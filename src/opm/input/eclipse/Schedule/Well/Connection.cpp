@@ -30,6 +30,7 @@
 #include <opm/input/eclipse/Deck/DeckRecord.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
 #include <opm/input/eclipse/Schedule/Well/Connection.hpp>
+#include <opm/input/eclipse/Schedule/Well/FilterCake.hpp>
 #include <opm/input/eclipse/Schedule/ScheduleGrid.hpp>
 
 namespace Opm {
@@ -136,6 +137,7 @@ Connection::Connection(const RestartIO::RstConnection& rst_connection, const Sch
         result.m_defaultSatTabId = true;
         result.segment_number = 16;
         result.m_subject_to_welpi = true;
+        result.m_filter_cake = FilterCake::serializationTestObject();
 
         return result;
     }
@@ -301,6 +303,9 @@ const std::optional<std::pair<double, double>>& Connection::perf_range() const {
         if (this->m_injmult.has_value()) {
             ss << "INJMULT " << InjMult::InjMultToString(this->m_injmult.value()) << std::endl;
         }
+        if (this->m_filter_cake.has_value()) {
+            ss << "FilterCake " << FilterCake::filterCakeToString(this->m_filter_cake.value()) << std::endl;
+        }
 
         return ss.str();
 }
@@ -323,7 +328,8 @@ const std::optional<std::pair<double, double>>& Connection::perf_range() const {
             && this->segment_number == rhs.segment_number
             && this->center_depth == rhs.center_depth
             && this->m_sort_value == rhs.m_sort_value
-            && this->m_subject_to_welpi == rhs.m_subject_to_welpi;
+            && this->m_subject_to_welpi == rhs.m_subject_to_welpi
+            && this->m_filter_cake == rhs.m_filter_cake;
     }
 
     bool Connection::operator!=( const Connection& rhs ) const {
@@ -461,4 +467,41 @@ void Connection::setInjMult(const InjMult& inj_mult) {
     m_injmult = inj_mult;
 }
 
+
+void Connection::setFilterCake(const FilterCake& filter_cake) {
+        this->m_filter_cake = filter_cake;
 }
+
+bool Connection::filterCakeActive() const {
+    return this->m_filter_cake.has_value();
+}
+
+const FilterCake& Connection::getFilterCake() const {
+        assert(this->filterCakeActive());
+        return this->m_filter_cake.value();
+}
+
+
+double Connection::getFilterCakeRadius() const {
+    if (this->getFilterCake().radius.has_value()) {
+        return this->getFilterCake().radius.value();
+    } else {
+        return this->m_rw;
+    }
+}
+
+
+double Connection::getFilterCakeArea() const {
+    if (this->getFilterCake().flow_area.has_value()) {
+        return this->getFilterCake().flow_area.value();
+    } else {
+        const double radius = this->getFilterCakeRadius();
+        const double length = this->m_connection_length;
+        constexpr double pi = 3.14159265;
+        return 2. * pi * radius * length;
+    }
+}
+
+
+
+} // end of namespace Opm

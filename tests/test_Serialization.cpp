@@ -75,6 +75,7 @@
 #include <opm/input/eclipse/Schedule/MSW/WellSegments.hpp>
 #include <opm/input/eclipse/Schedule/Network/Balance.hpp>
 #include <opm/input/eclipse/Schedule/Network/ExtNetwork.hpp>
+#include <opm/input/eclipse/Schedule/Well/FilterCake.hpp>
 #include <opm/input/eclipse/Schedule/Network/Node.hpp>
 #include <opm/input/eclipse/Schedule/OilVaporizationProperties.hpp>
 #include <opm/input/eclipse/Schedule/RFTConfig.hpp>
@@ -229,6 +230,7 @@ TEST_FOR_TYPE(Equil)
 TEST_FOR_TYPE(TLMixpar)
 TEST_FOR_TYPE(Ppcwmax)
 TEST_FOR_TYPE(Events)
+TEST_FOR_TYPE(FilterCake)
 TEST_FOR_TYPE(Fault)
 TEST_FOR_TYPE(FaultCollection)
 TEST_FOR_TYPE(FaultFace)

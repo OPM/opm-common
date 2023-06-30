@@ -30,6 +30,7 @@
 #include <optional>
 #include <limits>
 
+#include <opm/input/eclipse/Schedule/Well/FilterCake.hpp>
 #include <opm/input/eclipse/Schedule/Well/WINJMULT.hpp>
 
 namespace Opm {
@@ -125,6 +126,11 @@ namespace RestartIO {
         const InjMult& injmult() const;
         bool activeInjMult() const;
         void setInjMult(const InjMult& inj_mult);
+        void setFilterCake(const FilterCake& filter_cake);
+        const FilterCake& getFilterCake() const;
+        bool filterCakeActive() const;
+        double getFilterCakeRadius() const;
+        double getFilterCakeArea() const;
 
         void setState(State state);
         void setComplnum(int compnum);
@@ -174,6 +180,7 @@ namespace RestartIO {
             serializer(m_defaultSatTabId);
             serializer(segment_number);
             serializer(m_subject_to_welpi);
+            serializer(m_filter_cake);
         }
 
     private:
@@ -256,6 +263,8 @@ namespace RestartIO {
 
         // Whether or not this Connection is subject to WELPI scaling.
         bool m_subject_to_welpi = false;
+
+        std::optional<FilterCake> m_filter_cake;
 
         static std::string CTFKindToString(const CTFKind);
     };

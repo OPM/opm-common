@@ -1,0 +1,33 @@
+{
+  "name": "WINJCLN",
+  "sections": [
+    "SCHEDULE"
+  ],
+  "items": [
+    {
+      "name": "WELL_NAME",
+      "value_type": "STRING"
+    },
+    {
+      "name": "FRAC_REMOVE",
+      "value_type": "DOUBLE",
+      "dimension": "1",
+      "default": 1.0
+    },
+    {
+      "name": "I",
+      "value_type": "INT",
+      "default": -1
+    },
+    {
+      "name": "J",
+      "value_type": "INT",
+      "default": -1
+    },
+    {
+      "name": "K",
+      "value_type": "INT",
+      "default": -1
+    }
+  ]
+}

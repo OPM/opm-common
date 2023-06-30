@@ -536,6 +536,7 @@ Well Well::serializationTestObject()
     result.m_pavg = PAvg();
     result.well_temperature = 10.0;
     result.well_inj_mult = InjMult::serializationTestObject();
+    result.m_filter_concentration = 0.1;
 
     return result;
 }
@@ -1303,6 +1304,54 @@ bool Well::handleWPIMULT(const DeckRecord& record) {
     return this->updateConnections(std::move(new_connections), false);
 }
 
+bool Well::handleWINJCLN(const DeckRecord& record, const KeywordLocation& location) {
+    auto match = [=] ( const Connection& c) -> bool {
+        if (!match_eq(c.getI()  , record, "I", -1)) return false;
+        if (!match_eq(c.getJ()  , record, "J", -1)) return false;
+        if (!match_eq(c.getK()  , record, "K", -1)) return false;
+
+        return true;
+    };
+
+    const double fraction_removal = record.getItem<ParserKeywords::WINJCLN::FRAC_REMOVE>().getSIDouble(0);
+    if (fraction_removal < 0. || fraction_removal > 1.) {
+        const auto reason = fmt::format(" the item 2 in keyword WINJCLN must be between 0 and 1, while a "
+                                                    "value {} is given.", fraction_removal);
+        throw OpmInputError(reason, location);
+    }
+    const double fraction_remain = 1. - fraction_removal;
+    auto new_connections = std::make_shared<WellConnections>(this->connections->ordering(), this->headI, this->headJ);
+    for (auto c : *(this->connections)) {
+        if (match(c)) {
+             auto filter_cake = c.getFilterCake();
+             filter_cake.applyCleanMultiplier(fraction_remain);
+             c.setFilterCake(filter_cake);
+        }
+        new_connections->add(c);
+    }
+    return this->updateConnections(std::move(new_connections), false);
+}
+
+bool Well::handleWINJDAM(const DeckRecord& record, const KeywordLocation& location) {
+    auto match = [=] ( const Connection& c) -> bool {
+        if (!match_eq(c.getI()  , record, "I", -1)) return false;
+        if (!match_eq(c.getJ()  , record, "J", -1)) return false;
+        if (!match_eq(c.getK()  , record, "K", -1)) return false;
+
+        return true;
+    };
+
+    const FilterCake filter_cake {record, location};
+    auto new_connections = std::make_shared<WellConnections>(this->connections->ordering(),
+                                                                          this->headI, this->headJ);
+    for (auto c : *(this->connections)) {
+        if (match(c)) {
+            c.setFilterCake(filter_cake);
+        }
+        new_connections->add(c);
+    }
+    return this->updateConnections(std::move(new_connections), false);
+}
 
 bool Well::handleWINJMULT(const Opm::DeckRecord& record, const KeywordLocation& location) {
     // for this keyword, the default for I, J, K will be negative
@@ -1618,6 +1667,7 @@ bool Well::operator==(const Well& data) const {
         && (this->well_temperature == data.well_temperature)
         && (this->inj_mult_mode == data.inj_mult_mode)
         && (this->well_inj_mult == data.well_inj_mult)
+        && (this->m_filter_concentration == data.m_filter_concentration)
         ;
 }
 
@@ -1713,3 +1763,10 @@ bool Opm::Well::aciveWellInjMult() const {
 }
 
 
+void Opm::Well::setFilterConc(const double conc) {
+    this->m_filter_concentration = conc;
+}
+
+double Opm::Well::getFilterConc() const {
+    return this->m_filter_concentration;
+}

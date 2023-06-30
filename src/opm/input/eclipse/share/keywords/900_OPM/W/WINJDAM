@@ -1,0 +1,52 @@
+{
+  "name": "WINJDAM",
+  "sections": [
+    "SCHEDULE"
+  ],
+  "items": [
+    {
+      "name": "WELL_NAME",
+      "value_type": "STRING"
+    },
+    {
+      "name": "GEOMETRY",
+      "value_type": "STRING"
+    },
+    {
+      "name": "FILTER_CAKE_PERM",
+      "value_type": "DOUBLE",
+      "dimension": "Permeability"
+    },
+    {
+      "name": "FILTER_CAKE_PORO",
+      "value_type": "DOUBLE",
+      "dimension": "1",
+      "default": 0.3
+    },
+    {
+      "name": "FILTER_CAKE_RADIUS",
+      "value_type": "DOUBLE",
+      "dimension": "Length"
+    },
+    {
+      "name": "FILTER_CAKE_AREA",
+      "value_type": "DOUBLE",
+      "dimension": "Length*Length"
+    },
+    {
+      "name": "I",
+      "value_type": "INT",
+      "default": -1
+    },
+    {
+      "name": "J",
+      "value_type": "INT",
+      "default": -1
+    },
+    {
+      "name": "K",
+      "value_type": "INT",
+      "default": -1
+    }
+  ]
+}
