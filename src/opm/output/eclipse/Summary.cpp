@@ -1065,6 +1065,16 @@ double segment_phase_quantity_value(const Opm::data::SegmentQuantity<Items>& q,
     return q.has(p) ? q.get(p) : 0.0;
 }
 
+template <Opm::data::SegmentPhaseDensity::Item p>
+quantity segment_density(const fn_args& args)
+{
+    return segment_quantity(args, measure::density,
+        [](const Opm::data::Segment& segment)
+    {
+        return segment_phase_quantity_value(segment.density, p);
+    });
+}
+
 template <Opm::data::SegmentPhaseQuantity::Item p>
 quantity segment_flow_velocity(const fn_args& args)
 {
@@ -2213,6 +2223,9 @@ static const auto funs = std::unordered_map<std::string, ofun> {
     { "RHPV"  , rhpv },
 
     // Segment summary vectors for multi-segmented wells.
+    { "SDENM", segment_density<Opm::data::SegmentPhaseDensity::Item::Mixture> },
+    { "SMDEN", segment_density<Opm::data::SegmentPhaseDensity::Item::MixtureWithExponents> },
+    { "SODEN", segment_density<Opm::data::SegmentPhaseDensity::Item::Oil> },
     { "SOFR" , srate<rt::oil> },
     { "SOFT" , mul(srate<rt::oil>, duration) },
     { "SOFRF", sub(srate<rt::oil>, srate<rt::vaporized_oil>) }, // Free oil flow
@@ -2220,6 +2233,7 @@ static const auto funs = std::unordered_map<std::string, ofun> {
     { "SOFV" , segment_flow_velocity<Opm::data::SegmentPhaseQuantity::Item::Oil> },
     { "SOHF" , segment_holdup_fraction<Opm::data::SegmentPhaseQuantity::Item::Oil> },
     { "SOVIS", segment_viscosity<Opm::data::SegmentPhaseQuantity::Item::Oil> },
+    { "SGDEN", segment_density<Opm::data::SegmentPhaseDensity::Item::Gas> },
     { "SGFR" , srate<rt::gas> },
     { "SGFT" , mul(srate<rt::gas>, duration) },
     { "SGFRF", sub(srate<rt::gas>, srate<rt::dissolved_gas>) }, // Free gas flow
@@ -2227,6 +2241,7 @@ static const auto funs = std::unordered_map<std::string, ofun> {
     { "SGFV" , segment_flow_velocity<Opm::data::SegmentPhaseQuantity::Item::Gas> },
     { "SGHF" , segment_holdup_fraction<Opm::data::SegmentPhaseQuantity::Item::Gas> },
     { "SGVIS", segment_viscosity<Opm::data::SegmentPhaseQuantity::Item::Gas> },
+    { "SWDEN", segment_density<Opm::data::SegmentPhaseDensity::Item::Water> },
     { "SWFR" , srate<rt::wat> },
     { "SWFT" , mul(srate<rt::wat>, duration) },
     { "SWFV" , segment_flow_velocity<Opm::data::SegmentPhaseQuantity::Item::Water> },
