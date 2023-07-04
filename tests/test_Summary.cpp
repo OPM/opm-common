@@ -15,50 +15,62 @@
 
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
- */
+*/
 
 #include "config.h"
 
-#define BOOST_TEST_MODULE Wells
+#define BOOST_TEST_MODULE Summary_Output
+
 #include <boost/test/unit_test.hpp>
-
-#include <cstddef>
-#include <exception>
-#include <memory>
-#include <stdexcept>
-#include <unordered_map>
-#include <cctype>
-#include <ctime>
-#include <filesystem>
-
-#include <fmt/format.h>
 
 #include <opm/output/data/Groups.hpp>
 #include <opm/output/data/GuideRateValue.hpp>
 #include <opm/output/data/Wells.hpp>
-#include <opm/output/eclipse/WStat.hpp>
+#include <opm/output/eclipse/Inplace.hpp>
 #include <opm/output/eclipse/Summary.hpp>
+#include <opm/output/eclipse/WStat.hpp>
+
+#include <opm/input/eclipse/EclipseState/EclipseState.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
+#include <opm/input/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
+
+#include <opm/input/eclipse/Python/Python.hpp>
+
+#include <opm/input/eclipse/Schedule/Schedule.hpp>
+#include <opm/input/eclipse/Schedule/SummaryState.hpp>
+#include <opm/input/eclipse/Schedule/Well/Well.hpp>
+
+#include <opm/input/eclipse/Units/UnitSystem.hpp>
+#include <opm/input/eclipse/Units/Units.hpp>
+
+#include <opm/io/eclipse/ERsm.hpp>
+#include <opm/io/eclipse/ESmry.hpp>
+
 #include <opm/common/utility/TimeService.hpp>
 
-#include <opm/output/eclipse/Inplace.hpp>
-#include <opm/input/eclipse/Python/Python.hpp>
-#include <opm/input/eclipse/Schedule/SummaryState.hpp>
 #include <opm/input/eclipse/Deck/Deck.hpp>
-#include <opm/input/eclipse/Units/UnitSystem.hpp>
-#include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
-#include <opm/input/eclipse/EclipseState/EclipseState.hpp>
-#include <opm/input/eclipse/Schedule/Schedule.hpp>
-#include <opm/input/eclipse/Schedule/Well/Well.hpp>
-#include <opm/input/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
+
 #include <opm/input/eclipse/Parser/Parser.hpp>
 
-#include <opm/input/eclipse/Units/Units.hpp>
-#include <opm/input/eclipse/Units/UnitSystem.hpp>
-
-#include <opm/io/eclipse/ESmry.hpp>
-#include <opm/io/eclipse/ERsm.hpp>
-
 #include <tests/WorkArea.hpp>
+
+#include <algorithm>
+#include <cctype>
+#include <cstddef>
+#include <ctime>
+#include <exception>
+#include <filesystem>
+#include <map>
+#include <memory>
+#include <sstream>
+#include <stdexcept>
+#include <string>
+#include <tuple>
+#include <unordered_map>
+#include <utility>
+#include <vector>
+
+#include <fmt/format.h>
 
 using namespace Opm;
 using rt = data::Rates::opt;
@@ -66,6 +78,11 @@ using p_cmode = Opm::Group::ProductionCMode;
 using i_cmode = Opm::Group::InjectionCMode;
 
 namespace {
+    double kg_pr_m3()
+    {
+        return unit::kilogram / unit::cubic(unit::meter);
+    }
+
     double sm3_pr_day()
     {
        return unit::cubic(unit::meter) / unit::day;
@@ -2031,6 +2048,10 @@ BOOST_AUTO_TEST_CASE(BLOCK_VARIABLES)
     block_values[std::make_pair("BVOIL", 1)] = 31.0*cp();
     block_values[std::make_pair("BOVIS", 1)] = 33.0*cp();
 
+    block_values.emplace(std::piecewise_construct, std::forward_as_tuple("BDENG", 1), std::forward_as_tuple(210.98*kg_pr_m3()));
+    block_values.emplace(std::piecewise_construct, std::forward_as_tuple("BDENW", 1), std::forward_as_tuple(987.65*kg_pr_m3()));
+    block_values.emplace(std::piecewise_construct, std::forward_as_tuple("BODEN", 1), std::forward_as_tuple(890.12*kg_pr_m3()));
+
     out::Summary writer( cfg.es, cfg.config, cfg.grid, cfg.schedule, cfg.name );
     SummaryState st(TimeService::now());
     writer.eval( st, 0, 0 * day, cfg.wells, cfg.wbp, cfg.grp_nwrk, {}, {}, {}, {}, block_values);
@@ -2065,6 +2086,10 @@ BOOST_AUTO_TEST_CASE(BLOCK_VARIABLES)
     BOOST_CHECK_CLOSE(8.0 , ecl_sum_get_general_var(resp, 1, "BSWAT:1,1,1"), 1.0e-5);
     BOOST_CHECK_CLOSE(9.0 , ecl_sum_get_general_var(resp, 1, "BSGAS:1,1,1"), 1.0e-5);
     BOOST_CHECK_CLOSE(0.91, ecl_sum_get_general_var(resp, 1, "BOSAT:1,1,1"), 1.0e-5);
+
+    BOOST_CHECK_CLOSE(210.98, ecl_sum_get_general_var(resp, 1, "BDENG:1,1,1"), 1.0e-5);
+    BOOST_CHECK_CLOSE(987.65, ecl_sum_get_general_var(resp, 1, "BDENW:1,1,1"), 1.0e-5);
+    BOOST_CHECK_CLOSE(890.12, ecl_sum_get_general_var(resp, 1, "BODEN:1,1,1"), 1.0e-5);
 
     BOOST_CHECK_CLOSE(0.81, ecl_sum_get_general_var(resp, 1, "BWKR:2,1,1") , 1.0e-5);
     BOOST_CHECK_CLOSE(0.71, ecl_sum_get_general_var(resp, 1, "BOKR:2,1,1") , 1.0e-5);

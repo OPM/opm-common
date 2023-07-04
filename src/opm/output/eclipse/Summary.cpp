@@ -2353,6 +2353,8 @@ static const auto interregion_units = UnitTable {
 
 static const auto block_units = UnitTable {
     // Gas quantities
+    {"BGDEN"    , Opm::UnitSystem::measure::density},
+    {"BDENG"    , Opm::UnitSystem::measure::density},
     {"BGIP"     , Opm::UnitSystem::measure::gas_surface_volume},
     {"BGIPG"    , Opm::UnitSystem::measure::gas_surface_volume},
     {"BGIPL"    , Opm::UnitSystem::measure::gas_surface_volume},
@@ -2367,6 +2369,8 @@ static const auto block_units = UnitTable {
     {"BVGAS"    , Opm::UnitSystem::measure::viscosity},
 
     // Oil quantities
+    {"BODEN"    , Opm::UnitSystem::measure::density},
+    {"BDENO"    , Opm::UnitSystem::measure::density},
     {"BOKR"     , Opm::UnitSystem::measure::identity},
     {"BKRO"     , Opm::UnitSystem::measure::identity},
     {"BKROG"    , Opm::UnitSystem::measure::identity},
@@ -2381,6 +2385,8 @@ static const auto block_units = UnitTable {
     {"BVOIL"    , Opm::UnitSystem::measure::viscosity},
 
     // Water quantities
+    {"BWDEN"    , Opm::UnitSystem::measure::density},
+    {"BDENW"    , Opm::UnitSystem::measure::density},
     {"BWIP"     , Opm::UnitSystem::measure::liquid_surface_volume},
     {"BWKR"     , Opm::UnitSystem::measure::identity},
     {"BKRW"     , Opm::UnitSystem::measure::identity},
