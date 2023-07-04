@@ -318,15 +318,11 @@ namespace Opm {
         }
     };
 
-    class SegmentPhaseQuantity
+    template <typename Items>
+    class SegmentQuantity
     {
     public:
-        enum class Item : std::size_t {
-            Oil, Gas, Water,
-
-            // -- Must be last enumerator --
-            NumItems,
-        };
+        using Item = typename Items::Item;
 
         void clear()
         {
@@ -341,7 +337,7 @@ namespace Opm {
             return (i < Size) && this->hasItem(i);
         }
 
-        bool operator==(const SegmentPhaseQuantity& vec) const
+        bool operator==(const SegmentQuantity& vec) const
         {
             return (this->has_   == vec.has_)
                 && (this->value_ == vec.value_);
@@ -351,21 +347,21 @@ namespace Opm {
         {
             if (! this->has(p)) {
                 throw std::invalid_argument {
-                    "Request for Unset Item Value for " + this->itemName(p)
+                    "Request for Unset Item Value for " + Items::itemName(p)
                 };
             }
 
             return this->value_[ this->index(p) ];
         }
 
-        SegmentPhaseQuantity& set(const Item p, const double value)
+        SegmentQuantity& set(const Item p, const double value)
         {
             const auto i = this->index(p);
 
             if (i >= Size) {
                 throw std::invalid_argument {
                     "Cannot Assign Item Value for Unsupported Item '"
-                    + this->itemName(p) + '\''
+                    + Items::itemName(p) + '\''
                 };
             }
 
@@ -403,12 +399,15 @@ namespace Opm {
             serializer(this->value_);
         }
 
-        static SegmentPhaseQuantity serializationTestObject()
+        static SegmentQuantity serializationTestObject()
         {
-            return SegmentPhaseQuantity{}
-                .set(Item::Oil  , 1.0)
-                .set(Item::Gas  , 7.0)
-                .set(Item::Water, 2.9);
+            auto quant = SegmentQuantity{};
+
+            for (const auto& [item, value] : Items::serializationTestItems()) {
+                quant.set(item, value);
+            }
+
+            return quant;
         }
 
     private:
@@ -430,8 +429,18 @@ namespace Opm {
         {
             return (this->has_ & (1 << i)) != 0;
         }
+    };
 
-        std::string itemName(const Item p) const
+    struct PhaseItems
+    {
+        enum class Item {
+            Oil, Gas, Water,
+
+            // -- Must be last enumerator --
+            NumItems,
+        };
+
+        static std::string itemName(const Item p)
         {
             switch (p) {
             case Item::Oil:   return "Oil";
@@ -442,9 +451,58 @@ namespace Opm {
                 return "Out of bounds (NumItems)";
             }
 
-            return "Unknown (" + std::to_string(this->index(p)) + ')';
+            return "Unknown (" + std::to_string(static_cast<int>(p)) + ')';
+        }
+
+        static auto serializationTestItems()
+        {
+            return std::vector {
+                std::pair { Item::Oil  , 1.0 },
+                std::pair { Item::Gas  , 7.0 },
+                std::pair { Item::Water, 2.9 },
+            };
         }
     };
+
+    struct DensityItems
+    {
+        enum class Item {
+            Oil, Gas, Water, Mixture, MixtureWithExponents,
+
+            // -- Must be last enumerator --
+            NumItems,
+        };
+
+        static std::string itemName(const Item p)
+        {
+            switch (p) {
+            case Item::Oil:                  return "Oil";
+            case Item::Gas:                  return "Gas";
+            case Item::Water:                return "Water";
+            case Item::Mixture:              return "Mixture";
+            case Item::MixtureWithExponents: return "MixtureWithExponents";
+
+            case Item::NumItems:
+                return "Out of bounds (NumItems)";
+            }
+
+            return "Unknown (" + std::to_string(static_cast<int>(p)) + ')';
+        }
+
+        static auto serializationTestItems()
+        {
+            return std::vector {
+                std::pair { Item::Oil                 , 876.54 },
+                std::pair { Item::Gas                 , 321.09 },
+                std::pair { Item::Water               , 987.65 },
+                std::pair { Item::Mixture             , 975.31 },
+                std::pair { Item::MixtureWithExponents, 765.43 },
+            };
+        }
+    };
+
+    using SegmentPhaseQuantity = SegmentQuantity<PhaseItems>;
+    using SegmentPhaseDensity = SegmentQuantity<DensityItems>;
 
     struct Segment
     {
@@ -453,6 +511,7 @@ namespace Opm {
         SegmentPhaseQuantity velocity{};
         SegmentPhaseQuantity holdup{};
         SegmentPhaseQuantity viscosity{};
+        SegmentPhaseDensity density{};
         std::size_t segNumber{};
 
         bool operator==(const Segment& seg2) const
@@ -462,6 +521,7 @@ namespace Opm {
                 && (velocity == seg2.velocity)
                 && (holdup == seg2.holdup)
                 && (viscosity == seg2.viscosity)
+                && (density == seg2.density)
                 && (segNumber == seg2.segNumber);
         }
 
@@ -479,6 +539,7 @@ namespace Opm {
             serializer(this->velocity);
             serializer(this->holdup);
             serializer(this->viscosity);
+            serializer(this->density);
             serializer(this->segNumber);
         }
 
@@ -490,6 +551,7 @@ namespace Opm {
                 SegmentPhaseQuantity::serializationTestObject(), // velocity
                 SegmentPhaseQuantity::serializationTestObject(), // holdup
                 SegmentPhaseQuantity::serializationTestObject(), // viscosity
+                SegmentPhaseDensity::serializationTestObject(),  // density
                 10
             };
         }
@@ -1044,6 +1106,7 @@ namespace Opm {
         this->velocity.write(buffer);
         this->holdup.write(buffer);
         this->viscosity.write(buffer);
+        this->density.write(buffer);
     }
 
     template <class MessageBufferType>
@@ -1167,6 +1230,7 @@ namespace Opm {
         this->velocity.read(buffer);
         this->holdup.read(buffer);
         this->viscosity.read(buffer);
+        this->density.read(buffer);
     }
 
     template <class MessageBufferType>

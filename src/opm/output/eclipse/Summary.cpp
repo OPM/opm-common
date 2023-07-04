@@ -1058,8 +1058,9 @@ inline quantity srate(const fn_args& args)
     });
 }
 
-template <Opm::data::SegmentPhaseQuantity::Item p>
-double segment_phase_quantity_value(const Opm::data::SegmentPhaseQuantity& q)
+template <typename Items>
+double segment_phase_quantity_value(const Opm::data::SegmentQuantity<Items>& q,
+                                    const typename Items::Item               p)
 {
     return q.has(p) ? q.get(p) : 0.0;
 }
@@ -1071,7 +1072,7 @@ quantity segment_flow_velocity(const fn_args& args)
         [](const Opm::data::Segment& segment)
     {
         // Note: Opposite velocity sign conventions in Flow vs. ECLIPSE.
-        return - segment_phase_quantity_value<p>(segment.velocity);
+        return - segment_phase_quantity_value(segment.velocity, p);
     });
 }
 
@@ -1081,7 +1082,7 @@ quantity segment_holdup_fraction(const fn_args& args)
     return segment_quantity(args, measure::identity,
         [](const Opm::data::Segment& segment)
     {
-        return segment_phase_quantity_value<p>(segment.holdup);
+        return segment_phase_quantity_value(segment.holdup, p);
     });
 }
 
@@ -1091,7 +1092,7 @@ quantity segment_viscosity(const fn_args& args)
     return segment_quantity(args, measure::viscosity,
         [](const Opm::data::Segment& segment)
     {
-        return segment_phase_quantity_value<p>(segment.viscosity);
+        return segment_phase_quantity_value(segment.viscosity, p);
     });
 }
 

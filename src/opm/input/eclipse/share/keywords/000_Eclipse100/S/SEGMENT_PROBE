@@ -4,6 +4,9 @@
     "SUMMARY"
   ],
   "deck_names": [
+    "SDENM",
+    "SMDEN",
+    "SGDEN",
     "SGFR",
     "SGFRF",
     "SGFRS",
@@ -12,6 +15,7 @@
     "SGHF",
     "SGOR",
     "SGVIS",
+    "SODEN",
     "SOFR",
     "SOFRF",
     "SOFRS",
@@ -26,6 +30,7 @@
     "SPRDF",
     "SPRDH",
     "SWCT",
+    "SWDEN",
     "SWFR",
     "SWFT",
     "SWFV",

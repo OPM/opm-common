@@ -1150,6 +1150,7 @@ inline void keywordMISC( SummaryConfig::keyword_list& list,
             "SGFR" , "SGFRF", "SGFRS", "SGFT", "SGFV", "SGHF", "SGVIS",
             "SWFR" ,                   "SWFT", "SWFV", "SWHF", "SWVIS",
             "SGOR" , "SOGR" , "SWCT" , "SWGR" ,
+            "SODEN", "SGDEN", "SWDEN", "SMDEN", "SDENM",
             "SPR"  , "SPRD" , "SPRDH", "SPRDF", "SPRDA",
         };
 
