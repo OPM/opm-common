@@ -50,6 +50,10 @@ public:
             this->controls += int_arg;
     }
 
+    void clearControls(){
+        this->controls = 0;
+    }
+
     bool operator==(const WellProductionControls& other) const
     {
         return this->cmode == other.cmode &&
