@@ -1003,10 +1003,12 @@ quantity crate_resv( const fn_args& args ) {
     return { v, rate_unit<rt::reservoir_oil>() };
 }
 
-template <rt phase>
-inline quantity srate(const fn_args& args)
+template <typename GetValue>
+quantity segment_quantity(const fn_args& args,
+                          const measure  m,
+                          GetValue&&     getValue)
 {
-    const quantity zero = { 0, rate_unit<phase>() };
+    const auto zero = quantity { 0.0, m };
     if (args.schedule_wells.empty()) {
         return zero;
     }
@@ -1027,16 +1029,70 @@ inline quantity srate(const fn_args& args)
         return zero;
     }
 
-    const auto eff_fac = efac(args.eff_factors, name);
+    return { getValue(segPos->second), m };
+}
 
-    // Switch sign of rate--opposite convention in Flow vs ECLIPSE.
-    const auto v = -segPos->second.rates.get(phase, 0.0) * eff_fac;
+template <Opm::data::SegmentPressures::Value ix>
+inline quantity segpress(const fn_args& args)
+{
+    return segment_quantity(args, measure::pressure,
+                            [](const Opm::data::Segment& segment)
+                            {
+                                return segment.pressures[ix];
+                            });
+}
 
-    if ((phase == rt::polymer) || (phase == rt::brine)) {
-        return { v, measure::mass_rate };
-    }
+template <rt phase>
+inline quantity srate(const fn_args& args)
+{
+    const auto m = ((phase == rt::polymer) || (phase == rt::brine))
+        ? measure::mass_rate
+        : rate_unit<phase>();
 
-    return { v, rate_unit<phase>() };
+    return segment_quantity(args, m,
+        [&args](const Opm::data::Segment& segment)
+    {
+        // Note: Opposite flow rate sign conventions in Flow vs. ECLIPSE.
+        return - segment.rates.get(phase, 0.0)
+            * efac(args.eff_factors, args.schedule_wells.front()->name());
+    });
+}
+
+template <Opm::data::SegmentPhaseQuantity::Item p>
+double segment_phase_quantity_value(const Opm::data::SegmentPhaseQuantity& q)
+{
+    return q.has(p) ? q.get(p) : 0.0;
+}
+
+template <Opm::data::SegmentPhaseQuantity::Item p>
+quantity segment_flow_velocity(const fn_args& args)
+{
+    return segment_quantity(args, measure::pipeflow_velocity,
+        [](const Opm::data::Segment& segment)
+    {
+        // Note: Opposite velocity sign conventions in Flow vs. ECLIPSE.
+        return - segment_phase_quantity_value<p>(segment.velocity);
+    });
+}
+
+template <Opm::data::SegmentPhaseQuantity::Item p>
+quantity segment_holdup_fraction(const fn_args& args)
+{
+    return segment_quantity(args, measure::identity,
+        [](const Opm::data::Segment& segment)
+    {
+        return segment_phase_quantity_value<p>(segment.holdup);
+    });
+}
+
+template <Opm::data::SegmentPhaseQuantity::Item p>
+quantity segment_viscosity(const fn_args& args)
+{
+    return segment_quantity(args, measure::viscosity,
+        [](const Opm::data::Segment& segment)
+    {
+        return segment_phase_quantity_value<p>(segment.viscosity);
+    });
 }
 
 inline quantity trans_factors ( const fn_args& args ) {
@@ -1066,35 +1122,6 @@ inline quantity trans_factors ( const fn_args& args ) {
 
     // Dynamic connection result's "trans_factor" includes PI-adjustment.
     return { connPos->trans_factor, measure::transmissibility };
-}
-
-template <Opm::data::SegmentPressures::Value ix>
-inline quantity segpress ( const fn_args& args )
-{
-    const quantity zero = { 0, measure::pressure };
-
-    if (args.schedule_wells.empty())
-        return zero;
-
-    const auto* well = args.schedule_wells.front();
-    auto xwPos = args.wells.find(well->name());
-    if ((xwPos == args.wells.end()) ||
-        (xwPos->second.dynamicStatus == Opm::Well::Status::SHUT))
-    {
-        return zero;
-    }
-
-    // Like connection rate we need to look up a connection with offset 0.
-    const size_t segNumber = args.num;
-
-    const auto& well_data = xwPos->second;
-    const auto& segment = well_data.segments.find(segNumber);
-
-    if (segment == well_data.segments.end()) {
-        return zero;
-    }
-
-    return { segment->second.pressures[ix], measure::pressure };
 }
 
 inline quantity wstat( const fn_args& args ) {
@@ -2185,12 +2212,24 @@ static const std::unordered_map< std::string, ofun > funs = {
 
     // Segment summary vectors for multi-segmented wells.
     { "SOFR" , srate<rt::oil> },
+    { "SOFT" , mul(srate<rt::oil>, duration) },
     { "SOFRF", sub(srate<rt::oil>, srate<rt::vaporized_oil>) }, // Free oil flow
     { "SOFRS", srate<rt::vaporized_oil> },                      // Solution oil flow
+    { "SOFV" , segment_flow_velocity<Opm::data::SegmentPhaseQuantity::Item::Oil> },
+    { "SOHF" , segment_holdup_fraction<Opm::data::SegmentPhaseQuantity::Item::Oil> },
+    { "SOVIS", segment_viscosity<Opm::data::SegmentPhaseQuantity::Item::Oil> },
     { "SGFR" , srate<rt::gas> },
+    { "SGFT" , mul(srate<rt::gas>, duration) },
     { "SGFRF", sub(srate<rt::gas>, srate<rt::dissolved_gas>) }, // Free gas flow
     { "SGFRS", srate<rt::dissolved_gas> },                      // Solution gas flow
+    { "SGFV" , segment_flow_velocity<Opm::data::SegmentPhaseQuantity::Item::Gas> },
+    { "SGHF" , segment_holdup_fraction<Opm::data::SegmentPhaseQuantity::Item::Gas> },
+    { "SGVIS", segment_viscosity<Opm::data::SegmentPhaseQuantity::Item::Gas> },
     { "SWFR" , srate<rt::wat> },
+    { "SWFT" , mul(srate<rt::wat>, duration) },
+    { "SWFV" , segment_flow_velocity<Opm::data::SegmentPhaseQuantity::Item::Water> },
+    { "SWHF" , segment_holdup_fraction<Opm::data::SegmentPhaseQuantity::Item::Water> },
+    { "SWVIS", segment_viscosity<Opm::data::SegmentPhaseQuantity::Item::Water> },
     { "SGOR" , div(srate<rt::gas>, srate<rt::oil>) },
     { "SOGR" , div(srate<rt::oil>, srate<rt::gas>) },
     { "SWCT" , div(srate<rt::wat>, sum(srate<rt::wat>, srate<rt::oil>)) },

@@ -111,6 +111,30 @@ SOFR
   'PROD01'  21 /
 /
 
+SOFT
+  'PROD01'  1 /
+  'PROD01'  10 /
+  'PROD01'  21 /
+/
+
+SOHF
+  'PROD01'  1 /
+  'PROD01'  10 /
+  'PROD01'  21 /
+/
+
+SOFV
+  'PROD01'  1 /
+  'PROD01'  10 /
+  'PROD01'  21 /
+/
+
+SOVIS
+  'PROD01'  1 /
+  'PROD01'  10 /
+  'PROD01'  21 /
+/
+
 SOFRF
   'PROD01'  1 /
   'PROD01'  10 /
@@ -132,6 +156,22 @@ SGFR
   'PROD01' /
 /
 
+SGFT
+  'PROD01' /
+/
+
+SGHF
+  'PROD01' /
+/
+
+SGFV
+  'PROD01' /
+/
+
+SGVIS
+  'PROD01' /
+/
+
 SGFRF
   'PROD01'  2 /
 /
@@ -149,6 +189,18 @@ SPR
 /
 
 SWFR
+/
+
+SWFT
+/
+
+SWHF
+/
+
+SWFV
+/
+
+SWVIS
 /
 
 SWGR
