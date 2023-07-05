@@ -1544,6 +1544,8 @@ std::optional<JFunc> make_jfunc(const Deck& deck) {
                     container.addTable( tableIdx , table );
                 } catch (const std::runtime_error& err) {
                     throw OpmInputError(err, tableKeyword.location());
+                } catch (const std::invalid_argument& err) {
+                    throw OpmInputError(err, tableKeyword.location());
                 }
             }
         }
