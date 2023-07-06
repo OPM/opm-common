@@ -49,6 +49,9 @@
 #include <opm/input/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquifers.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
 
+#include <opm/common/OpmLog/OpmLog.hpp>
+#include <opm/common/OpmLog/LogUtil.hpp>
+
 #include "Operate.hpp"
 
 
@@ -921,6 +924,8 @@ void FieldProps::handle_region_operation(const DeckKeyword& keyword) {
     for (const auto& record : keyword) {
         const std::string& target_kw = Fieldprops::keywords::get_keyword_from_alias(record.getItem(0).get<std::string>(0));
         int region_value = record.getItem("REGION_NUMBER").get<int>(0);
+        const auto warn_empty_region = R"({} region {} has no active cells when processing operation {} on keyword {}.
+Please check whether this is on purpose or you missed defining the region properly.)";
 
         if (this->tran.find(target_kw) != this->tran.end())
             throw std::logic_error("The region operations can not be used for manipulations of TRANX, TRANY or TRANZ");
@@ -935,6 +940,11 @@ void FieldProps::handle_region_operation(const DeckKeyword& keyword) {
                 const auto& src_data = this->init_get<double>(src_kw);
                 auto& field_data = this->init_get<double>(target_kw);
                 FieldProps::operate(record, field_data, src_data, index_list);
+                if (index_list.empty()) {
+                    OpmLog::warning(Log::fileMessage(keyword.location(),
+                                                     fmt::format(warn_empty_region, region_name, region_value,
+                                                                 keyword.name(), src_kw)));
+                }
             } else {
                 auto operation = fromString(keyword.name());
                 const double scalar_value = this->getSIValue(operation, target_kw, record.getItem(1).get<double>(0));
@@ -961,6 +971,11 @@ void FieldProps::handle_region_operation(const DeckKeyword& keyword) {
                 }
 
                 FieldProps::apply(fromString(keyword.name()), field_data.data, field_data.value_status, scalar_value, index_list);
+                if (index_list.empty()) {
+                    OpmLog::warning(Log::fileMessage(keyword.location(),
+                                                     fmt::format(warn_empty_region, region_name, region_value, keyword.name(),
+                                                                 target_kw)));
+                }
             }
 
             continue;
