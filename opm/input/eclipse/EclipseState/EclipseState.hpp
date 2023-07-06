@@ -135,6 +135,7 @@ namespace Opm {
             serializer(m_deckUnitSystem);
             serializer(m_inputNnc);
             serializer(m_gridDims);
+            serializer(m_lgrs);
             serializer(m_simulationConfig);
             serializer(aquifer_config);
             serializer(m_transMult);
@@ -170,8 +171,8 @@ namespace Opm {
         EclipseGrid m_inputGrid;
         NNC m_inputNnc;
         GridDims m_gridDims;
-        LgrCollection m_lgrs;
         FieldPropsManager field_props;
+        LgrCollection m_lgrs;
         SimulationConfig m_simulationConfig;
         AquiferConfig aquifer_config;
         TransMult m_transMult;

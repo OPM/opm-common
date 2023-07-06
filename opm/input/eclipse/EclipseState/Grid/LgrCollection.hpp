@@ -34,6 +34,9 @@ public:
     LgrCollection();
     LgrCollection(const GRIDSection& gridSection, const GridDims& gridDims);
 
+   static LgrCollection serializationTestObject();
+
+   explicit LgrCollection(const Deck& deck);
 
     size_t size() const;
     bool hasLgr(const std::string& lgrName) const;

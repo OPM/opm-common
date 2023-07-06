@@ -127,7 +127,7 @@ namespace Opm {
         , m_inputNnc(          m_inputGrid, deck)
         , m_gridDims(          deck )
         , field_props(         deck, m_runspec.phases(), m_inputGrid, m_tables)
-        , m_lgrs(         deck)
+        , m_lgrs(              deck)
         , m_simulationConfig(  m_eclipseConfig.init().restartRequested(), deck, field_props)
         , aquifer_config(      m_tables, m_inputGrid, deck, field_props)
         , m_transMult(         GridDims(deck), deck, field_props)
