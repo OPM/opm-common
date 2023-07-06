@@ -20,6 +20,7 @@
 #include <opm/input/eclipse/EclipseState/Grid/GridDims.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/LgrCollection.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/CarfinManager.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/Carfin.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/C.hpp>
 
 
@@ -57,6 +58,14 @@ namespace Opm {
 
     bool LgrCollection::hasLgr(const std::string& lgrName) const {
         return m_lgrs.count( lgrName ) > 0;
+    }
+
+    const Carfin& LgrCollection::getLgr(const std::string& lgrName) const {
+        return m_lgrs.get( lgrName );
+    }
+
+    Carfin& LgrCollection::getLgr(const std::string& lgrName) {
+        return m_lgrs.get( lgrName );
     }
 
 }
