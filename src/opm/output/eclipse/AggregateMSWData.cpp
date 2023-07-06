@@ -793,7 +793,7 @@ namespace {
                     rSeg[iS + Ix::OutletDepthDiff] = units.from_si(M::length, welSegSet.depthTopSegment());
                     rSeg[iS + Ix::SegVolume]       = volFromLengthUnitConv*welSegSet.volumeTopSegment();
                     rSeg[iS + Ix::DistBHPRef]      = rSeg[iS + Ix::DistOutlet];
-                    rSeg[iS + Ix::DepthBHPRef]     = rSeg[iS + Ix::OutletDepthDiff];
+                    rSeg[iS + Ix::SegNodeDepth]    = rSeg[iS + Ix::OutletDepthDiff];
                     //
                     // branch according to whether multisegment well calculations are switched on or not
 
@@ -853,7 +853,7 @@ namespace {
                     rSeg[iS + Ix::SegArea]         = areaFromLengthUnitConv *  segment.crossArea();
                     rSeg[iS + Ix::SegVolume]       = volFromLengthUnitConv  *  segment.volume();
                     rSeg[iS + Ix::DistBHPRef]      = units.from_si(M::length, (segment.totalLength()));
-                    rSeg[iS + Ix::DepthBHPRef]     = units.from_si(M::length, (segment.depth()));
+                    rSeg[iS + Ix::SegNodeDepth]    = units.from_si(M::length, (segment.depth()));
 
                     // see section above for explanation of values
                     // branch according to whether multisegment well calculations are switched on or not

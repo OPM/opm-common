@@ -63,7 +63,7 @@ namespace Opm {
         , m_branch(rst_segment.branch)
         , m_outlet_segment(rst_segment.outlet_segment)
         , m_total_length( rst_segment.dist_bhp_ref )
-        , m_depth(rst_segment.bhp_ref_dz)
+        , m_depth(rst_segment.node_depth)
         , m_internal_diameter(if_invalid_value(rst_segment.diameter))
         , m_roughness(if_invalid_value(rst_segment.roughness))
         , m_cross_area(if_invalid_value(rst_segment.area))

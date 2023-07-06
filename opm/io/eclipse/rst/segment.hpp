@@ -47,7 +47,7 @@ struct RstSegment {
     double area;
     double volume;
     double dist_bhp_ref;
-    double bhp_ref_dz;
+    double node_depth;
     double total_flow;
     double water_flow_fraction;
     double gas_flow_fraction;
