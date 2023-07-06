@@ -49,7 +49,7 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
             SegArea         = 4, // Cross-sectional area of segment
             SegVolume       = 5, // Physical volume of segment
             DistBHPRef      = 6, // Segment's distance to BHP reference node
-            DepthBHPRef     = 7, // Segment's depth differential to BHP ref. node
+            SegNodeDepth    = 7, // Segment's node depth
 
             TotFlowRate  =  8,  // Normalised total segment flow rate
             WatFlowFract =  9,  // Normalised Water flow rate fraction
