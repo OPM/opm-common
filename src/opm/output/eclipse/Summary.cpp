@@ -1258,6 +1258,27 @@ inline quantity node_pressure(const fn_args& args)
     return { nodePos->second.pressure, measure::pressure };
 }
 
+template <Opm::data::WellBlockAvgPress::Quantity wbp_quantity>
+quantity well_block_average_pressure(const fn_args& args)
+{
+    // Note: This WBP evaluation function is supported only at the well
+    // level.  There is intentionally no loop over args.schedule_wells.
+
+    const quantity zero = { 0.0, measure::pressure };
+
+    if (args.schedule_wells.empty())
+        return zero;
+
+    // No need to exclude status == SHUT here as the WBP quantity is well
+    // defined for shut wells too.
+    auto p = args.wbp.values.find(args.schedule_wells.front()->name());
+    if (p == args.wbp.values.end()) {
+        return zero;
+    }
+
+    return { p->second[wbp_quantity], measure::pressure };
+}
+
 template <Opm::Phase phase>
 inline quantity production_history(const fn_args& args)
 {
@@ -1862,6 +1883,10 @@ static const auto funs = std::unordered_map<std::string, ofun> {
     { "WSTAT", wstat },
     { "WBHP", bhp },
     { "WTHP", thp },
+    { "WBP" , well_block_average_pressure<Opm::data::WellBlockAvgPress::Quantity::WBP>  },
+    { "WBP4", well_block_average_pressure<Opm::data::WellBlockAvgPress::Quantity::WBP4> },
+    { "WBP5", well_block_average_pressure<Opm::data::WellBlockAvgPress::Quantity::WBP5> },
+    { "WBP9", well_block_average_pressure<Opm::data::WellBlockAvgPress::Quantity::WBP9> },
     { "WTPCHEA", temperature< producer >},
     { "WTICHEA", temperature< injector >},
     { "WVPRT", res_vol_production_target },
