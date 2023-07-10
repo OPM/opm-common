@@ -50,6 +50,7 @@
 #include <algorithm>
 #include <array>
 #include <cassert>
+#include <iterator>
 #include <map>
 #include <regex>
 #include <set>
@@ -1882,12 +1883,16 @@ bool SummaryConfig::match(const std::string& keywordPattern) const {
     return false;
 }
 
-SummaryConfig::keyword_list SummaryConfig::keywords(const std::string& keywordPattern) const {
-    keyword_list kw_list;
-    for (const auto& keyword : this->m_keywords) {
-        if (shmatch(keywordPattern, keyword.keyword()))
-            kw_list.push_back(keyword);
-    }
+SummaryConfig::keyword_list
+SummaryConfig::keywords(const std::string& keywordPattern) const
+{
+    auto kw_list = keyword_list{};
+
+    std::copy_if(this->m_keywords.begin(), this->m_keywords.end(),
+                 std::back_inserter(kw_list),
+                 [&keywordPattern](const auto& kw)
+                 { return shmatch(keywordPattern, kw.keyword()); });
+
     return kw_list;
 }
 
