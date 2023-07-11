@@ -572,6 +572,17 @@ BOOST_AUTO_TEST_CASE(well_keywords)
     cfg.ta.makeSubDir( "PATH" );
     cfg.name = "PATH/CASE";
 
+    {
+        using Quantity = data::WellBlockAvgPress::Quantity;
+
+        auto& wbp = cfg.wbp.values["W_1"];
+
+        wbp[Quantity::WBP]  = 123.456*unit::barsa;
+        wbp[Quantity::WBP4] = 123.567*unit::barsa;
+        wbp[Quantity::WBP5] = 123.678*unit::barsa;
+        wbp[Quantity::WBP9] = 123.789*unit::barsa;
+    }
+
     SummaryState st(TimeService::now());
 
     out::Summary writer( cfg.es, cfg.config, cfg.grid, cfg.schedule , cfg.name );
@@ -814,6 +825,14 @@ BOOST_AUTO_TEST_CASE(well_keywords)
     BOOST_CHECK_CLOSE( 0.1, ecl_sum_get_well_var( resp, 1, "W_1", "WBHP" ), 1e-5 );
     BOOST_CHECK_CLOSE( 1.1, ecl_sum_get_well_var( resp, 1, "W_2", "WBHP" ), 1e-5 );
     BOOST_CHECK_CLOSE( 2.1, ecl_sum_get_well_var( resp, 1, "W_3", "WBHP" ), 1e-5 );
+
+    // WBP
+    BOOST_CHECK_CLOSE( 123.456, ecl_sum_get_well_var( resp, 1, "W_1", "WBP"  ), 1e-5 );
+    BOOST_CHECK_CLOSE( 123.567, ecl_sum_get_well_var( resp, 1, "W_1", "WBP4" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 123.678, ecl_sum_get_well_var( resp, 1, "W_1", "WBP5" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 123.789, ecl_sum_get_well_var( resp, 1, "W_1", "WBP9" ), 1e-5 );
+
+    BOOST_CHECK_CLOSE( 0.0, ecl_sum_get_well_var( resp, 1, "W_2", "WBP"  ), 1e-5 );
 
     /* THP */
     BOOST_CHECK_CLOSE( 0.2, ecl_sum_get_well_var( resp, 1, "W_1", "WTHP" ), 1e-5 );
