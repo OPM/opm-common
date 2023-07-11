@@ -43,6 +43,8 @@ public:
     Carfin& getLgr(const std::string& lgrName);
     const Carfin& getLgr(const std::string& lgrName) const;
 
+    void addLgr(const std::string& lgrName);
+
     template<class Serializer>
     void serializeOp(Serializer& serializer)
     {

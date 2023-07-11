@@ -68,4 +68,10 @@ namespace Opm {
         return m_lgrs.get( lgrName );
     }
 
+    void LgrCollection::addLgr(const std::string& lgrName) {
+        Carfin lgr(lgrName);
+        m_lgrs.insert(std::make_pair(lgr.NAME(), lgr)); 
+    }
+    
+
 }

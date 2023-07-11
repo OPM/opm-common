@@ -25,3 +25,22 @@ BOOST_AUTO_TEST_CASE(CreateLgrCollection) {
     BOOST_CHECK(! lgrs.hasLgr("NO-NotThisOne"));
     BOOST_CHECK_THROW( lgrs.getLgr("NO") , std::invalid_argument );
 }
+
+BOOST_AUTO_TEST_CASE(AddLgrsToCollection) {
+    Opm::LgrCollection lgrs;
+
+    lgrs.addLgr("LGR1");
+    BOOST_CHECK_EQUAL( lgrs.size() , 1U );
+    BOOST_CHECK(lgrs.hasLGR("LGR1"));
+
+    const auto& lgr1 = lgrs.getLgr("LGR1");
+    const auto& lgr12 = lgrs.getLgr(0);
+    BOOST_CHECK_EQUAL(lgr1.getName(), lgr12.getName());
+    BOOST_CHECK_EQUAL(lgr1.getName(), "LGR1");
+
+    lgrs.addLgr("LGR2");
+    const auto& lgr2 = lgrs.getFault("LGR2");
+    BOOST_CHECK_EQUAL( lgrs.size() , 2U );
+    BOOST_CHECK(lgrs.hasLgr("LGR2"));
+    BOOST_CHECK_EQUAL( lgr2.getName() , lgrs.getLgr(1).getName());
+}
