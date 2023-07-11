@@ -1060,7 +1060,6 @@ set( keywords
      001_Eclipse300/F/FIELDSEP
      001_Eclipse300/G/GASVISCT
      001_Eclipse300/G/GASWAT
-     001_Eclipse300/G/GCONPROD
      001_Eclipse300/G/GSF
      001_Eclipse300/H/H2STORE
      001_Eclipse300/H/HEATCR
