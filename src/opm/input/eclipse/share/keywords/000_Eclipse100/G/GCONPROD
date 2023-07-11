@@ -64,17 +64,20 @@
     {
       "item": 11,
       "name": "WATER_EXCEED_PROCEDURE",
-      "value_type": "STRING"
+      "value_type": "STRING",
+      "default": "NONE"
     },
     {
       "item": 12,
       "name": "GAS_EXCEED_PROCEDURE",
-      "value_type": "STRING"
+      "value_type": "STRING",
+      "default": "NONE"
     },
     {
       "item": 13,
       "name": "LIQUID_EXCEED_PROCEDURE",
-      "value_type": "STRING"
+      "value_type": "STRING",
+      "default": "NONE"
     },
     {
       "item": 14,
