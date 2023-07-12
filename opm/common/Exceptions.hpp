@@ -66,6 +66,13 @@ public:
         : NumericalProblem(message)
     {}
 };
+class LinearTimeSteppingBreakdown : public NumericalProblem
+{
+public:
+    explicit LinearTimeSteppingBreakdown(const std::string &message)
+        : NumericalProblem(message)
+    {}
+};
 }
 
 #endif // OPM_EXCEPTIONS_HPP
