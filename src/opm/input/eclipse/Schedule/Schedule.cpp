@@ -1511,7 +1511,12 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
     }
 
 
-    SimulatorUpdate Schedule::applyAction(std::size_t reportStep, const Action::ActionX& action, const std::vector<std::string>& matching_wells, const std::unordered_map<std::string, double>& target_wellpi) {
+    SimulatorUpdate
+    Schedule::applyAction(std::size_t reportStep,
+                          const Action::ActionX& action,
+                          const std::vector<std::string>& matching_wells,
+                          const std::unordered_map<std::string, double>& target_wellpi)
+    {
         const std::string prefix = "| ";
         ParseContext parseContext;
         ErrorGuard errors;
@@ -1519,14 +1524,21 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
         ScheduleGrid grid(this->completed_cells);
 
         OpmLog::debug("/----------------------------------------------------------------------");
-        OpmLog::debug(fmt::format("{0}Action {1} triggered. Will add action keywords and\n{0}rerun Schedule section.\n{0}", prefix, action.name()));
+        OpmLog::debug(fmt::format("{0}Action {1} triggered. Will add action "
+                                  "keywords and\n{0}rerun Schedule section.\n{0}",
+                                  prefix, action.name()));
+
         this->snapshots.resize(reportStep + 1);
         auto& input_block = this->m_sched_deck[reportStep];
+
         std::unordered_map<std::string, double> wpimult_global_factor;
         for (const auto& keyword : action) {
             input_block.push_back(keyword);
+
             const auto& location = keyword.location();
-            OpmLog::debug(fmt::format("{}Processing keyword {} from {} line {}", prefix, location.keyword, location.filename, location.lineno));
+            OpmLog::debug(fmt::format("{}Processing keyword {} from {} line {}", prefix,
+                                      location.keyword, location.filename, location.lineno));
+
             this->handleKeyword(reportStep,
                                 input_block,
                                 keyword,
@@ -1539,12 +1551,20 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
                                 &target_wellpi,
                                 &wpimult_global_factor);
         }
+
         this->applyGlobalWPIMULT(wpimult_global_factor);
+
         this->end_report(reportStep);
-        if (!sim_update.affected_wells.empty()) {
-            this->snapshots.back().events().addEvent( ScheduleEvents::ACTIONX_WELL_EVENT );
-            for (const auto& well: sim_update.affected_wells)
-                this->snapshots.back().wellgroup_events().addEvent(well, ScheduleEvents::ACTIONX_WELL_EVENT);
+
+        if (! sim_update.affected_wells.empty()) {
+            this->snapshots.back().events()
+                .addEvent(ScheduleEvents::ACTIONX_WELL_EVENT);
+
+            auto& wgEvents = this->snapshots.back().wellgroup_events();
+
+            for (const auto& well: sim_update.affected_wells) {
+                wgEvents.addEvent(well, ScheduleEvents::ACTIONX_WELL_EVENT);
+            }
         }
 
         if (reportStep < this->m_sched_deck.size() - 1) {
@@ -1553,6 +1573,7 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
                                          parseContext, errors, grid, &target_wellpi,
                                          prefix, log_to_debug);
         }
+
         OpmLog::debug("\\----------------------------------------------------------------------");
 
         return sim_update;
@@ -2324,6 +2345,13 @@ void Schedule::HandlerContext::affected_well(const std::string& well_name)
 {
     if (this->sim_update)
         this->sim_update->affected_wells.insert(well_name);
+}
+
+void Schedule::HandlerContext::record_well_structure_change()
+{
+    if (this->sim_update != nullptr) {
+        this->sim_update->well_structure_changed = true;
+    }
 }
 
 }

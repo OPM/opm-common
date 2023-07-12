@@ -514,11 +514,11 @@ namespace Opm
             const bool actionx_mode;
             const ParseContext& parseContext;
             ErrorGuard& errors;
-            SimulatorUpdate * sim_update;
-            const std::unordered_map<std::string, double> * target_wellpi;
-            std::unordered_map<std::string, double>* wpimult_global_factor;
-            WelSegsSet *welsegs_wells;
-            std::set<std::string>*compsegs_wells;
+            SimulatorUpdate* sim_update{nullptr};
+            const std::unordered_map<std::string, double>* target_wellpi{nullptr};
+            std::unordered_map<std::string, double>* wpimult_global_factor{nullptr};
+            WelSegsSet* welsegs_wells{nullptr};
+            std::set<std::string>* compsegs_wells{nullptr};
             const ScheduleGrid& grid;
 
             /// \param welsegs_wells All wells with a WELSEGS entry for checks.
@@ -531,8 +531,8 @@ namespace Opm
                            bool actionx_mode_,
                            const ParseContext& parseContext_,
                            ErrorGuard& errors_,
-                           SimulatorUpdate * sim_update_,
-                           const std::unordered_map<std::string, double> * target_wellpi_,
+                           SimulatorUpdate* sim_update_,
+                           const std::unordered_map<std::string, double>* target_wellpi_,
                            std::unordered_map<std::string, double>* wpimult_global_factor_,
                            WelSegsSet* welsegs_wells_,
                            std::set<std::string>* compsegs_wells_)
@@ -552,6 +552,7 @@ namespace Opm
             {}
 
             void affected_well(const std::string& well_name);
+            void record_well_structure_change();
 
             /// \brief Mark that the well occured in a  WELSEGS keyword
             void welsegs_handled(const std::string& well_name)
