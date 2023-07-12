@@ -500,6 +500,9 @@ Group::GroupProductionProperties Group::GroupProductionProperties::serialization
     result.name = "Group123";
     result.cmode = ProductionCMode::PRBL;
     result.exceed_action = ExceedAction::WELL;
+    result.water_exceed_action = ExceedAction::WELL;
+    result.gas_exceed_action = ExceedAction::WELL;
+    result.liquid_exceed_action = ExceedAction::WELL;
     result.oil_target = UDAValue(1.0);
     result.water_target = UDAValue(2.0);
     result.gas_target = UDAValue(3.0);
@@ -518,6 +521,9 @@ bool Group::GroupProductionProperties::operator==(const GroupProductionPropertie
         this->name                    == other.name &&
         this->cmode                   == other.cmode &&
         this->exceed_action           == other.exceed_action &&
+        this->water_exceed_action     == other.water_exceed_action &&
+        this->gas_exceed_action       == other.gas_exceed_action &&
+        this->liquid_exceed_action    == other.liquid_exceed_action &&
         this->oil_target              == other.oil_target &&
         this->water_target            == other.water_target &&
         this->gas_target              == other.gas_target &&
@@ -761,6 +767,9 @@ Group::ProductionControls Group::productionControls(const SummaryState& st) cons
 
     pc.cmode = this->production_properties.cmode;
     pc.exceed_action = this->production_properties.exceed_action;
+    pc.water_exceed_action = this->production_properties.water_exceed_action;
+    pc.gas_exceed_action = this->production_properties.gas_exceed_action;
+    pc.liquid_exceed_action = this->production_properties.liquid_exceed_action;
     pc.oil_target = UDA::eval_group_uda(this->production_properties.oil_target, this->m_name, st, this->udq_undefined);
     pc.water_target = UDA::eval_group_uda(this->production_properties.water_target, this->m_name, st, this->udq_undefined);
     pc.gas_target = UDA::eval_group_uda(this->production_properties.gas_target, this->m_name, st, this->udq_undefined);

@@ -195,6 +195,9 @@ struct GroupProductionProperties {
     std::string name;
     ProductionCMode cmode = ProductionCMode::NONE;
     ExceedAction exceed_action = ExceedAction::NONE;
+    ExceedAction water_exceed_action = ExceedAction::NONE;
+    ExceedAction gas_exceed_action = ExceedAction::NONE;
+    ExceedAction liquid_exceed_action = ExceedAction::NONE;
     UDAValue oil_target;
     UDAValue water_target;
     UDAValue gas_target;
@@ -233,6 +236,9 @@ struct GroupProductionProperties {
 struct ProductionControls {
     ProductionCMode cmode;
     ExceedAction exceed_action;
+    ExceedAction water_exceed_action;
+    ExceedAction gas_exceed_action;
+    ExceedAction liquid_exceed_action;
     double oil_target;
     double water_target;
     double gas_target;

@@ -512,6 +512,9 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
 
             const Group::ProductionCMode controlMode = Group::ProductionCModeFromString(record.getItem("CONTROL_MODE").getTrimmedString(0));
             const Group::ExceedAction exceedAction = Group::ExceedActionFromString(record.getItem("EXCEED_PROC").getTrimmedString(0));
+            const Group::ExceedAction waterExceedAction = Group::ExceedActionFromString(record.getItem("WATER_EXCEED_PROCEDURE").getTrimmedString(0));
+            const Group::ExceedAction gasExceedAction = Group::ExceedActionFromString(record.getItem("GAS_EXCEED_PROCEDURE").getTrimmedString(0));
+            const Group::ExceedAction liquidExceedAction = Group::ExceedActionFromString(record.getItem("LIQUID_EXCEED_PROCEDURE").getTrimmedString(0));
 
             const bool respond_to_parent = DeckItem::to_bool(record.getItem("RESPOND_TO_PARENT").getTrimmedString(0));
 
@@ -580,68 +583,38 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
                     production.available_group_control = availableForGroupControl;
 
                     production.exceed_action = exceedAction;
+                    production.water_exceed_action = waterExceedAction;
+                    production.liquid_exceed_action = liquidExceedAction;
+                    production.gas_exceed_action = gasExceedAction;
+
                     production.production_controls = 0;
                     // GCONPROD
                     // 'G1' 'ORAT' 1000 100 200 300 NONE =>  constraints 100,200,300 should be ignored
                     //
                     // GCONPROD
                     // 'G1' 'ORAT' 1000 100 200 300 RATE =>  constraints 100,200,300 should be honored
-                    if (production.cmode == Group::ProductionCMode::ORAT){
-                        production.production_controls += static_cast<int>(Group::ProductionCMode::ORAT);
-                        if (exceedAction == Group::ExceedAction::RATE) {
-                            if (!apply_default_gas_target)
-                                 production.production_controls += static_cast<int>(Group::ProductionCMode::GRAT);
-                            if (!apply_default_water_target)
-                                 production.production_controls += static_cast<int>(Group::ProductionCMode::WRAT);
-                            if (!apply_default_liquid_target)
-                                 production.production_controls += static_cast<int>(Group::ProductionCMode::LRAT);
-                        }
-                    }
-                    else if (production.cmode == Group::ProductionCMode::GRAT){
-                        production.production_controls += static_cast<int>(Group::ProductionCMode::GRAT);
-                        if (exceedAction == Group::ExceedAction::RATE) {
-                            if (!apply_default_oil_target)
-                                 production.production_controls += static_cast<int>(Group::ProductionCMode::ORAT);
-                            if (!apply_default_water_target)
-                                 production.production_controls += static_cast<int>(Group::ProductionCMode::WRAT);
-                            if (!apply_default_liquid_target)
-                                 production.production_controls += static_cast<int>(Group::ProductionCMode::LRAT);
-                        }
-                    }
-                    else if (production.cmode == Group::ProductionCMode::WRAT){
-                        production.production_controls += static_cast<int>(Group::ProductionCMode::WRAT);
-                        if (exceedAction == Group::ExceedAction::RATE) {
-                            if (!apply_default_oil_target)
-                                 production.production_controls += static_cast<int>(Group::ProductionCMode::ORAT);
-                            if (!apply_default_gas_target)
-                                 production.production_controls += static_cast<int>(Group::ProductionCMode::GRAT);
-                            if (!apply_default_liquid_target)
-                                 production.production_controls += static_cast<int>(Group::ProductionCMode::LRAT);
-                        }
-                    }
-                    else if (production.cmode == Group::ProductionCMode::LRAT){
-                        production.production_controls += static_cast<int>(Group::ProductionCMode::LRAT);
-                        if (exceedAction == Group::ExceedAction::RATE) {
-                            if (!apply_default_oil_target)
-                                 production.production_controls += static_cast<int>(Group::ProductionCMode::ORAT);
-                            if (!apply_default_gas_target)
-                                 production.production_controls += static_cast<int>(Group::ProductionCMode::GRAT);
-                            if (!apply_default_water_target)
-                                 production.production_controls += static_cast<int>(Group::ProductionCMode::WRAT);
-                        }
-                    }
-                    else {
-                        if (exceedAction == Group::ExceedAction::RATE) {
-                            if (!apply_default_oil_target)
-                                 production.production_controls += static_cast<int>(Group::ProductionCMode::ORAT);
-                            if (!apply_default_water_target)
-                                 production.production_controls += static_cast<int>(Group::ProductionCMode::WRAT);
-                            if (!apply_default_gas_target)
-                                 production.production_controls += static_cast<int>(Group::ProductionCMode::GRAT);
-                            if (!apply_default_liquid_target)
-                                 production.production_controls += static_cast<int>(Group::ProductionCMode::LRAT);
-                        }
-                    }
+                     if (production.cmode == Group::ProductionCMode::ORAT ||
+                         (exceedAction == Group::ExceedAction::RATE && !apply_default_oil_target)) {
+                         production.production_controls += static_cast<int>(Group::ProductionCMode::ORAT);
+                     }
+                     if (production.cmode == Group::ProductionCMode::WRAT ||
+                              ((exceedAction == Group::ExceedAction::RATE ||
+                                waterExceedAction == Group::ExceedAction::RATE)
+                                && !apply_default_water_target)) {
+                                production.production_controls += static_cast<int>(Group::ProductionCMode::WRAT);
+                     }
+                     if (production.cmode == Group::ProductionCMode::GRAT ||
+                              ((exceedAction == Group::ExceedAction::RATE ||
+                                gasExceedAction == Group::ExceedAction::RATE)
+                                && !apply_default_gas_target)) {
+                                production.production_controls += static_cast<int>(Group::ProductionCMode::GRAT);
+                     }
+                     if (production.cmode == Group::ProductionCMode::LRAT ||
+                              ((exceedAction == Group::ExceedAction::RATE ||
+                                liquidExceedAction == Group::ExceedAction::RATE)
+                                && !apply_default_liquid_target)) {
+                                production.production_controls += static_cast<int>(Group::ProductionCMode::LRAT);
+                     }
 
                     if (!apply_default_resv_target)
                         production.production_controls += static_cast<int>(Group::ProductionCMode::RESV);
