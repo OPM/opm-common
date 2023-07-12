@@ -220,6 +220,9 @@ struct GroupProductionProperties {
         serializer(name);
         serializer(cmode);
         serializer(exceed_action);
+        serializer(water_exceed_action);
+        serializer(gas_exceed_action);
+        serializer(liquid_exceed_action);
         serializer(oil_target);
         serializer(water_target);
         serializer(gas_target);
