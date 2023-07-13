@@ -598,22 +598,22 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
                          production.production_controls += static_cast<int>(Group::ProductionCMode::ORAT);
                      }
                      if (production.cmode == Group::ProductionCMode::WRAT ||
-                              ((exceedAction == Group::ExceedAction::RATE ||
-                                waterExceedAction == Group::ExceedAction::RATE)
-                                && !apply_default_water_target)) {
-                                production.production_controls += static_cast<int>(Group::ProductionCMode::WRAT);
+                         ((exceedAction == Group::ExceedAction::RATE ||
+                         waterExceedAction == Group::ExceedAction::RATE)
+                         && !apply_default_water_target)) {
+                         production.production_controls += static_cast<int>(Group::ProductionCMode::WRAT);
                      }
                      if (production.cmode == Group::ProductionCMode::GRAT ||
-                              ((exceedAction == Group::ExceedAction::RATE ||
-                                gasExceedAction == Group::ExceedAction::RATE)
-                                && !apply_default_gas_target)) {
-                                production.production_controls += static_cast<int>(Group::ProductionCMode::GRAT);
+                         ((exceedAction == Group::ExceedAction::RATE ||
+                         gasExceedAction == Group::ExceedAction::RATE)
+                         && !apply_default_gas_target)) {
+                         production.production_controls += static_cast<int>(Group::ProductionCMode::GRAT);
                      }
                      if (production.cmode == Group::ProductionCMode::LRAT ||
-                              ((exceedAction == Group::ExceedAction::RATE ||
-                                liquidExceedAction == Group::ExceedAction::RATE)
-                                && !apply_default_liquid_target)) {
-                                production.production_controls += static_cast<int>(Group::ProductionCMode::LRAT);
+                        ((exceedAction == Group::ExceedAction::RATE ||
+                        liquidExceedAction == Group::ExceedAction::RATE)
+                        && !apply_default_liquid_target)) {
+                        production.production_controls += static_cast<int>(Group::ProductionCMode::LRAT);
                      }
 
                     if (!apply_default_resv_target)
