@@ -213,6 +213,10 @@ namespace {
             well.updateRefDepth();
             this->snapshots.back().wells.update( std::move(well));
         }
+
+        if (! wells.empty()) {
+            handlerContext.record_well_structure_change();
+        }
     }
 
     void Schedule::handleWELTRAJ(HandlerContext& handlerContext)  {
@@ -226,6 +230,7 @@ namespace {
                 connections->loadWELTRAJ(record, handlerContext.grid, name, handlerContext.keyword.location());
                 if (well2.updateConnections(connections, handlerContext.grid)) {
                     this->snapshots.back().wells.update( well2 );
+                    handlerContext.record_well_structure_change();
                 }
                 this->snapshots.back().wellgroup_events().addEvent( name, ScheduleEvents::COMPLETION_CHANGE);
                 const auto& md = connections->getMD();
@@ -279,6 +284,10 @@ namespace {
             well.updateRefDepth();
             this->snapshots.back().wells.update( std::move(well));
         }
+
+        if (! wells.empty()) {
+            handlerContext.record_well_structure_change();
+        }
     }
 
     void Schedule::handleCOMPLUMP(HandlerContext& handlerContext) {
@@ -288,8 +297,11 @@ namespace {
 
             for (const auto& wname : well_names) {
                 auto well = this->snapshots.back().wells.get(wname);
-                if (well.handleCOMPLUMP(record))
+                if (well.handleCOMPLUMP(record)) {
                     this->snapshots.back().wells.update( std::move(well) );
+
+                    handlerContext.record_well_structure_change();
+                }
             }
         }
     }
@@ -330,7 +342,10 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
         }
 
         if (well.handleCOMPSEGS(handlerContext.keyword, handlerContext.grid, handlerContext.parseContext, handlerContext.errors))
+        {
             this->snapshots.back().wells.update( std::move(well) );
+            handlerContext.record_well_structure_change();
+        }
 
         handlerContext.compsegs_handled(wname);
     }
@@ -1411,8 +1426,10 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
                     const auto did_update_well_status =
                         this->updateWellStatus(wname, currentStep, new_well_status);
 
-                    if (handlerContext.sim_update) {
-                        handlerContext.sim_update->affected_wells.insert(wname);
+                    handlerContext.affected_well(wname);
+
+                    if (did_update_well_status) {
+                        handlerContext.record_well_structure_change();
                     }
 
                     if (did_update_well_status && (new_well_status == open)) {
@@ -1451,10 +1468,10 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
                     this->snapshots[currentStep].wells.update( std::move(well) );
                 }
 
-                auto* sim_update = handlerContext.sim_update;
-                if (sim_update)
-                    sim_update->affected_wells.insert(wname);
-                this->snapshots.back().events().addEvent( ScheduleEvents::COMPLETION_CHANGE);
+                handlerContext.affected_well(wname);
+                handlerContext.record_well_structure_change();
+
+                this->snapshots.back().events().addEvent(ScheduleEvents::COMPLETION_CHANGE);
             }
         }
     }
@@ -1537,8 +1554,10 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
         const auto& wname = record1.getItem("WELL").getTrimmedString(0);
         if (this->hasWell(wname, handlerContext.currentStep)) {
             auto well = this->snapshots.back().wells.get(wname);
-            if (well.handleWELSEGS(handlerContext.keyword))
+            if (well.handleWELSEGS(handlerContext.keyword)) {
                 this->snapshots.back().wells.update( std::move(well) );
+                handlerContext.record_well_structure_change();
+            }
             handlerContext.welsegs_handled(wname);
         } else {
             const auto& location = handlerContext.keyword.location();
@@ -1644,6 +1663,10 @@ Well{0} entered with 'FIELD' parent group:
                                                      msg_fmt,
                                                      handlerContext.keyword.location(),
                                                      handlerContext.errors );
+        }
+
+        if (! handlerContext.keyword.empty()) {
+            handlerContext.record_well_structure_change();
         }
     }
 

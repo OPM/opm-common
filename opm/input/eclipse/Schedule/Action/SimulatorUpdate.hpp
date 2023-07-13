@@ -25,23 +25,27 @@
 
 namespace Opm {
 
-/*
-  This struct is used to communicate back from the Schdule::applyAction() what
-  needs to be updated in the simulator when execution is returned to the
-  simulator code.
-*/
+/// This struct is used to communicate back from the Schedule::applyAction()
+/// what needs to be updated in the simulator when execution is returned to
+/// the simulator code.
 
-
-struct SimulatorUpdate {
-    // These wells have been affected by the ACTIONX and the simulator needs to
+struct SimulatorUpdate
+{
+    // Wells affected by ACTIONX and for which the simulator needs to
     // reapply rates and state from the newly updated Schedule object.
     std::unordered_set<std::string> affected_wells;
 
-    // If one of the transmissibility multiplier keywords has been invoked as an
-    // ACTIONX keyword the simulator needs to recalculate the transmissibility.
+    // If one of the transmissibility multiplier keywords has been invoked
+    // as an ACTIONX keyword the simulator needs to recalculate the
+    // transmissibility.
     bool tran_update{false};
+
+    /// Whether or not well structure changed in processing an ACTIONX
+    /// block.  Typically because of a keyword like WELSPECS, COMPDAT,
+    /// and/or WELOPEN.
+    bool well_structure_changed{false};
 };
 
-}
+} // namespace Opm
 
-#endif
+#endif // SIMULATOR_UPDATE_HPP
