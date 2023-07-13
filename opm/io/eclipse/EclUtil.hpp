@@ -25,6 +25,7 @@
 #include <tuple>
 #include <vector>
 #include <functional>
+#include <cstdint>
 
 namespace Opm { namespace EclIO {
 

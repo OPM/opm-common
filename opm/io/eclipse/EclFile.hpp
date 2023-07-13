@@ -28,6 +28,7 @@
 #include <tuple>
 #include <unordered_map>
 #include <vector>
+#include <cstdint>
 
 namespace Opm { namespace EclIO {
 
