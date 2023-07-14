@@ -412,7 +412,7 @@ void productionGroup(const Opm::Schedule&     sched,
     Other reduction options are currently not covered in the code
     */
 
-    const auto& p_exceed_act = production_controls.exceed_action;
+    const auto& p_exceed_act = production_controls.group_limit_action.allRates;
     switch (deck_cmode) {
     case Opm::Group::ProductionCMode::NONE:
         iGrp[nwgmax + IGroup::ExceedAction] = (p_exceed_act == Opm::Group::ExceedAction::NONE) ? 0 : 4;

@@ -526,7 +526,11 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
                 this->invalidNamePattern(groupNamePattern, handlerContext);
 
             const Group::ProductionCMode controlMode = Group::ProductionCModeFromString(record.getItem("CONTROL_MODE").getTrimmedString(0));
-            const Group::ExceedAction exceedAction = Group::ExceedActionFromString(record.getItem("EXCEED_PROC").getTrimmedString(0));
+            Group::GroupLimitAction groupLimitAction;
+            groupLimitAction.allRates = Group::ExceedActionFromString(record.getItem("EXCEED_PROC").getTrimmedString(0));
+            groupLimitAction.water = Group::ExceedActionFromString(record.getItem("WATER_EXCEED_PROCEDURE").getTrimmedString(0));
+            groupLimitAction.gas = Group::ExceedActionFromString(record.getItem("GAS_EXCEED_PROCEDURE").getTrimmedString(0));
+            groupLimitAction.liquid = Group::ExceedActionFromString(record.getItem("LIQUID_EXCEED_PROCEDURE").getTrimmedString(0));
 
             const bool respond_to_parent = DeckItem::to_bool(record.getItem("RESPOND_TO_PARENT").getTrimmedString(0));
 
@@ -593,73 +597,40 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
                     production.guide_rate_def = guide_rate_def;
                     production.resv_target = resv_target;
                     production.available_group_control = availableForGroupControl;
+                    production.group_limit_action = groupLimitAction;
 
-                    production.exceed_action = exceedAction;
                     production.production_controls = 0;
                     // GCONPROD
                     // 'G1' 'ORAT' 1000 100 200 300 NONE =>  constraints 100,200,300 should be ignored
                     //
                     // GCONPROD
                     // 'G1' 'ORAT' 1000 100 200 300 RATE =>  constraints 100,200,300 should be honored
-                    if (production.cmode == Group::ProductionCMode::ORAT){
-                        production.production_controls += static_cast<int>(Group::ProductionCMode::ORAT);
-                        if (exceedAction == Group::ExceedAction::RATE) {
-                            if (!apply_default_gas_target)
-                                 production.production_controls += static_cast<int>(Group::ProductionCMode::GRAT);
-                            if (!apply_default_water_target)
-                                 production.production_controls += static_cast<int>(Group::ProductionCMode::WRAT);
-                            if (!apply_default_liquid_target)
-                                 production.production_controls += static_cast<int>(Group::ProductionCMode::LRAT);
-                        }
+                    if (production.cmode == Group::ProductionCMode::ORAT ||
+                        (groupLimitAction.allRates == Group::ExceedAction::RATE &&
+                        !apply_default_oil_target)) {
+                        production.production_controls |= static_cast<int>(Group::ProductionCMode::ORAT);
                     }
-                    else if (production.cmode == Group::ProductionCMode::GRAT){
-                        production.production_controls += static_cast<int>(Group::ProductionCMode::GRAT);
-                        if (exceedAction == Group::ExceedAction::RATE) {
-                            if (!apply_default_oil_target)
-                                 production.production_controls += static_cast<int>(Group::ProductionCMode::ORAT);
-                            if (!apply_default_water_target)
-                                 production.production_controls += static_cast<int>(Group::ProductionCMode::WRAT);
-                            if (!apply_default_liquid_target)
-                                 production.production_controls += static_cast<int>(Group::ProductionCMode::LRAT);
-                        }
+                    if (production.cmode == Group::ProductionCMode::WRAT ||
+                        ((groupLimitAction.allRates == Group::ExceedAction::RATE ||
+                        groupLimitAction.water == Group::ExceedAction::RATE) &&
+                        !apply_default_water_target)) {
+                        production.production_controls |= static_cast<int>(Group::ProductionCMode::WRAT);
                     }
-                    else if (production.cmode == Group::ProductionCMode::WRAT){
-                        production.production_controls += static_cast<int>(Group::ProductionCMode::WRAT);
-                        if (exceedAction == Group::ExceedAction::RATE) {
-                            if (!apply_default_oil_target)
-                                 production.production_controls += static_cast<int>(Group::ProductionCMode::ORAT);
-                            if (!apply_default_gas_target)
-                                 production.production_controls += static_cast<int>(Group::ProductionCMode::GRAT);
-                            if (!apply_default_liquid_target)
-                                 production.production_controls += static_cast<int>(Group::ProductionCMode::LRAT);
-                        }
+                    if (production.cmode == Group::ProductionCMode::GRAT ||
+                        ((groupLimitAction.allRates  == Group::ExceedAction::RATE ||
+                        groupLimitAction.gas == Group::ExceedAction::RATE) &&
+                        !apply_default_gas_target)) {
+                        production.production_controls |= static_cast<int>(Group::ProductionCMode::GRAT);
                     }
-                    else if (production.cmode == Group::ProductionCMode::LRAT){
-                        production.production_controls += static_cast<int>(Group::ProductionCMode::LRAT);
-                        if (exceedAction == Group::ExceedAction::RATE) {
-                            if (!apply_default_oil_target)
-                                 production.production_controls += static_cast<int>(Group::ProductionCMode::ORAT);
-                            if (!apply_default_gas_target)
-                                 production.production_controls += static_cast<int>(Group::ProductionCMode::GRAT);
-                            if (!apply_default_water_target)
-                                 production.production_controls += static_cast<int>(Group::ProductionCMode::WRAT);
-                        }
-                    }
-                    else {
-                        if (exceedAction == Group::ExceedAction::RATE) {
-                            if (!apply_default_oil_target)
-                                 production.production_controls += static_cast<int>(Group::ProductionCMode::ORAT);
-                            if (!apply_default_water_target)
-                                 production.production_controls += static_cast<int>(Group::ProductionCMode::WRAT);
-                            if (!apply_default_gas_target)
-                                 production.production_controls += static_cast<int>(Group::ProductionCMode::GRAT);
-                            if (!apply_default_liquid_target)
-                                 production.production_controls += static_cast<int>(Group::ProductionCMode::LRAT);
-                        }
+                    if (production.cmode == Group::ProductionCMode::LRAT ||
+                        ((groupLimitAction.allRates == Group::ExceedAction::RATE ||
+                        groupLimitAction.liquid == Group::ExceedAction::RATE) &&
+                        !apply_default_liquid_target)) {
+                        production.production_controls |= static_cast<int>(Group::ProductionCMode::LRAT);
                     }
 
                     if (!apply_default_resv_target)
-                        production.production_controls += static_cast<int>(Group::ProductionCMode::RESV);
+                        production.production_controls |= static_cast<int>(Group::ProductionCMode::RESV);
 
                     if (new_group.updateProduction(production)) {
                         auto new_config = this->snapshots.back().guide_rate();
