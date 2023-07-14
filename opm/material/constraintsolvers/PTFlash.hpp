@@ -928,7 +928,7 @@ protected:
             secondary_z[idx] = SecondaryEval(Opm::getValue(z[idx]), idx + 1);
         }
         // set up the mole fractions
-        for (unsigned idx = 0; idx < num_equations; ++idx) {
+        for (unsigned idx = 0; idx < numComponents; ++idx) {
             // TODO: double checking that fluid_state_scalar returns a scalar here
             const auto x_i = fluid_state_scalar.moleFraction(oilPhaseIdx, idx);
             secondary_fluid_state.setMoleFraction(FluidSystem::oilPhaseIdx, idx, x_i);
