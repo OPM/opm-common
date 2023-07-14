@@ -263,7 +263,7 @@ BOOST_AUTO_TEST_CASE(createDeckWithGCONPROD) {
         /
 
         GCONPROD
-            'G1' 'ORAT' 10000 3* 'RATE' /
+            'G1' 'ORAT' 10000 3* 'RATE' 3* 'RATE' 'NONE' 'RATE'/
             'G2' 'RESV' 10000 3* 'CON' /
             'G3' 'ORAT' 10000 3*  1* /
         /)";
@@ -279,11 +279,13 @@ BOOST_AUTO_TEST_CASE(createDeckWithGCONPROD) {
     auto ctrl2 = group2.productionControls(st);
     auto ctrl3 = group3.productionControls(st);
 
-    BOOST_CHECK(ctrl1.exceed_action == Group::ExceedAction::RATE);
-    BOOST_CHECK(ctrl2.exceed_action == Group::ExceedAction::CON);
-    BOOST_CHECK(ctrl3.exceed_action == Group::ExceedAction::NONE);
+    BOOST_CHECK(ctrl1.group_limit_action.allRates == Group::ExceedAction::RATE);
+    BOOST_CHECK(ctrl1.group_limit_action.water == Group::ExceedAction::RATE);
+    BOOST_CHECK(ctrl1.group_limit_action.gas == Group::ExceedAction::NONE);
+    BOOST_CHECK(ctrl1.group_limit_action.liquid == Group::ExceedAction::RATE);
+    BOOST_CHECK(ctrl2.group_limit_action.allRates == Group::ExceedAction::CON);
+    BOOST_CHECK(ctrl3.group_limit_action.allRates == Group::ExceedAction::NONE);
 }
-
 
 BOOST_AUTO_TEST_CASE(TESTGuideRateModel) {
     Opm::GuideRateModel grc_default;
