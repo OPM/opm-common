@@ -174,6 +174,31 @@ struct GroupInjectionProperties {
     }
 };
 
+struct GroupLimitAction
+{
+    ExceedAction allRates{ExceedAction::NONE};
+    ExceedAction water{ExceedAction::NONE};
+    ExceedAction gas{ExceedAction::NONE};
+    ExceedAction liquid{ExceedAction::NONE};
+
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(allRates);
+        serializer(water);
+        serializer(gas);
+        serializer(liquid); 
+    }
+
+    bool operator==(const GroupLimitAction& other) const
+    {
+        return (this->allRates == other.allRates)
+            && (this->water == other.water)
+            && (this->gas == other.gas)
+            && (this->liquid == other.liquid);
+    }
+};
+
 struct InjectionControls {
     Phase phase;
     InjectionCMode cmode;
@@ -194,10 +219,7 @@ struct GroupProductionProperties {
 
     std::string name;
     ProductionCMode cmode = ProductionCMode::NONE;
-    ExceedAction exceed_action = ExceedAction::NONE;
-    ExceedAction water_exceed_action = ExceedAction::NONE;
-    ExceedAction gas_exceed_action = ExceedAction::NONE;
-    ExceedAction liquid_exceed_action = ExceedAction::NONE;
+    GroupLimitAction group_limit_action;
     UDAValue oil_target;
     UDAValue water_target;
     UDAValue gas_target;
@@ -219,10 +241,7 @@ struct GroupProductionProperties {
     {
         serializer(name);
         serializer(cmode);
-        serializer(exceed_action);
-        serializer(water_exceed_action);
-        serializer(gas_exceed_action);
-        serializer(liquid_exceed_action);
+        serializer(group_limit_action);
         serializer(oil_target);
         serializer(water_target);
         serializer(gas_target);
@@ -238,10 +257,7 @@ struct GroupProductionProperties {
 
 struct ProductionControls {
     ProductionCMode cmode;
-    ExceedAction exceed_action;
-    ExceedAction water_exceed_action;
-    ExceedAction gas_exceed_action;
-    ExceedAction liquid_exceed_action;
+    GroupLimitAction group_limit_action;
     double oil_target;
     double water_target;
     double gas_target;
