@@ -593,29 +593,29 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
                     if (production.cmode == Group::ProductionCMode::ORAT ||
                         (groupLimitAction.allRates == Group::ExceedAction::RATE &&
                         !apply_default_oil_target)) {
-                        production.production_controls += static_cast<int>(Group::ProductionCMode::ORAT);
+                        production.production_controls |= static_cast<int>(Group::ProductionCMode::ORAT);
                     }
                     if (production.cmode == Group::ProductionCMode::WRAT ||
                         ((groupLimitAction.allRates == Group::ExceedAction::RATE ||
                         groupLimitAction.water == Group::ExceedAction::RATE) &&
                         !apply_default_water_target)) {
-                        production.production_controls += static_cast<int>(Group::ProductionCMode::WRAT);
+                        production.production_controls |= static_cast<int>(Group::ProductionCMode::WRAT);
                     }
                     if (production.cmode == Group::ProductionCMode::GRAT ||
                         ((groupLimitAction.allRates  == Group::ExceedAction::RATE ||
                         groupLimitAction.gas == Group::ExceedAction::RATE) &&
                         !apply_default_gas_target)) {
-                        production.production_controls += static_cast<int>(Group::ProductionCMode::GRAT);
+                        production.production_controls |= static_cast<int>(Group::ProductionCMode::GRAT);
                     }
                     if (production.cmode == Group::ProductionCMode::LRAT ||
                         ((groupLimitAction.allRates == Group::ExceedAction::RATE ||
                         groupLimitAction.liquid == Group::ExceedAction::RATE) &&
                         !apply_default_liquid_target)) {
-                        production.production_controls += static_cast<int>(Group::ProductionCMode::LRAT);
+                        production.production_controls |= static_cast<int>(Group::ProductionCMode::LRAT);
                     }
 
                     if (!apply_default_resv_target)
-                        production.production_controls += static_cast<int>(Group::ProductionCMode::RESV);
+                        production.production_controls |= static_cast<int>(Group::ProductionCMode::RESV);
 
                     if (new_group.updateProduction(production)) {
                         auto new_config = this->snapshots.back().guide_rate();
