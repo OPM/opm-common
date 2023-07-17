@@ -127,7 +127,6 @@ namespace Opm {
         , m_inputNnc(          m_inputGrid, deck)
         , m_gridDims(          deck )
         , field_props(         deck, m_runspec.phases(), m_inputGrid, m_tables)
-        , m_lgrs(              deck)
         , m_simulationConfig(  m_eclipseConfig.init().restartRequested(), deck, field_props)
         , aquifer_config(      m_tables, m_inputGrid, deck, field_props)
         , m_transMult(         GridDims(deck), deck, field_props)
@@ -141,6 +140,7 @@ namespace Opm {
         this->conveyNumericalAquiferEffects();
         this->m_inputGrid.resetACTNUM(this->field_props.actnum());
         this->field_props.reset_actnum(this->getInputGrid().getACTNUM());
+        this->initLgrs(deck);
         this->aquifer_config.load_connections(deck, this->getInputGrid());
 
         this->applyMULTXYZ();
@@ -273,6 +273,17 @@ namespace Opm {
     bool EclipseState::hasInputNNC() const {
         return !m_inputNnc.input().empty();
     }
+
+    void EclipseState::initLgrs(const Deck& deck) {
+        if (!DeckSection::hasGRID(deck))
+            return;
+
+        const GRIDSection gridSection ( deck );
+
+        m_lgrs = LgrCollection(gridSection, m_inputGrid);
+
+    }
+
 
     std::string EclipseState::getTitle() const {
         return m_title;

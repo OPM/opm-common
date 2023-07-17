@@ -21,6 +21,7 @@
 #include <opm/input/eclipse/EclipseState/Util/OrderedMap.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/CarfinManager.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/Carfin.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 
 namespace Opm {
 
@@ -32,7 +33,7 @@ namespace Opm {
 class LgrCollection {
 public:
     LgrCollection();
-    LgrCollection(const GRIDSection& gridSection, const GridDims& gridDims);
+    LgrCollection(const GRIDSection& gridSection, const EclipseGrid& grid);
 
    static LgrCollection serializationTestObject();
 
@@ -43,7 +44,7 @@ public:
     Carfin& getLgr(const std::string& lgrName);
     const Carfin& getLgr(const std::string& lgrName) const;
 
-    void addLgr(const std::string& lgrName);
+    void addLgr(const EclipseGrid& grid, const DeckRecord& lgrRecord);
 
     template<class Serializer>
     void serializeOp(Serializer& serializer)

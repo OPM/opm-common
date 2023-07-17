@@ -17,6 +17,7 @@
 #include <opm/common/OpmLog/OpmLog.hpp>
 #include <opm/input/eclipse/Deck/DeckRecord.hpp>
 #include <opm/input/eclipse/Deck/DeckSection.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/GridDims.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/LgrCollection.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/CarfinManager.hpp>
@@ -35,8 +36,7 @@ namespace Opm {
     TODO: Collect also lgrs from RADFIN blocks...
      */
 
-    LgrCollection::LgrCollection(const GRIDSection& gridSection,
-                                     const GridDims& grid) {
+    LgrCollection::LgrCollection(const GRIDSection& gridSection, const EclipseGrid& grid) {
         const auto& lgrKeywords = gridSection.getKeywordList<ParserKeywords::CARFIN>();
 
         for (auto keyword_iter = lgrKeywords.begin(); keyword_iter != lgrKeywords.end(); ++keyword_iter) {
@@ -45,9 +45,8 @@ namespace Opm {
 
             for (auto iter = lgrsKeyword->begin(); iter != lgrsKeyword->end(); ++iter) {
                 const auto& lgrRecord = *iter;
-                const std::string& lgrName = lgrRecord.getItem(0).get< std::string >(0);
-
-                //addLgr(lgrName);
+                
+                addLgr(grid, lgrRecord);
             }
         }
     }
@@ -68,10 +67,17 @@ namespace Opm {
         return m_lgrs.get( lgrName );
     }
 
-    void LgrCollection::addLgr(const std::string& lgrName) {
-        Carfin lgr(lgrName);
-        m_lgrs.insert(std::make_pair(lgr.NAME(), lgr)); 
+    void LgrCollection::addLgr(const EclipseGrid& grid, const DeckRecord&  lgrRecord) {
+       Carfin lgr(grid,
+            [&grid](const std::size_t global_index)
+            {
+                return grid.cellActive(global_index);
+            },
+            [&grid](const std::size_t global_index)
+            {
+                return grid.activeIndex(global_index);
+            });
+       lgr.update(lgrRecord);    
+       m_lgrs.insert(std::make_pair(lgr.NAME(), lgr));
     }
-    
-
 }
