@@ -57,7 +57,7 @@ public:
       char_array.clear();
     }
 
-    using EclEntry = std::tuple<std::string, eclArrType, int64_t>;
+    using EclEntry = std::tuple<std::string, eclArrType, std::int64_t>;
     std::vector<EclEntry> getList() const;
 
     const std::vector<int>& getElementSizeList() const { return array_element_size; }
@@ -87,10 +87,10 @@ protected:
 
     std::vector<std::string> array_name;
     std::vector<eclArrType> array_type;
-    std::vector<int64_t> array_size;
+    std::vector<std::int64_t> array_size;
     std::vector<int> array_element_size;
 
-    std::vector<uint64_t> ifStreamPos;
+    std::vector<std::uint64_t> ifStreamPos;
 
     std::map<std::string, int> array_index;
 
@@ -106,7 +106,7 @@ private:
     std::vector<bool> arrayLoaded;
 
     void loadBinaryArray(std::fstream& fileH, std::size_t arrIndex);
-    void loadFormattedArray(const std::string& fileStr, std::size_t arrIndex, int64_t fromPos);
+    void loadFormattedArray(const std::string& fileStr, std::size_t arrIndex, std::int64_t fromPos);
     void load(bool preload);
 
     std::vector<unsigned int> get_bin_logi_raw_values(int arrIndex) const;

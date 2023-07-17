@@ -50,7 +50,7 @@ void EclFile::load(bool preload) {
     while (!isEOF(&fileH)) {
         std::string arrName(8,' ');
         eclArrType arrType;
-        int64_t num;
+        std::int64_t num;
         int sizeOfElement;
 
         if (formatted) {
@@ -66,17 +66,17 @@ void EclFile::load(bool preload) {
 
         array_index[array_name[n]] = n;
 
-        uint64_t pos = fileH.tellg();
+        std::uint64_t pos = fileH.tellg();
         ifStreamPos.push_back(pos);
 
         arrayLoaded.push_back(false);
 
         if (num > 0){
             if (formatted) {
-                uint64_t sizeOfNextArray = sizeOnDiskFormatted(num, arrType, sizeOfElement);
+                std::uint64_t sizeOfNextArray = sizeOnDiskFormatted(num, arrType, sizeOfElement);
                 fileH.seekg(static_cast<std::streamoff>(sizeOfNextArray), std::ios_base::cur);
             } else {
-                uint64_t sizeOfNextArray = sizeOnDiskBinary(num, arrType, sizeOfElement);
+                std::uint64_t sizeOfNextArray = sizeOnDiskBinary(num, arrType, sizeOfElement);
                 fileH.seekg(static_cast<std::streamoff>(sizeOfNextArray), std::ios_base::cur);
             }
         }
@@ -85,7 +85,7 @@ void EclFile::load(bool preload) {
     };
 
     fileH.seekg(0, std::ios_base::end);
-    this->ifStreamPos.push_back(static_cast<uint64_t>(fileH.tellg()));
+    this->ifStreamPos.push_back(static_cast<std::uint64_t>(fileH.tellg()));
     fileH.close();
 
     if (preload)
@@ -145,7 +145,7 @@ void EclFile::loadBinaryArray(std::fstream& fileH, std::size_t arrIndex)
     arrayLoaded[arrIndex] = true;
 }
 
-void EclFile::loadFormattedArray(const std::string& fileStr, std::size_t arrIndex, int64_t fromPos)
+void EclFile::loadFormattedArray(const std::string& fileStr, std::size_t arrIndex, std::int64_t fromPos)
 {
 
     switch (array_type[arrIndex]) {
