@@ -55,6 +55,8 @@ namespace Opm
             {}
         };
 
+        Carfin() = default;
+        explicit Carfin(const std::string& lgrName);
 
         explicit Carfin(const GridDims& gridDims,
                      IsActive        isActive,
@@ -92,6 +94,15 @@ namespace Opm
         int NX() const;
         int NY() const;
         int NZ() const;
+
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer(m_dims);    
+            serializer(m_offset);     
+            serializer(m_end_offset);     
+            serializer(name_grid);           
+        }
 
     private:
         GridDims m_globalGridDims_{};

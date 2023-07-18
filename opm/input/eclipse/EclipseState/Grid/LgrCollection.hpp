@@ -48,6 +48,8 @@ public:
 
     void addLgr(const EclipseGrid& grid, const DeckRecord& lgrRecord);
 
+    bool operator==(const LgrCollection& data) const;
+
     template<class Serializer>
     void serializeOp(Serializer& serializer)
     {

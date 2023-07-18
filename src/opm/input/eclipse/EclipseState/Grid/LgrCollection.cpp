@@ -24,7 +24,6 @@
 #include <opm/input/eclipse/EclipseState/Grid/Carfin.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/C.hpp>
 
-
 namespace Opm {
 
 
@@ -85,5 +84,9 @@ namespace Opm {
             });
        lgr.update(lgrRecord);    
        m_lgrs.insert(std::make_pair(lgr.NAME(), lgr));
+    }
+
+    bool LgrCollection::operator==(const LgrCollection& data) const {
+        return this->m_lgrs == data.m_lgrs;
     }
 }
