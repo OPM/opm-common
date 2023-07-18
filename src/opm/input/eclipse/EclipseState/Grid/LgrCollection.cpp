@@ -39,13 +39,10 @@ namespace Opm {
     LgrCollection::LgrCollection(const GRIDSection& gridSection, const EclipseGrid& grid) {
         const auto& lgrKeywords = gridSection.getKeywordList<ParserKeywords::CARFIN>();
 
-        for (auto keyword_iter = lgrKeywords.begin(); keyword_iter != lgrKeywords.end(); ++keyword_iter) {
-            const auto& lgrsKeyword = *keyword_iter;
+        for (const auto& lgrsKeyword : lgrKeywords) {
             OpmLog::info(OpmInputError::format("\nLoading lgrs from {keyword} in {file} line {line}", lgrsKeyword->location()));
 
-            for (auto iter = lgrsKeyword->begin(); iter != lgrsKeyword->end(); ++iter) {
-                const auto& lgrRecord = *iter;
-                
+            for (const auto& lgrRecord : *lgrsKeyword) {                
                 addLgr(grid, lgrRecord);
             }
         }
