@@ -64,6 +64,15 @@ namespace Opm {
         return m_lgrs.get( lgrName );
     }
 
+    const Carfin& LgrCollection::getLgr(size_t lgrIndex) const {
+        return m_lgrs.iget( lgrIndex );
+    }
+
+    Carfin& LgrCollection::getLgr(size_t lgrIndex) {
+        return m_lgrs.iget( lgrIndex );
+    }
+
+
     void LgrCollection::addLgr(const EclipseGrid& grid, const DeckRecord&  lgrRecord) {
        Carfin lgr(grid,
             [&grid](const std::size_t global_index)

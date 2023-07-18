@@ -43,6 +43,8 @@ public:
     bool hasLgr(const std::string& lgrName) const;
     Carfin& getLgr(const std::string& lgrName);
     const Carfin& getLgr(const std::string& lgrName) const;
+    Carfin& getLgr(size_t lgrIndex);
+    const Carfin& getLgr(size_t lgrIndex) const;
 
     void addLgr(const EclipseGrid& grid, const DeckRecord& lgrRecord);
 

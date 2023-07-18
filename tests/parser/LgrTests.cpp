@@ -63,4 +63,7 @@ BOOST_AUTO_TEST_CASE(ReadLgrCollection) {
     BOOST_CHECK_EQUAL(lgr1.NAME(), "LGR1");
     const auto& lgr2 = lgrs.getLgr("LGR2");
     BOOST_CHECK_EQUAL( lgr2.NAME() , "LGR2");
+
+    const auto& lgr3 = state.getLgrs().getLgr(0);
+    BOOST_CHECK_EQUAL( lgr1.NAME() , lgr3.NAME());
 }
