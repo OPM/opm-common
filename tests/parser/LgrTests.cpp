@@ -29,20 +29,6 @@
 
 using namespace Opm;
 
-namespace {
-
-std::string prefix() {
-    return boost::unit_test::framework::master_test_suite().argv[1];
-}
-
-Deck makeDeck(const std::string& fileName) {
-    Parser parser;
-    std::filesystem::path boxFile(fileName);
-    return parser.parseFile(boxFile.string());
-}
-
-}
-
 BOOST_AUTO_TEST_CASE(CreateLgrCollection) {
     Opm::LgrCollection lgrs;
     BOOST_CHECK_EQUAL( lgrs.size() , 0U );
@@ -50,8 +36,68 @@ BOOST_AUTO_TEST_CASE(CreateLgrCollection) {
     BOOST_CHECK_THROW( lgrs.getLgr("NO") , std::invalid_argument );
 }
 
-BOOST_AUTO_TEST_CASE(ReadLgrCollection) {
-    auto deck = makeDeck( prefix() + "CARFIN/CARFINTEST1" ); 
+BOOST_AUTO_TEST_CASE(ReadLgrCollection) { 
+    const std::string deck_string = R"(
+RUNSPEC
+
+DIMENS
+ 10 10 10 /
+
+GRID
+
+CARFIN
+-- NAME I1-I2 J1-J2 K1-K2 NX NY NZ
+'LGR1'  5  6  5  6  1  3  6  6  9 /
+ENDFIN
+
+CARFIN
+-- NAME I1-I2 J1-J2 K1-K2 NX NY NZ
+'LGR2'  7  8  7  8  1  3  8  8  9 /
+ENDFIN
+
+
+DX
+1000*1 /
+DY
+1000*1 /
+DZ
+1000*1 /
+TOPS
+100*1 /
+
+PORO
+  1000*0.15 /
+
+PERMX
+  1000*1 /
+
+COPY
+  PERMX PERMZ /
+  PERMX PERMY /
+/
+
+EDIT
+
+OIL
+GAS
+
+TITLE
+The title
+
+START
+16 JUN 1988 /
+
+PROPS
+
+REGIONS
+
+SOLUTION
+
+SCHEDULE
+)";
+
+    Opm::Parser parser;
+    Opm::Deck deck = parser.parseString(deck_string);
     Opm::EclipseState state(deck);
     Opm::LgrCollection lgrs = state.getLgrs();
 
