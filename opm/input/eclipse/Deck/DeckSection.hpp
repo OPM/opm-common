@@ -27,6 +27,7 @@
 namespace Opm {
 
 class Deck;
+class ErrorGuard;
 
 enum class Section {
     RUNSPEC,
@@ -63,6 +64,7 @@ class DeckSection : public DeckView {
         // the right order
         static bool checkSectionTopology(const Deck& deck,
                                          const Parser&,
+                                         ErrorGuard& errorGuard,
                                          bool ensureKeywordSectionAffiliation = false);
 
 

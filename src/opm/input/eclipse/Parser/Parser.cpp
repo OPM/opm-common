@@ -1554,6 +1554,7 @@ std::vector<std::string> Parser::getAllDeckNames () const {
 
     bool DeckSection::checkSectionTopology(const Deck& deck,
                                            const Parser& parser,
+                                           Opm::ErrorGuard& errorGuard,
                                            bool ensureKeywordSectionAffiliation)
     {
         if( deck.size() == 0 ) {
@@ -1563,11 +1564,12 @@ std::vector<std::string> Parser::getAllDeckNames () const {
         }
 
         bool deckValid = true;
+        const std::string errorKey = "SECTION_TOPOLOGY_ERROR";
 
         if( deck[0].name() != "RUNSPEC" ) {
             std::string msg = "The first keyword of a valid deck must be RUNSPEC\n";
             auto curKeyword = deck[0];
-            OpmLog::warning(Log::fileMessage(curKeyword.location(), msg) );
+            errorGuard.addError(errorKey, Log::fileMessage(curKeyword.location(), msg) );
             deckValid = false;
         }
 
@@ -1587,7 +1589,7 @@ std::vector<std::string> Parser::getAllDeckNames () const {
                     std::string msg =
                         "The keyword '"+curKeywordName+"' is located in the '"+curSectionName
                         +"' section where it is invalid";
-                    OpmLog::warning(Log::fileMessage(curKeyword.location(), msg) );
+                    errorGuard.addError(errorKey, Log::fileMessage(curKeyword.location(), msg) );
                     deckValid = false;
                 }
 
@@ -1598,7 +1600,7 @@ std::vector<std::string> Parser::getAllDeckNames () const {
                 if (curKeywordName != "GRID") {
                     std::string msg =
                         "The RUNSPEC section must be followed by GRID instead of "+curKeywordName;
-                    OpmLog::warning(Log::fileMessage(curKeyword.location(), msg) );
+                    errorGuard.addError(errorKey, Log::fileMessage(curKeyword.location(), msg) );
                     deckValid = false;
                 }
 
@@ -1608,7 +1610,7 @@ std::vector<std::string> Parser::getAllDeckNames () const {
                 if (curKeywordName != "EDIT" && curKeywordName != "PROPS") {
                     std::string msg =
                         "The GRID section must be followed by EDIT or PROPS instead of "+curKeywordName;
-                    OpmLog::warning(Log::fileMessage(curKeyword.location(), msg) );
+                    errorGuard.addError(errorKey, Log::fileMessage(curKeyword.location(), msg) );
                     deckValid = false;
                 }
 
@@ -1618,7 +1620,7 @@ std::vector<std::string> Parser::getAllDeckNames () const {
                 if (curKeywordName != "PROPS") {
                     std::string msg =
                         "The EDIT section must be followed by PROPS instead of "+curKeywordName;
-                    OpmLog::warning(Log::fileMessage(curKeyword.location(), msg) );
+                    errorGuard.addError(errorKey, Log::fileMessage(curKeyword.location(), msg) );
                     deckValid = false;
                 }
 
@@ -1628,7 +1630,7 @@ std::vector<std::string> Parser::getAllDeckNames () const {
                 if (curKeywordName != "REGIONS" && curKeywordName != "SOLUTION") {
                     std::string msg =
                         "The PROPS section must be followed by REGIONS or SOLUTION instead of "+curKeywordName;
-                    OpmLog::warning(Log::fileMessage(curKeyword.location(), msg) );
+                    errorGuard.addError(errorKey, Log::fileMessage(curKeyword.location(), msg) );
                     deckValid = false;
                 }
 
@@ -1638,7 +1640,7 @@ std::vector<std::string> Parser::getAllDeckNames () const {
                 if (curKeywordName != "SOLUTION") {
                     std::string msg =
                         "The REGIONS section must be followed by SOLUTION instead of "+curKeywordName;
-                    OpmLog::warning(Log::fileMessage(curKeyword.location(), msg) );
+                    errorGuard.addError(errorKey, Log::fileMessage(curKeyword.location(), msg) );
                     deckValid = false;
                 }
 
@@ -1648,7 +1650,7 @@ std::vector<std::string> Parser::getAllDeckNames () const {
                 if (curKeywordName != "SUMMARY" && curKeywordName != "SCHEDULE") {
                     std::string msg =
                         "The SOLUTION section must be followed by SUMMARY or SCHEDULE instead of "+curKeywordName;
-                    OpmLog::warning(Log::fileMessage(curKeyword.location(), msg) );
+                    errorGuard.addError(errorKey, Log::fileMessage(curKeyword.location(), msg) );
                     deckValid = false;
                 }
 
@@ -1658,7 +1660,7 @@ std::vector<std::string> Parser::getAllDeckNames () const {
                 if (curKeywordName != "SCHEDULE") {
                     std::string msg =
                         "The SUMMARY section must be followed by SCHEDULE instead of "+curKeywordName;
-                    OpmLog::warning(Log::fileMessage(curKeyword.location(), msg) );
+                    errorGuard.addError(errorKey, Log::fileMessage(curKeyword.location(), msg) );
                     deckValid = false;
                 }
 
@@ -1669,7 +1671,7 @@ std::vector<std::string> Parser::getAllDeckNames () const {
                 std::string msg =
                     "The SCHEDULE section must be the last one ("
                     +curKeywordName+" specified after SCHEDULE)";
-                OpmLog::warning(Log::fileMessage(curKeyword.location(), msg) );
+                errorGuard.addError(errorKey, Log::fileMessage(curKeyword.location(), msg) );
                 deckValid = false;
             }
         }
@@ -1679,7 +1681,7 @@ std::vector<std::string> Parser::getAllDeckNames () const {
             const auto& curKeyword = deck[deck.size() - 1];
             std::string msg =
                 "The last section of a valid deck must be SCHEDULE (is "+curSectionName+")";
-            OpmLog::warning(Log::fileMessage(curKeyword.location(), msg) );
+            errorGuard.addError(errorKey, Log::fileMessage(curKeyword.location(), msg) );
             deckValid = false;
         }
 
