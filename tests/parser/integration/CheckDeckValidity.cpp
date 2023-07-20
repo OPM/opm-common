@@ -102,4 +102,7 @@ BOOST_AUTO_TEST_CASE( KeywordInCorrectSection ) {
         // this fails because of the incorrect BOX keyword
         BOOST_CHECK(!Opm::checkDeck(deck, parser, parseContext, errorGuard, Opm::SectionTopology | Opm::KeywordSection));
     }
+    // prevent std::exit(1) in ErrorGuard's destructor!
+    errorGuard.dump();
+    errorGuard.clear();
 }

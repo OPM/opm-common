@@ -253,6 +253,9 @@ BOOST_AUTO_TEST_CASE(Section_ValidDecks) {
                                 "TEST8\n";
 
     BOOST_CHECK(Opm::DeckSection::checkSectionTopology( parser.parseString( with_opt, mode, errors ), parser, errors));
+    // prevent std::exit(1) in ErrorGuard's destructor!
+    errors.dump();
+    errors.clear();
 }
 
 BOOST_AUTO_TEST_CASE(Section_InvalidDecks) {
@@ -390,4 +393,7 @@ BOOST_AUTO_TEST_CASE(Section_InvalidDecks) {
                                          "TEST4\n";
 
     BOOST_CHECK(!Opm::DeckSection::checkSectionTopology( parser.parseString( missing_SCHEDULE, mode, errors ), parser, errors));
+    // prevent std::exit(1) in ErrorGuard's destructor!
+    errors.dump();
+    errors.clear();
 }
