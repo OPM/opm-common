@@ -76,14 +76,6 @@ namespace {
 namespace Opm
 {
 
-    Carfin::Carfin(const std::string& lgrName) :
-        m_dims({2,2,2}),   
-        m_offset({1,1,1}),   
-        m_end_offset({2,2,2}),  
-        name_grid(lgrName)
-    {
-    }
-
     Carfin::Carfin(const GridDims& gridDims,
              IsActive        isActive,
              ActiveIdx       activeIdx)

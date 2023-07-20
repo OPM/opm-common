@@ -56,7 +56,6 @@ namespace Opm
         };
 
         Carfin() = default;
-        explicit Carfin(const std::string& lgrName);
 
         explicit Carfin(const GridDims& gridDims,
                      IsActive        isActive,
