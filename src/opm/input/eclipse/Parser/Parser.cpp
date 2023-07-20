@@ -43,6 +43,7 @@
 
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/FieldProps.hpp>
 
 #include <opm/input/eclipse/Python/Python.hpp>
 
@@ -1584,13 +1585,40 @@ std::vector<std::string> Parser::getAllDeckNames () const {
                     // ignore unknown keywords for now (i.e. they can appear in any section)
                     continue;
 
-                const auto& parserKeyword = parser.getParserKeywordFromDeckName( curKeywordName );
-                if (ensureKeywordSectionAffiliation && !parserKeyword.isValidSection(curSectionName)) {
-                    std::string msg =
-                        "The keyword '"+curKeywordName+"' is located in the '"+curSectionName
-                        +"' section where it is invalid";
-                    errorGuard.addError(errorKey, Log::fileMessage(curKeyword.location(), msg) );
-                    deckValid = false;
+                const bool isOperateKeyword =
+                    Fieldprops::keywords::is_oper_keyword(curKeywordName);
+
+                auto checker = [&errorGuard, &deckValid, &parser, curSectionName,
+                                ensureKeywordSectionAffiliation, errorKey]
+                    (const std::string& curKeywordName, const KeywordLocation& location)
+                {
+                    const auto& parserKeyword =
+                        parser.getParserKeywordFromDeckName( curKeywordName );
+                    if (ensureKeywordSectionAffiliation && !parserKeyword.isValidSection(curSectionName)) {
+                        std::string msg =
+                            "The keyword '{}' is located in the '{}' section where it is invalid";
+                        errorGuard.addError(errorKey,
+                                            Log::fileMessage(location,
+                                                             fmt::format(msg,
+                                                                         curKeywordName,
+                                                                         curSectionName)
+                                                         ) );
+                        deckValid = false;
+                    }
+                };
+
+                if (isOperateKeyword) {
+                    for (const auto& record : curKeyword) {
+                        const auto& operName = record.getItem(0).getTrimmedString(0);
+                        if (!parser.isRecognizedKeyword(operName)) {
+                            // ignore unknown keywords
+                            continue;
+                        }
+                        checker(operName, curKeyword.location());
+                    }
+                }
+                else {
+                    checker(curKeyword.name(), curKeyword.location());
                 }
 
                 continue;
