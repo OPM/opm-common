@@ -140,6 +140,7 @@ namespace Opm {
         this->conveyNumericalAquiferEffects();
         this->m_inputGrid.resetACTNUM(this->field_props.actnum());
         this->field_props.reset_actnum(this->getInputGrid().getACTNUM());
+        this->initLgrs(deck);
         this->aquifer_config.load_connections(deck, this->getInputGrid());
 
         this->applyMULTXYZ();
@@ -235,6 +236,10 @@ namespace Opm {
         return m_faults;
     }
 
+    const LgrCollection& EclipseState::getLgrs() const {
+        return m_lgrs;
+    }
+
     const MICPpara& EclipseState::getMICPpara() const {
         return m_micppara;
     }
@@ -268,6 +273,17 @@ namespace Opm {
     bool EclipseState::hasInputNNC() const {
         return !m_inputNnc.input().empty();
     }
+
+    void EclipseState::initLgrs(const Deck& deck) {
+        if (!DeckSection::hasGRID(deck))
+            return;
+
+        const GRIDSection gridSection ( deck );
+
+        m_lgrs = LgrCollection(gridSection, m_inputGrid);
+
+    }
+
 
     std::string EclipseState::getTitle() const {
         return m_title;

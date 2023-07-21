@@ -75,6 +75,7 @@ namespace {
 
 namespace Opm
 {
+
     Carfin::Carfin(const GridDims& gridDims,
              IsActive        isActive,
              ActiveIdx       activeIdx)

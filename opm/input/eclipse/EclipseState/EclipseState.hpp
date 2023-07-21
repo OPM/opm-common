@@ -34,6 +34,7 @@
 #include <opm/input/eclipse/EclipseState/Grid/FaultCollection.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/NNC.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/TransMult.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/LgrCollection.hpp>
 #include <opm/input/eclipse/EclipseState/Runspec.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
 #include <opm/input/eclipse/EclipseState/SimulationConfig/SimulationConfig.hpp>
@@ -95,6 +96,9 @@ namespace Opm {
         const EclipseConfig& cfg() const;
         const GridDims& gridDims() const;
 
+        const LgrCollection& getLgrs() const;
+        bool hasInputLGR() const;
+
         // the unit system used by the deck. note that it is rarely needed
         // to convert units because internally to opm-parser everything is
         // represented by SI units.
@@ -131,6 +135,7 @@ namespace Opm {
             serializer(m_deckUnitSystem);
             serializer(m_inputNnc);
             serializer(m_gridDims);
+            serializer(m_lgrs);
             serializer(m_simulationConfig);
             serializer(aquifer_config);
             serializer(m_transMult);
@@ -148,6 +153,7 @@ namespace Opm {
         void initIOConfigPostSchedule(const Deck& deck);
         void assignRunTitle(const Deck& deck);
         void reportNumberOfActivePhases() const;
+        void initLgrs(const Deck& deck);
         void conveyNumericalAquiferEffects();
         void applyMULTXYZ();
         void initFaults(const Deck& deck);
@@ -167,6 +173,7 @@ namespace Opm {
         NNC m_inputNnc;
         GridDims m_gridDims;
         FieldPropsManager field_props;
+        LgrCollection m_lgrs;
         SimulationConfig m_simulationConfig;
         AquiferConfig aquifer_config;
         TransMult m_transMult;
