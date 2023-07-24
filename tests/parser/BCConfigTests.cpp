@@ -189,3 +189,121 @@ BCPROP
     BOOST_CHECK_EQUAL(deck.getActiveUnitSystem().to_si(measure::pressure, 279.0),
                       *prop[2].pressure);
 }
+
+BOOST_AUTO_TEST_CASE(Mech)
+{
+    const std::string input = R"(
+RUNSPEC
+
+DIMENS
+  10 10 3 /
+OIL
+GAS
+WATER
+LAB
+START
+  1 'JAN' 2015 /
+GRID
+DX
+  300*1000 /
+DY
+  300*1000 /
+DZ
+  300*1000 /
+TOPS
+  100*8325 /
+BCCON
+  1 1* * 1 5 1 10 Y- /
+  2 20 20 4* Y /
+  3 10 15 1 10 4 7 Z /
+/
+SCHEDULE
+BCPROP
+ 1 NONE * * * * FIXED 1 0 0 1.0 * * 2.0 * * /
+ 2 NONE * * * * FIXED 0 1 0 * 3.0 * /
+ 3 NONE * * * * FREE 0 0 1 * * 4.0 * * 5.0 /
+/
+)";
+
+    auto deck = createDeck(input);
+    Opm::BCConfig config(deck);
+    const auto& kw = deck.get<Opm::ParserKeywords::BCPROP>();
+    Opm::BCProp prop;
+    for (const auto& record : kw.back()) {
+        prop.updateBCProp(record);
+    }
+
+    BOOST_CHECK_EQUAL(config.size(), 3U);
+
+    BOOST_CHECK_EQUAL(prop.size(), 3U);
+    BOOST_CHECK(prop[1].bctype == Opm::BCType::NONE);
+    BOOST_CHECK(prop[1].component == Opm::BCComponent::NONE);
+    using measure = Opm::UnitSystem::measure;
+    BOOST_CHECK_EQUAL(0.0,
+                      prop[1].rate);
+    BOOST_CHECK(!prop[1].pressure.has_value());
+    BOOST_CHECK(!prop[1].temperature.has_value());
+    BOOST_CHECK(prop[1].bcmechtype == Opm::BCMECHType::FIXED);
+    BOOST_CHECK(prop[1].mechbcvalue.has_value());
+    BOOST_CHECK_EQUAL(prop[1].mechbcvalue->fixeddir[0], 1);
+    BOOST_CHECK_EQUAL(prop[1].mechbcvalue->fixeddir[1], 0);
+    BOOST_CHECK_EQUAL(prop[1].mechbcvalue->fixeddir[2], 0);
+    BOOST_CHECK_EQUAL(deck.getActiveUnitSystem().to_si(measure::pressure, 1.0),
+                      prop[1].mechbcvalue->stress[0]);
+    BOOST_CHECK_SMALL(prop[1].mechbcvalue->stress[1], 1e-12);
+    BOOST_CHECK_SMALL(prop[1].mechbcvalue->stress[2], 1e-12);
+    BOOST_CHECK_SMALL(prop[1].mechbcvalue->stress[3], 1e-12);
+    BOOST_CHECK_SMALL(prop[1].mechbcvalue->stress[4], 1e-12);
+    BOOST_CHECK_SMALL(prop[1].mechbcvalue->stress[5], 1e-12);
+    BOOST_CHECK_EQUAL(deck.getActiveUnitSystem().to_si(measure::length, 2.0),
+                      prop[1].mechbcvalue->disp[0]);
+    BOOST_CHECK_SMALL(prop[1].mechbcvalue->disp[1], 1e-12);
+    BOOST_CHECK_SMALL(prop[1].mechbcvalue->disp[2], 1e-12);
+
+    BOOST_CHECK(prop[2].bctype == Opm::BCType::NONE);
+    BOOST_CHECK(prop[2].component == Opm::BCComponent::NONE);
+    using measure = Opm::UnitSystem::measure;
+    BOOST_CHECK_EQUAL(0.0,
+                      prop[2].rate);
+    BOOST_CHECK(!prop[2].pressure.has_value());
+    BOOST_CHECK(!prop[2].temperature.has_value());
+    BOOST_CHECK(prop[2].bcmechtype == Opm::BCMECHType::FIXED);
+    BOOST_CHECK(prop[2].mechbcvalue.has_value());
+    BOOST_CHECK_EQUAL(prop[2].mechbcvalue->fixeddir[0], 0);
+    BOOST_CHECK_EQUAL(prop[2].mechbcvalue->fixeddir[1], 1);
+    BOOST_CHECK_EQUAL(prop[2].mechbcvalue->fixeddir[2], 0);
+    BOOST_CHECK_SMALL(prop[2].mechbcvalue->stress[0], 1e-12);
+    BOOST_CHECK_EQUAL(deck.getActiveUnitSystem().to_si(measure::pressure, 3.0),
+                      prop[2].mechbcvalue->stress[1]);
+    BOOST_CHECK_SMALL(prop[2].mechbcvalue->stress[2], 1e-12);
+    BOOST_CHECK_SMALL(prop[2].mechbcvalue->stress[3], 1e-12);
+    BOOST_CHECK_SMALL(prop[2].mechbcvalue->stress[4], 1e-12);
+    BOOST_CHECK_SMALL(prop[2].mechbcvalue->stress[5], 1e-12);
+    BOOST_CHECK_SMALL(prop[2].mechbcvalue->disp[0], 1e-12);
+    BOOST_CHECK_SMALL(prop[2].mechbcvalue->disp[1], 1e-12);
+    BOOST_CHECK_SMALL(prop[2].mechbcvalue->disp[2], 1e-12);
+
+    BOOST_CHECK(prop[3].bctype == Opm::BCType::NONE);
+    BOOST_CHECK(prop[3].component == Opm::BCComponent::NONE);
+    using measure = Opm::UnitSystem::measure;
+    BOOST_CHECK_EQUAL(0.0,
+                      prop[3].rate);
+    BOOST_CHECK(!prop[3].pressure.has_value());
+    BOOST_CHECK(!prop[3].temperature.has_value());
+    BOOST_CHECK(prop[3].bcmechtype == Opm::BCMECHType::FREE);
+    BOOST_CHECK(prop[3].mechbcvalue.has_value());
+    BOOST_CHECK_EQUAL(prop[3].mechbcvalue->fixeddir[0], 0);
+    BOOST_CHECK_EQUAL(prop[3].mechbcvalue->fixeddir[1], 0);
+    BOOST_CHECK_EQUAL(prop[3].mechbcvalue->fixeddir[2], 1);
+    BOOST_CHECK_SMALL(prop[3].mechbcvalue->stress[0], 1e-12);
+    BOOST_CHECK_SMALL(prop[3].mechbcvalue->stress[1], 1e-12);
+    BOOST_CHECK_EQUAL(deck.getActiveUnitSystem().to_si(measure::pressure, 4.0),
+                      prop[3].mechbcvalue->stress[2]);
+    BOOST_CHECK_SMALL(prop[3].mechbcvalue->stress[3], 1e-12);
+    BOOST_CHECK_SMALL(prop[3].mechbcvalue->stress[4], 1e-12);
+    BOOST_CHECK_SMALL(prop[3].mechbcvalue->stress[5], 1e-12);
+    BOOST_CHECK_SMALL(prop[3].mechbcvalue->disp[0], 1e-12);
+    BOOST_CHECK_SMALL(prop[3].mechbcvalue->disp[1], 1e-12);
+    BOOST_CHECK_EQUAL(deck.getActiveUnitSystem().to_si(measure::length, 5.0),
+                      prop[3].mechbcvalue->disp[2]);
+}

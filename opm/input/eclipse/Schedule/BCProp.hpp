@@ -28,7 +28,6 @@
 #include <opm/input/eclipse/EclipseState/Grid/FaceDir.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/GridDims.hpp>
 
-
 namespace Opm {
 
 class Deck;
@@ -43,6 +42,12 @@ enum class BCType {
      NONE
 };
 
+enum class BCMECHType {
+     FREE,
+     FIXED,
+     NONE
+};
+
 enum class BCComponent {
      OIL,
      GAS,
@@ -52,6 +57,33 @@ enum class BCComponent {
      NONE
 };
 
+struct MechBCValue {
+    std::array<double,3> disp{};
+    std::array<double,6> stress{};
+    std::array<bool,3> fixeddir{};
+
+    static MechBCValue serializationTestObject()
+    {
+        return MechBCValue{{1.0, 2.0, 3.0},
+                           {3.0, 4.0, 5.0, 6.0, 7.0, 8.0},
+                           {true, false, true}};
+    }
+
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(disp);
+        serializer(stress);
+        serializer(fixeddir);
+    }
+
+    bool operator==(const MechBCValue& other) const
+    {
+        return disp == other.disp &&
+               stress == other.stress &&
+               fixeddir == other.fixeddir;
+    }
+};
 
 class BCProp {
 public:
@@ -59,10 +91,13 @@ public:
     struct BCFace {
         int index;
         BCType bctype;
+        BCMECHType bcmechtype;
         BCComponent component;
         double rate;
         std::optional<double> pressure;
         std::optional<double> temperature;
+
+        std::optional<MechBCValue> mechbcvalue;
 
         BCFace() = default;
         explicit BCFace(const DeckRecord& record);
@@ -76,10 +111,12 @@ public:
         {
             serializer(index);
             serializer(bctype);
+            serializer(bcmechtype);
             serializer(component);
             serializer(rate);
             serializer(pressure);
             serializer(temperature);
+            serializer(mechbcvalue);
         }
     };
 
@@ -107,7 +144,5 @@ private:
 };
 
 } //namespace Opm
-
-
 
 #endif
