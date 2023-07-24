@@ -48,7 +48,19 @@ BCType bctype(const std::string& s) {
     throw std::invalid_argument("Not recognized boundary condition type: " + s);
 }
 
+BCMECHType bcmechtype(const std::string& s) {
+    if (s == "FREE")
+        return BCMECHType::FREE;
 
+    if (s == "FIXED")
+        return BCMECHType::FIXED;
+    
+    if (s == "NONE")
+        return BCMECHType::NONE;
+
+    throw std::invalid_argument("Not recognized boundary condition type: " + s);
+}
+    
 BCComponent component(const std::string& s) {
     if (s == "OIL")
         return BCComponent::OIL;
@@ -78,6 +90,7 @@ using BCKEY = ParserKeywords::BCPROP;
 BCProp::BCFace::BCFace(const DeckRecord& record) :
     index(record.getItem<BCKEY::INDEX>().get<int>(0)),
     bctype(fromstring::bctype(record.getItem<BCKEY::TYPE>().get<std::string>(0))),
+    bcmechtype(fromstring::bcmechtype(record.getItem<BCKEY::MECHTYPE>().get<std::string>(0))),
     component(fromstring::component(record.getItem<BCKEY::COMPONENT>().get<std::string>(0))),
     rate(record.getItem<BCKEY::RATE>().getSIDouble(0))
 {
@@ -87,6 +100,38 @@ BCProp::BCFace::BCFace(const DeckRecord& record) :
     if (const auto& T = record.getItem<BCKEY::TEMPERATURE>(); ! T.defaultApplied(0)) {
         temperature = T.getSIDouble(0);
     }
+    MechBCValue mechbcvaluetmp;
+    if (const auto& P = record.getItem<BC::STRESSXX>(); ! P.defaultApplied(0)) {
+        mechbcvaluetmp.stress[0] = P.getSIDouble(0);
+    }
+    if (const auto& P = record.getItem<BC::STRESSYY>(); ! P.defaultApplied(0)) {
+        mechbcvaluetmp.stress[1] = P.getSIDouble(0);
+    }
+    if (const auto& P = record.getItem<BC::STRESSZZ>(); ! P.defaultApplied(0)) {
+        mechbcvaluetmp.stress[2] = P.getSIDouble(0);
+    }
+    mechbcvaluetmp.stress[3] = 0;
+    mechbcvaluetmp.stress[4] = 0;
+    mechbcvaluetmp.stress[5] = 0;
+    if (const auto& P = record.getItem<BC::DISPX>(); ! P.defaultApplied(0)) {
+        mechbcvaluetmp.disp[0] = P.getSIDouble(0);
+    }
+    if (const auto& P = record.getItem<BC::DISPY>(); ! P.defaultApplied(0)) {
+        mechbcvaluetmp.disp[1] = P.getSIDouble(0);
+    }
+    if (const auto& P = record.getItem<BC::DISPZ>(); ! P.defaultApplied(0)) {
+        mechbcvaluetmp.disp[2] = P.getSIDouble(0);
+    }
+    if (const auto& P = record.getItem<BC::FIXEDX>(); ! P.defaultApplied(0)) {
+        mechbcvaluetmp.fixeddir[0] = P.get<int>(0);
+    }
+    if (const auto& P = record.getItem<BC::FIXEDY>(); ! P.defaultApplied(0)) {
+        mechbcvaluetmp.fixeddir[1] = P.get<int>(0);
+    }
+    if (const auto& P = record.getItem<BC::FIXEDZ>(); ! P.defaultApplied(0)) {
+        mechbcvaluetmp.fixeddir[2] = P.get<int>(0);
+    }
+    mechbcvalue = mechbcvaluetmp;
 }
 
 BCProp::BCFace BCProp::BCFace::serializationTestObject()

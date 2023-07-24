@@ -43,6 +43,12 @@ enum class BCType {
      NONE
 };
 
+enum class BCMECHType {
+     FREE,
+     FIXED,
+     NONE
+};
+    
 enum class BCComponent {
      OIL,
      GAS,
@@ -52,7 +58,13 @@ enum class BCComponent {
      NONE
 };
 
+struct MechBCValue{
+    std::array<double,3> disp;
+    std::array<double,6> stress;
+    std::array<bool,3> fixeddir;
+};
 
+    
 class BCProp {
 public:
 
@@ -64,6 +76,8 @@ public:
         std::optional<double> pressure;
         std::optional<double> temperature;
 
+        std::optional<MechBCValue> mechbcvalue;
+        
         BCFace() = default;
         explicit BCFace(const DeckRecord& record);
 
@@ -76,6 +90,7 @@ public:
         {
             serializer(index);
             serializer(bctype);
+            serializer(bcmechtype);
             serializer(component);
             serializer(rate);
             serializer(pressure);
