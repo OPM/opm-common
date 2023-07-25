@@ -66,10 +66,10 @@ public:
         : NumericalProblem(message)
     {}
 };
-class LinearTimeSteppingBreakdown : public NumericalProblem
+class TimeSteppingBreakdown : public NumericalProblem
 {
 public:
-    explicit LinearTimeSteppingBreakdown(const std::string &message)
+    explicit TimeSteppingBreakdown(const std::string &message)
         : NumericalProblem(message)
     {}
 };
