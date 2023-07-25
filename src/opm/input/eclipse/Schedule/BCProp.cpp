@@ -101,34 +101,34 @@ BCProp::BCFace::BCFace(const DeckRecord& record) :
         temperature = T.getSIDouble(0);
     }
     MechBCValue mechbcvaluetmp;
-    if (const auto& P = record.getItem<BC::STRESSXX>(); ! P.defaultApplied(0)) {
+    if (const auto& P = record.getItem<BCKEY::STRESSXX>(); ! P.defaultApplied(0)) {
         mechbcvaluetmp.stress[0] = P.getSIDouble(0);
     }
-    if (const auto& P = record.getItem<BC::STRESSYY>(); ! P.defaultApplied(0)) {
+    if (const auto& P = record.getItem<BCKEY::STRESSYY>(); ! P.defaultApplied(0)) {
         mechbcvaluetmp.stress[1] = P.getSIDouble(0);
     }
-    if (const auto& P = record.getItem<BC::STRESSZZ>(); ! P.defaultApplied(0)) {
+    if (const auto& P = record.getItem<BCKEY::STRESSZZ>(); ! P.defaultApplied(0)) {
         mechbcvaluetmp.stress[2] = P.getSIDouble(0);
     }
     mechbcvaluetmp.stress[3] = 0;
     mechbcvaluetmp.stress[4] = 0;
     mechbcvaluetmp.stress[5] = 0;
-    if (const auto& P = record.getItem<BC::DISPX>(); ! P.defaultApplied(0)) {
+    if (const auto& P = record.getItem<BCKEY::DISPX>(); ! P.defaultApplied(0)) {
         mechbcvaluetmp.disp[0] = P.getSIDouble(0);
     }
-    if (const auto& P = record.getItem<BC::DISPY>(); ! P.defaultApplied(0)) {
+    if (const auto& P = record.getItem<BCKEY::DISPY>(); ! P.defaultApplied(0)) {
         mechbcvaluetmp.disp[1] = P.getSIDouble(0);
     }
-    if (const auto& P = record.getItem<BC::DISPZ>(); ! P.defaultApplied(0)) {
+    if (const auto& P = record.getItem<BCKEY::DISPZ>(); ! P.defaultApplied(0)) {
         mechbcvaluetmp.disp[2] = P.getSIDouble(0);
     }
-    if (const auto& P = record.getItem<BC::FIXEDX>(); ! P.defaultApplied(0)) {
+    if (const auto& P = record.getItem<BCKEY::FIXEDX>(); ! P.defaultApplied(0)) {
         mechbcvaluetmp.fixeddir[0] = P.get<int>(0);
     }
-    if (const auto& P = record.getItem<BC::FIXEDY>(); ! P.defaultApplied(0)) {
+    if (const auto& P = record.getItem<BCKEY::FIXEDY>(); ! P.defaultApplied(0)) {
         mechbcvaluetmp.fixeddir[1] = P.get<int>(0);
     }
-    if (const auto& P = record.getItem<BC::FIXEDZ>(); ! P.defaultApplied(0)) {
+    if (const auto& P = record.getItem<BCKEY::FIXEDZ>(); ! P.defaultApplied(0)) {
         mechbcvaluetmp.fixeddir[2] = P.get<int>(0);
     }
     mechbcvalue = mechbcvaluetmp;

@@ -71,6 +71,7 @@ public:
     struct BCFace {
         int index;
         BCType bctype;
+        BCMECHType bcmechtype;
         BCComponent component;
         double rate;
         std::optional<double> pressure;
@@ -90,7 +91,7 @@ public:
         {
             serializer(index);
             serializer(bctype);
-            serializer(bcmechtype);
+            //serializer(bcmechtype);
             serializer(component);
             serializer(rate);
             serializer(pressure);
