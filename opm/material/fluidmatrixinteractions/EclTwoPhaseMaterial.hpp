@@ -111,6 +111,21 @@ public:
     //! are dependent on the phase composition
     static constexpr bool isCompositionDependent = false;
 
+    template <class ContainerT, class FluidState>
+    static Scalar relpermOilInOilGasSystem(const Params& params,
+                                           const FluidState& fluidState){
+        throw std::logic_error {
+            "relpermOilInOilGasSystem() is specific to three phases"
+                };
+    }
+    template <class ContainerT, class FluidState>
+    static Scalar relpermOilInOilWaterSystem(const Params& params,
+                                                 const FluidState& fluidState){
+        throw std::logic_error {
+                "relpermOilInOilWaterSystem() is specific to three phases"
+                    };
+    }
+
     /*!
      * \brief Implements the multiplexer three phase capillary pressure law
      *        used by the ECLipse simulator.
@@ -125,6 +140,7 @@ public:
      * \param params Parameters
      * \param state The fluid state
      */
+
     template <class ContainerT, class FluidState>
     static void capillaryPressures(ContainerT& values,
                                    const Params& params,
@@ -155,7 +171,7 @@ public:
             const Evaluation& Sw =
                 decay<Evaluation>(fluidState.saturation(waterPhaseIdx));
 
-            values[waterPhaseIdx] = 0.0;           
+            values[waterPhaseIdx] = 0.0;
             values[gasPhaseIdx] = GasWaterMaterialLaw::twoPhaseSatPcnw(params.gasWaterParams(), Sw);
             break;
         }
@@ -225,6 +241,13 @@ public:
         params.gasOilParams().update(pcSwMdc, krwSw, krnSwMdc);
     }
 
+    static Scalar trappedGasSaturation(const Params& params){
+        if(params.approach() == EclTwoPhaseApproach::GasOil)
+            return params.gasOilParams().SnTrapped();
+        if(params.approach() == EclTwoPhaseApproach::GasWater)
+            return params.gasWaterParams().SnTrapped();
+        return 0.0; // oil-water case
+    }
     /*!
      * \brief Capillary pressure between the gas and the non-wetting
      *        liquid (i.e., oil) phase.
@@ -342,7 +365,7 @@ public:
         case EclTwoPhaseApproach::GasWater: {
             const Evaluation& Sw =
                 decay<Evaluation>(fluidState.saturation(waterPhaseIdx));
-            
+
             values[waterPhaseIdx] = GasWaterMaterialLaw::twoPhaseSatKrw(params.gasWaterParams(), Sw);
             values[gasPhaseIdx] = GasWaterMaterialLaw::twoPhaseSatKrn(params.gasWaterParams(), Sw);
 
@@ -409,7 +432,7 @@ public:
 
         case EclTwoPhaseApproach::GasWater: {
             Scalar Sw = scalarValue(fluidState.saturation(waterPhaseIdx));
-           
+
             return params.gasWaterParams().update(/*pcSw=*/1.0, /*krwSw=*/0.0, /*krnSw=*/Sw);
             break;
         }
