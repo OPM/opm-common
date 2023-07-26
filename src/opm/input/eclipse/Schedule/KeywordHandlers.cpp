@@ -27,6 +27,8 @@
 #include <utility>
 #include <vector>
 
+#include <iostream>
+
 #include <fmt/format.h>
 
 #include <opm/common/OpmLog/OpmLog.hpp>
@@ -766,18 +768,42 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
     }
 
     void Schedule::handleGRUPNET(HandlerContext& handlerContext) {
+        auto network = this->snapshots.back().network.get();
+        std::vector<Network::Node> nodes;
+
         for (const auto& record : handlerContext.keyword) {
-            const auto& groupName = record.getItem("NAME").getTrimmedString(0);
+            const auto& name = record.getItem<ParserKeywords::GRUPNET::NAME>().get<std::string>(0);
+            const auto& pressure_item = record.getItem<ParserKeywords::GRUPNET::TERMINAL_PRESSURE>();
+            const int vfp_table = record.getItem<ParserKeywords::GRUPNET::VFP_TABLE>().get<int>(0);
 
-            if (!this->snapshots.back().groups.has(groupName))
-                addGroup(groupName , handlerContext.currentStep);
-
-            int table = record.getItem("VFP_TABLE").get< int >(0);
-
-            auto new_group = this->snapshots.back().groups.get( groupName );
-            if (new_group.updateNetVFPTable(table))
-                this->snapshots.back().groups.update( std::move(new_group) );
+            const auto& group = this->snapshots.back().groups.get(name);
+            const auto& parent = group.parent();
+            if (parent != "")
+            {
+                const std::string& downtree_node = name;
+                const std::string& uptree_node = parent;
+                if (vfp_table == 0) {
+                    network.drop_branch(uptree_node, downtree_node);
+                } else {
+                    const auto alq_eq = Network::Branch::AlqEqfromString(record.getItem<ParserKeywords::GRUPNET::ALQ_SURFACE_DENSITY>().get<std::string>(0));
+                    if (alq_eq == Network::Branch::AlqEQ::ALQ_INPUT) {
+                        double alq_value = record.getItem<ParserKeywords::GRUPNET::ALQ>().get<double>(0);
+                        network.add_branch(Network::Branch(downtree_node, uptree_node, vfp_table, alq_value));
+                    } else {
+                        network.add_branch(Network::Branch(downtree_node, uptree_node, vfp_table, alq_eq));
+                    }
+                }
+            }
+            Network::Node node { name };
+            if (pressure_item.hasValue(0) && (pressure_item.get<double>(0) > 0))
+                node.terminal_pressure(pressure_item.getSIDouble(0));
+            nodes.push_back(node);
         }
+
+        this->snapshots.back().network.update( network );
+        for(const auto& node: nodes)
+            network.add_node(node);
+        this->snapshots.back().network.update( std::move( network ));
     }
 
     void Schedule::handleGRUPTREE(HandlerContext& handlerContext) {
