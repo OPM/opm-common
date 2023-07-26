@@ -27,8 +27,6 @@
 #include <utility>
 #include <vector>
 
-#include <iostream>
-
 #include <fmt/format.h>
 
 #include <opm/common/OpmLog/OpmLog.hpp>
