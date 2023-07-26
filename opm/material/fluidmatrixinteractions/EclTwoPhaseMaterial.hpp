@@ -111,20 +111,6 @@ public:
     //! are dependent on the phase composition
     static constexpr bool isCompositionDependent = false;
 
-    /*!
-     * \brief Implements the multiplexer three phase capillary pressure law
-     *        used by the ECLipse simulator.
-     *
-     * This material law is valid for three fluid phases and only
-     * depends on the saturations.
-     *
-     * The required two-phase relations are supplied by means of template
-     * arguments and can be an arbitrary other material laws.
-     *
-     * \param values Container for the return values
-     * \param params Parameters
-     * \param state The fluid state
-     */
     template <class ContainerT, class FluidState>
     static Scalar relpermOilInOilGasSystem(const Params& params,
                                            const FluidState& fluidState){
@@ -139,7 +125,22 @@ public:
                 "relpermOilInOilWaterSystem() is specific to three phases"
                     };
     }
-  
+
+    /*!
+     * \brief Implements the multiplexer three phase capillary pressure law
+     *        used by the ECLipse simulator.
+     *
+     * This material law is valid for three fluid phases and only
+     * depends on the saturations.
+     *
+     * The required two-phase relations are supplied by means of template
+     * arguments and can be an arbitrary other material laws.
+     *
+     * \param values Container for the return values
+     * \param params Parameters
+     * \param state The fluid state
+     */
+
     template <class ContainerT, class FluidState>
     static void capillaryPressures(ContainerT& values,
                                    const Params& params,
@@ -170,7 +171,7 @@ public:
             const Evaluation& Sw =
                 decay<Evaluation>(fluidState.saturation(waterPhaseIdx));
 
-            values[waterPhaseIdx] = 0.0;           
+            values[waterPhaseIdx] = 0.0;
             values[gasPhaseIdx] = GasWaterMaterialLaw::twoPhaseSatPcnw(params.gasWaterParams(), Sw);
             break;
         }
@@ -364,7 +365,7 @@ public:
         case EclTwoPhaseApproach::GasWater: {
             const Evaluation& Sw =
                 decay<Evaluation>(fluidState.saturation(waterPhaseIdx));
-            
+
             values[waterPhaseIdx] = GasWaterMaterialLaw::twoPhaseSatKrw(params.gasWaterParams(), Sw);
             values[gasPhaseIdx] = GasWaterMaterialLaw::twoPhaseSatKrn(params.gasWaterParams(), Sw);
 
@@ -431,7 +432,7 @@ public:
 
         case EclTwoPhaseApproach::GasWater: {
             Scalar Sw = scalarValue(fluidState.saturation(waterPhaseIdx));
-           
+
             return params.gasWaterParams().update(/*pcSw=*/1.0, /*krwSw=*/0.0, /*krnSw=*/Sw);
             break;
         }
