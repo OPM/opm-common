@@ -64,6 +64,7 @@
 #include <opm/input/eclipse/Schedule/Group/GConSump.hpp>
 #include <opm/input/eclipse/Schedule/Group/GConSale.hpp>
 #include <opm/input/eclipse/Schedule/Group/GroupEconProductionLimits.hpp>
+#include <opm/input/eclipse/Schedule/Group/GroupEconProductionLimits.hpp>
 #include <opm/input/eclipse/Schedule/Group/GuideRateConfig.hpp>
 #include <opm/input/eclipse/Schedule/MSW/SICD.hpp>
 #include <opm/input/eclipse/Schedule/MSW/Valve.hpp>
@@ -690,6 +691,25 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
         }
         this->snapshots.back().gconsump.update( std::move(new_gconsump) );
     }
+    void
+    Schedule::handleGECON(HandlerContext& handlerContext)
+    {
+        auto gecon = this->snapshots.back().gecon();
+        const auto& keyword = handlerContext.keyword;
+        auto report_step = handlerContext.currentStep;
+        for (const auto& record : keyword) {
+            const std::string& groupNamePattern
+                = record.getItem<ParserKeywords::GECON::GROUP>().getTrimmedString(0);
+            const auto group_names = this->groupNames(groupNamePattern);
+            if (group_names.empty())
+                this->invalidNamePattern(groupNamePattern, handlerContext);
+            for (const auto& gname : group_names) {
+                gecon.add_group(report_step, gname, record);
+            }
+        }
+        this->snapshots.back().gecon.update(std::move(gecon));
+    }
+
 
     void
     Schedule::handleGECON(HandlerContext& handlerContext)
@@ -775,18 +795,12 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
             for (const auto& group_name : group_names) {
                 auto new_group = this->snapshots.back().groups.get(group_name);
                 if (target_string == "NONE") {
-                    new_group.set_gpmaint();
-                } else {
-                    GPMaint gpmaint(handlerContext.currentStep, record);
-                    new_group.set_gpmaint(std::move(gpmaint));
-                }
                 this->snapshots.back().groups.update( std::move(new_group) );
             }
         }
     }
 
     void Schedule::handleGRUPNET(HandlerContext& handlerContext) {
-        auto network = this->snapshots.back().network.get();
         std::vector<Network::Node> nodes;
         for (const auto& record : handlerContext.keyword) {
              const std::string& groupNamePattern = record.getItem<ParserKeywords::GRUPNET::NAME>().getTrimmedString(0);
@@ -1042,10 +1056,17 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
         auto tuning = this->snapshots.back().tuning();
 
         // local helpers
+
+        // \Note No TSTINIT value should not be used unless explicitly non-defaulted, hence removing value by default
+        // \Note (exception is the first time step, which is handled by the Tuning constructor)
+        tuning.TSINIT = std::nullopt;
         auto nondefault_or_previous_double = [](const Opm::DeckRecord& rec, const std::string& item_name, double previous_value) {
             const auto& deck_item = rec.getItem(item_name);
             return deck_item.defaultApplied(0) ? previous_value : rec.getItem(item_name).get< double >(0);
         };
+            // \Note A value indicates TSINIT was set in this record
+            if (const auto& deck_item = record1.getItem("TSINIT"); !deck_item.defaultApplied(0)) 
+                tuning.TSINIT = std::optional<double>{ record1.getItem("TSINIT").getSIDouble(0) };
 
         auto nondefault_or_previous_int = [](const Opm::DeckRecord& rec, const std::string& item_name, int previous_value) {
             const auto& deck_item = rec.getItem(item_name);
@@ -2580,6 +2601,7 @@ Well{0} entered with 'FIELD' parent group:
         using handler_function = void (Schedule::*) (HandlerContext&);
         static const std::unordered_map<std::string,handler_function> handler_functions = {
             { "AQUCT",    &Schedule::handleAQUCT     },
+            { "GECON",    &Schedule::handleGECON     },
             { "AQUFETP",  &Schedule::handleAQUFETP   },
             { "AQUFLUX",  &Schedule::handleAQUFLUX   },
             { "BCPROP",   &Schedule::handleBCProp    },
