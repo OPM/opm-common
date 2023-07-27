@@ -766,6 +766,9 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
     }
 
     void Schedule::handleGRUPNET(HandlerContext& handlerContext) {
+        // Todo: Currently GRUPNET requires GRUPTREE. In case GRUPTREE is not specified we could assume 
+        // one level of groups, that is, a network hierarchy  FIELD-GROUPS-WELLS.
+
         auto network = this->snapshots.back().network.get();
         std::vector<Network::Node> nodes;
 
@@ -774,13 +777,15 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
             const auto& pressure_item = record.getItem<ParserKeywords::GRUPNET::TERMINAL_PRESSURE>();
             const int vfp_table = record.getItem<ParserKeywords::GRUPNET::VFP_TABLE>().get<int>(0);
 
-            const auto& group = this->snapshots.back().groups.get(name);
+            auto& group = this->snapshots.back().groups.get(name);
+            group.updateNetVFPTable(vfp_table);
+
             const auto& parent = group.parent();
             if (parent != "")
             {
                 const std::string& downtree_node = name;
                 const std::string& uptree_node = parent;
-                if (vfp_table == 0) {
+                if (vfp_table == 0 && network.has_node(downtree_node) && network.has_node(uptree_node)) {
                     network.drop_branch(uptree_node, downtree_node);
                 } else {
                     const auto alq_eq = Network::Branch::AlqEqfromString(record.getItem<ParserKeywords::GRUPNET::ALQ_SURFACE_DENSITY>().get<std::string>(0));

@@ -183,10 +183,25 @@ WCONPROD
 
 
 BOOST_AUTO_TEST_CASE(createDeckWithGRUPNET) {
+
     const std::string input = R"(
 START             -- 0
 31 AUG 1993 /
 SCHEDULE
+
+GRUPTREE 
+'MANI-B2'  'FIELD'   / 
+'MANI-B1'  'FIELD'   / 
+'MANI-K1'  'FIELD'   / 
+'B1-DUMMY' 'MANI-K1' / 
+'MANI-D1'  'FIELD'   / 
+'PROD'     'MANI-D1' / 
+'MANI-D2'  'MANI-D1' / 
+'MANI-K2'  'MANI-D1' / 
+'D2-DUMMY' 'MANI-K2' / 
+'MANI-E1'  'MANI-K2' / 
+'MANI-E2'  'MANI-K2' / 
+/
 
 GRUPNET
  'FIELD'     20.000  5* /
