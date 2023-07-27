@@ -45,6 +45,9 @@ BCType bctype(const std::string& s) {
     if (s == "CLOSED")
         return BCType::CLOSED;
 
+    if (s == "NONE")
+        return BCType::NONE;
+
     throw std::invalid_argument("Not recognized boundary condition type: " + s);
 }
 
@@ -54,13 +57,13 @@ BCMECHType bcmechtype(const std::string& s) {
 
     if (s == "FIXED")
         return BCMECHType::FIXED;
-    
+
     if (s == "NONE")
         return BCMECHType::NONE;
 
     throw std::invalid_argument("Not recognized boundary condition type: " + s);
 }
-    
+
 BCComponent component(const std::string& s) {
     if (s == "OIL")
         return BCComponent::OIL;
@@ -168,7 +171,7 @@ void BCProp::updateBCProp(const DeckRecord& record) {
                 return;
             }
     }
-    this->m_faces.emplace_back( bcnew );   
+    this->m_faces.emplace_back( bcnew );
 }
 
 
@@ -211,4 +214,3 @@ bool BCProp::operator==(const BCProp& other) const {
 
 
 } //namespace Opm
-
