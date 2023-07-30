@@ -766,48 +766,48 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
     }
 
     void Schedule::handleGRUPNET(HandlerContext& handlerContext) {
-        // Todo: Currently GRUPNET requires GRUPTREE. In case GRUPTREE is not specified we could assume 
-        // one level of groups, that is, a network hierarchy  FIELD-GROUPS-WELLS.
 
         auto network = this->snapshots.back().network.get();
         std::vector<Network::Node> nodes;
-
         for (const auto& record : handlerContext.keyword) {
-            const auto& name = record.getItem<ParserKeywords::GRUPNET::NAME>().get<std::string>(0);
+            const std::string& groupNamePattern = record.getItem<ParserKeywords::GRUPNET::NAME>().getTrimmedString(0);
+            const auto group_names = this->groupNames(groupNamePattern);
+            if (group_names.empty())
+                this->invalidNamePattern(groupNamePattern, handlerContext);
             const auto& pressure_item = record.getItem<ParserKeywords::GRUPNET::TERMINAL_PRESSURE>();
             const int vfp_table = record.getItem<ParserKeywords::GRUPNET::VFP_TABLE>().get<int>(0);
 
-            auto& group = this->snapshots.back().groups.get(name);
-            group.updateNetVFPTable(vfp_table);
-
-            const auto& parent = group.parent();
-            if (parent != "")
-            {
-                const std::string& downtree_node = name;
-                const std::string& uptree_node = parent;
-                if (vfp_table == 0 && network.has_node(downtree_node) && network.has_node(uptree_node)) {
-                    network.drop_branch(uptree_node, downtree_node);
-                } else {
-                    const auto alq_eq = Network::Branch::AlqEqfromString(record.getItem<ParserKeywords::GRUPNET::ALQ_SURFACE_DENSITY>().get<std::string>(0));
-                    if (alq_eq == Network::Branch::AlqEQ::ALQ_INPUT) {
-                        double alq_value = record.getItem<ParserKeywords::GRUPNET::ALQ>().get<double>(0);
-                        network.add_branch(Network::Branch(downtree_node, uptree_node, vfp_table, alq_value));
+            for (const auto& group_name : group_names) {
+                auto& group = this->snapshots.back().groups.get(group_name);
+                group.updateNetVFPTable(vfp_table);
+                const auto& parent_name = group.parent();
+                if (parent_name != "")
+                {
+                    const std::string& downtree_node = group_name;
+                    const std::string& uptree_node = parent_name;
+                    if (vfp_table == 0 && network.has_node(downtree_node) && network.has_node(uptree_node)) {
+                        network.drop_branch(uptree_node, downtree_node);
                     } else {
-                        network.add_branch(Network::Branch(downtree_node, uptree_node, vfp_table, alq_eq));
+                        const auto alq_eq = Network::Branch::AlqEqfromString(record.getItem<ParserKeywords::GRUPNET::ALQ_SURFACE_DENSITY>().get<std::string>(0));
+                        if (alq_eq == Network::Branch::AlqEQ::ALQ_INPUT) {
+                            double alq_value = record.getItem<ParserKeywords::GRUPNET::ALQ>().get<double>(0);
+                            network.add_branch(Network::Branch(downtree_node, uptree_node, vfp_table, alq_value));
+                        } else {
+                            network.add_branch(Network::Branch(downtree_node, uptree_node, vfp_table, alq_eq));
+                        }
                     }
                 }
+                Network::Node node { group_name };
+                if (pressure_item.hasValue(0) && (pressure_item.get<double>(0) > 0))
+                    node.terminal_pressure(pressure_item.getSIDouble(0));
+                nodes.push_back(node);
             }
-            Network::Node node { name };
-            if (pressure_item.hasValue(0) && (pressure_item.get<double>(0) > 0))
-                node.terminal_pressure(pressure_item.getSIDouble(0));
-            nodes.push_back(node);
         }
-
         this->snapshots.back().network.update( network );
         for(const auto& node: nodes)
             network.add_node(node);
         this->snapshots.back().network.update( std::move( network ));
-    }
+     }
 
     void Schedule::handleGRUPTREE(HandlerContext& handlerContext) {
         for (const auto& record : handlerContext.keyword) {
