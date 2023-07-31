@@ -94,33 +94,30 @@ BOOST_AUTO_TEST_CASE(GroupDoesNotHaveWell) {
 
 
 BOOST_AUTO_TEST_CASE(createDeckWithGEFAC) {
-    std::string input =
-            "START             -- 0 \n"
-            "19 JUN 2007 / \n"
-            "GRID\n"
-            "PORO\n"
-            "1000*0.1  /\n"
-            "PERMX \n"
-            "1000*1 /\n"
-            "PERMY \n"
-            "1000*0.1 /\n"
-            "PERMZ \n"
-            "1000*0.01 /\n"
-            "SCHEDULE\n"
-
-	    "WELSPECS\n"
-     	     " 'B-37T2' 'PRODUC'  9  9   1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  / \n"
-	     " 'B-43A'  'PRODUC'  8  8   1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  / \n"
-	     "/\n"
-
-	     "COMPDAT\n"
-	     " 'B-37T2'  9  9   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
-             " 'B-43A'   8  8   2   2 'OPEN' 1*   46.825   0.311  4332.346 1*  1*  'X'  22.123 / \n"
-	     "/\n"
-
-            "GEFAC\n"
-            " 'PRODUC' 0.85   / \n"
-            "/\n";
+    const std::string input = R"(
+START             -- 0
+19 JUN 2007 /
+GRID
+PORO
+1000*0.1  /
+PERMX
+1000*1 /
+PERMY
+1000*0.1 /
+PERMZ
+1000*0.01 /
+SCHEDULE
+WELSPECS
+   'B-37T2' 'PRODUC'  9  9   1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  /
+   'B-43A'  'PRODUC'  8  8   1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  /
+  /
+ COMPDAT
+  'B-37T2'  9  9   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
+  'B-43A'   8  8   2   2 'OPEN' 1*   46.825   0.311  4332.346 1*  1*  'X'  22.123 /
+ /
+GEFAC
+ 'PRODUC' 0.85   /
+/)";
 
     auto schedule = create_schedule(input);
 
@@ -140,42 +137,35 @@ BOOST_AUTO_TEST_CASE(createDeckWithWGRUPCONandWCONPROD) {
     /* Test deck with well guide rates for group control:
        GRUPCON (well guide rates for group control)
        WCONPROD (conrol data for production wells) with GRUP control mode */
-    std::string input =
-            "START             -- 0 \n"
-            "19 JUN 2007 / \n"
-            "GRID\n"
-            "PORO\n"
-            "1000*0.1  /\n"
-            "PERMX \n"
-            "1000*1 /\n"
-            "PERMY \n"
-            "1000*0.1 /\n"
-            "PERMZ \n"
-            "1000*0.01 /\n"
-            "SCHEDULE\n"
-
-	    "WELSPECS\n"
-     	     " 'B-37T2' 'PRODUC'  9  9   1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  / \n"
-	     " 'B-43A'  'PRODUC'  8  8   1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  / \n"
-	     "/\n"
-
-	     "COMPDAT\n"
-	     " 'B-37T2'  9  9   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
-             " 'B-43A'   8  8   2   2 'OPEN' 1*   46.825   0.311  4332.346 1*  1*  'X'  22.123 / \n"
-	     "/\n"
-
-
-             "WGRUPCON\n"
-             " 'B-37T2'  YES 30 OIL / \n"
-             " 'B-43A'   YES 30 OIL / \n"
-             "/\n"
-
-             "WCONPROD\n"
-             " 'B-37T2'    'OPEN'     'GRUP'  1000  2*   2000.000  2* 1*   0 200000.000  5* /  / \n"
-             " 'B-43A'     'OPEN'     'GRUP'  1200  2*   3000.000  2* 1*   0  0.000      5* /  / \n"
-             "/\n";
-
-
+    const std::string input = R"(
+START             -- 0
+19 JUN 2007 /
+GRID
+PORO
+1000*0.1  /
+PERMX
+1000*1 /
+PERMY
+1000*0.1 /
+PERMZ
+1000*0.01 /
+SCHEDULE
+WELSPECS
+ 'B-37T2' 'PRODUC'  9  9   1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  /
+ 'B-43A'  'PRODUC'  8  8   1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  /
+/
+COMPDAT
+ 'B-37T2'  9  9   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
+ 'B-43A'   8  8   2   2 'OPEN' 1*   46.825   0.311  4332.346 1*  1*  'X'  22.123 /
+/
+WGRUPCON
+ 'B-37T2'  YES 30 OIL /
+ 'B-43A'   YES 30 OIL /
+/
+WCONPROD
+ 'B-37T2'    'OPEN'     'GRUP'  1000  2*   2000.000  2* 1*   0 200000.000  5* /  /
+ 'B-43A'     'OPEN'     'GRUP'  1200  2*   3000.000  2* 1*   0  0.000      5* /  /
+/)";
 
     auto schedule = create_schedule(input);
     const auto& currentWell = schedule.getWell("B-37T2", 0);
@@ -193,26 +183,25 @@ BOOST_AUTO_TEST_CASE(createDeckWithWGRUPCONandWCONPROD) {
 
 
 BOOST_AUTO_TEST_CASE(createDeckWithGRUPNET) {
-    std::string input =
-        "START             -- 0 \n"
-        "31 AUG 1993 / \n"
-        "SCHEDULE\n"
+    const std::string input = R"(
+START             -- 0
+31 AUG 1993 /
+SCHEDULE
 
-        "GRUPNET \n"
-        " 'FIELD'     20.000  5* / \n"
-        " 'PROD'     20.000  5* / \n"
-        " 'MANI-B2'  1*    8  1*        'NO'  2* / \n"
-        " 'MANI-B1'  1*    8  1*        'NO'  2* / \n"
-        " 'MANI-K1'  1* 9999  4* / \n"
-        " 'B1-DUMMY'  1* 9999  4* / \n"
-        " 'MANI-D1'  1*    8  1*        'NO'  2* / \n"
-        " 'MANI-D2'  1*    8  1*        'NO'  2* / \n"
-        " 'MANI-K2'  1* 9999  4* / \n"
-        " 'D2-DUMMY'  1* 9999  4* / \n"
-        " 'MANI-E1'  1*    9  1*        'NO'  2* / \n"
-        " 'MANI-E2'  1*    9  4* / \n"
-        "/\n";
-
+GRUPNET
+ 'FIELD'     20.000  5* /
+ 'PROD'     20.000  5* /
+ 'MANI-B2'  1*    8  1*        'NO'  2* /
+ 'MANI-B1'  1*    8  1*        'NO'  2* /
+ 'MANI-K1'  1* 9999  4* /
+ 'B1-DUMMY'  1* 9999  4* /
+ 'MANI-D1'  1*    8  1*        'NO'  2* /
+ 'MANI-D2'  1*    8  1*        'NO'  2* /
+ 'MANI-K2'  1* 9999  4* /
+ 'D2-DUMMY'  1* 9999  4* /
+ 'MANI-E1'  1*    9  1*        'NO'  2* /
+ 'MANI-E2'  1*    9  4* /
+/)";
 
     auto schedule = create_schedule(input);
 
