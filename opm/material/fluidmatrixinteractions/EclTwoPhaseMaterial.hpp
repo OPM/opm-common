@@ -112,15 +112,15 @@ public:
     static constexpr bool isCompositionDependent = false;
 
     template <class ContainerT, class FluidState>
-    static Scalar relpermOilInOilGasSystem(const Params& params,
-                                           const FluidState& fluidState){
+    static Scalar relpermOilInOilGasSystem(const Params& /*params*/,
+                                           const FluidState& /*fluidState*/) {
         throw std::logic_error {
             "relpermOilInOilGasSystem() is specific to three phases"
                 };
     }
     template <class ContainerT, class FluidState>
-    static Scalar relpermOilInOilWaterSystem(const Params& params,
-                                                 const FluidState& fluidState){
+    static Scalar relpermOilInOilWaterSystem(const Params& /*params*/,
+                                                 const FluidState& /*fluidState*/) {
         throw std::logic_error {
                 "relpermOilInOilWaterSystem() is specific to three phases"
                     };
