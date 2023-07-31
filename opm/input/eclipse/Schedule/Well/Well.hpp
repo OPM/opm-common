@@ -484,8 +484,8 @@ public:
     bool handleWINJCLN(const DeckRecord& record, const KeywordLocation& location);
     bool handleWINJDAM(const DeckRecord& record, const KeywordLocation& location);
     bool handleWINJMULT(const DeckRecord& record, const KeywordLocation& location);
-    void setFilterConc(const double conc);
-    double getFilterConc() const;
+    void setFilterConc(const UDAValue& conc);
+    double evalFilterConc(const SummaryState& summary_sate) const;
     bool applyGlobalWPIMULT(double scale_factor);
 
     void filterConnections(const ActiveGridCells& grid);
@@ -603,7 +603,7 @@ private:
     double well_temperature;
     InjMultMode inj_mult_mode = InjMultMode::NONE;
     std::optional<InjMult> well_inj_mult;
-    double m_filter_concentration = 0.;
+    UDAValue m_filter_concentration;
 };
 
 std::ostream& operator<<( std::ostream&, const Well::WellInjectionProperties& );

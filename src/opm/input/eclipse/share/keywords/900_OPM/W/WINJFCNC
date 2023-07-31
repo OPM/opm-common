@@ -10,7 +10,7 @@
     },
     {
       "name": "VOL_CONCENTRATION",
-      "value_type": "DOUBLE",
+      "value_type": "UDA",
       "dimension": "1",
       "default" : 0
     }
