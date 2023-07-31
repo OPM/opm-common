@@ -134,7 +134,9 @@ public:
         serializer(*oilWaterParams_);
         serializer(*gasWaterParams_);
     }
-    void setSwl(Scalar val){}
+
+    void setSwl(Scalar) {}
+
 private:
     EclTwoPhaseApproach approach_;
 
