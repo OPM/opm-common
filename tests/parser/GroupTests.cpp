@@ -240,22 +240,22 @@ BOOST_AUTO_TEST_CASE(GroupCreate) {
 }
 
 BOOST_AUTO_TEST_CASE(createDeckWithGCONPROD) {
-    std::string input = R"(
-        START             -- 0
-        31 AUG 1993 /
-        SCHEDULE
+    const std::string input = R"(
+START             -- 0
+31 AUG 1993 /
+SCHEDULE
 
-        GRUPTREE
-           'G1'  'FIELD' /
-           'G2'  'FIELD' /
-           'G3'  'FIELD' /
-        /
+GRUPTREE
+  'G1'  'FIELD' /
+  'G2'  'FIELD' /
+  'G3'  'FIELD' /
+/
 
-        GCONPROD
-            'G1' 'ORAT' 10000 3* 'RATE' 3* 'RATE' 'NONE' 'RATE'/
-            'G2' 'RESV' 10000 3* 'CON' /
-            'G3' 'ORAT' 10000 3*  1* /
-        /)";
+GCONPROD
+  'G1' 'ORAT' 10000 3* 'RATE' 3* 'RATE' 'NONE' 'RATE'/
+  'G2' 'RESV' 10000 3* 'CON' /
+  'G3' 'ORAT' 10000 3*  1* /
+/)";
 
     auto schedule = create_schedule(input);
     SummaryState st(TimeService::now());
@@ -286,85 +286,79 @@ BOOST_AUTO_TEST_CASE(TESTGuideRateModel) {
 }
 
 BOOST_AUTO_TEST_CASE(TESTGuideRateLINCOM) {
-    std::string input = R"(
-        START             -- 0
-        31 AUG 1993 /
-        SCHEDULE
+    const std::string input = R"(
+START             -- 0
+31 AUG 1993 /
+SCHEDULE
 
-        GRUPTREE
-           'G1'  'FIELD' /
-           'G2'  'FIELD' /
-        /
+GRUPTREE
+  'G1'  'FIELD' /
+  'G2'  'FIELD' /
+/
 
-        GCONPROD
-            'G1' 'ORAT' 10000 3* 'CON' /
-            'G2' 'RESV' 10000 3* 'CON' /
-        /
+GCONPROD
+  'G1' 'ORAT' 10000 3* 'CON' /
+  'G2' 'RESV' 10000 3* 'CON' /
+/
 
-        GUIDERAT
-             1*  'COMB'  1.0 1.0 /
+GUIDERAT
+  1*  'COMB'  1.0 1.0 /
 
-        LINCOM
-             1  2  'WWCT:OPX' /
-
-        )";
-
+LINCOM
+  1  2  'WWCT:OPX' /)";
 
     /* The 'COMB' target mode is not supported */
     BOOST_CHECK_THROW(create_schedule(input), std::exception);
 }
 
 BOOST_AUTO_TEST_CASE(TESTGuideRate) {
-    std::string input = R"(
-        START             -- 0
-        31 AUG 1993 /
-        SCHEDULE
+    const std::string input = R"(
+START             -- 0
+31 AUG 1993 /
+SCHEDULE
 
-        GRUPTREE
-           'G1'  'FIELD' /
-           'G2'  'FIELD' /
-        /
+GRUPTREE
+  'G1'  'FIELD' /
+  'G2'  'FIELD' /
+/
 
-        GCONPROD
-            'G1' 'ORAT' 10000 3* 'CON' /
-            'G2' 'RESV' 10000 3* 'CON' /
-        /
+GCONPROD
+  'G1' 'ORAT' 10000 3* 'CON' /
+  'G2' 'RESV' 10000 3* 'CON' /
+/
 
-        GUIDERAT
-             1*  'OIL'  1.0 1.0 /
+GUIDERAT
+  1*  'OIL'  1.0 1.0 /
 
-        LINCOM
-             1  2  'WWCT:OPX' /
+LINCOM
+  1  2  'WWCT:OPX' /
 
-        TSTEP
-           1 1 1 1 1 1 1 1 1 1 1 /
-        )";
+TSTEP
+  1 1 1 1 1 1 1 1 1 1 1 /)";
 
     auto schedule = create_schedule(input);
     GuideRate gr(schedule);
 }
 
 BOOST_AUTO_TEST_CASE(TESTGCONSALE) {
-    std::string input = R"(
-        START             -- 0
-        31 AUG 1993 /
-        SCHEDULE
+    const std::string input = R"(
+START             -- 0
+31 AUG 1993 /
+SCHEDULE
 
-        GRUPTREE
-           'G1'  'FIELD' /
-           'G2'  'FIELD' /
-        /
+GRUPTREE
+  'G1'  'FIELD' /
+  'G2'  'FIELD' /
+/
 
-        GCONSALE
-        'G1' 50000 55000 45000 WELL /
-        /
+GCONSALE
+  'G1' 50000 55000 45000 WELL /
+/
 
-        GCONSUMP
-        'G1' 20 50 'a_node' /
-        'G2' 30 60 /
-        /
-
-        )";
+GCONSUMP
+  'G1' 20 50 'a_node' /
+  'G2' 30 60 /
+/)";
 
     auto schedule = create_schedule(input);
     double metric_to_si = 1.0 / (24.0 * 3600.0);  //cubic meters / day
@@ -401,32 +395,30 @@ BOOST_AUTO_TEST_CASE(TESTGCONSALE) {
 }
 
 BOOST_AUTO_TEST_CASE(GCONINJE_MULTIPLE_PHASES) {
-    std::string input = R"(
-        START             -- 0
-        31 AUG 1993 /
-        SCHEDULE
+    const std::string input = R"(
+START             -- 0
+31 AUG 1993 /
+SCHEDULE
 
-        GRUPTREE
-           'G1'  'FIELD' /
-           'G2'  'FIELD' /
-        /
+GRUPTREE
+  'G1'  'FIELD' /
+  'G2'  'FIELD' /
+/
 
-        GCONINJE
-           'G1'   'WATER'   1*  1000      /
-           'G1'   'GAS'     1*  1*   2000 /
-           'G2'   'WATER'   1*  1000      /
-        /
+GCONINJE
+  'G1'   'WATER'   1*  1000      /
+  'G1'   'GAS'     1*  1*   2000 /
+  'G2'   'WATER'   1*  1000      /
+/
 
-        TSTEP
-           10 /
+TSTEP
+  10 /
 
-        GCONINJE
-           'G2'   'WATER'   1*  1000  /
-           'G2'   'GAS'     1*  1*   2000  2*   'NO' /
-           'G1'   'GAS'     1*  1000      /
-        /
-
-        )";
+GCONINJE
+  'G2'   'WATER'   1*  1000  /
+  'G2'   'GAS'     1*  1*   2000  2*   'NO' /
+  'G1'   'GAS'     1*  1000      /
+/)";
 
     auto schedule = create_schedule(input);
     SummaryState st(TimeService::now());
@@ -474,41 +466,39 @@ BOOST_AUTO_TEST_CASE(GCONINJE_MULTIPLE_PHASES) {
 }
 
 BOOST_AUTO_TEST_CASE(GCONINJE_GUIDERATE) {
-    std::string input = R"(
-        START             -- 0
-        31 AUG 1993 /
-        SCHEDULE
+    const std::string input = R"(
+START             -- 0
+31 AUG 1993 /
+SCHEDULE
 
-        GRUPTREE
-           'G1'  'FIELD' /
-           'G2'  'FIELD' /
-        /
+GRUPTREE
+  'G1'  'FIELD' /
+  'G2'  'FIELD' /
+/
 
-        GCONINJE
-           'G1'   'WATER'   1*  1000 /
-           'G1'   'GAS'     1*  1000 /
-           'G2'   'WATER'   1*  1000 /
-        /
+GCONINJE
+  'G1'   'WATER'   1*  1000 /
+  'G1'   'GAS'     1*  1000 /
+  'G2'   'WATER'   1*  1000 /
+/
 
-        TSTEP
-           10 /
+TSTEP
+  10 /
 
-        GCONINJE
-           'G1'   'WATER'   1*  1000 3* 'YES' 1 'RATE'/
-           'G1'   'GAS'     1*  1000 3* 'YES' 1 'RATE'/
-           'G2'   'WATER'   1*  1000 3* 'YES' 1 'RATE'/
-        /
+GCONINJE
+  'G1'   'WATER'   1*  1000 3* 'YES' 1 'RATE'/
+  'G1'   'GAS'     1*  1000 3* 'YES' 1 'RATE'/
+  'G2'   'WATER'   1*  1000 3* 'YES' 1 'RATE'/
+/
 
-        TSTEP
-            10 /
+TSTEP
+  10 /
 
-        GCONINJE
-            'G1'   'WATER'   1*  1000 /
-            'G1'   'GAS'     1*  1000 3* 'YES' 1 'RATE'/
-            'G2'   'WATER'   1*  1000 3* 'YES' 1 'RATE'/
-        /
-
-        )";
+GCONINJE
+  'G1'   'WATER'   1*  1000 /
+  'G1'   'GAS'     1*  1000 3* 'YES' 1 'RATE'/
+  'G2'   'WATER'   1*  1000 3* 'YES' 1 'RATE'/
+/)";
 
     auto schedule = create_schedule(input);
     // Step 0
@@ -563,41 +553,38 @@ BOOST_AUTO_TEST_CASE(GCONINJE_GUIDERATE) {
 }
 
 BOOST_AUTO_TEST_CASE(GCONINJE_GCONPROD) {
-    std::string input = R"(
-        START             -- 0
-        31 AUG 1993 /
-        SCHEDULE
+    const std::string input = R"(
+START             -- 0
+31 AUG 1993 /
+SCHEDULE
 
-        GRUPTREE
-           'G1'  'FIELD' /
-           'G2'  'FIELD' /
-        /
+GRUPTREE
+  'G1'  'FIELD' /
+  'G2'  'FIELD' /
+/
 
-        GCONPROD
-            'G1' 'ORAT' 10000 3* 'CON' 'NO'/
-            'G2' 'ORAT' 10000 3* 'CON' /
-        /
+GCONPROD
+  'G1' 'ORAT' 10000 3* 'CON' 'NO'/
+  'G2' 'ORAT' 10000 3* 'CON' /
+/
 
-        GCONINJE
-           'G1'   'WATER'     1*  1000      /
-           'G2'   'WATER'     1*  1*   2000 1*  1*  'NO'/
-        /
+GCONINJE
+  'G1'   'WATER'     1*  1000      /
+  'G2'   'WATER'     1*  1*   2000 1*  1*  'NO'/
+/
 
+TSTEP
+  1 /
 
-        TSTEP
-           1 /
+GCONPROD
+  'G1' 'ORAT' 10000 3* 'CON' /
+  'G2' 'ORAT' 10000 3* 'CON' 'NO'/
+/
 
-        GCONPROD
-            'G1' 'ORAT' 10000 3* 'CON' /
-            'G2' 'ORAT' 10000 3* 'CON' 'NO'/
-        /
-
-        GCONINJE
-           'G1'   'WATER'     1*  1000 3* 'NO'     /
-           'G2'   'WATER'     1*  1*   2000 /
-        /
-
-        )";
+GCONINJE
+  'G1'   'WATER'     1*  1000 3* 'NO'     /
+  'G2'   'WATER'     1*  1*   2000 /
+/)";
 
     auto schedule = create_schedule(input);
     {
@@ -677,10 +664,8 @@ TSTEP
 GCONPROD
    PROD        ORAT  0     0     1*    0     RATE  YES   1*    '   '     1*    1*    1*    1*    1*    /
    FIELD       ORAT  71500 1*    1*    1*    RATE  YES   1*    '   '     1*    1*    1*    1*    1*    /
-/
+/)";
 
-
-)";
     Opm::UnitSystem unitSystem = UnitSystem( UnitSystem::UnitType::UNIT_TYPE_METRIC );
     const auto sched = create_schedule(input);
     GPMaint::State gpm_state;
