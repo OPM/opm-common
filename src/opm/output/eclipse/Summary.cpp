@@ -688,8 +688,11 @@ inline quantity glir( const fn_args& args ) {
     return { alq_rate, measure::gas_surface_rate };
 }
 
-inline quantity wwirt( const fn_args& args ) {
-    const quantity zero = { 0, rate_unit< Opm::Phase::WATER >() };
+template< rt phase, bool injection = true >
+inline quantity well_rate_target( const fn_args& args ) {
+    quantity zero = { 0, rate_unit< Opm::Phase::WATER >() };
+    if (phase == rt::gas)
+        zero = { 0, rate_unit< Opm::Phase::GAS >() };  
 
     if (args.schedule_wells.empty()) {
         return zero;
@@ -697,13 +700,34 @@ inline quantity wwirt( const fn_args& args ) {
 
     const auto* well  = args.schedule_wells.front();
     const auto& wtype = well->wellType();
-    if (wtype.producer() || (wtype.injector_type() != Opm::InjectorType::WATER)) {
-        return zero;
-    }
 
-    const auto& injection = well->injectionControls(args.st);
-    return { injection.surface_rate, rate_unit<Opm::Phase::WATER>() };
+    if (injection){
+        if (phase ==  rt::wat){
+            if (wtype.producer() || (wtype.injector_type() != Opm::InjectorType::WATER)) {
+                return zero;
+            }
+            const auto& injectionControl = well->injectionControls(args.st);
+            return { injectionControl.surface_rate, rate_unit<Opm::Phase::WATER>() };
+        } else if (phase ==  rt::oil){
+            if (wtype.producer() || (wtype.injector_type() != Opm::InjectorType::OIL)){
+                return zero;
+            }
+            const auto& injectionControl = well->injectionControls(args.st);
+            return { injectionControl.surface_rate, rate_unit<Opm::Phase::OIL>() };
+        } else if (phase == rt::gas){
+            if (wtype.producer() || (wtype.injector_type() != Opm::InjectorType::GAS)) {
+                return zero;
+            }
+            const auto& injectionControl = well->injectionControls(args.st);
+            return { injectionControl.surface_rate, rate_unit<Opm::Phase::GAS>() };
+        } else{
+            return zero;           
+        }
+    } else { 
+            return zero;         
+    }
 }
+
 
 template< rt phase, bool injection = true >
 inline quantity rate( const fn_args& args ) {
@@ -1765,8 +1789,7 @@ using ofun = std::function<quantity(const fn_args&)>;
 using UnitTable = std::unordered_map<std::string, Opm::UnitSystem::measure>;
 
 static const auto funs = std::unordered_map<std::string, ofun> {
-    { "WWIR", rate< rt::wat, injector > },
-    { "WWIRT", wwirt },
+    { "WWIR", rate< rt::wat, injector > },   
     { "WOIR", rate< rt::oil, injector > },
     { "WGIR", rate< rt::gas, injector > },
     { "WEIR", rate< rt::energy, injector > },
@@ -1774,6 +1797,9 @@ static const auto funs = std::unordered_map<std::string, ofun> {
     { "WNIR", rate< rt::solvent, injector > },
     { "WCIR", rate< rt::polymer, injector > },
     { "WSIR", rate< rt::brine, injector > },
+    { "WWIRT", well_rate_target<rt::wat, injector > },
+    { "WOIRT", well_rate_target<rt::oil, injector > },
+    { "WGIRT", well_rate_target<rt::gas, injector > },
     // Allow phase specific interpretation of tracer related summary keywords
     { "WTIR#W", ratetracer< rt::tracer, rt::wat, injector > }, // #W: Water tracers
     { "WTIR#O", ratetracer< rt::tracer, rt::oil, injector > }, // #O: Oil tracers
