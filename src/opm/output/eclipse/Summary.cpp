@@ -724,7 +724,27 @@ inline quantity well_rate_target( const fn_args& args ) {
             return zero;           
         }
     } else { 
-            return zero;         
+         if (phase ==  rt::wat){
+            if (wtype.injector() ){
+                return zero;
+            }
+            const auto& production = well->productionControls(args.st);
+            return { production.water_rate, rate_unit<Opm::Phase::WATER>() };
+        } else if (phase ==  rt::oil){
+            if (wtype.injector() ){
+                return zero;
+            }
+            const auto& production = well->productionControls(args.st);
+            return { production.oil_rate, rate_unit<Opm::Phase::OIL>() };
+        } else if (phase == rt::gas){
+            if (wtype.injector() ){
+                return zero;
+            }
+            const auto& production = well->productionControls(args.st);
+            return { production.gas_rate, rate_unit<Opm::Phase::GAS>() };
+        } else{ 
+            return zero;           
+        }
     }
 }
 
@@ -1272,6 +1292,30 @@ inline quantity thp_history( const fn_args& args ) {
     return { thp_hist, measure::pressure };
 }
 
+inline quantity bhp_target( const fn_args& args ) {
+    if( args.schedule_wells.empty() ) return { 0.0, measure::pressure };
+
+    const auto* sched_well = args.schedule_wells.front();
+
+    const auto bhp_target = sched_well->isProducer()
+        ? sched_well->getProductionProperties().BHPTarget.getSI()
+        : sched_well->getInjectionProperties().BHPTarget.getSI();
+
+    return { bhp_target, measure::pressure };
+}
+
+inline quantity thp_target( const fn_args& args ) {
+    if( args.schedule_wells.empty() ) return { 0.0, measure::pressure };
+
+    const auto* sched_well = args.schedule_wells.front();
+
+    const auto thp_target = sched_well->isProducer()
+        ? sched_well->getProductionProperties().THPTarget.getSI()
+        : sched_well->getInjectionProperties().THPTarget.getSI();
+
+    return { thp_target, measure::pressure };
+}
+
 inline quantity node_pressure(const fn_args& args)
 {
     auto nodePos = args.grp_nwrk.nodeData.find(args.group_name);
@@ -1387,6 +1431,16 @@ inline quantity res_vol_production_target( const fn_args& args )
     for (const auto* sched_well : args.schedule_wells)
         if (sched_well->getProductionProperties().predictionMode)
             sum += sched_well->getProductionProperties().ResVRate.getSI();
+
+    return { sum, measure::rate };
+}
+
+inline quantity res_vol_injection_target( const fn_args& args )
+{
+    double sum = 0.0;
+    for (const auto* sched_well : args.schedule_wells)
+        if (sched_well->getInjectionProperties().predictionMode)
+            sum += sched_well->getInjectionProperties().reservoirInjectionRate.getSI();
 
     return { sum, measure::rate };
 }
@@ -1828,6 +1882,9 @@ static const auto funs = std::unordered_map<std::string, ofun> {
 
     { "WWPR", rate< rt::wat, producer > },
     { "WOPR", rate< rt::oil, producer > },
+    { "WWPRT", well_rate_target<rt::wat, producer > },
+    { "WOPRT", well_rate_target<rt::oil, producer > },
+    { "WGPRT", well_rate_target<rt::gas, producer > },
     { "WWPTL",mul(ratel< rt::wat, producer >, duration) },
     { "WGPTL",mul(ratel< rt::gas, producer >, duration) },
     { "WOPTL",mul(ratel< rt::oil, producer >, duration) },
@@ -1916,6 +1973,7 @@ static const auto funs = std::unordered_map<std::string, ofun> {
     { "WTPCHEA", temperature< producer >},
     { "WTICHEA", temperature< injector >},
     { "WVPRT", res_vol_production_target },
+    { "WVIRT", res_vol_injection_target },
 
     { "WMCTL", well_control_mode },
 
@@ -1934,6 +1992,10 @@ static const auto funs = std::unordered_map<std::string, ofun> {
 
     { "GGIGR", group_guiderate<injector, Opm::data::GuideRateValue::Item::Gas> },
     { "GWIGR", group_guiderate<injector, Opm::data::GuideRateValue::Item::Water> },
+
+    { "GWIRT", well_rate_target<rt::wat, injector > },
+    { "GOIRT", well_rate_target<rt::oil, injector > },
+    { "GGIRT", well_rate_target<rt::gas, injector > },
 
     { "GWIT", mul( rate< rt::wat, injector >, duration ) },
     { "GOIT", mul( rate< rt::oil, injector >, duration ) },
@@ -1967,6 +2029,11 @@ static const auto funs = std::unordered_map<std::string, ofun> {
     { "GGPGR", group_guiderate<producer, Opm::data::GuideRateValue::Item::Gas> },
     { "GWPGR", group_guiderate<producer, Opm::data::GuideRateValue::Item::Water> },
     { "GVPGR", group_guiderate<producer, Opm::data::GuideRateValue::Item::ResV> },
+
+    
+    { "GWPRT", well_rate_target<rt::wat, producer > },
+    { "GOPRT", well_rate_target<rt::oil, producer > },
+    { "GGPRT", well_rate_target<rt::gas, producer > },
 
     { "GPR", node_pressure },
 
@@ -2034,6 +2101,8 @@ static const auto funs = std::unordered_map<std::string, ofun> {
 
     { "WTHPH", thp_history },
     { "WBHPH", bhp_history },
+    { "WTHPT", thp_target },
+    { "WBHPT", bhp_target },
 
     { "GWPRH", production_history< Opm::Phase::WATER > },
     { "GOPRH", production_history< Opm::Phase::OIL > },
@@ -2072,6 +2141,7 @@ static const auto funs = std::unordered_map<std::string, ofun> {
     { "GMWPR", flowing< producer > },
 
     { "GVPRT", res_vol_production_target },
+    { "GVIRT", res_vol_injection_target },
 
     { "CPR", cpr  },
     { "CGIRL", cratel< rt::gas, injector> },
@@ -2250,6 +2320,7 @@ static const auto funs = std::unordered_map<std::string, ofun> {
     { "FMWIN", flowing< injector > },
     { "FMWPR", flowing< producer > },
     { "FVPRT", res_vol_production_target },
+    { "FVIRT", res_vol_injection_target },
     { "FMWPA", abandoned_well< producer > },
     { "FMWIA", abandoned_well< injector >},
 
@@ -2257,6 +2328,14 @@ static const auto funs = std::unordered_map<std::string, ofun> {
     { "FMCTP", group_control< false, true,  false, false >},
     { "FMCTW", group_control< false, false, true,  false >},
     { "FMCTG", group_control< false, false, false, true  >},
+
+    { "FWIRT", well_rate_target<rt::wat, injector > },
+    { "FOIRT", well_rate_target<rt::oil, injector > },
+    { "FGIRT", well_rate_target<rt::gas, injector > },
+    { "FWPRT", well_rate_target<rt::wat, producer > },
+    { "FOPRT", well_rate_target<rt::oil, producer > },
+    { "FGPRT", well_rate_target<rt::gas, producer > },
+    
 
     /* Region properties */
     { "ROIR"  , region_rate< rt::oil, injector > },
