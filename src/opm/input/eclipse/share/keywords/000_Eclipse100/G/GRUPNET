@@ -6,35 +6,42 @@
   ],
   "items": [
     {
+      "item": 1,
       "name": "NAME",
       "value_type": "STRING"
     },
     {
+      "item": 2,
       "name": "TERMINAL_PRESSURE",
       "value_type": "DOUBLE",
       "dimension": "Pressure"
     },
     {
+      "item": 3,
       "name": "VFP_TABLE",
       "value_type": "INT",
       "default": 0
     },
     {
+      "item": 4,
       "name": "ALQ",
       "value_type": "DOUBLE",
       "default": 0
     },
     {
+      "item": 5,
       "name": "SUB_SEA_MANIFOLD",
       "value_type": "STRING",
       "default": "NO"
     },
     {
-      "name": "LIFT_GAS_FLOW_THROUGH",
+      "item": 6,
+      "name": "ADD_GAS_LIFT_GAS",
       "value_type": "STRING",
       "default": "NO"
     },
     {
+      "item": 7,
       "name": "ALQ_SURFACE_DENSITY",
       "value_type": "STRING",
       "default": "NONE"

@@ -786,7 +786,6 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
     }
 
     void Schedule::handleGRUPNET(HandlerContext& handlerContext) {
-<<<<<<< HEAD
         auto network = this->snapshots.back().network.get();
         std::vector<Network::Node> nodes;
         for (const auto& record : handlerContext.keyword) {
@@ -850,6 +849,8 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
     }
 =======
 
+=======
+>>>>>>> dfdfbda56 (add gas-lift to standard network)
         auto network = this->snapshots.back().network.get();
         std::vector<Network::Node> nodes;
         for (const auto& record : handlerContext.keyword) {
@@ -859,6 +860,11 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
                 this->invalidNamePattern(groupNamePattern, handlerContext);
             const auto& pressure_item = record.getItem<ParserKeywords::GRUPNET::TERMINAL_PRESSURE>();
             const int vfp_table = record.getItem<ParserKeywords::GRUPNET::VFP_TABLE>().get<int>(0);
+            // It is assumed here that item 6 (ADD_GAS_LIFT_GAS) has the two options ON and FLO. THe option ALQ is not supported.
+            // For standard network the summation of ALQ values are weighted with efficiency factors. For extended networks
+            // this calculation using efficiency factors is the default set by WEFAC item 3 (YES), the value NO is not supported. 
+            // Therefore in opm-simulators (opm/simulators/wells/WellGroupHelpers.cpp) no changes are needed.
+            const bool add_gas_lift_gas = DeckItem::to_bool(record.getItem<ParserKeywords::GRUPNET::ADD_GAS_LIFT_GAS>().get<std::string>(0));
 
             for (const auto& group_name : group_names) {
                 auto& group = this->snapshots.back().groups.get(group_name);
@@ -883,6 +889,7 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
                 Network::Node node { group_name };
                 if (pressure_item.hasValue(0) && (pressure_item.get<double>(0) > 0))
                     node.terminal_pressure(pressure_item.getSIDouble(0));
+                node.add_gas_lift_gas(add_gas_lift_gas);
                 nodes.push_back(node);
             }
         }
