@@ -703,46 +703,61 @@ inline quantity well_rate_target( const fn_args& args ) {
 
     if (injection){
         if (phase ==  rt::wat){
-            if (wtype.producer() || (wtype.injector_type() != Opm::InjectorType::WATER)) {
-                return zero;
+            if (wtype.producer()) {
+                const auto& production = well->productionControls(args.st);
+                return { -production.water_rate, rate_unit<Opm::Phase::WATER>() };
+            } else if ((wtype.injector_type() != Opm::InjectorType::WATER)) {
+                return zero;            
+            } else {
+                const auto& injectionControl = well->injectionControls(args.st);
+                return { injectionControl.surface_rate, rate_unit<Opm::Phase::WATER>() };
             }
-            const auto& injectionControl = well->injectionControls(args.st);
-            return { injectionControl.surface_rate, rate_unit<Opm::Phase::WATER>() };
         } else if (phase ==  rt::oil){
-            if (wtype.producer() || (wtype.injector_type() != Opm::InjectorType::OIL)){
+            if (wtype.producer()) {
+                const auto& production = well->productionControls(args.st);
+                return { -production.oil_rate, rate_unit<Opm::Phase::OIL>() };
+            } else if ((wtype.injector_type() != Opm::InjectorType::OIL)){
                 return zero;
+            } else {
+                const auto& injectionControl = well->injectionControls(args.st);
+                return { injectionControl.surface_rate, rate_unit<Opm::Phase::OIL>() };
             }
-            const auto& injectionControl = well->injectionControls(args.st);
-            return { injectionControl.surface_rate, rate_unit<Opm::Phase::OIL>() };
         } else if (phase == rt::gas){
-            if (wtype.producer() || (wtype.injector_type() != Opm::InjectorType::GAS)) {
+            if (wtype.producer()) {
+                const auto& production = well->productionControls(args.st);
+                return { -production.gas_rate, rate_unit<Opm::Phase::GAS>() };
+            } else if ((wtype.injector_type() != Opm::InjectorType::GAS)) {
                 return zero;
+            } else {
+                const auto& injectionControl = well->injectionControls(args.st);
+                return { injectionControl.surface_rate, rate_unit<Opm::Phase::GAS>() };
             }
-            const auto& injectionControl = well->injectionControls(args.st);
-            return { injectionControl.surface_rate, rate_unit<Opm::Phase::GAS>() };
-        } else{
+        } else {
             return zero;           
         }
     } else { 
          if (phase ==  rt::wat){
             if (wtype.injector() ){
-                return zero;
+                const auto& injectionControl = well->injectionControls(args.st);
+                return { -injectionControl.surface_rate, rate_unit<Opm::Phase::WATER>() };
             }
             const auto& production = well->productionControls(args.st);
             return { production.water_rate, rate_unit<Opm::Phase::WATER>() };
         } else if (phase ==  rt::oil){
             if (wtype.injector() ){
-                return zero;
+                const auto& injectionControl = well->injectionControls(args.st);
+                return { -injectionControl.surface_rate, rate_unit<Opm::Phase::OIL>() };
             }
             const auto& production = well->productionControls(args.st);
             return { production.oil_rate, rate_unit<Opm::Phase::OIL>() };
         } else if (phase == rt::gas){
             if (wtype.injector() ){
-                return zero;
+                 const auto& injectionControl = well->injectionControls(args.st);
+                return { -injectionControl.surface_rate, rate_unit<Opm::Phase::GAS>() };
             }
             const auto& production = well->productionControls(args.st);
             return { production.gas_rate, rate_unit<Opm::Phase::GAS>() };
-        } else{ 
+        } else { 
             return zero;           
         }
     }
