@@ -23,7 +23,6 @@
 #include <opm/input/eclipse/Parser/ParserKeywords/B.hpp>
 #include <opm/input/eclipse/EclipseState/SimulationConfig/BCConfig.hpp>
 #include <opm/common/utility/OpmInputError.hpp>
-#include <opm/input/eclipse/Schedule/BCProp.hpp>
 
 namespace Opm {
 
@@ -133,4 +132,3 @@ bool BCConfig::operator==(const BCConfig& other) const {
 
 
 } //namespace Opm
-

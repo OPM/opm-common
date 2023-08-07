@@ -42,7 +42,7 @@ namespace Opm {
         if( !deck.hasKeyword<ParserKeywords::STRESSEQUIL>( ) ) return {};
         return deck.get<ParserKeywords::STRESSEQUIL>( ).back();
     }
-    
+
     InitConfig::InitConfig()
         : m_filleps(false)
     {
@@ -50,7 +50,7 @@ namespace Opm {
 
     InitConfig::InitConfig(const Deck& deck)
         : equil(equils(deck))
-        , stressequil(stressequils(deck))   
+        , stressequil(stressequils(deck))
         , foamconfig(deck)
         , m_filleps(PROPSSection{deck}.hasKeyword("FILLEPS"))
     {
@@ -127,14 +127,14 @@ namespace Opm {
 
         return this->equil;
     }
-    
+
     bool InitConfig::hasStressEquil() const {
-        return !this->equil.empty();
+        return !this->stressequil.empty();
     }
-    
+
     const DeckKeyword& InitConfig::getStressEquil() const {
         if( !this->hasStressEquil() )
-            throw std::runtime_error( "Error: No 'EQUIL' present" );
+            throw std::runtime_error( "Error: No 'STRESSEQUIL' present" );
 
         return this->stressequil;
     }
@@ -157,7 +157,7 @@ namespace Opm {
 
     bool InitConfig::operator==(const InitConfig& data) const {
         return equil == data.equil &&
-               stressequil  == data.stressequil && 
+               stressequil  == data.stressequil &&
                foamconfig == data.foamconfig &&
                m_filleps == data.m_filleps &&
                m_gravity == data.m_gravity &&
