@@ -20,14 +20,19 @@
 #ifndef OPM_ORDERED_MAP_HPP
 #define OPM_ORDERED_MAP_HPP
 
-#include <unordered_map>
-#include <vector>
-#include <string>
-#include <stdexcept>
+#include <algorithm>
+#include <cctype>
+#include <cstddef>
+#include <functional>
 #include <iterator>
 #include <set>
-#include <cctype>
-#include <algorithm>
+#include <stdexcept>
+#include <string>
+#include <string_view>
+#include <tuple>
+#include <unordered_map>
+#include <utility>
+#include <vector>
 
 namespace Opm {
 
@@ -68,11 +73,11 @@ findSimilarStrings(std::string str,
     return concatedStr.substr(0, concatedStr.size()-2);
 }
 
-template<std::size_t MAX_CHARS>
+template<std::string_view::size_type MAX_CHARS>
 class TruncatedStringHash
 {
 public:
-    std::size_t operator()(const std::string_view& key) const
+    std::size_t operator()(std::string_view key) const
     {
         return hasher(key.substr(0, MAX_CHARS));
     }
@@ -82,13 +87,13 @@ private:
 
 
 template<>
-class TruncatedStringHash<std::string::npos> : public std::hash<std::string_view>
+class TruncatedStringHash<std::string_view::npos> : public std::hash<std::string_view>
 {};
 
-template<std::size_t MAX_CHARS>
+template<std::string_view::size_type MAX_CHARS>
 struct TruncatedStringEquals
 {
-    bool operator()(const std::string& str1, const std::string& str2) const
+    bool operator()(std::string_view str1, std::string_view str2) const
     {
         return str1.substr(0, MAX_CHARS) == str2.substr(0, MAX_CHARS);
     }
@@ -102,21 +107,23 @@ struct TruncatedStringEquals<std::string::npos> : public std::equal_to<std::stri
 
 /// \brief A map with iteration in the order of insertion.
 ///
-/// Each entry has an associated index indicating when a value with that key was
-/// first inserted. When itering over it's entries values with lower insertion index
-/// are traversed before ones with an higher insertion index.
+/// Each entry has an associated index indicating when a value with that key
+/// was first inserted.  When iterating over the entries, elements with a
+/// lower insertion index are traversed before elements with a higher
+/// insertion index.
 ///
-/// \tparam MAX_CHARS The maximum number of characters that are use a keys. Default is
-///                   std::string::npos, which honors all characters. Any keys with the
+/// \tparam T Element type.  The map's value type is \code pair<string, T> \endcode.
+///
+/// \tparam MAX_CHARS Maximum number of characters used in key comparisons.
+///                   Default value honors all characters.  Keys with the
 ///                   same first MAX_CHARS characters are considered equal.
-///
-template <typename T, std::size_t MAX_CHARS = std::string::npos>
+template <typename T, std::string_view::size_type MAX_CHARS = std::string_view::npos>
 class OrderedMap {
 public:
-    using storage_type = typename std::vector<std::pair<std::string,T>>;
-    using index_type = typename std::unordered_map<std::string,std::size_t,
-                                                   Opm::OrderedMapDetail::TruncatedStringHash<MAX_CHARS>,
-                                                   Opm::OrderedMapDetail::TruncatedStringEquals<MAX_CHARS>>;
+    using storage_type = std::vector<std::pair<std::string, T>>;
+    using index_type = std::unordered_map<std::string, typename storage_type::size_type,
+                                          OrderedMapDetail::TruncatedStringHash<MAX_CHARS>,
+                                          OrderedMapDetail::TruncatedStringEquals<MAX_CHARS>>;
     using iter_type = typename storage_type::iterator;
     using const_iter_type = typename storage_type::const_iterator;
 
