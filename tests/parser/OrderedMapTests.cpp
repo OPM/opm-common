@@ -15,16 +15,23 @@
 
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
- */
+*/
 
-#include <stdexcept>
+#define BOOST_TEST_MODULE Ordered_Map_Tests
 
-#define BOOST_TEST_MODULE ScheduleTests
 #include <boost/test/unit_test.hpp>
 
 #include <opm/input/eclipse/EclipseState/Util/OrderedMap.hpp>
+
 #include <opm/input/eclipse/EclipseState/Util/IOrderSet.hpp>
 
+#include <cstddef>
+#include <initializer_list>
+#include <iterator>
+#include <stdexcept>
+#include <string>
+#include <utility>
+#include <vector>
 
 BOOST_AUTO_TEST_CASE( check_empty) {
     Opm::OrderedMap<std::string> map;
@@ -209,3 +216,64 @@ BOOST_AUTO_TEST_CASE(test_IOrderSet) {
     BOOST_CHECK_EQUAL(iset3[0], "BBB");
 }
 
+BOOST_AUTO_TEST_CASE(Emplace) {
+    auto fip = Opm::OrderedMap<std::vector<int>, 6>{};
+
+    {
+        const auto [numPos, inserted] =
+            fip.emplace("FIPNUM", std::vector{1, 2, 3, 4, 5});
+
+        BOOST_CHECK_MESSAGE(inserted, R"(Emplace("FIPNUM") must insert new element)");
+
+        const auto expect = std::vector { 1, 2, 3, 4, 5 };
+        BOOST_CHECK_EQUAL_COLLECTIONS(numPos->second.begin(), numPos->second.end(),
+                                      expect.begin(), expect.end());
+    }
+
+    {
+        const auto [numPos, inserted] = fip.emplace("FIPUNIT", 10, 5);
+
+        BOOST_CHECK_MESSAGE(inserted, R"(Emplace("FIPUNIT") must insert new element)");
+
+        const auto expect = std::vector<int>(10, 5);
+        BOOST_CHECK_EQUAL_COLLECTIONS(numPos->second.begin(), numPos->second.end(),
+                                      expect.begin(), expect.end());
+    }
+
+    {
+        auto [numPos, inserted] = fip.emplace("FIPUNIX", 42, 1729);
+
+        BOOST_CHECK_MESSAGE(! inserted, R"(Emplace("FIPUNIX") must NOT insert new element)");
+
+        {
+            const auto expect = std::vector<int>(10, 5);
+            BOOST_CHECK_EQUAL_COLLECTIONS(numPos->second.begin(), numPos->second.end(),
+                                          expect.begin(), expect.end());
+        }
+
+        numPos->second.assign(42, 1729);
+
+        const auto elem = fip.find("FIPUNIX");
+        BOOST_CHECK_MESSAGE(elem != fip.end(), R"("FIPUNIX" must exist)");
+
+        {
+            const auto expect = std::vector<int>(42, 1729);
+            BOOST_CHECK_EQUAL_COLLECTIONS(elem->second.begin(), elem->second.end(),
+                                          expect.begin(), expect.end());
+        }
+    }
+
+    fip.emplace("ABCDEFGH", std::vector { 3, 2, 1 });
+
+    {
+        auto keys = std::vector<std::string>{};
+        std::transform(fip.begin(), fip.end(), std::back_inserter(keys),
+                       [](const auto& elem) { return elem.first; });
+
+        const auto expect = std::vector<std::string> {
+            "FIPNUM", "FIPUNIX", "ABCDEFGH",
+        };
+
+        BOOST_CHECK_EQUAL_COLLECTIONS(keys.begin(), keys.end(), expect.begin(), expect.end());
+    }
+}

@@ -190,6 +190,25 @@ public:
         }
     }
 
+    template <typename... Args>
+    std::pair<iter_type, bool> emplace(std::string_view key, Args&&... args)
+    {
+        auto [ipos, inserted] = this->m_map.emplace(key, this->m_vector.size());
+
+        if (inserted) {
+            // New element.  Add to end.
+            this->m_vector.emplace_back
+                (std::piecewise_construct,
+                 std::forward_as_tuple(key),
+                 std::forward_as_tuple(std::forward<Args>(args)...));
+        }
+        else {
+            // Existing element.  Make sure we have the correct key.
+            this->m_vector[ipos->second].first = key;
+        }
+
+        return { this->m_vector.begin() + ipos->second, inserted };
+    }
 
     T& get(const std::string& key) {
         auto iter = m_map.find( key );
