@@ -69,6 +69,7 @@ public:
 
     bool operator==(const FieldPropsManager& other) const;
     static bool rst_cmp(const FieldPropsManager& full_arg, const FieldPropsManager& rst_arg);
+
     /*
       Because the FieldProps class can autocreate properties the semantics of
       get() and has() is slightly non intuitve:
@@ -136,8 +137,8 @@ public:
       contain said keyword, or if the keyword has not been fully initialized. If
       you ask for a totally unknown keyword the method will return nullptr.
     */
-    template <typename T> const std::vector<T>* try_get(const
-    std::string& keyword) const;
+    template <typename T>
+    const std::vector<T>* try_get(const std::string& keyword) const;
 
     /*
       You can ask whether the elements in the keyword have a default value -

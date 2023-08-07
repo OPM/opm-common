@@ -19,22 +19,32 @@
 #ifndef FIELDPROPS_HPP
 #define FIELDPROPS_HPP
 
-#include <limits>
-#include <optional>
-#include <string>
-#include <unordered_set>
-#include <vector>
-
-#include <opm/input/eclipse/Deck/value_status.hpp>
-#include <opm/input/eclipse/Deck/DeckSection.hpp>
-#include <opm/input/eclipse/Units/UnitSystem.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/Box.hpp>
-#include <opm/input/eclipse/EclipseState/Grid/SatfuncPropertyInitializers.hpp>
-#include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
-#include <opm/input/eclipse/EclipseState/Runspec.hpp>
-#include <opm/input/eclipse/EclipseState/Grid/Keywords.hpp>
-#include <opm/input/eclipse/EclipseState/Grid/TranCalculator.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/FieldData.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/Keywords.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/SatfuncPropertyInitializers.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/TranCalculator.hpp>
+#include <opm/input/eclipse/EclipseState/Runspec.hpp>
+#include <opm/input/eclipse/EclipseState/Util/OrderedMap.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
+
+#include <opm/input/eclipse/Units/UnitSystem.hpp>
+
+#include <opm/input/eclipse/Deck/DeckSection.hpp>
+#include <opm/input/eclipse/Deck/value_status.hpp>
+
+#include <cstddef>
+#include <limits>
+#include <map>
+#include <memory>
+#include <optional>
+#include <set>
+#include <stdexcept>
+#include <string>
+#include <unordered_map>
+#include <unordered_set>
+#include <utility>
+#include <vector>
 
 namespace Opm {
 
@@ -324,16 +334,12 @@ public:
         }
     };
 
-
-
     enum class GetStatus {
          OK = 1,
          INVALID_DATA = 2,               // std::runtime_error
          MISSING_KEYWORD = 3,            // std::out_of_range
          NOT_SUPPPORTED_KEYWORD = 4      // std::logic_error
     };
-
-
 
     template<typename T>
     struct FieldDataManager {
@@ -385,10 +391,9 @@ public:
 
     };
 
-
-
     /// Normal constructor for FieldProps.
     FieldProps(const Deck& deck, const Phases& phases, const EclipseGrid& grid, const TableManager& table_arg);
+
     /// Special case constructor used to process ACTNUM only.
     FieldProps(const Deck& deck, const EclipseGrid& grid);
 
@@ -410,102 +415,120 @@ public:
     template <typename T>
     std::vector<std::string> keys() const;
 
-
     template <typename T>
-    FieldDataManager<T> try_get(const std::string& keyword,
-                                bool allow_unsupported=false) {
-        if (!allow_unsupported && !FieldProps::supported<T>(keyword))
-            return FieldDataManager<T>(keyword, GetStatus::NOT_SUPPPORTED_KEYWORD, nullptr);
-
-        const Fieldprops::FieldData<T> * field_data;
-        bool has0 = this->has<T>(keyword);
-
-        field_data = std::addressof(this->init_get<T>(keyword,
-                                                      std::is_same<T,double>::value && allow_unsupported));
-        if (field_data->valid() || allow_unsupported)
-            return FieldDataManager<T>(keyword, GetStatus::OK, field_data);
-
-        if (!has0) {
-            this->erase<T>(keyword);
-            return FieldDataManager<T>(keyword, GetStatus::MISSING_KEYWORD, nullptr);
+    FieldDataManager<T>
+    try_get(const std::string& keyword, const bool allow_unsupported = false)
+    {
+        if (!allow_unsupported && !FieldProps::supported<T>(keyword)) {
+            return { keyword, GetStatus::NOT_SUPPPORTED_KEYWORD, nullptr };
         }
 
-        return FieldDataManager<T>(keyword, GetStatus::INVALID_DATA, nullptr);
+        const auto has0 = this->has<T>(keyword);
+
+        const auto& field_data =
+            this->init_get<T>(keyword, std::is_same<T,double>::value && allow_unsupported);
+
+        if (field_data.valid() || allow_unsupported) {
+            // Note: FieldDataManager depends on init_get<>() producing a
+            // long-lived FieldData instance.
+            return { keyword, GetStatus::OK, &field_data };
+        }
+
+        if (! has0) {
+            this->erase<T>(keyword);
+
+            return { keyword, GetStatus::MISSING_KEYWORD, nullptr };
+        }
+
+        return { keyword, GetStatus::INVALID_DATA, nullptr };
     }
 
-
     template <typename T>
-    const std::vector<T>& get(const std::string& keyword) {
-        const auto& data = this->try_get<T>(keyword);
-        return data.data();
+    const std::vector<T>& get(const std::string& keyword)
+    {
+        return this->try_get<T>(keyword).data();
     }
 
     template <typename T>
-    std::vector<T> get_global(const std::string& keyword) {
-        const auto& managed_field_data = this->try_get<T>(keyword);
+    std::vector<T> get_global(const std::string& keyword)
+    {
+        const auto managed_field_data = this->try_get<T>(keyword);
         const auto& field_data = managed_field_data.field_data();
+
         const auto& kw_info = Fieldprops::keywords::global_kw_info<T>(keyword);
-        if (kw_info.global)
-            return *field_data.global_data;
-        else
-            return this->global_copy(field_data.data, kw_info.scalar_init);
+
+        return kw_info.global
+            ? *field_data.global_data
+            : this->global_copy(field_data.data, kw_info.scalar_init);
     }
 
-
     template <typename T>
-    std::vector<T> get_copy(const std::string& keyword, bool global) {
-        bool has0 = this->has<T>(keyword);
-        const auto& field_data = this->try_get<T>(keyword).field_data();
+    std::vector<T> get_copy(const std::string& keyword, bool global)
+    {
+        const auto has0 = this->template has<T>(keyword);
+
+        // Recall: FieldDataManager::field_data() will throw various
+        // exception types if the 'status' is anything other than 'OK'.
+        //
+        // Get_copy() depends on this behaviour to not proceed to extracting
+        // values in such cases.  In other words, get_copy() uses exceptions
+        // for control flow, and we cannot move this try_get() call into the
+        // 'has0' branch even though the actual 'field_data' object returned
+        // from try_get() is only needed/used there.
+        const auto& field_data = this->template try_get<T>(keyword).field_data();
 
         if (has0) {
-            if (global)
-                return this->global_copy(field_data.data, field_data.kw_info.scalar_init);
-            else
-                return field_data.data;
-        } else {
-            if (global) {
-                const auto& kw_info = Fieldprops::keywords::global_kw_info<T>(keyword);
-                return this->global_copy(this->extract<T>(keyword), kw_info.scalar_init);
-            } else
-                return this->extract<T>(keyword);
+            return this->get_copy(field_data.data, field_data.kw_info.scalar_init, global);
         }
+
+        const auto initial_value = Fieldprops::keywords::
+            template global_kw_info<T>(keyword).scalar_init;
+
+        return this->get_copy(this->template extract<T>(keyword), initial_value, global);
     }
 
-
     template <typename T>
-    std::vector<bool> defaulted(const std::string& keyword) {
+    std::vector<bool> defaulted(const std::string& keyword)
+    {
         const auto& field = this->init_get<T>(keyword);
         std::vector<bool> def(field.size());
 
-        for (std::size_t i=0; i < def.size(); i++)
-            def[i] = value::defaulted( field.value_status[i]);
+        for (std::size_t i = 0; i < def.size(); ++i) {
+            def[i] = value::defaulted(field.value_status[i]);
+        }
 
         return def;
     }
 
-
     template <typename T>
-    std::vector<T> global_copy(const std::vector<T>& data, const std::optional<T>& default_value) const {
-        T fill_value = default_value.has_value() ? *default_value : 0;
+    std::vector<T> global_copy(const std::vector<T>&   data,
+                               const std::optional<T>& default_value) const
+    {
+        const T fill_value = default_value.has_value() ? *default_value : 0;
+
         std::vector<T> global_data(this->global_size, fill_value);
+
         std::size_t i = 0;
         for (std::size_t g = 0; g < this->global_size; g++) {
             if (this->m_actnum[g]) {
                 global_data[g] = data[i];
-                i++;
+                ++i;
             }
         }
+
         return global_data;
     }
 
     std::size_t active_size;
     std::size_t global_size;
 
-    std::size_t num_int() const {
+    std::size_t num_int() const
+    {
         return this->int_data.size();
     }
 
-    std::size_t num_double() const {
+    std::size_t num_double() const
+    {
         return this->double_data.size();
     }
 
@@ -534,6 +557,22 @@ private:
 
     template <typename T>
     std::vector<T> extract(const std::string& keyword);
+
+    template <typename T>
+    std::vector<T> get_copy(const std::vector<T>&   x,
+                            const std::optional<T>& initial_value,
+                            const bool              global) const
+    {
+        return (! global) ? x : this->global_copy(x, initial_value);
+    }
+
+    template <typename T>
+    std::vector<T> get_copy(std::vector<T>&&        x,
+                            const std::optional<T>& initial_value,
+                            const bool              global) const
+    {
+        return (! global) ? std::move(x) : this->global_copy(x, initial_value);
+    }
 
     template <typename T>
     void operate(const DeckRecord& record, Fieldprops::FieldData<T>& target_data, const Fieldprops::FieldData<T>& src_data, const std::vector<Box::cell_index>& index_list);
