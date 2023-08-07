@@ -443,6 +443,7 @@ bool FieldProps::operator==(const FieldProps& other) const {
            this->multregp == other.multregp &&
            this->int_data == other.int_data &&
            this->double_data == other.double_data &&
+           this->fipreg_data_ == other.fipreg_data_ &&
            this->tran == other.tran;
 }
 
@@ -588,6 +589,9 @@ void FieldProps::reset_actnum(const std::vector<int>& new_actnum) {
     for (auto& data : this->double_data)
         data.second.compress(active_map);
 
+    for (auto& data : this->fipreg_data_)
+        data.second.compress(active_map);
+
     for (auto& data : this->int_data)
         data.second.compress(active_map);
 
@@ -697,15 +701,40 @@ Fieldprops::FieldData<double>& FieldProps::init_get(const std::string& keyword,
     return this->init_get(keyword, kw_info);
 }
 
+Fieldprops::FieldData<int>&
+FieldProps::init_get_fipreg(const std::string&                             keyword,
+                            const Fieldprops::keywords::keyword_info<int>& kw_info)
+{
+    const auto glob_size = kw_info.global ? this->global_size : 0;
+
+    auto dPos_pair = this->fipreg_data_
+        .emplace(keyword, kw_info, this->active_size, glob_size);
+
+    return dPos_pair.first->second;
+}
 
 template <>
-Fieldprops::FieldData<int>& FieldProps::init_get(const std::string& keyword, const Fieldprops::keywords::keyword_info<int>& kw_info) {
-    auto iter = this->int_data.find(keyword);
-    if (iter != this->int_data.end())
-        return iter->second;
+Fieldprops::FieldData<int>&
+FieldProps::init_get(const std::string&                             keyword,
+                     const Fieldprops::keywords::keyword_info<int>& kw_info)
+{
+    if (Fieldprops::keywords::isFipxxx(keyword)) {
+        return this->init_get_fipreg(keyword, kw_info);
+    }
 
-    this->int_data[keyword] = Fieldprops::FieldData<int>(kw_info, this->active_size, kw_info.global ? this->global_size : 0);
-    return this->int_data[keyword];
+    auto iter = this->int_data.find(keyword);
+    if (iter != this->int_data.end()) {
+        return iter->second;
+    }
+
+    const auto glob_size = kw_info.global ? this->global_size : 0;
+
+    auto dPos_pair = this->int_data
+        .emplace(std::piecewise_construct,
+                 std::forward_as_tuple(keyword),
+                 std::forward_as_tuple(kw_info, this->active_size, glob_size));
+
+    return dPos_pair.first->second;
 }
 
 template <>
@@ -753,7 +782,9 @@ bool FieldProps::has<double>(const std::string& keyword_name) const {
 
 template <>
 bool FieldProps::has<int>(const std::string& keyword) const {
-    return (this->int_data.count(keyword) != 0);
+    return Fieldprops::keywords::isFipxxx(keyword)
+        ? this->fipreg_data_.find(keyword) != this->fipreg_data_.end()
+        : this->int_data    .find(keyword) != this->int_data    .end();
 }
 
 
@@ -788,17 +819,30 @@ std::vector<std::string> FieldProps::keys<double>() const {
 template <>
 std::vector<std::string> FieldProps::keys<int>() const {
     std::vector<std::string> klist;
+
     for (const auto& data_pair : this->int_data) {
         if (data_pair.second.valid() && data_pair.first != "ACTNUM")
             klist.push_back(data_pair.first);
     }
+
+    for (const auto& [region, regset] : this->fipreg_data_) {
+        if (regset.valid()) {
+            klist.push_back(region);
+        }
+    }
+
     return klist;
 }
 
 
 template <>
 void FieldProps::erase<int>(const std::string& keyword) {
-    this->int_data.erase(keyword);
+    if (Fieldprops::keywords::isFipxxx(keyword)) {
+        this->fipreg_data_.erase(keyword);
+    }
+    else {
+        this->int_data.erase(keyword);
+    }
 }
 
 template <>
@@ -806,13 +850,33 @@ void FieldProps::erase<double>(const std::string& keyword) {
     this->double_data.erase(keyword);
 }
 
+namespace {
+    template <typename Map>
+    std::vector<int> extractFieldData(const std::string& keyword, Map& fieldDataMap)
+    {
+        auto pos = fieldDataMap.find(keyword);
+        if (pos == fieldDataMap.end()) {
+            return {};
+        }
+
+        auto field = std::move(pos->second);
+        auto fieldData = std::vector { std::move(field.data) };
+
+        fieldDataMap.erase(keyword);
+
+        return fieldData;
+    }
+}
+
 template <>
-std::vector<int> FieldProps::extract<int>(const std::string& keyword) {
-    auto field_iter = this->int_data.find(keyword);
-    auto field = std::move(field_iter->second);
-    std::vector<int> data = std::move( field.data );
-    this->int_data.erase( field_iter );
-    return data;
+std::vector<int> FieldProps::extract<int>(const std::string& keyword)
+{
+    if (Fieldprops::keywords::isFipxxx(keyword)) {
+        return extractFieldData(keyword, this->fipreg_data_);
+    }
+    else {
+        return extractFieldData(keyword, this->int_data);
+    }
 }
 
 template <>

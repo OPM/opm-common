@@ -518,7 +518,7 @@ public:
 
     std::size_t num_int() const
     {
-        return this->int_data.size();
+        return this->int_data.size() + this->fipreg_data_.size();
     }
 
     std::size_t num_double() const
@@ -580,6 +580,8 @@ private:
     template <typename T>
     Fieldprops::FieldData<T>& init_get(const std::string& keyword, const Fieldprops::keywords::keyword_info<T>& kw_info);
 
+    Fieldprops::FieldData<int>& init_get_fipreg(const std::string& keyword, const Fieldprops::keywords::keyword_info<int>& kw_info);
+
     std::string region_name(const DeckItem& region_item);
     std::vector<Box::cell_index> region_index( const std::string& region_name, int region_value );
     void handle_OPERATE(const DeckKeyword& keyword, Box box);
@@ -612,6 +614,7 @@ private:
     std::vector<MultregpRecord> multregp;
     std::unordered_map<std::string, Fieldprops::FieldData<int>> int_data;
     std::unordered_map<std::string, Fieldprops::FieldData<double>> double_data;
+    OrderedMap<Fieldprops::FieldData<int>, 6> fipreg_data_{};
 
     std::unordered_map<std::string,Fieldprops::TranCalculator> tran;
 };
