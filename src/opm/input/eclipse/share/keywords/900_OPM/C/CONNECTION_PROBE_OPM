@@ -1,0 +1,33 @@
+{
+  "name": "CONNECTION_PROBE_OPM",
+  "sections": [
+    "SUMMARY"
+  ],
+  "comment": "Connection summary keywords only supported by OPM-flow.",
+  "deck_names": [
+    "CFCPERM",
+    "CFCPORO",
+    "CFCSKIN",
+    "CFCWIDTH",
+    "CINJFVR",
+    "CINJFVT"
+  ],
+  "items": [
+    {
+      "name": "WELL",
+      "value_type": "STRING"
+    },
+    {
+      "name": "I",
+      "value_type": "INT"
+    },
+    {
+      "name": "J",
+      "value_type": "INT"
+    },
+    {
+      "name": "K",
+      "value_type": "INT"
+    }
+  ]
+}
