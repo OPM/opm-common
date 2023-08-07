@@ -447,10 +447,10 @@ namespace {
             {"YMODULE"   , ::Opm::UnitSystem::measure::ymodule },
             {"PRATIO"   , ::Opm::UnitSystem::measure::identity },
             {"BIOTCOEF"   , ::Opm::UnitSystem::measure::identity },
-            {"POELCOEF"   , ::Opm::UnitSystem::measure::identity },//NB units not done
-            {"THELCOEF"   , ::Opm::UnitSystem::measure::identity },//NB units not done
-            {"THERMEXR"   , ::Opm::UnitSystem::measure::identity },
-            {"THCONR"   , ::Opm::UnitSystem::measure::identity } //NB units not done
+            {"POELCOEF"   , ::Opm::UnitSystem::measure::identity },
+            {"THELCOEF"   , ::Opm::UnitSystem::measure::identity },// Pressure/Temperature
+            {"THERMEXR"   , ::Opm::UnitSystem::measure::identity },// 1/(temperature difference)
+            {"THCONR"   , ::Opm::UnitSystem::measure::identity } // (normally Energy/AbsoluteTemperature*Length*Time)
         };
 
         // The INIT file should always contain the NTG property, we
