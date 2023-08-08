@@ -419,14 +419,14 @@ public:
     FieldDataManager<T>
     try_get(const std::string& keyword, const bool allow_unsupported = false)
     {
-        if (!allow_unsupported && !FieldProps::supported<T>(keyword)) {
+        if (!allow_unsupported && !FieldProps::template supported<T>(keyword)) {
             return { keyword, GetStatus::NOT_SUPPPORTED_KEYWORD, nullptr };
         }
 
-        const auto has0 = this->has<T>(keyword);
+        const auto has0 = this->template has<T>(keyword);
 
         const auto& field_data =
-            this->init_get<T>(keyword, std::is_same<T,double>::value && allow_unsupported);
+            this->template init_get<T>(keyword, std::is_same<T,double>::value && allow_unsupported);
 
         if (field_data.valid() || allow_unsupported) {
             // Note: FieldDataManager depends on init_get<>() producing a
@@ -435,7 +435,7 @@ public:
         }
 
         if (! has0) {
-            this->erase<T>(keyword);
+            this->template erase<T>(keyword);
 
             return { keyword, GetStatus::MISSING_KEYWORD, nullptr };
         }
@@ -446,16 +446,17 @@ public:
     template <typename T>
     const std::vector<T>& get(const std::string& keyword)
     {
-        return this->try_get<T>(keyword).data();
+        return this->template try_get<T>(keyword).data();
     }
 
     template <typename T>
     std::vector<T> get_global(const std::string& keyword)
     {
-        const auto managed_field_data = this->try_get<T>(keyword);
+        const auto managed_field_data = this->template try_get<T>(keyword);
         const auto& field_data = managed_field_data.field_data();
 
-        const auto& kw_info = Fieldprops::keywords::global_kw_info<T>(keyword);
+        const auto& kw_info = Fieldprops::keywords::
+            template global_kw_info<T>(keyword);
 
         return kw_info.global
             ? *field_data.global_data
@@ -490,7 +491,7 @@ public:
     template <typename T>
     std::vector<bool> defaulted(const std::string& keyword)
     {
-        const auto& field = this->init_get<T>(keyword);
+        const auto& field = this->template init_get<T>(keyword);
         std::vector<bool> def(field.size());
 
         for (std::size_t i = 0; i < def.size(); ++i) {
