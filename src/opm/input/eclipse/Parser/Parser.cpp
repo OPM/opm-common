@@ -1577,17 +1577,6 @@ std::vector<std::string> Parser::getAllDeckNames () const {
         std::string curSectionName = deck[0].name();
         size_t curKwIdx = 1;
         for (; curKwIdx < deck.size(); ++curKwIdx) {
-            const auto& curKeyword = deck[curKwIdx];
-            const std::string& curKeywordName = curKeyword.name();
-
-            if (!isSectionDelimiter( curKeyword )) {
-                if( !parser.isRecognizedKeyword( curKeywordName ) )
-                    // ignore unknown keywords for now (i.e. they can appear in any section)
-                    continue;
-
-                const bool isOperateKeyword =
-                    Fieldprops::keywords::is_oper_keyword(curKeywordName);
-
                 auto checker = [&errorGuard, &deckValid, &parser, curSectionName,
                                 ensureKeywordSectionAffiliation, errorKey]
                     (const std::string& curKeywordName, const KeywordLocation& location)
@@ -1606,6 +1595,17 @@ std::vector<std::string> Parser::getAllDeckNames () const {
                         deckValid = false;
                     }
                 };
+
+            const auto& curKeyword = deck[curKwIdx];
+            const std::string& curKeywordName = curKeyword.name();
+
+            if (!isSectionDelimiter( curKeyword )) {
+                if( !parser.isRecognizedKeyword( curKeywordName ) )
+                    // ignore unknown keywords for now (i.e. they can appear in any section)
+                    continue;
+
+                const bool isOperateKeyword =
+                    Fieldprops::keywords::is_oper_keyword(curKeywordName);
 
                 if (isOperateKeyword) {
                     for (const auto& record : curKeyword) {
