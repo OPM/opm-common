@@ -23,7 +23,7 @@
 */
 
 #include <opm/output/eclipse/WriteInit.hpp>
-
+#include <opm/input/eclipse/EclipseState/Grid/FieldProps.hpp>
 #include <opm/io/eclipse/OutputStream.hpp>
 
 #include <opm/output/data/Solution.hpp>
@@ -390,7 +390,14 @@ namespace {
 
             if (!fp.has_double(prop.name))
                 continue;
+            const auto& unit_system = fp.getUnitSystem();
             auto data = fp.get_double(prop.name);
+            const auto& kw_info = ::Opm::Fieldprops::keywords::global_kw_info<double>(prop.name);
+            assert(kw_info.unit);
+            const auto& dim = unit_system.parse( *kw_info.unit );
+            for(auto& val: data){
+                val = dim.convertSiToRaw(val);
+            }
             write(prop, std::move(data));
         }
     }
@@ -407,8 +414,6 @@ namespace {
                                     std::vector<bool>&&   dflt,
                                     std::vector<double>&& value)
             {
-                units.from_si(prop.unit, value);
-
                 for (auto n = dflt.size(), i = 0*n; i < n; ++i) {
                     if (dflt[i]) {
                         // Element defaulted.  Output sentinel value
@@ -428,7 +433,6 @@ namespace {
                 [&units, &initFile](const CellProperty&   prop,
                                     std::vector<double>&& value)
             {
-                units.from_si(prop.unit, value);
                 initFile.write(prop.name, singlePrecision(value));
             });
         }

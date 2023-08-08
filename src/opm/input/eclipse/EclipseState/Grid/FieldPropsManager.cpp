@@ -26,6 +26,9 @@
 
 namespace Opm {
 
+const UnitSystem& FieldPropsManager::getUnitSystem() const{
+    return this->fp->getUnitSystem();
+}
 
 bool FieldPropsManager::operator==(const FieldPropsManager& other) const {
     return *this->fp == *other.fp;
