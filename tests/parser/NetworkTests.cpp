@@ -318,3 +318,54 @@ BRANPROP
 
     BOOST_CHECK_EQUAL_COLLECTIONS(nodes.begin(), nodes.end(), expect.begin(), expect.end());
 }
+
+BOOST_AUTO_TEST_CASE(DefaultedNodes) {
+    const auto sched = make_schedule(R"(
+SCHEDULE
+
+GRUPTREE
+ 'PROD'    'FIELD' /
+
+ 'M5S'    'PLAT-A'  /
+ 'M5N'    'PLAT-A'  /
+
+ 'C1'     'M5N'  /
+ 'F1'     'M5N'  /
+ 'B1'     'M5S'  /
+ 'G1'     'M5S'  /
+/
+
+BRANPROP
+--  Downtree  Uptree   #VFP    ALQ
+    B1         PLAT-A    9999      1*      /
+    C1         PLAT-A    9999      1*      /
+/
+
+NODEPROP
+--  Node_name Pr    autoChock?      addGasLift?     Group_name
+     PLAT-A 21.0   NO     NO    1*  /
+--     B1    1*  YES      NO    1*  /
+--     C1    1*  YES     NO     'GROUP' /
+/
+
+TSTEP
+  10 /
+
+BRANPROP
+--  Downtree  Uptree   #VFP    ALQ
+    C1         PLAT-A    0 1*      /
+/
+)");
+
+    // The difference between this test and the NodeNames test above is that
+    // the NODEPROP entries for B1 and C1 have been commented out.
+
+    const auto expect = std::vector<std::string> {
+        "B1", "C1", "PLAT-A"
+    };
+
+    auto nodes = sched[0].network.get().node_names();
+    std::sort(nodes.begin(), nodes.end());
+
+    BOOST_CHECK_EQUAL_COLLECTIONS(nodes.begin(), nodes.end(), expect.begin(), expect.end());
+}
