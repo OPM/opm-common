@@ -393,10 +393,13 @@ namespace {
             const auto& unit_system = fp.getUnitSystem();
             auto data = fp.get_double(prop.name);
             const auto& kw_info = ::Opm::Fieldprops::keywords::global_kw_info<double>(prop.name);
-            assert(kw_info.unit);
-            const auto& dim = unit_system.parse( *kw_info.unit );
-            for(auto& val: data){
-                val = dim.convertSiToRaw(val);
+            if(kw_info.unit){
+                const auto& dim = unit_system.parse( *kw_info.unit );
+                for(auto& val: data){
+                    val = dim.convertSiToRaw(val);
+                }
+            }else{
+                // option kw_info.unit not set assume unit conversion
             }
             write(prop, std::move(data));
         }
