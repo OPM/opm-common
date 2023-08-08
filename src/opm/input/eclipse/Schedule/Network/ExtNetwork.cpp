@@ -75,11 +75,13 @@ const Node& ExtNetwork::root() const {
 
 void ExtNetwork::add_branch(Branch branch)
 {
-    if (!this->has_indexed_node_name(branch.downtree_node())) {
-        this->add_indexed_node_name(branch.downtree_node());
-    }
-    if (!this->has_indexed_node_name(branch.uptree_node())) {
-        this->add_indexed_node_name(branch.uptree_node());
+    for (const std::string& nodename : { branch.downtree_node(), branch.uptree_node() }) {
+        if (!this->has_node(nodename)) {
+            this->m_nodes.insert_or_assign(nodename, Node{nodename});
+        }
+        if (!this->has_indexed_node_name(nodename)) {
+            this->add_indexed_node_name(nodename);
+        }
     }
     this->m_branches.push_back( std::move(branch) );
 }
@@ -152,6 +154,9 @@ int ExtNetwork::NoOfBranches() const {
 
 void ExtNetwork::add_node(Node node)
 {
+    // This function should be called as a result of a NODEPROP deck
+    // entry (or equivalent from restart file). So the node should
+    // already exist, added in add_branch() from BRANPROP entries.
     std::string name = node.name();
     auto branch = std::find_if(this->m_branches.begin(), this->m_branches.end(),
                                [&name](const Branch& b) { return b.uptree_node() == name || b.downtree_node() == name;});
