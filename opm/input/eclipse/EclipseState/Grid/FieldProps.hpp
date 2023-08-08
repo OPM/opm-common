@@ -294,6 +294,7 @@ static const std::unordered_map<std::string, keyword_info<int>> int_keywords = {
 template <typename T>
 keyword_info<T> global_kw_info(const std::string& name, bool allow_unsupported = false);
 
+bool is_oper_keyword(const std::string& name);
 } // end namespace keywords
 
 } // end namespace FieldProps

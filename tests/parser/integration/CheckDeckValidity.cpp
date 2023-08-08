@@ -31,9 +31,9 @@
 BOOST_AUTO_TEST_CASE( KeywordInCorrectSection ) {
     Opm::Parser parser;
     Opm::ParseContext parseContext;
-    Opm::ErrorGuard errorGuard;
 
     {
+        Opm::ErrorGuard errorGuard;
         const char *correctDeckString =
             "RUNSPEC\n"
             "DIMENS\n"
@@ -55,9 +55,13 @@ BOOST_AUTO_TEST_CASE( KeywordInCorrectSection ) {
 
         auto deck = parser.parseString(correctDeckString);
         BOOST_CHECK(Opm::checkDeck(deck, parser, parseContext, errorGuard));
+        // prevent std::exit(1) in ErrorGuard's destructor!
+        errorGuard.dump();
+        errorGuard.clear();
     }
 
     {
+        Opm::ErrorGuard errorGuard;
         // wrong section ordering
         const char *correctDeckString =
             "GRID\n"
@@ -69,9 +73,13 @@ BOOST_AUTO_TEST_CASE( KeywordInCorrectSection ) {
         auto deck = parser.parseString(correctDeckString);
         BOOST_CHECK(!Opm::checkDeck(deck, parser, parseContext, errorGuard));
         BOOST_CHECK(Opm::checkDeck(deck, parser, parseContext, errorGuard, ~Opm::SectionTopology));
+        // prevent std::exit(1) in ErrorGuard's destructor!
+        errorGuard.dump();
+        errorGuard.clear();
     }
 
     {
+        Opm::ErrorGuard errorGuard;
         // the BOX keyword is in a section where it's not supposed to be
         const char *incorrectDeckString =
             "RUNSPEC\n"
@@ -101,5 +109,46 @@ BOOST_AUTO_TEST_CASE( KeywordInCorrectSection ) {
 
         // this fails because of the incorrect BOX keyword
         BOOST_CHECK(!Opm::checkDeck(deck, parser, parseContext, errorGuard, Opm::SectionTopology | Opm::KeywordSection));
+        // prevent std::exit(1) in ErrorGuard's destructor!
+        errorGuard.dump();
+        errorGuard.clear();
+    }
+
+    {
+        Opm::ErrorGuard errorGuard;
+        // the MULTIPLY TRANX is in a section where it's not supposed to be
+        const char *incorrectDeckString =
+            "RUNSPEC\n"
+            "DIMENS\n"
+            "3 3 3 /\n"
+            "GRID\n"
+            "DXV\n"
+            "1 1 1 /\n"
+            "DYV\n"
+            "1 1 1 /\n"
+            "DZV\n"
+            "1 1 1 /\n"
+            "TOPS\n"
+            "9*100 /\n"
+            "MULTIPLY\n"
+            "'TRANX' 20.0 /\n"
+            "'TRANY' 20.0 /\n"
+            "/\n"
+            "PROPS\n"
+            "SOLUTION\n"
+            "SCHEDULE\n";
+
+        auto deck = parser.parseString(incorrectDeckString);
+        BOOST_CHECK(!Opm::checkDeck(deck, parser, parseContext, errorGuard));
+
+        // this is supposed to succeed as we don't ensure that all keywords are in the
+        // correct section
+        BOOST_CHECK(Opm::checkDeck(deck, parser, parseContext, errorGuard, Opm::SectionTopology));
+
+        // this fails because of the incorrect TRANX keyword
+        BOOST_CHECK(!Opm::checkDeck(deck, parser, parseContext, errorGuard, Opm::SectionTopology | Opm::KeywordSection));
+        // prevent std::exit(1) in ErrorGuard's destructor!
+        errorGuard.dump();
+        errorGuard.clear();
     }
 }

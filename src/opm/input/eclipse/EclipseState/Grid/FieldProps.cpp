@@ -84,6 +84,12 @@ static const std::set<std::string> region_oper_keywords = {"MULTIREG", "ADDREG",
 static const std::set<std::string> box_keywords = {"BOX", "ENDBOX"};
 
 
+bool is_oper_keyword(const std::string& name)
+{
+    return (oper_keywords.find(name) != oper_keywords.end()
+            || region_oper_keywords.find(name) != region_oper_keywords.end());
+}
+
 std::string get_keyword_from_alias(const std::string& name) {
     if (ALIAS::aliased_keywords.count(name))
         return ALIAS::aliased_keywords.at(name);

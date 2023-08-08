@@ -50,7 +50,7 @@ bool checkDeck( const Deck& deck, const Parser& parser, const ParseContext& pars
     // make sure all mandatory sections are present and that their order is correct
     if (enabledChecks & SectionTopology) {
         bool ensureKeywordSection = enabledChecks & KeywordSection;
-        deckValid = deckValid && DeckSection::checkSectionTopology(deck, parser, ensureKeywordSection);
+        deckValid = deckValid && DeckSection::checkSectionTopology(deck, parser, errorGuard, ensureKeywordSection);
     }
 
     const std::string& deckUnitSystem = uppercase(deck.getActiveUnitSystem().getName());
