@@ -152,7 +152,7 @@ int ExtNetwork::NoOfBranches() const {
   the only possibility.
 */
 
-void ExtNetwork::add_node(Node node)
+void ExtNetwork::update_node(Node node)
 {
     // This function should be called as a result of a NODEPROP deck
     // entry (or equivalent from restart file). So the node should

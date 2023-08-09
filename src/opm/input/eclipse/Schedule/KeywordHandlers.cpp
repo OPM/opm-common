@@ -915,7 +915,7 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
             }
 
             node.add_gas_lift_gas(add_gas_lift_gas);
-            ext_network.add_node(node);
+            ext_network.update_node(node);
         }
 
         this->snapshots.back().network.update( ext_network );

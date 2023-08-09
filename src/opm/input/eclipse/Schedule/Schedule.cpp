@@ -2001,7 +2001,7 @@ namespace {
 
                 node.add_gas_lift_gas(rst_node.add_lift_gas);
 
-                network.add_node(std::move(node));
+                network.update_node(std::move(node));
             }
 
             this->snapshots.back().network.update(std::move(network));
