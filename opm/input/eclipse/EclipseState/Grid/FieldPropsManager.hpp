@@ -18,7 +18,6 @@
 
 #ifndef FIELDPROPS_MANAGER_HPP
 #define FIELDPROPS_MANAGER_HPP
-
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -34,6 +33,7 @@ class TranCalculator;
 template<typename T> struct FieldData;
 }
 class FieldProps;
+class UnitSystem;
 class Phases;
 class TableManager;
 class NumericalAquifers;
@@ -49,6 +49,7 @@ public:
     virtual ~FieldPropsManager() = default;
 
     virtual void reset_actnum(const std::vector<int>& actnum);
+    const UnitSystem& getUnitSystem() const;
     const std::string& default_region() const;
     virtual std::vector<int> actnum() const;
     virtual std::vector<double> porv(bool global = false) const;
@@ -122,6 +123,7 @@ public:
           const std::vector<int>& satnum = fp.get_copy<int>("SATNUM")
           fp.has<int>("SATNUM") -> false
     */
+
 
 
     template <typename T>

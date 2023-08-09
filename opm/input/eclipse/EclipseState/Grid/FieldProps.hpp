@@ -520,6 +520,9 @@ public:
         return tran;
     }
 
+    const UnitSystem& getUnitSystem() const {
+        return this->unit_system;
+    }
 private:
     void scanGRIDSection(const GRIDSection& grid_section);
     void scanGRIDSectionOnlyACTNUM(const GRIDSection& grid_section);
