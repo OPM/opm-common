@@ -37,10 +37,10 @@ class ExtNetwork {
 public:
     ExtNetwork() = default;
     bool active() const;
-    bool has_node(const std::string& name) const;
-    void add_node(Node node);
     void add_branch(Branch branch);
     void drop_branch(const std::string& uptree_node, const std::string& downtree_node);
+    bool has_node(const std::string& name) const;
+    void update_node(Node node);
     const Node& node(const std::string& name) const;
     const Node& root() const;
     std::vector<Branch> downtree_branches(const std::string& node) const;
