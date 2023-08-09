@@ -778,10 +778,9 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
             const int vfp_table = record.getItem<ParserKeywords::GRUPNET::VFP_TABLE>().get<int>(0);
 
             for (const auto& group_name : group_names) {
-                auto& group = this->snapshots.back().groups.get(group_name);
-                group.updateNetVFPTable(vfp_table);
+                const auto& group = this->snapshots.back().groups.get(group_name);
                 const auto& parent_name = group.parent();
-                if (parent_name != "")
+                if (!parent_name.empty())
                 {
                     const std::string& downtree_node = group_name;
                     const std::string& uptree_node = parent_name;
@@ -790,7 +789,7 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
                     } else {
                         const auto alq_eq = Network::Branch::AlqEqfromString(record.getItem<ParserKeywords::GRUPNET::ALQ_SURFACE_DENSITY>().get<std::string>(0));
                         if (alq_eq == Network::Branch::AlqEQ::ALQ_INPUT) {
-                            double alq_value = record.getItem<ParserKeywords::GRUPNET::ALQ>().get<double>(0);
+                            const double alq_value = record.getItem<ParserKeywords::GRUPNET::ALQ>().get<double>(0);
                             network.add_branch(Network::Branch(downtree_node, uptree_node, vfp_table, alq_value));
                         } else {
                             network.add_branch(Network::Branch(downtree_node, uptree_node, vfp_table, alq_eq));
@@ -798,14 +797,24 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
                     }
                 }
                 Network::Node node { group_name };
-                if (pressure_item.hasValue(0) && (pressure_item.get<double>(0) > 0))
+                const bool terminal_node = pressure_item.hasValue(0) && (pressure_item.get<double>(0) >= 0);
+                if (terminal_node) {
+                    if (!record.getItem<ParserKeywords::GRUPNET::VFP_TABLE>().defaultApplied(0)){
+                        std::string msg = fmt::format("Problem with keyword {{keyword}}\n"
+                                                      "In {{file}} line {{line}}\n"
+                                                      "The group {} is a terminal node of the network and should not have a vfp table assigned to.)", group_name);
+                        OpmLog::warning(OpmInputError::format(msg, handlerContext.keyword.location()));
+                    }
                     node.terminal_pressure(pressure_item.getSIDouble(0));
+                }
                 nodes.push_back(node);
             }
         }
-        this->snapshots.back().network.update( network );
+        this->snapshots.back().network.update( network ); 
         for(const auto& node: nodes)
-            network.add_node(node);
+            //By creating branches some nodes are automatically added. 
+            //Todo: still needed or check for already existing nodes?
+            network.add_node(node); // add_node requires branches be created 
         this->snapshots.back().network.update( std::move( network ));
      }
 
