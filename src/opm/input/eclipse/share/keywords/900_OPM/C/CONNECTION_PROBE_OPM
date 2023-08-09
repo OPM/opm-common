@@ -10,7 +10,9 @@
     "CFCSKIN",
     "CFCWIDTH",
     "CINJFVR",
-    "CINJFVT"
+    "CINJFVT",
+    "CFCRAD",
+    "CFCAOF"
   ],
   "items": [
     {

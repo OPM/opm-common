@@ -76,6 +76,7 @@
 #include <filesystem>
 #include <functional>
 #include <initializer_list>
+#include <iostream>
 #include <iterator>
 #include <limits>
 #include <memory>
@@ -736,6 +737,139 @@ inline quantity rate( const fn_args& args ) {
     }
 
     return { sum, rate_unit< phase >() };
+}
+
+template <bool injection = true>
+inline quantity filtrate_connection_quantities( const fn_args& args ) {
+
+    auto get_unit = [&args]() -> measure {
+        static std::unordered_map<std::string, measure> units = {
+                {"CINJFVR", measure::geometric_volume_rate},
+                {"CINJFVT", measure::geometric_volume},
+                {"CFCWIDTH", measure::length},
+                {"CFCSKIN", measure::identity},
+                {"CFCPORO", measure::identity},
+                {"CFCPERM", measure::permeability},
+                { "CFCRAD",  measure::length},
+                { "CFCAOF",  measure::area}
+        };
+
+        auto it = units.find(args.keyword_name);
+
+        // if could not find, there is some wrong usage of the function
+        assert(it != units.end());
+
+        return it->second;
+    };
+
+    const measure unit = get_unit();
+
+    const quantity zero = { 0., unit };
+
+    if (args.schedule_wells.empty()) {
+        return zero;
+    }
+
+    const auto& name = args.schedule_wells.front()->name();
+    auto xwPos = args.wells.find(name);
+    if ((xwPos == args.wells.end()) ||
+        (xwPos->second.dynamicStatus == Opm::Well::Status::SHUT) ||
+        (xwPos->second.current_control.isProducer == injection))
+    {
+        return zero;
+    }
+
+    // The args.num value is the literal value which will go to the
+    // NUMS array in the eclipse SMSPEC file; the values in this array
+    // are offset 1 - whereas we need to use this index here to look
+    // up a connection with offset 0.
+    const size_t global_index = args.num - 1;
+    const auto& well_data = xwPos->second;
+    const auto& connection =
+            std::find_if(well_data.connections.begin(),
+                         well_data.connections.end(),
+                         [global_index](const Opm::data::Connection& c)
+                         {
+                             return c.index == global_index;
+                         });
+
+    if (connection == well_data.connections.end()) {
+        return zero;
+    }
+
+    const auto& filtrate = connection->filtrate;
+    if (args.keyword_name == "CINJFVR") {
+        return {filtrate.rate, unit};
+    } else if (args.keyword_name == "CINJFVT") {
+        return {filtrate.total, unit};
+    } else if (args.keyword_name == "CFCWIDTH") {
+        return {filtrate.thickness, unit};
+    } else if (args.keyword_name == "CFCSKIN") {
+        return {filtrate.skin_factor, unit};
+    } else if (args.keyword_name == "CFCPORO") {
+        return {filtrate.poro, unit};
+    } else if (args.keyword_name == "CFCPERM") {
+        return {filtrate.perm, unit};
+    } else if (args.keyword_name == "CFCRAD") {
+        return {filtrate.radius, unit};
+    } else if (args.keyword_name == "CFCAOF") {
+        return {filtrate.area_of_flow, unit};
+    } else {
+        throw std::invalid_argument{
+            fmt::format("Unsupported connection summary keyword {} "
+                             "for filtrate injection modeling", args.keyword_name)
+        };
+    }
+}
+
+template <bool injection = true>
+inline quantity filtrate_well_quantities( const fn_args& args ) {
+    auto get_unit = [&args]() -> measure {
+        static std::unordered_map<std::string, measure> units = {
+                {"WINJFVR", measure::geometric_volume_rate},
+                {"WINJFVT", measure::geometric_volume},
+                {"WINJFC", measure::ppm}
+        };
+
+        auto it = units.find(args.keyword_name);
+
+        // if could not find, there is some wrong usage of the function
+        assert(it != units.end());
+
+        return it->second;
+    };
+
+    const auto unit = get_unit();
+
+    const quantity zero {0., unit};
+
+    if (args.schedule_wells.empty()) {
+        return zero;
+    }
+
+    const auto& name = args.schedule_wells.front()->name();
+    auto xwPos = args.wells.find(name);
+    if ((xwPos == args.wells.end()) ||
+        (xwPos->second.dynamicStatus == Opm::Well::Status::SHUT) ||
+        (xwPos->second.current_control.isProducer == injection))
+    {
+        return zero;
+    }
+
+    const auto& well_filtrate = xwPos->second.filtrate;
+
+    if (args.keyword_name == "WINJFVR") {
+        return {well_filtrate.rate, unit};
+    } else if (args.keyword_name == "WINJFVT") {
+        return {well_filtrate.total, unit};
+    } else if (args.keyword_name == "WINJFC") {
+        return {well_filtrate.concentration, unit};
+    } else {
+        throw std::invalid_argument{
+                fmt::format("Unsupported well summary keyword {} "
+                                 "for filtrate injection modeling", args.keyword_name)
+        };
+    }
 }
 
 template< rt tracer, rt phase, bool injection = true >
@@ -1883,6 +2017,9 @@ static const auto funs = std::unordered_map<std::string, ofun> {
     { "WSTAT", wstat },
     { "WBHP", bhp },
     { "WTHP", thp },
+    { "WINJFVR", filtrate_well_quantities<injector> },
+    { "WINJFVT", filtrate_well_quantities<injector> },
+    { "WINJFC", filtrate_well_quantities<injector> },
     { "WBP" , well_block_average_pressure<Opm::data::WellBlockAvgPress::Quantity::WBP>  },
     { "WBP4", well_block_average_pressure<Opm::data::WellBlockAvgPress::Quantity::WBP4> },
     { "WBP5", well_block_average_pressure<Opm::data::WellBlockAvgPress::Quantity::WBP5> },
@@ -2068,6 +2205,14 @@ static const auto funs = std::unordered_map<std::string, ofun> {
     { "CVIR", crate_resv<injector> },
     { "CCIR", crate< rt::polymer, injector > },
     { "CSIR", crate< rt::brine, injector > },
+    { "CINJFVR", filtrate_connection_quantities<injector> },
+    { "CINJFVT", filtrate_connection_quantities<injector> },
+    { "CFCSKIN",  filtrate_connection_quantities<injector> },
+    { "CFCWIDTH",  filtrate_connection_quantities<injector> },
+    { "CFCPERM",  filtrate_connection_quantities<injector> },
+    { "CFCPORO",  filtrate_connection_quantities<injector> },
+    { "CFCRAD",  filtrate_connection_quantities<injector> },
+    { "CFCAOF",  filtrate_connection_quantities<injector> },
     { "COIT", mul( crate< rt::oil, injector >, duration ) },
     { "CWIT", mul( crate< rt::wat, injector >, duration ) },
     { "CGIT", mul( crate< rt::gas, injector >, duration ) },

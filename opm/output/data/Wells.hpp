@@ -196,6 +196,47 @@ namespace Opm {
             double vaporized_water = 0.0;
     };
 
+    struct ConnectionFiltrate {
+        double rate;
+        double total;
+        double skin_factor;
+        double thickness;
+        double perm;
+        double poro;
+        double radius;
+        double area_of_flow;
+
+        template<class Serializer>
+        void serializeOp(Serializer& serializer) {
+            serializer(rate);
+            serializer(total);
+            serializer(skin_factor);
+            serializer(thickness);
+            serializer(perm);
+            serializer(poro);
+            serializer(radius);
+            serializer(area_of_flow);
+        }
+
+        bool operator==(const ConnectionFiltrate& filtrate) const
+        {
+            return this->rate == filtrate.rate &&
+                   this->total == filtrate.total &&
+                   this->skin_factor == filtrate.skin_factor &&
+                   this->thickness == filtrate.thickness &&
+                   this->perm == filtrate.perm &&
+                   this->poro == filtrate.poro &&
+                   this->radius == filtrate.radius &&
+                   this->area_of_flow == filtrate.area_of_flow;
+        }
+
+        static ConnectionFiltrate serializationTestObject()
+        {
+            return {0.8, 100., -1., 2., 1.e-9,
+                    0.3, 0.05, 0.8};
+        }
+    };
+
     struct Connection {
         using global_index = size_t;
         static const constexpr int restart_size = 6;
@@ -210,6 +251,8 @@ namespace Opm {
         double effective_Kh;
         double trans_factor;
 
+        ConnectionFiltrate filtrate;
+
         bool operator==(const Connection& conn2) const
         {
             return index == conn2.index &&
@@ -220,7 +263,8 @@ namespace Opm {
                    cell_saturation_water == conn2.cell_saturation_water &&
                    cell_saturation_gas == conn2.cell_saturation_gas &&
                    effective_Kh == conn2.effective_Kh &&
-                   trans_factor == conn2.trans_factor;
+                   trans_factor == conn2.trans_factor &&
+                   filtrate == conn2.filtrate;
         }
 
         template <class MessageBufferType>
@@ -242,13 +286,15 @@ namespace Opm {
             serializer(cell_saturation_gas);
             serializer(effective_Kh);
             serializer(trans_factor);
+            serializer(filtrate);
         }
 
         static Connection serializationTestObject()
         {
             return Connection{1, Rates::serializationTestObject(),
                               2.0, 3.0, 4.0, 5.0,
-                              6.0, 7.0, 8.0};
+                              6.0, 7.0, 8.0,
+                              ConnectionFiltrate::serializationTestObject() };
         }
     };
 
@@ -662,12 +708,41 @@ namespace Opm {
         std::array<double, NumQuantities> wbp_{};
     };
 
+    struct WellFiltrate {
+        double rate{0.};
+        double total{0.};
+        double concentration{0.};
+
+        template<class Serializer>
+        void serializeOp(Serializer& serializer) {
+            serializer(rate);
+            serializer(total);
+            serializer(concentration);
+        }
+
+        bool operator==(const WellFiltrate& filtrate) const {
+           return this->rate == filtrate.rate
+              && this->total == filtrate.total
+              && this->concentration == filtrate.concentration;
+        }
+
+        static WellFiltrate serializationTestObject() {
+            WellFiltrate res;
+            res.rate = 1.;
+            res.total = 10.;
+            res.concentration = 0.;
+            return res;
+        }
+    };
+
     struct Well {
         Rates rates{};
         double bhp{0.0};
         double thp{0.0};
         double temperature{0.0};
         int control{0};
+
+        WellFiltrate filtrate;
 
         ::Opm::WellStatus dynamicStatus { Opm::WellStatus::OPEN };
 
@@ -714,6 +789,7 @@ namespace Opm {
                 && (this->bhp == well2.bhp)
                 && (this->thp == well2.thp)
                 && (this->temperature == well2.temperature)
+                && (this->filtrate == well2.filtrate)
                 && (this->control == well2.control)
                 && (this->dynamicStatus == well2.dynamicStatus)
                 && (this->connections == well2.connections)
@@ -731,6 +807,7 @@ namespace Opm {
             serializer(thp);
             serializer(temperature);
             serializer(control);
+            serializer(filtrate);
             serializer(dynamicStatus);
             serializer(connections);
             serializer(segments);
@@ -746,6 +823,7 @@ namespace Opm {
                 2.0,
                 3.0,
                 4,
+                WellFiltrate::serializationTestObject(),
                 ::Opm::WellStatus::SHUT,
                 {Connection::serializationTestObject()},
                 {{0, Segment::serializationTestObject()}},
