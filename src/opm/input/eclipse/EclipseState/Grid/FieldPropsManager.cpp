@@ -18,14 +18,14 @@
 
 #include <opm/input/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
 
-#include <opm/input/eclipse/Deck/DeckKeyword.hpp>
+#include <opm/input/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquifers.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/FieldProps.hpp>
 #include <opm/input/eclipse/EclipseState/Runspec.hpp>
-#include <opm/input/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquifers.hpp>
+
+#include <opm/input/eclipse/Deck/DeckKeyword.hpp>
 
 namespace Opm {
-
 
 bool FieldPropsManager::operator==(const FieldPropsManager& other) const {
     return *this->fp == *other.fp;
@@ -237,4 +237,4 @@ template std::vector<double> FieldPropsManager::get_copy(const std::string& keyw
 template const std::vector<int>* FieldPropsManager::try_get(const std::string& keyword) const;
 template const std::vector<double>* FieldPropsManager::try_get(const std::string& keyword) const;
 
-}
+} // namespace Opm

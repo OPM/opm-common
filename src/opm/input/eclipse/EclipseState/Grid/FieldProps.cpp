@@ -18,16 +18,24 @@
 
 #include <opm/input/eclipse/EclipseState/Grid/FieldProps.hpp>
 
-#include <functional>
-#include <algorithm>
-#include <unordered_map>
-#include <array>
-#include <vector>
-#include <set>
-#include <unordered_set>
+#include <opm/common/OpmLog/LogUtil.hpp>
+#include <opm/common/OpmLog/OpmLog.hpp>
 
-#include <fmt/format.h>
 #include <opm/common/utility/OpmInputError.hpp>
+
+#include <opm/input/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquifers.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/Box.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/FieldPropsManager.hpp> // Layering violation.  Needed for apply_tran() function.
+#include <opm/input/eclipse/EclipseState/Grid/SatfuncPropertyInitializers.hpp>
+#include <opm/input/eclipse/EclipseState/Runspec.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/RtempvdTable.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
+#include <opm/input/eclipse/EclipseState/Util/OrderedMap.hpp>
+
+#include <opm/input/eclipse/Units/UnitSystem.hpp>
+
+#include <opm/input/eclipse/Deck/Deck.hpp>
 
 #include <opm/input/eclipse/Parser/ParserKeywords/A.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/B.hpp>
@@ -38,22 +46,23 @@
 #include <opm/input/eclipse/Parser/ParserKeywords/P.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/T.hpp>
 
-#include <opm/input/eclipse/Units/UnitSystem.hpp>
-#include <opm/input/eclipse/Deck/Deck.hpp>
-#include <opm/input/eclipse/EclipseState/Tables/RtempvdTable.hpp>
-#include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
-#include <opm/input/eclipse/EclipseState/Grid/Box.hpp>
-#include <opm/input/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
-#include <opm/input/eclipse/EclipseState/Grid/SatfuncPropertyInitializers.hpp>
-#include <opm/input/eclipse/EclipseState/Runspec.hpp>
-#include <opm/input/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquifers.hpp>
-#include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
-
-#include <opm/common/OpmLog/OpmLog.hpp>
-#include <opm/common/OpmLog/LogUtil.hpp>
-
 #include "Operate.hpp"
 
+#include <algorithm>
+#include <array>
+#include <cstddef>
+#include <functional>
+#include <optional>
+#include <set>
+#include <stdexcept>
+#include <string>
+#include <tuple>
+#include <unordered_map>
+#include <unordered_set>
+#include <utility>
+#include <vector>
+
+#include <fmt/format.h>
 
 namespace {
     Opm::Box makeGlobalGridBox(const Opm::EclipseGrid* gridPtr)
@@ -425,9 +434,9 @@ bool FieldProps::operator==(const FieldProps& other) const {
            this->m_default_region == other.m_default_region &&
            this->m_rtep == other.m_rtep &&
            this->tables == other.tables &&
+           this->multregp == other.multregp &&
            this->int_data == other.int_data &&
            this->double_data == other.double_data &&
-           this->multregp == other.multregp &&
            this->tran == other.tran;
 }
 
@@ -1403,7 +1412,7 @@ const std::string& FieldProps::default_region() const {
 }
 
 void FieldProps::apply_tran(const std::string& keyword, std::vector<double>& data) {
-    Opm::apply_tran(this->tran, this->double_data, this->active_size, keyword, data);
+    ::Opm::apply_tran(this->tran, this->double_data, this->active_size, keyword, data);
 }
 
 bool FieldProps::tran_active(const std::string& keyword) const {
