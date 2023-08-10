@@ -814,7 +814,7 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
         for(const auto& node: nodes)
             //By creating branches some nodes are automatically added. 
             //Todo: still needed or check for already existing nodes?
-            network.add_node(node); // add_node requires branches be created 
+            network.update_node(node); // add_node requires branches be created 
         this->snapshots.back().network.update( std::move( network ));
      }
 
