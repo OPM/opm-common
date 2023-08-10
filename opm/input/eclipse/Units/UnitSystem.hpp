@@ -51,6 +51,7 @@ namespace Opm {
             temperature,
             viscosity,
             permeability,
+            area,
             liquid_surface_volume,
             gas_surface_volume,
             volume,

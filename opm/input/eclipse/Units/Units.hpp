@@ -268,6 +268,7 @@ namespace Opm {
         constexpr const double LiquidSurfaceVolume  = cubic(meter);
         constexpr const double GasSurfaceVolume     = cubic(meter);
         constexpr const double ReservoirVolume      = cubic(meter);
+        constexpr const double Area                 = square(meter);
         constexpr const double GeomVolume           = cubic(meter);
         constexpr const double GasDissolutionFactor = GasSurfaceVolume/LiquidSurfaceVolume;
         constexpr const double OilDissolutionFactor = LiquidSurfaceVolume/GasSurfaceVolume;
@@ -302,6 +303,7 @@ namespace Opm {
         constexpr const double LiquidSurfaceVolume  = stb;
         constexpr const double GasSurfaceVolume     = 1000*cubic(feet);
         constexpr const double ReservoirVolume      = stb;
+        constexpr const double Area                 = square(feet);
         constexpr const double GeomVolume           = cubic(feet);
         constexpr const double GasDissolutionFactor = GasSurfaceVolume/LiquidSurfaceVolume;
         constexpr const double OilDissolutionFactor = LiquidSurfaceVolume/GasSurfaceVolume;
@@ -336,6 +338,7 @@ namespace Opm {
         constexpr const double LiquidSurfaceVolume  = cubic(centi*meter);
         constexpr const double GasSurfaceVolume     = cubic(centi*meter);
         constexpr const double ReservoirVolume      = cubic(centi*meter);
+        constexpr const double Area                 = square(centi*meter);
         constexpr const double GeomVolume           = cubic(centi*meter);
         constexpr const double GasDissolutionFactor = GasSurfaceVolume/LiquidSurfaceVolume;
         constexpr const double OilDissolutionFactor = LiquidSurfaceVolume/GasSurfaceVolume;
@@ -370,6 +373,7 @@ namespace Opm {
         constexpr const double LiquidSurfaceVolume  = cubic(meter);
         constexpr const double GasSurfaceVolume     = cubic(meter);
         constexpr const double ReservoirVolume      = cubic(meter);
+        constexpr const double Area                 = square(meter);
         constexpr const double GeomVolume           = cubic(meter);
         constexpr const double GasDissolutionFactor = GasSurfaceVolume/LiquidSurfaceVolume;
         constexpr const double OilDissolutionFactor = LiquidSurfaceVolume/GasSurfaceVolume;

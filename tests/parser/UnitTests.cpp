@@ -280,6 +280,7 @@ BOOST_AUTO_TEST_CASE(METRIC_UNITS)
     BOOST_CHECK_CLOSE( metric.to_si( Meas::temperature , 1.0 ) , 274.15 , 1.0e-10 );
     BOOST_CHECK_CLOSE( metric.to_si( Meas::viscosity , 1.0 ) , 1.0e-3 , 1.0e-10 );
     BOOST_CHECK_CLOSE( metric.to_si( Meas::permeability , 1.0 ) , 9.869232667160129e-16 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( metric.to_si( Meas::area, 1.0 ) , 1. , 1.0e-10 );
     BOOST_CHECK_CLOSE( metric.to_si( Meas::liquid_surface_volume , 1.0 ) , 1.0 , 1.0e-10 );
     BOOST_CHECK_CLOSE( metric.to_si( Meas::gas_surface_volume , 1.0 ) , 1.0 , 1.0e-10 );
     BOOST_CHECK_CLOSE( metric.to_si( Meas::volume , 1.0 ) , 1.0 , 1.0e-10 );
@@ -321,6 +322,7 @@ BOOST_AUTO_TEST_CASE(METRIC_UNITS)
     BOOST_CHECK_CLOSE( metric.from_si( Meas::temperature , 274.15 ) , 1.0 , 1.0e-10 );
     BOOST_CHECK_CLOSE( metric.from_si( Meas::viscosity , 1.0 ) , 1.0e+3 , 1.0e-10 );
     BOOST_CHECK_CLOSE( metric.from_si( Meas::permeability , 1.0 ) , 1.01325e+15 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( metric.from_si( Meas::area, 1.0 ) , 1.0 , 1.0e-10 );
     BOOST_CHECK_CLOSE( metric.from_si( Meas::liquid_surface_volume , 1.0 ) , 1.0 , 1.0e-10 );
     BOOST_CHECK_CLOSE( metric.from_si( Meas::gas_surface_volume , 1.0 ) , 1.0 , 1.0e-10 );
     BOOST_CHECK_CLOSE( metric.from_si( Meas::volume , 1.0 ) , 1.0 , 1.0e-10 );
@@ -372,6 +374,7 @@ BOOST_AUTO_TEST_CASE(FIELD_UNITS)
     BOOST_CHECK_CLOSE( field.to_si( Meas::temperature , 1.0 ) , 255.9277777777778 , 1.0e-10 );
     BOOST_CHECK_CLOSE( field.to_si( Meas::viscosity , 1.0 ) , 1.0e-3 , 1.0e-10 );
     BOOST_CHECK_CLOSE( field.to_si( Meas::permeability , 1.0 ) , 9.869232667160129e-16 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( field.to_si( Meas::area, 1.0 ) , 0.09290304, 1.0e-10 );
     BOOST_CHECK_CLOSE( field.to_si( Meas::liquid_surface_volume , 1.0 ) , 0.1589872949280001 , 1.0e-10 );
     BOOST_CHECK_CLOSE( field.to_si( Meas::gas_surface_volume , 1.0 ) , 28.31684659200000 , 1.0e-10 );
     BOOST_CHECK_CLOSE( field.to_si( Meas::volume , 1.0 ) , 0.1589872949280001 , 1.0e-10 );
@@ -414,6 +417,7 @@ BOOST_AUTO_TEST_CASE(FIELD_UNITS)
     BOOST_CHECK_CLOSE( field.from_si( Meas::temperature , 255.9277777777778 ) , 1.0 , 1.0e-10 );
     BOOST_CHECK_CLOSE( field.from_si( Meas::viscosity , 1.0 ) , 1.0e+3 , 1.0e-10 );
     BOOST_CHECK_CLOSE( field.from_si( Meas::permeability , 1.0 ) , 1.01325e+15 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( field.from_si( Meas::area, 1.0 ) , 10.763910416709722 , 1.0e-10 );
     BOOST_CHECK_CLOSE( field.from_si( Meas::liquid_surface_volume , 1.0 ) , 6.289810770432102e+00 , 1.0e-10 );
     BOOST_CHECK_CLOSE( field.from_si( Meas::gas_surface_volume , 1.0 ) , 3.531466672148859e-02 , 1.0e-10 );
     BOOST_CHECK_CLOSE( field.from_si( Meas::volume , 1.0 ) , 6.289810770432102e+00 , 1.0e-10 );
@@ -464,6 +468,7 @@ BOOST_AUTO_TEST_CASE(LAB_UNITS)
     BOOST_CHECK_CLOSE( lab.to_si( Meas::temperature , 1.0 ) , 274.15 , 1.0e-10 );
     BOOST_CHECK_CLOSE( lab.to_si( Meas::viscosity , 1.0 ) , 1.0e-3 , 1.0e-10 );
     BOOST_CHECK_CLOSE( lab.to_si( Meas::permeability , 1.0 ) , 9.869232667160129e-16 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( lab.to_si( Meas::area, 1.0 ) , 1.e-4 , 1.0e-10 );
     BOOST_CHECK_CLOSE( lab.to_si( Meas::liquid_surface_volume , 1.0 ) , 1.0e-6 , 1.0e-10 );
     BOOST_CHECK_CLOSE( lab.to_si( Meas::gas_surface_volume , 1.0 ) , 1.0e-6 , 1.0e-10 );
     BOOST_CHECK_CLOSE( lab.to_si( Meas::volume , 1.0 ) , 1.0e-6 , 1.0e-10 );
@@ -506,6 +511,7 @@ BOOST_AUTO_TEST_CASE(LAB_UNITS)
     BOOST_CHECK_CLOSE( lab.from_si( Meas::temperature , 274.15 ) , 1.0 , 1.0e-10 );
     BOOST_CHECK_CLOSE( lab.from_si( Meas::viscosity , 1.0 ) , 1.0e+3 , 1.0e-10 );
     BOOST_CHECK_CLOSE( lab.from_si( Meas::permeability , 1.0 ) , 1.01325e+15 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( lab.from_si( Meas::area, 1.0 ) , 1.0e4 , 1.0e-10 );
     BOOST_CHECK_CLOSE( lab.from_si( Meas::liquid_surface_volume , 1.0 ) , 1.0e6 , 1.0e-10 );
     BOOST_CHECK_CLOSE( lab.from_si( Meas::gas_surface_volume , 1.0 ) , 1.0e6 , 1.0e-10 );
     BOOST_CHECK_CLOSE( lab.from_si( Meas::volume , 1.0 ) , 1.0e6 , 1.0e-10 );
@@ -557,6 +563,7 @@ BOOST_AUTO_TEST_CASE(PVT_M_UNITS)
     BOOST_CHECK_CLOSE( pvt_m.to_si( Meas::temperature , 1.0 ) , 274.15 , 1.0e-10 );
     BOOST_CHECK_CLOSE( pvt_m.to_si( Meas::viscosity , 1.0 ) , 1.0e-3 , 1.0e-10 );
     BOOST_CHECK_CLOSE( pvt_m.to_si( Meas::permeability , 1.0 ) , 9.869232667160129e-16 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( pvt_m.to_si( Meas::area, 1.0 ) , 1.0 , 1.0e-10 );
     BOOST_CHECK_CLOSE( pvt_m.to_si( Meas::liquid_surface_volume , 1.0 ) , 1.0 , 1.0e-10 );
     BOOST_CHECK_CLOSE( pvt_m.to_si( Meas::gas_surface_volume , 1.0 ) , 1.0 , 1.0e-10 );
     BOOST_CHECK_CLOSE( pvt_m.to_si( Meas::volume , 1.0 ) , 1.0 , 1.0e-10 );
@@ -599,6 +606,7 @@ BOOST_AUTO_TEST_CASE(PVT_M_UNITS)
     BOOST_CHECK_CLOSE( pvt_m.from_si( Meas::temperature , 274.15 ) , 1.0 , 1.0e-10 );
     BOOST_CHECK_CLOSE( pvt_m.from_si( Meas::viscosity , 1.0 ) , 1.0e+3 , 1.0e-10 );
     BOOST_CHECK_CLOSE( pvt_m.from_si( Meas::permeability , 1.0 ) , 1.01325e+15 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( pvt_m.from_si( Meas::area, 1.0 ) , 1.0 , 1.0e-10 );
     BOOST_CHECK_CLOSE( pvt_m.from_si( Meas::liquid_surface_volume , 1.0 ) , 1.0 , 1.0e-10 );
     BOOST_CHECK_CLOSE( pvt_m.from_si( Meas::gas_surface_volume , 1.0 ) , 1.0 , 1.0e-10 );
     BOOST_CHECK_CLOSE( pvt_m.from_si( Meas::volume , 1.0 ) , 1.0 , 1.0e-10 );
