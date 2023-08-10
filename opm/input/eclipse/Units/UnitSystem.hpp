@@ -83,6 +83,7 @@ namespace Opm {
             salinity,
             gas_oil_ratio_rate,
             moles,
+            ppm,
             _count // New entries must be added *before* this
         };
 
