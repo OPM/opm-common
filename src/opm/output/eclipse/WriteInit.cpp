@@ -366,6 +366,21 @@ namespace {
         initFile.write("DZ"   , dz);
     }
 
+    std::vector<double>
+    getUnitConvertedPropertyValue(const std::string& propertyName,
+                                  const ::Opm::FieldPropsManager& fp){
+        auto data = fp.get_double(prop.name);
+        const auto& kw_info = ::Opm::Fieldprops::keywords::global_kw_info<double>(prop.name);
+        if(kw_info.unit){
+            const auto& dim = unit_system.parse( *kw_info.unit );
+            for(auto& val: data){
+                val = dim.convertSiToRaw(val);
+            }
+        }else{
+            // option kw_info.unit not set assume unit conversion
+        }
+    }
+
     template <class WriteVector>
     void writeCellDoublePropertiesWithDefaultFlag(const Properties& propList,
                                                   const ::Opm::FieldPropsManager& fp,
@@ -375,7 +390,7 @@ namespace {
             if (! fp.has_double(prop.name))
                 continue;
 
-            auto data = fp.get_double(prop.name);
+            auto data = getUnitConvertedPropertyValue(prop,fp);
             auto defaulted = fp.defaulted<double>(prop.name);
             write(prop, std::move(defaulted), std::move(data));
         }
@@ -390,17 +405,7 @@ namespace {
 
             if (!fp.has_double(prop.name))
                 continue;
-            const auto& unit_system = fp.getUnitSystem();
-            auto data = fp.get_double(prop.name);
-            const auto& kw_info = ::Opm::Fieldprops::keywords::global_kw_info<double>(prop.name);
-            if(kw_info.unit){
-                const auto& dim = unit_system.parse( *kw_info.unit );
-                for(auto& val: data){
-                    val = dim.convertSiToRaw(val);
-                }
-            }else{
-                // option kw_info.unit not set assume unit conversion
-            }
+            auto data = getUnitConvertedPropertyValue(prop,fp);
             write(prop, std::move(data));
         }
     }
