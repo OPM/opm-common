@@ -1933,8 +1933,8 @@ Opm::satfunc::init(const std::string&         keyword,
         dirfunc("SOWCR", SOWCREndpoint), dirfunc("ISOWCR", ISOWCREndpoint),
         dirfunc("SWCR",  SWCREndpoint),  dirfunc("ISWCR",  ISWCREndpoint),
 
-        dirfunc("PCG",   PCGEndpoint),   dirfunc("IPCG",   IPCGEndpoint),
-        dirfunc("PCW",   PCWEndpoint),   dirfunc("IPCW",   IPCWEndpoint),
+        {"PCG", PCGEndpoint},            {"IPCG", IPCGEndpoint},
+        {"PCW", PCWEndpoint},            {"IPCW", IPCWEndpoint},
 
         dirfunc("KRG",   KRGEndpoint),   dirfunc("IKRG",   IKRGEndpoint),
         dirfunc("KRGR",  KRGREndpoint),  dirfunc("IKRGR",  IKRGREndpoint),

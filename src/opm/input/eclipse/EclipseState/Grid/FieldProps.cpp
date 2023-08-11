@@ -79,6 +79,12 @@ namespace {
             }
         };
     }
+
+    bool is_capillary_pressure(const std::string& keyword)
+    {
+        return (keyword == "PCW")  || (keyword == "PCG")
+            || (keyword == "IPCG") || (keyword == "IPCW");
+    }
 }
 
 namespace Opm {
@@ -675,8 +681,11 @@ Fieldprops::FieldData<double>& FieldProps::init_get(const std::string& keyword_n
     if (keyword == ParserKeywords::TEMPI::keywordName)
         this->init_tempi(this->double_data[keyword]);
 
-    if (Fieldprops::keywords::PROPS::satfunc.count(keyword) == 1)
+    if ((Fieldprops::keywords::PROPS::satfunc.count(keyword) == 1) ||
+        is_capillary_pressure(keyword))
+    {
         this->init_satfunc(keyword, this->double_data[keyword]);
+    }
 
     return this->double_data[keyword];
 }
