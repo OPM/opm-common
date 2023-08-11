@@ -226,6 +226,7 @@ static const std::set<std::string> satfunc = {"SWLPC", "ISWLPC", "SGLPC", "ISGLP
                                               dirfunc("KRGR"),
                                               dirfunc("IKRGR")};
 
+#undef dirfunc
 }
 
 namespace REGIONS {
