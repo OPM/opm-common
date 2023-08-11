@@ -110,13 +110,14 @@ BOOST_AUTO_TEST_CASE(get_connections) {
     w1.bhp = 1.23;
     w1.temperature = 3.45;
     w1.control = 1;
+    w1.filtrate = {0.2, 2, 0.3}; // values are not tested in this test
 
     /*
      *  the completion keys (active indices) and well names correspond to the
      *  input deck. All other entries in the well structures are arbitrary.
      */
-    w1.connections.push_back( { 88, rc1, 30.45, 123.45, 543.21, 0.123, 0.5, 17.29, 0.1729 } );
-    w1.connections.push_back( { 288, rc2, 33.19, 67.89, 98.76, 0.5, 0.125, 355.113, 0.355113 } );
+    w1.connections.push_back( { 88, rc1, 30.45, 123.45, 543.21, 0.123, 0.5, 17.29, 0.1729,{}} );
+    w1.connections.push_back( { 288, rc2, 33.19, 67.89, 98.76, 0.5, 0.125, 355.113, 0.355113, {}} );
 
     {
         Json::JsonObject json_data;
@@ -132,7 +133,8 @@ BOOST_AUTO_TEST_CASE(get_connections) {
     w2.bhp = 2.34;
     w2.temperature = 4.56;
     w2.control = 2;
-    w2.connections.push_back( { 188, rc3, 36.22, 19.28, 28.91, 0.125, 0.125, 3.141, 0.31415 } );
+    w2.filtrate = {0.3, 3, 0.4}; // values are not tested in this test
+    w2.connections.push_back( { 188, rc3, 36.22, 19.28, 28.91, 0.125, 0.125, 3.141, 0.31415, {}} );
     data::Wells wellRates;
 
     wellRates["OP_1"] = w1;

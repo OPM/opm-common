@@ -550,6 +550,14 @@ WWPRH
 /
 WOPR
 /
+-- filtrate related
+WINJFVR
+/
+WINJFVT
+/
+WINJFC
+/
+
 WGVPR
  W_1 W_2 /
 WOPRH
@@ -924,6 +932,48 @@ CTFAC
  'W_1' /
  'W_2' /
  'W_3' /
+/
+
+
+CINJFVR
+ 'W_1' /
+ 'W_2' /
+ 'W_3' /
+/
+CINJFVT
+ W_1 /
+ W_2 /
+ W_3 /
+/
+CFCSKIN
+ W_1 /
+ W_2 /
+ W_3 /
+/
+CFCWIDTH
+ W_1 /
+ W_2 /
+ W_3 /
+/
+CFCPERM
+ W_1 /
+ W_2 /
+ W_3 /
+/
+CFCPORO
+ W_1 /
+ W_2 /
+ W_3 /
+/
+CFCRAD
+ W_1 /
+ W_2 /
+ W_3 /
+/
+CFCAOF
+ W_1 /
+ W_2 /
+ W_3 /
 /
 
 ---- Connection production rates
