@@ -777,7 +777,7 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
             const int vfp_table = record.getItem<ParserKeywords::GRUPNET::VFP_TABLE>().get<int>(0);
 
             for (const auto& group_name : group_names) {
-                auto& group = this->snapshots.back().groups.get(group_name);
+                const auto& group = this->snapshots.back().groups.get(group_name);
                 const auto& parent_name = group.parent();
                 if (!parent_name.empty())
                 {
