@@ -226,21 +226,6 @@ static const std::set<std::string> satfunc = {"SWLPC", "ISWLPC", "SGLPC", "ISGLP
                                               dirfunc("KRGR"),
                                               dirfunc("IKRGR")};
 
-static const std::map<std::string,std::string> sogcr_shift = {{"SOGCR",    "SWL"},
-                                                              {"SOGCRX",   "SWLX"},
-                                                              {"SOGCRX-",  "SWLX-"},
-                                                              {"SOGCRY",   "SWLY"},
-                                                              {"SOGCRY-",  "SWLY-"},
-                                                              {"SOGCRZ",   "SWLZ"},
-                                                              {"SOGCRZ-",  "SWLZ-"},
-                                                              {"ISOGCR",   "ISWL"},
-                                                              {"ISOGCRX",  "ISWLX"},
-                                                              {"ISOGCRX-", "ISWLX-"},
-                                                              {"ISOGCRY",  "ISWLY"},
-                                                              {"ISOGCRY-", "ISWLY-"},
-                                                              {"ISOGCRZ",  "ISWLZ"},
-                                                              {"ISOGCRZ-", "ISWLZ-"}};
-
 }
 
 namespace REGIONS {
