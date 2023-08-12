@@ -806,15 +806,19 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
                         is_valid_node = true;
                         node.terminal_pressure(pressure_item.getSIDouble(0));
                     } else {
-                         std::string msg = fmt::format("Problem with keyword {{keyword}}\n"
-                                                       "In {{file}} line {{line}}\n"
-                                                       "The group {} is a terminal node of the network and should not have a vfp table assigned to it.", group_name);
-                         OpmLog::warning(OpmInputError::format(msg, handlerContext.keyword.location()));
+                         std::string msg = fmt::format("The group {} is a terminal node of the network and should not have a vfp table assigned to it.", group_name);
+                         throw OpmInputError(msg, handlerContext.keyword.location());
                     }
                 } else {
-                      if (vfp_table != 0)
-                          // Only non-terminal nodes with non-default vfp table value can be part of the network
-                          is_valid_node = true;
+                     if (vfp_table != 0){
+                         // Only non-terminal nodes with non-default vfp table value can be part of the network
+                         is_valid_node = true;
+                         } else {
+                              if(network.has_node(group_name)) {
+                                 std::string msg = fmt::format("The group {} is not a terminal node of the network and should have a vfp table assigned to it.", group_name);
+                                 throw OpmInputError(msg, handlerContext.keyword.location());
+                              }
+                         }
                 }
                 if (is_valid_node)
                     nodes.push_back(node);
