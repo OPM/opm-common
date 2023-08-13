@@ -369,3 +369,44 @@ BRANPROP
 
     BOOST_CHECK_EQUAL_COLLECTIONS(nodes.begin(), nodes.end(), expect.begin(), expect.end());
 }
+
+BOOST_AUTO_TEST_CASE(StandardNetwork) {
+
+    const std::string input = R"(
+
+SCHEDULE
+
+GRUPTREE
+'PROD'    'FIELD' /
+
+'M5S'    'PLAT-A'  /
+'M5N'    'PLAT-A'  /
+
+'C1'     'M5N'  /
+'F1'     'M5N'  /
+'B1'     'M5S'  /
+'G1'     'M5S'  /
+/
+
+GRUPNET
+'PLAT-A'     21.000  5* /
+'M5S'  1*    3  1*        'NO'  2* /
+'B1'  1*     5  1*        'NO'  2* /
+'C1'  1*     4  1*        'NO'  2* /
+/)";
+
+    auto schedule = make_schedule(input);
+
+    const auto& network = schedule[0].network.get();
+    const auto& b1 = network.node("B1");
+    const auto upbranch = network.uptree_branch(b1.name());
+    const auto vfp_table = (*upbranch).vfp_table();
+    BOOST_CHECK_EQUAL(vfp_table.value(), 5);
+    BOOST_CHECK(!b1.terminal_pressure());
+    BOOST_CHECK(!b1.terminal_pressure());
+
+    const auto& p = network.node("PLAT-A");
+    BOOST_CHECK(p.terminal_pressure());
+    BOOST_CHECK_EQUAL(p.terminal_pressure().value(), 21 * 100000);
+    BOOST_CHECK(p == network.root());
+}
