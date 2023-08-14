@@ -245,36 +245,75 @@ public:
      * \param temperature temperature of component in \f$\mathrm{[K]}\f$
      * \param pressure pressure of component in \f$\mathrm{[Pa]}\f$
      *
-     * See:
-     *
-     * See: R. Reid, et al.: The Properties of Gases and Liquids,
-     * 4th edition, McGraw-Hill, 1987, pp 396-397,
-     * 5th edition, McGraw-Hill, 2001  pp 9.7-9.8 (omega and V_c taken from p. A.19)
+     * See: Muzney et al., J. Chem. Eng. Data 2013, 58, 4, 969–979 (and the corrections!)
      *
      */
     template <class Evaluation>
-    static Evaluation gasViscosity(const Evaluation& temperature, const Evaluation& /*pressure*/)
+    static Evaluation gasViscosity(const Evaluation& temperature, 
+                                   const Evaluation& pressure,
+                                   bool extrapolate = false)
     {
-        const Scalar Tc = criticalTemperature();
-        const Scalar Vc = 64.2; // critical specific volume [cm^3/mol]
-        const Scalar omega = -0.217; // accentric factor
-        const Scalar M = molarMass() * 1e3; // molar mas [g/mol]
-        const Scalar dipole = 0.0; // dipole moment [debye]
+        // Some needed parameters and variables
+        const Scalar M = molarMass() * 1e3;  // g/mol
+        const Scalar epsilon_div_kb = 30.41;
+        const Scalar sigma = 0.297;  // nm
+        const Scalar Na = 6.022137e23;  // Avogadro's number
 
-        Scalar mu_r4 = 131.3 * dipole / std::sqrt(Vc * Tc);
-        mu_r4 *= mu_r4;
-        mu_r4 *= mu_r4;
+        Evaluation T_star = temperature / epsilon_div_kb;
+        Evaluation ln_T_star = log(T_star);
+        Evaluation T_r = temperature / criticalTemperature();
+        Evaluation rho = gasDensity(temperature, pressure, extrapolate);
+        Evaluation rho_r = rho / 90.909090909; // see corrections
 
-        Scalar Fc = 1 - 0.2756*omega + 0.059035*mu_r4;
-        const Evaluation& Tstar = 1.2593 * temperature/Tc;
-        const Evaluation& Omega_v =
-            1.16145*pow(Tstar, -0.14874) +
-            0.52487*exp(- 0.77320*Tstar) +
-            2.16178*exp(- 2.43787*Tstar);
-        const Evaluation& mu = 40.785*Fc*sqrt(M*temperature)/(std::pow(Vc, 2./3)*Omega_v);
+        // 
+        // Eta_0 terms (zero-density viscocity)
+        //
+        // Parameters in Table 2 for Eq. (4) 
+        static constexpr Scalar a[5] = 
+            {2.0963e-1, -4.55274e-1, 1.43602e-1, -3.35325e-2, 2.76981e-3};
 
-        // convertion from micro poise to Pa s
-        return mu/1e6 / 10;
+        // Eq. (4)
+        Evaluation ln_S_star = 0.0;
+        for (int i = 0; i < 5; ++i) {
+            ln_S_star += a[i] * pow(ln_T_star, i);
+        }
+
+        // Eq. (3)
+        Evaluation eta_0 = 0.021357 * sqrt(M * temperature) / (sigma * sigma * exp(ln_S_star));
+
+        // 
+        // Eta_1 terms (excess contribution)
+        // 
+        // 
+        // Parameters in Table 3 for Eq. (7)
+        static constexpr Scalar b[7] = 
+            {-0.187, 2.4871, 3.7151, -11.0972, 9.0965, -3.8292, 0.5166};
+        
+        // Eq. (7) with corrections
+        Evaluation B_star = 0.0;
+        for (int i = 0; i < 7; ++i) {
+            B_star += b[i] * pow(T_star, -i);
+        }
+
+        // Eq. (9) (eta_1 part) using Eq. (5-7) with corrections and sigma in m (instead of nm). Note that Na * sigma_m
+        // ^ 3 have unit [m3/mol], so we need to multiply with molar density (= rho / molarMass) and not mass density in
+        // Eq. (9)
+        const Scalar sigma_m = sigma * 1e-9;
+        Evaluation eta_1 = B_star * Na * sigma_m * sigma_m * sigma_m * eta_0 * rho / M;
+
+        //
+        // delta eta_h terms (higher-order effects)
+        // 
+        // Parameters in Table 4 for Eq. (9)
+        static constexpr Scalar c[6] =
+            {6.43449673, 4.56334068e-2, 2.32797868e-1, 9.58326120e-1, 1.27941189e-1, 3.63576595e-1};
+
+        // delta eta_h terms in Eq. (9)
+        Evaluation delta_eta_h = c[0] * rho_r * rho_r * exp(c[1] * T_r + c[2] / T_r + 
+        (c[3] * rho_r * rho_r) / (c[4] + T_r) + c[5] * pow(rho_r, 6));
+
+        // return all terms in Eq. (9) converted from muPa*s to Pa*s
+        return (eta_0 + eta_1 + delta_eta_h) * 1e-6;
     }
 
     /*!
