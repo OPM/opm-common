@@ -839,7 +839,18 @@ void FieldProps::handle_double_keyword(Section section, const Fieldprops::keywor
     auto& field_data = this->init_get<double>(keyword_name, kw_info);
     const auto& deck_data = keyword.getSIDoubleData();
     const auto& deck_status = keyword.getValueStatus();
-
+#ifndef NDEBUG
+    const auto& kwunit = kw_info.unit;
+    double si_factor = 1.0;
+    if (kwunit) {
+        const auto& dim = unit_system.parse(*kwunit);
+        si_factor = dim.getSIScaling();
+    }
+    const std::vector<Dimension>& deckdims = keyword.getActiveDimensions();
+    for (const auto& dim : deckdims) {
+        assert(dim.getSIScaling() == si_factor);
+    }
+#endif
     if ((section == Section::EDIT || section == Section::SCHEDULE) && kw_info.multiplier)
         multiply_deck(kw_info, keyword, field_data, deck_data, deck_status, box);
     else

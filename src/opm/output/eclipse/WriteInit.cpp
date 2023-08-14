@@ -44,7 +44,7 @@
 #include <initializer_list>
 #include <stdexcept>
 #include <utility>
-
+#include <iostream>
 namespace {
 
     struct CellProperty
@@ -369,16 +369,18 @@ namespace {
     std::vector<double>
     getUnitConvertedPropertyValue(const std::string& propertyName,
                                   const ::Opm::FieldPropsManager& fp){
-        auto data = fp.get_double(prop.name);
-        const auto& kw_info = ::Opm::Fieldprops::keywords::global_kw_info<double>(prop.name);
+        auto data = fp.get_double(propertyName);
+        const auto& kw_info = ::Opm::Fieldprops::keywords::global_kw_info<double>(propertyName);
         if(kw_info.unit){
-            const auto& dim = unit_system.parse( *kw_info.unit );
+            const auto& dim = fp.getUnitSystem().parse( *kw_info.unit );
             for(auto& val: data){
                 val = dim.convertSiToRaw(val);
             }
         }else{
+            std::cout << propertyName << std::endl;
             // option kw_info.unit not set assume unit conversion
         }
+        return data;
     }
 
     template <class WriteVector>
@@ -390,7 +392,7 @@ namespace {
             if (! fp.has_double(prop.name))
                 continue;
 
-            auto data = getUnitConvertedPropertyValue(prop,fp);
+            auto data = getUnitConvertedPropertyValue(prop.name,fp);
             auto defaulted = fp.defaulted<double>(prop.name);
             write(prop, std::move(defaulted), std::move(data));
         }
@@ -405,7 +407,7 @@ namespace {
 
             if (!fp.has_double(prop.name))
                 continue;
-            auto data = getUnitConvertedPropertyValue(prop,fp);
+            auto data = getUnitConvertedPropertyValue(prop.name,fp);
             write(prop, std::move(data));
         }
     }
@@ -462,7 +464,7 @@ namespace {
         // therefore invoke the auto create functionality to ensure
         // that "NTG" is included in the properties container.
         const auto& fp = es.globalFieldProps();
-        fp.get_double("NTG");
+        fp.get_double("NTG"); //make default values for since has_double is used downstream
         writeDoubleCellProperties(doubleKeywords, fp,
                                   units, false, initFile);
     }
@@ -514,7 +516,7 @@ namespace {
                                    ::Opm::EclIO::OutputStream::Init& initFile)
     {
         for (const auto& prop : propList)
-            fp.get_double(prop.name);
+            fp.get_double(prop.name);//make default values for since has_double is used downstream
 
         // Don't write sentinel value if input defaulted.
         writeDoubleCellProperties(propList, fp,

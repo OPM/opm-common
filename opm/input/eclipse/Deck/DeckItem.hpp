@@ -151,6 +151,10 @@ namespace Opm {
         }
 
         void reserve_additionalRawString(std::size_t);
+
+        const std::vector<Dimension>& getActiveDimensions() const{
+            return active_dimensions;
+        }
     private:
         mutable std::vector< double > dval;
         std::vector< int > ival;
@@ -180,4 +184,3 @@ namespace Opm {
     };
 }
 #endif  /* DECKITEM_HPP */
-

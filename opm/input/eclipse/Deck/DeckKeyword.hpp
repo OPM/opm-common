@@ -69,6 +69,9 @@ namespace Opm {
         const std::vector<int>& getIntData() const;
         const std::vector<double>& getRawDoubleData() const;
         const std::vector<double>& getSIDoubleData() const;
+        const std::vector<Dimension>&  getActiveDimensions() const{
+            return this->getDataRecord().getDataItem().getActiveDimensions();
+        }
         const std::vector<std::string>& getStringData() const;
         const std::vector<value::status>& getValueStatus() const;
         size_t getDataSize() const;
@@ -116,4 +119,3 @@ namespace Opm {
 }
 
 #endif  /* DECKKEYWORD_HPP */
-
