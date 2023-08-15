@@ -93,6 +93,7 @@ namespace {
         0.0,
         0.0,
         0.0,
+        0.0,
     };
 
     static const double to_metric[] = {
