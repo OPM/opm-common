@@ -301,6 +301,7 @@ namespace {
         0.0,
         0.0,
         0.0,
+        0.0,
     };
 
     static const double to_field[] = {
@@ -473,6 +474,7 @@ namespace {
         0.0,
         0.0,
         Lab::TemperatureOffset,
+        0.0,
         0.0,
         0.0,
         0.0,
@@ -715,6 +717,7 @@ namespace {
         0.0,
         0.0,
         0.0,
+        0.0,
     };
 
     static const double to_pvt_m[] = {
@@ -922,6 +925,7 @@ namespace {
         0.0,
         0.0,
         0.0,
+        0.0,
     };
 
     static const double to_input[] = {
@@ -968,9 +972,11 @@ namespace {
         1,
         1,
         1,
+        1,
     };
 
     static const double from_input[] = {
+        1,
         1,
         1,
         1,

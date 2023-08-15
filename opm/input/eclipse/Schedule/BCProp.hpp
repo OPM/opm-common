@@ -62,6 +62,9 @@ struct MechBCValue{
     std::array<double,3> disp;
     std::array<double,6> stress;
     std::array<bool,3> fixeddir;
+    bool operator==(const MechBCValue& other) const{
+        return disp == other.disp && stress == other.stress && fixeddir == other.fixeddir;
+    }
 };
 
 

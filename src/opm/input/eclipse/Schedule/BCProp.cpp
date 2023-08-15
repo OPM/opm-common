@@ -142,6 +142,7 @@ BCProp::BCFace BCProp::BCFace::serializationTestObject()
     BCFace result;
     result.index = 100;
     result.bctype = BCType::RATE;
+    result.bcmechtype = BCMECHType::FIXED;
     result.component = BCComponent::GAS;
     result.rate = 101.0;
     result.pressure = 102.0;
@@ -149,8 +150,8 @@ BCProp::BCFace BCProp::BCFace::serializationTestObject()
     MechBCValue mechbcvalue;
     mechbcvalue.stress = {1.0, 2.0, 3.0, 0.0, 0.0, 0.0};
     mechbcvalue.disp = {1.0, 2.0, 3.0};
-    mechbcvalue.fixddif = {true, false, true};
-    result.mechbcvalue = mechbvalue;
+    mechbcvalue.fixeddir = {true, false, true};
+    result.mechbcvalue = mechbcvalue;
     return result;
 }
 
@@ -158,12 +159,12 @@ BCProp::BCFace BCProp::BCFace::serializationTestObject()
 bool BCProp::BCFace::operator==(const BCProp::BCFace& other) const {
     return this->index == other.index &&
            this->bctype == other.bctype &&
-           this->mechtype == other.mechtype &&
+           this->bcmechtype == other.bcmechtype &&
            this->component == other.component &&
            this->rate == other.rate &&
            this->pressure == other.pressure &&
            this->temperature == other.temperature &&
-           this->mechbcvalue == other.mechbcvalue
+           this->mechbcvalue == other.mechbcvalue;
 }
 
 
