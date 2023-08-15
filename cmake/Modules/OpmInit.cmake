@@ -110,6 +110,10 @@ macro (OpmInitDirVars)
   endif (COMMAND dir_hook)
 endmacro ()
 
+if("${CMAKE_SIZEOF_VOID_P}" STREQUAL "4")
+  message(FATAL_ERROR "OPM will only work correctly on 64bit systems!")
+endif()
+
 OpmInitProjVars ()
 OpmInitDirVars ()
 
