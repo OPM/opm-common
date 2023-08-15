@@ -19,8 +19,21 @@
 #ifndef OPM_TIMINGMACROS_HPP
 #define OPM_TIMINGMACROS_HPP
 
-// macros used to time blocks for example with tracy
-// time block of main part of codes which do not effect performance
+// This file defines macros
+// OPM_TIMEBLOCK - time block of main part of codes which do not effect performance
+// OPM_TIMEBLOCK_LOCAL - detailed timing which may effect performance
+
+#define DETAILED_PROFILING 0 // set to 1 to enable invasive profiling
+
+#if USE_TRACY
+#define TRACY_ENABLE 1
+#include <tracy/Tracy.hpp>
+#define OPM_TIMEBLOCK(blockname) ZoneNamedN(blockname, #blockname, true)
+#if DETAILED_PROFILING
+#define OPM_TIMEBLOCK_LOCAL(blockname) ZoneNamedN(blockname, #blockname, true)
+#endif
+#endif
+
 #ifndef OPM_TIMEBLOCK
 #define OPM_TIMEBLOCK(x)\
     do { /* nothing */ } while (false)
@@ -31,5 +44,7 @@
 #define OPM_TIMEBLOCK_LOCAL(x)\
     do { /* nothing */ } while (false)
 #endif
+
+#undef DETAILED_PROFILING
 
 #endif // OPM_TIMINGMACROS_HPP
