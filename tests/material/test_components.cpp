@@ -697,9 +697,12 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(H2Class, Scalar, Types)
     Evaluation T;
     Evaluation p;
 
+    // Extrapolate table
+    bool extrapolate = true;
+
     // Rel. diff. tolerance
     Scalar tol = 1e-2;
-    Scalar tol_visc = 30e-2;  // use tol once a better viscosity model is implemented
+    Scalar tol_visc = 2.6e-2;
     
     // Loop over temperature and pressure, and compare to reference values in JSON file
     for (int iT = 0; iT < numT; ++iT) {
@@ -711,7 +714,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(H2Class, Scalar, Types)
             p = Evaluation(pres_ref.get_array_item(iP).as_double());
 
             // Density
-            Scalar dens = H2::gasDensity(T, p).value();
+            Scalar dens = H2::gasDensity(T, p, extrapolate).value();
             Json::JsonObject dens_ref_row = density_ref.get_array_item(iT);
             Scalar dens_ref = Scalar(dens_ref_row.get_array_item(iP).as_double());
             
@@ -720,7 +723,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(H2Class, Scalar, Types)
                 "} exceeds tolerance {"<<tol<<"} at (T, p) = ("<<T.value()<<", "<<p.value()<<")");
 
             // Viscosity
-            Scalar visc = H2::gasViscosity(T, p).value();
+            Scalar visc = H2::gasViscosity(T, p, extrapolate).value();
             Json::JsonObject visc_ref_row = viscosity_ref.get_array_item(iT);
             Scalar visc_ref = Scalar(visc_ref_row.get_array_item(iP).as_double());
 
@@ -729,7 +732,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(H2Class, Scalar, Types)
                 "} exceeds tolerance {"<<tol_visc<<"} at (T, p) = ("<<T.value()<<", "<<p.value()<<")");
 
             // Enthalpy
-            Scalar enthalpy = H2::gasEnthalpy(T, p).value();
+            Scalar enthalpy = H2::gasEnthalpy(T, p, extrapolate).value();
             Json::JsonObject enth_ref_row = enthalpy_ref.get_array_item(iT);
             Scalar enth_ref = Scalar(enth_ref_row.get_array_item(iP).as_double());
 
