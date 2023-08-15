@@ -11,7 +11,7 @@
     {
       "name": "VOL_CONCENTRATION",
       "value_type": "UDA",
-      "dimension": "1",
+      "dimension": "PPM",
       "default" : 0
     }
   ]
