@@ -482,6 +482,7 @@ if(ENABLE_ECL_INPUT)
     tests/parser/ACTIONX.cpp
     tests/parser/ADDREGTests.cpp
     tests/parser/AquiferTests.cpp
+    tests/parser/BCConfigTests.cpp
     tests/parser/BoxTests.cpp
     tests/parser/CarfinTests.cpp
     tests/parser/ColumnSchemaTests.cpp
