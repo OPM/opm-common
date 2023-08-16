@@ -629,8 +629,6 @@ namespace {
         this->neighbour_id_.reserve(nconn);
         this->conn_depth_.reserve(nconn);
         this->conn_pressure_.reserve(nconn);
-        this->conn_depth_.reserve(nconn);
-        this->conn_pressure_.reserve(nconn);        
         this->trans_.reserve(nconn);
         this->kh_.reserve(nconn);
     }
