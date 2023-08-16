@@ -102,7 +102,8 @@ namespace Opm {
 
     /* ----------------------------------------------------------------- */
 
-    Equil::Equil( const DeckKeyword& keyword )
+    template<class RecordType>
+    EquilContainer<RecordType>::EquilContainer(const DeckKeyword& keyword)
     {
         using ParserKeywords::EQUIL;
 
@@ -111,35 +112,47 @@ namespace Opm {
         }
     }
 
-    Equil Equil::serializationTestObject()
+    template<class RecordType>
+    EquilContainer<RecordType> EquilContainer<RecordType>::serializationTestObject()
     {
-        Equil result;
-        result.m_records = {EquilRecord::serializationTestObject()};
+        EquilContainer<RecordType> result;
+        result.m_records = {RecordType::serializationTestObject()};
 
         return result;
     }
 
-    const EquilRecord& Equil::getRecord( size_t id ) const {
+    template<class RecordType>
+    const RecordType& EquilContainer<RecordType>::getRecord(std::size_t id) const {
         return this->m_records.at( id );
     }
 
-    size_t Equil::size() const {
+    template<class RecordType>
+    std::size_t EquilContainer<RecordType>::size() const {
         return this->m_records.size();
     }
 
-    bool Equil::empty() const {
+    template<class RecordType>
+    bool EquilContainer<RecordType>::empty() const {
         return this->m_records.empty();
     }
 
-    Equil::const_iterator Equil::begin() const {
+    template<class RecordType>
+    typename EquilContainer<RecordType>::const_iterator
+    EquilContainer<RecordType>::begin() const {
         return this->m_records.begin();
     }
 
-    Equil::const_iterator Equil::end() const {
+    template<class RecordType>
+    typename EquilContainer<RecordType>::const_iterator
+    EquilContainer<RecordType>::end() const {
         return this->m_records.end();
     }
 
-    bool Equil::operator==(const Equil& data) const {
+    template<class RecordType>
+    bool EquilContainer<RecordType>::
+    operator==(const EquilContainer<RecordType>& data) const {
         return this->m_records == data.m_records;
     }
+
+    template class EquilContainer<EquilRecord>;
 }

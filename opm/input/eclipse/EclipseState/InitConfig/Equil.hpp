@@ -64,16 +64,17 @@ namespace Opm {
             bool humid_gas_init_proc = false;
     };
 
-    class Equil {
+    template<class RecordType>
+    class EquilContainer {
         public:
-            using const_iterator = std::vector< EquilRecord >::const_iterator;
+            using const_iterator = typename std::vector<RecordType>::const_iterator;
 
-            Equil() = default;
-            explicit Equil( const DeckKeyword& );
+            EquilContainer() = default;
+            explicit EquilContainer( const DeckKeyword& );
 
-            static Equil serializationTestObject();
+            static EquilContainer serializationTestObject();
 
-            const EquilRecord& getRecord( size_t id ) const;
+            const RecordType& getRecord(std::size_t id) const;
 
             size_t size() const;
             bool empty() const;
@@ -81,7 +82,7 @@ namespace Opm {
             const_iterator begin() const;
             const_iterator end() const;
 
-            bool operator==(const Equil& data) const;
+            bool operator==(const EquilContainer& data) const;
 
             template<class Serializer>
             void serializeOp(Serializer& serializer)
@@ -90,9 +91,10 @@ namespace Opm {
             }
 
         private:
-            std::vector< EquilRecord > m_records;
+            std::vector<RecordType> m_records;
     };
 
+    using Equil = EquilContainer<EquilRecord>;
 }
 
 #endif //OPM_EQUIL_HPP
