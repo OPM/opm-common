@@ -769,66 +769,57 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
         auto network = this->snapshots.back().network.get();
         std::vector<Network::Node> nodes;
         for (const auto& record : handlerContext.keyword) {
-            const std::string& groupNamePattern = record.getItem<ParserKeywords::GRUPNET::NAME>().getTrimmedString(0);
-            const auto group_names = this->groupNames(groupNamePattern);
-            if (group_names.empty())
-                this->invalidNamePattern(groupNamePattern, handlerContext);
-            const auto& pressure_item = record.getItem<ParserKeywords::GRUPNET::TERMINAL_PRESSURE>();
-            const int vfp_table = record.getItem<ParserKeywords::GRUPNET::VFP_TABLE>().get<int>(0);
+             const std::string& groupNamePattern = record.getItem<ParserKeywords::GRUPNET::NAME>().getTrimmedString(0);
+             const auto group_names = this->groupNames(groupNamePattern);
+             if (group_names.empty())
+                 this->invalidNamePattern(groupNamePattern, handlerContext);
+             const auto& pressure_item = record.getItem<ParserKeywords::GRUPNET::TERMINAL_PRESSURE>();
+             const int vfp_table = record.getItem<ParserKeywords::GRUPNET::VFP_TABLE>().get<int>(0);
 
-            for (const auto& group_name : group_names) {
-                const auto& group = this->snapshots.back().groups.get(group_name);
-                const auto& parent_name = group.parent();
-                if (!parent_name.empty())
-                {
-                    const std::string& downtree_node = group_name;
-                    const std::string& uptree_node = parent_name;
-                    if (vfp_table == 0) {
-                        // If vfp table is defaulted (or set to 0) then the group is not part of the network
-                        if (network.has_node(downtree_node) && network.has_node(uptree_node)) 
-                            // If it was part of the network then drop it
-                            network.drop_branch(uptree_node, downtree_node);
-                    } else {
-                         const auto alq_eq = Network::Branch::AlqEqfromString(record.getItem<ParserKeywords::GRUPNET::ALQ_SURFACE_DENSITY>().get<std::string>(0));
-                         if (alq_eq == Network::Branch::AlqEQ::ALQ_INPUT) {
-                             const double alq_value = record.getItem<ParserKeywords::GRUPNET::ALQ>().get<double>(0);
-                             network.add_branch(Network::Branch(downtree_node, uptree_node, vfp_table, alq_value));
-                        } else {
-                             network.add_branch(Network::Branch(downtree_node, uptree_node, vfp_table, alq_eq));
-                        }
-                    }
-                }
-                bool is_valid_node = false;
-                Network::Node node { group_name };
-                const bool is_terminal_node = pressure_item.hasValue(0) && (pressure_item.get<double>(0) >= 0);
-                if (is_terminal_node) {
-                    if (vfp_table == 0) {
-                        is_valid_node = true;
-                        node.terminal_pressure(pressure_item.getSIDouble(0));
-                    } else {
-                         std::string msg = fmt::format("The group {} is a terminal node of the network and should not have a vfp table assigned to it.", group_name);
-                         throw OpmInputError(msg, handlerContext.keyword.location());
-                    }
-                } else {
-                     if (vfp_table != 0){
-                         // Only non-terminal nodes with non-default vfp table value can be part of the network
-                         is_valid_node = true;
-                     } else {
-                          if(network.has_node(node.name())) {
-                             std::string msg = fmt::format("The group {} is not a terminal node of the network and should have a vfp table assigned to it.", group_name);
-                             throw OpmInputError(msg, handlerContext.keyword.location());
-                          }
-                    }
-                }
-                if (is_valid_node)
-                    nodes.push_back(node);
-            }
+             for (const auto& group_name : group_names) {
+                  const auto& group = this->snapshots.back().groups.get(group_name);
+                  const std::string& downtree_node = group_name;
+                  const std::string& uptree_node = group.parent();
+                  Network::Node node { group_name };
+                  // A terminal node is a node with a fixed pressure
+                  const bool is_terminal_node = pressure_item.hasValue(0) && (pressure_item.get<double>(0) >= 0);
+                  if (is_terminal_node) {
+                      if (vfp_table > 0) {
+                          std::string msg = fmt::format("The group {} is a terminal node of the network and should not have a vfp table assigned to it.", group_name);
+                          throw OpmInputError(msg, handlerContext.keyword.location());
+                      }
+                      node.terminal_pressure(pressure_item.getSIDouble(0));
+                      nodes.push_back(node);
+                      // Remove the  branch upstream if it was part of the network
+                      if (network.has_node(downtree_node) && network.has_node(uptree_node))
+                          network.drop_branch(uptree_node, downtree_node);
+                  } else {
+                       if (vfp_table <= 0) {
+                           // If vfp table is defaulted (or set to <=0) then the group is not part of the network.
+                           // If the branch was part of the network then drop it
+                           if (network.has_node(downtree_node) && network.has_node(uptree_node))
+                               network.drop_branch(uptree_node, downtree_node);
+                       } else {
+                            if (!uptree_node.empty()) {
+                                const auto alq_eq = Network::Branch::AlqEqfromString(record.getItem<ParserKeywords::GRUPNET::ALQ_SURFACE_DENSITY>().get<std::string>(0));
+                                if (alq_eq == Network::Branch::AlqEQ::ALQ_INPUT) {
+                                    const double alq_value = record.getItem<ParserKeywords::GRUPNET::ALQ>().get<double>(0);
+                                    network.add_branch(Network::Branch(downtree_node, uptree_node, vfp_table, alq_value));
+                                } else {
+                                     network.add_branch(Network::Branch(downtree_node, uptree_node, vfp_table, alq_eq));
+                                }
+                            }
+                            nodes.push_back(node);
+                       }
+                  }
+             }
         }
-
+        // To use update_node the node should be associated to a branch via add_branch()
+        // so the update of nodes is postponed after creation of branches
         for(const auto& node: nodes)
-            network.update_node(node);
-        this->snapshots.back().network.update( std::move( network ));
-     }
+              network.update_node(node);
+        this->snapshots.back().network.update( std::move(network));
+    }
 
     void Schedule::handleGRUPTREE(HandlerContext& handlerContext) {
         for (const auto& record : handlerContext.keyword) {
