@@ -45,6 +45,9 @@ namespace Opm {
         bool hasEquil() const;
         const Equil& getEquil() const;
 
+        bool hasStressEquil() const;
+        const StressEquil& getStressEquil() const;
+
         bool hasGravity() const;
 
         bool hasFoamConfig() const;
@@ -64,6 +67,7 @@ namespace Opm {
         void serializeOp(Serializer& serializer)
         {
             serializer(equil);
+            serializer(stress_equil);
             serializer(foamconfig);
             serializer(m_filleps);
             serializer(m_gravity);
@@ -74,6 +78,7 @@ namespace Opm {
 
     private:
         Equil equil;
+        StressEquil stress_equil;
         FoamConfig foamconfig;
         bool m_filleps;
         bool m_gravity = true;
