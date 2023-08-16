@@ -302,7 +302,6 @@ namespace {
 
         void addConnection(const ::Opm::UnitSystem&       usys,
                            const double cell_depth, 
-                           const ::Opm::Connection&       conn,
                            const ::Opm::data::Connection& xcon);
     };
 
@@ -335,7 +334,7 @@ namespace {
             }
 
             const double cell_depth = grid.getCellDepth(connPos->global_index());
-            this->addConnection(usys, cell_depth, *connPos, *xconPos.value());
+            this->addConnection(usys, cell_depth, *xconPos.value());
         });
     }
 
@@ -349,7 +348,6 @@ namespace {
 
     void RFTRecord::addConnection(const ::Opm::UnitSystem&       usys,
                                   const double cell_depth, 
-                                  const ::Opm::Connection&       conn,
                                   const ::Opm::data::Connection& xcon)
     {
         using M = ::Opm::UnitSystem::measure;
