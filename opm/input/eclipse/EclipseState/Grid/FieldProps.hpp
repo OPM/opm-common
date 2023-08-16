@@ -185,7 +185,11 @@ static const std::unordered_map<std::string, keyword_info<int>> int_keywords = {
 }
 
 namespace PROPS {
-static const std::unordered_map<std::string, keyword_info<double>> double_keywords = {{"SWATINIT", keyword_info<double>{}}};
+static const std::unordered_map<std::string, keyword_info<double>> double_keywords = {{"SWATINIT", keyword_info<double>{}},
+                                                                                      {"PCG",      keyword_info<double>{}.unit_string("Pressure")},
+                                                                                      {"IPCG",     keyword_info<double>{}.unit_string("Pressure")},
+                                                                                      {"PCW",      keyword_info<double>{}.unit_string("Pressure")},
+                                                                                      {"IPCW",     keyword_info<double>{}.unit_string("Pressure")}};
 static const std::unordered_map<std::string, keyword_info<int>> int_keywords = {};
 
 #define dirfunc(base) base, base "X", base "X-", base "Y", base "Y-", base "Z", base "Z-"
@@ -207,10 +211,6 @@ static const std::set<std::string> satfunc = {"SWLPC", "ISWLPC", "SGLPC", "ISGLP
                                               dirfunc("ISOGCR"),
                                               dirfunc("SWCR"),
                                               dirfunc("ISWCR"),
-                                              dirfunc("PCW"),
-                                              dirfunc("IPCW"),
-                                              dirfunc("PCG"),
-                                              dirfunc("IPCG"),
                                               dirfunc("KRW"),
                                               dirfunc("IKRW"),
                                               dirfunc("KRWR"),
@@ -226,21 +226,7 @@ static const std::set<std::string> satfunc = {"SWLPC", "ISWLPC", "SGLPC", "ISGLP
                                               dirfunc("KRGR"),
                                               dirfunc("IKRGR")};
 
-static const std::map<std::string,std::string> sogcr_shift = {{"SOGCR",    "SWL"},
-                                                              {"SOGCRX",   "SWLX"},
-                                                              {"SOGCRX-",  "SWLX-"},
-                                                              {"SOGCRY",   "SWLY"},
-                                                              {"SOGCRY-",  "SWLY-"},
-                                                              {"SOGCRZ",   "SWLZ"},
-                                                              {"SOGCRZ-",  "SWLZ-"},
-                                                              {"ISOGCR",   "ISWL"},
-                                                              {"ISOGCRX",  "ISWLX"},
-                                                              {"ISOGCRX-", "ISWLX-"},
-                                                              {"ISOGCRY",  "ISWLY"},
-                                                              {"ISOGCRY-", "ISWLY-"},
-                                                              {"ISOGCRZ",  "ISWLZ"},
-                                                              {"ISOGCRZ-", "ISWLZ-"}};
-
+#undef dirfunc
 }
 
 namespace REGIONS {
