@@ -84,6 +84,7 @@ namespace Opm {
             gas_oil_ratio_rate,
             moles,
             ppm,
+            ymodule,
             _count // New entries must be added *before* this
         };
 
