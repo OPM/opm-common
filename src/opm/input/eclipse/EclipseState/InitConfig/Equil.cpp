@@ -38,6 +38,19 @@ namespace Opm {
         , humid_gas_init_proc(humid_gas_init)
     {}
 
+    EquilRecord::EquilRecord(const DeckRecord& record)
+        : datum_depth(record.getItem<ParserKeywords::EQUIL::DATUM_DEPTH>().getSIDouble(0))
+        , datum_depth_ps(record.getItem<ParserKeywords::EQUIL::DATUM_PRESSURE>().getSIDouble(0))
+        , water_oil_contact_depth(record.getItem<ParserKeywords::EQUIL::OWC>().getSIDouble(0))
+        , water_oil_contact_capillary_pressure(record.getItem<ParserKeywords::EQUIL::PC_OWC>().getSIDouble(0))
+        , gas_oil_contact_depth(record.getItem<ParserKeywords::EQUIL::GOC>().getSIDouble(0))
+        , gas_oil_contact_capillary_pressure(record.getItem<ParserKeywords::EQUIL::PC_GOC>().getSIDouble(0))
+        , live_oil_init_proc(record.getItem<ParserKeywords::EQUIL::BLACK_OIL_INIT>().get<int>(0) <= 0)
+        , wet_gas_init_proc(record.getItem<ParserKeywords::EQUIL::BLACK_OIL_INIT_WG>().get<int>(0) <= 0)
+        , init_target_accuracy(record.getItem<ParserKeywords::EQUIL::OIP_INIT>().get<int>(0))
+        , humid_gas_init_proc(record.getItem<ParserKeywords::EQUIL::BLACK_OIL_INIT_HG>().get<int>(0) <= 0)
+    {}
+
     double EquilRecord::datumDepth() const {
         return this->datum_depth;
     }
@@ -100,21 +113,7 @@ namespace Opm {
         using ParserKeywords::EQUIL;
 
         for (const auto& record : keyword) {
-            const auto datum_depth_arg = record.getItem<EQUIL::DATUM_DEPTH>().getSIDouble(0);
-            const auto datum_depth_pc_arg = record.getItem<EQUIL::DATUM_PRESSURE>().getSIDouble(0);
-            const auto woc_depth = record.getItem<EQUIL::OWC>().getSIDouble(0);
-            const auto woc_pc = record.getItem<EQUIL::PC_OWC>().getSIDouble(0);
-            const auto goc_depth = record.getItem<EQUIL::GOC>().getSIDouble(0);
-            const auto goc_pc = record.getItem<EQUIL::PC_GOC>().getSIDouble(0);
-            const auto live_oil_init = record.getItem<EQUIL::BLACK_OIL_INIT>().get<int>(0) <= 0;
-            const auto wet_gas_init = record.getItem<EQUIL::BLACK_OIL_INIT_WG>().get<int>(0) <= 0;
-            const auto target_accuracy = record.getItem<EQUIL::OIP_INIT>().get<int>(0);
-            const auto humid_gas_init = record.getItem<EQUIL::BLACK_OIL_INIT_HG>().get<int>(0) <= 0;
-
-            this->m_records.emplace_back(datum_depth_arg, datum_depth_pc_arg,
-                                         woc_depth      , woc_pc,
-                                         goc_depth      , goc_pc,
-                                         live_oil_init, wet_gas_init, target_accuracy, humid_gas_init);
+            this->m_records.emplace_back(record);
         }
     }
 
