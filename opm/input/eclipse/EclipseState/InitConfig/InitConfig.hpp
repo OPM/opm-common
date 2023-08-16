@@ -47,7 +47,7 @@ namespace Opm {
 
         bool hasStressEquil() const;
         const DeckKeyword& getStressEquil() const;
-        
+
         bool hasGravity() const;
 
         bool hasFoamConfig() const;
@@ -67,6 +67,7 @@ namespace Opm {
         void serializeOp(Serializer& serializer)
         {
             serializer(equil);
+            serializer(stressequil);
             serializer(foamconfig);
             serializer(m_filleps);
             serializer(m_gravity);

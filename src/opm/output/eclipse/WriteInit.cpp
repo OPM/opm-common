@@ -450,7 +450,7 @@ namespace {
             {"POELCOEF"   , ::Opm::UnitSystem::measure::identity },
             {"THELCOEF"   , ::Opm::UnitSystem::measure::identity },// Pressure/Temperature
             {"THERMEXR"   , ::Opm::UnitSystem::measure::identity },// 1/(temperature difference)
-            {"THCONR"   , ::Opm::UnitSystem::measure::identity } // (normally Energy/AbsoluteTemperature*Length*Time)
+            //{"THCONR"   , ::Opm::UnitSystem::measure::identity } // (normally Energy/AbsoluteTemperature*Length*Time)
         };
 
         // The INIT file should always contain the NTG property, we
