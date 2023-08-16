@@ -301,6 +301,7 @@ namespace {
         std::vector<float> sgas_;
 
         void addConnection(const ::Opm::UnitSystem&       usys,
+                           const double cell_depth, 
                            const ::Opm::Connection&       conn,
                            const ::Opm::data::Connection& xcon);
     };
@@ -323,9 +324,8 @@ namespace {
         using ConnPos = ::Opm::WellConnections::const_iterator;
 
         const auto& xcon = wellSol.connections;
-
         connectionLoop(well.getConnections(), grid,
-            [this, &usys, &xcon](ConnPos connPos)
+            [this, &usys, &grid, &xcon](ConnPos connPos)
         {
             const auto xconPos =
                 findConnResults(connPos->global_index(), xcon);
@@ -334,7 +334,8 @@ namespace {
                 return;
             }
 
-            this->addConnection(usys, *connPos, *xconPos.value());
+            const double cell_depth = grid.getCellDepth(connPos->global_index());
+            this->addConnection(usys, cell_depth, *connPos, *xconPos.value());
         });
     }
 
@@ -347,6 +348,7 @@ namespace {
     }
 
     void RFTRecord::addConnection(const ::Opm::UnitSystem&       usys,
+                                  const double cell_depth, 
                                   const ::Opm::Connection&       conn,
                                   const ::Opm::data::Connection& xcon)
     {
@@ -356,7 +358,7 @@ namespace {
             return usys.from_si(meas, x);
         };
 
-        this->depth_.push_back(cvrt(M::length  , conn.depth()));
+        this->depth_.push_back(cvrt(M::length  , cell_depth));
         this->press_.push_back(cvrt(M::pressure, xcon.cell_pressure));
 
         this->swat_.push_back(xcon.cell_saturation_water);
@@ -599,6 +601,7 @@ namespace {
 
         virtual void addConnection(const ::Opm::UnitSystem&       usys,
                                    const ::Opm::Well&             well,
+                                   const double cell_depth,
                                    ConnPos                        connPos,
                                    const ::Opm::data::Connection& xcon);
 
@@ -611,6 +614,8 @@ namespace {
 
         std::vector<float> depth_{};
         std::vector<float> pressure_{};
+        std::vector<float> conn_depth_{};
+        std::vector<float> conn_pressure_{};
         std::vector<float> trans_{};
         std::vector<float> kh_{};
 
@@ -628,6 +633,8 @@ namespace {
         this->neighbour_id_.reserve(nconn);
         this->depth_.reserve(nconn);
         this->pressure_.reserve(nconn);
+        this->conn_depth_.reserve(nconn);
+        this->conn_pressure_.reserve(nconn);        
         this->trans_.reserve(nconn);
         this->kh_.reserve(nconn);
     }
@@ -641,7 +648,7 @@ namespace {
 
         const auto& xcon = wellSol.connections;
         connectionLoop(well.getConnections(), grid,
-            [this, &usys, &well, &xcon](ConnPos connPos)
+            [this, &usys, &grid, &well, &xcon](ConnPos connPos)
         {
             const auto xconPos =
                 findConnResults(connPos->global_index(), xcon);
@@ -650,14 +657,15 @@ namespace {
                 return;
             }
 
-            this->addConnection(usys, well, connPos, *xconPos.value());
+            const double cell_depth = grid.getCellDepth(connPos->global_index());
+            this->addConnection(usys, well, cell_depth, connPos, *xconPos.value());
         });
     }
 
     void PLTRecord::write(::Opm::EclIO::OutputStream::RFT& rftFile) const
     {
-        rftFile.write("CONDEPTH", this->depth_);
-        rftFile.write("CONPRES" , this->pressure_);
+        rftFile.write("CONDEPTH", this->conn_depth_);
+        rftFile.write("CONPRES" , this->conn_pressure_);
 
         rftFile.write("CONORAT", this->flow_.oil());
         rftFile.write("CONWRAT", this->flow_.water());
@@ -673,6 +681,7 @@ namespace {
 
     void PLTRecord::addConnection(const ::Opm::UnitSystem&       usys,
                                   const ::Opm::Well&             well,
+                                  const double cell_depth, 
                                   ConnPos                        connPos,
                                   const ::Opm::data::Connection& xcon)
     {
@@ -688,8 +697,10 @@ namespace {
         // Infer neighbour connection in direction of well head.
         this->assignNextNeighbourID(connPos, well.getConnections());
 
-        this->depth_.push_back(cvrt(M::length, connPos->depth()));
-        this->pressure_.push_back(cvrt(M::pressure, xcon.pressure));
+        this->depth_.push_back(cvrt(M::length, cell_depth));
+        this->pressure_.push_back(cvrt(M::pressure, xcon.cell_pressure));        
+        this->conn_depth_.push_back(cvrt(M::length, connPos->depth()));        
+        this->conn_pressure_.push_back(cvrt(M::pressure, xcon.pressure));
         this->trans_.push_back(cvrt(M::transmissibility, xcon.trans_factor));
         this->kh_.push_back(cvrt(M::effective_Kh, connPos->Kh()));
 
@@ -939,6 +950,7 @@ namespace {
 
         void addConnection(const ::Opm::UnitSystem&       usys,
                            const ::Opm::Well&             well,
+                           const double cell_depth, 
                            ConnPos                        connPos,
                            const ::Opm::data::Connection& xcon) override;
 
@@ -982,10 +994,11 @@ namespace {
 
     void PLTRecordMSW::addConnection(const ::Opm::UnitSystem&       usys,
                                      const ::Opm::Well&             well,
+                                     const double cell_depth,
                                      ConnPos                        connPos,
                                      const ::Opm::data::Connection& xcon)
     {
-        PLTRecord::addConnection(usys, well, connPos, xcon);
+        PLTRecord::addConnection(usys, well, cell_depth, connPos, xcon);
 
         if (! connPos->attachedToSegment()) {
             this->segment_id_.push_back(0);
