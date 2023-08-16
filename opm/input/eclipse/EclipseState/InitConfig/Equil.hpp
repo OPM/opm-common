@@ -26,6 +26,8 @@ namespace Opm {
             EquilRecord( double datum_depth_arg, double datum_depth_pc_arg, double woc_depth, double woc_pc, double goc_depth, double goc_pc, bool live_oil_init, bool wet_gas_init, int target_accuracy, bool humid_gas_init);
             explicit EquilRecord(const DeckRecord& record);
 
+            static EquilRecord serializationTestObject();
+
             bool operator==(const EquilRecord& data) const;
 
             template<class Serializer>

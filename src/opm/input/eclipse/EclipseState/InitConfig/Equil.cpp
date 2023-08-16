@@ -51,6 +51,11 @@ namespace Opm {
         , humid_gas_init_proc(record.getItem<ParserKeywords::EQUIL::BLACK_OIL_INIT_HG>().get<int>(0) <= 0)
     {}
 
+    EquilRecord EquilRecord::serializationTestObject()
+    {
+        return EquilRecord{1.0, 2.0, 3.0, 4.0, 5.0, 6.0, true, false, 1, false};
+    }
+
     double EquilRecord::datumDepth() const {
         return this->datum_depth;
     }
@@ -120,7 +125,7 @@ namespace Opm {
     Equil Equil::serializationTestObject()
     {
         Equil result;
-        result.m_records = {{1.0, 2.0, 3.0, 4.0, 5.0, 6.0, true, false, 1, false}};
+        result.m_records = {EquilRecord::serializationTestObject()};
 
         return result;
     }
