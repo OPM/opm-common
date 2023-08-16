@@ -45,9 +45,24 @@ BCType bctype(const std::string& s) {
     if (s == "CLOSED")
         return BCType::CLOSED;
 
+    if (s == "NONE")
+        return BCType::NONE;
+
     throw std::invalid_argument("Not recognized boundary condition type: " + s);
 }
 
+BCMECHType bcmechtype(const std::string& s) {
+    if (s == "FREE")
+        return BCMECHType::FREE;
+
+    if (s == "FIXED")
+        return BCMECHType::FIXED;
+
+    if (s == "NONE")
+        return BCMECHType::NONE;
+
+    throw std::invalid_argument("Not recognized boundary condition type: " + s);
+}
 
 BCComponent component(const std::string& s) {
     if (s == "OIL")
@@ -78,6 +93,7 @@ using BCKEY = ParserKeywords::BCPROP;
 BCProp::BCFace::BCFace(const DeckRecord& record) :
     index(record.getItem<BCKEY::INDEX>().get<int>(0)),
     bctype(fromstring::bctype(record.getItem<BCKEY::TYPE>().get<std::string>(0))),
+    bcmechtype(fromstring::bcmechtype(record.getItem<BCKEY::MECHTYPE>().get<std::string>(0))),
     component(fromstring::component(record.getItem<BCKEY::COMPONENT>().get<std::string>(0))),
     rate(record.getItem<BCKEY::RATE>().getSIDouble(0))
 {
@@ -87,6 +103,51 @@ BCProp::BCFace::BCFace(const DeckRecord& record) :
     if (const auto& T = record.getItem<BCKEY::TEMPERATURE>(); ! T.defaultApplied(0)) {
         temperature = T.getSIDouble(0);
     }
+
+    MechBCValue mechbcvaluetmp;
+    bool allDefault = true;
+    if (const auto& P = record.getItem<BCKEY::STRESSXX>(); ! P.defaultApplied(0)) {
+        mechbcvaluetmp.stress[0] = P.getSIDouble(0);
+        allDefault = false;
+    }
+    if (const auto& P = record.getItem<BCKEY::STRESSYY>(); ! P.defaultApplied(0)) {
+        mechbcvaluetmp.stress[1] = P.getSIDouble(0);
+        allDefault = false;
+    }
+    if (const auto& P = record.getItem<BCKEY::STRESSZZ>(); ! P.defaultApplied(0)) {
+        mechbcvaluetmp.stress[2] = P.getSIDouble(0);
+        allDefault = false;
+    }
+    mechbcvaluetmp.stress[3] = 0;
+    mechbcvaluetmp.stress[4] = 0;
+    mechbcvaluetmp.stress[5] = 0;
+    if (const auto& P = record.getItem<BCKEY::DISPX>(); ! P.defaultApplied(0)) {
+        mechbcvaluetmp.disp[0] = P.getSIDouble(0);
+        allDefault = false;
+    }
+    if (const auto& P = record.getItem<BCKEY::DISPY>(); ! P.defaultApplied(0)) {
+        mechbcvaluetmp.disp[1] = P.getSIDouble(0);
+        allDefault = false;
+    }
+    if (const auto& P = record.getItem<BCKEY::DISPZ>(); ! P.defaultApplied(0)) {
+        mechbcvaluetmp.disp[2] = P.getSIDouble(0);
+        allDefault = false;
+    }
+    if (const auto& P = record.getItem<BCKEY::FIXEDX>(); ! P.defaultApplied(0)) {
+        mechbcvaluetmp.fixeddir[0] = P.get<int>(0);
+        allDefault = false;
+    }
+    if (const auto& P = record.getItem<BCKEY::FIXEDY>(); ! P.defaultApplied(0)) {
+        mechbcvaluetmp.fixeddir[1] = P.get<int>(0);
+        allDefault = false;
+    }
+    if (const auto& P = record.getItem<BCKEY::FIXEDZ>(); ! P.defaultApplied(0)) {
+        mechbcvaluetmp.fixeddir[2] = P.get<int>(0);
+        allDefault = false;
+    }
+    if (!allDefault) {
+        mechbcvalue = mechbcvaluetmp;
+    }
 }
 
 BCProp::BCFace BCProp::BCFace::serializationTestObject()
@@ -94,11 +155,12 @@ BCProp::BCFace BCProp::BCFace::serializationTestObject()
     BCFace result;
     result.index = 100;
     result.bctype = BCType::RATE;
+    result.bcmechtype = BCMECHType::FIXED;
     result.component = BCComponent::GAS;
     result.rate = 101.0;
     result.pressure = 102.0;
     result.temperature = 103.0;
-
+    result.mechbcvalue = MechBCValue::serializationTestObject();
     return result;
 }
 
@@ -106,10 +168,12 @@ BCProp::BCFace BCProp::BCFace::serializationTestObject()
 bool BCProp::BCFace::operator==(const BCProp::BCFace& other) const {
     return this->index == other.index &&
            this->bctype == other.bctype &&
+           this->bcmechtype == other.bcmechtype &&
            this->component == other.component &&
            this->rate == other.rate &&
            this->pressure == other.pressure &&
-           this->temperature == other.temperature;
+           this->temperature == other.temperature &&
+           this->mechbcvalue == other.mechbcvalue;
 }
 
 
@@ -123,7 +187,7 @@ void BCProp::updateBCProp(const DeckRecord& record) {
                 return;
             }
     }
-    this->m_faces.emplace_back( bcnew );   
+    this->m_faces.emplace_back( bcnew );
 }
 
 
@@ -166,4 +230,3 @@ bool BCProp::operator==(const BCProp& other) const {
 
 
 } //namespace Opm
-
