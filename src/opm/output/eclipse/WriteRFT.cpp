@@ -590,7 +590,7 @@ namespace {
                                const ::Opm::Well&        well,
                                const ::Opm::data::Well&  wellSol);
 
-        std::size_t nConn() const { return this->depth_.size(); }
+        std::size_t nConn() const { return this->conn_depth_.size(); }
 
         virtual void write(::Opm::EclIO::OutputStream::RFT& rftFile) const;
 
@@ -601,7 +601,6 @@ namespace {
 
         virtual void addConnection(const ::Opm::UnitSystem&       usys,
                                    const ::Opm::Well&             well,
-                                   const double cell_depth,
                                    ConnPos                        connPos,
                                    const ::Opm::data::Connection& xcon);
 
@@ -611,9 +610,6 @@ namespace {
         PLTFlowRate flow_{};
 
         std::vector<int> neighbour_id_{};
-
-        std::vector<float> depth_{};
-        std::vector<float> pressure_{};
         std::vector<float> conn_depth_{};
         std::vector<float> conn_pressure_{};
         std::vector<float> trans_{};
@@ -631,8 +627,8 @@ namespace {
         }
 
         this->neighbour_id_.reserve(nconn);
-        this->depth_.reserve(nconn);
-        this->pressure_.reserve(nconn);
+        this->conn_depth_.reserve(nconn);
+        this->conn_pressure_.reserve(nconn);
         this->conn_depth_.reserve(nconn);
         this->conn_pressure_.reserve(nconn);        
         this->trans_.reserve(nconn);
@@ -648,7 +644,7 @@ namespace {
 
         const auto& xcon = wellSol.connections;
         connectionLoop(well.getConnections(), grid,
-            [this, &usys, &grid, &well, &xcon](ConnPos connPos)
+            [this, &usys, &well, &xcon](ConnPos connPos)
         {
             const auto xconPos =
                 findConnResults(connPos->global_index(), xcon);
@@ -657,8 +653,7 @@ namespace {
                 return;
             }
 
-            const double cell_depth = grid.getCellDepth(connPos->global_index());
-            this->addConnection(usys, well, cell_depth, connPos, *xconPos.value());
+            this->addConnection(usys, well, connPos, *xconPos.value());
         });
     }
 
@@ -681,7 +676,6 @@ namespace {
 
     void PLTRecord::addConnection(const ::Opm::UnitSystem&       usys,
                                   const ::Opm::Well&             well,
-                                  const double cell_depth, 
                                   ConnPos                        connPos,
                                   const ::Opm::data::Connection& xcon)
     {
@@ -697,8 +691,6 @@ namespace {
         // Infer neighbour connection in direction of well head.
         this->assignNextNeighbourID(connPos, well.getConnections());
 
-        this->depth_.push_back(cvrt(M::length, cell_depth));
-        this->pressure_.push_back(cvrt(M::pressure, xcon.cell_pressure));        
         this->conn_depth_.push_back(cvrt(M::length, connPos->depth()));        
         this->conn_pressure_.push_back(cvrt(M::pressure, xcon.pressure));
         this->trans_.push_back(cvrt(M::transmissibility, xcon.trans_factor));
@@ -950,7 +942,6 @@ namespace {
 
         void addConnection(const ::Opm::UnitSystem&       usys,
                            const ::Opm::Well&             well,
-                           const double cell_depth, 
                            ConnPos                        connPos,
                            const ::Opm::data::Connection& xcon) override;
 
@@ -994,11 +985,10 @@ namespace {
 
     void PLTRecordMSW::addConnection(const ::Opm::UnitSystem&       usys,
                                      const ::Opm::Well&             well,
-                                     const double cell_depth,
                                      ConnPos                        connPos,
                                      const ::Opm::data::Connection& xcon)
     {
-        PLTRecord::addConnection(usys, well, cell_depth, connPos, xcon);
+        PLTRecord::addConnection(usys, well, connPos, xcon);
 
         if (! connPos->attachedToSegment()) {
             this->segment_id_.push_back(0);
