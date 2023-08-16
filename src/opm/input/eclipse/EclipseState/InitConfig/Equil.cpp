@@ -8,17 +8,6 @@
 #include <stddef.h>
 
 namespace Opm {
-
-    EquilRecord::EquilRecord()
-        : EquilRecord(0.0, 0.0,
-                      0.0, 0.0,
-                      0.0, 0.0,
-                      false,
-                      false,
-                      0,
-                      false)
-    {}
-
     EquilRecord::EquilRecord(const double datum_depth_arg, const double datum_depth_pc_arg,
                              const double woc_depth      , const double woc_pc,
                              const double goc_depth      , const double goc_pc,

@@ -10,6 +10,17 @@ namespace Opm {
 
     class EquilRecord {
         public:
+            EquilRecord() = default;
+            EquilRecord(double datum_depth_arg, double datum_depth_pc_arg,
+                        double woc_depth, double woc_pc,
+                        double goc_depth, double goc_pc,
+                        bool live_oil_init,
+                        bool wet_gas_init,
+                        int target_accuracy,
+                        bool humid_gas_init);
+            explicit EquilRecord(const DeckRecord& record);
+
+            static EquilRecord serializationTestObject();
             double datumDepth() const;
             double datumDepthPressure() const;
             double waterOilContactDepth() const;
@@ -21,12 +32,6 @@ namespace Opm {
             bool wetGasInitConstantRv() const;
             int initializationTargetAccuracy() const;
             bool humidGasInitConstantRvw() const;
-
-            EquilRecord();
-            EquilRecord( double datum_depth_arg, double datum_depth_pc_arg, double woc_depth, double woc_pc, double goc_depth, double goc_pc, bool live_oil_init, bool wet_gas_init, int target_accuracy, bool humid_gas_init);
-            explicit EquilRecord(const DeckRecord& record);
-
-            static EquilRecord serializationTestObject();
 
             bool operator==(const EquilRecord& data) const;
 
@@ -46,17 +51,17 @@ namespace Opm {
             }
 
         private:
-            double datum_depth;
-            double datum_depth_ps;
-            double water_oil_contact_depth;
-            double water_oil_contact_capillary_pressure;
-            double gas_oil_contact_depth;
-            double gas_oil_contact_capillary_pressure;
+            double datum_depth = 0.0;
+            double datum_depth_ps = 0.0;
+            double water_oil_contact_depth = 0.0;
+            double water_oil_contact_capillary_pressure = 0.0;
+            double gas_oil_contact_depth = 0.0;
+            double gas_oil_contact_capillary_pressure = 0.0;
 
-            bool live_oil_init_proc;
-            bool wet_gas_init_proc;
-            int init_target_accuracy;
-            bool humid_gas_init_proc;
+            bool live_oil_init_proc = false;
+            bool wet_gas_init_proc = false;
+            int init_target_accuracy = 0;
+            bool humid_gas_init_proc = false;
     };
 
     class Equil {
