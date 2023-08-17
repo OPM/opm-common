@@ -1,0 +1,11 @@
+{
+  "name": "PRATIO",
+  "sections": [
+    "GRID"
+  ],
+  "description": "The PRATIO item is used to set the Poisson's ratio for a cell in mechanics models.",
+  "data": {
+    "value_type": "DOUBLE",
+    "dimension": "1"
+  }
+}
