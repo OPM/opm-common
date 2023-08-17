@@ -94,6 +94,7 @@ namespace {
         0.0,
         0.0,
         0.0,
+        0.0,
     };
 
     static const double to_metric[] = {
@@ -107,6 +108,7 @@ namespace {
         1 / Metric::Temperature,
         1 / Metric::Viscosity,
         1 / Metric::Permeability,
+        1 / Metric::Area,
         1 / Metric::LiquidSurfaceVolume,
         1 / Metric::GasSurfaceVolume,
         1 / Metric::ReservoirVolume,
@@ -154,6 +156,7 @@ namespace {
         Metric::Temperature,
         Metric::Viscosity,
         Metric::Permeability,
+        Metric::Area,
         Metric::LiquidSurfaceVolume,
         Metric::GasSurfaceVolume,
         Metric::ReservoirVolume,
@@ -201,6 +204,7 @@ namespace {
         "C",
         "CP",
         "MD",
+        "SM2",
         "SM3",
         "SM3",
         "RM3",
@@ -302,6 +306,7 @@ namespace {
         0.0,
         0.0,
         0.0,
+        0.0,
     };
 
     static const double to_field[] = {
@@ -315,6 +320,7 @@ namespace {
         1 / Field::Temperature,
         1 / Field::Viscosity,
         1 / Field::Permeability,
+        1 / Field::Area,
         1 / Field::LiquidSurfaceVolume,
         1 / Field::GasSurfaceVolume,
         1 / Field::ReservoirVolume,
@@ -362,6 +368,7 @@ namespace {
          Field::Temperature,
          Field::Viscosity,
          Field::Permeability,
+         Field::Area,
          Field::LiquidSurfaceVolume,
          Field::GasSurfaceVolume,
          Field::ReservoirVolume,
@@ -409,6 +416,7 @@ namespace {
         "F",
         "CP",
         "MD",
+        "FT2",
         "STB",
         "MSCF",
         "RB",
@@ -510,6 +518,7 @@ namespace {
         0.0,
         0.0,
         0.0,
+        0.0,
     };
 
     static const double to_lab[] = {
@@ -523,6 +532,7 @@ namespace {
         1 / Lab::Temperature,
         1 / Lab::Viscosity,
         1 / Lab::Permeability,
+        1 / Lab::Area,
         1 / Lab::LiquidSurfaceVolume,
         1 / Lab::GasSurfaceVolume,
         1 / Lab::ReservoirVolume,
@@ -570,6 +580,7 @@ namespace {
         Lab::Temperature,
         Lab::Viscosity,
         Lab::Permeability,
+        Lab::Area,
         Lab::LiquidSurfaceVolume,
         Lab::GasSurfaceVolume,
         Lab::ReservoirVolume,
@@ -617,6 +628,7 @@ namespace {
         "C",
         "CP",
         "MD",
+        "CM2", // cm * cm
         "SCC",
         "SCC",
         "RCC",
@@ -718,6 +730,7 @@ namespace {
         0.0,
         0.0,
         0.0,
+        0.0,
     };
 
     static const double to_pvt_m[] = {
@@ -731,6 +744,7 @@ namespace {
         1 / PVT_M::Temperature,
         1 / PVT_M::Viscosity,
         1 / PVT_M::Permeability,
+        1 / PVT_M::Area,
         1 / PVT_M::LiquidSurfaceVolume,
         1 / PVT_M::GasSurfaceVolume,
         1 / PVT_M::ReservoirVolume,
@@ -778,6 +792,7 @@ namespace {
         PVT_M::Temperature,
         PVT_M::Viscosity,
         PVT_M::Permeability,
+        PVT_M::Area,
         PVT_M::LiquidSurfaceVolume,
         PVT_M::GasSurfaceVolume,
         PVT_M::ReservoirVolume,
@@ -825,6 +840,7 @@ namespace {
         "C",
         "CP",
         "MD",
+        "SM2",
         "SM3",
         "SM3",
         "RM3",
@@ -926,9 +942,11 @@ namespace {
         0.0,
         0.0,
         0.0,
+        0.0,
     };
 
     static const double to_input[] = {
+        1,
         1,
         1,
         1,
@@ -1020,6 +1038,7 @@ namespace {
         1,
         1,
         1,
+        1,
     };
 
     static constexpr const char* input_names[static_cast<int>(UnitSystem::measure::_count)] = {
@@ -1033,6 +1052,7 @@ namespace {
         "C",
         "CP",
         "MD",
+        "SM2",
         "SM3",
         "SM3",
         "RM3",
@@ -1116,6 +1136,7 @@ namespace {
         this->addDimension("RunTime"      , 1.0);
         this->addDimension("Mass"         , 1.0);
         this->addDimension("Permeability", 1.0);
+        this->addDimension("Area", 1.0);
         this->addDimension("Transmissibility", 1.0);
         this->addDimension("GasDissolutionFactor", 1.0);
         this->addDimension("OilDissolutionFactor", 1.0);
@@ -1154,6 +1175,7 @@ namespace {
         this->addDimension("RunTime"      , PVT_M::RunTime );
         this->addDimension("Mass"         , PVT_M::Mass );
         this->addDimension("Permeability", PVT_M::Permeability );
+        this->addDimension("Area", PVT_M::Area);
         this->addDimension("Transmissibility", PVT_M::Transmissibility );
         this->addDimension("GasDissolutionFactor", PVT_M::GasDissolutionFactor);
         this->addDimension("OilDissolutionFactor", PVT_M::OilDissolutionFactor);
@@ -1193,6 +1215,7 @@ namespace {
         this->addDimension("RunTime" , Lab::RunTime);
         this->addDimension("Mass", Lab::Mass);
         this->addDimension("Permeability", Lab::Permeability );
+        this->addDimension("Area", Lab::Area);
         this->addDimension("Transmissibility", Lab::Transmissibility );
         this->addDimension("GasDissolutionFactor" , Lab::GasDissolutionFactor);
         this->addDimension("OilDissolutionFactor", Lab::OilDissolutionFactor);
@@ -1233,6 +1256,7 @@ namespace {
         this->addDimension("RunTime"      , Metric::RunTime );
         this->addDimension("Mass"         , Metric::Mass );
         this->addDimension("Permeability", Metric::Permeability );
+        this->addDimension("Area", Metric::Area);
         this->addDimension("Transmissibility", Metric::Transmissibility );
         this->addDimension("GasDissolutionFactor", Metric::GasDissolutionFactor);
         this->addDimension("OilDissolutionFactor", Metric::OilDissolutionFactor);
@@ -1271,6 +1295,7 @@ namespace {
         this->addDimension("RunTime" , Field::RunTime);
         this->addDimension("Mass", Field::Mass);
         this->addDimension("Permeability", Field::Permeability );
+        this->addDimension("Area", Field::Area);
         this->addDimension("Transmissibility", Field::Transmissibility );
         this->addDimension("GasDissolutionFactor" , Field::GasDissolutionFactor);
         this->addDimension("OilDissolutionFactor", Field::OilDissolutionFactor);
