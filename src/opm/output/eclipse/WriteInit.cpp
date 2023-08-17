@@ -444,6 +444,7 @@ namespace {
             {"PERMY" , ::Opm::UnitSystem::measure::permeability },
             {"PERMZ" , ::Opm::UnitSystem::measure::permeability },
             {"NTG"   , ::Opm::UnitSystem::measure::identity },
+            {"YMODULE"   , ::Opm::UnitSystem::measure::ymodule },
         };
 
         // The INIT file should always contain the NTG property, we
