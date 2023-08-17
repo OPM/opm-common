@@ -1,0 +1,10 @@
+{
+  "name": "STRESSEQUILNUM",
+  "sections": [
+    "REGIONS"
+  ],
+  "description": "The STRESSEQUILNUM item is used to set the stress equilibration region for a cell in a mechanics model.",
+  "data": {
+    "value_type": "INT"
+  }
+}
