@@ -445,6 +445,7 @@ namespace {
             {"PERMX"    , ::Opm::UnitSystem::measure::permeability},
             {"PERMY"    , ::Opm::UnitSystem::measure::permeability},
             {"PERMZ"    , ::Opm::UnitSystem::measure::permeability},
+            {"POELCOEF" , ::Opm::UnitSystem::measure::identity},
             {"YMODULE"  , ::Opm::UnitSystem::measure::ymodule},
         };
 
