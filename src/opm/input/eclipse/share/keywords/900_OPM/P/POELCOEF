@@ -1,0 +1,11 @@
+{
+  "name": "POELCOEF",
+  "sections": [
+    "GRID"
+  ],
+  "description": "The POELCOEF item is used to set the elasticity coefficient for a cell in mechanics models.",
+  "data": {
+    "value_type": "DOUBLE",
+    "dimension": "1"
+  }
+}

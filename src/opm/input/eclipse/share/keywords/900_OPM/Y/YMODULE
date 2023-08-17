@@ -1,0 +1,11 @@
+{
+  "name": "YMODULE",
+  "sections": [
+    "GRID"
+  ],
+  "description": "The YMODULE item is used to set the Young's modulus for a cell in mechanics models.",
+  "data": {
+    "value_type": "DOUBLE",
+    "dimension": "Ymodule"
+  }
+}

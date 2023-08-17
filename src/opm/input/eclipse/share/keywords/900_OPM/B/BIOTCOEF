@@ -1,0 +1,11 @@
+{
+  "name": "BIOTCOEF",
+  "sections": [
+    "GRID"
+  ],
+  "description": "The BIOTCOEF item is used to set the Biot coefficient for a cell in mechanics models.",
+  "data": {
+    "value_type": "DOUBLE",
+    "dimension": "1"
+  }
+}
