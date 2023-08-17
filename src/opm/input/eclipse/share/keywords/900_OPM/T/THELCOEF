@@ -1,0 +1,11 @@
+{
+  "name": "THELCOEF",
+  "sections": [
+    "GRID"
+  ],
+  "description": "The THELCOEF item is used to set the thermal expansion coefficient for a cell in mechanics models.",
+  "data": {
+    "value_type": "DOUBLE",
+    "dimension": "1"
+  }
+}

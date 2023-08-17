@@ -152,6 +152,7 @@ static const std::unordered_map<std::string, keyword_info<double>> double_keywor
                                                                                       {"BIOTCOEF", keyword_info<double>{}.unit_string("1")},
                                                                                       {"POELCOEF", keyword_info<double>{}.unit_string("1")},
                                                                                       {"THERMEXR", keyword_info<double>{}.unit_string("1/AbsoluteTemperature")},
+                                                                                      {"THELCOEF", keyword_info<double>{}.unit_string("Pressure/AbsoluteTemperature")},
                                                                                       {"MULTX",   keyword_info<double>{}.init(1.0).mult(true)},
                                                                                       {"MULTX-",  keyword_info<double>{}.init(1.0).mult(true)},
                                                                                       {"MULTY",   keyword_info<double>{}.init(1.0).mult(true)},

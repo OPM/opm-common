@@ -448,6 +448,7 @@ namespace {
             {"POELCOEF" , ::Opm::UnitSystem::measure::identity},
             {"PRATIO"   , ::Opm::UnitSystem::measure::identity},
             {"THERMEXR" , ::Opm::UnitSystem::measure::identity}, // 1/(temperature difference)
+            {"THELCOEF" , ::Opm::UnitSystem::measure::identity}, // Pressure/Temperature
             {"YMODULE"  , ::Opm::UnitSystem::measure::ymodule},
         };
 
