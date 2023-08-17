@@ -148,6 +148,7 @@ static const std::unordered_map<std::string, keyword_info<double>> double_keywor
                                                                                       {"THCGAS",  keyword_info<double>{}.unit_string("Energy/AbsoluteTemperature*Length*Time")},
                                                                                       {"THCWATER",keyword_info<double>{}.unit_string("Energy/AbsoluteTemperature*Length*Time")},
                                                                                       {"YMODULE", keyword_info<double>{}.unit_string("Giga*Pascal")},
+                                                                                      {"BIOTCOEF", keyword_info<double>{}.unit_string("1")},
                                                                                       {"MULTX",   keyword_info<double>{}.init(1.0).mult(true)},
                                                                                       {"MULTX-",  keyword_info<double>{}.init(1.0).mult(true)},
                                                                                       {"MULTY",   keyword_info<double>{}.init(1.0).mult(true)},

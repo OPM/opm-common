@@ -439,12 +439,13 @@ namespace {
                                    ::Opm::EclIO::OutputStream::Init& initFile)
     {
         const auto doubleKeywords = Properties {
-            {"PORO"  , ::Opm::UnitSystem::measure::identity },
-            {"PERMX" , ::Opm::UnitSystem::measure::permeability },
-            {"PERMY" , ::Opm::UnitSystem::measure::permeability },
-            {"PERMZ" , ::Opm::UnitSystem::measure::permeability },
-            {"NTG"   , ::Opm::UnitSystem::measure::identity },
-            {"YMODULE"   , ::Opm::UnitSystem::measure::ymodule },
+            {"BIOTCOEF" , ::Opm::UnitSystem::measure::identity},
+            {"NTG"      , ::Opm::UnitSystem::measure::identity},
+            {"PORO"     , ::Opm::UnitSystem::measure::identity},
+            {"PERMX"    , ::Opm::UnitSystem::measure::permeability},
+            {"PERMY"    , ::Opm::UnitSystem::measure::permeability},
+            {"PERMZ"    , ::Opm::UnitSystem::measure::permeability},
+            {"YMODULE"  , ::Opm::UnitSystem::measure::ymodule},
         };
 
         // The INIT file should always contain the NTG property, we
