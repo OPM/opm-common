@@ -247,7 +247,11 @@ const std::optional<std::pair<double, double>>& Connection::perf_range() const {
                                    std::size_t compseg_insert_index,
                                    const std::pair<double, double>& perf_range) {
         this->segment_number = segment_number_arg;
-        this->center_depth = center_depth_arg;
+        // Keep the default (center cell) value unless a positive (hopefully reasonable) value is given
+        if (center_depth_arg > 0)
+        {
+            this->center_depth = center_depth_arg;
+        }
         this->m_sort_value = compseg_insert_index;
         this->m_perf_range = perf_range;
     }
