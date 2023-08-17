@@ -447,6 +447,7 @@ namespace {
             {"PERMZ"    , ::Opm::UnitSystem::measure::permeability},
             {"POELCOEF" , ::Opm::UnitSystem::measure::identity},
             {"PRATIO"   , ::Opm::UnitSystem::measure::identity},
+            {"THERMEXR" , ::Opm::UnitSystem::measure::identity}, // 1/(temperature difference)
             {"YMODULE"  , ::Opm::UnitSystem::measure::ymodule},
         };
 
