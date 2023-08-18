@@ -89,7 +89,7 @@ struct Record {
         const double segment_depth = segment.depth();
         const double segment_distance = segment.totalLength();
 
-        // Interpolation with top segment may lead to depths outside of the 
+        // Using top segment depth may lead to depths outside of the 
         // perforated grid cell, so simply stick to grid cell center in this case
         if (segment_number == 1) {
             center_depth = -1.0;
