@@ -17,11 +17,16 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-
 #ifndef OPM_PARSER_MULTREGTSCANNER_HPP
 #define OPM_PARSER_MULTREGTSCANNER_HPP
 
 #include <opm/input/eclipse/EclipseState/Grid/FaceDir.hpp>
+
+#include <cstddef>
+#include <map>
+#include <string>
+#include <utility>
+#include <vector>
 
 namespace Opm {
 
@@ -30,9 +35,11 @@ namespace Opm {
     class FieldPropsManager;
     class GridDims;
 
+} // namespace Opm
+
+namespace Opm {
+
     namespace MULTREGT {
-
-
         enum NNCBehaviourEnum {
             NNC = 1,
             NONNC = 2,
@@ -42,12 +49,10 @@ namespace Opm {
 
         std::string RegionNameFromDeckValue(const std::string& stringValue);
         NNCBehaviourEnum NNCBehaviourFromString(const std::string& stringValue);
-    }
+    } // namespace MULTREGT
 
-
-
-
-    struct MULTREGTRecord {
+    struct MULTREGTRecord
+    {
         int src_value;
         int target_value;
         double trans_mult;
@@ -76,25 +81,20 @@ namespace Opm {
         }
     };
 
-    using MULTREGTSearchMap = std::map< std::pair<int, int>, std::vector<MULTREGTRecord>::size_type>;
-    typedef std::tuple<size_t , FaceDir::DirEnum , double> MULTREGTConnection;
-
-
-
-    class MULTREGTScanner {
-
+    class MULTREGTScanner
+    {
     public:
-        using ExternalSearchMap = std::map<std::string, std::map<std::pair<int,int>, int>>;
-
         MULTREGTScanner() = default;
         MULTREGTScanner(const MULTREGTScanner& data);
         MULTREGTScanner(const GridDims& grid,
                         const FieldPropsManager* fp_arg,
-                        const std::vector< const DeckKeyword* >& keywords);
+                        const std::vector<const DeckKeyword*>& keywords);
 
         static MULTREGTScanner serializationTestObject();
 
-        double getRegionMultiplier(size_t globalCellIdx1, size_t globalCellIdx2, FaceDir::DirEnum faceDir) const;
+        double getRegionMultiplier(std::size_t globalCellIdx1,
+                                   std::size_t globalCellIdx2,
+                                   FaceDir::DirEnum faceDir) const;
 
         bool operator==(const MULTREGTScanner& data) const;
         MULTREGTScanner& operator=(const MULTREGTScanner& data);
@@ -105,23 +105,27 @@ namespace Opm {
             serializer(nx);
             serializer(ny);
             serializer(nz);
+            serializer(default_region);
             serializer(m_records);
             serializer(m_searchMap);
             serializer(regions);
-            serializer(default_region);
         }
 
     private:
-        void addKeyword( const DeckKeyword& deckKeyword, const std::string& defaultRegion);
-        void assertKeywordSupported(const DeckKeyword& deckKeyword);
+        using MULTREGTSearchMap = std::map< std::pair<int, int>, std::vector<MULTREGTRecord>::size_type>;
+
         std::size_t nx = 0,ny = 0, nz = 0;
-        const FieldPropsManager* fp = nullptr;
-        std::vector< MULTREGTRecord > m_records;
-        std::map<std::string , MULTREGTSearchMap> m_searchMap;
-        std::map<std::string, std::vector<int>> regions;
-        std::string default_region;
+        const FieldPropsManager* fp{nullptr};
+        std::string default_region{};
+
+        std::vector<MULTREGTRecord> m_records{};
+        std::map<std::string, MULTREGTSearchMap> m_searchMap{};
+        std::map<std::string, std::vector<int>> regions{};
+
+        void addKeyword(const DeckKeyword& deckKeyword);
+        void assertKeywordSupported(const DeckKeyword& deckKeyword);
     };
 
-}
+} // namespace Opm
 
 #endif // OPM_PARSER_MULTREGTSCANNER_HPP

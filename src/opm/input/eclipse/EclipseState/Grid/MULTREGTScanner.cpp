@@ -16,17 +16,37 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include <stdexcept>
-#include <map>
-#include <set>
+
+#include <opm/input/eclipse/EclipseState/Grid/MULTREGTScanner.hpp>
+
+#include <opm/input/eclipse/EclipseState/Grid/FaceDir.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/GridDims.hpp>
 
 #include <opm/input/eclipse/Deck/DeckItem.hpp>
 #include <opm/input/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/input/eclipse/Deck/DeckRecord.hpp>
-#include <opm/input/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
-#include <opm/input/eclipse/EclipseState/Grid/GridDims.hpp>
-#include <opm/input/eclipse/EclipseState/Grid/FaceDir.hpp>
-#include <opm/input/eclipse/EclipseState/Grid/MULTREGTScanner.hpp>
+
+#include <algorithm>
+#include <cassert>
+#include <cmath>
+#include <cstddef>
+#include <map>
+#include <stdexcept>
+#include <string>
+#include <utility>
+#include <vector>
+
+namespace {
+
+std::vector<int> unique(std::vector<int> data)
+{
+    std::sort(data.begin(), data.end());
+
+    return { data.begin(), std::unique(data.begin(), data.end()) };
+}
+
+} // Anonymous namespace
 
 namespace Opm {
 
@@ -45,8 +65,6 @@ namespace Opm {
             throw std::invalid_argument("The input string: " + stringValue + " was invalid. Expected: O/F/M");
         }
 
-
-
         NNCBehaviourEnum NNCBehaviourFromString(const std::string& stringValue) {
             if (stringValue == "ALL")
                 return ALL;
@@ -63,19 +81,7 @@ namespace Opm {
             throw std::invalid_argument("The input string: " + stringValue + " was invalid. Expected: ALL/NNC/NONNC/NOAQUNNC");
         }
 
-
-    }
-
-
-namespace {
-
-std::vector<int> unique(const std::vector<int>& data) {
-    std::set<int> set_data(data.begin(), data.end());
-    return { set_data.begin(), set_data.end() };
-}
-
-}
-
+    } // namespace MULTREGT
 
     /*****************************************************************/
     /*
@@ -106,23 +112,23 @@ std::vector<int> unique(const std::vector<int>& data) {
       Then it will go through the different regions and looking for
       interface with the wanted region values.
     */
-     MULTREGTScanner::MULTREGTScanner(const GridDims& grid,
-                                      const FieldPropsManager* fp_arg,
-                                      const std::vector< const DeckKeyword* >& keywords) :
-         nx(grid.getNX()),
-         ny(grid.getNY()),
-         nz(grid.getNZ()),
-         fp(fp_arg) {
-
-        this->default_region = this->fp->default_region();
-        for (size_t idx = 0; idx < keywords.size(); idx++)
-            this->addKeyword(*keywords[idx] , this->default_region);
+    MULTREGTScanner::MULTREGTScanner(const GridDims&                        gridDims,
+                                     const FieldPropsManager*               fp_arg,
+                                     const std::vector<const DeckKeyword*>& keywords)
+        : nx             { gridDims.getNX() }
+        , ny             { gridDims.getNY() }
+        , nz             { gridDims.getNZ() }
+        , fp             { fp_arg }
+        , default_region { this->fp->default_region() }
+    {
+        for (const auto* keywordPtr : keywords)
+            this->addKeyword(*keywordPtr);
 
         MULTREGTSearchMap searchPairs;
         for (auto recordIx = 0*this->m_records.size(); recordIx < this->m_records.size(); ++recordIx) {
             const auto& record = this->m_records[recordIx];
             const std::string& region_name = record.region_name;
-            if (this->fp->has_int( region_name)) {
+            if (this->fp->has_int(region_name)) {
                 int srcRegion    = record.src_value;
                 int targetRegion = record.target_value;
 
@@ -172,7 +178,6 @@ std::vector<int> unique(const std::vector<int>& data) {
         *this = data;
     }
 
-
     void MULTREGTScanner::assertKeywordSupported( const DeckKeyword& deckKeyword) {
         for (const auto& deckRecord : deckKeyword) {
             const auto& srcItem = deckRecord.getItem("SRC_REGION");
@@ -185,18 +190,15 @@ std::vector<int> unique(const std::vector<int>& data) {
 
             if (nnc_behaviour == MULTREGT::NOAQUNNC)
                 throw std::invalid_argument("Sorry - currently we do not support \'NOAQUNNC\' for MULTREGT.");
-
          }
     }
 
-
-
-    void MULTREGTScanner::addKeyword( const DeckKeyword& deckKeyword , const std::string& defaultRegion) {
+    void MULTREGTScanner::addKeyword(const DeckKeyword& deckKeyword) {
         assertKeywordSupported( deckKeyword );
         for (const auto& deckRecord : deckKeyword) {
             std::vector<int> src_regions;
             std::vector<int> target_regions;
-            std::string region_name = defaultRegion;
+            std::string region_name = this->default_region;
 
             const auto& srcItem = deckRecord.getItem("SRC_REGION");
             const auto& targetItem = deckRecord.getItem("TARGET_REGION");
@@ -227,33 +229,32 @@ std::vector<int> unique(const std::vector<int>& data) {
                     m_records.push_back({src_region, target_region, trans_mult, directions, nnc_behaviour, region_name});
             }
         }
-
     }
 
+    // This function will check the region values in globalIndex1 and
+    // globalIndex and see if they match the regionvalues specified in the
+    // deck.  The function checks both directions:
+    //
+    // Assume the relevant MULTREGT record looks like:
+    //
+    //    1  2   0.10  XYZ  ALL M /
+    //
+    // I.e., we are checking for the boundary between regions 1 and 2.  We
+    // assign the transmissibility multiplier to the correct face of the
+    // cell with value 1:
+    //
+    //    -----------
+    //    | 1  | 2  |   =>  MultTrans( i,j,k,FaceDir::XPlus ) *= 0.50
+    //    -----------
+    //
+    //    -----------
+    //    | 2  | 1  |   =>  MultTrans( i+1,j,k,FaceDir::XMinus ) *= 0.50
+    //    -----------
 
-    /*
-      This function will check the region values in globalIndex1 and
-      globalIndex and see if they match the regionvalues specified in
-      the deck. The function checks both directions:
-
-      Assume the relevant MULTREGT record looks like:
-
-         1  2   0.10  XYZ  ALL M /
-
-      I.e. we are checking for the boundary between regions 1 and
-      2. We assign the transmissibility multiplier to the correct face
-      of the cell with value 1:
-
-         -----------
-         | 1  | 2  |   =>  MultTrans( i,j,k,FaceDir::XPlus ) *= 0.50
-         -----------
-
-         -----------
-         | 2  | 1  |   =>  MultTrans( i+1,j,k,FaceDir::XMinus ) *= 0.50
-         -----------
-
-    */
-    double MULTREGTScanner::getRegionMultiplier(size_t globalIndex1 , size_t globalIndex2, FaceDir::DirEnum faceDir) const {
+    double MULTREGTScanner::getRegionMultiplier(const std::size_t globalIndex1,
+                                                const std::size_t globalIndex2,
+                                                const FaceDir::DirEnum faceDir) const
+    {
 
         for (auto iter = m_searchMap.begin(); iter != m_searchMap.end(); iter++) {
             const auto& region_data = this->regions.at( iter->first );
@@ -289,9 +290,9 @@ std::vector<int> unique(const std::vector<int>& data) {
 
             if (applyMultiplier)
                 return record.trans_mult;
-
         }
-        return 1;
+
+        return 1.0;
     }
 
     bool MULTREGTScanner::operator==(const MULTREGTScanner& data) const {
@@ -316,4 +317,4 @@ std::vector<int> unique(const std::vector<int>& data) {
 
         return *this;
     }
-}
+} // namespace Opm
