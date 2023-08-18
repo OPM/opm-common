@@ -126,11 +126,6 @@ struct Record {
         const double depth_change_segment = segment_depth - interpolation_detph;
         const double segment_length = segment_distance - interpolation_distance;
 
-        // if (segment_length == 0.) {
-        //     throw std::runtime_error("Zero segment length is botained when doing interpolation between segment "
-        //                               + std::to_string(segment_number) + " and segment " + std::to_string(interpolation_segment_number) );
-        // }
-
         // Use segment depth if length of sement is 0
         if (segment_length == 0.) {
             center_depth = segment_depth;
