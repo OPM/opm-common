@@ -126,12 +126,17 @@ struct Record {
         const double depth_change_segment = segment_depth - interpolation_detph;
         const double segment_length = segment_distance - interpolation_distance;
 
-        if (segment_length == 0.) {
-            throw std::runtime_error("Zero segment length is botained when doing interpolation between segment "
-                                      + std::to_string(segment_number) + " and segment " + std::to_string(interpolation_segment_number) );
-        }
+        // if (segment_length == 0.) {
+        //     throw std::runtime_error("Zero segment length is botained when doing interpolation between segment "
+        //                               + std::to_string(segment_number) + " and segment " + std::to_string(interpolation_segment_number) );
+        // }
 
-        center_depth = segment_depth + (center_distance - segment_distance) / segment_length * depth_change_segment;
+        // Use segment depth if length of sement is 0
+        if (segment_length == 0.) {
+            center_depth = segment_depth;
+        } else {
+            center_depth = segment_depth + (center_distance - segment_distance) / segment_length * depth_change_segment;
+        }
     }
 
 
@@ -143,35 +148,37 @@ namespace {
         // while the depth information is defaulted though, which need to be obtained from the related segment
         for( auto& compseg : compsegs ) {
 
-            // need to determine the related segment number first
-            if (compseg.segment_number != 0) continue;
+            // need to determine the related segment number first, if not defined
+            if (compseg.segment_number == 0) {
 
-            const double center_distance = (compseg.m_distance_start + compseg.m_distance_end) / 2.0;
-            const int branch_number = compseg.m_branch_number;
+                const double center_distance = (compseg.m_distance_start + compseg.m_distance_end) / 2.0;
+                const int branch_number = compseg.m_branch_number;
 
-            int segment_number = 0;
-            double min_distance_difference = 1.e100; // begin with a big value
-            for (std::size_t i_segment = 0; i_segment < segment_set.size(); ++i_segment) {
-                const Segment& current_segment = segment_set[i_segment];
-                if( branch_number != current_segment.branchNumber() ) continue;
+                int segment_number = 0;
+                double min_distance_difference = 1.e100; // begin with a big value
+                for (std::size_t i_segment = 0; i_segment < segment_set.size(); ++i_segment) {
+                    const Segment& current_segment = segment_set[i_segment];
+                    if( branch_number != current_segment.branchNumber() ) continue;
 
-                const double distance = current_segment.totalLength();
-                const double distance_difference = std::abs(center_distance - distance);
-                if (distance_difference < min_distance_difference) {
-                    min_distance_difference = distance_difference;
-                    segment_number = current_segment.segmentNumber();
+                    const double distance = current_segment.totalLength();
+                    const double distance_difference = std::abs(center_distance - distance);
+                    if (distance_difference < min_distance_difference) {
+                        min_distance_difference = distance_difference;
+                        segment_number = current_segment.segmentNumber();
+                    }
                 }
-            }
 
-            if (segment_number == 0) {
-                const std::string msg =
-                    fmt::format("The connection specified in COMPSEGS with index of "
-                                "{} {} {} failed in finding a related segment",
-                                compseg.m_i + 1, compseg.m_j + 1, compseg.m_k + 1);
-                throw std::runtime_error(msg);
-            }
+                if (segment_number == 0) {
+                    const std::string msg =
+                        fmt::format("The connection specified in COMPSEGS with index of "
+                                    "{} {} {} failed in finding a related segment",
+                                    compseg.m_i + 1, compseg.m_j + 1, compseg.m_k + 1);
+                    throw std::runtime_error(msg);
+                }
 
-            compseg.segment_number = segment_number;
+                compseg.segment_number = segment_number;
+            
+            }
 
             // when depth is default or zero, we obtain the depth of the connection based on the information
             // of the related segments
