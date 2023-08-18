@@ -186,7 +186,15 @@ void ESmry::write_block(std::ostream& os,
         const auto& vector_data { this->get(vector) } ;
 
         auto max = *std::max_element(vector_data.begin(), vector_data.end());
-        int scale_factor { std::max(0, 3 * static_cast<int>(std::floor(( std::log10(max) - 4 ) / 3 ))) } ;
+        // log10 for 0 is undefined and log10 for negative values yields nan.
+        // We skip the scale factor in these cases to prevent undefined behavior
+        int scale_factor {
+            max <= 0 ? 0 :
+            std::max(0, 3 * static_cast<int>(std::floor(( std::log10(max) - 4 ) / 3 ))) } ;
+
+        // Make sure that 10**scale_factor is less than 13 character
+        scale_factor = std::min(99999999, scale_factor);
+
         if (scale_factor) {
             has_scale_factors = true;
         }
