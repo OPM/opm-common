@@ -1426,6 +1426,10 @@ bool Well::handleWELSEGS(const DeckKeyword& keyword) {
         this->updateSegments(std::move(new_segments));
     } else
         this->updateSegments( std::make_shared<WellSegments>(keyword) );
+
+    // Ensure reference depth is depth of top segment node (as it should be)
+    this->ref_depth = this->segments->depthTopSegment();    
+
     return true;
 }
 
