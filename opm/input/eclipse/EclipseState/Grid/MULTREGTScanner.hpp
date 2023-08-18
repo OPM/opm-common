@@ -21,6 +21,7 @@
 #define OPM_PARSER_MULTREGTSCANNER_HPP
 
 #include <opm/input/eclipse/EclipseState/Grid/FaceDir.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/GridDims.hpp>
 
 #include <cstddef>
 #include <map>
@@ -33,7 +34,6 @@ namespace Opm {
     class DeckRecord;
     class DeckKeyword;
     class FieldPropsManager;
-    class GridDims;
 
 } // namespace Opm
 
@@ -102,9 +102,7 @@ namespace Opm {
         template<class Serializer>
         void serializeOp(Serializer& serializer)
         {
-            serializer(nx);
-            serializer(ny);
-            serializer(nz);
+            serializer(gridDims);
             serializer(default_region);
             serializer(m_records);
             serializer(m_searchMap);
@@ -114,7 +112,7 @@ namespace Opm {
     private:
         using MULTREGTSearchMap = std::map< std::pair<int, int>, std::vector<MULTREGTRecord>::size_type>;
 
-        std::size_t nx = 0,ny = 0, nz = 0;
+        GridDims gridDims{};
         const FieldPropsManager* fp{nullptr};
         std::string default_region{};
 

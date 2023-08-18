@@ -28,6 +28,7 @@
 #include <opm/input/eclipse/Deck/DeckRecord.hpp>
 
 #include <algorithm>
+#include <array>
 #include <cassert>
 #include <cmath>
 #include <cstddef>
@@ -44,6 +45,34 @@ std::vector<int> unique(std::vector<int> data)
     std::sort(data.begin(), data.end());
 
     return { data.begin(), std::unique(data.begin(), data.end()) };
+}
+
+bool is_adjacent(const int x, const int y)
+{
+    assert ((x >= 0) && (y >= 0));
+
+    return std::abs(x - y) == 1;
+}
+
+bool is_adjacent(const std::array<int, 3>& ijk1,
+                 const std::array<int, 3>& ijk2,
+                 const std::array<int, 3>& compIx)
+{
+    return is_adjacent(ijk1[compIx[0]], ijk2[compIx[0]])
+        && (ijk1[compIx[1]] == ijk2[compIx[1]])
+        && (ijk1[compIx[2]] == ijk2[compIx[2]]);
+}
+
+bool is_adjacent(const Opm::GridDims& gridDims,
+                 const std::size_t    gi1,
+                 const std::size_t    gi2)
+{
+    const auto ijk1 = gridDims.getIJK(gi1);
+    const auto ijk2 = gridDims.getIJK(gi2);
+
+    return is_adjacent(ijk1, ijk2, {0, 1, 2})  // (I,J,K) <-> (I+1,J,K)
+        || is_adjacent(ijk1, ijk2, {1, 2, 0})  // (I,J,K) <-> (I,J+1,K)
+        || is_adjacent(ijk1, ijk2, {2, 0, 1}); // (I,J,K) <-> (I,J,K+1)
 }
 
 } // Anonymous namespace
@@ -112,12 +141,10 @@ namespace Opm {
       Then it will go through the different regions and looking for
       interface with the wanted region values.
     */
-    MULTREGTScanner::MULTREGTScanner(const GridDims&                        gridDims,
+    MULTREGTScanner::MULTREGTScanner(const GridDims&                        gridDims_arg,
                                      const FieldPropsManager*               fp_arg,
                                      const std::vector<const DeckKeyword*>& keywords)
-        : nx             { gridDims.getNX() }
-        , ny             { gridDims.getNY() }
-        , nz             { gridDims.getNZ() }
+        : gridDims       { gridDims_arg }
         , fp             { fp_arg }
         , default_region { this->fp->default_region() }
     {
@@ -161,9 +188,7 @@ namespace Opm {
     MULTREGTScanner MULTREGTScanner::serializationTestObject()
     {
         MULTREGTScanner result;
-        result.nx = 1;
-        result.ny = 2;
-        result.nz = 3;
+        result.gridDims = GridDims::serializationTestObject();
         result.m_records = {{4, 5, 6.0, 7, MULTREGT::ALL, "test1"}};
         result.m_searchMap["MULTNUM"].emplace(std::piecewise_construct,
                                               std::forward_as_tuple(std::make_pair(1, 2)),
@@ -255,6 +280,7 @@ namespace Opm {
                                                 const std::size_t globalIndex2,
                                                 const FaceDir::DirEnum faceDir) const
     {
+        const auto is_adj = is_adjacent(this->gridDims, globalIndex1, globalIndex2);
 
         for (auto iter = m_searchMap.begin(); iter != m_searchMap.end(); iter++) {
             const auto& region_data = this->regions.at( iter->first );
@@ -272,19 +298,15 @@ namespace Opm {
             const MULTREGTRecord& record = this->m_records[map.at(pair)];
 
             bool applyMultiplier = true;
-            int i1 = globalIndex1 % this->nx;
-            int i2 = globalIndex2 % this->nx;
-            int j1 = globalIndex1 / this->nx % this->nz;
-            int j2 = globalIndex2 / this->nx % this->nz;
 
             if (record.nnc_behaviour == MULTREGT::NNC){
                 applyMultiplier = true;
-                if ((std::abs(i1-i2) == 0 && std::abs(j1-j2) == 1) || (std::abs(i1-i2) == 1 && std::abs(j1-j2) == 0))
+                if (is_adj)
                     applyMultiplier = false;
             }
             else if (record.nnc_behaviour == MULTREGT::NONNC){
                 applyMultiplier = false;
-                if ((std::abs(i1-i2) == 0 && std::abs(j1-j2) == 1) || (std::abs(i1-i2) == 1 && std::abs(j1-j2) == 0))
+                if (is_adj)
                     applyMultiplier = true;
             }
 
@@ -296,9 +318,7 @@ namespace Opm {
     }
 
     bool MULTREGTScanner::operator==(const MULTREGTScanner& data) const {
-        return this->nx == data.nx &&
-               this->ny == data.ny &&
-               this->nz == data.nz &&
+        return this->gridDims == data.gridDims &&
                this->m_records == data.m_records &&
                this->regions == data.regions &&
                this->m_searchMap == data.m_searchMap &&
@@ -306,9 +326,7 @@ namespace Opm {
     }
 
     MULTREGTScanner& MULTREGTScanner::operator=(const MULTREGTScanner& data) {
-        nx = data.nx;
-        ny = data.ny;
-        nz = data.nz;
+        gridDims = data.gridDims;
         fp = data.fp;
         m_records = data.m_records;
         m_searchMap = data.m_searchMap;
