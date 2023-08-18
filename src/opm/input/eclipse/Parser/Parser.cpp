@@ -881,6 +881,13 @@ newRawKeyword(const std::string&      deck_name,
 
             return newRawKeyword(parserKeyword, keyword8, parserState, parser);
         }
+        else if (parser.isBaseRecognizedKeyword(deck_name)) {
+            // Typically an OPM extended keyword such as STRESSEQUILNUM.
+            parserState.unknown_keyword = false;
+            const auto& parserKeyword = parser.getParserKeywordFromDeckName(deck_name);
+
+            return newRawKeyword(parserKeyword, deck_name, parserState, parser);
+        }
         else {
             parserState.parseContext.handleUnknownKeyword(deck_name,
                                                           KeywordLocation {
