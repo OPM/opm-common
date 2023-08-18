@@ -883,7 +883,7 @@ newRawKeyword(const std::string&      deck_name,
         }
         else {
             parserState.parseContext.handleUnknownKeyword(deck_name,
-                                                          KeywordLocation{
+                                                          KeywordLocation {
                                                               deck_name,
                                                               parserState.current_path().string(),
                                                               parserState.line()
@@ -1398,14 +1398,20 @@ bool parseState( ParserState& parserState, const Parser& parser ) {
         return (m_wildCardKeywords.count(internalKeywordName) > 0);
     }
 
-    bool Parser::isRecognizedKeyword(const std::string_view& name ) const {
-        if( !ParserKeyword::validDeckName( name ) )
+    bool Parser::isRecognizedKeyword(std::string_view name) const
+    {
+        if (! ParserKeyword::validDeckName(name)) {
             return false;
+        }
 
-        if( m_deckParserKeywords.count( name ) )
-            return true;
+        return (this->m_deckParserKeywords.find(name) != this->m_deckParserKeywords.end())
+            || (this->matchingKeyword(name) != nullptr);
+    }
 
-        return bool( matchingKeyword( name ) );
+    bool Parser::isBaseRecognizedKeyword(std::string_view name) const
+    {
+        return ParserKeyword::validDeckName(name)
+            && (this->m_deckParserKeywords.find(name) != this->m_deckParserKeywords.end());
     }
 
 void Parser::addParserKeyword( ParserKeyword parserKeyword ) {
