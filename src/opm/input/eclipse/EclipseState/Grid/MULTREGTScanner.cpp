@@ -119,19 +119,20 @@ std::vector<int> unique(const std::vector<int>& data) {
             this->addKeyword(*keywords[idx] , this->default_region);
 
         MULTREGTSearchMap searchPairs;
-        for (std::vector<MULTREGTRecord>::const_iterator record = m_records.begin(); record != m_records.end(); ++record) {
-            const std::string& region_name = record->region_name;
+        for (auto recordIx = 0*this->m_records.size(); recordIx < this->m_records.size(); ++recordIx) {
+            const auto& record = this->m_records[recordIx];
+            const std::string& region_name = record.region_name;
             if (this->fp->has_int( region_name)) {
-                int srcRegion    = record->src_value;
-                int targetRegion = record->target_value;
+                int srcRegion    = record.src_value;
+                int targetRegion = record.target_value;
 
                 // the MULTREGT keyword is directional independent
                 // i.e. we add it both ways to the lookup map.
                 if (srcRegion != targetRegion) {
                     std::pair<int,int> pair1{ srcRegion, targetRegion };
                     std::pair<int,int> pair2{ targetRegion, srcRegion };
-                    searchPairs[pair1] = &(*record);
-                    searchPairs[pair2] = &(*record);
+                    searchPairs[pair1] = recordIx;
+                    searchPairs[pair2] = recordIx;
                 }
             }
             else
@@ -144,14 +145,10 @@ std::vector<int> unique(const std::vector<int>& data) {
                 this->regions[region_name] = this->fp->get_global_int(region_name);
         }
 
-        for (auto iter = searchPairs.begin(); iter != searchPairs.end(); ++iter) {
-            const MULTREGTRecord * record = (*iter).second;
-            std::pair<int,int> pair = (*iter).first;
-            const std::string& keyword = record->region_name;
-            if (m_searchMap.count(keyword) == 0)
-                m_searchMap[keyword] = MULTREGTSearchMap();
+        for (const auto& [regPair, recordIx] : searchPairs) {
+            const std::string& keyword = this->m_records[recordIx].region_name;
 
-            m_searchMap[keyword][pair] = record;
+            m_searchMap[keyword][regPair] = recordIx;
         }
     }
 
@@ -162,7 +159,9 @@ std::vector<int> unique(const std::vector<int>& data) {
         result.ny = 2;
         result.nz = 3;
         result.m_records = {{4, 5, 6.0, 7, MULTREGT::ALL, "test1"}};
-        result.constructSearchMap({{"test2", {{{8, 9}, 10}}}});
+        result.m_searchMap["MULTNUM"].emplace(std::piecewise_construct,
+                                              std::forward_as_tuple(std::make_pair(1, 2)),
+                                              std::forward_as_tuple(0));
         result.regions = {{"test3", {11}}};
         result.default_region = "test4";
 
@@ -264,12 +263,12 @@ std::vector<int> unique(const std::vector<int>& data) {
             int regionId2 = region_data[globalIndex2];
 
             std::pair<int,int> pair{ regionId1, regionId2 };
-            if (map.count(pair) != 1 || !(map.at(pair)->directions & faceDir)) {
+            if (map.count(pair) != 1 || !(this->m_records[map.at(pair)].directions & faceDir)) {
                 pair = std::pair<int,int>{regionId2 , regionId1};
-                if (map.count(pair) != 1 || !(map.at(pair)->directions & faceDir))
+                if (map.count(pair) != 1 || !(this->m_records[map.at(pair)].directions & faceDir))
                     continue;
             }
-            const MULTREGTRecord* record = map.at(pair);
+            const MULTREGTRecord& record = this->m_records[map.at(pair)];
 
             bool applyMultiplier = true;
             int i1 = globalIndex1 % this->nx;
@@ -277,49 +276,22 @@ std::vector<int> unique(const std::vector<int>& data) {
             int j1 = globalIndex1 / this->nx % this->nz;
             int j2 = globalIndex2 / this->nx % this->nz;
 
-            if (record->nnc_behaviour == MULTREGT::NNC){
+            if (record.nnc_behaviour == MULTREGT::NNC){
                 applyMultiplier = true;
                 if ((std::abs(i1-i2) == 0 && std::abs(j1-j2) == 1) || (std::abs(i1-i2) == 1 && std::abs(j1-j2) == 0))
                     applyMultiplier = false;
             }
-            else if (record->nnc_behaviour == MULTREGT::NONNC){
+            else if (record.nnc_behaviour == MULTREGT::NONNC){
                 applyMultiplier = false;
                 if ((std::abs(i1-i2) == 0 && std::abs(j1-j2) == 1) || (std::abs(i1-i2) == 1 && std::abs(j1-j2) == 0))
                     applyMultiplier = true;
             }
 
             if (applyMultiplier)
-                return record->trans_mult;
+                return record.trans_mult;
 
         }
         return 1;
-    }
-
-    MULTREGTScanner::ExternalSearchMap MULTREGTScanner::getSearchMap() const {
-        ExternalSearchMap result;
-        for (const auto& it : m_searchMap) {
-            std::map<std::pair<int,int>, int> res;
-            for (const auto& it2 : it.second) {
-                auto ffunc = [&](const Opm::MULTREGTRecord& a)
-                {
-                    return &a == it2.second;
-                };
-                auto rIt = std::find_if(m_records.begin(), m_records.end(), ffunc);
-                res[it2.first] = std::distance(m_records.begin(), rIt);
-            }
-            result[it.first] = res;
-        }
-        return result;
-    }
-
-    void MULTREGTScanner::constructSearchMap(const ExternalSearchMap& searchMap) {
-        for (const auto& it : searchMap) {
-            std::map<std::pair<int,int>, const Opm::MULTREGTRecord*> res;
-            for (const auto& it2 : it.second) {
-                res[it2.first] = &m_records[it2.second];
-            }
-            m_searchMap.insert({it.first, res});
-        }
     }
 
     bool MULTREGTScanner::operator==(const MULTREGTScanner& data) const {
@@ -328,7 +300,7 @@ std::vector<int> unique(const std::vector<int>& data) {
                this->nz == data.nz &&
                this->m_records == data.m_records &&
                this->regions == data.regions &&
-               this->getSearchMap() == data.getSearchMap() &&
+               this->m_searchMap == data.m_searchMap &&
                this->default_region == data.default_region;
     }
 
@@ -338,10 +310,9 @@ std::vector<int> unique(const std::vector<int>& data) {
         nz = data.nz;
         fp = data.fp;
         m_records = data.m_records;
+        m_searchMap = data.m_searchMap;
         regions = data.regions;
         default_region = data.default_region;
-        m_searchMap.clear();
-        constructSearchMap(data.getSearchMap());
 
         return *this;
     }

@@ -76,7 +76,7 @@ namespace Opm {
         }
     };
 
-    typedef std::map< std::pair<int , int> , const MULTREGTRecord * >  MULTREGTSearchMap;
+    using MULTREGTSearchMap = std::map< std::pair<int, int>, std::vector<MULTREGTRecord>::size_type>;
     typedef std::tuple<size_t , FaceDir::DirEnum , double> MULTREGTConnection;
 
 
@@ -106,18 +106,12 @@ namespace Opm {
             serializer(ny);
             serializer(nz);
             serializer(m_records);
-            ExternalSearchMap searchMap = getSearchMap();
-            serializer(searchMap);
-            if (m_searchMap.empty())
-                constructSearchMap(searchMap);
+            serializer(m_searchMap);
             serializer(regions);
             serializer(default_region);
         }
 
     private:
-        ExternalSearchMap getSearchMap() const;
-        void constructSearchMap(const ExternalSearchMap& searchMap);
-
         void addKeyword( const DeckKeyword& deckKeyword, const std::string& defaultRegion);
         void assertKeywordSupported(const DeckKeyword& deckKeyword);
         std::size_t nx = 0,ny = 0, nz = 0;
