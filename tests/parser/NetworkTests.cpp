@@ -403,7 +403,6 @@ GRUPNET
     const auto vfp_table = (*upbranch).vfp_table();
     BOOST_CHECK_EQUAL(vfp_table.value(), 5);
     BOOST_CHECK(!b1.terminal_pressure());
-    BOOST_CHECK(!b1.terminal_pressure());
 
     const auto& p = network.node("PLAT-A");
     BOOST_CHECK(p.terminal_pressure());
