@@ -60,7 +60,7 @@ namespace {
             conns.emplace_back(i, j, k, globIndex({i, j, k}, dims), k,
                                2000 + (2*k + 1) / static_cast<double>(2),
                                Opm::Connection::State::OPEN,
-                               k / 100.0, 1.0, 1.0, 0.5, 0.5, 1.0, 0.0, 0,
+                               k / 100.0, 1.0, 1.0, 0.5, 0.5, 1.0, 0.0, 0.0, 0.0, 0,
                                Opm::Connection::Direction::Z,
                                Opm::Connection::CTFKind::DeckValue, k, false);
         }
@@ -96,7 +96,7 @@ namespace {
                                // 0.03, 0.0, 0.01, 0.02, 0.03, ...
                                ((k + 3 - topConn) % 4) / 100.0,
 
-                               1.0, 1.0, 0.5, 0.5, 1.0, 0.0, 0,
+                               1.0, 1.0, 0.5, 0.5, 1.0, 0.0, 0.0, 0.0, 0,
                                Opm::Connection::Direction::Z,
                                Opm::Connection::CTFKind::DeckValue, k - topConn, false);
         }
@@ -118,7 +118,7 @@ namespace {
             conns.emplace_back(i, j, k, globIndex({i, j, k}, dims), i - left,
                                2000 + (2*k + 1) / static_cast<double>(2),
                                Opm::Connection::State::OPEN,
-                               i / 100.0, 1.0, 1.0, 0.5, 0.5, 1.0, 0.0, 0,
+                               i / 100.0, 1.0, 1.0, 0.5, 0.5, 1.0, 0.0, 0.0, 0.0, 0,
                                Opm::Connection::Direction::X,
                                Opm::Connection::CTFKind::DeckValue, i - left, false);
         }

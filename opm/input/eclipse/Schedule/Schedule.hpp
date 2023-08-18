@@ -749,6 +749,8 @@ namespace Opm
         void handleWCONINJH  (HandlerContext&);
         void handleWCONPROD  (HandlerContext&);
         void handleWECON     (HandlerContext&);
+        void handleWDFACCOR  (HandlerContext&);
+        void handleWDFAC     (HandlerContext&);
         void handleWEFAC     (HandlerContext&);
         void handleWELOPEN   (HandlerContext&);
         void handleWELPI     (HandlerContext&);

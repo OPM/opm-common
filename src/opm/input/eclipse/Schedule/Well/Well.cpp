@@ -29,6 +29,7 @@
 #include <opm/input/eclipse/Schedule/MSW/WellSegments.hpp>
 #include <opm/input/eclipse/Schedule/ScheduleGrid.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQActive.hpp>
+#include <opm/input/eclipse/Schedule/Well/WDFAC.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellBrineProperties.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellEconProductionLimits.hpp>
@@ -38,6 +39,8 @@
 #include <opm/input/eclipse/Schedule/Well/WellTracerProperties.hpp>
 #include <opm/input/eclipse/Schedule/Well/WVFPDP.hpp>
 #include <opm/input/eclipse/Schedule/Well/WVFPEXP.hpp>
+
+
 
 #include <opm/input/eclipse/Units/Units.hpp>
 
@@ -311,6 +314,7 @@ Well::Well(const RestartIO::RstWell& rst_well,
     injection(std::make_shared<WellInjectionProperties>(unit_system_arg, wname)),
     wvfpdp(std::make_shared<WVFPDP>()),
     wvfpexp(explicitTHPOptions(rst_well)),
+    wdfac(std::make_shared<WDFAC>()),
     status(status_from_int(rst_well.well_status)),
     well_temperature(Metric::TemperatureOffset + ParserKeywords::STCOND::TEMPERATURE::defaultValue),
     well_inj_mult(std::nullopt)
@@ -492,6 +496,7 @@ Well::Well(const std::string& wname_arg,
     injection(std::make_shared<WellInjectionProperties>(unit_system, wname)),
     wvfpdp(std::make_shared<WVFPDP>()),
     wvfpexp(std::make_shared<WVFPEXP>()),
+    wdfac(std::make_shared<WDFAC>()),
     status(Status::SHUT),
     well_temperature(Metric::TemperatureOffset + ParserKeywords::STCOND::TEMPERATURE::defaultValue),
     well_inj_mult(std::nullopt)
@@ -536,6 +541,7 @@ Well Well::serializationTestObject()
     result.injection = std::make_shared<Well::WellInjectionProperties>(Well::WellInjectionProperties::serializationTestObject());
     result.segments = std::make_shared<WellSegments>(WellSegments::serializationTestObject());
     result.wvfpexp = std::make_shared<WVFPEXP>(WVFPEXP::serializationTestObject());
+    result.wdfac = std::make_shared<WDFAC>(WDFAC::serializationTestObject());
     result.m_pavg = PAvg();
     result.well_temperature = 10.0;
     result.well_inj_mult = InjMult::serializationTestObject();
@@ -552,7 +558,6 @@ bool Well::updateWPAVE(const PAvg& pavg) {
     this->m_pavg = pavg;
     return true;
 }
-
 
 bool Well::updateEfficiencyFactor(double efficiency_factor_arg) {
     if (this->efficiency_factor != efficiency_factor_arg) {
@@ -648,6 +653,15 @@ bool Well::updateWVFPDP(std::shared_ptr<WVFPDP> wvfpdp_arg) {
 bool Well::updateWVFPEXP(std::shared_ptr<WVFPEXP> wvfpexp_arg) {
     if (*this->wvfpexp != *wvfpexp_arg) {
         this->wvfpexp = std::move(wvfpexp_arg);
+        return true;
+    }
+
+    return false;
+}
+
+bool Well::updateWDFAC(std::shared_ptr<WDFAC> wdfac_arg) {
+    if (*this->wdfac != *wdfac_arg) {
+        this->wdfac = std::move(wdfac_arg);
         return true;
     }
 
@@ -1158,6 +1172,10 @@ const WVFPDP& Well::getWVFPDP() const {
 
 const WVFPEXP& Well::getWVFPEXP() const {
     return *this->wvfpexp;
+}
+
+const WDFAC& Well::getWDFAC() const {
+    return *this->wdfac;
 }
 
 const WellEconProductionLimits& Well::getEconLimits() const {
@@ -1734,6 +1752,7 @@ bool Well::operator==(const Well& data) const {
         && (this->derive_refdepth_from_conns_ == data.derive_refdepth_from_conns_)
         && (this->getTracerProperties() == data.getTracerProperties())
         && (this->getWVFPEXP() == data.getWVFPEXP())
+        && (this->getWDFAC() == data.getWDFAC())
         && (this->getProductionProperties() == data.getProductionProperties())
         && (this->m_pavg == data.m_pavg)
         && (this->getInjectionProperties() == data.getInjectionProperties())

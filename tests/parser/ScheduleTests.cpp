@@ -55,6 +55,7 @@
 #include <opm/input/eclipse/Schedule/Well/WellMatcher.hpp>
 #include <opm/input/eclipse/Schedule/Well/NameOrder.hpp>
 #include <opm/input/eclipse/Schedule/Well/PAvg.hpp>
+#include <opm/input/eclipse/Schedule/Well/WDFAC.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellFoamProperties.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellPolymerProperties.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellTestConfig.hpp>
@@ -3887,6 +3888,8 @@ BOOST_AUTO_TEST_CASE(WELL_STATIC) {
                       10,
                       10,
                       10,
+                      10,
+                      10,
                       100);
 
     BOOST_CHECK(  ws.updateConnections(c2, false) );
@@ -5679,6 +5682,129 @@ END
     BOOST_CHECK(wvfpexp2.explicit_lookup());
     BOOST_CHECK(wvfpexp2.shut());
     BOOST_CHECK(wvfpexp2.prevent());
+}
+
+
+BOOST_AUTO_TEST_CASE(Test_wdfac) {
+        std::string input = R"(
+DIMENS
+ 10 10 10 /
+
+START         -- 0
+ 19 JUN 2007 /
+
+GRID
+
+DXV
+ 10*100.0 /
+DYV
+ 10*100.0 /
+DZV
+ 10*10.0 /
+DEPTHZ
+121*2000.0 /
+
+PORO
+    1000*0.1 /
+PERMX
+    1000*1 /
+PERMY
+    1000*0.1 /
+PERMZ
+    1000*0.01 /
+    
+SCHEDULE
+
+DATES        -- 1
+ 10  OKT 2008 /
+/
+WELSPECS
+ 'W1' 'G1'  3 3 2873.94 'WATER' 0.00 'STD' 'SHUT' 'NO' 0 'SEG' /
+ 'W2' 'G2'  5 5 1       'OIL'   0.00 'STD' 'SHUT' 'NO' 0 'SEG' /
+/
+
+COMPDAT
+ 'W1'  3 3   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / 
+ 'W1'  3 3   2   2 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / 
+ 'W1'  3 3   3   3 'OPEN' 1*   46.825   0.311  4332.346 1*  1*  'X'  22.123 / 
+/
+
+WDFAC
+ 'W1' 1 /
+ 'W2' 2 /
+/
+
+DATES        -- 2
+ 10  NOV 2008 /
+/
+
+WDFACCOR
+-- 'W1' 8.957e10 1.1045 0.0 /
+   'W1' 1.984e-7 -1.1045 0.0 /
+/
+
+DATES        -- 3
+ 12  NOV 2008 /
+/
+
+COMPDAT
+ 'W1'  3 3   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / 
+ 'W1'  3 3   2   2 'OPEN' 1*   32.948   0.311  3047.839 1*  0  'X'  22.100 / 
+ 'W1'  3 3   3   3 'OPEN' 1*   46.825   0.311  4332.346 1*  11  'X'  22.123 / 
+/
+
+
+END
+
+)";
+    Deck deck = Parser{}.parseString(input);
+    const auto es = EclipseState { deck };
+    const auto sched = Schedule { deck, es, std::make_shared<const Python>() };
+
+    const auto& well11 = sched.getWell("W1", 1);
+    const auto& well21 = sched.getWell("W2", 1);
+    const auto& wdfac11 = well11.getWDFAC();
+    const auto& wdfac21 = well21.getWDFAC();
+
+    double rho = 1.0;
+    double mu = 0.01*Opm::prefix::centi * Opm::unit::Poise; 
+    double k = 10.0 * Opm::prefix::milli * Opm::unit::darcy;
+    double h = 20;
+    double rw = 0.108;
+    double phi = 0.3;
+
+    // WDFAC overwrites D factor in COMDAT
+    BOOST_CHECK(!wdfac11.useConnectionDFactor());
+    BOOST_CHECK(wdfac11.useDFactor());
+    BOOST_CHECK(!wdfac21.useConnectionDFactor());
+
+    BOOST_CHECK_CLOSE(wdfac11.getDFactor(rho, mu, k, phi, rw, h), 1*Opm::unit::day, 1e-12);
+    BOOST_CHECK_CLOSE(wdfac21.getDFactor(rho, mu, k, phi, rw, h), 2*Opm::unit::day, 1e-12);
+    
+    const auto& well12 = sched.getWell("W1", 2);
+    const auto& well22 = sched.getWell("W2", 2);
+    const auto& wdfac12 = well12.getWDFAC();
+    const auto& wdfac22 = well22.getWDFAC();
+
+    BOOST_CHECK_CLOSE(wdfac12.getDFactor(rho, mu, k, phi, rw, h), 5.19e-1, 3);
+    BOOST_CHECK_CLOSE(wdfac22.getDFactor(rho, mu, k, phi, rw, h), 2*Opm::unit::day, 1e-12);
+
+
+    const auto& well13 = sched.getWell("W1", 3);
+    const auto& well23 = sched.getWell("W2", 3);
+    const auto& wdfac13 = well13.getWDFAC();
+    const auto& wdfac23 = well23.getWDFAC();
+    BOOST_CHECK(wdfac13.useConnectionDFactor());
+    BOOST_CHECK(wdfac13.useDFactor());
+    BOOST_CHECK(!wdfac23.useConnectionDFactor());
+
+
+    BOOST_CHECK_CLOSE(well13.getConnections()[0].dFactor(), 0*Opm::unit::day, 1e-12);
+    BOOST_CHECK_CLOSE(well13.getConnections()[1].dFactor(), 0*Opm::unit::day, 1e-12);
+    BOOST_CHECK_CLOSE(well13.getConnections()[2].dFactor(), 11*Opm::unit::day, 1e-12);
+
+    BOOST_CHECK_CLOSE(wdfac23.getDFactor(rho, mu, k, phi, rw, h), 2*Opm::unit::day, 1e-12);
+    BOOST_CHECK_THROW(wdfac13.getDFactor(rho, mu, k, phi, rw, h ), std::exception);
 }
 
 BOOST_AUTO_TEST_CASE(createDeckWithBC) {

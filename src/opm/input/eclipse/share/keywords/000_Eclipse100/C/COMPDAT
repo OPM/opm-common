@@ -73,8 +73,8 @@
       "item": 12,
       "name": "D_FACTOR",
       "value_type": "DOUBLE",
-      "dimension": "1",
-      "comment": "Not used"
+      "dimension": "Time/GasSurfaceVolume",
+      "default": 0
       
     },
     {

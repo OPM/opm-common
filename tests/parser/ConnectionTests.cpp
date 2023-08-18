@@ -98,8 +98,8 @@ BOOST_AUTO_TEST_CASE(AddCompletionSizeCorrect) {
     auto dir = Opm::Connection::Direction::Z;
     const auto kind = Opm::Connection::CTFKind::DeckValue;
     Opm::WellConnections completionSet(Opm::Connection::Order::TRACK, 1,1);
-    Opm::Connection completion1( 10,10,10, 100, 1, 0.0, Opm::Connection::State::OPEN , 99.88, 355.113, 0.25, 0.0, 0.0, 0.0, 0.0, 0, dir, kind, 0, true);
-    Opm::Connection completion2( 10,10,11, 102, 1, 0.0, Opm::Connection::State::SHUT , 99.88, 355.113, 0.25, 0.0, 0.0, 0.0, 0.0, 0, dir, kind, 0, true);
+    Opm::Connection completion1( 10,10,10, 100, 1, 0.0, Opm::Connection::State::OPEN , 99.88, 355.113, 0.25, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, dir, kind, 0, true);
+    Opm::Connection completion2( 10,10,11, 102, 1, 0.0, Opm::Connection::State::SHUT , 99.88, 355.113, 0.25, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, dir, kind, 0, true);
     completionSet.add( completion1 );
     BOOST_CHECK_EQUAL( 1U , completionSet.size() );
     BOOST_CHECK_MESSAGE( !completionSet.empty(), "Non-empty completion set must not be empty" );
@@ -114,8 +114,8 @@ BOOST_AUTO_TEST_CASE(AddCompletionSizeCorrect) {
 BOOST_AUTO_TEST_CASE(WellConnectionsGetOutOfRangeThrows) {
     auto dir = Opm::Connection::Direction::Z;
     const auto kind = Opm::Connection::CTFKind::DeckValue;
-    Opm::Connection completion1( 10,10,10, 100, 1, 0.0, Opm::Connection::State::OPEN , 99.88, 355.113, 0.25, 0.0, 0.0, 0.0, 0.0, 0, dir, kind, 0,true);
-    Opm::Connection completion2( 10,10,11, 102, 1, 0.0, Opm::Connection::State::SHUT , 99.88, 355.113, 0.25, 0.0, 0.0, 0.0, 0.0, 0, dir, kind, 0,true);
+    Opm::Connection completion1( 10,10,10, 100, 1, 0.0, Opm::Connection::State::OPEN , 99.88, 355.113, 0.25, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, dir, kind, 0,true);
+    Opm::Connection completion2( 10,10,11, 102, 1, 0.0, Opm::Connection::State::SHUT , 99.88, 355.113, 0.25, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, dir, kind, 0,true);
     Opm::WellConnections completionSet(Opm::Connection::Order::TRACK, 1,1);
     completionSet.add( completion1 );
     BOOST_CHECK_EQUAL( 1U , completionSet.size() );
@@ -153,9 +153,9 @@ BOOST_AUTO_TEST_CASE(AddCompletionCopy) {
     auto dir = Opm::Connection::Direction::Z;
     const auto kind = Opm::Connection::CTFKind::DeckValue;
 
-    Opm::Connection completion1( 10,10,10, 100, 1, 0.0, Opm::Connection::State::OPEN , 99.88, 355.113, 0.25, 0.0, 0.0, 0.0, 0.0, 0, dir, kind, 0, true);
-    Opm::Connection completion2( 10,10,11, 101, 1, 0.0, Opm::Connection::State::SHUT , 99.88, 355.113, 0.25, 0.0, 0.0, 0.0, 0.0, 0, dir, kind, 0, true);
-    Opm::Connection completion3( 10,10,12, 102, 1, 0.0, Opm::Connection::State::SHUT , 99.88, 355.113, 0.25, 0.0, 0.0, 0.0, 0.0, 0, dir, kind, 0, true);
+    Opm::Connection completion1( 10,10,10, 100, 1, 0.0, Opm::Connection::State::OPEN , 99.88, 355.113, 0.25, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, dir, kind, 0, true);
+    Opm::Connection completion2( 10,10,11, 101, 1, 0.0, Opm::Connection::State::SHUT , 99.88, 355.113, 0.25, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, dir, kind, 0, true);
+    Opm::Connection completion3( 10,10,12, 102, 1, 0.0, Opm::Connection::State::SHUT , 99.88, 355.113, 0.25, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, dir, kind, 0, true);
 
     completionSet.add( completion1 );
     completionSet.add( completion2 );
@@ -176,9 +176,9 @@ BOOST_AUTO_TEST_CASE(ActiveCompletions) {
     auto dir = Opm::Connection::Direction::Z;
     const auto kind = Opm::Connection::CTFKind::Defaulted;
     Opm::WellConnections completions(Opm::Connection::Order::TRACK, 10,10);
-    Opm::Connection completion1( 0,0,0, grid.getGlobalIndex(0,0,0), 1, 0.0, Opm::Connection::State::OPEN , 99.88, 355.113, 0.25, 0.0, 0.0, 0.0, 0.0, 0, dir, kind, 0, true);
-    Opm::Connection completion2( 0,0,1, grid.getGlobalIndex(0,0,1), 1, 0.0, Opm::Connection::State::SHUT , 99.88, 355.113, 0.25, 0.0, 0.0, 0.0, 0.0, 0, dir, kind, 0, true);
-    Opm::Connection completion3( 0,0,2, grid.getGlobalIndex(0,0,2), 1, 0.0, Opm::Connection::State::SHUT , 99.88, 355.113, 0.25, 0.0, 0.0, 0.0, 0.0, 0, dir, kind, 0, true);
+    Opm::Connection completion1( 0,0,0, grid.getGlobalIndex(0,0,0), 1, 0.0, Opm::Connection::State::OPEN , 99.88, 355.113, 0.25, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, dir, kind, 0, true);
+    Opm::Connection completion2( 0,0,1, grid.getGlobalIndex(0,0,1), 1, 0.0, Opm::Connection::State::SHUT , 99.88, 355.113, 0.25, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, dir, kind, 0, true);
+    Opm::Connection completion3( 0,0,2, grid.getGlobalIndex(0,0,2), 1, 0.0, Opm::Connection::State::SHUT , 99.88, 355.113, 0.25, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, dir, kind, 0, true);
 
     completions.add( completion1 );
     completions.add( completion2 );
@@ -469,6 +469,8 @@ END
         0.234,
         0.157,
         0.0,
+        0.0, 
+        0.0,
         0.0,
         0.0,
         1);
@@ -511,6 +513,8 @@ END
         0.123,
         0.234,
         0.157,
+        0.0,
+        0.0,
         0.0,
         0.0,
         0.0,

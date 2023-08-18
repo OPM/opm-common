@@ -256,6 +256,7 @@ namespace Opm {
         double cell_saturation_gas;
         double effective_Kh;
         double trans_factor;
+        double d_factor;
 
         ConnectionFiltrate filtrate;
 
@@ -270,6 +271,7 @@ namespace Opm {
                    cell_saturation_gas == conn2.cell_saturation_gas &&
                    effective_Kh == conn2.effective_Kh &&
                    trans_factor == conn2.trans_factor &&
+                   d_factor == conn2.d_factor &&
                    filtrate == conn2.filtrate;
         }
 
@@ -292,6 +294,7 @@ namespace Opm {
             serializer(cell_saturation_gas);
             serializer(effective_Kh);
             serializer(trans_factor);
+            serializer(d_factor);
             serializer(filtrate);
         }
 
@@ -299,7 +302,7 @@ namespace Opm {
         {
             return Connection{1, Rates::serializationTestObject(),
                               2.0, 3.0, 4.0, 5.0,
-                              6.0, 7.0, 8.0,
+                              6.0, 7.0, 8.0, 9.0,
                               ConnectionFiltrate::serializationTestObject() };
         }
     };
@@ -1183,6 +1186,7 @@ namespace Opm {
             buffer.write(this->cell_saturation_gas);
             buffer.write(this->effective_Kh);
             buffer.write(this->trans_factor);
+            buffer.write(this->d_factor);
             this->filtrate.write(buffer);
     }
 
@@ -1198,6 +1202,7 @@ namespace Opm {
         json_data.add_item("sgas", this->cell_saturation_gas);
         json_data.add_item("Kh", this->effective_Kh);
         json_data.add_item("trans_factor", this->trans_factor);
+        json_data.add_item("d_factor", this->d_factor);
     }
 
     template <class MessageBufferType>
@@ -1343,6 +1348,7 @@ namespace Opm {
             buffer.read(this->cell_saturation_gas);
             buffer.read(this->effective_Kh);
             buffer.read(this->trans_factor);
+            buffer.read(this->d_factor);
             this->filtrate.read(buffer);
    }
 

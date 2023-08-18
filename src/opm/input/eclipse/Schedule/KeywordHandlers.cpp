@@ -52,6 +52,7 @@
 #include <opm/input/eclipse/Schedule/Tuning.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQActive.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQConfig.hpp>
+#include <opm/input/eclipse/Schedule/Well/WDFAC.hpp>
 #include <opm/input/eclipse/Schedule/Well/WList.hpp>
 #include <opm/input/eclipse/Schedule/Well/WListManager.hpp>
 #include <opm/input/eclipse/Schedule/Well/WVFPDP.hpp>
@@ -66,6 +67,10 @@
 #include <opm/input/eclipse/Schedule/Well/WellTestConfig.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellTracerProperties.hpp>
 
+#include <opm/input/eclipse/Schedule/Well/WVFPDP.hpp>
+
+#include <opm/input/eclipse/Schedule/Well/WVFPEXP.hpp>
+#include <opm/input/eclipse/Schedule/SummaryState.hpp>
 #include <opm/input/eclipse/Units/Dimension.hpp>
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
 #include <opm/input/eclipse/Units/Units.hpp>
@@ -195,7 +200,11 @@ namespace {
                 auto well2 = this->snapshots.back().wells.get(name);
                 auto connections = std::shared_ptr<WellConnections>( new WellConnections( well2.getConnections()));
                 connections->loadCOMPDAT(record, handlerContext.grid, name, handlerContext.keyword.location());
+
                 if (well2.updateConnections(connections, handlerContext.grid)) {
+                    auto wdfac = std::make_shared<WDFAC>(well2.getWDFAC());
+                    wdfac->updateWDFACType(*connections);
+                    well2.updateWDFAC(std::move(wdfac));
                     this->snapshots.back().wells.update( well2 );
                     wells.insert( name );
                 }
@@ -1530,6 +1539,40 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
         }
     }
 
+    void Schedule::handleWDFAC(HandlerContext& handlerContext) {
+        for (const auto& record : handlerContext.keyword) {
+            const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
+            const auto well_names = wellNames(wellNamePattern, handlerContext.currentStep);
+            if (well_names.empty())
+                this->invalidNamePattern(wellNamePattern, handlerContext);
+
+            for (const auto& well_name : well_names) {
+                auto well = this->snapshots.back().wells.get(well_name);
+                auto wdfac = std::make_shared<WDFAC>(well.getWDFAC());
+                wdfac->updateWDFAC( record );
+                if (well.updateWDFAC(std::move(wdfac)))
+                    this->snapshots.back().wells.update( std::move(well) );
+            }
+        }
+    }
+
+    void Schedule::handleWDFACCOR(HandlerContext& handlerContext) {
+        for (const auto& record : handlerContext.keyword) {
+            const std::string& wellNamePattern = record.getItem("WELLNAME").getTrimmedString(0);
+            const auto well_names = wellNames(wellNamePattern, handlerContext.currentStep);
+            if (well_names.empty())
+                this->invalidNamePattern(wellNamePattern, handlerContext);
+
+            for (const auto& well_name : well_names) {
+                auto well = this->snapshots.back().wells.get(well_name);
+                auto wdfac = std::make_shared<WDFAC>(well.getWDFAC());
+                wdfac->updateWDFACCOR( record );
+                if (well.updateWDFAC(std::move(wdfac)))
+                    this->snapshots.back().wells.update( std::move(well) );
+            }
+        }
+    }
+
     void Schedule::handleWEFAC(HandlerContext& handlerContext) {
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELLNAME").getTrimmedString(0);
@@ -2774,6 +2817,8 @@ Well{0} entered with 'FIELD' parent group:
             { "WCONINJH", &Schedule::handleWCONINJH  },
             { "WCONPROD", &Schedule::handleWCONPROD  },
             { "WECON"   , &Schedule::handleWECON     },
+            { "WDFAC"  ,  &Schedule::handleWDFAC     },
+            { "WDFACCOR", &Schedule::handleWDFACCOR  },
             { "WEFAC"   , &Schedule::handleWEFAC     },
             { "WELOPEN" , &Schedule::handleWELOPEN   },
             { "WELPI"   , &Schedule::handleWELPI     },

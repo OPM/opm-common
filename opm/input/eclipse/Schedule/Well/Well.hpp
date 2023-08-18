@@ -68,6 +68,7 @@ class WellSegments;
 class WellTracerProperties;
 class WVFPEXP;
 class WVFPDP;
+class WDFAC;
 
 namespace RestartIO {
 struct RstWell;
@@ -410,6 +411,8 @@ public:
     const WellTracerProperties& getTracerProperties() const;
     const WVFPDP& getWVFPDP() const;
     const WVFPEXP& getWVFPEXP() const;
+    const WDFAC& getWDFAC() const;
+
     /* The rate of a given phase under the following assumptions:
      * * Returns zero if production is requested for an injector (and vice
      *   versa)
@@ -458,6 +461,7 @@ public:
     bool updateWellGuideRate(bool available, double guide_rate, GuideRateTarget guide_phase, double scale_factor);
     bool updateWellGuideRate(double guide_rate);
     bool updateEfficiencyFactor(double efficiency_factor);
+
     bool updateSolventFraction(double solvent_fraction);
     bool updateTracer(std::shared_ptr<WellTracerProperties> tracer_properties);
     bool updateFoamProperties(std::shared_ptr<WellFoamProperties> foam_properties);
@@ -475,6 +479,8 @@ public:
     void updateWPaveRefDepth(double ref_depth);
     bool updateWVFPDP(std::shared_ptr<WVFPDP> wvfpdp);
     bool updateWVFPEXP(std::shared_ptr<WVFPEXP> wvfpexp);
+    bool updateWDFAC(std::shared_ptr<WDFAC> wdfac);
+
 
     bool handleWELSEGS(const DeckKeyword& keyword);
     bool handleCOMPSEGS(const DeckKeyword& keyword, const ScheduleGrid& grid, const ParseContext& parseContext, ErrorGuard& errors);
@@ -551,6 +557,7 @@ public:
         serializer(injection);
         serializer(segments);
         serializer(wvfpdp);
+        serializer(wdfac);
         serializer(wvfpexp);
         serializer(m_pavg);
         serializer(well_temperature);
@@ -601,6 +608,8 @@ private:
     std::shared_ptr<WellSegments> segments;
     std::shared_ptr<WVFPDP> wvfpdp;
     std::shared_ptr<WVFPEXP> wvfpexp;
+    std::shared_ptr<WDFAC> wdfac;
+
     Status status;
     PAvg m_pavg;
     double well_temperature;

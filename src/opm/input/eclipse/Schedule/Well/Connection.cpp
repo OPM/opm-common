@@ -48,6 +48,8 @@ namespace Opm {
                            double re,
                            double connection_length,
                            double skin_factor,
+                           double d_factor,
+                           double Ke,
                            const int satTableId,
                            const Direction directionArg,
                            const CTFKind ctf_kind,
@@ -65,6 +67,8 @@ namespace Opm {
           m_re(re),
           m_connection_length(connection_length),
           m_skin_factor(skin_factor),
+          m_d_factor(d_factor),
+          m_Ke(Ke),
           ijk({i,j,k}),
           m_ctfkind(ctf_kind),
           m_global_index(global_index),
@@ -90,6 +94,8 @@ Connection::Connection(const RestartIO::RstConnection& rst_connection, const Sch
         m_re(0.0),
         m_connection_length(0.0),
         m_skin_factor(rst_connection.skin_factor),
+        m_d_factor(0.0),
+        m_Ke(0.0),
         ijk(rst_connection.ijk),
         m_ctfkind(rst_connection.cf_kind),
         m_global_index(grid.get_cell(this->ijk[0], this->ijk[1], this->ijk[2]).global_index),
@@ -109,7 +115,7 @@ Connection::Connection(const RestartIO::RstConnection& rst_connection, const Sch
     }
 
     Connection::Connection()
-          : Connection(0, 0, 0, 0, 0, 0.0, State::SHUT, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+          : Connection(0, 0, 0, 0, 0, 0.0, State::SHUT, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
                        0, Direction::X, CTFKind::DeckValue, 0, false)
     {}
 
@@ -128,6 +134,8 @@ Connection::Connection(const RestartIO::RstConnection& rst_connection, const Sch
         result.m_re = 7.1;
         result.m_connection_length = 7.2;
         result.m_skin_factor = 8.0;
+        result.m_d_factor = 8.5;
+        result.m_Ke = 8.9;
         result.ijk = {9, 10, 11};
         result.m_ctfkind = CTFKind::Defaulted;
         result.m_global_index = 12;
@@ -214,6 +222,14 @@ const std::optional<std::pair<double, double>>& Connection::perf_range() const {
         this->m_skin_factor = skin_factor;
     }
 
+    void Connection::setDFactor(double d_factor) {
+        this->m_d_factor = d_factor;
+    }
+
+    void Connection::setKe(double Ke) {
+        this->m_Ke = Ke;
+    }
+
     void Connection::setCF(double CF) {
         this->m_CF = CF;
     }
@@ -248,6 +264,14 @@ const std::optional<std::pair<double, double>>& Connection::perf_range() const {
 
     double Connection::skinFactor() const {
         return this->m_skin_factor;
+    }
+
+    double Connection::dFactor() const {
+        return this->m_d_factor;
+    }
+
+    double Connection::Ke() const {
+        return this->m_Ke;
     }
 
     void Connection::setState(State state) {
@@ -306,6 +330,8 @@ const std::optional<std::pair<double, double>>& Connection::perf_range() const {
         ss << "Re " << this->m_re << std::endl;
         ss << "connection length " << this->m_connection_length << std::endl;
         ss << "skinf " << this->m_skin_factor << std::endl;
+        ss << "dfactor " << this->m_d_factor << std::endl;
+        ss << "Ke " << this->m_Ke << std::endl;
         ss << "kh " << this->m_Kh << std::endl;
         ss << "sat_tableId " << this->sat_tableId << std::endl;
         ss << "open_state " << Connection::State2String(this->open_state) << std::endl;
@@ -334,6 +360,8 @@ const std::optional<std::pair<double, double>>& Connection::perf_range() const {
             && this->m_re == rhs.m_re
             && this->m_connection_length == rhs.m_connection_length
             && this->m_skin_factor == rhs.m_skin_factor
+            && this->m_d_factor == rhs.m_d_factor
+            && this->m_Ke == rhs.m_Ke
             && this->m_injmult == rhs.m_injmult
             && this->m_Kh == rhs.m_Kh
             && this->sat_tableId == rhs.sat_tableId

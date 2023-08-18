@@ -86,6 +86,7 @@ namespace Opm {
             moles,
             ppm,
             ymodule,
+            dfactor,
             _count // New entries must be added *before* this
         };
 
