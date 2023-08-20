@@ -60,7 +60,7 @@ BOOST_AUTO_TEST_CASE(AICDWellTest) {
     auto dir = Opm::Connection::Direction::Z;
     const auto kind = Opm::Connection::CTFKind::DeckValue;
     Opm::WellConnections connection_set(Opm::Connection::Order::TRACK, 10,10);
-    Opm::EclipseGrid grid(20,20,20);
+    Opm::EclipseGrid grid(20,20,20, 1., 1., 25.0, 2500.0);
     connection_set.add(Opm::Connection( 19, 0, 0,grid.getGlobalIndex(19,0,0), 1, 0.0, Opm::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0.0, 0.0, 0, dir, kind, 0, true) );
     connection_set.add(Opm::Connection( 19, 0, 1,grid.getGlobalIndex(19,0,1), 1, 0.0, Opm::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0.0, 0.0, 0, dir, kind, 0, true) );
     connection_set.add(Opm::Connection( 19, 0, 2,grid.getGlobalIndex(19,0,2), 1, 0.0, Opm::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0.0, 0.0, 0, dir, kind, 0, true) );
@@ -220,7 +220,7 @@ BOOST_AUTO_TEST_CASE(MultisegmentWellTest) {
     auto dir = Opm::Connection::Direction::Z;
     const auto kind = Opm::Connection::CTFKind::DeckValue;
     Opm::WellConnections connection_set(Opm::Connection::Order::TRACK, 10,10);
-    Opm::EclipseGrid grid(20,20,20);
+    Opm::EclipseGrid grid(20,20,20, 1., 1., 25.0, 2500.0);
     connection_set.add(Opm::Connection( 19, 0, 0,grid.getGlobalIndex(19,0,0), 1, 0.0, Opm::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0.0, 0.0, 0, dir, kind, 0, true) );
     connection_set.add(Opm::Connection( 19, 0, 1,grid.getGlobalIndex(19,0,1), 1, 0.0, Opm::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0.0, 0.0, 0, dir, kind, 0, true) );
     connection_set.add(Opm::Connection( 19, 0, 2,grid.getGlobalIndex(19,0,2), 1, 0.0, Opm::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0.0, 0.0, 0, dir, kind, 0, true) );
@@ -387,7 +387,7 @@ BOOST_AUTO_TEST_CASE(WrongDistanceCOMPSEGS) {
     auto dir = Opm::Connection::Direction::Z;
     const auto kind = Opm::Connection::CTFKind::DeckValue;
     Opm::WellConnections connection_set(Opm::Connection::Order::TRACK, 10,10);
-    Opm::EclipseGrid grid(20,20,20);
+    Opm::EclipseGrid grid(20,20,20, 1., 1., 25., 2500.);
     connection_set.add(Opm::Connection( 19, 0, 0, grid.getGlobalIndex(19,0,0),1, 0.0, Opm::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0.0, 0.0, 0, dir, kind, 0, true) );
     connection_set.add(Opm::Connection( 19, 0, 1, grid.getGlobalIndex(19,0,1),1, 0.0, Opm::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0.0, 0.0, 0, dir, kind, 0, true) );
     connection_set.add(Opm::Connection( 19, 0, 2, grid.getGlobalIndex(19,0,2),1, 0.0, Opm::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0.0, 0.0, 0, dir, kind, 0, true) );
@@ -456,7 +456,7 @@ BOOST_AUTO_TEST_CASE(NegativeDepthCOMPSEGS) {
     auto dir = Opm::Connection::Direction::Z;
     const auto kind = Opm::Connection::CTFKind::DeckValue;
     Opm::WellConnections connection_set(Opm::Connection::Order::TRACK, 10,10);
-    Opm::EclipseGrid grid(20,20,20);
+    Opm::EclipseGrid grid(20,20,20, 1., 1., 25., 2500.);
     connection_set.add(Opm::Connection( 19, 0, 0, grid.getGlobalIndex(19,0,0),1, 0.0, Opm::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0.0, 0.0, 0, dir, kind, 0, true) );
     connection_set.add(Opm::Connection( 19, 0, 1, grid.getGlobalIndex(19,0,1),1, 0.0, Opm::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0.0, 0.0, 0, dir, kind, 0, true) );
     connection_set.add(Opm::Connection( 19, 0, 2, grid.getGlobalIndex(19,0,2),1, 0.0, Opm::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0.0, 0.0, 0, dir, kind, 0, true) );
@@ -525,7 +525,7 @@ BOOST_AUTO_TEST_CASE(testwsegvalv) {
     auto dir = Opm::Connection::Direction::Z;
     const auto kind = Opm::Connection::CTFKind::DeckValue;
     Opm::WellConnections connection_set(Opm::Connection::Order::TRACK, 10,10);
-    Opm::EclipseGrid grid(20,20,20);
+    Opm::EclipseGrid grid(20,20,20, 1., 1., 25., 2500.);
     connection_set.add(Opm::Connection( 19, 0, 0, grid.getGlobalIndex(19,0,0), 1, 0.0, Opm::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0.0, 0.0, 0, dir, kind, 0, true) );
     connection_set.add(Opm::Connection( 19, 0, 1, grid.getGlobalIndex(19,0,1), 1, 0.0, Opm::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0.0, 0.0, 0, dir, kind, 0, true) );
     connection_set.add(Opm::Connection( 19, 0, 2, grid.getGlobalIndex(19,0,2), 1, 0.0, Opm::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0.0, 0.0, 0, dir, kind, 0, true) );

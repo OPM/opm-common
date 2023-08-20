@@ -325,9 +325,11 @@ namespace {
                 const int j = compseg.m_j;
                 const int k = compseg.m_k;
                 if (grid.get_cell(i, j, k).is_active()) {
+                    // Negative values to indicate cell depths should be used
+                    double cdepth = compseg.center_depth >= 0. ? compseg.center_depth : grid.get_cell(i, j, k).depth;
                     Connection& connection = new_connection_set.getFromIJK(i, j, k);
                     connection.updateSegment(compseg.segment_number,
-                                             compseg.center_depth,
+                                             cdepth,
                                              compseg.m_seqIndex,
                                              { compseg.m_distance_start, compseg.m_distance_end });
                 }
