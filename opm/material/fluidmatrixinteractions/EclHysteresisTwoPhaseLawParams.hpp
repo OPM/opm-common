@@ -675,7 +675,7 @@ private:
                 }
             }
 
-            if (isDrain_ && krnSwDrainRevert_ > SncrtWAG_) { //Reversal from drain to imb
+            if (isDrain_ && (1.0-krnSwDrainRevert_) > SncrtWAG_) { //Reversal from drain to imb
                 cTransf_ = 1.0/(SncrtWAG_-Sncrd_ + 1.0e-12) - 1.0/(1.0-krnSwDrainRevert_-Sncrd_);
             }
 
