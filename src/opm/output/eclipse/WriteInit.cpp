@@ -439,12 +439,14 @@ namespace {
                                    ::Opm::EclIO::OutputStream::Init& initFile)
     {
         const auto doubleKeywords = Properties {
-            {"BIOTCOEF" , ::Opm::UnitSystem::measure::identity},
-            {"NTG"      , ::Opm::UnitSystem::measure::identity},
+            // do not reorder the fields below
             {"PORO"     , ::Opm::UnitSystem::measure::identity},
             {"PERMX"    , ::Opm::UnitSystem::measure::permeability},
             {"PERMY"    , ::Opm::UnitSystem::measure::permeability},
             {"PERMZ"    , ::Opm::UnitSystem::measure::permeability},
+            {"NTG"      , ::Opm::UnitSystem::measure::identity},
+            // the rest in alphabetic order starting here
+            {"BIOTCOEF" , ::Opm::UnitSystem::measure::identity},
             {"POELCOEF" , ::Opm::UnitSystem::measure::identity},
             {"PRATIO"   , ::Opm::UnitSystem::measure::identity},
             {"THERMEXR" , ::Opm::UnitSystem::measure::identity}, // 1/(temperature difference)
