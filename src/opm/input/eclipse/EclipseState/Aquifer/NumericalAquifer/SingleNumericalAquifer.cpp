@@ -26,6 +26,8 @@
 #include <opm/input/eclipse/EclipseState/Aquifer/NumericalAquifer/SingleNumericalAquifer.hpp>
 #include "../AquiferHelpers.hpp"
 
+#include <unordered_set>
+
 namespace Opm {
     SingleNumericalAquifer::SingleNumericalAquifer(const size_t aqu_id)
             : id_(aqu_id)
@@ -158,6 +160,11 @@ namespace Opm {
     }
 
     void SingleNumericalAquifer::postProcessConnections(const EclipseGrid& grid, const std::vector<int>& actnum) {
+        std::unordered_set<size_t> cell_global_indices;
+        for (const auto& cell : this->cells_) {
+            cell_global_indices.insert(cell.global_index);
+        }
+
         std::vector<NumericalAquiferConnection> conns;
         for (const auto& con : this->connections_) {
             const size_t i = con.I;
@@ -165,7 +172,7 @@ namespace Opm {
             const size_t k = con.K;
             if (!actnum[grid.getGlobalIndex(i, j, k)]) continue;
             if (con.connect_active_cell
-               || !AquiferHelpers::neighborCellInsideReservoirAndActive(grid, i, j, k, con.face_dir, actnum)) {
+               || !AquiferHelpers::neighborCellInsideReservoirAndActive(grid, i, j, k, con.face_dir, actnum, cell_global_indices)) {
                 conns.push_back(con);
             }
         }

@@ -22,12 +22,15 @@
 #include <opm/input/eclipse/EclipseState/Grid/FaceDir.hpp>
 
 #include <vector>
+#include <optional>
+#include <unordered_set>
 
 namespace Opm {
     class EclipseGrid;
     namespace AquiferHelpers {
         bool neighborCellInsideReservoirAndActive(const EclipseGrid &grid, int i, int j, int k,
-                                                  FaceDir::DirEnum faceDir, const std::vector<int>& actnum);
+                                                  FaceDir::DirEnum faceDir, const std::vector<int>& actnum,
+                                                  const std::optional<const std::unordered_set<std::size_t>>& numerical_aquifer_cells = std::nullopt);
     }
 }
 
