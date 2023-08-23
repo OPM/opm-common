@@ -2002,9 +2002,8 @@ Well{0} entered with 'FIELD' parent group:
             const auto well_names = this->wellNames(wellNamePattern, handlerContext);
             for (const auto& well_name: well_names) {
                 auto well = this->snapshots.back().wells(well_name);
-                const auto filter_conc = record.getItem<ParserKeywords::WINJFCNC::VOL_CONCENTRATION>().get<double>(0);
-                // the unit is ppm_vol
-                well.setFilterConc(filter_conc/1.e6);
+                const auto filter_conc = record.getItem<ParserKeywords::WINJFCNC::VOL_CONCENTRATION>().get<UDAValue>(0);
+                well.setFilterConc(filter_conc );
                 this->snapshots.back().wells.update(std::move(well));
             }
         }

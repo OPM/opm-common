@@ -10,8 +10,8 @@
     },
     {
       "name": "VOL_CONCENTRATION",
-      "value_type": "DOUBLE",
-      "dimension": "1",
+      "value_type": "UDA",
+      "dimension": "PPM",
       "default" : 0
     }
   ]
