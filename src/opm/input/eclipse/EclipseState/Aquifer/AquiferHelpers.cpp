@@ -22,7 +22,8 @@
 
 namespace Opm::AquiferHelpers {
     bool cellInsideReservoirAndActive(const EclipseGrid& grid, const int i, const int j, const int k,
-                                      const std::vector<int>& actnum)
+                                      const std::vector<int>& actnum,
+                                      const std::optional<const std::unordered_set<std::size_t>>& numerical_aquifer_cells = std::nullopt)
     {
         if ( i < 0 || j < 0 || k < 0
              || size_t(i) > grid.getNX() - 1
@@ -33,25 +34,35 @@ namespace Opm::AquiferHelpers {
         }
 
         const size_t globalIndex = grid.getGlobalIndex(i,j,k);
-        return actnum[globalIndex];
+        if (!actnum[globalIndex]) return false;
+
+        // we consider a numerical aquifer cell is outside the reservoir, so we can create aquifer connection between a
+        // reservoir cell and a numerical aquifer cell
+        const bool is_numerical_aquifer_cells = numerical_aquifer_cells.has_value() &&
+                                                numerical_aquifer_cells->count(globalIndex) > 0;
+
+        if (is_numerical_aquifer_cells) return false;
+
+        return true;
     }
 
     bool neighborCellInsideReservoirAndActive(const EclipseGrid& grid, const int i, const int j, const int k,
-                                              const Opm::FaceDir::DirEnum faceDir, const std::vector<int>& actnum)
+                                              const Opm::FaceDir::DirEnum faceDir, const std::vector<int>& actnum,
+                                              const std::optional<const std::unordered_set<std::size_t>>& numerical_aquifer_cells)
     {
         switch(faceDir) {
             case FaceDir::XMinus:
-                return cellInsideReservoirAndActive(grid, i - 1, j, k, actnum);
+                return cellInsideReservoirAndActive(grid, i - 1, j, k, actnum, numerical_aquifer_cells);
             case FaceDir::XPlus:
-                return cellInsideReservoirAndActive(grid, i + 1, j, k, actnum);
+                return cellInsideReservoirAndActive(grid, i + 1, j, k, actnum, numerical_aquifer_cells);
             case FaceDir::YMinus:
-                return cellInsideReservoirAndActive(grid, i, j - 1, k, actnum);
+                return cellInsideReservoirAndActive(grid, i, j - 1, k, actnum, numerical_aquifer_cells);
             case FaceDir::YPlus:
-                return cellInsideReservoirAndActive(grid, i, j + 1, k, actnum);
+                return cellInsideReservoirAndActive(grid, i, j + 1, k, actnum, numerical_aquifer_cells);
             case FaceDir::ZMinus:
-                return cellInsideReservoirAndActive(grid, i, j, k - 1, actnum);
+                return cellInsideReservoirAndActive(grid, i, j, k - 1, actnum, numerical_aquifer_cells);
             case FaceDir::ZPlus:
-                return cellInsideReservoirAndActive(grid, i, j, k + 1, actnum);
+                return cellInsideReservoirAndActive(grid, i, j, k + 1, actnum, numerical_aquifer_cells);
             default:
                 throw std::runtime_error("Unknown FaceDir enum " + std::to_string(faceDir));
         }
