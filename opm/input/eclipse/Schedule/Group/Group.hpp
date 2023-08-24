@@ -278,9 +278,7 @@ struct ProductionControls {
     std::size_t insert_index() const;
     const std::string& name() const;
     bool is_field() const;
-    int getGroupNetVFPTable() const;
 
-    bool updateNetVFPTable(int vfp_arg);
     bool update_gefac(double gefac, bool transfer_gefac);
 
     // [[deprecated("use Group::control_group() or Group::flow_group()")]]
@@ -342,7 +340,6 @@ struct ProductionControls {
         serializer(group_type);
         serializer(gefac);
         serializer(transfer_gefac);
-        serializer(vfp_table);
         serializer(parent_group);
         serializer(m_wells);
         serializer(m_groups);
@@ -363,7 +360,6 @@ private:
     GroupType group_type;
     double gefac;
     bool transfer_gefac;
-    int vfp_table;
 
     std::string parent_group;
     IOrderSet<std::string> m_wells;
