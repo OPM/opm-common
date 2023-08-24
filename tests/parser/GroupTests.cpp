@@ -180,58 +180,6 @@ WCONPROD
 }
 
 
-<<<<<<< HEAD
-=======
-
-
-
-BOOST_AUTO_TEST_CASE(createDeckWithGRUPNET) {
-    std::string input =
-        "START             -- 0 \n"
-        "31 AUG 1993 / \n"
-        "SCHEDULE\n"
-
-        "GRUPTREE \n"
-        " 'MANI-B2'  'FIELD'   / \n"
-        " 'MANI-B1'  'FIELD'   / \n"
-        " 'MANI-K1'  'FIELD'   / \n"
-        " 'B1-DUMMY' 'MANI-K1' / \n"
-        " 'MANI-D1'  'FIELD'   / \n"
-        " 'PROD'     'MANI-D1' / \n"
-        " 'MANI-D2'  'MANI-D1'    / \n"
-        " 'MANI-K2'  'MANI-D1'   / \n"
-        " 'D2-DUMMY' 'MANI-K2' / \n"
-        " 'MANI-E1'  'MANI-K2' / \n"
-        " 'MANI-E2'  'MANI-K2' / \n"
-        "/\n"
-
-        "GRUPNET \n"
-        " 'FIELD'     20.000  5* / \n"
-        " 'PROD'     20.000  5* / \n"
-        " 'MANI-B2'  1*    8  1*        'NO'  2* / \n"
-        " 'MANI-B1'  1*    8  1*        'NO'  2* / \n"
-        " 'MANI-K1'  1* 9999  4* / \n"
-        " 'B1-DUMMY'  1* 9999  4* / \n"
-        " 'MANI-D*'  1*    8  1*        'NO'  2* / \n"
-        " 'MANI-K2'  1* 9999  4* / \n"
-        " 'D2-DUMMY'  1* 9999  4* / \n"
-        " 'MANI-E1'  1*    9  1*        'NO'  2* / \n"
-        " 'MANI-E2'  1*    9  4* / \n"
-        "/\n";
-
-
-    auto schedule = create_schedule(input);
-
-    const auto& group1 = schedule.getGroup("PROD", 0);
-    const auto& group2 = schedule.getGroup("MANI-E2", 0);
-    const auto& group3 = schedule.getGroup("MANI-K1", 0);
-    BOOST_CHECK_EQUAL(group1.getGroupNetVFPTable(), 0);
-    BOOST_CHECK_EQUAL(group2.getGroupNetVFPTable(), 9);
-    BOOST_CHECK_EQUAL(group3.getGroupNetVFPTable(), 9999);
-}
-
-
->>>>>>> 0d7cc9b4e (allow for wildcards)
 BOOST_AUTO_TEST_CASE(GroupCreate) {
     Opm::Group g1("NAME", 1, 0, UnitSystem::newMETRIC());
     Opm::Group g2("NAME", 1, 0, UnitSystem::newMETRIC());
