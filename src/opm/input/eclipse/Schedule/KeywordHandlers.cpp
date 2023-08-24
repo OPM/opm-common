@@ -806,6 +806,7 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
                   const std::string& downtree_node = group_name;
                   const std::string& uptree_node = group.parent();
                   Network::Node node { group_name };
+                  node.add_gas_lift_gas(add_gas_lift_gas);
                   // A terminal node is a node with a fixed pressure
                   const bool is_terminal_node = pressure_item.hasValue(0) && (pressure_item.get<double>(0) >= 0);
                   if (is_terminal_node) {
@@ -841,64 +842,10 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
         }
         // To use update_node the node should be associated to a branch via add_branch()
         // so the update of nodes is postponed after creation of branches
-        for(const auto& node: nodes) {
-              node.add_gas_lift_gas(add_gas_lift_gas);
+        for(const auto& node: nodes) 
               network.update_node(node);
-        }
         this->snapshots.back().network.update( std::move(network));
     }
-=======
-
-=======
->>>>>>> dfdfbda56 (add gas-lift to standard network)
-        auto network = this->snapshots.back().network.get();
-        std::vector<Network::Node> nodes;
-        for (const auto& record : handlerContext.keyword) {
-            const std::string& groupNamePattern = record.getItem<ParserKeywords::GRUPNET::NAME>().getTrimmedString(0);
-            const auto group_names = this->groupNames(groupNamePattern);
-            if (group_names.empty())
-                this->invalidNamePattern(groupNamePattern, handlerContext);
-            const auto& pressure_item = record.getItem<ParserKeywords::GRUPNET::TERMINAL_PRESSURE>();
-            const int vfp_table = record.getItem<ParserKeywords::GRUPNET::VFP_TABLE>().get<int>(0);
-            // It is assumed here that item 6 (ADD_GAS_LIFT_GAS) has the two options ON and FLO. THe option ALQ is not supported.
-            // For standard network the summation of ALQ values are weighted with efficiency factors. For extended networks
-            // this calculation using efficiency factors is the default set by WEFAC item 3 (YES), the value NO is not supported. 
-            // Therefore in opm-simulators (opm/simulators/wells/WellGroupHelpers.cpp) no changes are needed.
-            const bool add_gas_lift_gas = DeckItem::to_bool(record.getItem<ParserKeywords::GRUPNET::ADD_GAS_LIFT_GAS>().get<std::string>(0));
-
-            for (const auto& group_name : group_names) {
-                auto& group = this->snapshots.back().groups.get(group_name);
-                group.updateNetVFPTable(vfp_table);
-                const auto& parent_name = group.parent();
-                if (parent_name != "")
-                {
-                    const std::string& downtree_node = group_name;
-                    const std::string& uptree_node = parent_name;
-                    if (vfp_table == 0 && network.has_node(downtree_node) && network.has_node(uptree_node)) {
-                        network.drop_branch(uptree_node, downtree_node);
-                    } else {
-                        const auto alq_eq = Network::Branch::AlqEqfromString(record.getItem<ParserKeywords::GRUPNET::ALQ_SURFACE_DENSITY>().get<std::string>(0));
-                        if (alq_eq == Network::Branch::AlqEQ::ALQ_INPUT) {
-                            double alq_value = record.getItem<ParserKeywords::GRUPNET::ALQ>().get<double>(0);
-                            network.add_branch(Network::Branch(downtree_node, uptree_node, vfp_table, alq_value));
-                        } else {
-                            network.add_branch(Network::Branch(downtree_node, uptree_node, vfp_table, alq_eq));
-                        }
-                    }
-                }
-                Network::Node node { group_name };
-                if (pressure_item.hasValue(0) && (pressure_item.get<double>(0) > 0))
-                    node.terminal_pressure(pressure_item.getSIDouble(0));
-                node.add_gas_lift_gas(add_gas_lift_gas);
-                nodes.push_back(node);
-            }
-        }
-        this->snapshots.back().network.update( network );
-        for(const auto& node: nodes)
-            network.add_node(node);
-        this->snapshots.back().network.update( std::move( network ));
-     }
->>>>>>> 0d7cc9b4e (allow for wildcards)
 
     void Schedule::handleGRUPTREE(HandlerContext& handlerContext) {
         for (const auto& record : handlerContext.keyword) {
