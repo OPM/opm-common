@@ -207,7 +207,6 @@ Group::Group(const std::string& name, std::size_t insert_index_arg, double udq_u
     group_type(GroupType::NONE),
     gefac(1),
     transfer_gefac(true),
-    vfp_table(0),
     production_properties(unit_system, name)
 {
     // All groups are initially created as children of the "FIELD" group.
@@ -248,7 +247,6 @@ Group Group::serializationTestObject()
     result.group_type = GroupType::PRODUCTION;
     result.gefac = 4.0;
     result.transfer_gefac = true;
-    result.vfp_table = 5;
     result.parent_group = "test2";
     result.m_wells = {{"test3", "test4"}, {"test5", "test6"}};
     result.m_groups = {{"test7", "test8"}, {"test9", "test10"}};
@@ -282,18 +280,6 @@ const std::map<Phase, Group::GroupInjectionProperties>& Group::injectionProperti
 
 const Group::GroupInjectionProperties& Group::injectionProperties(Phase phase) const {
     return this->injection_properties.at(phase);
-}
-
-int Group::getGroupNetVFPTable() const {
-    return this->vfp_table;
-}
-
-bool Group::updateNetVFPTable(int vfp_arg) {
-    if (this->vfp_table != vfp_arg) {
-        this->vfp_table = vfp_arg;
-        return true;
-    } else
-        return false;
 }
 
 namespace {
@@ -1209,7 +1195,6 @@ bool Group::operator==(const Group& data) const
            this->group_type == data.group_type &&
            this->getGroupEfficiencyFactor() == data.getGroupEfficiencyFactor() &&
            this->getTransferGroupEfficiencyFactor() == data.getTransferGroupEfficiencyFactor() &&
-           this->getGroupNetVFPTable() == data.getGroupNetVFPTable() &&
            this->parent() == data.parent() &&
            this->m_wells == data.m_wells &&
            this->m_groups == data.m_groups &&
