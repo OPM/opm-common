@@ -132,8 +132,8 @@ ScheduleState::ScheduleState(const ScheduleState& src, const time_point& start_t
         if (!this->next_tstep->every_report()) {
             this->next_tstep = std::nullopt;
         }
-				// Need to signal an event also for the persistance to take effect
-				this->events().addEvent(ScheduleEvents::TUNING_CHANGE);
+    // Need to signal an event also for the persistance to take effect
+    this->events().addEvent(ScheduleEvents::TUNING_CHANGE);
     }
 }
 
@@ -350,7 +350,7 @@ Tuning& ScheduleState::tuning() {
 
 // Returns -1 if there is no active limit on next step (from TUNING or NEXT[STEP])
 double ScheduleState::max_next_tstep() const {
-		double tuning_value = this->m_tuning.TSINIT.has_value() ? this->m_tuning.TSINIT.value() : -1.0;
+    double tuning_value = this->m_tuning.TSINIT.has_value() ? this->m_tuning.TSINIT.value() : -1.0;
     double next_value = this->next_tstep.has_value() ? this->next_tstep->value() : -1.0;
     return std::max(next_value, tuning_value);
 }

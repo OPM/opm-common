@@ -105,8 +105,9 @@ void RstState::load_tuning(const std::vector<int>& intehead,
     this->tuning.MXWSIT  = intehead[ VI::intehead::MXWSIT ];
     this->tuning.MXWPIT  = intehead[ VI::intehead::MXWPIT ];
 
-		double tsinit = this->unit_system.to_si(M::time, doubhead[VI::doubhead::TsInit]);
-    tuning.TSINIT = tsinit > 0 ? std::optional<double>{ tsinit } : std::nullopt;
+    double tsinit = this->unit_system.to_si(M::time, doubhead[VI::doubhead::TsInit]);
+    //tuning.TSINIT = tsinit > 0 ? std::optional<double>{ tsinit } : std::nullopt;
+    tuning.TSINIT = VI::DoubHeadValue::TSINITHasNoValue(tsinit) ? std::nullopt : std::optional<double>{ tsinit };
     tuning.TSMAXZ = this->unit_system.to_si(M::time, doubhead[VI::doubhead::TsMaxz]);
     tuning.TSMINZ = this->unit_system.to_si(M::time, doubhead[VI::doubhead::TsMinz]);
     tuning.TSMCHP = this->unit_system.to_si(M::time, doubhead[VI::doubhead::TsMchp]);

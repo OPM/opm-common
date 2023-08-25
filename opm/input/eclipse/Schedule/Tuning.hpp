@@ -51,7 +51,7 @@ namespace Opm {
         static Tuning serializationTestObject();
 
         // Record1
-				std::optional<double> TSINIT;
+        std::optional<double> TSINIT;
         double TSMAXZ;
         double TSMINZ;
         double TSMCHP;
