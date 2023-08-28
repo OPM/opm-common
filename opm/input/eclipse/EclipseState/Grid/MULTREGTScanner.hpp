@@ -104,6 +104,8 @@ namespace Opm {
                                    std::size_t globalCellIdx2,
                                    FaceDir::DirEnum faceDir) const;
 
+        double getRegionMultiplierNNC(std::size_t globalCellIdx1,
+                                      std::size_t globalCellIdx2) const;
 
         template <class Serializer>
         void serializeOp(Serializer& serializer)

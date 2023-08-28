@@ -324,6 +324,48 @@ namespace Opm {
         return 1.0;
     }
 
+    double MULTREGTScanner::getRegionMultiplierNNC(const std::size_t globalCellIdx1,
+                                                   const std::size_t globalCellIdx2) const
+    {
+        if (this->m_searchMap.empty()) {
+            return 1.0;
+        }
+
+        auto ignoreMultiplierRecord =
+            [is_aqu = this->isAquNNC(globalCellIdx1, globalCellIdx2)]
+            (const MULTREGT::NNCBehaviourEnum nnc_behaviour)
+        {
+            return (nnc_behaviour == MULTREGT::NNCBehaviourEnum::NONNC)
+                || (is_aqu && (nnc_behaviour == MULTREGT::NNCBehaviourEnum::NOAQUNNC));
+        };
+
+        for (const auto& [regName, regMap] : this->m_searchMap) {
+            const auto& region_data = this->regions.at(regName);
+
+            const auto regionId1 = region_data[globalCellIdx1];
+            const auto regionId2 = region_data[globalCellIdx2];
+
+            auto regPairPos = regMap.find({ regionId1, regionId2 });
+            if ((regionId1 != regionId2) && (regPairPos == regMap.end())) {
+                // 1 -> 2 not found.  Try reverse direction.
+                regPairPos = regMap.find({ regionId2, regionId1 });
+            }
+
+            if (regPairPos == regMap.end()) {
+                // Neither 1->2 nor 2->1 found.  Move on to next region set.
+                continue;
+            }
+
+            const auto& record = this->m_records[regPairPos->second];
+
+            if (! ignoreMultiplierRecord(record.nnc_behaviour)) {
+                return record.trans_mult;
+            }
+        }
+
+        return 1.0;
+    }
+
     void MULTREGTScanner::assertKeywordSupported(const DeckKeyword& deckKeyword)
     {
         using Kw = ParserKeywords::MULTREGT;

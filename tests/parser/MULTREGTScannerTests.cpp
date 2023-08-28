@@ -23,6 +23,7 @@
 
 #include <opm/input/eclipse/EclipseState/Grid/MULTREGTScanner.hpp>
 
+#include <opm/input/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquifers.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/Box.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/FaceDir.hpp>
@@ -172,13 +173,6 @@ BOOST_AUTO_TEST_CASE(NotSupported) {
     Opm::EclipseGrid eg( deck );
     Opm::FieldPropsManager fp(deck, Opm::Phases{true, true, true}, eg, tm);
 
-
-    // Not support NOAQUNNC behaviour
-    std::vector<const Opm::DeckKeyword*> keywords0;
-    const auto& multregtKeyword0 = deck["MULTREGT"][0];
-    keywords0.push_back( &multregtKeyword0 );
-    BOOST_CHECK_THROW( Opm::MULTREGTScanner scanner( grid, &fp, keywords0 ); , std::invalid_argument );
-
     // srcValue == targetValue - not supported
     std::vector<const Opm::DeckKeyword*> keywords1;
     const Opm::DeckKeyword& multregtKeyword1 = deck["MULTREGT"][1];
@@ -294,5 +288,465 @@ BOOST_AUTO_TEST_CASE(MULTREGT_COPY_MULTNUM) {
     for (auto i = 0; i < 2 * 2 * 2; i++) {
         BOOST_CHECK_EQUAL(fdata[i], mdata[i]);
         BOOST_CHECK_EQUAL(fdata[i], data[i]);
+    }
+}
+
+namespace {
+    Opm::Deck aquNNCDeck_OneAquCell()
+    {
+        return Opm::Parser{}.parseString(R"(RUNSPEC
+DIMENS
+ 1 6 2 /
+
+AQUDIMS
+-- mxnaqn  mxnaqc  niftbl  nriftb  nanaqu  ncamax  mxnali  mxaaql
+   1       1       1*      1*      1*      1       1*      1*  /
+
+GRID
+
+DXV
+  100.0 /
+
+DYV
+  6*100.0 /
+
+DZV
+  2*10.0 /
+
+DEPTHZ
+  14*2000.0 /
+
+PORO
+ 12*0.25 /
+
+PERMX
+ 12*100.0 /
+
+PERMZ
+ 12*10.0 /
+
+COPY
+  PERMX PERMY /
+/
+
+MULTNUM
+-- J= 1 2 3 4 5 6
+      1 2 2 2 1 1   -- K=1
+      1 2 2 2 1 1 / -- K=2
+
+ACTNUM
+-- J= 1 2 3 4 5 6
+      1 1 1 1 0 0   -- K=1
+      1 1 1 1 0 0 / -- K=2
+
+MULTREGT  -- 0
+  1 2 0.1  1*  'NONNC' /
+/
+
+MULTREGT  -- 1
+  1 2 0.2  1*  'ALL' /
+/
+
+MULTREGT  -- 2
+  1 2 0.3  1*  'NOAQUNNC' /
+/
+
+MULTREGT  -- 3
+  1 2 0.4  1*  'NNC' /
+/
+
+AQUNUM
+--AQnr.  I  J  K   Area       Length Poro    Perm   Depth    Initial.Pr   PVTNUM   SATNUM
+   1     1  5  2   100.0E+3   1000   0.25    400    2005.00  300.0        1        1  / MULTNUM=1
+/
+
+AQUCON
+--  Connect numerical aquifer to the reservoir
+--  Id.nr  I1 I2     J1  J2    K1  K2	 Face	 Trans.mult.  Trans.opt.
+     1     1  1      4   4     2   2     'J+'    1.00         1*  /
+/
+)");
+    }
+
+    Opm::Deck aquNNCDeck_ThreeAquCells()
+    {
+        return Opm::Parser{}.parseString(R"(RUNSPEC
+DIMENS
+ 1 10 2 /
+
+AQUDIMS
+-- mxnaqn  mxnaqc  niftbl  nriftb  nanaqu  ncamax  mxnali  mxaaql
+   1       1       1*      1*      1*      1       1*      1*  /
+
+GRID
+
+DXV
+  100.0 /
+
+DYV
+  10*100.0 /
+
+DZV
+  2*10.0 /
+
+DEPTHZ
+  22*2000.0 /
+
+PORO
+ 20*0.25 /
+
+PERMX
+ 20*100.0 /
+
+PERMZ
+ 20*10.0 /
+
+COPY
+  PERMX PERMY /
+/
+
+MULTNUM
+-- J= 1 2 3 4 5 6 7 8 9 10
+      1 2 2 2 2 2 3 4 4  4   -- K=1
+      1 2 2 2 2 2 3 4 4  4 / -- K=2
+
+ACTNUM
+-- J= 1 2 3 4 5 6 7 8 9 10
+      1 1 1 1 0 0 0 0 0  0   -- K=1
+      1 1 1 1 0 0 0 0 0  0 / -- K=2
+
+MULTREGT  -- 0
+  1 2 0.5   1*  'ALL' /
+  2 3 0.1   1*  'ALL' /
+  3 4 0.01  1*  'ALL' /
+/
+
+MULTREGT  -- 1
+  1 2 0.5   1*  'NONNC' /
+  2 3 0.1   1*  'NONNC' /
+  3 4 0.01  1*  'NONNC' /
+/
+
+MULTREGT  -- 2
+  1 2 0.5   1*  'NOAQUNNC' /
+  2 3 0.1   1*  'NOAQUNNC' /
+  3 4 0.01  1*  'NOAQUNNC' /
+/
+
+MULTREGT  -- 3
+  1 2 0.5   1*  'NNC' /
+  2 3 0.1   1*  'NNC' /
+  3 4 0.01  1*  'NNC' /
+/
+
+AQUNUM
+--AQnr.  I  J  K   Area       Length Poro    Perm   Depth    Initial.Pr   PVTNUM   SATNUM
+   1     1  6  2   100.0E+3   1000   0.25    400    2005.00  300.0        1        1  / MULTNUM=2
+   1     1  7  2   100.0E+3   1000   0.25    400    2005.00  300.0        1        1  / MULTNUM=3
+   1     1  8  2   100.0E+3   1000   0.25    400    2005.00  300.0        1        1  / MULTNUM=4
+/
+
+AQUCON
+--  Connect numerical aquifer to the reservoir
+--  Id.nr  I1 I2     J1  J2    K1  K2	 Face	 Trans.mult.  Trans.opt.
+     1     1  1      4   4     2   2     'J+'    1.00         1*  /
+/
+)");
+    }
+} // Anonymous namespace
+
+BOOST_AUTO_TEST_CASE(AQUNNC_Handling_OneAquCell)
+{
+    const auto deck = aquNNCDeck_OneAquCell();
+    const auto grid = Opm::EclipseGrid { deck };
+    const auto fp   = Opm::FieldPropsManager {
+        deck, Opm::Phases { true, true, true },
+        grid, Opm::TableManager { deck }
+    };
+
+    auto makeScanner = [&deck, &grid, &fp, aquNum = Opm::NumericalAquifers { deck, grid, fp }]
+        (const std::size_t mrtID)
+    {
+        auto scanner = Opm::MULTREGTScanner {
+            grid, &fp, { &deck.get<Opm::ParserKeywords::MULTREGT>()[mrtID] }
+        };
+
+        scanner.applyNumericalAquifer(aquNum.allAquiferCellIds());
+
+        return scanner;
+    };
+
+    auto getMultRegular = [&grid]
+        (const Opm::MULTREGTScanner& scanner,
+         const std::array<int,3>&    c1,
+         const std::array<int,3>&    c2,
+         const Opm::FaceDir::DirEnum direction)
+    {
+        return scanner.getRegionMultiplier(grid.getGlobalIndex(c1[0], c1[1], c1[2]),
+                                           grid.getGlobalIndex(c2[0], c2[1], c2[2]),
+                                           direction);
+    };
+
+    auto getMultNNC = [&grid]
+        (const Opm::MULTREGTScanner& scanner,
+         const std::array<int,3>&    c1,
+         const std::array<int,3>&    c2)
+    {
+        return scanner.getRegionMultiplierNNC(grid.getGlobalIndex(c1[0], c1[1], c1[2]),
+                                              grid.getGlobalIndex(c2[0], c2[1], c2[2]));
+    };
+
+    // 1->2: 0.1, NONNC
+    {
+        const auto scanner = makeScanner(0);
+
+        BOOST_CHECK_CLOSE(getMultRegular(scanner, { 0, 0, 0 }, { 0, 1, 0 }, Opm::FaceDir::YPlus), 0.1, 1.0e-8);
+        BOOST_CHECK_CLOSE(getMultRegular(scanner, { 0, 0, 0 }, { 0, 1, 1 }, Opm::FaceDir::YPlus), 1.0, 1.0e-8); // NNC
+        BOOST_CHECK_CLOSE(getMultRegular(scanner, { 0, 0, 1 }, { 0, 1, 0 }, Opm::FaceDir::YPlus), 1.0, 1.0e-8); // NNC
+        BOOST_CHECK_CLOSE(getMultRegular(scanner, { 0, 0, 1 }, { 0, 1, 1 }, Opm::FaceDir::YPlus), 0.1, 1.0e-8);
+
+        // Both cells in MULTNUM == 2
+        BOOST_CHECK_CLOSE(getMultRegular(scanner, { 0, 1, 0 }, { 0, 2, 0 }, Opm::FaceDir::YPlus), 1.0, 1.0e-8);
+        BOOST_CHECK_CLOSE(getMultRegular(scanner, { 0, 1, 0 }, { 0, 2, 1 }, Opm::FaceDir::YPlus), 1.0, 1.0e-8); // NNC
+        BOOST_CHECK_CLOSE(getMultRegular(scanner, { 0, 1, 1 }, { 0, 2, 0 }, Opm::FaceDir::YPlus), 1.0, 1.0e-8); // NNC
+        BOOST_CHECK_CLOSE(getMultRegular(scanner, { 0, 1, 1 }, { 0, 2, 1 }, Opm::FaceDir::YPlus), 1.0, 1.0e-8);
+
+        // Numerical aquifer
+        BOOST_CHECK_CLOSE(getMultRegular(scanner, { 0, 3, 1 }, { 0, 4, 1 }, Opm::FaceDir::YPlus), 1.0, 1.0e-8);
+
+        // NNCs
+        BOOST_CHECK_CLOSE(getMultNNC(scanner, { 0, 0, 0 }, { 0, 1, 1 }), 1.0, 1.0e-8);
+        BOOST_CHECK_CLOSE(getMultNNC(scanner, { 0, 0, 1 }, { 0, 1, 0 }), 1.0, 1.0e-8);
+        BOOST_CHECK_CLOSE(getMultNNC(scanner, { 0, 3, 1 }, { 0, 4, 1 }), 1.0, 1.0e-8); // Numerical aquifer
+    }
+
+    // 1->2: 0.2, ALL
+    {
+        const auto scanner = makeScanner(1);
+
+        BOOST_CHECK_CLOSE(getMultRegular(scanner, { 0, 0, 0 }, { 0, 1, 0 }, Opm::FaceDir::YPlus), 0.2, 1.0e-8);
+        BOOST_CHECK_CLOSE(getMultRegular(scanner, { 0, 0, 0 }, { 0, 1, 1 }, Opm::FaceDir::YPlus), 0.2, 1.0e-8); // NNC
+        BOOST_CHECK_CLOSE(getMultRegular(scanner, { 0, 0, 1 }, { 0, 1, 0 }, Opm::FaceDir::YPlus), 0.2, 1.0e-8); // NNC
+        BOOST_CHECK_CLOSE(getMultRegular(scanner, { 0, 0, 1 }, { 0, 1, 1 }, Opm::FaceDir::YPlus), 0.2, 1.0e-8);
+
+        // Both cells in MULTNUM == 2
+        BOOST_CHECK_CLOSE(getMultRegular(scanner, { 0, 1, 0 }, { 0, 2, 0 }, Opm::FaceDir::YPlus), 1.0, 1.0e-8);
+        BOOST_CHECK_CLOSE(getMultRegular(scanner, { 0, 1, 0 }, { 0, 2, 1 }, Opm::FaceDir::YPlus), 1.0, 1.0e-8); // NNC
+        BOOST_CHECK_CLOSE(getMultRegular(scanner, { 0, 1, 1 }, { 0, 2, 0 }, Opm::FaceDir::YPlus), 1.0, 1.0e-8); // NNC
+        BOOST_CHECK_CLOSE(getMultRegular(scanner, { 0, 1, 1 }, { 0, 2, 1 }, Opm::FaceDir::YPlus), 1.0, 1.0e-8);
+
+        // Numerical aquifer
+        BOOST_CHECK_CLOSE(getMultRegular(scanner, { 0, 3, 1 }, { 0, 4, 1 }, Opm::FaceDir::YPlus), 0.2, 1.0e-8);
+
+        // NNCs
+        BOOST_CHECK_CLOSE(getMultNNC(scanner, { 0, 0, 0 }, { 0, 1, 1 }), 0.2, 1.0e-8);
+        BOOST_CHECK_CLOSE(getMultNNC(scanner, { 0, 0, 1 }, { 0, 1, 0 }), 0.2, 1.0e-8);
+        BOOST_CHECK_CLOSE(getMultNNC(scanner, { 0, 3, 1 }, { 0, 4, 1 }), 0.2, 1.0e-8); // Numerical aquifer
+    }
+
+    // 1->2: 0.3, NOAQUNNC
+    {
+        const auto scanner = makeScanner(2);
+
+        BOOST_CHECK_CLOSE(getMultRegular(scanner, { 0, 0, 0 }, { 0, 1, 0 }, Opm::FaceDir::YPlus), 0.3, 1.0e-8);
+        BOOST_CHECK_CLOSE(getMultRegular(scanner, { 0, 0, 0 }, { 0, 1, 1 }, Opm::FaceDir::YPlus), 0.3, 1.0e-8); // NNC
+        BOOST_CHECK_CLOSE(getMultRegular(scanner, { 0, 0, 1 }, { 0, 1, 0 }, Opm::FaceDir::YPlus), 0.3, 1.0e-8); // NNC
+        BOOST_CHECK_CLOSE(getMultRegular(scanner, { 0, 0, 1 }, { 0, 1, 1 }, Opm::FaceDir::YPlus), 0.3, 1.0e-8);
+
+        // Both cells in MULTNUM == 2
+        BOOST_CHECK_CLOSE(getMultRegular(scanner, { 0, 1, 0 }, { 0, 2, 0 }, Opm::FaceDir::YPlus), 1.0, 1.0e-8);
+        BOOST_CHECK_CLOSE(getMultRegular(scanner, { 0, 1, 0 }, { 0, 2, 1 }, Opm::FaceDir::YPlus), 1.0, 1.0e-8); // NNC
+        BOOST_CHECK_CLOSE(getMultRegular(scanner, { 0, 1, 1 }, { 0, 2, 0 }, Opm::FaceDir::YPlus), 1.0, 1.0e-8); // NNC
+        BOOST_CHECK_CLOSE(getMultRegular(scanner, { 0, 1, 1 }, { 0, 2, 1 }, Opm::FaceDir::YPlus), 1.0, 1.0e-8);
+
+        // Numerical aquifer
+        BOOST_CHECK_CLOSE(getMultRegular(scanner, { 0, 3, 1 }, { 0, 4, 1 }, Opm::FaceDir::YPlus), 1.0, 1.0e-8);
+
+        // NNCs
+        BOOST_CHECK_CLOSE(getMultNNC(scanner, { 0, 0, 0 }, { 0, 1, 1 }), 0.3, 1.0e-8);
+        BOOST_CHECK_CLOSE(getMultNNC(scanner, { 0, 0, 1 }, { 0, 1, 0 }), 0.3, 1.0e-8);
+        BOOST_CHECK_CLOSE(getMultNNC(scanner, { 0, 3, 1 }, { 0, 4, 1 }), 1.0, 1.0e-8); // Numerical aquifer
+    }
+
+    // 1->2: 0.4, NNC
+    {
+        const auto scanner = makeScanner(3);
+
+        BOOST_CHECK_CLOSE(getMultRegular(scanner, { 0, 0, 0 }, { 0, 1, 0 }, Opm::FaceDir::YPlus), 1.0, 1.0e-8);
+        BOOST_CHECK_CLOSE(getMultRegular(scanner, { 0, 0, 0 }, { 0, 1, 1 }, Opm::FaceDir::YPlus), 0.4, 1.0e-8); // NNC
+        BOOST_CHECK_CLOSE(getMultRegular(scanner, { 0, 0, 1 }, { 0, 1, 0 }, Opm::FaceDir::YPlus), 0.4, 1.0e-8); // NNC
+        BOOST_CHECK_CLOSE(getMultRegular(scanner, { 0, 0, 1 }, { 0, 1, 1 }, Opm::FaceDir::YPlus), 1.0, 1.0e-8);
+
+        // Both cells in MULTNUM == 2
+        BOOST_CHECK_CLOSE(getMultRegular(scanner, { 0, 1, 0 }, { 0, 2, 0 }, Opm::FaceDir::YPlus), 1.0, 1.0e-8);
+        BOOST_CHECK_CLOSE(getMultRegular(scanner, { 0, 1, 0 }, { 0, 2, 1 }, Opm::FaceDir::YPlus), 1.0, 1.0e-8); // NNC
+        BOOST_CHECK_CLOSE(getMultRegular(scanner, { 0, 1, 1 }, { 0, 2, 0 }, Opm::FaceDir::YPlus), 1.0, 1.0e-8); // NNC
+        BOOST_CHECK_CLOSE(getMultRegular(scanner, { 0, 1, 1 }, { 0, 2, 1 }, Opm::FaceDir::YPlus), 1.0, 1.0e-8);
+
+        // Numerical aquifer
+        BOOST_CHECK_CLOSE(getMultRegular(scanner, { 0, 3, 1 }, { 0, 4, 1 }, Opm::FaceDir::YPlus), 0.4, 1.0e-8);
+
+        // NNCs
+        BOOST_CHECK_CLOSE(getMultNNC(scanner, { 0, 0, 0 }, { 0, 1, 1 }), 0.4, 1.0e-8);
+        BOOST_CHECK_CLOSE(getMultNNC(scanner, { 0, 0, 1 }, { 0, 1, 0 }), 0.4, 1.0e-8);
+        BOOST_CHECK_CLOSE(getMultNNC(scanner, { 0, 3, 1 }, { 0, 4, 1 }), 0.4, 1.0e-8); // Numerical aquifer
+    }
+}
+
+BOOST_AUTO_TEST_CASE(AQUNNC_Handling_ThreeAquCells)
+{
+    const auto deck = aquNNCDeck_ThreeAquCells();
+    const auto grid = Opm::EclipseGrid { deck };
+    const auto fp   = Opm::FieldPropsManager {
+        deck, Opm::Phases { true, true, true },
+        grid, Opm::TableManager { deck }
+    };
+
+    auto makeScanner = [&deck, &grid, &fp, aquNum = Opm::NumericalAquifers { deck, grid, fp }]
+        (const std::size_t mrtID)
+    {
+        auto scanner = Opm::MULTREGTScanner {
+            grid, &fp, { &deck.get<Opm::ParserKeywords::MULTREGT>()[mrtID] }
+        };
+
+        scanner.applyNumericalAquifer(aquNum.allAquiferCellIds());
+
+        return scanner;
+    };
+
+    auto getMultRegular = [&grid]
+        (const Opm::MULTREGTScanner& scanner,
+         const std::array<int,3>&    c1,
+         const std::array<int,3>&    c2,
+         const Opm::FaceDir::DirEnum direction)
+    {
+        return scanner.getRegionMultiplier(grid.getGlobalIndex(c1[0], c1[1], c1[2]),
+                                           grid.getGlobalIndex(c2[0], c2[1], c2[2]),
+                                           direction);
+    };
+
+    auto getMultNNC = [&grid]
+        (const Opm::MULTREGTScanner& scanner,
+         const std::array<int,3>&    c1,
+         const std::array<int,3>&    c2)
+    {
+        return scanner.getRegionMultiplierNNC(grid.getGlobalIndex(c1[0], c1[1], c1[2]),
+                                              grid.getGlobalIndex(c2[0], c2[1], c2[2]));
+    };
+
+    // 1->2: 0.5 , ALL
+    // 2->3: 0.1 , ALL
+    // 3->4: 0.01, ALL
+    {
+        const auto scanner = makeScanner(0);
+
+        BOOST_CHECK_CLOSE(getMultRegular(scanner, { 0, 0, 0 }, { 0, 1, 0 }, Opm::FaceDir::YPlus), 0.5, 1.0e-8);
+        BOOST_CHECK_CLOSE(getMultRegular(scanner, { 0, 0, 0 }, { 0, 1, 1 }, Opm::FaceDir::YPlus), 0.5, 1.0e-8); // NNC
+        BOOST_CHECK_CLOSE(getMultRegular(scanner, { 0, 0, 1 }, { 0, 1, 0 }, Opm::FaceDir::YPlus), 0.5, 1.0e-8); // NNC
+        BOOST_CHECK_CLOSE(getMultRegular(scanner, { 0, 0, 1 }, { 0, 1, 1 }, Opm::FaceDir::YPlus), 0.5, 1.0e-8);
+
+        // Both cells in MULTNUM == 2
+        BOOST_CHECK_CLOSE(getMultRegular(scanner, { 0, 1, 0 }, { 0, 2, 0 }, Opm::FaceDir::YPlus), 1.0, 1.0e-8);
+        BOOST_CHECK_CLOSE(getMultRegular(scanner, { 0, 1, 0 }, { 0, 2, 1 }, Opm::FaceDir::YPlus), 1.0, 1.0e-8); // NNC
+        BOOST_CHECK_CLOSE(getMultRegular(scanner, { 0, 1, 1 }, { 0, 2, 0 }, Opm::FaceDir::YPlus), 1.0, 1.0e-8); // NNC
+        BOOST_CHECK_CLOSE(getMultRegular(scanner, { 0, 1, 1 }, { 0, 2, 1 }, Opm::FaceDir::YPlus), 1.0, 1.0e-8);
+
+        // Numerical aquifer
+        BOOST_CHECK_CLOSE(getMultRegular(scanner, { 0, 3, 1 }, { 0, 5, 1 }, Opm::FaceDir::YPlus), 1.0 , 1.0e-8);
+        BOOST_CHECK_CLOSE(getMultRegular(scanner, { 0, 5, 1 }, { 0, 6, 1 }, Opm::FaceDir::YPlus), 0.1 , 1.0e-8);
+        BOOST_CHECK_CLOSE(getMultRegular(scanner, { 0, 6, 1 }, { 0, 7, 1 }, Opm::FaceDir::YPlus), 0.01, 1.0e-8);
+
+        // NNCs
+        BOOST_CHECK_CLOSE(getMultNNC(scanner, { 0, 0, 0 }, { 0, 1, 1 }), 0.5 , 1.0e-8);
+        BOOST_CHECK_CLOSE(getMultNNC(scanner, { 0, 3, 1 }, { 0, 5, 1 }), 1.0 , 1.0e-8);
+        BOOST_CHECK_CLOSE(getMultNNC(scanner, { 0, 5, 1 }, { 0, 6, 1 }), 0.1 , 1.0e-8);
+        BOOST_CHECK_CLOSE(getMultNNC(scanner, { 0, 6, 1 }, { 0, 7, 1 }), 0.01, 1.0e-8);
+    }
+
+    // 1->2: 0.5 , NONNC
+    // 2->3: 0.1 , NONNC
+    // 3->4: 0.01, NONNC
+    {
+        const auto scanner = makeScanner(1);
+
+        BOOST_CHECK_CLOSE(getMultRegular(scanner, { 0, 0, 0 }, { 0, 1, 0 }, Opm::FaceDir::YPlus), 0.5, 1.0e-8);
+        BOOST_CHECK_CLOSE(getMultRegular(scanner, { 0, 0, 0 }, { 0, 1, 1 }, Opm::FaceDir::YPlus), 1.0, 1.0e-8); // NNC
+        BOOST_CHECK_CLOSE(getMultRegular(scanner, { 0, 0, 1 }, { 0, 1, 0 }, Opm::FaceDir::YPlus), 1.0, 1.0e-8); // NNC
+        BOOST_CHECK_CLOSE(getMultRegular(scanner, { 0, 0, 1 }, { 0, 1, 1 }, Opm::FaceDir::YPlus), 0.5, 1.0e-8);
+
+        // Both cells in MULTNUM == 2
+        BOOST_CHECK_CLOSE(getMultRegular(scanner, { 0, 1, 0 }, { 0, 2, 0 }, Opm::FaceDir::YPlus), 1.0, 1.0e-8);
+        BOOST_CHECK_CLOSE(getMultRegular(scanner, { 0, 1, 0 }, { 0, 2, 1 }, Opm::FaceDir::YPlus), 1.0, 1.0e-8); // NNC
+        BOOST_CHECK_CLOSE(getMultRegular(scanner, { 0, 1, 1 }, { 0, 2, 0 }, Opm::FaceDir::YPlus), 1.0, 1.0e-8); // NNC
+        BOOST_CHECK_CLOSE(getMultRegular(scanner, { 0, 1, 1 }, { 0, 2, 1 }, Opm::FaceDir::YPlus), 1.0, 1.0e-8);
+
+        // Numerical aquifer
+        BOOST_CHECK_CLOSE(getMultRegular(scanner, { 0, 3, 1 }, { 0, 5, 1 }, Opm::FaceDir::YPlus), 1.0, 1.0e-8);
+        BOOST_CHECK_CLOSE(getMultRegular(scanner, { 0, 5, 1 }, { 0, 6, 1 }, Opm::FaceDir::YPlus), 1.0, 1.0e-8);
+        BOOST_CHECK_CLOSE(getMultRegular(scanner, { 0, 6, 1 }, { 0, 7, 1 }, Opm::FaceDir::YPlus), 1.0, 1.0e-8);
+
+        // NNCs
+        BOOST_CHECK_CLOSE(getMultNNC(scanner, { 0, 0, 0 }, { 0, 1, 1 }), 1.0 , 1.0e-8);
+        BOOST_CHECK_CLOSE(getMultNNC(scanner, { 0, 3, 1 }, { 0, 5, 1 }), 1.0, 1.0e-8);
+        BOOST_CHECK_CLOSE(getMultNNC(scanner, { 0, 5, 1 }, { 0, 6, 1 }), 1.0, 1.0e-8);
+        BOOST_CHECK_CLOSE(getMultNNC(scanner, { 0, 6, 1 }, { 0, 7, 1 }), 1.0, 1.0e-8);
+    }
+
+    // 1->2: 0.5 , NOAQUNNC
+    // 2->3: 0.1 , NOAQUNNC
+    // 3->4: 0.01, NOAQUNNC
+    {
+        const auto scanner = makeScanner(2);
+
+        BOOST_CHECK_CLOSE(getMultRegular(scanner, { 0, 0, 0 }, { 0, 1, 0 }, Opm::FaceDir::YPlus), 0.5, 1.0e-8);
+        BOOST_CHECK_CLOSE(getMultRegular(scanner, { 0, 0, 0 }, { 0, 1, 1 }, Opm::FaceDir::YPlus), 0.5, 1.0e-8); // NNC
+        BOOST_CHECK_CLOSE(getMultRegular(scanner, { 0, 0, 1 }, { 0, 1, 0 }, Opm::FaceDir::YPlus), 0.5, 1.0e-8); // NNC
+        BOOST_CHECK_CLOSE(getMultRegular(scanner, { 0, 0, 1 }, { 0, 1, 1 }, Opm::FaceDir::YPlus), 0.5, 1.0e-8);
+
+        // Both cells in MULTNUM == 2
+        BOOST_CHECK_CLOSE(getMultRegular(scanner, { 0, 1, 0 }, { 0, 2, 0 }, Opm::FaceDir::YPlus), 1.0, 1.0e-8);
+        BOOST_CHECK_CLOSE(getMultRegular(scanner, { 0, 1, 0 }, { 0, 2, 1 }, Opm::FaceDir::YPlus), 1.0, 1.0e-8); // NNC
+        BOOST_CHECK_CLOSE(getMultRegular(scanner, { 0, 1, 1 }, { 0, 2, 0 }, Opm::FaceDir::YPlus), 1.0, 1.0e-8); // NNC
+        BOOST_CHECK_CLOSE(getMultRegular(scanner, { 0, 1, 1 }, { 0, 2, 1 }, Opm::FaceDir::YPlus), 1.0, 1.0e-8);
+
+        // Numerical aquifer
+        BOOST_CHECK_CLOSE(getMultRegular(scanner, { 0, 3, 1 }, { 0, 5, 1 }, Opm::FaceDir::YPlus), 1.0, 1.0e-8);
+        BOOST_CHECK_CLOSE(getMultRegular(scanner, { 0, 5, 1 }, { 0, 6, 1 }, Opm::FaceDir::YPlus), 1.0, 1.0e-8);
+        BOOST_CHECK_CLOSE(getMultRegular(scanner, { 0, 6, 1 }, { 0, 7, 1 }, Opm::FaceDir::YPlus), 1.0, 1.0e-8);
+
+        // NNCs
+        BOOST_CHECK_CLOSE(getMultNNC(scanner, { 0, 0, 0 }, { 0, 1, 1 }), 0.5 , 1.0e-8);
+        BOOST_CHECK_CLOSE(getMultNNC(scanner, { 0, 3, 1 }, { 0, 5, 1 }), 1.0, 1.0e-8);
+        BOOST_CHECK_CLOSE(getMultNNC(scanner, { 0, 5, 1 }, { 0, 6, 1 }), 1.0, 1.0e-8);
+        BOOST_CHECK_CLOSE(getMultNNC(scanner, { 0, 6, 1 }, { 0, 7, 1 }), 1.0, 1.0e-8);
+    }
+
+    // 1->2: 0.5 , NNC
+    // 2->3: 0.1 , NNC
+    // 3->4: 0.01, NNC
+    {
+        const auto scanner = makeScanner(3);
+
+        BOOST_CHECK_CLOSE(getMultRegular(scanner, { 0, 0, 0 }, { 0, 1, 0 }, Opm::FaceDir::YPlus), 1.0, 1.0e-8);
+        BOOST_CHECK_CLOSE(getMultRegular(scanner, { 0, 0, 0 }, { 0, 1, 1 }, Opm::FaceDir::YPlus), 0.5, 1.0e-8); // NNC
+        BOOST_CHECK_CLOSE(getMultRegular(scanner, { 0, 0, 1 }, { 0, 1, 0 }, Opm::FaceDir::YPlus), 0.5, 1.0e-8); // NNC
+        BOOST_CHECK_CLOSE(getMultRegular(scanner, { 0, 0, 1 }, { 0, 1, 1 }, Opm::FaceDir::YPlus), 1.0, 1.0e-8);
+
+        // Both cells in MULTNUM == 2
+        BOOST_CHECK_CLOSE(getMultRegular(scanner, { 0, 1, 0 }, { 0, 2, 0 }, Opm::FaceDir::YPlus), 1.0, 1.0e-8);
+        BOOST_CHECK_CLOSE(getMultRegular(scanner, { 0, 1, 0 }, { 0, 2, 1 }, Opm::FaceDir::YPlus), 1.0, 1.0e-8); // NNC
+        BOOST_CHECK_CLOSE(getMultRegular(scanner, { 0, 1, 1 }, { 0, 2, 0 }, Opm::FaceDir::YPlus), 1.0, 1.0e-8); // NNC
+        BOOST_CHECK_CLOSE(getMultRegular(scanner, { 0, 1, 1 }, { 0, 2, 1 }, Opm::FaceDir::YPlus), 1.0, 1.0e-8);
+
+        // Numerical aquifer
+        BOOST_CHECK_CLOSE(getMultRegular(scanner, { 0, 3, 1 }, { 0, 5, 1 }, Opm::FaceDir::YPlus), 1.0 , 1.0e-8);
+        BOOST_CHECK_CLOSE(getMultRegular(scanner, { 0, 5, 1 }, { 0, 6, 1 }, Opm::FaceDir::YPlus), 0.1 , 1.0e-8);
+        BOOST_CHECK_CLOSE(getMultRegular(scanner, { 0, 6, 1 }, { 0, 7, 1 }, Opm::FaceDir::YPlus), 0.01, 1.0e-8);
+
+        // NNCs
+        BOOST_CHECK_CLOSE(getMultNNC(scanner, { 0, 0, 0 }, { 0, 1, 1 }), 0.5 , 1.0e-8);
+        BOOST_CHECK_CLOSE(getMultNNC(scanner, { 0, 3, 1 }, { 0, 5, 1 }), 1.0 , 1.0e-8);
+        BOOST_CHECK_CLOSE(getMultNNC(scanner, { 0, 5, 1 }, { 0, 6, 1 }), 0.1 , 1.0e-8);
+        BOOST_CHECK_CLOSE(getMultNNC(scanner, { 0, 6, 1 }, { 0, 7, 1 }), 0.01, 1.0e-8);
     }
 }
