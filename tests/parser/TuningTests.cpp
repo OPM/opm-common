@@ -228,8 +228,7 @@ BOOST_AUTO_TEST_CASE(TuningTest) {
 
       BOOST_CHECK(event.hasEvent(ScheduleEvents::TUNING_CHANGE));
 			std::optional<double> TSINIT = tuning.TSINIT;
-      BOOST_CHECK(TSINIT.has_value());
-      //BOOST_CHECK_CLOSE(TSINIT.value(), 2 * Metric::Time, diff);
+      BOOST_CHECK_CLOSE(TSINIT.value(), 2 * Metric::Time, diff);
 
       BOOST_CHECK_CLOSE(schedule[timeStep].max_next_tstep(), 5*Metric::Time, diff);
 
