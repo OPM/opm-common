@@ -21,6 +21,7 @@
 #define OPM_OUTPUT_ECLIPSE_VECTOR_DOUBHEAD_HPP
 
 #include <vector>
+#include <cmath>
 
 namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems {
 
@@ -90,6 +91,12 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
 
         // Default => Use TSMINZ from TUNING
         constexpr auto NetBalMinTSDefault = 0.0;
+        
+        // Default => Let Simulator choose TSINIT
+        constexpr auto TSINITNoValue = 1.00000011;
+        inline bool TSINITHasNoValue(const double value) {
+            return std::abs(value - TSINITNoValue) < 1.0e-7; 
+        }
     }
 
 }}}} // Opm::RestartIO::Helpers::VectorItems

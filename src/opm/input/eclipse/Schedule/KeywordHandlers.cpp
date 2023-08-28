@@ -1028,11 +1028,18 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
             const auto& deck_item = rec.getItem(item_name);
             return deck_item.defaultApplied(0) ? previous_value : rec.getItem(item_name).getSIDouble(0);
         };
+
+        // \Note No TSTINIT value should not be used unless explicitly non-defaulted, hence removing value by default
+        // \Note (exception is the first time step, which is handled by the Tuning constructor)
+        tuning.TSINIT = std::nullopt;
         
         if (numrecords > 0) {
             const auto& record1 = handlerContext.keyword.getRecord(0);
 
-            tuning.TSINIT = nondefault_or_previous_sidouble(record1, "TSINIT", tuning.TSINIT); 
+            // \Note A value indicates TSINIT was set in this record
+            if (const auto& deck_item = record1.getItem("TSINIT"); !deck_item.defaultApplied(0)) 
+                tuning.TSINIT = std::optional<double>{ record1.getItem("TSINIT").getSIDouble(0) };
+
             tuning.TSMAXZ = nondefault_or_previous_sidouble(record1, "TSMAXZ", tuning.TSMAXZ);
             tuning.TSMINZ = nondefault_or_previous_sidouble(record1, "TSMINZ", tuning.TSMINZ);
             tuning.TSMCHP = nondefault_or_previous_sidouble(record1, "TSMCHP", tuning.TSMCHP);
