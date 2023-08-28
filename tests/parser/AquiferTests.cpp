@@ -795,6 +795,14 @@ BOOST_AUTO_TEST_CASE(NumericalAquiferTest)
         BOOST_CHECK_EQUAL(c3->global_index, 3);
     }
 
+    {
+        const auto numAquCells = num_aqu.allAquiferCellIds();
+        const auto expect = std::vector { 0, 2, 3, };
+
+        BOOST_CHECK_EQUAL_COLLECTIONS(numAquCells.begin(), numAquCells.end(),
+                                      expect     .begin(), expect     .end());
+    }
+
     // using processed actnum for numerical aquifer connection generation
     std::vector<int> new_actnum(360, 1);
     new_actnum[0] = 0;

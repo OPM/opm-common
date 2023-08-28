@@ -20,12 +20,14 @@
 #ifndef OPM_NUMERICALAQUIFERS_HPP
 #define OPM_NUMERICALAQUIFERS_HPP
 
+#include <opm/input/eclipse/EclipseState/Aquifer/NumericalAquifer/SingleNumericalAquifer.hpp>
+
+#include <cstddef>
 #include <map>
 #include <unordered_map>
+#include <vector>
 
 #include <stddef.h>
-
-#include <opm/input/eclipse/EclipseState/Aquifer/NumericalAquifer/SingleNumericalAquifer.hpp>
 
 namespace Opm {
     class Deck;
@@ -46,6 +48,7 @@ namespace Opm {
         bool operator==(const NumericalAquifers& other) const;
 
         std::unordered_map<size_t, const NumericalAquiferCell*> allAquiferCells() const;
+        std::vector<std::size_t> allAquiferCellIds() const;
 
         std::unordered_map<size_t, double> aquiferCellVolumes() const;
 
