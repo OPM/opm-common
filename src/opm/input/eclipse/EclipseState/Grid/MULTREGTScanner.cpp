@@ -27,6 +27,8 @@
 #include <opm/input/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/input/eclipse/Deck/DeckRecord.hpp>
 
+#include <opm/input/eclipse/Parser/ParserKeywords/M.hpp>
+
 #include <algorithm>
 #include <array>
 #include <cassert>
@@ -43,8 +45,9 @@ namespace {
 std::vector<int> unique(std::vector<int> data)
 {
     std::sort(data.begin(), data.end());
+    data.erase(std::unique(data.begin(), data.end()), data.end());
 
-    return { data.begin(), std::unique(data.begin(), data.end()) };
+    return data;
 }
 
 bool is_adjacent(const int x, const int y)
@@ -81,66 +84,64 @@ namespace Opm {
 
     namespace MULTREGT {
 
-        std::string RegionNameFromDeckValue(const std::string& stringValue) {
-            if (stringValue == "O")
-                return "OPERNUM";
+        std::string RegionNameFromDeckValue(const std::string& stringValue)
+        {
+            if (stringValue == "O") { return "OPERNUM"; }
+            if (stringValue == "F") { return "FLUXNUM"; }
+            if (stringValue == "M") { return "MULTNUM"; }
 
-            if (stringValue == "F")
-                return "FLUXNUM";
-
-            if (stringValue == "M")
-                return "MULTNUM";
-
-            throw std::invalid_argument("The input string: " + stringValue + " was invalid. Expected: O/F/M");
+            throw std::invalid_argument {
+                "The input string: " + stringValue + " was invalid. Expected: O/F/M"
+            };
         }
 
-        NNCBehaviourEnum NNCBehaviourFromString(const std::string& stringValue) {
-            if (stringValue == "ALL")
-                return ALL;
+        NNCBehaviourEnum NNCBehaviourFromString(const std::string& stringValue)
+        {
+            if (stringValue == "ALL")      { return NNCBehaviourEnum::ALL; }
+            if (stringValue == "NNC")      { return NNCBehaviourEnum::NNC; }
+            if (stringValue == "NONNC")    { return NNCBehaviourEnum::NONNC; }
+            if (stringValue == "NOAQUNNC") { return NNCBehaviourEnum::NOAQUNNC; }
 
-            if (stringValue == "NNC")
-                return NNC;
-
-            if (stringValue == "NONNC")
-                return NONNC;
-
-            if (stringValue == "NOAQUNNC")
-                return NOAQUNNC;
-
-            throw std::invalid_argument("The input string: " + stringValue + " was invalid. Expected: ALL/NNC/NONNC/NOAQUNNC");
+            throw std::invalid_argument {
+                "The input string: " + stringValue + " was invalid. Expected: ALL/NNC/NONNC/NOAQUNNC"
+            };
         }
 
     } // namespace MULTREGT
 
-    /*****************************************************************/
-    /*
-      Observe that the (REGION1 -> REGION2) pairs behave like keys;
-      i.e. for the MULTREGT keyword
+    // -----------------------------------------------------------------------
 
-        MULTREGT
-          2  4   0.75    Z   ALL    M /
-          2  4   2.50   XY   ALL    F /
-        /
+    // Later records with the same region IDs overwrite earlier.  As an
+    // example, in the MULTREGT keyword
+    //
+    //   MULTREGT
+    //     2  4   0.75    Z   ALL    M /
+    //     2  4   2.50   XY   ALL    F /
+    //   /
+    //
+    // the second record will overwrite the first.  We enforce this
+    // behaviour through maps keyed on 'pair<region1,region2>'.
+    //
+    // This function starts with some initial preprocessing to create a map
+    // which looks like this:
+    //
+    //    searchMap = {
+    //       "MULTNUM" : {
+    //           std::pair(1,2) : recordIx,
+    //           std::pair(4,7) : recordIx,
+    //           ...
+    //       },
+    //       "FLUXNUM" : {
+    //           std::pair(4,8) : recordIx,
+    //           std::pair(1,4) : recordIx,
+    //           ...
+    //       },
+    //       ...
+    //    }
+    //
+    // Then it will go through the different regions and look for interfaces
+    // with the wanted region values.
 
-      The first record is completely overweritten by the second
-      record, this is because the both have the (2 -> 4) region
-      identifiers. This behaviourt is ensured by using a map with
-      std::pair<region1,region2> as key.
-
-      This function starts with some initial preprocessing to create a
-      map which looks like this:
-
-
-         searchMap = {"MULTNUM" : {std::pair(1,2) : std::tuple(TransFactor , Face , Region),
-                                   std::pair(4,7) : std::tuple(TransFactor , Face , Region),
-                                   ...},
-                      "FLUXNUM" : {std::pair(4,8) : std::tuple(TransFactor , Face , Region),
-                                   std::pair(1,4) : std::tuple(TransFactor , Face , Region),
-                                   ...}}
-
-      Then it will go through the different regions and looking for
-      interface with the wanted region values.
-    */
     MULTREGTScanner::MULTREGTScanner(const GridDims&                        gridDims_arg,
                                      const FieldPropsManager*               fp_arg,
                                      const std::vector<const DeckKeyword*>& keywords)
@@ -148,19 +149,21 @@ namespace Opm {
         , fp             { fp_arg }
         , default_region { this->fp->default_region() }
     {
-        for (const auto* keywordPtr : keywords)
-            this->addKeyword(*keywordPtr);
+        for (const auto* keywordRecordPtr : keywords) {
+            this->addKeyword(*keywordRecordPtr);
+        }
 
         MULTREGTSearchMap searchPairs;
         for (auto recordIx = 0*this->m_records.size(); recordIx < this->m_records.size(); ++recordIx) {
             const auto& record = this->m_records[recordIx];
             const std::string& region_name = record.region_name;
             if (this->fp->has_int(region_name)) {
-                int srcRegion    = record.src_value;
-                int targetRegion = record.target_value;
+                const auto srcRegion    = record.src_value;
+                const auto targetRegion = record.target_value;
 
-                // the MULTREGT keyword is directional independent
-                // i.e. we add it both ways to the lookup map.
+                // The MULTREGT keyword is directionally independent meaning
+                // we add both directions, symmetrically, to the lookup
+                // table.
                 if (srcRegion != targetRegion) {
                     std::pair<int,int> pair1{ srcRegion, targetRegion };
                     std::pair<int,int> pair2{ targetRegion, srcRegion };
@@ -168,28 +171,37 @@ namespace Opm {
                     searchPairs[pair2] = recordIx;
                 }
             }
-            else
-                throw std::logic_error(
-                                "MULTREGT record is based on region: "
-                                +  region_name
-                                + " which is not in the deck");
+            else {
+                throw std::logic_error {
+                    "MULTREGT record is based on region: "
+                    +  region_name
+                    + " which is not in the deck"
+                };
+            }
 
-            if (this->regions.count(region_name) == 0)
+            if (this->regions.count(region_name) == 0) {
                 this->regions[region_name] = this->fp->get_global_int(region_name);
+            }
         }
 
         for (const auto& [regPair, recordIx] : searchPairs) {
             const std::string& keyword = this->m_records[recordIx].region_name;
 
-            m_searchMap[keyword][regPair] = recordIx;
+            this->m_searchMap[keyword][regPair] = recordIx;
         }
+    }
+
+    MULTREGTScanner::MULTREGTScanner(const MULTREGTScanner& rhs)
+    {
+        *this = rhs;
     }
 
     MULTREGTScanner MULTREGTScanner::serializationTestObject()
     {
         MULTREGTScanner result;
+
         result.gridDims = GridDims::serializationTestObject();
-        result.m_records = {{4, 5, 6.0, 7, MULTREGT::ALL, "test1"}};
+        result.m_records = {{4, 5, 6.0, 7, MULTREGT::NNCBehaviourEnum::ALL, "test1"}};
         result.m_searchMap["MULTNUM"].emplace(std::piecewise_construct,
                                               std::forward_as_tuple(std::make_pair(1, 2)),
                                               std::forward_as_tuple(0));
@@ -199,61 +211,27 @@ namespace Opm {
         return result;
     }
 
-    MULTREGTScanner::MULTREGTScanner(const MULTREGTScanner& data) {
-        *this = data;
+    bool MULTREGTScanner::operator==(const MULTREGTScanner& data) const
+    {
+        return (this->gridDims == data.gridDims)
+            && (this->default_region == data.default_region)
+            && (this->m_records == data.m_records)
+            && (this->m_searchMap == data.m_searchMap)
+            && (this->regions == data.regions)
+            ;
     }
 
-    void MULTREGTScanner::assertKeywordSupported( const DeckKeyword& deckKeyword) {
-        for (const auto& deckRecord : deckKeyword) {
-            const auto& srcItem = deckRecord.getItem("SRC_REGION");
-            const auto& targetItem = deckRecord.getItem("TARGET_REGION");
-            auto nnc_behaviour = MULTREGT::NNCBehaviourFromString(deckRecord.getItem("NNC_MULT").get<std::string>(0));
+    MULTREGTScanner& MULTREGTScanner::operator=(const MULTREGTScanner& data)
+    {
+        this->gridDims = data.gridDims;
+        this->fp = data.fp;
+        this->default_region = data.default_region;
 
-            if (!srcItem.defaultApplied(0) && !targetItem.defaultApplied(0))
-                if (srcItem.get<int>(0) == targetItem.get<int>(0))
-                    throw std::invalid_argument("Sorry - MULTREGT applied internally to a region is not yet supported");
+        this->m_records = data.m_records;
+        this->m_searchMap = data.m_searchMap;
+        this->regions = data.regions;
 
-            if (nnc_behaviour == MULTREGT::NOAQUNNC)
-                throw std::invalid_argument("Sorry - currently we do not support \'NOAQUNNC\' for MULTREGT.");
-         }
-    }
-
-    void MULTREGTScanner::addKeyword(const DeckKeyword& deckKeyword) {
-        assertKeywordSupported( deckKeyword );
-        for (const auto& deckRecord : deckKeyword) {
-            std::vector<int> src_regions;
-            std::vector<int> target_regions;
-            std::string region_name = this->default_region;
-
-            const auto& srcItem = deckRecord.getItem("SRC_REGION");
-            const auto& targetItem = deckRecord.getItem("TARGET_REGION");
-            const auto& regionItem = deckRecord.getItem("REGION_DEF");
-
-            double trans_mult = deckRecord.getItem("TRAN_MULT").get<double>(0);
-            auto directions = FaceDir::FromMULTREGTString( deckRecord.getItem("DIRECTIONS").get<std::string>(0));
-            auto nnc_behaviour = MULTREGT::NNCBehaviourFromString(deckRecord.getItem("NNC_MULT").get<std::string>(0));
-
-            if (regionItem.defaultApplied(0)) {
-                if (!m_records.empty())
-                    region_name = m_records.back().region_name;
-            } else
-                region_name = MULTREGT::RegionNameFromDeckValue( regionItem.get<std::string>(0) );
-
-            if (srcItem.defaultApplied(0) || srcItem.get<int>(0) < 0)
-                src_regions = unique(this->fp->get_int(region_name));
-            else
-                src_regions.push_back(srcItem.get<int>(0));
-
-            if (targetItem.defaultApplied(0) || targetItem.get<int>(0) < 0)
-                target_regions = unique(fp->get_int(region_name));
-            else
-                target_regions.push_back(targetItem.get<int>(0));
-
-            for (int src_region : src_regions) {
-                for (int target_region : target_regions)
-                    m_records.push_back({src_region, target_region, trans_mult, directions, nnc_behaviour, region_name});
-            }
-        }
+        return *this;
     }
 
     // This function will check the region values in globalIndex1 and
@@ -275,64 +253,133 @@ namespace Opm {
     //    -----------
     //    | 2  | 1  |   =>  MultTrans( i+1,j,k,FaceDir::XMinus ) *= 0.50
     //    -----------
-
     double MULTREGTScanner::getRegionMultiplier(const std::size_t globalIndex1,
                                                 const std::size_t globalIndex2,
                                                 const FaceDir::DirEnum faceDir) const
     {
-        const auto is_adj = is_adjacent(this->gridDims, globalIndex1, globalIndex2);
+        if (this->m_searchMap.empty()) {
+            return 1.0;
+        }
 
-        for (auto iter = m_searchMap.begin(); iter != m_searchMap.end(); iter++) {
-            const auto& region_data = this->regions.at( iter->first );
-            const MULTREGTSearchMap& map = (*iter).second;
+        auto regPairFound = [faceDir, this](const auto& regMap, auto regPairPos)
+        {
+            return (regPairPos != regMap.end())
+                && ((this->m_records[regPairPos->second].directions & faceDir) != 0);
+        };
 
-            int regionId1 = region_data[globalIndex1];
-            int regionId2 = region_data[globalIndex2];
+        auto ignoreMultiplierRecord =
+            [is_adj = is_adjacent(this->gridDims, globalIndex1, globalIndex2)]
+            (const MULTREGT::NNCBehaviourEnum nnc_behaviour)
+        {
+            // We ignore the record if either of the following conditions hold
+            //
+            //   1. Cells are adjacent, but record stipulates NNCs only
+            //   2. Connection is an NNC, but record stipulates no NNCs
+            return ( is_adj && (nnc_behaviour == MULTREGT::NNCBehaviourEnum::NNC))
+                || (!is_adj && (nnc_behaviour == MULTREGT::NNCBehaviourEnum::NONNC));
+        };
 
-            std::pair<int,int> pair{ regionId1, regionId2 };
-            if (map.count(pair) != 1 || !(this->m_records[map.at(pair)].directions & faceDir)) {
-                pair = std::pair<int,int>{regionId2 , regionId1};
-                if (map.count(pair) != 1 || !(this->m_records[map.at(pair)].directions & faceDir))
-                    continue;
+        for (const auto& [regName, regMap] : this->m_searchMap) {
+            const auto& region_data = this->regions.at(regName);
+
+            const int regionId1 = region_data[globalIndex1];
+            const int regionId2 = region_data[globalIndex2];
+
+            auto regPairPos = regMap.find({ regionId1, regionId2 });
+            if ((regionId1 != regionId2) && !regPairFound(regMap, regPairPos)) {
+                // 1 -> 2 not found.  Try reverse direction.
+                regPairPos = regMap.find({ regionId2, regionId1 });
             }
-            const MULTREGTRecord& record = this->m_records[map.at(pair)];
 
-            bool applyMultiplier = true;
-
-            if (record.nnc_behaviour == MULTREGT::NNC){
-                applyMultiplier = true;
-                if (is_adj)
-                    applyMultiplier = false;
-            }
-            else if (record.nnc_behaviour == MULTREGT::NONNC){
-                applyMultiplier = false;
-                if (is_adj)
-                    applyMultiplier = true;
+            if (! regPairFound(regMap, regPairPos)) {
+                // Neither 1->2 nor 2->1 found.  Move on to next region set.
+                continue;
             }
 
-            if (applyMultiplier)
+            const auto& record = this->m_records[regPairPos->second];
+            const auto applyMultiplier =
+                (record.nnc_behaviour == MULTREGT::NNCBehaviourEnum::ALL) ||
+                ! ignoreMultiplierRecord(record.nnc_behaviour);
+
+            if (applyMultiplier) {
                 return record.trans_mult;
+            }
         }
 
         return 1.0;
     }
 
-    bool MULTREGTScanner::operator==(const MULTREGTScanner& data) const {
-        return this->gridDims == data.gridDims &&
-               this->m_records == data.m_records &&
-               this->regions == data.regions &&
-               this->m_searchMap == data.m_searchMap &&
-               this->default_region == data.default_region;
+    void MULTREGTScanner::assertKeywordSupported(const DeckKeyword& deckKeyword)
+    {
+        using Kw = ParserKeywords::MULTREGT;
+
+        for (const auto& deckRecord : deckKeyword) {
+            const auto& srcItem = deckRecord.getItem<Kw::SRC_REGION>();
+            const auto& targetItem = deckRecord.getItem<Kw::TARGET_REGION>();
+
+            if (!srcItem.defaultApplied(0) && !targetItem.defaultApplied(0)) {
+                if (srcItem.get<int>(0) == targetItem.get<int>(0)) {
+                    throw std::invalid_argument {
+                        "Sorry - MULTREGT applied internally to a region is not yet supported"
+                    };
+                }
+            }
+
+            const auto nnc_behaviour = MULTREGT::
+                NNCBehaviourFromString(deckRecord.getItem("NNC_MULT").get<std::string>(0));
+
+            if (nnc_behaviour == MULTREGT::NNCBehaviourEnum::NOAQUNNC) {
+                throw std::invalid_argument {
+                    "Sorry - currently we do not support 'NOAQUNNC' for MULTREGT."
+                };
+            }
+        }
     }
 
-    MULTREGTScanner& MULTREGTScanner::operator=(const MULTREGTScanner& data) {
-        gridDims = data.gridDims;
-        fp = data.fp;
-        m_records = data.m_records;
-        m_searchMap = data.m_searchMap;
-        regions = data.regions;
-        default_region = data.default_region;
+    void MULTREGTScanner::addKeyword(const DeckKeyword& deckKeyword)
+    {
+        using Kw = ParserKeywords::MULTREGT;
 
-        return *this;
+        this->assertKeywordSupported(deckKeyword);
+
+        for (const auto& deckRecord : deckKeyword) {
+            std::vector<int> src_regions;
+            std::vector<int> target_regions;
+            std::string region_name = this->default_region;
+
+            const auto& srcItem = deckRecord.getItem<Kw::SRC_REGION>();
+            const auto& targetItem = deckRecord.getItem<Kw::TARGET_REGION>();
+            const auto& regionItem = deckRecord.getItem<Kw::REGION_DEF>();
+
+            const auto trans_mult = deckRecord.getItem<Kw::TRAN_MULT>().get<double>(0);
+            const auto directions = FaceDir::FromMULTREGTString(deckRecord.getItem<Kw::DIRECTIONS>().get<std::string>(0));
+            const auto nnc_behaviour = MULTREGT::NNCBehaviourFromString(deckRecord.getItem<Kw::NNC_MULT>().get<std::string>(0));
+
+            if (regionItem.defaultApplied(0)) {
+                if (!m_records.empty())
+                    region_name = m_records.back().region_name;
+            } else
+                region_name = MULTREGT::RegionNameFromDeckValue( regionItem.get<std::string>(0) );
+
+            if (srcItem.defaultApplied(0) || srcItem.get<int>(0) < 0) {
+                src_regions = unique(this->fp->get_int(region_name));
+            }
+            else {
+                src_regions.push_back(srcItem.get<int>(0));
+            }
+
+            if (targetItem.defaultApplied(0) || targetItem.get<int>(0) < 0) {
+                target_regions = unique(fp->get_int(region_name));
+            }
+            else {
+                target_regions.push_back(targetItem.get<int>(0));
+            }
+
+            for (int src_region : src_regions) {
+                for (int target_region : target_regions) {
+                    m_records.push_back({src_region, target_region, trans_mult, directions, nnc_behaviour, region_name});
+                }
+            }
+        }
     }
 } // namespace Opm
