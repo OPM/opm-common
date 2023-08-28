@@ -145,9 +145,8 @@ namespace Opm {
     MULTREGTScanner::MULTREGTScanner(const GridDims&                        gridDims_arg,
                                      const FieldPropsManager*               fp_arg,
                                      const std::vector<const DeckKeyword*>& keywords)
-        : gridDims       { gridDims_arg }
-        , fp             { fp_arg }
-        , default_region { this->fp->default_region() }
+        : gridDims { gridDims_arg }
+        , fp       { fp_arg }
     {
         for (const auto* keywordRecordPtr : keywords) {
             this->addKeyword(*keywordRecordPtr);
@@ -206,7 +205,6 @@ namespace Opm {
                                               std::forward_as_tuple(std::make_pair(1, 2)),
                                               std::forward_as_tuple(0));
         result.regions = {{"test3", {11}}};
-        result.default_region = "test4";
 
         return result;
     }
@@ -214,7 +212,6 @@ namespace Opm {
     bool MULTREGTScanner::operator==(const MULTREGTScanner& data) const
     {
         return (this->gridDims == data.gridDims)
-            && (this->default_region == data.default_region)
             && (this->m_records == data.m_records)
             && (this->m_searchMap == data.m_searchMap)
             && (this->regions == data.regions)
@@ -225,7 +222,6 @@ namespace Opm {
     {
         this->gridDims = data.gridDims;
         this->fp = data.fp;
-        this->default_region = data.default_region;
 
         this->m_records = data.m_records;
         this->m_searchMap = data.m_searchMap;
@@ -345,7 +341,6 @@ namespace Opm {
         for (const auto& deckRecord : deckKeyword) {
             std::vector<int> src_regions;
             std::vector<int> target_regions;
-            std::string region_name = this->default_region;
 
             const auto& srcItem = deckRecord.getItem<Kw::SRC_REGION>();
             const auto& targetItem = deckRecord.getItem<Kw::TARGET_REGION>();
@@ -355,11 +350,9 @@ namespace Opm {
             const auto directions = FaceDir::FromMULTREGTString(deckRecord.getItem<Kw::DIRECTIONS>().get<std::string>(0));
             const auto nnc_behaviour = MULTREGT::NNCBehaviourFromString(deckRecord.getItem<Kw::NNC_MULT>().get<std::string>(0));
 
-            if (regionItem.defaultApplied(0)) {
-                if (!m_records.empty())
-                    region_name = m_records.back().region_name;
-            } else
-                region_name = MULTREGT::RegionNameFromDeckValue( regionItem.get<std::string>(0) );
+            const auto region_name = (!this->m_records.empty() && regionItem.defaultApplied(0))
+                ? this->m_records.back().region_name
+                : MULTREGT::RegionNameFromDeckValue(regionItem.get<std::string>(0));
 
             if (srcItem.defaultApplied(0) || srcItem.get<int>(0) < 0) {
                 src_regions = unique(this->fp->get_int(region_name));

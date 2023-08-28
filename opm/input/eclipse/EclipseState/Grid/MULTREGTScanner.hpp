@@ -108,7 +108,6 @@ namespace Opm {
         {
             serializer(gridDims);
 
-            serializer(default_region);
             serializer(m_records);
             serializer(m_searchMap);
 
@@ -123,7 +122,6 @@ namespace Opm {
 
         GridDims gridDims{};
         const FieldPropsManager* fp{nullptr};
-        std::string default_region{};
 
         std::vector<MULTREGTRecord> m_records{};
         std::map<std::string, MULTREGTSearchMap> m_searchMap{};
