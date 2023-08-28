@@ -156,6 +156,10 @@ namespace Opm {
         }
     }
 
+    void TransMult::applyNumericalAquifer(const std::vector<std::size_t>& aquifer_cells) {
+        m_multregtScanner.applyNumericalAquifer(aquifer_cells);
+    }
+
     bool TransMult::operator==(const TransMult& data) const {
         return this->m_nx == data.m_nx &&
                this->m_ny == data.m_ny &&

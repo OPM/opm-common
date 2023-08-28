@@ -59,6 +59,7 @@ namespace Opm {
         void applyMULT(const std::vector<double>& srcMultProp, FaceDir::DirEnum faceDir);
         void applyMULTFLT(const FaultCollection& faults);
         void applyMULTFLT(const Fault& fault);
+        void applyNumericalAquifer(const std::vector<std::size_t>& aquifer_cells);
 
         bool operator==(const TransMult& data) const;
 

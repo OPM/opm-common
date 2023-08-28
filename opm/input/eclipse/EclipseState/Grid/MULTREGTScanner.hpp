@@ -98,6 +98,8 @@ namespace Opm {
         bool operator==(const MULTREGTScanner& data) const;
         MULTREGTScanner& operator=(const MULTREGTScanner& data);
 
+        void applyNumericalAquifer(const std::vector<std::size_t>& aquifer_cells);
+
         double getRegionMultiplier(std::size_t globalCellIdx1,
                                    std::size_t globalCellIdx2,
                                    FaceDir::DirEnum faceDir) const;
@@ -112,6 +114,7 @@ namespace Opm {
             serializer(m_searchMap);
 
             serializer(regions);
+            serializer(aquifer_cells);
         }
 
     private:
@@ -126,6 +129,7 @@ namespace Opm {
         std::vector<MULTREGTRecord> m_records{};
         std::map<std::string, MULTREGTSearchMap> m_searchMap{};
         std::map<std::string, std::vector<int>> regions{};
+        std::vector<std::size_t> aquifer_cells{};
 
         void addKeyword(const DeckKeyword& deckKeyword);
         void assertKeywordSupported(const DeckKeyword& deckKeyword);

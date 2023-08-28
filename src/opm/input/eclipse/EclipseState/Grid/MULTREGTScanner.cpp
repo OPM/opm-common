@@ -205,6 +205,7 @@ namespace Opm {
                                               std::forward_as_tuple(std::make_pair(1, 2)),
                                               std::forward_as_tuple(0));
         result.regions = {{"test3", {11}}};
+        result.aquifer_cells = { std::size_t{17}, std::size_t{29} };
 
         return result;
     }
@@ -215,6 +216,7 @@ namespace Opm {
             && (this->m_records == data.m_records)
             && (this->m_searchMap == data.m_searchMap)
             && (this->regions == data.regions)
+            && (this->aquifer_cells == data.aquifer_cells)
             ;
     }
 
@@ -226,8 +228,21 @@ namespace Opm {
         this->m_records = data.m_records;
         this->m_searchMap = data.m_searchMap;
         this->regions = data.regions;
+        this->aquifer_cells = data.aquifer_cells;
 
         return *this;
+    }
+
+    void MULTREGTScanner::applyNumericalAquifer(const std::vector<std::size_t>& aquifer_cells_arg)
+    {
+        this->aquifer_cells.insert(this->aquifer_cells.end(),
+                                   aquifer_cells_arg.begin(),
+                                   aquifer_cells_arg.end());
+
+        std::sort(this->aquifer_cells.begin(), this->aquifer_cells.end());
+        this->aquifer_cells.erase(std::unique(this->aquifer_cells.begin(),
+                                              this->aquifer_cells.end()),
+                                  this->aquifer_cells.end());
     }
 
     // This function will check the region values in globalIndex1 and

@@ -352,6 +352,8 @@ namespace Opm {
         // Add NNCs between aquifer cells and first aquifer cell and aquifer
         // connections.
         this->appendInputNNC(numerical_aquifer.aquiferCellNNCs());
+
+        this->m_transMult.applyNumericalAquifer(numerical_aquifer.allAquiferCellIds());
     }
 
     void EclipseState::applyMULTXYZ() {
