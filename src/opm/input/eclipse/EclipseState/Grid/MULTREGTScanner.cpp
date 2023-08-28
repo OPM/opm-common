@@ -279,15 +279,19 @@ namespace Opm {
         };
 
         auto ignoreMultiplierRecord =
-            [is_adj = is_adjacent(this->gridDims, globalIndex1, globalIndex2)]
+            [is_adj = is_adjacent(this->gridDims, globalIndex1, globalIndex2),
+             is_aqu = this->isAquNNC(globalIndex1, globalIndex2)]
             (const MULTREGT::NNCBehaviourEnum nnc_behaviour)
         {
             // We ignore the record if either of the following conditions hold
             //
             //   1. Cells are adjacent, but record stipulates NNCs only
             //   2. Connection is an NNC, but record stipulates no NNCs
-            return ( is_adj && (nnc_behaviour == MULTREGT::NNCBehaviourEnum::NNC))
-                || (!is_adj && (nnc_behaviour == MULTREGT::NNCBehaviourEnum::NONNC));
+            //   3. Connection is associated to a numerical aquifer, but
+            //      record stipulates that no such connections apply.
+            return ((is_adj && !is_aqu) && (nnc_behaviour == MULTREGT::NNCBehaviourEnum::NNC))
+                || ((!is_adj || is_aqu) && (nnc_behaviour == MULTREGT::NNCBehaviourEnum::NONNC))
+                || (is_aqu              && (nnc_behaviour == MULTREGT::NNCBehaviourEnum::NOAQUNNC));
         };
 
         for (const auto& [regName, regMap] : this->m_searchMap) {
@@ -335,15 +339,6 @@ namespace Opm {
                     };
                 }
             }
-
-            const auto nnc_behaviour = MULTREGT::
-                NNCBehaviourFromString(deckRecord.getItem("NNC_MULT").get<std::string>(0));
-
-            if (nnc_behaviour == MULTREGT::NNCBehaviourEnum::NOAQUNNC) {
-                throw std::invalid_argument {
-                    "Sorry - currently we do not support 'NOAQUNNC' for MULTREGT."
-                };
-            }
         }
     }
 
@@ -389,5 +384,19 @@ namespace Opm {
                 }
             }
         }
+    }
+
+    bool MULTREGTScanner::isAquNNC(const std::size_t globalCellIdx1,
+                                   const std::size_t globalCellIdx2) const
+    {
+        return this->isAquCell(globalCellIdx1)
+            || this->isAquCell(globalCellIdx2);
+    }
+
+    bool MULTREGTScanner::isAquCell(const std::size_t globalCellIdx) const
+    {
+        return std::binary_search(this->aquifer_cells.begin(),
+                                  this->aquifer_cells.end(),
+                                  globalCellIdx);
     }
 } // namespace Opm
