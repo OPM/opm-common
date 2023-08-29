@@ -558,7 +558,9 @@ public:
 
             if (swatImbStartNxt_ < 0.0) { // Initial check ...
                 swatImbStartNxt_ = std::max(Swco_, Swco_ + krnSw - krwSw);
-                if (swatImbStartNxt_ > Swco_ + tolWAG_) {
+                // check if we are in threephase state sw > swco + tolWag and so > tolWag
+                // (sw = swco + krnSw - krwSw and so = krwSw for oil/gas params)
+                if ( (swatImbStartNxt_ > Swco_ + tolWAG_) && krwSw > tolWAG_) {
                     swatImbStart_ = swatImbStartNxt_;
                     krnSwWAG_ = krnSw;
                     krnSwDrainStartNxt_ = krnSwWAG_;
