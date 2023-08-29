@@ -136,7 +136,7 @@ public:
                                    const Params& params,
                                    const FluidState& fluidState)
     {
-        OPM_TIMEBLOCK_LOCAL(capillaryPressures);
+        OPM_TIMEFUNCTION_LOCAL();
         switch (params.approach()) {
         case EclMultiplexerApproach::Stone1:
             Stone1Material::capillaryPressures(values,
@@ -178,6 +178,7 @@ public:
                                          Scalar& krnSwMdc,
                                          const Params& params)
     {
+        OPM_TIMEFUNCTION_LOCAL();
         switch (params.approach()) {
         case EclMultiplexerApproach::Stone1:
             Stone1Material::oilWaterHysteresisParams(pcSwMdc, krnSwMdc,
@@ -215,6 +216,7 @@ public:
                                             const Scalar& krnSwMdc,
                                             Params& params)
     {
+        OPM_TIMEFUNCTION_LOCAL();
         switch (params.approach()) {
         case EclMultiplexerApproach::Stone1:
             Stone1Material::setOilWaterHysteresisParams(pcSwMdc, krnSwMdc,
@@ -252,6 +254,7 @@ public:
                                        Scalar& krnSwMdc,
                                        const Params& params)
     {
+        OPM_TIMEFUNCTION_LOCAL();
         switch (params.approach()) {
         case EclMultiplexerApproach::Stone1:
             Stone1Material::gasOilHysteresisParams(pcSwMdc, krnSwMdc,
@@ -281,6 +284,7 @@ public:
 
     static Scalar trappedGasSaturation(const Params& params)
     {
+        OPM_TIMEFUNCTION_LOCAL();
         switch (params.approach()) {
         case EclMultiplexerApproach::Stone1:
             return params.template getRealParams<EclMultiplexerApproach::Stone1>().gasOilParams().SnTrapped();
@@ -310,6 +314,7 @@ public:
                                           const Scalar& krnSwMdc,
                                           Params& params)
     {
+        OPM_TIMEFUNCTION_LOCAL();
         switch (params.approach()) {
         case EclMultiplexerApproach::Stone1:
             Stone1Material::setGasOilHysteresisParams(pcSwMdc, krnSwMdc,
@@ -430,7 +435,7 @@ public:
                                        const Params& params,
                                        const FluidState& fluidState)
     {
-        OPM_TIMEBLOCK_LOCAL(relativePermeabilities);
+        OPM_TIMEFUNCTION_LOCAL();
         switch (params.approach()) {
         case EclMultiplexerApproach::Stone1:
             Stone1Material::relativePermeabilities(values,
@@ -473,6 +478,7 @@ public:
     static Evaluation relpermOilInOilGasSystem(const Params& params,
                                                const FluidState& fluidState)
     {
+        OPM_TIMEFUNCTION_LOCAL();
         switch (params.approach()) {
         case EclMultiplexerApproach::Stone1:
             return Stone1Material::template relpermOilInOilGasSystem<Evaluation>
@@ -503,6 +509,7 @@ public:
     static Evaluation relpermOilInOilWaterSystem(const Params& params,
                                                  const FluidState& fluidState)
     {
+        OPM_TIMEFUNCTION_LOCAL();
         switch (params.approach()) {
         case EclMultiplexerApproach::Stone1:
             return Stone1Material::template relpermOilInOilWaterSystem<Evaluation>
@@ -567,6 +574,7 @@ public:
     template <class FluidState>
     static bool updateHysteresis(Params& params, const FluidState& fluidState)
     {
+        OPM_TIMEFUNCTION_LOCAL();
         switch (params.approach()) {
         case EclMultiplexerApproach::Stone1:
             return Stone1Material::updateHysteresis(params.template getRealParams<EclMultiplexerApproach::Stone1>(),

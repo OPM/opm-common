@@ -146,6 +146,7 @@ public:
                                    const Params& params,
                                    const FluidState& fluidState)
     {
+        OPM_TIMEFUNCTION_LOCAL();
         using Evaluation = typename std::remove_reference<decltype(values[0])>::type;
 
         switch (params.approach()) {
@@ -189,6 +190,7 @@ public:
                                          Scalar& krnSwMdc,
                                          const Params& params)
     {
+        OPM_TIMEFUNCTION_LOCAL();
         pcSwMdc = params.oilWaterParams().pcSwMdc();
         krnSwMdc = params.oilWaterParams().krnSwMdc();
 
@@ -206,6 +208,7 @@ public:
                                             const Scalar& krnSwMdc,
                                             Params& params)
     {
+        OPM_TIMEFUNCTION_LOCAL();
         constexpr const Scalar krwSw = 2.0; //Should not be used
         params.oilWaterParams().update(pcSwMdc, krwSw, krnSwMdc);
     }
@@ -341,6 +344,7 @@ public:
                                        const Params& params,
                                        const FluidState& fluidState)
     {
+        OPM_TIMEFUNCTION_LOCAL();
         using Evaluation = typename std::remove_reference<decltype(values[0])>::type;
 
         switch (params.approach()) {
@@ -415,6 +419,7 @@ public:
     template <class FluidState>
     static bool updateHysteresis(Params& params, const FluidState& fluidState)
     {
+        OPM_TIMEFUNCTION_LOCAL();
         switch (params.approach()) {
         case EclTwoPhaseApproach::GasOil: {
             Scalar So = scalarValue(fluidState.saturation(oilPhaseIdx));

@@ -28,6 +28,7 @@
 #define OPM_BRINE_CO2_PVT_HPP
 
 #include <opm/common/Exceptions.hpp>
+#include <opm/common/TimingMacros.hpp>
 
 #include <opm/material/Constants.hpp>
 
@@ -163,6 +164,7 @@ public:
                               const Evaluation& Rs,
                               const Evaluation& saltConcentration) const
     {
+        OPM_TIMEFUNCTION_LOCAL();
         const Evaluation salinity = salinityFromConcentration(regionIdx, temperature, pressure, saltConcentration);
         const Evaluation xlCO2 = convertRsToXoG_(Rs,regionIdx);
         return (liquidEnthalpyBrineCO2_(temperature,
@@ -180,7 +182,7 @@ public:
                         const Evaluation& pressure,
                         const Evaluation& Rs) const
     {
-
+        OPM_TIMEFUNCTION_LOCAL();
         const Evaluation xlCO2 = convertRsToXoG_(Rs,regionIdx);
         return (liquidEnthalpyBrineCO2_(temperature,
                                        pressure,
@@ -211,6 +213,7 @@ public:
                                  const Evaluation& pressure,
                                  const Evaluation& saltConcentration) const
     {
+        OPM_TIMEFUNCTION_LOCAL();
         const Evaluation salinity = salinityFromConcentration(regionIdx, temperature, pressure, saltConcentration);
         return Brine::liquidViscosity(temperature, pressure, salinity);
     }
@@ -225,6 +228,7 @@ public:
                          const Evaluation& /*Rsw*/,
                          const Evaluation& saltConcentration) const
     {
+        OPM_TIMEFUNCTION_LOCAL();
         //TODO: The viscosity does not yet depend on the composition
         return saturatedViscosity(regionIdx, temperature, pressure, saltConcentration);
     }
@@ -237,6 +241,7 @@ public:
                                   const Evaluation& temperature,
                                   const Evaluation& pressure) const
     {
+        OPM_TIMEFUNCTION_LOCAL();
         return Brine::liquidViscosity(temperature, pressure, Evaluation(salinity_[regionIdx]));
     }
 
@@ -250,6 +255,7 @@ public:
                                                      const Evaluation& pressure,
                                                      const Evaluation& saltconcentration) const
     {
+        OPM_TIMEFUNCTION_LOCAL();
         const Evaluation salinity = salinityFromConcentration(regionIdx, temperature, pressure, saltconcentration);
         Evaluation rsSat = rsSat_(regionIdx, temperature, pressure, salinity);
         return (1.0 - convertRsToXoG_(rsSat,regionIdx)) * density_(regionIdx, temperature, pressure, rsSat, salinity)/brineReferenceDensity_[regionIdx];
@@ -264,6 +270,7 @@ public:
                                             const Evaluation& Rs,
                                             const Evaluation& saltConcentration) const
     {
+        OPM_TIMEFUNCTION_LOCAL();
         const Evaluation salinity = salinityFromConcentration(regionIdx, temperature, pressure, saltConcentration);
         return (1.0 - convertRsToXoG_(Rs,regionIdx)) * density_(regionIdx, temperature, pressure, Rs, salinity)/brineReferenceDensity_[regionIdx];
     }
@@ -287,6 +294,7 @@ public:
                                                      const Evaluation& temperature,
                                                      const Evaluation& pressure) const
     {
+        OPM_TIMEFUNCTION_LOCAL();
         Evaluation rsSat = rsSat_(regionIdx, temperature, pressure, Evaluation(salinity_[regionIdx]));
         return (1.0 - convertRsToXoG_(rsSat,regionIdx)) * density_(regionIdx, temperature, pressure, rsSat, Evaluation(salinity_[regionIdx]))/brineReferenceDensity_[regionIdx];
     }
@@ -376,6 +384,7 @@ public:
                                     const Evaluation& pressure,
                                     unsigned /*compIdx*/) const
     {
+        OPM_TIMEFUNCTION_LOCAL();
         //Diffusion coefficient of CO2 in pure water according to (McLachlan and Danckwerts, 1972)
         const Evaluation log_D_H20 = -4.1764 + 712.52 / temperature - 2.5907e5 / (temperature*temperature);
 
@@ -401,6 +410,7 @@ private:
                      const LhsEval& Rs,
                      const LhsEval& salinity) const
     {
+        OPM_TIMEFUNCTION_LOCAL();
         LhsEval xlCO2 = convertXoGToxoG_(convertRsToXoG_(Rs,regionIdx), salinity);
         LhsEval result = liquidDensity_(temperature,
                                         pressure,
@@ -418,6 +428,7 @@ private:
                            const LhsEval& xlCO2,
                            const LhsEval& salinity) const
     {
+        OPM_TIMEFUNCTION_LOCAL();
         Valgrind::CheckDefined(T);
         Valgrind::CheckDefined(pl);
         Valgrind::CheckDefined(xlCO2);
@@ -450,6 +461,7 @@ private:
                                           const LhsEval& pl,
                                           const LhsEval& xlCO2) const
     {
+        OPM_TIMEFUNCTION_LOCAL();
         Scalar M_CO2 = CO2::molarMass();
         Scalar M_H2O = H2O::molarMass();
 
@@ -475,6 +487,7 @@ private:
     template <class LhsEval>
     LhsEval convertRsToXoG_(const LhsEval& Rs, unsigned regionIdx) const
     {
+        OPM_TIMEFUNCTION_LOCAL();
         Scalar rho_oRef = brineReferenceDensity_[regionIdx];
         Scalar rho_gRef = co2ReferenceDensity_[regionIdx];
 
@@ -489,6 +502,7 @@ private:
     template <class LhsEval>
     LhsEval convertXoGToxoG_(const LhsEval& XoG, const LhsEval& salinity) const
     {
+        OPM_TIMEFUNCTION_LOCAL();
         Scalar M_CO2 = CO2::molarMass();
         LhsEval M_Brine = Brine::molarMass(salinity);
         return XoG*M_Brine / (M_CO2*(1 - XoG) + XoG*M_Brine);
@@ -501,6 +515,7 @@ private:
     template <class LhsEval>
     LhsEval convertxoGToXoG(const LhsEval& xoG, const LhsEval& salinity) const
     {
+        OPM_TIMEBLOCK_LOCAL(convertxoGToXoG);
         Scalar M_CO2 = CO2::molarMass();
         LhsEval M_Brine = Brine::molarMass(salinity);
 
@@ -528,11 +543,12 @@ private:
                    const LhsEval& pressure,
                    const LhsEval& salinity) const
     {
+        OPM_TIMEFUNCTION_LOCAL();
         if (!enableDissolution_)
             return 0.0;
 
         // calulate the equilibrium composition for the given
-        // temperature and pressure. 
+        // temperature and pressure.
         LhsEval xgH2O;
         LhsEval xlCO2;
         BinaryCoeffBrineCO2::calculateMoleFractions(temperature,
@@ -555,6 +571,7 @@ private:
                                            const LhsEval& salinity,
                                            const LhsEval& X_CO2_w)
     {
+        OPM_TIMEFUNCTION_LOCAL();
         /* X_CO2_w : mass fraction of CO2 in brine */
 
         /* same function as enthalpy_brine, only extended by CO2 content */

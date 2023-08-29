@@ -28,7 +28,7 @@
 #define OPM_PIECEWISE_LINEAR_TWO_PHASE_MATERIAL_HPP
 
 #include "PiecewiseLinearTwoPhaseMaterialParams.hpp"
-
+#include <opm/common/TimingMacros.hpp>
 #include <opm/material/common/MathToolbox.hpp>
 
 #include <stdexcept>
@@ -96,6 +96,7 @@ public:
     template <class Container, class FluidState>
     static void capillaryPressures(Container& values, const Params& params, const FluidState& fs)
     {
+        OPM_TIMEFUNCTION_LOCAL();
         using Evaluation = typename std::remove_reference<decltype(values[0])>::type;
 
         values[Traits::wettingPhaseIdx] = 0.0; // reference phase
@@ -116,6 +117,7 @@ public:
     template <class Container, class FluidState>
     static void relativePermeabilities(Container& values, const Params& params, const FluidState& fs)
     {
+        OPM_TIMEFUNCTION_LOCAL();
         using Evaluation = typename std::remove_reference<decltype(values[0])>::type;
 
         values[Traits::wettingPhaseIdx] = krw<FluidState, Evaluation>(params, fs);
@@ -128,6 +130,7 @@ public:
     template <class FluidState, class Evaluation = typename FluidState::Scalar>
     static Evaluation pcnw(const Params& params, const FluidState& fs)
     {
+        OPM_TIMEFUNCTION_LOCAL();
         const auto& Sw =
             decay<Evaluation>(fs.saturation(Traits::wettingPhaseIdx));
 
@@ -139,7 +142,10 @@ public:
      */
     template <class Evaluation>
     static Evaluation twoPhaseSatPcnw(const Params& params, const Evaluation& Sw)
-    { return eval_(params.SwPcwnSamples(), params.pcnwSamples(), Sw); }
+    {
+        OPM_TIMEFUNCTION_LOCAL();
+        return eval_(params.SwPcwnSamples(), params.pcnwSamples(), Sw);
+    }
 
     template <class Evaluation>
     static Evaluation twoPhaseSatPcnwInv(const Params& params, const Evaluation& pcnw)
@@ -175,6 +181,7 @@ public:
     template <class FluidState, class Evaluation = typename FluidState::Scalar>
     static Evaluation krw(const Params& params, const FluidState& fs)
     {
+        OPM_TIMEFUNCTION_LOCAL();
         const auto& Sw =
             decay<Evaluation>(fs.saturation(Traits::wettingPhaseIdx));
 
@@ -183,11 +190,17 @@ public:
 
     template <class Evaluation>
     static Evaluation twoPhaseSatKrw(const Params& params, const Evaluation& Sw)
-    { return eval_(params.SwKrwSamples(), params.krwSamples(), Sw); }
+    {
+        OPM_TIMEFUNCTION_LOCAL();
+        return eval_(params.SwKrwSamples(), params.krwSamples(), Sw);
+    }
 
     template <class Evaluation>
     static Evaluation twoPhaseSatKrwInv(const Params& params, const Evaluation& krw)
-    { return eval_(params.krwSamples(), params.SwKrwSamples(), krw); }
+    {
+        OPM_TIMEFUNCTION_LOCAL();
+        return eval_(params.krwSamples(), params.SwKrwSamples(), krw);
+    }
 
     /*!
      * \brief The relative permeability for the non-wetting phase
@@ -196,6 +209,7 @@ public:
     template <class FluidState, class Evaluation = typename FluidState::Scalar>
     static Evaluation krn(const Params& params, const FluidState& fs)
     {
+        OPM_TIMEFUNCTION_LOCAL();
         const auto& Sw =
             decay<Evaluation>(fs.saturation(Traits::wettingPhaseIdx));
 
@@ -204,7 +218,10 @@ public:
 
     template <class Evaluation>
     static Evaluation twoPhaseSatKrn(const Params& params, const Evaluation& Sw)
-    { return eval_(params.SwKrnSamples(), params.krnSamples(), Sw); }
+    {
+        OPM_TIMEFUNCTION_LOCAL();
+        return eval_(params.SwKrnSamples(), params.krnSamples(), Sw);
+    }
 
     template <class Evaluation>
     static Evaluation twoPhaseSatKrnInv(const Params& params, const Evaluation& krn)
@@ -219,7 +236,7 @@ public:
     static size_t findSegmentIndexDescending(const ValueVector& xValues, const Evaluation& x){
         return findSegmentIndexDescending_(xValues, scalarValue(x));
     }
-    
+
     template <class Evaluation>
     static Evaluation eval(const ValueVector& xValues, const ValueVector& yValues, const Evaluation& x, unsigned segIdx){
         Scalar x0 = xValues[segIdx];
@@ -232,13 +249,14 @@ public:
 
         return y0 + (x - x0)*m;
     }
-    
+
 private:
     template <class Evaluation>
     static Evaluation eval_(const ValueVector& xValues,
                             const ValueVector& yValues,
                             const Evaluation& x)
     {
+        OPM_TIMEFUNCTION_LOCAL();
         if (xValues.front() < xValues.back())
             return evalAscending_(xValues, yValues, x);
         return evalDescending_(xValues, yValues, x);
@@ -249,6 +267,7 @@ private:
                                      const ValueVector& yValues,
                                      const Evaluation& x)
     {
+        OPM_TIMEFUNCTION_LOCAL();
         if (x <= xValues.front())
             return yValues.front();
         if (x >= xValues.back())
@@ -264,6 +283,7 @@ private:
                                       const ValueVector& yValues,
                                       const Evaluation& x)
     {
+        OPM_TIMEFUNCTION_LOCAL();
         if (x >= xValues.front())
             return yValues.front();
         if (x <= xValues.back())
@@ -279,6 +299,7 @@ private:
                                  const ValueVector& yValues,
                                  const Evaluation& x)
     {
+        OPM_TIMEFUNCTION_LOCAL();
         if (x <= xValues.front())
             return 0.0;
         if (x >= xValues.back())
@@ -297,6 +318,7 @@ private:
     template<class ScalarT>
     static size_t findSegmentIndex_(const ValueVector& xValues, const ScalarT& x)
     {
+        OPM_TIMEFUNCTION_LOCAL();
         assert(xValues.size() > 1); // we need at least two sampling points!
         size_t n = xValues.size() - 1;
         if (xValues.back() <= x)
@@ -319,6 +341,7 @@ private:
 
     static size_t findSegmentIndexDescending_(const ValueVector& xValues, Scalar x)
     {
+        OPM_TIMEFUNCTION_LOCAL();
         assert(xValues.size() > 1); // we need at least two sampling points!
         size_t n = xValues.size() - 1;
         if (x <= xValues.back())

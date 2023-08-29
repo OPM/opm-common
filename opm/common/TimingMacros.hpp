@@ -21,16 +21,22 @@
 
 // This file defines macros
 // OPM_TIMEBLOCK - time block of main part of codes which do not effect performance
+// OPM_TIMEFUNCTION - time block of main part of codes which do not effect performance with name from function
 // OPM_TIMEBLOCK_LOCAL - detailed timing which may effect performance
+// OPM_TIMEFUNCTION_LOCAL - detailed timing which may effect performance with name from function
 
+#ifndef DETAILED_PROFILING
 #define DETAILED_PROFILING 0 // set to 1 to enable invasive profiling
+#endif
 
 #if USE_TRACY
 #define TRACY_ENABLE 1
 #include <tracy/Tracy.hpp>
 #define OPM_TIMEBLOCK(blockname) ZoneNamedN(blockname, #blockname, true)
+#define OPM_TIMEFUNCTION() ZoneNamedN(myname, __func__, true)
 #if DETAILED_PROFILING
 #define OPM_TIMEBLOCK_LOCAL(blockname) ZoneNamedN(blockname, #blockname, true)
+#define OPM_TIMEFUNCTION_LOCAL() ZoneNamedN(myname, __func__, true)
 #endif
 #endif
 
@@ -45,6 +51,14 @@
     do { /* nothing */ } while (false)
 #endif
 
-#undef DETAILED_PROFILING
+#ifndef OPM_TIMEFUNCTION
+#define OPM_TIMEFUNCTION()\
+    do { /* nothing */ } while (false)
+#endif
+
+#ifndef OPM_TIMEFUNCTION_LOCAL
+#define OPM_TIMEFUNCTION_LOCAL()\
+    do { /* nothing */ } while (false)
+#endif
 
 #endif // OPM_TIMINGMACROS_HPP

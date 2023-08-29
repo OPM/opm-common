@@ -102,6 +102,7 @@ public:
                                        Evaluation& ygH2O,
                                        bool extrapolate = false)
     {
+        OPM_TIMEFUNCTION_LOCAL();
         Evaluation A = computeA_(temperature, pg, extrapolate);
 
         /* salinity: conversion from mass fraction to mol fraction */
@@ -150,6 +151,7 @@ public:
     template <class Evaluation>
     static Evaluation fugacityCoefficientCO2(const Evaluation& temperature, const Evaluation& pg, bool extrapolate = false)
     {
+        OPM_TIMEFUNCTION_LOCAL();
         Valgrind::CheckDefined(temperature);
         Valgrind::CheckDefined(pg);
 
@@ -187,6 +189,7 @@ public:
     template <class Evaluation>
     static Evaluation fugacityCoefficientH2O(const Evaluation& temperature, const Evaluation& pg, bool extrapolate = false)
     {
+        OPM_TIMEFUNCTION_LOCAL();
         const Evaluation& V = 1 / (CO2::gasDensity(temperature, pg, extrapolate) / CO2::molarMass()) * 1.e6; // molar volume in cm^3/mol
         const Evaluation& pg_bar = pg / 1.e5; // gas phase pressure in bar
         const Evaluation& a_CO2 = (7.54e7 - 4.13e4 * temperature);// mixture parameter of  Redlich-Kwong equation
@@ -214,7 +217,7 @@ private:
      */
     template <class Evaluation>
     static Evaluation salinityToMolFrac_(const Evaluation& salinity) {
-
+        OPM_TIMEFUNCTION_LOCAL();
         const Scalar Mw = H2O::molarMass(); /* molecular weight of water [kg/mol] */
         const Scalar Ms = 58.44e-3; /* molecular weight of NaCl  [kg/mol] */
 
@@ -246,6 +249,7 @@ private:
     template <class Evaluation>
     static Evaluation molalityCO2inPureWater_(const Evaluation& temperature, const Evaluation& pg, bool extrapolate = false)
     {
+        OPM_TIMEFUNCTION_LOCAL();
         const Evaluation& A = computeA_(temperature, pg, extrapolate); // according to Spycher, Pruess and Ennis-King (2003)
         const Evaluation& B = computeB_(temperature, pg, extrapolate); // according to Spycher, Pruess and Ennis-King (2003)
         const Evaluation& yH2OinGas = (1 - B) / (1. / A - B); // equilibrium mol fraction of H2O in the gas phase
@@ -267,6 +271,7 @@ private:
                                            const Evaluation& pg,
                                            const Evaluation& molalityNaCl)
     {
+        OPM_TIMEFUNCTION_LOCAL();
         const Evaluation& lambda = computeLambda_(temperature, pg); // lambda_{CO2-Na+}
         const Evaluation& xi = computeXi_(temperature, pg); // Xi_{CO2-Na+-Cl-}
         const Evaluation& lnGammaStar =
@@ -285,6 +290,7 @@ private:
     template <class Evaluation>
     static Evaluation computeA_(const Evaluation& temperature, const Evaluation& pg, bool extrapolate = false)
     {
+        OPM_TIMEFUNCTION_LOCAL();
         const Evaluation& deltaP = pg / 1e5 - 1; // pressure range [bar] from p0 = 1bar to pg[bar]
         Scalar v_av_H2O = 18.1; // average partial molar volume of H2O [cm^3/mol]
         Scalar R = IdealGas::R * 10;
@@ -305,6 +311,7 @@ private:
     template <class Evaluation>
     static Evaluation computeB_(const Evaluation& temperature, const Evaluation& pg, bool extrapolate = false)
     {
+        OPM_TIMEFUNCTION_LOCAL();
         const Evaluation& deltaP = pg / 1e5 - 1; // pressure range [bar] from p0 = 1bar to pg[bar]
         const Scalar v_av_CO2 = 32.6; // average partial molar volume of CO2 [cm^3/mol]
         const Scalar R = IdealGas::R * 10;
@@ -324,6 +331,7 @@ private:
     template <class Evaluation>
     static Evaluation computeLambda_(const Evaluation& temperature, const Evaluation& pg)
     {
+        OPM_TIMEFUNCTION_LOCAL();
         static const Scalar c[6] =
             { -0.411370585, 6.07632013E-4, 97.5347708, -0.0237622469, 0.0170656236, 1.41335834E-5 };
 
@@ -347,6 +355,7 @@ private:
     template <class Evaluation>
     static Evaluation computeXi_(const Evaluation& temperature, const Evaluation& pg)
     {
+        OPM_TIMEFUNCTION_LOCAL();
         static const Scalar c[4] =
             { 3.36389723E-4, -1.98298980E-5, 2.12220830E-3, -5.24873303E-3 };
 
@@ -363,6 +372,7 @@ private:
     template <class Evaluation>
     static Evaluation equilibriumConstantCO2_(const Evaluation& temperature)
     {
+        OPM_TIMEFUNCTION_LOCAL();
         Evaluation temperatureCelcius = temperature - 273.15;
         static const Scalar c[3] = { 1.189, 1.304e-2, -5.446e-5 };
         Evaluation logk0_CO2 = c[0] + temperatureCelcius*(c[1] + temperatureCelcius*c[2]);
@@ -379,6 +389,7 @@ private:
     template <class Evaluation>
     static Evaluation equilibriumConstantH2O_(const Evaluation& temperature)
     {
+        OPM_TIMEFUNCTION_LOCAL();
         Evaluation temperatureCelcius = temperature - 273.15;
         static const Scalar c[4] = { -2.209, 3.097e-2, -1.098e-4, 2.048e-7 };
         Evaluation logk0_H2O =
