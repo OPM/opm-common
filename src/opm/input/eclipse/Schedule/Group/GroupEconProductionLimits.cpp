@@ -201,19 +201,6 @@ int GroupEconProductionLimits::GEconGroup::reportStep() const {
     return m_report_step;
 }
 
-template<class Serializer>
-void GroupEconProductionLimits::GEconGroup::serializeOp(Serializer& serializer)
-{
-    serializer(m_min_oil_rate);
-    serializer(m_min_gas_rate);
-    serializer(m_max_water_cut);
-    serializer(m_max_gas_oil_ratio);
-    serializer(m_max_water_gas_ratio);
-    serializer(m_workover);
-    serializer(m_end_run);
-    serializer(m_max_open_wells);
-}
-
 GroupEconProductionLimits::GEconGroup GroupEconProductionLimits::GEconGroup::serializationTestObject()
 {
     GEconGroup group;

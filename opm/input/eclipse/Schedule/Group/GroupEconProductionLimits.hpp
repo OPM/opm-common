@@ -59,7 +59,18 @@ public:
         int maxOpenWells() const;
         bool operator==(const GEconGroup& other) const;
         int reportStep() const;
-        template<class Serializer> void serializeOp(Serializer& serializer);
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer(m_min_oil_rate);
+            serializer(m_min_gas_rate);
+            serializer(m_max_water_cut);
+            serializer(m_max_gas_oil_ratio);
+            serializer(m_max_water_gas_ratio);
+            serializer(m_workover);
+            serializer(m_end_run);
+            serializer(m_max_open_wells);
+        }
         static GEconGroup serializationTestObject();
         EconWorkover workover() const;
 
