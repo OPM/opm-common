@@ -117,7 +117,11 @@ public:
     bool has_group(const std::string& gname) const;
     bool operator==(const GroupEconProductionLimits& other) const;
     bool operator!=(const GroupEconProductionLimits& other) const;
-    template<class Serializer> void serializeOp(Serializer& serializer) const;
+    template<class Serializer>
+    void serializeOp(Serializer& serializer) const
+    {
+        serializer(m_groups);
+    }
     static GroupEconProductionLimits serializationTestObject();
     size_t size() const;
 

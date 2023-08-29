@@ -96,29 +96,6 @@ bool GroupEconProductionLimits::operator!=(const GroupEconProductionLimits& othe
 }
 
 
-template<class Serializer>
-void GroupEconProductionLimits::serializeOp(Serializer& serializer) const
-{
-    serializer(m_groups);
-}
-
-// TODO: The template function serializeOp() needs to be specialized here or else
-//  the linker will not be able to link test_Serialization. The error I got was
-//
-//  CMakeFiles/test_Serialization.dir/tests/test_Serialization.cpp.o:
-//    in function `void Opm::Serializer<Opm::Serialization::MemPacker>
-//    ::operator()<Opm::GroupEconProductionLimits>(Opm::GroupEconProductionLimits const&)':
-//    /home/hakon/test/opm/opm-common/opm/common/utility/Serializer.hpp:113:
-//    undefined reference to `void Opm::GroupEconProductionLimits::serializeOp<
-//    Opm::Serializer<Opm::Serialization::MemPacker> >(Opm::Serializer<Opm::Serialization::MemPacker>&)'
-//  collect2: error: ld returned 1 exit status
-//
-template<> void GroupEconProductionLimits::serializeOp(
-    Opm::Serializer<Opm::Serialization::MemPacker>& serializer) const
-{
-    serializer(m_groups);
-}
-
 
 GroupEconProductionLimits GroupEconProductionLimits::serializationTestObject()
 {
