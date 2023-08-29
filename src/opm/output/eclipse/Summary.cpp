@@ -741,27 +741,28 @@ inline quantity rate( const fn_args& args ) {
 template <bool injection = true>
 inline quantity filtrate_connection_quantities( const fn_args& args ) {
 
-    auto get_unit = [&args]() -> measure {
-        static std::unordered_map<std::string, measure> units = {
-                {"CINJFVR", measure::geometric_volume_rate},
-                {"CINJFVT", measure::geometric_volume},
-                {"CFCWIDTH", measure::length},
-                {"CFCSKIN", measure::identity},
-                {"CFCPORO", measure::identity},
-                {"CFCPERM", measure::permeability},
-                { "CFCRAD",  measure::length},
-                { "CFCAOF",  measure::area}
+    static const auto conn_quant =
+            std::unordered_map<std::string, std::pair<measure, double Opm::data::ConnectionFiltrate::*> >{
+                    {"CINJFVR",  {measure::geometric_volume_rate, &Opm::data::ConnectionFiltrate::rate}},
+                    {"CINJFVT",  {measure::geometric_volume,      &Opm::data::ConnectionFiltrate::total}},
+                    {"CFCWIDTH", {measure::length,                &Opm::data::ConnectionFiltrate::thickness}},
+                    {"CFCSKIN",  {measure::identity,              &Opm::data::ConnectionFiltrate::skin_factor}},
+                    {"CFCPORO",  {measure::identity,              &Opm::data::ConnectionFiltrate::poro}},
+                    {"CFCPERM",  {measure::permeability,          &Opm::data::ConnectionFiltrate::perm}},
+                    {"CFCRAD",   {measure::length,                &Opm::data::ConnectionFiltrate::radius}},
+                    {"CFCAOF",   {measure::area,                  &Opm::data::ConnectionFiltrate::area_of_flow}}
+            };
+
+    auto quant_pos = conn_quant.find(args.keyword_name);
+
+    if (quant_pos == conn_quant.end()) {
+        throw std::logic_error{
+                fmt::format("Unsupported connection summary keyword {} "
+                            "for filtrate injection modeling", args.keyword_name)
         };
+    }
 
-        auto it = units.find(args.keyword_name);
-
-        // if could not find, there is some wrong usage of the function
-        assert(it != units.end());
-
-        return it->second;
-    };
-
-    const measure unit = get_unit();
+    const auto& [unit, quant_ptr] = quant_pos->second;
 
     const quantity zero = { 0., unit };
 
@@ -796,50 +797,30 @@ inline quantity filtrate_connection_quantities( const fn_args& args ) {
         return zero;
     }
 
-    const auto& filtrate = connection->filtrate;
-    if (args.keyword_name == "CINJFVR") {
-        return {filtrate.rate, unit};
-    } else if (args.keyword_name == "CINJFVT") {
-        return {filtrate.total, unit};
-    } else if (args.keyword_name == "CFCWIDTH") {
-        return {filtrate.thickness, unit};
-    } else if (args.keyword_name == "CFCSKIN") {
-        return {filtrate.skin_factor, unit};
-    } else if (args.keyword_name == "CFCPORO") {
-        return {filtrate.poro, unit};
-    } else if (args.keyword_name == "CFCPERM") {
-        return {filtrate.perm, unit};
-    } else if (args.keyword_name == "CFCRAD") {
-        return {filtrate.radius, unit};
-    } else if (args.keyword_name == "CFCAOF") {
-        return {filtrate.area_of_flow, unit};
-    } else {
-        throw std::invalid_argument{
-            fmt::format("Unsupported connection summary keyword {} "
-                             "for filtrate injection modeling", args.keyword_name)
-        };
-    }
+    return {connection->filtrate.*quant_ptr, unit };
 }
 
 template <bool injection = true>
 inline quantity filtrate_well_quantities( const fn_args& args ) {
-    auto get_unit = [&args]() -> measure {
-        static std::unordered_map<std::string, measure> units = {
-                {"WINJFVR", measure::geometric_volume_rate},
-                {"WINJFVT", measure::geometric_volume},
-                {"WINJFC", measure::ppm}
+
+    static const auto well_quant =
+            std::unordered_map<std::string, std::pair<measure, double Opm::data::WellFiltrate::*> > {
+                    {"WINJFVR", {measure::geometric_volume_rate, &Opm::data::WellFiltrate::rate}},
+                    {"WINJFVT", {measure::geometric_volume,      &Opm::data::WellFiltrate::total}},
+                    {"WINJFC",  {measure::ppm,                   &Opm::data::WellFiltrate::concentration}}
+            };
+
+    auto quant_pos = well_quant.find(args.keyword_name);
+
+    if (quant_pos == well_quant.end()) {
+        throw std::logic_error{
+                fmt::format("Unsupported well summary keyword {} "
+                            "for filtrate injection modeling", args.keyword_name)
         };
+    }
 
-        auto it = units.find(args.keyword_name);
 
-        // if could not find, there is some wrong usage of the function
-        assert(it != units.end());
-
-        return it->second;
-    };
-
-    const auto unit = get_unit();
-
+    const auto& [unit, quant_ptr] = quant_pos->second;
     const quantity zero {0., unit};
 
     if (args.schedule_wells.empty()) {
@@ -856,19 +837,7 @@ inline quantity filtrate_well_quantities( const fn_args& args ) {
     }
 
     const auto& well_filtrate = xwPos->second.filtrate;
-
-    if (args.keyword_name == "WINJFVR") {
-        return {well_filtrate.rate, unit};
-    } else if (args.keyword_name == "WINJFVT") {
-        return {well_filtrate.total, unit};
-    } else if (args.keyword_name == "WINJFC") {
-        return {well_filtrate.concentration, unit};
-    } else {
-        throw std::invalid_argument{
-                fmt::format("Unsupported well summary keyword {} "
-                                 "for filtrate injection modeling", args.keyword_name)
-        };
-    }
+    return {well_filtrate.*quant_ptr, unit};
 }
 
 template< rt tracer, rt phase, bool injection = true >
