@@ -196,6 +196,53 @@ namespace Opm {
             double vaporized_water = 0.0;
     };
 
+    struct ConnectionFiltrate {
+        double rate;
+        double total;
+        double skin_factor;
+        double thickness;
+        double perm;
+        double poro;
+        double radius;
+        double area_of_flow;
+
+        template<class Serializer>
+        void serializeOp(Serializer& serializer) {
+            serializer(rate);
+            serializer(total);
+            serializer(skin_factor);
+            serializer(thickness);
+            serializer(perm);
+            serializer(poro);
+            serializer(radius);
+            serializer(area_of_flow);
+        }
+
+        bool operator==(const ConnectionFiltrate& filtrate) const
+        {
+            return this->rate == filtrate.rate &&
+                   this->total == filtrate.total &&
+                   this->skin_factor == filtrate.skin_factor &&
+                   this->thickness == filtrate.thickness &&
+                   this->perm == filtrate.perm &&
+                   this->poro == filtrate.poro &&
+                   this->radius == filtrate.radius &&
+                   this->area_of_flow == filtrate.area_of_flow;
+        }
+
+        static ConnectionFiltrate serializationTestObject()
+        {
+            return {0.8, 100., -1., 2., 1.e-9,
+                    0.3, 0.05, 0.8};
+        }
+
+        template <class MessageBufferType>
+        void write(MessageBufferType& buffer) const;
+
+        template <class MessageBufferType>
+        void read(MessageBufferType& buffer);
+    };
+
     struct Connection {
         using global_index = size_t;
         static const constexpr int restart_size = 6;
@@ -210,6 +257,8 @@ namespace Opm {
         double effective_Kh;
         double trans_factor;
 
+        ConnectionFiltrate filtrate;
+
         bool operator==(const Connection& conn2) const
         {
             return index == conn2.index &&
@@ -220,7 +269,8 @@ namespace Opm {
                    cell_saturation_water == conn2.cell_saturation_water &&
                    cell_saturation_gas == conn2.cell_saturation_gas &&
                    effective_Kh == conn2.effective_Kh &&
-                   trans_factor == conn2.trans_factor;
+                   trans_factor == conn2.trans_factor &&
+                   filtrate == conn2.filtrate;
         }
 
         template <class MessageBufferType>
@@ -242,13 +292,15 @@ namespace Opm {
             serializer(cell_saturation_gas);
             serializer(effective_Kh);
             serializer(trans_factor);
+            serializer(filtrate);
         }
 
         static Connection serializationTestObject()
         {
             return Connection{1, Rates::serializationTestObject(),
                               2.0, 3.0, 4.0, 5.0,
-                              6.0, 7.0, 8.0};
+                              6.0, 7.0, 8.0,
+                              ConnectionFiltrate::serializationTestObject() };
         }
     };
 
@@ -662,12 +714,47 @@ namespace Opm {
         std::array<double, NumQuantities> wbp_{};
     };
 
+    struct WellFiltrate {
+        double rate{0.};
+        double total{0.};
+        double concentration{0.};
+
+        template<class Serializer>
+        void serializeOp(Serializer& serializer) {
+            serializer(rate);
+            serializer(total);
+            serializer(concentration);
+        }
+
+        bool operator==(const WellFiltrate& filtrate) const {
+           return this->rate == filtrate.rate
+              && this->total == filtrate.total
+              && this->concentration == filtrate.concentration;
+        }
+
+        static WellFiltrate serializationTestObject() {
+            WellFiltrate res;
+            res.rate = 1.;
+            res.total = 10.;
+            res.concentration = 0.;
+            return res;
+        }
+
+        template <class MessageBufferType>
+        void write(MessageBufferType& buffer) const;
+
+        template <class MessageBufferType>
+        void read(MessageBufferType& buffer);
+    };
+
     struct Well {
         Rates rates{};
         double bhp{0.0};
         double thp{0.0};
         double temperature{0.0};
         int control{0};
+
+        WellFiltrate filtrate;
 
         ::Opm::WellStatus dynamicStatus { Opm::WellStatus::OPEN };
 
@@ -714,6 +801,7 @@ namespace Opm {
                 && (this->bhp == well2.bhp)
                 && (this->thp == well2.thp)
                 && (this->temperature == well2.temperature)
+                && (this->filtrate == well2.filtrate)
                 && (this->control == well2.control)
                 && (this->dynamicStatus == well2.dynamicStatus)
                 && (this->connections == well2.connections)
@@ -731,6 +819,7 @@ namespace Opm {
             serializer(thp);
             serializer(temperature);
             serializer(control);
+            serializer(filtrate);
             serializer(dynamicStatus);
             serializer(connections);
             serializer(segments);
@@ -746,6 +835,7 @@ namespace Opm {
                 2.0,
                 3.0,
                 4,
+                WellFiltrate::serializationTestObject(),
                 ::Opm::WellStatus::SHUT,
                 {Connection::serializationTestObject()},
                 {{0, Segment::serializationTestObject()}},
@@ -1071,6 +1161,18 @@ namespace Opm {
     }
 
     template <class MessageBufferType>
+    void ConnectionFiltrate::write(MessageBufferType& buffer) const {
+        buffer.write(this->rate);
+        buffer.write(this->total);
+        buffer.write(this->skin_factor);
+        buffer.write(this->thickness);
+        buffer.write(this->perm);
+        buffer.write(this->poro);
+        buffer.write(this->radius);
+        buffer.write(this->area_of_flow);
+    }
+
+    template <class MessageBufferType>
     void Connection::write(MessageBufferType& buffer) const {
             buffer.write(this->index);
             this->rates.write(buffer);
@@ -1081,6 +1183,7 @@ namespace Opm {
             buffer.write(this->cell_saturation_gas);
             buffer.write(this->effective_Kh);
             buffer.write(this->trans_factor);
+            this->filtrate.write(buffer);
     }
 
     void Connection::init_json(Json::JsonObject& json_data) const {
@@ -1130,12 +1233,21 @@ namespace Opm {
     }
 
     template <class MessageBufferType>
+    void WellFiltrate::write(MessageBufferType& buffer) const
+    {
+        buffer.write(this->rate);
+        buffer.write(this->total);
+        buffer.write(this->concentration);
+    }
+
+    template <class MessageBufferType>
     void Well::write(MessageBufferType& buffer) const {
         this->rates.write(buffer);
         buffer.write(this->bhp);
         buffer.write(this->thp);
         buffer.write(this->temperature);
         buffer.write(this->control);
+        this->filtrate.write(buffer);
 
         {
             const auto status = ::Opm::WellStatus2String(this->dynamicStatus);
@@ -1208,6 +1320,18 @@ namespace Opm {
             buffer.read(this->vaporized_water);
     }
 
+    template <class MessageBufferType>
+    void ConnectionFiltrate::read(MessageBufferType& buffer) {
+        buffer.read(this->rate);
+        buffer.read(this->total);
+        buffer.read(this->skin_factor);
+        buffer.read(this->thickness);
+        buffer.read(this->perm);
+        buffer.read(this->poro);
+        buffer.read(this->radius);
+        buffer.read(this->area_of_flow);
+    }
+
    template <class MessageBufferType>
    void Connection::read(MessageBufferType& buffer) {
             buffer.read(this->index);
@@ -1219,6 +1343,7 @@ namespace Opm {
             buffer.read(this->cell_saturation_gas);
             buffer.read(this->effective_Kh);
             buffer.read(this->trans_factor);
+            this->filtrate.read(buffer);
    }
 
     template <class MessageBufferType>
@@ -1254,12 +1379,21 @@ namespace Opm {
     }
 
     template <class MessageBufferType>
+    void WellFiltrate::read(MessageBufferType& buffer)
+    {
+        buffer.read(this->rate);
+        buffer.read(this->total);
+        buffer.read(this->concentration);
+    }
+
+    template <class MessageBufferType>
     void Well::read(MessageBufferType& buffer) {
         this->rates.read(buffer);
         buffer.read(this->bhp);
         buffer.read(this->thp);
         buffer.read(this->temperature);
         buffer.read(this->control);
+        this->filtrate.read(buffer);
 
         {
             auto status = std::string{};

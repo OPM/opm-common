@@ -730,13 +730,14 @@ BOOST_AUTO_TEST_CASE(test_RFT)
         r2.set( Opm::data::Rates::opt::gas, 4.23 );
 
         std::vector<Opm::data::Connection> well1_comps(9);
+        Opm::data::ConnectionFiltrate con_filtrate {0.1, 1, 3, 0.4, 1.e-9, 0.2, 0.05, 10.}; // values are not used in this test
         for (size_t i = 0; i < 9; ++i) {
-            Opm::data::Connection well_comp { grid.getGlobalIndex(8,8,i) ,r1, 0.0 , 0.0, (double)i, 0.1*i,0.2*i, 1.2e3, 4.321};
+            Opm::data::Connection well_comp { grid.getGlobalIndex(8,8,i) ,r1, 0.0 , 0.0, (double)i, 0.1*i,0.2*i, 1.2e3, 4.321, con_filtrate};
             well1_comps[i] = std::move(well_comp);
         }
         std::vector<Opm::data::Connection> well2_comps(6);
         for (size_t i = 0; i < 6; ++i) {
-            Opm::data::Connection well_comp { grid.getGlobalIndex(3,3,i+3) ,r2, 0.0 , 0.0, (double)i, i*0.1,i*0.2, 0.15, 0.54321};
+            Opm::data::Connection well_comp { grid.getGlobalIndex(3,3,i+3) ,r2, 0.0 , 0.0, (double)i, i*0.1,i*0.2, 0.15, 0.54321, con_filtrate};
             well2_comps[i] = std::move(well_comp);
         }
 
@@ -747,13 +748,14 @@ BOOST_AUTO_TEST_CASE(test_RFT)
         using SegRes = decltype(wells["w"].segments);
         using Ctrl = decltype(wells["w"].current_control);
 
+        Opm::data::WellFiltrate well_filtrate {0.1, 500., 0.3}; // values are not used in this test
         wells["OP_1"] = {
-            std::move(r1), 1.0, 1.1, 3.1, 1,
+            std::move(r1), 1.0, 1.1, 3.1, 1, well_filtrate,
             ::Opm::Well::Status::OPEN,
-            std::move(well1_comps), SegRes{}, Ctrl{}
+            std::move(well1_comps), SegRes{}, Ctrl{},
         };
         wells["OP_2"] = {
-            std::move(r2), 1.0, 1.1, 3.2, 1,
+            std::move(r2), 1.0, 1.1, 3.2, 1, well_filtrate,
             ::Opm::Well::Status::OPEN,
             std::move(well2_comps), SegRes{}, Ctrl{}
         };
@@ -867,13 +869,14 @@ BOOST_AUTO_TEST_CASE(test_RFT2)
                 r2.set( Opm::data::Rates::opt::gas, 4.23 );
 
                 std::vector<Opm::data::Connection> well1_comps(9);
+                Opm::data::ConnectionFiltrate con_filtrate {0.1, 1, 3, 0.4, 1.e-9, 0.2, 0.05, 10.}; // values are not used in this test
                 for (size_t i = 0; i < 9; ++i) {
-                    Opm::data::Connection well_comp { grid.getGlobalIndex(8,8,i) ,r1, 0.0 , 0.0, (double)i, 0.1*i,0.2*i, 3.14e5, 0.1234};
+                    Opm::data::Connection well_comp { grid.getGlobalIndex(8,8,i) ,r1, 0.0 , 0.0, (double)i, 0.1*i,0.2*i, 3.14e5, 0.1234, con_filtrate};
                     well1_comps[i] = std::move(well_comp);
                 }
                 std::vector<Opm::data::Connection> well2_comps(6);
                 for (size_t i = 0; i < 6; ++i) {
-                    Opm::data::Connection well_comp { grid.getGlobalIndex(3,3,i+3) ,r2, 0.0 , 0.0, (double)i, i*0.1,i*0.2, 355.113, 0.9876};
+                    Opm::data::Connection well_comp { grid.getGlobalIndex(3,3,i+3) ,r2, 0.0 , 0.0, (double)i, i*0.1,i*0.2, 355.113, 0.9876, con_filtrate};
                     well2_comps[i] = std::move(well_comp);
                 }
 
@@ -883,13 +886,14 @@ BOOST_AUTO_TEST_CASE(test_RFT2)
                 using SegRes = decltype(wells["w"].segments);
                 using Ctrl = decltype(wells["w"].current_control);
 
+                Opm::data::WellFiltrate well_filtrate {0.1, 500., 0.3}; // values are not used in this test
                 wells["OP_1"] = {
-                    std::move(r1), 1.0, 1.1, 3.1, 1,
+                    std::move(r1), 1.0, 1.1, 3.1, 1, well_filtrate,
                     ::Opm::Well::Status::OPEN,
                     std::move(well1_comps), SegRes{}, Ctrl{}
                 };
                 wells["OP_2"] = {
-                    std::move(r2), 1.0, 1.1, 3.2, 1,
+                    std::move(r2), 1.0, 1.1, 3.2, 1, well_filtrate,
                     ::Opm::Well::Status::OPEN,
                     std::move(well2_comps), SegRes{}, Ctrl{}
                 };
