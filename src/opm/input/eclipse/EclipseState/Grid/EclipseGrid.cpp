@@ -62,8 +62,6 @@
 #include <numeric>
 #include <tuple>
 
-#include <iostream>
-
 #include <fmt/format.h>
 
 namespace Opm {
