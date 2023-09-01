@@ -155,7 +155,7 @@ EclipseGrid::EclipseGrid(const GridDims& gd)
 
 
 EclipseGrid::EclipseGrid(size_t nx, size_t ny , size_t nz,
-                         double dx, double dy, double dz)
+                         double dx, double dy, double dz, double top)
     : GridDims(nx, ny, nz),
       m_minpvMode(MinpvMode::Inactive),
       m_pinchoutMode(PinchMode::TOPBOT),
@@ -186,8 +186,8 @@ EclipseGrid::EclipseGrid(size_t nx, size_t ny , size_t nz,
                 // top face of cell
                 int zind = i*2 + j*nx*4 + k*nx*ny*8;
 
-                double zt = k*dz;
-                double zb = (k+1)*dz;
+                double zt = top + k*dz;
+                double zb = top + (k+1)*dz;
 
                 m_zcorn[zind] = zt;
                 m_zcorn[zind + 1] = zt;
