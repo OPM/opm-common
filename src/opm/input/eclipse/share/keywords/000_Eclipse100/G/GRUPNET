@@ -11,7 +11,8 @@
     },
     {
       "name": "TERMINAL_PRESSURE",
-      "value_type": "DOUBLE"
+      "value_type": "DOUBLE",
+      "dimension": "Pressure"
     },
     {
       "name": "VFP_TABLE",
@@ -34,7 +35,7 @@
       "default": "NO"
     },
     {
-      "name": "ALQ_SURFACE_EQV",
+      "name": "ALQ_SURFACE_DENSITY",
       "value_type": "STRING",
       "default": "NONE"
     }

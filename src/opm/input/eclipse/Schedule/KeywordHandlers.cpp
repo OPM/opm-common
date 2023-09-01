@@ -766,18 +766,59 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
     }
 
     void Schedule::handleGRUPNET(HandlerContext& handlerContext) {
+        auto network = this->snapshots.back().network.get();
+        std::vector<Network::Node> nodes;
         for (const auto& record : handlerContext.keyword) {
-            const auto& groupName = record.getItem("NAME").getTrimmedString(0);
+             const std::string& groupNamePattern = record.getItem<ParserKeywords::GRUPNET::NAME>().getTrimmedString(0);
+             const auto group_names = this->groupNames(groupNamePattern);
+             if (group_names.empty())
+                 this->invalidNamePattern(groupNamePattern, handlerContext);
+             const auto& pressure_item = record.getItem<ParserKeywords::GRUPNET::TERMINAL_PRESSURE>();
+             const int vfp_table = record.getItem<ParserKeywords::GRUPNET::VFP_TABLE>().get<int>(0);
 
-            if (!this->snapshots.back().groups.has(groupName))
-                addGroup(groupName , handlerContext.currentStep);
-
-            int table = record.getItem("VFP_TABLE").get< int >(0);
-
-            auto new_group = this->snapshots.back().groups.get( groupName );
-            if (new_group.updateNetVFPTable(table))
-                this->snapshots.back().groups.update( std::move(new_group) );
+             for (const auto& group_name : group_names) {
+                  const auto& group = this->snapshots.back().groups.get(group_name);
+                  const std::string& downtree_node = group_name;
+                  const std::string& uptree_node = group.parent();
+                  Network::Node node { group_name };
+                  // A terminal node is a node with a fixed pressure
+                  const bool is_terminal_node = pressure_item.hasValue(0) && (pressure_item.get<double>(0) >= 0);
+                  if (is_terminal_node) {
+                      if (vfp_table > 0) {
+                          std::string msg = fmt::format("The group {} is a terminal node of the network and should not have a vfp table assigned to it.", group_name);
+                          throw OpmInputError(msg, handlerContext.keyword.location());
+                      }
+                      node.terminal_pressure(pressure_item.getSIDouble(0));
+                      nodes.push_back(node);
+                      // Remove the  branch upstream if it was part of the network
+                      if (network.has_node(downtree_node) && network.has_node(uptree_node))
+                          network.drop_branch(uptree_node, downtree_node);
+                  } else {
+                       if (vfp_table <= 0) {
+                           // If vfp table is defaulted (or set to <=0) then the group is not part of the network.
+                           // If the branch was part of the network then drop it
+                           if (network.has_node(downtree_node) && network.has_node(uptree_node))
+                               network.drop_branch(uptree_node, downtree_node);
+                       } else {
+                            if (!uptree_node.empty()) {
+                                const auto alq_eq = Network::Branch::AlqEqfromString(record.getItem<ParserKeywords::GRUPNET::ALQ_SURFACE_DENSITY>().get<std::string>(0));
+                                if (alq_eq == Network::Branch::AlqEQ::ALQ_INPUT) {
+                                    const double alq_value = record.getItem<ParserKeywords::GRUPNET::ALQ>().get<double>(0);
+                                    network.add_branch(Network::Branch(downtree_node, uptree_node, vfp_table, alq_value));
+                                } else {
+                                     network.add_branch(Network::Branch(downtree_node, uptree_node, vfp_table, alq_eq));
+                                }
+                            }
+                            nodes.push_back(node);
+                       }
+                  }
+             }
         }
+        // To use update_node the node should be associated to a branch via add_branch()
+        // so the update of nodes is postponed after creation of branches
+        for(const auto& node: nodes)
+              network.update_node(node);
+        this->snapshots.back().network.update( std::move(network));
     }
 
     void Schedule::handleGRUPTREE(HandlerContext& handlerContext) {
@@ -987,11 +1028,18 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
             const auto& deck_item = rec.getItem(item_name);
             return deck_item.defaultApplied(0) ? previous_value : rec.getItem(item_name).getSIDouble(0);
         };
+
+        // \Note No TSTINIT value should not be used unless explicitly non-defaulted, hence removing value by default
+        // \Note (exception is the first time step, which is handled by the Tuning constructor)
+        tuning.TSINIT = std::nullopt;
         
         if (numrecords > 0) {
             const auto& record1 = handlerContext.keyword.getRecord(0);
 
-            tuning.TSINIT = nondefault_or_previous_sidouble(record1, "TSINIT", tuning.TSINIT); 
+            // \Note A value indicates TSINIT was set in this record
+            if (const auto& deck_item = record1.getItem("TSINIT"); !deck_item.defaultApplied(0)) 
+                tuning.TSINIT = std::optional<double>{ record1.getItem("TSINIT").getSIDouble(0) };
+
             tuning.TSMAXZ = nondefault_or_previous_sidouble(record1, "TSMAXZ", tuning.TSMAXZ);
             tuning.TSMINZ = nondefault_or_previous_sidouble(record1, "TSMINZ", tuning.TSMINZ);
             tuning.TSMCHP = nondefault_or_previous_sidouble(record1, "TSMCHP", tuning.TSMCHP);
@@ -2002,9 +2050,8 @@ Well{0} entered with 'FIELD' parent group:
             const auto well_names = this->wellNames(wellNamePattern, handlerContext);
             for (const auto& well_name: well_names) {
                 auto well = this->snapshots.back().wells(well_name);
-                const auto filter_conc = record.getItem<ParserKeywords::WINJFCNC::VOL_CONCENTRATION>().get<double>(0);
-                // the unit is ppm_vol
-                well.setFilterConc(filter_conc/1.e6);
+                const auto filter_conc = record.getItem<ParserKeywords::WINJFCNC::VOL_CONCENTRATION>().get<UDAValue>(0);
+                well.setFilterConc(filter_conc );
                 this->snapshots.back().wells.update(std::move(well));
             }
         }

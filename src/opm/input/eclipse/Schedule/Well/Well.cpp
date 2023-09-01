@@ -51,6 +51,7 @@
 #include <opm/input/eclipse/Deck/DeckKeyword.hpp>
 
 #include "../MSW/Compsegs.hpp"
+#include "../eval_uda.hpp"
 
 #include <cassert>
 #include <cmath>
@@ -536,7 +537,7 @@ Well Well::serializationTestObject()
     result.m_pavg = PAvg();
     result.well_temperature = 10.0;
     result.well_inj_mult = InjMult::serializationTestObject();
-    result.m_filter_concentration = 0.1;
+    result.m_filter_concentration = UDAValue::serializationTestObject();
 
     return result;
 }
@@ -1767,10 +1768,15 @@ bool Opm::Well::aciveWellInjMult() const {
 }
 
 
-void Opm::Well::setFilterConc(const double conc) {
+void Opm::Well::setFilterConc(const UDAValue& conc) {
     this->m_filter_concentration = conc;
 }
 
+
 double Opm::Well::getFilterConc() const {
     return this->m_filter_concentration;
+}
+
+double Opm::Well::evalFilterConc(const SummaryState& summary_sate) const {
+    return UDA::eval_well_uda(this->m_filter_concentration, this->name(), summary_sate, 0.);
 }

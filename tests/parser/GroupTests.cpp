@@ -179,41 +179,6 @@ WCONPROD
 }
 
 
-
-
-
-BOOST_AUTO_TEST_CASE(createDeckWithGRUPNET) {
-    const std::string input = R"(
-START             -- 0
-31 AUG 1993 /
-SCHEDULE
-
-GRUPNET
- 'FIELD'     20.000  5* /
- 'PROD'     20.000  5* /
- 'MANI-B2'  1*    8  1*        'NO'  2* /
- 'MANI-B1'  1*    8  1*        'NO'  2* /
- 'MANI-K1'  1* 9999  4* /
- 'B1-DUMMY'  1* 9999  4* /
- 'MANI-D1'  1*    8  1*        'NO'  2* /
- 'MANI-D2'  1*    8  1*        'NO'  2* /
- 'MANI-K2'  1* 9999  4* /
- 'D2-DUMMY'  1* 9999  4* /
- 'MANI-E1'  1*    9  1*        'NO'  2* /
- 'MANI-E2'  1*    9  4* /
-/)";
-
-    auto schedule = create_schedule(input);
-
-    const auto& group1 = schedule.getGroup("PROD", 0);
-    const auto& group2 = schedule.getGroup("MANI-E2", 0);
-    const auto& group3 = schedule.getGroup("MANI-K1", 0);
-    BOOST_CHECK_EQUAL(group1.getGroupNetVFPTable(), 0);
-    BOOST_CHECK_EQUAL(group2.getGroupNetVFPTable(), 9);
-    BOOST_CHECK_EQUAL(group3.getGroupNetVFPTable(), 9999);
-}
-
-
 BOOST_AUTO_TEST_CASE(GroupCreate) {
     Opm::Group g1("NAME", 1, 0, UnitSystem::newMETRIC());
     Opm::Group g2("NAME", 1, 0, UnitSystem::newMETRIC());

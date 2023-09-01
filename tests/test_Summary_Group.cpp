@@ -171,13 +171,16 @@ static data::Wells result_wells() {
       syncronized with the global index in the COMPDAT keyword in the
       input deck.
     */
-    data::Connection well1_comp1 { 0  , crates1, 1.9 , 123.4, 314.15, 0.35, 0.25, 2.718e2, 0.12345};
+    data::ConnectionFiltrate con_filtrate {0.1, 1, 3, 0.4, 1.e-9, 0.2, 0.05, 10.}; // values are not tested in this test
+    data::Connection well1_comp1 { 0  , crates1, 1.9 , 123.4, 314.15, 0.35, 0.25, 2.718e2, 0.12345, con_filtrate };
 
     /*
       The completions
     */
+    data::WellFiltrate well_filtrate {0.1, 1., 0.3}; // values are not tested in this test
     data::Well well1 {
         rates1, 0.1 * ps, 0.2 * ps, 0.3 * ps, 1,
+        well_filtrate,
         ::Opm::Well::Status::OPEN,
         { {well1_comp1} },
         { { segment.segNumber, segment } },

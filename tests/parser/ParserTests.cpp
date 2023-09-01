@@ -2354,12 +2354,36 @@ GUIDERATE
 /
 )";
 
+   const auto stressequilnum_string = std::string { R"(RUNSPEC
+DIMENS
+1 5 2 /
+REGIONS
+STRESSEQUILNUM
+1 1 1 1 1
+2 2 2 2 2 /
+END
+)" };
+
    parseContext.update(ParseContext::PARSE_LONG_KEYWORD, Opm::InputErrorAction::THROW_EXCEPTION);
    BOOST_CHECK_THROW(parser.parseString(deck_string, parseContext, errors), OpmInputError);
 
-   parseContext.update(ParseContext::PARSE_LONG_KEYWORD, Opm::InputErrorAction::IGNORE);
-   auto deck = parser.parseString(deck_string, parseContext, errors);
-   BOOST_CHECK( deck.hasKeyword("GUIDERAT") );
+   errors.clear();
+
+   {
+       parseContext.update(ParseContext::PARSE_LONG_KEYWORD, Opm::InputErrorAction::IGNORE);
+       auto deck = parser.parseString(deck_string, parseContext, errors);
+       BOOST_CHECK( deck.hasKeyword("GUIDERAT") );
+   }
+
+   errors.clear();
+
+   {
+       parseContext.update(ParseContext::PARSE_LONG_KEYWORD, Opm::InputErrorAction::THROW_EXCEPTION);
+       const auto deck = parser.parseString(stressequilnum_string, parseContext, errors);
+
+       BOOST_CHECK_MESSAGE(deck.hasKeyword("STRESSEQUILNUM"),
+                           R"(Long keyword "STRESSEQUILNUM" must be present in input deck)");
+   }
 }
 
 BOOST_AUTO_TEST_CASE(DynamicParser1) {

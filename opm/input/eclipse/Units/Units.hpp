@@ -178,6 +178,8 @@ namespace Opm {
         constexpr const double Poise = prefix::deci*Pas;
         /// @}
 
+        constexpr const double ppm = 1. / prefix::mega;
+
         namespace perm_details {
             constexpr const double p_grad   = atm / (prefix::centi*meter);
             constexpr const double area     = square(prefix::centi*meter);
@@ -282,7 +284,7 @@ namespace Opm {
         constexpr const double SurfaceTension       = dyne/(centi*meter);
         constexpr const double Energy               = kilo*joule;
         constexpr const double Moles                = kilo*mol;
-        constexpr const double PPM                  = 1./mega;
+        constexpr const double PPM                  = ppm;
         constexpr const double Ymodule              = giga*Pascal;
     }
 
@@ -317,7 +319,7 @@ namespace Opm {
         constexpr const double SurfaceTension       = dyne/(centi*meter);
         constexpr const double Energy               = btu;
         constexpr const double Moles                = kilo*pound*mol;
-        constexpr const double PPM                  = 1./mega;
+        constexpr const double PPM                  = ppm;
         constexpr const double Ymodule              = giga*Pascal;
     }
 
@@ -352,7 +354,7 @@ namespace Opm {
         constexpr const double SurfaceTension       = dyne/(centi*meter);
         constexpr const double Energy               = joule;
         constexpr const double Moles                = mol;
-        constexpr const double PPM                  = 1./mega;
+        constexpr const double PPM                  = ppm;
         constexpr const double Ymodule              = giga*Pascal;
     }
 
@@ -387,7 +389,7 @@ namespace Opm {
         constexpr const double SurfaceTension       = dyne/(centi*meter);
         constexpr const double Energy               = kilo*joule;
         constexpr const double Moles                = kilo*mol;
-        constexpr const double PPM                  = 1./mega;
+        constexpr const double PPM                  = ppm;
         constexpr const double Ymodule              = giga*Pascal;
     }
 }

@@ -97,7 +97,30 @@ namespace Opm {
         bool hasKeyword( const std::string& ) const;
         const ParserKeyword& getKeyword(const std::string& name) const;
 
-        bool isRecognizedKeyword( const std::string_view& deckKeywordName) const;
+        /// Whether or not string is a valid keyword.
+        ///
+        /// The full keyword recognition process first verifies that the
+        /// input string looks like a valid keyword and, if so matches that
+        /// string against the builtin set of known keywords.  The function
+        /// additionally includes those keywords that match against keyword
+        /// collections, typically the SUMMARY section "meta" keywords in
+        /// the *_PROBE files.
+        ///
+        /// \return Whether or not \p deckKeywordName is a builtin deck
+        /// keyword or a known summary keyword.
+        bool isRecognizedKeyword(std::string_view deckKeywordName) const;
+
+        /// Whether or not string is a valid keyword.
+        ///
+        /// First checks that the input string looks like a valid keyword
+        /// and, if so, matches the string against the builtin set of known
+        /// keywords.
+        ///
+        /// \param[in] deckKeywordName Potential deck keyword.
+        ///
+        /// \return Whether or not \p deckKeywordName is a builtin deck keyword.
+        bool isBaseRecognizedKeyword(std::string_view deckKeywordName) const;
+
         const ParserKeyword& getParserKeywordFromDeckName(const std::string_view& deckKeywordName) const;
         std::vector<std::string> getAllDeckNames () const;
 
