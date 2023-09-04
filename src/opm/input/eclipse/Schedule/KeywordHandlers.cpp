@@ -796,9 +796,8 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
              const auto& pressure_item = record.getItem<ParserKeywords::GRUPNET::TERMINAL_PRESSURE>();
              const int vfp_table = record.getItem<ParserKeywords::GRUPNET::VFP_TABLE>().get<int>(0);
              // It is assumed here that item 6 (ADD_GAS_LIFT_GAS) has the two options ON and FLO. THe option ALQ is not supported.
-             // For standard network the summation of ALQ values are weighted with efficiency factors. For extended networks
-             // this calculation using efficiency factors is the default set by WEFAC item 3 (YES), the value NO is not supported. 
-             // Therefore in opm-simulators (opm/simulators/wells/WellGroupHelpers.cpp) no changes are needed.
+             // For standard networks the summation of ALQ values are weighted with efficiency factors. 
+             // Note that, currently, extended networks uses always efficiency factors (this is the default set by WEFAC item 3 (YES), the value NO is not supported.) 
              const bool add_gas_lift_gas = DeckItem::to_bool(record.getItem<ParserKeywords::GRUPNET::ADD_GAS_LIFT_GAS>().get<std::string>(0));
 
              for (const auto& group_name : group_names) {
