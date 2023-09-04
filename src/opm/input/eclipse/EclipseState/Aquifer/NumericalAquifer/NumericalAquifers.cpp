@@ -35,8 +35,12 @@
 
 #include <fmt/format.h>
 
+#include <algorithm>
 #include <cstddef>
 #include <unordered_set>
+#include <utility>
+#include <stdexcept>
+#include <vector>
 
 namespace Opm {
 
@@ -153,6 +157,22 @@ namespace Opm {
             }
         }
         return cells;
+    }
+
+    std::vector<std::size_t> NumericalAquifers::allAquiferCellIds() const {
+        auto cellIds = std::vector<std::size_t>{};
+
+        for (const auto& aquifer_pair : this->m_aquifers) {
+            const auto nc = aquifer_pair.second.numCells();
+            for (auto aquCell = 0*nc; aquCell < nc; ++aquCell) {
+                cellIds.push_back(aquifer_pair.second.getCellPrt(aquCell)->global_index);
+            }
+        }
+
+        std::sort(cellIds.begin(), cellIds.end());
+        cellIds.erase(std::unique(cellIds.begin(), cellIds.end()), cellIds.end());
+
+        return cellIds;
     }
 
     const std::map<size_t, SingleNumericalAquifer>& NumericalAquifers::aquifers() const {
