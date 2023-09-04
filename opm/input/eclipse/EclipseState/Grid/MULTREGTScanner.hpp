@@ -40,7 +40,8 @@ namespace Opm {
 namespace Opm {
 
     namespace MULTREGT {
-        enum NNCBehaviourEnum {
+        enum class NNCBehaviourEnum
+        {
             NNC = 1,
             NONNC = 2,
             ALL = 3,
@@ -60,13 +61,15 @@ namespace Opm {
         MULTREGT::NNCBehaviourEnum nnc_behaviour;
         std::string region_name;
 
-        bool operator==(const MULTREGTRecord& data) const {
-            return src_value == data.src_value &&
-                   target_value == data.target_value &&
-                   trans_mult == data.trans_mult &&
-                   directions == data.directions &&
-                   nnc_behaviour == data.nnc_behaviour &&
-                   region_name == data.region_name;
+        bool operator==(const MULTREGTRecord& data) const
+        {
+            return (src_value == data.src_value)
+                && (target_value == data.target_value)
+                && (trans_mult == data.trans_mult)
+                && (directions == data.directions)
+                && (nnc_behaviour == data.nnc_behaviour)
+                && (region_name == data.region_name)
+                ;
         }
 
         template<class Serializer>
@@ -92,29 +95,33 @@ namespace Opm {
 
         static MULTREGTScanner serializationTestObject();
 
+        bool operator==(const MULTREGTScanner& data) const;
+        MULTREGTScanner& operator=(const MULTREGTScanner& data);
+
         double getRegionMultiplier(std::size_t globalCellIdx1,
                                    std::size_t globalCellIdx2,
                                    FaceDir::DirEnum faceDir) const;
 
-        bool operator==(const MULTREGTScanner& data) const;
-        MULTREGTScanner& operator=(const MULTREGTScanner& data);
 
-        template<class Serializer>
+        template <class Serializer>
         void serializeOp(Serializer& serializer)
         {
             serializer(gridDims);
-            serializer(default_region);
+
             serializer(m_records);
             serializer(m_searchMap);
+
             serializer(regions);
         }
 
     private:
-        using MULTREGTSearchMap = std::map< std::pair<int, int>, std::vector<MULTREGTRecord>::size_type>;
+        using MULTREGTSearchMap = std::map<
+            std::pair<int, int>,
+            std::vector<MULTREGTRecord>::size_type
+        >;
 
         GridDims gridDims{};
         const FieldPropsManager* fp{nullptr};
-        std::string default_region{};
 
         std::vector<MULTREGTRecord> m_records{};
         std::map<std::string, MULTREGTSearchMap> m_searchMap{};

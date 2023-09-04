@@ -17,27 +17,31 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdexcept>
-
 #define BOOST_TEST_MODULE MULTREGTScannerTests
+
 #include <boost/test/unit_test.hpp>
 
-#include <opm/input/eclipse/Parser/Parser.hpp>
-
-#include <opm/input/eclipse/Deck/DeckSection.hpp>
-#include <opm/input/eclipse/Deck/Deck.hpp>
-#include <opm/input/eclipse/Deck/DeckKeyword.hpp>
-
 #include <opm/input/eclipse/EclipseState/Grid/MULTREGTScanner.hpp>
-#include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
+
 #include <opm/input/eclipse/EclipseState/Grid/Box.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/FaceDir.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
 #include <opm/input/eclipse/EclipseState/Runspec.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
 
+#include <opm/input/eclipse/Deck/Deck.hpp>
+#include <opm/input/eclipse/Deck/DeckKeyword.hpp>
+#include <opm/input/eclipse/Deck/DeckSection.hpp>
 
+#include <opm/input/eclipse/Parser/Parser.hpp>
 
+#include <opm/input/eclipse/Parser/ParserKeywords/M.hpp>
+
+#include <array>
+#include <initializer_list>
+#include <stdexcept>
+#include <vector>
 
 BOOST_AUTO_TEST_CASE(TestRegionName) {
     BOOST_CHECK_EQUAL( "FLUXNUM" , Opm::MULTREGT::RegionNameFromDeckValue( "F"));
@@ -48,58 +52,58 @@ BOOST_AUTO_TEST_CASE(TestRegionName) {
     BOOST_CHECK_THROW( Opm::MULTREGT::RegionNameFromDeckValue("X") , std::invalid_argument);
 }
 
-
 BOOST_AUTO_TEST_CASE(TestNNCBehaviourEnum) {
-    BOOST_CHECK_EQUAL( Opm::MULTREGT::ALL      , Opm::MULTREGT::NNCBehaviourFromString( "ALL"));
-    BOOST_CHECK_EQUAL( Opm::MULTREGT::NNC      , Opm::MULTREGT::NNCBehaviourFromString( "NNC"));
-    BOOST_CHECK_EQUAL( Opm::MULTREGT::NONNC    , Opm::MULTREGT::NNCBehaviourFromString( "NONNC"));
-    BOOST_CHECK_EQUAL( Opm::MULTREGT::NOAQUNNC , Opm::MULTREGT::NNCBehaviourFromString( "NOAQUNNC"));
+    BOOST_CHECK_MESSAGE(Opm::MULTREGT::NNCBehaviourEnum::ALL == Opm::MULTREGT::NNCBehaviourFromString("ALL"),
+                        R"(Behaviour("ALL") must be ALL)");
 
+    BOOST_CHECK_MESSAGE(Opm::MULTREGT::NNCBehaviourEnum::NNC == Opm::MULTREGT::NNCBehaviourFromString("NNC"),
+                        R"(Behaviour("NNC") must be NNC)");
 
-    BOOST_CHECK_THROW(  Opm::MULTREGT::NNCBehaviourFromString( "Invalid") , std::invalid_argument);
+    BOOST_CHECK_MESSAGE(Opm::MULTREGT::NNCBehaviourEnum::NONNC == Opm::MULTREGT::NNCBehaviourFromString("NONNC"),
+                        R"(Behaviour("NONNC") must be NONNC)");
+
+    BOOST_CHECK_MESSAGE(Opm::MULTREGT::NNCBehaviourEnum::NOAQUNNC == Opm::MULTREGT::NNCBehaviourFromString("NOAQUNNC"),
+                        R"(Behaviour("NOAQUNNC") must be NOAQUNNC)");
+
+    BOOST_CHECK_THROW(Opm::MULTREGT::NNCBehaviourFromString("Invalid"), std::invalid_argument);
 }
 
-
-
-static Opm::Deck createInvalidMULTREGTDeck() {
-    const char* deckData =
-        "RUNSPEC\n"
-        "\n"
-        "DIMENS\n"
-        " 3 3 2 /\n"
-        "GRID\n"
-        "DX\n"
-        "18*0.25 /\n"
-        "DY\n"
-        "18*0.25 /\n"
-        "DZ\n"
-        "18*0.25 /\n"
-        "TOPS\n"
-        "9*0.25 /\n"
-        "FLUXNUM\n"
-        "1 1 2\n"
-        "1 1 2\n"
-        "1 1 2\n"
-        "3 4 5\n"
-        "3 4 5\n"
-        "3 4 5\n"
-        "/\n"
-        "MULTREGT\n"
-        "1  2   0.50   G   ALL    M / -- Invalid direction\n"
-        "/\n"
-        "MULTREGT\n"
-        "1  2   0.50   X   ALL    G / -- Invalid region \n"
-        "/\n"
-        "MULTREGT\n"
-        "1  2   0.50   X   ALL    M / -- Region not in deck \n"
-        "/\n"
-        "EDIT\n"
-        "\n";
-
-    Opm::Parser parser;
-    return parser.parseString(deckData) ;
-}
-
+namespace {
+    Opm::Deck createInvalidMULTREGTDeck()
+    {
+        return Opm::Parser{}.parseString(R"(RUNSPEC
+DIMENS
+ 3 3 2 /
+GRID
+DX
+18*0.25 /
+DY
+18*0.25 /
+DZ
+18*0.25 /
+TOPS
+9*0.25 /
+FLUXNUM
+1 1 2
+1 1 2
+1 1 2
+3 4 5
+3 4 5
+3 4 5
+/
+MULTREGT
+1  2   0.50   G   ALL    M / -- Invalid direction
+/
+MULTREGT
+1  2   0.50   X   ALL    G / -- Invalid region
+/
+MULTREGT
+1  2   0.50   X   ALL    M / -- Region not in deck
+/
+EDIT
+)");
+    }
+} // Anonymous namespace
 
 BOOST_AUTO_TEST_CASE(InvalidInput) {
     Opm::Deck deck = createInvalidMULTREGTDeck();
@@ -127,45 +131,39 @@ BOOST_AUTO_TEST_CASE(InvalidInput) {
     BOOST_CHECK_THROW( Opm::MULTREGTScanner scanner( grid, &fp, keywords2 ); , std::logic_error );
 }
 
-
-static Opm::Deck createNotSupportedMULTREGTDeck() {
-    const char* deckData =
-        "RUNSPEC\n"
-        "\n"
-        "DIMENS\n"
-        " 3 3 2 /\n"
-        "GRID\n"
-        "DX\n"
-        "18*0.25 /\n"
-        "DY\n"
-        "18*0.25 /\n"
-        "DZ\n"
-        "18*0.25 /\n"
-        "TOPS\n"
-        "9*0.25 /\n"
-        "FLUXNUM\n"
-        "1 1 2\n"
-        "1 1 2\n"
-        "1 1 2\n"
-        "3 4 5\n"
-        "3 4 5\n"
-        "3 4 5\n"
-        "/\n"
-        "MULTREGT\n"
-        "1  2   0.50   X   NOAQUNNC  F / -- Not support NOAQUNNC behaviour \n"
-        "/\n"
-        "MULTREGT\n"
-        "2  2   0.50   X   ALL    M / -- Region values equal \n"
-        "/\n"
-        "EDIT\n"
-        "\n";
-
-    Opm::Parser parser;
-    return parser.parseString(deckData) ;
-}
-
-
-
+namespace {
+    Opm::Deck createNotSupportedMULTREGTDeck()
+    {
+        return Opm::Parser{}.parseString(R"(RUNSPEC
+DIMENS
+ 3 3 2 /
+GRID
+DX
+18*0.25 /
+DY
+18*0.25 /
+DZ
+18*0.25 /
+TOPS
+9*0.25 /
+FLUXNUM
+1 1 2
+1 1 2
+1 1 2
+3 4 5
+3 4 5
+3 4 5
+/
+MULTREGT
+1  2   0.50   X   NOAQUNNC  F / -- Not support NOAQUNNC behaviour
+/
+MULTREGT
+2  2   0.50   X   ALL    M / -- Region values equal
+/
+EDIT
+)");
+    }
+} // Anonymous namespace
 
 BOOST_AUTO_TEST_CASE(NotSupported) {
     Opm::Deck deck = createNotSupportedMULTREGTDeck();
@@ -188,45 +186,42 @@ BOOST_AUTO_TEST_CASE(NotSupported) {
     BOOST_CHECK_THROW( Opm::MULTREGTScanner scanner( grid, &fp, keywords1 ); , std::invalid_argument );
 }
 
-static Opm::Deck createDefaultedRegions() {
-    const char* deckData =
-        "RUNSPEC\n"
-        "\n"
-        "DIMENS\n"
-        " 3 3 2 /\n"
-        "GRID\n"
-        "DX\n"
-        "18*0.25 /\n"
-        "DY\n"
-        "18*0.25 /\n"
-        "DZ\n"
-        "18*0.25 /\n"
-        "TOPS\n"
-        "9*0.25 /\n"
-        "FLUXNUM\n"
-        "1 1 2\n"
-        "1 1 2\n"
-        "1 1 2\n"
-        "3 4 5\n"
-        "3 4 5\n"
-        "3 4 5\n"
-        "/\n"
-        "MULTREGT\n"
-        "3  4   1.25   XYZ   ALL    F /\n"
-        "2  -1   0   XYZ   ALL    F / -- Defaulted from region value \n"
-        "1  -1   0   XYZ   ALL    F / -- Defaulted from region value \n"
-        "2  1   1      XYZ   ALL    F / Override default  \n"
-        "/\n"
-        "MULTREGT\n"
-        "2  *   0.75   XYZ   ALL    F / -- Defaulted to region value \n"
-        "/\n"
-        "EDIT\n"
-        "\n";
-
-    Opm::Parser parser;
-    return parser.parseString(deckData) ;
-}
-
+namespace {
+    Opm::Deck createDefaultedRegions()
+    {
+        return Opm::Parser{}.parseString(R"(RUNSPEC
+DIMENS
+ 3 3 2 /
+GRID
+DX
+18*0.25 /
+DY
+18*0.25 /
+DZ
+18*0.25 /
+TOPS
+9*0.25 /
+FLUXNUM
+1 1 2
+1 1 2
+1 1 2
+3 4 5
+3 4 5
+3 4 5
+/
+MULTREGT
+3  4   1.25   XYZ   ALL    F /
+2  -1   0   XYZ   ALL    F / -- Defaulted from region value
+1  -1   0   XYZ   ALL    F / -- Defaulted from region value
+2  1   1      XYZ   ALL    F / Override default
+/
+MULTREGT
+2  *   0.75   XYZ   ALL    F / -- Defaulted to region value
+/
+EDIT
+)");
+    }
+} // Anonymous namespace
 
 BOOST_AUTO_TEST_CASE(DefaultedRegions) {
   Opm::Deck deck = createDefaultedRegions();
@@ -252,42 +247,37 @@ BOOST_AUTO_TEST_CASE(DefaultedRegions) {
   BOOST_CHECK_EQUAL( scanner1.getRegionMultiplier(grid.getGlobalIndex(2,0,0), grid.getGlobalIndex(2,0,1), Opm::FaceDir::ZPlus), 0.75);
 }
 
-
-
-
-static Opm::Deck createCopyMULTNUMDeck() {
-    const char* deckData =
-        "RUNSPEC\n"
-        "\n"
-        "DIMENS\n"
-        "2 2 2 /\n"
-        "GRID\n"
-        "DX\n"
-        "8*0.25 /\n"
-        "DY\n"
-        "8*0.25 /\n"
-        "DZ\n"
-        "8*0.25 /\n"
-        "TOPS\n"
-        "4*0.25 /\n"
-        "FLUXNUM\n"
-        "1 2\n"
-        "1 2\n"
-        "3 4\n"
-        "3 4\n"
-        "/\n"
-        "COPY\n"
-        " FLUXNUM  MULTNUM /\n"
-        "/\n"
-        "MULTREGT\n"
-        "1  2   0.50/ \n"
-        "/\n"
-        "EDIT\n"
-        "\n";
-
-    Opm::Parser parser;
-    return parser.parseString(deckData) ;
-}
+namespace {
+    Opm::Deck createCopyMULTNUMDeck()
+    {
+        return Opm::Parser{}.parseString(R"(RUNSPEC
+DIMENS
+2 2 2 /
+GRID
+DX
+8*0.25 /
+DY
+8*0.25 /
+DZ
+8*0.25 /
+TOPS
+4*0.25 /
+FLUXNUM
+1 2
+1 2
+3 4
+3 4
+/
+COPY
+ FLUXNUM  MULTNUM /
+/
+MULTREGT
+1  2   0.50/
+/
+EDIT
+)");
+    }
+} // Anonymous namespace
 
 BOOST_AUTO_TEST_CASE(MULTREGT_COPY_MULTNUM) {
     Opm::Deck deck = createCopyMULTNUMDeck();
