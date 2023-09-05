@@ -503,9 +503,6 @@ bool DeckItem::to_bool(std::string string_value) {
     if (string_value == "1")
         return true;
 
-    if (string_value == "FLO")
-        return true;
-
     if (string_value == "FALSE")
         return false;
 
