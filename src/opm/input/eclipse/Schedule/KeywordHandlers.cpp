@@ -795,12 +795,20 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
                  this->invalidNamePattern(groupNamePattern, handlerContext);
              const auto& pressure_item = record.getItem<ParserKeywords::GRUPNET::TERMINAL_PRESSURE>();
              const int vfp_table = record.getItem<ParserKeywords::GRUPNET::VFP_TABLE>().get<int>(0);
+             // It is assumed here that item 6 (ADD_GAS_LIFT_GAS) has the two options NO and FLO. THe option ALQ is not supported.
+             // For standard networks the summation of ALQ values are weighted with efficiency factors. 
+             // Note that, currently, extended networks uses always efficiency factors (this is the default set by WEFAC item 3 (YES), the value NO is not supported.) 
+             const std::string& add_gas_lift_gas_string = record.getItem<ParserKeywords::GRUPNET::ADD_GAS_LIFT_GAS>().get<std::string>(0);
+             bool add_gas_lift_gas = false;
+             if (add_gas_lift_gas_string == "FLO") 
+                 add_gas_lift_gas = true;
 
              for (const auto& group_name : group_names) {
                   const auto& group = this->snapshots.back().groups.get(group_name);
                   const std::string& downtree_node = group_name;
                   const std::string& uptree_node = group.parent();
                   Network::Node node { group_name };
+                  node.add_gas_lift_gas(add_gas_lift_gas);
                   // A terminal node is a node with a fixed pressure
                   const bool is_terminal_node = pressure_item.hasValue(0) && (pressure_item.get<double>(0) >= 0);
                   if (is_terminal_node) {
