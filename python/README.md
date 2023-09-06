@@ -27,7 +27,7 @@ do
 done
 ```
 
-Then you should be able to you use the module from a Python script. If you installed in
+Then you should be able to use the module from a Python script. If you installed in
 a non-standard directory by specifying `-DCMAKE_INSTALL_PREFIX` you may need to set the
 `PYTHONPATH` environment variable before running your Python script, for example:
 
