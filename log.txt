@@ -1,0 +1,108 @@
+-- The C compiler identification is GNU 11.4.0
+-- The CXX compiler identification is GNU 11.4.0
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Check for working C compiler: /bin/cc - skipped
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: /bin/c++ - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+CMake Deprecation Warning at cmake/Modules/OpmInit.cmake:26 (cmake_policy):
+  The OLD behavior for policy CMP0026 will be removed from a future version
+  of CMake.
+
+  The cmake-policies(7) manual explains that the OLD behaviors of all
+  policies are deprecated and that a policy should be set to OLD only under
+  specific short-term circumstances.  Projects should be ported to the NEW
+  behavior and not rely on setting a policy to OLD.
+Call Stack (most recent call first):
+  CMakeLists.txt:58 (OpmSetPolicies)
+
+
+-- Setting OPM_TESTS_ROOT: /home/hakon/test/opm12/opm-common/../opm-tests
+-- Performing Test HAVE_C99
+-- Performing Test HAVE_C99 - Success
+-- Found C99: -std=c99  
+-- Found Valgrind: /usr/include  
+-- Found Boost: /usr/lib/x86_64-linux-gnu/cmake/Boost-1.74.0/BoostConfig.cmake (found suitable version "1.74.0", minimum required is "1.44.0") found components: system unit_test_framework 
+-- Performing Test HAVE_CJSON
+-- Performing Test HAVE_CJSON - Failed
+-- Could NOT find cjson (missing: cjson_INCLUDE_DIRS cjson_LIBRARIES HAVE_CJSON) 
+-- Performing Test QuadMath_COMPILES
+-- Performing Test QuadMath_COMPILES - Success
+-- Found QuadMath: (Supported by compiler)  
+-- Found Python3: /home/hakon/miniconda3/envs/rkt/bin/python3 (found version "3.11.5") found components: Interpreter Development.Module 
+-- Could NOT find pybind11 (missing: pybind11_DIR)
+CMake Error at CMakeLists.txt:272 (add_subdirectory):
+  add_subdirectory given source "python/pybind11" which is not an existing
+  directory.
+
+
+-- Performing Test HAVE_ATTRIBUTE_ALWAYS_INLINE
+-- Performing Test HAVE_ATTRIBUTE_ALWAYS_INLINE - Success
+-- Performing Test HAS_ATTRIBUTE_UNUSED
+-- Performing Test HAS_ATTRIBUTE_UNUSED - Success
+-- Performing Test HAS_ATTRIBUTE_DEPRECATED
+-- Performing Test HAS_ATTRIBUTE_DEPRECATED - Success
+-- Performing Test HAS_ATTRIBUTE_DEPRECATED_MSG
+-- Performing Test HAS_ATTRIBUTE_DEPRECATED_MSG - Success
+-- CMake version: 3.22.1
+-- Linux distribution: Ubuntu 22.04.3 LTS
+-- Target architecture: x86_64
+-- Found Git: /bin/git (found version "2.34.1") 
+-- Source code repository: git f428cf957*%
+-- GNU C++ compiler version: 11.4.0
+-- Linker: ld 2.38
+Processing opm_defaults opm-common
+-- Checking to see if CXX compiler accepts flag -Wl,--enable-new-dtags
+-- Checking to see if CXX compiler accepts flag -Wl,--enable-new-dtags - yes
+-- Precompiled headers: disabled
+-- Build type: Debug
+-- Checking to see if CXX compiler accepts flag -mtune=native
+-- Checking to see if CXX compiler accepts flag -mtune=native - yes
+-- All warnings enabled: -Wall -Wextra -Wshadow
+-- OpenMP: disabled
+-- Looking for pthread.h
+-- Looking for pthread.h - found
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Success
+-- Found Threads: TRUE  
+-- Checking to see if CXX compiler accepts flag -pthread
+-- Checking to see if CXX compiler accepts flag -pthread - yes
+-- Could NOT find CppCheck (missing: CPPCHECK_PROGRAM) 
+-- Disabling clang-check as CMAKE_EXPORT_COMPILE_COMMANDS is not enabled
+-- Could NOT find cjson (missing: cjson_INCLUDE_DIRS cjson_LIBRARIES HAVE_CJSON) 
+-- Looking for strip utility
+-- Looking for strip utility - found
+-- Performing Test HAVE_DYNAMIC_BOOST_TEST
+-- Performing Test HAVE_DYNAMIC_BOOST_TEST - Success
+-- Writing config file "/home/hakon/test/opm12/opm-common/build/config.h"...
+-- This build defaults to installing in /opt/opm
+-- Checking whether the file system is case-sensitive
+-- File system is case-sensitive
+-- Found Doxygen: /bin/doxygen (found version "1.9.1") found components: doxygen dot 
+-- Writing version information to local header project-version.h
+-- Looking for sgemm_
+-- Looking for sgemm_ - not found
+-- Looking for sgemm_
+-- Looking for sgemm_ - found
+-- Found BLAS: /usr/lib/x86_64-linux-gnu/libopenblas.so  
+-- Looking for cheev_
+-- Looking for cheev_ - found
+-- Found LAPACK: /usr/lib/x86_64-linux-gnu/libopenblas.so;-lm;-ldl  
+-- Performing Test HAVE_CXA_DEMANGLE
+-- Performing Test HAVE_CXA_DEMANGLE - Success
+-- Found TBB library using config mode
+-- Found GMP: /usr/lib/x86_64-linux-gnu/libgmpxx.so  
+-- Found dune-common: /opt/dune/include;/usr/include/x86_64-linux-gnu  
+-- Version 2.8.0 of dune-common from /opt/dune/lib/cmake/dune-common
+CMake Error at CMakeLists.txt:406 (pybind11_add_module):
+  Unknown CMake command "pybind11_add_module".
+
+
+-- Configuring incomplete, errors occurred!
+See also "/home/hakon/test/opm12/opm-common/build/CMakeFiles/CMakeOutput.log".
+See also "/home/hakon/test/opm12/opm-common/build/CMakeFiles/CMakeError.log".
