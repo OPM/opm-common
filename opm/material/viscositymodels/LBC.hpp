@@ -122,6 +122,6 @@ public:
 
 };
 
-}; // namespace Opm
+} // namespace Opm
 
 #endif // LBC_HPP
