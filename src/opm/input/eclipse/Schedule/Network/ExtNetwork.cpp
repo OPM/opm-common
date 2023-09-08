@@ -86,6 +86,42 @@ void ExtNetwork::add_branch(Branch branch)
     this->m_branches.push_back( std::move(branch) );
 }
 
+void ExtNetwork::add_or_replace_branch(Branch branch)
+{
+    const std::string& uptree_node = branch.uptree_node();
+    const std::string& downtree_node = branch.downtree_node();
+
+    // Add any missing nodes
+    for (const std::string& nodename : { downtree_node, uptree_node }) {
+        if (!this->has_node(nodename)) {
+            this->m_nodes.insert_or_assign(nodename, Node{nodename});
+        }
+        if (!this->has_indexed_node_name(nodename)) {
+            this->add_indexed_node_name(nodename);
+        }
+    }
+    
+    // Remote any other branch uptree from downtree_node
+    auto uptree_link = this->uptree_branch( downtree_node );
+    if (uptree_link.has_value()){
+        const auto& old_uptree_node = uptree_link.value().uptree_node();
+        this->drop_branch(old_uptree_node, downtree_node);
+    }
+    
+    // Update existing branch
+    auto downtree_branches = this->downtree_branches( uptree_node );
+    if (!downtree_branches.empty()) {
+        auto branch_iter = std::find_if(this->m_branches.begin(), this->m_branches.end(), [&uptree_node, &downtree_node](const Branch& b) { return (b.uptree_node() == uptree_node && b.downtree_node() == downtree_node); });
+        if (branch_iter != this->m_branches.end()) {
+            *branch_iter = branch;
+            return;
+        }
+    }
+    
+    this->m_branches.push_back( std::move(branch) );
+}
+
+
 void ExtNetwork::drop_branch(const std::string& uptree_node, const std::string& downtree_node) {
     auto downtree_branches = this->downtree_branches( downtree_node );
     if (downtree_branches.empty()) {

@@ -38,6 +38,7 @@ public:
     ExtNetwork() = default;
     bool active() const;
     void add_branch(Branch branch);
+    void add_or_replace_branch(Branch branch);
     void drop_branch(const std::string& uptree_node, const std::string& downtree_node);
     bool has_node(const std::string& name) const;
     void update_node(Node node);
