@@ -873,9 +873,9 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
                                 const auto alq_eq = Network::Branch::AlqEqfromString(record.getItem<ParserKeywords::GRUPNET::ALQ_SURFACE_DENSITY>().get<std::string>(0));
                                 if (alq_eq == Network::Branch::AlqEQ::ALQ_INPUT) {
                                     const double alq_value = record.getItem<ParserKeywords::GRUPNET::ALQ>().get<double>(0);
-                                    network.add_branch(Network::Branch(downtree_node, uptree_node, vfp_table, alq_value));
+                                    network.add_or_replace_branch(Network::Branch(downtree_node, uptree_node, vfp_table, alq_value));
                                 } else {
-                                     network.add_branch(Network::Branch(downtree_node, uptree_node, vfp_table, alq_eq));
+                                     network.add_or_replace_branch(Network::Branch(downtree_node, uptree_node, vfp_table, alq_eq));
                                 }
                             }
                             nodes.push_back(node);
