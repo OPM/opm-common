@@ -116,6 +116,7 @@ namespace RestartIO {
         int complnum() const;
         int segment() const;
         double CF() const;
+        double wpimult() const;
         double Kh() const;
         double rw() const;
         double r0() const;
@@ -134,6 +135,8 @@ namespace RestartIO {
 
         void setState(State state);
         void setComplnum(int compnum);
+        void setSkinFactor(double skin_factor);
+        void setCF(double CF);
         void scaleWellPi(double wellPi);
         bool prepareWellPIScaling();
         bool applyWellPIScaling(const double scaleFactor);
@@ -263,6 +266,9 @@ namespace RestartIO {
 
         // Whether or not this Connection is subject to WELPI scaling.
         bool m_subject_to_welpi = false;
+
+        // For applying last known WPIMULT to when calculating connection transmissibilty factor in CSKIN
+        double m_wpimult = 1.0;
 
         std::optional<FilterCake> m_filter_cake;
 

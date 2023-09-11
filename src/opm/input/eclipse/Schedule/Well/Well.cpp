@@ -1248,9 +1248,46 @@ bool Well::handleWELOPENConnections(const DeckRecord& record, Connection::State 
     return this->updateConnections(std::move(new_connections), false);
 }
 
+bool Well::handleCSKINConnections(const DeckRecord& record) {
+    // Lambda expression to check if record coordinates match connection coordinates
+    auto match = [=]( const Connection &c) -> bool {
+        if (!match_eq(c.getI(), record, "I" , -1)) return false;
+        if (!match_eq(c.getJ(), record, "J" , -1)) return false;
+        if (!match_ge(c.getK(), record, "K_UPPER", -1)) return false;
+        if (!match_le(c.getK(), record, "K_LOWER", -1)) return false;
 
+        return true;
+    };
 
+    // Generate a new connection which will be updated with new connection skin factor
+    auto new_connections = std::make_shared<WellConnections>(this->connections->ordering(), this->headI, this->headJ);
 
+    // Update skin factor
+    double skin_factor = record.getItem("CONNECTION_SKIN_FACTOR").get<double>(0);
+    const double angle = 6.2831853071795864769252867665590057683943387987502116419498;
+    for (auto c : *this->connections) {
+        if (match(c)) {
+            // Calculate new connection transmissibility factor
+            double CF = angle * c.Kh() / (std::log(c.r0() / std::min(c.rw(), c.r0())) + skin_factor);
+
+            // Apply last known WPIMULT (defaulted to 1.0)
+            CF *= c.wpimult();
+
+            // Check if new CF is negative
+            if (CF < 0.0) {
+                throw std::runtime_error("Negative connection transmissibility factor produced by CSKIN for well " 
+                                         + name());
+            }
+
+            // Set skin factor and connection factor
+            c.setSkinFactor(skin_factor);
+            c.setCF(CF);
+        }
+        new_connections->add(c);
+    }
+
+    return this->updateConnections(std::move(new_connections), false);
+}
 
 bool Well::handleCOMPLUMP(const DeckRecord& record) {
 

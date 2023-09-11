@@ -210,8 +210,20 @@ const std::optional<std::pair<double, double>>& Connection::perf_range() const {
         this->m_complnum = complnum;
     }
 
+    void Connection::setSkinFactor(double skin_factor) {
+        this->m_skin_factor = skin_factor;
+    }
+
+    void Connection::setCF(double CF) {
+        this->m_CF = CF;
+    }
+
     double Connection::CF() const {
         return this->m_CF;
+    }
+
+    double Connection::wpimult() const {
+        return this->m_wpimult;
     }
 
     double Connection::Kh() const {
@@ -263,6 +275,7 @@ const std::optional<std::pair<double, double>>& Connection::perf_range() const {
     }
 
     void Connection::scaleWellPi(double wellPi) {
+        this->m_wpimult = wellPi;
         this->m_CF *= wellPi;
     }
 
@@ -273,6 +286,7 @@ const std::optional<std::pair<double, double>>& Connection::perf_range() const {
 
         return update;
     }
+    
 
     bool Connection::applyWellPIScaling(const double scaleFactor) {
         if (! this->m_subject_to_welpi)

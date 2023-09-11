@@ -351,6 +351,27 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
         handlerContext.compsegs_handled(wname);
     }
 
+    void Schedule::handleCSKIN(HandlerContext& handlerContext) {
+        // Get CSKIN keyword info and current step
+        const auto& keyword = handlerContext.keyword;
+        const auto& currentStep = handlerContext.currentStep;
+
+        // Loop over records in CSKIN
+        for (const auto& record: keyword) {
+            // Get well names
+            const auto& wellNamePattern = record.getItem( "WELL" ).getTrimmedString(0);
+            const auto well_names = this->wellNames(wellNamePattern, handlerContext);
+
+            // Loop over well(s) in record
+            for (const auto& wname : well_names) {
+                // Get well information, modify connection skin factor, and update well
+                auto well = this->snapshots[currentStep].wells.get(wname);
+                well.handleCSKINConnections(record);
+                this->snapshots[currentStep].wells.update( std::move(well) );
+            }
+        }
+    }
+
     void Schedule::handleDRSDT(HandlerContext& handlerContext) {
         std::size_t numPvtRegions = this->m_static.m_runspec.tabdims().getNumPVTTables();
         std::vector<double> maximums(numPvtRegions);
@@ -2590,6 +2611,7 @@ Well{0} entered with 'FIELD' parent group:
             { "COMPORD" , &Schedule::handleCOMPORD   },
             { "COMPSEGS", &Schedule::handleCOMPSEGS  },
             { "COMPTRAJ", &Schedule::handleCOMPTRAJ  },
+            { "CSKIN",    &Schedule::handleCSKIN     },
             { "DRSDT"   , &Schedule::handleDRSDT     },
             { "DRSDTCON", &Schedule::handleDRSDTCON  },
             { "DRSDTR"  , &Schedule::handleDRSDTR    },
