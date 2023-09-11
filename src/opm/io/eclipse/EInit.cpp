@@ -92,7 +92,7 @@ int EInit::get_array_index(const std::string& name, const std::string& grid_name
 
         return lgr_array_index[lgr_index].at(name);
     }
-};
+}
 
 int EInit::activeCells(const std::string& grid_name) const
 {

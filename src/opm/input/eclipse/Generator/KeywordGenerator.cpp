@@ -123,7 +123,7 @@ struct Builtin {
             for (const auto& kw: keywords)
             {
                 newHeader << fmt::format("    const ::Opm::ParserKeyword get_{0}();\n",kw.className());
-                source << fmt::format("const ::Opm::ParserKeyword Builtin::get_{0}() {{ return {0}(); }};\n",kw.className());
+                source << fmt::format("const ::Opm::ParserKeyword Builtin::get_{0}() {{ return {0}(); }}\n",kw.className());
             }
         }
 
