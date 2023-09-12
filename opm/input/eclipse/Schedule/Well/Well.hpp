@@ -168,7 +168,7 @@ public:
 
         void handleWELTARG(WELTARGCMode cmode, const UDAValue& new_arg, double SIFactorP);
         void handleWCONINJE(const DeckRecord& record, bool availableForGroupControl, const std::string& well_name);
-        void handleWCONINJH(const DeckRecord& record, bool is_producer, const std::string& well_name);
+        void handleWCONINJH(const DeckRecord& record, const bool is_producer, const std::string& well_name, const KeywordLocation& loc);
         bool hasInjectionControl(InjectorCMode controlModeArg) const {
             if (injectionControls & static_cast<int>(controlModeArg))
                 return true;

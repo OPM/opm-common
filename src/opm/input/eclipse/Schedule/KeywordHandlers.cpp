@@ -1379,7 +1379,7 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
                 auto well2 = this->snapshots.back().wells.get( well_name );
                 auto injection = std::make_shared<Well::WellInjectionProperties>(well2.getInjectionProperties());
                 auto previousInjectorType = injection->injectorType;
-                injection->handleWCONINJH(record, well2.isProducer(), well_name);
+                injection->handleWCONINJH(record, well2.isProducer(), well_name, handlerContext.keyword.location());
                 const bool switching_from_producer = well2.isProducer();
 
                 if (well2.updateInjection(injection))

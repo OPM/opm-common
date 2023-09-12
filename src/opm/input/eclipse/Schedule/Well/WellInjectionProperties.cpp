@@ -20,6 +20,7 @@
 #include <config.h>
 #include <opm/input/eclipse/Schedule/Well/Well.hpp>
 
+#include <opm/common/OpmLog/OpmLog.hpp>
 #include <opm/input/eclipse/Units/Units.hpp>
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
 #include <opm/input/eclipse/Deck/DeckRecord.hpp>
@@ -29,6 +30,8 @@
 #include <opm/input/eclipse/Schedule/UDQ/UDQActive.hpp>
 
 #include "../eval_uda.hpp"
+
+#include <fmt/format.h>
 
 #include <ostream>
 #include <string>
@@ -177,7 +180,12 @@ namespace Opm {
     }
 
 
-    void Well::WellInjectionProperties::handleWCONINJH(const DeckRecord& record, bool is_producer, const std::string& well_name) {
+    void
+    Well::WellInjectionProperties::handleWCONINJH(const DeckRecord& record,
+                                                  const bool is_producer,
+                                                  const std::string& well_name,
+                                                  const KeywordLocation& loc)
+    {
         // convert injection rates to SI
         const auto& typeItem = record.getItem("TYPE");
         if (typeItem.defaultApplied(0)) {
@@ -196,11 +204,22 @@ namespace Opm {
             this->THPH = record.getItem("THP").getSIDouble(0);
 
         const std::string& cmodeString = record.getItem("CMODE").getTrimmedString(0);
-        const InjectorCMode newControlMode = WellInjectorCModeFromString(cmodeString);
+        InjectorCMode newControlMode = WellInjectorCModeFromString(cmodeString);
 
         if ( !(newControlMode == InjectorCMode::RATE || newControlMode == InjectorCMode::BHP) ) {
-            const std::string msg = "Only RATE and BHP control are allowed for WCONINJH for well " + well_name;
-            throw std::invalid_argument(msg);
+            newControlMode = InjectorCMode::RATE;
+            const auto& sir = this->surfaceInjectionRate;
+            std::string target = sir.is<double>() ? std::to_string(sir.get<double>()) : sir.get<std::string>();
+            std::string msg = fmt::format("Problem with keyword WCONINJH\n"
+                                          "In {} line {}\n"
+                                          "Only RATE and BHP controls supported for well {}.\n"
+                                          "Selected control {} reset to RATE, with target = {}.",
+                                          loc.filename,
+                                          loc.lineno,
+                                          well_name,
+                                          WellInjectorCMode2String(newControlMode),
+                                          target);
+            OpmLog::warning(msg);
         }
 
         // when well is under BHP control, we use its historical BHP value as BHP limit
