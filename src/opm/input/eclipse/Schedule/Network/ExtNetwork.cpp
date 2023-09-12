@@ -61,16 +61,22 @@ const Node& ExtNetwork::root() const {
     if (this->m_nodes.empty())
         throw std::invalid_argument("No root defined for empty network");
 
-    auto node_ptr = &(this->m_nodes.begin()->second);
-    while (true) {
-        auto next_branch = this->uptree_branch(node_ptr->name());
-        if (!next_branch)
-            break;
-
-        node_ptr = &(this->node( next_branch->uptree_node() ));
+    std::vector<const Node*> root;
+    auto node_iter = this->m_nodes.begin();
+    // Find all nodes with terminal pressure assigned to it
+    while ((node_iter = std::find_if(node_iter, this->m_nodes.end(), [](const auto &n) { return (n.second.terminal_pressure().has_value() == true); })) != this->m_nodes.end()) {
+        const auto node_ptr = &(node_iter->second);
+        root.push_back(node_ptr);
+        ++node_iter;
     }
 
-    return *node_ptr;
+    if (root.empty()) {
+         throw std::invalid_argument("No root defined in the network");
+    } else if (root.size() >= 2) {
+         throw std::invalid_argument("Multiple roots in the network are not supported");
+    }
+
+    return *root[0];
 }
 
 void ExtNetwork::add_branch(Branch branch)
