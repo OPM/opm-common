@@ -370,8 +370,86 @@ BRANPROP
     BOOST_CHECK_EQUAL_COLLECTIONS(nodes.begin(), nodes.end(), expect.begin(), expect.end());
 }
 
-BOOST_AUTO_TEST_CASE(StandardNetwork) {
 
+BOOST_AUTO_TEST_CASE(RootIsNotTopNode) {
+    const std::string input = R"(
+
+SCHEDULE
+
+GRUPTREE
+'M5S'    'PLAT-A'  /
+'M5N'    'PLAT-A'  /
+
+'C1'     'M5N'  /
+'F1'     'M5N'  /
+'B1'     'M5S'  /
+'G1'     'M5S'  /
+/
+
+BRANPROP
+--  Downtree  Uptree   #VFP    ALQ
+    M5S         PLAT-A   9999      1*      /
+    B1         M5S   9999      1*      /
+    C1         PLAT-A    9999      1*      /
+/
+
+NODEPROP
+--  Node_name Pr    autoChock?      addGasLift?     Group_name
+     M5S   21.0   NO     NO    1*  /
+     B1    1*  YES      NO    1*  /
+     C1    1*  YES     NO     'GROUP' /
+/
+)";
+    //In this test the top node (PLAT-A) is not a root but a node (M5S) lower in the tree
+    auto schedule = make_schedule(input);
+    const auto& network = schedule[0].network.get();
+
+    const auto& p = network.node("M5S");
+    BOOST_CHECK(p.terminal_pressure());
+    BOOST_CHECK_EQUAL(p.terminal_pressure().value(), 21 * 100000);
+    BOOST_CHECK(p == network.root());
+}
+
+
+BOOST_AUTO_TEST_CASE(MultipleRoots) {
+    const std::string input = R"(
+
+SCHEDULE
+
+GRUPTREE
+'M5S'    'PLAT-A'  /
+'M5N'    'PLAT-A'  /
+
+'C1'     'M5N'  /
+'F1'     'M5N'  /
+'B1'     'M5S'  /
+'G1'     'M5S'  /
+/
+
+BRANPROP
+--  Downtree  Uptree   #VFP    ALQ
+    M5S         PLAT-A   9999      1*      /
+    B1         M5S   9999      1*      /
+    C1         PLAT-A    9999      1*      /
+/
+
+NODEPROP
+--  Node_name Pr    autoChock?      addGasLift?     Group_name
+     PLAT-A   21.0   NO     NO    1*  /
+     M5S   20.0   NO     NO    1*  /
+     B1    1*  YES      NO    1*  /
+     C1    1*  YES     NO     'GROUP' /
+/
+)";
+
+    auto schedule = make_schedule(input);
+    const auto& network = schedule[0].network.get();
+
+    //Multiple roots, i.e multiple nodes with a terminal pressure, are not supported
+    BOOST_CHECK_THROW(network.root(), std::invalid_argument);
+}
+
+BOOST_AUTO_TEST_CASE(StandardNetwork) {
     const std::string input = R"(
 
 SCHEDULE
