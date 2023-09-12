@@ -37,6 +37,22 @@ public:
         return (this->controls & static_cast<int>(cmode_arg)) != 0;
     }
 
+    void skipControl(WellInjectorCMode cmode_arg) {
+        auto int_arg = static_cast<int>(cmode_arg);
+        if ((this->controls & int_arg) != 0)
+            this->controls -= int_arg;
+    }
+
+    void addControl(WellInjectorCMode cmode_arg) {
+        auto int_arg = static_cast<int>(cmode_arg);
+        if ((this->controls & int_arg) == 0)
+            this->controls += int_arg;
+    }
+
+    void clearControls(){
+        this->controls = 0;
+    }
+
     double bhp_limit;
     double thp_limit;
 
