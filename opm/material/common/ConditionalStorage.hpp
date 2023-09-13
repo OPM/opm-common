@@ -95,7 +95,7 @@ public:
     { return &data_; }
 
 private:
-    T data_;
+    T data_{};
 };
 
 template <class T>
