@@ -30,6 +30,7 @@
 #include <optional>
 #include <stdexcept>
 #include <unordered_set>
+#include <map>
 
 namespace Opm {
 
