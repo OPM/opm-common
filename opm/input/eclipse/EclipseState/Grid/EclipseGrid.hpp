@@ -30,8 +30,6 @@
 #include <optional>
 #include <stdexcept>
 #include <unordered_set>
-#include <vector>
-#include <map>
 
 namespace Opm {
 
@@ -264,7 +262,7 @@ namespace Opm {
         std::optional<std::vector<double>> m_rv;
 
         void updateNumericalAquiferCells(const Deck&);
-        double computeCellDepth(size_t globalIndex) const;
+        double computeCellGeometricDepth(size_t globalIndex) const;
 
         void initGridFromEGridFile(Opm::EclIO::EclFile& egridfile, std::string fileName);
         void resetACTNUM( const int* actnum);

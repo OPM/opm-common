@@ -1680,10 +1680,10 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
         assertGlobalIndex( globalIndex );
 
         auto it = this->m_aquifer_cell_depths.find(globalIndex);
-        return it != this->m_aquifer_cell_depths.end() ? it->second : computeCellDepth(globalIndex);
+        return it != this->m_aquifer_cell_depths.end() ? it->second : computeCellGeometricDepth(globalIndex);
     }
 
-    double EclipseGrid::computeCellDepth(size_t globalIndex) const {
+    double EclipseGrid::computeCellGeometricDepth(size_t globalIndex) const {
         std::array<double,8> X;
         std::array<double,8> Y;
         std::array<double,8> Z;
