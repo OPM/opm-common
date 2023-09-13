@@ -94,7 +94,9 @@ namespace Opm {
         static bool validInternalName(const std::string& name);
         static bool validDeckName(const std::string_view& name);
         bool hasMatchRegex() const;
+        bool hasMatchRegexSuffix() const;
         void setMatchRegex(const std::string& deckNameRegexp);
+        void setMatchRegexSuffix(const std::string& deckNameRegexp);
         bool matches(const std::string_view& ) const;
         bool hasDimension() const;
         void addRecord( ParserRecord );
@@ -154,6 +156,7 @@ namespace Opm {
         std::unordered_set<std::string> m_validSectionNames;
         std::string m_matchRegexString;
         std::regex m_matchRegex;
+        std::string m_matchRegexSuffix{};
         std::vector< ParserRecord > m_records;
         std::string m_Description;
         bool raw_string_keyword = false;
@@ -175,6 +178,7 @@ namespace Opm {
         void initSizeKeyword(bool table_collection, const Json::JsonObject& sizeObject);
         void addItems( const Json::JsonObject& jsonConfig);
         void parseRecords( const Json::JsonObject& recordsConfig);
+        bool matchesDeckNames(std::string_view name) const;
     };
 
 std::ostream& operator<<( std::ostream&, const ParserKeyword& );

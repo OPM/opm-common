@@ -318,11 +318,15 @@ std::string KeywordSize::construct() const
         ParserKeyword(jsonConfig.get_string("name"))
     {
 
-        if (jsonConfig.has_item("deck_names") || jsonConfig.has_item("deck_name_regex") )
+        if (jsonConfig.has_item("deck_names") ||
+            jsonConfig.has_item("deck_name_regex") ||
+            jsonConfig.has_item("deck_name_regex_suffix"))
+        {
             // if either the deck names or the regular expression for deck names are
             // explicitly specified, we do not implicitly add the contents of the 'name'
             // item to the deck names...
             clearDeckNames();
+        }
 
         initSize(jsonConfig);
         if (jsonConfig.has_item("min_size")) {
@@ -503,14 +507,32 @@ std::string KeywordSize::construct() const
     }
 
     void ParserKeyword::initMatchRegex(const Json::JsonObject& jsonObject) {
-        if (!jsonObject.has_item("deck_name_regex"))
-            return;
+        if (jsonObject.has_item("deck_name_regex")) {
+            const Json::JsonObject regexStringObject = jsonObject.get_item("deck_name_regex");
+            if (!regexStringObject.is_string())
+                throw std::invalid_argument("The 'deck_name_regex' JSON item of keyword "+m_name+" need to be a string");
 
-        const Json::JsonObject regexStringObject = jsonObject.get_item("deck_name_regex");
-        if (!regexStringObject.is_string())
-            throw std::invalid_argument("The 'deck_name_regex' JSON item of keyword "+m_name+" need to be a string");
+            setMatchRegex(regexStringObject.as_string());
+        }
 
-        setMatchRegex(regexStringObject.as_string());
+        if (jsonObject.has_item("deck_name_regex_suffix")) {
+            if (!jsonObject.has_item("deck_names")) {
+                throw std::invalid_argument {
+                    fmt::format("The 'deck_name_regex_suffix' JSON item of "
+                                "keyword {} requires an explicit list "
+                                "of 'deck_names' too", this->m_name)
+                };
+            }
+
+            const Json::JsonObject regexStringObject = jsonObject.get_item("deck_name_regex_suffix");
+            if (!regexStringObject.is_string())
+                throw std::invalid_argument {
+                    fmt::format("The 'deck_name_regex_suffix' JSON item of "
+                                "keyword {} must be a string", this->m_name)
+                };
+
+            setMatchRegexSuffix(regexStringObject.as_string());
+        }
     }
 
     void ParserKeyword::addItems(const Json::JsonObject& itemsConfig) {
@@ -831,40 +853,91 @@ void set_dimensions( ParserItem& item,
         return !m_matchRegexString.empty();
     }
 
-    void ParserKeyword::setMatchRegex(const std::string& deckNameRegexp) {
+    bool ParserKeyword::hasMatchRegexSuffix() const {
+        return !this->m_matchRegexSuffix.empty();
+    }
+
+    void ParserKeyword::setMatchRegex(const std::string& deckNameRegexp)
+    {
+        if (deckNameRegexp.empty()) {
+            return;
+        }
+
         try {
             m_matchRegex = std::regex(deckNameRegexp);
             m_matchRegexString = deckNameRegexp;
         }
-        catch (const std::exception &e) {
-            std::cerr << "Warning: Malformed regular expression for keyword '" << getName() << "':\n"
-                      << "\n"
-                      << e.what() << "\n"
-                      << "\n"
-                      << "Ignoring expression!\n";
+        catch (const std::regex_error&) {
+            throw std::invalid_argument {
+                fmt::format("'{}' is not a valid regular expression ('deck_name_regex') "
+                            "for keyword '{}'", deckNameRegexp, this->getName())
+            };
+        }
+    }
+
+    void ParserKeyword::setMatchRegexSuffix(const std::string& deckNameRegexp)
+    {
+        if (deckNameRegexp.empty()) {
+            return;
+        }
+
+        try {
+            const auto sfx = std::regex { deckNameRegexp };
+            this->m_matchRegexSuffix = deckNameRegexp;
+        }
+        catch (const std::regex_error&) {
+            throw std::invalid_argument {
+                fmt::format("'{}' is not a valid regular expression suffix "
+                            "('deck_name_regex_suffix') for keyword '{}'",
+                            deckNameRegexp, this->getName())
+            };
         }
     }
 
     bool ParserKeyword::matches(const std::string_view& name ) const {
-        if (!validDeckName(name ))
+        if (!validDeckName(name))
             return false;
 
-        else if( m_deckNames.count( std::string(name) ) )
+        else if (matchesDeckNames(name))
             return true;
 
-        else if (hasMatchRegex()) {
-            bool match = std::regex_match( name.begin(), name.end(), m_matchRegex);
-            if (match)
-                return true;
+        else if (hasMatchRegex() && std::regex_match(std::string{name}, m_matchRegex))
+            return true;
+
+        return false;
+    }
+
+    bool ParserKeyword::matchesDeckNames(std::string_view name) const
+    {
+        const auto nameStr = std::string { name };
+
+        if (m_deckNames.find(nameStr) != m_deckNames.end()) {
+            return true;
         }
 
-        // Last desperate attempt - go through the deckNames list and
-        // interpret the elements as a regular expression.
-        for (const auto& deck_name : this->m_deckNames) {
-            if (std::regex_match(name.begin(), name.end(), std::regex(deck_name)))
-                return true;
-        }
-        return false;
+        // Try to match nameStr against all m_deckNames while treating each
+        // deck name as a regular expression, or, if applicable, when the
+        // name is extended by appending the m_matchRegexSuffix.  The latter
+        // is mostly a special case for region-level summary keywords whose
+        // strings may include a tag referring to a user-defined region set
+        // entered using the FIP* keywords--FIPNUM excluded.  Examples of
+        // such strings are
+        //
+        //   RPR__XYZ
+        //   ROPR_XYZ
+        //   RODENXYZ
+        //
+        // denoting the region-level average pressures, region-level oil
+        // production rate, and region-level average mass density of oil
+        // respectively defined for the FIPXYZ region set.
+        return std::any_of(this->m_deckNames.begin(),
+                           this->m_deckNames.end(),
+            [&nameStr, this](const std::string& deckName)
+        {
+            return std::regex_match(nameStr, std::regex { deckName })
+                || (this->hasMatchRegexSuffix() &&
+                    std::regex_match(nameStr, std::regex { deckName + m_matchRegexSuffix }));
+        });
     }
 
     std::string ParserKeyword::createDeclaration(const std::string& indent) const {
@@ -970,6 +1043,10 @@ void set_dimensions( ParserItem& item,
         if (hasMatchRegex())
             ss << indent << "setMatchRegex(\"" << m_matchRegexString << "\");" << '\n';
 
+        // set the deck name match regex suffix
+        if (hasMatchRegexSuffix())
+            ss << indent << "setMatchRegexSuffix(\"" << m_matchRegexSuffix << "\");\n";
+
         if (this->keyword_size.code())
             ss << indent << "setCodeEnd(\"" << this->code_end << "\");" << '\n';
 
@@ -1027,6 +1104,7 @@ void set_dimensions( ParserItem& item,
         if(    m_name              != rhs.m_name
             || this->code_end      != rhs.code_end
             || m_matchRegexString  != rhs.m_matchRegexString
+            || m_matchRegexSuffix  != rhs.m_matchRegexSuffix
             || isCodeKeyword()     != rhs.isCodeKeyword()
             || isDataKeyword()     != rhs.isDataKeyword())
           return false;
