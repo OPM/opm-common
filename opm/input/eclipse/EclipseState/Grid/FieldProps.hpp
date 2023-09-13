@@ -597,6 +597,8 @@ private:
     void init_satfunc(const std::string& keyword, Fieldprops::FieldData<double>& satfunc);
     void init_porv(Fieldprops::FieldData<double>& porv);
     void init_tempi(Fieldprops::FieldData<double>& tempi);
+    std::string canonical_fipreg_name(const std::string& fipreg);
+    const std::string& canonical_fipreg_name(const std::string& fipreg) const;
 
     const UnitSystem unit_system;
     std::size_t nx,ny,nz;
@@ -612,6 +614,7 @@ private:
     std::vector<MultregpRecord> multregp;
     std::unordered_map<std::string, Fieldprops::FieldData<int>> int_data;
     std::unordered_map<std::string, Fieldprops::FieldData<double>> double_data;
+    std::unordered_map<std::string, std::string> fipreg_shortname_translation{};
 
     std::unordered_map<std::string,Fieldprops::TranCalculator> tran;
 };
