@@ -2540,6 +2540,9 @@ static const auto block_units = UnitTable {
     // Water quantities
     {"BWDEN"    , Opm::UnitSystem::measure::density},
     {"BDENW"    , Opm::UnitSystem::measure::density},
+    {"BFLOWI"   , Opm::UnitSystem::measure::liquid_surface_rate},
+    {"BFLOWJ"   , Opm::UnitSystem::measure::liquid_surface_rate},
+    {"BFLOWK"   , Opm::UnitSystem::measure::liquid_surface_rate},
     {"BWIP"     , Opm::UnitSystem::measure::liquid_surface_volume},
     {"BWKR"     , Opm::UnitSystem::measure::identity},
     {"BKRW"     , Opm::UnitSystem::measure::identity},
