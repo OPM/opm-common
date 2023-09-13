@@ -243,6 +243,21 @@ Opm::EclIO::SummaryNode::normalise_keyword(const Opm::EclIO::SummaryNode::Catego
         : keyword;
 }
 
+std::string
+Opm::EclIO::SummaryNode::normalise_region_keyword(const std::string& keyword)
+{
+    static const auto region_kw = std::regex {
+        R"((R[A-Z]{2,4})(_{0,2}[A-Z]{3})?)"
+    };
+
+    auto keywordPieces = std::smatch {};
+    if (std::regex_match(keyword, keywordPieces, region_kw)) {
+        return keywordPieces[1].str();
+    }
+
+    return keyword;
+}
+
 std::optional<std::string> Opm::EclIO::SummaryNode::display_name() const {
     if (use_name(category)) {
         return wgname;

@@ -3677,8 +3677,9 @@ namespace Evaluator {
 
     bool Factory::isFunctionRelation()
     {
-        const auto normKw = Opm::EclIO::SummaryNode::
-            normalise_keyword(this->node_->category, this->node_->keyword);
+        const auto normKw = (this->node_->category == Opm::EclIO::SummaryNode::Category::Region)
+            ? Opm::EclIO::SummaryNode::normalise_region_keyword(this->node_->keyword)
+            : Opm::EclIO::SummaryNode::normalise_keyword(this->node_->category, this->node_->keyword);
 
         auto pos = funs.find(normKw);
         if (pos != funs.end()) {
