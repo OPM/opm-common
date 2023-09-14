@@ -678,6 +678,86 @@ BOOST_AUTO_TEST_CASE(TestCrossFlowHandling) {
     BOOST_CHECK(Well::Status::OPEN == schedule.getWell("BAN", 5).getStatus());
 }
 
+static std::string createDeckWithWellsAndSkinFactorChanges() {
+    std::string input = R"(
+START             -- 0
+1 NOV 1979 /
+GRID
+PORO
+    1000*0.1 /
+PERMX
+    1000*1 /
+PERMY
+    1000*0.1 /
+PERMZ
+    1000*0.01 /
+SCHEDULE
+DATES             -- 1
+ 1 DES 1979/
+/
+WELSPECS
+    'OP_1'       'OP'   9   9 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  /
+    'OP_2'       'OP'   8   8 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  /
+    'OP_3'       'OP'   7   7 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  /
+/
+COMPDAT
+ 'OP_1'  9  9   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
+ 'OP_1'  9  9   2   2 'OPEN' 1*   46.825   0.311  4332.346 1*  1*  'X'  22.123 /
+ 'OP_2'  8  8   1   3 'OPEN' 1*    1.168   0.311   107.872 1*  1*  'Y'  21.925 /
+ 'OP_2'  8  7   3   3 'OPEN' 1*   15.071   0.311  1391.859 1*  1*  'Y'  21.920 /
+ 'OP_2'  8  7   3   6 'OPEN' 1*    6.242   0.311   576.458 1*  1*  'Y'  21.915 /
+ 'OP_3'  7  7   1   1 'OPEN' 1*   27.412   0.311  2445.337 1*  1*  'Y'  18.521 /
+ 'OP_3'  7  7   2   2 'OPEN' 1*   55.195   0.311  4923.842 1*  1*  'Y'  18.524 /
+/
+DATES             -- 2
+ 10  JUL 2007 /
+/
+
+CSKIN
+'OP_1'  9  9  1  1  1.5  /
+'OP_2'  4*          -1.0 /
+'OP_3'  2*    1  2  10.0  /
+'OP_3'  7  7  1  1  -1.15 /
+/
+
+)";
+    return input;
+}
+
+BOOST_AUTO_TEST_CASE(CreateScheduleDeckWellsAndSkinFactorChanges) {
+    Opm::UnitSystem units(Opm::UnitSystem::UnitType::UNIT_TYPE_METRIC);
+    const auto& schedule = make_schedule(createDeckWithWellsAndSkinFactorChanges());
+    
+    // OP_1
+    {
+        const auto& cs = schedule.getWell("OP_1", 2).getConnections();
+        BOOST_CHECK_CLOSE(cs.getFromIJK(8, 8, 0).skinFactor(), 1.5, 1e-10);
+        double CF = 25.290608354096133;
+        BOOST_CHECK_CLOSE(cs.getFromIJK(8, 8, 0).CF(), units.to_si(Opm::UnitSystem::measure::transmissibility, CF), 1e-5);
+    }
+    // OP_2
+    {
+        const auto& well = schedule.getWell("OP_2", 2);
+        const auto& cs = well.getConnections();
+        for (size_t i = 0; i < cs.size(); i++) {
+            BOOST_CHECK_CLOSE(cs.get(i).skinFactor(), -1.0, 1e-10);
+        }
+        double CF = 7.822338909386947;
+        BOOST_CHECK_CLOSE(cs.getFromIJK(7, 6, 2).CF(), units.to_si(Opm::UnitSystem::measure::transmissibility, CF), 1e-5);
+    }
+    // OP_3
+    {
+        const auto& well = schedule.getWell("OP_3", 2);
+        const auto& cs = well.getConnections();
+        BOOST_CHECK_CLOSE(cs.getFromIJK(6, 6, 0).skinFactor(), -1.15, 1e-10);
+        BOOST_CHECK_CLOSE(cs.getFromIJK(6, 6, 1).skinFactor(), 10.0, 1e-10);
+        double CF1 = 36.09169888375442;
+        BOOST_CHECK_CLOSE(cs.getFromIJK(6, 6, 0).CF(), units.to_si(Opm::UnitSystem::measure::transmissibility, CF1), 1e-5);
+        double CF2 = 17.848489977420336;
+        BOOST_CHECK_CLOSE(cs.getFromIJK(6, 6, 1).CF(), units.to_si(Opm::UnitSystem::measure::transmissibility, CF2), 1e-5);
+    }
+}
+
 static std::string createDeckWithWellsAndConnectionDataWithWELOPEN() {
     std::string input = R"(
 START             -- 0
