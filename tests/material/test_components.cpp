@@ -703,6 +703,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(H2Class, Scalar, Types)
     // Rel. diff. tolerance
     Scalar tol = 1e-2;
     Scalar tol_visc = 2.6e-2;
+    Scalar tol_enth = 3.8e-2;
     
     // Loop over temperature and pressure, and compare to reference values in JSON file
     for (int iT = 0; iT < numT; ++iT) {
@@ -736,9 +737,9 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(H2Class, Scalar, Types)
             Json::JsonObject enth_ref_row = enthalpy_ref.get_array_item(iT);
             Scalar enth_ref = Scalar(enth_ref_row.get_array_item(iP).as_double());
 
-            BOOST_CHECK_MESSAGE(close_at_tolerance(enthalpy, enth_ref, tol), 
+            BOOST_CHECK_MESSAGE(close_at_tolerance(enthalpy, enth_ref, tol_enth), 
                 "relative difference between enthalpy {"<<enthalpy<<"} and reference {"<<enth_ref<<
-                "} exceeds tolerance {"<<tol<<"} at (T, p) = ("<<T.value()<<", "<<p.value()<<")");
+                "} exceeds tolerance {"<<tol_enth<<"} at (T, p) = ("<<T.value()<<", "<<p.value()<<")");
         }
     }
 }

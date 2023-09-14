@@ -46,6 +46,9 @@ initFromState(const EclipseState& eclState, const Schedule&)
                         "H2 pvt properties are calculated based on ideal gas relations, "
                         "and PVDG/PVTG input is ignored.");
     }
+    // Enable vaporization of water if needed
+    setEnableVaporizationWater(eclState.getSimulationConfig().hasVAPOIL() || 
+                               eclState.getSimulationConfig().hasVAPWAT());
 
     // We only supported single pvt region for the H2-brine module
     size_t numRegions = 1;
@@ -54,6 +57,7 @@ initFromState(const EclipseState& eclState, const Schedule&)
     Scalar T_ref = eclState.getTableManager().stCond().temperature;
     Scalar P_ref = eclState.getTableManager().stCond().pressure;
     gasReferenceDensity_[regionIdx] = H2::gasDensity(T_ref, P_ref, extrapolate);
+    brineReferenceDensity_[regionIdx] = Brine::liquidDensity(T_ref, P_ref, salinity_[regionIdx], extrapolate);
     initEnd();
 }
 

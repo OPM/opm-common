@@ -137,9 +137,15 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
 
     // Use molar mass of H2 and Brine as default in H2STORE keyword
     if (eclState.runspec().h2Storage()) {
+        // Salinity in mass fraction
+        const Scalar molality = eclState.getTableManager().salinity(); // mol/kg
+        const Scalar MmNaCl = 58.44e-3; // molar mass of NaCl [kg/mol]
+        const Scalar salinity = 1 / ( 1 + 1 / (molality*MmNaCl));
         for (unsigned regionIdx = 0; regionIdx < numRegions; ++regionIdx) {
             if (phaseIsActive(oilPhaseIdx)) // The oil component is used for the brine if OIL is active
-                molarMass_[regionIdx][oilCompIdx] = BrineH2Pvt<Scalar>::Brine::molarMass();
+                molarMass_[regionIdx][oilCompIdx] = BrineH2Pvt<Scalar>::Brine::molarMass(salinity);
+            if (phaseIsActive(waterPhaseIdx))
+                molarMass_[regionIdx][waterCompIdx] = BrineH2Pvt<Scalar>::Brine::molarMass(salinity);
             if (!phaseIsActive(gasPhaseIdx)) {
                 OPM_THROW(std::runtime_error,
                           "H2STORE requires gas phase\n");
@@ -176,13 +182,13 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
                               "or set it to zero.");
                 }
             }
-        } else if ( eclState.runspec().co2Storage()
+        } else if ( (eclState.runspec().co2Storage() || eclState.runspec().h2Storage())
                 && eclState.runspec().phases().active(Phase::GAS)
                 && eclState.runspec().phases().active(Phase::WATER))
         {
             diffusionCoefficients_.resize(numRegions,{0,0,0,0,0,0,0,0,0});
             // diffusion coefficients can be set using DIFFCGAS and DIFFCWAT
-            // for CO2STORE cases with gas + water
+            // for CO2STORE and H2STORE cases with gas + water
             const auto& diffCoeffWatTables = eclState.getTableManager().getDiffusionCoefficientWaterTable();
             if (!diffCoeffWatTables.empty()) {
                 for (unsigned regionIdx = 0; regionIdx < numRegions; ++regionIdx) {

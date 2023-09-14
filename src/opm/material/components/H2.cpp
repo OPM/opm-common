@@ -23,17 +23,40 @@
 
 #include <config.h>
 #include <opm/material/components/H2.hpp>
-
+#if HAVE_QUAD
+#include <opm/material/common/quad.hpp>
+#endif
 #include "h2tables.inc"
 
 namespace Opm {
 
 template<>
 const UniformTabulated2DFunction<double>&
+H2<double>::tabulatedEnthalpy = H2Tables::tabulatedEnthalpy;
+template<>
+const UniformTabulated2DFunction<double>&
 H2<double>::tabulatedDensity = H2Tables::tabulatedDensity;
+template<>
+const double H2<double>::brineSalinity = H2Tables::brineSalinity;
 
 template<>
 const UniformTabulated2DFunction<double>&
+H2<float>::tabulatedEnthalpy = H2Tables::tabulatedEnthalpy;
+template<>
+const UniformTabulated2DFunction<double>&
 H2<float>::tabulatedDensity = H2Tables::tabulatedDensity;
+template<>
+const float H2<float>::brineSalinity = H2Tables::brineSalinity;
+
+#if HAVE_QUAD
+template<>
+const UniformTabulated2DFunction<double>&
+H2<quad>::tabulatedEnthalpy = H2Tables::tabulatedEnthalpy;
+template<>
+const UniformTabulated2DFunction<double>&
+H2<quad>::tabulatedDensity = H2Tables::tabulatedDensity;
+template<>
+const quad H2<quad>::brineSalinity = H2Tables::brineSalinity;
+#endif
 
 } // namespace Opm

@@ -50,6 +50,9 @@ initFromState(const EclipseState& eclState, const Schedule&)
     // Check if DISGAS has been activated (enables H2 dissolved in brine)
     setEnableDissolvedGas(eclState.getSimulationConfig().hasDISGASW() || eclState.getSimulationConfig().hasDISGAS());
 
+    // Check if BRINE has been activated (varying salt concentration in brine)
+    setEnableSaltConcentration(eclState.runspec().phases().active(Phase::BRINE));
+
     // We only supported single pvt region for the H2-brine module
     size_t numRegions = 1;
     setNumRegions(numRegions);
@@ -57,15 +60,14 @@ initFromState(const EclipseState& eclState, const Schedule&)
 
     // Currently we only support constant salinity
     const Scalar molality = eclState.getTableManager().salinity(); // mol/kg
-    const Scalar MmNaCl = 58e-3; // molar mass of NaCl [kg/mol]
-    Brine::salinity = 1 / ( 1 + 1 / (molality*MmNaCl)); // convert to mass fraction
-    salinity_[regionIdx] = molality;  // molality used in BrineH2Pvt functions
+    const Scalar MmNaCl = 58.44e-3; // molar mass of NaCl [kg/mol]
+    salinity_[regionIdx] = 1 / ( 1 + 1 / (molality*MmNaCl)); // convert to mass fraction
 
     // set the surface conditions using the STCOND keyword
     Scalar T_ref = eclState.getTableManager().stCond().temperature;
     Scalar P_ref = eclState.getTableManager().stCond().pressure;
 
-    brineReferenceDensity_[regionIdx] = Brine::liquidDensity(T_ref, P_ref, extrapolate);
+    brineReferenceDensity_[regionIdx] = Brine::liquidDensity(T_ref, P_ref, salinity_[regionIdx], extrapolate);
     h2ReferenceDensity_[regionIdx] = H2::gasDensity(T_ref, P_ref, extrapolate);
 }
 
