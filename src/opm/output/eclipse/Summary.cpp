@@ -2460,6 +2460,7 @@ static const auto single_values_units = UnitTable {
 static const auto region_units = UnitTable {
     {"RPR"   , Opm::UnitSystem::measure::pressure},
     {"RPRP"  , Opm::UnitSystem::measure::pressure},
+    {"RPRH"  , Opm::UnitSystem::measure::pressure},
     {"RRPV"  , Opm::UnitSystem::measure::volume },
     {"ROIP"  , Opm::UnitSystem::measure::liquid_surface_volume },
     {"ROIPL" , Opm::UnitSystem::measure::liquid_surface_volume },
