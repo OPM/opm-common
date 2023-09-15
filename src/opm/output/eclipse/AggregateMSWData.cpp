@@ -577,7 +577,7 @@ namespace {
                 usys.from_si(M::length, valve.pipeAdditionalLength());
 
             rSeg[baseIndex + Ix::ValveArea] =
-                usys.from_si(M::length, usys.from_si(M::length, valve.conCrossArea()));
+                usys.from_si(M::length, usys.from_si(M::length, valve.conCrossAreaValue()));
 
             rSeg[baseIndex + Ix::ValveFlowCoeff] = valve.conFlowCoefficient();
             rSeg[baseIndex + Ix::ValveMaxArea]   =

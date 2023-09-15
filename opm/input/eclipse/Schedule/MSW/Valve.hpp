@@ -24,8 +24,11 @@
 #include <utility>
 #include <vector>
 #include <string>
+#include <optional>
 
 #include <opm/input/eclipse/Schedule/MSW/icd.hpp>
+#include <opm/input/eclipse/Deck/UDAValue.hpp>
+#include <opm/input/eclipse/Schedule/SummaryState.hpp>
 
 
 namespace Opm {
@@ -33,6 +36,19 @@ namespace Opm {
     class DeckRecord;
     class DeckKeyword;
     class Segment;
+
+    struct ValveUDAEval {
+        const SummaryState& summary_state;
+        const std::string& well_name;
+        const size_t segment_number;
+        const double udq_default;
+        
+        ValveUDAEval(const SummaryState& summary_state_, const std::string& well_name_,
+                         const size_t segment_number_, const double udq_default_);
+        
+        double value(const UDAValue& value) const;
+    };
+
 
     class Valve {
     public:
@@ -58,7 +74,8 @@ namespace Opm {
 
         // parameters for constriction pressure loss
         double conFlowCoefficient() const;
-        double conCrossArea() const;
+        double conCrossArea(const std::optional<const ValveUDAEval>& uda_eval = std::nullopt);
+        inline double conCrossAreaValue() const { return m_con_cross_area_value; }
         double conMaxCrossArea() const;
         double pipeDiameter() const;
         double pipeRoughness() const;
@@ -84,6 +101,7 @@ namespace Opm {
         {
             serializer(m_con_flow_coeff);
             serializer(m_con_cross_area);
+            serializer(m_con_cross_area_value);
             serializer(m_con_max_cross_area);
             serializer(m_pipe_additional_length);
             serializer(m_pipe_diameter);
@@ -94,7 +112,8 @@ namespace Opm {
 
     private:
         double m_con_flow_coeff;
-        double m_con_cross_area;
+        UDAValue m_con_cross_area;
+        double m_con_cross_area_value;
         double m_con_max_cross_area;
 
         double m_pipe_additional_length;

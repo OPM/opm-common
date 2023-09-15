@@ -22,7 +22,7 @@
     {
       "item": 4,
       "name": "AREA",
-      "value_type": "DOUBLE",
+      "value_type": "UDA",
       "dimension": "Length*Length"
     },
     {

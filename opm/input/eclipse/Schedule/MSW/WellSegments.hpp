@@ -93,6 +93,7 @@ namespace Opm {
         const Segment& getFromSegmentNumber(const int segment_number) const;
 
         const Segment& operator[](size_t idx) const;
+        Segment& operator[](size_t idx);
         void orderSegments();
         void updatePerfLength(const WellConnections& connections);
 

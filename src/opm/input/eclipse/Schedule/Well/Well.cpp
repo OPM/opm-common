@@ -1144,6 +1144,14 @@ const WellSegments& Well::getSegments() const {
         throw std::logic_error("Asked for segment information in not MSW well: " + this->name());
 }
 
+WellSegments& Well::getSegments() {
+    if (this->segments)
+        return *this->segments;
+    else
+        throw std::logic_error("Asked for segment information in not MSW well: " + this->name());
+}
+
+
 int Well::maxSegmentID() const
 {
     return (this->segments == nullptr)
