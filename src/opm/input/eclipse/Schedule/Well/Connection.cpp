@@ -275,7 +275,7 @@ const std::optional<std::pair<double, double>>& Connection::perf_range() const {
     }
 
     void Connection::scaleWellPi(double wellPi) {
-        this->m_wpimult = wellPi;
+        this->m_wpimult *= wellPi;
         this->m_CF *= wellPi;
     }
 
