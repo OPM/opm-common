@@ -1267,17 +1267,17 @@ bool Well::handleCSKINConnections(const DeckRecord& record) {
     const double angle = 6.2831853071795864769252867665590057683943387987502116419498;
     for (auto c : *this->connections) {
         if (match(c)) {
+            // Check for potential negative new CF
+            if ((std::log(c.r0() / std::min(c.rw(), c.r0())) + skin_factor) < 0.0) {
+                throw std::runtime_error("Negative connection transmissibility factor produced by CSKIN for well " 
+                                         + name());
+            }
+
             // Calculate new connection transmissibility factor
             double CF = angle * c.Kh() / (std::log(c.r0() / std::min(c.rw(), c.r0())) + skin_factor);
 
             // Apply last known WPIMULT (defaulted to 1.0)
             CF *= c.wpimult();
-
-            // Check if new CF is negative
-            if (CF < 0.0) {
-                throw std::runtime_error("Negative connection transmissibility factor produced by CSKIN for well " 
-                                         + name());
-            }
 
             // Set skin factor and connection factor
             c.setSkinFactor(skin_factor);
