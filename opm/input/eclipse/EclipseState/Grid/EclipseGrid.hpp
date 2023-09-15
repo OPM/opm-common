@@ -31,6 +31,7 @@
 #include <stdexcept>
 #include <unordered_set>
 #include <vector>
+#include <map>
 
 namespace Opm {
 
@@ -255,12 +256,15 @@ namespace Opm {
         std::vector<int> m_global_to_active;
         // Numerical aquifer cells, needs to be active
         std::unordered_set<size_t> m_aquifer_cells;
+        // Keep track of aquifer cell depths
+        std::map<size_t, double> m_aquifer_cell_depths;
 
         // Radial grids need this for volume calculations.
         std::optional<std::vector<double>> m_thetav;
         std::optional<std::vector<double>> m_rv;
 
         void updateNumericalAquiferCells(const Deck&);
+        double computeCellGeometricDepth(size_t globalIndex) const;
 
         void initGridFromEGridFile(Opm::EclIO::EclFile& egridfile, std::string fileName);
         void resetACTNUM( const int* actnum);

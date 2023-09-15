@@ -1678,6 +1678,12 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
 
     double EclipseGrid::getCellDepth(size_t globalIndex) const {
         assertGlobalIndex( globalIndex );
+
+        auto it = this->m_aquifer_cell_depths.find(globalIndex);
+        return it != this->m_aquifer_cell_depths.end() ? it->second : computeCellGeometricDepth(globalIndex);
+    }
+
+    double EclipseGrid::computeCellGeometricDepth(size_t globalIndex) const {
         std::array<double,8> X;
         std::array<double,8> Y;
         std::array<double,8> Z;
@@ -1891,6 +1897,10 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
                 const size_t k = record.getItem<AQUNUM::K>().get<int>(0) - 1;
                 const size_t global_index = this->getGlobalIndex(i, j, k);
                 this->m_aquifer_cells.insert(global_index);
+
+                const double depth = record.getItem<AQUNUM::DEPTH>().defaultApplied(0) ?
+                                        this->computeCellGeometricDepth(global_index) : record.getItem<AQUNUM::DEPTH>().getSIDouble(0);
+                this->m_aquifer_cell_depths.insert_or_assign(global_index, depth);
             }
         }
     }
