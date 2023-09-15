@@ -114,6 +114,10 @@ namespace Opm {
         return m_multregtScanner.getRegionMultiplier(globalCellIndex1, globalCellIndex2, faceDir);
     }
 
+    double TransMult::getRegionMultiplierNNC(std::size_t globalCellIndex1, std::size_t globalCellIndex2) const {
+        return m_multregtScanner.getRegionMultiplierNNC(globalCellIndex1, globalCellIndex2);
+    }
+
     bool TransMult::hasDirectionProperty(FaceDir::DirEnum faceDir) const {
         return m_trans.count(faceDir) == 1;
     }
@@ -154,6 +158,10 @@ namespace Opm {
             auto& fault = faults.getFault(faultIndex);
             this->applyMULTFLT(fault);
         }
+    }
+
+    void TransMult::applyNumericalAquifer(const std::vector<std::size_t>& aquifer_cells) {
+        m_multregtScanner.applyNumericalAquifer(aquifer_cells);
     }
 
     bool TransMult::operator==(const TransMult& data) const {

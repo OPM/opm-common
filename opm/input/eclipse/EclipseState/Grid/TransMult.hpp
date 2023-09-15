@@ -56,9 +56,11 @@ namespace Opm {
         double getMultiplier(size_t globalIndex, FaceDir::DirEnum faceDir) const;
         double getMultiplier(size_t i , size_t j , size_t k, FaceDir::DirEnum faceDir) const;
         double getRegionMultiplier( size_t globalCellIndex1, size_t globalCellIndex2, FaceDir::DirEnum faceDir) const;
+        double getRegionMultiplierNNC(std::size_t globalCellIndex1, std::size_t globalCellIndex2) const;
         void applyMULT(const std::vector<double>& srcMultProp, FaceDir::DirEnum faceDir);
         void applyMULTFLT(const FaultCollection& faults);
         void applyMULTFLT(const Fault& fault);
+        void applyNumericalAquifer(const std::vector<std::size_t>& aquifer_cells);
 
         bool operator==(const TransMult& data) const;
 

@@ -205,6 +205,7 @@ namespace Opm {
                                               std::forward_as_tuple(std::make_pair(1, 2)),
                                               std::forward_as_tuple(0));
         result.regions = {{"test3", {11}}};
+        result.aquifer_cells = { std::size_t{17}, std::size_t{29} };
 
         return result;
     }
@@ -215,6 +216,7 @@ namespace Opm {
             && (this->m_records == data.m_records)
             && (this->m_searchMap == data.m_searchMap)
             && (this->regions == data.regions)
+            && (this->aquifer_cells == data.aquifer_cells)
             ;
     }
 
@@ -226,8 +228,21 @@ namespace Opm {
         this->m_records = data.m_records;
         this->m_searchMap = data.m_searchMap;
         this->regions = data.regions;
+        this->aquifer_cells = data.aquifer_cells;
 
         return *this;
+    }
+
+    void MULTREGTScanner::applyNumericalAquifer(const std::vector<std::size_t>& aquifer_cells_arg)
+    {
+        this->aquifer_cells.insert(this->aquifer_cells.end(),
+                                   aquifer_cells_arg.begin(),
+                                   aquifer_cells_arg.end());
+
+        std::sort(this->aquifer_cells.begin(), this->aquifer_cells.end());
+        this->aquifer_cells.erase(std::unique(this->aquifer_cells.begin(),
+                                              this->aquifer_cells.end()),
+                                  this->aquifer_cells.end());
     }
 
     // This function will check the region values in globalIndex1 and
@@ -264,15 +279,19 @@ namespace Opm {
         };
 
         auto ignoreMultiplierRecord =
-            [is_adj = is_adjacent(this->gridDims, globalIndex1, globalIndex2)]
+            [is_adj = is_adjacent(this->gridDims, globalIndex1, globalIndex2),
+             is_aqu = this->isAquNNC(globalIndex1, globalIndex2)]
             (const MULTREGT::NNCBehaviourEnum nnc_behaviour)
         {
             // We ignore the record if either of the following conditions hold
             //
             //   1. Cells are adjacent, but record stipulates NNCs only
             //   2. Connection is an NNC, but record stipulates no NNCs
-            return ( is_adj && (nnc_behaviour == MULTREGT::NNCBehaviourEnum::NNC))
-                || (!is_adj && (nnc_behaviour == MULTREGT::NNCBehaviourEnum::NONNC));
+            //   3. Connection is associated to a numerical aquifer, but
+            //      record stipulates that no such connections apply.
+            return ((is_adj && !is_aqu) && (nnc_behaviour == MULTREGT::NNCBehaviourEnum::NNC))
+                || ((!is_adj || is_aqu) && (nnc_behaviour == MULTREGT::NNCBehaviourEnum::NONNC))
+                || (is_aqu              && (nnc_behaviour == MULTREGT::NNCBehaviourEnum::NOAQUNNC));
         };
 
         for (const auto& [regName, regMap] : this->m_searchMap) {
@@ -305,6 +324,48 @@ namespace Opm {
         return 1.0;
     }
 
+    double MULTREGTScanner::getRegionMultiplierNNC(const std::size_t globalCellIdx1,
+                                                   const std::size_t globalCellIdx2) const
+    {
+        if (this->m_searchMap.empty()) {
+            return 1.0;
+        }
+
+        auto ignoreMultiplierRecord =
+            [is_aqu = this->isAquNNC(globalCellIdx1, globalCellIdx2)]
+            (const MULTREGT::NNCBehaviourEnum nnc_behaviour)
+        {
+            return (nnc_behaviour == MULTREGT::NNCBehaviourEnum::NONNC)
+                || (is_aqu && (nnc_behaviour == MULTREGT::NNCBehaviourEnum::NOAQUNNC));
+        };
+
+        for (const auto& [regName, regMap] : this->m_searchMap) {
+            const auto& region_data = this->regions.at(regName);
+
+            const auto regionId1 = region_data[globalCellIdx1];
+            const auto regionId2 = region_data[globalCellIdx2];
+
+            auto regPairPos = regMap.find({ regionId1, regionId2 });
+            if ((regionId1 != regionId2) && (regPairPos == regMap.end())) {
+                // 1 -> 2 not found.  Try reverse direction.
+                regPairPos = regMap.find({ regionId2, regionId1 });
+            }
+
+            if (regPairPos == regMap.end()) {
+                // Neither 1->2 nor 2->1 found.  Move on to next region set.
+                continue;
+            }
+
+            const auto& record = this->m_records[regPairPos->second];
+
+            if (! ignoreMultiplierRecord(record.nnc_behaviour)) {
+                return record.trans_mult;
+            }
+        }
+
+        return 1.0;
+    }
+
     void MULTREGTScanner::assertKeywordSupported(const DeckKeyword& deckKeyword)
     {
         using Kw = ParserKeywords::MULTREGT;
@@ -319,15 +380,6 @@ namespace Opm {
                         "Sorry - MULTREGT applied internally to a region is not yet supported"
                     };
                 }
-            }
-
-            const auto nnc_behaviour = MULTREGT::
-                NNCBehaviourFromString(deckRecord.getItem("NNC_MULT").get<std::string>(0));
-
-            if (nnc_behaviour == MULTREGT::NNCBehaviourEnum::NOAQUNNC) {
-                throw std::invalid_argument {
-                    "Sorry - currently we do not support 'NOAQUNNC' for MULTREGT."
-                };
             }
         }
     }
@@ -374,5 +426,19 @@ namespace Opm {
                 }
             }
         }
+    }
+
+    bool MULTREGTScanner::isAquNNC(const std::size_t globalCellIdx1,
+                                   const std::size_t globalCellIdx2) const
+    {
+        return this->isAquCell(globalCellIdx1)
+            || this->isAquCell(globalCellIdx2);
+    }
+
+    bool MULTREGTScanner::isAquCell(const std::size_t globalCellIdx) const
+    {
+        return std::binary_search(this->aquifer_cells.begin(),
+                                  this->aquifer_cells.end(),
+                                  globalCellIdx);
     }
 } // namespace Opm
