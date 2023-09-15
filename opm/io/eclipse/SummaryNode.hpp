@@ -81,6 +81,8 @@ struct SummaryNode {
     static std::string normalise_keyword(const Category     category,
                                          const std::string& keyword);
 
+    static std::string normalise_region_keyword(const std::string& keyword);
+
     static inline std::string normalise_keyword(const std::string& keyword)
     {
         return normalise_keyword(category_from_keyword(keyword), keyword);

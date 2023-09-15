@@ -1067,7 +1067,7 @@ inline void keywordR(SummaryConfig::keyword_list& list,
     auto param = SummaryConfigNode {
         keyword, SummaryConfigNode::Category::Region, deck_keyword.location()
     }
-    .parameterType(parseKeywordType(keyword))
+    .parameterType(parseKeywordType(EclIO::SummaryNode::normalise_region_keyword(keyword)))
     .fip_region( region_name.value() )
     .isUserDefined( is_udq(keyword) );
 
