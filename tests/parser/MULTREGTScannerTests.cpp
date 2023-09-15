@@ -44,6 +44,8 @@
 #include <stdexcept>
 #include <vector>
 
+BOOST_AUTO_TEST_SUITE(Basic)
+
 BOOST_AUTO_TEST_CASE(TestRegionName) {
     BOOST_CHECK_EQUAL( "FLUXNUM" , Opm::MULTREGT::RegionNameFromDeckValue( "F"));
     BOOST_CHECK_EQUAL( "MULTNUM" , Opm::MULTREGT::RegionNameFromDeckValue( "M"));
@@ -290,6 +292,12 @@ BOOST_AUTO_TEST_CASE(MULTREGT_COPY_MULTNUM) {
         BOOST_CHECK_EQUAL(fdata[i], data[i]);
     }
 }
+
+BOOST_AUTO_TEST_SUITE_END()     // Basic
+
+// ===========================================================================
+
+BOOST_AUTO_TEST_SUITE(AquNNC)
 
 namespace {
     Opm::Deck aquNNCDeck_OneAquCell()
@@ -750,3 +758,183 @@ BOOST_AUTO_TEST_CASE(AQUNNC_Handling_ThreeAquCells)
         BOOST_CHECK_CLOSE(getMultNNC(scanner, { 0, 6, 1 }, { 0, 7, 1 }), 0.01, 1.0e-8);
     }
 }
+
+BOOST_AUTO_TEST_SUITE_END()     // AquNNC
+
+// ===========================================================================
+
+BOOST_AUTO_TEST_SUITE(MultiRegSet)
+
+namespace {
+    class TMultRegion
+    {
+    public:
+        explicit TMultRegion(const Opm::Deck& deck);
+
+        double regular(const std::array<int,3>&    c1,
+                       const std::array<int,3>&    c2,
+                       const Opm::FaceDir::DirEnum direction) const;
+
+        double nnc(const std::array<int,3>& c1,
+                   const std::array<int,3>& c2) const;
+
+    private:
+        Opm::EclipseGrid grid_;
+        Opm::FieldPropsManager fp_;
+        Opm::MULTREGTScanner scanner_;
+    };
+
+    TMultRegion::TMultRegion(const Opm::Deck& deck)
+        : grid_    { deck }
+        , fp_      { deck, Opm::Phases { true, true, true }, grid_, Opm::TableManager { deck } }
+        , scanner_ { grid_, &fp_, deck.getKeywordList<Opm::ParserKeywords::MULTREGT>() }
+    {}
+
+    double TMultRegion::regular(const std::array<int,3>&    c1,
+                                const std::array<int,3>&    c2,
+                                const Opm::FaceDir::DirEnum direction) const
+    {
+        return this->scanner_
+            .getRegionMultiplier(this->grid_.getGlobalIndex(c1[0], c1[1], c1[2]),
+                                 this->grid_.getGlobalIndex(c2[0], c2[1], c2[2]),
+                                 direction);
+    }
+
+    double TMultRegion::nnc(const std::array<int,3>& c1,
+                            const std::array<int,3>& c2) const
+    {
+        return this->scanner_
+            .getRegionMultiplierNNC(this->grid_.getGlobalIndex(c1[0], c1[1], c1[2]),
+                                    this->grid_.getGlobalIndex(c2[0], c2[1], c2[2]));
+    }
+
+    Opm::Deck setup(const std::string& regsets,
+                    const std::string& multregt)
+    {
+        return Opm::Parser{}.parseString(R"(RUNSPEC
+DIMENS
+ 1 6 2 /
+
+GRID
+
+DXV
+  100.0 /
+
+DYV
+  6*100.0 /
+
+DZV
+  2*10.0 /
+
+DEPTHZ
+  14*2000.0 /
+
+PORO
+ 12*0.25 /
+
+PERMX
+ 12*100.0 /
+
+PERMZ
+ 12*10.0 /
+
+COPY
+  PERMX PERMY /
+/
+)" + regsets + multregt);
+    }
+
+    namespace Regions {
+        std::string same()
+        {
+            return { R"(MULTNUM
+1 5*2   -- K=1
+1 5*2 / -- K=2
+
+FLUXNUM
+1 5*2   -- K=1
+1 5*2 / -- K=2
+)" };
+        }
+
+        std::string f_plus_one()
+        {
+            return { R"(MULTNUM
+2 5*3   -- K=1
+2 5*3 / -- K=2
+
+FLUXNUM
+1 5*2   -- K=1
+1 5*2 / -- K=2
+)" };
+        }
+    } // namespace Regions
+
+    namespace Multregt {
+        std::string none() { return {}; }
+
+        std::string repeated()
+        {
+            return { R"(
+MULTREGT
+  1 2  0.5  1*  'NNC'   'M' /
+  1 2  0.1  1*  'NNC'   'M' /
+/
+)" };
+        }
+
+        std::string repeated_different_regsets()
+        {
+            return { R"(
+MULTREGT
+  1 2  0.5  1*  'NNC'   'F' /
+  1 2  0.2  1*  'NNC'   'M' /
+/
+)" };
+        }
+
+        std::string same_but_different()
+        {
+            return { R"(
+MULTREGT
+  1 2  0.5  1*  'NNC'   'F' /
+  2 3  0.1  1*  'NNC'   'M' /
+/
+)" };
+        }
+    } // namespace Multregt
+} // Anonymous namespace
+
+BOOST_AUTO_TEST_CASE(No_Multiplier)
+{
+    const auto rmult = TMultRegion { setup(Regions::same(), Multregt::none()) };
+
+    BOOST_CHECK_CLOSE(rmult.regular({ 0, 1, 0 }, { 0, 0, 1 }, Opm::FaceDir::DirEnum::YPlus), 1.0, 1.0e-8);
+    BOOST_CHECK_CLOSE(rmult.nnc({ 0, 1, 0 }, { 0, 0, 1 }), 1.0, 1.0e-8);
+}
+
+BOOST_AUTO_TEST_CASE(Repeated_Take_Last)
+{
+    const auto rmult = TMultRegion { setup(Regions::same(), Multregt::repeated()) };
+
+    BOOST_CHECK_CLOSE(rmult.regular({ 0, 1, 0 }, { 0, 0, 1 }, Opm::FaceDir::DirEnum::YPlus), 0.1, 1.0e-8);
+    BOOST_CHECK_CLOSE(rmult.nnc({ 0, 1, 0 }, { 0, 0, 1 }), 0.1, 1.0e-8);
+}
+
+BOOST_AUTO_TEST_CASE(Repeated_Take_Last_Different_Regsets)
+{
+    const auto rmult = TMultRegion { setup(Regions::same(), Multregt::repeated_different_regsets()) };
+
+    BOOST_CHECK_CLOSE(rmult.regular({ 0, 1, 0 }, { 0, 0, 1 }, Opm::FaceDir::DirEnum::YPlus), 0.2, 1.0e-8);
+    BOOST_CHECK_CLOSE(rmult.nnc({ 0, 1, 0 }, { 0, 0, 1 }), 0.2, 1.0e-8);
+}
+
+BOOST_AUTO_TEST_CASE(Same_Conn_From_Multiple_Regsets)
+{
+    const auto rmult = TMultRegion { setup(Regions::f_plus_one(), Multregt::same_but_different()) };
+
+    BOOST_CHECK_CLOSE(rmult.regular({ 0, 1, 0 }, { 0, 0, 1 }, Opm::FaceDir::DirEnum::YPlus), 0.05, 1.0e-8);
+    BOOST_CHECK_CLOSE(rmult.nnc({ 0, 1, 0 }, { 0, 0, 1 }), 0.05, 1.0e-8);
+}
+
+BOOST_AUTO_TEST_SUITE_END()     // MultiRegSet
