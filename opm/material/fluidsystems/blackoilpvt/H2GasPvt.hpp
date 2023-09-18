@@ -66,7 +66,7 @@ public:
     {
         int numRegions = salinity_.size();
         setNumRegions(numRegions);
-        for (size_t i = 0; i < numRegions; ++i) {
+        for (int i = 0; i < numRegions; ++i) {
             gasReferenceDensity_[i] = H2::gasDensity(T_ref, P_ref, extrapolate);
             brineReferenceDensity_[i] = Brine::liquidDensity(T_ref, P_ref, salinity_[i], extrapolate);
         }
@@ -139,7 +139,7 @@ public:
         /* NOTE: Assume ideal mixing */
 
         // Init output
-        Evaluation result;
+        Evaluation result = 0;
 
         // We have to check that one of RV and RVW is zero since H2STORE works with either GAS/WATER or GAS/OIL system
         assert(rv == 0.0 || rvw == 0.0);

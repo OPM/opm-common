@@ -132,7 +132,6 @@ void ensurePvtApiBrine(const BrinePvt& brinePvt)
         Evaluation pressure = 1e5;
         Evaluation saltconcentration = 0.0;
         Evaluation rs = 0.0;
-        Evaluation tmp;
 
         ////
         // Water PVT API
@@ -166,7 +165,6 @@ void ensurePvtApiGas(const H2Pvt& h2Pvt)
         Evaluation Rvw = 0.0;
         Evaluation So = 0.5;
         Evaluation maxSo = 1.0;
-        Evaluation tmp;
 
         /////
         // H2 PVT API
@@ -211,7 +209,6 @@ void ensurePvtApiBrineOil(const BrinePvt& brinePvt)
         Evaluation Rs = 0.0;
         Evaluation So = 0.5;
         Evaluation maxSo = 1.0;
-        Evaluation tmp;
 
         /////
         // brine PVT API
