@@ -443,8 +443,12 @@ namespace Opm {
                     if (KhItem.defaultApplied(0) || KhItem.getSIDouble(0) < 0) {
                         Kh = CF * (std::log(r0 / std::min(r0, rw)) + skin_factor) / angle;
                     } else {
-                        if (Kh < 0)
+                        if (Kh < 0) {
                             Kh = std::sqrt(K[0] * K[1]) * D[2];
+
+                            // Compute r0 to be consistent with other parameters
+                            r0 = RestartIO::RstConnection::inverse_peaceman(CF, Kh, rw, skin_factor);
+                        }
                     }
                 }
             }

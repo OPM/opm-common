@@ -688,6 +688,7 @@ namespace Opm
         void handleCOMPORD   (HandlerContext&);
         void handleCOMPSEGS  (HandlerContext&);
         void handleCOMPTRAJ  (HandlerContext&);
+        void handleCSKIN     (HandlerContext&);
         void handleDRSDT     (HandlerContext&);
         void handleDRSDTCON  (HandlerContext&);
         void handleDRSDTR    (HandlerContext&);

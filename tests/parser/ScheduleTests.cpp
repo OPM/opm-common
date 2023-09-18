@@ -678,6 +678,249 @@ BOOST_AUTO_TEST_CASE(TestCrossFlowHandling) {
     BOOST_CHECK(Well::Status::OPEN == schedule.getWell("BAN", 5).getStatus());
 }
 
+static std::string createDeckWithWellsAndSkinFactorChanges() {
+    std::string input = R"(
+START             -- 0
+1 NOV 1979 /
+GRID
+PORO
+    1000*0.1 /
+PERMX
+    1000*1 /
+PERMY
+    1000*0.1 /
+PERMZ
+    1000*0.01 /
+SCHEDULE
+DATES             -- 1
+ 1 DES 1979/
+/
+WELSPECS
+    'OP_1'       'OP'   9   9 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  /
+    'OP_2'       'OP'   8   8 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  /
+    'OP_3'       'OP'   7   7 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  /
+/
+COMPDAT
+ 'OP_1'  9  9   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
+ 'OP_1'  9  9   2   2 'OPEN' 1*   46.825   0.311  4332.346 1*  1*  'X'  22.123 /
+ 'OP_2'  8  8   1   3 'OPEN' 1*    1.168   0.311   107.872 1*  1*  'Y'  21.925 /
+ 'OP_2'  8  7   3   3 'OPEN' 1*   15.071   0.311  1391.859 1*  1*  'Y'  21.920 /
+ 'OP_2'  8  7   3   6 'OPEN' 1*    6.242   0.311   576.458 1*  1*  'Y'  21.915 /
+ 'OP_3'  7  7   1   1 'OPEN' 1*   27.412   0.311  2445.337 1*  1*  'Y'  18.521 /
+ 'OP_3'  7  7   2   2 'OPEN' 1*   55.195   0.311  4923.842 1*  1*  'Y'  18.524 /
+/
+DATES             -- 2
+ 10  JUL 2007 /
+/
+
+CSKIN
+'OP_1'  9  9  1  1  1.5  /
+'OP_2'  4*          -1.0 /
+'OP_3'  2*    1  2  10.0  /
+'OP_3'  7  7  1  1  -1.15 /
+/
+
+)";
+    return input;
+}
+
+BOOST_AUTO_TEST_CASE(CreateScheduleDeckWellsAndSkinFactorChanges) {
+    Opm::UnitSystem units(Opm::UnitSystem::UnitType::UNIT_TYPE_METRIC);
+    const auto& schedule = make_schedule(createDeckWithWellsAndSkinFactorChanges());
+    
+    // OP_1
+    {
+        const auto& cs = schedule.getWell("OP_1", 2).getConnections();
+        BOOST_CHECK_CLOSE(cs.getFromIJK(8, 8, 0).skinFactor(), 1.5, 1e-10);
+        double CF = 25.290608354096133;
+        BOOST_CHECK_CLOSE(cs.getFromIJK(8, 8, 0).CF(), units.to_si(Opm::UnitSystem::measure::transmissibility, CF), 1e-5);
+    }
+    // OP_2
+    {
+        const auto& well = schedule.getWell("OP_2", 2);
+        const auto& cs = well.getConnections();
+        for (size_t i = 0; i < cs.size(); i++) {
+            BOOST_CHECK_CLOSE(cs.get(i).skinFactor(), -1.0, 1e-10);
+        }
+        double CF = 7.822338909386947;
+        BOOST_CHECK_CLOSE(cs.getFromIJK(7, 6, 2).CF(), units.to_si(Opm::UnitSystem::measure::transmissibility, CF), 1e-5);
+    }
+    // OP_3
+    {
+        const auto& well = schedule.getWell("OP_3", 2);
+        const auto& cs = well.getConnections();
+        BOOST_CHECK_CLOSE(cs.getFromIJK(6, 6, 0).skinFactor(), -1.15, 1e-10);
+        BOOST_CHECK_CLOSE(cs.getFromIJK(6, 6, 1).skinFactor(), 10.0, 1e-10);
+        double CF1 = 36.09169888375442;
+        BOOST_CHECK_CLOSE(cs.getFromIJK(6, 6, 0).CF(), units.to_si(Opm::UnitSystem::measure::transmissibility, CF1), 1e-5);
+        double CF2 = 17.848489977420336;
+        BOOST_CHECK_CLOSE(cs.getFromIJK(6, 6, 1).CF(), units.to_si(Opm::UnitSystem::measure::transmissibility, CF2), 1e-5);
+    }
+}
+
+static std::string createDeckWithWPIMULTandWELPIandCSKIN() {
+    std::string input = R"(
+START             -- 0
+1 NOV 1979 /
+GRID
+PORO
+    1000*0.1 /
+PERMX
+    1000*1 /
+PERMY
+    1000*0.1 /
+PERMZ
+    1000*0.01 /
+SCHEDULE
+DATES             -- 1
+ 1 DES 1979/
+/
+WELSPECS
+    'OP_1'       'OP'   9   9 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  /
+/
+COMPDAT
+ 'OP_1'  9  9   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
+/
+
+DATES             -- 2
+ 10  JUL 2007 /
+/
+CSKIN
+'OP_1'  9  9  1  1  1.5  /
+/
+
+DATES             -- 3
+ 10  AUG 2007 /
+/
+WPIMULT
+OP_1  1.30 /
+/
+WPIMULT
+OP_1  1.30 /
+/
+
+DATES             -- 4
+ 10  SEP 2007 /
+/
+CSKIN
+'OP_1'  9  9  1  1  0.5  /
+/
+
+DATES             -- 5
+ 10  OCT 2007 /
+/
+WPIMULT
+OP_1  1.30 /
+/
+
+DATES             -- 6
+ 10  NOV 2007 /
+/
+WELPI
+OP_1 50 /
+/
+
+DATES             -- 7
+ 10  DEC 2007 /
+/
+CSKIN
+'OP_1'  9  9  1  1  5.0  /
+/
+
+DATES             -- 8
+ 10  JAN 2008 /
+/
+COMPDAT
+ 'OP_1'  9  9   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
+/
+
+DATES             -- 9
+ 10  FEB 2008 /
+/
+CSKIN
+'OP_1'  9  9  1  1  -1.0  /
+/
+
+)";
+    return input;
+}
+
+BOOST_AUTO_TEST_CASE(CreateScheduleDeckWPIMULTandWELPIandCSKIN) {
+    // Setup
+    Opm::UnitSystem units(Opm::UnitSystem::UnitType::UNIT_TYPE_METRIC);
+    auto schedule = make_schedule(createDeckWithWPIMULTandWELPIandCSKIN());
+
+    // Report step 2
+    {
+        const auto& cs = schedule.getWell("OP_1", 2).getConnections();
+        BOOST_CHECK_CLOSE(cs.getFromIJK(8, 8, 0).skinFactor(), 1.5, 1e-10);
+        double CF = 25.290608354096133;
+        BOOST_CHECK_CLOSE(cs.getFromIJK(8, 8, 0).CF(), units.to_si(Opm::UnitSystem::measure::transmissibility, CF), 1e-5);
+        BOOST_CHECK_CLOSE(cs.getFromIJK(8, 8, 0).wpimult(), 1.0, 1e-5);
+    }
+
+    // Report step 3
+    {
+        const auto& cs_prev = schedule.getWell("OP_1", 2).getConnections();
+        const auto& cs_curr = schedule.getWell("OP_1", 3).getConnections();
+        BOOST_CHECK_CLOSE(cs_curr.getFromIJK(8, 8, 0).CF() / cs_prev.getFromIJK(8, 8, 0).CF(), 1.3, 1e-5);
+        BOOST_CHECK_CLOSE(cs_curr.getFromIJK(8, 8, 0).wpimult(), 1.3, 1e-5);
+    }
+
+    // Report step 4
+    {
+        const auto& cs = schedule.getWell("OP_1", 4).getConnections();
+        BOOST_CHECK_CLOSE(cs.getFromIJK(8, 8, 0).skinFactor(), 0.5, 1e-10);
+        double CF = 38.90302007377862;  // CF from CSKIN multiplied by 1.3 from WPIMULT
+        BOOST_CHECK_CLOSE(cs.getFromIJK(8, 8, 0).CF(), units.to_si(Opm::UnitSystem::measure::transmissibility, CF), 1e-5);
+    }
+
+    // Report step 5
+    {
+        const auto& cs_prev = schedule.getWell("OP_1", 4).getConnections();
+        const auto& cs_curr = schedule.getWell("OP_1", 5).getConnections();
+        BOOST_CHECK_CLOSE(cs_curr.getFromIJK(8, 8, 0).CF() / cs_prev.getFromIJK(8, 8, 0).CF(), 1.3, 1e-5);
+        BOOST_CHECK_CLOSE(cs_curr.getFromIJK(8, 8, 0).wpimult(), 1.3 * 1.3, 1e-5);
+    }
+
+    // Report step 6
+    {
+        const auto& cs = schedule.getWell("OP_1", 6).getConnections();
+        double init_pi = 100.0;
+        schedule.applyWellProdIndexScaling("OP_1", 6, units.to_si(Opm::UnitSystem::measure::liquid_productivity_index, init_pi));
+        const auto& target_pi = schedule[6].target_wellpi.at("OP_1");
+        BOOST_CHECK_CLOSE(target_pi, 50.0, 1e-5);
+        BOOST_CHECK_CLOSE(cs.getFromIJK(8, 8, 0).wpimult(), 1.3 * 1.3 * (target_pi / init_pi), 1e-5);
+    }
+
+    // Report step 7
+    {
+        const auto& cs_prev = schedule.getWell("OP_1", 6).getConnections();
+        const auto& cs_curr = schedule.getWell("OP_1", 7).getConnections();
+        BOOST_CHECK_CLOSE(cs_curr.getFromIJK(8, 8, 0).skinFactor(), 5.0, 1e-10);
+        double CF = 13.858329011932668;  // CF from CSKIN multiplied by 0.845 from WPIMULT and WELPI previous
+        BOOST_CHECK_CLOSE(cs_curr.getFromIJK(8, 8, 0).CF(), units.to_si(Opm::UnitSystem::measure::transmissibility, CF), 1e-5);
+        BOOST_CHECK_CLOSE(cs_curr.getFromIJK(8, 8, 0).wpimult(), cs_prev.getFromIJK(8, 8, 0).wpimult(), 1e-5);
+    }
+
+    // Report step 8
+    {
+        const auto& cs = schedule.getWell("OP_1", 8).getConnections();
+        BOOST_CHECK_CLOSE(cs.getFromIJK(8, 8, 0).CF(), units.to_si(Opm::UnitSystem::measure::transmissibility, 32.948), 1e-5);
+        BOOST_CHECK_CLOSE(cs.getFromIJK(8, 8, 0).wpimult(), 1.0, 1e-5);
+    }
+
+    // Report step 9
+    {
+        const auto& cs = schedule.getWell("OP_1", 9).getConnections();
+        BOOST_CHECK_CLOSE(cs.getFromIJK(8, 8, 0).skinFactor(), -1.0, 1e-10);
+        double CF = 41.27026972084714;  // CF from CSKIN with WPIMULT and WELLPI multiplier reset to 1.0
+        BOOST_CHECK_CLOSE(cs.getFromIJK(8, 8, 0).CF(), units.to_si(Opm::UnitSystem::measure::transmissibility, CF), 1e-5);
+        BOOST_CHECK_CLOSE(cs.getFromIJK(8, 8, 0).wpimult(), 1.0, 1e-5);
+    }
+}
+
+
 static std::string createDeckWithWellsAndConnectionDataWithWELOPEN() {
     std::string input = R"(
 START             -- 0
