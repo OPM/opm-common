@@ -157,6 +157,8 @@ FOIP
 FOIPL
 FGIP
 FGIPG
+-- Volumes
+FHPV
 -- Ratios
 FWCT
 FWCTH
@@ -176,6 +178,8 @@ FWPI
 
 -- Pressures
 FPR
+FPRH
+FPRP
 
 BPR
   1  1  1 /
@@ -679,6 +683,10 @@ WWCTH
 WGOR
 /
 WGORH
+/
+WOGR
+/
+WWGRH
 /
 WGLR
 /
