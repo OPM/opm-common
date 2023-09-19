@@ -1898,9 +1898,8 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
                 const size_t global_index = this->getGlobalIndex(i, j, k);
                 this->m_aquifer_cells.insert(global_index);
 
-                const double depth = record.getItem<AQUNUM::DEPTH>().defaultApplied(0) ?
-                                        this->computeCellGeometricDepth(global_index) : record.getItem<AQUNUM::DEPTH>().getSIDouble(0);
-                this->m_aquifer_cell_depths.insert_or_assign(global_index, depth);
+                if (! record.getItem<AQUNUM::DEPTH>().defaultApplied(0))
+                    this->m_aquifer_cell_depths.insert_or_assign(global_index, record.getItem<AQUNUM::DEPTH>().getSIDouble(0));
             }
         }
     }
