@@ -663,6 +663,13 @@ BOOST_AUTO_TEST_CASE(well_keywords)
     BOOST_CHECK_CLOSE( 10.11, ecl_sum_get_well_var( resp, 1, "W_1", "WPI"  ), 1.0e-5 );
     BOOST_CHECK_CLOSE( 21.01, ecl_sum_get_well_var( resp, 1, "W_1", "WPIL" ), 1.0e-5 );
 
+    BOOST_CHECK_CLOSE(10.1 / (123.456 - 0.1), ecl_sum_get_well_var( resp, 1, "W_1", "WPI1" ), 1.0e-5 );
+    BOOST_CHECK_CLOSE(10.1 / (123.567 - 0.1), ecl_sum_get_well_var( resp, 1, "W_1", "WPI4" ), 1.0e-5 );
+    BOOST_CHECK_CLOSE(10.1 / (123.678 - 0.1), ecl_sum_get_well_var( resp, 1, "W_1", "WPI5" ), 1.0e-5 );
+    BOOST_CHECK_CLOSE(10.1 / (123.789 - 0.1), ecl_sum_get_well_var( resp, 1, "W_1", "WPI9" ), 1.0e-5 );
+
+    BOOST_CHECK_CLOSE(0.0, ecl_sum_get_well_var( resp, 1, "W_2", "WPI1" ), 1.0e-5 );
+
     BOOST_CHECK_CLOSE( 20.9 , ecl_sum_get_well_var( resp, 1, "W_2", "WPIW" ), 1.0e-5 );
     BOOST_CHECK_CLOSE( 20.11, ecl_sum_get_well_var( resp, 1, "W_2", "WPIO" ), 1.0e-5 );
     BOOST_CHECK_CLOSE( 20.12, ecl_sum_get_well_var( resp, 1, "W_2", "WPIG" ), 1.0e-5 );
