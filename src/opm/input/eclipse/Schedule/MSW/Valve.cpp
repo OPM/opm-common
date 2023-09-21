@@ -40,8 +40,8 @@ namespace Opm {
         const std::string& string_var = value.get<std::string>();
         double output_value = udq_default;
 
-        if (summary_state.has_segment_var(well_name, value.get<std::string>(), segment_number))
-            output_value = summary_state.get_segment_var(well_name, string_var, segment_number);
+        if (summary_state.has_segment_var(well_name, string_var, segment_number+1))
+            output_value = summary_state.get_segment_var(well_name, string_var, segment_number+1);
         else if (summary_state.has(string_var))
             output_value = summary_state.get(string_var);
 
