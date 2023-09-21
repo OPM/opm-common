@@ -477,6 +477,7 @@ if(ENABLE_ECL_INPUT)
     tests/test_PAvgDynamicSourceData.cpp
     tests/test_Serialization.cpp
     tests/material/test_co2brinepvt.cpp
+    tests/material/test_h2brinepvt.cpp
     tests/material/test_eclblackoilfluidsystem.cpp
     tests/material/test_eclblackoilpvt.cpp
     tests/material/test_eclmateriallawmanager.cpp

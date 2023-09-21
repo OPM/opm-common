@@ -49,27 +49,30 @@ public:
     *
     * \param temperature temperature [K]
     * \param pg gas phase pressure [Pa]
-    * \param salinity salinity [mol NaCl / kg solution]
+    * \param salinity salinity [kg NaCl / kg solution]
     * \param knownPhaseIdx indicates which phases are present
     * \param xlH2 mole fraction of H2 in brine [mol/mol]
     */
     template <class Evaluation>
-    static void calculateMoleFractions(const Evaluation& temperature,
-                                       const Evaluation& pg,
-                                       Scalar salinity,
-                                       Evaluation& xH2,
-                                       bool extrapolate = false)
+    static Evaluation calculateMoleFractions(const Evaluation& temperature,
+                                             const Evaluation& pg,
+                                             const Evaluation& salinity,
+                                             bool extrapolate = false)
     {
+        // Convert salinity to molality from mass fraction
+        Evaluation X_NaCl = salinityToMolality_(salinity);
+
         // All intermediate calculations
         Evaluation lnYH2 = moleFractionGasH2_(temperature, pg);
         Evaluation lnPg = log(pg / 1e6);  // Pa --> MPa before ln
         Evaluation lnPhiH2 = fugacityCoefficientH2(temperature, pg, extrapolate);
         Evaluation lnKh = henrysConstant_(temperature);
         Evaluation PF = computePoyntingFactor_(temperature, pg);
-        Evaluation lnGammaH2 = activityCoefficient_(temperature, salinity);
+        Evaluation lnGammaH2 = activityCoefficient_(temperature, X_NaCl);
 
         // Eq. (4) to get mole fraction of H2 in brine
-        xH2 = exp(lnYH2 + lnPg + lnPhiH2 - lnKh - PF - lnGammaH2);
+        Evaluation xH2 = exp(lnYH2 + lnPg + lnPhiH2 - lnKh - PF - lnGammaH2);
+        return xH2;
     }
 
     /*!
@@ -100,7 +103,7 @@ public:
     * \param salinity salinity [mol NaCl / kg solution]
     */
     template <class Evaluation>
-    static Evaluation activityCoefficient_(const Evaluation& temperature, Scalar salinity)
+    static Evaluation activityCoefficient_(const Evaluation& temperature, const Evaluation& salinity)
     {
         // Linear approximation in temperature with following parameters (Table 5)
         static const Scalar a[2] = {0.64485, 0.00142};
@@ -188,6 +191,22 @@ public:
         const Scalar M[2] = { H2O::molarMass()*Scalar(1e3), H2::molarMass()*Scalar(1e3) };
 
         return fullerMethod(M, SigmaNu, temperature, pressure);
+    }
+
+private:
+    /*!
+    * \brief Convert mass fraction to molality NaCl [mol NaCl / kg water]
+    *
+    */
+    template <class Evaluation>
+    static Evaluation salinityToMolality_(const Evaluation& salinity) {
+        // Molar mass NaCl
+        const Scalar M_NaCl = 58.44e-3; 
+
+        // Convert
+        const Evaluation X_NaCl = salinity / ((1 - salinity) * M_NaCl);
+        return X_NaCl;
+
     }
 };  // end class Brine_H2
 

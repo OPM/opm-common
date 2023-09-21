@@ -28,6 +28,7 @@
 #define OPM_H2_GAS_PVT_HPP
 
 #include <opm/material/components/SimpleHuDuanH2O.hpp>
+#include <opm/material/components/BrineDynamic.hpp>
 #include <opm/material/components/H2.hpp>
 #include <opm/material/binarycoefficients/Brine_H2.hpp>
 #include <opm/material/common/UniformTabulated2DFunction.hpp>
@@ -48,6 +49,7 @@ template <class Scalar>
 class H2GasPvt
 {
     using H2O = SimpleHuDuanH2O<Scalar>;
+    using Brine = ::Opm::BrineDynamic<Scalar, H2O>;
     using H2 = ::Opm::H2<Scalar>;
     static const bool extrapolate = true;
 
@@ -57,13 +59,16 @@ public:
 
     explicit H2GasPvt() = default;
 
-    H2GasPvt(size_t numRegions,
+    H2GasPvt(const std::vector<Scalar>& salinity,
               Scalar T_ref = 288.71, //(273.15 + 15.56)
               Scalar P_ref = 101325)
+        : salinity_(salinity)
     {
+        int numRegions = salinity_.size();
         setNumRegions(numRegions);
-        for (size_t i = 0; i < numRegions; ++i) {
+        for (int i = 0; i < numRegions; ++i) {
             gasReferenceDensity_[i] = H2::gasDensity(T_ref, P_ref, extrapolate);
+            brineReferenceDensity_[i] = Brine::liquidDensity(T_ref, P_ref, salinity_[i], extrapolate);
         }
     }
 
@@ -77,6 +82,8 @@ public:
     void setNumRegions(size_t numRegions)
     {
         gasReferenceDensity_.resize(numRegions);
+        brineReferenceDensity_.resize(numRegions);
+        salinity_.resize(numRegions);
     }
 
     void setVapPars(const Scalar, const Scalar)
@@ -88,12 +95,22 @@ public:
     * \brief Initialize the reference densities of all fluids for a given PVT region
     */
     void setReferenceDensities(unsigned regionIdx,
-                               Scalar /*rhoRefOil*/,
+                               Scalar rhoRefBrine,
                                Scalar rhoRefGas,
                                Scalar /*rhoRefWater*/)
     {
         gasReferenceDensity_[regionIdx] = rhoRefGas;
+        brineReferenceDensity_[regionIdx] = rhoRefBrine;
     }
+
+    /*!
+    * \brief Specify whether the PVT model should consider that the water component can
+    *        vaporize in the gas phase
+    *
+    * By default, vaporized water is considered.
+    */
+    void setEnableVaporizationWater(bool yesno)
+    { enableVaporization_ = yesno; }
 
     /*!
     * \brief Finish initializing the oil phase PVT properties.
@@ -110,15 +127,28 @@ public:
 
     /*!
     * \brief Returns the specific enthalpy [J/kg] of gas given a set of parameters.
+    *
     */
     template <class Evaluation>
-    Evaluation internalEnergy(unsigned,
+    Evaluation internalEnergy(unsigned regionIdx,
                         const Evaluation& temperature,
                         const Evaluation& pressure,
-                        const Evaluation& /*rv*/,
-                        const Evaluation& /*rvw*/) const
+                        const Evaluation& rv,
+                        const Evaluation& rvw) const
     {
-        return H2::gasInternalEnergy(temperature, pressure, extrapolate);
+        /* NOTE: Assume ideal mixing */
+
+        // Init output
+        Evaluation result = 0;
+
+        // We have to check that one of RV and RVW is zero since H2STORE works with either GAS/WATER or GAS/OIL system
+        assert(rv == 0.0 || rvw == 0.0);
+
+        // Calculate each component contribution and return weighted sum
+        const Evaluation xBrine = convertRvwToXgW_(max(rvw, rv), regionIdx);
+        result += xBrine * H2O::gasInternalEnergy(temperature, pressure);
+        result += (1 - xBrine) * H2::gasInternalEnergy(temperature, pressure, extrapolate);
+        return result;
     }
 
     /*!
@@ -130,7 +160,9 @@ public:
                          const Evaluation& pressure,
                          const Evaluation& /*Rv*/,
                          const Evaluation& /*Rvw*/) const
-    { return saturatedViscosity(regionIdx, temperature, pressure); }
+    { 
+        return saturatedViscosity(regionIdx, temperature, pressure); 
+    }
 
     /*!
      * \brief Returns the dynamic viscosity [Pa s] of oil saturated gas at given pressure.
@@ -140,7 +172,7 @@ public:
                                   const Evaluation& temperature,
                                   const Evaluation& pressure) const
     {
-        return H2::gasViscosity(temperature, pressure);
+        return H2::gasViscosity(temperature, pressure, extrapolate);
     }
 
     /*!
@@ -150,9 +182,24 @@ public:
     Evaluation inverseFormationVolumeFactor(unsigned regionIdx,
                                             const Evaluation& temperature,
                                             const Evaluation& pressure,
-                                            const Evaluation& /*Rv*/,
-                                            const Evaluation& /*Rvw*/) const
-    { return saturatedInverseFormationVolumeFactor(regionIdx, temperature, pressure); }
+                                            const Evaluation& rv,
+                                            const Evaluation& rvw) const
+    {
+        // If vaporization is disabled, return H2 gas volume factor
+        if (!enableVaporization_)
+            return H2::gasDensity(temperature, pressure, extrapolate)/gasReferenceDensity_[regionIdx];
+
+        /* NOTE: Assume ideal mixing! */
+
+        // We have to check that one of RV and RVW is zero since H2STORE works with either GAS/WATER or GAS/OIL system
+        assert(rv == 0.0 || rvw == 0.0);
+
+        // Calculate each component contribution and return weighted sum
+        const Evaluation xBrine = convertRvwToXgW_(max(rvw, rv),regionIdx);
+        const auto& rhoH2 = H2::gasDensity(temperature, pressure, extrapolate);
+        const auto& rhoH2O = H2O::gasDensity(temperature, pressure);
+        return 1.0 / ((xBrine / rhoH2O + (1.0 - xBrine) / rhoH2) * gasReferenceDensity_[regionIdx]); 
+    }
 
     /*!
     * \brief Returns the formation volume factor [-] of oil saturated gas at given pressure.
@@ -162,7 +209,8 @@ public:
                                                      const Evaluation& temperature,
                                                      const Evaluation& pressure) const
     {
-        return H2::gasDensity(temperature, pressure, extrapolate)/gasReferenceDensity_[regionIdx];
+        const Evaluation rvw = rvwSat_(regionIdx, temperature, pressure, Evaluation(salinity_[regionIdx]));
+        return inverseFormationVolumeFactor(regionIdx, temperature, pressure, Evaluation(0.0), rvw);
     }
 
     /*!
@@ -174,46 +222,55 @@ public:
     Evaluation saturationPressure(unsigned /*regionIdx*/,
                                   const Evaluation& /*temperature*/,
                                   const Evaluation& /*Rv*/) const
-    { return 0.0; /* this is dry gas! */ }
+    { return 0.0; /* Not implemented! */ }
 
     /*!
     * \brief Returns the water vaporization factor \f$R_vw\f$ [m^3/m^3] of the water phase.
     */
     template <class Evaluation>
-    Evaluation saturatedWaterVaporizationFactor(unsigned /*regionIdx*/,
-                                              const Evaluation& /*temperature*/,
-                                              const Evaluation& /*pressure*/) const
-    { return 0.0; /* this is non-humid gas! */ }
+    Evaluation saturatedWaterVaporizationFactor(unsigned regionIdx,
+                                              const Evaluation& temperature,
+                                              const Evaluation& pressure) const
+    { 
+        return rvwSat_(regionIdx, temperature, pressure, Evaluation(salinity_[regionIdx]));
+    }
 
     /*!
     * \brief Returns the water vaporization factor \f$R_vw\f$ [m^3/m^3] of water saturated gas.
     */
     template <class Evaluation = Scalar>
-    Evaluation saturatedWaterVaporizationFactor(unsigned /*regionIdx*/,
-                                              const Evaluation& /*temperature*/,
-                                              const Evaluation& /*pressure*/, 
-                                              const Evaluation& /*saltConcentration*/) const
-    { return 0.0; }
+    Evaluation saturatedWaterVaporizationFactor(unsigned regionIdx,
+                                              const Evaluation& temperature,
+                                              const Evaluation& pressure, 
+                                              const Evaluation& saltConcentration) const
+    { 
+        const Evaluation salinity = salinityFromConcentration(temperature, pressure, saltConcentration);
+        return rvwSat_(regionIdx, temperature, pressure, salinity);
+     }
 
     /*!
     * \brief Returns the oil vaporization factor \f$R_v\f$ [m^3/m^3] of the oil phase.
     */
     template <class Evaluation>
-    Evaluation saturatedOilVaporizationFactor(unsigned /*regionIdx*/,
-                                              const Evaluation& /*temperature*/,
-                                              const Evaluation& /*pressure*/,
+    Evaluation saturatedOilVaporizationFactor(unsigned regionIdx,
+                                              const Evaluation& temperature,
+                                              const Evaluation& pressure,
                                               const Evaluation& /*oilSaturation*/,
                                               const Evaluation& /*maxOilSaturation*/) const
-    { return 0.0; /* this is dry gas! */ }
+    { 
+        return rvwSat_(regionIdx, temperature, pressure, Evaluation(salinity_[regionIdx])); 
+    }
 
     /*!
     * \brief Returns the oil vaporization factor \f$R_v\f$ [m^3/m^3] of the oil phase.
     */
     template <class Evaluation>
-    Evaluation saturatedOilVaporizationFactor(unsigned /*regionIdx*/,
-                                              const Evaluation& /*temperature*/,
-                                              const Evaluation& /*pressure*/) const
-    { return 0.0; /* this is dry gas! */ }
+    Evaluation saturatedOilVaporizationFactor(unsigned regionIdx,
+                                              const Evaluation& temperature,
+                                              const Evaluation& pressure) const
+    { 
+        return rvwSat_(regionIdx, temperature, pressure, Evaluation(salinity_[regionIdx]));
+    }
 
     template <class Evaluation>
     Evaluation diffusionCoefficient(const Evaluation& temperature,
@@ -226,8 +283,85 @@ public:
     const Scalar gasReferenceDensity(unsigned regionIdx) const
     { return gasReferenceDensity_[regionIdx]; }
 
+    Scalar oilReferenceDensity(unsigned regionIdx) const
+    { return brineReferenceDensity_[regionIdx]; }
+
+    Scalar waterReferenceDensity(unsigned regionIdx) const
+    { return brineReferenceDensity_[regionIdx]; }
+
+    Scalar salinity(unsigned regionIdx) const
+    { return salinity_[regionIdx]; }
+
 private:
     std::vector<Scalar> gasReferenceDensity_;
+    std::vector<Scalar> brineReferenceDensity_;
+    std::vector<Scalar> salinity_;
+    bool enableVaporization_ = true;
+
+    template <class LhsEval>
+    LhsEval rvwSat_(unsigned regionIdx,
+                    const LhsEval& temperature,
+                    const LhsEval& pressure,
+                    const LhsEval& salinity) const
+    {
+        // If water vaporization is disabled, we return zero
+        if (!enableVaporization_)
+            return 0.0;
+        
+        // From Li et al., Int. J. Hydrogen Energ., 2018, water mole fraction is calculated assuming ideal mixing
+        LhsEval pw_sat = H2O::vaporPressure(temperature);
+        LhsEval yH2O = pw_sat / pressure;
+        
+        // normalize the phase compositions
+        yH2O = max(0.0, min(1.0, yH2O));
+        return convertXgWToRvw(convertxgWToXgW(yH2O, salinity), regionIdx);
+    }
+
+    /*!
+    * \brief Convert the mass fraction of the water component in the gas phase to the
+    *        corresponding water vaporization factor.
+    */
+    template <class LhsEval>
+    LhsEval convertXgWToRvw(const LhsEval& XgW, unsigned regionIdx) const
+    {
+        Scalar rho_wRef = brineReferenceDensity_[regionIdx];
+        Scalar rho_gRef = gasReferenceDensity_[regionIdx];
+
+        return XgW/(1.0 - XgW)*(rho_gRef/rho_wRef);
+    }
+
+    /*!
+    * \brief Convert a water vaporization factor to the the corresponding mass fraction
+    *        of the water component in the gas phase.
+    */
+    template <class LhsEval>
+    LhsEval convertRvwToXgW_(const LhsEval& Rvw, unsigned regionIdx) const
+    {
+        Scalar rho_wRef = brineReferenceDensity_[regionIdx];
+        Scalar rho_gRef = gasReferenceDensity_[regionIdx];
+
+        const LhsEval& rho_wG = Rvw*rho_wRef;
+        return rho_wG/(rho_gRef + rho_wG);
+    }
+
+    /*!
+    * \brief Convert a water mole fraction in the gas phase the corresponding mass fraction.
+    */
+    template <class LhsEval>
+    LhsEval convertxgWToXgW(const LhsEval& xgW, const LhsEval& salinity) const
+    {
+        Scalar M_H2 = H2::molarMass();
+        LhsEval M_Brine = Brine::molarMass(salinity);
+
+        return xgW*M_Brine / (xgW*(M_Brine - M_H2) + M_H2);
+    }
+
+    template <class LhsEval>
+    const LhsEval salinityFromConcentration(const LhsEval&T, const LhsEval& P, const LhsEval& saltConcentration) const
+    { 
+        return saltConcentration / H2O::liquidDensity(T, P, true); 
+    }
+
 };  // end class H2GasPvt
 
 }  // end namspace Opm

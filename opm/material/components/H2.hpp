@@ -58,9 +58,13 @@ class H2 : public Component<Scalar, H2<Scalar> >
 {
     using IdealGas = Opm::IdealGas<Scalar>;
 
+    static const UniformTabulated2DFunction<double>& tabulatedEnthalpy;
     static const UniformTabulated2DFunction<double>& tabulatedDensity;
 
 public:
+    // For H2Tables class
+    static const Scalar brineSalinity;
+
     /*!
     * \brief A human readable name for the \f$H_2\f$.
     */
@@ -212,13 +216,10 @@ public:
                                         const Evaluation& pressure,
                                         bool extrapolate = false)
     {
-        // Eq. (58) in Span et al. (2000)
-        Evaluation rho_red = reducedMolarDensity(temperature, pressure, extrapolate);
-        Evaluation T_red = criticalTemperature() / temperature;
-        Scalar R = IdealGas::R;
+        const Evaluation h = gasEnthalpy(temperature, pressure, extrapolate);
+        const Evaluation rho = gasDensity(temperature, pressure, extrapolate);
 
-        return  R * criticalTemperature() * (derivIdealHelmholtzWrtRecipRedTemp(T_red) 
-            + derivResHelmholtzWrtRecipRedTemp(T_red, rho_red)) / molarMass();
+        return h - (pressure / rho);
     }
 
     /*!
@@ -232,11 +233,7 @@ public:
                                         Evaluation pressure,
                                         bool extrapolate = false)
     {
-        // Eq. (59) in Span et al. (2000)
-        Evaluation u = gasInternalEnergy(temperature, pressure);
-        Evaluation rho = gasDensity(temperature, pressure, extrapolate);
-
-        return u + (pressure / rho);
+        return tabulatedEnthalpy.eval(temperature, pressure, extrapolate);
     }
 
     /*!

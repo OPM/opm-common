@@ -1061,7 +1061,6 @@ set( keywords
      001_Eclipse300/G/GASVISCT
      001_Eclipse300/G/GASWAT
      001_Eclipse300/G/GSF
-     001_Eclipse300/H/H2STORE
      001_Eclipse300/H/HEATCR
      001_Eclipse300/H/HEATCRT
      001_Eclipse300/H/HWELLS
@@ -1115,6 +1114,7 @@ set( keywords
      900_OPM/G/GCOMPIDX
      900_OPM/G/GASDENT
      900_OPM/G/GASJT
+     900_OPM/H/H2STORE
      900_OPM/M/MECH
      900_OPM/M/MICP
      900_OPM/M/MICPPARA
