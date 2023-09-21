@@ -268,8 +268,14 @@ namespace Opm {
                                                 const std::size_t globalIndex2,
                                                 const FaceDir::DirEnum faceDir) const
     {
+        // If multiple records, from different region sets and region
+        // IDs--e.g., both regions 1/2 in 'M' (MULTNUM) and regions 2/3 in
+        // 'F' (FLUXNUM) apply to the same connection--then the total
+        // multiplier value is the product of the values from each record.
+        auto multiplier = 1.0;
+
         if (this->m_searchMap.empty()) {
-            return 1.0;
+            return multiplier;
         }
 
         auto regPairFound = [faceDir, this](const auto& regMap, auto regPairPos)
@@ -317,18 +323,24 @@ namespace Opm {
                 ! ignoreMultiplierRecord(record.nnc_behaviour);
 
             if (applyMultiplier) {
-                return record.trans_mult;
+                multiplier *= record.trans_mult;
             }
         }
 
-        return 1.0;
+        return multiplier;
     }
 
     double MULTREGTScanner::getRegionMultiplierNNC(const std::size_t globalCellIdx1,
                                                    const std::size_t globalCellIdx2) const
     {
+        // If multiple records, from different region sets and region
+        // IDs--e.g., both regions 1/2 in 'M' (MULTNUM) and regions 2/3 in
+        // 'F' (FLUXNUM) apply to the same connection--then the total
+        // multiplier value is the product of the values from each record.
+        auto multiplier = 1.0;
+
         if (this->m_searchMap.empty()) {
-            return 1.0;
+            return multiplier;
         }
 
         auto ignoreMultiplierRecord =
@@ -359,11 +371,11 @@ namespace Opm {
             const auto& record = this->m_records[regPairPos->second];
 
             if (! ignoreMultiplierRecord(record.nnc_behaviour)) {
-                return record.trans_mult;
+                multiplier *= record.trans_mult;
             }
         }
 
-        return 1.0;
+        return multiplier;
     }
 
     void MULTREGTScanner::assertKeywordSupported(const DeckKeyword& deckKeyword)
