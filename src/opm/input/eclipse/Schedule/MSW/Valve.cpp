@@ -25,15 +25,14 @@
 namespace Opm {
 
     ValveUDAEval::ValveUDAEval(const SummaryState& summary_state_, const std::string& well_name_,
-                         const size_t segment_number_, const double udq_default_) :
+                         const size_t segment_number_) :
         summary_state(summary_state_),
         well_name(well_name_),
-        segment_number(segment_number_),
-        udq_default(udq_default_)
+        segment_number(segment_number_)
         {}
 
 
-    double ValveUDAEval::value(const UDAValue& value) const {
+    double ValveUDAEval::value(const UDAValue& value, const double udq_default) const {
         if (value.is<double>())
             return value.getSI();
 
@@ -74,10 +73,11 @@ namespace Opm {
     {
     }
 
-    Valve::Valve(const DeckRecord& record)
+    Valve::Valve(const DeckRecord& record, const double udq_default)
         : m_con_flow_coeff(record.getItem("CV").get<double>(0))
         , m_con_cross_area(record.getItem("AREA").get<UDAValue>(0))
         , m_con_cross_area_value(m_con_cross_area.is<double>() ? m_con_cross_area.getSI() : -1.0)
+        , m_udq_default(udq_default)
     {
         // we initialize negative values for the values are defaulted
         const double value_for_default = -1.e100;
@@ -138,7 +138,7 @@ namespace Opm {
     }
 
     std::map<std::string, std::vector<std::pair<int, Valve> > >
-    Valve::fromWSEGVALV(const DeckKeyword& keyword)
+    Valve::fromWSEGVALV(const DeckKeyword& keyword, const double udq_default)
     {
         std::map<std::string, std::vector<std::pair<int, Valve> > > res;
 
@@ -147,7 +147,7 @@ namespace Opm {
 
             const int segment_number = record.getItem("SEGMENT_NUMBER").get<int>(0);
 
-            const Valve valve(record);
+            const Valve valve(record, udq_default);
             res[well_name].push_back(std::make_pair(segment_number, valve));
         }
 
@@ -164,7 +164,7 @@ namespace Opm {
 
     double Valve::conCrossArea(const std::optional<const ValveUDAEval>& uda_eval_optional) {
         m_con_cross_area_value = uda_eval_optional.has_value() ?
-                                    uda_eval_optional.value().value(m_con_cross_area) :
+                                    uda_eval_optional.value().value(m_con_cross_area, m_udq_default) :
                                     m_con_cross_area.getSI();
         return m_con_cross_area_value;
     }

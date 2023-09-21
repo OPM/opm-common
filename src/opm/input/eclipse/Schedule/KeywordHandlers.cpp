@@ -2211,7 +2211,8 @@ Well{0} entered with 'FIELD' parent group:
     }
 
     void Schedule::handleWSEGVALV(HandlerContext& handlerContext) {
-        const std::map<std::string, std::vector<std::pair<int, Valve> > > valves = Valve::fromWSEGVALV(handlerContext.keyword);
+        const double udq_default = this->getUDQConfig(handlerContext.currentStep).params().undefinedValue();
+        const std::map<std::string, std::vector<std::pair<int, Valve> > > valves = Valve::fromWSEGVALV(handlerContext.keyword, udq_default);
 
         for (const auto& map_elem : valves) {
             const std::string& well_name_pattern = map_elem.first;
