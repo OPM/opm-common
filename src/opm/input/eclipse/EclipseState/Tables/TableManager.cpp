@@ -1247,6 +1247,10 @@ std::optional<JFunc> make_jfunc(const Deck& deck) {
         return this->m_salinity;
     }
 
+    int TableManager::actco2s() const {
+        return this->m_actco2s;
+    }
+
     std::size_t TableManager::gas_comp_index() const {
         return this->m_gas_comp_index;
     }

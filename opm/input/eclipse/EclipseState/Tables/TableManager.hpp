@@ -201,6 +201,8 @@ namespace Opm {
 
         double salinity() const;
 
+        int actco2s() const;
+
         bool operator==(const TableManager& data) const;
 
         template<class Serializer>
@@ -261,6 +263,7 @@ namespace Opm {
             serializer(m_gas_comp_index);
             serializer(m_rtemp);
             serializer(m_salinity);
+            serializer(m_actco2s);
             serializer(m_tlmixpar);
             serializer(m_ppcwmax);
             if (!serializer.isSerializing()) {
@@ -412,6 +415,7 @@ namespace Opm {
         std::size_t m_gas_comp_index = 77;
         double m_rtemp {288.7056}; // 60 Fahrenheit in Kelvin
         double m_salinity {0.0};
+        int m_actco2s {1};  // Rumpf et al. (1994) activity model for CO2 solubility
 
         struct SplitSimpleTables {
           size_t plyshMax = 0;

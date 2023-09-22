@@ -64,6 +64,7 @@ public:
     explicit Co2GasPvt() = default;
 
     Co2GasPvt(const std::vector<Scalar>& salinity,
+              int activityModel = 1,
               Scalar T_ref = 288.71, //(273.15 + 15.56)
               Scalar P_ref = 101325)
         : salinity_(salinity)
@@ -73,6 +74,7 @@ public:
             OPM_THROW(std::runtime_error, 
                 "BrineCo2Pvt class can only be used with default reference state (T, P) = (288.71 K, 1.01325e5 Pa)!");
         }
+        setActivityModelSalt(activityModel);
         int num_regions = salinity_.size();
         setNumRegions(num_regions);
         for (int i = 0; i < num_regions; ++i) {
@@ -118,6 +120,17 @@ public:
      */
     void setEnableVaporizationWater(bool yesno)
     { enableVaporization_ = yesno; }
+
+    /*!
+    * \brief Set activity coefficient model for salt in solubility model
+    */
+    void setActivityModelSalt(int activityModel)
+    {
+        // Only 0, 1, or 2 is allowed
+        if (activityModel > 2 || activityModel < 0) {
+            throw std::runtime_error("ACTCO2S options are 0, 1 or 2; see manual!");
+        }
+        activityModel_ = activityModel;}
 
     /*!
      * \brief Finish initializing the co2 phase PVT properties.
@@ -317,6 +330,7 @@ private:
                                                     /*knownPhaseIdx=*/-1,
                                                     xlCO2,
                                                     xgH2O,
+                                                    activityModel_,
                                                     extrapolate);
 
         // normalize the phase compositions
@@ -374,6 +388,7 @@ private:
     std::vector<Scalar> gasReferenceDensity_;
     std::vector<Scalar> salinity_;
     bool enableVaporization_ = true;
+    int activityModel_;
 };
 
 } // namespace Opm
