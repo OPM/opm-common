@@ -1950,10 +1950,21 @@ RUNSUM
 
 
 BOOST_AUTO_TEST_CASE(FIPREG) {
-    std::string deck_string = R"(
--- The FIPREG region has three distinct values, i.e.
--- there will be three different RPR__REG keywords.
+    const std::string deck_string = R"(
+-- Both the FIPREG and the FIPXYZ region sets have three distinct
+-- values (i.e., region IDs).  Consequently, there will be three
+-- separate *_REG or *XYZ summary configuration nodes for each
+-- region level summary vector requested here.
 RPR__REG
+/
+
+RPRP_REG
+/
+
+RPRH_REG
+/
+
+RODENXYZ
 /
 
 ROPT_REG
@@ -1969,34 +1980,51 @@ RHPV_REG
 /
 
 )";
-    const auto& summary_config = createSummary(deck_string);
-    // The +5 corresponds to five additional COPT summary config keywords which
-    // have been automatically added for the ROEW calculation.
-    BOOST_CHECK_EQUAL(summary_config.size(), 15 + 5);
-    BOOST_CHECK(summary_config.hasKeyword("RPR__REG"));
-    BOOST_CHECK(summary_config.hasKeyword("ROPT_REG"));
-    BOOST_CHECK(summary_config.hasKeyword("RRPV_REG"));
-    BOOST_CHECK(summary_config.hasKeyword("ROEW_REG"));
-    BOOST_CHECK(summary_config.hasKeyword("RHPV_REG"));
+
+    const auto summary_config = createSummary(deck_string);
+
+    // The +5 corresponds to five additional COPT summary config keywords
+    // which have been automatically added for the ROEW calculation.
+    const auto numRegKw = 8;
+    BOOST_CHECK_EQUAL(summary_config.size(), numRegKw*3 + 5);
+
+    BOOST_CHECK( summary_config.hasKeyword("RPR__REG"));
+    BOOST_CHECK( summary_config.hasKeyword("RPRP_REG"));
+    BOOST_CHECK( summary_config.hasKeyword("RPRH_REG"));
+    BOOST_CHECK( summary_config.hasKeyword("RODENXYZ"));
+    BOOST_CHECK( summary_config.hasKeyword("ROPT_REG"));
+    BOOST_CHECK( summary_config.hasKeyword("RRPV_REG"));
+    BOOST_CHECK( summary_config.hasKeyword("ROEW_REG"));
+    BOOST_CHECK( summary_config.hasKeyword("RHPV_REG"));
     BOOST_CHECK(!summary_config.hasKeyword("RPR"));
     BOOST_CHECK(!summary_config.match("BPR*"));
-    BOOST_CHECK(summary_config.match("RPR*"));
+    BOOST_CHECK( summary_config.match("RPR*"));
+
     for (const auto& node : summary_config) {
-        if (node.category() == EclIO::SummaryNode::Category::Region)
-            BOOST_CHECK_EQUAL( node.fip_region(), "FIPREG" );
+        if (node.category() == EclIO::SummaryNode::Category::Region) {
+            if (node.keyword() == "RODENXYZ") {
+                BOOST_CHECK_EQUAL(node.fip_region(), "FIPXYZ");
+            }
+            else {
+                BOOST_CHECK_EQUAL(node.fip_region(), "FIPREG");
+            }
+        }
     }
 
-    const auto& fip_regions = summary_config.fip_regions();
-    BOOST_CHECK_EQUAL(fip_regions.size(), 1U);
+    {
+        const auto& fip_regions = summary_config.fip_regions();
+        BOOST_CHECK_EQUAL(fip_regions.size(), 2U);
 
-    auto reg_iter = fip_regions.find("FIPREG");
-    BOOST_CHECK( reg_iter != fip_regions.end() );
+        auto reg_iter = fip_regions.find("FIPREG");
+        BOOST_CHECK(reg_iter != fip_regions.end());
+    }
 
+    {
+        auto rpr = summary_config.keywords("RP*");
+        BOOST_CHECK_EQUAL(rpr.size(), 9U);
+    }
 
-    auto rpr = summary_config.keywords("RP*");
-    BOOST_CHECK_EQUAL(rpr.size(), 3U);
-
-    // See comment on the roew() function in Summary.cpp for this uglyness.
+    // See comment on the roew() function in Summary.cpp for this ugliness.
     BOOST_CHECK(summary_config.hasKeyword("COPT"));
 }
 

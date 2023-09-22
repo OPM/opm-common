@@ -5,9 +5,9 @@
   ],
   "comment": "Tracer keywords where the 2nd letter is a 'T' should be compounded with the tracer name",
   "deck_names": [
-    "RRPV_[0-9A-Z][0-9A-Z][0-9A-Z]",
-    "ROEW_[0-9A-Z][0-9A-Z][0-9A-Z]",
-    "RHPV_[0-9A-Z][0-9A-Z][0-9A-Z]",
+    "RRPV",
+    "ROEW",
+    "RHPV",
     "ROSAT",
     "ROIP",
     "ROIPL",
@@ -109,9 +109,9 @@
     "RTFTTSUR",
     "RTADSUR"
   ],
-    "CommentFip": "This regexp should work for region output of arbitrary named FIPxxxx regions. Current implementation is not entirely correct",
     "CommentTracer": "???",
-    "deck_name_regex": "R[OGW]?[OIP][EPRT]_.+|RU.+|RTIPF.+|RTIPS.+|RTFTF.+|RTFTS.+|RTFTT.+|RTIPT.+|RTIPF.+|RTIPS.+|RTIP[1-9][0-9]*.+|RTFTT.+|RTFTF.+|RTFTS.+|RTFT[1-9][0-9]*.+|RTADS.+|RTDCY.+",
+    "deck_name_regex": "RU.+|RTIPF.+|RTIPS.+|RTFTF.+|RTFTS.+|RTFTT.+|RTIPT.+|RTIPF.+|RTIPS.+|RTIP[1-9][0-9]*.+|RTFTT.+|RTFTF.+|RTFTS.+|RTFT[1-9][0-9]*.+|RTADS.+|RTDCY.+",
+    "deck_name_regex_suffix": "_{0,2}[A-Z0-9]{3}",
     "data": {
         "value_type": "INT"
     }
