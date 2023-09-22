@@ -102,11 +102,10 @@ public:
                                        const int knownPhaseIdx,
                                        Evaluation& xlCO2,
                                        Evaluation& ygH2O,
+                                       const int& activityModel,
                                        bool extrapolate = false)
     {
         OPM_TIMEFUNCTION_LOCAL();
-        // Evaluation A = computeA_(temperature, pg, extrapolate);
-
         /* salinity: conversion from mass fraction to mol fraction */
         Evaluation x_NaCl = salinityToMolFrac_(salinity);
 
@@ -126,14 +125,14 @@ public:
             
             // High-temp. cases need iterations
             if (highTemp) {
-                auto [xCO2, yH2O] = highTempSolubility_(temperature, pg, molalityNaCl, extrapolate);
+                auto [xCO2, yH2O] = highTempSolubility_(temperature, pg, molalityNaCl, activityModel, extrapolate);
                 xlCO2 = xCO2;
                 ygH2O = yH2O;
             }
 
             // While low-temp. cases don't need it
             else {
-                auto [xCO2, yH2O] = lowTempSolubility_(temperature, pg, molalityNaCl, extrapolate);
+                auto [xCO2, yH2O] = lowTempSolubility_(temperature, pg, molalityNaCl, activityModel, extrapolate);
                 xlCO2 = xCO2;
                 ygH2O = yH2O;
             }
@@ -483,57 +482,44 @@ private:
     }
 
     /*!
-     * \brief Returns the equilibrium molality of CO2 (mol CO2 / kg water) for a
-     * CO2-water mixture at a given pressure and temperature
-     *
-     * \param temperature The temperature [K]
-     * \param pg The gas phase pressure [Pa]
-     */
-    // template <class Evaluation>
-    // static Evaluation molalityCO2inPureWater_(const Evaluation& temperature, const Evaluation& pg, bool extrapolate = false)
-    // {
-    //     const Evaluation& A = computeA_(temperature, pg, extrapolate); // according to Spycher, Pruess and Ennis-King (2003)
-    //     const Evaluation& B = computeB_(temperature, pg, extrapolate); // according to Spycher, Pruess and Ennis-King (2003)
-    //     const Evaluation& yH2OinGas = (1 - B) / (1. / A - B); // equilibrium mol fraction of H2O in the gas phase
-    //     const Evaluation& xCO2inWater = B * (1 - yH2OinGas); // equilibrium mol fraction of CO2 in the water phase
-    //     return (xCO2inWater * 55.508) / (1 - xCO2inWater); // CO2 molality
-    // }
-
-    /*!
     * \brief Fixed-point iterations for high-temperature cases
     */
     template <class Evaluation>
     static std::pair<Evaluation, Evaluation> highTempSolubility_(const Evaluation& temperature, 
                                                           const Evaluation& pg,
                                                           const Evaluation& m_NaCl,
+                                                          const int& activityModel,
                                                           bool extrapolate = false)
     {
         OPM_TIMEFUNCTION_LOCAL();
 	// Start point for fixed-point iterations as recommended below in section 2.2
         Evaluation yH2O = H2O::vaporPressure(temperature) / pg;  // ideal mixing
         Evaluation xCO2 = 0.009;  // same as ~0.5 mol/kg
+        Evaluation gammaNaCl = 1.0;  // default salt activity coeff to 1.0
 
-        // Calculate activity coefficient for salt
-        Evaluation gammaNaCl = 1.0;
-        if (m_NaCl > 0.0) {
-            gammaNaCl = activityCoefficientDuanSun_(temperature, m_NaCl);
+        // We can pre-calculate Duan-Sun, Spycher & Preuss (2009) salt model
+        if (m_NaCl > 0.0 && activityModel == 2) {
+            gammaNaCl = activityCoefficientSalt_(temperature, m_NaCl, Evaluation(0.0), activityModel);
         }
-
+        
         // Options
         int max_iter = 100;
         Scalar tol = 1e-8;
-        // bool success = false;
         const bool highTemp = true;
 
         // Fixed-point loop x_i+1 = F(x_i)
         for (int i = 0; i < max_iter; ++i) {
+            // Calculate activity coefficient for Rumpf et al (1994) model
+            if (m_NaCl > 0.0 && activityModel == 1) {
+                gammaNaCl = activityCoefficientSalt_(temperature, m_NaCl, xCO2, activityModel);
+            }
+
             // F(x_i) is the mutual solubilities
             auto [xCO2_new, yH2O_new] = mutualSolubility_(temperature, pg, xCO2, yH2O, m_NaCl, gammaNaCl, highTemp, 
                                                           extrapolate);
             
             // Check for convergence
             if (abs(xCO2_new - xCO2) < tol && abs(yH2O_new - yH2O) < tol) {
-                // success = true;
                 xCO2 = xCO2_new;
                 yH2O = yH2O_new;
                 break;
@@ -556,12 +542,13 @@ private:
     static std::pair<Evaluation, Evaluation> lowTempSolubility_(const Evaluation& temperature, 
                                                          const Evaluation& pg,
                                                          const Evaluation& m_NaCl,
+                                                         const int& activityModel,
                                                          bool extrapolate = false)
     {
         // Calculate activity coefficient for salt
         Evaluation gammaNaCl = 1.0;
-        if (m_NaCl > 0.0) {
-            gammaNaCl = activityCoefficientDuanSun_(temperature, m_NaCl);
+        if (m_NaCl > 0.0 && activityModel > 0) {
+            gammaNaCl = activityCoefficientSalt_(temperature, m_NaCl, Evaluation(0.0), activityModel);
         }
 
         // Calculate mutual solubility.
@@ -607,28 +594,6 @@ private:
     }
 
     /*!
-     * \brief Returns the activity coefficient of CO2 in brine for a
-     *           molal description. According to "Duan and Sun 2003"
-     *           given in "Spycher and Pruess 2005"
-     *
-     * \param temperature the temperature [K]
-     * \param pg the gas phase pressure [Pa]
-     * \param molalityNaCl molality of NaCl (mol NaCl / kg water)
-     */
-    template <class Evaluation>
-    static Evaluation activityCoefficient_(const Evaluation& temperature,
-                                           const Evaluation& pg,
-                                           const Evaluation& molalityNaCl)
-    {
-        OPM_TIMEFUNCTION_LOCAL();
-        const Evaluation& lambda = computeLambda_(temperature, pg); // lambda_{CO2-Na+}
-        const Evaluation& xi = computeXi_(temperature, pg); // Xi_{CO2-Na+-Cl-}
-        const Evaluation& lnGammaStar =
-            2*molalityNaCl*lambda + xi*molalityNaCl*molalityNaCl;
-        return exp(lnGammaStar);
-    }
-
-    /*!
      * \brief Returns the paramater A for the calculation of
      * them mutual solubility in the water-CO2 system.
      * Given in Spycher, Pruess and Ennis-King (2003)
@@ -647,7 +612,7 @@ private:
         OPM_TIMEFUNCTION_LOCAL();
 	// Intermediate calculations
         const Evaluation& deltaP = pg / 1e5 - Pref_(temperature, highTemp); // pressure range [bar] from pref to pg[bar]
-        Scalar v_av_H2O = V_avg_H2O_(temperature, highTemp); // average partial molar volume of H2O [cm^3/mol]
+        Evaluation v_av_H2O = V_avg_H2O_(temperature, highTemp); // average partial molar volume of H2O [cm^3/mol]
         Evaluation k0_H2O = equilibriumConstantH2O_(temperature, highTemp); // equilibrium constant for H2O at 1 bar
         Evaluation phi_H2O = fugacityCoefficientH2O(temperature, pg, yH2O, highTemp, extrapolate); // fugacity coefficient of H2O for the water-CO2 system
         Evaluation gammaH2O = activityCoefficientH2O_(temperature, xCO2, highTemp);
@@ -687,7 +652,7 @@ private:
         OPM_TIMEFUNCTION_LOCAL();
 	// Intermediate calculations
         const Evaluation& deltaP = pg / 1e5 - Pref_(temperature, highTemp); // pressure range [bar] from pref to pg[bar]
-        const Scalar& v_av_CO2 = V_avg_CO2_(temperature, highTemp); // average partial molar volume of CO2 [cm^3/mol]
+        Evaluation v_av_CO2 = V_avg_CO2_(temperature, highTemp); // average partial molar volume of CO2 [cm^3/mol]
         Evaluation k0_CO2 = equilibriumConstantCO2_(temperature, pg, highTemp); // equilibrium constant for CO2 at 1 bar
         Evaluation phi_CO2 = fugacityCoefficientCO2(temperature, pg, yH2O, highTemp, extrapolate); // fugacity coefficient of CO2 for the water-CO2 system
         Evaluation gammaCO2 = activityCoefficientCO2_(temperature, xCO2, highTemp);
@@ -709,60 +674,37 @@ private:
     }
 
     /*!
-     * \brief Returns the parameter lambda, which is needed for the
-     * calculation of the CO2 activity coefficient in the brine-CO2 system.
-     * Given in Spycher and Pruess (2005)
-     * \param temperature the temperature [K]
-     * \param pg the gas phase pressure [Pa]
-     */
-    template <class Evaluation>
-    static Evaluation computeLambda_(const Evaluation& temperature, const Evaluation& pg)
-    {
-        OPM_TIMEFUNCTION_LOCAL();
-        static const Scalar c[6] =
-            { -0.411370585, 6.07632013E-4, 97.5347708, -0.0237622469, 0.0170656236, 1.41335834E-5 };
-
-        Evaluation pg_bar = pg / 1.0E5; /* conversion from Pa to bar */
-        return
-            c[0]
-            + c[1]*temperature
-            + c[2]/temperature
-            + c[3]*pg_bar/temperature
-            + c[4]*pg_bar/(630.0 - temperature)
-            + c[5]*temperature*log(pg_bar);
-    }
-
-    /*!
-     * \brief Returns the parameter xi, which is needed for the
-     * calculation of the CO2 activity coefficient in the brine-CO2 system.
-     * Given in Spycher and Pruess (2005)
-     * \param temperature the temperature [K]
-     * \param pg the gas phase pressure [Pa]
-     */
-    template <class Evaluation>
-    static Evaluation computeXi_(const Evaluation& temperature, const Evaluation& pg)
-    {
-        OPM_TIMEFUNCTION_LOCAL();
-        static const Scalar c[4] =
-            { 3.36389723E-4, -1.98298980E-5, 2.12220830E-3, -5.24873303E-3 };
-
-        Evaluation pg_bar = pg / 1.0E5; /* conversion from Pa to bar */
-        return c[0] + c[1]*temperature + c[2]*pg_bar/temperature + c[3]*pg_bar/(630.0 - temperature);
-    }
-
-    /*!
-    * \brief Activity model from Duan & Sun as modified and detailed in Spycher & Preuss (2009)
+    * \brief Activity model of salt in Spycher & Preuss (2009)
     */
     template <class Evaluation>
-    static Evaluation activityCoefficientDuanSun_(const Evaluation& temperature, const Evaluation& m_NaCl)
+    static Evaluation activityCoefficientSalt_(const Evaluation& temperature, 
+                                               const Evaluation& m_NaCl,
+                                               const Evaluation& xCO2,
+                                               const int& activityModel)
     {
-        // Lambda and xi parameters
-        const Evaluation& lambda = computeLambdaDuanSun_(temperature);
-        const Evaluation& xi = computeXiDuanSun_(temperature);
-        const Evaluation& lnGamma = 2 * lambda * m_NaCl + xi * m_NaCl * m_NaCl;
+	OPM_TIMEFUNCTION_LOCAL();        
+	// Lambda and xi parameter for either Rumpf et al (1994) (activityModel = 1) or Duan-Sun as modified by Spycher
+        // & Preuss (2009) (activityModel = 2)
+        Evaluation lambda;
+        Evaluation xi;
+        Evaluation convTerm;
+        if (activityModel == 1) {
+            lambda = computeLambdaRumpfetal_(temperature);
+            xi = -0.0028 * 3.0;
+            Evaluation m_CO2 = xCO2 * (2 * m_NaCl + 55.508) / (1 - xCO2);
+            convTerm = (1 + (m_CO2 + 2 * m_NaCl) / 55.508) / (1 + m_CO2 / 55.508);
+        }
+        else if (activityModel == 2) {
+            lambda = computeLambdaDuanSun_(temperature);
+            xi = computeXiDuanSun_(temperature);
+            convTerm = 1 + 2 * m_NaCl / 55.508;
+        }
 
+        // Eq. (18)
+        const Evaluation& lnGamma = 2 * lambda * m_NaCl + xi * m_NaCl * m_NaCl;
+        
         // Eq. (18), return activity coeff. on mole-fraction scale
-        return (1 + 2 * m_NaCl / 55.508) * exp(lnGamma);
+        return convTerm * exp(lnGamma);
     }
 
     /*!
@@ -789,6 +731,19 @@ private:
 
         // Eq. (19)
         return c[0] * temperature + c[1] / temperature + c[2] / (temperature * temperature);
+    }
+
+    /*!
+    * \brief Lambda parameter in Rumpf et al. (1994), as detailed in Spycher & Preuss (2005)
+    */
+    template <class Evaluation>
+    static Evaluation computeLambdaRumpfetal_(const Evaluation& temperature)
+    {
+        // B^(0) below Eq. (A-6)
+        static const Scalar c[4] = { 0.254, -76.82, -10656, 6312e3 };
+
+        return c[0] + c[1] / temperature + c[2] / (temperature * temperature) +
+            c[3] / (temperature * temperature * temperature);
     }
 
     /*!
