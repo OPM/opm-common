@@ -102,7 +102,6 @@ public:
                                        const int knownPhaseIdx,
                                        Evaluation& xlCO2,
                                        Evaluation& ygH2O,
-                                       bool activity_model,
                                        bool extrapolate = false)
     {
         OPM_TIMEFUNCTION_LOCAL();
@@ -192,13 +191,10 @@ public:
         Evaluation b_mix = bMix_(yH2O, highTemp);
 
         Evaluation lnPhiCO2;
-        lnPhiCO2 = log(V / (V - b_mix));
-        lnPhiCO2 += b_CO2 / (V - b_mix);
-        lnPhiCO2 -= 2 * (yH2O * a_CO2_H2O + (1 - yH2O) * a_CO2) / (R * pow(temperature, 1.5) * b_mix) 
-                    * log((V + b_mix) / V);
-        lnPhiCO2 += a_mix * b_CO2 / (R * pow(temperature, 1.5) * b_mix * b_mix) * (log((V + b_CO2) / V) 
-                    - b_mix / (V + b_mix));
-        lnPhiCO2 -= log(pg_bar * V / (R * temperature));
+        lnPhiCO2 = (b_CO2 / b_mix) * (pg_bar * V / (R * temperature) - 1);
+        lnPhiCO2 -= log(pg_bar * (V - b_mix) / (R * temperature));
+        lnPhiCO2 += (2 * (yH2O * a_CO2_H2O + (1 - yH2O) * a_CO2) / a_mix - (b_CO2 / b_mix)) *
+                    a_mix / (b_mix * R * pow(temperature, 1.5)) * log(V / (V + b_mix));
 
         return exp(lnPhiCO2); // fugacity coefficient of CO2
     }
@@ -234,13 +230,10 @@ public:
         Evaluation b_mix = bMix_(yH2O, highTemp);
 
         Evaluation lnPhiH2O;
-        lnPhiH2O = log(V / (V - b_mix));
-        lnPhiH2O += b_H2O / (V - b_mix);
-        lnPhiH2O -= 2 * (yH2O * a_H2O + (1 - yH2O) * a_CO2_H2O) / (R * pow(temperature, 1.5) * b_mix) 
-                    * log((V + b_mix) / V);
-        lnPhiH2O += a_mix * b_H2O / (R * pow(temperature, 1.5) * b_mix * b_mix) * (log((V + b_H2O) / V) 
-                    - b_mix / (V + b_mix));
-        lnPhiH2O -= log(pg_bar * V / (R * temperature));
+        lnPhiH2O = (b_H2O / b_mix) * (pg_bar * V / (R * temperature) - 1);
+        lnPhiH2O -= log(pg_bar * (V - b_mix) / (R * temperature));
+        lnPhiH2O += (2 * (yH2O * a_H2O + (1 - yH2O) * a_CO2_H2O) / a_mix - (b_H2O / b_mix)) *
+                    a_mix / (b_mix * R * pow(temperature, 1.5)) * log(V / (V + b_mix));
 
         return exp(lnPhiH2O); // fugacity coefficient of H2O
     }
@@ -535,7 +528,7 @@ private:
         // Fixed-point loop x_i+1 = F(x_i)
         for (int i = 0; i < max_iter; ++i) {
             // F(x_i) is the mutual solubilities
-            auto [yH2O_new, xCO2_new] = mutualSolubility_(temperature, pg, xCO2, yH2O, m_NaCl, gammaNaCl, highTemp, 
+            auto [xCO2_new, yH2O_new] = mutualSolubility_(temperature, pg, xCO2, yH2O, m_NaCl, gammaNaCl, highTemp, 
                                                           extrapolate);
             
             // Check for convergence
@@ -602,7 +595,13 @@ private:
 
         // Compute yH2O and xCO2, Eqs. (B-7) and (B-2)
         Evaluation yH2O_new = (1. - B) * 55.508 / ((1. / A - B) * (2 * m_NaCl + 55.508) + 2 * m_NaCl * B);
-        Evaluation xCO2_new = B * (1 - yH2O);
+        Evaluation xCO2_new;
+        if (highTemp) {
+            xCO2_new = B * (1 - yH2O);
+        }
+        else {
+            xCO2_new = B * (1 - yH2O_new);
+        }
 
         return {xCO2_new, yH2O_new};
     }
@@ -763,7 +762,7 @@ private:
         const Evaluation& lnGamma = 2 * lambda * m_NaCl + xi * m_NaCl * m_NaCl;
 
         // Eq. (18), return activity coeff. on mole-fraction scale
-        return (1 + m_NaCl / 55.508) * exp(lnGamma);
+        return (1 + 2 * m_NaCl / 55.508) * exp(lnGamma);
     }
 
     /*!
