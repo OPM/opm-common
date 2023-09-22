@@ -1762,6 +1762,13 @@ BOOST_AUTO_TEST_CASE(region_vars) {
         region_values["RPR"] = values;
     }
     {
+        std::vector<double> values(10, 0.0);
+        for (size_t r=1; r <= 10; r++) {
+            values[r - 1] = r * r * 2.5;
+        }
+        region_values["RPRH"] = values;
+    }
+    {
         double area = cfg.grid.getNX() * cfg.grid.getNY();
         std::vector<double> values(10, 0.0);
         for (size_t r=1; r <= 10; r++) {
@@ -1854,13 +1861,27 @@ BOOST_AUTO_TEST_CASE(region_vars) {
     auto res = readsum( cfg.name );
     const auto* resp = res.get();
 
-    BOOST_CHECK( ecl_sum_has_general_var( resp , "RPR:1"));
-    BOOST_CHECK( ecl_sum_has_general_var( resp , "RPR:10"));
-    BOOST_CHECK( !ecl_sum_has_general_var( resp , "RPR:21"));
+    BOOST_CHECK( ecl_sum_has_general_var(resp, "RPR:1"));
+    BOOST_CHECK( ecl_sum_has_general_var(resp, "RPR:10"));
+    BOOST_CHECK(!ecl_sum_has_general_var(resp, "RPR:21"));
+
+    BOOST_CHECK( ecl_sum_has_general_var(resp, "RPRH:1"));
+    BOOST_CHECK( ecl_sum_has_general_var(resp, "RPRH:2"));
+    BOOST_CHECK( ecl_sum_has_general_var(resp, "RPRH:3"));
+    BOOST_CHECK( ecl_sum_has_general_var(resp, "RPRH:4"));
+    BOOST_CHECK( ecl_sum_has_general_var(resp, "RPRH:5"));
+    BOOST_CHECK( ecl_sum_has_general_var(resp, "RPRH:6"));
+    BOOST_CHECK( ecl_sum_has_general_var(resp, "RPRH:7"));
+    BOOST_CHECK( ecl_sum_has_general_var(resp, "RPRH:8"));
+    BOOST_CHECK( ecl_sum_has_general_var(resp, "RPRH:9"));
+    BOOST_CHECK( ecl_sum_has_general_var(resp, "RPRH:10"));
+    BOOST_CHECK(!ecl_sum_has_general_var(resp, "RPRH:21"));
+
     UnitSystem units( UnitSystem::UnitType::UNIT_TYPE_METRIC );
 
     for (size_t r=1; r <= 10; r++) {
         std::string rpr_key   = "RPR:"   + std::to_string( r );
+        std::string rprh_key  = "RPRH:"  + std::to_string( r );
         std::string roip_key  = "ROIP:"  + std::to_string( r );
         std::string rwip_key  = "RWIP:"  + std::to_string( r );
         std::string rgip_key  = "RGIP:"  + std::to_string( r );
@@ -1870,7 +1891,8 @@ BOOST_AUTO_TEST_CASE(region_vars) {
         std::string rgipg_key = "RGIPG:" + std::to_string( r );
         double area = cfg.grid.getNX() * cfg.grid.getNY();
 
-        //BOOST_CHECK_CLOSE(   r * 1.0        , units.to_si( UnitSystem::measure::pressure , ecl_sum_get_general_var( resp, 1, rpr_key.c_str())) , 1e-5);
+        BOOST_CHECK_CLOSE(r *     1.0, units.to_si(UnitSystem::measure::pressure, ecl_sum_get_general_var(resp, 1, rpr_key)) , 1.0e-5);
+        BOOST_CHECK_CLOSE(r * r * 2.5, units.to_si(UnitSystem::measure::pressure, ecl_sum_get_general_var(resp, 1, rprh_key)), 1.0e-5);
 
         // There is one inactive cell in the bottom layer.
         if (r == 10)
