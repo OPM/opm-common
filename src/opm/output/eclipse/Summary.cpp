@@ -1535,6 +1535,41 @@ inline quantity potential_rate( const fn_args& args )
     return { sum, rate_unit< phase >() };
 }
 
+template <Opm::data::WellBlockAvgPress::Quantity wbp_quantity>
+quantity well_block_average_prod_index(const fn_args& args)
+{
+    // Note: This WPIn evaluation function is supported only at the well
+    // level.  There is intentionally no loop over args.schedule_wells.
+
+    const auto unit = rate_unit<rt::productivity_index_oil>();
+    const quantity zero = { 0.0, unit };
+
+    if (args.schedule_wells.empty()) {
+        return zero;
+    }
+
+    const auto& name = args.schedule_wells.front()->name();
+
+    auto xwPos = args.wells.find(name);
+    if ((xwPos == args.wells.end()) ||
+        (xwPos->second.dynamicStatus == Opm::Well::Status::SHUT))
+    {
+        return zero;
+    }
+
+    auto p = args.wbp.values.find(args.schedule_wells.front()->name());
+    if (p == args.wbp.values.end()) {
+        return zero;
+    }
+
+    // Rt::oil is intentional.
+    const auto eff_fac = efac(args.eff_factors, name);
+    const auto q  = xwPos->second.rates.get(rt::oil, 0.0) * eff_fac;
+    const auto dp = p->second[wbp_quantity] - xwPos->second.bhp;
+
+    return { - q / dp, unit };
+}
+
 inline quantity preferred_phase_productivty_index(const fn_args& args)
 {
     if (args.schedule_wells.empty())
@@ -2402,6 +2437,12 @@ static const auto funs = std::unordered_map<std::string, ofun> {
     { "WPIG", potential_rate< rt::productivity_index_gas >},
     { "WPIL", sum( potential_rate< rt::productivity_index_water, true, false >,
                    potential_rate< rt::productivity_index_oil, true, false >)},
+
+    { "WPI1", well_block_average_prod_index<Opm::data::WellBlockAvgPress::Quantity::WBP>  },
+    { "WPI4", well_block_average_prod_index<Opm::data::WellBlockAvgPress::Quantity::WBP4> },
+    { "WPI5", well_block_average_prod_index<Opm::data::WellBlockAvgPress::Quantity::WBP5> },
+    { "WPI9", well_block_average_prod_index<Opm::data::WellBlockAvgPress::Quantity::WBP9> },
+
     // Well potential
     { "WWPP", potential_rate< rt::well_potential_water , true, false>},
     { "WOPP", potential_rate< rt::well_potential_oil , true, false>},
