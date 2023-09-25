@@ -415,7 +415,7 @@ namespace Opm {
         std::size_t m_gas_comp_index = 77;
         double m_rtemp {288.7056}; // 60 Fahrenheit in Kelvin
         double m_salinity {0.0};
-        int m_actco2s {1};  // Rumpf et al. (1994) activity model for CO2 solubility
+        int m_actco2s {1};
 
         struct SplitSimpleTables {
           size_t plyshMax = 0;
