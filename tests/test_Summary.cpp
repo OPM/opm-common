@@ -828,6 +828,15 @@ BOOST_AUTO_TEST_CASE(well_keywords)
     BOOST_CHECK_CLOSE( wgor2, ecl_sum_get_well_var( resp, 1, "W_2", "WGORH" ), 1e-5 );
     BOOST_CHECK_CLOSE( 0,     ecl_sum_get_well_var( resp, 1, "W_3", "WGORH" ), 1e-5 );
 
+    /* oil-gas ratio */
+    const double wogr1 = 10.1 / 10.2;
+    const double wogr2 = 20.1 / 20.2;
+    const double wogr3 = 0.0;
+
+    BOOST_CHECK_CLOSE(wogr1, ecl_sum_get_well_var(resp, 1, "W_1", "WOGR"), 1.0e-5);
+    BOOST_CHECK_CLOSE(wogr2, ecl_sum_get_well_var(resp, 1, "W_2", "WOGR"), 1.0e-5);
+    BOOST_CHECK_CLOSE(wogr3, ecl_sum_get_well_var(resp, 1, "W_3", "WOGR"), 1.0e-5);
+
     /* WGLR - gas-liquid rate */
     const double wglr1 = 10.2 / ( 10.0 + 10.1 );
     const double wglr2 = 20.2 / ( 20.0 + 20.1 );
@@ -840,6 +849,15 @@ BOOST_AUTO_TEST_CASE(well_keywords)
     BOOST_CHECK_CLOSE( wglr1, ecl_sum_get_well_var( resp, 1, "W_1", "WGLRH" ), 1e-5 );
     BOOST_CHECK_CLOSE( wglr2, ecl_sum_get_well_var( resp, 1, "W_2", "WGLRH" ), 1e-5 );
     BOOST_CHECK_CLOSE( 0, ecl_sum_get_well_var( resp, 1, "W_3", "WGLRH" ), 1e-5 );
+
+    // WWGRH - water/gas ratio based on observed rates
+    const double wwgr1 = 10.0 / 10.2;
+    const double wwgr2 = 20.0 / 20.2;
+    const double wwgr3 = 0.0;
+
+    BOOST_CHECK_CLOSE(wwgr1, ecl_sum_get_well_var(resp, 1, "W_1", "WWGRH"), 1.0e-5);
+    BOOST_CHECK_CLOSE(wwgr2, ecl_sum_get_well_var(resp, 1, "W_2", "WWGRH"), 1.0e-5);
+    BOOST_CHECK_CLOSE(wwgr3, ecl_sum_get_well_var(resp, 1, "W_3", "WWGRH"), 1.0e-5);
 
     /* BHP */
     BOOST_CHECK_CLOSE( 0.1, ecl_sum_get_well_var( resp, 1, "W_1", "WBHP" ), 1e-5 );
@@ -1565,14 +1583,32 @@ BOOST_AUTO_TEST_CASE(DATE) {
 BOOST_AUTO_TEST_CASE(field_keywords) {
     setup cfg( "test_summary_field" );
 
+    auto single_values = out::Summary::GlobalProcessParameters {};
+
     out::Summary writer( cfg.es, cfg.config, cfg.grid, cfg.schedule, cfg.name );
     SummaryState st(TimeService::now());
-    writer.eval( st, 0, 0 * day, cfg.wells, cfg.wbp, cfg.grp_nwrk, {}, {}, {}, {});
+
+    single_values.insert_or_assign("FPR" , 123.45*barsa());
+    single_values.insert_or_assign("FPRH", 123.45*barsa());
+    single_values.insert_or_assign("FPRP", 109.87*barsa());
+    single_values.insert_or_assign("FHPV", 123.45e6*sm3());
+    writer.eval( st, 0, 0 * day, cfg.wells, cfg.wbp, cfg.grp_nwrk, single_values, {}, {}, {});
     writer.add_timestep( st, 0, false);
-    writer.eval( st, 1, 1 * day, cfg.wells, cfg.wbp, cfg.grp_nwrk, {}, {}, {}, {});
+
+    single_values.insert_or_assign("FPR" , 121.21*barsa());
+    single_values.insert_or_assign("FPRH", 121.21*barsa());
+    single_values.insert_or_assign("FPRP", 111.11*barsa());
+    single_values.insert_or_assign("FHPV", 123.21e6*sm3());
+    writer.eval( st, 1, 1 * day, cfg.wells, cfg.wbp, cfg.grp_nwrk, single_values, {}, {}, {});
     writer.add_timestep( st, 1, false);
-    writer.eval( st, 2, 2 * day, cfg.wells, cfg.wbp, cfg.grp_nwrk, {}, {}, {}, {});
+
+    single_values.insert_or_assign("FPR" , 101.98*barsa());
+    single_values.insert_or_assign("FPRH", 101.98*barsa());
+    single_values.insert_or_assign("FPRP",  99.98*barsa());
+    single_values.insert_or_assign("FHPV", 121.21e6*sm3());
+    writer.eval( st, 2, 2 * day, cfg.wells, cfg.wbp, cfg.grp_nwrk, single_values, {}, {}, {});
     writer.add_timestep( st, 2, false);
+
     writer.write();
 
     auto res = readsum( cfg.name );
@@ -1699,6 +1735,23 @@ BOOST_AUTO_TEST_CASE(field_keywords) {
     BOOST_CHECK_CLOSE( ggor, ecl_sum_get_field_var( resp, 1, "FGOR" ), 1e-5 );
     BOOST_CHECK_CLOSE( ggor, ecl_sum_get_field_var( resp, 1, "FGORH" ), 1e-5 );
 
+    // Pressures
+    BOOST_CHECK_CLOSE(123.45, ecl_sum_get_field_var(resp, 0, "FPR"), 1.0e-5);
+    BOOST_CHECK_CLOSE(121.21, ecl_sum_get_field_var(resp, 1, "FPR"), 1.0e-5);
+    BOOST_CHECK_CLOSE(101.98, ecl_sum_get_field_var(resp, 2, "FPR"), 1.0e-5);
+
+    BOOST_CHECK_CLOSE(123.45, ecl_sum_get_field_var(resp, 0, "FPRH"), 1.0e-5);
+    BOOST_CHECK_CLOSE(121.21, ecl_sum_get_field_var(resp, 1, "FPRH"), 1.0e-5);
+    BOOST_CHECK_CLOSE(101.98, ecl_sum_get_field_var(resp, 2, "FPRH"), 1.0e-5);
+
+    BOOST_CHECK_CLOSE(109.87, ecl_sum_get_field_var(resp, 0, "FPRP"), 1.0e-5);
+    BOOST_CHECK_CLOSE(111.11, ecl_sum_get_field_var(resp, 1, "FPRP"), 1.0e-5);
+    BOOST_CHECK_CLOSE( 99.98, ecl_sum_get_field_var(resp, 2, "FPRP"), 1.0e-5);
+
+    // Volumes
+    BOOST_CHECK_CLOSE(123.45e6, ecl_sum_get_field_var(resp, 0, "FHPV"), 1.0e-5);
+    BOOST_CHECK_CLOSE(123.21e6, ecl_sum_get_field_var(resp, 1, "FHPV"), 1.0e-5);
+    BOOST_CHECK_CLOSE(121.21e6, ecl_sum_get_field_var(resp, 2, "FHPV"), 1.0e-5);
 }
 
 #if 0
