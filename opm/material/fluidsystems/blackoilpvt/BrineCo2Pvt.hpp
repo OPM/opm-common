@@ -161,9 +161,9 @@ public:
     */
     void setActivityModelSalt(int activityModel)
     {
-        // Only 0, 1, or 2 is allowed
-        if (activityModel > 2 || activityModel < 0) {
-            throw std::runtime_error("ACTCO2S options are 0, 1 or 2; see manual!");
+        // Only 0, 1, 2 and 3 are allowed
+        if (activityModel > 3 || activityModel < 0) {
+            throw std::runtime_error("ACTCO2S options are 0, 1, 2 or 3; see manual!");
         }
         activityModel_ = activityModel;
     }

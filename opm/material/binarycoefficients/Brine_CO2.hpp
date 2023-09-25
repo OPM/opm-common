@@ -118,6 +118,12 @@ public:
             highTemp = false;
         }
 
+        // Activity model 3, which is Duan & Sun (2003) as given in Spycher & Pruess (2005), can only be used for
+        // temperatures below 99 C
+        if (activityModel == 3 && highTemp) {
+            throw std::runtime_error("Activity model 3 cannot be used for temperatures above 99 degrees Celsius!");
+        } 
+
         // if both phases are present the mole fractions in each phase can be calculate
         // with the mutual solubility function
         if (knownPhaseIdx < 0) {
@@ -470,15 +476,27 @@ private:
     }
 
     /*!
-     * \brief Returns the molality of NaCl (mol NaCl / kg water) for a given mole fraction (mol NaCl / mol solution)
-     *
-     * \param x_NaCl mole fraction of NaCL in brine [mol/mol]
-     */
+    * \brief Returns the molality of NaCl (mol NaCl / kg water) for a given mole fraction (mol NaCl / mol solution)
+    *
+    * \param x_NaCl mole fraction of NaCL in brine [mol/mol]
+    */
     template <class Evaluation>
     static Evaluation moleFracToMolality_(const Evaluation& x_NaCl)
     {
         // conversion from mol fraction to molality (dissolved CO2 neglected)
         return 55.508 * x_NaCl / (1 - x_NaCl);
+    }
+
+    /*!
+    * \brief Returns the mole fraction NaCl; see e.g. Appendix B in Spycher & Pruess (2009)
+    *
+    * \param x_NaCl mole fraction of NaCL in brine [mol/mol]
+    */
+    template <class Evaluation>
+    static Evaluation molalityToMoleFrac_(const Evaluation& m_NaCl, const Evaluation& m_CO2)
+    {
+        // conversion from mol fraction to molality
+        return 2 * m_NaCl / (55.508 + 2 * m_NaCl + m_CO2);
     }
 
     /*!
@@ -495,11 +513,11 @@ private:
 	// Start point for fixed-point iterations as recommended below in section 2.2
         Evaluation yH2O = H2O::vaporPressure(temperature) / pg;  // ideal mixing
         Evaluation xCO2 = 0.009;  // same as ~0.5 mol/kg
-        Evaluation gammaNaCl = 1.0;  // default salt activity coeff to 1.0
+        Evaluation gammaNaCl = 1.0;  // default salt activity coeff = 1.0
 
-        // We can pre-calculate Duan-Sun, Spycher & Preuss (2009) salt model
+        // We can pre-calculate Duan-Sun, Spycher & Pruess (2009) salt activity coeff.
         if (m_NaCl > 0.0 && activityModel == 2) {
-            gammaNaCl = activityCoefficientSalt_(temperature, m_NaCl, Evaluation(0.0), activityModel);
+            gammaNaCl = activityCoefficientSalt_(temperature, pg, m_NaCl, Evaluation(0.0), activityModel);
         }
         
         // Options
@@ -511,7 +529,7 @@ private:
         for (int i = 0; i < max_iter; ++i) {
             // Calculate activity coefficient for Rumpf et al (1994) model
             if (m_NaCl > 0.0 && activityModel == 1) {
-                gammaNaCl = activityCoefficientSalt_(temperature, m_NaCl, xCO2, activityModel);
+                gammaNaCl = activityCoefficientSalt_(temperature, pg, m_NaCl, xCO2, activityModel);
             }
 
             // F(x_i) is the mutual solubilities
@@ -547,8 +565,8 @@ private:
     {
         // Calculate activity coefficient for salt
         Evaluation gammaNaCl = 1.0;
-        if (m_NaCl > 0.0 && activityModel > 0) {
-            gammaNaCl = activityCoefficientSalt_(temperature, m_NaCl, Evaluation(0.0), activityModel);
+        if (m_NaCl > 0.0 && activityModel > 0 && activityModel < 3) {
+            gammaNaCl = activityCoefficientSalt_(temperature, pg, m_NaCl, Evaluation(0.0), activityModel);
         }
 
         // Calculate mutual solubility.
@@ -557,11 +575,26 @@ private:
         auto [xCO2, yH2O] = mutualSolubility_(temperature, pg, Evaluation(0.0), Evaluation(0.0), m_NaCl, gammaNaCl, 
                                               highTemp, extrapolate);
 
+        // If activity model of Duan & Sun (2003), as given in Spycher & Pruess (2005), is used, the "activitiy
+        // coefficient" is applied on the pure CO2 in water molality and not mole fraction as above
+        if (m_NaCl > 0.0 && activityModel == 3) {
+            // new xCO2 with salt
+            Evaluation m0_CO2 = xCO2 * 55.508 / (1 - xCO2);  // OBS: CO2 in pure water!
+            gammaNaCl = activityCoefficientSalt_(temperature, pg, m_NaCl, Evaluation(0.0), activityModel);
+            Evaluation m_CO2 = m0_CO2 / gammaNaCl;
+            xCO2 = m_CO2 / (2 * m_NaCl + 55.508 + m_CO2);
+
+            // new yH2O with salt 
+            const Evaluation& xNaCl = molalityToMoleFrac_(m_NaCl, m_CO2);
+            const Evaluation& A = computeA_(temperature, pg, Evaluation(0.0), Evaluation(0.0), highTemp, extrapolate);
+            yH2O = A * (1 - xCO2 - xNaCl);
+        }
+
         return {xCO2, yH2O};
     }
 
     /*!
-    * \brief Mutual solubility according to Spycher & Preuss (2009)
+    * \brief Mutual solubility according to Spycher & Pruess (2009)
     */
     template <class Evaluation>
     static std::pair<Evaluation, Evaluation> mutualSolubility_(const Evaluation& temperature, 
@@ -674,17 +707,19 @@ private:
     }
 
     /*!
-    * \brief Activity model of salt in Spycher & Preuss (2009)
+    * \brief Activity model of salt in Spycher & Pruess (2009)
     */
     template <class Evaluation>
-    static Evaluation activityCoefficientSalt_(const Evaluation& temperature, 
+    static Evaluation activityCoefficientSalt_(const Evaluation& temperature,
+                                               const Evaluation& pg, 
                                                const Evaluation& m_NaCl,
                                                const Evaluation& xCO2,
                                                const int& activityModel)
     {
-	OPM_TIMEFUNCTION_LOCAL();        
+        OPM_TIMEFUNCTION_LOCAL();   
 	// Lambda and xi parameter for either Rumpf et al (1994) (activityModel = 1) or Duan-Sun as modified by Spycher
-        // & Preuss (2009) (activityModel = 2)
+        // & Pruess (2009) (activityModel = 2) or Duan & Sun (2003) as given in Spycher & Pruess (2005) (activityModel =
+        // 3)
         Evaluation lambda;
         Evaluation xi;
         Evaluation convTerm;
@@ -695,9 +730,17 @@ private:
             convTerm = (1 + (m_CO2 + 2 * m_NaCl) / 55.508) / (1 + m_CO2 / 55.508);
         }
         else if (activityModel == 2) {
-            lambda = computeLambdaDuanSun_(temperature);
-            xi = computeXiDuanSun_(temperature);
+            lambda = computeLambdaSpycherPruess2009_(temperature);
+            xi = computeXiSpycherPruess2009_(temperature);
             convTerm = 1 + 2 * m_NaCl / 55.508;
+        }
+        else if (activityModel == 3) {
+            lambda = computeLambdaDuanSun_(temperature, pg);
+            xi = computeXiSpycherPruess2009_(temperature);
+            convTerm = 1.0;
+        }
+        else {
+            throw std::runtime_error("Activity model for salt-out effect has not been implemented!");
         }
 
         // Eq. (18)
@@ -708,10 +751,10 @@ private:
     }
 
     /*!
-    * \brief Lambda parameter in Duan & Sun model, as modified and detailed in Spycher & Preuss (2009)
+    * \brief Lambda parameter in Duan & Sun model, as modified and detailed in Spycher & Pruess (2009)
     */
     template <class Evaluation>
-    static Evaluation computeLambdaDuanSun_(const Evaluation& temperature)
+    static Evaluation computeLambdaSpycherPruess2009_(const Evaluation& temperature)
     {
         // Table 1
         static const Scalar c[3] = { 2.217e-4, 1.074, 2648. };
@@ -721,10 +764,10 @@ private:
     }
 
     /*!
-    * \brief Xi parameter in Duan & Sun model, as modified and detailed in Spycher & Preuss (2009)
+    * \brief Xi parameter in Duan & Sun model, as modified and detailed in Spycher & Pruess (2009)
     */
     template <class Evaluation>
-    static Evaluation computeXiDuanSun_(const Evaluation& temperature)
+    static Evaluation computeXiSpycherPruess2009_(const Evaluation& temperature)
     {
         // Table 1
         static const Scalar c[3] = { 1.3e-5, -20.12, 5259. };
@@ -734,7 +777,7 @@ private:
     }
 
     /*!
-    * \brief Lambda parameter in Rumpf et al. (1994), as detailed in Spycher & Preuss (2005)
+    * \brief Lambda parameter in Rumpf et al. (1994), as detailed in Spycher & Pruess (2005)
     */
     template <class Evaluation>
     static Evaluation computeLambdaRumpfetal_(const Evaluation& temperature)
@@ -744,6 +787,41 @@ private:
 
         return c[0] + c[1] / temperature + c[2] / (temperature * temperature) +
             c[3] / (temperature * temperature * temperature);
+    }
+
+    /*!
+     * \brief Returns the parameter lambda, which is needed for the
+     * calculation of the CO2 activity coefficient in the brine-CO2 system.
+     * Given in Spycher and Pruess (2005)
+     * \param temperature the temperature [K]
+     * \param pg the gas phase pressure [Pa]
+     */
+    template <class Evaluation>
+    static Evaluation computeLambdaDuanSun_(const Evaluation& temperature, const Evaluation& pg)
+    {
+        static const Scalar c[6] =
+            { -0.411370585, 6.07632013E-4, 97.5347708, -0.0237622469, 0.0170656236, 1.41335834E-5 };
+
+        Evaluation pg_bar = pg / 1.0E5; /* conversion from Pa to bar */
+        return c[0] + c[1]*temperature + c[2]/temperature + c[3]*pg_bar/temperature + c[4]*pg_bar/(630.0 - temperature)
+            + c[5]*temperature*log(pg_bar);
+    }
+
+    /*!
+     * \brief Returns the parameter xi, which is needed for the
+     * calculation of the CO2 activity coefficient in the brine-CO2 system.
+     * Given in Spycher and Pruess (2005)
+     * \param temperature the temperature [K]
+     * \param pg the gas phase pressure [Pa]
+     */
+    template <class Evaluation>
+    static Evaluation computeXiDuanSun_(const Evaluation& temperature, const Evaluation& pg)
+    {
+        static const Scalar c[4] =
+            { 3.36389723E-4, -1.98298980E-5, 2.12220830E-3, -5.24873303E-3 };
+
+        Evaluation pg_bar = pg / 1.0E5; /* conversion from Pa to bar */
+        return c[0] + c[1]*temperature + c[2]*pg_bar/temperature + c[3]*pg_bar/(630.0 - temperature);
     }
 
     /*!
@@ -763,11 +841,9 @@ private:
         }
         else {
             // For temperature below 31 C and pressures above saturation pressure, separate parameters are needed
-            if (temperatureCelcius < 31) {
-                Evaluation psat = CO2::vaporPressure(temperature);
-                if (pg > psat) {
-                    c = { 1.169, 1.368e-2, -5.38e-5, 0.0 };
-                }
+            Evaluation psat = CO2::vaporPressure(temperature);
+            if (temperatureCelcius < 31 && pg > psat) {
+                c = { 1.169, 1.368e-2, -5.38e-5, 0.0 };
             }
             else {
                 c = { 1.189, 1.304e-2, -5.446e-5, 0.0 };
@@ -788,7 +864,6 @@ private:
     template <class Evaluation>
     static Evaluation equilibriumConstantH2O_(const Evaluation& temperature, const bool& highTemp)
     {
-        OPM_TIMEFUNCTION_LOCAL();
         Evaluation temperatureCelcius = temperature - 273.15;
         std::array<Scalar, 5> c;
         if (highTemp){
