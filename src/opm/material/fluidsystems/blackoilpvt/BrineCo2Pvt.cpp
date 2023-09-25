@@ -25,6 +25,7 @@
 #include <opm/material/fluidsystems/blackoilpvt/BrineCo2Pvt.hpp>
 
 #include <opm/common/OpmLog/OpmLog.hpp>
+#include <opm/common/ErrorMacros.hpp>
 
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
@@ -62,6 +63,11 @@ initFromState(const EclipseState& eclState, const Schedule&)
     // set the surface conditions using the STCOND keyword
     Scalar T_ref = eclState.getTableManager().stCond().temperature;
     Scalar P_ref = eclState.getTableManager().stCond().pressure;
+    
+    // Throw an error if STCOND is not (T, p) = (15.56 C, 1 atm) = (288.71 K, 1.01325e5 Pa)
+    if (T_ref != 288.71 || P_ref != 1.01325e5) {
+        OPM_THROW(std::runtime_error, "CO2STORE can only be used with default values for STCOND!");
+    }
 
     brineReferenceDensity_[regionIdx] = Brine::liquidDensity(T_ref, P_ref, salinity_[regionIdx], extrapolate);
     co2ReferenceDensity_[regionIdx] = CO2::gasDensity(T_ref, P_ref, extrapolate);
