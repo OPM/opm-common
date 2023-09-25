@@ -189,7 +189,12 @@ public:
         const Evaluation& invBo = inverseSaturatedOilBTable_[regionIdx].eval(pressure, /*extrapolate=*/true);
         const Evaluation& invMuoBo = inverseSaturatedOilBMuTable_[regionIdx].eval(pressure, /*extrapolate=*/true);
 
-        return invBo/invMuoBo;
+        if (std::abs(invMuoBo.value()) > EPS)
+            return invBo/invMuoBo;
+
+        // If we are too close to zero, try evaluating at a point nearby
+        const Evaluation& invMuoBoNZ = inverseSaturatedOilBMuTable_[regionIdx].eval(pressure*(1+PDELTA_REL), /*extrapolate=*/true);
+        return invBo/invMuoBoNZ;
     }
 
     /*!
@@ -370,6 +375,9 @@ private:
     std::vector<TabulatedOneDFunction> saturationPressure_;
 
     Scalar vapPar2_ = 0.0;
+
+    static constexpr auto EPS = 1.0e-6;
+    static constexpr auto PDELTA_REL = 1.0e-6;
 };
 
 } // namespace Opm
