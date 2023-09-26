@@ -540,12 +540,11 @@ void check_compsegs_consistency(::Opm::Schedule::WelSegsSet& welsegs,
                         std::back_inserter(difference),
                         ::Opm::Schedule::PairComp());
     // Ignore wells without connections
-    const auto empty_conn = [wells](const std::pair<std::string,::Opm::KeywordLocation> &x) -> bool {
-        const auto& wname = x.first;
-        const auto it = std::find_if(wells.begin(), wells.end(),
-                                     [wname](const ::Opm::Well& well) -> bool {
-                                         return well.name()==wname && well.getConnections().empty();});
-        return it != wells.end();
+    const auto empty_conn = [&wells](const std::pair<std::string,::Opm::KeywordLocation> &x) -> bool {
+        return std::any_of(wells.begin(), wells.end(),
+                           [wname = x.first](const ::Opm::Well& well) {
+                               return (well.name() == wname) && well.getConnections().empty(); }
+                           );
     };
     difference.erase(std::remove_if(difference.begin(), difference.end(), empty_conn), difference.end());
     
