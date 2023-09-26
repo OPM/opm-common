@@ -520,15 +520,15 @@ private:
     }
 
     /*!
-    * \brief Returns the mole fraction NaCl; see e.g. Appendix B in Spycher & Pruess (2009)
+    * \brief Returns the mole fraction NaCl; inverse of moleFracToMolality
     *
     * \param x_NaCl mole fraction of NaCL in brine [mol/mol]
     */
     template <class Evaluation>
-    static Evaluation molalityToMoleFrac_(const Evaluation& m_NaCl, const Evaluation& m_CO2)
+    static Evaluation molalityToMoleFrac_(const Evaluation& m_NaCl)
     {
-        // conversion from mol fraction to molality
-        return m_NaCl / (55.508 + m_NaCl + m_CO2);
+        // conversion from molality to mole fractio (dissolved CO2 neglected)
+        return m_NaCl / (55.508 + m_NaCl);
     }
 
     /*!
@@ -671,7 +671,7 @@ private:
             xCO2 = mCO2 / (m_NaCl + 55.508 + mCO2);
 
             // new yH2O with salt 
-            const Evaluation& xNaCl = molalityToMoleFrac_(m_NaCl, mCO2);
+            const Evaluation& xNaCl = molalityToMoleFrac_(m_NaCl);
             yH2O = A * (1 - xCO2 - xNaCl);
         }
 
