@@ -333,7 +333,7 @@ public:
 
         // Activity model for salt-out effect in brine-CO2 mutual solubility
         // 2 = Duan & Sun as modified in Spycher & Pruess, Trans. Porous Media, (2009)
-        const int activityModel = 2;
+        const int activityModel = 3;
 
         // calulate the equilibrium composition for the given
         // temperature and pressure. TODO: calculateMoleFractions()
