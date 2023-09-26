@@ -529,7 +529,9 @@ namespace
 /// \brief Check whether each MS well has COMPSEGS entry andissue error if not.
 /// \param welsegs All wells with a WELSEGS entry together with the location.
 /// \param compegs All wells with a COMPSEGS entry
-void check_compsegs_consistency(::Opm::Schedule::WelSegsSet& welsegs, std::set<std::string>&  compsegs)
+void check_compsegs_consistency(::Opm::Schedule::WelSegsSet& welsegs, 
+                                std::set<std::string>&  compsegs,
+                                const std::vector<::Opm::Well>& wells)
 {
     std::vector<std::pair<std::string,::Opm::KeywordLocation>> difference;
     difference.reserve(welsegs.size());
@@ -537,17 +539,26 @@ void check_compsegs_consistency(::Opm::Schedule::WelSegsSet& welsegs, std::set<s
                         compsegs.begin(), compsegs.end(),
                         std::back_inserter(difference),
                         ::Opm::Schedule::PairComp());
+    // Ignore wells without connections
+    const auto empty_conn = [&wells](const std::pair<std::string,::Opm::KeywordLocation> &x) -> bool {
+        return std::any_of(wells.begin(), wells.end(),
+                           [wname = x.first](const ::Opm::Well& well) {
+                               return (well.name() == wname) && well.getConnections().empty(); }
+                           );
+    };
+    difference.erase(std::remove_if(difference.begin(), difference.end(), empty_conn), difference.end());
+    
     if (difference.size()) {
-        std::string wells = "well";
+        std::string well_str = "well";
         if (difference.size()>1) {
-            wells.append("s");
+            well_str.append("s");
         }
-        wells.append(":");
+        well_str.append(":");
 
         for(const auto& [name, location] : difference) {
-            wells.append(fmt::format("\n   {} in {} at line {}", name, location.filename, location.lineno));
+            well_str.append(fmt::format("\n   {} in {} at line {}", name, location.filename, location.lineno));
         }
-        auto msg = fmt::format("Missing COMPSEGS keyword for the following multisegment {}.", wells);
+        auto msg = fmt::format("Missing COMPSEGS keyword for the following multisegment {}.", well_str);
         throw Opm::OpmInputError(msg, std::get<1>(difference[0]));
     }
 }
@@ -697,7 +708,7 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                 keyword_index++;
             }
 
-            check_compsegs_consistency(welsegs_wells, compsegs_wells);
+            check_compsegs_consistency(welsegs_wells, compsegs_wells, this->getWells(report_step));
             this->applyGlobalWPIMULT(wpimult_global_factor);
             this->end_report(report_step);
 
