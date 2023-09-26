@@ -457,6 +457,7 @@ list (APPEND TEST_SOURCE_FILES
       tests/material/test_2dtables.cpp
       tests/material/test_blackoilfluidstate.cpp
       tests/material/test_components.cpp
+      tests/material/test_binarycoefficients.cpp
       tests/material/test_fluidmatrixinteractions.cpp
       tests/material/test_fluidsystems.cpp
       tests/material/test_spline.cpp
