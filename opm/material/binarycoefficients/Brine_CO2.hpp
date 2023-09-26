@@ -614,7 +614,7 @@ private:
         B /= gammaNaCl;
 
         // Compute yH2O and xCO2, Eqs. (B-7) and (B-2)
-        Evaluation yH2O_new = (1. - B) * 55.508 / ((1. / A - B) * (2 * m_NaCl + 55.508) + 2 * m_NaCl * B);
+        Evaluation yH2O_new = (1. - B) * 55.508 / ((1. / A - B) * (m_NaCl + 55.508) + m_NaCl * B);
         Evaluation xCO2_new;
         if (highTemp) {
             xCO2_new = B * (1 - yH2O);
@@ -726,17 +726,17 @@ private:
         if (activityModel == 1) {
             lambda = computeLambdaRumpfetal_(temperature);
             xi = -0.0028 * 3.0;
-            Evaluation m_CO2 = xCO2 * (2 * m_NaCl + 55.508) / (1 - xCO2);
-            convTerm = (1 + (m_CO2 + 2 * m_NaCl) / 55.508) / (1 + m_CO2 / 55.508);
+            Evaluation m_CO2 = xCO2 * (m_NaCl + 55.508) / (1 - xCO2);
+            convTerm = (1 + (m_CO2 + m_NaCl) / 55.508) / (1 + m_CO2 / 55.508);
         }
         else if (activityModel == 2) {
             lambda = computeLambdaSpycherPruess2009_(temperature);
             xi = computeXiSpycherPruess2009_(temperature);
-            convTerm = 1 + 2 * m_NaCl / 55.508;
+            convTerm = 1 + m_NaCl / 55.508;
         }
         else if (activityModel == 3) {
             lambda = computeLambdaDuanSun_(temperature, pg);
-            xi = computeXiSpycherPruess2009_(temperature);
+            xi = computeXiDuanSun_(temperature, pg);
             convTerm = 1.0;
         }
         else {
