@@ -1,38 +1,5 @@
 # - Helper routines for opm-core like projects
 
-include (LibtoolArchives) # linker_cmdline
-
-# convert a list back to a command-line string
-function (unseparate_args var_name prefix value)
-  separate_arguments (value)
-  foreach (item IN LISTS value)
-	set (prefixed_item "${prefix}${item}")
-	if (${var_name})
-	  set (${var_name} "${${var_name}} ${prefixed_item}")
-	else (${var_name})
-	  set (${var_name} "${prefixed_item}")
-	endif (${var_name})
-  endforeach (item)
-  set (${var_name} "${${var_name}}" PARENT_SCOPE)
-endfunction (unseparate_args var_name prefix value)
-
-# wrapper to set variables in pkg-config file
-function (configure_pc_file name source dest prefix libdir includedir)
-  # escape set of standard strings
-  unseparate_args (includes "-I" "${${name}_INCLUDE_DIRS}")
-  unseparate_args (defs "" "${${name}_DEFINITIONS}")
-  linker_cmdline (STRING INTO libs FROM ${${name}_LIBRARIES})
-
-  # necessary to make these variables visible to configure_file
-  set (name "${${name}_NAME}")
-  set (description "${${name}_DESCRIPTION}")
-  set (major "${${name}_VERSION_MAJOR}")
-  set (minor "${${name}_VERSION_MINOR}")
-  set (target "${${name}_LIBRARY}")
-  linker_cmdline (STRING INTO target from ${target})
-  configure_file (${source} ${dest} @ONLY)
-endfunction (configure_pc_file name source dist prefix libdir includedir)
-
 function (configure_cmake_file name variant version)
   # declarative list of the variable names that are used in the template
   # and that must be defined in the project to be exported
@@ -91,16 +58,6 @@ function (opm_cmake_config name)
 	APPEND "${${name}_CONFIG_VARS}"
 	)
 
-  # config-mode .pc file; use this to find the build tree
-  configure_pc_file (
-	${name}
-	${template_dir}/opm-project.pc.in
-	${PROJECT_BINARY_DIR}/${${name}_NAME}.pc
-	${PROJECT_BINARY_DIR}
-	"${CMAKE_LIBRARY_OUTPUT_DIRECTORY}"
-	${PROJECT_SOURCE_DIR}
-	)
-
   # The next replace will result in bogus entries if install directory is
   # a subdirectory of source tree,
   # and we have existing entries pointing to that install directory.
@@ -153,29 +110,5 @@ function (opm_cmake_config name)
   install (
 	FILES ${PROJECT_BINARY_DIR}/${${name}_NAME}-config-version.cmake
 	DESTINATION share/cmake${${name}_VER_DIR}/${${name}_NAME}
-	)
-
-  # find-mode .pc file; use this to locate system installation
-  configure_pc_file (
-	${name}
-	${template_dir}/opm-project.pc.in
-	${PROJECT_BINARY_DIR}/${${name}_NAME}-install.pc
-	${CMAKE_INSTALL_PREFIX}
-	${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}${${name}_VER_DIR}
-	${CMAKE_INSTALL_PREFIX}/include${${name}_VER_DIR}
-	)
-
-  # put this in the right system location; if we have binaries then it
-  # should go in the arch-specific lib/ directory, otherwise use the
-  # common/noarch lib/ directory (these targets come from UseMultiArch)
-  if (${name}_TARGET)
-	set (_pkg_dir ${CMAKE_INSTALL_LIBDIR})
-  else ()
-	set (_pkg_dir lib)
-  endif ()
-  install (
-	FILES ${PROJECT_BINARY_DIR}/${${name}_NAME}-install.pc
-	DESTINATION ${CMAKE_INSTALL_PREFIX}/${_pkg_dir}/pkgconfig${${name}_VER_DIR}/
-	RENAME ${${name}_NAME}.pc
 	)
 endfunction (opm_cmake_config name)
