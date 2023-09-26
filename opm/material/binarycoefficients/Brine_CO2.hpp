@@ -118,29 +118,35 @@ public:
             highTemp = false;
         }
 
-        // Activity model 3, which is Duan & Sun (2003) as given in Spycher & Pruess (2005), can only be used for
-        // temperatures below 99 C
-        if (activityModel == 3 && highTemp) {
-            throw std::runtime_error("Activity model 3 cannot be used for temperatures above 99 degrees Celsius!");
-        } 
-
-        // if both phases are present the mole fractions in each phase can be calculate
-        // with the mutual solubility function
+        // If both phases are present the mole fractions in each phase can be calculate with the mutual solubility
+        // function
         if (knownPhaseIdx < 0) {
             Evaluation molalityNaCl = moleFracToMolality_(x_NaCl); // molality of NaCl //CHANGED
             
-            // High-temp. cases need iterations
-            if (highTemp) {
-                auto [xCO2, yH2O] = highTempSolubility_(temperature, pg, molalityNaCl, activityModel, extrapolate);
+            // Duan-Sun model as given in Spycher & Pruess (2005) have a different fugacity coefficient formula and
+            // activity coefficient definition (not a true activity coefficient but a ratio).
+            // Technically only valid below T = 100 C, but we use low-temp. parameters and formulas even above 100 C as
+            // an approximation.
+            if (activityModel == 3) {
+                auto [xCO2, yH2O] = mutualSolubilitySpycherPruess2005_(temperature, pg, molalityNaCl, extrapolate);
                 xlCO2 = xCO2;
                 ygH2O = yH2O;
-            }
 
-            // While low-temp. cases don't need it
+            }
             else {
-                auto [xCO2, yH2O] = lowTempSolubility_(temperature, pg, molalityNaCl, activityModel, extrapolate);
-                xlCO2 = xCO2;
-                ygH2O = yH2O;
+                // High-temp. cases need iterations
+                if (highTemp) {
+                    auto [xCO2, yH2O] = highTempSolubility_(temperature, pg, molalityNaCl, activityModel, extrapolate);
+                    xlCO2 = xCO2;
+                    ygH2O = yH2O;
+                }
+
+                // While low-temp. cases don't need it
+                else {
+                    auto [xCO2, yH2O] = lowTempSolubility_(temperature, pg, molalityNaCl, activityModel, extrapolate);
+                    xlCO2 = xCO2;
+                    ygH2O = yH2O;
+                }
             }
         }
 
@@ -178,7 +184,8 @@ public:
                                              const Evaluation& pg,
                                              const Evaluation& yH2O, 
                                              const bool highTemp, 
-                                             bool extrapolate = false)
+                                             bool extrapolate = false,
+                                             bool spycherPruess2005 = false)
     {
         OPM_TIMEFUNCTION_LOCAL();
         Valgrind::CheckDefined(temperature);
@@ -196,11 +203,26 @@ public:
         Evaluation b_mix = bMix_(yH2O, highTemp);
 
         Evaluation lnPhiCO2;
-        lnPhiCO2 = (b_CO2 / b_mix) * (pg_bar * V / (R * temperature) - 1);
-        lnPhiCO2 -= log(pg_bar * (V - b_mix) / (R * temperature));
-        lnPhiCO2 += (2 * (yH2O * a_CO2_H2O + (1 - yH2O) * a_CO2) / a_mix - (b_CO2 / b_mix)) *
-                    a_mix / (b_mix * R * pow(temperature, 1.5)) * log(V / (V + b_mix));
-
+        if (spycherPruess2005) {
+            lnPhiCO2 = log(V / (V - b_CO2));
+            lnPhiCO2 += b_CO2 / (V - b_CO2);
+            lnPhiCO2 -= 2 * a_CO2 / (R * pow(temperature, 1.5) * b_CO2) * log((V + b_CO2) / V);
+            lnPhiCO2 +=
+                a_CO2 * b_CO2
+                / (R
+                   * pow(temperature, 1.5)
+                   * b_CO2
+                   * b_CO2)
+                * (log((V + b_CO2) / V)
+                   - b_CO2 / (V + b_CO2));
+            lnPhiCO2 -= log(pg_bar * V / (R * temperature));
+        }
+        else {
+            lnPhiCO2 = (b_CO2 / b_mix) * (pg_bar * V / (R * temperature) - 1);
+            lnPhiCO2 -= log(pg_bar * (V - b_mix) / (R * temperature));
+            lnPhiCO2 += (2 * (yH2O * a_CO2_H2O + (1 - yH2O) * a_CO2) / a_mix - (b_CO2 / b_mix)) *
+                        a_mix / (b_mix * R * pow(temperature, 1.5)) * log(V / (V + b_mix));
+        }
         return exp(lnPhiCO2); // fugacity coefficient of CO2
     }
 
@@ -217,7 +239,8 @@ public:
                                              const Evaluation& pg,
                                              const Evaluation& yH2O, 
                                              const bool highTemp, 
-                                             bool extrapolate = false)
+                                             bool extrapolate = false,
+                                             bool spycherPruess2005 = false)
     {
         OPM_TIMEFUNCTION_LOCAL();
         Valgrind::CheckDefined(temperature);
@@ -235,11 +258,21 @@ public:
         Evaluation b_mix = bMix_(yH2O, highTemp);
 
         Evaluation lnPhiH2O;
-        lnPhiH2O = (b_H2O / b_mix) * (pg_bar * V / (R * temperature) - 1);
-        lnPhiH2O -= log(pg_bar * (V - b_mix) / (R * temperature));
-        lnPhiH2O += (2 * (yH2O * a_H2O + (1 - yH2O) * a_CO2_H2O) / a_mix - (b_H2O / b_mix)) *
-                    a_mix / (b_mix * R * pow(temperature, 1.5)) * log(V / (V + b_mix));
-
+        if (spycherPruess2005) {
+            lnPhiH2O =
+                log(V/(V - b_mix))
+                + b_H2O/(V - b_mix) - 2*a_CO2_H2O
+                / (R*pow(temperature, 1.5)*b_mix)*log((V + b_mix)/V)
+                + a_mix*b_H2O/(R*pow(temperature, 1.5)*b_mix*b_mix)
+                *(log((V + b_mix)/V) - b_mix/(V + b_mix))
+                - log(pg_bar*V/(R*temperature));
+        }
+        else {
+            lnPhiH2O = (b_H2O / b_mix) * (pg_bar * V / (R * temperature) - 1);
+            lnPhiH2O -= log(pg_bar * (V - b_mix) / (R * temperature));
+            lnPhiH2O += (2 * (yH2O * a_H2O + (1 - yH2O) * a_CO2_H2O) / a_mix - (b_H2O / b_mix)) *
+                        a_mix / (b_mix * R * pow(temperature, 1.5)) * log(V / (V + b_mix));
+        }
         return exp(lnPhiH2O); // fugacity coefficient of H2O
     }
 
@@ -314,7 +347,6 @@ private:
             return aCO2_(temperature, highTemp);
         }
     }
-
 
     /*!
     * \brief
@@ -496,7 +528,7 @@ private:
     static Evaluation molalityToMoleFrac_(const Evaluation& m_NaCl, const Evaluation& m_CO2)
     {
         // conversion from mol fraction to molality
-        return 2 * m_NaCl / (55.508 + 2 * m_NaCl + m_CO2);
+        return m_NaCl / (55.508 + m_NaCl + m_CO2);
     }
 
     /*!
@@ -575,21 +607,6 @@ private:
         auto [xCO2, yH2O] = mutualSolubility_(temperature, pg, Evaluation(0.0), Evaluation(0.0), m_NaCl, gammaNaCl, 
                                               highTemp, extrapolate);
 
-        // If activity model of Duan & Sun (2003), as given in Spycher & Pruess (2005), is used, the "activitiy
-        // coefficient" is applied on the pure CO2 in water molality and not mole fraction as above
-        if (m_NaCl > 0.0 && activityModel == 3) {
-            // new xCO2 with salt
-            Evaluation m0_CO2 = xCO2 * 55.508 / (1 - xCO2);  // OBS: CO2 in pure water!
-            gammaNaCl = activityCoefficientSalt_(temperature, pg, m_NaCl, Evaluation(0.0), activityModel);
-            Evaluation m_CO2 = m0_CO2 / gammaNaCl;
-            xCO2 = m_CO2 / (2 * m_NaCl + 55.508 + m_CO2);
-
-            // new yH2O with salt 
-            const Evaluation& xNaCl = molalityToMoleFrac_(m_NaCl, m_CO2);
-            const Evaluation& A = computeA_(temperature, pg, Evaluation(0.0), Evaluation(0.0), highTemp, extrapolate);
-            yH2O = A * (1 - xCO2 - xNaCl);
-        }
-
         return {xCO2, yH2O};
     }
 
@@ -598,13 +615,13 @@ private:
     */
     template <class Evaluation>
     static std::pair<Evaluation, Evaluation> mutualSolubility_(const Evaluation& temperature, 
-                                                        const Evaluation& pg,
-                                                        const Evaluation& xCO2,
-                                                        const Evaluation& yH2O,
-                                                        const Evaluation& m_NaCl,
-                                                        const Evaluation& gammaNaCl,
-                                                        const bool& highTemp,
-                                                        bool extrapolate = false)
+                                                               const Evaluation& pg,
+                                                               const Evaluation& xCO2,
+                                                               const Evaluation& yH2O,
+                                                               const Evaluation& m_NaCl,
+                                                               const Evaluation& gammaNaCl,
+                                                               const bool& highTemp,
+                                                               bool extrapolate = false)
     {
         // Calculate A and B (without salt effect); Eqs. (8) and (9)
         const Evaluation& A = computeA_(temperature, pg, yH2O, xCO2, highTemp, extrapolate);
@@ -627,6 +644,41 @@ private:
     }
 
     /*!
+    * \brief Mutual solubility according to Spycher & Pruess (2009)
+    */
+    template <class Evaluation>
+    static std::pair<Evaluation, Evaluation> 
+    mutualSolubilitySpycherPruess2005_(const Evaluation& temperature,
+                                       const Evaluation& pg,
+                                       const Evaluation& m_NaCl,
+                                       bool extrapolate = false)
+    {
+        // Calculate A and B (without salt effect); Eqs. (8) and (9)
+        const Evaluation& A = computeA_(temperature, pg, Evaluation(0.0), Evaluation(0.0), false, extrapolate, true);
+        const Evaluation& B = computeB_(temperature, pg, Evaluation(0.0), Evaluation(0.0), false, extrapolate, true);
+
+        // Mole fractions and molality in pure water
+        Evaluation yH2O = (1 - B) / (1. / A - B);
+        Evaluation xCO2 = B * (1 - yH2O);
+
+        // Modifiy mole fractions with Duan-Sun "activity coefficient" if salt is involved
+        if (m_NaCl > 0.0) {
+            const Evaluation& gammaNaCl = activityCoefficientSalt_(temperature, pg, m_NaCl, Evaluation(0.0), 3);
+
+            // Molality with salt
+            Evaluation mCO2 = (xCO2 * 55.508) / (1 - xCO2);  // pure water
+            mCO2 /= gammaNaCl;
+            xCO2 = mCO2 / (m_NaCl + 55.508 + mCO2);
+
+            // new yH2O with salt 
+            const Evaluation& xNaCl = molalityToMoleFrac_(m_NaCl, mCO2);
+            yH2O = A * (1 - xCO2 - xNaCl);
+        }
+
+        return {xCO2, yH2O};
+    }                                       
+
+    /*!
      * \brief Returns the paramater A for the calculation of
      * them mutual solubility in the water-CO2 system.
      * Given in Spycher, Pruess and Ennis-King (2003)
@@ -640,19 +692,20 @@ private:
                                 const Evaluation& yH2O,
                                 const Evaluation& xCO2,
                                 const bool& highTemp,
-                                bool extrapolate = false)
+                                bool extrapolate = false,
+                                bool spycherPruess2005 = false)
     {
         OPM_TIMEFUNCTION_LOCAL();
 	// Intermediate calculations
         const Evaluation& deltaP = pg / 1e5 - Pref_(temperature, highTemp); // pressure range [bar] from pref to pg[bar]
         Evaluation v_av_H2O = V_avg_H2O_(temperature, highTemp); // average partial molar volume of H2O [cm^3/mol]
         Evaluation k0_H2O = equilibriumConstantH2O_(temperature, highTemp); // equilibrium constant for H2O at 1 bar
-        Evaluation phi_H2O = fugacityCoefficientH2O(temperature, pg, yH2O, highTemp, extrapolate); // fugacity coefficient of H2O for the water-CO2 system
+        Evaluation phi_H2O = fugacityCoefficientH2O(temperature, pg, yH2O, highTemp, extrapolate, spycherPruess2005); // fugacity coefficient of H2O for the water-CO2 system
         Evaluation gammaH2O = activityCoefficientH2O_(temperature, xCO2, highTemp);
 
         // In the intermediate temperature range 99-109 C, equilibrium constants and fugacity coeff. are linearly
         // weighted
-        if ( temperature > 372.15 && temperature < 382.15) {
+        if ( temperature > 372.15 && temperature < 382.15 && !spycherPruess2005) {
             const Evaluation weight = (382.15 - temperature) / 10.;
             const Evaluation& k0_H2O_low = equilibriumConstantH2O_(temperature, false);
             const Evaluation& phi_H2O_low = fugacityCoefficientH2O(temperature, pg, Evaluation(0.0), false, extrapolate);
@@ -680,21 +733,22 @@ private:
                                 const Evaluation& yH2O,
                                 const Evaluation& xCO2,
                                 const bool& highTemp,
-                                bool extrapolate = false)
+                                bool extrapolate = false,
+                                bool spycherPruess2005 = false)
     {
         OPM_TIMEFUNCTION_LOCAL();
 	// Intermediate calculations
         const Evaluation& deltaP = pg / 1e5 - Pref_(temperature, highTemp); // pressure range [bar] from pref to pg[bar]
         Evaluation v_av_CO2 = V_avg_CO2_(temperature, highTemp); // average partial molar volume of CO2 [cm^3/mol]
-        Evaluation k0_CO2 = equilibriumConstantCO2_(temperature, pg, highTemp); // equilibrium constant for CO2 at 1 bar
-        Evaluation phi_CO2 = fugacityCoefficientCO2(temperature, pg, yH2O, highTemp, extrapolate); // fugacity coefficient of CO2 for the water-CO2 system
+        Evaluation k0_CO2 = equilibriumConstantCO2_(temperature, pg, highTemp, spycherPruess2005); // equilibrium constant for CO2 at 1 bar
+        Evaluation phi_CO2 = fugacityCoefficientCO2(temperature, pg, yH2O, highTemp, extrapolate, spycherPruess2005); // fugacity coefficient of CO2 for the water-CO2 system
         Evaluation gammaCO2 = activityCoefficientCO2_(temperature, xCO2, highTemp);
 
         // In the intermediate temperature range 99-109 C, equilibrium constants and fugacity coeff. are linearly
         // weighted
-        if ( temperature > 372.15 && temperature < 382.15) {
+        if ( temperature > 372.15 && temperature < 382.15 && !spycherPruess2005) {
             const Evaluation weight = (382.15 - temperature) / 10.;
-            const Evaluation& k0_CO2_low = equilibriumConstantCO2_(temperature, pg, false);
+            const Evaluation& k0_CO2_low = equilibriumConstantCO2_(temperature, pg, false, spycherPruess2005);
             const Evaluation& phi_CO2_low = fugacityCoefficientCO2(temperature, pg, Evaluation(0.0), false, extrapolate);
             k0_CO2 = k0_CO2 * (1 - weight) + k0_CO2_low * weight;
             phi_CO2 = phi_CO2 * (1 - weight) + phi_CO2_low * weight;
@@ -831,7 +885,10 @@ private:
      * \param temperature the temperature [K]
      */
     template <class Evaluation>
-    static Evaluation equilibriumConstantCO2_(const Evaluation& temperature, const Evaluation& pg, const bool& highTemp)
+    static Evaluation equilibriumConstantCO2_(const Evaluation& temperature, 
+                                              const Evaluation& pg, 
+                                              const bool& highTemp,
+                                              bool spycherPruess2005 = false)
     {
         OPM_TIMEFUNCTION_LOCAL();
         Evaluation temperatureCelcius = temperature - 273.15;
@@ -842,7 +899,7 @@ private:
         else {
             // For temperature below 31 C and pressures above saturation pressure, separate parameters are needed
             Evaluation psat = CO2::vaporPressure(temperature);
-            if (temperatureCelcius < 31 && pg > psat) {
+            if (temperatureCelcius < 31 && pg > psat && !spycherPruess2005) {
                 c = { 1.169, 1.368e-2, -5.38e-5, 0.0 };
             }
             else {
