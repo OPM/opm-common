@@ -64,12 +64,13 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(Brine_CO2, Scalar, Types)
     const Scalar MmNaCl = 58.44e-3;
 
     // Extrapolate density?
-    bool extrapolate = true;
+    const bool extrapolate = true;
 
     // Activity model for salt
     // 1 = Rumpf et al. (1994) as given in Spycher & Pruess (2005)
     // 2 = Duan-Sun model as modified in Spycher & Pruess (2009)
-    const int activityModel = 1;
+    // 3 = Duan-Sun model as given in Spycher & Pruess (2005)
+    const int activityModel = 2;
 
     // Init. water gas mole fraction (which we don't care about here)
     Evaluation xgH2O;
@@ -80,16 +81,16 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(Brine_CO2, Scalar, Types)
     Evaluation s;
 
     // Boost rel. diff. tolerance (in percent)
-    Scalar tol_zhao = 0.5e-2;
+    const Scalar tol_zhao = 0.5e-2;
 
     // Reference data Zhao et al., Geochimica et Cosmochimica Acta 149, 2015
-    // Experimental data:
+    // Experimental data in Table 3
     // static constexpr Scalar xSol_Zhao[3][7] = {
     //     {1.245, 1.016, 0.859, 0.734, 0.623, 0.551, 0.498},
     //     {1.020, 0.836, 0.706, 0.618, 0.527, 0.469, 0.427},
     //     {1.001, 0.800, 0.647, 0.566, 0.498, 0.440, 0.390}
     // };
-    // SP2010 data
+    // Spycher & Pruess (2009) (i.e., activityModel = 2 in our case) data given in Table 3
     static constexpr Scalar xSol_Zhao[3][7] = {
         {1.233, 1.012, 0.845, 0.716, 0.618, 0.541, 0.481},
         {1.001, 0.819, 0.686, 0.588, 0.515, 0.463, 0.425},
@@ -98,9 +99,9 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(Brine_CO2, Scalar, Types)
 
     // Temperature, pressure and salinity for Zhao et al (2015) data; Table 3
     T = 323.15;  // K
-    int numT = 3;
+    const int numT = 3;
     p = 150e5;  // Pa
-    int numS = 7;
+    const int numS = 7;
 
     // Test against Zhao et al (2015) data
     for (int iT = 0; iT < numT; ++iT) {
@@ -109,7 +110,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(Brine_CO2, Scalar, Types)
 
         for (int iS = 0; iS < numS; ++iS) {
             // convert to mass fraction
-            Evaluation salinity = 1 / ( 1 + 1 / (s * MmNaCl));
+            const Evaluation& salinity = 1 / ( 1 + 1 / (s * MmNaCl));
 
             // Init. mole fraction CO2 in water
             Evaluation xlCO2;
@@ -118,7 +119,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(Brine_CO2, Scalar, Types)
             BinaryCoeffBrineCO2::calculateMoleFractions(T, p, salinity, -1, xlCO2, xgH2O, activityModel, extrapolate);
 
             // Convert to molality CO2
-            Evaluation mCO2 = xlCO2 * (s + 55.508) / (1 - xlCO2);
+            const Evaluation& mCO2 = xlCO2 * (s + 55.508) / (1 - xlCO2);
 
             // Compare to experimental data
             // BOOST_CHECK_CLOSE(mCO2.value(), xSol_Zhao[iT][iS], tol);
@@ -158,13 +159,13 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(Brine_CO2, Scalar, Types)
     };
 
     // Tolerance for Koschel et al. (2006) data
-    Scalar tol_koschel = 14e-2;
+    const Scalar tol_koschel = 14e-2;
 
     // Test against reference data in Koschel et al. (2006)
     s = 1.0;
     for (int i = 0; i < 2; ++i) {
         // Convert to mass fraction
-        Evaluation salinity = 1 / ( 1 + 1 / (s * MmNaCl));
+        const Evaluation& salinity = 1 / ( 1 + 1 / (s * MmNaCl));
 
         // First table
         T = 323.1;
