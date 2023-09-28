@@ -191,7 +191,7 @@ public:
                                        pressure,
                                        salinity,
                                        xlCO2)
-        - pressure / density_(regionIdx, temperature, pressure, Rs, salinity ));
+        - pressure / density(regionIdx, temperature, pressure, Rs, salinity ));
     }
     /*!
      * \brief Returns the specific enthalpy [J/kg] of gas given a set of parameters.
@@ -208,7 +208,7 @@ public:
                                        pressure,
                                        Evaluation(salinity_[regionIdx]),
                                        xlCO2)
-        - pressure / density_(regionIdx, temperature, pressure, Rs, Evaluation(salinity_[regionIdx])));
+        - pressure / density(regionIdx, temperature, pressure, Rs, Evaluation(salinity_[regionIdx])));
     }
 
     /*!
@@ -277,8 +277,8 @@ public:
     {
         OPM_TIMEFUNCTION_LOCAL();
         const Evaluation salinity = salinityFromConcentration(regionIdx, temperature, pressure, saltconcentration);
-        Evaluation rsSat = rsSat_(regionIdx, temperature, pressure, salinity);
-        return (1.0 - convertRsToXoG_(rsSat,regionIdx)) * density_(regionIdx, temperature, pressure, rsSat, salinity)/brineReferenceDensity_[regionIdx];
+        Evaluation rs_sat = rsSat(regionIdx, temperature, pressure, salinity);
+        return (1.0 - convertRsToXoG_(rs_sat,regionIdx)) * density(regionIdx, temperature, pressure, rs_sat, salinity)/brineReferenceDensity_[regionIdx];
     }
     /*!
      * \brief Returns the formation volume factor [-] of the fluid phase.
@@ -292,7 +292,7 @@ public:
     {
         OPM_TIMEFUNCTION_LOCAL();
         const Evaluation salinity = salinityFromConcentration(regionIdx, temperature, pressure, saltConcentration);
-        return (1.0 - convertRsToXoG_(Rs,regionIdx)) * density_(regionIdx, temperature, pressure, Rs, salinity)/brineReferenceDensity_[regionIdx];
+        return (1.0 - convertRsToXoG_(Rs,regionIdx)) * density(regionIdx, temperature, pressure, Rs, salinity)/brineReferenceDensity_[regionIdx];
     }
     /*!
      * \brief Returns the formation volume factor [-] of the fluid phase.
@@ -303,7 +303,7 @@ public:
                                             const Evaluation& pressure,
                                             const Evaluation& Rs) const
     {
-        return (1.0 - convertRsToXoG_(Rs,regionIdx)) * density_(regionIdx, temperature, pressure, Rs, Evaluation(salinity_[regionIdx]))/brineReferenceDensity_[regionIdx];
+        return (1.0 - convertRsToXoG_(Rs,regionIdx)) * density(regionIdx, temperature, pressure, Rs, Evaluation(salinity_[regionIdx]))/brineReferenceDensity_[regionIdx];
     }
 
     /*!
@@ -314,9 +314,9 @@ public:
                                                      const Evaluation& temperature,
                                                      const Evaluation& pressure) const
     {
-        OPM_TIMEFUNCTION_LOCAL();
-        Evaluation rsSat = rsSat_(regionIdx, temperature, pressure, Evaluation(salinity_[regionIdx]));
-        return (1.0 - convertRsToXoG_(rsSat,regionIdx)) * density_(regionIdx, temperature, pressure, rsSat, Evaluation(salinity_[regionIdx]))/brineReferenceDensity_[regionIdx];
+ 	OPM_TIMEFUNCTION_LOCAL();
+	Evaluation rs_sat = rsSat(regionIdx, temperature, pressure, Evaluation(salinity_[regionIdx]));
+        return (1.0 - convertRsToXoG_(rs_sat,regionIdx)) * density(regionIdx, temperature, pressure, rs_sat, Evaluation(salinity_[regionIdx]))/brineReferenceDensity_[regionIdx];
     }
 
     /*!
@@ -359,7 +359,7 @@ public:
                                              const Evaluation& /*maxOilSaturation*/) const
     {
         //TODO support VAPPARS
-        return rsSat_(regionIdx, temperature, pressure, Evaluation(salinity_[regionIdx]));
+        return rsSat(regionIdx, temperature, pressure, Evaluation(salinity_[regionIdx]));
     }
 
     /*!
@@ -372,7 +372,7 @@ public:
                                              const Evaluation& saltConcentration) const
     {
         const Evaluation salinity = salinityFromConcentration(regionIdx, temperature, pressure, saltConcentration);
-        return rsSat_(regionIdx, temperature, pressure, salinity);
+        return rsSat(regionIdx, temperature, pressure, salinity);
     }
 
     /*!
@@ -383,7 +383,7 @@ public:
                                              const Evaluation& temperature,
                                              const Evaluation& pressure) const
     {
-        return rsSat_(regionIdx, temperature, pressure, Evaluation(salinity_[regionIdx]));
+        return rsSat(regionIdx, temperature, pressure, Evaluation(salinity_[regionIdx]));
     }
 
     const Scalar oilReferenceDensity(unsigned regionIdx) const
@@ -416,24 +416,16 @@ public:
         return pow(Evaluation(10), log_D_Brine) * 1e-4; // convert from cm2/s to m2/s
     }
 
-private:
-    std::vector<Scalar> brineReferenceDensity_;
-    std::vector<Scalar> co2ReferenceDensity_;
-    std::vector<Scalar> salinity_;
-    bool enableDissolution_ = true;
-    bool enableSaltConcentration_ = false;
-    int activityModel_;
-
-    template <class LhsEval>
-    LhsEval density_(unsigned regionIdx,
-                     const LhsEval& temperature,
-                     const LhsEval& pressure,
-                     const LhsEval& Rs,
-                     const LhsEval& salinity) const
+    template <class Evaluation>
+    Evaluation density(unsigned regionIdx,
+                       const Evaluation& temperature,
+                       const Evaluation& pressure,
+                       const Evaluation& Rs,
+                       const Evaluation& salinity) const
     {
-        OPM_TIMEFUNCTION_LOCAL();
-        LhsEval xlCO2 = convertXoGToxoG_(convertRsToXoG_(Rs,regionIdx), salinity);
-        LhsEval result = liquidDensity_(temperature,
+	OPM_TIMEFUNCTION_LOCAL();        
+	Evaluation xlCO2 = convertXoGToxoG_(convertRsToXoG_(Rs,regionIdx), salinity);
+        Evaluation result = liquidDensity_(temperature,
                                         pressure,
                                         xlCO2,
                                         salinity);
@@ -442,6 +434,42 @@ private:
         return result;
     }
 
+    template <class Evaluation>
+    Evaluation rsSat(unsigned regionIdx,
+                     const Evaluation& temperature,
+                     const Evaluation& pressure,
+                     const Evaluation& salinity) const
+    {
+	OPM_TIMEFUNCTION_LOCAL();
+        if (!enableDissolution_)
+            return 0.0;
+
+        // calulate the equilibrium composition for the given
+        // temperature and pressure. 
+        Evaluation xgH2O;
+        Evaluation xlCO2;
+        BinaryCoeffBrineCO2::calculateMoleFractions(temperature,
+                                                    pressure,
+                                                    salinity,
+                                                    /*knownPhaseIdx=*/-1,
+                                                    xlCO2,
+                                                    xgH2O,
+                                                    activityModel_,
+                                                    extrapolate);
+
+        // normalize the phase compositions
+        xlCO2 = max(0.0, min(1.0, xlCO2));
+
+        return convertXoGToRs(convertxoGToXoG(xlCO2, salinity), regionIdx);
+    }
+
+private:
+    std::vector<Scalar> brineReferenceDensity_;
+    std::vector<Scalar> co2ReferenceDensity_;
+    std::vector<Scalar> salinity_;
+    bool enableDissolution_ = true;
+    bool enableSaltConcentration_ = false;
+    int activityModel_;
 
     template <class LhsEval>
     LhsEval liquidDensity_(const LhsEval& T,
@@ -557,43 +585,12 @@ private:
         return XoG/(1.0 - XoG)*(rho_oRef/rho_gRef);
     }
 
-
-    template <class LhsEval>
-    LhsEval rsSat_(unsigned regionIdx,
-                   const LhsEval& temperature,
-                   const LhsEval& pressure,
-                   const LhsEval& salinity) const
-    {
-        OPM_TIMEFUNCTION_LOCAL();
-        if (!enableDissolution_)
-            return 0.0;
-
-        // calulate the equilibrium composition for the given
-        // temperature and pressure.
-        LhsEval xgH2O;
-        LhsEval xlCO2;
-        BinaryCoeffBrineCO2::calculateMoleFractions(temperature,
-                                                    pressure,
-                                                    salinity,
-                                                    /*knownPhaseIdx=*/-1,
-                                                    xlCO2,
-                                                    xgH2O,
-                                                    activityModel_,
-                                                    extrapolate);
-
-        // normalize the phase compositions
-        xlCO2 = max(0.0, min(1.0, xlCO2));
-
-        return convertXoGToRs(convertxoGToXoG(xlCO2, salinity), regionIdx);
-    }
-
     template <class LhsEval>
     static LhsEval liquidEnthalpyBrineCO2_(const LhsEval& T,
                                            const LhsEval& p,
                                            const LhsEval& salinity,
                                            const LhsEval& X_CO2_w)
     {
-        OPM_TIMEFUNCTION_LOCAL();
         /* X_CO2_w : mass fraction of CO2 in brine */
 
         /* same function as enthalpy_brine, only extended by CO2 content */

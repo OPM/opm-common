@@ -35,12 +35,9 @@
 #include <opm/material/densead/Math.hpp>
 
 #include <opm/material/binarycoefficients/Brine_CO2.hpp>
-#include <opm/material/binarycoefficients/Brine_H2.hpp>
 #include <opm/material/components/SimpleHuDuanH2O.hpp>
 #include <opm/material/components/CO2.hpp>
-#include <opm/material/components/H2.hpp>
-
-#include <iostream>
+#include <opm/material/fluidsystems/blackoilpvt/BrineCo2Pvt.hpp>
 
 template<class Scalar>
 bool close_at_tolerance(Scalar n1, Scalar n2, Scalar tolerance)
@@ -72,15 +69,16 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(Brine_CO2, Scalar, Types)
     // 3 = Duan-Sun model as given in Spycher & Pruess (2005)
     const int activityModel = 2;
 
-    // Init. water gas mole fraction (which we don't care about here)
+    // Init. water gas mole fraction (which we don't care about here) and dissolved CO2 mole fraction
     Evaluation xgH2O;
+    Evaluation xlCO2;
 
     // Init pressure, temperature, and salinity variables
     Evaluation T;
     Evaluation p;
     Evaluation s;
 
-    // Boost rel. diff. tolerance (in percent)
+    // Tolerance for Zhao et al (2015) data
     const Scalar tol_zhao = 0.5e-2;
 
     // Reference data Zhao et al., Geochimica et Cosmochimica Acta 149, 2015
@@ -104,22 +102,21 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(Brine_CO2, Scalar, Types)
     const int numS = 7;
 
     // Test against Zhao et al (2015) data
+    Evaluation salinity;
+    Evaluation mCO2;
     for (int iT = 0; iT < numT; ++iT) {
         // Salinity in mol/kg
         s = 0.0;
 
         for (int iS = 0; iS < numS; ++iS) {
             // convert to mass fraction
-            const Evaluation& salinity = 1 / ( 1 + 1 / (s * MmNaCl));
-
-            // Init. mole fraction CO2 in water
-            Evaluation xlCO2;
+            salinity = 1 / ( 1 + 1 / (s * MmNaCl));
 
             // Calculate solubility as mole fraction
             BinaryCoeffBrineCO2::calculateMoleFractions(T, p, salinity, -1, xlCO2, xgH2O, activityModel, extrapolate);
 
             // Convert to molality CO2
-            const Evaluation& mCO2 = xlCO2 * (s + 55.508) / (1 - xlCO2);
+            mCO2 = xlCO2 * (s + 55.508) / (1 - xlCO2);
 
             // Compare to experimental data
             // BOOST_CHECK_CLOSE(mCO2.value(), xSol_Zhao[iT][iS], tol);
@@ -165,16 +162,13 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(Brine_CO2, Scalar, Types)
     s = 1.0;
     for (int i = 0; i < 2; ++i) {
         // Convert to mass fraction
-        const Evaluation& salinity = 1 / ( 1 + 1 / (s * MmNaCl));
+        salinity = 1 / ( 1 + 1 / (s * MmNaCl));
 
         // First table
         T = 323.1;
         for (int j = 0; j < 4; ++j) {
             // Get pressure 
             p = p_1[i][j];
-
-            // Init. mole fraction CO2 in water
-            Evaluation xlCO2;
 
             // Calculate solubility as mole fraction
             BinaryCoeffBrineCO2::calculateMoleFractions(T, p, salinity, -1, xlCO2, xgH2O, activityModel, extrapolate);
@@ -193,9 +187,6 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(Brine_CO2, Scalar, Types)
             // Get pressure 
             p = p_2[i][j];
 
-            // Init. mole fraction CO2 in water
-            Evaluation xlCO2;
-
             // Calculate solubility as mole fraction
             BinaryCoeffBrineCO2::calculateMoleFractions(T, p, salinity, -1, xlCO2, xgH2O, activityModel, extrapolate);
 
@@ -211,98 +202,79 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(Brine_CO2, Scalar, Types)
     }
 }
 
-// BOOST_AUTO_TEST_CASE_TEMPLATE(Brine_H2, Scalar, Types)
-// {
-//     using Evaluation = Opm::DenseAd::Evaluation<Scalar, 3>;
+BOOST_AUTO_TEST_CASE_TEMPLATE(BrineDensityWithCO2, Scalar, Types)
+{
+    using Evaluation = Opm::DenseAd::Evaluation<Scalar, 3>;
 
-//     using H2O = Opm::SimpleHuDuanH2O<Scalar>;
-//     using H2 = Opm::H2<Scalar>;
+    // Molar mass of NaCl [kg/mol]
+    const Scalar MmNaCl = 58.44e-3;
 
-//     using BinaryCoeffBrineH2 = Opm::BinaryCoeff::Brine_H2<Scalar, H2O, H2>;
+    // Activity model for salt
+    // 1 = Rumpf et al. (1994) as given in Spycher & Pruess (2005)
+    // 2 = Duan-Sun model as modified in Spycher & Pruess (2009)
+    // 3 = Duan-Sun model as given in Spycher & Pruess (2005)
+    const int activityModel = 3;
 
-//     // Init pressure, temperature, and salinity variables
-//     Evaluation T;
-//     Evaluation p;
-//     Scalar s;
+    // Tolerance for Yan et al. (2011) data
+    const Scalar tol_yan = 5e-3;
 
-//     // Extrapolate density?
-//     bool extrapolate = true;
+    // Yan et al, Int. J. Greenh. Gas Control, 5, 2011; Table 4
+    static constexpr Scalar rho_Yan_1[3][6][3] = {{
+        {0.99722e3, 0.96370e3, 0.92928e3},
+        {1.00268e3, 0.96741e3, 0.93367e3},
+        {1.00528e3, 0.97062e3, 0.93760e3},
+        {1.00688e3, 0.97425e3, 0.94108e3},
+        {1.01293e3, 0.97962e3, 0.94700e3},
+        {1.01744e3, 0.98506e3, 0.95282e3}
+    },
+    {
+        {1.03116e3, 1.00026e3, 0.96883e3},
+        {1.03491e3, 1.00321e3, 0.97169e3},
+        {1.03968e3, 1.00667e3, 0.97483e3},
+        {1.04173e3, 1.00961e3, 0.97778e3},
+        {1.04602e3, 1.01448e3, 0.98301e3},
+        {1.05024e3, 1.01980e3, 0.98817e3}
+    },
+    {
+        {1.15824e3, 1.12727e3, 1.09559e3},
+        {1.16090e3, 1.12902e3, 1.10183e3},
+        {1.16290e3, 1.13066e3, 1.10349e3},
+        {1.16468e3, 1.13214e3, 1.10499e3},
+        {1.16810e3, 1.13566e3, 1.10882e3},
+        {1.17118e3, 1.13893e3, 1.11254e3}
+    }};
 
-//     // Boost rel. diff. tolerance (in percent)
-//     double tol = 1;
+    // Temperature, pressure and salinity for Yan et al (2011) data; Table 4
+    std::vector<Evaluation> T = {323.2, 373.2, 413.2};  // K
+    std::vector<Evaluation> p = {5e6, 10e6, 15e6, 20e6, 30e6, 40e6};  // Pa
+    std::vector<Scalar> s = {0.0, 1.0, 5.0};
 
-//     // Reference experimental data from Chabab et al., Int. J. Hydrogen Energy 45, 2020;  Table 4
-//     static constexpr Scalar xSol_Chabab[4][3] = {
-//         {0.000461, 0.001544, 0.000857},
-//         {0.000972, 0.000827, 0.000659},
-//         {0.000400, 0.000456, 0.001333},
-//         {0.000127, 0.000440, 0.000838}
-//     };
-//     std::vector< std::vector<Evaluation> > p_Chabab = {
-//         {37.108e5, 121.706e5, 60.213e5},
-//         {100.354e5, 80.673e5, 60.987e5},
-//         {66.733e5, 66.536e5, 196.178e5},
-//         {28.623e5, 100.979e5, 193.702e5}
-//     };
-//     std::vector< std::vector<Evaluation> > T_Chabab = {
-//         {323.18, 323.19, 372.73},
-//         {323.21, 347.91, 372.76},
-//         {323.18, 372.74, 372.75},
-//         {323.19, 323.19, 323.19}
-//     };
-//     Scalar s_Chabab[] = {0.0, 1.0, 3.0, 5.0};
+    // Test against Yan et al. (2011) data
+    Evaluation rs_sat;
+    Evaluation rho;
+    std::vector<Scalar> salinity = {0.0};
+    for (std::size_t iS = 0; iS < s.size(); ++iS) {
+        for (std::size_t iP = 0; iP < p.size(); ++iP) {
+            for (std::size_t iT = 0; iT < T.size(); ++iT) {
+                // Calculate salinity in mass fraction
+                salinity[0] = 1 / ( 1 + 1 / (s[iS] * MmNaCl));
 
-//     // Test against Chabab et al. (2020) data
-//     for (int i = 0; i < 4; ++i) {
-//         // Pick out salinity
-//         s = s_Chabab[i];
-//         for (int j = 0; j < 3; ++j) {
-//             // Temperature and pressure
-//             p = p_Chabab[i][j];
-//             T = T_Chabab[i][j];
+                // Instantiate BrineCo2Pvt class
+                Opm::BrineCo2Pvt<Scalar> brineCo2Pvt(salinity, activityModel);
 
-//             // Init. mole fraction H2 in brine
-//             Evaluation xlH2;
+                // Calculate saturated Rs (dissolved CO2 in brine)
+                rs_sat = brineCo2Pvt.rsSat(/*regionIdx=*/0, T[iT], p[iP], Evaluation(salinity[0]));
 
-//             // Calculate molefration in brine
-//             BinaryCoeffBrineH2::calculateMoleFractions(T, p, s, xlH2, extrapolate);
+                // Calculate density of brine with dissolved CO2
+                rho = brineCo2Pvt.density(/*regionIdx=*/0, T[iT], p[iP], rs_sat, Evaluation(salinity[0]));
 
-//             // Compare to reference
-//             BOOST_CHECK_CLOSE(xlH2.value(), xSol_Chabab[i][j], tol);
-//         }
-//     }
+                // Compare with data
+                BOOST_CHECK_MESSAGE(close_at_tolerance(rho.value(), rho_Yan_1[iS][iP][iT], tol_yan),
+                                    "relative difference between density {"<<rho.value()<<"} and Yan et al. (2011) {"<<
+                                    rho_Yan_1[iS][iP][iT]<<"} exceeds tolerance {"<<tol_yan<<"} at (T, p, S) = ("<<
+                                    T[iT].value()<<", "<<p[iP].value()<<", "<<s[iS]<<")");
 
-//     // Reference data from Li et al., Int. J. Hydrogen Energy 43, 2018;  Tables A1-A4
-//     static constexpr Scalar xSol_Li[4][4] = {
-//         {0.038198, 0.070252, 0.142645, 0.227373},
-//         {0.030609, 0.058746, 0.122717, 0.201243},
-//         {0.024528, 0.049124, 0.105573, 0.178116},
-//         {0.015751, 0.034349, 0.078136, 0.13953}
-//     };
-//     std::vector<Evaluation> p_Li = {5e6, 10e6, 20e6, 30e6};
-//     std::vector<Evaluation> T_Li = {298.15, 328.15, 348.15, 368.15};
-//     Scalar s_Li[] = {0.0, 1.0, 2.0, 4.0};
-
-//     // Test against Li et al. (2018) data
-//     for (int i = 0; i < 4; ++i) {
-//         // Pick out salinity
-//         s = s_Li[i];
-//         for (int j = 0; j < 4; ++j) {
-//             // Temperature and pressure
-//             p = p_Li[j];
-//             T = T_Li[j];
-            
-//             // Init. mole fraction H2 in brine
-//             Evaluation xlH2;
-
-//             // Calculate molefration in brine
-//             BinaryCoeffBrineH2::calculateMoleFractions(T, p, s, xlH2, extrapolate);
-
-//             // Convert to molality
-//             Evaluation mH2 =  xlH2 * 55.508 / (1 - xlH2);
-
-//             // Compare to reference
-//             BOOST_CHECK_CLOSE(mH2.value(), xSol_Li[i][j], tol);
-//         }
-//     }
-// }
+            }
+        }
+    }
+}
