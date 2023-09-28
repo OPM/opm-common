@@ -1849,6 +1849,47 @@ BOOST_AUTO_TEST_CASE(SatFunc_EndPts_Family_II_TolCrit_Large) {
 
 // =====================================================================
 
+BOOST_AUTO_TEST_CASE(Equivalent_FIP_Keys) {
+    std::string deck_string = R"(
+GRID
+
+PORO
+   200*0.15 /
+
+REGIONS
+
+FIPUNIT
+  100*1 100*2 /
+
+FIPUNIX
+  100*3 100*4 /
+)";
+
+    const EclipseGrid grid { 10, 10, 2 };
+    const Deck deck = Parser{}.parseString(deck_string);
+
+    BOOST_CHECK_MESSAGE(deck.hasKeyword("FIPUNIT"),
+                        R"(Input deck must have "FIPUNIT" region set)");
+
+    BOOST_CHECK_MESSAGE(deck.hasKeyword("FIPUNIX"),
+                        R"(Input deck must have "FIPUNIX" region set)");
+
+    const FieldPropsManager fpm {
+        deck, Phases{true, true, true}, grid, TableManager()
+    };
+
+    const auto& fipuni = fpm.get_int("FIPUNI");
+    auto expect = std::vector<int>(100, 3);
+    {
+        const auto l2 = std::vector<int>(100, 4);
+        expect.insert(expect.end(), l2.begin(), l2.end());
+    };
+
+    // FIPUNI <=> FIPUNIX
+    BOOST_CHECK_EQUAL_COLLECTIONS(fipuni.begin(), fipuni.end(),
+                                  expect.begin(), expect.end());
+}
+
 BOOST_AUTO_TEST_CASE(GET_FIPXYZ) {
     std::string deck_string = R"(
 GRID

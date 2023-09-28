@@ -157,6 +157,9 @@ keyword_info<int> global_kw_info(const std::string& name, bool) {
     if (SCHEDULE::int_keywords.count(name))
         return SCHEDULE::int_keywords.at(name);
 
+    if (isFipxxx(name))
+        return keyword_info<int>{}.init(1);
+
     throw std::out_of_range("No such keyword: " + name);
 }
 
@@ -443,6 +446,7 @@ bool FieldProps::operator==(const FieldProps& other) const {
            this->multregp == other.multregp &&
            this->int_data == other.int_data &&
            this->double_data == other.double_data &&
+           this->fipreg_shortname_translation == other.fipreg_shortname_translation &&
            this->tran == other.tran;
 }
 
@@ -713,7 +717,7 @@ Fieldprops::FieldData<int>& FieldProps::init_get(const std::string& keyword, boo
     if (Fieldprops::keywords::isFipxxx(keyword)) {
         auto kw_info = Fieldprops::keywords::keyword_info<int>{};
         kw_info.init(1);
-        return this->init_get(keyword, kw_info);
+        return this->init_get(this->canonical_fipreg_name(keyword), kw_info);
     } else {
         const Fieldprops::keywords::keyword_info<int>& kw_info = Fieldprops::keywords::global_kw_info<int>(keyword);
         return this->init_get(keyword, kw_info);
@@ -753,7 +757,9 @@ bool FieldProps::has<double>(const std::string& keyword_name) const {
 
 template <>
 bool FieldProps::has<int>(const std::string& keyword) const {
-    return (this->int_data.count(keyword) != 0);
+    return Fieldprops::keywords::isFipxxx(keyword)
+        ? this->int_data.count(this->canonical_fipreg_name(keyword)) != 0
+        : this->int_data.count(keyword) != 0;
 }
 
 
@@ -1193,6 +1199,41 @@ void FieldProps::init_porv(Fieldprops::FieldData<double>& porv) {
     }
 }
 
+std::string FieldProps::canonical_fipreg_name(const std::string& fipreg)
+{
+    constexpr auto num_unique_chars = std::string::size_type{6};
+    const auto shortname = fipreg.substr(0, num_unique_chars);
+
+    auto canonicalPos = std::unordered_map<std::string, std::string>::const_iterator{};
+    auto inserted = false;
+
+    std::tie(canonicalPos, inserted) = this->fipreg_shortname_translation
+        .emplace(shortname, fipreg);
+
+    if (inserted || (fipreg.size() <= num_unique_chars)) {
+        // New FIP keyword (inserted == true) or we're looking up the
+        // canonical name of an existing FIP array based on a unique prefix
+        // string, such as "FIPUNIT" from "FIPUNI" (size <= ...).
+        return canonicalPos->second;
+    }
+
+    // New FIP keyword with the same unique prefix as an existing FIP
+    // keyword.  Override the translation table entry for this prefix,
+    // because "last entry wins".
+    canonicalPos = this->fipreg_shortname_translation
+        .insert_or_assign(canonicalPos, shortname, fipreg);
+
+    return canonicalPos->second;
+}
+
+const std::string& FieldProps::canonical_fipreg_name(const std::string& fipreg) const
+{
+    auto canonicalPos = this->fipreg_shortname_translation.find(fipreg.substr(0, 6));
+
+    return (canonicalPos != this->fipreg_shortname_translation.end())
+        ? canonicalPos->second
+        : fipreg;
+}
 
 /*
   This function generates a new ACTNUM vector.The ACTNUM vector which is
