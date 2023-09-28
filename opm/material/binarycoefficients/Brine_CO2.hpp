@@ -153,15 +153,19 @@ public:
         // if only liquid phase is present the mole fraction of CO2 in brine is given and
         // and the virtual equilibrium mole fraction of water in the non-existing gas phase can be estimated
         // with the mutual solubility function
-        // if (knownPhaseIdx == liquidPhaseIdx)
-        //     ygH2O = A * (1 - xlCO2 - x_NaCl);
+        if (knownPhaseIdx == liquidPhaseIdx && activityModel == 3) {
+            const Evaluation& A = computeA_(temperature, pg, Evaluation(0.0), Evaluation(0.0), false, extrapolate, true);
+            ygH2O = A * (1 - xlCO2 - x_NaCl);
+        }
 
         // if only gas phase is present the mole fraction of water in the gas phase is given and
         // and the virtual equilibrium mole fraction of CO2 in the non-existing liquid phase can be estimated
         // with the mutual solubility function
-        // if (knownPhaseIdx == gasPhaseIdx)
-        //     //y_H2o = fluidstate.
-        //     xlCO2 = 1 - x_NaCl - ygH2O / A;
+        if (knownPhaseIdx == gasPhaseIdx && activityModel == 3) {
+            //y_H2o = fluidstate.
+            const Evaluation& A = computeA_(temperature, pg, Evaluation(0.0), Evaluation(0.0), false, extrapolate, true);
+            xlCO2 = 1 - x_NaCl - ygH2O / A;
+        }
     }
 
     /*!
