@@ -31,6 +31,7 @@
 #include "iapws/Common.hpp"
 
 #include <opm/common/Exceptions.hpp>
+#include <opm/common/TimingMacros.hpp>
 #include <opm/common/OpmLog/OpmLog.hpp>
 
 #include <opm/material/IdealGas.hpp>
@@ -43,7 +44,7 @@ namespace Opm {
  /*!
  * \ingroup Components
  *
- * \brief A simple version of  pure water with density from Hu et al. 
+ * \brief A simple version of  pure water with density from Hu et al.
  *
  * Compared to the water formulation of IAPWS'97, this class provides
  * a much simpler component that represents the thermodynamic
@@ -52,8 +53,8 @@ namespace Opm {
  * increased. (At the cost of accuracy for the representation of the
  * physical quantities, of course.)
  *
- * Density from Hu, Duan, Zhu and Chou: PVTx properties of the CO2-H2O and CO2-H2O-NaCl 
- * systems below 647 K: Assessment of experimental data and 
+ * Density from Hu, Duan, Zhu and Chou: PVTx properties of the CO2-H2O and CO2-H2O-NaCl
+ * systems below 647 K: Assessment of experimental data and
  * thermodynamics models, Chemical Geology, 2007.
  *
  * \tparam Scalar The type used for representing scalar values
@@ -136,6 +137,8 @@ public:
     template <class Evaluation>
     static Evaluation vaporPressure(const Evaluation& T)
     {
+
+        OPM_TIMEFUNCTION_LOCAL();
         if (T > criticalTemperature())
             return criticalPressure();
         if (T < tripleTemperature())
@@ -378,6 +381,7 @@ private:
         // Hu, Duan, Zhu and Chou: PVTx properties of the CO2-H2O and CO2-H2O-NaCl
         // systems below 647 K: Assessment of experimental data and
         // thermodynamics models, Chemical Geology, 2007.
+        OPM_TIMEBLOCK_LOCAL(liquidDensity_);
         if (T > 647 || pressure > 100e6) {
             const std::string msg =
                 "Density of water is only implemented for temperatures "

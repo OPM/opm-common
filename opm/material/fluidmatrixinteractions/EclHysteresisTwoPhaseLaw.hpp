@@ -26,7 +26,7 @@
  */
 #ifndef OPM_ECL_HYSTERESIS_TWO_PHASE_LAW_HPP
 #define OPM_ECL_HYSTERESIS_TWO_PHASE_LAW_HPP
-
+#include <opm/common/TimingMacros.hpp>
 #include "EclHysteresisTwoPhaseLawParams.hpp"
 
 #include <stdexcept>
@@ -148,6 +148,7 @@ public:
     template <class Evaluation>
     static Evaluation twoPhaseSatPcnw(const Params& params, const Evaluation& Sw)
     {
+        OPM_TIMEFUNCTION_LOCAL();
         // if no pc hysteresis is enabled, use the drainage curve
         if (!params.config().enableHysteresis() || params.config().pcHysteresisModel() < 0)
             return EffectiveLaw::twoPhaseSatPcnw(params.drainageParams(), Sw);
@@ -267,6 +268,7 @@ public:
     template <class Evaluation>
     static Evaluation twoPhaseSatKrw(const Params& params, const Evaluation& Sw)
     {
+        OPM_TIMEFUNCTION_LOCAL();
         // if no relperm hysteresis is enabled, use the drainage curve
         if (!params.config().enableHysteresis() || params.config().krHysteresisModel() < 0)
             return EffectiveLaw::twoPhaseSatKrw(params.drainageParams(), Sw);
@@ -293,6 +295,7 @@ public:
     template <class Evaluation>
     static Evaluation twoPhaseSatKrn(const Params& params, const Evaluation& Sw)
     {
+        OPM_TIMEFUNCTION_LOCAL();
         // If WAG hysteresis is enabled, the convential hysteresis model is ignored.
         // (Two-phase model, non-wetting: only gas in oil.)
         if (params.gasOilHysteresisWAG()) {

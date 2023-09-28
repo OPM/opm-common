@@ -137,6 +137,7 @@ public:
                                    const Params& params,
                                    const FluidState& state)
     {
+        OPM_TIMEFUNCTION_LOCAL();
         using Evaluation = typename std::remove_reference<decltype(values[0])>::type;
         values[gasPhaseIdx] = pcgn<FluidState, Evaluation>(params, state);
         values[oilPhaseIdx] = 0;
@@ -202,7 +203,7 @@ public:
 
     static Scalar trappedGasSaturation(const Params& params)
     {
-     
+
         return params.gasOilParams().SnTrapped();
     }
     /*
@@ -234,6 +235,7 @@ public:
     static Evaluation pcgn(const Params& params,
                            const FluidState& fs)
     {
+        OPM_TIMEFUNCTION_LOCAL();
         // Maximum attainable oil saturation is 1-SWL.
         const auto Sw = 1.0 - params.Swl() - decay<Evaluation>(fs.saturation(gasPhaseIdx));
         return GasOilMaterialLaw::twoPhaseSatPcnw(params.gasOilParams(), Sw);
@@ -252,6 +254,7 @@ public:
     static Evaluation pcnw(const Params& params,
                            const FluidState& fs)
     {
+        OPM_TIMEFUNCTION_LOCAL();
         const auto Sw = decay<Evaluation>(fs.saturation(waterPhaseIdx));
         return OilWaterMaterialLaw::twoPhaseSatPcnw(params.oilWaterParams(), Sw);
     }
@@ -317,6 +320,7 @@ public:
                                        const Params& params,
                                        const FluidState& fluidState)
     {
+        OPM_TIMEFUNCTION_LOCAL();
         using Evaluation = typename std::remove_reference<decltype(values[0])>::type;
 
         values[waterPhaseIdx] = krw<FluidState, Evaluation>(params, fluidState);
@@ -331,6 +335,7 @@ public:
     static Evaluation krg(const Params& params,
                           const FluidState& fluidState)
     {
+        OPM_TIMEFUNCTION_LOCAL();
         // Maximum attainable oil saturation is 1-SWL.
         const Evaluation Sw = 1.0 - params.Swl() - decay<Evaluation>(fluidState.saturation(gasPhaseIdx));
         return GasOilMaterialLaw::twoPhaseSatKrn(params.gasOilParams(), Sw);
@@ -343,6 +348,7 @@ public:
     static Evaluation krw(const Params& params,
                           const FluidState& fluidState)
     {
+        OPM_TIMEFUNCTION_LOCAL();
         const Evaluation Sw = decay<Evaluation>(fluidState.saturation(waterPhaseIdx));
         return OilWaterMaterialLaw::twoPhaseSatKrw(params.oilWaterParams(), Sw);
     }
@@ -354,6 +360,7 @@ public:
     static Evaluation krn(const Params& params,
                           const FluidState& fluidState)
     {
+        OPM_TIMEFUNCTION_LOCAL();
         const Scalar Swco = params.Swl();
 
         const Evaluation Sw =
@@ -392,6 +399,7 @@ public:
     static Evaluation relpermOilInOilGasSystem(const Params& params,
                                                const FluidState& fluidState)
     {
+        OPM_TIMEFUNCTION_LOCAL();
         const Evaluation Sw =
             max(Evaluation{ params.Swl() },
                      decay<Evaluation>(fluidState.saturation(waterPhaseIdx)));
@@ -409,6 +417,7 @@ public:
     static Evaluation relpermOilInOilWaterSystem(const Params& params,
                                                  const FluidState& fluidState)
     {
+        OPM_TIMEFUNCTION_LOCAL();
         const Evaluation Sw =
             max(Evaluation{ params.Swl() },
                      decay<Evaluation>(fluidState.saturation(waterPhaseIdx)));
@@ -429,6 +438,7 @@ public:
     template <class FluidState>
     static bool updateHysteresis(Params& params, const FluidState& fluidState)
     {
+        OPM_TIMEFUNCTION_LOCAL();
         bool changed = false;
         const Scalar Swco = params.Swl();
 
@@ -449,7 +459,7 @@ public:
             bool oilchanged = params.oilWaterParams().update(/*pcSw=*/  Sw, //1.0 - So, (Effect is significant vs benchmark.)
                                            /*krwSw=*/ 1.0 - So,
                                            /*krnSw=*/ 1.0 - So);
-            
+
             changed = changed || oilchanged;
 
             bool gaschanged = params.gasOilParams().update(/*pcSw=*/  1.0 - Swco - Sg,
@@ -476,6 +486,7 @@ public:
     template <class FluidState>
     static Scalar clampSaturation(const FluidState& fluidState, const int phaseIndex)
     {
+        OPM_TIMEFUNCTION_LOCAL();
         const auto sat = scalarValue(fluidState.saturation(phaseIndex));
         return std::clamp(sat, Scalar{0.0}, Scalar{1.0});
     }
