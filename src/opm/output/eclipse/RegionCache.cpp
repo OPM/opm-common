@@ -40,12 +40,12 @@ RegionCache::RegionCache(const std::set<std::string>& fip_regions, const FieldPr
                 continue;
 
             for (const auto& c : connections) {
-                if (grid.cellActive(c.getI(), c.getJ(), c.getK())) {
-                    size_t active_index = grid.activeIndex(c.getI(), c.getJ(), c.getK());
+                if (grid.cellActive(c.global_index())) {
+                    size_t active_index = grid.activeIndex(c.global_index());
                     int region_id = fip_region[active_index];
                     auto key = std::make_pair(fip_name, region_id);
                     auto& well_index_list = this->connection_map[ key ];
-                    well_index_list.push_back( { well.name() , active_index } );
+                    well_index_list.emplace_back(well.name(), c.global_index());
                 }
             }
 
