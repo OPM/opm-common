@@ -153,6 +153,96 @@ Opm::data::Wells wr()
     return xw;
 }
 
+//------------------------------------------------------------------+
+// Models a multi-lateral well with the following segment structure |
+//------------------------------------------------------------------+
+//                                                                  |
+//                     12   13    14     15     16                  |
+//                   o----o----o-----o------o-----o (2)             |
+//              11  /              20 \   21 \                      |
+//                 /                   o      o (6)                 |
+//                /                     \                           |
+//               /                    22 \  23   24                 |
+//   1   2   3  /  4   5   6              o----o----o (5)           |
+//  ---o---o---o-----o---o---o (1)                                  |
+//                        \                                         |
+//                       7 \  8   9    10                           |
+//                          o---o---o-----o (3)                     |
+//                                         \                        |
+//                                       17 \   18   19             |
+//                                           o----o----o (4)        |
+//------------------------------------------------------------------+
+//  Branch (1):  1,  2,  3,  4,  5,  6                              |
+//  Branch (2): 11, 12, 13, 14, 15, 16                              |
+//  Branch (3):  7,  8,  9, 10                                      |
+//  Branch (4): 17, 18, 19                                          |
+//  Branch (5): 20, 22, 23, 24                                      |
+//  Branch (6): 12                                                  |
+//------------------------------------------------------------------+
+Opm::Deck multilaterals()
+{
+    return Opm::Parser{}.parseString(R"(RUNSPEC
+START
+29 'SEP' 2023 /
+DIMENS
+10 10 3 /
+OIL
+GAS
+WATER
+DISGAS
+VAPOIL
+GRID
+DXV
+10*100.0 /
+DYV
+10*100.0 /
+DZV
+3*5.0 /
+PERMX
+300*100.0 /
+COPY
+PERMX PERMY /
+PERMX PERMZ /
+/
+MULTIPLY
+PERMZ 0.1 /
+/
+PORO
+300*0.3 /
+DEPTHZ
+121*2000.0 /
+SCHEDULE
+WELSPECS
+ 'MLP' 'G' 10 10 2002.5 'OIL' /
+/
+COMPDAT
+ 'MLP' 10 10 3 3 'OPEN' 1* 123.4 /
+/
+WELSEGS
+ 'MLP' 2002.5 0.0 1* 'INC' 'H--' /
+--
+  2  6 1  1 0.1 0.1 0.2 0.01 /
+  7 10 3  5 0.1 0.1 0.2 0.01 /
+ 11 16 2  3 0.1 0.1 0.2 0.01 /
+ 17 19 4 10 0.1 0.1 0.2 0.01 /
+ 20 20 5 14 0.1 0.1 0.2 0.01 /
+ 21 21 6 15 0.1 0.1 0.2 0.01 /
+ 22 24 5 20 0.1 0.1 0.2 0.01 /
+/
+COMPSEGS
+ 'MLP' /
+--
+ 10 10 3 5 0.0 1.0 'Z' /
+/
+WCONPROD
+ 'MLP' 'OPEN' 'ORAT' 321.0 4* 10.0 /
+/
+TSTEP
+5*30 /
+END
+)");
+}
+
 } // Anonymous namespace
 
 struct SimulationCase
@@ -404,6 +494,67 @@ BOOST_AUTO_TEST_CASE (Declared_MSW_Data)
         //WINJ
         BOOST_CHECK_EQUAL(iLBs[start + 0] ,  14); // WINJ-branch   2, first segment in branch
 
+    }
+}
+
+// The segments must appear in the following depth first search toe-to-heel
+// order in ISEG[0].  We furthermore, go along kick-off branches before
+// searching the main branch.  Note that this order is *different* from
+// ILBS/ILBR.
+//
+//     24, 23, 22, 20,         -- Branch (5)
+//     21,                     -- Branch (6)
+//     16, 15, 14, 13, 12, 11, -- Branch (2)
+//     19, 18, 17,             -- Branch (4)
+//     10,  9,  8,  7,         -- Branch (3)
+//      6,  5,  4,  3,  2,  1, -- Branch (1)
+//
+BOOST_AUTO_TEST_CASE(Multilateral_Segments_ISEG_0)
+{
+    const auto cse = SimulationCase { multilaterals() };
+
+    const auto& es    = cse.es;
+    const auto& grid  = cse.grid;
+    const auto& sched = cse.sched;
+    const auto& units = es.getUnits();
+    const auto  smry  = Opm::SummaryState { Opm::TimeService::now() };
+
+    // Report Step 1: 2023-09-29 --> 2023-10-23
+    const auto rptStep = std::size_t {1};
+
+    const double secs_elapsed = 30 * 86'400.0;
+    const auto ih = Opm::RestartIO::Helpers::
+        createInteHead(es, grid, sched, secs_elapsed,
+                       rptStep, rptStep + 1, rptStep);
+
+    const auto xw = Opm::data::Wells {};
+
+    auto amswd = Opm::RestartIO::Helpers::AggregateMSWData {ih};
+    amswd.captureDeclaredMSWData(sched, rptStep, units,
+                                 ih, grid, smry, xw);
+
+    auto isegOffset = [&ih](const int ix)
+    {
+        return ih[VI::intehead::NISEGZ] * ix;
+    };
+
+    const auto expect = std::vector {
+        24, 23, 22, 20,         // Branch (5)
+        21,                     // Branch (6)
+        16, 15, 14, 13, 12, 11, // Branch (2)
+        19, 18, 17,             // Branch (4)
+        10,  9,  8,  7,         // Branch (3)
+         6,  5,  4,  3,  2,  1, // Branch (1)
+    };
+
+    const auto& iseg = amswd.getISeg();
+
+    for (auto i = 0*expect.size(); i < expect.size(); ++i) {
+        BOOST_CHECK_MESSAGE(iseg[isegOffset(i)] == expect[i],
+                            "ISEG[0](" << i << ") == "
+                            << iseg[isegOffset(i)]
+                            << " differs from expected value "
+                            << expect[i]);
     }
 }
 

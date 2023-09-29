@@ -565,7 +565,7 @@ namespace {
                     const auto& segment = welSegSet[ind];
                     auto segNumber = segment.segmentNumber();
                     auto iS = (segNumber-1)*noElmSeg;
-                    iSeg[iS + Ix::SegNo]          = welSegSet[orderedSegmentNo[ind]].segmentNumber();
+                    iSeg[ind*noElmSeg + Ix::SegNo] = welSegSet[orderedSegmentNo[ind]].segmentNumber();
                     iSeg[iS + Ix::OutSeg]         = segment.outletSegment();
                     iSeg[iS + Ix::InSegCurBranch] = (inflowSegmentCurBranch(well.name(), welSegSet, ind) == 0) ? 0 : welSegSet[inflowSegmentCurBranch(well.name(), welSegSet, ind)].segmentNumber();
                     iSeg[iS + Ix::BranchNo]       = segment.branchNumber();
@@ -838,6 +838,7 @@ namespace {
                 bool haveWellRes = (well.getStatus() != Opm::Well::Status::SHUT) ? (wRatesIt != wr.end()) : false;
                 const auto volFromLengthUnitConv = units.from_si(M::length, units.from_si(M::length, units.from_si(M::length, 1.)));
                 const auto areaFromLengthUnitConv =  units.from_si(M::length, units.from_si(M::length, 1.));
+
                 //
                 //Initialize temporary variables
                 double temp_o = 0.;
@@ -845,17 +846,15 @@ namespace {
                 double temp_g = 0.;
 
                 // find well connections and calculate segment rates based on well connection production/injection terms
-                auto sSFR = SegmentSetFlowRates{};
-                if (haveWellRes) {
-                    sSFR = getSegmentSetFlowRates(welSegSet, wRatesIt->second.connections, welConns, units);
-                }
+                const auto sSFR = haveWellRes
+                    ? getSegmentSetFlowRates(welSegSet, wRatesIt->second.connections, welConns, units)
+                    : SegmentSetFlowRates{};
 
                 auto get = [&smry, &wname](const std::string& vector, const std::string& segment_nr)
                 {
                     const auto key = vector + ':' + wname + ':' + segment_nr;
                     return smry.get(key, 0.0);
                 };
-
 
                 // Treat the top segment individually
                 {
