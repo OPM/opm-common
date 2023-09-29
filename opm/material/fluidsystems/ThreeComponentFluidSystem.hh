@@ -166,7 +166,7 @@ namespace Opm {
                         Comp2::name(),
                 };
 
-                assert(0 <= compIdx && compIdx < 3);
+                assert(compIdx < 3);
                 return name[compIdx];
         }
 
