@@ -18,41 +18,50 @@
 */
 
 #define BOOST_TEST_MODULE Aggregate_MSW_Data
+
 #include <opm/output/eclipse/AggregateMSWData.hpp>
-#include <opm/output/eclipse/WriteRestartHelpers.hpp>
 
 #include <boost/test/unit_test.hpp>
 
-#include <opm/output/eclipse/AggregateWellData.hpp>
-#include <opm/input/eclipse/Python/Python.hpp>
-
 #include <opm/output/eclipse/VectorItems/intehead.hpp>
-#include <opm/output/eclipse/VectorItems/well.hpp>
 #include <opm/output/eclipse/VectorItems/msw.hpp>
+#include <opm/output/eclipse/VectorItems/well.hpp>
+
+#include <opm/output/eclipse/WriteRestartHelpers.hpp>
 
 #include <opm/output/data/Wells.hpp>
 
 #include <opm/io/eclipse/rst/segment.hpp>
-#include <opm/input/eclipse/Deck/Deck.hpp>
-#include <opm/input/eclipse/Parser/Parser.hpp>
+
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
+
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 #include <opm/input/eclipse/Schedule/SummaryState.hpp>
+
 #include <opm/common/utility/TimeService.hpp>
 
-#include <exception>
+#include <opm/input/eclipse/Python/Python.hpp>
+
+#include <opm/input/eclipse/Deck/Deck.hpp>
+
+#include <opm/input/eclipse/Parser/Parser.hpp>
+
+#include <cmath>
+#include <cstddef>
+#include <memory>
 #include <stdexcept>
+#include <string>
 #include <utility>
 #include <vector>
-#include <iostream>
-#include <cstddef>
 
 namespace {
 
 namespace VI = ::Opm::RestartIO::Helpers::VectorItems;
 
-Opm::Deck first_sim(std::string fname) {
-    return Opm::Parser {} .parseFile(fname);
+Opm::Deck first_sim(const std::string& fname)
+{
+    return Opm::Parser {}.parseFile(fname);
 }
 
 Opm::SummaryState sim_state()
@@ -92,6 +101,7 @@ Opm::SummaryState sim_state()
     state.update_well_var("WINJ", "WBHP",  234.);
     return state;
 }
+
 Opm::data::Wells wr()
 {
     using o = ::Opm::data::Rates::opt;
@@ -142,28 +152,26 @@ Opm::data::Wells wr()
     }
     return xw;
 }
-}
+
+} // Anonymous namespace
 
 struct SimulationCase
 {
     explicit SimulationCase(const Opm::Deck& deck)
-        : es   ( deck )
-        , grid ( deck )
-        , python( std::make_shared<Opm::Python>() )
-        , sched( deck, es, python )
+        : es   (deck)
+        , grid (deck)
+        , sched(deck, es, std::make_shared<Opm::Python>())
     {}
 
     // Order requirement: 'es' must be declared/initialised before 'sched'.
     Opm::EclipseState es;
     Opm::EclipseGrid  grid;
-    std::shared_ptr<Opm::Python>  python;
     Opm::Schedule     sched;
 };
 
 // =====================================================================
 
 BOOST_AUTO_TEST_SUITE(Aggregate_MSW)
-
 
 // test dimensions of multisegment data
 BOOST_AUTO_TEST_CASE (Constructor)
@@ -191,46 +199,36 @@ BOOST_AUTO_TEST_CASE (Constructor)
     const auto nrsegz = VI::intehead::NRSEGZ;
     const auto nlbrmx = VI::intehead::NLBRMX;
     const auto nilbrz = VI::intehead::NILBRZ;
+
     BOOST_CHECK_EQUAL(static_cast<int>(amswd.getISeg().size()), ih[nswlmx] * ih[nsegmx] * ih[nisegz]);
     BOOST_CHECK_EQUAL(static_cast<int>(amswd.getRSeg().size()), ih[nswlmx] * ih[nsegmx] * ih[nrsegz]);
     BOOST_CHECK_EQUAL(static_cast<int>(amswd.getILBs().size()), ih[nswlmx] * ih[nlbrmx]);
     BOOST_CHECK_EQUAL(static_cast<int>(amswd.getILBr().size()), ih[nswlmx] * ih[nlbrmx] * ih[nilbrz]);
 }
 
-
 BOOST_AUTO_TEST_CASE (Declared_MSW_Data)
 {
-
     const auto simCase = SimulationCase {first_sim("TEST_AGGREGATE_MSW.DATA")};
 
-    Opm::EclipseState es = simCase.es;
-    Opm::Runspec rspec   = es.runspec();
-    Opm::SummaryState smry = sim_state();
-    Opm::Schedule     sched = simCase.sched;
-    Opm::EclipseGrid  grid = simCase.grid;
-    const auto& units    = es.getUnits();
-
+    const auto& es    = simCase.es;
+    const auto& grid  = simCase.grid;
+    const auto& sched = simCase.sched;
+    const auto& units = es.getUnits();
+    const auto  smry  = sim_state();
 
     // Report Step 1: 2008-10-10 --> 2011-01-20
     const auto rptStep = std::size_t {1};
 
-    double secs_elapsed = 3.1536E07;
+    const double secs_elapsed = 3.1536E07;
     const auto ih = Opm::RestartIO::Helpers::
-                    createInteHead(es, grid, sched, secs_elapsed,
-                                   rptStep, rptStep+1, rptStep);
-
-    //BOOST_CHECK_EQUAL(ih.nwells, MockIH::Sz{2});
+        createInteHead(es, grid, sched, secs_elapsed,
+                       rptStep, rptStep + 1, rptStep);
 
     const Opm::data::Wells wrc = wr();
+
     auto amswd = Opm::RestartIO::Helpers::AggregateMSWData {ih};
-    amswd.captureDeclaredMSWData(simCase.sched,
-                                 rptStep,
-                                 units,
-                                 ih,
-                                 grid,
-                                 smry,
-                                 wrc
-                                );
+    amswd.captureDeclaredMSWData(sched, rptStep, units,
+                                 ih, grid, smry, wrc);
 
     // ISEG (PROD)
     {
@@ -409,39 +407,31 @@ BOOST_AUTO_TEST_CASE (Declared_MSW_Data)
     }
 }
 
-
-BOOST_AUTO_TEST_CASE(MSW_AICD) {
+BOOST_AUTO_TEST_CASE(MSW_AICD)
+{
     const auto simCase = SimulationCase {first_sim("TEST_AGGREGATE_MSW.DATA")};
 
-    Opm::EclipseState es = simCase.es;
-    Opm::Runspec rspec   = es.runspec();
-    Opm::SummaryState smry = sim_state();
-    Opm::Schedule     sched = simCase.sched;
-    Opm::EclipseGrid  grid = simCase.grid;
-    const auto& units    = es.getUnits();
-
+    const auto& es    = simCase.es;
+    const auto& grid  = simCase.grid;
+    const auto& sched = simCase.sched;
+    const auto& units = es.getUnits();
+    const auto  smry  = sim_state();
 
     // Report Step 1: 2008-10-10 --> 2011-01-20
     const auto rptStep = std::size_t {1};
 
-    double secs_elapsed = 3.1536E07;
+    const double secs_elapsed = 3.1536E07;
     const auto ih = Opm::RestartIO::Helpers::
-                    createInteHead(es, grid, sched, secs_elapsed,
-                                   rptStep, rptStep+1, rptStep);
-
+        createInteHead(es, grid, sched, secs_elapsed,
+                       rptStep, rptStep + 1, rptStep);
 
     const Opm::data::Wells wrc = wr();
-    auto amswd = Opm::RestartIO::Helpers::AggregateMSWData {ih};
-    amswd.captureDeclaredMSWData(simCase.sched,
-                                 rptStep,
-                                 units,
-                                 ih,
-                                 grid,
-                                 smry,
-                                 wrc
-                                );
 
-// ISEG (PROD)
+    auto amswd = Opm::RestartIO::Helpers::AggregateMSWData {ih};
+    amswd.captureDeclaredMSWData(sched, rptStep, units,
+                                 ih, grid, smry, wrc);
+
+    // ISEG (PROD)
     {
         const auto& iSeg = amswd.getISeg();
         auto start = 7*ih[VI::intehead::NISEGZ];
@@ -507,48 +497,38 @@ BOOST_AUTO_TEST_CASE(MSW_AICD) {
         BOOST_CHECK_CLOSE(rseg[i0 + VI::RSeg::index::flowFractionOilViscosityExponent], 1.01 , 1.0e-10);
         BOOST_CHECK_CLOSE(rseg[i0 + VI::RSeg::index::flowFractionWaterViscosityExponent], 1.02 , 1.0e-10);
         BOOST_CHECK_CLOSE(rseg[i0 + VI::RSeg::index::flowFractionGasViscosityExponent], 1.03  , 1.0e-10);
-
     }
-
 }
 
-
-BOOST_AUTO_TEST_CASE(MSW_RST) {
+BOOST_AUTO_TEST_CASE(MSW_RST)
+{
     const auto simCase = SimulationCase {first_sim("TEST_AGGREGATE_MSW.DATA")};
 
-    Opm::EclipseState es = simCase.es;
-    Opm::Runspec rspec   = es.runspec();
-    Opm::SummaryState smry = sim_state();
-    Opm::Schedule     sched = simCase.sched;
-    Opm::EclipseGrid  grid = simCase.grid;
-    const auto& units    = es.getUnits();
-
+    const auto& es    = simCase.es;
+    const auto& grid  = simCase.grid;
+    const auto& sched = simCase.sched;
+    const auto& units = es.getUnits();
+    const auto  smry  = sim_state();
 
     // Report Step 1: 2008-10-10 --> 2011-01-20
     const auto rptStep = std::size_t {1};
 
-    double secs_elapsed = 3.1536E07;
+    const double secs_elapsed = 3.1536E07;
     const auto ih = Opm::RestartIO::Helpers::
-                    createInteHead(es, grid, sched, secs_elapsed,
-                                   rptStep, rptStep+1, rptStep);
-
+        createInteHead(es, grid, sched, secs_elapsed,
+                       rptStep, rptStep + 1, rptStep);
 
     const Opm::data::Wells wrc = wr();
+
     auto amswd = Opm::RestartIO::Helpers::AggregateMSWData {ih};
-    amswd.captureDeclaredMSWData(simCase.sched,
-                                 rptStep,
-                                 units,
-                                 ih,
-                                 grid,
-                                 smry,
-                                 wrc
-                                );
+    amswd.captureDeclaredMSWData(sched, rptStep, units,
+                                 ih, grid, smry, wrc);
 
     const auto& iseg = amswd.getISeg();
     const auto& rseg = amswd.getRSeg();
-    auto segment = Opm::RestartIO::RstSegment(simCase.es.getUnits(), 1, iseg.data(), rseg.data());
+
+    auto segment = Opm::RestartIO::RstSegment(simCase.es.getUnits(), 1,
+                                              iseg.data(), rseg.data());
 }
 
-
-
-BOOST_AUTO_TEST_SUITE_END()
+BOOST_AUTO_TEST_SUITE_END()     // Aggregate_MSW
