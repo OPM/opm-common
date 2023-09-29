@@ -18,37 +18,69 @@
 */
 
 #include <opm/output/eclipse/AggregateMSWData.hpp>
+
 #include <opm/output/eclipse/InteHEAD.hpp>
 #include <opm/output/eclipse/VectorItems/msw.hpp>
 
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 
+#include <opm/input/eclipse/Schedule/MSW/AICD.hpp>
+#include <opm/input/eclipse/Schedule/MSW/Segment.hpp>
 #include <opm/input/eclipse/Schedule/MSW/SICD.hpp>
 #include <opm/input/eclipse/Schedule/MSW/Valve.hpp>
-#include <opm/input/eclipse/Schedule/SummaryState.hpp>
+#include <opm/input/eclipse/Schedule/MSW/WellSegments.hpp>
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
+#include <opm/input/eclipse/Schedule/SummaryState.hpp>
 #include <opm/input/eclipse/Schedule/Well/Connection.hpp>
 #include <opm/input/eclipse/Schedule/Well/Well.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
-#include <opm/input/eclipse/Schedule/MSW/Segment.hpp>
-#include <opm/input/eclipse/Schedule/MSW/WellSegments.hpp>
+
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
 
 #include <algorithm>
+#include <cassert>
 #include <cmath>
 #include <cstddef>
 #include <cstring>
-#include <exception>
+#include <deque>
+#include <functional>
 #include <iostream>
 #include <limits>
+#include <optional>
+#include <queue>
 #include <stdexcept>
 #include <string>
+#include <string_view>
+#include <utility>
+#include <vector>
+
+#include <fmt/format.h>
 
 // #####################################################################
 // Class Opm::RestartIO::Helpers::AggregateMSWData
 // ---------------------------------------------------------------------
 
 namespace {
+
+    struct BranchSegmentPar {
+        int outletS;
+        int noSegInBranch;
+        int firstSeg;
+        int lastSeg;
+        int branch;
+    };
+
+    struct SegmentSetSourceSinkTerms {
+        std::vector<double> qosc;
+        std::vector<double> qwsc;
+        std::vector<double> qgsc;
+    };
+
+    struct SegmentSetFlowRates {
+        std::vector<double> sofr;
+        std::vector<double> swfr;
+        std::vector<double> sgfr;
+    };
 
     std::size_t nswlmx(const std::vector<int>& inteHead)
     {
@@ -75,19 +107,24 @@ namespace {
     }
 
     std::vector<std::size_t>
-    inflowSegmentsIndex(const Opm::WellSegments& segSet, const std::size_t& segIndex) {
-        const auto& segNumber  = segSet[segIndex].segmentNumber();
+    inflowSegmentsIndex(const Opm::WellSegments& segSet,
+                        const std::size_t        segIndex)
+    {
         std::vector<std::size_t> inFlowSegInd;
+
+        const auto segNumber = segSet[segIndex].segmentNumber();
+
         for (std::size_t ind = 0; ind < segSet.size(); ind++) {
             const auto& i_outletSeg = segSet[ind].outletSegment();
             if (segNumber == i_outletSeg) {
                 inFlowSegInd.push_back(ind);
             }
         }
+
         return inFlowSegInd;
     }
 
-    Opm::RestartIO::Helpers::BranchSegmentPar
+    BranchSegmentPar
     getBranchSegmentParam(const Opm::WellSegments& segSet, const int branch)
     {
         int noSegInBranch = 0;
@@ -117,14 +154,21 @@ namespace {
         };
     }
 
-    std::vector <std::size_t> segmentIndFromOrderedSegmentInd(const Opm::WellSegments& segSet, const std::vector<std::size_t>& ordSegNo) {
+    std::vector<std::size_t>
+    segmentIndFromOrderedSegmentInd(const Opm::WellSegments&        segSet,
+                                    const std::vector<std::size_t>& ordSegNo)
+    {
         std::vector <std::size_t> sNFOSN (segSet.size(),0);
         for (std::size_t segInd = 0; segInd < segSet.size(); segInd++) {
             sNFOSN[ordSegNo[segInd]] = segInd;
         }
         return sNFOSN;
     }
-    std::vector<std::size_t> segmentOrder(const Opm::WellSegments& segSet, const std::size_t segIndex) {
+
+    std::vector<std::size_t>
+    segmentOrder(const Opm::WellSegments& segSet,
+                 const std::size_t        segIndex)
+    {
         std::vector<std::size_t> ordSegNumber;
         std::vector<std::size_t> segIndCB;
         // Store "heel" segment since that will not always be at the end of the list
@@ -177,16 +221,18 @@ namespace {
         return ordSegNumber;
     }
 
-    std::vector<std::size_t> segmentOrder(const Opm::WellSegments& segSet) {
+    std::vector<std::size_t>
+    segmentOrder(const Opm::WellSegments& segSet)
+    {
         return segmentOrder(segSet, 0);
     }
 
     /// Accumulate connection flow rates (surface conditions) to their connecting segment.
-    Opm::RestartIO::Helpers::SegmentSetSourceSinkTerms
-    getSegmentSetSSTerms(const Opm::WellSegments& segSet,
+    SegmentSetSourceSinkTerms
+    getSegmentSetSSTerms(const Opm::WellSegments&                  segSet,
                          const std::vector<Opm::data::Connection>& rateConns,
-                         const Opm::WellConnections& welConns,
-                         const Opm::UnitSystem& units)
+                         const Opm::WellConnections&               welConns,
+                         const Opm::UnitSystem&                    units)
     {
         std::vector<double> qosc (segSet.size(), 0.);
         std::vector<double> qwsc (segSet.size(), 0.);
@@ -232,11 +278,11 @@ namespace {
         };
     }
 
-    Opm::RestartIO::Helpers::SegmentSetFlowRates
-    getSegmentSetFlowRates(const Opm::WellSegments& segSet,
+    SegmentSetFlowRates
+    getSegmentSetFlowRates(const Opm::WellSegments&                  segSet,
                            const std::vector<Opm::data::Connection>& rateConns,
-                           const Opm::WellConnections& welConns,
-                           const Opm::UnitSystem& units)
+                           const Opm::WellConnections&               welConns,
+                           const Opm::UnitSystem&                    units)
     {
         std::vector<double> sofr (segSet.size(), 0.);
         std::vector<double> swfr (segSet.size(), 0.);
@@ -273,15 +319,17 @@ namespace {
         };
     }
 
-
-    std::vector<std::size_t> SegmentSetBranches(const Opm::WellSegments& segSet) {
+    std::vector<std::size_t> SegmentSetBranches(const Opm::WellSegments& segSet)
+    {
         std::vector<std::size_t> branches;
+
         for (std::size_t segInd = 0; segInd < segSet.size(); segInd++) {
             const auto& i_branch = segSet[segInd].branchNumber();
             if (std::find(branches.begin(), branches.end(), i_branch) == branches.end()) {
                 branches.push_back(i_branch);
             }
         }
+
         return branches;
     }
 
@@ -332,9 +380,12 @@ namespace {
         return sumConn;
     }
 
-    int noInFlowBranches(const Opm::WellSegments& segSet, std::size_t segIndex) {
-        const auto& segNumber  = segSet[segIndex].segmentNumber();
-        const auto& branch     = segSet[segIndex].branchNumber();
+    int noInFlowBranches(const Opm::WellSegments& segSet,
+                         const std::size_t        segIndex)
+    {
+        const auto segNumber = segSet[segIndex].segmentNumber();
+        const auto branch    = segSet[segIndex].branchNumber();
+
         int noIFBr = 0;
         for (std::size_t ind = 0; ind < segSet.size(); ind++) {
             const auto& o_segNum = segSet[ind].outletSegment();
@@ -343,12 +394,16 @@ namespace {
                 noIFBr+=1;
             }
         }
+
         return noIFBr;
     }
+
     //find the number of inflow branch-segments (segments that has a branch) from the
     // first segment to the current segment for segments that has at least one inflow branch
     // Segments with no inflow branches get the value zero
-    int sumNoInFlowBranches(const Opm::WellSegments& segSet, const std::size_t& segIndex) {
+    int sumNoInFlowBranches(const Opm::WellSegments& segSet,
+                            const std::size_t        segIndex)
+    {
         int sumIFB = 0;
         //auto segInd = segIndex;
         for (int segInd = static_cast<int>(segIndex); segInd >= 0; segInd--) {
@@ -362,15 +417,19 @@ namespace {
                 }
             }
         }
+
         // check if the segment has inflow branches - if yes return sumIFB else return zero
-        return  (noInFlowBranches(segSet, segIndex) >= 1)
+        return (noInFlowBranches(segSet, segIndex) >= 1)
             ? sumIFB : 0;
     }
 
+    int inflowSegmentCurBranch(const std::string&       wname,
+                               const Opm::WellSegments& segSet,
+                               const std::size_t        segIndex)
+    {
+        const auto branch    = segSet[segIndex].branchNumber();
+        const auto segNumber = segSet[segIndex].segmentNumber();
 
-    int inflowSegmentCurBranch(const std::string& wname, const Opm::WellSegments& segSet, std::size_t segIndex) {
-        const auto& branch = segSet[segIndex].branchNumber();
-        const auto& segNumber  = segSet[segIndex].segmentNumber();
         int inFlowSegInd = -1;
         for (std::size_t ind = 0; ind < segSet.size(); ind++) {
             const auto& i_segNum = segSet[ind].segmentNumber();
@@ -390,6 +449,7 @@ namespace {
                 }
             }
         }
+
         return (inFlowSegInd == -1) ? 0 : inFlowSegInd;
     }
 
@@ -771,7 +831,7 @@ namespace {
                 double temp_g = 0.;
 
                 // find well connections and calculate segment rates based on well connection production/injection terms
-                auto sSFR = Opm::RestartIO::Helpers::SegmentSetFlowRates{};
+                auto sSFR = SegmentSetFlowRates{};
                 if (haveWellRes) {
                     sSFR = getSegmentSetFlowRates(welSegSet, wRatesIt->second.connections, welConns, units);
                 }
@@ -904,7 +964,6 @@ namespace {
         }
     } // RSeg
 
-
     namespace ILBS {
         std::size_t entriesPerMSW(const std::vector<int>& inteHead)
         {
@@ -1004,60 +1063,42 @@ AggregateMSWData(const std::vector<int>& inteHead)
 
 void
 Opm::RestartIO::Helpers::AggregateMSWData::
-captureDeclaredMSWData(const Schedule&         sched,
-                       const std::size_t       rptStep,
-                       const Opm::UnitSystem& units,
-                       const std::vector<int>& inteHead,
+captureDeclaredMSWData(const Schedule&          sched,
+                       const std::size_t        rptStep,
+                       const Opm::UnitSystem&   units,
+                       const std::vector<int>&  inteHead,
                        const Opm::EclipseGrid&  grid,
                        const Opm::SummaryState& smry,
-                       const Opm::data::Wells&  wr
-                       )
+                       const Opm::data::Wells&  wr)
 {
     const auto& wells = sched.getWells(rptStep);
     auto msw = std::vector<const Opm::Well*>{};
 
-    //msw.reserve(wells.size());
     for (const auto& well : wells) {
-        if (well.isMultiSegment())
+        if (well.isMultiSegment()) {
             msw.push_back(&well);
+        }
     }
-    // Extract Contributions to ISeg Array
-    {
-        MSWLoop(msw, [&inteHead, this]
-            (const Well& well, const std::size_t mswID) -> void
-        {
-            auto imsw = this->iSeg_[mswID];
 
-            ISeg::staticContrib(well, inteHead, imsw);
-        });
-    }
-    // Extract Contributions to RSeg Array
+    // Extract contributions to the ISEG and RSEG arrays.
+    MSWLoop(msw, [&units, &inteHead, &sched, &grid, &smry, &wr, this]
+        (const Well& well, const std::size_t mswID)
     {
-        MSWLoop(msw, [&units, &inteHead, &sched, &grid, &smry, this, &wr]
-            (const Well& well, const std::size_t mswID) -> void
-        {
-            auto rmsw = this->rSeg_[mswID];
-            RSeg::staticContrib_useMSW(sched.runspec(), well, inteHead, grid, units, smry, wr, rmsw);
-        });
-    }
-    // Extract Contributions to ILBS Array
-    {
-        MSWLoop(msw, [this]
-            (const Well& well, const std::size_t mswID) -> void
-        {
-            auto ilbs_msw = this->iLBS_[mswID];
+        auto imsw = this->iSeg_[mswID];
+        auto rmsw = this->rSeg_[mswID];
 
-            ILBS::staticContrib(well, ilbs_msw);
-        });
-    }
-    // Extract Contributions to ILBR Array
-    {
-        MSWLoop(msw, [&inteHead, this]
-            (const Well& well, const std::size_t mswID) -> void
-        {
-            auto ilbr_msw = this->iLBR_[mswID];
+        ISeg::staticContrib(well, inteHead, imsw);
+        RSeg::staticContrib_useMSW(sched.runspec(), well, inteHead,
+                                   grid, units, smry, wr, rmsw);
+    });
 
-            ILBR::staticContrib(well, inteHead, ilbr_msw);
-        });
-    }
+    // Extract contributions to the ILBS and ILBR arrays
+    MSWLoop(msw, [this, &inteHead](const Well& well, const std::size_t mswID)
+    {
+        auto ilbs_msw = this->iLBS_[mswID];
+        auto ilbr_msw = this->iLBR_[mswID];
+
+        ILBS::staticContrib(well, ilbs_msw);
+        ILBR::staticContrib(well, inteHead, ilbr_msw);
+    });
 }
