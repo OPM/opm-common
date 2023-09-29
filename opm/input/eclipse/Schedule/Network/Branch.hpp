@@ -45,6 +45,7 @@ public:
 
     const std::string& downtree_node() const;
     const std::string& uptree_node() const;
+    void set_uptree_node(const std::string& new_uptree_node) { m_uptree_node = new_uptree_node; }
     std::optional<int> vfp_table() const;
     AlqEQ alq_eq() const;
     std::optional<double> alq_value() const;

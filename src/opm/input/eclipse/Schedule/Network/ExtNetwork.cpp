@@ -101,11 +101,11 @@ void ExtNetwork::add_or_replace_branch(Branch branch)
         }
     }
     
-    // Remote any other branch uptree from downtree_node
+    // Remove any other branch uptree from downtree_node
     auto uptree_link = this->uptree_branch( downtree_node );
     if (uptree_link.has_value()){
         const auto& old_uptree_node = uptree_link.value().uptree_node();
-        this->drop_branch(old_uptree_node, downtree_node);
+        this->drop_branch(old_uptree_node, downtree_node, false);
     }
     
     // Update existing branch
@@ -122,14 +122,14 @@ void ExtNetwork::add_or_replace_branch(Branch branch)
 }
 
 
-void ExtNetwork::drop_branch(const std::string& uptree_node, const std::string& downtree_node) {
+void ExtNetwork::drop_branch(const std::string& uptree_node, const std::string& downtree_node, const bool recurse) {
     auto downtree_branches = this->downtree_branches( downtree_node );
-    if (downtree_branches.empty()) {
+    if (downtree_branches.empty() || !recurse) {
         auto branch_iter = std::find_if(this->m_branches.begin(), this->m_branches.end(), [&uptree_node, &downtree_node](const Branch& b) { return (b.uptree_node() == uptree_node && b.downtree_node() == downtree_node); });
         if (branch_iter != this->m_branches.end())
             this->m_branches.erase( branch_iter );
 
-        this->m_nodes.erase( downtree_node );
+        if (downtree_branches.empty()) this->m_nodes.erase( downtree_node );
     } else {
         for (const auto& branch : downtree_branches)
             this->drop_branch(branch.uptree_node(), branch.downtree_node());
