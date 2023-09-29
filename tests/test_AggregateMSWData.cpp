@@ -177,7 +177,7 @@ Opm::data::Wells wr()
 //  Branch (3):  7,  8,  9, 10                                      |
 //  Branch (4): 17, 18, 19                                          |
 //  Branch (5): 20, 22, 23, 24                                      |
-//  Branch (6): 12                                                  |
+//  Branch (6): 21                                                  |
 //------------------------------------------------------------------+
 Opm::Deck multilaterals()
 {
@@ -494,6 +494,128 @@ BOOST_AUTO_TEST_CASE (Declared_MSW_Data)
         //WINJ
         BOOST_CHECK_EQUAL(iLBs[start + 0] ,  14); // WINJ-branch   2, first segment in branch
 
+    }
+}
+
+// The segments and branches must appear in the following order in the
+// ILBS/ILBR output arrays.
+//
+//      1,  2,  3,  4,  5,  6 -- Branch (1)
+//     11, 12, 13, 14, 15, 16 -- Branch (2)
+//      7,  8,  9, 10         -- Branch (3)
+//     20, 22, 23, 24         -- Branch (5)
+//     21,                    -- Branch (6)
+//     17, 18, 19             -- Branch (4)
+//
+BOOST_AUTO_TEST_CASE(Multilateral_Branches)
+{
+    const auto cse = SimulationCase { multilaterals() };
+
+    const auto& es    = cse.es;
+    const auto& grid  = cse.grid;
+    const auto& sched = cse.sched;
+    const auto& units = es.getUnits();
+    const auto  smry  = Opm::SummaryState { Opm::TimeService::now() };
+
+    // Report Step 1: 2023-09-29 --> 2023-10-23
+    const auto rptStep = std::size_t {1};
+
+    const double secs_elapsed = 30 * 86'400.0;
+    const auto ih = Opm::RestartIO::Helpers::
+        createInteHead(es, grid, sched, secs_elapsed,
+                       rptStep, rptStep + 1, rptStep);
+
+    const auto xw = Opm::data::Wells {};
+
+    auto amswd = Opm::RestartIO::Helpers::AggregateMSWData {ih};
+    amswd.captureDeclaredMSWData(sched, rptStep, units,
+                                 ih, grid, smry, xw);
+
+    // ILBS--First segment on each branch other than branch 1.  Ordered by
+    // discovery.
+    {
+        const auto& ilbs = amswd.getILBs();
+
+        // No WSEGDIMS => size = maximum branch number
+        BOOST_CHECK_EQUAL(ilbs.size(), std::vector<int>::size_type{6});
+
+        const auto expect = std::vector {
+            11, 7, 20, 21, 17, 0,
+        };
+
+        BOOST_CHECK_EQUAL_COLLECTIONS(ilbs  .begin(), ilbs  .end(),
+                                      expect.begin(), expect.end());
+    }
+
+    auto ilbrOffset = [&ih](const int branch)
+    {
+        return ih[VI::intehead::NILBRZ] * (branch - 1);
+    };
+
+    // ILBR, branch 1
+    {
+        const auto* ilbr = &amswd.getILBr()[ilbrOffset(1)];
+
+        BOOST_CHECK_EQUAL(ilbr[VI::ILbr::OutletSegment],          0);
+        BOOST_CHECK_EQUAL(ilbr[VI::ILbr::NumBranchSegments],      6);
+        BOOST_CHECK_EQUAL(ilbr[VI::ILbr::FirstSegment],           1);
+        BOOST_CHECK_EQUAL(ilbr[VI::ILbr::LastSegment],            6);
+        BOOST_CHECK_EQUAL(ilbr[VI::ILbr::KickOffDiscoveryOffset], 0);
+    }
+
+    // ILBR, branch 2
+    {
+        const auto* ilbr = &amswd.getILBr()[ilbrOffset(2)];
+
+        BOOST_CHECK_EQUAL(ilbr[VI::ILbr::OutletSegment],           3);
+        BOOST_CHECK_EQUAL(ilbr[VI::ILbr::NumBranchSegments],       6);
+        BOOST_CHECK_EQUAL(ilbr[VI::ILbr::FirstSegment],           11);
+        BOOST_CHECK_EQUAL(ilbr[VI::ILbr::LastSegment],            16);
+        BOOST_CHECK_EQUAL(ilbr[VI::ILbr::KickOffDiscoveryOffset],  1);
+    }
+
+    // ILBR, branch 3
+    {
+        const auto* ilbr = &amswd.getILBr()[ilbrOffset(3)];
+
+        BOOST_CHECK_EQUAL(ilbr[VI::ILbr::OutletSegment],           5);
+        BOOST_CHECK_EQUAL(ilbr[VI::ILbr::NumBranchSegments],       4);
+        BOOST_CHECK_EQUAL(ilbr[VI::ILbr::FirstSegment],            7);
+        BOOST_CHECK_EQUAL(ilbr[VI::ILbr::LastSegment],            10);
+        BOOST_CHECK_EQUAL(ilbr[VI::ILbr::KickOffDiscoveryOffset],  2);
+    }
+
+    // ILBR, branch 4
+    {
+        const auto* ilbr = &amswd.getILBr()[ilbrOffset(4)];
+
+        BOOST_CHECK_EQUAL(ilbr[VI::ILbr::OutletSegment],          10);
+        BOOST_CHECK_EQUAL(ilbr[VI::ILbr::NumBranchSegments],       3);
+        BOOST_CHECK_EQUAL(ilbr[VI::ILbr::FirstSegment],           17);
+        BOOST_CHECK_EQUAL(ilbr[VI::ILbr::LastSegment],            19);
+        BOOST_CHECK_EQUAL(ilbr[VI::ILbr::KickOffDiscoveryOffset],  5);
+    }
+
+    // ILBR, branch 5
+    {
+        const auto* ilbr = &amswd.getILBr()[ilbrOffset(5)];
+
+        BOOST_CHECK_EQUAL(ilbr[VI::ILbr::OutletSegment],          14);
+        BOOST_CHECK_EQUAL(ilbr[VI::ILbr::NumBranchSegments],       4);
+        BOOST_CHECK_EQUAL(ilbr[VI::ILbr::FirstSegment],           20);
+        BOOST_CHECK_EQUAL(ilbr[VI::ILbr::LastSegment],            24);
+        BOOST_CHECK_EQUAL(ilbr[VI::ILbr::KickOffDiscoveryOffset],  3);
+    }
+
+    // ILBR, branch 6
+    {
+        const auto* ilbr = &amswd.getILBr()[ilbrOffset(6)];
+
+        BOOST_CHECK_EQUAL(ilbr[VI::ILbr::OutletSegment],          15);
+        BOOST_CHECK_EQUAL(ilbr[VI::ILbr::NumBranchSegments],       1);
+        BOOST_CHECK_EQUAL(ilbr[VI::ILbr::FirstSegment],           21);
+        BOOST_CHECK_EQUAL(ilbr[VI::ILbr::LastSegment],            21);
+        BOOST_CHECK_EQUAL(ilbr[VI::ILbr::KickOffDiscoveryOffset],  4);
     }
 }
 

@@ -62,14 +62,6 @@
 
 namespace {
 
-    struct BranchSegmentPar {
-        int outletS;
-        int noSegInBranch;
-        int firstSeg;
-        int lastSeg;
-        int branch;
-    };
-
     struct SegmentSetSourceSinkTerms {
         std::vector<double> qosc;
         std::vector<double> qwsc;
@@ -122,36 +114,6 @@ namespace {
         }
 
         return inFlowSegInd;
-    }
-
-    BranchSegmentPar
-    getBranchSegmentParam(const Opm::WellSegments& segSet, const int branch)
-    {
-        int noSegInBranch = 0;
-        int firstSeg = -1;
-        int lastSeg  = -1;
-        int outletS = 0;
-        for (std::size_t segInd = 0; segInd < segSet.size(); segInd++) {
-            const auto& segNo = segSet[segInd].segmentNumber();
-            const auto& i_branch = segSet[segInd].branchNumber();
-            const auto& i_outS = segSet[segInd].outletSegment();
-            if (i_branch == branch) {
-                noSegInBranch +=1;
-                if (firstSeg < 0) {
-                    firstSeg = segNo;
-                    outletS = (branch > 1) ? i_outS : 0;
-                }
-                lastSeg = segNo;
-            }
-        }
-
-        return {
-            outletS,
-            noSegInBranch,
-            firstSeg,
-            lastSeg,
-            branch
-        };
     }
 
     std::vector<std::size_t>
@@ -317,33 +279,6 @@ namespace {
             swfr,
             sgfr
         };
-    }
-
-    std::vector<std::size_t> SegmentSetBranches(const Opm::WellSegments& segSet)
-    {
-        std::vector<std::size_t> branches;
-
-        for (std::size_t segInd = 0; segInd < segSet.size(); segInd++) {
-            const auto& i_branch = segSet[segInd].branchNumber();
-            if (std::find(branches.begin(), branches.end(), i_branch) == branches.end()) {
-                branches.push_back(i_branch);
-            }
-        }
-
-        return branches;
-    }
-
-    int firstSegmentInBranch(const Opm::WellSegments& segSet, const int branch) {
-        int firstSegInd = 0;
-        std::size_t segInd = 0;
-        while ((segInd < segSet.size()) && (firstSegInd == 0)) {
-            const auto& i_branch = segSet[segInd].branchNumber();
-            if (branch == i_branch) {
-                firstSegInd = segInd;
-            }
-            segInd+=1;
-        }
-        return firstSegInd;
     }
 
     int noConnectionsSegment(const Opm::WellConnections& compSet,
@@ -977,6 +912,288 @@ namespace {
         }
     } // RSeg
 
+    namespace LateralBranch {
+        /// Discover segment and branch tree structure through traversal.
+        /// Uses Segment::inletSegments() as the primary link in the tree
+        /// structure.
+        ///
+        /// Information conveyed to the user through callback routines.
+        ///
+        /// As an example, the segments in the following tree will be
+        /// visited in the order
+        ///
+        ///      1,  2,  3,  4,  5,  6 -- Branch (1)
+        ///     11, 12, 13, 14, 15, 16 -- Branch (2)
+        ///      7,  8,  9, 10         -- Branch (3)
+        ///     20, 22, 23, 24         -- Branch (5)
+        ///     21,                    -- Branch (6)
+        ///     17, 18, 19             -- Branch (4)
+        ///
+        /// +------------------------------------------------------------+
+        /// |                                                            |
+        /// |                     12   13    14     15     16            |
+        /// |                   o----o----o-----o------o-----o (2)       |
+        /// |              11  /              20 \   21 \                |
+        /// |                 /                   o      o (6)           |
+        /// |                /                     \                     |
+        /// |               /                    22 \  23   24           |
+        /// |   1   2   3  /  4   5   6              o----o----o (5)     |
+        /// |  ---o---o---o-----o---o---o (1)                            |
+        /// |                        \                                   |
+        /// |                       7 \  8   9    10                     |
+        /// |                          o---o---o-----o (3)               |
+        /// |                                         \                  |
+        /// |                                       17 \   18   19       |
+        /// |                                           o----o----o (4)  |
+        /// |                                                            |
+        /// +------------------------------------------------------------+
+        ///
+        class Topology
+        {
+        public:
+            /// Callback for discovering/visiting a new segment.
+            using NewSegmentCallback = std::function<void(const ::Opm::Segment& seg)>;
+
+            /// Callback for discovering/creating a new branch.
+            using NewBranchCallback = std::function<
+                void(std::string_view well,
+                     const int        branchId,
+                     const int        kickOffSegment,
+                     const int        outletSegment)
+            >;
+
+            /// Constructor.
+            ///
+            /// \param[in] well Name of current MS well.
+            /// \param[in] segSet Well's segments and branches.
+            explicit Topology(std::string_view           well,
+                              const ::Opm::WellSegments& segSet)
+                : well_   { well }
+                , segSet_ { std::cref(segSet) }
+            {}
+
+            /// Set callback for visiting a new segment.
+            ///
+            /// \param[in] callback New callback routine.
+            /// \return \c *this.
+            Topology& setNewSegmentCallback(NewSegmentCallback callback)
+            {
+                this->runNewSegmentCallback_ = std::move(callback);
+                return *this;
+            }
+
+            /// Set callback for visiting a new branch.
+            ///
+            /// \param[in] callback New callback routine.
+            /// \return \c *this.
+            Topology& setNewBranchCallback(NewBranchCallback callback)
+            {
+                this->runNewBranchCallback_ = std::move(callback);
+                return *this;
+            }
+
+            /// Walk well's segment tree from top (segment 1, branch 1).
+            ///
+            /// New branches and segments are searched in a depth first
+            /// order.  Furthermore, new branches are visited in order of
+            /// discovery, but we always search to the end of the current
+            /// branch, visiting all of its segments, before visiting the
+            /// first segment of a new branch.  Each segment is visited
+            /// exactly once.
+            ///
+            /// Invokes the user-defined callback routines for new segments
+            /// and branches and imparts segment tree structure to caller
+            /// through these routines.
+            void traverseStructure();
+
+        private:
+            /// Name of well being explored.
+            std::string_view well_{};
+
+            /// Well's segments and branches.
+            std::reference_wrapper<const ::Opm::WellSegments> segSet_;
+
+            /// Callback routine for visiting a new segment.
+            NewSegmentCallback runNewSegmentCallback_{};
+
+            /// Callback routine for visiting a new branch.
+            NewBranchCallback runNewBranchCallback_{};
+
+            /// Segments from which to kick off searching new branches.
+            std::queue<int> kickOffSegments_{};
+
+            /// One-based segment number of currently visited segment.
+            int currentSegment_{};
+
+            /// Find all segments on current branch, in order from heel to
+            /// toe.
+            ///
+            /// Invokes new segment callback, once for each segment.
+            void buildCurrentBranch();
+
+            /// Enqueue collection of new branches from common kick-off
+            /// point.
+            ///
+            /// \param[in] outletSegment Segment from which new branches
+            ///    kick off.
+            ///
+            /// \param[in] children Collection of new branch start segments.
+            ///    One child/kick-off segment for each new branch.
+            void discoverNewBranches(const int               outletSegment,
+                                     const std::vector<int>& children);
+
+            /// Enqueue new branch.
+            ///
+            /// Will be visited later.  Invokes new branch callback.
+            ///
+            /// \param[in] branchId Branch number for new branch.
+            ///
+            /// \param[in] kickOffSegment First segment on new branch.
+            ///
+            /// \param[in] outletSegment Segment on branch from which the
+            ///    new branch kicks off.
+            void discoverNewBranch(const int branchId,
+                                   const int kickOffSegment,
+                                   const int outletSegment);
+
+            /// Split child segments of current segment into groups
+            /// based on their associate branch number.
+            ///
+            /// \return Child segment grouping.  The \c .first group
+            /// contains child segments associated to branches different to
+            /// that of the current segment.  This collection is empty if
+            /// there are no child segments on other branches.  The \c
+            /// .second group is the single child segment on the same branch
+            /// as the current segment.  This will be \c nullopt if there is
+            /// no such child segment, thus signifiying the end of the
+            /// current branch.
+            std::pair<std::vector<int>, std::optional<int>>
+            characteriseChildSegments() const;
+
+            /// Get current segment object.
+            const Opm::Segment& currentSegment() const;
+
+            /// Get segment object from one-based segment number.
+            ///
+            /// \param[in] segNum One-based segment number.
+            ///
+            /// \return Segment object corresponding to \p segNum.
+            const Opm::Segment& segment(const int segNum) const;
+        };
+
+        void Topology::traverseStructure()
+        {
+            this->kickOffSegments_.push(1);
+
+            while (! this->kickOffSegments_.empty()) {
+                this->currentSegment_ = this->kickOffSegments_.front();
+                this->kickOffSegments_.pop();
+
+                this->buildCurrentBranch();
+            }
+        }
+
+        void Topology::buildCurrentBranch()
+        {
+            while (true) {
+                const auto& seg = this->currentSegment();
+
+                this->runNewSegmentCallback_(seg);
+
+                const auto& [newBranchChildren, sameBranchChild] =
+                    this->characteriseChildSegments();
+
+                this->discoverNewBranches(seg.segmentNumber(), newBranchChildren);
+
+                if (sameBranchChild.has_value()) {
+                    // Child on same branch as currentSegment().  This child
+                    // will be the next segment in our search order.
+                    this->currentSegment_ = *sameBranchChild;
+                }
+                else {
+                    // Branch completed.
+                    return;
+                }
+            }
+        }
+
+        void Topology::discoverNewBranches(const int               outletSegment,
+                                           const std::vector<int>& children)
+        {
+            for (const auto& child : children) {
+                const auto branch = this->segment(child).branchNumber();
+                this->discoverNewBranch(branch, child, outletSegment);
+            }
+        }
+
+        void Topology::discoverNewBranch(const int branchId,
+                                         const int kickOffSegment,
+                                         const int outletSegment)
+        {
+            this->runNewBranchCallback_(this->well_,
+                                        branchId,
+                                        kickOffSegment,
+                                        outletSegment);
+
+            this->kickOffSegments_.push(kickOffSegment);
+        }
+
+        std::pair<std::vector<int>, std::optional<int>>
+        Topology::characteriseChildSegments() const
+        {
+            auto children = this->currentSegment().inletSegments();
+
+            auto sameBranchPos =
+                std::stable_partition(children.begin(), children.end(),
+                    [this, currBranch = this->currentSegment().branchNumber()]
+                    (const int segNum)
+                {
+                    return this->segment(segNum).branchNumber() != currBranch;
+                });
+
+            if (sameBranchPos == children.end()) {
+                // Every child is on another branch--or there are no children
+                return {
+                    std::piecewise_construct,
+                    std::forward_as_tuple(std::move(children)),
+                    std::forward_as_tuple()
+                };
+            }
+            else {
+                if (const auto numSameBranch = std::distance(sameBranchPos, children.end());
+                    numSameBranch != std::vector<int>::difference_type{1})
+                {
+                    throw std::invalid_argument {
+                        fmt::format("Segment {} of well {} has {} "
+                                    "inlet segments on branch {}",
+                                    this->currentSegment().segmentNumber(),
+                                    this->well_, numSameBranch,
+                                    this->currentSegment().branchNumber())
+                    };
+                }
+
+                // Common case: The segment at *sameBranchPos continues the
+                // current branch.  All other child segments start new
+                // branches.
+                return {
+                    std::piecewise_construct,
+                    std::forward_as_tuple(children.begin(), sameBranchPos),
+                    std::forward_as_tuple(*sameBranchPos)
+                };
+            }
+        }
+
+        const Opm::Segment& Topology::currentSegment() const
+        {
+            return this->segment(this->currentSegment_);
+        }
+
+        const Opm::Segment& Topology::segment(const int segNum) const
+        {
+            return this->segSet_.get().getFromSegmentNumber(segNum);
+        }
+    } // LateralBranch
+
     namespace ILBS {
         std::size_t entriesPerMSW(const std::vector<int>& inteHead)
         {
@@ -994,69 +1211,45 @@ namespace {
                 WV::WindowSize{ entriesPerMSW(inteHead) }
             };
         }
-
-        template <class ILBSArray>
-        void staticContrib(const Opm::Well& well,
-                           ILBSArray&        iLBS)
-        {
-            if (well.isMultiSegment()) {
-                //
-                // Store the segment number of the first segment in branch for branch number
-                // 2 and upwards
-                const auto& welSegSet = well.getSegments();
-                const auto& branches = SegmentSetBranches(welSegSet);
-                for (auto it = branches.begin()+1; it != branches.end(); it++){
-                    iLBS[*it-2] = welSegSet[firstSegmentInBranch(welSegSet, *it)].segmentNumber();
-                }
-            }
-            else {
-                throw std::invalid_argument("No such multisegment well: " + well.name());
-            }
-        }
     } // ILBS
 
     namespace ILBR {
-        std::size_t entriesPerMSW(const std::vector<int>& inteHead)
+        class Array
         {
-            // inteHead(177) = NLBRMX
-            // inteHead(180) = NILBRZ
-            return inteHead[177] * inteHead[180];
+        public:
+            using Matrix = Opm::RestartIO::Helpers::WindowedMatrix<int>;
+
+            explicit Array(Matrix&           ilbr,
+                           const Matrix::Idx msWellID)
+                : ilbr_ { std::ref(ilbr) }
+                , well_ { msWellID }
+            {}
+
+            decltype(auto) operator[](const Matrix::Idx branch)
+            {
+                return this->ilbr_.get()(this->well_, branch - 1);
+            }
+
+        private:
+            std::reference_wrapper<Matrix> ilbr_;
+            Matrix::Idx well_;
+        };
+
+        std::size_t maxBranchesPerMSWell(const std::vector<int>& inteHead)
+        {
+            return inteHead[177];
         }
 
-        Opm::RestartIO::Helpers::WindowedArray<int>
+        Opm::RestartIO::Helpers::WindowedMatrix<int>
         allocate(const std::vector<int>& inteHead)
         {
-            using WV = Opm::RestartIO::Helpers::WindowedArray<int>;
+            using WM = Opm::RestartIO::Helpers::WindowedMatrix<int>;
 
-            return WV {
-                WV::NumWindows{ nswlmx(inteHead) },
-                WV::WindowSize{ entriesPerMSW(inteHead) }
+            return WM {
+                WM::NumRows   { nswlmx(inteHead) },
+                WM::NumCols   { maxBranchesPerMSWell(inteHead) },
+                WM::WindowSize{ nilbrz(inteHead) }
             };
-        }
-
-        template <class ILBRArray>
-        void staticContrib(const Opm::Well&  well,
-                           const std::vector<int>& inteHead,
-                           ILBRArray&        iLBR)
-        {
-            if (well.isMultiSegment()) {
-                //
-                const auto& welSegSet = well.getSegments();
-                const auto& branches = SegmentSetBranches(welSegSet);
-                const auto& noElmBranch = nilbrz(inteHead);
-                for (auto it = branches.begin(); it != branches.end(); it++){
-                    const auto iB = (*it-1)*noElmBranch;
-                    const auto& branchParam = getBranchSegmentParam(welSegSet, *it);
-                    iLBR[iB  ] = branchParam.outletS;
-                    iLBR[iB+1] = branchParam.noSegInBranch;
-                    iLBR[iB+2] = branchParam.firstSeg;
-                    iLBR[iB+3] = branchParam.lastSeg;
-                    iLBR[iB+4] = branchParam.branch - 1;
-                }
-            }
-            else {
-                throw std::invalid_argument("No such multisegment well: " + well.name());
-            }
         }
     } // ILBR
 
@@ -1105,13 +1298,61 @@ captureDeclaredMSWData(const Schedule&          sched,
                                    grid, units, smry, wr, rmsw);
     });
 
-    // Extract contributions to the ILBS and ILBR arrays
-    MSWLoop(msw, [this, &inteHead](const Well& well, const std::size_t mswID)
+    // Extract contributions to the ILBS and ILBR arrays.
+    MSWLoop(msw, [this](const Well& well, const std::size_t mswID)
     {
-        auto ilbs_msw = this->iLBS_[mswID];
-        auto ilbr_msw = this->iLBR_[mswID];
+        using Ix = VectorItems::ILbr::index;
 
-        ILBS::staticContrib(well, ilbs_msw);
-        ILBR::staticContrib(well, inteHead, ilbr_msw);
+        auto ilbs = this->iLBS_[mswID];
+        auto ilbr = ILBR::Array { this->iLBR_, mswID };
+
+        // The top segment (segment 1) is always the first segment of branch
+        // 1, at an offset of 0 with no outlet segment.  Describe it as such.
+        ilbr[1][Ix::OutletSegment]          = 0;
+        ilbr[1][Ix::NumBranchSegments]      = 0;
+        ilbr[1][Ix::FirstSegment]           = 1;
+        ilbr[1][Ix::KickOffDiscoveryOffset] = 0;
+
+        LateralBranch::Topology { well.name(), well.getSegments() }
+            .setNewSegmentCallback([&ilbr](const Segment& seg)
+            {
+                auto currBranch = ilbr[seg.branchNumber()];
+
+                // Attribute 'seg' to current branch.  The LastSegment is
+                // intentionally updated on every call since every new
+                // segment is the last segment along the branch until it
+                // isn't anymore.
+                //
+                // We do it this way since the branch traversal visits each
+                // segment exactly once.
+                currBranch[Ix::LastSegment] = seg.segmentNumber();
+                currBranch[Ix::NumBranchSegments] += 1;
+            })
+            .setNewBranchCallback([&ilbr, &ilbs, insertIndex = 0]
+                                  (std::string_view wellName,
+                                   const int        newBranchId,
+                                   const int        kickOffSegment,
+                                   const int        outletSegment) mutable
+            {
+                ilbs[insertIndex] = kickOffSegment;
+
+                auto newBranch = ilbr[newBranchId];
+
+                // Add one to the kick-off discovery offset to account for
+                // branch 1 which is not in ILBS.
+                newBranch[Ix::OutletSegment]          = outletSegment;
+                newBranch[Ix::FirstSegment]           = kickOffSegment;
+                newBranch[Ix::KickOffDiscoveryOffset] = insertIndex + 1;
+
+                if (newBranch[Ix::NumBranchSegments] > 0) {
+                    throw std::invalid_argument {
+                        fmt::format("Looped branch {} for well {} "
+                                    "is not supported", newBranchId, wellName)
+                    };
+                }
+
+                ++insertIndex;
+            })
+            .traverseStructure();
     });
 }

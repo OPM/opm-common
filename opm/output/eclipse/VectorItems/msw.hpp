@@ -40,6 +40,16 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
 
     } // ISeg
 
+    namespace ILbr {
+        enum index : std::vector<int>::size_type {
+            OutletSegment          = 0, // Branch's outlet segment (one-based)
+            NumBranchSegments      = 1, // Number of segments on branch
+            FirstSegment           = 2, // First segment on branch (kick-off, heel)
+            LastSegment            = 3, // Last segment on branch (toe)
+            KickOffDiscoveryOffset = 4, // Segment traversal order at which this branch was encountered
+        };
+    } // ILbr
+
     namespace RSeg {
         enum index : std::vector<double>::size_type {
             DistOutlet      = 0, // Segment's distance to outlet

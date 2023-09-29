@@ -84,8 +84,7 @@ namespace Opm { namespace RestartIO { namespace Helpers {
         WindowedArray<int> iLBS_;
 
         /// Aggregate 'ILBR' array (Integer) for all multisegment wells
-        WindowedArray<int> iLBR_;
-
+        WindowedMatrix<int> iLBR_;
     };
 
 }}} // Opm::RestartIO::Helpers
