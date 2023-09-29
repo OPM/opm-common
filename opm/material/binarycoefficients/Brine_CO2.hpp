@@ -30,6 +30,7 @@
 
 #include <opm/material/IdealGas.hpp>
 #include <opm/material/common/Valgrind.hpp>
+#include <opm/common/TimingMacros.hpp>
 
 #include <array>
 
@@ -546,7 +547,7 @@ private:
                                                           bool extrapolate = false)
     {
         OPM_TIMEFUNCTION_LOCAL();
-	// Start point for fixed-point iterations as recommended below in section 2.2
+	    // Start point for fixed-point iterations as recommended below in section 2.2
         Evaluation yH2O = H2O::vaporPressure(temperature) / pg;  // ideal mixing
         Evaluation xCO2 = 0.009;  // same as ~0.5 mol/kg
         Evaluation gammaNaCl = 1.0;  // default salt activity coeff = 1.0
@@ -700,7 +701,7 @@ private:
                                 bool spycherPruess2005 = false)
     {
         OPM_TIMEFUNCTION_LOCAL();
-	// Intermediate calculations
+	    // Intermediate calculations
         const Evaluation& deltaP = pg / 1e5 - Pref_(temperature, highTemp); // pressure range [bar] from pref to pg[bar]
         Evaluation v_av_H2O = V_avg_H2O_(temperature, highTemp); // average partial molar volume of H2O [cm^3/mol]
         Evaluation k0_H2O = equilibriumConstantH2O_(temperature, highTemp); // equilibrium constant for H2O at 1 bar
@@ -741,7 +742,7 @@ private:
                                 bool spycherPruess2005 = false)
     {
         OPM_TIMEFUNCTION_LOCAL();
-	// Intermediate calculations
+	    // Intermediate calculations
         const Evaluation& deltaP = pg / 1e5 - Pref_(temperature, highTemp); // pressure range [bar] from pref to pg[bar]
         Evaluation v_av_CO2 = V_avg_CO2_(temperature, highTemp); // average partial molar volume of CO2 [cm^3/mol]
         Evaluation k0_CO2 = equilibriumConstantCO2_(temperature, pg, highTemp, spycherPruess2005); // equilibrium constant for CO2 at 1 bar
@@ -775,7 +776,7 @@ private:
                                                const int& activityModel)
     {
         OPM_TIMEFUNCTION_LOCAL();   
-	// Lambda and xi parameter for either Rumpf et al (1994) (activityModel = 1) or Duan-Sun as modified by Spycher
+	    // Lambda and xi parameter for either Rumpf et al (1994) (activityModel = 1) or Duan-Sun as modified by Spycher
         // & Pruess (2009) (activityModel = 2) or Duan & Sun (2003) as given in Spycher & Pruess (2005) (activityModel =
         // 3)
         Evaluation lambda;

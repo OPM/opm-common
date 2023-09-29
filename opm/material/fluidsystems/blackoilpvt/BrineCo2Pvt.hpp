@@ -440,7 +440,7 @@ public:
                      const Evaluation& pressure,
                      const Evaluation& salinity) const
     {
-	OPM_TIMEFUNCTION_LOCAL();
+	    OPM_TIMEFUNCTION_LOCAL();
         if (!enableDissolution_)
             return 0.0;
 
