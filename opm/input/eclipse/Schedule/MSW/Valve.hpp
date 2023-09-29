@@ -69,6 +69,7 @@ namespace Opm {
 
         // Status: OPEN or SHUT
         ICDStatus status() const;
+        int ecl_status() const;
 
         void setConMaxCrossArea(const double area);
 

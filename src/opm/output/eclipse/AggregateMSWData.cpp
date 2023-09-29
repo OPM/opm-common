@@ -495,7 +495,6 @@ namespace {
                 VectorItems::ISeg::index;
 
             const auto& sicd = segment.spiralICD();
-            iSeg[baseIndex + Ix::SegmentType] = segment.ecl_type_id();
             iSeg[baseIndex + Ix::ICDScalingMode] = sicd.methodFlowScaling();
             iSeg[baseIndex + Ix::ICDOpenShutFlag] = sicd.ecl_status();
         }
@@ -509,9 +508,19 @@ namespace {
                 VectorItems::ISeg::index;
 
             const auto& aicd = segment.autoICD();
-            iSeg[baseIndex + Ix::SegmentType] = segment.ecl_type_id();
             iSeg[baseIndex + Ix::ICDScalingMode] = aicd.methodFlowScaling();
             iSeg[baseIndex + Ix::ICDOpenShutFlag] = aicd.ecl_status();
+        }
+
+        template <class ISegArray>
+        void assignValveCharacteristics(const Opm::Segment& segment,
+                                        const std::size_t   baseIndex,
+                                        ISegArray&          iSeg)
+        {
+            using Ix = ::Opm::RestartIO::Helpers::VectorItems::ISeg::index;
+
+            const auto& valve = segment.valve();
+            iSeg[baseIndex + Ix::ICDOpenShutFlag] = valve.ecl_status();
         }
 
         template <class ISegArray>
@@ -522,8 +531,13 @@ namespace {
             if (segment.isSpiralICD()) {
                 assignSpiralICDCharacteristics(segment, baseIndex, iSeg);
             }
+
             if (segment.isAICD()) {
                 assignAICDCharacteristics(segment, baseIndex, iSeg);
+            }
+
+            if (segment.isValve()) {
+                assignValveCharacteristics(segment, baseIndex, iSeg);
             }
         }
 
