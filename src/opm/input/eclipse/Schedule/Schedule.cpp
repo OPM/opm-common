@@ -1395,6 +1395,18 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
             new_child_group.updateParent(parent_name);
             this->snapshots.back().groups.update( std::move(new_child_group) );
         }
+
+        // Update network if required
+        auto network = this->snapshots.back().network.get();
+        if (network.has_node(child_name)) {
+            auto old_branch = network.uptree_branch(child_name);
+            if (old_branch.has_value()) {
+                auto new_branch = old_branch.value();
+                new_branch.set_uptree_node(parent_name);
+                network.add_or_replace_branch(new_branch);
+            }
+            // If no previous uptree branch the child is a fixed-pressure node, so no need to update network
+        }
     }
 
     void Schedule::addWellToGroup( const std::string& group_name, const std::string& well_name , std::size_t timeStep) {
