@@ -24,9 +24,11 @@
 #include <opm/input/eclipse/Schedule/MSW/SICD.hpp>
 #include <opm/input/eclipse/Schedule/MSW/Valve.hpp>
 
+#include <algorithm>
 #include <cassert>
 #include <stdexcept>
 #include <string>
+#include <vector>
 
 namespace {
 
@@ -277,8 +279,15 @@ namespace Opm {
         return m_inlet_segments;
     }
 
-    void Segment::addInletSegment(const int segment_number_in) {
-        m_inlet_segments.push_back(segment_number_in);
+    void Segment::addInletSegment(const int segment_number_in)
+    {
+        auto segPos = std::find(this->m_inlet_segments.begin(),
+                                this->m_inlet_segments.end(),
+                                segment_number_in);
+
+        if (segPos == this->m_inlet_segments.end()) {
+            this->m_inlet_segments.push_back(segment_number_in);
+        }
     }
 
     double Segment::invalidValue() {
