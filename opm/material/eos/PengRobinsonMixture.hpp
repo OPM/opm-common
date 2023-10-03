@@ -40,7 +40,6 @@ template <class Scalar, class StaticParameters>
 class PengRobinsonMixture
 {
     enum { numComponents = StaticParameters::numComponents };
-    typedef ::Opm::PengRobinson<Scalar> PengRobinson;
 
     // this class cannot be instantiated!
     PengRobinsonMixture() = default;
@@ -53,20 +52,6 @@ class PengRobinsonMixture
     static const Scalar w;
 
 public:
-    /*!
-     * \brief Computes molar volumes where the Peng-Robinson EOS is
-     *        true.
-     *
-     * \return Number of solutions.
-     */
-    template <class MutableParams, class FluidState>
-    static int computeMolarVolumes(Scalar* Vm,
-                                   const MutableParams& params,
-                                   unsigned phaseIdx,
-                                   const FluidState& fs)
-    {
-        return PengRobinson::computeMolarVolumes(Vm, params, phaseIdx, fs);
-    }
 
     /*!
      * \brief Returns the fugacity coefficient of an individual

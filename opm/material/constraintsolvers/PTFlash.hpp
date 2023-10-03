@@ -79,7 +79,6 @@ public:
     template <class FluidState>
     static void solve(FluidState& fluid_state,
                       const Dune::FieldVector<typename FluidState::Scalar, numComponents>& z,
-                      int spatialIdx,
                       std::string twoPhaseMethod,
                       Scalar tolerance = -1.,
                       int verbosity = 0)
@@ -104,7 +103,6 @@ public:
         // Print header
         if (verbosity >= 1) {
             std::cout << "********" << std::endl;
-            std::cout << "Flash calculations on Cell " << spatialIdx << std::endl;
             std::cout << "Inputs are K = [" << K << "], L = [" << L << "], z = [" << z << "], P = " << fluid_state.pressure(0) << ", and T = " << fluid_state.temperature(0) << std::endl;
         }
 
@@ -248,7 +246,7 @@ protected:
         
         // If temperature is below estimated critical temperature --> phase = liquid; else vapor
         typename Vector::field_type L;
-        if (T >= Tc_est) { //TODO
+        if (T < Tc_est) {
             // Liquid
             L = 1.0;
 
@@ -1169,7 +1167,7 @@ protected:
             }
 
             // Print iteration info
-            if (verbosity == 2 || verbosity >= 4) {
+            if (verbosity >= 2) {
                 int prec = 5;
                 int fugWidth = (prec + 3);
                 int convWidth = prec + 9;

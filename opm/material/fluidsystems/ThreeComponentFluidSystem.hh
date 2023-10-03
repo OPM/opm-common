@@ -153,7 +153,7 @@ namespace Opm {
                 static const char* name[] = {"o",  // oleic phase
                                              "g"};  // gas phase
 
-                assert(0 <= phaseIdx && phaseIdx < 2);
+                assert(phaseIdx < 2);
                 return name[phaseIdx];
         }
 

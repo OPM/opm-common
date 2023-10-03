@@ -127,9 +127,8 @@ BOOST_DATA_TEST_CASE(PtFlash, test_methods)
     const Evaluation Ltmp = 1.;
     fluid_state.setLvalue(Ltmp);
 
-    const int spatialIdx = 0;
     using Flash = Opm::PTFlash<double, FluidSystem>;
-    Flash::solve(fluid_state, z, spatialIdx, sample, flash_tolerance, flash_verbosity);
+    Flash::solve(fluid_state, z, sample, flash_tolerance, flash_verbosity);
 
     ComponentVector x, y;
     const Evaluation L = fluid_state.L();
@@ -138,21 +137,23 @@ BOOST_DATA_TEST_CASE(PtFlash, test_methods)
         y[comp_idx] = fluid_state.moleFraction(FluidSystem::gasPhaseIdx, comp_idx);
     }
 
-    for (unsigned comp_idx = 0; comp_idx < numComponents; ++comp_idx) {
-        std::cout << " x for component: " << comp_idx << "is " << x[comp_idx] << std::endl;
-         for (int i = 0; i < 3; ++i) {
-             std::cout << " x deriv " << i << " is: " << x[comp_idx].derivative(i) << std::endl;
-         }
+    if (flash_verbosity >= 1) {
+        for (unsigned comp_idx = 0; comp_idx < numComponents; ++comp_idx) {
+            std::cout << " x for component: " << comp_idx << "is " << x[comp_idx] << std::endl;
+             for (int i = 0; i < 3; ++i) {
+                 std::cout << " x deriv " << i << " is: " << x[comp_idx].derivative(i) << std::endl;
+             }
 
-        std::cout << " y for component: " << comp_idx << "is " << y[comp_idx] << std::endl;
-         for (int i = 0; i < 3; ++i) {
-             std::cout << " y deriv " << i << " is: " << y[comp_idx].derivative(i) << std::endl;
+            std::cout << " y for component: " << comp_idx << "is " << y[comp_idx] << std::endl;
+             for (int i = 0; i < 3; ++i) {
+                 std::cout << " y deriv " << i << " is: " << y[comp_idx].derivative(i) << std::endl;
+             }
+        }
+        std::cout << " L is " << L << std::endl;
+         for (int i = 0; i < L.size(); ++i) {
+                 std::cout << " L deriv " << i << " is: " << L.derivative(i) << std::endl;
          }
     }
-    std::cout << " L is " << L << std::endl;
-     for (int i = 0; i < L.size(); ++i) {
-             std::cout << " L deriv " << i << " is: " << L.derivative(i) << std::endl;
-     }
 
 
     Evaluation ref_L = 1 - 0.763309246;

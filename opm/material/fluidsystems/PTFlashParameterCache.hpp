@@ -48,7 +48,7 @@ class PTFlashParameterCache
 {
     using ThisType = PTFlashParameterCache<Scalar, FluidSystem>;
     using ParentType = Opm::ParameterCacheBase<ThisType>;
-    using PengRobinson = Opm::PengRobinson<Scalar>;
+    using PengRobinson = Opm::PengRobinson<Scalar, false>; // false refer to discard some old code
 
     enum { numPhases = FluidSystem::numPhases };
     enum { oilPhaseIdx = FluidSystem::oilPhaseIdx };

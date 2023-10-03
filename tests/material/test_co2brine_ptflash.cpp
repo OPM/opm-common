@@ -127,9 +127,8 @@ BOOST_DATA_TEST_CASE(PtFlash, test_methods)
     const Evaluation Ltmp = 1.;
     fluid_state.setLvalue(Ltmp);
 
-    const int spatialIdx = 0;
     using Flash = Opm::PTFlash<double, FluidSystem>;
-    Flash::solve(fluid_state, z, spatialIdx, sample, flash_tolerance, flash_verbosity);
+    Flash::solve(fluid_state, z, sample, flash_tolerance, flash_verbosity);
 
     ComponentVector x, y;
     const Evaluation L = fluid_state.L();
@@ -241,9 +240,8 @@ BOOST_DATA_TEST_CASE(PtFlashSingle, test_methods)
     const Evaluation Ltmp = 1.;
     fluid_state.setLvalue(Ltmp);
 
-    const int spatialIdx = 0;
     using Flash = Opm::PTFlash<double, FluidSystem>;
-    Flash::solve(fluid_state, z, spatialIdx, sample, flash_tolerance, flash_verbosity);
+    Flash::solve(fluid_state, z, sample, flash_tolerance, flash_verbosity);
 
     ComponentVector x, y;
     const Evaluation L = fluid_state.L();
