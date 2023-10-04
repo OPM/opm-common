@@ -1494,7 +1494,9 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
         for (const auto& record : keyword) {
             const auto& wellNamePattern = record.getItem( "WELL" ).getTrimmedString(0);
             const auto& status_str = record.getItem( "STATUS" ).getTrimmedString( 0 );
-            const auto well_names = this->wellNames(wellNamePattern, handlerContext);
+            const auto well_names = this->wellNames(wellNamePattern, handlerContext,
+                                                    isWList(handlerContext.currentStep,
+                                                            wellNamePattern));
 
             /* if all records are defaulted or just the status is set, only
              * well status is updated
