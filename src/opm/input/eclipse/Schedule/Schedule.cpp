@@ -1216,11 +1216,14 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
 
 
 
-    std::vector<std::string> Schedule::wellNames(const std::string& pattern, const HandlerContext& context) {
+    std::vector<std::string> Schedule::wellNames(const std::string& pattern,
+                                                 const HandlerContext& context,
+                                                 bool allowEmpty)
+    {
         std::vector<std::string> valid_names;
         const auto& report_step = context.currentStep;
         auto names = this->wellNames(pattern, report_step, context.matching_wells);
-        if (names.empty()) {
+        if (names.empty() && !allowEmpty) {
             const auto& location = context.keyword.location();
             if (this->action_wgnames.has_well(pattern)) {
                 std::string msg = fmt::format(R"(Well: {} not yet defined for keyword {}.
