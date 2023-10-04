@@ -1984,7 +1984,9 @@ Well{0} entered with 'FIELD' parent group:
                 throw std::invalid_argument("The action:" + action + " is not recognized.");
 
             for (const auto& well_arg : well_args) {
-                const auto& names = this->wellNames(well_arg, handlerContext.currentStep);
+                // does not use overload for context to avoid throw
+                const auto& names = this->wellNames(well_arg, handlerContext.currentStep,
+                                                    handlerContext.matching_wells);
                 if (names.empty() && well_arg.find("*") == std::string::npos)
                     throw std::invalid_argument("The well: " + well_arg + " has not been defined in the WELSPECS");
 
