@@ -36,39 +36,18 @@ namespace Opm {
 
 namespace Opm { namespace RestartIO { namespace Helpers {
 
-    struct BranchSegmentPar {
-      int outletS;
-      int noSegInBranch;
-      int firstSeg;
-      int lastSeg;
-      int branch;
-    };
-
-    struct SegmentSetSourceSinkTerms {
-      std::vector<double> qosc;
-      std::vector<double> qwsc;
-      std::vector<double> qgsc;
-    };
-
-    struct SegmentSetFlowRates {
-      std::vector<double> sofr;
-      std::vector<double> swfr;
-      std::vector<double> sgfr;
-    };
-
     class AggregateMSWData
     {
     public:
         explicit AggregateMSWData(const std::vector<int>& inteHead);
 
-        void captureDeclaredMSWData(const Opm::Schedule& sched,
-                                     const std::size_t    rptStep,
-				     const Opm::UnitSystem& units,
-				     const std::vector<int>& inteHead,
-				     const Opm::EclipseGrid&  grid,
-				     const Opm::SummaryState& smry,
-				     const Opm::data::Wells&  wr
-				   );
+        void captureDeclaredMSWData(const Opm::Schedule&     sched,
+                                    const std::size_t        rptStep,
+                                    const Opm::UnitSystem&   units,
+                                    const std::vector<int>&  inteHead,
+                                    const Opm::EclipseGrid&  grid,
+                                    const Opm::SummaryState& smry,
+                                    const Opm::data::Wells&  wr);
 
         /// Retrieve Integer Multisegment well data Array.
         const std::vector<int>& getISeg() const
@@ -94,7 +73,6 @@ namespace Opm { namespace RestartIO { namespace Helpers {
             return this->iLBR_.data();
         }
 
-
     private:
         /// Aggregate 'ISEG' array (Integer) for all multisegment wells
         WindowedArray<int> iSeg_;
@@ -106,8 +84,7 @@ namespace Opm { namespace RestartIO { namespace Helpers {
         WindowedArray<int> iLBS_;
 
         /// Aggregate 'ILBR' array (Integer) for all multisegment wells
-        WindowedArray<int> iLBR_;
-
+        WindowedMatrix<int> iLBR_;
     };
 
 }}} // Opm::RestartIO::Helpers

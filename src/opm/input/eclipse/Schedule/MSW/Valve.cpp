@@ -18,9 +18,11 @@
 */
 
 #include <opm/input/eclipse/Schedule/MSW/Valve.hpp>
+
 #include <opm/input/eclipse/Deck/DeckRecord.hpp>
 #include <opm/input/eclipse/Deck/DeckKeyword.hpp>
 
+#include "icd_convert.hpp"
 
 namespace Opm {
 
@@ -128,6 +130,11 @@ namespace Opm {
 
     ICDStatus Valve::status() const {
         return m_status;
+    }
+
+    int Valve::ecl_status() const
+    {
+        return to_int(this->status());
     }
 
     double Valve::conFlowCoefficient() const {
