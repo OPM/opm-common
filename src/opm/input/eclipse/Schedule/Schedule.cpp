@@ -1757,6 +1757,17 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
         return this->snapshots[report_step].rst_file(rst_config, previous_output);
     }
 
+    bool Schedule::isWList(std::size_t report_step, const std::string& pattern) const
+    {
+        const ScheduleState * sched_state;
+
+        if (report_step < this->snapshots.size())
+            sched_state = &this->snapshots[report_step];
+        else
+            sched_state = &this->snapshots.back();
+
+        return sched_state->wlist_manager.get().hasList(pattern);
+    }
 
     const std::map< std::string, int >& Schedule::rst_keywords( size_t report_step ) const {
         if (report_step == 0)

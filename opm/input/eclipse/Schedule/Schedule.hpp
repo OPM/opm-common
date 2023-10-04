@@ -654,6 +654,8 @@ namespace Opm
 
         bool must_write_rst_file(std::size_t report_step) const;
 
+        bool isWList(std::size_t report_step, const std::string& pattern) const;
+
         void applyEXIT(const DeckKeyword&, std::size_t currentStep);
         SimulatorUpdate applyAction(std::size_t reportStep, const std::string& action_name, const std::vector<std::string>& matching_wells);
 
