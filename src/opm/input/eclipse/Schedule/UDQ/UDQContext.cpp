@@ -52,14 +52,14 @@ namespace Opm {
 
     UDQContext::UDQContext(const UDQFunctionTable& udqft_arg,
                            const WellMatcher&      wm,
-                           SegmentMatcherFactory   segment_matcher_factory_arg,
+                           SegmentMatcherFactory   create_segment_matcher_arg,
                            SummaryState&           summary_state_arg,
                            UDQState&               udq_state_arg)
-        : udqft                  (udqft_arg)
-        , well_matcher           (wm)
-        , segment_matcher_factory(std::move(segment_matcher_factory_arg))
-        , summary_state          (summary_state_arg)
-        , udq_state              (udq_state_arg)
+        : udqft                 (udqft_arg)
+        , well_matcher          (wm)
+        , create_segment_matcher(std::move(create_segment_matcher_arg))
+        , summary_state         (summary_state_arg)
+        , udq_state             (udq_state_arg)
     {
         for (const auto& [month, index] : TimeService::eclipseMonthIndices()) {
             this->add(month, index);
@@ -237,7 +237,7 @@ namespace Opm {
     void UDQContext::ensure_segment_matcher_exists() const
     {
         if (this->segment_matcher == nullptr) {
-            this->segment_matcher = this->segment_matcher_factory();
+            this->segment_matcher = this->create_segment_matcher();
         }
     }
 }

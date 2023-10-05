@@ -191,7 +191,7 @@ namespace Opm {
     }
 
     void UDQConfig::add_assign(const std::string&              quantity,
-                               SegmentMatcherFactory           segment_matcher_factory,
+                               SegmentMatcherFactory           create_segment_matcher,
                                const std::vector<std::string>& selector,
                                const double                    value,
                                const std::size_t               report_step)
@@ -201,7 +201,7 @@ namespace Opm {
         switch (UDQ::varType(quantity)) {
         case UDQVarType::SEGMENT_VAR:
             this->add_enumerated_assign(quantity,
-                                        std::move(segment_matcher_factory),
+                                        std::move(create_segment_matcher),
                                         selector, value, report_step);
             break;
 
@@ -289,7 +289,7 @@ namespace Opm {
         define.update_status(update_status, report_step);
     }
 
-    void UDQConfig::add_record(SegmentMatcherFactory  segment_matcher_factory,
+    void UDQConfig::add_record(SegmentMatcherFactory  create_segment_matcher,
                                const DeckRecord&      record,
                                const KeywordLocation& location,
                                const std::size_t      report_step)
@@ -310,7 +310,7 @@ namespace Opm {
             const auto selector = std::vector<std::string>(data.begin(), data.end() - 1);
             const auto value = std::stod(data.back());
             this->add_assign(quantity,
-                             std::move(segment_matcher_factory),
+                             std::move(create_segment_matcher),
                              selector, value, report_step);
         }
         else if (action == UDQAction::DEFINE) {
@@ -590,12 +590,12 @@ namespace Opm {
     void UDQConfig::eval(const std::size_t     report_step,
                          const Schedule&       sched,
                          const WellMatcher&    wm,
-                         SegmentMatcherFactory segment_matcher_factory,
+                         SegmentMatcherFactory create_segment_matcher,
                          SummaryState&         st,
                          UDQState&             udq_state) const
     {
         UDQContext context {
-            this->function_table(), wm, std::move(segment_matcher_factory), st, udq_state
+            this->function_table(), wm, std::move(create_segment_matcher), st, udq_state
         };
         this->eval_assign(report_step, sched, udq_state, context);
         this->eval_define(report_step, udq_state, context);
@@ -604,12 +604,12 @@ namespace Opm {
     void UDQConfig::eval_assign(const std::size_t     report_step,
                                 const Schedule&       sched,
                                 const WellMatcher&    wm,
-                                SegmentMatcherFactory segment_matcher_factory,
+                                SegmentMatcherFactory create_segment_matcher,
                                 SummaryState&         st,
                                 UDQState&             udq_state) const
     {
         UDQContext context {
-            this->function_table(), wm, std::move(segment_matcher_factory), st, udq_state
+            this->function_table(), wm, std::move(create_segment_matcher), st, udq_state
         };
         this->eval_assign(report_step, sched, udq_state, context);
     }
@@ -637,12 +637,12 @@ namespace Opm {
     }
 
     void UDQConfig::add_enumerated_assign(const std::string&              quantity,
-                                          SegmentMatcherFactory           segment_matcher_factory,
+                                          SegmentMatcherFactory           create_segment_matcher,
                                           const std::vector<std::string>& selector,
                                           const double                    value,
                                           const std::size_t               report_step)
     {
-        auto segmentMatcher = segment_matcher_factory();
+        auto segmentMatcher = create_segment_matcher();
 
         auto setDescriptor = SegmentMatcher::SetDescriptor{};
         if (! selector.empty()) {

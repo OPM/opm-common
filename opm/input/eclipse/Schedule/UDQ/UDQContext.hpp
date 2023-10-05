@@ -49,7 +49,7 @@ namespace Opm {
 
         UDQContext(const UDQFunctionTable& udqft,
                    const WellMatcher&      wm,
-                   SegmentMatcherFactory   segment_matcher_factory,
+                   SegmentMatcherFactory   create_segment_matcher,
                    SummaryState&           summary_state,
                    UDQState&               udq_state);
 
@@ -74,7 +74,7 @@ namespace Opm {
         const UDQFunctionTable& udqft;
         const WellMatcher& well_matcher;
 
-        SegmentMatcherFactory segment_matcher_factory;
+        SegmentMatcherFactory create_segment_matcher;
         mutable std::unique_ptr<SegmentMatcher> segment_matcher;
         SummaryState& summary_state;
         UDQState& udq_state;

@@ -72,7 +72,7 @@ namespace Opm {
         bool has_unit(const std::string& keyword) const;
         bool has_keyword(const std::string& keyword) const;
 
-        void add_record(SegmentMatcherFactory  segment_matcher_factory,
+        void add_record(SegmentMatcherFactory  create_segment_matcher,
                         const DeckRecord&      record,
                         const KeywordLocation& location,
                         std::size_t            report_step);
@@ -86,7 +86,7 @@ namespace Opm {
                         const std::vector<std::string>& data);
 
         void add_assign(const std::string&              quantity,
-                        SegmentMatcherFactory           segment_matcher_factory,
+                        SegmentMatcherFactory           create_segment_matcher,
                         const std::vector<std::string>& selector,
                         double                          value,
                         std::size_t                     report_step);
@@ -104,14 +104,14 @@ namespace Opm {
         void eval_assign(std::size_t           report_step,
                          const Schedule&       sched,
                          const WellMatcher&    wm,
-                         SegmentMatcherFactory segment_matcher_factory,
+                         SegmentMatcherFactory create_segment_matcher,
                          SummaryState&         st,
                          UDQState&             udq_state) const;
 
         void eval(std::size_t           report_step,
                   const Schedule&       sched,
                   const WellMatcher&    wm,
-                  SegmentMatcherFactory segment_matcher_factory,
+                  SegmentMatcherFactory create_segment_matcher,
                   SummaryState&         st,
                   UDQState&             udq_state) const;
 
@@ -192,7 +192,7 @@ namespace Opm {
                               std::size_t                     report_step);
 
         void add_enumerated_assign(const std::string&              quantity,
-                                   SegmentMatcherFactory           segment_matcher_factory,
+                                   SegmentMatcherFactory           create_segment_matcher,
                                    const std::vector<std::string>& selector,
                                    double                          value,
                                    std::size_t                     report_step);
