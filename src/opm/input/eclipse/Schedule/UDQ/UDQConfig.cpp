@@ -110,9 +110,19 @@ namespace {
         Opm::UDQSet operator()(const Opm::UDQAssign& assign) const
         {
             if (! this->eval_.has_value()) {
+                // First call to operator().
+                //
+                // Create evaluation function using whatever state was
+                // captured in the creation function, for instance a "const
+                // UDQContext&".
+                //
+                // Note: This is deferred initialisation.  The create_()
+                // call could be rather expensive so we don't incur the cost
+                // of calling the function until we know we that we have to.
                 this->eval_ = this->create_();
             }
 
+            // Evaluate type dependent UDQ ASSIGN statement.
             return (*this->eval_)(assign);
         }
 
