@@ -74,6 +74,22 @@
 #include <fmt/format.h>
 
 namespace {
+    /// \brief Whether a keyword is a global keyword and how many to skip
+    ///
+    /// Those are allowed before RUNSPEC.
+    /// \return false if this is not a global keyword or the number of keywords to skip
+    ///               otherwise (including itself.
+    bool isGlobalKeyword(const Opm::DeckKeyword& keyword ) {
+        const auto& name = keyword.name();
+        for( const auto& x : { "ECHO", "NOECHO",
+                              "INCLUDE", "COLUMNS", "FORMFEED",
+                              "SKIP", "ENDSKIP",
+                              "SKIP100", "SKIP300" } )
+            if( name == x ) return true;
+
+        return false;
+    }
+
     // If ROCKOPTS does NOT exist, then the number of records is NTPVT (= TABDIMS(2))
     //
     // Otherwise, the number of records depends on ROCKOPTS(3), (= TABLE_TYPE)
@@ -1582,19 +1598,25 @@ std::vector<std::string> Parser::getAllDeckNames () const {
         // We put errors on the top level to the end of the list to make them
         // more prominent
         std::vector<std::string> topLevelErrors;
+        size_t curKwIdx = 0;
 
-        if( deck[0].name() != "RUNSPEC" ) {
+        while(curKwIdx < deck.size() && isGlobalKeyword(deck[curKwIdx])) {
+            ++curKwIdx;
+        }
+
+        bool validKwIdx = curKwIdx < deck.size();
+        if( !validKwIdx || deck[curKwIdx].name() != "RUNSPEC" ) {
             std::string msg = "The first keyword of a valid deck must be RUNSPEC (is {})\n";
             auto curKeyword = deck[0];
             topLevelErrors.push_back(Log::fileMessage(curKeyword.location(),
-                                                      fmt::format(msg, deck[0].name())));
+                                                      fmt::format(msg,
+                                                                  (validKwIdx)? deck[curKwIdx].name() : "")));
             deckValid = false;
         }
 
-        std::string curSectionName = deck[0].name();
-        size_t curKwIdx = 1;
+        std::string curSectionName = validKwIdx? deck[curKwIdx].name() : "";
 
-        for (; curKwIdx < deck.size(); ++curKwIdx) {
+        for (++curKwIdx; curKwIdx < deck.size(); ++curKwIdx) {
                 auto checker = [&errorGuard, &deckValid, &parser, curSectionName,
                                 ensureKeywordSectionAffiliation, errorKey]
                     (const std::string& curKeywordName, const KeywordLocation& location)
