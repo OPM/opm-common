@@ -1250,11 +1250,7 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
         return {
             [report_step, this]() -> std::unique_ptr<SegmentMatcher>
             {
-                const auto ix = (report_step < this->snapshots.size())
-                    ? report_step
-                    : this->snapshots.size() - 1;
-
-                return std::make_unique<SegmentMatcher>(this->snapshots[ix]);
+                return std::make_unique<SegmentMatcher>((*this)[report_step]);
             }
         };
     }
