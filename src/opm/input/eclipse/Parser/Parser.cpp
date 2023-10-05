@@ -1579,16 +1579,21 @@ std::vector<std::string> Parser::getAllDeckNames () const {
 
         bool deckValid = true;
         const std::string errorKey = "SECTION_TOPOLOGY_ERROR";
+        // We put errors on the top level to the end of the list to make them
+        // more prominent
+        std::vector<std::string> topLevelErrors;
 
         if( deck[0].name() != "RUNSPEC" ) {
-            std::string msg = "The first keyword of a valid deck must be RUNSPEC\n";
+            std::string msg = "The first keyword of a valid deck must be RUNSPEC (is {})\n";
             auto curKeyword = deck[0];
-            errorGuard.addError(errorKey, Log::fileMessage(curKeyword.location(), msg) );
+            topLevelErrors.push_back(Log::fileMessage(curKeyword.location(),
+                                                      fmt::format(msg, deck[0].name())));
             deckValid = false;
         }
 
         std::string curSectionName = deck[0].name();
         size_t curKwIdx = 1;
+
         for (; curKwIdx < deck.size(); ++curKwIdx) {
                 auto checker = [&errorGuard, &deckValid, &parser, curSectionName,
                                 ensureKeywordSectionAffiliation, errorKey]
@@ -1641,7 +1646,7 @@ std::vector<std::string> Parser::getAllDeckNames () const {
                 if (curKeywordName != "GRID") {
                     std::string msg =
                         "The RUNSPEC section must be followed by GRID instead of "+curKeywordName;
-                    errorGuard.addError(errorKey, Log::fileMessage(curKeyword.location(), msg) );
+                    topLevelErrors.push_back(Log::fileMessage(curKeyword.location(), msg) );
                     deckValid = false;
                 }
 
@@ -1651,7 +1656,7 @@ std::vector<std::string> Parser::getAllDeckNames () const {
                 if (curKeywordName != "EDIT" && curKeywordName != "PROPS") {
                     std::string msg =
                         "The GRID section must be followed by EDIT or PROPS instead of "+curKeywordName;
-                    errorGuard.addError(errorKey, Log::fileMessage(curKeyword.location(), msg) );
+                    topLevelErrors.push_back(Log::fileMessage(curKeyword.location(), msg) );
                     deckValid = false;
                 }
 
@@ -1661,7 +1666,7 @@ std::vector<std::string> Parser::getAllDeckNames () const {
                 if (curKeywordName != "PROPS") {
                     std::string msg =
                         "The EDIT section must be followed by PROPS instead of "+curKeywordName;
-                    errorGuard.addError(errorKey, Log::fileMessage(curKeyword.location(), msg) );
+                    topLevelErrors.push_back(Log::fileMessage(curKeyword.location(), msg) );
                     deckValid = false;
                 }
 
@@ -1671,7 +1676,7 @@ std::vector<std::string> Parser::getAllDeckNames () const {
                 if (curKeywordName != "REGIONS" && curKeywordName != "SOLUTION") {
                     std::string msg =
                         "The PROPS section must be followed by REGIONS or SOLUTION instead of "+curKeywordName;
-                    errorGuard.addError(errorKey, Log::fileMessage(curKeyword.location(), msg) );
+                    topLevelErrors.push_back(Log::fileMessage(curKeyword.location(), msg) );
                     deckValid = false;
                 }
 
@@ -1681,7 +1686,7 @@ std::vector<std::string> Parser::getAllDeckNames () const {
                 if (curKeywordName != "SOLUTION") {
                     std::string msg =
                         "The REGIONS section must be followed by SOLUTION instead of "+curKeywordName;
-                    errorGuard.addError(errorKey, Log::fileMessage(curKeyword.location(), msg) );
+                    topLevelErrors.push_back(Log::fileMessage(curKeyword.location(), msg) );
                     deckValid = false;
                 }
 
@@ -1691,7 +1696,7 @@ std::vector<std::string> Parser::getAllDeckNames () const {
                 if (curKeywordName != "SUMMARY" && curKeywordName != "SCHEDULE") {
                     std::string msg =
                         "The SOLUTION section must be followed by SUMMARY or SCHEDULE instead of "+curKeywordName;
-                    errorGuard.addError(errorKey, Log::fileMessage(curKeyword.location(), msg) );
+                    topLevelErrors.push_back(Log::fileMessage(curKeyword.location(), msg) );
                     deckValid = false;
                 }
 
@@ -1701,7 +1706,7 @@ std::vector<std::string> Parser::getAllDeckNames () const {
                 if (curKeywordName != "SCHEDULE") {
                     std::string msg =
                         "The SUMMARY section must be followed by SCHEDULE instead of "+curKeywordName;
-                    errorGuard.addError(errorKey, Log::fileMessage(curKeyword.location(), msg) );
+                    topLevelErrors.push_back(Log::fileMessage(curKeyword.location(), msg) );
                     deckValid = false;
                 }
 
@@ -1712,7 +1717,7 @@ std::vector<std::string> Parser::getAllDeckNames () const {
                 std::string msg =
                     "The SCHEDULE section must be the last one ("
                     +curKeywordName+" specified after SCHEDULE)";
-                errorGuard.addError(errorKey, Log::fileMessage(curKeyword.location(), msg) );
+                topLevelErrors.push_back(Log::fileMessage(curKeyword.location(), msg) );
                 deckValid = false;
             }
         }
@@ -1722,8 +1727,12 @@ std::vector<std::string> Parser::getAllDeckNames () const {
             const auto& curKeyword = deck[deck.size() - 1];
             std::string msg =
                 "The last section of a valid deck must be SCHEDULE (is "+curSectionName+")";
-            errorGuard.addError(errorKey, Log::fileMessage(curKeyword.location(), msg) );
+            topLevelErrors.push_back(Log::fileMessage(curKeyword.location(), msg) );
             deckValid = false;
+        }
+
+        for(const auto& err: topLevelErrors) {
+            errorGuard.addError(errorKey, err);
         }
 
         return deckValid;
