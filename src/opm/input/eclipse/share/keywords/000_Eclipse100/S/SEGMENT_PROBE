@@ -39,6 +39,7 @@
     "SWVIS"
   ],
   "comment": "This list is incomplete",
+  "deck_name_regex": "SU.+",
   "items": [
     {
       "name": "Well",

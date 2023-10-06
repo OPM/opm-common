@@ -19,6 +19,8 @@
 
 #include <opm/input/eclipse/Schedule/UDQ/UDQSet.hpp>
 
+#include <opm/input/eclipse/Schedule/MSW/SegmentMatcher.hpp>
+
 #include <opm/common/utility/shmatch.hpp>
 
 #include <algorithm>
@@ -270,6 +272,20 @@ UDQSet UDQSet::groups(const std::string&              name,
     return us;
 }
 
+UDQSet UDQSet::segments(const std::string&                      name,
+                        const std::vector<EnumeratedWellItems>& segments)
+{
+    return { name, UDQVarType::SEGMENT_VAR, segments };
+}
+
+UDQSet UDQSet::segments(const std::string&                      name,
+                        const std::vector<EnumeratedWellItems>& segments,
+                        const double                            scalar_value)
+{
+    auto us = UDQSet::segments(name, segments);
+    us.assign(scalar_value);
+    return us;
+}
 
 bool UDQSet::has(const std::string& name) const
 {
@@ -754,6 +770,22 @@ bool UDQSet::operator==(const UDQSet& other) const
     return (this->m_name == other.m_name)
         && (this->m_var_type == other.m_var_type)
         && (this->values == other.values);
+}
+
+std::vector<UDQSet::EnumeratedWellItems>
+UDQSet::getSegmentItems(const SegmentSet& segSet)
+{
+    const auto numWells = segSet.numWells();
+
+    auto items = std::vector<Opm::UDQSet::EnumeratedWellItems>(numWells);
+    for (auto wellID = 0*numWells; wellID < numWells; ++wellID) {
+        auto segRange = segSet.segments(wellID);
+
+        items[wellID].well = segRange.well();
+        items[wellID].numbers.assign(segRange.begin(), segRange.end());
+    }
+
+    return items;
 }
 
 } // namespace Opm

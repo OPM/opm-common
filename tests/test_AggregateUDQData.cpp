@@ -2,97 +2,113 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include <opm/output/eclipse/AggregateUDQData.hpp>
+
+#include <opm/output/eclipse/AggregateConnectionData.hpp>
 #include <opm/output/eclipse/AggregateGroupData.hpp>
 #include <opm/output/eclipse/AggregateWellData.hpp>
-#include <opm/output/eclipse/AggregateConnectionData.hpp>
-#include <opm/input/eclipse/EclipseState/EclipseState.hpp>
-#include <opm/input/eclipse/Schedule/Schedule.hpp>
-#include <opm/input/eclipse/Schedule/SummaryState.hpp>
-#include <opm/input/eclipse/Parser/Parser.hpp>
-#include <opm/input/eclipse/Deck/Deck.hpp>
-
-#include <opm/output/eclipse/AggregateUDQData.hpp>
-#include <opm/output/eclipse/WriteRestartHelpers.hpp>
-
+#include <opm/output/eclipse/DoubHEAD.hpp>
 #include <opm/output/eclipse/InteHEAD.hpp>
 #include <opm/output/eclipse/VectorItems/intehead.hpp>
-#include <opm/output/eclipse/DoubHEAD.hpp>
+#include <opm/output/eclipse/WriteRestartHelpers.hpp>
+
+#include <opm/output/data/Wells.hpp>
+
+#include <opm/io/eclipse/ERst.hpp>
+#include <opm/io/eclipse/OutputStream.hpp>
+#include <opm/io/eclipse/RestartFileView.hpp>
+#include <opm/io/eclipse/rst/state.hpp>
+
+#include <opm/input/eclipse/EclipseState/EclipseState.hpp>
+
 #include <opm/input/eclipse/Python/Python.hpp>
 
-#include <opm/input/eclipse/Schedule/UDQ/UDQInput.hpp>
+#include <opm/input/eclipse/Schedule/Action/State.hpp>
+#include <opm/input/eclipse/Schedule/MSW/SegmentMatcher.hpp>
+#include <opm/input/eclipse/Schedule/Schedule.hpp>
+#include <opm/input/eclipse/Schedule/ScheduleState.hpp>
+#include <opm/input/eclipse/Schedule/SummaryState.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQActive.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQConfig.hpp>
-#include <opm/input/eclipse/Schedule/UDQ/UDQParams.hpp>
-#include <opm/input/eclipse/Schedule/UDQ/UDQState.hpp>
-#include <opm/input/eclipse/Schedule/UDQ/UDQSet.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQEnums.hpp>
+#include <opm/input/eclipse/Schedule/UDQ/UDQInput.hpp>
+#include <opm/input/eclipse/Schedule/UDQ/UDQParams.hpp>
+#include <opm/input/eclipse/Schedule/UDQ/UDQSet.hpp>
+#include <opm/input/eclipse/Schedule/UDQ/UDQState.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellMatcher.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellTestState.hpp>
 
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
 #include <opm/input/eclipse/Units/Units.hpp>
-#include <opm/common/utility/TimeService.hpp>
-#include <opm/io/eclipse/ERst.hpp>
-#include <opm/io/eclipse/RestartFileView.hpp>
-#include <opm/io/eclipse/rst/state.hpp>
-#include <opm/input/eclipse/Schedule/Action/State.hpp>
-#include <opm/output/data/Wells.hpp>
 
-#include <opm/io/eclipse/OutputStream.hpp>
+#include <opm/common/utility/TimeService.hpp>
+
+#include <opm/input/eclipse/Parser/Parser.hpp>
+
+#include <opm/input/eclipse/Deck/Deck.hpp>
 
 #include <algorithm>
-#include <stdexcept>
-#include <utility>
+#include <cstddef>
 #include <exception>
-#include <iostream>
+#include <memory>
+#include <stdexcept>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "tests/WorkArea.hpp"
 
 namespace {
 
-    Opm::Deck first_sim(std::string fname) {
+    Opm::Deck first_sim(const std::string& fname)
+    {
         return Opm::Parser{}.parseFile(fname);
     }
-    /*
-     Opm::UDQActive udq_active() {
-      int update_count = 0;
-      // construct record data for udq_active
-      Opm::UDQParams params;
-      Opm::UDQConfig conf(params);
-      Opm::UDQActive udq_act;
-      Opm::UDAValue uda1("WUOPRL");
-      update_count += udq_act.update(conf, uda1, "PROD1", Opm::UDAControl::WCONPROD_ORAT);
 
-      Opm::UDAValue uda2("WULPRL");
-      update_count += udq_act.update(conf, uda2, "PROD1", Opm::UDAControl::WCONPROD_LRAT);
-      Opm::UDAValue uda3("WUOPRU");
-      update_count += udq_act.update(conf, uda3, "PROD2", Opm::UDAControl::WCONPROD_ORAT);
-      Opm::UDAValue uda4("WULPRU");
-      update_count += udq_act.update(conf, uda4, "PROD2", Opm::UDAControl::WCONPROD_LRAT);
+#if 0
+    Opm::UDQActive udq_active()
+    {
+        int update_count = 0;
+        // construct record data for udq_active
+        Opm::UDQParams params;
+        Opm::UDQConfig conf(params);
+        Opm::UDQActive udq_act;
+        Opm::UDAValue uda1("WUOPRL");
+        update_count += udq_act.update(conf, uda1, "PROD1", Opm::UDAControl::WCONPROD_ORAT);
 
-      for (std::size_t index=0; index < udq_act.IUAD_size(); index++)
-      {
-          const auto & record = udq_act[index];
-          auto ind = record.input_index;
-          auto udq_key = record.udq;
-          auto name = record.wgname;
-          auto ctrl_type = record.control;
-       }
-      return udq_act;
+        Opm::UDAValue uda2("WULPRL");
+        update_count += udq_act.update(conf, uda2, "PROD1", Opm::UDAControl::WCONPROD_LRAT);
+        Opm::UDAValue uda3("WUOPRU");
+        update_count += udq_act.update(conf, uda3, "PROD2", Opm::UDAControl::WCONPROD_ORAT);
+        Opm::UDAValue uda4("WULPRU");
+        update_count += udq_act.update(conf, uda4, "PROD2", Opm::UDAControl::WCONPROD_LRAT);
+
+        for (std::size_t index = 0; index < udq_act.IUAD_size(); ++index) {
+            const auto & record = udq_act[index];
+            auto ind = record.input_index;
+            auto udq_key = record.udq;
+            auto name = record.wgname;
+            auto ctrl_type = record.control;
+        }
+
+        return udq_act;
     }
-    */
-}
+#endif
 
+    Opm::UDQSet
+    make_udq_set(const std::string&              name,
+                 const Opm::UDQVarType           var_type,
+                 const std::vector<std::string>& wgnames,
+                 const std::vector<double>&      values)
+    {
+        Opm::UDQSet s(name, var_type, wgnames);
 
-Opm::UDQSet make_udq_set(const std::string& name, Opm::UDQVarType var_type, const std::vector<std::string>& wgnames, const std::vector<double>& values) {
-    Opm::UDQSet s(name, var_type, wgnames);
-    for (std::size_t i=0; i < values.size(); i++)
-        s.assign(i , values[i]);
+        for (std::size_t i = 0; i < values.size(); ++i) {
+            s.assign(i, values[i]);
+        }
 
-    return s;
-}
+        return s;
+    }
 
     Opm::UDQState make_udq_state()
     {
@@ -170,38 +186,42 @@ Opm::UDQSet make_udq_set(const std::string& name, Opm::UDQVarType var_type, cons
         return state;
     }
 
+    struct SimulationCase
+    {
+        explicit SimulationCase(const Opm::Deck& deck)
+            : es   { deck }
+            , grid { deck }
+            , sched{ deck, es, std::make_shared<Opm::Python>() }
+        {}
 
-//int main(int argc, char* argv[])
-struct SimulationCase
-{
-    explicit SimulationCase(const Opm::Deck& deck)
-        : es   { deck }
-        , grid { deck }
-        , python { std::make_shared<Opm::Python>()}
-        , sched{ deck, es, python }
-    {}
+        // Order requirement: 'es' must be declared/initialised before 'sched'.
+        Opm::EclipseState es;
+        Opm::EclipseGrid  grid;
+        Opm::Schedule     sched;
+        Opm::Parser       parser;
+    };
 
-    // Order requirement: 'es' must be declared/initialised before 'sched'.
-    Opm::EclipseState es;
-    Opm::EclipseGrid  grid;
-    std::shared_ptr<Opm::Python> python;
-    Opm::Schedule     sched;
-    Opm::Parser       parser;
-};
+    bool udq_contains(const std::vector<Opm::UDQActive::RstRecord>& records,
+                      const Opm::UDAControl                         control,
+                      const std::string&                            udq,
+                      const std::string&                            wgname)
+    {
+        auto find_iter = std::find_if(records.begin(), records.end(),
+            [&control, &udq, &wgname](const Opm::UDQActive::RstRecord& record)
+            {
+                return (record.control == control)
+                    && (record.wgname == wgname)
+                    && (record.value.get<std::string>() == udq);
+            });
 
-BOOST_AUTO_TEST_SUITE(Aggregate_UDQ)
+        return find_iter != records.end();
+    }
 
-bool udq_contains(const std::vector<Opm::UDQActive::RstRecord>& records, Opm::UDAControl control, const std::string& udq, const std::string wgname) {
-    auto find_iter = std::find_if(records.begin(),
-                                  records.end(),
-                                  [&control, &udq, &wgname] (const Opm::UDQActive::RstRecord& record) {
-                                      return record.control == control &&
-                                             record.wgname == wgname &&
-                                             record.value.get<std::string>() == udq;
-                                  });
-    return find_iter != records.end();
 }
 
+// ---------------------------------------------------------------------------
+
+BOOST_AUTO_TEST_SUITE(Aggregate_UDQ)
 
 // test constructed UDQ restart data
 BOOST_AUTO_TEST_CASE (Declared_UDQ_data)
@@ -219,11 +239,10 @@ BOOST_AUTO_TEST_CASE (Declared_UDQ_data)
     // Report Step 1: 2008-10-10 --> 2011-01-20
     const auto rptStep = std::size_t{1};
 
-
     double secs_elapsed = 3.1536E07;
     const auto ih = Opm::RestartIO::Helpers::
         createInteHead(es, grid, sched, secs_elapsed,
-                       rptStep, rptStep, rptStep-1);
+                       rptStep, rptStep, rptStep - 1);
 
     //set dummy value for next_step_size
     const double next_step_size= 0.1;
@@ -234,10 +253,11 @@ BOOST_AUTO_TEST_CASE (Declared_UDQ_data)
 
     const auto udqDims = Opm::RestartIO::Helpers::createUdqDims(sched, rptStep-1, ih);
     auto  udqData = Opm::RestartIO::Helpers::AggregateUDQData(udqDims);
-    udqData.captureDeclaredUDQData(sched, rptStep-1, udq_state, ih);
+    udqData.captureDeclaredUDQData(sched, rptStep - 1, udq_state, ih);
 
     {
         WorkArea work;
+
         {
             std::string outputDir = "./";
             std::string baseName = "TEST_UDQRST";
@@ -308,7 +328,6 @@ BOOST_AUTO_TEST_CASE (Declared_UDQ_data)
             BOOST_CHECK_EQUAL(dh[213], 0.0);
             BOOST_CHECK_EQUAL(dh[214], 1.0E-4);
         }
-
 
         {
             /*
@@ -731,7 +750,6 @@ BOOST_AUTO_TEST_CASE (Declared_UDQ_data)
             BOOST_CHECK_EQUAL(zUdn[start + 1].c_str(), "SM3/DAY "); // udq NO. 6
         }
 
-
         {
             /*
             ZUDL:
@@ -771,7 +789,6 @@ BOOST_AUTO_TEST_CASE (Declared_UDQ_data)
             BOOST_CHECK_EQUAL(zUdl[start + 2].c_str(), ".65     "); // udq NO. 1
             BOOST_CHECK_EQUAL(zUdl[start + 3].c_str(), "        "); // udq NO. 1
         }
-
 
         {
             /*
@@ -816,7 +833,6 @@ BOOST_AUTO_TEST_CASE (Declared_UDQ_data)
             BOOST_CHECK_EQUAL(dUdg[start + 4], -0.3E+21); // duDg NO. 1
         }
 
-
         {
             /*
             'DUDG    '          1 'DOUB'
@@ -841,12 +857,14 @@ BOOST_AUTO_TEST_CASE (Declared_UDQ_data)
             BOOST_CHECK_EQUAL(rst_state.header.num_udq(), 44);
             BOOST_CHECK_EQUAL(rst_state.udqs.size(), 44);
 
-            std::vector<std::pair<std::string, std::string>> expected = {{"WUOPRL", "SM3/DAY"},
-                                                                         {"WULPRL", "SM3/DAY"},
-                                                                         {"WUOPRU", "SM3/DAY"},
-                                                                         {"GUOPRU", "SM3/DAY"},
-                                                                         {"WULPRU", "SM3/DAY"},
-                                                                         {"FULPR", "SM3/DAY"}};
+            const auto expected = std::vector<std::pair<std::string, std::string>> {
+                {"WUOPRL", "SM3/DAY"},
+                {"WULPRL", "SM3/DAY"},
+                {"WUOPRU", "SM3/DAY"},
+                {"GUOPRU", "SM3/DAY"},
+                {"WULPRU", "SM3/DAY"},
+                {"FULPR" , "SM3/DAY"},
+            };
 
             std::size_t iudq = 0;
             for (const auto& [name, unit] : expected) {
@@ -855,7 +873,6 @@ BOOST_AUTO_TEST_CASE (Declared_UDQ_data)
                 iudq += 1;
             }
 
-
             const std::size_t report_step = 1;
             const auto& udq_params = es.runspec().udqParams();
             const auto& input_config = sched[report_step].udq();
@@ -863,12 +880,20 @@ BOOST_AUTO_TEST_CASE (Declared_UDQ_data)
             BOOST_CHECK_EQUAL(input_config.size(), rst_config.size());
             BOOST_CHECK_EQUAL(input_config.definitions().size(), rst_config.definitions().size());
 
-            const std::vector<std::string>& wells = {"PROD1", "PROD2", "WINJ1", "WINJ2"};
+            const auto wells = std::vector<std::string> {
+                "PROD1", "PROD2", "WINJ1", "WINJ2",
+            };
             Opm::UDQState rst_udq_state(udq_params.undefinedValue());
             Opm::UDQFunctionTable udqft(udq_params);
             auto wm = Opm::WellMatcher(wells);
-            Opm::UDQContext input_context(udqft, wm, st, udq_state);
-            Opm::UDQContext rst_context(udqft, wm, st, rst_udq_state);
+
+            auto segmentMatcherFactory = []()
+            {
+                return std::make_unique<Opm::SegmentMatcher>(Opm::ScheduleState{});
+            };
+
+            Opm::UDQContext input_context(udqft, wm, segmentMatcherFactory, st, udq_state);
+            Opm::UDQContext rst_context(udqft, wm, segmentMatcherFactory, st, rst_udq_state);
 
             rst_udq_state.load_rst(rst_state);
             for (const auto& input_def : input_config.definitions()) {
@@ -888,9 +913,10 @@ BOOST_AUTO_TEST_CASE (Declared_UDQ_data)
                 BOOST_CHECK(input_eval == rst_eval);
             }
 
-
-            const auto& uda_records = Opm::UDQActive::load_rst(
-                es.getUnits(), input_config, rst_state, sched.wellNames(report_step), sched.groupNames(report_step));
+            const auto uda_records =
+                Opm::UDQActive::load_rst(es.getUnits(), input_config, rst_state,
+                                         sched.wellNames(report_step),
+                                         sched.groupNames(report_step));
 
             BOOST_CHECK_EQUAL(uda_records.size(), 4);
             BOOST_CHECK(udq_contains(uda_records, Opm::UDAControl::WCONPROD_ORAT, "WUOPRU", "PROD1"));
@@ -916,7 +942,6 @@ BOOST_AUTO_TEST_CASE (Declared_UDQ_data_2)
     auto rptStep = std::size_t{1};
     auto simStep = rptStep - 1;
 
-
     double secs_elapsed = 3.1536E07;
     auto ih = Opm::RestartIO::Helpers::
         createInteHead(es, grid, sched, secs_elapsed,
@@ -925,14 +950,13 @@ BOOST_AUTO_TEST_CASE (Declared_UDQ_data_2)
     //set dummy value for next_step_size
     double next_step_size= 0.1;
     auto dh = Opm::RestartIO::Helpers::createDoubHead(es, sched, simStep, simStep+1,
-                secs_elapsed, next_step_size);
+                                                      secs_elapsed, next_step_size);
 
     auto lh = Opm::RestartIO::Helpers::createLogiHead(es);
 
     auto udqDims = Opm::RestartIO::Helpers::createUdqDims(sched, simStep, ih);
-    auto  udqData = Opm::RestartIO::Helpers::AggregateUDQData(udqDims);
+    auto udqData = Opm::RestartIO::Helpers::AggregateUDQData(udqDims);
     udqData.captureDeclaredUDQData(sched, simStep, udq_state, ih);
-
 
     {
         const auto& iGph = udqData.getIGPH();
@@ -952,7 +976,7 @@ BOOST_AUTO_TEST_CASE (Declared_UDQ_data_2)
     //set dummy value for next_step_size
     next_step_size= 0.1;
     dh = Opm::RestartIO::Helpers::createDoubHead(es, sched, simStep, simStep+1,
-            secs_elapsed, next_step_size);
+                                                 secs_elapsed, next_step_size);
 
     lh = Opm::RestartIO::Helpers::createLogiHead(es);
 
@@ -960,14 +984,12 @@ BOOST_AUTO_TEST_CASE (Declared_UDQ_data_2)
     udqData = Opm::RestartIO::Helpers::AggregateUDQData(udqDims);
     udqData.captureDeclaredUDQData(sched, simStep, udq_state, ih);
 
-
     {
         const auto& iGph = udqData.getIGPH();
 
         auto start = 0*udqDims[1];
         BOOST_CHECK_EQUAL(iGph[start + 0] ,  2); // (2 - water injection)
     }
-
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BOOST_AUTO_TEST_SUITE_END() // Aggregate_UDQ

@@ -24,10 +24,12 @@
 #include <opm/common/OpmLog/KeywordLocation.hpp>
 #include <opm/common/utility/OpmInputError.hpp>
 
+#include <opm/input/eclipse/Schedule/MSW/SegmentMatcher.hpp>
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 #include <opm/input/eclipse/Schedule/SummaryState.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQEnums.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQInput.hpp>
+#include <opm/input/eclipse/Schedule/UDQ/UDQSet.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQState.hpp>
 
 #include <opm/input/eclipse/Parser/ParserKeywords/U.hpp> // UDQ
@@ -36,6 +38,7 @@
 
 #include <algorithm>
 #include <cstddef>
+#include <functional>
 #include <stdexcept>
 #include <string>
 #include <tuple>
@@ -55,6 +58,83 @@ namespace {
             return s;
         }
     }
+
+    class EvalAssign
+    {
+    public:
+        static EvalAssign field()
+        {
+            return { []() {
+                return [](const auto& assign) { return assign.eval(); };
+            }};
+        }
+
+        static EvalAssign group(const std::size_t    report_step,
+                                const Opm::Schedule& sched)
+        {
+            return { [report_step, &sched]() {
+                return [groups = sched.groupNames(report_step)]
+                    (const auto& assign)
+                {
+                    return assign.eval(groups);
+                };
+            }};
+        }
+
+        static EvalAssign well(const std::size_t    report_step,
+                               const Opm::Schedule& sched)
+        {
+            return { [report_step, &sched]() {
+                return [wells = sched.wellNames(report_step)]
+                    (const auto& assign)
+                {
+                    return assign.eval(wells);
+                };
+            }};
+        }
+
+        static EvalAssign segment(const Opm::UDQContext& context)
+        {
+            return { [&context]() {
+                // Result set should be sized according to total number of
+                // segments.
+                const auto segSet = context.segments();
+
+                return [items = Opm::UDQSet::getSegmentItems(segSet)](const auto& assign)
+                {
+                    return assign.eval(items);
+                };
+            }};
+        }
+
+        Opm::UDQSet operator()(const Opm::UDQAssign& assign) const
+        {
+            if (! this->eval_.has_value()) {
+                // First call to operator().
+                //
+                // Create evaluation function using whatever state was
+                // captured in the creation function, for instance a "const
+                // UDQContext&".
+                //
+                // Note: This is deferred initialisation.  The create_()
+                // call could be rather expensive so we don't incur the cost
+                // of calling the function until we know we that we have to.
+                this->eval_ = this->create_();
+            }
+
+            // Evaluate type dependent UDQ ASSIGN statement.
+            return (*this->eval_)(assign);
+        }
+
+    private:
+        using Eval = std::function<Opm::UDQSet(const Opm::UDQAssign&)>;
+        using Create = std::function<Eval()>;
+
+        Create create_;
+        mutable std::optional<Eval> eval_;
+
+        EvalAssign(Create create) : create_{ std::move(create) } {}
+    };
 } // Anonymous namespace
 
 namespace Opm {
@@ -121,21 +201,23 @@ namespace Opm {
     }
 
     void UDQConfig::add_assign(const std::string&              quantity,
+                               SegmentMatcherFactory           create_segment_matcher,
                                const std::vector<std::string>& selector,
                                const double                    value,
                                const std::size_t               report_step)
     {
         this->add_node(quantity, UDQAction::ASSIGN);
 
-        auto assignment = this->m_assignments.find(quantity);
-        if (assignment == this->m_assignments.end()) {
-            this->m_assignments.emplace(std::piecewise_construct,
-                                        std::forward_as_tuple(quantity),
-                                        std::forward_as_tuple(quantity, selector,
-                                                              value, report_step));
-        }
-        else {
-            assignment->second.add_record(selector, value, report_step);
+        switch (UDQ::varType(quantity)) {
+        case UDQVarType::SEGMENT_VAR:
+            this->add_enumerated_assign(quantity,
+                                        std::move(create_segment_matcher),
+                                        selector, value, report_step);
+            break;
+
+        default:
+            this->add_named_assign(quantity, selector, value, report_step);
+            break;
         }
     }
 
@@ -217,7 +299,8 @@ namespace Opm {
         define.update_status(update_status, report_step);
     }
 
-    void UDQConfig::add_record(const DeckRecord&      record,
+    void UDQConfig::add_record(SegmentMatcherFactory  create_segment_matcher,
+                               const DeckRecord&      record,
                                const KeywordLocation& location,
                                const std::size_t      report_step)
     {
@@ -236,7 +319,9 @@ namespace Opm {
         else if (action == UDQAction::ASSIGN) {
             const auto selector = std::vector<std::string>(data.begin(), data.end() - 1);
             const auto value = std::stod(data.back());
-            this->add_assign(quantity, selector, value, report_step);
+            this->add_assign(quantity,
+                             std::move(create_segment_matcher),
+                             selector, value, report_step);
         }
         else if (action == UDQAction::DEFINE) {
             this->add_define(quantity, location, data, report_step);
@@ -445,28 +530,31 @@ namespace Opm {
                                 UDQState&         udq_state,
                                 UDQContext&       context) const
     {
-        const auto wells  = sched.wellNames(report_step);
-        const auto groups = sched.groupNames(report_step);
+        const auto handlers = std::map<UDQVarType, EvalAssign> {
+            { UDQVarType::FIELD_VAR  , EvalAssign::field()                   },
+            { UDQVarType::GROUP_VAR  , EvalAssign::group(report_step, sched) },
+            { UDQVarType::WELL_VAR   , EvalAssign::well(report_step, sched)  },
+            { UDQVarType::SEGMENT_VAR, EvalAssign::segment(context)          },
+        };
 
-        for (const auto& assign : this->assignments(UDQVarType::WELL_VAR)) {
-            if (udq_state.assign(assign.report_step(), assign.keyword())) {
-                auto ws = assign.eval(wells);
-                context.update_assign(report_step, assign.keyword(), ws);
+        for (const auto& index_pair : this->input_index) {
+            const auto& keyword = index_pair.first;
+            auto asgn_pos = this->m_assignments.find(keyword);
+            if ((asgn_pos == this->m_assignments.end()) ||
+                ! udq_state.assign(asgn_pos->second.report_step(), keyword))
+            {
+                // No such ASSIGN or ASSIGN not active
+                continue;
             }
-        }
 
-        for (const auto& assign : this->assignments(UDQVarType::GROUP_VAR)) {
-            if (udq_state.assign(assign.report_step(), assign.keyword())) {
-                auto ws = assign.eval(groups);
-                context.update_assign(report_step, assign.keyword(), ws);
+            auto handler = handlers.find(asgn_pos->second.var_type());
+            if (handler == handlers.end()) {
+                // Unhandled variable type.
+                continue;
             }
-        }
 
-        for (const auto& assign : this->assignments(UDQVarType::FIELD_VAR)) {
-            if (udq_state.assign(assign.report_step(), assign.keyword())) {
-                auto ws = assign.eval();
-                context.update_assign(report_step, assign.keyword(), ws);
-            }
+            context.update_assign(report_step, keyword,
+                                  handler->second(asgn_pos->second));
         }
     }
 
@@ -483,6 +571,7 @@ namespace Opm {
         select_var_type |= var_type_bit(UDQVarType::WELL_VAR);
         select_var_type |= var_type_bit(UDQVarType::GROUP_VAR);
         select_var_type |= var_type_bit(UDQVarType::FIELD_VAR);
+        select_var_type |= var_type_bit(UDQVarType::SEGMENT_VAR);
 
         for (const auto& [keyword, index] : this->input_index) {
             if (index.action != UDQAction::DEFINE) {
@@ -508,24 +597,30 @@ namespace Opm {
         }
     }
 
-    void UDQConfig::eval(const std::size_t  report_step,
-                         const Schedule&    sched,
-                         const WellMatcher& wm,
-                         SummaryState&      st,
-                         UDQState&          udq_state) const
+    void UDQConfig::eval(const std::size_t     report_step,
+                         const Schedule&       sched,
+                         const WellMatcher&    wm,
+                         SegmentMatcherFactory create_segment_matcher,
+                         SummaryState&         st,
+                         UDQState&             udq_state) const
     {
-        UDQContext context(this->function_table(), wm, st, udq_state);
+        UDQContext context {
+            this->function_table(), wm, std::move(create_segment_matcher), st, udq_state
+        };
         this->eval_assign(report_step, sched, udq_state, context);
         this->eval_define(report_step, udq_state, context);
     }
 
-    void UDQConfig::eval_assign(const std::size_t  report_step,
-                                const Schedule&    sched,
-                                const WellMatcher& wm,
-                                SummaryState&      st,
-                                UDQState&          udq_state) const
+    void UDQConfig::eval_assign(const std::size_t     report_step,
+                                const Schedule&       sched,
+                                const WellMatcher&    wm,
+                                SegmentMatcherFactory create_segment_matcher,
+                                SummaryState&         st,
+                                UDQState&             udq_state) const
     {
-        UDQContext context(this->function_table(), wm, st, udq_state);
+        UDQContext context {
+            this->function_table(), wm, std::move(create_segment_matcher), st, udq_state
+        };
         this->eval_assign(report_step, sched, udq_state, context);
     }
 
@@ -533,6 +628,50 @@ namespace Opm {
     {
         for (const auto& def_pair : this->m_definitions) {
             def_pair.second.required_summary(summary_keys);
+        }
+    }
+
+    void UDQConfig::add_named_assign(const std::string&              quantity,
+                                     const std::vector<std::string>& selector,
+                                     const double                    value,
+                                     const std::size_t               report_step)
+    {
+        auto [asgnPos, inserted] = this->m_assignments
+            .emplace(std::piecewise_construct,
+                     std::forward_as_tuple(quantity),
+                     std::forward_as_tuple(quantity, selector, value, report_step));
+
+        if (! inserted) {
+            asgnPos->second.add_record(selector, value, report_step);
+        }
+    }
+
+    void UDQConfig::add_enumerated_assign(const std::string&              quantity,
+                                          SegmentMatcherFactory           create_segment_matcher,
+                                          const std::vector<std::string>& selector,
+                                          const double                    value,
+                                          const std::size_t               report_step)
+    {
+        auto segmentMatcher = create_segment_matcher();
+
+        auto setDescriptor = SegmentMatcher::SetDescriptor{};
+        if (! selector.empty()) {
+            setDescriptor.wellNames(selector.front());
+        }
+        if (selector.size() > 1) {
+            setDescriptor.segmentNumber(selector[1]);
+        }
+
+        auto items = UDQSet::
+            getSegmentItems(segmentMatcher->findSegments(setDescriptor));
+
+        auto [asgnPos, inserted] = this->m_assignments
+            .emplace(std::piecewise_construct,
+                     std::forward_as_tuple(quantity),
+                     std::forward_as_tuple(quantity, items, value, report_step));
+
+        if (! inserted) {
+            asgnPos->second.add_record(std::move(items), value, report_step);
         }
     }
 

@@ -22,6 +22,7 @@
 #include <opm/common/OpmLog/OpmLog.hpp>
 #include <opm/common/utility/String.hpp>
 
+#include <opm/input/eclipse/Schedule/MSW/SegmentMatcher.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQASTNode.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQEnums.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQToken.hpp>
@@ -439,6 +440,10 @@ UDQSet UDQDefine::scatter_scalar_value(UDQSet&& res, const UDQContext& context) 
         return this->scatter_scalar_group_value(context, res[0].value());
     }
 
+    if (this->var_type() == UDQVarType::SEGMENT_VAR) {
+        return this->scatter_scalar_segment_value(context, res[0].value());
+    }
+
     return std::move(res);
 }
 
@@ -460,6 +465,16 @@ UDQSet UDQDefine::scatter_scalar_group_value(const UDQContext&            contex
     }
 
     return UDQSet::groups(this->m_keyword, context.groups(), *value);
+}
+
+UDQSet UDQDefine::scatter_scalar_segment_value(const UDQContext&            context,
+                                               const std::optional<double>& value) const
+{
+    if (! value.has_value()) {
+        return UDQSet::segments(this->m_keyword, UDQSet::getSegmentItems(context.segments()));
+    }
+
+    return UDQSet::segments(this->m_keyword, UDQSet::getSegmentItems(context.segments()), *value);
 }
 
 } // namespace Opm

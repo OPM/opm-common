@@ -30,6 +30,10 @@
 #include <vector>
 
 namespace Opm {
+    class SegmentSet;
+} // namespace Opm
+
+namespace Opm {
 
 class UDQScalar
 {
@@ -197,6 +201,9 @@ public:
         }
     };
 
+    static std::vector<EnumeratedWellItems>
+    getSegmentItems(const SegmentSet& segmentSet);
+
     /// Construct empty, named UDQ set of specific variable type
     ///
     /// \param[in] name UDQ set name
@@ -304,6 +311,11 @@ public:
     ///    this UDQ set.  Non-finite value leaves the UDQ set element
     ///    undefined.
     static UDQSet field(const std::string& name, double scalar_value);
+    static UDQSet segments(const std::string&                      name,
+                           const std::vector<EnumeratedWellItems>& segments);
+    static UDQSet segments(const std::string&                      name,
+                           const std::vector<EnumeratedWellItems>& segments,
+                           const double                            scalar_value);
 
     /// Assign value to every element of the UDQ set
     ///

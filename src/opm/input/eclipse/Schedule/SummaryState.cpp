@@ -266,6 +266,14 @@ namespace Opm
                 this->update_group_var(group, udq_set.name(), udq_value.value_or(undefined_value));
             }
         }
+        else if (var_type == UDQVarType::SEGMENT_VAR) {
+            for (const auto& udq_value : udq_set) {
+                this->update_segment_var(udq_value.wgname(),
+                                         udq_set.name(),
+                                         udq_value.number(),
+                                         udq_value.value().value_or(undefined_value));
+            }
+        }
         else {
             const auto& udq_var = udq_set[0].value();
             this->update(udq_set.name(), udq_var.value_or(undefined_value));

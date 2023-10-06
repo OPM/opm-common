@@ -19,9 +19,11 @@
 
 #include <opm/input/eclipse/Schedule/UDQ/UDQASTNode.hpp>
 
+#include <opm/input/eclipse/Schedule/MSW/SegmentMatcher.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQEnums.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQFunction.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQFunctionTable.hpp>
+#include <opm/input/eclipse/Schedule/UDQ/UDQSet.hpp>
 
 #include <memory>
 #include <set>
@@ -34,19 +36,32 @@
 
 namespace {
 
-bool is_udq(const std::string& key)
+bool is_udq_blacklist(const std::string& keyword)
 {
-    return (key.size() >= std::string::size_type{2})
-        && (key[1] == 'U');
+    static const auto udq_blacklistkw = std::unordered_set<std::string> {
+        "SUMTHIN", "SUMMARY", "RUNSUM",
+    };
+
+    return udq_blacklistkw.find(keyword) != udq_blacklistkw.end();
+}
+
+bool is_udq(const std::string& keyword)
+{
+    // Does 'keyword' match one of the patterns
+    //   AU*, BU*, CU*, FU*, GU*, RU*, SU*, or WU*?
+    using sz_t = std::string::size_type;
+
+    return (keyword.size() > sz_t{1})
+        && (keyword[1] == 'U')
+        && ! is_udq_blacklist(keyword)
+        && (keyword.find_first_of("WGFCRBSA") == sz_t{0});
 }
 
 Opm::UDQVarType init_type(const Opm::UDQTokenType token_type)
 {
-    if (token_type == Opm::UDQTokenType::number) {
-        return Opm::UDQVarType::SCALAR;
-    }
-
-    if (Opm::UDQ::scalarFunc(token_type)) {
+    if ((token_type == Opm::UDQTokenType::number) ||
+        Opm::UDQ::scalarFunc(token_type))
+    {
         return Opm::UDQVarType::SCALAR;
     }
 
@@ -132,7 +147,6 @@ UDQASTNode::UDQASTNode(const UDQTokenType                       type_arg,
 
     if ((this->var_type == UDQVarType::CONNECTION_VAR) ||
         (this->var_type == UDQVarType::REGION_VAR) ||
-        (this->var_type == UDQVarType::SEGMENT_VAR) ||
         (this->var_type == UDQVarType::AQUIFER_VAR) ||
         (this->var_type == UDQVarType::BLOCK_VAR))
     {
@@ -267,12 +281,13 @@ bool UDQASTNode::operator==(const UDQASTNode& data) const
 
 void UDQASTNode::required_summary(std::unordered_set<std::string>& summary_keys) const
 {
-    if (this->type == UDQTokenType::ecl_expr) {
-        if (std::holds_alternative<std::string>(this->value)) {
-            const auto& keyword = std::get<std::string>(this->value);
-            if (!is_udq(keyword)) {
-                summary_keys.insert(keyword);
-            }
+    if ((this->type == UDQTokenType::ecl_expr) &&
+        std::holds_alternative<std::string>(this->value))
+    {
+        if (const auto& keyword = std::get<std::string>(this->value);
+            !is_udq(keyword))
+        {
+            summary_keys.insert(keyword);
         }
     }
 
@@ -297,6 +312,10 @@ UDQASTNode::eval_expression(const UDQContext& context) const
 
     if (data_type == UDQVarType::GROUP_VAR) {
         return this->eval_group_expression(string_value, context);
+    }
+
+    if (data_type == UDQVarType::SEGMENT_VAR) {
+        return this->eval_segment_expression(string_value, context);
     }
 
     if (data_type == UDQVarType::FIELD_VAR) {
@@ -377,6 +396,54 @@ UDQASTNode::eval_group_expression(const std::string& string_value,
 }
 
 UDQSet
+UDQASTNode::eval_segment_expression(const std::string& string_value,
+                                    const UDQContext&  context) const
+{
+    const auto all_msw_segments = UDQSet::getSegmentItems(context.segments());
+    if (this->selector.empty()) {
+        auto res = UDQSet::segments(string_value, all_msw_segments);
+
+        auto index = std::size_t{0};
+        for (const auto& ms_well : all_msw_segments) {
+            for (const auto& segment : ms_well.numbers) {
+                res.assign(index++, context.get_segment_var(ms_well.well, string_value, segment));
+            }
+        }
+
+        return res;
+    }
+
+    const auto selected_segments = context.segments(this->selector);
+    if (selected_segments.empty()) {
+        // No matching segments.  Could be because the 'selector' only
+        // applies to MS wells that are no yet online, or because the
+        // segments don't yet exist.
+        return UDQSet::empty(string_value);
+    }
+    else if (selected_segments.isScalar()) {
+        // Selector matches a single segment in a single MS well.
+        const auto segSet = selected_segments.segments(0);
+        const auto well = std::string { segSet.well() };
+        return UDQSet::scalar(string_value, context.get_segment_var(well, string_value, *segSet.begin()));
+    }
+
+    // If we get here, the selector matches at least one segment in at least
+    // one MS well.
+    auto res = UDQSet::segments(string_value, all_msw_segments);
+
+    const auto numWells = selected_segments.numWells();
+    for (auto wellID = 0*numWells; wellID < numWells; ++wellID) {
+        const auto segSet = selected_segments.segments(wellID);
+        const auto well = std::string { segSet.well() };
+        for (const auto& segment : segSet) {
+            res.assign(well, segment, context.get_segment_var(well, string_value, segment));
+        }
+    }
+
+    return res;
+}
+
+UDQSet
 UDQASTNode::eval_scalar_function(const UDQVarType  target_type,
                                  const UDQContext& context) const
 {
@@ -428,6 +495,9 @@ UDQASTNode::eval_number(const UDQVarType  target_type,
 
     case UDQVarType::GROUP_VAR:
         return UDQSet::groups(dummy_name, context.groups(), numeric_value);
+
+    case UDQVarType::SEGMENT_VAR:
+        return UDQSet::segments(dummy_name, UDQSet::getSegmentItems(context.segments()), numeric_value);
 
     case UDQVarType::SCALAR:
         return UDQSet::scalar(dummy_name, numeric_value);
