@@ -74,11 +74,11 @@
 #include <fmt/format.h>
 
 namespace {
-    /// \brief Whether a keyword is a global keyword and how many to skip
+    /// \brief Whether a keyword is a global keyword.
     ///
     /// Those are allowed before RUNSPEC.
-    /// \return false if this is not a global keyword or the number of keywords to skip
-    ///               otherwise (including itself.
+    /// \return whether keyword is global (ECHO, NOECHO, INCLUDE,
+    ///         COLUMNS, FORMFEED, SKIP, SKIP100, SKIP300, END)
     bool isGlobalKeyword(const Opm::DeckKeyword& keyword ) {
         const auto& name = keyword.name();
         for( const auto& x : { "ECHO", "NOECHO",
