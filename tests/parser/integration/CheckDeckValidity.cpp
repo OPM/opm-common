@@ -152,3 +152,35 @@ BOOST_AUTO_TEST_CASE( KeywordInCorrectSection ) {
         errorGuard.clear();
     }
 }
+BOOST_AUTO_TEST_CASE(Ignore_Leading_Global_Keywords)
+{
+
+    const auto* input_deck = R"(
+ECHO
+SKIP
+NOECHO
+COLUMNS
+ 10 10 /
+SKIP100
+SKIP300
+ENDSKIP
+FORMFEED
+ 10 /
+RUNSPEC
+DIMENS
+10 10 10 /
+GRID
+PROPS
+SOLUTION
+SCHEDULE
+)";
+
+    Opm::ErrorGuard errorGuard;
+    Opm::Parser parser;
+    Opm::ParseContext parseContext;
+    const auto deck = parser.parseString( input_deck);
+    BOOST_CHECK(Opm::checkDeck(deck, parser, parseContext, errorGuard, Opm::SectionTopology | Opm::KeywordSection));
+    // prevent std::exit(1) in ErrorGuard's destructor!
+    errorGuard.dump();
+    errorGuard.clear();
+}
