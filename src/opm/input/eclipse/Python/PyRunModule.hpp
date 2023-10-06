@@ -44,9 +44,20 @@ public:
     PyRunModule(std::shared_ptr<const Python> python, const std::string& fname);
 
     bool run(EclipseState& ecl_state, Schedule& sched, std::size_t report_step, SummaryState& st, const std::function<void(const std::string&, const std::vector<std::string>&)>& actionx_callback);
+    bool run_post_step(EclipseState& ecl_state, Schedule& sched, std::size_t report_step, SummaryState& st, const std::function<void(const std::string&, const std::vector<std::string>&)>& actionx_callback);
+    bool run_pre_step(EclipseState& ecl_state, Schedule& sched, std::size_t report_step, SummaryState& st, const std::function<void(const std::string&, const std::vector<std::string>&)>& actionx_callback);
+    bool run_post_newton(EclipseState& ecl_state, Schedule& sched, std::size_t report_step, SummaryState& st, const std::function<void(const std::string&, const std::vector<std::string>&)>& actionx_callback);
+    bool run_pre_newton(EclipseState& ecl_state, Schedule& sched, std::size_t report_step, SummaryState& st, const std::function<void(const std::string&, const std::vector<std::string>&)>& actionx_callback);    
+    bool run_post_report(EclipseState& ecl_state, Schedule& sched, std::size_t report_step, SummaryState& st, const std::function<void(const std::string&, const std::vector<std::string>&)>& actionx_callback);
+    bool run_pre_report(EclipseState& ecl_state, Schedule& sched, std::size_t report_step, SummaryState& st, const std::function<void(const std::string&, const std::vector<std::string>&)>& actionx_callback);                
 
 private:
-    py::object run_function = py::none();
+    py::object run_post_step_function = py::none();
+    py::object run_pre_step_function = py::none();
+    py::object run_post_newton_function = py::none();
+    py::object run_pre_newton_function = py::none();    
+    py::object run_post_report_function = py::none();
+    py::object run_pre_report_function = py::none();
     std::shared_ptr<const Python> python_handle;
     py::module module;
     py::module opm_embedded;

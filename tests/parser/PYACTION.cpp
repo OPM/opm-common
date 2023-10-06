@@ -38,10 +38,24 @@ BOOST_AUTO_TEST_CASE(ParsePYACTION) {
     const auto& record0 = keyword.getRecord(0);
     const auto& record1 = keyword.getRecord(1);
 
-    auto run_count = Action::PyAction::from_string(record0.getItem(1).get<std::string>(0));
+    auto run_count = Action::PyAction::count_from_string(record0.getItem(1).get<std::string>(0));
+    auto run_when = Action::PyAction::when_from_string(record0.getItem(2).get<std::string>(0));
+    // TODO|VK Should really do more checking than just the path... - should also be in constructor? 
     const std::string& ok_module = deck.makeDeckPath(record1.getItem(0).get<std::string>(0));
-    Action::PyAction pyaction(python, "ACT1", run_count, ok_module);
+    Action::PyAction pyaction(python, "ACT1", run_count, run_when, ok_module);
     BOOST_CHECK_EQUAL(pyaction.name(), "ACT1");
+    
+    // Second PYACTION keword, with non-default item record0 item 3
+    auto keyword2 = deck.get<ParserKeywords::PYACTION>()[1];
+    const auto& record20 = keyword2.getRecord(0);
+    const auto& record21 = keyword2.getRecord(1);
+    auto run_count2 = Action::PyAction::count_from_string(record20.getItem(1).get<std::string>(0));
+    auto run_when2 = Action::PyAction::when_from_string(record20.getItem(2).get<std::string>(0));
+    const std::string& ok_module2 = deck.makeDeckPath(record21.getItem(0).get<std::string>(0));
+    Action::PyAction pyaction2(python, "ACT1B", run_count2, run_when2, ok_module2);
+    BOOST_CHECK_EQUAL(pyaction2.name(), "ACT1B");
+    BOOST_CHECK_EQUAL(pyaction2.when(), "PRE_REPORT");
+    
 }
 
 
@@ -54,12 +68,13 @@ BOOST_AUTO_TEST_CASE(ParsePYACTION_Module_Run_Missing) {
     const auto& record0 = keyword.getRecord(0);
     const auto& record1 = keyword.getRecord(1);
 
-    auto run_count = Action::PyAction::from_string(record0.getItem(1).get<std::string>(0));
+    auto run_count = Action::PyAction::count_from_string(record0.getItem(1).get<std::string>(0));
+    auto run_when = Action::PyAction::when_from_string(record0.getItem(2).get<std::string>(0));    
     const std::string& ok_module = deck.makeDeckPath(record1.getItem(0).get<std::string>(0));
-    Action::PyAction pyaction(python, "ACT1", run_count, ok_module);
+    Action::PyAction pyaction(python, "ACT1", run_count, run_when, ok_module);
 
     const std::string& broken_module = deck.makeDeckPath("action_missing_run.py");
-    BOOST_CHECK_THROW(Action::PyAction(python , "ACT2", run_count, broken_module), std::runtime_error);
+    BOOST_CHECK_THROW(Action::PyAction(python , "ACT2", run_count, run_when, broken_module), std::runtime_error);
 
 }
 
@@ -71,12 +86,13 @@ BOOST_AUTO_TEST_CASE(ParsePYACTION_Module_Syntax_Error) {
     const auto& record0 = keyword.getRecord(0);
     const auto& record1 = keyword.getRecord(1);
 
-    auto run_count = Action::PyAction::from_string(record0.getItem(1).get<std::string>(0));
+    auto run_count = Action::PyAction::count_from_string(record0.getItem(1).get<std::string>(0));
+    auto run_when = Action::PyAction::when_from_string(record0.getItem(2).get<std::string>(0));    
     const std::string& ok_module = deck.makeDeckPath(record1.getItem(0).get<std::string>(0));
-    Action::PyAction pyaction(python, "ACT1", run_count, ok_module);
+    Action::PyAction pyaction(python, "ACT1", run_count, run_when, ok_module);
 
     const std::string& broken_module2 = deck.makeDeckPath("action_syntax_error.py");
-    BOOST_CHECK_THROW(Action::PyAction(python , "ACT2", run_count, broken_module2), std::exception);
+    BOOST_CHECK_THROW(Action::PyAction(python , "ACT2", run_count, run_when, broken_module2), std::exception);
 
 }
 
@@ -88,12 +104,13 @@ BOOST_AUTO_TEST_CASE(ParsePYACTION_ModuleMissing) {
     const auto& record0 = keyword.getRecord(0);
     const auto& record1 = keyword.getRecord(1);
 
-    auto run_count = Action::PyAction::from_string(record0.getItem(1).get<std::string>(0));
+    auto run_count = Action::PyAction::count_from_string(record0.getItem(1).get<std::string>(0));
+    auto run_when = Action::PyAction::when_from_string(record0.getItem(2).get<std::string>(0));    
     const std::string& ok_module = deck.makeDeckPath(record1.getItem(0).get<std::string>(0));
-    Action::PyAction pyaction(python, "ACT1", run_count, ok_module);
+    Action::PyAction pyaction(python, "ACT1", run_count, run_when, ok_module);
 
     const std::string& missing_module = deck.makeDeckPath("no_such_module.py");
-    BOOST_CHECK_THROW(Action::PyAction(python , "ACT2", run_count, missing_module), std::invalid_argument);
+    BOOST_CHECK_THROW(Action::PyAction(python , "ACT2", run_count, run_when, missing_module), std::invalid_argument);
 }
 
 #endif

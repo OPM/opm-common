@@ -17,6 +17,8 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <limits>
+
 #include <opm/input/eclipse/Schedule/Action/ActionContext.hpp>
 
 #include <opm/common/utility/TimeService.hpp>
@@ -51,6 +53,11 @@ namespace Action {
         const auto& iter = this->values.find(key);
         if (iter != this->values.end())
             return iter->second;
+
+        // Avoid hard crashes while ensuring all comparisons fail if key is not present
+        if (!this->summary_state.has(key)) {
+            return std::numeric_limits<double>::quiet_NaN();
+        }
 
         return this->summary_state.get(key);
     }

@@ -4,6 +4,9 @@ import random
 def run():
     pass
 
+def run_pre_report():
+    print("Run this python code before one or more report steps")
+
 print("sin(0) = {}".format(sin(0)))
 #---
 if random.random() > 0.25:

@@ -589,7 +589,8 @@ BOOST_AUTO_TEST_CASE(UDQ_CONTEXT) {
     UDQState udq_state(udqp.undefinedValue());
     UDQContext ctx(func_table, {}, st, udq_state);
     BOOST_CHECK_EQUAL(*ctx.get("JAN"), 1.0);
-    BOOST_CHECK_THROW(ctx.get("NO_SUCH_KEY"), std::out_of_range);
+    //BOOST_CHECK_THROW(ctx.get("NO_SUCH_KEY"), std::out_of_range);
+    BOOST_CHECK(std::isnan(ctx.get("NO_SUCH_KEY").value()));
 
     for (std::string& key : std::vector<std::string>({"MSUMLINS", "MSUMNEWT", "NEWTON", "TCPU"}))
         BOOST_CHECK_NO_THROW( ctx.get(key) );
@@ -2313,6 +2314,12 @@ DEFINE FU_VAR91 GOPR TEST  /
 BOOST_AUTO_TEST_CASE(UDQ_KEY_ERROR) {
     std::string deck_string = R"(
 -- udq #2
+RUNSPEC
+
+UDQPARAM
+  2* -1.1234 /
+
+  
 SCHEDULE
 
 UDQ
@@ -2326,7 +2333,10 @@ UDQ
     UDQState udq_state(undefined_value);
     SummaryState st(TimeService::now());
 
-    BOOST_CHECK_THROW(udq.eval(0, schedule, {}, st, udq_state), std::exception);
+    //BOOST_CHECK_THROW(udq.eval(0, schedule, {}, st, udq_state), std::exception);
+    //With undefined vales now returned as NaN from SummaryState, this should eventually return UDQPARAM item 3 
+    udq.eval(0, schedule, {}, st, udq_state);
+    BOOST_CHECK_EQUAL(st.get("FU_VAR1"), -1.1234);
 }
 
 BOOST_AUTO_TEST_CASE(UDQ_ASSIGN) {

@@ -801,7 +801,8 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
         }
 
         const auto& name = keyword.getRecord(0).getItem<ParserKeywords::PYACTION::NAME>().get<std::string>(0);
-        const auto& run_count = Action::PyAction::from_string( keyword.getRecord(0).getItem<ParserKeywords::PYACTION::RUN_COUNT>().get<std::string>(0) );
+        const auto& run_count = Action::PyAction::count_from_string( keyword.getRecord(0).getItem<ParserKeywords::PYACTION::RUN_COUNT>().get<std::string>(0) );
+        const auto& run_when = Action::PyAction::when_from_string( keyword.getRecord(0).getItem<ParserKeywords::PYACTION::RUN_WHEN>().get<std::string>(0) );        
         const auto& module_arg = keyword.getRecord(1).getItem<ParserKeywords::PYACTION::FILENAME>().get<std::string>(0);
         std::string module;
         if (this->m_static.m_input_path.empty())
@@ -809,7 +810,7 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
         else
             module = this->m_static.m_input_path + "/" + module_arg;
 
-        Action::PyAction pyaction(this->m_static.m_python_handle, name, run_count, module);
+        Action::PyAction pyaction(this->m_static.m_python_handle, name, run_count, run_when, module);
         auto new_actions = this->snapshots.back().actions.get();
         new_actions.add(pyaction);
         this->snapshots.back().actions.update( std::move(new_actions) );

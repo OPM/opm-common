@@ -45,15 +45,28 @@ public:
        unlimited,
        first_true
     };
+   enum class RunWhen {
+       post_step,
+       pre_step,
+       post_newton,
+       pre_newton,       
+       post_report,
+       pre_report
+   };
 
 
-    static RunCount from_string(std::string run_count);
+    static RunCount count_from_string(std::string run_count);
+    static std::string count_to_string(RunCount run_count);
+    static RunWhen  when_from_string(std::string run_when);
+    static std::string  when_to_string(RunWhen run_when);
     static PyAction serializationTestObject();
     PyAction() = default;
-    PyAction(std::shared_ptr<const Python> python, const std::string& name, RunCount run_count, const std::string& module_file);
+    PyAction(std::shared_ptr<const Python> python, const std::string& name, RunCount run_count, RunWhen run_when, const std::string& module_file);
     bool run(EclipseState& ecl_state, Schedule& schedule, std::size_t report_step, SummaryState& st,
-             const std::function<void(const std::string&, const std::vector<std::string>&)>& actionx_callback) const;
+             const std::function<void(const std::string&, const std::vector<std::string>&)>& actionx_callback) const;    
+    
     const std::string& name() const;
+    const std::string when() const;
     bool ready(const State& state) const;
     bool operator==(const PyAction& other) const;
 
@@ -62,6 +75,7 @@ public:
     {
         serializer(m_name);
         serializer(m_run_count);
+        serializer(m_run_when);
         serializer(module_file);
         serializer(m_active);
     }
@@ -72,6 +86,7 @@ private:
     mutable std::shared_ptr< PyRunModule > run_module;
     std::string m_name;
     RunCount m_run_count;
+    RunWhen m_run_when;
     std::string module_file;
     mutable bool m_active = true;
 };

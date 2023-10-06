@@ -19,6 +19,7 @@
 
 #include <stdexcept>
 #include <algorithm>
+#include <cmath>
 
 #define BOOST_TEST_MODULE ACTIONX
 
@@ -294,10 +295,10 @@ BOOST_AUTO_TEST_CASE(TestActions) {
         Opm::Action::ActionX action3("NAME3", 1000000, 0, asTimeT(TimeStampUTC(TimeStampUTC::YMD{ 2000, 7, 1 })) );
         config.add(action3);
 
-        Opm::Action::PyAction py_action1(python, "PYTHON1", Opm::Action::PyAction::RunCount::single, "act1.py");
+        Opm::Action::PyAction py_action1(python, "PYTHON1", Opm::Action::PyAction::RunCount::single, Opm::Action::PyAction::RunWhen::post_step, "act1.py");
         config.add(py_action1);
 
-        Opm::Action::PyAction py_action2(python, "PYTHON2", Opm::Action::PyAction::RunCount::single, "act1.py");
+        Opm::Action::PyAction py_action2(python, "PYTHON2", Opm::Action::PyAction::RunCount::single, Opm::Action::PyAction::RunWhen::post_step,"act1.py");
         config.add(py_action2);
     }
     const Opm::Action::ActionX& action2 = config["NAME"];
@@ -328,7 +329,9 @@ BOOST_AUTO_TEST_CASE(TestContext) {
     Opm::WListManager wlm;
     Opm::Action::Context context(st, wlm);
 
-    BOOST_REQUIRE_THROW(context.get("func", "arg"), std::out_of_range);
+    //BOOST_REQUIRE_THROW(context.get("func", "arg"), std::out_of_range);
+    //SummaryState returns NaN instead of throw on unknown arguments
+    BOOST_CHECK(std::isnan(context.get("func", "arg")));
 
     context.add("FUNC", "ARG", 100);
     BOOST_CHECK_EQUAL(context.get("FUNC", "ARG"), 100);
@@ -369,7 +372,9 @@ BOOST_AUTO_TEST_CASE(TestAction_AST_BASIC) {
     BOOST_CHECK(!ast1.eval(context));
 
     BOOST_CHECK(ast2.eval(context));
-    BOOST_REQUIRE_THROW(ast3.eval(context), std::out_of_range);
+    //BOOST_REQUIRE_THROW(ast3.eval(context), std::out_of_range);
+    //SummaryState returns NaN instead of throw on unknown arguments, and NaN always compares as false
+    BOOST_CHECK(!ast3.eval(context));
 }
 
 BOOST_AUTO_TEST_CASE(TestAction_AST_OR_AND) {
@@ -608,11 +613,13 @@ BOOST_AUTO_TEST_CASE(Action_ContextTest) {
 
 
     BOOST_CHECK_EQUAL(context.get("WWCT", "OP1"), 100);
-    BOOST_REQUIRE_THROW(context.get("WGOR", "B37"), std::out_of_range);
+    //BOOST_REQUIRE_THROW(context.get("WGOR", "B37"), std::out_of_range);
+    BOOST_CHECK(std::isnan(context.get("WGOR", "B37")));
     context.add("WWCT", "OP1", 200);
 
     BOOST_CHECK_EQUAL(context.get("WWCT", "OP1"), 200);
-    BOOST_REQUIRE_THROW(context.get("WGOR", "B37"), std::out_of_range);
+    //BOOST_REQUIRE_THROW(context.get("WGOR", "B37"), std::out_of_range);
+    BOOST_CHECK(std::isnan(context.get("WGOR", "B37")));
 }
 
 //Note: that this is only temporary test.

@@ -37,7 +37,7 @@ namespace py = pybind11;
 namespace Opm {
 namespace Action {
 
-PyAction::RunCount PyAction::from_string(std::string run_count) {
+PyAction::RunCount PyAction::count_from_string(std::string run_count) {
     run_count = uppercase(run_count);
 
     if (run_count == "SINGLE")
@@ -52,12 +52,63 @@ PyAction::RunCount PyAction::from_string(std::string run_count) {
     throw std::invalid_argument("RunCount string: " + run_count + " not recognized ");
 }
 
+std::string PyAction::count_to_string(RunCount run_count)
+{
+    switch (run_count) {
+        case RunCount::single: return "SINGLE";
+        case RunCount::unlimited: return "UNLIMITED";
+        case RunCount::first_true: return "FIRST_TRUE";
+        default: throw std::invalid_argument("Invalid RunCount value - should never happen");
+    }
+    return "UNKNOWN_RUN_COUNT";
+}
+
+PyAction::RunWhen PyAction::when_from_string(std::string run_when) {
+    run_when = uppercase(run_when);
+
+    if (run_when == "POST_STEP")
+        return RunWhen::post_step;
+
+    if (run_when == "PRE_STEP")
+        return RunWhen::pre_step;
+
+    if (run_when == "POST_NEWTON")
+        return RunWhen::post_newton;
+
+    if (run_when == "PRE_NEWTON")
+        return RunWhen::pre_newton;
+
+    if (run_when == "POST_REPORT")
+        return RunWhen::post_report;
+
+    if (run_when == "PRE_REPORT")
+        return RunWhen::pre_report;
+    
+    throw std::invalid_argument("RunWhen string: " + run_when + " not recognized ");
+}
+
+std::string PyAction::when_to_string(RunWhen run_when)
+{
+    switch (run_when) {
+        case RunWhen::pre_step: return "PRE_STEP";
+        case RunWhen::post_step: return "POST_STEP";
+        case RunWhen::pre_newton: return "PRE_NEWTON";
+        case RunWhen::post_newton: return "POST_NEWTON";        
+        case RunWhen::pre_report: return "PRE_REPORT";
+        case RunWhen::post_report: return "POST_REPORT";
+        default: throw std::invalid_argument("Invalid RunWhen value - should never happen");
+    }
+    return "UNKNOWN_RUN_WHEN";
+}
+
+
 PyAction PyAction::serializationTestObject()
 {
     PyAction result;
 
     result.m_name = "name";
     result.m_run_count = RunCount::first_true;
+    result.m_run_when = RunWhen::post_step;
     result.m_active = false;
     result.module_file = "no.such.file.py";
 
@@ -83,10 +134,14 @@ const std::string& PyAction::name() const {
     return this->m_name;
 }
 
+const std::string PyAction::when() const {
+    return PyAction::when_to_string(this->m_run_when);
+}
 
 bool PyAction::operator==(const PyAction& other) const {
     return this->m_name == other.m_name &&
         this->m_run_count == other.m_run_count &&
+        this->m_run_when == other.m_run_when &&
         this->m_active == other.m_active &&
         this->module_file == other.module_file;
 }
@@ -100,18 +155,20 @@ bool PyAction::run(EclipseState&, Schedule&, std::size_t, SummaryState&,
     return false;
 }
 
-PyAction::PyAction(std::shared_ptr<const Python>, const std::string& name, RunCount run_count, const std::string& fname) :
+PyAction::PyAction(std::shared_ptr<const Python>, const std::string& name, RunCount run_count, RunWhen run_when, const std::string& fname) :
     m_name(name),
     m_run_count(run_count),
+    m_run_when(run_when),
     module_file(fname)
 {}
 
 #else
 
-PyAction::PyAction(std::shared_ptr<const Python> python, const std::string& name, RunCount run_count, const std::string& fname) :
+PyAction::PyAction(std::shared_ptr<const Python> python, const std::string& name, RunCount run_count, RunWhen run_when, const std::string& fname) :
     run_module( std::make_shared<Opm::PyRunModule>(python, fname)),
     m_name(name),
     m_run_count(run_count),
+    m_run_when(run_when),
     module_file(fname)
 {
 }
@@ -131,8 +188,32 @@ bool PyAction::run(EclipseState& ecl_state, Schedule& schedule, std::size_t repo
     if (!this->run_module)
         this->run_module = std::make_shared<Opm::PyRunModule>(schedule.python(), this->module_file);
 
-    return this->run_module->run(ecl_state, schedule, report_step, st, actionx_callback);
+    if (this->m_run_when == RunWhen::post_step)
+        return this->run_module->run(ecl_state, schedule, report_step, st, actionx_callback);
+
+    if (this->m_run_when == RunWhen::pre_report)
+        return this->run_module->run_pre_report(ecl_state, schedule, report_step, st, actionx_callback);
+        
+    if (this->m_run_when == RunWhen::post_newton)
+        // TODO: Also check for run_post_step method (?)
+        return this->run_module->run_post_newton(ecl_state, schedule, report_step, st, actionx_callback);
+
+    if (this->m_run_when == RunWhen::pre_newton)
+        return this->run_module->run_pre_newton(ecl_state, schedule, report_step, st, actionx_callback);
+
+    if (this->m_run_when == RunWhen::post_report)
+        return this->run_module->run_post_report(ecl_state, schedule, report_step, st, actionx_callback);
+        
+    if (this->m_run_when == RunWhen::pre_step)
+        return this->run_module->run_pre_step(ecl_state, schedule, report_step, st, actionx_callback);
+    
+    throw std::runtime_error("Invalid run_when vaue:" + when_to_string(this->m_run_when));
+    
+    // Silence warning
+    return false;
 }
+
+
 
 
 
