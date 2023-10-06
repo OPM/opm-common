@@ -28,6 +28,7 @@
 #define OPM_CO2_GAS_PVT_HPP
 
 #include <opm/material/Constants.hpp>
+#include <opm/common/ErrorMacros.hpp>
 
 #include <opm/material/components/CO2.hpp>
 #include <opm/material/components/BrineDynamic.hpp>
@@ -67,6 +68,11 @@ public:
               Scalar P_ref = 101325)
         : salinity_(salinity)
     {
+        // Throw an error if reference state is not (T, p) = (15.56 C, 1 atm) = (288.71 K, 1.01325e5 Pa)
+        if (T_ref != Scalar(288.71) || P_ref != Scalar(1.01325e5)) {
+            OPM_THROW(std::runtime_error, 
+                "BrineCo2Pvt class can only be used with default reference state (T, P) = (288.71 K, 1.01325e5 Pa)!");
+        }
         int num_regions = salinity_.size();
         setNumRegions(num_regions);
         for (int i = 0; i < num_regions; ++i) {
