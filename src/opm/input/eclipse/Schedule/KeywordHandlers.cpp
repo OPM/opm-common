@@ -1687,9 +1687,9 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
                 fip_region_number != Kw::FIP_REGION::defaultValue)
             {
                 const auto& location = handlerContext.keyword.location();
-                const auto msg = fmt::format("FIP region {} in WELSPECS keyword "
-                                             "in file {} line {} is unsupported. "
-                                             "Using default value {}.",
+                const auto msg = fmt::format("Non-defaulted FIP region {} in WELSPECS keyword "
+                                             "in file {} line {} is not supported. "
+                                             "Reset to default value {}.",
                                              fip_region_number,
                                              location.filename,
                                              location.lineno,
@@ -1701,9 +1701,9 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
                 density_calc_type != Kw::DENSITY_CALC::defaultValue)
             {
                 const auto& location = handlerContext.keyword.location();
-                const auto msg = fmt::format("Density calculation method '{}' in WELSPECS keyword "
-                                             "in file {} line {} is unsupported. "
-                                             "Using default value {}.",
+                const auto msg = fmt::format("Non-defaulted density calculation method '{}' "
+                                             "in WELSPECS keyword in file {} line {} is "
+                                             "not supported. Reset to default value {}.",
                                              density_calc_type,
                                              location.filename,
                                              location.lineno,
@@ -1720,15 +1720,11 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
             // 'wellName' matches any existing well names through pattern
             // matching before treating the wellName as a simple well name.
             //
-            // Note also that we use the wellNames(name, step, matching)
-            // overload instead of wellNames(name, handlerContext) since the
-            // latter throws an exception if the list of candidate wells is
-            // empty.  That's the wrong behaviour here, because an empty
-            // list just means that we're creating a new well in this case.
+            // An empty list of well names is okay since that means we're
+            // creating a new well in this case.
+            const auto allowEmptyWellList = true;
             const auto existingWells =
-                this->wellNames(wellName,
-                                handlerContext.currentStep,
-                                handlerContext.matching_wells);
+                this->wellNames(wellName, handlerContext, allowEmptyWellList);
 
             if (groupName == "FIELD") {
                 if (existingWells.empty()) {

@@ -480,6 +480,7 @@ Well::Well(const std::string& wname_arg,
     guide_rate({true, -1, Well::GuideRateTarget::UNDEFINED,ParserKeywords::WGRUPCON::SCALING_FACTOR::defaultValue}),
     efficiency_factor(1.0),
     solvent_fraction(0.0),
+    derive_refdepth_from_conns_{ ! ref_depth_arg.has_value() || (*ref_depth_arg < 0.0) },
     econ_limits(std::make_shared<WellEconProductionLimits>()),
     foam_properties(std::make_shared<WellFoamProperties>()),
     polymer_properties(std::make_shared<WellPolymerProperties>()),
@@ -523,6 +524,7 @@ Well Well::serializationTestObject()
     result.efficiency_factor = 8.0;
     result.solvent_fraction = 9.0;
     result.prediction_mode = false;
+    result.derive_refdepth_from_conns_ = false;
     result.econ_limits = std::make_shared<Opm::WellEconProductionLimits>(Opm::WellEconProductionLimits::serializationTestObject());
     result.foam_properties = std::make_shared<WellFoamProperties>(WellFoamProperties::serializationTestObject());
     result.polymer_properties =  std::make_shared<WellPolymerProperties>(WellPolymerProperties::serializationTestObject());
@@ -769,15 +771,17 @@ bool Well::updateGroup(const std::string& group_arg) {
 }
 
 
-bool Well::updateHead(int I, int J) {
+bool Well::updateHead(std::optional<int> I, std::optional<int> J)
+{
     bool update = false;
-    if (this->headI != I) {
-        this->headI = I;
+
+    if (I.has_value() && (this->headI != *I)) {
+        this->headI = *I;
         update = true;
     }
 
-    if (this->headJ != J) {
-        this->headJ = J;
+    if (J.has_value() && (this->headJ != *J)) {
+        this->headJ = *J;
         update = true;
     }
 
@@ -795,8 +799,25 @@ bool Well::updateStatus(Status well_state) {
 
 
 
-bool Well::updateRefDepth(const std::optional<double>& ref_depth_arg) {
-    if (this->ref_depth != ref_depth_arg) {
+bool Well::updateRefDepth(std::optional<double> ref_depth_arg)
+{
+    if (this->ref_depth == ref_depth_arg) {
+        return false;
+    }
+
+    if (ref_depth_arg.has_value()) {
+        this->derive_refdepth_from_conns_ = *ref_depth_arg < 0.0;
+
+        this->ref_depth = ref_depth_arg;
+        return true;
+    }
+
+    // If we get here, then this->ref_depth.has_value() &&
+    // !ref_depth_arg.has_value().  Assign the argument's value--i.e., reset
+    // this->ref_depth--if we're supposed to calculate the reference depth
+    // from the connections.
+
+    if (this->derive_refdepth_from_conns_) {
         this->ref_depth = ref_depth_arg;
         return true;
     }
@@ -804,9 +825,12 @@ bool Well::updateRefDepth(const std::optional<double>& ref_depth_arg) {
     return false;
 }
 
-bool Well::updateDrainageRadius(double drainage_radius_arg) {
-    if (this->drainage_radius != drainage_radius_arg) {
-        this->drainage_radius = drainage_radius_arg;
+bool Well::updateDrainageRadius(std::optional<double> drainage_radius_arg)
+{
+    if (drainage_radius_arg.has_value() &&
+        (this->drainage_radius != *drainage_radius_arg))
+    {
+        this->drainage_radius = *drainage_radius_arg;
         return true;
     }
 
@@ -1015,14 +1039,21 @@ double Well::getWPaveRefDepth() const {
     return this->wpave_ref_depth.value_or( this->getRefDepth() );
 }
 
-void Well::updateRefDepth() {
-    if( !this->ref_depth ) {
-        // ref depth was defaulted and we get the depth of the first completion
+void Well::updateRefDepth()
+{
+    if ((! this->ref_depth.has_value() || (*this->ref_depth < 0.0)) &&
+        this->derive_refdepth_from_conns_)
+    {
+        // Reference depth was defaulted and we get the depth of the first
+        // connection.
 
-        if( this->connections->empty() )
-            throw std::invalid_argument( "No completions defined for well: "
-                                         + name()
-                                     + ". Can not infer reference depth" );
+        if (this->connections->empty()) {
+            throw std::invalid_argument {
+                fmt::format("No reservoir connection defined for well {}. "
+                            "Cannot infer reference depth.", this->name())
+            };
+        }
+
         this->ref_depth = this->connections->get(0).depth();
     }
 }
@@ -1453,6 +1484,7 @@ bool Opm::Well::applyGlobalWPIMULT(const double scaling_factor)
 void Well::updateSegments(std::shared_ptr<WellSegments> segments_arg) {
     this->segments = std::move(segments_arg);
     this->updateRefDepth( this->segments->depthTopSegment() );
+    this->derive_refdepth_from_conns_ = false;
 }
 
 
@@ -1466,12 +1498,14 @@ bool Well::handleWELSEGS(const DeckKeyword& keyword) {
     return true;
 }
 
-bool Well::updatePVTTable(int pvt_table_) {
-    if (this->pvt_table != pvt_table_) {
-        this->pvt_table = pvt_table_;
+bool Well::updatePVTTable(std::optional<int> pvt_table_)
+{
+    if (pvt_table_.has_value() && (this->pvt_table != *pvt_table_)) {
+        this->pvt_table = *pvt_table_;
         return true;
-    } else
-        return false;
+    }
+
+    return false;
 }
 
 
@@ -1697,6 +1731,7 @@ bool Well::operator==(const Well& data) const {
         && (this->hasProduced() == data.hasProduced())
         && (this->hasInjected() == data.hasInjected())
         && (this->predictionMode() == data.predictionMode())
+        && (this->derive_refdepth_from_conns_ == data.derive_refdepth_from_conns_)
         && (this->getTracerProperties() == data.getTracerProperties())
         && (this->getWVFPEXP() == data.getWVFPEXP())
         && (this->getProductionProperties() == data.getProductionProperties())

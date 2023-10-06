@@ -1815,14 +1815,14 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
         const auto& drad  = record.getItem<Kw::D_RADIUS>();
         const auto& ref_d = record.getItem<Kw::REF_DEPTH>();
 
-        const auto I = headI.get<int>(0) - 1;
-        const auto J = headJ.get<int>(0) - 1;
+        const auto I = headI.defaultApplied(0) ? std::nullopt : std::optional<int> {headI.get<int>(0) - 1};
+        const auto J = headJ.defaultApplied(0) ? std::nullopt : std::optional<int> {headJ.get<int>(0) - 1};
 
-        const auto pvt_table = pvt.get<int>(0);
-        const auto drainageRadius = drad.getSIDouble(0);
+        const auto pvt_table = pvt.defaultApplied(0) ? std::nullopt : std::optional<int> { pvt.get<int>(0) };
+        const auto drainageRadius = drad.defaultApplied(0) ? std::nullopt : std::optional<double> { drad.getSIDouble(0) };
 
         auto ref_depth = std::optional<double>{};
-        if (ref_d.hasValue(0)) {
+        if (! ref_d.defaultApplied(0) && ref_d.hasValue(0)) {
             ref_depth.emplace(ref_d.getSIDouble(0));
         }
 

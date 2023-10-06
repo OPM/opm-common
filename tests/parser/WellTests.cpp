@@ -1515,10 +1515,8 @@ COMPDAT
 TSTEP
   1 /
 
-
-
 WELSPECS
-  'W1' 'G' 1 1 2005 'LIQ' /
+  'W1' 'G' 1 1 1995.0 'LIQ' /
 /
 
 -- W2
@@ -1538,7 +1536,6 @@ WPAVEDEP
 TSTEP
 1  /
 
-
 COMPDAT
      'W1'     1    1     1    1      'OPEN'  1*     25.620      0.216   2086.842  2*         'Y'      8.486 /
 /
@@ -1547,7 +1544,7 @@ TSTEP
 1 /
 
 WELSPECS
-  'W1' 'G' 1 1 1* 'LIQ' /
+  'W1' 'G' 1 1 -1.0 'LIQ' /
 /
 -- W5
 
@@ -1565,15 +1562,14 @@ END
     const auto& w4 = sched.getWell("W1", 4);
     const auto& w5 = sched.getWell("W1", 5);
 
-
-    BOOST_CHECK_EQUAL(w0.getRefDepth(), grid.getCellDepth(0,0,2));
-    BOOST_CHECK_EQUAL(w0.getRefDepth(), w0.getWPaveRefDepth());
-    BOOST_CHECK_EQUAL(w1.getRefDepth(), w0.getRefDepth());
-    BOOST_CHECK_EQUAL(w2.getRefDepth(), 2005 );
-    BOOST_CHECK_EQUAL(w3.getRefDepth(), grid.getCellDepth(0,0,1));
-    BOOST_CHECK_EQUAL(w4.getRefDepth(), w3.getRefDepth());
-    BOOST_CHECK_EQUAL(w5.getRefDepth(), grid.getCellDepth(0,0,0));
-    BOOST_CHECK_EQUAL(w5.getWPaveRefDepth(), 0);
+    BOOST_CHECK_CLOSE(w0.getRefDepth()     , grid.getCellDepth(0, 0, 2), 1.0e-8);
+    BOOST_CHECK_CLOSE(w0.getRefDepth()     , w0.getWPaveRefDepth()     , 1.0e-8);
+    BOOST_CHECK_CLOSE(w1.getRefDepth()     , w0.getRefDepth()          , 1.0e-8);
+    BOOST_CHECK_CLOSE(w2.getRefDepth()     , 1995.0                    , 1.0e-8);
+    BOOST_CHECK_CLOSE(w3.getRefDepth()     , 1995.0                    , 1.0e-8);
+    BOOST_CHECK_CLOSE(w4.getRefDepth()     , w3.getRefDepth()          , 1.0e-8);
+    BOOST_CHECK_CLOSE(w5.getRefDepth()     , grid.getCellDepth(0, 0, 0), 1.0e-8);
+    BOOST_CHECK_CLOSE(w5.getWPaveRefDepth(), 0.0                       , 1.0e-8);
 }
 
 BOOST_AUTO_TEST_CASE(Missing_RefDepth) {
@@ -1647,4 +1643,230 @@ END
     BOOST_CHECK_MESSAGE(w1.hasRefDepth(),
                         R"(Well "W1" must have a BHP reference depth at report=2)");
     BOOST_CHECK_CLOSE(w1.getRefDepth(), es.getInputGrid().getCellDepth(0, 0, 1), 1.0e-8);
+}
+
+BOOST_AUTO_TEST_CASE(Update_Group_Single_Well)
+{
+    const auto deck = Parser{}.parseString(R"(RUNSPEC
+DIMENS
+10 10 3 /
+GRID
+DXV
+10*100.0 /
+DYV
+10*100.0 /
+DZV
+3*5.0 /
+DEPTHZ
+121*2000 /
+PERMX
+300*100.0 /
+COPY
+PERMX PERMY /
+PERMX PERMZ /
+/
+MULTIPLY
+PERMZ 0.1 /
+/
+PORO
+300*0.3 /
+SCHEDULE
+WELSPECS
+ 'P' 'G' 10 10 1* 'OIL' /
+ 'I' 'G'  1  1 1* 'GAS' /
+/
+COMPDAT
+ 'P' 10 10 1 3 'OPEN' /
+ 'I'  1  1 1 1 'OPEN' /
+/
+WCONPROD
+ 'P' 'OPEN' 'LRAT' 1* 1* 1* 1234.567 1* 12.34 /
+/
+WCONINJE
+ 'I' 'GAS' 'OPEN' 'RATE' 20.0E3 /
+/
+TSTEP
+30.0 /
+WELSPECS
+ 'P' 'G1' /
+/
+TSTEP
+ 30.0 /
+END
+)");
+
+    const auto es    = EclipseState { deck };
+    const auto sched = Schedule { deck, es };
+
+    {
+        const auto& wellP = sched.getWell("P", 0);
+        BOOST_CHECK_EQUAL(wellP.groupName(), "G");
+    }
+
+    {
+        const auto& wellP = sched.getWell("P", 1);
+        BOOST_CHECK_EQUAL(wellP.groupName(), "G1");
+    }
+}
+
+BOOST_AUTO_TEST_CASE(Update_Group_Multi_Well)
+{
+    const auto deck = Parser{}.parseString(R"(RUNSPEC
+DIMENS
+10 10 3 /
+GRID
+DXV
+10*100.0 /
+DYV
+10*100.0 /
+DZV
+3*5.0 /
+DEPTHZ
+121*2000 /
+PERMX
+300*100.0 /
+COPY
+PERMX PERMY /
+PERMX PERMZ /
+/
+MULTIPLY
+PERMZ 0.1 /
+/
+PORO
+300*0.3 /
+SCHEDULE
+WELSPECS
+ 'P1' 'G'  1 10 1* 'OIL' /
+ 'P2' 'G' 10  1 1* 'OIL' /
+ 'P3' 'G' 10 10 1* 'OIL' /
+ 'I'  'G'  1  1 1* 'GAS' /
+/
+COMPDAT
+ 'P1'  1 10 1 3 'OPEN' /
+ 'P2' 10  1 1 3 'OPEN' /
+ 'P3' 10 10 1 3 'OPEN' /
+ 'I'   1  1 1 1 'OPEN' /
+/
+WCONPROD
+ 'P*' 'OPEN' 'LRAT' 1* 1* 1* 1234.567 1* 12.34 /
+/
+WCONINJE
+ 'I' 'GAS' 'OPEN' 'RATE' 20.0E3 /
+/
+TSTEP
+30.0 /
+WELSPECS
+ 'P*' 'G1' /
+/
+TSTEP
+ 30.0 /
+END
+)");
+
+    const auto es    = EclipseState { deck };
+    const auto sched = Schedule { deck, es };
+
+    {
+        for (const auto* P : { "P1", "P2", "P3", }) {
+            const auto& wellP = sched.getWell(P, 0);
+            BOOST_CHECK_MESSAGE(wellP.groupName() == "G",
+                                "Well " << P << " must have "
+                                "controlling group \"G\" at time zero");
+        }
+    }
+
+    {
+        for (const auto* P : { "P1", "P2", "P3", }) {
+            const auto& wellP = sched.getWell(P, 1);
+            BOOST_CHECK_MESSAGE(wellP.groupName() == "G1",
+                                "Well " << P << " must have "
+                                "controlling group \"G1\" at time one");
+        }
+    }
+}
+
+BOOST_AUTO_TEST_CASE(Update_Group_WList)
+{
+    const auto deck = Parser{}.parseString(R"(RUNSPEC
+DIMENS
+10 10 3 /
+GRID
+DXV
+10*100.0 /
+DYV
+10*100.0 /
+DZV
+3*5.0 /
+DEPTHZ
+121*2000 /
+PERMX
+300*100.0 /
+COPY
+PERMX PERMY /
+PERMX PERMZ /
+/
+MULTIPLY
+PERMZ 0.1 /
+/
+PORO
+300*0.3 /
+SCHEDULE
+WELSPECS
+ 'P1' 'G'  1 10 1* 'OIL' /
+ 'P2' 'G' 10  1 1* 'OIL' /
+ 'P3' 'G' 10 10 1* 'OIL' /
+ 'I'  'G'  1  1 1* 'GAS' /
+/
+COMPDAT
+ 'P1'  1 10 1 3 'OPEN' /
+ 'P2' 10  1 1 3 'OPEN' /
+ 'P3' 10 10 1 3 'OPEN' /
+ 'I'   1  1 1 1 'OPEN' /
+/
+WLIST
+ '*QFS' NEW 'I' 'P3' /
+/
+WCONPROD
+ 'P*' 'OPEN' 'LRAT' 1* 1* 1* 1234.567 1* 12.34 /
+/
+WCONINJE
+ 'I' 'GAS' 'OPEN' 'RATE' 20.0E3 /
+/
+TSTEP
+30.0 /
+WELSPECS
+ '*QFS' 'G1' /
+/
+TSTEP
+ 30.0 /
+END
+)");
+
+    const auto es    = EclipseState { deck };
+    const auto sched = Schedule { deck, es };
+
+    {
+        for (const auto* P : { "P1", "P2", "P3", "I", }) {
+            const auto& wellP = sched.getWell(P, 0);
+            BOOST_CHECK_MESSAGE(wellP.groupName() == "G",
+                                "Well " << P << " must have "
+                                "controlling group \"G\" at time zero");
+        }
+    }
+
+    {
+        for (const auto* P : { "P1", "P2", }) {
+            const auto& wellP = sched.getWell(P, 1);
+            BOOST_CHECK_MESSAGE(wellP.groupName() == "G",
+                                "Well " << P << " must have "
+                                "controlling group \"G\" at time one");
+        }
+
+        for (const auto* P : { "P3", "I", }) {
+            const auto& wellP = sched.getWell(P, 1);
+            BOOST_CHECK_MESSAGE(wellP.groupName() == "G1",
+                                "Well " << P << " must have "
+                                "controlling group \"G1\" at time one");
+        }
+    }
 }

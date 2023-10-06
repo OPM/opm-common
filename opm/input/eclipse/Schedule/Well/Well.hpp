@@ -445,11 +445,11 @@ public:
     bool updatePrediction(bool prediction_mode);
     bool updateAutoShutin(bool auto_shutin);
     bool updateCrossFlow(bool allow_cross_flow);
-    bool updatePVTTable(int pvt_table);
-    bool updateHead(int I, int J);
+    bool updatePVTTable(std::optional<int> pvt_table);
+    bool updateHead(std::optional<int> I, std::optional<int> J);
     void updateRefDepth();
-    bool updateRefDepth(const std::optional<double>& ref_dpeth);
-    bool updateDrainageRadius(double drainage_radius);
+    bool updateRefDepth(std::optional<double> ref_dpeth);
+    bool updateDrainageRadius(std::optional<double> drainage_radius);
     void updateSegments(std::shared_ptr<WellSegments> segments_arg);
     bool updateConnections(std::shared_ptr<WellConnections> connections, bool force);
     bool updateConnections(std::shared_ptr<WellConnections> connections, const ScheduleGrid& grid);
@@ -539,6 +539,7 @@ public:
         serializer(has_produced);
         serializer(has_injected);
         serializer(prediction_mode);
+        serializer(derive_refdepth_from_conns_);
         serializer(econ_limits);
         serializer(foam_properties);
         serializer(polymer_properties);
@@ -586,6 +587,7 @@ private:
     bool has_produced = false;
     bool has_injected = false;
     bool prediction_mode = true;
+    bool derive_refdepth_from_conns_ { true };
 
     std::shared_ptr<WellEconProductionLimits> econ_limits;
     std::shared_ptr<WellFoamProperties> foam_properties;
