@@ -17,6 +17,81 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <opm/input/eclipse/Schedule/Schedule.hpp>
+
+#include <opm/common/OpmLog/OpmLog.hpp>
+#include <opm/common/OpmLog/LogUtil.hpp>
+#include <opm/common/utility/OpmInputError.hpp>
+#include <opm/common/utility/numeric/cmp.hpp>
+#include <opm/common/utility/String.hpp>
+
+#include <opm/input/eclipse/Python/Python.hpp>
+
+#include <opm/input/eclipse/EclipseState/Phase.hpp>
+#include <opm/input/eclipse/EclipseState/Aquifer/AquiferFlux.hpp>
+
+#include <opm/input/eclipse/Schedule/Action/ActionResult.hpp>
+#include <opm/input/eclipse/Schedule/Action/ActionX.hpp>
+#include <opm/input/eclipse/Schedule/Action/SimulatorUpdate.hpp>
+#include <opm/input/eclipse/Schedule/Events.hpp>
+#include <opm/input/eclipse/Schedule/GasLiftOpt.hpp>
+#include <opm/input/eclipse/Schedule/Group/GConSale.hpp>
+#include <opm/input/eclipse/Schedule/Group/GConSump.hpp>
+#include <opm/input/eclipse/Schedule/Group/GroupEconProductionLimits.hpp>
+#include <opm/input/eclipse/Schedule/Group/GuideRateConfig.hpp>
+#include <opm/input/eclipse/Schedule/MSW/SICD.hpp>
+#include <opm/input/eclipse/Schedule/MSW/SegmentMatcher.hpp>
+#include <opm/input/eclipse/Schedule/MSW/Valve.hpp>
+#include <opm/input/eclipse/Schedule/MSW/WellSegments.hpp>
+#include <opm/input/eclipse/Schedule/Network/Balance.hpp>
+#include <opm/input/eclipse/Schedule/Network/ExtNetwork.hpp>
+#include <opm/input/eclipse/Schedule/OilVaporizationProperties.hpp>
+#include <opm/input/eclipse/Schedule/RFTConfig.hpp>
+#include <opm/input/eclipse/Schedule/RPTConfig.hpp>
+#include <opm/input/eclipse/Schedule/SummaryState.hpp>
+#include <opm/input/eclipse/Schedule/Tuning.hpp>
+#include <opm/input/eclipse/Schedule/UDQ/UDQActive.hpp>
+#include <opm/input/eclipse/Schedule/UDQ/UDQConfig.hpp>
+#include <opm/input/eclipse/Schedule/Well/WList.hpp>
+#include <opm/input/eclipse/Schedule/Well/WListManager.hpp>
+#include <opm/input/eclipse/Schedule/Well/WVFPDP.hpp>
+#include <opm/input/eclipse/Schedule/Well/WVFPEXP.hpp>
+#include <opm/input/eclipse/Schedule/Well/Well.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellBrineProperties.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellEconProductionLimits.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellFoamProperties.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellMICPProperties.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellPolymerProperties.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellTestConfig.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellTracerProperties.hpp>
+
+#include <opm/input/eclipse/Units/Dimension.hpp>
+#include <opm/input/eclipse/Units/UnitSystem.hpp>
+#include <opm/input/eclipse/Units/Units.hpp>
+
+#include <opm/input/eclipse/Deck/DeckItem.hpp>
+#include <opm/input/eclipse/Deck/DeckKeyword.hpp>
+#include <opm/input/eclipse/Deck/DeckRecord.hpp>
+#include <opm/input/eclipse/Deck/DeckSection.hpp>
+
+#include <opm/input/eclipse/Parser/ErrorGuard.hpp>
+#include <opm/input/eclipse/Parser/ParseContext.hpp>
+
+#include <opm/input/eclipse/Parser/ParserKeywords/B.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/C.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/D.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/G.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/L.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/N.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/P.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/T.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/V.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/W.hpp>
+
+#include "Well/injection.hpp"
+
+#include <algorithm>
 #include <exception>
 #include <functional>
 #include <memory>
@@ -28,76 +103,6 @@
 #include <vector>
 
 #include <fmt/format.h>
-
-#include <opm/common/OpmLog/OpmLog.hpp>
-#include <opm/common/OpmLog/LogUtil.hpp>
-#include <opm/common/utility/OpmInputError.hpp>
-#include <opm/common/utility/numeric/cmp.hpp>
-#include <opm/common/utility/String.hpp>
-
-#include <opm/input/eclipse/Python/Python.hpp>
-#include <opm/input/eclipse/Deck/DeckItem.hpp>
-#include <opm/input/eclipse/Deck/DeckKeyword.hpp>
-#include <opm/input/eclipse/Deck/DeckRecord.hpp>
-#include <opm/input/eclipse/Deck/DeckSection.hpp>
-#include <opm/input/eclipse/Parser/ErrorGuard.hpp>
-#include <opm/input/eclipse/Parser/ParseContext.hpp>
-#include <opm/input/eclipse/Parser/ParserKeywords/B.hpp>
-#include <opm/input/eclipse/Parser/ParserKeywords/C.hpp>
-#include <opm/input/eclipse/Parser/ParserKeywords/D.hpp>
-#include <opm/input/eclipse/Parser/ParserKeywords/G.hpp>
-#include <opm/input/eclipse/Parser/ParserKeywords/L.hpp>
-#include <opm/input/eclipse/Parser/ParserKeywords/N.hpp>
-#include <opm/input/eclipse/Parser/ParserKeywords/P.hpp>
-#include <opm/input/eclipse/Parser/ParserKeywords/T.hpp>
-#include <opm/input/eclipse/Parser/ParserKeywords/V.hpp>
-#include <opm/input/eclipse/Parser/ParserKeywords/W.hpp>
-#include <opm/input/eclipse/Parser/ParserKeywords/W.hpp>
-
-#include <opm/input/eclipse/EclipseState/Phase.hpp>
-#include <opm/input/eclipse/EclipseState/Aquifer/AquiferFlux.hpp>
-#include <opm/input/eclipse/Schedule/Action/ActionX.hpp>
-#include <opm/input/eclipse/Schedule/Action/ActionResult.hpp>
-#include <opm/input/eclipse/Schedule/Action/SimulatorUpdate.hpp>
-#include <opm/input/eclipse/Schedule/Events.hpp>
-#include <opm/input/eclipse/Schedule/GasLiftOpt.hpp>
-#include <opm/input/eclipse/Schedule/Group/GConSump.hpp>
-#include <opm/input/eclipse/Schedule/Group/GConSale.hpp>
-#include <opm/input/eclipse/Schedule/Group/GroupEconProductionLimits.hpp>
-#include <opm/input/eclipse/Schedule/Group/GuideRateConfig.hpp>
-#include <opm/input/eclipse/Schedule/MSW/SegmentMatcher.hpp>
-#include <opm/input/eclipse/Schedule/MSW/SICD.hpp>
-#include <opm/input/eclipse/Schedule/MSW/Valve.hpp>
-#include <opm/input/eclipse/Schedule/MSW/WellSegments.hpp>
-#include <opm/input/eclipse/Schedule/Network/Balance.hpp>
-#include <opm/input/eclipse/Schedule/Network/ExtNetwork.hpp>
-#include <opm/input/eclipse/Schedule/RFTConfig.hpp>
-#include <opm/input/eclipse/Schedule/Well/Well.hpp>
-#include <opm/input/eclipse/Schedule/Well/WellTestConfig.hpp>
-
-#include <opm/input/eclipse/Schedule/OilVaporizationProperties.hpp>
-#include <opm/input/eclipse/Schedule/UDQ/UDQConfig.hpp>
-#include <opm/input/eclipse/Schedule/UDQ/UDQActive.hpp>
-#include <opm/input/eclipse/Schedule/RPTConfig.hpp>
-#include <opm/input/eclipse/Schedule/Schedule.hpp>
-#include <opm/input/eclipse/Schedule/Tuning.hpp>
-#include <opm/input/eclipse/Schedule/Well/WList.hpp>
-#include <opm/input/eclipse/Schedule/Well/WListManager.hpp>
-#include <opm/input/eclipse/Schedule/Well/WellBrineProperties.hpp>
-#include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
-#include <opm/input/eclipse/Schedule/Well/WellEconProductionLimits.hpp>
-#include <opm/input/eclipse/Schedule/Well/WellFoamProperties.hpp>
-#include <opm/input/eclipse/Schedule/Well/WellMICPProperties.hpp>
-#include <opm/input/eclipse/Schedule/Well/WellPolymerProperties.hpp>
-#include <opm/input/eclipse/Schedule/Well/WellTracerProperties.hpp>
-#include <opm/input/eclipse/Schedule/Well/WVFPDP.hpp>
-#include <opm/input/eclipse/Schedule/Well/WVFPEXP.hpp>
-#include <opm/input/eclipse/Schedule/SummaryState.hpp>
-#include <opm/input/eclipse/Units/Dimension.hpp>
-#include <opm/input/eclipse/Units/UnitSystem.hpp>
-#include <opm/input/eclipse/Units/Units.hpp>
-
-#include "Well/injection.hpp"
 
 #include <external/resinsight/LibGeometry/cvfBoundingBoxTree.h>
 
@@ -1666,6 +1671,8 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
 
     void Schedule::handleWELSPECS(HandlerContext& handlerContext)
     {
+        using Kw = ParserKeywords::WELSPECS;
+
         auto getTrimmedName = [&handlerContext](const auto& item)
         {
             return trim_wgname(handlerContext.keyword,
@@ -1676,86 +1683,101 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
 
         auto fieldWells = std::vector<std::string>{};
         for (const auto& record : handlerContext.keyword) {
-            const auto wellName = getTrimmedName(record.getItem<ParserKeywords::WELSPECS::WELL>());
-            const auto groupName = getTrimmedName(record.getItem<ParserKeywords::WELSPECS::GROUP>());
+            if (const auto fip_region_number = record.getItem<Kw::FIP_REGION>().get<int>(0);
+                fip_region_number != Kw::FIP_REGION::defaultValue)
+            {
+                const auto& location = handlerContext.keyword.location();
+                const auto msg = fmt::format("FIP region {} in WELSPECS keyword "
+                                             "in file {} line {} is unsupported. "
+                                             "Using default value {}.",
+                                             fip_region_number,
+                                             location.filename,
+                                             location.lineno,
+                                             Kw::FIP_REGION::defaultValue);
+                OpmLog::warning(msg);
+            }
+
+            if (const auto& density_calc_type = record.getItem<Kw::DENSITY_CALC>().get<std::string>(0);
+                density_calc_type != Kw::DENSITY_CALC::defaultValue)
+            {
+                const auto& location = handlerContext.keyword.location();
+                const auto msg = fmt::format("Density calculation method '{}' in WELSPECS keyword "
+                                             "in file {} line {} is unsupported. "
+                                             "Using default value {}.",
+                                             density_calc_type,
+                                             location.filename,
+                                             location.lineno,
+                                             Kw::DENSITY_CALC::defaultValue);
+                OpmLog::warning(msg);
+            }
+
+            const auto wellName = getTrimmedName(record.getItem<Kw::WELL>());
+            const auto groupName = getTrimmedName(record.getItem<Kw::GROUP>());
+
+            // We might get here from an ACTIONX context, or we might get
+            // called on a well (list) template, to reassign certain well
+            // properties--e.g, the well's controlling group--so check if
+            // 'wellName' matches any existing well names through pattern
+            // matching before treating the wellName as a simple well name.
+            //
+            // Note also that we use the wellNames(name, step, matching)
+            // overload instead of wellNames(name, handlerContext) since the
+            // latter throws an exception if the list of candidate wells is
+            // empty.  That's the wrong behaviour here, because an empty
+            // list just means that we're creating a new well in this case.
+            const auto existingWells =
+                this->wellNames(wellName,
+                                handlerContext.currentStep,
+                                handlerContext.matching_wells);
 
             if (groupName == "FIELD") {
-                fieldWells.push_back(wellName);
-            }
-
-            const auto fip_region_number = record.getItem<ParserKeywords::WELSPECS::FIP_REGION>().get<int>(0);
-            if (fip_region_number != 0) {
-                const auto& location = handlerContext.keyword.location();
-                std::string msg = "The FIP_REGION item in the WELSPECS keyword in file: " + location.filename + " line: " + std::to_string(location.lineno) + " using default value: " + std::to_string(ParserKeywords::WELSPECS::FIP_REGION::defaultValue);
-                OpmLog::warning(msg);
-            }
-
-            const auto& density_calc_type = record.getItem<ParserKeywords::WELSPECS::DENSITY_CALC>().get<std::string>(0);
-            if (density_calc_type != "SEG") {
-                const auto& location = handlerContext.keyword.location();
-                std::string msg = "The DENSITY_CALC item in the WELSPECS keyword in file: " + location.filename + " line: " + std::to_string(location.lineno) + " using default value: " + ParserKeywords::WELSPECS::DENSITY_CALC::defaultValue;
-                OpmLog::warning(msg);
-            }
-
-            if (!this->snapshots.back().groups.has(groupName))
-                addGroup(groupName, handlerContext.currentStep);
-
-            if (!hasWell(wellName)) {
-                auto wellConnectionOrder = Connection::Order::TRACK;
-
-                const auto& compord = handlerContext.block.get("COMPORD");
-                if (compord.has_value()) {
-                    for (std::size_t compordRecordNr = 0; compordRecordNr < compord->size(); compordRecordNr++) {
-                        const auto& compordRecord = compord->getRecord(compordRecordNr);
-
-                        const std::string& wellNamePattern = compordRecord.getItem(0).getTrimmedString(0);
-                        if (Well::wellNameInWellNamePattern(wellName, wellNamePattern)) {
-                            const std::string& compordString = compordRecord.getItem(1).getTrimmedString(0);
-                            wellConnectionOrder = Connection::OrderFromString(compordString);
-                        }
-                    }
+                if (existingWells.empty()) {
+                    fieldWells.push_back(wellName);
                 }
-                this->addWell(wellName, record, handlerContext.currentStep, wellConnectionOrder);
-                this->addWellToGroup(groupName, wellName, handlerContext.currentStep);
-                handlerContext.affected_well(wellName);
-            } else {
-                const auto headI = record.getItem<ParserKeywords::WELSPECS::HEAD_I>().get<int>(0) - 1;
-                const auto headJ = record.getItem<ParserKeywords::WELSPECS::HEAD_J>().get<int>(0) - 1;
-                const auto& refDepthItem = record.getItem<ParserKeywords::WELSPECS::REF_DEPTH>();
-                int pvt_table = record.getItem<ParserKeywords::WELSPECS::P_TABLE>().get<int>(0);
-                double drainageRadius = record.getItem<ParserKeywords::WELSPECS::D_RADIUS>().getSIDouble(0);
-                std::optional<double> ref_depth;
-                if (refDepthItem.hasValue(0))
-                    ref_depth = refDepthItem.getSIDouble(0);
-                {
-                    bool update = false;
-                    auto well2 = this->snapshots.back().wells.get( wellName );
-                    update  = well2.updateHead(headI, headJ);
-                    update |= well2.updateRefDepth(ref_depth);
-                    update |= well2.updateDrainageRadius(drainageRadius);
-                    update |= well2.updatePVTTable(pvt_table);
-
-                    if (update) {
-                        well2.updateRefDepth();
-                        this->snapshots.back().wellgroup_events().addEvent( wellName, ScheduleEvents::WELL_WELSPECS_UPDATE);
-                        this->snapshots.back().wells.update( std::move(well2) );
-                        handlerContext.affected_well(wellName);
+                else {
+                    for (const auto& existingWell : existingWells) {
+                        fieldWells.push_back(existingWell);
                     }
                 }
             }
 
-            this->addWellToGroup(groupName, wellName, handlerContext.currentStep);
+            if (! this->snapshots.back().groups.has(groupName)) {
+                this->addGroup(groupName, handlerContext.currentStep);
+            }
+
+            if (existingWells.empty()) {
+                // 'wellName' does not match any existing wells.  Create a
+                // new Well object for this well.
+                this->welspecsCreateNewWell(record,
+                                            wellName,
+                                            groupName,
+                                            handlerContext);
+            }
+            else {
+                // 'wellName' matches one or more existing wells.  Assign
+                // new properties for those wells.
+                this->welspecsUpdateExistingWells(record,
+                                                  existingWells,
+                                                  groupName,
+                                                  handlerContext);
+            }
         }
 
         if (! fieldWells.empty()) {
+            std::sort(fieldWells.begin(), fieldWells.end());
+            fieldWells.erase(std::unique(fieldWells.begin(), fieldWells.end()),
+                             fieldWells.end());
+
             const auto* plural = (fieldWells.size() == 1) ? "" : "s";
-            const auto msg_fmt = fmt::format(R"(Well{0} is parented directly to 'FIELD', this is allowed but discouraged.
+
+            const auto msg_fmt = fmt::format(R"(Well{0} parented directly to 'FIELD'; this is allowed but discouraged.
 Well{0} entered with 'FIELD' parent group:
  * {1})", plural, fmt::join(fieldWells, "\n * "));
-            handlerContext.parseContext.handleError( ParseContext::SCHEDULE_WELL_IN_FIELD_GROUP,
-                                                     msg_fmt,
-                                                     handlerContext.keyword.location(),
-                                                     handlerContext.errors );
+
+            handlerContext.parseContext.handleError(ParseContext::SCHEDULE_WELL_IN_FIELD_GROUP,
+                                                    msg_fmt,
+                                                    handlerContext.keyword.location(),
+                                                    handlerContext.errors);
         }
 
         if (! handlerContext.keyword.empty()) {
