@@ -96,11 +96,13 @@ namespace {
         // note: we allow for SOF2 to be part of family1 for threeP +
         // solvent simulations.
 
-        const auto family2 =      // SGFN, SOF{2,3}, SWFN
-            (gas && deck.hasKeyword<Opm::ParserKeywords::SGFN>()) ||
+        const auto family2 =      // SGFN, SOF{2,3}, SWFN, SGWFN
+            (gas && (deck.hasKeyword<Opm::ParserKeywords::SGFN>() ||
+                     deck.hasKeyword<Opm::ParserKeywords::SGWFN>())) ||
             (oil && ((threeP && deck.hasKeyword<Opm::ParserKeywords::SOF3>()) ||
                      (twoP && deck.hasKeyword<Opm::ParserKeywords::SOF2>()))) ||
-            (wat && deck.hasKeyword<Opm::ParserKeywords::SWFN>());
+            (wat && (deck.hasKeyword<Opm::ParserKeywords::SWFN>() ||
+                     deck.hasKeyword<Opm::ParserKeywords::SGWFN>()));
         const auto family3 = //WSF, GSF gas-water CO2STORE case
             deck.hasKeyword<Opm::ParserKeywords::GSF>() &&
             deck.hasKeyword<Opm::ParserKeywords::WSF>();

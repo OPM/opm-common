@@ -23,6 +23,7 @@
 #include <opm/input/eclipse/EclipseState/Tables/SgfnTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/SgofTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/SlgofTable.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/SgwfnTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/Sof2Table.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/Sof3Table.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/SwfnTable.hpp>
@@ -70,8 +71,8 @@ namespace {
      * Description; there are several alternative families of keywords which
      * can be used to enter relperm and capillary pressure tables.
      *
-     * If SWOF and SGOF are specified in the deck it return I
-     * If SWFN, SGFN and SOF3 are specified in the deck it return II
+     * If SWOF and SGOF are specified in the deck it returns I
+     * If SGWFN, SWFN, SGFN and SOF3 are specified in the deck it returns II
      * If keywords are missing or mixed, an error is given.
      */
     enum class SatfuncFamily { none = 0, I = 1, II = 2, III = 3 };
@@ -97,8 +98,8 @@ namespace {
             (wat && (tm.hasTables("SWOF") || !tm.getSwofletTable().empty()));
         // note: we allow for SOF2 to be part of family1 for threeP + solvent simulations.
 
-        const auto family2 =      // SGFN, SOF{2,3}, SWFN
-            (gas && tm.hasTables("SGFN")) ||
+        const auto family2 =      // SGFN, SOF{2,3}, SWFN, SGWFN
+            (gas && (tm.hasTables("SGFN") || tm.hasTables("SGWFN"))) ||
             (oil && ((threeP && tm.hasTables("SOF3")) ||
                      (twoP && tm.hasTables("SOF2")))) ||
             (wat && tm.hasTables("SWFN"));
@@ -132,7 +133,7 @@ namespace {
         throw std::invalid_argument {
             "Saturation functions must be specified using "
             "either family 1 or family 2 keywords\n"
-            "Use either SGOF (or SLGOF) and/or SWOF or SGFN/SWFN and SOF2/SOF3"
+            "Use either SGOF (or SLGOF) and/or SWOF or SGFN/SWFN or SGWFN and SOF2/SOF3"
         };
     }
 
@@ -148,6 +149,7 @@ namespace {
         const auto& swofTables = tm.getSwofTables();
         const auto& swofLetTables  = tm.getSwofletTable();
         const auto& swfnTables = tm.getSwfnTables();
+        const auto& sgwfnTables = tm.getSgwfnTables();
         const auto& wsfTables = tm.getWsfTables();
 
         const auto famI = [&swofTables]( int i ) {
@@ -161,6 +163,9 @@ namespace {
         const auto famII = [&swfnTables]( int i ) {
             return swfnTables.getTable<Opm::SwfnTable>( i ).getSwColumn().front();
         };
+        const auto famII_sgwfn = [&sgwfnTables]( int i ) {
+            return 1.0 - sgwfnTables.getTable<Opm::SgwfnTable>( i ).getSgColumn().back();
+        };
         const auto famIII = [&wsfTables]( int i ) {
             return wsfTables.getTable<Opm::WsfTable>( i ).getSwColumn().front();
         };
@@ -173,7 +178,11 @@ namespace {
                 else
                     throw std::domain_error("Either SWOF or SWOFLET tables must be provided");
 
-            case SatfuncFamily::II: return map( famII, Opm::fun::iota( num_tables ) );
+            case SatfuncFamily::II: 
+                if( !swfnTables.empty() )
+                    return map( famII, Opm::fun::iota( num_tables ) );
+                else
+                    return map( famII_sgwfn, Opm::fun::iota( num_tables ) );
             case SatfuncFamily::III: return map( famIII, Opm::fun::iota( num_tables ) );
             default:
                 throw std::domain_error("No valid saturation keyword family specified");
@@ -192,6 +201,7 @@ namespace {
         const auto& swofTables = tm.getSwofTables();
         const auto& swofLetTables  = tm.getSwofletTable();
         const auto& swfnTables = tm.getSwfnTables();
+        const auto& sgwfnTables = tm.getSgwfnTables();
         const auto& wsfTables = tm.getWsfTables();
 
         const auto famI = [&swofTables]( int i ) {
@@ -205,6 +215,9 @@ namespace {
         const auto famII = [&swfnTables]( int i ) {
             return swfnTables.getTable<Opm::SwfnTable>( i ).getSwColumn().back();
         };
+        const auto famII_sgwfn = [&sgwfnTables]( int i ) {
+            return 1.0 - sgwfnTables.getTable<Opm::SgwfnTable>( i ).getSgColumn().front();
+        };
         const auto famIII = [&wsfTables]( int i ) {
             return wsfTables.getTable<Opm::WsfTable>( i ).getSwColumn().back();
         };
@@ -217,7 +230,11 @@ namespace {
                 else
                     throw std::domain_error("Either SWOF or SWOFLET tables must be provided");
 
-            case SatfuncFamily::II: return map( famII, Opm::fun::iota( num_tables ) );
+            case SatfuncFamily::II:
+                if( !swfnTables.empty() ) 
+                    return map( famII, Opm::fun::iota( num_tables ) );
+                else
+                    return map( famII_sgwfn, Opm::fun::iota( num_tables ) );
             case SatfuncFamily::III: return map( famIII, Opm::fun::iota( num_tables ) );
 
             default:
@@ -238,6 +255,7 @@ namespace {
         const auto& sgofLetTables  = tm.getSgofletTable();
         const auto& slgofTables = tm.getSlgofTables();
         const auto& sgfnTables = tm.getSgfnTables();
+        const auto& sgwfnTables = tm.getSgwfnTables();
         const auto& gsfTables = tm.getGsfTables();
 
         const auto famI_sgof = [&sgofTables]( int i ) {
@@ -255,6 +273,9 @@ namespace {
         const auto famII = [&sgfnTables]( int i ) {
             return sgfnTables.getTable<Opm::SgfnTable>( i ).getSgColumn().front();
         };
+        const auto famII_sgwfn = [&sgwfnTables]( int i ) {
+            return sgwfnTables.getTable<Opm::SgwfnTable>( i ).getSgColumn().front();
+        };
         const auto famIII = [&gsfTables]( int i ) {
             return gsfTables.getTable<Opm::GsfTable>( i ).getSgColumn().front();
         };
@@ -271,7 +292,10 @@ namespace {
                     return Opm::fun::map( famI_slgof, Opm::fun::iota( num_tables ) );
 
             case SatfuncFamily::II:
-                return Opm::fun::map( famII, Opm::fun::iota( num_tables ) );
+                if( !sgfnTables.empty() )
+                    return Opm::fun::map( famII, Opm::fun::iota( num_tables ) );
+                else
+                    return Opm::fun::map( famII_sgwfn, Opm::fun::iota( num_tables ) );
             case SatfuncFamily::III:
                 return Opm::fun::map( famIII, Opm::fun::iota( num_tables ) );
 
@@ -294,6 +318,7 @@ namespace {
         const auto& swofLetTables  = tm.getSwofletTable();
         const auto& slgofTables = tm.getSlgofTables();
         const auto& sgfnTables = tm.getSgfnTables();
+        const auto& sgwfnTables = tm.getSgwfnTables();
         const auto& gsfTables = tm.getGsfTables();
 
         const auto famI_sgof = [&sgofTables]( int i ) {
@@ -312,6 +337,9 @@ namespace {
         const auto famII = [&sgfnTables]( int i ) {
             return sgfnTables.getTable<Opm::SgfnTable>( i ).getSgColumn().back();
         };
+        const auto famII_sgwfn = [&sgwfnTables]( int i ) {
+            return sgwfnTables.getTable<Opm::SgwfnTable>( i ).getSgColumn().back();
+        };
         const auto famIII = [&gsfTables]( int i ) {
             return gsfTables.getTable<Opm::GsfTable>( i ).getSgColumn().back();
         };
@@ -329,7 +357,10 @@ namespace {
                     return Opm::fun::map( famI_slgof, Opm::fun::iota( num_tables ) );
 
             case SatfuncFamily::II:
-                return Opm::fun::map( famII, Opm::fun::iota( num_tables ) );
+                if( !sgfnTables.empty() )
+                    return Opm::fun::map( famII, Opm::fun::iota( num_tables ) );
+                else
+                    return Opm::fun::map( famII_sgwfn, Opm::fun::iota( num_tables ) );
             case SatfuncFamily::III:
                 return Opm::fun::map( famIII, Opm::fun::iota( num_tables ) );
 
@@ -395,6 +426,21 @@ namespace {
                                       table.getKrwColumn(), tolcrit);
     }
 
+    /// Maximum water saturation for which Krgw(1-Sw) <= tolcrit.
+    ///
+    /// Expected Table Format:
+    ///    [1-Sw,  Krgw(1-Sw), ...other...]
+    ///
+    ///    Krgw decreasing.
+    double critical_water_sgwfn(const Opm::SgwfnTable& sgwfnTable, const double tolcrit)
+    {
+        const auto sg_at_crit_krgw =
+            crit_sat_decreasing_KR(sgwfnTable.getSgColumn(),
+                                      sgwfnTable.getKrgwColumn(), tolcrit);
+        // Sw = 1 - Sg
+        return 1.0 - sg_at_crit_krgw;
+    }
+
     std::vector<double>
     findCriticalWater(const Opm::TableManager& tm,
                       const Opm::Phases&       ph,
@@ -408,6 +454,7 @@ namespace {
         const auto& swofTables = tm.getSwofTables();
         const auto& swofLetTables  = tm.getSwofletTable();
         const auto& swfnTables = tm.getSwfnTables();
+        const auto& sgwfnTables = tm.getSgwfnTables();
         const auto& wsfTables = tm.getWsfTables();
 
         const auto famI = [&swofTables, tolcrit](const int i) -> double
@@ -423,6 +470,10 @@ namespace {
         {
             return critical_water(swfnTables.getTable<Opm::SwfnTable>(i), tolcrit);
         };
+        const auto famII_sgwfn = [&sgwfnTables, tolcrit](const int i) -> double
+        {
+            return critical_water_sgwfn(sgwfnTables.getTable<Opm::SgwfnTable>(i), tolcrit);
+        };
         const auto famIII = [&wsfTables, tolcrit](const int i) -> double
         {
             return critical_water(wsfTables.getTable<Opm::WsfTable>(i), tolcrit);
@@ -436,7 +487,11 @@ namespace {
                 else
                     throw std::domain_error("Either SWOF or SWOFLET tables must be provided");
 
-            case SatfuncFamily::II: return Opm::fun::map( famII, Opm::fun::iota( num_tables ) );
+            case SatfuncFamily::II:
+                if( !swfnTables.empty() )
+                    return Opm::fun::map( famII, Opm::fun::iota( num_tables ) );
+                else
+                    return Opm::fun::map( famII_sgwfn, Opm::fun::iota( num_tables ) );
             case SatfuncFamily::III: return Opm::fun::map( famIII, Opm::fun::iota( num_tables ) );
 
             default: throw std::domain_error("No valid saturation keyword family specified");
@@ -484,6 +539,7 @@ namespace {
             return std::vector<double>(num_tables, 0.0);
 
         const auto& sgfnTables = tm.getSgfnTables();
+        const auto& sgwfnTables = tm.getSgwfnTables();
         const auto& sgofTables = tm.getSgofTables();
         const auto& sgofLetTables  = tm.getSgofletTable();
         const auto& slgofTables = tm.getSlgofTables();
@@ -508,6 +564,11 @@ namespace {
             return critical_gas(sgfnTables.getTable<Opm::SgfnTable>(i), tolcrit);
         };
 
+        const auto famII_sgwfn = [&sgwfnTables, tolcrit](const int i) -> double
+        {
+            return critical_gas(sgwfnTables.getTable<Opm::SgwfnTable>(i), tolcrit);
+        };
+
         const auto famIII = [&gsfTables, tolcrit](const int i) -> double
         {
             return critical_gas(gsfTables.getTable<Opm::GsfTable>(i), tolcrit);
@@ -526,7 +587,10 @@ namespace {
                     return Opm::fun::map( famI_slgof, Opm::fun::iota( num_tables ) );
 
             case SatfuncFamily::II:
-                return Opm::fun::map( famII, Opm::fun::iota( num_tables ) );
+                if( !sgfnTables.empty() )
+                    return Opm::fun::map( famII, Opm::fun::iota( num_tables ) );
+                else
+                    return Opm::fun::map( famII_sgwfn, Opm::fun::iota( num_tables ) );
             case SatfuncFamily::III:
                 return Opm::fun::map( famIII, Opm::fun::iota( num_tables ) );
 
@@ -742,6 +806,7 @@ namespace {
         const auto& sgofLetTables  = tm.getSgofletTable();
         const auto& slgofTables = tm.getSlgofTables();
         const auto& sgfnTables = tm.getSgfnTables();
+        const auto& sgwfnTables = tm.getSgwfnTables();
         const auto& gsfTables = tm.getGsfTables();
 
         const auto& famI_sgof = [&sgofTables]( int i ) {
@@ -760,6 +825,10 @@ namespace {
             return sgfnTables.getTable<Opm::SgfnTable>( i ).getKrgColumn().back();
         };
 
+        const auto& famII_sgwfn = [&sgwfnTables]( int i ) {
+            return sgwfnTables.getTable<Opm::SgwfnTable>( i ).getKrgColumn().back();
+        };
+
         const auto& famIII = [&gsfTables]( int i ) {
             return gsfTables.getTable<Opm::GsfTable>( i ).getKrgColumn().back();
         };
@@ -775,7 +844,10 @@ namespace {
                 else
                     return Opm::fun::map( famI_slgof, Opm::fun::iota( num_tables ) );
             case SatfuncFamily::II:
-                return Opm::fun::map( famII, Opm::fun::iota( num_tables ) );
+                if( !sgfnTables.empty() )
+                    return Opm::fun::map( famII, Opm::fun::iota( num_tables ) );
+                else
+                    return Opm::fun::map( famII_sgwfn, Opm::fun::iota( num_tables ) );
             case SatfuncFamily::III:
                 return Opm::fun::map( famIII, Opm::fun::iota( num_tables ) );
             default:
@@ -797,6 +869,7 @@ namespace {
         const auto& sgofLetTables  = tm.getSgofletTable();
         const auto& slgofTables = tm.getSlgofTables();
         const auto& sgfnTables = tm.getSgfnTables();
+        const auto& sgwfnTables = tm.getSgwfnTables();
         const auto& gsfTables = tm.getGsfTables();
 
         auto sr = std::vector<double>(num_tables, 0.0);
@@ -843,6 +916,14 @@ namespace {
             return sgfn.getKrgColumn().eval(ix);
         };
 
+        const auto famII_sgwfn = [&sgwfnTables, &sr](const int i) -> double
+        {
+            const auto& sgwfn = sgwfnTables.getTable<Opm::SgwfnTable>(i);
+            const auto  ix   = sgwfn.getSgColumn().lookup(sr[i]);
+
+            return sgwfn.getKrgColumn().eval(ix);
+        };
+
         const auto famIII = [&gsfTables, &sr](const int i) -> double
         {
             const auto& gsf = gsfTables.getTable<Opm::GsfTable>(i);
@@ -862,7 +943,10 @@ namespace {
                 else
                     return Opm::fun::map( famI_slgof, Opm::fun::iota( num_tables ) );
             case SatfuncFamily::II:
-                return Opm::fun::map( famII, Opm::fun::iota( num_tables ) );
+                if( !sgfnTables.empty() )
+                    return Opm::fun::map( famII, Opm::fun::iota( num_tables ) );
+                else
+                    return Opm::fun::map( famII_sgwfn, Opm::fun::iota( num_tables ) );
             case SatfuncFamily::III:
                 return Opm::fun::map( famIII, Opm::fun::iota( num_tables ) );
             default:
@@ -883,6 +967,7 @@ namespace {
         const auto& swofTables = tm.getSwofTables();
         const auto& swofLetTables  = tm.getSwofletTable();
         const auto& swfnTables = tm.getSwfnTables();
+        const auto& sgwfnTables = tm.getSgwfnTables();
         const auto& wsfTables = tm.getWsfTables();
 
         auto sr = std::vector<double>(num_tables, 0.0);
@@ -921,6 +1006,14 @@ namespace {
             return swfn.getKrwColumn().eval(ix);
         };
 
+        const auto& famII_sgwfn = [&sgwfnTables, &sr](const int i) -> double
+        {
+            const auto& sgwfn = sgwfnTables.getTable<Opm::SgwfnTable>(i);
+            const auto  ix   = sgwfn.getSgColumn().lookup(1. - sr[i]);
+
+            return sgwfn.getKrgwColumn().eval(ix);
+        };
+
         const auto& famIII = [&wsfTables, &sr](const int i) -> double
         {
             const auto& wsf = wsfTables.getTable<Opm::WsfTable>(i);
@@ -939,7 +1032,10 @@ namespace {
                     throw std::domain_error("Either SWOF or SWOFLET tables must be provided");
 
             case SatfuncFamily::II:
-                return Opm::fun::map( famII, Opm::fun::iota( num_tables ) );
+                if( !swfnTables.empty() )
+                    return Opm::fun::map( famII, Opm::fun::iota( num_tables ) );
+                else
+                    return Opm::fun::map( famII_sgwfn, Opm::fun::iota( num_tables ) );
             case SatfuncFamily::III:
                 return Opm::fun::map( famIII, Opm::fun::iota( num_tables ) );
             default:
@@ -1115,6 +1211,7 @@ namespace {
         const auto& sgofLetTables = tm.getSgofletTable();
         const auto& slgofTables = tm.getSlgofTables();
         const auto& sgfnTables = tm.getSgfnTables();
+        const auto& sgwfnTables = tm.getSgwfnTables();
         const auto& gsfTables = tm.getGsfTables();
 
         const auto& famI_sgof = [&sgofTables]( int i ) {
@@ -1133,6 +1230,10 @@ namespace {
             return sgfnTables.getTable<Opm::SgfnTable>( i ).getPcogColumn().back();
         };
 
+        const auto& famII_sgwfn = [&sgwfnTables]( int i ) {
+            return sgwfnTables.getTable<Opm::SgwfnTable>( i ).getPcgwColumn().back();
+        };
+
         const auto& famIII = [&gsfTables]( int i ) {
             return gsfTables.getTable<Opm::GsfTable>( i ).getPcgwColumn().back();
         };
@@ -1148,7 +1249,10 @@ namespace {
                 else
                     return Opm::fun::map( famI_slgof, Opm::fun::iota( num_tables ) );
             case SatfuncFamily::II:
-                return Opm::fun::map( famII, Opm::fun::iota( num_tables ) );
+                if( !sgfnTables.empty() )
+                    return Opm::fun::map( famII, Opm::fun::iota( num_tables ) );
+                else
+                    return Opm::fun::map( famII_sgwfn, Opm::fun::iota( num_tables ) );
             case SatfuncFamily::III:
                 return Opm::fun::map( famIII, Opm::fun::iota( num_tables ) );
             default:
@@ -1162,7 +1266,8 @@ namespace {
     {
         const auto num_tables  = tm.getTabdims().getNumSatTables();
 
-        if (! ph.active(::Opm::Phase::WATER))
+        if (! ph.active(::Opm::Phase::WATER) ||
+            ! ph.active(::Opm::Phase::OIL))
             return std::vector<double>(num_tables, 0.0);
 
         const auto& swofTables = tm.getSwofTables();
@@ -1279,6 +1384,7 @@ namespace {
         const auto& swofTables = tm.getSwofTables();
         const auto& swofLetTables  = tm.getSwofletTable();
         const auto& swfnTables = tm.getSwfnTables();
+        const auto& sgwfnTables = tm.getSgwfnTables();
         const auto& wsfTables = tm.getWsfTables();
 
         const auto& famI = [&swofTables]( int i ) {
@@ -1293,6 +1399,10 @@ namespace {
             return swfnTables.getTable<Opm::SwfnTable>( i ).getKrwColumn().back();
         };
 
+        const auto& famII_sgwfn = [&sgwfnTables]( int i ) {
+            return sgwfnTables.getTable<Opm::SgwfnTable>( i ).getKrgwColumn().front();
+        };
+
         const auto& famIII = [&wsfTables]( int i ) {
             return wsfTables.getTable<Opm::WsfTable>( i ).getKrwColumn().back();
         };
@@ -1305,10 +1415,11 @@ namespace {
                     return Opm::fun::map( famI_let, Opm::fun::iota( num_tables ) );
                 else
                     throw std::domain_error("Either SWOF or SWOFLET tables must be provided");
-
-
             case SatfuncFamily::II:
-                return Opm::fun::map( famII, Opm::fun::iota( num_tables ) );
+                if( !swfnTables.empty() )
+                    return Opm::fun::map( famII, Opm::fun::iota( num_tables ) );
+                else
+                    return Opm::fun::map( famII_sgwfn, Opm::fun::iota( num_tables ) );
             case SatfuncFamily::III:
                 return Opm::fun::map( famIII, Opm::fun::iota( num_tables ) );
             default:

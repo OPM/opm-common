@@ -787,6 +787,80 @@ SOGCR    -- Requires 'OIL'
 )"), Opm::OpmInputError);
 }
 
+BOOST_AUTO_TEST_CASE(SGWFN) {
+    std::string deck_string = R"(
+RUNSPEC
+
+DIMENS
+6 6 3 /
+
+WATER
+GAS
+CO2STORE
+
+TABDIMS
+/
+
+GRID
+
+DXV
+  6*100.0 /
+DYV
+  6*100.0 /
+DZV
+  3*5.0 /
+
+TOPS
+  36*2000.0 /
+
+PERMX
+  108*100.0 /
+PERMY
+  108*100.0 /
+PERMZ
+  108*10.0 /
+PORO
+  108*0.3 /
+
+PROPS
+
+SGWFN
+0.00   0.00     0.9      0.0
+0.05   0.02     0.8      5.
+0.10   0.03     0.5      10.0
+0.80   1.00     0.0      20.0
+/
+)";
+    const auto es = ::Opm::EclipseState {
+        ::Opm::Parser{}.parseString(deck_string)
+    };
+    const auto& tm      = es.getTableManager();
+    const auto& ph      = es.runspec().phases();
+    const auto  tolcrit = 0.0;
+
+    auto rtepPtr = satfunc::getRawTableEndpoints(tm, ph, tolcrit);
+
+    // Water end-points
+    {
+        const auto swl  = rtepPtr.connate .water;
+        const auto swcr = rtepPtr.critical.water;
+        const auto swu  = rtepPtr.maximum .water;
+        BOOST_CHECK_CLOSE(swl [0], 0.2, 1.0e-10);
+        BOOST_CHECK_CLOSE(swcr[0], 0.2, 1.0e-10);
+        BOOST_CHECK_CLOSE(swu [0], 1.0, 1.0e-10);
+    }
+
+    // Gas end-points
+    {
+        const auto sgl  = rtepPtr.connate .gas;
+        const auto sgcr = rtepPtr.critical.gas;
+        const auto sgu  = rtepPtr.maximum .gas;
+        BOOST_CHECK_CLOSE(sgl [0], 0.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(sgcr[0], 0.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(sgu [0], 0.8, 1.0e-10);
+    }
+}
+
 namespace {
     std::string satfunc_model_setup()
     {
