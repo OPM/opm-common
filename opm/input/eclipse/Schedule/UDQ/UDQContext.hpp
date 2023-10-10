@@ -59,7 +59,7 @@ namespace Opm {
         std::optional<double> get_segment_var(const std::string& well, const std::string& var, std::size_t segment) const;
 
         void add(const std::string& key, double value);
-        void update_assign(std::size_t report_step, const std::string& keyword, const UDQSet& udq_result);
+        void update_assign(const std::string& keyword, const UDQSet& udq_result);
         void update_define(std::size_t report_step, const std::string& keyword, const UDQSet& udq_result);
 
         const UDQFunctionTable& function_table() const;

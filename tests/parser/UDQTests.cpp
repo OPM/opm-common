@@ -2851,7 +2851,7 @@ UDQ
     const auto& udq = schedule.getUDQConfig(1);
     {
         const auto& ass = udq.assign("FUBHPP1");
-        context.update_assign(1, "FUBHPP1", ass.eval());
+        context.update_assign("FUBHPP1", ass.eval());
     }
     const auto& def = udq.define("WUDELTA");
     auto res = def.eval(context);

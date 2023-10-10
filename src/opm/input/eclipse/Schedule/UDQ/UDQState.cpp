@@ -291,9 +291,8 @@ void UDQState::add_define(std::size_t report_step, const std::string& udq_key, c
     this->add(udq_key, result);
 }
 
-void UDQState::add_assign(std::size_t report_step, const std::string& udq_key, const UDQSet& result)
+void UDQState::add_assign(const std::string& udq_key, const UDQSet& result)
 {
-    this->assignments[udq_key] = report_step;
     this->add(udq_key, result);
 }
 
@@ -364,7 +363,6 @@ bool UDQState::operator==(const UDQState& other) const
         && (this->well_values == other.well_values)
         && (this->group_values == other.group_values)
         && (this->segment_values == other.segment_values)
-        && (this->assignments == other.assignments)
         && (this->defines == other.defines);
 }
 
@@ -373,7 +371,6 @@ UDQState UDQState::serializationTestObject()
     UDQState st;
     st.undef_value = 78;
     st.scalar_values = {{"FU1", 100}, {"FU2", 200}};
-    st.assignments = {{"GU1", 99}, {"GU2", 199}};
     st.defines = {{"DU1", 299}, {"DU2", 399}};
 
     st.well_values.emplace("W1", std::unordered_map<std::string, double>{{"U1", 100}, {"U2", 200}});
@@ -408,14 +405,6 @@ UDQState UDQState::serializationTestObject()
     st.segment_values["SUSPECT"];
 
     return st;
-}
-
-bool UDQState::assign(std::size_t report_step, const std::string& udq_key) const
-{
-    auto assign_iter = this->assignments.find(udq_key);
-
-    return (assign_iter == this->assignments.end())
-        || (report_step > assign_iter->second);
 }
 
 bool UDQState::define(const std::string&                       udq_key,
