@@ -343,8 +343,8 @@ public:
 
     enum class KeywordFamily {
         Family_I,               // SGOF, SWOF, SLGOF
-        Family_II,              // SGFN, SOF{2,3}, SWFN
-        Family_III,              // GSF, WSF
+        Family_II,              // SGFN, SOF{2,3}, SWFN, SGWFN
+        Family_III,             // GSF, WSF
 
         Undefined,
     };
