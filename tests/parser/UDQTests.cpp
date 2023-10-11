@@ -2905,3 +2905,30 @@ BOOST_AUTO_TEST_CASE(UDQ_ASSIGN_SEGMENT)
         BOOST_CHECK_EQUAL(all.size(), std::size_t{3}); // Three different SU* variables
     }
 }
+
+BOOST_AUTO_TEST_CASE(UDQ_Update_SummaryState)
+{
+    auto st = SummaryState { TimeService::now() };
+
+    // P2 not yet online
+    st.update_well_var("P1", "WBHP",  42.0);
+    st.update_well_var("P2", "WBHP",   0.0);
+    st.update_well_var("P3", "WBHP", 121.2);
+
+    // BB not yet online
+    st.update_group_var("G1", "GOPR", 1222.0);
+    st.update_group_var("BB", "GOPR",    0.0);
+    st.update_group_var("AA", "GOPR", 1234.5);
+
+    // P2 not yet online
+    st.update_udq(UDQSet::wells("WUBAR", { "P1", "P3" }, 17.29), -123.4);
+    BOOST_CHECK_CLOSE(st.get_well_var("P1", "WUBAR"),   17.29, 1.0e-8);
+    BOOST_CHECK_CLOSE(st.get_well_var("P2", "WUBAR"), -123.4 , 1.0e-8);
+    BOOST_CHECK_CLOSE(st.get_well_var("P3", "WUBAR"),   17.29, 1.0e-8);
+
+    // BB not yet online
+    st.update_udq(UDQSet::groups("GUNDA_ST", { "G1", "AA" }, 652.44), -123.4);
+    BOOST_CHECK_CLOSE(st.get_group_var("AA", "GUNDA_ST"),  652.44, 1.0e-8);
+    BOOST_CHECK_CLOSE(st.get_group_var("BB", "GUNDA_ST"), -123.4 , 1.0e-8);
+    BOOST_CHECK_CLOSE(st.get_group_var("G1", "GUNDA_ST"),  652.44, 1.0e-8);
+}
