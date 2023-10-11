@@ -1316,6 +1316,10 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
                 if (well2.updateHasProduced())
                     update_well = true;
 
+                if (well2.getStatus() == WellStatus::OPEN) {
+                    this->snapshots.back().wellgroup_events().addEvent(well2.name(), ScheduleEvents::REQUEST_OPEN_WELL);
+                }
+
                 if (update_well) {
                     this->snapshots.back().events().addEvent( ScheduleEvents::PRODUCTION_UPDATE );
                     this->snapshots.back().wellgroup_events().addEvent( well2.name(), ScheduleEvents::PRODUCTION_UPDATE);
@@ -1388,6 +1392,10 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
                             this->updateWellStatus( well_name, handlerContext.currentStep, Well::Status::SHUT);
                         }
                     }
+                }
+
+                if (this->snapshots.back().wells.get( well_name ).getStatus() == Well::Status::OPEN) {
+                    this->snapshots.back().wellgroup_events().addEvent(well_name, ScheduleEvents::REQUEST_OPEN_WELL);
                 }
 
                 auto udq_active = this->snapshots.back().udq_active.get();
@@ -1525,6 +1533,10 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
                         if (did_flow_update) {
                             this->snapshots[currentStep].wells.update(std::move(well2));
                         }
+                    }
+
+                    if (new_well_status == open) {
+                        this->snapshots.back().wellgroup_events().addEvent( wname, ScheduleEvents::REQUEST_OPEN_WELL);
                     }
                 }
                 continue;

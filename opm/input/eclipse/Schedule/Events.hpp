@@ -126,6 +126,13 @@ namespace Opm
              * The well has been affected in an ACTIONX keyword.
              */
             ACTIONX_WELL_EVENT = (1 << 20),
+
+            /*
+             * Some SCHEDULE keywords can set a well to be OPEN to open a previously STOPped or SHUT well.
+             * The well is SHUT/STOP due to various causes (SCHEDULE, economical, physical, etc.)
+             * For now, the WELOPEN, WCONPROD and WCONINJE keywords are considered with this event
+             */
+            REQUEST_OPEN_WELL = (1 << 21),
         };
     }
 
