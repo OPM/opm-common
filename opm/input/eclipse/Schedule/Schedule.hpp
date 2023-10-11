@@ -21,10 +21,11 @@
 
 #include <cstddef>
 #include <ctime>
+#include <functional>
+#include <iosfwd>
 #include <map>
 #include <memory>
 #include <optional>
-#include <iosfwd>
 #include <set>
 #include <string>
 #include <unordered_map>
@@ -32,14 +33,14 @@
 #include <vector>
 
 #include <opm/input/eclipse/EclipseState/Runspec.hpp>
+#include <opm/input/eclipse/Schedule/Action/WGNames.hpp>
+#include <opm/input/eclipse/Schedule/CompletedCells.hpp>
 #include <opm/input/eclipse/Schedule/Group/Group.hpp>
 #include <opm/input/eclipse/Schedule/MessageLimits.hpp>
 #include <opm/input/eclipse/Schedule/ScheduleDeck.hpp>
 #include <opm/input/eclipse/Schedule/ScheduleState.hpp>
 #include <opm/input/eclipse/Schedule/Well/PAvg.hpp>
 #include <opm/input/eclipse/Schedule/WriteRestartFileEvents.hpp>
-#include <opm/input/eclipse/Schedule/CompletedCells.hpp>
-#include <opm/input/eclipse/Schedule/Action/WGNames.hpp>
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
 
 namespace Opm
