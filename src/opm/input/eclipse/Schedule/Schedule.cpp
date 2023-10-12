@@ -1216,11 +1216,14 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
 
 
 
-    std::vector<std::string> Schedule::wellNames(const std::string& pattern, const HandlerContext& context) {
+    std::vector<std::string> Schedule::wellNames(const std::string& pattern,
+                                                 const HandlerContext& context,
+                                                 bool allowEmpty)
+    {
         std::vector<std::string> valid_names;
         const auto& report_step = context.currentStep;
         auto names = this->wellNames(pattern, report_step, context.matching_wells);
-        if (names.empty()) {
+        if (names.empty() && !allowEmpty) {
             const auto& location = context.keyword.location();
             if (this->action_wgnames.has_well(pattern)) {
                 std::string msg = fmt::format(R"(Well: {} not yet defined for keyword {}.
@@ -1757,6 +1760,17 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
         return this->snapshots[report_step].rst_file(rst_config, previous_output);
     }
 
+    bool Schedule::isWList(std::size_t report_step, const std::string& pattern) const
+    {
+        const ScheduleState * sched_state;
+
+        if (report_step < this->snapshots.size())
+            sched_state = &this->snapshots[report_step];
+        else
+            sched_state = &this->snapshots.back();
+
+        return sched_state->wlist_manager.get().hasList(pattern);
+    }
 
     const std::map< std::string, int >& Schedule::rst_keywords( size_t report_step ) const {
         if (report_step == 0)
