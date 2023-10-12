@@ -255,6 +255,11 @@ namespace Opm
         if (var_type == UDQVarType::WELL_VAR) {
             const std::vector<std::string> wells = this->wells(); // Intentional copy
             for (const auto& well : wells) {
+                if (! udq_set.has(well)) {
+                    this->update_well_var(well, udq_set.name(), undefined_value);
+                    continue;
+                }
+
                 const auto& udq_value = udq_set[well].value();
                 this->update_well_var(well, udq_set.name(), udq_value.value_or(undefined_value));
             }
@@ -262,6 +267,11 @@ namespace Opm
         else if (var_type == UDQVarType::GROUP_VAR) {
             const std::vector<std::string> groups = this->groups(); // Intentional copy
             for (const auto& group : groups) {
+                if (! udq_set.has(group)) {
+                    this->update_group_var(group, udq_set.name(), undefined_value);
+                    continue;
+                }
+
                 const auto& udq_value = udq_set[group].value();
                 this->update_group_var(group, udq_set.name(), udq_value.value_or(undefined_value));
             }
