@@ -153,7 +153,7 @@ namespace Opm {
                 static const char* name[] = {"o",  // oleic phase
                                              "g"};  // gas phase
 
-                assert(0 <= phaseIdx && phaseIdx < 2);
+                assert(phaseIdx < 2);
                 return name[phaseIdx];
         }
 
@@ -166,7 +166,7 @@ namespace Opm {
                         Comp2::name(),
                 };
 
-                assert(0 <= compIdx && compIdx < 3);
+                assert(compIdx < 3);
                 return name[compIdx];
         }
 
@@ -196,6 +196,7 @@ namespace Opm {
             // Use LBC method to calculate viscosity
             LhsEval mu;
             mu = ViscosityModel::LBC(fluidState, paramCache, phaseIdx); 
+            return mu;
 
         }
 

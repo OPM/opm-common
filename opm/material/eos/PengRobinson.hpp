@@ -54,7 +54,7 @@ namespace Opm {
  * R. Reid, et al.: The Properties of Gases and Liquids,
  * 4th edition, McGraw-Hill, 1987, pp. 42-44, 82
  */
-template <class Scalar>
+template <class Scalar, bool UseLegacy=true>
 class PengRobinson
 {
     //! The ideal gas constant [Pa * m^3/mol/K]
@@ -205,26 +205,24 @@ public:
             Evaluation VmCubic = max(1e-7, Z[0]*RT/p);
             Vm = VmCubic;
 
-            // find the extrema (if they are present)
-            Evaluation Vmin, Vmax, pmin, pmax;
-            if (findExtrema_(Vmin, Vmax,
-                             pmin, pmax,
-                             a, b, T))
-            {
-                if (isGasPhase)
-                    Vm = std::max(Vmax, VmCubic);
-                else {
-                    if (Vmin > 0)
-                        Vm = std::min(Vmin, VmCubic);
-                    else
-                        Vm = VmCubic;
+            if (UseLegacy) {
+                // find the extrema (if they are present)
+                Evaluation Vmin, Vmax, pmin, pmax;
+                if (findExtrema_(Vmin, Vmax, pmin, pmax, a, b, T)) {
+                    if (isGasPhase)
+                        Vm = std::max(Vmax, VmCubic);
+                    else {
+                        if (Vmin > 0)
+                            Vm = std::min(Vmin, VmCubic);
+                        else
+                            Vm = VmCubic;
+                    }
+                } else {
+                    // the EOS does not exhibit any physically meaningful
+                    // extrema, and the fluid is critical...
+                    Vm = VmCubic;
+                    handleCriticalFluid_(Vm, fs, params, phaseIdx, isGasPhase);
                 }
-            }
-            else {
-                // the EOS does not exhibit any physically meaningful
-                // extrema, and the fluid is critical...
-                Vm = VmCubic;
-                handleCriticalFluid_(Vm, fs, params, phaseIdx, isGasPhase);
             }
         }
 

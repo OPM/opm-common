@@ -89,7 +89,7 @@ public:
      * \brief Critical volume of \f$CO_2\f$ [m2/kmol].
      */
     // Critical volume [m3/kmol]
-    static Scalar criticalVolume() {return 9.412e-5; }
+    static Scalar criticalVolume() {return 9.412e-2; }
 
     /*!
      * \brief Returns the pressure \f$\mathrm{[Pa]}\f$ at the triple point of \f$CO_2\f$.
