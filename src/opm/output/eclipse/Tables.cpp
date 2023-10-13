@@ -30,6 +30,7 @@
 #include <opm/input/eclipse/EclipseState/Tables/PvtoTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/SgfnTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/SgofTable.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/SgwfnTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/Sof2Table.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/Sof3Table.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/SwfnTable.hpp>
@@ -465,6 +466,83 @@ namespace { namespace SatFunc {
                 -> std::size_t
             {
                 const auto& t = gsf.getTable<Gsf>(tableID);
+
+                auto numActRows = std::size_t{0};
+
+                // Sg
+                {
+                    const auto& Sg = t.getSgColumn();
+
+                    numActRows = Sg.size();
+                    std::copy(std::begin(Sg), std::end(Sg),
+                              linTable.column(tableID, primID, 0));
+                }
+
+                // Krg(Sg)
+                detail::outputRelperm(t.getKrgColumn(), tolcrit,
+                                      linTable.column(tableID, primID, 1));
+
+                // Pcgw(Sg)
+                {
+                    constexpr auto uPress = ::Opm::UnitSystem::measure::pressure;
+
+                    const auto& pc = t.getPcgwColumn();
+                    std::transform(std::begin(pc), std::end(pc),
+                                   linTable.column(tableID, primID, 2),
+                                   [&units](const double Pc) -> double
+                                   {
+                                       return units.from_si(uPress, Pc);
+                                   });
+                }
+
+                // Inform createSatfuncTable() of number of active rows in
+                // this table.  Needed to compute slopes of piecewise linear
+                // interpolants.
+                return numActRows;
+            });
+        }
+
+        /// Create linearised and padded 'TAB' vector entries of normalised
+        /// SGFN tables for all saturation function regions from Family Two
+        /// table data (SGWFN keyword).
+        ///
+        /// \param[in] numRows Number of rows to allocate in the output
+        ///    vector for each table.  Expected to be equal to the number of
+        ///    declared saturation nodes in the simulation run's TABDIMS
+        ///    keyword (Item 3).
+        ///
+        /// \param tolcrit Minimum relative permeability threshold value for
+        ///    phase to be considered mobile.  Values less than this threshold
+        ///    are output as zero.
+        ///
+        /// \param[in] units Active unit system.  Needed to convert SI
+        ///    convention capillary pressure values (Pascal) to declared
+        ///    conventions of the run specification.
+        ///
+        /// \param[in] gsf Collection of SGFN tables for all saturation
+        ///    regions.
+        ///
+        /// \return Linearised and padded 'TAB' vector values for output
+        ///    SGFN tables.  Corresponds to unit-converted copies of columns
+        ///    1, 2, and 4--with added derivatives--of the input SGWFN tables.
+        std::vector<double>
+        fromSGWFN(const std::size_t          numRows,
+                const double               tolcrit,
+                const Opm::UnitSystem&     units,
+                const Opm::TableContainer& gsf)
+        {
+            using Sgwfn = ::Opm::SgwfnTable;
+
+            const auto numTab = gsf.size();
+            const auto numDep = std::size_t{2}; // Krg, Pcgw
+
+            return detail::createSatfuncTable(numTab, numRows, numDep,
+                [tolcrit, &units, &gsf](const std::size_t           tableID,
+                                         const std::size_t           primID,
+                                         Opm::LinearisedOutputTable& linTable)
+                -> std::size_t
+            {
+                const auto& t = gsf.getTable<Sgwfn>(tableID);
 
                 auto numActRows = std::size_t{0};
 
@@ -1235,6 +1313,87 @@ namespace { namespace SatFunc {
                                    [&units](const double Pc) -> double
                                    {
                                        return units.from_si(uPress, Pc);
+                                   });
+                }
+
+                // Inform createSatfuncTable() of number of active rows in
+                // this table.  Needed to compute slopes of piecewise linear
+                // interpolants.
+                return numActRows;
+            });
+        }
+
+        /// Create linearised and padded 'TAB' vector entries of normalised
+        /// SWFN tables for all saturation function regions from Family Two
+        /// table data (SGWFN keyword).
+        ///
+        /// \param[in] numRows Number of rows to allocate for each table in
+        ///    the output vector.  Expected to be equal to the number of
+        ///    declared saturation nodes in the simulation run's TABDIMS
+        ///    keyword (Item 3).
+        ///
+        /// \param tolcrit Minimum relative permeability threshold value for
+        ///    phase to be considered mobile.  Values less than this threshold
+        ///    are output as zero.
+        ///
+        /// \param[in] swof Collection of SWOF tables for all saturation
+        ///    regions.
+        ///
+        /// \return Linearised and padded 'TAB' vector values for output
+        ///    SWFN tables.  Corresponds to unit-converted copies of columns
+        ///    1, 3, and 4 --with added derivatives--of the input SGWFN tables.
+        std::vector<double>
+        fromSGWFN(const std::size_t          numRows,
+                  const double               tolcrit,
+                  const Opm::TableContainer& swfn)
+        {
+            using SWFN = ::Opm::SgwfnTable;
+
+            const auto numTab = swfn.size();
+            const auto numDep = std::size_t{2}; // Krw, Pcow
+
+            return detail::createSatfuncTable(numTab, numRows, numDep,
+                [tolcrit, &swfn]
+                    (const std::size_t           tableID,
+                     const std::size_t           primID,
+                     Opm::LinearisedOutputTable& linTable)
+                -> std::size_t
+            {
+                const auto& t = swfn.getTable<SWFN>(tableID);
+
+                auto numActRows = std::size_t{0};
+
+                // Sw
+                {
+                    const auto& Sg = t.getSgColumn();
+                    numActRows = Sg.size();
+                    auto Sw = std::vector<double>{};
+                    Sw.reserve(numActRows);
+                    std::transform(std::begin(Sg), std::end(Sg),
+                                   std::back_inserter(Sw),
+                                   [](const auto sg) { return 1.0 - sg; });
+                    std::copy(Sw.rbegin(), Sw.rend(),
+                                linTable.column(tableID, primID, 0));
+                }
+
+                // Krgw(Sw)
+                {
+                    const auto& kr = t.getKrgwColumn();
+                    const auto krgw = std::vector<double> {
+                                      std::begin(kr), std::end(kr)
+                                      };
+                    detail::outputRelperm(krgw.rbegin(), krgw.rend(), tolcrit,
+                                          linTable.column(tableID, primID, 1));
+                }
+
+                // Pcow(Sw) = zero
+                {
+                    const auto& pc = t.getPcgwColumn();
+                    std::transform(std::begin(pc), std::end(pc),
+                                   linTable.column(tableID, primID, 2),
+                                   [](const double) -> double
+                                   {
+                                       return 0.0;
                                    });
                 }
 
@@ -2456,8 +2615,8 @@ namespace Opm {
             (gas && !tabMgr.getSgofletTable().empty()) ||
             (wat && !tabMgr.getSwofletTable().empty());
 
-        const auto famII =      // SGFN, SOF{2,3}, SWFN
-            (gas && tabMgr.hasTables("SGFN")) ||
+        const auto famII =      // SGFN, SOF{2,3}, SWFN, SGWFN
+            (gas && (tabMgr.hasTables("SGFN") || tabMgr.hasTables("SGWFN"))) ||
             (oil && ((threeP && tabMgr.hasTables("SOF3")) ||
                      tabMgr.hasTables("SOF2"))) ||
             (wat && tabMgr.hasTables("SWFN"));
@@ -2621,15 +2780,25 @@ namespace Opm {
             .minimumRelpermMobilityThreshold();
 
         if (gas) {
-            const auto& tables = tabMgr.getSgfnTables();
+            if ( !tabMgr.getSgfnTables().empty() ) {
+                const auto& tables = tabMgr.getSgfnTables();
 
-            const auto sgfn =
-                SatFunc::Gas::fromSGFN(nssfun, tolcrit,
-                                       this->units, tables);
-
-            this->addData(Ix::SgfnTableStart, sgfn);
-            this->m_tabdims[Ix::SgfnNumSatNodes] = nssfun;
-            this->m_tabdims[Ix::SgfnNumTables]   = tables.size();
+                const auto sgfn =
+                    SatFunc::Gas::fromSGFN(nssfun, tolcrit,
+                                        this->units, tables);
+                this->addData(Ix::SgfnTableStart, sgfn);
+                this->m_tabdims[Ix::SgfnNumSatNodes] = nssfun;
+                this->m_tabdims[Ix::SgfnNumTables]   = tables.size();
+            }
+            else {
+                const auto& tables = tabMgr.getSgwfnTables();
+                const auto sgfn =
+                    SatFunc::Gas::fromSGWFN(nssfun, tolcrit,
+                                        this->units, tables);
+                this->addData(Ix::SgfnTableStart, sgfn);
+                this->m_tabdims[Ix::SgfnNumSatNodes] = nssfun;
+                this->m_tabdims[Ix::SgfnNumTables]   = tables.size();
+            }
         }
 
         if (oil) {
@@ -2656,14 +2825,22 @@ namespace Opm {
         }
 
         if (wat) {
-            const auto& tables = tabMgr.getSwfnTables();
-
-            const auto swfn =
-                SatFunc::Water::fromSWFN(nssfun, tolcrit, this->units, tables);
-
-            this->addData(Ix::SwfnTableStart, swfn);
-            this->m_tabdims[Ix::SwfnNumSatNodes] = nssfun;
-            this->m_tabdims[Ix::SwfnNumTables]   = tables.size();
+            if ( !tabMgr.getSwfnTables().empty() ) {
+                const auto& tables = tabMgr.getSwfnTables();
+                const auto swfn =
+                    SatFunc::Water::fromSWFN(nssfun, tolcrit, this->units, tables);
+                this->m_tabdims[Ix::SwfnNumTables]   = tables.size();
+                this->addData(Ix::SwfnTableStart, swfn);
+                this->m_tabdims[Ix::SwfnNumSatNodes] = nssfun;
+            }
+            else {
+                const auto& tables = tabMgr.getSgwfnTables();
+                const auto swfn =
+                    SatFunc::Water::fromSGWFN(nssfun, tolcrit, tables);
+                this->m_tabdims[Ix::SwfnNumTables]   = tables.size();
+                this->addData(Ix::SwfnTableStart, swfn);
+                this->m_tabdims[Ix::SwfnNumSatNodes] = nssfun;
+            }
         }
     }
 
