@@ -324,10 +324,10 @@ const std::map<logic_enum, int> logicalToIndex_17 = {
             std::size_t offset = 0;
             const auto& actx_cond = actx.conditions();
             int first_greater = 0;
+            if( !actx_cond.empty() &&
+                actx_cond[0].cmp == Opm::Action::Comparator::LESS)
             {
-                const auto& first_cond = actx_cond[0];
-                if (first_cond.cmp == Opm::Action::Comparator::LESS)
-                    first_greater = 1;
+                first_greater = 1;
             }
 
             for (const auto& cond : actx_cond) {
