@@ -128,7 +128,9 @@ ParseNode Parser::current() const {
 Action::ASTNode Parser::parse_left() {
     auto current = this->current();
     if (current.type != TokenType::ecl_expr)
-        return TokenType::error;
+        throw std::invalid_argument("Left side of comparison ("
+                                    + current.value + ") has to be "
+                                    "an expression!");
 
     std::string func = current.value;
     FuncType func_type = get_func(current.value);
@@ -270,14 +272,16 @@ Action::ASTNode Parser::parse(const std::vector<std::string>& tokens) {
         return ASTNode( start_node.type );
 
     auto tree = parser.parse_or();
+
+    if (tree.type == TokenType::error)
+        throw std::invalid_argument("Failed to parse ACTIONX condition.");
+
     auto current = parser.current();
     if (current.type != TokenType::end) {
         size_t index = parser.current_pos;
-        throw std::invalid_argument("Extra unhandled data starting with token[" + std::to_string(index) + "] = " + current.value);
+        throw std::invalid_argument("Extra unhandled data starting with token[" + std::to_string(index) + "] = " + current.value+
+                                    " in ACTIONX condition.");
     }
-
-    if (tree.type == TokenType::error)
-        throw std::invalid_argument("Failed to parse");
 
     return tree;
 }

@@ -75,7 +75,8 @@ class ActionX {
 public:
     ActionX();
     ActionX(const std::string& name, size_t max_run, double max_wait, std::time_t start_time);
-    ActionX(const DeckKeyword& kw, const Actdims& actimds, std::time_t start_time);
+    ActionX(const DeckKeyword& kw, const Actdims& actimds, std::time_t start_time,
+            std::vector<std::pair<std::string, std::string>>& condition_errors);
     ActionX(const DeckRecord& record, std::time_t start_time);
     explicit ActionX(const RestartIO::RstAction& rst_action);
 

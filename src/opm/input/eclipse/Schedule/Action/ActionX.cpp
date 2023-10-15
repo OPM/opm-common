@@ -30,6 +30,7 @@
 #include <opm/input/eclipse/Schedule/Action/Actdims.hpp>
 #include <opm/input/eclipse/Schedule/Action/State.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellMatcher.hpp>
+#include <opm/input/eclipse/Parser/ParseContext.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/W.hpp>
 #include <opm/io/eclipse/rst/action.hpp>
 #include <opm/common/utility/OpmInputError.hpp>
@@ -119,7 +120,7 @@ ActionX::ActionX(const DeckRecord& record, std::time_t start_time) :
 
 
 
-ActionX::ActionX(const DeckKeyword& kw, const Actdims& actdims, std::time_t start_time) :
+ActionX::ActionX(const DeckKeyword& kw, const Actdims& actdims, std::time_t start_time, std::vector<std::pair<std::string, std::string>>& condition_errors) :
     ActionX(kw.getRecord(0), start_time)
 {
     std::vector<std::string> tokens;
@@ -132,10 +133,22 @@ ActionX::ActionX(const DeckKeyword& kw, const Actdims& actdims, std::time_t star
 
         this->m_conditions.emplace_back(cond_tokens, kw.location());
     }
-    if (this->m_conditions.size() > actdims.max_conditions())
-        throw OpmInputError(fmt::format("Action {} has too many conditions - adjust item 4 of ACTDIMS to at least {}", this->name(), this->m_conditions.size()), kw.location());
+    if (this->m_conditions.empty())
+        condition_errors.push_back({ParseContext::ACTIONX_NO_CONDITION, fmt::format("Action {} is missing a condition.", this->name())});
 
-    this->condition = Action::AST(tokens);
+    if (this->m_conditions.size() > actdims.max_conditions())
+        condition_errors.push_back({ ParseContext::ACTIONX_CONDITION_ERROR,
+                fmt::format("Action {} has too many conditions - adjust item 4 of ACTDIMS to at least {}", this->name(), this->m_conditions.size())});
+
+    try
+    {
+        this->condition = Action::AST(tokens);
+    }
+    catch(const std::invalid_argument& e)
+    {
+        condition_errors.push_back({ ParseContext::ACTIONX_CONDITION_ERROR,
+                fmt::format("condition of action {} has the following error: {}", this->name(), e.what())});
+    }
 }
 
 
