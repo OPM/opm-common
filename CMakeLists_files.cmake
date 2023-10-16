@@ -881,6 +881,7 @@ list( APPEND PUBLIC_HEADER_FILES
       opm/material/fluidsystems/blackoilpvt/ConstantCompressibilityOilPvt.hpp
       opm/material/fluidsystems/H2OAirFluidSystem.hpp
       opm/material/fluidsystems/H2ON2FluidSystem.hpp
+      opm/material/fluidsystems/ThreeComponentFluidSystem.hh
       opm/material/fluidmatrixinteractions/EclTwoPhaseMaterial.hpp
       opm/material/fluidmatrixinteractions/SatCurveMultiplexerParams.hpp
       opm/material/fluidmatrixinteractions/EclTwoPhaseMaterialParams.hpp
