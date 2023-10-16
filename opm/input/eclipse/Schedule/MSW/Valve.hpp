@@ -74,7 +74,7 @@ namespace Opm {
 
         // parameters for constriction pressure loss
         double conFlowCoefficient() const;
-        double conCrossArea(const std::optional<const ValveUDAEval>& uda_eval = std::nullopt);
+        double conCrossArea(const std::optional<const ValveUDAEval>& uda_eval = std::nullopt) const;
         inline double conCrossAreaValue() const { return m_con_cross_area_value; }
         double conMaxCrossArea() const;
         double pipeDiameter() const;
@@ -114,7 +114,7 @@ namespace Opm {
     private:
         double m_con_flow_coeff;
         UDAValue m_con_cross_area;
-        double m_con_cross_area_value;
+        mutable double m_con_cross_area_value;
         double m_con_max_cross_area;
 
         double m_pipe_additional_length;

@@ -137,10 +137,6 @@ namespace Opm {
         return m_segments[idx];
     }
 
-    Segment& WellSegments::operator[](size_t idx) {
-        return m_segments[idx];
-    }
-
     int WellSegments::segmentNumberToIndex(const int segment_number) const {
         const auto it = segment_number_to_index.find(segment_number);
         if (it != segment_number_to_index.end()) {

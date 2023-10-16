@@ -123,7 +123,6 @@ namespace Opm {
         const SICD& spiralICD() const;
         const AutoICD& autoICD() const;
         const Valve& valve() const;
-        Valve& valve();
 
         void updatePerfLength(double perf_length);
         void updateSpiralICD(const SICD& spiral_icd);

@@ -39,8 +39,8 @@ namespace Opm {
         const std::string& string_var = value.get<std::string>();
         double output_value = udq_default;
 
-        if (summary_state.has_segment_var(well_name, string_var, segment_number+1))
-            output_value = summary_state.get_segment_var(well_name, string_var, segment_number+1);
+        if (summary_state.has_segment_var(well_name, string_var, segment_number))
+            output_value = summary_state.get_segment_var(well_name, string_var, segment_number);
         else if (summary_state.has(string_var))
             output_value = summary_state.get(string_var);
 
@@ -162,7 +162,7 @@ namespace Opm {
         return m_con_flow_coeff;
     }
 
-    double Valve::conCrossArea(const std::optional<const ValveUDAEval>& uda_eval_optional) {
+    double Valve::conCrossArea(const std::optional<const ValveUDAEval>& uda_eval_optional) const {
         m_con_cross_area_value = uda_eval_optional.has_value() ?
                                     uda_eval_optional.value().value(m_con_cross_area, m_udq_default) :
                                     m_con_cross_area.getSI();

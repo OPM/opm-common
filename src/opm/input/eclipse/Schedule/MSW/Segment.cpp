@@ -374,10 +374,6 @@ namespace Opm {
         return std::get<Valve>(this->m_icd);
     }
 
-    Valve& Segment::valve() {
-        return std::get<Valve>(this->m_icd);
-    }
-
     int Segment::ecl_type_id() const {
         switch (this->segmentType()) {
         case SegmentType::REGULAR:

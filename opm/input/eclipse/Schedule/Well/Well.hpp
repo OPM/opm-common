@@ -397,7 +397,6 @@ public:
     const std::vector<const Connection *> getConnections(int completion) const;
     const WellConnections& getConnections() const;
     const WellSegments& getSegments() const;
-    WellSegments& getSegments();
     int maxSegmentID() const;
     int maxBranchID() const;
 
