@@ -21,6 +21,7 @@
 #include <opm/material/fluidmatrixinteractions/EclMaterialLawManager.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/SgfnTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/SgofTable.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/SgwfnTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/SlgofTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/Sof2Table.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/Sof3Table.hpp>
@@ -276,25 +277,34 @@ readGasWaterParameters_(GasWaterEffectiveParamVector& dest, unsigned satRegionId
 
     case SatFuncControls::KeywordFamily::Family_II:
     {
-        //Todo: allow also for Sgwfn table input as alternative to Sgfn and Swfn table input
-        const SgfnTable& sgfnTable = tableManager.getSgfnTables().template getTable<SgfnTable>( satRegionIdx );
-        const SwfnTable& swfnTable = tableManager.getSwfnTables().template getTable<SwfnTable>( satRegionIdx );
-
+        const TableContainer& sgwfnTables = tableManager.getSgwfnTables();
         effParams.setApproach(SatCurveMultiplexerApproach::PiecewiseLinear);
         auto& realParams = effParams.template getRealParams<SatCurveMultiplexerApproach::PiecewiseLinear>();
+        if (!sgwfnTables.empty()){
+            const SgwfnTable& sgwfnTable = tableManager.getSgwfnTables().template getTable<SgwfnTable>( satRegionIdx );
+            std::vector<double> SwSamples(sgwfnTable.numRows());
+            for (size_t sampleIdx = 0; sampleIdx < sgwfnTable.numRows(); ++ sampleIdx)
+                SwSamples[sampleIdx] = 1 - sgwfnTable.get("SG", sampleIdx);
+            realParams.setKrwSamples(SwSamples, normalizeKrValues_(tolcrit, sgwfnTable.getColumn("KRGW")));
+            realParams.setKrnSamples(SwSamples, normalizeKrValues_(tolcrit, sgwfnTable.getColumn("KRG")));
+            realParams.setPcnwSamples(SwSamples, sgwfnTable.getColumn("PCGW").vectorCopy());
+        }
+        else {
+            const SgfnTable& sgfnTable = tableManager.getSgfnTables().template getTable<SgfnTable>( satRegionIdx );
+            const SwfnTable& swfnTable = tableManager.getSwfnTables().template getTable<SwfnTable>( satRegionIdx );
 
-        std::vector<double> SwColumn = swfnTable.getColumn("SW").vectorCopy();
+            std::vector<double> SwColumn = swfnTable.getColumn("SW").vectorCopy();
 
-        realParams.setKrwSamples(SwColumn, normalizeKrValues_(tolcrit, swfnTable.getColumn("KRW")));
-        std::vector<double> SwSamples(sgfnTable.numRows());
-        for (size_t sampleIdx = 0; sampleIdx < sgfnTable.numRows(); ++ sampleIdx)
-            SwSamples[sampleIdx] = 1 - sgfnTable.get("SG", sampleIdx);
-        realParams.setKrnSamples(SwSamples, normalizeKrValues_(tolcrit, sgfnTable.getColumn("KRG")));
-        //Capillary pressure is read from SWFN.
-        //For gas-water system the capillary pressure column values are set to 0 in SGFN
-        realParams.setPcnwSamples(SwColumn, swfnTable.getColumn("PCOW").vectorCopy());
+            realParams.setKrwSamples(SwColumn, normalizeKrValues_(tolcrit, swfnTable.getColumn("KRW")));
+            std::vector<double> SwSamples(sgfnTable.numRows());
+            for (size_t sampleIdx = 0; sampleIdx < sgfnTable.numRows(); ++ sampleIdx)
+                SwSamples[sampleIdx] = 1 - sgfnTable.get("SG", sampleIdx);
+            realParams.setKrnSamples(SwSamples, normalizeKrValues_(tolcrit, sgfnTable.getColumn("KRG")));
+            //Capillary pressure is read from SWFN.
+            //For gas-water system the capillary pressure column values are set to 0 in SGFN
+            realParams.setPcnwSamples(SwColumn, swfnTable.getColumn("PCOW").vectorCopy());
+        }
         realParams.finalize();
-
         break;
     }
 
