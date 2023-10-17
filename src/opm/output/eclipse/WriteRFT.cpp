@@ -1445,7 +1445,7 @@ namespace {
     {
         assert ((segment.segmentNumber() > 1) && segment.isValve());
 
-        const auto Ac     = segment.valve().conCrossArea();
+        const auto Ac     = segment.valve().conCrossAreaValue();
         const auto Ac_max = valveMaximumCrossSectionalArea(segment);
 
         return Ac / Ac_max;
