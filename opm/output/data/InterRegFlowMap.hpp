@@ -24,6 +24,8 @@
 
 #include <opm/output/data/InterRegFlow.hpp>
 
+#include <opm/common/utility/CSRGraphFromCoordinates.hpp>
+
 #include <cstddef>
 #include <optional>
 #include <utility>
@@ -117,415 +119,62 @@ namespace Opm { namespace data {
         template <class MessageBufferType>
         void write(MessageBufferType& buffer) const
         {
-            this->csr_.write(buffer);
+            this->connections_.write(buffer);
+            this->writeVector(this->rates_, buffer);
         }
 
         // MessageBufferType API should be similar to Dune::MessageBufferIF
         template <class MessageBufferType>
         void read(MessageBufferType& buffer)
         {
-            auto other = CSR{};
-            other.read(buffer);
+            this->connections_.read(buffer);
 
-            this->uncompressed_
-                .add(other.maxRowIdx(),
-                     other.maxColIdx(),
-                     other.coordinateFormatRowIndices(),
-                     other.columnIndices(),
-                     other.values());
+            auto rates = RateBuffer{};
+            this->readVector(buffer, rates);
+            this->appendRates(rates);
         }
 
         /// Clear all internal buffers, but preserve allocated capacity.
         void clear();
 
     private:
-        /// Coordinate format representation of individual contributions to
-        /// inter-region flows.
-        class Connections
+        // VertexID = int, TrackCompressedIdx = true.
+        using Graph = utility::CSRGraphFromCoordinates<int, true>;
+
+        Graph connections_{};
+        RateBuffer rates_{};
+
+        template <typename T, class A, class MessageBufferType>
+        void writeVector(const std::vector<T,A>& vec,
+                         MessageBufferType&      buffer) const
         {
-        public:
-            /// Add contributions from a single inter-region connection.
-            ///
-            /// \param[in] r1 Source region.  Zero-based region index/ID.
-            ///
-            /// \param[in] r2 Destination region.  Zero-based region index.
-            ///
-            /// \param[in] rates Flow rates of single inter-region
-            ///    connection.
-            void add(const int r1, const int r2, const FlowRates& rates);
+            const auto n = vec.size();
+            buffer.write(n);
 
-            /// Add contributions from multiple inter-region connections.
-            ///
-            /// \param[in] maxRowIdx Maximum row (source region) index
-            ///    across all new inter-region connection contributions.
-            ///
-            /// \param[in] maxColIdx Maximum column (destination region)
-            ///    index across all new inter-region contributions.
-            ///
-            /// \param[in] rows Source region indices for all new
-            ///    inter-region connection contributions.
-            ///
-            /// \param[in] cols Destination region indices for all new
-            ///    inter-region connection contributions.
-            ///
-            /// \param[in] rates Flow rate values for all new inter-region
-            ///    connection contributions.
-            void add(const int maxRowIdx,
-                     const int maxColIdx,
-                     const Neighbours& rows,
-                     const Neighbours& cols,
-                     const RateBuffer& rates);
+            for (const auto& x : vec) {
+                buffer.write(x);
+            }
+        }
 
-            /// Clear internal tables.  Preserve allocated capacity.
-            void clear();
-
-            /// Predicate.
-            ///
-            /// \return Whether or not internal tables are empty.
-            bool empty() const;
-
-            /// Whether or not internal tables meet size consistency
-            /// requirements.
-            bool isValid() const;
-
-            /// Maximum zero-based row (source region) index.
-            int maxRow() const;
-
-            /// Maximum zero-based column (destination region) index.
-            int maxCol() const;
-
-            /// Number of uncompressed contributions in internal tables.
-            Neighbours::size_type numContributions() const;
-
-            /// Read-only access to uncompressed row indices.
-            const Neighbours& rowIndices() const;
-
-            /// Read-only access to uncompressed column indices.
-            const Neighbours& columnIndices() const;
-
-            /// Read-only access to uncompressed flow rate values.
-            const RateBuffer& values() const;
-
-        private:
-            /// Zero-based row/source region indices.
-            Neighbours i_{};
-
-            /// Zero-based column/destination region indices.
-            Neighbours j_{};
-
-            /// Uncompressed flow rate values.  Window::bufferSize() entries
-            /// per connection.
-            RateBuffer v_{};
-
-            /// Maximum row index in \code this->i_ \endcode.
-            int max_i_{ -1 };
-
-            /// Maximum column index in \code this->j_ \endcode.
-            int max_j_{ -1 };
-        };
-
-        /// Compressed sparse row representation of inter-region flow rates
-        ///
-        /// Row and column indices are zero-based region IDs.  Column
-        /// indices ascendingly sorted per row.  Value type is window,
-        /// backed by a pair of iterators, of aggregate flow rates per
-        /// region pair.
-        class CSR
+        template <typename T, class A, class MessageBufferType>
+        void readVector(MessageBufferType& buffer,
+                        std::vector<T,A>&  vec)
         {
-        public:
-            /// Merge coordinate format into existing CSR map.
-            ///
-            /// \param[in] conns Coordinate representation of new
-            ///    contributions.
-            ///
-            /// \param[in] numRegions Maximum number of regions in this
-            ///    region set.  Common values/settings are
-            ///
-            ///      -# Maximum one-based region ID on local MPI rank
-            ///      -# Maximum one-based region ID across all MPI ranks
-            ///      -# Maximum *possible* one-based region ID in model
-            ///         ("NTFIP"), from TABDIMS(5) and/or REGDIMS(1).
-            ///
-            ///    If this value is smaller than the maximum one-based
-            ///    region ID on the local MPI rank, then it will be ignored
-            ///    and the local rank's maximum one-based region ID will be
-            ///    used instead.
-            void merge(const Connections& conns,
-                       const Offset       numRegions);
+            auto n = 0 * vec.size();
+            buffer.read(n);
 
-            /// Read-only access to flow rates of given region ID pair.
-            ///
-            /// \param[in] i Source region.  Zero-based region ID.
-            ///
-            /// \param[in] j Destination region.  Zero-based region ID.
-            ///
-            /// \return Flow rates of region ID pair.  Nullopt if no such
-            ///    pair exists.
-            std::optional<ReadOnlyWindow> getWindow(const int i, const int j) const;
+            vec.resize(n);
 
-            /// Total number of rows in compressed map structure.
-            Offset numRows() const;
-
-            /// Maximum zero-based row index encountered mapped structure.
-            int maxRowIdx() const;
-
-            /// Maximum zero-based column index encountered mapped structure.
-            int maxColIdx() const;
-
-            /// Read-only access to compressed structure's start pointers.
-            const Start& startPointers() const;
-
-            /// Read-only access to compressed structure's column indices,
-            /// ascendingly sorted per rwo.
-            const Neighbours& columnIndices() const;
-
-            /// Read-only access to compressed, unique, linearised flow rate
-            /// values.  \code Window::bufferSize() \endcode entries per
-            /// non-zero element.
-            const RateBuffer& values() const;
-
-            /// Coordinate format row index vector.  Expanded from \code
-            /// startPointers() \endcode.
-            Neighbours coordinateFormatRowIndices() const;
-
-            // MessageBufferType API should be similar to Dune::MessageBufferIF
-            template <class MessageBufferType>
-            void write(MessageBufferType& buffer) const
-            {
-                this->writeVector(this->ia_, buffer);
-                this->writeVector(this->ja_, buffer);
-                this->writeVector(this->sa_, buffer);
-                this->writeVector(this->compressedIdx_, buffer);
-
-                buffer.write(this->numRows_);
-                buffer.write(this->numCols_);
+            for (auto& x : vec) {
+                buffer.read(x);
             }
+        }
 
-            // MessageBufferType API should be similar to Dune::MessageBufferIF
-            template <class MessageBufferType>
-            void read(MessageBufferType& buffer)
-            {
-                this->readVector(buffer, this->ia_);
-                this->readVector(buffer, this->ja_);
-                this->readVector(buffer, this->sa_);
-                this->readVector(buffer, this->compressedIdx_);
-
-                buffer.read(this->numRows_);
-                buffer.read(this->numCols_);
-            }
-
-            /// Clear internal tables.  Preserve allocated capacity.
-            void clear();
-
-        private:
-            /// Start pointers.
-            Start ia_{};
-
-            /// Column indices.  Ascendingly sorted per row once structure
-            /// is fully established.
-            Neighbours ja_{};
-
-            /// Compressed, unique, linearised flow rate values.  \code
-            /// Window::bufferSize() \endcode entries per non-zero map
-            /// element.
-            RateBuffer sa_{};
-
-            /// Destination index in compressed representation.  Size NNZ.
-            Start compressedIdx_{};
-
-            /// Number of active rows in compressed map structure.
-            int numRows_{ 0 };
-
-            /// Number of active columns in compressed map structure.
-            /// Tracked as the maximum column index plus one.
-            int numCols_{ 0 };
-
-            // ---------------------------------------------------------
-            // Implementation of read()/write()
-            // ---------------------------------------------------------
-
-            template <typename T, class A, class MessageBufferType>
-            void writeVector(const std::vector<T,A>& vec,
-                             MessageBufferType&      buffer) const
-            {
-                const auto n = vec.size();
-                buffer.write(n);
-
-                for (const auto& x : vec) {
-                    buffer.write(x);
-                }
-            }
-
-            template <class MessageBufferType, typename T, class A>
-            void readVector(MessageBufferType& buffer,
-                            std::vector<T,A>&  vec)
-            {
-                auto n = 0 * vec.size();
-                buffer.read(n);
-
-                vec.resize(n);
-
-                for (auto& x : vec) {
-                    buffer.read(x);
-                }
-            }
-
-            // ---------------------------------------------------------
-            // Implementation of merge()
-            // ---------------------------------------------------------
-
-            /// Incorporate new, coordinate format contributions into
-            /// existing, possibly empty, CSR mapping structure.
-            ///
-            /// On exit the ia_ array holds the proper start pointers while
-            /// ja_ holds the corresponding column indices albeit possibly
-            /// repeated and unsorted.
-            ///
-            /// \param[in] rows Row indices of all, possibly repeated,
-            ///    coordinate format input contributions.  Start pointers \c
-            ///    ia_ updated to account for new entries.
-            ///
-            /// \param[in] cols Column index of coordinate format intput
-            ///    structure.  Inserted into \c ja_ according to its
-            ///    corresponding row index.
-            ///
-            /// \param[in] maxRowIdx Maximum index in \p rows.  Needed to
-            ///    ensure proper size of \c ia_.
-            ///
-            /// \param[in] maxColIdx Maximum index in \p cols.
-            void assemble(const Neighbours& rows,
-                          const Neighbours& cols,
-                          const int         maxRowIdx,
-                          const int         maxColIdx);
-
-
-            /// Sort column indices per row and compress repeated column
-            /// indices down to a single unique element per row.  Sum
-            /// repeated values
-            ///
-            /// On exit the \c ia_, \c ja_, and \c sa_ arrays all have their
-            /// expected, canonical structure.
-            ///
-            /// \param[in] numRegions Maximum number of regions supported by
-            ///    final compressed mapping structure.  Ignored if less than
-            ///    active number of rows.
-            ///
-            /// \param[in] rates Uncompressed flow rate values from
-            ///    coordinate format contributions.
-            void compress(const Offset      numRegions,
-                          const RateBuffer& rates);
-
-            /// Sort column indices within each mapped row.
-            ///
-            /// On exit \c ja_ has ascendingly sorted column indices, albeit
-            /// possibly with repeated entries.  This function also updates
-            /// \c compressedIdx_ to account for the new locations of the
-            /// non-zero elements in the grouped structure.
-            void sortColumnIndicesPerRow();
-
-            /// Condense repeated column indices per row down to a single
-            /// unique entry for each.
-            ///
-            /// Assumes that each row has ascendingly sorted column indices
-            /// in \c ja_ and must therefore be called after member function
-            /// sortColumnIndicesPerRow().  On exit, \c ja_ has its final
-            /// canonical structure and \c compressedIdx_ knows the final
-            /// location of each non-zero contribution in the input
-            /// coordinate format.
-            void condenseDuplicates();
-
-            /// Sum coordinate format flow rates into compressed map
-            /// structure.
-            ///
-            /// Repeated (row,column) index pairs in the input coordinate
-            /// format add to the same compressed map element.  This
-            /// function assumes that \c compressedIdx_ knows the final
-            /// compressed location of each non-zero contribution in the
-            /// input coordinate format and must therefore be called after
-            /// member function condenseDuplicates().  On exit \c sa_ has
-            /// incorporated all entries from the input coordinate
-            /// structure.
-            ///
-            /// \param[in] v Uncompressed flow rate values from coordinate
-            ///    format contributions.
-            void accumulateFlowRates(const RateBuffer& v);
-
-            // ---------------------------------------------------------
-            // Implementation of assemble()
-            // ---------------------------------------------------------
-
-            /// Position end pointers at start of row to prepare for column
-            /// index grouping by corresponding row index.
-            ///
-            /// Also counts total number of non-zero elements, possibly
-            /// including repetitions, in \code this->ia_[0] \endcode.
-            ///
-            /// \param[in] Number of rows in final compressed structure.
-            ///    Used to allocate \code this->ia_ \endcode.
-            ///
-            /// \param[in] Row indices of all, possibly repeated, coordinate
-            ///    format input contributions.  Needed to count the number
-            ///    of possibly repeated column index entries per row.
-            void preparePushbackRowGrouping(const int         numRows,
-                                            const Neighbours& rowIdx);
-
-            /// Group column indices by corresponding row index and track
-            /// grouped location of original coordinate format element
-            ///
-            /// Appends grouped location to \c compressedIdx_.
-            ///
-            /// \param[in] rowIdx Row index of coordinate format input
-            ///    structure.  Used as grouping key.
-            ///
-            /// \param[in] colIdx Column index of coordinate format intput
-            ///    structure.  Inserted into \c ja_ according to its
-            ///    corresponding row index.
-            void groupAndTrackColumnIndicesByRow(const Neighbours& rowIdx,
-                                                 const Neighbours& colIdx);
-
-            // ---------------------------------------------------------
-            // General utilities
-            // ---------------------------------------------------------
-
-            /// Transpose connectivity structure.
-            ///
-            /// Essentially swaps the roles of rows and columns.  Also used
-            /// as a basic building block for sortColumnIndicesPerRow().
-            void transpose();
-
-            /// Condense sequences of repeated column indices in a single
-            /// map row down to a single copy of each unique column index.
-            ///
-            /// Appends new unique column indices to \code ja_ \endcode
-            ///
-            /// Assumes that the map row has ascendingly sorted column
-            /// indices and therefore has the same requirements as
-            /// std::unique.  Will also update the internal compressedIdx_
-            /// mapping to record new compressed locations for the current,
-            /// uncompressed, non-zero map elements.
-            ///
-            /// \param[in] begin Start of map row that contains possibly
-            ///    repeated column indices.
-            ///
-            /// \param[in] end One-past-end of map row that contains
-            ///    possibly repeated column indices.
-            void condenseAndTrackUniqueColumnsForSingleRow(Neighbours::const_iterator begin,
-                                                           Neighbours::const_iterator end);
-
-            /// Update \c compressedIdx_ mapping to account for column index
-            /// reshuffling.
-            ///
-            /// \param[in] compressedIdx New compressed index locations of
-            ///   the non-zero map entries.
-            void remapCompressedIndex(Start&& compressedIdx);
-        };
-
-        /// Accumulated coordinate format contributions that have not yet
-        /// been added to the final CSR structure.
-        Connections uncompressed_;
-
-        /// Canonical representation of unique inter-region flow rates.
-        CSR csr_;
+        template <typename Rates>
+        void appendRates(const Rates& rates)
+        {
+            this->rates_.insert(this->rates_.end(), rates.begin(), rates.end());
+        }
     };
 
 }} // namespace Opm::data

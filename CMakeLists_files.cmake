@@ -463,6 +463,7 @@ if(ENABLE_ECL_INPUT)
     tests/rst_test.cpp
     tests/test_ActiveGridCells.cpp
     tests/test_CopyablePtr.cpp
+    tests/test_CSRGraphFromCoordinates.cpp
     tests/test_ERsm.cpp
     tests/test_GuideRate.cpp
     tests/test_RestartFileView.cpp
@@ -756,6 +757,8 @@ list( APPEND PUBLIC_HEADER_FILES
       opm/common/OpmLog/StreamLog.hpp
       opm/common/OpmLog/TimerLog.hpp
       opm/common/utility/ActiveGridCells.hpp
+      opm/common/utility/CSRGraphFromCoordinates.hpp
+      opm/common/utility/CSRGraphFromCoordinates_impl.hpp
       opm/common/utility/Demangle.hpp
       opm/common/utility/FileSystem.hpp
       opm/common/utility/OpmInputError.hpp
