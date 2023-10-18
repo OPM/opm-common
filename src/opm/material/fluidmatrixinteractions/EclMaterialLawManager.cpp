@@ -180,8 +180,8 @@ applySwatinit(unsigned elemIdx,
 
         Scalar pcowAtSw = pc[oilPhaseIdx] - pc[waterPhaseIdx];
         constexpr const Scalar pcowAtSwThreshold = 1.0; //Pascal
-        // avoid divison by very small number
-        if (std::abs(pcowAtSw) > pcowAtSwThreshold) {
+        // avoid divison by very small number and avoid negative PCW at connate Sw
+        if (pcowAtSw > pcowAtSwThreshold) {
             // Scale max. capillary pressure to honor SWATINIT value
             Scalar newMaxPcow = elemScaledEpsInfo.maxPcow * (pcow/pcowAtSw);
 
@@ -208,6 +208,8 @@ applySwatinit(unsigned elemIdx,
                                          *oilWaterEclEpsConfig_,
                                          EclTwoPhaseSystemType::OilWater);
         }
+        // Find Sw from unscaled curve if PCW at connate Sw would be negative (i.e., do no respect SWATINIT in this case)
+        if (pcowAtSw < 0.0) newSwatInit = true;
     }
 
     return {Sw, newSwatInit};
