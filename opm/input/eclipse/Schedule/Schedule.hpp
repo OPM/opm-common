@@ -740,6 +740,7 @@ namespace Opm
         void handleSAVE      (HandlerContext&);
         void handleSUMTHIN   (HandlerContext&);
         void handleUDQ       (HandlerContext&);
+        void handleUDT       (HandlerContext&);
         void handleVAPPARS   (HandlerContext&);
         void handleVFPINJ    (HandlerContext&);
         void handleVFPPROD   (HandlerContext&);

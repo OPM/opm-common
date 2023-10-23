@@ -943,33 +943,6 @@ newRawKeyword(const std::string&      deck_name,
     return nullptr;
 }
 
-// This code is made to skip part of the eclipse file containing the contents of UDT
-// UDT is currently not a supported keyword.
-// The first record of UDT contains a line, that MAY (although unlikely) contain a keyword.
-// Skipping this first line, and the next, skipUDT then searches for the next
-// keyword, which marks the end of UDT.
-void skipUDT( ParserState& parserState, const Parser& parser) {
-  //Skipping first two records of UDT:
-  size_t record_count = 0;
-  size_t count_max = 2;
-
-  while( !parserState.done() ) {
-      auto line = parserState.getline();
-      if( line.empty() ) continue;
-
-      if (record_count < count_max)
-          record_count++;
-      else {
-           std::string deck_name = str::make_deck_name( line );
-           if (parser.hasKeyword(deck_name)) {
-               parserState.ungetline(line);
-               return;
-           }
-      }
-  }
-}
-
-
 std::unique_ptr<RawKeyword> tryParseKeyword( ParserState& parserState, const Parser& parser) {
     bool is_title = false;
     std::unique_ptr<RawKeyword> rawKeyword;
@@ -1005,10 +978,6 @@ std::unique_ptr<RawKeyword> tryParseKeyword( ParserState& parserState, const Par
                 if (ptr) {
                     rawKeyword.reset( ptr );
                     parserKeyword = parser.getParserKeywordFromDeckName(rawKeyword->getKeywordName());
-                    if (deck_name == "UDT") {
-                        skipUDT(parserState, parser);
-                        return nullptr;
-                    }
                     parserState.lastSizeType = parserKeyword->getSizeType();
                     parserState.lastKeyWord = deck_name;
                     if (rawKeyword->isFinished())
