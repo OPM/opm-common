@@ -28,27 +28,22 @@
 namespace Opm
 {
 
+//! \brief Returns an index in an ordered table such that x is between
+//!        table[j] and table[j+1].
+//! \details If x is out of bounds, it returns a clamped index
 inline int tableIndex(const std::vector<double>& table, double x)
 {
-    // Returns an index in an ordered table such that x is between
-    // table[j] and table[j+1]. If x is out of range, first or last
-    // interval is returned; Binary search.
-    int n = table.size() - 1;
-    if (n < 2) {
+    if (table.size() < 2)
         return 0;
-    }
-    int jl = 0;
-    int ju = n;
-    bool ascend = (table[n] > table[0]);
-    while (ju - jl > 1) {
-        int jm = (ju + jl)/2;   // Compute a midpoint
-        if ( (x >= table[jm]) == ascend) {
-            jl = jm;     // Replace lower limit
-        } else {
-            ju = jm;     // Replace upper limit
-        }
-    }
-    return jl;
+
+    const auto lower = std::lower_bound(table.begin(), table.end(), x);
+
+    if (lower == table.end())
+        return table.size()-2;
+    else if (lower == table.begin())
+        return 0;
+    else
+      return std::distance(table.begin(), lower)-1;
 }
 
 
