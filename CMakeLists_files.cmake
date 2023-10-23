@@ -261,21 +261,21 @@ if(ENABLE_ECL_INPUT)
     src/opm/input/eclipse/EclipseState/Tables/BrineDensityTable.cpp
     src/opm/input/eclipse/EclipseState/Tables/SolventDensityTable.cpp
     src/opm/input/eclipse/EclipseState/Tables/Tabdims.cpp
-    src/opm/input/eclipse/Schedule/UDQ/UDQASTNode.cpp
-    src/opm/input/eclipse/Schedule/UDQ/UDQParams.cpp
-    src/opm/input/eclipse/Schedule/UDQ/UDQParser.cpp
-    src/opm/input/eclipse/Schedule/UDQ/UDQSet.cpp
     src/opm/input/eclipse/Schedule/UDQ/UDQActive.cpp
     src/opm/input/eclipse/Schedule/UDQ/UDQAssign.cpp
-    src/opm/input/eclipse/Schedule/UDQ/UDQDefine.cpp
-    src/opm/input/eclipse/Schedule/UDQ/UDQEnums.cpp
-    src/opm/input/eclipse/Schedule/UDQ/UDQToken.cpp
+    src/opm/input/eclipse/Schedule/UDQ/UDQASTNode.cpp
     src/opm/input/eclipse/Schedule/UDQ/UDQConfig.cpp
     src/opm/input/eclipse/Schedule/UDQ/UDQContext.cpp
+    src/opm/input/eclipse/Schedule/UDQ/UDQDefine.cpp
+    src/opm/input/eclipse/Schedule/UDQ/UDQEnums.cpp
     src/opm/input/eclipse/Schedule/UDQ/UDQFunction.cpp
     src/opm/input/eclipse/Schedule/UDQ/UDQFunctionTable.cpp
     src/opm/input/eclipse/Schedule/UDQ/UDQInput.cpp
+    src/opm/input/eclipse/Schedule/UDQ/UDQParams.cpp
+    src/opm/input/eclipse/Schedule/UDQ/UDQParser.cpp
+    src/opm/input/eclipse/Schedule/UDQ/UDQSet.cpp
     src/opm/input/eclipse/Schedule/UDQ/UDQState.cpp
+    src/opm/input/eclipse/Schedule/UDQ/UDQToken.cpp
     src/opm/input/eclipse/Schedule/VFPInjTable.cpp
     src/opm/input/eclipse/Schedule/VFPProdTable.cpp
     src/opm/input/eclipse/Parser/ErrorGuard.cpp
@@ -1302,20 +1302,20 @@ if(ENABLE_ECL_INPUT)
        opm/input/eclipse/EclipseState/checkDeck.hpp
        opm/input/eclipse/EclipseState/Phase.hpp
        opm/input/eclipse/EclipseState/Runspec.hpp
+       opm/input/eclipse/Schedule/UDQ/UDQActive.hpp
        opm/input/eclipse/Schedule/UDQ/UDQAssign.hpp
        opm/input/eclipse/Schedule/UDQ/UDQASTNode.hpp
-       opm/input/eclipse/Schedule/UDQ/UDQDefine.hpp
-       opm/input/eclipse/Schedule/UDQ/UDQContext.hpp
-       opm/input/eclipse/Schedule/UDQ/UDQState.hpp
        opm/input/eclipse/Schedule/UDQ/UDQConfig.hpp
+       opm/input/eclipse/Schedule/UDQ/UDQContext.hpp
+       opm/input/eclipse/Schedule/UDQ/UDQDefine.hpp
        opm/input/eclipse/Schedule/UDQ/UDQEnums.hpp
-       opm/input/eclipse/Schedule/UDQ/UDQParams.hpp
-       opm/input/eclipse/Schedule/UDQ/UDQInput.hpp
-       opm/input/eclipse/Schedule/UDQ/UDQActive.hpp
-       opm/input/eclipse/Schedule/UDQ/UDQSet.hpp
-       opm/input/eclipse/Schedule/UDQ/UDQToken.hpp
        opm/input/eclipse/Schedule/UDQ/UDQFunction.hpp
        opm/input/eclipse/Schedule/UDQ/UDQFunctionTable.hpp
+       opm/input/eclipse/Schedule/UDQ/UDQInput.hpp
+       opm/input/eclipse/Schedule/UDQ/UDQParams.hpp
+       opm/input/eclipse/Schedule/UDQ/UDQSet.hpp
+       opm/input/eclipse/Schedule/UDQ/UDQState.hpp
+       opm/input/eclipse/Schedule/UDQ/UDQToken.hpp
        opm/input/eclipse/Deck/DeckItem.hpp
        opm/input/eclipse/Deck/Deck.hpp
        opm/input/eclipse/Deck/DeckView.hpp
