@@ -167,6 +167,7 @@ bool is_RPTRST_mnemonic( const std::string& kw ) {
         "GIMULT",   "HYDH",     "HYDHFW",   "KRG",    "KRO",      "KRW",
         "NOGRAD",   "NORST",    "NPMREB",   "PBPD",   "PCOG",     "PCOW",
         "PERMREDN", "POIS",     "PORO",     "PORV",   "POT",      "PRES",
+        "RESIDUAL",
         "RFIP",     "RK",       "ROCKC",    "RPORV",  "RSSAT",    "RVSAT",
         "SAVE",     "SDENO",    "SFIP",     "SFREQ",  "SGTRAP",   "SIGM_MOD",
         "STREAM",   "SURFBLK",  "TEMP",     "TRAS",     "VELGAS",  "VELOCITY",
