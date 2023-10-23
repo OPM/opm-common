@@ -46,23 +46,29 @@ inline int tableIndex(const std::vector<double>& table, double x)
       return std::distance(table.begin(), lower)-1;
 }
 
+inline std::pair<double, int>
+linearInterpolationSlope(const std::vector<double>& xv,
+                         const std::vector<double>& yv,
+                         const double x)
+{
+    const auto i = Opm::tableIndex(xv, x);
+    return { (yv[i + 1] - yv[i]) / (xv[i + 1] - xv[i]), i };
+}
+
 
 inline double linearInterpolationDerivative(const std::vector<double>& xv,
                                             const std::vector<double>& yv, double x)
 {
     // Extrapolates if x is outside xv
-    int ix1 = tableIndex(xv, x);
-    int ix2 = ix1 + 1;
-    return  (yv[ix2] - yv[ix1])/(xv[ix2] - xv[ix1]);
+    return linearInterpolationSlope(xv, yv, x).first;
 }
 
 inline double linearInterpolation(const std::vector<double>& xv,
                                   const std::vector<double>& yv, double x)
 {
     // Extrapolates if x is outside xv
-    int ix1 = tableIndex(xv, x);
-    int ix2 = ix1 + 1;
-    return  (yv[ix2] - yv[ix1])/(xv[ix2] - xv[ix1])*(x - xv[ix1]) + yv[ix1];
+    const auto& [t, i] = linearInterpolationSlope(xv, yv, x);
+    return t * (x - xv[i]) + yv[i];
 }
 
 inline double linearInterpolationNoExtrapolation(const std::vector<double>& xv,
@@ -76,9 +82,7 @@ inline double linearInterpolationNoExtrapolation(const std::vector<double>& xv,
         return yv.back();
     }
 
-    int ix1 = tableIndex(xv, x);
-    int ix2 = ix1 + 1;
-    return  (yv[ix2] - yv[ix1])/(xv[ix2] - xv[ix1])*(x - xv[ix1]) + yv[ix1];
+    return linearInterpolation(xv, yv, x);
 }
 
 inline double linearInterpolation(const std::vector<double>& xv,
@@ -86,9 +90,9 @@ inline double linearInterpolation(const std::vector<double>& xv,
                                   double x, int& ix1)
 {
     // Extrapolates if x is outside xv
-    ix1 = tableIndex(xv, x);
-    int ix2 = ix1 + 1;
-    return (yv[ix2] - yv[ix1])/(xv[ix2] - xv[ix1])*(x - xv[ix1]) + yv[ix1];
+    double t;
+    std::tie(t, ix1) = linearInterpolationSlope(xv, yv, x);
+    return t * (x - xv[ix1]) + yv[ix1];
 }
 
 } // namespace Opm
