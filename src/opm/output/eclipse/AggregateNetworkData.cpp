@@ -448,6 +448,9 @@ void staticContrib(const Opm::Schedule&     sched,
     if (sched.hasGroup(nodeName, lookup_step)) {
         iNode[Ix::Group] = sched.getGroup(nodeName, lookup_step).insert_index();
     }
+    if (nodeName == "FIELD") {
+        iNode[Ix::Group] = sched.restart_groups(lookup_step).size();  // @TODO: Cheaper way to get this number?
+    }
     iNode[Ix::FixedPresNode] = (fixedPressureNode(sched, nodeName, lookup_step)) ? 1 : 0;
     // the meaning of the value of item [4] is currently not known, the constant value used cover all cases so far
     iNode[4] = 1;
@@ -487,7 +490,7 @@ void staticContrib(const Opm::Schedule&         sched,
     auto uptr_nd_res = findInVector<std::string>(nodeNames, branch.uptree_node());
     iBran[Ix::UpTreeNode] = (uptr_nd_res) ? uptr_nd_res.value() + 1 : 0 ;
 
-    iBran[Ix::VfpTableNo] = (branch.vfp_table().has_value()) ? branch.vfp_table().value() : 0;
+    iBran[Ix::VfpTableNo] = (branch.vfp_table().has_value()) ? branch.vfp_table().value() : 9999;
 }
 } // Ibran
 
