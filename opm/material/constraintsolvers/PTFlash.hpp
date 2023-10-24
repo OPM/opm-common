@@ -243,7 +243,7 @@ protected:
 
         // Get temperature
         const auto& T = fluid_state.temperature(0);
-        
+
         // If temperature is below estimated critical temperature --> phase = liquid; else vapor
         typename Vector::field_type L;
         if (T < Tc_est) {
@@ -258,13 +258,13 @@ protected:
         else {
             // Vapor
             L = 0.0;
-            
+
             // Print
             if (verbosity >= 1) {
                 std::cout << "Cell is single-phase, vapor (L = 0.0) due to Li's phase labeling method giving T >= Tc_est (" << T << " >= " << Tc_est << ")!" << std::endl;
             }
         }
-        
+
 
         return L;
     }
@@ -344,7 +344,7 @@ protected:
 
                     // Run bisection
                     L = bisection_g_(K, Lmin, Lmax, z, verbosity);
-        
+
                     // Ensure that L is in the range (0, 1)
                     L = Opm::min(Opm::max(L, 0.0), 1.0);
 
@@ -381,7 +381,7 @@ protected:
     {
         // Calculate for g(Lmin) for first comparison with gMid = g(L)
         typename Vector::field_type gLmin = rachfordRice_g_(K, Lmin, z);
-      
+
         // Print new header
         if (verbosity >= 3) {
                 std::cout << std::setw(10) << "Iteration" << std::setw(16) << "g(Lmid)" << std::setw(16) << "L" << std::endl;
@@ -401,14 +401,14 @@ protected:
             if (Opm::abs(gMid) < 1e-10 || Opm::abs((Lmax - Lmin) / 2) < 1e-10){
                 return L;
             }
-            
+
             // Else we repeat with midpoint being either Lmin og Lmax (depending on the signs).
             else if (Dune::sign(gMid) != Dune::sign(gLmin)) {
                 // gMid has same sign as gLmax, so we set L as the new Lmax
-                Lmax = L; 
+                Lmax = L;
             }
             else {
-                // gMid and gLmin have same sign so we set L as the new Lmin 
+                // gMid and gLmin have same sign so we set L as the new Lmin
                 Lmin = L;
                 gLmin = gMid;
             }
@@ -441,7 +441,7 @@ protected:
         bool L_stable = (S_l < (1.0 + 1e-5)) || isTrivialL;
 
         // L-stable means success in making liquid, V-unstable means no success in making vapour
-        isStable = L_stable && V_unstable; 
+        isStable = L_stable && V_unstable;
         if (isStable) {
             // Single phase, i.e. phase composition is equivalent to the global composition
             // Update fluid_state with mole fraction
@@ -465,7 +465,7 @@ protected:
         using FlashEval = typename FlashFluidState::Scalar;
         using PengRobinsonMixture = typename Opm::PengRobinsonMixture<Scalar, FluidSystem>;
 
-        // Declarations 
+        // Declarations
         FlashFluidState fluid_state_fake = fluid_state;
         FlashFluidState fluid_state_global = fluid_state;
 
@@ -521,7 +521,7 @@ protected:
                 fluid_state_global.setFugacityCoefficient(phaseIdx2, compIdx, phiGlobal);
             }
 
-           
+
             ComponentVector R;
             for (int compIdx=0; compIdx<numComponents; ++compIdx){
                 if (isGas){
@@ -779,7 +779,7 @@ protected:
             K[idx] = K_i;
         }
         L = Opm::getValue(l);
-        fluid_state.setLvalue(L);    
+        fluid_state.setLvalue(L);
     }
 
     // TODO: the interface will need to refactor for later usage
@@ -956,7 +956,7 @@ protected:
         SecondaryNewtonMatrix sec_jac;
         SecondaryNewtonVector sec_res;
 
-    
+
         //use the regular equations
         assembleNewton_<SecondaryFlashFluidState, SecondaryComponentVector, secondary_num_pv, num_equations>
             (secondary_fluid_state, secondary_z, sec_jac, sec_res);
@@ -1024,9 +1024,9 @@ protected:
 
         // use the chainrule (and using partial instead of total
         // derivatives, DF / Dp = dF / dp +  dF / ds * ds/dp.
-        // where p is the primary variables and s the secondary variables. We then obtain 
+        // where p is the primary variables and s the secondary variables. We then obtain
         // ds / dp = -inv(dF / ds)*(DF / Dp)
-        
+
         const auto p_l = fluid_state.pressure(FluidSystem::oilPhaseIdx);
         const auto p_v = fluid_state.pressure(FluidSystem::gasPhaseIdx);
         std::vector<double> K(numComponents);
@@ -1036,11 +1036,11 @@ protected:
             x[compIdx] = fluid_state_scalar.moleFraction(FluidSystem::oilPhaseIdx,compIdx);//;z[compIdx] * 1. / (L + (1 - L) * K[compIdx]);
             y[compIdx] = fluid_state_scalar.moleFraction(FluidSystem::gasPhaseIdx,compIdx);//;x[compIdx] * K[compIdx];
         }
-            
+
         // then we try to set the derivatives for x, y and L against P and x.
         // p_l and p_v are the same here, in the future, there might be slightly more complicated scenarios when capillary
         // pressure joins
-    
+
         constexpr size_t num_deri = numComponents;
         for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
             std::vector<double> deri(num_deri, 0.);
@@ -1129,7 +1129,7 @@ protected:
 
         // Store cout format before manipulation
         std::ios_base::fmtflags f(std::cout.flags());
-        
+
         // Print initial guess
         if (verbosity >= 1)
             std::cout << "Initial guess: K = [" << K << "] and L = " << L << std::endl;
@@ -1140,9 +1140,9 @@ protected:
             int convWidth = fugWidth + 7;
             std::cout << std::setw(10) << "Iteration" << std::setw(fugWidth) << "fL/fV" << std::setw(convWidth) << "norm2(fL/fv-1)" << std::endl;
         }
-        // 
+        //
         // Successive substitution loop
-        // 
+        //
         for (int i=0; i < maxIterations; ++i){
             // Compute (normalized) liquid and vapor mole fractions
             computeLiquidVapor_(fluid_state, L, K, z);
@@ -1157,7 +1157,7 @@ protected:
                     fluid_state.setFugacityCoefficient(phaseIdx, compIdx, phi);
                 }
             }
-            
+
             // Calculate fugacity ratio
             ComponentVector newFugRatio;
             ComponentVector convFugRatio;
@@ -1184,7 +1184,7 @@ protected:
             // Check convergence
             if (convFugRatio.two_norm() < 1e-6) {
                 // Restore cout format
-                std::cout.flags(f); 
+                std::cout.flags(f);
 
                 // Print info
                 if (verbosity >= 1) {
@@ -1211,7 +1211,7 @@ protected:
                 // Restore cout format format
                 return;
             }
-            
+
             //  If convergence is not met, K is updated in a successive substitution manner
             else{
                 // Update K
@@ -1226,10 +1226,10 @@ protected:
         }
         if (!newton_afterwards) {
             throw std::runtime_error(
-                    "Successive substitution composition update did not converge within maxIterations");
+                    "Successive substitution composition update did not converge within maxIterations " + std::to_string(maxIterations));
         }
     }
-    
+
 };//end PTFlash
 
 } // namespace Opm
