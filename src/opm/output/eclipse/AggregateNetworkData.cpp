@@ -233,6 +233,9 @@ double nodePressure(const Opm::Schedule&               sched,
             // find fixed pressure higher in the node tree
             bool fp_flag = false;
             auto node_name = nodeName;
+            auto upt_br_opt = network.uptree_branch(node_name);
+            if (!upt_br_opt.has_value()) return 0.0; // Node not belonging to the network right now
+
             auto upt_br = network.uptree_branch(node_name).value();
             while (!fp_flag) {
                 if (fixedPressureNode(sched, upt_br.uptree_node(), lookup_step)) {
@@ -243,8 +246,7 @@ double nodePressure(const Opm::Schedule&               sched,
                     if (network.uptree_branch(node_name).has_value()) {
                         upt_br = network.uptree_branch(node_name).value();
                     } else {
-                        auto msg = fmt::format("Node: {} has no uptree node with fixed pressure condition,  uppermost node is: {} ", nodeName, node_name);
-                        throw std::logic_error(msg);
+                        return 0.0;  // Subtree not belonging to the network right now
                     }
                 }
             }
@@ -407,8 +409,7 @@ int numberOfBranchesConnToNode(const Opm::Schedule& sched, const std::string& no
         noBranches = (network.uptree_branch(nodeName).has_value()) ? noBranches+1 : noBranches;
         return noBranches;
     } else {
-        auto msg = fmt::format("Actual node: {} has not been defined at report time: {} ", nodeName, lookup_step+1);
-        throw std::logic_error(msg);
+        return 0; // @TODO - Should number of branches in inactive subtree be reported?
     }
 }
 

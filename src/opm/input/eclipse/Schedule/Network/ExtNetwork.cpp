@@ -101,14 +101,14 @@ void ExtNetwork::add_or_replace_branch(Branch branch)
         }
     }
     
-    // Remove any other branch uptree from downtree_node
+    // Remove any other branch uptree from downtree_node (gathering tree structure required)
     auto uptree_link = this->uptree_branch( downtree_node );
     if (uptree_link.has_value()){
         const auto& old_uptree_node = uptree_link.value().uptree_node();
-        this->drop_branch(old_uptree_node, downtree_node, false);
+        this->drop_branch(old_uptree_node, downtree_node);
     }
     
-    // Update existing branch
+    // Update existing branch if it exists
     auto downtree_branches = this->downtree_branches( uptree_node );
     if (!downtree_branches.empty()) {
         auto branch_iter = std::find_if(this->m_branches.begin(), this->m_branches.end(), [&uptree_node, &downtree_node](const Branch& b) { return (b.uptree_node() == uptree_node && b.downtree_node() == downtree_node); });
@@ -121,25 +121,30 @@ void ExtNetwork::add_or_replace_branch(Branch branch)
     this->m_branches.push_back( std::move(branch) );
 }
 
+bool ExtNetwork::is_disconnected(const std::string& node_name) const {
+    if (!this->has_node(node_name)) return false;
 
-void ExtNetwork::drop_branch(const std::string& uptree_node, const std::string& downtree_node, const bool recurse) {
-    auto downtree_branches = this->downtree_branches( downtree_node );
-    if (downtree_branches.empty() || !recurse) {
-        auto branch_iter = std::find_if(this->m_branches.begin(), this->m_branches.end(), [&uptree_node, &downtree_node](const Branch& b) { return (b.uptree_node() == uptree_node && b.downtree_node() == downtree_node); });
-        if (branch_iter != this->m_branches.end())
-            this->m_branches.erase( branch_iter );
+    if (this->downtree_branches(node_name).empty()) {
+        for (const auto& branch : this->m_branches)
+            if (branch.downtree_node() == node_name) return false;
 
-        if (downtree_branches.empty()) this->m_nodes.erase( downtree_node );
-    } else {
-        for (const auto& branch : downtree_branches)
-            this->drop_branch(branch.uptree_node(), branch.downtree_node());
+        return true;
+    }
+    return false;
+}
+
+void ExtNetwork::drop_branch(const std::string& uptree_node, const std::string& downtree_node) {
+    auto branch_iter = std::find_if(this->m_branches.begin(),
+                                    this->m_branches.end(),
+                                    [&uptree_node, &downtree_node](const Branch& b) { return (b.uptree_node() == uptree_node && b.downtree_node() == downtree_node); });
+    if (branch_iter != this->m_branches.end()) {
+        this->m_branches.erase(branch_iter);
     }
 }
 
 
 std::optional<Branch> ExtNetwork::uptree_branch(const std::string& node) const {
-    if (!this->has_node(node))
-        throw std::out_of_range("No such node: " + node);
+    if (!this->has_node(node)) return {};
 
     std::vector<Branch> branches;
     std::copy_if(this->m_branches.begin(), this->m_branches.end(), std::back_inserter(branches), [&node](const Branch& b) { return b.downtree_node() == node; });
@@ -149,15 +154,15 @@ std::optional<Branch> ExtNetwork::uptree_branch(const std::string& node) const {
     if (branches.size() == 1)
         return std::move(branches[0]);
 
-    throw std::logic_error("Bug - more than upstree branch for node: " + node);
+    throw std::logic_error("Bug - more than uptree branch for node: " + node);
 }
 
 
 std::vector<Branch> ExtNetwork::downtree_branches(const std::string& node) const {
-    if (!this->has_node(node))
-        throw std::out_of_range("No such node: " + node);
-
     std::vector<Branch> branches;
+
+    if (!this->has_node(node)) return branches;
+
     std::copy_if(this->m_branches.begin(), this->m_branches.end(), std::back_inserter(branches), [&node](const Branch& b) { return b.uptree_node() == node; });
     return branches;
 }
@@ -196,10 +201,6 @@ void ExtNetwork::update_node(Node node)
     std::string name = node.name();
     auto branch = std::find_if(this->m_branches.begin(), this->m_branches.end(),
                                [&name](const Branch& b) { return b.uptree_node() == name || b.downtree_node() == name;});
-
-    if (branch == this->m_branches.end())
-        throw std::invalid_argument("Node: " + name + " is not referenced by any branch and would be dangling.");
-
 
     if (branch->downtree_node() == name) {
         if (node.as_choke() && branch->vfp_table().has_value())

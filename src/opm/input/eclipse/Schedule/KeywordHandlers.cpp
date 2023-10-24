@@ -180,9 +180,9 @@ namespace {
 
                 if (alq_eq == Network::Branch::AlqEQ::ALQ_INPUT) {
                     double alq_value = record.getItem<ParserKeywords::BRANPROP::ALQ>().get<double>(0);
-                    ext_network.add_branch(Network::Branch(downtree_node, uptree_node, vfp_table, alq_value));
+                    ext_network.add_or_replace_branch(Network::Branch(downtree_node, uptree_node, vfp_table, alq_value));
                 } else {
-                    ext_network.add_branch(Network::Branch(downtree_node, uptree_node, vfp_table, alq_eq));
+                    ext_network.add_or_replace_branch(Network::Branch(downtree_node, uptree_node, vfp_table, alq_eq));
                 }
             }
         }

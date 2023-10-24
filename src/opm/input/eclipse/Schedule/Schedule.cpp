@@ -1404,6 +1404,7 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
                 auto new_branch = old_branch.value();
                 new_branch.set_uptree_node(parent_name);
                 network.add_or_replace_branch(new_branch);
+                this->snapshots.back().network.update( std::move(network));
             }
             // If no previous uptree branch the child is a fixed-pressure node, so no need to update network
         }
