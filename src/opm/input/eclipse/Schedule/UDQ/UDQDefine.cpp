@@ -187,8 +187,28 @@ make_udq_tokens(const std::vector<std::string>& string_tokens)
             }
 
             tokens.emplace_back(string_token, selector);
-        }
-        else {
+        } else if (token_type == Opm::UDQTokenType::table_lookup) {
+            std::vector<std::string> selector;
+            while (token_index < string_tokens.size()) {
+                auto next_token_type = Opm::UDQ::tokenType(string_tokens[token_index]);
+                if (next_token_type == Opm::UDQTokenType::table_lookup_end) {
+                    break;
+                }
+
+                if (next_token_type != Opm::UDQTokenType::table_lookup_start) {
+                  const auto& select_token = string_tokens[token_index];
+                  if (Opm::RawConsts::is_quote()(select_token[0])) {
+                      selector.push_back(select_token.substr(1, select_token.size() - 2));
+                  }
+                  else {
+                      selector.push_back(select_token);
+                  }
+                }
+                ++token_index;
+            }
+            ++token_index;
+            tokens.emplace_back(string_token, selector);
+        } else {
             tokens.emplace_back(string_token, token_type);
         }
 

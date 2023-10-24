@@ -70,6 +70,7 @@ enum class UDQVarType
     BLOCK_VAR = 7,
     WELL_VAR = 8,
     GROUP_VAR = 9,
+    TABLE_LOOKUP = 10,
 };
 
 enum class UDQTokenType
@@ -124,6 +125,8 @@ enum class UDQTokenType
     scalar_func_prod = 46,
     //
     table_lookup = 47,
+    table_lookup_start = 48,
+    table_lookup_end = 49,
     //
     end = 100,
 };

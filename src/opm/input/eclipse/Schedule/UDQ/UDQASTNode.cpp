@@ -24,6 +24,7 @@
 #include <opm/input/eclipse/Schedule/UDQ/UDQFunction.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQFunctionTable.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQSet.hpp>
+#include <opm/input/eclipse/Schedule/UDQ/UDT.hpp>
 
 #include <memory>
 #include <set>
@@ -322,6 +323,11 @@ UDQASTNode::eval_expression(const UDQContext& context) const
         return UDQSet::scalar(string_value, context.get(string_value));
     }
 
+    if (data_type == UDQVarType::TABLE_LOOKUP) {
+        const auto param_type = UDQ::targetType(this->selector[0]);
+        return this->eval_table_lookup(param_type, string_value, context);
+    }
+
     if (const auto scalar = context.get(string_value); scalar.has_value()) {
         return UDQSet::scalar(string_value, scalar.value());
     }
@@ -510,6 +516,92 @@ UDQASTNode::eval_number(const UDQVarType  target_type,
             "Unsupported target_type: " + std::to_string(static_cast<int>(target_type))
         };
     }
+}
+
+UDQSet
+UDQASTNode::eval_table_lookup(const UDQVarType target_type,
+                              const std::string& string_value,
+                              const UDQContext& context) const
+{
+    switch (target_type) {
+    case UDQVarType::FIELD_VAR:
+        return eval_table_lookup_field(string_value, context);
+    case UDQVarType::GROUP_VAR:
+        return eval_table_lookup_group(string_value, context);
+    case UDQVarType::SEGMENT_VAR:
+        return eval_table_lookup_segment(string_value, context);
+    case UDQVarType::WELL_VAR:
+        return eval_table_lookup_well(string_value, context);
+    default:
+        throw std::invalid_argument {
+            "Unsupported target_type: " + std::to_string(static_cast<int>(target_type))
+        };
+    }
+}
+
+UDQSet
+UDQASTNode::eval_table_lookup_field(const std::string& string_value,
+                                    const UDQContext& context) const
+{
+    const UDT& udt = context.get_udt(string_value);
+    const auto xvar = context.get(this->selector[0]);
+    double val = 0.0;
+    if (xvar.has_value()) {
+        val = udt(*xvar);
+    }
+
+    return UDQSet::scalar("dummy", val);
+}
+
+UDQSet
+UDQASTNode::eval_table_lookup_group(const std::string& string_value,
+                                    const UDQContext& context) const
+{
+    const UDT& udt = context.get_udt(string_value);
+    UDQSet result = UDQSet::groups("dummy", context.groups());
+    for (const auto& group : context.groups()) {
+        const auto xvar = context.get_group_var(group, this->selector[0]);
+        if (xvar.has_value()) {
+            result.assign(group, udt(*xvar));
+        }
+    }
+
+    return result;
+}
+
+UDQSet
+UDQASTNode::eval_table_lookup_segment(const std::string& string_value,
+                                      const UDQContext& context) const
+{
+    const UDT& udt = context.get_udt(string_value);
+    const auto all_msw_segments = UDQSet::getSegmentItems(context.segments());
+    UDQSet result = UDQSet::segments("dummy", all_msw_segments);
+    for (const auto& ms_well : all_msw_segments) {
+        for (const auto& segment : ms_well.numbers) {
+            const auto xvar = context.get_segment_var(ms_well.well, this->selector[0], segment);
+            if (xvar.has_value()) {
+                result.assign(ms_well.well, segment, udt(*xvar));
+            }
+        }
+    }
+
+    return result;
+}
+
+UDQSet
+UDQASTNode::eval_table_lookup_well(const std::string& string_value,
+                                   const UDQContext& context) const
+{
+    const UDT& udt = context.get_udt(string_value);
+    UDQSet result = UDQSet::wells("dummy", context.wells());
+    for (const auto& well : context.wells()) {
+        const auto xvar = context.get_well_var(well, this->selector[0]);
+        if (xvar.has_value()) {
+            result.assign(well, udt(*xvar));
+        }
+    }
+
+    return result;
 }
 
 void UDQASTNode::func_tokens(std::set<UDQTokenType>& tokens) const

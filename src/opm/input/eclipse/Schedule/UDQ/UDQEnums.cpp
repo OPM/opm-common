@@ -76,6 +76,7 @@ namespace {
             || (t == Opm::UDQVarType::NONE)
             || (t == Opm::UDQVarType::SCALAR)
             || (t == Opm::UDQVarType::FIELD_VAR)
+            || (t == Opm::UDQVarType::TABLE_LOOKUP)
             ;
     }
 
@@ -234,6 +235,9 @@ namespace Opm { namespace UDQ {
 
 UDQVarType targetType(const std::string& keyword)
 {
+    if (keyword.substr(0,3) == "TU_") {
+        return UDQVarType::TABLE_LOOKUP;
+    }
     const char first_char = keyword[0];
     switch (first_char) {
     case 'C': return UDQVarType::CONNECTION_VAR;
@@ -409,8 +413,16 @@ UDQTokenType tokenType(const std::string& token)
         return UDQTokenType::open_paren;
     }
 
+    if (token == "[") {
+        return UDQTokenType::table_lookup_start;
+    }
+
     if (token == ")") {
         return UDQTokenType::close_paren;
+    }
+
+    if (token == "]") {
+        return UDQTokenType::table_lookup_end;
     }
 
     if (const auto number = try_parse_double(token);
