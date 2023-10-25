@@ -75,8 +75,10 @@ class ActionX {
 public:
     ActionX();
     ActionX(const std::string& name, size_t max_run, double max_wait, std::time_t start_time);
-    ActionX(const DeckKeyword& kw, const Actdims& actimds, std::time_t start_time,
-            std::vector<std::pair<std::string, std::string>>& condition_errors);
+    ActionX(const std::string& name, size_t max_run, double max_wait,
+            std::time_t start_time,
+            const std::vector<Condition>&& conditions,
+            const std::vector<std::string>&& tokens);
     ActionX(const DeckRecord& record, std::time_t start_time);
     explicit ActionX(const RestartIO::RstAction& rst_action);
 
@@ -131,6 +133,15 @@ private:
     Action::AST condition;
     std::vector<Condition> m_conditions;
 };
+
+/// \brief Parse ActionX keyword.
+/// \param kw The keyword representation of ActionX
+/// \param actdims Dimensions for ActionX as specified in the deck.
+/// \param start_time The first time that the ActionX should be evaluated
+/// \return A tuple of the ActionX created and a vector that contains for each error experienced
+///         during parsing the string indicating the type of error and the error string itself.
+std::tuple<ActionX, std::vector<std::pair<std::string, std::string>>>
+parseActionX(const DeckKeyword& kw, const Actdims& actimds, std::time_t start_time);
 
 }
 }
