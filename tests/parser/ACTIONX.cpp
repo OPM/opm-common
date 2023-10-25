@@ -88,9 +88,10 @@ ACTIONX
     const auto& kw = deck["ACTIONX"].back();
 
 
-    std::vector<std::pair<std::string, std::string>> condition_errors;
-    Action::ActionX action2(kw, {}, 0, condition_errors);
+    const auto& [action2, condition_errors2 ] =
+        Action::parseActionX(kw, {}, 0);
     BOOST_CHECK_EQUAL(action2.name(), "ACTION");
+    BOOST_CHECK_EQUAL(condition_errors2.size(), 0U);
 
     // left hand side has to be an expression.
     // Check whether we add an error to condition_errors
@@ -102,10 +103,11 @@ ACTIONX
 /
 )"};
 
-    condition_errors.clear();
+
     const auto deck1 = Parser{}.parseString( action_kw_num_first);
-    const auto action3 = Action::ActionX(deck1["ACTIONX"].back(), {}, 0, condition_errors);
-    BOOST_CHECK_EQUAL(condition_errors.size(), 1U);
+    const auto& [action3, condition_errors3] =
+        Action::parseActionX(deck1["ACTIONX"].back(), {}, 0);
+    BOOST_CHECK_EQUAL(condition_errors3.size(), 1U);
 }
 
 

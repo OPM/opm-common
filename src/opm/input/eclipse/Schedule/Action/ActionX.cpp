@@ -74,6 +74,50 @@ bool ActionX::valid_keyword(const std::string& keyword) {
     return (actionx_allowed_list.find(keyword) != actionx_allowed_list.end());
 }
 
+std::tuple<ActionX, std::vector<std::pair<std::string, std::string>>>
+parseActionX(const DeckKeyword& kw, const Actdims& actdims,
+             std::time_t start_time)
+{
+    std::vector<std::pair<std::string, std::string>> condition_errors;
+    std::vector<std::string> tokens;
+    std::vector<Condition> conditions;
+    auto record = kw.getRecord(0);
+    const std::string name = record.getItem("NAME").getTrimmedString(0);
+
+    for (size_t record_index = 1; record_index < kw.size(); record_index++) {
+        const auto& record = kw.getRecord(record_index);
+        const auto& cond_tokens = RawString::strings( record.getItem("CONDITION").getData<RawString>() );
+
+        for (const auto& token : cond_tokens)
+            tokens.push_back(dequote(token, kw.location()));
+
+        conditions.emplace_back(cond_tokens, kw.location());
+    }
+    if (conditions.empty())
+        condition_errors.push_back({ParseContext::ACTIONX_NO_CONDITION,
+                fmt::format("Action {} is missing a condition.", name)});
+
+    if (conditions.size() > actdims.max_conditions())
+        condition_errors.push_back({ ParseContext::ACTIONX_CONDITION_ERROR,
+                fmt::format("Action {} has too many conditions - adjust item "
+                            "4 of ACTDIMS to at least {}",
+                            name, conditions.size())});
+
+    try
+    {
+        return { ActionX(name,
+                         record.getItem("NUM").get<int>(0),
+                         record.getItem("MIN_WAIT").getSIDouble(0),
+                         start_time, std::move(conditions), std::move(tokens)),
+            condition_errors};
+    }
+    catch(const std::invalid_argument& e)
+    {
+        condition_errors.push_back({ ParseContext::ACTIONX_CONDITION_ERROR,
+                fmt::format("condition of action {} has the following error: {}", name, e.what())});
+        return {ActionX(kw.getRecord(0), start_time), condition_errors};
+    }
+}
 
 ActionX::ActionX() :
     m_start_time(0)
@@ -120,36 +164,13 @@ ActionX::ActionX(const DeckRecord& record, std::time_t start_time) :
 
 
 
-ActionX::ActionX(const DeckKeyword& kw, const Actdims& actdims, std::time_t start_time, std::vector<std::pair<std::string, std::string>>& condition_errors) :
-    ActionX(kw.getRecord(0), start_time)
-{
-    std::vector<std::string> tokens;
-    for (size_t record_index = 1; record_index < kw.size(); record_index++) {
-        const auto& record = kw.getRecord(record_index);
-        const auto& cond_tokens = RawString::strings( record.getItem("CONDITION").getData<RawString>() );
-
-        for (const auto& token : cond_tokens)
-            tokens.push_back(dequote(token, kw.location()));
-
-        this->m_conditions.emplace_back(cond_tokens, kw.location());
-    }
-    if (this->m_conditions.empty())
-        condition_errors.push_back({ParseContext::ACTIONX_NO_CONDITION, fmt::format("Action {} is missing a condition.", this->name())});
-
-    if (this->m_conditions.size() > actdims.max_conditions())
-        condition_errors.push_back({ ParseContext::ACTIONX_CONDITION_ERROR,
-                fmt::format("Action {} has too many conditions - adjust item 4 of ACTDIMS to at least {}", this->name(), this->m_conditions.size())});
-
-    try
-    {
-        this->condition = Action::AST(tokens);
-    }
-    catch(const std::invalid_argument& e)
-    {
-        condition_errors.push_back({ ParseContext::ACTIONX_CONDITION_ERROR,
-                fmt::format("condition of action {} has the following error: {}", this->name(), e.what())});
-    }
-}
+ActionX::ActionX(const std::string& name, size_t max_run, double min_wait,
+                 std::time_t start_time,
+                 const std::vector<Condition>&& conditions,
+                 const std::vector<std::string>&& tokens)
+    : m_name(name), m_max_run(max_run), m_min_wait(min_wait),
+      m_start_time(start_time), condition(tokens), m_conditions(conditions)
+{}
 
 
 ActionX ActionX::serializationTestObject()
