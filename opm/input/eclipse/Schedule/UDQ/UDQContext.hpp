@@ -36,6 +36,7 @@ namespace Opm {
     class UDQFunctionTable;
     class UDQSet;
     class UDQState;
+    class UDT;
     class WellMatcher;
 
 } // namespace Opm
@@ -49,6 +50,7 @@ namespace Opm {
 
         UDQContext(const UDQFunctionTable& udqft,
                    const WellMatcher&      wm,
+                   const std::unordered_map<std::string, UDT>& tables,
                    SegmentMatcherFactory   create_segment_matcher,
                    SummaryState&           summary_state,
                    UDQState&               udq_state);
@@ -57,6 +59,7 @@ namespace Opm {
         std::optional<double> get_well_var(const std::string& well, const std::string& var) const;
         std::optional<double> get_group_var(const std::string& group, const std::string& var) const;
         std::optional<double> get_segment_var(const std::string& well, const std::string& var, std::size_t segment) const;
+        const UDT& get_udt(const std::string& name) const;
 
         void add(const std::string& key, double value);
         void update_assign(const std::string& keyword, const UDQSet& udq_result);
@@ -73,6 +76,7 @@ namespace Opm {
     private:
         const UDQFunctionTable& udqft;
         const WellMatcher& well_matcher;
+        const std::unordered_map<std::string, UDT>& udt;
 
         SegmentMatcherFactory create_segment_matcher;
         mutable std::unique_ptr<SegmentMatcher> segment_matcher;

@@ -276,6 +276,7 @@ if(ENABLE_ECL_INPUT)
     src/opm/input/eclipse/Schedule/UDQ/UDQSet.cpp
     src/opm/input/eclipse/Schedule/UDQ/UDQState.cpp
     src/opm/input/eclipse/Schedule/UDQ/UDQToken.cpp
+    src/opm/input/eclipse/Schedule/UDQ/UDT.cpp
     src/opm/input/eclipse/Schedule/VFPInjTable.cpp
     src/opm/input/eclipse/Schedule/VFPProdTable.cpp
     src/opm/input/eclipse/Parser/ErrorGuard.cpp
@@ -548,6 +549,7 @@ if(ENABLE_ECL_INPUT)
     tests/parser/TransMultTests.cpp
     tests/parser/TuningTests.cpp
     tests/parser/UDQTests.cpp
+    tests/parser/UDTTests.cpp
     tests/parser/UnitTests.cpp
     tests/parser/integration/NNCTests.cpp
     tests/parser/WellSolventTests.cpp
@@ -1316,6 +1318,7 @@ if(ENABLE_ECL_INPUT)
        opm/input/eclipse/Schedule/UDQ/UDQSet.hpp
        opm/input/eclipse/Schedule/UDQ/UDQState.hpp
        opm/input/eclipse/Schedule/UDQ/UDQToken.hpp
+       opm/input/eclipse/Schedule/UDQ/UDT.hpp
        opm/input/eclipse/Deck/DeckItem.hpp
        opm/input/eclipse/Deck/Deck.hpp
        opm/input/eclipse/Deck/DeckView.hpp

@@ -26,6 +26,7 @@
 #include <opm/input/eclipse/Schedule/UDQ/UDQFunctionTable.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQInput.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQParams.hpp>
+#include <opm/input/eclipse/Schedule/UDQ/UDT.hpp>
 
 #include <opm/input/eclipse/EclipseState/Util/OrderedMap.hpp>
 #include <opm/input/eclipse/EclipseState/Util/IOrderSet.hpp>
@@ -101,6 +102,8 @@ namespace Opm {
                         const std::vector<std::string>& expression,
                         std::size_t                     report_step);
 
+        void add_table(const std::string& name, UDT udt);
+
         bool clear_pending_assignments();
 
         void eval_assign(std::size_t           report_step,
@@ -136,6 +139,7 @@ namespace Opm {
         std::vector<UDQAssign> assignments(UDQVarType var_type) const;
         const UDQParams& params() const;
         const UDQFunctionTable& function_table() const;
+        const std::unordered_map<std::string, UDT>& tables() const;
 
         bool operator==(const UDQConfig& config) const;
         void required_summary(std::unordered_set<std::string>& summary_keys) const;
@@ -146,6 +150,7 @@ namespace Opm {
             serializer(udq_params);
             serializer(m_definitions);
             serializer(m_assignments);
+            serializer(m_tables);
             serializer(units);
             serializer(input_index);
             serializer(type_count);
@@ -171,6 +176,7 @@ namespace Opm {
         // currently DEFINE'ed or ASSIGN'ed.
         std::unordered_map<std::string, UDQDefine> m_definitions;
         std::unordered_map<std::string, UDQAssign> m_assignments;
+        std::unordered_map<std::string, UDT> m_tables;
         std::unordered_map<std::string, std::string> units;
 
         IOrderSet<std::string> define_order;

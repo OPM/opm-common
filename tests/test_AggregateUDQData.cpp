@@ -892,8 +892,8 @@ BOOST_AUTO_TEST_CASE (Declared_UDQ_data)
                 return std::make_unique<Opm::SegmentMatcher>(Opm::ScheduleState{});
             };
 
-            Opm::UDQContext input_context(udqft, wm, segmentMatcherFactory, st, udq_state);
-            Opm::UDQContext rst_context(udqft, wm, segmentMatcherFactory, st, rst_udq_state);
+            Opm::UDQContext input_context(udqft, wm, {}, segmentMatcherFactory, st, udq_state);
+            Opm::UDQContext rst_context(udqft, wm, {}, segmentMatcherFactory, st, rst_udq_state);
 
             rst_udq_state.load_rst(rst_state);
             for (const auto& input_def : input_config.definitions()) {

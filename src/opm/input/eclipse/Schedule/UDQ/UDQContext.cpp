@@ -22,6 +22,7 @@
 #include <opm/input/eclipse/Schedule/MSW/SegmentMatcher.hpp>
 #include <opm/input/eclipse/Schedule/SummaryState.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQState.hpp>
+#include <opm/input/eclipse/Schedule/UDQ/UDT.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellMatcher.hpp>
 
 #include <opm/common/utility/TimeService.hpp>
@@ -52,11 +53,13 @@ namespace Opm {
 
     UDQContext::UDQContext(const UDQFunctionTable& udqft_arg,
                            const WellMatcher&      wm,
+                           const std::unordered_map<std::string, UDT>& tables,
                            SegmentMatcherFactory   create_segment_matcher_arg,
                            SummaryState&           summary_state_arg,
                            UDQState&               udq_state_arg)
         : udqft                 (udqft_arg)
         , well_matcher          (wm)
+        , udt(tables)
         , create_segment_matcher(std::move(create_segment_matcher_arg))
         , summary_state         (summary_state_arg)
         , udq_state             (udq_state_arg)
@@ -171,6 +174,18 @@ namespace Opm {
                         "registered for segment {} in well {}",
                         var, segment, well)
         };
+    }
+
+    const UDT&
+    UDQContext::get_udt(const std::string& name) const
+    {
+        const auto it = udt.find(name);
+        if (it == udt.end()) {
+            throw std::logic_error {
+              fmt::format("Not such UDT defined: {}", name)
+            };
+        }
+        return it->second;
     }
 
     std::vector<std::string> UDQContext::wells() const

@@ -173,6 +173,7 @@ namespace Opm {
         result.udqft = UDQFunctionTable(result.udq_params);
         result.m_definitions = {{"test1", UDQDefine::serializationTestObject()}};
         result.m_assignments = {{"test2", UDQAssign::serializationTestObject()}};
+        result.m_tables = {{"test3", UDT::serializationTestObject()}};
         result.units = {{"test3", "test4"}};
         result.input_index.insert({"test5", UDQIndex::serializationTestObject()});
         result.type_count = {{UDQVarType::SCALAR, 5}};
@@ -336,6 +337,11 @@ namespace Opm {
                 "Unknown UDQ Operation " + std::to_string(static_cast<int>(action))
             };
         }
+    }
+
+    void UDQConfig::add_table(const std::string& name, UDT udt)
+    {
+        m_tables.emplace(name, std::move(udt));
     }
 
     bool UDQConfig::clear_pending_assignments()
@@ -526,12 +532,18 @@ namespace Opm {
         return this->udqft;
     }
 
+    const std::unordered_map<std::string, UDT>& UDQConfig::tables() const
+    {
+        return m_tables;
+    }
+
     bool UDQConfig::operator==(const UDQConfig& data) const
     {
         return (this->params() == data.params())
             && (this->function_table() == data.function_table())
             && (this->m_definitions == data.m_definitions)
             && (this->m_assignments == data.m_assignments)
+            && (this->m_tables == data.m_tables)
             && (this->units == data.units)
             && (this->input_index == data.input_index)
             && (this->type_count == data.type_count)
@@ -628,7 +640,7 @@ namespace Opm {
                          UDQState&             udq_state) const
     {
         UDQContext context {
-            this->function_table(), wm, std::move(create_segment_matcher), st, udq_state
+            this->function_table(), wm, m_tables, std::move(create_segment_matcher), st, udq_state
         };
         this->eval_assign(report_step, sched, context);
         this->eval_define(report_step, udq_state, context);
@@ -642,7 +654,7 @@ namespace Opm {
                                 UDQState&             udq_state) const
     {
         UDQContext context {
-            this->function_table(), wm, std::move(create_segment_matcher), st, udq_state
+            this->function_table(), wm, m_tables, std::move(create_segment_matcher), st, udq_state
         };
         this->eval_assign(report_step, sched, context);
     }
