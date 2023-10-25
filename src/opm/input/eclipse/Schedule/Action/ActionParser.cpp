@@ -22,6 +22,8 @@
 #include <cstdlib>
 #include <stdexcept>
 
+#include <fmt/format.h>
+
 #include <opm/input/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
 
 #include "ActionParser.hpp"
@@ -128,9 +130,9 @@ ParseNode Parser::current() const {
 Action::ASTNode Parser::parse_left() {
     auto current = this->current();
     if (current.type != TokenType::ecl_expr)
-        throw std::invalid_argument("Left side of comparison ("
-                                    + current.value + ") has to be "
-                                    "an expression!");
+        throw std::invalid_argument(fmt::format("Expected expression as left hand side "
+                                                "of comparison, but got {} instead.",
+                                                current.value));
 
     std::string func = current.value;
     FuncType func_type = get_func(current.value);
