@@ -257,6 +257,16 @@ public:
                          Scalar pcow,
                          Scalar Sw);
 
+    /// Apply SWATINIT-like scaling of oil/water capillary pressure curve at
+    /// simulation restart.
+    ///
+    /// \param[in] elemIdx Active cell index
+    ///
+    /// \param[in] maxPcow Scaled maximum oil/water capillary pressure.
+    ///   Typically the PPCW restart file array's entry for the
+    ///   corresponding cell.
+    void applyRestartSwatInit(const unsigned elemIdx, const Scalar maxPcow);
+
     bool enableEndPointScaling() const
     { return enableEndPointScaling_; }
 

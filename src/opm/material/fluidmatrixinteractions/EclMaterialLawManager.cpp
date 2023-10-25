@@ -212,6 +212,24 @@ applySwatinit(unsigned elemIdx,
 }
 
 template<class TraitsT>
+void
+EclMaterialLawManager<TraitsT>::applyRestartSwatInit(const unsigned elemIdx,
+                                                     const Scalar   maxPcow)
+{
+    // Maximum capillary pressure adjusted from SWATINIT data.
+
+    auto& elemScaledEpsInfo =
+        this->oilWaterScaledEpsInfoDrainage_[elemIdx];
+
+    elemScaledEpsInfo.maxPcow = maxPcow;
+
+    this->oilWaterScaledEpsPointsDrainage(elemIdx)
+        .init(elemScaledEpsInfo,
+              *this->oilWaterEclEpsConfig_,
+              EclTwoPhaseSystemType::OilWater);
+}
+
+template<class TraitsT>
 const typename EclMaterialLawManager<TraitsT>::MaterialLawParams&
 EclMaterialLawManager<TraitsT>::
 connectionMaterialLawParams(unsigned satRegionIdx, unsigned elemIdx) const
