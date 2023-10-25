@@ -2323,10 +2323,6 @@ GCUTBACK
 G1 0.6 3* 0.9 LIQ /
 G2 1* 3.0 2* 0.9 RESV /
 /
-UDT
-LANGMUIR 4 /
-LC 2 /
-This keyword will not be finished
 )"};
 
 Parser parser;
@@ -2336,7 +2332,6 @@ auto kw = deck["GCUTBACK"].back();
 BOOST_CHECK_EQUAL( kw.size(), 2 );
 auto record = kw.getRecord(1);
 BOOST_CHECK_EQUAL( record.getItem(5).get<double>(0), 0.9 );
-BOOST_CHECK( !deck.hasKeyword("LANGMUIR") );
  const auto& tracerkm = deck.get<ParserKeywords::TRACERKM>().back();
 BOOST_CHECK_EQUAL(tracerkm.size(), 5);
  BOOST_CHECK_EQUAL(deck.count<ParserKeywords::SAVE>(), 2);

@@ -21,6 +21,16 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include <opm/common/utility/OpmInputError.hpp>
+
+#include <opm/input/eclipse/Deck/Deck.hpp>
+#include <opm/input/eclipse/EclipseState/Runspec.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
+#include <opm/input/eclipse/Parser/Parser.hpp>
+#include <opm/input/eclipse/Python/Python.hpp>
+#include <opm/input/eclipse/Schedule/Schedule.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDT.hpp>
 
 using namespace Opm;
@@ -56,4 +66,145 @@ BOOST_AUTO_TEST_CASE(UDT_LL)
     BOOST_CHECK_EQUAL(udt(4.0), 10.0);
     BOOST_CHECK_EQUAL(udt(4.7), 10.0 + (11.0 - 10.0) * (4.7 - 4.0) / (5.0 - 4.0));
     BOOST_CHECK_EQUAL(udt(5.2), 10.0 + (11.0 - 10.0) * (5.2 - 4.0) / (5.0 - 4.0));
+}
+
+BOOST_AUTO_TEST_CASE(ParseUDT_NV)
+{
+    const std::string input = R"(
+RUNSPEC
+UDTDIMS
+  1 10 10 1 /
+SCHEDULE
+UDT
+  'TEST1' 1/
+  'NV' 100.0 500.0 600.0 /
+  100.0 180.0 90.0 /
+/
+/
+)";
+    Parser parser;
+    auto deck = parser.parseString(input);
+    EclipseGrid grid(10,10,10);
+    TableManager table(deck);
+    FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
+    Runspec runspec(deck);
+    BOOST_CHECK_NO_THROW(Schedule schedule(deck, grid, fp, runspec, std::make_shared<Python>()));
+}
+
+BOOST_AUTO_TEST_CASE(ParseUDT_LC)
+{
+    const std::string input = R"(
+RUNSPEC
+UDTDIMS
+  1 10 10 1 /
+SCHEDULE
+UDT
+  'TEST1' 1/
+  'LC' 100.0 500.0 /
+  100.0 180.0 /
+/
+/
+)";
+    Parser parser;
+    auto deck = parser.parseString(input);
+    EclipseGrid grid(10,10,10);
+    TableManager table(deck);
+    FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
+    Runspec runspec(deck);
+    BOOST_CHECK_NO_THROW(Schedule schedule(deck, grid, fp, runspec, std::make_shared<Python>()));
+}
+
+BOOST_AUTO_TEST_CASE(ParseUDT_LL)
+{
+    const std::string input = R"(
+RUNSPEC
+UDTDIMS
+  1 10 10 1 /
+SCHEDULE
+UDT
+  'TEST1' 1/
+  'LL' 100.0 500.0 /
+  100.0 180.0 /
+/
+/
+)";
+    Parser parser;
+    auto deck = parser.parseString(input);
+    EclipseGrid grid(10,10,10);
+    TableManager table(deck);
+    FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
+    Runspec runspec(deck);
+    BOOST_CHECK_NO_THROW(Schedule schedule(deck, grid, fp, runspec, std::make_shared<Python>()));
+}
+
+BOOST_AUTO_TEST_CASE(ParseUDT_NonAscending)
+{
+    const std::string input = R"(
+RUNSPEC
+UDTDIMS
+  1 10 10 1 /
+SCHEDULE
+UDT
+  'TEST1' 1/
+  'LL' 100.0 500.0 200.0 /
+  100.0 180.0 13.0 /
+/
+/
+)";
+    Parser parser;
+    auto deck = parser.parseString(input);
+    EclipseGrid grid(10,10,10);
+    TableManager table(deck);
+    FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
+    Runspec runspec(deck);
+    BOOST_CHECK_THROW(Schedule schedule(deck, grid, fp, runspec, std::make_shared<Python>()),
+                      Opm::OpmInputError);
+}
+
+BOOST_AUTO_TEST_CASE(ParseUDT_SizeMismatch)
+{
+    const std::string input = R"(
+RUNSPEC
+UDTDIMS
+  1 10 10 1 /
+SCHEDULE
+UDT
+  'TEST1' 1/
+  'LL' 100.0 500.0 200.0 /
+  100.0 180.0 13.0 15.0 /
+/
+/
+)";
+    Parser parser;
+    auto deck = parser.parseString(input);
+    EclipseGrid grid(10,10,10);
+    TableManager table(deck);
+    FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
+    Runspec runspec(deck);
+    BOOST_CHECK_THROW(Schedule schedule(deck, grid, fp, runspec, std::make_shared<Python>()),
+                      Opm::OpmInputError);
+}
+
+BOOST_AUTO_TEST_CASE(ParseUDT_Duplicate)
+{
+    const std::string input = R"(
+RUNSPEC
+UDTDIMS
+  1 10 10 1 /
+SCHEDULE
+UDT
+  'TEST1' 1/
+  'LL' 100.0 500.0 500.0 /
+  100.0 180.0 13.0 15.0 /
+/
+/
+)";
+    Parser parser;
+    auto deck = parser.parseString(input);
+    EclipseGrid grid(10,10,10);
+    TableManager table(deck);
+    FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
+    Runspec runspec(deck);
+    BOOST_CHECK_THROW(Schedule schedule(deck, grid, fp, runspec, std::make_shared<Python>()),
+                      Opm::OpmInputError);
 }

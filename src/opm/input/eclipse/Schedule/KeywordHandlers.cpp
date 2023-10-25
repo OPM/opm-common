@@ -86,6 +86,7 @@
 #include <opm/input/eclipse/Parser/ParserKeywords/N.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/P.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/T.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/U.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/V.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/W.hpp>
 
@@ -1175,6 +1176,63 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
                                handlerContext.keyword.location(),
                                handlerContext.currentStep);
         }
+
+        this->snapshots.back().udq.update(std::move(new_udq));
+    }
+
+    void Schedule::handleUDT(HandlerContext& handlerContext)
+    {
+        auto new_udq = this->snapshots.back().udq();
+
+        using PUDT = ParserKeywords::UDT;
+
+        const auto& header = handlerContext.keyword.getRecord(0);
+        const std::string name = header.getItem<PUDT::TABLE_NAME>().get<std::string>(0);
+
+        const int dim = header.getItem<PUDT::DIMENSIONS>().get<int>(0);
+        if (dim != 1) {
+            throw OpmInputError("Only 1D UDTs are supported",
+                                handlerContext.keyword.location());
+
+        }
+
+        const auto& points = handlerContext.keyword.getRecord(1);
+        const std::string interp_type = points.getItem<PUDT::INTERPOLATION_TYPE>().get<std::string>(0);
+        UDT::InterpolationType type;
+        if (interp_type == "NV") {
+            type = UDT::InterpolationType::NearestNeighbour;
+        } else if (interp_type == "LC") {
+            type = UDT::InterpolationType::LinearClamp;
+        } else if (interp_type == "LL") {
+            type = UDT::InterpolationType::LinearExtrapolate;
+        } else {
+            throw OpmInputError(fmt::format("Unknown UDT interpolation type {}", interp_type),
+                                handlerContext.keyword.location());
+        }
+        const auto x_vals = points.getItem<ParserKeywords::UDT::INTERPOLATION_POINTS>().getData<double>();
+
+        if (!std::is_sorted(x_vals.begin(), x_vals.end())) {
+            throw OpmInputError("UDT: Interpolation points need to be given in ascending order",
+                                handlerContext.keyword.location());
+        }
+
+        if (auto it = std::adjacent_find(x_vals.begin(), x_vals.end()); it != x_vals.end()) {
+            throw OpmInputError(fmt::format("UDT: Interpolation points need to be unique: "
+                                            "found duplicate for {}", *it),
+                                handlerContext.keyword.location());
+        }
+
+        const auto& data = handlerContext.keyword.getRecord(2);
+        const auto y_vals = data.getItem<ParserKeywords::UDT::TABLE_VALUES>().getData<double>();
+
+        if (x_vals.size() != y_vals.size()) {
+            throw OpmInputError(fmt::format("UDT data size mismatch, number of x-values {}",
+                                            ", number of y-values {}",
+                                            x_vals.size(), y_vals.size()),
+                                handlerContext.keyword.location());
+        }
+
+        new_udq.add_table(name, UDT(x_vals, y_vals, type));
 
         this->snapshots.back().udq.update(std::move(new_udq));
     }
@@ -2707,6 +2765,7 @@ Well{0} entered with 'FIELD' parent group:
             { "SUMTHIN" , &Schedule::handleSUMTHIN   },
             { "TUNING"  , &Schedule::handleTUNING    },
             { "UDQ"     , &Schedule::handleUDQ       },
+            { "UDT"     , &Schedule::handleUDT       },
             { "VAPPARS" , &Schedule::handleVAPPARS   },
             { "VFPINJ"  , &Schedule::handleVFPINJ    },
             { "VFPPROD" , &Schedule::handleVFPPROD   },
