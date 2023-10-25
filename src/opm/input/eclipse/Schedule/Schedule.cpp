@@ -665,9 +665,15 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                 logger.location(location);
 
                 if (keyword.is<ParserKeywords::ACTIONX>()) {
-                    Action::ActionX action(keyword,
-                                           this->m_static.m_runspec.actdims(),
-                                           std::chrono::system_clock::to_time_t(this->snapshots[report_step].start_time()));
+                    auto [action, condition_errors] =
+                        Action::parseActionX(keyword,
+                                              this->m_static.m_runspec.actdims(),
+                                              std::chrono::system_clock::to_time_t(this->snapshots[report_step].start_time()));
+
+                    for(const auto& [ marker, msg]: condition_errors) {
+                        parseContext.handleError(marker, msg, keyword.location(), errors);
+                    }
+
                     while (true) {
                         keyword_index++;
                         if (keyword_index == block.size())

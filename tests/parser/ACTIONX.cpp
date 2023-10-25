@@ -87,8 +87,27 @@ ACTIONX
     const auto deck = Parser{}.parseString( action_kw );
     const auto& kw = deck["ACTIONX"].back();
 
-    Action::ActionX action2(kw, {}, 0);
+
+    const auto& [action2, condition_errors2 ] =
+        Action::parseActionX(kw, {}, 0);
     BOOST_CHECK_EQUAL(action2.name(), "ACTION");
+    BOOST_CHECK_EQUAL(condition_errors2.size(), 0U);
+
+    // left hand side has to be an expression.
+    // Check whether we add an error to condition_errors
+    // if that is not the case
+    const auto action_kw_num_first = std::string{ R"(
+ACTIONX
+   'ACTION' /
+   0.75 < WWCT OPX /
+/
+)"};
+
+
+    const auto deck1 = Parser{}.parseString( action_kw_num_first);
+    const auto& [action3, condition_errors3] =
+        Action::parseActionX(deck1["ACTIONX"].back(), {}, 0);
+    BOOST_CHECK_EQUAL(condition_errors3.size(), 1U);
 }
 
 

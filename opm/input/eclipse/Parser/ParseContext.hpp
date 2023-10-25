@@ -314,6 +314,14 @@ class KeywordLocation;
          */
         const static std::string ACTIONX_ILLEGAL_KEYWORD;
 
+        /*
+          Error flag marking parser errors ic ACTIONX conditions
+         */
+        const static std::string ACTIONX_CONDITION_ERROR;
+        /*
+          Error flag marking that an ACTIONX has no condition
+         */
+        const static std::string ACTIONX_NO_CONDITION;
 
         /*
           The RPTSCH, RPTSOL and RPTSCHED keywords have two alternative forms,
