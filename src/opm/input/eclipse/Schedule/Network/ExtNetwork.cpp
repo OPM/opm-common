@@ -19,6 +19,8 @@
 #include <algorithm>
 #include <iterator>
 #include <stdexcept>
+#include <vector>
+#include <functional>
 
 #include <opm/input/eclipse/Schedule/Network/ExtNetwork.hpp>
 
@@ -57,20 +59,18 @@ const Node& ExtNetwork::node(const std::string& name) const {
 }
 
 
-const Node& ExtNetwork::root() const {
+std::vector<std::reference_wrapper<const Node>> ExtNetwork::roots() const {
     if (this->m_nodes.empty())
         throw std::invalid_argument("No root defined for empty network");
 
-    auto node_ptr = &(this->m_nodes.begin()->second);
-    while (true) {
-        auto next_branch = this->uptree_branch(node_ptr->name());
-        if (!next_branch)
-            break;
-
-        node_ptr = &(this->node( next_branch->uptree_node() ));
+    std::vector<std::reference_wrapper<const Node>> root_vector;
+    // Roots are defined as uptree nodes of a branch with a fixed pressure
+    for (const auto& branch : this->m_branches) {
+        const auto& node = this->node( branch.uptree_node() );
+        if (node.terminal_pressure().has_value()) root_vector.push_back(node);
     }
 
-    return *node_ptr;
+    return root_vector;
 }
 
 void ExtNetwork::add_branch(Branch branch)

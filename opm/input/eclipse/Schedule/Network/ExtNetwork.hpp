@@ -25,6 +25,7 @@
 #include <optional>
 #include <string>
 #include <vector>
+#include <functional>
 
 #include <opm/input/eclipse/Schedule/Network/Branch.hpp>
 #include <opm/input/eclipse/Schedule/Network/Node.hpp>
@@ -43,7 +44,7 @@ public:
     bool has_node(const std::string& name) const;
     void update_node(Node node);
     const Node& node(const std::string& name) const;
-    const Node& root() const;
+    std::vector<std::reference_wrapper<const Node>> roots() const;
     bool is_disconnected(const std::string& node) const;
     std::vector<Branch> downtree_branches(const std::string& node) const;
     std::vector<const Branch*> branches() const;
