@@ -85,8 +85,8 @@ parseActionX(const DeckKeyword& kw, const Actdims& actdims,
     const std::string name = record.getItem("NAME").getTrimmedString(0);
 
     for (size_t record_index = 1; record_index < kw.size(); record_index++) {
-        const auto& record = kw.getRecord(record_index);
-        const auto& cond_tokens = RawString::strings( record.getItem("CONDITION").getData<RawString>() );
+        const auto& cond_tokens = RawString::strings( kw.getRecord(record_index)
+                                                      .getItem("CONDITION").getData<RawString>() );
 
         for (const auto& token : cond_tokens)
             tokens.push_back(dequote(token, kw.location()));
