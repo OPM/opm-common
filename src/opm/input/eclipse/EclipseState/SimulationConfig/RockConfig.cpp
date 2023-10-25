@@ -24,6 +24,7 @@
 
 #include <opm/input/eclipse/Deck/Deck.hpp>
 
+#include <opm/input/eclipse/Parser/ParserKeywords/D.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/R.hpp>
 
 #include <stdexcept>
@@ -98,6 +99,7 @@ RockConfig::RockConfig(const Deck& deck, const FieldPropsManager& fp)
     using rock = ParserKeywords::ROCK;
     using rockopts = ParserKeywords::ROCKOPTS;
     using rockcomp = ParserKeywords::ROCKCOMP;
+    using disperc = ParserKeywords::DISPERC;
 
     if (deck.hasKeyword<rock>()) {
         for (const auto& table : RockTable { deck.get<rock>().back() }) {
@@ -126,6 +128,10 @@ RockConfig::RockConfig(const Deck& deck, const FieldPropsManager& fp)
             this->m_active = false;
         }
     }
+
+    if (deck.hasKeyword<disperc>()) {
+        this->m_dispersion = true;
+    }
 }
 
 RockConfig RockConfig::serializationTestObject()
@@ -137,6 +143,7 @@ RockConfig RockConfig::serializationTestObject()
     result.num_tables = 10;
     result.m_water_compaction = false;
     result.hyst_mode = Hysteresis::HYSTER;
+    result.m_dispersion = false;
 
     return result;
 }
@@ -171,6 +178,11 @@ bool RockConfig::water_compaction() const
     return this->m_water_compaction;
 }
 
+bool RockConfig::dispersion() const
+{
+    return this->m_dispersion;
+}
+
 bool RockConfig::operator==(const RockConfig& other) const
 {
     return (this->num_property == other.num_property)
@@ -178,7 +190,8 @@ bool RockConfig::operator==(const RockConfig& other) const
         && (this->num_tables == other.num_tables)
         && (this->m_active == other.m_active)
         && (this->m_water_compaction == other.m_water_compaction)
-        && (this->hyst_mode == other.hyst_mode);
+        && (this->hyst_mode == other.hyst_mode)
+        && (this->m_dispersion == other.m_dispersion);
 }
 
 } //namespace Opm
