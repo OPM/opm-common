@@ -994,13 +994,7 @@ public:
         case oilPhaseIdx: {
             if (enableDissolvedGas()) {
                 const auto& Rs = BlackOil::template getRs_<ThisType, FluidState, LhsEval>(fluidState, regionIdx);
-                if (fluidState.saturation(gasPhaseIdx) > 0.0
-                    && Rs >= (1.0 - 1e-10)*oilPvt_->saturatedGasDissolutionFactor(regionIdx, scalarValue(T), scalarValue(p)))
-                {
-                    return oilPvt_->saturatedViscosity(regionIdx, T, p);
-                } else {
-                    return oilPvt_->viscosity(regionIdx, T, p, Rs);
-                }
+                return oilPvt_->viscosity(regionIdx, T, p, Rs);
             }
 
             const LhsEval Rs(0.0);
