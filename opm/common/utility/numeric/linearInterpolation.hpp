@@ -23,6 +23,7 @@
 
 
 #include <algorithm>
+#include <tuple>
 #include <vector>
 
 namespace Opm
