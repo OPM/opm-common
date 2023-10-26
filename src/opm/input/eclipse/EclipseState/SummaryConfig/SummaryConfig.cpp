@@ -427,9 +427,10 @@ struct SummaryConfigContext {
         for (auto step = 0*nstep; step < nstep; ++step) {
             const auto& nodes = sched[step].network.get().node_names();
             names.insert(nodes.begin(), nodes.end());
-            // Also insert wells to be able to report network-computed THPs
+            // Also insert wells belonging to groups in the network to be able to report network-computed THPs
             for (const auto& node : nodes) {
-                const auto& group = sched.getGroup(node, nstep);
+                if (!sched.hasGroup(node, step)) continue;
+                const auto& group = sched.getGroup(node, step);
                 for (const std::string& wellname : group.wells()) {
                     names.insert(wellname);
                 }
