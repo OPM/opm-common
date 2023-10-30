@@ -106,6 +106,20 @@ private:
     UDQSet eval_number(const UDQVarType  target_type,
                        const UDQContext& context) const;
 
+    UDQSet eval_table_lookup(const UDQVarType target_type,
+                             const std::string& string_value,
+                             const UDQContext& context) const;
+
+    UDQSet eval_table_lookup_field(const std::string& string_value,
+                                   const UDQContext& context) const;
+    UDQSet eval_table_lookup_group(const std::string& string_value,
+                                   const UDQContext& context) const;
+    UDQSet eval_table_lookup_segment(const std::string& string_value,
+                                     const UDQContext& context) const;
+    UDQSet eval_table_lookup_well(const std::string& string_value,
+                                  const UDQContext& context) const;
+
+
     void func_tokens(std::set<UDQTokenType>& tokens) const;
 };
 

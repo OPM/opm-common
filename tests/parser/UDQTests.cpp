@@ -337,12 +337,6 @@ BOOST_AUTO_TEST_CASE(MIX_SCALAR) {
     BOOST_CHECK_EQUAL( res_add["P1"].get() , 2);
 }
 
-BOOST_AUTO_TEST_CASE(UDQ_TABLE_EXCEPTION) {
-    UDQParams udqp;
-    KeywordLocation location;
-    BOOST_CHECK_THROW(UDQDefine(udqp, "WU",0, location, {"TUPRICE[WOPR]"}), std::invalid_argument);
-}
-
 BOOST_AUTO_TEST_CASE(UDQFieldSetTest) {
     std::vector<std::string> wells = {"P1", "P2", "P3", "P4"};
     KeywordLocation location;
@@ -2931,4 +2925,92 @@ BOOST_AUTO_TEST_CASE(UDQ_Update_SummaryState)
     BOOST_CHECK_CLOSE(st.get_group_var("AA", "GUNDA_ST"),  652.44, 1.0e-8);
     BOOST_CHECK_CLOSE(st.get_group_var("BB", "GUNDA_ST"), -123.4 , 1.0e-8);
     BOOST_CHECK_CLOSE(st.get_group_var("G1", "GUNDA_ST"),  652.44, 1.0e-8);
+}
+
+BOOST_AUTO_TEST_CASE(UDQ_WITH_UDT_FIELD)
+{
+    std::string valid = R"(
+SCHEDULE
+
+UDT
+ 'TU_FBHP' 1 /
+ 'LC'  100.0  500.0 / -- FOPR values
+       100.0  180.0 / -- FBHP values
+/
+/
+
+UDQ
+ASSIGN FU_FOPR 110.0 /
+ASSIGN FU_WBHP 0 /
+DEFINE FU_WBHP0 FU_WBHP /
+DEFINE FU_WBHP TU_FBHP[FU_FOPR] UMIN FU_WBHP0 /
+/
+
+)";
+
+    auto schedule = make_schedule(valid);
+    UDQState udq_state(0);
+    SummaryState st(TimeService::now());
+    UDQFunctionTable udqft;
+    WellMatcher wm(NameOrder({"W1", "W2", "W3"}));
+    const auto& udq = schedule.getUDQConfig(0);
+    auto segmentMatcherFactory = []() { return std::make_unique<SegmentMatcher>(ScheduleState {}); };
+    UDQContext context(udqft, wm, udq.tables(), segmentMatcherFactory, st, udq_state);
+
+    const auto& ass = udq.assign("FU_WBHP");
+    context.update_assign("FU_WBHP", ass.eval());
+    const auto& ass2 = udq.assign("FU_FOPR");
+    context.update_assign("FU_FOPR", ass2.eval());
+    udq.define("FU_WBHP0");
+    const auto& def = udq.define("FU_WBHP");
+    auto res = def.eval(context);
+
+    BOOST_CHECK_EQUAL(res.size(), 1U);
+    BOOST_CHECK_EQUAL(res[0].get(), 100.0 + (180.0 - 100.0) * (110.0 - 100.0) / (500.0 - 100.0));
+}
+
+BOOST_AUTO_TEST_CASE(UDQ_WITH_UDT_WELL)
+{
+    std::string valid = R"(
+SCHEDULE
+
+
+WELSPECS
+   'PROD1'   'TEST'   5   1  1*       'OIL'  2*      'STOP'  4* /
+   'PROD2'   'TEST'   1   1  1*       'OIL'  2*      'STOP'  4* /
+/
+
+UDT
+ 'TU_FBHP' 1 /
+ 'LC'  100.0  500.0 / -- FOPR values
+       100.0  180.0 / -- FBHP values
+/
+/
+
+UDQ
+ASSIGN WU_WBHP 0 /
+DEFINE WU_WBHP0 FU_WBHP /
+DEFINE WU_WBHP TU_FBHP[WOPR] UMIN WU_WBHP0 /
+/
+
+)";
+
+    auto schedule = make_schedule(valid);
+    UDQState udq_state(0);
+    SummaryState st(TimeService::now());
+    UDQFunctionTable udqft;
+    WellMatcher wm(NameOrder({"PROD1", "PROD2"}));
+    const auto& udq = schedule.getUDQConfig(0);
+
+    st.update_well_var("PROD1", "WOPR", 120.0);
+    st.update_well_var("PROD2", "WOPR", 450.0);
+
+    auto segmentMatcherFactory = []() { return std::make_unique<SegmentMatcher>(ScheduleState {}); };
+    udq.eval(0, schedule, wm, segmentMatcherFactory, st, udq_state);
+
+    const double wu_wbhp1 = st.get_well_var("PROD1", "WU_WBHP");
+    const double wu_wbhp2 = st.get_well_var("PROD2", "WU_WBHP");
+
+    BOOST_CHECK_EQUAL(wu_wbhp1, 100.0 + (180.0 - 100.0) * (120.0 - 100.0) / (500.0 - 100.0));
+    BOOST_CHECK_EQUAL(wu_wbhp2, 100.0 + (180.0 - 100.0) * (450.0 - 100.0) / (500.0 - 100.0));
 }

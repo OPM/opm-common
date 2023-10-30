@@ -64,6 +64,12 @@ namespace {
             return lhs == Opm::UDQVarType::WELL_VAR;
         }
 
+        if (rhs == Opm::UDQVarType::TABLE_LOOKUP)
+            return lhs == Opm::UDQVarType::WELL_VAR ||
+                   lhs == Opm::UDQVarType::FIELD_VAR ||
+                   lhs == Opm::UDQVarType::SEGMENT_VAR ||
+                   lhs == Opm::UDQVarType::GROUP_VAR;
+
         return false;
     }
 
@@ -74,11 +80,6 @@ namespace Opm {
 UDQTokenType UDQParser::get_type(const std::string& arg) const
 {
     auto func_type = UDQ::funcType(arg);
-    if (func_type == UDQTokenType::table_lookup) {
-        throw std::invalid_argument {
-            "Table lookup function TU*[] is not supported in UDQ"
-        };
-    }
 
     if (func_type != UDQTokenType::error) {
         return func_type;
@@ -90,6 +91,13 @@ UDQTokenType UDQParser::get_type(const std::string& arg) const
 
     if (arg == ")") {
         return UDQTokenType::close_paren;
+    }
+    if (arg == "[") {
+        return UDQTokenType::table_lookup_start;
+    }
+
+    if (arg == "]") {
+        return UDQTokenType::table_lookup_end;
     }
 
     {
