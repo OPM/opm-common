@@ -23,6 +23,7 @@
 #include <cstddef>
 #include <memory>
 #include <vector>
+#include <optional>
 
 #include <opm/input/eclipse/EclipseState/Aquifer/AquiferConfig.hpp>
 #include <opm/input/eclipse/EclipseState/EclipseConfig.hpp>
@@ -50,6 +51,7 @@ namespace Opm {
 
 namespace Opm { namespace RestartIO {
     class RstAquifer;
+    class RstNetwork;
 }} // namespace Opm::RestartIO
 
 namespace Opm {
@@ -124,6 +126,9 @@ namespace Opm {
         // When we know and decide to handle the same for AQUFETP and AQUCT, this part will be refactored
         void appendAqufluxSchedule(const std::unordered_set<int>& ids);
 
+        void loadRestartNetworkPressures(const RestartIO::RstNetwork& network);
+        const std::optional<std::map<std::string, double> >& getRestartNetworkPressures() const { return this->m_restart_network_pressures; }
+
         template<class Serializer>
         void serializeOp(Serializer& serializer)
         {
@@ -183,6 +188,8 @@ namespace Opm {
 
         std::string m_title{};
         FaultCollection m_faults{};
+
+        std::optional<std::map<std::string, double> > m_restart_network_pressures{std::nullopt};
     };
 } // namespace Opm
 

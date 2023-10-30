@@ -29,6 +29,7 @@
 #include <opm/common/utility/OpmInputError.hpp>
 
 #include <opm/io/eclipse/rst/aquifer.hpp>
+#include <opm/io/eclipse/rst/network.hpp>
 #include <opm/io/eclipse/ERst.hpp>
 
 #include <opm/input/eclipse/Deck/DeckSection.hpp>
@@ -313,6 +314,16 @@ namespace Opm {
 
     void EclipseState::appendAqufluxSchedule(const std::unordered_set<int>& ids) {
         this->aquifer_config.appendAqufluxSchedule(ids);
+    }
+
+    void EclipseState::loadRestartNetworkPressures(const RestartIO::RstNetwork& network) {
+        if (!network.isActive()) return;
+
+        this->m_restart_network_pressures = std::map<std::string, double>{};
+        auto& node_pressures = this->m_restart_network_pressures.value();
+        for (const auto& node : network.nodes()) {
+            node_pressures[node.name] = node.pressure;
+        }
     }
 
     void EclipseState::assignRunTitle(const Deck& deck)
