@@ -11,17 +11,21 @@
     {
       "name": "A",
       "value_type": "DOUBLE",
-      "default": 0
+      "default": 0,
+      "dimension": "Viscosity*Time/Permeability*GasSurfaceVolume"
     },
     {
       "name": "B",
       "value_type": "DOUBLE",
-      "default": 0
+      "default": 0,
+      "dimension": "1"
+
     },
     {
       "name": "C",
       "value_type": "DOUBLE",
-      "default": 0
+      "default": 0,
+      "dimension": "1"
     }
   ]
 }

@@ -172,7 +172,7 @@ static data::Wells result_wells() {
       input deck.
     */
     data::ConnectionFiltrate con_filtrate {0.1, 1, 3, 0.4, 1.e-9, 0.2, 0.05, 10.}; // values are not tested in this test
-    data::Connection well1_comp1 { 0  , crates1, 1.9 , 123.4, 314.15, 0.35, 0.25, 2.718e2, 0.12345, con_filtrate };
+    data::Connection well1_comp1 { 0  , crates1, 1.9 , 123.4, 314.15, 0.35, 0.25, 2.718e2, 0.12345, 0.0, con_filtrate };
 
     /*
       The completions

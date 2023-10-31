@@ -93,6 +93,8 @@ namespace RestartIO {
                    double re,
                    double connection_length,
                    double skin_factor,
+                   double d_factor,
+                   double Ke,
                    const int satTableId,
                    const Direction direction,
                    const CTFKind ctf_kind,
@@ -123,6 +125,8 @@ namespace RestartIO {
         double re() const;
         double connectionLength() const;
         double skinFactor() const;
+        double dFactor() const;
+        double Ke() const;
         CTFKind kind() const;
         const InjMult& injmult() const;
         bool activeInjMult() const;
@@ -136,6 +140,8 @@ namespace RestartIO {
         void setState(State state);
         void setComplnum(int compnum);
         void setSkinFactor(double skin_factor);
+        void setDFactor(double d_factor);
+        void setKe(double Ke);
         void setCF(double CF);
         void scaleWellPi(double wellPi);
         bool prepareWellPIScaling();
@@ -174,6 +180,8 @@ namespace RestartIO {
             serializer(m_re);
             serializer(m_connection_length);
             serializer(m_skin_factor);
+            serializer(m_d_factor);
+            serializer(m_Ke);
             serializer(ijk);
             serializer(m_global_index);
             serializer(m_ctfkind);
@@ -199,6 +207,8 @@ namespace RestartIO {
         double m_re;
         double m_connection_length;
         double m_skin_factor;
+        double m_d_factor;
+        double m_Ke;
 
         std::array<int,3> ijk;
         CTFKind m_ctfkind;

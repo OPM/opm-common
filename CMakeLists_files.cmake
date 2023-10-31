@@ -228,6 +228,7 @@ if(ENABLE_ECL_INPUT)
     src/opm/input/eclipse/Schedule/Well/WINJMULT.cpp
     src/opm/input/eclipse/Schedule/Well/WList.cpp
     src/opm/input/eclipse/Schedule/Well/WListManager.cpp
+    src/opm/input/eclipse/Schedule/Well/WDFAC.cpp
     src/opm/input/eclipse/Schedule/Well/WVFPDP.cpp
     src/opm/input/eclipse/Schedule/Well/WVFPEXP.cpp
     src/opm/input/eclipse/Schedule/WellTraj/RigEclipseWellLogExtractor.cpp
@@ -1259,6 +1260,7 @@ if(ENABLE_ECL_INPUT)
        opm/input/eclipse/Schedule/Well/WellPolymerProperties.hpp
        opm/input/eclipse/Schedule/Well/WellTracerProperties.hpp
        opm/input/eclipse/Schedule/Well/WINJMULT.hpp
+       opm/input/eclipse/Schedule/Well/WDFAC.hpp
        opm/input/eclipse/Schedule/Well/WVFPDP.hpp
        opm/input/eclipse/Schedule/Well/WVFPEXP.hpp
        opm/input/eclipse/Schedule/Well/WellTestConfig.hpp

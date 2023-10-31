@@ -1238,6 +1238,35 @@ inline quantity trans_factors ( const fn_args& args ) {
     return { connPos->trans_factor, measure::transmissibility };
 }
 
+inline quantity d_factors ( const fn_args& args ) {
+    const quantity zero = { 0.0, measure::dfactor };
+
+    if (args.schedule_wells.empty())
+        // No wells.  Before simulation starts?
+        return zero;
+
+    auto xwPos = args.wells.find(args.schedule_wells.front()->name());
+    if (xwPos == args.wells.end())
+        // No dynamic results for this well.  Not open?
+        return zero;
+
+    // Like connection rate we need to look up a connection with offset 0.
+    const size_t global_index = args.num - 1;
+    const auto& connections = xwPos->second.connections;
+    auto connPos = std::find_if(connections.begin(), connections.end(),
+        [global_index](const Opm::data::Connection& c)
+    {
+        return c.index == global_index;
+    });
+
+    if (connPos == connections.end())
+        // No dynamic results for this connection.
+        return zero;
+
+    // Connection "d_factor".
+    return { connPos->d_factor, measure::dfactor };
+}
+
 inline quantity wstat( const fn_args& args ) {
     const quantity zero = { Opm::WStat::numeric::UNKNOWN, measure::identity};
     if (args.schedule_wells.empty())
@@ -2250,6 +2279,7 @@ static const auto funs = std::unordered_map<std::string, ofun> {
     { "CSIT", mul( crate< rt::brine, injector >, duration ) },
     { "CSPT", mul( crate< rt::brine, producer >, duration ) },
     { "CTFAC", trans_factors },
+    { "CDFAC", d_factors },
     { "CPI", connection_productivity_index },
 
     { "FWPR", rate< rt::wat, producer > },

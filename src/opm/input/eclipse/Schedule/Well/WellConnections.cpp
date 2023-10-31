@@ -296,6 +296,8 @@ namespace Opm {
                                         const double re,
                                         const double connection_length,
                                         const double skin_factor,
+                                        const double d_factor,
+                                        const double Ke,
                                         const int satTableId,
                                         const Connection::Direction direction,
                                         const Connection::CTFKind ctf_kind,
@@ -308,7 +310,7 @@ namespace Opm {
         Connection conn(conn_i, conn_j, k,
                         global_index, complnum,
                         depth, state, CF, Kh, rw, r0, re, connection_length,
-                        skin_factor, satTableId, direction, ctf_kind,
+                        skin_factor, d_factor, Ke, satTableId, direction, ctf_kind,
                         seqIndex, defaultSatTabId);
 
         this->add(conn);
@@ -325,6 +327,8 @@ namespace Opm {
                                         const double re,
                                         const double connection_length,
                                         const double skin_factor,
+                                        const double d_factor,
+                                        const double Ke,
                                         const int satTableId,
                                         const Connection::Direction direction,
                                         const Connection::CTFKind ctf_kind,
@@ -335,7 +339,7 @@ namespace Opm {
 
         this->addConnection(i, j, k, global_index, complnum,
                             depth, state, CF, Kh, rw, r0, re,
-                            connection_length, skin_factor,
+                            connection_length, skin_factor, d_factor, Ke,
                             satTableId, direction, ctf_kind,
                             seqIndex, defaultSatTabId);
     }
@@ -367,6 +371,9 @@ namespace Opm {
         const auto& satTableIdItem = record.getItem("SAT_TABLE");
         const auto direction = Connection::DirectionFromString(record.getItem("DIR").getTrimmedString(0));
         double skin_factor = record.getItem("SKIN").getSIDouble(0);
+        
+        double d_factor = record.getItem("D_FACTOR").getSIDouble(0);
+
         double rw;
 
         if (satTableIdItem.hasValue(0) && satTableIdItem.get < int > (0) > 0)
@@ -420,23 +427,23 @@ namespace Opm {
             std::array<double,3> cell_size = cell.dimensions;
             const auto& D = effectiveExtent(direction, props->ntg, cell_size);
 
+            std::array<double,3> cell_perm = {{ props->permx,
+                                                props->permy,
+                                                props->permz}};
+            const auto& K = permComponents(direction, cell_perm);
+            double Ke = std::sqrt(K[0] * K[1]);
+
             /* We start with the absolute happy path; both CF and Kh are explicitly given in the deck. */
             if (CF > 0 && Kh > 0)
                 goto CF_done;
 
             /* We must calculate CF and Kh from the items in the COMPDAT record and cell properties. */
             {
-                std::array<double,3> cell_perm = {{ props->permx,
-                                                    props->permy,
-                                                    props->permz}};
-                const auto& K = permComponents(direction, cell_perm);
-
                 if (r0 < 0)
                     r0 = effectiveRadius(K,D);
-
                 if (CF < 0) {
                     if (Kh < 0)
-                        Kh = std::sqrt(K[0] * K[1]) * D[2];
+                        Kh = Ke * D[2];
                     CF = angle * Kh / (std::log(r0 / std::min(rw, r0)) + skin_factor);
                     ctf_kind = ::Opm::Connection::CTFKind::Defaulted;
                 } else {
@@ -444,7 +451,7 @@ namespace Opm {
                         Kh = CF * (std::log(r0 / std::min(r0, rw)) + skin_factor) / angle;
                     } else {
                         if (Kh < 0) {
-                            Kh = std::sqrt(K[0] * K[1]) * D[2];
+                            Kh = Ke * D[2];
 
                             // Compute r0 to be consistent with other parameters
                             r0 = RestartIO::RstConnection::inverse_peaceman(CF, Kh, rw, skin_factor);
@@ -477,6 +484,8 @@ namespace Opm {
                                     re,
                                     connection_length,
                                     skin_factor,
+                                    d_factor,
+                                    Ke,
                                     satTableId,
                                     direction,
                                     ctf_kind,
@@ -499,6 +508,8 @@ namespace Opm {
                                    re,
                                    connection_length,
                                    skin_factor,
+                                   d_factor,
+                                   Ke,
                                    satTableId,
                                    direction,
                                    ctf_kind,
@@ -527,6 +538,7 @@ namespace Opm {
         const auto& diameterItem = record.getItem("DIAMETER");
         const auto& KhItem = record.getItem("Kh");
         double skin_factor = record.getItem("SKIN").getSIDouble(0);
+        double d_factor = record.getItem("D_FACTOR").getSIDouble(0);
         const auto& satTableIdItem = record.getItem("SAT_TABLE");
         Connection::State state = Connection::StateFromString(record.getItem("STATE").getTrimmedString(0));
 
@@ -624,13 +636,14 @@ namespace Opm {
 
             std::array<double,3> cell_size = cell.dimensions;
 
+            std::array<double,3> cell_perm = {{ props->permx,
+                                                props->permy,
+                                                props->permz}};
+
             if (CF < 0 && Kh < 0) {
                 /* We must calculate CF and Kh from the items in the COMPTRAJ record and cell properties. */
                 ctf_kind = ::Opm::Connection::CTFKind::Defaulted;
 
-                std::array<double,3> cell_perm = {{ props->permx,
-                                                    props->permy,
-                                                    props->permz}};
 
                 const auto& perm_thickness =  permThickness(connection_vector,
                                                             cell_perm,
@@ -668,6 +681,8 @@ namespace Opm {
             const auto direction = Connection::DirectionFromString("Z");
             double re = -1;
             double connection_length = connection_vector.length(); 
+            const auto& K = permComponents(direction, cell_perm);
+            double Ke = std::sqrt(K[0] * K[1]);
 
             auto prev = std::find_if( this->m_connections.begin(),
                                       this->m_connections.end(),
@@ -685,6 +700,8 @@ namespace Opm {
                                     re,
                                     connection_length,
                                     skin_factor,
+                                    d_factor,
+                                    Ke,
                                     satTableId,
                                     direction,
                                     ctf_kind,
@@ -707,6 +724,8 @@ namespace Opm {
                                    re,
                                    connection_length,
                                    skin_factor,
+                                   d_factor,
+                                   Ke,
                                    satTableId,
                                    direction,
                                    ctf_kind,

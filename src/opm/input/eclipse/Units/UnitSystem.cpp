@@ -95,6 +95,7 @@ namespace {
         0.0,
         0.0,
         0.0,
+        0.0,
     };
 
     static const double to_metric[] = {
@@ -143,6 +144,7 @@ namespace {
         1 / Metric::Moles,
         1 / Metric::PPM,
         1 / Metric::Ymodule,
+        1 / (Metric::Time / Metric::GasSurfaceVolume),
     };
 
     static const double from_metric[] = {
@@ -191,6 +193,7 @@ namespace {
         Metric::Moles,
         Metric::PPM,
         Metric::Ymodule,
+        Metric::Time / Metric::GasSurfaceVolume,
     };
 
     static constexpr const char* metric_names[static_cast<int>(UnitSystem::measure::_count)] = {
@@ -239,6 +242,7 @@ namespace {
         "KG-M",
         "PPM", /*Parts per million */
         "GPa",
+        "DAY/SM3"
     };
 
     static_assert(numElems(from_metric_offset) == static_cast<std::size_t>(UnitSystem::measure::_count),
@@ -270,6 +274,7 @@ namespace {
         0.0,
         0.0,
         Field::TemperatureOffset,
+        0.0,
         0.0,
         0.0,
         0.0,
@@ -355,6 +360,7 @@ namespace {
         1 / Field::Moles,
         1 / Field::PPM,
         1 / Field::Ymodule,
+        1 / (Field::Time / Field::GasSurfaceVolume)
     };
 
     static const double from_field[] = {
@@ -403,6 +409,7 @@ namespace {
          Field::Moles,
          Field::PPM,
          Field::Ymodule,
+         Field::Time / Field::GasSurfaceVolume,
     };
 
     static constexpr const char* field_names[static_cast<int>(UnitSystem::measure::_count)] = {
@@ -451,6 +458,7 @@ namespace {
         "LB-M",
         "PPM",
         "GPa",
+        "DAY/MSCF",
     };
 
     static_assert(numElems(from_field_offset) == static_cast<std::size_t>(UnitSystem::measure::_count),
@@ -482,6 +490,7 @@ namespace {
         0.0,
         0.0,
         Lab::TemperatureOffset,
+        0.0,
         0.0,
         0.0,
         0.0,
@@ -567,6 +576,7 @@ namespace {
         1 / Lab::Moles,
         1 / Lab::PPM,
         1 / Lab::Ymodule,
+        1 / (Lab::Time / Lab::GasSurfaceVolume)
     };
 
     static const double from_lab[] = {
@@ -615,6 +625,7 @@ namespace {
         Lab::Moles,
         Lab::PPM,
         Lab::Ymodule,
+        Lab::Time / Lab::GasSurfaceVolume
     };
 
     static constexpr const char* lab_names[static_cast<int>(UnitSystem::measure::_count)] = {
@@ -663,6 +674,7 @@ namespace {
         "g-M",
         "PPM",
         "GPa",
+        "HR/SCC",
     };
 
     static_assert(numElems(from_lab_offset) == static_cast<std::size_t>(UnitSystem::measure::_count),
@@ -694,6 +706,7 @@ namespace {
         0.0,
         0.0,
         PVT_M::TemperatureOffset,
+        0.0,
         0.0,
         0.0,
         0.0,
@@ -779,6 +792,7 @@ namespace {
         1 / PVT_M::Moles,
         1 / PVT_M::PPM,
         1 / PVT_M::Ymodule,
+        1 / (PVT_M::Time / PVT_M::GasSurfaceVolume),
     };
 
     static const double from_pvt_m[] = {
@@ -827,6 +841,7 @@ namespace {
         PVT_M::Moles,
         PVT_M::PPM,
         PVT_M::Ymodule,
+        PVT_M::Time / PVT_M::GasSurfaceVolume,
     };
 
     static constexpr const char* pvt_m_names[static_cast<int>(UnitSystem::measure::_count)] = {
@@ -874,7 +889,8 @@ namespace {
         "SM3/SM3/DAY",
         "KG-M",
         "PPM",
-        "GPa"
+        "GPa",
+        "DAY/SM3",
     };
 
     static_assert(numElems(from_pvt_m_offset) == static_cast<std::size_t>(UnitSystem::measure::_count),
@@ -898,6 +914,7 @@ namespace {
     // INPUT Unit Conventions
 
     static const double from_input_offset[] = {
+        0.0,
         0.0,
         0.0,
         0.0,
@@ -991,9 +1008,11 @@ namespace {
         1,
         1,
         1,
+        1,
     };
 
     static const double from_input[] = {
+        1,
         1,
         1,
         1,
@@ -1087,6 +1106,7 @@ namespace {
         "g-M",
         "PPM",
         "GPa",
+        "DAY/SM3",
     };
 
     static_assert(numElems(from_input_offset) == static_cast<std::size_t>(UnitSystem::measure::_count),
