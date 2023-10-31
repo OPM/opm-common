@@ -22,7 +22,7 @@
         "name": "TSMINZ",
         "value_type": "DOUBLE",
         "dimension": "Time",
-        "default": 8.64e-8
+        "default": 1.0e-12
       },
       {
         "name": "TSMCHP",
