@@ -160,13 +160,22 @@ namespace Opm {
 
 
 
-    void Well::WellProductionProperties::handleWCONPROD(const std::optional<VFPProdTable::ALQ_TYPE>& alq_type, const UnitSystem& unit_system_arg, const std::string& /* well */, const DeckRecord& record)
+    void Well::WellProductionProperties::handleWCONPROD(const std::optional<VFPProdTable::ALQ_TYPE>& alq_type,
+                                                        const double bhp_def,
+                                                        const UnitSystem& unit_system_arg,
+                                                        const std::string& /* well */,
+                                                        const DeckRecord& record)
     {
         this->predictionMode = true;
         this->init_vfp(alq_type, unit_system_arg, record);
         this->init_rates(record);
 
-        this->BHPTarget      = record.getItem("BHP").get<UDAValue>(0);
+        if (record.getItem("BHP").defaultApplied(0)) {
+            this->BHPTarget.update(unit_system_arg.from_si(UnitSystem::measure::pressure,
+                                                           bhp_def));
+        } else {
+            this->BHPTarget      = record.getItem("BHP").get<UDAValue>(0);
+        }
         this->THPTarget      = record.getItem("THP").get<UDAValue>(0);
         this->LiquidRate     = record.getItem("LRAT").get<UDAValue>(0);
         this->ResVRate       = record.getItem("RESV").get<UDAValue>(0);
@@ -209,7 +218,10 @@ namespace Opm {
       originate from the WCONHIST keyword. Predictions are handled with the
       default constructor and the handleWCONPROD() method.
     */
-void Well::WellProductionProperties::handleWCONHIST(const std::optional<VFPProdTable::ALQ_TYPE>& alq_type, const UnitSystem& unit_system_arg, const DeckRecord& record)
+void Well::WellProductionProperties::handleWCONHIST(const std::optional<VFPProdTable::ALQ_TYPE>& alq_type,
+                                                    const double bhp_def,
+                                                    const UnitSystem& unit_system_arg,
+                                                    const DeckRecord& record)
     {
         this->init_rates(record);
         this->init_vfp(alq_type, unit_system_arg, record);
@@ -220,11 +232,9 @@ void Well::WellProductionProperties::handleWCONHIST(const std::optional<VFPProdT
         // or switching from injector to producer
         // or switching from BHP control to RATE control (under history matching mode)
         // we use the defaulted BHP limit, otherwise, we use the previous BHP limit
-        if (this->predictionMode)
-            this->resetDefaultBHPLimit();
-
-        if (this->controlMode == ProducerCMode::BHP)
-            this->resetDefaultBHPLimit();
+        if (this->predictionMode || this->controlMode == ProducerCMode::BHP) {
+            this->setBHPLimit(bhp_def);
+        }
 
         this->init_history(record);
     }
@@ -258,6 +268,7 @@ void Well::WellProductionProperties::handleWCONHIST(const std::optional<VFPProdT
             else
                 this->bhp_hist_limit = new_arg.get<double>() * SiFactorP;
             this->addProductionControl( ProducerCMode::BHP );
+            this->bhp_hist_limit_defaulted = false;
         }
         else if (cmode == WELTARGCMode::THP){
             this->THPTarget.update_value( new_arg );

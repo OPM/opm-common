@@ -86,6 +86,7 @@
 #include <opm/input/eclipse/Parser/ParserKeywords/B.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/C.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/D.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/F.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/G.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/L.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/N.hpp>
@@ -463,6 +464,20 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
     void Schedule::handleEXIT(HandlerContext& handlerContext) {
         if (handlerContext.actionx_mode)
             this->applyEXIT(handlerContext.keyword, handlerContext.currentStep);
+    }
+
+    void Schedule::handleFBHPDEF(HandlerContext& handlerContext)
+    {
+        using FBHP = ParserKeywords::FBHPDEF;
+        const auto& record = handlerContext.keyword.getRecord(0);
+        ScheduleState::BHPDefaults bhp_defaults;
+        const auto& prod_limit = record.getItem<FBHP::TARGET_BHP>();
+        const auto& inj_limit = record.getItem<FBHP::LIMIT_BHP>();
+        if (!(prod_limit.defaultApplied(0) && inj_limit.defaultApplied(0))) {
+            bhp_defaults.prod_target = prod_limit.getSIDouble(0);
+            bhp_defaults.inj_limit = inj_limit.getSIDouble(0);
+        }
+        this->snapshots.back().bhp_defaults.update(std::move(bhp_defaults));
     }
 
     void Schedule::handleGCONINJE(HandlerContext& handlerContext) {
@@ -1300,10 +1315,22 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
                         throw OpmInputError(reason, handlerContext.keyword.location());
                     }
                 }
-                properties->handleWCONHIST(alq_type, this->m_static.m_unit_system, record);
+                double default_bhp;
+                if (this->snapshots.back().bhp_defaults.get().prod_target) {
+                    default_bhp = *this->snapshots.back().bhp_defaults.get().prod_target;
+                } else {
+                    default_bhp = UnitSystem::newMETRIC().to_si(UnitSystem::measure::pressure,
+                                                                ParserKeywords::FBHPDEF::TARGET_BHP::defaultValue);
+                }
+
+                properties->handleWCONHIST(alq_type,
+                                           default_bhp,
+                                           this->m_static.m_unit_system, record);
 
                 if (switching_from_injector) {
-                    properties->resetDefaultBHPLimit();
+                    if (properties->bhp_hist_limit_defaulted) {
+                        properties->setBHPLimit(default_bhp);
+                    }
 
                     auto inj_props = std::make_shared<Well::WellInjectionProperties>(well2.getInjectionProperties());
                     inj_props->resetBHPLimit();
@@ -1375,10 +1402,23 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
                         throw OpmInputError(reason, handlerContext.keyword.location());
                     }
                 }
-                properties->handleWCONPROD(alq_type, this->m_static.m_unit_system, well_name, record);
+
+                double default_bhp_target;
+                if (this->snapshots.back().bhp_defaults.get().prod_target) {
+                    default_bhp_target = *this->snapshots.back().bhp_defaults.get().prod_target;
+                } else {
+                    default_bhp_target = UnitSystem::newMETRIC().to_si(UnitSystem::measure::pressure,
+                                                                       ParserKeywords::WCONPROD::BHP::defaultValue.get<double>());
+                }
+
+                properties->handleWCONPROD(alq_type, default_bhp_target,
+                                           this->m_static.m_unit_system,
+                                           well_name, record);
 
                 if (switching_from_injector) {
-                    properties->resetDefaultBHPLimit();
+                    if (properties->bhp_hist_limit_defaulted) {
+                        properties->setBHPLimit(default_bhp_target);
+                    }
                     update_well = true;
                     this->snapshots.back().wellgroup_events().addEvent( well2.name(), ScheduleEvents::WELL_SWITCHED_INJECTOR_PRODUCER);
                 }
@@ -1428,7 +1468,21 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
 
                 auto injection = std::make_shared<Well::WellInjectionProperties>(well2.getInjectionProperties());
                 auto previousInjectorType = injection->injectorType;
-                injection->handleWCONINJE(record, well2.isAvailableForGroupControl(), well_name);
+
+                double default_bhp_limit;
+                if (this->snapshots.back().bhp_defaults.get().inj_limit) {
+                    default_bhp_limit = this->m_static.m_unit_system.from_si(UnitSystem::measure::pressure,
+                                                                            *this->snapshots.back().bhp_defaults.get().inj_limit);
+                } else {
+                    default_bhp_limit = UnitSystem::newMETRIC().to_si(UnitSystem::measure::pressure,
+                                                                      ParserKeywords::WCONINJE::BHP::defaultValue.get<double>());
+                    default_bhp_limit = this->m_static.m_unit_system.from_si(UnitSystem::measure::pressure,
+                                                                             default_bhp_limit);
+                }
+
+                injection->handleWCONINJE(record, default_bhp_limit,
+                                          well2.isAvailableForGroupControl(), well_name);
+
                 const bool switching_from_producer = well2.isProducer();
                 if (well2.updateInjection(injection))
                     update_well = true;
@@ -1497,9 +1551,20 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
                 auto well2 = this->snapshots.back().wells.get( well_name );
                 auto injection = std::make_shared<Well::WellInjectionProperties>(well2.getInjectionProperties());
                 auto previousInjectorType = injection->injectorType;
-                injection->handleWCONINJH(record, well2.isProducer(), well_name, handlerContext.keyword.location());
-                const bool switching_from_producer = well2.isProducer();
 
+                double default_bhp_limit;
+                if (this->snapshots.back().bhp_defaults.get().inj_limit) {
+                    default_bhp_limit = *this->snapshots.back().bhp_defaults.get().inj_limit;
+                } else {
+                    default_bhp_limit = UnitSystem::newMETRIC().to_si(UnitSystem::measure::pressure,
+                                                                      6891.2);
+                }
+
+                injection->handleWCONINJH(record, default_bhp_limit,
+                                          well2.isProducer(), well_name,
+                                          handlerContext.keyword.location());
+
+                const bool switching_from_producer = well2.isProducer();
                 if (well2.updateInjection(injection))
                     update_well = true;
 
@@ -2789,6 +2854,7 @@ Well{0} entered with 'FIELD' parent group:
             { "DRVDTR"  , &Schedule::handleDRVDTR    },
             { "ENDBOX"  , &Schedule::handleGEOKeyword},
             { "EXIT",     &Schedule::handleEXIT      },
+            { "FBHPDEF",  &Schedule::handleFBHPDEF   },
             { "GCONINJE", &Schedule::handleGCONINJE  },
             { "GCONPROD", &Schedule::handleGCONPROD  },
             { "GCONSALE", &Schedule::handleGCONSALE  },

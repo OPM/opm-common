@@ -19,6 +19,8 @@
 
 #include <opm/input/eclipse/Schedule/ScheduleState.hpp>
 
+#include <opm/input/eclipse/Parser/ParserKeywords/F.hpp>
+
 #include <opm/input/eclipse/Schedule/Action/Actions.hpp>
 #include <opm/input/eclipse/Schedule/GasLiftOpt.hpp>
 #include <opm/input/eclipse/Schedule/Group/GConSale.hpp>
@@ -307,6 +309,7 @@ bool ScheduleState::operator==(const ScheduleState& other) const {
            this->guide_rate.get() == other.guide_rate.get() &&
            this->rft_config.get() == other.rft_config.get() &&
            this->udq.get() == other.udq.get() &&
+           this->bhp_defaults.get() == other.bhp_defaults.get() &&
            this->wells == other.wells &&
            this->groups == other.groups &&
            this->vfpprod == other.vfpprod &&
@@ -338,6 +341,7 @@ ScheduleState ScheduleState::serializationTestObject() {
     ts.m_sumthin = 12.345;
     ts.m_rptonly = true;
 
+    ts.bhp_defaults.update( BHPDefaults::serializationTestObject() );
     ts.pavg.update( PAvg::serializationTestObject() );
     ts.wtest_config.update( WellTestConfig::serializationTestObject() );
     ts.gconsump.update( GConSump::serializationTestObject() );

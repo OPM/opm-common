@@ -427,8 +427,11 @@ Well::Well(const RestartIO::RstWell& rst_well,
         if (! i->predictionMode) {
             if (i->controlMode == Well::InjectorCMode::BHP)
                 i->bhp_hist_limit = rst_well.hist_bhp_target;
-            else
+            else  {
+                // defaults (ie FBHPDEF) are not stored in the restart file.
+                // we thus use an empirically obtained default value.
                 i->resetDefaultHistoricalBHPLimit();
+            }
         }
         else if (this->isAvailableForGroupControl())
             i->addInjectionControl(Well::InjectorCMode::GRUP);
