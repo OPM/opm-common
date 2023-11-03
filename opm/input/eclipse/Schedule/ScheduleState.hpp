@@ -20,12 +20,6 @@
 #ifndef SCHEDULE_TSTEP_HPP
 #define SCHEDULE_TSTEP_HPP
 
-#include <chrono>
-#include <cstddef>
-#include <memory>
-#include <optional>
-#include <unordered_map>
-
 #include <opm/input/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/common/utility/TimeService.hpp>
 
@@ -43,6 +37,13 @@
 #include <opm/input/eclipse/Schedule/VFPInjTable.hpp>
 #include <opm/input/eclipse/Schedule/RSTConfig.hpp>
 
+#include <chrono>
+#include <cstddef>
+#include <memory>
+#include <optional>
+#include <type_traits>
+#include <unordered_map>
+#include <utility>
 
 namespace {
 
@@ -381,52 +382,16 @@ namespace Opm {
         ptr_member<RFTConfig> rft_config;
         ptr_member<RSTConfig> rst_config;
 
-        template <typename T> struct always_false1 : std::false_type {};
-
         template <typename T>
         ptr_member<T>& get() {
-            if constexpr ( std::is_same_v<T, PAvg> )
-                             return this->pavg;
-            else if constexpr ( std::is_same_v<T, WellTestConfig> )
-                                  return this->wtest_config;
-            else if constexpr ( std::is_same_v<T, GConSale> )
-                                  return this->gconsale;
-            else if constexpr ( std::is_same_v<T, GConSump> )
-                                  return this->gconsump;
-            else if constexpr ( std::is_same_v<T, GroupEconProductionLimits> )
-                                  return this->gecon;
-            else if constexpr ( std::is_same_v<T, WListManager> )
-                                  return this->wlist_manager;
-            else if constexpr ( std::is_same_v<T, Network::ExtNetwork> )
-                                  return this->network;
-            else if constexpr ( std::is_same_v<T, Network::Balance> )
-                                  return this->network_balance;
-            else if constexpr ( std::is_same_v<T, RPTConfig> )
-                                  return this->rpt_config;
-            else if constexpr ( std::is_same_v<T, Action::Actions> )
-                                  return this->actions;
-            else if constexpr ( std::is_same_v<T, UDQActive> )
-                                  return this->udq_active;
-            else if constexpr ( std::is_same_v<T, NameOrder> )
-                                  return this->well_order;
-            else if constexpr ( std::is_same_v<T, GroupOrder> )
-                                  return this->group_order;
-            else if constexpr ( std::is_same_v<T, UDQConfig> )
-                                  return this->udq;
-            else if constexpr ( std::is_same_v<T, GasLiftOpt> )
-                                  return this->glo;
-            else if constexpr ( std::is_same_v<T, GuideRateConfig> )
-                                  return this->guide_rate;
-            else if constexpr ( std::is_same_v<T, RFTConfig> )
-                                  return this->rft_config;
-            else if constexpr ( std::is_same_v<T, RSTConfig> )
-                                  return this->rst_config;
-            else
-                static_assert(always_false1<T>::value, "Template type <T> not supported in get()");
+            return const_cast<ptr_member<T>&>(std::as_const(*this).template get<T>());
         }
 
         template <typename T>
-        const ptr_member<T>& get() const {
+        const ptr_member<T>& get() const
+        {
+            struct always_false1 : std::false_type {};
+
             if constexpr ( std::is_same_v<T, PAvg> )
                              return this->pavg;
             else if constexpr ( std::is_same_v<T, WellTestConfig> )
@@ -464,13 +429,14 @@ namespace Opm {
             else if constexpr ( std::is_same_v<T, RSTConfig> )
                                   return this->rst_config;
             else
-                static_assert(always_false1<T>::value, "Template type <T> not supported in get()");
+                static_assert(always_false1::value, "Template type <T> not supported in get()");
         }
 
 
-        template <typename K, typename T> struct always_false2 : std::false_type {};
         template <typename K, typename T>
-        map_member<K,T>& get_map() {
+        map_member<K,T>& get_map()
+        {
+            struct always_false2 : std::false_type {};
             if constexpr ( std::is_same_v<T, VFPProdTable> )
                              return this->vfpprod;
             else if constexpr ( std::is_same_v<T, VFPInjTable> )
@@ -480,7 +446,7 @@ namespace Opm {
             else if constexpr ( std::is_same_v<T, Well> )
                                   return this->wells;
             else
-                static_assert(always_false2<K,T>::value, "Template type <K,T> not supported in get_map()");
+                static_assert(always_false2::value, "Template type <K,T> not supported in get_map()");
         }
 
         map_member<int, VFPProdTable> vfpprod;
