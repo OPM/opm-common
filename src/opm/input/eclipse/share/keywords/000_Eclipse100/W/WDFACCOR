@@ -12,7 +12,7 @@
       "name": "A",
       "value_type": "DOUBLE",
       "default": 0,
-      "dimension": "Viscosity*Time/Permeability*GasSurfaceVolume"
+      "dimension": "Viscosity*Time*Area/Permeability*GasSurfaceVolume"
     },
     {
       "name": "B",
