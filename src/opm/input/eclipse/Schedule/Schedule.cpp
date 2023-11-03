@@ -239,8 +239,6 @@ namespace Opm {
         } else {
             this->iterateScheduleSection( 0, this->m_sched_deck.size(), parseContext, errors, grid, nullptr, "");
         }
-
-        //m_grid = std::make_shared<SparseScheduleGrid>(grid, gridWrapper.getHitKeys());
     }
     catch (const OpmInputError& opm_error) {
         OpmLog::error(opm_error.what());
