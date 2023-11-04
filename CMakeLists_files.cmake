@@ -1151,6 +1151,7 @@ if(ENABLE_ECL_INPUT)
        opm/input/eclipse/EclipseState/Tables/SpecrockTable.hpp
        opm/input/eclipse/EclipseState/Tables/PvtwsaltTable.hpp
        opm/input/eclipse/EclipseState/Tables/BrineDensityTable.hpp
+       opm/input/eclipse/EclipseState/Tables/PcfactTable.hpp
        opm/input/eclipse/EclipseState/Tables/PermfactTable.hpp
        opm/input/eclipse/EclipseState/Tables/RwgsaltTable.hpp
        opm/input/eclipse/EclipseState/Tables/SaltSolubilityTable.hpp
