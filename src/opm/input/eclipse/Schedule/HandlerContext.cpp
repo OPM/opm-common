@@ -157,4 +157,15 @@ HandlerContext::wellNames(const std::string& pattern) const
     return this->wellNames(pattern, allowEmpty);
 }
 
+void HandlerContext::addGroup(const std::string& groupName)
+{
+    schedule_.addGroup(groupName, currentStep);
+}
+
+void HandlerContext::addGroupToGroup(const std::string& parent_group,
+                                     const std::string& child_group)
+{
+    schedule_.addGroupToGroup(parent_group, child_group);
+}
+
 }

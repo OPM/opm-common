@@ -107,6 +107,12 @@ public:
                           WellStatus status,
                           std::optional<KeywordLocation> location = {});
 
+    //! \brief Adds a group to the schedule.
+    void addGroup(const std::string& groupName);
+    //! \brief Adds a group to a group.
+    void addGroupToGroup(const std::string& parent_group,
+                         const std::string& child_group);
+
     //! \brief Obtain PI for a well.
     double getWellPI(const std::string& well_name) const;
 
