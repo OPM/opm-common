@@ -305,7 +305,10 @@ macro(opm_add_test TestName)
       target_link_libraries (${CURTEST_EXE_NAME} ${CURTEST_LIBRARIES})
       get_property(dirs DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY INCLUDE_DIRECTORIES)
       add_static_analysis_tests(CURTEST_SOURCES dirs)
-
+      if(HAVE_DYNAMIC_BOOST_TEST)
+        set_target_properties (${CURTEST_EXE_NAME} PROPERTIES
+                                COMPILE_DEFINITIONS BOOST_TEST_DYN_LINK)
+      endif()
       if(TARGET ${project}_prepare)
         add_dependencies("${CURTEST_EXE_NAME}" ${project}_prepare)
       endif()
