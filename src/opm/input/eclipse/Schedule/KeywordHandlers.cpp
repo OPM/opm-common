@@ -934,13 +934,15 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
             const std::string& childName = trim_wgname(handlerContext.keyword, record.getItem("CHILD_GROUP").get<std::string>(0), handlerContext.parseContext, handlerContext.errors);
             const std::string& parentName = trim_wgname(handlerContext.keyword, record.getItem("PARENT_GROUP").get<std::string>(0), handlerContext.parseContext, handlerContext.errors);
 
-            if (!handlerContext.state().groups.has(childName))
-                addGroup(childName, handlerContext.currentStep);
+            if (!handlerContext.state().groups.has(childName)) {
+                handlerContext.addGroup(childName);
+            }
 
-            if (!handlerContext.state().groups.has(parentName))
-                addGroup(parentName, handlerContext.currentStep);
+            if (!handlerContext.state().groups.has(parentName)) {
+                handlerContext.addGroup(parentName);
+            }
 
-            this->addGroupToGroup(parentName, childName);
+            handlerContext.addGroupToGroup(parentName, childName);
         }
     }
 
@@ -1939,7 +1941,7 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
             }
 
             if (! handlerContext.state().groups.has(groupName)) {
-                this->addGroup(groupName, handlerContext.currentStep);
+                handlerContext.addGroup(groupName);
             }
 
             if (existingWells.empty()) {
