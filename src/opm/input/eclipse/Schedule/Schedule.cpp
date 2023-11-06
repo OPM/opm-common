@@ -91,9 +91,10 @@
 #include <opm/input/eclipse/Deck/DeckRecord.hpp>
 #include <opm/input/eclipse/Deck/DeckSection.hpp>
 
-#include "Well/injection.hpp"
+#include "HandlerContext.hpp"
 #include "MSW/Compsegs.hpp"
 #include "MSW/WelSegsSet.hpp"
+#include "Well/injection.hpp"
 
 #include <algorithm>
 #include <ctime>
@@ -2456,19 +2457,6 @@ std::ostream& operator<<(std::ostream& os, const Schedule& sched)
 {
     sched.dump_deck(os);
     return os;
-}
-
-void Schedule::HandlerContext::affected_well(const std::string& well_name)
-{
-    if (this->sim_update)
-        this->sim_update->affected_wells.insert(well_name);
-}
-
-void Schedule::HandlerContext::record_well_structure_change()
-{
-    if (this->sim_update != nullptr) {
-        this->sim_update->well_structure_changed = true;
-    }
 }
 
 }
