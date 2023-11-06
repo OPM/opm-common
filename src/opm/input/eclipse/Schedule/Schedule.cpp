@@ -805,12 +805,6 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
         this->snapshots.back().actions.update( std::move(new_actions) );
     }
 
-    void Schedule::applyEXIT(const DeckKeyword& keyword, std::size_t report_step) {
-        int status = keyword.getRecord(0).getItem<ParserKeywords::EXIT::STATUS_CODE>().get<int>(0);
-        OpmLog::info("Simulation exit with status: " + std::to_string(status) + " requested as part of ACTIONX at report_step: " + std::to_string(report_step));
-        this->exit_status = status;
-    }
-
     void Schedule::shut_well(const std::string& well_name, std::size_t report_step) {
         this->updateWellStatus(well_name, report_step, Well::Status::SHUT);
     }

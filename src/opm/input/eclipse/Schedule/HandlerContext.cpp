@@ -77,6 +77,11 @@ ScheduleState& HandlerContext::state()
     return schedule_.snapshots[currentStep];
 }
 
+void HandlerContext::setExitCode(int code)
+{
+    schedule_.exit_status = code;
+}
+
 const ScheduleStatic& HandlerContext::static_schedule() const
 {
     return schedule_.m_static;

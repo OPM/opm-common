@@ -87,6 +87,7 @@
 #include <opm/input/eclipse/Parser/ParserKeywords/B.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/C.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/D.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/E.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/F.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/G.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/L.hpp>
@@ -464,9 +465,17 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
         OilVaporizationProperties::updateDRVDT(ovp, maximums);
     }
 
-    void Schedule::handleEXIT(HandlerContext& handlerContext) {
-        if (handlerContext.actionx_mode)
-            this->applyEXIT(handlerContext.keyword, handlerContext.currentStep);
+    void Schedule::handleEXIT(HandlerContext& handlerContext)
+    {
+        if (handlerContext.actionx_mode) {
+            using ES = ParserKeywords::EXIT;
+            int status = handlerContext.keyword.getRecord(0).getItem<ES::STATUS_CODE>().get<int>(0);
+            OpmLog::info("Simulation exit with status: " +
+                         std::to_string(status) +
+                         " requested as part of ACTIONX at report_step: " +
+                         std::to_string(handlerContext.currentStep));
+            handlerContext.setExitCode(status);
+        }
     }
 
     void Schedule::handleFBHPDEF(HandlerContext& handlerContext)
