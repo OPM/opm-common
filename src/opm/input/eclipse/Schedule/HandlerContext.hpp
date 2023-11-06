@@ -22,6 +22,7 @@
 #include <opm/common/OpmLog/KeywordLocation.hpp>
 
 #include <cstddef>
+#include <optional>
 #include <set>
 #include <string>
 #include <unordered_map>
@@ -39,6 +40,7 @@ class ScheduleGrid;
 class ScheduleState;
 struct ScheduleStatic;
 struct SimulatorUpdate;
+enum class WellStatus;
 class WelSegsSet;
 
 class HandlerContext
@@ -99,6 +101,11 @@ public:
 
     //! \brief Set exit code.
     void setExitCode(int code);
+
+    //! \brief Update status of a well.
+    bool updateWellStatus(const std::string& well,
+                          WellStatus status,
+                          std::optional<KeywordLocation> location = {});
 
     //! \brief Obtain PI for a well.
     double getWellPI(const std::string& well_name) const;

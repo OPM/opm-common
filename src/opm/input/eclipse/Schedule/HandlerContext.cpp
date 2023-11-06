@@ -82,6 +82,14 @@ void HandlerContext::setExitCode(int code)
     schedule_.exit_status = code;
 }
 
+bool HandlerContext::updateWellStatus(const std::string& well,
+                                      WellStatus status,
+                                      std::optional<KeywordLocation> location)
+{
+    return schedule_.updateWellStatus(well, currentStep,
+                                      status, location);
+}
+
 const ScheduleStatic& HandlerContext::static_schedule() const
 {
     return schedule_.m_static;

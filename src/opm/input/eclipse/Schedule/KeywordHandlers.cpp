@@ -1326,7 +1326,8 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
             const Well::Status status = WellStatusFromString(record.getItem("STATUS").getTrimmedString(0));
 
             for (const auto& well_name : well_names) {
-                this->updateWellStatus( well_name , handlerContext.currentStep , status, handlerContext.keyword.location() );
+                handlerContext.updateWellStatus(well_name, status,
+                                                handlerContext.keyword.location());
 
                 std::optional<VFPProdTable::ALQ_TYPE> alq_type;
                 auto well2 = handlerContext.state().wells.get( well_name );
@@ -1397,7 +1398,7 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
                             "Well " + well2.name() + " is a history matched well with zero rate where crossflow is banned. " +
                             "This well will be closed at " + std::to_string(handlerContext.elapsed_seconds() / (60*60*24)) + " days";
                         OpmLog::note(msg);
-                        this->updateWellStatus( well_name, handlerContext.currentStep, Well::Status::SHUT);
+                        handlerContext.updateWellStatus(well_name,  Well::Status::SHUT);
                     }
                 }
             }
@@ -1412,7 +1413,8 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
             const Well::Status status = WellStatusFromString(record.getItem("STATUS").getTrimmedString(0));
 
             for (const auto& well_name : well_names) {
-                bool update_well = this->updateWellStatus(well_name, handlerContext.currentStep, status, handlerContext.keyword.location());
+                bool update_well = handlerContext.updateWellStatus(well_name, status,
+                                                                   handlerContext.keyword.location());
                 std::optional<VFPProdTable::ALQ_TYPE> alq_type;
                 auto well2 = handlerContext.state().wells.get( well_name );
                 const bool switching_from_injector = !well2.isProducer();
@@ -1491,7 +1493,8 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
             const Well::Status status = WellStatusFromString(record.getItem("STATUS").getTrimmedString(0));
 
             for (const auto& well_name : well_names) {
-                this->updateWellStatus(well_name, handlerContext.currentStep, status, handlerContext.keyword.location());
+                handlerContext.updateWellStatus(well_name, status,
+                                                handlerContext.keyword.location());
 
                 bool update_well = false;
                 auto well2 = handlerContext.state().wells.get( well_name );
@@ -1545,14 +1548,14 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
                     if (injection->surfaceInjectionRate.is<double>()) {
                         if (injection->hasInjectionControl(Well::InjectorCMode::RATE) && injection->surfaceInjectionRate.zero()) {
                             OpmLog::note(msg);
-                            this->updateWellStatus( well_name, handlerContext.currentStep, Well::Status::SHUT);
+                            handlerContext.updateWellStatus(well_name, Well::Status::SHUT);
                         }
                     }
 
                     if (injection->reservoirInjectionRate.is<double>()) {
                         if (injection->hasInjectionControl(Well::InjectorCMode::RESV) && injection->reservoirInjectionRate.zero()) {
                             OpmLog::note(msg);
-                            this->updateWellStatus( well_name, handlerContext.currentStep, Well::Status::SHUT);
+                            handlerContext.updateWellStatus(well_name, Well::Status::SHUT);
                         }
                     }
                 }
@@ -1577,7 +1580,8 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
             const Well::Status status = WellStatusFromString( record.getItem("STATUS").getTrimmedString(0));
 
             for (const auto& well_name : well_names) {
-                this->updateWellStatus(well_name, handlerContext.currentStep, status, handlerContext.keyword.location());
+                handlerContext.updateWellStatus(well_name, status,
+                                                handlerContext.keyword.location());
                 bool update_well = false;
                 auto well2 = handlerContext.state().wells.get( well_name );
                 auto injection = std::make_shared<Well::WellInjectionProperties>(well2.getInjectionProperties());
@@ -1621,7 +1625,7 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
                         "Well " + well_name + " is an injector with zero rate where crossflow is banned. " +
                         "This well will be closed at " + std::to_string(handlerContext.elapsed_seconds() / (60*60*24)) + " days";
                     OpmLog::note(msg);
-                    this->updateWellStatus( well_name, handlerContext.currentStep, Well::Status::SHUT);
+                    handlerContext.updateWellStatus(well_name, Well::Status::SHUT);
                 }
             }
         }
@@ -1698,7 +1702,6 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
 
     void Schedule::handleWELOPEN(HandlerContext& handlerContext) {
         const auto& keyword = handlerContext.keyword;
-        const auto& currentStep = handlerContext.currentStep;
 
         auto conn_defaulted = []( const DeckRecord& rec ) {
             auto defaulted = []( const DeckItem& item ) {
@@ -1722,7 +1725,7 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
                 const auto new_well_status = WellStatusFromString(status_str);
                 for (const auto& wname : well_names) {
                     const auto did_update_well_status =
-                        this->updateWellStatus(wname, currentStep, new_well_status);
+                        handlerContext.updateWellStatus(wname, new_well_status);
 
                     handlerContext.affected_well(wname);
 
