@@ -586,7 +586,6 @@ namespace Opm
                                          const std::string&              groupName,
                                          HandlerContext&                 handlerContext);
 
-        void applyEXIT(const DeckKeyword&, std::size_t currentStep);
         SimulatorUpdate applyAction(std::size_t reportStep, const std::string& action_name, const std::vector<std::string>& matching_wells);
 
         /**

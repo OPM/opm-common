@@ -97,6 +97,9 @@ public:
     /// \brief Mark that the well occured in a COMPSEGS keyword.
     void compsegs_handled(const std::string& well_name);
 
+    //! \brief Set exit code.
+    void setExitCode(int code);
+
     //! \brief Obtain PI for a well.
     double getWellPI(const std::string& well_name) const;
 
