@@ -98,6 +98,9 @@ public:
     //! \brief Returns elapsed time since simulation start in seconds.
     double elapsed_seconds() const;
 
+    //! \brief Adds parse error for an invalid name pattern.
+    void invalidNamePattern(const std::string& namePattern) const;
+
     const ScheduleBlock& block;
     const DeckKeyword& keyword;
     const std::size_t currentStep;
