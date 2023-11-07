@@ -568,7 +568,6 @@ namespace Opm
                                            const HandlerContext& context,
                                            bool allowEmpty = false);
         std::vector<std::string> wellNames(const std::string& pattern, std::size_t timeStep, const std::vector<std::string>& matching_wells, InputErrorAction error_action, ErrorGuard& errors, const KeywordLocation& location) const;
-        void invalidNamePattern( const std::string& namePattern, const HandlerContext& context) const;
         static std::string formatDate(std::time_t t);
         std::string simulationDays(std::size_t currentStep) const;
         void applyGlobalWPIMULT( const std::unordered_map<std::string, double>& wpimult_global_factor);

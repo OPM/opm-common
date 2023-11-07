@@ -489,8 +489,9 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
         for (const auto& record : keyword) {
             const std::string& groupNamePattern = record.getItem<GI::GROUP>().getTrimmedString(0);
             const auto group_names = this->groupNames(groupNamePattern);
-            if (group_names.empty())
-                this->invalidNamePattern(groupNamePattern, handlerContext);
+            if (group_names.empty()) {
+                handlerContext.invalidNamePattern(groupNamePattern);
+            }
 
             const Group::InjectionCMode controlMode = Group::InjectionCModeFromString(record.getItem<GI::CONTROL_MODE>().getTrimmedString(0));
             const Phase phase = get_phase( record.getItem<GI::PHASE>().getTrimmedString(0));
@@ -580,8 +581,9 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
         for (const auto& record : keyword) {
             const std::string& groupNamePattern = record.getItem("GROUP").getTrimmedString(0);
             const auto group_names = this->groupNames(groupNamePattern);
-            if (group_names.empty())
-                this->invalidNamePattern(groupNamePattern, handlerContext);
+            if (group_names.empty()) {
+                handlerContext.invalidNamePattern(groupNamePattern);
+            }
 
             const Group::ProductionCMode controlMode = Group::ProductionCModeFromString(record.getItem("CONTROL_MODE").getTrimmedString(0));
             Group::GroupLimitAction groupLimitAction;
@@ -758,8 +760,9 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
             const std::string& groupNamePattern
                 = record.getItem<ParserKeywords::GECON::GROUP>().getTrimmedString(0);
             const auto group_names = this->groupNames(groupNamePattern);
-            if (group_names.empty())
-                this->invalidNamePattern(groupNamePattern, handlerContext);
+            if (group_names.empty()) {
+                handlerContext.invalidNamePattern(groupNamePattern);
+            }
             for (const auto& gname : group_names) {
                 gecon.add_group(report_step, gname, record);
             }
@@ -771,8 +774,9 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
         for (const auto& record : handlerContext.keyword) {
             const std::string& groupNamePattern = record.getItem("GROUP").getTrimmedString(0);
             const auto group_names = this->groupNames(groupNamePattern);
-            if (group_names.empty())
-                this->invalidNamePattern(groupNamePattern, handlerContext);
+            if (group_names.empty()) {
+                handlerContext.invalidNamePattern(groupNamePattern);
+            }
 
             const bool transfer = DeckItem::to_bool(record.getItem("TRANSFER_EXT_NET").getTrimmedString(0));
             const auto gefac = record.getItem("EFFICIENCY_FACTOR").get<double>(0);
@@ -795,8 +799,9 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
         for (const auto& record : keyword) {
             const std::string& groupNamePattern = record.getItem<ParserKeywords::GLIFTOPT::GROUP_NAME>().getTrimmedString(0);
             const auto group_names = this->groupNames(groupNamePattern);
-            if (group_names.empty())
-                this->invalidNamePattern(groupNamePattern, handlerContext);
+            if (group_names.empty()) {
+                handlerContext.invalidNamePattern(groupNamePattern);
+            }
 
             const auto& max_gas_item = record.getItem<ParserKeywords::GLIFTOPT::MAX_LIFT_GAS_SUPPLY>();
             const double max_lift_gas_value = max_gas_item.hasValue(0)
@@ -824,8 +829,9 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
         for (const auto& record : handlerContext.keyword) {
             const std::string& groupNamePattern = record.getItem("GROUP").getTrimmedString(0);
             const auto group_names = this->groupNames(groupNamePattern);
-            if (group_names.empty())
-                this->invalidNamePattern(groupNamePattern, handlerContext);
+            if (group_names.empty()) {
+                handlerContext.invalidNamePattern(groupNamePattern);
+            }
 
             const auto& target_string = record.getItem<ParserKeywords::GPMAINT::FLOW_TARGET>().get<std::string>(0);
 
@@ -853,8 +859,9 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
         for (const auto& record : handlerContext.keyword) {
              const std::string& groupNamePattern = record.getItem<ParserKeywords::GRUPNET::NAME>().getTrimmedString(0);
              const auto group_names = this->groupNames(groupNamePattern);
-             if (group_names.empty())
-                 this->invalidNamePattern(groupNamePattern, handlerContext);
+             if (group_names.empty()) {
+                 handlerContext.invalidNamePattern(groupNamePattern);
+             }
              const auto& pressure_item = record.getItem<ParserKeywords::GRUPNET::TERMINAL_PRESSURE>();
              const int vfp_table = record.getItem<ParserKeywords::GRUPNET::VFP_TABLE>().get<int>(0);
              // It is assumed here that item 6 (ADD_GAS_LIFT_GAS) has the two options NO and FLO. THe option ALQ is not supported.
@@ -1625,8 +1632,9 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
             const auto well_names = wellNames(wellNamePattern, handlerContext.currentStep);
-            if (well_names.empty())
-                this->invalidNamePattern(wellNamePattern, handlerContext);
+            if (well_names.empty()) {
+                handlerContext.invalidNamePattern(wellNamePattern);
+            }
 
             for (const auto& well_name : well_names) {
                 auto well = handlerContext.state().wells.get(well_name);
@@ -1643,8 +1651,9 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELLNAME").getTrimmedString(0);
             const auto well_names = wellNames(wellNamePattern, handlerContext.currentStep);
-            if (well_names.empty())
-                this->invalidNamePattern(wellNamePattern, handlerContext);
+            if (well_names.empty()) {
+                handlerContext.invalidNamePattern(wellNamePattern);
+            }
 
             for (const auto& well_name : well_names) {
                 auto well = handlerContext.state().wells.get(well_name);
@@ -1988,8 +1997,9 @@ Well{0} entered with 'FIELD' parent group:
             const auto well_names = this->wellNames(wellNamePattern, handlerContext,
                                                     isWList(handlerContext.currentStep,
                                                             wellNamePattern));
-            if (well_names.empty())
-                this->invalidNamePattern( wellNamePattern, handlerContext);
+            if (well_names.empty()) {
+                handlerContext.invalidNamePattern( wellNamePattern);
+            }
 
             const auto cmode = WellWELTARGCModeFromString(record.getItem("CMODE").getTrimmedString(0));
             const auto new_arg = record.getItem("NEW_VALUE").get<UDAValue>(0);
@@ -2162,7 +2172,7 @@ Well{0} entered with 'FIELD' parent group:
             const std::string& wellNamePattern = record.getItem<ParserKeywords::WLIFTOPT::WELL>().getTrimmedString(0);
             const auto well_names = this->wellNames(wellNamePattern);
             if (well_names.empty())
-                this->invalidNamePattern(wellNamePattern, handlerContext);
+                handlerContext.invalidNamePattern(wellNamePattern);
 
             const bool use_glo = DeckItem::to_bool(record.getItem<ParserKeywords::WLIFTOPT::USE_OPTIMIZER>().get<std::string>(0));
             const bool alloc_extra_gas = DeckItem::to_bool( record.getItem<ParserKeywords::WLIFTOPT::ALLOCATE_EXTRA_LIFT_GAS>().get<std::string>(0));
@@ -2533,8 +2543,9 @@ Well{0} entered with 'FIELD' parent group:
             const auto well_names = this->wellNames(wellNamePattern, handlerContext,
                                                     isWList(handlerContext.currentStep,
                                                             wellNamePattern));
-            if (well_names.empty())
-                this->invalidNamePattern(wellNamePattern, handlerContext);
+            if (well_names.empty()) {
+                handlerContext.invalidNamePattern(wellNamePattern);
+            }
 
             const double test_interval = record.getItem("INTERVAL").getSIDouble(0);
             const std::string& reasons = record.getItem("REASON").get<std::string>(0);
@@ -2557,8 +2568,9 @@ Well{0} entered with 'FIELD' parent group:
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
             const auto well_names = wellNames(wellNamePattern, handlerContext);
 
-            if (well_names.empty())
-                this->invalidNamePattern(wellNamePattern, handlerContext);
+            if (well_names.empty()) {
+                handlerContext.invalidNamePattern(wellNamePattern);
+            }
 
             const double tracerConcentration = record.getItem("CONCENTRATION").get<UDAValue>(0).getSI();
             const std::string& tracerName = record.getItem("TRACER").getTrimmedString(0);
@@ -2617,8 +2629,9 @@ Well{0} entered with 'FIELD' parent group:
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
             const auto well_names = wellNames(wellNamePattern, handlerContext.currentStep);
-            if (well_names.empty())
-                this->invalidNamePattern(wellNamePattern, handlerContext);
+            if (well_names.empty()) {
+                handlerContext.invalidNamePattern(wellNamePattern);
+            }
 
             for (const auto& well_name : well_names) {
                 auto well = handlerContext.state().wells.get(well_name);
@@ -2634,8 +2647,9 @@ Well{0} entered with 'FIELD' parent group:
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
             const auto well_names = wellNames(wellNamePattern, handlerContext.currentStep);
-            if (well_names.empty())
-                this->invalidNamePattern(wellNamePattern, handlerContext);
+            if (well_names.empty()) {
+                handlerContext.invalidNamePattern(wellNamePattern);
+            }
 
             for (const auto& well_name : well_names) {
                 auto well = handlerContext.state().wells.get(well_name);
@@ -2652,8 +2666,9 @@ Well{0} entered with 'FIELD' parent group:
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
             const auto well_names = wellNames(wellNamePattern, handlerContext.currentStep);
 
-            if (well_names.empty())
-                this->invalidNamePattern(wellNamePattern, handlerContext);
+            if (well_names.empty()) {
+                handlerContext.invalidNamePattern(wellNamePattern);
+            }
 
             auto wpave = PAvg(record);
 
@@ -2698,8 +2713,9 @@ Well{0} entered with 'FIELD' parent group:
             const std::string& wellNamePattern = record.getItem<ParserKeywords::WPAVEDEP::WELL>().getTrimmedString(0);
             const auto well_names = wellNames(wellNamePattern, handlerContext);
 
-            if (well_names.empty())
-                this->invalidNamePattern(wellNamePattern, handlerContext);
+            if (well_names.empty()) {
+                handlerContext.invalidNamePattern(wellNamePattern);
+            }
 
             const auto& item = record.getItem<ParserKeywords::WPAVEDEP::REFDEPTH>();
             if (item.hasValue(0)) {
@@ -2727,7 +2743,7 @@ Well{0} entered with 'FIELD' parent group:
             const auto well_names = wellNames(wellNamePattern, handlerContext);
 
             if (well_names.empty()) {
-                this->invalidNamePattern(wellNamePattern, handlerContext);
+                handlerContext.invalidNamePattern(wellNamePattern);
             }
 
             for (const auto& well_name : well_names) {
@@ -2759,7 +2775,7 @@ Well{0} entered with 'FIELD' parent group:
             const auto well_names = wellNames(wellNamePattern, handlerContext);
 
             if (well_names.empty()) {
-                this->invalidNamePattern(wellNamePattern, handlerContext);
+                handlerContext.invalidNamePattern(wellNamePattern);
                 continue;
             }
 

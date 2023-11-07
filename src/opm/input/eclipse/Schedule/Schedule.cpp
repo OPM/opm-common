@@ -888,21 +888,6 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
         return {};
     }
 
-    void Schedule::invalidNamePattern( const std::string& namePattern, const HandlerContext& context) const {
-        std::string msg_fmt = fmt::format("No wells/groups match the pattern: \'{}\'", namePattern);
-        if (namePattern == "?") {
-            /*
-              In particular when an ACTIONX keyword is called via PYACTION
-              coming in here with an empty list of matching wells is not
-              entirely unheard of. It is probably not what the user wanted and
-              we give a warning, but the simulation continues.
-            */
-            auto msg = OpmInputError::format("No matching wells for ACTIONX {keyword} in {file} line {line}.", context.keyword.location());
-            OpmLog::warning(msg);
-        } else
-            context.parseContext.handleError(ParseContext::SCHEDULE_INVALID_NAME, msg_fmt, context.keyword.location(), context.errors);
-    }
-
     GTNode Schedule::groupTree(const std::string& root_node, std::size_t report_step, std::size_t level, const std::optional<std::string>& parent_name) const {
         auto root_group = this->getGroup(root_node, report_step);
         GTNode tree(root_group, level, parent_name);
@@ -1218,8 +1203,9 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
 Expecting well to be defined with WELSPECS in ACTIONX before actual use.
 File {} line {}.)", pattern, location.keyword, location.filename, location.lineno);
                 OpmLog::warning(msg);
-            } else
-                this->invalidNamePattern(pattern, context);
+            } else {
+                context.invalidNamePattern(pattern);
+            }
         }
         return names;
     }
