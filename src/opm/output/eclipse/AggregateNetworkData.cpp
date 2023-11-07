@@ -409,7 +409,8 @@ int numberOfBranchesConnToNode(const Opm::Schedule& sched, const std::string& no
         noBranches = (network.uptree_branch(nodeName).has_value()) ? noBranches+1 : noBranches;
         return noBranches;
     } else {
-        return 0; // @TODO - Should number of branches in inactive subtree be reported?
+        auto msg = fmt::format("Actual node: {} has not been defined at report time: {} ", nodeName, lookup_step+1);
+        throw std::logic_error(msg);
     }
 }
 
