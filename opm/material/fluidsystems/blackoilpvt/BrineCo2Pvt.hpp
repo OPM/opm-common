@@ -498,11 +498,19 @@ private:
         }
 
         const LhsEval& rho_brine = Brine::liquidDensity(T, pl, salinity, extrapolate);
-        const LhsEval& rho_pure = H2O::liquidDensity(T, pl, extrapolate);
-        const LhsEval& rho_lCO2 = liquidDensityWaterCO2_(T, pl, xlCO2);
-        const LhsEval& contribCO2 = rho_lCO2 - rho_pure;
+        
+        static constexpr Scalar a[3] = {0.103300, -0.000023, -0.000002};
+        const LhsEval& T_c = T - 273.15;
+        const LhsEval coeff = a[0] + T_c * (a[1] + a[2] * T_c);
+        const LhsEval& XCO2 = convertxoGToXoG(xlCO2, salinity);
+        const LhsEval exponent = coeff * XCO2;
 
-        return rho_brine + contribCO2;
+        return rho_brine * pow(10.0, exponent);
+        // const LhsEval& rho_pure = H2O::liquidDensity(T, pl, extrapolate);
+        // const LhsEval& rho_lCO2 = liquidDensityWaterCO2_(T, pl, xlCO2);
+        // const LhsEval& contribCO2 = rho_lCO2 - rho_pure;
+
+        // return rho_brine + contribCO2;
     }
 
     template <class LhsEval>
