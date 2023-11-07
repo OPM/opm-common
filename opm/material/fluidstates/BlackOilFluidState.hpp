@@ -111,7 +111,7 @@ template <class ScalarT,
           bool enableTemperature = false,
           bool enableEnergy = false,
           bool enableDissolution = true,
-          bool enableEvaporation = false,
+          bool enableVapwat = false,
           bool enableBrine = false,
           bool enableSaltPrecipitation = false,
           bool enableDissolutionInWater = false,
@@ -159,7 +159,7 @@ public:
             Valgrind::CheckDefined(*Rv_);
         }
 
-        if constexpr (enableEvaporation) {
+        if constexpr (enableVapwat) {
             Valgrind::CheckDefined(*Rvw_);
         }
 
@@ -197,7 +197,7 @@ public:
             setRs(BlackOil::getRs_<FluidSystem, FluidState, Scalar>(fs, pvtRegionIdx));
             setRv(BlackOil::getRv_<FluidSystem, FluidState, Scalar>(fs, pvtRegionIdx));
         }
-        if constexpr (enableEvaporation) {
+        if constexpr (enableVapwat) {
             setRvw(BlackOil::getRvw_<FluidSystem, FluidState, Scalar>(fs, pvtRegionIdx));
         }
         if constexpr (enableDissolutionInWater) {
@@ -430,7 +430,7 @@ public:
      */
     const Scalar& Rvw() const
     {
-        if constexpr (enableEvaporation) {
+        if constexpr (enableVapwat) {
             return *Rvw_;
         } else {
             static Scalar null = 0.0;
@@ -685,7 +685,7 @@ private:
     std::array<Scalar, numStoragePhases> density_;
     ConditionalStorage<enableDissolution,Scalar> Rs_;
     ConditionalStorage<enableDissolution, Scalar> Rv_;
-    ConditionalStorage<enableEvaporation,Scalar> Rvw_;
+    ConditionalStorage<enableVapwat,Scalar> Rvw_;
     ConditionalStorage<enableDissolutionInWater,Scalar> Rsw_;
     ConditionalStorage<enableBrine, Scalar> saltConcentration_;
     ConditionalStorage<enableSaltPrecipitation, Scalar> saltSaturation_;
