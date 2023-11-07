@@ -47,6 +47,8 @@
 #include <opm/input/eclipse/Parser/Parser.hpp>
 #include <opm/common/utility/TimeService.hpp>
 
+#include <opm/input/eclipse/Parser/ParserKeywords/F.hpp>
+
 using namespace Opm;
 
 namespace {
@@ -589,7 +591,9 @@ namespace {
             auto deck = parser.parseString(input);
             const auto& record = deck["WCONHIST"].back().getRecord(0);
             Opm::Well::WellProductionProperties hist(unit_system, "W");
-            hist.handleWCONHIST(alq_type, unit_system, record);
+            hist.handleWCONHIST(alq_type,
+                                Opm::ParserKeywords::FBHPDEF::TARGET_BHP::defaultValue * unit::barsa,
+                                unit_system, record);
 
 
             return hist;
@@ -642,7 +646,9 @@ namespace {
             const auto& kwd     = deck["WCONPROD"].back();
             const auto&  record = kwd.getRecord(0);
             Opm::Well::WellProductionProperties pred(unit_system, "W");
-            pred.handleWCONPROD(alq_type, unit_system, "WELL", record);
+            pred.handleWCONPROD(alq_type,
+                                Opm::ParserKeywords::FBHPDEF::TARGET_BHP::defaultValue * unit::barsa,
+                                unit_system, "WELL", record);
 
             return pred;
         }
@@ -1869,4 +1875,92 @@ END
                                 "controlling group \"G1\" at time one");
         }
     }
+}
+
+BOOST_AUTO_TEST_CASE(FBHPDEF_Basic)
+{
+    const auto deck = Parser{}.parseString(R"(RUNSPEC
+DIMENS
+10 10 3 /
+GRID
+DXV
+10*100.0 /
+DYV
+10*100.0 /
+DZV
+3*5.0 /
+DEPTHZ
+121*2000 /
+PERMX
+300*100.0 /
+COPY
+PERMX PERMY /
+PERMX PERMZ /
+/
+MULTIPLY
+PERMZ 0.1 /
+/
+PORO
+300*0.3 /
+SCHEDULE
+
+WELSPECS
+ 'P' 'G' 10 10 1* 'OIL' /
+ 'I' 'G'  1  1 1* 'GAS' /
+ 'I2' 'W'  1  1 1* 'WATER' /
+ 'I3' 'W'  1  1 1* 'WATER' /
+/
+COMPDAT
+ 'P' 10 10 1 3 'OPEN' /
+ 'I'  1  1 1 1 'OPEN' /
+ 'I2'  1  1 1 1 'OPEN' /
+ 'I3'  1  1 1 1 'OPEN' /
+/
+
+WCONINJH
+  I3 WATER OPEN 116281 1* 0 /
+/
+
+FBHPDEF
+  5.0 20.0 /
+
+WCONPROD
+ 'P' 'OPEN' 'LRAT' 1* 1* 1* 1234.567 1* 1* /
+/
+
+WCONINJH
+  I2 WATER OPEN 116281 1* 0 /
+/
+
+FBHPDEF
+  2.0 30.0 /
+
+WCONINJE
+ 'I' 'GAS' 'OPEN' 'RATE' 20.0E3 /
+/
+
+TSTEP
+30.0 /
+WELSPECS
+ 'P' 'G1' /
+/
+TSTEP
+ 30.0 /
+END
+)");
+
+    const auto es    = EclipseState { deck };
+    const auto sched = Schedule { deck, es };
+
+    const auto& wellP = sched.getWell("P", 0);
+    BOOST_CHECK_EQUAL(wellP.getProductionProperties().BHPTarget.get<double>(), 5.0);
+
+    const auto& wellI = sched.getWell("I", 0);
+    BOOST_CHECK_CLOSE(wellI.getInjectionProperties().BHPTarget.get<double>(), 30.0, 1e-12);
+
+    const auto& wellI2 = sched.getWell("I2", 0);
+    BOOST_CHECK_EQUAL(wellI2.getInjectionProperties().bhp_hist_limit, 20.0 * unit::barsa);
+
+    const auto& wellI3 = sched.getWell("I3", 0);
+    BOOST_CHECK_CLOSE(wellI3.getInjectionProperties().bhp_hist_limit, 6891.2 * unit::barsa, 1e-12);
 }

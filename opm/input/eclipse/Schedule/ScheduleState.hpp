@@ -279,7 +279,28 @@ namespace Opm {
             std::unordered_map<K, std::shared_ptr<T>> m_data;
         };
 
+        struct BHPDefaults {
+            std::optional<double> prod_target;
+            std::optional<double> inj_limit;
 
+            static BHPDefaults serializationTestObject()
+            {
+                return BHPDefaults{1.0, 2.0};
+            }
+
+            bool operator==(const BHPDefaults& rhs) const
+            {
+                return this->prod_target == rhs.prod_target
+                    && this->inj_limit == rhs.inj_limit;
+            }
+
+            template<class Serializer>
+            void serializeOp(Serializer& serializer)
+            {
+                serializer(prod_target);
+                serializer(inj_limit);
+            }
+        };
 
         ScheduleState() = default;
         explicit ScheduleState(const time_point& start_time);
@@ -382,6 +403,8 @@ namespace Opm {
         ptr_member<RFTConfig> rft_config;
         ptr_member<RSTConfig> rst_config;
 
+        ptr_member<BHPDefaults> bhp_defaults;
+
         template <typename T>
         ptr_member<T>& get() {
             return const_cast<ptr_member<T>&>(std::as_const(*this).template get<T>());
@@ -428,6 +451,8 @@ namespace Opm {
                                   return this->rft_config;
             else if constexpr ( std::is_same_v<T, RSTConfig> )
                                   return this->rst_config;
+            else if constexpr ( std::is_same_v<T, BHPDefaults> )
+                                  return this->bhp_defaults;
             else
                 static_assert(always_false1::value, "Template type <T> not supported in get()");
         }

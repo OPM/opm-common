@@ -85,7 +85,11 @@ namespace Opm {
         return result;
     }
 
-    void Well::WellInjectionProperties::handleWCONINJE(const DeckRecord& record, bool availableForGroupControl, const std::string& well_name) {
+    void Well::WellInjectionProperties::handleWCONINJE(const DeckRecord& record,
+                                                       const double bhp_def,
+                                                       bool availableForGroupControl,
+                                                       const std::string& well_name)
+    {
         this->injectorType = InjectorTypeFromString( record.getItem("TYPE").getTrimmedString(0) );
         this->predictionMode = true;
 
@@ -118,7 +122,11 @@ namespace Opm {
           current behavoir agrees with the behavior of Eclipse when BHPLimit is not
           specified while employed during group control.
         */
-        this->BHPTarget = record.getItem("BHP").get<UDAValue>(0);
+        if (record.getItem("BHP").defaultApplied(0)) {
+            this->BHPTarget.update(bhp_def);
+        } else {
+            this->BHPTarget = record.getItem("BHP").get<UDAValue>(0);
+        }
         this->addInjectionControl(InjectorCMode::BHP);
 
         if (availableForGroupControl)
@@ -182,6 +190,7 @@ namespace Opm {
 
     void
     Well::WellInjectionProperties::handleWCONINJH(const DeckRecord& record,
+                                                  const double bhp_def,
                                                   const bool is_producer,
                                                   const std::string& well_name,
                                                   const KeywordLocation& loc)
@@ -232,7 +241,7 @@ namespace Opm {
             if (switching_from_prediction ||
                 switching_from_BHP_control ||
                 switching_from_producer) {
-                this->resetDefaultHistoricalBHPLimit();
+                this->bhp_hist_limit = bhp_def;
             }
             // otherwise, we keep its previous BHP limit
         }

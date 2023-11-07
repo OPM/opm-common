@@ -168,8 +168,29 @@ public:
         static WellInjectionProperties serializationTestObject();
 
         void handleWELTARG(WELTARGCMode cmode, const UDAValue& new_arg, double SIFactorP);
-        void handleWCONINJE(const DeckRecord& record, bool availableForGroupControl, const std::string& well_name);
-        void handleWCONINJH(const DeckRecord& record, const bool is_producer, const std::string& well_name, const KeywordLocation& loc);
+
+        //! \brief Handle a WCONINJE keyword.
+        //! \param record The deck record to use
+        //! \param bhp_def The default BHP target in input units
+        //! \param availableForGroupControl True if available for group control
+        //! \param well_name Name of well
+        void handleWCONINJE(const DeckRecord& record,
+                            const double bhp_def,
+                            bool availableForGroupControl,
+                            const std::string& well_name);
+
+        //! \brief Handle a WCONINJH keyword.
+        //! \param record The deck record to use
+        //! \param bhp_def The default BHP limit in SI units
+        //! \param is_producer True if well is a producer
+        //! \param well_name Name of well
+        //! \param loc Location of keyword for logging purpuses
+        void handleWCONINJH(const DeckRecord& record,
+                            const double bhp_def,
+                            const bool is_producer,
+                            const std::string& well_name,
+                            const KeywordLocation& loc);
+
         bool hasInjectionControl(InjectorCMode controlModeArg) const {
             if (injectionControls & static_cast<int>(controlModeArg))
                 return true;
@@ -240,6 +261,7 @@ public:
         // BHP and THP limit
         double  bhp_hist_limit = 0.0;
         double  thp_hist_limit = 0.0;
+        bool    bhp_hist_limit_defaulted = true; // Tracks whether value was defaulted or not
 
         // historical BHP and THP under historical mode
         double  BHPH        = 0.0;
@@ -273,8 +295,28 @@ public:
 
         // this is used to check whether the specified control mode is an effective history matching production mode
         static bool effectiveHistoryProductionControl(ProducerCMode cmode);
-        void handleWCONPROD( const std::optional<VFPProdTable::ALQ_TYPE>& alq_type, const UnitSystem& unit_system, const std::string& well, const DeckRecord& record);
-        void handleWCONHIST( const std::optional<VFPProdTable::ALQ_TYPE>& alq_type, const UnitSystem& unit_system, const DeckRecord& record);
+
+        //! \brief Handle WCONPROD keyword.
+        //! \param alq_type ALQ type
+        //! \param bhp_def Default BHP target in SI units
+        //! \param unit_system Unit system to use
+        //! \param well Well name
+        //! \param record Deck record to use
+        void handleWCONPROD(const std::optional<VFPProdTable::ALQ_TYPE>& alq_type,
+                            const double bhp_def,
+                            const UnitSystem& unit_system,
+                            const std::string& well,
+                            const DeckRecord& record);
+
+        //! \brief Handle WCONHIST keyword.
+        //! \param alq_type ALQ type
+        //! \param bhp_def Default BHP limit in SI units
+        //! \param unit_system Unit system to use
+        //! \param record Deck record to use
+        void handleWCONHIST(const std::optional<VFPProdTable::ALQ_TYPE>& alq_type,
+                            const double bhp_def,
+                            const UnitSystem& unit_system,
+                            const DeckRecord& record);
         void handleWELTARG( WELTARGCMode cmode, const UDAValue& new_arg, double SiFactorP);
         void resetDefaultBHPLimit();
         void clearControls();

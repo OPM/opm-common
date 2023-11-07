@@ -8,12 +8,14 @@
     {
       "name": "TARGET_BHP",
       "value_type": "DOUBLE",
-      "dimension": "Length"
+      "dimension": "Pressure",
+      "default": 1.01325
     },
     {
       "name": "LIMIT_BHP",
       "value_type": "DOUBLE",
-      "dimension": "Pressure"
+      "dimension": "Pressure",
+      "default": 6895
     }
   ]
 }

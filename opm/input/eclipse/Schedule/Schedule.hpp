@@ -367,6 +367,7 @@ namespace Opm
             this->template pack_unpack<GasLiftOpt>(serializer);
             this->template pack_unpack<RFTConfig>(serializer);
             this->template pack_unpack<RSTConfig>(serializer);
+            this->template pack_unpack<ScheduleState::BHPDefaults>(serializer);
 
             this->template pack_unpack_map<int, VFPProdTable>(serializer);
             this->template pack_unpack_map<int, VFPInjTable>(serializer);
@@ -712,6 +713,7 @@ namespace Opm
         void handleDRVDT     (HandlerContext&);
         void handleDRVDTR    (HandlerContext&);
         void handleEXIT      (HandlerContext&);
+        void handleFBHPDEF   (HandlerContext&);
         void handleGCONINJE  (HandlerContext&);
         void handleGCONPROD  (HandlerContext&);
         void handleGCONSALE  (HandlerContext&);
