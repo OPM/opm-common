@@ -1396,8 +1396,10 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
             this->snapshots.back().groups.update( std::move(new_child_group) );
         }
 
-        // Update network if required
+        // Update standard network if required
         auto network = this->snapshots.back().network.get();
+        if (!network.is_standard_network())
+            return;
         if (network.has_node(child_name)) {
             auto old_branch = network.uptree_branch(child_name);
             if (old_branch.has_value()) {

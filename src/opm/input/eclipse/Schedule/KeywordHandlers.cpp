@@ -167,7 +167,11 @@ namespace {
 
     void Schedule::handleBRANPROP(HandlerContext& handlerContext) {
         auto ext_network = this->snapshots.back().network.get();
-
+        if (ext_network.active() && ext_network.is_standard_network()) {
+            std::string msg = "Cannot have standard and extended network defined simultaneously.";
+            throw OpmInputError(msg, handlerContext.keyword.location());
+        }
+        ext_network.set_standard_network(false);
         for (const auto& record : handlerContext.keyword) {
             const auto& downtree_node = record.getItem<ParserKeywords::BRANPROP::DOWNTREE_NODE>().get<std::string>(0);
             const auto& uptree_node = record.getItem<ParserKeywords::BRANPROP::UPTREE_NODE>().get<std::string>(0);
@@ -828,6 +832,11 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
 
     void Schedule::handleGRUPNET(HandlerContext& handlerContext) {
         auto network = this->snapshots.back().network.get();
+        if (network.active() && !network.is_standard_network()) {
+            std::string msg = "Cannot have standard and extended network defined simultaneously.";
+            throw OpmInputError(msg, handlerContext.keyword.location());
+        }
+        network.set_standard_network(true);
         std::vector<Network::Node> nodes;
         for (const auto& record : handlerContext.keyword) {
              const std::string& groupNamePattern = record.getItem<ParserKeywords::GRUPNET::NAME>().getTrimmedString(0);
@@ -993,6 +1002,10 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
 
     void Schedule::handleNODEPROP(HandlerContext& handlerContext) {
         auto ext_network = this->snapshots.back().network.get();
+        if (ext_network.active() && ext_network.is_standard_network()) {
+            std::string msg = "Cannot have standard and extended network defined simultaneously.";
+            throw OpmInputError(msg, handlerContext.keyword.location());
+        }
 
         for (const auto& record : handlerContext.keyword) {
             const auto& name = record.getItem<ParserKeywords::NODEPROP::NAME>().get<std::string>(0);
