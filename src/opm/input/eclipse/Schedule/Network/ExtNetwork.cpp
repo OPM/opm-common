@@ -19,6 +19,7 @@
 #include <algorithm>
 #include <iterator>
 #include <stdexcept>
+#include <fmt/format.h>
 
 #include <opm/input/eclipse/Schedule/Network/ExtNetwork.hpp>
 
@@ -132,7 +133,10 @@ void ExtNetwork::drop_branch(const std::string& uptree_node, const std::string& 
 
 
 std::optional<Branch> ExtNetwork::uptree_branch(const std::string& node) const {
-    if (!this->has_node(node)) return {};
+    if (!this->has_node(node)) {
+        auto msg = fmt::format("Requesting uptree branch of undefined node: {}", node);
+        throw std::out_of_range(msg);
+    }
 
     std::vector<Branch> branches;
     std::copy_if(this->m_branches.begin(), this->m_branches.end(), std::back_inserter(branches), [&node](const Branch& b) { return b.downtree_node() == node; });
@@ -149,7 +153,10 @@ std::optional<Branch> ExtNetwork::uptree_branch(const std::string& node) const {
 std::vector<Branch> ExtNetwork::downtree_branches(const std::string& node) const {
     std::vector<Branch> branches;
 
-    if (!this->has_node(node)) return branches;
+    if (!this->has_node(node)) {
+        auto msg = fmt::format("Requesting downtree branches of undefined node: {}", node);
+        throw std::out_of_range(msg);
+    }
 
     std::copy_if(this->m_branches.begin(), this->m_branches.end(), std::back_inserter(branches), [&node](const Branch& b) { return b.uptree_node() == node; });
     return branches;

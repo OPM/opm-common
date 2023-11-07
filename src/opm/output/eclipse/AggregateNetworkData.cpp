@@ -37,6 +37,7 @@
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
 #include <opm/input/eclipse/Units/Units.hpp>
 
+#include <opm/common/OpmLog/OpmLog.hpp>
 
 #include <algorithm>
 #include <cstddef>
@@ -246,6 +247,10 @@ double nodePressure(const Opm::Schedule&               sched,
                     if (network.uptree_branch(node_name).has_value()) {
                         upt_br = network.uptree_branch(node_name).value();
                     } else {
+                        auto msg = fmt::format("Node: {} does not belong to the network at report step: {} - node pressure set to zero.",
+                                               node_name,
+                                               lookup_step+1);
+                        Opm::OpmLog::warning(msg);
                         return 0.0;  // Subtree not belonging to the network right now
                     }
                 }
@@ -409,7 +414,7 @@ int numberOfBranchesConnToNode(const Opm::Schedule& sched, const std::string& no
         noBranches = (network.uptree_branch(nodeName).has_value()) ? noBranches+1 : noBranches;
         return noBranches;
     } else {
-        auto msg = fmt::format("Actual node: {} has not been defined at report time: {} ", nodeName, lookup_step+1);
+        auto msg = fmt::format("Trying to find number of branches connected to undefined node: {} at report time: {} ", nodeName, lookup_step+1);
         throw std::logic_error(msg);
     }
 }
