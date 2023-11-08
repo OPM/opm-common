@@ -28,13 +28,17 @@ namespace Opm {
 
     EclipseConfig::EclipseConfig(const Deck& deck) :
         m_initConfig(deck),
+        fip_config(deck),
         io_config(deck)
     {
     }
 
 
-    EclipseConfig::EclipseConfig(const InitConfig& initConfig, const IOConfig& io_conf):
+    EclipseConfig::EclipseConfig(const InitConfig& initConfig,
+                                 const FIPConfig& fip_conf,
+                                 const IOConfig& io_conf):
         m_initConfig(initConfig),
+        fip_config(fip_conf),
         io_config(io_conf)
     {
     }
@@ -44,6 +48,7 @@ namespace Opm {
     {
         EclipseConfig result;
         result.m_initConfig = InitConfig::serializationTestObject();
+        result.fip_config = FIPConfig::serializationTestObject();
         result.io_config = IOConfig::serializationTestObject();
 
         return result;
@@ -59,17 +64,21 @@ namespace Opm {
 
     bool EclipseConfig::operator==(const EclipseConfig& data) const {
         return this->init() == data.init() &&
+               this->fip() == data.fip() &&
                this->io() == data.io();
     }
 
     IOConfig& EclipseConfig::io() {
-        return const_cast<IOConfig &>(this->io_config);
+        return this->io_config;
     }
 
     const IOConfig& EclipseConfig::io() const {
         return this->io_config;
     }
 
+    const FIPConfig& EclipseConfig::fip() const {
+        return this->fip_config;
+    }
 
     bool EclipseConfig::rst_cmp(const EclipseConfig& full_config, const EclipseConfig& rst_config) {
         return IOConfig::rst_cmp(full_config.io(), rst_config.io()) &&

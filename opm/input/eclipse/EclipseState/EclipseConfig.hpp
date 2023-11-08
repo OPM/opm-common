@@ -21,6 +21,7 @@
 #define OPM_ECLIPSE_CONFIG_HPP
 
 #include <opm/input/eclipse/EclipseState/InitConfig/InitConfig.hpp>
+#include <opm/input/eclipse/EclipseState/IOConfig/FIPConfig.hpp>
 #include <opm/input/eclipse/EclipseState/IOConfig/IOConfig.hpp>
 
 namespace Opm {
@@ -32,7 +33,9 @@ namespace Opm {
     public:
         EclipseConfig() = default;
         explicit EclipseConfig(const Deck& deck);
-        EclipseConfig(const InitConfig& initConfig, const IOConfig& io_conf);
+        EclipseConfig(const InitConfig& initConfig,
+                      const FIPConfig& fip_conf,
+                      const IOConfig& io_conf);
 
         static EclipseConfig serializationTestObject();
 
@@ -40,6 +43,7 @@ namespace Opm {
         IOConfig& io();
         const IOConfig& io() const;
         const InitConfig& init() const;
+        const FIPConfig& fip() const;
 
         bool operator==(const EclipseConfig& data) const;
         static bool rst_cmp(const EclipseConfig& full_config, const EclipseConfig& rst_config);
@@ -47,11 +51,13 @@ namespace Opm {
         void serializeOp(Serializer& serializer)
         {
             serializer(m_initConfig);
+            serializer(fip_config);
             serializer(io_config);
         }
 
     private:
         InitConfig m_initConfig;
+        FIPConfig fip_config;
         IOConfig io_config;
     };
 }

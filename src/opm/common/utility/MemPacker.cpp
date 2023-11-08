@@ -20,6 +20,8 @@
 #include <config.h>
 #include <opm/common/utility/MemPacker.hpp>
 
+#include <opm/input/eclipse/EclipseState/IOConfig/FIPConfig.hpp>
+
 namespace Opm {
 namespace Serialization {
 namespace detail {
@@ -100,6 +102,8 @@ unpack(time_point& data, std::vector<char>& buffer, int& position)
 template struct Packing<false,std::bitset<3>>;
 template struct Packing<false,std::bitset<4>>;
 template struct Packing<false,std::bitset<10>>;
+constexpr int NumFip = static_cast<int>(FIPConfig::OutputField::NUM_FIP_REPORT);
+template struct Packing<false,std::bitset<NumFip>>;
 
 }
 
