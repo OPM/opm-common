@@ -242,7 +242,7 @@ namespace {
         "KG-M",
         "PPM", /*Parts per million */
         "GPa",
-        "DAY/SM3"
+        "DAY/SM3",
     };
 
     static_assert(numElems(from_metric_offset) == static_cast<std::size_t>(UnitSystem::measure::_count),
@@ -1594,12 +1594,14 @@ namespace {
             + this->measure_table_to_si_offset[ static_cast< int >( m ) ];
     }
 
-    double UnitSystem::from_si( const std::string& dimension, double value) {
+    double UnitSystem::from_si( const std::string& dimension, double value) const
+    {
         const auto& dim = this->parse(dimension);
         return dim.convertSiToRaw(value);
     }
 
-    double UnitSystem::to_si( const std::string& dimension, double value) {
+    double UnitSystem::to_si( const std::string& dimension, double value) const
+    {
         const auto& dim = this->parse(dimension);
         return dim.convertRawToSi(value);
     }
