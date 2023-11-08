@@ -142,6 +142,7 @@ if(ENABLE_ECL_INPUT)
     src/opm/input/eclipse/EclipseState/InitConfig/Equil.cpp
     src/opm/input/eclipse/EclipseState/InitConfig/FoamConfig.cpp
     src/opm/input/eclipse/EclipseState/InitConfig/InitConfig.cpp
+    src/opm/input/eclipse/EclipseState/IOConfig/FIPConfig.cpp
     src/opm/input/eclipse/EclipseState/IOConfig/IOConfig.cpp
     src/opm/input/eclipse/EclipseState/Runspec.cpp
     src/opm/input/eclipse/EclipseState/Phase.cpp
@@ -503,6 +504,7 @@ if(ENABLE_ECL_INPUT)
     tests/parser/FaceDirTests.cpp
     tests/parser/FaultTests.cpp
     tests/parser/FieldPropsTests.cpp
+    tests/parser/FIPConfigTests.cpp
     tests/parser/FoamTests.cpp
     tests/parser/FunctionalTests.cpp
     tests/parser/GeomodifierTests.cpp
@@ -1302,6 +1304,7 @@ if(ENABLE_ECL_INPUT)
        opm/input/eclipse/EclipseState/SimulationConfig/RockConfig.hpp
        opm/input/eclipse/EclipseState/SimulationConfig/SimulationConfig.hpp
        opm/input/eclipse/Schedule/MSW/Valve.hpp
+       opm/input/eclipse/EclipseState/IOConfig/FIPConfig.hpp
        opm/input/eclipse/EclipseState/IOConfig/IOConfig.hpp
        opm/input/eclipse/EclipseState/checkDeck.hpp
        opm/input/eclipse/EclipseState/Phase.hpp
