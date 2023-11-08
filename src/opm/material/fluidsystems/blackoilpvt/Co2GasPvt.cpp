@@ -39,15 +39,9 @@ initFromState(const EclipseState& eclState, const Schedule&)
 
     setEnableVaporizationWater(eclState.getSimulationConfig().hasVAPOIL() || eclState.getSimulationConfig().hasVAPWAT());
 
-    if (!eclState.getTableManager().getDensityTable().empty()) {
-        OpmLog::warning("CO2STOR is enabled but DENSITY is in the deck. \n"
-                        "The surface density is computed based on CO2-BRINE "
-                        "PVT at standard conditions (STCOND) and DENSITY is ignored");
-    }
-
     if (eclState.getTableManager().hasTables("PVDG") ||
         !eclState.getTableManager().getPvtgTables().empty()) {
-        OpmLog::warning("CO2STOR is enabled but PVDG or PVTG is in the deck. \n"
+        OpmLog::warning("CO2STORE is enabled but PVDG or PVTG is in the deck. \n"
                         "CO2 PVT properties are computed based on the Span-Wagner "
                         "pvt model and PVDG/PVTG input is ignored.");
     }
