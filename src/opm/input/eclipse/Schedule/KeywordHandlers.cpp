@@ -173,9 +173,21 @@ namespace {
             throw OpmInputError(msg, handlerContext.keyword.location());
         }
         ext_network.set_standard_network(false);
+
+        const auto& groups = this->snapshots.back().groups;
         for (const auto& record : handlerContext.keyword) {
             const auto& downtree_node = record.getItem<ParserKeywords::BRANPROP::DOWNTREE_NODE>().get<std::string>(0);
             const auto& uptree_node = record.getItem<ParserKeywords::BRANPROP::UPTREE_NODE>().get<std::string>(0);
+            if (!groups.has(downtree_node) || !groups.has(uptree_node)) {
+                std::string reason = "Unknown group names specified in BRANPROP:";
+                if (!groups.has(downtree_node)) {
+                    fmt::format_to(std::back_inserter(reason), " {}", downtree_node);
+                }
+                if (!groups.has(uptree_node)) {
+                    fmt::format_to(std::back_inserter(reason), " {}", uptree_node);
+                }
+                throw OpmInputError {reason, handlerContext.keyword.location()};
+            }
             const int vfp_table = record.getItem<ParserKeywords::BRANPROP::VFP_TABLE>().get<int>(0);
 
             if (vfp_table == 0) {
@@ -1022,8 +1034,13 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
             throw OpmInputError(msg, handlerContext.keyword.location());
         }
 
+        const auto& groups = this->snapshots.back().groups;
         for (const auto& record : handlerContext.keyword) {
             const auto& name = record.getItem<ParserKeywords::NODEPROP::NAME>().get<std::string>(0);
+            if (!groups.has(name)) {
+                const std::string reason = fmt::format("Unknown group name: {}", name);
+                throw OpmInputError {reason, handlerContext.keyword.location()};
+            }
             const auto& pressure_item = record.getItem<ParserKeywords::NODEPROP::PRESSURE>();
 
             const bool as_choke = DeckItem::to_bool(record.getItem<ParserKeywords::NODEPROP::AS_CHOKE>().get<std::string>(0));

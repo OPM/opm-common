@@ -1007,6 +1007,11 @@ UDQ
   UNITS  WUBHP  'BARSA' /
 /
 
+GRUPTREE
+G_1  PLAT-A /
+G_2  PLAT-A /
+/
+
 BRANPROP
 --  Downtree  Uptree   #VFP    ALQ
     G_1        PLAT-A   5       1* /
