@@ -445,6 +445,7 @@ template <class INodeArray>
 void staticContrib(const Opm::Schedule&     sched,
                    const std::string&       nodeName,
                    const std::size_t        lookup_step,
+                   const std::size_t        ngroups,
                    INodeArray&              iNode)
 {
     //
@@ -455,7 +456,7 @@ void staticContrib(const Opm::Schedule&     sched,
         iNode[Ix::Group] = sched.getGroup(nodeName, lookup_step).insert_index();
     }
     if (nodeName == "FIELD") {
-        iNode[Ix::Group] = sched.restart_groups(lookup_step).size();  // @TODO: Cheaper way to get this number?
+        iNode[Ix::Group] = ngroups;
     }
     iNode[Ix::FixedPresNode] = (fixedPressureNode(sched, nodeName, lookup_step)) ? 1 : 0;
     // the meaning of the value of item [4] is currently not known, the constant value used cover all cases so far
@@ -680,13 +681,14 @@ captureDeclaredNetworkData(const Opm::EclipseState&             es,
     const auto& networkNodePtrs  =   ndNmPt;
     const auto& branchPtrs = sched[lookup_step].network().branches();
 
+    const std::size_t ngroups = inteHead[VI::NGMAXZ];
     // Define Static Contributions to INode Array.
-    nodeLoop(networkNodePtrs, [&sched, lookup_step, this]
+    nodeLoop(networkNodePtrs, [&sched, lookup_step, ngroups, this]
              (const std::string& nodeName, const std::size_t nodeID) -> void
     {
         auto ind = this->iNode_[nodeID];
 
-        INode::staticContrib(sched, nodeName, lookup_step, ind);
+        INode::staticContrib(sched, nodeName, lookup_step, ngroups, ind);
     });
 
     // Define Static Contributions to IBran Array.
