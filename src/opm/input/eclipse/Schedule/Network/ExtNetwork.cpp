@@ -19,6 +19,7 @@
 #include <algorithm>
 #include <iterator>
 #include <stdexcept>
+#include <fmt/format.h>
 
 #include <opm/input/eclipse/Schedule/Network/ExtNetwork.hpp>
 
@@ -30,11 +31,20 @@ ExtNetwork ExtNetwork::serializationTestObject() {
     object.m_branches = {Branch::serializationTestObject()};
     object.insert_indexed_node_names = {"test1", "test2"};
     object.m_nodes = {{"test3", Node::serializationTestObject()}};
+    object.m_is_standard_network = false;
     return object;
 }
 
 bool ExtNetwork::active() const {
     return !this->m_branches.empty() && !this->m_nodes.empty();
+}
+
+bool ExtNetwork::is_standard_network() const {
+    return this->m_is_standard_network;
+}
+
+void ExtNetwork::set_standard_network(bool is_standard_network) {
+    this->m_is_standard_network = is_standard_network;
 }
 
 bool ExtNetwork::operator==(const ExtNetwork& rhs) const {
@@ -86,24 +96,47 @@ void ExtNetwork::add_branch(Branch branch)
     this->m_branches.push_back( std::move(branch) );
 }
 
-void ExtNetwork::drop_branch(const std::string& uptree_node, const std::string& downtree_node) {
-    auto downtree_branches = this->downtree_branches( downtree_node );
-    if (downtree_branches.empty()) {
-        auto branch_iter = std::find_if(this->m_branches.begin(), this->m_branches.end(), [&uptree_node, &downtree_node](const Branch& b) { return (b.uptree_node() == uptree_node && b.downtree_node() == downtree_node); });
-        if (branch_iter != this->m_branches.end())
-            this->m_branches.erase( branch_iter );
+void ExtNetwork::add_or_replace_branch(Branch branch)
+{
+    const std::string& uptree_node = branch.uptree_node();
+    const std::string& downtree_node = branch.downtree_node();
 
-        this->m_nodes.erase( downtree_node );
-    } else {
-        for (const auto& branch : downtree_branches)
-            this->drop_branch(branch.uptree_node(), branch.downtree_node());
+    // Add any missing nodes
+    for (const std::string& nodename : { downtree_node, uptree_node }) {
+        if (!this->has_node(nodename)) {
+            this->m_nodes.insert_or_assign(nodename, Node{nodename});
+        }
+        if (!this->has_indexed_node_name(nodename)) {
+            this->add_indexed_node_name(nodename);
+        }
+    }
+
+    // Remove any existing branch uptree from downtree_node (gathering tree structure required)
+    // (If it is an existing branch that should be updated, it will be added again below)
+    auto uptree_link = this->uptree_branch( downtree_node );
+    if (uptree_link.has_value()){
+        const auto& old_uptree_node = uptree_link.value().uptree_node();
+        this->drop_branch(old_uptree_node, downtree_node);
+    }
+
+    this->m_branches.push_back( std::move(branch) );
+}
+
+void ExtNetwork::drop_branch(const std::string& uptree_node, const std::string& downtree_node) {
+    auto branch_iter = std::find_if(this->m_branches.begin(),
+                                    this->m_branches.end(),
+                                    [&uptree_node, &downtree_node](const Branch& b) { return (b.uptree_node() == uptree_node && b.downtree_node() == downtree_node); });
+    if (branch_iter != this->m_branches.end()) {
+        this->m_branches.erase(branch_iter);
     }
 }
 
 
 std::optional<Branch> ExtNetwork::uptree_branch(const std::string& node) const {
-    if (!this->has_node(node))
-        throw std::out_of_range("No such node: " + node);
+    if (!this->has_node(node)) {
+        auto msg = fmt::format("Requesting uptree branch of undefined node: {}", node);
+        throw std::out_of_range(msg);
+    }
 
     std::vector<Branch> branches;
     std::copy_if(this->m_branches.begin(), this->m_branches.end(), std::back_inserter(branches), [&node](const Branch& b) { return b.downtree_node() == node; });
@@ -113,13 +146,15 @@ std::optional<Branch> ExtNetwork::uptree_branch(const std::string& node) const {
     if (branches.size() == 1)
         return std::move(branches[0]);
 
-    throw std::logic_error("Bug - more than upstree branch for node: " + node);
+    throw std::logic_error("Bug - more than one uptree branch for node: " + node);
 }
 
 
 std::vector<Branch> ExtNetwork::downtree_branches(const std::string& node) const {
-    if (!this->has_node(node))
-        throw std::out_of_range("No such node: " + node);
+    if (!this->has_node(node)) {
+        auto msg = fmt::format("Requesting downtree branches of undefined node: {}", node);
+        throw std::out_of_range(msg);
+    }
 
     std::vector<Branch> branches;
     std::copy_if(this->m_branches.begin(), this->m_branches.end(), std::back_inserter(branches), [&node](const Branch& b) { return b.uptree_node() == node; });
@@ -161,11 +196,7 @@ void ExtNetwork::update_node(Node node)
     auto branch = std::find_if(this->m_branches.begin(), this->m_branches.end(),
                                [&name](const Branch& b) { return b.uptree_node() == name || b.downtree_node() == name;});
 
-    if (branch == this->m_branches.end())
-        throw std::invalid_argument("Node: " + name + " is not referenced by any branch and would be dangling.");
-
-
-    if (branch->downtree_node() == name) {
+    if (branch != this->m_branches.end() && branch->downtree_node() == name) {
         if (node.as_choke() && branch->vfp_table().has_value())
             throw std::invalid_argument("Node: " + name + " should serve as a choke => upstream branch can not have VFP table");
     }

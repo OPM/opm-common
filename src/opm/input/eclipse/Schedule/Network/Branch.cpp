@@ -65,6 +65,10 @@ const std::string& Branch::downtree_node() const {
     return this->m_downtree_node;
 }
 
+void Branch::set_uptree_node(const std::string& new_uptree_node) {
+    this->m_uptree_node = new_uptree_node;
+}
+
 bool Branch::operator==(const Branch& other) const {
     return this->m_downtree_node == other.m_downtree_node &&
            this->m_uptree_node == other.m_uptree_node &&

@@ -37,6 +37,7 @@
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
 #include <opm/input/eclipse/Units/Units.hpp>
 
+#include <opm/common/OpmLog/OpmLog.hpp>
 
 #include <algorithm>
 #include <cstddef>
@@ -233,6 +234,9 @@ double nodePressure(const Opm::Schedule&               sched,
             // find fixed pressure higher in the node tree
             bool fp_flag = false;
             auto node_name = nodeName;
+            auto upt_br_opt = network.uptree_branch(node_name);
+            if (!upt_br_opt.has_value()) return 0.0; // Node not belonging to the network right now
+
             auto upt_br = network.uptree_branch(node_name).value();
             while (!fp_flag) {
                 if (fixedPressureNode(sched, upt_br.uptree_node(), lookup_step)) {
@@ -243,8 +247,11 @@ double nodePressure(const Opm::Schedule&               sched,
                     if (network.uptree_branch(node_name).has_value()) {
                         upt_br = network.uptree_branch(node_name).value();
                     } else {
-                        auto msg = fmt::format("Node: {} has no uptree node with fixed pressure condition,  uppermost node is: {} ", nodeName, node_name);
-                        throw std::logic_error(msg);
+                        auto msg = fmt::format("Node: {} does not belong to the network at report step: {} - node pressure set to zero.",
+                                               node_name,
+                                               lookup_step+1);
+                        Opm::OpmLog::warning(msg);
+                        return 0.0;  // Subtree not belonging to the network right now
                     }
                 }
             }
@@ -407,7 +414,7 @@ int numberOfBranchesConnToNode(const Opm::Schedule& sched, const std::string& no
         noBranches = (network.uptree_branch(nodeName).has_value()) ? noBranches+1 : noBranches;
         return noBranches;
     } else {
-        auto msg = fmt::format("Actual node: {} has not been defined at report time: {} ", nodeName, lookup_step+1);
+        auto msg = fmt::format("Trying to find number of branches connected to undefined node: {} at report time: {} ", nodeName, lookup_step+1);
         throw std::logic_error(msg);
     }
 }
@@ -438,6 +445,7 @@ template <class INodeArray>
 void staticContrib(const Opm::Schedule&     sched,
                    const std::string&       nodeName,
                    const std::size_t        lookup_step,
+                   const std::size_t        ngroups,
                    INodeArray&              iNode)
 {
     //
@@ -446,6 +454,9 @@ void staticContrib(const Opm::Schedule&     sched,
     iNode[Ix::CumNoBranchesConnToNode] = cumNumberOfBranchesConnToNode(sched, nodeName, lookup_step);
     if (sched.hasGroup(nodeName, lookup_step)) {
         iNode[Ix::Group] = sched.getGroup(nodeName, lookup_step).insert_index();
+    }
+    if (nodeName == "FIELD") {
+        iNode[Ix::Group] = ngroups;
     }
     iNode[Ix::FixedPresNode] = (fixedPressureNode(sched, nodeName, lookup_step)) ? 1 : 0;
     // the meaning of the value of item [4] is currently not known, the constant value used cover all cases so far
@@ -486,7 +497,7 @@ void staticContrib(const Opm::Schedule&         sched,
     auto uptr_nd_res = findInVector<std::string>(nodeNames, branch.uptree_node());
     iBran[Ix::UpTreeNode] = (uptr_nd_res) ? uptr_nd_res.value() + 1 : 0 ;
 
-    iBran[Ix::VfpTableNo] = (branch.vfp_table().has_value()) ? branch.vfp_table().value() : 0;
+    iBran[Ix::VfpTableNo] = (branch.vfp_table().has_value()) ? branch.vfp_table().value() : 9999;
 }
 } // Ibran
 
@@ -670,13 +681,14 @@ captureDeclaredNetworkData(const Opm::EclipseState&             es,
     const auto& networkNodePtrs  =   ndNmPt;
     const auto& branchPtrs = sched[lookup_step].network().branches();
 
+    const std::size_t ngroups = inteHead[VI::NGMAXZ];
     // Define Static Contributions to INode Array.
-    nodeLoop(networkNodePtrs, [&sched, lookup_step, this]
+    nodeLoop(networkNodePtrs, [&sched, lookup_step, ngroups, this]
              (const std::string& nodeName, const std::size_t nodeID) -> void
     {
         auto ind = this->iNode_[nodeID];
 
-        INode::staticContrib(sched, nodeName, lookup_step, ind);
+        INode::staticContrib(sched, nodeName, lookup_step, ngroups, ind);
     });
 
     // Define Static Contributions to IBran Array.

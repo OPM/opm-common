@@ -168,7 +168,11 @@ namespace {
 
     void Schedule::handleBRANPROP(HandlerContext& handlerContext) {
         auto ext_network = this->snapshots.back().network.get();
-
+        if (ext_network.active() && ext_network.is_standard_network()) {
+            std::string msg = "Cannot have standard and extended network defined simultaneously.";
+            throw OpmInputError(msg, handlerContext.keyword.location());
+        }
+        ext_network.set_standard_network(false);
         for (const auto& record : handlerContext.keyword) {
             const auto& downtree_node = record.getItem<ParserKeywords::BRANPROP::DOWNTREE_NODE>().get<std::string>(0);
             const auto& uptree_node = record.getItem<ParserKeywords::BRANPROP::UPTREE_NODE>().get<std::string>(0);
@@ -181,9 +185,9 @@ namespace {
 
                 if (alq_eq == Network::Branch::AlqEQ::ALQ_INPUT) {
                     double alq_value = record.getItem<ParserKeywords::BRANPROP::ALQ>().get<double>(0);
-                    ext_network.add_branch(Network::Branch(downtree_node, uptree_node, vfp_table, alq_value));
+                    ext_network.add_or_replace_branch(Network::Branch(downtree_node, uptree_node, vfp_table, alq_value));
                 } else {
-                    ext_network.add_branch(Network::Branch(downtree_node, uptree_node, vfp_table, alq_eq));
+                    ext_network.add_or_replace_branch(Network::Branch(downtree_node, uptree_node, vfp_table, alq_eq));
                 }
             }
         }
@@ -843,6 +847,11 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
 
     void Schedule::handleGRUPNET(HandlerContext& handlerContext) {
         auto network = this->snapshots.back().network.get();
+        if (network.active() && !network.is_standard_network()) {
+            std::string msg = "Cannot have standard and extended network defined simultaneously.";
+            throw OpmInputError(msg, handlerContext.keyword.location());
+        }
+        network.set_standard_network(true);
         std::vector<Network::Node> nodes;
         for (const auto& record : handlerContext.keyword) {
              const std::string& groupNamePattern = record.getItem<ParserKeywords::GRUPNET::NAME>().getTrimmedString(0);
@@ -888,9 +897,9 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
                                 const auto alq_eq = Network::Branch::AlqEqfromString(record.getItem<ParserKeywords::GRUPNET::ALQ_SURFACE_DENSITY>().get<std::string>(0));
                                 if (alq_eq == Network::Branch::AlqEQ::ALQ_INPUT) {
                                     const double alq_value = record.getItem<ParserKeywords::GRUPNET::ALQ>().get<double>(0);
-                                    network.add_branch(Network::Branch(downtree_node, uptree_node, vfp_table, alq_value));
+                                    network.add_or_replace_branch(Network::Branch(downtree_node, uptree_node, vfp_table, alq_value));
                                 } else {
-                                     network.add_branch(Network::Branch(downtree_node, uptree_node, vfp_table, alq_eq));
+                                     network.add_or_replace_branch(Network::Branch(downtree_node, uptree_node, vfp_table, alq_eq));
                                 }
                             }
                             nodes.push_back(node);
@@ -1008,6 +1017,10 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
 
     void Schedule::handleNODEPROP(HandlerContext& handlerContext) {
         auto ext_network = this->snapshots.back().network.get();
+        if (ext_network.active() && ext_network.is_standard_network()) {
+            std::string msg = "Cannot have standard and extended network defined simultaneously.";
+            throw OpmInputError(msg, handlerContext.keyword.location());
+        }
 
         for (const auto& record : handlerContext.keyword) {
             const auto& name = record.getItem<ParserKeywords::NODEPROP::NAME>().get<std::string>(0);

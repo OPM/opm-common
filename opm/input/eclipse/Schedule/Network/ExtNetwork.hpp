@@ -37,7 +37,10 @@ class ExtNetwork {
 public:
     ExtNetwork() = default;
     bool active() const;
+    bool is_standard_network() const;
+    void set_standard_network(bool is_standard_network);
     void add_branch(Branch branch);
+    void add_or_replace_branch(Branch branch);
     void drop_branch(const std::string& uptree_node, const std::string& downtree_node);
     bool has_node(const std::string& name) const;
     void update_node(Node node);
@@ -58,12 +61,14 @@ public:
         serializer(m_branches);
         serializer(insert_indexed_node_names);
         serializer(m_nodes);
+        serializer(m_is_standard_network);
     }
 
 private:
     std::vector<Branch> m_branches;
     std::vector<std::string> insert_indexed_node_names;
     std::map<std::string, Node> m_nodes;
+    bool m_is_standard_network{false};
     bool has_indexed_node_name(const std::string& name) const;
     void add_indexed_node_name(std::string name);
 };
