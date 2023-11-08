@@ -96,7 +96,9 @@ NODEPROP
 /
 )";
 
-    BOOST_CHECK_THROW( make_schedule(deck_string), std::exception);
+    const auto& schedule = make_schedule(deck_string);
+    const auto& network = schedule[0].network.get();
+    BOOST_CHECK(network.has_node("B1X"));
 }
 
 
@@ -130,7 +132,9 @@ NODEPROP
 /
 )";
 
-    BOOST_CHECK_THROW( make_schedule(deck_string), std::exception);
+    const auto& schedule = make_schedule(deck_string);
+    const auto& network = schedule[0].network.get();
+    BOOST_CHECK(network.has_node("PLAT-AX"));
 }
 
 BOOST_AUTO_TEST_CASE(INVALID_VFP_NODE) {
@@ -264,9 +268,9 @@ BRANPROP
         BOOST_CHECK_EQUAL(B1_uptree->downtree_node(), "B1");
         BOOST_CHECK_EQUAL(B1_uptree->uptree_node(), "PLAT-A");
 
-        BOOST_CHECK_THROW( network.uptree_branch("C1"), std::out_of_range);
-        BOOST_CHECK_THROW( network.node("C1"), std::out_of_range);
-
+        BOOST_CHECK( network.has_node("C1") );
+        BOOST_CHECK( !network.uptree_branch("C1") );
+        
         BOOST_CHECK(network.active());
     }
 }

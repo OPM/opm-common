@@ -151,13 +151,12 @@ std::optional<Branch> ExtNetwork::uptree_branch(const std::string& node) const {
 
 
 std::vector<Branch> ExtNetwork::downtree_branches(const std::string& node) const {
-    std::vector<Branch> branches;
-
     if (!this->has_node(node)) {
         auto msg = fmt::format("Requesting downtree branches of undefined node: {}", node);
         throw std::out_of_range(msg);
     }
 
+    std::vector<Branch> branches;
     std::copy_if(this->m_branches.begin(), this->m_branches.end(), std::back_inserter(branches), [&node](const Branch& b) { return b.uptree_node() == node; });
     return branches;
 }
@@ -197,7 +196,7 @@ void ExtNetwork::update_node(Node node)
     auto branch = std::find_if(this->m_branches.begin(), this->m_branches.end(),
                                [&name](const Branch& b) { return b.uptree_node() == name || b.downtree_node() == name;});
 
-    if (branch->downtree_node() == name) {
+    if (branch != this->m_branches.end() && branch->downtree_node() == name) {
         if (node.as_choke() && branch->vfp_table().has_value())
             throw std::invalid_argument("Node: " + name + " should serve as a choke => upstream branch can not have VFP table");
     }
