@@ -61,23 +61,31 @@ void FIPConfig::parseRPT(const RPTConfig& rptConfig)
 
     for (const auto& mnemonic : rptConfig) {
         if (mnemonic.first == "FIP") {
-            parseFlags({FIELD, FIPNUM, FIP}, mnemonic.second);
+            parseFlags({static_cast<int>(OutputField::FIELD),
+                        static_cast<int>(OutputField::FIPNUM),
+                        static_cast<int>(OutputField::FIP)}, mnemonic.second);
         } else if (mnemonic.first == "FIPFOAM") {
-            parseFlags({FOAM_FIELD, FOAM_REGION}, mnemonic.second);
+            parseFlags({static_cast<int>(OutputField::FOAM_FIELD),
+                        static_cast<int>(OutputField::FOAM_REGION)}, mnemonic.second);
         } else if (mnemonic.first == "FIPPLY") {
-            parseFlags({POLYMER_FIELD, POLYMER_REGION}, mnemonic.second);
+            parseFlags({static_cast<int>(OutputField::POLYMER_FIELD),
+                        static_cast<int>(OutputField::POLYMER_REGION)}, mnemonic.second);
         } else if (mnemonic.first == "FIPSOL") {
-            parseFlags({SOLVENT_FIELD, SOLVENT_REGION}, mnemonic.second);
+            parseFlags({static_cast<int>(OutputField::SOLVENT_FIELD),
+                        static_cast<int>(OutputField::SOLVENT_REGION)}, mnemonic.second);
         } else if (mnemonic.first == "FIPSURF") {
-            parseFlags({SURF_FIELD, SURF_REGION}, mnemonic.second);
+            parseFlags({static_cast<int>(OutputField::SURF_FIELD),
+                        static_cast<int>(OutputField::SURF_REGION)}, mnemonic.second);
         } else if (mnemonic.first == "FIPHEAT" || mnemonic.first == "FIPTEMP") {
-            parseFlags({TEMPERATURE_FIELD, TEMPERATURE_REGION}, mnemonic.second);
+            parseFlags({static_cast<int>(OutputField::TEMPERATURE_FIELD),
+                        static_cast<int>(OutputField::TEMPERATURE_REGION)}, mnemonic.second);
         } else if (mnemonic.first == "FIPTR") {
-            parseFlags({TRACER_FIELD, TRACER_REGION}, mnemonic.second);
+            parseFlags({static_cast<int>(OutputField::TRACER_FIELD),
+                        static_cast<int>(OutputField::TRACER_REGION)}, mnemonic.second);
         } else if (mnemonic.first == "FIPRESV") {
-            m_flags.set(RESV);
+            m_flags.set(static_cast<int>(OutputField::RESV));
         } else if (mnemonic.first == "FIPVE") {
-            m_flags.set(VE);
+            m_flags.set(static_cast<int>(OutputField::VE));
         }
     }
 }
@@ -85,16 +93,16 @@ void FIPConfig::parseRPT(const RPTConfig& rptConfig)
 FIPConfig FIPConfig::serializationTestObject()
 {
     FIPConfig result;
-    result.m_flags.set(FIELD);
-    result.m_flags.set(FIP);
-    result.m_flags.set(RESV);
+    result.m_flags.set(static_cast<int>(OutputField::FIELD));
+    result.m_flags.set(static_cast<int>(OutputField::FIP));
+    result.m_flags.set(static_cast<int>(OutputField::RESV));
 
     return result;
 }
 
-bool FIPConfig::output(FIPOutputField field) const
+bool FIPConfig::output(OutputField field) const
 {
-    return m_flags.test(field);
+    return m_flags.test(static_cast<int>(field));
 }
 
 bool FIPConfig::operator==(const FIPConfig& rhs) const

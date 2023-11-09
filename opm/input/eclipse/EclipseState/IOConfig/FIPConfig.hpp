@@ -32,7 +32,7 @@ class RPTConfig;
 class FIPConfig {
 public:
     //! \brief Enumeration of FIP report outputs.
-    enum FIPOutputField {
+    enum class OutputField {
         FIELD              =  0, //!< Whole field
         FIPNUM             =  1, //!< FIPNUM regions
         FIP                =  2, //!< FIP defined regions
@@ -76,7 +76,7 @@ public:
     }
 
     //! \brief Query if FIP output is enabled for a given field.
-    bool output(FIPOutputField field) const;
+    bool output(OutputField field) const;
 
     //! \brief Comparison operator.
     bool operator==(const FIPConfig& rhs) const;
@@ -85,7 +85,8 @@ private:
     //! \brief Initialize flags based on mnemonics in a RPTConfig instance.
     void parseRPT(const RPTConfig& rptConfig);
 
-    std::bitset<NUM_FIP_REPORT> m_flags = {}; //!< Bitset holding enable status for fields
+    //! \brief Bitset holding enable status for fields
+    std::bitset<static_cast<int>(OutputField::NUM_FIP_REPORT)> m_flags = {};
 };
 
 } //namespace Opm

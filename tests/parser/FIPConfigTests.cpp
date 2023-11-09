@@ -43,23 +43,23 @@ RPTSOL
     const auto& keyword = SOLUTIONSection(deck).get<ParserKeywords::RPTSOL>().back();
     FIPConfig fipConfig(keyword);
 
-    BOOST_CHECK( fipConfig.output(FIPConfig::FIELD));
-    BOOST_CHECK(!fipConfig.output(FIPConfig::FIPNUM));
-    BOOST_CHECK(!fipConfig.output(FIPConfig::FIP));
-    BOOST_CHECK( fipConfig.output(FIPConfig::FOAM_FIELD));
-    BOOST_CHECK(!fipConfig.output(FIPConfig::FOAM_REGION));
-    BOOST_CHECK(!fipConfig.output(FIPConfig::POLYMER_FIELD));
-    BOOST_CHECK(!fipConfig.output(FIPConfig::POLYMER_REGION));
-    BOOST_CHECK( fipConfig.output(FIPConfig::RESV));
-    BOOST_CHECK(!fipConfig.output(FIPConfig::SOLVENT_FIELD));
-    BOOST_CHECK(!fipConfig.output(FIPConfig::SOLVENT_REGION));
-    BOOST_CHECK(!fipConfig.output(FIPConfig::SURF_FIELD));
-    BOOST_CHECK(!fipConfig.output(FIPConfig::SURF_REGION));
-    BOOST_CHECK(!fipConfig.output(FIPConfig::TEMPERATURE_FIELD));
-    BOOST_CHECK(!fipConfig.output(FIPConfig::TEMPERATURE_REGION));
-    BOOST_CHECK(!fipConfig.output(FIPConfig::TRACER_FIELD));
-    BOOST_CHECK(!fipConfig.output(FIPConfig::TRACER_REGION));
-    BOOST_CHECK(!fipConfig.output(FIPConfig::VE));
+    BOOST_CHECK( fipConfig.output(FIPConfig::OutputField::FIELD));
+    BOOST_CHECK(!fipConfig.output(FIPConfig::OutputField::FIPNUM));
+    BOOST_CHECK(!fipConfig.output(FIPConfig::OutputField::FIP));
+    BOOST_CHECK( fipConfig.output(FIPConfig::OutputField::FOAM_FIELD));
+    BOOST_CHECK(!fipConfig.output(FIPConfig::OutputField::FOAM_REGION));
+    BOOST_CHECK(!fipConfig.output(FIPConfig::OutputField::POLYMER_FIELD));
+    BOOST_CHECK(!fipConfig.output(FIPConfig::OutputField::POLYMER_REGION));
+    BOOST_CHECK( fipConfig.output(FIPConfig::OutputField::RESV));
+    BOOST_CHECK(!fipConfig.output(FIPConfig::OutputField::SOLVENT_FIELD));
+    BOOST_CHECK(!fipConfig.output(FIPConfig::OutputField::SOLVENT_REGION));
+    BOOST_CHECK(!fipConfig.output(FIPConfig::OutputField::SURF_FIELD));
+    BOOST_CHECK(!fipConfig.output(FIPConfig::OutputField::SURF_REGION));
+    BOOST_CHECK(!fipConfig.output(FIPConfig::OutputField::TEMPERATURE_FIELD));
+    BOOST_CHECK(!fipConfig.output(FIPConfig::OutputField::TEMPERATURE_REGION));
+    BOOST_CHECK(!fipConfig.output(FIPConfig::OutputField::TRACER_FIELD));
+    BOOST_CHECK(!fipConfig.output(FIPConfig::OutputField::TRACER_REGION));
+    BOOST_CHECK(!fipConfig.output(FIPConfig::OutputField::VE));
 }
 
 BOOST_AUTO_TEST_CASE(FieldFipnumFipFoamFieldFoamRegionResv)
@@ -75,23 +75,23 @@ RPTSOL
     const auto& keyword = SOLUTIONSection(deck).get<ParserKeywords::RPTSOL>().back();
     FIPConfig fipConfig(keyword);
 
-    BOOST_CHECK( fipConfig.output(FIPConfig::FIELD));
-    BOOST_CHECK( fipConfig.output(FIPConfig::FIPNUM));
-    BOOST_CHECK( fipConfig.output(FIPConfig::FIP));
-    BOOST_CHECK( fipConfig.output(FIPConfig::FOAM_FIELD));
-    BOOST_CHECK( fipConfig.output(FIPConfig::FOAM_REGION));
-    BOOST_CHECK(!fipConfig.output(FIPConfig::POLYMER_FIELD));
-    BOOST_CHECK(!fipConfig.output(FIPConfig::POLYMER_REGION));
-    BOOST_CHECK(!fipConfig.output(FIPConfig::RESV));
-    BOOST_CHECK(!fipConfig.output(FIPConfig::SOLVENT_FIELD));
-    BOOST_CHECK(!fipConfig.output(FIPConfig::SOLVENT_REGION));
-    BOOST_CHECK(!fipConfig.output(FIPConfig::SURF_FIELD));
-    BOOST_CHECK(!fipConfig.output(FIPConfig::SURF_REGION));
-    BOOST_CHECK(!fipConfig.output(FIPConfig::TEMPERATURE_FIELD));
-    BOOST_CHECK(!fipConfig.output(FIPConfig::TEMPERATURE_REGION));
-    BOOST_CHECK(!fipConfig.output(FIPConfig::TRACER_FIELD));
-    BOOST_CHECK(!fipConfig.output(FIPConfig::TRACER_REGION));
-    BOOST_CHECK( fipConfig.output(FIPConfig::VE));
+    BOOST_CHECK( fipConfig.output(FIPConfig::OutputField::FIELD));
+    BOOST_CHECK( fipConfig.output(FIPConfig::OutputField::FIPNUM));
+    BOOST_CHECK( fipConfig.output(FIPConfig::OutputField::FIP));
+    BOOST_CHECK( fipConfig.output(FIPConfig::OutputField::FOAM_FIELD));
+    BOOST_CHECK( fipConfig.output(FIPConfig::OutputField::FOAM_REGION));
+    BOOST_CHECK(!fipConfig.output(FIPConfig::OutputField::POLYMER_FIELD));
+    BOOST_CHECK(!fipConfig.output(FIPConfig::OutputField::POLYMER_REGION));
+    BOOST_CHECK(!fipConfig.output(FIPConfig::OutputField::RESV));
+    BOOST_CHECK(!fipConfig.output(FIPConfig::OutputField::SOLVENT_FIELD));
+    BOOST_CHECK(!fipConfig.output(FIPConfig::OutputField::SOLVENT_REGION));
+    BOOST_CHECK(!fipConfig.output(FIPConfig::OutputField::SURF_FIELD));
+    BOOST_CHECK(!fipConfig.output(FIPConfig::OutputField::SURF_REGION));
+    BOOST_CHECK(!fipConfig.output(FIPConfig::OutputField::TEMPERATURE_FIELD));
+    BOOST_CHECK(!fipConfig.output(FIPConfig::OutputField::TEMPERATURE_REGION));
+    BOOST_CHECK(!fipConfig.output(FIPConfig::OutputField::TRACER_FIELD));
+    BOOST_CHECK(!fipConfig.output(FIPConfig::OutputField::TRACER_REGION));
+    BOOST_CHECK( fipConfig.output(FIPConfig::OutputField::VE));
 }
 
 BOOST_AUTO_TEST_CASE(PolymerFieldPolymerRegion)
@@ -107,23 +107,23 @@ RPTSOL
     const auto& keyword = SOLUTIONSection(deck).get<ParserKeywords::RPTSOL>().back();
     FIPConfig fipConfig(keyword);
 
-    BOOST_CHECK(!fipConfig.output(FIPConfig::FIELD));
-    BOOST_CHECK(!fipConfig.output(FIPConfig::FIPNUM));
-    BOOST_CHECK(!fipConfig.output(FIPConfig::FIP));
-    BOOST_CHECK(!fipConfig.output(FIPConfig::FOAM_FIELD));
-    BOOST_CHECK(!fipConfig.output(FIPConfig::FOAM_REGION));
-    BOOST_CHECK( fipConfig.output(FIPConfig::POLYMER_FIELD));
-    BOOST_CHECK( fipConfig.output(FIPConfig::POLYMER_REGION));
-    BOOST_CHECK(!fipConfig.output(FIPConfig::RESV));
-    BOOST_CHECK(!fipConfig.output(FIPConfig::SOLVENT_FIELD));
-    BOOST_CHECK(!fipConfig.output(FIPConfig::SOLVENT_REGION));
-    BOOST_CHECK(!fipConfig.output(FIPConfig::SURF_FIELD));
-    BOOST_CHECK(!fipConfig.output(FIPConfig::SURF_REGION));
-    BOOST_CHECK(!fipConfig.output(FIPConfig::TEMPERATURE_FIELD));
-    BOOST_CHECK(!fipConfig.output(FIPConfig::TEMPERATURE_REGION));
-    BOOST_CHECK(!fipConfig.output(FIPConfig::TRACER_FIELD));
-    BOOST_CHECK(!fipConfig.output(FIPConfig::TRACER_REGION));
-    BOOST_CHECK(!fipConfig.output(FIPConfig::VE));
+    BOOST_CHECK(!fipConfig.output(FIPConfig::OutputField::FIELD));
+    BOOST_CHECK(!fipConfig.output(FIPConfig::OutputField::FIPNUM));
+    BOOST_CHECK(!fipConfig.output(FIPConfig::OutputField::FIP));
+    BOOST_CHECK(!fipConfig.output(FIPConfig::OutputField::FOAM_FIELD));
+    BOOST_CHECK(!fipConfig.output(FIPConfig::OutputField::FOAM_REGION));
+    BOOST_CHECK( fipConfig.output(FIPConfig::OutputField::POLYMER_FIELD));
+    BOOST_CHECK( fipConfig.output(FIPConfig::OutputField::POLYMER_REGION));
+    BOOST_CHECK(!fipConfig.output(FIPConfig::OutputField::RESV));
+    BOOST_CHECK(!fipConfig.output(FIPConfig::OutputField::SOLVENT_FIELD));
+    BOOST_CHECK(!fipConfig.output(FIPConfig::OutputField::SOLVENT_REGION));
+    BOOST_CHECK(!fipConfig.output(FIPConfig::OutputField::SURF_FIELD));
+    BOOST_CHECK(!fipConfig.output(FIPConfig::OutputField::SURF_REGION));
+    BOOST_CHECK(!fipConfig.output(FIPConfig::OutputField::TEMPERATURE_FIELD));
+    BOOST_CHECK(!fipConfig.output(FIPConfig::OutputField::TEMPERATURE_REGION));
+    BOOST_CHECK(!fipConfig.output(FIPConfig::OutputField::TRACER_FIELD));
+    BOOST_CHECK(!fipConfig.output(FIPConfig::OutputField::TRACER_REGION));
+    BOOST_CHECK(!fipConfig.output(FIPConfig::OutputField::VE));
 }
 
 BOOST_AUTO_TEST_CASE(SurfFieldSurfRegion)
@@ -139,23 +139,23 @@ RPTSOL
     const auto& keyword = SOLUTIONSection(deck).get<ParserKeywords::RPTSOL>().back();
     FIPConfig fipConfig(keyword);
 
-    BOOST_CHECK(!fipConfig.output(FIPConfig::FIELD));
-    BOOST_CHECK(!fipConfig.output(FIPConfig::FIPNUM));
-    BOOST_CHECK(!fipConfig.output(FIPConfig::FIP));
-    BOOST_CHECK(!fipConfig.output(FIPConfig::FOAM_FIELD));
-    BOOST_CHECK(!fipConfig.output(FIPConfig::FOAM_REGION));
-    BOOST_CHECK(!fipConfig.output(FIPConfig::POLYMER_FIELD));
-    BOOST_CHECK(!fipConfig.output(FIPConfig::POLYMER_REGION));
-    BOOST_CHECK(!fipConfig.output(FIPConfig::RESV));
-    BOOST_CHECK(!fipConfig.output(FIPConfig::SOLVENT_FIELD));
-    BOOST_CHECK(!fipConfig.output(FIPConfig::SOLVENT_REGION));
-    BOOST_CHECK( fipConfig.output(FIPConfig::SURF_FIELD));
-    BOOST_CHECK( fipConfig.output(FIPConfig::SURF_REGION));
-    BOOST_CHECK(!fipConfig.output(FIPConfig::TEMPERATURE_FIELD));
-    BOOST_CHECK(!fipConfig.output(FIPConfig::TEMPERATURE_REGION));
-    BOOST_CHECK(!fipConfig.output(FIPConfig::TRACER_FIELD));
-    BOOST_CHECK(!fipConfig.output(FIPConfig::TRACER_REGION));
-    BOOST_CHECK(!fipConfig.output(FIPConfig::VE));
+    BOOST_CHECK(!fipConfig.output(FIPConfig::OutputField::FIELD));
+    BOOST_CHECK(!fipConfig.output(FIPConfig::OutputField::FIPNUM));
+    BOOST_CHECK(!fipConfig.output(FIPConfig::OutputField::FIP));
+    BOOST_CHECK(!fipConfig.output(FIPConfig::OutputField::FOAM_FIELD));
+    BOOST_CHECK(!fipConfig.output(FIPConfig::OutputField::FOAM_REGION));
+    BOOST_CHECK(!fipConfig.output(FIPConfig::OutputField::POLYMER_FIELD));
+    BOOST_CHECK(!fipConfig.output(FIPConfig::OutputField::POLYMER_REGION));
+    BOOST_CHECK(!fipConfig.output(FIPConfig::OutputField::RESV));
+    BOOST_CHECK(!fipConfig.output(FIPConfig::OutputField::SOLVENT_FIELD));
+    BOOST_CHECK(!fipConfig.output(FIPConfig::OutputField::SOLVENT_REGION));
+    BOOST_CHECK( fipConfig.output(FIPConfig::OutputField::SURF_FIELD));
+    BOOST_CHECK( fipConfig.output(FIPConfig::OutputField::SURF_REGION));
+    BOOST_CHECK(!fipConfig.output(FIPConfig::OutputField::TEMPERATURE_FIELD));
+    BOOST_CHECK(!fipConfig.output(FIPConfig::OutputField::TEMPERATURE_REGION));
+    BOOST_CHECK(!fipConfig.output(FIPConfig::OutputField::TRACER_FIELD));
+    BOOST_CHECK(!fipConfig.output(FIPConfig::OutputField::TRACER_REGION));
+    BOOST_CHECK(!fipConfig.output(FIPConfig::OutputField::VE));
 }
 
 BOOST_AUTO_TEST_CASE(HeatFieldHeatRegion)
@@ -171,23 +171,23 @@ RPTSOL
     const auto& keyword = SOLUTIONSection(deck).get<ParserKeywords::RPTSOL>().back();
     FIPConfig fipConfig(keyword);
 
-    BOOST_CHECK(!fipConfig.output(FIPConfig::FIELD));
-    BOOST_CHECK(!fipConfig.output(FIPConfig::FIPNUM));
-    BOOST_CHECK(!fipConfig.output(FIPConfig::FIP));
-    BOOST_CHECK(!fipConfig.output(FIPConfig::FOAM_FIELD));
-    BOOST_CHECK(!fipConfig.output(FIPConfig::FOAM_REGION));
-    BOOST_CHECK(!fipConfig.output(FIPConfig::POLYMER_FIELD));
-    BOOST_CHECK(!fipConfig.output(FIPConfig::POLYMER_REGION));
-    BOOST_CHECK(!fipConfig.output(FIPConfig::RESV));
-    BOOST_CHECK(!fipConfig.output(FIPConfig::SOLVENT_FIELD));
-    BOOST_CHECK(!fipConfig.output(FIPConfig::SOLVENT_REGION));
-    BOOST_CHECK(!fipConfig.output(FIPConfig::SURF_FIELD));
-    BOOST_CHECK(!fipConfig.output(FIPConfig::SURF_REGION));
-    BOOST_CHECK( fipConfig.output(FIPConfig::TEMPERATURE_FIELD));
-    BOOST_CHECK( fipConfig.output(FIPConfig::TEMPERATURE_REGION));
-    BOOST_CHECK(!fipConfig.output(FIPConfig::TRACER_FIELD));
-    BOOST_CHECK(!fipConfig.output(FIPConfig::TRACER_REGION));
-    BOOST_CHECK(!fipConfig.output(FIPConfig::VE));
+    BOOST_CHECK(!fipConfig.output(FIPConfig::OutputField::FIELD));
+    BOOST_CHECK(!fipConfig.output(FIPConfig::OutputField::FIPNUM));
+    BOOST_CHECK(!fipConfig.output(FIPConfig::OutputField::FIP));
+    BOOST_CHECK(!fipConfig.output(FIPConfig::OutputField::FOAM_FIELD));
+    BOOST_CHECK(!fipConfig.output(FIPConfig::OutputField::FOAM_REGION));
+    BOOST_CHECK(!fipConfig.output(FIPConfig::OutputField::POLYMER_FIELD));
+    BOOST_CHECK(!fipConfig.output(FIPConfig::OutputField::POLYMER_REGION));
+    BOOST_CHECK(!fipConfig.output(FIPConfig::OutputField::RESV));
+    BOOST_CHECK(!fipConfig.output(FIPConfig::OutputField::SOLVENT_FIELD));
+    BOOST_CHECK(!fipConfig.output(FIPConfig::OutputField::SOLVENT_REGION));
+    BOOST_CHECK(!fipConfig.output(FIPConfig::OutputField::SURF_FIELD));
+    BOOST_CHECK(!fipConfig.output(FIPConfig::OutputField::SURF_REGION));
+    BOOST_CHECK( fipConfig.output(FIPConfig::OutputField::TEMPERATURE_FIELD));
+    BOOST_CHECK( fipConfig.output(FIPConfig::OutputField::TEMPERATURE_REGION));
+    BOOST_CHECK(!fipConfig.output(FIPConfig::OutputField::TRACER_FIELD));
+    BOOST_CHECK(!fipConfig.output(FIPConfig::OutputField::TRACER_REGION));
+    BOOST_CHECK(!fipConfig.output(FIPConfig::OutputField::VE));
 }
 
 BOOST_AUTO_TEST_CASE(TemperatureFieldTemperatureRegion)
@@ -203,23 +203,23 @@ RPTSOL
     const auto& keyword = SOLUTIONSection(deck).get<ParserKeywords::RPTSOL>().back();
     FIPConfig fipConfig(keyword);
 
-    BOOST_CHECK(!fipConfig.output(FIPConfig::FIELD));
-    BOOST_CHECK(!fipConfig.output(FIPConfig::FIPNUM));
-    BOOST_CHECK(!fipConfig.output(FIPConfig::FIP));
-    BOOST_CHECK(!fipConfig.output(FIPConfig::FOAM_FIELD));
-    BOOST_CHECK(!fipConfig.output(FIPConfig::FOAM_REGION));
-    BOOST_CHECK(!fipConfig.output(FIPConfig::POLYMER_FIELD));
-    BOOST_CHECK(!fipConfig.output(FIPConfig::POLYMER_REGION));
-    BOOST_CHECK(!fipConfig.output(FIPConfig::RESV));
-    BOOST_CHECK(!fipConfig.output(FIPConfig::SOLVENT_FIELD));
-    BOOST_CHECK(!fipConfig.output(FIPConfig::SOLVENT_REGION));
-    BOOST_CHECK(!fipConfig.output(FIPConfig::SURF_FIELD));
-    BOOST_CHECK(!fipConfig.output(FIPConfig::SURF_REGION));
-    BOOST_CHECK( fipConfig.output(FIPConfig::TEMPERATURE_FIELD));
-    BOOST_CHECK( fipConfig.output(FIPConfig::TEMPERATURE_REGION));
-    BOOST_CHECK(!fipConfig.output(FIPConfig::TRACER_FIELD));
-    BOOST_CHECK(!fipConfig.output(FIPConfig::TRACER_REGION));
-    BOOST_CHECK(!fipConfig.output(FIPConfig::VE));
+    BOOST_CHECK(!fipConfig.output(FIPConfig::OutputField::FIELD));
+    BOOST_CHECK(!fipConfig.output(FIPConfig::OutputField::FIPNUM));
+    BOOST_CHECK(!fipConfig.output(FIPConfig::OutputField::FIP));
+    BOOST_CHECK(!fipConfig.output(FIPConfig::OutputField::FOAM_FIELD));
+    BOOST_CHECK(!fipConfig.output(FIPConfig::OutputField::FOAM_REGION));
+    BOOST_CHECK(!fipConfig.output(FIPConfig::OutputField::POLYMER_FIELD));
+    BOOST_CHECK(!fipConfig.output(FIPConfig::OutputField::POLYMER_REGION));
+    BOOST_CHECK(!fipConfig.output(FIPConfig::OutputField::RESV));
+    BOOST_CHECK(!fipConfig.output(FIPConfig::OutputField::SOLVENT_FIELD));
+    BOOST_CHECK(!fipConfig.output(FIPConfig::OutputField::SOLVENT_REGION));
+    BOOST_CHECK(!fipConfig.output(FIPConfig::OutputField::SURF_FIELD));
+    BOOST_CHECK(!fipConfig.output(FIPConfig::OutputField::SURF_REGION));
+    BOOST_CHECK( fipConfig.output(FIPConfig::OutputField::TEMPERATURE_FIELD));
+    BOOST_CHECK( fipConfig.output(FIPConfig::OutputField::TEMPERATURE_REGION));
+    BOOST_CHECK(!fipConfig.output(FIPConfig::OutputField::TRACER_FIELD));
+    BOOST_CHECK(!fipConfig.output(FIPConfig::OutputField::TRACER_REGION));
+    BOOST_CHECK(!fipConfig.output(FIPConfig::OutputField::VE));
 }
 
 BOOST_AUTO_TEST_CASE(TracerFieldTracerRegion)
@@ -235,21 +235,21 @@ RPTSOL
     const auto& keyword = SOLUTIONSection(deck).get<ParserKeywords::RPTSOL>().back();
     FIPConfig fipConfig(keyword);
 
-    BOOST_CHECK(!fipConfig.output(FIPConfig::FIELD));
-    BOOST_CHECK(!fipConfig.output(FIPConfig::FIPNUM));
-    BOOST_CHECK(!fipConfig.output(FIPConfig::FIP));
-    BOOST_CHECK(!fipConfig.output(FIPConfig::FOAM_FIELD));
-    BOOST_CHECK(!fipConfig.output(FIPConfig::FOAM_REGION));
-    BOOST_CHECK(!fipConfig.output(FIPConfig::POLYMER_FIELD));
-    BOOST_CHECK(!fipConfig.output(FIPConfig::POLYMER_REGION));
-    BOOST_CHECK(!fipConfig.output(FIPConfig::RESV));
-    BOOST_CHECK(!fipConfig.output(FIPConfig::SOLVENT_FIELD));
-    BOOST_CHECK(!fipConfig.output(FIPConfig::SOLVENT_REGION));
-    BOOST_CHECK(!fipConfig.output(FIPConfig::SURF_FIELD));
-    BOOST_CHECK(!fipConfig.output(FIPConfig::SURF_REGION));
-    BOOST_CHECK(!fipConfig.output(FIPConfig::TEMPERATURE_FIELD));
-    BOOST_CHECK(!fipConfig.output(FIPConfig::TEMPERATURE_REGION));
-    BOOST_CHECK( fipConfig.output(FIPConfig::TRACER_FIELD));
-    BOOST_CHECK( fipConfig.output(FIPConfig::TRACER_REGION));
-    BOOST_CHECK(!fipConfig.output(FIPConfig::VE));
+    BOOST_CHECK(!fipConfig.output(FIPConfig::OutputField::FIELD));
+    BOOST_CHECK(!fipConfig.output(FIPConfig::OutputField::FIPNUM));
+    BOOST_CHECK(!fipConfig.output(FIPConfig::OutputField::FIP));
+    BOOST_CHECK(!fipConfig.output(FIPConfig::OutputField::FOAM_FIELD));
+    BOOST_CHECK(!fipConfig.output(FIPConfig::OutputField::FOAM_REGION));
+    BOOST_CHECK(!fipConfig.output(FIPConfig::OutputField::POLYMER_FIELD));
+    BOOST_CHECK(!fipConfig.output(FIPConfig::OutputField::POLYMER_REGION));
+    BOOST_CHECK(!fipConfig.output(FIPConfig::OutputField::RESV));
+    BOOST_CHECK(!fipConfig.output(FIPConfig::OutputField::SOLVENT_FIELD));
+    BOOST_CHECK(!fipConfig.output(FIPConfig::OutputField::SOLVENT_REGION));
+    BOOST_CHECK(!fipConfig.output(FIPConfig::OutputField::SURF_FIELD));
+    BOOST_CHECK(!fipConfig.output(FIPConfig::OutputField::SURF_REGION));
+    BOOST_CHECK(!fipConfig.output(FIPConfig::OutputField::TEMPERATURE_FIELD));
+    BOOST_CHECK(!fipConfig.output(FIPConfig::OutputField::TEMPERATURE_REGION));
+    BOOST_CHECK( fipConfig.output(FIPConfig::OutputField::TRACER_FIELD));
+    BOOST_CHECK( fipConfig.output(FIPConfig::OutputField::TRACER_REGION));
+    BOOST_CHECK(!fipConfig.output(FIPConfig::OutputField::VE));
 }
