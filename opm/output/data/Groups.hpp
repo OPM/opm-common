@@ -172,37 +172,42 @@ namespace Opm { namespace data {
 
     struct NodeData {
         double pressure { 0.0 };
+        double converged_pressure { 0.0 };
 
         template <class MessageBufferType>
         void write(MessageBufferType& buffer) const
         {
             buffer.write(this->pressure);
+            buffer.write(this->converged_pressure);
         }
 
         template <class MessageBufferType>
         void read(MessageBufferType& buffer)
         {
             buffer.read(this->pressure);
+            buffer.read(this->converged_pressure);
         }
 
         bool operator==(const NodeData& other) const
         {
-            return this->pressure == other.pressure;
+            return this->pressure == other.pressure && this->converged_pressure == other.converged_pressure;
         }
 
         void init_json(Json::JsonObject& json_data) const {
             json_data.add_item("pressure", this->pressure);
+            json_data.add_item("converged_pressure", this->converged_pressure);
         }
 
         template<class Serializer>
         void serializeOp(Serializer& serializer)
         {
             serializer(pressure);
+            serializer(converged_pressure);
         }
 
         static NodeData serializationTestObject()
         {
-            return NodeData{10.0};
+            return NodeData{10.0, 10.0};
         }
     };
 

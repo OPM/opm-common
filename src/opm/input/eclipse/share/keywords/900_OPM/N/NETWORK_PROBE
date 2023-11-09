@@ -1,0 +1,20 @@
+{
+  "name": "NETWORK_PROBE",
+  "sections": [
+    "SUMMARY"
+  ],
+  "comment": "Network output",
+  "deck_names": [
+    "NPR",
+    "GNETPR"
+  ],
+  "deck_name_regex": "NU.+",
+  "size": 1,
+  "items": [
+    {
+      "name": "NETWORK_NODES",
+      "size_type": "ALL",
+      "value_type": "STRING"
+    }
+  ]
+}

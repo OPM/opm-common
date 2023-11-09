@@ -1390,6 +1390,16 @@ inline quantity node_pressure(const fn_args& args)
     return { nodePos->second.pressure, measure::pressure };
 }
 
+inline quantity converged_node_pressure(const fn_args& args)
+{
+    auto nodePos = args.grp_nwrk.nodeData.find(args.group_name);
+    if (nodePos == args.grp_nwrk.nodeData.end()) {
+        return { 0.0, measure::pressure };
+    }
+
+    return { nodePos->second.converged_pressure, measure::pressure };
+}
+
 template <Opm::data::WellBlockAvgPress::Quantity wbp_quantity>
 quantity well_block_average_pressure(const fn_args& args)
 {
@@ -2114,6 +2124,8 @@ static const auto funs = std::unordered_map<std::string, ofun> {
     { "GVPGR", group_guiderate<producer, Opm::data::GuideRateValue::Item::ResV> },
 
     { "GPR", node_pressure },
+    { "NPR", converged_node_pressure },
+    { "GNETPR", converged_node_pressure },
 
     { "GWPT", mul( rate< rt::wat, producer >, duration ) },
     { "GOPT", mul( rate< rt::oil, producer >, duration ) },

@@ -397,7 +397,7 @@ struct SummaryConfigContext {
     bool is_node_keyword(const std::string& keyword)
     {
         static const auto nodekw = keyword_set {
-            "GPR", "GPRG", "GPRW",
+            "GPR", "GPRG", "GPRW", "NPR", "GNETPR"
         };
 
         return is_in_set(nodekw, keyword);
@@ -427,6 +427,14 @@ struct SummaryConfigContext {
         for (auto step = 0*nstep; step < nstep; ++step) {
             const auto& nodes = sched[step].network.get().node_names();
             names.insert(nodes.begin(), nodes.end());
+            // Also insert wells belonging to groups in the network to be able to report network-computed THPs
+            for (const auto& node : nodes) {
+                if (!sched.hasGroup(node, step)) continue;
+                const auto& group = sched.getGroup(node, step);
+                for (const std::string& wellname : group.wells()) {
+                    names.insert(wellname);
+                }
+            }            
         }
 
         node_names.assign(names.begin(), names.end());
@@ -1559,6 +1567,7 @@ SummaryConfigNode::Category parseKeywordCategory(const std::string& keyword)
     case 'R': return Cat::Region;
     case 'B': return Cat::Block;
     case 'S': return Cat::Segment;
+    case 'N': return Cat::Node;
     }
 
     // TCPU, MLINEARS, NEWTON, &c
