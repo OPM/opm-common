@@ -103,62 +103,6 @@ namespace Opm {
             [](const double tot_cf, const auto& conn) { return tot_cf + conn.CF(); });
     }
 
-    double WDFAC::getDFactor(const Connection& connection, double mu, double rho, double phi) const
-    {
-        switch (this->m_type) {
-        case WDFacType::NONE:
-            return 0.0;
-
-        case WDFacType::DFACTOR:
-        {
-            if (m_total_cf < 0.0) {
-                throw std::invalid_argument { "Total connection factor is not set" };
-            }
-
-            return this->m_d * this->m_total_cf / connection.CF();
-        }
-
-        case WDFacType::DAKEMODEL:
-        {
-            const double Kh = connection.Kh();
-            const double Ke = connection.Ke();
-            const double h = Kh / Ke;
-            const double rw = connection.rw();
-
-            const auto k_md = unit::convert::to(Ke, prefix::milli*unit::darcy);
-            double beta = m_corr.coeff_a * (std::pow(k_md, m_corr.exponent_b) * std::pow(phi, m_corr.exponent_c));
-            double specific_gravity = rho / 1.225; // divide by density of air at standard conditions. 
-            return beta * specific_gravity * Ke / (h * mu * rw );
-        }
-        break;
-
-        case WDFacType::CON_DFACTOR:
-        {
-            const double d = connection.dFactor();
-
-            // If a negative D-factor is set in COMPDAT, then the individual
-            // connection D-factor should be used directly.
-            if (d < 0.0) {
-                return -d;
-            }
-
-            if (this->m_total_cf < 0.0) {
-                throw std::invalid_argument { "Total connection factor is not set" };
-            }
-
-            // If a positive D-factor is set in COMPDAT, then the connection
-            // D-factor is treated as a well-level D-factor and thus scaled
-            // with the connection transmissibility factor.
-            return d * m_total_cf / connection.CF();
-        }
-
-        default:
-            break;
-        }
-
-        return 0.0;
-    }
-
     bool WDFAC::useDFactor() const
     {
         return m_type != WDFacType::NONE;
@@ -171,5 +115,47 @@ namespace Opm {
             && (this->m_total_cf == other.m_total_cf)
             && (this->m_corr == other.m_corr)
             ;
+    }
+
+    double WDFAC::connectionLevelDFactor(const Connection& conn) const
+    {
+        const double d = conn.dFactor();
+
+        if (d < 0.0) {
+            // Negative D-factor values in COMPDAT should be used directly
+            // as connection-level D-factors.
+
+            return -d;
+        }
+
+        // Positive D-factor values in COMPDAT are treated as well-level
+        // values and scaled with the CTF for translation to connection
+        // level.
+        return this->scaledWellLevelDFactor(d, conn);
+    }
+
+    double WDFAC::dakeModelDFactor(const double      rhoGS,
+                                   const double      gas_visc,
+                                   const Connection& conn) const
+    {
+        using namespace unit;
+
+        // Specific gravity of gas relative to air at standard conditions.
+        constexpr auto rho_air = 1.225*kilogram / cubic(meter);
+        const auto specific_gravity = rhoGS / rho_air;
+
+        return conn.ctfProperties().static_dfac_corr_coeff * specific_gravity / gas_visc;
+    }
+
+    double WDFAC::scaledWellLevelDFactor(const double      dfac,
+                                         const Connection& conn) const
+    {
+        if (this->m_total_cf < 0.0) {
+            throw std::invalid_argument {
+                "Total well-level connection factor is not set"
+            };
+        }
+
+        return dfac * this->m_total_cf / conn.CF();
     }
 }

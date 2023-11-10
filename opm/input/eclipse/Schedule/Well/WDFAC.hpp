@@ -20,6 +20,10 @@
 #ifndef WDFAC_HPP_HEADER_INCLUDED
 #define WDFAC_HPP_HEADER_INCLUDED
 
+#include <stdexcept>
+
+#include <fmt/format.h>
+
 namespace Opm {
     class Connection;
     class DeckRecord;
@@ -104,8 +108,6 @@ namespace Opm {
         /// Serialisation test object
         static WDFAC serializationTestObject();
 
-        double getDFactor(const Connection& connection, double mu, double rho, double phi) const;
-
         /// Configure D-factor calculation from well-level D-factor
         /// description (keyword 'WDFAC')
         ///
@@ -136,6 +138,55 @@ namespace Opm {
         /// \param[in] connections Connection set as defined by keyword
         ///   COMPDAT.
         void updateTotalCF(const WellConnections& connections);
+
+        /// Retrieve currently configured D-factor for single connection
+        ///
+        /// \tparam DensityCallback Callback type for evaluating the gas
+        ///   component mass density at surface conditions.  Expected to
+        ///   provide a function call operator taking no arguments and
+        ///   returning a single scalar convertible to \c double.
+        ///
+        /// \tparam GasViscCallback Callback type for evaluating the gas
+        ///   phase viscosity at reservoir conditions.  Expected to
+        ///   provide a function call operator taking no arguments and
+        ///   returning a single scalar convertible to \c double.
+        ///
+        /// \param[in] rhoGS Callback function for evaluating the gas
+        ///   component mass density at surface conditions.  Invoked only if
+        ///   the D-factor is configured to use the Dake model correlation.
+        ///
+        /// \param[in] gas_visc Callback function for evaluating the gas
+        ///   phase viscosity at reservoir conditions.  Invoked only if the
+        ///   D-factor is configured to use the Dake model correlation.
+        ///
+        /// \param[in] conn Reservoir connection for which to retrieve the
+        ///   D-factor.
+        ///
+        /// \return D-factor for connection \p conn.
+        template <typename DensityCallback, typename GasViscCallback>
+        double getDFactor(DensityCallback&& rhoGS,
+                          GasViscCallback&& gas_visc,
+                          const Connection& conn) const
+        {
+            switch (this->m_type) {
+            case WDFacType::NONE:
+                return 0.0;
+
+            case WDFacType::DFACTOR:
+                return this->scaledWellLevelDFactor(this->m_d, conn);
+
+            case WDFacType::DAKEMODEL:
+                return this->dakeModelDFactor(rhoGS(), gas_visc(), conn);
+
+            case WDFacType::CON_DFACTOR:
+                return this->connectionLevelDFactor(conn);
+            }
+
+            throw std::runtime_error {
+                fmt::format("Unknown D-Factor model '{}'",
+                            static_cast<int>(this->m_type))
+            };
+        }
 
         /// Retrieve current D-factor correlation model coefficients.
         const Correlation& getDFactorCorrelationCoefficients() const
@@ -203,6 +254,42 @@ namespace Opm {
 
         /// Coefficients for Dake's correlation model.
         Correlation m_corr{};
+
+        /// Retrieve connection-level D-Factor from COMPDAT entries
+        ///
+        /// Possibly translated from well-level values.
+        ///
+        /// \param[in] conn Reservoir connection for which to retrieve the
+        ///   D-factor.
+        ///
+        /// \return Connection-level D-factor.
+        double connectionLevelDFactor(const Connection& conn) const;
+
+        /// Compute Dake model correlation value
+        ///
+        /// \param[in] rhoGS Gas component mass density at surface
+        ///   conditions.
+        ///
+        /// \param[in] gas_visc Gas phase viscosity at reservoir conditions.
+        ///
+        /// \param[in] conn Reservoir connection for which to retrieve the
+        ///   D-factor.
+        ///
+        /// \return D-factor for connection \p conn.
+        double dakeModelDFactor(const double      rhoGS,
+                                const double      gas_visc,
+                                const Connection& conn) const;
+
+        /// Translate well-level D-factor to connection level D-factor
+        ///
+        /// \param[in] dfac Well-level D-factor.
+        ///
+        /// \param[in] conn Reservoir connection for which to retrieve the
+        ///   D-factor.
+        ///
+        /// \return Connection-level D-factor, translated from well level.
+        double scaledWellLevelDFactor(const double      dfac,
+                                      const Connection& conn) const;
     };
 
 } // namespace Opm

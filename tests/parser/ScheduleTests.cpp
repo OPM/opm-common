@@ -5868,9 +5868,8 @@ END
 
     const auto dFacUnit = 1*unit::day/unit::cubic(unit::meter);
 
-    const double rho = 1.0;
-    const double mu = 0.01*prefix::centi*unit::Poise;
-    const double phi = 0.3;
+    auto rho = []() { return 1.0*unit::kilogram/unit::cubic(unit::meter); };
+    auto mu  = []() { return 0.01*prefix::centi*unit::Poise; };
 
     {
         const auto& well11 = sched.getWell("W1", 1);
@@ -5883,8 +5882,8 @@ END
                             R"(Well "W1" must use D-Factors at step 1)");
 
         // Well-level D-factor scaled by connection transmissibility factor.
-        BOOST_CHECK_CLOSE(wdfac11.getDFactor(well11.getConnections()[0], mu, rho, phi), 6*1.0*dFacUnit, 1e-12);
-        BOOST_CHECK_CLOSE(wdfac21.getDFactor(well21.getConnections()[0], mu, rho, phi),   2.0*dFacUnit, 1e-12);
+        BOOST_CHECK_CLOSE(wdfac11.getDFactor(rho, mu, well11.getConnections()[0]), 6*1.0*dFacUnit, 1e-12);
+        BOOST_CHECK_CLOSE(wdfac21.getDFactor(rho, mu, well21.getConnections()[0]),   2.0*dFacUnit, 1e-12);
     }
 
     {
@@ -5893,8 +5892,8 @@ END
         const auto& wdfac12 = well12.getWDFAC();
         const auto& wdfac22 = well22.getWDFAC();
 
-        BOOST_CHECK_CLOSE(wdfac12.getDFactor(well12.getConnections()[0], mu, rho, phi), 5.19e-1, 3);
-        BOOST_CHECK_CLOSE(wdfac22.getDFactor(well22.getConnections()[0], mu, rho, phi), 2.0*dFacUnit, 1e-12);
+        BOOST_CHECK_CLOSE(wdfac12.getDFactor(rho, mu, well12.getConnections()[0]), 5.19e-1, 3);
+        BOOST_CHECK_CLOSE(wdfac22.getDFactor(rho, mu, well22.getConnections()[0]), 2.0*dFacUnit, 1e-12);
     }
 
     {
@@ -5910,8 +5909,8 @@ END
         BOOST_CHECK_CLOSE(well13.getConnections()[1].dFactor(),  0.0*dFacUnit, 1e-12);
         BOOST_CHECK_CLOSE(well13.getConnections()[2].dFactor(), 11.0*dFacUnit, 1e-12);
 
-        BOOST_CHECK_CLOSE(wdfac13.getDFactor(well13.getConnections()[2], mu, rho, phi), 6.0/3.0*11.0*dFacUnit, 1e-12);
-        BOOST_CHECK_CLOSE(wdfac23.getDFactor(well23.getConnections()[0], mu, rho, phi),          2.0*dFacUnit, 1e-12);
+        BOOST_CHECK_CLOSE(wdfac13.getDFactor(rho, mu, well13.getConnections()[2]), 6.0/3.0*11.0*dFacUnit, 1e-12);
+        BOOST_CHECK_CLOSE(wdfac23.getDFactor(rho, mu, well23.getConnections()[0]),          2.0*dFacUnit, 1e-12);
     }
 }
 
