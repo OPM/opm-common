@@ -15,15 +15,11 @@
 
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
- */
+*/
 
 #include "WellPropertiesKeywordHandlers.hpp"
 
 #include <opm/common/utility/OpmInputError.hpp>
-
-#include <opm/input/eclipse/Deck/DeckKeyword.hpp>
-
-#include <opm/input/eclipse/Parser/ParserKeywords/W.hpp>
 
 #include <opm/input/eclipse/Schedule/ScheduleState.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQConfig.hpp>
@@ -39,7 +35,17 @@
 #include <opm/input/eclipse/Schedule/Well/WVFPDP.hpp>
 #include <opm/input/eclipse/Schedule/Well/WVFPEXP.hpp>
 
+#include <opm/input/eclipse/Deck/DeckKeyword.hpp>
+
+#include <opm/input/eclipse/Parser/ParserKeywords/W.hpp>
+
 #include "../HandlerContext.hpp"
+
+#include <algorithm>
+#include <memory>
+#include <utility>
+#include <string>
+#include <vector>
 
 #include <fmt/format.h>
 
@@ -50,7 +56,8 @@ namespace {
 void handleWDFAC(HandlerContext& handlerContext)
 {
     for (const auto& record : handlerContext.keyword) {
-        const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
+        const auto wellNamePattern = record.getItem<ParserKeywords::WDFAC::WELL>().getTrimmedString(0);
+
         const auto well_names = handlerContext.wellNames(wellNamePattern, true);
         if (well_names.empty()) {
             handlerContext.invalidNamePattern(wellNamePattern);
@@ -59,10 +66,20 @@ void handleWDFAC(HandlerContext& handlerContext)
         for (const auto& well_name : well_names) {
             auto well = handlerContext.state().wells.get(well_name);
             auto wdfac = std::make_shared<WDFAC>(well.getWDFAC());
-            wdfac->updateWDFAC( record );
+            wdfac->updateWDFAC(record);
             wdfac->updateTotalCF(well.getConnections());
+
             if (well.updateWDFAC(std::move(wdfac))) {
-                handlerContext.state().wells.update( std::move(well) );
+                handlerContext.state().wells.update(std::move(well));
+
+                handlerContext.affected_well(well_name);
+                handlerContext.record_well_structure_change();
+
+                handlerContext.state().events()
+                    .addEvent(ScheduleEvents::COMPLETION_CHANGE);
+
+                handlerContext.state().wellgroup_events()
+                    .addEvent(well_name, ScheduleEvents::COMPLETION_CHANGE);
             }
         }
     }
@@ -71,7 +88,7 @@ void handleWDFAC(HandlerContext& handlerContext)
 void handleWDFACCOR(HandlerContext& handlerContext)
 {
     for (const auto& record : handlerContext.keyword) {
-        const std::string& wellNamePattern = record.getItem("WELLNAME").getTrimmedString(0);
+        const auto wellNamePattern = record.getItem("WELLNAME").getTrimmedString(0);
         const auto well_names = handlerContext.wellNames(wellNamePattern, true);
         if (well_names.empty()) {
             handlerContext.invalidNamePattern(wellNamePattern);
@@ -79,10 +96,28 @@ void handleWDFACCOR(HandlerContext& handlerContext)
 
         for (const auto& well_name : well_names) {
             auto well = handlerContext.state().wells.get(well_name);
+            auto conns = std::make_shared<WellConnections>(well.getConnections());
+
             auto wdfac = std::make_shared<WDFAC>(well.getWDFAC());
-            wdfac->updateWDFACCOR( record );
-            if (well.updateWDFAC(std::move(wdfac))) {
-                handlerContext.state().wells.update( std::move(well) );
+            wdfac->updateWDFACCOR(record);
+
+            conns->applyDFactorCorrelation(handlerContext.grid, *wdfac);
+            const auto updateConns =
+                well.updateConnections(std::move(conns), handlerContext.grid);
+
+            if (well.updateWDFAC(std::move(wdfac)) || updateConns) {
+                handlerContext.state().wells.update(std::move(well));
+
+                handlerContext.affected_well(well_name);
+                handlerContext.record_well_structure_change();
+
+                if (updateConns) {
+                    handlerContext.state().events()
+                        .addEvent(ScheduleEvents::COMPLETION_CHANGE);
+
+                    handlerContext.state().wellgroup_events()
+                        .addEvent(well_name, ScheduleEvents::COMPLETION_CHANGE);
+                }
             }
         }
     }

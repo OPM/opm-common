@@ -46,33 +46,46 @@ void handleCOMPDAT(HandlerContext& handlerContext)
 {
     std::unordered_set<std::string> wells;
     for (const auto& record : handlerContext.keyword) {
-        const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
-        auto wellnames = handlerContext.wellNames(wellNamePattern);
+        const auto wellNamePattern = record.getItem("WELL").getTrimmedString(0);
+        const auto wellnames = handlerContext.wellNames(wellNamePattern);
 
         for (const auto& name : wellnames) {
             auto well2 = handlerContext.state().wells.get(name);
-            auto connections = std::make_shared<WellConnections>(well2.getConnections());
-            connections->loadCOMPDAT(record, handlerContext.grid, name, handlerContext.keyword.location());
 
-            if (well2.updateConnections(connections, handlerContext.grid)) {
+            auto connections = std::make_shared<WellConnections>(well2.getConnections());
+            const auto origWellConnSetIsEmpty = connections->empty();
+
+            connections->loadCOMPDAT(record, handlerContext.grid, name,
+                                     well2.getWDFAC(), handlerContext.keyword.location());
+            const auto newWellConnSetIsEmpty = connections->empty();
+
+            if (well2.updateConnections(std::move(connections), handlerContext.grid)) {
                 auto wdfac = std::make_shared<WDFAC>(well2.getWDFAC());
-                wdfac->updateWDFACType(*connections);
+                wdfac->updateWDFACType(well2.getConnections());
+
                 well2.updateWDFAC(std::move(wdfac));
                 handlerContext.state().wells.update( well2 );
-                wells.insert( name );
+
+                wells.insert(name);
             }
 
-            if (connections->empty() && well2.getConnections().empty()) {
+            if (origWellConnSetIsEmpty && newWellConnSetIsEmpty) {
                 const auto& location = handlerContext.keyword.location();
-                auto msg = fmt::format("Problem with COMPDAT/{}\n"
-                                       "In {} line {}\n"
-                                       "Well {} is not connected to grid - will remain SHUT",
-                                       name, location.filename, location.lineno, name);
+
+                const auto msg = fmt::format(R"(Problem with COMPDAT/{}
+In {} line {}
+Well {} is not connected to grid - will remain SHUT)",
+                                             name, location.filename,
+                                             location.lineno, name);
+
                 OpmLog::warning(msg);
             }
-            handlerContext.state().wellgroup_events().addEvent( name, ScheduleEvents::COMPLETION_CHANGE);
+
+            handlerContext.state().wellgroup_events()
+                .addEvent(name, ScheduleEvents::COMPLETION_CHANGE);
         }
     }
+
     handlerContext.state().events().addEvent(ScheduleEvents::COMPLETION_CHANGE);
 
     // In the case the wells reference depth has been defaulted in the
@@ -80,9 +93,10 @@ void handleCOMPDAT(HandlerContext& handlerContext)
     // reference depth exactly when the COMPDAT keyword has been completely
     // processed.
     for (const auto& wname : wells) {
-        auto& well = handlerContext.state().wells.get( wname );
+        auto well = handlerContext.state().wells.get( wname );
         well.updateRefDepth();
-        handlerContext.state().wells.update( std::move(well));
+
+        handlerContext.state().wells.update(std::move(well));
     }
 
     if (! wells.empty()) {
@@ -117,16 +131,25 @@ void handleCOMPTRAJ(HandlerContext& handlerContext)
     // Keyword WELTRAJ must be read first
     std::unordered_set<std::string> wells;
     external::cvf::ref<external::cvf::BoundingBoxTree> cellSearchTree = nullptr;
+
     for (const auto& record : handlerContext.keyword) {
-        const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
+        const auto wellNamePattern = record.getItem("WELL").getTrimmedString(0);
         const auto wellnames = handlerContext.wellNames(wellNamePattern, false);
 
         for (const auto& name : wellnames) {
             auto well2 = handlerContext.state().wells.get(name);
-            auto connections = std::make_shared<WellConnections>(WellConnections(well2.getConnections()));
-            // cellsearchTree is calculated only once and is used to calculated cell intersections of the perforations specified in COMPTRAJ
-            connections->loadCOMPTRAJ(record, handlerContext.grid, name, handlerContext.keyword.location(), cellSearchTree);
-            // In the case that defaults are used in WELSPECS for headI/J the headI/J are calculated based on the well trajectory data
+            auto connections = std::make_shared<WellConnections>(well2.getConnections());
+
+            // cellsearchTree is calculated only once and is used to
+            // calculated cell intersections of the perforations
+            // specified in COMPTRAJ
+            connections->loadCOMPTRAJ(record, handlerContext.grid, name,
+                                      handlerContext.keyword.location(),
+                                      cellSearchTree);
+
+            // In the case that defaults are used in WELSPECS for
+            // headI/J the headI/J are calculated based on the well
+            // trajectory data
             well2.updateHead(connections->getHeadI(), connections->getHeadJ());
             if (well2.updateConnections(connections, handlerContext.grid)) {
                 handlerContext.state().wells.update( well2 );
@@ -135,24 +158,30 @@ void handleCOMPTRAJ(HandlerContext& handlerContext)
 
             if (connections->empty() && well2.getConnections().empty()) {
                 const auto& location = handlerContext.keyword.location();
-                auto msg = fmt::format("Problem with COMPTRAJ/{}\n"
-                                       "In {} line {}\n"
-                                       "Well {} is not connected to grid - will remain SHUT", name, location.filename, location.lineno, name);
+                const auto msg = fmt::format(R"(Problem with COMPTRAJ/{}
+In {} line {}
+Well {} is not connected to grid - will remain SHUT)",
+                                             name, location.filename,
+                                             location.lineno, name);
                 OpmLog::warning(msg);
             }
-            handlerContext.state().wellgroup_events().addEvent( name, ScheduleEvents::COMPLETION_CHANGE);
+
+            handlerContext.state().wellgroup_events()
+                .addEvent(name, ScheduleEvents::COMPLETION_CHANGE);
         }
     }
+
     handlerContext.state().events().addEvent(ScheduleEvents::COMPLETION_CHANGE);
 
     // In the case the wells reference depth has been defaulted in the
     // WELSPECS keyword we need to force a calculation of the wells
-    // reference depth exactly when the WELCOML keyword has been completely
-    // processed.
+    // reference depth exactly when the COMPTRAJ keyword has been
+    // completely processed.
     for (const auto& wname : wells) {
-        auto& well = handlerContext.state().wells.get( wname );
+        auto well = handlerContext.state().wells.get(wname);
         well.updateRefDepth();
-        handlerContext.state().wells.update( std::move(well));
+
+        handlerContext.state().wells.update(std::move(well));
     }
 
     if (! wells.empty()) {
