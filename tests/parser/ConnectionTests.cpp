@@ -263,6 +263,10 @@ COPY
   'PERMX' 'PERMZ' /
   'PERMX' 'PERMY' /
 /
+
+PORO
+  1000*0.3 /
+
 SCHEDULE
 
 COMPDAT
@@ -287,6 +291,9 @@ COPY
   'PERMX' 'PERMZ' /
   'PERMX' 'PERMY' /
 /
+
+PORO
+  1000*0.3 /
 
 SCHEDULE
 

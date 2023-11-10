@@ -21,17 +21,30 @@
 
 #include <opm/input/eclipse/Schedule/CompletedCells.hpp>
 
+#include <cstddef>
+#include <string>
+
 namespace Opm {
 
 class EclipseGrid;
 class FieldPropsManager;
 
-class ScheduleGrid {
+} // namespace Opm
+
+namespace Opm {
+
+class ScheduleGrid
+{
 public:
-    ScheduleGrid(const EclipseGrid& ecl_grid, const FieldPropsManager& fpm, CompletedCells& completed_cells);
+    ScheduleGrid(const EclipseGrid& ecl_grid,
+                 const FieldPropsManager& fpm,
+                 CompletedCells& completed_cells);
+
     explicit ScheduleGrid(CompletedCells& completed_cells);
 
-    const CompletedCells::Cell& get_cell(std::size_t i, std::size_t j, std::size_t k) const;
+    const CompletedCells::Cell&
+    get_cell(std::size_t i, std::size_t j, std::size_t k) const;
+
     const Opm::EclipseGrid* get_grid() const;
 
 private:
@@ -40,8 +53,6 @@ private:
     CompletedCells& cells;
 };
 
+} // namespace Opm
 
-
-}
-#endif
-
+#endif  // SCHEDULE_GRID

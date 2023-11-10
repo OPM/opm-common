@@ -14,6 +14,8 @@ COPY
   PERMX PERMZ /
 /
 
+PORO
+  1000*0.3 /
 
 DX
     1000*1 /

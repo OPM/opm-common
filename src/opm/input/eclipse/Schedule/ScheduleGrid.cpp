@@ -17,16 +17,24 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <fmt/format.h>
-#include <opm/input/eclipse/Schedule/CompletedCells.hpp>
 #include <opm/input/eclipse/Schedule/ScheduleGrid.hpp>
+
+#include <opm/input/eclipse/Schedule/CompletedCells.hpp>
+
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
 
-Opm::ScheduleGrid::ScheduleGrid(const Opm::EclipseGrid& ecl_grid, const Opm::FieldPropsManager& fpm, Opm::CompletedCells& completed_cells)
-    : grid(&ecl_grid)
-    , fp(&fpm)
-    , cells(completed_cells)
+#include <cstddef>
+#include <string>
+
+#include <fmt/format.h>
+
+Opm::ScheduleGrid::ScheduleGrid(const Opm::EclipseGrid& ecl_grid,
+                                const Opm::FieldPropsManager& fpm,
+                                Opm::CompletedCells& completed_cells)
+    : grid  { &ecl_grid }
+    , fp    { &fpm }
+    , cells { completed_cells }
 {}
 
 Opm::ScheduleGrid::ScheduleGrid(Opm::CompletedCells& completed_cells)
@@ -34,45 +42,58 @@ Opm::ScheduleGrid::ScheduleGrid(Opm::CompletedCells& completed_cells)
 {}
 
 namespace {
-    double try_get_value(const Opm::FieldPropsManager& fp, const std::string& kw, std::size_t active_index) {
-        if (fp.has_double(kw))
-            return fp.try_get<double>(kw)->at(active_index);
-        else
+    double try_get_value(const Opm::FieldPropsManager& fp,
+                         const std::string& kw,
+                         const std::size_t active_index)
+    {
+        if (! fp.has_double(kw)) {
             throw std::logic_error(fmt::format("FieldPropsManager is missing keyword '{}'", kw));
-    }
-
-    double try_get_ntg_value(const Opm::FieldPropsManager& fp, const std::string& kw, std::size_t active_index){
-        if (fp.has_double(kw))
-            return fp.try_get<double>(kw)->at(active_index);
-        else
-            return 1.0;
-    }
-}
-
-const Opm::CompletedCells::Cell& Opm::ScheduleGrid::get_cell(std::size_t i, std::size_t j, std::size_t k) const {
-    if (this->grid) {
-        auto [valid, cell] = this->cells.try_get(i,j,k);
-        if (!valid) {
-            cell.depth = this->grid->getCellDepth(i,j,k);
-            cell.dimensions = this->grid->getCellDimensions(i,j,k);
-            if (this->grid->cellActive(i,j,k)){
-                CompletedCells::Cell::Props props;
-
-                props.active_index = this->grid->getActiveIndex(i,j,k);
-                props.permx = try_get_value(*this->fp, "PERMX", props.active_index);
-                props.permy = try_get_value(*this->fp, "PERMY", props.active_index);
-                props.permz = try_get_value(*this->fp, "PERMZ", props.active_index);
-                props.satnum = this->fp->get_int("SATNUM").at(props.active_index);
-                props.pvtnum = this->fp->get_int("PVTNUM").at(props.active_index);
-                props.ntg = try_get_ntg_value(*this->fp, "NTG", props.active_index);
-                cell.props = props;
-            }
         }
-        return cell;
-    } else
-        return this->cells.get(i,j,k);
+
+        return fp.try_get<double>(kw)->at(active_index);
+    }
+
+    double try_get_ntg_value(const Opm::FieldPropsManager& fp,
+                             const std::string& kw,
+                             const std::size_t active_index)
+    {
+        return fp.has_double(kw)
+            ? fp.try_get<double>(kw)->at(active_index)
+            : 1.0;
+    }
 }
 
-const Opm::EclipseGrid* Opm::ScheduleGrid::get_grid() const {
-      return this->grid;
+const Opm::CompletedCells::Cell&
+Opm::ScheduleGrid::get_cell(std::size_t i, std::size_t j, std::size_t k) const
+{
+    if (this->grid == nullptr) {
+        return this->cells.get(i, j, k);
+    }
+
+    auto [valid, cellRef] = this->cells.try_get(i, j, k);
+
+    if (!valid) {
+        cellRef.depth = this->grid->getCellDepth(i, j, k);
+        cellRef.dimensions = this->grid->getCellDimensions(i, j, k);
+
+        if (this->grid->cellActive(i, j, k)) {
+            auto& props = cellRef.props.emplace(CompletedCells::Cell::Props{});
+
+            props.active_index = this->grid->getActiveIndex(i, j, k);
+            props.permx = try_get_value(*this->fp, "PERMX", props.active_index);
+            props.permy = try_get_value(*this->fp, "PERMY", props.active_index);
+            props.permz = try_get_value(*this->fp, "PERMZ", props.active_index);
+            props.poro = try_get_value(*this->fp, "PORO", props.active_index);
+            props.satnum = this->fp->get_int("SATNUM").at(props.active_index);
+            props.pvtnum = this->fp->get_int("PVTNUM").at(props.active_index);
+            props.ntg = try_get_ntg_value(*this->fp, "NTG", props.active_index);
+        }
+    }
+
+    return cellRef;
+}
+
+const Opm::EclipseGrid* Opm::ScheduleGrid::get_grid() const
+{
+    return this->grid;
 }
