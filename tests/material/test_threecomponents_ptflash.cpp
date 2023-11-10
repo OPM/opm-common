@@ -31,7 +31,11 @@
 
 #define BOOST_TEST_MODULE PtFlash
 #include <boost/test/unit_test.hpp>
+
+#include <boost/version.hpp>
+#if BOOST_VERSION / 100000 == 1 && BOOST_VERSION / 100 % 1000 > 66
 #include <boost/test/data/test_case.hpp>
+#endif
 
 #include <opm/material/constraintsolvers/PTFlash.hpp>
 #include <opm/material/fluidsystems/ThreeComponentFluidSystem.hh>
@@ -52,8 +56,15 @@ using FluidState = Opm::CompositionalFluidState<Evaluation, FluidSystem>;
 
 std::vector<std::string> test_methods {"newton", "ssi", "ssi+newton"};
 
+#if BOOST_VERSION / 100000 == 1 && BOOST_VERSION / 100 % 1000 > 66
 BOOST_DATA_TEST_CASE(PtFlash, test_methods)
+#else
+BOOST_AUTO_TEST_CASE(PtFlash)
+#endif
 {
+#if BOOST_VERSION / 100000 == 1 && BOOST_VERSION / 100 % 1000 < 67
+for (const auto& sample : test_methods) {
+#endif
     // Initial: the primary variables are, pressure, molar fractions of the first and second component
     Evaluation p_init = Evaluation::createVariable(10e5, 0); // 10 bar
     ComponentVector comp;
@@ -204,4 +215,8 @@ BOOST_DATA_TEST_CASE(PtFlash, test_methods)
 
     BOOST_CHECK_MESSAGE(Opm::MathToolbox<Evaluation>::isSame(L, ref_L, 2e-3),
                         "L does not match");
+
+#if BOOST_VERSION / 100000 == 1 && BOOST_VERSION / 100 % 1000 < 67
+}
+#endif
 }
