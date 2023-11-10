@@ -21,6 +21,8 @@
 #define BOOST_TEST_MODULE ParserTests
 #include <boost/test/unit_test.hpp>
 
+#include <boost/version.hpp>
+
 #include <filesystem>
 #include <iostream>
 #include <opm/common/utility/OpmInputError.hpp>
@@ -34,7 +36,11 @@
 #include <iostream>
 
 inline std::string prefix() {
+#if BOOST_VERSION / 100000 == 1 && BOOST_VERSION / 100 % 1000 < 71
+    return boost::unit_test::framework::master_test_suite().argv[2];
+#else
     return boost::unit_test::framework::master_test_suite().argv[1];
+#endif
 }
 
 
