@@ -319,11 +319,11 @@ data::Wells result_wells(const bool w3_injector = true)
     data::ConnectionFiltrate zero_filtrate {}; // only injecting connections are counted for filtration related
     data::ConnectionFiltrate con_filtrate = {0.1*sm3_pr_day(), 1*sm3(), 3, 0.01*unit::meter, 1.e-3*unit::darcy, 0.2, 0.05*unit::meter, 10.*unit::square(unit::meter)};
     data::ConnectionFiltrate w3_con_filtrate = w3_injector ? con_filtrate : zero_filtrate;
-    data::Connection well1_comp1 { 0  , crates1, 1.9 *unit::barsa, -123.4 *rm3_pr_day(), 314.15, 0.35 , 0.25,   2.718e2, 111.222*cp_rm3_per_db(), 0.0, zero_filtrate};
-    data::Connection well2_comp1 { 1  , crates2, 1.10*unit::barsa, - 23.4 *rm3_pr_day(), 212.1 , 0.78 , 0.0 ,  12.34   , 222.333*cp_rm3_per_db(), 0.0, zero_filtrate};
-    data::Connection well2_comp2 { 101, crates3, 1.11*unit::barsa, -234.5 *rm3_pr_day(), 150.6 , 0.001, 0.89, 100.0    , 333.444*cp_rm3_per_db(), 0.0, con_filtrate /* output should be zero since it is a producer */};
-    data::Connection well3_comp1 { 2  , crates3, 1.11*unit::barsa,  432.1 *rm3_pr_day(), 456.78, 0.0  , 0.15, 432.1    , 444.555*cp_rm3_per_db(), 0.0, w3_con_filtrate};
-    data::Connection well6_comp1 { 77 , crates6, 6.11*unit::barsa,  321.09*rm3_pr_day(), 656.78, 0.0  , 0.65, 632.1    , 555.666*cp_rm3_per_db(), 0.0, zero_filtrate};
+    data::Connection well1_comp1 { 0  , crates1, 1.9 *unit::barsa, -123.4 *rm3_pr_day(), 314.15, 0.35 , 0.25,   2.718e2, 111.222*cp_rm3_per_db(), 0.0, 1.0, zero_filtrate};
+    data::Connection well2_comp1 { 1  , crates2, 1.10*unit::barsa, - 23.4 *rm3_pr_day(), 212.1 , 0.78 , 0.0 ,  12.34   , 222.333*cp_rm3_per_db(), 0.0, 1.0, zero_filtrate};
+    data::Connection well2_comp2 { 101, crates3, 1.11*unit::barsa, -234.5 *rm3_pr_day(), 150.6 , 0.001, 0.89, 100.0    , 333.444*cp_rm3_per_db(), 0.0, 1.0, con_filtrate /* output should be zero since it is a producer */};
+    data::Connection well3_comp1 { 2  , crates3, 1.11*unit::barsa,  432.1 *rm3_pr_day(), 456.78, 0.0  , 0.15, 432.1    , 444.555*cp_rm3_per_db(), 0.0, 1.0, w3_con_filtrate};
+    data::Connection well6_comp1 { 77 , crates6, 6.11*unit::barsa,  321.09*rm3_pr_day(), 656.78, 0.0  , 0.65, 632.1    , 555.666*cp_rm3_per_db(), 0.0, 1.0, zero_filtrate};
 
     /*
       The completions

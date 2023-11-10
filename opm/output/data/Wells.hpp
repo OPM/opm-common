@@ -35,9 +35,7 @@
 #include <unordered_map>
 #include <vector>
 
-namespace Opm {
-
-    namespace data {
+namespace Opm { namespace data {
 
     class Rates {
         /* Methods are defined inline for performance, as the actual *work* done
@@ -256,22 +254,25 @@ namespace Opm {
         double effective_Kh;
         double trans_factor;
         double d_factor;
+        double compact_mult{1.0}; // Rock compaction transmissibility multiplier (ROCKTAB)
 
         ConnectionFiltrate filtrate;
 
         bool operator==(const Connection& conn2) const
         {
-            return index == conn2.index &&
-                   rates == conn2.rates &&
-                   pressure == conn2.pressure &&
-                   reservoir_rate == conn2.reservoir_rate &&
-                   cell_pressure == conn2.cell_pressure &&
-                   cell_saturation_water == conn2.cell_saturation_water &&
-                   cell_saturation_gas == conn2.cell_saturation_gas &&
-                   effective_Kh == conn2.effective_Kh &&
-                   trans_factor == conn2.trans_factor &&
-                   d_factor == conn2.d_factor &&
-                   filtrate == conn2.filtrate;
+            return (index == conn2.index)
+                && (rates == conn2.rates)
+                && (pressure == conn2.pressure)
+                && (reservoir_rate == conn2.reservoir_rate)
+                && (cell_pressure == conn2.cell_pressure)
+                && (cell_saturation_water == conn2.cell_saturation_water)
+                && (cell_saturation_gas == conn2.cell_saturation_gas)
+                && (effective_Kh == conn2.effective_Kh)
+                && (trans_factor == conn2.trans_factor)
+                && (d_factor == conn2.d_factor)
+                && (compact_mult == conn2.compact_mult)
+                && (filtrate == conn2.filtrate)
+                ;
         }
 
         template <class MessageBufferType>
@@ -294,15 +295,18 @@ namespace Opm {
             serializer(effective_Kh);
             serializer(trans_factor);
             serializer(d_factor);
+            serializer(compact_mult);
             serializer(filtrate);
         }
 
         static Connection serializationTestObject()
         {
-            return Connection{1, Rates::serializationTestObject(),
-                              2.0, 3.0, 4.0, 5.0,
-                              6.0, 7.0, 8.0, 9.0,
-                              ConnectionFiltrate::serializationTestObject() };
+            return Connection {
+                1, Rates::serializationTestObject(),
+                2.0, 3.0, 4.0, 5.0,
+                6.0, 7.0, 8.0, 9.0, 0.987,
+                ConnectionFiltrate::serializationTestObject()
+            };
         }
     };
 
@@ -1186,6 +1190,7 @@ namespace Opm {
             buffer.write(this->effective_Kh);
             buffer.write(this->trans_factor);
             buffer.write(this->d_factor);
+            buffer.write(this->compact_mult);
             this->filtrate.write(buffer);
     }
 
@@ -1202,6 +1207,7 @@ namespace Opm {
         json_data.add_item("Kh", this->effective_Kh);
         json_data.add_item("trans_factor", this->trans_factor);
         json_data.add_item("d_factor", this->d_factor);
+        json_data.add_item("compact_mult", this->compact_mult);
     }
 
     template <class MessageBufferType>
@@ -1348,6 +1354,7 @@ namespace Opm {
             buffer.read(this->effective_Kh);
             buffer.read(this->trans_factor);
             buffer.read(this->d_factor);
+            buffer.read(this->compact_mult);
             this->filtrate.read(buffer);
    }
 
