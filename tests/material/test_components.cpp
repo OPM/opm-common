@@ -27,9 +27,17 @@
  */
 #include "config.h"
 
+#include <boost/mpl/list.hpp>
+
 #define BOOST_TEST_MODULE Components
 #include <boost/test/unit_test.hpp>
+
+#include <boost/version.hpp>
+#if BOOST_VERSION / 100000 == 1 && BOOST_VERSION / 100 % 1000 < 71
+#include <boost/test/floating_point_comparison.hpp>
+#else
 #include <boost/test/tools/floating_point_comparison.hpp>
+#endif
 
 #include <opm/material/densead/Evaluation.hpp>
 #include <opm/material/densead/Math.hpp>
@@ -93,11 +101,15 @@ void testAllComponents()
 template<class Scalar>
 bool close_at_tolerance(Scalar n1, Scalar n2, Scalar tolerance)
 {
+#if BOOST_VERSION / 100000 == 1 && BOOST_VERSION / 100 % 1000 < 71
+    auto comp = boost::test_tools::close_at_tolerance<Scalar>(boost::test_tools::percent_tolerance_t<Scalar>(tolerance*100.0));
+#else
     auto comp = boost::math::fpc::close_at_tolerance<Scalar>(tolerance);
+#endif
     return comp(n1, n2);
 }
 
-using Types = std::tuple<float,double>;
+using Types = boost::mpl::list<float,double>;
 
 BOOST_AUTO_TEST_CASE_TEMPLATE(All, Scalar, Types)
 {

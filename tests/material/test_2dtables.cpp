@@ -29,6 +29,8 @@
  */
 #include "config.h"
 
+#include <boost/mpl/list.hpp>
+
 #define BOOST_TEST_MODULE 2DTables
 #include <boost/test/unit_test.hpp>
 
@@ -284,7 +286,7 @@ struct Test
     }
 };
 
-using Types = std::tuple<float,double>;
+using Types = boost::mpl::list<float,double>;
 
 BOOST_AUTO_TEST_CASE_TEMPLATE(UniformTabulatedFunction1, Scalar, Types)
 {

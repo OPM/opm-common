@@ -34,6 +34,8 @@
 #error "The test for EclMaterialLawManager requires eclipse input support in opm-common"
 #endif
 
+#include <boost/mpl/list.hpp>
+
 #define BOOST_TEST_MODULE EclMaterialLawManager
 #include <boost/test/unit_test.hpp>
 
@@ -611,7 +613,7 @@ struct Fixture {
     using MaterialLaw = typename MaterialLawManager::MaterialLaw;
 };
 
-using Types = std::tuple<float,double>;
+using Types = boost::mpl::list<float,double>;
 BOOST_AUTO_TEST_CASE_TEMPLATE(Fam1Fam2Hysteresis, Scalar, Types)
 {
     using MaterialLaw = typename Fixture<Scalar>::MaterialLaw;

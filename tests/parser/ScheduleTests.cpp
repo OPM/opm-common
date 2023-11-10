@@ -29,7 +29,13 @@
 #define BOOST_TEST_MODULE ScheduleTests
 
 #include <boost/test/unit_test.hpp>
+
+#include <boost/version.hpp>
+#if BOOST_VERSION / 100000 == 1 && BOOST_VERSION / 100 % 1000 < 71
+#include <boost/test/floating_point_comparison.hpp>
+#else
 #include <boost/test/tools/floating_point_comparison.hpp>
+#endif
 
 #include <opm/common/utility/ActiveGridCells.hpp>
 #include <opm/common/utility/TimeService.hpp>
