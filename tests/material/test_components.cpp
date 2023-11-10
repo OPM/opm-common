@@ -27,6 +27,8 @@
  */
 #include "config.h"
 
+#include <boost/mpl/list.hpp>
+
 #define BOOST_TEST_MODULE Components
 #include <boost/test/unit_test.hpp>
 #include <boost/test/tools/floating_point_comparison.hpp>
@@ -97,7 +99,7 @@ bool close_at_tolerance(Scalar n1, Scalar n2, Scalar tolerance)
     return comp(n1, n2);
 }
 
-using Types = std::tuple<float,double>;
+using Types = boost::mpl::list<float,double>;
 
 BOOST_AUTO_TEST_CASE_TEMPLATE(All, Scalar, Types)
 {

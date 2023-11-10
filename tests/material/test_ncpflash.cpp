@@ -35,6 +35,8 @@
 #define BOOST_TEST_MODULE NcpFlash
 #include <boost/test/unit_test.hpp>
 
+#include <boost/mpl/list.hpp>
+
 #include <opm/material/constraintsolvers/NcpFlash.hpp>
 #include <opm/material/constraintsolvers/MiscibleMultiPhaseComposition.hpp>
 #include <opm/material/constraintsolvers/ComputeFromReferencePhase.hpp>
@@ -219,7 +221,7 @@ struct Fixture {
     MaterialLawParams matParams;
 };
 
-using Types = std::tuple<float,double>;
+using Types = boost::mpl::list<float,double>;
 
 BOOST_AUTO_TEST_CASE_TEMPLATE(SinglePhaseGas, Scalar, Types)
 {

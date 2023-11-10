@@ -29,6 +29,8 @@
  */
 #include "config.h"
 
+#include <boost/mpl/list.hpp>
+
 #define BOOST_TEST_MODULE Co2BrinePvt
 #include <boost/test/unit_test.hpp>
 
@@ -239,7 +241,7 @@ void ensurePvtApiBrineOil(const BrinePvt& brinePvt)
     }
 }
 
-using Types = std::tuple<float,double>;
+using Types = boost::mpl::list<float,double>;
 
 BOOST_AUTO_TEST_CASE_TEMPLATE(Oil, Scalar, Types)
 {
