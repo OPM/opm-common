@@ -470,6 +470,8 @@ public:
     const Nupcol& nupcol() const noexcept;
     const Tracers& tracers() const;
     bool co2Storage() const noexcept;
+    bool co2Sol() const noexcept;
+    bool h2Sol() const noexcept;
     bool h2Storage() const noexcept;
     bool micp() const noexcept;
     bool mech() const noexcept;
@@ -495,6 +497,8 @@ public:
         serializer(m_sfuncctrl);
         serializer(m_nupcol);
         serializer(m_co2storage);
+        serializer(m_co2sol);
+        serializer(m_h2sol);
         serializer(m_h2storage);
         serializer(m_micp);
         serializer(m_mech);
@@ -517,6 +521,8 @@ private:
     Nupcol m_nupcol;
     Tracers m_tracers;
     bool m_co2storage;
+    bool m_co2sol;
+    bool m_h2sol;
     bool m_h2storage;
     bool m_micp;
     bool m_mech;

@@ -624,6 +624,8 @@ Runspec::Runspec( const Deck& deck )
     , m_nupcol( )
     , m_tracers( deck )
     , m_co2storage (false)
+    , m_co2sol (false)
+    , m_h2sol (false)
     , m_h2storage (false)
     , m_micp (false)
     , m_mech (false)
@@ -656,6 +658,30 @@ Runspec::Runspec( const Deck& deck )
                 OpmLog::note(msg);
             } else {
                 throw std::runtime_error("The CO2 storage option is given. Activate GAS, plus WATER or OIL ");
+            }
+
+        }
+
+        if (runspecSection.hasKeyword<ParserKeywords::CO2SOL>()) {
+            m_co2sol = true;
+            if (phases().active(Phase::SOLVENT)) {
+                std::string msg = "The CO2SOL option is given together with SOLVENT. PVT properties from the CO2-Brine system is used \n"
+                                  "See the OPM manual for details on the used models.";
+                OpmLog::note(msg);
+            } else {
+                throw std::runtime_error("The CO2SOL option is given. Activate SOLVENT.");
+            }
+
+        }
+
+        if (runspecSection.hasKeyword<ParserKeywords::H2SOL>()) {
+            m_h2sol = true;
+            if (phases().active(Phase::SOLVENT)) {
+                std::string msg = "The H2SOL option is given together with SOLVENT. PVT properties from the H2-Brine system is used \n"
+                                  "See the OPM manual for details on the used models.";
+                OpmLog::note(msg);
+            } else {
+                throw std::runtime_error("The H2SOL option is given. Activate SOLVENT.");
             }
 
         }
@@ -699,6 +725,8 @@ Runspec Runspec::serializationTestObject()
     result.m_sfuncctrl = SatFuncControls::serializationTestObject();
     result.m_nupcol = Nupcol::serializationTestObject();
     result.m_co2storage = true;
+    result.m_co2sol = true;
+    result.m_h2sol = true;
     result.m_h2storage = true;
     result.m_micp = true;
     result.m_mech = true;
@@ -766,6 +794,16 @@ bool Runspec::co2Storage() const noexcept
     return this->m_co2storage;
 }
 
+bool Runspec::co2Sol() const noexcept
+{
+    return this->m_co2sol;
+}
+
+bool Runspec::h2Sol() const noexcept
+{
+    return this->m_h2sol;
+}
+
 bool Runspec::h2Storage() const noexcept
 {
     return this->m_h2storage;
@@ -818,6 +856,8 @@ bool Runspec::rst_cmp(const Runspec& full_spec, const Runspec& rst_spec) {
         full_spec.saturationFunctionControls() == rst_spec.saturationFunctionControls() &&
         full_spec.m_nupcol == rst_spec.m_nupcol &&
         full_spec.m_co2storage == rst_spec.m_co2storage &&
+        full_spec.m_co2sol == rst_spec.m_co2sol &&
+        full_spec.m_h2sol == rst_spec.m_h2sol &&
         full_spec.m_h2storage == rst_spec.m_h2storage &&
         full_spec.m_micp == rst_spec.m_micp &&
         full_spec.m_mech == rst_spec.m_mech &&
@@ -837,6 +877,8 @@ bool Runspec::operator==(const Runspec& data) const {
            this->saturationFunctionControls() == data.saturationFunctionControls() &&
            this->m_nupcol == data.m_nupcol &&
            this->m_co2storage == data.m_co2storage &&
+           this->m_co2sol == data.m_co2sol &&
+           this->m_h2sol == data.m_h2sol &&
            this->m_h2storage == data.m_h2storage &&
            this->m_micp == data.m_micp &&
            this->m_mech == data.m_mech;

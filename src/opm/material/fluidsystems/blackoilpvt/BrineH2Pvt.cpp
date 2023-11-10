@@ -35,20 +35,30 @@ template<class Scalar>
 void BrineH2Pvt<Scalar>::
 initFromState(const EclipseState& eclState, const Schedule&)
 {
-    if( !eclState.getTableManager().getDensityTable().empty()) {
+    bool h2sol = eclState.runspec().h2Sol();
+    if( !h2sol && !eclState.getTableManager().getDensityTable().empty()) {
         OpmLog::warning("H2STORE is enabled but DENSITY is in the deck. \n"
                         "The surface density is computed based on H2-BRINE PVT "
                         "at standard conditions (STCOND) and DENSITY is ignored ");
     }
 
-    if(eclState.getTableManager().hasTables("PVDO") || 
-       !eclState.getTableManager().getPvtgTables().empty()) {
+    if(!h2sol && (eclState.getTableManager().hasTables("PVDO") || 
+       !eclState.getTableManager().getPvtgTables().empty())) {
         OpmLog::warning("H2STORE is enabled but PVDO or PVTO is in the deck. \n"
                         "H2 PVT properties are calculated internally, "
                         "and PVDO/PVTO input is ignored.");
     }
-    // Check if DISGAS has been activated (enables H2 dissolved in brine)
-    setEnableDissolvedGas(eclState.getSimulationConfig().hasDISGASW() || eclState.getSimulationConfig().hasDISGAS());
+
+    if (eclState.getTableManager().hasTables("PVTW")) {
+        OpmLog::warning("H2STORE or HSOL is enabled but PVTW is in the deck.\n"
+                        "BRINE PVT properties are computed based on the Hu et al. "
+                        "pvt model and PVTW input is ignored.");
+    }
+    // enable h2 dissolution into brine for h2sol case with DISGASW
+    // or h2store case with DISGASW or DISGAS    
+    bool h2sol_dis = h2sol && eclState.getSimulationConfig().hasDISGASW();
+    bool h2storage_dis = eclState.runspec().h2Storage() && (eclState.getSimulationConfig().hasDISGASW() || eclState.getSimulationConfig().hasDISGAS());
+    setEnableDissolvedGas(h2sol_dis || h2storage_dis);
 
     // Check if BRINE has been activated (varying salt concentration in brine)
     setEnableSaltConcentration(eclState.runspec().phases().active(Phase::BRINE));

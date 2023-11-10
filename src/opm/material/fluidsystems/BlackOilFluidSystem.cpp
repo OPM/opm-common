@@ -84,9 +84,15 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
     if (eclState.getSimulationConfig().hasDISGASW()) {
         if (eclState.runspec().co2Storage() || eclState.runspec().h2Storage())
             setEnableDissolvedGasInWater(eclState.getSimulationConfig().hasDISGASW());
-        else
+        else if (eclState.runspec().co2Sol() || eclState.runspec().h2Sol()) {
+            // For CO2SOL and H2SOL the dissolved gas in water is added in the solvent model
+            // The HC gas is not allowed to dissolved into water.
+            // For most HC gasses this is a resonable assumption.
+            OpmLog::info("CO2SOL/H2SOL is activated together with DISGASW. \n" 
+                         "Only CO2/H2 is allowed to dissolve into water");
+        } else
             OPM_THROW(std::runtime_error,
-                      "DISGASW only supported in combination with CO2STORE or H2STORE");
+                      "DISGASW only supported in combination with CO2STORE/H2STORE or CO2SOL/H2SOL");
     }
 
     if (phaseIsActive(gasPhaseIdx)) {

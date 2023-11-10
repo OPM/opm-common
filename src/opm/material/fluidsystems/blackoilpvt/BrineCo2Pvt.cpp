@@ -36,20 +36,30 @@ template<class Scalar>
 void BrineCo2Pvt<Scalar>::
 initFromState(const EclipseState& eclState, const Schedule&)
 {
-    if (!eclState.getTableManager().getDensityTable().empty()) {
+
+    bool co2sol = eclState.runspec().co2Sol();
+    if (!co2sol && !eclState.getTableManager().getDensityTable().empty()) {
         OpmLog::warning("CO2STORE is enabled but DENSITY is in the deck. \n"
                         "The surface density is computed based on CO2-BRINE "
                         "PVT at standard conditions (STCOND) and DENSITY is ignored");
     }
 
-    if (eclState.getTableManager().hasTables("PVDO") ||
-        !eclState.getTableManager().getPvtoTables().empty()) {
+    if (!co2sol && (eclState.getTableManager().hasTables("PVDO") ||
+        !eclState.getTableManager().getPvtoTables().empty())) {
         OpmLog::warning("CO2STORE is enabled but PVDO or PVTO is in the deck.\n"
                         "BRINE PVT properties are computed based on the Hu et al. "
                         "pvt model and PVDO/PVTO input is ignored.");
     }
-
-    setEnableDissolvedGas(eclState.getSimulationConfig().hasDISGASW() || eclState.getSimulationConfig().hasDISGAS());
+    if (eclState.getTableManager().hasTables("PVTW")) {
+        OpmLog::warning("CO2STORE or CO2SOL is enabled but PVTW is in the deck.\n"
+                        "BRINE PVT properties are computed based on the Hu et al. "
+                        "pvt model and PVTW input is ignored.");
+    }
+    // enable co2 dissolution into brine for co2sol case with DISGASW
+    // or co2store case with DISGASW or DISGAS
+    bool co2sol_dis = co2sol && eclState.getSimulationConfig().hasDISGASW();
+    bool co2storage_dis = eclState.runspec().co2Storage() && (eclState.getSimulationConfig().hasDISGASW() || eclState.getSimulationConfig().hasDISGAS());
+    setEnableDissolvedGas(co2sol_dis || co2storage_dis);
     setEnableSaltConcentration(eclState.runspec().phases().active(Phase::BRINE));
     // We only supported single pvt region for the co2-brine module
     size_t numRegions = 1;
@@ -72,7 +82,7 @@ initFromState(const EclipseState& eclState, const Schedule&)
     brineReferenceDensity_[regionIdx] = Brine::liquidDensity(T_ref, P_ref, salinity_[regionIdx], extrapolate);
     co2ReferenceDensity_[regionIdx] = CO2::gasDensity(T_ref, P_ref, extrapolate);
 
-    OpmLog::info("CO2STORE is enabled. \n The surface density of CO2 is  " + std::to_string(co2ReferenceDensity_[regionIdx])
+    OpmLog::info("CO2STORE/CO2SOL is enabled. \n The surface density of CO2 is  " + std::to_string(co2ReferenceDensity_[regionIdx])
                  + "kg/m3 \n The surface density of Brine is  " + std::to_string(brineReferenceDensity_[regionIdx])
                  + "kg/m3"
                  + "\n The surface densities are computed using the reference pressure ( " + std::to_string(P_ref) 
