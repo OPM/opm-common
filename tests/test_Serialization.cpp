@@ -316,6 +316,8 @@ TEST_FOR_TYPE(VFPInjTable)
 TEST_FOR_TYPE(VFPProdTable)
 TEST_FOR_TYPE(ViscrefTable)
 TEST_FOR_TYPE(WatdentTable)
+TEST_FOR_TYPE_NAMED(WDFAC::Correlation, Correlation)
+TEST_FOR_TYPE(WDFAC)
 TEST_FOR_TYPE(Well)
 TEST_FOR_TYPE(Welldims)
 TEST_FOR_TYPE(WellBrineProperties)
@@ -336,11 +338,14 @@ TEST_FOR_TYPE(WListManager)
 TEST_FOR_TYPE(WriteRestartFileEvents)
 
 
+namespace {
+
 bool init_unit_test_func()
 {
     return true;
 }
 
+} // Anonymous namespace
 
 int main(int argc, char** argv)
 {
