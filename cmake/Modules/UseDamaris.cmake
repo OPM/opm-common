@@ -18,7 +18,7 @@ if(USE_DAMARIS_LIB AND MPI_FOUND)
       message(STATUS "The Damaris library does NOT have Catalyst support")
     endif()
   else()
-    message(STATUS "The Damaris library was requested but NOT found")
+    message(FATAL_ERROR "The Damaris library was requested but NOT found")
   endif()
 else()  # User did not request Damaris support
   unset(HAVE_DAMARIS)
