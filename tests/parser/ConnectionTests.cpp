@@ -17,32 +17,38 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <cstddef>
-#include <stdexcept>
-#include <ostream>
-
 #define BOOST_TEST_MODULE CompletionTests
 #include <boost/test/unit_test.hpp>
 
-#include <opm/common/utility/ActiveGridCells.hpp>
-#include <opm/input/eclipse/Python/Python.hpp>
-#include <opm/input/eclipse/Parser/Parser.hpp>
-#include <opm/input/eclipse/Deck/Deck.hpp>
-
 #include <opm/input/eclipse/Schedule/Well/Connection.hpp>
-#include <opm/input/eclipse/Schedule/Well/Well.hpp>
-#include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
+
+#include <opm/common/utility/ActiveGridCells.hpp>
+
+#include <opm/input/eclipse/Python/Python.hpp>
+
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
-#include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
-#include <opm/input/eclipse/Schedule/CompletedCells.hpp>
-#include <opm/input/eclipse/Schedule/ScheduleGrid.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
 
+#include <opm/input/eclipse/Schedule/CompletedCells.hpp>
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
+#include <opm/input/eclipse/Schedule/ScheduleGrid.hpp>
+#include <opm/input/eclipse/Schedule/Well/Well.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
+
 #include <opm/common/OpmLog/KeywordLocation.hpp>
 
 #include <opm/input/eclipse/Units/Units.hpp>
+#include <opm/input/eclipse/Units/UnitSystem.hpp>
+
+#include <opm/input/eclipse/Deck/Deck.hpp>
+
+#include <opm/input/eclipse/Parser/Parser.hpp>
+
+#include <cstddef>
+#include <stdexcept>
+#include <ostream>
 
 namespace {
     double cp_rm3_per_db()
@@ -51,20 +57,31 @@ namespace {
             / (Opm::unit::day * Opm::unit::barsa);
     }
 
-Opm::WellConnections loadCOMPDAT(const std::string& compdat_keyword) {
-    Opm::EclipseGrid grid(10,10,10);
-    Opm::TableManager tables;
-    Opm::Parser parser;
-    const auto deck = parser.parseString(compdat_keyword);
-    Opm::FieldPropsManager field_props(deck, Opm::Phases{true, true, true}, grid, Opm::TableManager());
-    const auto& keyword = deck["COMPDAT"][0];
-    Opm::WellConnections connections(Opm::Connection::Order::TRACK, 10,10);
-    Opm::CompletedCells cells(grid);
-    for (const auto& rec : keyword)
-        connections.loadCOMPDAT(rec, Opm::ScheduleGrid(grid, field_props, cells), "WELL", {});
+    Opm::WellConnections
+    loadCOMPDAT(const std::string& compdat_keyword)
+    {
+        Opm::WellConnections connections {
+            Opm::Connection::Order::TRACK, 10, 10
+        };
 
-    return connections;
-}
+        const auto deck = Opm::Parser{}.parseString(compdat_keyword);
+        const auto loc = Opm::KeywordLocation{};
+
+        const Opm::EclipseGrid grid { 10, 10, 10 };
+        const Opm::FieldPropsManager field_props {
+            deck, Opm::Phases{true, true, true}, grid, Opm::TableManager{}
+        };
+
+        // Must be mutable.
+        Opm::CompletedCells completed_cells(grid);
+        const auto sg = Opm::ScheduleGrid { grid, field_props, completed_cells };
+
+        for (const auto& rec : deck["COMPDAT"][0]) {
+            connections.loadCOMPDAT(rec, sg, "WELL", loc);
+        }
+
+        return connections;
+    }
 }
 
 namespace Opm {
@@ -94,12 +111,22 @@ BOOST_AUTO_TEST_CASE(CreateWellConnectionsOK) {
 
 
 
-BOOST_AUTO_TEST_CASE(AddCompletionSizeCorrect) {
-    auto dir = Opm::Connection::Direction::Z;
+BOOST_AUTO_TEST_CASE(AddCompletionSizeCorrect)
+{
+    const auto dir = Opm::Connection::Direction::Z;
     const auto kind = Opm::Connection::CTFKind::DeckValue;
+    const auto depth = 0.0;
+
+    auto ctf_props = Opm::Connection::CTFProperties{};
+
+    ctf_props.CF = 99.88;
+    ctf_props.Kh = 355.113;
+    ctf_props.rw = 0.25;
+
+    const auto completion1 = Opm::Connection { 10,10,10, 100, 1, Opm::Connection::State::OPEN, dir, kind, 0, depth, ctf_props, 0, true };
+    const auto completion2 = Opm::Connection { 10,10,11, 102, 1, Opm::Connection::State::SHUT, dir, kind, 0, depth, ctf_props, 0, true };
+
     Opm::WellConnections completionSet(Opm::Connection::Order::TRACK, 1,1);
-    Opm::Connection completion1( 10,10,10, 100, 1, 0.0, Opm::Connection::State::OPEN , 99.88, 355.113, 0.25, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, dir, kind, 0, true);
-    Opm::Connection completion2( 10,10,11, 102, 1, 0.0, Opm::Connection::State::SHUT , 99.88, 355.113, 0.25, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, dir, kind, 0, true);
     completionSet.add( completion1 );
     BOOST_CHECK_EQUAL( 1U , completionSet.size() );
     BOOST_CHECK_MESSAGE( !completionSet.empty(), "Non-empty completion set must not be empty" );
@@ -111,11 +138,21 @@ BOOST_AUTO_TEST_CASE(AddCompletionSizeCorrect) {
 }
 
 
-BOOST_AUTO_TEST_CASE(WellConnectionsGetOutOfRangeThrows) {
-    auto dir = Opm::Connection::Direction::Z;
+BOOST_AUTO_TEST_CASE(WellConnectionsGetOutOfRangeThrows)
+{
+    const auto dir = Opm::Connection::Direction::Z;
     const auto kind = Opm::Connection::CTFKind::DeckValue;
-    Opm::Connection completion1( 10,10,10, 100, 1, 0.0, Opm::Connection::State::OPEN , 99.88, 355.113, 0.25, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, dir, kind, 0,true);
-    Opm::Connection completion2( 10,10,11, 102, 1, 0.0, Opm::Connection::State::SHUT , 99.88, 355.113, 0.25, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, dir, kind, 0,true);
+    const auto depth = 0.0;
+
+    auto ctf_props = Opm::Connection::CTFProperties{};
+
+    ctf_props.CF = 99.88;
+    ctf_props.Kh = 355.113;
+    ctf_props.rw = 0.25;
+
+    const auto completion1 = Opm::Connection { 10,10,10, 100, 1, Opm::Connection::State::OPEN, dir, kind, 0, depth, ctf_props, 0, true };
+    const auto completion2 = Opm::Connection { 10,10,11, 102, 1, Opm::Connection::State::SHUT, dir, kind, 0, depth, ctf_props, 0, true };
+
     Opm::WellConnections completionSet(Opm::Connection::Order::TRACK, 1,1);
     completionSet.add( completion1 );
     BOOST_CHECK_EQUAL( 1U , completionSet.size() );
@@ -148,15 +185,23 @@ BOOST_AUTO_TEST_CASE(Compdat_Direction) {
 }
 
 
-BOOST_AUTO_TEST_CASE(AddCompletionCopy) {
-    Opm::WellConnections completionSet(Opm::Connection::Order::TRACK, 10,10);
-    auto dir = Opm::Connection::Direction::Z;
+BOOST_AUTO_TEST_CASE(AddCompletionCopy)
+{
+    const auto dir = Opm::Connection::Direction::Z;
     const auto kind = Opm::Connection::CTFKind::DeckValue;
+    const auto depth = 0.0;
 
-    Opm::Connection completion1( 10,10,10, 100, 1, 0.0, Opm::Connection::State::OPEN , 99.88, 355.113, 0.25, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, dir, kind, 0, true);
-    Opm::Connection completion2( 10,10,11, 101, 1, 0.0, Opm::Connection::State::SHUT , 99.88, 355.113, 0.25, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, dir, kind, 0, true);
-    Opm::Connection completion3( 10,10,12, 102, 1, 0.0, Opm::Connection::State::SHUT , 99.88, 355.113, 0.25, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, dir, kind, 0, true);
+    auto ctf_props = Opm::Connection::CTFProperties{};
 
+    ctf_props.CF = 99.88;
+    ctf_props.Kh = 355.113;
+    ctf_props.rw = 0.25;
+
+    const auto completion1 = Opm::Connection { 10,10,10, 100, 1, Opm::Connection::State::OPEN, dir, kind, 0, depth, ctf_props, 0, true };
+    const auto completion2 = Opm::Connection { 10,10,11, 101, 1, Opm::Connection::State::SHUT, dir, kind, 0, depth, ctf_props, 0, true };
+    const auto completion3 = Opm::Connection { 10,10,12, 102, 1, Opm::Connection::State::SHUT, dir, kind, 0, depth, ctf_props, 0, true };
+
+    Opm::WellConnections completionSet(Opm::Connection::Order::TRACK, 10,10);
     completionSet.add( completion1 );
     completionSet.add( completion2 );
     completionSet.add( completion3 );
@@ -171,31 +216,43 @@ BOOST_AUTO_TEST_CASE(AddCompletionCopy) {
 }
 
 
-BOOST_AUTO_TEST_CASE(ActiveCompletions) {
-    Opm::EclipseGrid grid(10,20,20);
-    auto dir = Opm::Connection::Direction::Z;
-    const auto kind = Opm::Connection::CTFKind::Defaulted;
-    Opm::WellConnections completions(Opm::Connection::Order::TRACK, 10,10);
-    Opm::Connection completion1( 0,0,0, grid.getGlobalIndex(0,0,0), 1, 0.0, Opm::Connection::State::OPEN , 99.88, 355.113, 0.25, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, dir, kind, 0, true);
-    Opm::Connection completion2( 0,0,1, grid.getGlobalIndex(0,0,1), 1, 0.0, Opm::Connection::State::SHUT , 99.88, 355.113, 0.25, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, dir, kind, 0, true);
-    Opm::Connection completion3( 0,0,2, grid.getGlobalIndex(0,0,2), 1, 0.0, Opm::Connection::State::SHUT , 99.88, 355.113, 0.25, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, dir, kind, 0, true);
+BOOST_AUTO_TEST_CASE(ActiveCompletions)
+{
+    const auto dir = Opm::Connection::Direction::Z;
+    const auto kind = Opm::Connection::CTFKind::DeckValue;
+    const auto depth = 0.0;
 
+    auto ctf_props = Opm::Connection::CTFProperties{};
+
+    ctf_props.CF = 99.88;
+    ctf_props.Kh = 355.113;
+    ctf_props.rw = 0.25;
+
+    Opm::EclipseGrid grid { 10, 20, 20 };
+
+    const auto completion1 = Opm::Connection { 0,0,0, grid.getGlobalIndex(0,0,0), 1, Opm::Connection::State::OPEN, dir, kind, 0, depth, ctf_props, 0, true };
+    const auto completion2 = Opm::Connection { 0,0,1, grid.getGlobalIndex(0,0,1), 1, Opm::Connection::State::SHUT, dir, kind, 0, depth, ctf_props, 0, true };
+    const auto completion3 = Opm::Connection { 0,0,2, grid.getGlobalIndex(0,0,2), 1, Opm::Connection::State::SHUT, dir, kind, 0, depth, ctf_props, 0, true };
+
+    Opm::WellConnections completions(Opm::Connection::Order::TRACK, 10,10);
     completions.add( completion1 );
     completions.add( completion2 );
     completions.add( completion3 );
 
     std::vector<int> actnum(grid.getCartesianSize(), 1);
     actnum[0] = 0;
-    grid.resetACTNUM( actnum);
+    grid.resetACTNUM(actnum);
 
-    Opm::WellConnections active_completions(completions, grid);
+    const Opm::WellConnections active_completions(completions, grid);
     BOOST_CHECK_EQUAL( active_completions.size() , 2U);
     BOOST_CHECK_EQUAL( completion2, active_completions.get(0));
     BOOST_CHECK_EQUAL( completion3, active_completions.get(1));
 }
 
-BOOST_AUTO_TEST_CASE(loadCOMPDATTEST) {
-    Opm::UnitSystem units(Opm::UnitSystem::UnitType::UNIT_TYPE_METRIC); // Unit system used in deck FIRST_SIM.DATA.
+BOOST_AUTO_TEST_CASE(loadCOMPDATTEST)
+{
+    const Opm::UnitSystem units(Opm::UnitSystem::UnitType::UNIT_TYPE_METRIC); // Unit system used in deck FIRST_SIM.DATA.
+
     {
         const std::string deck = R"(GRID
 
@@ -212,7 +269,8 @@ COMPDAT
 --                                    CF      Diam    Kh      Skin   Df
     'WELL'  1  1   1   1 'OPEN' 1*    1.168   0.311   107.872 1*     1*  'Z'  21.925 /
 /)";
-        Opm::WellConnections connections = loadCOMPDAT(deck);
+
+        const Opm::WellConnections connections = loadCOMPDAT(deck);
         const auto& conn0 = connections[0];
         BOOST_CHECK_EQUAL(conn0.CF(), units.to_si(Opm::UnitSystem::measure::transmissibility, 1.168));
         BOOST_CHECK_EQUAL(conn0.Kh(), units.to_si(Opm::UnitSystem::measure::effective_Kh, 107.872));
@@ -236,7 +294,8 @@ COMPDAT
 --                                CF      Diam    Kh      Skin   Df
 'WELL'  1  1   1   1 'OPEN' 1*    1.168   0.311   0       1*     1*  'Z'  21.925 /
 /)";
-        Opm::WellConnections connections = loadCOMPDAT(deck);
+
+        const Opm::WellConnections connections = loadCOMPDAT(deck);
         const auto& conn0 = connections[0];
         BOOST_CHECK_EQUAL(conn0.CF(), units.to_si(Opm::UnitSystem::measure::transmissibility, 1.168));
         BOOST_CHECK_EQUAL(conn0.Kh(), units.to_si(Opm::UnitSystem::measure::effective_Kh, 0.10 * 1.0));
@@ -460,20 +519,16 @@ END
     }
 
     // Reset CF -- simulating COMPDAT record (inactive cell)
+    auto ctf_props = Opm::Connection::CTFProperties{};
+    ctf_props.CF = 50.0*cp_rm3_per_db();
+    ctf_props.Kh = 0.123;
+    ctf_props.rw = 0.234;
+    ctf_props.r0 = 0.157;
+
     connP.addConnection(9, 9, 1, // 10, 10, 2
-        199,
-        2015.0,
-        Opm::Connection::State::OPEN,
-        50.0*cp_rm3_per_db(),
-        0.123,
-        0.234,
-        0.157,
-        0.0,
-        0.0, 
-        0.0,
-        0.0,
-        0.0,
-        1);
+                        199,
+                        Opm::Connection::State::OPEN,
+                        2015.0, ctf_props, 1);
 
     BOOST_REQUIRE_EQUAL(connP.size(), std::size_t{3});
 
@@ -506,19 +561,9 @@ END
 
     // Reset CF -- simulating COMPDAT record (active cell)
     connP.addConnection(8, 9, 1, // 10, 10, 2
-        198,
-        2015.0,
-        Opm::Connection::State::OPEN,
-        50.0*cp_rm3_per_db(),
-        0.123,
-        0.234,
-        0.157,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        1);
+                        198,
+                        Opm::Connection::State::OPEN,
+                        2015.0, ctf_props, 1);
 
     BOOST_REQUIRE_EQUAL(connP.size(), std::size_t{4});
 

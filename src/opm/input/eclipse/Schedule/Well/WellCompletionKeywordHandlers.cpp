@@ -15,7 +15,7 @@
 
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
- */
+*/
 
 #include "WellCompletionKeywordHandlers.hpp"
 
@@ -29,6 +29,8 @@
 #include <opm/input/eclipse/Schedule/Well/WDFAC.hpp>
 #include <opm/input/eclipse/Schedule/Well/Well.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
+
+#include <opm/input/eclipse/Parser/ParserKeywords/C.hpp>
 
 #include "../HandlerContext.hpp"
 
@@ -105,10 +107,8 @@ void handleCOMPLUMP(HandlerContext& handlerContext)
     }
 }
 
-/*
-  The COMPORD keyword is handled together with the WELSPECS keyword in the
-  handleWELSPECS function.
-*/
+// The COMPORD keyword is handled together with the WELSPECS keyword in the
+// handleWELSPECS() function.
 void handleCOMPORD(HandlerContext&)
 {}
 
@@ -162,26 +162,28 @@ void handleCOMPTRAJ(HandlerContext& handlerContext)
 
 void handleCSKIN(HandlerContext& handlerContext)
 {
-    // Get CSKIN keyword info and current step
-    const auto& keyword = handlerContext.keyword;
+    using Kw = ParserKeywords::CSKIN;
 
     // Loop over records in CSKIN
-    for (const auto& record: keyword) {
+    for (const auto& record : handlerContext.keyword) {
         // Get well names
-        const auto& wellNamePattern = record.getItem( "WELL" ).getTrimmedString(0);
+        const auto wellNamePattern = record.getItem<Kw::WELL>().getTrimmedString(0);
         const auto well_names = handlerContext.wellNames(wellNamePattern, false);
 
         // Loop over well(s) in record
         for (const auto& wname : well_names) {
-            // Get well information, modify connection skin factor, and update well
+            // Get well information, modify connection skin factor, and
+            // update well.
             auto well = handlerContext.state().wells.get(wname);
-            well.handleCSKINConnections(record);
-            handlerContext.state().wells.update( std::move(well) );
+
+            if (well.handleCSKIN(record, handlerContext.keyword.location())) {
+                handlerContext.state().wells.update(std::move(well));
+            }
         }
     }
 }
 
-}
+} // Anonymous namespace
 
 std::vector<std::pair<std::string,KeywordHandlers::handler_function>>
 getWellCompletionHandlers()
@@ -195,4 +197,4 @@ getWellCompletionHandlers()
     };
 }
 
-}
+} // namespace Opm

@@ -55,20 +55,32 @@
 #include <stdexcept>
 #include <string>
 
-BOOST_AUTO_TEST_CASE(AICDWellTest) {
-
-    auto dir = Opm::Connection::Direction::Z;
+BOOST_AUTO_TEST_CASE(AICDWellTest)
+{
+    const auto dir_z = Opm::Connection::Direction::Z;
+    const auto dir_x = Opm::Connection::Direction::X;
     const auto kind = Opm::Connection::CTFKind::DeckValue;
-    Opm::WellConnections connection_set(Opm::Connection::Order::TRACK, 10,10);
-    Opm::EclipseGrid grid(20,20,20, 1., 1., 25.0, 2500.0);
-    connection_set.add(Opm::Connection( 19, 0, 0,grid.getGlobalIndex(19,0,0), 1, 0.0, Opm::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, dir, kind, 0, true) );
-    connection_set.add(Opm::Connection( 19, 0, 1,grid.getGlobalIndex(19,0,1), 1, 0.0, Opm::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, dir, kind, 0, true) );
-    connection_set.add(Opm::Connection( 19, 0, 2,grid.getGlobalIndex(19,0,2), 1, 0.0, Opm::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, dir, kind, 0, true) );
 
-    connection_set.add(Opm::Connection( 18, 0, 1,grid.getGlobalIndex(18,0,1), 1, 0.0, Opm::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0,  Opm::Connection::Direction::X, kind, 0, true) );
-    connection_set.add(Opm::Connection( 17, 0, 1,grid.getGlobalIndex(17,0,1), 1, 0.0, Opm::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0,  Opm::Connection::Direction::X, kind, 0, true) );
-    connection_set.add(Opm::Connection( 16, 0, 1,grid.getGlobalIndex(16,0,1), 1, 0.0, Opm::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0,  Opm::Connection::Direction::X, kind, 0, true) );
-    connection_set.add(Opm::Connection( 15, 0, 1,grid.getGlobalIndex(15,0,1), 1, 0.0, Opm::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0,  Opm::Connection::Direction::X, kind, 0, true) );
+    const Opm::EclipseGrid grid { 20,20,20, 1.0, 1.0, 25.0, 2500.0 };
+
+    const auto depth = 0.0;
+    const auto state = Opm::Connection::State::OPEN;
+
+    auto ctf_props = Opm::Connection::CTFProperties{};
+
+    ctf_props.CF = 200.0;
+    ctf_props.Kh = 17.29;
+    ctf_props.rw = 0.25;
+
+    Opm::WellConnections connection_set(Opm::Connection::Order::TRACK, 10,10);
+    connection_set.add({ 19, 0, 0, grid.getGlobalIndex(19,0,0), 1, state, dir_z, kind, 0, depth, ctf_props, 0, true });
+    connection_set.add({ 19, 0, 1, grid.getGlobalIndex(19,0,1), 1, state, dir_z, kind, 0, depth, ctf_props, 0, true });
+    connection_set.add({ 19, 0, 2, grid.getGlobalIndex(19,0,2), 1, state, dir_z, kind, 0, depth, ctf_props, 0, true });
+
+    connection_set.add({ 18, 0, 1, grid.getGlobalIndex(18,0,1), 1, state, dir_x, kind, 0, depth, ctf_props, 0, true });
+    connection_set.add({ 17, 0, 1, grid.getGlobalIndex(17,0,1), 1, state, dir_x, kind, 0, depth, ctf_props, 0, true });
+    connection_set.add({ 16, 0, 1, grid.getGlobalIndex(16,0,1), 1, state, dir_x, kind, 0, depth, ctf_props, 0, true });
+    connection_set.add({ 15, 0, 1, grid.getGlobalIndex(15,0,1), 1, state, dir_x, kind, 0, depth, ctf_props, 0, true });
 
     BOOST_CHECK_EQUAL( 7U , connection_set.size() );
 
@@ -212,23 +224,33 @@ WSEGAICD
     const double center_depth_connection7 = connection7.depth();
     BOOST_CHECK_EQUAL(segment_number_connection7, 8);
     BOOST_CHECK_EQUAL(center_depth_connection7, 2534.5);
-
 }
 
-BOOST_AUTO_TEST_CASE(MultisegmentWellTest) {
-
-    auto dir = Opm::Connection::Direction::Z;
+BOOST_AUTO_TEST_CASE(MultisegmentWellTest)
+{
+    const auto dir_z = Opm::Connection::Direction::Z;
+    const auto dir_x = Opm::Connection::Direction::X;
     const auto kind = Opm::Connection::CTFKind::DeckValue;
-    Opm::WellConnections connection_set(Opm::Connection::Order::TRACK, 10,10);
-    Opm::EclipseGrid grid(20,20,20, 1., 1., 25.0, 2500.0);
-    connection_set.add(Opm::Connection( 19, 0, 0,grid.getGlobalIndex(19,0,0), 1, 0.0, Opm::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, dir, kind, 0, true) );
-    connection_set.add(Opm::Connection( 19, 0, 1,grid.getGlobalIndex(19,0,1), 1, 0.0, Opm::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, dir, kind, 0, true) );
-    connection_set.add(Opm::Connection( 19, 0, 2,grid.getGlobalIndex(19,0,2), 1, 0.0, Opm::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, dir, kind, 0, true) );
+    const Opm::EclipseGrid grid { 20,20,20, 1.0, 1.0, 25.0, 2500.0 };
 
-    connection_set.add(Opm::Connection( 18, 0, 1,grid.getGlobalIndex(18,0,1), 1, 0.0, Opm::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0,  Opm::Connection::Direction::X, kind, 0, true) );
-    connection_set.add(Opm::Connection( 17, 0, 1,grid.getGlobalIndex(17,0,1), 1, 0.0, Opm::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0,  Opm::Connection::Direction::X, kind, 0, true) );
-    connection_set.add(Opm::Connection( 16, 0, 1,grid.getGlobalIndex(16,0,1), 1, 0.0, Opm::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0,  Opm::Connection::Direction::X, kind, 0, true) );
-    connection_set.add(Opm::Connection( 15, 0, 1,grid.getGlobalIndex(15,0,1), 1, 0.0, Opm::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0,  Opm::Connection::Direction::X, kind, 0, true) );
+    const auto depth = 0.0;
+    const auto state = Opm::Connection::State::OPEN;
+
+    auto ctf_props = Opm::Connection::CTFProperties{};
+
+    ctf_props.CF = 200.0;
+    ctf_props.Kh = 17.29;
+    ctf_props.rw = 0.25;
+
+    Opm::WellConnections connection_set(Opm::Connection::Order::TRACK, 10,10);
+    connection_set.add({ 19, 0, 0, grid.getGlobalIndex(19,0,0), 1, state, dir_z, kind, 0, depth, ctf_props, 0, true });
+    connection_set.add({ 19, 0, 1, grid.getGlobalIndex(19,0,1), 1, state, dir_z, kind, 0, depth, ctf_props, 0, true });
+    connection_set.add({ 19, 0, 2, grid.getGlobalIndex(19,0,2), 1, state, dir_z, kind, 0, depth, ctf_props, 0, true });
+
+    connection_set.add({ 18, 0, 1, grid.getGlobalIndex(18,0,1), 1, state, dir_x, kind, 0, depth, ctf_props, 0, true });
+    connection_set.add({ 17, 0, 1, grid.getGlobalIndex(17,0,1), 1, state, dir_x, kind, 0, depth, ctf_props, 0, true });
+    connection_set.add({ 16, 0, 1, grid.getGlobalIndex(16,0,1), 1, state, dir_x, kind, 0, depth, ctf_props, 0, true });
+    connection_set.add({ 15, 0, 1, grid.getGlobalIndex(15,0,1), 1, state, dir_x, kind, 0, depth, ctf_props, 0, true });
 
     BOOST_CHECK_EQUAL( 7U , connection_set.size() );
 
@@ -383,19 +405,32 @@ WSEGSICD
 
 }
 
-BOOST_AUTO_TEST_CASE(WrongDistanceCOMPSEGS) {
-    auto dir = Opm::Connection::Direction::Z;
+BOOST_AUTO_TEST_CASE(WrongDistanceCOMPSEGS)
+{
+    const auto dir_z = Opm::Connection::Direction::Z;
+    const auto dir_x = Opm::Connection::Direction::X;
     const auto kind = Opm::Connection::CTFKind::DeckValue;
-    Opm::WellConnections connection_set(Opm::Connection::Order::TRACK, 10,10);
-    Opm::EclipseGrid grid(20,20,20, 1., 1., 25., 2500.);
-    connection_set.add(Opm::Connection( 19, 0, 0, grid.getGlobalIndex(19,0,0),1, 0.0, Opm::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, dir, kind, 0, true) );
-    connection_set.add(Opm::Connection( 19, 0, 1, grid.getGlobalIndex(19,0,1),1, 0.0, Opm::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, dir, kind, 0, true) );
-    connection_set.add(Opm::Connection( 19, 0, 2, grid.getGlobalIndex(19,0,2),1, 0.0, Opm::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, dir, kind, 0, true) );
 
-    connection_set.add(Opm::Connection( 18, 0, 1, grid.getGlobalIndex(18,0,1),1, 0.0, Opm::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0,  Opm::Connection::Direction::X, kind, 0, true) );
-    connection_set.add(Opm::Connection( 17, 0, 1, grid.getGlobalIndex(17,0,1),1, 0.0, Opm::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0,  Opm::Connection::Direction::X, kind, 0, true) );
-    connection_set.add(Opm::Connection( 16, 0, 1, grid.getGlobalIndex(16,0,1),1, 0.0, Opm::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0,  Opm::Connection::Direction::X, kind, 0, true) );
-    connection_set.add(Opm::Connection( 15, 0, 1, grid.getGlobalIndex(15,0,1),1, 0.0, Opm::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0,  Opm::Connection::Direction::X, kind, 0, true) );
+    const Opm::EclipseGrid grid { 20,20,20, 1.0, 1.0, 25., 2500.0 };
+
+    const auto depth = 0.0;
+    const auto state = Opm::Connection::State::OPEN;
+
+    auto ctf_props = Opm::Connection::CTFProperties{};
+
+    ctf_props.CF = 200.0;
+    ctf_props.Kh = 17.29;
+    ctf_props.rw = 0.25;
+
+    Opm::WellConnections connection_set(Opm::Connection::Order::TRACK, 10,10);
+    connection_set.add({ 19, 0, 0, grid.getGlobalIndex(19,0,0), 1, state, dir_z, kind, 0, depth, ctf_props, 0, true });
+    connection_set.add({ 19, 0, 1, grid.getGlobalIndex(19,0,1), 1, state, dir_z, kind, 0, depth, ctf_props, 0, true });
+    connection_set.add({ 19, 0, 2, grid.getGlobalIndex(19,0,2), 1, state, dir_z, kind, 0, depth, ctf_props, 0, true });
+
+    connection_set.add({ 18, 0, 1, grid.getGlobalIndex(18,0,1), 1, state, dir_x, kind, 0, depth, ctf_props, 0, true });
+    connection_set.add({ 17, 0, 1, grid.getGlobalIndex(17,0,1), 1, state, dir_x, kind, 0, depth, ctf_props, 0, true });
+    connection_set.add({ 16, 0, 1, grid.getGlobalIndex(16,0,1), 1, state, dir_x, kind, 0, depth, ctf_props, 0, true });
+    connection_set.add({ 15, 0, 1, grid.getGlobalIndex(15,0,1), 1, state, dir_x, kind, 0, depth, ctf_props, 0, true });
 
     BOOST_CHECK_EQUAL( 7U , connection_set.size() );
 
@@ -452,19 +487,32 @@ BOOST_AUTO_TEST_CASE(WrongDistanceCOMPSEGS) {
     BOOST_CHECK_NO_THROW(Opm::Compsegs::processCOMPSEGS(compsegs, connection_set, segment_set, Opm::ScheduleGrid(grid, fp, cells), parseContext, errorGuard));
 }
 
-BOOST_AUTO_TEST_CASE(NegativeDepthCOMPSEGS) {
-    auto dir = Opm::Connection::Direction::Z;
+BOOST_AUTO_TEST_CASE(NegativeDepthCOMPSEGS)
+{
+    const auto dir_z = Opm::Connection::Direction::Z;
+    const auto dir_x = Opm::Connection::Direction::X;
     const auto kind = Opm::Connection::CTFKind::DeckValue;
-    Opm::WellConnections connection_set(Opm::Connection::Order::TRACK, 10,10);
-    Opm::EclipseGrid grid(20,20,20, 1., 1., 25., 2500.);
-    connection_set.add(Opm::Connection( 19, 0, 0, grid.getGlobalIndex(19,0,0),1, 0.0, Opm::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, dir, kind, 0, true) );
-    connection_set.add(Opm::Connection( 19, 0, 1, grid.getGlobalIndex(19,0,1),1, 0.0, Opm::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, dir, kind, 0, true) );
-    connection_set.add(Opm::Connection( 19, 0, 2, grid.getGlobalIndex(19,0,2),1, 0.0, Opm::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, dir, kind, 0, true) );
 
-    connection_set.add(Opm::Connection( 18, 0, 1, grid.getGlobalIndex(18,0,1),1, 0.0, Opm::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0,  Opm::Connection::Direction::X, kind, 0, true) );
-    connection_set.add(Opm::Connection( 17, 0, 1, grid.getGlobalIndex(17,0,1),1, 0.0, Opm::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0,  Opm::Connection::Direction::X, kind, 0, true) );
-    connection_set.add(Opm::Connection( 16, 0, 1, grid.getGlobalIndex(16,0,1),1, 0.0, Opm::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0,  Opm::Connection::Direction::X, kind, 0, true) );
-    connection_set.add(Opm::Connection( 15, 0, 1, grid.getGlobalIndex(15,0,1),1, 0.0, Opm::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0,  Opm::Connection::Direction::X, kind, 0, true) );
+    const Opm::EclipseGrid grid { 20,20,20, 1.0, 1.0, 25.0, 2500.0 };
+
+    const auto depth = 0.0;
+    const auto state = Opm::Connection::State::OPEN;
+
+    auto ctf_props = Opm::Connection::CTFProperties{};
+
+    ctf_props.CF = 200.0;
+    ctf_props.Kh = 17.29;
+    ctf_props.rw = 0.25;
+
+    Opm::WellConnections connection_set(Opm::Connection::Order::TRACK, 10,10);
+    connection_set.add({ 19, 0, 0, grid.getGlobalIndex(19,0,0), 1, state, dir_z, kind, 0, depth, ctf_props, 0, true });
+    connection_set.add({ 19, 0, 1, grid.getGlobalIndex(19,0,1), 1, state, dir_z, kind, 0, depth, ctf_props, 0, true });
+    connection_set.add({ 19, 0, 2, grid.getGlobalIndex(19,0,2), 1, state, dir_z, kind, 0, depth, ctf_props, 0, true });
+
+    connection_set.add({ 18, 0, 1, grid.getGlobalIndex(18,0,1), 1, state, dir_x, kind, 0, depth, ctf_props, 0, true });
+    connection_set.add({ 17, 0, 1, grid.getGlobalIndex(17,0,1), 1, state, dir_x, kind, 0, depth, ctf_props, 0, true });
+    connection_set.add({ 16, 0, 1, grid.getGlobalIndex(16,0,1), 1, state, dir_x, kind, 0, depth, ctf_props, 0, true });
+    connection_set.add({ 15, 0, 1, grid.getGlobalIndex(15,0,1), 1, state, dir_x, kind, 0, depth, ctf_props, 0, true });
 
     BOOST_CHECK_EQUAL( 7U , connection_set.size() );
 
@@ -521,19 +569,31 @@ BOOST_AUTO_TEST_CASE(NegativeDepthCOMPSEGS) {
     BOOST_CHECK_NO_THROW( Opm::Compsegs::processCOMPSEGS(compsegs, connection_set, segment_set, Opm::ScheduleGrid(grid, fp, cells), parseContext, errorGuard) );
 }
 
-BOOST_AUTO_TEST_CASE(testwsegvalv) {
-    auto dir = Opm::Connection::Direction::Z;
+BOOST_AUTO_TEST_CASE(testwsegvalv)
+{
+    const auto dir_z = Opm::Connection::Direction::Z;
+    const auto dir_x = Opm::Connection::Direction::X;
     const auto kind = Opm::Connection::CTFKind::DeckValue;
-    Opm::WellConnections connection_set(Opm::Connection::Order::TRACK, 10,10);
-    Opm::EclipseGrid grid(20,20,20, 1., 1., 25., 2500.);
-    connection_set.add(Opm::Connection( 19, 0, 0, grid.getGlobalIndex(19,0,0), 1, 0.0, Opm::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, dir, kind, 0, true) );
-    connection_set.add(Opm::Connection( 19, 0, 1, grid.getGlobalIndex(19,0,1), 1, 0.0, Opm::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, dir, kind, 0, true) );
-    connection_set.add(Opm::Connection( 19, 0, 2, grid.getGlobalIndex(19,0,2), 1, 0.0, Opm::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, dir, kind, 0, true) );
+    const Opm::EclipseGrid grid { 20,20,20, 1.0, 1.0, 25.0, 2500.0 };
 
-    connection_set.add(Opm::Connection( 18, 0, 1, grid.getGlobalIndex(18,0,1), 1, 0.0, Opm::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0,  Opm::Connection::Direction::X, kind, 0, true) );
-    connection_set.add(Opm::Connection( 17, 0, 1, grid.getGlobalIndex(17,0,1), 1, 0.0, Opm::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0,  Opm::Connection::Direction::X, kind, 0, true) );
-    connection_set.add(Opm::Connection( 16, 0, 1, grid.getGlobalIndex(16,0,1), 1, 0.0, Opm::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0,  Opm::Connection::Direction::X, kind, 0, true) );
-    connection_set.add(Opm::Connection( 15, 0, 1, grid.getGlobalIndex(15,0,1), 1, 0.0, Opm::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0,  Opm::Connection::Direction::X, kind, 0, true) );
+    const auto depth = 0.0;
+    const auto state = Opm::Connection::State::OPEN;
+
+    auto ctf_props = Opm::Connection::CTFProperties{};
+
+    ctf_props.CF = 200.0;
+    ctf_props.Kh = 17.29;
+    ctf_props.rw = 0.25;
+
+    Opm::WellConnections connection_set(Opm::Connection::Order::TRACK, 10,10);
+    connection_set.add({ 19, 0, 0, grid.getGlobalIndex(19,0,0), 1, state, dir_z, kind, 0, depth, ctf_props, 0, true });
+    connection_set.add({ 19, 0, 1, grid.getGlobalIndex(19,0,1), 1, state, dir_z, kind, 0, depth, ctf_props, 0, true });
+    connection_set.add({ 19, 0, 2, grid.getGlobalIndex(19,0,2), 1, state, dir_z, kind, 0, depth, ctf_props, 0, true });
+
+    connection_set.add({ 18, 0, 1, grid.getGlobalIndex(18,0,1), 1, state, dir_x, kind, 0, depth, ctf_props, 0, true });
+    connection_set.add({ 17, 0, 1, grid.getGlobalIndex(17,0,1), 1, state, dir_x, kind, 0, depth, ctf_props, 0, true });
+    connection_set.add({ 16, 0, 1, grid.getGlobalIndex(16,0,1), 1, state, dir_x, kind, 0, depth, ctf_props, 0, true });
+    connection_set.add({ 15, 0, 1, grid.getGlobalIndex(15,0,1), 1, state, dir_x, kind, 0, depth, ctf_props, 0, true });
 
     BOOST_CHECK_EQUAL( 7U , connection_set.size() );
 

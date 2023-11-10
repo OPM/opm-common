@@ -518,34 +518,39 @@ BOOST_AUTO_TEST_CASE(WellTestWGRUPCONWellPropertiesSet) {
 }
 
 
-BOOST_AUTO_TEST_CASE(TestDefaultedCOMPDATIJ) {
-    Parser parser;
-    const char * deckString = "\n\
-START\n\
-\n\
-10 MAI 2007 /\n\
-\n\
-GRID\n\
-PERMX\n\
-   9000*0.25 /\n\
-COPY \n\
-   PERMX PERMY /\n\
-   PERMX PERMZ /\n\
-/\n\
-SCHEDULE\n\
-WELSPECS \n\
-     'W1'        'OP'   11   21  3.33       'OIL'  7* /   \n\
-/\n\
-COMPDAT \n\
-     'W1'   2*    1    1      'OPEN'  1*     32.948      0.311   3047.839  2*         'X'     22.100 /\n\
-/\n";
-    auto deck =  parser.parseString(deckString);
-    auto python = std::make_shared<Python>();
-    EclipseGrid grid(30,30,10);
-    TableManager table ( deck );
-    FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
-    Runspec runspec (deck);
-    Schedule sched(deck,  grid , fp, runspec, python);
+BOOST_AUTO_TEST_CASE(TestDefaultedCOMPDATIJ)
+{
+    const auto deck = Parser{}.parseString(R"(
+START
+
+10 MAI 2007 /
+
+GRID
+PERMX
+   9000*0.25 /
+COPY
+   PERMX PERMY /
+   PERMX PERMZ /
+/
+PORO
+  9000*0.3 /
+
+SCHEDULE
+WELSPECS
+     'W1'        'OP'   11   21  3.33       'OIL'  7* /
+/
+COMPDAT
+     'W1'   2*    1    1      'OPEN'  1*     32.948      0.311   3047.839  2*         'X'     22.100 /
+/
+END
+)");
+
+    const EclipseGrid grid(30,30,10);
+    const TableManager table (deck);
+    const FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
+    const Runspec runspec (deck);
+    const Schedule sched(deck, grid, fp, runspec, std::make_shared<Python>());
+
     const auto& connections = sched.getWell("W1", 0).getConnections();
     BOOST_CHECK_EQUAL( 10 , connections.get(0).getI() );
     BOOST_CHECK_EQUAL( 20 , connections.get(0).getJ() );
@@ -907,4 +912,3 @@ BOOST_AUTO_TEST_CASE(TestWellEvents) {
     BOOST_CHECK( sched[0].wellgroup_events().hasEvent( "W_1", ScheduleEvents::COMPLETION_CHANGE));
     BOOST_CHECK( sched[5].wellgroup_events().hasEvent( "W_1", ScheduleEvents::COMPLETION_CHANGE));
 }
-

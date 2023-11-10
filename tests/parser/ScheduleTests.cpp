@@ -15,16 +15,7 @@
 
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
- */
-
-#include <algorithm>
-#include <cstddef>
-#include <fstream>
-#include <memory>
-#include <stdexcept>
-#include <utility>
-
-#include <fmt/format.h>
+*/
 
 #define BOOST_TEST_MODULE ScheduleTests
 
@@ -37,6 +28,8 @@
 #include <boost/test/tools/floating_point_comparison.hpp>
 #endif
 
+#include <opm/input/eclipse/Schedule/Schedule.hpp>
+
 #include <opm/common/utility/ActiveGridCells.hpp>
 #include <opm/common/utility/TimeService.hpp>
 #include <opm/common/utility/OpmInputError.hpp>
@@ -45,48 +38,61 @@
 #include <opm/io/eclipse/RestartFileView.hpp>
 #include <opm/io/eclipse/rst/state.hpp>
 
-#include <opm/input/eclipse/Python/Python.hpp>
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
-#include <opm/input/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
 #include <opm/input/eclipse/EclipseState/Runspec.hpp>
+#include <opm/input/eclipse/EclipseState/SimulationConfig/BCConfig.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
-#include <opm/input/eclipse/Schedule/Schedule.hpp>
-#include <opm/input/eclipse/Schedule/OilVaporizationProperties.hpp>
-#include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
-#include <opm/input/eclipse/Schedule/Well/Well.hpp>
+
+#include <opm/input/eclipse/Python/Python.hpp>
+
+#include <opm/input/eclipse/Schedule/CompletedCells.hpp>
 #include <opm/input/eclipse/Schedule/GasLiftOpt.hpp>
+#include <opm/input/eclipse/Schedule/Group/GTNode.hpp>
+#include <opm/input/eclipse/Schedule/Group/GuideRate.hpp>
+#include <opm/input/eclipse/Schedule/Group/GuideRateConfig.hpp>
 #include <opm/input/eclipse/Schedule/Network/Balance.hpp>
+#include <opm/input/eclipse/Schedule/OilVaporizationProperties.hpp>
+#include <opm/input/eclipse/Schedule/ScheduleGrid.hpp>
 #include <opm/input/eclipse/Schedule/SummaryState.hpp>
-#include <opm/input/eclipse/Schedule/Well/WellMatcher.hpp>
 #include <opm/input/eclipse/Schedule/Well/NameOrder.hpp>
 #include <opm/input/eclipse/Schedule/Well/PAvg.hpp>
 #include <opm/input/eclipse/Schedule/Well/WDFAC.hpp>
+#include <opm/input/eclipse/Schedule/Well/WVFPEXP.hpp>
+#include <opm/input/eclipse/Schedule/Well/Well.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellFoamProperties.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellMatcher.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellPolymerProperties.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellTestConfig.hpp>
-#include <opm/input/eclipse/Schedule/Well/WVFPEXP.hpp>
-#include <opm/input/eclipse/EclipseState/SimulationConfig/BCConfig.hpp>
+
+#include <opm/input/eclipse/Units/Dimension.hpp>
+#include <opm/input/eclipse/Units/UnitSystem.hpp>
+#include <opm/input/eclipse/Units/Units.hpp>
 
 #include <opm/input/eclipse/Deck/Deck.hpp>
 #include <opm/input/eclipse/Deck/DeckItem.hpp>
 #include <opm/input/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/input/eclipse/Deck/DeckRecord.hpp>
+
 #include <opm/input/eclipse/Parser/ErrorGuard.hpp>
 #include <opm/input/eclipse/Parser/InputErrorAction.hpp>
-#include <opm/input/eclipse/Parser/Parser.hpp>
 #include <opm/input/eclipse/Parser/ParseContext.hpp>
-#include <opm/input/eclipse/Units/Dimension.hpp>
-#include <opm/input/eclipse/Units/UnitSystem.hpp>
-#include <opm/input/eclipse/Units/Units.hpp>
-
-#include <opm/input/eclipse/Schedule/Group/GuideRateConfig.hpp>
-#include <opm/input/eclipse/Schedule/Group/GuideRate.hpp>
-#include <opm/input/eclipse/Schedule/Group/GTNode.hpp>
-#include <opm/input/eclipse/Schedule/CompletedCells.hpp>
-#include <opm/input/eclipse/Schedule/ScheduleGrid.hpp>
+#include <opm/input/eclipse/Parser/Parser.hpp>
 
 #include "tests/WorkArea.hpp"
+
+#include <algorithm>
+#include <cstddef>
+#include <fstream>
+#include <memory>
+#include <stdexcept>
+#include <string>
+#include <utility>
+#include <vector>
+
+#include <fmt/format.h>
 
 using namespace Opm;
 
@@ -100,32 +106,33 @@ namespace {
     {
         return UnitSystem::newMETRIC().to_si(UnitSystem::measure::transmissibility, 1.0);
     }
-}
 
-static Schedule make_schedule(const std::string& deck_string) {
-    const auto& deck = Parser{}.parseString(deck_string);
-    auto python = std::make_shared<Python>();
-    EclipseGrid grid(10,10,10);
-    TableManager table ( deck );
-    FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
-    Runspec runspec (deck);
-    return Schedule(deck, grid , fp, runspec, python);
-}
+    Schedule make_schedule(const std::string& deck_string)
+    {
+        const auto deck = Parser{}.parseString(deck_string);
 
+        const EclipseGrid grid(10, 10, 10);
+        const TableManager table (deck);
+        const FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
+        const Runspec runspec (deck);
 
-static std::string createDeck() {
-    std::string input = R"(
+        return { deck, grid, fp, runspec, std::make_shared<Python>() };
+    }
+
+    std::string createDeck()
+    {
+        return { R"(
 START
 8 MAR 1998 /
 
 SCHEDULE
 
-)";
-    return input;
-}
+)" };
+    }
 
-static std::string createDeckWithWells() {
-    std::string input = R"(
+    std::string createDeckWithWells()
+    {
+        return { R"(
 START             -- 0
 10 MAI 2007 /
 SCHEDULE
@@ -143,13 +150,12 @@ WELSPECS
      'WX2'        'OP'   30   37  3.33       'OIL'  7* /
      'W_3'        'OP'   20   51  3.92       'OIL'  7* /
 /;
-)";
-    return input;
-}
+)" };
+    }
 
-
-static std::string createDeckWTEST() {
-    std::string input = R"(
+    std::string createDeckWTEST()
+    {
+        return { R"(
 START             -- 0
 10 MAI 2007 /
 GRID
@@ -246,12 +252,12 @@ DATES             -- 5
 WCONINJH
      'BAN'      'WATER'      1*      1.0 /
 /
-)";
-    return input;
-}
+)" };
+    }
 
-static std::string createDeckForTestingCrossFlow() {
-    std::string input = R"(
+    std::string createDeckForTestingCrossFlow()
+    {
+        return { R"(
 START             -- 0
 10 MAI 2007 /
 GRID
@@ -318,12 +324,12 @@ DATES             -- 4
 WCONINJH
      'BAN'      'WATER'      1*      1.0 /
 /
-)";
-    return input;
-}
+)" };
+    }
 
-static std::string createDeckWithWellsOrdered() {
-    std::string input = R"(
+    std::string createDeckWithWellsOrdered()
+    {
+        return { R"(
 START             -- 0
 10 MAI 2007 /
 WELLDIMS
@@ -334,12 +340,12 @@ WELSPECS
      'BW_2'        'BG'   3   3  3.33       'OIL'  7* /
      'AW_3'        'AG'   2   5  3.92       'OIL'  7* /
 /
-)";
-    return input;
-}
+)" };
+    }
 
-static std::string createDeckWithWellsOrderedGRUPTREE() {
-    std::string input = R"(
+    std::string createDeckWithWellsOrderedGRUPTREE()
+    {
+        return { R"(
 START             -- 0
 10 MAI 2007 /
 SCHEDULE
@@ -355,13 +361,12 @@ WELSPECS
      'BW_2'        'CG2'   3   3  3.33       'OIL'  7* /
      'AW_3'        'CG2'   2   5  3.92       'OIL'  7* /
 /
-)";
+)" };
+    }
 
-    return input;
-}
-
-static std::string createDeckWithWellsAndCompletionData() {
-    std::string input = R"(
+    std::string createDeckWithWellsAndCompletionData()
+    {
+        return { R"(
 START             -- 0
 1 NOV 1979 /
 GRID
@@ -398,17 +403,20 @@ DATES             -- 2,3
 COMPDAT // with defaulted I and J
  'OP_1'  0  *   3  9 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
 /
-)";
-    return input;
-}
+)" };
+    }
 
+    bool has_name(const std::vector<std::string>& names,
+                  const std::string& name)
+    {
+        return std::any_of(names.begin(), names.end(),
+                           [&name](const std::string& search)
+                           {
+                               return search == name;
+                           });
+    }
 
-
-bool has_name(const std::vector<std::string>& names, const std::string& name) {
-    auto find_iter = std::find(names.begin(), names.end(), name);
-    return (find_iter != names.end());
-}
-
+} // Anonymous namespace
 
 BOOST_AUTO_TEST_CASE(CreateScheduleDeckMissingReturnsDefaults) {
     Deck deck;
@@ -448,14 +456,16 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWellsOrdered) {
     BOOST_CHECK_EQUAL(field_ptr->name(), "FIELD");
 }
 
+namespace {
 
-static bool has_well( const std::vector<Well>& wells, const std::string& well_name) {
+bool has_well( const std::vector<Well>& wells, const std::string& well_name) {
     for (const auto& well : wells )
         if (well.name( ) == well_name)
             return true;
     return false;
 }
 
+} // Anonymous namespace
 
 BOOST_AUTO_TEST_CASE(CreateScheduleDeckWellsOrderedGRUPTREE) {
     const auto& schedule = make_schedule( createDeckWithWellsOrderedGRUPTREE() );
@@ -525,7 +535,6 @@ BOOST_AUTO_TEST_CASE(GroupTree2TEST) {
     BOOST_CHECK_EQUAL(pg.group().name(), "PLATFORM");
     BOOST_CHECK_EQUAL(pg.parent_name(), "FIELD");
 }
-
 
 
 BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithStart) {
@@ -685,8 +694,11 @@ BOOST_AUTO_TEST_CASE(TestCrossFlowHandling) {
     BOOST_CHECK(Well::Status::OPEN == schedule.getWell("BAN", 5).getStatus());
 }
 
-static std::string createDeckWithWellsAndSkinFactorChanges() {
-    std::string input = R"(
+namespace {
+
+    std::string createDeckWithWellsAndSkinFactorChanges()
+    {
+        return { R"(RUNSPEC
 START             -- 0
 1 NOV 1979 /
 GRID
@@ -708,40 +720,53 @@ WELSPECS
     'OP_3'       'OP'   7   7 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  /
 /
 COMPDAT
- 'OP_1'  9  9   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
- 'OP_1'  9  9   2   2 'OPEN' 1*   46.825   0.311  4332.346 1*  1*  'X'  22.123 /
- 'OP_2'  8  8   1   3 'OPEN' 1*    1.168   0.311   107.872 1*  1*  'Y'  21.925 /
- 'OP_2'  8  7   3   3 'OPEN' 1*   15.071   0.311  1391.859 1*  1*  'Y'  21.920 /
- 'OP_2'  8  7   3   6 'OPEN' 1*    6.242   0.311   576.458 1*  1*  'Y'  21.915 /
- 'OP_3'  7  7   1   1 'OPEN' 1*   27.412   0.311  2445.337 1*  1*  'Y'  18.521 /
- 'OP_3'  7  7   2   2 'OPEN' 1*   55.195   0.311  4923.842 1*  1*  'Y'  18.524 /
+-- Well  I  J  K1  K2 Status SATNUM  CTF      Diam   Kh       Skin  D   Dir  PER (r0)
+ 'OP_1'  9  9   1   1 'OPEN' 1*      32.948   0.311  3047.839 1*    1*  'X'  22.100 /
+ 'OP_1'  9  9   2   2 'OPEN' 1*      46.825   0.311  4332.346 1*    1*  'X'  22.123 /
+ 'OP_2'  8  8   1   3 'OPEN' 1*       1.168   0.311   107.872 1*    1*  'Y'  21.925 /
+ 'OP_2'  8  7   3   3 'OPEN' 1*      15.071   0.311  1391.859 1*    1*  'Y'  21.920 /
+ 'OP_2'  8  7   3   6 'OPEN' 1*       6.242   0.311   576.458 1*    1*  'Y'  21.915 /
+ 'OP_3'  7  7   1   1 'OPEN' 1*      27.412   0.311  2445.337 1*    1*  'Y'  18.521 /
+ 'OP_3'  7  7   2   2 'OPEN' 1*      55.195   0.311  4923.842 1*    1*  'Y'  18.524 /
 /
 DATES             -- 2
  10  JUL 2007 /
 /
 
 CSKIN
-'OP_1'  9  9  1  1  1.5  /
-'OP_2'  4*          -1.0 /
-'OP_3'  2*    1  2  10.0  /
+'OP_1'  9  9  1  1    1.5 /
+'OP_2'  4*           -1.0 /
+'OP_3'  2*    1  2   10.0 /
 'OP_3'  7  7  1  1  -1.15 /
 /
 
-)";
-    return input;
-}
+)" };
+    }
 
-BOOST_AUTO_TEST_CASE(CreateScheduleDeckWellsAndSkinFactorChanges) {
-    Opm::UnitSystem units(Opm::UnitSystem::UnitType::UNIT_TYPE_METRIC);
-    const auto& schedule = make_schedule(createDeckWithWellsAndSkinFactorChanges());
-    
+} // Anonymous namespace
+
+BOOST_AUTO_TEST_CASE(CreateScheduleDeckWellsAndSkinFactorChanges)
+{
+    auto metricCF = [units = Opm::UnitSystem::newMETRIC()]
+        (const double ctf)
+    {
+        return units.from_si(Opm::UnitSystem::measure::transmissibility, ctf);
+    };
+
+    const auto schedule = make_schedule(createDeckWithWellsAndSkinFactorChanges());
+
     // OP_1
     {
         const auto& cs = schedule.getWell("OP_1", 2).getConnections();
         BOOST_CHECK_CLOSE(cs.getFromIJK(8, 8, 0).skinFactor(), 1.5, 1e-10);
-        double CF = 25.290608354096133;
-        BOOST_CHECK_CLOSE(cs.getFromIJK(8, 8, 0).CF(), units.to_si(Opm::UnitSystem::measure::transmissibility, CF), 1e-5);
+
+        // denom = 2*pi*Kh / CTF = 4.95609889
+        //
+        // New CTF = CTF * denom / (denom + S) = 32.948 * 4.95609889 / (4.95609889 + 1.5)
+        const double expectCF = 25.292912792;
+        BOOST_CHECK_CLOSE(metricCF(cs.getFromIJK(8, 8, 0).CF()), expectCF, 1.0e-5);
     }
+
     // OP_2
     {
         const auto& well = schedule.getWell("OP_2", 2);
@@ -749,24 +774,40 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWellsAndSkinFactorChanges) {
         for (size_t i = 0; i < cs.size(); i++) {
             BOOST_CHECK_CLOSE(cs.get(i).skinFactor(), -1.0, 1e-10);
         }
-        double CF = 7.822338909386947;
-        BOOST_CHECK_CLOSE(cs.getFromIJK(7, 6, 2).CF(), units.to_si(Opm::UnitSystem::measure::transmissibility, CF), 1e-5);
+
+        // denom = 2*pi*Kh / CTF = 4.947899898
+        //
+        // New CTF = CTF * denom / (denom + S) = 6.242 * 4.947899898 / (4.947899898 - 1.0)
+        const double expectCF = 7.82309378689;
+        BOOST_CHECK_CLOSE(metricCF(cs.getFromIJK(7, 6, 2).CF()), expectCF, 1.0e-5);
     }
+
     // OP_3
     {
         const auto& well = schedule.getWell("OP_3", 2);
         const auto& cs = well.getConnections();
-        BOOST_CHECK_CLOSE(cs.getFromIJK(6, 6, 0).skinFactor(), -1.15, 1e-10);
-        BOOST_CHECK_CLOSE(cs.getFromIJK(6, 6, 1).skinFactor(), 10.0, 1e-10);
-        double CF1 = 36.09169888375442;
-        BOOST_CHECK_CLOSE(cs.getFromIJK(6, 6, 0).CF(), units.to_si(Opm::UnitSystem::measure::transmissibility, CF1), 1e-5);
-        double CF2 = 17.848489977420336;
-        BOOST_CHECK_CLOSE(cs.getFromIJK(6, 6, 1).CF(), units.to_si(Opm::UnitSystem::measure::transmissibility, CF2), 1e-5);
+        BOOST_CHECK_CLOSE(cs.getFromIJK(6, 6, 0).skinFactor(), - 1.15, 1e-10);
+        BOOST_CHECK_CLOSE(cs.getFromIJK(6, 6, 1).skinFactor(),  10.0, 1e-10);
+
+        // denom = 2*pi*Kh / CTF = 4.7794177751
+        //
+        // New CTF = CTF * denom / (denom + S) = 27.412 * 4.7794177751 / (4.7794177751 - 1.15)
+        const double expectCF1 = 36.09763553531;
+        BOOST_CHECK_CLOSE(metricCF(cs.getFromIJK(6, 6, 0).CF()), expectCF1, 1.0e-5);
+
+        // denom = 2*pi*Kh / CTF = 4.7794879307
+        //
+        // New CTF = CTF * denom / (denom + S) = 55.195 * 4.7794879307 / (4.7794879307 + 10)
+        const double expectCF2 = 17.84932181501;
+        BOOST_CHECK_CLOSE(metricCF(cs.getFromIJK(6, 6, 1).CF()), expectCF2, 1.0e-5);
     }
 }
 
-static std::string createDeckWithWPIMULTandWELPIandCSKIN() {
-    std::string input = R"(
+namespace {
+
+    std::string createDeckWithWPIMULTandWELPIandCSKIN()
+    {
+        return { R"(
 START             -- 0
 1 NOV 1979 /
 GRID
@@ -848,22 +889,33 @@ CSKIN
 'OP_1'  9  9  1  1  -1.0  /
 /
 
-)";
-    return input;
-}
+)" };
+    }
 
-BOOST_AUTO_TEST_CASE(CreateScheduleDeckWPIMULTandWELPIandCSKIN) {
-    // Setup
-    Opm::UnitSystem units(Opm::UnitSystem::UnitType::UNIT_TYPE_METRIC);
+} // Anonymous namespace
+
+BOOST_AUTO_TEST_CASE(CreateScheduleDeckWPIMULTandWELPIandCSKIN)
+{
+    auto metricCF = [units = Opm::UnitSystem::newMETRIC()](const double ctf)
+    {
+        return units.from_si(Opm::UnitSystem::measure::transmissibility, ctf);
+    };
+
+    // Note: Schedule must be mutable for WELPI scaling.
     auto schedule = make_schedule(createDeckWithWPIMULTandWELPIandCSKIN());
 
     // Report step 2
     {
         const auto& cs = schedule.getWell("OP_1", 2).getConnections();
-        BOOST_CHECK_CLOSE(cs.getFromIJK(8, 8, 0).skinFactor(), 1.5, 1e-10);
-        double CF = 25.290608354096133;
-        BOOST_CHECK_CLOSE(cs.getFromIJK(8, 8, 0).CF(), units.to_si(Opm::UnitSystem::measure::transmissibility, CF), 1e-5);
-        BOOST_CHECK_CLOSE(cs.getFromIJK(8, 8, 0).wpimult(), 1.0, 1e-5);
+        const auto& conn = cs.getFromIJK(8, 8, 0);
+
+        BOOST_CHECK_CLOSE(conn.skinFactor(), 1.5, 1e-10);
+
+        // denom = 2*pi*Kh / CTF = 4.95609889
+        //
+        // New CTF = CTF * denom / (denom + S) = 32.948 * 4.95609889 / (4.95609889 + 1.5)
+        const double expectCF = 25.292912792376;
+        BOOST_CHECK_CLOSE(metricCF(conn.CF()), expectCF, 1.0e-5);
     }
 
     // Report step 3
@@ -871,15 +923,22 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWPIMULTandWELPIandCSKIN) {
         const auto& cs_prev = schedule.getWell("OP_1", 2).getConnections();
         const auto& cs_curr = schedule.getWell("OP_1", 3).getConnections();
         BOOST_CHECK_CLOSE(cs_curr.getFromIJK(8, 8, 0).CF() / cs_prev.getFromIJK(8, 8, 0).CF(), 1.3, 1e-5);
-        BOOST_CHECK_CLOSE(cs_curr.getFromIJK(8, 8, 0).wpimult(), 1.3, 1e-5);
     }
 
     // Report step 4
     {
         const auto& cs = schedule.getWell("OP_1", 4).getConnections();
-        BOOST_CHECK_CLOSE(cs.getFromIJK(8, 8, 0).skinFactor(), 0.5, 1e-10);
-        double CF = 38.90302007377862;  // CF from CSKIN multiplied by 1.3 from WPIMULT
-        BOOST_CHECK_CLOSE(cs.getFromIJK(8, 8, 0).CF(), units.to_si(Opm::UnitSystem::measure::transmissibility, CF), 1e-5);
+        const auto& conn = cs.getFromIJK(8, 8, 0);
+
+        BOOST_CHECK_CLOSE(conn.skinFactor(), 0.5, 1e-10);
+
+        // CF from CSKIN multiplied by 1.3 from WPIMULT
+        // denom = 2*pi*Kh / CTF = 4.95609889
+        // mult = 1.3
+        //
+        // New CTF = mult * CTF * denom / (denom + S) = 1.3 * 32.948 * 4.95609889 / (4.95609889 + 0.5)
+        const double expectCF = 38.90721454349;
+        BOOST_CHECK_CLOSE(metricCF(conn.CF()), expectCF, 1e-5);
     }
 
     // Report step 5
@@ -887,49 +946,69 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWPIMULTandWELPIandCSKIN) {
         const auto& cs_prev = schedule.getWell("OP_1", 4).getConnections();
         const auto& cs_curr = schedule.getWell("OP_1", 5).getConnections();
         BOOST_CHECK_CLOSE(cs_curr.getFromIJK(8, 8, 0).CF() / cs_prev.getFromIJK(8, 8, 0).CF(), 1.3, 1e-5);
-        BOOST_CHECK_CLOSE(cs_curr.getFromIJK(8, 8, 0).wpimult(), 1.3 * 1.3, 1e-5);
     }
 
     // Report step 6
     {
-        const auto& cs = schedule.getWell("OP_1", 6).getConnections();
-        double init_pi = 100.0;
-        schedule.applyWellProdIndexScaling("OP_1", 6, units.to_si(Opm::UnitSystem::measure::liquid_productivity_index, init_pi));
-        const auto& target_pi = schedule[6].target_wellpi.at("OP_1");
-        BOOST_CHECK_CLOSE(target_pi, 50.0, 1e-5);
-        BOOST_CHECK_CLOSE(cs.getFromIJK(8, 8, 0).wpimult(), 1.3 * 1.3 * (target_pi / init_pi), 1e-5);
+        auto cvrtPI = [units = Opm::UnitSystem::newMETRIC()](const double pi)
+        {
+            return units.to_si(Opm::UnitSystem::measure::liquid_productivity_index, pi);
+        };
+
+        const auto init_pi = cvrtPI(100.0);
+        schedule.applyWellProdIndexScaling("OP_1", 6, init_pi);
+
+        const auto target_pi = schedule[6].target_wellpi.at("OP_1");
+        BOOST_CHECK_CLOSE(target_pi, 50.0, 1.0e-5);
     }
 
     // Report step 7
     {
-        const auto& cs_prev = schedule.getWell("OP_1", 6).getConnections();
-        const auto& cs_curr = schedule.getWell("OP_1", 7).getConnections();
-        BOOST_CHECK_CLOSE(cs_curr.getFromIJK(8, 8, 0).skinFactor(), 5.0, 1e-10);
-        double CF = 13.858329011932668;  // CF from CSKIN multiplied by 0.845 from WPIMULT and WELPI previous
-        BOOST_CHECK_CLOSE(cs_curr.getFromIJK(8, 8, 0).CF(), units.to_si(Opm::UnitSystem::measure::transmissibility, CF), 1e-5);
-        BOOST_CHECK_CLOSE(cs_curr.getFromIJK(8, 8, 0).wpimult(), cs_prev.getFromIJK(8, 8, 0).wpimult(), 1e-5);
+        const auto& cs = schedule.getWell("OP_1", 7).getConnections();
+        const auto& conn = cs.getFromIJK(8, 8, 0);
+
+        BOOST_CHECK_CLOSE(conn.skinFactor(), 5.0, 1e-10);
+
+        // denom = 2*pi*Kh / CTF = 4.95609889
+        // mult = 1.3 * 1.3 * (50 / 100) = 0.845
+        //
+        // New CTF = mult * CTF * denom / (denom + S) = 0.845 * 32.948 * 4.95609889 / (4.95609889 + 5)
+
+        const auto expectCF = 13.8591478493;
+        BOOST_CHECK_CLOSE(metricCF(conn.CF()), expectCF, 1.0e-5);
     }
 
     // Report step 8
     {
         const auto& cs = schedule.getWell("OP_1", 8).getConnections();
-        BOOST_CHECK_CLOSE(cs.getFromIJK(8, 8, 0).CF(), units.to_si(Opm::UnitSystem::measure::transmissibility, 32.948), 1e-5);
-        BOOST_CHECK_CLOSE(cs.getFromIJK(8, 8, 0).wpimult(), 1.0, 1e-5);
+        const auto& conn = cs.getFromIJK(8, 8, 0);
+
+        const auto expectCF = 32.948;
+        BOOST_CHECK_CLOSE(metricCF(conn.CF()), expectCF, 1.0e-5);
     }
 
     // Report step 9
     {
         const auto& cs = schedule.getWell("OP_1", 9).getConnections();
-        BOOST_CHECK_CLOSE(cs.getFromIJK(8, 8, 0).skinFactor(), -1.0, 1e-10);
-        double CF = 41.27026972084714;  // CF from CSKIN with WPIMULT and WELLPI multiplier reset to 1.0
-        BOOST_CHECK_CLOSE(cs.getFromIJK(8, 8, 0).CF(), units.to_si(Opm::UnitSystem::measure::transmissibility, CF), 1e-5);
-        BOOST_CHECK_CLOSE(cs.getFromIJK(8, 8, 0).wpimult(), 1.0, 1e-5);
+        const auto& conn = cs.getFromIJK(8, 8, 0);
+
+        BOOST_CHECK_CLOSE(conn.skinFactor(), -1.0, 1e-10);
+
+        // CF from CSKIN with WPIMULT and WELLPI multiplier reset to 1.0
+        //
+        // denom = 2*pi*Kh / CTF = 4.95609889
+        //
+        // New CTF = CTF * denom / (denom + S) = 32.948 * 4.95609889 / (4.95609889 - 1)
+        const auto expectCF = 41.276406579873;
+        BOOST_CHECK_CLOSE(metricCF(conn.CF()), expectCF, 1.0e-5);
     }
 }
 
+namespace {
 
-static std::string createDeckWithWellsAndConnectionDataWithWELOPEN() {
-    std::string input = R"(
+    std::string createDeckWithWellsAndConnectionDataWithWELOPEN()
+    {
+        return { R"(
 START             -- 0
 1 NOV 1979 /
 GRID
@@ -986,9 +1065,10 @@ DATES             -- 5
 WELOPEN
  'OP_1' SHUT 0 0 0 0 0 /
 /
-)";
-    return input;
-}
+)" };
+    }
+
+} // Anonymous namespace
 
 BOOST_AUTO_TEST_CASE(CreateScheduleDeckWellsAndConnectionDataWithWELOPEN) {
     const auto& schedule = make_schedule(createDeckWithWellsAndConnectionDataWithWELOPEN());
@@ -2617,46 +2697,48 @@ BOOST_AUTO_TEST_CASE(WTEMPINJ_well_template) {
 }
 
 BOOST_AUTO_TEST_CASE( COMPDAT_sets_automatic_complnum ) {
-    std::string input = R"(
-        START             -- 0
-        19 JUN 2007 /
-        GRID
-        PERMX
-          1000*0.10/
-        COPY
-          PERMX PERMY /
-          PERMX PERMZ /
-        /
-        SCHEDULE
-        DATES             -- 1
-            10  OKT 2008 /
-        /
-        WELSPECS
-            'W1' 'G1'  3 3 2873.94 'WATER' 0.00 'STD' 'SHUT' 'NO' 0 'SEG' /
-        /
+    const auto deck = Parser{}.parseString(R"(
+START             -- 0
+19 JUN 2007 /
+GRID
+PORO
+  1000*0.3 /
+PERMX
+  1000*0.10/
+COPY
+  PERMX PERMY /
+  PERMX PERMZ /
+/
+SCHEDULE
+DATES             -- 1
+    10  OKT 2008 /
+/
+WELSPECS
+    'W1' 'G1'  3 3 2873.94 'WATER' 0.00 'STD' 'SHUT' 'NO' 0 'SEG' /
+/
 
-        COMPDAT
-            'W1' 0 0 1 1 'SHUT' 1*    / -- regular completion (1)
-            'W1' 0 0 2 2 'SHUT' 1*    / -- regular completion (2)
-            'W1' 0 0 3 4 'SHUT' 1*    / -- two completions in one record (3, 4)
-        /
+COMPDAT
+    'W1' 0 0 1 1 'SHUT' 1*    / -- regular completion (1)
+    'W1' 0 0 2 2 'SHUT' 1*    / -- regular completion (2)
+    'W1' 0 0 3 4 'SHUT' 1*    / -- two completions in one record (3, 4)
+/
 
-        DATES             -- 2
-            11  OKT 2008 /
-        /
+DATES             -- 2
+    11  OKT 2008 /
+/
 
-        COMPDAT
-            'W1' 0 0 1 1 'SHUT' 1*    / -- respecify, essentially ignore (1)
-        /
-    )";
+COMPDAT
+    'W1' 0 0 1 1 'SHUT' 1*    / -- respecify, essentially ignore (1)
+/
+END
+)");
 
-    auto deck = Parser().parseString(input);
-    auto python = std::make_shared<Python>();
-    EclipseGrid grid(10,10,10);
-    TableManager table ( deck );
-    FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
-    Runspec runspec (deck);
-    Schedule schedule( deck, grid, fp, runspec, python);
+    const EclipseGrid grid(10,10,10);
+    const TableManager table (deck);
+    const FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
+    const Runspec runspec (deck);
+    const Schedule schedule(deck, grid, fp, runspec, std::make_shared<Python>());
+
     const auto& cs1 = schedule.getWell( "W1", 1 ).getConnections(  );
     BOOST_CHECK_EQUAL( 1, cs1.get( 0 ).complnum() );
     BOOST_CHECK_EQUAL( 2, cs1.get( 1 ).complnum() );
@@ -2671,43 +2753,44 @@ BOOST_AUTO_TEST_CASE( COMPDAT_sets_automatic_complnum ) {
 }
 
 BOOST_AUTO_TEST_CASE( COMPDAT_multiple_wells ) {
-    std::string input = R"(
-        START             -- 0
-        19 JUN 2007 /
-        GRID
-        PERMX
-          1000*0.10/
-        COPY
-          PERMX PERMY /
-          PERMX PERMZ /
-        /
-        SCHEDULE
-        DATES             -- 1
-            10  OKT 2008 /
-        /
-        WELSPECS
-            'W1' 'G1'  3 3 2873.94 'WATER' 0.00 'STD' 'SHUT' 'NO' 0 'SEG' /
-            'W2' 'G2'  5 5 1       'OIL'   0.00 'STD' 'SHUT' 'NO' 0 'SEG' /
-        /
+    const auto deck = Parser{}.parseString(R"(
+START             -- 0
+19 JUN 2007 /
+GRID
+PERMX
+  1000*0.10/
+COPY
+  PERMX PERMY /
+  PERMX PERMZ /
+/
+PORO
+  1000*0.3 /
 
-        COMPDAT
-            'W1' 0 0 1 1 'SHUT' 1*    / -- regular completion (1)
-            'W1' 0 0 2 2 'SHUT' 1*    / -- regular completion (2)
-            'W1' 0 0 3 4 'SHUT' 1*    / -- two completions in one record (3, 4)
-            'W2' 0 0 3 3 'SHUT' 1*    / -- regular completion (1)
-            'W2' 0 0 1 3 'SHUT' 1*    / -- two completions (one exist already) (2, 3)
-            'W*' 0 0 3 5 'SHUT' 1*    / -- two completions, two wells (includes existing
-                                        -- and adding for both wells)
-        /
-    )";
+SCHEDULE
+DATES             -- 1
+    10  OKT 2008 /
+/
+WELSPECS
+    'W1' 'G1'  3 3 2873.94 'WATER' 0.00 'STD' 'SHUT' 'NO' 0 'SEG' /
+    'W2' 'G2'  5 5 1       'OIL'   0.00 'STD' 'SHUT' 'NO' 0 'SEG' /
+/
 
-    auto deck = Parser().parseString( input);
-    auto python = std::make_shared<Python>();
-    EclipseGrid grid( 10, 10, 10 );
-    TableManager table ( deck );
-    FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
-    Runspec runspec (deck);
-    Schedule schedule( deck, grid, fp, runspec, python);
+COMPDAT
+    'W1' 0 0 1 1 'SHUT' 1*    / -- regular completion (1)
+    'W1' 0 0 2 2 'SHUT' 1*    / -- regular completion (2)
+    'W1' 0 0 3 4 'SHUT' 1*    / -- two completions in one record (3, 4)
+    'W2' 0 0 3 3 'SHUT' 1*    / -- regular completion (1)
+    'W2' 0 0 1 3 'SHUT' 1*    / -- two completions (one exist already) (2, 3)
+    'W*' 0 0 3 5 'SHUT' 1*    / -- two completions, two wells (includes existing
+                                -- and adding for both wells)
+/
+)");
+
+    const EclipseGrid grid(10, 10, 10);
+    const TableManager table (deck);
+    const FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
+    const Runspec runspec (deck);
+    const Schedule schedule(deck, grid, fp, runspec, std::make_shared<Python>());
 
     {
         const auto& w1cs = schedule.getWell( "W1", 1 ).getConnections();
@@ -2745,39 +2828,40 @@ BOOST_AUTO_TEST_CASE( COMPDAT_multiple_wells ) {
 }
 
 BOOST_AUTO_TEST_CASE( COMPDAT_multiple_records_same_completion ) {
-    std::string input = R"(
-        START             -- 0
-        19 JUN 2007 /
-        GRID
-        PERMX
-          1000*0.10/
-        COPY
-          PERMX PERMY /
-          PERMX PERMZ /
-        /
-        SCHEDULE
-        DATES             -- 1
-            10  OKT 2008 /
-        /
-        WELSPECS
-            'W1' 'G1'  3 3 2873.94 'WATER' 0.00 'STD' 'SHUT' 'NO' 0 'SEG' /
-            'W2' 'G2'  5 5 1       'OIL'   0.00 'STD' 'SHUT' 'NO' 0 'SEG' /
-        /
+    const auto deck = Parser{}.parseString(R"(
+START             -- 0
+19 JUN 2007 /
+GRID
+PERMX
+  1000*0.10/
+COPY
+  PERMX PERMY /
+  PERMX PERMZ /
+/
+PORO
+  1000*0.3 /
+SCHEDULE
+DATES             -- 1
+    10  OKT 2008 /
+/
+WELSPECS
+    'W1' 'G1'  3 3 2873.94 'WATER' 0.00 'STD' 'SHUT' 'NO' 0 'SEG' /
+    'W2' 'G2'  5 5 1       'OIL'   0.00 'STD' 'SHUT' 'NO' 0 'SEG' /
+/
 
-        COMPDAT
-            'W1' 0 0 1 2 'SHUT' 1*    / -- multiple completion (1, 2)
-            'W1' 0 0 2 2 'SHUT' 1*    / -- updated completion (2)
-            'W1' 0 0 3 3 'SHUT' 1*    / -- regular completion (3)
-        /
-    )";
+COMPDAT
+    'W1' 0 0 1 2 'SHUT' 1*    / -- multiple completion (1, 2)
+    'W1' 0 0 2 2 'SHUT' 1*    / -- updated completion (2)
+    'W1' 0 0 3 3 'SHUT' 1*    / -- regular completion (3)
+/
+)");
 
-    auto deck = Parser().parseString(input);
-    auto python = std::make_shared<Python>();
-    EclipseGrid grid(10,10,10);
-    TableManager table ( deck );
-    FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
-    Runspec runspec (deck);
-    Schedule schedule( deck, grid, fp, runspec, python);
+    const EclipseGrid grid(10,10,10);
+    const TableManager table (deck);
+    const FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
+    const Runspec runspec (deck);
+    const Schedule schedule(deck, grid, fp, runspec, std::make_shared<Python>());
+
     const auto& cs = schedule.getWell( "W1", 1 ).getConnections();
     BOOST_CHECK_EQUAL( 3U, cs.size() );
     BOOST_CHECK_EQUAL( 1, cs.get( 0 ).complnum() );
@@ -2822,56 +2906,57 @@ BOOST_AUTO_TEST_CASE( complump_less_than_1 ) {
 }
 
 BOOST_AUTO_TEST_CASE( complump ) {
-    std::string input = R"(
-            START             -- 0
-            19 JUN 2007 /
-            GRID
-            PERMX
-              1000*0.10/
-            COPY
-              PERMX PERMY /
-              PERMX PERMZ /
-            /
-            SCHEDULE
+    const auto deck = Parser{}.parseString(R"(
+START             -- 0
+19 JUN 2007 /
+GRID
+PERMX
+  1000*0.10/
+COPY
+  PERMX PERMY /
+  PERMX PERMZ /
+/
+PORO
+  1000*0.3 /
 
-            WELSPECS
-                'W1' 'G1'  3 3 2873.94 'WATER' 0.00 'STD' 'SHUT' 'NO' 0 'SEG' /
-                'W2' 'G2'  5 5 1       'OIL'   0.00 'STD' 'SHUT' 'NO' 0 'SEG' /
-            /
+SCHEDULE
 
-            COMPDAT
-                'W1' 0 0 1 2 'SHUT' 1*    /    Global Index = 23, 123, 223, 323, 423, 523
-                'W1' 0 0 2 3 'SHUT' 1*    /
-                'W1' 0 0 4 6 'SHUT' 1*    /
-                'W2' 0 0 3 4 'SHUT' 1*    /
-                'W2' 0 0 1 4 'SHUT' 1*    /
-            /
+WELSPECS
+    'W1' 'G1'  3 3 2873.94 'WATER' 0.00 'STD' 'SHUT' 'NO' 0 'SEG' /
+    'W2' 'G2'  5 5 1       'OIL'   0.00 'STD' 'SHUT' 'NO' 0 'SEG' /
+/
 
-            COMPLUMP
-                -- name I J K1 K2 C
-                -- where C is the completion number of this lump
-                'W1' 0 0 1 3 1 /
-            /
+COMPDAT
+    'W1' 0 0 1 2 'SHUT' 1*    /    Global Index = 23, 123, 223, 323, 423, 523
+    'W1' 0 0 2 3 'SHUT' 1*    /
+    'W1' 0 0 4 6 'SHUT' 1*    /
+    'W2' 0 0 3 4 'SHUT' 1*    /
+    'W2' 0 0 1 4 'SHUT' 1*    /
+/
 
-            DATES             -- 1
-             10  OKT 2008 /
-            /
+COMPLUMP
+    -- name I J K1 K2 C
+    -- where C is the completion number of this lump
+    'W1' 0 0 1 3 1 /
+/
 
-            WELOPEN
-                'W1' 'OPEN' 0 0 0 1 1 /
-            /
-    )";
+DATES             -- 1
+ 10  OKT 2008 /
+/
+
+WELOPEN
+    'W1' 'OPEN' 0 0 0 1 1 /
+/
+)");
 
     constexpr auto open = Connection::State::OPEN;
     constexpr auto shut = Connection::State::SHUT;
 
-    auto deck = Parser().parseString(input);
-    auto python = std::make_shared<Python>();
-    EclipseGrid grid(10,10,10);
-    TableManager table ( deck );
-    FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
-    Runspec runspec (deck);
-    Schedule schedule( deck, grid, fp, runspec, python);
+    const EclipseGrid grid(10,10,10);
+    const TableManager table (deck);
+    const FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
+    const Runspec runspec (deck);
+    const Schedule schedule(deck, grid, fp, runspec, std::make_shared<Python>());
 
     const auto& sc0 = schedule.getWell("W1", 0).getConnections();
     /* complnum should be modified by COMPLNUM */
@@ -2932,66 +3017,65 @@ BOOST_AUTO_TEST_CASE( complump ) {
     BOOST_CHECK_THROW( all_connections.getFromGlobalIndex(100000), std::exception );
 }
 
-
-
 BOOST_AUTO_TEST_CASE( COMPLUMP_specific_coordinates ) {
-    std::string input = R"(
-        START             -- 0
-        19 JUN 2007 /
-        GRID
-        PERMX
-          1000*0.10/
-        COPY
-          PERMX PERMY /
-          PERMX PERMZ /
-        /
-        SCHEDULE
+    const auto deck = Parser{}.parseString(R"(
+START             -- 0
+19 JUN 2007 /
+GRID
+PERMX
+  1000*0.10/
+COPY
+  PERMX PERMY /
+  PERMX PERMZ /
+/
+PORO
+  1000*0.3 /
 
-        WELSPECS
-            'W1' 'G1'  3 3 2873.94 'WATER' 0.00 'STD' 'SHUT' 'NO' 0 'SEG' /
-        /
+SCHEDULE
 
-        COMPDAT                         -- completion number
-            'W1' 1 1 1 1 'SHUT' 1*    / -- 1
-            'W1' 1 1 2 2 'SHUT' 1*    / -- 2
-            'W1' 0 0 1 2 'SHUT' 1*    / -- 3, 4
-            'W1' 0 0 2 3 'SHUT' 1*    / -- 5
-            'W1' 2 2 1 1 'SHUT' 1*    / -- 6
-            'W1' 2 2 4 6 'SHUT' 1*    / -- 7, 8, 9
-        /
+WELSPECS
+    'W1' 'G1'  3 3 2873.94 'WATER' 0.00 'STD' 'SHUT' 'NO' 0 'SEG' /
+/
 
-        DATES             -- 1
-            10  OKT 2008 /
-        /
+COMPDAT                         -- completion number
+    'W1' 1 1 1 1 'SHUT' 1*    / -- 1
+    'W1' 1 1 2 2 'SHUT' 1*    / -- 2
+    'W1' 0 0 1 2 'SHUT' 1*    / -- 3, 4
+    'W1' 0 0 2 3 'SHUT' 1*    / -- 5
+    'W1' 2 2 1 1 'SHUT' 1*    / -- 6
+    'W1' 2 2 4 6 'SHUT' 1*    / -- 7, 8, 9
+/
+
+DATES             -- 1
+    10  OKT 2008 /
+/
 
 
-        DATES             -- 2
-            15  OKT 2008 /
-        /
+DATES             -- 2
+    15  OKT 2008 /
+/
 
-        COMPLUMP
-            -- name I J K1 K2 C
-            -- where C is the completion number of this lump
-            'W1' 0 0 2 3 2 / -- all with k = [2 <= k <= 3] -> {2, 4, 5}
-            'W1' 2 2 1 5 7 / -- fix'd i,j, k = [1 <= k <= 5] -> {6, 7, 8}
-        /
+COMPLUMP
+    -- name I J K1 K2 C
+    -- where C is the completion number of this lump
+    'W1' 0 0 2 3 2 / -- all with k = [2 <= k <= 3] -> {2, 4, 5}
+    'W1' 2 2 1 5 7 / -- fix'd i,j, k = [1 <= k <= 5] -> {6, 7, 8}
+/
 
-        WELOPEN
-            'W1' OPEN 0 0 0 2 2 / -- open the new 2 {2, 4, 5}
-            'W1' OPEN 0 0 0 5 7 / -- open 5..7 {5, 6, 7, 8}
-        /
-    )";
+WELOPEN
+    'W1' OPEN 0 0 0 2 2 / -- open the new 2 {2, 4, 5}
+    'W1' OPEN 0 0 0 5 7 / -- open 5..7 {5, 6, 7, 8}
+/
+)");
 
     constexpr auto open = Connection::State::OPEN;
     constexpr auto shut = Connection::State::SHUT;
 
-    auto deck = Parser().parseString( input);
-    auto python = std::make_shared<Python>();
-    EclipseGrid grid( 10, 10, 10 );
-    TableManager table ( deck );
-    FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
-    Runspec runspec (deck);
-    Schedule schedule( deck, grid, fp, runspec, python);
+    const EclipseGrid grid(10, 10, 10);
+    const TableManager table (deck );
+    const FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
+    const Runspec runspec (deck);
+    const Schedule schedule(deck, grid, fp, runspec, std::make_shared<Python>());
 
     const auto& cs1 = schedule.getWell("W1", 1).getConnections();
     const auto& cs2 = schedule.getWell("W1", 2).getConnections();
@@ -3843,9 +3927,16 @@ BOOST_AUTO_TEST_CASE(WTEST_CONFIG) {
 }
 
 
-static bool has(const std::vector<std::string>& l, const std::string& s) {
-    auto f = std::find(l.begin(), l.end(), s);
-    return (f != l.end());
+namespace {
+
+    bool has(const std::vector<std::string>& l, const std::string& s)
+    {
+        return std::any_of(l.begin(), l.end(),
+                           [&s](const std::string& search)
+                           {
+                               return search == s;
+                           });
+    }
 }
 
 
@@ -3883,20 +3974,10 @@ BOOST_AUTO_TEST_CASE(WELL_STATIC) {
     const auto& connections = ws.getConnections();
     BOOST_CHECK_EQUAL(connections.size(), 0U);
     auto c2 = std::make_shared<WellConnections>(Connection::Order::TRACK, 1,1);
-    c2->addConnection(1,1,1,
-                      grid1.getGlobalIndex(1,1,1),
-                      100,
+    c2->addConnection(1, 1, 1,
+                      grid1.getGlobalIndex(1, 1, 1),
                       Connection::State::OPEN,
-                      10,
-                      10,
-                      10,
-                      10,
-                      10,
-                      10,
-                      10,
-                      10,
-                      10,
-                      100);
+                      100.0, Connection::CTFProperties{}, 10);
 
     BOOST_CHECK(  ws.updateConnections(c2, false) );
     BOOST_CHECK( !ws.updateConnections(c2, false) );
@@ -4869,11 +4950,15 @@ END
     }
 }
 
+namespace {
+
 void cmp_vector(const std::vector<double>&v1, const std::vector<double>& v2) {
     BOOST_CHECK_EQUAL(v1.size(), v2.size());
     for (std::size_t i = 0; i < v1.size(); i++)
         BOOST_CHECK_CLOSE(v1[i], v2[i], 1e-4);
 }
+
+} // Anonymous namespace
 
 BOOST_AUTO_TEST_CASE(VFPPROD_SCALING) {
     const auto deck = Parser{}.parseFile("VFP_CASE.DATA");
@@ -5128,6 +5213,8 @@ END
     BOOST_CHECK_EQUAL( netbalan1.thp_max_iter(), 5 );
 }
 
+namespace {
+
 bool compare_dates(const time_point& t, int year, int month, int day) {
     return t == TimeService::from_time_t( asTimeT( TimeStampUTC(year, month, day)));
 }
@@ -5141,6 +5228,7 @@ std::string dates_msg(const time_point& t, std::array<int,3>& ymd) {
     return fmt::format("Different dates: {}-{}-{} != {}-{}-{}", ts.year(), ts.month(), ts.day(), ymd[0], ymd[1], ymd[2]);
 }
 
+} // Anonymous namespace
 
 BOOST_AUTO_TEST_CASE(ScheduleStateDatesTest) {
     const auto& sched = make_schedule(createDeckWTEST());
@@ -5696,7 +5784,7 @@ END
 
 
 BOOST_AUTO_TEST_CASE(Test_wdfac) {
-        std::string input = R"(
+    const auto deck = Parser{}.parseString(R"(
 DIMENS
  10 10 10 /
 
@@ -5722,7 +5810,7 @@ PERMY
     1000*10 /
 PERMZ
     1000*10 /
-    
+
 SCHEDULE
 
 DATES        -- 1
@@ -5734,10 +5822,10 @@ WELSPECS
 /
 
 COMPDAT
- 'W1'  3 3   1   1 'OPEN' 1*   1   0.216  200 1*  1*  'X'  / 
- 'W1'  3 3   2   2 'OPEN' 1*   2   0.216  200 1*  1*  'X'  / 
- 'W1'  3 3   3   3 'OPEN' 1*   3   0.216  200 1*  1*  'X'  / 
- 'W2'  3 3   3   3 'OPEN' 1*   1   0.216  200 1*  11  'X'  / 
+ 'W1'  3 3   1   1 'OPEN' 1*   1   0.216  200 1*  1*  'X'  /
+ 'W1'  3 3   2   2 'OPEN' 1*   2   0.216  200 1*  1*  'X'  /
+ 'W1'  3 3   3   3 'OPEN' 1*   3   0.216  200 1*  1*  'X'  /
+ 'W2'  3 3   3   3 'OPEN' 1*   1   0.216  200 1*  11  'X'  /
 /
 
 WDFAC
@@ -5750,10 +5838,10 @@ DATES        -- 2
 /
 
 COMPDAT
- 'W1'  3 3   1   1 'OPEN' 1*   1*   0.216  200 1*  1*  'X'  / 
- 'W1'  3 3   2   2 'OPEN' 1*   1*   0.216  200 1*  1*  'X'  / 
- 'W1'  3 3   3   3 'OPEN' 1*   1*   0.216  200 1*  1*  'X'  / 
- 'W2'  3 3   3   3 'OPEN' 1*   1   0.216  200 1*  11  'X'  / 
+ 'W1'  3 3   1   1 'OPEN' 1*   1*   0.216  200 1*  1*  'X'  /
+ 'W1'  3 3   2   2 'OPEN' 1*   1*   0.216  200 1*  1*  'X'  /
+ 'W1'  3 3   3   3 'OPEN' 1*   1*   0.216  200 1*  1*  'X'  /
+ 'W2'  3 3   3   3 'OPEN' 1*   1   0.216  200 1*  11  'X'  /
 /
 
 WDFACCOR
@@ -5766,57 +5854,65 @@ DATES        -- 3
 /
 
 COMPDAT
- 'W1'  3 3   1   1 'OPEN' 1*   1   0.216  200 1*  1*  'X' / 
- 'W1'  3 3   2   2 'OPEN' 1*   2   0.216  200 1*  0  'X' / 
- 'W1'  3 3   3   3 'OPEN' 1*   3   0.216  200 1*  11  'X' / 
- 'W2'  3 3   3   3 'OPEN' 1*   1   0.216  200 1*  11  'X' / 
+ 'W1'  3 3   1   1 'OPEN' 1*   1   0.216  200 1*  1*  'X' /
+ 'W1'  3 3   2   2 'OPEN' 1*   2   0.216  200 1*  0  'X' /
+ 'W1'  3 3   3   3 'OPEN' 1*   3   0.216  200 1*  11  'X' /
+ 'W2'  3 3   3   3 'OPEN' 1*   1   0.216  200 1*  11  'X' /
 /
 
-
 END
+)");
 
-)";
-    Deck deck = Parser{}.parseString(input);
     const auto es = EclipseState { deck };
     const auto sched = Schedule { deck, es, std::make_shared<const Python>() };
 
-    const auto& well11 = sched.getWell("W1", 1);
-    const auto& well21 = sched.getWell("W2", 1);
-    const auto& wdfac11 = well11.getWDFAC();
-    const auto& wdfac21 = well21.getWDFAC();
+    const auto dFacUnit = 1*unit::day/unit::cubic(unit::meter);
 
-    double rho = 1.0;
-    double mu = 0.01*Opm::prefix::centi * Opm::unit::Poise; 
-    double phi = 0.3;
+    const double rho = 1.0;
+    const double mu = 0.01*prefix::centi*unit::Poise;
+    const double phi = 0.3;
 
-    // WDFAC overwrites D factor in COMDAT
-    BOOST_CHECK(wdfac11.useDFactor());
+    {
+        const auto& well11 = sched.getWell("W1", 1);
+        const auto& well21 = sched.getWell("W2", 1);
+        const auto& wdfac11 = well11.getWDFAC();
+        const auto& wdfac21 = well21.getWDFAC();
 
-    // well d factor scaled by connection CF. 
-    BOOST_CHECK_CLOSE(wdfac11.getDFactor(well11.getConnections()[0], mu, rho, phi), 6*1*Opm::unit::day, 1e-12);
-    BOOST_CHECK_CLOSE(wdfac21.getDFactor(well21.getConnections()[0], mu, rho, phi), 2*Opm::unit::day, 1e-12);
-    
-    const auto& well12 = sched.getWell("W1", 2);
-    const auto& well22 = sched.getWell("W2", 2);
-    const auto& wdfac12 = well12.getWDFAC();
-    const auto& wdfac22 = well22.getWDFAC();
+        // WDFAC overwrites D factor in COMDAT
+        BOOST_CHECK_MESSAGE(wdfac11.useDFactor(),
+                            R"(Well "W1" must use D-Factors at step 1)");
 
-    BOOST_CHECK_CLOSE(wdfac12.getDFactor(well12.getConnections()[0], mu, rho, phi), 5.19e-1, 3);
-    BOOST_CHECK_CLOSE(wdfac22.getDFactor(well22.getConnections()[0], mu, rho, phi), 2*Opm::unit::day, 1e-12);
+        // Well-level D-factor scaled by connection transmissibility factor.
+        BOOST_CHECK_CLOSE(wdfac11.getDFactor(well11.getConnections()[0], mu, rho, phi), 6*1.0*dFacUnit, 1e-12);
+        BOOST_CHECK_CLOSE(wdfac21.getDFactor(well21.getConnections()[0], mu, rho, phi),   2.0*dFacUnit, 1e-12);
+    }
 
+    {
+        const auto& well12 = sched.getWell("W1", 2);
+        const auto& well22 = sched.getWell("W2", 2);
+        const auto& wdfac12 = well12.getWDFAC();
+        const auto& wdfac22 = well22.getWDFAC();
 
-    const auto& well13 = sched.getWell("W1", 3);
-    const auto& well23 = sched.getWell("W2", 3);
-    const auto& wdfac13 = well13.getWDFAC();
-    const auto& wdfac23 = well23.getWDFAC();
-    BOOST_CHECK(wdfac13.useDFactor());
+        BOOST_CHECK_CLOSE(wdfac12.getDFactor(well12.getConnections()[0], mu, rho, phi), 5.19e-1, 3);
+        BOOST_CHECK_CLOSE(wdfac22.getDFactor(well22.getConnections()[0], mu, rho, phi), 2.0*dFacUnit, 1e-12);
+    }
 
+    {
+        const auto& well13 = sched.getWell("W1", 3);
+        const auto& well23 = sched.getWell("W2", 3);
+        const auto& wdfac13 = well13.getWDFAC();
+        const auto& wdfac23 = well23.getWDFAC();
 
-    BOOST_CHECK_CLOSE(well13.getConnections()[0].dFactor(), 0*Opm::unit::day, 1e-12);
-    BOOST_CHECK_CLOSE(well13.getConnections()[1].dFactor(), 0*Opm::unit::day, 1e-12);
-    BOOST_CHECK_CLOSE(well13.getConnections()[2].dFactor(), 11*Opm::unit::day, 1e-12);
-    BOOST_CHECK_CLOSE(wdfac13.getDFactor(well13.getConnections()[2], mu, rho, phi), 6/3*11*Opm::unit::day, 1e-12);
-    BOOST_CHECK_CLOSE(wdfac23.getDFactor(well23.getConnections()[0], mu, rho, phi), 2*Opm::unit::day, 1e-12);
+        BOOST_CHECK_MESSAGE(wdfac13.useDFactor(),
+                            R"(Well "W1" must use D-Factors at step 3)");
+
+        BOOST_CHECK_CLOSE(well13.getConnections()[0].dFactor(),  0.0*dFacUnit, 1e-12);
+        BOOST_CHECK_CLOSE(well13.getConnections()[1].dFactor(),  0.0*dFacUnit, 1e-12);
+        BOOST_CHECK_CLOSE(well13.getConnections()[2].dFactor(), 11.0*dFacUnit, 1e-12);
+
+        BOOST_CHECK_CLOSE(wdfac13.getDFactor(well13.getConnections()[2], mu, rho, phi), 6.0/3.0*11.0*dFacUnit, 1e-12);
+        BOOST_CHECK_CLOSE(wdfac23.getDFactor(well23.getConnections()[0], mu, rho, phi),          2.0*dFacUnit, 1e-12);
+    }
 }
 
 BOOST_AUTO_TEST_CASE(createDeckWithBC) {
