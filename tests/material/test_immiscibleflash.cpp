@@ -35,6 +35,8 @@
 #define BOOST_TEST_MODULE ImmiscibleFlash
 #include <boost/test/unit_test.hpp>
 
+#include <boost/mpl/list.hpp>
+
 #include <opm/material/densead/Evaluation.hpp>
 #include <opm/material/constraintsolvers/MiscibleMultiPhaseComposition.hpp>
 #include <opm/material/constraintsolvers/ComputeFromReferencePhase.hpp>
@@ -153,7 +155,7 @@ void completeReferenceFluidState(FluidState& fs,
     }
 }
 
-using Types = std::tuple<float,double>;
+using Types = boost::mpl::list<float,double>;
 
 template<class Scalar>
 struct Fixture {
