@@ -31,8 +31,9 @@ using EclEntry = Opm::EclIO::EclFile::EclEntry;
 
 static void printHelp() {
 
-    std::cout << "\nList all arrays found in an EclFile specified on the command line. \n\n"
-              << "\nThe program have one option which will only work on unified restart files:\n\n"
+    std::cout << "Usage: arraylist [OPTIONS] ECL_FILE_NAME"<<std::endl
+              << "\nList all arrays found in an EclFile specified on the command line. \n\n"
+              << "\nThe program has one option which will only work on unified restart files:\n\n"
               << "-h Print help and exit.\n"
               << "-r List array for a specific report time step number. Option only valid for a unified restart file. \n\n";
 }
@@ -109,6 +110,14 @@ int main(int argc, char **argv) {
     }
 
     int argOffset = optind;
+
+    if(argOffset >= argc)
+    {
+        std::cerr<<"Eclipse file name is missing. Please provide it "
+                 <<"as the last argument."<<std::endl<<std::endl;
+        printHelp();
+        return EXIT_FAILURE;
+    }
 
     std::filesystem::path filename(argv[argOffset]);
 
