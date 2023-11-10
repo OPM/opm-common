@@ -33,6 +33,8 @@
 #error "The test for the black oil PVT classes requires eclipse input support in opm-common"
 #endif
 
+#include <boost/mpl/list.hpp>
+
 #define BOOST_TEST_MODULE EclBlackOilPvt
 #include <boost/test/unit_test.hpp>
 
@@ -246,7 +248,8 @@ struct Fixture {
 
 BOOST_FIXTURE_TEST_SUITE(Generic, Fixture)
 
-using Types = std::tuple<float,double>;
+using Types = boost::mpl::list<float,double>;
+
 BOOST_AUTO_TEST_CASE_TEMPLATE(ApiConformance, Scalar, Types)
 {
     Opm::GasPvtMultiplexer<Scalar> gasPvt;

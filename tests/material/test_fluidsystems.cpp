@@ -28,6 +28,8 @@
  */
 #include "config.h"
 
+#include <boost/mpl/list.hpp>
+
 #define BOOST_TEST_MODULE FluidSystems
 #include <boost/test/unit_test.hpp>
 
@@ -164,7 +166,7 @@ void ensureBlackoilApi()
     }
 }
 
-using EvalTypes = std::tuple<float,double,Opm::DenseAd::Evaluation<float,3>,Opm::DenseAd::Evaluation<double,3>>;
+using EvalTypes = boost::mpl::list<float,double,Opm::DenseAd::Evaluation<float,3>,Opm::DenseAd::Evaluation<double,3>>;
 
 BOOST_AUTO_TEST_CASE_TEMPLATE(SimpleModularFluidState, Eval, EvalTypes)
 {
@@ -247,7 +249,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(SaturationOverlayFluidState, Eval, EvalTypes)
     checkFluidState<Eval>(fs);
 }
 
-using ScalarTypes = std::tuple<float,double>;
+using ScalarTypes = boost::mpl::list<float,double>;
 
 BOOST_AUTO_TEST_CASE_TEMPLATE(BlackoilFluidSystem, Scalar, ScalarTypes)
 {

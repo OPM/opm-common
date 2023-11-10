@@ -33,6 +33,8 @@
 #error "The test for the black oil fluid system classes requires ecl input support in opm-common"
 #endif
 
+#include <boost/mpl/list.hpp>
+
 #define BOOST_TEST_MODULE EclBlackOilFluidSystem
 #include <boost/test/unit_test.hpp>
 
@@ -611,7 +613,7 @@ static constexpr const char* deckString1 =
     "      860.04 1033.0    0.853  /\n"
     "\n";
 
-using Types = std::tuple<double,Opm::DenseAd::Evaluation<double,2>>;
+using Types = boost::mpl::list<double,Opm::DenseAd::Evaluation<double,2>>;
 
 BOOST_AUTO_TEST_CASE_TEMPLATE(BlackOil, Evaluation, Types)
 {
