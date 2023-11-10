@@ -18,6 +18,7 @@
 
 #define BOOST_TEST_MODULE TransMultTests
 #include <boost/test/unit_test.hpp>
+#include <boost/version.hpp>
 
 #include <opm/input/eclipse/Deck/Deck.hpp>
 #include <opm/input/eclipse/Parser/Parser.hpp>
@@ -29,7 +30,11 @@
 using namespace Opm;
 
 inline std::string pathprefix() {
+#if BOOST_VERSION / 100000 == 1 && BOOST_VERSION / 100 % 1000 < 71
+    return boost::unit_test::framework::master_test_suite().argv[2];
+#else
     return boost::unit_test::framework::master_test_suite().argv[1];
+#endif
 }
 
 BOOST_AUTO_TEST_CASE(MULTFLT_IN_SCHEDULE) {

@@ -20,6 +20,8 @@
 #define BOOST_TEST_MODULE ParserTests
 #include <boost/test/unit_test.hpp>
 
+#include <boost/version.hpp>
+
 #include <opm/json/JsonObject.hpp>
 
 #include <opm/common/OpmLog/KeywordLocation.hpp>
@@ -68,7 +70,11 @@ constexpr ParserItem::itype DOUBLE = ParserItem::itype::DOUBLE;
 
 
 std::string prefix() {
+#if BOOST_VERSION / 100000 == 1 && BOOST_VERSION / 100 % 1000 < 71
+    return boost::unit_test::framework::master_test_suite().argv[2];
+#else
     return boost::unit_test::framework::master_test_suite().argv[1];
+#endif
 }
 
 ParserKeyword createDynamicSized(const std::string& kw) {
