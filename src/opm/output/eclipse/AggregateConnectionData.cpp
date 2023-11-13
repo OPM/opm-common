@@ -191,8 +191,9 @@ namespace {
 
             sConn[Ix::SkinFactor] = conn.skinFactor();
 
-            sConn[Ix::item12] = sConn[Ix::ConnTrans];
+            sConn[Ix::CFDenom] = conn.ctfProperties().peaceman_denom;
 
+            sConn[Ix::item12] = sConn[Ix::ConnTrans];
 
             if (conn.attachedToSegment()) {
                 const auto& [start, end] = *conn.perf_range();
@@ -202,7 +203,11 @@ namespace {
 
             sConn[Ix::item30] = -1.0e+20f;
             sConn[Ix::item31] = -1.0e+20f;
-            sConn[Ix::CFInDeck] = (conn.ctfAssignedFromInput()) ? 1 : 0;
+
+            sConn[Ix::EffectiveLength] =
+                scprop(M::length, conn.connectionLength());
+
+            sConn[Ix::CFInDeck] = conn.ctfAssignedFromInput() ? 1.0f : 0.0f;
         }
 
         template <class SConnArray>
