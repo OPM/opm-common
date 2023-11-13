@@ -2211,8 +2211,14 @@ Well{0} entered with 'FIELD' parent group:
                 // does not use overload for context to avoid throw
                 const auto& names = this->wellNames(well_arg, handlerContext.currentStep,
                                                     handlerContext.matching_wells);
-                if (names.empty() && well_arg.find("*") == std::string::npos)
-                    throw std::invalid_argument("The well: " + well_arg + " has not been defined in the WELSPECS");
+                if (names.empty() && well_arg.find("*") == std::string::npos) {
+                    std::string msg_fmt = "Problem with {keyword}\n"
+                                          "In {file} line {line}\n"
+                                          "The well '" + well_arg + "' has not been defined with WELSPECS and will not be added to the list.";
+                    const auto& parseContext = handlerContext.parseContext;
+                    parseContext.handleError(ParseContext::SCHEDULE_INVALID_NAME, msg_fmt, handlerContext.keyword.location(),handlerContext.errors);
+                    continue;
+                }
 
                 std::move(names.begin(), names.end(), std::back_inserter(wells));
             }
