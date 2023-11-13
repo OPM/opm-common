@@ -64,6 +64,9 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
 
             EffectiveLength = 31, // Effective length of connection's perforation interval.
 
+            StaticDFacCorrCoeff = 37, // Static component of Forchheimer
+                                      // D-factor correlation.
+
             CFInDeck     = 40, // = 0 for connection factor not defined, = 1 for connection factor defined
         };
     } // SConn

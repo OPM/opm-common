@@ -167,6 +167,16 @@ namespace {
             };
         }
 
+        double staticDFacCorrCoeff(const Opm::Connection::CTFProperties& ctf_props,
+                                   const Opm::UnitSystem&                units)
+        {
+            using M = Opm::UnitSystem::measure;
+
+            // Coefficient's units are [D] * [viscosity]
+
+            return units.from_si(M::viscosity, units.from_si(M::dfactor, ctf_props.static_dfac_corr_coeff));
+        }
+
         template <class SConnArray>
         void staticContrib(const Opm::Connection& conn,
                            const Opm::UnitSystem& units,
@@ -204,6 +214,9 @@ namespace {
 
             sConn[Ix::EffectiveLength] =
                 scprop(M::length, conn.connectionLength());
+
+            sConn[Ix::StaticDFacCorrCoeff] =
+                staticDFacCorrCoeff(conn.ctfProperties(), units);
 
             sConn[Ix::CFInDeck] = conn.ctfAssignedFromInput() ? 1.0f : 0.0f;
         }
@@ -324,12 +337,12 @@ AggregateConnectionData(const std::vector<int>& inteHead)
 
 void
 Opm::RestartIO::Helpers::AggregateConnectionData::
-captureDeclaredConnData(const Schedule&        sched,
-                        const EclipseGrid&     grid,
-                        const UnitSystem&      units,
-                        const data::Wells& xw,
-                        const SummaryState&    summary_state,
-                        const std::size_t      sim_step)
+captureDeclaredConnData(const Schedule&     sched,
+                        const EclipseGrid&  grid,
+                        const UnitSystem&   units,
+                        const data::Wells&  xw,
+                        const SummaryState& summary_state,
+                        const std::size_t   sim_step)
 {
     wellConnectionLoop(sched, sim_step, grid, xw, [&units, &summary_state, this]
         (const std::string&      wellName,

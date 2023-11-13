@@ -37,6 +37,7 @@
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 #include <opm/input/eclipse/Schedule/SummaryState.hpp>
 #include <opm/input/eclipse/Schedule/VFPProdTable.hpp>
+#include <opm/input/eclipse/Schedule/Well/WDFAC.hpp>
 #include <opm/input/eclipse/Schedule/Well/Well.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellEconProductionLimits.hpp>
@@ -48,6 +49,11 @@
 
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
 #include <opm/input/eclipse/Units/Units.hpp>
+
+#include <opm/input/eclipse/Parser/ParserItem.hpp>
+#include <opm/input/eclipse/Parser/ParserKeyword.hpp>
+#include <opm/input/eclipse/Parser/ParserRecord.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/W.hpp>
 
 #include <algorithm>
 #include <cassert>
@@ -1028,6 +1034,26 @@ namespace {
             sWell[Ix::EfficiencyFactor2] = sWell[Ix::EfficiencyFactor1];
         }
 
+        template <class SWellArray>
+        void assignDFactorCorrelation(const Opm::Well&       well,
+                                      const Opm::UnitSystem& units,
+                                      SWellArray&            sWell)
+        {
+            using Ix = VI::SWell::index;
+
+            const auto& corr = well.getWDFAC().getDFactorCorrelationCoefficients();
+
+            // D-Factor correlation exponents don't need unit conversion.
+            sWell[Ix::DFacCorrExpB] = corr.exponent_b;
+            sWell[Ix::DFacCorrExpC] = corr.exponent_c;
+
+            const auto dimension = Opm::ParserKeywords::WDFACCOR{}
+                .getRecord(0).get(Opm::ParserKeywords::WDFACCOR::A::itemName)
+                .dimensions().front();
+
+            sWell[Ix::DFacCorrCoeffA] = units.from_si(dimension, corr.coeff_a);
+        }
+
         template <class SWProp, class SWellArray>
         void assignBhpVfpAdjustment(const Opm::Well& well,
                                     SWProp&&         swprop,
@@ -1094,6 +1120,7 @@ namespace {
 
             assignWGrupCon(well, sWell);
             assignEfficiencyFactors(well, sWell);
+            assignDFactorCorrelation(well, units, sWell);
             assignEconomicLimits(well, swprop, sWell);
             assignWellTest(well.name(), sched, wtest_state, sim_step, swprop, sWell);
             assignTracerData(tracers, smry, well.name(), sWell);
