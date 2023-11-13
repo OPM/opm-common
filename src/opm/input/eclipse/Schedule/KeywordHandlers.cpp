@@ -878,7 +878,7 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
                   const bool is_terminal_node = pressure_item.hasValue(0) && (pressure_item.get<double>(0) >= 0);
                   if (is_terminal_node) {
                       if (vfp_table > 0) {
-                          std::string msg = fmt::format("The group {} is a terminal node of the network and should not have a vfp table assigned to it.", group_name);
+                          std::string msg = fmt::format("The group {} is a terminal node of the network and should not have a vfp table assigned to it. This vfp table will be ignored.", group_name);
                           OpmLog::warning(OpmInputError::format(msg, handlerContext.keyword.location()));
                       }
                       node.terminal_pressure(pressure_item.getSIDouble(0));
