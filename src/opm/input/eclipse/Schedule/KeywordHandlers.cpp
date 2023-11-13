@@ -1381,6 +1381,10 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
                         this->updateWellStatus( well_name, handlerContext.currentStep, Well::Status::SHUT);
                     }
                 }
+
+                if (well2.getStatus() == WellStatus::OPEN) {
+                    this->snapshots.back().wellgroup_events().addEvent(well2.name(), ScheduleEvents::REQUEST_OPEN_WELL);
+                }
             }
         }
     }
@@ -1604,6 +1608,10 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
                         "This well will be closed at " + std::to_string ( this->seconds(handlerContext.currentStep) / (60*60*24) ) + " days";
                     OpmLog::note(msg);
                     this->updateWellStatus( well_name, handlerContext.currentStep, Well::Status::SHUT);
+                }
+
+                if (well2.getStatus() == WellStatus::OPEN) {
+                    this->snapshots.back().wellgroup_events().addEvent(well2.name(), ScheduleEvents::REQUEST_OPEN_WELL);
                 }
             }
         }
@@ -2429,8 +2437,12 @@ Well{0} entered with 'FIELD' parent group:
                     sicd.updateScalingFactor(outlet_segment_length, connections.segment_perf_length(segment_nr));
                 }
 
-                if (well.updateWSEGSICD(sicd_pairs) )
+                if (well.updateWSEGSICD(sicd_pairs) ) {
                     this->snapshots.back().wells.update( std::move(well) );
+                    if (well.getStatus() == WellStatus::OPEN) { // Ensure shut wells are checked for opening if valve characteristics are changed
+                        this->snapshots.back().wellgroup_events().addEvent(well_name, ScheduleEvents::REQUEST_OPEN_WELL);
+                    }
+                }
             }
         }
     }
@@ -2451,8 +2463,12 @@ Well{0} entered with 'FIELD' parent group:
                     aicd.updateScalingFactor(outlet_segment_length, connections.segment_perf_length(segment_nr));
                 }
 
-                if (well.updateWSEGAICD(aicd_pairs, handlerContext.keyword.location()) )
+                if (well.updateWSEGAICD(aicd_pairs, handlerContext.keyword.location()) ) {
                     this->snapshots.back().wells.update( std::move(well) );
+                    if (well.getStatus() == WellStatus::OPEN) { // Ensure shut wells are checked for opening if valve characteristics are changed
+                        this->snapshots.back().wellgroup_events().addEvent(well_name, ScheduleEvents::REQUEST_OPEN_WELL);
+                    }
+                }
             }
         }
     }
@@ -2471,8 +2487,12 @@ Well{0} entered with 'FIELD' parent group:
 
             for (const auto& well_name : well_names) {
                 auto well = this->snapshots.back().wells( well_name );
-                if (well.updateWSEGVALV(valve_pairs))
+                if (well.updateWSEGVALV(valve_pairs)) {
                     this->snapshots.back().wells.update( std::move(well) );
+                    if (well.getStatus() == WellStatus::OPEN) { // Ensure shut wells are checked for opening if valve characteristics are changed
+                        this->snapshots.back().wellgroup_events().addEvent(well_name, ScheduleEvents::REQUEST_OPEN_WELL);
+                    }
+                }
             }
         }
     }
