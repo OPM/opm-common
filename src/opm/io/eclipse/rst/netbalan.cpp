@@ -63,8 +63,7 @@ namespace {
     double thpToleranceValue(const std::vector<double>& doubhead,
                              const Opm::UnitSystem&     usys)
     {
-        return usys.to_si(Opm::UnitSystem::measure::pressure,
-                          doubhead[VI::doubhead::Netbalthpc]);
+        return doubhead[VI::doubhead::Netbalthpc];
     }
 
     bool is_finite_float(const double x)
