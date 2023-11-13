@@ -222,7 +222,7 @@ BRANPROP
         const auto& p = network.node("PLAT-A");
         BOOST_CHECK(p.terminal_pressure());
         BOOST_CHECK_EQUAL(p.terminal_pressure().value(), 21 * 100000);
-        BOOST_CHECK(p == network.root());
+        BOOST_CHECK(p == network.roots()[0]);
 
         BOOST_CHECK_THROW(network.node("NO_SUCH_NODE"), std::out_of_range);
 
@@ -411,5 +411,5 @@ GRUPNET
     const auto& p = network.node("PLAT-A");
     BOOST_CHECK(p.terminal_pressure());
     BOOST_CHECK_EQUAL(p.terminal_pressure().value(), 21 * 100000);
-    BOOST_CHECK(p == network.root());
+    BOOST_CHECK(p == network.roots()[0]);
 }
