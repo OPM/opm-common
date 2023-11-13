@@ -1611,7 +1611,7 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
                 }
 
                 if (well2.getStatus() == WellStatus::OPEN) {
-                    this->snapshots.back().wellgroup_events().addEvent(well2.name(), ScheduleEvents::REQUEST_OPEN_WELL);
+                    this->snapshots.back().wellgroup_events().addEvent(well_name, ScheduleEvents::REQUEST_OPEN_WELL);
                 }
             }
         }
