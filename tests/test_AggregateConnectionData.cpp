@@ -502,6 +502,7 @@ END
                     c.pressure = 215.0;
                     c.index = connections[i].global_index();
                     c.trans_factor = connections[i].CF();
+                    c.compact_mult = 0.875;
 
                     const auto& global_index = connections[i].global_index();
                     sum_state.update_conn_var("PROD", "CWPR", global_index + 1, qw * (i + 1));
@@ -543,6 +544,7 @@ END
                     c.pressure = 218.0;
                     c.index = connections[i].global_index();
                     c.trans_factor = connections[i].CF();
+                    c.compact_mult = 0.987;
 
                     const auto& global_index = connections[i].global_index();
                     sum_state.update_conn_var("WINJ", "CWIR", global_index+ 1, qw*(i + 1));
@@ -683,12 +685,12 @@ BOOST_AUTO_TEST_CASE(Declared_Connection_Data)
         const auto& sconn = amconn.getSConn();
         int connNo = 1;
         auto i0 = (connNo - 1) * ih.nsconz;
-        BOOST_CHECK_CLOSE(sconn[i0 + Ix::ConnTrans], 2.55826545, 1.0e-5); // PROD - conn 1 : Transmissibility factor
+        BOOST_CHECK_CLOSE(sconn[i0 + Ix::EffConnTrans], 2.55826545, 1.0e-5); // PROD - conn 1 : Effective transmissibility factor
         BOOST_CHECK_CLOSE(sconn[i0 + Ix::Depth], 7050., 1.0e-5); // PROD - conn 1 : Centre depth
         BOOST_CHECK_CLOSE(sconn[i0 + Ix::Diameter], 0.20, 1.0e-5); // PROD - conn 1 : diameter
         BOOST_CHECK_CLOSE(sconn[i0 + Ix::EffectiveKH], 1581.13879, 1.0e-5); // PROD - conn 1 : effective kh-product
         BOOST_CHECK_CLOSE(sconn[i0 + Ix::CFDenom], 4.37696314, 1.0e-5);
-        BOOST_CHECK_CLOSE(sconn[i0 + Ix::item12], 2.55826545, 1.0e-5); // PROD - conn 1 : Transmissibility factor
+        BOOST_CHECK_CLOSE(sconn[i0 + Ix::ConnTrans], 2.55826545 / 0.875, 1.0e-5); // PROD - conn 1 : Transmissibility factor
         BOOST_CHECK_CLOSE(
             sconn[i0 + Ix::SegDistEnd], 130., 1.0e-5); // PROD - conn 1 : Distance to end of connection in segment
         BOOST_CHECK_CLOSE(
@@ -698,12 +700,12 @@ BOOST_AUTO_TEST_CASE(Declared_Connection_Data)
         // Well no 2 - WINJ well
         connNo = 3;
         i0 = ih.ncwmax * ih.nsconz + (connNo - 1) * ih.nsconz;
-        BOOST_CHECK_CLOSE(sconn[i0 + Ix::ConnTrans], 2.55826545, 1.0e-5); // WINJ - conn 3 : Transmissibility factor
+        BOOST_CHECK_CLOSE(sconn[i0 + Ix::EffConnTrans], 2.55826545, 1.0e-5); // WINJ - conn 3 : Effective transmissibility factor
         BOOST_CHECK_CLOSE(sconn[i0 + Ix::Depth], 7250., 1.0e-5); // WINJ - conn 3 : Centre depth
         BOOST_CHECK_CLOSE(sconn[i0 + Ix::Diameter], 0.20, 1.0e-5); // WINJ - conn 3 : diameter
         BOOST_CHECK_CLOSE(sconn[i0 + Ix::EffectiveKH], 1581.13879, 1.0e-5); // WINJ - conn 3 : effective kh-product
         BOOST_CHECK_CLOSE(sconn[i0 + Ix::CFDenom], 4.37696314, 1.0e-5);
-        BOOST_CHECK_CLOSE(sconn[i0 + Ix::item12], 2.55826545, 1.0e-5); // WINJ - conn 3 : Transmissibility factor
+        BOOST_CHECK_CLOSE(sconn[i0 + Ix::ConnTrans], 2.55826545 / 0.987, 1.0e-5); // WINJ - conn 3 : Transmissibility factor
         BOOST_CHECK_CLOSE(
             sconn[i0 + Ix::SegDistEnd], 0., 1.0e-5); // WINJ - conn 3 : Distance to end of connection in segment
         BOOST_CHECK_CLOSE(
@@ -712,12 +714,12 @@ BOOST_AUTO_TEST_CASE(Declared_Connection_Data)
 
         connNo = 4;
         i0 = ih.ncwmax * ih.nsconz + (connNo - 1) * ih.nsconz;
-        BOOST_CHECK_CLOSE(sconn[i0 + Ix::ConnTrans], 2.55826545, 1.0e-5); // WINJ - conn 4 : Transmissibility factor
+        BOOST_CHECK_CLOSE(sconn[i0 + Ix::EffConnTrans], 2.55826545, 1.0e-5); // WINJ - conn 4 : Effective transmissibility factor
         BOOST_CHECK_CLOSE(sconn[i0 + Ix::Depth], 7250., 1.0e-5); // WINJ - conn 4 : Centre depth
         BOOST_CHECK_CLOSE(sconn[i0 + Ix::Diameter], 0.20, 1.0e-5); // WINJ - conn 4 : diameter
         BOOST_CHECK_CLOSE(sconn[i0 + Ix::EffectiveKH], 1581.13879, 1.0e-5); // WINJ - conn 4 : effective kh-product
         BOOST_CHECK_CLOSE(sconn[i0 + Ix::CFDenom], 4.37696314, 1.0e-5);
-        BOOST_CHECK_CLOSE(sconn[i0 + Ix::item12], 2.55826545, 1.0e-5); // WINJ - conn 4 : Transmissibility factor
+        BOOST_CHECK_CLOSE(sconn[i0 + Ix::ConnTrans], 2.55826545 / 0.987, 1.0e-5); // WINJ - conn 4 : Transmissibility factor
         BOOST_CHECK_CLOSE(
             sconn[i0 + Ix::SegDistEnd], 0., 1.0e-5); // WINJ - conn 4 : Distance to end of connection in segment
         BOOST_CHECK_CLOSE(

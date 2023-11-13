@@ -180,7 +180,7 @@ namespace {
                 return static_cast<float>(units.from_si(u, x));
             };
 
-            sConn[Ix::ConnTrans] =
+            sConn[Ix::EffConnTrans] = sConn[Ix::ConnTrans] =
                 scprop(M::transmissibility, conn.CF());
 
             sConn[Ix::Depth]    = scprop(M::length, conn.depth());
@@ -192,8 +192,6 @@ namespace {
             sConn[Ix::SkinFactor] = conn.skinFactor();
 
             sConn[Ix::CFDenom] = conn.ctfProperties().peaceman_denom;
-
-            sConn[Ix::item12] = sConn[Ix::ConnTrans];
 
             if (conn.attachedToSegment()) {
                 const auto& [start, end] = *conn.perf_range();
@@ -223,8 +221,15 @@ namespace {
                 return static_cast<float>(units.from_si(u, x));
             };
 
-            sConn[Ix::item12] = sConn[Ix::ConnTrans] =
+            sConn[Ix::EffConnTrans] = sConn[Ix::ConnTrans] =
                 scprop(M::transmissibility, xconn.trans_factor);
+
+            // xconn.trans_factor == CTFAC == CF * rock compaction.  Divide
+            // out the rock compaction contribution to infer the "real"
+            // connection transmissibility factor.  No additional unit
+            // conversion needed since the rock compaction effect (keyword
+            // ROCKTAB) is imparted through a dimensionless multiplier.
+            sConn[Ix::ConnTrans] /= xconn.compact_mult;
         }
     } // SConn
 
