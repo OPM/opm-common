@@ -73,10 +73,12 @@ namespace Opm {
 
         const auto non_trivial_dfactor =
             std::any_of(connections.begin(), connections.end(),
-                [](const auto& conn) { return conn.dFactor() > 0.0; });
+                [](const auto& conn) { return conn.dFactor() != 0.0; });
 
-        if (non_trivial_dfactor)
+        // non-trivial dfactors detected use connection D factors
+        if (non_trivial_dfactor) {
             m_type = WDFACTYPE::CON_DFACTOR;
+        }
     }
 
 
