@@ -56,6 +56,18 @@ namespace Opm {
 
     // -------------------------------------------------------------------------
 
+    WDFAC::WDFAC(const RestartIO::RstWell& rst_well)
+        : m_type { WDFacType::NONE }
+        , m_d    { 0.0 }
+        , m_corr { rst_well.dfac_corr_coeff_a    ,
+                   rst_well.dfac_corr_exponent_b ,
+                   rst_well.dfac_corr_exponent_c }
+    {
+        if (m_corr.coeff_a > 0.0) {
+            this->m_type = WDFacType::DAKEMODEL;
+        }
+    }
+
     WDFAC WDFAC::serializationTestObject()
     {
         WDFAC result;

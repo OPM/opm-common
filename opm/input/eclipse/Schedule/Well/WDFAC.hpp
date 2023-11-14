@@ -105,6 +105,17 @@ namespace Opm {
             }
         };
 
+        /// Default constructor
+        WDFAC() = default;
+
+        /// Constructor
+        ///
+        /// Creates an object from restart information
+        ///
+        /// \param[in] rst_well Linearised well-level restart information,
+        ///   including D-factor parameters.
+        explicit WDFAC(const RestartIO::RstWell& rst_well);
+
         /// Serialisation test object
         static WDFAC serializationTestObject();
 

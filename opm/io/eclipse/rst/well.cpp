@@ -17,16 +17,23 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <opm/common/utility/String.hpp>
+#include <opm/io/eclipse/rst/well.hpp>
 
 #include <opm/io/eclipse/rst/header.hpp>
 #include <opm/io/eclipse/rst/connection.hpp>
-#include <opm/io/eclipse/rst/well.hpp>
 
 #include <opm/output/eclipse/VectorItems/connection.hpp>
 #include <opm/output/eclipse/VectorItems/msw.hpp>
 #include <opm/output/eclipse/VectorItems/well.hpp>
+
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
+
+#include <opm/common/utility/String.hpp>
+
+#include <opm/input/eclipse/Parser/ParserItem.hpp>
+#include <opm/input/eclipse/Parser/ParserKeyword.hpp>
+#include <opm/input/eclipse/Parser/ParserRecord.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/W.hpp>
 
 #include <algorithm>
 #include <cmath>
@@ -54,28 +61,34 @@ namespace {
     {
         return is_sentinel(raw_value) ? raw_value : convert(raw_value);
     }
-}
+
+    float dfactor_correlation_coefficient_a(const Opm::UnitSystem& unit_system,
+                                            const float            coeff_a)
+    {
+        const auto dimension = Opm::ParserKeywords::WDFACCOR{}
+            .getRecord(0).get(Opm::ParserKeywords::WDFACCOR::A::itemName)
+            .dimensions().front();
+
+        return static_cast<float>(unit_system.to_si(dimension, coeff_a));
+    }
+
+    constexpr int def_ecl_phase = 1;
+    constexpr int def_pvt_table = 0;
+} // Anonymous namespace
 
 namespace VI = ::Opm::RestartIO::Helpers::VectorItems;
+using M = ::Opm::UnitSystem::measure;
 
-namespace Opm {
-namespace RestartIO {
-
-constexpr int def_ecl_phase = 1;
-constexpr int def_pvt_table = 0;
-
-using M  = ::Opm::UnitSystem::measure;
-
-RstWell::RstWell(const ::Opm::UnitSystem& unit_system,
-                 const RstHeader& header,
-                 const std::string& group_arg,
-                 const std::string* zwel,
-                 const int * iwel,
-                 const float * swel,
-                 const double * xwel,
-                 const int * icon,
-                 const float * scon,
-                 const double * xcon) :
+Opm::RestartIO::RstWell::RstWell(const UnitSystem&  unit_system,
+                                 const RstHeader&   header,
+                                 const std::string& group_arg,
+                                 const std::string* zwel,
+                                 const int*         iwel,
+                                 const float*       swel,
+                                 const double*      xwel,
+                                 const int*         icon,
+                                 const float*       scon,
+                                 const double*      xcon) :
     name(rtrim_copy(zwel[0])),
     group(group_arg),
     ij(                                                              {iwel[VI::IWell::IHead] - 1, iwel[VI::IWell::JHead] - 1}),
@@ -139,6 +152,9 @@ RstWell::RstWell(const ::Opm::UnitSystem& unit_system,
     glift_min_rate(      unit_system.to_si(M::gas_surface_rate,      swel[VI::SWell::LOminRate])),
     glift_weight_factor(                                             swel[VI::SWell::LOweightFac]),
     glift_inc_weight_factor(                                         swel[VI::SWell::LOincFac]),
+    dfac_corr_coeff_a(dfactor_correlation_coefficient_a(unit_system, swel[VI::SWell::DFacCorrCoeffA])),
+    dfac_corr_exponent_b(                                            swel[VI::SWell::DFacCorrExpB]),
+    dfac_corr_exponent_c(                                            swel[VI::SWell::DFacCorrExpC]),
     //
     oil_rate(            unit_system.to_si(M::liquid_surface_rate,   xwel[VI::XWell::OilPrRate])),
     water_rate(          unit_system.to_si(M::liquid_surface_rate,   xwel[VI::XWell::WatPrRate])),
@@ -167,66 +183,85 @@ RstWell::RstWell(const ::Opm::UnitSystem& unit_system,
     gas_void_rate(       unit_system.to_si(M::gas_surface_volume,    xwel[VI::XWell::GasVoidPrRate]))
 {
 
-    for (std::size_t tracer_index = 0; tracer_index < static_cast<std::size_t>(header.runspec.tracers().water_tracers()); tracer_index++)
-        this->tracer_concentration_injection.push_back( swel[VI::SWell::TracerOffset + tracer_index] );
+    for (std::size_t tracer_index = 0;
+         tracer_index < static_cast<std::size_t>(header.runspec.tracers().water_tracers());
+         ++tracer_index)
+    {
+        this->tracer_concentration_injection.push_back(swel[VI::SWell::TracerOffset + tracer_index]);
+    }
 
+    for (int ic = 0; ic < iwel[VI::IWell::NConn]; ++ic) {
+        const std::size_t icon_offset = ic * header.niconz;
+        const std::size_t scon_offset = ic * header.nsconz;
+        const std::size_t xcon_offset = ic * header.nxconz;
 
-    for (int ic = 0; ic < iwel[VI::IWell::NConn]; ic++) {
-        std::size_t icon_offset = ic * header.niconz;
-        std::size_t scon_offset = ic * header.nsconz;
-        std::size_t xcon_offset = ic * header.nxconz;
-        this->connections.emplace_back( unit_system, ic, header.nsconz, icon + icon_offset, scon + scon_offset, xcon + xcon_offset);
+        this->connections.emplace_back(unit_system, ic, header.nsconz,
+                                       icon + icon_offset,
+                                       scon + scon_offset,
+                                       xcon + xcon_offset);
     }
 }
 
 
-
-RstWell::RstWell(const ::Opm::UnitSystem& unit_system,
-                 const RstHeader& header,
-                 const std::string& group_arg,
-                 const std::string* zwel,
-                 const int * iwel,
-                 const float * swel,
-                 const double * xwel,
-                 const int * icon,
-                 const float * scon,
-                 const double * xcon,
-                 const std::vector<int>& iseg,
-                 const std::vector<double>& rseg) :
-    RstWell(unit_system, header, group_arg, zwel, iwel, swel, xwel, icon, scon, xcon)
+Opm::RestartIO::RstWell::RstWell(const UnitSystem&          unit_system,
+                                 const RstHeader&           header,
+                                 const std::string&         group_arg,
+                                 const std::string*         zwel,
+                                 const int*                 iwel,
+                                 const float*               swel,
+                                 const double*              xwel,
+                                 const int*                 icon,
+                                 const float*               scon,
+                                 const double*              xcon,
+                                 const std::vector<int>&    iseg,
+                                 const std::vector<double>& rseg)
+    : RstWell { unit_system, header, group_arg,
+                zwel, iwel, swel, xwel,
+                icon, scon, xcon }
 {
+    if (this->msw_index == 0) {
+        return;
+    }
 
-    if (this->msw_index) {
-        std::unordered_map<int, std::size_t> segment_map;
-        for (int is=0; is < header.nsegmx; is++) {
-            std::size_t iseg_offset = header.nisegz * (is + (this->msw_index - 1) * header.nsegmx);
-            std::size_t rseg_offset = header.nrsegz * (is + (this->msw_index - 1) * header.nsegmx);
-            auto other_segment_number = iseg[iseg_offset + VI::ISeg::SegNo];
-            if (other_segment_number != 0) {
-                auto segment_number = is + 1;
-                segment_map.insert({segment_number, this->segments.size()});
-                this->segments.emplace_back( unit_system, segment_number, iseg.data() + iseg_offset, rseg.data() + rseg_offset);
-            }
+    std::unordered_map<int, std::size_t> segment_map;
+    for (int is = 0; is < header.nsegmx; ++is) {
+        const std::size_t iseg_offset = header.nisegz * (is + (this->msw_index - 1)*header.nsegmx);
+        const std::size_t rseg_offset = header.nrsegz * (is + (this->msw_index - 1)*header.nsegmx);
+        const auto other_segment_number = iseg[iseg_offset + VI::ISeg::SegNo];
+
+        if (other_segment_number != 0) {
+            const auto segment_number = is + 1;
+            segment_map.emplace(segment_number, this->segments.size());
+            this->segments.emplace_back(unit_system, segment_number,
+                                        iseg.data() + iseg_offset,
+                                        rseg.data() + rseg_offset);
         }
+    }
 
-        for (auto& segment : this->segments) {
-            if (segment.outlet_segment != 0) {
-                auto& outlet_segment = this->segments[ segment_map[segment.outlet_segment] ];
-                outlet_segment.inflow_segments.push_back(segment.segment);
+    for (const auto& segment : this->segments) {
+        if (const auto outlet = segment.outlet_segment; outlet != 0) {
+            auto segIxPos = segment_map.find(outlet);
+            if (segIxPos == segment_map.end()) {
+                continue;
             }
+
+            this->segments[segIxPos->second]
+                .inflow_segments.push_back(segment.segment);
         }
     }
 }
 
-const RstSegment&
-RstWell::segment(int segment_number) const
-{
-    const auto& iter = std::find_if(this->segments.begin(), this->segments.end(), [segment_number](const RstSegment& segment) { return segment.segment == segment_number; });
 
-    if (iter == this->segments.end())
+const Opm::RestartIO::RstSegment&
+Opm::RestartIO::RstWell::segment(int segment_number) const
+{
+    auto iter = std::find_if(this->segments.begin(), this->segments.end(),
+                             [segment_number](const RstSegment& segment)
+                             { return segment.segment == segment_number; });
+
+    if (iter == this->segments.end()) {
         throw std::invalid_argument("No such segment");
+    }
 
     return *iter;
 }
-
-}} // namepace Opm::RestartIO

@@ -59,6 +59,7 @@ namespace {
         props.connection_length = rst_conn.length;
         props.skin_factor = rst_conn.skin_factor;
         props.d_factor = 0.0;
+        props.static_dfac_corr_coeff = rst_conn.static_dfac_corr_coeff;
         props.peaceman_denom = rst_conn.denom;
 
         return props;
