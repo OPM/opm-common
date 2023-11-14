@@ -2438,7 +2438,7 @@ Well{0} entered with 'FIELD' parent group:
                 }
 
                 if (well.updateWSEGSICD(sicd_pairs) ) {
-                    const bool well_status = well.getStatus();
+                    const auto well_status = well.getStatus();
                     this->snapshots.back().wells.update( std::move(well) );
                     if (well_status == WellStatus::OPEN) { // Ensure shut wells are checked for opening if valve characteristics are changed
                         this->snapshots.back().wellgroup_events().addEvent(well_name, ScheduleEvents::REQUEST_OPEN_WELL);
@@ -2465,7 +2465,7 @@ Well{0} entered with 'FIELD' parent group:
                 }
 
                 if (well.updateWSEGAICD(aicd_pairs, handlerContext.keyword.location()) ) {
-                    const bool well_status = well.getStatus();
+                    const auto well_status = well.getStatus();
                     this->snapshots.back().wells.update( std::move(well) );
                     if (well_status == WellStatus::OPEN) { // Ensure shut wells are checked for opening if valve characteristics are changed
                         this->snapshots.back().wellgroup_events().addEvent(well_name, ScheduleEvents::REQUEST_OPEN_WELL);
@@ -2490,7 +2490,7 @@ Well{0} entered with 'FIELD' parent group:
             for (const auto& well_name : well_names) {
                 auto well = this->snapshots.back().wells( well_name );
                 if (well.updateWSEGVALV(valve_pairs)) {
-                    const bool well_status = well.getStatus();
+                    const auto well_status = well.getStatus();
                     this->snapshots.back().wells.update( std::move(well) );
                     if (well_status == WellStatus::OPEN) { // Ensure shut wells are checked for opening if valve characteristics are changed
                         this->snapshots.back().wellgroup_events().addEvent(well_name, ScheduleEvents::REQUEST_OPEN_WELL);
