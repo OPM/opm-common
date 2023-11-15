@@ -223,7 +223,7 @@ Group::Group(const RestartIO::RstGroup& rst_group, std::size_t insert_index_arg,
     const auto gas_inj_limits   = GasInjectionLimits  { rst_group };
     const auto water_inj_limits = WaterInjectionLimits{ rst_group };
 
-    if ((rst_group.prod_cmode != 0) || has_active(prod_limits)) {
+    if ((rst_group.prod_cmode != 0) || rst_group.exceed_action >0 || has_active(prod_limits)) {
         this->updateProduction(make_production_properties(rst_group, prod_limits, unit_system_arg));
     }
 

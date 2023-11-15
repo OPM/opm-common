@@ -193,6 +193,8 @@ namespace {
                 usys.to_si(Opm::UnitSystem::measure::pressure,
                            rnode[VI::RNode::index::PressureLimit]);
         }
+        node.pressure = usys.to_si(Opm::UnitSystem::measure::pressure,
+                                   rnode[VI::RNode::index::NodePres]);
 
         return node;
     }

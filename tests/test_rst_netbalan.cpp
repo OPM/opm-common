@@ -125,7 +125,7 @@ BOOST_AUTO_TEST_CASE(No_Active_Network)
     BOOST_CHECK_CLOSE(netbalan.interval(), 0.0, 1.0e-7);
     BOOST_CHECK_CLOSE(netbalan.pressureTolerance(), 0.0*Opm::unit::barsa, 1.0e-7);
     BOOST_CHECK_EQUAL(netbalan.pressureMaxIter(), std::size_t{0});
-    BOOST_CHECK_CLOSE(netbalan.thpTolerance(), 0.01*Opm::unit::barsa, 1.0e-7);
+    BOOST_CHECK_CLOSE(netbalan.thpTolerance(), 0.01, 1.0e-7);
     BOOST_CHECK_EQUAL(netbalan.thpMaxIter(), std::size_t{10});
 
     BOOST_CHECK_MESSAGE(! netbalan.targetBalanceError().has_value(),
@@ -155,7 +155,7 @@ BOOST_AUTO_TEST_CASE(Norne)
     BOOST_CHECK_CLOSE(netbalan.interval(), 0.0, 1.0e-7);
     BOOST_CHECK_CLOSE(netbalan.pressureTolerance(), 0.2*Opm::unit::barsa, 1.0e-7);
     BOOST_CHECK_EQUAL(netbalan.pressureMaxIter(), std::size_t{0});
-    BOOST_CHECK_CLOSE(netbalan.thpTolerance(), 0.01*Opm::unit::barsa, 1.0e-7);
+    BOOST_CHECK_CLOSE(netbalan.thpTolerance(), 0.01, 1.0e-7);
     BOOST_CHECK_EQUAL(netbalan.thpMaxIter(), std::size_t{10});
 
     BOOST_CHECK_MESSAGE(! netbalan.targetBalanceError().has_value(),
@@ -178,7 +178,7 @@ BOOST_AUTO_TEST_CASE(Iota)
     BOOST_CHECK_CLOSE(netbalan.interval(), 1.0*Opm::unit::day, 1.0e-7);
     BOOST_CHECK_CLOSE(netbalan.pressureTolerance(), 2.0*Opm::unit::barsa, 1.0e-7);
     BOOST_CHECK_EQUAL(netbalan.pressureMaxIter(), std::size_t{3});
-    BOOST_CHECK_CLOSE(netbalan.thpTolerance(), 4.0*Opm::unit::barsa, 1.0e-7);
+    BOOST_CHECK_CLOSE(netbalan.thpTolerance(), 4.0, 1.0e-7);
     BOOST_CHECK_EQUAL(netbalan.thpMaxIter(), std::size_t{5});
 
     BOOST_CHECK_MESSAGE(netbalan.targetBalanceError().has_value(),
@@ -226,7 +226,7 @@ BOOST_AUTO_TEST_CASE(No_Active_Network)
     BOOST_CHECK_CLOSE(netbalan.interval(), 0.0, 1.0e-7);
     BOOST_CHECK_CLOSE(netbalan.pressure_tolerance(), 0.0, 1.0e-7);
     BOOST_CHECK_EQUAL(netbalan.pressure_max_iter(), std::size_t{0});
-    BOOST_CHECK_CLOSE(netbalan.thp_tolerance(), 0.01*Opm::unit::barsa, 1.0e-7);
+    BOOST_CHECK_CLOSE(netbalan.thp_tolerance(), 0.01, 1.0e-7);
     BOOST_CHECK_EQUAL(netbalan.thp_max_iter(), std::size_t{10});
 
     BOOST_CHECK_MESSAGE(! netbalan.target_balance_error().has_value(),
@@ -255,7 +255,7 @@ BOOST_AUTO_TEST_CASE(Norne)
     BOOST_CHECK_CLOSE(netbalan.interval(), 0.0, 1.0e-7);
     BOOST_CHECK_CLOSE(netbalan.pressure_tolerance(), 0.2*Opm::unit::barsa, 1.0e-7);
     BOOST_CHECK_EQUAL(netbalan.pressure_max_iter(), std::size_t{0});
-    BOOST_CHECK_CLOSE(netbalan.thp_tolerance(), 0.01*Opm::unit::barsa, 1.0e-7);
+    BOOST_CHECK_CLOSE(netbalan.thp_tolerance(), 0.01, 1.0e-7);
     BOOST_CHECK_EQUAL(netbalan.thp_max_iter(), std::size_t{10});
 
     BOOST_CHECK_MESSAGE(! netbalan.target_balance_error().has_value(),
@@ -284,7 +284,7 @@ BOOST_AUTO_TEST_CASE(Iota)
     BOOST_CHECK_CLOSE(netbalan.interval(), 1.0*Opm::unit::day, 1.0e-7);
     BOOST_CHECK_CLOSE(netbalan.pressure_tolerance(), 2.0*Opm::unit::barsa, 1.0e-7);
     BOOST_CHECK_EQUAL(netbalan.pressure_max_iter(), std::size_t{3});
-    BOOST_CHECK_CLOSE(netbalan.thp_tolerance(), 4.0*Opm::unit::barsa, 1.0e-7);
+    BOOST_CHECK_CLOSE(netbalan.thp_tolerance(), 4.0, 1.0e-7);
     BOOST_CHECK_EQUAL(netbalan.thp_max_iter(), std::size_t{5});
 
     BOOST_CHECK_MESSAGE(netbalan.target_balance_error().has_value(),

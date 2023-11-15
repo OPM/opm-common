@@ -68,6 +68,9 @@ namespace Opm { namespace RestartIO {
             /// Whether or not to include lift gas of subordinate wells as
             /// part of the produced gas entering the network at this node.
             bool add_lift_gas{false};
+
+            /// Node pressure
+            double pressure{};
         };
 
         explicit RstNetwork(std::shared_ptr<EclIO::RestartFileView> rstView,

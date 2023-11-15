@@ -60,11 +60,9 @@ namespace {
                           doubhead[VI::doubhead::Netbalnpre]);
     }
 
-    double thpToleranceValue(const std::vector<double>& doubhead,
-                             const Opm::UnitSystem&     usys)
+    double thpToleranceValue(const std::vector<double>& doubhead)
     {
-        return usys.to_si(Opm::UnitSystem::measure::pressure,
-                          doubhead[VI::doubhead::Netbalthpc]);
+        return doubhead[VI::doubhead::Netbalthpc];
     }
 
     bool is_finite_float(const double x)
@@ -112,7 +110,7 @@ Opm::RestartIO::RstNetbalan::RstNetbalan(const std::vector<int>&    intehead,
     : calc_interval_              (calcInterval(doubhead, usys))
     , ptol_                       (pressureToleranceValue(doubhead, usys))
     , pressure_max_iter_          (maxBalanceIter(intehead))
-    , thp_tolerance_              (thpToleranceValue(doubhead, usys))
+    , thp_tolerance_              (thpToleranceValue(doubhead))
     , thp_max_iter_               (maxTHPIter(intehead))
     , target_branch_balance_error_(targetBranchBalanceError(doubhead, usys))
     , max_branch_balance_error_   (maxBranchBalanceError(doubhead, usys))
