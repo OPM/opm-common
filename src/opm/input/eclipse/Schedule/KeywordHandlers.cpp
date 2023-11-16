@@ -1971,6 +1971,118 @@ Well{0} entered with 'FIELD' parent group:
         }
     }
 
+    void Schedule::handleWELSPECL(HandlerContext& handlerContext)
+    {
+        using Kw = ParserKeywords::WELSPECL;
+
+        auto getTrimmedName = [&handlerContext](const auto& item)
+        {
+            return trim_wgname(handlerContext.keyword,
+                               item.template get<std::string>(0),
+                               handlerContext.parseContext,
+                               handlerContext.errors);
+        };
+
+        auto fieldWells = std::vector<std::string>{};
+        for (const auto& record : handlerContext.keyword) {
+            if (const auto fip_region_number = record.getItem<Kw::FIP_REGION>().get<int>(0);
+                fip_region_number != Kw::FIP_REGION::defaultValue)
+            {
+                const auto& location = handlerContext.keyword.location();
+                const auto msg = fmt::format("Non-defaulted FIP region {} in WELSPECL keyword "
+                                             "in file {} line {} is not supported. "
+                                             "Reset to default value {}.",
+                                             fip_region_number,
+                                             location.filename,
+                                             location.lineno,
+                                             Kw::FIP_REGION::defaultValue);
+                OpmLog::warning(msg);
+            }
+
+            if (const auto& density_calc_type = record.getItem<Kw::DENSITY_CALC>().get<std::string>(0);
+                density_calc_type != Kw::DENSITY_CALC::defaultValue)
+            {
+                const auto& location = handlerContext.keyword.location();
+                const auto msg = fmt::format("Non-defaulted density calculation method '{}' "
+                                             "in WELSPECL keyword in file {} line {} is "
+                                             "not supported. Reset to default value {}.",
+                                             density_calc_type,
+                                             location.filename,
+                                             location.lineno,
+                                             Kw::DENSITY_CALC::defaultValue);
+                OpmLog::warning(msg);
+            }
+
+            const auto wellName = getTrimmedName(record.getItem<Kw::WELL>());
+            const auto groupName = getTrimmedName(record.getItem<Kw::GROUP>());
+
+            // We might get here from an ACTIONX context, or we might get
+            // called on a well (list) template, to reassign certain well
+            // properties--e.g, the well's controlling group--so check if
+            // 'wellName' matches any existing well names through pattern
+            // matching before treating the wellName as a simple well name.
+            //
+            // An empty list of well names is okay since that means we're
+            // creating a new well in this case.
+            const auto allowEmptyWellList = true;
+            const auto existingWells =
+                this->wellNames(wellName, handlerContext, allowEmptyWellList);
+
+            if (groupName == "FIELD") {
+                if (existingWells.empty()) {
+                    fieldWells.push_back(wellName);
+                }
+                else {
+                    for (const auto& existingWell : existingWells) {
+                        fieldWells.push_back(existingWell);
+                    }
+                }
+            }
+
+            if (! this->snapshots.back().groups.has(groupName)) {
+                this->addGroup(groupName, handlerContext.currentStep);
+            }
+
+            if (existingWells.empty()) {
+                // 'wellName' does not match any existing wells.  Create a
+                // new Well object for this well.
+                this->welspecsCreateNewWell(record,
+                                            wellName,
+                                            groupName,
+                                            handlerContext);
+            }
+            else {
+                // 'wellName' matches one or more existing wells.  Assign
+                // new properties for those wells.
+                this->welspecsUpdateExistingWells(record,
+                                                  existingWells,
+                                                  groupName,
+                                                  handlerContext);
+            }
+        }
+
+        if (! fieldWells.empty()) {
+            std::sort(fieldWells.begin(), fieldWells.end());
+            fieldWells.erase(std::unique(fieldWells.begin(), fieldWells.end()),
+                             fieldWells.end());
+
+            const auto* plural = (fieldWells.size() == 1) ? "" : "s";
+
+            const auto msg_fmt = fmt::format(R"(Well{0} parented directly to 'FIELD'; this is allowed but discouraged.
+Well{0} entered with 'FIELD' parent group:
+ * {1})", plural, fmt::join(fieldWells, "\n * "));
+
+            handlerContext.parseContext.handleError(ParseContext::SCHEDULE_WELL_IN_FIELD_GROUP,
+                                                    msg_fmt,
+                                                    handlerContext.keyword.location(),
+                                                    handlerContext.errors);
+        }
+
+        if (! handlerContext.keyword.empty()) {
+            handlerContext.record_well_structure_change();
+        }
+    }
+
     /*
       The documentation for the WELTARG keyword says that the well
       must have been fully specified and initialized using one of the
@@ -2932,6 +3044,7 @@ Well{0} entered with 'FIELD' parent group:
             { "WELPI"   , &Schedule::handleWELPI     },
             { "WELSEGS" , &Schedule::handleWELSEGS   },
             { "WELSPECS", &Schedule::handleWELSPECS  },
+            { "WELSPECL", &Schedule::handleWELSPECL  },
             { "WELTARG" , &Schedule::handleWELTARG   },
             { "WELTRAJ" , &Schedule::handleWELTRAJ   },
             { "WFOAM"   , &Schedule::handleWFOAM     },
