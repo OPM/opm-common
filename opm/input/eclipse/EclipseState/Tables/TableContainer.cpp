@@ -17,22 +17,26 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <opm/input/eclipse/EclipseState/Tables/SimpleTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/TableContainer.hpp>
 
+#include <opm/input/eclipse/EclipseState/Tables/SimpleTable.hpp>
+
 #include <string>
+#include <utility>
+
+#include <stddef.h>
+
+#include <fmt/format.h>
 
 namespace Opm {
 
-    TableContainer::TableContainer() :
-        m_maxTables(0)
-    {
-    }
+    TableContainer::TableContainer()
+        : m_maxTables(0)
+    {}
 
-    TableContainer::TableContainer(size_t maxTables) :
-        m_maxTables(maxTables)
-    {
-    }
+    TableContainer::TableContainer(size_t maxTables)
+        : m_maxTables(maxTables)
+    {}
 
     TableContainer TableContainer::serializationTestObject()
     {
@@ -44,77 +48,90 @@ namespace Opm {
         return result;
     }
 
-    bool TableContainer::empty() const {
+    bool TableContainer::empty() const
+    {
         return m_tables.empty();
     }
 
-
-    size_t TableContainer::size() const {
+    size_t TableContainer::size() const
+    {
         return m_tables.size();
     }
 
-
-    size_t TableContainer::max() const {
+    size_t TableContainer::max() const
+    {
         return m_maxTables;
     }
 
-    const TableContainer::TableMap& TableContainer::tables() const {
+    const TableContainer::TableMap& TableContainer::tables() const
+    {
         return m_tables;
     }
 
-
-    size_t TableContainer::hasTable(size_t tableNumber) const {
-        if (m_tables.find( tableNumber ) == m_tables.end())
-            return false;
-        else
-            return true;
+    bool TableContainer::hasTable(size_t tableNumber) const
+    {
+        return this->m_tables.find(tableNumber)
+            != this->m_tables.end();
     }
 
+    const SimpleTable& TableContainer::getTable(size_t tableNumber) const
+    {
+        if (tableNumber >= m_maxTables) {
+            throw std::invalid_argument {
+                fmt::format("TableContainer - invalid tableNumber {}", tableNumber)
+            };
+        }
 
-    const SimpleTable& TableContainer::getTable(size_t tableNumber) const {
-        if (tableNumber >= m_maxTables)
-            throw std::invalid_argument("TableContainer - invalid tableNumber");
-
-        if (hasTable(tableNumber)) {
-            auto pair = m_tables.find( tableNumber );
-            return *(pair->second.get());
-        } else {
-            if (tableNumber > 0)
-                return getTable(tableNumber -1);
-            else
-                throw std::invalid_argument("TableContainer does not have any table in the range 0..." + std::to_string( tableNumber ));
+        if (auto pairPos = m_tables.find(tableNumber); pairPos != m_tables.end()) {
+            return *pairPos->second;
+        }
+        else if (tableNumber > 0) {
+            return getTable(tableNumber - 1);
+        }
+        else {
+            throw std::invalid_argument {
+                fmt::format("TableContainer does not have any table in "
+                            "the range 0...{}", tableNumber)
+            };
         }
     }
 
+    void TableContainer::addTable(size_t tableNumber, std::shared_ptr<SimpleTable> table)
+    {
+        if (tableNumber >= m_maxTables) {
+            throw std::invalid_argument {
+                fmt::format("TableContainer has at most {} tables. "
+                            "Table number {} is illegal.",
+                            this->m_maxTables, tableNumber)
+            };
+        }
 
-    const SimpleTable& TableContainer::operator[](size_t tableNumber) const {
-        return getTable(tableNumber);
+        m_tables[tableNumber] = std::move(table);
     }
 
-    void TableContainer::addTable(size_t tableNumber , std::shared_ptr<SimpleTable> table) {
-        if (tableNumber >= m_maxTables)
-            throw std::invalid_argument("TableContainer has max: " + std::to_string( m_maxTables ) + " tables. Table number: " + std::to_string( tableNumber ) + " illegal.");
-
-        m_tables[tableNumber] = table;
-    }
-
-
-    bool TableContainer::operator==(const TableContainer& data) const {
-        if (this->max() != data.max())
+    bool TableContainer::operator==(const TableContainer& data) const
+    {
+        if (this->max() != data.max()) {
             return false;
-        if (this->size() != data.size())
+        }
+
+        if (this->size() != data.size()) {
             return false;
+        }
+
         for (const auto& it : m_tables) {
             auto it2 = data.m_tables.find(it.first);
-            if (it2 == data.m_tables.end())
+            if (it2 == data.m_tables.end()) {
                 return false;
-            if (!(*it.second == *it2->second))
+            }
+
+            // Note: "! (a == b)" here because operator!=() might not exist.
+            if (! (*it.second == *it2->second)) {
                 return false;
+            }
         }
 
         return true;
     }
-}
 
-
-
+} // namespace Opm
