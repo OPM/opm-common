@@ -281,7 +281,7 @@ const std::optional<std::pair<double, double>>& Connection::perf_range() const {
     void Connection::updateSegment(int segment_number_arg,
                                    double center_depth_arg,
                                    std::size_t compseg_insert_index,
-                                   const std::pair<double, double>& perf_range) {
+                                   const std::optional<std::pair<double, double>>& perf_range) {
         this->segment_number = segment_number_arg;
         this->center_depth = center_depth_arg;
         this->m_sort_value = compseg_insert_index;

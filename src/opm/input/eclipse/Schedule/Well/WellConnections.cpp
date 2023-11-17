@@ -519,7 +519,7 @@ namespace Opm {
                 prev->updateSegment(conSegNo,
                                     depth,
                                     css_ind,
-                                    *perf_range);
+                                    perf_range);
             }
         }
     }

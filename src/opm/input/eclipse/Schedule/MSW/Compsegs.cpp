@@ -331,7 +331,8 @@ namespace {
                     connection.updateSegment(compseg.segment_number,
                                              cdepth,
                                              compseg.m_seqIndex,
-                                             { compseg.m_distance_start, compseg.m_distance_end });
+                                             std::make_pair(compseg.m_distance_start,
+                                                            compseg.m_distance_end));
                 }
             }
 
