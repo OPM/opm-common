@@ -1097,7 +1097,7 @@ bool ESmry::make_esmry_file()
             std::vector<std::string> units;
             units.reserve(keyword.size());
 
-            for (auto key : keyword)
+            for (const auto& key : keyword)
                 units.push_back(kwunits.at(key));
 
 
