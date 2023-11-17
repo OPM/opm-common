@@ -130,6 +130,22 @@ DeckItem DeckItem::serializationTestObject()
     return result;
 }
 
+DeckItem DeckItem::emptyStructuralCopy() const
+{
+    auto ret = *this;
+
+    ret.dval .clear();
+    ret.ival .clear();
+    ret.sval .clear();
+    ret.rsval.clear();
+    ret.uval .clear();
+
+    ret.value_status.clear();
+    ret.raw_data = true;
+
+    return ret;
+}
+
 const std::string& DeckItem::name() const {
     return this->item_name;
 }
