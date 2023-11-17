@@ -46,6 +46,7 @@ namespace Opm {
         DeckItem( const std::string&, double, const std::vector<Dimension>& active_dim, const std::vector<Dimension>& default_dim);
 
         static DeckItem serializationTestObject();
+        DeckItem emptyStructuralCopy() const;
 
         const std::string& name() const;
 
@@ -150,6 +151,7 @@ namespace Opm {
         }
 
         void reserve_additionalRawString(std::size_t);
+
     private:
         mutable std::vector< double > dval;
         std::vector< int > ival;
