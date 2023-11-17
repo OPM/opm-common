@@ -1084,6 +1084,9 @@ bool ESmry::make_esmry_file()
 
         {
             std::vector<int> start_date_vect = start_vect;
+            if (start_date_vect.size() < 6) {
+                start_date_vect.resize(6);
+            }
 
             int sec = start_date_vect[5] / 1000000;
             int millisec = (start_date_vect[5] % 1000000) / 1000;
