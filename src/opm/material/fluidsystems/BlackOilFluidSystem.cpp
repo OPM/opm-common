@@ -332,6 +332,9 @@ soluteComponentIndex(unsigned phaseIdx)
     case oilPhaseIdx:
         return gasCompIdx;
     case gasPhaseIdx:
+        if (enableVaporizedWater()) {
+            return waterCompIdx;
+        }
         return oilCompIdx;
 
     default:

@@ -71,6 +71,7 @@ public:
     std::size_t num_rock_tables() const;
     Hysteresis hysteresis_mode() const;
     bool water_compaction() const;
+    bool dispersion() const;
 
     bool operator==(const RockConfig& other) const;
 
@@ -83,6 +84,7 @@ public:
         serializer(num_tables);
         serializer(m_water_compaction);
         serializer(hyst_mode);
+        serializer(m_dispersion);
     }
 
 private:
@@ -92,6 +94,7 @@ private:
     std::size_t num_tables = 0;
     bool m_water_compaction = false;
     Hysteresis hyst_mode = Hysteresis::REVERS;
+    bool m_dispersion = false;
 };
 
 } //namespace Opm
