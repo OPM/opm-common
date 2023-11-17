@@ -65,6 +65,15 @@ namespace Opm {
         return result;
     }
 
+    DeckKeyword DeckKeyword::emptyStructuralCopy() const
+    {
+        auto ret = *this;
+
+        ret.m_recordList.clear();
+
+        return ret;
+    }
+
     namespace {
     template <typename T>
     void add_deckvalue( DeckItem deck_item, DeckRecord& deck_record, const ParserItem& parser_item, const std::vector<DeckValue>& input_record, size_t j) {
