@@ -33,9 +33,9 @@
 // Class Opm::utility::CSRGraphFromCoordinates::Connections
 // ---------------------------------------------------------------------
 
-template <typename VertexID, bool TrackCompressedIdx>
+template <typename VertexID, bool TrackCompressedIdx, bool PermitSelfConnections>
 void
-Opm::utility::CSRGraphFromCoordinates<VertexID, TrackCompressedIdx>::
+Opm::utility::CSRGraphFromCoordinates<VertexID, TrackCompressedIdx, PermitSelfConnections>::
 Connections::add(const VertexID v1, const VertexID v2)
 {
     this->i_.push_back(v1);
@@ -45,9 +45,9 @@ Connections::add(const VertexID v1, const VertexID v2)
     this->max_j_ = std::max(this->max_j_.value_or(BaseVertexID{}), this->j_.back());
 }
 
-template <typename VertexID, bool TrackCompressedIdx>
+template <typename VertexID, bool TrackCompressedIdx, bool PermitSelfConnections>
 void
-Opm::utility::CSRGraphFromCoordinates<VertexID, TrackCompressedIdx>::
+Opm::utility::CSRGraphFromCoordinates<VertexID, TrackCompressedIdx, PermitSelfConnections>::
 Connections::add(VertexID          maxRowIdx,
                  VertexID          maxColIdx,
                  const Neighbours& rows,
@@ -67,9 +67,9 @@ Connections::add(VertexID          maxRowIdx,
     this->max_j_ = std::max(this->max_j_.value_or(BaseVertexID{}), maxColIdx);
 }
 
-template <typename VertexID, bool TrackCompressedIdx>
+template <typename VertexID, bool TrackCompressedIdx, bool PermitSelfConnections>
 void
-Opm::utility::CSRGraphFromCoordinates<VertexID, TrackCompressedIdx>::
+Opm::utility::CSRGraphFromCoordinates<VertexID, TrackCompressedIdx, PermitSelfConnections>::
 Connections::clear()
 {
     this->j_.clear();
@@ -79,57 +79,57 @@ Connections::clear()
     this->max_j_.reset();
 }
 
-template <typename VertexID, bool TrackCompressedIdx>
+template <typename VertexID, bool TrackCompressedIdx, bool PermitSelfConnections>
 bool
-Opm::utility::CSRGraphFromCoordinates<VertexID, TrackCompressedIdx>::
+Opm::utility::CSRGraphFromCoordinates<VertexID, TrackCompressedIdx, PermitSelfConnections>::
 Connections::empty() const
 {
     return this->i_.empty();
 }
 
-template <typename VertexID, bool TrackCompressedIdx>
+template <typename VertexID, bool TrackCompressedIdx, bool PermitSelfConnections>
 bool
-Opm::utility::CSRGraphFromCoordinates<VertexID, TrackCompressedIdx>::
+Opm::utility::CSRGraphFromCoordinates<VertexID, TrackCompressedIdx, PermitSelfConnections>::
 Connections::isValid() const
 {
     return this->i_.size() == this->j_.size();
 }
 
-template <typename VertexID, bool TrackCompressedIdx>
-std::optional<typename Opm::utility::CSRGraphFromCoordinates<VertexID, TrackCompressedIdx>::BaseVertexID>
-Opm::utility::CSRGraphFromCoordinates<VertexID, TrackCompressedIdx>::
+template <typename VertexID, bool TrackCompressedIdx, bool PermitSelfConnections>
+std::optional<typename Opm::utility::CSRGraphFromCoordinates<VertexID, TrackCompressedIdx, PermitSelfConnections>::BaseVertexID>
+Opm::utility::CSRGraphFromCoordinates<VertexID, TrackCompressedIdx, PermitSelfConnections>::
 Connections::maxRow() const
 {
     return this->max_i_;
 }
 
-template <typename VertexID, bool TrackCompressedIdx>
-std::optional<typename Opm::utility::CSRGraphFromCoordinates<VertexID, TrackCompressedIdx>::BaseVertexID>
-Opm::utility::CSRGraphFromCoordinates<VertexID, TrackCompressedIdx>::
+template <typename VertexID, bool TrackCompressedIdx, bool PermitSelfConnections>
+std::optional<typename Opm::utility::CSRGraphFromCoordinates<VertexID, TrackCompressedIdx, PermitSelfConnections>::BaseVertexID>
+Opm::utility::CSRGraphFromCoordinates<VertexID, TrackCompressedIdx, PermitSelfConnections>::
 Connections::maxCol() const
 {
     return this->max_j_;
 }
 
-template <typename VertexID, bool TrackCompressedIdx>
-typename Opm::utility::CSRGraphFromCoordinates<VertexID, TrackCompressedIdx>::Neighbours::size_type
-Opm::utility::CSRGraphFromCoordinates<VertexID, TrackCompressedIdx>::
+template <typename VertexID, bool TrackCompressedIdx, bool PermitSelfConnections>
+typename Opm::utility::CSRGraphFromCoordinates<VertexID, TrackCompressedIdx, PermitSelfConnections>::Neighbours::size_type
+Opm::utility::CSRGraphFromCoordinates<VertexID, TrackCompressedIdx, PermitSelfConnections>::
 Connections::numContributions() const
 {
     return this->i_.size();
 }
 
-template <typename VertexID, bool TrackCompressedIdx>
-const typename Opm::utility::CSRGraphFromCoordinates<VertexID, TrackCompressedIdx>::Neighbours&
-Opm::utility::CSRGraphFromCoordinates<VertexID, TrackCompressedIdx>::
+template <typename VertexID, bool TrackCompressedIdx, bool PermitSelfConnections>
+const typename Opm::utility::CSRGraphFromCoordinates<VertexID, TrackCompressedIdx, PermitSelfConnections>::Neighbours&
+Opm::utility::CSRGraphFromCoordinates<VertexID, TrackCompressedIdx, PermitSelfConnections>::
 Connections::rowIndices() const
 {
     return this->i_;
 }
 
-template <typename VertexID, bool TrackCompressedIdx>
-const typename Opm::utility::CSRGraphFromCoordinates<VertexID, TrackCompressedIdx>::Neighbours&
-Opm::utility::CSRGraphFromCoordinates<VertexID, TrackCompressedIdx>::
+template <typename VertexID, bool TrackCompressedIdx, bool PermitSelfConnections>
+const typename Opm::utility::CSRGraphFromCoordinates<VertexID, TrackCompressedIdx, PermitSelfConnections>::Neighbours&
+Opm::utility::CSRGraphFromCoordinates<VertexID, TrackCompressedIdx, PermitSelfConnections>::
 Connections::columnIndices() const
 {
     return this->j_;
@@ -141,9 +141,9 @@ Connections::columnIndices() const
 // Class Opm::utility::CSRGraphFromCoordinates::CSR
 // ---------------------------------------------------------------------
 
-template <typename VertexID, bool TrackCompressedIdx>
+template <typename VertexID, bool TrackCompressedIdx, bool PermitSelfConnections>
 void
-Opm::utility::CSRGraphFromCoordinates<VertexID, TrackCompressedIdx>::
+Opm::utility::CSRGraphFromCoordinates<VertexID, TrackCompressedIdx, PermitSelfConnections>::
 CSR::merge(const Connections& conns,
            const Offset       maxNumVertices,
            const bool         expandExistingIdxMap)
@@ -169,50 +169,50 @@ CSR::merge(const Connections& conns,
     this->compress(maxNumVertices);
 }
 
-template <typename VertexID, bool TrackCompressedIdx>
-typename Opm::utility::CSRGraphFromCoordinates<VertexID, TrackCompressedIdx>::Offset
-Opm::utility::CSRGraphFromCoordinates<VertexID, TrackCompressedIdx>::
+template <typename VertexID, bool TrackCompressedIdx, bool PermitSelfConnections>
+typename Opm::utility::CSRGraphFromCoordinates<VertexID, TrackCompressedIdx, PermitSelfConnections>::Offset
+Opm::utility::CSRGraphFromCoordinates<VertexID, TrackCompressedIdx, PermitSelfConnections>::
 CSR::numRows() const
 {
     return this->startPointers().empty()
         ? 0 : this->startPointers().size() - 1;
 }
 
-template <typename VertexID, bool TrackCompressedIdx>
-typename Opm::utility::CSRGraphFromCoordinates<VertexID, TrackCompressedIdx>::BaseVertexID
-Opm::utility::CSRGraphFromCoordinates<VertexID, TrackCompressedIdx>::
+template <typename VertexID, bool TrackCompressedIdx, bool PermitSelfConnections>
+typename Opm::utility::CSRGraphFromCoordinates<VertexID, TrackCompressedIdx, PermitSelfConnections>::BaseVertexID
+Opm::utility::CSRGraphFromCoordinates<VertexID, TrackCompressedIdx, PermitSelfConnections>::
 CSR::maxRowID() const
 {
     return this->numRows_ - 1;
 }
 
-template <typename VertexID, bool TrackCompressedIdx>
-typename Opm::utility::CSRGraphFromCoordinates<VertexID, TrackCompressedIdx>::BaseVertexID
-Opm::utility::CSRGraphFromCoordinates<VertexID, TrackCompressedIdx>::
+template <typename VertexID, bool TrackCompressedIdx, bool PermitSelfConnections>
+typename Opm::utility::CSRGraphFromCoordinates<VertexID, TrackCompressedIdx, PermitSelfConnections>::BaseVertexID
+Opm::utility::CSRGraphFromCoordinates<VertexID, TrackCompressedIdx, PermitSelfConnections>::
 CSR::maxColID() const
 {
     return this->numCols_ - 1;
 }
 
-template <typename VertexID, bool TrackCompressedIdx>
-const typename Opm::utility::CSRGraphFromCoordinates<VertexID, TrackCompressedIdx>::Start&
-Opm::utility::CSRGraphFromCoordinates<VertexID, TrackCompressedIdx>::
+template <typename VertexID, bool TrackCompressedIdx, bool PermitSelfConnections>
+const typename Opm::utility::CSRGraphFromCoordinates<VertexID, TrackCompressedIdx, PermitSelfConnections>::Start&
+Opm::utility::CSRGraphFromCoordinates<VertexID, TrackCompressedIdx, PermitSelfConnections>::
 CSR::startPointers() const
 {
     return this->ia_;
 }
 
-template <typename VertexID, bool TrackCompressedIdx>
-const typename Opm::utility::CSRGraphFromCoordinates<VertexID, TrackCompressedIdx>::Neighbours&
-Opm::utility::CSRGraphFromCoordinates<VertexID, TrackCompressedIdx>::
+template <typename VertexID, bool TrackCompressedIdx, bool PermitSelfConnections>
+const typename Opm::utility::CSRGraphFromCoordinates<VertexID, TrackCompressedIdx, PermitSelfConnections>::Neighbours&
+Opm::utility::CSRGraphFromCoordinates<VertexID, TrackCompressedIdx, PermitSelfConnections>::
 CSR::columnIndices() const
 {
     return this->ja_;
 }
 
-template <typename VertexID, bool TrackCompressedIdx>
-typename Opm::utility::CSRGraphFromCoordinates<VertexID, TrackCompressedIdx>::Neighbours
-Opm::utility::CSRGraphFromCoordinates<VertexID, TrackCompressedIdx>::
+template <typename VertexID, bool TrackCompressedIdx, bool PermitSelfConnections>
+typename Opm::utility::CSRGraphFromCoordinates<VertexID, TrackCompressedIdx, PermitSelfConnections>::Neighbours
+Opm::utility::CSRGraphFromCoordinates<VertexID, TrackCompressedIdx, PermitSelfConnections>::
 CSR::coordinateFormatRowIndices() const
 {
     auto rowIdx = Neighbours{};
@@ -235,9 +235,9 @@ CSR::coordinateFormatRowIndices() const
     return rowIdx;
 }
 
-template <typename VertexID, bool TrackCompressedIdx>
+template <typename VertexID, bool TrackCompressedIdx, bool PermitSelfConnections>
 void
-Opm::utility::CSRGraphFromCoordinates<VertexID, TrackCompressedIdx>::
+Opm::utility::CSRGraphFromCoordinates<VertexID, TrackCompressedIdx, PermitSelfConnections>::
 CSR::clear()
 {
     this->ia_.clear();
@@ -251,9 +251,9 @@ CSR::clear()
     this->numCols_ = 0;
 }
 
-template <typename VertexID, bool TrackCompressedIdx>
+template <typename VertexID, bool TrackCompressedIdx, bool PermitSelfConnections>
 void
-Opm::utility::CSRGraphFromCoordinates<VertexID, TrackCompressedIdx>::
+Opm::utility::CSRGraphFromCoordinates<VertexID, TrackCompressedIdx, PermitSelfConnections>::
 CSR::assemble(const Neighbours&  rows,
               const Neighbours&  cols,
               const BaseVertexID maxRowIdx,
@@ -286,9 +286,9 @@ CSR::assemble(const Neighbours&  rows,
     this->numCols_ = thisNumCols;
 }
 
-template <typename VertexID, bool TrackCompressedIdx>
+template <typename VertexID, bool TrackCompressedIdx, bool PermitSelfConnections>
 void
-Opm::utility::CSRGraphFromCoordinates<VertexID, TrackCompressedIdx>::
+Opm::utility::CSRGraphFromCoordinates<VertexID, TrackCompressedIdx, PermitSelfConnections>::
 CSR::compress(const Offset maxNumVertices)
 {
     if (this->numRows() > maxNumVertices) {
@@ -313,9 +313,9 @@ CSR::compress(const Offset maxNumVertices)
     }
 }
 
-template <typename VertexID, bool TrackCompressedIdx>
+template <typename VertexID, bool TrackCompressedIdx, bool PermitSelfConnections>
 void
-Opm::utility::CSRGraphFromCoordinates<VertexID, TrackCompressedIdx>::
+Opm::utility::CSRGraphFromCoordinates<VertexID, TrackCompressedIdx, PermitSelfConnections>::
 CSR::sortColumnIndicesPerRow()
 {
     // Transposition is, in this context, effectively a linear time (O(nnz))
@@ -327,9 +327,9 @@ CSR::sortColumnIndicesPerRow()
     this->transpose();
 }
 
-template <typename VertexID, bool TrackCompressedIdx>
+template <typename VertexID, bool TrackCompressedIdx, bool PermitSelfConnections>
 void
-Opm::utility::CSRGraphFromCoordinates<VertexID, TrackCompressedIdx>::
+Opm::utility::CSRGraphFromCoordinates<VertexID, TrackCompressedIdx, PermitSelfConnections>::
 CSR::condenseDuplicates()
 {
     // Note: Must be called *after* sortColumnIndicesPerRow().
@@ -365,9 +365,9 @@ CSR::condenseDuplicates()
     this->ia_.back() = this->ja_.size();
 }
 
-template <typename VertexID, bool TrackCompressedIdx>
+template <typename VertexID, bool TrackCompressedIdx, bool PermitSelfConnections>
 void
-Opm::utility::CSRGraphFromCoordinates<VertexID, TrackCompressedIdx>::
+Opm::utility::CSRGraphFromCoordinates<VertexID, TrackCompressedIdx, PermitSelfConnections>::
 CSR::preparePushbackRowGrouping(const int         numRows,
                                 const Neighbours& rowIdx)
 {
@@ -400,9 +400,9 @@ CSR::preparePushbackRowGrouping(const int         numRows,
     assert (this->ia_[0] == rowIdx.size());
 }
 
-template <typename VertexID, bool TrackCompressedIdx>
+template <typename VertexID, bool TrackCompressedIdx, bool PermitSelfConnections>
 void
-Opm::utility::CSRGraphFromCoordinates<VertexID, TrackCompressedIdx>::
+Opm::utility::CSRGraphFromCoordinates<VertexID, TrackCompressedIdx, PermitSelfConnections>::
 CSR::groupAndTrackColumnIndicesByRow(const Neighbours& rowIdx,
                                      const Neighbours& colIdx)
 {
@@ -447,9 +447,9 @@ CSR::groupAndTrackColumnIndicesByRow(const Neighbours& rowIdx,
     this->ia_[0] = 0;
 }
 
-template <typename VertexID, bool TrackCompressedIdx>
+template <typename VertexID, bool TrackCompressedIdx, bool PermitSelfConnections>
 void
-Opm::utility::CSRGraphFromCoordinates<VertexID, TrackCompressedIdx>::
+Opm::utility::CSRGraphFromCoordinates<VertexID, TrackCompressedIdx, PermitSelfConnections>::
 CSR::transpose()
 {
     [[maybe_unused]] auto compressedIdx = this->compressedIdx_;
@@ -472,9 +472,9 @@ CSR::transpose()
     std::swap(this->numRows_, this->numCols_);
 }
 
-template <typename VertexID, bool TrackCompressedIdx>
+template <typename VertexID, bool TrackCompressedIdx, bool PermitSelfConnections>
 void
-Opm::utility::CSRGraphFromCoordinates<VertexID, TrackCompressedIdx>::
+Opm::utility::CSRGraphFromCoordinates<VertexID, TrackCompressedIdx, PermitSelfConnections>::
 CSR::condenseAndTrackUniqueColumnsForSingleRow(typename Neighbours::const_iterator begin,
                                                typename Neighbours::const_iterator end)
 {
@@ -517,9 +517,9 @@ CSR::condenseAndTrackUniqueColumnsForSingleRow(typename Neighbours::const_iterat
     }
 }
 
-template <typename VertexID, bool TrackCompressedIdx>
+template <typename VertexID, bool TrackCompressedIdx, bool PermitSelfConnections>
 void
-Opm::utility::CSRGraphFromCoordinates<VertexID, TrackCompressedIdx>::CSR::
+Opm::utility::CSRGraphFromCoordinates<VertexID, TrackCompressedIdx, PermitSelfConnections>::CSR::
 remapCompressedIndex([[maybe_unused]] Start&&                                  compressedIdx,
                      [[maybe_unused]] std::optional<typename Start::size_type> numOrig)
 {
@@ -547,16 +547,16 @@ remapCompressedIndex([[maybe_unused]] Start&&                                  c
 // Class Opm::utility::CSRGraphFromCoordinates
 // ---------------------------------------------------------------------
 
-template <typename VertexID, bool TrackCompressedIdx>
-void Opm::utility::CSRGraphFromCoordinates<VertexID, TrackCompressedIdx>::clear()
+template <typename VertexID, bool TrackCompressedIdx, bool PermitSelfConnections>
+void Opm::utility::CSRGraphFromCoordinates<VertexID, TrackCompressedIdx, PermitSelfConnections>::clear()
 {
     this->uncompressed_.clear();
     this->csr_.clear();
 }
 
-template <typename VertexID, bool TrackCompressedIdx>
+template <typename VertexID, bool TrackCompressedIdx, bool PermitSelfConnections>
 void
-Opm::utility::CSRGraphFromCoordinates<VertexID, TrackCompressedIdx>::
+Opm::utility::CSRGraphFromCoordinates<VertexID, TrackCompressedIdx, PermitSelfConnections>::
 addConnection(const VertexID v1, const VertexID v2)
 {
     if ((v1 < 0) || (v2 < 0)) {
@@ -567,17 +567,19 @@ addConnection(const VertexID v1, const VertexID v2)
         };
     }
 
-    if (v1 == v2) {
-        // Ignore self connections.
-        return;
+    if constexpr (! PermitSelfConnections) {
+        if (v1 == v2) {
+            // Ignore self connections.
+            return;
+        }
     }
 
     this->uncompressed_.add(v1, v2);
 }
 
-template <typename VertexID, bool TrackCompressedIdx>
+template <typename VertexID, bool TrackCompressedIdx, bool PermitSelfConnections>
 void
-Opm::utility::CSRGraphFromCoordinates<VertexID, TrackCompressedIdx>::
+Opm::utility::CSRGraphFromCoordinates<VertexID, TrackCompressedIdx, PermitSelfConnections>::
 compress(const Offset maxNumVertices, const bool expandExistingIdxMap)
 {
     if (! this->uncompressed_.isValid()) {
@@ -591,16 +593,16 @@ compress(const Offset maxNumVertices, const bool expandExistingIdxMap)
     this->uncompressed_.clear();
 }
 
-template <typename VertexID, bool TrackCompressedIdx>
-typename Opm::utility::CSRGraphFromCoordinates<VertexID, TrackCompressedIdx>::Offset
-Opm::utility::CSRGraphFromCoordinates<VertexID, TrackCompressedIdx>::numVertices() const
+template <typename VertexID, bool TrackCompressedIdx, bool PermitSelfConnections>
+typename Opm::utility::CSRGraphFromCoordinates<VertexID, TrackCompressedIdx, PermitSelfConnections>::Offset
+Opm::utility::CSRGraphFromCoordinates<VertexID, TrackCompressedIdx, PermitSelfConnections>::numVertices() const
 {
     return this->csr_.numRows();
 }
 
-template <typename VertexID, bool TrackCompressedIdx>
-typename Opm::utility::CSRGraphFromCoordinates<VertexID, TrackCompressedIdx>::Offset
-Opm::utility::CSRGraphFromCoordinates<VertexID, TrackCompressedIdx>::numEdges() const
+template <typename VertexID, bool TrackCompressedIdx, bool PermitSelfConnections>
+typename Opm::utility::CSRGraphFromCoordinates<VertexID, TrackCompressedIdx, PermitSelfConnections>::Offset
+Opm::utility::CSRGraphFromCoordinates<VertexID, TrackCompressedIdx, PermitSelfConnections>::numEdges() const
 {
     const auto& ia = this->startPointers();
 

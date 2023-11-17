@@ -47,7 +47,11 @@ namespace Opm { namespace utility {
     /// \tparam TrackCompressedIdx Whether or not to form a mapping relation
     ///    for vertex pairs to compressed indices.  Default value, false,
     ///    bypasses this mapping relation and conserves memory.
-    template <typename VertexID = int, bool TrackCompressedIdx = false>
+    ///
+    /// \tparam PermitSelfConnections Whether or not to allow connections of
+    ///    the form i->i--i.e., diagonal elements.  Default value, \c false,
+    ///    does not generate connections from a vertex to itself.
+    template <typename VertexID = int, bool TrackCompressedIdx = false, bool PermitSelfConnections = false>
     class CSRGraphFromCoordinates
     {
     private:
@@ -73,9 +77,11 @@ namespace Opm { namespace utility {
         ///
         /// \param[in] v1 First vertex in vertex pair.  Used as row index.
         ///
-        /// \param[in] r2 Second vertex in vertex pair.  Used as column index.
+        /// \param[in] v2 Second vertex in vertex pair.  Used as column index.
         ///
-        /// If both vertex IDs are the same then this function does nothing.
+        /// If both vertex IDs are the same, and class template argument \c
+        /// PermitSelfConnections is in its default state of \c false, then
+        /// this function does nothing.
         void addConnection(VertexID v1, VertexID v2);
 
         /// Form CSR adjacency matrix representation of input graph from
