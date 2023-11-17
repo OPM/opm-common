@@ -76,6 +76,10 @@ namespace Opm {
         template< typename T > const std::vector< T >& getData() const;
         const std::vector< double >& getSIDoubleData() const;
         const std::vector<value::status>& getValueStatus() const;
+        const std::vector<Dimension>& getActiveDimensions() const
+        {
+            return this->active_dimensions;
+        }
 
         template< typename T>
         void shrink_to_fit();

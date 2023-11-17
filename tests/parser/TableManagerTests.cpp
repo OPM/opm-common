@@ -31,36 +31,40 @@
 #include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
 
 // keyword specific table classes
-#include <opm/input/eclipse/EclipseState/Tables/PlyrockTable.hpp>
-#include <opm/input/eclipse/EclipseState/Tables/Regdims.hpp>
-#include <opm/input/eclipse/EclipseState/Tables/SwofTable.hpp>
-#include <opm/input/eclipse/EclipseState/Tables/SgwfnTable.hpp>
-#include <opm/input/eclipse/EclipseState/Tables/SwfnTable.hpp>
-#include <opm/input/eclipse/EclipseState/Tables/SgofTable.hpp>
-#include <opm/input/eclipse/EclipseState/Tables/Tabdims.hpp>
-#include <opm/input/eclipse/EclipseState/Tables/PlyadsTable.hpp>
-#include <opm/input/eclipse/EclipseState/Tables/PlymaxTable.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/DenT.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/FlatTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/FoamadsTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/FoammobTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/PbvdTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/PdvdTable.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/PlyadsTable.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/PlymaxTable.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/PlyrockTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/PvdgTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/PvdoTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/PvtgTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/PvtoTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/PvtxTable.hpp>
-#include <opm/input/eclipse/EclipseState/Tables/DenT.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/Regdims.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/SgofTable.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/SgwfnTable.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/SwfnTable.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/SwofTable.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/TLMixpar.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/Tabdims.hpp>
 
 #include <opm/input/eclipse/Schedule/VFPProdTable.hpp>
 #include <opm/input/eclipse/Schedule/VFPInjTable.hpp>
-#include <opm/input/eclipse/EclipseState/Tables/TLMixpar.hpp>
 
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
+#include <opm/input/eclipse/Units/Units.hpp>
 
+#include <cstddef>
 #include <iostream>
 #include <stdexcept>
+#include <string>
 #include <tuple>
+#include <vector>
 
 using namespace Opm;
 
@@ -760,48 +764,64 @@ END
     const auto& pvdg = tmgr.getPvdgTables();
     BOOST_REQUIRE_EQUAL(pvdg.size(), std::size_t{2});
 
+    // Table 1 padded to low pressure of 1 bar by inserting two new rows:
+    // p=p0=1 bar and p=pLim=2 bar.
     {
         const auto& t1 = pvdg.getTable<PvdgTable>(0);
 
         const auto& p = t1.getPressureColumn();
-        BOOST_REQUIRE_EQUAL(p.size(), std::size_t{3});
-        BOOST_CHECK_CLOSE(p[0], 1.0e6, 1.0e-8);
-        BOOST_CHECK_CLOSE(p[1], 1.5e6, 1.0e-8);
-        BOOST_CHECK_CLOSE(p[2], 2.5e6, 1.0e-8);
+        BOOST_REQUIRE_EQUAL(p.size(), std::size_t{5});
+        BOOST_CHECK_CLOSE(p[0],  1.0       *unit::barsa, 1.0e-8);
+        BOOST_CHECK_CLOSE(p[1],  5.87719759*unit::barsa, 5.0e-8);
+        BOOST_CHECK_CLOSE(p[2], 10.0       *unit::barsa, 1.0e-8);
+        BOOST_CHECK_CLOSE(p[3], 15.0       *unit::barsa, 1.0e-8);
+        BOOST_CHECK_CLOSE(p[4], 25.0       *unit::barsa, 1.0e-8);
 
         const auto& B = t1.getFormationFactorColumn();
-        BOOST_REQUIRE_EQUAL(B.size(), std::size_t{3});
-        BOOST_CHECK_CLOSE(B[0], 0.266161, 1.0e-8);
-        BOOST_CHECK_CLOSE(B[1], 0.127259, 1.0e-8);
-        BOOST_CHECK_CLOSE(B[2], 0.062022, 1.0e-8);
+        BOOST_REQUIRE_EQUAL(B.size(), std::size_t{5});
+        BOOST_CHECK_CLOSE(B[0], 2.927771, 1.0e-8);
+        BOOST_CHECK_CLOSE(B[1], 2.66161 , 1.0e-8);
+        BOOST_CHECK_CLOSE(B[2], 0.266161, 1.0e-8);
+        BOOST_CHECK_CLOSE(B[3], 0.127259, 1.0e-8);
+        BOOST_CHECK_CLOSE(B[4], 0.062022, 1.0e-8);
 
         const auto& mu = t1.getViscosityColumn();
-        BOOST_REQUIRE_EQUAL(mu.size(), std::size_t{3});
-        BOOST_CHECK_CLOSE(mu[0], 0.0108e-3, 1.0e-8);
-        BOOST_CHECK_CLOSE(mu[1], 0.0116e-3, 1.0e-8);
-        BOOST_CHECK_CLOSE(mu[2], 0.0123e-3, 1.0e-8);
+        BOOST_REQUIRE_EQUAL(mu.size(), std::size_t{5});
+        constexpr auto cP = prefix::centi*unit::Poise;
+        BOOST_CHECK_CLOSE(mu[0], 4.93296634e-3*cP, 1.0e-8);
+        BOOST_CHECK_CLOSE(mu[1], 4.93296634e-3*cP, 1.0e-8);
+        BOOST_CHECK_CLOSE(mu[2], 0.0108*cP       , 1.0e-8);
+        BOOST_CHECK_CLOSE(mu[3], 0.0116*cP       , 1.0e-8);
+        BOOST_CHECK_CLOSE(mu[4], 0.0123*cP       , 1.0e-8);
     }
 
     {
         const auto& t2 = pvdg.getTable<PvdgTable>(1);
 
         const auto& p = t2.getPressureColumn();
-        BOOST_REQUIRE_EQUAL(p.size(), std::size_t{3});
-        BOOST_CHECK_CLOSE(p[0], 1.0e6, 1.0e-8);
-        BOOST_CHECK_CLOSE(p[1], 1.5e6, 1.0e-8);
-        BOOST_CHECK_CLOSE(p[2], 2.5e6, 1.0e-8);
+        BOOST_REQUIRE_EQUAL(p.size(), std::size_t{5});
+        BOOST_CHECK_CLOSE(p[0],  1.0       *unit::barsa, 1.0e-8);
+        BOOST_CHECK_CLOSE(p[1],  5.87719759*unit::barsa, 5.0e-8);
+        BOOST_CHECK_CLOSE(p[2], 10.0       *unit::barsa, 1.0e-8);
+        BOOST_CHECK_CLOSE(p[3], 15.0       *unit::barsa, 1.0e-8);
+        BOOST_CHECK_CLOSE(p[4], 25.0       *unit::barsa, 1.0e-8);
 
         const auto& B = t2.getFormationFactorColumn();
-        BOOST_REQUIRE_EQUAL(B.size(), std::size_t{3});
-        BOOST_CHECK_CLOSE(B[0], 0.266161, 1.0e-8);
-        BOOST_CHECK_CLOSE(B[1], 0.127259, 1.0e-8);
-        BOOST_CHECK_CLOSE(B[2], 0.062022, 1.0e-8);
+        BOOST_REQUIRE_EQUAL(B.size(), std::size_t{5});
+        BOOST_CHECK_CLOSE(B[0], 2.927771, 1.0e-8);
+        BOOST_CHECK_CLOSE(B[1], 2.66161 , 1.0e-8);
+        BOOST_CHECK_CLOSE(B[2], 0.266161, 1.0e-8);
+        BOOST_CHECK_CLOSE(B[3], 0.127259, 1.0e-8);
+        BOOST_CHECK_CLOSE(B[4], 0.062022, 1.0e-8);
 
         const auto& mu = t2.getViscosityColumn();
-        BOOST_REQUIRE_EQUAL(mu.size(), std::size_t{3});
-        BOOST_CHECK_CLOSE(mu[0], 0.0108e-3, 1.0e-8);
-        BOOST_CHECK_CLOSE(mu[1], 0.0116e-3, 1.0e-8);
-        BOOST_CHECK_CLOSE(mu[2], 0.0123e-3, 1.0e-8);
+        BOOST_REQUIRE_EQUAL(mu.size(), std::size_t{5});
+        constexpr auto cP = prefix::centi*unit::Poise;
+        BOOST_CHECK_CLOSE(mu[0], 4.93296634e-3*cP, 1.0e-8);
+        BOOST_CHECK_CLOSE(mu[1], 4.93296634e-3*cP, 1.0e-8);
+        BOOST_CHECK_CLOSE(mu[2], 0.0108*cP       , 1.0e-8);
+        BOOST_CHECK_CLOSE(mu[3], 0.0116*cP       , 1.0e-8);
+        BOOST_CHECK_CLOSE(mu[4], 0.0123*cP       , 1.0e-8);
     }
 }
 
@@ -1019,48 +1039,97 @@ END
     {
         const auto& t1 = pvtg[0];
 
-        BOOST_REQUIRE_EQUAL(t1.size(), std::size_t{2});
+        // Padded to low pressure by inserting two new rows, one for p=p0=1
+        // bar, and one for p=pLim=3.002 bar.
+        BOOST_REQUIRE_EQUAL(t1.size(), std::size_t{4});
 
         const auto& satTbl = t1.getSaturatedTable();
         {
-            BOOST_REQUIRE_EQUAL(satTbl.numRows(), std::size_t{2});
+            BOOST_REQUIRE_EQUAL(satTbl.numRows(), std::size_t{4});
             BOOST_REQUIRE_EQUAL(satTbl.numColumns(), std::size_t{4});
 
             const auto& p = satTbl.getColumn(0);
-            BOOST_CHECK_CLOSE(p[0], 5.0e6, 1.0e-8);
-            BOOST_CHECK_CLOSE(p[1], 7.0e6, 1.0e-8);
+            BOOST_CHECK_CLOSE(p[0],  1.0        *unit::barsa, 1.0e-8);
+            BOOST_CHECK_CLOSE(p[1],  3.002416073*unit::barsa, 1.0e-8);
+            BOOST_CHECK_CLOSE(p[2], 50.0        *unit::barsa, 1.0e-8);
+            BOOST_CHECK_CLOSE(p[3], 70.0        *unit::barsa, 1.0e-8);
 
             const auto& rv = satTbl.getColumn(1);
-            BOOST_CHECK_CLOSE(rv[0], 0.00000497, 1.0e-8);
-            BOOST_CHECK_CLOSE(rv[1], 0.00000521, 1.0e-8);
+            BOOST_CHECK_CLOSE(rv[0], 4.406029e-06, 2.0e-7);
+            BOOST_CHECK_CLOSE(rv[1], 4.406029e-06, 2.0e-7);
+            BOOST_CHECK_CLOSE(rv[2], 4.97e-6     , 1.0e-8);
+            BOOST_CHECK_CLOSE(rv[3], 5.21e-6     , 1.0e-8);
 
             const auto& B = satTbl.getColumn(2);
-            BOOST_CHECK_CLOSE(B[0], 0.024958, 1.0e-8);
-            BOOST_CHECK_CLOSE(B[1], 0.017639, 1.0e-8);
+            BOOST_CHECK_CLOSE(B[0], 1.1     , 1.0e-8);
+            BOOST_CHECK_CLOSE(B[1], 1.0     , 1.0e-8);
+            BOOST_CHECK_CLOSE(B[2], 0.024958, 1.0e-8);
+            BOOST_CHECK_CLOSE(B[3], 0.017639, 1.0e-8);
 
             const auto& mu = satTbl.getColumn(3);
-            BOOST_CHECK_CLOSE(mu[0], 0.01441e-3, 1.0e-8);
-            BOOST_CHECK_CLOSE(mu[1], 0.01491e-3, 1.0e-8);
+            constexpr auto cP = prefix::centi*unit::Poise;
+            BOOST_CHECK_CLOSE(mu[0], 2.63557694e-3*cP, 2.0e-8);
+            BOOST_CHECK_CLOSE(mu[1], 2.63557694e-3*cP, 2.0e-8);
+            BOOST_CHECK_CLOSE(mu[2], 0.01441*cP      , 1.0e-8);
+            BOOST_CHECK_CLOSE(mu[3], 0.01491*cP      , 1.0e-8);
         }
 
         {
             const auto& u1 = t1.getUnderSaturatedTable(0);
-            BOOST_REQUIRE_EQUAL(u1.numRows(), std::size_t{3});
+            BOOST_REQUIRE_EQUAL(u1.numRows(), std::size_t{1});
             BOOST_REQUIRE_EQUAL(u1.numColumns(), std::size_t{3});
 
             const auto& rv = u1.getColumn(0);
+            BOOST_REQUIRE_EQUAL(rv.size(), std::size_t{1});
+            BOOST_CHECK_CLOSE(rv[0], 4.406029e-06, 2.0e-7);
+
+            const auto& B = u1.getColumn(1);
+            BOOST_REQUIRE_EQUAL(B.size(), std::size_t{1});
+            BOOST_CHECK_CLOSE(B[0], 1.1, 1.0e-8);
+
+            const auto& mu = u1.getColumn(2);
+            constexpr auto cP = prefix::centi*unit::Poise;
+            BOOST_REQUIRE_EQUAL(mu.size(), std::size_t{1});
+            BOOST_CHECK_CLOSE(mu[0], 2.63557694e-3*cP, 2.0e-8);
+        }
+
+        {
+            const auto& u2 = t1.getUnderSaturatedTable(1);
+            BOOST_REQUIRE_EQUAL(u2.numRows(), std::size_t{1});
+            BOOST_REQUIRE_EQUAL(u2.numColumns(), std::size_t{3});
+
+            const auto& rv = u2.getColumn(0);
+            BOOST_REQUIRE_EQUAL(rv.size(), std::size_t{1});
+            BOOST_CHECK_CLOSE(rv[0], 4.406029e-06, 2.0e-7);
+
+            const auto& B = u2.getColumn(1);
+            BOOST_REQUIRE_EQUAL(B.size(), std::size_t{1});
+            BOOST_CHECK_CLOSE(B[0], 1.0, 1.0e-8);
+
+            const auto& mu = u2.getColumn(2);
+            constexpr auto cP = prefix::centi*unit::Poise;
+            BOOST_REQUIRE_EQUAL(mu.size(), std::size_t{1});
+            BOOST_CHECK_CLOSE(mu[0], 2.63557694e-3*cP, 2.0e-8);
+        }
+
+        {
+            const auto& u3 = t1.getUnderSaturatedTable(2);
+            BOOST_REQUIRE_EQUAL(u3.numRows(), std::size_t{3});
+            BOOST_REQUIRE_EQUAL(u3.numColumns(), std::size_t{3});
+
+            const auto& rv = u3.getColumn(0);
             BOOST_REQUIRE_EQUAL(rv.size(), std::size_t{3});
             BOOST_CHECK_CLOSE(rv[0], 0.00000497, 1.0e-8);
             BOOST_CHECK_CLOSE(rv[1], 0.00000248, 1.0e-8);
             BOOST_CHECK_CLOSE(rv[2], 0.00000000, 1.0e-8);
 
-            const auto& B = u1.getColumn(1);
+            const auto& B = u3.getColumn(1);
             BOOST_REQUIRE_EQUAL(B.size(), std::size_t{3});
             BOOST_CHECK_CLOSE(B[0], 0.024958, 1.0e-8);
             BOOST_CHECK_CLOSE(B[1], 0.024958, 1.0e-8);
             BOOST_CHECK_CLOSE(B[2], 0.024958, 1.0e-8);
 
-            const auto& mu = u1.getColumn(2);
+            const auto& mu = u3.getColumn(2);
             BOOST_REQUIRE_EQUAL(mu.size(), std::size_t{3});
             BOOST_CHECK_CLOSE(mu[0], 0.01441e-3, 1.0e-8);
             BOOST_CHECK_CLOSE(mu[1], 0.01440e-3, 1.0e-8);
@@ -1068,23 +1137,23 @@ END
         }
 
         {
-            const auto& u2 = t1.getUnderSaturatedTable(1);
-            BOOST_REQUIRE_EQUAL(u2.numRows(), std::size_t{3});
-            BOOST_REQUIRE_EQUAL(u2.numColumns(), std::size_t{3});
+            const auto& u4 = t1.getUnderSaturatedTable(3);
+            BOOST_REQUIRE_EQUAL(u4.numRows(), std::size_t{3});
+            BOOST_REQUIRE_EQUAL(u4.numColumns(), std::size_t{3});
 
-            const auto& rv = u2.getColumn(0);
+            const auto& rv = u4.getColumn(0);
             BOOST_REQUIRE_EQUAL(rv.size(), std::size_t{3});
             BOOST_CHECK_CLOSE(rv[0], 0.00000521, 1.0e-8);
             BOOST_CHECK_CLOSE(rv[1], 0.00000261, 1.0e-8);
             BOOST_CHECK_CLOSE(rv[2], 0.00000000, 1.0e-8);
 
-            const auto& B = u2.getColumn(1);
+            const auto& B = u4.getColumn(1);
             BOOST_REQUIRE_EQUAL(B.size(), std::size_t{3});
             BOOST_CHECK_CLOSE(B[0], 0.017639, 1.0e-8);
             BOOST_CHECK_CLOSE(B[1], 0.017641, 1.0e-8);
             BOOST_CHECK_CLOSE(B[2], 0.017643, 1.0e-8);
 
-            const auto& mu = u2.getColumn(2);
+            const auto& mu = u4.getColumn(2);
             BOOST_REQUIRE_EQUAL(mu.size(), std::size_t{3});
             BOOST_CHECK_CLOSE(mu[0], 0.01491e-3, 1.0e-8);
             BOOST_CHECK_CLOSE(mu[1], 0.01490e-3, 1.0e-8);
@@ -1095,48 +1164,97 @@ END
     {
         const auto& t2 = pvtg[1];
 
-        BOOST_REQUIRE_EQUAL(t2.size(), std::size_t{2});
+        // Padded to low pressure by inserting two new rows, one for p=p0=1
+        // bar, and one for p=pLim=3.002 bar.
+        BOOST_REQUIRE_EQUAL(t2.size(), std::size_t{4});
 
         const auto& satTbl = t2.getSaturatedTable();
         {
-            BOOST_REQUIRE_EQUAL(satTbl.numRows(), std::size_t{2});
+            BOOST_REQUIRE_EQUAL(satTbl.numRows(), std::size_t{4});
             BOOST_REQUIRE_EQUAL(satTbl.numColumns(), std::size_t{4});
 
             const auto& p = satTbl.getColumn(0);
-            BOOST_CHECK_CLOSE(p[0], 5.0e6, 1.0e-8);
-            BOOST_CHECK_CLOSE(p[1], 7.0e6, 1.0e-8);
+            BOOST_CHECK_CLOSE(p[0],  1.0        *unit::barsa, 1.0e-8);
+            BOOST_CHECK_CLOSE(p[1],  3.002416073*unit::barsa, 1.0e-8);
+            BOOST_CHECK_CLOSE(p[2], 50.0        *unit::barsa, 1.0e-8);
+            BOOST_CHECK_CLOSE(p[3], 70.0        *unit::barsa, 1.0e-8);
 
             const auto& rv = satTbl.getColumn(1);
-            BOOST_CHECK_CLOSE(rv[0], 0.00000497, 1.0e-8);
-            BOOST_CHECK_CLOSE(rv[1], 0.00000521, 1.0e-8);
+            BOOST_CHECK_CLOSE(rv[0], 4.406029e-06, 2.0e-7);
+            BOOST_CHECK_CLOSE(rv[1], 4.406029e-06, 2.0e-7);
+            BOOST_CHECK_CLOSE(rv[2], 4.97e-6     , 1.0e-8);
+            BOOST_CHECK_CLOSE(rv[3], 5.21e-6     , 1.0e-8);
 
             const auto& B = satTbl.getColumn(2);
-            BOOST_CHECK_CLOSE(B[0], 0.024958, 1.0e-8);
-            BOOST_CHECK_CLOSE(B[1], 0.017639, 1.0e-8);
+            BOOST_CHECK_CLOSE(B[0], 1.1     , 1.0e-8);
+            BOOST_CHECK_CLOSE(B[1], 1.0     , 1.0e-8);
+            BOOST_CHECK_CLOSE(B[2], 0.024958, 1.0e-8);
+            BOOST_CHECK_CLOSE(B[3], 0.017639, 1.0e-8);
 
             const auto& mu = satTbl.getColumn(3);
-            BOOST_CHECK_CLOSE(mu[0], 0.01441e-3, 1.0e-8);
-            BOOST_CHECK_CLOSE(mu[1], 0.01491e-3, 1.0e-8);
+            constexpr auto cP = prefix::centi*unit::Poise;
+            BOOST_CHECK_CLOSE(mu[0], 2.63557694e-3*cP, 2.0e-8);
+            BOOST_CHECK_CLOSE(mu[1], 2.63557694e-3*cP, 2.0e-8);
+            BOOST_CHECK_CLOSE(mu[2], 0.01441*cP      , 1.0e-8);
+            BOOST_CHECK_CLOSE(mu[3], 0.01491*cP      , 1.0e-8);
         }
 
         {
             const auto& u1 = t2.getUnderSaturatedTable(0);
-            BOOST_REQUIRE_EQUAL(u1.numRows(), std::size_t{3});
+            BOOST_REQUIRE_EQUAL(u1.numRows(), std::size_t{1});
             BOOST_REQUIRE_EQUAL(u1.numColumns(), std::size_t{3});
 
             const auto& rv = u1.getColumn(0);
+            BOOST_REQUIRE_EQUAL(rv.size(), std::size_t{1});
+            BOOST_CHECK_CLOSE(rv[0], 4.406029e-06, 2.0e-7);
+
+            const auto& B = u1.getColumn(1);
+            BOOST_REQUIRE_EQUAL(B.size(), std::size_t{1});
+            BOOST_CHECK_CLOSE(B[0], 1.1, 1.0e-8);
+
+            const auto& mu = u1.getColumn(2);
+            constexpr auto cP = prefix::centi*unit::Poise;
+            BOOST_REQUIRE_EQUAL(mu.size(), std::size_t{1});
+            BOOST_CHECK_CLOSE(mu[0], 2.63557694e-3*cP, 2.0e-8);
+        }
+
+        {
+            const auto& u2 = t2.getUnderSaturatedTable(1);
+            BOOST_REQUIRE_EQUAL(u2.numRows(), std::size_t{1});
+            BOOST_REQUIRE_EQUAL(u2.numColumns(), std::size_t{3});
+
+            const auto& rv = u2.getColumn(0);
+            BOOST_REQUIRE_EQUAL(rv.size(), std::size_t{1});
+            BOOST_CHECK_CLOSE(rv[0], 4.406029e-06, 2.0e-7);
+
+            const auto& B = u2.getColumn(1);
+            BOOST_REQUIRE_EQUAL(B.size(), std::size_t{1});
+            BOOST_CHECK_CLOSE(B[0], 1.0, 1.0e-8);
+
+            const auto& mu = u2.getColumn(2);
+            constexpr auto cP = prefix::centi*unit::Poise;
+            BOOST_REQUIRE_EQUAL(mu.size(), std::size_t{1});
+            BOOST_CHECK_CLOSE(mu[0], 2.63557694e-3*cP, 2.0e-8);
+        }
+
+        {
+            const auto& u3 = t2.getUnderSaturatedTable(2);
+            BOOST_REQUIRE_EQUAL(u3.numRows(), std::size_t{3});
+            BOOST_REQUIRE_EQUAL(u3.numColumns(), std::size_t{3});
+
+            const auto& rv = u3.getColumn(0);
             BOOST_REQUIRE_EQUAL(rv.size(), std::size_t{3});
             BOOST_CHECK_CLOSE(rv[0], 0.00000497, 1.0e-8);
             BOOST_CHECK_CLOSE(rv[1], 0.00000248, 1.0e-8);
             BOOST_CHECK_CLOSE(rv[2], 0.00000000, 1.0e-8);
 
-            const auto& B = u1.getColumn(1);
+            const auto& B = u3.getColumn(1);
             BOOST_REQUIRE_EQUAL(B.size(), std::size_t{3});
             BOOST_CHECK_CLOSE(B[0], 0.024958, 1.0e-8);
             BOOST_CHECK_CLOSE(B[1], 0.024958, 1.0e-8);
             BOOST_CHECK_CLOSE(B[2], 0.024958, 1.0e-8);
 
-            const auto& mu = u1.getColumn(2);
+            const auto& mu = u3.getColumn(2);
             BOOST_REQUIRE_EQUAL(mu.size(), std::size_t{3});
             BOOST_CHECK_CLOSE(mu[0], 0.01441e-3, 1.0e-8);
             BOOST_CHECK_CLOSE(mu[1], 0.01440e-3, 1.0e-8);
@@ -1144,23 +1262,23 @@ END
         }
 
         {
-            const auto& u2 = t2.getUnderSaturatedTable(1);
-            BOOST_REQUIRE_EQUAL(u2.numRows(), std::size_t{3});
-            BOOST_REQUIRE_EQUAL(u2.numColumns(), std::size_t{3});
+            const auto& u4 = t2.getUnderSaturatedTable(3);
+            BOOST_REQUIRE_EQUAL(u4.numRows(), std::size_t{3});
+            BOOST_REQUIRE_EQUAL(u4.numColumns(), std::size_t{3});
 
-            const auto& rv = u2.getColumn(0);
+            const auto& rv = u4.getColumn(0);
             BOOST_REQUIRE_EQUAL(rv.size(), std::size_t{3});
             BOOST_CHECK_CLOSE(rv[0], 0.00000521, 1.0e-8);
             BOOST_CHECK_CLOSE(rv[1], 0.00000261, 1.0e-8);
             BOOST_CHECK_CLOSE(rv[2], 0.00000000, 1.0e-8);
 
-            const auto& B = u2.getColumn(1);
+            const auto& B = u4.getColumn(1);
             BOOST_REQUIRE_EQUAL(B.size(), std::size_t{3});
             BOOST_CHECK_CLOSE(B[0], 0.017639, 1.0e-8);
             BOOST_CHECK_CLOSE(B[1], 0.017641, 1.0e-8);
             BOOST_CHECK_CLOSE(B[2], 0.017643, 1.0e-8);
 
-            const auto& mu = u2.getColumn(2);
+            const auto& mu = u4.getColumn(2);
             BOOST_REQUIRE_EQUAL(mu.size(), std::size_t{3});
             BOOST_CHECK_CLOSE(mu[0], 0.01491e-3, 1.0e-8);
             BOOST_CHECK_CLOSE(mu[1], 0.01490e-3, 1.0e-8);
