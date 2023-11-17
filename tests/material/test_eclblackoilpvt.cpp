@@ -231,14 +231,11 @@ void ensurePvtApi(const OilPvt& oilPvt, const GasPvt& gasPvt, const WaterPvt& wa
 
 struct Fixture {
     Fixture()
-        : python(std::make_shared<Opm::Python>())
-        , deck(Opm::Parser().parseString(deckString1))
+        : deck(Opm::Parser().parseString(deckString1))
         , eclState(deck)
-        , schedule(deck, eclState, python)
-    {
-    }
+        , schedule(deck, eclState, std::make_shared<Opm::Python>())
+    {}
 
-    std::shared_ptr<Opm::Python> python;
     Opm::Deck deck;
     Opm::EclipseState eclState;
     Opm::Schedule schedule;
