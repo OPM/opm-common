@@ -758,8 +758,7 @@ namespace Opm
         void handleWELOPEN   (HandlerContext&);
         void handleWELPI     (HandlerContext&);
         void handleWELSEGS   (HandlerContext&);
-        void handleWELSPECS  (HandlerContext&);
-        void handleWELSPECL  (HandlerContext&);
+        void handleWELSPEC   (HandlerContext&);
         void handleWELTARG   (HandlerContext&);
         void handleWELTRAJ   (HandlerContext&);
         void handleWFOAM     (HandlerContext&);
