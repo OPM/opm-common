@@ -846,7 +846,7 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
         auto well2 = this->snapshots[reportStep].wells.get(well_name);
         if (well2.getConnections().empty() && status == Well::Status::OPEN) {
             if (location) {
-                auto msg = fmt::format("Problem with{}\n",
+                auto msg = fmt::format("Problem with {}\n"
                                        "In {} line{}\n"
                                        "Well {} has no connections to grid and will remain SHUT", location->keyword, location->filename, location->lineno, well_name);
                 OpmLog::warning(msg);
