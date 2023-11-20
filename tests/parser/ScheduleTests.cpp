@@ -5780,9 +5780,9 @@ END
     double phi = 0.3;
 
     // WDFAC overwrites D factor in COMDAT
-    BOOST_CHECK(!wdfac11.useConnectionDFactor());
+    BOOST_CHECK(wdfac11.getType() != WDFACTYPE::CON_DFACTOR);
     BOOST_CHECK(wdfac11.useDFactor());
-    BOOST_CHECK(!wdfac21.useConnectionDFactor());
+    BOOST_CHECK(wdfac21.getType() != WDFACTYPE::CON_DFACTOR);
 
     BOOST_CHECK_CLOSE(wdfac11.getDFactor(rho, mu, k, phi, rw, h), 1*Opm::unit::day, 1e-12);
     BOOST_CHECK_CLOSE(wdfac21.getDFactor(rho, mu, k, phi, rw, h), 2*Opm::unit::day, 1e-12);
@@ -5800,9 +5800,9 @@ END
     const auto& well23 = sched.getWell("W2", 3);
     const auto& wdfac13 = well13.getWDFAC();
     const auto& wdfac23 = well23.getWDFAC();
-    BOOST_CHECK(wdfac13.useConnectionDFactor());
+    BOOST_CHECK(wdfac13.getType() == WDFACTYPE::CON_DFACTOR);
     BOOST_CHECK(wdfac13.useDFactor());
-    BOOST_CHECK(!wdfac23.useConnectionDFactor());
+    BOOST_CHECK(wdfac23.getType() != WDFACTYPE::CON_DFACTOR);
 
 
     BOOST_CHECK_CLOSE(well13.getConnections()[0].dFactor(), 0*Opm::unit::day, 1e-12);

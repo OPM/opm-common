@@ -53,6 +53,8 @@ namespace Opm {
 
         bool useDFactor() const;
         bool useConnectionDFactor() const;
+        bool useWellDFactor() const;
+        WDFACTYPE getType() const;
 
         bool operator==(const WDFAC& other) const;
         bool operator!=(const WDFAC& other) const;

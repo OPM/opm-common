@@ -109,10 +109,9 @@ namespace Opm {
         return m_type != WDFACTYPE::NONE;
     }
 
-    bool WDFAC::useConnectionDFactor() const {
-        return m_type == WDFACTYPE::CON_DFACTOR;
+    WDFACTYPE WDFAC::getType() const {
+        return m_type;
     }
-
     bool WDFAC::operator!=(const WDFAC& other) const {
         return !(*this == other);
     }
