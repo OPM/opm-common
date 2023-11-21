@@ -1407,6 +1407,13 @@ BOOST_AUTO_TEST_CASE(connection_kewords) {
 
     BOOST_CHECK_CLOSE( 1.9,       ecl_sum_get_well_connection_var( resp, 1, "W_1", "CPR",  1, 1, 1), 1e-5);
 
+    BOOST_CHECK_CLOSE( 100.2-100.4,ecl_sum_get_well_connection_var( resp, 1, "W_1", "CGFRF", 1, 1, 1 ), 1e-5 );
+    BOOST_CHECK_CLOSE( 100.4,      ecl_sum_get_well_connection_var( resp, 1, "W_1", "CGFRS", 1, 1, 1 ), 1e-5 );
+
+    BOOST_CHECK_CLOSE( 100.1-100.5,ecl_sum_get_well_connection_var( resp, 1, "W_1", "COFRF", 1, 1, 1 ), 1e-5 );
+    BOOST_CHECK_CLOSE( 100.5,      ecl_sum_get_well_connection_var( resp, 1, "W_1", "COFRS", 1, 1, 1 ), 1e-5 );
+
+
     BOOST_CHECK_MESSAGE(! ecl_sum_has_well_connection_var( resp, "W_1", "CVPR", 1, 1, 1 ),
                         "Summary vector CVPR must NOT exist for connection 1,1,1 of well W_1");
 

@@ -2293,7 +2293,10 @@ static const auto funs = std::unordered_map<std::string, ofun> {
     { "CTFAC", trans_factors },
     { "CDFAC", d_factors },
     { "CPI", connection_productivity_index },
-
+    { "CGFRF", sub(crate<rt::gas, producer>, crate<rt::dissolved_gas, producer>) }, // Free gas flow
+    { "CGFRS", crate<rt::dissolved_gas, producer> },                                // Solution gas flow
+    { "COFRF", sub(crate<rt::oil, producer>, crate<rt::vaporized_oil, producer>) }, // Liquid oil flow
+    { "COFRS", crate<rt::vaporized_oil, producer> },                                // Vaporized oil
     { "FWPR", rate< rt::wat, producer > },
     { "FOPR", rate< rt::oil, producer > },
     { "FGPR", rate< rt::gas, producer > },
