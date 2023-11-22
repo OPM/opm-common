@@ -34,6 +34,7 @@
 #include <cmath>
 #include <iostream>
 #include <cassert>
+#include <numeric>
 
 namespace Opm {
 
@@ -44,6 +45,7 @@ namespace Opm {
         result.m_b = 0.456;
         result.m_c = 0.457;
         result.m_d = 0.458;
+        result.m_total_cf = 1.0;
         result.m_type = WDFACTYPE::NONE;
 
         return result;
@@ -54,6 +56,7 @@ namespace Opm {
             && (m_b == other.m_b)
             && (m_c == other.m_c)
             && (m_d == other.m_d)
+            && (m_total_cf == other.m_total_cf)
             && (m_type == other.m_type);
     }
 
@@ -79,26 +82,43 @@ namespace Opm {
         if (non_trivial_dfactor) {
             m_type = WDFACTYPE::CON_DFACTOR;
         }
+
+        m_total_cf = std::accumulate(connections.begin(), connections.end(), 0.0,
+                [](const double tot_cf, const auto& conn) { return tot_cf + conn.CF(); });
     }
 
+    double WDFAC::getDFactor(const Connection& connection, double mu, double rho, double phi) const {
 
-    double WDFAC::getDFactor(double rho, double mu, double k, double phi, double rw, double h) const {
-
+        if (m_total_cf < 0.0) {
+            throw std::invalid_argument { "Total connection factor is not set" };
+        }
         switch (m_type)
         {
         case WDFACTYPE::NONE:
             return 0.0;
         case WDFACTYPE::DFACTOR:
-            return m_d;
+            return m_d * m_total_cf / connection.CF();
+        case WDFACTYPE::CON_DFACTOR: {
+            double d =  connection.dFactor();
+            // If a negative d factor is set in COMPDAT individual connection d factors should be used directly.
+            if (d < 0)
+                return -d;
+            // If a positive d factor is set in COMPDAT the connection d factors is treated like a well d factor.
+            // and thus scaled with the connection index
+            return d * m_total_cf / connection.CF();
+        }
         case WDFACTYPE::DAKEMODEL:
         {   
-            const auto k_md = unit::convert::to(k, prefix::milli*unit::darcy);
+            double Kh = connection.Kh();
+            double Ke = connection.Ke();
+            double h = Kh / Ke;
+            double rw = connection.rw();
+
+            const auto k_md = unit::convert::to(Ke, prefix::milli*unit::darcy);
             double beta = m_a * (std::pow(k_md, m_b) * std::pow(phi, m_c));
             double specific_gravity = rho / 1.225; // divide by density of air at standard conditions. 
-            return beta * specific_gravity * k / (h * mu * rw );
+            return beta * specific_gravity * Ke / (h * mu * rw );
         }
-        case WDFACTYPE::CON_DFACTOR:
-            throw std::invalid_argument { "getDFactor should not be called if D factor is given by COMPDAT item 12." };
         default:
             break;
         }
@@ -107,10 +127,6 @@ namespace Opm {
 
     bool WDFAC::useDFactor() const {
         return m_type != WDFACTYPE::NONE;
-    }
-
-    bool WDFAC::useConnectionDFactor() const {
-        return m_type == WDFACTYPE::CON_DFACTOR;
     }
 
     bool WDFAC::operator!=(const WDFAC& other) const {
