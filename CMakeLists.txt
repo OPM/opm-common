@@ -88,10 +88,6 @@ include (CMakeLists_files.cmake)
 
 macro (config_hook)
   if(ENABLE_ECL_INPUT)
-    if(NOT cjson_FOUND)
-      list(APPEND EXTRA_INCLUDES ${PROJECT_SOURCE_DIR}/external/cjson)
-    endif()
-
     # For this project
     include_directories(${EXTRA_INCLUDES} ${PROJECT_BINARY_DIR}/include)
     # For downstreams
@@ -130,6 +126,12 @@ macro (prereqs_hook)
 endmacro (prereqs_hook)
 
 macro (sources_hook)
+  if(NOT cjson_FOUND)
+    include(DownloadCjson)
+    include_directories(${cjson_SOURCE_DIR})
+    list(APPEND opm-common_SOURCES ${cjson_SOURCE_DIR}/cJSON.c)
+  endif()
+
   if(ENABLE_ECL_INPUT)
     # Keyword generation
     include(GenerateKeywords.cmake)

@@ -354,10 +354,6 @@ if(ENABLE_ECL_INPUT)
   list( APPEND PYTHON_CXX_DEPENDS ${PYTHON_CXX_SOURCE_FILES}
     python/cxx/converters.hpp
     python/cxx/export.hpp)
-
-  if(NOT cjson_FOUND)
-    list(APPEND MAIN_SOURCE_FILES external/cjson/cJSON.c)
-  endif()
 endif()
 if(ENABLE_ECL_OUTPUT)
   list( APPEND MAIN_SOURCE_FILES

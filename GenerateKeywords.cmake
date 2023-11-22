@@ -33,7 +33,7 @@ set(genkw_SOURCES src/opm/json/JsonObject.cpp
                   src/opm/common/OpmLog/LogUtil.cpp
 )
 if(NOT cjson_FOUND)
-  list(APPEND genkw_SOURCES external/cjson/cJSON.c)
+  list(APPEND genkw_SOURCES ${cjson_SOURCE_DIR}/cJSON.c)
 endif()
 add_executable(genkw ${genkw_SOURCES})
 
