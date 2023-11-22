@@ -5711,13 +5711,13 @@ DEPTHZ
 121*2000.0 /
 
 PORO
-    1000*0.1 /
+    1000*0.3 /
 PERMX
-    1000*1 /
+    1000*10 /
 PERMY
-    1000*0.1 /
+    1000*10 /
 PERMZ
-    1000*0.01 /
+    1000*10 /
     
 SCHEDULE
 
@@ -5730,9 +5730,10 @@ WELSPECS
 /
 
 COMPDAT
- 'W1'  3 3   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / 
- 'W1'  3 3   2   2 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / 
- 'W1'  3 3   3   3 'OPEN' 1*   46.825   0.311  4332.346 1*  1*  'X'  22.123 / 
+ 'W1'  3 3   1   1 'OPEN' 1*   1   0.216  200 1*  1*  'X'  / 
+ 'W1'  3 3   2   2 'OPEN' 1*   2   0.216  200 1*  1*  'X'  / 
+ 'W1'  3 3   3   3 'OPEN' 1*   3   0.216  200 1*  1*  'X'  / 
+ 'W2'  3 3   3   3 'OPEN' 1*   1   0.216  200 1*  11  'X'  / 
 /
 
 WDFAC
@@ -5742,6 +5743,13 @@ WDFAC
 
 DATES        -- 2
  10  NOV 2008 /
+/
+
+COMPDAT
+ 'W1'  3 3   1   1 'OPEN' 1*   1*   0.216  200 1*  1*  'X'  / 
+ 'W1'  3 3   2   2 'OPEN' 1*   1*   0.216  200 1*  1*  'X'  / 
+ 'W1'  3 3   3   3 'OPEN' 1*   1*   0.216  200 1*  1*  'X'  / 
+ 'W2'  3 3   3   3 'OPEN' 1*   1   0.216  200 1*  11  'X'  / 
 /
 
 WDFACCOR
@@ -5754,9 +5762,10 @@ DATES        -- 3
 /
 
 COMPDAT
- 'W1'  3 3   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / 
- 'W1'  3 3   2   2 'OPEN' 1*   32.948   0.311  3047.839 1*  0  'X'  22.100 / 
- 'W1'  3 3   3   3 'OPEN' 1*   46.825   0.311  4332.346 1*  11  'X'  22.123 / 
+ 'W1'  3 3   1   1 'OPEN' 1*   1   0.216  200 1*  1*  'X' / 
+ 'W1'  3 3   2   2 'OPEN' 1*   2   0.216  200 1*  0  'X' / 
+ 'W1'  3 3   3   3 'OPEN' 1*   3   0.216  200 1*  11  'X' / 
+ 'W2'  3 3   3   3 'OPEN' 1*   1   0.216  200 1*  11  'X' / 
 /
 
 
@@ -5774,43 +5783,37 @@ END
 
     double rho = 1.0;
     double mu = 0.01*Opm::prefix::centi * Opm::unit::Poise; 
-    double k = 10.0 * Opm::prefix::milli * Opm::unit::darcy;
-    double h = 20;
-    double rw = 0.108;
     double phi = 0.3;
+    double trans_mult = 1.0;
 
     // WDFAC overwrites D factor in COMDAT
-    BOOST_CHECK(wdfac11.getType() != WDFACTYPE::CON_DFACTOR);
     BOOST_CHECK(wdfac11.useDFactor());
-    BOOST_CHECK(wdfac21.getType() != WDFACTYPE::CON_DFACTOR);
 
-    BOOST_CHECK_CLOSE(wdfac11.getDFactor(rho, mu, k, phi, rw, h), 1*Opm::unit::day, 1e-12);
-    BOOST_CHECK_CLOSE(wdfac21.getDFactor(rho, mu, k, phi, rw, h), 2*Opm::unit::day, 1e-12);
+    // well d factor scaled by connection CF. 
+    BOOST_CHECK_CLOSE(wdfac11.getDFactor(well11.getConnections()[0], mu, rho, phi, trans_mult), 6*1*Opm::unit::day, 1e-12);
+    BOOST_CHECK_CLOSE(wdfac21.getDFactor(well21.getConnections()[0], mu, rho, phi, trans_mult), 2*Opm::unit::day, 1e-12);
     
     const auto& well12 = sched.getWell("W1", 2);
     const auto& well22 = sched.getWell("W2", 2);
     const auto& wdfac12 = well12.getWDFAC();
     const auto& wdfac22 = well22.getWDFAC();
 
-    BOOST_CHECK_CLOSE(wdfac12.getDFactor(rho, mu, k, phi, rw, h), 5.19e-1, 3);
-    BOOST_CHECK_CLOSE(wdfac22.getDFactor(rho, mu, k, phi, rw, h), 2*Opm::unit::day, 1e-12);
+    BOOST_CHECK_CLOSE(wdfac12.getDFactor(well12.getConnections()[0], mu, rho, phi, trans_mult), 5.19e-1, 3);
+    BOOST_CHECK_CLOSE(wdfac22.getDFactor(well22.getConnections()[0], mu, rho, phi, trans_mult), 2*Opm::unit::day, 1e-12);
 
 
     const auto& well13 = sched.getWell("W1", 3);
     const auto& well23 = sched.getWell("W2", 3);
     const auto& wdfac13 = well13.getWDFAC();
     const auto& wdfac23 = well23.getWDFAC();
-    BOOST_CHECK(wdfac13.getType() == WDFACTYPE::CON_DFACTOR);
     BOOST_CHECK(wdfac13.useDFactor());
-    BOOST_CHECK(wdfac23.getType() != WDFACTYPE::CON_DFACTOR);
 
 
     BOOST_CHECK_CLOSE(well13.getConnections()[0].dFactor(), 0*Opm::unit::day, 1e-12);
     BOOST_CHECK_CLOSE(well13.getConnections()[1].dFactor(), 0*Opm::unit::day, 1e-12);
     BOOST_CHECK_CLOSE(well13.getConnections()[2].dFactor(), 11*Opm::unit::day, 1e-12);
-
-    BOOST_CHECK_CLOSE(wdfac23.getDFactor(rho, mu, k, phi, rw, h), 2*Opm::unit::day, 1e-12);
-    BOOST_CHECK_THROW(wdfac13.getDFactor(rho, mu, k, phi, rw, h ), std::exception);
+    BOOST_CHECK_CLOSE(wdfac13.getDFactor(well13.getConnections()[2], mu, rho, phi, trans_mult), 6/3*11*Opm::unit::day, 1e-12);
+    BOOST_CHECK_CLOSE(wdfac23.getDFactor(well23.getConnections()[0], mu, rho, phi, trans_mult), 2*Opm::unit::day, 1e-12);
 }
 
 BOOST_AUTO_TEST_CASE(createDeckWithBC) {

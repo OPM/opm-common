@@ -43,18 +43,14 @@ namespace Opm {
     public:
         static WDFAC serializationTestObject();
 
-        double getDFactor(double rho, double mu, double k, double phi, double rw, double h) const;
+        double getDFactor(const Connection& connection, double mu, double rho, double phi, double trans_mult) const;
         void updateWDFAC(const DeckRecord& record);
         //void updateWDFAC(const RestartIO::RstWell& rst_well);
         void updateWDFACCOR(const DeckRecord& record);
         //void updateWDFACOR(const RestartIO::RstWell& rst_well);
 
         void updateWDFACType(const WellConnections& connections);
-
         bool useDFactor() const;
-        bool useConnectionDFactor() const;
-        bool useWellDFactor() const;
-        WDFACTYPE getType() const;
 
         bool operator==(const WDFAC& other) const;
         bool operator!=(const WDFAC& other) const;
@@ -66,6 +62,7 @@ namespace Opm {
             serializer(m_b);
             serializer(m_c);
             serializer(m_d);
+            serializer(m_total_cf);
             serializer(m_type);
         }
 
@@ -74,6 +71,7 @@ namespace Opm {
         double m_b{0.0};
         double m_c{0.0};
         double m_d{0.0};
+        double m_total_cf{-1.0};
         WDFACTYPE m_type = WDFACTYPE::NONE;
     };
 
