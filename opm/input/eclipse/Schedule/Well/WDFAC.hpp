@@ -43,7 +43,7 @@ namespace Opm {
     public:
         static WDFAC serializationTestObject();
 
-        double getDFactor(const Connection& connection, double mu, double rho, double phi, double trans_mult) const;
+        double getDFactor(const Connection& connection, double mu, double rho, double phi) const;
         void updateWDFAC(const DeckRecord& record);
         //void updateWDFAC(const RestartIO::RstWell& rst_well);
         void updateWDFACCOR(const DeckRecord& record);

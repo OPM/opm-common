@@ -87,7 +87,7 @@ namespace Opm {
                 [](const double tot_cf, const auto& conn) { return tot_cf + conn.CF(); });
     }
 
-    double WDFAC::getDFactor(const Connection& connection, double mu, double rho, double phi, double trans_mult) const {
+    double WDFAC::getDFactor(const Connection& connection, double mu, double rho, double phi) const {
 
         if (m_total_cf < 0.0) {
             throw std::invalid_argument { "Total connection factor is not set" };
@@ -109,8 +109,8 @@ namespace Opm {
         }
         case WDFACTYPE::DAKEMODEL:
         {   
-            double Kh = connection.Kh() * trans_mult;
-            double Ke = connection.Ke() * trans_mult;
+            double Kh = connection.Kh();
+            double Ke = connection.Ke();
             double h = Kh / Ke;
             double rw = connection.rw();
 
