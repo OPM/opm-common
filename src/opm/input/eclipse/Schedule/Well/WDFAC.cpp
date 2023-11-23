@@ -81,23 +81,27 @@ namespace Opm {
         // non-trivial dfactors detected use connection D factors
         if (non_trivial_dfactor) {
             m_type = WDFACTYPE::CON_DFACTOR;
+            updateTotalCF(connections);
         }
+    }
 
+    void WDFAC::updateTotalCF(const WellConnections& connections) {
         m_total_cf = std::accumulate(connections.begin(), connections.end(), 0.0,
                 [](const double tot_cf, const auto& conn) { return tot_cf + conn.CF(); });
     }
 
     double WDFAC::getDFactor(const Connection& connection, double mu, double rho, double phi) const {
 
-        if (m_total_cf < 0.0) {
-            throw std::invalid_argument { "Total connection factor is not set" };
-        }
         switch (m_type)
         {
         case WDFACTYPE::NONE:
             return 0.0;
-        case WDFACTYPE::DFACTOR:
-            return m_d * m_total_cf / connection.CF();
+        case WDFACTYPE::DFACTOR: {
+            if (m_total_cf < 0.0) {
+                throw std::invalid_argument { "Total connection factor is not set" };
+            }
+            return  m_d * m_total_cf / connection.CF();
+        }
         case WDFACTYPE::CON_DFACTOR: {
             double d =  connection.dFactor();
             // If a negative d factor is set in COMPDAT individual connection d factors should be used directly.
@@ -105,6 +109,10 @@ namespace Opm {
                 return -d;
             // If a positive d factor is set in COMPDAT the connection d factors is treated like a well d factor.
             // and thus scaled with the connection index
+            if (m_total_cf < 0.0) {
+                throw std::invalid_argument { "Total connection factor is not set" };
+            }
+
             return d * m_total_cf / connection.CF();
         }
         case WDFACTYPE::DAKEMODEL:
@@ -113,7 +121,6 @@ namespace Opm {
             double Ke = connection.Ke();
             double h = Kh / Ke;
             double rw = connection.rw();
-
             const auto k_md = unit::convert::to(Ke, prefix::milli*unit::darcy);
             double beta = m_a * (std::pow(k_md, m_b) * std::pow(phi, m_c));
             double specific_gravity = rho / 1.225; // divide by density of air at standard conditions. 
