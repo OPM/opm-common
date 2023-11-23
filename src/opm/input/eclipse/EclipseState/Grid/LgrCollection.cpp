@@ -71,6 +71,10 @@ namespace Opm {
         return m_lgrs.iget( lgrIndex );
     }
 
+const Opm::OrderedMap<Carfin,8>& LgrCollection::getOrderedMap() const
+    {
+       return m_lgrs;
+    }
 
     void LgrCollection::addLgr(const EclipseGrid& grid, const DeckRecord&  lgrRecord) {
        Carfin lgr(grid,
