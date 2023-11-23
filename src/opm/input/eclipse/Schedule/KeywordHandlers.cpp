@@ -1634,6 +1634,7 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
                 auto well = this->snapshots.back().wells.get(well_name);
                 auto wdfac = std::make_shared<WDFAC>(well.getWDFAC());
                 wdfac->updateWDFAC( record );
+                wdfac->updateTotalCF(well.getConnections());
                 if (well.updateWDFAC(std::move(wdfac)))
                     this->snapshots.back().wells.update( std::move(well) );
             }

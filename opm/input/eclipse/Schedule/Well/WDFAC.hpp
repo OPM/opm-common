@@ -50,6 +50,7 @@ namespace Opm {
         //void updateWDFACOR(const RestartIO::RstWell& rst_well);
 
         void updateWDFACType(const WellConnections& connections);
+        void updateTotalCF(const WellConnections& connections);
         bool useDFactor() const;
 
         bool operator==(const WDFAC& other) const;

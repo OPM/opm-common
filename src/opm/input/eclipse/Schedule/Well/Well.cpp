@@ -1390,7 +1390,6 @@ bool Well::handleWPIMULT(const DeckRecord& record) {
 
         new_connections->add(c);
     }
-
     return this->updateConnections(std::move(new_connections), false);
 }
 
