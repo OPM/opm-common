@@ -101,6 +101,7 @@ SCHEDULE
     Opm::EclipseState state(deck);
     Opm::LgrCollection lgrs = state.getLgrs();
 
+    BOOST_CHECK_MESSAGE(state.hasInputLGR(), "EclipseState should have LGRs");
     BOOST_CHECK_EQUAL( lgrs.size() , 2U );
     BOOST_CHECK(lgrs.hasLgr("LGR1"));
     BOOST_CHECK(lgrs.hasLgr("LGR2"));
