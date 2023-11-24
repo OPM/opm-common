@@ -925,9 +925,9 @@ namespace {
         ///      1,  2,  3,  4,  5,  6 -- Branch (1)
         ///     11, 12, 13, 14, 15, 16 -- Branch (2)
         ///      7,  8,  9, 10         -- Branch (3)
+        ///     17, 18, 19             -- Branch (4)
         ///     20, 22, 23, 24         -- Branch (5)
         ///     21,                    -- Branch (6)
-        ///     17, 18, 19             -- Branch (4)
         ///
         /// +------------------------------------------------------------+
         /// |                                                            |
@@ -1007,6 +1007,49 @@ namespace {
             void traverseStructure();
 
         private:
+            /// Representation of a branch kick-off point
+            struct KickOffPoint
+            {
+                /// Branch start segment
+                int segment;
+
+                /// Branch outlet segment.  Segment from which the branch
+                /// kicks off.
+                int outlet;
+
+                /// ID of branch starting at this kick-off point.
+                int branch;
+            };
+
+            /// Priority queue ordering operation
+            struct KickOffPointPriorityOrder
+            {
+                /// Priority comparison operation
+                ///
+                /// \param[in] p1 Left-hand side of comparison
+                /// \param[in] p2 Right-hand side of comparison
+                ///
+                /// \return Whether \p p1 has a lower priority than \p p2.
+                bool operator()(const KickOffPoint& p1,
+                                const KickOffPoint& p2) const
+                {
+                    // We use '>' here to have low outlet segment IDs move
+                    // to the front of the priority queue.  If multiple
+                    // branches kick off from the same outlet segment, we
+                    // sort these by their branch IDs whence lower-ID
+                    // branches are created before higher-ID branches.
+                    return std::tie(p1.outlet, p1.branch)
+                        >  std::tie(p2.outlet, p2.branch);
+                }
+            };
+
+            /// Priority queue container type for branch kick-off points.
+            using KickOffPointsQueue = std::priority_queue<
+                KickOffPoint,
+                std::vector<KickOffPoint>,
+                KickOffPointPriorityOrder
+                >;
+
             /// Name of well being explored.
             std::string_view well_{};
 
@@ -1019,11 +1062,17 @@ namespace {
             /// Callback routine for visiting a new branch.
             NewBranchCallback runNewBranchCallback_{};
 
-            /// Segments from which to kick off searching new branches.
-            std::queue<int> kickOffSegments_{};
+            /// Points from which to kick off new branches.
+            KickOffPointsQueue kickOffPoints_{};
 
             /// One-based segment number of currently visited segment.
             int currentSegment_{};
+
+            /// Create a new branch from "top" kick-off point.
+            ///
+            /// Invokes new branch callback and makes the "current" segment
+            /// be the kick-off segment.
+            void createNewBranch();
 
             /// Find all segments on current branch, in order from heel to
             /// toe.
@@ -1041,20 +1090,6 @@ namespace {
             ///    One child/kick-off segment for each new branch.
             void discoverNewBranches(const int               outletSegment,
                                      const std::vector<int>& children);
-
-            /// Enqueue new branch.
-            ///
-            /// Will be visited later.  Invokes new branch callback.
-            ///
-            /// \param[in] branchId Branch number for new branch.
-            ///
-            /// \param[in] kickOffSegment First segment on new branch.
-            ///
-            /// \param[in] outletSegment Segment on branch from which the
-            ///    new branch kicks off.
-            void discoverNewBranch(const int branchId,
-                                   const int kickOffSegment,
-                                   const int outletSegment);
 
             /// Split child segments of current segment into groups
             /// based on their associate branch number.
@@ -1083,14 +1118,31 @@ namespace {
 
         void Topology::traverseStructure()
         {
-            this->kickOffSegments_.push(1);
+            // Search starts at top segment: branch 1, segment 1.
+            this->kickOffPoints_.push(KickOffPoint { 1, 0, 1 });
 
-            while (! this->kickOffSegments_.empty()) {
-                this->currentSegment_ = this->kickOffSegments_.front();
-                this->kickOffSegments_.pop();
-
+            while (! this->kickOffPoints_.empty()) {
+                this->createNewBranch();
                 this->buildCurrentBranch();
             }
+        }
+
+        void Topology::createNewBranch()
+        {
+            const auto kickOff = this->kickOffPoints_.top();
+            this->kickOffPoints_.pop();
+
+            if (kickOff.branch != 1) {
+                // All branches other than the main branch (branch ID 1)
+                // create new branch objects.  Run new branch callback for
+                // these.
+                this->runNewBranchCallback_(this->well_,
+                                            kickOff.branch,
+                                            kickOff.segment,
+                                            kickOff.outlet);
+            }
+
+            this->currentSegment_ = kickOff.segment;
         }
 
         void Topology::buildCurrentBranch()
@@ -1121,21 +1173,12 @@ namespace {
                                            const std::vector<int>& children)
         {
             for (const auto& child : children) {
-                const auto branch = this->segment(child).branchNumber();
-                this->discoverNewBranch(branch, child, outletSegment);
+                this->kickOffPoints_
+                    .push(KickOffPoint {
+                            child, outletSegment,
+                            this->segment(child).branchNumber()
+                        });
             }
-        }
-
-        void Topology::discoverNewBranch(const int branchId,
-                                         const int kickOffSegment,
-                                         const int outletSegment)
-        {
-            this->runNewBranchCallback_(this->well_,
-                                        branchId,
-                                        kickOffSegment,
-                                        outletSegment);
-
-            this->kickOffSegments_.push(kickOffSegment);
         }
 
         std::pair<std::vector<int>, std::optional<int>>

@@ -243,6 +243,113 @@ END
 )");
 }
 
+//------------------------------------------------------------------+
+// Multi-lateral well with several ICDs and/or valves in a segment  |
+// structure of the form                                            |
+//------------------------------------------------------------------+
+//                                                                  |
+//                      8     9     10     11     12                |
+//                  o-----o-----o------o------o------o (2)          |
+//               7 /                    \                           |
+//                /                      \                          |
+//               /                     19 \   20   26               |
+//   1   2   3  /  4   5   6               o----o----o (4)          |
+//  ---o---o---o-----o---o---o (1)                                  |
+//          \                                                       |
+//        13 \              (7)              (6)                    |
+//            \             o                o                      |
+//             o        25 /             24 /                       |
+//              \         /                /                        |
+//            14 \   15  /    16      17  /    18                   |
+//                o-----o--------o-------o--------o (3)             |
+//                       \                                          |
+//                     21 \      22      23                         |
+//                         o-------o--------o (5)                   |
+//                          \       \        \                      |
+//                        27 \    28 \     29 \                     |
+//                            o       o        o                    |
+//                           (8)     (9)      (10)                  |
+//                                                                  |
+//------------------------------------------------------------------+
+//  Branch ( 1):  1,  2,  3,  4,  5,  6                             |
+//  Branch ( 2):  7,  8,  9, 10, 11, 12                             |
+//  Branch ( 3): 13, 14, 15, 16, 17, 18                             |
+//  Branch ( 4): 19, 20, 26                                         |
+//  Branch ( 5): 21, 22, 23                                         |
+//  Branch ( 6): 24                                                 |
+//  Branch ( 7): 25                                                 |
+//  Branch ( 8): 27                                                 |
+//  Branch ( 9): 24                                                 |
+//  Branch (10): 29                                                 |
+//------------------------------------------------------------------+
+Opm::Deck multilaterals_with_icd_valve()
+{
+    return Opm::Parser{}.parseString(R"(RUNSPEC
+START
+23 'NOV' 2023 /
+DIMENS
+10 10 3 /
+OIL
+GAS
+WATER
+DISGAS
+VAPOIL
+GRID
+DXV
+10*100.0 /
+DYV
+10*100.0 /
+DZV
+3*5.0 /
+PERMX
+300*100.0 /
+COPY
+PERMX PERMY /
+PERMX PERMZ /
+/
+MULTIPLY
+PERMZ 0.1 /
+/
+PORO
+300*0.3 /
+DEPTHZ
+121*2000.0 /
+SCHEDULE
+WELSPECS
+ 'MLP' 'G' 10 10 2002.5 'OIL' /
+/
+COMPDAT
+ 'MLP' 10 10 3 3 'OPEN' 1* 123.4 /
+/
+WELSEGS
+ 'MLP' 2002.5 0.0 1* 'INC' 'H--' /
+--
+  2  6  1  1 0.1 0.1 0.2 0.01 /
+  7 12  2  3 0.1 0.1 0.2 0.01 /
+ 13 18  3  2 0.1 0.1 0.2 0.01 /
+ 19 20  4 10 0.1 0.1 0.2 0.01 /
+ 26 26  4 20 0.1 0.1 0.2 0.01 /
+ 21 23  5 15 0.1 0.1 0.2 0.01 /
+ 24 24  6 17 0.1 0.1 0.2 0.01 /
+ 25 25  7 15 0.1 0.1 0.2 0.01 /
+ 27 27  8 21 0.1 0.1 0.2 0.01 /
+ 28 28  9 22 0.1 0.1 0.2 0.01 /
+ 29 29 10 23 0.1 0.1 0.2 0.01 /
+/
+COMPSEGS
+ 'MLP' /
+--
+ 10 10 3 5 0.0 1.0 'Z' /
+/
+WCONPROD
+ 'MLP' 'OPEN' 'ORAT' 321.0 4* 10.0 /
+/
+TSTEP
+5*30 /
+END
+)");
+}
+
 } // Anonymous namespace
 
 struct SimulationCase
@@ -503,9 +610,9 @@ BOOST_AUTO_TEST_CASE (Declared_MSW_Data)
 //      1,  2,  3,  4,  5,  6 -- Branch (1)
 //     11, 12, 13, 14, 15, 16 -- Branch (2)
 //      7,  8,  9, 10         -- Branch (3)
+//     17, 18, 19             -- Branch (4)
 //     20, 22, 23, 24         -- Branch (5)
 //     21,                    -- Branch (6)
-//     17, 18, 19             -- Branch (4)
 //
 BOOST_AUTO_TEST_CASE(Multilateral_Branches)
 {
@@ -540,7 +647,7 @@ BOOST_AUTO_TEST_CASE(Multilateral_Branches)
         BOOST_CHECK_EQUAL(ilbs.size(), std::vector<int>::size_type{6});
 
         const auto expect = std::vector {
-            11, 7, 20, 21, 17, 0,
+            11, 7, 17, 20, 21, 0,
         };
 
         BOOST_CHECK_EQUAL_COLLECTIONS(ilbs  .begin(), ilbs  .end(),
@@ -593,7 +700,7 @@ BOOST_AUTO_TEST_CASE(Multilateral_Branches)
         BOOST_CHECK_EQUAL(ilbr[VI::ILbr::NumBranchSegments],       3);
         BOOST_CHECK_EQUAL(ilbr[VI::ILbr::FirstSegment],           17);
         BOOST_CHECK_EQUAL(ilbr[VI::ILbr::LastSegment],            19);
-        BOOST_CHECK_EQUAL(ilbr[VI::ILbr::KickOffDiscoveryOffset],  5);
+        BOOST_CHECK_EQUAL(ilbr[VI::ILbr::KickOffDiscoveryOffset],  3);
     }
 
     // ILBR, branch 5
@@ -604,7 +711,7 @@ BOOST_AUTO_TEST_CASE(Multilateral_Branches)
         BOOST_CHECK_EQUAL(ilbr[VI::ILbr::NumBranchSegments],       4);
         BOOST_CHECK_EQUAL(ilbr[VI::ILbr::FirstSegment],           20);
         BOOST_CHECK_EQUAL(ilbr[VI::ILbr::LastSegment],            24);
-        BOOST_CHECK_EQUAL(ilbr[VI::ILbr::KickOffDiscoveryOffset],  3);
+        BOOST_CHECK_EQUAL(ilbr[VI::ILbr::KickOffDiscoveryOffset],  4);
     }
 
     // ILBR, branch 6
@@ -615,7 +722,7 @@ BOOST_AUTO_TEST_CASE(Multilateral_Branches)
         BOOST_CHECK_EQUAL(ilbr[VI::ILbr::NumBranchSegments],       1);
         BOOST_CHECK_EQUAL(ilbr[VI::ILbr::FirstSegment],           21);
         BOOST_CHECK_EQUAL(ilbr[VI::ILbr::LastSegment],            21);
-        BOOST_CHECK_EQUAL(ilbr[VI::ILbr::KickOffDiscoveryOffset],  4);
+        BOOST_CHECK_EQUAL(ilbr[VI::ILbr::KickOffDiscoveryOffset],  5);
     }
 }
 
@@ -667,6 +774,247 @@ BOOST_AUTO_TEST_CASE(Multilateral_Segments_ISEG_0)
         19, 18, 17,             // Branch (4)
         10,  9,  8,  7,         // Branch (3)
          6,  5,  4,  3,  2,  1, // Branch (1)
+    };
+
+    const auto& iseg = amswd.getISeg();
+
+    for (auto i = 0*expect.size(); i < expect.size(); ++i) {
+        BOOST_CHECK_MESSAGE(iseg[isegOffset(i)] == expect[i],
+                            "ISEG[0](" << i << ") == "
+                            << iseg[isegOffset(i)]
+                            << " differs from expected value "
+                            << expect[i]);
+    }
+}
+
+// The segments and branches must appear in the following order in the
+// ILBS/ILBR output arrays.
+//
+//      1,  2,  3,  4,  5,  6 -- Branch ( 1)
+//     13, 14, 15, 16, 17, 18 -- Branch ( 3)
+//      7,  8,  9, 10, 11, 12 -- Branch ( 2)
+//     19, 20, 26             -- Branch ( 4)
+//     21, 22, 23             -- Branch ( 5)
+//     25,                    -- Branch ( 7)
+//     24,                    -- Branch ( 6)
+//     27,                    -- Branch ( 8)
+//     28,                    -- Branch ( 9)
+//     29,                    -- Branch (10)
+//
+BOOST_AUTO_TEST_CASE(Multilateral_Branches_ICD_Valve)
+{
+    const auto cse = SimulationCase { multilaterals_with_icd_valve() };
+
+    const auto& es    = cse.es;
+    const auto& grid  = cse.grid;
+    const auto& sched = cse.sched;
+
+    // Report Step 1: 2023-11-23 --> 2023-12-23
+    const auto rptStep = std::size_t {1};
+
+    const auto secs_elapsed = 30 * 86'400.0;
+    const auto ih = Opm::RestartIO::Helpers::
+        createInteHead(es, grid, sched, secs_elapsed,
+                       rptStep, rptStep + 1, rptStep);
+
+    // No dynamic data needed for this test.  We're checking the structure
+    // only.
+    const auto smry = Opm::SummaryState { Opm::TimeService::now() };
+    const auto xw   = Opm::data::Wells {};
+
+    auto amswd = Opm::RestartIO::Helpers::AggregateMSWData {ih};
+    amswd.captureDeclaredMSWData(sched, rptStep, es.getUnits(),
+                                 ih, grid, smry, xw);
+
+    // ILBS--First segment on each branch other than branch 1.  Ordered by
+    // discovery.
+    {
+        const auto& ilbs = amswd.getILBs();
+
+        // No WSEGDIMS => size = maximum branch number
+        BOOST_CHECK_EQUAL(ilbs.size(), std::vector<int>::size_type{10});
+
+        const auto expect = std::vector {
+            13, 7, 19, 21, 25, 24, 27, 28, 29, 0,
+        };
+
+        BOOST_CHECK_EQUAL_COLLECTIONS(ilbs  .begin(), ilbs  .end(),
+                                      expect.begin(), expect.end());
+    }
+
+    auto ilbrOffset = [&ih](const int branch)
+    {
+        return ih[VI::intehead::NILBRZ] * (branch - 1);
+    };
+
+    // ILBR, branch 1
+    {
+        const auto* ilbr = &amswd.getILBr()[ilbrOffset(1)];
+
+        BOOST_CHECK_EQUAL(ilbr[VI::ILbr::OutletSegment],          0);
+        BOOST_CHECK_EQUAL(ilbr[VI::ILbr::NumBranchSegments],      6);
+        BOOST_CHECK_EQUAL(ilbr[VI::ILbr::FirstSegment],           1);
+        BOOST_CHECK_EQUAL(ilbr[VI::ILbr::LastSegment],            6);
+        BOOST_CHECK_EQUAL(ilbr[VI::ILbr::KickOffDiscoveryOffset], 0);
+    }
+
+    // ILBR, branch 2
+    {
+        const auto* ilbr = &amswd.getILBr()[ilbrOffset(2)];
+
+        BOOST_CHECK_EQUAL(ilbr[VI::ILbr::OutletSegment],           3);
+        BOOST_CHECK_EQUAL(ilbr[VI::ILbr::NumBranchSegments],       6);
+        BOOST_CHECK_EQUAL(ilbr[VI::ILbr::FirstSegment],            7);
+        BOOST_CHECK_EQUAL(ilbr[VI::ILbr::LastSegment],            12);
+        BOOST_CHECK_EQUAL(ilbr[VI::ILbr::KickOffDiscoveryOffset],  2);
+    }
+
+    // ILBR, branch 3
+    {
+        const auto* ilbr = &amswd.getILBr()[ilbrOffset(3)];
+
+        BOOST_CHECK_EQUAL(ilbr[VI::ILbr::OutletSegment],           2);
+        BOOST_CHECK_EQUAL(ilbr[VI::ILbr::NumBranchSegments],       6);
+        BOOST_CHECK_EQUAL(ilbr[VI::ILbr::FirstSegment],           13);
+        BOOST_CHECK_EQUAL(ilbr[VI::ILbr::LastSegment],            18);
+        BOOST_CHECK_EQUAL(ilbr[VI::ILbr::KickOffDiscoveryOffset],  1);
+    }
+
+    // ILBR, branch 4
+    {
+        const auto* ilbr = &amswd.getILBr()[ilbrOffset(4)];
+
+        BOOST_CHECK_EQUAL(ilbr[VI::ILbr::OutletSegment],          10);
+        BOOST_CHECK_EQUAL(ilbr[VI::ILbr::NumBranchSegments],       3);
+        BOOST_CHECK_EQUAL(ilbr[VI::ILbr::FirstSegment],           19);
+        BOOST_CHECK_EQUAL(ilbr[VI::ILbr::LastSegment],            26);
+        BOOST_CHECK_EQUAL(ilbr[VI::ILbr::KickOffDiscoveryOffset],  3);
+    }
+
+    // ILBR, branch 5
+    {
+        const auto* ilbr = &amswd.getILBr()[ilbrOffset(5)];
+
+        BOOST_CHECK_EQUAL(ilbr[VI::ILbr::OutletSegment],          15);
+        BOOST_CHECK_EQUAL(ilbr[VI::ILbr::NumBranchSegments],       3);
+        BOOST_CHECK_EQUAL(ilbr[VI::ILbr::FirstSegment],           21);
+        BOOST_CHECK_EQUAL(ilbr[VI::ILbr::LastSegment],            23);
+        BOOST_CHECK_EQUAL(ilbr[VI::ILbr::KickOffDiscoveryOffset],  4);
+    }
+
+    // ILBR, branch 6
+    {
+        const auto* ilbr = &amswd.getILBr()[ilbrOffset(6)];
+
+        BOOST_CHECK_EQUAL(ilbr[VI::ILbr::OutletSegment],          17);
+        BOOST_CHECK_EQUAL(ilbr[VI::ILbr::NumBranchSegments],       1);
+        BOOST_CHECK_EQUAL(ilbr[VI::ILbr::FirstSegment],           24);
+        BOOST_CHECK_EQUAL(ilbr[VI::ILbr::LastSegment],            24);
+        BOOST_CHECK_EQUAL(ilbr[VI::ILbr::KickOffDiscoveryOffset],  6);
+    }
+
+    // ILBR, branch 7
+    {
+        const auto* ilbr = &amswd.getILBr()[ilbrOffset(7)];
+
+        BOOST_CHECK_EQUAL(ilbr[VI::ILbr::OutletSegment],          15);
+        BOOST_CHECK_EQUAL(ilbr[VI::ILbr::NumBranchSegments],       1);
+        BOOST_CHECK_EQUAL(ilbr[VI::ILbr::FirstSegment],           25);
+        BOOST_CHECK_EQUAL(ilbr[VI::ILbr::LastSegment],            25);
+        BOOST_CHECK_EQUAL(ilbr[VI::ILbr::KickOffDiscoveryOffset],  5);
+    }
+
+    // ILBR, branch 8
+    {
+        const auto* ilbr = &amswd.getILBr()[ilbrOffset(8)];
+
+        BOOST_CHECK_EQUAL(ilbr[VI::ILbr::OutletSegment],          21);
+        BOOST_CHECK_EQUAL(ilbr[VI::ILbr::NumBranchSegments],       1);
+        BOOST_CHECK_EQUAL(ilbr[VI::ILbr::FirstSegment],           27);
+        BOOST_CHECK_EQUAL(ilbr[VI::ILbr::LastSegment],            27);
+        BOOST_CHECK_EQUAL(ilbr[VI::ILbr::KickOffDiscoveryOffset],  7);
+    }
+
+    // ILBR, branch 9
+    {
+        const auto* ilbr = &amswd.getILBr()[ilbrOffset(9)];
+
+        BOOST_CHECK_EQUAL(ilbr[VI::ILbr::OutletSegment],          22);
+        BOOST_CHECK_EQUAL(ilbr[VI::ILbr::NumBranchSegments],       1);
+        BOOST_CHECK_EQUAL(ilbr[VI::ILbr::FirstSegment],           28);
+        BOOST_CHECK_EQUAL(ilbr[VI::ILbr::LastSegment],            28);
+        BOOST_CHECK_EQUAL(ilbr[VI::ILbr::KickOffDiscoveryOffset],  8);
+    }
+
+    // ILBR, branch 10
+    {
+        const auto* ilbr = &amswd.getILBr()[ilbrOffset(10)];
+
+        BOOST_CHECK_EQUAL(ilbr[VI::ILbr::OutletSegment],          23);
+        BOOST_CHECK_EQUAL(ilbr[VI::ILbr::NumBranchSegments],       1);
+        BOOST_CHECK_EQUAL(ilbr[VI::ILbr::FirstSegment],           29);
+        BOOST_CHECK_EQUAL(ilbr[VI::ILbr::LastSegment],            29);
+        BOOST_CHECK_EQUAL(ilbr[VI::ILbr::KickOffDiscoveryOffset],  9);
+    }
+}
+
+// The segments must appear in the following depth first search toe-to-heel
+// order in ISEG[0].  We furthermore, go along kick-off branches before
+// searching the main branch.  Note that this order is *different* from
+// ILBS/ILBR.
+//
+//     27                      -- Branch ( 8)
+//     28                      -- Branch ( 9)
+//     29                      -- Branch (10)
+//     23, 22, 21              -- Branch ( 5)
+//     25                      -- Branch ( 7)
+//     24                      -- Branch ( 6)
+//     18, 17, 16, 15, 14, 13  -- Branch ( 3)
+//     26, 20, 19              -- Branch ( 4)
+//     12, 11, 10,  9,  8,  7  -- Branch ( 2)
+//      6,  5,  4,  3,  2,  1  -- Branch ( 1)
+//
+BOOST_AUTO_TEST_CASE(Multilateral_ICD_Valve_ISEG_0)
+{
+    const auto cse = SimulationCase { multilaterals_with_icd_valve() };
+
+    const auto& es    = cse.es;
+    const auto& grid  = cse.grid;
+    const auto& sched = cse.sched;
+
+    // Report Step 1: 2023-11-23 --> 2023-12-23
+    const auto rptStep = std::size_t {1};
+
+    const auto secs_elapsed = 30 * 86'400.0;
+    const auto ih = Opm::RestartIO::Helpers::
+        createInteHead(es, grid, sched, secs_elapsed,
+                       rptStep, rptStep + 1, rptStep);
+
+    // No dynamic data needed for this test.  We're checking the structure
+    // only.
+    const auto smry = Opm::SummaryState { Opm::TimeService::now() };
+    const auto xw   = Opm::data::Wells {};
+
+    auto amswd = Opm::RestartIO::Helpers::AggregateMSWData {ih};
+    amswd.captureDeclaredMSWData(sched, rptStep, es.getUnits(),
+                                 ih, grid, smry, xw);
+
+    auto isegOffset = [&ih](const int ix)
+    {
+        return ih[VI::intehead::NISEGZ] * ix;
+    };
+
+    const auto expect = std::vector {
+        27,                     // Branch ( 8)
+        28,                     // Branch ( 9)
+        29,                     // Branch (10)
+        23, 22, 21,             // Branch ( 5)
+        25,                     // Branch ( 7)
+        24,                     // Branch ( 6)
+        18, 17, 16, 15, 14, 13, // Branch ( 3)
+        26, 20, 19,             // Branch ( 4)
+        12, 11, 10,  9,  8,  7, // Branch ( 2)
+         6,  5,  4,  3,  2,  1, // Branch ( 1)
     };
 
     const auto& iseg = amswd.getISeg();
