@@ -112,6 +112,17 @@ public:
     //! \brief Obtain well group names from a pattern.
     std::vector<std::string> groupNames(const std::string& pattern) const;
 
+    //! \brief Obtain well names from a pattern.
+    //! \details Throws if no wells match the pattern and pattern is not a WLIST.
+    std::vector<std::string>
+    wellNames(const std::string& pattern) const;
+
+    //! \brief Obtain well names from a pattern.
+    //! \param pattern Pattern to match
+    //! \param allowEmpty If true do not throw if no wells match the pattern
+    std::vector<std::string>
+    wellNames(const std::string& pattern, bool allowEmpty) const;
+
     const ScheduleBlock& block;
     const DeckKeyword& keyword;
     const std::size_t currentStep;
