@@ -492,7 +492,7 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
         const auto& keyword = handlerContext.keyword;
         for (const auto& record : keyword) {
             const std::string& groupNamePattern = record.getItem<GI::GROUP>().getTrimmedString(0);
-            const auto group_names = this->groupNames(groupNamePattern);
+            const auto group_names = handlerContext.groupNames(groupNamePattern);
             if (group_names.empty()) {
                 handlerContext.invalidNamePattern(groupNamePattern);
             }
@@ -584,7 +584,7 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
         const auto& keyword = handlerContext.keyword;
         for (const auto& record : keyword) {
             const std::string& groupNamePattern = record.getItem("GROUP").getTrimmedString(0);
-            const auto group_names = this->groupNames(groupNamePattern);
+            const auto group_names = handlerContext.groupNames(groupNamePattern);
             if (group_names.empty()) {
                 handlerContext.invalidNamePattern(groupNamePattern);
             }
@@ -765,7 +765,7 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
         for (const auto& record : keyword) {
             const std::string& groupNamePattern
                 = record.getItem<ParserKeywords::GECON::GROUP>().getTrimmedString(0);
-            const auto group_names = this->groupNames(groupNamePattern);
+            const auto group_names = handlerContext.groupNames(groupNamePattern);
             if (group_names.empty()) {
                 handlerContext.invalidNamePattern(groupNamePattern);
             }
@@ -779,7 +779,7 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
     void Schedule::handleGEFAC(HandlerContext& handlerContext) {
         for (const auto& record : handlerContext.keyword) {
             const std::string& groupNamePattern = record.getItem("GROUP").getTrimmedString(0);
-            const auto group_names = this->groupNames(groupNamePattern);
+            const auto group_names = handlerContext.groupNames(groupNamePattern);
             if (group_names.empty()) {
                 handlerContext.invalidNamePattern(groupNamePattern);
             }
@@ -804,7 +804,7 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
 
         for (const auto& record : keyword) {
             const std::string& groupNamePattern = record.getItem<ParserKeywords::GLIFTOPT::GROUP_NAME>().getTrimmedString(0);
-            const auto group_names = this->groupNames(groupNamePattern);
+            const auto group_names = handlerContext.groupNames(groupNamePattern);
             if (group_names.empty()) {
                 handlerContext.invalidNamePattern(groupNamePattern);
             }
@@ -834,7 +834,7 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
     void Schedule::handleGPMAINT(HandlerContext& handlerContext) {
         for (const auto& record : handlerContext.keyword) {
             const std::string& groupNamePattern = record.getItem("GROUP").getTrimmedString(0);
-            const auto group_names = this->groupNames(groupNamePattern);
+            const auto group_names = handlerContext.groupNames(groupNamePattern);
             if (group_names.empty()) {
                 handlerContext.invalidNamePattern(groupNamePattern);
             }
@@ -864,7 +864,7 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
         std::vector<Network::Node> nodes;
         for (const auto& record : handlerContext.keyword) {
              const std::string& groupNamePattern = record.getItem<ParserKeywords::GRUPNET::NAME>().getTrimmedString(0);
-             const auto group_names = this->groupNames(groupNamePattern);
+             const auto group_names = handlerContext.groupNames(groupNamePattern);
              if (group_names.empty()) {
                  handlerContext.invalidNamePattern(groupNamePattern);
              }

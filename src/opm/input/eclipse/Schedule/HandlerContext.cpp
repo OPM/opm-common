@@ -125,4 +125,10 @@ const Action::WGNames& HandlerContext::action_wgnames() const
     return schedule_.action_wgnames;
 }
 
+std::vector<std::string>
+HandlerContext::groupNames(const std::string& pattern) const
+{
+    return schedule_.groupNames(pattern);
+}
+
 }

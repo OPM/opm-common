@@ -109,6 +109,9 @@ public:
     //! \brief Obtain action well group names.
     const Action::WGNames& action_wgnames() const;
 
+    //! \brief Obtain well group names from a pattern.
+    std::vector<std::string> groupNames(const std::string& pattern) const;
+
     const ScheduleBlock& block;
     const DeckKeyword& keyword;
     const std::size_t currentStep;
