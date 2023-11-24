@@ -32,6 +32,7 @@ namespace Opm {
 class DeckKeyword;
 class ErrorGuard;
 class ParseContext;
+class Schedule;
 class ScheduleBlock;
 class ScheduleGrid;
 class ScheduleState;
@@ -43,7 +44,8 @@ class HandlerContext
 public:
     /// \param welsegs_wells All wells with a WELSEGS entry for checks.
     /// \param compegs_wells All wells with a COMPSEGS entry for checks.
-    HandlerContext(const ScheduleBlock& block_,
+    HandlerContext(Schedule& schedule,
+                   const ScheduleBlock& block_,
                    const DeckKeyword& keyword_,
                    const ScheduleGrid& grid_,
                    const std::size_t currentStep_,
@@ -69,6 +71,7 @@ public:
         , welsegs_wells(welsegs_wells_)
         , compsegs_wells(compsegs_wells_)
         , sim_update(sim_update_)
+        , schedule_(schedule)
     {}
 
     //! \brief Mark that a well has changed.
@@ -104,6 +107,7 @@ private:
     WelSegsSet* welsegs_wells{nullptr};
     std::set<std::string>* compsegs_wells{nullptr};
     SimulatorUpdate* sim_update{nullptr};
+    Schedule& schedule_;
 };
 
 } // end namespace Opm

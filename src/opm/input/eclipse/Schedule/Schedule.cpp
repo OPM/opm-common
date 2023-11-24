@@ -376,9 +376,10 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const std::optional
                                  WelSegsSet* welsegs_wells,
                                  std::set<std::string>* compsegs_wells)
     {
-        HandlerContext handlerContext { block, keyword, grid, currentStep, matching_wells, actionx_mode,
+        HandlerContext handlerContext { *this, block, keyword, grid, currentStep, matching_wells, actionx_mode,
                                         parseContext, errors, sim_update, target_wellpi,
                                         wpimult_global_factor, welsegs_wells, compsegs_wells};
+
         /*
           The grid and fieldProps members create problems for reiterating the
           Schedule section. We therefor single them out very clearly here.
