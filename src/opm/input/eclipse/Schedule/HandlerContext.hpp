@@ -65,9 +65,9 @@ public:
         , errors(errors_)
         , target_wellpi(target_wellpi_)
         , wpimult_global_factor(wpimult_global_factor_)
+        , grid(grid_)
         , welsegs_wells(welsegs_wells_)
         , compsegs_wells(compsegs_wells_)
-        , grid(grid_)
         , sim_update(sim_update_)
     {}
 
@@ -95,11 +95,11 @@ public:
     ErrorGuard& errors;
     const std::unordered_map<std::string, double>* target_wellpi{nullptr};
     std::unordered_map<std::string, double>* wpimult_global_factor{nullptr};
-    WelSegsSet* welsegs_wells{nullptr};
-    std::set<std::string>* compsegs_wells{nullptr};
     const ScheduleGrid& grid;
 
 private:
+    WelSegsSet* welsegs_wells{nullptr};
+    std::set<std::string>* compsegs_wells{nullptr};
     SimulatorUpdate* sim_update{nullptr};
 };
 
