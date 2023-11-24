@@ -25,6 +25,8 @@
 
 #include "MSW/WelSegsSet.hpp"
 
+#include <stdexcept>
+
 namespace Opm {
 
 void HandlerContext::affected_well(const std::string& well_name)
@@ -60,6 +62,20 @@ void HandlerContext::compsegs_handled(const std::string& well_name)
     if (compsegs_wells) {
         compsegs_wells->insert(well_name);
     }
+}
+
+double HandlerContext::getWellPI(const std::string& well_name) const
+{
+    if (!target_wellpi) {
+        throw std::logic_error("Lookup of well PI with no map available");
+    }
+
+    auto wellpi_iter = target_wellpi->find(well_name);
+    if (wellpi_iter == target_wellpi->end()) {
+        throw std::logic_error("Missing current PI for well " + well_name);
+    }
+
+    return wellpi_iter->second;
 }
 
 }

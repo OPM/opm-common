@@ -1773,14 +1773,10 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
             const auto targetPI = record.getItem<PI>().get<double>(0);
 
             std::vector<bool> scalingApplicable;
-            const auto& current_wellpi = *handlerContext.target_wellpi;
             for (const auto& well_name : well_names) {
-                auto wellpi_iter = current_wellpi.find(well_name);
-                if (wellpi_iter == current_wellpi.end())
-                    throw std::logic_error(fmt::format("Missing current PI for well {}", well_name));
-
                 auto new_well = this->getWell(well_name, report_step);
-                auto scalingFactor = new_well.convertDeckPI(targetPI) / wellpi_iter->second;
+                auto scalingFactor = new_well.convertDeckPI(targetPI) /
+                                     handlerContext.getWellPI(well_name);
                 new_well.updateWellProductivityIndex();
                 new_well.applyWellProdIndexScaling(scalingFactor, scalingApplicable);
                 this->snapshots.back().wells.update( std::move(new_well) );
