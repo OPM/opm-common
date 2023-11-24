@@ -52,6 +52,7 @@
 #include <opm/input/eclipse/Schedule/Tuning.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQActive.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQConfig.hpp>
+#include <opm/input/eclipse/Schedule/Well/NameOrder.hpp>
 #include <opm/input/eclipse/Schedule/Well/WDFAC.hpp>
 #include <opm/input/eclipse/Schedule/Well/WList.hpp>
 #include <opm/input/eclipse/Schedule/Well/WListManager.hpp>
@@ -199,9 +200,7 @@ namespace {
         std::unordered_set<std::string> wells;
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
-            auto wellnames = this->wellNames(wellNamePattern, handlerContext,
-                                             isWList(handlerContext.currentStep,
-                                                     wellNamePattern));
+            auto wellnames = handlerContext.wellNames(wellNamePattern);
 
             for (const auto& name : wellnames) {
                 auto well2 = handlerContext.state().wells.get(name);
@@ -246,7 +245,7 @@ namespace {
     void Schedule::handleWELTRAJ(HandlerContext& handlerContext)  {
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
-            auto wellnames = this->wellNames(wellNamePattern, handlerContext);
+            const auto wellnames = handlerContext.wellNames(wellNamePattern, false);
 
             for (const auto& name : wellnames) {
                 auto well2 = handlerContext.state().wells.get(name);
@@ -273,7 +272,7 @@ namespace {
         external::cvf::ref<external::cvf::BoundingBoxTree> cellSearchTree = nullptr; 
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
-            auto wellnames = this->wellNames(wellNamePattern, handlerContext );
+            const auto wellnames = handlerContext.wellNames(wellNamePattern, false);
 
             for (const auto& name : wellnames) {
                 auto well2 = handlerContext.state().wells.get(name);
@@ -317,9 +316,7 @@ namespace {
     void Schedule::handleCOMPLUMP(HandlerContext& handlerContext) {
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
-            const auto well_names = this->wellNames(wellNamePattern, handlerContext,
-                                                    isWList(handlerContext.currentStep,
-                                                            wellNamePattern));
+            const auto well_names = handlerContext.wellNames(wellNamePattern);
 
             for (const auto& wname : well_names) {
                 auto well = handlerContext.state().wells.get(wname);
@@ -387,7 +384,7 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
         for (const auto& record: keyword) {
             // Get well names
             const auto& wellNamePattern = record.getItem( "WELL" ).getTrimmedString(0);
-            const auto well_names = this->wellNames(wellNamePattern, handlerContext);
+            const auto well_names = handlerContext.wellNames(wellNamePattern, false);
 
             // Loop over well(s) in record
             for (const auto& wname : well_names) {
@@ -1315,7 +1312,7 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
     void Schedule::handleWCONHIST(HandlerContext& handlerContext) {
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
-            const auto well_names = this->wellNames(wellNamePattern, handlerContext);
+            const auto well_names = handlerContext.wellNames(wellNamePattern, false);
 
             const Well::Status status = WellStatusFromString(record.getItem("STATUS").getTrimmedString(0));
 
@@ -1401,7 +1398,7 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
     void Schedule::handleWCONPROD(HandlerContext& handlerContext) {
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
-            const auto well_names = this->wellNames(wellNamePattern, handlerContext);
+            const auto well_names = handlerContext.wellNames(wellNamePattern, false);
 
             const Well::Status status = WellStatusFromString(record.getItem("STATUS").getTrimmedString(0));
 
@@ -1480,9 +1477,7 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
     void Schedule::handleWCONINJE(HandlerContext& handlerContext) {
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
-            const auto well_names = wellNames(wellNamePattern, handlerContext,
-                                              isWList(handlerContext.currentStep,
-                                                      wellNamePattern));
+            const auto well_names = handlerContext.wellNames(wellNamePattern);
 
             const Well::Status status = WellStatusFromString(record.getItem("STATUS").getTrimmedString(0));
 
@@ -1569,7 +1564,7 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
     void Schedule::handleWCONINJH(HandlerContext& handlerContext) {
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
-            const auto well_names = wellNames(wellNamePattern, handlerContext);
+            const auto well_names = handlerContext.wellNames(wellNamePattern, false);
             const Well::Status status = WellStatusFromString( record.getItem("STATUS").getTrimmedString(0));
 
             for (const auto& well_name : well_names) {
@@ -1626,7 +1621,7 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
     void Schedule::handleWECON(HandlerContext& handlerContext) {
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
-            const auto well_names = this->wellNames(wellNamePattern, handlerContext);
+            const auto well_names = handlerContext.wellNames(wellNamePattern, false);
 
             for (const auto& well_name : well_names) {
                 auto well2 = handlerContext.state().wells.get( well_name );
@@ -1640,7 +1635,7 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
     void Schedule::handleWDFAC(HandlerContext& handlerContext) {
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
-            const auto well_names = wellNames(wellNamePattern, handlerContext.currentStep);
+            const auto well_names = handlerContext.wellNames(wellNamePattern, true);
             if (well_names.empty()) {
                 handlerContext.invalidNamePattern(wellNamePattern);
             }
@@ -1659,7 +1654,7 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
     void Schedule::handleWDFACCOR(HandlerContext& handlerContext) {
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELLNAME").getTrimmedString(0);
-            const auto well_names = wellNames(wellNamePattern, handlerContext.currentStep);
+            const auto well_names = handlerContext.wellNames(wellNamePattern, true);
             if (well_names.empty()) {
                 handlerContext.invalidNamePattern(wellNamePattern);
             }
@@ -1677,9 +1672,7 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
     void Schedule::handleWEFAC(HandlerContext& handlerContext) {
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELLNAME").getTrimmedString(0);
-            const auto well_names = this->wellNames(wellNamePattern, handlerContext,
-                                                    isWList(handlerContext.currentStep,
-                                                            wellNamePattern));
+            const auto well_names = handlerContext.wellNames(wellNamePattern);
 
             const double& efficiencyFactor = record.getItem("EFFICIENCY_FACTOR").get<double>(0);
 
@@ -1711,9 +1704,7 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
         for (const auto& record : keyword) {
             const auto& wellNamePattern = record.getItem( "WELL" ).getTrimmedString(0);
             const auto& status_str = record.getItem( "STATUS" ).getTrimmedString( 0 );
-            const auto well_names = this->wellNames(wellNamePattern, handlerContext,
-                                                    isWList(handlerContext.currentStep,
-                                                            wellNamePattern));
+            const auto well_names = handlerContext.wellNames(wellNamePattern);
 
             /* if all records are defaulted or just the status is set, only
              * well status is updated
@@ -1783,8 +1774,8 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
         using PI        = ParserKeywords::WELPI::STEADY_STATE_PRODUCTIVITY_OR_INJECTIVITY_INDEX_VALUE;
 
         for (const auto& record : handlerContext.keyword) {
-            const auto well_names = this->wellNames(record.getItem<WELL_NAME>().getTrimmedString(0),
-                                                    handlerContext);
+            const std::string trimmed = record.getItem<WELL_NAME>().getTrimmedString(0);
+            const auto well_names = handlerContext.wellNames(trimmed, false);
             const auto targetPI = record.getItem<PI>().get<double>(0);
 
             std::vector<bool> scalingApplicable;
@@ -1822,10 +1813,7 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
 
             for (const auto& record : keyword) {
                 const auto& wellNamePattern = record.getItem<WELL_NAME>().getTrimmedString(0);
-                const auto well_names
-                    = this->wellNames(wellNamePattern, handlerContext,
-                                      isWList(handlerContext.currentStep,
-                                              wellNamePattern));
+                const auto well_names = handlerContext.wellNames(wellNamePattern);
 
                 const auto rawProdIndex = record.getItem<PI>().get<double>(0);
                 for (const auto& well_name : well_names) {
@@ -1925,8 +1913,7 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
             // An empty list of well names is okay since that means we're
             // creating a new well in this case.
             const auto allowEmptyWellList = true;
-            const auto existingWells =
-                this->wellNames(wellName, handlerContext, allowEmptyWellList);
+            const auto existingWells = handlerContext.wellNames(wellName, allowEmptyWellList);
 
             if (groupName == "FIELD") {
                 if (existingWells.empty()) {
@@ -2003,9 +1990,7 @@ Well{0} entered with 'FIELD' parent group:
         const double SiFactorP = handlerContext.sched_stat().m_unit_system.parse("Pressure").getSIScaling();
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
-            const auto well_names = this->wellNames(wellNamePattern, handlerContext,
-                                                    isWList(handlerContext.currentStep,
-                                                            wellNamePattern));
+            const auto well_names = handlerContext.wellNames(wellNamePattern);
             if (well_names.empty()) {
                 handlerContext.invalidNamePattern( wellNamePattern);
             }
@@ -2059,7 +2044,7 @@ Well{0} entered with 'FIELD' parent group:
     void Schedule::handleWFOAM(HandlerContext& handlerContext) {
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
-            const auto well_names = this->wellNames(wellNamePattern, handlerContext);
+            const auto well_names = handlerContext.wellNames(wellNamePattern, false);
 
             for (const auto& well_name : well_names) {
                 auto well2 = handlerContext.state().wells.get(well_name);
@@ -2074,9 +2059,7 @@ Well{0} entered with 'FIELD' parent group:
     void Schedule::handleWGRUPCON(HandlerContext& handlerContext) {
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
-            const auto well_names = this->wellNames(wellNamePattern, handlerContext,
-                                                    isWList(handlerContext.currentStep,
-                                                            wellNamePattern));
+            const auto well_names = handlerContext.wellNames(wellNamePattern);
 
             const bool availableForGroupControl = DeckItem::to_bool(record.getItem("GROUP_CONTROLLED").getTrimmedString(0));
             const double guide_rate = record.getItem("GUIDE_RATE").get<double>(0);
@@ -2137,7 +2120,7 @@ Well{0} entered with 'FIELD' parent group:
     void Schedule::handleWINJMULT(HandlerContext& handlerContext) {
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL_NAME").getTrimmedString(0);
-            const auto well_names = wellNames(wellNamePattern);
+            const auto well_names = handlerContext.wellNames(wellNamePattern, true);
 
             for (const auto& well_name : well_names) {
                 auto well = handlerContext.state().wells( well_name );
@@ -2158,7 +2141,7 @@ Well{0} entered with 'FIELD' parent group:
         // question.
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
-            auto well_names = wellNames(wellNamePattern, handlerContext);
+            auto well_names = handlerContext.wellNames(wellNamePattern, false);
 
             const double temp = record.getItem("TEMPERATURE").getSIDouble(0);
 
@@ -2179,9 +2162,10 @@ Well{0} entered with 'FIELD' parent group:
 
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem<ParserKeywords::WLIFTOPT::WELL>().getTrimmedString(0);
-            const auto well_names = this->wellNames(wellNamePattern);
-            if (well_names.empty())
+            const auto well_names = handlerContext.wellNames(wellNamePattern, true);
+            if (well_names.empty()) {
                 handlerContext.invalidNamePattern(wellNamePattern);
+            }
 
             const bool use_glo = DeckItem::to_bool(record.getItem<ParserKeywords::WLIFTOPT::USE_OPTIMIZER>().get<std::string>(0));
             const bool alloc_extra_gas = DeckItem::to_bool( record.getItem<ParserKeywords::WLIFTOPT::ALLOCATE_EXTRA_LIFT_GAS>().get<std::string>(0));
@@ -2222,8 +2206,7 @@ Well{0} entered with 'FIELD' parent group:
 
             for (const auto& well_arg : well_args) {
                 // does not use overload for context to avoid throw
-                const auto& names = this->wellNames(well_arg, handlerContext.currentStep,
-                                                    handlerContext.matching_wells);
+                const auto names = handlerContext.wellNames(well_arg, true);
                 if (names.empty() && well_arg.find("*") == std::string::npos) {
                     std::string msg_fmt = "Problem with {keyword}\n"
                                           "In {file} line {line}\n"
@@ -2268,7 +2251,7 @@ Well{0} entered with 'FIELD' parent group:
     void Schedule::handleWMICP(HandlerContext& handlerContext) {
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
-            const auto well_names = wellNames(wellNamePattern, handlerContext);
+            const auto well_names = handlerContext.wellNames(wellNamePattern, false);
 
             for (const auto& well_name : well_names) {
                 auto well = handlerContext.state().wells( well_name );
@@ -2296,9 +2279,7 @@ Well{0} entered with 'FIELD' parent group:
 
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
-            const auto& well_names = this->wellNames(wellNamePattern, handlerContext,
-                                                     isWList(handlerContext.currentStep,
-                                                             wellNamePattern));
+            const auto& well_names = handlerContext.wellNames(wellNamePattern);
 
             // for the record has defaulted connection and completion information, we do not apply it immediately
             // because we only need to apply the last record with defaulted connection and completion information
@@ -2327,7 +2308,7 @@ Well{0} entered with 'FIELD' parent group:
     void Schedule::handleWINJCLN(HandlerContext& handlerContext) {
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem<ParserKeywords::WINJCLN::WELL_NAME>().getTrimmedString(0);
-            const auto well_names = this->wellNames(wellNamePattern, handlerContext);
+            const auto well_names = handlerContext.wellNames(wellNamePattern, false);
             for (const auto& well_name: well_names) {
                 auto well = handlerContext.state().wells(well_name);
                 well.handleWINJCLN(record, handlerContext.keyword.location());
@@ -2339,7 +2320,7 @@ Well{0} entered with 'FIELD' parent group:
     void Schedule::handleWINJDAM(HandlerContext& handlerContext) {
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem<ParserKeywords::WINJDAM::WELL_NAME>().getTrimmedString(0);
-            const auto well_names = wellNames(wellNamePattern);
+            const auto well_names = handlerContext.wellNames(wellNamePattern, true);
 
             for (const auto& well_name : well_names) {
                 auto well = handlerContext.state().wells(well_name);
@@ -2353,7 +2334,7 @@ Well{0} entered with 'FIELD' parent group:
     void Schedule::handleWINJFCNC(HandlerContext& handlerContext) {
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem<ParserKeywords::WINJFCNC::WELL>().getTrimmedString(0);
-            const auto well_names = this->wellNames(wellNamePattern, handlerContext);
+            const auto well_names = handlerContext.wellNames(wellNamePattern, false);
             for (const auto& well_name: well_names) {
                 auto well = handlerContext.state().wells(well_name);
                 const auto filter_conc = record.getItem<ParserKeywords::WINJFCNC::VOL_CONCENTRATION>().get<UDAValue>(0);
@@ -2366,7 +2347,7 @@ Well{0} entered with 'FIELD' parent group:
     void Schedule::handleWPMITAB(HandlerContext& handlerContext) {
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
-            const auto well_names = wellNames(wellNamePattern);
+            const auto well_names = handlerContext.wellNames(wellNamePattern, true);
 
             for (const auto& well_name : well_names) {
                 auto well = handlerContext.state().wells( well_name );
@@ -2381,7 +2362,7 @@ Well{0} entered with 'FIELD' parent group:
     void Schedule::handleWPOLYMER(HandlerContext& handlerContext) {
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
-            const auto well_names = this->wellNames(wellNamePattern, handlerContext);
+            const auto well_names = handlerContext.wellNames(wellNamePattern, false);
 
             for (const auto& well_name : well_names) {
                 auto well = handlerContext.state().wells( well_name );
@@ -2396,7 +2377,7 @@ Well{0} entered with 'FIELD' parent group:
     void Schedule::handleWSALT(HandlerContext& handlerContext) {
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
-            const auto well_names = wellNames(wellNamePattern);
+            const auto well_names = handlerContext.wellNames(wellNamePattern, true);
 
             for (const auto& well_name : well_names) {
                 auto well2 = handlerContext.state().wells( well_name );
@@ -2425,7 +2406,7 @@ Well{0} entered with 'FIELD' parent group:
 
         for (auto& map_elem : spiral_icds) {
             const std::string& well_name_pattern = map_elem.first;
-            const auto well_names = this->wellNames(well_name_pattern, handlerContext);
+            const auto well_names = handlerContext.wellNames(well_name_pattern, false);
 
             std::vector<std::pair<int, SICD> >& sicd_pairs = map_elem.second;
 
@@ -2449,7 +2430,7 @@ Well{0} entered with 'FIELD' parent group:
         std::map<std::string, std::vector<std::pair<int, AutoICD> > > auto_icds = AutoICD::fromWSEGAICD(handlerContext.keyword);
 
         for (auto& [well_name_pattern, aicd_pairs] : auto_icds) {
-            const auto well_names = this->wellNames(well_name_pattern, handlerContext.currentStep);
+            const auto well_names = handlerContext.wellNames(well_name_pattern, true);
 
             for (const auto& well_name : well_names) {
                 auto well = handlerContext.state().wells( well_name );
@@ -2473,9 +2454,7 @@ Well{0} entered with 'FIELD' parent group:
 
         for (const auto& map_elem : valves) {
             const std::string& well_name_pattern = map_elem.first;
-            const auto well_names = this->wellNames(well_name_pattern, handlerContext,
-                                                    isWList(handlerContext.currentStep,
-                                                            well_name_pattern));
+            const auto well_names = handlerContext.wellNames(well_name_pattern);
 
             const std::vector<std::pair<int, Valve> >& valve_pairs = map_elem.second;
 
@@ -2490,7 +2469,7 @@ Well{0} entered with 'FIELD' parent group:
     void Schedule::handleWSKPTAB(HandlerContext& handlerContext) {
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
-            const auto well_names = wellNames(wellNamePattern, handlerContext);
+            const auto well_names = handlerContext.wellNames(wellNamePattern, false);
 
             for (const auto& well_name : well_names) {
                 auto well = handlerContext.state().wells( well_name );
@@ -2507,7 +2486,7 @@ Well{0} entered with 'FIELD' parent group:
 
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
-            const auto well_names = wellNames( wellNamePattern , handlerContext);
+            const auto well_names = handlerContext.wellNames(wellNamePattern, false);
 
             const double fraction = record.getItem("SOLVENT_FRACTION").get<UDAValue>(0).getSI();
 
@@ -2530,7 +2509,7 @@ Well{0} entered with 'FIELD' parent group:
     void Schedule::handleWTEMP(HandlerContext& handlerContext) {
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
-            const auto well_names = this->wellNames( wellNamePattern, handlerContext);
+            const auto well_names = handlerContext.wellNames(wellNamePattern, false);
             double temp = record.getItem("TEMP").getSIDouble(0);
 
             for (const auto& well_name : well_names) {
@@ -2549,9 +2528,7 @@ Well{0} entered with 'FIELD' parent group:
         auto new_config = handlerContext.state().wtest_config.get();
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
-            const auto well_names = this->wellNames(wellNamePattern, handlerContext,
-                                                    isWList(handlerContext.currentStep,
-                                                            wellNamePattern));
+            const auto well_names = handlerContext.wellNames(wellNamePattern);
             if (well_names.empty()) {
                 handlerContext.invalidNamePattern(wellNamePattern);
             }
@@ -2575,7 +2552,7 @@ Well{0} entered with 'FIELD' parent group:
 
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
-            const auto well_names = wellNames(wellNamePattern, handlerContext);
+            const auto well_names = handlerContext.wellNames(wellNamePattern, false);
 
             if (well_names.empty()) {
                 handlerContext.invalidNamePattern(wellNamePattern);
@@ -2637,7 +2614,7 @@ Well{0} entered with 'FIELD' parent group:
     void Schedule::handleWVFPDP(HandlerContext& handlerContext) {
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
-            const auto well_names = wellNames(wellNamePattern, handlerContext.currentStep);
+            const auto well_names = handlerContext.wellNames(wellNamePattern, true);
             if (well_names.empty()) {
                 handlerContext.invalidNamePattern(wellNamePattern);
             }
@@ -2655,7 +2632,7 @@ Well{0} entered with 'FIELD' parent group:
     void Schedule::handleWVFPEXP(HandlerContext& handlerContext) {
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
-            const auto well_names = wellNames(wellNamePattern, handlerContext.currentStep);
+            const auto well_names = handlerContext.wellNames(wellNamePattern, true);
             if (well_names.empty()) {
                 handlerContext.invalidNamePattern(wellNamePattern);
             }
@@ -2673,7 +2650,7 @@ Well{0} entered with 'FIELD' parent group:
     void Schedule::handleWWPAVE(HandlerContext& handlerContext) {
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
-            const auto well_names = wellNames(wellNamePattern, handlerContext.currentStep);
+            const auto well_names = handlerContext.wellNames(wellNamePattern, true);
 
             if (well_names.empty()) {
                 handlerContext.invalidNamePattern(wellNamePattern);
@@ -2720,7 +2697,7 @@ Well{0} entered with 'FIELD' parent group:
     void Schedule::handleWPAVEDEP(HandlerContext& handlerContext) {
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem<ParserKeywords::WPAVEDEP::WELL>().getTrimmedString(0);
-            const auto well_names = wellNames(wellNamePattern, handlerContext);
+            const auto well_names = handlerContext.wellNames(wellNamePattern, false);
 
             if (well_names.empty()) {
                 handlerContext.invalidNamePattern(wellNamePattern);
@@ -2749,7 +2726,7 @@ Well{0} entered with 'FIELD' parent group:
             }
 
             const auto wellNamePattern = record.getItem<ParserKeywords::WRFT::WELL>().getTrimmedString(0);
-            const auto well_names = wellNames(wellNamePattern, handlerContext);
+            const auto well_names = handlerContext.wellNames(wellNamePattern, false);
 
             if (well_names.empty()) {
                 handlerContext.invalidNamePattern(wellNamePattern);
@@ -2781,7 +2758,7 @@ Well{0} entered with 'FIELD' parent group:
 
         for (const auto& record : handlerContext.keyword) {
             const auto wellNamePattern = record.getItem<ParserKeywords::WRFTPLT::WELL>().getTrimmedString(0);
-            const auto well_names = wellNames(wellNamePattern, handlerContext);
+            const auto well_names = handlerContext.wellNames(wellNamePattern, false);
 
             if (well_names.empty()) {
                 handlerContext.invalidNamePattern(wellNamePattern);
@@ -2844,9 +2821,7 @@ Well{0} entered with 'FIELD' parent group:
             if (cmode == Well::WELTARGCMode::GUID)
                 throw std::logic_error("Multiplying guide rate is not implemented");
 
-            const auto well_names = this->wellNames(wellNamePattern, handlerContext,
-                                                    isWList(handlerContext.currentStep,
-                                                            wellNamePattern));
+            const auto well_names = handlerContext.wellNames(wellNamePattern);
             for (const auto& well_name : well_names) {
                 auto well = handlerContext.state().wells.get(well_name);
                 if (well.isInjector()) {

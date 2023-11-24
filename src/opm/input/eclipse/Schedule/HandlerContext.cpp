@@ -131,4 +131,17 @@ HandlerContext::groupNames(const std::string& pattern) const
     return schedule_.groupNames(pattern);
 }
 
+std::vector<std::string>
+HandlerContext::wellNames(const std::string& pattern, bool allowEmpty) const
+{
+    return schedule_.wellNames(pattern, *this, allowEmpty);
+}
+
+std::vector<std::string>
+HandlerContext::wellNames(const std::string& pattern) const
+{
+    bool allowEmpty = schedule_.isWList(currentStep, pattern);
+    return this->wellNames(pattern, allowEmpty);
+}
+
 }
