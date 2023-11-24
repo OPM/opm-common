@@ -95,6 +95,9 @@ public:
     //! \brief Obtain PI for a well.
     double getWellPI(const std::string& well_name) const;
 
+    //! \brief Returns elapsed time since simulation start in seconds.
+    double elapsed_seconds() const;
+
     const ScheduleBlock& block;
     const DeckKeyword& keyword;
     const std::size_t currentStep;
