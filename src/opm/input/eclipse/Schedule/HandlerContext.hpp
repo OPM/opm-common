@@ -36,6 +36,7 @@ class Schedule;
 class ScheduleBlock;
 class ScheduleGrid;
 class ScheduleState;
+struct ScheduleStatic;
 struct SimulatorUpdate;
 class WelSegsSet;
 
@@ -85,6 +86,9 @@ public:
 
     //! \brief Returns a reference to current state.
     ScheduleState& state();
+
+    //! \brief Returns a const-ref to the static schedule.
+    const ScheduleStatic& sched_stat() const;
 
     /// \brief Mark that the well occured in a WELSEGS keyword.
     void welsegs_handled(const std::string& well_name);
