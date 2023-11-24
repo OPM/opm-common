@@ -556,7 +556,7 @@ namespace Opm
                            bool actionx_mode,
                            SimulatorUpdate* sim_update,
                            const std::unordered_map<std::string, double>* target_wellpi,
-                           std::unordered_map<std::string, double>* wpimult_global_factor = nullptr,
+                           std::unordered_map<std::string, double>& wpimult_global_factor,
                            WelSegsSet* welsegs_wells = nullptr,
                            std::set<std::string>* compsegs_wells = nullptr);
 

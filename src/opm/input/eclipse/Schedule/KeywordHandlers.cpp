@@ -2291,13 +2291,10 @@ Well{0} entered with 'FIELD' parent group:
             // whether it is the last one.
             const bool default_con_comp = defaultConCompRec(record);
             if (default_con_comp) {
-                auto wpimult_global_factor = handlerContext.wpimult_global_factor;
-                if (!wpimult_global_factor) {
-                    throw std::runtime_error(" wpimult_global_factor is nullptr in function handleWPIMULT ");
-                }
+                auto& wpimult_global_factor = handlerContext.wpimult_global_factor;
                 const auto scaling_factor = record.getItem("WELLPI").get<double>(0);
                 for (const auto& wname : well_names) {
-                    (*wpimult_global_factor)[wname] = scaling_factor;
+                    wpimult_global_factor.insert_or_assign(wname, scaling_factor);
                 }
                 continue;
             }

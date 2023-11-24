@@ -53,7 +53,7 @@ public:
                    ErrorGuard& errors_,
                    SimulatorUpdate* sim_update_,
                    const std::unordered_map<std::string, double>* target_wellpi_,
-                   std::unordered_map<std::string, double>* wpimult_global_factor_,
+                   std::unordered_map<std::string, double>& wpimult_global_factor_,
                    WelSegsSet* welsegs_wells_,
                    std::set<std::string>* compsegs_wells_)
         : block(block_)
@@ -96,7 +96,7 @@ public:
     const bool actionx_mode;
     const ParseContext& parseContext;
     ErrorGuard& errors;
-    std::unordered_map<std::string, double>* wpimult_global_factor{nullptr};
+    std::unordered_map<std::string, double>& wpimult_global_factor;
     const ScheduleGrid& grid;
 
 private:

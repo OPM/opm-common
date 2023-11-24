@@ -372,7 +372,7 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const std::optional
                                  bool actionx_mode,
                                  SimulatorUpdate* sim_update,
                                  const std::unordered_map<std::string, double>* target_wellpi,
-                                 std::unordered_map<std::string, double>* wpimult_global_factor,
+                                 std::unordered_map<std::string, double>& wpimult_global_factor,
                                  WelSegsSet* welsegs_wells,
                                  std::set<std::string>* compsegs_wells)
     {
@@ -690,7 +690,7 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                                     false,
                                     nullptr,
                                     target_wellpi,
-                                    &wpimult_global_factor,
+                                    wpimult_global_factor,
                                     &welsegs_wells,
                                     &compsegs_wells);
                 keyword_index++;
@@ -1522,7 +1522,7 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
                                 /*actionx_mode=*/false,
                                 &sim_update,
                                 &target_wellpi,
-                                &wpimult_global_factor);
+                                wpimult_global_factor);
         }
         this->applyGlobalWPIMULT(wpimult_global_factor);
         this->end_report(reportStep);
@@ -1577,7 +1577,7 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
                                 true,
                                 &sim_update,
                                 &target_wellpi,
-                                &wpimult_global_factor);
+                                wpimult_global_factor);
         }
 
         this->applyGlobalWPIMULT(wpimult_global_factor);
