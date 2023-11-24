@@ -43,6 +43,8 @@
 #include <opm/input/eclipse/Schedule/WriteRestartFileEvents.hpp>
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
 
+#include "src/opm/input/eclipse/Schedule/MSW/WelSegsSet.hpp"
+
 namespace Opm
 {
     namespace Action {
@@ -76,6 +78,7 @@ namespace Opm
     class WellMatcher;
     enum class WellProducerCMode;
     enum class WellStatus;
+    class WelSegsSet;
     class WellTestConfig;
 
     namespace RestartIO { struct RstState; }
@@ -132,28 +135,6 @@ namespace Opm
 
     class Schedule {
     public:
-
-        struct PairComp
-        {
-            bool operator()(const std::pair<std::string,KeywordLocation>& pair,
-                            const std::string& str) const
-            {
-                return std::get<0>(pair) < str;
-            }
-            bool operator()(const std::pair<std::string,KeywordLocation>& pair1,
-                            const std::pair<std::string,KeywordLocation>& pair2) const
-            {
-                return std::get<0>(pair1) < std::get<0>(pair2);
-            }
-            bool operator()(const std::string& str,
-                            const std::pair<std::string,KeywordLocation>& pair) const
-            {
-                return str < std::get<0>(pair);
-            }
-        };
-
-        using WelSegsSet = std::set<std::pair<std::string,KeywordLocation>,PairComp>;
-
         Schedule() = default;
         explicit Schedule(std::shared_ptr<const Python> python_handle);
         Schedule(const Deck& deck,
@@ -563,7 +544,7 @@ namespace Opm
             void welsegs_handled(const std::string& well_name)
             {
                 if (welsegs_wells)
-                    welsegs_wells->insert({well_name, keyword.location()});
+                    welsegs_wells->insert(well_name, keyword.location());
             }
 
             /// \brief Mark that the well occured in a  COMPSEGS keyword

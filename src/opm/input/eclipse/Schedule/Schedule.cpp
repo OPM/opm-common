@@ -93,6 +93,7 @@
 
 #include "Well/injection.hpp"
 #include "MSW/Compsegs.hpp"
+#include "MSW/WelSegsSet.hpp"
 
 #include <algorithm>
 #include <ctime>
@@ -521,34 +522,22 @@ namespace
 /// \brief Check whether each MS well has COMPSEGS entry andissue error if not.
 /// \param welsegs All wells with a WELSEGS entry together with the location.
 /// \param compegs All wells with a COMPSEGS entry
-void check_compsegs_consistency(::Opm::Schedule::WelSegsSet& welsegs, 
-                                std::set<std::string>&  compsegs,
+void check_compsegs_consistency(Opm::WelSegsSet& welsegs,
+                                const std::set<std::string>& compsegs,
                                 const std::vector<::Opm::Well>& wells)
 {
-    std::vector<std::pair<std::string,::Opm::KeywordLocation>> difference;
-    difference.reserve(welsegs.size());
-    std::set_difference(welsegs.begin(), welsegs.end(),
-                        compsegs.begin(), compsegs.end(),
-                        std::back_inserter(difference),
-                        ::Opm::Schedule::PairComp());
-    // Ignore wells without connections
-    const auto empty_conn = [&wells](const std::pair<std::string,::Opm::KeywordLocation> &x) -> bool {
-        return std::any_of(wells.begin(), wells.end(),
-                           [wname = x.first](const ::Opm::Well& well) {
-                               return (well.name() == wname) && well.getConnections().empty(); }
-                           );
-    };
-    difference.erase(std::remove_if(difference.begin(), difference.end(), empty_conn), difference.end());
+    const auto difference = welsegs.difference(compsegs, wells);
     
-    if (difference.size()) {
+    if (!difference.empty()) {
         std::string well_str = "well";
-        if (difference.size()>1) {
+        if (difference.size() > 1) {
             well_str.append("s");
         }
         well_str.append(":");
 
         for(const auto& [name, location] : difference) {
-            well_str.append(fmt::format("\n   {} in {} at line {}", name, location.filename, location.lineno));
+            well_str.append(fmt::format("\n   {} in {} at line {}",
+                                        name, location.filename, location.lineno));
         }
         auto msg = fmt::format("Missing COMPSEGS keyword for the following multisegment {}.", well_str);
         throw Opm::OpmInputError(msg, std::get<1>(difference[0]));
