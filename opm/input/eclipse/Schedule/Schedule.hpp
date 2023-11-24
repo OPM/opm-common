@@ -490,6 +490,8 @@ namespace Opm
         void dump_deck(std::ostream& os) const;
 
     private:
+        friend class HandlerContext;
+
         // Please update the member functions
         //   - operator==(const Schedule&) const
         //   - serializationTestObject()

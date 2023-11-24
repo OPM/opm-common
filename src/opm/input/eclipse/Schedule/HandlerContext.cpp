@@ -22,6 +22,7 @@
 #include <opm/input/eclipse/Deck/DeckKeyword.hpp>
 
 #include <opm/input/eclipse/Schedule/Action/SimulatorUpdate.hpp>
+#include <opm/input/eclipse/Schedule/Schedule.hpp>
 
 #include "MSW/WelSegsSet.hpp"
 
@@ -62,6 +63,11 @@ void HandlerContext::compsegs_handled(const std::string& well_name)
     if (compsegs_wells) {
         compsegs_wells->insert(well_name);
     }
+}
+
+ScheduleState& HandlerContext::state()
+{
+    return schedule_.snapshots[currentStep];
 }
 
 double HandlerContext::getWellPI(const std::string& well_name) const

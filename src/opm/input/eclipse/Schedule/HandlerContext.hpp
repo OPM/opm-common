@@ -83,6 +83,9 @@ public:
     //! \brief Mark that well structure has changed.
     void record_well_structure_change();
 
+    //! \brief Returns a reference to current state.
+    ScheduleState& state();
+
     /// \brief Mark that the well occured in a WELSEGS keyword.
     void welsegs_handled(const std::string& well_name);
 
