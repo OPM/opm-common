@@ -32,6 +32,7 @@ namespace Opm {
 
 namespace Action { class WGNames; }
 class DeckKeyword;
+class DeckRecord;
 class ErrorGuard;
 class ParseContext;
 class Schedule;
@@ -112,6 +113,16 @@ public:
     //! \brief Adds a group to a group.
     void addGroupToGroup(const std::string& parent_group,
                          const std::string& child_group);
+
+    //! \brief Create a new Well from a WELSPECS record.
+    void welspecsCreateNewWell(const DeckRecord&  record,
+                               const std::string& wellName,
+                               const std::string& groupName);
+
+    //! \brief Update an existing Well from a WELSPECS record.
+    void welspecsUpdateExistingWells(const DeckRecord&               record,
+                                     const std::vector<std::string>& wellNames,
+                                     const std::string&              groupName);
 
     //! \brief Obtain PI for a well.
     double getWellPI(const std::string& well_name) const;
