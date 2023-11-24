@@ -84,4 +84,9 @@ double HandlerContext::getWellPI(const std::string& well_name) const
     return wellpi_iter->second;
 }
 
+double HandlerContext::elapsed_seconds() const
+{
+    return schedule_.seconds(currentStep);
+}
+
 }
