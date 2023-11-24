@@ -177,6 +177,7 @@ if(ENABLE_ECL_INPUT)
     src/opm/input/eclipse/Schedule/Group/GConSump.cpp
     src/opm/input/eclipse/Schedule/Group/GroupEconProductionLimits.cpp
     src/opm/input/eclipse/Schedule/Group/GTNode.cpp
+    src/opm/input/eclipse/Schedule/HandlerContext.cpp
     src/opm/input/eclipse/Schedule/KeywordHandlers.cpp
     src/opm/input/eclipse/Schedule/MessageLimits.cpp
     src/opm/input/eclipse/Schedule/MSW/icd.cpp
@@ -184,6 +185,7 @@ if(ENABLE_ECL_INPUT)
     src/opm/input/eclipse/Schedule/MSW/Segment.cpp
     src/opm/input/eclipse/Schedule/MSW/SegmentMatcher.cpp
     src/opm/input/eclipse/Schedule/MSW/WellSegments.cpp
+    src/opm/input/eclipse/Schedule/MSW/WelSegsSet.cpp
     src/opm/input/eclipse/Schedule/MSW/AICD.cpp
     src/opm/input/eclipse/Schedule/MSW/SICD.cpp
     src/opm/input/eclipse/Schedule/MSW/Valve.cpp

@@ -91,8 +91,10 @@
 #include <opm/input/eclipse/Deck/DeckRecord.hpp>
 #include <opm/input/eclipse/Deck/DeckSection.hpp>
 
-#include "Well/injection.hpp"
+#include "HandlerContext.hpp"
 #include "MSW/Compsegs.hpp"
+#include "MSW/WelSegsSet.hpp"
+#include "Well/injection.hpp"
 
 #include <algorithm>
 #include <ctime>
@@ -370,7 +372,7 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const std::optional
                                  bool actionx_mode,
                                  SimulatorUpdate* sim_update,
                                  const std::unordered_map<std::string, double>* target_wellpi,
-                                 std::unordered_map<std::string, double>* wpimult_global_factor,
+                                 std::unordered_map<std::string, double>& wpimult_global_factor,
                                  WelSegsSet* welsegs_wells,
                                  std::set<std::string>* compsegs_wells)
     {
@@ -521,34 +523,22 @@ namespace
 /// \brief Check whether each MS well has COMPSEGS entry andissue error if not.
 /// \param welsegs All wells with a WELSEGS entry together with the location.
 /// \param compegs All wells with a COMPSEGS entry
-void check_compsegs_consistency(::Opm::Schedule::WelSegsSet& welsegs, 
-                                std::set<std::string>&  compsegs,
+void check_compsegs_consistency(Opm::WelSegsSet& welsegs,
+                                const std::set<std::string>& compsegs,
                                 const std::vector<::Opm::Well>& wells)
 {
-    std::vector<std::pair<std::string,::Opm::KeywordLocation>> difference;
-    difference.reserve(welsegs.size());
-    std::set_difference(welsegs.begin(), welsegs.end(),
-                        compsegs.begin(), compsegs.end(),
-                        std::back_inserter(difference),
-                        ::Opm::Schedule::PairComp());
-    // Ignore wells without connections
-    const auto empty_conn = [&wells](const std::pair<std::string,::Opm::KeywordLocation> &x) -> bool {
-        return std::any_of(wells.begin(), wells.end(),
-                           [wname = x.first](const ::Opm::Well& well) {
-                               return (well.name() == wname) && well.getConnections().empty(); }
-                           );
-    };
-    difference.erase(std::remove_if(difference.begin(), difference.end(), empty_conn), difference.end());
+    const auto difference = welsegs.difference(compsegs, wells);
     
-    if (difference.size()) {
+    if (!difference.empty()) {
         std::string well_str = "well";
-        if (difference.size()>1) {
+        if (difference.size() > 1) {
             well_str.append("s");
         }
         well_str.append(":");
 
         for(const auto& [name, location] : difference) {
-            well_str.append(fmt::format("\n   {} in {} at line {}", name, location.filename, location.lineno));
+            well_str.append(fmt::format("\n   {} in {} at line {}",
+                                        name, location.filename, location.lineno));
         }
         auto msg = fmt::format("Missing COMPSEGS keyword for the following multisegment {}.", well_str);
         throw Opm::OpmInputError(msg, std::get<1>(difference[0]));
@@ -700,7 +690,7 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                                     false,
                                     nullptr,
                                     target_wellpi,
-                                    &wpimult_global_factor,
+                                    wpimult_global_factor,
                                     &welsegs_wells,
                                     &compsegs_wells);
                 keyword_index++;
@@ -1532,7 +1522,7 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
                                 /*actionx_mode=*/false,
                                 &sim_update,
                                 &target_wellpi,
-                                &wpimult_global_factor);
+                                wpimult_global_factor);
         }
         this->applyGlobalWPIMULT(wpimult_global_factor);
         this->end_report(reportStep);
@@ -1587,7 +1577,7 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
                                 true,
                                 &sim_update,
                                 &target_wellpi,
-                                &wpimult_global_factor);
+                                wpimult_global_factor);
         }
 
         this->applyGlobalWPIMULT(wpimult_global_factor);
@@ -2467,19 +2457,6 @@ std::ostream& operator<<(std::ostream& os, const Schedule& sched)
 {
     sched.dump_deck(os);
     return os;
-}
-
-void Schedule::HandlerContext::affected_well(const std::string& well_name)
-{
-    if (this->sim_update)
-        this->sim_update->affected_wells.insert(well_name);
-}
-
-void Schedule::HandlerContext::record_well_structure_change()
-{
-    if (this->sim_update != nullptr) {
-        this->sim_update->well_structure_changed = true;
-    }
 }
 
 }

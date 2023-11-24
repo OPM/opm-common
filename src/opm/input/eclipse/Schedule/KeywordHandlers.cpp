@@ -96,6 +96,7 @@
 #include <opm/input/eclipse/Parser/ParserKeywords/V.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/W.hpp>
 
+#include "HandlerContext.hpp"
 #include "Well/injection.hpp"
 
 #include <algorithm>
@@ -150,7 +151,7 @@ namespace {
         throw OpmInputError("AQUFETP is not supported as SCHEDULE keyword", handlerContext.keyword.location());
     }
 
-    void Schedule::handleAQUFLUX(Schedule::HandlerContext& handlerContext) {
+    void Schedule::handleAQUFLUX(HandlerContext& handlerContext) {
         // auto& aqufluxs = this->snapshots.back().aqufluxs;
         auto& aqufluxs = this->snapshots.back().aqufluxs;
         for (const auto& record : handlerContext.keyword) {
@@ -159,7 +160,7 @@ namespace {
         }
     }
 
-    void Schedule::handleBCProp(Schedule::HandlerContext& handlerContext) {
+    void Schedule::handleBCProp(HandlerContext& handlerContext) {
         auto& bcprop = this->snapshots.back().bcprop;
         for (const auto& record : handlerContext.keyword) {
             bcprop.updateBCProp(record);
@@ -989,8 +990,7 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
     void Schedule::handleGEOKeyword(HandlerContext& handlerContext) {
         this->snapshots.back().geo_keywords().push_back(handlerContext.keyword);
         this->snapshots.back().events().addEvent( ScheduleEvents::GEO_MODIFIER );
-        if (handlerContext.sim_update)
-            handlerContext.sim_update->tran_update = true;
+        handlerContext.record_tran_change();
     }
 
     void Schedule::handleMXUNSUPP(HandlerContext& handlerContext) {
@@ -1773,14 +1773,10 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
             const auto targetPI = record.getItem<PI>().get<double>(0);
 
             std::vector<bool> scalingApplicable;
-            const auto& current_wellpi = *handlerContext.target_wellpi;
             for (const auto& well_name : well_names) {
-                auto wellpi_iter = current_wellpi.find(well_name);
-                if (wellpi_iter == current_wellpi.end())
-                    throw std::logic_error(fmt::format("Missing current PI for well {}", well_name));
-
                 auto new_well = this->getWell(well_name, report_step);
-                auto scalingFactor = new_well.convertDeckPI(targetPI) / wellpi_iter->second;
+                auto scalingFactor = new_well.convertDeckPI(targetPI) /
+                                     handlerContext.getWellPI(well_name);
                 new_well.updateWellProductivityIndex();
                 new_well.applyWellProdIndexScaling(scalingFactor, scalingApplicable);
                 this->snapshots.back().wells.update( std::move(new_well) );
@@ -2122,7 +2118,7 @@ Well{0} entered with 'FIELD' parent group:
         }
     }
 
-    void Schedule::handleWINJMULT(Opm::Schedule::HandlerContext& handlerContext) {
+    void Schedule::handleWINJMULT(HandlerContext& handlerContext) {
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL_NAME").getTrimmedString(0);
             const auto well_names = wellNames(wellNamePattern);
@@ -2295,13 +2291,10 @@ Well{0} entered with 'FIELD' parent group:
             // whether it is the last one.
             const bool default_con_comp = defaultConCompRec(record);
             if (default_con_comp) {
-                auto wpimult_global_factor = handlerContext.wpimult_global_factor;
-                if (!wpimult_global_factor) {
-                    throw std::runtime_error(" wpimult_global_factor is nullptr in function handleWPIMULT ");
-                }
+                auto& wpimult_global_factor = handlerContext.wpimult_global_factor;
                 const auto scaling_factor = record.getItem("WELLPI").get<double>(0);
                 for (const auto& wname : well_names) {
-                    (*wpimult_global_factor)[wname] = scaling_factor;
+                    wpimult_global_factor.insert_or_assign(wname, scaling_factor);
                 }
                 continue;
             }
