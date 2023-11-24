@@ -63,16 +63,19 @@ public:
         , actionx_mode(actionx_mode_)
         , parseContext(parseContext_)
         , errors(errors_)
-        , sim_update(sim_update_)
         , target_wellpi(target_wellpi_)
         , wpimult_global_factor(wpimult_global_factor_)
         , welsegs_wells(welsegs_wells_)
         , compsegs_wells(compsegs_wells_)
         , grid(grid_)
+        , sim_update(sim_update_)
     {}
 
     //! \brief Mark that a well has changed.
     void affected_well(const std::string& well_name);
+
+    //! \brief Mark that transmissibilities must be recalculated.
+    void record_tran_change();
 
     //! \brief Mark that well structure has changed.
     void record_well_structure_change();
@@ -90,12 +93,14 @@ public:
     const bool actionx_mode;
     const ParseContext& parseContext;
     ErrorGuard& errors;
-    SimulatorUpdate* sim_update{nullptr};
     const std::unordered_map<std::string, double>* target_wellpi{nullptr};
     std::unordered_map<std::string, double>* wpimult_global_factor{nullptr};
     WelSegsSet* welsegs_wells{nullptr};
     std::set<std::string>* compsegs_wells{nullptr};
     const ScheduleGrid& grid;
+
+private:
+    SimulatorUpdate* sim_update{nullptr};
 };
 
 } // end namespace Opm

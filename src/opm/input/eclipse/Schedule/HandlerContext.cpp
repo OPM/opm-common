@@ -34,6 +34,13 @@ void HandlerContext::affected_well(const std::string& well_name)
     }
 }
 
+void HandlerContext::record_tran_change()
+{
+    if (sim_update) {
+        sim_update->tran_update = true;
+    }
+}
+
 void HandlerContext::record_well_structure_change()
 {
     if (sim_update) {

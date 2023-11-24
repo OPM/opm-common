@@ -990,8 +990,7 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
     void Schedule::handleGEOKeyword(HandlerContext& handlerContext) {
         this->snapshots.back().geo_keywords().push_back(handlerContext.keyword);
         this->snapshots.back().events().addEvent( ScheduleEvents::GEO_MODIFIER );
-        if (handlerContext.sim_update)
-            handlerContext.sim_update->tran_update = true;
+        handlerContext.record_tran_change();
     }
 
     void Schedule::handleMXUNSUPP(HandlerContext& handlerContext) {
