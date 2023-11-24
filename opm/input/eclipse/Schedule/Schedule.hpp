@@ -576,16 +576,6 @@ namespace Opm
 
         bool isWList(std::size_t report_step, const std::string& pattern) const;
 
-        void welspecsCreateNewWell(const DeckRecord&  record,
-                                   const std::string& wellName,
-                                   const std::string& groupName,
-                                   HandlerContext&    handlerContext);
-
-        void welspecsUpdateExistingWells(const DeckRecord&               record,
-                                         const std::vector<std::string>& wellNames,
-                                         const std::string&              groupName,
-                                         HandlerContext&                 handlerContext);
-
         SimulatorUpdate applyAction(std::size_t reportStep, const std::string& action_name, const std::vector<std::string>& matching_wells);
 
         /**

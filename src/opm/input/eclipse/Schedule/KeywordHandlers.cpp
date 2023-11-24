@@ -1947,18 +1947,16 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
             if (existingWells.empty()) {
                 // 'wellName' does not match any existing wells.  Create a
                 // new Well object for this well.
-                this->welspecsCreateNewWell(record,
-                                            wellName,
-                                            groupName,
-                                            handlerContext);
+                handlerContext.welspecsCreateNewWell(record,
+                                                     wellName,
+                                                     groupName);
             }
             else {
                 // 'wellName' matches one or more existing wells.  Assign
                 // new properties for those wells.
-                this->welspecsUpdateExistingWells(record,
-                                                  existingWells,
-                                                  groupName,
-                                                  handlerContext);
+                handlerContext.welspecsUpdateExistingWells(record,
+                                                           existingWells,
+                                                           groupName);
             }
         }
 
