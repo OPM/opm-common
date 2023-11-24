@@ -120,4 +120,9 @@ void HandlerContext::invalidNamePattern(const std::string& namePattern) const
     }
 }
 
+const Action::WGNames& HandlerContext::action_wgnames() const
+{
+    return schedule_.action_wgnames;
+}
+
 }

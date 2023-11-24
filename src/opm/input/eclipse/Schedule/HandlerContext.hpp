@@ -29,6 +29,7 @@
 
 namespace Opm {
 
+namespace Action { class WGNames; }
 class DeckKeyword;
 class ErrorGuard;
 class ParseContext;
@@ -104,6 +105,9 @@ public:
 
     //! \brief Adds parse error for an invalid name pattern.
     void invalidNamePattern(const std::string& namePattern) const;
+
+    //! \brief Obtain action well group names.
+    const Action::WGNames& action_wgnames() const;
 
     const ScheduleBlock& block;
     const DeckKeyword& keyword;

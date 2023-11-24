@@ -347,7 +347,7 @@ namespace {
 
         if (!handlerContext.state().wells.has(wname)) {
             const auto& location = handlerContext.keyword.location();
-            if (this->action_wgnames.has_well(wname)) {
+            if (handlerContext.action_wgnames().has_well(wname)) {
                 std::string msg = fmt::format(R"(Well: {} not yet defined for keyword {}.
 Expecting well to be defined with WELSPECS in ACTIONX before actual use.
 File {} line {}.)", wname, location.keyword, location.filename, location.lineno);
@@ -363,12 +363,15 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
             const auto& location = handlerContext.keyword.location();
             auto msg = fmt::format("Problem with COMPSEGS/{0}\n"
                                    "In {1} line {2}\n"
-                                   "Well {0} is not connected to grid - COMPSEGS will be ignored", wname, location.filename, location.lineno);
+                                   "Well {0} is not connected to grid - "
+                                   "COMPSEGS will be ignored",
+                                   wname, location.filename, location.lineno);
             OpmLog::warning(msg);
             return;
         }
 
-        if (well.handleCOMPSEGS(handlerContext.keyword, handlerContext.grid, handlerContext.parseContext, handlerContext.errors))
+        if (well.handleCOMPSEGS(handlerContext.keyword, handlerContext.grid,
+                                handlerContext.parseContext, handlerContext.errors))
         {
             handlerContext.state().wells.update( std::move(well) );
             handlerContext.record_well_structure_change();
@@ -1859,7 +1862,7 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
             handlerContext.welsegs_handled(wname);
         } else {
             const auto& location = handlerContext.keyword.location();
-            if (this->action_wgnames.has_well(wname)) {
+            if (handlerContext.action_wgnames().has_well(wname)) {
                 std::string msg = fmt::format(R"(Well: {} not yet defined for keyword {}.
 Expecting well to be defined with WELSPECS in ACTIONX before actual use.
 File {} line {}.)", wname, location.keyword, location.filename, location.lineno);
