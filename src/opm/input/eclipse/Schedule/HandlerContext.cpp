@@ -77,6 +77,11 @@ ScheduleState& HandlerContext::state()
     return schedule_.snapshots[currentStep];
 }
 
+const ScheduleStatic& HandlerContext::static_schedule() const
+{
+    return schedule_.m_static;
+}
+
 double HandlerContext::getWellPI(const std::string& well_name) const
 {
     if (!target_wellpi) {

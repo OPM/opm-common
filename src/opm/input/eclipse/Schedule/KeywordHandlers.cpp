@@ -398,7 +398,7 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
     }
 
     void Schedule::handleDRSDT(HandlerContext& handlerContext) {
-        std::size_t numPvtRegions = this->m_static.m_runspec.tabdims().getNumPVTTables();
+        const std::size_t numPvtRegions = handlerContext.static_schedule().m_runspec.tabdims().getNumPVTTables();
         std::vector<double> maximums(numPvtRegions);
         std::vector<std::string> options(numPvtRegions);
         for (const auto& record : handlerContext.keyword) {
@@ -412,7 +412,7 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
     }
 
     void Schedule::handleDRSDTCON(HandlerContext& handlerContext) {
-        std::size_t numPvtRegions = this->m_static.m_runspec.tabdims().getNumPVTTables();
+        const std::size_t numPvtRegions = handlerContext.static_schedule().m_runspec.tabdims().getNumPVTTables();
         std::vector<double> maximums(numPvtRegions);
         std::vector<std::string> options(numPvtRegions);
         for (const auto& record : handlerContext.keyword) {
@@ -426,7 +426,7 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
     }
 
     void Schedule::handleDRSDTR(HandlerContext& handlerContext) {
-        std::size_t numPvtRegions = this->m_static.m_runspec.tabdims().getNumPVTTables();
+        const std::size_t numPvtRegions = handlerContext.static_schedule().m_runspec.tabdims().getNumPVTTables();
         std::vector<double> maximums(numPvtRegions);
         std::vector<std::string> options(numPvtRegions);
         std::size_t pvtRegionIdx = 0;
@@ -442,7 +442,7 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
     }
 
     void Schedule::handleDRVDT(HandlerContext& handlerContext) {
-        std::size_t numPvtRegions = this->m_static.m_runspec.tabdims().getNumPVTTables();
+        const std::size_t numPvtRegions = handlerContext.static_schedule().m_runspec.tabdims().getNumPVTTables();
         std::vector<double> maximums(numPvtRegions);
         for (const auto& record : handlerContext.keyword) {
             const auto& max = record.getItem<ParserKeywords::DRVDTR::DRVDT_MAX>().getSIDouble(0);
@@ -453,7 +453,7 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
     }
 
     void Schedule::handleDRVDTR(HandlerContext& handlerContext) {
-        std::size_t numPvtRegions = this->m_static.m_runspec.tabdims().getNumPVTTables();
+        std::size_t numPvtRegions = handlerContext.static_schedule().m_runspec.tabdims().getNumPVTTables();
         std::size_t pvtRegionIdx = 0;
         std::vector<double> maximums(numPvtRegions);
         for (const auto& record : handlerContext.keyword) {
@@ -648,7 +648,7 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
                     // FLD overrides item 8 (respond_to_parent i.e if FLD the group is available for higher up groups)
                     const bool availableForGroupControl { (respond_to_parent || controlMode == Group::ProductionCMode::FLD) && !is_field } ;
                     auto new_group = handlerContext.state().groups.get(group_name);
-                    Group::GroupProductionProperties production(this->m_static.m_unit_system, group_name);
+                    Group::GroupProductionProperties production(handlerContext.static_schedule().m_unit_system, group_name);
                     production.cmode = controlMode;
                     production.oil_target = oil_target;
                     production.gas_target = gas_target;
@@ -721,7 +721,8 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
             std::string procedure = record.getItem("MAX_PROC").getTrimmedString(0);
             auto udqconfig = handlerContext.state().udq.get().params().undefinedValue();
 
-            new_gconsale.add(groupName, sales_target, max_rate, min_rate, procedure, udqconfig, this->m_static.m_unit_system);
+            new_gconsale.add(groupName, sales_target, max_rate, min_rate, procedure,
+                             udqconfig, handlerContext.static_schedule().m_unit_system);
 
             auto new_group = handlerContext.state().groups.get( groupName );
             Group::GroupInjectionProperties injection{groupName};
@@ -746,7 +747,8 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
 
             auto udqconfig = handlerContext.state().udq.get().params().undefinedValue();
 
-            new_gconsump.add(groupName, consumption_rate, import_rate, network_node_name, udqconfig, this->m_static.m_unit_system);
+            new_gconsump.add(groupName, consumption_rate, import_rate, network_node_name,
+                             udqconfig, handlerContext.static_schedule().m_unit_system);
         }
         handlerContext.state().gconsump.update( std::move(new_gconsump) );
     }
@@ -1294,13 +1296,16 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
     }
 
     void Schedule::handleVFPINJ(HandlerContext& handlerContext) {
-        auto table = VFPInjTable(handlerContext.keyword, this->m_static.m_unit_system);
+        auto table = VFPInjTable(handlerContext.keyword,
+                                 handlerContext.static_schedule().m_unit_system);
         handlerContext.state().events().addEvent( ScheduleEvents::VFPINJ_UPDATE );
         handlerContext.state().vfpinj.update( std::move(table) );
     }
 
     void Schedule::handleVFPPROD(HandlerContext& handlerContext) {
-        auto table = VFPProdTable(handlerContext.keyword, this->m_static.gaslift_opt_active, this->m_static.m_unit_system);
+        auto table = VFPProdTable(handlerContext.keyword,
+                                  handlerContext.static_schedule().gaslift_opt_active,
+                                  handlerContext.static_schedule().m_unit_system);
         handlerContext.state().events().addEvent( ScheduleEvents::VFPPROD_UPDATE );
         handlerContext.state().vfpprod.update( std::move(table) );
     }
@@ -1344,7 +1349,7 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
 
                 properties->handleWCONHIST(alq_type,
                                            default_bhp,
-                                           this->m_static.m_unit_system, record);
+                                           handlerContext.static_schedule().m_unit_system, record);
 
                 if (switching_from_injector) {
                     if (properties->bhp_hist_limit_defaulted) {
@@ -1431,7 +1436,7 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
                 }
 
                 properties->handleWCONPROD(alq_type, default_bhp_target,
-                                           this->m_static.m_unit_system,
+                                           handlerContext.static_schedule().m_unit_system,
                                            well_name, record);
 
                 if (switching_from_injector) {
@@ -1489,14 +1494,15 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
                 auto previousInjectorType = injection->injectorType;
 
                 double default_bhp_limit;
+                const auto& usys = handlerContext.static_schedule().m_unit_system;
                 if (handlerContext.state().bhp_defaults.get().inj_limit) {
-                    default_bhp_limit = this->m_static.m_unit_system.from_si(UnitSystem::measure::pressure,
-                                                                            *handlerContext.state().bhp_defaults.get().inj_limit);
+                    default_bhp_limit = usys.from_si(UnitSystem::measure::pressure,
+                                                     *handlerContext.state().bhp_defaults.get().inj_limit);
                 } else {
                     default_bhp_limit = UnitSystem::newMETRIC().to_si(UnitSystem::measure::pressure,
                                                                       ParserKeywords::WCONINJE::BHP::defaultValue.get<double>());
-                    default_bhp_limit = this->m_static.m_unit_system.from_si(UnitSystem::measure::pressure,
-                                                                             default_bhp_limit);
+                    default_bhp_limit = usys.from_si(UnitSystem::measure::pressure,
+                                                     default_bhp_limit);
                 }
 
                 injection->handleWCONINJE(record, default_bhp_limit,
@@ -1992,7 +1998,7 @@ Well{0} entered with 'FIELD' parent group:
       rates will be wrong.
     */
     void Schedule::handleWELTARG(HandlerContext& handlerContext) {
-        const double SiFactorP = this->m_static.m_unit_system.parse("Pressure").getSIScaling();
+        const double SiFactorP = handlerContext.static_schedule().m_unit_system.parse("Pressure").getSIScaling();
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
             const auto well_names = this->wellNames(wellNamePattern, handlerContext,
