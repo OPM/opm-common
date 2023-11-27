@@ -77,7 +77,6 @@
 #include <opm/input/eclipse/Parser/ErrorGuard.hpp>
 #include <opm/input/eclipse/Parser/ParseContext.hpp>
 
-#include <opm/input/eclipse/Parser/ParserKeywords/C.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/D.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/E.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/F.hpp>
@@ -94,6 +93,7 @@
 #include "MSW/MSWKeywordHandlers.hpp"
 #include "Network/NetworkKeywordHandlers.hpp"
 #include "UDQ/UDQKeywordHandlers.hpp"
+#include "Well/WellCompletionKeywordHandlers.hpp"
 #include "Well/injection.hpp"
 
 #include <algorithm>
@@ -103,7 +103,6 @@
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
-#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -170,53 +169,6 @@ namespace {
         }
     }
 
-    void handleCOMPDAT(HandlerContext& handlerContext)
-    {
-        std::unordered_set<std::string> wells;
-        for (const auto& record : handlerContext.keyword) {
-            const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
-            auto wellnames = handlerContext.wellNames(wellNamePattern);
-
-            for (const auto& name : wellnames) {
-                auto well2 = handlerContext.state().wells.get(name);
-                auto connections = std::shared_ptr<WellConnections>( new WellConnections( well2.getConnections()));
-                connections->loadCOMPDAT(record, handlerContext.grid, name, handlerContext.keyword.location());
-
-                if (well2.updateConnections(connections, handlerContext.grid)) {
-                    auto wdfac = std::make_shared<WDFAC>(well2.getWDFAC());
-                    wdfac->updateWDFACType(*connections);
-                    well2.updateWDFAC(std::move(wdfac));
-                    handlerContext.state().wells.update( well2 );
-                    wells.insert( name );
-                }
-
-                if (connections->empty() && well2.getConnections().empty()) {
-                    const auto& location = handlerContext.keyword.location();
-                    auto msg = fmt::format("Problem with COMPDAT/{}\n"
-                                           "In {} line {}\n"
-                                           "Well {} is not connected to grid - will remain SHUT", name, location.filename, location.lineno, name);
-                    OpmLog::warning(msg);
-                }
-                handlerContext.state().wellgroup_events().addEvent( name, ScheduleEvents::COMPLETION_CHANGE);
-            }
-        }
-        handlerContext.state().events().addEvent(ScheduleEvents::COMPLETION_CHANGE);
-
-        // In the case the wells reference depth has been defaulted in the
-        // WELSPECS keyword we need to force a calculation of the wells
-        // reference depth exactly when the COMPDAT keyword has been completely
-        // processed.
-        for (const auto& wname : wells) {
-            auto& well = handlerContext.state().wells.get( wname );
-            well.updateRefDepth();
-            handlerContext.state().wells.update( std::move(well));
-        }
-
-        if (! wells.empty()) {
-            handlerContext.record_well_structure_change();
-        }
-    }
-
     void handleWELTRAJ(HandlerContext& handlerContext)
     {
         for (const auto& record : handlerContext.keyword) {
@@ -240,100 +192,6 @@ namespace {
             }
         }
         handlerContext.state().events().addEvent(ScheduleEvents::COMPLETION_CHANGE);
-    }
-
-    void handleCOMPTRAJ(HandlerContext& handlerContext)
-    {
-        // Keyword WELTRAJ must be read first
-        std::unordered_set<std::string> wells;
-        external::cvf::ref<external::cvf::BoundingBoxTree> cellSearchTree = nullptr;
-        for (const auto& record : handlerContext.keyword) {
-            const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
-            const auto wellnames = handlerContext.wellNames(wellNamePattern, false);
-
-            for (const auto& name : wellnames) {
-                auto well2 = handlerContext.state().wells.get(name);
-                auto connections = std::make_shared<WellConnections>(WellConnections(well2.getConnections()));
-                // cellsearchTree is calculated only once and is used to calculated cell intersections of the perforations specified in COMPTRAJ
-                connections->loadCOMPTRAJ(record, handlerContext.grid, name, handlerContext.keyword.location(), cellSearchTree);
-                // In the case that defaults are used in WELSPECS for headI/J the headI/J are calculated based on the well trajectory data
-                well2.updateHead(connections->getHeadI(), connections->getHeadJ());
-                if (well2.updateConnections(connections, handlerContext.grid)) {
-                    handlerContext.state().wells.update( well2 );
-                    wells.insert( name );
-                }
-
-                if (connections->empty() && well2.getConnections().empty()) {
-                    const auto& location = handlerContext.keyword.location();
-                    auto msg = fmt::format("Problem with COMPTRAJ/{}\n"
-                                           "In {} line {}\n"
-                                           "Well {} is not connected to grid - will remain SHUT", name, location.filename, location.lineno, name);
-                    OpmLog::warning(msg);
-                }
-                handlerContext.state().wellgroup_events().addEvent( name, ScheduleEvents::COMPLETION_CHANGE);
-            }
-        }
-        handlerContext.state().events().addEvent(ScheduleEvents::COMPLETION_CHANGE);
-
-        // In the case the wells reference depth has been defaulted in the
-        // WELSPECS keyword we need to force a calculation of the wells
-        // reference depth exactly when the WELCOML keyword has been completely
-        // processed.
-        for (const auto& wname : wells) {
-            auto& well = handlerContext.state().wells.get( wname );
-            well.updateRefDepth();
-            handlerContext.state().wells.update( std::move(well));
-        }
-
-        if (! wells.empty()) {
-            handlerContext.record_well_structure_change();
-        }
-    }
-
-    void handleCOMPLUMP(HandlerContext& handlerContext)
-    {
-        for (const auto& record : handlerContext.keyword) {
-            const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
-            const auto well_names = handlerContext.wellNames(wellNamePattern);
-
-            for (const auto& wname : well_names) {
-                auto well = handlerContext.state().wells.get(wname);
-                if (well.handleCOMPLUMP(record)) {
-                    handlerContext.state().wells.update( std::move(well) );
-
-                    handlerContext.record_well_structure_change();
-                }
-            }
-        }
-    }
-
-    /*
-      The COMPORD keyword is handled together with the WELSPECS keyword in the
-      handleWELSPECS function.
-    */
-    void handleCOMPORD(HandlerContext&)
-    {
-    }
-
-    void handleCSKIN(HandlerContext& handlerContext)
-    {
-        // Get CSKIN keyword info and current step
-        const auto& keyword = handlerContext.keyword;
-
-        // Loop over records in CSKIN
-        for (const auto& record: keyword) {
-            // Get well names
-            const auto& wellNamePattern = record.getItem( "WELL" ).getTrimmedString(0);
-            const auto well_names = handlerContext.wellNames(wellNamePattern, false);
-
-            // Loop over well(s) in record
-            for (const auto& wname : well_names) {
-                // Get well information, modify connection skin factor, and update well
-                auto well = handlerContext.state().wells.get(wname);
-                well.handleCSKINConnections(record);
-                handlerContext.state().wells.update( std::move(well) );
-            }
-        }
     }
 
     void handleDRSDT(HandlerContext& handlerContext)
@@ -2104,11 +1962,6 @@ KeywordHandlers::KeywordHandlers()
         { "AQUFLUX",  &handleAQUFLUX    },
         { "BCPROP",   &handleBCProp     },
         { "BOX",      &handleGEOKeyword },
-        { "COMPDAT" , &handleCOMPDAT    },
-        { "COMPLUMP", &handleCOMPLUMP   },
-        { "COMPORD" , &handleCOMPORD    },
-        { "COMPTRAJ", &handleCOMPTRAJ   },
-        { "CSKIN",    &handleCSKIN      },
         { "DRSDT"   , &handleDRSDT      },
         { "DRSDTCON", &handleDRSDTCON   },
         { "DRSDTR"  , &handleDRSDTR     },
@@ -2193,7 +2046,8 @@ KeywordHandlers::KeywordHandlers()
                                        getGuideRateHandlers,
                                        getMSWHandlers,
                                        getNetworkHandlers,
-                                       getUDQHandlers}) {
+                                       getUDQHandlers,
+                                       getWellCompletionHandlers}) {
         for (const auto& [keyword, handler] : std::invoke(handlerFactory)) {
             handler_functions.emplace(keyword, handler);
         }

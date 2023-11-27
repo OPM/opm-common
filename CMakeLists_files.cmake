@@ -222,6 +222,7 @@ if(ENABLE_ECL_INPUT)
     src/opm/input/eclipse/Schedule/Well/PAvgCalculatorCollection.cpp
     src/opm/input/eclipse/Schedule/Well/PAvgDynamicSourceData.cpp
     src/opm/input/eclipse/Schedule/Well/Well.cpp
+    src/opm/input/eclipse/Schedule/Well/WellCompletionKeywordHandlers.cpp
     src/opm/input/eclipse/Schedule/Well/WellConnections.cpp
     src/opm/input/eclipse/Schedule/Well/WellMatcher.cpp
     src/opm/input/eclipse/Schedule/Well/WellEnums.cpp
