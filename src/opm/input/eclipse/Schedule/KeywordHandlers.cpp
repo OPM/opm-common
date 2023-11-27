@@ -270,7 +270,7 @@ namespace {
     void Schedule::handleCOMPTRAJ(HandlerContext& handlerContext)  {
         // Keyword WELTRAJ must be read first
         std::unordered_set<std::string> wells;
-        external::cvf::ref<external::cvf::BoundingBoxTree> cellSearchTree = nullptr; 
+        external::cvf::ref<external::cvf::BoundingBoxTree> cellSearchTree = nullptr;
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
             const auto wellnames = handlerContext.wellNames(wellNamePattern, false);
@@ -278,7 +278,7 @@ namespace {
             for (const auto& name : wellnames) {
                 auto well2 = handlerContext.state().wells.get(name);
                 auto connections = std::make_shared<WellConnections>(WellConnections(well2.getConnections()));
-                // cellsearchTree is calculated only once and is used to calculated cell intersections of the perforations specified in COMPTRAJ 
+                // cellsearchTree is calculated only once and is used to calculated cell intersections of the perforations specified in COMPTRAJ
                 connections->loadCOMPTRAJ(record, handlerContext.grid, name, handlerContext.keyword.location(), cellSearchTree);
                 // In the case that defaults are used in WELSPECS for headI/J the headI/J are calculated based on the well trajectory data
                 well2.updateHead(connections->getHeadI(), connections->getHeadJ());
@@ -876,11 +876,11 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
              const auto& pressure_item = record.getItem<ParserKeywords::GRUPNET::TERMINAL_PRESSURE>();
              const int vfp_table = record.getItem<ParserKeywords::GRUPNET::VFP_TABLE>().get<int>(0);
              // It is assumed here that item 6 (ADD_GAS_LIFT_GAS) has the two options NO and FLO. THe option ALQ is not supported.
-             // For standard networks the summation of ALQ values are weighted with efficiency factors. 
-             // Note that, currently, extended networks uses always efficiency factors (this is the default set by WEFAC item 3 (YES), the value NO is not supported.) 
+             // For standard networks the summation of ALQ values are weighted with efficiency factors.
+             // Note that, currently, extended networks uses always efficiency factors (this is the default set by WEFAC item 3 (YES), the value NO is not supported.)
              const std::string& add_gas_lift_gas_string = record.getItem<ParserKeywords::GRUPNET::ADD_GAS_LIFT_GAS>().get<std::string>(0);
              bool add_gas_lift_gas = false;
-             if (add_gas_lift_gas_string == "FLO") 
+             if (add_gas_lift_gas_string == "FLO")
                  add_gas_lift_gas = true;
 
              for (const auto& group_name : group_names) {
@@ -1138,7 +1138,7 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
             const auto& deck_item = rec.getItem(item_name);
             return deck_item.defaultApplied(0) ? previous_value : rec.getItem(item_name).get< int >(0);
         };
-        
+
         auto nondefault_or_previous_sidouble = [](const Opm::DeckRecord& rec, const std::string& item_name, double previous_value) {
             const auto& deck_item = rec.getItem(item_name);
             return deck_item.defaultApplied(0) ? previous_value : rec.getItem(item_name).getSIDouble(0);
@@ -1147,12 +1147,12 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
         // \Note No TSTINIT value should not be used unless explicitly non-defaulted, hence removing value by default
         // \Note (exception is the first time step, which is handled by the Tuning constructor)
         tuning.TSINIT = std::nullopt;
-        
+
         if (numrecords > 0) {
             const auto& record1 = handlerContext.keyword.getRecord(0);
 
             // \Note A value indicates TSINIT was set in this record
-            if (const auto& deck_item = record1.getItem("TSINIT"); !deck_item.defaultApplied(0)) 
+            if (const auto& deck_item = record1.getItem("TSINIT"); !deck_item.defaultApplied(0))
                 tuning.TSINIT = std::optional<double>{ record1.getItem("TSINIT").getSIDouble(0) };
 
             tuning.TSMAXZ = nondefault_or_previous_sidouble(record1, "TSMAXZ", tuning.TSMAXZ);
@@ -1163,7 +1163,7 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
             tuning.TSFCNV = nondefault_or_previous_double(record1, "TSFCNV", tuning.TSFCNV);
             tuning.TFDIFF = nondefault_or_previous_double(record1, "TFDIFF", tuning.TFDIFF);
             tuning.THRUPT = nondefault_or_previous_double(record1, "THRUPT", tuning.THRUPT);
-            
+
             const auto& TMAXWCdeckItem = record1.getItem("TMAXWC");
             if (TMAXWCdeckItem.hasValue(0)) {
                 tuning.TMAXWC_has_value = true;
@@ -1182,7 +1182,7 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
             tuning.XXXCNV = nondefault_or_previous_double(record2, "XXXCNV", tuning.XXXCNV);
 
             tuning.XXXMBE = nondefault_or_previous_double(record2, "XXXMBE", tuning.XXXMBE);
-            
+
             tuning.XXXLCV = nondefault_or_previous_double(record2, "XXXLCV", tuning.XXXLCV);
             tuning.XXXWFL = nondefault_or_previous_double(record2, "XXXWFL", tuning.XXXWFL);
             tuning.TRGFIP = nondefault_or_previous_double(record2, "TRGFIP", tuning.TRGFIP);
@@ -1215,7 +1215,7 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
                 tuning.XXXDPR_has_value = true;
                 tuning.XXXDPR = nondefault_or_previous_sidouble(record3, "XXXDPR", tuning.XXXDPR);
             }
-        } 
+        }
 
         handlerContext.state().update_tuning( std::move( tuning ));
         handlerContext.state().events().addEvent(ScheduleEvents::TUNING_CHANGE);
