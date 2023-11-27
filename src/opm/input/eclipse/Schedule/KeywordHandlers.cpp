@@ -17,6 +17,8 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "KeywordHandlers.hpp"
+
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 
 #include <opm/common/OpmLog/OpmLog.hpp>
@@ -2981,147 +2983,160 @@ Well{0} entered with 'FIELD' parent group:
     }
 }
 
-    bool Schedule::handleNormalKeyword(HandlerContext& handlerContext) {
-        using handler_function = std::function<void(HandlerContext&)>;
-        static const std::unordered_map<std::string,handler_function> handler_functions = {
-            { "AQUCT",    &handleAQUCT      },
-            { "AQUFETP",  &handleAQUFETP    },
-            { "AQUFLUX",  &handleAQUFLUX    },
-            { "BCPROP",   &handleBCProp     },
-            { "BOX",      &handleGEOKeyword },
-            { "BRANPROP", &handleBRANPROP   },
-            { "COMPDAT" , &handleCOMPDAT    },
-            { "COMPLUMP", &handleCOMPLUMP   },
-            { "COMPORD" , &handleCOMPORD    },
-            { "COMPSEGS", &handleCOMPSEGS   },
-            { "COMPTRAJ", &handleCOMPTRAJ   },
-            { "CSKIN",    &handleCSKIN      },
-            { "DRSDT"   , &handleDRSDT      },
-            { "DRSDTCON", &handleDRSDTCON   },
-            { "DRSDTR"  , &handleDRSDTR     },
-            { "DRVDT"   , &handleDRVDT      },
-            { "DRVDTR"  , &handleDRVDTR     },
-            { "ENDBOX"  , &handleGEOKeyword },
-            { "EXIT",     &handleEXIT       },
-            { "FBHPDEF",  &handleFBHPDEF    },
-            { "GCONINJE", &handleGCONINJE   },
-            { "GCONPROD", &handleGCONPROD   },
-            { "GCONSALE", &handleGCONSALE   },
-            { "GCONSUMP", &handleGCONSUMP   },
-            { "GECON",    &handleGECON      },
-            { "GEFAC"   , &handleGEFAC      },
-            { "GLIFTOPT", &handleGLIFTOPT   },
-            { "GPMAINT" , &handleGPMAINT    },
-            { "GRUPNET" , &handleGRUPNET    },
-            { "GRUPTREE", &handleGRUPTREE   },
-            { "GUIDERAT", &handleGUIDERAT   },
-            { "LIFTOPT" , &handleLIFTOPT    },
-            { "LINCOM"  , &handleLINCOM     },
-            { "MESSAGES", &handleMESSAGES   },
-            { "MULTFLT" , &handleGEOKeyword },
-            { "MULTPV"  , &handleMXUNSUPP   },
-            { "MULTR"   , &handleMXUNSUPP   },
-            { "MULTR-"  , &handleMXUNSUPP   },
-            { "MULTREGT", &handleMXUNSUPP   },
-            { "MULTSIG" , &handleMXUNSUPP   },
-            { "MULTSIGV", &handleMXUNSUPP   },
-            { "MULTTHT" , &handleMXUNSUPP   },
-            { "MULTTHT-", &handleMXUNSUPP   },
-            { "MULTX"   , &handleGEOKeyword },
-            { "MULTX-"  , &handleGEOKeyword },
-            { "MULTY"   , &handleGEOKeyword },
-            { "MULTY-"  , &handleGEOKeyword },
-            { "MULTZ"   , &handleGEOKeyword },
-            { "MULTZ-"  , &handleGEOKeyword },
-            { "NETBALAN", &handleNETBALAN   },
-            { "NEXT",     &handleNEXTSTEP   },
-            { "NEXTSTEP", &handleNEXTSTEP   },
-            { "NODEPROP", &handleNODEPROP   },
-            { "NUPCOL"  , &handleNUPCOL     },
-            { "PYACTION", &handlePYACTION   },
-            { "RPTONLY" , &handleRPTONLY    },
-            { "RPTONLYO", &handleRPTONLYO   },
-            { "RPTRST"  , &handleRPTRST     },
-            { "RPTSCHED", &handleRPTSCHED   },
-            { "SAVE"    , &handleSAVE       },
-            { "SUMTHIN" , &handleSUMTHIN    },
-            { "TUNING"  , &handleTUNING     },
-            { "UDQ"     , &handleUDQ        },
-            { "UDT"     , &handleUDT        },
-            { "VAPPARS" , &handleVAPPARS    },
-            { "VFPINJ"  , &handleVFPINJ     },
-            { "VFPPROD" , &handleVFPPROD    },
-            { "WCONHIST", &handleWCONHIST   },
-            { "WCONINJE", &handleWCONINJE   },
-            { "WCONINJH", &handleWCONINJH   },
-            { "WCONPROD", &handleWCONPROD   },
-            { "WECON"   , &handleWECON      },
-            { "WDFAC"  ,  &handleWDFAC      },
-            { "WDFACCOR", &handleWDFACCOR   },
-            { "WEFAC"   , &handleWEFAC      },
-            { "WELOPEN" , &handleWELOPEN    },
-            { "WELPI"   , &handleWELPI      },
-            { "WELSEGS" , &handleWELSEGS    },
-            { "WELSPECS", &handleWELSPECS   },
-            { "WELTARG" , &handleWELTARG    },
-            { "WELTRAJ" , &handleWELTRAJ    },
-            { "WFOAM"   , &handleWFOAM      },
-            { "WGRUPCON", &handleWGRUPCON   },
-            { "WHISTCTL", &handleWHISTCTL   },
-            { "WINJMULT", &handleWINJMULT   },
-            { "WINJTEMP", &handleWINJTEMP   },
-            { "WLIFTOPT", &handleWLIFTOPT   },
-            { "WLIST"   , &handleWLIST      },
-            { "WMICP"   , &handleWMICP      },
-            { "WPAVE"   , &handleWPAVE      },
-            { "WPAVEDEP", &handleWPAVEDEP   },
-            { "WVFPDP",   &handleWVFPDP     },
-            { "WVFPEXP" , &handleWVFPEXP    },
-            { "WWPAVE"  , &handleWWPAVE     },
-            { "WPIMULT" , &handleWPIMULT    },
-            { "WINJDAM" , &handleWINJDAM    },
-            { "WINJFCNC", &handleWINJFCNC   },
-            { "WINJCLN",  &handleWINJCLN    },
-            { "WPMITAB" , &handleWPMITAB    },
-            { "WPOLYMER", &handleWPOLYMER   },
-            { "WRFT"    , &handleWRFT       },
-            { "WRFTPLT" , &handleWRFTPLT    },
-            { "WSALT"   , &handleWSALT      },
-            { "WSEGITER", &handleWSEGITER   },
-            { "WSEGSICD", &handleWSEGSICD   },
-            { "WSEGAICD", &handleWSEGAICD   },
-            { "WSEGVALV", &handleWSEGVALV   },
-            { "WSKPTAB" , &handleWSKPTAB    },
-            { "WSOLVENT", &handleWSOLVENT   },
-            { "WTEMP"   , &handleWTEMP      },
-            { "WTEST"   , &handleWTEST      },
-            { "WTMULT"  , &handleWTMULT     },
-            { "WTRACER" , &handleWTRACER    },
-        };
+const KeywordHandlers& KeywordHandlers::getInstance()
+{
+    static KeywordHandlers instance{};
+    return instance;
+}
 
-        auto function_iterator = handler_functions.find(handlerContext.keyword.name());
-        if (function_iterator == handler_functions.end()) {
-            return false;
-        }
+KeywordHandlers::KeywordHandlers()
+{
+    handler_functions = {
+        { "AQUCT",    &handleAQUCT      },
+        { "AQUFETP",  &handleAQUFETP    },
+        { "AQUFLUX",  &handleAQUFLUX    },
+        { "BCPROP",   &handleBCProp     },
+        { "BOX",      &handleGEOKeyword },
+        { "BRANPROP", &handleBRANPROP   },
+        { "COMPDAT" , &handleCOMPDAT    },
+        { "COMPLUMP", &handleCOMPLUMP   },
+        { "COMPORD" , &handleCOMPORD    },
+        { "COMPSEGS", &handleCOMPSEGS   },
+        { "COMPTRAJ", &handleCOMPTRAJ   },
+        { "CSKIN",    &handleCSKIN      },
+        { "DRSDT"   , &handleDRSDT      },
+        { "DRSDTCON", &handleDRSDTCON   },
+        { "DRSDTR"  , &handleDRSDTR     },
+        { "DRVDT"   , &handleDRVDT      },
+        { "DRVDTR"  , &handleDRVDTR     },
+        { "ENDBOX"  , &handleGEOKeyword },
+        { "EXIT",     &handleEXIT       },
+        { "FBHPDEF",  &handleFBHPDEF    },
+        { "GCONINJE", &handleGCONINJE   },
+        { "GCONPROD", &handleGCONPROD   },
+        { "GCONSALE", &handleGCONSALE   },
+        { "GCONSUMP", &handleGCONSUMP   },
+        { "GECON",    &handleGECON      },
+        { "GEFAC"   , &handleGEFAC      },
+        { "GLIFTOPT", &handleGLIFTOPT   },
+        { "GPMAINT" , &handleGPMAINT    },
+        { "GRUPNET" , &handleGRUPNET    },
+        { "GRUPTREE", &handleGRUPTREE   },
+        { "GUIDERAT", &handleGUIDERAT   },
+        { "LIFTOPT" , &handleLIFTOPT    },
+        { "LINCOM"  , &handleLINCOM     },
+        { "MESSAGES", &handleMESSAGES   },
+        { "MULTFLT" , &handleGEOKeyword },
+        { "MULTPV"  , &handleMXUNSUPP   },
+        { "MULTR"   , &handleMXUNSUPP   },
+        { "MULTR-"  , &handleMXUNSUPP   },
+        { "MULTREGT", &handleMXUNSUPP   },
+        { "MULTSIG" , &handleMXUNSUPP   },
+        { "MULTSIGV", &handleMXUNSUPP   },
+        { "MULTTHT" , &handleMXUNSUPP   },
+        { "MULTTHT-", &handleMXUNSUPP   },
+        { "MULTX"   , &handleGEOKeyword },
+        { "MULTX-"  , &handleGEOKeyword },
+        { "MULTY"   , &handleGEOKeyword },
+        { "MULTY-"  , &handleGEOKeyword },
+        { "MULTZ"   , &handleGEOKeyword },
+        { "MULTZ-"  , &handleGEOKeyword },
+        { "NETBALAN", &handleNETBALAN   },
+        { "NEXT",     &handleNEXTSTEP   },
+        { "NEXTSTEP", &handleNEXTSTEP   },
+        { "NODEPROP", &handleNODEPROP   },
+        { "NUPCOL"  , &handleNUPCOL     },
+        { "PYACTION", &handlePYACTION   },
+        { "RPTONLY" , &handleRPTONLY    },
+        { "RPTONLYO", &handleRPTONLYO   },
+        { "RPTRST"  , &handleRPTRST     },
+        { "RPTSCHED", &handleRPTSCHED   },
+        { "SAVE"    , &handleSAVE       },
+        { "SUMTHIN" , &handleSUMTHIN    },
+        { "TUNING"  , &handleTUNING     },
+        { "UDQ"     , &handleUDQ        },
+        { "UDT"     , &handleUDT        },
+        { "VAPPARS" , &handleVAPPARS    },
+        { "VFPINJ"  , &handleVFPINJ     },
+        { "VFPPROD" , &handleVFPPROD    },
+        { "WCONHIST", &handleWCONHIST   },
+        { "WCONINJE", &handleWCONINJE   },
+        { "WCONINJH", &handleWCONINJH   },
+        { "WCONPROD", &handleWCONPROD   },
+        { "WDFAC"  ,  &handleWDFAC      },
+        { "WDFACCOR", &handleWDFACCOR   },
+        { "WECON"   , &handleWECON      },
+        { "WEFAC"   , &handleWEFAC      },
+        { "WELOPEN" , &handleWELOPEN    },
+        { "WELPI"   , &handleWELPI      },
+        { "WELSEGS" , &handleWELSEGS    },
+        { "WELSPECS", &handleWELSPECS   },
+        { "WELTARG" , &handleWELTARG    },
+        { "WELTRAJ" , &handleWELTRAJ    },
+        { "WFOAM"   , &handleWFOAM      },
+        { "WGRUPCON", &handleWGRUPCON   },
+        { "WHISTCTL", &handleWHISTCTL   },
+        { "WINJMULT", &handleWINJMULT   },
+        { "WINJTEMP", &handleWINJTEMP   },
+        { "WLIFTOPT", &handleWLIFTOPT   },
+        { "WLIST"   , &handleWLIST      },
+        { "WMICP"   , &handleWMICP      },
+        { "WPAVE"   , &handleWPAVE      },
+        { "WPAVEDEP", &handleWPAVEDEP   },
+        { "WVFPDP",   &handleWVFPDP     },
+        { "WVFPEXP" , &handleWVFPEXP    },
+        { "WWPAVE"  , &handleWWPAVE     },
+        { "WPIMULT" , &handleWPIMULT    },
+        { "WINJDAM" , &handleWINJDAM    },
+        { "WINJFCNC", &handleWINJFCNC   },
+        { "WINJCLN",  &handleWINJCLN    },
+        { "WPMITAB" , &handleWPMITAB    },
+        { "WPOLYMER", &handleWPOLYMER   },
+        { "WRFT"    , &handleWRFT       },
+        { "WRFTPLT" , &handleWRFTPLT    },
+        { "WSALT"   , &handleWSALT      },
+        { "WSEGITER", &handleWSEGITER   },
+        { "WSEGSICD", &handleWSEGSICD   },
+        { "WSEGAICD", &handleWSEGAICD   },
+        { "WSEGVALV", &handleWSEGVALV   },
+        { "WSKPTAB" , &handleWSKPTAB    },
+        { "WSOLVENT", &handleWSOLVENT   },
+        { "WTEMP"   , &handleWTEMP      },
+        { "WTEST"   , &handleWTEST      },
+        { "WTMULT"  , &handleWTMULT     },
+        { "WTRACER" , &handleWTRACER    },
+    };
+}
 
-        try {
-            std::invoke(function_iterator->second, handlerContext);
-        } catch (const OpmInputError&) {
-            throw;
-        } catch (const std::logic_error& e) {
-            // Rethrow as OpmInputError to provide more context,
-            // but add "Internal error: " to the string, as that
-            // is what logic_error signifies.
-            const OpmInputError opm_error { std::string("Internal error: ") + e.what(), handlerContext.keyword.location() } ;
-            OpmLog::error(opm_error.what());
-            std::throw_with_nested(opm_error);
-        } catch (const std::exception& e) {
-            // Rethrow as OpmInputError to provide more context.
-            const OpmInputError opm_error { e, handlerContext.keyword.location() } ;
-            OpmLog::error(opm_error.what());
-            std::throw_with_nested(opm_error);
-        }
-
-        return true;
+bool KeywordHandlers::handleKeyword(HandlerContext& handlerContext) const
+{
+    auto function_iterator = handler_functions.find(handlerContext.keyword.name());
+    if (function_iterator == handler_functions.end()) {
+        return false;
     }
+
+    try {
+        std::invoke(function_iterator->second, handlerContext);
+    } catch (const OpmInputError&) {
+        throw;
+    } catch (const std::logic_error& e) {
+        // Rethrow as OpmInputError to provide more context,
+        // but add "Internal error: " to the string, as that
+        // is what logic_error signifies.
+        const OpmInputError opm_error {
+            std::string("Internal error: ") + e.what(),
+            handlerContext.keyword.location()
+        };
+        OpmLog::error(opm_error.what());
+        std::throw_with_nested(opm_error);
+    } catch (const std::exception& e) {
+        // Rethrow as OpmInputError to provide more context.
+        const OpmInputError opm_error { e, handlerContext.keyword.location() } ;
+        OpmLog::error(opm_error.what());
+        std::throw_with_nested(opm_error);
+    }
+
+    return true;
+}
+
 }

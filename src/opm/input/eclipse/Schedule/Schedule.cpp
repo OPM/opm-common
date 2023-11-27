@@ -92,6 +92,7 @@
 #include <opm/input/eclipse/Deck/DeckSection.hpp>
 
 #include "HandlerContext.hpp"
+#include "KeywordHandlers.hpp"
 #include "MSW/Compsegs.hpp"
 #include "MSW/WelSegsSet.hpp"
 #include "Well/injection.hpp"
@@ -381,7 +382,12 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const std::optional
                                         parseContext, errors, sim_update, target_wellpi,
                                         wpimult_global_factor, welsegs_wells, compsegs_wells};
 
-        handleNormalKeyword(handlerContext);
+        if (!KeywordHandlers::getInstance().handleKeyword(handlerContext)) {
+            OpmLog::warning(fmt::format("No handler registered for keyword {} "
+                                        "in file {} line {}",
+                            keyword.name(), keyword.location().filename,
+                            keyword.location().lineno));
+        }
     }
 
 namespace {

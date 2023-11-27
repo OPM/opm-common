@@ -577,23 +577,6 @@ namespace Opm
         bool isWList(std::size_t report_step, const std::string& pattern) const;
 
         SimulatorUpdate applyAction(std::size_t reportStep, const std::string& action_name, const std::vector<std::string>& matching_wells);
-
-        /**
-         * Handles a "normal" keyword. A normal keyword is one that can be handled by a function with the standard set of arguments (the ones that are passed to this function).
-         *
-         * Normal keywords are found in the file KeywordHandlers.cpp; to add a new keyword handler to the file, add its signature in the list below,
-         * add the implementation to KeywordHandlers.cpp, and add a pointer to the handler in the dispatch registry in the implementation of this method, found at the bottom of
-         * KeywordHandlers.cpp.
-         *
-         * For the benefit of automatic cross-checking of the lists, all of these are in alphabetical order.
-         *
-         * @param handlerContext context object containing the environment in which the handler was invoked
-         * @param parseContext context object containing the parsing environment
-         * @param errors the error handling object for the current parsing process
-         *
-         * @return `true` if the keyword was handled
-         */
-        bool handleNormalKeyword(HandlerContext& handlerContext);
     };
 }
 
