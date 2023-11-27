@@ -38,7 +38,6 @@
 #include <opm/input/eclipse/Schedule/Action/PyAction.hpp>
 #include <opm/input/eclipse/Schedule/Action/SimulatorUpdate.hpp>
 #include <opm/input/eclipse/Schedule/Events.hpp>
-#include <opm/input/eclipse/Schedule/Group/GuideRateConfig.hpp>
 #include <opm/input/eclipse/Schedule/OilVaporizationProperties.hpp>
 #include <opm/input/eclipse/Schedule/RFTConfig.hpp>
 #include <opm/input/eclipse/Schedule/RPTConfig.hpp>
@@ -82,8 +81,6 @@
 #include <opm/input/eclipse/Parser/ParserKeywords/D.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/E.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/F.hpp>
-#include <opm/input/eclipse/Parser/ParserKeywords/G.hpp>
-#include <opm/input/eclipse/Parser/ParserKeywords/L.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/N.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/P.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/T.hpp>
@@ -92,6 +89,7 @@
 
 #include "GasLiftOptKeywordHandlers.hpp"
 #include "Group/GroupKeywordHandlers.hpp"
+#include "Group/GuideRateKeywordHandlers.hpp"
 #include "HandlerContext.hpp"
 #include "MSW/MSWKeywordHandlers.hpp"
 #include "Network/NetworkKeywordHandlers.hpp"
@@ -436,44 +434,6 @@ namespace {
             bhp_defaults.inj_limit = inj_limit.getSIDouble(0);
         }
         handlerContext.state().bhp_defaults.update(std::move(bhp_defaults));
-    }
-
-    void handleGUIDERAT(HandlerContext& handlerContext)
-    {
-        const auto& record = handlerContext.keyword.getRecord(0);
-
-        const double min_calc_delay = record.getItem<ParserKeywords::GUIDERAT::MIN_CALC_TIME>().getSIDouble(0);
-        const auto phase = GuideRateModel::TargetFromString(record.getItem<ParserKeywords::GUIDERAT::NOMINATED_PHASE>().getTrimmedString(0));
-        const double A = record.getItem<ParserKeywords::GUIDERAT::A>().get<double>(0);
-        const double B = record.getItem<ParserKeywords::GUIDERAT::B>().get<double>(0);
-        const double C = record.getItem<ParserKeywords::GUIDERAT::C>().get<double>(0);
-        const double D = record.getItem<ParserKeywords::GUIDERAT::D>().get<double>(0);
-        const double E = record.getItem<ParserKeywords::GUIDERAT::E>().get<double>(0);
-        const double F = record.getItem<ParserKeywords::GUIDERAT::F>().get<double>(0);
-        const bool allow_increase = DeckItem::to_bool( record.getItem<ParserKeywords::GUIDERAT::ALLOW_INCREASE>().getTrimmedString(0));
-        const double damping_factor = record.getItem<ParserKeywords::GUIDERAT::DAMPING_FACTOR>().get<double>(0);
-        const bool use_free_gas = DeckItem::to_bool( record.getItem<ParserKeywords::GUIDERAT::USE_FREE_GAS>().getTrimmedString(0));
-
-        const auto new_model = GuideRateModel(min_calc_delay, phase, A, B, C, D, E, F, allow_increase, damping_factor, use_free_gas);
-        auto new_config = handlerContext.state().guide_rate();
-        if (new_config.update_model(new_model))
-            handlerContext.state().guide_rate.update( std::move(new_config) );
-    }
-
-    void handleLINCOM(HandlerContext& handlerContext)
-    {
-        const auto& record = handlerContext.keyword.getRecord(0);
-        const auto alpha = record.getItem<ParserKeywords::LINCOM::ALPHA>().get<UDAValue>(0);
-        const auto beta  = record.getItem<ParserKeywords::LINCOM::BETA>().get<UDAValue>(0);
-        const auto gamma = record.getItem<ParserKeywords::LINCOM::GAMMA>().get<UDAValue>(0);
-
-        auto new_config = handlerContext.state().guide_rate();
-        auto new_model = new_config.model();
-
-        if (new_model.updateLINCOM(alpha, beta, gamma)) {
-            new_config.update_model(new_model);
-            handlerContext.state().guide_rate.update( std::move( new_config) );
-        }
     }
 
     void handleMESSAGES(HandlerContext& handlerContext)
@@ -1452,34 +1412,6 @@ Well{0} entered with 'FIELD' parent group:
         }
     }
 
-    void handleWGRUPCON(HandlerContext& handlerContext)
-    {
-        for (const auto& record : handlerContext.keyword) {
-            const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
-            const auto well_names = handlerContext.wellNames(wellNamePattern);
-
-            const bool availableForGroupControl = DeckItem::to_bool(record.getItem("GROUP_CONTROLLED").getTrimmedString(0));
-            const double guide_rate = record.getItem("GUIDE_RATE").get<double>(0);
-            const double scaling_factor = record.getItem("SCALING_FACTOR").get<double>(0);
-
-            for (const auto& well_name : well_names) {
-                auto phase = Well::GuideRateTarget::UNDEFINED;
-                if (!record.getItem("PHASE").defaultApplied(0)) {
-                    std::string guideRatePhase = record.getItem("PHASE").getTrimmedString(0);
-                    phase = WellGuideRateTargetFromString(guideRatePhase);
-                }
-
-                auto well = handlerContext.state().wells.get(well_name);
-                if (well.updateWellGuideRate(availableForGroupControl, guide_rate, phase, scaling_factor)) {
-                    auto new_config = handlerContext.state().guide_rate();
-                    new_config.update_well(well);
-                    handlerContext.state().guide_rate.update( std::move(new_config) );
-                    handlerContext.state().wells.update( std::move(well) );
-                }
-            }
-        }
-    }
-
     void handleWHISTCTL(HandlerContext& handlerContext)
     {
         const auto& record = handlerContext.keyword.getRecord(0);
@@ -2185,8 +2117,6 @@ KeywordHandlers::KeywordHandlers()
         { "ENDBOX"  , &handleGEOKeyword },
         { "EXIT",     &handleEXIT       },
         { "FBHPDEF",  &handleFBHPDEF    },
-        { "GUIDERAT", &handleGUIDERAT   },
-        { "LINCOM"  , &handleLINCOM     },
         { "MESSAGES", &handleMESSAGES   },
         { "MULTFLT" , &handleGEOKeyword },
         { "MULTPV"  , &handleMXUNSUPP   },
@@ -2231,7 +2161,6 @@ KeywordHandlers::KeywordHandlers()
         { "WELTARG" , &handleWELTARG    },
         { "WELTRAJ" , &handleWELTRAJ    },
         { "WFOAM"   , &handleWFOAM      },
-        { "WGRUPCON", &handleWGRUPCON   },
         { "WHISTCTL", &handleWHISTCTL   },
         { "WINJMULT", &handleWINJMULT   },
         { "WINJTEMP", &handleWINJTEMP   },
@@ -2261,6 +2190,7 @@ KeywordHandlers::KeywordHandlers()
 
     for (const auto& handlerFactory : {getGasLiftOptHandlers,
                                        getGroupHandlers,
+                                       getGuideRateHandlers,
                                        getMSWHandlers,
                                        getNetworkHandlers,
                                        getUDQHandlers}) {
