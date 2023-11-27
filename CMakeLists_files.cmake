@@ -265,6 +265,7 @@ if(ENABLE_ECL_INPUT)
     src/opm/input/eclipse/EclipseState/Tables/BrineDensityTable.cpp
     src/opm/input/eclipse/EclipseState/Tables/SolventDensityTable.cpp
     src/opm/input/eclipse/EclipseState/Tables/Tabdims.cpp
+    src/opm/input/eclipse/Schedule/UDQ/UDQKeywordHandlers.cpp
     src/opm/input/eclipse/Schedule/UDQ/UDQActive.cpp
     src/opm/input/eclipse/Schedule/UDQ/UDQAssign.cpp
     src/opm/input/eclipse/Schedule/UDQ/UDQASTNode.cpp
