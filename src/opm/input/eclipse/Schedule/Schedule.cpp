@@ -376,9 +376,11 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const std::optional
                                  WelSegsSet* welsegs_wells,
                                  std::set<std::string>* compsegs_wells)
     {
-        HandlerContext handlerContext { block, keyword, grid, currentStep, matching_wells, actionx_mode,
+        HandlerContext handlerContext { *this, block, keyword, grid, currentStep,
+                                        matching_wells, actionx_mode,
                                         parseContext, errors, sim_update, target_wellpi,
                                         wpimult_global_factor, welsegs_wells, compsegs_wells};
+
         /*
           The grid and fieldProps members create problems for reiterating the
           Schedule section. We therefor single them out very clearly here.
@@ -803,12 +805,6 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
         this->snapshots.back().actions.update( std::move(new_actions) );
     }
 
-    void Schedule::applyEXIT(const DeckKeyword& keyword, std::size_t report_step) {
-        int status = keyword.getRecord(0).getItem<ParserKeywords::EXIT::STATUS_CODE>().get<int>(0);
-        OpmLog::info("Simulation exit with status: " + std::to_string(status) + " requested as part of ACTIONX at report_step: " + std::to_string(report_step));
-        this->exit_status = status;
-    }
-
     void Schedule::shut_well(const std::string& well_name, std::size_t report_step) {
         this->updateWellStatus(well_name, report_step, Well::Status::SHUT);
     }
@@ -885,21 +881,6 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                 return report_step;
         }
         return {};
-    }
-
-    void Schedule::invalidNamePattern( const std::string& namePattern, const HandlerContext& context) const {
-        std::string msg_fmt = fmt::format("No wells/groups match the pattern: \'{}\'", namePattern);
-        if (namePattern == "?") {
-            /*
-              In particular when an ACTIONX keyword is called via PYACTION
-              coming in here with an empty list of matching wells is not
-              entirely unheard of. It is probably not what the user wanted and
-              we give a warning, but the simulation continues.
-            */
-            auto msg = OpmInputError::format("No matching wells for ACTIONX {keyword} in {file} line {line}.", context.keyword.location());
-            OpmLog::warning(msg);
-        } else
-            context.parseContext.handleError(ParseContext::SCHEDULE_INVALID_NAME, msg_fmt, context.keyword.location(), context.errors);
     }
 
     GTNode Schedule::groupTree(const std::string& root_node, std::size_t report_step, std::size_t level, const std::optional<std::string>& parent_name) const {
@@ -1217,8 +1198,9 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
 Expecting well to be defined with WELSPECS in ACTIONX before actual use.
 File {} line {}.)", pattern, location.keyword, location.filename, location.lineno);
                 OpmLog::warning(msg);
-            } else
-                this->invalidNamePattern(pattern, context);
+            } else {
+                context.invalidNamePattern(pattern);
+            }
         }
         return names;
     }
@@ -1772,83 +1754,6 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
             sched_state = &this->snapshots.back();
 
         return sched_state->wlist_manager.get().hasList(pattern);
-    }
-
-    void Schedule::welspecsCreateNewWell(const DeckRecord&  record,
-                                         const std::string& wellName,
-                                         const std::string& groupName,
-                                         HandlerContext&    handlerContext)
-    {
-        auto wellConnectionOrder = Connection::Order::TRACK;
-
-        if (const auto& compord = handlerContext.block.get("COMPORD");
-            compord.has_value())
-        {
-            const auto nrec = compord->size();
-
-            for (auto compordRecordNr = 0*nrec; compordRecordNr < nrec; ++compordRecordNr) {
-                const auto& compordRecord = compord->getRecord(compordRecordNr);
-
-                const std::string& wellNamePattern = compordRecord.getItem(0).getTrimmedString(0);
-
-                if (Well::wellNameInWellNamePattern(wellName, wellNamePattern)) {
-                    const std::string& compordString = compordRecord.getItem(1).getTrimmedString(0);
-                    wellConnectionOrder = Connection::OrderFromString(compordString);
-                }
-            }
-        }
-
-        this->addWell(wellName, record, handlerContext.currentStep, wellConnectionOrder);
-        this->addWellToGroup(groupName, wellName, handlerContext.currentStep);
-
-        handlerContext.affected_well(wellName);
-    }
-
-    void Schedule::welspecsUpdateExistingWells(const DeckRecord&               record,
-                                               const std::vector<std::string>& wellNames,
-                                               const std::string&              groupName,
-                                               HandlerContext&                 handlerContext)
-    {
-        using Kw = ParserKeywords::WELSPECS;
-
-        const auto& headI = record.getItem<Kw::HEAD_I>();
-        const auto& headJ = record.getItem<Kw::HEAD_J>();
-        const auto& pvt   = record.getItem<Kw::P_TABLE>();
-        const auto& drad  = record.getItem<Kw::D_RADIUS>();
-        const auto& ref_d = record.getItem<Kw::REF_DEPTH>();
-
-        const auto I = headI.defaultApplied(0) ? std::nullopt : std::optional<int> {headI.get<int>(0) - 1};
-        const auto J = headJ.defaultApplied(0) ? std::nullopt : std::optional<int> {headJ.get<int>(0) - 1};
-
-        const auto pvt_table = pvt.defaultApplied(0) ? std::nullopt : std::optional<int> { pvt.get<int>(0) };
-        const auto drainageRadius = drad.defaultApplied(0) ? std::nullopt : std::optional<double> { drad.getSIDouble(0) };
-
-        auto ref_depth = std::optional<double>{};
-        if (! ref_d.defaultApplied(0) && ref_d.hasValue(0)) {
-            ref_depth.emplace(ref_d.getSIDouble(0));
-        }
-
-        for (const auto& wellName : wellNames) {
-            auto well = this->snapshots.back().wells.get(wellName);
-
-            const auto updateHead = well.updateHead(I, J);
-            const auto updateRefD = well.updateRefDepth(ref_depth);
-            const auto updateDRad = well.updateDrainageRadius(drainageRadius);
-            const auto updatePVT  = well.updatePVTTable(pvt_table);
-
-            if (updateHead || updateRefD || updateDRad || updatePVT) {
-                well.updateRefDepth();
-
-                this->snapshots.back().wellgroup_events()
-                    .addEvent(wellName, ScheduleEvents::WELL_WELSPECS_UPDATE);
-
-                this->snapshots.back().wells.update(std::move(well));
-
-                handlerContext.affected_well(wellName);
-            }
-
-            this->addWellToGroup(groupName, wellName, handlerContext.currentStep);
-        }
     }
 
     const std::map< std::string, int >& Schedule::rst_keywords( size_t report_step ) const {

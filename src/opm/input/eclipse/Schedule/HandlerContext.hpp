@@ -22,6 +22,7 @@
 #include <opm/common/OpmLog/KeywordLocation.hpp>
 
 #include <cstddef>
+#include <optional>
 #include <set>
 #include <string>
 #include <unordered_map>
@@ -29,13 +30,18 @@
 
 namespace Opm {
 
+namespace Action { class WGNames; }
 class DeckKeyword;
+class DeckRecord;
 class ErrorGuard;
 class ParseContext;
+class Schedule;
 class ScheduleBlock;
 class ScheduleGrid;
 class ScheduleState;
+struct ScheduleStatic;
 struct SimulatorUpdate;
+enum class WellStatus;
 class WelSegsSet;
 
 class HandlerContext
@@ -43,7 +49,8 @@ class HandlerContext
 public:
     /// \param welsegs_wells All wells with a WELSEGS entry for checks.
     /// \param compegs_wells All wells with a COMPSEGS entry for checks.
-    HandlerContext(const ScheduleBlock& block_,
+    HandlerContext(Schedule& schedule,
+                   const ScheduleBlock& block_,
                    const DeckKeyword& keyword_,
                    const ScheduleGrid& grid_,
                    const std::size_t currentStep_,
@@ -69,6 +76,7 @@ public:
         , welsegs_wells(welsegs_wells_)
         , compsegs_wells(compsegs_wells_)
         , sim_update(sim_update_)
+        , schedule_(schedule)
     {}
 
     //! \brief Mark that a well has changed.
@@ -80,14 +88,67 @@ public:
     //! \brief Mark that well structure has changed.
     void record_well_structure_change();
 
+    //! \brief Returns a reference to current state.
+    ScheduleState& state();
+
+    //! \brief Returns a const-ref to the static schedule.
+    const ScheduleStatic& static_schedule() const;
+
     /// \brief Mark that the well occured in a WELSEGS keyword.
     void welsegs_handled(const std::string& well_name);
 
     /// \brief Mark that the well occured in a COMPSEGS keyword.
     void compsegs_handled(const std::string& well_name);
 
+    //! \brief Set exit code.
+    void setExitCode(int code);
+
+    //! \brief Update status of a well.
+    bool updateWellStatus(const std::string& well,
+                          WellStatus status,
+                          std::optional<KeywordLocation> location = {});
+
+    //! \brief Adds a group to the schedule.
+    void addGroup(const std::string& groupName);
+    //! \brief Adds a group to a group.
+    void addGroupToGroup(const std::string& parent_group,
+                         const std::string& child_group);
+
+    //! \brief Create a new Well from a WELSPECS record.
+    void welspecsCreateNewWell(const DeckRecord&  record,
+                               const std::string& wellName,
+                               const std::string& groupName);
+
+    //! \brief Update one or more existing wells from a WELSPECS record.
+    void welspecsUpdateExistingWells(const DeckRecord&               record,
+                                     const std::vector<std::string>& wellNames,
+                                     const std::string&              groupName);
+
     //! \brief Obtain PI for a well.
     double getWellPI(const std::string& well_name) const;
+
+    //! \brief Returns elapsed time since simulation start in seconds.
+    double elapsed_seconds() const;
+
+    //! \brief Adds parse error for an invalid name pattern.
+    void invalidNamePattern(const std::string& namePattern) const;
+
+    //! \brief Obtain action well group names.
+    const Action::WGNames& action_wgnames() const;
+
+    //! \brief Obtain well group names from a pattern.
+    std::vector<std::string> groupNames(const std::string& pattern) const;
+
+    //! \brief Obtain well names from a pattern.
+    //! \details Throws if no wells match the pattern and pattern is not a WLIST.
+    std::vector<std::string>
+    wellNames(const std::string& pattern) const;
+
+    //! \brief Obtain well names from a pattern.
+    //! \param pattern Pattern to match
+    //! \param allowEmpty If true do not throw if no wells match the pattern
+    std::vector<std::string>
+    wellNames(const std::string& pattern, bool allowEmpty) const;
 
     const ScheduleBlock& block;
     const DeckKeyword& keyword;
@@ -104,6 +165,7 @@ private:
     WelSegsSet* welsegs_wells{nullptr};
     std::set<std::string>* compsegs_wells{nullptr};
     SimulatorUpdate* sim_update{nullptr};
+    Schedule& schedule_;
 };
 
 } // end namespace Opm

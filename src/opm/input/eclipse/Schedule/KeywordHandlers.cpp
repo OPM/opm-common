@@ -52,6 +52,7 @@
 #include <opm/input/eclipse/Schedule/Tuning.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQActive.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQConfig.hpp>
+#include <opm/input/eclipse/Schedule/Well/NameOrder.hpp>
 #include <opm/input/eclipse/Schedule/Well/WDFAC.hpp>
 #include <opm/input/eclipse/Schedule/Well/WList.hpp>
 #include <opm/input/eclipse/Schedule/Well/WListManager.hpp>
@@ -86,6 +87,7 @@
 #include <opm/input/eclipse/Parser/ParserKeywords/B.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/C.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/D.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/E.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/F.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/G.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/L.hpp>
@@ -152,8 +154,7 @@ namespace {
     }
 
     void Schedule::handleAQUFLUX(HandlerContext& handlerContext) {
-        // auto& aqufluxs = this->snapshots.back().aqufluxs;
-        auto& aqufluxs = this->snapshots.back().aqufluxs;
+        auto& aqufluxs = handlerContext.state().aqufluxs;
         for (const auto& record : handlerContext.keyword) {
             const auto aquifer = SingleAquiferFlux { record };
             aqufluxs.insert_or_assign(aquifer.id, aquifer);
@@ -161,14 +162,14 @@ namespace {
     }
 
     void Schedule::handleBCProp(HandlerContext& handlerContext) {
-        auto& bcprop = this->snapshots.back().bcprop;
+        auto& bcprop = handlerContext.state().bcprop;
         for (const auto& record : handlerContext.keyword) {
             bcprop.updateBCProp(record);
         }
     }
 
     void Schedule::handleBRANPROP(HandlerContext& handlerContext) {
-        auto ext_network = this->snapshots.back().network.get();
+        auto ext_network = handlerContext.state().network.get();
         if (ext_network.active() && ext_network.is_standard_network()) {
             std::string msg = "Cannot have standard and extended network defined simultaneously.";
             throw OpmInputError(msg, handlerContext.keyword.location());
@@ -193,19 +194,17 @@ namespace {
             }
         }
 
-        this->snapshots.back().network.update( std::move( ext_network ));
+        handlerContext.state().network.update( std::move( ext_network ));
     }
 
     void Schedule::handleCOMPDAT(HandlerContext& handlerContext)  {
         std::unordered_set<std::string> wells;
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
-            auto wellnames = this->wellNames(wellNamePattern, handlerContext,
-                                             isWList(handlerContext.currentStep,
-                                                     wellNamePattern));
+            auto wellnames = handlerContext.wellNames(wellNamePattern);
 
             for (const auto& name : wellnames) {
-                auto well2 = this->snapshots.back().wells.get(name);
+                auto well2 = handlerContext.state().wells.get(name);
                 auto connections = std::shared_ptr<WellConnections>( new WellConnections( well2.getConnections()));
                 connections->loadCOMPDAT(record, handlerContext.grid, name, handlerContext.keyword.location());
 
@@ -213,7 +212,7 @@ namespace {
                     auto wdfac = std::make_shared<WDFAC>(well2.getWDFAC());
                     wdfac->updateWDFACType(*connections);
                     well2.updateWDFAC(std::move(wdfac));
-                    this->snapshots.back().wells.update( well2 );
+                    handlerContext.state().wells.update( well2 );
                     wells.insert( name );
                 }
 
@@ -224,19 +223,19 @@ namespace {
                                            "Well {} is not connected to grid - will remain SHUT", name, location.filename, location.lineno, name);
                     OpmLog::warning(msg);
                 }
-                this->snapshots.back().wellgroup_events().addEvent( name, ScheduleEvents::COMPLETION_CHANGE);
+                handlerContext.state().wellgroup_events().addEvent( name, ScheduleEvents::COMPLETION_CHANGE);
             }
         }
-        this->snapshots.back().events().addEvent(ScheduleEvents::COMPLETION_CHANGE);
+        handlerContext.state().events().addEvent(ScheduleEvents::COMPLETION_CHANGE);
 
         // In the case the wells reference depth has been defaulted in the
         // WELSPECS keyword we need to force a calculation of the wells
         // reference depth exactly when the COMPDAT keyword has been completely
         // processed.
         for (const auto& wname : wells) {
-            auto& well = this->snapshots.back().wells.get( wname );
+            auto& well = handlerContext.state().wells.get( wname );
             well.updateRefDepth();
-            this->snapshots.back().wells.update( std::move(well));
+            handlerContext.state().wells.update( std::move(well));
         }
 
         if (! wells.empty()) {
@@ -247,17 +246,17 @@ namespace {
     void Schedule::handleWELTRAJ(HandlerContext& handlerContext)  {
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
-            auto wellnames = this->wellNames(wellNamePattern, handlerContext);
+            const auto wellnames = handlerContext.wellNames(wellNamePattern, false);
 
             for (const auto& name : wellnames) {
-                auto well2 = this->snapshots.back().wells.get(name);
+                auto well2 = handlerContext.state().wells.get(name);
                 auto connections = std::make_shared<WellConnections>(WellConnections(well2.getConnections()));
                 connections->loadWELTRAJ(record, handlerContext.grid, name, handlerContext.keyword.location());
                 if (well2.updateConnections(connections, handlerContext.grid)) {
-                    this->snapshots.back().wells.update( well2 );
+                    handlerContext.state().wells.update( well2 );
                     handlerContext.record_well_structure_change();
                 }
-                this->snapshots.back().wellgroup_events().addEvent( name, ScheduleEvents::COMPLETION_CHANGE);
+                handlerContext.state().wellgroup_events().addEvent( name, ScheduleEvents::COMPLETION_CHANGE);
                 const auto& md = connections->getMD();
                 if (!std::is_sorted(std::begin(md), std::end(md))) {
                     auto msg = fmt::format("Well {} measured depth column is not strictly increasing", name);
@@ -265,26 +264,26 @@ namespace {
                 }
             }
         }
-        this->snapshots.back().events().addEvent(ScheduleEvents::COMPLETION_CHANGE);
+        handlerContext.state().events().addEvent(ScheduleEvents::COMPLETION_CHANGE);
     }
 
     void Schedule::handleCOMPTRAJ(HandlerContext& handlerContext)  {
         // Keyword WELTRAJ must be read first
         std::unordered_set<std::string> wells;
-        external::cvf::ref<external::cvf::BoundingBoxTree> cellSearchTree = nullptr; 
+        external::cvf::ref<external::cvf::BoundingBoxTree> cellSearchTree = nullptr;
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
-            auto wellnames = this->wellNames(wellNamePattern, handlerContext );
+            const auto wellnames = handlerContext.wellNames(wellNamePattern, false);
 
             for (const auto& name : wellnames) {
-                auto well2 = this->snapshots.back().wells.get(name);
+                auto well2 = handlerContext.state().wells.get(name);
                 auto connections = std::make_shared<WellConnections>(WellConnections(well2.getConnections()));
-                // cellsearchTree is calculated only once and is used to calculated cell intersections of the perforations specified in COMPTRAJ 
+                // cellsearchTree is calculated only once and is used to calculated cell intersections of the perforations specified in COMPTRAJ
                 connections->loadCOMPTRAJ(record, handlerContext.grid, name, handlerContext.keyword.location(), cellSearchTree);
                 // In the case that defaults are used in WELSPECS for headI/J the headI/J are calculated based on the well trajectory data
                 well2.updateHead(connections->getHeadI(), connections->getHeadJ());
                 if (well2.updateConnections(connections, handlerContext.grid)) {
-                    this->snapshots.back().wells.update( well2 );
+                    handlerContext.state().wells.update( well2 );
                     wells.insert( name );
                 }
 
@@ -295,19 +294,19 @@ namespace {
                                            "Well {} is not connected to grid - will remain SHUT", name, location.filename, location.lineno, name);
                     OpmLog::warning(msg);
                 }
-                this->snapshots.back().wellgroup_events().addEvent( name, ScheduleEvents::COMPLETION_CHANGE);
+                handlerContext.state().wellgroup_events().addEvent( name, ScheduleEvents::COMPLETION_CHANGE);
             }
         }
-        this->snapshots.back().events().addEvent(ScheduleEvents::COMPLETION_CHANGE);
+        handlerContext.state().events().addEvent(ScheduleEvents::COMPLETION_CHANGE);
 
         // In the case the wells reference depth has been defaulted in the
         // WELSPECS keyword we need to force a calculation of the wells
         // reference depth exactly when the WELCOML keyword has been completely
         // processed.
         for (const auto& wname : wells) {
-            auto& well = this->snapshots.back().wells.get( wname );
+            auto& well = handlerContext.state().wells.get( wname );
             well.updateRefDepth();
-            this->snapshots.back().wells.update( std::move(well));
+            handlerContext.state().wells.update( std::move(well));
         }
 
         if (! wells.empty()) {
@@ -318,14 +317,12 @@ namespace {
     void Schedule::handleCOMPLUMP(HandlerContext& handlerContext) {
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
-            const auto well_names = this->wellNames(wellNamePattern, handlerContext,
-                                                    isWList(handlerContext.currentStep,
-                                                            wellNamePattern));
+            const auto well_names = handlerContext.wellNames(wellNamePattern);
 
             for (const auto& wname : well_names) {
-                auto well = this->snapshots.back().wells.get(wname);
+                auto well = handlerContext.state().wells.get(wname);
                 if (well.handleCOMPLUMP(record)) {
-                    this->snapshots.back().wells.update( std::move(well) );
+                    handlerContext.state().wells.update( std::move(well) );
 
                     handlerContext.record_well_structure_change();
                 }
@@ -345,9 +342,9 @@ namespace {
         const auto& record1 = handlerContext.keyword.getRecord(0);
         const std::string& wname = record1.getItem("WELL").getTrimmedString(0);
 
-        if (!this->hasWell(wname, handlerContext.currentStep)) {
+        if (!handlerContext.state().wells.has(wname)) {
             const auto& location = handlerContext.keyword.location();
-            if (this->action_wgnames.has_well(wname)) {
+            if (handlerContext.action_wgnames().has_well(wname)) {
                 std::string msg = fmt::format(R"(Well: {} not yet defined for keyword {}.
 Expecting well to be defined with WELSPECS in ACTIONX before actual use.
 File {} line {}.)", wname, location.keyword, location.filename, location.lineno);
@@ -357,20 +354,23 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
             return;
         }
 
-        auto well = this->snapshots.back().wells.get( wname );
+        auto well = handlerContext.state().wells.get( wname );
 
         if (well.getConnections().empty()) {
             const auto& location = handlerContext.keyword.location();
             auto msg = fmt::format("Problem with COMPSEGS/{0}\n"
                                    "In {1} line {2}\n"
-                                   "Well {0} is not connected to grid - COMPSEGS will be ignored", wname, location.filename, location.lineno);
+                                   "Well {0} is not connected to grid - "
+                                   "COMPSEGS will be ignored",
+                                   wname, location.filename, location.lineno);
             OpmLog::warning(msg);
             return;
         }
 
-        if (well.handleCOMPSEGS(handlerContext.keyword, handlerContext.grid, handlerContext.parseContext, handlerContext.errors))
+        if (well.handleCOMPSEGS(handlerContext.keyword, handlerContext.grid,
+                                handlerContext.parseContext, handlerContext.errors))
         {
-            this->snapshots.back().wells.update( std::move(well) );
+            handlerContext.state().wells.update( std::move(well) );
             handlerContext.record_well_structure_change();
         }
 
@@ -380,26 +380,25 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
     void Schedule::handleCSKIN(HandlerContext& handlerContext) {
         // Get CSKIN keyword info and current step
         const auto& keyword = handlerContext.keyword;
-        const auto& currentStep = handlerContext.currentStep;
 
         // Loop over records in CSKIN
         for (const auto& record: keyword) {
             // Get well names
             const auto& wellNamePattern = record.getItem( "WELL" ).getTrimmedString(0);
-            const auto well_names = this->wellNames(wellNamePattern, handlerContext);
+            const auto well_names = handlerContext.wellNames(wellNamePattern, false);
 
             // Loop over well(s) in record
             for (const auto& wname : well_names) {
                 // Get well information, modify connection skin factor, and update well
-                auto well = this->snapshots[currentStep].wells.get(wname);
+                auto well = handlerContext.state().wells.get(wname);
                 well.handleCSKINConnections(record);
-                this->snapshots[currentStep].wells.update( std::move(well) );
+                handlerContext.state().wells.update( std::move(well) );
             }
         }
     }
 
     void Schedule::handleDRSDT(HandlerContext& handlerContext) {
-        std::size_t numPvtRegions = this->m_static.m_runspec.tabdims().getNumPVTTables();
+        const std::size_t numPvtRegions = handlerContext.static_schedule().m_runspec.tabdims().getNumPVTTables();
         std::vector<double> maximums(numPvtRegions);
         std::vector<std::string> options(numPvtRegions);
         for (const auto& record : handlerContext.keyword) {
@@ -407,13 +406,13 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
             const auto& option = record.getItem<ParserKeywords::DRSDT::OPTION>().get< std::string >(0);
             std::fill(maximums.begin(), maximums.end(), max);
             std::fill(options.begin(), options.end(), option);
-            auto& ovp = this->snapshots.back().oilvap();
+            auto& ovp = handlerContext.state().oilvap();
             OilVaporizationProperties::updateDRSDT(ovp, maximums, options);
         }
     }
 
     void Schedule::handleDRSDTCON(HandlerContext& handlerContext) {
-        std::size_t numPvtRegions = this->m_static.m_runspec.tabdims().getNumPVTTables();
+        const std::size_t numPvtRegions = handlerContext.static_schedule().m_runspec.tabdims().getNumPVTTables();
         std::vector<double> maximums(numPvtRegions);
         std::vector<std::string> options(numPvtRegions);
         for (const auto& record : handlerContext.keyword) {
@@ -421,13 +420,13 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
             const auto& option = record.getItem<ParserKeywords::DRSDTCON::OPTION>().get< std::string >(0);
             std::fill(maximums.begin(), maximums.end(), max);
             std::fill(options.begin(), options.end(), option);
-            auto& ovp = this->snapshots.back().oilvap();
+            auto& ovp = handlerContext.state().oilvap();
             OilVaporizationProperties::updateDRSDTCON(ovp, maximums, options);
         }
     }
 
     void Schedule::handleDRSDTR(HandlerContext& handlerContext) {
-        std::size_t numPvtRegions = this->m_static.m_runspec.tabdims().getNumPVTTables();
+        const std::size_t numPvtRegions = handlerContext.static_schedule().m_runspec.tabdims().getNumPVTTables();
         std::vector<double> maximums(numPvtRegions);
         std::vector<std::string> options(numPvtRegions);
         std::size_t pvtRegionIdx = 0;
@@ -438,23 +437,23 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
             options[pvtRegionIdx] = option;
             pvtRegionIdx++;
         }
-        auto& ovp = this->snapshots.back().oilvap();
+        auto& ovp = handlerContext.state().oilvap();
         OilVaporizationProperties::updateDRSDT(ovp, maximums, options);
     }
 
     void Schedule::handleDRVDT(HandlerContext& handlerContext) {
-        std::size_t numPvtRegions = this->m_static.m_runspec.tabdims().getNumPVTTables();
+        const std::size_t numPvtRegions = handlerContext.static_schedule().m_runspec.tabdims().getNumPVTTables();
         std::vector<double> maximums(numPvtRegions);
         for (const auto& record : handlerContext.keyword) {
             const auto& max = record.getItem<ParserKeywords::DRVDTR::DRVDT_MAX>().getSIDouble(0);
             std::fill(maximums.begin(), maximums.end(), max);
-            auto& ovp = this->snapshots.back().oilvap();
+            auto& ovp = handlerContext.state().oilvap();
             OilVaporizationProperties::updateDRVDT(ovp, maximums);
         }
     }
 
     void Schedule::handleDRVDTR(HandlerContext& handlerContext) {
-        std::size_t numPvtRegions = this->m_static.m_runspec.tabdims().getNumPVTTables();
+        std::size_t numPvtRegions = handlerContext.static_schedule().m_runspec.tabdims().getNumPVTTables();
         std::size_t pvtRegionIdx = 0;
         std::vector<double> maximums(numPvtRegions);
         for (const auto& record : handlerContext.keyword) {
@@ -462,13 +461,21 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
             maximums[pvtRegionIdx] = max;
             pvtRegionIdx++;
         }
-        auto& ovp = this->snapshots.back().oilvap();
+        auto& ovp = handlerContext.state().oilvap();
         OilVaporizationProperties::updateDRVDT(ovp, maximums);
     }
 
-    void Schedule::handleEXIT(HandlerContext& handlerContext) {
-        if (handlerContext.actionx_mode)
-            this->applyEXIT(handlerContext.keyword, handlerContext.currentStep);
+    void Schedule::handleEXIT(HandlerContext& handlerContext)
+    {
+        if (handlerContext.actionx_mode) {
+            using ES = ParserKeywords::EXIT;
+            int status = handlerContext.keyword.getRecord(0).getItem<ES::STATUS_CODE>().get<int>(0);
+            OpmLog::info("Simulation exit with status: " +
+                         std::to_string(status) +
+                         " requested as part of ACTIONX at report_step: " +
+                         std::to_string(handlerContext.currentStep));
+            handlerContext.setExitCode(status);
+        }
     }
 
     void Schedule::handleFBHPDEF(HandlerContext& handlerContext)
@@ -482,18 +489,18 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
             bhp_defaults.prod_target = prod_limit.getSIDouble(0);
             bhp_defaults.inj_limit = inj_limit.getSIDouble(0);
         }
-        this->snapshots.back().bhp_defaults.update(std::move(bhp_defaults));
+        handlerContext.state().bhp_defaults.update(std::move(bhp_defaults));
     }
 
     void Schedule::handleGCONINJE(HandlerContext& handlerContext) {
         using GI = ParserKeywords::GCONINJE;
-        auto current_step = handlerContext.currentStep;
         const auto& keyword = handlerContext.keyword;
         for (const auto& record : keyword) {
             const std::string& groupNamePattern = record.getItem<GI::GROUP>().getTrimmedString(0);
-            const auto group_names = this->groupNames(groupNamePattern);
-            if (group_names.empty())
-                this->invalidNamePattern(groupNamePattern, handlerContext);
+            const auto group_names = handlerContext.groupNames(groupNamePattern);
+            if (group_names.empty()) {
+                handlerContext.invalidNamePattern(groupNamePattern);
+            }
 
             const Group::InjectionCMode controlMode = Group::InjectionCModeFromString(record.getItem<GI::CONTROL_MODE>().getTrimmedString(0));
             const Phase phase = get_phase( record.getItem<GI::PHASE>().getTrimmedString(0));
@@ -529,7 +536,7 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
                 {
                     // FLD overrides item 8 (is_free i.e if FLD the group is available for higher up groups)
                     const bool availableForGroupControl = (is_free || controlMode == Group::InjectionCMode::FLD)&& !is_field;
-                    auto new_group = this->snapshots.back().groups.get(group_name);
+                    auto new_group = handlerContext.state().groups.get(group_name);
                     Group::GroupInjectionProperties injection{group_name};
                     injection.phase = phase;
                     injection.cmode = controlMode;
@@ -561,17 +568,17 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
                         injection.voidage_group = record.getItem("VOIDAGE_GROUP").getTrimmedString(0);
 
                     if (new_group.updateInjection(injection)) {
-                        auto new_config = this->snapshots.back().guide_rate();
+                        auto new_config = handlerContext.state().guide_rate();
                         new_config.update_injection_group(group_name, injection);
-                        this->snapshots.back().guide_rate.update( std::move(new_config));
+                        handlerContext.state().guide_rate.update( std::move(new_config));
 
-                        this->snapshots.back().groups.update( std::move(new_group));
-                        this->snapshots.back().events().addEvent( ScheduleEvents::GROUP_INJECTION_UPDATE );
-                        this->snapshots.back().wellgroup_events().addEvent( group_name, ScheduleEvents::GROUP_INJECTION_UPDATE);
+                        handlerContext.state().groups.update( std::move(new_group));
+                        handlerContext.state().events().addEvent( ScheduleEvents::GROUP_INJECTION_UPDATE );
+                        handlerContext.state().wellgroup_events().addEvent( group_name, ScheduleEvents::GROUP_INJECTION_UPDATE);
 
-                        auto udq_active = this->snapshots.back().udq_active.get();
-                        if (injection.updateUDQActive(this->getUDQConfig(current_step), udq_active))
-                            this->snapshots.back().udq_active.update( std::move(udq_active));
+                        auto udq_active = handlerContext.state().udq_active.get();
+                        if (injection.updateUDQActive(handlerContext.state().udq.get(), udq_active))
+                            handlerContext.state().udq_active.update( std::move(udq_active));
                     }
                 }
             }
@@ -579,13 +586,13 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
     }
 
     void Schedule::handleGCONPROD(HandlerContext& handlerContext) {
-        auto current_step = handlerContext.currentStep;
         const auto& keyword = handlerContext.keyword;
         for (const auto& record : keyword) {
             const std::string& groupNamePattern = record.getItem("GROUP").getTrimmedString(0);
-            const auto group_names = this->groupNames(groupNamePattern);
-            if (group_names.empty())
-                this->invalidNamePattern(groupNamePattern, handlerContext);
+            const auto group_names = handlerContext.groupNames(groupNamePattern);
+            if (group_names.empty()) {
+                handlerContext.invalidNamePattern(groupNamePattern);
+            }
 
             const Group::ProductionCMode controlMode = Group::ProductionCModeFromString(record.getItem("CONTROL_MODE").getTrimmedString(0));
             Group::GroupLimitAction groupLimitAction;
@@ -648,8 +655,8 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
                 {
                     // FLD overrides item 8 (respond_to_parent i.e if FLD the group is available for higher up groups)
                     const bool availableForGroupControl { (respond_to_parent || controlMode == Group::ProductionCMode::FLD) && !is_field } ;
-                    auto new_group = this->snapshots.back().groups.get(group_name);
-                    Group::GroupProductionProperties production(this->m_static.m_unit_system, group_name);
+                    auto new_group = handlerContext.state().groups.get(group_name);
+                    Group::GroupProductionProperties production(handlerContext.static_schedule().m_unit_system, group_name);
                     production.cmode = controlMode;
                     production.oil_target = oil_target;
                     production.gas_target = gas_target;
@@ -695,17 +702,17 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
                         production.production_controls |= static_cast<int>(Group::ProductionCMode::RESV);
 
                     if (new_group.updateProduction(production)) {
-                        auto new_config = this->snapshots.back().guide_rate();
+                        auto new_config = handlerContext.state().guide_rate();
                         new_config.update_production_group(new_group);
-                        this->snapshots.back().guide_rate.update( std::move(new_config));
+                        handlerContext.state().guide_rate.update( std::move(new_config));
 
-                        this->snapshots.back().groups.update( std::move(new_group));
-                        this->snapshots.back().events().addEvent(ScheduleEvents::GROUP_PRODUCTION_UPDATE);
-                        this->snapshots.back().wellgroup_events().addEvent( group_name, ScheduleEvents::GROUP_PRODUCTION_UPDATE);
+                        handlerContext.state().groups.update( std::move(new_group));
+                        handlerContext.state().events().addEvent(ScheduleEvents::GROUP_PRODUCTION_UPDATE);
+                        handlerContext.state().wellgroup_events().addEvent( group_name, ScheduleEvents::GROUP_PRODUCTION_UPDATE);
 
-                        auto udq_active = this->snapshots.back().udq_active.get();
-                        if (production.updateUDQActive(this->getUDQConfig(current_step), udq_active))
-                            this->snapshots.back().udq_active.update( std::move(udq_active));
+                        auto udq_active = handlerContext.state().udq_active.get();
+                        if (production.updateUDQActive(handlerContext.state().udq.get(), udq_active))
+                            handlerContext.state().udq_active.update( std::move(udq_active));
                     }
                 }
             }
@@ -713,28 +720,29 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
     }
 
     void Schedule::handleGCONSALE(HandlerContext& handlerContext) {
-        auto new_gconsale = this->snapshots.back().gconsale.get();
+        auto new_gconsale = handlerContext.state().gconsale.get();
         for (const auto& record : handlerContext.keyword) {
             const std::string& groupName = record.getItem("GROUP").getTrimmedString(0);
             auto sales_target = record.getItem("SALES_TARGET").get<UDAValue>(0);
             auto max_rate = record.getItem("MAX_SALES_RATE").get<UDAValue>(0);
             auto min_rate = record.getItem("MIN_SALES_RATE").get<UDAValue>(0);
             std::string procedure = record.getItem("MAX_PROC").getTrimmedString(0);
-            auto udqconfig = this->getUDQConfig(handlerContext.currentStep).params().undefinedValue();
+            auto udqconfig = handlerContext.state().udq.get().params().undefinedValue();
 
-            new_gconsale.add(groupName, sales_target, max_rate, min_rate, procedure, udqconfig, this->m_static.m_unit_system);
+            new_gconsale.add(groupName, sales_target, max_rate, min_rate, procedure,
+                             udqconfig, handlerContext.static_schedule().m_unit_system);
 
-            auto new_group = this->snapshots.back().groups.get( groupName );
+            auto new_group = handlerContext.state().groups.get( groupName );
             Group::GroupInjectionProperties injection{groupName};
             injection.phase = Phase::GAS;
             if (new_group.updateInjection(injection))
-                this->snapshots.back().groups.update(new_group);
+                handlerContext.state().groups.update(new_group);
         }
-        this->snapshots.back().gconsale.update( std::move(new_gconsale) );
+        handlerContext.state().gconsale.update( std::move(new_gconsale) );
     }
 
     void Schedule::handleGCONSUMP(HandlerContext& handlerContext) {
-        auto new_gconsump = this->snapshots.back().gconsump.get();
+        auto new_gconsump = handlerContext.state().gconsump.get();
         for (const auto& record : handlerContext.keyword) {
             const std::string& groupName = record.getItem("GROUP").getTrimmedString(0);
             auto consumption_rate = record.getItem("GAS_CONSUMP_RATE").get<UDAValue>(0);
@@ -745,62 +753,66 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
             if (!network_node.defaultApplied(0))
                 network_node_name = network_node.getTrimmedString(0);
 
-            auto udqconfig = this->getUDQConfig(handlerContext.currentStep).params().undefinedValue();
+            auto udqconfig = handlerContext.state().udq.get().params().undefinedValue();
 
-            new_gconsump.add(groupName, consumption_rate, import_rate, network_node_name, udqconfig, this->m_static.m_unit_system);
+            new_gconsump.add(groupName, consumption_rate, import_rate, network_node_name,
+                             udqconfig, handlerContext.static_schedule().m_unit_system);
         }
-        this->snapshots.back().gconsump.update( std::move(new_gconsump) );
+        handlerContext.state().gconsump.update( std::move(new_gconsump) );
     }
 
     void
     Schedule::handleGECON(HandlerContext& handlerContext)
     {
-        auto gecon = this->snapshots.back().gecon();
+        auto gecon = handlerContext.state().gecon();
         const auto& keyword = handlerContext.keyword;
         auto report_step = handlerContext.currentStep;
         for (const auto& record : keyword) {
             const std::string& groupNamePattern
                 = record.getItem<ParserKeywords::GECON::GROUP>().getTrimmedString(0);
-            const auto group_names = this->groupNames(groupNamePattern);
-            if (group_names.empty())
-                this->invalidNamePattern(groupNamePattern, handlerContext);
+            const auto group_names = handlerContext.groupNames(groupNamePattern);
+            if (group_names.empty()) {
+                handlerContext.invalidNamePattern(groupNamePattern);
+            }
             for (const auto& gname : group_names) {
                 gecon.add_group(report_step, gname, record);
             }
         }
-        this->snapshots.back().gecon.update(std::move(gecon));
+        handlerContext.state().gecon.update(std::move(gecon));
     }
 
     void Schedule::handleGEFAC(HandlerContext& handlerContext) {
         for (const auto& record : handlerContext.keyword) {
             const std::string& groupNamePattern = record.getItem("GROUP").getTrimmedString(0);
-            const auto group_names = this->groupNames(groupNamePattern);
-            if (group_names.empty())
-                this->invalidNamePattern(groupNamePattern, handlerContext);
+            const auto group_names = handlerContext.groupNames(groupNamePattern);
+            if (group_names.empty()) {
+                handlerContext.invalidNamePattern(groupNamePattern);
+            }
 
             const bool transfer = DeckItem::to_bool(record.getItem("TRANSFER_EXT_NET").getTrimmedString(0));
             const auto gefac = record.getItem("EFFICIENCY_FACTOR").get<double>(0);
 
             for (const auto& group_name : group_names) {
-                auto new_group = this->snapshots.back().groups.get(group_name);
+                auto new_group = handlerContext.state().groups.get(group_name);
                 if (new_group.update_gefac(gefac, transfer)) {
-                    this->snapshots.back().wellgroup_events().addEvent( group_name, ScheduleEvents::WELLGROUP_EFFICIENCY_UPDATE);
-                    this->snapshots.back().events().addEvent( ScheduleEvents::WELLGROUP_EFFICIENCY_UPDATE );
-                    this->snapshots.back().groups.update(std::move(new_group));
+                    handlerContext.state().wellgroup_events().addEvent( group_name, ScheduleEvents::WELLGROUP_EFFICIENCY_UPDATE);
+                    handlerContext.state().events().addEvent( ScheduleEvents::WELLGROUP_EFFICIENCY_UPDATE );
+                    handlerContext.state().groups.update(std::move(new_group));
                 }
             }
         }
     }
 
     void Schedule::handleGLIFTOPT(HandlerContext& handlerContext) {
-        auto glo = this->snapshots.back().glo();
+        auto glo = handlerContext.state().glo();
         const auto& keyword = handlerContext.keyword;
 
         for (const auto& record : keyword) {
             const std::string& groupNamePattern = record.getItem<ParserKeywords::GLIFTOPT::GROUP_NAME>().getTrimmedString(0);
-            const auto group_names = this->groupNames(groupNamePattern);
-            if (group_names.empty())
-                this->invalidNamePattern(groupNamePattern, handlerContext);
+            const auto group_names = handlerContext.groupNames(groupNamePattern);
+            if (group_names.empty()) {
+                handlerContext.invalidNamePattern(groupNamePattern);
+            }
 
             const auto& max_gas_item = record.getItem<ParserKeywords::GLIFTOPT::MAX_LIFT_GAS_SUPPLY>();
             const double max_lift_gas_value = max_gas_item.hasValue(0)
@@ -821,33 +833,34 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
             }
         }
 
-        this->snapshots.back().glo.update( std::move(glo) );
+        handlerContext.state().glo.update( std::move(glo) );
     }
 
     void Schedule::handleGPMAINT(HandlerContext& handlerContext) {
         for (const auto& record : handlerContext.keyword) {
             const std::string& groupNamePattern = record.getItem("GROUP").getTrimmedString(0);
-            const auto group_names = this->groupNames(groupNamePattern);
-            if (group_names.empty())
-                this->invalidNamePattern(groupNamePattern, handlerContext);
+            const auto group_names = handlerContext.groupNames(groupNamePattern);
+            if (group_names.empty()) {
+                handlerContext.invalidNamePattern(groupNamePattern);
+            }
 
             const auto& target_string = record.getItem<ParserKeywords::GPMAINT::FLOW_TARGET>().get<std::string>(0);
 
             for (const auto& group_name : group_names) {
-                auto new_group = this->snapshots.back().groups.get(group_name);
+                auto new_group = handlerContext.state().groups.get(group_name);
                 if (target_string == "NONE") {
                     new_group.set_gpmaint();
                 } else {
                     GPMaint gpmaint(handlerContext.currentStep, record);
                     new_group.set_gpmaint(std::move(gpmaint));
                 }
-                this->snapshots.back().groups.update( std::move(new_group) );
+                handlerContext.state().groups.update( std::move(new_group) );
             }
         }
     }
 
     void Schedule::handleGRUPNET(HandlerContext& handlerContext) {
-        auto network = this->snapshots.back().network.get();
+        auto network = handlerContext.state().network.get();
         if (network.active() && !network.is_standard_network()) {
             std::string msg = "Cannot have standard and extended network defined simultaneously.";
             throw OpmInputError(msg, handlerContext.keyword.location());
@@ -856,21 +869,22 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
         std::vector<Network::Node> nodes;
         for (const auto& record : handlerContext.keyword) {
              const std::string& groupNamePattern = record.getItem<ParserKeywords::GRUPNET::NAME>().getTrimmedString(0);
-             const auto group_names = this->groupNames(groupNamePattern);
-             if (group_names.empty())
-                 this->invalidNamePattern(groupNamePattern, handlerContext);
+             const auto group_names = handlerContext.groupNames(groupNamePattern);
+             if (group_names.empty()) {
+                 handlerContext.invalidNamePattern(groupNamePattern);
+             }
              const auto& pressure_item = record.getItem<ParserKeywords::GRUPNET::TERMINAL_PRESSURE>();
              const int vfp_table = record.getItem<ParserKeywords::GRUPNET::VFP_TABLE>().get<int>(0);
              // It is assumed here that item 6 (ADD_GAS_LIFT_GAS) has the two options NO and FLO. THe option ALQ is not supported.
-             // For standard networks the summation of ALQ values are weighted with efficiency factors. 
-             // Note that, currently, extended networks uses always efficiency factors (this is the default set by WEFAC item 3 (YES), the value NO is not supported.) 
+             // For standard networks the summation of ALQ values are weighted with efficiency factors.
+             // Note that, currently, extended networks uses always efficiency factors (this is the default set by WEFAC item 3 (YES), the value NO is not supported.)
              const std::string& add_gas_lift_gas_string = record.getItem<ParserKeywords::GRUPNET::ADD_GAS_LIFT_GAS>().get<std::string>(0);
              bool add_gas_lift_gas = false;
-             if (add_gas_lift_gas_string == "FLO") 
+             if (add_gas_lift_gas_string == "FLO")
                  add_gas_lift_gas = true;
 
              for (const auto& group_name : group_names) {
-                  const auto& group = this->snapshots.back().groups.get(group_name);
+                  const auto& group = handlerContext.state().groups.get(group_name);
                   const std::string& downtree_node = group_name;
                   const std::string& uptree_node = group.parent();
                   Network::Node node { group_name };
@@ -912,7 +926,7 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
         // so the update of nodes is postponed after creation of branches
         for(const auto& node: nodes)
               network.update_node(node);
-        this->snapshots.back().network.update( std::move(network));
+        handlerContext.state().network.update( std::move(network));
     }
 
     void Schedule::handleGRUPTREE(HandlerContext& handlerContext) {
@@ -920,13 +934,15 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
             const std::string& childName = trim_wgname(handlerContext.keyword, record.getItem("CHILD_GROUP").get<std::string>(0), handlerContext.parseContext, handlerContext.errors);
             const std::string& parentName = trim_wgname(handlerContext.keyword, record.getItem("PARENT_GROUP").get<std::string>(0), handlerContext.parseContext, handlerContext.errors);
 
-            if (!this->snapshots.back().groups.has(childName))
-                addGroup(childName, handlerContext.currentStep);
+            if (!handlerContext.state().groups.has(childName)) {
+                handlerContext.addGroup(childName);
+            }
 
-            if (!this->snapshots.back().groups.has(parentName))
-                addGroup(parentName, handlerContext.currentStep);
+            if (!handlerContext.state().groups.has(parentName)) {
+                handlerContext.addGroup(parentName);
+            }
 
-            this->addGroupToGroup(parentName, childName);
+            handlerContext.addGroupToGroup(parentName, childName);
         }
     }
 
@@ -946,11 +962,13 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
         const bool use_free_gas = DeckItem::to_bool( record.getItem<ParserKeywords::GUIDERAT::USE_FREE_GAS>().getTrimmedString(0));
 
         const auto new_model = GuideRateModel(min_calc_delay, phase, A, B, C, D, E, F, allow_increase, damping_factor, use_free_gas);
-        this->updateGuideRateModel(new_model, handlerContext.currentStep);
+        auto new_config = handlerContext.state().guide_rate();
+        if (new_config.update_model(new_model))
+            handlerContext.state().guide_rate.update( std::move(new_config) );
     }
 
     void Schedule::handleLIFTOPT(HandlerContext& handlerContext) {
-        auto glo = this->snapshots.back().glo();
+        auto glo = handlerContext.state().glo();
 
         const auto& record = handlerContext.keyword.getRecord(0);
 
@@ -964,7 +982,7 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
         glo.min_wait(min_wait);
         glo.all_newton(all_newton);
 
-        this->snapshots.back().glo.update( std::move(glo) );
+        handlerContext.state().glo.update( std::move(glo) );
     }
 
     void Schedule::handleLINCOM(HandlerContext& handlerContext) {
@@ -973,23 +991,23 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
         const auto beta  = record.getItem<ParserKeywords::LINCOM::BETA>().get<UDAValue>(0);
         const auto gamma = record.getItem<ParserKeywords::LINCOM::GAMMA>().get<UDAValue>(0);
 
-        auto new_config = this->snapshots.back().guide_rate();
+        auto new_config = handlerContext.state().guide_rate();
         auto new_model = new_config.model();
 
         if (new_model.updateLINCOM(alpha, beta, gamma)) {
             new_config.update_model(new_model);
-            this->snapshots.back().guide_rate.update( std::move( new_config) );
+            handlerContext.state().guide_rate.update( std::move( new_config) );
         }
     }
 
     void Schedule::handleMESSAGES(HandlerContext& handlerContext) {
-        this->snapshots.back().message_limits().update( handlerContext.keyword );
+        handlerContext.state().message_limits().update( handlerContext.keyword );
     }
 
 
     void Schedule::handleGEOKeyword(HandlerContext& handlerContext) {
-        this->snapshots.back().geo_keywords().push_back(handlerContext.keyword);
-        this->snapshots.back().events().addEvent( ScheduleEvents::GEO_MODIFIER );
+        handlerContext.state().geo_keywords().push_back(handlerContext.keyword);
+        handlerContext.state().events().addEvent( ScheduleEvents::GEO_MODIFIER );
         handlerContext.record_tran_change();
     }
 
@@ -1001,7 +1019,7 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
     }
 
     void Schedule::handleNETBALAN(HandlerContext& handlerContext) {
-        this->snapshots.back().network_balance
+        handlerContext.state().network_balance
             .update(Network::Balance{ handlerContext.keyword });
     }
 
@@ -1010,13 +1028,13 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
         auto next_tstep = record.getItem<ParserKeywords::NEXTSTEP::MAX_STEP>().getSIDouble(0);
         auto apply_to_all = DeckItem::to_bool( record.getItem<ParserKeywords::NEXTSTEP::APPLY_TO_ALL>().get<std::string>(0) );
 
-        this->snapshots.back().next_tstep = NextStep{next_tstep, apply_to_all};
-        this->snapshots.back().events().addEvent(ScheduleEvents::TUNING_CHANGE);
+        handlerContext.state().next_tstep = NextStep{next_tstep, apply_to_all};
+        handlerContext.state().events().addEvent(ScheduleEvents::TUNING_CHANGE);
     }
 
 
     void Schedule::handleNODEPROP(HandlerContext& handlerContext) {
-        auto ext_network = this->snapshots.back().network.get();
+        auto ext_network = handlerContext.state().network.get();
         if (ext_network.active() && ext_network.is_standard_network()) {
             std::string msg = "Cannot have standard and extended network defined simultaneously.";
             throw OpmInputError(msg, handlerContext.keyword.location());
@@ -1042,8 +1060,8 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
                     target_group = target_item.get<std::string>(0);
 
                 if (target_group != name) {
-                    if (this->snapshots.back().groups.has(name)) {
-                        const auto& group = this->getGroup(name, handlerContext.currentStep);
+                    if (handlerContext.state().groups.has(name)) {
+                        const auto& group = handlerContext.state().groups.get(name);
                         if (group.numWells() > 0)
                             throw std::invalid_argument("A manifold group must respond to its own target");
                     }
@@ -1056,7 +1074,7 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
             ext_network.update_node(node);
         }
 
-        this->snapshots.back().network.update( ext_network );
+        handlerContext.state().network.update( ext_network );
     }
 
     void Schedule::handleNUPCOL(HandlerContext& handlerContext) {
@@ -1067,28 +1085,28 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
             OpmLog::note(msg);
         }
 
-        this->snapshots.back().update_nupcol(nupcol);
+        handlerContext.state().update_nupcol(nupcol);
     }
 
-    void Schedule::handleRPTONLY(HandlerContext&) {
-        this->snapshots.back().rptonly(true);
+    void Schedule::handleRPTONLY(HandlerContext& handlerContext) {
+        handlerContext.state().rptonly(true);
     }
 
-    void Schedule::handleRPTONLYO(HandlerContext&) {
-        this->snapshots.back().rptonly(false);
+    void Schedule::handleRPTONLYO(HandlerContext& handlerContext) {
+        handlerContext.state().rptonly(false);
     }
 
     void Schedule::handleRPTSCHED(HandlerContext& handlerContext) {
-        this->snapshots.back().rpt_config.update( RPTConfig(handlerContext.keyword ));
-        auto rst_config = this->snapshots.back().rst_config();
+        handlerContext.state().rpt_config.update( RPTConfig(handlerContext.keyword ));
+        auto rst_config = handlerContext.state().rst_config();
         rst_config.update(handlerContext.keyword, handlerContext.parseContext, handlerContext.errors);
-        this->snapshots.back().rst_config.update(std::move(rst_config));
+        handlerContext.state().rst_config.update(std::move(rst_config));
     }
 
     void Schedule::handleRPTRST(HandlerContext& handlerContext) {
-        auto rst_config = this->snapshots.back().rst_config();
+        auto rst_config = handlerContext.state().rst_config();
         rst_config.update(handlerContext.keyword, handlerContext.parseContext, handlerContext.errors);
-        this->snapshots.back().rst_config.update(std::move(rst_config));
+        handlerContext.state().rst_config.update(std::move(rst_config));
     }
 
     /*
@@ -1096,19 +1114,19 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
       normal restart file at this report step.
     */
     void Schedule::handleSAVE(HandlerContext& handlerContext) {
-        this->snapshots[handlerContext.currentStep].updateSAVE(true);
+        handlerContext.state().updateSAVE(true);
     }
 
 
     void Schedule::handleSUMTHIN(HandlerContext& handlerContext) {
         auto value = handlerContext.keyword.getRecord(0).getItem(0).getSIDouble(0);
-        this->snapshots.back().update_sumthin( value );
+        handlerContext.state().update_sumthin( value );
     }
 
 
     void Schedule::handleTUNING(HandlerContext& handlerContext) {
         const auto numrecords = handlerContext.keyword.size();
-        auto tuning = this->snapshots.back().tuning();
+        auto tuning = handlerContext.state().tuning();
 
         // local helpers
         auto nondefault_or_previous_double = [](const Opm::DeckRecord& rec, const std::string& item_name, double previous_value) {
@@ -1120,7 +1138,7 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
             const auto& deck_item = rec.getItem(item_name);
             return deck_item.defaultApplied(0) ? previous_value : rec.getItem(item_name).get< int >(0);
         };
-        
+
         auto nondefault_or_previous_sidouble = [](const Opm::DeckRecord& rec, const std::string& item_name, double previous_value) {
             const auto& deck_item = rec.getItem(item_name);
             return deck_item.defaultApplied(0) ? previous_value : rec.getItem(item_name).getSIDouble(0);
@@ -1129,12 +1147,12 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
         // \Note No TSTINIT value should not be used unless explicitly non-defaulted, hence removing value by default
         // \Note (exception is the first time step, which is handled by the Tuning constructor)
         tuning.TSINIT = std::nullopt;
-        
+
         if (numrecords > 0) {
             const auto& record1 = handlerContext.keyword.getRecord(0);
 
             // \Note A value indicates TSINIT was set in this record
-            if (const auto& deck_item = record1.getItem("TSINIT"); !deck_item.defaultApplied(0)) 
+            if (const auto& deck_item = record1.getItem("TSINIT"); !deck_item.defaultApplied(0))
                 tuning.TSINIT = std::optional<double>{ record1.getItem("TSINIT").getSIDouble(0) };
 
             tuning.TSMAXZ = nondefault_or_previous_sidouble(record1, "TSMAXZ", tuning.TSMAXZ);
@@ -1145,7 +1163,7 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
             tuning.TSFCNV = nondefault_or_previous_double(record1, "TSFCNV", tuning.TSFCNV);
             tuning.TFDIFF = nondefault_or_previous_double(record1, "TFDIFF", tuning.TFDIFF);
             tuning.THRUPT = nondefault_or_previous_double(record1, "THRUPT", tuning.THRUPT);
-            
+
             const auto& TMAXWCdeckItem = record1.getItem("TMAXWC");
             if (TMAXWCdeckItem.hasValue(0)) {
                 tuning.TMAXWC_has_value = true;
@@ -1164,7 +1182,7 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
             tuning.XXXCNV = nondefault_or_previous_double(record2, "XXXCNV", tuning.XXXCNV);
 
             tuning.XXXMBE = nondefault_or_previous_double(record2, "XXXMBE", tuning.XXXMBE);
-            
+
             tuning.XXXLCV = nondefault_or_previous_double(record2, "XXXLCV", tuning.XXXLCV);
             tuning.XXXWFL = nondefault_or_previous_double(record2, "XXXWFL", tuning.XXXWFL);
             tuning.TRGFIP = nondefault_or_previous_double(record2, "TRGFIP", tuning.TRGFIP);
@@ -1197,19 +1215,19 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
                 tuning.XXXDPR_has_value = true;
                 tuning.XXXDPR = nondefault_or_previous_sidouble(record3, "XXXDPR", tuning.XXXDPR);
             }
-        } 
+        }
 
-        this->snapshots.back().update_tuning( std::move( tuning ));
-        this->snapshots.back().events().addEvent(ScheduleEvents::TUNING_CHANGE);
+        handlerContext.state().update_tuning( std::move( tuning ));
+        handlerContext.state().events().addEvent(ScheduleEvents::TUNING_CHANGE);
     }
 
     void Schedule::handleUDQ(HandlerContext& handlerContext)
     {
-        auto new_udq = this->snapshots.back().udq();
+        auto new_udq = handlerContext.state().udq();
 
-        auto segment_matcher_factory = [this]()
+        auto segment_matcher_factory = [&handlerContext]()
         {
-            return std::make_unique<SegmentMatcher>(this->snapshots.back());
+            return std::make_unique<SegmentMatcher>(handlerContext.state());
         };
 
         for (const auto& record : handlerContext.keyword) {
@@ -1218,12 +1236,12 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
                                handlerContext.currentStep);
         }
 
-        this->snapshots.back().udq.update(std::move(new_udq));
+        handlerContext.state().udq.update(std::move(new_udq));
     }
 
     void Schedule::handleUDT(HandlerContext& handlerContext)
     {
-        auto new_udq = this->snapshots.back().udq();
+        auto new_udq = handlerContext.state().udq();
 
         using PUDT = ParserKeywords::UDT;
 
@@ -1275,42 +1293,46 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
 
         new_udq.add_table(name, UDT(x_vals, y_vals, type));
 
-        this->snapshots.back().udq.update(std::move(new_udq));
+        handlerContext.state().udq.update(std::move(new_udq));
     }
 
     void Schedule::handleVAPPARS(HandlerContext& handlerContext) {
         for (const auto& record : handlerContext.keyword) {
             double vap1 = record.getItem("OIL_VAP_PROPENSITY").get< double >(0);
             double vap2 = record.getItem("OIL_DENSITY_PROPENSITY").get< double >(0);
-            auto& ovp = this->snapshots.back().oilvap();
+            auto& ovp = handlerContext.state().oilvap();
             OilVaporizationProperties::updateVAPPARS(ovp, vap1, vap2);
         }
     }
 
     void Schedule::handleVFPINJ(HandlerContext& handlerContext) {
-        auto table = VFPInjTable(handlerContext.keyword, this->m_static.m_unit_system);
-        this->snapshots.back().events().addEvent( ScheduleEvents::VFPINJ_UPDATE );
-        this->snapshots.back().vfpinj.update( std::move(table) );
+        auto table = VFPInjTable(handlerContext.keyword,
+                                 handlerContext.static_schedule().m_unit_system);
+        handlerContext.state().events().addEvent( ScheduleEvents::VFPINJ_UPDATE );
+        handlerContext.state().vfpinj.update( std::move(table) );
     }
 
     void Schedule::handleVFPPROD(HandlerContext& handlerContext) {
-        auto table = VFPProdTable(handlerContext.keyword, this->m_static.gaslift_opt_active, this->m_static.m_unit_system);
-        this->snapshots.back().events().addEvent( ScheduleEvents::VFPPROD_UPDATE );
-        this->snapshots.back().vfpprod.update( std::move(table) );
+        auto table = VFPProdTable(handlerContext.keyword,
+                                  handlerContext.static_schedule().gaslift_opt_active,
+                                  handlerContext.static_schedule().m_unit_system);
+        handlerContext.state().events().addEvent( ScheduleEvents::VFPPROD_UPDATE );
+        handlerContext.state().vfpprod.update( std::move(table) );
     }
 
     void Schedule::handleWCONHIST(HandlerContext& handlerContext) {
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
-            const auto well_names = this->wellNames(wellNamePattern, handlerContext);
+            const auto well_names = handlerContext.wellNames(wellNamePattern, false);
 
             const Well::Status status = WellStatusFromString(record.getItem("STATUS").getTrimmedString(0));
 
             for (const auto& well_name : well_names) {
-                this->updateWellStatus( well_name , handlerContext.currentStep , status, handlerContext.keyword.location() );
+                handlerContext.updateWellStatus(well_name, status,
+                                                handlerContext.keyword.location());
 
                 std::optional<VFPProdTable::ALQ_TYPE> alq_type;
-                auto well2 = this->snapshots.back().wells.get( well_name );
+                auto well2 = handlerContext.state().wells.get( well_name );
                 const bool switching_from_injector = !well2.isProducer();
                 auto properties = std::make_shared<Well::WellProductionProperties>(well2.getProductionProperties());
                 bool update_well = false;
@@ -1320,17 +1342,17 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
                     table_nr = properties->VFPTableNumber;
 
                 if (table_nr != 0) {
-                    const auto& vfpprod = this->snapshots.back().vfpprod;
+                    const auto& vfpprod = handlerContext.state().vfpprod;
                     if (vfpprod.has(table_nr))
-                        alq_type = this->snapshots.back().vfpprod(table_nr).getALQType();
+                        alq_type = handlerContext.state().vfpprod(table_nr).getALQType();
                     else {
                         std::string reason = fmt::format("Problem with well:{} VFP table: {} not defined", well_name, table_nr);
                         throw OpmInputError(reason, handlerContext.keyword.location());
                     }
                 }
                 double default_bhp;
-                if (this->snapshots.back().bhp_defaults.get().prod_target) {
-                    default_bhp = *this->snapshots.back().bhp_defaults.get().prod_target;
+                if (handlerContext.state().bhp_defaults.get().prod_target) {
+                    default_bhp = *handlerContext.state().bhp_defaults.get().prod_target;
                 } else {
                     default_bhp = UnitSystem::newMETRIC().to_si(UnitSystem::measure::pressure,
                                                                 ParserKeywords::FBHPDEF::TARGET_BHP::defaultValue);
@@ -1338,7 +1360,7 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
 
                 properties->handleWCONHIST(alq_type,
                                            default_bhp,
-                                           this->m_static.m_unit_system, record);
+                                           handlerContext.static_schedule().m_unit_system, record);
 
                 if (switching_from_injector) {
                     if (properties->bhp_hist_limit_defaulted) {
@@ -1349,7 +1371,7 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
                     inj_props->resetBHPLimit();
                     well2.updateInjection(inj_props);
                     update_well = true;
-                    this->snapshots.back().wellgroup_events().addEvent( well2.name(), ScheduleEvents::WELL_SWITCHED_INJECTOR_PRODUCER);
+                    handlerContext.state().wellgroup_events().addEvent( well2.name(), ScheduleEvents::WELL_SWITCHED_INJECTOR_PRODUCER);
                 }
 
                 if (well2.updateProduction(properties))
@@ -1362,9 +1384,9 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
                     update_well = true;
 
                 if (update_well) {
-                    this->snapshots.back().events().addEvent( ScheduleEvents::PRODUCTION_UPDATE );
-                    this->snapshots.back().wellgroup_events().addEvent( well2.name(), ScheduleEvents::PRODUCTION_UPDATE);
-                    this->snapshots.back().wells.update( well2 );
+                    handlerContext.state().events().addEvent( ScheduleEvents::PRODUCTION_UPDATE );
+                    handlerContext.state().wellgroup_events().addEvent( well2.name(), ScheduleEvents::PRODUCTION_UPDATE);
+                    handlerContext.state().wells.update( well2 );
                 }
 
                 if (!well2.getAllowCrossFlow()) {
@@ -1376,9 +1398,9 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
                     if (oil_rate.zero() && water_rate.zero() && gas_rate.zero()) {
                         std::string msg =
                             "Well " + well2.name() + " is a history matched well with zero rate where crossflow is banned. " +
-                            "This well will be closed at " + std::to_string(this->seconds(handlerContext.currentStep) / (60*60*24)) + " days";
+                            "This well will be closed at " + std::to_string(handlerContext.elapsed_seconds() / (60*60*24)) + " days";
                         OpmLog::note(msg);
-                        this->updateWellStatus( well_name, handlerContext.currentStep, Well::Status::SHUT);
+                        handlerContext.updateWellStatus(well_name,  Well::Status::SHUT);
                     }
                 }
             }
@@ -1388,14 +1410,15 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
     void Schedule::handleWCONPROD(HandlerContext& handlerContext) {
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
-            const auto well_names = this->wellNames(wellNamePattern, handlerContext);
+            const auto well_names = handlerContext.wellNames(wellNamePattern, false);
 
             const Well::Status status = WellStatusFromString(record.getItem("STATUS").getTrimmedString(0));
 
             for (const auto& well_name : well_names) {
-                bool update_well = this->updateWellStatus(well_name, handlerContext.currentStep, status, handlerContext.keyword.location());
+                bool update_well = handlerContext.updateWellStatus(well_name, status,
+                                                                   handlerContext.keyword.location());
                 std::optional<VFPProdTable::ALQ_TYPE> alq_type;
-                auto well2 = this->snapshots.back().wells.get( well_name );
+                auto well2 = handlerContext.state().wells.get( well_name );
                 const bool switching_from_injector = !well2.isProducer();
                 auto properties = std::make_shared<Well::WellProductionProperties>(well2.getProductionProperties());
                 properties->clearControls();
@@ -1407,9 +1430,9 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
                     table_nr = properties->VFPTableNumber;
 
                 if (table_nr != 0) {
-                    const auto& vfpprod = this->snapshots.back().vfpprod;
+                    const auto& vfpprod = handlerContext.state().vfpprod;
                     if (vfpprod.has(table_nr))
-                        alq_type = this->snapshots.back().vfpprod(table_nr).getALQType();
+                        alq_type = handlerContext.state().vfpprod(table_nr).getALQType();
                     else {
                         std::string reason = fmt::format("Problem with well:{} VFP table: {} not defined", well_name, table_nr);
                         throw OpmInputError(reason, handlerContext.keyword.location());
@@ -1417,15 +1440,15 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
                 }
 
                 double default_bhp_target;
-                if (this->snapshots.back().bhp_defaults.get().prod_target) {
-                    default_bhp_target = *this->snapshots.back().bhp_defaults.get().prod_target;
+                if (handlerContext.state().bhp_defaults.get().prod_target) {
+                    default_bhp_target = *handlerContext.state().bhp_defaults.get().prod_target;
                 } else {
                     default_bhp_target = UnitSystem::newMETRIC().to_si(UnitSystem::measure::pressure,
                                                                        ParserKeywords::WCONPROD::BHP::defaultValue.get<double>());
                 }
 
                 properties->handleWCONPROD(alq_type, default_bhp_target,
-                                           this->m_static.m_unit_system,
+                                           handlerContext.static_schedule().m_unit_system,
                                            well_name, record);
 
                 if (switching_from_injector) {
@@ -1433,7 +1456,7 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
                         properties->setBHPLimit(default_bhp_target);
                     }
                     update_well = true;
-                    this->snapshots.back().wellgroup_events().addEvent( well2.name(), ScheduleEvents::WELL_SWITCHED_INJECTOR_PRODUCER);
+                    handlerContext.state().wellgroup_events().addEvent( well2.name(), ScheduleEvents::WELL_SWITCHED_INJECTOR_PRODUCER);
                 }
 
                 if (well2.updateProduction(properties))
@@ -1446,18 +1469,18 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
                     update_well = true;
 
                 if (well2.getStatus() == WellStatus::OPEN) {
-                    this->snapshots.back().wellgroup_events().addEvent(well2.name(), ScheduleEvents::REQUEST_OPEN_WELL);
+                    handlerContext.state().wellgroup_events().addEvent(well2.name(), ScheduleEvents::REQUEST_OPEN_WELL);
                 }
 
                 if (update_well) {
-                    this->snapshots.back().events().addEvent( ScheduleEvents::PRODUCTION_UPDATE );
-                    this->snapshots.back().wellgroup_events().addEvent( well2.name(), ScheduleEvents::PRODUCTION_UPDATE);
-                    this->snapshots.back().wells.update( std::move(well2) );
+                    handlerContext.state().events().addEvent( ScheduleEvents::PRODUCTION_UPDATE );
+                    handlerContext.state().wellgroup_events().addEvent( well2.name(), ScheduleEvents::PRODUCTION_UPDATE);
+                    handlerContext.state().wells.update( std::move(well2) );
                 }
 
-                auto udq_active = this->snapshots.back().udq_active.get();
-                if (properties->updateUDQActive(this->getUDQConfig(handlerContext.currentStep), udq_active))
-                    this->snapshots.back().udq_active.update( std::move(udq_active));
+                auto udq_active = handlerContext.state().udq_active.get();
+                if (properties->updateUDQActive(handlerContext.state().udq.get(), udq_active))
+                    handlerContext.state().udq_active.update( std::move(udq_active));
 
                 handlerContext.affected_well(well_name);
             }
@@ -1467,30 +1490,30 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
     void Schedule::handleWCONINJE(HandlerContext& handlerContext) {
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
-            const auto well_names = wellNames(wellNamePattern, handlerContext,
-                                              isWList(handlerContext.currentStep,
-                                                      wellNamePattern));
+            const auto well_names = handlerContext.wellNames(wellNamePattern);
 
             const Well::Status status = WellStatusFromString(record.getItem("STATUS").getTrimmedString(0));
 
             for (const auto& well_name : well_names) {
-                this->updateWellStatus(well_name, handlerContext.currentStep, status, handlerContext.keyword.location());
+                handlerContext.updateWellStatus(well_name, status,
+                                                handlerContext.keyword.location());
 
                 bool update_well = false;
-                auto well2 = this->snapshots.back().wells.get( well_name );
+                auto well2 = handlerContext.state().wells.get( well_name );
 
                 auto injection = std::make_shared<Well::WellInjectionProperties>(well2.getInjectionProperties());
                 auto previousInjectorType = injection->injectorType;
 
                 double default_bhp_limit;
-                if (this->snapshots.back().bhp_defaults.get().inj_limit) {
-                    default_bhp_limit = this->m_static.m_unit_system.from_si(UnitSystem::measure::pressure,
-                                                                            *this->snapshots.back().bhp_defaults.get().inj_limit);
+                const auto& usys = handlerContext.static_schedule().m_unit_system;
+                if (handlerContext.state().bhp_defaults.get().inj_limit) {
+                    default_bhp_limit = usys.from_si(UnitSystem::measure::pressure,
+                                                     *handlerContext.state().bhp_defaults.get().inj_limit);
                 } else {
                     default_bhp_limit = UnitSystem::newMETRIC().to_si(UnitSystem::measure::pressure,
                                                                       ParserKeywords::WCONINJE::BHP::defaultValue.get<double>());
-                    default_bhp_limit = this->m_static.m_unit_system.from_si(UnitSystem::measure::pressure,
-                                                                             default_bhp_limit);
+                    default_bhp_limit = usys.from_si(UnitSystem::measure::pressure,
+                                                     default_bhp_limit);
                 }
 
                 injection->handleWCONINJE(record, default_bhp_limit,
@@ -1501,7 +1524,7 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
                     update_well = true;
 
                 if (switching_from_producer)
-                    this->snapshots.back().wellgroup_events().addEvent( well2.name(), ScheduleEvents::WELL_SWITCHED_INJECTOR_PRODUCER);
+                    handlerContext.state().wellgroup_events().addEvent( well2.name(), ScheduleEvents::WELL_SWITCHED_INJECTOR_PRODUCER);
 
                 if (well2.updatePrediction(true))
                     update_well = true;
@@ -1510,11 +1533,11 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
                     update_well = true;
 
                 if (update_well) {
-                    this->snapshots.back().events().addEvent(ScheduleEvents::INJECTION_UPDATE);
-                    this->snapshots.back().wellgroup_events().addEvent( well_name, ScheduleEvents::INJECTION_UPDATE);
+                    handlerContext.state().events().addEvent(ScheduleEvents::INJECTION_UPDATE);
+                    handlerContext.state().wellgroup_events().addEvent( well_name, ScheduleEvents::INJECTION_UPDATE);
                     if(previousInjectorType != injection->injectorType)
-                        this->snapshots.back().wellgroup_events().addEvent( well_name, ScheduleEvents::INJECTION_TYPE_CHANGED);
-                    this->snapshots.back().wells.update( std::move(well2) );
+                        handlerContext.state().wellgroup_events().addEvent( well_name, ScheduleEvents::INJECTION_TYPE_CHANGED);
+                    handlerContext.state().wells.update( std::move(well2) );
                 }
 
                 // if the well has zero surface rate limit or reservior rate limit, while does not allow crossflow,
@@ -1522,30 +1545,30 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
                 if ( ! well2.getAllowCrossFlow() ) {
                     std::string msg =
                         "Well " + well_name + " is an injector with zero rate where crossflow is banned. " +
-                        "This well will be closed at " + std::to_string ( this->seconds(handlerContext.currentStep) / (60*60*24) ) + " days";
+                        "This well will be closed at " + std::to_string(handlerContext.elapsed_seconds() / (60*60*24)) + " days";
 
                     if (injection->surfaceInjectionRate.is<double>()) {
                         if (injection->hasInjectionControl(Well::InjectorCMode::RATE) && injection->surfaceInjectionRate.zero()) {
                             OpmLog::note(msg);
-                            this->updateWellStatus( well_name, handlerContext.currentStep, Well::Status::SHUT);
+                            handlerContext.updateWellStatus(well_name, Well::Status::SHUT);
                         }
                     }
 
                     if (injection->reservoirInjectionRate.is<double>()) {
                         if (injection->hasInjectionControl(Well::InjectorCMode::RESV) && injection->reservoirInjectionRate.zero()) {
                             OpmLog::note(msg);
-                            this->updateWellStatus( well_name, handlerContext.currentStep, Well::Status::SHUT);
+                            handlerContext.updateWellStatus(well_name, Well::Status::SHUT);
                         }
                     }
                 }
 
-                if (this->snapshots.back().wells.get( well_name ).getStatus() == Well::Status::OPEN) {
-                    this->snapshots.back().wellgroup_events().addEvent(well_name, ScheduleEvents::REQUEST_OPEN_WELL);
+                if (handlerContext.state().wells.get( well_name ).getStatus() == Well::Status::OPEN) {
+                    handlerContext.state().wellgroup_events().addEvent(well_name, ScheduleEvents::REQUEST_OPEN_WELL);
                 }
 
-                auto udq_active = this->snapshots.back().udq_active.get();
-                if (injection->updateUDQActive(this->getUDQConfig(handlerContext.currentStep), udq_active))
-                    this->snapshots.back().udq_active.update( std::move(udq_active) );
+                auto udq_active = handlerContext.state().udq_active.get();
+                if (injection->updateUDQActive(handlerContext.state().udq.get(), udq_active))
+                    handlerContext.state().udq_active.update( std::move(udq_active) );
 
                 handlerContext.affected_well(well_name);
             }
@@ -1555,19 +1578,20 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
     void Schedule::handleWCONINJH(HandlerContext& handlerContext) {
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
-            const auto well_names = wellNames(wellNamePattern, handlerContext);
+            const auto well_names = handlerContext.wellNames(wellNamePattern, false);
             const Well::Status status = WellStatusFromString( record.getItem("STATUS").getTrimmedString(0));
 
             for (const auto& well_name : well_names) {
-                this->updateWellStatus(well_name, handlerContext.currentStep, status, handlerContext.keyword.location());
+                handlerContext.updateWellStatus(well_name, status,
+                                                handlerContext.keyword.location());
                 bool update_well = false;
-                auto well2 = this->snapshots.back().wells.get( well_name );
+                auto well2 = handlerContext.state().wells.get( well_name );
                 auto injection = std::make_shared<Well::WellInjectionProperties>(well2.getInjectionProperties());
                 auto previousInjectorType = injection->injectorType;
 
                 double default_bhp_limit;
-                if (this->snapshots.back().bhp_defaults.get().inj_limit) {
-                    default_bhp_limit = *this->snapshots.back().bhp_defaults.get().inj_limit;
+                if (handlerContext.state().bhp_defaults.get().inj_limit) {
+                    default_bhp_limit = *handlerContext.state().bhp_defaults.get().inj_limit;
                 } else {
                     default_bhp_limit = UnitSystem::newMETRIC().to_si(UnitSystem::measure::pressure,
                                                                       6891.2);
@@ -1582,7 +1606,7 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
                     update_well = true;
 
                 if (switching_from_producer)
-                    this->snapshots.back().wellgroup_events().addEvent( well2.name(), ScheduleEvents::WELL_SWITCHED_INJECTOR_PRODUCER);
+                    handlerContext.state().wellgroup_events().addEvent( well2.name(), ScheduleEvents::WELL_SWITCHED_INJECTOR_PRODUCER);
 
                 if (well2.updatePrediction(false))
                     update_well = true;
@@ -1591,19 +1615,19 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
                     update_well = true;
 
                 if (update_well) {
-                    this->snapshots.back().events().addEvent( ScheduleEvents::INJECTION_UPDATE );
-                    this->snapshots.back().wellgroup_events().addEvent( well_name, ScheduleEvents::INJECTION_UPDATE);
+                    handlerContext.state().events().addEvent( ScheduleEvents::INJECTION_UPDATE );
+                    handlerContext.state().wellgroup_events().addEvent( well_name, ScheduleEvents::INJECTION_UPDATE);
                     if(previousInjectorType != injection->injectorType)
-                        this->snapshots.back().wellgroup_events().addEvent( well_name, ScheduleEvents::INJECTION_TYPE_CHANGED);
-                    this->snapshots.back().wells.update( std::move(well2) );
+                        handlerContext.state().wellgroup_events().addEvent( well_name, ScheduleEvents::INJECTION_TYPE_CHANGED);
+                    handlerContext.state().wells.update( std::move(well2) );
                 }
 
                 if ( ! well2.getAllowCrossFlow() && (injection->surfaceInjectionRate.zero())) {
                     std::string msg =
                         "Well " + well_name + " is an injector with zero rate where crossflow is banned. " +
-                        "This well will be closed at " + std::to_string ( this->seconds(handlerContext.currentStep) / (60*60*24) ) + " days";
+                        "This well will be closed at " + std::to_string(handlerContext.elapsed_seconds() / (60*60*24)) + " days";
                     OpmLog::note(msg);
-                    this->updateWellStatus( well_name, handlerContext.currentStep, Well::Status::SHUT);
+                    handlerContext.updateWellStatus(well_name, Well::Status::SHUT);
                 }
             }
         }
@@ -1612,13 +1636,13 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
     void Schedule::handleWECON(HandlerContext& handlerContext) {
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
-            const auto well_names = this->wellNames(wellNamePattern, handlerContext);
+            const auto well_names = handlerContext.wellNames(wellNamePattern, false);
 
             for (const auto& well_name : well_names) {
-                auto well2 = this->snapshots.back().wells.get( well_name );
+                auto well2 = handlerContext.state().wells.get( well_name );
                 auto econ_limits = std::make_shared<WellEconProductionLimits>( record );
                 if (well2.updateEconLimits(econ_limits))
-                    this->snapshots.back().wells.update( std::move(well2) );
+                    handlerContext.state().wells.update( std::move(well2) );
             }
         }
     }
@@ -1626,17 +1650,18 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
     void Schedule::handleWDFAC(HandlerContext& handlerContext) {
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
-            const auto well_names = wellNames(wellNamePattern, handlerContext.currentStep);
-            if (well_names.empty())
-                this->invalidNamePattern(wellNamePattern, handlerContext);
+            const auto well_names = handlerContext.wellNames(wellNamePattern, true);
+            if (well_names.empty()) {
+                handlerContext.invalidNamePattern(wellNamePattern);
+            }
 
             for (const auto& well_name : well_names) {
-                auto well = this->snapshots.back().wells.get(well_name);
+                auto well = handlerContext.state().wells.get(well_name);
                 auto wdfac = std::make_shared<WDFAC>(well.getWDFAC());
                 wdfac->updateWDFAC( record );
                 wdfac->updateTotalCF(well.getConnections());
                 if (well.updateWDFAC(std::move(wdfac)))
-                    this->snapshots.back().wells.update( std::move(well) );
+                    handlerContext.state().wells.update( std::move(well) );
             }
         }
     }
@@ -1644,16 +1669,17 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
     void Schedule::handleWDFACCOR(HandlerContext& handlerContext) {
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELLNAME").getTrimmedString(0);
-            const auto well_names = wellNames(wellNamePattern, handlerContext.currentStep);
-            if (well_names.empty())
-                this->invalidNamePattern(wellNamePattern, handlerContext);
+            const auto well_names = handlerContext.wellNames(wellNamePattern, true);
+            if (well_names.empty()) {
+                handlerContext.invalidNamePattern(wellNamePattern);
+            }
 
             for (const auto& well_name : well_names) {
-                auto well = this->snapshots.back().wells.get(well_name);
+                auto well = handlerContext.state().wells.get(well_name);
                 auto wdfac = std::make_shared<WDFAC>(well.getWDFAC());
                 wdfac->updateWDFACCOR( record );
                 if (well.updateWDFAC(std::move(wdfac)))
-                    this->snapshots.back().wells.update( std::move(well) );
+                    handlerContext.state().wells.update( std::move(well) );
             }
         }
     }
@@ -1661,18 +1687,16 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
     void Schedule::handleWEFAC(HandlerContext& handlerContext) {
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELLNAME").getTrimmedString(0);
-            const auto well_names = this->wellNames(wellNamePattern, handlerContext,
-                                                    isWList(handlerContext.currentStep,
-                                                            wellNamePattern));
+            const auto well_names = handlerContext.wellNames(wellNamePattern);
 
             const double& efficiencyFactor = record.getItem("EFFICIENCY_FACTOR").get<double>(0);
 
             for (const auto& well_name : well_names) {
-                auto well2 = this->snapshots.back().wells.get( well_name );
+                auto well2 = handlerContext.state().wells.get( well_name );
                 if (well2.updateEfficiencyFactor(efficiencyFactor)){
-                    this->snapshots.back().wellgroup_events().addEvent( well_name, ScheduleEvents::WELLGROUP_EFFICIENCY_UPDATE);
-                    this->snapshots.back().events().addEvent(ScheduleEvents::WELLGROUP_EFFICIENCY_UPDATE);
-                    this->snapshots.back().wells.update( std::move(well2) );
+                    handlerContext.state().wellgroup_events().addEvent( well_name, ScheduleEvents::WELLGROUP_EFFICIENCY_UPDATE);
+                    handlerContext.state().events().addEvent(ScheduleEvents::WELLGROUP_EFFICIENCY_UPDATE);
+                    handlerContext.state().wells.update( std::move(well2) );
                 }
             }
         }
@@ -1680,7 +1704,6 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
 
     void Schedule::handleWELOPEN(HandlerContext& handlerContext) {
         const auto& keyword = handlerContext.keyword;
-        const auto& currentStep = handlerContext.currentStep;
 
         auto conn_defaulted = []( const DeckRecord& rec ) {
             auto defaulted = []( const DeckItem& item ) {
@@ -1695,9 +1718,7 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
         for (const auto& record : keyword) {
             const auto& wellNamePattern = record.getItem( "WELL" ).getTrimmedString(0);
             const auto& status_str = record.getItem( "STATUS" ).getTrimmedString( 0 );
-            const auto well_names = this->wellNames(wellNamePattern, handlerContext,
-                                                    isWList(handlerContext.currentStep,
-                                                            wellNamePattern));
+            const auto well_names = handlerContext.wellNames(wellNamePattern);
 
             /* if all records are defaulted or just the status is set, only
              * well status is updated
@@ -1706,7 +1727,7 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
                 const auto new_well_status = WellStatusFromString(status_str);
                 for (const auto& wname : well_names) {
                     const auto did_update_well_status =
-                        this->updateWellStatus(wname, currentStep, new_well_status);
+                        handlerContext.updateWellStatus(wname, new_well_status);
 
                     handlerContext.affected_well(wname);
 
@@ -1716,7 +1737,7 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
 
                     if (did_update_well_status && (new_well_status == open)) {
                         // Record possible well injection/production status change
-                        auto well2 = this->snapshots[currentStep].wells.get(wname);
+                        auto well2 = handlerContext.state().wells.get(wname);
 
                         const auto did_flow_update =
                             (well2.isProducer() && well2.updateHasProduced())
@@ -1724,12 +1745,12 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
                             (well2.isInjector() && well2.updateHasInjected());
 
                         if (did_flow_update) {
-                            this->snapshots[currentStep].wells.update(std::move(well2));
+                            handlerContext.state().wells.update(std::move(well2));
                         }
                     }
 
                     if (new_well_status == open) {
-                        this->snapshots.back().wellgroup_events().addEvent( wname, ScheduleEvents::REQUEST_OPEN_WELL);
+                        handlerContext.state().wellgroup_events().addEvent( wname, ScheduleEvents::REQUEST_OPEN_WELL);
                     }
                 }
                 continue;
@@ -1743,21 +1764,21 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
              */
             for (const auto& wname : well_names) {
                 {
-                    auto well = this->snapshots[currentStep].wells.get(wname);
-                    this->snapshots[currentStep].wells.update( std::move(well) );
+                    auto well = handlerContext.state().wells.get(wname);
+                    handlerContext.state().wells.update( std::move(well) );
                 }
 
                 const auto connection_status = Connection::StateFromString( status_str );
                 {
-                    auto well = this->snapshots[currentStep].wells.get(wname);
+                    auto well = handlerContext.state().wells.get(wname);
                     well.handleWELOPENConnections(record, connection_status);
-                    this->snapshots[currentStep].wells.update( std::move(well) );
+                    handlerContext.state().wells.update( std::move(well) );
                 }
 
                 handlerContext.affected_well(wname);
                 handlerContext.record_well_structure_change();
 
-                this->snapshots.back().events().addEvent(ScheduleEvents::COMPLETION_CHANGE);
+                handlerContext.state().events().addEvent(ScheduleEvents::COMPLETION_CHANGE);
             }
         }
     }
@@ -1766,21 +1787,20 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
         using WELL_NAME = ParserKeywords::WELPI::WELL_NAME;
         using PI        = ParserKeywords::WELPI::STEADY_STATE_PRODUCTIVITY_OR_INJECTIVITY_INDEX_VALUE;
 
-        auto report_step = handlerContext.currentStep;
         for (const auto& record : handlerContext.keyword) {
-            const auto well_names = this->wellNames(record.getItem<WELL_NAME>().getTrimmedString(0),
-                                                    handlerContext);
+            const std::string trimmed = record.getItem<WELL_NAME>().getTrimmedString(0);
+            const auto well_names = handlerContext.wellNames(trimmed, false);
             const auto targetPI = record.getItem<PI>().get<double>(0);
 
             std::vector<bool> scalingApplicable;
             for (const auto& well_name : well_names) {
-                auto new_well = this->getWell(well_name, report_step);
+                auto new_well = handlerContext.state().wells.get(well_name);
                 auto scalingFactor = new_well.convertDeckPI(targetPI) /
                                      handlerContext.getWellPI(well_name);
                 new_well.updateWellProductivityIndex();
                 new_well.applyWellProdIndexScaling(scalingFactor, scalingApplicable);
-                this->snapshots.back().wells.update( std::move(new_well) );
-                this->snapshots.back().target_wellpi[well_name] = targetPI;
+                handlerContext.state().wells.update( std::move(new_well) );
+                handlerContext.state().target_wellpi[well_name] = targetPI;
 
                 handlerContext.affected_well(well_name);
             }
@@ -1807,14 +1827,11 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
 
             for (const auto& record : keyword) {
                 const auto& wellNamePattern = record.getItem<WELL_NAME>().getTrimmedString(0);
-                const auto well_names
-                    = this->wellNames(wellNamePattern, handlerContext,
-                                      isWList(handlerContext.currentStep,
-                                              wellNamePattern));
+                const auto well_names = handlerContext.wellNames(wellNamePattern);
 
                 const auto rawProdIndex = record.getItem<PI>().get<double>(0);
                 for (const auto& well_name : well_names) {
-                    auto well2 = this->snapshots.back().wells.get(well_name);
+                    auto well2 = handlerContext.state().wells.get(well_name);
 
                     // Note: Need to ensure we have an independent copy of
                     // well's connections because
@@ -1823,30 +1840,30 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
                     auto connections = std::make_shared<WellConnections>(well2.getConnections());
                     well2.updateConnections(std::move(connections), true);
                     if (well2.updateWellProductivityIndex())
-                        this->snapshots.back().wells.update(std::move(well2));
+                        handlerContext.state().wells.update(std::move(well2));
 
-                    this->snapshots.back().wellgroup_events().addEvent(well_name,
+                    handlerContext.state().wellgroup_events().addEvent(well_name,
                                                                        ScheduleEvents::WELL_PRODUCTIVITY_INDEX);
-                    this->snapshots.back().target_wellpi[well_name] = rawProdIndex;
+                    handlerContext.state().target_wellpi[well_name] = rawProdIndex;
                 }
             }
-            this->snapshots.back().events().addEvent(ScheduleEvents::WELL_PRODUCTIVITY_INDEX);
+            handlerContext.state().events().addEvent(ScheduleEvents::WELL_PRODUCTIVITY_INDEX);
         }
     }
 
     void Schedule::handleWELSEGS(HandlerContext& handlerContext) {
         const auto& record1 = handlerContext.keyword.getRecord(0);
         const auto& wname = record1.getItem("WELL").getTrimmedString(0);
-        if (this->hasWell(wname, handlerContext.currentStep)) {
-            auto well = this->snapshots.back().wells.get(wname);
+        if (handlerContext.state().wells.has(wname)) {
+            auto well = handlerContext.state().wells.get(wname);
             if (well.handleWELSEGS(handlerContext.keyword)) {
-                this->snapshots.back().wells.update( std::move(well) );
+                handlerContext.state().wells.update( std::move(well) );
                 handlerContext.record_well_structure_change();
             }
             handlerContext.welsegs_handled(wname);
         } else {
             const auto& location = handlerContext.keyword.location();
-            if (this->action_wgnames.has_well(wname)) {
+            if (handlerContext.action_wgnames().has_well(wname)) {
                 std::string msg = fmt::format(R"(Well: {} not yet defined for keyword {}.
 Expecting well to be defined with WELSPECS in ACTIONX before actual use.
 File {} line {}.)", wname, location.keyword, location.filename, location.lineno);
@@ -1910,8 +1927,7 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
             // An empty list of well names is okay since that means we're
             // creating a new well in this case.
             const auto allowEmptyWellList = true;
-            const auto existingWells =
-                this->wellNames(wellName, handlerContext, allowEmptyWellList);
+            const auto existingWells = handlerContext.wellNames(wellName, allowEmptyWellList);
 
             if (groupName == "FIELD") {
                 if (existingWells.empty()) {
@@ -1924,25 +1940,23 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
                 }
             }
 
-            if (! this->snapshots.back().groups.has(groupName)) {
-                this->addGroup(groupName, handlerContext.currentStep);
+            if (! handlerContext.state().groups.has(groupName)) {
+                handlerContext.addGroup(groupName);
             }
 
             if (existingWells.empty()) {
                 // 'wellName' does not match any existing wells.  Create a
                 // new Well object for this well.
-                this->welspecsCreateNewWell(record,
-                                            wellName,
-                                            groupName,
-                                            handlerContext);
+                handlerContext.welspecsCreateNewWell(record,
+                                                     wellName,
+                                                     groupName);
             }
             else {
                 // 'wellName' matches one or more existing wells.  Assign
                 // new properties for those wells.
-                this->welspecsUpdateExistingWells(record,
-                                                  existingWells,
-                                                  groupName,
-                                                  handlerContext);
+                handlerContext.welspecsUpdateExistingWells(record,
+                                                           existingWells,
+                                                           groupName);
             }
         }
 
@@ -1985,20 +1999,19 @@ Well{0} entered with 'FIELD' parent group:
       rates will be wrong.
     */
     void Schedule::handleWELTARG(HandlerContext& handlerContext) {
-        const double SiFactorP = this->m_static.m_unit_system.parse("Pressure").getSIScaling();
+        const double SiFactorP = handlerContext.static_schedule().m_unit_system.parse("Pressure").getSIScaling();
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
-            const auto well_names = this->wellNames(wellNamePattern, handlerContext,
-                                                    isWList(handlerContext.currentStep,
-                                                            wellNamePattern));
-            if (well_names.empty())
-                this->invalidNamePattern( wellNamePattern, handlerContext);
+            const auto well_names = handlerContext.wellNames(wellNamePattern);
+            if (well_names.empty()) {
+                handlerContext.invalidNamePattern( wellNamePattern);
+            }
 
             const auto cmode = WellWELTARGCModeFromString(record.getItem("CMODE").getTrimmedString(0));
             const auto new_arg = record.getItem("NEW_VALUE").get<UDAValue>(0);
 
             for (const auto& well_name : well_names) {
-                auto well2 = this->snapshots.back().wells.get(well_name);
+                auto well2 = handlerContext.state().wells.get(well_name);
                 bool update = false;
                 if (well2.isProducer()) {
                     auto prop = std::make_shared<Well::WellProductionProperties>(well2.getProductionProperties());
@@ -2007,9 +2020,9 @@ Well{0} entered with 'FIELD' parent group:
                     if (cmode == Well::WELTARGCMode::GUID)
                         update |= well2.updateWellGuideRate(new_arg.get<double>());
 
-                    auto udq_active = this->snapshots.back().udq_active.get();
-                    if (prop->updateUDQActive(this->getUDQConfig(handlerContext.currentStep), cmode, udq_active))
-                        this->snapshots.back().udq_active.update( std::move(udq_active));
+                    auto udq_active = handlerContext.state().udq_active.get();
+                    if (prop->updateUDQActive(handlerContext.state().udq.get(), cmode, udq_active))
+                        handlerContext.state().udq_active.update( std::move(udq_active));
                 }
                 else {
                     auto inj = std::make_shared<Well::WellInjectionProperties>(well2.getInjectionProperties());
@@ -2018,21 +2031,21 @@ Well{0} entered with 'FIELD' parent group:
                     if (cmode == Well::WELTARGCMode::GUID)
                         update |= well2.updateWellGuideRate(new_arg.get<double>());
 
-                    auto udq_active = this->snapshots.back().udq_active.get();
-                    if (inj->updateUDQActive(this->getUDQConfig(handlerContext.currentStep), cmode, udq_active))
-                        this->snapshots.back().udq_active.update(std::move(udq_active));
+                    auto udq_active = handlerContext.state().udq_active.get();
+                    if (inj->updateUDQActive(handlerContext.state().udq.get(), cmode, udq_active))
+                        handlerContext.state().udq_active.update(std::move(udq_active));
                 }
 
                 if (update)
                 {
                     if (well2.isProducer()) {
-                        this->snapshots.back().wellgroup_events().addEvent( well_name, ScheduleEvents::PRODUCTION_UPDATE);
-                        this->snapshots.back().events().addEvent( ScheduleEvents::PRODUCTION_UPDATE );
+                        handlerContext.state().wellgroup_events().addEvent( well_name, ScheduleEvents::PRODUCTION_UPDATE);
+                        handlerContext.state().events().addEvent( ScheduleEvents::PRODUCTION_UPDATE );
                     } else {
-                        this->snapshots.back().wellgroup_events().addEvent( well_name, ScheduleEvents::INJECTION_UPDATE);
-                        this->snapshots.back().events().addEvent( ScheduleEvents::INJECTION_UPDATE );
+                        handlerContext.state().wellgroup_events().addEvent( well_name, ScheduleEvents::INJECTION_UPDATE);
+                        handlerContext.state().events().addEvent( ScheduleEvents::INJECTION_UPDATE );
                     }
-                    this->snapshots.back().wells.update( std::move(well2) );
+                    handlerContext.state().wells.update( std::move(well2) );
                 }
 
                 handlerContext.affected_well(well_name);
@@ -2043,14 +2056,14 @@ Well{0} entered with 'FIELD' parent group:
     void Schedule::handleWFOAM(HandlerContext& handlerContext) {
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
-            const auto well_names = this->wellNames(wellNamePattern, handlerContext);
+            const auto well_names = handlerContext.wellNames(wellNamePattern, false);
 
             for (const auto& well_name : well_names) {
-                auto well2 = this->snapshots.back().wells.get(well_name);
+                auto well2 = handlerContext.state().wells.get(well_name);
                 auto foam_properties = std::make_shared<WellFoamProperties>(well2.getFoamProperties());
                 foam_properties->handleWFOAM(record);
                 if (well2.updateFoamProperties(foam_properties))
-                    this->snapshots.back().wells.update( std::move(well2) );
+                    handlerContext.state().wells.update( std::move(well2) );
             }
         }
     }
@@ -2058,9 +2071,7 @@ Well{0} entered with 'FIELD' parent group:
     void Schedule::handleWGRUPCON(HandlerContext& handlerContext) {
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
-            const auto well_names = this->wellNames(wellNamePattern, handlerContext,
-                                                    isWList(handlerContext.currentStep,
-                                                            wellNamePattern));
+            const auto well_names = handlerContext.wellNames(wellNamePattern);
 
             const bool availableForGroupControl = DeckItem::to_bool(record.getItem("GROUP_CONTROLLED").getTrimmedString(0));
             const double guide_rate = record.getItem("GUIDE_RATE").get<double>(0);
@@ -2073,12 +2084,12 @@ Well{0} entered with 'FIELD' parent group:
                     phase = WellGuideRateTargetFromString(guideRatePhase);
                 }
 
-                auto well = this->snapshots.back().wells.get(well_name);
+                auto well = handlerContext.state().wells.get(well_name);
                 if (well.updateWellGuideRate(availableForGroupControl, guide_rate, phase, scaling_factor)) {
-                    auto new_config = this->snapshots.back().guide_rate();
+                    auto new_config = handlerContext.state().guide_rate();
                     new_config.update_well(well);
-                    this->snapshots.back().guide_rate.update( std::move(new_config) );
-                    this->snapshots.back().wells.update( std::move(well) );
+                    handlerContext.state().guide_rate.update( std::move(new_config) );
+                    handlerContext.state().wells.update( std::move(well) );
                 }
             }
         }
@@ -2095,7 +2106,7 @@ Well{0} entered with 'FIELD' parent group:
                     + ", which makes WHISTCTL keyword not affect the simulation at all";
                 OpmLog::warning(msg);
             } else
-                this->snapshots.back().update_whistctl( controlMode );
+                handlerContext.state().update_whistctl( controlMode );
         }
 
         const std::string bhp_terminate = record.getItem("BPH_TERMINATE").getTrimmedString(0);
@@ -2106,14 +2117,14 @@ Well{0} entered with 'FIELD' parent group:
             handlerContext.parseContext.handleError( ParseContext::UNSUPPORTED_TERMINATE_IF_BHP , msg_fmt, handlerContext.keyword.location(), handlerContext.errors );
         }
 
-        for (const auto& well_ref : this->snapshots.back().wells()) {
+        for (const auto& well_ref : handlerContext.state().wells()) {
             auto well2 = well_ref.get();
             auto prop = std::make_shared<Well::WellProductionProperties>(well2.getProductionProperties());
 
             if (prop->whistctl_cmode != controlMode) {
                 prop->whistctl_cmode = controlMode;
                 well2.updateProduction(prop);
-                this->snapshots.back().wells.update( std::move(well2) );
+                handlerContext.state().wells.update( std::move(well2) );
             }
         }
     }
@@ -2121,17 +2132,17 @@ Well{0} entered with 'FIELD' parent group:
     void Schedule::handleWINJMULT(HandlerContext& handlerContext) {
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL_NAME").getTrimmedString(0);
-            const auto well_names = wellNames(wellNamePattern);
+            const auto well_names = handlerContext.wellNames(wellNamePattern, true);
 
             for (const auto& well_name : well_names) {
-                auto well = this->snapshots.back().wells( well_name );
+                auto well = handlerContext.state().wells( well_name );
                 if (well.isProducer()) {
                     const std::string reason = fmt::format("Keyword WINJMULT can only apply to injectors,"
                                                            " but Well {} is a producer", well_name);
                     throw OpmInputError(reason, handlerContext.keyword.location());
                 }
                 if (well.handleWINJMULT(record, handlerContext.keyword.location())) {
-                    this->snapshots.back().wells.update(std::move(well));
+                    handlerContext.state().wells.update(std::move(well));
                 }
             }
         }
@@ -2142,30 +2153,31 @@ Well{0} entered with 'FIELD' parent group:
         // question.
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
-            auto well_names = wellNames(wellNamePattern, handlerContext);
+            auto well_names = handlerContext.wellNames(wellNamePattern, false);
 
             const double temp = record.getItem("TEMPERATURE").getSIDouble(0);
 
             for (const auto& well_name : well_names) {
-                const auto& well = this->getWell(well_name, handlerContext.currentStep);
+                const auto& well = handlerContext.state().wells.get(well_name);
                 const double current_temp = !well.isProducer()? well.temperature(): 0.0;
                 if (current_temp != temp) {
-                    auto well2 = this->snapshots.back().wells( well_name );
+                    auto well2 = handlerContext.state().wells( well_name );
                     well2.setWellTemperature(temp);
-                    this->snapshots.back().wells.update( std::move(well2) );
+                    handlerContext.state().wells.update( std::move(well2) );
                 }
             }
         }
     }
 
     void Schedule::handleWLIFTOPT(HandlerContext& handlerContext) {
-        auto glo = this->snapshots.back().glo();
+        auto glo = handlerContext.state().glo();
 
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem<ParserKeywords::WLIFTOPT::WELL>().getTrimmedString(0);
-            const auto well_names = this->wellNames(wellNamePattern);
-            if (well_names.empty())
-                this->invalidNamePattern(wellNamePattern, handlerContext);
+            const auto well_names = handlerContext.wellNames(wellNamePattern, true);
+            if (well_names.empty()) {
+                handlerContext.invalidNamePattern(wellNamePattern);
+            }
 
             const bool use_glo = DeckItem::to_bool(record.getItem<ParserKeywords::WLIFTOPT::USE_OPTIMIZER>().get<std::string>(0));
             const bool alloc_extra_gas = DeckItem::to_bool( record.getItem<ParserKeywords::WLIFTOPT::ALLOCATE_EXTRA_LIFT_GAS>().get<std::string>(0));
@@ -2189,7 +2201,7 @@ Well{0} entered with 'FIELD' parent group:
             }
         }
 
-        this->snapshots.back().glo.update( std::move(glo) );
+        handlerContext.state().glo.update( std::move(glo) );
     }
 
     void Schedule::handleWLIST(HandlerContext& handlerContext) {
@@ -2199,15 +2211,14 @@ Well{0} entered with 'FIELD' parent group:
             const std::string& action = record.getItem("ACTION").getTrimmedString(0);
             const std::vector<std::string>& well_args = record.getItem("WELLS").getData<std::string>();
             std::vector<std::string> wells;
-            auto new_wlm = this->snapshots.back().wlist_manager.get();
+            auto new_wlm = handlerContext.state().wlist_manager.get();
 
             if (legal_actions.find(action) == std::string::npos)
                 throw std::invalid_argument("The action:" + action + " is not recognized.");
 
             for (const auto& well_arg : well_args) {
                 // does not use overload for context to avoid throw
-                const auto& names = this->wellNames(well_arg, handlerContext.currentStep,
-                                                    handlerContext.matching_wells);
+                const auto names = handlerContext.wellNames(well_arg, true);
                 if (names.empty() && well_arg.find("*") == std::string::npos) {
                     std::string msg_fmt = "Problem with {keyword}\n"
                                           "In {file} line {line}\n"
@@ -2245,21 +2256,21 @@ Well{0} entered with 'FIELD' parent group:
                     new_wlm.addWListWell(well, name);
                 }
             }
-            this->snapshots.back().wlist_manager.update( std::move(new_wlm) );
+            handlerContext.state().wlist_manager.update( std::move(new_wlm) );
         }
     }
 
     void Schedule::handleWMICP(HandlerContext& handlerContext) {
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
-            const auto well_names = wellNames(wellNamePattern, handlerContext);
+            const auto well_names = handlerContext.wellNames(wellNamePattern, false);
 
             for (const auto& well_name : well_names) {
-                auto well = this->snapshots.back().wells( well_name );
+                auto well = handlerContext.state().wells( well_name );
                 auto micp_properties = std::make_shared<WellMICPProperties>( well.getMICPProperties() );
                 micp_properties->handleWMICP(record);
                 if (well.updateMICPProperties(micp_properties))
-                    this->snapshots.back().wells.update( std::move(well));
+                    handlerContext.state().wells.update( std::move(well));
             }
         }
     }
@@ -2280,9 +2291,7 @@ Well{0} entered with 'FIELD' parent group:
 
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
-            const auto& well_names = this->wellNames(wellNamePattern, handlerContext,
-                                                     isWList(handlerContext.currentStep,
-                                                             wellNamePattern));
+            const auto& well_names = handlerContext.wellNames(wellNamePattern);
 
             // for the record has defaulted connection and completion information, we do not apply it immediately
             // because we only need to apply the last record with defaulted connection and completion information
@@ -2301,9 +2310,9 @@ Well{0} entered with 'FIELD' parent group:
 
             // the record with non-defaulted connection and completion information will be applied immediately
             for (const auto& wname : well_names) {
-                auto well = this->snapshots.back().wells( wname );
+                auto well = handlerContext.state().wells( wname );
                 if (well.handleWPIMULT(record))
-                    this->snapshots.back().wells.update( std::move(well));
+                    handlerContext.state().wells.update( std::move(well));
             }
         }
     }
@@ -2311,11 +2320,11 @@ Well{0} entered with 'FIELD' parent group:
     void Schedule::handleWINJCLN(HandlerContext& handlerContext) {
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem<ParserKeywords::WINJCLN::WELL_NAME>().getTrimmedString(0);
-            const auto well_names = this->wellNames(wellNamePattern, handlerContext);
+            const auto well_names = handlerContext.wellNames(wellNamePattern, false);
             for (const auto& well_name: well_names) {
-                auto well = this->snapshots.back().wells(well_name);
+                auto well = handlerContext.state().wells(well_name);
                 well.handleWINJCLN(record, handlerContext.keyword.location());
-                this->snapshots.back().wells.update(std::move(well));
+                handlerContext.state().wells.update(std::move(well));
             }
         }
     }
@@ -2323,12 +2332,12 @@ Well{0} entered with 'FIELD' parent group:
     void Schedule::handleWINJDAM(HandlerContext& handlerContext) {
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem<ParserKeywords::WINJDAM::WELL_NAME>().getTrimmedString(0);
-            const auto well_names = wellNames(wellNamePattern);
+            const auto well_names = handlerContext.wellNames(wellNamePattern, true);
 
             for (const auto& well_name : well_names) {
-                auto well = this->snapshots.back().wells(well_name);
+                auto well = handlerContext.state().wells(well_name);
                 if (well.handleWINJDAM(record, handlerContext.keyword.location())) {
-                    this->snapshots.back().wells.update( std::move(well) );
+                    handlerContext.state().wells.update( std::move(well) );
                 }
             }
         }
@@ -2337,12 +2346,12 @@ Well{0} entered with 'FIELD' parent group:
     void Schedule::handleWINJFCNC(HandlerContext& handlerContext) {
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem<ParserKeywords::WINJFCNC::WELL>().getTrimmedString(0);
-            const auto well_names = this->wellNames(wellNamePattern, handlerContext);
+            const auto well_names = handlerContext.wellNames(wellNamePattern, false);
             for (const auto& well_name: well_names) {
-                auto well = this->snapshots.back().wells(well_name);
+                auto well = handlerContext.state().wells(well_name);
                 const auto filter_conc = record.getItem<ParserKeywords::WINJFCNC::VOL_CONCENTRATION>().get<UDAValue>(0);
                 well.setFilterConc(filter_conc );
-                this->snapshots.back().wells.update(std::move(well));
+                handlerContext.state().wells.update(std::move(well));
             }
         }
     }
@@ -2350,14 +2359,14 @@ Well{0} entered with 'FIELD' parent group:
     void Schedule::handleWPMITAB(HandlerContext& handlerContext) {
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
-            const auto well_names = wellNames(wellNamePattern);
+            const auto well_names = handlerContext.wellNames(wellNamePattern, true);
 
             for (const auto& well_name : well_names) {
-                auto well = this->snapshots.back().wells( well_name );
+                auto well = handlerContext.state().wells( well_name );
                 auto polymer_properties = std::make_shared<WellPolymerProperties>( well.getPolymerProperties() );
                 polymer_properties->handleWPMITAB(record);
                 if (well.updatePolymerProperties(polymer_properties))
-                    this->snapshots.back().wells.update( std::move(well));
+                    handlerContext.state().wells.update( std::move(well));
             }
         }
     }
@@ -2365,14 +2374,14 @@ Well{0} entered with 'FIELD' parent group:
     void Schedule::handleWPOLYMER(HandlerContext& handlerContext) {
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
-            const auto well_names = this->wellNames(wellNamePattern, handlerContext);
+            const auto well_names = handlerContext.wellNames(wellNamePattern, false);
 
             for (const auto& well_name : well_names) {
-                auto well = this->snapshots.back().wells( well_name );
+                auto well = handlerContext.state().wells( well_name );
                 auto polymer_properties = std::make_shared<WellPolymerProperties>( well.getPolymerProperties() );
                 polymer_properties->handleWPOLYMER(record);
                 if (well.updatePolymerProperties(polymer_properties))
-                    this->snapshots.back().wells.update( std::move(well));
+                    handlerContext.state().wells.update( std::move(well));
             }
         }
     }
@@ -2380,28 +2389,28 @@ Well{0} entered with 'FIELD' parent group:
     void Schedule::handleWSALT(HandlerContext& handlerContext) {
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
-            const auto well_names = wellNames(wellNamePattern);
+            const auto well_names = handlerContext.wellNames(wellNamePattern, true);
 
             for (const auto& well_name : well_names) {
-                auto well2 = this->snapshots.back().wells( well_name );
+                auto well2 = handlerContext.state().wells( well_name );
                 auto brine_properties = std::make_shared<WellBrineProperties>(well2.getBrineProperties());
                 brine_properties->handleWSALT(record);
                 if (well2.updateBrineProperties(brine_properties))
-                    this->snapshots.back().wells.update( std::move(well2) );
+                    handlerContext.state().wells.update( std::move(well2) );
             }
         }
     }
 
     void Schedule::handleWSEGITER(HandlerContext& handlerContext) {
         const auto& record = handlerContext.keyword.getRecord(0);
-        auto& tuning = this->snapshots.back().tuning();
+        auto& tuning = handlerContext.state().tuning();
 
         tuning.MXWSIT = record.getItem<ParserKeywords::WSEGITER::MAX_WELL_ITERATIONS>().get<int>(0);
         tuning.WSEG_MAX_RESTART = record.getItem<ParserKeywords::WSEGITER::MAX_TIMES_REDUCED>().get<int>(0);
         tuning.WSEG_REDUCTION_FACTOR = record.getItem<ParserKeywords::WSEGITER::REDUCTION_FACTOR>().get<double>(0);
         tuning.WSEG_INCREASE_FACTOR = record.getItem<ParserKeywords::WSEGITER::INCREASING_FACTOR>().get<double>(0);
 
-        this->snapshots.back().events().addEvent(ScheduleEvents::TUNING_CHANGE);
+        handlerContext.state().events().addEvent(ScheduleEvents::TUNING_CHANGE);
     }
 
     void Schedule::handleWSEGSICD(HandlerContext& handlerContext) {
@@ -2409,12 +2418,12 @@ Well{0} entered with 'FIELD' parent group:
 
         for (auto& map_elem : spiral_icds) {
             const std::string& well_name_pattern = map_elem.first;
-            const auto well_names = this->wellNames(well_name_pattern, handlerContext);
+            const auto well_names = handlerContext.wellNames(well_name_pattern, false);
 
             std::vector<std::pair<int, SICD> >& sicd_pairs = map_elem.second;
 
             for (const auto& well_name : well_names) {
-                auto well = this->snapshots.back().wells( well_name );
+                auto well = handlerContext.state().wells( well_name );
 
                 const auto& connections = well.getConnections();
                 const auto& segments = well.getSegments();
@@ -2424,7 +2433,7 @@ Well{0} entered with 'FIELD' parent group:
                 }
 
                 if (well.updateWSEGSICD(sicd_pairs) )
-                    this->snapshots.back().wells.update( std::move(well) );
+                    handlerContext.state().wells.update( std::move(well) );
             }
         }
     }
@@ -2433,10 +2442,10 @@ Well{0} entered with 'FIELD' parent group:
         std::map<std::string, std::vector<std::pair<int, AutoICD> > > auto_icds = AutoICD::fromWSEGAICD(handlerContext.keyword);
 
         for (auto& [well_name_pattern, aicd_pairs] : auto_icds) {
-            const auto well_names = this->wellNames(well_name_pattern, handlerContext.currentStep);
+            const auto well_names = handlerContext.wellNames(well_name_pattern, true);
 
             for (const auto& well_name : well_names) {
-                auto well = this->snapshots.back().wells( well_name );
+                auto well = handlerContext.state().wells( well_name );
 
                 const auto& connections = well.getConnections();
                 const auto& segments = well.getSegments();
@@ -2446,27 +2455,25 @@ Well{0} entered with 'FIELD' parent group:
                 }
 
                 if (well.updateWSEGAICD(aicd_pairs, handlerContext.keyword.location()) )
-                    this->snapshots.back().wells.update( std::move(well) );
+                    handlerContext.state().wells.update( std::move(well) );
             }
         }
     }
 
     void Schedule::handleWSEGVALV(HandlerContext& handlerContext) {
-        const double udq_default = this->getUDQConfig(handlerContext.currentStep).params().undefinedValue();
+        const double udq_default = handlerContext.state().udq.get().params().undefinedValue();
         const std::map<std::string, std::vector<std::pair<int, Valve> > > valves = Valve::fromWSEGVALV(handlerContext.keyword, udq_default);
 
         for (const auto& map_elem : valves) {
             const std::string& well_name_pattern = map_elem.first;
-            const auto well_names = this->wellNames(well_name_pattern, handlerContext,
-                                                    isWList(handlerContext.currentStep,
-                                                            well_name_pattern));
+            const auto well_names = handlerContext.wellNames(well_name_pattern);
 
             const std::vector<std::pair<int, Valve> >& valve_pairs = map_elem.second;
 
             for (const auto& well_name : well_names) {
-                auto well = this->snapshots.back().wells( well_name );
+                auto well = handlerContext.state().wells( well_name );
                 if (well.updateWSEGVALV(valve_pairs))
-                    this->snapshots.back().wells.update( std::move(well) );
+                    handlerContext.state().wells.update( std::move(well) );
             }
         }
     }
@@ -2474,15 +2481,15 @@ Well{0} entered with 'FIELD' parent group:
     void Schedule::handleWSKPTAB(HandlerContext& handlerContext) {
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
-            const auto well_names = wellNames(wellNamePattern, handlerContext);
+            const auto well_names = handlerContext.wellNames(wellNamePattern, false);
 
             for (const auto& well_name : well_names) {
-                auto well = this->snapshots.back().wells( well_name );
+                auto well = handlerContext.state().wells( well_name );
 
                 auto polymer_properties = std::make_shared<WellPolymerProperties>(well.getPolymerProperties());
                 polymer_properties->handleWSKPTAB(record);
                 if (well.updatePolymerProperties(polymer_properties))
-                    this->snapshots.back().wells.update( std::move(well) );
+                    handlerContext.state().wells.update( std::move(well) );
             }
         }
     }
@@ -2491,18 +2498,18 @@ Well{0} entered with 'FIELD' parent group:
 
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
-            const auto well_names = wellNames( wellNamePattern , handlerContext);
+            const auto well_names = handlerContext.wellNames(wellNamePattern, false);
 
             const double fraction = record.getItem("SOLVENT_FRACTION").get<UDAValue>(0).getSI();
 
             for (const auto& well_name : well_names) {
-                const auto& well = this->getWell(well_name, handlerContext.currentStep);
+                const auto& well = handlerContext.state().wells.get(well_name);
                 const auto& inj = well.getInjectionProperties();
                 if (!well.isProducer() && inj.injectorType == InjectorType::GAS) {
                     if (well.getSolventFraction() != fraction) {
-                        auto well2 = this->snapshots.back().wells( well_name );
+                        auto well2 = handlerContext.state().wells( well_name );
                         well2.updateSolventFraction(fraction);
-                        this->snapshots.back().wells.update( std::move(well2) );
+                        handlerContext.state().wells.update( std::move(well2) );
                     }
                 } else {
                     throw std::invalid_argument("The WSOLVENT keyword can only be applied to gas injectors");
@@ -2514,30 +2521,29 @@ Well{0} entered with 'FIELD' parent group:
     void Schedule::handleWTEMP(HandlerContext& handlerContext) {
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
-            const auto well_names = this->wellNames( wellNamePattern, handlerContext);
+            const auto well_names = handlerContext.wellNames(wellNamePattern, false);
             double temp = record.getItem("TEMP").getSIDouble(0);
 
             for (const auto& well_name : well_names) {
-                const auto& well = this->getWell(well_name, handlerContext.currentStep);
+                const auto& well = handlerContext.state().wells.get(well_name);
                 const double current_temp = !well.isProducer()? well.temperature(): 0.0;
                 if (current_temp != temp) {
-                    auto well2 = this->snapshots.back().wells( well_name );
+                    auto well2 = handlerContext.state().wells( well_name );
                     well2.setWellTemperature(temp);
-                    this->snapshots.back().wells.update( std::move(well2) );
+                    handlerContext.state().wells.update( std::move(well2) );
                 }
             }
         }
     }
 
     void Schedule::handleWTEST(HandlerContext& handlerContext) {
-        auto new_config = this->snapshots.back().wtest_config.get();
+        auto new_config = handlerContext.state().wtest_config.get();
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
-            const auto well_names = this->wellNames(wellNamePattern, handlerContext,
-                                                    isWList(handlerContext.currentStep,
-                                                            wellNamePattern));
-            if (well_names.empty())
-                this->invalidNamePattern(wellNamePattern, handlerContext);
+            const auto well_names = handlerContext.wellNames(wellNamePattern);
+            if (well_names.empty()) {
+                handlerContext.invalidNamePattern(wellNamePattern);
+            }
 
             const double test_interval = record.getItem("INTERVAL").getSIDouble(0);
             const std::string& reasons = record.getItem("REASON").get<std::string>(0);
@@ -2551,27 +2557,28 @@ Well{0} entered with 'FIELD' parent group:
                     new_config.add_well(well_name, reasons, test_interval, num_test, startup_time, handlerContext.currentStep);
             }
         }
-        this->snapshots.back().wtest_config.update( std::move(new_config) );
+        handlerContext.state().wtest_config.update( std::move(new_config) );
     }
 
     void Schedule::handleWTRACER(HandlerContext& handlerContext) {
 
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
-            const auto well_names = wellNames(wellNamePattern, handlerContext);
+            const auto well_names = handlerContext.wellNames(wellNamePattern, false);
 
-            if (well_names.empty())
-                this->invalidNamePattern(wellNamePattern, handlerContext);
+            if (well_names.empty()) {
+                handlerContext.invalidNamePattern(wellNamePattern);
+            }
 
             const double tracerConcentration = record.getItem("CONCENTRATION").get<UDAValue>(0).getSI();
             const std::string& tracerName = record.getItem("TRACER").getTrimmedString(0);
 
             for (const auto& well_name : well_names) {
-                auto well = this->snapshots.back().wells.get( well_name );
+                auto well = handlerContext.state().wells.get( well_name );
                 auto wellTracerProperties = std::make_shared<WellTracerProperties>(well.getTracerProperties());
                 wellTracerProperties->setConcentration(tracerName, tracerConcentration);
                 if (well.updateTracer(wellTracerProperties))
-                    this->snapshots.back().wells.update( std::move(well) );
+                    handlerContext.state().wells.update( std::move(well) );
             }
         }
     }
@@ -2604,26 +2611,32 @@ Well{0} entered with 'FIELD' parent group:
             };
         }
 
-        for (const auto& wname : this->wellNames(handlerContext.currentStep))
-            this->updateWPAVE(wname, handlerContext.currentStep, wpave );
+        for (const auto& wname : handlerContext.state().well_order()) {
+            const auto& well = handlerContext.state().wells.get(wname);
+            if (well.pavg() != wpave) {
+                auto new_well = handlerContext.state().wells.get(wname);
+                new_well.updateWPAVE(wpave);
+                handlerContext.state().wells.update(std::move(new_well));
+            }
+        }
 
-        auto& sched_state = this->snapshots.back();
-        sched_state.pavg.update(std::move(wpave));
+        handlerContext.state().pavg.update(std::move(wpave));
     }
 
     void Schedule::handleWVFPDP(HandlerContext& handlerContext) {
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
-            const auto well_names = wellNames(wellNamePattern, handlerContext.currentStep);
-            if (well_names.empty())
-                this->invalidNamePattern(wellNamePattern, handlerContext);
+            const auto well_names = handlerContext.wellNames(wellNamePattern, true);
+            if (well_names.empty()) {
+                handlerContext.invalidNamePattern(wellNamePattern);
+            }
 
             for (const auto& well_name : well_names) {
-                auto well = this->snapshots.back().wells.get(well_name);
+                auto well = handlerContext.state().wells.get(well_name);
                 auto wvfpdp = std::make_shared<WVFPDP>(well.getWVFPDP());
                 wvfpdp->update( record );
                 if (well.updateWVFPDP(std::move(wvfpdp)))
-                    this->snapshots.back().wells.update( std::move(well) );
+                    handlerContext.state().wells.update( std::move(well) );
             }
         }
     }
@@ -2631,16 +2644,17 @@ Well{0} entered with 'FIELD' parent group:
     void Schedule::handleWVFPEXP(HandlerContext& handlerContext) {
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
-            const auto well_names = wellNames(wellNamePattern, handlerContext.currentStep);
-            if (well_names.empty())
-                this->invalidNamePattern(wellNamePattern, handlerContext);
+            const auto well_names = handlerContext.wellNames(wellNamePattern, true);
+            if (well_names.empty()) {
+                handlerContext.invalidNamePattern(wellNamePattern);
+            }
 
             for (const auto& well_name : well_names) {
-                auto well = this->snapshots.back().wells.get(well_name);
+                auto well = handlerContext.state().wells.get(well_name);
                 auto wvfpexp = std::make_shared<WVFPEXP>(well.getWVFPEXP());
                 wvfpexp->update( record );
                 if (well.updateWVFPEXP(std::move(wvfpexp)))
-                    this->snapshots.back().wells.update( std::move(well) );
+                    handlerContext.state().wells.update( std::move(well) );
             }
         }
     }
@@ -2648,10 +2662,11 @@ Well{0} entered with 'FIELD' parent group:
     void Schedule::handleWWPAVE(HandlerContext& handlerContext) {
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
-            const auto well_names = wellNames(wellNamePattern, handlerContext.currentStep);
+            const auto well_names = handlerContext.wellNames(wellNamePattern, true);
 
-            if (well_names.empty())
-                this->invalidNamePattern(wellNamePattern, handlerContext);
+            if (well_names.empty()) {
+                handlerContext.invalidNamePattern(wellNamePattern);
+            }
 
             auto wpave = PAvg(record);
 
@@ -2680,26 +2695,33 @@ Well{0} entered with 'FIELD' parent group:
                 };
             }
 
-            for (const auto& well_name : well_names)
-                this->updateWPAVE(well_name, handlerContext.currentStep, wpave);
+            for (const auto& well_name : well_names) {
+                const auto& well = handlerContext.state().wells.get(well_name);
+                if (well.pavg() != wpave) {
+                    auto new_well = handlerContext.state().wells.get(well_name);
+                    new_well.updateWPAVE(wpave);
+                    handlerContext.state().wells.update(std::move(new_well));
+                }
+            }
         }
     }
 
     void Schedule::handleWPAVEDEP(HandlerContext& handlerContext) {
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem<ParserKeywords::WPAVEDEP::WELL>().getTrimmedString(0);
-            const auto well_names = wellNames(wellNamePattern, handlerContext);
+            const auto well_names = handlerContext.wellNames(wellNamePattern, false);
 
-            if (well_names.empty())
-                this->invalidNamePattern(wellNamePattern, handlerContext);
+            if (well_names.empty()) {
+                handlerContext.invalidNamePattern(wellNamePattern);
+            }
 
             const auto& item = record.getItem<ParserKeywords::WPAVEDEP::REFDEPTH>();
             if (item.hasValue(0)) {
                 auto ref_depth = item.getSIDouble(0);
                 for (const auto& well_name : well_names) {
-                    auto well = this->snapshots.back().wells.get(well_name);
+                    auto well = handlerContext.state().wells.get(well_name);
                     well.updateWPaveRefDepth( ref_depth );
-                    this->snapshots.back().wells.update( std::move(well) );
+                    handlerContext.state().wells.update( std::move(well) );
                 }
             }
         }
@@ -2707,7 +2729,7 @@ Well{0} entered with 'FIELD' parent group:
 
     void Schedule::handleWRFT(HandlerContext& handlerContext)
     {
-        auto new_rft = this->snapshots.back().rft_config();
+        auto new_rft = handlerContext.state().rft_config();
 
         for (const auto& record : handlerContext.keyword) {
             const auto& item = record.getItem<ParserKeywords::WRFT::WELL>();
@@ -2716,10 +2738,10 @@ Well{0} entered with 'FIELD' parent group:
             }
 
             const auto wellNamePattern = record.getItem<ParserKeywords::WRFT::WELL>().getTrimmedString(0);
-            const auto well_names = wellNames(wellNamePattern, handlerContext);
+            const auto well_names = handlerContext.wellNames(wellNamePattern, false);
 
             if (well_names.empty()) {
-                this->invalidNamePattern(wellNamePattern, handlerContext);
+                handlerContext.invalidNamePattern(wellNamePattern);
             }
 
             for (const auto& well_name : well_names) {
@@ -2729,12 +2751,12 @@ Well{0} entered with 'FIELD' parent group:
 
         new_rft.first_open(true);
 
-        this->snapshots.back().rft_config.update(std::move(new_rft));
+        handlerContext.state().rft_config.update(std::move(new_rft));
     }
 
     void Schedule::handleWRFTPLT(HandlerContext& handlerContext)
     {
-        auto new_rft = this->snapshots.back().rft_config();
+        auto new_rft = handlerContext.state().rft_config();
 
         const auto rftKey = [](const DeckItem& key)
         {
@@ -2748,10 +2770,10 @@ Well{0} entered with 'FIELD' parent group:
 
         for (const auto& record : handlerContext.keyword) {
             const auto wellNamePattern = record.getItem<ParserKeywords::WRFTPLT::WELL>().getTrimmedString(0);
-            const auto well_names = wellNames(wellNamePattern, handlerContext);
+            const auto well_names = handlerContext.wellNames(wellNamePattern, false);
 
             if (well_names.empty()) {
-                this->invalidNamePattern(wellNamePattern, handlerContext);
+                handlerContext.invalidNamePattern(wellNamePattern);
                 continue;
             }
 
@@ -2766,7 +2788,7 @@ Well{0} entered with 'FIELD' parent group:
             }
         }
 
-        this->snapshots.back().rft_config.update(std::move(new_rft));
+        handlerContext.state().rft_config.update(std::move(new_rft));
     }
 
 
@@ -2797,7 +2819,7 @@ Well{0} entered with 'FIELD' parent group:
                 throw OpmInputError(reason, handlerContext.keyword.location());
             }
 
-            if (this->snapshots.back().udq().has_keyword(control)) {
+            if (handlerContext.state().udq().has_keyword(control)) {
                 std::string reason = fmt::format("Use of UDA value: {} is not supported for control target", control);
                 throw OpmInputError(reason, handlerContext.keyword.location());
             }
@@ -2811,11 +2833,9 @@ Well{0} entered with 'FIELD' parent group:
             if (cmode == Well::WELTARGCMode::GUID)
                 throw std::logic_error("Multiplying guide rate is not implemented");
 
-            const auto well_names = this->wellNames(wellNamePattern, handlerContext,
-                                                    isWList(handlerContext.currentStep,
-                                                            wellNamePattern));
+            const auto well_names = handlerContext.wellNames(wellNamePattern);
             for (const auto& well_name : well_names) {
-                auto well = this->snapshots.back().wells.get(well_name);
+                auto well = handlerContext.state().wells.get(well_name);
                 if (well.isInjector()) {
                     bool update_well = true;
                     auto properties = std::make_shared<Well::WellInjectionProperties>(well.getInjectionProperties());
@@ -2823,9 +2843,9 @@ Well{0} entered with 'FIELD' parent group:
 
                     well.updateInjection(properties);
                     if (update_well) {
-                        this->snapshots.back().events().addEvent(ScheduleEvents::INJECTION_UPDATE);
-                        this->snapshots.back().wellgroup_events().addEvent(well_name, ScheduleEvents::INJECTION_UPDATE);
-                        this->snapshots.back().wells.update(std::move(well));
+                        handlerContext.state().events().addEvent(ScheduleEvents::INJECTION_UPDATE);
+                        handlerContext.state().wellgroup_events().addEvent(well_name, ScheduleEvents::INJECTION_UPDATE);
+                        handlerContext.state().wells.update(std::move(well));
                     }
                 } else {
                     bool update_well = true;
@@ -2834,10 +2854,10 @@ Well{0} entered with 'FIELD' parent group:
 
                     well.updateProduction(properties);
                     if (update_well) {
-                        this->snapshots.back().events().addEvent(ScheduleEvents::PRODUCTION_UPDATE);
-                        this->snapshots.back().wellgroup_events().addEvent(well_name,
-                                                                           ScheduleEvents::PRODUCTION_UPDATE);
-                        this->snapshots.back().wells.update(std::move(well));
+                        handlerContext.state().events().addEvent(ScheduleEvents::PRODUCTION_UPDATE);
+                        handlerContext.state().wellgroup_events().addEvent(well_name,
+                                                                         ScheduleEvents::PRODUCTION_UPDATE);
+                        handlerContext.state().wells.update(std::move(well));
                     }
                 }
             }

@@ -490,6 +490,8 @@ namespace Opm
         void dump_deck(std::ostream& os) const;
 
     private:
+        friend class HandlerContext;
+
         // Please update the member functions
         //   - operator==(const Schedule&) const
         //   - serializationTestObject()
@@ -566,7 +568,6 @@ namespace Opm
                                            const HandlerContext& context,
                                            bool allowEmpty = false);
         std::vector<std::string> wellNames(const std::string& pattern, std::size_t timeStep, const std::vector<std::string>& matching_wells, InputErrorAction error_action, ErrorGuard& errors, const KeywordLocation& location) const;
-        void invalidNamePattern( const std::string& namePattern, const HandlerContext& context) const;
         static std::string formatDate(std::time_t t);
         std::string simulationDays(std::size_t currentStep) const;
         void applyGlobalWPIMULT( const std::unordered_map<std::string, double>& wpimult_global_factor);
@@ -575,17 +576,6 @@ namespace Opm
 
         bool isWList(std::size_t report_step, const std::string& pattern) const;
 
-        void welspecsCreateNewWell(const DeckRecord&  record,
-                                   const std::string& wellName,
-                                   const std::string& groupName,
-                                   HandlerContext&    handlerContext);
-
-        void welspecsUpdateExistingWells(const DeckRecord&               record,
-                                         const std::vector<std::string>& wellNames,
-                                         const std::string&              groupName,
-                                         HandlerContext&                 handlerContext);
-
-        void applyEXIT(const DeckKeyword&, std::size_t currentStep);
         SimulatorUpdate applyAction(std::size_t reportStep, const std::string& action_name, const std::vector<std::string>& matching_wells);
 
         /**
