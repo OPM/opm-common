@@ -170,6 +170,7 @@ if(ENABLE_ECL_INPUT)
     src/opm/input/eclipse/Schedule/GasLiftOpt.cpp
     src/opm/input/eclipse/Schedule/Group/GPMaint.cpp
     src/opm/input/eclipse/Schedule/Group/Group.cpp
+    src/opm/input/eclipse/Schedule/Group/GroupKeywordHandlers.cpp
     src/opm/input/eclipse/Schedule/Group/GuideRate.cpp
     src/opm/input/eclipse/Schedule/Group/GuideRateConfig.cpp
     src/opm/input/eclipse/Schedule/Group/GuideRateModel.cpp
