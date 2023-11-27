@@ -192,6 +192,7 @@ if(ENABLE_ECL_INPUT)
     src/opm/input/eclipse/Schedule/Network/Balance.cpp
     src/opm/input/eclipse/Schedule/Network/Branch.cpp
     src/opm/input/eclipse/Schedule/Network/ExtNetwork.cpp
+    src/opm/input/eclipse/Schedule/Network/NetworkKeywordHandlers.cpp
     src/opm/input/eclipse/Schedule/Network/Node.cpp
     src/opm/input/eclipse/Schedule/OilVaporizationProperties.cpp
     src/opm/input/eclipse/Schedule/RFTConfig.cpp
