@@ -30,8 +30,6 @@
 #include <opm/input/eclipse/Schedule/Action/Actions.hpp>
 #include <opm/input/eclipse/Schedule/Action/PyAction.hpp>
 #include <opm/input/eclipse/Schedule/Events.hpp>
-#include <opm/input/eclipse/Schedule/RFTConfig.hpp>
-#include <opm/input/eclipse/Schedule/RPTConfig.hpp>
 #include <opm/input/eclipse/Schedule/ScheduleState.hpp>
 #include <opm/input/eclipse/Schedule/ScheduleStatic.hpp>
 #include <opm/input/eclipse/Schedule/SummaryState.hpp>
@@ -45,7 +43,6 @@
 #include <opm/input/eclipse/Parser/ParserKeywords/F.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/N.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/P.hpp>
-#include <opm/input/eclipse/Parser/ParserKeywords/W.hpp>
 
 #include "GasLiftOptKeywordHandlers.hpp"
 #include "Group/GroupKeywordHandlers.hpp"
@@ -54,6 +51,7 @@
 #include "MixingRateControlKeywordHandlers.hpp"
 #include "MSW/MSWKeywordHandlers.hpp"
 #include "Network/NetworkKeywordHandlers.hpp"
+#include "RXXKeywordHandlers.hpp"
 #include "UDQ/UDQKeywordHandlers.hpp"
 #include "Well/WellCompletionKeywordHandlers.hpp"
 #include "Well/WellKeywordHandlers.hpp"
@@ -195,40 +193,6 @@ namespace {
         handlerContext.state().actions.update( std::move(new_actions) );
     }
 
-    void handleRPTONLY(HandlerContext& handlerContext)
-    {
-        handlerContext.state().rptonly(true);
-    }
-
-    void handleRPTONLYO(HandlerContext& handlerContext)
-    {
-        handlerContext.state().rptonly(false);
-    }
-
-    void handleRPTSCHED(HandlerContext& handlerContext)
-    {
-        handlerContext.state().rpt_config.update( RPTConfig(handlerContext.keyword ));
-        auto rst_config = handlerContext.state().rst_config();
-        rst_config.update(handlerContext.keyword, handlerContext.parseContext, handlerContext.errors);
-        handlerContext.state().rst_config.update(std::move(rst_config));
-    }
-
-    void handleRPTRST(HandlerContext& handlerContext)
-    {
-        auto rst_config = handlerContext.state().rst_config();
-        rst_config.update(handlerContext.keyword, handlerContext.parseContext, handlerContext.errors);
-        handlerContext.state().rst_config.update(std::move(rst_config));
-    }
-
-    /*
-      We do not really handle the SAVE keyword, we just interpret it as: Write a
-      normal restart file at this report step.
-    */
-    void handleSAVE(HandlerContext& handlerContext)
-    {
-        handlerContext.state().updateSAVE(true);
-    }
-
     void handleSUMTHIN(HandlerContext& handlerContext)
     {
         auto value = handlerContext.keyword.getRecord(0).getItem(0).getSIDouble(0);
@@ -350,70 +314,6 @@ namespace {
         handlerContext.state().vfpprod.update( std::move(table) );
     }
 
-    void handleWRFT(HandlerContext& handlerContext)
-    {
-        auto new_rft = handlerContext.state().rft_config();
-
-        for (const auto& record : handlerContext.keyword) {
-            const auto& item = record.getItem<ParserKeywords::WRFT::WELL>();
-            if (! item.hasValue(0)) {
-                continue;
-            }
-
-            const auto wellNamePattern = record.getItem<ParserKeywords::WRFT::WELL>().getTrimmedString(0);
-            const auto well_names = handlerContext.wellNames(wellNamePattern, false);
-
-            if (well_names.empty()) {
-                handlerContext.invalidNamePattern(wellNamePattern);
-            }
-
-            for (const auto& well_name : well_names) {
-                new_rft.update(well_name, RFTConfig::RFT::YES);
-            }
-        }
-
-        new_rft.first_open(true);
-
-        handlerContext.state().rft_config.update(std::move(new_rft));
-    }
-
-    void handleWRFTPLT(HandlerContext& handlerContext)
-    {
-        auto new_rft = handlerContext.state().rft_config();
-
-        const auto rftKey = [](const DeckItem& key)
-        {
-            return RFTConfig::RFTFromString(key.getTrimmedString(0));
-        };
-
-        const auto pltKey = [](const DeckItem& key)
-        {
-            return RFTConfig::PLTFromString(key.getTrimmedString(0));
-        };
-
-        for (const auto& record : handlerContext.keyword) {
-            const auto wellNamePattern = record.getItem<ParserKeywords::WRFTPLT::WELL>().getTrimmedString(0);
-            const auto well_names = handlerContext.wellNames(wellNamePattern, false);
-
-            if (well_names.empty()) {
-                handlerContext.invalidNamePattern(wellNamePattern);
-                continue;
-            }
-
-            const auto RFTKey = rftKey(record.getItem<ParserKeywords::WRFTPLT::OUTPUT_RFT>());
-            const auto PLTKey = pltKey(record.getItem<ParserKeywords::WRFTPLT::OUTPUT_PLT>());
-            const auto SEGKey = pltKey(record.getItem<ParserKeywords::WRFTPLT::OUTPUT_SEGMENT>());
-
-            for (const auto& well_name : well_names) {
-                new_rft.update(well_name, RFTKey);
-                new_rft.update(well_name, PLTKey);
-                new_rft.update_segment(well_name, SEGKey);
-            }
-        }
-
-        handlerContext.state().rft_config.update(std::move(new_rft));
-    }
-
 }
 
 const KeywordHandlers& KeywordHandlers::getInstance()
@@ -453,17 +353,10 @@ KeywordHandlers::KeywordHandlers()
         { "NEXTSTEP", &handleNEXTSTEP   },
         { "NUPCOL"  , &handleNUPCOL     },
         { "PYACTION", &handlePYACTION   },
-        { "RPTONLY" , &handleRPTONLY    },
-        { "RPTONLYO", &handleRPTONLYO   },
-        { "RPTRST"  , &handleRPTRST     },
-        { "RPTSCHED", &handleRPTSCHED   },
-        { "SAVE"    , &handleSAVE       },
         { "SUMTHIN" , &handleSUMTHIN    },
         { "TUNING"  , &handleTUNING     },
         { "VFPINJ"  , &handleVFPINJ     },
         { "VFPPROD" , &handleVFPPROD    },
-        { "WRFT"    , &handleWRFT       },
-        { "WRFTPLT" , &handleWRFTPLT    },
     };
 
     for (const auto& handlerFactory : {getGasLiftOptHandlers,
@@ -473,6 +366,7 @@ KeywordHandlers::KeywordHandlers()
                                        getMSWHandlers,
                                        getNetworkHandlers,
                                        getUDQHandlers,
+                                       getRXXHandlers,
                                        getWellCompletionHandlers,
                                        getWellHandlers,
                                        getWellPropertiesHandlers}) {
