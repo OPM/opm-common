@@ -37,7 +37,6 @@
 #include <opm/input/eclipse/Schedule/VFPInjTable.hpp>
 #include <opm/input/eclipse/Schedule/RSTConfig.hpp>
 
-#include <chrono>
 #include <cstddef>
 #include <memory>
 #include <optional>

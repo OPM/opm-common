@@ -38,7 +38,6 @@
 #include <opm/input/eclipse/Schedule/Action/PyAction.hpp>
 #include <opm/input/eclipse/Schedule/Action/SimulatorUpdate.hpp>
 #include <opm/input/eclipse/Schedule/Events.hpp>
-#include <opm/input/eclipse/Schedule/OilVaporizationProperties.hpp>
 #include <opm/input/eclipse/Schedule/RFTConfig.hpp>
 #include <opm/input/eclipse/Schedule/RPTConfig.hpp>
 #include <opm/input/eclipse/Schedule/SummaryState.hpp>
@@ -79,6 +78,7 @@
 #include "Group/GroupKeywordHandlers.hpp"
 #include "Group/GuideRateKeywordHandlers.hpp"
 #include "HandlerContext.hpp"
+#include "MixingRateControlKeywordHandlers.hpp"
 #include "MSW/MSWKeywordHandlers.hpp"
 #include "Network/NetworkKeywordHandlers.hpp"
 #include "UDQ/UDQKeywordHandlers.hpp"
@@ -182,79 +182,6 @@ namespace {
             }
         }
         handlerContext.state().events().addEvent(ScheduleEvents::COMPLETION_CHANGE);
-    }
-
-    void handleDRSDT(HandlerContext& handlerContext)
-    {
-        const std::size_t numPvtRegions = handlerContext.static_schedule().m_runspec.tabdims().getNumPVTTables();
-        std::vector<double> maximums(numPvtRegions);
-        std::vector<std::string> options(numPvtRegions);
-        for (const auto& record : handlerContext.keyword) {
-            const auto& max = record.getItem<ParserKeywords::DRSDT::DRSDT_MAX>().getSIDouble(0);
-            const auto& option = record.getItem<ParserKeywords::DRSDT::OPTION>().get< std::string >(0);
-            std::fill(maximums.begin(), maximums.end(), max);
-            std::fill(options.begin(), options.end(), option);
-            auto& ovp = handlerContext.state().oilvap();
-            OilVaporizationProperties::updateDRSDT(ovp, maximums, options);
-        }
-    }
-
-    void handleDRSDTCON(HandlerContext& handlerContext)
-    {
-        const std::size_t numPvtRegions = handlerContext.static_schedule().m_runspec.tabdims().getNumPVTTables();
-        std::vector<double> maximums(numPvtRegions);
-        std::vector<std::string> options(numPvtRegions);
-        for (const auto& record : handlerContext.keyword) {
-            const auto& max = record.getItem<ParserKeywords::DRSDTCON::DRSDT_MAX>().getSIDouble(0);
-            const auto& option = record.getItem<ParserKeywords::DRSDTCON::OPTION>().get< std::string >(0);
-            std::fill(maximums.begin(), maximums.end(), max);
-            std::fill(options.begin(), options.end(), option);
-            auto& ovp = handlerContext.state().oilvap();
-            OilVaporizationProperties::updateDRSDTCON(ovp, maximums, options);
-        }
-    }
-
-    void handleDRSDTR(HandlerContext& handlerContext)
-    {
-        const std::size_t numPvtRegions = handlerContext.static_schedule().m_runspec.tabdims().getNumPVTTables();
-        std::vector<double> maximums(numPvtRegions);
-        std::vector<std::string> options(numPvtRegions);
-        std::size_t pvtRegionIdx = 0;
-        for (const auto& record : handlerContext.keyword) {
-            const auto& max = record.getItem<ParserKeywords::DRSDTR::DRSDT_MAX>().getSIDouble(0);
-            const auto& option = record.getItem<ParserKeywords::DRSDTR::OPTION>().get< std::string >(0);
-            maximums[pvtRegionIdx] = max;
-            options[pvtRegionIdx] = option;
-            pvtRegionIdx++;
-        }
-        auto& ovp = handlerContext.state().oilvap();
-        OilVaporizationProperties::updateDRSDT(ovp, maximums, options);
-    }
-
-    void handleDRVDT(HandlerContext& handlerContext)
-    {
-        const std::size_t numPvtRegions = handlerContext.static_schedule().m_runspec.tabdims().getNumPVTTables();
-        std::vector<double> maximums(numPvtRegions);
-        for (const auto& record : handlerContext.keyword) {
-            const auto& max = record.getItem<ParserKeywords::DRVDTR::DRVDT_MAX>().getSIDouble(0);
-            std::fill(maximums.begin(), maximums.end(), max);
-            auto& ovp = handlerContext.state().oilvap();
-            OilVaporizationProperties::updateDRVDT(ovp, maximums);
-        }
-    }
-
-    void handleDRVDTR(HandlerContext& handlerContext)
-    {
-        std::size_t numPvtRegions = handlerContext.static_schedule().m_runspec.tabdims().getNumPVTTables();
-        std::size_t pvtRegionIdx = 0;
-        std::vector<double> maximums(numPvtRegions);
-        for (const auto& record : handlerContext.keyword) {
-            const auto& max = record.getItem<ParserKeywords::DRVDTR::DRVDT_MAX>().getSIDouble(0);
-            maximums[pvtRegionIdx] = max;
-            pvtRegionIdx++;
-        }
-        auto& ovp = handlerContext.state().oilvap();
-        OilVaporizationProperties::updateDRVDT(ovp, maximums);
     }
 
     void handleEXIT(HandlerContext& handlerContext)
@@ -490,16 +417,6 @@ namespace {
 
         handlerContext.state().update_tuning( std::move( tuning ));
         handlerContext.state().events().addEvent(ScheduleEvents::TUNING_CHANGE);
-    }
-
-    void handleVAPPARS(HandlerContext& handlerContext)
-    {
-        for (const auto& record : handlerContext.keyword) {
-            double vap1 = record.getItem("OIL_VAP_PROPENSITY").get< double >(0);
-            double vap2 = record.getItem("OIL_DENSITY_PROPENSITY").get< double >(0);
-            auto& ovp = handlerContext.state().oilvap();
-            OilVaporizationProperties::updateVAPPARS(ovp, vap1, vap2);
-        }
     }
 
     void handleVFPINJ(HandlerContext& handlerContext)
@@ -1361,11 +1278,6 @@ KeywordHandlers::KeywordHandlers()
         { "AQUFLUX",  &handleAQUFLUX    },
         { "BCPROP",   &handleBCProp     },
         { "BOX",      &handleGEOKeyword },
-        { "DRSDT"   , &handleDRSDT      },
-        { "DRSDTCON", &handleDRSDTCON   },
-        { "DRSDTR"  , &handleDRSDTR     },
-        { "DRVDT"   , &handleDRVDT      },
-        { "DRVDTR"  , &handleDRVDTR     },
         { "ENDBOX"  , &handleGEOKeyword },
         { "EXIT",     &handleEXIT       },
         { "FBHPDEF",  &handleFBHPDEF    },
@@ -1396,7 +1308,6 @@ KeywordHandlers::KeywordHandlers()
         { "SAVE"    , &handleSAVE       },
         { "SUMTHIN" , &handleSUMTHIN    },
         { "TUNING"  , &handleTUNING     },
-        { "VAPPARS" , &handleVAPPARS    },
         { "VFPINJ"  , &handleVFPINJ     },
         { "VFPPROD" , &handleVFPPROD    },
         { "WCONHIST", &handleWCONHIST   },
@@ -1419,6 +1330,7 @@ KeywordHandlers::KeywordHandlers()
     for (const auto& handlerFactory : {getGasLiftOptHandlers,
                                        getGroupHandlers,
                                        getGuideRateHandlers,
+                                       getMixingRateControlHandlers,
                                        getMSWHandlers,
                                        getNetworkHandlers,
                                        getUDQHandlers,
