@@ -29,8 +29,12 @@
 #include "config.h"
 #include <opm/material/fluidsystems/blackoilpvt/Co2GasPvt.hpp>
 #include <opm/material/fluidsystems/blackoilpvt/BrineCo2Pvt.hpp>
+#include <opm/material/binarycoefficients/Brine_CO2.hpp>
+#include <opm/material/components/SimpleHuDuanH2O.hpp>
+#include <opm/material/components/CO2.hpp>
 
 #include <iostream>
+#include <iomanip>
 
 template <class Co2Pvt>
 double densityGas(const Co2Pvt& co2Pvt, const double p, const double T, const double Rv)
@@ -52,6 +56,61 @@ double densityBrine(const BrinePvt& brinePvt, const double p, const double T, co
     return bo * (brinePvt.oilReferenceDensity(0) + Rs * brinePvt.gasReferenceDensity(0));
 }
 
+std::pair<double, double> moleFractionMutualSolubility(const double p, 
+                                                       const double T, 
+                                                       const double s,
+                                                       const int activityModel)
+{
+    // Init. output
+    double yH2O;
+    double xCO2;
+
+    // Calc. mutual solubility
+    using H2O = Opm::SimpleHuDuanH2O<double>;
+    using CO2 = Opm::CO2<double>;
+    using BinaryCoeffBrineCO2 = Opm::BinaryCoeff::Brine_CO2<double, H2O, CO2>;
+    BinaryCoeffBrineCO2::calculateMoleFractions(T, p, s, -1, xCO2, yH2O, activityModel, true);
+
+    return {xCO2, yH2O};
+}
+
+double moleFractionCO2inBrine(const double p, 
+                              const double T, 
+                              const double s,
+                              const int activityModel)
+{
+    // Calculate mutual solubilities
+    auto [xCO2, yH2O] = moleFractionMutualSolubility(p, T, s, activityModel);
+   
+    return xCO2;
+}
+
+double moleFractionBrineInCO2(const double p, 
+                              const double T, 
+                              const double s,
+                              const int activityModel)
+{
+    // Calculate mutual solubilities
+    auto [xCO2, yH2O] = moleFractionMutualSolubility(p, T, s, activityModel);
+   
+    return yH2O;
+}
+
+double molalityCO2inBrine(const double p, 
+                          const double T, 
+                          const double m_sal,
+                          const int activityModel)
+{
+    // Mole fraction CO2 in brine
+    const double MmNaCl = 58.44e-3; // molar mass of NaCl [kg/mol]
+    const double s = 1 / ( 1 + 1 / (m_sal*MmNaCl));
+    double xlCO2 = moleFractionCO2inBrine(p, T, s, activityModel);
+
+    // return molal co2
+    return xlCO2 * (2 * m_sal + 55.508) / (1 - xlCO2);
+
+}
+
 int main(int argc, char **argv)
 {
 
@@ -63,13 +122,15 @@ int main(int argc, char **argv)
 
     if (argc < 5 || help) {
         std::cout << "USAGE:" << std::endl;
-        std::cout << "co2brinepvt <prop> <phase> <p> <T> <salinity> <rs> "<< std::endl;
+        std::cout << "co2brinepvt <prop> <phase> <p> <T> <salinity> <rs> <saltmodel>"<< std::endl;
         std::cout << "prop = {density, invB, B, viscosity, rsSat, internalEnergy, enthalpy, diffusionCoefficient}" << std::endl;
         std::cout << "phase = {CO2, brine}" << std::endl;
-        std::cout << "p: pressure in pascal" << std::endl;
-        std::cout << "T: temperature in kelvin" << std::endl;
+        std::cout << "p: pressure in bar" << std::endl;
+        std::cout << "T: temperature in celcius" << std::endl;
         std::cout << "salinity(optional): salt molality in mol/kg" << std::endl;
         std::cout << "rs(optional): amount of dissolved CO2 in Brine in SM3/SM3" << std::endl;
+        std::cout << "saltmodel(optional): 0 = no salt activity; 1 = Rumpf et al (1996) [default];"
+                     " 2 = Duan-Sun in Spycher & Pruess (2009); 3 = Duan-Sun in Sycher & Pruess (2005)" << std::endl;
         std::cout << "OPTIONS:" << std::endl;
         std::cout << "--h/--help Print help and exit." << std::endl;
         std::cout << "DESCRIPTION:" << std::endl;
@@ -83,24 +144,27 @@ int main(int argc, char **argv)
 
     std::string prop = argv[1];
     std::string phase = argv[2];
-    double p = atof(argv[3]);
-    double T = atof(argv[4]);
+    double p = atof(argv[3]) * 1e5;
+    double T = atof(argv[4]) + 273.15;
     double molality = 0.0;
     double rs = 0.0;
     double rv = 0.0; // only support 0.0 for now
+    int activityModel = 1;
     if (argc > 5)
         molality = atof(argv[5]);
     if (argc > 6)
         rs = atof(argv[6]);
+    if (argc > 7)
+        activityModel = atoi(argv[7]);
 
     const double MmNaCl = 58.44e-3; // molar mass of NaCl [kg/mol]
     // convert to mass fraction
     std::vector<double> salinity = {0.0};
     if (molality > 0.0)
         salinity[0] = 1 / ( 1 + 1 / (molality*MmNaCl));
-    Opm::BrineCo2Pvt<double> brineCo2Pvt(salinity);
+    Opm::BrineCo2Pvt<double> brineCo2Pvt(salinity, activityModel);
 
-    Opm::Co2GasPvt<double> co2Pvt(salinity);
+    Opm::Co2GasPvt<double> co2Pvt(salinity, activityModel);
 
     double value;
     if (prop == "density") {
@@ -183,12 +247,51 @@ int main(int argc, char **argv)
         } else {
             throw std::runtime_error("phase " + phase + " not recognized. Use either CO2 or brine");
         }
-    } else {
+    } else if (prop == "solubility_molal") {
+        if (phase == "CO2") {
+            // Solubility of CO2 is brine
+            value = molalityCO2inBrine(p, T, molality, activityModel);
+
+        }
+        else if (phase == "brine") {
+            throw std::runtime_error("solubility in molal for brine in CO2 gas not implemented yet!");
+        }
+        else {
+            throw std::runtime_error("phase " + phase + " not recognized. Use either CO2 or brine");
+        }
+    } else if (prop == "solubility_molefraction") {
+        if (phase == "CO2") {
+            // Solubility of CO2 is brine
+            value = moleFractionCO2inBrine(p, T, salinity[0], activityModel);
+
+        }
+        else if (phase == "brine") {
+            // Solubility of brine in CO2
+            value = moleFractionBrineInCO2(p, T, salinity[0], activityModel);
+        }
+        else {
+            throw std::runtime_error("phase " + phase + " not recognized. Use either CO2 or brine");
+        }
+    } else if (prop == "solubility_molepercent") {
+        if (phase == "CO2") {
+            // Solubility of CO2 is brine
+            value = moleFractionCO2inBrine(p, T, salinity[0], activityModel) * 100;
+
+        }
+        else if (phase == "brine") {
+            // Solubility of brine in CO2
+            value = moleFractionBrineInCO2(p, T, salinity[0], activityModel) * 100;
+        }
+        else {
+            throw std::runtime_error("phase " + phase + " not recognized. Use either CO2 or brine");
+        }
+    }  
+    else {
         throw std::runtime_error("prop " + prop + " not recognized. "
         + "Use either density, visosity, invB, B, internalEnergy, enthalpy or diffusionCoefficient");
     }
 
-    std::cout << value << std::endl;
+    std::cout << std::setprecision (15) << value << std::endl;
 
     return 0;
 }
