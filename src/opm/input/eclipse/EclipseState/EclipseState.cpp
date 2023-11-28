@@ -275,6 +275,10 @@ namespace Opm {
         return !m_inputNnc.input().empty();
     }
 
+    bool EclipseState::hasInputLGR() const {
+        return m_lgrs.size() != 0;
+    }
+
     void EclipseState::initLgrs(const Deck& deck) {
         if (!DeckSection::hasGRID(deck))
             return;
