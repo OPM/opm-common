@@ -151,7 +151,7 @@ public:
         // Either rv og rvw should be zero
         assert(rv == 0.0 || rvw == 0.0);
         const Evaluation xBrine = convertRvwToXgW_(max(rvw,rv),regionIdx);
-        result += xBrine * H2O::gasInternalEnergy(temperature, pressure);
+        result += xBrine * H2O::liquidInternalEnergy(temperature, pressure);
         result += (1 - xBrine) * CO2::gasInternalEnergy(temperature, pressure, extrapolate);
         return result;
     }
