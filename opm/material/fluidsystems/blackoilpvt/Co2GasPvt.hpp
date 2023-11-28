@@ -77,7 +77,7 @@ public:
         setNumRegions(num_regions);
         for (int i = 0; i < num_regions; ++i) {
             gasReferenceDensity_[i] = CO2::gasDensity(T_ref, P_ref, extrapolate);
-            brineReferenceDensity_[i] = Brine::liquidDensity(T_ref, P_ref, salinity_[i], extrapolate);
+            brineReferenceDensity_[i] = H2O::liquidDensity(T_ref, P_ref, extrapolate);
         }
     }
 #if HAVE_ECL_INPUT
@@ -319,7 +319,7 @@ private:
         // normalize the phase compositions
         xgH2O = max(0.0, min(1.0, xgH2O));
 
-        return convertXgWToRvw(convertxgWToXgW(xgH2O, salinity), regionIdx);
+        return convertXgWToRvw(convertxgWToXgW(xgH2O), regionIdx);
     }
 
     /*!
@@ -354,11 +354,11 @@ private:
      * \brief Convert a water mole fraction in the gas phase the corresponding mass fraction.
      */
     template <class LhsEval>
-    LhsEval convertxgWToXgW(const LhsEval& xgW, const LhsEval& salinity) const
+    LhsEval convertxgWToXgW(const LhsEval& xgW) const
     {
         OPM_TIMEFUNCTION_LOCAL();
         Scalar M_CO2 = CO2::molarMass();
-        LhsEval M_Brine = Brine::molarMass(salinity);
+        LhsEval M_Brine = H2O::molarMass();
 
         return xgW*M_Brine / (xgW*(M_Brine - M_CO2) + M_CO2);
     }
