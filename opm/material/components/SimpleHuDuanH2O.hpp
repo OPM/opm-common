@@ -280,8 +280,9 @@ public:
     template <class Evaluation>
     static Evaluation gasDensity(const Evaluation& temperature, const Evaluation& pressure)
     {
+        return density_(temperature, pressure, true);
         // Assume an ideal gas
-        return molarMass()*IdealGas::molarDensity(temperature, pressure);
+        //return molarMass()*IdealGas::molarDensity(temperature, pressure);
     }
 
     /*!
@@ -309,7 +310,7 @@ public:
     static Evaluation liquidDensity(const Evaluation& temperature, const Evaluation& pressure,
                                     bool extrapolate)
     {
-        return liquidDensity_(temperature, pressure, extrapolate);
+        return density_(temperature, pressure, extrapolate);
     }
 
     /*!
@@ -378,11 +379,11 @@ private:
      *                    values. If false an exception might be thrown.
      */
     template <class Evaluation>
-    static Evaluation liquidDensity_(const Evaluation& T, const Evaluation& pressure, bool extrapolate) {
+    static Evaluation density_(const Evaluation& T, const Evaluation& pressure, bool extrapolate) {
         // Hu, Duan, Zhu and Chou: PVTx properties of the CO2-H2O and CO2-H2O-NaCl
         // systems below 647 K: Assessment of experimental data and
         // thermodynamics models, Chemical Geology, 2007.
-        OPM_TIMEBLOCK_LOCAL(liquidDensity_);
+        OPM_TIMEBLOCK_LOCAL(density_);
         if (T > 647 || pressure > 100e6) {
             const std::string msg =
                 "Density of water is only implemented for temperatures "
