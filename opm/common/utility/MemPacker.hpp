@@ -25,6 +25,7 @@
 #include <cstddef>
 #include <cstring>
 #include <string>
+#include <vector>
 
 namespace Opm {
 namespace Serialization {
