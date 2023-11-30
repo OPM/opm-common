@@ -19,7 +19,6 @@
 #ifndef SCHEDULE_DECK_HPP
 #define SCHEDULE_DECK_HPP
 
-#include <chrono>
 #include <cstddef>
 #include <optional>
 #include <iosfwd>
@@ -29,9 +28,9 @@
 #include <opm/input/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/common/utility/TimeService.hpp>
 
-#include <opm/io/eclipse/rst/state.hpp>
-
 namespace Opm {
+
+    struct ScheduleRestartInfo;
 
     enum class ScheduleTimeType {
         START = 0,
@@ -89,29 +88,6 @@ namespace Opm {
     };
 
 
-    struct ScheduleRestartInfo {
-        std::time_t time{0};
-        std::size_t report_step{0};
-        bool skiprest{false};
-
-        ScheduleRestartInfo() = default;
-
-        ScheduleRestartInfo(const RestartIO::RstState * rst, const Deck& deck);
-        bool operator==(const ScheduleRestartInfo& other) const;
-        static ScheduleRestartInfo serializationTestObject();
-
-        template<class Serializer>
-        void serializeOp(Serializer& serializer)
-        {
-            serializer(this->time);
-            serializer(this->report_step);
-            serializer(this->skiprest);
-        }
-    };
-
-
-
-
     /*
       The purpose of the ScheduleDeck class is to serve as a container holding
       all the keywords of the SCHEDULE section, when the Schedule class is
@@ -125,7 +101,8 @@ namespace Opm {
     public:
         explicit ScheduleDeck(time_point start_time, const Deck& deck, const ScheduleRestartInfo& rst_info);
         ScheduleDeck();
-        void add_block(ScheduleTimeType time_type, const time_point& t, ScheduleDeckContext& context, const KeywordLocation& location);
+        void add_block(ScheduleTimeType time_type, const time_point& t,
+                       ScheduleDeckContext& context, const KeywordLocation& location);
         void add_TSTEP(const DeckKeyword& TSTEPKeyword, ScheduleDeckContext& context);
         ScheduleBlock& operator[](const std::size_t index);
         const ScheduleBlock& operator[](const std::size_t index) const;

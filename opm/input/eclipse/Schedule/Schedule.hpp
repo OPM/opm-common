@@ -39,6 +39,8 @@
 #include <opm/input/eclipse/Schedule/MessageLimits.hpp>
 #include <opm/input/eclipse/Schedule/ScheduleDeck.hpp>
 #include <opm/input/eclipse/Schedule/ScheduleState.hpp>
+#include <opm/input/eclipse/Schedule/ScheduleRestartInfo.hpp>
+#include <opm/input/eclipse/Schedule/Well/Connection.hpp>
 #include <opm/input/eclipse/Schedule/Well/PAvg.hpp>
 #include <opm/input/eclipse/Schedule/WriteRestartFileEvents.hpp>
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
@@ -54,6 +56,7 @@ namespace Opm
     class Deck;
     class DeckKeyword;
     class DeckRecord;
+    class EclipseGrid;
     class EclipseState;
     class ErrorGuard;
     class FieldPropsManager;
@@ -66,6 +69,7 @@ namespace Opm
     class ParseContext;
     class Python;
     class RPTConfig;
+    class ScheduleGrid;
     class SCHEDULESection;
     class SegmentMatcher;
     struct SimulatorUpdate;

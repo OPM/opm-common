@@ -29,7 +29,7 @@
 #include <opm/input/eclipse/Deck/DeckOutput.hpp>
 #include <opm/input/eclipse/Deck/DeckSection.hpp>
 
-#include <opm/input/eclipse/Parser/ParserKeywords/S.hpp>
+#include <opm/input/eclipse/Schedule/ScheduleRestartInfo.hpp>
 
 #include <chrono>
 #include <ctime>
@@ -39,32 +39,6 @@
 #include <fmt/chrono.h>
 
 namespace Opm {
-
-ScheduleRestartInfo::ScheduleRestartInfo(const RestartIO::RstState * rst, const Deck& deck) {
-    if (rst) {
-        const auto& [t,r] = rst->header.restart_info();
-        this->time = t;
-        this->report_step = r;
-        this->skiprest = deck.hasKeyword<ParserKeywords::SKIPREST>();
-    }
-}
-
-
-bool ScheduleRestartInfo::operator==(const ScheduleRestartInfo& other) const {
-    return this->time == other.time &&
-        this->report_step == other.report_step &&
-        this->skiprest == other.skiprest;
-}
-
-
-ScheduleRestartInfo ScheduleRestartInfo::serializationTestObject() {
-    ScheduleRestartInfo rst_info;
-    rst_info.report_step = 12345;
-    rst_info.skiprest = false;
-    return rst_info;
-}
-
-
 
 
 ScheduleBlock::ScheduleBlock(const KeywordLocation& location, ScheduleTimeType time_type, const time_point& start_time) :

@@ -200,6 +200,7 @@ if(ENABLE_ECL_INPUT)
     src/opm/input/eclipse/Schedule/Schedule.cpp
     src/opm/input/eclipse/Schedule/ScheduleDeck.cpp
     src/opm/input/eclipse/Schedule/ScheduleGrid.cpp
+    src/opm/input/eclipse/Schedule/ScheduleRestartInfo.cpp
     src/opm/input/eclipse/Schedule/ScheduleState.cpp
     src/opm/input/eclipse/Schedule/ScheduleTypes.cpp
     src/opm/input/eclipse/Schedule/SummaryState.cpp
@@ -1274,6 +1275,7 @@ if(ENABLE_ECL_INPUT)
        opm/input/eclipse/Schedule/Schedule.hpp
        opm/input/eclipse/Schedule/ScheduleDeck.hpp
        opm/input/eclipse/Schedule/ScheduleGrid.hpp
+       opm/input/eclipse/Schedule/ScheduleRestartInfo.hpp
        opm/input/eclipse/Schedule/ScheduleState.hpp
        opm/input/eclipse/Schedule/ScheduleTypes.hpp
        opm/input/eclipse/Schedule/Tuning.hpp
