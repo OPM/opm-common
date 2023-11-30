@@ -24,10 +24,10 @@
 #include <ctime>
 #include <string>
 #include <unordered_map>
-#include <opm/input/eclipse/Deck/DeckRecord.hpp>
-
 
 namespace Opm {
+
+    class DeckRecord;
 
     using time_point = std::chrono::time_point<std::chrono::system_clock, std::chrono::duration<int64_t, std::ratio<1,1000>>>;
 

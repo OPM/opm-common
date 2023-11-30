@@ -32,13 +32,12 @@
 #include <utility>
 #include <vector>
 
-#include <opm/input/eclipse/EclipseState/Runspec.hpp>
 #include <opm/input/eclipse/Schedule/Action/WGNames.hpp>
 #include <opm/input/eclipse/Schedule/CompletedCells.hpp>
 #include <opm/input/eclipse/Schedule/Group/Group.hpp>
-#include <opm/input/eclipse/Schedule/MessageLimits.hpp>
 #include <opm/input/eclipse/Schedule/ScheduleDeck.hpp>
 #include <opm/input/eclipse/Schedule/ScheduleState.hpp>
+#include <opm/input/eclipse/Schedule/ScheduleStatic.hpp>
 #include <opm/input/eclipse/Schedule/Well/PAvg.hpp>
 #include <opm/input/eclipse/Schedule/WriteRestartFileEvents.hpp>
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
@@ -54,6 +53,8 @@ namespace Opm
     class Deck;
     class DeckKeyword;
     class DeckRecord;
+    enum class ConnectionOrder;
+    class EclipseGrid;
     class EclipseState;
     class ErrorGuard;
     class FieldPropsManager;
@@ -65,7 +66,9 @@ namespace Opm
     enum class InputErrorAction;
     class ParseContext;
     class Python;
+    class Runspec;
     class RPTConfig;
+    class ScheduleGrid;
     class SCHEDULESection;
     class SegmentMatcher;
     struct SimulatorUpdate;
@@ -81,56 +84,6 @@ namespace Opm
     class WellTestConfig;
 
     namespace RestartIO { struct RstState; }
-
-
-    struct ScheduleStatic {
-        std::shared_ptr<const Python> m_python_handle;
-        std::string m_input_path;
-        ScheduleRestartInfo rst_info;
-        MessageLimits m_deck_message_limits;
-        UnitSystem m_unit_system;
-        Runspec m_runspec;
-        RSTConfig rst_config;
-        std::optional<int> output_interval;
-        double sumthin{-1.0};
-        bool rptonly{false};
-        bool gaslift_opt_active{false};
-        std::optional<OilVaporizationProperties> oilVap;
-
-        ScheduleStatic() = default;
-
-        explicit ScheduleStatic(std::shared_ptr<const Python> python_handle) :
-            m_python_handle(python_handle)
-        {}
-
-        ScheduleStatic(std::shared_ptr<const Python> python_handle,
-                       const ScheduleRestartInfo& restart_info,
-                       const Deck& deck,
-                       const Runspec& runspec,
-                       const std::optional<int>& output_interval_,
-                       const ParseContext& parseContext,
-                       ErrorGuard& errors);
-
-        template<class Serializer>
-        void serializeOp(Serializer& serializer)
-        {
-            serializer(m_deck_message_limits);
-            serializer(this->rst_info);
-            serializer(m_runspec);
-            serializer(m_unit_system);
-            serializer(this->m_input_path);
-            serializer(rst_info);
-            serializer(rst_config);
-            serializer(this->output_interval);
-            serializer(this->gaslift_opt_active);
-        }
-
-
-        static ScheduleStatic serializationTestObject();
-
-        bool operator==(const ScheduleStatic& other) const;
-    };
-
 
     class Schedule {
     public:
@@ -522,7 +475,7 @@ namespace Opm
                      int pvt_table,
                      WellGasInflowEquation gas_inflow,
                      std::size_t timeStep,
-                     Connection::Order wellConnectionOrder);
+                     ConnectionOrder wellConnectionOrder);
         bool updateWPAVE(const std::string& wname, std::size_t report_step, const PAvg& pavg);
 
         void updateGuideRateModel(const GuideRateModel& new_model, std::size_t report_step);
@@ -543,7 +496,8 @@ namespace Opm
         void addGroup(const std::string& groupName , std::size_t timeStep);
         void addGroup(Group group);
         void addGroup(const RestartIO::RstGroup& rst_group, std::size_t timeStep);
-        void addWell(const std::string& wellName, const DeckRecord& record, std::size_t timeStep, Connection::Order connection_order);
+        void addWell(const std::string& wellName, const DeckRecord& record,
+                    std::size_t timeStep, ConnectionOrder connection_order);
         void checkIfAllConnectionsIsShut(std::size_t currentStep);
         void end_report(std::size_t report_step);
         /// \param welsegs_wells All wells with a WELSEGS entry for checks.

@@ -19,98 +19,26 @@
 #ifndef SCHEDULE_DECK_HPP
 #define SCHEDULE_DECK_HPP
 
-#include <chrono>
+#include <opm/common/OpmLog/KeywordLocation.hpp>
+#include <opm/common/utility/TimeService.hpp>
+
+#include <opm/input/eclipse/Deck/DeckKeyword.hpp>
+
+#include <opm/input/eclipse/Schedule/ScheduleBlock.hpp>
+
 #include <cstddef>
-#include <optional>
 #include <iosfwd>
 #include <vector>
 
-#include <opm/common/OpmLog/KeywordLocation.hpp>
-#include <opm/input/eclipse/Deck/DeckKeyword.hpp>
-#include <opm/common/utility/TimeService.hpp>
-
-#include <opm/io/eclipse/rst/state.hpp>
 
 namespace Opm {
 
-    enum class ScheduleTimeType {
-        START = 0,
-        DATES = 1,
-        TSTEP = 2,
-        RESTART = 3
-    };
-
+    struct ScheduleRestartInfo;
 
     class Deck;
     class DeckOutput;
     struct ScheduleDeckContext;
     class Runspec;
-
-    /*
-      The ScheduleBlock is collection of all the Schedule keywords from one
-      report step.
-    */
-
-    class ScheduleBlock {
-    public:
-        ScheduleBlock() = default;
-        ScheduleBlock(const KeywordLocation& location, ScheduleTimeType time_type, const time_point& start_time);
-        std::size_t size() const;
-        void push_back(const DeckKeyword& keyword);
-        std::optional<DeckKeyword> get(const std::string& kw) const;
-        const time_point& start_time() const;
-        const std::optional<time_point>& end_time() const;
-        void end_time(const time_point& t);
-        ScheduleTimeType time_type() const;
-        const KeywordLocation& location() const;
-        const DeckKeyword& operator[](const std::size_t index) const;
-        std::vector<DeckKeyword>::const_iterator begin() const;
-        std::vector<DeckKeyword>::const_iterator end() const;
-
-        bool operator==(const ScheduleBlock& other) const;
-        static ScheduleBlock serializationTestObject();
-        template<class Serializer>
-        void serializeOp(Serializer& serializer) {
-            serializer(m_time_type);
-            serializer(m_start_time);
-            serializer(m_end_time);
-            serializer(m_keywords);
-            serializer(m_location);
-        }
-
-        void dump_time(time_point current_time, DeckOutput& output) const;
-        void dump_deck(DeckOutput& output, time_point& current_time) const;
-    private:
-        ScheduleTimeType m_time_type;
-        time_point m_start_time;
-        std::optional<time_point> m_end_time;
-        KeywordLocation m_location;
-        std::vector<DeckKeyword> m_keywords;
-    };
-
-
-    struct ScheduleRestartInfo {
-        std::time_t time{0};
-        std::size_t report_step{0};
-        bool skiprest{false};
-
-        ScheduleRestartInfo() = default;
-
-        ScheduleRestartInfo(const RestartIO::RstState * rst, const Deck& deck);
-        bool operator==(const ScheduleRestartInfo& other) const;
-        static ScheduleRestartInfo serializationTestObject();
-
-        template<class Serializer>
-        void serializeOp(Serializer& serializer)
-        {
-            serializer(this->time);
-            serializer(this->report_step);
-            serializer(this->skiprest);
-        }
-    };
-
-
-
 
     /*
       The purpose of the ScheduleDeck class is to serve as a container holding
@@ -125,7 +53,8 @@ namespace Opm {
     public:
         explicit ScheduleDeck(time_point start_time, const Deck& deck, const ScheduleRestartInfo& rst_info);
         ScheduleDeck();
-        void add_block(ScheduleTimeType time_type, const time_point& t, ScheduleDeckContext& context, const KeywordLocation& location);
+        void add_block(ScheduleTimeType time_type, const time_point& t,
+                       ScheduleDeckContext& context, const KeywordLocation& location);
         void add_TSTEP(const DeckKeyword& TSTEPKeyword, ScheduleDeckContext& context);
         ScheduleBlock& operator[](const std::size_t index);
         const ScheduleBlock& operator[](const std::size_t index) const;

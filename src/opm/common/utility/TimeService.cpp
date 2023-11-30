@@ -18,12 +18,16 @@
 */
 
 #include <opm/common/utility/TimeService.hpp>
+
 #include <opm/common/utility/String.hpp>
+
+#include <opm/input/eclipse/Deck/DeckRecord.hpp>
 
 #include <chrono>
 #include <ctime>
 #include <limits>
 #include <utility>
+#include <stdexcept>
 #include <string>
 
 namespace Opm {
