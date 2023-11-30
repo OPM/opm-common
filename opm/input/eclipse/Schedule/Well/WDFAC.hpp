@@ -21,6 +21,7 @@
 #define WDFAC_HPP_HEADER_INCLUDED
 
 namespace Opm {
+    class Connection;
     class DeckRecord;
     class WellConnections;
 } // namespace Opm
