@@ -151,7 +151,7 @@ public:
         // Either rv og rvw should be zero
         assert(rv == 0.0 || rvw == 0.0);
         const Evaluation xBrine = convertRvwToXgW_(max(rvw,rv),regionIdx);
-        result += xBrine * H2O::gasInternalEnergy(temperature, pressure);
+        result += xBrine * H2O::liquidInternalEnergy(temperature, pressure, extrapolate);
         result += (1 - xBrine) * CO2::gasInternalEnergy(temperature, pressure, extrapolate);
         return result;
     }
@@ -200,7 +200,7 @@ public:
         assert(rv == 0.0 || rvw == 0.0);
         const Evaluation xBrine = convertRvwToXgW_(max(rvw,rv),regionIdx);
         const auto& rhoCo2 = CO2::gasDensity(temperature, pressure, extrapolate);
-        const auto& rhoH2O = H2O::gasDensity(temperature, pressure);
+        const auto& rhoH2O = H2O::liquidDensity(temperature, pressure, extrapolate);
         return 1.0 / ( ( xBrine/rhoH2O + (1.0 - xBrine)/rhoCo2) * gasReferenceDensity_[regionIdx]);
     }
 
