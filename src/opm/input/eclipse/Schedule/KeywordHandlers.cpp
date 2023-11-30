@@ -1532,6 +1532,7 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
                 if (well2.updateHasInjected())
                     update_well = true;
 
+                const bool crossFlow = well2.getAllowCrossFlow();
                 if (update_well) {
                     handlerContext.state().events().addEvent(ScheduleEvents::INJECTION_UPDATE);
                     handlerContext.state().wellgroup_events().addEvent( well_name, ScheduleEvents::INJECTION_UPDATE);
@@ -1542,7 +1543,7 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
 
                 // if the well has zero surface rate limit or reservior rate limit, while does not allow crossflow,
                 // it should be turned off.
-                if ( ! well2.getAllowCrossFlow() ) {
+                if ( ! crossFlow ) {
                     std::string msg =
                         "Well " + well_name + " is an injector with zero rate where crossflow is banned. " +
                         "This well will be closed at " + std::to_string(handlerContext.elapsed_seconds() / (60*60*24)) + " days";
@@ -1614,6 +1615,7 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
                 if (well2.updateHasInjected())
                     update_well = true;
 
+                const bool crossFlow = well2.getAllowCrossFlow();
                 if (update_well) {
                     handlerContext.state().events().addEvent( ScheduleEvents::INJECTION_UPDATE );
                     handlerContext.state().wellgroup_events().addEvent( well_name, ScheduleEvents::INJECTION_UPDATE);
@@ -1622,7 +1624,7 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
                     handlerContext.state().wells.update( std::move(well2) );
                 }
 
-                if ( ! well2.getAllowCrossFlow() && (injection->surfaceInjectionRate.zero())) {
+                if ( ! crossFlow && (injection->surfaceInjectionRate.zero())) {
                     std::string msg =
                         "Well " + well_name + " is an injector with zero rate where crossflow is banned. " +
                         "This well will be closed at " + std::to_string(handlerContext.elapsed_seconds() / (60*60*24)) + " days";
