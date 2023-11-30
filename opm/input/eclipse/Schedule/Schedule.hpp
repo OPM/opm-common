@@ -594,9 +594,6 @@ namespace Opm
          * @return `true` if the keyword was handled
          */
         bool handleNormalKeyword(HandlerContext& handlerContext);
-
-        // Keyword Handlers
-        void handlePYACTION(const DeckKeyword&);
     };
 }
 

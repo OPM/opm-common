@@ -31,7 +31,9 @@
 #include <opm/input/eclipse/EclipseState/Aquifer/AquiferFlux.hpp>
 
 #include <opm/input/eclipse/Schedule/Action/ActionResult.hpp>
+#include <opm/input/eclipse/Schedule/Action/Actions.hpp>
 #include <opm/input/eclipse/Schedule/Action/ActionX.hpp>
+#include <opm/input/eclipse/Schedule/Action/PyAction.hpp>
 #include <opm/input/eclipse/Schedule/Action/SimulatorUpdate.hpp>
 #include <opm/input/eclipse/Schedule/Events.hpp>
 #include <opm/input/eclipse/Schedule/GasLiftOpt.hpp>
@@ -1122,6 +1124,35 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
 
         handlerContext.state().update_nupcol(nupcol);
     }
+
+    void handlePYACTION(HandlerContext& handlerContext)
+    {
+        if (!handlerContext.static_schedule().m_python_handle->enabled()) {
+            //Must have a real Python instance here - to ensure that IMPORT works
+            const auto& loc = handlerContext.keyword.location();
+            OpmLog::warning(fmt::format("This version of flow is built without support for Python. "
+                                        "Keyword PYACTION in file: {} line: {} is ignored.",
+                                        loc.filename, loc.lineno));
+            return;
+        }
+
+        const auto& keyword = handlerContext.keyword;
+        const auto& name = keyword.getRecord(0).getItem<ParserKeywords::PYACTION::NAME>().get<std::string>(0);
+        const auto& run_count = Action::PyAction::from_string( keyword.getRecord(0).getItem<ParserKeywords::PYACTION::RUN_COUNT>().get<std::string>(0) );
+        const auto& module_arg = keyword.getRecord(1).getItem<ParserKeywords::PYACTION::FILENAME>().get<std::string>(0);
+        std::string module;
+        if (handlerContext.static_schedule().m_input_path.empty()) {
+            module = module_arg;
+        } else {
+            module = handlerContext.static_schedule().m_input_path + "/" + module_arg;
+        }
+
+        Action::PyAction pyaction(handlerContext.static_schedule().m_python_handle, name, run_count, module);
+        auto new_actions = handlerContext.state().actions.get();
+        new_actions.add(pyaction);
+        handlerContext.state().actions.update( std::move(new_actions) );
+    }
+
 
     void handleRPTONLY(HandlerContext& handlerContext)
     {
@@ -3007,6 +3038,7 @@ Well{0} entered with 'FIELD' parent group:
             { "NEXTSTEP", &handleNEXTSTEP   },
             { "NODEPROP", &handleNODEPROP   },
             { "NUPCOL"  , &handleNUPCOL     },
+            { "PYACTION", &handlePYACTION   },
             { "RPTONLY" , &handleRPTONLY    },
             { "RPTONLYO", &handleRPTONLYO   },
             { "RPTRST"  , &handleRPTRST     },
