@@ -38,7 +38,6 @@
 #include <opm/input/eclipse/Schedule/ScheduleDeck.hpp>
 #include <opm/input/eclipse/Schedule/ScheduleState.hpp>
 #include <opm/input/eclipse/Schedule/ScheduleStatic.hpp>
-#include <opm/input/eclipse/Schedule/Well/Connection.hpp>
 #include <opm/input/eclipse/Schedule/Well/PAvg.hpp>
 #include <opm/input/eclipse/Schedule/WriteRestartFileEvents.hpp>
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
@@ -54,6 +53,7 @@ namespace Opm
     class Deck;
     class DeckKeyword;
     class DeckRecord;
+    enum class ConnectionOrder;
     class EclipseGrid;
     class EclipseState;
     class ErrorGuard;
@@ -475,7 +475,7 @@ namespace Opm
                      int pvt_table,
                      WellGasInflowEquation gas_inflow,
                      std::size_t timeStep,
-                     Connection::Order wellConnectionOrder);
+                     ConnectionOrder wellConnectionOrder);
         bool updateWPAVE(const std::string& wname, std::size_t report_step, const PAvg& pavg);
 
         void updateGuideRateModel(const GuideRateModel& new_model, std::size_t report_step);
@@ -496,7 +496,8 @@ namespace Opm
         void addGroup(const std::string& groupName , std::size_t timeStep);
         void addGroup(Group group);
         void addGroup(const RestartIO::RstGroup& rst_group, std::size_t timeStep);
-        void addWell(const std::string& wellName, const DeckRecord& record, std::size_t timeStep, Connection::Order connection_order);
+        void addWell(const std::string& wellName, const DeckRecord& record,
+                    std::size_t timeStep, ConnectionOrder connection_order);
         void checkIfAllConnectionsIsShut(std::size_t currentStep);
         void end_report(std::size_t report_step);
         /// \param welsegs_wells All wells with a WELSEGS entry for checks.

@@ -23,12 +23,8 @@
 
 #include <array>
 #include <cstddef>
-#include <map>
-#include <memory>
 #include <string>
-#include <vector>
 #include <optional>
-#include <limits>
 
 #include <opm/input/eclipse/Schedule/Well/FilterCake.hpp>
 #include <opm/input/eclipse/Schedule/Well/WINJMULT.hpp>
@@ -43,6 +39,12 @@ namespace RestartIO {
     class DeckRecord;
     class ScheduleGrid;
     class FieldPropsManager;
+
+    enum class ConnectionOrder {
+        DEPTH,
+        INPUT,
+        TRACK
+    };
 
     class Connection {
     public:
@@ -66,12 +68,7 @@ namespace RestartIO {
         static Direction   DirectionFromString(const std::string& stringValue);
 
 
-        enum class Order {
-                          DEPTH,
-                          INPUT,
-                          TRACK
-        };
-
+        using Order = ConnectionOrder;
         static const std::string Order2String( Order enumValue );
         static Order OrderFromString(const std::string& comporderStringValue);
 
