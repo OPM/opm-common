@@ -92,6 +92,7 @@
 #include <opm/input/eclipse/Deck/DeckSection.hpp>
 
 #include "HandlerContext.hpp"
+#include "KeywordHandlers.hpp"
 #include "MSW/Compsegs.hpp"
 #include "MSW/WelSegsSet.hpp"
 #include "Well/injection.hpp"
@@ -381,15 +382,12 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const std::optional
                                         parseContext, errors, sim_update, target_wellpi,
                                         wpimult_global_factor, welsegs_wells, compsegs_wells};
 
-        /*
-          The grid and fieldProps members create problems for reiterating the
-          Schedule section. We therefor single them out very clearly here.
-        */
-        if (handleNormalKeyword(handlerContext))
-            return;
-
-        if (keyword.is<ParserKeywords::PYACTION>())
-            handlePYACTION(keyword);
+        if (!KeywordHandlers::getInstance().handleKeyword(handlerContext)) {
+            OpmLog::warning(fmt::format("No handler registered for keyword {} "
+                                        "in file {} line {}",
+                            keyword.name(), keyword.location().filename,
+                            keyword.location().lineno));
+        }
     }
 
 namespace {
@@ -780,29 +778,6 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                 (void) cell;
             }
         }
-    }
-
-    void Schedule::handlePYACTION(const DeckKeyword& keyword) {
-        if (!this->m_static.m_python_handle->enabled()) {
-            //Must have a real Python instance here - to ensure that IMPORT works
-            const auto& loc = keyword.location();
-            OpmLog::warning("This version of flow is built without support for Python. Keyword PYACTION in file: " + loc.filename + " line: " + std::to_string(loc.lineno) + " is ignored.");
-            return;
-        }
-
-        const auto& name = keyword.getRecord(0).getItem<ParserKeywords::PYACTION::NAME>().get<std::string>(0);
-        const auto& run_count = Action::PyAction::from_string( keyword.getRecord(0).getItem<ParserKeywords::PYACTION::RUN_COUNT>().get<std::string>(0) );
-        const auto& module_arg = keyword.getRecord(1).getItem<ParserKeywords::PYACTION::FILENAME>().get<std::string>(0);
-        std::string module;
-        if (this->m_static.m_input_path.empty())
-            module = module_arg;
-        else
-            module = this->m_static.m_input_path + "/" + module_arg;
-
-        Action::PyAction pyaction(this->m_static.m_python_handle, name, run_count, module);
-        auto new_actions = this->snapshots.back().actions.get();
-        new_actions.add(pyaction);
-        this->snapshots.back().actions.update( std::move(new_actions) );
     }
 
     void Schedule::shut_well(const std::string& well_name, std::size_t report_step) {

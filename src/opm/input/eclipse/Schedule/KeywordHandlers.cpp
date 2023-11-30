@@ -17,6 +17,8 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "KeywordHandlers.hpp"
+
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 
 #include <opm/common/OpmLog/OpmLog.hpp>
@@ -31,7 +33,9 @@
 #include <opm/input/eclipse/EclipseState/Aquifer/AquiferFlux.hpp>
 
 #include <opm/input/eclipse/Schedule/Action/ActionResult.hpp>
+#include <opm/input/eclipse/Schedule/Action/Actions.hpp>
 #include <opm/input/eclipse/Schedule/Action/ActionX.hpp>
+#include <opm/input/eclipse/Schedule/Action/PyAction.hpp>
 #include <opm/input/eclipse/Schedule/Action/SimulatorUpdate.hpp>
 #include <opm/input/eclipse/Schedule/Events.hpp>
 #include <opm/input/eclipse/Schedule/GasLiftOpt.hpp>
@@ -132,7 +136,11 @@ namespace {
       means that we do not inform the user about "our fix", but it is *not* possible
       to configure the parser to leave the spaces intact.
     */
-    std::string trim_wgname(const DeckKeyword& keyword, const std::string& wgname_arg,  const ParseContext& parseContext, ErrorGuard& errors) {
+    std::string trim_wgname(const DeckKeyword& keyword,
+                            const std::string& wgname_arg,
+                            const ParseContext& parseContext,
+                            ErrorGuard& errors)
+    {
         std::string wgname = trim_copy(wgname_arg);
         if (wgname != wgname_arg)  {
             const auto& location = keyword.location();
@@ -144,16 +152,18 @@ namespace {
         return wgname;
     }
 
-}
-    void Schedule::handleAQUCT(HandlerContext& handlerContext) {
+    void handleAQUCT(HandlerContext& handlerContext)
+    {
         throw OpmInputError("AQUCT is not supported as SCHEDULE keyword", handlerContext.keyword.location());
     }
 
-    void Schedule::handleAQUFETP(HandlerContext& handlerContext) {
+    void handleAQUFETP(HandlerContext& handlerContext)
+    {
         throw OpmInputError("AQUFETP is not supported as SCHEDULE keyword", handlerContext.keyword.location());
     }
 
-    void Schedule::handleAQUFLUX(HandlerContext& handlerContext) {
+    void handleAQUFLUX(HandlerContext& handlerContext)
+    {
         auto& aqufluxs = handlerContext.state().aqufluxs;
         for (const auto& record : handlerContext.keyword) {
             const auto aquifer = SingleAquiferFlux { record };
@@ -161,14 +171,16 @@ namespace {
         }
     }
 
-    void Schedule::handleBCProp(HandlerContext& handlerContext) {
+    void handleBCProp(HandlerContext& handlerContext)
+    {
         auto& bcprop = handlerContext.state().bcprop;
         for (const auto& record : handlerContext.keyword) {
             bcprop.updateBCProp(record);
         }
     }
 
-    void Schedule::handleBRANPROP(HandlerContext& handlerContext) {
+    void handleBRANPROP(HandlerContext& handlerContext)
+    {
         auto ext_network = handlerContext.state().network.get();
         if (ext_network.active() && ext_network.is_standard_network()) {
             std::string msg = "Cannot have standard and extended network defined simultaneously.";
@@ -197,7 +209,8 @@ namespace {
         handlerContext.state().network.update( std::move( ext_network ));
     }
 
-    void Schedule::handleCOMPDAT(HandlerContext& handlerContext)  {
+    void handleCOMPDAT(HandlerContext& handlerContext)
+    {
         std::unordered_set<std::string> wells;
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
@@ -243,7 +256,8 @@ namespace {
         }
     }
 
-    void Schedule::handleWELTRAJ(HandlerContext& handlerContext)  {
+    void handleWELTRAJ(HandlerContext& handlerContext)
+    {
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
             const auto wellnames = handlerContext.wellNames(wellNamePattern, false);
@@ -267,7 +281,8 @@ namespace {
         handlerContext.state().events().addEvent(ScheduleEvents::COMPLETION_CHANGE);
     }
 
-    void Schedule::handleCOMPTRAJ(HandlerContext& handlerContext)  {
+    void handleCOMPTRAJ(HandlerContext& handlerContext)
+    {
         // Keyword WELTRAJ must be read first
         std::unordered_set<std::string> wells;
         external::cvf::ref<external::cvf::BoundingBoxTree> cellSearchTree = nullptr;
@@ -314,7 +329,8 @@ namespace {
         }
     }
 
-    void Schedule::handleCOMPLUMP(HandlerContext& handlerContext) {
+    void handleCOMPLUMP(HandlerContext& handlerContext)
+    {
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
             const auto well_names = handlerContext.wellNames(wellNamePattern);
@@ -334,11 +350,12 @@ namespace {
       The COMPORD keyword is handled together with the WELSPECS keyword in the
       handleWELSPECS function.
     */
-    void Schedule::handleCOMPORD(HandlerContext& )
+    void handleCOMPORD(HandlerContext&)
     {
     }
 
-    void Schedule::handleCOMPSEGS(HandlerContext& handlerContext) {
+    void handleCOMPSEGS(HandlerContext& handlerContext)
+    {
         const auto& record1 = handlerContext.keyword.getRecord(0);
         const std::string& wname = record1.getItem("WELL").getTrimmedString(0);
 
@@ -377,7 +394,8 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
         handlerContext.compsegs_handled(wname);
     }
 
-    void Schedule::handleCSKIN(HandlerContext& handlerContext) {
+    void handleCSKIN(HandlerContext& handlerContext)
+    {
         // Get CSKIN keyword info and current step
         const auto& keyword = handlerContext.keyword;
 
@@ -397,7 +415,8 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
         }
     }
 
-    void Schedule::handleDRSDT(HandlerContext& handlerContext) {
+    void handleDRSDT(HandlerContext& handlerContext)
+    {
         const std::size_t numPvtRegions = handlerContext.static_schedule().m_runspec.tabdims().getNumPVTTables();
         std::vector<double> maximums(numPvtRegions);
         std::vector<std::string> options(numPvtRegions);
@@ -411,7 +430,8 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
         }
     }
 
-    void Schedule::handleDRSDTCON(HandlerContext& handlerContext) {
+    void handleDRSDTCON(HandlerContext& handlerContext)
+    {
         const std::size_t numPvtRegions = handlerContext.static_schedule().m_runspec.tabdims().getNumPVTTables();
         std::vector<double> maximums(numPvtRegions);
         std::vector<std::string> options(numPvtRegions);
@@ -425,7 +445,8 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
         }
     }
 
-    void Schedule::handleDRSDTR(HandlerContext& handlerContext) {
+    void handleDRSDTR(HandlerContext& handlerContext)
+    {
         const std::size_t numPvtRegions = handlerContext.static_schedule().m_runspec.tabdims().getNumPVTTables();
         std::vector<double> maximums(numPvtRegions);
         std::vector<std::string> options(numPvtRegions);
@@ -441,7 +462,8 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
         OilVaporizationProperties::updateDRSDT(ovp, maximums, options);
     }
 
-    void Schedule::handleDRVDT(HandlerContext& handlerContext) {
+    void handleDRVDT(HandlerContext& handlerContext)
+    {
         const std::size_t numPvtRegions = handlerContext.static_schedule().m_runspec.tabdims().getNumPVTTables();
         std::vector<double> maximums(numPvtRegions);
         for (const auto& record : handlerContext.keyword) {
@@ -452,7 +474,8 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
         }
     }
 
-    void Schedule::handleDRVDTR(HandlerContext& handlerContext) {
+    void handleDRVDTR(HandlerContext& handlerContext)
+    {
         std::size_t numPvtRegions = handlerContext.static_schedule().m_runspec.tabdims().getNumPVTTables();
         std::size_t pvtRegionIdx = 0;
         std::vector<double> maximums(numPvtRegions);
@@ -465,7 +488,7 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
         OilVaporizationProperties::updateDRVDT(ovp, maximums);
     }
 
-    void Schedule::handleEXIT(HandlerContext& handlerContext)
+    void handleEXIT(HandlerContext& handlerContext)
     {
         if (handlerContext.actionx_mode) {
             using ES = ParserKeywords::EXIT;
@@ -478,7 +501,7 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
         }
     }
 
-    void Schedule::handleFBHPDEF(HandlerContext& handlerContext)
+    void handleFBHPDEF(HandlerContext& handlerContext)
     {
         using FBHP = ParserKeywords::FBHPDEF;
         const auto& record = handlerContext.keyword.getRecord(0);
@@ -492,7 +515,8 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
         handlerContext.state().bhp_defaults.update(std::move(bhp_defaults));
     }
 
-    void Schedule::handleGCONINJE(HandlerContext& handlerContext) {
+    void handleGCONINJE(HandlerContext& handlerContext)
+    {
         using GI = ParserKeywords::GCONINJE;
         const auto& keyword = handlerContext.keyword;
         for (const auto& record : keyword) {
@@ -585,7 +609,8 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
         }
     }
 
-    void Schedule::handleGCONPROD(HandlerContext& handlerContext) {
+    void handleGCONPROD(HandlerContext& handlerContext)
+    {
         const auto& keyword = handlerContext.keyword;
         for (const auto& record : keyword) {
             const std::string& groupNamePattern = record.getItem("GROUP").getTrimmedString(0);
@@ -719,7 +744,8 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
         }
     }
 
-    void Schedule::handleGCONSALE(HandlerContext& handlerContext) {
+    void handleGCONSALE(HandlerContext& handlerContext)
+    {
         auto new_gconsale = handlerContext.state().gconsale.get();
         for (const auto& record : handlerContext.keyword) {
             const std::string& groupName = record.getItem("GROUP").getTrimmedString(0);
@@ -741,7 +767,8 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
         handlerContext.state().gconsale.update( std::move(new_gconsale) );
     }
 
-    void Schedule::handleGCONSUMP(HandlerContext& handlerContext) {
+    void handleGCONSUMP(HandlerContext& handlerContext)
+    {
         auto new_gconsump = handlerContext.state().gconsump.get();
         for (const auto& record : handlerContext.keyword) {
             const std::string& groupName = record.getItem("GROUP").getTrimmedString(0);
@@ -761,8 +788,7 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
         handlerContext.state().gconsump.update( std::move(new_gconsump) );
     }
 
-    void
-    Schedule::handleGECON(HandlerContext& handlerContext)
+    void handleGECON(HandlerContext& handlerContext)
     {
         auto gecon = handlerContext.state().gecon();
         const auto& keyword = handlerContext.keyword;
@@ -781,7 +807,8 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
         handlerContext.state().gecon.update(std::move(gecon));
     }
 
-    void Schedule::handleGEFAC(HandlerContext& handlerContext) {
+    void handleGEFAC(HandlerContext& handlerContext)
+    {
         for (const auto& record : handlerContext.keyword) {
             const std::string& groupNamePattern = record.getItem("GROUP").getTrimmedString(0);
             const auto group_names = handlerContext.groupNames(groupNamePattern);
@@ -803,7 +830,8 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
         }
     }
 
-    void Schedule::handleGLIFTOPT(HandlerContext& handlerContext) {
+    void handleGLIFTOPT(HandlerContext& handlerContext)
+    {
         auto glo = handlerContext.state().glo();
         const auto& keyword = handlerContext.keyword;
 
@@ -836,7 +864,8 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
         handlerContext.state().glo.update( std::move(glo) );
     }
 
-    void Schedule::handleGPMAINT(HandlerContext& handlerContext) {
+    void handleGPMAINT(HandlerContext& handlerContext)
+    {
         for (const auto& record : handlerContext.keyword) {
             const std::string& groupNamePattern = record.getItem("GROUP").getTrimmedString(0);
             const auto group_names = handlerContext.groupNames(groupNamePattern);
@@ -859,7 +888,8 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
         }
     }
 
-    void Schedule::handleGRUPNET(HandlerContext& handlerContext) {
+    void handleGRUPNET(HandlerContext& handlerContext)
+    {
         auto network = handlerContext.state().network.get();
         if (network.active() && !network.is_standard_network()) {
             std::string msg = "Cannot have standard and extended network defined simultaneously.";
@@ -929,7 +959,8 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
         handlerContext.state().network.update( std::move(network));
     }
 
-    void Schedule::handleGRUPTREE(HandlerContext& handlerContext) {
+    void handleGRUPTREE(HandlerContext& handlerContext)
+    {
         for (const auto& record : handlerContext.keyword) {
             const std::string& childName = trim_wgname(handlerContext.keyword, record.getItem("CHILD_GROUP").get<std::string>(0), handlerContext.parseContext, handlerContext.errors);
             const std::string& parentName = trim_wgname(handlerContext.keyword, record.getItem("PARENT_GROUP").get<std::string>(0), handlerContext.parseContext, handlerContext.errors);
@@ -946,7 +977,8 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
         }
     }
 
-    void Schedule::handleGUIDERAT(HandlerContext& handlerContext) {
+    void handleGUIDERAT(HandlerContext& handlerContext)
+    {
         const auto& record = handlerContext.keyword.getRecord(0);
 
         const double min_calc_delay = record.getItem<ParserKeywords::GUIDERAT::MIN_CALC_TIME>().getSIDouble(0);
@@ -967,7 +999,8 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
             handlerContext.state().guide_rate.update( std::move(new_config) );
     }
 
-    void Schedule::handleLIFTOPT(HandlerContext& handlerContext) {
+    void handleLIFTOPT(HandlerContext& handlerContext)
+    {
         auto glo = handlerContext.state().glo();
 
         const auto& record = handlerContext.keyword.getRecord(0);
@@ -985,7 +1018,8 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
         handlerContext.state().glo.update( std::move(glo) );
     }
 
-    void Schedule::handleLINCOM(HandlerContext& handlerContext) {
+    void handleLINCOM(HandlerContext& handlerContext)
+    {
         const auto& record = handlerContext.keyword.getRecord(0);
         const auto alpha = record.getItem<ParserKeywords::LINCOM::ALPHA>().get<UDAValue>(0);
         const auto beta  = record.getItem<ParserKeywords::LINCOM::BETA>().get<UDAValue>(0);
@@ -1000,30 +1034,34 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
         }
     }
 
-    void Schedule::handleMESSAGES(HandlerContext& handlerContext) {
+    void handleMESSAGES(HandlerContext& handlerContext)
+    {
         handlerContext.state().message_limits().update( handlerContext.keyword );
     }
 
-
-    void Schedule::handleGEOKeyword(HandlerContext& handlerContext) {
+    void handleGEOKeyword(HandlerContext& handlerContext)
+    {
         handlerContext.state().geo_keywords().push_back(handlerContext.keyword);
         handlerContext.state().events().addEvent( ScheduleEvents::GEO_MODIFIER );
         handlerContext.record_tran_change();
     }
 
-    void Schedule::handleMXUNSUPP(HandlerContext& handlerContext) {
+    void handleMXUNSUPP(HandlerContext& handlerContext)
+    {
         std::string msg_fmt = fmt::format("Problem with keyword {{keyword}} at report step {}\n"
                                           "In {{file}} line {{line}}\n"
                                           "OPM does not support grid property modifier {} in the Schedule section", handlerContext.currentStep, handlerContext.keyword.name());
         OpmLog::warning(OpmInputError::format(msg_fmt, handlerContext.keyword.location()));
     }
 
-    void Schedule::handleNETBALAN(HandlerContext& handlerContext) {
+    void handleNETBALAN(HandlerContext& handlerContext)
+    {
         handlerContext.state().network_balance
             .update(Network::Balance{ handlerContext.keyword });
     }
 
-    void Schedule::handleNEXTSTEP(HandlerContext& handlerContext) {
+    void handleNEXTSTEP(HandlerContext& handlerContext)
+    {
         const auto& record = handlerContext.keyword[0];
         auto next_tstep = record.getItem<ParserKeywords::NEXTSTEP::MAX_STEP>().getSIDouble(0);
         auto apply_to_all = DeckItem::to_bool( record.getItem<ParserKeywords::NEXTSTEP::APPLY_TO_ALL>().get<std::string>(0) );
@@ -1032,8 +1070,8 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
         handlerContext.state().events().addEvent(ScheduleEvents::TUNING_CHANGE);
     }
 
-
-    void Schedule::handleNODEPROP(HandlerContext& handlerContext) {
+    void handleNODEPROP(HandlerContext& handlerContext)
+    {
         auto ext_network = handlerContext.state().network.get();
         if (ext_network.active() && ext_network.is_standard_network()) {
             std::string msg = "Cannot have standard and extended network defined simultaneously.";
@@ -1077,7 +1115,8 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
         handlerContext.state().network.update( ext_network );
     }
 
-    void Schedule::handleNUPCOL(HandlerContext& handlerContext) {
+    void handleNUPCOL(HandlerContext& handlerContext)
+    {
         const int nupcol = handlerContext.keyword.getRecord(0).getItem("NUM_ITER").get<int>(0);
 
         if (handlerContext.keyword.getRecord(0).getItem("NUM_ITER").defaultApplied(0)) {
@@ -1088,22 +1127,55 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
         handlerContext.state().update_nupcol(nupcol);
     }
 
-    void Schedule::handleRPTONLY(HandlerContext& handlerContext) {
+    void handlePYACTION(HandlerContext& handlerContext)
+    {
+        if (!handlerContext.static_schedule().m_python_handle->enabled()) {
+            //Must have a real Python instance here - to ensure that IMPORT works
+            const auto& loc = handlerContext.keyword.location();
+            OpmLog::warning(fmt::format("This version of flow is built without support for Python. "
+                                        "Keyword PYACTION in file: {} line: {} is ignored.",
+                                        loc.filename, loc.lineno));
+            return;
+        }
+
+        const auto& keyword = handlerContext.keyword;
+        const auto& name = keyword.getRecord(0).getItem<ParserKeywords::PYACTION::NAME>().get<std::string>(0);
+        const auto& run_count = Action::PyAction::from_string( keyword.getRecord(0).getItem<ParserKeywords::PYACTION::RUN_COUNT>().get<std::string>(0) );
+        const auto& module_arg = keyword.getRecord(1).getItem<ParserKeywords::PYACTION::FILENAME>().get<std::string>(0);
+        std::string module;
+        if (handlerContext.static_schedule().m_input_path.empty()) {
+            module = module_arg;
+        } else {
+            module = handlerContext.static_schedule().m_input_path + "/" + module_arg;
+        }
+
+        Action::PyAction pyaction(handlerContext.static_schedule().m_python_handle, name, run_count, module);
+        auto new_actions = handlerContext.state().actions.get();
+        new_actions.add(pyaction);
+        handlerContext.state().actions.update( std::move(new_actions) );
+    }
+
+
+    void handleRPTONLY(HandlerContext& handlerContext)
+    {
         handlerContext.state().rptonly(true);
     }
 
-    void Schedule::handleRPTONLYO(HandlerContext& handlerContext) {
+    void handleRPTONLYO(HandlerContext& handlerContext)
+    {
         handlerContext.state().rptonly(false);
     }
 
-    void Schedule::handleRPTSCHED(HandlerContext& handlerContext) {
+    void handleRPTSCHED(HandlerContext& handlerContext)
+    {
         handlerContext.state().rpt_config.update( RPTConfig(handlerContext.keyword ));
         auto rst_config = handlerContext.state().rst_config();
         rst_config.update(handlerContext.keyword, handlerContext.parseContext, handlerContext.errors);
         handlerContext.state().rst_config.update(std::move(rst_config));
     }
 
-    void Schedule::handleRPTRST(HandlerContext& handlerContext) {
+    void handleRPTRST(HandlerContext& handlerContext)
+    {
         auto rst_config = handlerContext.state().rst_config();
         rst_config.update(handlerContext.keyword, handlerContext.parseContext, handlerContext.errors);
         handlerContext.state().rst_config.update(std::move(rst_config));
@@ -1113,18 +1185,19 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
       We do not really handle the SAVE keyword, we just interpret it as: Write a
       normal restart file at this report step.
     */
-    void Schedule::handleSAVE(HandlerContext& handlerContext) {
+    void handleSAVE(HandlerContext& handlerContext)
+    {
         handlerContext.state().updateSAVE(true);
     }
 
-
-    void Schedule::handleSUMTHIN(HandlerContext& handlerContext) {
+    void handleSUMTHIN(HandlerContext& handlerContext)
+    {
         auto value = handlerContext.keyword.getRecord(0).getItem(0).getSIDouble(0);
         handlerContext.state().update_sumthin( value );
     }
 
-
-    void Schedule::handleTUNING(HandlerContext& handlerContext) {
+    void handleTUNING(HandlerContext& handlerContext)
+    {
         const auto numrecords = handlerContext.keyword.size();
         auto tuning = handlerContext.state().tuning();
 
@@ -1221,7 +1294,7 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
         handlerContext.state().events().addEvent(ScheduleEvents::TUNING_CHANGE);
     }
 
-    void Schedule::handleUDQ(HandlerContext& handlerContext)
+    void handleUDQ(HandlerContext& handlerContext)
     {
         auto new_udq = handlerContext.state().udq();
 
@@ -1239,7 +1312,7 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
         handlerContext.state().udq.update(std::move(new_udq));
     }
 
-    void Schedule::handleUDT(HandlerContext& handlerContext)
+    void handleUDT(HandlerContext& handlerContext)
     {
         auto new_udq = handlerContext.state().udq();
 
@@ -1296,7 +1369,8 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
         handlerContext.state().udq.update(std::move(new_udq));
     }
 
-    void Schedule::handleVAPPARS(HandlerContext& handlerContext) {
+    void handleVAPPARS(HandlerContext& handlerContext)
+    {
         for (const auto& record : handlerContext.keyword) {
             double vap1 = record.getItem("OIL_VAP_PROPENSITY").get< double >(0);
             double vap2 = record.getItem("OIL_DENSITY_PROPENSITY").get< double >(0);
@@ -1305,14 +1379,16 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
         }
     }
 
-    void Schedule::handleVFPINJ(HandlerContext& handlerContext) {
+    void handleVFPINJ(HandlerContext& handlerContext)
+    {
         auto table = VFPInjTable(handlerContext.keyword,
                                  handlerContext.static_schedule().m_unit_system);
         handlerContext.state().events().addEvent( ScheduleEvents::VFPINJ_UPDATE );
         handlerContext.state().vfpinj.update( std::move(table) );
     }
 
-    void Schedule::handleVFPPROD(HandlerContext& handlerContext) {
+    void handleVFPPROD(HandlerContext& handlerContext)
+    {
         auto table = VFPProdTable(handlerContext.keyword,
                                   handlerContext.static_schedule().gaslift_opt_active,
                                   handlerContext.static_schedule().m_unit_system);
@@ -1320,7 +1396,8 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
         handlerContext.state().vfpprod.update( std::move(table) );
     }
 
-    void Schedule::handleWCONHIST(HandlerContext& handlerContext) {
+    void handleWCONHIST(HandlerContext& handlerContext)
+    {
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
             const auto well_names = handlerContext.wellNames(wellNamePattern, false);
@@ -1407,7 +1484,8 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
         }
     }
 
-    void Schedule::handleWCONPROD(HandlerContext& handlerContext) {
+    void handleWCONPROD(HandlerContext& handlerContext)
+    {
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
             const auto well_names = handlerContext.wellNames(wellNamePattern, false);
@@ -1487,7 +1565,8 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
         }
     }
 
-    void Schedule::handleWCONINJE(HandlerContext& handlerContext) {
+    void handleWCONINJE(HandlerContext& handlerContext)
+    {
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
             const auto well_names = handlerContext.wellNames(wellNamePattern);
@@ -1576,7 +1655,8 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
         }
     }
 
-    void Schedule::handleWCONINJH(HandlerContext& handlerContext) {
+    void handleWCONINJH(HandlerContext& handlerContext)
+    {
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
             const auto well_names = handlerContext.wellNames(wellNamePattern, false);
@@ -1635,7 +1715,8 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
         }
     }
 
-    void Schedule::handleWECON(HandlerContext& handlerContext) {
+    void handleWECON(HandlerContext& handlerContext)
+    {
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
             const auto well_names = handlerContext.wellNames(wellNamePattern, false);
@@ -1649,7 +1730,8 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
         }
     }
 
-    void Schedule::handleWDFAC(HandlerContext& handlerContext) {
+    void handleWDFAC(HandlerContext& handlerContext)
+    {
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
             const auto well_names = handlerContext.wellNames(wellNamePattern, true);
@@ -1668,7 +1750,8 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
         }
     }
 
-    void Schedule::handleWDFACCOR(HandlerContext& handlerContext) {
+    void handleWDFACCOR(HandlerContext& handlerContext)
+    {
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELLNAME").getTrimmedString(0);
             const auto well_names = handlerContext.wellNames(wellNamePattern, true);
@@ -1686,7 +1769,8 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
         }
     }
 
-    void Schedule::handleWEFAC(HandlerContext& handlerContext) {
+    void handleWEFAC(HandlerContext& handlerContext)
+    {
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELLNAME").getTrimmedString(0);
             const auto well_names = handlerContext.wellNames(wellNamePattern);
@@ -1704,7 +1788,8 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
         }
     }
 
-    void Schedule::handleWELOPEN(HandlerContext& handlerContext) {
+    void handleWELOPEN(HandlerContext& handlerContext)
+    {
         const auto& keyword = handlerContext.keyword;
 
         auto conn_defaulted = []( const DeckRecord& rec ) {
@@ -1785,7 +1870,8 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
         }
     }
 
-    void Schedule::handleWELPIRuntime(HandlerContext& handlerContext) {
+    void handleWELPIRuntime(HandlerContext& handlerContext)
+    {
         using WELL_NAME = ParserKeywords::WELPI::WELL_NAME;
         using PI        = ParserKeywords::WELPI::STEADY_STATE_PRODUCTIVITY_OR_INJECTIVITY_INDEX_VALUE;
 
@@ -1809,9 +1895,10 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
         }
     }
 
-    void Schedule::handleWELPI(HandlerContext& handlerContext) {
+    void handleWELPI(HandlerContext& handlerContext)
+    {
         if (handlerContext.actionx_mode)
-            this->handleWELPIRuntime(handlerContext);
+            handleWELPIRuntime(handlerContext);
         else {
             // Keyword structure
             //
@@ -1853,7 +1940,8 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
         }
     }
 
-    void Schedule::handleWELSEGS(HandlerContext& handlerContext) {
+    void handleWELSEGS(HandlerContext& handlerContext)
+    {
         const auto& record1 = handlerContext.keyword.getRecord(0);
         const auto& wname = record1.getItem("WELL").getTrimmedString(0);
         if (handlerContext.state().wells.has(wname)) {
@@ -1875,7 +1963,7 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
         }
     }
 
-    void Schedule::handleWELSPECS(HandlerContext& handlerContext)
+    void handleWELSPECS(HandlerContext& handlerContext)
     {
         using Kw = ParserKeywords::WELSPECS;
 
@@ -2000,7 +2088,8 @@ Well{0} entered with 'FIELD' parent group:
       WCONPROD / WCONHIST before WELTARG is applied, if not the units for the
       rates will be wrong.
     */
-    void Schedule::handleWELTARG(HandlerContext& handlerContext) {
+    void handleWELTARG(HandlerContext& handlerContext)
+    {
         const double SiFactorP = handlerContext.static_schedule().m_unit_system.parse("Pressure").getSIScaling();
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
@@ -2055,7 +2144,8 @@ Well{0} entered with 'FIELD' parent group:
         }
     }
 
-    void Schedule::handleWFOAM(HandlerContext& handlerContext) {
+    void handleWFOAM(HandlerContext& handlerContext)
+    {
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
             const auto well_names = handlerContext.wellNames(wellNamePattern, false);
@@ -2070,7 +2160,8 @@ Well{0} entered with 'FIELD' parent group:
         }
     }
 
-    void Schedule::handleWGRUPCON(HandlerContext& handlerContext) {
+    void handleWGRUPCON(HandlerContext& handlerContext)
+    {
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
             const auto well_names = handlerContext.wellNames(wellNamePattern);
@@ -2097,7 +2188,8 @@ Well{0} entered with 'FIELD' parent group:
         }
     }
 
-    void Schedule::handleWHISTCTL(HandlerContext& handlerContext) {
+    void handleWHISTCTL(HandlerContext& handlerContext)
+    {
         const auto& record = handlerContext.keyword.getRecord(0);
         const std::string& cmodeString = record.getItem("CMODE").getTrimmedString(0);
         const auto controlMode = WellProducerCModeFromString(cmodeString);
@@ -2131,7 +2223,8 @@ Well{0} entered with 'FIELD' parent group:
         }
     }
 
-    void Schedule::handleWINJMULT(HandlerContext& handlerContext) {
+    void handleWINJMULT(HandlerContext& handlerContext)
+    {
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL_NAME").getTrimmedString(0);
             const auto well_names = handlerContext.wellNames(wellNamePattern, true);
@@ -2150,7 +2243,8 @@ Well{0} entered with 'FIELD' parent group:
         }
     }
 
-    void Schedule::handleWINJTEMP(HandlerContext& handlerContext) {
+    void handleWINJTEMP(HandlerContext& handlerContext)
+    {
         // we do not support the "enthalpy" field yet. how to do this is a more difficult
         // question.
         for (const auto& record : handlerContext.keyword) {
@@ -2171,7 +2265,8 @@ Well{0} entered with 'FIELD' parent group:
         }
     }
 
-    void Schedule::handleWLIFTOPT(HandlerContext& handlerContext) {
+    void handleWLIFTOPT(HandlerContext& handlerContext)
+    {
         auto glo = handlerContext.state().glo();
 
         for (const auto& record : handlerContext.keyword) {
@@ -2206,7 +2301,8 @@ Well{0} entered with 'FIELD' parent group:
         handlerContext.state().glo.update( std::move(glo) );
     }
 
-    void Schedule::handleWLIST(HandlerContext& handlerContext) {
+    void handleWLIST(HandlerContext& handlerContext)
+    {
         const std::string legal_actions = "NEW:ADD:DEL:MOV";
         for (const auto& record : handlerContext.keyword) {
             const std::string& name = record.getItem("NAME").getTrimmedString(0);
@@ -2262,7 +2358,8 @@ Well{0} entered with 'FIELD' parent group:
         }
     }
 
-    void Schedule::handleWMICP(HandlerContext& handlerContext) {
+    void handleWMICP(HandlerContext& handlerContext)
+    {
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
             const auto well_names = handlerContext.wellNames(wellNamePattern, false);
@@ -2277,7 +2374,8 @@ Well{0} entered with 'FIELD' parent group:
         }
     }
 
-    void Schedule::handleWPIMULT(HandlerContext& handlerContext) {
+    void handleWPIMULT(HandlerContext& handlerContext)
+    {
         // from the third item to the seventh item in the WPIMULT record, they are numbers indicate
         // the I, J, K location and completion number range.
         // When defaulted, it assumes it is negative
@@ -2319,7 +2417,8 @@ Well{0} entered with 'FIELD' parent group:
         }
     }
 
-    void Schedule::handleWINJCLN(HandlerContext& handlerContext) {
+    void handleWINJCLN(HandlerContext& handlerContext)
+    {
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem<ParserKeywords::WINJCLN::WELL_NAME>().getTrimmedString(0);
             const auto well_names = handlerContext.wellNames(wellNamePattern, false);
@@ -2331,7 +2430,8 @@ Well{0} entered with 'FIELD' parent group:
         }
     }
 
-    void Schedule::handleWINJDAM(HandlerContext& handlerContext) {
+    void handleWINJDAM(HandlerContext& handlerContext)
+    {
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem<ParserKeywords::WINJDAM::WELL_NAME>().getTrimmedString(0);
             const auto well_names = handlerContext.wellNames(wellNamePattern, true);
@@ -2345,7 +2445,8 @@ Well{0} entered with 'FIELD' parent group:
         }
     }
 
-    void Schedule::handleWINJFCNC(HandlerContext& handlerContext) {
+    void handleWINJFCNC(HandlerContext& handlerContext)
+    {
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem<ParserKeywords::WINJFCNC::WELL>().getTrimmedString(0);
             const auto well_names = handlerContext.wellNames(wellNamePattern, false);
@@ -2358,7 +2459,8 @@ Well{0} entered with 'FIELD' parent group:
         }
     }
 
-    void Schedule::handleWPMITAB(HandlerContext& handlerContext) {
+    void handleWPMITAB(HandlerContext& handlerContext)
+    {
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
             const auto well_names = handlerContext.wellNames(wellNamePattern, true);
@@ -2373,7 +2475,8 @@ Well{0} entered with 'FIELD' parent group:
         }
     }
 
-    void Schedule::handleWPOLYMER(HandlerContext& handlerContext) {
+    void handleWPOLYMER(HandlerContext& handlerContext)
+    {
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
             const auto well_names = handlerContext.wellNames(wellNamePattern, false);
@@ -2388,7 +2491,8 @@ Well{0} entered with 'FIELD' parent group:
         }
     }
 
-    void Schedule::handleWSALT(HandlerContext& handlerContext) {
+    void handleWSALT(HandlerContext& handlerContext)
+    {
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
             const auto well_names = handlerContext.wellNames(wellNamePattern, true);
@@ -2403,7 +2507,8 @@ Well{0} entered with 'FIELD' parent group:
         }
     }
 
-    void Schedule::handleWSEGITER(HandlerContext& handlerContext) {
+    void handleWSEGITER(HandlerContext& handlerContext)
+    {
         const auto& record = handlerContext.keyword.getRecord(0);
         auto& tuning = handlerContext.state().tuning();
 
@@ -2415,7 +2520,8 @@ Well{0} entered with 'FIELD' parent group:
         handlerContext.state().events().addEvent(ScheduleEvents::TUNING_CHANGE);
     }
 
-    void Schedule::handleWSEGSICD(HandlerContext& handlerContext) {
+    void handleWSEGSICD(HandlerContext& handlerContext)
+    {
         std::map<std::string, std::vector<std::pair<int, SICD> > > spiral_icds = SICD::fromWSEGSICD(handlerContext.keyword);
 
         for (auto& map_elem : spiral_icds) {
@@ -2440,7 +2546,8 @@ Well{0} entered with 'FIELD' parent group:
         }
     }
 
-    void Schedule::handleWSEGAICD(HandlerContext& handlerContext) {
+    void handleWSEGAICD(HandlerContext& handlerContext)
+    {
         std::map<std::string, std::vector<std::pair<int, AutoICD> > > auto_icds = AutoICD::fromWSEGAICD(handlerContext.keyword);
 
         for (auto& [well_name_pattern, aicd_pairs] : auto_icds) {
@@ -2462,7 +2569,8 @@ Well{0} entered with 'FIELD' parent group:
         }
     }
 
-    void Schedule::handleWSEGVALV(HandlerContext& handlerContext) {
+    void handleWSEGVALV(HandlerContext& handlerContext)
+    {
         const double udq_default = handlerContext.state().udq.get().params().undefinedValue();
         const std::map<std::string, std::vector<std::pair<int, Valve> > > valves = Valve::fromWSEGVALV(handlerContext.keyword, udq_default);
 
@@ -2480,7 +2588,8 @@ Well{0} entered with 'FIELD' parent group:
         }
     }
 
-    void Schedule::handleWSKPTAB(HandlerContext& handlerContext) {
+    void handleWSKPTAB(HandlerContext& handlerContext)
+    {
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
             const auto well_names = handlerContext.wellNames(wellNamePattern, false);
@@ -2496,8 +2605,8 @@ Well{0} entered with 'FIELD' parent group:
         }
     }
 
-    void Schedule::handleWSOLVENT(HandlerContext& handlerContext) {
-
+    void handleWSOLVENT(HandlerContext& handlerContext)
+    {
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
             const auto well_names = handlerContext.wellNames(wellNamePattern, false);
@@ -2520,7 +2629,8 @@ Well{0} entered with 'FIELD' parent group:
         }
     }
 
-    void Schedule::handleWTEMP(HandlerContext& handlerContext) {
+    void handleWTEMP(HandlerContext& handlerContext)
+    {
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
             const auto well_names = handlerContext.wellNames(wellNamePattern, false);
@@ -2538,7 +2648,8 @@ Well{0} entered with 'FIELD' parent group:
         }
     }
 
-    void Schedule::handleWTEST(HandlerContext& handlerContext) {
+    void handleWTEST(HandlerContext& handlerContext)
+    {
         auto new_config = handlerContext.state().wtest_config.get();
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
@@ -2562,8 +2673,8 @@ Well{0} entered with 'FIELD' parent group:
         handlerContext.state().wtest_config.update( std::move(new_config) );
     }
 
-    void Schedule::handleWTRACER(HandlerContext& handlerContext) {
-
+    void handleWTRACER(HandlerContext& handlerContext)
+    {
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
             const auto well_names = handlerContext.wellNames(wellNamePattern, false);
@@ -2585,7 +2696,8 @@ Well{0} entered with 'FIELD' parent group:
         }
     }
 
-    void Schedule::handleWPAVE(HandlerContext& handlerContext) {
+    void handleWPAVE(HandlerContext& handlerContext)
+    {
         auto wpave = PAvg( handlerContext.keyword.getRecord(0) );
 
         if (wpave.inner_weight() > 1.0) {
@@ -2625,7 +2737,8 @@ Well{0} entered with 'FIELD' parent group:
         handlerContext.state().pavg.update(std::move(wpave));
     }
 
-    void Schedule::handleWVFPDP(HandlerContext& handlerContext) {
+    void handleWVFPDP(HandlerContext& handlerContext)
+    {
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
             const auto well_names = handlerContext.wellNames(wellNamePattern, true);
@@ -2643,7 +2756,8 @@ Well{0} entered with 'FIELD' parent group:
         }
     }
 
-    void Schedule::handleWVFPEXP(HandlerContext& handlerContext) {
+    void handleWVFPEXP(HandlerContext& handlerContext)
+    {
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
             const auto well_names = handlerContext.wellNames(wellNamePattern, true);
@@ -2661,7 +2775,8 @@ Well{0} entered with 'FIELD' parent group:
         }
     }
 
-    void Schedule::handleWWPAVE(HandlerContext& handlerContext) {
+    void handleWWPAVE(HandlerContext& handlerContext)
+    {
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
             const auto well_names = handlerContext.wellNames(wellNamePattern, true);
@@ -2708,7 +2823,8 @@ Well{0} entered with 'FIELD' parent group:
         }
     }
 
-    void Schedule::handleWPAVEDEP(HandlerContext& handlerContext) {
+    void handleWPAVEDEP(HandlerContext& handlerContext)
+    {
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem<ParserKeywords::WPAVEDEP::WELL>().getTrimmedString(0);
             const auto well_names = handlerContext.wellNames(wellNamePattern, false);
@@ -2729,7 +2845,7 @@ Well{0} entered with 'FIELD' parent group:
         }
     }
 
-    void Schedule::handleWRFT(HandlerContext& handlerContext)
+    void handleWRFT(HandlerContext& handlerContext)
     {
         auto new_rft = handlerContext.state().rft_config();
 
@@ -2756,7 +2872,7 @@ Well{0} entered with 'FIELD' parent group:
         handlerContext.state().rft_config.update(std::move(new_rft));
     }
 
-    void Schedule::handleWRFTPLT(HandlerContext& handlerContext)
+    void handleWRFTPLT(HandlerContext& handlerContext)
     {
         auto new_rft = handlerContext.state().rft_config();
 
@@ -2793,23 +2909,23 @@ Well{0} entered with 'FIELD' parent group:
         handlerContext.state().rft_config.update(std::move(new_rft));
     }
 
+    /*
+      The WTMULT keyword can optionally use UDA values in three different ways:
 
-/*
-  The WTMULT keyword can optionally use UDA values in three different ways:
+        1. The target can be UDA - instead of the standard strings "ORAT", "GRAT",
+           "WRAT", ..., the keyword can be configured with a UDA which is evaluated to
+           an integer and then mapped to one of the common controls.
 
-    1. The target can be UDA - instead of the standard strings "ORAT", "GRAT",
-       "WRAT", ..., the keyword can be configured with a UDA which is evaluated to
-       an integer and then mapped to one of the common controls.
+        2. The scaling factor itself can be a UDA.
 
-    2. The scaling factor itself can be a UDA.
+        3. The target we aim to scale might already be specified as a UDA.
 
-    3. The target we aim to scale might already be specified as a UDA.
+      The current implementation does not support UDA usage in any part of WTMULT
+      codepath.
+    */
 
-  The current implementation does not support UDA usage in any part of WTMULT
-  codepath.
-*/
-
-    void Schedule::handleWTMULT(HandlerContext& handlerContext) {
+    void handleWTMULT(HandlerContext& handlerContext)
+    {
         for (const auto& record : handlerContext.keyword) {
             const auto& wellNamePattern = record.getItem<ParserKeywords::WTMULT::WELL>().getTrimmedString(0);
             const auto& control = record.getItem<ParserKeywords::WTMULT::CONTROL>().get<std::string>(0);
@@ -2865,149 +2981,162 @@ Well{0} entered with 'FIELD' parent group:
             }
         }
     }
+}
 
+const KeywordHandlers& KeywordHandlers::getInstance()
+{
+    static KeywordHandlers instance{};
+    return instance;
+}
 
-    bool Schedule::handleNormalKeyword(HandlerContext& handlerContext) {
-        using handler_function = void (Schedule::*) (HandlerContext&);
-        static const std::unordered_map<std::string,handler_function> handler_functions = {
-            { "AQUCT",    &Schedule::handleAQUCT     },
-            { "AQUFETP",  &Schedule::handleAQUFETP   },
-            { "AQUFLUX",  &Schedule::handleAQUFLUX   },
-            { "BCPROP",   &Schedule::handleBCProp    },
-            { "BOX",      &Schedule::handleGEOKeyword},
-            { "BRANPROP", &Schedule::handleBRANPROP  },
-            { "COMPDAT" , &Schedule::handleCOMPDAT   },
-            { "COMPLUMP", &Schedule::handleCOMPLUMP  },
-            { "COMPORD" , &Schedule::handleCOMPORD   },
-            { "COMPSEGS", &Schedule::handleCOMPSEGS  },
-            { "COMPTRAJ", &Schedule::handleCOMPTRAJ  },
-            { "CSKIN",    &Schedule::handleCSKIN     },
-            { "DRSDT"   , &Schedule::handleDRSDT     },
-            { "DRSDTCON", &Schedule::handleDRSDTCON  },
-            { "DRSDTR"  , &Schedule::handleDRSDTR    },
-            { "DRVDT"   , &Schedule::handleDRVDT     },
-            { "DRVDTR"  , &Schedule::handleDRVDTR    },
-            { "ENDBOX"  , &Schedule::handleGEOKeyword},
-            { "EXIT",     &Schedule::handleEXIT      },
-            { "FBHPDEF",  &Schedule::handleFBHPDEF   },
-            { "GCONINJE", &Schedule::handleGCONINJE  },
-            { "GCONPROD", &Schedule::handleGCONPROD  },
-            { "GCONSALE", &Schedule::handleGCONSALE  },
-            { "GCONSUMP", &Schedule::handleGCONSUMP  },
-            { "GECON",    &Schedule::handleGECON     },
-            { "GEFAC"   , &Schedule::handleGEFAC     },
-            { "GLIFTOPT", &Schedule::handleGLIFTOPT  },
-            { "GPMAINT" , &Schedule::handleGPMAINT   },
-            { "GRUPNET" , &Schedule::handleGRUPNET   },
-            { "GRUPTREE", &Schedule::handleGRUPTREE  },
-            { "GUIDERAT", &Schedule::handleGUIDERAT  },
-            { "LIFTOPT" , &Schedule::handleLIFTOPT   },
-            { "LINCOM"  , &Schedule::handleLINCOM    },
-            { "MESSAGES", &Schedule::handleMESSAGES  },
-            { "MULTFLT" , &Schedule::handleGEOKeyword},
-            { "MULTPV"  , &Schedule::handleMXUNSUPP  },
-            { "MULTR"   , &Schedule::handleMXUNSUPP  },
-            { "MULTR-"  , &Schedule::handleMXUNSUPP  },
-            { "MULTREGT", &Schedule::handleMXUNSUPP  },
-            { "MULTSIG" , &Schedule::handleMXUNSUPP  },
-            { "MULTSIGV", &Schedule::handleMXUNSUPP  },
-            { "MULTTHT" , &Schedule::handleMXUNSUPP  },
-            { "MULTTHT-", &Schedule::handleMXUNSUPP  },
-            { "MULTX"   , &Schedule::handleGEOKeyword},
-            { "MULTX-"  , &Schedule::handleGEOKeyword},
-            { "MULTY"   , &Schedule::handleGEOKeyword},
-            { "MULTY-"  , &Schedule::handleGEOKeyword},
-            { "MULTZ"   , &Schedule::handleGEOKeyword},
-            { "MULTZ-"  , &Schedule::handleGEOKeyword},
-            { "NETBALAN", &Schedule::handleNETBALAN  },
-            { "NEXT",     &Schedule::handleNEXTSTEP  },
-            { "NEXTSTEP", &Schedule::handleNEXTSTEP  },
-            { "NODEPROP", &Schedule::handleNODEPROP  },
-            { "NUPCOL"  , &Schedule::handleNUPCOL    },
-            { "RPTONLY" , &Schedule::handleRPTONLY   },
-            { "RPTONLYO", &Schedule::handleRPTONLYO  },
-            { "RPTRST"  , &Schedule::handleRPTRST    },
-            { "RPTSCHED", &Schedule::handleRPTSCHED  },
-            { "SAVE"    , &Schedule::handleSAVE      },
-            { "SUMTHIN" , &Schedule::handleSUMTHIN   },
-            { "TUNING"  , &Schedule::handleTUNING    },
-            { "UDQ"     , &Schedule::handleUDQ       },
-            { "UDT"     , &Schedule::handleUDT       },
-            { "VAPPARS" , &Schedule::handleVAPPARS   },
-            { "VFPINJ"  , &Schedule::handleVFPINJ    },
-            { "VFPPROD" , &Schedule::handleVFPPROD   },
-            { "WCONHIST", &Schedule::handleWCONHIST  },
-            { "WCONINJE", &Schedule::handleWCONINJE  },
-            { "WCONINJH", &Schedule::handleWCONINJH  },
-            { "WCONPROD", &Schedule::handleWCONPROD  },
-            { "WECON"   , &Schedule::handleWECON     },
-            { "WDFAC"  ,  &Schedule::handleWDFAC     },
-            { "WDFACCOR", &Schedule::handleWDFACCOR  },
-            { "WEFAC"   , &Schedule::handleWEFAC     },
-            { "WELOPEN" , &Schedule::handleWELOPEN   },
-            { "WELPI"   , &Schedule::handleWELPI     },
-            { "WELSEGS" , &Schedule::handleWELSEGS   },
-            { "WELSPECS", &Schedule::handleWELSPECS  },
-            { "WELTARG" , &Schedule::handleWELTARG   },
-            { "WELTRAJ" , &Schedule::handleWELTRAJ   },
-            { "WFOAM"   , &Schedule::handleWFOAM     },
-            { "WGRUPCON", &Schedule::handleWGRUPCON  },
-            { "WHISTCTL", &Schedule::handleWHISTCTL  },
-            { "WINJMULT", &Schedule::handleWINJMULT  },
-            { "WINJTEMP", &Schedule::handleWINJTEMP  },
-            { "WLIFTOPT", &Schedule::handleWLIFTOPT  },
-            { "WLIST"   , &Schedule::handleWLIST     },
-            { "WMICP"   , &Schedule::handleWMICP     },
-            { "WPAVE"   , &Schedule::handleWPAVE     },
-            { "WPAVEDEP", &Schedule::handleWPAVEDEP  },
-            { "WVFPDP",   &Schedule::handleWVFPDP    },
-            { "WVFPEXP" , &Schedule::handleWVFPEXP   },
-            { "WWPAVE"  , &Schedule::handleWWPAVE    },
-            { "WPIMULT" , &Schedule::handleWPIMULT   },
-            { "WINJDAM" , &Schedule::handleWINJDAM   },
-            { "WINJFCNC", &Schedule::handleWINJFCNC  },
-            { "WINJCLN",  &Schedule::handleWINJCLN   },
-            { "WPMITAB" , &Schedule::handleWPMITAB   },
-            { "WPOLYMER", &Schedule::handleWPOLYMER  },
-            { "WRFT"    , &Schedule::handleWRFT      },
-            { "WRFTPLT" , &Schedule::handleWRFTPLT   },
-            { "WSALT"   , &Schedule::handleWSALT     },
-            { "WSEGITER", &Schedule::handleWSEGITER  },
-            { "WSEGSICD", &Schedule::handleWSEGSICD  },
-            { "WSEGAICD", &Schedule::handleWSEGAICD  },
-            { "WSEGVALV", &Schedule::handleWSEGVALV  },
-            { "WSKPTAB" , &Schedule::handleWSKPTAB   },
-            { "WSOLVENT", &Schedule::handleWSOLVENT  },
-            { "WTEMP"   , &Schedule::handleWTEMP     },
-            { "WTEST"   , &Schedule::handleWTEST     },
-            { "WTMULT"  , &Schedule::handleWTMULT    },
-            { "WTRACER" , &Schedule::handleWTRACER   },
-        };
+KeywordHandlers::KeywordHandlers()
+{
+    handler_functions = {
+        { "AQUCT",    &handleAQUCT      },
+        { "AQUFETP",  &handleAQUFETP    },
+        { "AQUFLUX",  &handleAQUFLUX    },
+        { "BCPROP",   &handleBCProp     },
+        { "BOX",      &handleGEOKeyword },
+        { "BRANPROP", &handleBRANPROP   },
+        { "COMPDAT" , &handleCOMPDAT    },
+        { "COMPLUMP", &handleCOMPLUMP   },
+        { "COMPORD" , &handleCOMPORD    },
+        { "COMPSEGS", &handleCOMPSEGS   },
+        { "COMPTRAJ", &handleCOMPTRAJ   },
+        { "CSKIN",    &handleCSKIN      },
+        { "DRSDT"   , &handleDRSDT      },
+        { "DRSDTCON", &handleDRSDTCON   },
+        { "DRSDTR"  , &handleDRSDTR     },
+        { "DRVDT"   , &handleDRVDT      },
+        { "DRVDTR"  , &handleDRVDTR     },
+        { "ENDBOX"  , &handleGEOKeyword },
+        { "EXIT",     &handleEXIT       },
+        { "FBHPDEF",  &handleFBHPDEF    },
+        { "GCONINJE", &handleGCONINJE   },
+        { "GCONPROD", &handleGCONPROD   },
+        { "GCONSALE", &handleGCONSALE   },
+        { "GCONSUMP", &handleGCONSUMP   },
+        { "GECON",    &handleGECON      },
+        { "GEFAC"   , &handleGEFAC      },
+        { "GLIFTOPT", &handleGLIFTOPT   },
+        { "GPMAINT" , &handleGPMAINT    },
+        { "GRUPNET" , &handleGRUPNET    },
+        { "GRUPTREE", &handleGRUPTREE   },
+        { "GUIDERAT", &handleGUIDERAT   },
+        { "LIFTOPT" , &handleLIFTOPT    },
+        { "LINCOM"  , &handleLINCOM     },
+        { "MESSAGES", &handleMESSAGES   },
+        { "MULTFLT" , &handleGEOKeyword },
+        { "MULTPV"  , &handleMXUNSUPP   },
+        { "MULTR"   , &handleMXUNSUPP   },
+        { "MULTR-"  , &handleMXUNSUPP   },
+        { "MULTREGT", &handleMXUNSUPP   },
+        { "MULTSIG" , &handleMXUNSUPP   },
+        { "MULTSIGV", &handleMXUNSUPP   },
+        { "MULTTHT" , &handleMXUNSUPP   },
+        { "MULTTHT-", &handleMXUNSUPP   },
+        { "MULTX"   , &handleGEOKeyword },
+        { "MULTX-"  , &handleGEOKeyword },
+        { "MULTY"   , &handleGEOKeyword },
+        { "MULTY-"  , &handleGEOKeyword },
+        { "MULTZ"   , &handleGEOKeyword },
+        { "MULTZ-"  , &handleGEOKeyword },
+        { "NETBALAN", &handleNETBALAN   },
+        { "NEXT",     &handleNEXTSTEP   },
+        { "NEXTSTEP", &handleNEXTSTEP   },
+        { "NODEPROP", &handleNODEPROP   },
+        { "NUPCOL"  , &handleNUPCOL     },
+        { "PYACTION", &handlePYACTION   },
+        { "RPTONLY" , &handleRPTONLY    },
+        { "RPTONLYO", &handleRPTONLYO   },
+        { "RPTRST"  , &handleRPTRST     },
+        { "RPTSCHED", &handleRPTSCHED   },
+        { "SAVE"    , &handleSAVE       },
+        { "SUMTHIN" , &handleSUMTHIN    },
+        { "TUNING"  , &handleTUNING     },
+        { "UDQ"     , &handleUDQ        },
+        { "UDT"     , &handleUDT        },
+        { "VAPPARS" , &handleVAPPARS    },
+        { "VFPINJ"  , &handleVFPINJ     },
+        { "VFPPROD" , &handleVFPPROD    },
+        { "WCONHIST", &handleWCONHIST   },
+        { "WCONINJE", &handleWCONINJE   },
+        { "WCONINJH", &handleWCONINJH   },
+        { "WCONPROD", &handleWCONPROD   },
+        { "WDFAC"  ,  &handleWDFAC      },
+        { "WDFACCOR", &handleWDFACCOR   },
+        { "WECON"   , &handleWECON      },
+        { "WEFAC"   , &handleWEFAC      },
+        { "WELOPEN" , &handleWELOPEN    },
+        { "WELPI"   , &handleWELPI      },
+        { "WELSEGS" , &handleWELSEGS    },
+        { "WELSPECS", &handleWELSPECS   },
+        { "WELTARG" , &handleWELTARG    },
+        { "WELTRAJ" , &handleWELTRAJ    },
+        { "WFOAM"   , &handleWFOAM      },
+        { "WGRUPCON", &handleWGRUPCON   },
+        { "WHISTCTL", &handleWHISTCTL   },
+        { "WINJMULT", &handleWINJMULT   },
+        { "WINJTEMP", &handleWINJTEMP   },
+        { "WLIFTOPT", &handleWLIFTOPT   },
+        { "WLIST"   , &handleWLIST      },
+        { "WMICP"   , &handleWMICP      },
+        { "WPAVE"   , &handleWPAVE      },
+        { "WPAVEDEP", &handleWPAVEDEP   },
+        { "WVFPDP",   &handleWVFPDP     },
+        { "WVFPEXP" , &handleWVFPEXP    },
+        { "WWPAVE"  , &handleWWPAVE     },
+        { "WPIMULT" , &handleWPIMULT    },
+        { "WINJDAM" , &handleWINJDAM    },
+        { "WINJFCNC", &handleWINJFCNC   },
+        { "WINJCLN",  &handleWINJCLN    },
+        { "WPMITAB" , &handleWPMITAB    },
+        { "WPOLYMER", &handleWPOLYMER   },
+        { "WRFT"    , &handleWRFT       },
+        { "WRFTPLT" , &handleWRFTPLT    },
+        { "WSALT"   , &handleWSALT      },
+        { "WSEGITER", &handleWSEGITER   },
+        { "WSEGSICD", &handleWSEGSICD   },
+        { "WSEGAICD", &handleWSEGAICD   },
+        { "WSEGVALV", &handleWSEGVALV   },
+        { "WSKPTAB" , &handleWSKPTAB    },
+        { "WSOLVENT", &handleWSOLVENT   },
+        { "WTEMP"   , &handleWTEMP      },
+        { "WTEST"   , &handleWTEST      },
+        { "WTMULT"  , &handleWTMULT     },
+        { "WTRACER" , &handleWTRACER    },
+    };
+}
 
-        auto function_iterator = handler_functions.find(handlerContext.keyword.name());
-        if (function_iterator == handler_functions.end()) {
-            return false;
-        }
-
-        try {
-            std::invoke(function_iterator->second, this, handlerContext);
-        } catch (const OpmInputError&) {
-            throw;
-        } catch (const std::logic_error& e) {
-            // Rethrow as OpmInputError to provide more context,
-            // but add "Internal error: " to the string, as that
-            // is what logic_error signifies.
-            const OpmInputError opm_error { std::string("Internal error: ") + e.what(), handlerContext.keyword.location() } ;
-            OpmLog::error(opm_error.what());
-            std::throw_with_nested(opm_error);
-        } catch (const std::exception& e) {
-            // Rethrow as OpmInputError to provide more context.
-            const OpmInputError opm_error { e, handlerContext.keyword.location() } ;
-            OpmLog::error(opm_error.what());
-            std::throw_with_nested(opm_error);
-        }
-
-        return true;
+bool KeywordHandlers::handleKeyword(HandlerContext& handlerContext) const
+{
+    auto function_iterator = handler_functions.find(handlerContext.keyword.name());
+    if (function_iterator == handler_functions.end()) {
+        return false;
     }
+
+    try {
+        std::invoke(function_iterator->second, handlerContext);
+    } catch (const OpmInputError&) {
+        throw;
+    } catch (const std::logic_error& e) {
+        // Rethrow as OpmInputError to provide more context,
+        // but add "Internal error: " to the string, as that
+        // is what logic_error signifies.
+        const OpmInputError opm_error {
+            std::string("Internal error: ") + e.what(),
+            handlerContext.keyword.location()
+        };
+        OpmLog::error(opm_error.what());
+        std::throw_with_nested(opm_error);
+    } catch (const std::exception& e) {
+        // Rethrow as OpmInputError to provide more context.
+        const OpmInputError opm_error { e, handlerContext.keyword.location() } ;
+        OpmLog::error(opm_error.what());
+        std::throw_with_nested(opm_error);
+    }
+
+    return true;
+}
 
 }
