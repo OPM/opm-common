@@ -56,7 +56,7 @@
     },
     {
       "item": 9,
-      "name": "NUM_STATE_EQ",
+      "name": "NUM_EOS_RES",
       "value_type": "INT",
       "default": 1,
       "comment": "This item is ECLIPSE300 specific"

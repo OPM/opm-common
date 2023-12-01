@@ -5,7 +5,7 @@
   ],
   "size": {
     "keyword": "TABDIMS",
-    "item": "NUM_STATE_EQ"
+    "item": "NUM_EOS_RES"
   },
   "comment": "Also note that there is no default for this item because the default is specified by STCOND",
   "items": [
