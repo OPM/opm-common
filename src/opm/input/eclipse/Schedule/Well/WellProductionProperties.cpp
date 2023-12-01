@@ -417,6 +417,7 @@ void Well::WellProductionProperties::handleWCONHIST(const std::optional<VFPProdT
         update_count += active.update(udq_config, this->ResVRate, this->name, UDAControl::WCONPROD_RESV);
         update_count += active.update(udq_config, this->BHPTarget, this->name, UDAControl::WCONPROD_BHP);
         update_count += active.update(udq_config, this->THPTarget, this->name, UDAControl::WCONPROD_THP);
+        update_count += active.update(udq_config, this->ALQValue, this->name, UDAControl::WCONPROD_LIFT);
 
         return (update_count > 0);
     }
@@ -495,6 +496,12 @@ void Well::WellProductionProperties::handleWCONHIST(const std::optional<VFPProdT
         case UDAControl::WELTARG_THP:
             this->THPTarget = value;
             break;
+
+        case UDAControl::WCONPROD_LIFT:
+        case UDAControl::WELTARG_LIFT:
+            this->ALQValue = value;
+            break;
+
 
         default:
             throw std::logic_error {

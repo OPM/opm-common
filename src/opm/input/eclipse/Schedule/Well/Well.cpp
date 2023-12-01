@@ -1672,6 +1672,15 @@ Well::InjectionControls Well::injectionControls(const SummaryState& st) const {
         throw std::logic_error("Trying to get injection data from a producer");
 }
 
+double Well::alq_value(const SummaryState& st) const {
+    if (this->wtype.producer()) {
+        auto controls = this->production->controls(st, this->udq_undefined);
+        return controls.alq_value;
+    }
+
+
+    throw std::runtime_error("Can not ask for ALQ value in an injector");
+}
 
 /*
   These accessor functions are at the "wrong" level of abstraction; the same
@@ -1686,16 +1695,6 @@ int Well::vfp_table_number() const {
         return this->production->VFPTableNumber;
     else
         return this->injection->VFPTableNumber;
-}
-
-/*
-  This short circuits the UDA and assumes the UDA contains a double.
-*/
-double Well::alq_value() const {
-    if (this->wtype.producer())
-        return this->production->ALQValue.getSI();
-
-    throw std::runtime_error("Can not ask for ALQ value in an injector");
 }
 
 double Well::temperature() const {
