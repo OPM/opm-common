@@ -137,23 +137,25 @@ public:
      * \brief Returns the specific enthalpy [J/kg] of gas given a set of parameters.
      */
     template <class Evaluation>
-    Evaluation internalEnergy(unsigned regionIdx,
+    Evaluation internalEnergy(unsigned /*regionIdx*/,
                         const Evaluation& temperature,
                         const Evaluation& pressure,
-                        const Evaluation& rv,
-                        const Evaluation& rvw) const
+                        const Evaluation& /*rv*/,
+                        const Evaluation& /*rvw*/) const
     {
         OPM_TIMEBLOCK_LOCAL(internalEnergy);
-        // assume ideal mixture
-        Evaluation result = 0;
+        // use the gasInternalEnergy of CO2
+        return CO2::gasInternalEnergy(temperature, pressure, extrapolate); 
 
+        // account for H2O in the gas phase
+        // Evaluation result = 0;
         // The CO2STORE option both works for GAS/WATER and GAS/OIL systems
         // Either rv og rvw should be zero
-        assert(rv == 0.0 || rvw == 0.0);
-        const Evaluation xBrine = convertRvwToXgW_(max(rvw,rv),regionIdx);
-        result += xBrine * H2O::gasInternalEnergy(temperature, pressure);
-        result += (1 - xBrine) * CO2::gasInternalEnergy(temperature, pressure, extrapolate);
-        return result;
+        //assert(rv == 0.0 || rvw == 0.0);
+        //const Evaluation xBrine = convertRvwToXgW_(max(rvw,rv),regionIdx);
+        //result += xBrine * H2O::gasInternalEnergy(temperature, pressure);
+        //result += (1 - xBrine) * CO2::gasInternalEnergy(temperature, pressure, extrapolate);
+        //return result;
     }
 
     /*!
@@ -194,14 +196,15 @@ public:
         if (!enableVaporization_)
             return CO2::gasDensity(temperature, pressure, extrapolate)/gasReferenceDensity_[regionIdx];
 
-        // assume ideal mixture
-        // The CO2STORE option both works for GAS/WATER and GAS/OIL systems
-        // Either rv og rvw should be zero
-        assert(rv == 0.0 || rvw == 0.0);
-        const Evaluation xBrine = convertRvwToXgW_(max(rvw,rv),regionIdx);
+        // Use CO2 density for the gas phase.
         const auto& rhoCo2 = CO2::gasDensity(temperature, pressure, extrapolate);
-        const auto& rhoH2O = H2O::gasDensity(temperature, pressure);
-        return 1.0 / ( ( xBrine/rhoH2O + (1.0 - xBrine)/rhoCo2) * gasReferenceDensity_[regionIdx]);
+        //const auto& rhoH2O = H2O::gasDensity(temperature, pressure);
+        //The CO2STORE option both works for GAS/WATER and GAS/OIL systems
+        //Either rv og rvw should be zero
+        //assert(rv == 0.0 || rvw == 0.0);
+        //const Evaluation xBrine = convertRvwToXgW_(max(rvw,rv),regionIdx);
+        //const auto rho = 1.0/(xBrine/rhoH2O + (1.0 - xBrine)/rhoCo2);
+        return rhoCo2/(gasReferenceDensity_[regionIdx] + max(rvw,rv)*brineReferenceDensity_[regionIdx]);
     }
 
     /*!

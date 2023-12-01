@@ -142,6 +142,11 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(SimpleH2O, Scalar, Types)
                                                     1e-3*H2O::liquidDensity(T,p).value()),
                                 "oops: the water density based on Hu-Duan has more then 1e-3 deviation from IAPWS'97");
 
+            BOOST_CHECK_MESSAGE(EvalToolbox::isSame(H2O::liquidEnthalpy(T,p),
+                                                    SimpleHuDuanH2O::liquidEnthalpy(T,p),
+                                                    1e-3*H2O::liquidEnthalpy(T,p).value()),
+                                "oops: the liquid enthalpy in Simple-Hu-Duan has more then 1e-3 deviation from IAPWS'97");
+
             if (T >= 570) // for temperature larger then 570 the viscosity based on HuDuan is too far from IAPWS.
                 continue;
 
