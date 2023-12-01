@@ -100,8 +100,12 @@ namespace Opm {
             const auto& alq_input = record.getItem("ALQ").get<UDAValue>(0);
             if (alq_input.is<double>())
                 this->ALQValue = UDAValue(alq_input.get<double>(), alq_dim);
-            else
+            else {
+                if (alq_type.has_value() && alq_type.value() != VFPProdTable::ALQ_TYPE::ALQ_GRAT) {
+                    throw std::logic_error("UDA for other ALQ types than GRAT are not yet supported (specifically, unit handling for restart is missing).");
+                }
                 this->ALQValue = UDAValue(alq_input.get<std::string>(), alq_dim);
+            }
         } else {
             const auto table_nr = record.getItem("VFP_TABLE").get< int >(0);
             if (table_nr != 0)
