@@ -101,7 +101,7 @@ namespace Opm {
             if (alq_input.is<double>())
                 this->ALQValue = UDAValue(alq_input.get<double>(), alq_dim);
             else {
-                if (alq_type.has_value() && alq_type.value() != VFPProdTable::ALQ_TYPE::ALQ_GRAT) {
+                if (alq_type.has_value() && !(alq_type.value() == VFPProdTable::ALQ_TYPE::ALQ_GRAT || alq_type.value() == VFPProdTable::ALQ_TYPE::ALQ_UNDEF)) {
                     throw std::logic_error("UDA for other ALQ types than GRAT are not yet supported (specifically, unit handling for restart is missing).");
                 }
                 this->ALQValue = UDAValue(alq_input.get<std::string>(), alq_dim);
