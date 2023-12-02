@@ -217,7 +217,7 @@ namespace {
         "RM3/DAY",
         "SM3/DAY",  // Should possibly be RM3/DAY
         "M/SEC",    // pipeflow velocity
-        "CPR3/DAY/BARS",
+        "CPM3/D/B", // Transmissibility (e.g., CTFAC)
         "MDM",
         "KG",
         "KG/DAY",
