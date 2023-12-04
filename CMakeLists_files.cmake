@@ -182,6 +182,7 @@ if(ENABLE_ECL_INPUT)
     src/opm/input/eclipse/Schedule/MessageLimits.cpp
     src/opm/input/eclipse/Schedule/MSW/icd.cpp
     src/opm/input/eclipse/Schedule/MSW/Compsegs.cpp
+    src/opm/input/eclipse/Schedule/MSW/MSWKeywordHandlers.cpp
     src/opm/input/eclipse/Schedule/MSW/Segment.cpp
     src/opm/input/eclipse/Schedule/MSW/SegmentMatcher.cpp
     src/opm/input/eclipse/Schedule/MSW/WellSegments.cpp
