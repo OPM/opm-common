@@ -32,16 +32,14 @@
 #define OPM_ECL_MATERIAL_LAW_MANAGER_HPP
 
 #include <opm/input/eclipse/EclipseState/Grid/FaceDir.hpp>
+#include <opm/input/eclipse/EclipseState/WagHysteresisConfig.hpp>
 
 #include <opm/material/fluidmatrixinteractions/SatCurveMultiplexer.hpp>
 #include <opm/material/fluidmatrixinteractions/EclEpsTwoPhaseLaw.hpp>
-#include <opm/input/eclipse/EclipseState/WagHysteresisConfig.hpp>
 #include <opm/material/fluidmatrixinteractions/EclHysteresisTwoPhaseLaw.hpp>
 #include <opm/material/fluidmatrixinteractions/EclMultiplexerMaterial.hpp>
 #include <opm/material/fluidmatrixinteractions/MaterialTraits.hpp>
 #include <opm/material/fluidmatrixinteractions/DirectionalMaterialLawParams.hpp>
-#include <opm/input/eclipse/EclipseState/Tables/TableColumn.hpp>
-#include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 
 #include <cassert>
 #include <memory>
@@ -61,6 +59,7 @@ class Runspec;
 class SgfnTable;
 class SgofTable;
 class SlgofTable;
+class TableColumn;
 
 /*!
  * \ingroup fluidmatrixinteractions
