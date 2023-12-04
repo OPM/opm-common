@@ -37,6 +37,7 @@
 #include <opm/input/eclipse/Deck/DeckRecord.hpp>
 
 #include <algorithm>
+#include <cassert>
 #include <cstddef>
 #include <functional>
 #include <stdexcept>
@@ -154,6 +155,12 @@ namespace Opm {
                                  location,
                                  { rst_udq.expression() },
                                  rst_state.header.report_step);
+
+                auto pos = this->m_definitions.find(rst_udq.name);
+                assert (pos != this->m_definitions.end());
+
+                pos->second.update_status(rst_udq.updateStatus(),
+                                          rst_state.header.report_step);
             }
             else {
                 this->add_assign(rst_udq.name,
