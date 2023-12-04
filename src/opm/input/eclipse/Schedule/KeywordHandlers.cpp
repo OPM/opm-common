@@ -38,7 +38,6 @@
 #include <opm/input/eclipse/Schedule/Action/PyAction.hpp>
 #include <opm/input/eclipse/Schedule/Action/SimulatorUpdate.hpp>
 #include <opm/input/eclipse/Schedule/Events.hpp>
-#include <opm/input/eclipse/Schedule/GasLiftOpt.hpp>
 #include <opm/input/eclipse/Schedule/Group/GConSale.hpp>
 #include <opm/input/eclipse/Schedule/Group/GConSump.hpp>
 #include <opm/input/eclipse/Schedule/Group/GroupEconProductionLimits.hpp>
@@ -94,6 +93,7 @@
 #include <opm/input/eclipse/Parser/ParserKeywords/V.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/W.hpp>
 
+#include "GasLiftOptKeywordHandlers.hpp"
 #include "HandlerContext.hpp"
 #include "MSW/MSWKeywordHandlers.hpp"
 #include "Network/NetworkKeywordHandlers.hpp"
@@ -755,40 +755,6 @@ namespace {
         }
     }
 
-    void handleGLIFTOPT(HandlerContext& handlerContext)
-    {
-        auto glo = handlerContext.state().glo();
-        const auto& keyword = handlerContext.keyword;
-
-        for (const auto& record : keyword) {
-            const std::string& groupNamePattern = record.getItem<ParserKeywords::GLIFTOPT::GROUP_NAME>().getTrimmedString(0);
-            const auto group_names = handlerContext.groupNames(groupNamePattern);
-            if (group_names.empty()) {
-                handlerContext.invalidNamePattern(groupNamePattern);
-            }
-
-            const auto& max_gas_item = record.getItem<ParserKeywords::GLIFTOPT::MAX_LIFT_GAS_SUPPLY>();
-            const double max_lift_gas_value = max_gas_item.hasValue(0)
-                ? max_gas_item.getSIDouble(0)
-                : -1;
-
-            const auto& max_total_item = record.getItem<ParserKeywords::GLIFTOPT::MAX_TOTAL_GAS_RATE>();
-            const double max_total_gas_value = max_total_item.hasValue(0)
-                ? max_total_item.getSIDouble(0)
-                : -1;
-
-            for (const auto& gname : group_names) {
-                auto group = GasLiftGroup(gname);
-                group.max_lift_gas(max_lift_gas_value);
-                group.max_total_gas(max_total_gas_value);
-
-                glo.add_group(group);
-            }
-        }
-
-        handlerContext.state().glo.update( std::move(glo) );
-    }
-
     void handleGPMAINT(HandlerContext& handlerContext)
     {
         for (const auto& record : handlerContext.keyword) {
@@ -851,25 +817,6 @@ namespace {
         auto new_config = handlerContext.state().guide_rate();
         if (new_config.update_model(new_model))
             handlerContext.state().guide_rate.update( std::move(new_config) );
-    }
-
-    void handleLIFTOPT(HandlerContext& handlerContext)
-    {
-        auto glo = handlerContext.state().glo();
-
-        const auto& record = handlerContext.keyword.getRecord(0);
-
-        const double gaslift_increment = record.getItem<ParserKeywords::LIFTOPT::INCREMENT_SIZE>().getSIDouble(0);
-        const double min_eco_gradient = record.getItem<ParserKeywords::LIFTOPT::MIN_ECONOMIC_GRADIENT>().getSIDouble(0);
-        const double min_wait = record.getItem<ParserKeywords::LIFTOPT::MIN_INTERVAL_BETWEEN_GAS_LIFT_OPTIMIZATIONS>().getSIDouble(0);
-        const bool all_newton = DeckItem::to_bool( record.getItem<ParserKeywords::LIFTOPT::OPTIMISE_ALL_ITERATIONS>().get<std::string>(0) );
-
-        glo.gaslift_increment(gaslift_increment);
-        glo.min_eco_gradient(min_eco_gradient);
-        glo.min_wait(min_wait);
-        glo.all_newton(all_newton);
-
-        handlerContext.state().glo.update( std::move(glo) );
     }
 
     void handleLINCOM(HandlerContext& handlerContext)
@@ -1970,42 +1917,6 @@ Well{0} entered with 'FIELD' parent group:
         }
     }
 
-    void handleWLIFTOPT(HandlerContext& handlerContext)
-    {
-        auto glo = handlerContext.state().glo();
-
-        for (const auto& record : handlerContext.keyword) {
-            const std::string& wellNamePattern = record.getItem<ParserKeywords::WLIFTOPT::WELL>().getTrimmedString(0);
-            const auto well_names = handlerContext.wellNames(wellNamePattern, true);
-            if (well_names.empty()) {
-                handlerContext.invalidNamePattern(wellNamePattern);
-            }
-
-            const bool use_glo = DeckItem::to_bool(record.getItem<ParserKeywords::WLIFTOPT::USE_OPTIMIZER>().get<std::string>(0));
-            const bool alloc_extra_gas = DeckItem::to_bool( record.getItem<ParserKeywords::WLIFTOPT::ALLOCATE_EXTRA_LIFT_GAS>().get<std::string>(0));
-            const double weight_factor = record.getItem<ParserKeywords::WLIFTOPT::WEIGHT_FACTOR>().get<double>(0);
-            const double inc_weight_factor = record.getItem<ParserKeywords::WLIFTOPT::DELTA_GAS_RATE_WEIGHT_FACTOR>().get<double>(0);
-            const double min_rate = record.getItem<ParserKeywords::WLIFTOPT::MIN_LIFT_GAS_RATE>().getSIDouble(0);
-            const auto& max_rate_item = record.getItem<ParserKeywords::WLIFTOPT::MAX_LIFT_GAS_RATE>();
-
-            for (const auto& wname : well_names) {
-                auto well = GasLiftWell(wname, use_glo);
-
-                if (max_rate_item.hasValue(0))
-                    well.max_rate( max_rate_item.getSIDouble(0) );
-
-                well.weight_factor(weight_factor);
-                well.inc_weight_factor(inc_weight_factor);
-                well.min_rate(min_rate);
-                well.alloc_extra_gas(alloc_extra_gas);
-
-                glo.add_well(well);
-            }
-        }
-
-        handlerContext.state().glo.update( std::move(glo) );
-    }
-
     void handleWLIST(HandlerContext& handlerContext)
     {
         const std::string legal_actions = "NEW:ADD:DEL:MOV";
@@ -2640,11 +2551,9 @@ KeywordHandlers::KeywordHandlers()
         { "GCONSUMP", &handleGCONSUMP   },
         { "GECON",    &handleGECON      },
         { "GEFAC"   , &handleGEFAC      },
-        { "GLIFTOPT", &handleGLIFTOPT   },
         { "GPMAINT" , &handleGPMAINT    },
         { "GRUPTREE", &handleGRUPTREE   },
         { "GUIDERAT", &handleGUIDERAT   },
-        { "LIFTOPT" , &handleLIFTOPT    },
         { "LINCOM"  , &handleLINCOM     },
         { "MESSAGES", &handleMESSAGES   },
         { "MULTFLT" , &handleGEOKeyword },
@@ -2694,7 +2603,6 @@ KeywordHandlers::KeywordHandlers()
         { "WHISTCTL", &handleWHISTCTL   },
         { "WINJMULT", &handleWINJMULT   },
         { "WINJTEMP", &handleWINJTEMP   },
-        { "WLIFTOPT", &handleWLIFTOPT   },
         { "WLIST"   , &handleWLIST      },
         { "WMICP"   , &handleWMICP      },
         { "WPAVE"   , &handleWPAVE      },
@@ -2719,7 +2627,8 @@ KeywordHandlers::KeywordHandlers()
         { "WTRACER" , &handleWTRACER    },
     };
 
-    for (const auto& handlerFactory : {getMSWHandlers,
+    for (const auto& handlerFactory : {getGasLiftOptHandlers,
+                                       getMSWHandlers,
                                        getNetworkHandlers,
                                        getUDQHandlers}) {
         for (const auto& [keyword, handler] : std::invoke(handlerFactory)) {
