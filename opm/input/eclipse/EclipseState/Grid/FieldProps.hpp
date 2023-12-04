@@ -538,6 +538,8 @@ public:
         return tran;
     }
 
+    std::vector<std::string> fip_regions() const;
+
 private:
     void scanGRIDSection(const GRIDSection& grid_section);
     void scanGRIDSectionOnlyACTNUM(const GRIDSection& grid_section);
