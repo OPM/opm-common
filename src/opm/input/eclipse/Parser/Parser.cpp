@@ -945,6 +945,7 @@ newRawKeyword(const std::string&      deck_name,
 
 std::unique_ptr<RawKeyword> tryParseKeyword( ParserState& parserState, const Parser& parser) {
     bool is_title = false;
+    bool skip = false;
     std::unique_ptr<RawKeyword> rawKeyword;
     std::string_view record_buffer(str::emptystr);
     std::optional<ParserKeyword> parserKeyword;
@@ -973,6 +974,14 @@ std::unique_ptr<RawKeyword> tryParseKeyword( ParserState& parserState, const Par
                  container.
             */
             std::string deck_name = str::make_deck_name( line );
+            if (deck_name == "SKIP")
+                skip = true;
+            else if (deck_name == "ENDSKIP") {
+                skip = false;
+                continue;
+            }
+            if (skip) continue;
+
             if (ParserKeyword::validDeckName(deck_name)) {
                 auto ptr = newRawKeyword( deck_name, parserState, parser, line );
                 if (ptr) {
