@@ -173,6 +173,7 @@ if(ENABLE_ECL_INPUT)
     src/opm/input/eclipse/Schedule/Group/GroupKeywordHandlers.cpp
     src/opm/input/eclipse/Schedule/Group/GuideRate.cpp
     src/opm/input/eclipse/Schedule/Group/GuideRateConfig.cpp
+    src/opm/input/eclipse/Schedule/Group/GuideRateKeywordHandlers.cpp
     src/opm/input/eclipse/Schedule/Group/GuideRateModel.cpp
     src/opm/input/eclipse/Schedule/Group/GConSale.cpp
     src/opm/input/eclipse/Schedule/Group/GConSump.cpp
