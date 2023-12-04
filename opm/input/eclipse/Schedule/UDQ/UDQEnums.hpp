@@ -155,6 +155,7 @@ enum class UDAControl
     WCONPROD_RESV,
     WCONPROD_BHP,
     WCONPROD_THP,
+    WCONPROD_LIFT,
     //
     WCONINJE_RATE,
     WCONINJE_RESV,

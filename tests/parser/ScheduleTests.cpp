@@ -5288,9 +5288,13 @@ COMPDAT
   'P2'  9  9   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
 /
 
+UDQ
+ASSIGN FU_GAS 10000 /
+/
+
 WCONPROD
-  'P1' 'OPEN' 'ORAT'  123.4  0.0  0.0  0.0  0.0 100 100 42 'UDA' /
-  'P2' 'OPEN' 'ORAT'  123.4  0.0  0.0  0.0  0.0 100 100 43 'UDA' /
+  'P1' 'OPEN' 'ORAT'  123.4  0.0  0.0  0.0  0.0 100 100 42 'FU_GAS' /
+  'P2' 'OPEN' 'ORAT'  123.4  0.0  0.0  0.0  0.0 100 100 43 'FU_GAS' /
 /
 
 )";
@@ -5301,7 +5305,7 @@ WCONPROD
     const auto& well2 = sched.getWell("P2", 0);
     SummaryState st(TimeService::now());
 
-    st.update("UDA", 123);
+    st.update("FU_GAS", 123);
     const auto& controls1 = well1.productionControls(st);
     BOOST_CHECK_EQUAL(controls1.alq_value, 123);
 

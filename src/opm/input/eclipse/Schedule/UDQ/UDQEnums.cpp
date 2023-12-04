@@ -556,6 +556,7 @@ UDAKeyword keyword(const UDAControl control)
         {UDAControl::WCONPROD_RESV, UDAKeyword::WCONPROD},
         {UDAControl::WCONPROD_BHP,  UDAKeyword::WCONPROD},
         {UDAControl::WCONPROD_THP,  UDAKeyword::WCONPROD},
+        {UDAControl::WCONPROD_LIFT,  UDAKeyword::WCONPROD},
 
         // --------------------------------------------------------------
         {UDAControl::WCONINJE_RATE, UDAKeyword::WCONINJE},
@@ -599,6 +600,7 @@ int udaCode(const UDAControl control)
         {UDAControl::WCONPROD_RESV,  700'004},
         {UDAControl::WCONPROD_BHP,   800'004},
         {UDAControl::WCONPROD_THP,   900'004},
+        {UDAControl::WCONPROD_LIFT,   1'100'004},
 
         // --------------------------------------------------------------
         {UDAControl::WCONINJE_RATE,  400'003},
@@ -713,6 +715,7 @@ UDAControl udaControl(const int uda_code)
     case   700'004: return UDAControl::WCONPROD_RESV;
     case   800'004: return UDAControl::WCONPROD_BHP;
     case   900'004: return UDAControl::WCONPROD_THP;
+    case   1'100'004: return UDAControl::WCONPROD_LIFT;
 
     case   400'003: return UDAControl::WCONINJE_RATE;
     case   500'003: return UDAControl::WCONINJE_RESV;
@@ -791,6 +794,9 @@ std::string controlName(const UDAControl control)
 
     case UDAControl::WCONPROD_THP:
         return "WCONPROD_THP";
+
+    case UDAControl::WCONPROD_LIFT:
+        return "WCONPROD_LIFT";
 
     case UDAControl::WCONINJE_RATE:
         return "WCONINJE_RATE";

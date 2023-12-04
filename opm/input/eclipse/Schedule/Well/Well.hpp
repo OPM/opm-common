@@ -545,7 +545,7 @@ public:
     int fip_region_number() const;
     GasInflowEquation gas_inflow_equation() const;
     bool segmented_density_calculation() const { return true; }
-    double alq_value() const;
+    double alq_value(const SummaryState& st) const;
     double temperature() const;
     void setWellTemperature(const double temp);
     bool hasInjected( ) const;

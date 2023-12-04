@@ -99,7 +99,7 @@ std::string UDQActive::wg_hash(const std::string& wgname, UDAControl control) {
     4. The uda variable is a string; but another udq was used for this (wgname,
        control) combination: We erase the previous entry and add a new entry.
 
-    5. The uda ariable is a string and we do not find this (wgname, control)
+    5. The uda variable is a string and we do not find this (wgname, control)
        combination in the previous records: We add a new record.
 
     6. The uda variable is a double, and the (wgname, control) combination has

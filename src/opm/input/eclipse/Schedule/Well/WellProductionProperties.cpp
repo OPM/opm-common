@@ -100,8 +100,12 @@ namespace Opm {
             const auto& alq_input = record.getItem("ALQ").get<UDAValue>(0);
             if (alq_input.is<double>())
                 this->ALQValue = UDAValue(alq_input.get<double>(), alq_dim);
-            else
+            else {
+                if (alq_type.has_value() && !(alq_type.value() == VFPProdTable::ALQ_TYPE::ALQ_GRAT || alq_type.value() == VFPProdTable::ALQ_TYPE::ALQ_UNDEF)) {
+                    throw std::logic_error("UDA for other ALQ types than GRAT are not yet supported (specifically, unit handling for restart is missing).");
+                }
                 this->ALQValue = UDAValue(alq_input.get<std::string>(), alq_dim);
+            }
         } else {
             const auto table_nr = record.getItem("VFP_TABLE").get< int >(0);
             if (table_nr != 0)
@@ -417,6 +421,7 @@ void Well::WellProductionProperties::handleWCONHIST(const std::optional<VFPProdT
         update_count += active.update(udq_config, this->ResVRate, this->name, UDAControl::WCONPROD_RESV);
         update_count += active.update(udq_config, this->BHPTarget, this->name, UDAControl::WCONPROD_BHP);
         update_count += active.update(udq_config, this->THPTarget, this->name, UDAControl::WCONPROD_THP);
+        update_count += active.update(udq_config, this->ALQValue, this->name, UDAControl::WCONPROD_LIFT);
 
         return (update_count > 0);
     }
@@ -495,6 +500,12 @@ void Well::WellProductionProperties::handleWCONHIST(const std::optional<VFPProdT
         case UDAControl::WELTARG_THP:
             this->THPTarget = value;
             break;
+
+        case UDAControl::WCONPROD_LIFT:
+        case UDAControl::WELTARG_LIFT:
+            this->ALQValue = value;
+            break;
+
 
         default:
             throw std::logic_error {
