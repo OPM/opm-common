@@ -174,8 +174,11 @@ static std::vector< std::string > sorted_names( const SummaryConfig& summary ) {
 
 static std::vector< std::string > sorted_keywords( const SummaryConfig& summary ) {
     std::vector< std::string > ret;
-    for( const auto& x : summary )
-        ret.push_back( x.keyword() );
+    for( const auto& x : summary ) {
+        if (! x.keyword().empty()) {
+            ret.push_back( x.keyword() );
+        }
+    }
 
     std::sort( ret.begin(), ret.end() );
     return ret;
@@ -184,7 +187,9 @@ static std::vector< std::string > sorted_keywords( const SummaryConfig& summary 
 static std::vector< std::string > sorted_key_names( const SummaryConfig& summary ) {
     std::vector< std::string > ret;
     for( const auto& x : summary ) {
-        ret.push_back( x.uniqueNodeKey() );
+        if (! x.keyword().empty()) {
+            ret.push_back( x.uniqueNodeKey() );
+        }
     }
 
     std::sort( ret.begin(), ret.end() );
@@ -254,7 +259,7 @@ BOOST_AUTO_TEST_CASE(wells_select) {
             wells.begin(), wells.end(),
             names.begin(), names.end() );
 
-    BOOST_CHECK_EQUAL( summary.size(), 2U );
+    BOOST_CHECK_EQUAL( summary.size(), 4U );
 }
 
 BOOST_AUTO_TEST_CASE(groups_all) {
@@ -930,7 +935,7 @@ BOOST_AUTO_TEST_CASE( summary_FMWSET ) {
 BOOST_AUTO_TEST_CASE(FMWPA) {
     const auto input = "FMWPA\n";
     const auto summary = createSummary( input );
-    BOOST_CHECK_EQUAL(1U , summary.size() );
+    BOOST_CHECK_EQUAL(3U , summary.size() );
 }
 
 
@@ -1986,7 +1991,7 @@ RHPV_REG
     // The +5 corresponds to five additional COPT summary config keywords
     // which have been automatically added for the ROEW calculation.
     const auto numRegKw = 8;
-    BOOST_CHECK_EQUAL(summary_config.size(), numRegKw*3 + 5);
+    BOOST_CHECK_EQUAL(summary_config.size(), numRegKw*3 + 7);
 
     BOOST_CHECK( summary_config.hasKeyword("RPR__REG"));
     BOOST_CHECK( summary_config.hasKeyword("RPRP_REG"));
@@ -2001,7 +2006,7 @@ RHPV_REG
     BOOST_CHECK( summary_config.match("RPR*"));
 
     for (const auto& node : summary_config) {
-        if (node.category() == EclIO::SummaryNode::Category::Region) {
+        if (!node.keyword().empty() && node.category() == EclIO::SummaryNode::Category::Region) {
             if (node.keyword() == "RODENXYZ") {
                 BOOST_CHECK_EQUAL(node.fip_region(), "FIPXYZ");
             }
@@ -2059,7 +2064,7 @@ RGFTL
 
     const auto summary_config = createSummary(deck_string);
 
-    BOOST_CHECK_EQUAL(summary_config.size(), 8);
+    BOOST_CHECK_EQUAL(summary_config.size(), 10);
     BOOST_CHECK(summary_config.hasKeyword("ROFT"));
     BOOST_CHECK(summary_config.hasKeyword("ROFTGXYZ"));
     BOOST_CHECK(summary_config.hasKeyword("RGFT_XYZ"));
@@ -2107,7 +2112,7 @@ WOPRL
     parseContext.update(ParseContext::SUMMARY_UNKNOWN_WELL, InputErrorAction::IGNORE);
     const auto& summary_config1 = createSummary(input1, parseContext);
     BOOST_CHECK(summary_config1.hasKeyword("WOPRL__2"));
-    BOOST_CHECK_EQUAL(summary_config1.size(), 1);
+    BOOST_CHECK_EQUAL(summary_config1.size(), 3);
 
     const auto& summary_config2 = createSummary(input2, parseContext );
     BOOST_CHECK(summary_config2.hasKeyword("WOPRL__2"));
@@ -2153,7 +2158,7 @@ COPRL
     parseContext.update(ParseContext::SUMMARY_UNKNOWN_WELL, InputErrorAction::IGNORE);
     const auto& summary_config1 = createSummary(input1, parseContext);
     BOOST_CHECK(summary_config1.hasKeyword("COPRL"));
-    BOOST_CHECK_EQUAL(summary_config1.size(), 1);
+    BOOST_CHECK_EQUAL(summary_config1.size(), 3);
 
 
     EclipseGrid grid(10,10,10);
@@ -2163,7 +2168,7 @@ COPRL
 
     const auto& summary_config2 = createSummary(input2, parseContext );
     BOOST_CHECK(summary_config2.hasKeyword("COPRL"));
-    BOOST_CHECK_EQUAL( summary_config2.size(), 1);
+    BOOST_CHECK_EQUAL( summary_config2.size(), 3);
     {
         const auto& node = summary_config2[0];
         BOOST_CHECK_EQUAL( node.number(),  g3);
@@ -2173,7 +2178,7 @@ COPRL
 
     const auto& summary_config3 = createSummary(input3, parseContext );
     BOOST_CHECK(summary_config3.hasKeyword("COPRL"));
-    BOOST_CHECK_EQUAL( summary_config3.size(), 3);
+    BOOST_CHECK_EQUAL( summary_config3.size(), 5);
     {
         const auto& node = summary_config3[0];
         BOOST_CHECK_EQUAL( node.number(),  g1);
@@ -2256,7 +2261,7 @@ RPR__REG
     {
         parse_context.update(ParseContext::SUMMARY_REGION_TOO_LARGE, InputErrorAction::IGNORE);
         const auto& summary_config = createSummary(input_too_large, parse_context);
-        BOOST_CHECK_EQUAL( summary_config.size(), 3);
+        BOOST_CHECK_EQUAL( summary_config.size(), 5);
     }
 
     {
@@ -2267,6 +2272,6 @@ RPR__REG
     {
         parse_context.update(ParseContext::SUMMARY_EMPTY_REGION, InputErrorAction::IGNORE);
         const auto& summary_config = createSummary(input_empty, parse_context);
-        BOOST_CHECK_EQUAL( summary_config.size(), 1);
+        BOOST_CHECK_EQUAL( summary_config.size(), 3);
     }
 }

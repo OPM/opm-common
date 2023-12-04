@@ -1790,6 +1790,17 @@ SummaryConfig::SummaryConfig( const Deck& deck,
             this->short_keywords.insert(kw.keyword());
             this->summary_keywords.insert(kw.uniqueNodeKey());
         }
+
+        // Make sure we have a (dummy) keyword for all FIP regions
+        // so that fip_region() will find the region for RPTSOL output.
+        const auto keys = field_props.keys<int>();
+        for (const auto& key : keys) {
+            if (key.substr(0,3) == "FIP" && key != "FIPNUM") {
+                SummaryConfigNode node("", EclIO::SummaryNode::Category::Region, {});
+                node.fip_region(key);
+                this->m_keywords.push_back(node);
+            }
+        }
     }
     catch (const OpmInputError& opm_error) {
         throw;
