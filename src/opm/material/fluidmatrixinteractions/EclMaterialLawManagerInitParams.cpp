@@ -19,8 +19,12 @@
 */
 
 #include <config.h>
+
+#include <opm/input/eclipse/EclipseState/EclipseState.hpp>
+
 #include <opm/material/fluidmatrixinteractions/EclMaterialLawManager.hpp>
 #include <opm/material/fluidmatrixinteractions/EclEpsGridProperties.hpp>
+
 
 namespace Opm {
 
