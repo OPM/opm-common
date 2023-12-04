@@ -27,12 +27,13 @@
 #ifndef OPM_ECL_HYSTERESIS_TWO_PHASE_LAW_PARAMS_HPP
 #define OPM_ECL_HYSTERESIS_TWO_PHASE_LAW_PARAMS_HPP
 
+#include <opm/input/eclipse/EclipseState/WagHysteresisConfig.hpp>
+
 #include <opm/material/common/EnsureFinalized.hpp>
 #include <opm/material/fluidmatrixinteractions/EclEpsConfig.hpp>
 #include <opm/material/fluidmatrixinteractions/EclEpsScalingPoints.hpp>
 #include <opm/material/fluidmatrixinteractions/EclHysteresisConfig.hpp>
 
-#include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <cassert>
 #include <cmath>
 #include <memory>
