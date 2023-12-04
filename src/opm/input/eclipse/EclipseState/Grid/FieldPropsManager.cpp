@@ -126,6 +126,11 @@ std::vector<std::string> FieldPropsManager::keys() const {
     return this->fp->keys<T>();
 }
 
+std::vector<std::string> FieldPropsManager::fip_regions() const
+{
+    return this->fp->fip_regions();
+}
+
 std::vector<int> FieldPropsManager::actnum() const {
     return this->fp->actnum();
 }

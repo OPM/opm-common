@@ -171,6 +171,8 @@ public:
     template <typename T>
     std::vector<std::string> keys() const;
 
+    virtual std::vector<std::string> fip_regions() const;
+
     const Fieldprops::FieldData<int>&
     get_int_field_data(const std::string& keyword) const;
 

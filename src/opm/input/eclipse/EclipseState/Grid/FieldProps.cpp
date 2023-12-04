@@ -1498,6 +1498,18 @@ void FieldProps::apply_numerical_aquifers(const NumericalAquifers& numerical_aqu
     }
 }
 
+std::vector<std::string> FieldProps::fip_regions() const
+{
+    std::vector<std::string> result;
+    for (const auto& key : this->keys<int>()) {
+        if (Fieldprops::keywords::isFipxxx(key)) {
+            result.push_back(key);
+        }
+    }
+
+    return result;
+}
+
 
 template std::vector<bool> FieldProps::defaulted<int>(const std::string& keyword);
 template std::vector<bool> FieldProps::defaulted<double>(const std::string& keyword);
