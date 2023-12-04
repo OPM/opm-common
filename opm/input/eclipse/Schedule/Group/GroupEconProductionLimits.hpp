@@ -20,20 +20,19 @@
 #ifndef GROUP_ECON_PRODUCTION_LIMITS_H
 #define GROUP_ECON_PRODUCTION_LIMITS_H
 
-#include <map>
-#include <string>
-#include <optional>
-
 #include <opm/input/eclipse/Deck/UDAValue.hpp>
-#include <opm/input/eclipse/Units/UnitSystem.hpp>
-#include <opm/input/eclipse/Schedule/Schedule.hpp>
-#include <opm/input/eclipse/Schedule/SummaryState.hpp>
 #include <opm/common/utility/Serializer.hpp>
 #include <opm/common/utility/MemPacker.hpp>
+
+#include <map>
+#include <optional>
+#include <string>
 
 namespace Opm {
 
 class DeckRecord;
+class Schedule;
+class SummaryState;
 
 class GroupEconProductionLimits {
 public:
