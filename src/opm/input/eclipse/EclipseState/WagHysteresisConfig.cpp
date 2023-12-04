@@ -16,15 +16,10 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
+#include <opm/input/eclipse/EclipseState/WagHysteresisConfig.hpp>
 
-#include <fmt/format.h>
-#include <algorithm>
-#include <iostream>
-
-#include <opm/common/utility/OpmInputError.hpp>
 #include <opm/common/OpmLog/OpmLog.hpp>
 #include <opm/common/OpmLog/InfoLogger.hpp>
-#include <opm/input/eclipse/EclipseState/WagHysteresisConfig.hpp>
 #include <opm/input/eclipse/Deck/Deck.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/W.hpp>
 
@@ -50,7 +45,7 @@ namespace Opm {
         }
     }
 
-    size_t WagHysteresisConfig::size() const {
+    std::size_t WagHysteresisConfig::size() const {
         return this->wagrecords.size();
     }
 

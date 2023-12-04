@@ -19,6 +19,9 @@
 #ifndef OPM_PARSER_WAGHYSTERSISCONFIG_HPP
 #define	OPM_PARSER_WAGHYSTERSISCONFIG_HPP
 
+#include <cstddef>
+#include <vector>
+
 namespace Opm {
 
 class Deck;
@@ -120,7 +123,7 @@ class DeckRecord;
 
       explicit WagHysteresisConfig(const Deck& deck);
 
-      size_t size() const;
+      std::size_t size() const;
       bool empty() const;
 
       const std::vector<WagHysteresisConfigRecord>::const_iterator begin() const;
