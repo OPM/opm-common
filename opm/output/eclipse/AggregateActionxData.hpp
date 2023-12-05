@@ -21,14 +21,8 @@
 #define OPM_AGGREGATE_Actionx_DATA_HPP
 
 #include <opm/output/eclipse/WindowedArray.hpp>
-#include <opm/io/eclipse/PaddedOutputString.hpp>
 
-#include <opm/input/eclipse/Schedule/UDQ/UDQInput.hpp>
-#include <opm/input/eclipse/Schedule/UDQ/UDQDefine.hpp>
-#include <opm/input/eclipse/Schedule/UDQ/UDQAssign.hpp>
-#include <opm/input/eclipse/Schedule/UDQ/UDQEnums.hpp>
-#include <opm/input/eclipse/Schedule/UDQ/UDQParams.hpp>
-#include <opm/input/eclipse/Schedule/UDQ/UDQFunctionTable.hpp>
+#include <opm/io/eclipse/PaddedOutputString.hpp>
 
 #include <cstddef>
 #include <string>
@@ -36,23 +30,21 @@
 #include <map>
 
 namespace Opm {
-    class Schedule;
-    class UDQInput;
     class Actdims;
+    class Schedule;
+    class SummaryState;
+    class UDQInput;
+} // namespace Opm
 
-    namespace Action {
-        class State;
-    }
-} // Opm
-
-
+namespace Opm { namespace Action {
+    class State;
+}} // Opm::Action
 
 namespace Opm { namespace RestartIO { namespace Helpers {
     
 class AggregateActionxData
 {
 public:
-
     AggregateActionxData(const Opm::Schedule&      sched,
                          const Opm::Action::State& action_state,
                          const Opm::SummaryState&  st,
@@ -62,7 +54,6 @@ public:
     {
         return this->iACT_.data();
     }
-
    
     const std::vector<float>& getSACT() const
     {
@@ -88,20 +79,21 @@ public:
     {
         return this->iACN_.data();
     }
-        
+
+    // Note: Type 'double' despite the S* name.
     const std::vector<double>& getSACN() const
     {
         return this->sACN_.data();
     }
 
 private:
-    AggregateActionxData( const std::vector<int>&     rst_dims,
-                          std::size_t                 num_actions,
-                          const Opm::Actdims& actdims,
-                          const Opm::Schedule&        sched,
-                          const Opm::Action::State&   action_state,
-                          const Opm::SummaryState&    st,
-                          const std::size_t           simStep);
+    AggregateActionxData(const std::vector<int>&   rst_dims,
+                         std::size_t               num_actions,
+                         const Opm::Actdims&       actdims,
+                         const Opm::Schedule&      sched,
+                         const Opm::Action::State& action_state,
+                         const Opm::SummaryState&  st,
+                         const std::size_t         simStep);
 
     /// Aggregate 'IACT' array (Integer) for all ACTIONX data  (9 integers pr UDQ)
     WindowedArray<int> iACT_;
@@ -121,8 +113,8 @@ private:
     /// Aggregate 'IACN' array (Integer) for all Actionx data  (length 26* the max number of conditoins pr Actionx * the number of Actionx kwords)
     WindowedArray<int> iACN_;
 
-    /// Aggregate 'SACN' array (Integer) for all Actionx data  (16 * max number of Actionx conditions)
-    WindowedArray<double> sACN_;
+    /// Aggregate 'SACN' array (double precision floating-point) for all Actionx data  (16 * max number of Actionx conditions)
+    WindowedMatrix<double> sACN_;
 
 };
 
