@@ -40,6 +40,7 @@
 
 #include <opm/material/constraintsolvers/PTFlash.hpp>
 #include <opm/material/fluidsystems/Co2BrineFluidSystem.hh>
+#include <opm/material/fluidsystems/ThreeComponentFluidSystem.hh>
 
 #include <opm/material/densead/Evaluation.hpp>
 #include <opm/material/constraintsolvers/ComputeFromReferencePhase.hpp>
@@ -51,6 +52,7 @@
 // It is a two component system
 using Scalar = double;
 using FluidSystem = Opm::Co2BrineFluidSystem<Scalar>;
+using ThreeComponentSystem = Opm::ThreeComponentFluidSystem<Scalar>;
 
 constexpr auto numComponents = FluidSystem::numComponents;
 using Evaluation = Opm::DenseAd::Evaluation<double, numComponents>;
@@ -290,4 +292,135 @@ for (const auto& sample : test_methods) {
 #if BOOST_VERSION / 100000 == 1 && BOOST_VERSION / 100 % 1000 < 67
 }
 #endif
+}
+
+BOOST_AUTO_TEST_CASE(RachfordRice) {
+    using NumVector = Dune::FieldVector<double, 3>;
+    // TODO: Should not really need flash for this part.
+    using Flash = Opm::PTFlash<double, ThreeComponentSystem>;
+
+    // Scalar temp = 273.15;
+    // Scalar p = 150000.0;
+
+    // ComponentVector z;
+    // z[0] = 0.2; z[1] = 0.5; z[2] = 0.3;
+    auto K_values = std::vector<std::vector<double>>();
+    auto z_values = std::vector<std::vector<double>>();
+    auto vapor_reference = std::vector<double>();
+
+    // sol for p = 1.5 bar, T = 273.15 K
+    K_values.push_back({19742.008209810265, 104061.44705736745, 0.29692744936348753});
+    z_values.push_back({0.2, 0.5, 0.3});
+    vapor_reference.push_back(0.9956234231343956);
+
+    // sol for p = 112.44444444444444 bar, T = 273.15 K
+    K_values.push_back({0.6247560532583887, 1.754176409580374, 0.00264809842113736});
+    z_values.push_back({0.2, 0.5, 0.3});
+    vapor_reference.push_back(0.004634932674127616);
+
+    // sol for p = 1.5 bar, T = 298.35555555555555 K
+    K_values.push_back({5011.808655921476, 20394.761667099738, 0.2981316471374891});
+    z_values.push_back({0.2, 0.5, 0.3});
+    vapor_reference.push_back(0.9973104175796784);
+
+    // sol for p = 112.44444444444444 bar, T = 298.35555555555555 K
+    K_values.push_back({0.699756966810626, 1.7243997063092453, 0.0032527792216226767});
+    z_values.push_back({0.2, 0.5, 0.3});
+    vapor_reference.push_back(0.00540010197110916);
+
+    // sol for p = 1.5 bar, T = 323.56111111111113 K
+    K_values.push_back({1602.907259275084, 5278.701579138767, 0.29886066422781404});
+    z_values.push_back({0.2, 0.5, 0.3});
+    vapor_reference.push_back(0.998280924170745);
+
+    // sol for p = 112.44444444444444 bar, T = 323.56111111111113 K
+    K_values.push_back({0.7857993293648643, 1.6860914516428702, 0.0052022817582215155});
+    z_values.push_back({0.2, 0.5, 0.3});
+    vapor_reference.push_back(0.003259588429511987);
+
+    // sol for p = 1.5 bar, T = 348.76666666666665 K
+    K_values.push_back({623.5248499334857, 1730.8998902544013, 0.28483826298498793});
+    z_values.push_back({0.2, 0.5, 0.3});
+    vapor_reference.push_back(0.9785380752533385);
+
+    // sol for p = 112.44444444444444 bar, T = 348.76666666666665 K
+    K_values.push_back({0.8738459013983119, 1.6483861730818257, 0.009126227905247714});
+    z_values.push_back({0.2, 0.5, 0.3});
+    vapor_reference.push_back(0.003343693200458504);
+
+    // sol for p = 1.5 bar, T = 373.97222222222223 K
+    K_values.push_back({273.5620907524389, 654.8043484805389, 0.28778776891147734});
+    z_values.push_back({0.2, 0.5, 0.3});
+    vapor_reference.push_back(0.9822111573271644);
+
+    // sol for p = 112.44444444444444 bar, T = 373.97222222222223 K
+    K_values.push_back({0.9594432989887618, 1.6087045715588943, 0.01668691940009185});
+    z_values.push_back({0.2, 0.5, 0.3});
+    vapor_reference.push_back(0.002619159406464278);
+
+    // sol for p = 1.5 bar, T = 399.1777777777778 K
+    K_values.push_back({134.27575624313343, 283.4218134512125, 0.2904166028146171});
+    z_values.push_back({0.2, 0.5, 0.3});
+    vapor_reference.push_back(0.9850934240313229);
+
+    // sol for p = 112.44444444444444 bar, T = 399.1777777777778 K
+    K_values.push_back({1.1056927210301593, 1.7637285066428006, 0.025528660493607223});
+    z_values.push_back({0.2, 0.5, 0.3});
+    vapor_reference.push_back(0.1829805554210638);
+
+    // sol for p = 112.44444444444444 bar, T = 424.3833333333333 K
+    K_values.push_back({1.2988026430219273, 1.9765552313014425, 0.04040594253059525});
+    z_values.push_back({0.2, 0.5, 0.3});
+    vapor_reference.push_back(0.33270889928548736);
+
+    // sol for p = 112.44444444444444 bar, T = 449.5888888888889 K
+    K_values.push_back({1.523322259507949, 2.2013619219246285, 0.06723018079131272});
+    z_values.push_back({0.2, 0.5, 0.3});
+    vapor_reference.push_back(0.44310335029510134);
+
+    // sol for p = 112.44444444444444 bar, T = 474.7944444444444 K
+    K_values.push_back({1.7176562249206835, 2.3413966156487644, 0.11537246148979083});
+    z_values.push_back({0.2, 0.5, 0.3});
+    vapor_reference.push_back(0.5269214180997791);
+
+    // sol for p = 112.44444444444444 bar, T = 500.0 K
+    K_values.push_back({1.787578933245329, 2.282308523254643, 0.19884032011593508});
+    z_values.push_back({0.2, 0.5, 0.3});
+    vapor_reference.push_back(0.6062547183490403);
+
+    for(unsigned int i = 0; i < K_values.size(); i++){
+        auto z_i = z_values[i];
+        auto K_i = K_values[i];
+        std::cout << "Perform RR test " << i << " of " << K_values.size() << std::endl
+                  << "z = " << z_i[0] << ", "  << z_i[1]  << ", " << z_i[2] << std::endl
+                  << "K = " << K_i[0] << ", "  << K_i[1]  << ", " << K_i[2] << std::endl;
+
+
+        NumVector K = {K_i[0], K_i[1], K_i[2]};
+        NumVector z = {z_i[0], z_i[1], z_i[2]};
+
+        auto L = Flash::solveRachfordRice_g_(K, z, 3);
+        auto L_ref = 1.0 - vapor_reference[i];
+
+        BOOST_CHECK_MESSAGE(Opm::MathToolbox<Evaluation>::isSame(L, L_ref, 1e-5),
+                            "Test sol #" + std::to_string(i+1) +
+                            " Computed vapor fraction " + std::to_string(L) +
+                            " does not match reference " + std::to_string(L_ref)
+        );
+    }
+
+    /*
+    NumVector K(1.7176562249206835, 2.3413966156487644, 0.11537246148979083);
+
+    NumVector z = {0.2, 0.5, 0.3};
+    using Flash = Opm::PTFlash<double, FluidSystem>;
+    auto V_ref = 0.5269214180997791;
+
+   for(unsigned int i = 0; i < K_values.size(); i++){
+        auto L = Flash::solveRachfordRice_g_(K, z, 1);
+        auto V = 1.0 - L;
+        BOOST_CHECK_MESSAGE(Opm::MathToolbox<Evaluation>::isSame(V, V_ref, 2e-3),
+                            "Computed vapor fraction " + std::to_string(V) + "  does not match reference " + std::to_string(V_ref));
+    }
+    */
 }
