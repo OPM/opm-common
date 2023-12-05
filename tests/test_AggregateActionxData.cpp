@@ -1,86 +1,66 @@
 #define BOOST_TEST_MODULE UDQ-ACTIONX_Data
 
 #include <boost/test/unit_test.hpp>
-#include <opm/output/eclipse/VectorItems/intehead.hpp>
 
-#include <opm/output/eclipse/AggregateGroupData.hpp>
-#include <opm/output/eclipse/AggregateWellData.hpp>
-#include <opm/output/eclipse/AggregateConnectionData.hpp>
-#include <opm/input/eclipse/EclipseState/EclipseState.hpp>
-#include <opm/input/eclipse/Schedule/Schedule.hpp>
-#include <opm/input/eclipse/Schedule/SummaryState.hpp>
-#include <opm/input/eclipse/Schedule/Well/Well.hpp>
-#include <opm/input/eclipse/Parser/Parser.hpp>
-#include <opm/input/eclipse/Deck/Deck.hpp>
-
-#include <opm/input/eclipse/Python/Python.hpp>
-#include <opm/input/eclipse/Schedule/Action/State.hpp>
-#include <opm/output/eclipse/AggregateUDQData.hpp>
 #include <opm/output/eclipse/AggregateActionxData.hpp>
-#include <opm/output/eclipse/WriteRestartHelpers.hpp>
 
-#include <opm/output/eclipse/InteHEAD.hpp>
-#include <opm/output/eclipse/VectorItems/intehead.hpp>
-#include <opm/output/eclipse/DoubHEAD.hpp>
-
-#include <opm/input/eclipse/Schedule/Action/Actions.hpp>
-#include <opm/input/eclipse/Schedule/UDQ/UDQInput.hpp>
-#include <opm/input/eclipse/Schedule/UDQ/UDQActive.hpp>
-#include <opm/input/eclipse/Schedule/UDQ/UDQConfig.hpp>
-#include <opm/input/eclipse/Schedule/UDQ/UDQState.hpp>
-#include <opm/input/eclipse/Schedule/UDQ/UDQParams.hpp>
-#include <opm/input/eclipse/Schedule/Action/ActionX.hpp>
-#include <opm/input/eclipse/Schedule/Action/ActionContext.hpp>
-#include <opm/input/eclipse/Schedule/Well/WellTestState.hpp>
-#include <opm/input/eclipse/Schedule/Well/WListManager.hpp>
-
-#include <opm/input/eclipse/Units/UnitSystem.hpp>
-#include <opm/input/eclipse/Units/Units.hpp>
-#include <opm/common/utility/TimeService.hpp>
+#include <opm/io/eclipse/OutputStream.hpp>
 #include <opm/io/eclipse/ERst.hpp>
 #include <opm/io/eclipse/RestartFileView.hpp>
 #include <opm/io/eclipse/rst/state.hpp>
+
 #include <opm/output/data/Wells.hpp>
+#include <opm/output/eclipse/AggregateConnectionData.hpp>
+#include <opm/output/eclipse/AggregateGroupData.hpp>
+#include <opm/output/eclipse/AggregateWellData.hpp>
+#include <opm/output/eclipse/DoubHEAD.hpp>
+#include <opm/output/eclipse/InteHEAD.hpp>
+#include <opm/output/eclipse/VectorItems/intehead.hpp>
+#include <opm/output/eclipse/WriteRestartHelpers.hpp>
 
-#include <opm/io/eclipse/OutputStream.hpp>
+#include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 
-#include <stdexcept>
-#include <utility>
+#include <opm/input/eclipse/Python/Python.hpp>
+
+#include <opm/input/eclipse/Schedule/Action/ActionContext.hpp>
+#include <opm/input/eclipse/Schedule/Action/ActionX.hpp>
+#include <opm/input/eclipse/Schedule/Action/Actions.hpp>
+#include <opm/input/eclipse/Schedule/Action/State.hpp>
+#include <opm/input/eclipse/Schedule/Schedule.hpp>
+#include <opm/input/eclipse/Schedule/SummaryState.hpp>
+#include <opm/input/eclipse/Schedule/UDQ/UDQState.hpp>
+#include <opm/input/eclipse/Schedule/Well/WListManager.hpp>
+#include <opm/input/eclipse/Schedule/Well/Well.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellTestState.hpp>
+
+#include <opm/input/eclipse/Units/UnitSystem.hpp>
+#include <opm/input/eclipse/Units/Units.hpp>
+
+#include <opm/common/utility/TimeService.hpp>
+
+#include <opm/input/eclipse/Deck/Deck.hpp>
+#include <opm/input/eclipse/Parser/Parser.hpp>
+
+#include <cstddef>
 #include <exception>
-#include <iostream>
 #include <random>
+#include <memory>
+#include <stdexcept>
 #include <string>
+#include <utility>
 #include <vector>
+
 #include <fmt/format.h>
 
 #include "tests/WorkArea.hpp"
 
 namespace {
-
-    Opm::Deck first_sim(std::string fname) {
+    Opm::Deck first_sim(const std::string& fname)
+    {
         return Opm::Parser{}.parseFile(fname);
     }
-}
 
-bool compare_tokens(const std::vector<std::string>& rst_tokens, const std::vector<std::string>& deck_tokens) {
-    if (deck_tokens == rst_tokens)
-        return true;
-
-    fmt::print("Deck tokens : ");
-    for (const auto& dt : deck_tokens)
-        fmt::print("{} ", dt);
-    fmt::print("\n");
-
-    fmt::print("Rst tokens  : ");
-    for (const auto& rt : rst_tokens)
-        fmt::print("{} ", rt);
-    fmt::print("\n");
-
-    return false;
-}
-
-
-Opm::SummaryState sum_state_TEST1()
+    Opm::SummaryState sum_state_TEST1()
     {
         auto state = Opm::SummaryState{Opm::TimeService::now()};
         state.update_well_var("OPU01", "WWPR", 21.);
@@ -113,51 +93,63 @@ Opm::SummaryState sum_state_TEST1()
         state.update("YEAR", 2020);
 
         return state;
+    }
+
+    struct SimulationCase
+    {
+        explicit SimulationCase(const std::string& input)
+            : SimulationCase { Opm::Parser{}.parseString(input) }
+        {}
+
+        explicit SimulationCase(const Opm::Deck& deck)
+            : es   { deck }
+            , grid { deck }
+            , sched{ deck, es, std::make_shared<Opm::Python>() }
+        {}
+
+        // Order requirement: 'es' must be declared/initialised before
+        // 'sched'.
+        Opm::EclipseState es;
+        Opm::EclipseGrid  grid;
+        Opm::Schedule     sched;
+    };
+
+    bool compare_tokens(const std::vector<std::string>& rst_tokens,
+                        const std::vector<std::string>& deck_tokens)
+    {
+        if (deck_tokens == rst_tokens) {
+            return true;
+        }
+
+        fmt::print("Deck tokens : {}\n", fmt::join(deck_tokens, " "));
+        fmt::print("Rst tokens  : {}\n", fmt::join(rst_tokens,  " "));
+
+        return false;
+    }
 }
 
-//int main(int argc, char* argv[])
-struct SimulationCase
-{
-    explicit SimulationCase(const Opm::Deck& deck)
-        : es   { deck }
-        , grid { deck }
-        , python{ std::make_shared<Opm::Python>() }
-        , sched{ deck, es, python }
-    {}
-
-    // Order requirement: 'es' must be declared/initialised before 'sched'.
-    Opm::EclipseState es;
-    Opm::EclipseGrid  grid;
-    std::shared_ptr<Opm::Python> python;
-    Opm::Schedule     sched;
-    Opm::Parser       parser;
-};
-
 BOOST_AUTO_TEST_SUITE(Aggregate_Actionx)
-
-
 
 // test constructed UDQ-Actionx restart data
 BOOST_AUTO_TEST_CASE(Declared_Actionx_data)
 {
     const auto simCase = SimulationCase {first_sim("UDQ_ACTIONX_TEST1.DATA")};
 
-    Opm::EclipseState es = simCase.es;
-    Opm::Runspec rspec = es.runspec();
-    Opm::SummaryState st = sum_state_TEST1();
-    Opm::UDQState udq_state(1);
-    Opm::Action::State action_state;
-    Opm::Schedule sched = simCase.sched;
-    Opm::EclipseGrid grid = simCase.grid;
-    const auto& start_time = sched.getStartTime();
+    const auto& es = simCase.es;
+    const auto st = sum_state_TEST1();
+    const auto udq_state = Opm::UDQState{1};
+    const auto& sched = simCase.sched;
+    const auto& grid = simCase.grid;
+    const auto start_time = sched.getStartTime();
     const auto& ioConfig = es.getIOConfig();
     // const auto& restart = es.cfg().restart();
 
+    auto action_state = Opm::Action::State {};
 
     // Report Step 3: 2008-08-22 --> 2018-10-01
     const auto rptStep = std::size_t {3};
-    std::string outputDir = "./";
-    std::string baseName = "UDQ_ACTIONX_TEST1";
+    const std::string outputDir = "./";
+    const std::string baseName = "UDQ_ACTIONX_TEST1";
     Opm::Action::ActionX actx_14 = Opm::Action::ActionX("ACT14", 10, 0.543, start_time);
     Opm::Action::Result result = Opm::Action::Result(true);
     action_state.add_run(actx_14, start_time + 1.E09, result);
@@ -168,19 +160,22 @@ BOOST_AUTO_TEST_CASE(Declared_Actionx_data)
     {
         WorkArea work;
         {
-            Opm::EclIO::OutputStream::Restart rstFile {Opm::EclIO::OutputStream::ResultSet {outputDir, baseName},
-                                                       rptStep,
-                                                       Opm::EclIO::OutputStream::Formatted {ioConfig.getFMTOUT()},
-                                                       Opm::EclIO::OutputStream::Unified {ioConfig.getUNIFOUT()}};
+            Opm::EclIO::OutputStream::Restart rstFile {
+                Opm::EclIO::OutputStream::ResultSet { outputDir, baseName },
+                rptStep,
+                Opm::EclIO::OutputStream::Formatted { ioConfig.getFMTOUT() },
+                Opm::EclIO::OutputStream::Unified   { ioConfig.getUNIFOUT() }
+            };
 
-            std::vector<int> ih
-                = Opm::RestartIO::Helpers::createInteHead(es, grid, sched, secs_elapsed, rptStep, rptStep, rptStep-1);
+            auto ih = Opm::RestartIO::Helpers::
+                createInteHead(es, grid, sched, secs_elapsed, rptStep, rptStep, rptStep-1);
 
             // set dummy value for next_step_size
             const double next_step_size = 0.1;
-            const auto dh = Opm::RestartIO::Helpers::createDoubHead(es, sched, rptStep-1, rptStep, secs_elapsed, next_step_size);
+            const auto dh = Opm::RestartIO::Helpers::
+                createDoubHead(es, sched, rptStep-1, rptStep, secs_elapsed, next_step_size);
 
-            const auto& lh = Opm::RestartIO::Helpers::createLogiHead(es);
+            const auto lh = Opm::RestartIO::Helpers::createLogiHead(es);
 
             // Not really interested in the UDQ data
             ih[Opm::RestartIO::Helpers::VectorItems::intehead::NO_WELL_UDQS] = 0;
@@ -227,15 +222,15 @@ BOOST_AUTO_TEST_CASE(Declared_Actionx_data)
             rstFile.write("SACN", actionxData.getSACN());
             {
                 /*
-                Check of InteHEAD and DoubHEAD data for UDQ variables
+                  Check of InteHEAD and DoubHEAD data for UDQ variables
 
-                        INTEHEAD
+                  INTEHEAD
 
-                        Intehead[156]  -  The number of ACTIONS
-                        Intehead[157]  -  The max number of lines of schedule data including ENDACTIO keyword for any
-                ACTION
+                  Intehead[156]  -  The number of ACTIONS
+                  Intehead[157]  -  The max number of lines of schedule data including ENDACTIO keyword for any
+                  ACTION
 
-                        ---------------------------------------------------------------------------------------------------------------------]
+                  ---------------------------------------------------------------------------------------------------------------------]
 
                 */
                 const auto rptStep_1 = std::size_t {1};
@@ -286,18 +281,18 @@ BOOST_AUTO_TEST_CASE(Declared_Actionx_data)
 
             {
                 /*
-                IACT
-                --length is equal to 9*the number of ACTIONX keywords
-                    //item [0]: is unknown, (=0)
-                    //item [1]: The number of lines of schedule data including ENDACTIO
-                    //item [2]: is the number of times an action has been triggered
-                    //item [3]: is unknown, (=7)
-                    //item [4]: is unknown, (=0)
-                    //item [5]: The number of times the action is triggered
-                    //item [6]: is unknown, (=0)
-                    //item [7]: is unknown, (=0)
-                    //item [8]: The number of times the action is triggered
-                */
+                  IACT
+                  --length is equal to 9*the number of ACTIONX keywords
+                  //item [0]: is unknown, (=0)
+                  //item [1]: The number of lines of schedule data including ENDACTIO
+                  //item [2]: is the number of times an action has been triggered
+                  //item [3]: is unknown, (=7)
+                  //item [4]: is unknown, (=0)
+                  //item [5]: The number of times the action is triggered
+                  //item [6]: is unknown, (=0)
+                  //item [7]: is unknown, (=0)
+                  //item [8]: The number of times the action is triggered
+                  */
 
 
                 const auto& iAct = actionxData.getIACT();
@@ -342,14 +337,14 @@ BOOST_AUTO_TEST_CASE(Declared_Actionx_data)
 
             {
                 /*
-                SACT
-                --length is equal to 9*the number of ACTIONX keywords
-                    //item [0]: is unknown, (=0)
-                    //item [1]: is unknown, (=0)
-                    //item [2]: is unknown, (=0)
-                    //item [3]:  Minimum time interval between action triggers.
-                    //item [4]: is unknown, (=0)
-                */
+                  SACT
+                  --length is equal to 9*the number of ACTIONX keywords
+                  //item [0]: is unknown, (=0)
+                  //item [1]: is unknown, (=0)
+                  //item [2]: is unknown, (=0)
+                  //item [3]:  Minimum time interval between action triggers.
+                  //item [4]: is unknown, (=0)
+                  */
 
 
                 const auto& sAct = actionxData.getSACT();
@@ -362,10 +357,10 @@ BOOST_AUTO_TEST_CASE(Declared_Actionx_data)
 
             {
                 /*
-                ZACT
-                --length 4 times 8-chars pr ACTIONX keyword
+                  ZACT
+                  --length 4 times 8-chars pr ACTIONX keyword
 
-                Name of action 4 times 8 chars (up to 8 chars for name)
+                  Name of action 4 times 8 chars (up to 8 chars for name)
 
                 */
 
@@ -383,10 +378,10 @@ BOOST_AUTO_TEST_CASE(Declared_Actionx_data)
 
             {
                 /*
-                ZLACT
-                   -- length = ACTDIMS_item3*(max-over-action of number of lines of data pr ACTION)
+                  ZLACT
+                  -- length = ACTDIMS_item3*(max-over-action of number of lines of data pr ACTION)
 
-                   */
+                */
 
                 const auto& zLact = actionxData.getZLACT();
 
@@ -437,11 +432,11 @@ BOOST_AUTO_TEST_CASE(Declared_Actionx_data)
 
             {
                 /*
-                ZACN
-                   //(Max number of conditions pr ACTIONX) * ((max no characters pr line = 104) / (8 - characters pr
-                string)(104/8 = 13)
+                  ZACN
+                  //(Max number of conditions pr ACTIONX) * ((max no characters pr line = 104) / (8 - characters pr
+                  string)(104/8 = 13)
 
-                   */
+                */
 
                 const auto& zAcn = actionxData.getZACN();
 
@@ -497,8 +492,8 @@ BOOST_AUTO_TEST_CASE(Declared_Actionx_data)
 
             {
                 /*
-                IACN
-                26*Max number of conditions pr ACTIONX
+                  IACN
+                  26*Max number of conditions pr ACTIONX
 
                 */
 
@@ -936,8 +931,8 @@ BOOST_AUTO_TEST_CASE(Declared_Actionx_data)
 
             {
                 /*
-                SACN
-                26*Max number of conditions pr ACTIONX
+                  SACN
+                  26*Max number of conditions pr ACTIONX
 
                 */
 
@@ -1004,7 +999,7 @@ BOOST_AUTO_TEST_CASE(Declared_Actionx_data)
         {
             auto rst_file = std::make_shared<Opm::EclIO::ERst>("UDQ_ACTIONX_TEST1.UNRST");
             auto rst_view = std::make_shared<Opm::EclIO::RestartFileView>(std::move(rst_file), 3);
-            auto rst_state = Opm::RestartIO::RstState::load(std::move(rst_view), es.runspec(), simCase.parser);
+            auto rst_state = Opm::RestartIO::RstState::load(std::move(rst_view), es.runspec(), Opm::Parser{});
             const auto& input_actions = sched[rptStep-1].actions();
 
             BOOST_CHECK(rst_state.actions.size() == input_actions.ecl_size());
@@ -1016,8 +1011,6 @@ BOOST_AUTO_TEST_CASE(Declared_Actionx_data)
             BOOST_CHECK_EQUAL(rst_state.actions[4].conditions.size(), 5);
             BOOST_CHECK_EQUAL(rst_state.actions[5].conditions.size(), 5);
 
-
-
             {
                 const auto& action = rst_state.actions[0];
                 BOOST_CHECK(compare_tokens(action.conditions[0].tokens(), {"FMWPR", ">", "45", "AND"}));
@@ -1027,8 +1020,8 @@ BOOST_AUTO_TEST_CASE(Declared_Actionx_data)
             {
                 const auto& action = rst_state.actions[1];
                 BOOST_CHECK(compare_tokens(action.conditions[0].tokens(), {"FMWPR", ">", "25", "AND"}));
-                BOOST_CHECK(
-                    compare_tokens(action.conditions[1].tokens(), {"WGPR", "OPL02", ">", "GGPR", "LOWER", "AND"}));
+                BOOST_CHECK(compare_tokens(action.conditions[1].tokens(),
+                                           {"WGPR", "OPL02", ">", "GGPR", "LOWER", "AND"}));
                 BOOST_CHECK(compare_tokens(action.conditions[2].tokens(), {"MNTH", ">", "NOV"}));
             }
             {
@@ -1114,5 +1107,161 @@ BOOST_AUTO_TEST_CASE(Declared_Actionx_data)
     }
 }
 
+BOOST_AUTO_TEST_CASE(Condition_Month_February_SACN)
+{
+    const auto cse = SimulationCase { R"(RUNSPEC
+OIL
+GAS
+WATER
+DIMENS
+  10 10 3 /
+START
+ 5 'DEC' 2023 /
+TABDIMS
+/
+EQLDIMS
+/
+GRID
+DXV
+ 10*100.0 /
+DYV
+ 10*100.0 /
+DZV
+ 3*2.0 /
+DEPTHZ
+ 121*2000.0 /
+PERMX
+  300*100.0 /
+COPY
+  PERMX PERMY /
+  PERMX PERMZ /
+/
+MULTIPLY
+  PERMZ 0.1 /
+/
+PORO
+  300*0.3 /
+PROPS
+SWOF
+ 0 0 1 0
+ 1 1 0 0 /
+SGOF
+ 0 0 1 0
+ 1 1 0 0 /
+PVDO
+    1 1    0.5
+ 1000 0.99 0.51 /
+PVDG
+   1 1     0.01
+1000 0.01  0.02 /
+SOLUTION
+EQUIL
+ 2000.0 100.0 2050.0 0.0 1950.0 0.0 0 0 -10 /
+SCHEDULE
+WELSPECS
+ 'P' 'G' 10 10 1* OIL /
+/
+COMPDAT
+ 'P' 1* 1* 1 3 'OPEN' /
+/
+WCONPROD
+ 'P' 'OPEN' 'ORAT' 1000.0 4* 10.0 /
+/
+ACTIONX
+ TDEP_PI_P 1 /
+ DAY >= 1 AND /
+ MNTH >= FEB AND /
+ YEAR >= 2024 /
+/
+WPIMULT
+ 'P' 1.234 /
+/
+ENDACTIO
+TSTEP
+20*30.0 /
+END
+)" };
+
+    const auto action_state = Opm::Action::State {};
+    const auto simStep = 5;
+
+    auto smstate = Opm::SummaryState { Opm::TimeService::now() };
+    smstate.update("DAY", 3);
+    smstate.update("MNTH", 5);
+    smstate.update("YEAR", 2024);
+
+    const auto actionData = Opm::RestartIO::Helpers::AggregateActionxData {
+        cse.sched, action_state, smstate, simStep
+    };
+
+    const auto& sacn = actionData.getSACN();
+    BOOST_CHECK_EQUAL(sacn.size(), 3 * std::size_t{16});
+
+    auto value = [&sacn](const std::size_t condition,
+                         const std::size_t element)
+    {
+        return sacn[(condition - 1)*16 + element];
+    };
+
+    // Condition 1: DAY >= 1
+    {
+        BOOST_CHECK_CLOSE(value(1,  0), 0.0    , 1.0e-8);
+        BOOST_CHECK_CLOSE(value(1,  1), 0.0    , 1.0e-8);
+        BOOST_CHECK_CLOSE(value(1,  2), 1.0    , 1.0e-8); // 1
+        BOOST_CHECK_CLOSE(value(1,  3), 0.0    , 1.0e-8);
+        BOOST_CHECK_CLOSE(value(1,  4), 1.0e+20, 1.0e-8);
+        BOOST_CHECK_CLOSE(value(1,  5), 1.0e+20, 1.0e-8);
+        BOOST_CHECK_CLOSE(value(1,  6), 1.0e+20, 1.0e-8);
+        BOOST_CHECK_CLOSE(value(1,  7), 1.0e+20, 1.0e-8);
+        BOOST_CHECK_CLOSE(value(1,  8), 1.0e+20, 1.0e-8);
+        BOOST_CHECK_CLOSE(value(1,  9), 1.0e+20, 1.0e-8);
+        BOOST_CHECK_CLOSE(value(1, 10), 0.0    , 1.0e-8);
+        BOOST_CHECK_CLOSE(value(1, 11), 0.0    , 1.0e-8);
+        BOOST_CHECK_CLOSE(value(1, 12), 0.0    , 1.0e-8);
+        BOOST_CHECK_CLOSE(value(1, 13), 0.0    , 1.0e-8);
+        BOOST_CHECK_CLOSE(value(1, 14), 0.0    , 1.0e-8);
+        BOOST_CHECK_CLOSE(value(1, 15), 0.0    , 1.0e-8);
+    }
+
+    // Condition 2: MNTH >= FEB
+    {
+        BOOST_CHECK_CLOSE(value(2,  0), 0.0    , 1.0e-8);
+        BOOST_CHECK_CLOSE(value(2,  1), 0.0    , 1.0e-8);
+        BOOST_CHECK_CLOSE(value(2,  2), 2.0    , 1.0e-8); // FEB
+        BOOST_CHECK_CLOSE(value(2,  3), 0.0    , 1.0e-8);
+        BOOST_CHECK_CLOSE(value(2,  4), 1.0e+20, 1.0e-8);
+        BOOST_CHECK_CLOSE(value(2,  5), 1.0e+20, 1.0e-8);
+        BOOST_CHECK_CLOSE(value(2,  6), 1.0e+20, 1.0e-8);
+        BOOST_CHECK_CLOSE(value(2,  7), 1.0e+20, 1.0e-8);
+        BOOST_CHECK_CLOSE(value(2,  8), 1.0e+20, 1.0e-8);
+        BOOST_CHECK_CLOSE(value(2,  9), 1.0e+20, 1.0e-8);
+        BOOST_CHECK_CLOSE(value(2, 10), 0.0    , 1.0e-8);
+        BOOST_CHECK_CLOSE(value(2, 11), 0.0    , 1.0e-8);
+        BOOST_CHECK_CLOSE(value(2, 12), 0.0    , 1.0e-8);
+        BOOST_CHECK_CLOSE(value(2, 13), 0.0    , 1.0e-8);
+        BOOST_CHECK_CLOSE(value(2, 14), 0.0    , 1.0e-8);
+        BOOST_CHECK_CLOSE(value(2, 15), 0.0    , 1.0e-8);
+    }
+
+    // Condition 3: YEAR >= 2024
+    {
+        BOOST_CHECK_CLOSE(value(3,  0),    0.0    , 1.0e-8);
+        BOOST_CHECK_CLOSE(value(3,  1),    0.0    , 1.0e-8);
+        BOOST_CHECK_CLOSE(value(3,  2), 2024.0    , 1.0e-8); // 2024
+        BOOST_CHECK_CLOSE(value(3,  3),    0.0    , 1.0e-8);
+        BOOST_CHECK_CLOSE(value(3,  4),    1.0e+20, 1.0e-8);
+        BOOST_CHECK_CLOSE(value(3,  5),    1.0e+20, 1.0e-8);
+        BOOST_CHECK_CLOSE(value(3,  6),    1.0e+20, 1.0e-8);
+        BOOST_CHECK_CLOSE(value(3,  7),    1.0e+20, 1.0e-8);
+        BOOST_CHECK_CLOSE(value(3,  8),    1.0e+20, 1.0e-8);
+        BOOST_CHECK_CLOSE(value(3,  9),    1.0e+20, 1.0e-8);
+        BOOST_CHECK_CLOSE(value(3, 10),    0.0    , 1.0e-8);
+        BOOST_CHECK_CLOSE(value(3, 11),    0.0    , 1.0e-8);
+        BOOST_CHECK_CLOSE(value(3, 12),    0.0    , 1.0e-8);
+        BOOST_CHECK_CLOSE(value(3, 13),    0.0    , 1.0e-8);
+        BOOST_CHECK_CLOSE(value(3, 14),    0.0    , 1.0e-8);
+        BOOST_CHECK_CLOSE(value(3, 15),    0.0    , 1.0e-8);
+    }
+}
 
 BOOST_AUTO_TEST_SUITE_END()
