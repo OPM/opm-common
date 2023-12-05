@@ -16,19 +16,21 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
-
-#include <cmath>
-#include <utility>
-
-#include <fmt/format.h>
+#include <opm/input/eclipse/Schedule/Group/Group.hpp>
 
 #include <opm/input/eclipse/Schedule/SummaryState.hpp>
-#include <opm/input/eclipse/Schedule/Group/Group.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQActive.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQConfig.hpp>
+
 #include <opm/io/eclipse/rst/group.hpp>
 
 #include "../eval_uda.hpp"
+
+#include <fmt/format.h>
+
+#include <cmath>
+#include <stdexcept>
+#include <utility>
 
 namespace {
     bool has_limit(const double x)

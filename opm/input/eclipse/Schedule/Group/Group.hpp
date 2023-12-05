@@ -20,16 +20,16 @@
 #ifndef GROUP2_HPP
 #define GROUP2_HPP
 
-#include <algorithm>
-#include <map>
-#include <optional>
-#include <string>
-
 #include <opm/input/eclipse/Deck/UDAValue.hpp>
 #include <opm/input/eclipse/EclipseState/Util/IOrderSet.hpp>
 #include <opm/input/eclipse/EclipseState/Phase.hpp>
 #include <opm/input/eclipse/Schedule/Group/GPMaint.hpp>
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
+
+#include <cstddef>
+#include <map>
+#include <optional>
+#include <string>
 
 namespace Opm {
 
@@ -37,237 +37,234 @@ namespace RestartIO {
 struct RstGroup;
 }
 
-
 class SummaryState;
 class UDQConfig;
 class UDQActive;
+
 class Group {
 public:
+    // A group can have both injection controls and production controls set at
+    // the same time, i.e. this enum is used as a bitmask.
+    enum class GroupType : unsigned {
+        NONE = 0,
+        PRODUCTION = 1,
+        INJECTION = 2,
+        MIXED = 3
+    };
 
-// A group can have both injection controls and production controls set at
-// the same time, i.e. this enum is used as a bitmask.
-enum class GroupType : unsigned {
-    NONE = 0,
-    PRODUCTION = 1,
-    INJECTION = 2,
-    MIXED = 3
-};
+    enum class ExceedAction {
+        NONE = 0,
+        CON = 1,
+        CON_PLUS = 2,   // String: "+CON"
+        WELL = 3,
+        PLUG = 4,
+        RATE = 5
+    };
+    static const std::string ExceedAction2String( ExceedAction enumValue );
+    static ExceedAction ExceedActionFromString( const std::string& stringValue );
+    static ExceedAction ExceedActionFromInt(const int value);
 
+    enum class InjectionCMode  : int {
+        NONE = 0,
+        RATE = 1,
+        RESV = 2,
+        REIN = 4,
+        VREP = 8,
+        FLD  = 16,
+        SALE = 32
+    };
+    static const std::string InjectionCMode2String( InjectionCMode enumValue );
+    static InjectionCMode InjectionCModeFromString( const std::string& stringValue );
+    static InjectionCMode InjectionCModeFromInt(int ecl_int);
+    static int            InjectionCMode2Int(InjectionCMode enumValue);
 
+    enum class ProductionCMode : int {
+        NONE = 0,
+        ORAT = 1,
+        WRAT = 2,
+        GRAT = 4,
+        LRAT = 8,
+        CRAT = 16,
+        RESV = 32,
+        PRBL = 64,
+        FLD  = 128
+    };
+    static const std::string ProductionCMode2String( ProductionCMode enumValue );
+    static ProductionCMode ProductionCModeFromString( const std::string& stringValue );
+    static ProductionCMode ProductionCModeFromInt(int ecl_int);
+    static int             ProductionCMode2Int(Group::ProductionCMode cmode);
 
-enum class ExceedAction {
-    NONE = 0,
-    CON = 1,
-    CON_PLUS = 2,   // String: "+CON"
-    WELL = 3,
-    PLUG = 4,
-    RATE = 5
-};
-static const std::string ExceedAction2String( ExceedAction enumValue );
-static ExceedAction ExceedActionFromString( const std::string& stringValue );
-static ExceedAction ExceedActionFromInt(const int value);
+    enum class GuideRateProdTarget {
+        OIL = 0,
+        WAT = 1,
+        GAS = 2,
+        LIQ = 3,
+        RES = 4,
+        COMB = 5,
+        WGA =  6,
+        CVAL = 7,
+        INJV = 8,
+        POTN = 9,
+        FORM = 10,
+        NO_GUIDE_RATE = 11
+    };
+    static GuideRateProdTarget GuideRateProdTargetFromString( const std::string& stringValue );
+    static GuideRateProdTarget GuideRateProdTargetFromInt(int ecl_id);
 
-enum class InjectionCMode  : int {
-    NONE = 0,
-    RATE = 1,
-    RESV = 2,
-    REIN = 4,
-    VREP = 8,
-    FLD  = 16,
-    SALE = 32
-};
-static const std::string InjectionCMode2String( InjectionCMode enumValue );
-static InjectionCMode InjectionCModeFromString( const std::string& stringValue );
-static InjectionCMode InjectionCModeFromInt(int ecl_int);
-static int            InjectionCMode2Int(InjectionCMode enumValue);
+    enum class GuideRateInjTarget {
+        RATE = 1,
+        VOID = 2,
+        NETV = 3,
+        RESV = 4,
+        POTN = 5,
+        NO_GUIDE_RATE = 6
+    };
+    static GuideRateInjTarget GuideRateInjTargetFromString( const std::string& stringValue );
+    static GuideRateInjTarget GuideRateInjTargetFromInt(int ecl_id);
+    static int                GuideRateInjTargetToInt(GuideRateInjTarget target);
 
-enum class ProductionCMode : int {
-    NONE = 0,
-    ORAT = 1,
-    WRAT = 2,
-    GRAT = 4,
-    LRAT = 8,
-    CRAT = 16,
-    RESV = 32,
-    PRBL = 64,
-    FLD  = 128
-};
-static const std::string ProductionCMode2String( ProductionCMode enumValue );
-static ProductionCMode ProductionCModeFromString( const std::string& stringValue );
-static ProductionCMode ProductionCModeFromInt(int ecl_int);
-static int             ProductionCMode2Int(Group::ProductionCMode cmode);
-
-enum class GuideRateProdTarget {
-    OIL = 0,
-    WAT = 1,
-    GAS = 2,
-    LIQ = 3,
-    RES = 4,
-    COMB = 5,
-    WGA =  6,
-    CVAL = 7,
-    INJV = 8,
-    POTN = 9,
-    FORM = 10,
-    NO_GUIDE_RATE = 11
-};
-static GuideRateProdTarget GuideRateProdTargetFromString( const std::string& stringValue );
-static GuideRateProdTarget GuideRateProdTargetFromInt(int ecl_id);
-
-
-enum class GuideRateInjTarget {
-    RATE = 1,
-    VOID = 2,
-    NETV = 3,
-    RESV = 4,
-    POTN = 5,
-    NO_GUIDE_RATE = 6
-};
-static GuideRateInjTarget GuideRateInjTargetFromString( const std::string& stringValue );
-static GuideRateInjTarget GuideRateInjTargetFromInt(int ecl_id);
-static int                GuideRateInjTargetToInt(GuideRateInjTarget target);
-
-
-struct GroupInjectionProperties {
-    GroupInjectionProperties() = default;
-    explicit GroupInjectionProperties(std::string group_name_arg);
-    GroupInjectionProperties(std::string group_name_arg, Phase phase, const UnitSystem& unit_system);
-
-    std::string name{};
-    Phase phase = Phase::WATER;
-    InjectionCMode cmode = InjectionCMode::NONE;
-    UDAValue surface_max_rate;
-    UDAValue resv_max_rate;
-    UDAValue target_reinj_fraction;
-    UDAValue target_void_fraction;
-    std::optional<std::string> reinj_group;
-    std::optional<std::string> voidage_group;
-    bool available_group_control = true;
-    double guide_rate = 0;
-    GuideRateInjTarget guide_rate_def = GuideRateInjTarget::NO_GUIDE_RATE;
-
-    static GroupInjectionProperties serializationTestObject();
-
-    int injection_controls = 0;
-    bool operator==(const GroupInjectionProperties& other) const;
-    bool operator!=(const GroupInjectionProperties& other) const;
-    bool updateUDQActive(const UDQConfig& udq_config, UDQActive& active) const;
-    bool uda_phase() const;
-    void update_uda(const UDQConfig& udq_config, UDQActive& udq_active, UDAControl control, const UDAValue& value);
-
-    template<class Serializer>
-    void serializeOp(Serializer& serializer)
+    struct GroupInjectionProperties
     {
-        serializer(this->name);
-        serializer(phase);
-        serializer(cmode);
-        serializer(surface_max_rate);
-        serializer(resv_max_rate);
-        serializer(target_reinj_fraction);
-        serializer(target_void_fraction);
-        serializer(reinj_group);
-        serializer(voidage_group);
-        serializer(injection_controls);
-        serializer(available_group_control);
-        serializer(guide_rate);
-        serializer(guide_rate_def);
-    }
-};
+        GroupInjectionProperties() = default;
+        explicit GroupInjectionProperties(std::string group_name_arg);
+        GroupInjectionProperties(std::string group_name_arg, Phase phase, const UnitSystem& unit_system);
 
-struct GroupLimitAction
-{
-    ExceedAction allRates{ExceedAction::NONE};
-    ExceedAction water{ExceedAction::NONE};
-    ExceedAction gas{ExceedAction::NONE};
-    ExceedAction liquid{ExceedAction::NONE};
+        std::string name{};
+        Phase phase = Phase::WATER;
+        InjectionCMode cmode = InjectionCMode::NONE;
+        UDAValue surface_max_rate;
+        UDAValue resv_max_rate;
+        UDAValue target_reinj_fraction;
+        UDAValue target_void_fraction;
+        std::optional<std::string> reinj_group;
+        std::optional<std::string> voidage_group;
+        bool available_group_control = true;
+        double guide_rate = 0;
+        GuideRateInjTarget guide_rate_def = GuideRateInjTarget::NO_GUIDE_RATE;
 
-    template<class Serializer>
-    void serializeOp(Serializer& serializer)
+        static GroupInjectionProperties serializationTestObject();
+
+        int injection_controls = 0;
+        bool operator==(const GroupInjectionProperties& other) const;
+        bool operator!=(const GroupInjectionProperties& other) const;
+        bool updateUDQActive(const UDQConfig& udq_config, UDQActive& active) const;
+        bool uda_phase() const;
+        void update_uda(const UDQConfig& udq_config, UDQActive& udq_active, UDAControl control, const UDAValue& value);
+
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer(this->name);
+            serializer(phase);
+            serializer(cmode);
+            serializer(surface_max_rate);
+            serializer(resv_max_rate);
+            serializer(target_reinj_fraction);
+            serializer(target_void_fraction);
+            serializer(reinj_group);
+            serializer(voidage_group);
+            serializer(injection_controls);
+            serializer(available_group_control);
+            serializer(guide_rate);
+            serializer(guide_rate_def);
+        }
+    };
+
+    struct GroupLimitAction
     {
-        serializer(allRates);
-        serializer(water);
-        serializer(gas);
-        serializer(liquid); 
-    }
+        ExceedAction allRates{ExceedAction::NONE};
+        ExceedAction water{ExceedAction::NONE};
+        ExceedAction gas{ExceedAction::NONE};
+        ExceedAction liquid{ExceedAction::NONE};
 
-    bool operator==(const GroupLimitAction& other) const
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer(allRates);
+            serializer(water);
+            serializer(gas);
+            serializer(liquid);
+        }
+
+        bool operator==(const GroupLimitAction& other) const
+        {
+            return (this->allRates == other.allRates)
+                && (this->water == other.water)
+                && (this->gas == other.gas)
+                && (this->liquid == other.liquid);
+        }
+    };
+
+    struct InjectionControls
     {
-        return (this->allRates == other.allRates)
-            && (this->water == other.water)
-            && (this->gas == other.gas)
-            && (this->liquid == other.liquid);
-    }
-};
+        Phase phase;
+        InjectionCMode cmode;
+        double surface_max_rate;
+        double resv_max_rate;
+        double target_reinj_fraction;
+        double target_void_fraction;
+        int injection_controls = 0;
+        std::string reinj_group;
+        std::string voidage_group;
+        double guide_rate;
+        GuideRateInjTarget guide_rate_def = GuideRateInjTarget::NO_GUIDE_RATE;
+    };
 
-struct InjectionControls {
-    Phase phase;
-    InjectionCMode cmode;
-    double surface_max_rate;
-    double resv_max_rate;
-    double target_reinj_fraction;
-    double target_void_fraction;
-    int injection_controls = 0;
-    std::string reinj_group;
-    std::string voidage_group;
-    double guide_rate;
-    GuideRateInjTarget guide_rate_def = GuideRateInjTarget::NO_GUIDE_RATE;
-};
-
-struct GroupProductionProperties {
-    GroupProductionProperties();
-    GroupProductionProperties(const UnitSystem& unit_system, const std::string& gname);
-
-    std::string name;
-    ProductionCMode cmode = ProductionCMode::NONE;
-    GroupLimitAction group_limit_action;
-    UDAValue oil_target;
-    UDAValue water_target;
-    UDAValue gas_target;
-    UDAValue liquid_target;
-    double guide_rate = 0;
-    GuideRateProdTarget guide_rate_def = GuideRateProdTarget::NO_GUIDE_RATE;
-    double resv_target = 0;
-    bool available_group_control = true;
-    static GroupProductionProperties serializationTestObject();
-
-    int production_controls = 0;
-    bool operator==(const GroupProductionProperties& other) const;
-    bool operator!=(const GroupProductionProperties& other) const;
-    bool updateUDQActive(const UDQConfig& udq_config, UDQActive& active) const;
-    void update_uda(const UDQConfig& udq_config, UDQActive& udq_active, UDAControl control, const UDAValue& value);
-
-    template<class Serializer>
-    void serializeOp(Serializer& serializer)
+    struct GroupProductionProperties
     {
-        serializer(name);
-        serializer(cmode);
-        serializer(group_limit_action);
-        serializer(oil_target);
-        serializer(water_target);
-        serializer(gas_target);
-        serializer(liquid_target);
-        serializer(guide_rate);
-        serializer(guide_rate_def);
-        serializer(resv_target);
-        serializer(available_group_control);
-        serializer(production_controls);
-    }
-};
+        GroupProductionProperties();
+        GroupProductionProperties(const UnitSystem& unit_system, const std::string& gname);
 
+        std::string name;
+        ProductionCMode cmode = ProductionCMode::NONE;
+        GroupLimitAction group_limit_action;
+        UDAValue oil_target;
+        UDAValue water_target;
+        UDAValue gas_target;
+        UDAValue liquid_target;
+        double guide_rate = 0;
+        GuideRateProdTarget guide_rate_def = GuideRateProdTarget::NO_GUIDE_RATE;
+        double resv_target = 0;
+        bool available_group_control = true;
+        static GroupProductionProperties serializationTestObject();
 
-struct ProductionControls {
-    ProductionCMode cmode;
-    GroupLimitAction group_limit_action;
-    double oil_target;
-    double water_target;
-    double gas_target;
-    double liquid_target;
-    double guide_rate;
-    GuideRateProdTarget guide_rate_def = GuideRateProdTarget::NO_GUIDE_RATE;
-    double resv_target = 0;
-    int production_controls = 0;
-};
+        int production_controls = 0;
+        bool operator==(const GroupProductionProperties& other) const;
+        bool operator!=(const GroupProductionProperties& other) const;
+        bool updateUDQActive(const UDQConfig& udq_config, UDQActive& active) const;
+        void update_uda(const UDQConfig& udq_config, UDQActive& udq_active, UDAControl control, const UDAValue& value);
 
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer(name);
+            serializer(cmode);
+            serializer(group_limit_action);
+            serializer(oil_target);
+            serializer(water_target);
+            serializer(gas_target);
+            serializer(liquid_target);
+            serializer(guide_rate);
+            serializer(guide_rate_def);
+            serializer(resv_target);
+            serializer(available_group_control);
+            serializer(production_controls);
+        }
+    };
+
+    struct ProductionControls
+    {
+        ProductionCMode cmode;
+        GroupLimitAction group_limit_action;
+        double oil_target;
+        double water_target;
+        double gas_target;
+        double liquid_target;
+        double guide_rate;
+        GuideRateProdTarget guide_rate_def = GuideRateProdTarget::NO_GUIDE_RATE;
+        double resv_target = 0;
+        int production_controls = 0;
+    };
 
     Group();
     Group(const std::string& group_name, std::size_t insert_index_arg, double udq_undefined_arg, const UnitSystem& unit_system);
