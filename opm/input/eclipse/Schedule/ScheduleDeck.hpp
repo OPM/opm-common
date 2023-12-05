@@ -39,6 +39,7 @@ namespace Opm {
     class DeckOutput;
     struct ScheduleDeckContext;
     class Runspec;
+    class UnitSystem;
 
     /*
       The purpose of the ScheduleDeck class is to serve as a container holding
@@ -76,7 +77,7 @@ namespace Opm {
             serializer(m_location);
         }
 
-        void dump_deck(std::ostream& os) const;
+        void dump_deck(std::ostream& os, const UnitSystem& usys) const;
 
     private:
         time_point m_restart_time;

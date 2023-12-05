@@ -29,6 +29,10 @@
 #include <vector>
 
 namespace Opm {
+    class UnitSystem;
+}
+
+namespace Opm {
 
 class DeckOutput;
 
@@ -36,7 +40,7 @@ enum class ScheduleTimeType {
     START = 0,
     DATES = 1,
     TSTEP = 2,
-    RESTART = 3
+    RESTART = 3,
 };
 
 /*
@@ -65,8 +69,10 @@ public:
 
     bool operator==(const ScheduleBlock& other) const;
     static ScheduleBlock serializationTestObject();
+
     template<class Serializer>
-    void serializeOp(Serializer& serializer) {
+    void serializeOp(Serializer& serializer)
+    {
         serializer(m_time_type);
         serializer(m_start_time);
         serializer(m_end_time);
@@ -74,8 +80,9 @@ public:
         serializer(m_location);
     }
 
-    void dump_time(time_point current_time, DeckOutput& output) const;
-    void dump_deck(DeckOutput& output, time_point& current_time) const;
+    void dump_deck(const UnitSystem& usys,
+                   DeckOutput&       output,
+                   time_point&       current_time) const;
 
 private:
     ScheduleTimeType m_time_type;
@@ -83,6 +90,16 @@ private:
     std::optional<time_point> m_end_time;
     KeywordLocation m_location;
     std::vector<DeckKeyword> m_keywords;
+
+    void dump_time(const UnitSystem& usys,
+                   time_point        current_time,
+                   DeckOutput&       output) const;
+
+    void writeDates(DeckOutput& output) const;
+
+    void writeTStep(const UnitSystem& usys,
+                    time_point        current_time,
+                    DeckOutput&       output) const;
 };
 
 } // end namespace Opm
