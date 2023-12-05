@@ -37,11 +37,13 @@
 #include "EclThermalConductionLawMultiplexer.hpp"
 #include "EclThermalConductionLawMultiplexerParams.hpp"
 
+#include <functional>
 #include <vector>
 
 namespace Opm {
 
 class EclipseState;
+class FieldPropsManager;
 
 /*!
  * \ingroup fluidmatrixinteractions
@@ -61,7 +63,12 @@ public:
     using ThermalConductionLaw = EclThermalConductionLawMultiplexer<Scalar, FluidSystem>;
     using ThermalConductionLawParams = typename ThermalConductionLaw::Params;
 
-    void initParamsForElements(const EclipseState& eclState, size_t numElems);
+    void initParamsForElements(const EclipseState& eclState, size_t numElems,
+                               const std::function<std::vector<double>(const FieldPropsManager&, const std::string&, const unsigned int&)>&
+                               assignFieldPropsDoubleOnLeaf,
+                               const std::function<std::vector<unsigned int>(const FieldPropsManager&, const std::string&,
+                               const unsigned int&, bool)>&
+                               assignFieldPropsIntOnLeaf);
 
     const SolidEnergyLawParams& solidEnergyLawParams(unsigned elemIdx) const;
 
@@ -71,12 +78,16 @@ private:
     /*!
      * \brief Initialize the parameters for the solid energy law using using HEATCR and friends.
      */
-    void initHeatcr_(const EclipseState& eclState, size_t numElems);
+    void initHeatcr_(const EclipseState& eclState, size_t numElems,
+                     const std::function<std::vector<double>(const FieldPropsManager&, const std::string&, const unsigned int&)>&
+                     assignFieldPropsDoubleOnLeaf);
 
     /*!
      * \brief Initialize the parameters for the solid energy law using using SPECROCK and friends.
      */
-    void initSpecrock_(const EclipseState& eclState, size_t numElems);
+    void initSpecrock_(const EclipseState& eclState, size_t numElems,
+                       const std::function<std::vector<unsigned int>(const FieldPropsManager&, const std::string&,
+                                                                     const unsigned int&, bool)>& assignFieldPropsIntOnLeaf);
 
     /*!
      * \brief Specify the solid energy law by setting heat capacity of rock to 0
@@ -86,12 +97,16 @@ private:
     /*!
      * \brief Initialize the parameters for the thermal conduction law using THCONR and friends.
      */
-    void initThconr_(const EclipseState& eclState, size_t numElems);
+    void initThconr_(const EclipseState& eclState, size_t numElems,
+                     const std::function<std::vector<double>(const FieldPropsManager&, const std::string&, const unsigned int&)>&
+                     assignFieldPropsDoubleOnLeaf);
 
     /*!
      * \brief Initialize the parameters for the thermal conduction law using THCROCK and friends.
      */
-    void initThc_(const EclipseState& eclState, size_t numElems);
+    void initThc_(const EclipseState& eclState, size_t numElems,
+                  const std::function<std::vector<double>(const FieldPropsManager&, const std::string&, const unsigned int&)>&
+                  assignFieldPropsDoubleOnLeaf);
 
     /*!
      * \brief Disable thermal conductivity

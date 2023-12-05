@@ -39,7 +39,11 @@ namespace Opm {
 
 template<class Scalar, class FluidSystem>
 void EclThermalLawManager<Scalar,FluidSystem>::
-initParamsForElements(const EclipseState& eclState, size_t numElems)
+initParamsForElements(const EclipseState& eclState, size_t numElems,
+                      const std::function<std::vector<double>(const FieldPropsManager&, const std::string&,
+                      const unsigned int&)>& assignFieldPropsDoubleOnLeaf,
+                      const std::function<std::vector<unsigned int>(const FieldPropsManager&, const std::string&,
+                      const unsigned int&, bool)>& assignFieldPropsIntOnLeaf)
 {
     const auto& fp = eclState.fieldProps();
     const auto& tableManager = eclState.getTableManager();
@@ -51,16 +55,16 @@ initParamsForElements(const EclipseState& eclState, size_t numElems)
                    fp.has_double("THCWATER");
 
     if (has_heatcr)
-        initHeatcr_(eclState, numElems);
+        initHeatcr_(eclState, numElems, assignFieldPropsDoubleOnLeaf);
     else if (tableManager.hasTables("SPECROCK"))
-        initSpecrock_(eclState, numElems);
+        initSpecrock_(eclState, numElems, assignFieldPropsIntOnLeaf);
     else
         initNullRockEnergy_();
 
     if (has_thconr)
-        initThconr_(eclState, numElems);
+        initThconr_(eclState, numElems, assignFieldPropsDoubleOnLeaf);
     else if (has_thc)
-        initThc_(eclState, numElems);
+        initThc_(eclState, numElems, assignFieldPropsDoubleOnLeaf);
     else
         initNullCond_();
 }
@@ -116,16 +120,17 @@ thermalConductionLawParams(unsigned elemIdx) const
 
 template<class Scalar, class FluidSystem>
 void EclThermalLawManager<Scalar,FluidSystem>::
-initHeatcr_(const EclipseState& eclState, size_t numElems)
+initHeatcr_(const EclipseState& eclState, size_t numElems,
+            const std::function<std::vector<double>(const FieldPropsManager&, const std::string&, const unsigned int&)>&
+            assignFieldPropsDoubleOnLeaf)
 {
     solidEnergyApproach_ = EclSolidEnergyApproach::Heatcr;
     // actually the value of the reference temperature does not matter for energy
     // conservation. We set it anyway to faciliate comparisons with ECL
     HeatcrLawParams::setReferenceTemperature(FluidSystem::surfaceTemperature);
 
-    const auto& fp = eclState.fieldProps();
-    const std::vector<double>& heatcrData  = fp.get_double("HEATCR");
-    const std::vector<double>& heatcrtData = fp.get_double("HEATCRT");
+    const std::vector<double>& heatcrData = assignFieldPropsDoubleOnLeaf(eclState.fieldProps(), "HEATCR", numElems);
+    const std::vector<double>& heatcrtData = assignFieldPropsDoubleOnLeaf(eclState.fieldProps(), "HEATCRT", numElems);
     solidEnergyLawParams_.resize(numElems);
     for (unsigned elemIdx = 0; elemIdx < numElems; ++elemIdx) {
         auto& elemParam = solidEnergyLawParams_[elemIdx];
@@ -141,19 +146,16 @@ initHeatcr_(const EclipseState& eclState, size_t numElems)
 
 template<class Scalar, class FluidSystem>
 void EclThermalLawManager<Scalar,FluidSystem>::
-initSpecrock_(const EclipseState& eclState, size_t numElems)
+initSpecrock_(const EclipseState& eclState, size_t numElems,
+              const std::function<std::vector<unsigned int>(const FieldPropsManager&, const std::string&, const unsigned int&, bool)>&
+              assignFieldPropsIntOnLeaf)
 {
     solidEnergyApproach_ = EclSolidEnergyApproach::Specrock;
 
     // initialize the element index -> SATNUM index mapping
-    const auto& fp = eclState.fieldProps();
-    const std::vector<int>& satnumData = fp.get_int("SATNUM");
-    elemToSatnumIdx_.resize(numElems);
-    for (unsigned elemIdx = 0; elemIdx < numElems; ++ elemIdx) {
-        // satnumData contains Fortran-style indices, i.e., they start with 1 instead
-        // of 0!
-        elemToSatnumIdx_[elemIdx] = satnumData[elemIdx] - 1;
-    }
+    elemToSatnumIdx_ = assignFieldPropsIntOnLeaf(eclState.fieldProps(),"SATNUM", numElems, true /*needs translation*/);
+    // SATNUM Data contains Fortran-style indices, i.e., they start with 1 instead of 0!
+
     // internalize the SPECROCK table
     unsigned numSatRegions = eclState.runspec().tabdims().getNumSatTables();
     const auto& tableManager = eclState.getTableManager();
@@ -187,7 +189,9 @@ initNullRockEnergy_()
 
 template<class Scalar, class FluidSystem>
 void EclThermalLawManager<Scalar,FluidSystem>::
-initThconr_(const EclipseState& eclState, size_t numElems)
+initThconr_(const EclipseState& eclState, size_t numElems,
+            const std::function<std::vector<double>(const FieldPropsManager&, const std::string&, const unsigned int&)>&
+            assignFieldPropsDoubleOnLeaf)
 {
     thermalConductivityApproach_ = EclThermalConductionApproach::Thconr;
 
@@ -195,10 +199,10 @@ initThconr_(const EclipseState& eclState, size_t numElems)
     std::vector<double> thconrData;
     std::vector<double> thconsfData;
     if (fp.has_double("THCONR"))
-        thconrData  = fp.get_double("THCONR");
+        thconrData  = assignFieldPropsDoubleOnLeaf(fp, "THCONR", numElems);
 
     if (fp.has_double("THCONSF"))
-        thconsfData = fp.get_double("THCONSF");
+        thconsfData =  assignFieldPropsDoubleOnLeaf(fp, "THCONSF", numElems);
 
     thermalConductionLawParams_.resize(numElems);
     for (unsigned elemIdx = 0; elemIdx < numElems; ++elemIdx) {
@@ -218,7 +222,9 @@ initThconr_(const EclipseState& eclState, size_t numElems)
 
 template<class Scalar, class FluidSystem>
 void EclThermalLawManager<Scalar,FluidSystem>::
-initThc_(const EclipseState& eclState, size_t numElems)
+initThc_(const EclipseState& eclState, size_t numElems,
+         const std::function<std::vector<double>(const FieldPropsManager&, const std::string&, const unsigned int&)>&
+         assignFieldPropsDoubleOnLeaf)
 {
     thermalConductivityApproach_ = EclThermalConductionApproach::Thc;
 
@@ -226,21 +232,21 @@ initThc_(const EclipseState& eclState, size_t numElems)
     std::vector<double> thcrockData;
     std::vector<double> thcoilData;
     std::vector<double> thcgasData;
-    std::vector<double> thcwaterData = fp.get_double("THCWATER");
+    std::vector<double> thcwaterData;
 
     if (fp.has_double("THCROCK"))
-        thcrockData = fp.get_double("THCROCK");
+        thcrockData = assignFieldPropsDoubleOnLeaf(fp, "THCROCK", numElems);
 
     if (fp.has_double("THCOIL"))
-        thcoilData = fp.get_double("THCOIL");
+        thcoilData = assignFieldPropsDoubleOnLeaf(fp, "THCOIL", numElems);
 
     if (fp.has_double("THCGAS"))
-        thcgasData = fp.get_double("THCGAS");
+        thcgasData =  assignFieldPropsDoubleOnLeaf(fp, "THCGAS", numElems);
 
     if (fp.has_double("THCWATER"))
-        thcwaterData = fp.get_double("THCWATER");
+        thcwaterData = assignFieldPropsDoubleOnLeaf(fp, "THCWATER", numElems);
 
-    const std::vector<double>& poroData = fp.get_double("PORO");
+    const std::vector<double>& poroData = assignFieldPropsDoubleOnLeaf(fp, "PORO", numElems);
 
     thermalConductionLawParams_.resize(numElems);
     for (unsigned elemIdx = 0; elemIdx < numElems; ++elemIdx) {
