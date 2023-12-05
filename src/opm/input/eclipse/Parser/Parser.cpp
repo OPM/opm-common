@@ -945,6 +945,7 @@ newRawKeyword(const std::string&      deck_name,
 
 std::unique_ptr<RawKeyword> tryParseKeyword( ParserState& parserState, const Parser& parser) {
     bool is_title = false;
+    bool skip = false;
     std::unique_ptr<RawKeyword> rawKeyword;
     std::string_view record_buffer(str::emptystr);
     std::optional<ParserKeyword> parserKeyword;
@@ -955,6 +956,18 @@ std::unique_ptr<RawKeyword> tryParseKeyword( ParserState& parserState, const Par
         if( line.empty() && !is_title ) continue;
 
         std::string keywordString;
+        std::string deck_name = str::make_deck_name( line );
+        if (deck_name == "SKIP" || deck_name == "SKIP100" || deck_name == "SKIP300") {
+            skip = true;
+            auto msg = fmt::format("{:5} Reading {:<8} in {} line {} \n      ... ignoring everything until 'ENDSKIP' ... ", "", "SKIP", parserState.current_path().string(), parserState.line());
+            OpmLog::info(msg);
+        } else if (deck_name == "ENDSKIP") {
+            skip = false;
+            auto msg = fmt::format("{:5} Reading {:<8} in {} line {}", "", "ENDSKIP", parserState.current_path().string(), parserState.line());
+            OpmLog::info(msg);
+            continue;
+        }
+        if (skip) continue;
 
         if( !rawKeyword ) {
             /*
@@ -972,7 +985,6 @@ std::unique_ptr<RawKeyword> tryParseKeyword( ParserState& parserState, const Par
                  deck_name is used to look for the keyword in the Parser
                  container.
             */
-            std::string deck_name = str::make_deck_name( line );
             if (ParserKeyword::validDeckName(deck_name)) {
                 auto ptr = newRawKeyword( deck_name, parserState, parser, line );
                 if (ptr) {
@@ -1022,7 +1034,6 @@ std::unique_ptr<RawKeyword> tryParseKeyword( ParserState& parserState, const Par
                   line variable before we check if it is the start of a new
                   keyword.
                 */
-                std::string deck_name = str::make_deck_name( line );
                 if( parser.isRecognizedKeyword( deck_name ) ) {
                     rawKeyword->terminateKeyword();
                     parserState.ungetline(line);
