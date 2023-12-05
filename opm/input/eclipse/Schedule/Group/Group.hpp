@@ -20,16 +20,16 @@
 #ifndef GROUP2_HPP
 #define GROUP2_HPP
 
-#include <algorithm>
-#include <map>
-#include <optional>
-#include <string>
-
 #include <opm/input/eclipse/Deck/UDAValue.hpp>
 #include <opm/input/eclipse/EclipseState/Util/IOrderSet.hpp>
 #include <opm/input/eclipse/EclipseState/Phase.hpp>
 #include <opm/input/eclipse/Schedule/Group/GPMaint.hpp>
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
+
+#include <cstddef>
+#include <map>
+#include <optional>
+#include <string>
 
 namespace Opm {
 
