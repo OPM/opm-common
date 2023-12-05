@@ -233,6 +233,7 @@ if(ENABLE_ECL_INPUT)
     src/opm/input/eclipse/Schedule/Well/WellMICPProperties.cpp
     src/opm/input/eclipse/Schedule/Well/WellPolymerProperties.cpp
     src/opm/input/eclipse/Schedule/Well/WellProductionProperties.cpp
+    src/opm/input/eclipse/Schedule/Well/WellPropertiesKeywordHandlers.cpp
     src/opm/input/eclipse/Schedule/Well/WellTestConfig.cpp
     src/opm/input/eclipse/Schedule/Well/WellTestState.cpp
     src/opm/input/eclipse/Schedule/WellTraj/RigEclipseWellLogExtractor.cpp
