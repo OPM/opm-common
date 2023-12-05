@@ -128,19 +128,27 @@ void handleWELPIRuntime(HandlerContext& handlerContext)
     using PI        = ParserKeywords::WELPI::STEADY_STATE_PRODUCTIVITY_OR_INJECTIVITY_INDEX_VALUE;
 
     for (const auto& record : handlerContext.keyword) {
-        const std::string trimmed = record.getItem<WELL_NAME>().getTrimmedString(0);
-        const auto well_names = handlerContext.wellNames(trimmed, false);
+        const auto well_names = handlerContext
+            .wellNames(record.getItem<WELL_NAME>().getTrimmedString(0), false);
+
         const auto targetPI = record.getItem<PI>().get<double>(0);
 
-        std::vector<bool> scalingApplicable;
         for (const auto& well_name : well_names) {
             auto new_well = handlerContext.state().wells.get(well_name);
-            auto scalingFactor = new_well.convertDeckPI(targetPI) /
-                                 handlerContext.getWellPI(well_name);
+
+            const auto scalingFactor = new_well.convertDeckPI(targetPI)
+                / handlerContext.getWellPI(well_name);
+
             new_well.updateWellProductivityIndex();
+
+            // Note: Must have a separate 'scalingApplicable' object for
+            // each well.
+            auto scalingApplicable = std::vector<bool>{};
             new_well.applyWellProdIndexScaling(scalingFactor, scalingApplicable);
-            handlerContext.state().wells.update( std::move(new_well) );
-            handlerContext.state().target_wellpi[well_name] = targetPI;
+
+            handlerContext.state().wells.update(std::move(new_well));
+            handlerContext.state().target_wellpi
+                .insert_or_assign(well_name, targetPI);
 
             handlerContext.affected_well(well_name);
         }
@@ -149,47 +157,53 @@ void handleWELPIRuntime(HandlerContext& handlerContext)
 
 void handleWELPI(HandlerContext& handlerContext)
 {
-    if (handlerContext.actionx_mode)
+    if (handlerContext.actionx_mode) {
         handleWELPIRuntime(handlerContext);
-    else {
-        // Keyword structure
-        //
-        //   WELPI
-        //     W1   123.45 /
-        //     W2*  456.78 /
-        //     *P   111.222 /
-        //     **X* 333.444 /
-        //   /
-        //
-        // Interpretation of productivity index (item 2) depends on well's preferred phase.
-        using WELL_NAME = ParserKeywords::WELPI::WELL_NAME;
-        using PI = ParserKeywords::WELPI::STEADY_STATE_PRODUCTIVITY_OR_INJECTIVITY_INDEX_VALUE;
-        const auto& keyword = handlerContext.keyword;
-
-        for (const auto& record : keyword) {
-            const auto& wellNamePattern = record.getItem<WELL_NAME>().getTrimmedString(0);
-            const auto well_names = handlerContext.wellNames(wellNamePattern);
-
-            const auto rawProdIndex = record.getItem<PI>().get<double>(0);
-            for (const auto& well_name : well_names) {
-                auto well2 = handlerContext.state().wells.get(well_name);
-
-                // Note: Need to ensure we have an independent copy of
-                // well's connections because
-                // Well::updateWellProductivityIndex() implicitly mutates
-                // internal state in the WellConnections class.
-                auto connections = std::make_shared<WellConnections>(well2.getConnections());
-                well2.updateConnections(std::move(connections), true);
-                if (well2.updateWellProductivityIndex())
-                    handlerContext.state().wells.update(std::move(well2));
-
-                handlerContext.state().wellgroup_events().addEvent(well_name,
-                                                                   ScheduleEvents::WELL_PRODUCTIVITY_INDEX);
-                handlerContext.state().target_wellpi[well_name] = rawProdIndex;
-            }
-        }
-        handlerContext.state().events().addEvent(ScheduleEvents::WELL_PRODUCTIVITY_INDEX);
+        return;
     }
+
+    // Keyword structure
+    //
+    //   WELPI
+    //     W1   123.45 /
+    //     W2*  456.78 /
+    //     *P   111.222 /
+    //     **X* 333.444 /
+    //   /
+    //
+    // Interpretation of productivity index (item 2) depends on well's
+    // preferred phase.
+    using WELL_NAME = ParserKeywords::WELPI::WELL_NAME;
+    using PI = ParserKeywords::WELPI::STEADY_STATE_PRODUCTIVITY_OR_INJECTIVITY_INDEX_VALUE;
+
+    for (const auto& record : handlerContext.keyword) {
+        const auto wellNamePattern = record.getItem<WELL_NAME>().getTrimmedString(0);
+        const auto well_names = handlerContext.wellNames(wellNamePattern);
+
+        const auto rawProdIndex = record.getItem<PI>().get<double>(0);
+        for (const auto& well_name : well_names) {
+            auto well2 = handlerContext.state().wells.get(well_name);
+
+            // Note: Need to ensure we have an independent copy of
+            // well's connections because
+            // Well::updateWellProductivityIndex() implicitly mutates
+            // internal state in the WellConnections class.
+            auto connections = std::make_shared<WellConnections>(well2.getConnections());
+            well2.updateConnections(std::move(connections), true);
+            if (well2.updateWellProductivityIndex()) {
+                handlerContext.state().wells.update(std::move(well2));
+            }
+
+            handlerContext.state().wellgroup_events()
+                .addEvent(well_name, ScheduleEvents::WELL_PRODUCTIVITY_INDEX);
+
+            handlerContext.state().target_wellpi
+                .insert_or_assign(well_name, rawProdIndex);
+        }
+    }
+
+    handlerContext.state().events()
+        .addEvent(ScheduleEvents::WELL_PRODUCTIVITY_INDEX);
 }
 
 void handleWFOAM(HandlerContext& handlerContext)
@@ -461,21 +475,19 @@ void handleWTEMP(HandlerContext& handlerContext)
     }
 }
 
-/*
-  The WTMULT keyword can optionally use UDA values in three different ways:
-
-    1. The target can be UDA - instead of the standard strings "ORAT", "GRAT",
-       "WRAT", ..., the keyword can be configured with a UDA which is evaluated to
-       an integer and then mapped to one of the common controls.
-
-    2. The scaling factor itself can be a UDA.
-
-    3. The target we aim to scale might already be specified as a UDA.
-
-  The current implementation does not support UDA usage in any part of WTMULT
-  codepath.
-*/
-
+// The WTMULT keyword can optionally use UDA values in three different ways:
+//
+//   1. The target can be UDA - instead of the standard strings "ORAT",
+//      "GRAT", "WRAT", ..., the keyword can be configured with a UDA
+//      which is evaluated to an integer and then mapped to one of the
+//      common controls.
+//
+//   2. The scaling factor itself can be a UDA.
+//
+//   3. The target we aim to scale might already be specified as a UDA.
+//
+// The current implementation does not support UDA usage in any part of
+// WTMULT codepath.
 void handleWTMULT(HandlerContext& handlerContext)
 {
     for (const auto& record : handlerContext.keyword) {
