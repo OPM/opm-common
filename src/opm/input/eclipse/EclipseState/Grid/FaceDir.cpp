@@ -107,5 +107,27 @@ namespace Opm {
 
             return mapping[idx];
         }
+
+
+        int ToIntersectionIndex(DirEnum dir)
+        {
+            switch(dir) {
+                case XMinus:
+                    return 0;
+                case XPlus:
+                    return 1;
+                case YMinus:
+                    return 2;
+                case YPlus:
+                    return 3;
+                case ZMinus:
+                    return 4;
+                case ZPlus:
+                    return 5;
+                default:
+                    throw std::invalid_argument("Wrong face direction");
+            }
+            return -1;
+        }
     }
 }

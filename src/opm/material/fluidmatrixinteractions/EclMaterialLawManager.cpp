@@ -435,10 +435,13 @@ materialLawParamsFunc_(unsigned elemIdx, FaceDir::DirEnum facedir) const
     using Dir = FaceDir::DirEnum;
     if (dirMaterialLawParams_) {
         switch(facedir) {
+            case Dir::XMinus:
             case Dir::XPlus:
                 return dirMaterialLawParams_->materialLawParamsX_[elemIdx];
+            case Dir::YMinus:
             case Dir::YPlus:
                 return dirMaterialLawParams_->materialLawParamsY_[elemIdx];
+            case Dir::ZMinus:
             case Dir::ZPlus:
                 return dirMaterialLawParams_->materialLawParamsZ_[elemIdx];
             default:
