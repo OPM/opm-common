@@ -51,6 +51,7 @@ namespace {
     {
         std::string                name;
         ::Opm::UnitSystem::measure unit;
+        bool                       supports_auto_create { false };
     };
 
     using Properties = std::vector<CellProperty>;
@@ -73,6 +74,7 @@ namespace {
         void insertScaledWaterEndPoints();
         void insertScaledGasEndPoints();
         void insertScaledOilEndPoints(const ::Opm::Phases& ph);
+        void insertSWatInit();
         void insertScaledRelpermValues(const ::Opm::Phases& ph);
         void insertScaledCapillaryPressure(const ::Opm::Phases& ph);
         void insertImbibitionPoints();
@@ -99,6 +101,8 @@ namespace {
             this->insertScaledOilEndPoints(ph);
         }
 
+        this->insertSWatInit();
+
         this->insertScaledRelpermValues(ph);
 
         if (ph.active(::Opm::Phase::OIL)) {
@@ -117,9 +121,9 @@ namespace {
     {
         this->vectors_.insert(this->vectors_.end(),
         {
-            {"SWL" , ::Opm::UnitSystem::measure::identity },
-            {"SWCR", ::Opm::UnitSystem::measure::identity },
-            {"SWU" , ::Opm::UnitSystem::measure::identity },
+            {"SWL" , ::Opm::UnitSystem::measure::identity, true },
+            {"SWCR", ::Opm::UnitSystem::measure::identity, true },
+            {"SWU" , ::Opm::UnitSystem::measure::identity, true },
         });
     }
 
@@ -127,9 +131,9 @@ namespace {
     {
         this->vectors_.insert(this->vectors_.end(),
         {
-            {"SGL" , ::Opm::UnitSystem::measure::identity },
-            {"SGCR", ::Opm::UnitSystem::measure::identity },
-            {"SGU" , ::Opm::UnitSystem::measure::identity },
+            {"SGL" , ::Opm::UnitSystem::measure::identity, true },
+            {"SGCR", ::Opm::UnitSystem::measure::identity, true },
+            {"SGU" , ::Opm::UnitSystem::measure::identity, true },
         });
     }
 
@@ -137,15 +141,22 @@ namespace {
     {
         if (ph.active(::Opm::Phase::WATER)) {
             this->vectors_.push_back(CellProperty {
-                "SOWCR", ::Opm::UnitSystem::measure::identity
+                "SOWCR", ::Opm::UnitSystem::measure::identity, true
             });
         }
 
         if (ph.active(::Opm::Phase::GAS)) {
             this->vectors_.push_back(CellProperty {
-                "SOGCR", ::Opm::UnitSystem::measure::identity
+                "SOGCR", ::Opm::UnitSystem::measure::identity, true
             });
         }
+    }
+
+    void ScalingVectors::insertSWatInit()
+    {
+        this->vectors_.push_back(CellProperty {
+            "SWATINIT", ::Opm::UnitSystem::measure::identity
+        });
     }
 
     void ScalingVectors::insertScaledRelpermValues(const ::Opm::Phases& ph)
@@ -153,33 +164,33 @@ namespace {
         if (ph.active(::Opm::Phase::WATER)) {
             this->vectors_.insert(this->vectors_.end(),
             {
-                {"KRW" , ::Opm::UnitSystem::measure::identity },
-                {"KRWR", ::Opm::UnitSystem::measure::identity },
+                {"KRW" , ::Opm::UnitSystem::measure::identity, true },
+                {"KRWR", ::Opm::UnitSystem::measure::identity, true },
             });
         }
 
         if (ph.active(::Opm::Phase::GAS)) {
             this->vectors_.insert(this->vectors_.end(),
             {
-                {"KRG" , ::Opm::UnitSystem::measure::identity },
-                {"KRGR", ::Opm::UnitSystem::measure::identity },
+                {"KRG" , ::Opm::UnitSystem::measure::identity, true },
+                {"KRGR", ::Opm::UnitSystem::measure::identity, true },
             });
         }
 
         if (ph.active(::Opm::Phase::OIL)) {
             this->vectors_.push_back(CellProperty {
-                "KRO", ::Opm::UnitSystem::measure::identity
+                "KRO", ::Opm::UnitSystem::measure::identity, true
             });
 
             if (ph.active(::Opm::Phase::WATER)) {
                 this->vectors_.push_back(CellProperty {
-                    "KRORW", ::Opm::UnitSystem::measure::identity
+                    "KRORW", ::Opm::UnitSystem::measure::identity, true
                 });
             }
 
             if (ph.active(::Opm::Phase::GAS)) {
                 this->vectors_.push_back(CellProperty {
-                    "KRORG", ::Opm::UnitSystem::measure::identity
+                    "KRORG", ::Opm::UnitSystem::measure::identity, true
                 });
             }
         }
@@ -190,16 +201,16 @@ namespace {
         if (ph.active(::Opm::Phase::WATER)) {
             this->vectors_.insert(this->vectors_.end(),
             {
-                {"SWLPC", ::Opm::UnitSystem::measure::identity },
-                {"PCW"  , ::Opm::UnitSystem::measure::pressure },
+                {"SWLPC", ::Opm::UnitSystem::measure::identity, true },
+                {"PCW"  , ::Opm::UnitSystem::measure::pressure, true },
             });
         }
 
         if (ph.active(::Opm::Phase::GAS)) {
             this->vectors_.insert(this->vectors_.end(),
             {
-                {"SGLPC", ::Opm::UnitSystem::measure::identity },
-                {"PCG"  , ::Opm::UnitSystem::measure::pressure },
+                {"SGLPC", ::Opm::UnitSystem::measure::identity, true },
+                {"PCG"  , ::Opm::UnitSystem::measure::pressure, true },
             });
         }
     }
@@ -305,8 +316,6 @@ namespace {
         }
     }
 
-
-
     void writePoreVolume(const ::Opm::EclipseState&        es,
                          const ::Opm::UnitSystem&          units,
                          ::Opm::EclIO::OutputStream::Init& initFile)
@@ -319,24 +328,23 @@ namespace {
     void writeIntegerCellProperties(const ::Opm::EclipseState&        es,
                                     ::Opm::EclIO::OutputStream::Init& initFile)
     {
-
         // The INIT file should always contain PVT, saturation function,
-        // equilibration, and fluid-in-place region vectors.  Call
-        // assertKeyword() here--on a 'const' GridProperties object--to
-        // invoke the autocreation property, and ensure that the keywords
-        // exist in the properties container.
+        // equilibration, and fluid-in-place region vectors.
+        // Unconditionally 'get()' these arrays--on a 'const'
+        // FieldPropsManager object--to invoke the automatic creation of the
+        // arrays, and ensure that the keywords exist in the properties
+        // container.
+
         const auto& fp = es.globalFieldProps();
         fp.get_int("PVTNUM");
         fp.get_int("SATNUM");
         fp.get_int("EQLNUM");
         fp.get_int("FIPNUM");
 
-        for (const auto& keyword : fp.keys<int>())
+        for (const auto& keyword : fp.keys<int>()) {
             initFile.write(keyword, fp.get_int(keyword));
-
+        }
     }
-
-
 
     void writeGridGeometry(const ::Opm::EclipseGrid&         grid,
                            const ::Opm::UnitSystem&          units,
@@ -367,29 +375,32 @@ namespace {
     }
 
     template <class WriteVector>
-    void writeCellDoublePropertiesWithDefaultFlag(const Properties& propList,
+    void writeCellDoublePropertiesWithDefaultFlag(const Properties&               propList,
                                                   const ::Opm::FieldPropsManager& fp,
-                                                  WriteVector&&  write)
+                                                  WriteVector&&                   write)
     {
         for (const auto& prop : propList) {
-            if (! fp.has_double(prop.name))
+            if (! fp.has_double(prop.name)) {
                 continue;
+            }
 
             auto data = fp.get_double(prop.name);
             auto defaulted = fp.defaulted<double>(prop.name);
+
             write(prop, std::move(defaulted), std::move(data));
         }
     }
 
     template <class WriteVector>
-    void writeCellPropertiesValuesOnly(const Properties& propList,
+    void writeCellPropertiesValuesOnly(const Properties&               propList,
                                        const ::Opm::FieldPropsManager& fp,
                                        WriteVector&&                   write)
     {
         for (const auto& prop : propList) {
-
-            if (!fp.has_double(prop.name))
+            if (!fp.has_double(prop.name)) {
                 continue;
+            }
+
             auto data = fp.get_double(prop.name);
             write(prop, std::move(data));
         }
@@ -455,13 +466,13 @@ namespace {
             {"YMODULE"  , ::Opm::UnitSystem::measure::ymodule},
         };
 
-        // The INIT file should always contain the NTG property, we
-        // therefore invoke the auto create functionality to ensure
-        // that "NTG" is included in the properties container.
+        // The INIT file should always contain the NTG property.  Guarantee
+        // this by invoking the auto create functionality to ensure that
+        // "NTG" is included in the properties container.
         const auto& fp = es.globalFieldProps();
         fp.get_double("NTG");
-        writeDoubleCellProperties(doubleKeywords, fp,
-                                  units, false, initFile);
+
+        writeDoubleCellProperties(doubleKeywords, fp, units, false, initFile);
     }
 
     void writeSimulatorProperties(const ::Opm::EclipseGrid&         grid,
@@ -510,12 +521,14 @@ namespace {
                                    const ::Opm::UnitSystem&          units,
                                    ::Opm::EclIO::OutputStream::Init& initFile)
     {
-        for (const auto& prop : propList)
-            fp.get_double(prop.name);
+        for (const auto& prop : propList) {
+            if (prop.supports_auto_create) {
+                fp.get_double(prop.name);
+            }
+        }
 
         // Don't write sentinel value if input defaulted.
-        writeDoubleCellProperties(propList, fp,
-                                  units, false, initFile);
+        writeDoubleCellProperties(propList, fp, units, false, initFile);
     }
 
     void writeSatFuncScaling(const ::Opm::EclipseState&        es,
@@ -539,11 +552,11 @@ namespace {
         else {
             // Input deck specified FILLEPS so we should output all endpoint
             // arrays, whether explicitly defined in the input deck or not.
-            // However, downstream clients of GridProperties<double> should
-            // not see scaling arrays created for output purposes only, so
-            // make a copy of the properties object and modify that copy in
-            // order to leave the original intact.  Don't write sentinel
-            // value if input defaulted.
+            // However, downstream clients of FieldPropsManager should not
+            // see scaling arrays created for output purposes only, so make
+            // a copy of the properties object and modify that copy in order
+            // to leave the original intact.  Don't write sentinel value if
+            // input defaulted.
             auto fp_copy = fp;
             writeFilledSatFuncScaling(epsVectors.getVectors(),
                                       std::move(fp_copy),

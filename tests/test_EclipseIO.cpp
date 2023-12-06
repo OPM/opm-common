@@ -23,34 +23,43 @@
 
 #include <opm/output/eclipse/EclipseIO.hpp>
 #include <opm/output/eclipse/RestartValue.hpp>
-#include <opm/output/data/Cells.hpp>
 
-#include <opm/input/eclipse/Python/Python.hpp>
-#include <opm/input/eclipse/Parser/Parser.hpp>
-#include <opm/input/eclipse/Deck/Deck.hpp>
-#include <opm/input/eclipse/Deck/DeckKeyword.hpp>
-#include <opm/input/eclipse/EclipseState/EclipseState.hpp>
-#include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
-#include <opm/input/eclipse/Schedule/Schedule.hpp>
-#include <opm/input/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
-#include <opm/input/eclipse/Schedule/SummaryState.hpp>
-#include <opm/input/eclipse/EclipseState/IOConfig/IOConfig.hpp>
-#include <opm/input/eclipse/Units/Units.hpp>
-#include <opm/input/eclipse/Units/UnitSystem.hpp>
-#include <opm/input/eclipse/Schedule/Action/State.hpp>
-#include <opm/input/eclipse/Schedule/UDQ/UDQState.hpp>
-#include <opm/input/eclipse/Schedule/Well/WellTestState.hpp>
+#include <opm/output/data/Cells.hpp>
 
 #include <opm/io/eclipse/EclFile.hpp>
 #include <opm/io/eclipse/EGrid.hpp>
 #include <opm/io/eclipse/ERst.hpp>
 
+#include <opm/input/eclipse/EclipseState/EclipseState.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
+#include <opm/input/eclipse/EclipseState/IOConfig/IOConfig.hpp>
+#include <opm/input/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
+
+#include <opm/input/eclipse/Python/Python.hpp>
+
+#include <opm/input/eclipse/Schedule/Action/State.hpp>
+#include <opm/input/eclipse/Schedule/Schedule.hpp>
+#include <opm/input/eclipse/Schedule/SummaryState.hpp>
+#include <opm/input/eclipse/Schedule/UDQ/UDQState.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellTestState.hpp>
+
+#include <opm/input/eclipse/Units/UnitSystem.hpp>
+#include <opm/input/eclipse/Units/Units.hpp>
+
 #include <opm/common/utility/TimeService.hpp>
+
+#include <opm/input/eclipse/Deck/Deck.hpp>
+#include <opm/input/eclipse/Deck/DeckKeyword.hpp>
+
+#include <opm/input/eclipse/Parser/Parser.hpp>
 
 #include <algorithm>
 #include <fstream>
+#include <ios>
 #include <map>
+#include <memory>
 #include <numeric>
+#include <stdexcept>
 #include <string>
 #include <tuple>
 #include <utility>
@@ -127,7 +136,8 @@ void compareErtData(const std::vector<int> &src, const std::vector<int> &dst)
                                    dst.begin(), dst.end() );
 }
 
-void checkEgridFile( const EclipseGrid& eclGrid ) {
+void checkEgridFile(const EclipseGrid& eclGrid)
+{
     auto egridFile = EclIO::EGrid("FOO.EGRID");
 
     {
@@ -155,7 +165,8 @@ void checkEgridFile( const EclipseGrid& eclGrid ) {
     }
 }
 
-void checkInitFile( const Deck& deck, const data::Solution& simProps) {
+void checkInitFile(const Deck& deck, const data::Solution& simProps)
+{
     EclIO::EclFile initFile { "FOO.INIT" };
 
     if (initFile.hasKey("PORO")) {
@@ -176,10 +187,8 @@ void checkInitFile( const Deck& deck, const data::Solution& simProps) {
         compareErtData(expect, permx, 1e-4);
     }
 
-    /*
-      These keyword should always be in the INIT file, irrespective of
-      whether they appear in the inut deck or not.
-    */
+    // These arrays should always be in the INIT file, irrespective of
+    // keyword presence in the inut deck.
     BOOST_CHECK_MESSAGE( initFile.hasKey("NTG"), R"(INIT file must have "NTG" array)" );
     BOOST_CHECK_MESSAGE( initFile.hasKey("FIPNUM"), R"(INIT file must have "FIPNUM" array)");
     BOOST_CHECK_MESSAGE( initFile.hasKey("SATNUM"), R"(INIT file must have "SATNUM" array)");
@@ -240,65 +249,69 @@ time_t ecl_util_make_date( const int day, const int month, const int year )
 
 } // Anonymous namespace
 
-BOOST_AUTO_TEST_CASE(EclipseIOIntegration) {
-    const char *deckString =
-        "RUNSPEC\n"
-        "UNIFOUT\n"
-        "OIL\n"
-        "GAS\n"
-        "WATER\n"
-        "METRIC\n"
-        "DIMENS\n"
-        "3 3 3/\n"
-        "GRID\n"
-        "PORO\n"
-        "27*0.3 /\n"
-        "PERMX\n"
-        "27*1 /\n"
-        "INIT\n"
-        "DXV\n"
-        "1.0 2.0 3.0 /\n"
-        "DYV\n"
-        "4.0 5.0 6.0 /\n"
-        "DZV\n"
-        "7.0 8.0 9.0 /\n"
-        "TOPS\n"
-        "9*100 /\n"
-        "PORO \n"
-        "  27*0.15 /\n"
-        "PROPS\n"
-        "REGIONS\n"
-        "SATNUM\n"
-        "27*2 /\n"
-        "FIPNUM\n"
-        "27*3 /\n"
-        "SOLUTION\n"
-        "RPTRST\n"
-        "BASIC=2\n"
-        "/\n"
-        "SCHEDULE\n"
-        "TSTEP\n"
-        "1.0 2.0 3.0 4.0 5.0 6.0 7.0 /\n"
-        "WELSPECS\n"
-        "'INJ' 'G' 1 1 2000 'GAS' /\n"
-        "'PROD' 'G' 3 3 1000 'OIL' /\n"
-        "/\n";
+BOOST_AUTO_TEST_CASE(EclipseIOIntegration)
+{
+    const auto deckString = std::string { R"(RUNSPEC
+UNIFOUT
+OIL
+GAS
+WATER
+METRIC
+DIMENS
+3 3 3/
+GRID
+PORO
+27*0.3 /
+PERMX
+27*1 /
+INIT
+DXV
+1.0 2.0 3.0 /
+DYV
+4.0 5.0 6.0 /
+DZV
+7.0 8.0 9.0 /
+TOPS
+9*100 /
+PORO
+  27*0.15 /
+PROPS
+SWATINIT
+ 9*0.1   -- K=1
+ 9*0.5   -- K=2
+ 9*1.0 / -- K=3
+REGIONS
+SATNUM
+27*2 /
+FIPNUM
+27*3 /
+SOLUTION
+RPTRST
+BASIC=2
+/
+SCHEDULE
+TSTEP
+1.0 2.0 3.0 4.0 5.0 6.0 7.0 /
+WELSPECS
+'INJ' 'G' 1 1 2000 'GAS' /
+'PROD' 'G' 3 3 1000 'OIL' /
+/
+)" };
 
-    auto write_and_check = [&]( int first = 1, int last = 5 ) {
-        auto deck = Parser().parseString( deckString);
+    auto write_and_check = [&deckString]( int first = 1, int last = 5 ) {
+        const auto deck = Parser().parseString( deckString);
         auto es = EclipseState( deck );
-        auto& eclGrid = es.getInputGrid();
-        auto python = std::make_shared<Python>();
-        Schedule schedule(deck, es, python);
-        SummaryConfig summary_config( deck, schedule, es.fieldProps(), es.aquifer());
-        SummaryState st(TimeService::now());
+        const auto& eclGrid = es.getInputGrid();
+        const Schedule schedule(deck, es, std::make_shared<Python>());
+        const SummaryConfig summary_config( deck, schedule, es.fieldProps(), es.aquifer());
+        const SummaryState st(TimeService::now());
         es.getIOConfig().setBaseName( "FOO" );
 
         EclipseIO eclWriter( es, eclGrid , schedule, summary_config);
 
         using measure = UnitSystem::measure;
         using TargetType = data::TargetType;
-        auto start_time = ecl_util_make_date( 10, 10, 2008 );
+        const auto start_time = ecl_util_make_date( 10, 10, 2008 );
         std::vector<double> tranx(3*3*3);
         std::vector<double> trany(3*3*3);
         std::vector<double> tranz(3*3*3);
@@ -315,83 +328,106 @@ BOOST_AUTO_TEST_CASE(EclipseIOIntegration) {
 
         eclWriter.writeInitial( );
 
-        BOOST_CHECK_THROW( eclWriter.writeInitial( eGridProps , int_data) , std::invalid_argument);
+        BOOST_CHECK_THROW(eclWriter.writeInitial(eGridProps, int_data), std::invalid_argument);
 
         int_data.erase("STR_ULONGNAME");
-        eclWriter.writeInitial( eGridProps , int_data );
+        eclWriter.writeInitial(eGridProps, int_data);
 
         data::Wells wells;
         data::GroupAndNetworkValues grp_nwrk;
 
-        for( int i = first; i < last; ++i ) {
-            data::Solution sol = createBlackoilState( i, 3 * 3 * 3 );
-            sol.insert("KRO", measure::identity , std::vector<double>(3*3*3 , i), TargetType::RESTART_AUXILIARY);
-            sol.insert("KRG", measure::identity , std::vector<double>(3*3*3 , i*10), TargetType::RESTART_AUXILIARY);
+        for (int i = first; i < last; ++i) {
+            data::Solution sol = createBlackoilState(i, 3 * 3 * 3);
+            sol.insert("KRO", measure::identity, std::vector<double>(3*3*3, i), TargetType::RESTART_AUXILIARY);
+            sol.insert("KRG", measure::identity, std::vector<double>(3*3*3, i*10), TargetType::RESTART_AUXILIARY);
 
             Action::State action_state;
             WellTestState wtest_state;
             UDQState udq_state(1);
             RestartValue restart_value(sol, wells, grp_nwrk, {});
-            auto first_step = ecl_util_make_date( 10 + i, 11, 2008 );
-            eclWriter.writeTimeStep( action_state,
-                                     wtest_state,
-                                     st,
-                                     udq_state,
-                                     i,
-                                     false,
-                                     first_step - start_time,
-                                     std::move(restart_value));
+            auto first_step = ecl_util_make_date(10 + i, 11, 2008);
+            eclWriter.writeTimeStep(action_state,
+                                    wtest_state,
+                                    st,
+                                    udq_state,
+                                    i,
+                                    false,
+                                    first_step - start_time,
+                                    std::move(restart_value));
 
-            checkRestartFile( i );
+            checkRestartFile(i);
         }
 
-        checkInitFile( deck , eGridProps);
-        checkEgridFile( eclGrid );
+        checkInitFile(deck, eGridProps);
+        checkEgridFile(eclGrid);
 
         EclIO::EclFile initFile("FOO.INIT");
-        BOOST_CHECK_MESSAGE( initFile.hasKey("STR_V"), R"(INIT file must have "STR_V" array)" );
-        const auto& kw = initFile.get<int>("STR_V");
-        BOOST_CHECK_EQUAL(67, kw[ 2]);
-        BOOST_CHECK_EQUAL(89, kw[26]);
 
-        std::ifstream file( "FOO.UNRST", std::ios::binary );
+        {
+            BOOST_CHECK_MESSAGE(initFile.hasKey("STR_V"), R"(INIT file must have "STR_V" array)" );
+
+            const auto& kw = initFile.get<int>("STR_V");
+            BOOST_CHECK_EQUAL(67, kw[ 2]);
+            BOOST_CHECK_EQUAL(89, kw[26]);
+        }
+
+        {
+            BOOST_CHECK_MESSAGE(initFile.hasKey("SWATINIT"),
+                                R"(INIT file must have "SWATINIT" array)");
+
+            const auto& kw = initFile.get<float>("SWATINIT");
+
+            auto offset = std::size_t{0};
+            for (auto i = 0; i < 9; ++i) {
+                BOOST_CHECK_CLOSE(kw[offset + i], 0.1f, 1.0e-8);
+            }
+
+            offset += 9;
+            for (auto i = 0; i < 9; ++i) {
+                BOOST_CHECK_CLOSE(kw[offset + i], 0.5f, 1.0e-8);
+            }
+
+            offset += 9;
+            for (auto i = 0; i < 9; ++i) {
+                BOOST_CHECK_CLOSE(kw[offset + i], 1.0f, 1.0e-8);
+            }
+        }
+
         std::streampos file_size = 0;
+        {
+            std::ifstream file("FOO.UNRST", std::ios::binary);
 
-        file_size = file.tellg();
-        file.seekg( 0, std::ios::end );
-        file_size = file.tellg() - file_size;
+            file_size = file.tellg();
+            file.seekg(0, std::ios::end);
+            file_size = file.tellg() - file_size;
+        }
 
         return file_size;
     };
 
-    /*
-     * write the file and calculate the file size. FOO.UNRST should be
-     * overwitten for every time step, i.e. the file size should not change
-     * between runs.  This is to verify that UNRST files are properly
-     * overwritten, which they used not to.
-     *
-     * * https://github.com/OPM/opm-simulators/issues/753
-     * * https://github.com/OPM/opm-output/pull/61
-     */
+    // Write the file and calculate the file size. FOO.UNRST should be
+    // overwitten for every time step, i.e. the file size should not change
+    // between runs.  This is to verify that UNRST files are properly
+    // overwritten, which they used not to.
+    //
+    //  * https://github.com/OPM/opm-simulators/issues/753
+    //  * https://github.com/OPM/opm-output/pull/61
 
     WorkArea work_area("test_ecl_writer");
     const auto file_size = write_and_check();
 
-    for( int i = 0; i < 3; ++i )
-        BOOST_CHECK_EQUAL( file_size, write_and_check() );
+    for (int i = 0; i < 3; ++i) {
+        BOOST_CHECK_EQUAL(file_size, write_and_check());
+    }
 
-    /*
-     * check that "restarting" and writing over previous timesteps does not
-     * change the file size, if the total amount of steps are the same
-     */
-    BOOST_CHECK_EQUAL( file_size, write_and_check( 3, 5 ) );
+    // Check that "restarting" and writing over previous timesteps does not
+    // change the file size, if the total amount of steps are the same.
+    BOOST_CHECK_EQUAL(file_size, write_and_check(3, 5));
 
-    /* verify that adding steps from restart also increases file size */
-    BOOST_CHECK( file_size < write_and_check( 3, 7 ) );
+    // Verify that adding steps from restart also increases file size
+    BOOST_CHECK(file_size < write_and_check(3, 7));
 
-    /*
-     * verify that restarting a simulation, then writing fewer steps truncates
-     * the file
-     */
-    BOOST_CHECK_EQUAL( file_size, write_and_check( 3, 5 ) );
+    // Verify that restarting a simulation, then writing fewer steps truncates
+    // the file
+    BOOST_CHECK_EQUAL(file_size, write_and_check(3, 5));
 }
