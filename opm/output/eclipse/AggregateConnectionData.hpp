@@ -23,7 +23,6 @@
 #include <opm/output/eclipse/WindowedArray.hpp>
 
 #include <cstddef>
-#include <string>
 #include <vector>
 
 namespace Opm {

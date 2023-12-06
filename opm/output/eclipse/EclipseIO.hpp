@@ -27,11 +27,7 @@
 #include <string>
 #include <vector>
 
-#include <opm/input/eclipse/EclipseState/Grid/NNC.hpp>
-
-#include <opm/output/data/Cells.hpp>
 #include <opm/output/data/Solution.hpp>
-#include <opm/output/data/Wells.hpp>
 
 namespace Opm { namespace out {
     class Summary;
@@ -41,6 +37,7 @@ namespace Opm {
 
 class EclipseGrid;
 class EclipseState;
+struct NNCdata;
 class RestartKey;
 class RestartValue;
 class Schedule;

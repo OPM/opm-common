@@ -23,7 +23,6 @@
 #include <opm/output/data/Wells.hpp>
 #include <opm/output/eclipse/WindowedArray.hpp>
 
-#include <string>
 #include <vector>
 
 namespace Opm {
