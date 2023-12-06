@@ -24,13 +24,11 @@
 #include <string>
 #include <vector>
 
-#include <opm/input/eclipse/EclipseState/Grid/NNC.hpp>
-
 namespace Opm {
 
     class EclipseGrid;
     class EclipseState;
-    class NNC;
+    struct NNCdata;
     class Schedule;
 
 } // namespace Opm

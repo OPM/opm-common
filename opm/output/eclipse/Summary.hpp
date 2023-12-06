@@ -23,9 +23,6 @@
 #include <opm/output/data/Aquifer.hpp>
 #include <opm/output/data/InterRegFlowMap.hpp>
 
-#include <opm/input/eclipse/Schedule/Group/Group.hpp>
-
-#include <cstddef>
 #include <map>
 #include <memory>
 #include <string>

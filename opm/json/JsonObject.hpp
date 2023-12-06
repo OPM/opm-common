@@ -20,10 +20,9 @@
 #ifndef JSON_OBJECT_HPP
 #define JSON_OBJECT_HPP
 
+#include <cstddef>
 #include <filesystem>
 #include <string>
-
-#include <opm/common/utility/FileSystem.hpp>
 
 struct cJSON;
 
@@ -52,7 +51,7 @@ namespace Json {
         std::string dump() const;
 
         bool has_item(const std::string& key) const;
-        JsonObject get_array_item( size_t index ) const;
+        JsonObject get_array_item( std::size_t index ) const;
         JsonObject get_item(const std::string& key) const;
 
         std::string to_string() const;
@@ -69,7 +68,7 @@ namespace Json {
         bool is_array( ) const;
         bool is_object( ) const;
 
-        size_t size() const;
+        std::size_t size() const;
     private:
         JsonObject get_scalar_object(const std::string& key) const;
         void  initialize(const std::string& inline_json);
@@ -78,8 +77,4 @@ namespace Json {
     };
 }
 
-
-
 #endif
-
-

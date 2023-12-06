@@ -21,7 +21,6 @@
 #define OPM_PARSER_NNC_HPP
 
 #include <cstddef>
-#include <memory>
 #include <optional>
 #include <tuple>
 #include <vector>

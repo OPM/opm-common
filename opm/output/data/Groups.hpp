@@ -22,10 +22,8 @@
 
 #include <cstddef>
 #include <map>
-#include <stdexcept>
 #include <string>
 #include <utility>
-#include <vector>
 
 #include <opm/output/data/GuideRateValue.hpp>
 #include <opm/json/JsonObject.hpp>

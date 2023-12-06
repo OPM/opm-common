@@ -24,11 +24,10 @@
 
 #include <vector>
 
-#include <opm/input/eclipse/EclipseState/Tables/FlatTable.hpp>
-
 namespace Opm {
-    class UnitSystem;
+    struct DensityTable;
     class EclipseState;
+    class UnitSystem;
 
     class Tables {
     public:
