@@ -1430,7 +1430,6 @@ if(ENABLE_ECL_OUTPUT)
         opm/output/eclipse/WriteRFT.hpp
         opm/output/eclipse/WriteRPT.hpp
         opm/output/eclipse/WriteRestartHelpers.hpp
-        opm/output/OutputWriter.hpp
         opm/utility/CopyablePtr.hpp
         opm/utility/EModel.hpp
         )
