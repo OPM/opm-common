@@ -130,25 +130,27 @@ public:
     *
     */
     template <class Evaluation>
-    Evaluation internalEnergy(unsigned regionIdx,
+    Evaluation internalEnergy(unsigned /*regionIdx*/,
                         const Evaluation& temperature,
                         const Evaluation& pressure,
-                        const Evaluation& rv,
-                        const Evaluation& rvw) const
+                        const Evaluation& /*rv*/,
+                        const Evaluation& /*rvw*/) const
     {
-        /* NOTE: Assume ideal mixing */
-
+        // use the gasInternalEnergy of H2
+        return H2::gasInternalEnergy(temperature, pressure, extrapolate);
+        
+        // TODO: account for H2O in the gas phase
         // Init output
-        Evaluation result = 0;
+        //Evaluation result = 0;
 
         // We have to check that one of RV and RVW is zero since H2STORE works with either GAS/WATER or GAS/OIL system
-        assert(rv == 0.0 || rvw == 0.0);
+        //assert(rv == 0.0 || rvw == 0.0);
 
         // Calculate each component contribution and return weighted sum
-        const Evaluation xBrine = convertRvwToXgW_(max(rvw, rv), regionIdx);
-        result += xBrine * H2O::gasInternalEnergy(temperature, pressure);
-        result += (1 - xBrine) * H2::gasInternalEnergy(temperature, pressure, extrapolate);
-        return result;
+        //const Evaluation xBrine = convertRvwToXgW_(max(rvw, rv), regionIdx);
+        //result += xBrine * H2O::gasInternalEnergy(temperature, pressure);
+        //result += (1 - xBrine) * H2::gasInternalEnergy(temperature, pressure, extrapolate);
+        //return result;
     }
 
     /*!
@@ -189,16 +191,15 @@ public:
         if (!enableVaporization_)
             return H2::gasDensity(temperature, pressure, extrapolate)/gasReferenceDensity_[regionIdx];
 
-        /* NOTE: Assume ideal mixing! */
-
-        // We have to check that one of RV and RVW is zero since H2STORE works with either GAS/WATER or GAS/OIL system
-        assert(rv == 0.0 || rvw == 0.0);
-
-        // Calculate each component contribution and return weighted sum
-        const Evaluation xBrine = convertRvwToXgW_(max(rvw, rv),regionIdx);
+        // Use CO2 density for the gas phase.
         const auto& rhoH2 = H2::gasDensity(temperature, pressure, extrapolate);
-        const auto& rhoH2O = H2O::gasDensity(temperature, pressure);
-        return 1.0 / ((xBrine / rhoH2O + (1.0 - xBrine) / rhoH2) * gasReferenceDensity_[regionIdx]); 
+        //const auto& rhoH2O = H2O::gasDensity(temperature, pressure);
+        //The H2STORE option both works for GAS/WATER and GAS/OIL systems
+        //Either rv og rvw should be zero
+        //assert(rv == 0.0 || rvw == 0.0);
+        //const Evaluation xBrine = convertRvwToXgW_(max(rvw,rv),regionIdx);
+        //const auto rho = 1.0/(xBrine/rhoH2O + (1.0 - xBrine)/rhoH2);
+        return rhoH2/(gasReferenceDensity_[regionIdx] + max(rvw,rv)*brineReferenceDensity_[regionIdx]);
     }
 
     /*!
