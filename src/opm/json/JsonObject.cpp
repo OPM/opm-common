@@ -189,13 +189,13 @@ namespace Json {
     }
 
 
-    size_t JsonObject::size() const {
+    std::size_t JsonObject::size() const {
         int int_size = cJSON_GetArraySize( this->root );
-        return (size_t) int_size;
+        return static_cast<std::size_t>(int_size);
     }
 
 
-    JsonObject JsonObject::get_array_item( size_t index ) const {
+    JsonObject JsonObject::get_array_item(std::size_t index) const {
         if (is_array()) {
             cJSON * new_c_ptr = cJSON_GetArrayItem( this->root , index );
             if (new_c_ptr)
