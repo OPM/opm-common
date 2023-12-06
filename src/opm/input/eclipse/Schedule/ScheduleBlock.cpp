@@ -20,6 +20,15 @@
 #include <opm/input/eclipse/Schedule/ScheduleBlock.hpp>
 
 #include <opm/input/eclipse/Deck/DeckOutput.hpp>
+#include <opm/input/eclipse/Deck/DeckKeyword.hpp>
+
+#include <opm/input/eclipse/Units/UnitSystem.hpp>
+
+#include <algorithm>
+#include <chrono>
+#include <cstddef>
+#include <optional>
+#include <vector>
 
 #include <fmt/format.h>
 
@@ -31,8 +40,7 @@ ScheduleBlock::ScheduleBlock(const KeywordLocation& location,
     : m_time_type(time_type)
     , m_start_time(start_time)
     , m_location(location)
-{
-}
+{}
 
 std::size_t ScheduleBlock::size() const
 {
@@ -44,19 +52,18 @@ void ScheduleBlock::push_back(const DeckKeyword& keyword)
     this->m_keywords.push_back(keyword);
 }
 
-std::vector<DeckKeyword>::const_iterator ScheduleBlock::begin() const
+std::optional<DeckKeyword> ScheduleBlock::get(const std::string& kw) const
 {
-    return this->m_keywords.begin();
-}
+    auto kwPos = std::find_if(this->m_keywords.begin(),
+                              this->m_keywords.end(),
+                              [&kw](const DeckKeyword& keyword)
+                              {
+                                  return keyword.name() == kw;
+                              });
 
-std::vector<DeckKeyword>::const_iterator ScheduleBlock::end() const
-{
-    return this->m_keywords.end();
-}
-
-const DeckKeyword& ScheduleBlock::operator[](const std::size_t index) const
-{
-    return this->m_keywords.at(index);
+    return (kwPos == this->m_keywords.end())
+        ? std::nullopt
+        : std::optional<DeckKeyword> { *kwPos };
 }
 
 const time_point& ScheduleBlock::start_time() const
@@ -69,69 +76,45 @@ const std::optional<time_point>& ScheduleBlock::end_time() const
     return this->m_end_time;
 }
 
-ScheduleTimeType ScheduleBlock::time_type() const
-{
-    return this->m_time_type;
-}
-
 void ScheduleBlock::end_time(const time_point& t)
 {
     this->m_end_time = t;
 }
 
-bool ScheduleBlock::operator==(const ScheduleBlock& other) const
+ScheduleTimeType ScheduleBlock::time_type() const
 {
-    return this->m_start_time == other.m_start_time &&
-           this->m_end_time == other.m_end_time &&
-           this->m_location == other.m_location &&
-           this->m_time_type == other.m_time_type &&
-           this->m_keywords == other.m_keywords;
+    return this->m_time_type;
 }
-
-void ScheduleBlock::dump_time(time_point current_time, DeckOutput& output) const
-{
-    if (this->m_time_type == ScheduleTimeType::START)
-        return;
-
-    if (this->m_time_type == ScheduleTimeType::DATES) {
-        TimeStampUTC ts(TimeService::to_time_t(this->start_time()));
-        auto ecl_month = TimeService::eclipseMonthNames().at(ts.month());
-        std::string dates_string = fmt::format(R"(
-DATES
-   {} '{}' {} /
-/
-)", ts.day(), ecl_month, ts.year());
-        output.write_string(dates_string);
-    } else {
-        auto seconds = std::chrono::duration_cast<std::chrono::seconds>(this->start_time() - current_time);
-        double days = seconds.count() / 86400.0;
-        std::string tstep_string = fmt::format(R"(
-TSTEP
-   {} /
-)", days);
-        output.write_string(tstep_string);
-    }
-}
-
-
-void ScheduleBlock::dump_deck(DeckOutput& output, time_point& current_time) const
-{
-    this->dump_time(current_time, output);
-    if (!this->end_time().has_value())
-        return;
-
-    for (const auto& keyword : this->m_keywords)
-        keyword.write(output);
-
-    current_time = this->end_time().value();
-}
-
 
 const KeywordLocation& ScheduleBlock::location() const
 {
     return this->m_location;
 }
 
+const DeckKeyword& ScheduleBlock::operator[](const std::size_t index) const
+{
+    return this->m_keywords.at(index);
+}
+
+std::vector<DeckKeyword>::const_iterator ScheduleBlock::begin() const
+{
+    return this->m_keywords.begin();
+}
+
+std::vector<DeckKeyword>::const_iterator ScheduleBlock::end() const
+{
+    return this->m_keywords.end();
+}
+
+bool ScheduleBlock::operator==(const ScheduleBlock& other) const
+{
+    return (this->m_start_time == other.m_start_time)
+        && (this->m_end_time == other.m_end_time)
+        && (this->m_location == other.m_location)
+        && (this->m_time_type == other.m_time_type)
+        && (this->m_keywords == other.m_keywords)
+        ;
+}
 
 ScheduleBlock ScheduleBlock::serializationTestObject()
 {
@@ -144,13 +127,67 @@ ScheduleBlock ScheduleBlock::serializationTestObject()
     return block;
 }
 
-std::optional<DeckKeyword> ScheduleBlock::get(const std::string& kw) const
+void ScheduleBlock::dump_deck(const UnitSystem& usys,
+                              DeckOutput&       output,
+                              time_point&       current_time) const
 {
-    for (const auto& keyword : this->m_keywords) {
-        if (keyword.name() == kw)
-            return keyword;
+    this->dump_time(usys, current_time, output);
+    if (!this->end_time().has_value()) {
+        return;
     }
-    return {};
+
+    for (const auto& keyword : this->m_keywords) {
+        keyword.write(output);
+    }
+
+    current_time = this->end_time().value();
 }
 
+void ScheduleBlock::dump_time(const UnitSystem& usys,
+                              const time_point  current_time,
+                              DeckOutput&       output) const
+{
+    if (this->m_time_type == ScheduleTimeType::START) {
+        return;
+    }
+
+    if (this->m_time_type == ScheduleTimeType::DATES) {
+        this->writeDates(output);
+    }
+    else {
+        this->writeTStep(usys, current_time, output);
+    }
 }
+
+void ScheduleBlock::writeDates(DeckOutput& output) const
+{
+    const auto ts = TimeStampUTC {
+        TimeService::to_time_t(this->start_time())
+    };
+
+    const auto ecl_month = TimeService::eclipseMonthNames().at(ts.month());
+    const auto dates_string = fmt::format(R"(
+DATES
+   {} '{}' {} /
+/
+)", ts.day(), ecl_month, ts.year());
+
+    output.write_string(dates_string);
+}
+
+void ScheduleBlock::writeTStep(const UnitSystem& usys,
+                               time_point        current_time,
+                               DeckOutput&       output) const
+{
+    const auto seconds = std::chrono::duration_cast<std::chrono::seconds>
+        (this->start_time() - current_time);
+
+    const auto tstep_string = fmt::format(R"(
+TSTEP
+   {} /
+)", usys.from_si(UnitSystem::measure::time, seconds.count()));
+
+    output.write_string(tstep_string);
+}
+
+} // namespace Opm

@@ -31,6 +31,8 @@
 
 #include <opm/input/eclipse/Schedule/ScheduleRestartInfo.hpp>
 
+#include <opm/input/eclipse/Units/UnitSystem.hpp>
+
 #include <chrono>
 #include <ctime>
 #include <unordered_set>
@@ -270,13 +272,17 @@ ScheduleDeck ScheduleDeck::serializationTestObject() {
     return deck;
 }
 
-void ScheduleDeck::dump_deck(std::ostream& os) const {
+void ScheduleDeck::dump_deck(std::ostream&     os,
+                             const UnitSystem& usys) const
+{
     DeckOutput output(os);
 
     output.write_string("SCHEDULE\n");
+
     auto current_time = this->m_blocks[0].start_time();
-    for (const auto& block : this->m_blocks)
-        block.dump_deck(output, current_time);
+    for (const auto& block : this->m_blocks) {
+        block.dump_deck(usys, output, current_time);
+    }
 }
 
 

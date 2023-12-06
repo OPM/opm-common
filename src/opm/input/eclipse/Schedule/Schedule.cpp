@@ -2239,8 +2239,9 @@ void Schedule::create_next(const ScheduleBlock& block) {
     this->create_next(start_time, end_time);
 }
 
-void Schedule::dump_deck(std::ostream& os) const {
-    this->m_sched_deck.dump_deck(os);
+void Schedule::dump_deck(std::ostream& os) const
+{
+    this->m_sched_deck.dump_deck(os, this->getUnits());
 }
 
 std::ostream& operator<<(std::ostream& os, const Schedule& sched)
