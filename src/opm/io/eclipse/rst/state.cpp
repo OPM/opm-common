@@ -19,6 +19,7 @@
 #include <opm/io/eclipse/rst/state.hpp>
 
 #include <opm/io/eclipse/RestartFileView.hpp>
+#include <opm/io/eclipse/PaddedOutputString.hpp>
 
 #include <opm/io/eclipse/rst/aquifer.hpp>
 #include <opm/io/eclipse/rst/action.hpp>
@@ -344,8 +345,10 @@ void RstState::add_actions(const Parser& parser,
         auto zlact_offset = index * zlact_action_size;
         while (true) {
             std::string line;
-            for (std::size_t item_index = 0; item_index < actdims.line_size(); item_index++)
-                line += zlact[zlact_offset + item_index];
+            for (std::size_t item_index = 0; item_index < actdims.line_size(); item_index++) {
+                const auto padded = EclIO::PaddedOutputString<8> { zlact[zlact_offset + item_index] };
+                line += padded.c_str();
+            }
 
             line = trim_copy(line);
             if (line.empty())
