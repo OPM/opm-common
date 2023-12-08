@@ -1500,10 +1500,12 @@ void FieldProps::apply_numerical_aquifers(const NumericalAquifers& numerical_aqu
 
 std::vector<std::string> FieldProps::fip_regions() const
 {
+    constexpr auto maxchars = std::string::size_type{6};
+
     std::vector<std::string> result;
-    for (const auto& key : this->keys<int>()) {
-        if (Fieldprops::keywords::isFipxxx(key)) {
-            result.push_back(key);
+    for (const auto& [key, fd_value] : this->int_data) {
+        if (fd_value.valid() && Fieldprops::keywords::isFipxxx(key)) {
+            result.push_back(key.substr(0, maxchars));
         }
     }
 
