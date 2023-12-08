@@ -45,6 +45,7 @@ namespace Opm {
         DirEnum FromString(const std::string& stringValue);
         int     FromMULTREGTString(const std::string& stringValue);
         DirEnum FromIntersectionIndex(int idx);
+        int ToIntersectionIndex(DirEnum dir);
 
         const std::string toString(DirEnum dir);
     }
