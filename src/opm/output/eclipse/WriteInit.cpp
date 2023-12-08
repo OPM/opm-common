@@ -480,7 +480,7 @@ namespace {
                                   ::Opm::EclIO::OutputStream::Init& initFile)
     {
         for (const auto& prop : simProps) {
-            const auto& value = grid.compressedVector(prop.second.data);
+            const auto& value = grid.compressedVector(prop.second.data<double>());
 
             initFile.write(prop.first, singlePrecision(value));
         }

@@ -23,6 +23,7 @@
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
 
 #include <utility>
+#include <variant>
 #include <vector>
 
 namespace Opm { namespace data {
@@ -68,9 +69,6 @@ namespace Opm { namespace data {
         /// Dimension of the data to write
         UnitSystem::measure dim{UnitSystem::measure::identity};
 
-        /// Per-cell solution values
-        std::vector<double> data{};
-
         /// File output destination
         TargetType target{TargetType::RESTART_SOLUTION};
 
@@ -79,22 +77,29 @@ namespace Opm { namespace data {
                           std::vector<double> x,
                           TargetType          dest)
             : dim    { m }
-            , data   { std::move(x) }
             , target { dest }
+            , data_  { std::move(x) }
+        {}
+
+        explicit CellData(std::vector<int> x,
+                          TargetType          dest)
+            : dim    { UnitSystem::measure::identity }
+            , target { dest }
+            , data_  { std::move(x) }
         {}
 
         bool operator==(const CellData& cell2) const
         {
             return (dim    == cell2.dim)
                 && (target == cell2.target)
-                && (data   == cell2.data);
+                && (data_   == cell2.data_);
         }
 
         template <class Serializer>
         void serializeOp(Serializer& serializer)
         {
             serializer(this->dim);
-            serializer(this->data);
+            serializer(this->data_);
             serializer(this->target);
         }
 
@@ -102,10 +107,31 @@ namespace Opm { namespace data {
         {
             return CellData {
                 UnitSystem::measure::runtime,
-                {1.0, 2.0, 3.0},
+                std::vector<double>{1.0, 2.0, 3.0},
                 TargetType::RESTART_OPM_EXTENDED
             };
         }
+
+        template<class T>
+        std::vector<T>& data()
+        {
+            return std::get<std::vector<T>>(data_);
+        }
+
+        template<class T>
+        const std::vector<T>& data() const
+        {
+            return std::get<std::vector<T>>(data_);
+        }
+
+    private:
+        /// Per-cell solution values
+        using DataVector = std::variant<std::monostate,
+                                        std::vector<double>,
+                                        std::vector<int>>;
+
+        DataVector data_{};
+
     };
 
 }} // namespace Opm::data

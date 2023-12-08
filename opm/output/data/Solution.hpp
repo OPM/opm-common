@@ -47,13 +47,20 @@ class Solution : public std::map<std::string, data::CellData>
          * Get the data field of the struct matching the requested key. Will
          * throw std::out_of_range if they key does not exist.
          */
-        std::vector< double >& data(const std::string& );
-        const std::vector< double >& data(const std::string& ) const;
+        template<class T>
+        std::vector<T>& data(const std::string& );
 
-        std::pair< iterator, bool > insert( std::string name,
-                                            UnitSystem::measure,
-                                            std::vector< double >,
-                                            TargetType );
+        template<class T>
+        const std::vector<T>& data(const std::string& ) const;
+
+        std::pair<iterator, bool> insert(std::string name,
+                                         UnitSystem::measure,
+                                         std::vector<double>,
+                                         TargetType );
+
+        std::pair<iterator, bool> insert(std::string name,
+                                         std::vector<int>,
+                                         TargetType );
 
         void convertToSI( const UnitSystem& );
         void convertFromSI( const UnitSystem& );
