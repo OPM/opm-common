@@ -21,7 +21,6 @@
 
 #include <opm/output/data/Cells.hpp>
 
-#include <algorithm>
 #include <map>
 #include <string>
 #include <tuple>
@@ -39,16 +38,18 @@ bool Solution::has(const std::string& keyword) const
     return this->find(keyword) != this->end();
 }
 
-std::vector<double>&
+template<class T>
+std::vector<T>&
 Solution::data(const std::string& keyword)
 {
-    return this->at(keyword).data;
+    return this->at(keyword).data<T>();
 }
 
-const std::vector<double>&
+template<class T>
+const std::vector<T>&
 Solution::data(const std::string& keyword) const
 {
-    return this->at(keyword).data;
+    return this->at(keyword).data<T>();
 }
 
 std::pair<Solution::iterator, bool>
@@ -62,6 +63,17 @@ Solution::insert(std::string               name,
                          std::forward_as_tuple(m, std::move(xs), type));
 }
 
+
+std::pair<Solution::iterator, bool>
+Solution::insert(std::string               name,
+                 std::vector<int>          xs,
+                 const TargetType          type)
+{
+    return this->emplace(std::piecewise_construct,
+                         std::forward_as_tuple(std::move(name)),
+                         std::forward_as_tuple(std::move(xs), type));
+}
+
 void data::Solution::convertToSI(const UnitSystem& units)
 {
     if (this->si) {
@@ -72,7 +84,7 @@ void data::Solution::convertToSI(const UnitSystem& units)
         const auto dim = elm.second.dim;
 
         if (dim != UnitSystem::measure::identity) {
-            units.to_si(dim, elm.second.data);
+            units.to_si(dim, (elm.second.data<double>()));
         }
     }
 
@@ -89,11 +101,16 @@ void data::Solution::convertFromSI(const UnitSystem& units)
         const auto dim = elm.second.dim;
 
         if (dim != UnitSystem::measure::identity) {
-            units.from_si(dim, elm.second.data);
+            units.from_si(dim, elm.second.data<double>());
         }
     }
 
     this->si = false;
 }
+
+template std::vector<double>& data::Solution::data<double>(const std::string&);
+template const std::vector<double>& data::Solution::data<double>(const std::string&) const;
+template std::vector<int>& data::Solution::data<int>(const std::string&);
+template const std::vector<int>& data::Solution::data<int>(const std::string&) const;
 
 }} // namespace Opm::data

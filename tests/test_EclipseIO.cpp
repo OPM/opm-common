@@ -213,20 +213,20 @@ void checkRestartFile( int timeStepIdx ) {
 
         if (keywordExists(knownVec, "PRESSURE")) {
             const auto& press = rstFile.getRestartData<float>("PRESSURE", i, 0);
-            for( auto& x : sol.data("PRESSURE") )
+            for( auto& x : sol.data<double>("PRESSURE") )
                 x /= Metric::Pressure;
 
-            compareErtData( sol.data("PRESSURE"), press, 1e-4 );
+            compareErtData( sol.data<double>("PRESSURE"), press, 1e-4 );
         }
 
         if (keywordExists(knownVec, "SWAT")) {
             const auto& swat = rstFile.getRestartData<float>("SWAT", i, 0);
-            compareErtData( sol.data("SWAT"), swat, 1e-4 );
+            compareErtData( sol.data<double>("SWAT"), swat, 1e-4 );
         }
 
         if (keywordExists(knownVec, "SGAS")) {
             const auto& sgas = rstFile.getRestartData<float>("SGAS", i, 0);
-            compareErtData( sol.data("SGAS"), sgas, 1e-4 );
+            compareErtData( sol.data<double>("SGAS"), sgas, 1e-4 );
         }
 
         if (keywordExists(knownVec, "KRO")) {

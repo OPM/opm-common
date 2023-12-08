@@ -218,16 +218,20 @@ data::Solution mkSolution(int numCells)
         { "SGAS",     data::CellData { measure::identity,    {}, data::TargetType::RESTART_SOLUTION } },
     };
 
-    sol.data("PRESSURE").assign( numCells, 6.0 );
-    sol.data("TEMP").assign( numCells, 7.0 );
-    sol.data("SWAT").assign( numCells, 8.0 );
-    sol.data("SGAS").assign( numCells, 9.0 );
+    sol.data<double>("PRESSURE").assign( numCells, 6.0 );
+    sol.data<double>("TEMP").assign( numCells, 7.0 );
+    sol.data<double>("SWAT").assign( numCells, 8.0 );
+    sol.data<double>("SGAS").assign( numCells, 9.0 );
 
-    fun::iota rsi( 300, 300 + numCells );
-    fun::iota rvi( 400, 400 + numCells );
+    fun::iota rsi( 300.0, 300.0 + numCells );
+    fun::iota rvi( 400.0, 400.0 + numCells );
 
-    sol.insert("RS", measure::identity, { rsi.begin(), rsi.end() }, data::TargetType::RESTART_SOLUTION);
-    sol.insert("RV", measure::identity, { rvi.begin(), rvi.end() }, data::TargetType::RESTART_SOLUTION);
+    sol.insert("RS", measure::identity,
+               { rsi.begin(), rsi.end() },
+               data::TargetType::RESTART_SOLUTION);
+    sol.insert("RV", measure::identity,
+               { rvi.begin(), rvi.end() },
+               data::TargetType::RESTART_SOLUTION);
 
     return sol;
 }
@@ -472,10 +476,10 @@ void compare(const RestartValue&            fst,
             tol *= 10.0;
         }
 
-        auto first = fst.solution.data(key).begin();
-        auto second = snd.solution.data(key).begin();
+        auto first = fst.solution.data<double>(key).begin();
+        auto second = snd.solution.data<double>(key).begin();
 
-        for (; first != fst.solution.data( key).end(); ++first, ++second) {
+        for (; first != fst.solution.data<double>(key).end(); ++first, ++second) {
             BOOST_CHECK_CLOSE(*first, *second, tol);
         }
     }
@@ -608,10 +612,10 @@ void compare_equal(const RestartValue&            fst,
 {
     for (const auto& value : keys) {
         const std::string& key = value.key;
-        auto first = fst.solution.data( key ).begin();
-        auto second = snd.solution.data( key ).begin();
+        auto first = fst.solution.data<double>(key).begin();
+        auto second = snd.solution.data<double>(key).begin();
 
-        for (; first != fst.solution.data(key).end(); ++first, ++second) {
+        for (; first != fst.solution.data<double>(key).end(); ++first, ++second) {
             BOOST_CHECK_EQUAL(*first, *second);
         }
     }

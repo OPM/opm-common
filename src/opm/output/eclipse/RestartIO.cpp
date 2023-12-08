@@ -207,10 +207,11 @@ namespace {
                             const EclipseGrid&  grid)
     {
         for (const auto& [name, vector] : restart_value.solution)
-            if (vector.data.size() != grid.getNumActive()) {
+            if (vector.data<double>().size() != grid.getNumActive()) {
                 const auto msg = fmt::format("Incorrectly sized solution vector {}.  "
                                              "Expected {} elements, but got {}.", name,
-                                             grid.getNumActive(), vector.data.size());
+                                             grid.getNumActive(),
+                                             vector.data<double>().size());
                 throw std::runtime_error(msg);
             }
 
@@ -567,10 +568,10 @@ namespace {
         auto smax = std::vector<double>{};
 
         if (value.solution.has(primary)) {
-            smax = value.solution.data(primary);
+            smax = value.solution.data<double>(primary);
         }
         else if (value.solution.has(fallback)) {
-            smax = value.solution.data(fallback);
+            smax = value.solution.data<double>(fallback);
         }
 
         if (! smax.empty()) {
@@ -620,7 +621,7 @@ namespace {
                               OutputVector&&                  writeVector)
     {
         for (const auto& vector : vectors) {
-            writeVector(vector, value.solution.data(vector), write_double);
+            writeVector(vector, value.solution.data<double>(vector), write_double);
         }
     }
 
@@ -708,7 +709,7 @@ namespace {
             ztracer.push_back(fmt::format("{}/{}", tracer.unit_string, unit_system.name( UnitSystem::measure::volume )));
             rstFile.write("ZTRACER", ztracer);
 
-            const auto& data = vector.data;
+            const auto& data = vector.data<double>();
             if (write_double) {
                 rstFile.write(tracer_rst_name, data);
             }

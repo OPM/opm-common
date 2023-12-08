@@ -79,7 +79,7 @@ void pressure(const EclipseState& es, const Schedule& /* sched */, data::Solutio
         sol.insert("PRESSURE", UnitSystem::measure::pressure, std::vector<double>(grid.getNumActive()), data::TargetType::RESTART_SOLUTION);
     }
 
-    auto& data = sol.data("PRESSURE");
+    auto& data = sol.data<double>("PRESSURE");
     std::fill(data.begin(), data.end(), units.to_si(UnitSystem::measure::pressure, seconds_elapsed));
 }
 
