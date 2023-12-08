@@ -96,6 +96,14 @@ void handleBCProp(HandlerContext& handlerContext)
     }
 }
 
+void handleSourceProp(HandlerContext& handlerContext)
+{
+    auto& sourceprop = handlerContext.state().sourceprop;
+    for (const auto& record : handlerContext.keyword) {
+        sourceprop.updateSourceProp(record);
+    }
+}
+
 void handleEXIT(HandlerContext& handlerContext)
 {
     if (handlerContext.actionx_mode) {
@@ -353,6 +361,7 @@ KeywordHandlers::KeywordHandlers()
         { "NEXTSTEP", &handleNEXTSTEP   },
         { "NUPCOL"  , &handleNUPCOL     },
         { "PYACTION", &handlePYACTION   },
+        { "SOURCE",   &handleSourceProp },
         { "SUMTHIN" , &handleSUMTHIN    },
         { "TUNING"  , &handleTUNING     },
         { "VFPINJ"  , &handleVFPINJ     },
