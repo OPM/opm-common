@@ -106,9 +106,14 @@ int main(int argc, char **argv) {
 
         try {
             Opm::EclIO::ESmry smry{ argv[f + argOffset] };
-            status[f] = smry.make_esmry_file();
-            if (! status[f]) {
-                std::cerr << "\n! Warning, smspec already have one esmry file, existing kept use option -f to replace this\n";
+
+            if (smry.numberOfTimeSteps() > 0){
+                status[f] = smry.make_esmry_file();
+                if (! status[f]) {
+                    std::cerr << "\n! Warning, smspec already have one esmry file, existing kept use option -f to replace this\n";
+                }
+            } else {
+                std::cerr << "\n! summary file doesn't hold any time step data, ESMRY file not created. \n";
             }
 
         } catch (...) {
