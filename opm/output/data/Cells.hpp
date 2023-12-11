@@ -124,6 +124,12 @@ namespace Opm { namespace data {
             return std::get<std::vector<T>>(data_);
         }
 
+        template<class Visitor>
+        void visit(Visitor&& visit) const
+        {
+            std::visit(std::forward<Visitor>(visit), data_);
+        }
+
     private:
         /// Per-cell solution values
         using DataVector = std::variant<std::monostate,
