@@ -24,6 +24,8 @@
 
 #include <opm/output/eclipse/RestartIO.hpp>
 
+#include <opm/common/utility/Visitor.hpp>
+
 #include <opm/output/eclipse/AggregateAquiferData.hpp>
 #include <opm/output/eclipse/AggregateGroupData.hpp>
 #include <opm/output/eclipse/AggregateNetworkData.hpp>
@@ -59,9 +61,7 @@
 #include <opm/common/OpmLog/OpmLog.hpp>
 
 #include <algorithm>
-#include <cassert>
 #include <cstddef>
-#include <initializer_list>
 #include <iterator>
 #include <stdexcept>
 #include <string>
@@ -206,14 +206,23 @@ namespace {
                             const RestartValue& restart_value,
                             const EclipseGrid&  grid)
     {
-        for (const auto& [name, vector] : restart_value.solution)
-            if (vector.data<double>().size() != grid.getNumActive()) {
-                const auto msg = fmt::format("Incorrectly sized solution vector {}.  "
-                                             "Expected {} elements, but got {}.", name,
-                                             grid.getNumActive(),
-                                             vector.data<double>().size());
-                throw std::runtime_error(msg);
-            }
+        for (const auto& [name, vector] : restart_value.solution) {
+            // Cannot capture structured bindings in c++17
+            const char* n = name.c_str();
+            vector.visit(VisitorOverloadSet{
+                MonoThrowHandler<std::logic_error>(fmt::format("{} does not have an associate value", name)),
+                [n, &grid](const auto& data)
+                {
+                    if (data.size() != grid.getNumActive()) {
+                        const auto msg = fmt::format("Incorrectly sized solution vector {}.  "
+                                                     "Expected {} elements, but got {}.", n,
+                                         grid.getNumActive(),
+                                         data.size());
+                        throw std::runtime_error(msg);
+                    }
+                }
+            });
+        }
 
         if (es.getSimulationConfig().getThresholdPressure().size() > 0) {
             // If the the THPRES option is active the restart_value should have a
@@ -614,33 +623,45 @@ namespace {
         return vectors;
     }
 
-    template <class OutputVector>
+    template <class OutputVector, class OutputVectorInt>
     void writeSolutionVectors(const RestartValue&             value,
                               const std::vector<std::string>& vectors,
-                              const bool                      write_double,
-                              OutputVector&&                  writeVector)
+                              OutputVector                    writeVectorF,
+                              OutputVectorInt                 writeVectorI)
     {
         for (const auto& vector : vectors) {
-            writeVector(vector, value.solution.data<double>(vector), write_double);
+            value.solution.at(vector).visit(VisitorOverloadSet{
+                MonoThrowHandler<std::logic_error>(fmt::format("{} does not have an associate value", vector)),
+                [&vector,&writeVectorF](const std::vector<double>& v)
+                {
+                    writeVectorF(vector, v);
+                },
+                [&vector,&writeVectorI](const std::vector<int>& v)
+                {
+                    writeVectorI(vector, v);
+                }
+            });
         }
     }
 
-    template <class OutputVector>
+    template <class OutputVector, class OutputVectorInt>
     void writeRegularSolutionVectors(const RestartValue& value,
-                                     const bool          write_double,
-                                     OutputVector&&      writeVector)
+                                     OutputVector&&      writeVectorF,
+                                     OutputVectorInt&&   writeVectorI)
     {
-        writeSolutionVectors(value, solutionVectorNames(value), write_double,
-                             std::forward<OutputVector>(writeVector));
+        writeSolutionVectors(value, solutionVectorNames(value),
+                             std::forward<OutputVector>(writeVectorF),
+                             std::forward<OutputVectorInt>(writeVectorI));
     }
 
-    template <class OutputVector>
+    template <class OutputVector, class OutputVectorInt>
     void writeExtendedSolutionVectors(const RestartValue& value,
-                                      const bool          write_double,
-                                      OutputVector&&      writeVector)
+                                      OutputVector&&      writeVectorF,
+                                      OutputVectorInt&&   writeVectorI)
     {
-        writeSolutionVectors(value, extendedSolutionVectorNames(value), write_double,
-                             std::forward<OutputVector>(writeVector));
+        writeSolutionVectors(value, extendedSolutionVectorNames(value),
+                             std::forward<OutputVector>(writeVectorF),
+                             std::forward<OutputVectorInt>(writeVectorI));
     }
 
     template <class OutputVector>
@@ -652,15 +673,14 @@ namespace {
             if (extraInSolution(key)) {
                 // Observe that the extra data is unconditionally
                 // output as double precision.
-                writeVector(key, elm.second, true);
+                writeVector(key, elm.second);
             }
         }
     }
 
     template <class OutputVector>
     void writeEclipseCompatHysteresis(const RestartValue& value,
-                                      const bool          write_double,
-                                      OutputVector&&      writeVector)
+                                      OutputVector&       writeVector)
     {
         // Convert Flow-specific vectors {KRNSW,PCSWM}_OW to ECLIPSE's
         // requisite SOMAX vector.  Only partially characterised.
@@ -670,7 +690,7 @@ namespace {
                 convertedHysteresisSat(value, "KRNSW_OW", "PCSWM_OW");
 
             if (! somax.empty()) {
-                writeVector("SOMAX", somax, write_double);
+                writeVector("SOMAX", somax);
             }
         }
 
@@ -682,7 +702,7 @@ namespace {
                 convertedHysteresisSat(value, "KRNSW_GO", "PCSWM_GO");
 
             if (! sgmax.empty()) {
-                writeVector("SGMAX", sgmax, write_double);
+                writeVector("SGMAX", sgmax);
             }
         }
     }
@@ -732,10 +752,8 @@ namespace {
                        const std::vector<int>&       inteHD,
                        EclIO::OutputStream::Restart& rstFile)
     {
-        auto write = [&rstFile]
-            (const std::string&         key,
-             const std::vector<double>& data,
-             const bool                 write_double) -> void
+        auto writeDorF = [&rstFile, write_double = write_double_arg]
+            (const std::string& key, const std::vector<double>& data)
         {
             if (write_double) {
                 rstFile.write(key, data);
@@ -747,20 +765,33 @@ namespace {
             }
         };
 
+        auto writeInt = [&rstFile](const std::string& key,
+                                   const std::vector<int>& data)
+        {
+            rstFile.write(key,data);
+        };
+
+        auto writeDouble = [&rstFile]
+            (const std::string& key, const std::vector<double>& data)
+        {
+            rstFile.write(key, data);
+        };
+
         rstFile.message("STARTSOL");
 
-        writeRegularSolutionVectors(value, write_double_arg, write);
-        writeTracerVectors(schedule.getUnits(), tracer_config, value, write_double_arg, rstFile);
+        writeRegularSolutionVectors(value, writeDorF, writeInt);
+        writeTracerVectors(schedule.getUnits(), tracer_config, value,
+                           write_double_arg, rstFile);
         writeUDQ(report_step, sim_step, schedule, udq_state, inteHD, rstFile);
 
-        writeExtraVectors(value, write);
+        writeExtraVectors(value, writeDouble);
 
         if (ecl_compatible_rst && haveHysteresis(value)) {
-            writeEclipseCompatHysteresis(value, write_double_arg, write);
+            writeEclipseCompatHysteresis(value, writeDorF);
         }
 
         if (! ecl_compatible_rst) {
-            writeExtendedSolutionVectors(value, write_double_arg, write);
+            writeExtendedSolutionVectors(value, writeDorF, writeInt);
         }
 
         rstFile.message("ENDSOL");
