@@ -68,6 +68,7 @@ public:
     void add_value(const std::string& wgname, double value);
 
     bool is_define() const;
+    UDQUpdate updateStatus() const;
     double assign_value() const;
     const std::unordered_set<std::string>& assign_selector() const;
     const std::string& expression() const;

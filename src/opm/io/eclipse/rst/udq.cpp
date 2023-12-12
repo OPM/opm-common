@@ -55,10 +55,15 @@ RstUDQ::RstUDQ(const std::string& name_arg, const std::string& unit_arg)
 {
 }
 
-
-
 bool RstUDQ::is_define() const {
     return std::holds_alternative<RstDefine>(this->data);
+}
+
+UDQUpdate RstUDQ::updateStatus() const
+{
+    return this->is_define()
+        ? std::get<RstDefine>(this->data).status
+        : UDQUpdate::OFF;
 }
 
 void RstUDQ::add_value(const std::string& wgname, double value) {
