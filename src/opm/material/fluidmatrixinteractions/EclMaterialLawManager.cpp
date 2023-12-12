@@ -131,10 +131,12 @@ initFromState(const EclipseState& eclState)
 
 template<class TraitsT>
 void EclMaterialLawManager<TraitsT>::
-initParamsForElements(const EclipseState& eclState, size_t numCompressedElems)
+initParamsForElements(const EclipseState& eclState, size_t numCompressedElems,
+                      const std::function<std::vector<int>(const FieldPropsManager&, const std::string&,
+                      const unsigned int, bool)>& fieldPropIntOnLeafAssigner)
 {
     InitParams initParams {*this, eclState, numCompressedElems};
-    initParams.run();
+    initParams.run(fieldPropIntOnLeafAssigner);
 }
 
 template<class TraitsT>
