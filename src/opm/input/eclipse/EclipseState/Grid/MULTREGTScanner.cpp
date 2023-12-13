@@ -1,5 +1,5 @@
 /*
-  Copyright 2014 Statoil ASA.
+  Copyright 2014--2023 Equinor ASA.
 
   This file is part of the Open Porous Media project (OPM).
 
@@ -163,11 +163,9 @@ namespace Opm {
                 // The MULTREGT keyword is directionally independent meaning
                 // we add both directions, symmetrically, to the lookup
                 // table.
-                if (srcRegion != targetRegion) {
-                    std::pair<int,int> pair = (srcRegion <= targetRegion) ?
-                        std::make_pair(srcRegion, targetRegion) : std::make_pair(targetRegion, srcRegion);
-                    searchPairs[pair] = recordIx;
-                }
+                std::pair<int,int> pair = (srcRegion <= targetRegion) ?
+                    std::make_pair(srcRegion, targetRegion) : std::make_pair(targetRegion, srcRegion);
+                searchPairs[pair] = recordIx;
             }
             else {
                 throw std::logic_error {
@@ -305,7 +303,6 @@ namespace Opm {
             const int regionId1 = region_data[globalIndex1];
             const int regionId2 = region_data[globalIndex2];
 
-            assert(regionId1 != regionId2);
             auto regPairPos = (regionId1 <= regionId2) ? regMap.find({ regionId1, regionId2 })
                 : regMap.find({ regionId2, regionId1 });
 
@@ -355,7 +352,6 @@ namespace Opm {
             const auto regionId2 = region_data[globalCellIdx2];
 
             auto regPairPos = regMap.find({ regionId1, regionId2 });
-            assert(regionId1 != regionId2);
 
             if (regPairPos == regMap.end()) {
                 // Neither 1->2 nor 2->1 found.  Move on to next region set.
@@ -372,29 +368,9 @@ namespace Opm {
         return multiplier;
     }
 
-    void MULTREGTScanner::assertKeywordSupported(const DeckKeyword& deckKeyword)
-    {
-        using Kw = ParserKeywords::MULTREGT;
-
-        for (const auto& deckRecord : deckKeyword) {
-            const auto& srcItem = deckRecord.getItem<Kw::SRC_REGION>();
-            const auto& targetItem = deckRecord.getItem<Kw::TARGET_REGION>();
-
-            if (!srcItem.defaultApplied(0) && !targetItem.defaultApplied(0)) {
-                if (srcItem.get<int>(0) == targetItem.get<int>(0)) {
-                    throw std::invalid_argument {
-                        "Sorry - MULTREGT applied internally to a region is not yet supported"
-                    };
-                }
-            }
-        }
-    }
-
     void MULTREGTScanner::addKeyword(const DeckKeyword& deckKeyword)
     {
         using Kw = ParserKeywords::MULTREGT;
-
-        this->assertKeywordSupported(deckKeyword);
 
         for (const auto& deckRecord : deckKeyword) {
             std::vector<int> src_regions;
@@ -426,11 +402,20 @@ namespace Opm {
                 target_regions.push_back(targetItem.get<int>(0));
             }
 
+            bool include_self = false; // case where target and source are same region
+            if (target_regions.size() == 1 && src_regions.size() == 1 &&
+                src_regions[0] == target_regions[0]) {
+                // MULTREGT with same source and target region.
+                // Use connections to self and all other regions
+                target_regions = unique(fp->get_int(region_name));
+                include_self = true;
+            }
+
             for (int src_region : src_regions) {
                 for (int target_region : target_regions) {
                     if (src_region <= target_region) {
                         // same region should not happen for defaulted regions
-                        if (src_region != target_region) {
+                        if (src_region != target_region || include_self) {
                             m_records.push_back({src_region, target_region, trans_mult, directions, nnc_behaviour, region_name});
                         }
                     }

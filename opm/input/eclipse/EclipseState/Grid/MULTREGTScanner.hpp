@@ -1,5 +1,5 @@
 /*
-  Copyright 2014 Statoil ASA.
+  Copyright 2014--2023 Equinor ASA.
 
   This file is part of the Open Porous Media project (OPM).
 
@@ -137,7 +137,6 @@ namespace Opm {
         std::vector<std::size_t> aquifer_cells{};
 
         void addKeyword(const DeckKeyword& deckKeyword);
-        void assertKeywordSupported(const DeckKeyword& deckKeyword);
 
         bool isAquNNC(std::size_t globalCellIdx1, std::size_t globalCellIdx2) const;
         bool isAquCell(std::size_t globalCellIdx) const;
