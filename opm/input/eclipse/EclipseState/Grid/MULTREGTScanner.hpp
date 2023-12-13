@@ -120,6 +120,7 @@ namespace Opm {
         }
 
     private:
+        // For any key k in the map k.first <= k.second holds.
         using MULTREGTSearchMap = std::map<
             std::pair<int, int>,
             std::vector<MULTREGTRecord>::size_type
@@ -128,6 +129,8 @@ namespace Opm {
         GridDims gridDims{};
         const FieldPropsManager* fp{nullptr};
 
+        // For any record stored index of source region is less than
+        // or equal to target region.
         std::vector<MULTREGTRecord> m_records{};
         std::map<std::string, MULTREGTSearchMap> m_searchMap{};
         std::map<std::string, std::vector<int>> regions{};
