@@ -52,11 +52,12 @@ InitParams(EclMaterialLawManager<Traits>& parent, const EclipseState& eclState, 
 template <class Traits>
 void
 EclMaterialLawManager<Traits>::InitParams::
-run() {
+run(const std::function<std::vector<int>(const FieldPropsManager&, const std::string&, const unsigned int, bool)>&
+    fieldPropIntOnLeafAssigner) {
     readUnscaledEpsPointsVectors_();
     readEffectiveParameters_();
-    initSatnumRegionArray_();
-    copySatnumArrays_();
+    initSatnumRegionArray_(fieldPropIntOnLeafAssigner);
+    copySatnumArrays_(fieldPropIntOnLeafAssigner);
     initOilWaterScaledEpsInfo_();
     initMaterialLawParamVectors_();
     std::vector<std::vector<int>*> satnumArray;
@@ -90,18 +91,19 @@ run() {
 template <class Traits>
 void
 EclMaterialLawManager<Traits>::InitParams::
-copySatnumArrays_()
+copySatnumArrays_(const std::function<std::vector<int>(const FieldPropsManager&, const std::string&,
+                  const unsigned int, bool)>& fieldPropIntOnLeafAssigner)
 {
-    copyIntArray_(this->parent_.krnumXArray_, "KRNUMX");
-    copyIntArray_(this->parent_.krnumYArray_, "KRNUMY");
-    copyIntArray_(this->parent_.krnumZArray_, "KRNUMZ");
-    copyIntArray_(this->parent_.imbnumXArray_, "IMBNUMX");
-    copyIntArray_(this->parent_.imbnumYArray_, "IMBNUMY");
-    copyIntArray_(this->parent_.imbnumZArray_, "IMBNUMZ");
+    copyIntArray_(this->parent_.krnumXArray_, "KRNUMX", fieldPropIntOnLeafAssigner);
+    copyIntArray_(this->parent_.krnumYArray_, "KRNUMY", fieldPropIntOnLeafAssigner);
+    copyIntArray_(this->parent_.krnumZArray_, "KRNUMZ", fieldPropIntOnLeafAssigner);
+    copyIntArray_(this->parent_.imbnumXArray_, "IMBNUMX", fieldPropIntOnLeafAssigner);
+    copyIntArray_(this->parent_.imbnumYArray_, "IMBNUMY", fieldPropIntOnLeafAssigner);
+    copyIntArray_(this->parent_.imbnumZArray_, "IMBNUMZ", fieldPropIntOnLeafAssigner);
     // create the information for the imbibition region (IMBNUM). By default this is
     // the same as the saturation region (SATNUM)
     this->parent_.imbnumRegionArray_ = this->parent_.satnumRegionArray_;
-    copyIntArray_(this->parent_.imbnumRegionArray_, "IMBNUM");
+    copyIntArray_(this->parent_.imbnumRegionArray_, "IMBNUM", fieldPropIntOnLeafAssigner);
     assert(this->numCompressedElems_ == this->parent_.satnumRegionArray_.size());
     assert(!this->parent_.enableHysteresis() || this->numCompressedElems_ == this->parent_.imbnumRegionArray_.size());
 }
@@ -109,14 +111,12 @@ copySatnumArrays_()
 template <class Traits>
 void
 EclMaterialLawManager<Traits>::InitParams::
-copyIntArray_(std::vector<int>& dest, const std::string keyword)
+copyIntArray_(std::vector<int>& dest, const std::string keyword,
+              const std::function<std::vector<int>(const FieldPropsManager&, const std::string&, const unsigned int, bool)>&
+              fieldPropIntOnLeafAssigner)
 {
     if (this->eclState_.fieldProps().has_int(keyword)) {
-        dest.resize(this->numCompressedElems_);
-        const auto& satnumRawData = this->eclState_.fieldProps().get_int(keyword);
-        for (unsigned elemIdx = 0; elemIdx < this->numCompressedElems_; ++elemIdx) {
-            dest[elemIdx] = satnumRawData[elemIdx] - 1;
-        }
+        dest = fieldPropIntOnLeafAssigner(this->eclState_.fieldProps(), keyword, this->numCompressedElems_, /*needsTranslation*/true);
     }
 }
 
@@ -134,7 +134,7 @@ void
 EclMaterialLawManager<Traits>::InitParams::
 initArrays_(
         std::vector<std::vector<int>*>& satnumArray,
-        std::vector<std::vector<int>*>& imbnumArray, 
+        std::vector<std::vector<int>*>& imbnumArray,
         std::vector<std::vector<MaterialLawParams>*>& mlpArray)
 {
     satnumArray.push_back(&this->parent_.satnumRegionArray_);
@@ -164,7 +164,7 @@ initMaterialLawParamVectors_()
 {
     this->parent_.materialLawParams_.resize(this->numCompressedElems_);
     if (this->parent_.hasDirectionalImbnum() || this->parent_.hasDirectionalRelperms()) {
-        this->parent_.dirMaterialLawParams_ 
+        this->parent_.dirMaterialLawParams_
             = std::make_unique<DirectionalMaterialLawParams<MaterialLawParams>>(this->numCompressedElems_);
     }
 }
@@ -181,17 +181,16 @@ initOilWaterScaledEpsInfo_()
 template <class Traits>
 void
 EclMaterialLawManager<Traits>::InitParams::
-initSatnumRegionArray_()
+initSatnumRegionArray_(const std::function<std::vector<int>(const FieldPropsManager&, const std::string&, const unsigned int, bool)>&
+                       fieldPropIntOnLeafAssigner)
 {
     // copy the SATNUM grid property. in some cases this is not necessary, but it
     // should not require much memory anyway...
     auto &satnumArray = this->parent_.satnumRegionArray_;
     satnumArray.resize(this->numCompressedElems_);
     if (this->eclState_.fieldProps().has_int("SATNUM")) {
-        const auto& satnumRawData = this->eclState_.fieldProps().get_int("SATNUM");
-        for (unsigned elemIdx = 0; elemIdx < this->numCompressedElems_; ++elemIdx) {
-            satnumArray[elemIdx] = satnumRawData[elemIdx] - 1;
-        }
+        satnumArray = fieldPropIntOnLeafAssigner(this->eclState_.fieldProps(), "SATNUM",
+                                                    this->numCompressedElems_, /*needsTranslation*/true);
     }
     else {
         std::fill(satnumArray.begin(), satnumArray.end(), 0);

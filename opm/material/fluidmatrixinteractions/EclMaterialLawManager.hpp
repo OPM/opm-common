@@ -42,6 +42,7 @@
 #include <opm/material/fluidmatrixinteractions/DirectionalMaterialLawParams.hpp>
 
 #include <cassert>
+#include <functional>
 #include <memory>
 #include <tuple>
 #include <vector>
@@ -55,6 +56,7 @@ template<class Scalar> class EclEpsScalingPoints;
 template<class Scalar> struct EclEpsScalingPointsInfo;
 class EclHysteresisConfig;
 enum class EclTwoPhaseSystemType;
+class FieldPropsManager;
 class Runspec;
 class SgfnTable;
 class SgofTable;
@@ -137,28 +139,41 @@ private:
     class InitParams {
     public:
         InitParams(EclMaterialLawManager<TraitsT>& parent, const EclipseState& eclState, size_t numCompressedElems);
-        void run();
+        // \brief Function argument 'fieldPropIntOnLeadAssigner' needed to lookup
+        //        field properties of cells on the leaf grid view for CpGrid with local grid refinement.
+        void run(const std::function<std::vector<int>(const FieldPropsManager&, const std::string&,
+                 const unsigned int, bool)>& fieldPropIntOnLeafAssigner);
     private:
         class HystParams;
-        void copySatnumArrays_();
-        void copyIntArray_(std::vector<int>& dest, const std::string keyword);
+        // \brief Function argument 'fieldPropIntOnLeadAssigner' needed to lookup
+        //        field properties of cells on the leaf grid view for CpGrid with local grid refinement.
+        void copySatnumArrays_(const std::function<std::vector<int>(const FieldPropsManager&, const std::string&,
+                               const unsigned int, bool)>& fieldPropIntOnLeafAssigner);
+        // \brief Function argument 'fieldPropIntOnLeadAssigner' needed to lookup
+        //        field properties of cells on the leaf grid view for CpGrid with local grid refinement.
+        void copyIntArray_(std::vector<int>& dest, const std::string keyword,
+                           const std::function<std::vector<int>(const FieldPropsManager&, const std::string&,
+                           const unsigned int, bool)>& fieldPropIntOnLeafAssigner);
         unsigned imbRegion_(std::vector<int>& array, unsigned elemIdx);
         void initArrays_(
-            std::vector<std::vector<int>*>& satnumArray,
-            std::vector<std::vector<int>*>& imbnumArray,
-            std::vector<std::vector<MaterialLawParams>*>& mlpArray);
+                         std::vector<std::vector<int>*>& satnumArray,
+                         std::vector<std::vector<int>*>& imbnumArray,
+                         std::vector<std::vector<MaterialLawParams>*>& mlpArray);
         void initMaterialLawParamVectors_();
         void initOilWaterScaledEpsInfo_();
-        void initSatnumRegionArray_();
+        // \brief Function argument 'fieldPropIntOnLeadAssigner' needed to lookup
+        //        field properties of cells on the leaf grid view for CpGrid with local grid refinement.
+        void initSatnumRegionArray_(const std::function<std::vector<int>(const FieldPropsManager&, const std::string&,
+                                    const unsigned int, bool)>& fieldPropIntOnLeafAssigner);
         void initThreePhaseParams_(
-            HystParams &hystParams,
-            MaterialLawParams& materialParams,
-            unsigned satRegionIdx,
-            unsigned elemIdx);
+                                   HystParams &hystParams,
+                                   MaterialLawParams& materialParams,
+                                   unsigned satRegionIdx,
+                                   unsigned elemIdx);
         void readEffectiveParameters_();
         void readUnscaledEpsPointsVectors_();
         template <class Container>
-          void readUnscaledEpsPoints_(Container& dest, std::shared_ptr<EclEpsConfig> config, EclTwoPhaseSystemType system_type);
+        void readUnscaledEpsPoints_(Container& dest, std::shared_ptr<EclEpsConfig> config, EclTwoPhaseSystemType system_type);
         unsigned satRegion_(std::vector<int>& array, unsigned elemIdx);
         unsigned satOrImbRegion_(std::vector<int>& array, std::vector<int>& default_vec, unsigned elemIdx);
 
@@ -183,11 +198,11 @@ private:
             bool hasOilWater_();
 
             std::tuple<EclEpsScalingPointsInfo<Scalar>, EclEpsScalingPoints<Scalar>> readScaledEpsPoints_(
-              const EclEpsGridProperties& epsGridProperties, unsigned elemIdx, EclTwoPhaseSystemType type);
+                                                                                                          const EclEpsGridProperties& epsGridProperties, unsigned elemIdx, EclTwoPhaseSystemType type);
             std::tuple<EclEpsScalingPointsInfo<Scalar>, EclEpsScalingPoints<Scalar>>
-              readScaledEpsPointsDrainage_(unsigned elemIdx, EclTwoPhaseSystemType type);
+            readScaledEpsPointsDrainage_(unsigned elemIdx, EclTwoPhaseSystemType type);
             std::tuple<EclEpsScalingPointsInfo<Scalar>, EclEpsScalingPoints<Scalar>>
-              readScaledEpsPointsImbibition_(unsigned elemIdx, EclTwoPhaseSystemType type);
+            readScaledEpsPointsImbibition_(unsigned elemIdx, EclTwoPhaseSystemType type);
             EclMaterialLawManager<TraitsT>::InitParams& init_params_;
             EclMaterialLawManager<TraitsT>& parent_;
             const EclipseState& eclState_;
@@ -206,21 +221,21 @@ private:
             void readGasOilParameters_(GasOilEffectiveParamVector& dest, unsigned satRegionIdx);
             template <class TableType>
             void readGasOilFamily2_(
-                GasOilEffectiveTwoPhaseParams& effParams,
-                const Scalar Swco,
-                const double tolcrit,
-                const TableType& sofTable,
-                const SgfnTable& sgfnTable,
-                const std::string& columnName);
+                                    GasOilEffectiveTwoPhaseParams& effParams,
+                                    const Scalar Swco,
+                                    const double tolcrit,
+                                    const TableType& sofTable,
+                                    const SgfnTable& sgfnTable,
+                                    const std::string& columnName);
             void readGasOilSgof_(GasOilEffectiveTwoPhaseParams& effParams,
-                                const Scalar Swco,
-                                const double tolcrit,
-                                const SgofTable& sgofTable);
+                                 const Scalar Swco,
+                                 const double tolcrit,
+                                 const SgofTable& sgofTable);
 
             void readGasOilSlgof_(GasOilEffectiveTwoPhaseParams& effParams,
-                                const Scalar Swco,
-                                const double tolcrit,
-                                const SlgofTable& slgofTable);
+                                  const Scalar Swco,
+                                  const double tolcrit,
+                                  const SlgofTable& slgofTable);
             void readGasWaterParameters_(GasWaterEffectiveParamVector& dest, unsigned satRegionIdx);
             void readOilWaterParameters_(OilWaterEffectiveParamVector& dest, unsigned satRegionIdx);
 
@@ -241,7 +256,11 @@ private:
 public:
     void initFromState(const EclipseState& eclState);
 
-    void initParamsForElements(const EclipseState& eclState, size_t numCompressedElems);
+    // \brief Function argument 'fieldPropIntOnLeadAssigner' needed to lookup
+    //        field properties of cells on the leaf grid view for CpGrid with local grid refinement.
+    void initParamsForElements(const EclipseState& eclState, size_t numCompressedElems,
+                               const std::function<std::vector<int>(const FieldPropsManager&, const std::string&,
+                               const unsigned int,bool)>& fieldPropIntOnLeafAssigner);
 
     /*!
      * \brief Modify the initial condition according to the SWATINIT keyword.
@@ -253,8 +272,8 @@ public:
      */
     std::pair<Scalar, bool>
     applySwatinit(unsigned elemIdx,
-                         Scalar pcow,
-                         Scalar Sw);
+                  Scalar pcow,
+                  Scalar Sw);
 
     /// Apply SWATINIT-like scaling of oil/water capillary pressure curve at
     /// simulation restart.
