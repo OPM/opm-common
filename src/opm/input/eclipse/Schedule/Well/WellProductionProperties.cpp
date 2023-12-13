@@ -65,7 +65,7 @@ namespace Opm {
         Well::WellProductionProperties result;
         result.name = "test";
         result.OilRate = UDAValue(1.0);
-        result.WaterRate = UDAValue("test");
+        result.WaterRate = UDAValue("FUTEST");
         result.GasRate = UDAValue(2.0);
         result.LiquidRate = UDAValue(3.0);
         result.ResVRate = UDAValue(4.0);

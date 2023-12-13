@@ -68,7 +68,7 @@ namespace Opm {
         Well::WellInjectionProperties result;
         result.name = "test";
         result.surfaceInjectionRate = UDAValue(1.0);
-        result.reservoirInjectionRate = UDAValue("test");
+        result.reservoirInjectionRate = UDAValue("FUTEST");
         result.BHPTarget = UDAValue(2.0);
         result.THPTarget = UDAValue(3.0);
         result.bhp_hist_limit = 4.0;

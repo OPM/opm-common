@@ -19,9 +19,34 @@
 #include <fmt/format.h>
 
 #include <ostream>
+#include <unordered_set>
 
 #include <opm/input/eclipse/Deck/UDAValue.hpp>
 
+namespace {
+
+bool is_udq_blacklist(const std::string& keyword)
+{
+    static const auto udq_blacklistkw = std::unordered_set<std::string> {
+        "SUMTHIN", "SUMMARY", "RUNSUM",
+    };
+
+    return udq_blacklistkw.find(keyword) != udq_blacklistkw.end();
+}
+
+bool is_udq(const std::string& keyword)
+{
+    // Does 'keyword' match one of the patterns
+    //   AU*, BU*, CU*, FU*, GU*, RU*, SU*, or WU*?
+    using sz_t = std::string::size_type;
+
+    return (keyword.size() > sz_t{1})
+        && (keyword[1] == 'U')
+        && ! is_udq_blacklist(keyword)
+        && (keyword.find_first_of("WGFCRBSA") == sz_t{0});
+}
+
+} // Anonymous namespace
 
 namespace Opm {
 
@@ -51,6 +76,10 @@ UDAValue::UDAValue(const std::string& value):
     numeric_value(false),
     string_value(value)
 {
+    if (! is_udq(value)) {
+        std::string msg = fmt::format("Input error: Cannot create UDA value from string '{}' - neither float nor a valid UDQ name.", value);
+        throw std::invalid_argument(msg);
+    }
 }
 
 UDAValue::UDAValue(const std::string& value, const Dimension& dim_):
@@ -58,6 +87,10 @@ UDAValue::UDAValue(const std::string& value, const Dimension& dim_):
     string_value(value),
     dim(dim_)
 {
+    if (! is_udq(value)) {
+        std::string msg = fmt::format("Input error: Cannot create UDA value from string '{}' - neither float nor a valid UDQ name.", value);
+        throw std::invalid_argument(msg);
+    }
 }
 
 UDAValue UDAValue::serializationTestObject()
