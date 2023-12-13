@@ -164,10 +164,9 @@ namespace Opm {
                 // we add both directions, symmetrically, to the lookup
                 // table.
                 if (srcRegion != targetRegion) {
-                    std::pair<int,int> pair1{ srcRegion, targetRegion };
-                    std::pair<int,int> pair2{ targetRegion, srcRegion };
-                    searchPairs[pair1] = recordIx;
-                    searchPairs[pair2] = recordIx;
+                    std::pair<int,int> pair = (srcRegion <= targetRegion) ?
+                        std::make_pair(srcRegion, targetRegion) : std::make_pair(targetRegion, srcRegion);
+                    searchPairs[pair] = recordIx;
                 }
             }
             else {
@@ -306,11 +305,8 @@ namespace Opm {
             const int regionId1 = region_data[globalIndex1];
             const int regionId2 = region_data[globalIndex2];
 
-            auto regPairPos = regMap.find({ regionId1, regionId2 });
-            if ((regionId1 != regionId2) && !regPairFound(regMap, regPairPos)) {
-                // 1 -> 2 not found.  Try reverse direction.
-                regPairPos = regMap.find({ regionId2, regionId1 });
-            }
+            auto regPairPos = (regionId1 <= regionId2) ? regMap.find({ regionId1, regionId2 })
+                : regMap.find({ regionId2, regionId1 });
 
             if (! regPairFound(regMap, regPairPos)) {
                 // Neither 1->2 nor 2->1 found.  Move on to next region set.
@@ -434,7 +430,12 @@ namespace Opm {
 
             for (int src_region : src_regions) {
                 for (int target_region : target_regions) {
-                    m_records.push_back({src_region, target_region, trans_mult, directions, nnc_behaviour, region_name});
+                    if(src_region <= target_region) {
+                        m_records.push_back({src_region, target_region, trans_mult, directions, nnc_behaviour, region_name});
+                    }
+                    else {
+                        m_records.push_back({target_region, src_region, trans_mult, directions, nnc_behaviour, region_name});  
+                    }
                 }
             }
         }
