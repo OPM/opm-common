@@ -271,7 +271,7 @@ GUIDERAT
   1*  'COMB'  1.0 1.0 /
 
 LINCOM
-  1  2  'WWCT:OPX' /)";
+  1  2  'FUWCT' /)";
 
     /* The 'COMB' target mode is not supported */
     BOOST_CHECK_THROW(create_schedule(input), std::exception);
@@ -297,7 +297,7 @@ GUIDERAT
   1*  'OIL'  1.0 1.0 /
 
 LINCOM
-  1  2  'WWCT:OPX' /
+  1  2  'FUWCT' /
 
 TSTEP
   1 1 1 1 1 1 1 1 1 1 1 /)";
