@@ -95,11 +95,12 @@ setConfig(unsigned satRegionIdx)
 template <class Traits>
 void
 EclMaterialLawManager<Traits>::InitParams::HystParams::
-setDrainageParamsGasWater(unsigned elemIdx, unsigned satRegionIdx)
+setDrainageParamsGasWater(unsigned elemIdx, unsigned satRegionIdx,
+                          const std::function<unsigned(unsigned)>& lookupIdxOnLevelZeroAssigner)
 {
     if (hasGasWater_()) {
         auto [gasWaterScaledInfo, gasWaterScaledPoints]
-            = readScaledEpsPointsDrainage_(elemIdx, EclTwoPhaseSystemType::GasWater);
+            = readScaledEpsPointsDrainage_(elemIdx, EclTwoPhaseSystemType::GasWater, lookupIdxOnLevelZeroAssigner);
         GasWaterEpsTwoPhaseParams gasWaterDrainParams;
         gasWaterDrainParams.setConfig(this->parent_.gasWaterConfig_);
         gasWaterDrainParams.setUnscaledPoints(this->parent_.gasWaterUnscaledPointsVector_[satRegionIdx]);
@@ -113,11 +114,12 @@ setDrainageParamsGasWater(unsigned elemIdx, unsigned satRegionIdx)
 template <class Traits>
 void
 EclMaterialLawManager<Traits>::InitParams::HystParams::
-setDrainageParamsOilGas(unsigned elemIdx, unsigned satRegionIdx)
+setDrainageParamsOilGas(unsigned elemIdx, unsigned satRegionIdx,
+                        const std::function<unsigned(unsigned)>& lookupIdxOnLevelZeroAssigner)
 {
     if (hasGasOil_()) {
         auto [gasOilScaledInfo, gasOilScaledPoints]
-            = readScaledEpsPointsDrainage_(elemIdx, EclTwoPhaseSystemType::GasOil);
+            = readScaledEpsPointsDrainage_(elemIdx, EclTwoPhaseSystemType::GasOil, lookupIdxOnLevelZeroAssigner);
         GasOilEpsTwoPhaseParams gasOilDrainParams;
         gasOilDrainParams.setConfig(this->parent_.gasOilConfig_);
         gasOilDrainParams.setUnscaledPoints(this->parent_.gasOilUnscaledPointsVector_[satRegionIdx]);
@@ -131,14 +133,15 @@ setDrainageParamsOilGas(unsigned elemIdx, unsigned satRegionIdx)
 template <class Traits>
 void
 EclMaterialLawManager<Traits>::InitParams::HystParams::
-setDrainageParamsOilWater(unsigned elemIdx, unsigned satRegionIdx)
+setDrainageParamsOilWater(unsigned elemIdx, unsigned satRegionIdx,
+                          const std::function<unsigned(unsigned)>& lookupIdxOnLevelZeroAssigner)
 {
     // We need to compute the oil-water scaled info even if we are running a two-phase case without
     // water (e.g. gas-oil). The reason is that the oil-water scaled info is used when computing
     // the initial condition see e.g. equilibrationhelpers.cc and initstateequil.cc
     // Therefore, the below 7 lines should not be put inside the if(hasOilWater_){} below.
     auto [oilWaterScaledInfo, oilWaterScaledPoints]
-        = readScaledEpsPointsDrainage_(elemIdx, EclTwoPhaseSystemType::OilWater);
+        = readScaledEpsPointsDrainage_(elemIdx, EclTwoPhaseSystemType::OilWater, lookupIdxOnLevelZeroAssigner);
     // TODO: This will reassign the same EclEpsScalingPointsInfo for each facedir
     //  since we currently does not support facedir for the scaling points info
     //  When such support is added, we need to extend the below vector which has info for each cell
@@ -158,11 +161,12 @@ setDrainageParamsOilWater(unsigned elemIdx, unsigned satRegionIdx)
 template <class Traits>
 void
 EclMaterialLawManager<Traits>::InitParams::HystParams::
-setImbibitionParamsGasWater(unsigned elemIdx, unsigned imbRegionIdx)
+setImbibitionParamsGasWater(unsigned elemIdx, unsigned imbRegionIdx,
+                            const std::function<unsigned(unsigned)>& lookupIdxOnLevelZeroAssigner)
 {
     if (hasGasWater_()) {
         auto [gasWaterScaledInfo, gasWaterScaledPoints]
-            = readScaledEpsPointsImbibition_(elemIdx, EclTwoPhaseSystemType::GasWater);
+            = readScaledEpsPointsImbibition_(elemIdx, EclTwoPhaseSystemType::GasWater, lookupIdxOnLevelZeroAssigner);
         GasWaterEpsTwoPhaseParams gasWaterImbParamsHyst;
         gasWaterImbParamsHyst.setConfig(this->parent_.gasWaterConfig_);
         gasWaterImbParamsHyst.setUnscaledPoints(this->parent_.gasWaterUnscaledPointsVector_[imbRegionIdx]);
@@ -179,11 +183,12 @@ setImbibitionParamsGasWater(unsigned elemIdx, unsigned imbRegionIdx)
 template <class Traits>
 void
 EclMaterialLawManager<Traits>::InitParams::HystParams::
-setImbibitionParamsOilGas(unsigned elemIdx, unsigned imbRegionIdx)
+setImbibitionParamsOilGas(unsigned elemIdx, unsigned imbRegionIdx,
+                          const std::function<unsigned(unsigned)>& lookupIdxOnLevelZeroAssigner)
 {
     if (hasGasOil_()) {
         auto [gasOilScaledInfo, gasOilScaledPoints]
-            = readScaledEpsPointsImbibition_(elemIdx, EclTwoPhaseSystemType::GasOil);
+            = readScaledEpsPointsImbibition_(elemIdx, EclTwoPhaseSystemType::GasOil, lookupIdxOnLevelZeroAssigner);
 
         GasOilEpsTwoPhaseParams gasOilImbParamsHyst;
         gasOilImbParamsHyst.setConfig(this->parent_.gasOilConfig_);
@@ -200,11 +205,12 @@ setImbibitionParamsOilGas(unsigned elemIdx, unsigned imbRegionIdx)
 template <class Traits>
 void
 EclMaterialLawManager<Traits>::InitParams::HystParams::
-setImbibitionParamsOilWater(unsigned elemIdx, unsigned imbRegionIdx)
+setImbibitionParamsOilWater(unsigned elemIdx, unsigned imbRegionIdx,
+                            const std::function<unsigned(unsigned)>& lookupIdxOnLevelZeroAssigner)
 {
     if (hasOilWater_()) {
         auto [oilWaterScaledInfo, oilWaterScaledPoints]
-            = readScaledEpsPointsImbibition_(elemIdx, EclTwoPhaseSystemType::OilWater);
+            = readScaledEpsPointsImbibition_(elemIdx, EclTwoPhaseSystemType::OilWater, lookupIdxOnLevelZeroAssigner);
         OilWaterEpsTwoPhaseParams oilWaterImbParamsHyst;
         oilWaterImbParamsHyst.setConfig(this->parent_.oilWaterConfig_);
         oilWaterImbParamsHyst.setUnscaledPoints(this->parent_.oilWaterUnscaledPointsVector_[imbRegionIdx]);
@@ -250,15 +256,20 @@ std::tuple<
   EclEpsScalingPoints<typename EclMaterialLawManager<Traits>::Scalar>
 >
 EclMaterialLawManager<Traits>::InitParams::HystParams::
-readScaledEpsPoints_(const EclEpsGridProperties& epsGridProperties, unsigned elemIdx, EclTwoPhaseSystemType type)
+readScaledEpsPoints_(const EclEpsGridProperties& epsGridProperties, unsigned elemIdx, EclTwoPhaseSystemType type,
+                     const std::function<unsigned(unsigned)>& fieldPropIdxOnLevelZero)
 {
     const EclEpsConfig& config = (type == EclTwoPhaseSystemType::OilWater)?  *(this->parent_.oilWaterConfig_): *(this->parent_.gasOilConfig_);
-    unsigned satRegionIdx = epsGridProperties.satRegion( elemIdx );
+    // For CpGrids with LGRs, field prop is inherited from parent/equivalent cell from level 0.
+    // 'lookupIdx' is the index on level zero of the parent cell or the equivalent cell of the
+    // leaf grid view cell with index 'elemIdx'.
+    const auto lookupIdx = fieldPropIdxOnLevelZero(elemIdx);
+    unsigned satRegionIdx = epsGridProperties.satRegion( lookupIdx /* coincides with elemIdx when no LGRs */ );
     // Copy-construct a new instance of EclEpsScalingPointsInfo
     EclEpsScalingPointsInfo<Scalar> destInfo(this->parent_.unscaledEpsInfo_[satRegionIdx]);
     // TODO: currently epsGridProperties does not implement a face direction, e.g. SWLX, SWLY,...
     //  when these keywords get implemented, we need to use include facedir in the lookup
-    destInfo.extractScaled(this->eclState_, epsGridProperties, elemIdx);
+    destInfo.extractScaled(this->eclState_, epsGridProperties, lookupIdx /* coincides with elemIdx when no LGRs */);
 
     EclEpsScalingPoints<Scalar> destPoint;
     destPoint.init(destInfo, config, type);
@@ -271,10 +282,11 @@ std::tuple<
   EclEpsScalingPoints<typename EclMaterialLawManager<Traits>::Scalar>
 >
 EclMaterialLawManager<Traits>::InitParams::HystParams::
-readScaledEpsPointsDrainage_(unsigned elemIdx, EclTwoPhaseSystemType type)
+readScaledEpsPointsDrainage_(unsigned elemIdx, EclTwoPhaseSystemType type,
+                             const std::function<unsigned(unsigned)>& fieldPropIdxOnLevelZero)
 {
     const auto& epsGridProperties = this->init_params_.epsGridProperties_;
-    return readScaledEpsPoints_(*epsGridProperties, elemIdx, type);
+    return readScaledEpsPoints_(*epsGridProperties, elemIdx, type, fieldPropIdxOnLevelZero);
 }
 
 template <class Traits>
@@ -283,10 +295,11 @@ std::tuple<
   EclEpsScalingPoints<typename EclMaterialLawManager<Traits>::Scalar>
 >
 EclMaterialLawManager<Traits>::InitParams::HystParams::
-readScaledEpsPointsImbibition_(unsigned elemIdx, EclTwoPhaseSystemType type)
+readScaledEpsPointsImbibition_(unsigned elemIdx, EclTwoPhaseSystemType type,
+                               const std::function<unsigned(unsigned)>& fieldPropIdxOnLevelZero)
 {
     const auto& epsGridProperties = this->init_params_.epsImbGridProperties_;
-    return readScaledEpsPoints_(*epsGridProperties, elemIdx, type);
+    return readScaledEpsPoints_(*epsGridProperties, elemIdx, type, fieldPropIdxOnLevelZero);
 }
 
 // Make some actual code, by realizing the previously defined templated class
