@@ -64,7 +64,7 @@ public:
     explicit Co2GasPvt() = default;
 
     Co2GasPvt(const std::vector<Scalar>& salinity,
-              int activityModel = 1,
+              int activityModel = 3,
               Scalar T_ref = 288.71, //(273.15 + 15.56)
               Scalar P_ref = 101325)
         : salinity_(salinity)
@@ -126,9 +126,9 @@ public:
     */
     void setActivityModelSalt(int activityModel)
     {
-        // Only 0, 1, 2, 3 are allowed
-        if (activityModel > 3 || activityModel < 0) {
-            throw std::runtime_error("ACTCO2S options are 0, 1, 2 or 3; see manual!");
+        // Only 1, 2, and 3 are allowed
+        if (activityModel > 3 || activityModel < 1) {
+            OPM_THROW(std::runtime_error, "The salt activity model options are 1, 2 or 3");
         }
         activityModel_ = activityModel;}
 

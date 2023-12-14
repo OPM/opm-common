@@ -327,7 +327,7 @@ std::optional<JFunc> make_jfunc(const Deck& deck) {
         result.m_gas_comp_index = 77;
         result.m_rtemp = 1.0;
         result.m_salinity = 1.0;
-        result.m_actco2s = 1;
+        result.m_actco2s = 3;
         result.m_tlmixpar = TLMixpar::serializationTestObject();
         result.m_ppcwmax = Ppcwmax::serializationTestObject();
         return result;
