@@ -305,6 +305,7 @@ namespace Opm {
             const int regionId1 = region_data[globalIndex1];
             const int regionId2 = region_data[globalIndex2];
 
+            assert(regionId1 != regionId2);
             auto regPairPos = (regionId1 <= regionId2) ? regMap.find({ regionId1, regionId2 })
                 : regMap.find({ regionId2, regionId1 });
 
@@ -354,10 +355,7 @@ namespace Opm {
             const auto regionId2 = region_data[globalCellIdx2];
 
             auto regPairPos = regMap.find({ regionId1, regionId2 });
-            if ((regionId1 != regionId2) && (regPairPos == regMap.end())) {
-                // 1 -> 2 not found.  Try reverse direction.
-                regPairPos = regMap.find({ regionId2, regionId1 });
-            }
+            assert(regionId1 != regionId2);
 
             if (regPairPos == regMap.end()) {
                 // Neither 1->2 nor 2->1 found.  Move on to next region set.
@@ -430,8 +428,11 @@ namespace Opm {
 
             for (int src_region : src_regions) {
                 for (int target_region : target_regions) {
-                    if(src_region <= target_region) {
-                        m_records.push_back({src_region, target_region, trans_mult, directions, nnc_behaviour, region_name});
+                    if (src_region <= target_region) {
+                        // same region should not happen for defaulted regions
+                        if (src_region != target_region) {
+                            m_records.push_back({src_region, target_region, trans_mult, directions, nnc_behaviour, region_name});
+                        }
                     }
                     else {
                         m_records.push_back({target_region, src_region, trans_mult, directions, nnc_behaviour, region_name});  
