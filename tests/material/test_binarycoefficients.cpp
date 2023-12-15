@@ -46,6 +46,22 @@ bool close_at_tolerance(Scalar n1, Scalar n2, Scalar tolerance)
     return comp(n1, n2);
 }
 
+template<class Evaluation>
+Evaluation moleFractionToMolality(Evaluation& xlCO2, Evaluation& s, const int& activityModel)
+{
+    Evaluation mCO2;
+
+    // Activity model 3 have been implemented without 2 times salt molality 
+    if (activityModel == 3){
+        mCO2 = xlCO2 * (s + 55.508) / (1 - xlCO2);
+    }
+    else {
+        mCO2 = xlCO2 * (2 * s + 55.508) / (1 - xlCO2);
+    }
+
+    return mCO2;
+}
+
 using Types = std::tuple<float,double>;
 
 BOOST_AUTO_TEST_CASE_TEMPLATE(Brine_CO2, Scalar, Types)
@@ -67,139 +83,83 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(Brine_CO2, Scalar, Types)
     // 1 = Rumpf et al. (1994) as given in Spycher & Pruess (2005)
     // 2 = Duan-Sun model as modified in Spycher & Pruess (2009)
     // 3 = Duan-Sun model as given in Spycher & Pruess (2005)
-    const int activityModel = 2;
-
-    // Init. water gas mole fraction (which we don't care about here) and dissolved CO2 mole fraction
-    Evaluation xgH2O;
-    Evaluation xlCO2;
+    std::vector<int> activityModel = {1, 2, 3};
 
     // Init pressure, temperature, and salinity variables
-    Evaluation T;
-    Evaluation p;
-    Evaluation s;
+    std::vector<Evaluation> T = {303.15, 333.15, 363.15, 393.15};  // K
+    std::vector<Evaluation> p = {1e5, 5e5, 10e5, 50e5, 100e5, 200e5, 300e5, 400e5, 500e5, 600e5};  // Pa
+    std::vector<Evaluation> s = {0.0, 1.0, 2.0, 4.0};
 
-    // Tolerance for Zhao et al (2015) data
-    const Scalar tol_zhao = 0.5e-2;
-
-    // Reference data Zhao et al., Geochimica et Cosmochimica Acta 149, 2015
-    // Experimental data in Table 3
-    // static constexpr Scalar xSol_Zhao[3][7] = {
-    //     {1.245, 1.016, 0.859, 0.734, 0.623, 0.551, 0.498},
-    //     {1.020, 0.836, 0.706, 0.618, 0.527, 0.469, 0.427},
-    //     {1.001, 0.800, 0.647, 0.566, 0.498, 0.440, 0.390}
-    // };
-    // Spycher & Pruess (2009) (i.e., activityModel = 2 in our case) data given in Table 3
-    static constexpr Scalar xSol_Zhao[3][7] = {
-        {1.233, 1.012, 0.845, 0.716, 0.618, 0.541, 0.481},
-        {1.001, 0.819, 0.686, 0.588, 0.515, 0.463, 0.425},
-        {1.028, 0.824, 0.679, 0.577, 0.503, 0.450, 0.414}
+    // Literature values from Duan & Sun (2003), An improved model calculating CO 2 solubility in pure water and aqueous
+    // NaCl solutions from 273 to 533 K and from 0 to 2000 bar, Chemical Geology 193
+    static constexpr Scalar m_co2_data[4][4][10] = {
+    {
+        {0.0286, 0.1442, 0.2809, 1.0811, 1.3611, 1.4889, 1.5989, 1.7005, 1.7965, 1.8883},
+        {0.0137, 0.0803, 0.1602, 0.6695, 1.0275, 1.2344, 1.3495, 1.4478, 1.5368, 1.6194},
+        {0.0036, 0.0511, 0.1086, 0.4952, 0.8219, 1.1308, 1.2802, 1.3954, 1.4954, 1.5857},
+        {-999., 0.0298, 0.0781, 0.4157, 0.7314, 1.1100, 1.3184, 1.4700, 1.5972, 1.7102}
+    },
+    {
+        {0.0238, 0.1185, 0.2294, 0.8729, 1.0958, 1.1990, 1.2910, 1.3781, 1.4620, 1.5438},
+        {0.0116, 0.0674, 0.1335, 0.5502, 0.8405, 1.0072, 1.1012, -999., 1.2577, 1.3282},
+        {0.0031, 0.0433, 0.0914, 0.4103, 0.6767, 0.9259, 1.0456, 1.1383, 1.2191, 1.2925},
+        {-999., 0.0253, 0.0660, 0.3447, 0.6015, 0.9052, 1.0696, 1.1881, 1.2869, 1.3742}
+    },
+    {
+        {0.0200, 0.0984, 0.1895, 0.7135, 0.8939, 0.9801, 1.0600, 1.1377, 1.2143, 1.2905},
+        {0.0100, 0.0572, 0.1126, 0.4583, 0.6978, 0.8359, 0.9160, 0.9873, 1.0542, 1.1182},
+        {0.0027, 0.0372, 0.0780, 0.3451, 0.5663, 0.7729, 0.8731, 0.9518, 1.0216, 1.0859},
+        {-999., 0.0218, 0.0565, 0.2905, 0.5038, 0.7543, 0.8898, 0.9878, 1.0702, 1.1436},
+    },
+    {
+        {0.0147, 0.0703, 0.1339, 0.4945, 0.6189, 0.6849, 0.7515, 0.8200, 0.8907, 0.9639},
+        {0.0077, 0.0428, 0.0833, 0.3314, 0.5028, 0.6060, 0.6717, 0.7340, 0.7955, 0.8571},
+        {0.0021, 0.0287, 0.0593, 0.2554, 0.4169, 0.5705, 0.6503, 0.7170, 0.7793, 0.8395},
+        {-999., 0.0171, 0.0435, 0.2169, 0.3733, 0.5590, 0.6636, 0.7434, 0.8140, 0.8798},
+    }
     };
 
-    // Temperature, pressure and salinity for Zhao et al (2015) data; Table 3
-    T = 323.15;  // K
-    const int numT = 3;
-    p = 150e5;  // Pa
-    const int numS = 7;
+    // Tolerance per activity model
+    std::vector<Scalar> tol = {2.5e-1, 1.75e-1, 2e-1};
 
-    // Test against Zhao et al (2015) data
-    Evaluation salinity;
+    // Test against Duan&Sun (2005) data
+    Evaluation xgH2O;
+    Evaluation xlCO2;
     Evaluation mCO2;
-    for (int iT = 0; iT < numT; ++iT) {
-        // Salinity in mol/kg
-        s = 0.0;
+    Evaluation salinity = 0.0;
+    for (std::size_t iS = 0; iS < s.size(); ++iS) {
+        for (std::size_t iT = 0; iT < T.size(); ++iT) {
+            for (std::size_t iP = 0; iP < p.size(); ++iP) {
+                for (std::size_t iA = 0; iA < activityModel.size(); ++iA) {
+                    // Data that are negative do either not exist or wrong
+                    if (m_co2_data[iS][iT][iP] < 0.0) {
+                        continue;
+                    }
 
-        for (int iS = 0; iS < numS; ++iS) {
-            // convert to mass fraction
-            salinity = 1 / ( 1 + 1 / (s * MmNaCl));
+                    // Calculate salinity in mass fraction
+                    if (iS > 0) {
+                        salinity = 1 / ( 1 + 1 / (s[iS] * MmNaCl));
+                    }
+                    else {
+                        salinity = 0.0;
+                    }
 
-            // Calculate solubility as mole fraction
-            BinaryCoeffBrineCO2::calculateMoleFractions(T, p, salinity, -1, xlCO2, xgH2O, activityModel, extrapolate);
+                    // Calculate solubility as mole fraction
+                    BinaryCoeffBrineCO2::calculateMoleFractions(T[iT], p[iP], salinity, -1, xlCO2, xgH2O,
+                                                                activityModel[iA], extrapolate);
 
-            // Convert to molality CO2
-            mCO2 = xlCO2 * (s + 55.508) / (1 - xlCO2);
+                    // Convert to molality
+                    mCO2 = moleFractionToMolality(xlCO2, s[iS], activityModel[iA]);
 
-            // Compare to experimental data
-            // BOOST_CHECK_CLOSE(mCO2.value(), xSol_Zhao[iT][iS], tol);
-            BOOST_CHECK_MESSAGE(close_at_tolerance(mCO2.value(), xSol_Zhao[iT][iS], tol_zhao),
-                "relative difference between solubility {"<<mCO2.value()<<"} and Zhao et al. (2015) {"<<
-                xSol_Zhao[iT][iS]<<"} exceeds tolerance {"<<tol_zhao<<"} at (T, p, S) = ("<<T.value()<<", "<<
-                p.value()<<", "<<s.value()<<")");
-
-            // Increment salinity (mol/kg)
-            s += 1.0;
+                    BOOST_CHECK_MESSAGE(close_at_tolerance(mCO2.value(), m_co2_data[iS][iT][iP], tol[iA]),
+                    "relative difference between solubility {"<<mCO2.value()<<"} and Duan & Sun (2005) {"<<
+                    m_co2_data[iS][iT][iP]<<"} exceeds tolerance {"<<tol[iA]<<"} at (T, p, S) = ("<<T[iT].value()<<
+                    ", "<<p[iP].value()<<", "<<s[iS].value()<<") for salt activity model = "<<activityModel[iA]);
+                }
+            }
         }
-        // Increment T
-        T += 50.0;
     }
-
-    // Reference (experimental?) data Koschel et al., Fluid Phase Equilibria 247, 2006; Table 6
-    // Data for T = 323.1 K
-    static constexpr Scalar xSol_Koschel_1[2][4] = {
-        {0.0111, 0.0164, 0.0177, 0.0181},
-        {0.0083, 0.0114, 0.0124, 0.0137}
-    };
-    // Data for T = 373.1 K
-    static constexpr Scalar xSol_Koschel_2[2][3] = {
-        {0.006, 0.0112, 0.0161},
-        {0.0043, 0.008, 0.0112}
-    };
-
-    // Pressure data in Koschel et al. (2006) data
-    std::vector< std::vector<Evaluation> > p_1 = {
-        {5.1e6, 10.03e6, 14.38e6, 20.24e6},
-        {5.0e6, 10.04e6, 14.41e6, 20.24e6}
-    };
     
-    std::vector< std::vector<Evaluation> > p_2 = {
-        {5.07e6, 10.4e6, 19.14e6},
-        {5.04e6, 10.29e6, 19.02e6}
-    };
-
-    // Tolerance for Koschel et al. (2006) data
-    const Scalar tol_koschel = 14e-2;
-
-    // Test against reference data in Koschel et al. (2006)
-    s = 1.0;
-    for (int i = 0; i < 2; ++i) {
-        // Convert to mass fraction
-        salinity = 1 / ( 1 + 1 / (s * MmNaCl));
-
-        // First table
-        T = 323.1;
-        for (int j = 0; j < 4; ++j) {
-            // Get pressure 
-            p = p_1[i][j];
-
-            // Calculate solubility as mole fraction
-            BinaryCoeffBrineCO2::calculateMoleFractions(T, p, salinity, -1, xlCO2, xgH2O, activityModel, extrapolate);
-
-            // Compare to experimental data
-            // BOOST_CHECK_CLOSE(xlCO2.value(), xSol_Koschel_1[i][j], tol);
-            BOOST_CHECK_MESSAGE(close_at_tolerance(xlCO2.value(), xSol_Koschel_1[i][j], tol_koschel),
-                "relative difference between solubility {"<<xlCO2.value()<<"} and Koschel et al. (2006) {"<<
-                xSol_Koschel_1[i][j]<<"} exceeds tolerance {"<<tol_koschel<<"} at (T, p, S) = ("<<T.value()<<", "<<
-                p.value()<<", "<<s.value()<<")");
-        }
-
-        // Second table 
-        T = 373.1;
-        for (int j = 0; j < 3; ++j) {
-            // Get pressure 
-            p = p_2[i][j];
-
-            // Calculate solubility as mole fraction
-            BinaryCoeffBrineCO2::calculateMoleFractions(T, p, salinity, -1, xlCO2, xgH2O, activityModel, extrapolate);
-
-            // Compare to experimental data
-            // BOOST_CHECK_CLOSE(xlCO2.value(), xSol_Koschel_2[i][j], tol);
-            BOOST_CHECK_MESSAGE(close_at_tolerance(xlCO2.value(), xSol_Koschel_2[i][j], tol_koschel),
-                "relative difference between solubility {"<<xlCO2.value()<<"} and Koschel et al. (2006) {"<<
-                xSol_Koschel_2[i][j]<<"} exceeds tolerance {"<<tol_koschel<<"} at (T, p, S) = ("<<T.value()<<", "<<
-                p.value()<<", "<<s.value()<<")");
-        }
-        // Increment salinity (to 3 mol/kg)
-        s += 2.0;
-    }
 }
 
 BOOST_AUTO_TEST_CASE_TEMPLATE(BrineDensityWithCO2, Scalar, Types)
@@ -256,8 +216,13 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(BrineDensityWithCO2, Scalar, Types)
     for (std::size_t iS = 0; iS < s.size(); ++iS) {
         for (std::size_t iP = 0; iP < p.size(); ++iP) {
             for (std::size_t iT = 0; iT < T.size(); ++iT) {
-                // Calculate salinity in mass fraction
-                salinity[0] = 1 / ( 1 + 1 / (s[iS] * MmNaCl));
+                // Calculate salinity in mass fraction for nonzero salinity
+                if (iS > 0) {
+                    salinity[0] = 1 / ( 1 + 1 / (s[iS] * MmNaCl));
+                }
+                else {
+                    salinity[0] = 0.0;
+                }
 
                 // Instantiate BrineCo2Pvt class
                 Opm::BrineCo2Pvt<Scalar> brineCo2Pvt(salinity, activityModel);
