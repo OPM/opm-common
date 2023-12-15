@@ -1,7 +1,7 @@
 // -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
 // vi: set et ts=4 sw=4 sts=4:
 /*
-  Copyright 2022 SINTEF Digital, Mathematics and Cybernetics.
+  Copyright 2023 SINTEF Digital, Mathematics and Cybernetics.
 
   This file is part of the Open Porous Media project (OPM).
 
@@ -26,11 +26,16 @@
 #ifndef OPM_GENERICFLUIDSYSTEM_HH
 #define OPM_GENERICFLUIDSYSTEM_HH
 
-#include <opm/material/fluidsystems/BaseFluidSystem.hpp>
+#include <opm/common/OpmLog/OpmLog.hpp>
 
-// TODO: this is something else need to check
-#include <opm/material/fluidsystems/PTFlashParameterCache.hpp>
+#include <opm/material/fluidsystems/BaseFluidSystem.hpp>
+#include <opm/material/fluidsystems/PTFlashParameterCache.hpp> // TODO: this is something else need to check
 #include <opm/material/viscositymodels/LBC.hpp>
+
+#include <cassert>
+#include <string>
+
+#include <fmt/format.h>
 
 namespace Opm {
 
@@ -56,11 +61,13 @@ namespace Opm {
 /*!
  * \ingroup FluidSystem
  *
- * \brief A two phase three component fluid system with components
- * CO2, Methane and NDekan
+ * \brief A two phase system that can contain NumComp components
+ *
+ * \tparam Scalar  The floating-point type that specifies the precision of the numerical operations.
+ * \tparam NumComp The number of the components in the fluid system.
  */
     template<class Scalar, int NumComp>
-    class GenericFluidSystem : public Opm::BaseFluidSystem<Scalar, GenericFluidSystem<Scalar, NumComp> > {
+    class GenericFluidSystem : public BaseFluidSystem<Scalar, GenericFluidSystem<Scalar, NumComp> > {
     public:
         // TODO: I do not think these should be constant in fluidsystem, will try to make it non-constant later
         static const int numPhases=2;
@@ -73,16 +80,17 @@ namespace Opm {
 
         template <class ValueType>
         using ParameterCache = Opm::PTFlashParameterCache<ValueType, GenericFluidSystem<Scalar, NumComp>>;
-        using ViscosityModel = typename Opm::ViscosityModels<Scalar, GenericFluidSystem<Scalar, NumComp>>;
-        using PengRobinsonMixture = typename Opm::PengRobinsonMixture<Scalar, GenericFluidSystem<Scalar, NumComp>>;
+        using ViscosityModel = Opm::ViscosityModels<Scalar, GenericFluidSystem<Scalar, NumComp>>;
+        using PengRobinsonMixture = Opm::PengRobinsonMixture<Scalar, GenericFluidSystem<Scalar, NumComp>>;
 
         template<typename Param>
         static void addComponent(const Param& param)
         {
             assert(component_param_.size() <= numComponents);
             if (component_param_.size() == numComponents) {
-                std::cout << " the fluid system has reached maximum " << numComponents << " component,"
-                          << " the component " << param.name << " will not be added " << std::endl;
+                const std::string msg =  fmt::format("the fluid system has reached maximum {} component, the component {} will not be added",
+                                                     NumComp, param.name);
+                OpmLog::note(msg);
             }
             component_param_.push_back(param);
         }
