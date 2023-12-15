@@ -61,6 +61,7 @@
 #include <initializer_list>
 #include <numeric>
 #include <tuple>
+#include <unordered_map>
 
 #include <fmt/format.h>
 
@@ -332,22 +333,72 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
         return this->m_circle;
     }
 
+
     void EclipseGrid::initGrid(const Deck& deck, const int* actnum)
     {
-        if (deck.hasKeyword<ParserKeywords::RADIAL>()) {
-            initCylindricalGrid(deck );
-        } else if (deck.hasKeyword<ParserKeywords::SPIDER>()) {
-            initSpiderwebGrid(deck );
-        } else {
-            if (hasCornerPointKeywords(deck)) {
-                initCornerPointGrid(deck);
-            } else if (hasCartesianKeywords(deck)) {
-                initCartesianGrid(deck);
-            } else if (hasGDFILE(deck)) {
-                initBinaryGrid(deck);
-            } else {
-                throw std::invalid_argument("EclipseGrid needs cornerpoint or cartesian keywords.");
+        enum GridType { COORD, DEPTHZ, TOPS, RADIAL, SPIDER, GDFILE, GT_SIZE };
+
+        std::vector<int> found;
+        if (hasCornerPointKeywords(deck)) {
+            found.push_back(GridType::COORD);
+        }
+        if (hasDVDEPTHZKeywords(deck)) {
+            found.push_back(GridType::DEPTHZ);
+        }
+        if (hasDTOPSKeywords(deck)) {
+            found.push_back(GridType::TOPS);
+        }
+        if (hasRadialKeywords(deck)) {
+            found.push_back(GridType::RADIAL);
+        }
+        if (hasSpiderKeywords(deck)) {
+            found.push_back(GridType::SPIDER);
+        }
+        if (hasGDFILE(deck)) {
+            found.push_back(GridType::GDFILE);
+        }
+
+        const std::string messages[GT_SIZE] {
+            "COORD with ZCORN creates a corner-point grid",
+            "DEPTHZ with DXV, DYV, DZV creates a cartesian grid",
+            "TOPS with DX/DXV, DY/DYV, DZ/DZV creates a cartesian grid",
+            "RADIAL with DR/DRV, DTHETA/DTHETAV, DZ/DZV and TOPS creates a cylindrical grid",
+            "SPIDER with DR/DRV, DTHETA/DTHETAV, DZ/DZV and TOPS creates a spider grid",
+            "GDFILE reads a grid from file"};
+
+        if (found.empty()) {
+            std::string message = "The grid must be specified using one of these options:";
+            for (int grid_type = 0; grid_type < GridType::GT_SIZE; grid_type++) {
+                message += "\n    " + messages[grid_type];
             }
+            throw std::invalid_argument(message);
+        }
+
+        if (found.size() > 1) {
+            std::string message = "The specification of the grid is ambiguous:";
+            for (const int& grid_type : found) {
+                message += "\n    " + messages[grid_type];
+            }
+            throw std::invalid_argument(message);
+        }
+
+        switch (found.front()) {
+        case GridType::COORD:
+            this->initCornerPointGrid(deck);
+            break;
+        case GridType::DEPTHZ:
+        case GridType::TOPS:
+            this->initCartesianGrid(deck);
+            break;
+        case GridType::RADIAL:
+            this->initCylindricalGrid(deck);
+            break;
+        case GridType::SPIDER:
+            this->initSpiderwebGrid(deck);
+            break;
+        case GridType::GDFILE:
+            this->initBinaryGrid(deck);
+            break;
         }
 
         if (deck.hasKeyword<ParserKeywords::PINCH>()) {
@@ -1230,12 +1281,24 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
         return deck.hasKeyword<ParserKeywords::GDFILE>();
     }
 
+
     bool EclipseGrid::hasCartesianKeywords(const Deck& deck) {
         if (hasDVDEPTHZKeywords( deck ))
             return true;
         else
             return hasDTOPSKeywords(deck);
     }
+
+
+    bool EclipseGrid::hasRadialKeywords(const Deck& deck) {
+        return deck.hasKeyword<ParserKeywords::RADIAL>() && hasCylindricalKeywords(deck);
+    }
+
+
+    bool EclipseGrid::hasSpiderKeywords(const Deck& deck) {
+        return deck.hasKeyword<ParserKeywords::SPIDER>() && hasCylindricalKeywords(deck);
+    }
+
 
     bool EclipseGrid::hasCylindricalKeywords(const Deck& deck) {
         if (deck.hasKeyword<ParserKeywords::INRAD>() &&
