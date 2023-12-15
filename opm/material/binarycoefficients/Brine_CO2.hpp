@@ -682,7 +682,7 @@ private:
             // Molality with salt
             Evaluation mCO2 = (xCO2 * 55.508) / (1 - xCO2);  // pure water
             mCO2 /= gammaNaCl;
-            xCO2 = mCO2 / (2 * m_NaCl + 55.508 + mCO2);
+            xCO2 = mCO2 / (m_NaCl + 55.508 + mCO2);
 
             // new yH2O with salt 
             const Evaluation& xNaCl = molalityToMoleFrac_(m_NaCl);
