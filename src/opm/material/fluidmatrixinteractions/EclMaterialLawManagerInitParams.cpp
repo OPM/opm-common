@@ -53,7 +53,8 @@ template <class Traits>
 void
 EclMaterialLawManager<Traits>::InitParams::
 run(const std::function<std::vector<int>(const FieldPropsManager&, const std::string&, const unsigned int, bool)>&
-    fieldPropIntOnLeafAssigner) {
+    fieldPropIntOnLeafAssigner,
+    const std::function<unsigned(unsigned)>& lookupIdxOnLevelZeroAssigner) {
     readUnscaledEpsPointsVectors_();
     readEffectiveParameters_();
     initSatnumRegionArray_(fieldPropIntOnLeafAssigner);
@@ -71,14 +72,14 @@ run(const std::function<std::vector<int>(const FieldPropsManager&, const std::st
             //unsigned satNumCell = this->parent_.satnumRegionArray_[elemIdx];
             HystParams hystParams {*this};
             hystParams.setConfig(satRegionIdx);
-            hystParams.setDrainageParamsOilGas(elemIdx, satRegionIdx);
-            hystParams.setDrainageParamsOilWater(elemIdx, satRegionIdx);
-            hystParams.setDrainageParamsGasWater(elemIdx, satRegionIdx);
+            hystParams.setDrainageParamsOilGas(elemIdx, satRegionIdx, lookupIdxOnLevelZeroAssigner);
+            hystParams.setDrainageParamsOilWater(elemIdx, satRegionIdx, lookupIdxOnLevelZeroAssigner);
+            hystParams.setDrainageParamsGasWater(elemIdx, satRegionIdx, lookupIdxOnLevelZeroAssigner);
             if (this->parent_.enableHysteresis()) {
                 unsigned imbRegionIdx = imbRegion_(*imbnumArray[i], elemIdx);
-                hystParams.setImbibitionParamsOilGas(elemIdx, imbRegionIdx);
-                hystParams.setImbibitionParamsOilWater(elemIdx, imbRegionIdx);
-                hystParams.setImbibitionParamsGasWater(elemIdx, imbRegionIdx);
+                hystParams.setImbibitionParamsOilGas(elemIdx, imbRegionIdx, lookupIdxOnLevelZeroAssigner);
+                hystParams.setImbibitionParamsOilWater(elemIdx, imbRegionIdx, lookupIdxOnLevelZeroAssigner);
+                hystParams.setImbibitionParamsGasWater(elemIdx, imbRegionIdx, lookupIdxOnLevelZeroAssigner);
             }
             hystParams.finalize();
             initThreePhaseParams_(hystParams, (*mlpArray[i])[elemIdx], satRegionIdx, elemIdx);

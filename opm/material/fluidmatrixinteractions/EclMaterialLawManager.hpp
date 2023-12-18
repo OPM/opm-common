@@ -141,8 +141,11 @@ private:
         InitParams(EclMaterialLawManager<TraitsT>& parent, const EclipseState& eclState, size_t numCompressedElems);
         // \brief Function argument 'fieldPropIntOnLeadAssigner' needed to lookup
         //        field properties of cells on the leaf grid view for CpGrid with local grid refinement.
+        //        Function argument 'lookupIdxOnLevelZeroAssigner' is added to lookup, for each
+        //        leaf gridview cell with index 'elemIdx', its 'lookupIdx' (index of the parent/equivalent cell on level zero).
         void run(const std::function<std::vector<int>(const FieldPropsManager&, const std::string&,
-                 const unsigned int, bool)>& fieldPropIntOnLeafAssigner);
+                 const unsigned int, bool)>& fieldPropIntOnLeafAssigner,
+                 const std::function<unsigned(unsigned)>& lookupIdxOnLevelZeroAssigner);
     private:
         class HystParams;
         // \brief Function argument 'fieldPropIntOnLeadAssigner' needed to lookup
@@ -186,23 +189,37 @@ private:
             std::shared_ptr<OilWaterTwoPhaseHystParams> getOilWaterParams();
             std::shared_ptr<GasWaterTwoPhaseHystParams> getGasWaterParams();
             void setConfig(unsigned satRegionIdx);
-            void setDrainageParamsOilGas(unsigned elemIdx, unsigned satRegionIdx);
-            void setDrainageParamsOilWater(unsigned elemIdx, unsigned satRegionIdx);
-            void setDrainageParamsGasWater(unsigned elemIdx, unsigned satRegionIdx);
-            void setImbibitionParamsOilGas(unsigned elemIdx, unsigned satRegionIdx);
-            void setImbibitionParamsOilWater(unsigned elemIdx, unsigned satRegionIdx);
-            void setImbibitionParamsGasWater(unsigned elemIdx, unsigned satRegionIdx);
+            // Function argument 'lookupIdxOnLevelZeroAssigner' is added to lookup, for each
+            // leaf gridview cell with index 'elemIdx', its 'lookupIdx' (index of the parent/equivalent cell on level zero).
+            void setDrainageParamsOilGas(unsigned elemIdx, unsigned satRegionIdx,
+                                         const std::function<unsigned(unsigned)>& lookupIdxOnLevelZeroAssigner);
+            void setDrainageParamsOilWater(unsigned elemIdx, unsigned satRegionIdx,
+                                           const std::function<unsigned(unsigned)>& lookupIdxOnLevelZeroAssigner);
+            void setDrainageParamsGasWater(unsigned elemIdx, unsigned satRegionIdx,
+                                           const std::function<unsigned(unsigned)>& lookupIdxOnLevelZeroAssigner);
+            void setImbibitionParamsOilGas(unsigned elemIdx, unsigned satRegionIdx,
+                                           const std::function<unsigned(unsigned)>& lookupIdxOnLevelZeroAssigner);
+            void setImbibitionParamsOilWater(unsigned elemIdx, unsigned satRegionIdx,
+                                             const std::function<unsigned(unsigned)>& lookupIdxOnLevelZeroAssigner);
+            void setImbibitionParamsGasWater(unsigned elemIdx, unsigned satRegionIdx,
+                                             const std::function<unsigned(unsigned)>& lookupIdxOnLevelZeroAssigner);
         private:
             bool hasGasWater_();
             bool hasGasOil_();
             bool hasOilWater_();
 
-            std::tuple<EclEpsScalingPointsInfo<Scalar>, EclEpsScalingPoints<Scalar>> readScaledEpsPoints_(
-                                                                                                          const EclEpsGridProperties& epsGridProperties, unsigned elemIdx, EclTwoPhaseSystemType type);
+            // Function argument 'lookupIdxOnLevelZeroAssigner' is added to lookup, for each
+            // leaf gridview cell with index 'elemIdx', its 'lookupIdx' (index of the parent/equivalent cell on level zero).
             std::tuple<EclEpsScalingPointsInfo<Scalar>, EclEpsScalingPoints<Scalar>>
-            readScaledEpsPointsDrainage_(unsigned elemIdx, EclTwoPhaseSystemType type);
+            readScaledEpsPoints_(const EclEpsGridProperties& epsGridProperties, unsigned elemIdx, EclTwoPhaseSystemType type,
+                                 const std::function<unsigned(unsigned)>& lookupIdxOnLevelZeroAssigner);
             std::tuple<EclEpsScalingPointsInfo<Scalar>, EclEpsScalingPoints<Scalar>>
-            readScaledEpsPointsImbibition_(unsigned elemIdx, EclTwoPhaseSystemType type);
+            readScaledEpsPointsDrainage_(unsigned elemIdx, EclTwoPhaseSystemType type,
+                                         const std::function<unsigned(unsigned)>& lookupIdxOnLevelZeroAssigner);
+            std::tuple<EclEpsScalingPointsInfo<Scalar>, EclEpsScalingPoints<Scalar>>
+            readScaledEpsPointsImbibition_(unsigned elemIdx, EclTwoPhaseSystemType type,
+                                           const std::function<unsigned(unsigned)>& lookupIdxOnLevelZeroAssigner);
+
             EclMaterialLawManager<TraitsT>::InitParams& init_params_;
             EclMaterialLawManager<TraitsT>& parent_;
             const EclipseState& eclState_;
@@ -258,9 +275,12 @@ public:
 
     // \brief Function argument 'fieldPropIntOnLeadAssigner' needed to lookup
     //        field properties of cells on the leaf grid view for CpGrid with local grid refinement.
+    //        Function argument 'lookupIdxOnLevelZeroAssigner' is added to lookup, for each
+    //        leaf gridview cell with index 'elemIdx', its 'lookupIdx' (index of the parent/equivalent cell on level zero).
     void initParamsForElements(const EclipseState& eclState, size_t numCompressedElems,
                                const std::function<std::vector<int>(const FieldPropsManager&, const std::string&,
-                               const unsigned int,bool)>& fieldPropIntOnLeafAssigner);
+                               const unsigned int,bool)>& fieldPropIntOnLeafAssigner,
+                               const std::function<unsigned(unsigned)>& lookupIdxOnLevelZeroAssigner);
 
     /*!
      * \brief Modify the initial condition according to the SWATINIT keyword.

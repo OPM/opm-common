@@ -618,9 +618,9 @@ namespace Opm
 class FieldPropsManager;
 }
 
-// To support Local Grid Refinement for CpGrid, an additional argument has been added
+// To support Local Grid Refinement for CpGrid, additional arguments have been added
 // in some EclMaterialLawManager(InitParams) member functions. Therefore, we define
-// a lambda expression that does not affect this test file.
+// some lambda expressions that does not affect this test file.
 std::function<std::vector<int>(const Opm::FieldPropsManager&, const std::string&, const unsigned int, bool)> doOldLookup =
     [](const Opm::FieldPropsManager& fieldPropManager, const std::string& propString, const unsigned int numElems, bool needsTranslation)
     {
@@ -632,6 +632,8 @@ std::function<std::vector<int>(const Opm::FieldPropsManager&, const std::string&
         }
         return dest;
     };
+
+std::function<unsigned(unsigned)> doNothing = [](unsigned elemIdx){ return elemIdx;};
 
 using Types = boost::mpl::list<float,double>;
 BOOST_AUTO_TEST_CASE_TEMPLATE(Fam1Fam2Hysteresis, Scalar, Types)
@@ -650,7 +652,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(Fam1Fam2Hysteresis, Scalar, Types)
 
     MaterialLawManager fam1materialLawManager;
     fam1materialLawManager.initFromState(eclState);
-    fam1materialLawManager.initParamsForElements(eclState, n, doOldLookup);
+    fam1materialLawManager.initParamsForElements(eclState, n, doOldLookup, doNothing);
 
     BOOST_CHECK(!fam1materialLawManager.enableEndPointScaling());
     BOOST_CHECK(!fam1materialLawManager.enableHysteresis());
@@ -660,7 +662,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(Fam1Fam2Hysteresis, Scalar, Types)
 
     MaterialLawManager fam2MaterialLawManager;
     fam2MaterialLawManager.initFromState(fam2EclState);
-    fam2MaterialLawManager.initParamsForElements(fam2EclState, n, doOldLookup);
+    fam2MaterialLawManager.initParamsForElements(fam2EclState, n, doOldLookup, doNothing);
 
     BOOST_CHECK(!fam2MaterialLawManager.enableEndPointScaling());
     BOOST_CHECK(!fam2MaterialLawManager.enableHysteresis());
@@ -670,7 +672,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(Fam1Fam2Hysteresis, Scalar, Types)
 
     MaterialLawManager hysterMaterialLawManager;
     hysterMaterialLawManager.initFromState(hysterEclState);
-    hysterMaterialLawManager.initParamsForElements(hysterEclState, n, doOldLookup);
+    hysterMaterialLawManager.initParamsForElements(hysterEclState, n, doOldLookup, doNothing);
 
     BOOST_CHECK(!hysterMaterialLawManager.enableEndPointScaling());
     BOOST_CHECK(hysterMaterialLawManager.enableHysteresis());
@@ -759,14 +761,14 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(GasOil, Scalar, Types)
 
     MaterialLawManager fam1materialLawManager;
     fam1materialLawManager.initFromState(fam1EclState);
-    fam1materialLawManager.initParamsForElements(fam1EclState, n, doOldLookup);
+    fam1materialLawManager.initParamsForElements(fam1EclState, n, doOldLookup, doNothing);
 
     const auto fam2Deck = parser.parseString(fam2DeckStringGasOil);
     const Opm::EclipseState fam2EclState(fam2Deck);
 
     MaterialLawManager fam2MaterialLawManager;
     fam2MaterialLawManager.initFromState(fam2EclState);
-    fam2MaterialLawManager.initParamsForElements(fam2EclState, n, doOldLookup);
+    fam2MaterialLawManager.initParamsForElements(fam2EclState, n, doOldLookup, doNothing);
 
     for (unsigned elemIdx = 0; elemIdx < n; ++elemIdx) {
         for (int i = 0; i < 100; ++ i) {
@@ -821,14 +823,14 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(GasWater, Scalar, Types)
 
     MaterialLawManager fam2materialLawManager;
     fam2materialLawManager.initFromState(fam2EclState);
-    fam2materialLawManager.initParamsForElements(fam2EclState, n, doOldLookup);
+    fam2materialLawManager.initParamsForElements(fam2EclState, n, doOldLookup, doNothing);
 
     const auto fam3Deck = parser.parseString(fam3DeckStringGasWater);
     const Opm::EclipseState fam3EclState(fam3Deck);
 
     MaterialLawManager fam3materialLawManager;
     fam3materialLawManager.initFromState(fam3EclState);
-    fam3materialLawManager.initParamsForElements(fam3EclState, n, doOldLookup);
+    fam3materialLawManager.initParamsForElements(fam3EclState, n, doOldLookup, doNothing);
 
     for (unsigned elemIdx = 0; elemIdx < n; ++elemIdx) {
         for (int i = 0; i < 100; ++ i) {
@@ -886,7 +888,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(Let, Scalar, Types)
 
     MaterialLawManager letmaterialLawManager;
     letmaterialLawManager.initFromState(letEclState);
-    letmaterialLawManager.initParamsForElements(letEclState, n, doOldLookup);
+    letmaterialLawManager.initParamsForElements(letEclState, n, doOldLookup, doNothing);
 
     Scalar Swco = 0.1;
     Scalar psi2Pa = 6894.7573;
