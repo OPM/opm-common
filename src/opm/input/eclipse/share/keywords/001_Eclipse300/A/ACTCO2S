@@ -1,0 +1,14 @@
+{
+  "name": "ACTCO2S",
+  "sections": [
+    "PROPS"
+  ],
+  "size": 1,
+  "items": [
+    {
+        "name": "ACTIVITY_MODEL",
+        "value_type": "INT",
+        "default": 3
+    }
+  ]
+}

@@ -331,6 +331,10 @@ public:
         assert(temperature > 0);
         assert(pressure > 0);
 
+        // Activity model for salt-out effect in brine-CO2 mutual solubility
+        // 2 = Duan & Sun as modified in Spycher & Pruess, Trans. Porous Media, (2009)
+        const int activityModel = 3;
+
         // calulate the equilibrium composition for the given
         // temperature and pressure. TODO: calculateMoleFractions()
         // could use some cleanup.
@@ -341,7 +345,8 @@ public:
                                                     LhsEval(Brine_IAPWS::salinity),
                                                     /*knownPhaseIdx=*/-1,
                                                     xlCO2,
-                                                    xgH2O);
+                                                    xgH2O,
+                                                    activityModel);
 
         // normalize the phase compositions
         xlCO2 = max(0.0, min(1.0, xlCO2));
