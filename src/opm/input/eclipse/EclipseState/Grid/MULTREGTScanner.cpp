@@ -287,10 +287,16 @@ namespace Opm {
             return multiplier;
         }
 
-        auto regPairFound = [faceDir, this](const auto& regMap, const auto& regPairPos)
+        auto regPairFound0 = [faceDir, this](const auto& regMap, const auto& regPairPos)
         {
             return (regPairPos != regMap.end())
                 && ((this->m_records[regPairPos->second].directions & faceDir) != 0);
+        };
+
+        auto regPairFound1 = [faceDir, this](const auto& regMap, const auto& regPairPos)
+        {
+            return (regPairPos != regMap.end())
+                && ((this->m_records_same[regPairPos->second].directions & faceDir) != 0);
         };
 
         auto ignoreMultiplierRecord =
@@ -331,7 +337,7 @@ namespace Opm {
                                                                  regionId1,
                                                                  regionId2,
                                                                  applyMultiplier,
-                                                                 regPairFound);
+                                                                 regPairFound0);
             // same region. Note that a pair where both region indices are the same is special.
             // For connections between it and all other regions the multipliers
             // will not override otherwise explicitly specified (as pairs with
@@ -341,7 +347,7 @@ namespace Opm {
                                                                  regionId1,
                                                                  regionId2,
                                                                  applyMultiplier,
-                                                                 regPairFound);
+                                                                 regPairFound1);
         }
 
         return multiplier;
