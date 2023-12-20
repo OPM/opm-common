@@ -23,6 +23,8 @@
 #include <opm/input/eclipse/EclipseState/Grid/FaceDir.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/GridDims.hpp>
 
+#include <array>
+#include <functional>
 #include <cstddef>
 #include <map>
 #include <string>
@@ -113,6 +115,7 @@ namespace Opm {
             serializer(gridDims);
 
             serializer(m_records);
+            serializer(m_records_same);
             serializer(m_searchMap);
 
             serializer(regions);
@@ -120,19 +123,54 @@ namespace Opm {
         }
 
     private:
+
         // For any key k in the map k.first <= k.second holds.
         using MULTREGTSearchMap = std::map<
             std::pair<int, int>,
             std::vector<MULTREGTRecord>::size_type
         >;
 
+        /// \brief Apply regionMultiplier
+        ///
+        /// Either for pairs with different region id  (index 0) or pairs with
+        /// same region id (index 1).
+        /// Note that a pair where both region indices are the same is special.
+        /// For connections between it and all other regions the multipliers
+        /// will not override otherwise explicitly specified (as pairs with
+        /// different ids) multipliers, but accumulated to these.
+        /// \param regMaps the maps for the region name (FLUXNUM or else)
+        ///        first entry is between regions with different indices
+        ///        second entry is between regions withe the same index
+        /// \param regionId1 Id of egion for first cell
+        /// \param regionId Id of regions for the second cell (not less than regionId1!)
+        /// \param applyMultiplier Functor returning true if multiplier should be applied
+        /// \param regPairFound Functor to check whether there is a entry for region pair.
+        /// \tparam index Use 0 for application to pairs with different region, use 1 for pairs
+        ///                with same id.
+        template<int index, typename ApplyDecision, typename RegPairFound>
+        double applyRegionMultiplier(const std::array<MULTREGTSearchMap,2>& regMaps,
+                                     double multiplier,
+                                     std::size_t regionId1,
+                                     std::size_t regionId2,
+                                     const ApplyDecision& applyMultiplier,
+                                     const RegPairFound& regPairFound) const;
+        template<int index>
+        void fillSearchMap(const std::vector<MULTREGTRecord>& records);
+
         GridDims gridDims{};
         const FieldPropsManager* fp{nullptr};
 
         // For any record stored index of source region is less than
-        // or equal to target region.
+        // target region.
         std::vector<MULTREGTRecord> m_records{};
-        std::map<std::string, MULTREGTSearchMap> m_searchMap{};
+        /// \brief Records for special case where source and target region id is the same
+        ///
+        /// The multiplier is applied to conections in the same regio as well as to connection
+        /// between the regions if this id and any other region.
+        /// Note that this will not override any entries from m_records, but multiplier will be
+        /// applied cumulatively.
+        std::vector<MULTREGTRecord> m_records_same{};
+        std::map<std::string, std::array<MULTREGTSearchMap,2>> m_searchMap{};
         std::map<std::string, std::vector<int>> regions{};
         std::vector<std::size_t> aquifer_cells{};
 
