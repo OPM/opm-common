@@ -3247,3 +3247,63 @@ BOOST_AUTO_TEST_CASE(GDFILE_NO_ACTNUM) {
 }
 
 
+BOOST_AUTO_TEST_CASE(noGridKeywords)
+{
+    const std::string deck_data = R"(
+RUNSPEC
+DIMENS
+1 5 2 /
+)";
+
+    Opm::Parser parser;
+    const auto deck = parser.parseString(deck_data);
+
+    BOOST_CHECK_EXCEPTION(Opm::EclipseGrid grid(deck), std::invalid_argument, [](const std::invalid_argument& e) {
+        return e.what() == std::string(R"(The grid must be specified using one of these options:
+    COORD with ZCORN creates a corner-point grid
+    DEPTHZ with DXV, DYV, DZV creates a cartesian grid
+    TOPS with DX/DXV, DY/DYV, DZ/DZV creates a cartesian grid
+    RADIAL with DR/DRV, DTHETA/DTHETAV, DZ/DZV and TOPS creates a cylindrical grid
+    SPIDER with DR/DRV, DTHETA/DTHETAV, DZ/DZV and TOPS creates a spider grid
+    GDFILE reads a grid from file)");
+    });
+}
+
+
+BOOST_AUTO_TEST_CASE(ambigousGridKeywords)
+{
+    const std::string deck_data = R"(
+RUNSPEC
+DIMENS
+1 5 2 /
+SPIDER
+GRID
+INRAD
+1 /
+DRV
+1 /
+DTHETAV
+3*90 60 30/
+DZV
+2*1 /
+TOPS
+5*1.0 /
+DX
+99*0.25 /
+DY
+1000*0.25 /
+DZ
+1000*1.0 /
+PORO 
+10*0.15 /"
+)";
+
+    Opm::Parser parser;
+    const auto deck = parser.parseString(deck_data);
+
+    BOOST_CHECK_EXCEPTION(Opm::EclipseGrid grid(deck), std::invalid_argument, [](const std::invalid_argument& e) {
+        return e.what() == std::string(R"(The specification of the grid is ambiguous:
+    TOPS with DX/DXV, DY/DYV, DZ/DZV creates a cartesian grid
+    SPIDER with DR/DRV, DTHETA/DTHETAV, DZ/DZV and TOPS creates a spider grid)");
+    });
+}
