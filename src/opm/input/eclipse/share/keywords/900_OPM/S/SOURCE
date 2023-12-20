@@ -26,6 +26,12 @@
        "value_type": "DOUBLE",
        "dimension": "Mass/Time",
        "default": 0
+    },
+    {
+       "name": "HRATE",
+       "value_type": "DOUBLE",
+       "dimension": "Energy/Time",
+       "default": 0
     }
   ]
 }

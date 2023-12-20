@@ -45,7 +45,8 @@ public:
     struct SourceCell {
         std::array<int, 3> ijk;
         SourceComponent component;
-        double rate;   
+        double rate;
+        double hrate;   
 
         SourceCell() = default;
         explicit SourceCell(const DeckRecord& record);
@@ -76,6 +77,7 @@ public:
     bool operator==(const SourceProp& other) const;
 
     double rate(const std::pair<std::array<int, 3>, SourceComponent>& input ) const;
+    double hrate(const std::array<int, 3>& input ) const;
 
     void updateSourceProp(const DeckRecord& record);
 

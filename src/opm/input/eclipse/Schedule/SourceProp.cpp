@@ -59,9 +59,9 @@ SourceProp::SourceCell::SourceCell(const DeckRecord& record) :
         record.getItem<SOURCEKEY::J>().get<int>(0)-1,
         record.getItem<SOURCEKEY::K>().get<int>(0)-1}),
     component(fromstring::component(record.getItem<SOURCEKEY::COMPONENT>().get<std::string>(0))),
-    rate(record.getItem<SOURCEKEY::RATE>().getSIDouble(0))
+    rate(record.getItem<SOURCEKEY::RATE>().getSIDouble(0)),
+    hrate(record.getItem<SOURCEKEY::HRATE>().getSIDouble(0))
 {
-
 }
 
 SourceProp::SourceCell SourceProp::SourceCell::serializationTestObject()
@@ -70,12 +70,13 @@ SourceProp::SourceCell SourceProp::SourceCell::serializationTestObject()
     result.ijk = {1,1,1};
     result.component = SourceComponent::GAS;
     result.rate = 101.0;
+    result.hrate = 201.0;
     return result;
 }
 
 
 bool SourceProp::SourceCell::operator==(const SourceProp::SourceCell& other) const {
-    return this->isSame(other) && (this->rate == other.rate);
+    return this->isSame(other) && (this->rate == other.rate) && (this->hrate == other.hrate);
 }
 
 bool SourceProp::SourceCell::isSame(const SourceProp::SourceCell& other) const {
@@ -132,6 +133,18 @@ double SourceProp::rate(const std::pair<std::array<int, 3>, SourceComponent>& in
             }
     }
     return 0.0;
+}
+
+double SourceProp::hrate(const std::array<int, 3>& input) const {
+    double hrate = 0.0;
+    // return the sum of all the component contribution    
+    for (auto& source : m_cells) {
+        if (source.ijk == input)
+            {
+                hrate += source.hrate;
+            }
+    }
+    return hrate;
 }
 
 bool SourceProp::operator==(const SourceProp& other) const {

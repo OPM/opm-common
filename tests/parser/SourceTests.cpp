@@ -61,8 +61,8 @@ TOPS
 SCHEDULE
 
 SOURCE
- 1 1 1 GAS -0.01 /
- 1 1 1 WATER -0.01 /
+ 1 1 1 GAS 0.01 /
+ 1 1 1 WATER 0.01 /
 /
 
 DATES             -- 1
@@ -70,8 +70,8 @@ DATES             -- 1
 /
 
 SOURCE
- 1 1 1 GAS -0.0 /
- 1 1 2 WATER -0.02 /
+ 1 1 1 GAS 0.0 /
+ 1 1 2 WATER 0.02 /
 /
 
 )";
@@ -85,16 +85,16 @@ SOURCE
 
     BOOST_CHECK_EQUAL(prop.size(), 2U);
     const auto& c1 = *prop.begin();
-    BOOST_CHECK_EQUAL(c1.i, 0);
-    BOOST_CHECK_EQUAL(c1.j, 0);
-    BOOST_CHECK_EQUAL(c1.k, 0);
+    BOOST_CHECK_EQUAL(c1.ijk[0], 0);
+    BOOST_CHECK_EQUAL(c1.ijk[1], 0);
+    BOOST_CHECK_EQUAL(c1.ijk[2], 0);
     BOOST_CHECK(c1.component == Opm::SourceComponent::GAS);
     BOOST_CHECK_EQUAL(c1.rate,
-                      deck.getActiveUnitSystem().to_si("Mass/Time", -0.01));
+                      deck.getActiveUnitSystem().to_si("Mass/Time", 0.01));
 
     double rate2 = prop.rate({{0,0,0},Opm::SourceComponent::WATER});
     BOOST_CHECK_EQUAL(rate2,
-                      deck.getActiveUnitSystem().to_si("Mass/Time", -0.01));
+                      deck.getActiveUnitSystem().to_si("Mass/Time", 0.01));
 
 
     for (const auto& record : kw[1]) {
@@ -103,19 +103,106 @@ SOURCE
 
     BOOST_CHECK_EQUAL(prop.size(), 3U);
     const auto& c21 = *prop.begin();
-    BOOST_CHECK_EQUAL(c21.i, 0);
-    BOOST_CHECK_EQUAL(c21.j, 0);
-    BOOST_CHECK_EQUAL(c21.k, 0);
+    BOOST_CHECK_EQUAL(c21.ijk[0], 0);
+    BOOST_CHECK_EQUAL(c21.ijk[1], 0);
+    BOOST_CHECK_EQUAL(c21.ijk[2], 0);
     BOOST_CHECK(c21.component == Opm::SourceComponent::GAS);
     BOOST_CHECK_EQUAL(c21.rate,
-                      deck.getActiveUnitSystem().to_si("Mass/Time", -0.00));
+                      deck.getActiveUnitSystem().to_si("Mass/Time", 0.00));
 
     double rate22 = prop.rate({{0,0,0},Opm::SourceComponent::WATER});
     BOOST_CHECK_EQUAL(rate22,
-                      deck.getActiveUnitSystem().to_si("Mass/Time", -0.01));
+                      deck.getActiveUnitSystem().to_si("Mass/Time", 0.01));
 
     double rate23 = prop.rate({{0,0,1},Opm::SourceComponent::WATER});
     BOOST_CHECK_EQUAL(rate23,
-                      deck.getActiveUnitSystem().to_si("Mass/Time", -0.02));
+                      deck.getActiveUnitSystem().to_si("Mass/Time", 0.02));
     
+}
+
+BOOST_AUTO_TEST_CASE(SourceEnergy)
+{
+    const std::string input = R"(
+RUNSPEC
+
+DIMENS
+  10 10 3 /
+OIL
+GAS
+WATER
+THERMAL
+START
+  1 'JAN' 2015 /
+GRID
+DX
+  300*1000 /
+DY
+  300*1000 /
+DZ
+  300*1000 /
+TOPS
+  100*8325 /
+
+SCHEDULE
+
+SOURCE
+ 1 1 1 GAS 0.01 1.0/
+/
+
+DATES             -- 1
+ 10  'JUN'  2007 /
+/
+
+SOURCE
+ 1 1 1 GAS 0.01 1.0/
+ 1 1 1 WATER 0.02 2.0/
+/
+
+)";
+
+    auto deck = createDeck(input);
+    const auto& kw = deck.get<Opm::ParserKeywords::SOURCE>();
+    Opm::SourceProp prop;
+    for (const auto& record : kw[0]) {
+        prop.updateSourceProp(record);
+    }
+
+    BOOST_CHECK_EQUAL(prop.size(), 1U);
+    const auto& c1 = *prop.begin();
+    BOOST_CHECK(c1.component == Opm::SourceComponent::GAS);
+    BOOST_CHECK_EQUAL(c1.rate,
+                      deck.getActiveUnitSystem().to_si("Mass/Time", 0.01));
+
+    BOOST_CHECK_EQUAL(c1.hrate,
+                      deck.getActiveUnitSystem().to_si("Energy/Time", 1.0));
+
+    double rate = prop.rate({{0,0,0},Opm::SourceComponent::GAS});
+    BOOST_CHECK_EQUAL(rate,
+                      deck.getActiveUnitSystem().to_si("Mass/Time", 0.01));
+
+    double hrate = prop.hrate({0,0,0});
+    BOOST_CHECK_EQUAL(hrate,
+                      deck.getActiveUnitSystem().to_si("Energy/Time", 1.0));
+
+
+    for (const auto& record : kw[1]) {
+        prop.updateSourceProp(record);
+    }
+
+    BOOST_CHECK_EQUAL(prop.size(), 2U);
+    const auto& c21 = *prop.begin();
+    BOOST_CHECK(c21.component == Opm::SourceComponent::GAS);
+    BOOST_CHECK_EQUAL(c21.rate,
+                      deck.getActiveUnitSystem().to_si("Mass/Time", 0.01));
+
+    BOOST_CHECK_EQUAL(c21.hrate,
+                      deck.getActiveUnitSystem().to_si("Energy/Time", 1.0));
+
+    double rate21 = prop.rate({{0,0,0},Opm::SourceComponent::GAS});
+    BOOST_CHECK_EQUAL(rate21, c21.rate);
+    double rate22 = prop.rate({{0,0,0},Opm::SourceComponent::WATER});
+    BOOST_CHECK_EQUAL(rate22,
+                      deck.getActiveUnitSystem().to_si("Mass/Time", 0.02));
+    double hrate2 = prop.hrate({0,0,0});
+    BOOST_CHECK_EQUAL(hrate2, c21.hrate + deck.getActiveUnitSystem().to_si("Energy/Time", 2.0));   
 }
