@@ -158,7 +158,9 @@ FLUXNUM
 3 4 5
 /
 MULTREGT
-1  2   0.50   X   NOAQUNNC  F / -- Not support NOAQUNNC behaviour
+1  2   0.30   X   NOAQUNNC  F / -- Not support NOAQUNNC behaviour
+1  2   0.50   X   ALL  F /
+1  1   0.1   X   ALL  F /
 /
 MULTREGT
 2  2   0.50   YZ   ALL    F / -- Region values equal
@@ -176,17 +178,25 @@ BOOST_AUTO_TEST_CASE(IncludeSelf) {
     Opm::FieldPropsManager fp(deck, Opm::Phases{true, true, true}, eg, tm);
 
     // srcValue == targetValue - not supported
-    std::vector<const Opm::DeckKeyword*> keywords1;
+    std::vector<const Opm::DeckKeyword*> keywords0, keywords1;
+    const Opm::DeckKeyword& multregtKeyword0 = deck["MULTREGT"][0];
     const Opm::DeckKeyword& multregtKeyword1 = deck["MULTREGT"][1];
+    keywords0.push_back( &multregtKeyword0 );
     keywords1.push_back( &multregtKeyword1 );
+    Opm::MULTREGTScanner scanner0 = { grid, &fp, keywords0 };
     Opm::MULTREGTScanner scanner1 = { grid, &fp, keywords1 };
 
+    // Region 1 to 2 scanner0 where two multipliers are cumulated
+    BOOST_CHECK_EQUAL( scanner0.getRegionMultiplier(grid.getGlobalIndex(1,0,0), grid.getGlobalIndex(2,0,0),
+                                                    Opm::FaceDir::XPlus ), 0.05);
     // Region 2 to 2
     BOOST_CHECK_EQUAL( scanner1.getRegionMultiplier(grid.getGlobalIndex(2,0,0), grid.getGlobalIndex(2,1,0),
                                                     Opm::FaceDir::YPlus ), 0.50);
     // Region 2 to 5
     BOOST_CHECK_EQUAL( scanner1.getRegionMultiplier(grid.getGlobalIndex(2,0,0), grid.getGlobalIndex(2,0,1),
                                                     Opm::FaceDir::ZPlus ), 0.5);
+    BOOST_CHECK_EQUAL( scanner1.getRegionMultiplier(grid.getGlobalIndex(0,0,0), grid.getGlobalIndex(0,0,1),
+                                                    Opm::FaceDir::ZMinus ), 1.0);
     BOOST_CHECK_EQUAL( scanner1.getRegionMultiplier(grid.getGlobalIndex(0,0,0), grid.getGlobalIndex(0,0,1),
                                                     Opm::FaceDir::ZMinus ), 1.0);
 
