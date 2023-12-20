@@ -1582,9 +1582,15 @@ std::optional<JFunc> make_jfunc(const Deck& deck) {
         for (size_t tableIdx = 0; tableIdx < tableKeyword.size(); ++tableIdx) {
             const auto& dataItem = tableKeyword.getRecord( tableIdx ).getItem("DATA");
             if (dataItem.data_size() > 0) {
-                std::shared_ptr<TableType> table = std::make_shared<TableType>( dataItem, tableIdx );
-                container.addTable( tableIdx , table );
-                lastComplete = tableIdx;
+                try {
+                    std::shared_ptr<TableType> table = std::make_shared<TableType>( dataItem, tableIdx );
+                    container.addTable( tableIdx , table );
+                    lastComplete = tableIdx;
+                } catch (const std::runtime_error& err) {
+                    throw OpmInputError(err, tableKeyword.location());
+                } catch (const std::invalid_argument& err) {
+                    throw OpmInputError(err, tableKeyword.location());
+                }
             }
             else if (tableIdx > static_cast<size_t>(0)) {
                 const auto& item = tableKeyword.getRecord(lastComplete).getItem("DATA");
