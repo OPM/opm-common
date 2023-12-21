@@ -98,10 +98,11 @@ void handleBCProp(HandlerContext& handlerContext)
 
 void handleSourceProp(HandlerContext& handlerContext)
 {
-    auto& sourceprop = handlerContext.state().sourceprop;
+    auto new_source = SourceProp();
     for (const auto& record : handlerContext.keyword) {
-        sourceprop.updateSourceProp(record);
+        new_source.updateSourceProp(record);
     }
+    handlerContext.state().sourceprop.update(std::move(new_source));
 }
 
 void handleEXIT(HandlerContext& handlerContext)

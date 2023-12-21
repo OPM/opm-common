@@ -404,6 +404,7 @@ namespace Opm {
         ptr_member<RSTConfig> rst_config;
 
         ptr_member<BHPDefaults> bhp_defaults;
+        ptr_member<SourceProp> sourceprop;
 
         template <typename T>
         ptr_member<T>& get() {
@@ -453,6 +454,9 @@ namespace Opm {
                                   return this->rst_config;
             else if constexpr ( std::is_same_v<T, BHPDefaults> )
                                   return this->bhp_defaults;
+            else if constexpr ( std::is_same_v<T, SourceProp> )
+                                  return this->sourceprop;
+
             else
                 static_assert(always_false1::value, "Template type <T> not supported in get()");
         }
@@ -481,7 +485,6 @@ namespace Opm {
         // constant flux aquifers
         std::unordered_map<int, SingleAquiferFlux> aqufluxs;
         BCProp bcprop;
-        SourceProp sourceprop;
         std::unordered_map<std::string, double> target_wellpi;
         std::optional<NextStep> next_tstep;
 
@@ -511,7 +514,6 @@ namespace Opm {
             serializer(target_wellpi);
             serializer(aqufluxs);
             serializer(bcprop);
-            serializer(sourceprop);
         }
 
 
