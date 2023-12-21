@@ -96,13 +96,13 @@ void handleBCProp(HandlerContext& handlerContext)
     }
 }
 
-void handleSourceProp(HandlerContext& handlerContext)
+void handleSource(HandlerContext& handlerContext)
 {
-    auto new_source = SourceProp();
+    auto new_source = Source();
     for (const auto& record : handlerContext.keyword) {
-        new_source.updateSourceProp(record);
+        new_source.updateSource(record);
     }
-    handlerContext.state().sourceprop.update(std::move(new_source));
+    handlerContext.state().source.update(std::move(new_source));
 }
 
 void handleEXIT(HandlerContext& handlerContext)
@@ -362,7 +362,7 @@ KeywordHandlers::KeywordHandlers()
         { "NEXTSTEP", &handleNEXTSTEP   },
         { "NUPCOL"  , &handleNUPCOL     },
         { "PYACTION", &handlePYACTION   },
-        { "SOURCE",   &handleSourceProp },
+        { "SOURCE",   &handleSource },
         { "SUMTHIN" , &handleSUMTHIN    },
         { "TUNING"  , &handleTUNING     },
         { "VFPINJ"  , &handleVFPINJ     },

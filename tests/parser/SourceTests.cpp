@@ -21,7 +21,7 @@
 #include <opm/input/eclipse/Parser/Parser.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/S.hpp>
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
-#include <opm/input/eclipse/Schedule/SourceProp.hpp>
+#include <opm/input/eclipse/Schedule/Source.hpp>
 
 #include <string>
 
@@ -78,9 +78,9 @@ SOURCE
 
     auto deck = createDeck(input);
     const auto& kw = deck.get<Opm::ParserKeywords::SOURCE>();
-    Opm::SourceProp prop;
+    Opm::Source prop;
     for (const auto& record : kw[0]) {
-        prop.updateSourceProp(record);
+        prop.updateSource(record);
     }
 
     BOOST_CHECK_EQUAL(prop.size(), 2U);
@@ -98,7 +98,7 @@ SOURCE
 
 
     for (const auto& record : kw[1]) {
-        prop.updateSourceProp(record);
+        prop.updateSource(record);
     }
 
     BOOST_CHECK_EQUAL(prop.size(), 3U);
@@ -162,9 +162,9 @@ SOURCE
 
     auto deck = createDeck(input);
     const auto& kw = deck.get<Opm::ParserKeywords::SOURCE>();
-    Opm::SourceProp prop;
+    Opm::Source prop;
     for (const auto& record : kw[0]) {
-        prop.updateSourceProp(record);
+        prop.updateSource(record);
     }
 
     BOOST_CHECK_EQUAL(prop.size(), 1U);
@@ -186,7 +186,7 @@ SOURCE
 
 
     for (const auto& record : kw[1]) {
-        prop.updateSourceProp(record);
+        prop.updateSource(record);
     }
 
     BOOST_CHECK_EQUAL(prop.size(), 2U);

@@ -22,7 +22,7 @@
 
 #include <opm/input/eclipse/Deck/Deck.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/S.hpp>
-#include <opm/input/eclipse/Schedule/SourceProp.hpp>
+#include <opm/input/eclipse/Schedule/Source.hpp>
 
 namespace Opm {
 namespace {
@@ -54,7 +54,7 @@ SourceComponent component(const std::string& s) {
 }
 
 using SOURCEKEY = ParserKeywords::SOURCE;
-SourceProp::SourceCell::SourceCell(const DeckRecord& record) :
+Source::SourceCell::SourceCell(const DeckRecord& record) :
     ijk({record.getItem<SOURCEKEY::I>().get<int>(0)-1,
         record.getItem<SOURCEKEY::J>().get<int>(0)-1,
         record.getItem<SOURCEKEY::K>().get<int>(0)-1}),
@@ -64,7 +64,7 @@ SourceProp::SourceCell::SourceCell(const DeckRecord& record) :
 {
 }
 
-SourceProp::SourceCell SourceProp::SourceCell::serializationTestObject()
+Source::SourceCell Source::SourceCell::serializationTestObject()
 {
     SourceCell result;
     result.ijk = {1,1,1};
@@ -75,23 +75,23 @@ SourceProp::SourceCell SourceProp::SourceCell::serializationTestObject()
 }
 
 
-bool SourceProp::SourceCell::operator==(const SourceProp::SourceCell& other) const {
+bool Source::SourceCell::operator==(const Source::SourceCell& other) const {
     return this->isSame(other) && (this->rate == other.rate) && (this->hrate == other.hrate);
 }
 
-bool SourceProp::SourceCell::isSame(const SourceProp::SourceCell& other) const {
+bool Source::SourceCell::isSame(const Source::SourceCell& other) const {
     return this->ijk == other.ijk &&
            this->component == other.component;
 }
 
-bool SourceProp::SourceCell::isSame(const std::pair<std::array<int, 3>, SourceComponent>& other) const {
+bool Source::SourceCell::isSame(const std::pair<std::array<int, 3>, SourceComponent>& other) const {
     return this->ijk == other.first &&
            this->component == other.second;
 }
 
 
-void SourceProp::updateSourceProp(const DeckRecord& record) {
-    const SourceProp::SourceCell sourcenew( record );
+void Source::updateSource(const DeckRecord& record) {
+    const Source::SourceCell sourcenew( record );
     for (auto& source : m_cells) {
         if (source.isSame(sourcenew))
             {
@@ -104,28 +104,28 @@ void SourceProp::updateSourceProp(const DeckRecord& record) {
 
 
 
-SourceProp SourceProp::serializationTestObject()
+Source Source::serializationTestObject()
 {
-    SourceProp result;
+    Source result;
     result.m_cells = {SourceCell::serializationTestObject()};
 
     return result;
 }
 
 
-std::size_t SourceProp::size() const {
+std::size_t Source::size() const {
     return this->m_cells.size();
 }
 
-std::vector<SourceProp::SourceCell>::const_iterator SourceProp::begin() const {
+std::vector<Source::SourceCell>::const_iterator Source::begin() const {
     return this->m_cells.begin();
 }
 
-std::vector<SourceProp::SourceCell>::const_iterator SourceProp::end() const {
+std::vector<Source::SourceCell>::const_iterator Source::end() const {
     return this->m_cells.end();
 }
 
-double SourceProp::rate(const std::pair<std::array<int, 3>, SourceComponent>& input) const {
+double Source::rate(const std::pair<std::array<int, 3>, SourceComponent>& input) const {
     for (auto& source : m_cells) {
         if (source.isSame(input))
             {
@@ -135,7 +135,7 @@ double SourceProp::rate(const std::pair<std::array<int, 3>, SourceComponent>& in
     return 0.0;
 }
 
-double SourceProp::hrate(const std::array<int, 3>& input) const {
+double Source::hrate(const std::array<int, 3>& input) const {
     double hrate = 0.0;
     // return the sum of all the component contribution    
     for (auto& source : m_cells) {
@@ -147,7 +147,7 @@ double SourceProp::hrate(const std::array<int, 3>& input) const {
     return hrate;
 }
 
-bool SourceProp::operator==(const SourceProp& other) const {
+bool Source::operator==(const Source& other) const {
     return this->m_cells == other.m_cells;
 }
 

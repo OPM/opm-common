@@ -30,7 +30,7 @@
 #include <opm/input/eclipse/Schedule/OilVaporizationProperties.hpp>
 #include <opm/input/eclipse/Schedule/Events.hpp>
 #include <opm/input/eclipse/Schedule/BCProp.hpp>
-#include <opm/input/eclipse/Schedule/SourceProp.hpp>
+#include <opm/input/eclipse/Schedule/Source.hpp>
 #include <opm/input/eclipse/Schedule/Group/Group.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellEnums.hpp>
 #include <opm/input/eclipse/Schedule/MessageLimits.hpp>
@@ -404,7 +404,7 @@ namespace Opm {
         ptr_member<RSTConfig> rst_config;
 
         ptr_member<BHPDefaults> bhp_defaults;
-        ptr_member<SourceProp> sourceprop;
+        ptr_member<Source> source;
 
         template <typename T>
         ptr_member<T>& get() {
@@ -454,8 +454,8 @@ namespace Opm {
                                   return this->rst_config;
             else if constexpr ( std::is_same_v<T, BHPDefaults> )
                                   return this->bhp_defaults;
-            else if constexpr ( std::is_same_v<T, SourceProp> )
-                                  return this->sourceprop;
+            else if constexpr ( std::is_same_v<T, Source> )
+                                  return this->source;
 
             else
                 static_assert(always_false1::value, "Template type <T> not supported in get()");

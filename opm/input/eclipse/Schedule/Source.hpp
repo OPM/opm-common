@@ -39,7 +39,7 @@ enum class SourceComponent {
      NONE
 };
 
-class SourceProp {
+class Source {
 public:
 
     struct SourceCell {
@@ -67,19 +67,19 @@ public:
     };
 
 
-    SourceProp() = default;
+    Source() = default;
 
-    static SourceProp serializationTestObject();
+    static Source serializationTestObject();
 
     std::size_t size() const;
     std::vector<SourceCell>::const_iterator begin() const;
     std::vector<SourceCell>::const_iterator end() const;
-    bool operator==(const SourceProp& other) const;
+    bool operator==(const Source& other) const;
 
     double rate(const std::pair<std::array<int, 3>, SourceComponent>& input ) const;
     double hrate(const std::array<int, 3>& input ) const;
 
-    void updateSourceProp(const DeckRecord& record);
+    void updateSource(const DeckRecord& record);
 
     template<class Serializer>
     void serializeOp(Serializer& serializer)

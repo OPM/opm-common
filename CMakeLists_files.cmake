@@ -212,7 +212,7 @@ if(ENABLE_ECL_INPUT)
     src/opm/input/eclipse/Schedule/ScheduleState.cpp
     src/opm/input/eclipse/Schedule/ScheduleStatic.cpp
     src/opm/input/eclipse/Schedule/ScheduleTypes.cpp
-    src/opm/input/eclipse/Schedule/SourceProp.cpp
+    src/opm/input/eclipse/Schedule/Source.cpp
     src/opm/input/eclipse/Schedule/SummaryState.cpp
     src/opm/input/eclipse/Schedule/Tuning.cpp
     src/opm/input/eclipse/Schedule/WriteRestartFileEvents.cpp
@@ -1297,7 +1297,7 @@ if(ENABLE_ECL_INPUT)
        opm/input/eclipse/Schedule/ScheduleState.hpp
        opm/input/eclipse/Schedule/ScheduleStatic.hpp
        opm/input/eclipse/Schedule/ScheduleTypes.hpp
-       opm/input/eclipse/Schedule/SourceProp.hpp
+       opm/input/eclipse/Schedule/Source.hpp
        opm/input/eclipse/Schedule/Tuning.hpp
        opm/input/eclipse/Schedule/WriteRestartFileEvents.hpp
        opm/input/eclipse/Schedule/Group/GPMaint.hpp

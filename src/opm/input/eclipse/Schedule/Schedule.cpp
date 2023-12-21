@@ -2216,7 +2216,7 @@ void Schedule::create_first(const time_point& start_time, const std::optional<ti
     sched_state.update_sumthin(this->m_static.sumthin);
     sched_state.rptonly(this->m_static.rptonly);
     sched_state.bhp_defaults.update( ScheduleState::BHPDefaults() );
-    sched_state.sourceprop.update( SourceProp() );
+    sched_state.source.update( Source() );
     //sched_state.update_date( start_time );
     this->addGroup("FIELD", 0);
 }
