@@ -40,8 +40,9 @@ initFromState(const EclipseState& eclState, const Schedule&)
     setEnableVaporizationWater(eclState.getSimulationConfig().hasVAPOIL() || eclState.getSimulationConfig().hasVAPWAT());
     setActivityModelSalt(eclState.getTableManager().actco2s());
 
-    if (eclState.getTableManager().hasTables("PVDG") ||
-        !eclState.getTableManager().getPvtgTables().empty()) {
+    bool co2sol = eclState.runspec().co2Sol();
+    if (!co2sol && (eclState.getTableManager().hasTables("PVDG") ||
+        !eclState.getTableManager().getPvtgTables().empty())) {
         OpmLog::warning("CO2STORE is enabled but PVDG or PVTG is in the deck. \n"
                         "CO2 PVT properties are computed based on the Span-Wagner "
                         "pvt model and PVDG/PVTG input is ignored.");
@@ -56,7 +57,7 @@ initFromState(const EclipseState& eclState, const Schedule&)
 
     // Throw an error if STCOND is not (T, p) = (15.56 C, 1 atm) = (288.71 K, 1.01325e5 Pa)
     if (T_ref != Scalar(288.71) || P_ref != Scalar(1.01325e5)) {
-        OPM_THROW(std::runtime_error, "CO2STORE can only be used with default values for STCOND!");
+        OPM_THROW(std::runtime_error, "CO2STORE/CO2SOL can only be used with default values for STCOND!");
     }
 
     gasReferenceDensity_[regionIdx] = CO2::gasDensity(T_ref, P_ref, extrapolate);

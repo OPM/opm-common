@@ -38,9 +38,9 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
 
     // The co2Storage option both works with oil + gas
     // and water/brine + gas
-    if (eclState.runspec().co2Storage())
+    if (eclState.runspec().co2Storage() || eclState.runspec().co2Sol())
         setApproach(WaterPvtApproach::BrineCo2);
-    else if (eclState.runspec().h2Storage())
+    else if (eclState.runspec().h2Storage() || eclState.runspec().h2Sol())
         setApproach(WaterPvtApproach::BrineH2);
     else if (enableThermal && eclState.getSimulationConfig().isThermal())
         setApproach(WaterPvtApproach::ThermalWater);

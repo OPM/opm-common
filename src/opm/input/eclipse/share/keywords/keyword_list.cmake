@@ -1050,6 +1050,7 @@ set( keywords
      001_Eclipse300/C/CIRCLE
      001_Eclipse300/C/CNAMES
      001_Eclipse300/C/COMPS
+     001_Eclipse300/C/CO2SOL
      001_Eclipse300/C/CO2STORE
      001_Eclipse300/C/CREF
      001_Eclipse300/C/CREFS
@@ -1116,6 +1117,7 @@ set( keywords
      900_OPM/G/GCOMPIDX
      900_OPM/G/GASDENT
      900_OPM/G/GASJT
+     900_OPM/H/H2SOL
      900_OPM/H/H2STORE
      900_OPM/M/MECH
      900_OPM/M/MICP
