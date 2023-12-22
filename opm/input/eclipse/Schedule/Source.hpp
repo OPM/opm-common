@@ -63,6 +63,7 @@ public:
             serializer(ijk);
             serializer(component);
             serializer(rate);
+            serializer(hrate);
         }
     };
 

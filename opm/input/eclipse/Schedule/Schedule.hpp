@@ -301,6 +301,7 @@ namespace Opm
             this->template pack_unpack<RFTConfig>(serializer);
             this->template pack_unpack<RSTConfig>(serializer);
             this->template pack_unpack<ScheduleState::BHPDefaults>(serializer);
+            this->template pack_unpack<Source>(serializer);
 
             this->template pack_unpack_map<int, VFPProdTable>(serializer);
             this->template pack_unpack_map<int, VFPInjTable>(serializer);
