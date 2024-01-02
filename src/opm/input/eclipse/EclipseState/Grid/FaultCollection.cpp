@@ -17,22 +17,24 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <opm/input/eclipse/EclipseState/Grid/FaultCollection.hpp>
 
-#include <iterator>
-#include <memory>
-#include <string>
-#include <vector>
-
-#include <opm/common/utility/OpmInputError.hpp>
 #include <opm/common/OpmLog/OpmLog.hpp>
+#include <opm/common/utility/OpmInputError.hpp>
+#include <opm/common/utility/shmatch.hpp>
+
 #include <opm/input/eclipse/Deck/DeckRecord.hpp>
 #include <opm/input/eclipse/Deck/DeckSection.hpp>
+
 #include <opm/input/eclipse/EclipseState/Grid/GridDims.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/FaceDir.hpp>
-#include <opm/input/eclipse/EclipseState/Grid/FaultCollection.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/FaultFace.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/Fault.hpp>
+
 #include <opm/input/eclipse/Parser/ParserKeywords/F.hpp>
+
+#include <string>
+#include <vector>
 
 namespace Opm {
 
@@ -110,6 +112,27 @@ namespace Opm {
 
     const Fault& FaultCollection::getFault(size_t faultIndex) const {
         return m_faults.iget( faultIndex );
+    }
+
+    std::vector<std::string> FaultCollection::getFaults(const std::string& pattern) const
+    {
+        std::vector<std::string> names;
+        auto star_pos = pattern.find('*');
+        if (star_pos != std::string::npos) {
+            const std::string ptrunc = pattern.substr(0, star_pos + 1);
+            if (star_pos != pattern.size() - 1) {
+                OpmLog::warning("Fault pattern " + pattern + " has symbols after the asterisk."
+                                " Truncated to " + ptrunc);
+            }
+            for (const auto& fault : m_faults) {
+                if (shmatch(ptrunc, fault.first)) {
+                    names.push_back(fault.first);
+                }
+            }
+        } else if (hasFault(pattern)) {
+            names.push_back(pattern);
+        }
+        return names;
     }
 
     void FaultCollection::addFault(const std::string& faultName) {

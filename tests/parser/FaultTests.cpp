@@ -176,6 +176,74 @@ MULTFLT
     BOOST_CHECK_EQUAL(flt2.getTransMult(), 0.0005);
 }
 
+BOOST_AUTO_TEST_CASE(Pattern) {
+    const std::string deck_string = R"(
+RUNSPEC
+DIMENS
+  10 10 10 /
+GRID
+DX
+1000*0.25 /
+DY
+1000*0.25 /
+DZ
+1000*0.25 /
+TOPS
+100*0.25 /
+FAULTS
+  'FLT1' 3 3 1 4 1 7 'X' /
+  'FLT2' 1 8 4 4 1 7 'Y' /
+/
+MULTFLT
+  'FLT*' 0.0001 /
+/
+)";
+
+    Opm::Parser parser;
+    Opm::Deck deck = parser.parseString(deck_string);
+    Opm::EclipseState state(deck);
+    const auto& flt1 = state.getFaults().getFault("FLT1");
+    BOOST_CHECK_EQUAL(flt1.getTransMult(), 0.0001);
+    const auto& flt2 = state.getFaults().getFault("FLT2");
+    BOOST_CHECK_EQUAL(flt2.getTransMult(), 0.0001);
+}
+
+BOOST_AUTO_TEST_CASE(PatternTrunc) {
+    const std::string deck_string = R"(
+RUNSPEC
+DIMENS
+  10 10 10 /
+GRID
+DX
+1000*0.25 /
+DY
+1000*0.25 /
+DZ
+1000*0.25 /
+TOPS
+100*0.25 /
+FAULTS
+  'FLT11' 3 3 1 4 1 7 'X' /
+  'FLT12' 3 3 1 4 1 7 'X' /
+  'FLT22' 1 8 4 4 1 7 'Y' /
+/
+MULTFLT
+  'FLT*1' 0.0001 /
+  'FLT2*' 0.0005 /
+/
+)";
+
+    Opm::Parser parser;
+    Opm::Deck deck = parser.parseString(deck_string);
+    Opm::EclipseState state(deck);
+    const auto& flt1 = state.getFaults().getFault("FLT11");
+    BOOST_CHECK_EQUAL(flt1.getTransMult(), 0.0001);
+    const auto& flt12 = state.getFaults().getFault("FLT12");
+    BOOST_CHECK_EQUAL(flt12.getTransMult(), 0.0001);
+    const auto& flt2 = state.getFaults().getFault("FLT22");
+    BOOST_CHECK_EQUAL(flt2.getTransMult(), 0.0005);
+}
+
 BOOST_AUTO_TEST_CASE(EditOnly) {
     const std::string deck_string = R"(
 RUNSPEC
@@ -283,4 +351,44 @@ MULTFLT
     Opm::EclipseState state(deck);
     const auto& flt1 = state.getFaults().getFault("FLT1");
     BOOST_CHECK_EQUAL(flt1.getTransMult(), 0.002);
+}
+
+BOOST_AUTO_TEST_CASE(GridAndEditPattern) {
+    const std::string deck_string = R"(
+RUNSPEC
+DIMENS
+  10 10 10 /
+GRID
+DX
+1000*0.25 /
+DY
+1000*0.25 /
+DZ
+1000*0.25 /
+TOPS
+100*0.25 /
+FAULTS
+  'FLT11' 3 3 1 4 1 7 'X' /
+  'FLT12' 3 3 1 4 1 7 'X' /
+  'FLT22' 1 8 4 4 1 7 'Y' /
+/
+MULTFLT
+  'FLT*1' 0.0001 /
+/
+EDIT
+MULTFLT
+  'FLT1*' 20 /
+  'FLT2*' 0.0005 /
+/
+)";
+
+    Opm::Parser parser;
+    Opm::Deck deck = parser.parseString(deck_string);
+    Opm::EclipseState state(deck);
+    const auto& flt1 = state.getFaults().getFault("FLT11");
+    BOOST_CHECK_EQUAL(flt1.getTransMult(), 0.0001 * 20);
+    const auto& flt12 = state.getFaults().getFault("FLT12");
+    BOOST_CHECK_EQUAL(flt12.getTransMult(), 0.0001 * 20);
+    const auto& flt2 = state.getFaults().getFault("FLT22");
+    BOOST_CHECK_EQUAL(flt2.getTransMult(), 0.0001 * 0.0005);
 }
