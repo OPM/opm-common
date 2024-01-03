@@ -45,6 +45,7 @@ public:
     const Fault& getFault(const std::string& faultName) const;
     Fault& getFault(size_t faultIndex);
     const Fault& getFault(size_t faultIndex) const;
+    std::vector<std::string> getFaults(const std::string& pattern) const;
 
     /// we construct the fault based on faultName.  To get the fault: getFault
     void addFault(const std::string& faultName);

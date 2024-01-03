@@ -17,11 +17,6 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <filesystem>
-#include <set>
-
-#include <fmt/format.h>
-
 #include <opm/common/ErrorMacros.hpp>
 #include <opm/common/OpmLog/OpmLog.hpp>
 #include <opm/common/OpmLog/InfoLogger.hpp>
@@ -53,6 +48,10 @@
 #include <opm/input/eclipse/Parser/ParserKeywords/T.hpp>
 #include <opm/input/eclipse/Units/Dimension.hpp>
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
+
+#include <fmt/format.h>
+
+#include <filesystem>
 
 namespace {
     void verify_consistent_restart_information(const Opm::DeckKeyword& restart_keyword,
@@ -412,29 +411,30 @@ namespace Opm {
             InfoLogger logger("MULTFLT",3);
             for (auto iter = faultsKeyword.begin(); iter != faultsKeyword.end(); ++iter) {
                 const auto& faultRecord = *iter;
-                const std::string& faultName = faultRecord.getItem(0).get< std::string >(0);
-                double multFlt = faultRecord.getItem(1).get< double >(0);
+                const std::string& faultPattern = faultRecord.getItem(0).get< std::string >(0);
+                const double multFlt = faultRecord.getItem(1).get< double >(0);
                 try
                 {
-                    if (edit) {
-                        if (m_faults.hasFault(faultName)) {
+                    for (const auto& faultName : m_faults.getFaults(faultPattern)) {
+                        double multFltEdit = multFlt;
+                        if (edit) {
                             const auto it = prev.find(faultName);
                             const auto& fault = m_faults.getFault(faultName);
                             if (it == prev.end()) {
                                 prev[faultName] = fault.getTransMult();
-                                multFlt *= m_faults.getFault(faultName).getTransMult();
+                                multFltEdit *= m_faults.getFault(faultName).getTransMult();
                             } else
-                                multFlt *= it->second;
+                                multFltEdit *= it->second;
                         }
+                        m_faults.setTransMult(faultName, multFltEdit);
+                        logger(fmt::format("Setting fault transmissibility multiplier {} for fault {}", multFlt, faultName));
                     }
-                    m_faults.setTransMult(faultName, multFlt);
-                    logger(fmt::format("Setting fault transmissibility multiplier {} for fault {}", multFlt, faultName));
                 }
-                catch(const std::exception& std_error)
+                catch (const std::exception& std_error)
                 {
                     OpmLog::error(fmt::format("\nMULTFLT: Cannot set fault transmissibility multiplier\n" 
                        "MULTFLT(FLTNAME) equals {} and MULT(FLT-TRS) equals {}\n"
-                       "Error creating reservoir properties: {}" , faultName, multFlt, std_error.what()));
+                       "Error creating reservoir properties: {}" , faultPattern, multFlt, std_error.what()));
                     error = true;
 
                 }
