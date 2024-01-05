@@ -432,30 +432,39 @@ namespace Opm {
                 // Pair not found.
                 return multiplier;
             }
+            const auto& record = this->m_records[regPairPos->second];
+
+            if (applyMultiplier(record)) {
+                multiplier *= record.trans_mult;
+            }
         }
         else {
             // search for enty where the two region ids are the same
-            // where one of thos is a region of ours.
+            // where one of those is a region of ours.
             regPairPos = myMap.find({ regionId1, regionId1 });
 
-            if (!regPairFound(myMap, regPairPos)) {
-                // not found search for other region id
+            if (regPairFound(myMap, regPairPos)) {
+                const auto& record = this->m_records_same[regPairPos->second];
+
+                if (applyMultiplier(record)) {
+                    multiplier *= record.trans_mult;
+                }
+            }
+            if (regionId1 != regionId2)
+            {
+                // also try to apply other region multiplier.
                 regPairPos = myMap.find({ regionId2, regionId2 });
-            }
 
-            if (!regPairFound(myMap, regPairPos)) {
-                // Pair not found.
-                return multiplier;
+                if (regPairFound(myMap, regPairPos)) {
+                    const auto& record = this->m_records_same[regPairPos->second];
+
+                    if (applyMultiplier(record)) {
+                        multiplier *= record.trans_mult;
+                    }
+                }
             }
         }
 
-        const auto& record = (index == 0) ?
-            this->m_records[regPairPos->second] :
-            this->m_records_same[regPairPos->second];
-
-        if (applyMultiplier(record)) {
-            multiplier *= record.trans_mult;
-        }
         return multiplier;
     }
 
