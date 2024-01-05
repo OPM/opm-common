@@ -30,6 +30,7 @@
 #include <opm/common/utility/Demangle.hpp>
 
 #include <stdexcept>
+#include <string_view>
 
 #include "NullParameterCache.hpp"
 
@@ -137,7 +138,7 @@ public:
      *
      * \copydoc Doxygen::compIdxParam
      */
-    static const char* componentName(unsigned /*compIdx*/)
+    static std::string_view componentName(unsigned /*compIdx*/)
     {
         throw std::runtime_error(not_implemented("componentName"));
     }
@@ -296,11 +297,11 @@ public:
     }
 
 private:
-    static std::string not_implemented(const char* method)
+    static std::string not_implemented(const std::string_view method)
     {
         return "Not implemented: The fluid system '" +
                demangle(typeid(Implementation).name()) +
-               "'  does not provide a " + method + "() method!";
+               "'  does not provide a " + method.data() + "() method!";
     }
 };
 

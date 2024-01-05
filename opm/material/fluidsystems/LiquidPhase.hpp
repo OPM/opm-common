@@ -27,6 +27,8 @@
 #ifndef OPM_LIQUID_PHASE_HPP
 #define OPM_LIQUID_PHASE_HPP
 
+#include <string_view>
+
 namespace Opm {
 
 /*!
@@ -41,7 +43,7 @@ public:
     typedef ComponentT Component;
 
     //! \copydoc GasPhase::name
-    static const char* name()
+    static std::string_view name()
     { return Component::name(); }
 
     //! \copydoc GasPhase::isLiquid

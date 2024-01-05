@@ -32,6 +32,8 @@
 #include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
 #endif
 
+#include <string_view>
+
 #include <fmt/format.h>
 
 namespace Opm {
@@ -293,7 +295,7 @@ void BlackOilFluidSystem<Scalar,IndexTraits>::initEnd()
 }
 
 template <class Scalar, class IndexTraits>
-const char* BlackOilFluidSystem<Scalar,IndexTraits>::
+std::string_view BlackOilFluidSystem<Scalar,IndexTraits>::
 phaseName(unsigned phaseIdx)
 {
     switch (phaseIdx) {
@@ -349,7 +351,7 @@ soluteComponentIndex(unsigned phaseIdx)
 }
 
 template <class Scalar, class IndexTraits>
-const char* BlackOilFluidSystem<Scalar,IndexTraits>::
+std::string_view BlackOilFluidSystem<Scalar,IndexTraits>::
 componentName(unsigned compIdx)
 {
     switch (compIdx) {

@@ -42,6 +42,8 @@
 #include <opm/material/binarycoefficients/H2O_Mesitylene.hpp>
 #include <opm/material/binarycoefficients/Air_Mesitylene.hpp>
 
+#include <string_view>
+
 namespace Opm {
 
 /*!
@@ -159,7 +161,7 @@ public:
     }
 
     //! \copydoc BaseFluidSystem::phaseName
-    static const char* phaseName(unsigned phaseIdx)
+    static std::string_view phaseName(unsigned phaseIdx)
     {
         switch (phaseIdx) {
         case waterPhaseIdx: return "water";
@@ -170,7 +172,7 @@ public:
     }
 
     //! \copydoc BaseFluidSystem::componentName
-    static const char* componentName(unsigned compIdx)
+    static std::string_view componentName(unsigned compIdx)
     {
         switch (compIdx) {
         case H2OIdx: return H2O::name();

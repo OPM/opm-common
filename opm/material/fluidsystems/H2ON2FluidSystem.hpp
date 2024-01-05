@@ -39,6 +39,7 @@
 #include <opm/material/common/Valgrind.hpp>
 
 #include <cassert>
+#include <string_view>
 
 namespace Opm {
 
@@ -78,7 +79,7 @@ public:
     static const int gasPhaseIdx = 1;
 
     //! \copydoc BaseFluidSystem::phaseName
-    static const char* phaseName(unsigned phaseIdx)
+    static std::string_view phaseName(unsigned phaseIdx)
     {
         static const char* name[] = {
             "liquid",
@@ -149,7 +150,7 @@ public:
     typedef SimpleN2 N2;
 
     //! \copydoc BaseFluidSystem::componentName
-    static const char* componentName(unsigned compIdx)
+    static std::string_view componentName(unsigned compIdx)
     {
         static const char* name[] = {
             H2O::name(),

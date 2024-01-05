@@ -34,6 +34,7 @@
 
 #include <cassert>
 #include <string>
+#include <string_view>
 
 #include <fmt/format.h>
 
@@ -154,7 +155,7 @@ namespace Opm {
         }
 
         //! \copydoc BaseFluidSystem::phaseName
-        static const char* phaseName(unsigned phaseIdx)
+        static std::string_view phaseName(unsigned phaseIdx)
         {
                 static const char* name[] = {"o",  // oleic phase
                                              "g"};  // gas phase
@@ -164,9 +165,9 @@ namespace Opm {
         }
 
         //! \copydoc BaseFluidSystem::componentName
-        static const char* componentName(unsigned compIdx)
+        static std::string_view componentName(unsigned compIdx)
         {
-            return component_param_[compIdx].name.c_str();
+            return component_param_[compIdx].name;
         }
 
         /*!

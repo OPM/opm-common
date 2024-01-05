@@ -31,6 +31,8 @@
 #include <opm/material/components/C10.hpp>
 #include <opm/material/components/C1.hpp>
 
+#include <string_view>
+
 
 // TODO: this is something else need to check
 #include <opm/material/fluidsystems/PTFlashParameterCache.hpp>
@@ -148,7 +150,7 @@ namespace Opm {
         }
 
         //! \copydoc BaseFluidSystem::phaseName
-        static const char* phaseName(unsigned phaseIdx)
+        static std::string_view phaseName(unsigned phaseIdx)
         {
                 static const char* name[] = {"o",  // oleic phase
                                              "g"};  // gas phase
@@ -158,7 +160,7 @@ namespace Opm {
         }
 
         //! \copydoc BaseFluidSystem::componentName
-        static const char* componentName(unsigned compIdx)
+        static std::string_view componentName(unsigned compIdx)
         {
                 static const char* name[] = {
                         Comp0::name(),

@@ -45,6 +45,8 @@
 #include <opm/material/binarycoefficients/Brine_CO2.hpp>
 #include <opm/material/binarycoefficients/H2O_N2.hpp>
 
+#include <string_view>
+
 namespace Opm {
 
 // Silence compiler warnings about use of variables
@@ -100,7 +102,7 @@ public:
     /*!
      * \copydoc BaseFluidSystem::phaseName
      */
-    static const char* phaseName(unsigned phaseIdx)
+    static std::string_view phaseName(unsigned phaseIdx)
     {
         static const char* name[] = {
             "liquid",
@@ -167,7 +169,7 @@ public:
     /*!
      * \copydoc BaseFluidSystem::componentName
      */
-    static const char* componentName(unsigned compIdx)
+    static std::string_view componentName(unsigned compIdx)
     {
         static const char* name[] = {
             Brine::name(),

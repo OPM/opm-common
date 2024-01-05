@@ -49,6 +49,7 @@
 
 #include <iostream>
 #include <string>
+#include <string_view>
 #include <typeinfo>
 
 /*!
@@ -373,7 +374,7 @@ void checkFluidSystem()
 
     // test for phaseName(), isLiquid() and isIdealGas()
     for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++ phaseIdx) {
-        [[maybe_unused]] std::string name = FluidSystem::phaseName(phaseIdx);
+        [[maybe_unused]] std::string name{FluidSystem::phaseName(phaseIdx)};
         bool bVal = FluidSystem::isLiquid(phaseIdx);
         bVal = FluidSystem::isIdealGas(phaseIdx);
         bVal = !bVal; // get rid of GCC warning (only occurs with paranoid warning flags)
@@ -382,7 +383,7 @@ void checkFluidSystem()
     // test for molarMass() and componentName()
     for (unsigned compIdx = 0; compIdx < numComponents; ++ compIdx) {
         val = FluidSystem::molarMass(compIdx);
-        std::string name = FluidSystem::componentName(compIdx);
+        std::string{FluidSystem::componentName(compIdx)};
     }
 }
 

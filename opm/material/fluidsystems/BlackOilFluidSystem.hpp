@@ -47,6 +47,7 @@
 #include <cstddef>
 #include <memory>
 #include <stdexcept>
+#include <string_view>
 #include <vector>
 
 namespace Opm {
@@ -360,7 +361,7 @@ public:
     static Scalar surfaceTemperature;
 
     //! \copydoc BaseFluidSystem::phaseName
-    static const char* phaseName(unsigned phaseIdx);
+    static std::string_view phaseName(unsigned phaseIdx);
 
     //! \copydoc BaseFluidSystem::isLiquid
     static bool isLiquid(unsigned phaseIdx)
@@ -406,7 +407,7 @@ public:
     static unsigned soluteComponentIndex(unsigned phaseIdx);
 
     //! \copydoc BaseFluidSystem::componentName
-    static const char* componentName(unsigned compIdx);
+    static std::string_view componentName(unsigned compIdx);
 
     //! \copydoc BaseFluidSystem::molarMass
     static Scalar molarMass(unsigned compIdx, unsigned regionIdx = 0)
