@@ -164,6 +164,7 @@ MULTREGT
 /
 MULTREGT
 2  2   0.50   YZ   ALL    F / -- Region values equal
+5  5   0.1   XZ   ALL    F / -- Region values equal
 /
 EDIT
 )");
@@ -192,13 +193,16 @@ BOOST_AUTO_TEST_CASE(IncludeSelf) {
     // Region 2 to 2
     BOOST_CHECK_EQUAL( scanner1.getRegionMultiplier(grid.getGlobalIndex(2,0,0), grid.getGlobalIndex(2,1,0),
                                                     Opm::FaceDir::YPlus ), 0.50);
-    // Region 2 to 5
+    // Region 2 to 5, both multipliers will be used.
     BOOST_CHECK_EQUAL( scanner1.getRegionMultiplier(grid.getGlobalIndex(2,0,0), grid.getGlobalIndex(2,0,1),
-                                                    Opm::FaceDir::ZPlus ), 0.5);
+                                                    Opm::FaceDir::ZPlus ), 0.05);
     BOOST_CHECK_EQUAL( scanner1.getRegionMultiplier(grid.getGlobalIndex(0,0,0), grid.getGlobalIndex(0,0,1),
                                                     Opm::FaceDir::ZMinus ), 1.0);
     BOOST_CHECK_EQUAL( scanner1.getRegionMultiplier(grid.getGlobalIndex(0,0,0), grid.getGlobalIndex(0,0,1),
                                                     Opm::FaceDir::ZMinus ), 1.0);
+    // Region 4 to 5
+    BOOST_CHECK_EQUAL( scanner1.getRegionMultiplier(grid.getGlobalIndex(1,0,1), grid.getGlobalIndex(2,0,1),
+                                                    Opm::FaceDir::XPlus ), 0.1);
 
 }
 
