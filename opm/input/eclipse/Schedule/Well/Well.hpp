@@ -394,6 +394,7 @@ public:
 
     Well(const RestartIO::RstWell& rst_well,
          int report_step,
+         int rst_whistctl_cmode,
          const TracerConfig& tracer_config,
          const UnitSystem& unit_system,
          double udq_undefined);

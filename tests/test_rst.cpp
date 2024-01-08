@@ -664,9 +664,12 @@ BOOST_AUTO_TEST_CASE(Construct_Well_Guide_Rates_Group_Control_Object)
 
     auto makeRestartWell = [&state](const std::string& well_name)
     {
+        const auto rst_whistctl_cmode = 0; // NONE (WHISTCTL keyword not entered)
+
         return Opm::Well {
             state.get_well(well_name),
             static_cast<int>(rptStep),
+            rst_whistctl_cmode,
             Opm::TracerConfig{},
             Opm::UnitSystem::newMETRIC(),
             1.0e+20
@@ -748,9 +751,12 @@ BOOST_AUTO_TEST_CASE(Construct_Well_Explicit_THP_Control_Options_Object)
 
     auto makeTHPOptions = [&state](const std::string& well_name)
     {
+        const auto rst_whistctl_cmode = 0; // NONE (WHISTCTL keyword not entered).
+
         return Opm::Well {
             state.get_well(well_name),
             static_cast<int>(rptStep),
+            rst_whistctl_cmode,
             Opm::TracerConfig{},
             Opm::UnitSystem::newMETRIC(),
             1.0e+20
