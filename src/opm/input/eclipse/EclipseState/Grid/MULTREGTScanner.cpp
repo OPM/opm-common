@@ -1,5 +1,5 @@
 /*
-  Copyright 2014 Statoil ASA.
+  Copyright 2014--2023 Equinor ASA.
 
   This file is part of the Open Porous Media project (OPM).
 
@@ -152,9 +152,15 @@ namespace Opm {
             this->addKeyword(*keywordRecordPtr);
         }
 
+        this->template fillSearchMap<0>(m_records);
+        this->template fillSearchMap<1>(m_records_same);
+    }
+
+    template<int index>
+    void MULTREGTScanner::fillSearchMap(const std::vector<MULTREGTRecord>& records) {
         MULTREGTSearchMap searchPairs;
-        for (auto recordIx = 0*this->m_records.size(); recordIx < this->m_records.size(); ++recordIx) {
-            const auto& record = this->m_records[recordIx];
+        for (auto recordIx = 0*records.size(); recordIx < records.size(); ++recordIx) {
+            const auto& record = records[recordIx];
             const std::string& region_name = record.region_name;
             if (this->fp->has_int(region_name)) {
                 const auto srcRegion    = record.src_value;
@@ -163,12 +169,9 @@ namespace Opm {
                 // The MULTREGT keyword is directionally independent meaning
                 // we add both directions, symmetrically, to the lookup
                 // table.
-                if (srcRegion != targetRegion) {
-                    std::pair<int,int> pair1{ srcRegion, targetRegion };
-                    std::pair<int,int> pair2{ targetRegion, srcRegion };
-                    searchPairs[pair1] = recordIx;
-                    searchPairs[pair2] = recordIx;
-                }
+                std::pair<int,int> pair = (srcRegion <= targetRegion) ?
+                    std::make_pair(srcRegion, targetRegion) : std::make_pair(targetRegion, srcRegion);
+                searchPairs[pair] = recordIx;
             }
             else {
                 throw std::logic_error {
@@ -184,9 +187,9 @@ namespace Opm {
         }
 
         for (const auto& [regPair, recordIx] : searchPairs) {
-            const std::string& keyword = this->m_records[recordIx].region_name;
+            const std::string& keyword = records[recordIx].region_name;
 
-            this->m_searchMap[keyword][regPair] = recordIx;
+            std::get<index>(this->m_searchMap[keyword])[regPair] = recordIx;
         }
     }
 
@@ -201,9 +204,13 @@ namespace Opm {
 
         result.gridDims = GridDims::serializationTestObject();
         result.m_records = {{4, 5, 6.0, 7, MULTREGT::NNCBehaviourEnum::ALL, "test1"}};
-        result.m_searchMap["MULTNUM"].emplace(std::piecewise_construct,
-                                              std::forward_as_tuple(std::make_pair(1, 2)),
-                                              std::forward_as_tuple(0));
+        result.m_records_same = {{4, 4, 4.0, 3, MULTREGT::NNCBehaviourEnum::NONNC, "test2"}};
+        result.m_searchMap["MULTNUM"][0].emplace(std::piecewise_construct,
+                                                 std::forward_as_tuple(std::make_pair(1, 2)),
+                                                 std::forward_as_tuple(0));
+        result.m_searchMap["MULTNUM"][1].emplace(std::piecewise_construct,
+                                                 std::forward_as_tuple(std::make_pair(2, 2)),
+                                                 std::forward_as_tuple(0));
         result.regions = {{"test3", {11}}};
         result.aquifer_cells = { std::size_t{17}, std::size_t{29} };
 
@@ -214,6 +221,7 @@ namespace Opm {
     {
         return (this->gridDims == data.gridDims)
             && (this->m_records == data.m_records)
+            && (this->m_records_same == data.m_records_same)
             && (this->m_searchMap == data.m_searchMap)
             && (this->regions == data.regions)
             && (this->aquifer_cells == data.aquifer_cells)
@@ -226,6 +234,7 @@ namespace Opm {
         this->fp = data.fp;
 
         this->m_records = data.m_records;
+        this->m_records_same = data.m_records_same;
         this->m_searchMap = data.m_searchMap;
         this->regions = data.regions;
         this->aquifer_cells = data.aquifer_cells;
@@ -278,10 +287,16 @@ namespace Opm {
             return multiplier;
         }
 
-        auto regPairFound = [faceDir, this](const auto& regMap, auto regPairPos)
+        auto regPairFoundDifferent = [faceDir, this](const auto& regMap, const auto& regPairPos)
         {
             return (regPairPos != regMap.end())
                 && ((this->m_records[regPairPos->second].directions & faceDir) != 0);
+        };
+
+        auto regPairFoundSame = [faceDir, this](const auto& regMap, const auto& regPairPos)
+        {
+            return (regPairPos != regMap.end())
+                && ((this->m_records_same[regPairPos->second].directions & faceDir) != 0);
         };
 
         auto ignoreMultiplierRecord =
@@ -300,31 +315,39 @@ namespace Opm {
                 || (is_aqu              && (nnc_behaviour == MULTREGT::NNCBehaviourEnum::NOAQUNNC));
         };
 
-        for (const auto& [regName, regMap] : this->m_searchMap) {
+
+        for (const auto& [regName, regMaps] : this->m_searchMap) {
             const auto& region_data = this->regions.at(regName);
 
-            const int regionId1 = region_data[globalIndex1];
-            const int regionId2 = region_data[globalIndex2];
+            auto regionId1 = region_data[globalIndex1];
+            auto regionId2 = region_data[globalIndex2];
 
-            auto regPairPos = regMap.find({ regionId1, regionId2 });
-            if ((regionId1 != regionId2) && !regPairFound(regMap, regPairPos)) {
-                // 1 -> 2 not found.  Try reverse direction.
-                regPairPos = regMap.find({ regionId2, regionId1 });
+            if (regionId1 > regionId2) {
+                std::swap(regionId1, regionId2);
             }
 
-            if (! regPairFound(regMap, regPairPos)) {
-                // Neither 1->2 nor 2->1 found.  Move on to next region set.
-                continue;
-            }
-
-            const auto& record = this->m_records[regPairPos->second];
-            const auto applyMultiplier =
-                (record.nnc_behaviour == MULTREGT::NNCBehaviourEnum::ALL) ||
+            const auto applyMultiplier = [ignoreMultiplierRecord](const MULTREGTRecord& record)
+            {
+                return (record.nnc_behaviour == MULTREGT::NNCBehaviourEnum::ALL) ||
                 ! ignoreMultiplierRecord(record.nnc_behaviour);
+            };
 
-            if (applyMultiplier) {
-                multiplier *= record.trans_mult;
-            }
+            multiplier = this->template applyMultiplierDifferentRegion(regMaps,
+                                                                       multiplier,
+                                                                       regionId1,
+                                                                       regionId2,
+                                                                       applyMultiplier,
+                                                                       regPairFoundDifferent);
+            // same region. Note that a pair where both region indices are the same is special.
+            // For connections between it and all other regions the multipliers
+            // will not override otherwise explicitly specified (as pairs with
+            // different ids) multipliers, but accumulated to these.
+            multiplier = this->template applyMultiplierSameRegion(regMaps,
+                                                                  multiplier,
+                                                                  regionId1,
+                                                                  regionId2,
+                                                                  applyMultiplier,
+                                                                  regPairFoundSame);
         }
 
         return multiplier;
@@ -351,56 +374,116 @@ namespace Opm {
                 || (is_aqu && (nnc_behaviour == MULTREGT::NNCBehaviourEnum::NOAQUNNC));
         };
 
-        for (const auto& [regName, regMap] : this->m_searchMap) {
+        for (const auto& [regName, regMaps] : this->m_searchMap) {
             const auto& region_data = this->regions.at(regName);
 
-            const auto regionId1 = region_data[globalCellIdx1];
-            const auto regionId2 = region_data[globalCellIdx2];
+            auto regionId1 = region_data[globalCellIdx1];
+            auto regionId2 = region_data[globalCellIdx2];
 
-            auto regPairPos = regMap.find({ regionId1, regionId2 });
-            if ((regionId1 != regionId2) && (regPairPos == regMap.end())) {
-                // 1 -> 2 not found.  Try reverse direction.
-                regPairPos = regMap.find({ regionId2, regionId1 });
+            if (regionId1> regionId2) {
+                std::swap(regionId1, regionId2);
             }
 
-            if (regPairPos == regMap.end()) {
-                // Neither 1->2 nor 2->1 found.  Move on to next region set.
-                continue;
-            }
+            const auto applyMultiplier = [ignoreMultiplierRecord](const auto& record){
+                return ! ignoreMultiplierRecord(record.nnc_behaviour);
+            };
 
-            const auto& record = this->m_records[regPairPos->second];
+            const auto regPairFound = [](const auto& regMap, const auto& regPairPos)
+            {
+                // all entries match no matter what FaceDir says.
+                return (regPairPos != regMap.end());
+            };
 
-            if (! ignoreMultiplierRecord(record.nnc_behaviour)) {
+            multiplier = this->template applyMultiplierSameRegion(regMaps,
+                                                                  multiplier,
+                                                                  regionId1,
+                                                                  regionId2,
+                                                                  applyMultiplier,
+                                                                  regPairFound);
+            // same region. Note that a pair where both region indices are the same is special.
+            // For connections between it and all other regions the multipliers
+            // will not override otherwise explicitly specified (as pairs with
+            // different ids) multipliers, but accumulated to these.
+            multiplier = this->template applyMultiplierDifferentRegion(regMaps,
+                                                                       multiplier,
+                                                                       regionId1,
+                                                                       regionId2,
+                                                                       applyMultiplier,
+                                                                       regPairFound);
+        }
+
+        return multiplier;
+    }
+
+    template<typename ApplyDecision, typename RegPairFound>
+    double MULTREGTScanner::applyMultiplierDifferentRegion(const std::array<MULTREGTSearchMap,2>& regMaps,
+                                                           double multiplier,
+                                                           std::size_t regionId1,
+                                                           std::size_t regionId2,
+                                                           const ApplyDecision& applyMultiplier,
+                                                           const RegPairFound& regPairFound) const
+    {
+        const auto& myMap = std::get<0>(regMaps);
+        decltype(myMap.begin()) regPairPos;
+
+        regPairPos = myMap.find({ regionId1, regionId2 });
+
+        if (!regPairFound(myMap, regPairPos)) {
+            // Pair not found.
+            return multiplier;
+        }
+        const auto& record = this->m_records[regPairPos->second];
+
+        if (applyMultiplier(record)) {
+            multiplier *= record.trans_mult;
+        }
+
+        return multiplier;
+    }
+
+
+    template<typename ApplyDecision, typename RegPairFound>
+    double MULTREGTScanner::applyMultiplierSameRegion(const std::array<MULTREGTSearchMap,2>& regMaps,
+                                                      double multiplier,
+                                                      std::size_t regionId1,
+                                                      std::size_t regionId2,
+                                                      const ApplyDecision& applyMultiplier,
+                                                      const RegPairFound& regPairFound) const
+    {
+        const auto& myMap = std::get<1>(regMaps);
+        decltype(myMap.begin()) regPairPos;
+
+        // search for entry where the two region ids are the same
+        // where one of those is a region of ours.
+        regPairPos = myMap.find({ regionId1, regionId1 });
+
+        if (regPairFound(myMap, regPairPos)) {
+            const auto& record = this->m_records_same[regPairPos->second];
+
+            if (applyMultiplier(record)) {
                 multiplier *= record.trans_mult;
+            }
+        }
+        if (regionId1 != regionId2)
+        {
+            // also try to apply other region multiplier.
+            regPairPos = myMap.find({ regionId2, regionId2 });
+
+            if (regPairFound(myMap, regPairPos)) {
+                const auto& record = this->m_records_same[regPairPos->second];
+
+                if (applyMultiplier(record)) {
+                    multiplier *= record.trans_mult;
+                }
             }
         }
 
         return multiplier;
     }
 
-    void MULTREGTScanner::assertKeywordSupported(const DeckKeyword& deckKeyword)
-    {
-        using Kw = ParserKeywords::MULTREGT;
-
-        for (const auto& deckRecord : deckKeyword) {
-            const auto& srcItem = deckRecord.getItem<Kw::SRC_REGION>();
-            const auto& targetItem = deckRecord.getItem<Kw::TARGET_REGION>();
-
-            if (!srcItem.defaultApplied(0) && !targetItem.defaultApplied(0)) {
-                if (srcItem.get<int>(0) == targetItem.get<int>(0)) {
-                    throw std::invalid_argument {
-                        "Sorry - MULTREGT applied internally to a region is not yet supported"
-                    };
-                }
-            }
-        }
-    }
-
     void MULTREGTScanner::addKeyword(const DeckKeyword& deckKeyword)
     {
         using Kw = ParserKeywords::MULTREGT;
-
-        this->assertKeywordSupported(deckKeyword);
 
         for (const auto& deckRecord : deckKeyword) {
             std::vector<int> src_regions;
@@ -432,9 +515,25 @@ namespace Opm {
                 target_regions.push_back(targetItem.get<int>(0));
             }
 
-            for (int src_region : src_regions) {
-                for (int target_region : target_regions) {
-                    m_records.push_back({src_region, target_region, trans_mult, directions, nnc_behaviour, region_name});
+            if (target_regions.size() == 1 && src_regions.size() == 1 &&
+                src_regions[0] == target_regions[0]) {
+                // MULTREGT with same source and target region.
+                // Use connections to self and all other regions
+                m_records_same.push_back({src_regions[0], src_regions[0], trans_mult, directions, nnc_behaviour, region_name});
+            }
+            else {
+                for (int src_region : src_regions) {
+                    for (int target_region : target_regions) {
+                        if (src_region <= target_region) {
+                            // same region should not happen for defaulted regions
+                            if (src_region != target_region) {
+                                m_records.push_back({src_region, target_region, trans_mult, directions, nnc_behaviour, region_name});
+                            }
+                        }
+                        else {
+                            m_records.push_back({target_region, src_region, trans_mult, directions, nnc_behaviour, region_name});
+                        }
+                    }
                 }
             }
         }

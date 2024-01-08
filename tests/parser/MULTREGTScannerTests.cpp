@@ -1,5 +1,5 @@
 /*
-  Copyright 2014 Statoil ASA.
+  Copyright 2014--2023 Equinor ASA.
 
   This file is part of the Open Porous Media project (OPM).
 
@@ -135,7 +135,7 @@ BOOST_AUTO_TEST_CASE(InvalidInput) {
 }
 
 namespace {
-    Opm::Deck createNotSupportedMULTREGTDeck()
+    Opm::Deck createIncludeSelfMULTREGTDeck()
     {
         return Opm::Parser{}.parseString(R"(RUNSPEC
 DIMENS
@@ -158,28 +158,52 @@ FLUXNUM
 3 4 5
 /
 MULTREGT
-1  2   0.50   X   NOAQUNNC  F / -- Not support NOAQUNNC behaviour
+1  2   0.30   X   NOAQUNNC  F / -- Not support NOAQUNNC behaviour
+1  2   0.50   X   ALL  F /
+1  1   0.1   X   ALL  F /
 /
 MULTREGT
-2  2   0.50   X   ALL    M / -- Region values equal
+2  2   0.50   YZ   ALL    F / -- Region values equal
+5  5   0.1   XZ   ALL    F / -- Region values equal
 /
 EDIT
 )");
     }
 } // Anonymous namespace
 
-BOOST_AUTO_TEST_CASE(NotSupported) {
-    Opm::Deck deck = createNotSupportedMULTREGTDeck();
+BOOST_AUTO_TEST_CASE(IncludeSelf) {
+    Opm::Deck deck = createIncludeSelfMULTREGTDeck();
     Opm::EclipseGrid grid( deck );
     Opm::TableManager tm(deck);
     Opm::EclipseGrid eg( deck );
     Opm::FieldPropsManager fp(deck, Opm::Phases{true, true, true}, eg, tm);
 
     // srcValue == targetValue - not supported
-    std::vector<const Opm::DeckKeyword*> keywords1;
+    std::vector<const Opm::DeckKeyword*> keywords0, keywords1;
+    const Opm::DeckKeyword& multregtKeyword0 = deck["MULTREGT"][0];
     const Opm::DeckKeyword& multregtKeyword1 = deck["MULTREGT"][1];
+    keywords0.push_back( &multregtKeyword0 );
     keywords1.push_back( &multregtKeyword1 );
-    BOOST_CHECK_THROW( Opm::MULTREGTScanner scanner( grid, &fp, keywords1 ); , std::invalid_argument );
+    Opm::MULTREGTScanner scanner0 = { grid, &fp, keywords0 };
+    Opm::MULTREGTScanner scanner1 = { grid, &fp, keywords1 };
+
+    // Region 1 to 2 scanner0 where two multipliers are cumulated
+    BOOST_CHECK_EQUAL( scanner0.getRegionMultiplier(grid.getGlobalIndex(1,0,0), grid.getGlobalIndex(2,0,0),
+                                                    Opm::FaceDir::XPlus ), 0.05);
+    // Region 2 to 2
+    BOOST_CHECK_EQUAL( scanner1.getRegionMultiplier(grid.getGlobalIndex(2,0,0), grid.getGlobalIndex(2,1,0),
+                                                    Opm::FaceDir::YPlus ), 0.50);
+    // Region 2 to 5, both multipliers will be used.
+    BOOST_CHECK_EQUAL( scanner1.getRegionMultiplier(grid.getGlobalIndex(2,0,0), grid.getGlobalIndex(2,0,1),
+                                                    Opm::FaceDir::ZPlus ), 0.05);
+    BOOST_CHECK_EQUAL( scanner1.getRegionMultiplier(grid.getGlobalIndex(0,0,0), grid.getGlobalIndex(0,0,1),
+                                                    Opm::FaceDir::ZMinus ), 1.0);
+    BOOST_CHECK_EQUAL( scanner1.getRegionMultiplier(grid.getGlobalIndex(0,0,0), grid.getGlobalIndex(0,0,1),
+                                                    Opm::FaceDir::ZMinus ), 1.0);
+    // Region 4 to 5
+    BOOST_CHECK_EQUAL( scanner1.getRegionMultiplier(grid.getGlobalIndex(1,0,1), grid.getGlobalIndex(2,0,1),
+                                                    Opm::FaceDir::XPlus ), 0.1);
+
 }
 
 namespace {
