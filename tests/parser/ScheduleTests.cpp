@@ -5859,3 +5859,57 @@ BCPROP
         BOOST_CHECK_CLOSE(bcface0.rate * Opm::unit::day, 200, 1e-8 );
     }
 }
+
+BOOST_AUTO_TEST_CASE(createDeckWithSource) {
+    std::string input = R"(
+START             -- 0
+19 JUN 2007 /
+
+SOLUTION
+
+SCHEDULE
+
+SOURCE
+ 1 1 1 GAS 0.01 /
+ 1 1 1 WATER 0.01 /
+/
+
+DATES             -- 1
+ 10  OKT 2008 /
+/
+SOURCE
+ 1 1 1 GAS 0.02 /
+ 1 1 2 WATER 0.01 /
+/
+)";
+
+    const auto& schedule = make_schedule(input);
+    {
+        size_t currentStep = 0;
+        const auto& source = schedule[currentStep].source();
+        BOOST_CHECK_EQUAL(source.size(), 2);
+        double rate11 = source.rate({{0,0,0},Opm::SourceComponent::GAS});
+        BOOST_CHECK_EQUAL(rate11,
+                        schedule.getUnits().to_si("Mass/Time", 0.01));
+
+        double rate12 = source.rate({{0,0,0},Opm::SourceComponent::WATER});
+        BOOST_CHECK_EQUAL(rate12,
+                      schedule.getUnits().to_si("Mass/Time", 0.01));
+    }
+
+    {
+        size_t currentStep = 1;
+        const auto& source = schedule[currentStep].source();
+        BOOST_CHECK_EQUAL(source.size(), 3);
+        double rate21 = source.rate({{0,0,0},Opm::SourceComponent::GAS});
+        BOOST_CHECK_EQUAL(rate21,
+                        schedule.getUnits().to_si("Mass/Time", 0.02));
+        double rate22 = source.rate({{0,0,0},Opm::SourceComponent::WATER});
+        BOOST_CHECK_EQUAL(rate22,
+                        schedule.getUnits().to_si("Mass/Time", 0.01));
+
+        double rate23 = source.rate({{0,0,1},Opm::SourceComponent::WATER});
+        BOOST_CHECK_EQUAL(rate23,
+                      schedule.getUnits().to_si("Mass/Time", 0.01));
+    }
+}

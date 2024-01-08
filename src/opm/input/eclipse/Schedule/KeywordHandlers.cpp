@@ -98,7 +98,7 @@ void handleBCProp(HandlerContext& handlerContext)
 
 void handleSource(HandlerContext& handlerContext)
 {
-    auto new_source = Source();
+    auto new_source = handlerContext.state().source.get();
     for (const auto& record : handlerContext.keyword) {
         new_source.updateSource(record);
     }
