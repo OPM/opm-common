@@ -70,6 +70,7 @@ struct RstHeader {
     int nacaqz;
     int tstep;
     int report_step;
+    int histctl_override;
     int newtmx;
     int newtmn;
     int litmax;
