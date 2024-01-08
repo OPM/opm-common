@@ -287,13 +287,13 @@ namespace Opm {
             return multiplier;
         }
 
-        auto regPairFound0 = [faceDir, this](const auto& regMap, const auto& regPairPos)
+        auto regPairFoundDifferent = [faceDir, this](const auto& regMap, const auto& regPairPos)
         {
             return (regPairPos != regMap.end())
                 && ((this->m_records[regPairPos->second].directions & faceDir) != 0);
         };
 
-        auto regPairFound1 = [faceDir, this](const auto& regMap, const auto& regPairPos)
+        auto regPairFoundSame = [faceDir, this](const auto& regMap, const auto& regPairPos)
         {
             return (regPairPos != regMap.end())
                 && ((this->m_records_same[regPairPos->second].directions & faceDir) != 0);
@@ -332,22 +332,22 @@ namespace Opm {
                 ! ignoreMultiplierRecord(record.nnc_behaviour);
             };
 
-            multiplier = this->template applyRegionMultiplier<0>(regMaps,
-                                                                 multiplier,
-                                                                 regionId1,
-                                                                 regionId2,
-                                                                 applyMultiplier,
-                                                                 regPairFound0);
+            multiplier = this->template applyMultiplierDifferentRegion(regMaps,
+                                                                       multiplier,
+                                                                       regionId1,
+                                                                       regionId2,
+                                                                       applyMultiplier,
+                                                                       regPairFoundDifferent);
             // same region. Note that a pair where both region indices are the same is special.
             // For connections between it and all other regions the multipliers
             // will not override otherwise explicitly specified (as pairs with
             // different ids) multipliers, but accumulated to these.
-            multiplier = this->template applyRegionMultiplier<1>(regMaps,
-                                                                 multiplier,
-                                                                 regionId1,
-                                                                 regionId2,
-                                                                 applyMultiplier,
-                                                                 regPairFound1);
+            multiplier = this->template applyMultiplierSameRegion(regMaps,
+                                                                  multiplier,
+                                                                  regionId1,
+                                                                  regionId2,
+                                                                  applyMultiplier,
+                                                                  regPairFoundSame);
         }
 
         return multiplier;
@@ -390,77 +390,90 @@ namespace Opm {
 
             const auto regPairFound = [](const auto& regMap, const auto& regPairPos)
             {
-                return regPairPos != regMap.end();
+                // all entries match no matter what FaceDir says.
+                return (regPairPos != regMap.end());
             };
 
-            multiplier = this->template applyRegionMultiplier<0>(regMaps,
-                                                                 multiplier,
-                                                                 regionId1,
-                                                                 regionId2,
-                                                                 applyMultiplier,
-                                                                 regPairFound);
+            multiplier = this->template applyMultiplierSameRegion(regMaps,
+                                                                  multiplier,
+                                                                  regionId1,
+                                                                  regionId2,
+                                                                  applyMultiplier,
+                                                                  regPairFound);
             // same region. Note that a pair where both region indices are the same is special.
             // For connections between it and all other regions the multipliers
             // will not override otherwise explicitly specified (as pairs with
             // different ids) multipliers, but accumulated to these.
-            multiplier = this->template applyRegionMultiplier<1>(regMaps,
-                                                                 multiplier,
-                                                                 regionId1,
-                                                                 regionId2,
-                                                                 applyMultiplier,
-                                                                 regPairFound);
+            multiplier = this->template applyMultiplierDifferentRegion(regMaps,
+                                                                       multiplier,
+                                                                       regionId1,
+                                                                       regionId2,
+                                                                       applyMultiplier,
+                                                                       regPairFound);
         }
 
         return multiplier;
     }
 
-    template<int index, typename ApplyDecision, typename RegPairFound>
-    double MULTREGTScanner::applyRegionMultiplier(const std::array<MULTREGTSearchMap,2>& regMaps,
-                                                  double multiplier,
-                                                  std::size_t regionId1,
-                                                  std::size_t regionId2,
-                                                  const ApplyDecision& applyMultiplier,
-                                                  const RegPairFound& regPairFound) const
+    template<typename ApplyDecision, typename RegPairFound>
+    double MULTREGTScanner::applyMultiplierDifferentRegion(const std::array<MULTREGTSearchMap,2>& regMaps,
+                                                           double multiplier,
+                                                           std::size_t regionId1,
+                                                           std::size_t regionId2,
+                                                           const ApplyDecision& applyMultiplier,
+                                                           const RegPairFound& regPairFound) const
     {
-        const auto& myMap = std::get<index>(regMaps);
+        const auto& myMap = std::get<0>(regMaps);
         decltype(myMap.begin()) regPairPos;
 
-        if (index==0) {
-            regPairPos = myMap.find({ regionId1, regionId2 });
+        regPairPos = myMap.find({ regionId1, regionId2 });
 
-            if (!regPairFound(myMap, regPairPos)) {
-                // Pair not found.
-                return multiplier;
-            }
-            const auto& record = this->m_records[regPairPos->second];
+        if (!regPairFound(myMap, regPairPos)) {
+            // Pair not found.
+            return multiplier;
+        }
+        const auto& record = this->m_records[regPairPos->second];
+
+        if (applyMultiplier(record)) {
+            multiplier *= record.trans_mult;
+        }
+
+        return multiplier;
+    }
+
+
+    template<typename ApplyDecision, typename RegPairFound>
+    double MULTREGTScanner::applyMultiplierSameRegion(const std::array<MULTREGTSearchMap,2>& regMaps,
+                                                      double multiplier,
+                                                      std::size_t regionId1,
+                                                      std::size_t regionId2,
+                                                      const ApplyDecision& applyMultiplier,
+                                                      const RegPairFound& regPairFound) const
+    {
+        const auto& myMap = std::get<1>(regMaps);
+        decltype(myMap.begin()) regPairPos;
+
+        // search for entry where the two region ids are the same
+        // where one of those is a region of ours.
+        regPairPos = myMap.find({ regionId1, regionId1 });
+
+        if (regPairFound(myMap, regPairPos)) {
+            const auto& record = this->m_records_same[regPairPos->second];
 
             if (applyMultiplier(record)) {
                 multiplier *= record.trans_mult;
             }
         }
-        else {
-            // search for enty where the two region ids are the same
-            // where one of those is a region of ours.
-            regPairPos = myMap.find({ regionId1, regionId1 });
+        if (regionId1 != regionId2)
+        {
+            // also try to apply other region multiplier.
+            regPairPos = myMap.find({ regionId2, regionId2 });
 
             if (regPairFound(myMap, regPairPos)) {
                 const auto& record = this->m_records_same[regPairPos->second];
 
                 if (applyMultiplier(record)) {
                     multiplier *= record.trans_mult;
-                }
-            }
-            if (regionId1 != regionId2)
-            {
-                // also try to apply other region multiplier.
-                regPairPos = myMap.find({ regionId2, regionId2 });
-
-                if (regPairFound(myMap, regPairPos)) {
-                    const auto& record = this->m_records_same[regPairPos->second];
-
-                    if (applyMultiplier(record)) {
-                        multiplier *= record.trans_mult;
-                    }
                 }
             }
         }

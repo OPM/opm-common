@@ -24,8 +24,8 @@
 #include <opm/input/eclipse/EclipseState/Grid/GridDims.hpp>
 
 #include <array>
-#include <functional>
 #include <cstddef>
+#include <functional>
 #include <map>
 #include <string>
 #include <utility>
@@ -130,10 +130,25 @@ namespace Opm {
             std::vector<MULTREGTRecord>::size_type
         >;
 
-        /// \brief Apply regionMultiplier
+        /// \brief Apply regionMultiplier from entries where source and target region differ
         ///
-        /// Either for pairs with different region id  (index 0) or pairs with
-        /// same region id (index 1).
+        /// \param regMaps the maps for the region name (FLUXNUM or else)
+        ///        first entry is between regions with different indices
+        ///        second entry is between regions withe the same index
+        /// \param regionId1 Id of egion for first cell
+        /// \param regionId Id of regions for the second cell (not less than regionId1!)
+        /// \param applyMultiplier Functor returning true if multiplier should be applied
+        /// \param regPairFound Functor to check whether there is a entry for region pair.
+        template<typename ApplyDecision, typename RegPairFound>
+        double applyMultiplierDifferentRegion(const std::array<MULTREGTSearchMap,2>& regMaps,
+                                              double multiplier,
+                                              std::size_t regionId1,
+                                              std::size_t regionId2,
+                                              const ApplyDecision& applyMultiplier,
+                                              const RegPairFound& regPairFound) const;
+
+        /// \brief Apply region multipliers from entries with same source and target region
+        ///
         /// Note that a pair where both region indices are the same is special.
         /// For connections between it and all other regions the multipliers
         /// will not override otherwise explicitly specified (as pairs with
@@ -145,15 +160,13 @@ namespace Opm {
         /// \param regionId Id of regions for the second cell (not less than regionId1!)
         /// \param applyMultiplier Functor returning true if multiplier should be applied
         /// \param regPairFound Functor to check whether there is a entry for region pair.
-        /// \tparam index Use 0 for application to pairs with different region, use 1 for pairs
-        ///                with same id.
-        template<int index, typename ApplyDecision, typename RegPairFound>
-        double applyRegionMultiplier(const std::array<MULTREGTSearchMap,2>& regMaps,
-                                     double multiplier,
-                                     std::size_t regionId1,
-                                     std::size_t regionId2,
-                                     const ApplyDecision& applyMultiplier,
-                                     const RegPairFound& regPairFound) const;
+        template<typename ApplyDecision, typename RegPairFound>
+        double applyMultiplierSameRegion(const std::array<MULTREGTSearchMap,2>& regMaps,
+                                         double multiplier,
+                                         std::size_t regionId1,
+                                         std::size_t regionId2,
+                                         const ApplyDecision& applyMultiplier,
+                                         const RegPairFound& regPairFound) const;
         template<int index>
         void fillSearchMap(const std::vector<MULTREGTRecord>& records);
 
