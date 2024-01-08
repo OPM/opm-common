@@ -290,8 +290,8 @@ protected:
         findCriticalPoint_(Tcrit,
                            pcrit,
                            Vcrit,
-                           params.a(phaseIdx),
-                           params.b(phaseIdx));
+                           Evaluation(params.a(phaseIdx)),
+                           Evaluation(params.b(phaseIdx)) );
 
 
         //Evaluation Vcrit = criticalMolarVolume_.eval(params.a(phaseIdx), params.b(phaseIdx));
