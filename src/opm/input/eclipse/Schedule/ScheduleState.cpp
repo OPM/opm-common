@@ -310,6 +310,7 @@ bool ScheduleState::operator==(const ScheduleState& other) const {
            this->rft_config.get() == other.rft_config.get() &&
            this->udq.get() == other.udq.get() &&
            this->bhp_defaults.get() == other.bhp_defaults.get() &&
+           this->source.get() == other.source.get() &&
            this->wells == other.wells &&
            this->groups == other.groups &&
            this->vfpprod == other.vfpprod &&
@@ -360,6 +361,7 @@ ScheduleState ScheduleState::serializationTestObject() {
     ts.glo.update( GasLiftOpt::serializationTestObject() );
     ts.rft_config.update( RFTConfig::serializationTestObject() );
     ts.rst_config.update( RSTConfig::serializationTestObject() );
+    ts.source.update( Source::serializationTestObject() );
 
     return ts;
 }
