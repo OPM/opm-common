@@ -42,6 +42,9 @@
 
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/EclipseState/TracerConfig.hpp>
+
+#include <opm/input/eclipse/Python/Python.hpp>
+
 #include <opm/input/eclipse/Schedule/Action/State.hpp>
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 #include <opm/input/eclipse/Schedule/SummaryState.hpp>
@@ -52,11 +55,13 @@
 
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
 
-#include <opm/input/eclipse/Deck/Deck.hpp>
-#include <opm/input/eclipse/Parser/Parser.hpp>
-#include <opm/input/eclipse/Python/Python.hpp>
-
 #include <opm/common/utility/TimeService.hpp>
+
+#include <opm/input/eclipse/Deck/Deck.hpp>
+
+#include <opm/input/eclipse/Parser/Parser.hpp>
+
+#include <opm/input/eclipse/Parser/ParserKeywords/W.hpp>
 
 #include <tests/WorkArea.hpp>
 
@@ -238,6 +243,146 @@ TSTEP            -- 8
 )~" };
 
         return Opm::Parser{}.parseString(input);
+    }
+
+    Opm::Deck historic_period()
+    {
+        return Opm::Parser{}.parseString(R"~(
+RUNSPEC
+OIL
+GAS
+WATER
+DISGAS
+VAPOIL
+UNIFOUT
+UNIFIN
+DIMENS
+ 10 10 10 /
+
+START             -- 0
+1 OKT 2008 /
+
+GRID
+DXV
+10*0.25 /
+DYV
+10*0.25 /
+DZV
+10*0.25 /
+TOPS
+100*2000.0 /
+
+PORO
+1000*0.2 /
+PERMX
+1000*1 /
+PERMY
+1000*0.1 /
+PERMZ
+1000*0.01 /
+
+SOLUTION
+
+SCHEDULE
+RPTRST
+BASIC=2
+/
+DATES             -- 1
+ 10  OKT 2008 /
+/
+WELSPECS
+      'OP_1'  'OP'   9   9 1* 'OIL' 1*      1*  1*   1*  1*   1*  1*  /
+/
+COMPDAT
+      'OP_1'  9  9   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
+      'OP_1'  9  9   3   3 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
+/
+WCONHIST
+      'OP_1' 'SHUT' 'GRAT' 1* 1* 0.0 /
+/
+DATES             -- 2
+ 20  JAN 2011 /
+/
+WCONHIST
+  'OP_1'  OPEN  RESV 1234.56 78.90 12345.67 /
+/
+TSTEP            -- 3
+10 /
+END
+)~");
+
+    }
+
+    Opm::Deck historic_period_whistctl()
+    {
+        return Opm::Parser{}.parseString(R"~(
+RUNSPEC
+OIL
+GAS
+WATER
+DISGAS
+VAPOIL
+UNIFOUT
+UNIFIN
+DIMENS
+ 10 10 10 /
+
+START             -- 0
+1 OKT 2008 /
+
+GRID
+DXV
+10*0.25 /
+DYV
+10*0.25 /
+DZV
+10*0.25 /
+TOPS
+100*2000.0 /
+
+PORO
+1000*0.2 /
+PERMX
+1000*1 /
+PERMY
+1000*0.1 /
+PERMZ
+1000*0.01 /
+
+SOLUTION
+
+SCHEDULE
+RPTRST
+BASIC=2
+/
+DATES             -- 1
+ 10  OKT 2008 /
+/
+WELSPECS
+      'OP_1'  'OP'   9   9 1* 'OIL' 1*      1*  1*   1*  1*   1*  1*  /
+/
+COMPDAT
+      'OP_1'  9  9   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
+      'OP_1'  9  9   3   3 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
+/
+WCONHIST
+      'OP_1' 'SHUT' 'GRAT' 1* 1* 0.0 /
+/
+DATES             -- 2
+ 20  JAN 2011 /
+/
+WHISTCTL
+  ORAT /
+TSTEP            -- 3
+10 /
+WCONHIST
+  'OP_1'  OPEN  RESV 1234.56 78.90 12345.67 /
+/
+TSTEP            -- 4
+10 /
+END
+)~");
+
     }
 
     void writeRstFile(const SimulationCase& simCase,
@@ -795,4 +940,144 @@ BOOST_AUTO_TEST_CASE(Construct_Well_Explicit_THP_Control_Options_Object)
     BOOST_CHECK_MESSAGE(! op_4.prevent(),         "Well 'OP_4' must NOT prevent switching to THP control when constrained to unstable VFP table region");
     BOOST_CHECK_MESSAGE(! op_4.report_first(),    "Well 'OP_4' must NOT report first time THP control switching prevented");
     BOOST_CHECK_MESSAGE(! op_4.report_every(),    "Well 'OP_4' must NOT report every time THP control switching prevented");
+}
+
+BOOST_AUTO_TEST_CASE(Historic_Period)
+{
+    const auto deck = historic_period();
+    const auto simCase = SimulationCase{ deck };
+
+    const auto rptStep  = std::size_t{2};
+    const auto baseName = std::string { "HISTORIC_RST" };
+
+    const auto state =
+        makeRestartState(simCase, baseName, rptStep, "historic_rst");
+
+    BOOST_CHECK_EQUAL(state.header.histctl_override, 0);
+
+    {
+        const auto op1 = Opm::Well {
+            state.wells.front(),
+            static_cast<int>(rptStep),
+            state.header.histctl_override,
+            Opm::TracerConfig{},
+            Opm::UnitSystem::newMETRIC(),
+            state.header.udq_undefined
+        };
+
+        const auto ctrl = op1.productionControls(Opm::SummaryState { Opm::TimeService::now() });
+        BOOST_CHECK_MESSAGE(ctrl.cmode == Opm::WellProducerCMode::GRAT,
+                            "Well loaded from restart file must be controlled "
+                            "by observed surface gas flow rate (GRAT)");
+    }
+
+    {
+        const auto op1 = Opm::Well {
+            state.wells.front(),
+            static_cast<int>(rptStep),
+            state.header.histctl_override,
+            Opm::TracerConfig{},
+            Opm::UnitSystem::newMETRIC(),
+            state.header.udq_undefined
+        };
+
+        auto prop = op1.getProductionProperties();
+        prop.handleWCONHIST(std::nullopt, 101325.0, Opm::UnitSystem::newMETRIC(),
+                            deck.get<Opm::ParserKeywords::WCONHIST>().back().getRecord(0));
+
+        const auto ctrl = prop.controls(Opm::SummaryState { Opm::TimeService::now() }, state.header.udq_undefined);
+        BOOST_CHECK_MESSAGE(ctrl.cmode == Opm::WellProducerCMode::RESV,
+                            "Well loaded from restart file must be controlled by "
+                            "observed reservoir voidage rate (RESV) after WCONHIST");
+    }
+
+    {
+        const auto op1 = Opm::Well {
+            state.wells.front(),
+            static_cast<int>(rptStep),
+            1,                  // ORAT
+            Opm::TracerConfig{},
+            Opm::UnitSystem::newMETRIC(),
+            state.header.udq_undefined
+        };
+
+        auto prop = op1.getProductionProperties();
+        prop.handleWCONHIST(std::nullopt, 101325.0, Opm::UnitSystem::newMETRIC(),
+                            deck.get<Opm::ParserKeywords::WCONHIST>().back().getRecord(0));
+
+        const auto ctrl = prop.controls(Opm::SummaryState { Opm::TimeService::now() }, state.header.udq_undefined);
+        BOOST_CHECK_MESSAGE(ctrl.cmode == Opm::WellProducerCMode::ORAT,
+                            "Well loaded from restart file must be controlled by "
+                            "observed surface oil flow rate (ORAT) after WCONHIST");
+    }
+}
+
+BOOST_AUTO_TEST_CASE(Historic_Period_WHistCtl)
+{
+    const auto deck = historic_period_whistctl();
+    const auto simCase = SimulationCase{ deck };
+
+    const auto rptStep  = std::size_t{3};
+    const auto baseName = std::string { "HISTORIC_WHISTCTL_RST" };
+
+    const auto state =
+        makeRestartState(simCase, baseName, rptStep, "historic_whistctl_rst");
+
+    BOOST_CHECK_EQUAL(state.header.histctl_override, 1);
+
+    {
+        const auto op1 = Opm::Well {
+            state.wells.front(),
+            static_cast<int>(rptStep),
+            state.header.histctl_override,
+            Opm::TracerConfig{},
+            Opm::UnitSystem::newMETRIC(),
+            state.header.udq_undefined
+        };
+
+        const auto ctrl = op1.productionControls(Opm::SummaryState { Opm::TimeService::now() });
+        BOOST_CHECK_MESSAGE(ctrl.cmode == Opm::WellProducerCMode::GRAT,
+                            "Well loaded from restart file must be controlled "
+                            "by observed surface gas flow rate (GRAT)");
+    }
+
+    {
+        const auto op1 = Opm::Well {
+            state.wells.front(),
+            static_cast<int>(rptStep),
+            state.header.histctl_override,
+            Opm::TracerConfig{},
+            Opm::UnitSystem::newMETRIC(),
+            state.header.udq_undefined
+        };
+
+        auto prop = op1.getProductionProperties();
+        prop.handleWCONHIST(std::nullopt, 101325.0, Opm::UnitSystem::newMETRIC(),
+                            deck.get<Opm::ParserKeywords::WCONHIST>().back().getRecord(0));
+
+        const auto ctrl = prop.controls(Opm::SummaryState { Opm::TimeService::now() }, state.header.udq_undefined);
+        BOOST_CHECK_MESSAGE(ctrl.cmode == Opm::WellProducerCMode::ORAT,
+                            "Well loaded from restart file must be controlled by "
+                            "observed surface oil flow rate (ORAT) after WCONHIST");
+    }
+
+    {
+        const auto op1 = Opm::Well {
+            state.wells.front(),
+            static_cast<int>(rptStep),
+            0,                  // NONE
+            Opm::TracerConfig{},
+            Opm::UnitSystem::newMETRIC(),
+            state.header.udq_undefined
+        };
+
+        auto prop = op1.getProductionProperties();
+        prop.handleWCONHIST(std::nullopt, 101325.0, Opm::UnitSystem::newMETRIC(),
+                            deck.get<Opm::ParserKeywords::WCONHIST>().back().getRecord(0));
+
+        const auto ctrl = prop.controls(Opm::SummaryState { Opm::TimeService::now() }, state.header.udq_undefined);
+        BOOST_CHECK_MESSAGE(ctrl.cmode == Opm::WellProducerCMode::RESV,
+                            "Well loaded from restart file must be controlled by "
+                            "observed reservoir voidage rate (RESV) after WCONHIST");
+    }
 }
