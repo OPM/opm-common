@@ -70,6 +70,7 @@ RstHeader::RstHeader(const Runspec& runspec_, const Opm::UnitSystem& unit_system
     nacaqz(intehead[VI::intehead::NACAQZ]),
     tstep(intehead[VI::intehead::NUM_SOLVER_STEPS]),
     report_step(intehead[VI::intehead::REPORT_STEP]),
+    histctl_override(intehead[VI::intehead::WHISTC]),
     newtmx(intehead[VI::intehead::NEWTMX]),
     newtmn(intehead[VI::intehead::NEWTMN]),
     litmax(intehead[VI::intehead::LITMAX]),

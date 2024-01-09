@@ -1693,7 +1693,7 @@ namespace {
                             const FieldPropsManager&   fp)
     {
         const auto report_step = rst_state.header.report_step - 1;
-        double udq_undefined = 0;
+
         for (const auto& rst_group : rst_state.groups) {
             this->addGroup(rst_group, report_step);
             const auto& group = this->snapshots.back().groups.get( rst_group.name );
@@ -1735,11 +1735,19 @@ namespace {
         }
 
         for (const auto& rst_well : rst_state.wells) {
-            Opm::Well well(rst_well, report_step, tracer_config, this->m_static.m_unit_system, udq_undefined);
-            std::vector<Opm::Connection> rst_connections;
+            auto well = Well {
+                rst_well,
+                report_step,
+                rst_state.header.histctl_override,
+                tracer_config,
+                this->m_static.m_unit_system,
+                rst_state.header.udq_undefined
+            };
 
-            for (const auto& rst_conn : rst_well.connections)
+            auto rst_connections = std::vector<Connection> {};
+            for (const auto& rst_conn : rst_well.connections) {
                 rst_connections.emplace_back(rst_conn, grid, fp);
+            }
 
             if (rst_well.segments.empty()) {
                 Opm::WellConnections connections(order_from_int(rst_well.completion_ordering),

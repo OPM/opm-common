@@ -92,7 +92,7 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
         NUM_SOLVER_STEPS = 67, //
         REPORT_STEP = 68, //
 
-        WHISTC = 71, //  Calendar year of report step
+        WHISTC = 71, // History matching wells control mode override (WHISTCTL(1)).
 
         ACTNETWRK = 74, //  Indicator for active external network (= 0: no active network, = 2 Active network)
 

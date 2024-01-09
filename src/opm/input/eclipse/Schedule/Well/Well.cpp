@@ -273,7 +273,6 @@ explicitTHPOptions(const Opm::RestartIO::RstWell& rst_well)
     return options;
 }
 
-constexpr Opm::Well::ProducerCMode def_whistctl_cmode = Opm::Well::ProducerCMode::CMODE_UNDEFINED;
 const static bool def_automatic_shutin = true;
 constexpr double def_solvent_fraction = 0;
 
@@ -282,10 +281,11 @@ constexpr double def_solvent_fraction = 0;
 namespace Opm {
 
 Well::Well(const RestartIO::RstWell& rst_well,
-           int report_step,
+           const int report_step,
+           const int rst_whistctl_cmode,
            const TracerConfig& tracer_config,
            const UnitSystem& unit_system_arg,
-           double udq_undefined_arg) :
+           const double udq_undefined_arg) :
     wname(rst_well.name),
     group_name(rst_well.group),
     init_step(report_step),
@@ -321,8 +321,11 @@ Well::Well(const RestartIO::RstWell& rst_well,
 {
     if (this->wtype.producer()) {
         auto p = std::make_shared<WellProductionProperties>(this->unit_system, wname);
-        // Reverse of function ctrlMode() in AggregateWellData.cpp
-        p->whistctl_cmode = def_whistctl_cmode;
+
+        p->whistctl_cmode = (rst_whistctl_cmode > 0)
+            ? producer_cmode_from_int(rst_whistctl_cmode)
+            : Well::ProducerCMode::CMODE_UNDEFINED;
+
         p->BHPTarget.update(rst_well.bhp_target_float);
         p->OilRate.update(rst_well.orat_target);
         p->WaterRate.update(rst_well.wrat_target);
@@ -363,8 +366,7 @@ Well::Well(const RestartIO::RstWell& rst_well,
         if (! p->predictionMode) {
             p->BHPTarget.update(0.0);
             p->setBHPLimit(rst_well.bhp_target_double);
-            p->controlMode = p->whistctl_cmode =
-                producer_cmode_from_int(rst_well.hist_requested_control);
+            p->controlMode = producer_cmode_from_int(rst_well.hist_requested_control);
         }
         else if (this->isAvailableForGroupControl())
             p->addProductionControl(Well::ProducerCMode::GRUP);
