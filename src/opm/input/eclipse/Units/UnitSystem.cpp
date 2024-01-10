@@ -1174,6 +1174,7 @@ namespace {
         this->addDimension("SurfaceTension"  , 1.0);
         this->addDimension("Energy", 1.0);
         this->addDimension("PPM", 1.0);
+        this->addDimension("Moles", 1.0);
         this->addDimension("ContextDependent", 1.0);
     }
 
@@ -1213,6 +1214,7 @@ namespace {
         this->addDimension("SurfaceTension"  , PVT_M::SurfaceTension);
         this->addDimension("Energy", PVT_M::Energy);
         this->addDimension("PPM", PVT_M::PPM);
+        this->addDimension("Moles", PVT_M::Moles);
         this->addDimension("ContextDependent", std::numeric_limits<double>::quiet_NaN());
         this->addDimension("Ymodule", PVT_M::Ymodule);
     }
@@ -1253,6 +1255,7 @@ namespace {
         this->addDimension("SurfaceTension"  , Lab::SurfaceTension);
         this->addDimension("Energy", Lab::Energy);
         this->addDimension("PPM", Lab::PPM);
+        this->addDimension("Moles", Lab::Moles);
         this->addDimension("ContextDependent", std::numeric_limits<double>::quiet_NaN());
         this->addDimension("Ymodule", Lab::Ymodule);
     }
@@ -1294,6 +1297,7 @@ namespace {
         this->addDimension("SurfaceTension"  , Metric::SurfaceTension);
         this->addDimension("Energy", Metric::Energy);
         this->addDimension("PPM", Metric::PPM);
+        this->addDimension("Moles", Metric::Moles);
         this->addDimension("ContextDependent", std::numeric_limits<double>::quiet_NaN());
         this->addDimension("Ymodule", Metric::Ymodule);
     }
@@ -1333,6 +1337,7 @@ namespace {
         this->addDimension("SurfaceTension"  , Field::SurfaceTension);
         this->addDimension("Energy", Field::Energy);
         this->addDimension("PPM", Field::PPM);
+        this->addDimension("Moles", Field::Moles);
         this->addDimension("ContextDependent", std::numeric_limits<double>::quiet_NaN());
         this->addDimension("Ymodule", Field::Ymodule);
     }

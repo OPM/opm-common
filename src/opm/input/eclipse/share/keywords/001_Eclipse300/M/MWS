@@ -5,14 +5,15 @@
   ],
   "size": {
     "keyword": "TABDIMS",
-    "item": "NUM_STATE_EQ"
+    "item": "NUM_EOS_SURFACE"
   },
   "comment": "Also note that there is no dimension for this item because there is no unit for 'molar weight' yet",
   "items": [
     {
       "name": "MOLAR_WEIGHT",
       "value_type": "DOUBLE",
-      "size_type": "ALL"
+      "size_type": "ALL",
+      "dimension": "Mass/Moles"
     }
   ]
 }

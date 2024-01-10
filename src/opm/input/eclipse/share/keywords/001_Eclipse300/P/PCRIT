@@ -1,5 +1,5 @@
 {
-  "name": "DREF",
+  "name": "PCRIT",
   "sections": [
     "PROPS"
   ],
@@ -7,15 +7,12 @@
     "keyword": "TABDIMS",
     "item": "NUM_EOS_RES"
   },
-  "comment": "and this also cannot (yet?) be specified.",
   "items": [
     {
-      "name": "DENSITY",
+      "name": "DATA",
       "value_type": "DOUBLE",
       "size_type": "ALL",
-      "dimension": [
-        "Density"
-      ]
+      "dimension": "Pressure"
     }
   ]
 }
