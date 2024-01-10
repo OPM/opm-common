@@ -12,7 +12,8 @@
     {
       "name": "MOLAR_WEIGHT",
       "value_type": "DOUBLE",
-      "size_type": "ALL"
+      "size_type": "ALL",
+      "dimension": "Mass/Moles"
     }
   ]
 }
