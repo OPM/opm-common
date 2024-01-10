@@ -49,6 +49,8 @@
 #include <stdexcept>
 #include <type_traits>
 
+#include <fmt/format.h>
+
 namespace Opm {
 
 /*!
@@ -206,22 +208,20 @@ public:
     {
         // Find min and max K. Have to do a laborious for loop to avoid water component (where K=0)
         // TODO: Replace loop with Dune::min_value() and Dune::max_value() when water component is properly handled
-        auto tol = 1e-12;
-        int itmax = 10000;
-        typename Vector::field_type Kmin = K[0];
-        typename Vector::field_type Kmax = K[0];
-        for (int compIdx=1; compIdx<numComponents; ++compIdx){
-            auto Kc = K[compIdx];
-            // std::cout << "compIdx=" <<compIdx << " K = " << Kc << std::endl;
-            if (Kc < Kmin)
-                Kmin = Kc;
-            else if (Kc >= Kmax)
-                Kmax = Kc;
+        using field_type = typename Vector::field_type;
+        constexpr field_type tol = 1e-12;
+        constexpr int itmax = 10000;
+        field_type Kmin = K[0];
+        field_type Kmax = K[0];
+        for (int compIdx = 1; compIdx < numComponents; ++compIdx){
+            if (K[compIdx] < Kmin)
+                Kmin = K[compIdx];
+            else if (K[compIdx] >= Kmax)
+                Kmax = K[compIdx];
         }
-        // std::cout << "Kmax = " << Kmax << " Kmin = " << Kmin << std::endl;
         // Lower and upper bound for solution
-        auto Vmin = 1/(1 - Kmax);
-        auto Vmax = 1/(1 - Kmin);
+        auto Vmin = 1 / (1 - Kmax);
+        auto Vmax = 1 / (1 - Kmin);
         // Initial guess
         auto V = (Vmin + Vmax)/2;
         // Print initial guess and header
@@ -230,18 +230,18 @@ public:
             std::cout << std::setw(10) << "Iteration" << std::setw(16) << "abs(step)" << std::setw(16) << "V" << std::endl;
         }
         // Newton-Raphson loop
-        for (int iteration=1; iteration<itmax; ++iteration){
+        for (int iteration = 1; iteration < itmax; ++iteration) {
             // Calculate function and derivative values
-            auto denum = 0.0;
-            auto r = 0.0;
-            for (int compIdx=0; compIdx<numComponents; ++compIdx){
-                auto dK = K[compIdx]-1.0;
-                auto a = z[compIdx]*dK;
-                auto b = (1 + V*dK);
+            field_type denum = 0.0;
+            field_type r = 0.0;
+            for (int compIdx = 0; compIdx < numComponents; ++compIdx){
+                auto dK = K[compIdx] - 1.0;
+                auto a = z[compIdx] * dK;
+                auto b = (1 + V * dK);
                 r += a/b;
-                denum += z[compIdx]*(dK*dK)/(b*b);
+                denum += z[compIdx] * (dK*dK) / (b*b);
             }
-            auto delta = r/denum;
+            auto delta = r / denum;
             V += delta;
 
             // Check if V is within the bounds, and if not, we apply bisection method
@@ -275,9 +275,9 @@ public:
                 std::cout << std::setw(10) << iteration << std::setw(16) << Opm::abs(delta) << std::setw(16) << V << std::endl;
             }
             // Check for convergence
-            if ( Opm::abs(r) < tol || iteration == itmax) {
-                // Ensure that L is in the range (0, 1)
+            if ( Opm::abs(r) < tol ) {
                 auto L = 1 - V;
+                // Should we make sure the range of L is within (0, 1)?
 
                 // Print final result
                 if (verbosity >= 1) {
@@ -298,26 +298,21 @@ public:
         // Calculate for g(Lmin) for first comparison with gMid = g(L)
         typename Vector::field_type gLmin = rachfordRice_g_(K, Lmin, z);
 
-        /*
-        int n = 50;
-        for (int i=-1; i < n+1; i++){
-            auto L_i = Lmin + i*(Lmax - Lmin)/n;
-            auto gL_i = rachfordRice_g_(K, L_i, z);
-            std::cout << "F(" << L_i << ") = " << gL_i << std::endl;
-        }
-        */
         // Print new header
         if (verbosity >= 3) {
                 std::cout << std::setw(10) << "Iteration" << std::setw(16) << "g(Lmid)" << std::setw(16) << "L" << std::endl;
         }
-        // std::cout << "Lmin = " << Lmin << " Lmax = " << Lmax << std::endl;
-        // std::cout << "K = [" << K[0] << "," << K[1] << "," << K[2] << "," << "]" << std::endl;
-        // std::cout << "z = [" << z[0] << "," << z[1] << "," << z[2] << "," << "]" << std::endl;
 
         constexpr int max_it = 10000;
+
+        auto closeLmaxLmin = [](double max_v, double min_v) {
+            return Opm::abs(max_v - min_v) / 2. < 1e-10;
+            // what if max_v < min_v?
+        };
+
         // Bisection loop
-        if (Opm::abs((Lmax - Lmin) / 2) < 1e-10){
-            throw std::runtime_error("Strange bisection?");
+        if (closeLmaxLmin(Lmax, Lmin) ){
+            throw std::runtime_error(fmt::format("Strange bisection with Lmax {} and Lmin {}?", Lmax, Lmin));
         }
         for (int iteration = 0; iteration < max_it; ++iteration){
             // New midpoint
@@ -329,13 +324,12 @@ public:
             }
 
             // Check if midpoint fulfills g=0 or L - Lmin is sufficiently small
-            if (Opm::abs(gMid) < 1e-16 || Opm::abs((Lmax - Lmin) / 2) < 1e-10){
+            if (Opm::abs(gMid) < 1e-16 || closeLmaxLmin(Lmax, Lmin)){
                 return L;
             }
-
             // Else we repeat with midpoint being either Lmin og Lmax (depending on the signs).
             else if (Dune::sign(gMid) != Dune::sign(gLmin)) {
-                // gMid has same sign as gLmax, so we set L as the new Lmax
+                // gMid has different sign as gLmin, so we set L as the new Lmax
                 Lmax = L;
             }
             else {
