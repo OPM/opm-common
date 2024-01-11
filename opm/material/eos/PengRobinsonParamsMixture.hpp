@@ -145,7 +145,7 @@ public:
         using FlashEval = typename FluidState::Scalar;
         Scalar sumx = 0.0;
         for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx)
-            sumx += fs.moleFraction(phaseIdx, compIdx);
+            sumx += decay<Scalar>(fs.moleFraction(phaseIdx, compIdx) );
         sumx = std::max(Scalar(1e-10), sumx);
 
         // Calculate the Peng-Robinson parameters of the mixture
@@ -176,8 +176,8 @@ public:
         }
 
         // assert(newB > 0);
-        this->setA(newA);
-        this->setB(newB);
+        this->setA(decay<Scalar>(newA));
+        this->setB(decay<Scalar>(newB));
 
         Valgrind::CheckDefined(this->a());
         Valgrind::CheckDefined(this->b());

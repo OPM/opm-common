@@ -214,6 +214,12 @@ public:
         return this->base().viscosity(phaseIdx);
     }
 
+    auto compressFactor(unsigned phaseIdx) const
+        -> decltype(this->base().compressFactor(phaseIdx))
+    {
+        return this->base().compressFactor(phaseIdx);
+    }
+
 private:
     bool allowSaturation_;
     bool allowTemperature_;

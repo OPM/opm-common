@@ -254,8 +254,8 @@ protected:
     template <class FluidState>
     void updatePure_(const FluidState& fluidState, unsigned phaseIdx)
     {
-        Scalar T = fluidState.temperature(phaseIdx);
-        Scalar p = fluidState.pressure(phaseIdx);
+        Scalar T = decay<Scalar>(fluidState.temperature(phaseIdx));
+        Scalar p = decay<Scalar>(fluidState.pressure(phaseIdx));
 
         switch (phaseIdx)
         {
@@ -301,11 +301,11 @@ protected:
             // molar volume appears in basically every quantity the fluid
             // system can get queried, so it is okay to calculate it
             // here...
-            Vm_[gasPhaseIdx] =
+            Vm_[gasPhaseIdx] = decay<Scalar> (
                 PengRobinson::computeMolarVolume(fluidState,
                                                  *this,
                                                  phaseIdx,
-                                                 /*isGasPhase=*/true);
+                                                 /*isGasPhase=*/true) );
             break;
         }
         case oilPhaseIdx: {
@@ -314,11 +314,11 @@ protected:
             // molar volume appears in basically every quantity the fluid
             // system can get queried, so it is okay to calculate it
             // here...
-            Vm_[oilPhaseIdx] = 
+            Vm_[oilPhaseIdx] = decay<Scalar> (
                 PengRobinson::computeMolarVolume(fluidState,
                                                  *this,
                                                  phaseIdx,
-                                                 /*isGasPhase=*/false);
+                                                 /*isGasPhase=*/false) );
 
             break;
         }

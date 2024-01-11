@@ -47,6 +47,7 @@
 #include <opm/material/fluidsystems/H2OAirFluidSystem.hpp>
 #include <opm/material/fluidsystems/H2OAirMesityleneFluidSystem.hpp>
 #include <opm/material/fluidsystems/H2OAirXyleneFluidSystem.hpp>
+#include <opm/material/fluidsystems/ThreeComponentFluidSystem.hh>
 
 #include <opm/material/thermal/FluidThermalConductionLaw.hpp>
 
@@ -367,6 +368,16 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(SinglePhaseFluidSystemG, Scalar, ScalarTypes)
     using Evaluation = Opm::DenseAd::Evaluation<Scalar,3>;
     using Gas = Opm::GasPhase<Scalar, Opm::N2<Scalar>>;
     using FluidSystem = Opm::SinglePhaseFluidSystem<Scalar, Gas>;
+
+    checkFluidSystem<Scalar, FluidSystem, Scalar, Scalar>();
+    checkFluidSystem<Scalar, FluidSystem, Evaluation, Scalar>();
+    checkFluidSystem<Scalar, FluidSystem, Evaluation, Evaluation>();
+}
+
+BOOST_AUTO_TEST_CASE_TEMPLATE(ThreeComponentFluidSystem, Scalar, ScalarTypes)
+{
+    using Evaluation = Opm::DenseAd::Evaluation<Scalar,3>;
+    using FluidSystem = Opm::ThreeComponentFluidSystem<Scalar>;
 
     checkFluidSystem<Scalar, FluidSystem, Scalar, Scalar>();
     checkFluidSystem<Scalar, FluidSystem, Evaluation, Scalar>();
