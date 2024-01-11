@@ -181,7 +181,7 @@ namespace Opm {
 
             LhsEval dens;
             if (phaseIdx == oilPhaseIdx || phaseIdx == gasPhaseIdx) {
-                dens = fluidState.averageMolarMass(phaseIdx) / paramCache.molarVolume(phaseIdx);
+                dens = decay<LhsEval>(fluidState.averageMolarMass(phaseIdx) / paramCache.molarVolume(phaseIdx));
             }
             return dens;
 
@@ -194,10 +194,7 @@ namespace Opm {
                                  unsigned phaseIdx)
         {
             // Use LBC method to calculate viscosity
-            LhsEval mu;
-            mu = ViscosityModel::LBC(fluidState, paramCache, phaseIdx); 
-            return mu;
-
+            return decay<LhsEval>(ViscosityModel::LBC(fluidState, paramCache, phaseIdx));
         }
 
         //! \copydoc BaseFluidSystem::fugacityCoefficient
@@ -210,8 +207,39 @@ namespace Opm {
             assert(phaseIdx < numPhases);
             assert(compIdx < numComponents);
 
-            LhsEval phi = PengRobinsonMixture::computeFugacityCoefficient(fluidState, paramCache, phaseIdx, compIdx);
-            return phi;
+            return decay<LhsEval>(PengRobinsonMixture::computeFugacityCoefficient(fluidState, paramCache, phaseIdx, compIdx));
+        }
+
+        //! \copydoc BaseFluidSystem::isCompressible
+        static bool isCompressible([[maybe_unused]] unsigned phaseIdx)
+        {
+            assert(phaseIdx < numPhases);
+
+            return true;
+        }
+
+        //! \copydoc BaseFluidSystem::isIdealMixture
+        static bool isIdealMixture([[maybe_unused]] unsigned phaseIdx)
+        {
+            assert(phaseIdx < numPhases);
+
+            return false;
+        }
+
+        //! \copydoc BaseFluidSystem::isLiquid
+        static bool isLiquid(unsigned phaseIdx)
+        {
+            assert(phaseIdx < numPhases);
+
+            return (phaseIdx == 0);
+        }
+
+        //! \copydoc BaseFluidSystem::isIdealGas
+        static bool isIdealGas(unsigned phaseIdx)
+        {
+            assert(phaseIdx < numPhases);
+
+            return (phaseIdx == 1);
         }
     private:
         static std::vector<ComponentParam<Scalar>> component_param_;

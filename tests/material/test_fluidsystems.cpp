@@ -34,6 +34,12 @@
 #include <boost/test/unit_test.hpp>
 
 #include <opm/material/checkFluidSystem.hpp>
+
+#include <opm/material/components/C1.hpp>
+#include <opm/material/components/C10.hpp>
+#include <opm/material/components/N2.hpp>
+#include <opm/material/components/SimpleCO2.hpp>
+
 #include <opm/material/densead/Evaluation.hpp>
 #include <opm/material/densead/Math.hpp>
 
@@ -42,6 +48,7 @@
 #include <opm/material/fluidsystems/TwoPhaseImmiscibleFluidSystem.hpp>
 #include <opm/material/fluidsystems/BlackOilFluidSystem.hpp>
 #include <opm/material/fluidsystems/BrineCO2FluidSystem.hpp>
+#include <opm/material/fluidsystems/GenericFluidSystem.hh>
 #include <opm/material/fluidsystems/H2ON2FluidSystem.hpp>
 #include <opm/material/fluidsystems/H2ON2LiquidPhaseFluidSystem.hpp>
 #include <opm/material/fluidsystems/H2OAirFluidSystem.hpp>
@@ -378,6 +385,30 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(ThreeComponentFluidSystem, Scalar, ScalarTypes)
 {
     using Evaluation = Opm::DenseAd::Evaluation<Scalar,3>;
     using FluidSystem = Opm::ThreeComponentFluidSystem<Scalar>;
+
+    checkFluidSystem<Scalar, FluidSystem, Scalar, Scalar>();
+    checkFluidSystem<Scalar, FluidSystem, Evaluation, Scalar>();
+    checkFluidSystem<Scalar, FluidSystem, Evaluation, Evaluation>();
+}
+
+BOOST_AUTO_TEST_CASE_TEMPLATE(GenericFluidSystem, Scalar, ScalarTypes)
+{
+    using Evaluation = Opm::DenseAd::Evaluation<Scalar, 4>;
+    using FluidSystem = Opm::GenericFluidSystem<Scalar, 4>;
+
+    using CompParm = Opm::ComponentParam<Scalar>;
+    using CO2 = Opm::SimpleCO2<Scalar>;
+    using C1 = Opm::C1<Scalar>;
+    using N2 = Opm::N2<Scalar>;
+    using C10 = Opm::C10<Scalar>;
+    FluidSystem::addComponent(CompParm {CO2::name(), CO2::molarMass(), CO2::criticalTemperature(),
+                                        CO2::criticalPressure(), CO2::criticalVolume(), CO2::acentricFactor()});
+    FluidSystem::addComponent(CompParm {C1::name(), C1::molarMass(), C1::criticalTemperature(),
+                                        C1::criticalPressure(), C1::criticalVolume(), C1::acentricFactor()});
+    FluidSystem::addComponent(CompParm{C10::name(), C10::molarMass(), C10::criticalTemperature(),
+                                       C10::criticalPressure(), C10::criticalVolume(), C10::acentricFactor()});
+    FluidSystem::addComponent(CompParm{N2::name(), N2::molarMass(), N2::criticalTemperature(),
+                                       N2::criticalPressure(), N2::criticalVolume(), N2::acentricFactor()});
 
     checkFluidSystem<Scalar, FluidSystem, Scalar, Scalar>();
     checkFluidSystem<Scalar, FluidSystem, Evaluation, Scalar>();
