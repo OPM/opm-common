@@ -734,11 +734,11 @@ namespace {
 
     std::string decorate_hierarchy_name(const std::string& name, bool first_line, bool last_child) {
         if (first_line) {
-            return std::string(vertical_line, 1) + std::string(horizontal_line,  3) + name;
+            return std::string(1, vertical_line) + std::string(3, horizontal_line) + name;
         } else if (last_child) {
-            return                                 std::string(indent_character, 4) + name;
+            return                                 std::string(4, indent_character) + name;
         } else {
-            return std::string(vertical_line, 1) + std::string(indent_character, 3) + name;
+            return std::string(1, vertical_line) + std::string(3, indent_character) + name;
         }
     }
 
@@ -748,7 +748,7 @@ namespace {
         const std::vector<Opm::GTNode>& children { node.groups() } ;
 
         if (children.size()) {
-            lines.push_back(std::string(vertical_line, 1));
+            lines.push_back(std::string(1, vertical_line));
 
             std::size_t i { 0 } ;
             for (const auto& child : children) {
