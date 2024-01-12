@@ -48,7 +48,7 @@
 #include <opm/material/fluidsystems/TwoPhaseImmiscibleFluidSystem.hpp>
 #include <opm/material/fluidsystems/BlackOilFluidSystem.hpp>
 #include <opm/material/fluidsystems/BrineCO2FluidSystem.hpp>
-#include <opm/material/fluidsystems/GenericFluidSystem.hh>
+#include <opm/material/fluidsystems/GenericOilGasFluidSystem.hpp>
 #include <opm/material/fluidsystems/H2ON2FluidSystem.hpp>
 #include <opm/material/fluidsystems/H2ON2LiquidPhaseFluidSystem.hpp>
 #include <opm/material/fluidsystems/H2OAirFluidSystem.hpp>
@@ -394,7 +394,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(ThreeComponentFluidSystem, Scalar, ScalarTypes)
 BOOST_AUTO_TEST_CASE_TEMPLATE(GenericFluidSystem, Scalar, ScalarTypes)
 {
     using Evaluation = Opm::DenseAd::Evaluation<Scalar, 4>;
-    using FluidSystem = Opm::GenericFluidSystem<Scalar, 4>;
+    using FluidSystem = Opm::GenericOilGasFluidSystem<Scalar, 4>;
 
     using CompParm = Opm::ComponentParam<Scalar>;
     using CO2 = Opm::SimpleCO2<Scalar>;

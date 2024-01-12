@@ -23,8 +23,8 @@
   copyright holders.
 */
 
-#ifndef OPM_GENERICFLUIDSYSTEM_HH
-#define OPM_GENERICFLUIDSYSTEM_HH
+#ifndef OPM_GENERICOILGASFLUIDSYSTEM_HPP
+#define OPM_GENERICOILGASFLUIDSYSTEM_HPP
 
 #include <opm/common/OpmLog/OpmLog.hpp>
 
@@ -68,7 +68,7 @@ namespace Opm {
  * \tparam NumComp The number of the components in the fluid system.
  */
     template<class Scalar, int NumComp>
-    class GenericFluidSystem : public BaseFluidSystem<Scalar, GenericFluidSystem<Scalar, NumComp> > {
+    class GenericOilGasFluidSystem : public BaseFluidSystem<Scalar, GenericOilGasFluidSystem<Scalar, NumComp> > {
     public:
         // TODO: I do not think these should be constant in fluidsystem, will try to make it non-constant later
         static const int numPhases=2;
@@ -80,9 +80,9 @@ namespace Opm {
         static constexpr int gasPhaseIdx = 1;
 
         template <class ValueType>
-        using ParameterCache = Opm::PTFlashParameterCache<ValueType, GenericFluidSystem<Scalar, NumComp>>;
-        using ViscosityModel = Opm::ViscosityModels<Scalar, GenericFluidSystem<Scalar, NumComp>>;
-        using PengRobinsonMixture = Opm::PengRobinsonMixture<Scalar, GenericFluidSystem<Scalar, NumComp>>;
+        using ParameterCache = Opm::PTFlashParameterCache<ValueType, GenericOilGasFluidSystem<Scalar, NumComp>>;
+        using ViscosityModel = Opm::ViscosityModels<Scalar, GenericOilGasFluidSystem<Scalar, NumComp>>;
+        using PengRobinsonMixture = Opm::PengRobinsonMixture<Scalar, GenericOilGasFluidSystem<Scalar, NumComp>>;
 
         template<typename Param>
         static void addComponent(const Param& param)
@@ -108,6 +108,9 @@ namespace Opm {
          */
         static Scalar acentricFactor(unsigned compIdx)
         {
+            assert(isConsistent());
+            assert(compIdx < numComponents);
+
             return component_param_[compIdx].acentric_factor;
         }
         /*!
@@ -117,6 +120,9 @@ namespace Opm {
          */
         static Scalar criticalTemperature(unsigned compIdx)
         {
+            assert(isConsistent());
+            assert(compIdx < numComponents);
+
             return component_param_[compIdx].critic_temp;
         }
         /*!
@@ -126,6 +132,9 @@ namespace Opm {
          */
         static Scalar criticalPressure(unsigned compIdx)
         {
+            assert(isConsistent());
+            assert(compIdx < numComponents);
+
             return component_param_[compIdx].critic_pres;
         }
         /*!
@@ -135,12 +144,18 @@ namespace Opm {
         */
         static Scalar criticalVolume(unsigned compIdx)
         {
+            assert(isConsistent());
+            assert(compIdx < numComponents);
+
             return component_param_[compIdx].critic_vol;
         }
 
         //! \copydoc BaseFluidSystem::molarMass
         static Scalar molarMass(unsigned compIdx)
         {
+            assert(isConsistent());
+            assert(compIdx < numComponents);
+
             return component_param_[compIdx].molar_mass;
         }
 
@@ -150,6 +165,7 @@ namespace Opm {
          */
         static Scalar interactionCoefficient(unsigned /*comp1Idx*/, unsigned /*comp2Idx*/)
         {
+            assert(isConsistent());
             // TODO: some data structure is needed to support this
             return 0.0;
         }
@@ -160,13 +176,16 @@ namespace Opm {
                 static const char* name[] = {"o",  // oleic phase
                                              "g"};  // gas phase
 
-                assert(phaseIdx < 2);
+                assert(phaseIdx < numPhases);
                 return name[phaseIdx];
         }
 
         //! \copydoc BaseFluidSystem::componentName
         static std::string_view componentName(unsigned compIdx)
         {
+            assert(isConsistent());
+            assert(compIdx < numComponents);
+
             return component_param_[compIdx].name;
         }
 
@@ -178,6 +197,8 @@ namespace Opm {
                                const ParameterCache<ParamCacheEval>& paramCache,
                                unsigned phaseIdx)
         {
+            assert(isConsistent());
+            assert(phaseIdx < numPhases);
 
             LhsEval dens;
             if (phaseIdx == oilPhaseIdx || phaseIdx == gasPhaseIdx) {
@@ -193,6 +214,8 @@ namespace Opm {
                                  const ParameterCache<ParamCacheEval>& paramCache,
                                  unsigned phaseIdx)
         {
+            assert(isConsistent());
+            assert(phaseIdx < numPhases);
             // Use LBC method to calculate viscosity
             return decay<LhsEval>(ViscosityModel::LBC(fluidState, paramCache, phaseIdx));
         }
@@ -204,6 +227,7 @@ namespace Opm {
                                            unsigned phaseIdx,
                                            unsigned compIdx)
         {
+            assert(isConsistent());
             assert(phaseIdx < numPhases);
             assert(compIdx < numComponents);
 
@@ -242,11 +266,15 @@ namespace Opm {
             return (phaseIdx == 1);
         }
     private:
+        static bool isConsistent() {
+            return component_param_.size() == NumComp;
+        }
+
         static std::vector<ComponentParam<Scalar>> component_param_;
     };
 
     template <class Scalar, int NumComp>
     std::vector<ComponentParam<Scalar>>
-    GenericFluidSystem<Scalar, NumComp>::component_param_;
+    GenericOilGasFluidSystem<Scalar, NumComp>::component_param_;
 }
-#endif // OPM_GENERICFLUIDSYSTEM_HH
+#endif // OPM_GENERICOILGASFLUIDSYSTEM_HPP
