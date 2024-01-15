@@ -178,13 +178,8 @@ namespace Opm {
                                const ParameterCache<ParamCacheEval>& paramCache,
                                unsigned phaseIdx)
         {
-
-            LhsEval dens;
-            if (phaseIdx == oilPhaseIdx || phaseIdx == gasPhaseIdx) {
-                dens = decay<LhsEval>(fluidState.averageMolarMass(phaseIdx) / paramCache.molarVolume(phaseIdx));
-            }
-            return dens;
-
+            assert(phaseIdx == oilPhaseIdx || phaseIdx == gasPhaseIdx); // This is a oil + gas only two-phase system
+            return decay<LhsEval>(fluidState.averageMolarMass(phaseIdx) / paramCache.molarVolume(phaseIdx));
         }
 
         //! \copydoc BaseFluidSystem::viscosity
