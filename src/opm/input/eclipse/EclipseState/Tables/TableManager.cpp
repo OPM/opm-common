@@ -83,6 +83,7 @@
 #include <opm/input/eclipse/EclipseState/Tables/RtempvdTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/RvvdTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/RvwvdTable.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/PcfactTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/PermfactTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/SaltvdTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/SaltpvdTable.hpp>
@@ -471,6 +472,7 @@ std::optional<JFunc> make_jfunc(const Deck& deck) {
         addTables( "SALTPVD", m_eqldims.getNumEquilRegions());
         addTables( "SALTSOL", m_tabdims.getNumPVTTables());
         addTables( "PERMFACT",  m_tabdims.getNumPVTTables());
+        addTables( "PCFACT",  m_tabdims.getNumSatTables());
 
         addTables( "AQUTAB", m_aqudims.getNumInfluenceTablesCT());
         {
@@ -486,7 +488,6 @@ std::optional<JFunc> make_jfunc(const Deck& deck) {
             addTables( "PMISC",   numMiscibleTables);
             addTables( "TLPMIXPA",numMiscibleTables);
         }
-
         {
             size_t numEndScaleTables = ParserKeywords::ENDSCALE::NTENDP::defaultValue;
 
@@ -541,6 +542,7 @@ std::optional<JFunc> make_jfunc(const Deck& deck) {
         initSimpleTableContainer<SaltvdTable>(deck, "SALTVD" , m_eqldims.getNumEquilRegions());
         initSimpleTableContainer<SaltsolTable>(deck, "SALTSOL" , m_tabdims.getNumPVTTables());
         initSimpleTableContainer<PermfactTable>(deck, "PERMFACT" , m_tabdims.getNumPVTTables());
+        initSimpleTableContainer<PcfactTable>(deck, "PCFACT" , m_tabdims.getNumSatTables());
         initSimpleTableContainer<AqutabTable>(deck, "AQUTAB" , m_aqudims.getNumInfluenceTablesCT());
         {
             size_t numEndScaleTables = ParserKeywords::ENDSCALE::NTENDP::defaultValue;
@@ -556,7 +558,6 @@ std::optional<JFunc> make_jfunc(const Deck& deck) {
             initSimpleTableContainer<ImkrvdTable>( deck , "IMKRVD", numEndScaleTables);
             initSimpleTableContainer<ImptvdTable>( deck , "IMPTVD", numEndScaleTables);
         }
-
         {
             size_t numMiscibleTables = ParserKeywords::MISCIBLE::NTMISC::defaultValue;
             if (deck.hasKeyword<ParserKeywords::MISCIBLE>()) {
@@ -951,6 +952,10 @@ std::optional<JFunc> make_jfunc(const Deck& deck) {
 
    const TableContainer& TableManager::getSaltsolTables() const {
         return getTables("SALTSOL");
+    }
+
+    const TableContainer& TableManager::getPcfactTables() const {
+        return getTables("PCFACT");
     }
     
     const TableContainer& TableManager::getPermfactTables() const {

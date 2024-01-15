@@ -48,6 +48,7 @@
 #include <opm/input/eclipse/EclipseState/Tables/OverburdTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/PbvdTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/PdvdTable.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/PcfactTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/PermfactTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/PlyadsTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/PlydhflfTable.hpp>
@@ -1470,6 +1471,25 @@ PermfactTable::getPermeabilityMultiplierColumn() const
     return SimpleTable::getColumn(1);
 }
 
+PcfactTable::PcfactTable(const DeckItem& item, const int tableID)
+{
+    m_schema.addColumn(ColumnSchema("POROSITYCHANGE", Table::STRICTLY_INCREASING, Table::DEFAULT_NONE));
+    m_schema.addColumn(ColumnSchema("PCMULTIPLIER", Table::RANDOM, Table::DEFAULT_NONE));
+
+    SimpleTable::init("PCFACT", item, tableID);
+}
+
+const TableColumn&
+PcfactTable::getPorosityChangeColumn() const
+{
+    return SimpleTable::getColumn(0);
+}
+
+const TableColumn&
+PcfactTable::getPcMultiplierColumn() const
+{
+    return SimpleTable::getColumn(1);
+}
 
 AqutabTable::AqutabTable(const DeckItem& item, const int tableID)
 {
