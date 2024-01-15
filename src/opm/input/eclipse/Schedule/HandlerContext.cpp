@@ -93,6 +93,11 @@ bool HandlerContext::updateWellStatus(const std::string& well,
                                       status, location);
 }
 
+WellStatus HandlerContext::getWellStatus(const std::string& well) const
+{
+    return schedule_.getWell(well, currentStep).getStatus();
+}
+
 const ScheduleStatic& HandlerContext::static_schedule() const
 {
     return schedule_.m_static;
