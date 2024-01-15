@@ -17,88 +17,166 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-
 #ifndef COMPLETION_HPP_
 #define COMPLETION_HPP_
-
-#include <array>
-#include <cstddef>
-#include <string>
-#include <optional>
 
 #include <opm/input/eclipse/Schedule/Well/FilterCake.hpp>
 #include <opm/input/eclipse/Schedule/Well/WINJMULT.hpp>
 
+#include <array>
+#include <cstddef>
+#include <optional>
+#include <string>
+#include <string_view>
+#include <vector>
+
 namespace Opm {
-
-namespace RestartIO {
-    struct RstConnection;
-}
-
     class DeckKeyword;
     class DeckRecord;
     class ScheduleGrid;
     class FieldPropsManager;
+} // namespace Opm
+
+namespace Opm { namespace RestartIO {
+    struct RstConnection;
+}} // namespace Opm::RestartIO
+
+namespace Opm {
 
     enum class ConnectionOrder {
         DEPTH,
         INPUT,
-        TRACK
+        TRACK,
     };
 
-    class Connection {
+    class Connection
+    {
     public:
         enum class State {
             OPEN = 1,
             SHUT = 2,
-            AUTO = 3   // Seems like the AUTO state can not be serialized to restart files.
+            AUTO = 3, // Seems like the AUTO state can not be serialized to restart files.
         };
 
-        static const std::string State2String( State enumValue );
-        static State StateFromString( const std::string& stringValue );
+        static std::string State2String(State enumValue);
+        static State StateFromString(std::string_view stringValue);
 
 
-        enum class Direction{
+        enum class Direction {
             X = 1,
             Y = 2,
-            Z = 3
+            Z = 3,
         };
 
         static std::string Direction2String(const Direction enumValue);
-        static Direction   DirectionFromString(const std::string& stringValue);
+        static Direction   DirectionFromString(std::string_view stringValue);
 
 
         using Order = ConnectionOrder;
-        static const std::string Order2String( Order enumValue );
-        static Order OrderFromString(const std::string& comporderStringValue);
+
+        static std::string Order2String(Order enumValue);
+        static Order OrderFromString(std::string_view comporderStringValue);
+
 
         enum class CTFKind {
             DeckValue,
             Defaulted,
         };
 
-        Connection();
-        Connection(int i, int j , int k ,
-                   std::size_t global_index,
-                   int complnum,
-                   double depth,
-                   State state,
-                   double CF,
-                   double Kh,
-                   double rw,
-                   double r0,
-                   double re,
-                   double connection_length,
-                   double skin_factor,
-                   double d_factor,
-                   double Ke,
-                   const int satTableId,
-                   const Direction direction,
-                   const CTFKind ctf_kind,
-                   const std::size_t sort_value,
-                   const bool defaultSatTabId);
 
-        Connection(const RestartIO::RstConnection& rst_connection, const ScheduleGrid& grid, const FieldPropsManager& fp);
+        /// Quantities that go into calculating the connection
+        /// transmissibility factor.
+        struct CTFProperties
+        {
+            /// Static connection transmissibility factor calculated from
+            /// input quantities.
+            double CF{};
+
+            /// Static 'Kh' product
+            double Kh{};
+
+            /// Effective permeability.
+            double Ke{};
+
+            /// Connection's wellbore radius
+            double rw{};
+
+            /// Connection's pressure equivalent radius
+            double r0{};
+
+            /// Connection's area equivalent radius--mostly for use by the
+            /// polymer code.
+            double re{};
+
+            /// Length of connection's perfororation interval
+            double connection_length{};
+
+            /// Connection's skin factor.
+            double skin_factor{};
+
+            /// Connection's D factor-i.e., the flow-dependent skin factor
+            /// for gas.
+            double d_factor{};
+
+            /// Denominator in peaceman's formula-i.e., log(r0/rw) + skin.
+            double peaceman_denom{};
+
+            /// Serialisation test object.
+            static CTFProperties serializationTestObject();
+
+            /// Equality operator
+            ///
+            /// \param[in] that Property object to which \c *this will be compared.
+            bool operator==(const CTFProperties& that) const;
+
+            /// Inequality operator
+            ///
+            /// \param[in] that Property object to which \c *this will be compared.
+            bool operator!=(const CTFProperties& that) const
+            {
+                return ! (*this == that);
+            }
+
+            /// Serialisation operator
+            ///
+            /// \tparam Serializer Protocol for serialising and
+            ///   deserialising objects between memory and character
+            ///   buffers.
+            ///
+            /// \param[in,out] serializer Serialisation object.
+            template <class Serializer>
+            void serializeOp(Serializer& serializer)
+            {
+                serializer(this->CF);
+                serializer(this->Kh);
+                serializer(this->Ke);
+                serializer(this->rw);
+                serializer(this->r0);
+                serializer(this->re);
+                serializer(this->connection_length);
+                serializer(this->skin_factor);
+                serializer(this->d_factor);
+                serializer(this->peaceman_denom);
+            }
+        };
+
+
+        Connection() = default;
+        Connection(int i, int j, int k,
+                   std::size_t          global_index,
+                   int                  complnum,
+                   State                state,
+                   Direction            direction,
+                   CTFKind              ctf_kind,
+                   const int            satTableId,
+                   double               depth,
+                   const CTFProperties& ctf_properties,
+                   const std::size_t    sort_value,
+                   const bool           defaultSatTabId);
+
+        Connection(const RestartIO::RstConnection& rst_connection,
+                   const ScheduleGrid&             grid,
+                   const FieldPropsManager&        fp);
 
         static Connection serializationTestObject();
 
@@ -114,104 +192,104 @@ namespace RestartIO {
         int satTableId() const;
         int complnum() const;
         int segment() const;
-        double CF() const;
         double wpimult() const;
+        double CF() const;
         double Kh() const;
+        double Ke() const;
         double rw() const;
         double r0() const;
         double re() const;
         double connectionLength() const;
         double skinFactor() const;
         double dFactor() const;
-        double Ke() const;
         CTFKind kind() const;
         const InjMult& injmult() const;
         bool activeInjMult() const;
-        void setInjMult(const InjMult& inj_mult);
-        void setFilterCake(const FilterCake& filter_cake);
         const FilterCake& getFilterCake() const;
         bool filterCakeActive() const;
         double getFilterCakeRadius() const;
         double getFilterCakeArea() const;
 
+        const CTFProperties& ctfProperties() const
+        {
+            return this->ctf_properties_;
+        }
+
+        std::size_t sort_value() const;
+        bool getDefaultSatTabId() const;
+        const std::optional<std::pair<double, double>>& perf_range() const;
+        std::string str() const;
+
+        bool ctfAssignedFromInput() const
+        {
+            return this->m_ctfkind == CTFKind::DeckValue;
+        }
+
+        bool operator==(const Connection&) const;
+        bool operator!=(const Connection& that) const
+        {
+            return ! (*this == that);
+        }
+
+        void setInjMult(const InjMult& inj_mult);
+        void setFilterCake(const FilterCake& filter_cake);
         void setState(State state);
         void setComplnum(int compnum);
         void setSkinFactor(double skin_factor);
         void setDFactor(double d_factor);
         void setKe(double Ke);
         void setCF(double CF);
+        void setDefaultSatTabId(bool id);
+
         void scaleWellPi(double wellPi);
         bool prepareWellPIScaling();
         bool applyWellPIScaling(const double scaleFactor);
+
         void updateSegmentRST(int segment_number_arg,
                               double center_depth_arg);
         void updateSegment(int segment_number_arg,
                            double center_depth_arg,
                            std::size_t compseg_insert_index,
                            const std::optional<std::pair<double,double>>& perf_range);
-        std::size_t sort_value() const;
-        const bool& getDefaultSatTabId() const;
-        void setDefaultSatTabId(bool id);
-        const std::optional<std::pair<double, double>>& perf_range() const;
-        std::string str() const;
-        bool ctfAssignedFromInput() const
-        {
-            return this->m_ctfkind == CTFKind::DeckValue;
-        }
-
-        bool operator==( const Connection& ) const;
-        bool operator!=( const Connection& ) const;
 
         template<class Serializer>
         void serializeOp(Serializer& serializer)
         {
-            serializer(direction);
-            serializer(center_depth);
-            serializer(open_state);
-            serializer(sat_tableId);
-            serializer(m_complnum);
-            serializer(m_CF);
-            serializer(m_Kh);
-            serializer(m_rw);
-            serializer(m_r0);
-            serializer(m_re);
-            serializer(m_connection_length);
-            serializer(m_skin_factor);
-            serializer(m_d_factor);
-            serializer(m_Ke);
-            serializer(ijk);
-            serializer(m_global_index);
-            serializer(m_ctfkind);
-            serializer(m_injmult);
-            serializer(m_sort_value);
-            serializer(m_perf_range);
-            serializer(m_defaultSatTabId);
-            serializer(segment_number);
-            serializer(m_subject_to_welpi);
-            serializer(m_filter_cake);
-            serializer(m_wpimult);
+            serializer(this->direction);
+            serializer(this->center_depth);
+            serializer(this->open_state);
+            serializer(this->sat_tableId);
+            serializer(this->m_complnum);
+            serializer(this->ctf_properties_);
+            serializer(this->ijk);
+            serializer(this->m_ctfkind);
+            serializer(this->m_global_index);
+            serializer(this->m_injmult);
+            serializer(this->m_sort_value);
+            serializer(this->m_perf_range);
+            serializer(this->m_defaultSatTabId);
+            serializer(this->segment_number);
+            serializer(this->m_wpimult);
+            serializer(this->m_subject_to_welpi);
+            serializer(this->m_filter_cake);
         }
 
     private:
-        Direction direction;
-        double center_depth;
-        State open_state;
-        int sat_tableId;
-        int m_complnum;
-        double m_CF;
-        double m_Kh;
-        double m_rw;
-        double m_r0;
-        double m_re;
-        double m_connection_length;
-        double m_skin_factor;
-        double m_d_factor;
-        double m_Ke;
+        // Note to maintainer: If you add new members to this list, then
+        // please also update the operator==(), serializeOp(), and
+        // serializationTestObject() member functions.
+        Direction direction { Direction::Z };
+        double center_depth { 0.0 };
+        State open_state { State::SHUT };
+        int sat_tableId { -1 };
+        int m_complnum { -1 };
+        CTFProperties ctf_properties_{};
 
-        std::array<int,3> ijk;
-        CTFKind m_ctfkind;
-        std::optional<InjMult> m_injmult;
-        std::size_t m_global_index;
+        std::array<int,3> ijk{};
+        CTFKind m_ctfkind { CTFKind::DeckValue };
+        std::optional<InjMult> m_injmult{};
+        std::size_t m_global_index{};
+
         /*
           The sort_value member is a peculiar quantity. The connections are
           assembled in the WellConnections class. During the lifetime of the
@@ -263,26 +341,26 @@ namespace RestartIO {
                explicitly, so the truth is probably that the storage order
                during simulation makes no difference?
         */
+        std::size_t m_sort_value{};
 
-        std::size_t m_sort_value;
-        std::optional<std::pair<double,double>> m_perf_range;
-        bool m_defaultSatTabId;
+        std::optional<std::pair<double,double>> m_perf_range{};
+        bool m_defaultSatTabId{true};
 
-        // related segment number
-        // 0 means the completion is not related to segment
-        int segment_number = 0;
+        // Associate segment number
+        //
+        // 0 means the connection is not associated to a segment.
+        int segment_number { 0 };
+
+        double m_wpimult { 1.0 };
 
         // Whether or not this Connection is subject to WELPI scaling.
-        bool m_subject_to_welpi = false;
+        bool m_subject_to_welpi { false };
 
-        // For applying last known WPIMULT to when calculating connection transmissibilty factor in CSKIN
-        double m_wpimult = 1.0;
-
-        std::optional<FilterCake> m_filter_cake;
+        std::optional<FilterCake> m_filter_cake{};
 
         static std::string CTFKindToString(const CTFKind);
     };
-}
 
-#endif /* COMPLETION_HPP_ */
+} // namespace Opm
 
+#endif // COMPLETION_HPP_

@@ -22,141 +22,166 @@
 #include <boost/test/unit_test.hpp>
 
 #include <opm/common/utility/OpmInputError.hpp>
+
 #include <opm/input/eclipse/Python/Python.hpp>
+
 #include <opm/input/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/input/eclipse/EclipseState/Runspec.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
+
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 #include <opm/input/eclipse/Schedule/Well/Well.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellTracerProperties.hpp>
+
 #include <opm/input/eclipse/Deck/Deck.hpp>
 #include <opm/input/eclipse/Deck/DeckItem.hpp>
 #include <opm/input/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/input/eclipse/Deck/DeckRecord.hpp>
+
 #include <opm/input/eclipse/Parser/Parser.hpp>
 
 using namespace Opm;
 
-static Deck createDeckWithOutTracer() {
-    Opm::Parser parser;
-    std::string input =
-            "GRID\n"
-            "PERMX\n"
-            "   1000*0.25/\n"
-            "COPY\n"
-            "  PERMX PERMY /\n"
-            "  PERMX PERMZ /\n"
-            "/\n"
-            "SCHEDULE\n"
-            "WELSPECS\n"
-            "     'W_1'        'OP'   2   2  1*       \'OIL\'  7* /   \n"
-            "/\n"
-            "COMPDAT\n"
-            " 'W_1'  2*  1   1 'OPEN' / \n"
-            "/\n"
-            "WCONINJE\n"
-            "     'W_1' 'WATER' 'OPEN' 'BHP' 1 2 3/\n/\n";
+namespace {
 
-    return parser.parseString(input);
+Deck createDeckWithOutTracer()
+{
+    return Parser{}.parseString(R"(
+GRID
+PERMX
+   1000*0.25/
+COPY
+  PERMX PERMY /
+  PERMX PERMZ /
+/
+PORO
+1000*0.3 /
+
+SCHEDULE
+WELSPECS
+     'W_1'        'OP'   2   2  1*       'OIL'  7* /
+/
+COMPDAT
+ 'W_1'  2*  1   1 'OPEN' /
+/
+WCONINJE
+     'W_1' 'WATER' 'OPEN' 'BHP' 1 2 3/
+/
+END
+)");
 }
 
+Deck createDeckWithDynamicWTRACER()
+{
+    return Parser{}.parseString(R"(
+START             -- 0
+1 JAN 2000 /
+GRID
+PERMX
+   1000*0.25/
+COPY
+  PERMX PERMY /
+  PERMX PERMZ /
+/
+PORO
+1000*0.3 /
 
-static Deck createDeckWithDynamicWTRACER() {
-    Opm::Parser parser;
-    std::string input =
-            "START             -- 0 \n"
-            "1 JAN 2000 / \n"
-            "GRID\n"
-            "PERMX\n"
-            "   1000*0.25/\n"
-            "COPY\n"
-            "  PERMX PERMY /\n"
-            "  PERMX PERMZ /\n"
-            "/\n"
-            "SCHEDULE\n"
-            "WELSPECS\n"
-            "     'W_1'        'OP'   1   1  1*       \'GAS\'  7* /   \n"
-            "/\n"
-            "COMPDAT\n"
-            " 'W_1'  2*  1   1 'OPEN' / \n"
-            "/\n"
-            "WCONINJE\n"
-            "     'W_1' 'GAS' 'OPEN' 'BHP' 1 2 3/\n/\n"
-            "DATES             -- 1\n"
-            " 1  MAY 2000 / \n"
-            "/\n"
-            "WTRACER\n"
-            "     'W_1' 'I1'       1 / \n "
-            "     'W_1' 'I2'       1 / \n "
-            "/\n"
-            "DATES             -- 2, 3\n"
-            " 1  JUL 2000 / \n"
-            " 1  AUG 2000 / \n"
-            "/\n"
-            "WTRACER\n"
-            "     'W_1' 'I1'       0 / \n "
-            "/\n"
-            "DATES             -- 4\n"
-            " 1  SEP 2000 / \n"
-            "/\n";
+SCHEDULE
+WELSPECS
+     'W_1'        'OP'   1   1  1*       'GAS'  7* /
+/
+COMPDAT
+ 'W_1'  2*  1   1 'OPEN' /
+/
+WCONINJE
+     'W_1' 'GAS' 'OPEN' 'BHP' 1 2 3/
+/
+DATES             -- 1
+ 1  MAY 2000 /
+/
+WTRACER
+     'W_1' 'I1'       1 /
+     'W_1' 'I2'       1 /
+/
+DATES             -- 2, 3
+ 1  JUL 2000 /
+ 1  AUG 2000 /
+/
+WTRACER
+     'W_1' 'I1'       0 /
+/
+DATES             -- 4
+ 1  SEP 2000 /
+/
 
-    return parser.parseString(input);
+END
+)");
 }
 
-static Deck createDeckWithTracerInProducer() {
-    Opm::Parser parser;
-    std::string input =
-            "START             -- 0 \n"
-            "1 JAN 2000 / \n"
-            "GRID\n"
-            "PERMX\n"
-            "   1000*0.25/\n"
-            "COPY\n"
-            "  PERMX PERMY /\n"
-            "  PERMX PERMZ /\n"
-            "/\n"
-            "SCHEDULE\n"
-            "WELSPECS\n"
-            "     'W_1'        'OP'   1   1  1*       \'GAS\'  7* /   \n"
-            "/\n"
-            "COMPDAT\n"
-            " 'W_1'  2*  1   1 'OPEN' / \n"
-            "/\n"
-            "WCONPROD\n"
-                "'W_1' 'OPEN' 'ORAT' 20000  4* 1000 /\n"
-            "WTRACER\n"
-            "     'W_1' 'I1'       1 / \n "
-            "     'W_1' 'I2'       1 / \n "
-            "/\n";
+Deck createDeckWithTracerInProducer()
+{
+    return Parser{}.parseString(R"(
+START             -- 0
+1 JAN 2000 /
+GRID
+PERMX
+   1000*0.25/
+COPY
+  PERMX PERMY /
+  PERMX PERMZ /
+/
+PORO
+  1000*0.3 /
 
-    return parser.parseString(input);
+SCHEDULE
+WELSPECS
+     'W_1'        'OP'   1   1  1*       'GAS'  7* /
+/
+COMPDAT
+ 'W_1'  2*  1   1 'OPEN' /
+/
+WCONPROD
+   'W_1' 'OPEN' 'ORAT' 20000  4* 1000 /
+WTRACER
+     'W_1' 'I1'       1 /
+     'W_1' 'I2'       1 /
+/
+END
+)");
 }
 
+} // Anonymous namespace
 
-BOOST_AUTO_TEST_CASE(TestNoTracer) {
-    auto deck = createDeckWithOutTracer();
-    EclipseGrid grid(10,10,10);
-    TableManager table ( deck );
-    FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
-    auto python = std::make_shared<Python>();
-    Runspec runspec ( deck );
-    Schedule schedule(deck, grid , fp, runspec, python);
+BOOST_AUTO_TEST_CASE(TestNoTracer)
+{
+    const auto deck = createDeckWithOutTracer();
+
+    const EclipseGrid grid(10,10,10);
+    const TableManager table (deck);
+    const FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
+    const Runspec runspec (deck);
+    const Schedule schedule(deck, grid, fp, runspec, std::make_shared<Python>());
+
     BOOST_CHECK(!deck.hasKeyword("WTRACER"));
 }
 
 
-BOOST_AUTO_TEST_CASE(TestDynamicWTRACER) {
-    auto deck = createDeckWithDynamicWTRACER();
-    auto python = std::make_shared<Python>();
-    EclipseGrid grid(10,10,10);
-    TableManager table ( deck );
-    FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
-    Runspec runspec ( deck );
-    Schedule schedule(deck, grid , fp, runspec, python);
+BOOST_AUTO_TEST_CASE(TestDynamicWTRACER)
+{
+    const auto deck = createDeckWithDynamicWTRACER();
+
+    const EclipseGrid grid(10,10,10);
+    const TableManager table (deck);
+    const FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
+    const Runspec runspec (deck);
+    const Schedule schedule(deck, grid, fp, runspec, std::make_shared<Python>());
+
     BOOST_CHECK(deck.hasKeyword("WTRACER"));
+
     const auto& keyword = deck["WTRACER"].back();
     BOOST_CHECK_EQUAL(keyword.size(),1U);
+
     const auto& record = keyword.getRecord(0);
     const std::string& well_name = record.getItem("WELL").getTrimmedString(0);
     BOOST_CHECK_EQUAL(well_name, "W_1");
@@ -169,13 +194,13 @@ BOOST_AUTO_TEST_CASE(TestDynamicWTRACER) {
 }
 
 
-BOOST_AUTO_TEST_CASE(TestTracerInProducerTHROW) {
-    auto deck = createDeckWithTracerInProducer();
-    auto python = std::make_shared<Python>();
-    EclipseGrid grid(10,10,10);
-    TableManager table ( deck );
-    FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
-    Runspec runspec ( deck );
+BOOST_AUTO_TEST_CASE(TestTracerInProducerTHROW)
+{
+    const auto deck = createDeckWithTracerInProducer();
+    const EclipseGrid grid(10,10,10);
+    const TableManager table (deck);
+    const FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
+    const Runspec runspec (deck);
 
-    BOOST_CHECK_THROW(Schedule(deck, grid, fp, runspec, python), OpmInputError);
+    BOOST_CHECK_THROW(Schedule(deck, grid, fp, runspec, std::make_shared<Python>()), OpmInputError);
 }

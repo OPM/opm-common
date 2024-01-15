@@ -57,12 +57,22 @@ namespace {
         const auto j = (dims[1] - 1) - 1;
 
         for (auto k = top; k < static_cast<int>(dims.size()); ++k) {
+            const auto depth = 2000 + (2*k + 1) / static_cast<double>(2);
+
+            auto ctf_props = Opm::Connection::CTFProperties{};
+            ctf_props.CF = k / 100.0;
+            ctf_props.Kh = 1.0;
+            ctf_props.Ke = 1.0;
+            ctf_props.rw = 1.0;
+            ctf_props.r0 = 0.5;
+            ctf_props.re = 0.5;
+            ctf_props.connection_length = 1.0;
+
             conns.emplace_back(i, j, k, globIndex({i, j, k}, dims), k,
-                               2000 + (2*k + 1) / static_cast<double>(2),
                                Opm::Connection::State::OPEN,
-                               k / 100.0, 1.0, 1.0, 0.5, 0.5, 1.0, 0.0, 0.0, 0.0, 0,
                                Opm::Connection::Direction::Z,
-                               Opm::Connection::CTFKind::DeckValue, k, false);
+                               Opm::Connection::CTFKind::DeckValue,
+                               0, depth, ctf_props, k, false);
         }
 
         return { Opm::Connection::Order::INPUT, i, j, conns };
@@ -87,18 +97,28 @@ namespace {
         };
 
         for (auto k = topConn; k < kMax; ++k) {
+            const auto depth = 2000 + (2*k + 1) / static_cast<double>(2);
+
+            auto ctf_props = Opm::Connection::CTFProperties{};
+
+            // 0.03, 0.0, 0.01, 0.02, 0.03, ...
+            ctf_props.CF = ((k + 3 - topConn) % 4) / 100.0;
+
+            ctf_props.Kh = 1.0;
+            ctf_props.Ke = 1.0;
+            ctf_props.rw = 1.0;
+            ctf_props.r0 = 0.5;
+            ctf_props.re = 0.5;
+            ctf_props.connection_length = 1.0;
+
             conns.emplace_back(i, j, k, globIndex({i, j, k}, dims), k - topConn,
-                               2000 + (2*k + 1) / static_cast<double>(2),
 
                                // Open, Shut, Open, Open, Shut, ...
                                state[(k - topConn) % state.size()],
 
-                               // 0.03, 0.0, 0.01, 0.02, 0.03, ...
-                               ((k + 3 - topConn) % 4) / 100.0,
-
-                               1.0, 1.0, 0.5, 0.5, 1.0, 0.0, 0.0, 0.0, 0,
                                Opm::Connection::Direction::Z,
-                               Opm::Connection::CTFKind::DeckValue, k - topConn, false);
+                               Opm::Connection::CTFKind::DeckValue,
+                               0, depth, ctf_props, k - topConn, false);
         }
 
         return { Opm::Connection::Order::INPUT, i, j, conns };
@@ -115,12 +135,22 @@ namespace {
         const auto iMax = std::min(dims[0] - 1, left + numConns);
 
         for (auto i = left; i < iMax; ++i) {
+            const auto depth = 2000 + (2*k + 1) / static_cast<double>(2);
+
+            auto ctf_props = Opm::Connection::CTFProperties{};
+            ctf_props.CF = i / 100.0;
+            ctf_props.Kh = 1.0;
+            ctf_props.Ke = 1.0;
+            ctf_props.rw = 1.0;
+            ctf_props.r0 = 0.5;
+            ctf_props.re = 0.5;
+            ctf_props.connection_length = 1.0;
+
             conns.emplace_back(i, j, k, globIndex({i, j, k}, dims), i - left,
-                               2000 + (2*k + 1) / static_cast<double>(2),
                                Opm::Connection::State::OPEN,
-                               i / 100.0, 1.0, 1.0, 0.5, 0.5, 1.0, 0.0, 0.0, 0.0, 0,
                                Opm::Connection::Direction::X,
-                               Opm::Connection::CTFKind::DeckValue, i - left, false);
+                               Opm::Connection::CTFKind::DeckValue,
+                               0, depth, ctf_props, i - left, false);
         }
 
         return { Opm::Connection::Order::INPUT, left, j, conns };

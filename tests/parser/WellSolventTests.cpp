@@ -22,192 +22,219 @@
 #include <boost/test/unit_test.hpp>
 
 #include <opm/input/eclipse/Python/Python.hpp>
+
 #include <opm/input/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/input/eclipse/EclipseState/Runspec.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
+
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 #include <opm/input/eclipse/Schedule/Well/Well.hpp>
+
 #include <opm/input/eclipse/Deck/Deck.hpp>
 #include <opm/input/eclipse/Deck/DeckItem.hpp>
 #include <opm/input/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/input/eclipse/Deck/DeckRecord.hpp>
+
 #include <opm/input/eclipse/Parser/Parser.hpp>
 #include <opm/input/eclipse/Parser/ParseContext.hpp>
 
 using namespace Opm;
 
-static Deck createDeckWithOutSolvent() {
-    Opm::Parser parser;
-    std::string input =
-            "GRID\n"
-            "PERMX\n"
-            "   1000*0.25/\n"
-            "COPY\n"
-            "  PERMX PERMY /\n"
-            "  PERMX PERMZ /\n"
-            "/\n"
-            "SCHEDULE\n"
-            "WELSPECS\n"
-            "     'W_1'        'OP'   2   2  1*       \'OIL\'  7* /   \n"
-            "/\n"
-            "COMPDAT\n"
-            " 'W_1'  2*  1   1 'OPEN' / \n"
-            "/\n"
-            "WCONINJE\n"
-            "     'W_1' 'WATER' 'OPEN' 'BHP' 1 2 3/\n/\n";
+namespace {
 
-    return parser.parseString(input);
+Deck createDeckWithOutSolvent()
+{
+    return Parser{}.parseString(R"(
+GRID
+PERMX
+   1000*0.25/
+COPY
+  PERMX PERMY /
+  PERMX PERMZ /
+/
+PORO
+  1000*0.3 /
+
+SCHEDULE
+WELSPECS
+  'W_1'  'OP' 2 2  1*  'OIL'  7* /
+/
+COMPDAT
+ 'W_1'  2*  1   1 'OPEN' /
+/
+WCONINJE
+ 'W_1' 'WATER' 'OPEN' 'BHP' 1 2 3/
+/
+END
+)");
 }
 
-static Deck createDeckWithGasInjector() {
-    Opm::Parser parser;
-    std::string input =
-            "GRID\n"
-            "PERMX\n"
-            "   1000*0.25/\n"
-            "COPY\n"
-            "  PERMX PERMY /\n"
-            "  PERMX PERMZ /\n"
-            "/\n"
-            "SCHEDULE\n"
-            "WELSPECS\n"
-            "     'W_1'        'OP'   1   1  1*       \'GAS\'  7* /   \n"
-            "/\n"
-            "COMPDAT\n"
-            " 'W_1'  2*  1   1 'OPEN' / \n"
-            "/\n"
-            "WCONINJE\n"
-            "     'W_1' 'GAS' 'OPEN' 'BHP' 1 2 3/\n/\n"
-            "WSOLVENT\n"
-            "     'W_1'        1 / \n "
-            "/\n";
+Deck createDeckWithGasInjector()
+{
+    return Parser{}.parseString(R"(
+GRID
+PERMX
+   1000*0.25/
+COPY
+  PERMX PERMY /
+  PERMX PERMZ /
+/
+PORO
+  1000*0.3 /
 
-    return parser.parseString(input);
+SCHEDULE
+WELSPECS
+     'W_1'        'OP'   1   1  1*       'GAS'  7* /
+/
+COMPDAT
+ 'W_1'  2*  1   1 'OPEN' /
+/
+WCONINJE
+     'W_1' 'GAS' 'OPEN' 'BHP' 1 2 3/
+/
+WSOLVENT
+     'W_1'        1 /
+/
+END
+)");
 }
 
-static Deck createDeckWithDynamicWSOLVENT() {
-    Opm::Parser parser;
-    std::string input =
-            "START             -- 0 \n"
-            "1 JAN 2000 / \n"
-            "GRID\n"
-            "PERMX\n"
-            "   1000*0.25/\n"
-            "COPY\n"
-            "  PERMX PERMY /\n"
-            "  PERMX PERMZ /\n"
-            "/\n"
-            "SCHEDULE\n"
-            "WELSPECS\n"
-            "     'W_1'        'OP'   1   1  1*       \'GAS\'  7* /   \n"
-            "/\n"
-            "COMPDAT\n"
-            " 'W_1'  2*  1   1 'OPEN' / \n"
-            "/\n"
-            "WCONINJE\n"
-            "     'W_1' 'GAS' 'OPEN' 'BHP' 1 2 3/\n/\n"
-            "DATES             -- 2\n"
-            " 1  MAY 2000 / \n"
-            "/\n"
-            "WSOLVENT\n"
-            "     'W_1'        1 / \n "
-            "/\n"
-            "DATES             -- 3,4\n"
-            " 1  JUL 2000 / \n"
-            " 1  AUG 2000 / \n"
-            "/\n"
-            "WSOLVENT\n"
-            "     'W_1'        0 / \n "
-            "/\n";
+Deck createDeckWithDynamicWSOLVENT()
+{
+    return Parser{}.parseString(R"(
+START             -- 0
+1 JAN 2000 /
+GRID
+PERMX
+   1000*0.25/
+COPY
+  PERMX PERMY /
+  PERMX PERMZ /
+/
+PORO
+  1000*0.3 /
 
-    return parser.parseString(input);
+SCHEDULE
+WELSPECS
+     'W_1'        'OP'   1   1  1*       'GAS'  7* /
+/
+COMPDAT
+ 'W_1'  2*  1   1 'OPEN' /
+/
+WCONINJE
+     'W_1' 'GAS' 'OPEN' 'BHP' 1 2 3/
+/
+DATES             -- 2
+ 1  MAY 2000 /
+/
+WSOLVENT
+     'W_1'        1 /
+/
+DATES             -- 3,4
+ 1  JUL 2000 /
+ 1  AUG 2000 /
+/
+WSOLVENT
+     'W_1'        0 /
+/
+END
+)");
 }
 
-static Deck createDeckWithOilInjector() {
-    Opm::Parser parser;
-    std::string input =
-            "GRID\n"
-            "PERMX\n"
-            "   1000*0.25/\n"
-            "COPY\n"
-            "  PERMX PERMY /\n"
-            "  PERMX PERMZ /\n"
-            "/\n"
-            "SCHEDULE\n"
-            "WELSPECS\n"
-            "     'W_1'        'OP'   2   2  1*       \'OIL\'  7* /   \n"
-            "/\n"
-            "COMPDAT\n"
-            " 'W_1'  2*  1   1 'OPEN' / \n"
-            "/\n"
-            "WCONINJE\n"
-            "     'W_1' 'OIL' 'OPEN' 'BHP' 1 2 3/\n/\n"
-            "WSOLVENT\n"
-            "     'W_1'        1 / \n "
-            "/\n";
-
-    return parser.parseString(input);
+Deck createDeckWithOilInjector()
+{
+    return Parser{}.parseString(R"(
+GRID
+PERMX
+   1000*0.25/
+COPY
+  PERMX PERMY /
+  PERMX PERMZ /
+/
+SCHEDULE
+WELSPECS
+     'W_1'        'OP'   2   2  1*       'OIL'  7* /
+/
+COMPDAT
+ 'W_1'  2*  1   1 'OPEN' /
+/
+WCONINJE
+     'W_1' 'OIL' 'OPEN' 'BHP' 1 2 3/
+/
+WSOLVENT
+     'W_1'        1 /
+/
+END
+)");
 }
 
-static Deck createDeckWithWaterInjector() {
-    Opm::Parser parser;
-    std::string input =
-            "GRID\n"
-            "PERMX\n"
-            "   1000*0.25/\n"
-            "COPY\n"
-            "  PERMX PERMY /\n"
-            "  PERMX PERMZ /\n"
-            "/\n"
-            "SCHEDULE\n"
-            "WELSPECS\n"
-            "     'W_1'        'OP'   2   2  1*       \'OIL\'  7* /   \n"
-            "/\n"
-            "COMPDAT\n"
-            " 'W_1'  2*  1   1 'OPEN' / \n"
-            "/\n"
-            "WCONINJE\n"
-            "     'W_1' 'WATER' 'OPEN' 'BHP' 1 2 3/\n/\n"
-            "WSOLVENT\n"
-            "     'W_1'        1 / \n "
-            "/\n";
-
-    return parser.parseString(input);
+Deck createDeckWithWaterInjector()
+{
+    return Parser{}.parseString(R"(
+GRID
+PERMX
+   1000*0.25/
+COPY
+  PERMX PERMY /
+  PERMX PERMZ /
+/
+SCHEDULE
+WELSPECS
+     'W_1'        'OP'   2   2  1*       'OIL'  7* /
+/
+COMPDAT
+ 'W_1'  2*  1   1 'OPEN' /
+/
+WCONINJE
+     'W_1' 'WATER' 'OPEN' 'BHP' 1 2 3/
+/
+WSOLVENT
+     'W_1'        1 /
+/
+END
+)");
 }
-BOOST_AUTO_TEST_CASE(TestNoSolvent) {
-    auto deck = createDeckWithOutSolvent();
-    auto python = std::make_shared<Python>();
-    EclipseGrid grid(10,10,10);
-    TableManager table ( deck );
-    FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
-    Runspec runspec(deck);
-    Schedule schedule(deck, grid , fp, runspec, python);
+
+} // Anonymous namespace
+
+BOOST_AUTO_TEST_CASE(TestNoSolvent)
+{
+    const auto deck = createDeckWithOutSolvent();
+    const EclipseGrid grid(10,10,10);
+    const TableManager table (deck);
+    const FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
+    const Runspec runspec(deck);
+    const Schedule schedule(deck, grid, fp, runspec, std::make_shared<Python>());
+
     BOOST_CHECK(!deck.hasKeyword("WSOLVENT"));
 }
 
 BOOST_AUTO_TEST_CASE(TestGasInjector) {
-    auto deck = createDeckWithGasInjector();
-    auto python = std::make_shared<Python>();
-    EclipseGrid grid(10,10,10);
-    TableManager table ( deck );
-    FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
-    Runspec runspec(deck);
-    Schedule schedule(deck, grid , fp, runspec, python);
+    const auto deck = createDeckWithGasInjector();
+    const EclipseGrid grid(10,10,10);
+    const TableManager table (deck);
+    const FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
+    const Runspec runspec(deck);
+    const Schedule schedule(deck, grid, fp, runspec, std::make_shared<Python>());
+
     BOOST_CHECK(deck.hasKeyword("WSOLVENT"));
 }
 
-BOOST_AUTO_TEST_CASE(TestDynamicWSOLVENT) {
-    auto deck = createDeckWithDynamicWSOLVENT();
-    auto python = std::make_shared<Python>();
-    EclipseGrid grid(10,10,10);
-    TableManager table ( deck );
-    FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
-    Runspec runspec(deck);
-    Schedule schedule(deck, grid , fp, runspec, python);
+BOOST_AUTO_TEST_CASE(TestDynamicWSOLVENT)
+{
+    const auto deck = createDeckWithDynamicWSOLVENT();
+    const EclipseGrid grid(10,10,10);
+    const TableManager table (deck);
+    const FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
+    const Runspec runspec(deck);
+    const Schedule schedule(deck, grid, fp, runspec, std::make_shared<Python>());
+
     BOOST_CHECK(deck.hasKeyword("WSOLVENT"));
+
     const auto& keyword = deck["WSOLVENT"].back();
     BOOST_CHECK_EQUAL(keyword.size(),1U);
+
     const auto& record = keyword.getRecord(0);
     const std::string& well_name = record.getItem("WELL").getTrimmedString(0);
     BOOST_CHECK_EQUAL(well_name, "W_1");
@@ -217,22 +244,24 @@ BOOST_AUTO_TEST_CASE(TestDynamicWSOLVENT) {
     BOOST_CHECK_EQUAL(schedule.getWell("W_1", 3).getSolventFraction(),0);
 }
 
-BOOST_AUTO_TEST_CASE(TestOilInjector) {
-    auto deck = createDeckWithOilInjector();
-    auto python = std::make_shared<Python>();
-    EclipseGrid grid(10,10,10);
-    TableManager table ( deck );
-    FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
-    Runspec runspec(deck);
-    BOOST_CHECK_THROW (Schedule(deck , grid , fp, runspec, python), std::exception);
+BOOST_AUTO_TEST_CASE(TestOilInjector)
+{
+    const auto deck = createDeckWithOilInjector();
+    const EclipseGrid grid(10,10,10);
+    const TableManager table (deck);
+    const FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
+    const Runspec runspec(deck);
+
+    BOOST_CHECK_THROW (Schedule(deck, grid, fp, runspec, std::make_shared<Python>()), std::exception);
 }
 
-BOOST_AUTO_TEST_CASE(TestWaterInjector) {
-    auto deck = createDeckWithWaterInjector();
-    auto python = std::make_shared<Python>();
-    EclipseGrid grid(10,10,10);
-    TableManager table ( deck );
-    FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
-    Runspec runspec(deck);
-    BOOST_CHECK_THROW (Schedule(deck, grid , fp, runspec, python), std::exception);
+BOOST_AUTO_TEST_CASE(TestWaterInjector)
+{
+    const auto deck = createDeckWithWaterInjector();
+    const EclipseGrid grid(10,10,10);
+    const TableManager table ( deck );
+    const FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
+    const Runspec runspec(deck);
+
+    BOOST_CHECK_THROW (Schedule(deck, grid , fp, runspec, std::make_shared<Python>()), std::exception);
 }
