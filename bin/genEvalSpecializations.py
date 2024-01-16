@@ -896,7 +896,7 @@ std::ostream& operator<<(std::ostream& os, const Evaluation<ValueType, numVars, 
     if constexpr (is_evaluation<ValueType>::value)
         printEvaluation(os, eval.value(), false);
     else
-        printEvaluation(os, eval, false);
+        printEvaluation(os, eval, true);
 
     return os;
 }
