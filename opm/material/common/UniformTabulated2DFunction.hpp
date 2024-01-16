@@ -194,8 +194,8 @@ public:
     template <class Evaluation>
     Evaluation eval(const Evaluation& x, const Evaluation& y, bool extrapolate) const
     {
-        if (!applies(x,y))
-        {
+#ifndef NDEBUG
+        if (!extrapolate && !applies(x,y)) {
             std::string msg = "Attempt to get tabulated value for ("
                 +std::to_string(double(scalarValue(x)))+", "+std::to_string(double(scalarValue(y)))
                 +") on a table of extent "
@@ -212,6 +212,7 @@ public:
             }
 
         };
+#endif
 
         Evaluation alpha = xToI(x);
         Evaluation beta = yToJ(y);
