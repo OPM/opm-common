@@ -40,25 +40,7 @@
 
 namespace Opm {
 
-    template <typename Scalar>
-    struct ComponentParam {
-        std::string name;
-        Scalar molar_mass;
-        Scalar critic_temp;
-        Scalar critic_pres;
-        Scalar critic_vol;
-        Scalar acentric_factor;
 
-        ComponentParam(const std::string_view name_, const Scalar molar_mass_, const Scalar critic_temp_,
-                       const Scalar critic_pres_, const Scalar critic_vol_, const Scalar acentric_factor_)
-                       : name(name_),
-                         molar_mass(molar_mass_),
-                         critic_temp(critic_temp_),
-                         critic_pres(critic_pres_),
-                         critic_vol(critic_vol_),
-                         acentric_factor(acentric_factor_)
-        {}
-    };
 /*!
  * \ingroup FluidSystem
  *
@@ -74,7 +56,9 @@ namespace Opm {
         static const int numPhases=2;
         static const int numComponents = NumComp;
         static const int numMisciblePhases=2;
-        static const int numMiscibleComponents = 3;
+        // \Note: not totally sure when we should distinguish numMiscibleComponents and numComponents.
+        // Possibly when with a dummy phase like water?
+        static const int numMiscibleComponents = NumComp;
         // TODO: phase location should be more general
         static constexpr int oilPhaseIdx = 0;
         static constexpr int gasPhaseIdx = 1;
@@ -84,16 +68,38 @@ namespace Opm {
         using ViscosityModel = Opm::ViscosityModels<Scalar, GenericOilGasFluidSystem<Scalar, NumComp>>;
         using PengRobinsonMixture = Opm::PengRobinsonMixture<Scalar, GenericOilGasFluidSystem<Scalar, NumComp>>;
 
+        struct ComponentParam {
+            std::string name;
+            Scalar molar_mass;
+            Scalar critic_temp;
+            Scalar critic_pres;
+            Scalar critic_vol;
+            Scalar acentric_factor;
+
+            ComponentParam(const std::string_view name_, const Scalar molar_mass_, const Scalar critic_temp_,
+                           const Scalar critic_pres_, const Scalar critic_vol_, const Scalar acentric_factor_)
+                    : name(name_),
+                      molar_mass(molar_mass_),
+                      critic_temp(critic_temp_),
+                      critic_pres(critic_pres_),
+                      critic_vol(critic_vol_),
+                      acentric_factor(acentric_factor_)
+            {}
+        };
+
         template<typename Param>
         static void addComponent(const Param& param)
         {
-            assert(component_param_.size() <= numComponents);
-            if (component_param_.size() == numComponents) {
-                const std::string msg =  fmt::format("the fluid system has reached maximum {} component, the component {} will not be added",
-                                                     NumComp, param.name);
+            // Check if the current size is less than the maximum allowed components.
+            if (component_param_.size() < numComponents) {
+                component_param_.push_back(param);
+            } else {
+                // Adding another component would exceed the limit.
+                const std::string msg = fmt::format("The fluid system has reached its maximum capacity of {} components,"
+                                                    "the component '{}' will not be added.", NumComp, param.name);
                 OpmLog::note(msg);
+                // Optionally, throw an exception?
             }
-            component_param_.push_back(param);
         }
 
         static void init()
@@ -270,11 +276,11 @@ namespace Opm {
             return component_param_.size() == NumComp;
         }
 
-        static std::vector<ComponentParam<Scalar>> component_param_;
+        static std::vector<ComponentParam> component_param_;
     };
 
     template <class Scalar, int NumComp>
-    std::vector<ComponentParam<Scalar>>
+    std::vector<typename GenericOilGasFluidSystem<Scalar, NumComp>::ComponentParam>
     GenericOilGasFluidSystem<Scalar, NumComp>::component_param_;
 }
 #endif // OPM_GENERICOILGASFLUIDSYSTEM_HPP
