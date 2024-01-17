@@ -39,6 +39,7 @@
 
 #include <limits>
 #include <cassert>
+#include <string_view>
 
 namespace Opm {
 
@@ -72,7 +73,7 @@ public:
     static const int numPhases = 1;
 
     //! \copydoc BaseFluidSystem::phaseName
-    static const char* phaseName([[maybe_unused]] unsigned phaseIdx)
+    static std::string_view phaseName([[maybe_unused]] unsigned phaseIdx)
     {
         assert(phaseIdx < numPhases);
 
@@ -122,7 +123,7 @@ public:
     static const int numComponents = 1;
 
     //! \copydoc BaseFluidSystem::componentName
-    static const char* componentName([[maybe_unused]] unsigned compIdx)
+    static std::string_view componentName([[maybe_unused]] unsigned compIdx)
     {
         assert(compIdx < numComponents);
 

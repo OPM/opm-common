@@ -1,7 +1,7 @@
 // -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
 // vi: set et ts=4 sw=4 sts=4:
 /*
-  Copyright 2022 SINTEF Digital, Mathematics and Cybernetics.
+  Copyright 2023 SINTEF Digital, Mathematics and Cybernetics.
 
   This file is part of the Open Porous Media project (OPM).
 
@@ -23,55 +23,89 @@
   copyright holders.
 */
 
-#ifndef OPM_THREECOMPONENTFLUIDSYSTEM_HH
-#define OPM_THREECOMPONENTFLUIDSYSTEM_HH
+#ifndef OPM_GENERICOILGASFLUIDSYSTEM_HPP
+#define OPM_GENERICOILGASFLUIDSYSTEM_HPP
+
+#include <opm/common/OpmLog/OpmLog.hpp>
 
 #include <opm/material/fluidsystems/BaseFluidSystem.hpp>
-#include <opm/material/components/SimpleCO2.hpp>
-#include <opm/material/components/C10.hpp>
-#include <opm/material/components/C1.hpp>
-
-#include <string_view>
-
-
-// TODO: this is something else need to check
-#include <opm/material/fluidsystems/PTFlashParameterCache.hpp>
+#include <opm/material/fluidsystems/PTFlashParameterCache.hpp> // TODO: this is something else need to check
 #include <opm/material/viscositymodels/LBC.hpp>
 
+#include <cassert>
+#include <string>
+#include <string_view>
+
+#include <fmt/format.h>
+
 namespace Opm {
+
+
 /*!
  * \ingroup FluidSystem
  *
- * \brief A two phase three component fluid system with components
- * CO2, Methane and NDekan
+ * \brief A two phase system that can contain NumComp components
+ *
+ * \tparam Scalar  The floating-point type that specifies the precision of the numerical operations.
+ * \tparam NumComp The number of the components in the fluid system.
  */
-
-    template<class Scalar>
-    class ThreeComponentFluidSystem
-            : public Opm::BaseFluidSystem<Scalar, ThreeComponentFluidSystem<Scalar> > {
+    template<class Scalar, int NumComp>
+    class GenericOilGasFluidSystem : public BaseFluidSystem<Scalar, GenericOilGasFluidSystem<Scalar, NumComp> > {
     public:
         // TODO: I do not think these should be constant in fluidsystem, will try to make it non-constant later
-        static constexpr int numPhases=2;
-        static constexpr int numComponents = 3;
-        static constexpr int numMisciblePhases=2;
-        static constexpr int numMiscibleComponents = 3;
+        static const int numPhases=2;
+        static const int numComponents = NumComp;
+        static const int numMisciblePhases=2;
+        // \Note: not totally sure when we should distinguish numMiscibleComponents and numComponents.
+        // Possibly when with a dummy phase like water?
+        static const int numMiscibleComponents = NumComp;
         // TODO: phase location should be more general
         static constexpr int oilPhaseIdx = 0;
         static constexpr int gasPhaseIdx = 1;
 
-        static constexpr int Comp0Idx = 0;
-        static constexpr int Comp1Idx = 1;
-        static constexpr int Comp2Idx = 2;
-
-        // TODO: needs to be more general
-        using Comp0 = Opm::SimpleCO2<Scalar>;
-        using Comp1 = Opm::C1<Scalar>;
-        using Comp2 = Opm::C10<Scalar>;
-
         template <class ValueType>
-        using ParameterCache = Opm::PTFlashParameterCache<ValueType, ThreeComponentFluidSystem<Scalar>>;
-        using ViscosityModel = typename Opm::ViscosityModels<Scalar, ThreeComponentFluidSystem<Scalar>>;
-        using PengRobinsonMixture = typename Opm::PengRobinsonMixture<Scalar, ThreeComponentFluidSystem<Scalar>>;
+        using ParameterCache = Opm::PTFlashParameterCache<ValueType, GenericOilGasFluidSystem<Scalar, NumComp>>;
+        using ViscosityModel = Opm::ViscosityModels<Scalar, GenericOilGasFluidSystem<Scalar, NumComp>>;
+        using PengRobinsonMixture = Opm::PengRobinsonMixture<Scalar, GenericOilGasFluidSystem<Scalar, NumComp>>;
+
+        struct ComponentParam {
+            std::string name;
+            Scalar molar_mass;
+            Scalar critic_temp;
+            Scalar critic_pres;
+            Scalar critic_vol;
+            Scalar acentric_factor;
+
+            ComponentParam(const std::string_view name_, const Scalar molar_mass_, const Scalar critic_temp_,
+                           const Scalar critic_pres_, const Scalar critic_vol_, const Scalar acentric_factor_)
+                    : name(name_),
+                      molar_mass(molar_mass_),
+                      critic_temp(critic_temp_),
+                      critic_pres(critic_pres_),
+                      critic_vol(critic_vol_),
+                      acentric_factor(acentric_factor_)
+            {}
+        };
+
+        template<typename Param>
+        static void addComponent(const Param& param)
+        {
+            // Check if the current size is less than the maximum allowed components.
+            if (component_param_.size() < numComponents) {
+                component_param_.push_back(param);
+            } else {
+                // Adding another component would exceed the limit.
+                const std::string msg = fmt::format("The fluid system has reached its maximum capacity of {} components,"
+                                                    "the component '{}' will not be added.", NumComp, param.name);
+                OpmLog::note(msg);
+                // Optionally, throw an exception?
+            }
+        }
+
+        static void init()
+        {
+            component_param_.reserve(numComponents);
+        }
 
         /*!
          * \brief The acentric factor of a component [].
@@ -80,12 +114,10 @@ namespace Opm {
          */
         static Scalar acentricFactor(unsigned compIdx)
         {
-            switch (compIdx) {
-            case Comp0Idx: return Comp0::acentricFactor();
-            case Comp1Idx: return Comp1::acentricFactor();
-            case Comp2Idx: return Comp2::acentricFactor();
-            default: throw std::runtime_error("Illegal component index for acentricFactor");
-            }
+            assert(isConsistent());
+            assert(compIdx < numComponents);
+
+            return component_param_[compIdx].acentric_factor;
         }
         /*!
          * \brief Critical temperature of a component [K].
@@ -94,25 +126,22 @@ namespace Opm {
          */
         static Scalar criticalTemperature(unsigned compIdx)
         {
-            switch (compIdx) {
-                case Comp0Idx: return Comp0::criticalTemperature();
-                case Comp1Idx: return Comp1::criticalTemperature();
-                case Comp2Idx: return Comp2::criticalTemperature();
-                default: throw std::runtime_error("Illegal component index for criticalTemperature");
-            }
+            assert(isConsistent());
+            assert(compIdx < numComponents);
+
+            return component_param_[compIdx].critic_temp;
         }
         /*!
          * \brief Critical pressure of a component [Pa].
          *
          * \copydetails Doxygen::compIdxParam
          */
-        static Scalar criticalPressure(unsigned compIdx) {
-            switch (compIdx) {
-                case Comp0Idx: return Comp0::criticalPressure();
-                case Comp1Idx: return Comp1::criticalPressure();
-                case Comp2Idx: return Comp2::criticalPressure();
-                default: throw std::runtime_error("Illegal component index for criticalPressure");
-            }
+        static Scalar criticalPressure(unsigned compIdx)
+        {
+            assert(isConsistent());
+            assert(compIdx < numComponents);
+
+            return component_param_[compIdx].critic_pres;
         }
         /*!
         * \brief Critical volume of a component [m3].
@@ -121,23 +150,19 @@ namespace Opm {
         */
         static Scalar criticalVolume(unsigned compIdx)
         {
-            switch (compIdx) {
-                case Comp0Idx: return Comp0::criticalVolume();
-                case Comp1Idx: return Comp1::criticalVolume();
-                case Comp2Idx: return Comp2::criticalVolume();
-                default: throw std::runtime_error("Illegal component index for criticalVolume");
-            }
+            assert(isConsistent());
+            assert(compIdx < numComponents);
+
+            return component_param_[compIdx].critic_vol;
         }
 
         //! \copydoc BaseFluidSystem::molarMass
         static Scalar molarMass(unsigned compIdx)
         {
-            switch (compIdx) {
-                case Comp0Idx: return Comp0::molarMass();
-                case Comp1Idx: return Comp1::molarMass();
-                case Comp2Idx: return Comp2::molarMass();
-                default: throw std::runtime_error("Illegal component index for molarMass");
-            }
+            assert(isConsistent());
+            assert(compIdx < numComponents);
+
+            return component_param_[compIdx].molar_mass;
         }
 
         /*!
@@ -146,6 +171,8 @@ namespace Opm {
          */
         static Scalar interactionCoefficient(unsigned /*comp1Idx*/, unsigned /*comp2Idx*/)
         {
+            assert(isConsistent());
+            // TODO: some data structure is needed to support this
             return 0.0;
         }
 
@@ -155,21 +182,17 @@ namespace Opm {
                 static const char* name[] = {"o",  // oleic phase
                                              "g"};  // gas phase
 
-                assert(phaseIdx < 2);
+                assert(phaseIdx < numPhases);
                 return name[phaseIdx];
         }
 
         //! \copydoc BaseFluidSystem::componentName
         static std::string_view componentName(unsigned compIdx)
         {
-                static const char* name[] = {
-                        Comp0::name(),
-                        Comp1::name(),
-                        Comp2::name(),
-                };
+            assert(isConsistent());
+            assert(compIdx < numComponents);
 
-                assert(compIdx < 3);
-                return name[compIdx];
+            return component_param_[compIdx].name;
         }
 
         /*!
@@ -180,8 +203,15 @@ namespace Opm {
                                const ParameterCache<ParamCacheEval>& paramCache,
                                unsigned phaseIdx)
         {
-            assert(phaseIdx == oilPhaseIdx || phaseIdx == gasPhaseIdx); // This is a oil + gas only two-phase system
-            return decay<LhsEval>(fluidState.averageMolarMass(phaseIdx) / paramCache.molarVolume(phaseIdx));
+            assert(isConsistent());
+            assert(phaseIdx < numPhases);
+
+            LhsEval dens;
+            if (phaseIdx == oilPhaseIdx || phaseIdx == gasPhaseIdx) {
+                dens = decay<LhsEval>(fluidState.averageMolarMass(phaseIdx) / paramCache.molarVolume(phaseIdx));
+            }
+            return dens;
+
         }
 
         //! \copydoc BaseFluidSystem::viscosity
@@ -190,6 +220,8 @@ namespace Opm {
                                  const ParameterCache<ParamCacheEval>& paramCache,
                                  unsigned phaseIdx)
         {
+            assert(isConsistent());
+            assert(phaseIdx < numPhases);
             // Use LBC method to calculate viscosity
             return decay<LhsEval>(ViscosityModel::LBC(fluidState, paramCache, phaseIdx));
         }
@@ -201,6 +233,7 @@ namespace Opm {
                                            unsigned phaseIdx,
                                            unsigned compIdx)
         {
+            assert(isConsistent());
             assert(phaseIdx < numPhases);
             assert(compIdx < numComponents);
 
@@ -238,6 +271,16 @@ namespace Opm {
 
             return (phaseIdx == 1);
         }
+    private:
+        static bool isConsistent() {
+            return component_param_.size() == NumComp;
+        }
+
+        static std::vector<ComponentParam> component_param_;
     };
+
+    template <class Scalar, int NumComp>
+    std::vector<typename GenericOilGasFluidSystem<Scalar, NumComp>::ComponentParam>
+    GenericOilGasFluidSystem<Scalar, NumComp>::component_param_;
 }
-#endif //OPM_THREECOMPONENTFLUIDSYSTEM_HH
+#endif // OPM_GENERICOILGASFLUIDSYSTEM_HPP

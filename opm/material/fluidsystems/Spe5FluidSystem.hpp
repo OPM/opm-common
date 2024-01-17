@@ -35,6 +35,8 @@
 
 #include <opm/material/common/Spline.hpp>
 
+#include <string_view>
+
 namespace Opm {
 
 /*!
@@ -86,7 +88,7 @@ public:
     typedef ::Opm::H2O<Scalar> H2O;
 
     //! \copydoc BaseFluidSystem::phaseName
-    static const char* phaseName(unsigned phaseIdx)
+    static std::string_view phaseName(unsigned phaseIdx)
     {
         static const char* name[] = {
             "gas",
@@ -148,7 +150,7 @@ public:
     static const int C20Idx = 6; //!< Index of the C20 component
 
     //! \copydoc BaseFluidSystem::componentName
-    static const char* componentName(unsigned compIdx)
+    static std::string_view componentName(unsigned compIdx)
     {
         static const char* name[] = {
             H2O::name(),

@@ -27,6 +27,8 @@
 #ifndef OPM_GAS_PHASE_HPP
 #define OPM_GAS_PHASE_HPP
 
+#include <string_view>
+
 namespace Opm {
 
 /*!
@@ -45,7 +47,7 @@ public:
     /*!
      * \brief A human readable name for the component.
      */
-    static const char* name()
+    static std::string_view name()
     { return Component::name(); }
 
     /*!

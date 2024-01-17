@@ -27,8 +27,9 @@
 #ifndef OPM_TWO_PHASE_IMMISCIBLE_FLUID_SYSTEM_HPP
 #define OPM_TWO_PHASE_IMMISCIBLE_FLUID_SYSTEM_HPP
 
-#include <limits>
 #include <cassert>
+#include <limits>
+#include <string_view>
 
 #include <opm/material/fluidsystems/LiquidPhase.hpp>
 #include <opm/material/fluidsystems/GasPhase.hpp>
@@ -81,7 +82,7 @@ public:
     static const int nonWettingPhaseIdx = 1;
 
     //! \copydoc BaseFluidSystem::phaseName
-    static const char* phaseName(unsigned phaseIdx)
+    static std::string_view phaseName(unsigned phaseIdx)
     {
         assert(phaseIdx < numPhases);
 
@@ -147,7 +148,7 @@ public:
     static const int nonWettingCompIdx = 1;
 
     //! \copydoc BaseFluidSystem::componentName
-    static const char* componentName(unsigned compIdx)
+    static std::string_view componentName(unsigned compIdx)
     {
         assert(compIdx < numComponents);
 

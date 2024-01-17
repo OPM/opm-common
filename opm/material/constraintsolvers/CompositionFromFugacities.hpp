@@ -36,6 +36,7 @@
 #include <dune/common/fmatrix.hh>
 
 #include <limits>
+#include <string_view>
 
 namespace Opm {
 
@@ -178,7 +179,7 @@ public:
 
         std::string msg =
             std::string("Calculating the ")
-            + FluidSystem::phaseName(phaseIdx)
+            + FluidSystem::phaseName(phaseIdx).data()
             + "Phase composition failed. Initial {x} = {";
         for (const auto& v : xInit)
             msg += " " + std::to_string(cast(getValue(v)));
