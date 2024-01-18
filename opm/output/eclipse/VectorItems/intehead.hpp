@@ -155,22 +155,28 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
         MAX_ACT_COND = 245, //  Maximum number of conditions pr action
         MAX_AN_AQUIFER_ID = 252, // Maximum aquifer ID of all analytic aquifers (<= AQUDIMS(5))
 
-        NO_FIELD_UDQS = 262, //  No of Field UDQ data (parameters) /
-        NO_GROUP_UDQS = 263, //  No of Group UDQ data (parameters) /
-        NO_WELL_UDQS = 266, //  No of Well UDQ data (parameters) /
-        UDQPAR_1 = 267, //  Integer seed value for the RAND /
+        NO_CONN_UDQS = 261,     // Number of connection-level UDQ parameters
+        NO_FIELD_UDQS = 262,    // Number of field-level UDQ parameters
+        NO_GROUP_UDQS = 263,    // Number of group-level UDQ parameters
+        NO_REG_UDQS = 264,      // Number of region-level UDQ parameters
+        NO_SEG_UDQS = 265,      // Number of segment-level UDQ parameters
+        NO_WELL_UDQS = 266,     // Number of well-level UDQ parameters
+        UDQPAR_1 = 267,         // Integer seed value for the RAND
 
-        AQU_UNKNOWN_1 = 269,  // Not characterised.  Equal to NAQUIF in all cases seen so far.
+        AQU_UNKNOWN_1 = 269, // Not characterised.  Equal to NAQUIF in all cases seen so far.
         MAX_ANALYTIC_AQUIFERS = 286, // Declared maximum number of analytic aquifers in model.  AQUDIMS(5).
 
-        NO_IUADS = 290, //  No IUADs
-        NO_IUAPS = 291, //  No IUAPs
+        NO_AQU_UDQS = 288,      // Number of aquifer-level UDQ parameters
+        NO_BLK_UDQS = 289,      // Number of block-level UDQ parameters
+
+        NO_IUADS = 290,         //  No IUADs
+        NO_IUAPS = 291,         //  No IUAPs
         RSEED = 296,
 
         MAXDYNWELLST = 302, //  Maximum number of dynamic well lists (default = 1)
 
-        ISECND = 410 //  ISECND = current simulation time HH:MM:SS - number of seconds (SS), reported in microseconds
-                     //  (0-59,999,999)
+        ISECND = 410,  // ISECND = current simulation time HH:MM:SS - number
+                       // of seconds (SS), reported in microseconds (0 .. 59,999,999)
     };
 
     namespace InteheadValues {

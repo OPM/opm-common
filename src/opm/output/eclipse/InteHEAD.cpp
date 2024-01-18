@@ -316,13 +316,13 @@ enum index : std::vector<int>::size_type {
   ih_258       =      258       ,              //       0
   ih_259       =      259       ,              //       0
   ih_260       =      260       ,              //       0
-  ih_261       =      261       ,              //       0
-  NOFUDQS      =      VI::intehead::NO_FIELD_UDQS,    //       0
-  NOGUDQS      =      VI::intehead::NO_GROUP_UDQS,    //       0
-  ih_264       =      264       ,              //       0
-  ih_265       =      265       ,              //       0
-  NOWUDQS      =      VI::intehead::NO_WELL_UDQS,     //       0
-  UDQPAR_1     =      VI::intehead::UDQPAR_1,  //       0
+  NUM_CONN_UDQS  =    VI::intehead::NO_CONN_UDQS,     //       0
+  NUM_FIELD_UDQS =    VI::intehead::NO_FIELD_UDQS,    //       0
+  NUM_GROUP_UDQS =    VI::intehead::NO_GROUP_UDQS,    //       0
+  NUM_REG_UDQS   =    VI::intehead::NO_REG_UDQS,      //       0
+  NUM_SEG_UDQS   =    VI::intehead::NO_SEG_UDQS,      //       0
+  NUM_WELL_UDQS  =    VI::intehead::NO_WELL_UDQS,     //       0
+  UDQPAR_1       =    VI::intehead::UDQPAR_1,         //       0
   ih_268       =      268       ,              //       0
   AQU_UNKNOWN_1=      VI::intehead::AQU_UNKNOWN_1,              //       0  Not characterised.  Equal to NAQUIF in all cases seen so far.
   ih_270       =      270       ,              //       0
@@ -343,10 +343,10 @@ enum index : std::vector<int>::size_type {
   ih_285       =      285       ,              //       0
   MAX_ANALYTIC_AQUIFERS= VI::intehead::MAX_ANALYTIC_AQUIFERS, //  Declared maximum number of analytic aquifers in model.  AQUDIMS(5).
   ih_287       =      287       ,              //       0
-  ih_288       =      288       ,              //       0
-  ih_289       =      289       ,              //       0
-  NOIUADS       =      VI::intehead::NO_IUADS,  //       0
-  NOIUAPS       =      VI::intehead::NO_IUAPS,  //       0
+  NUM_AQU_UDQS =      VI::intehead::NO_AQU_UDQS,      //       0
+  NUM_BLK_UDQS =      VI::intehead::NO_BLK_UDQS,      //       0
+  NUM_IUADS    =      VI::intehead::NO_IUADS,  //       0
+  NUM_IUAPS    =      VI::intehead::NO_IUAPS,  //       0
   ih_292       =      292       ,              //       0
   ih_293       =      293       ,              //       0
   ih_294       =      294       ,              //       0
@@ -732,13 +732,20 @@ Opm::RestartIO::InteHEAD&
 Opm::RestartIO::InteHEAD::
 udqParam_1(const UdqParam& udq_par)
 {
-    this -> data_[UDQPAR_1]     = - udq_par.udqParam_1;
-    this -> data_[R_SEED]       = - udq_par.udqParam_1;
-    this -> data_[NOWUDQS]      = udq_par.no_wudqs;
-    this -> data_[NOGUDQS]      = udq_par.no_gudqs;
-    this -> data_[NOFUDQS]      = udq_par.no_fudqs;
-    this -> data_[NOIUADS]      = udq_par.no_iuads;
-    this -> data_[NOIUAPS]      = udq_par.no_iuaps;
+    this->data_[UDQPAR_1] = - udq_par.udqParam_1;
+    this->data_[R_SEED]   = - udq_par.udqParam_1;
+
+    this->data_[NUM_CONN_UDQS]  = udq_par.num_conn_udqs;
+    this->data_[NUM_FIELD_UDQS] = udq_par.num_field_udqs;
+    this->data_[NUM_REG_UDQS]   = udq_par.num_reg_udqs;
+    this->data_[NUM_GROUP_UDQS] = udq_par.num_group_udqs;
+    this->data_[NUM_SEG_UDQS]   = udq_par.num_seg_udqs;
+    this->data_[NUM_WELL_UDQS]  = udq_par.num_well_udqs;
+    this->data_[NUM_AQU_UDQS]   = udq_par.num_aqu_udqs;
+    this->data_[NUM_BLK_UDQS]   = udq_par.num_blk_udqs;
+
+    this->data_[NUM_IUADS] = udq_par.num_iuads;
+    this->data_[NUM_IUAPS] = udq_par.num_iuaps;
 
     return *this;
 }

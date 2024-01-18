@@ -362,26 +362,22 @@ namespace {
                 const std::size_t     rptStep,
                 const std::size_t     simStep)
     {
+        auto param = Opm::RestartIO::InteHEAD::UdqParam{};
+
         if (rptStep == std::size_t{0}) {
-            return { 0, 0, 0, 0, 0, 0 };
+            return param;
         }
 
-        const auto& udq_par = rspec.udqParams();
-        const auto r_seed   = udq_par.rand_seed();
-        const auto no_wudq  = noWellUdqs(sched, rptStep, simStep);
-        const auto no_gudq  = noGroupUdqs(sched, rptStep, simStep);
-        const auto no_fudq  = noFieldUdqs(sched, rptStep, simStep);
-        const auto no_iuads = noIuads(sched, rptStep, simStep);
-        const auto no_iuaps = noIuaps(sched, rptStep, simStep);
+        param.udqParam_1 = rspec.udqParams().rand_seed();
 
-        return {
-            r_seed,
-            static_cast<int>(no_wudq),
-            static_cast<int>(no_gudq),
-            static_cast<int>(no_fudq),
-            static_cast<int>(no_iuads),
-            static_cast<int>(no_iuaps)
-        };
+        param.num_field_udqs = noFieldUdqs(sched, rptStep, simStep);
+        param.num_group_udqs = noGroupUdqs(sched, rptStep, simStep);
+        param.num_well_udqs  = noWellUdqs (sched, rptStep, simStep);
+
+        param.num_iuads = noIuads(sched, rptStep, simStep);
+        param.num_iuaps = noIuaps(sched, rptStep, simStep);
+
+        return param;
     }
 
     Opm::RestartIO::InteHEAD::ActionParam
