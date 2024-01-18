@@ -46,7 +46,8 @@ public:
         std::array<int, 3> ijk;
         SourceComponent component;
         double rate;
-        double hrate;   
+        std::optional<double> hrate;
+        std::optional<double> temperature;  
 
         SourceCell() = default;
         explicit SourceCell(const DeckRecord& record);
@@ -64,6 +65,7 @@ public:
             serializer(component);
             serializer(rate);
             serializer(hrate);
+            serializer(temperature);
         }
     };
 
@@ -78,7 +80,11 @@ public:
     bool operator==(const Source& other) const;
 
     double rate(const std::pair<std::array<int, 3>, SourceComponent>& input ) const;
-    double hrate(const std::array<int, 3>& input ) const;
+    double hrate(const std::pair<std::array<int, 3>, SourceComponent>& input ) const;
+    double temperature(const std::pair<std::array<int, 3>, SourceComponent>& input) const;
+    bool hasHrate(const std::pair<std::array<int, 3>, SourceComponent>& input) const;
+    bool hasTemperature(const std::pair<std::array<int, 3>, SourceComponent>& input) const;
+    bool hasSource(const std::array<int, 3>& input) const;
 
     void updateSource(const DeckRecord& record);
 
