@@ -90,7 +90,7 @@ public:
     //! \copydoc BaseFluidSystem::phaseName
     static std::string_view phaseName(unsigned phaseIdx)
     {
-        static const char* name[] = {
+        static const std::string_view name[] = {
             "gas",
             "water",
             "oil",
@@ -152,7 +152,7 @@ public:
     //! \copydoc BaseFluidSystem::componentName
     static std::string_view componentName(unsigned compIdx)
     {
-        static const char* name[] = {
+        static const std::string_view name[] = {
             H2O::name(),
             "C1",
             "C3",

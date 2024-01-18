@@ -28,6 +28,8 @@
 #define OPM_COMPONENT_HPP
 
 #include <stdexcept>
+#include <string_view>
+
 namespace Opm {
 
 /*!
@@ -82,7 +84,7 @@ public:
     /*!
      * \brief A human readable name for the component.
      */
-    static const char* name()
+    static std::string_view name()
     { throw std::runtime_error("Not implemented: Component::name()"); }
 
     /*!

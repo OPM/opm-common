@@ -33,6 +33,8 @@
 #include <opm/material/common/MathToolbox.hpp>
 #include <opm/material/IdealGas.hpp>
 
+#include <string_view>
+
 namespace Opm {
 
 /*!
@@ -57,7 +59,7 @@ public:
     /*!
      * \brief A human readable name for the \f$Air\f$.
      */
-    static const char* name()
+    static std::string_view name()
     { return "Air"; }
 
     /*!

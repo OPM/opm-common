@@ -29,6 +29,8 @@
 
 #include "Component.hpp"
 
+#include <string_view>
+
 namespace Opm {
 /*!
  * \ingroup Components
@@ -44,7 +46,7 @@ public:
     /*!
      * \brief A human readable name for the iso-octane.
      */
-    static const char* name()
+    static std::string_view name()
     { return "LNAPL"; }
 
     /*!

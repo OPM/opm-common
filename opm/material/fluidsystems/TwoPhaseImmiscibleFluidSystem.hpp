@@ -86,7 +86,7 @@ public:
     {
         assert(phaseIdx < numPhases);
 
-        static const char* name[] = {
+        static const std::string_view name[] = {
             "wetting",
             "nonwetting"
         };

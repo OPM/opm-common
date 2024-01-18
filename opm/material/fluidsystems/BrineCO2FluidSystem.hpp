@@ -104,7 +104,7 @@ public:
      */
     static std::string_view phaseName(unsigned phaseIdx)
     {
-        static const char* name[] = {
+        static const std::string_view name[] = {
             "liquid",
             "gas"
         };
@@ -171,7 +171,7 @@ public:
      */
     static std::string_view componentName(unsigned compIdx)
     {
-        static const char* name[] = {
+        static const std::string_view name[] = {
             Brine::name(),
             CO2::name(),
         };

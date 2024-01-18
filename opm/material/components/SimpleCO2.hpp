@@ -34,6 +34,7 @@
 #include <opm/material/components/Component.hpp>
 
 #include <cmath>
+#include <string_view>
 
 namespace Opm {
 
@@ -53,7 +54,7 @@ public:
     /*!
      * \copydoc Component::name
      */
-    static const char* name()
+    static std::string_view name()
     { return "CO2"; }
 
     /*!

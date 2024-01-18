@@ -140,7 +140,7 @@ public:
     //! \copydoc BaseFluidSystem::componentName
     static std::string_view componentName(unsigned compIdx)
     {
-        static const char* name[] = {
+        static const std::string_view name[] = {
             H2O::name(),
             N2::name()
         };

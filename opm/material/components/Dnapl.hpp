@@ -32,6 +32,8 @@
 #include <opm/material/IdealGas.hpp>
 #include <opm/material/common/MathToolbox.hpp>
 
+#include <string_view>
+
 namespace Opm {
 /*!
  * \ingroup Components
@@ -50,7 +52,7 @@ public:
     /*!
      * \brief A human readable name for the TCE.
      */
-    static const char* name()
+    static std::string_view name()
     { return "DNAPL"; }
 
     /*!
