@@ -140,75 +140,78 @@ initParamsForElements(const EclipseState& eclState, size_t numCompressedElems,
     initParams.run(fieldPropIntOnLeafAssigner, lookupIdxOnLevelZeroAssigner);
 }
 
+// TODO: Better (proper?) handling of mixed wettability systems - see ecl kw OPTIONS switch 74
+// Note: Without OPTIONS[74] the negative part of the Pcow curve is not scaled
 template<class TraitsT>
 std::pair<typename TraitsT::Scalar, bool> EclMaterialLawManager<TraitsT>::
 applySwatinit(unsigned elemIdx,
               Scalar pcow,
               Scalar Sw)
 {
+    // Default is no SWATINIT scaling of the negative part of the Pcow curve, so look up saturation using the input Pcow curve
+    if (pcow <= 0.0) {
+        return {Sw, /*newSwatInit*/ true};
+    }
+
     auto& elemScaledEpsInfo = oilWaterScaledEpsInfoDrainage_[elemIdx];
+    if (Sw <= elemScaledEpsInfo.Swl)
+        Sw = elemScaledEpsInfo.Swl;
+
+    // specify a fluid state which only stores the saturations
+    using FluidState = SimpleModularFluidState<Scalar,
+                                                numPhases,
+                                                /*numComponents=*/0,
+                                                /*FluidSystem=*/void, /* -> don't care */
+                                                /*storePressure=*/false,
+                                                /*storeTemperature=*/false,
+                                                /*storeComposition=*/false,
+                                                /*storeFugacity=*/false,
+                                                /*storeSaturation=*/true,
+                                                /*storeDensity=*/false,
+                                                /*storeViscosity=*/false,
+                                                /*storeEnthalpy=*/false>;
+    FluidState fs;
+    fs.setSaturation(waterPhaseIdx, Sw);
+    fs.setSaturation(gasPhaseIdx, 0);
+    fs.setSaturation(oilPhaseIdx, 0);
+    std::array<Scalar, numPhases> pc = { 0 };
+    MaterialLaw::capillaryPressures(pc, materialLawParams(elemIdx), fs);
+    Scalar pcowAtSw = pc[oilPhaseIdx] - pc[waterPhaseIdx];
+    constexpr const Scalar pcowAtSwThreshold = 1.0e-6; //Pascal
+
+    // avoid division by very small number and avoid negative PCW at connate Sw
+    // (look up saturation on input Pcow curve in this case)
+    if (pcowAtSw < pcowAtSwThreshold) {
+        return {Sw, /*newSwatInit*/ true};
+    }
+
+    // Sufficiently positive value, continue with max. capillary pressure (PCW) scaling to honor SWATINIT value
+    Scalar newMaxPcow = elemScaledEpsInfo.maxPcow * (pcow/pcowAtSw);
+
+    // Limit max. capillary pressure with PPCWMAX
     bool newSwatInit = false;
-
-    // TODO: Mixed wettability systems - see ecl kw OPTIONS switch 74
-
-    if (pcow < 0.0)
-        Sw = elemScaledEpsInfo.Swu;
-    else {
-
-        if (Sw <= elemScaledEpsInfo.Swl)
-            Sw = elemScaledEpsInfo.Swl;
-
-        // specify a fluid state which only stores the saturations
-        using FluidState = SimpleModularFluidState<Scalar,
-                                                   numPhases,
-                                                   /*numComponents=*/0,
-                                                   /*FluidSystem=*/void, /* -> don't care */
-                                                   /*storePressure=*/false,
-                                                   /*storeTemperature=*/false,
-                                                   /*storeComposition=*/false,
-                                                   /*storeFugacity=*/false,
-                                                   /*storeSaturation=*/true,
-                                                   /*storeDensity=*/false,
-                                                   /*storeViscosity=*/false,
-                                                   /*storeEnthalpy=*/false>;
-        FluidState fs;
-        fs.setSaturation(waterPhaseIdx, Sw);
-        fs.setSaturation(gasPhaseIdx, 0);
-        fs.setSaturation(oilPhaseIdx, 0);
-        std::array<Scalar, numPhases> pc = { 0 };
-        MaterialLaw::capillaryPressures(pc, materialLawParams(elemIdx), fs);
-
-        Scalar pcowAtSw = pc[oilPhaseIdx] - pc[waterPhaseIdx];
-        constexpr const Scalar pcowAtSwThreshold = 1.0; //Pascal
-        // avoid divison by very small number
-        if (std::abs(pcowAtSw) > pcowAtSwThreshold) {
-            // Scale max. capillary pressure to honor SWATINIT value
-            Scalar newMaxPcow = elemScaledEpsInfo.maxPcow * (pcow/pcowAtSw);
-
-            // Limit max. capillary pressure with PPCWMAX
-            int satRegionIdx = satnumRegionIdx(elemIdx);
-            if (enablePpcwmax() && (newMaxPcow > maxAllowPc_[satRegionIdx])) {
-                // Two options in PPCWMAX to modify connate Sw or not.  In both cases, init. Sw needs to be
-                // re-calculated (done in opm-simulators)
-                newSwatInit = true;
-                if (modifySwl_[satRegionIdx] == false) {
-                    // Max. cap. pressure set to PCWO in PPCWMAX
-                    elemScaledEpsInfo.maxPcow = maxAllowPc_[satRegionIdx];
-                }
-                else {
-                    // Max. cap. pressure remains unscaled and connate Sw is set to SWATINIT value
-                    elemScaledEpsInfo.Swl = Sw;
-                }
-            }
-            // Max. cap. pressure adjusted from SWATINIT data
-            else
-                elemScaledEpsInfo.maxPcow = newMaxPcow;
-            auto& elemEclEpsScalingPoints = oilWaterScaledEpsPointsDrainage(elemIdx);
-            elemEclEpsScalingPoints.init(elemScaledEpsInfo,
-                                         *oilWaterEclEpsConfig_,
-                                         EclTwoPhaseSystemType::OilWater);
+    int satRegionIdx = satnumRegionIdx(elemIdx);
+    if (enablePpcwmax() && (newMaxPcow > maxAllowPc_[satRegionIdx])) {
+        // Two options in PPCWMAX to modify connate Sw or not.  In both cases, init. Sw needs to be
+        // re-calculated (done in opm-simulators)
+        newSwatInit = true;
+        if (modifySwl_[satRegionIdx] == false) {
+            // Max. cap. pressure set to PCWO in PPCWMAX
+            elemScaledEpsInfo.maxPcow = maxAllowPc_[satRegionIdx];
+        }
+        else {
+            // Max. cap. pressure remains unscaled and connate Sw is set to SWATINIT value
+            elemScaledEpsInfo.Swl = Sw;
         }
     }
+    // Max. cap. pressure adjusted from SWATINIT data
+    else
+        elemScaledEpsInfo.maxPcow = newMaxPcow;
+
+    auto& elemEclEpsScalingPoints = oilWaterScaledEpsPointsDrainage(elemIdx);
+    elemEclEpsScalingPoints.init(elemScaledEpsInfo,
+                                    *oilWaterEclEpsConfig_,
+                                    EclTwoPhaseSystemType::OilWater);
 
     return {Sw, newSwatInit};
 }
