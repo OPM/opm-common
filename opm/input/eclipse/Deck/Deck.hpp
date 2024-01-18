@@ -129,7 +129,7 @@ namespace Opm {
             }
             size_t count(const std::string& keyword) const;
 
-
+            void remove_keywords(int from, int to) { keywordList.erase(keywordList.begin() +from, keywordList.begin() + to); };     
 
         private:
 

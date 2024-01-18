@@ -2451,14 +2451,14 @@ BOOST_AUTO_TEST_CASE(parseSections) {
 
     const auto deck_test1 = parser.parseFile("./tests/SPE1CASE1.DATA", parseContext, test1);
 
-    BOOST_CHECK_EQUAL( deck_grid.size(), 25 );
-    BOOST_CHECK_EQUAL( deck_props.size(), 21 );
-    BOOST_CHECK_EQUAL( deck_regions.size(), 15 );
-    BOOST_CHECK_EQUAL( deck_solution.size(), 16 );
-    BOOST_CHECK_EQUAL( deck_summary.size(), 37 );
-    BOOST_CHECK_EQUAL( deck_schecule.size(), 30 );
+    BOOST_CHECK_EQUAL( deck_grid.size(), 12 );
+    BOOST_CHECK_EQUAL( deck_props.size(), 8 );
+    BOOST_CHECK_EQUAL( deck_regions.size(), 2 );
+    BOOST_CHECK_EQUAL( deck_solution.size(), 3 );
+    BOOST_CHECK_EQUAL( deck_summary.size(), 24 );
+    BOOST_CHECK_EQUAL( deck_schecule.size(), 17 );
 
-    BOOST_CHECK_EQUAL( deck_test1.size(), 24 );
+    BOOST_CHECK_EQUAL( deck_test1.size(), 11 );
 
     const auto deck1b_all = parser.parseFile("./tests/SPE1CASE1B.DATA", parseContext);
 
