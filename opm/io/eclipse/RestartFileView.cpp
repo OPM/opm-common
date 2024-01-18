@@ -190,8 +190,6 @@ Implementation(std::shared_ptr<ERst> restart_file,
         return;
     }
 
-    this->rst_file_->loadReportStepNumber(this->report_step_);
-
     for (const auto& vector : this->rst_file_->listOfRstArrays(this->report_step_)) {
         const auto& type = std::get<1>(vector);
 
