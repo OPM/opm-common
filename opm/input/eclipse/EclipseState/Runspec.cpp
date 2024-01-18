@@ -715,6 +715,15 @@ Runspec::Runspec(const Deck& deck)
             }
         }
 
+        if (runspecSection.hasKeyword<ParserKeywords::COMPS>()) {
+            const auto& comps_item = runspecSection.get<ParserKeywords::COMPS>().back().getRecord(0).getItem<ParserKeywords::COMPS::NUM_COMPS>();
+            const auto num_comps = comps_item.get<int>(0);
+            if (num_comps < 1) {
+                throw std::logic_error(fmt::format("non-positive COMPS value {} is specified", num_comps));
+            }
+            this->m_comps = num_comps;
+        }
+
         if (runspecSection.hasKeyword<ParserKeywords::H2SOL>()) {
             m_h2sol = true;
 
@@ -776,6 +785,7 @@ Runspec Runspec::serializationTestObject()
     result.m_actdims = Actdims::serializationTestObject();
     result.m_sfuncctrl = SatFuncControls::serializationTestObject();
     result.m_nupcol = Nupcol::serializationTestObject();
+    result.m_comps = 3;
     result.m_co2storage = true;
     result.m_co2sol = true;
     result.m_h2sol = true;
@@ -839,6 +849,16 @@ const SatFuncControls& Runspec::saturationFunctionControls() const noexcept
 const Nupcol& Runspec::nupcol() const noexcept
 {
     return this->m_nupcol;
+}
+
+bool Runspec::compostionalMode() const
+{
+    return this->m_comps > 0;
+}
+
+int Runspec::numComps() const
+{
+    return this->m_comps;
 }
 
 bool Runspec::co2Storage() const noexcept
@@ -906,6 +926,7 @@ bool Runspec::rst_cmp(const Runspec& full_spec, const Runspec& rst_spec)
         full_spec.actdims() == rst_spec.actdims() &&
         full_spec.saturationFunctionControls() == rst_spec.saturationFunctionControls() &&
         full_spec.m_nupcol == rst_spec.m_nupcol &&
+        full_spec.m_comps == rst_spec.m_comps &&
         full_spec.m_co2storage == rst_spec.m_co2storage &&
         full_spec.m_co2sol == rst_spec.m_co2sol &&
         full_spec.m_h2sol == rst_spec.m_h2sol &&
@@ -928,6 +949,7 @@ bool Runspec::operator==(const Runspec& data) const
         && (this->actdims() == data.actdims())
         && (this->saturationFunctionControls() == data.saturationFunctionControls())
         && (this->m_nupcol == data.m_nupcol)
+	&& (this->m_comps == data.m_comps)
         && (this->m_co2storage == data.m_co2storage)
         && (this->m_co2sol == data.m_co2sol)
         && (this->m_h2sol == data.m_h2sol)
