@@ -2562,9 +2562,9 @@ static const auto region_units = UnitTable {
     {"RGIPG" , Opm::UnitSystem::measure::gas_surface_volume },
     {"RWIP"  , Opm::UnitSystem::measure::liquid_surface_volume },
     {"RRPV"  , Opm::UnitSystem::measure::geometric_volume },
-    {"RGCDI" , Opm::UnitSystem::measure::gas_surface_volume },
-    {"RGCDM" , Opm::UnitSystem::measure::gas_surface_volume },
-    {"RWCD"  , Opm::UnitSystem::measure::gas_surface_volume },
+    {"RGCDI" , Opm::UnitSystem::measure::moles },
+    {"RGCDM" , Opm::UnitSystem::measure::moles },
+    {"RWCD"  , Opm::UnitSystem::measure::moles },
     {"RWIPG" , Opm::UnitSystem::measure::liquid_surface_volume },
     {"RWIPL" , Opm::UnitSystem::measure::liquid_surface_volume },
 };
