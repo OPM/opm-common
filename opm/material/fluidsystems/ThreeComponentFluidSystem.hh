@@ -65,14 +65,14 @@ namespace Opm {
         static constexpr int Comp2Idx = 2;
 
         // TODO: needs to be more general
-        using Comp0 = Opm::SimpleCO2<Scalar>;
-        using Comp1 = Opm::C1<Scalar>;
-        using Comp2 = Opm::C10<Scalar>;
+        using Comp0 = SimpleCO2<Scalar>;
+        using Comp1 = C1<Scalar>;
+        using Comp2 = C10<Scalar>;
 
         template <class ValueType>
-        using ParameterCache = Opm::PTFlashParameterCache<ValueType, ThreeComponentFluidSystem<Scalar>>;
-        using ViscosityModel = typename Opm::ViscosityModels<Scalar, ThreeComponentFluidSystem<Scalar>>;
-        using PengRobinsonMixture = typename Opm::PengRobinsonMixture<Scalar, ThreeComponentFluidSystem<Scalar>>;
+        using ParameterCache = PTFlashParameterCache<ValueType, ThreeComponentFluidSystem<Scalar>>;
+        using ViscosityModel = ViscosityModels<Scalar, ThreeComponentFluidSystem<Scalar>>;
+        using PengRobinsonMixture = ::Opm::PengRobinsonMixture<Scalar, ThreeComponentFluidSystem<Scalar>>;
 
         /*!
          * \brief The acentric factor of a component [].
