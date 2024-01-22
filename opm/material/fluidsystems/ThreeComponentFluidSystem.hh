@@ -26,6 +26,7 @@
 #ifndef OPM_THREECOMPONENTFLUIDSYSTEM_HH
 #define OPM_THREECOMPONENTFLUIDSYSTEM_HH
 
+#include <opm/material/eos/PengRobinsonMixture.hpp>
 #include <opm/material/fluidsystems/BaseFluidSystem.hpp>
 #include <opm/material/components/SimpleCO2.hpp>
 #include <opm/material/components/C10.hpp>
