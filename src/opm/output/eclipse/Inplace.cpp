@@ -160,6 +160,11 @@ const std::vector<Inplace::Phase>& Inplace::phases() {
         Inplace::Phase::CO2InGasPhaseMob,
         Inplace::Phase::WaterInGasPhase,
         Inplace::Phase::WaterInWaterPhase,
+        Inplace::Phase::CO2Mass,
+        Inplace::Phase::CO2MassInWaterPhase,
+        Inplace::Phase::CO2MassInGasPhase,
+        Inplace::Phase::CO2MassInGasPhaseInMob,
+        Inplace::Phase::CO2MassInGasPhaseMob,
     };
 
     return phases_;
