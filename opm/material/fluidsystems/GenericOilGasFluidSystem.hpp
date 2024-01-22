@@ -206,12 +206,11 @@ namespace Opm {
             assert(isConsistent());
             assert(phaseIdx < numPhases);
 
-            LhsEval dens;
             if (phaseIdx == oilPhaseIdx || phaseIdx == gasPhaseIdx) {
-                dens = decay<LhsEval>(fluidState.averageMolarMass(phaseIdx) / paramCache.molarVolume(phaseIdx));
+                return decay<LhsEval>(fluidState.averageMolarMass(phaseIdx) / paramCache.molarVolume(phaseIdx));
             }
-            return dens;
 
+            return {};
         }
 
         //! \copydoc BaseFluidSystem::viscosity
