@@ -133,6 +133,7 @@ namespace Opm {
         , field_props(         deck, m_runspec.phases(), m_inputGrid, m_tables)
         , m_simulationConfig(  m_eclipseConfig.init().restartRequested(), deck, field_props)
         , aquifer_config(      m_tables, m_inputGrid, deck, field_props)
+        , compostional_config(  deck, m_runspec)
         , m_transMult(         GridDims(deck), deck, field_props)
         , tracer_config(       m_deckUnitSystem, deck)
         , m_micppara(          deck)
@@ -529,6 +530,7 @@ bool rst_cmp_obj(const T& full_arg, const T& rst_arg, const std::string& object_
             rst_cmp_obj(full_state.m_inputNnc, rst_state.m_inputNnc, "NNC") &&
             rst_cmp_obj(full_state.m_gridDims, rst_state.m_gridDims, "Grid dims") &&
             rst_cmp_obj(full_state.aquifer_config, rst_state.aquifer_config, "AquiferConfig") &&
+            rst_cmp_obj(full_state.compostional_config, rst_state.compostional_config, "CompositionalConfig") &&
             rst_cmp_obj(full_state.m_transMult, rst_state.m_transMult, "TransMult") &&
             rst_cmp_obj(full_state.m_faults, rst_state.m_faults, "Faults") &&
             rst_cmp_obj(full_state.m_title, rst_state.m_title, "Title") &&

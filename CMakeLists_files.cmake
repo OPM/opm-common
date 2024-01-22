@@ -85,6 +85,7 @@ if(ENABLE_ECL_INPUT)
     external/resinsight/CommonCode/cvfStructGrid.cpp
     external/resinsight/cafPdmCore/cafSignal.cpp
     external/resinsight/cafHexGridIntersectionTools/cafHexGridIntersectionTools.cpp
+
     opm/io/eclipse/SummaryNode.cpp
     opm/json/JsonObject.cpp
     opm/input/eclipse/Deck/Deck.cpp
@@ -118,6 +119,7 @@ if(ENABLE_ECL_INPUT)
     opm/input/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquiferConnection.cpp
     opm/input/eclipse/EclipseState/Aquifer/NumericalAquifer/SingleNumericalAquifer.cpp
     opm/input/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquifers.cpp
+    opm/input/eclipse/EclipseState/Compositional/CompositionalConfig.cpp
     opm/input/eclipse/EclipseState/Grid/Box.cpp
     opm/input/eclipse/EclipseState/Grid/BoxManager.cpp
     opm/input/eclipse/EclipseState/Grid/Carfin.cpp
@@ -1238,6 +1240,7 @@ if(ENABLE_ECL_INPUT)
        opm/input/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquiferConnection.hpp
        opm/input/eclipse/EclipseState/Aquifer/NumericalAquifer/SingleNumericalAquifer.hpp
        opm/input/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquifers.hpp
+       opm/input/eclipse/EclipseState/Compositional/CompositionalConfig.hpp
        opm/input/eclipse/Schedule/Action/ActionAST.hpp
        opm/input/eclipse/Schedule/Action/ActionContext.hpp
        opm/input/eclipse/Schedule/Action/ActionResult.hpp
