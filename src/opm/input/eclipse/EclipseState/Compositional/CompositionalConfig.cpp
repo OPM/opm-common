@@ -22,6 +22,7 @@ along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 #include <opm/input/eclipse/EclipseState/Runspec.hpp>
 #include <opm/input/eclipse/EclipseState/Compositional/CompositionalConfig.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/Tabdims.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/A.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/E.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/N.hpp>
 
@@ -40,7 +41,7 @@ CompostionalConfig::CompostionalConfig(const Deck& deck, const Runspec& runspec)
 
     if (!runspec.compostionalMode()) return; // or we should go head to give more diagnostic messages.
 
-    const bool comp_mode_runspec = runspec.compostionalMode();
+    const bool comp_mode_runspec = runspec.compostionalMode(); // TODO: the way to use comp_mode_runspec should be refactored
     if (comp_mode_runspec) {
         this->num_comps = runspec.numComps();
     }
@@ -65,25 +66,54 @@ CompostionalConfig::CompostionalConfig(const Deck& deck, const Runspec& runspec)
 
     const auto tabdims = Tabdims(deck);
     const auto num_eos_res = tabdims.getNumEosRes();
-    eos_type.resize(num_eos_res, EOSType::PR);
+    eos_types.resize(num_eos_res, EOSType::PR);
     if (props_section.hasKeyword<ParserKeywords::EOS>()) {
         if (comp_mode_runspec) {
+            // TODO: should we use the last one directly?
+            // TODO: how should we handle multiple EOS input, new one overwrite the old one?
             const auto& keywords = props_section.get<ParserKeywords::EOS>();
-            for (size_t i = 0; i < keywords.size(); ++i) {
-                const auto& kw = keywords[i];
-                const auto& item = kw.getRecord(0).getItem<ParserKeywords::EOS::EQUATION>();
-                const auto& equ_str = item.getTrimmedString(0);
-                eos_type[i] = CompostionalConfig::eosTypeFromString(equ_str); // this
+            for (const auto& kw : keywords) {
+                for (size_t i = 0; i < kw.size(); ++i) {
+                    const auto& item = kw.getRecord(i).getItem<ParserKeywords::EOS::EQUATION>();
+                    const auto& equ_str = item.getTrimmedString(0);
+                    eos_types[i] = CompostionalConfig::eosTypeFromString(equ_str); // this
+                }
             }
         } else {
             OpmLog::warning("EOS keywords will be ignored since there is no COMPS specified in RUNSPEC");
         }
     }
+    acentric_factors.resize(num_eos_res, std::vector<double>(this->num_comps, 0.));
+    if (props_section.hasKeyword<ParserKeywords::ACF>()) {
+        if (comp_mode_runspec) {
+            const auto& keywords = props_section.get<ParserKeywords::ACF>();
+            for (const auto& kw : keywords) {
+                for (size_t i = 0; i < kw.size(); ++i) {
+                    const auto& item = kw.getRecord(i).getItem<ParserKeywords::ACF::DATA>();
+                    const auto data = item.getData<double>();
+                    if (data.size() > this->num_comps) { // size_t vs int
+                        const auto msg = fmt::format("in keyword ACF, {} values are specified, which is bigger than the number of components {}",
+                                                      data.size(), this->num_comps);
+                        throw OpmInputError(msg, kw.location());
+                    }
+                    std::copy(data.begin(), data.end(), acentric_factors[i].begin());
+                }
+            }
+        } else {
+            OpmLog::warning("ACF keywords will be ignored since there is no COMPS specified in RUNSPEC");
+        }
+    }
+
+    // PCRIT
+    // VCRIT
+    // TCRIT
+
+    // BIC a little different
 };
 
 bool CompostionalConfig::operator==(const CompostionalConfig& other) const {
     return this->num_comps == other.num_comps &&
-           this->eos_type == other.eos_type;
+           this->eos_types == other.eos_types;
 }
 
 
@@ -91,7 +121,7 @@ CompostionalConfig CompostionalConfig::serializationTestObject() {
     CompostionalConfig result;
 
     result.num_comps = 3;
-    result.eos_type = {2, EOSType::SRK};
+    result.eos_types = {2, EOSType::SRK};
 
     return result;
 }

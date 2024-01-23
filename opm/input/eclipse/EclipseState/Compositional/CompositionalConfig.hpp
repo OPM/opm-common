@@ -53,11 +53,12 @@ public:
     void serializeOp(Serializer& serializer)
     {
         serializer(num_comps);
-        serializer(eos_type);
+        serializer(eos_types);
     }
 private:
-    int num_comps = -1; // might not be needed, while might be convenient
-    std::vector<EOSType> eos_type;
+    int num_comps = -1; // might not be needed, while might be convenient // size_t?
+    std::vector<EOSType> eos_types;
+    std::vector<std::vector<double>> acentric_factors;
 };
 
 }
