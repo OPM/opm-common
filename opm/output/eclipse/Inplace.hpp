@@ -58,11 +58,6 @@ public:
         CO2InGasPhaseMob = 18,
         WaterInGasPhase = 19,
         WaterInWaterPhase = 20,
-        CO2Mass = 21,
-        CO2MassInWaterPhase = 22,
-        CO2MassInGasPhase = 23,
-        CO2MassInGasPhaseInMob = 24,
-        CO2MassInGasPhaseMob = 25,
     };
 
     /*
