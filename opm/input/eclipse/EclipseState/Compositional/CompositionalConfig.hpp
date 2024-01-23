@@ -19,10 +19,12 @@
 
 #ifndef OPM_COMPOSITIONALCONFIG_HPP
 
+
 namespace Opm {
 
 class Deck;
 class Runspec;
+// class Ta
 
 // TODO: adding serialization?
 
@@ -34,6 +36,10 @@ public:
         SRK,  // Soave-Redlich-Kwong
         ZJ    // Zudkevitch-Joffe-Redlich-Kwong
     };
+
+    static EOSType eosTypeFromString(const std::string& str);
+
+    static std::string eosTypeToString(EOSType eos);
 
     CompostionalConfig() = default;
 
@@ -51,7 +57,7 @@ public:
     }
 private:
     int num_comps = -1; // might not be needed, while might be convenient
-    EOSType eos_type = EOSType::PR;
+    std::vector<EOSType> eos_type;
 };
 
 }

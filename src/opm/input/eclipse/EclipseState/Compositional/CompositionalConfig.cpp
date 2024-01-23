@@ -21,6 +21,8 @@ along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 #include <opm/input/eclipse/Deck/DeckSection.hpp>
 #include <opm/input/eclipse/EclipseState/Runspec.hpp>
 #include <opm/input/eclipse/EclipseState/Compositional/CompositionalConfig.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/Tabdims.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/E.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/N.hpp>
 
 #include <opm/common/utility/OpmInputError.hpp>
@@ -28,6 +30,7 @@ along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <fmt/format.h>
 
+#include <stdexcept>
 #include <string>
 
 namespace Opm {
@@ -59,6 +62,23 @@ CompostionalConfig::CompostionalConfig(const Deck& deck, const Runspec& runspec)
             OpmLog::warning("NCOMPS will be ignored since there is no COMPS specified in RUNSPEC");
         }
     }
+
+    const auto tabdims = Tabdims(deck);
+    const auto num_eos_res = tabdims.getNumEosRes();
+    eos_type.resize(num_eos_res, EOSType::PR);
+    if (props_section.hasKeyword<ParserKeywords::EOS>()) {
+        if (comp_mode_runspec) {
+            const auto& keywords = props_section.get<ParserKeywords::EOS>();
+            for (size_t i = 0; i < keywords.size(); ++i) {
+                const auto& kw = keywords[i];
+                const auto& item = kw.getRecord(0).getItem<ParserKeywords::EOS::EQUATION>();
+                const auto& equ_str = item.getTrimmedString(0);
+                eos_type[i] = CompostionalConfig::eosTypeFromString(equ_str); // this
+            }
+        } else {
+            OpmLog::warning("EOS keywords will be ignored since there is no COMPS specified in RUNSPEC");
+        }
+    }
 };
 
 bool CompostionalConfig::operator==(const CompostionalConfig& other) const {
@@ -71,9 +91,27 @@ CompostionalConfig CompostionalConfig::serializationTestObject() {
     CompostionalConfig result;
 
     result.num_comps = 3;
-    result.eos_type = EOSType::SRK;
+    result.eos_type = {2, EOSType::SRK};
 
     return result;
+}
+
+CompostionalConfig::EOSType CompostionalConfig::eosTypeFromString(const std::string& str) {
+    if (str == "PR") return EOSType::PR;
+    if (str == "RK") return EOSType::RK;
+    if (str == "SRK") return EOSType::SRK;
+    if (str == "ZJ") return EOSType::ZJ;
+    throw std::invalid_argument("Unknown string for EOSType");
+}
+
+std::string CompostionalConfig::eosTypeToString(Opm::CompostionalConfig::EOSType eos) {
+    switch (eos) {
+        case EOSType::PR: return "PR";
+        case EOSType::RK: return "RK";
+        case EOSType::SRK: return "SRK";
+        case EOSType::ZJ: return "ZJ";
+        default: throw std::invalid_argument("Unknown EOSType");
+    }
 }
 
 }
