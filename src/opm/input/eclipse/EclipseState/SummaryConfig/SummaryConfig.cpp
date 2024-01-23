@@ -161,12 +161,7 @@ struct SummaryConfigContext {
          {"SWAT" , {"BSWAT"}},
          {"SGAS" , {"BSGAS"}},
          {"SALT" , {"FSIP"}},
-         {"TEMP" , {"BTCNFHEA"}},
-         {"GMIP"  , {"RGMIP", "FGMIP"}},
-         {"GMGP"  , {"RGMGP", "FGMGP"}},
-         {"GMDS"  , {"RGMDS", "FGMDS"}},
-         {"GMTR"  , {"RGMTR", "FGMTR"}},
-         {"GMMO"  , {"RGMMO", "FGMMO"}}
+         {"TEMP" , {"BTCNFHEA"}}
     };
 
     using keyword_set = std::unordered_set<std::string>;
