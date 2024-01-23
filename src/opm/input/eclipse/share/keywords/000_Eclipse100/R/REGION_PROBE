@@ -107,12 +107,7 @@
     "RNFT",
     "RTIPTSUR",
     "RTFTTSUR",
-    "RTADSUR",
-    "RGMIP",
-    "RGMGP",
-    "RGMDS",
-    "RGMTR",
-    "RGMMO"
+    "RTADSUR"
   ],
     "CommentTracer": "???",
     "deck_name_regex": "RU.+|RTIPF.+|RTIPS.+|RTFTF.+|RTFTS.+|RTFTT.+|RTIPT.+|RTIPF.+|RTIPS.+|RTIP[1-9][0-9]*.+|RTFTT.+|RTFTF.+|RTFTS.+|RTFT[1-9][0-9]*.+|RTADS.+|RTDCY.+",
