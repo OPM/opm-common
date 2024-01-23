@@ -30,8 +30,12 @@
     {
        "name": "HRATE",
        "value_type": "DOUBLE",
-       "dimension": "Energy/Time",
-       "default": 0
+       "dimension": "Energy/Time"
+    },
+    {
+      "name": "TEMP",
+      "value_type": "DOUBLE",
+      "dimension": "Temperature"
     }
   ]
 }

@@ -60,8 +60,16 @@ Source::SourceCell::SourceCell(const DeckRecord& record) :
         record.getItem<SOURCEKEY::K>().get<int>(0)-1}),
     component(fromstring::component(record.getItem<SOURCEKEY::COMPONENT>().get<std::string>(0))),
     rate(record.getItem<SOURCEKEY::RATE>().getSIDouble(0)),
-    hrate(record.getItem<SOURCEKEY::HRATE>().getSIDouble(0))
+    hrate(std::nullopt),
+    temperature(std::nullopt)
 {
+
+    if (record.getItem<SOURCEKEY::HRATE>().hasValue(0))
+        hrate = record.getItem<SOURCEKEY::HRATE>().getSIDouble(0);
+
+    if (record.getItem<SOURCEKEY::TEMP>().hasValue(0))
+        temperature = record.getItem<SOURCEKEY::TEMP>().getSIDouble(0);
+
 }
 
 Source::SourceCell Source::SourceCell::serializationTestObject()
@@ -71,12 +79,16 @@ Source::SourceCell Source::SourceCell::serializationTestObject()
     result.component = SourceComponent::GAS;
     result.rate = 101.0;
     result.hrate = 201.0;
+    result.temperature = 202.0;
     return result;
 }
 
 
 bool Source::SourceCell::operator==(const Source::SourceCell& other) const {
-    return this->isSame(other) && (this->rate == other.rate) && (this->hrate == other.hrate);
+    return this->isSame(other) && 
+           this->rate == other.rate &&
+           this->hrate == other.hrate &&
+           this->temperature == other.temperature;
 }
 
 bool Source::SourceCell::isSame(const Source::SourceCell& other) const {
@@ -125,6 +137,16 @@ std::vector<Source::SourceCell>::const_iterator Source::end() const {
     return this->m_cells.end();
 }
 
+bool Source::hasSource(const std::array<int, 3>& input) const {
+    for (auto& source : m_cells) {
+        if (source.ijk == input)
+            {
+                return true;
+            }
+    }
+    return false;
+}
+
 double Source::rate(const std::pair<std::array<int, 3>, SourceComponent>& input) const {
     for (auto& source : m_cells) {
         if (source.isSame(input))
@@ -135,16 +157,43 @@ double Source::rate(const std::pair<std::array<int, 3>, SourceComponent>& input)
     return 0.0;
 }
 
-double Source::hrate(const std::array<int, 3>& input) const {
-    double hrate = 0.0;
-    // return the sum of all the component contribution    
+double Source::hrate(const std::pair<std::array<int, 3>, SourceComponent>& input) const {
     for (auto& source : m_cells) {
-        if (source.ijk == input)
+        if (source.isSame(input))
             {
-                hrate += source.hrate;
+                return source.hrate.value();
             }
     }
-    return hrate;
+    return 0.0;
+}
+
+bool Source::hasHrate(const std::pair<std::array<int, 3>, SourceComponent>& input) const {
+    for (auto& source : m_cells) {
+        if (source.isSame(input))
+            {
+                return source.hrate.has_value();
+            }
+    }
+    return false;
+}
+
+bool Source::hasTemperature(const std::pair<std::array<int, 3>, SourceComponent>& input) const {
+    for (auto& source : m_cells) {
+        if (source.isSame(input))
+            {
+                return source.temperature.has_value();
+            }
+    }
+    return false;
+}
+double Source::temperature(const std::pair<std::array<int, 3>, SourceComponent>& input) const {
+    for (auto& source : m_cells) {
+        if (source.isSame(input))
+            {
+                return source.temperature.value();
+            }
+    }
+    return 0.0;
 }
 
 bool Source::operator==(const Source& other) const {

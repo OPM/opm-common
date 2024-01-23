@@ -82,7 +82,6 @@ SOURCE
     for (const auto& record : kw[0]) {
         prop.updateSource(record);
     }
-
     BOOST_CHECK_EQUAL(prop.size(), 2U);
     const auto& c1 = *prop.begin();
     BOOST_CHECK_EQUAL(c1.ijk[0], 0);
@@ -92,6 +91,7 @@ SOURCE
     BOOST_CHECK_EQUAL(c1.rate,
                       deck.getActiveUnitSystem().to_si("Mass/Time", 0.01));
 
+    BOOST_CHECK(prop.hasSource({0,0,0}));
     double rate2 = prop.rate({{0,0,0},Opm::SourceComponent::WATER});
     BOOST_CHECK_EQUAL(rate2,
                       deck.getActiveUnitSystem().to_si("Mass/Time", 0.01));
@@ -158,6 +158,16 @@ SOURCE
  1 1 1 WATER 0.02 2.0/
 /
 
+
+DATES             -- 2
+ 11  'JUN'  2007 /
+/
+
+SOURCE
+ 1 1 1 GAS 0.01 1* 50/
+ 1 1 1 WATER 0.02 1* 100/
+/
+
 )";
 
     auto deck = createDeck(input);
@@ -173,14 +183,14 @@ SOURCE
     BOOST_CHECK_EQUAL(c1.rate,
                       deck.getActiveUnitSystem().to_si("Mass/Time", 0.01));
 
-    BOOST_CHECK_EQUAL(c1.hrate,
+    BOOST_CHECK_EQUAL(c1.hrate.value(),
                       deck.getActiveUnitSystem().to_si("Energy/Time", 1.0));
 
     double rate = prop.rate({{0,0,0},Opm::SourceComponent::GAS});
     BOOST_CHECK_EQUAL(rate,
                       deck.getActiveUnitSystem().to_si("Mass/Time", 0.01));
 
-    double hrate = prop.hrate({0,0,0});
+    double hrate = prop.hrate({{0,0,0}, Opm::SourceComponent::GAS});
     BOOST_CHECK_EQUAL(hrate,
                       deck.getActiveUnitSystem().to_si("Energy/Time", 1.0));
 
@@ -195,7 +205,7 @@ SOURCE
     BOOST_CHECK_EQUAL(c21.rate,
                       deck.getActiveUnitSystem().to_si("Mass/Time", 0.01));
 
-    BOOST_CHECK_EQUAL(c21.hrate,
+    BOOST_CHECK_EQUAL(c21.hrate.value(),
                       deck.getActiveUnitSystem().to_si("Energy/Time", 1.0));
 
     double rate21 = prop.rate({{0,0,0},Opm::SourceComponent::GAS});
@@ -203,6 +213,21 @@ SOURCE
     double rate22 = prop.rate({{0,0,0},Opm::SourceComponent::WATER});
     BOOST_CHECK_EQUAL(rate22,
                       deck.getActiveUnitSystem().to_si("Mass/Time", 0.02));
-    double hrate2 = prop.hrate({0,0,0});
-    BOOST_CHECK_EQUAL(hrate2, c21.hrate + deck.getActiveUnitSystem().to_si("Energy/Time", 2.0));   
+    BOOST_CHECK(prop.hasHrate({{0,0,0}, Opm::SourceComponent::WATER}));
+    double hrate2 = prop.hrate({{0,0,0}, Opm::SourceComponent::WATER});
+    BOOST_CHECK_EQUAL(hrate2, deck.getActiveUnitSystem().to_si("Energy/Time", 2.0)); 
+
+    for (const auto& record : kw[2]) {
+        prop.updateSource(record);
+    }
+
+    BOOST_CHECK_EQUAL(prop.size(), 2U);
+    BOOST_CHECK(!prop.hasHrate({{0,0,0}, Opm::SourceComponent::GAS}));
+    BOOST_CHECK(!prop.hasHrate({{0,0,0}, Opm::SourceComponent::WATER}));
+    BOOST_CHECK(prop.hasTemperature({{0,0,0}, Opm::SourceComponent::GAS}));
+    BOOST_CHECK(prop.hasTemperature({{0,0,0}, Opm::SourceComponent::WATER}));
+    double temp1 = prop.temperature({{0,0,0}, Opm::SourceComponent::GAS});
+    BOOST_CHECK_EQUAL(temp1, 50 + 273.15);
+    double temp2 = prop.temperature({{0,0,0}, Opm::SourceComponent::WATER});
+    BOOST_CHECK_EQUAL(temp2, 273.15 + 100);   
 }
