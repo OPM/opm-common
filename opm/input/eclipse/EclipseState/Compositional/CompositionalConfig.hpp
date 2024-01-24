@@ -54,11 +54,20 @@ public:
     {
         serializer(num_comps);
         serializer(eos_types);
+        serializer(acentric_factors);
+        serializer(critical_pressure);
+        serializer(critical_temperature);
+        serializer(critical_volume);
+        serializer(binary_interaction_coefficient);
     }
 private:
-    int num_comps = -1; // might not be needed, while might be convenient // size_t?
+    size_t num_comps = 0; // might not be needed, while might be convenient // size_t?
     std::vector<EOSType> eos_types;
     std::vector<std::vector<double>> acentric_factors;
+    std::vector<std::vector<double>> critical_pressure;
+    std::vector<std::vector<double>> critical_temperature;
+    std::vector<std::vector<double>> critical_volume;
+    std::vector<std::vector<double>> binary_interaction_coefficient; // TODO: might need a separate class for better efficiency
 };
 
 }
