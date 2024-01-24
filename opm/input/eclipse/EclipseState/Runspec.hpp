@@ -502,7 +502,7 @@ public:
     const Nupcol& nupcol() const noexcept;
     const Tracers& tracers() const;
     bool compostionalMode() const;
-    int numComps() const;
+    size_t numComps() const;
     bool co2Storage() const noexcept;
     bool co2Sol() const noexcept;
     bool h2Sol() const noexcept;
@@ -555,7 +555,7 @@ private:
     SatFuncControls m_sfuncctrl;
     Nupcol m_nupcol;
     Tracers m_tracers;
-    int m_comps = -1;
+    size_t m_comps = 0;
     bool m_co2storage;
     bool m_co2sol;
     bool m_h2sol;

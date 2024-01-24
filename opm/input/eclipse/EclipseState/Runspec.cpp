@@ -856,7 +856,7 @@ bool Runspec::compostionalMode() const
     return this->m_comps > 0;
 }
 
-int Runspec::numComps() const
+size_t Runspec::numComps() const
 {
     return this->m_comps;
 }

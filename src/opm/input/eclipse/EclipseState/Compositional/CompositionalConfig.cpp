@@ -37,163 +37,108 @@ along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <stdexcept>
 #include <string>
+#include <unordered_map>
 
 namespace Opm {
 
 CompostionalConfig::CompostionalConfig(const Deck& deck, const Runspec& runspec) {
     if (!DeckSection::hasPROPS(deck)) return;
 
-    if (!runspec.compostionalMode()) return; // or we should go head to give more diagnostic messages.
-
+    const PROPSSection props_section {deck};
     const bool comp_mode_runspec = runspec.compostionalMode(); // TODO: the way to use comp_mode_runspec should be refactored
-    if (comp_mode_runspec) {
-        this->num_comps = runspec.numComps();
+    // the following code goes to a function
+    if (!comp_mode_runspec) {
+        warningForExistingCompKeywords(props_section);
+        return; // not processing compositional props keywords
     }
 
-    const PROPSSection props_section {deck};
+    // we are under compositional mode now
+    this->num_comps = runspec.numComps();
+
     if (props_section.hasKeyword<ParserKeywords::NCOMPS>()) {
-        if (comp_mode_runspec) {
-            const auto& keywords = props_section.get<ParserKeywords::NCOMPS>();
-            for (const auto& kw : keywords) {
-                const auto& item = kw.getRecord(0).getItem<ParserKeywords::NCOMPS::NUM_COMPS>();
-                const auto ncomps = item.get<int>(0);
-                if (ncomps != this->num_comps) {
-                    const std::string msg = fmt::format("NCOMPS is specified with {}, which is different from the number specified in COMPS {}",
-                                                         num_comps, this->num_comps);
-                    throw OpmInputError(msg, kw.location());
-                }
+        // NCOMPS might be present within multiple included files
+        // We check all the input NCOMPS until testing proves that we can not have multiple of them
+        const auto& keywords = props_section.get<ParserKeywords::NCOMPS>();
+        for (const auto& kw : keywords) {
+            const auto& item = kw.getRecord(0).getItem<ParserKeywords::NCOMPS::NUM_COMPS>();
+            const auto ncomps = item.get<int>(0);
+            if (size_t(ncomps) != this->num_comps) {
+                const std::string msg = fmt::format("NCOMPS is specified with {}, which is different from the number specified in COMPS {}",
+                                                    ncomps, this->num_comps);
+                throw OpmInputError(msg, kw.location());
             }
-        } else {
-            OpmLog::warning("NCOMPS will be ignored since there is no COMPS specified in RUNSPEC");
         }
     }
 
-    const auto tabdims = Tabdims(deck);
-    const auto num_eos_res = tabdims.getNumEosRes();
+    const Tabdims tabdims{deck};
+    const size_t num_eos_res = tabdims.getNumEosRes();
+    // TODO: EOS keyword can also be in RUNSPEC section
     eos_types.resize(num_eos_res, EOSType::PR);
     if (props_section.hasKeyword<ParserKeywords::EOS>()) {
-        if (comp_mode_runspec) {
-            // TODO: should we use the last one directly?
-            // TODO: how should we handle multiple EOS input, new one overwrite the old one?
-            const auto& keywords = props_section.get<ParserKeywords::EOS>();
-            for (const auto& kw : keywords) {
-                for (size_t i = 0; i < kw.size(); ++i) {
-                    const auto& item = kw.getRecord(i).getItem<ParserKeywords::EOS::EQUATION>();
-                    const auto& equ_str = item.getTrimmedString(0);
-                    eos_types[i] = CompostionalConfig::eosTypeFromString(equ_str); // this
-                }
-            }
-        } else {
-            OpmLog::warning("EOS keywords will be ignored since there is no COMPS specified in RUNSPEC");
+        // we do not allow multiple input of the keyword EOS unless proven otherwise
+        const auto keywords = props_section.get<ParserKeywords::EOS>();
+        if (keywords.size() > 1) {
+            throw OpmInputError("there are multiple EOS keyword specification", keywords.begin()->location());
+        }
+        const auto& kw = keywords.back();
+        for (size_t i = 0; i < kw.size(); ++i) {
+            const auto& item = kw.getRecord(i).getItem<ParserKeywords::EOS::EQUATION>();
+            const auto& equ_str = item.getTrimmedString(0);
+            eos_types[i] = eosTypeFromString(equ_str);
         }
     }
+
     acentric_factors.resize(num_eos_res, std::vector<double>(this->num_comps, 0.));
     if (props_section.hasKeyword<ParserKeywords::ACF>()) {
-        if (comp_mode_runspec) {
-            const auto& keywords = props_section.get<ParserKeywords::ACF>();
-            for (const auto& kw : keywords) {
-                for (size_t i = 0; i < kw.size(); ++i) {
-                    const auto& item = kw.getRecord(i).getItem<ParserKeywords::ACF::DATA>();
-                    const auto data = item.getData<double>();
-                    if (data.size() > this->num_comps) { // size_t vs int
-                        const auto msg = fmt::format("in keyword ACF, {} values are specified, which is bigger than the number of components {}",
-                                                      data.size(), this->num_comps);
-                        throw OpmInputError(msg, kw.location());
-                    }
-                    std::copy(data.begin(), data.end(), acentric_factors[i].begin());
-                }
-            }
-        } else {
-            OpmLog::warning("ACF keywords will be ignored since there is no COMPS specified in RUNSPEC");
+        // we do not allow multiple input of the keyword ACF unless proven otherwise
+        const auto& keywords = props_section.get<ParserKeywords::ACF>();
+        if (keywords.size() > 1) {
+            throw OpmInputError("there are multiple ACF keyword specification", keywords.begin()->location());
         }
-    }
-
-    critical_pressure.resize(num_eos_res, std::vector<double>(this->num_comps, 0.)); // not default value, we should not initialize them to 0
-    if (props_section.hasKeyword<ParserKeywords::PCRIT>()) {
-        if (comp_mode_runspec) {
-            const auto& keywords = props_section.get<ParserKeywords::PCRIT>();
-            for (const auto& kw : keywords) {
-                for (size_t i = 0; i < kw.size(); ++i) { // should we make sure it is the name with the numbers of the EOS NUM regions
-                    const auto& item = kw.getRecord(i).getItem<ParserKeywords::PCRIT::DATA>();
-                    const auto data = item.getData<double>();
-                    if (data.size() != this->num_comps) { // size_t vs int
-                        const auto msg = fmt::format("in keyword PCRIT, {} values are specified, which is different from the number of components {}",
-                                                     data.size(), this->num_comps);
-                        throw OpmInputError(msg, kw.location());
-                    }
-                    critical_pressure[i] = data;
-                }
+        const auto& kw = keywords.back();
+        for (size_t i = 0; i < kw.size(); ++i) {
+            const auto& item = kw.getRecord(i).getItem<ParserKeywords::ACF::DATA>();
+            const auto data = item.getData<double>();
+            if (data.size() > this->num_comps) { // size_t vs int
+                const auto msg = fmt::format("in keyword ACF, {} values are specified, which is bigger than the number of components {}",
+                                                        data.size(), this->num_comps);
+               throw OpmInputError(msg, kw.location());
             }
-        } else {
-            OpmLog::warning("PCRIT keywords will be ignored since there is no COMPS specified in RUNSPEC");
-        }
-    }
-
-    critical_temperature.resize(num_eos_res, std::vector<double>(this->num_comps, 0.)); // not default value, we should not initialize them to 0
-    if (props_section.hasKeyword<ParserKeywords::TCRIT>()) {
-        if (comp_mode_runspec) {
-            const auto& keywords = props_section.get<ParserKeywords::TCRIT>();
-            for (const auto& kw : keywords) {
-                for (size_t i = 0; i < kw.size(); ++i) { // should we make sure it is the name with the numbers of the EOS NUM regions
-                    const auto& item = kw.getRecord(i).getItem<ParserKeywords::TCRIT::DATA>();
-                    const auto data = item.getData<double>();
-                    if (data.size() != this->num_comps) { // size_t vs int
-                        const auto msg = fmt::format("in keyword TCRIT, {} values are specified, which is different from the number of components {}",
-                                                     data.size(), this->num_comps);
-                        throw OpmInputError(msg, kw.location());
-                    }
-                    critical_temperature[i] = data;
-                }
-            }
-        } else {
-            OpmLog::warning("TCRIT keywords will be ignored since there is no COMPS specified in RUNSPEC");
-        }
-    }
-
-    critical_volume.resize(num_eos_res, std::vector<double>(this->num_comps, 0.)); // not default value, we should not initialize them to 0
-    if (props_section.hasKeyword<ParserKeywords::VCRIT>()) {
-        if (comp_mode_runspec) {
-            const auto& keywords = props_section.get<ParserKeywords::VCRIT>();
-            for (const auto& kw : keywords) {
-                for (size_t i = 0; i < kw.size(); ++i) { // should we make sure it is the name with the numbers of the EOS NUM regions
-                    const auto& item = kw.getRecord(i).getItem<ParserKeywords::VCRIT::DATA>();
-                    const auto data = item.getData<double>();
-                    if (data.size() != this->num_comps) { // size_t vs int
-                        const auto msg = fmt::format("in keyword VCRIT, {} values are specified, which is different from the number of components {}",
-                                                     data.size(), this->num_comps);
-                        throw OpmInputError(msg, kw.location());
-                    }
-                    critical_volume[i] = data;
-                }
-            }
-        } else {
-            OpmLog::warning("VCRIT keywords will be ignored since there is no COMPS specified in RUNSPEC");
+            // ACF has default values for 0. so we only overwrite when values are provided
+            std::copy(data.begin(), data.end(), acentric_factors[i].begin());
         }
     }
 
     const size_t bic_size = this->num_comps * (this->num_comps - 1) / 2;
-    binary_interaction_coefficient.resize(num_eos_res, std::vector<double>(bic_size,  0.));
+    binary_interaction_coefficient.resize(num_eos_res, std::vector<double>(bic_size,  0.)); // default value 0.
     if (props_section.hasKeyword<ParserKeywords::BIC>()) {
-        if (comp_mode_runspec) {
-            const auto& keywords = props_section.get<ParserKeywords::BIC>();
-            for (const auto& kw : keywords) {
-                for (size_t i = 0; i < kw.size(); ++i) { // should we make sure it is the name with the numbers of the EOS NUM regions
-                    const auto& item = kw.getRecord(i).getItem<ParserKeywords::BIC::DATA>();
-                    const auto data = item.getData<double>();
-                    if (data.size() > bic_size) { // size_t vs int
-                        const auto msg = fmt::format("in keyword BIC, {} values are specified, which is bigger than the number"
-                                                     "({} X {} = {})should be specified ",
-                                                     data.size(), this->num_comps, this->num_comps-1, bic_size);
-                        throw OpmInputError(msg, kw.location());
-                    }
-                    std::copy(data.begin(), data.end(), binary_interaction_coefficient[i].begin());
-                }
+        // we do not allow multiple input of the keyword ACF unless proven otherwise
+        const auto& keywords = props_section.get<ParserKeywords::BIC>();
+        if (keywords.size() > 1) {
+            throw OpmInputError("there are multiple BIC keyword specification", keywords.begin()->location());
+        }
+        const auto& kw = keywords.back();
+        for (size_t i = 0; i < kw.size(); ++i) {
+            const auto& item = kw.getRecord(i).getItem<ParserKeywords::BIC::DATA>();
+            const auto data = item.getData<double>();
+            if (data.size() > bic_size) { // size_t vs int
+                const auto msg = fmt::format("in keyword BIC, {} values are specified, which is bigger than the number"
+                                             "({} X {} = {})should be specified ",
+                                             data.size(), this->num_comps, this->num_comps-1, bic_size);
+                throw OpmInputError(msg, kw.location());
             }
-        } else {
-            OpmLog::warning("BIC keywords will be ignored since there is no COMPS specified in RUNSPEC");
+            // BIC has default values for 0. so we only overwrite when values are provided
+            std::copy(data.begin(), data.end(), binary_interaction_coefficient[i].begin());
         }
     }
-};
+
+    CompostionalConfig::processKeyword<ParserKeywords::PCRIT>(props_section, this->critical_pressure,
+                                                              num_eos_res, this->num_comps, "PCRIT");
+    CompostionalConfig::processKeyword<ParserKeywords::TCRIT>(props_section, this->critical_temperature,
+                                                              num_eos_res, this->num_comps, "TCRIT");
+    CompostionalConfig::processKeyword<ParserKeywords::VCRIT>(props_section, this->critical_volume,
+                                                              num_eos_res, this->num_comps, "VCRIT");
+}
 
 bool CompostionalConfig::operator==(const CompostionalConfig& other) const {
     return this->num_comps == other.num_comps &&
@@ -235,6 +180,32 @@ std::string CompostionalConfig::eosTypeToString(Opm::CompostionalConfig::EOSType
         case EOSType::SRK: return "SRK";
         case EOSType::ZJ: return "ZJ";
         default: throw std::invalid_argument("Unknown EOSType");
+    }
+}
+
+void CompostionalConfig::warningForExistingCompKeywords(const PROPSSection& props_section) {
+    bool any_comp_prop_kw = false;
+    std::string msg {" COMPS is not specified, the following keywords related to compositional simulation in PROPS section will be ignored:\n"};
+
+    static const std::unordered_map<std::string, std::function<bool(const PROPSSection&)>> keywordCheckers = {
+        {"NCOMPS", [](const PROPSSection& section) -> bool { return section.hasKeyword<ParserKeywords::NCOMPS>(); }},
+        {"EOS",    [](const PROPSSection& section) -> bool { return section.hasKeyword<ParserKeywords::EOS>(); }},
+        {"PCRIT",  [](const PROPSSection& section) -> bool { return section.hasKeyword<ParserKeywords::PCRIT>(); }},
+        {"TCRIT",  [](const PROPSSection& section) -> bool { return section.hasKeyword<ParserKeywords::TCRIT>(); }},
+        {"VCRIT",  [](const PROPSSection& section) -> bool { return section.hasKeyword<ParserKeywords::VCRIT>(); }},
+        {"ACF",    [](const PROPSSection& section) -> bool { return section.hasKeyword<ParserKeywords::ACF>(); }},
+        {"BIC",    [](const PROPSSection& section) -> bool { return section.hasKeyword<ParserKeywords::BIC>(); }},
+    };
+
+    for (const auto& [kwname, checker] : keywordCheckers) {
+        if (checker(props_section)) {
+            any_comp_prop_kw = true;
+            fmt::format_to(std::back_inserter(msg),  " {}", kwname);
+        }
+    }
+
+    if (any_comp_prop_kw) {
+        OpmLog::warning(msg);
     }
 }
 
