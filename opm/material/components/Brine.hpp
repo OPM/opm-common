@@ -30,7 +30,6 @@
 
 #include <opm/material/components/Component.hpp>
 #include <opm/material/common/MathToolbox.hpp>
-
 namespace Opm {
 
 /*!
@@ -329,23 +328,39 @@ public:
 
     /*!
      * \copydoc H2O::liquidViscosity
-     *
-     * Equation given in:
-     * - Batzle & Wang (1992)
-     * - cited by: Bachu & Adams (2002)
-     *   "Equations of State for basin geofluids"
+     * Modified Jones - Doles equation to account for temperature effects
+     * Coeficients from McBride-Wright, 2013
+     * Viscosity and density of aqueous fluids with dissolved CO2"
      */
     template <class Evaluation>
-    static Evaluation liquidViscosity(const Evaluation& temperature, const Evaluation& /*pressure*/)
+    static Evaluation liquidViscosity(const Evaluation& temperature, const Evaluation& pressure)
     {
-        Evaluation T_C = temperature - 273.15;
-        if(temperature <= 275.) // regularization
-            T_C = 275.0;
+        // Modified Jones - Doles equation to account for temperature effects
+        // Coefficients from McBride-Wright, 2013
+        // "Viscosity and density of aqueous fluids with dissolved CO2"
+        std::vector<double> c = {0.291015724, -0.119318366, 0.190911976};
+        const Scalar MmNaCl = 58e-3; // molar mass of NaCl [kg/mol]
+        // compute molality mol/kg
+        Scalar molality = salinity / (MmNaCl*(1 - salinity));
+        // compute molar concentration mol/l
+        Evaluation b = molality/H2O::liquidDensity(temperature, pressure, true)*1000; 
+        Evaluation mu_corr = 1 + (c[0] + c[1] * 1000/temperature) * pow(b, 0.5) + c[2] * b;
+        return H2O::liquidViscosity(temperature, pressure, true) * mu_corr;
 
-        Evaluation A = (0.42*std::pow((std::pow(salinity, 0.8)-0.17), 2) + 0.045)*pow(T_C, 0.8);
-        Evaluation mu_brine = 0.1 + 0.333*salinity + (1.65+91.9*salinity*salinity*salinity)*exp(-A);
+        // old formulation (does not depend on pressure)
+        // Equation given in:
+        // - Batzle & Wang (1992)
+        // - cited by: Bachu & Adams (2002)
+        //   "Equations of State for basin geofluids"
+        //Evaluation T_C = temperature - 273.15;
+        //if(temperature <= 275.) // regularization
+        //    T_C = 275.0;
 
-        return mu_brine/1000.0; // convert to [Pa s] (todo: check if correct cP->Pa s is times 10...)
+        //Evaluation A = (0.42*std::pow((std::pow(salinity, 0.8)-0.17), 2) + 0.045)*pow(T_C, 0.8);
+        //Evaluation mu_brine = 0.1 + 0.333*salinity + (1.65+91.9*salinity*salinity*salinity)*exp(-A);
+
+        //return mu_brine/1000.0; // convert to [Pa s] (todo: check if correct cP->Pa s is times 10...)
+        //}
     }
 };
 
