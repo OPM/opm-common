@@ -34,6 +34,7 @@
 #include <opm/material/common/MathToolbox.hpp>
 
 #include <cmath>
+#include <string_view>
 
 namespace Opm {
 /*!
@@ -52,7 +53,7 @@ public:
     /*!
      * \brief A human readable name for the xylene
      */
-    static const char* name()
+    static std::string_view name()
     { return "xylene"; }
 
     /*!

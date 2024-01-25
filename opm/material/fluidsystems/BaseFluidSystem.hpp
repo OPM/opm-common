@@ -74,7 +74,7 @@ public:
      *
      * \copydoc Doxygen::phaseIdxParam
      */
-    static char* phaseName(unsigned /*phaseIdx*/)
+    static std::string_view phaseName(unsigned /*phaseIdx*/)
     {
         throw std::runtime_error(not_implemented("phaseName"));
     }

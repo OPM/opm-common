@@ -212,7 +212,7 @@ public:
     /*!
      * \brief A human readable name for the component.
      */
-    static const char* name()
+    static std::string_view name()
     { return RawComponent::name(); }
 
     /*!

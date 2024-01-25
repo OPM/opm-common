@@ -35,6 +35,7 @@
 #include <opm/material/common/UniformTabulated2DFunction.hpp>
 
 #include <cmath>
+#include <string_view>
 
 namespace Opm {
 
@@ -61,7 +62,7 @@ public:
     /*!
      * \brief A human readable name for the CO2.
      */
-    static const char* name()
+    static std::string_view name()
     { return "CO2"; }
 
     /*!

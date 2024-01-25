@@ -33,6 +33,8 @@
 
 #include <opm/material/common/MathToolbox.hpp>
 
+#include <string_view>
+
 namespace Opm {
 /*!
  * \ingroup Components
@@ -49,7 +51,7 @@ public:
     /*!
      * \brief A human readable name for the mesitylene
      */
-    static const char* name()
+    static std::string_view name()
     { return "mesitylene"; }
 
     /*!

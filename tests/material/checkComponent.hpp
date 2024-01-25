@@ -57,7 +57,7 @@ void checkComponent()
         { [[maybe_unused]] bool b = Component::gasIsCompressible(); }
         { [[maybe_unused]] bool b = Component::gasIsIdeal(); }
         { [[maybe_unused]] bool b = Component::liquidIsCompressible(); }
-        { [[maybe_unused]] std::string s = Component::name(); }
+        { [[maybe_unused]] std::string s {Component::name()}; }
         { [[maybe_unused]] Scalar M = Component::molarMass(); }
         { [[maybe_unused]] Scalar Tc = Component::criticalTemperature(); }
         { [[maybe_unused]] Scalar pc = Component::criticalPressure(); }
