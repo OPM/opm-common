@@ -32,7 +32,9 @@ Tabdims::Tabdims() :
     m_nssfun( ParserKeywords::TABDIMS::NSSFUN::defaultValue ),
     m_nppvt(  ParserKeywords::TABDIMS::NPPVT::defaultValue ),
     m_ntfip(  ParserKeywords::TABDIMS::NTFIP::defaultValue ),
-    m_nrpvt(  ParserKeywords::TABDIMS::NRPVT::defaultValue ), m_neosres( ParserKeywords::TABDIMS::NUM_EOS_RES::defaultValue ), m_neossur( ParserKeywords::TABDIMS::NUM_EOS_SURFACE::defaultValue )
+    m_nrpvt(  ParserKeywords::TABDIMS::NRPVT::defaultValue ),
+    m_neosres( ParserKeywords::TABDIMS::NUM_EOS_RES::defaultValue ),
+    m_neossur( ParserKeywords::TABDIMS::NUM_EOS_SURFACE::defaultValue )
 { }
 
 
