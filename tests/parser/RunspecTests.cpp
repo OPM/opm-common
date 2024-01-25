@@ -1134,3 +1134,92 @@ BOOST_AUTO_TEST_CASE(Mech) {
     BOOST_CHECK( runspec.mech() );
 }
 
+BOOST_AUTO_TEST_CASE(NetworkDims_no_network)
+{
+    {
+        const auto nd = NetworkDims {};
+        BOOST_CHECK_MESSAGE(! nd.active(),
+                            "Default-constructed NetworkDims must not "
+                            "represent a run with active networks");
+
+        BOOST_CHECK_MESSAGE(! nd.extendedNetwork(),
+                            "Default-constructed NetworkDims must not "
+                            "represent a run with the extended network model");
+
+        BOOST_CHECK_MESSAGE(! nd.standardNetwork(),
+                            "Default-constructed NetworkDims must not "
+                            "represent a run with the standard network model");
+    }
+
+    {
+        const auto deck = Parser{}.parseString(R"(
+TOLCRIT
+  5.0E-7 /
+)");
+        const auto nd = Runspec{deck}.networkDimensions();
+
+        BOOST_CHECK_MESSAGE(! nd.active(),
+                            "NetworkDims from deck without networks must not "
+                            "represent a run with active networks");
+
+        BOOST_CHECK_MESSAGE(! nd.extendedNetwork(),
+                            "NetworkDims from deck without networks must not "
+                            "represent a run with the extended network model");
+
+        BOOST_CHECK_MESSAGE(! nd.standardNetwork(),
+                            "NetworkDims from deck without networks must not "
+                            "represent a run with the standard network model");
+    }
+}
+
+BOOST_AUTO_TEST_CASE(NetworkDims_Extended)
+{
+    const auto deck = Parser{}.parseString(R"(
+NETWORK
+  42 1729 /
+)");
+    const auto nd = Runspec{deck}.networkDimensions();
+
+    BOOST_CHECK_MESSAGE(nd.active(),
+                        "NetworkDims from deck with NETWORK keyword must "
+                        "represent a run with active networks");
+
+    BOOST_CHECK_MESSAGE(nd.extendedNetwork(),
+                        "NetworkDims from deck with NETWORK keyword must "
+                        "represent a run with the extended network model");
+
+    BOOST_CHECK_MESSAGE(! nd.standardNetwork(),
+                        "NetworkDims from deck with NETWORK keyword must not "
+                        "represent a run with the standard network model");
+
+    BOOST_CHECK_EQUAL(nd.maxNONodes(), 42);
+    BOOST_CHECK_EQUAL(nd.maxNoBranches(), 1729);
+    BOOST_CHECK_EQUAL(nd.maxNoBranchesConToNode(), 20);
+}
+
+BOOST_AUTO_TEST_CASE(NetworkDims_Standard)
+{
+    const auto deck = Parser{}.parseString(R"(
+GRUPNET
+  FIELD 12.34 /
+  G 23.45 9999 /
+/
+)");
+    const auto nd = Runspec{deck}.networkDimensions();
+
+    BOOST_CHECK_MESSAGE(nd.active(),
+                        "NetworkDims from deck with GRUPNET keyword must "
+                        "represent a run with active networks");
+
+    BOOST_CHECK_MESSAGE(! nd.extendedNetwork(),
+                        "NetworkDims from deck with GRUPNET keyword must "
+                        "represent a run with the extended network model");
+
+    BOOST_CHECK_MESSAGE(nd.standardNetwork(),
+                        "NetworkDims from deck without networks must not "
+                        "represent a run with the standard network model");
+
+    BOOST_CHECK_EQUAL(nd.maxNONodes(), 0);
+    BOOST_CHECK_EQUAL(nd.maxNoBranches(), 0);
+    BOOST_CHECK_EQUAL(nd.maxNoBranchesConToNode(), 20);
+}

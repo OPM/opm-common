@@ -270,27 +270,28 @@ bool WellSegmentDims::operator==(const WellSegmentDims& data) const
         && (this->location() == data.location());
 }
 
-NetworkDims::NetworkDims() :
-    nMaxNoNodes( 0 ),
-    nMaxNoBranches( 0 ),
-    nMaxNoBranchesConToNode( ParserKeywords::NETWORK::NBCMAX::defaultValue )
+NetworkDims::NetworkDims()
+    : nMaxNoNodes(0)
+    , nMaxNoBranches(0)
+    , nMaxNoBranchesConToNode(ParserKeywords::NETWORK::NBCMAX::defaultValue)
 {}
 
-NetworkDims::NetworkDims(const Deck& deck) : NetworkDims()
+NetworkDims::NetworkDims(const Deck& deck)
+    : NetworkDims{}
 {
-    if (deck.hasKeyword("NETWORK")) {
-        const auto& wsd = deck["NETWORK"][0].getRecord(0);
+    if (deck.hasKeyword<ParserKeywords::NETWORK>()) {
+        const auto& wsd = deck.get<ParserKeywords::NETWORK>()[0].getRecord(0);
 
-        this->nMaxNoNodes   = wsd.getItem("NODMAX").get<int>(0);
-        this->nMaxNoBranches   = wsd.getItem("NBRMAX").get<int>(0);
-        this->nMaxNoBranchesConToNode = wsd.getItem("NBCMAX").get<int>(0);
+        this->nMaxNoNodes    = wsd.getItem<ParserKeywords::NETWORK::NODMAX>().get<int>(0);
+        this->nMaxNoBranches = wsd.getItem<ParserKeywords::NETWORK::NBRMAX>().get<int>(0);
+        this->nMaxNoBranchesConToNode = wsd.getItem<ParserKeywords::NETWORK::NBCMAX>().get<int>(0);
+
+        this->extNetwork_ = true;
+    }
+    else if (deck.hasKeyword<ParserKeywords::GRUPNET>()) {
+        this->stdNetwork_ = true;
     }
 }
-
-bool NetworkDims::active() const {
-    return this->nMaxNoNodes > 0;
-}
-
 
 NetworkDims NetworkDims::serializationTestObject()
 {

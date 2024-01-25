@@ -202,7 +202,21 @@ public:
         return this->nMaxNoBranchesConToNode;
     }
 
-    bool active() const;
+    bool extendedNetwork() const
+    {
+        return this->extNetwork_;
+    }
+
+    bool standardNetwork() const
+    {
+        return this->stdNetwork_;
+    }
+
+    bool active() const
+    {
+        return this->extendedNetwork()
+            || this->standardNetwork();
+    }
 
     bool operator==(const NetworkDims& data) const;
 
@@ -218,6 +232,9 @@ private:
     int nMaxNoNodes;
     int nMaxNoBranches;
     int nMaxNoBranchesConToNode;
+
+    bool extNetwork_{false};
+    bool stdNetwork_{false};
 };
 
 class AquiferDimensions {
