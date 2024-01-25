@@ -35,6 +35,7 @@
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 #include <opm/input/eclipse/Schedule/ScheduleGrid.hpp>
 #include <opm/input/eclipse/Schedule/Well/Well.hpp>
+#include <opm/input/eclipse/Schedule/Well/WDFAC.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
 
 #include <opm/common/OpmLog/KeywordLocation.hpp>
@@ -65,6 +66,7 @@ namespace {
         };
 
         const auto deck = Opm::Parser{}.parseString(compdat_keyword);
+        const auto wdfac = Opm::WDFAC{};
         const auto loc = Opm::KeywordLocation{};
 
         const Opm::EclipseGrid grid { 10, 10, 10 };
@@ -77,7 +79,7 @@ namespace {
         const auto sg = Opm::ScheduleGrid { grid, field_props, completed_cells };
 
         for (const auto& rec : deck["COMPDAT"][0]) {
-            connections.loadCOMPDAT(rec, sg, "WELL", loc);
+            connections.loadCOMPDAT(rec, sg, "WELL", wdfac, loc);
         }
 
         return connections;
@@ -263,6 +265,10 @@ COPY
   'PERMX' 'PERMZ' /
   'PERMX' 'PERMY' /
 /
+
+PORO
+  1000*0.3 /
+
 SCHEDULE
 
 COMPDAT
@@ -287,6 +293,9 @@ COPY
   'PERMX' 'PERMZ' /
   'PERMX' 'PERMY' /
 /
+
+PORO
+  1000*0.3 /
 
 SCHEDULE
 

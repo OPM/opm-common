@@ -153,6 +153,22 @@ namespace {
         return peacemanDenominator(ctf_props.r0, ctf_props.rw, ctf_props.skin_factor);
     }
 
+    double staticForchheimerCoefficient(const Opm::Connection::CTFProperties& ctf_props,
+                                        const double                          porosity,
+                                        const Opm::WDFAC&                     wdfac)
+    {
+        // Reference/background permeability against which to scale cell
+        // permeability for model evaluation.
+        constexpr auto Kref = 1.0*Opm::prefix::milli*Opm::unit::darcy;
+
+        const auto& corr_coeff = wdfac.getDFactorCorrelationCoefficients();
+
+        return corr_coeff.coeff_a
+            * std::pow(ctf_props.Ke / Kref, corr_coeff.exponent_b)
+            * std::pow(porosity           , corr_coeff.exponent_c)
+            * ctf_props.Ke / (ctf_props.connection_length * ctf_props.rw);
+    }
+
     // Calculate permeability thickness Kh for line segment in a cell for x,y,z directions
     std::array<double, 3>
     permThickness(const external::cvf::Vec3d& effective_connection,
@@ -339,6 +355,7 @@ namespace Opm {
     void WellConnections::loadCOMPDAT(const DeckRecord&      record,
                                       const ScheduleGrid&    grid,
                                       const std::string&     wname,
+                                      const WDFAC&           wdfac,
                                       const KeywordLocation& location)
     {
         const auto& itemI = record.getItem("I");
@@ -491,6 +508,9 @@ The cell ({},{},{}) in well {} is not active and the connection will be ignored)
             // Area equivalent radius of the grid block.  Used by the
             // PolymerMW module.
             ctf_props.re = std::sqrt(D[0] * D[1] / angle * 2);
+
+            ctf_props.static_dfac_corr_coeff =
+                staticForchheimerCoefficient(ctf_props, props->poro, wdfac);
 
             auto prev = std::find_if(this->m_connections.begin(),
                                      this->m_connections.end(),
@@ -732,6 +752,21 @@ CF and Kh items for well {} must both be specified or both defaulted/negative)",
         this->coord[2].push_back(record.getItem("TVD").getSIDouble(0));
 
         this->md.push_back(record.getItem("MD").getSIDouble(0));
+    }
+
+    void WellConnections::applyDFactorCorrelation(const ScheduleGrid& grid,
+                                                  const WDFAC&        wdfac)
+    {
+        for (auto& conn : this->m_connections) {
+            const auto& complCell = grid.get_cell(conn.getI(), conn.getJ(), conn.getK());
+            if (! complCell.is_active()) {
+                continue;
+            }
+
+            conn.setStaticDFacCorrCoeff
+                (staticForchheimerCoefficient(conn.ctfProperties(),
+                                              complCell.props->poro, wdfac));
+        }
     }
 
     std::size_t WellConnections::size() const

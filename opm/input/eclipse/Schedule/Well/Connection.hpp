@@ -118,6 +118,10 @@ namespace Opm {
             /// for gas.
             double d_factor{};
 
+            /// Product of certain static elements of D-factor correlation
+            /// law (WDFACCOR keyword).
+            double static_dfac_corr_coeff{};
+
             /// Denominator in peaceman's formula-i.e., log(r0/rw) + skin.
             double peaceman_denom{};
 
@@ -156,6 +160,7 @@ namespace Opm {
                 serializer(this->connection_length);
                 serializer(this->skin_factor);
                 serializer(this->d_factor);
+                serializer(this->static_dfac_corr_coeff);
                 serializer(this->peaceman_denom);
             }
         };
@@ -240,6 +245,7 @@ namespace Opm {
         void setKe(double Ke);
         void setCF(double CF);
         void setDefaultSatTabId(bool id);
+        void setStaticDFacCorrCoeff(const double c);
 
         void scaleWellPi(double wellPi);
         bool prepareWellPIScaling();

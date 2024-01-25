@@ -17,6 +17,9 @@ COPY
   PERMX PERMZ /
 /
 
+PORO
+  27000*0.3 /
+
 SCHEDULE
 
 

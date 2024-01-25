@@ -78,7 +78,8 @@ namespace Opm
         props.connection_length = 7.0;
         props.skin_factor = 8.0;
         props.d_factor = 9.0;
-        props.peaceman_denom = 10.0;
+        props.static_dfac_corr_coeff = 10.0;
+        props.peaceman_denom = 11.0;
 
         return props;
     }
@@ -94,6 +95,7 @@ namespace Opm
             && (this->connection_length == that.connection_length)
             && (this->skin_factor == that.skin_factor)
             && (this->d_factor == that.d_factor)
+            && (this->static_dfac_corr_coeff == that.static_dfac_corr_coeff)
             && (this->peaceman_denom == that.peaceman_denom)
             ;
     }
@@ -392,6 +394,11 @@ namespace Opm
 
         this->scaleWellPi(scaleFactor);
         return true;
+    }
+
+    void Connection::setStaticDFacCorrCoeff(const double c)
+    {
+        this->ctf_properties_.static_dfac_corr_coeff = c;
     }
 
     std::string Connection::str() const

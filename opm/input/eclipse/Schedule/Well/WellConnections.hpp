@@ -39,6 +39,7 @@ namespace Opm {
     class FieldPropsManager;
     class KeywordLocation;
     class ScheduleGrid;
+    class WDFAC;
 } // namespace Opm
 
 namespace Opm {
@@ -88,6 +89,7 @@ namespace Opm {
         void loadCOMPDAT(const DeckRecord&      record,
                          const ScheduleGrid&    grid,
                          const std::string&     wname,
+                         const WDFAC&           wdfac,
                          const KeywordLocation& location);
 
         void loadCOMPTRAJ(const DeckRecord&      record,
@@ -100,6 +102,9 @@ namespace Opm {
                          const ScheduleGrid&    grid,
                          const std::string&     wname,
                          const KeywordLocation& location);
+
+        void applyDFactorCorrelation(const ScheduleGrid& grid,
+                                     const WDFAC&        wdfac);
 
         int getHeadI() const;
         int getHeadJ() const;
