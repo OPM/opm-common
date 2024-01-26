@@ -181,9 +181,16 @@ std::optional<JFunc> make_jfunc(const Deck& deck) {
 
         if( deck.hasKeyword( "DIFFCWAT" ) )
             this->m_diffCoeffWatTable = DiffCoeffWatTable( deck["DIFFCWAT"].back() );
+        else if (deck.hasKeyword( "DIFFAWAT" ) )
+            this->m_diffCoeffWatTable = DiffCoeffWatTable( deck["DIFFAWAT"].back() );
 
         if( deck.hasKeyword( "DIFFCGAS" ) )
             this->m_diffCoeffGasTable = DiffCoeffGasTable( deck["DIFFCGAS"].back() );
+        else if ( deck.hasKeyword( "DIFFAGAS" ) )
+            this->m_diffCoeffGasTable = DiffCoeffGasTable( deck["DIFFAGAS"].back() );
+        
+        if (deck.hasKeyword( "DIFFAWAT" ) || deck.hasKeyword( "DIFFAGAS" ))
+            this->m_diff_mole_fraction = false;
 
         if( deck.hasKeyword( "ROCK" ) )
             this->m_rockTable = RockTable( deck["ROCK"].back() );
@@ -329,6 +336,7 @@ std::optional<JFunc> make_jfunc(const Deck& deck) {
         result.m_rtemp = 1.0;
         result.m_salinity = 1.0;
         result.m_actco2s = 3;
+        result.m_diff_mole_fraction = true;
         result.m_tlmixpar = TLMixpar::serializationTestObject();
         result.m_ppcwmax = Ppcwmax::serializationTestObject();
         return result;
@@ -1262,6 +1270,10 @@ std::optional<JFunc> make_jfunc(const Deck& deck) {
         return this->m_actco2s;
     }
 
+    bool TableManager::diffMoleFraction() const {
+        return this->m_diff_mole_fraction;
+    }
+
     std::size_t TableManager::gas_comp_index() const {
         return this->m_gas_comp_index;
     }
@@ -1316,6 +1328,7 @@ std::optional<JFunc> make_jfunc(const Deck& deck) {
                m_rtemp == data.m_rtemp &&
                m_salinity == data.m_salinity &&
                m_actco2s == data.m_actco2s &&
+               m_diff_mole_fraction == data.m_diff_mole_fraction &&
                m_gas_comp_index == data.m_gas_comp_index;
     }
 

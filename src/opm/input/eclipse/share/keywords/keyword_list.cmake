@@ -1057,6 +1057,8 @@ set( keywords
      001_Eclipse300/C/CREF
      001_Eclipse300/C/CREFW
      001_Eclipse300/C/CREFWS
+     001_Eclipse300/D/DIFFAGAS
+     001_Eclipse300/D/DIFFAWAT
      001_Eclipse300/D/DIFFCGAS
      001_Eclipse300/D/DIFFCWAT
      001_Eclipse300/D/DREF

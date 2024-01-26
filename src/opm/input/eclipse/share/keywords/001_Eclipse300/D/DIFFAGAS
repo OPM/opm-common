@@ -1,5 +1,5 @@
 {
-  "name": "DIFFCGAS",
+  "name": "DIFFAGAS",
   "comment": "Hardcoded two components.",
   "sections": [
     "PROPS"
@@ -9,7 +9,7 @@
     "item": "NTPVT"
   },
   "requires": ["GAS", "WATER"],
-  "prohibits": ["DIFFAWAT", "DIFFAGAS"],
+  "prohibits": ["DIFFCWAT", "DIFFCGAS"],
   "items": [
   {
     "name": "CO2_IN_GAS",
