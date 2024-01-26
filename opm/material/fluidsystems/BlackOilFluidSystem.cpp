@@ -43,6 +43,11 @@ template <class Scalar, class IndexTraits>
 void BlackOilFluidSystem<Scalar,IndexTraits>::
 initFromState(const EclipseState& eclState, const Schedule& schedule)
 {
+    if(eclState.getSimulationConfig().useEnthalpy()){
+        enthalpy_eq_energy_ = false;
+    }else{
+        enthalpy_eq_energy_ = true;
+    }
     std::size_t numRegions = eclState.runspec().tabdims().getNumPVTTables();
     initBegin(numRegions);
 
@@ -90,7 +95,7 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
             // For CO2SOL and H2SOL the dissolved gas in water is added in the solvent model
             // The HC gas is not allowed to dissolved into water.
             // For most HC gasses this is a resonable assumption.
-            OpmLog::info("CO2SOL/H2SOL is activated together with DISGASW. \n" 
+            OpmLog::info("CO2SOL/H2SOL is activated together with DISGASW. \n"
                          "Only CO2/H2 is allowed to dissolve into water");
         } else
             OPM_THROW(std::runtime_error,

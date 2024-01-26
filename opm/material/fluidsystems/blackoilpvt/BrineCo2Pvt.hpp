@@ -88,8 +88,8 @@ public:
         : salinity_(salinity)
     {
         // Throw an error if reference state is not (T, p) = (15.56 C, 1 atm) = (288.71 K, 1.01325e5 Pa)
-        if (T_ref != Scalar(288.71) || P_ref != Scalar(1.01325e5)) {    
-            OPM_THROW(std::runtime_error, 
+        if (T_ref != Scalar(288.71) || P_ref != Scalar(1.01325e5)) {
+            OPM_THROW(std::runtime_error,
                 "BrineCo2Pvt class can only be used with default reference state (T, P) = (288.71 K, 1.01325e5 Pa)!");
         }
         setActivityModelSalt(activityModel);
@@ -225,6 +225,10 @@ public:
      */
     unsigned numRegions() const
     { return brineReferenceDensity_.size(); }
+
+    Scalar hVap(unsigned ) const{
+        return 0;
+    }
 
     /*!
      * \brief Returns the specific enthalpy [J/kg] of gas given a set of parameters.
@@ -381,8 +385,8 @@ public:
                                                      const Evaluation& temperature,
                                                      const Evaluation& pressure) const
     {
- 	OPM_TIMEFUNCTION_LOCAL();
-	Evaluation rs_sat = rsSat(regionIdx, temperature, pressure, Evaluation(salinity_[regionIdx]));
+    OPM_TIMEFUNCTION_LOCAL();
+    Evaluation rs_sat = rsSat(regionIdx, temperature, pressure, Evaluation(salinity_[regionIdx]));
         return (1.0 - convertRsToXoG_(rs_sat,regionIdx)) * density(regionIdx, temperature, pressure, rs_sat, Evaluation(salinity_[regionIdx]))/brineReferenceDensity_[regionIdx];
     }
 
@@ -497,8 +501,8 @@ public:
                        const Evaluation& Rs,
                        const Evaluation& salinity) const
     {
-	OPM_TIMEFUNCTION_LOCAL();        
-	Evaluation xlCO2 = convertXoGToxoG_(convertRsToXoG_(Rs,regionIdx), salinity);
+    OPM_TIMEFUNCTION_LOCAL();
+    Evaluation xlCO2 = convertXoGToxoG_(convertRsToXoG_(Rs,regionIdx), salinity);
         Evaluation result = liquidDensity_(temperature,
                                         pressure,
                                         xlCO2,
@@ -514,12 +518,12 @@ public:
                      const Evaluation& pressure,
                      const Evaluation& salinity) const
     {
-	    OPM_TIMEFUNCTION_LOCAL();
+        OPM_TIMEFUNCTION_LOCAL();
         if (!enableDissolution_)
             return 0.0;
 
         // calulate the equilibrium composition for the given
-        // temperature and pressure. 
+        // temperature and pressure.
         Evaluation xgH2O;
         Evaluation xlCO2;
         BinaryCoeffBrineCO2::calculateMoleFractions(temperature,
