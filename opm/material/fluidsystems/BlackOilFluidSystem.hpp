@@ -1188,7 +1188,7 @@ static LhsEval internalEnergy(const FluidState& fluidState,
                 waterPvt_->internalEnergy(regionIdx, T, p,
                                           BlackOil::template getRsw_<ThisType, FluidState, LhsEval>(fluidState, regionIdx),
                                           BlackOil::template getSaltConcentration_<ThisType, FluidState, LhsEval>(fluidState, regionIdx));
-            if(!water_->mixingEnergy()){
+            if(!waterPvt_->mixingEnergy()){
                 return waterEnergy;
             }else{
                 if (enableDissolvedGasInWater()) {
