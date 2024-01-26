@@ -143,20 +143,19 @@ private:
         //        field properties of cells on the leaf grid view for CpGrid with local grid refinement.
         //        Function argument 'lookupIdxOnLevelZeroAssigner' is added to lookup, for each
         //        leaf gridview cell with index 'elemIdx', its 'lookupIdx' (index of the parent/equivalent cell on level zero).
-        void run(const std::function<std::vector<int>(const FieldPropsManager&, const std::string&,
-                 const unsigned int, bool)>& fieldPropIntOnLeafAssigner,
+        void run(const std::function<std::vector<int>(const FieldPropsManager&, const std::string&, bool)>& fieldPropIntOnLeafAssigner,
                  const std::function<unsigned(unsigned)>& lookupIdxOnLevelZeroAssigner);
     private:
         class HystParams;
         // \brief Function argument 'fieldPropIntOnLeadAssigner' needed to lookup
         //        field properties of cells on the leaf grid view for CpGrid with local grid refinement.
-        void copySatnumArrays_(const std::function<std::vector<int>(const FieldPropsManager&, const std::string&,
-                               const unsigned int, bool)>& fieldPropIntOnLeafAssigner);
+        void copySatnumArrays_(const std::function<std::vector<int>(const FieldPropsManager&, const std::string&, bool)>&
+                               fieldPropIntOnLeafAssigner);
         // \brief Function argument 'fieldPropIntOnLeadAssigner' needed to lookup
         //        field properties of cells on the leaf grid view for CpGrid with local grid refinement.
         void copyIntArray_(std::vector<int>& dest, const std::string keyword,
-                           const std::function<std::vector<int>(const FieldPropsManager&, const std::string&,
-                           const unsigned int, bool)>& fieldPropIntOnLeafAssigner);
+                           const std::function<std::vector<int>(const FieldPropsManager&, const std::string&, bool)>&
+                           fieldPropIntOnLeafAssigner);
         unsigned imbRegion_(std::vector<int>& array, unsigned elemIdx);
         void initArrays_(
                          std::vector<std::vector<int>*>& satnumArray,
@@ -164,10 +163,10 @@ private:
                          std::vector<std::vector<MaterialLawParams>*>& mlpArray);
         void initMaterialLawParamVectors_();
         void initOilWaterScaledEpsInfo_();
-        // \brief Function argument 'fieldPropIntOnLeadAssigner' needed to lookup
+        // \brief Function argument 'fieldProptOnLeadAssigner' needed to lookup
         //        field properties of cells on the leaf grid view for CpGrid with local grid refinement.
-        void initSatnumRegionArray_(const std::function<std::vector<int>(const FieldPropsManager&, const std::string&,
-                                    const unsigned int, bool)>& fieldPropIntOnLeafAssigner);
+        void initSatnumRegionArray_(const std::function<std::vector<int>(const FieldPropsManager&, const std::string&, bool)>&
+                                    fieldPropIntOnLeafAssigner);
         void initThreePhaseParams_(
                                    HystParams &hystParams,
                                    MaterialLawParams& materialParams,
@@ -278,8 +277,8 @@ public:
     //        Function argument 'lookupIdxOnLevelZeroAssigner' is added to lookup, for each
     //        leaf gridview cell with index 'elemIdx', its 'lookupIdx' (index of the parent/equivalent cell on level zero).
     void initParamsForElements(const EclipseState& eclState, size_t numCompressedElems,
-                               const std::function<std::vector<int>(const FieldPropsManager&, const std::string&,
-                               const unsigned int,bool)>& fieldPropIntOnLeafAssigner,
+                               const std::function<std::vector<int>(const FieldPropsManager&, const std::string&, bool)>&
+                               fieldPropIntOnLeafAssigner,
                                const std::function<unsigned(unsigned)>& lookupIdxOnLevelZeroAssigner);
 
     /*!
