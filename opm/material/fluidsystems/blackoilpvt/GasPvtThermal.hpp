@@ -119,6 +119,7 @@ public:
         gasJTRefPres_.resize(numRegions);
         gasJTC_.resize(numRegions);
         rhoRefO_.resize(numRegions);
+        hVap_.resize(numRegions, 0.0);
     }
 
     void setVapPars(const Scalar par1, const Scalar par2)
@@ -152,7 +153,7 @@ public:
 
     size_t numRegions() const
     { return viscrefPress_.size(); }
- 
+
 
     /*!
      * \brief Returns the specific internal energy [J/kg] of gas given a set of parameters.
@@ -162,8 +163,9 @@ public:
                               const Evaluation& temperature,
                               const Evaluation& pressure,
                               const Evaluation& Rv,
-                              const Evaluation& ) const
+                              const Evaluation& RvW) const
     {
+        Evaluation gasEnergy = 0;
         if (!enableInternalEnergy_)
              throw std::runtime_error("Requested the internal energy of gas but it is disabled");
 
@@ -174,14 +176,16 @@ public:
             return internalEnergyCurves_[regionIdx].eval(temperature, /*extrapolate=*/true);
         }
         else {
+            // NB should probably be revisited with adding more or restrict to linear internal energy
+            OpmLog::warning("Experimental code for jouleThomson: simulation will be slower");
             Evaluation Tref = gasdentRefTemp_[regionIdx];
-            Evaluation Pref = gasJTRefPres_[regionIdx]; 
-            Scalar JTC = gasJTC_[regionIdx]; // if JTC is default then JTC is calculated
+            Evaluation Pref = gasJTRefPres_[regionIdx];
+            Scalar JTC = gasJTC_[regionIdx]; // if JTC is default then JTC is calculaited
             Evaluation Rvw = 0.0;
 
             Evaluation invB = inverseFormationVolumeFactor(regionIdx, temperature, pressure, Rv, Rvw);
-            constexpr const Scalar hVap = 480.6e3; // [J / kg]
-            Evaluation Cp = (internalEnergyCurves_[regionIdx].eval(temperature, /*extrapolate=*/true) - hVap)/temperature;
+            // NB this assumes internalEnergyCurve(0) = 0 derivative should be used add Cp table ??
+            Evaluation Cp = (internalEnergyCurves_[regionIdx].eval(temperature, /*extrapolate=*/true))/temperature;
             Evaluation density = invB * (gasReferenceDensity(regionIdx) + Rv * rhoRefO_[regionIdx]);
 
             Evaluation enthalpyPres;
@@ -191,7 +195,7 @@ public:
             else if(enableThermalDensity_) {
                 Scalar c1T = gasdentCT1_[regionIdx];
                 Scalar c2T = gasdentCT2_[regionIdx];
-              
+
                 Evaluation alpha = (c1T + 2 * c2T * (temperature - Tref)) /
                     (1 + c1T  *(temperature - Tref) + c2T * (temperature - Tref) * (temperature - Tref));
 
@@ -205,7 +209,7 @@ public:
                     // see e.g.https://en.wikipedia.org/wiki/Joule-Thomson_effect for a derivation of the Joule-Thomson coeff.
                     Evaluation jouleThomsonCoefficient = -(1.0/Cp) * (1.0 - alpha * temperature)/rho;
                     Evaluation deltaEnthalpyPres = -Cp * jouleThomsonCoefficient * deltaP;
-                    enthalpyPres = enthalpyPresPrev + deltaEnthalpyPres; 
+                    enthalpyPres = enthalpyPresPrev + deltaEnthalpyPres;
                     enthalpyPresPrev = enthalpyPres;
                 }
             }
@@ -229,12 +233,12 @@ public:
                          const Evaluation& Rv,
                          const Evaluation& Rvw) const
     {
-        
+
         const auto& isothermalMu = isothermalPvt_->viscosity(regionIdx, temperature, pressure, Rv, Rvw);
         if (!enableThermalViscosity())
             return isothermalMu;
 
-        // compute the viscosity deviation due to temperature        
+        // compute the viscosity deviation due to temperature
         const auto& muGasvisct = gasvisctCurves_[regionIdx].eval(temperature, /*extrapolate=*/true);
         return muGasvisct/viscRef_[regionIdx]*isothermalMu;
     }
@@ -332,11 +336,11 @@ public:
     template <class Evaluation = Scalar>
     Evaluation saturatedWaterVaporizationFactor(unsigned /*regionIdx*/,
                                               const Evaluation& /*temperature*/,
-                                              const Evaluation& /*pressure*/, 
+                                              const Evaluation& /*pressure*/,
                                               const Evaluation& /*saltConcentration*/) const
     { return 0.0; }
 
-    
+
 
     /*!
      * \brief Returns the oil vaporization factor \f$R_v\f$ [m^3/m^3] of the gas phase.
@@ -391,6 +395,10 @@ public:
 
     const Scalar gasReferenceDensity(unsigned regionIdx) const
     { return isothermalPvt_->gasReferenceDensity(regionIdx); }
+
+    const Scalar hVap(unsigned regionIdx) const {
+        return this->hVap_[regionIdx];
+    }
 
     const std::vector<TabulatedOneDFunction>& gasvisctCurves() const
     { return gasvisctCurves_; }
@@ -485,6 +493,7 @@ private:
     std::vector<Scalar> gasJTC_;
 
     std::vector<Scalar> rhoRefO_;
+    std::vector<Scalar> hVap_;
 
     // piecewise linear curve representing the internal energy of gas
     std::vector<TabulatedOneDFunction> internalEnergyCurves_;

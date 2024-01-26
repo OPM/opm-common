@@ -151,7 +151,7 @@ public:
             Valgrind::CheckDefined(invB_[storagePhaseIdx]);
 
             if constexpr (enableEnergy)
-                Valgrind::CheckDefined((*enthalpy_)[storagePhaseIdx]);
+                Valgrind::CheckDefined((*internalEnergy_)[storagePhaseIdx]);
         }
 
         if constexpr (enableDissolution) {
@@ -216,7 +216,7 @@ public:
             setDensity(phaseIdx, fs.density(phaseIdx));
 
             if constexpr (enableEnergy)
-                setEnthalpy(phaseIdx, fs.enthalpy(phaseIdx));
+                setInternalEnergy(phaseIdx, fs.internalEnergy(phaseIdx));
 
             setInvB(phaseIdx, getInvB_<FluidSystem, FluidState, Scalar>(fs, phaseIdx, pvtRegionIdx));
         }
@@ -276,11 +276,11 @@ public:
      * If the enableEnergy template argument is not set to true, this method will throw
      * an exception!
      */
-    void setEnthalpy(unsigned phaseIdx, const Scalar& value)
+    void setInternalEnergy(unsigned phaseIdx, const Scalar& value)
     {
         assert(enableTemperature || enableEnergy);
 
-        (*enthalpy_)[canonicalToStoragePhaseIndex_(phaseIdx)] = value;
+        (*internalEnergy_)[canonicalToStoragePhaseIndex_(phaseIdx)] = value;
     }
 
     /*!
@@ -501,7 +501,7 @@ public:
      * exception!
      */
     const Scalar& enthalpy(unsigned phaseIdx) const
-    { return (*enthalpy_)[canonicalToStoragePhaseIndex_(phaseIdx)]; }
+    { return (*internalEnergy_)[canonicalToStoragePhaseIndex_(phaseIdx)] + pressure(phaseIdx)/density(phaseIdx); }
 
     /*!
      * \brief Return the specific internal energy [J/kg] of a given fluid phase.
@@ -510,7 +510,7 @@ public:
      * exception!
      */
     Scalar internalEnergy(unsigned phaseIdx) const
-    { return (*enthalpy_)[canonicalToStoragePhaseIndex_(phaseIdx)] - pressure(phaseIdx)/density(phaseIdx); }
+    { return (*internalEnergy_)[canonicalToStoragePhaseIndex_(phaseIdx)]; }
 
     //////
     // slow methods
@@ -676,7 +676,7 @@ private:
     }
 
     ConditionalStorage<enableTemperature || enableEnergy, Scalar> temperature_;
-    ConditionalStorage<enableEnergy, std::array<Scalar, numStoragePhases> > enthalpy_;
+    ConditionalStorage<enableEnergy, std::array<Scalar, numStoragePhases> > internalEnergy_;
     Scalar totalSaturation_;
     std::array<Scalar, numStoragePhases> pressure_;
     std::array<Scalar, numStoragePhases> pc_;
