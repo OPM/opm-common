@@ -140,7 +140,9 @@ public:
     {
         throw std::runtime_error("Requested the enthalpy of water but the thermal option is not enabled");
     }
-
+    Scalar hVap(unsigned) const{
+        throw std::runtime_error("Requested the hvap of oil but the thermal option is not enabled");
+    }
 
     /*!
      * \brief Returns the dynamic viscosity [Pa s] of the fluid phase given a set of parameters.
@@ -232,9 +234,9 @@ public:
 
         // TODO (?): consider the salt concentration of the brine
         bw = (1.0 + X*(1.0 + X/2.0))/BwRef;
-        
+
         Scalar BwMuwRef = waterViscosity_[regionIdx]*BwRef;
-        
+
         const Evaluation& Y =
             (waterCompressibility_[regionIdx] - waterViscosibility_[regionIdx])
             * (pressure - pRef);
@@ -261,7 +263,7 @@ public:
     {
         throw std::runtime_error("Not implemented: The PVT model does not provide a diffusionCoefficient()");
     }
-    
+
     /*!
      * \brief Returns the gas dissolution factor \f$R_s\f$ [m^3/m^3] of the water phase.
      */
