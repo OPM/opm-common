@@ -52,7 +52,7 @@ InitParams(EclMaterialLawManager<Traits>& parent, const EclipseState& eclState, 
 template <class Traits>
 void
 EclMaterialLawManager<Traits>::InitParams::
-run(const std::function<std::vector<int>(const FieldPropsManager&, const std::string&, const unsigned int, bool)>&
+run(const std::function<std::vector<int>(const FieldPropsManager&, const std::string&, bool)>&
     fieldPropIntOnLeafAssigner,
     const std::function<unsigned(unsigned)>& lookupIdxOnLevelZeroAssigner) {
     readUnscaledEpsPointsVectors_();
@@ -92,8 +92,7 @@ run(const std::function<std::vector<int>(const FieldPropsManager&, const std::st
 template <class Traits>
 void
 EclMaterialLawManager<Traits>::InitParams::
-copySatnumArrays_(const std::function<std::vector<int>(const FieldPropsManager&, const std::string&,
-                  const unsigned int, bool)>& fieldPropIntOnLeafAssigner)
+copySatnumArrays_(const std::function<std::vector<int>(const FieldPropsManager&, const std::string&, bool)>& fieldPropIntOnLeafAssigner)
 {
     copyIntArray_(this->parent_.krnumXArray_, "KRNUMX", fieldPropIntOnLeafAssigner);
     copyIntArray_(this->parent_.krnumYArray_, "KRNUMY", fieldPropIntOnLeafAssigner);
@@ -113,11 +112,10 @@ template <class Traits>
 void
 EclMaterialLawManager<Traits>::InitParams::
 copyIntArray_(std::vector<int>& dest, const std::string keyword,
-              const std::function<std::vector<int>(const FieldPropsManager&, const std::string&, const unsigned int, bool)>&
-              fieldPropIntOnLeafAssigner)
+              const std::function<std::vector<int>(const FieldPropsManager&, const std::string&, bool)>& fieldPropIntOnLeafAssigner)
 {
     if (this->eclState_.fieldProps().has_int(keyword)) {
-        dest = fieldPropIntOnLeafAssigner(this->eclState_.fieldProps(), keyword, this->numCompressedElems_, /*needsTranslation*/true);
+        dest = fieldPropIntOnLeafAssigner(this->eclState_.fieldProps(), keyword, /*needsTranslation*/true);
     }
 }
 
@@ -182,16 +180,14 @@ initOilWaterScaledEpsInfo_()
 template <class Traits>
 void
 EclMaterialLawManager<Traits>::InitParams::
-initSatnumRegionArray_(const std::function<std::vector<int>(const FieldPropsManager&, const std::string&, const unsigned int, bool)>&
-                       fieldPropIntOnLeafAssigner)
+initSatnumRegionArray_(const std::function<std::vector<int>(const FieldPropsManager&, const std::string&, bool)>& fieldPropIntOnLeafAssigner)
 {
     // copy the SATNUM grid property. in some cases this is not necessary, but it
     // should not require much memory anyway...
     auto &satnumArray = this->parent_.satnumRegionArray_;
     satnumArray.resize(this->numCompressedElems_);
     if (this->eclState_.fieldProps().has_int("SATNUM")) {
-        satnumArray = fieldPropIntOnLeafAssigner(this->eclState_.fieldProps(), "SATNUM",
-                                                    this->numCompressedElems_, /*needsTranslation*/true);
+        satnumArray = fieldPropIntOnLeafAssigner(this->eclState_.fieldProps(), "SATNUM", /*needsTranslation*/true);
     }
     else {
         std::fill(satnumArray.begin(), satnumArray.end(), 0);

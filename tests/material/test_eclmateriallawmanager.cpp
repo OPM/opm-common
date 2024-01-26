@@ -621,12 +621,13 @@ class FieldPropsManager;
 // To support Local Grid Refinement for CpGrid, additional arguments have been added
 // in some EclMaterialLawManager(InitParams) member functions. Therefore, we define
 // some lambda expressions that does not affect this test file.
-std::function<std::vector<int>(const Opm::FieldPropsManager&, const std::string&, const unsigned int, bool)> doOldLookup =
-    [](const Opm::FieldPropsManager& fieldPropManager, const std::string& propString, const unsigned int numElems, bool needsTranslation)
+std::function<std::vector<int>(const Opm::FieldPropsManager&, const std::string&, bool)> doOldLookup =
+    [](const Opm::FieldPropsManager& fieldPropManager, const std::string& propString, bool needsTranslation)
     {
         std::vector<int> dest;
-        dest.resize(numElems);
         const auto& intRawData = fieldPropManager.get_int(propString);
+        unsigned int numElems =  intRawData.size();
+        dest.resize(numElems);
         for (unsigned elemIdx = 0; elemIdx < numElems; ++elemIdx) {
             dest[elemIdx] = intRawData[elemIdx] - needsTranslation;
         }
