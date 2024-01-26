@@ -162,7 +162,7 @@ public:
     bool enableThermalViscosity() const
     { return enableThermalViscosity_; }
 
-    const Scalar hVap(unsigned regionIdx) const {
+    Scalar hVap(unsigned regionIdx) const {
         return this->hVap_[regionIdx];
     }
 
