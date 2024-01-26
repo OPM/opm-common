@@ -2547,6 +2547,11 @@ static const auto single_values_units = UnitTable {
     {"FWCD"     , Opm::UnitSystem::measure::moles },
     {"FWIPG"    , Opm::UnitSystem::measure::liquid_surface_volume },
     {"FWIPL"    , Opm::UnitSystem::measure::liquid_surface_volume },
+    {"FGMIP"    , Opm::UnitSystem::measure::mass },
+    {"FGMGP"    , Opm::UnitSystem::measure::mass },
+    {"FGMDS"    , Opm::UnitSystem::measure::mass },
+    {"FGMTR"    , Opm::UnitSystem::measure::mass },
+    {"FGMMO"    , Opm::UnitSystem::measure::mass },
 };
 
 static const auto region_units = UnitTable {
@@ -2567,6 +2572,11 @@ static const auto region_units = UnitTable {
     {"RWCD"  , Opm::UnitSystem::measure::moles },
     {"RWIPG" , Opm::UnitSystem::measure::liquid_surface_volume },
     {"RWIPL" , Opm::UnitSystem::measure::liquid_surface_volume },
+    {"RGMIP" , Opm::UnitSystem::measure::mass },
+    {"RGMGP" , Opm::UnitSystem::measure::mass },
+    {"RGMDS" , Opm::UnitSystem::measure::mass },
+    {"RGMTR" , Opm::UnitSystem::measure::mass },
+    {"RGMMO" , Opm::UnitSystem::measure::mass },
 };
 
 static const auto interregion_units = UnitTable {
