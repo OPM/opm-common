@@ -84,7 +84,7 @@ private:
     /*!
      * \brief Initialize the parameters for the solid energy law using using SPECROCK and friends.
      */
-    void initSpecrock_(const EclipseState& eclState, size_t numElems,
+    void initSpecrock_(const EclipseState& eclState,
                        const std::function<std::vector<unsigned int>(const FieldPropsManager&, const std::string&, bool)>&
                        fieldPropIntOnLeafAssigner);
 

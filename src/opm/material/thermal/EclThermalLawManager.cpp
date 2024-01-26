@@ -56,7 +56,7 @@ initParamsForElements(const EclipseState& eclState, size_t numElems,
     if (has_heatcr)
         initHeatcr_(eclState, numElems, fieldPropsDoubleOnLeafAssigner);
     else if (tableManager.hasTables("SPECROCK"))
-        initSpecrock_(eclState, numElems, fieldPropsIntOnLeafAssigner);
+        initSpecrock_(eclState, fieldPropsIntOnLeafAssigner);
     else
         initNullRockEnergy_();
 
@@ -144,7 +144,7 @@ initHeatcr_(const EclipseState& eclState, size_t numElems,
 
 template<class Scalar, class FluidSystem>
 void EclThermalLawManager<Scalar,FluidSystem>::
-initSpecrock_(const EclipseState& eclState, size_t numElems,
+initSpecrock_(const EclipseState& eclState,
               const std::function<std::vector<unsigned int>(const FieldPropsManager&, const std::string&, bool)>& fieldPropsIntOnLeafAssigner)
 {
     solidEnergyApproach_ = EclSolidEnergyApproach::Specrock;
