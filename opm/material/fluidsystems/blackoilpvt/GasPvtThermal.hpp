@@ -163,9 +163,8 @@ public:
                               const Evaluation& temperature,
                               const Evaluation& pressure,
                               const Evaluation& Rv,
-                              const Evaluation& RvW) const
+                              [[maybe_unused]] const Evaluation& RvW) const
     {
-        Evaluation gasEnergy = 0;
         if (!enableInternalEnergy_)
              throw std::runtime_error("Requested the internal energy of gas but it is disabled");
 

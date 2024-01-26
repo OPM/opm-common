@@ -500,8 +500,10 @@ public:
      * If the EnableEnergy property is not set to true, this method will throw an
      * exception!
      */
-    const Scalar& enthalpy(unsigned phaseIdx) const
-    { return (*internalEnergy_)[canonicalToStoragePhaseIndex_(phaseIdx)] + pressure(phaseIdx)/density(phaseIdx); }
+    Scalar enthalpy(unsigned phaseIdx) const
+    {
+        return (*internalEnergy_)[canonicalToStoragePhaseIndex_(phaseIdx)] + pressure(phaseIdx)/density(phaseIdx);
+    }
 
     /*!
      * \brief Return the specific internal energy [J/kg] of a given fluid phase.
