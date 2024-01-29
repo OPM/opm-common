@@ -99,6 +99,7 @@ SATNUM
         sim = self.state.simulation()
         self.assertFalse(sim.hasThresholdPressure())
         self.assertFalse(sim.useCPR())
+        self.assertFalse(sim.useNONNC())
         self.assertTrue(sim.hasDISGAS())
         self.assertTrue(sim.hasVAPOIL())
 

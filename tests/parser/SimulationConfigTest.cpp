@@ -108,6 +108,11 @@ const std::string& inputStr_cpr_BOTH = "RUNSPEC\n"
     "CPR\n"
     "well1 10 20 30/\n/\n";
 
+const std::string& inputStr_nonnc = "RUNSPEC\n"
+    "NONNC\n"
+    "DIMENS\n"
+    "10 3 4 /\n";
+
 const std::string& inputStr_vap_dis = R"(
 RUNSPEC
 VAPOIL
@@ -267,6 +272,22 @@ BOOST_AUTO_TEST_CASE(SimulationConfigCPRRUnspecWithData) {
     BOOST_CHECK_THROW( createDeck(inputStr_INVALID) , Opm::OpmInputError );
 }
 
+BOOST_AUTO_TEST_CASE(SimulationConfig_NONNC) {
+
+    EclipseGrid eg(10, 3, 4);
+
+    auto deck = createDeck(inputStr);
+    TableManager tm(deck);
+    FieldPropsManager fp(deck, Phases{true, true, true}, eg, tm);
+    SimulationConfig simulationConfig(false, deck, fp);
+    BOOST_CHECK_EQUAL( false , simulationConfig.useNONNC());
+
+    auto deck_nonnc = createDeck(inputStr_nonnc);
+    TableManager tm_nonnc(deck_nonnc);
+    FieldPropsManager fp_nonnc(deck_nonnc, Phases{true, true, true}, eg, tm_nonnc);
+    SimulationConfig simulationConfig_nonnc(false, deck_nonnc, fp_nonnc);
+    BOOST_CHECK_EQUAL( true , simulationConfig_nonnc.useNONNC());
+}
 
 BOOST_AUTO_TEST_CASE(SimulationConfig_VAPOIL_DISGAS_VAPWAT) {
 

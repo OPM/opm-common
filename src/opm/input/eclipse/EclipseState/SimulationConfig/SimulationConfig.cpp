@@ -24,6 +24,7 @@
 #include <opm/input/eclipse/EclipseState/SimulationConfig/ThresholdPressure.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/C.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/D.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/N.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/G.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/P.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/T.hpp>
@@ -49,6 +50,7 @@ namespace Opm {
 
     SimulationConfig::SimulationConfig() :
         m_useCPR(false),
+        m_useNONNC(false),
         m_DISGAS(false),
         m_DISGASW(false),
         m_VAPOIL(false),
@@ -66,6 +68,7 @@ namespace Opm {
         m_bcconfig(deck),
         m_rock_config(deck, fp),
         m_useCPR(false),
+        m_useNONNC(false),
         m_DISGAS(false),
         m_DISGASW(false),
         m_VAPOIL(false),
@@ -82,6 +85,13 @@ namespace Opm {
                     throw std::invalid_argument("ERROR: In the RUNSPEC section the CPR keyword should contain EXACTLY one empty record.");
 
                 m_useCPR = true;
+            }
+            if (runspec.hasKeyword<ParserKeywords::NONNC>()) {
+                const auto& nonnc = runspec.get<ParserKeywords::NONNC>().back();
+                if (nonnc.size() > 0)
+                    throw std::invalid_argument("ERROR: In the RUNSPEC section the NONNC keyword should contain EXACTLY one empty record.");
+
+                m_useNONNC = true;
             }
             if (runspec.hasKeyword<ParserKeywords::DISGAS>()) {
                 m_DISGAS = true;
@@ -113,6 +123,7 @@ namespace Opm {
         result.m_bcconfig = BCConfig::serializationTestObject();
         result.m_rock_config = RockConfig::serializationTestObject();
         result.m_useCPR = false;
+        result.m_useNONNC = true;
         result.m_DISGAS = true;
         result.m_DISGASW = true;
         result.m_VAPOIL = false;
@@ -142,6 +153,10 @@ namespace Opm {
 
     bool SimulationConfig::useCPR() const {
         return m_useCPR;
+    }
+
+    bool SimulationConfig::useNONNC() const {
+        return m_useNONNC;
     }
 
     bool SimulationConfig::hasDISGAS() const {
@@ -177,6 +192,7 @@ namespace Opm {
                this->bcconfig() == data.bcconfig() &&
                this->rock_config() == data.rock_config() &&
                this->useCPR() == data.useCPR() &&
+               this->useNONNC() == data.useNONNC() &&
                this->hasDISGAS() == data.hasDISGAS() &&
                this->hasDISGASW() == data.hasDISGASW() &&
                this->hasVAPOIL() == data.hasVAPOIL() &&
@@ -191,6 +207,7 @@ namespace Opm {
                full_config.bcconfig() == rst_config.bcconfig() &&
                full_config.rock_config() == rst_config.rock_config() &&
                full_config.useCPR() == rst_config.useCPR() &&
+               full_config.useNONNC() == rst_config.useNONNC() &&
                full_config.hasDISGAS() == rst_config.hasDISGAS() &&
                full_config.hasDISGASW() == rst_config.hasDISGASW() &&
                full_config.hasVAPOIL() == rst_config.hasVAPOIL() &&

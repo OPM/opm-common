@@ -45,6 +45,7 @@ namespace Opm {
         const BCConfig& bcconfig() const;
         bool useThresholdPressure() const;
         bool useCPR() const;
+        bool useNONNC() const;
         bool hasDISGAS() const;
         bool hasDISGASW() const;
         bool hasVAPOIL() const;
@@ -63,6 +64,7 @@ namespace Opm {
             serializer(m_bcconfig);
             serializer(m_rock_config);
             serializer(m_useCPR);
+            serializer(m_useNONNC);
             serializer(m_DISGAS);
             serializer(m_DISGASW);
             serializer(m_VAPOIL);
@@ -78,6 +80,7 @@ namespace Opm {
         BCConfig m_bcconfig;
         RockConfig m_rock_config;
         bool m_useCPR;
+        bool m_useNONNC;
         bool m_DISGAS;
         bool m_DISGASW;
         bool m_VAPOIL;
