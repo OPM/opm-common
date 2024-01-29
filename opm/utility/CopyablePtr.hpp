@@ -19,6 +19,10 @@
 
 #ifndef OPM_COPYABLE_PTR_HPP
 #define OPM_COPYABLE_PTR_HPP
+
+#include <iostream>
+#include <cstdlib>
+
 namespace Opm {
 namespace Utility {
 // Wraps std::unique_ptr and makes it copyable.
@@ -29,13 +33,28 @@ namespace Utility {
 template <class T>
 class CopyablePtr {
 public:
-    CopyablePtr() : ptr_(nullptr) {}
+    CopyablePtr() : ptr_(nullptr) {
+         if (isDebugEnabled()) {
+            std::cout << "CopyablePtr Default Constructed: ptr_ = nullptr" << std::endl;
+        }
+    }
     CopyablePtr(const CopyablePtr& other) {
         if (other) { // other does not contain a nullptr
             ptr_ = std::make_unique<T>(*other.get());
+             if (isDebugEnabled()) {
+                std::cout << "CopyablePtr Copied: New ptr_ = " << ptr_.get() << std::endl;
+            }
         }
         else {
             ptr_ = nullptr;
+            if (isDebugEnabled()) {
+                std::cout << "CopyablePtr Copied: ptr_ = nullptr (from nullptr)" << std::endl;
+            }
+        }
+    }
+    ~CopyablePtr() {
+        if (isDebugEnabled()) {
+            std::cout << "CopyablePtr Destructed: Freeing ptr_ = " << ptr_.get() << std::endl;
         }
     }
     // assignment operator
@@ -64,6 +83,11 @@ public:
     T* release() const {return ptr_.release();}
 private:
     std::unique_ptr<T> ptr_;
+
+    static bool isDebugEnabled() {
+        const char* debugEnv = std::getenv("OPM_DEBUG");
+        return debugEnv && std::string(debugEnv) == "1";
+    }
 };
 
 } // namespace Utility
