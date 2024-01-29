@@ -154,7 +154,7 @@ public:
     bool mixingEnergy(){
         switch (approach_) {
         case OilPvtApproach::ThermalOil: {
-            return true;
+            return false;
             break;
         }
         default: {

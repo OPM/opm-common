@@ -134,7 +134,7 @@ public:
     bool mixingEnergy(){
         switch (approach_) {
         case WaterPvtApproach::ThermalWater: {
-            return true;
+            return false;
             break;
         }
         default: {
