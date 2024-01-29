@@ -172,6 +172,12 @@ void handleWCONHIST(HandlerContext& handlerContext)
                     handlerContext.updateWellStatus(well_name,  Well::Status::SHUT);
                 }
             }
+
+            // Always check if well can be opened (it could have been closed for numerical reasons and possible to operate with new params)
+            if (handlerContext.getWellStatus(well_name) == WellStatus::OPEN) {
+                handlerContext.state().wellgroup_events().addEvent( well_name, ScheduleEvents::REQUEST_OPEN_WELL);
+            }
+
         }
     }
 }
@@ -333,6 +339,12 @@ void handleWCONINJH(HandlerContext& handlerContext)
                 OpmLog::note(msg);
                 handlerContext.updateWellStatus(well_name, Well::Status::SHUT);
             }
+
+            // Always check if well can be opened (it could have been closed for numerical reasons and possible to operate with new params)
+            if (handlerContext.getWellStatus(well_name) == WellStatus::OPEN) {
+                handlerContext.state().wellgroup_events().addEvent( well_name, ScheduleEvents::REQUEST_OPEN_WELL);
+            }
+
         }
     }
 }
