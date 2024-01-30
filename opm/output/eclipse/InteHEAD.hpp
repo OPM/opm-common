@@ -1,5 +1,5 @@
 /*
-  Copyright 2021 Equinor ASA.
+  Copyright 2021-2024 Equinor ASA.
   Copyright 2016, 2017, 2018 Statoil ASA.
 
   This file is part of the Open Porous Media Project (OPM).
@@ -34,7 +34,7 @@ class Phases;
 class ScheduleState;
 class UnitSystem;
 
-}
+} // namespace Opm
 
 namespace Opm { namespace RestartIO {
 
@@ -42,110 +42,131 @@ namespace Opm { namespace RestartIO {
     {
     public:
         struct WellTableDim {
-            int numWells;
-            int maxPerf;
-            int maxWellInGroup;
-            int maxGroupInField;
-            int maxWellsInField;
-            int mxwlstprwel;
-            int mxdynwlst;
+            int numWells{};
+            int maxPerf{};
+            int maxWellInGroup{};
+            int maxGroupInField{};
+            int maxWellsInField{};
+            int mxwlstprwel{};
+            int mxdynwlst{};
         };
 
         struct WellSegDims {
-            int nsegwl;
-            int nswlmx;
-            int nsegmx;
-            int nlbrmx;
-            int nisegz;
-            int nrsegz;
-            int nilbrz;
+            int nsegwl{};
+            int nswlmx{};
+            int nsegmx{};
+            int nlbrmx{};
+            int nisegz{};
+            int nrsegz{};
+            int nilbrz{};
         };
 
         struct RegDims {
-            int ntfip;
-            int nmfipr;
-            int nrfreg;
-            int ntfreg;
-            int nplmix;
+            int ntfip{};
+            int nmfipr{};
+            int nrfreg{};
+            int ntfreg{};
+            int nplmix{};
         };
 
         struct RockOpts {
-            int ttyp;
+            int ttyp{};
         };
 
         struct TimePoint {
-            int year;
-            int month;          // 1..12
-            int day;            // 1..31
+            int year{};
+            int month{};          // 1..12
+            int day{};            // 1..31
 
-            int hour;           // 0..23
-            int minute;         // 0..59
-            int second;         // 0..59
+            int hour{};           // 0..23
+            int minute{};         // 0..59
+            int second{};         // 0..59
 
-            int microseconds;   // 0..999999
+            int microseconds{};   // 0..999999
         };
 
         struct Phases {
-            int oil;
-            int water;
-            int gas;
+            int oil{};
+            int water{};
+            int gas{};
         };
 
         struct TuningPar {
-            int newtmx;
-            int newtmn;
-            int litmax;
-            int litmin;
-            int mxwsit;
-            int mxwpit;
-            int wseg_mx_rst;
-        };
-	
-	struct Group {
-	  int ngroups;
-	};
-	
-	struct UdqParam {
-	  int    udqParam_1;
-      int    no_wudqs;
-      int    no_gudqs;
-      int    no_fudqs;
-      int    no_iuads;
-      int    no_iuaps;
-	};
-
-    struct ActionParam {
-      int   no_actions;
-      int   max_no_sched_lines_per_action;
-      int   max_no_conditions_per_action;
-      int   max_no_characters_per_line;
-     };
-     
-     struct GuideRateNominatedPhase {
-      int   nominated_phase;
-     };
-
-
-     struct ActiveNetwork {
-         int actnetwrk;
-     };
-
-     struct NetworkDims {
-            int noactnod;
-            int noactbr;
-            int nodmax;
-            int nbrmax;
-            int nibran;
-            int nrbran;
-            int ninode;
-            int nrnode;
-            int nznode;
-            int ninobr;
+            int newtmx{};
+            int newtmn{};
+            int litmax{};
+            int litmin{};
+            int mxwsit{};
+            int mxwpit{};
+            int wseg_mx_rst{};
         };
 
-     struct NetBalanceDims {
-            int maxNoIterationsNBC;
-            int maxNoIterationsTHP;
+        struct Group {
+            int ngroups{};
+        };
+
+        struct UdqParam {
+            int udqParam_1{};
+
+            /// Number of field-level UDQ parameters (FU*)
+            int num_field_udqs{};
+
+            /// Number of group-level UDQ parameters (GU*)
+            int num_group_udqs{};
+
+            /// Number of region-level UDQ parameters (RU*)
+            int num_reg_udqs{};
+
+            /// Number of well-level UDQ parameters (WU*)
+            int num_well_udqs{};
+
+            /// Number of segment-level UDQ parameters (SU*)
+            int num_seg_udqs{};
+
+            /// Number of connection-level UDQ parameters (CU*)
+            int num_conn_udqs{};
+
+            /// Number of aquifer-level UDQ parameters (AU*)
+            int num_aqu_udqs{};
+
+            /// Number of block-level UDQ parameters (BU*)
+            int num_blk_udqs{};
+
+            int num_iuads{};
+            int num_iuaps{};
+        };
+
+        struct ActionParam {
+            int no_actions{};
+            int max_no_sched_lines_per_action{};
+            int max_no_conditions_per_action{};
+            int max_no_characters_per_line{};
+        };
+
+        struct GuideRateNominatedPhase {
+            int nominated_phase;
+        };
+
+        struct ActiveNetwork {
+            int actnetwrk;
+        };
+
+        struct NetworkDims {
+            int noactnod{};
+            int noactbr{};
+            int nodmax{};
+            int nbrmax{};
+            int nibran{};
+            int nrbran{};
+            int ninode{};
+            int nrnode{};
+            int nznode{};
+            int ninobr{};
+        };
+
+        struct NetBalanceDims {
+            int maxNoIterationsNBC{};
+            int maxNoIterationsTHP{};
         };
 
         struct AquiferDims {
@@ -193,7 +214,7 @@ namespace Opm { namespace RestartIO {
             // Number of data elements per connection in ACAQ array.
             int numDoubConnElem {4};
         };
-     
+
         InteHEAD();
         ~InteHEAD() = default;
 
@@ -237,6 +258,7 @@ namespace Opm { namespace RestartIO {
         InteHEAD& liftOptParam(int in_enc);
 
         static int numRsegElem(const Opm::Phases& phase);
+
         const std::vector<int>& data() const
         {
             return this->data_;
