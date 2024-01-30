@@ -24,6 +24,8 @@
 #include <opm/input/eclipse/Schedule/ScheduleTypes.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellEnums.hpp>
 
+#include <cmath>
+
 namespace Opm {
 
 struct WellInjectionControls {
@@ -51,6 +53,23 @@ public:
 
     void clearControls(){
         this->controls = 0;
+    }
+
+    bool zeroRateLimit() const {
+        auto is_zero = [](const double x)
+        {
+            return std::isfinite(x) && !std::isnormal(x);
+        };
+
+        if (this->hasControl(WellInjectorCMode::RATE) && is_zero(this->surface_rate) ) {
+            return true;
+        }
+
+        if (this->hasControl(WellInjectorCMode::RESV) && is_zero(this->reservoir_rate) ) {
+            return true;
+        }
+
+        return false;
     }
 
     double bhp_limit;

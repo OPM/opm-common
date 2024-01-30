@@ -37,6 +37,7 @@
 #include <fmt/format.h>
 
 #include <stdexcept>
+#include <iostream>
 
 namespace Opm {
 
@@ -236,6 +237,7 @@ welspecsUpdateExistingWells(const DeckRecord&               record,
 
     for (const auto& wellName : wellNames) {
         auto well = state().wells.get(wellName);
+        std::cout << " well " << wellName << "prev allow_crossflow? " << well.getAllowCrossFlow() << " now allow_crossflow? " << allow_crossflow << std::endl;
 
         const auto updateHead = well.updateHead(I, J);
         const auto updateRefD = well.updateRefDepth(ref_depth);
@@ -243,6 +245,7 @@ welspecsUpdateExistingWells(const DeckRecord&               record,
         const auto updatePVT  = well.updatePVTTable(pvt_table);
         const auto updateCrossflow = well.updateCrossFlow(allow_crossflow);
         const auto updateShutin = well.updateAutoShutin(auto_shutin);
+        std::cout << " well " << wellName << " updateCrossflow ? " << updateCrossflow << " new allow_crossflow " << well.getAllowCrossFlow() << std::endl;
 
         if (updateHead || updateRefD || updateDRad || updatePVT || updateCrossflow || updateShutin) {
             well.updateRefDepth();
