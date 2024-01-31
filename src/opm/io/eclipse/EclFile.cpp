@@ -53,10 +53,15 @@ void EclFile::load(bool preload) {
         std::int64_t num;
         int sizeOfElement;
 
-        if (formatted) {
-            readFormattedHeader(fileH,arrName,num,arrType, sizeOfElement);
-        } else {
-            readBinaryHeader(fileH,arrName,num, arrType, sizeOfElement);
+        try {
+            if (formatted) {
+                readFormattedHeader(fileH,arrName,num,arrType, sizeOfElement);
+            } else {
+                readBinaryHeader(fileH,arrName,num, arrType, sizeOfElement);
+            }
+        } catch (const std::exception& e){
+            OPM_THROW(std::runtime_error,
+                fmt::format("Unable to read array header from {}: {} \nPlease check if the file is corrupt!", this->inputFilename, e.what()));
         }
 
         array_size.push_back(num);
