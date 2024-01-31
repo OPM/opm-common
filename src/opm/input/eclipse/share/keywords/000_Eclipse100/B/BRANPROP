@@ -3,6 +3,8 @@
   "sections": [
     "SCHEDULE"
   ],
+  "requires": ["NETWORK"],
+  "prohibits": ["GRUPNET"],
   "items": [
     {
       "name": "DOWNTREE_NODE",

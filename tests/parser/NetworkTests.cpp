@@ -21,18 +21,24 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include <algorithm>
+#include <opm/common/utility/OpmInputError.hpp>
 
-#include <opm/input/eclipse/Deck/Deck.hpp>
-#include <opm/input/eclipse/Schedule/Network/ExtNetwork.hpp>
-#include <opm/input/eclipse/Schedule/Network/Node.hpp>
-#include <opm/input/eclipse/Schedule/Network/Branch.hpp>
-#include <opm/input/eclipse/Schedule/Schedule.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
-#include <opm/input/eclipse/Parser/Parser.hpp>
+
 #include <opm/input/eclipse/Python/Python.hpp>
+
+#include <opm/input/eclipse/Schedule/Network/Branch.hpp>
+#include <opm/input/eclipse/Schedule/Network/ExtNetwork.hpp>
+#include <opm/input/eclipse/Schedule/Network/Node.hpp>
+#include <opm/input/eclipse/Schedule/Schedule.hpp>
+
+#include <opm/input/eclipse/Deck/Deck.hpp>
+
+#include <opm/input/eclipse/Parser/Parser.hpp>
+
+#include <algorithm>
 
 using namespace Opm;
 
@@ -50,6 +56,7 @@ Schedule make_schedule(const std::string& schedule_string) {
 }
 }
 
+BOOST_AUTO_TEST_SUITE(Basic_Functionality)
 
 BOOST_AUTO_TEST_CASE(CreateNetwork) {
     Network::ExtNetwork network;
@@ -68,6 +75,10 @@ BOOST_AUTO_TEST_CASE(Branch) {
 
 BOOST_AUTO_TEST_CASE(INVALID_DOWNTREE_NODE) {
     std::string deck_string = R"(
+RUNSPEC
+NETWORK
+ 3 2 /
+
 SCHEDULE
 
 GRUPTREE
@@ -104,6 +115,10 @@ NODEPROP
 
 BOOST_AUTO_TEST_CASE(INVALID_UPTREE_NODE) {
     std::string deck_string = R"(
+RUNSPEC
+NETWORK
+ 3 2 /
+
 SCHEDULE
 
 GRUPTREE
@@ -172,6 +187,10 @@ NODEPROP
 
 BOOST_AUTO_TEST_CASE(OK) {
     std::string deck_string = R"(
+RUNSPEC
+NETWORK
+ 3 2 /
+
 SCHEDULE
 
 GRUPTREE
@@ -277,6 +296,10 @@ BRANPROP
 
 BOOST_AUTO_TEST_CASE(NodeNames) {
     const auto sched = make_schedule(R"(
+RUNSPEC
+NETWORK
+ 3 2 /
+
 SCHEDULE
 
 GRUPTREE
@@ -325,6 +348,10 @@ BRANPROP
 
 BOOST_AUTO_TEST_CASE(DefaultedNodes) {
     const auto sched = make_schedule(R"(
+RUNSPEC
+NETWORK
+ 3 2 /
+
 SCHEDULE
 
 GRUPTREE
@@ -413,3 +440,96 @@ GRUPNET
     BOOST_CHECK_EQUAL(p.terminal_pressure().value(), 21 * 100000);
     BOOST_CHECK(p == network.roots()[0]);
 }
+
+BOOST_AUTO_TEST_SUITE_END()     // Basic_Functionality
+
+// ===========================================================================
+
+BOOST_AUTO_TEST_SUITE(Keyword_Consistency)
+
+BOOST_AUTO_TEST_SUITE(Standard_Networks)
+
+BOOST_AUTO_TEST_CASE(Reject_NETWORK_Keyword)
+{
+    BOOST_CHECK_THROW(const auto deck = Parser{}.parseString(R"(
+GRUPNET
+ FIELD 12.34 /
+/
+NETWORK
+ 3 2 /
+)"), OpmInputError);
+}
+
+BOOST_AUTO_TEST_CASE(Reject_BRANPROP_Keyword)
+{
+    BOOST_CHECK_THROW(const auto deck = Parser{}.parseString(R"(
+GRUPNET
+ FIELD 12.34 /
+/
+BRANPROP
+ 'D' 'U' 9999 /
+/
+)"), OpmInputError);
+}
+
+BOOST_AUTO_TEST_CASE(Reject_NODEPROP_Keyword)
+{
+    BOOST_CHECK_THROW(const auto deck = Parser{}.parseString(R"(
+GRUPNET
+ FIELD 12.34 /
+/
+NODEPROP
+ 'D' 23.45 /
+/
+)"), OpmInputError);
+}
+
+BOOST_AUTO_TEST_SUITE_END()     // Standard_Networks
+
+// ---------------------------------------------------------------------------
+
+BOOST_AUTO_TEST_SUITE(Extended_Network)
+
+BOOST_AUTO_TEST_CASE(Network_Reject_Grupnet)
+{
+    BOOST_CHECK_THROW(const auto deck = Parser{}.parseString(R"(
+NETWORK
+ 3 2 /
+GRUPNET
+ FIELD 12.34 /
+/
+)"), OpmInputError);
+}
+
+BOOST_AUTO_TEST_CASE(Branprop_Requires_Network)
+{
+    BOOST_CHECK_THROW(const auto deck = Parser{}.parseString(R"(
+BRANPROP
+ 'D' 'U' 9999 /
+/
+)"), OpmInputError);
+}
+
+BOOST_AUTO_TEST_CASE(Nodeprop_Requires_Network)
+{
+    BOOST_CHECK_THROW(const auto deck = Parser{}.parseString(R"(
+NODEPROP
+ 'D' 23.45 /
+/
+)"), OpmInputError);
+}
+
+BOOST_AUTO_TEST_CASE(Nodeprop_Requires_Branprop)
+{
+    BOOST_CHECK_THROW(const auto deck = Parser{}.parseString(R"(
+NETWORK
+ 3 2 /
+NODEPROP
+ 'D' 23.45 /
+/
+)"), OpmInputError);
+}
+
+BOOST_AUTO_TEST_SUITE_END()     // Extended_Network
+
+BOOST_AUTO_TEST_SUITE_END()     // Keyword_Consistency

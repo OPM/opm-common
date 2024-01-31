@@ -3,6 +3,8 @@
   "sections": [
     "SCHEDULE"
   ],
+  "requires": ["NETWORK", "BRANPROP"],
+  "prohibits": ["GRUPNET"],
   "items": [
     {
       "item": 1,

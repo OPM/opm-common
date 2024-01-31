@@ -4,6 +4,7 @@
     "SPECIAL",
     "SCHEDULE"
   ],
+  "prohibits": ["NETWORK", "BRANPROP", "NODEPROP"],
   "items": [
     {
       "item": 1,
