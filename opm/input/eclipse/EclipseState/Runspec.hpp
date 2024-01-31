@@ -202,7 +202,21 @@ public:
         return this->nMaxNoBranchesConToNode;
     }
 
-    bool active() const;
+    bool extendedNetwork() const
+    {
+        return this->type_ == Type::Extended;
+    }
+
+    bool standardNetwork() const
+    {
+        return this->type_ == Type::Standard;
+    }
+
+    bool active() const
+    {
+        return this->extendedNetwork()
+            || this->standardNetwork();
+    }
 
     bool operator==(const NetworkDims& data) const;
 
@@ -215,9 +229,12 @@ public:
     }
 
 private:
+    enum class Type { None, Extended, Standard, };
+
     int nMaxNoNodes;
     int nMaxNoBranches;
     int nMaxNoBranchesConToNode;
+    Type type_{ Type::None };
 };
 
 class AquiferDimensions {
