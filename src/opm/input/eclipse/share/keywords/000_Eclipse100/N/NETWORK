@@ -3,6 +3,7 @@
   "sections": [
     "RUNSPEC"
   ],
+  "prohibits": ["GRUPNET"],
   "size": 1,
   "items": [
     {

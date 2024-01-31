@@ -17,6 +17,9 @@ DIMENS
 REGDIMS
   10 /
 
+NETWORK
+  3 2 /
+
 WELLDIMS
 -- Item 1: NWMAX  (Maximum number of wells in model)
 -- Item 2: NCWMAX (Maximum number of connections per well)
