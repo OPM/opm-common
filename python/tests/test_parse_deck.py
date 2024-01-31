@@ -173,10 +173,7 @@ FIPNUM
         # notice that RUNSPEC keywords will always be parsed since these properties from these keyword
         # are needed to parse following sections.
 
-        props_spe1case1 = ["RUNSPEC", "TITLE", "DIMENS", "EQLDIMS", "TABDIMS", "REGDIMS", "OIL", "GAS",
-                         "WATER", "DISGAS", "FIELD", "START", "WELLDIMS", "UNIFOUT", "UDQDIMS", "UDADIMS", "GRID",
-                          "PVTW", "ROCK", "SWOF", "SGOF", "DENSITY", "PVDG",
-                         "PVTO"]
+        props_spe1case1 = ["PROPS", "PVTW", "ROCK", "SWOF", "SGOF", "DENSITY", "PVDG", "PVTO"]
 
         parser = Parser()
 

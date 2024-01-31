@@ -42,7 +42,7 @@ namespace Opm {
     namespace Ecl {
 
         enum SectionType {
-            GRID, PROPS, REGIONS, SOLUTION, SUMMARY, SCHEDULE
+            RUNSPEC, GRID, EDIT, PROPS, REGIONS, SOLUTION, SUMMARY, SCHEDULE
         };
     }
 
