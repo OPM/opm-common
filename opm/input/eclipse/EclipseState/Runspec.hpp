@@ -204,12 +204,12 @@ public:
 
     bool extendedNetwork() const
     {
-        return this->extNetwork_;
+        return this->type_ == Type::Extended;
     }
 
     bool standardNetwork() const
     {
-        return this->stdNetwork_;
+        return this->type_ == Type::Standard;
     }
 
     bool active() const
@@ -229,12 +229,12 @@ public:
     }
 
 private:
+    enum class Type { None, Extended, Standard, };
+
     int nMaxNoNodes;
     int nMaxNoBranches;
     int nMaxNoBranchesConToNode;
-
-    bool extNetwork_{false};
-    bool stdNetwork_{false};
+    Type type_{ Type::None };
 };
 
 class AquiferDimensions {

@@ -286,10 +286,10 @@ NetworkDims::NetworkDims(const Deck& deck)
         this->nMaxNoBranches = wsd.getItem<ParserKeywords::NETWORK::NBRMAX>().get<int>(0);
         this->nMaxNoBranchesConToNode = wsd.getItem<ParserKeywords::NETWORK::NBCMAX>().get<int>(0);
 
-        this->extNetwork_ = true;
+        this->type_ = Type::Extended;
     }
     else if (deck.hasKeyword<ParserKeywords::GRUPNET>()) {
-        this->stdNetwork_ = true;
+        this->type_ = Type::Standard;
     }
 }
 
