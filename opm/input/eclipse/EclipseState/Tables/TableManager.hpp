@@ -204,6 +204,8 @@ namespace Opm {
 
         int actco2s() const;
 
+        bool diffMoleFraction() const;
+
         bool operator==(const TableManager& data) const;
 
         template<class Serializer>
@@ -265,6 +267,7 @@ namespace Opm {
             serializer(m_rtemp);
             serializer(m_salinity);
             serializer(m_actco2s);
+            serializer(m_diff_mole_fraction);
             serializer(m_tlmixpar);
             serializer(m_ppcwmax);
             if (!serializer.isSerializing()) {
@@ -417,6 +420,7 @@ namespace Opm {
         double m_rtemp {288.7056}; // 60 Fahrenheit in Kelvin
         double m_salinity {0.0};
         int m_actco2s {3};
+        bool m_diff_mole_fraction {true};
 
         struct SplitSimpleTables {
           size_t plyshMax = 0;

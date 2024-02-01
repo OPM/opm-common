@@ -8,6 +8,8 @@
     "keyword": "TABDIMS",
     "item": "NTPVT"
   },
+  "requires": ["GAS", "WATER"],
+  "prohibits": ["DIFFAWAT", "DIFFAGAS"],
   "items": [
   {
     "name": "CO2_IN_WATER",
