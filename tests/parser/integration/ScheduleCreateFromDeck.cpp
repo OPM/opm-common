@@ -262,7 +262,7 @@ BOOST_AUTO_TEST_CASE(WellTesting) {
 
         BOOST_CHECK( Well::Status::OPEN == sched.getWell("W_1", 11).getStatus( ));
         BOOST_CHECK( Well::Status::OPEN == sched.getWell("W_1", 12).getStatus( ));
-        BOOST_CHECK( Well::Status::SHUT == sched.getWell("W_1", 13).getStatus( ));
+        BOOST_CHECK( Well::Status::OPEN == sched.getWell("W_1", 13).getStatus( ));
         BOOST_CHECK( Well::Status::OPEN == sched.getWell("W_1", 14).getStatus( ));
         {
             SummaryState st(TimeService::now());

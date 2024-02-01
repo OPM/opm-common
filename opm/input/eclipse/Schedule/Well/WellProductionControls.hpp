@@ -56,7 +56,7 @@ public:
         this->controls = 0;
     }
 
-    bool zeroRateLimit() const {
+    bool anyZeroRateConstraint() const {
         auto is_zero = [](const double x)
         {
             return std::isfinite(x) && !std::isnormal(x);

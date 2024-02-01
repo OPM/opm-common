@@ -162,6 +162,7 @@ void handleWCONHIST(HandlerContext& handlerContext)
             if (handlerContext.getWellStatus(well_name) == WellStatus::OPEN) {
                 handlerContext.state().wellgroup_events().addEvent( well_name, ScheduleEvents::REQUEST_OPEN_WELL);
             }
+
         }
     }
 }
@@ -216,7 +217,6 @@ void handleWCONINJE(HandlerContext& handlerContext)
                 update_well = true;
             }
 
-            // const bool crossFlow = well2.getAllowCrossFlow();
             if (update_well) {
                 handlerContext.state().events().addEvent(ScheduleEvents::INJECTION_UPDATE);
                 handlerContext.state().wellgroup_events().addEvent( well_name, ScheduleEvents::INJECTION_UPDATE);
@@ -284,7 +284,6 @@ void handleWCONINJH(HandlerContext& handlerContext)
                 update_well = true;
             }
 
-            // const bool crossFlow = well2.getAllowCrossFlow();
             if (update_well) {
                 handlerContext.state().events().addEvent( ScheduleEvents::INJECTION_UPDATE );
                 handlerContext.state().wellgroup_events().addEvent( well_name, ScheduleEvents::INJECTION_UPDATE);
