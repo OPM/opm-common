@@ -91,11 +91,15 @@ private:
     std::vector<int> nnc2_array;
     std::vector<float> transnnc_array;
     std::vector<int> host_cells;
-
+    std::map<int,int> res;
+     
     std::vector<std::string> lgr_names;
-
+    
+    int numres;
+    
     int zcorn_array_index;
     int coord_array_index;
+    int coordsys_array_index;
     int actnum_array_index;
     int nnc1_array_index;
     int nnc2_array_index;

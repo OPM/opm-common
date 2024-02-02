@@ -33,6 +33,7 @@
 #include <string>
 #include <stdexcept>
 
+
 namespace Opm { namespace EclIO {
 
 using NNCentry = std::tuple<int, int, int, int, int,int, float>;
@@ -53,6 +54,7 @@ EGrid::EGrid(const std::string &filename, std::string grid_name) :
     actnum_array_index = -1;
     nnc1_array_index = -1;
     nnc2_array_index = -1;
+    coordsys_array_index = -1;    
     m_radial = false;
 
     int hostnum_index = -1;
@@ -91,23 +93,27 @@ EGrid::EGrid(const std::string &filename, std::string grid_name) :
                 nijk[0] = gridhead[1];
                 nijk[1] = gridhead[2];
                 nijk[2] = gridhead[3];
-
+                
+                numres = gridhead[24];
+               
                 if (gridhead.size() > 26)
                     m_radial = gridhead[26] > 0 ? true: false;
             }
 
             if (array_name[n] == "COORD")
-                coord_array_index= n;
+                coord_array_index = n;
+            else if (array_name[n] == "COORDSYS")
+                coordsys_array_index = n;
             else if (array_name[n] == "ZCORN")
-                zcorn_array_index= n;
+                zcorn_array_index = n;
             else if (array_name[n] == "ACTNUM")
                 actnum_array_index= n;
             else if (array_name[n] == "NNC1")
-                nnc1_array_index= n;
+                nnc1_array_index = n;
             else if (array_name[n] == "NNC2")
-                nnc2_array_index= n;
+                nnc2_array_index = n;
             else if (array_name[n] == "HOSTNUM")
-                hostnum_index= n;
+                hostnum_index = n;
         }
 
         if ((lgrname == "global") && (array_name[n] == "GRIDHEAD")) {
@@ -117,6 +123,21 @@ EGrid::EGrid(const std::string &filename, std::string grid_name) :
             host_nijk[2] = gridhead[3];
         }
 
+    }
+    
+    if (coordsys_array_index == -1){
+        for (int l = 0; l < nijk[2]; l ++)
+            res[l] = 0;
+    } else {
+        auto coordsys = get<int>(coordsys_array_index);
+        
+        for (int r = 0; r < numres; r++){
+            int l1 = coordsys[r*6 + 0];
+            int l2 = coordsys[r*6 + 1];
+            
+            for (int l = l1 -1; l < l2; l++)
+                res[l] = r;    
+        }
     }
 
     if (actnum_array_index != -1) {
@@ -309,8 +330,10 @@ void EGrid::getCellCorners(const std::array<int, 3>& ijk,
     std::vector<int> zind;
     std::vector<int> pind;
 
+    int res_shift = res.at(ijk[2])*(nijk[0]+1)*(nijk[1]+1)*6;
+    
    // calculate indices for grid pillars in COORD arrray
-    pind.push_back(ijk[1]*(nijk[0]+1)*6 + ijk[0]*6);
+    pind.push_back(res_shift + ijk[1]*(nijk[0]+1)*6 + ijk[0]*6);
     pind.push_back(pind[0] + 6);
     pind.push_back(pind[0] + (nijk[0]+1)*6);
     pind.push_back(pind[2] + 6);
