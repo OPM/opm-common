@@ -1224,7 +1224,7 @@ static LhsEval internalEnergy(const FluidState& fluidState,
         // should preferably not be used values should be taken from intensive quantities fluid state.
         OpmLog::warning("Not need: try to take enthalpy from fluidState");
         const auto& p = decay<LhsEval>(fluidState.pressure(phaseIdx));
-        return internalEnergy(fluidState, phaseIdx, regionIdx) + p/density<FluidState, LhsEval>(fluidState, phaseIdx, regionIdx);
+        return internalEnergy<FluidState, LhsEval>(fluidState, phaseIdx, regionIdx) + p/density<FluidState, LhsEval>(fluidState, phaseIdx, regionIdx);
     }
 
     /*!
