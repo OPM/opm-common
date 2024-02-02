@@ -163,7 +163,7 @@ public:
     bool mixingEnergy(){
         switch (gasPvtApproach_) {
         case GasPvtApproach::ThermalGas: {
-            return false;
+            return true;
             break;
         }
         default: {
