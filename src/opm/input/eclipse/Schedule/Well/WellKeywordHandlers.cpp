@@ -158,21 +158,6 @@ void handleWCONHIST(HandlerContext& handlerContext)
                 handlerContext.state().wells.update( well2 );
             }
 
-            if (!well2.getAllowCrossFlow()) {
-                // The numerical content of the rate UDAValues is accessed unconditionally;
-                // since this is in history mode use of UDA values is not allowed anyway.
-                const auto& oil_rate = properties->OilRate;
-                const auto& water_rate = properties->WaterRate;
-                const auto& gas_rate = properties->GasRate;
-                if (oil_rate.zero() && water_rate.zero() && gas_rate.zero()) {
-                    std::string msg =
-                        "Well " + well2.name() + " is a history matched well with zero rate where crossflow is banned. " +
-                        "This well will be closed at " + std::to_string(handlerContext.elapsed_seconds() / (60*60*24)) + " days";
-                    OpmLog::note(msg);
-                    handlerContext.updateWellStatus(well_name,  Well::Status::SHUT);
-                }
-            }
-
             // Always check if well can be opened (it could have been closed for numerical reasons and possible to operate with new params)
             if (handlerContext.getWellStatus(well_name) == WellStatus::OPEN) {
                 handlerContext.state().wellgroup_events().addEvent( well_name, ScheduleEvents::REQUEST_OPEN_WELL);
@@ -232,7 +217,6 @@ void handleWCONINJE(HandlerContext& handlerContext)
                 update_well = true;
             }
 
-            const bool crossFlow = well2.getAllowCrossFlow();
             if (update_well) {
                 handlerContext.state().events().addEvent(ScheduleEvents::INJECTION_UPDATE);
                 handlerContext.state().wellgroup_events().addEvent( well_name, ScheduleEvents::INJECTION_UPDATE);
@@ -240,28 +224,6 @@ void handleWCONINJE(HandlerContext& handlerContext)
                     handlerContext.state().wellgroup_events().addEvent( well_name, ScheduleEvents::INJECTION_TYPE_CHANGED);
                 }
                 handlerContext.state().wells.update( std::move(well2) );
-            }
-
-            // if the well has zero surface rate limit or reservior rate limit, while does not allow crossflow,
-            // it should be turned off.
-            if ( ! crossFlow ) {
-                std::string msg =
-                    "Well " + well_name + " is an injector with zero rate where crossflow is banned. " +
-                    "This well will be closed at " + std::to_string(handlerContext.elapsed_seconds() / (60*60*24)) + " days";
-
-                if (injection->surfaceInjectionRate.is<double>()) {
-                    if (injection->hasInjectionControl(Well::InjectorCMode::RATE) && injection->surfaceInjectionRate.zero()) {
-                        OpmLog::note(msg);
-                        handlerContext.updateWellStatus(well_name, Well::Status::SHUT);
-                    }
-                }
-
-                if (injection->reservoirInjectionRate.is<double>()) {
-                    if (injection->hasInjectionControl(Well::InjectorCMode::RESV) && injection->reservoirInjectionRate.zero()) {
-                        OpmLog::note(msg);
-                        handlerContext.updateWellStatus(well_name, Well::Status::SHUT);
-                    }
-                }
             }
 
             if (handlerContext.state().wells.get( well_name ).getStatus() == Well::Status::OPEN) {
@@ -322,7 +284,6 @@ void handleWCONINJH(HandlerContext& handlerContext)
                 update_well = true;
             }
 
-            const bool crossFlow = well2.getAllowCrossFlow();
             if (update_well) {
                 handlerContext.state().events().addEvent( ScheduleEvents::INJECTION_UPDATE );
                 handlerContext.state().wellgroup_events().addEvent( well_name, ScheduleEvents::INJECTION_UPDATE);
@@ -330,14 +291,6 @@ void handleWCONINJH(HandlerContext& handlerContext)
                     handlerContext.state().wellgroup_events().addEvent( well_name, ScheduleEvents::INJECTION_TYPE_CHANGED);
                 }
                 handlerContext.state().wells.update( std::move(well2) );
-            }
-
-            if ( ! crossFlow && (injection->surfaceInjectionRate.zero())) {
-                std::string msg =
-                    "Well " + well_name + " is an injector with zero rate where crossflow is banned. " +
-                    "This well will be closed at " + std::to_string(handlerContext.elapsed_seconds() / (60*60*24)) + " days";
-                OpmLog::note(msg);
-                handlerContext.updateWellStatus(well_name, Well::Status::SHUT);
             }
 
             // Always check if well can be opened (it could have been closed for numerical reasons and possible to operate with new params)

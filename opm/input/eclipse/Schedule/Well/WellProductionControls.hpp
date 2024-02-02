@@ -24,6 +24,8 @@
 #include <opm/input/eclipse/Schedule/ScheduleTypes.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellEnums.hpp>
 
+#include <cmath>
+
 namespace Opm {
 
 struct WellProductionControls {
@@ -52,6 +54,35 @@ public:
 
     void clearControls(){
         this->controls = 0;
+    }
+
+    bool anyZeroRateConstraint() const {
+        auto is_zero = [](const double x)
+        {
+            return std::isfinite(x) && !std::isnormal(x);
+        };
+
+        if (this->hasControl(WellProducerCMode::ORAT) && is_zero(this->oil_rate)) {
+            return true;
+        }
+
+        if (this->hasControl(WellProducerCMode::WRAT) && is_zero(this->water_rate)) {
+            return true;
+        }
+
+        if (this->hasControl(WellProducerCMode::GRAT) && is_zero(this->gas_rate)) {
+            return true;
+        }
+
+        if (this->hasControl(WellProducerCMode::LRAT) && is_zero(this->liquid_rate)) {
+            return true;
+        }
+
+        if (this->hasControl(WellProducerCMode::RESV) && is_zero(this->resv_rate)) {
+            return true;
+        }
+
+        return false;
     }
 
     bool operator==(const WellProductionControls& other) const

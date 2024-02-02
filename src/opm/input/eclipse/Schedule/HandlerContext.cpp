@@ -37,6 +37,7 @@
 #include <fmt/format.h>
 
 #include <stdexcept>
+#include <iostream>
 
 namespace Opm {
 
@@ -228,6 +229,12 @@ welspecsUpdateExistingWells(const DeckRecord&               record,
         ref_depth.emplace(ref_d.getSIDouble(0));
     }
 
+    const std::string& cross_flow_str = record.getItem<Kw::CROSSFLOW>().getTrimmedString(0);
+    const bool allow_crossflow = cross_flow_str != "NO";
+
+    const std::string& shutin_str = record.getItem<Kw::AUTO_SHUTIN>().getTrimmedString(0);
+    const bool auto_shutin = shutin_str != "STOP";
+
     for (const auto& wellName : wellNames) {
         auto well = state().wells.get(wellName);
 
@@ -235,8 +242,10 @@ welspecsUpdateExistingWells(const DeckRecord&               record,
         const auto updateRefD = well.updateRefDepth(ref_depth);
         const auto updateDRad = well.updateDrainageRadius(drainageRadius);
         const auto updatePVT  = well.updatePVTTable(pvt_table);
+        const auto updateCrossflow = well.updateCrossFlow(allow_crossflow);
+        const auto updateShutin = well.updateAutoShutin(auto_shutin);
 
-        if (updateHead || updateRefD || updateDRad || updatePVT) {
+        if (updateHead || updateRefD || updateDRad || updatePVT || updateCrossflow || updateShutin) {
             well.updateRefDepth();
 
             state().wellgroup_events()

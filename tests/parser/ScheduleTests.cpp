@@ -296,6 +296,11 @@ DATES             -- 2
  10  JUL 2007 /
 /
 
+WELSPECS
+     'BAN'        'OP'   20   51  3.92       'OIL'  2*  STOP YES /
+/
+
+
 WCONPROD
      'BAN'      'OPEN'      'ORAT'      0.000      0.000      0.000  5* /
 /
@@ -686,12 +691,27 @@ BOOST_AUTO_TEST_CASE(TestCrossFlowHandling) {
     BOOST_CHECK_EQUAL(schedule.getWell("BAN", 0).getAllowCrossFlow(), false);
     BOOST_CHECK_EQUAL(schedule.getWell("ALLOW", 0).getAllowCrossFlow(), true);
     BOOST_CHECK_EQUAL(schedule.getWell("DEFAULT", 0).getAllowCrossFlow(), true);
-    BOOST_CHECK(Well::Status::SHUT == schedule.getWell("BAN", 0).getStatus());
+    // we do not SHUT wells due to crossflow flag in the parser
+    BOOST_CHECK(Well::Status::OPEN == schedule.getWell("BAN", 0).getStatus());
     BOOST_CHECK(Well::Status::OPEN == schedule.getWell("BAN", 1).getStatus());
     BOOST_CHECK(Well::Status::OPEN == schedule.getWell("BAN", 2).getStatus());
-    BOOST_CHECK(Well::Status::SHUT == schedule.getWell("BAN", 3).getStatus());
+    BOOST_CHECK(Well::Status::OPEN == schedule.getWell("BAN", 3).getStatus());
     BOOST_CHECK(Well::Status::OPEN == schedule.getWell("BAN", 4).getStatus());
     BOOST_CHECK(Well::Status::OPEN == schedule.getWell("BAN", 5).getStatus());
+
+    BOOST_CHECK_EQUAL(false, schedule.getWell("BAN", 0).getAllowCrossFlow() );
+    BOOST_CHECK_EQUAL(false, schedule.getWell("BAN", 1).getAllowCrossFlow() );
+    BOOST_CHECK_EQUAL(true, schedule.getWell("BAN", 2).getAllowCrossFlow() );
+    BOOST_CHECK_EQUAL(true, schedule.getWell("BAN", 3).getAllowCrossFlow() );
+    BOOST_CHECK_EQUAL(true, schedule.getWell("BAN", 4).getAllowCrossFlow() );
+    BOOST_CHECK_EQUAL(true, schedule.getWell("BAN", 5).getAllowCrossFlow() );
+
+    BOOST_CHECK_EQUAL(true, schedule.getWell("BAN", 0).getAutomaticShutIn() );
+    BOOST_CHECK_EQUAL(true, schedule.getWell("BAN", 1).getAutomaticShutIn() );
+    BOOST_CHECK_EQUAL(false, schedule.getWell("BAN", 2).getAutomaticShutIn() );
+    BOOST_CHECK_EQUAL(false, schedule.getWell("BAN", 3).getAutomaticShutIn() );
+    BOOST_CHECK_EQUAL(false, schedule.getWell("BAN", 4).getAutomaticShutIn() );
+    BOOST_CHECK_EQUAL(false, schedule.getWell("BAN", 5).getAutomaticShutIn() );
 }
 
 namespace {
