@@ -164,8 +164,7 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
             std::vector<double> uSamples(temperatureColumn.size());
 
             // this is the heat capasity for gas without dissolution which is handled else where
-            const Scalar hVap = 480.6e3;
-            Scalar u = temperatureColumn[0]*cvGasColumn[0] + hVap;
+            Scalar u = temperatureColumn[0]*cvGasColumn[0];
             for (size_t i = 0;; ++i) {
                 uSamples[i] = u;
 

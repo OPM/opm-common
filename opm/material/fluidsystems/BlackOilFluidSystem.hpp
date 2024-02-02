@@ -1095,6 +1095,7 @@ public:
                 return oilEnergy;
             }
             is_mixing = true;
+            break;
         }
         case waterPhaseIdx: {
             if(!waterPvt_->mixingEnergy()){
@@ -1106,7 +1107,7 @@ public:
                 return waterEnergy;
             }
             is_mixing = true;
-
+            break;
         }
         case gasPhaseIdx: {
             if(!gasPvt_->mixingEnergy()){
@@ -1118,6 +1119,7 @@ public:
                 return gasEnergy;
             }
             is_mixing = true;
+            break;
         }
         }
         assert(is_mixing==true);
