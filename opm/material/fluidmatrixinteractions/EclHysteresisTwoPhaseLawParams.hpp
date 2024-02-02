@@ -30,6 +30,7 @@
 #include <opm/input/eclipse/EclipseState/WagHysteresisConfig.hpp>
 
 #include <opm/material/common/EnsureFinalized.hpp>
+#include <opm/material/common/MathToolbox.hpp>
 #include <opm/material/fluidmatrixinteractions/EclEpsConfig.hpp>
 #include <opm/material/fluidmatrixinteractions/EclEpsScalingPoints.hpp>
 #include <opm/material/fluidmatrixinteractions/EclHysteresisConfig.hpp>
