@@ -1255,7 +1255,7 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
 
             if (ZCORNKeyWord.getDataSize() != static_cast<size_t>(8*nx*ny*nz)) {
                 const std::string msg =
-                    "Wrong size of the ZCORN keyword: Expected 8*x*ny*nz = "
+                    "Wrong size of the ZCORN keyword: Expected 8*nx*ny*nz = "
                     + std::to_string(static_cast<long long>(8*nx*ny*nz)) + " is "
                     + std::to_string(static_cast<long long>(ZCORNKeyWord.getDataSize()));
                 OpmLog::error(msg);
