@@ -184,6 +184,38 @@ NODEPROP
 
     BOOST_CHECK_THROW( make_schedule(deck_string), std::exception);
 }
+BOOST_AUTO_TEST_CASE(INVALID_AUTOCHOKE_NODE) {
+    std::string deck_string = R"(
+SCHEDULE
+
+GRUPTREE
+ 'PROD'    'FIELD' /
+
+ 'M5S'    'PLAT-A'  /
+ 'M5N'    'PLAT-A'  /
+
+ 'C1'     'M5N'  /
+ 'F1'     'M5N'  /
+ 'B1'     'M5S'  /
+ 'G1'     'M5S'  /
+/
+
+BRANPROP
+--  Downtree  Uptree   #VFP    ALQ
+    B1         PLAT-A    5      1*      /
+    C1         PLAT-A    9999      1*      /  
+/
+
+NODEPROP
+--  Node_name Pr    autoChock?      addGasLift?   Group_name
+     PLAT-A 21.0   NO     NO    1*  /
+     B1    1*  NO     NO    1*  /
+     C1    1*  YES    NO    'GROUP' /  --This is an autochoke well-group - must have defaulted target group_name
+/
+)";
+
+    BOOST_CHECK_THROW( make_schedule(deck_string), std::exception);
+}
 
 BOOST_AUTO_TEST_CASE(OK) {
     std::string deck_string = R"(
@@ -215,7 +247,7 @@ NODEPROP
 --  Node_name Pr    autoChock?      addGasLift?     Group_name
      PLAT-A 21.0   NO     NO    1*  /
      B1    1*  YES      NO    1*  /
-     C1    1*  YES     NO     'GROUP' /
+     C1    1*  YES     NO     1* /
 /
 
 TSTEP
@@ -324,7 +356,7 @@ NODEPROP
 --  Node_name Pr    autoChock?      addGasLift?     Group_name
      PLAT-A 21.0   NO     NO    1*  /
      B1    1*  YES      NO    1*  /
-     C1    1*  YES     NO     'GROUP' /
+     C1    1*  YES     NO     1* /
 /
 
 TSTEP
