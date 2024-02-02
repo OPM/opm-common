@@ -777,6 +777,16 @@ bool Well::updateWellGuideRate(bool available, double guide_rate_arg, GuideRateT
     return update;
 }
 
+bool Well::updateAvailableForGroupControl(bool available) {
+    bool update = false;
+    if (this->guide_rate.available != available) {
+        this->guide_rate.available = available;
+        update = true;
+    }
+
+    return update;
+}
+
 
 
 

@@ -503,6 +503,7 @@ public:
     bool updateGroup(const std::string& group);
     bool updateWellGuideRate(bool available, double guide_rate, GuideRateTarget guide_phase, double scale_factor);
     bool updateWellGuideRate(double guide_rate);
+    bool updateAvailableForGroupControl(bool available);
     bool updateEfficiencyFactor(double efficiency_factor);
 
     bool updateSolventFraction(double solvent_fraction);

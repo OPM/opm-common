@@ -30,7 +30,9 @@
 
 #include <opm/input/eclipse/Schedule/Network/Balance.hpp>
 #include <opm/input/eclipse/Schedule/Network/ExtNetwork.hpp>
+#include <opm/input/eclipse/Schedule/Group/GuideRateConfig.hpp>
 #include <opm/input/eclipse/Schedule/ScheduleState.hpp>
+#include <opm/input/eclipse/Schedule/Well/Well.hpp>
 
 #include <fmt/format.h>
 
@@ -170,23 +172,42 @@ void handleNODEPROP(HandlerContext& handlerContext)
         }
 
         if (as_choke) {
-            std::string target_group = name;
-            const auto& target_item = record.getItem<ParserKeywords::NODEPROP::CHOKE_GROUP>();
+            const auto& group = handlerContext.state().groups.get(name);
+            if (group.wellgroup()) {
+                // Wells belong to a group with autochoke enabled are to be run on a common THP and should not have guide rates
+                for (const std::string& wellName : group.wells()) {
+                    auto well = handlerContext.state().wells.get(wellName);
 
-            if (target_item.hasValue(0)) {
-                target_group = target_item.get<std::string>(0);
-            }
+                    // Let the wells be operating on a THP Constraint
+                    auto properties = std::make_shared<Well::WellProductionProperties>(well.getProductionProperties());
+                    // The wells are not to be under GRUP control using guide rates but under THP control
+                    properties->addProductionControl(Well::ProducerCMode::THP);
+                    properties->controlMode = Well::ProducerCMode::THP;
+                    well.updateProduction(properties);
 
-            if (target_group != name) {
-                if (handlerContext.state().groups.has(name)) {
-                    const auto& group = handlerContext.state().groups.get(name);
-                    if (group.numWells() > 0) {
-                        throw std::invalid_argument("A manifold group must respond to its own target");
-                    }
+                    // Guide rate availability should be set to false
+                    well.updateAvailableForGroupControl(false);
+                    auto new_config = handlerContext.state().guide_rate();
+                    new_config.update_well(well);
+                    handlerContext.state().guide_rate.update( std::move(new_config) );
+                    handlerContext.state().wells.update( std::move(well) );
                 }
-            }
+                std::string target_group = name;
+                const auto& target_item = record.getItem<ParserKeywords::NODEPROP::CHOKE_GROUP>();
 
-            node.as_choke(target_group);
+                if (target_item.hasValue(0)) {
+                    target_group = target_item.get<std::string>(0);
+                }
+                if (target_group != name) {
+                    const std::string msg = "A manifold group must respond to its own target.";
+                    throw OpmInputError(msg, handlerContext.keyword.location());
+                }
+                node.as_choke(target_group);
+            }
+            else {
+                std::string msg = "The auto-choke option is implemented only for well groups.";
+                throw OpmInputError(msg, handlerContext.keyword.location());
+            }  
         }
 
         node.add_gas_lift_gas(add_gas_lift_gas);
