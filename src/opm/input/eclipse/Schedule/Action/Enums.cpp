@@ -53,6 +53,8 @@ Comparator comparator_from_int(int cmp_int) {
         return Comparator::LESS_EQUAL;
     case 5:
         return Comparator::EQUAL;
+    case 6:
+        return Comparator::NOT_EQUAL;
     default:
         throw std::logic_error(fmt::format("Integer value: {} could not be converted to ACTIONX comparator", cmp_int));
     }
@@ -61,6 +63,9 @@ Comparator comparator_from_int(int cmp_int) {
 std::string comparator_as_string(Comparator cmp) {
     if (cmp == Comparator::EQUAL)
         return "=";
+
+    if (cmp == Comparator::NOT_EQUAL)
+        return "!=";
 
     if (cmp == Comparator::GREATER)
         return ">";

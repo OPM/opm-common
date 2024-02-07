@@ -42,6 +42,9 @@ Comparator comparator(TokenType tt) {
     if (tt == TokenType::op_eq)
         return Comparator::EQUAL;
 
+    if (tt == TokenType::op_ne)
+        return Comparator::NOT_EQUAL;
+
     if (tt == TokenType::op_gt)
         return Comparator::GREATER;
 
@@ -247,6 +250,8 @@ int Condition::comparator_as_int() const {
         return 4;
     case Comparator::EQUAL:
         return 5;
+    case Comparator::NOT_EQUAL:
+        return 6;
     default:
         throw std::logic_error(fmt::format("Unhandeled value: {} in enum comparison", static_cast<int>(this->cmp)));
     }
