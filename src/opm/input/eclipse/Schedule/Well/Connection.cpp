@@ -31,12 +31,15 @@
 #include <opm/input/eclipse/Deck/DeckRecord.hpp>
 
 #include <algorithm>
+#include <array>
 #include <cassert>
+#include <cstddef>
 #include <exception>
 #include <sstream>
 #include <stdexcept>
 #include <string>
 #include <string_view>
+#include <utility>
 #include <vector>
 
 namespace {
@@ -53,9 +56,10 @@ namespace {
         props.rw = rst_conn.diameter / 2;
         props.r0 = rst_conn.r0;
         props.re = 0.0;
-        props.connection_length = 0.0;
+        props.connection_length = rst_conn.length;
         props.skin_factor = rst_conn.skin_factor;
         props.d_factor = 0.0;
+        props.peaceman_denom = rst_conn.denom;
 
         return props;
     }
@@ -155,7 +159,7 @@ namespace Opm
                                                 rst_connection.segdist_end);
         }
 
-        //TODO recompute re and perf_length from the grid
+        // TODO: recompute re from the grid
     }
 
     Connection Connection::serializationTestObject()

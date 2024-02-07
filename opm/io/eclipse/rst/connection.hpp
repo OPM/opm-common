@@ -3,7 +3,8 @@
 
   This file is part of the Open Porous Media project (OPM).
 
-  OPM is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by
+  OPM is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
   the Free Software Foundation, either version 3 of the License, or
   (at your option) any later version.
 
@@ -19,19 +20,27 @@
 #ifndef RST_CONNECTION
 #define RST_CONNECTION
 
-#include <array>
-
 #include <opm/input/eclipse/Schedule/Well/Connection.hpp>
 
+#include <array>
+
 namespace Opm {
+
 class UnitSystem;
 
-namespace RestartIO {
+} // namespace Opm
 
-class Header;
+namespace Opm { namespace RestartIO {
 
-struct RstConnection {
-    RstConnection(const ::Opm::UnitSystem& unit_system, std::size_t rst_index, int nsconz, const int* icon, const float* scon, const double *xcon);
+struct RstConnection
+{
+    RstConnection(const UnitSystem& unit_system,
+                  std::size_t rst_index,
+                  int nsconz,
+                  const int* icon,
+                  const float* scon,
+                  const double *xcon);
+
     static double inverse_peaceman(double cf, double kh, double rw, double skin);
 
     std::size_t rst_index;
@@ -49,6 +58,8 @@ struct RstConnection {
     float depth;
     float diameter;
     float kh;
+    float denom;
+    float length;
     float segdist_end;
     float segdist_start;
 
@@ -60,11 +71,6 @@ struct RstConnection {
     double r0;
 };
 
+}} // namespace Opm::RestartIO
 
-}
-}
-
-
-
-
-#endif
+#endif // RST_CONNECTION

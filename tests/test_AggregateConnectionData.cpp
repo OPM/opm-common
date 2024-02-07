@@ -687,11 +687,13 @@ BOOST_AUTO_TEST_CASE(Declared_Connection_Data)
         BOOST_CHECK_CLOSE(sconn[i0 + Ix::Depth], 7050., 1.0e-5); // PROD - conn 1 : Centre depth
         BOOST_CHECK_CLOSE(sconn[i0 + Ix::Diameter], 0.20, 1.0e-5); // PROD - conn 1 : diameter
         BOOST_CHECK_CLOSE(sconn[i0 + Ix::EffectiveKH], 1581.13879, 1.0e-5); // PROD - conn 1 : effective kh-product
+        BOOST_CHECK_CLOSE(sconn[i0 + Ix::CFDenom], 4.37696314, 1.0e-5);
         BOOST_CHECK_CLOSE(sconn[i0 + Ix::item12], 2.55826545, 1.0e-5); // PROD - conn 1 : Transmissibility factor
         BOOST_CHECK_CLOSE(
             sconn[i0 + Ix::SegDistEnd], 130., 1.0e-5); // PROD - conn 1 : Distance to end of connection in segment
         BOOST_CHECK_CLOSE(
             sconn[i0 + Ix::SegDistStart], 30., 1.0e-5); // PROD - conn 1 : Distance to start of connection in segment
+        BOOST_CHECK_CLOSE(sconn[i0 + Ix::EffectiveLength], 100.0, 1.0e-5);
 
         // Well no 2 - WINJ well
         connNo = 3;
@@ -700,11 +702,13 @@ BOOST_AUTO_TEST_CASE(Declared_Connection_Data)
         BOOST_CHECK_CLOSE(sconn[i0 + Ix::Depth], 7250., 1.0e-5); // WINJ - conn 3 : Centre depth
         BOOST_CHECK_CLOSE(sconn[i0 + Ix::Diameter], 0.20, 1.0e-5); // WINJ - conn 3 : diameter
         BOOST_CHECK_CLOSE(sconn[i0 + Ix::EffectiveKH], 1581.13879, 1.0e-5); // WINJ - conn 3 : effective kh-product
+        BOOST_CHECK_CLOSE(sconn[i0 + Ix::CFDenom], 4.37696314, 1.0e-5);
         BOOST_CHECK_CLOSE(sconn[i0 + Ix::item12], 2.55826545, 1.0e-5); // WINJ - conn 3 : Transmissibility factor
         BOOST_CHECK_CLOSE(
             sconn[i0 + Ix::SegDistEnd], 0., 1.0e-5); // WINJ - conn 3 : Distance to end of connection in segment
         BOOST_CHECK_CLOSE(
             sconn[i0 + Ix::SegDistStart], 0., 1.0e-5); // WINJ - conn 3 : Distance to start of connection in segment
+        BOOST_CHECK_CLOSE(sconn[i0 + Ix::EffectiveLength], 100.0, 1.0e-5);
 
         connNo = 4;
         i0 = ih.ncwmax * ih.nsconz + (connNo - 1) * ih.nsconz;
@@ -712,11 +716,13 @@ BOOST_AUTO_TEST_CASE(Declared_Connection_Data)
         BOOST_CHECK_CLOSE(sconn[i0 + Ix::Depth], 7250., 1.0e-5); // WINJ - conn 4 : Centre depth
         BOOST_CHECK_CLOSE(sconn[i0 + Ix::Diameter], 0.20, 1.0e-5); // WINJ - conn 4 : diameter
         BOOST_CHECK_CLOSE(sconn[i0 + Ix::EffectiveKH], 1581.13879, 1.0e-5); // WINJ - conn 4 : effective kh-product
+        BOOST_CHECK_CLOSE(sconn[i0 + Ix::CFDenom], 4.37696314, 1.0e-5);
         BOOST_CHECK_CLOSE(sconn[i0 + Ix::item12], 2.55826545, 1.0e-5); // WINJ - conn 4 : Transmissibility factor
         BOOST_CHECK_CLOSE(
             sconn[i0 + Ix::SegDistEnd], 0., 1.0e-5); // WINJ - conn 4 : Distance to end of connection in segment
         BOOST_CHECK_CLOSE(
             sconn[i0 + Ix::SegDistStart], 0., 1.0e-5); // WINJ - conn 4 : Distance to start of connection in segment
+        BOOST_CHECK_CLOSE(sconn[i0 + Ix::EffectiveLength], 100.0, 1.0e-5);
     }
 
     // XCONN (PROD)  + (WINJ)

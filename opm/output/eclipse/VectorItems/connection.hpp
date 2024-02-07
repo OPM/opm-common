@@ -50,6 +50,10 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
 
             EffectiveKH  =  3, // Effective Kh product of connection
             SkinFactor   =  4, // Skinfactor - item 'SKIN' from COMPDAT
+
+            CFDenom = 6,    // Denominator in connection transmissibility
+                            // factor expression
+
             item12       = 11, // Connection transmissibility factor
 
             SegDistEnd   = 20, // Distance to end of connection in segment
@@ -57,6 +61,9 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
 
             item30       = 29, // Unknown
             item31       = 30, // Unknown
+
+            EffectiveLength = 31, // Effective length of connection's perforation interval.
+
             CFInDeck     = 40, // = 0 for connection factor not defined, = 1 for connection factor defined
         };
     } // SConn
