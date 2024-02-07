@@ -33,6 +33,7 @@ enum class Logical {
 
 enum class Comparator {
     EQUAL,
+    NOT_EQUAL,
     GREATER,
     LESS,
     GREATER_EQUAL,
