@@ -180,9 +180,18 @@ void handleGCONPROD(HandlerContext& handlerContext)
         const Group::ProductionCMode controlMode = Group::ProductionCModeFromString(record.getItem("CONTROL_MODE").getTrimmedString(0));
         Group::GroupLimitAction groupLimitAction;
         groupLimitAction.allRates = Group::ExceedActionFromString(record.getItem("EXCEED_PROC").getTrimmedString(0));
-        groupLimitAction.water = Group::ExceedActionFromString(record.getItem("WATER_EXCEED_PROCEDURE").getTrimmedString(0));
-        groupLimitAction.gas = Group::ExceedActionFromString(record.getItem("GAS_EXCEED_PROCEDURE").getTrimmedString(0));
-        groupLimitAction.liquid = Group::ExceedActionFromString(record.getItem("LIQUID_EXCEED_PROCEDURE").getTrimmedString(0));
+
+        groupLimitAction.water = record.getItem("WATER_EXCEED_PROCEDURE").defaultApplied(0)
+        ? groupLimitAction.allRates
+        : Group::ExceedActionFromString(record.getItem("WATER_EXCEED_PROCEDURE").getTrimmedString(0));
+        
+        groupLimitAction.gas = record.getItem("GAS_EXCEED_PROCEDURE").defaultApplied(0)
+        ? groupLimitAction.allRates
+        : Group::ExceedActionFromString(record.getItem("GAS_EXCEED_PROCEDURE").getTrimmedString(0));
+
+        groupLimitAction.liquid = record.getItem("LIQUID_EXCEED_PROCEDURE").defaultApplied(0)
+        ? groupLimitAction.allRates
+        : Group::ExceedActionFromString(record.getItem("LIQUID_EXCEED_PROCEDURE").getTrimmedString(0));
 
         const bool respond_to_parent = DeckItem::to_bool(record.getItem("RESPOND_TO_PARENT").getTrimmedString(0));
 
@@ -258,25 +267,22 @@ void handleGCONPROD(HandlerContext& handlerContext)
                 // GCONPROD
                 // 'G1' 'ORAT' 1000 100 200 300 RATE =>  constraints 100,200,300 should be honored
                 if (production.cmode == Group::ProductionCMode::ORAT ||
-                    (groupLimitAction.allRates == Group::ExceedAction::RATE &&
+                    (groupLimitAction.allRates != Group::ExceedAction::NONE &&
                     !apply_default_oil_target)) {
                     production.production_controls |= static_cast<int>(Group::ProductionCMode::ORAT);
                 }
                 if (production.cmode == Group::ProductionCMode::WRAT ||
-                    ((groupLimitAction.allRates == Group::ExceedAction::RATE ||
-                    groupLimitAction.water == Group::ExceedAction::RATE) &&
+                    ((groupLimitAction.water != Group::ExceedAction::NONE) &&
                     !apply_default_water_target)) {
                     production.production_controls |= static_cast<int>(Group::ProductionCMode::WRAT);
                 }
                 if (production.cmode == Group::ProductionCMode::GRAT ||
-                    ((groupLimitAction.allRates  == Group::ExceedAction::RATE ||
-                    groupLimitAction.gas == Group::ExceedAction::RATE) &&
+                    ((groupLimitAction.gas  != Group::ExceedAction::NONE) &&
                     !apply_default_gas_target)) {
                     production.production_controls |= static_cast<int>(Group::ProductionCMode::GRAT);
                 }
                 if (production.cmode == Group::ProductionCMode::LRAT ||
-                    ((groupLimitAction.allRates == Group::ExceedAction::RATE ||
-                    groupLimitAction.liquid == Group::ExceedAction::RATE) &&
+                    ((groupLimitAction.liquid != Group::ExceedAction::NONE) &&
                     !apply_default_liquid_target)) {
                     production.production_controls |= static_cast<int>(Group::ProductionCMode::LRAT);
                 }
