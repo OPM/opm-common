@@ -81,23 +81,39 @@ Schedule make_schedule(const std::string& deck_string, const ParseContext& parse
 
 
 BOOST_AUTO_TEST_CASE(Create) {
-    const auto action_kw = std::string{ R"(
+    auto check_operator = [](const std::string& comp_op)
+    {
+        BOOST_TEST_MESSAGE("Checking operator "+comp_op);
+        const auto action_kw = std::string{ R"(
 ACTIONX
    'ACTION' /
-   WWCT OPX  > 0.75 /
+   WWCT OPX
+ )"}
+        + comp_op + std::string{ R"(
+ 0.75 /
 /
 )"};
-    Action::ActionX action1("NAME", 10, 100, 0);
-    BOOST_CHECK_EQUAL(action1.name(), "NAME");
+        Action::ActionX action1("NAME", 10, 100, 0);
+        BOOST_CHECK_EQUAL(action1.name(), "NAME");
 
-    const auto deck = Parser{}.parseString( action_kw );
-    const auto& kw = deck["ACTIONX"].back();
+        const auto deck = Parser{}.parseString( action_kw );
+        const auto& kw = deck["ACTIONX"].back();
 
 
-    const auto& [action2, condition_errors2 ] =
-        Action::parseActionX(kw, {}, 0);
-    BOOST_CHECK_EQUAL(action2.name(), "ACTION");
-    BOOST_CHECK_EQUAL(condition_errors2.size(), 0U);
+        const auto& [action2, condition_errors2 ] =
+            Action::parseActionX(kw, {}, 0);
+        BOOST_CHECK_EQUAL(action2.name(), "ACTION");
+        BOOST_CHECK_EQUAL(condition_errors2.size(), 0U);
+    };
+
+    // Check the other operators
+    std::vector<std::string> operators =
+        { "=", ".eq.", "!=", ".ne.", "<=", ".le.", ">=", ".ge.", "<", ".lt.", ">", ".gt." };
+
+    for(const auto& op :operators)
+    {
+        check_operator(op);
+    }
 
     // left hand side has to be an expression.
     // Check whether we add an error to condition_errors
