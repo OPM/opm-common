@@ -1,0 +1,18 @@
+{
+  "name": "REGION_PROBE_OPM",
+  "sections": [
+    "SUMMARY"
+  ],
+  "comment": "Region-level summary vectors supported only by OPM Flow",
+  "deck_names": [
+    "RGMDS",
+    "RGMGP",
+    "RGMIP",
+    "RGMMO",
+    "RGMTR"
+  ],
+  "deck_name_regex_suffix": "_{0,2}[A-Z0-9]{3}",
+  "data": {
+    "value_type": "INT"
+  }
+}
