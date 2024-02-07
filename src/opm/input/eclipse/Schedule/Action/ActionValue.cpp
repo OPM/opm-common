@@ -12,7 +12,7 @@ inline std::string tokenString(TokenType op) {
     switch (op) {
 
     case TokenType::op_eq:
-        return "==";
+        return "=";
 
     case TokenType::op_ge:
         return ">=";
