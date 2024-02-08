@@ -1264,7 +1264,12 @@ public:
         // should preferably not be used values should be taken from intensive quantities fluid state.
         OpmLog::warning("Not need: try to take enthalpy from fluidState");
         const auto& p = decay<LhsEval>(fluidState.pressure(phaseIdx));
-        return internalEnergy<FluidState, LhsEval>(fluidState, phaseIdx, regionIdx) + p/density<FluidState, LhsEval>(fluidState, phaseIdx, regionIdx);
+        const auto& energy = internalEnergy<FluidState, LhsEval>(fluidState, phaseIdx, regionIdx);
+        if(!enthalpy_eq_energy_){
+            // used for simplified models
+            energy += p/density<FluidState, LhsEval>(fluidState, phaseIdx, regionIdx);
+        }
+        return energy;
     }
 
     /*!
@@ -1672,6 +1677,13 @@ public:
         default: throw std::logic_error("Unhandled phase index "+std::to_string(phaseIdx));
         }
     }
+    void setEnergyEqualEnthalpy(bool enthalpy_eq_energy){
+        enthalpy_eq_energy_ = enthalpy_eq_energy;
+    }
+
+    bool enthalpyEqualEnergy const{
+        return enthalpy_eq_energy_;
+    }
 
 private:
     static void resizeArrays_(std::size_t numRegions);
@@ -1699,6 +1711,7 @@ private:
     static std::array<short, numPhases> canonicalToActivePhaseIdx_;
 
     static bool isInitialized_;
+    inline static bool enthalpy_eq_energy_ = false
 };
 
 template <class Scalar, class IndexTraits>
