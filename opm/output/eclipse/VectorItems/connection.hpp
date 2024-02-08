@@ -44,7 +44,7 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
 
     namespace SConn {
         enum index : std::vector<float>::size_type {
-            ConnTrans    =  0, // Connection transmissibility factor
+            EffConnTrans =  0, // Effective connection transmissibility factor (incl. ROCKTAB &c)
             Depth        =  1, // Connection centre depth
             Diameter     =  2, // Connection diameter
 
@@ -54,7 +54,7 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
             CFDenom = 6,    // Denominator in connection transmissibility
                             // factor expression
 
-            item12       = 11, // Connection transmissibility factor
+            ConnTrans = 11, // Connection transmissibility factor
 
             SegDistEnd   = 20, // Distance to end of connection in segment
             SegDistStart = 21, // Distance to start of connection in segment
