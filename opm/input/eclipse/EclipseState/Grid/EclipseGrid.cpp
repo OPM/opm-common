@@ -427,12 +427,9 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
             const auto& item = record.getItem<ParserKeywords::MINPORV::VALUE>( );
             std::fill(m_minpvVector.begin(), m_minpvVector.end(), item.getSIDouble(0));
             m_minpvMode = MinpvMode::EclSTD;
-        } else if(deck.hasKeyword<ParserKeywords::MINPVV>()) {
-            // We should use the grid properties to support BOX, but then we need the eclipseState
-            const auto& record = deck.get<ParserKeywords::MINPVV>( ).back().getRecord(0);
-            m_minpvVector =record.getItem(0).getSIDoubleData();
-            m_minpvMode = MinpvMode::EclSTD;
         }
+        // Note that MINPVV is not handled here but in a second stage in EclipseState where we
+        // call setMINPVV to also support BOX via grid properties
 
         if (actnum != nullptr) {
             this->resetACTNUM(actnum);
@@ -1936,6 +1933,13 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
         }
     }
 
+    void EclipseGrid::setMINPVV(const std::vector<double>& minpvv) {
+        if (m_minpvMode == MinpvMode::Inactive) {
+            assert(minpvv.size() == this->getCartesianSize());
+            m_minpvVector = minpvv;
+            m_minpvMode = MinpvMode::EclSTD;
+        }
+    }
     void EclipseGrid::resetACTNUM(const std::vector<int>& actnum) {
         if (actnum.size() != getCartesianSize())
             throw std::runtime_error("resetACTNUM(): actnum vector size differs from logical cartesian size of grid.");

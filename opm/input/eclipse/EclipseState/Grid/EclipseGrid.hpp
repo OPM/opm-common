@@ -212,6 +212,9 @@ namespace Opm {
         void resetACTNUM();
         void resetACTNUM( const std::vector<int>& actnum);
 
+        /// \brief Sets MINPVV if MINPV and MINPORV are not used
+        void setMINPVV(const std::vector<double>& minpvv);
+
         bool equal(const EclipseGrid& other) const;
         static bool hasDVDEPTHZKeywords(const Deck&);
 
