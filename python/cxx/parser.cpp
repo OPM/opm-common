@@ -52,7 +52,9 @@ void python::common::export_Parser(py::module& module) {
         .def_property_readonly("name", &ParserKeyword::getName);
 
     py::enum_<Opm::Ecl::SectionType>(module, "eclSectionType", py::arithmetic())
+        .value("RUNSPEC", Opm::Ecl::RUNSPEC)
         .value("GRID", Opm::Ecl::GRID)
+        .value("EDIT", Opm::Ecl::EDIT)
         .value("PROPS", Opm::Ecl::PROPS)
         .value("REGIONS", Opm::Ecl::REGIONS)
         .value("SOLUTION", Opm::Ecl::SOLUTION)
