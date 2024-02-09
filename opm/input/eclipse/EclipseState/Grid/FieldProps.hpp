@@ -131,7 +131,7 @@ namespace ALIAS {
 
 namespace GRID {
 static const std::unordered_map<std::string, keyword_info<double>> double_keywords = {{"DISPERC",keyword_info<double>{}.unit_string("Length")},
-                                                                                      {"MINPVV",  keyword_info<double>{}.unit_string("ReservoirVolume")},
+                                                                                      {"MINPVV",  keyword_info<double>{}.unit_string("ReservoirVolume").global_kw(true)},
                                                                                       {"MULTPV",  keyword_info<double>{}.init(1.0)},
                                                                                       {"NTG",     keyword_info<double>{}.init(1.0)},
                                                                                       {"PORO",    keyword_info<double>{}.distribute_top(true)},
