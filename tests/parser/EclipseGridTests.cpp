@@ -944,10 +944,9 @@ BOOST_AUTO_TEST_CASE(MinPVV) {
     Opm::EclipseState es( deck);
     const auto& fp = es.fieldProps();
     const auto& grid = es.getInputGrid();
-    const auto& fp_minpvv = fp.get_global_double("MINPVV");
+    std::vector<double> fp_minpvv = {1000, 1000, 1000, 1010, 1010, 1010};
 
     BOOST_CHECK(grid.getMinpvMode() != Opm::MinpvMode::Inactive);
-    BOOST_CHECK(fp.has_double("MINPVV"));
 
     BOOST_CHECK_EQUAL_COLLECTIONS(grid.getMinpvVector().begin(),
                                   grid.getMinpvVector().end(),
@@ -962,10 +961,9 @@ BOOST_AUTO_TEST_CASE(MinPVV) {
     Opm::EclipseState es1( deck1);
     const auto& fp1 = es1.fieldProps();
     const auto& grid1 = es1.getInputGrid();
-    const auto& fp_minpvv1 = fp1.get_global_double("MINPVV");
+    std::vector<double> fp_minpvv1 = {0, 0, 0, 100, 100, 100};
 
     BOOST_CHECK(grid1.getMinpvMode() != Opm::MinpvMode::Inactive);
-    BOOST_CHECK(fp1.has_double("MINPVV"));
 
     BOOST_CHECK_EQUAL_COLLECTIONS(grid1.getMinpvVector().begin(),
                                   grid1.getMinpvVector().end(),

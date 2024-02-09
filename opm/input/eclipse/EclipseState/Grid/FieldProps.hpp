@@ -541,6 +541,7 @@ public:
 
     std::vector<std::string> fip_regions() const;
 
+    void deleteMINPVV();
 private:
     void scanGRIDSection(const GRIDSection& grid_section);
     void scanGRIDSectionOnlyACTNUM(const GRIDSection& grid_section);
