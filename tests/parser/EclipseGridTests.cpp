@@ -942,7 +942,6 @@ static Opm::Deck createMinpvvEqualsCPDeck() {
 BOOST_AUTO_TEST_CASE(MinPVV) {
     auto deck = createMinpvvAddCPDeck();
     Opm::EclipseState es( deck);
-    const auto& fp = es.fieldProps();
     const auto& grid = es.getInputGrid();
     std::vector<double> fp_minpvv = {1000, 1000, 1000, 1010, 1010, 1010};
 
@@ -959,7 +958,6 @@ BOOST_AUTO_TEST_CASE(MinPVV) {
     
     auto deck1 = createMinpvvEqualsCPDeck();
     Opm::EclipseState es1( deck1);
-    const auto& fp1 = es1.fieldProps();
     const auto& grid1 = es1.getInputGrid();
     std::vector<double> fp_minpvv1 = {0, 0, 0, 100, 100, 100};
 
