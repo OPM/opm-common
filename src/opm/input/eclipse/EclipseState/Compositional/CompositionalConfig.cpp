@@ -27,6 +27,7 @@ along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 #include <opm/input/eclipse/Parser/ParserKeywords/E.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/N.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/P.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/S.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/T.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/V.hpp>
 
@@ -67,6 +68,16 @@ CompostionalConfig::CompostionalConfig(const Deck& deck, const Runspec& runspec)
                                                     ncomps, this->num_comps);
                 throw OpmInputError(msg, kw.location());
             }
+        }
+    }
+
+    if (props_section.hasKeyword<ParserKeywords::STCOND>()) {
+        const auto& keywords = props_section.get<ParserKeywords::STCOND>();
+        for (const auto& kw : keywords) {
+            const auto& temp_item = kw.getRecord(0).getItem<ParserKeywords::STCOND::TEMPERATURE>();
+            this->standard_temperature = temp_item.getSIDouble(0);
+            const auto& pres_item = kw.getRecord(0).getItem<ParserKeywords::STCOND::PRESSURE>();
+            this->standard_pressure = pres_item.getSIDouble(0);
         }
     }
 
@@ -142,6 +153,8 @@ CompostionalConfig::CompostionalConfig(const Deck& deck, const Runspec& runspec)
 
 bool CompostionalConfig::operator==(const CompostionalConfig& other) const {
     return this->num_comps == other.num_comps &&
+           this->standard_temperature == other.standard_temperature &&
+           this->standard_pressure == other.standard_pressure &&
            this->eos_types == other.eos_types &&
            this->acentric_factors == other.acentric_factors &&
            this->critical_pressure == other.critical_pressure &&
@@ -155,6 +168,8 @@ CompostionalConfig CompostionalConfig::serializationTestObject() {
     CompostionalConfig result;
 
     result.num_comps = 3;
+    result.standard_temperature = 5.;
+    result.standard_pressure = 1e5;
     result.eos_types = {2, EOSType::SRK};
     result.acentric_factors = {2,  std::vector(result.num_comps, 1.)};
     result.critical_pressure = {2, std::vector(result.num_comps, 2.)};
@@ -190,6 +205,7 @@ void CompostionalConfig::warningForExistingCompKeywords(const PROPSSection& prop
     static const std::unordered_map<std::string, std::function<bool(const PROPSSection&)>> keywordCheckers = {
         {"NCOMPS", [](const PROPSSection& section) -> bool { return section.hasKeyword<ParserKeywords::NCOMPS>(); }},
         {"EOS",    [](const PROPSSection& section) -> bool { return section.hasKeyword<ParserKeywords::EOS>(); }},
+        {"STCOND", [](const PROPSSection& section) -> bool { return section.hasKeyword<ParserKeywords::STCOND>(); }},
         {"PCRIT",  [](const PROPSSection& section) -> bool { return section.hasKeyword<ParserKeywords::PCRIT>(); }},
         {"TCRIT",  [](const PROPSSection& section) -> bool { return section.hasKeyword<ParserKeywords::TCRIT>(); }},
         {"VCRIT",  [](const PROPSSection& section) -> bool { return section.hasKeyword<ParserKeywords::VCRIT>(); }},

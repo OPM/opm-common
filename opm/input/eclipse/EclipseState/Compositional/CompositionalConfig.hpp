@@ -22,6 +22,7 @@
 #include <opm/input/eclipse/Deck/Deck.hpp>
 #include <opm/input/eclipse/Deck/DeckRecord.hpp>
 #include <opm/input/eclipse/Deck/DeckSection.hpp>
+#include <opm/input/eclipse/Units/Units.hpp>
 
 #include <opm/common/utility/OpmInputError.hpp>
 
@@ -62,6 +63,8 @@ public:
     void serializeOp(Serializer& serializer)
     {
         serializer(num_comps);
+        serializer(standard_temperature);
+        serializer(standard_pressure);
         serializer(eos_types);
         serializer(acentric_factors);
         serializer(critical_pressure);
@@ -73,6 +76,8 @@ private:
     // TODO: num_comps might not be totally necessary, while might be convenient.
     //  We can check the number of components without accessing Runspec
     size_t num_comps = 0;
+    double standard_temperature = 288.71; // Kelvin
+    double standard_pressure = 1.0 * unit::atm; // 1 atm
     std::vector<EOSType> eos_types;
     std::vector<std::vector<double>> acentric_factors;
     std::vector<std::vector<double>> critical_pressure;
