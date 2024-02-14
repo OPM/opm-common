@@ -24,6 +24,7 @@ along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 #include <opm/input/eclipse/EclipseState/Tables/Tabdims.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/A.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/B.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/C.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/E.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/N.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/P.hpp>
@@ -67,6 +68,25 @@ CompositionalConfig::CompositionalConfig(const Deck& deck, const Runspec& runspe
                 const std::string msg = fmt::format("NCOMPS is specified with {}, which is different from the number specified in COMPS {}",
                                                     ncomps, this->num_comps);
                 throw OpmInputError(msg, kw.location());
+            }
+        }
+    }
+
+    if ( !props_section.hasKeyword<ParserKeywords::CNAMES>() ) {
+        throw std::logic_error("CNAMES is not specified for compositional simulation");
+    } else {
+        comp_names.resize(num_comps);
+        const auto& keywords = props_section.get<ParserKeywords::CNAMES>();
+        for (const auto& kw : keywords) {
+            const auto& item = kw.getRecord(0).getItem<ParserKeywords::CNAMES::data>();
+            const auto names_size = item.getData<std::string>().size();
+            if (names_size != num_comps) {
+                const auto msg = fmt::format("in keyword CNAMES, {} values are specified, which is bigger than the number of components {}",
+                                             names_size, num_comps);
+                throw OpmInputError(msg, kw.location());
+            }
+            for (size_t c = 0; c < num_comps; ++c) {
+                comp_names[c] = item.getTrimmedString(c);
             }
         }
     }
@@ -155,6 +175,7 @@ bool CompositionalConfig::operator==(const CompositionalConfig& other) const {
     return this->num_comps == other.num_comps &&
            this->standard_temperature == other.standard_temperature &&
            this->standard_pressure == other.standard_pressure &&
+           this->comp_names ==other.comp_names &&
            this->eos_types == other.eos_types &&
            this->acentric_factors == other.acentric_factors &&
            this->critical_pressure == other.critical_pressure &&
@@ -170,6 +191,7 @@ CompositionalConfig CompositionalConfig::serializationTestObject() {
     result.num_comps = 3;
     result.standard_temperature = 5.;
     result.standard_pressure = 1e5;
+    result.comp_names = {"C1", "C10"};
     result.eos_types = {2, EOSType::SRK};
     result.acentric_factors = {2,  std::vector(result.num_comps, 1.)};
     result.critical_pressure = {2, std::vector(result.num_comps, 2.)};
@@ -204,6 +226,7 @@ void CompositionalConfig::warningForExistingCompKeywords(const PROPSSection& pro
 
     static const std::unordered_map<std::string, std::function<bool(const PROPSSection&)>> keywordCheckers = {
         {"NCOMPS", [](const PROPSSection& section) -> bool { return section.hasKeyword<ParserKeywords::NCOMPS>(); }},
+        {"CNAMES", [](const PROPSSection& section) -> bool { return section.hasKeyword<ParserKeywords::CNAMES>(); }},
         {"EOS",    [](const PROPSSection& section) -> bool { return section.hasKeyword<ParserKeywords::EOS>(); }},
         {"STCOND", [](const PROPSSection& section) -> bool { return section.hasKeyword<ParserKeywords::STCOND>(); }},
         {"PCRIT",  [](const PROPSSection& section) -> bool { return section.hasKeyword<ParserKeywords::PCRIT>(); }},

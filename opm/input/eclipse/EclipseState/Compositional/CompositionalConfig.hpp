@@ -28,6 +28,7 @@
 
 #include <fmt/format.h>
 
+#include <string>
 #include <vector>
 
 namespace Opm {
@@ -75,6 +76,7 @@ public:
         serializer(num_comps);
         serializer(standard_temperature);
         serializer(standard_pressure);
+        serializer(comp_names);
         serializer(eos_types);
         serializer(acentric_factors);
         serializer(critical_pressure);
@@ -88,6 +90,7 @@ private:
     size_t num_comps = 0;
     double standard_temperature = 288.71; // Kelvin
     double standard_pressure = 1.0 * unit::atm; // 1 atm
+    std::vector<std::string> comp_names;
     std::vector<EOSType> eos_types;
     std::vector<std::vector<double>> acentric_factors;
     std::vector<std::vector<double>> critical_pressure;

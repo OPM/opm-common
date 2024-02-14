@@ -118,7 +118,7 @@ BOOST_AUTO_TEST_CASE(CompositionalParsingTest) {
     BOOST_CHECK(CompositionalConfig::EOSType::PR == comp_config.eosType(0));
     BOOST_CHECK(CompositionalConfig::EOSType::SRK == comp_config.eosType(1));
 
-    BOOSE_CHECK_EQUAL()
+    // BOOSE_CHECK_EQUAL()
 
 
 }
