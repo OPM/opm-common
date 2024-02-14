@@ -501,7 +501,7 @@ public:
     const SatFuncControls& saturationFunctionControls() const noexcept;
     const Nupcol& nupcol() const noexcept;
     const Tracers& tracers() const;
-    bool compostionalMode() const;
+    bool compositionalMode() const;
     size_t numComps() const;
     bool co2Storage() const noexcept;
     bool co2Sol() const noexcept;

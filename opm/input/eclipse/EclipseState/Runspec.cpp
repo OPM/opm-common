@@ -851,7 +851,7 @@ const Nupcol& Runspec::nupcol() const noexcept
     return this->m_nupcol;
 }
 
-bool Runspec::compostionalMode() const
+bool Runspec::compositionalMode() const
 {
     return this->m_comps > 0;
 }

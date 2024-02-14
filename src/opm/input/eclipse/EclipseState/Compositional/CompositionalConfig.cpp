@@ -42,11 +42,11 @@ along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace Opm {
 
-CompostionalConfig::CompostionalConfig(const Deck& deck, const Runspec& runspec) {
+CompositionalConfig::CompositionalConfig(const Deck& deck, const Runspec& runspec) {
     if (!DeckSection::hasPROPS(deck)) return;
 
     const PROPSSection props_section {deck};
-    const bool comp_mode_runspec = runspec.compostionalMode(); // TODO: the way to use comp_mode_runspec should be refactored
+    const bool comp_mode_runspec = runspec.compositionalMode(); // TODO: the way to use comp_mode_runspec should be refactored
     // the following code goes to a function
     if (!comp_mode_runspec) {
         warningForExistingCompKeywords(props_section);
@@ -143,15 +143,15 @@ CompostionalConfig::CompostionalConfig(const Deck& deck, const Runspec& runspec)
         }
     }
 
-    CompostionalConfig::processKeyword<ParserKeywords::PCRIT>(props_section, this->critical_pressure,
+    CompositionalConfig::processKeyword<ParserKeywords::PCRIT>(props_section, this->critical_pressure,
                                                               num_eos_res, this->num_comps, "PCRIT");
-    CompostionalConfig::processKeyword<ParserKeywords::TCRIT>(props_section, this->critical_temperature,
+    CompositionalConfig::processKeyword<ParserKeywords::TCRIT>(props_section, this->critical_temperature,
                                                               num_eos_res, this->num_comps, "TCRIT");
-    CompostionalConfig::processKeyword<ParserKeywords::VCRIT>(props_section, this->critical_volume,
+    CompositionalConfig::processKeyword<ParserKeywords::VCRIT>(props_section, this->critical_volume,
                                                               num_eos_res, this->num_comps, "VCRIT");
 }
 
-bool CompostionalConfig::operator==(const CompostionalConfig& other) const {
+bool CompositionalConfig::operator==(const CompositionalConfig& other) const {
     return this->num_comps == other.num_comps &&
            this->standard_temperature == other.standard_temperature &&
            this->standard_pressure == other.standard_pressure &&
@@ -164,8 +164,8 @@ bool CompostionalConfig::operator==(const CompostionalConfig& other) const {
 }
 
 
-CompostionalConfig CompostionalConfig::serializationTestObject() {
-    CompostionalConfig result;
+CompositionalConfig CompositionalConfig::serializationTestObject() {
+    CompositionalConfig result;
 
     result.num_comps = 3;
     result.standard_temperature = 5.;
@@ -180,7 +180,7 @@ CompostionalConfig CompostionalConfig::serializationTestObject() {
     return result;
 }
 
-CompostionalConfig::EOSType CompostionalConfig::eosTypeFromString(const std::string& str) {
+CompositionalConfig::EOSType CompositionalConfig::eosTypeFromString(const std::string& str) {
     if (str == "PR") return EOSType::PR;
     if (str == "RK") return EOSType::RK;
     if (str == "SRK") return EOSType::SRK;
@@ -188,7 +188,7 @@ CompostionalConfig::EOSType CompostionalConfig::eosTypeFromString(const std::str
     throw std::invalid_argument("Unknown string for EOSType");
 }
 
-std::string CompostionalConfig::eosTypeToString(Opm::CompostionalConfig::EOSType eos) {
+std::string CompositionalConfig::eosTypeToString(Opm::CompositionalConfig::EOSType eos) {
     switch (eos) {
         case EOSType::PR: return "PR";
         case EOSType::RK: return "RK";
@@ -198,7 +198,7 @@ std::string CompostionalConfig::eosTypeToString(Opm::CompostionalConfig::EOSType
     }
 }
 
-void CompostionalConfig::warningForExistingCompKeywords(const PROPSSection& props_section) {
+void CompositionalConfig::warningForExistingCompKeywords(const PROPSSection& props_section) {
     bool any_comp_prop_kw = false;
     std::string msg {" COMPS is not specified, the following keywords related to compositional simulation in PROPS section will be ignored:\n"};
 
@@ -223,6 +223,38 @@ void CompostionalConfig::warningForExistingCompKeywords(const PROPSSection& prop
     if (any_comp_prop_kw) {
         OpmLog::warning(msg);
     }
+}
+
+double CompositionalConfig::standardTemperature() const {
+    return this->standard_temperature;
+}
+
+double CompositionalConfig::standardPressure() const {
+    return this->standard_pressure;
+}
+
+CompositionalConfig::EOSType CompositionalConfig::eosType(size_t eos_region) const {
+    return this->eos_types[eos_region];
+}
+
+const std::vector<double>& CompositionalConfig::acentricFactors(size_t eos_region) const {
+    return this->acentric_factors[eos_region];
+}
+
+const std::vector<double>& CompositionalConfig::criticalPressure(size_t eos_region) const {
+    return this->critical_pressure[eos_region];
+}
+
+const std::vector<double>& CompositionalConfig::criticalTemperature(size_t eos_region) const {
+    return this->critical_temperature[eos_region];
+}
+
+const std::vector<double>& CompositionalConfig::criticalVolume(size_t eos_region) const {
+    return this->critical_volume[eos_region];
+}
+
+const std::vector<double>& CompositionalConfig::binaryInteractionCoefficient(size_t eos_region) const {
+    return this->binary_interaction_coefficient[eos_region];
 }
 
 }

@@ -34,11 +34,8 @@ namespace Opm {
 
 class Deck;
 class Runspec;
-// class Ta
 
-// TODO: adding serialization?
-
-class CompostionalConfig {
+class CompositionalConfig {
 public:
     enum class EOSType {
         PR,   // Peng-Robinson
@@ -51,13 +48,26 @@ public:
 
     static std::string eosTypeToString(EOSType eos);
 
-    CompostionalConfig() = default;
+    CompositionalConfig() = default;
 
-    CompostionalConfig(const Deck& deck, const Runspec& runspec);
+    CompositionalConfig(const Deck& deck, const Runspec& runspec);
 
-    static CompostionalConfig serializationTestObject();
+    static CompositionalConfig serializationTestObject();
 
-    bool operator==(const CompostionalConfig& other) const;
+    bool operator==(const CompositionalConfig& other) const;
+
+    // accessing functions
+    double standardTemperature() const;
+    double standardPressure() const;
+    EOSType eosType(size_t eos_region) const;
+    const std::vector<double>& acentricFactors(size_t eos_region) const;
+    const std::vector<double>& criticalPressure(size_t eos_region) const;
+    const std::vector<double>& criticalTemperature(size_t eos_region) const;
+    const std::vector<double>& criticalVolume(size_t eos_region) const;
+    // binary_interaction_coefficient will likely need some design when we know how we use it
+    const std::vector<double>& binaryInteractionCoefficient(size_t eos_region) const;
+
+
 
     template<class Serializer>
     void serializeOp(Serializer& serializer)
