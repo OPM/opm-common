@@ -30,6 +30,10 @@
 #define BOOST_TEST_MODULE Binarycoefficients
 #include <boost/test/unit_test.hpp>
 #include <boost/test/tools/floating_point_comparison.hpp>
+#include <boost/version.hpp>
+#if BOOST_VERSION / 100000 == 1 && BOOST_VERSION / 100 % 1000 < 67
+#include <boost/mpl/list.hpp>
+#endif
 
 #include <opm/material/densead/Evaluation.hpp>
 #include <opm/material/densead/Math.hpp>
@@ -62,7 +66,11 @@ Evaluation moleFractionToMolality(Evaluation& xlCO2, Evaluation& s, const int& a
     return mCO2;
 }
 
+#if BOOST_VERSION / 100000 == 1 && BOOST_VERSION / 100 % 1000 < 67
+using Types = boost::mpl::list<float,double>;
+#else
 using Types = std::tuple<float,double>;
+#endif
 
 BOOST_AUTO_TEST_CASE_TEMPLATE(Brine_CO2, Scalar, Types)
 {
