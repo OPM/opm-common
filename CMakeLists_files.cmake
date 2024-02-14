@@ -512,6 +512,7 @@ if(ENABLE_ECL_INPUT)
     tests/parser/ColumnSchemaTests.cpp
     tests/parser/ConnectionTests.cpp
     tests/parser/COMPSEGUnits.cpp
+    tests/parser/CompositionalTests.cpp
     tests/parser/CopyRegTests.cpp
     tests/parser/DeckValueTests.cpp
     tests/parser/DeckTests.cpp
