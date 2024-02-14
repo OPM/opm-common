@@ -256,6 +256,10 @@ double CompositionalConfig::standardPressure() const {
     return this->standard_pressure;
 }
 
+const std::vector<std::string>& CompositionalConfig::compName() const {
+    return this->comp_names;
+}
+
 CompositionalConfig::EOSType CompositionalConfig::eosType(size_t eos_region) const {
     return this->eos_types[eos_region];
 }

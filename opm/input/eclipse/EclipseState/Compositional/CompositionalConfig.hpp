@@ -60,11 +60,12 @@ public:
     // accessing functions
     double standardTemperature() const;
     double standardPressure() const;
+    const std::vector<std::string>& compName() const;
     EOSType eosType(size_t eos_region) const;
-    const std::vector<double>& acentricFactors(size_t eos_region) const;
-    const std::vector<double>& criticalPressure(size_t eos_region) const;
-    const std::vector<double>& criticalTemperature(size_t eos_region) const;
-    const std::vector<double>& criticalVolume(size_t eos_region) const;
+    const std::vector<double>& acentricFactors(std::size_t eos_region) const;
+    const std::vector<double>& criticalPressure(std::size_t eos_region) const;
+    const std::vector<double>& criticalTemperature(std::size_t eos_region) const;
+    const std::vector<double>& criticalVolume(std::size_t eos_region) const;
     // binary_interaction_coefficient will likely need some design when we know how we use it
     const std::vector<double>& binaryInteractionCoefficient(size_t eos_region) const;
 
@@ -131,7 +132,7 @@ private:
 
             for (size_t i = 0; i < kw.size(); ++i) {
                 const auto& item = kw.getRecord(i).template getItem<typename Keyword::DATA>();
-                const auto data = item.template getData<double>();
+                const auto data = item.getSIDoubleData();
                 if (data.size() != num_comps) {
                     const auto msg = fmt::format("in keyword {}, {} values are specified, which is different from the number of components {}",
                                                  keywordName, data.size(), num_comps);
