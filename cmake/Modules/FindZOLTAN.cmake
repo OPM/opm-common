@@ -26,6 +26,7 @@ find_package(PTScotch)
 # search for files which implements this module
 find_path (ZOLTAN_INCLUDE_DIR
   NAMES "zoltan.h"
+  HINTS $ENV{MPI_INCLUDE}
   PATHS ${ZOLTAN_SEARCH_PATH}
   PATH_SUFFIXES include trilinos
   ${ZOLTAN_NO_DEFAULT_PATH})
@@ -37,6 +38,7 @@ endif (CMAKE_SIZEOF_VOID_P)
 
 find_library(ZOLTAN_LIBRARY
   NAMES zoltan trilinos_zoltan
+  HINTS $ENV{MPI_LIB}
   PATHS ${ZOLTAN_SEARCH_PATH}
   PATH_SUFFIXES "lib/.libs" "lib" "lib${_BITS}" "lib/${CMAKE_LIBRARY_ARCHITECTURE}"
   ${ZOLTAN_NO_DEFAULT_PATH})
