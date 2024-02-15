@@ -25,7 +25,7 @@ error BUG: The PyRunModule.hpp header should *not* be included in a configuratio
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 #include <opm/input/eclipse/Schedule/SummaryState.hpp>
 
-#include "src/opm/input/eclipse/Python/PyRunModule.hpp"
+#include "PyRunModule.hpp"
 
 #include <filesystem>
 
