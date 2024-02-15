@@ -52,15 +52,14 @@
 #include <opm/input/eclipse/Deck/DeckRecord.hpp>
 #include <opm/input/eclipse/Deck/DeckKeyword.hpp>
 
-#include "../MSW/Compsegs.hpp"
-#include "../eval_uda.hpp"
+#include "src/opm/input/eclipse/Schedule/MSW/Compsegs.hpp" // TODO: make relative again
+#include "src/opm/input/eclipse/Schedule/eval_uda.hpp" // TODO: make relative again
 
 #include <cassert>
 #include <cmath>
 #include <cstddef>
 #include <memory>
 #include <optional>
-#include <ostream>
 #include <stdexcept>
 #include <string>
 #include <utility>

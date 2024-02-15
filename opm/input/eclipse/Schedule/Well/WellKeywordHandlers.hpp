@@ -16,10 +16,10 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef WELL_COMPLETION_KEYWORD_HANDLERS_HPP
-#define WELL_COMPLETION_KEYWORD_HANDLERS_HPP
+#ifndef WELL_KEYWORD_HANDLERS_HPP
+#define WELL_KEYWORD_HANDLERS_HPP
 
-#include "../KeywordHandlers.hpp"
+#include "src/opm/input/eclipse/Schedule/KeywordHandlers.hpp" // TODO: make relative again
 
 #include <string>
 #include <utility>
@@ -27,8 +27,8 @@
 
 namespace Opm {
 
-//! \brief Obtain a list of well completion keyword handlers.
-std::vector<std::pair<std::string,KeywordHandlers::handler_function>> getWellCompletionHandlers();
+//! \brief Obtain a list of well keyword handlers.
+std::vector<std::pair<std::string,KeywordHandlers::handler_function>> getWellHandlers();
 
 }
 

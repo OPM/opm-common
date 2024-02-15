@@ -39,7 +39,7 @@
 
 #include <opm/input/eclipse/Parser/ParserKeywords/W.hpp>
 
-#include "../HandlerContext.hpp"
+#include "src/opm/input/eclipse/Schedule/HandlerContext.hpp" // TODO: make relative again
 
 #include <algorithm>
 #include <memory>

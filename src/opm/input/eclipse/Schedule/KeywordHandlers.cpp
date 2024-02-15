@@ -53,9 +53,9 @@
 #include "Network/NetworkKeywordHandlers.hpp"
 #include "RXXKeywordHandlers.hpp"
 #include "UDQ/UDQKeywordHandlers.hpp"
-#include "Well/WellCompletionKeywordHandlers.hpp"
-#include "Well/WellKeywordHandlers.hpp"
-#include "Well/WellPropertiesKeywordHandlers.hpp"
+#include "opm/input/eclipse/Schedule/Well/WellCompletionKeywordHandlers.hpp" // TODO: make relative again
+#include "opm/input/eclipse/Schedule/Well/WellKeywordHandlers.hpp"// TODO: make relative again
+#include "opm/input/eclipse/Schedule/Well/WellPropertiesKeywordHandlers.hpp" // TODO: make relative again
 
 #include <fmt/format.h>
 

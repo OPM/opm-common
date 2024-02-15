@@ -216,37 +216,37 @@ if(ENABLE_ECL_INPUT)
     src/opm/input/eclipse/Schedule/SummaryState.cpp
     src/opm/input/eclipse/Schedule/Tuning.cpp
     src/opm/input/eclipse/Schedule/WriteRestartFileEvents.cpp
-    src/opm/input/eclipse/Schedule/Well/Connection.cpp
-    src/opm/input/eclipse/Schedule/Well/FilterCake.cpp
-    src/opm/input/eclipse/Schedule/Well/injection.cpp
-    src/opm/input/eclipse/Schedule/Well/NameOrder.cpp
-    src/opm/input/eclipse/Schedule/Well/PAvg.cpp
-    src/opm/input/eclipse/Schedule/Well/PAvgCalculator.cpp
-    src/opm/input/eclipse/Schedule/Well/PAvgCalculatorCollection.cpp
-    src/opm/input/eclipse/Schedule/Well/PAvgDynamicSourceData.cpp
-    src/opm/input/eclipse/Schedule/Well/Well.cpp
-    src/opm/input/eclipse/Schedule/Well/WellBrineProperties.cpp
-    src/opm/input/eclipse/Schedule/Well/WellCompletionKeywordHandlers.cpp
-    src/opm/input/eclipse/Schedule/Well/WellConnections.cpp
-    src/opm/input/eclipse/Schedule/Well/WellEconProductionLimits.cpp
-    src/opm/input/eclipse/Schedule/Well/WellEnums.cpp
-    src/opm/input/eclipse/Schedule/Well/WellFoamProperties.cpp
-    src/opm/input/eclipse/Schedule/Well/WellInjectionProperties.cpp
-    src/opm/input/eclipse/Schedule/Well/WellKeywordHandlers.cpp
-    src/opm/input/eclipse/Schedule/Well/WellMatcher.cpp
-    src/opm/input/eclipse/Schedule/Well/WellMICPProperties.cpp
-    src/opm/input/eclipse/Schedule/Well/WellPolymerProperties.cpp
-    src/opm/input/eclipse/Schedule/Well/WellProductionProperties.cpp
-    src/opm/input/eclipse/Schedule/Well/WellPropertiesKeywordHandlers.cpp
-    src/opm/input/eclipse/Schedule/Well/WellTestConfig.cpp
-    src/opm/input/eclipse/Schedule/Well/WellTestState.cpp
-    src/opm/input/eclipse/Schedule/Well/WellTracerProperties.cpp
-    src/opm/input/eclipse/Schedule/Well/WINJMULT.cpp
-    src/opm/input/eclipse/Schedule/Well/WList.cpp
-    src/opm/input/eclipse/Schedule/Well/WListManager.cpp
-    src/opm/input/eclipse/Schedule/Well/WDFAC.cpp
-    src/opm/input/eclipse/Schedule/Well/WVFPDP.cpp
-    src/opm/input/eclipse/Schedule/Well/WVFPEXP.cpp
+    opm/input/eclipse/Schedule/Well/Connection.cpp
+    opm/input/eclipse/Schedule/Well/FilterCake.cpp
+    opm/input/eclipse/Schedule/Well/injection.cpp
+    opm/input/eclipse/Schedule/Well/NameOrder.cpp
+    opm/input/eclipse/Schedule/Well/PAvg.cpp
+    opm/input/eclipse/Schedule/Well/PAvgCalculator.cpp
+    opm/input/eclipse/Schedule/Well/PAvgCalculatorCollection.cpp
+    opm/input/eclipse/Schedule/Well/PAvgDynamicSourceData.cpp
+    opm/input/eclipse/Schedule/Well/Well.cpp
+    opm/input/eclipse/Schedule/Well/WellBrineProperties.cpp
+    opm/input/eclipse/Schedule/Well/WellCompletionKeywordHandlers.cpp
+    opm/input/eclipse/Schedule/Well/WellConnections.cpp
+    opm/input/eclipse/Schedule/Well/WellEconProductionLimits.cpp
+    opm/input/eclipse/Schedule/Well/WellEnums.cpp
+    opm/input/eclipse/Schedule/Well/WellFoamProperties.cpp
+    opm/input/eclipse/Schedule/Well/WellInjectionProperties.cpp
+    opm/input/eclipse/Schedule/Well/WellKeywordHandlers.cpp
+    opm/input/eclipse/Schedule/Well/WellMatcher.cpp
+    opm/input/eclipse/Schedule/Well/WellMICPProperties.cpp
+    opm/input/eclipse/Schedule/Well/WellPolymerProperties.cpp
+    opm/input/eclipse/Schedule/Well/WellProductionProperties.cpp
+    opm/input/eclipse/Schedule/Well/WellPropertiesKeywordHandlers.cpp
+    opm/input/eclipse/Schedule/Well/WellTestConfig.cpp
+    opm/input/eclipse/Schedule/Well/WellTestState.cpp
+    opm/input/eclipse/Schedule/Well/WellTracerProperties.cpp
+    opm/input/eclipse/Schedule/Well/WINJMULT.cpp
+    opm/input/eclipse/Schedule/Well/WList.cpp
+    opm/input/eclipse/Schedule/Well/WListManager.cpp
+    opm/input/eclipse/Schedule/Well/WDFAC.cpp
+    opm/input/eclipse/Schedule/Well/WVFPDP.cpp
+    opm/input/eclipse/Schedule/Well/WVFPEXP.cpp
     src/opm/input/eclipse/Schedule/WellTraj/RigEclipseWellLogExtractor.cpp
     src/opm/input/eclipse/EclipseState/SimulationConfig/BCConfig.cpp
     src/opm/input/eclipse/EclipseState/SimulationConfig/RockConfig.cpp
