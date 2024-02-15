@@ -85,7 +85,7 @@ if(ENABLE_ECL_INPUT)
     external/resinsight/CommonCode/cvfStructGrid.cpp
     external/resinsight/cafPdmCore/cafSignal.cpp
     external/resinsight/cafHexGridIntersectionTools/cafHexGridIntersectionTools.cpp
-    src/opm/io/eclipse/SummaryNode.cpp
+    opm/io/eclipse/SummaryNode.cpp
     opm/json/JsonObject.cpp
     src/opm/input/eclipse/Deck/Deck.cpp
     src/opm/input/eclipse/Deck/DeckView.cpp
@@ -373,21 +373,21 @@ if(ENABLE_ECL_INPUT)
 endif()
 if(ENABLE_ECL_OUTPUT)
   list( APPEND MAIN_SOURCE_FILES
-          src/opm/io/eclipse/EclFile.cpp
-          src/opm/io/eclipse/EclOutput.cpp
-          src/opm/io/eclipse/EclUtil.cpp
-          src/opm/io/eclipse/EGrid.cpp
-          src/opm/io/eclipse/EInit.cpp
-          src/opm/io/eclipse/ERft.cpp
-          src/opm/io/eclipse/ERst.cpp
-          src/opm/io/eclipse/ERsm.cpp
-          src/opm/io/eclipse/ESmry.cpp
-          src/opm/io/eclipse/ExtESmry.cpp
-          src/opm/io/eclipse/ESmry_write_rsm.cpp
-          src/opm/io/eclipse/OutputStream.cpp
-          src/opm/io/eclipse/ExtSmryOutput.cpp
-          src/opm/io/eclipse/RestartFileView.cpp
-          src/opm/io/eclipse/SummaryNode.cpp
+          opm/io/eclipse/EclFile.cpp
+          opm/io/eclipse/EclOutput.cpp
+          opm/io/eclipse/EclUtil.cpp
+          opm/io/eclipse/EGrid.cpp
+          opm/io/eclipse/EInit.cpp
+          opm/io/eclipse/ERft.cpp
+          opm/io/eclipse/ERst.cpp
+          opm/io/eclipse/ERsm.cpp
+          opm/io/eclipse/ESmry.cpp
+          opm/io/eclipse/ExtESmry.cpp
+          opm/io/eclipse/ESmry_write_rsm.cpp
+          opm/io/eclipse/OutputStream.cpp
+          opm/io/eclipse/ExtSmryOutput.cpp
+          opm/io/eclipse/RestartFileView.cpp
+          opm/io/eclipse/SummaryNode.cpp
           opm/io/eclipse/rst/action.cpp
           opm/io/eclipse/rst/aquifer.cpp
           opm/io/eclipse/rst/connection.cpp
