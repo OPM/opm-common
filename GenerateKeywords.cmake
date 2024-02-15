@@ -40,9 +40,9 @@ add_executable(genkw ${genkw_SOURCES})
 target_link_libraries(genkw ${opm-common_LIBRARIES})
 
 # Generate keyword list
-include(src/opm/input/eclipse/share/keywords/keyword_list.cmake)
-string(REGEX REPLACE "([^;]+)" "${PROJECT_SOURCE_DIR}/src/opm/input/eclipse/share/keywords/\\1" keyword_files "${keywords}")
-configure_file(src/opm/input/eclipse/keyword_list.argv.in keyword_list.argv)
+include(opm/input/eclipse/share/keywords/keyword_list.cmake)
+string(REGEX REPLACE "([^;]+)" "${PROJECT_SOURCE_DIR}/opm/input/eclipse/share/keywords/\\1" keyword_files "${keywords}")
+configure_file(opm/input/eclipse/keyword_list.argv.in keyword_list.argv)
 
 # Generate keyword source
 
@@ -85,7 +85,7 @@ endif()
 add_custom_command( OUTPUT
   ${_tmp_output}
   COMMAND genkw ${genkw_argv}
-  DEPENDS genkw ${keyword_files} src/opm/input/eclipse/share/keywords/keyword_list.cmake)
+  DEPENDS genkw ${keyword_files} opm/input/eclipse/share/keywords/keyword_list.cmake)
 
 # To avoid some rebuilds
 add_custom_command(OUTPUT
