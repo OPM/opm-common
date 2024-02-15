@@ -115,30 +115,30 @@ if(ENABLE_ECL_INPUT)
     src/opm/input/eclipse/EclipseState/EclipseConfig.cpp
     src/opm/input/eclipse/EclipseState/EclipseState.cpp
     src/opm/input/eclipse/EclipseState/EndpointScaling.cpp
-    src/opm/input/eclipse/EclipseState/Grid/Box.cpp
-    src/opm/input/eclipse/EclipseState/Grid/BoxManager.cpp
-    src/opm/input/eclipse/EclipseState/Grid/Carfin.cpp
-    src/opm/input/eclipse/EclipseState/Grid/CarfinManager.cpp
-    src/opm/input/eclipse/EclipseState/Grid/LgrCollection.cpp
-    src/opm/input/eclipse/EclipseState/Grid/EclipseGrid.cpp
-    src/opm/input/eclipse/EclipseState/Grid/FieldProps.cpp
-    src/opm/input/eclipse/EclipseState/Grid/FieldPropsManager.cpp
-    src/opm/input/eclipse/EclipseState/Grid/FaceDir.cpp
-    src/opm/input/eclipse/EclipseState/Grid/FaultCollection.cpp
-    src/opm/input/eclipse/EclipseState/Grid/Fault.cpp
-    src/opm/input/eclipse/EclipseState/Grid/FaultFace.cpp
-    src/opm/input/eclipse/EclipseState/Grid/GridDims.cpp
-    src/opm/input/eclipse/EclipseState/Grid/MapAxes.cpp
-    src/opm/input/eclipse/EclipseState/Grid/MinpvMode.cpp
-    src/opm/input/eclipse/EclipseState/Grid/MULTREGTScanner.cpp
-    src/opm/input/eclipse/EclipseState/Grid/NNC.cpp
-    src/opm/input/eclipse/EclipseState/Grid/Operate.cpp
-    src/opm/input/eclipse/EclipseState/Grid/PinchMode.cpp
-    src/opm/input/eclipse/EclipseState/Grid/readKeywordCarfin.cpp
-    src/opm/input/eclipse/EclipseState/Grid/SatfuncPropertyInitializers.cpp
-    src/opm/input/eclipse/EclipseState/Grid/setKeywordBox.cpp
-    src/opm/input/eclipse/EclipseState/Grid/TranCalculator.cpp
-    src/opm/input/eclipse/EclipseState/Grid/TransMult.cpp
+    opm/input/eclipse/EclipseState/Grid/Box.cpp
+    opm/input/eclipse/EclipseState/Grid/BoxManager.cpp
+    opm/input/eclipse/EclipseState/Grid/Carfin.cpp
+    opm/input/eclipse/EclipseState/Grid/CarfinManager.cpp
+    opm/input/eclipse/EclipseState/Grid/LgrCollection.cpp
+    opm/input/eclipse/EclipseState/Grid/EclipseGrid.cpp
+    opm/input/eclipse/EclipseState/Grid/FieldProps.cpp
+    opm/input/eclipse/EclipseState/Grid/FieldPropsManager.cpp
+    opm/input/eclipse/EclipseState/Grid/FaceDir.cpp
+    opm/input/eclipse/EclipseState/Grid/Fault.cpp
+    opm/input/eclipse/EclipseState/Grid/FaultCollection.cpp
+    opm/input/eclipse/EclipseState/Grid/FaultFace.cpp
+    opm/input/eclipse/EclipseState/Grid/GridDims.cpp
+    opm/input/eclipse/EclipseState/Grid/MapAxes.cpp
+    opm/input/eclipse/EclipseState/Grid/MinpvMode.cpp
+    opm/input/eclipse/EclipseState/Grid/MULTREGTScanner.cpp
+    opm/input/eclipse/EclipseState/Grid/NNC.cpp
+    opm/input/eclipse/EclipseState/Grid/Operate.cpp
+    opm/input/eclipse/EclipseState/Grid/PinchMode.cpp
+    opm/input/eclipse/EclipseState/Grid/readKeywordCarfin.cpp
+    opm/input/eclipse/EclipseState/Grid/SatfuncPropertyInitializers.cpp
+    opm/input/eclipse/EclipseState/Grid/setKeywordBox.cpp
+    opm/input/eclipse/EclipseState/Grid/TranCalculator.cpp
+    opm/input/eclipse/EclipseState/Grid/TransMult.cpp
     src/opm/input/eclipse/EclipseState/InitConfig/Equil.cpp
     src/opm/input/eclipse/EclipseState/InitConfig/FoamConfig.cpp
     src/opm/input/eclipse/EclipseState/InitConfig/InitConfig.cpp
