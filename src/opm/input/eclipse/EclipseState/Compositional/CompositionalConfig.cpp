@@ -1,7 +1,7 @@
 /*
-Copyright (C) 2024 SINTEF Digital, Mathematics and Cybernetics.
+  Copyright (C) 2024 SINTEF Digital, Mathematics and Cybernetics.
 
-This file is part of the Open Porous Media project (OPM).
+  This file is part of the Open Porous Media project (OPM).
 
   OPM is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -10,11 +10,11 @@ This file is part of the Open Porous Media project (OPM).
 
   OPM is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
 
-You should have received a copy of the GNU General Public License
-along with OPM.  If not, see <http://www.gnu.org/licenses/>.
+  You should have received a copy of the GNU General Public License
+  along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include <opm/input/eclipse/Deck/Deck.hpp>
@@ -49,7 +49,6 @@ CompositionalConfig::CompositionalConfig(const Deck& deck, const Runspec& runspe
 
     const PROPSSection props_section {deck};
     const bool comp_mode_runspec = runspec.compositionalMode(); // TODO: the way to use comp_mode_runspec should be refactored
-    // the following code goes to a function
     if (!comp_mode_runspec) {
         warningForExistingCompKeywords(props_section);
         return; // not processing compositional props keywords
@@ -85,7 +84,7 @@ CompositionalConfig::CompositionalConfig(const Deck& deck, const Runspec& runspe
         const auto& item = kw.getRecord(0).getItem<ParserKeywords::CNAMES::data>();
         const auto names_size = item.getData<std::string>().size();
         if (names_size != num_comps) {
-            const auto msg = fmt::format("in keyword CNAMES, {} values are specified, which is bigger than the number of components {}",
+            const auto msg = fmt::format("in keyword CNAMES, {} values are specified, which is different from the number of components {}",
                                          names_size, num_comps);
             throw OpmInputError(msg, kw.location());
         }
@@ -128,6 +127,11 @@ CompositionalConfig::CompositionalConfig(const Deck& deck, const Runspec& runspe
                 throw OpmInputError("there are multiple EOS keyword specification", keywords.begin()->location());
             }
             const auto& kw = keywords.back();
+            if (kw.size() > num_eos_res) {
+                const auto msg = fmt::format(" {} equations of state are specified in keyword EOS, which is more than the number of"
+                                             " of equation of state regions of {}.", kw.size(), num_eos_res);
+                throw OpmInputError(msg, kw.location());
+            }
             for (size_t i = 0; i < kw.size(); ++i) {
                 const auto& item = kw.getRecord(i).getItem<KWEOS::EQUATION>();
                 const auto& equ_str = item.getTrimmedString(0);
@@ -136,58 +140,20 @@ CompositionalConfig::CompositionalConfig(const Deck& deck, const Runspec& runspe
         }
     }
 
-    acentric_factors.resize(num_eos_res, std::vector<double>(this->num_comps, 0.));
-    if (props_section.hasKeyword<ParserKeywords::ACF>()) {
-        // we do not allow multiple input of the keyword ACF unless proven otherwise
-        const auto& keywords = props_section.get<ParserKeywords::ACF>();
-        if (keywords.size() > 1) {
-            throw OpmInputError("there are multiple ACF keyword specification", keywords.begin()->location());
-        }
-        const auto& kw = keywords.back();
-        for (size_t i = 0; i < kw.size(); ++i) {
-            const auto& item = kw.getRecord(i).getItem<ParserKeywords::ACF::DATA>();
-            const auto data = item.getData<double>();
-            if (data.size() > this->num_comps) {
-                const auto msg = fmt::format("in keyword ACF, {} values are specified, which is bigger than the number of components {}",
-                                                        data.size(), this->num_comps);
-               throw OpmInputError(msg, kw.location());
-            }
-            // ACF has default values for 0. so we only overwrite when values are provided
-            std::copy(data.begin(), data.end(), acentric_factors[i].begin());
-        }
-    }
-
-    const size_t bic_size = this->num_comps * (this->num_comps - 1) / 2;
-    binary_interaction_coefficient.resize(num_eos_res, std::vector<double>(bic_size,  0.)); // default value 0.
-    if (props_section.hasKeyword<ParserKeywords::BIC>()) {
-        // we do not allow multiple input of the keyword ACF unless proven otherwise
-        const auto& keywords = props_section.get<ParserKeywords::BIC>();
-        if (keywords.size() > 1) {
-            throw OpmInputError("there are multiple BIC keyword specification", keywords.begin()->location());
-        }
-        const auto& kw = keywords.back();
-        for (size_t i = 0; i < kw.size(); ++i) {
-            const auto& item = kw.getRecord(i).getItem<ParserKeywords::BIC::DATA>();
-            const auto data = item.getData<double>();
-            if (data.size() > bic_size) { // size_t vs int
-                const auto msg = fmt::format("in keyword BIC, {} values are specified, which is bigger than the number"
-                                             "({} X {} = {})should be specified ",
-                                             data.size(), this->num_comps, this->num_comps-1, bic_size);
-                throw OpmInputError(msg, kw.location());
-            }
-            // BIC has default values for 0. so we only overwrite when values are provided
-            std::copy(data.begin(), data.end(), binary_interaction_coefficient[i].begin());
-        }
-    }
-
     CompositionalConfig::processKeyword<ParserKeywords::MW>(props_section, this->molecular_weights,
                                                             num_eos_res, this->num_comps, "MW");
+    CompositionalConfig::processKeyword<ParserKeywords::ACF>(props_section, this->acentric_factors,
+                                                            num_eos_res, this->num_comps, "ACF");
     CompositionalConfig::processKeyword<ParserKeywords::PCRIT>(props_section, this->critical_pressure,
                                                               num_eos_res, this->num_comps, "PCRIT");
     CompositionalConfig::processKeyword<ParserKeywords::TCRIT>(props_section, this->critical_temperature,
                                                               num_eos_res, this->num_comps, "TCRIT");
     CompositionalConfig::processKeyword<ParserKeywords::VCRIT>(props_section, this->critical_volume,
                                                               num_eos_res, this->num_comps, "VCRIT");
+
+    const std::size_t bic_size = this->num_comps * (this->num_comps - 1) / 2;
+    CompositionalConfig::processKeyword<ParserKeywords::BIC>(props_section, this->binary_interaction_coefficient,
+                                                             num_eos_res, bic_size, "ACF", 0.);
 }
 
 bool CompositionalConfig::operator==(const CompositionalConfig& other) const {

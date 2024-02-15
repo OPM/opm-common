@@ -29,6 +29,7 @@
 
 #include <fmt/format.h>
 
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -105,26 +106,31 @@ private:
 
     static void warningForExistingCompKeywords(const PROPSSection& section);
 
-    // The following function is used to parse some keywords that do not have default values
-    // at the moment, it is used to parse MW, PCRIT, TCRIT and VCRIT
+    // The following function is used to parse the following keywords:
+    // MW, ACF, BIC, PCRIT, TCRIT and VCRIT
     template<typename Keyword>
     static void processKeyword(const PROPSSection& props_section,
                                std::vector<std::vector<double>>& target,
-                               const unsigned num_eos_res,
-                               const unsigned num_comps,
-                               const std::string& keywordName) {
+                               const std::size_t num_eos_res,
+                               const std::size_t num_values,
+                               const std::string& kw_name,
+                               const std::optional<double> default_value = std::nullopt) {
         if ( !props_section.hasKeyword<Keyword>() ) {
-            throw std::logic_error(keywordName + " is not specified for compositional simulation");
+            throw std::logic_error(kw_name + " is not specified for compositional simulation");
         }
         target.resize(num_eos_res);
         for (auto& vec : target) {
-            vec.resize(num_comps);
+            if (default_value.has_value()) {
+                vec.resize(num_values, default_value.value());
+            } else {
+                vec.resize(num_values);
+            }
         }
 
         const auto& keywords = props_section.get<Keyword>();
-        // we do not allow multiple input of the keyword ACF unless proven otherwi
+        // we do not allow multiple input of the keyword unless proven otherwise
         if (keywords.size() > 1) {
-            throw OpmInputError(fmt::format("there are multiple {} keyword specifications", keywordName),
+            throw OpmInputError(fmt::format("there are multiple {} keyword specifications", kw_name),
                                 keywords.begin()->location());
         }
 
@@ -133,18 +139,30 @@ private:
         const auto& kw = keywords.back();
         if (kw.size() != num_eos_res) {
             throw OpmInputError(fmt::format("there are {} EOS regions, while only {} regions are specified in {}",
-                                           num_eos_res, kw.size(), keywordName), kw.location());
+                                           num_eos_res, kw.size(),
+                                            kw_name), kw.location());
         }
 
         for (size_t i = 0; i < kw.size(); ++i) {
             const auto& item = kw.getRecord(i).template getItem<typename Keyword::DATA>();
             const auto data = item.getSIDoubleData();
-            if (data.size() != num_comps) {
-                const auto msg = fmt::format("in keyword {}, {} values are specified, which is different from the number of components {}",
-                                             keywordName, data.size(), num_comps);
-                throw OpmInputError(msg, kw.location());
+            if ( !default_value.has_value() ) { // when there is no default values, we should specify all the values
+                if (data.size() != num_values) {
+                    const auto msg = fmt::format("in keyword {}, {} values are specified, which is different from the number of components {}",
+                        kw_name, data.size(), num_values);
+                    throw OpmInputError(msg, kw.location());
+                }
+            } else {
+                if (data.size() > num_values) { // when there is default values, we should not specify more values than needed
+                    const auto msg = fmt::format("in keyword {}, {} values are specified, which is bigger than the number"
+                                                 " {} should be specified ",
+                                      kw_name, data.size(), num_values);
+                    throw OpmInputError(msg, kw.location());
+                }
             }
-            target[i] = data;
+            // using copy here to consider the situation that there is default values, we might not specify all the values
+            // and keep the rest to be the default values
+            std::copy(data.begin(), data.end(), target[i].begin());
         }
     }
 };
