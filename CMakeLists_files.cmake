@@ -248,10 +248,10 @@ if(ENABLE_ECL_INPUT)
     src/opm/input/eclipse/Schedule/Well/WVFPDP.cpp
     src/opm/input/eclipse/Schedule/Well/WVFPEXP.cpp
     src/opm/input/eclipse/Schedule/WellTraj/RigEclipseWellLogExtractor.cpp
-    src/opm/input/eclipse/EclipseState/SimulationConfig/BCConfig.cpp
-    src/opm/input/eclipse/EclipseState/SimulationConfig/RockConfig.cpp
-    src/opm/input/eclipse/EclipseState/SimulationConfig/SimulationConfig.cpp
-    src/opm/input/eclipse/EclipseState/SimulationConfig/ThresholdPressure.cpp
+    opm/input/eclipse/EclipseState/SimulationConfig/BCConfig.cpp
+    opm/input/eclipse/EclipseState/SimulationConfig/RockConfig.cpp
+    opm/input/eclipse/EclipseState/SimulationConfig/SimulationConfig.cpp
+    opm/input/eclipse/EclipseState/SimulationConfig/ThresholdPressure.cpp
     src/opm/input/eclipse/EclipseState/SummaryConfig/SummaryConfig.cpp
     src/opm/input/eclipse/EclipseState/Tables/Aqudims.cpp
     src/opm/input/eclipse/EclipseState/Tables/ColumnSchema.cpp
