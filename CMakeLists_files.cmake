@@ -54,7 +54,7 @@ list (APPEND MAIN_SOURCE_FILES
       opm/material/components/H2.cpp
       opm/material/densead/Evaluation.cpp
       opm/material/fluidmatrixinteractions/EclEpsScalingPoints.cpp
-      src/opm/material/fluidsystems/BlackOilFluidSystem.cpp
+      opm/material/fluidsystems/BlackOilFluidSystem.cpp
       opm/material/fluidsystems/blackoilpvt/DeadOilPvt.cpp
       opm/material/fluidsystems/blackoilpvt/DryGasPvt.cpp
       opm/material/fluidsystems/blackoilpvt/DryHumidGasPvt.cpp
