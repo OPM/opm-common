@@ -111,10 +111,15 @@ if(ENABLE_ECL_INPUT)
     opm/input/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquiferConnection.cpp
     opm/input/eclipse/EclipseState/Aquifer/NumericalAquifer/SingleNumericalAquifer.cpp
     opm/input/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquifers.cpp
-    src/opm/input/eclipse/EclipseState/checkDeck.cpp
-    src/opm/input/eclipse/EclipseState/EclipseConfig.cpp
-    src/opm/input/eclipse/EclipseState/EclipseState.cpp
-    src/opm/input/eclipse/EclipseState/EndpointScaling.cpp
+    opm/input/eclipse/EclipseState/checkDeck.cpp
+    opm/input/eclipse/EclipseState/EclipseConfig.cpp
+    opm/input/eclipse/EclipseState/EclipseState.cpp
+    opm/input/eclipse/EclipseState/EndpointScaling.cpp
+    opm/input/eclipse/EclipseState/MICPpara.cpp
+    opm/input/eclipse/EclipseState/Phase.cpp
+    opm/input/eclipse/EclipseState/Runspec.cpp
+    opm/input/eclipse/EclipseState/TracerConfig.cpp
+    opm/input/eclipse/EclipseState/WagHysteresisConfig.cpp
     opm/input/eclipse/EclipseState/Grid/Box.cpp
     opm/input/eclipse/EclipseState/Grid/BoxManager.cpp
     opm/input/eclipse/EclipseState/Grid/Carfin.cpp
@@ -144,11 +149,6 @@ if(ENABLE_ECL_INPUT)
     opm/input/eclipse/EclipseState/InitConfig/InitConfig.cpp
     src/opm/input/eclipse/EclipseState/IOConfig/FIPConfig.cpp
     src/opm/input/eclipse/EclipseState/IOConfig/IOConfig.cpp
-    src/opm/input/eclipse/EclipseState/Runspec.cpp
-    src/opm/input/eclipse/EclipseState/Phase.cpp
-    src/opm/input/eclipse/EclipseState/TracerConfig.cpp
-    src/opm/input/eclipse/EclipseState/MICPpara.cpp
-    src/opm/input/eclipse/EclipseState/WagHysteresisConfig.cpp
     src/opm/input/eclipse/Schedule/Action/ActionAST.cpp
     src/opm/input/eclipse/Schedule/Action/ActionContext.cpp
     src/opm/input/eclipse/Schedule/Action/ActionResult.cpp
