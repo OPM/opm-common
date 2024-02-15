@@ -3,7 +3,7 @@ Copyright (C) 2024 SINTEF Digital, Mathematics and Cybernetics.
 
 This file is part of the Open Porous Media project (OPM).
 
-      OPM is free software: you can redistribute it and/or modify
+  OPM is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation, either version 3 of the License, or
   (at your option) any later version.
@@ -78,52 +78,61 @@ CompositionalConfig::CompositionalConfig(const Deck& deck, const Runspec& runspe
     } else {
         comp_names.resize(num_comps);
         const auto& keywords = props_section.get<ParserKeywords::CNAMES>();
-        for (const auto& kw : keywords) {
-            const auto& item = kw.getRecord(0).getItem<ParserKeywords::CNAMES::data>();
-            const auto names_size = item.getData<std::string>().size();
-            if (names_size != num_comps) {
-                const auto msg = fmt::format("in keyword CNAMES, {} values are specified, which is bigger than the number of components {}",
-                                             names_size, num_comps);
-                throw OpmInputError(msg, kw.location());
-            }
-            for (size_t c = 0; c < num_comps; ++c) {
-                comp_names[c] = item.getTrimmedString(c);
-            }
+        if (keywords.size() > 1) {
+            throw OpmInputError("there are multiple CNAMES keyword specification", keywords.begin()->location());
         }
+        const auto& kw = keywords.back();
+        const auto& item = kw.getRecord(0).getItem<ParserKeywords::CNAMES::data>();
+        const auto names_size = item.getData<std::string>().size();
+        if (names_size != num_comps) {
+            const auto msg = fmt::format("in keyword CNAMES, {} values are specified, which is bigger than the number of components {}",
+                                         names_size, num_comps);
+            throw OpmInputError(msg, kw.location());
+        }
+        for (size_t c = 0; c < num_comps; ++c) {
+            comp_names[c] = item.getTrimmedString(c);
+        }
+    }
+
+
+    if (props_section.hasKeyword<ParserKeywords::STCOND>()) {
+        const auto& keywords = props_section.get<ParserKeywords::STCOND>();
+        if (keywords.size() > 1) {
+            throw OpmInputError("there are multiple STCOND keyword specification", keywords.begin()->location());
+        }
+        const auto& kw = keywords.back();
+        const auto& temp_item = kw.getRecord(0).getItem<ParserKeywords::STCOND::TEMPERATURE>();
+        this->standard_temperature = temp_item.getSIDouble(0);
+        const auto& pres_item = kw.getRecord(0).getItem<ParserKeywords::STCOND::PRESSURE>();
+        this->standard_pressure = pres_item.getSIDouble(0);
     }
 
     const Tabdims tabdims{deck};
     const size_t num_eos_res = tabdims.getNumEosRes();
-    if ( !props_section.hasKeyword<ParserKeywords::MW>() )  {
-        throw std::logic_error("MW is not specified for compositional simulation");
-    } else {
-        CompositionalConfig::processKeyword<ParserKeywords::MW>(props_section, this->molecular_weights,
-                                                                   num_eos_res, this->num_comps, "MW");
-    }
-
-    if (props_section.hasKeyword<ParserKeywords::STCOND>()) {
-        const auto& keywords = props_section.get<ParserKeywords::STCOND>();
-        for (const auto& kw : keywords) {
-            const auto& temp_item = kw.getRecord(0).getItem<ParserKeywords::STCOND::TEMPERATURE>();
-            this->standard_temperature = temp_item.getSIDouble(0);
-            const auto& pres_item = kw.getRecord(0).getItem<ParserKeywords::STCOND::PRESSURE>();
-            this->standard_pressure = pres_item.getSIDouble(0);
-        }
-    }
-
-    // TODO: EOS keyword can also be in RUNSPEC section
+    // EOS keyword can also be in RUNSPEC section, we also parse the EOS in the RUNSPEC section here for simplicity
+    // might be suggested to handle in the RUNSPEC section though
     eos_types.resize(num_eos_res, EOSType::PR);
-    if (props_section.hasKeyword<ParserKeywords::EOS>()) {
-        // we do not allow multiple input of the keyword EOS unless proven otherwise
-        const auto keywords = props_section.get<ParserKeywords::EOS>();
-        if (keywords.size() > 1) {
-            throw OpmInputError("there are multiple EOS keyword specification", keywords.begin()->location());
-        }
-        const auto& kw = keywords.back();
-        for (size_t i = 0; i < kw.size(); ++i) {
-            const auto& item = kw.getRecord(i).getItem<ParserKeywords::EOS::EQUATION>();
-            const auto& equ_str = item.getTrimmedString(0);
-            eos_types[i] = eosTypeFromString(equ_str);
+    {
+        const RUNSPECSection runsec_section {deck};
+        using KWEOS = ParserKeywords::EOS;
+        if (props_section.hasKeyword<KWEOS>() || !runsec_section.hasKeyword<KWEOS>()) {
+            // we are not allowing EOS specified in both places
+            if (props_section.hasKeyword<KWEOS>() && runsec_section.hasKeyword<KWEOS>()) {
+                throw std::logic_error("EOS is specified in both RUNSPEC and PROP sections");
+            }
+
+            // we do not allow multiple input of the keyword EOS unless proven otherwise
+            // only one section has EOS defined when we reach here
+            const auto& keywords = props_section.hasKeyword<KWEOS>() ? props_section.get<KWEOS>() : runsec_section.get<KWEOS>();
+            if (keywords.size() > 1) {
+                throw OpmInputError("there are multiple EOS keyword specification", keywords.begin()->location());
+            }
+            const auto& kw = keywords.back();
+            for (size_t i = 0; i < kw.size(); ++i) {
+                const auto& item = kw.getRecord(i).getItem<KWEOS::EQUATION>();
+                const auto& equ_str = item.getTrimmedString(0);
+                eos_types[i] = eosTypeFromString(equ_str);
+            }
         }
     }
 
@@ -138,7 +147,7 @@ CompositionalConfig::CompositionalConfig(const Deck& deck, const Runspec& runspe
         for (size_t i = 0; i < kw.size(); ++i) {
             const auto& item = kw.getRecord(i).getItem<ParserKeywords::ACF::DATA>();
             const auto data = item.getData<double>();
-            if (data.size() > this->num_comps) { // size_t vs int
+            if (data.size() > this->num_comps) {
                 const auto msg = fmt::format("in keyword ACF, {} values are specified, which is bigger than the number of components {}",
                                                         data.size(), this->num_comps);
                throw OpmInputError(msg, kw.location());
@@ -171,6 +180,8 @@ CompositionalConfig::CompositionalConfig(const Deck& deck, const Runspec& runspe
         }
     }
 
+    CompositionalConfig::processKeyword<ParserKeywords::MW>(props_section, this->molecular_weights,
+                                                            num_eos_res, this->num_comps, "MW");
     CompositionalConfig::processKeyword<ParserKeywords::PCRIT>(props_section, this->critical_pressure,
                                                               num_eos_res, this->num_comps, "PCRIT");
     CompositionalConfig::processKeyword<ParserKeywords::TCRIT>(props_section, this->critical_temperature,
