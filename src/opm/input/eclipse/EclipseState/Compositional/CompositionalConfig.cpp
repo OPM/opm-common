@@ -114,7 +114,7 @@ CompositionalConfig::CompositionalConfig(const Deck& deck, const Runspec& runspe
     {
         const RUNSPECSection runsec_section {deck};
         using KWEOS = ParserKeywords::EOS;
-        if (props_section.hasKeyword<KWEOS>() || !runsec_section.hasKeyword<KWEOS>()) {
+        if (props_section.hasKeyword<KWEOS>() || runsec_section.hasKeyword<KWEOS>()) {
             // we are not allowing EOS specified in both places
             if (props_section.hasKeyword<KWEOS>() && runsec_section.hasKeyword<KWEOS>()) {
                 throw std::logic_error("EOS is specified in both RUNSPEC and PROP sections");

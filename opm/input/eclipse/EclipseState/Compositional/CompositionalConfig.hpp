@@ -116,7 +116,7 @@ private:
                                const std::string& kw_name,
                                const std::optional<double> default_value = std::nullopt) {
         if ( !props_section.hasKeyword<Keyword>() ) {
-            throw std::logic_error(kw_name + " is not specified for compositional simulation");
+            return;
         }
         target.resize(num_eos_res);
         for (auto& vec : target) {
