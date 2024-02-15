@@ -30,7 +30,7 @@
 #include <opm/input/eclipse/Parser/ErrorGuard.hpp>
 #include <opm/input/eclipse/Parser/ParseContext.hpp>
 
-#include "../../Parser/raw/RawConsts.hpp"
+#include "opm/input/eclipse/Parser/raw/RawConsts.hpp" // TODO: make relative again
 #include "UDQParser.hpp"
 
 #include <cstddef>

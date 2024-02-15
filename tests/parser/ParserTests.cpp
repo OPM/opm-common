@@ -46,8 +46,8 @@
 #include <opm/input/eclipse/Parser/ParserKeywords/T.hpp>
 #include <opm/input/eclipse/Parser/ParserRecord.hpp>
 
-#include "src/opm/input/eclipse/Parser/raw/RawKeyword.hpp"
-#include "src/opm/input/eclipse/Parser/raw/RawRecord.hpp"
+#include "../../opm/input/eclipse/Parser/raw/RawKeyword.hpp"
+#include "../../opm/input/eclipse/Parser/raw/RawRecord.hpp"
 
 #include <cstddef>
 #include <filesystem>

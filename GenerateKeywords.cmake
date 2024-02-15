@@ -1,5 +1,4 @@
 set(genkw_SOURCES opm/json/JsonObject.cpp
-                  src/opm/input/eclipse/Parser/createDefaultKeywordList.cpp
                   opm/input/eclipse/Deck/DeckTree.cpp
                   opm/input/eclipse/Deck/DeckValue.cpp
                   opm/input/eclipse/Deck/Deck.cpp
@@ -12,15 +11,16 @@ set(genkw_SOURCES opm/json/JsonObject.cpp
                   opm/input/eclipse/Generator/KeywordGenerator.cpp
                   opm/input/eclipse/Generator/KeywordLoader.cpp
                   src/opm/input/eclipse/Schedule/UDQ/UDQEnums.cpp
-                  src/opm/input/eclipse/Parser/ErrorGuard.cpp
-                  src/opm/input/eclipse/Parser/ParseContext.cpp
-                  src/opm/input/eclipse/Parser/ParserEnums.cpp
-                  src/opm/input/eclipse/Parser/ParserItem.cpp
-                  src/opm/input/eclipse/Parser/ParserKeyword.cpp
-                  src/opm/input/eclipse/Parser/ParserRecord.cpp
-                  src/opm/input/eclipse/Parser/raw/RawKeyword.cpp
-                  src/opm/input/eclipse/Parser/raw/RawRecord.cpp
-                  src/opm/input/eclipse/Parser/raw/StarToken.cpp
+                  opm/input/eclipse/Parser/createDefaultKeywordList.cpp
+                  opm/input/eclipse/Parser/ErrorGuard.cpp
+                  opm/input/eclipse/Parser/ParseContext.cpp
+                  opm/input/eclipse/Parser/ParserEnums.cpp
+                  opm/input/eclipse/Parser/ParserItem.cpp
+                  opm/input/eclipse/Parser/ParserKeyword.cpp
+                  opm/input/eclipse/Parser/ParserRecord.cpp
+                  opm/input/eclipse/Parser/raw/RawKeyword.cpp
+                  opm/input/eclipse/Parser/raw/RawRecord.cpp
+                  opm/input/eclipse/Parser/raw/StarToken.cpp
                   opm/input/eclipse/Units/Dimension.cpp
                   opm/input/eclipse/Units/UnitSystem.cpp
                   opm/common/utility/OpmInputError.cpp
