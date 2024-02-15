@@ -32,7 +32,7 @@
 #include <opm/input/eclipse/Schedule/Well/Well.hpp>
 
 
-#include "MSW/WelSegsSet.hpp"
+#include "opm/input/eclipse/Schedule/MSW/WelSegsSet.hpp" // TODO: make relative again
 
 #include <fmt/format.h>
 

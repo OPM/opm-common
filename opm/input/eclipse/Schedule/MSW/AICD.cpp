@@ -23,7 +23,7 @@
 #include <opm/input/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/input/eclipse/Deck/DeckRecord.hpp>
 
-#include "src/opm/input/eclipse/Schedule/MSW/FromWSEG.hpp"
+#include "FromWSEG.hpp"
 
 
 namespace Opm {

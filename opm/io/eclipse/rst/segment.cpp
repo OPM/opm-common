@@ -23,7 +23,7 @@
 #include <opm/input/eclipse/Schedule/MSW/Segment.hpp>
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
 
-#include "src/opm/input/eclipse/Schedule/MSW/icd_convert.hpp"
+#include "opm/input/eclipse/Schedule/MSW/icd_convert.hpp" // TODO: make relative again
 
 namespace VI = ::Opm::RestartIO::Helpers::VectorItems;
 
