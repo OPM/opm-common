@@ -146,8 +146,8 @@ if(ENABLE_ECL_INPUT)
     opm/input/eclipse/EclipseState/InitConfig/Equil.cpp
     opm/input/eclipse/EclipseState/InitConfig/FoamConfig.cpp
     opm/input/eclipse/EclipseState/InitConfig/InitConfig.cpp
-    src/opm/input/eclipse/EclipseState/IOConfig/FIPConfig.cpp
-    src/opm/input/eclipse/EclipseState/IOConfig/IOConfig.cpp
+    opm/input/eclipse/EclipseState/IOConfig/FIPConfig.cpp
+    opm/input/eclipse/EclipseState/IOConfig/IOConfig.cpp
     opm/input/eclipse/Schedule/Action/ActionAST.cpp
     opm/input/eclipse/Schedule/Action/ActionContext.cpp
     opm/input/eclipse/Schedule/Action/ActionResult.cpp
