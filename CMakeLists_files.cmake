@@ -21,16 +21,16 @@
 #	                      the library needs it.
 
 list (APPEND MAIN_SOURCE_FILES
-      src/opm/common/OpmLog/CounterLog.cpp
-      src/opm/common/OpmLog/EclipsePRTLog.cpp
-      src/opm/common/OpmLog/LogBackend.cpp
-      src/opm/common/OpmLog/Logger.cpp
-      src/opm/common/OpmLog/LogUtil.cpp
-      src/opm/common/OpmLog/KeywordLocation.cpp
-      src/opm/common/OpmLog/InfoLogger.cpp
-      src/opm/common/OpmLog/OpmLog.cpp
-      src/opm/common/OpmLog/StreamLog.cpp
-      src/opm/common/OpmLog/TimerLog.cpp
+      opm/common/OpmLog/CounterLog.cpp
+      opm/common/OpmLog/EclipsePRTLog.cpp
+      opm/common/OpmLog/LogBackend.cpp
+      opm/common/OpmLog/Logger.cpp
+      opm/common/OpmLog/LogUtil.cpp
+      opm/common/OpmLog/KeywordLocation.cpp
+      opm/common/OpmLog/InfoLogger.cpp
+      opm/common/OpmLog/OpmLog.cpp
+      opm/common/OpmLog/StreamLog.cpp
+      opm/common/OpmLog/TimerLog.cpp
       src/opm/common/utility/ActiveGridCells.cpp
       src/opm/common/utility/Demangle.cpp
       src/opm/common/utility/FileSystem.cpp
