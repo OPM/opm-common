@@ -37,10 +37,10 @@ list (APPEND MAIN_SOURCE_FILES
       src/opm/common/utility/MemPacker.cpp
       src/opm/common/utility/numeric/MonotCubicInterpolator.cpp
       src/opm/common/utility/OpmInputError.cpp
-      src/opm/common/utility/parameters/Parameter.cpp
-      src/opm/common/utility/parameters/ParameterGroup.cpp
-      src/opm/common/utility/parameters/ParameterRequirement.cpp
-      src/opm/common/utility/parameters/ParameterTools.cpp
+      opm/common/utility/parameters/Parameter.cpp
+      opm/common/utility/parameters/ParameterGroup.cpp
+      opm/common/utility/parameters/ParameterRequirement.cpp
+      opm/common/utility/parameters/ParameterTools.cpp
       src/opm/common/utility/numeric/calculateCellVol.cpp
       src/opm/common/utility/numeric/RootFinders.cpp
       src/opm/common/utility/shmatch.cpp
