@@ -388,17 +388,17 @@ if(ENABLE_ECL_OUTPUT)
           src/opm/io/eclipse/ExtSmryOutput.cpp
           src/opm/io/eclipse/RestartFileView.cpp
           src/opm/io/eclipse/SummaryNode.cpp
-          src/opm/io/eclipse/rst/action.cpp
-          src/opm/io/eclipse/rst/aquifer.cpp
-          src/opm/io/eclipse/rst/connection.cpp
-          src/opm/io/eclipse/rst/group.cpp
-          src/opm/io/eclipse/rst/header.cpp
-          src/opm/io/eclipse/rst/netbalan.cpp
-          src/opm/io/eclipse/rst/network.cpp
-          src/opm/io/eclipse/rst/udq.cpp
-          src/opm/io/eclipse/rst/segment.cpp
-          src/opm/io/eclipse/rst/state.cpp
-          src/opm/io/eclipse/rst/well.cpp
+          opm/io/eclipse/rst/action.cpp
+          opm/io/eclipse/rst/aquifer.cpp
+          opm/io/eclipse/rst/connection.cpp
+          opm/io/eclipse/rst/group.cpp
+          opm/io/eclipse/rst/header.cpp
+          opm/io/eclipse/rst/netbalan.cpp
+          opm/io/eclipse/rst/network.cpp
+          opm/io/eclipse/rst/udq.cpp
+          opm/io/eclipse/rst/segment.cpp
+          opm/io/eclipse/rst/state.cpp
+          opm/io/eclipse/rst/well.cpp
           src/opm/output/data/Aquifer.cpp
           src/opm/output/data/InterRegFlowMap.cpp
           src/opm/output/data/Solution.cpp
