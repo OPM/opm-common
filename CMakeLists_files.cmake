@@ -308,8 +308,8 @@ if(ENABLE_ECL_INPUT)
     src/opm/input/eclipse/Parser/raw/RawKeyword.cpp
     src/opm/input/eclipse/Parser/raw/RawRecord.cpp
     src/opm/input/eclipse/Parser/raw/StarToken.cpp
-    src/opm/input/eclipse/Units/Dimension.cpp
-    src/opm/input/eclipse/Units/UnitSystem.cpp
+    opm/input/eclipse/Units/Dimension.cpp
+    opm/input/eclipse/Units/UnitSystem.cpp
     src/opm/input/eclipse/Utility/Functional.cpp
     src/opm/material/fluidmatrixinteractions/EclEpsConfig.cpp
     src/opm/material/fluidmatrixinteractions/EclEpsGridProperties.cpp
