@@ -36,7 +36,7 @@ using namespace Opm;
 
 namespace {
 
-// using local_prefix instead of prefix because there is a prefix() in Opm namespace in Units.hpp
+// using local_prefix instead of prefix because there is a prefix namespace in Opm namespace in Units.hpp
 std::string local_prefix() {
 #if BOOST_VERSION / 100000 == 1 && BOOST_VERSION / 100 % 1000 < 71
     return boost::unit_test::framework::master_test_suite().argv[2];

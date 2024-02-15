@@ -26,6 +26,7 @@ along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 #include <opm/input/eclipse/Parser/ParserKeywords/B.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/C.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/E.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/M.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/N.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/P.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/S.hpp>
@@ -91,6 +92,15 @@ CompositionalConfig::CompositionalConfig(const Deck& deck, const Runspec& runspe
         }
     }
 
+    const Tabdims tabdims{deck};
+    const size_t num_eos_res = tabdims.getNumEosRes();
+    if ( !props_section.hasKeyword<ParserKeywords::MW>() )  {
+        throw std::logic_error("MW is not specified for compositional simulation");
+    } else {
+        CompositionalConfig::processKeyword<ParserKeywords::MW>(props_section, this->molecular_weights,
+                                                                   num_eos_res, this->num_comps, "MW");
+    }
+
     if (props_section.hasKeyword<ParserKeywords::STCOND>()) {
         const auto& keywords = props_section.get<ParserKeywords::STCOND>();
         for (const auto& kw : keywords) {
@@ -101,8 +111,6 @@ CompositionalConfig::CompositionalConfig(const Deck& deck, const Runspec& runspe
         }
     }
 
-    const Tabdims tabdims{deck};
-    const size_t num_eos_res = tabdims.getNumEosRes();
     // TODO: EOS keyword can also be in RUNSPEC section
     eos_types.resize(num_eos_res, EOSType::PR);
     if (props_section.hasKeyword<ParserKeywords::EOS>()) {
@@ -177,6 +185,7 @@ bool CompositionalConfig::operator==(const CompositionalConfig& other) const {
            this->standard_pressure == other.standard_pressure &&
            this->comp_names ==other.comp_names &&
            this->eos_types == other.eos_types &&
+           this->molecular_weights == other.molecular_weights &&
            this->acentric_factors == other.acentric_factors &&
            this->critical_pressure == other.critical_pressure &&
            this->critical_temperature == other.critical_temperature &&
@@ -193,11 +202,12 @@ CompositionalConfig CompositionalConfig::serializationTestObject() {
     result.standard_pressure = 1e5;
     result.comp_names = {"C1", "C10"};
     result.eos_types = {2, EOSType::SRK};
-    result.acentric_factors = {2,  std::vector(result.num_comps, 1.)};
-    result.critical_pressure = {2, std::vector(result.num_comps, 2.)};
-    result.critical_temperature = {2, std::vector(result.num_comps, 3.)};
-    result.critical_volume = {2, std::vector(result.num_comps, 5.)};
-    result.binary_interaction_coefficient = {2, std::vector(result.num_comps * (result.num_comps - 1) / 2, 6.)};
+    result.molecular_weights = {2, std::vector<double>(result.num_comps, 16.)};
+    result.acentric_factors = {2,  std::vector<double>(result.num_comps, 1.)};
+    result.critical_pressure = {2, std::vector<double>(result.num_comps, 2.)};
+    result.critical_temperature = {2, std::vector<double>(result.num_comps, 3.)};
+    result.critical_volume = {2, std::vector<double>(result.num_comps, 5.)};
+    result.binary_interaction_coefficient = {2, std::vector<double>(result.num_comps * (result.num_comps - 1) / 2, 6.)};
 
     return result;
 }
@@ -262,6 +272,10 @@ const std::vector<std::string>& CompositionalConfig::compName() const {
 
 CompositionalConfig::EOSType CompositionalConfig::eosType(size_t eos_region) const {
     return this->eos_types[eos_region];
+}
+
+const std::vector<double>& CompositionalConfig::molecularWeights(std::size_t eos_region) const {
+    return this->molecular_weights[eos_region];
 }
 
 const std::vector<double>& CompositionalConfig::acentricFactors(size_t eos_region) const {

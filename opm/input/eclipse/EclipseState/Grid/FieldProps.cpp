@@ -45,6 +45,8 @@
 #include <opm/input/eclipse/Parser/ParserKeywords/O.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/P.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/T.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/X.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/Y.hpp>
 
 #include "Operate.hpp"
 

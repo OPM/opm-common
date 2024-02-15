@@ -18,6 +18,7 @@
 */
 
 #ifndef OPM_COMPOSITIONALCONFIG_HPP
+#define OPM_COMPOSITIONALCONFIG_HPP
 
 #include <opm/input/eclipse/Deck/Deck.hpp>
 #include <opm/input/eclipse/Deck/DeckRecord.hpp>
@@ -62,6 +63,7 @@ public:
     double standardPressure() const;
     const std::vector<std::string>& compName() const;
     EOSType eosType(size_t eos_region) const;
+    const std::vector<double>& molecularWeights(std::size_t eos_region) const;
     const std::vector<double>& acentricFactors(std::size_t eos_region) const;
     const std::vector<double>& criticalPressure(std::size_t eos_region) const;
     const std::vector<double>& criticalTemperature(std::size_t eos_region) const;
@@ -79,6 +81,7 @@ public:
         serializer(standard_pressure);
         serializer(comp_names);
         serializer(eos_types);
+        serializer(molecular_weights);
         serializer(acentric_factors);
         serializer(critical_pressure);
         serializer(critical_temperature);
@@ -93,6 +96,7 @@ private:
     double standard_pressure = 1.0 * unit::atm; // 1 atm
     std::vector<std::string> comp_names;
     std::vector<EOSType> eos_types;
+    std::vector<std::vector<double>> molecular_weights;
     std::vector<std::vector<double>> acentric_factors;
     std::vector<std::vector<double>> critical_pressure;
     std::vector<std::vector<double>> critical_temperature;
@@ -145,6 +149,4 @@ private:
 };
 
 }
-#define OPM_COMPOSITIONALCONFIG_HPP
-
 #endif // OPM_COMPOSITIONALCONFIG_HPP

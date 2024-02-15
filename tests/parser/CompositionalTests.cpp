@@ -174,12 +174,15 @@ BOOST_AUTO_TEST_CASE(CompositionalParsingTest) {
     {
         const auto& cv0 = comp_config.criticalVolume(0);
         BOOST_CHECK_EQUAL(num_comps, cv0.size());
-        const double convert_coef = usys.to_si(M::geometric_volume, 1) / usys.to_si(M::moles, 1);
-        const std::vector<double> ref_cv0 { 0.6 * convert_coef, 0.1 * convert_coef, 0.1 * convert_coef };
+        const std::vector<double> ref_cv0 { usys.to_si( "GeometricVolume/Moles", 0.6),
+                                            usys.to_si( "GeometricVolume/Moles", 0.1),
+                                            usys.to_si( "GeometricVolume/Moles", 0.1) };
         check_vectors_close(ref_cv0, cv0, tolerance);
         const auto& cv1 = comp_config.criticalVolume(1);
         BOOST_CHECK_EQUAL(num_comps, cv1.size());
-        const std::vector<double> ref_cv1 {0.61 * convert_coef, 0.11 * convert_coef, 0.11 * convert_coef};
+        const std::vector<double> ref_cv1 { usys.to_si( "GeometricVolume/Moles", 0.61),
+                                            usys.to_si( "GeometricVolume/Moles", 0.11),
+                                            usys.to_si( "GeometricVolume/Moles", 0.11) };
         check_vectors_close(ref_cv1, cv1, tolerance);
     }
 
@@ -193,6 +196,21 @@ BOOST_AUTO_TEST_CASE(CompositionalParsingTest) {
         BOOST_CHECK_EQUAL(bic_size, bic1.size());
         const std::vector<double> ref_bic1 {1, 2, 3};
         check_vectors_close(ref_bic1, bic1, tolerance);
+    }
+
+    {
+        const auto& mw0 = comp_config.molecularWeights(0);
+        BOOST_CHECK_EQUAL(num_comps, mw0.size());
+        const std::vector<double> ref_mw0 { usys.to_si( "Mass/Moles", 142.),
+                                            usys.to_si( "Mass/Moles", 44.),
+                                            usys.to_si( "Mass/Moles", 16) };
+        check_vectors_close(ref_mw0, mw0, tolerance);
+        const auto& mw1 = comp_config.molecularWeights(1);
+        BOOST_CHECK_EQUAL(num_comps, mw1.size());
+        const std::vector<double> ref_mw1 { usys.to_si( "Mass/Moles", 142.1),
+                                            usys.to_si( "Mass/Moles", 44.1),
+                                            usys.to_si( "Mass/Moles", 16.1) };
+        check_vectors_close(ref_mw1, mw1, tolerance);
     }
 }
 
