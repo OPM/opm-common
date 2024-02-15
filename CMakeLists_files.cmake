@@ -139,9 +139,9 @@ if(ENABLE_ECL_INPUT)
     opm/input/eclipse/EclipseState/Grid/setKeywordBox.cpp
     opm/input/eclipse/EclipseState/Grid/TranCalculator.cpp
     opm/input/eclipse/EclipseState/Grid/TransMult.cpp
-    src/opm/input/eclipse/EclipseState/InitConfig/Equil.cpp
-    src/opm/input/eclipse/EclipseState/InitConfig/FoamConfig.cpp
-    src/opm/input/eclipse/EclipseState/InitConfig/InitConfig.cpp
+    opm/input/eclipse/EclipseState/InitConfig/Equil.cpp
+    opm/input/eclipse/EclipseState/InitConfig/FoamConfig.cpp
+    opm/input/eclipse/EclipseState/InitConfig/InitConfig.cpp
     src/opm/input/eclipse/EclipseState/IOConfig/FIPConfig.cpp
     src/opm/input/eclipse/EclipseState/IOConfig/IOConfig.cpp
     src/opm/input/eclipse/EclipseState/Runspec.cpp
