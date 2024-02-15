@@ -20,7 +20,7 @@
 #include <opm/input/eclipse/Deck/UDAValue.hpp>
 
 #include <opm/input/eclipse/Schedule/Group/GConSale.hpp>
-#include "../eval_uda.hpp"
+#include "src/opm/input/eclipse/Schedule/eval_uda.hpp" // TODO: make relative again
 
 namespace Opm {
 
