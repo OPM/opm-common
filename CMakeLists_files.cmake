@@ -31,11 +31,14 @@ list (APPEND MAIN_SOURCE_FILES
       opm/common/OpmLog/OpmLog.cpp
       opm/common/OpmLog/StreamLog.cpp
       opm/common/OpmLog/TimerLog.cpp
-      src/opm/common/utility/ActiveGridCells.cpp
-      src/opm/common/utility/Demangle.cpp
-      src/opm/common/utility/FileSystem.cpp
-      src/opm/common/utility/MemPacker.cpp
-      src/opm/common/utility/OpmInputError.cpp
+      opm/common/utility/ActiveGridCells.cpp
+      opm/common/utility/Demangle.cpp
+      opm/common/utility/FileSystem.cpp
+      opm/common/utility/MemPacker.cpp
+      opm/common/utility/OpmInputError.cpp
+      opm/common/utility/shmatch.cpp
+      opm/common/utility/String.cpp
+      opm/common/utility/TimeService.cpp
       opm/common/utility/parameters/Parameter.cpp
       opm/common/utility/parameters/ParameterGroup.cpp
       opm/common/utility/parameters/ParameterRequirement.cpp
@@ -43,9 +46,6 @@ list (APPEND MAIN_SOURCE_FILES
       opm/common/utility/numeric/calculateCellVol.cpp
       opm/common/utility/numeric/MonotCubicInterpolator.cpp
       opm/common/utility/numeric/RootFinders.cpp
-      src/opm/common/utility/shmatch.cpp
-      src/opm/common/utility/String.cpp
-      src/opm/common/utility/TimeService.cpp
       opm/material/common/Spline.cpp
       opm/material/common/Tabulated1DFunction.cpp
       opm/material/common/TridiagonalMatrix.cpp
