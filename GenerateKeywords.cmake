@@ -10,7 +10,7 @@ set(genkw_SOURCES opm/json/JsonObject.cpp
                   opm/input/eclipse/Deck/UDAValue.cpp
                   opm/input/eclipse/Generator/KeywordGenerator.cpp
                   opm/input/eclipse/Generator/KeywordLoader.cpp
-                  src/opm/input/eclipse/Schedule/UDQ/UDQEnums.cpp
+                  opm/input/eclipse/Schedule/UDQ/UDQEnums.cpp
                   opm/input/eclipse/Parser/createDefaultKeywordList.cpp
                   opm/input/eclipse/Parser/ErrorGuard.cpp
                   opm/input/eclipse/Parser/ParseContext.cpp
