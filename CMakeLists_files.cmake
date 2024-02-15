@@ -55,13 +55,13 @@ list (APPEND MAIN_SOURCE_FILES
       src/opm/material/densead/Evaluation.cpp
       src/opm/material/fluidmatrixinteractions/EclEpsScalingPoints.cpp
       src/opm/material/fluidsystems/BlackOilFluidSystem.cpp
-      src/opm/material/fluidsystems/blackoilpvt/DeadOilPvt.cpp
-      src/opm/material/fluidsystems/blackoilpvt/DryGasPvt.cpp
-      src/opm/material/fluidsystems/blackoilpvt/DryHumidGasPvt.cpp
-      src/opm/material/fluidsystems/blackoilpvt/LiveOilPvt.cpp
-      src/opm/material/fluidsystems/blackoilpvt/SolventPvt.cpp
-      src/opm/material/fluidsystems/blackoilpvt/WetGasPvt.cpp
-      src/opm/material/fluidsystems/blackoilpvt/WetHumidGasPvt.cpp
+      opm/material/fluidsystems/blackoilpvt/DeadOilPvt.cpp
+      opm/material/fluidsystems/blackoilpvt/DryGasPvt.cpp
+      opm/material/fluidsystems/blackoilpvt/DryHumidGasPvt.cpp
+      opm/material/fluidsystems/blackoilpvt/LiveOilPvt.cpp
+      opm/material/fluidsystems/blackoilpvt/SolventPvt.cpp
+      opm/material/fluidsystems/blackoilpvt/WetGasPvt.cpp
+      opm/material/fluidsystems/blackoilpvt/WetHumidGasPvt.cpp
 )
 if(ENABLE_ECL_INPUT)
   list(APPEND MAIN_SOURCE_FILES
@@ -318,19 +318,19 @@ if(ENABLE_ECL_INPUT)
     src/opm/material/fluidmatrixinteractions/EclMaterialLawManagerReadEffectiveParams.cpp
     src/opm/material/fluidmatrixinteractions/EclMaterialLawManagerInitParams.cpp
     src/opm/material/fluidmatrixinteractions/EclMaterialLawManagerHystParams.cpp
-    src/opm/material/fluidsystems/blackoilpvt/BrineCo2Pvt.cpp
-    src/opm/material/fluidsystems/blackoilpvt/Co2GasPvt.cpp
-    src/opm/material/fluidsystems/blackoilpvt/BrineH2Pvt.cpp
-    src/opm/material/fluidsystems/blackoilpvt/H2GasPvt.cpp
-    src/opm/material/fluidsystems/blackoilpvt/ConstantCompressibilityBrinePvt.cpp
-    src/opm/material/fluidsystems/blackoilpvt/ConstantCompressibilityOilPvt.cpp
-    src/opm/material/fluidsystems/blackoilpvt/ConstantCompressibilityWaterPvt.cpp
-    src/opm/material/fluidsystems/blackoilpvt/GasPvtMultiplexer.cpp
-    src/opm/material/fluidsystems/blackoilpvt/GasPvtThermal.cpp
-    src/opm/material/fluidsystems/blackoilpvt/OilPvtMultiplexer.cpp
-    src/opm/material/fluidsystems/blackoilpvt/OilPvtThermal.cpp
-    src/opm/material/fluidsystems/blackoilpvt/WaterPvtMultiplexer.cpp
-    src/opm/material/fluidsystems/blackoilpvt/WaterPvtThermal.cpp
+    opm/material/fluidsystems/blackoilpvt/BrineCo2Pvt.cpp
+    opm/material/fluidsystems/blackoilpvt/Co2GasPvt.cpp
+    opm/material/fluidsystems/blackoilpvt/BrineH2Pvt.cpp
+    opm/material/fluidsystems/blackoilpvt/H2GasPvt.cpp
+    opm/material/fluidsystems/blackoilpvt/ConstantCompressibilityBrinePvt.cpp
+    opm/material/fluidsystems/blackoilpvt/ConstantCompressibilityOilPvt.cpp
+    opm/material/fluidsystems/blackoilpvt/ConstantCompressibilityWaterPvt.cpp
+    opm/material/fluidsystems/blackoilpvt/GasPvtMultiplexer.cpp
+    opm/material/fluidsystems/blackoilpvt/GasPvtThermal.cpp
+    opm/material/fluidsystems/blackoilpvt/OilPvtMultiplexer.cpp
+    opm/material/fluidsystems/blackoilpvt/OilPvtThermal.cpp
+    opm/material/fluidsystems/blackoilpvt/WaterPvtMultiplexer.cpp
+    opm/material/fluidsystems/blackoilpvt/WaterPvtThermal.cpp
     src/opm/material/thermal/EclThermalLawManager.cpp
   )
 
