@@ -247,7 +247,7 @@ if(ENABLE_ECL_INPUT)
     opm/input/eclipse/Schedule/Well/WDFAC.cpp
     opm/input/eclipse/Schedule/Well/WVFPDP.cpp
     opm/input/eclipse/Schedule/Well/WVFPEXP.cpp
-    src/opm/input/eclipse/Schedule/WellTraj/RigEclipseWellLogExtractor.cpp
+    opm/input/eclipse/Schedule/WellTraj/RigEclipseWellLogExtractor.cpp
     opm/input/eclipse/EclipseState/SimulationConfig/BCConfig.cpp
     opm/input/eclipse/EclipseState/SimulationConfig/RockConfig.cpp
     opm/input/eclipse/EclipseState/SimulationConfig/SimulationConfig.cpp
