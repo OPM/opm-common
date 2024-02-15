@@ -36,7 +36,8 @@ using namespace Opm;
 
 namespace {
 
-std::string prefix() {
+// using local_prefix instead of prefix because there is a prefix() in Opm namespace in Units.hpp
+std::string local_prefix() {
 #if BOOST_VERSION / 100000 == 1 && BOOST_VERSION / 100 % 1000 < 71
     return boost::unit_test::framework::master_test_suite().argv[2];
 #else
@@ -57,7 +58,7 @@ EclipseState makeState(const std::string& fileName) {
 }
 
 BOOST_AUTO_TEST_CASE( PERMX ) {
-    EclipseState state = makeState( prefix() + "BOX/BOXTEST1" );
+    EclipseState state = makeState( local_prefix() + "BOX/BOXTEST1" );
     const auto& permx = state.fieldProps().get_global_double( "PERMX" );
     const auto& permy = state.fieldProps().get_global_double( "PERMY" );
     const auto& permz = state.fieldProps().get_global_double( "PERMZ" );
@@ -80,7 +81,7 @@ BOOST_AUTO_TEST_CASE( PERMX ) {
 
 
 BOOST_AUTO_TEST_CASE( PARSE_BOX_OK ) {
-    EclipseState state = makeState( prefix() + "BOX/BOXTEST1" );
+    EclipseState state = makeState( local_prefix() + "BOX/BOXTEST1" );
     const auto& satnum = state.fieldProps().get_global_int( "SATNUM" );
     {
         size_t i, j, k;
@@ -102,7 +103,7 @@ BOOST_AUTO_TEST_CASE( PARSE_BOX_OK ) {
 }
 
 BOOST_AUTO_TEST_CASE( PARSE_MULTIPLY_COPY ) {
-    EclipseState state = makeState( prefix() + "BOX/BOXTEST1" );
+    EclipseState state = makeState( local_prefix() + "BOX/BOXTEST1" );
     const auto& satnum = state.fieldProps().get_global_int( "SATNUM" );
     const auto& fipnum = state.fieldProps().get_global_int( "FIPNUM" );
     size_t i, j, k;
@@ -127,7 +128,7 @@ BOOST_AUTO_TEST_CASE( PARSE_MULTIPLY_COPY ) {
 
 
 BOOST_AUTO_TEST_CASE( EQUALS ) {
-    EclipseState state = makeState( prefix() + "BOX/BOXTEST1" );
+    EclipseState state = makeState( local_prefix() + "BOX/BOXTEST1" );
     const auto& pvtnum = state.fieldProps().get_global_int( "PVTNUM" );
     const auto& eqlnum = state.fieldProps().get_global_int( "EQLNUM" );
     const auto& poro   = state.fieldProps().get_global_double( "PORO" );
@@ -149,7 +150,7 @@ BOOST_AUTO_TEST_CASE( EQUALS ) {
 
 
 BOOST_AUTO_TEST_CASE( OPERATE ) {
-    EclipseState state = makeState( prefix() + "BOX/BOXTEST1" );
+    EclipseState state = makeState( local_prefix() + "BOX/BOXTEST1" );
     const EclipseGrid& grid = state.getInputGrid();
     const auto& ntg = state.fieldProps().get_global_double("NTG");
     BOOST_CHECK_EQUAL( ntg[grid.getGlobalIndex(0,0,0)], 8.50 );  // MULTA
@@ -163,7 +164,7 @@ BOOST_AUTO_TEST_CASE( OPERATE ) {
 
 
 BOOST_AUTO_TEST_CASE( CONSTRUCTOR_AND_UPDATE ) {
-    auto deck = makeDeck( prefix() + "BOX/BOXTEST1" );
+    auto deck = makeDeck( local_prefix() + "BOX/BOXTEST1" );
     EclipseGrid grid(deck);
     const auto& box_keyword = deck["BOX"][0];
     const auto& operate_keyword = deck["OPERATE"].back();
