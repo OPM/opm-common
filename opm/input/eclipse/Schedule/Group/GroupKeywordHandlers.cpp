@@ -37,7 +37,7 @@
 #include <opm/input/eclipse/Schedule/UDQ/UDQActive.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQConfig.hpp>
 
-#include "src/opm/input/eclipse/Schedule/HandlerContext.hpp" // TODO: make relative again
+#include "../HandlerContext.hpp"
 
 #include <fmt/format.h>
 

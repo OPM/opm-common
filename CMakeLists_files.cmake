@@ -99,7 +99,15 @@ if(ENABLE_ECL_INPUT)
     opm/input/eclipse/Deck/DeckSection.cpp
     opm/input/eclipse/Deck/ImportContainer.cpp
     opm/input/eclipse/Deck/UDAValue.cpp
-    opm/input/eclipse/Python/Python.cpp
+    opm/input/eclipse/EclipseState/checkDeck.cpp
+    opm/input/eclipse/EclipseState/EclipseConfig.cpp
+    opm/input/eclipse/EclipseState/EclipseState.cpp
+    opm/input/eclipse/EclipseState/EndpointScaling.cpp
+    opm/input/eclipse/EclipseState/MICPpara.cpp
+    opm/input/eclipse/EclipseState/Phase.cpp
+    opm/input/eclipse/EclipseState/Runspec.cpp
+    opm/input/eclipse/EclipseState/TracerConfig.cpp
+    opm/input/eclipse/EclipseState/WagHysteresisConfig.cpp
     opm/input/eclipse/EclipseState/Aquifer/AquiferConfig.cpp
     opm/input/eclipse/EclipseState/Aquifer/AquiferFlux.cpp
     opm/input/eclipse/EclipseState/Aquifer/AquiferCT.cpp
@@ -110,15 +118,6 @@ if(ENABLE_ECL_INPUT)
     opm/input/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquiferConnection.cpp
     opm/input/eclipse/EclipseState/Aquifer/NumericalAquifer/SingleNumericalAquifer.cpp
     opm/input/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquifers.cpp
-    opm/input/eclipse/EclipseState/checkDeck.cpp
-    opm/input/eclipse/EclipseState/EclipseConfig.cpp
-    opm/input/eclipse/EclipseState/EclipseState.cpp
-    opm/input/eclipse/EclipseState/EndpointScaling.cpp
-    opm/input/eclipse/EclipseState/MICPpara.cpp
-    opm/input/eclipse/EclipseState/Phase.cpp
-    opm/input/eclipse/EclipseState/Runspec.cpp
-    opm/input/eclipse/EclipseState/TracerConfig.cpp
-    opm/input/eclipse/EclipseState/WagHysteresisConfig.cpp
     opm/input/eclipse/EclipseState/Grid/Box.cpp
     opm/input/eclipse/EclipseState/Grid/BoxManager.cpp
     opm/input/eclipse/EclipseState/Grid/Carfin.cpp
@@ -148,6 +147,78 @@ if(ENABLE_ECL_INPUT)
     opm/input/eclipse/EclipseState/InitConfig/InitConfig.cpp
     opm/input/eclipse/EclipseState/IOConfig/FIPConfig.cpp
     opm/input/eclipse/EclipseState/IOConfig/IOConfig.cpp
+    opm/input/eclipse/EclipseState/SimulationConfig/BCConfig.cpp
+    opm/input/eclipse/EclipseState/SimulationConfig/RockConfig.cpp
+    opm/input/eclipse/EclipseState/SimulationConfig/SimulationConfig.cpp
+    opm/input/eclipse/EclipseState/SimulationConfig/ThresholdPressure.cpp
+    opm/input/eclipse/EclipseState/SummaryConfig/SummaryConfig.cpp
+    opm/input/eclipse/EclipseState/Tables/Aqudims.cpp
+    opm/input/eclipse/EclipseState/Tables/ColumnSchema.cpp
+    opm/input/eclipse/EclipseState/Tables/DenT.cpp
+    opm/input/eclipse/EclipseState/Tables/JouleThomson.cpp
+    opm/input/eclipse/EclipseState/Tables/Eqldims.cpp
+    opm/input/eclipse/EclipseState/Tables/JFunc.cpp
+    opm/input/eclipse/EclipseState/Tables/PvtxTable.cpp
+    opm/input/eclipse/EclipseState/Tables/Regdims.cpp
+    opm/input/eclipse/EclipseState/Tables/SimpleTable.cpp
+    opm/input/eclipse/EclipseState/Tables/PolyInjTables.cpp
+    opm/input/eclipse/EclipseState/Tables/StandardCond.cpp
+    opm/input/eclipse/EclipseState/Tables/TableColumn.cpp
+    opm/input/eclipse/EclipseState/Tables/TableContainer.cpp
+    opm/input/eclipse/EclipseState/Tables/TableIndex.cpp
+    opm/input/eclipse/EclipseState/Tables/TLMixpar.cpp
+    opm/input/eclipse/EclipseState/Tables/Ppcwmax.cpp
+    opm/input/eclipse/EclipseState/Tables/TableManager.cpp
+    opm/input/eclipse/EclipseState/Tables/TableSchema.cpp
+    opm/input/eclipse/EclipseState/Tables/Tables.cpp
+    opm/input/eclipse/EclipseState/Tables/Rock2dTable.cpp
+    opm/input/eclipse/EclipseState/Tables/Rock2dtrTable.cpp
+    opm/input/eclipse/EclipseState/Tables/PvtwsaltTable.cpp
+    opm/input/eclipse/EclipseState/Tables/BrineDensityTable.cpp
+    opm/input/eclipse/EclipseState/Tables/SolventDensityTable.cpp
+    opm/input/eclipse/EclipseState/Tables/Tabdims.cpp
+    opm/input/eclipse/Parser/ErrorGuard.cpp
+    opm/input/eclipse/Parser/InputErrorAction.cpp
+    opm/input/eclipse/Parser/ParseContext.cpp
+    opm/input/eclipse/Parser/Parser.cpp
+    opm/input/eclipse/Parser/ParserEnums.cpp
+    opm/input/eclipse/Parser/ParserItem.cpp
+    opm/input/eclipse/Parser/ParserKeyword.cpp
+    opm/input/eclipse/Parser/ParserRecord.cpp
+    opm/input/eclipse/Parser/raw/RawKeyword.cpp
+    opm/input/eclipse/Parser/raw/RawRecord.cpp
+    opm/input/eclipse/Parser/raw/StarToken.cpp
+    opm/input/eclipse/Python/Python.cpp
+    opm/input/eclipse/Schedule/ArrayDimChecker.cpp
+    opm/input/eclipse/Schedule/BCProp.cpp
+    opm/input/eclipse/Schedule/CompletedCells.cpp
+    opm/input/eclipse/Schedule/eval_uda.cpp
+    opm/input/eclipse/Schedule/Events.cpp
+    opm/input/eclipse/Schedule/GasLiftOpt.cpp
+    opm/input/eclipse/Schedule/GasLiftOptKeywordHandlers.cpp
+    opm/input/eclipse/Schedule/HandlerContext.cpp
+    opm/input/eclipse/Schedule/KeywordHandlers.cpp
+    opm/input/eclipse/Schedule/MessageLimits.cpp
+    opm/input/eclipse/Schedule/MixingRateControlKeywordHandlers.cpp
+    opm/input/eclipse/Schedule/OilVaporizationProperties.cpp
+    opm/input/eclipse/Schedule/RFTConfig.cpp
+    opm/input/eclipse/Schedule/RPTConfig.cpp
+    opm/input/eclipse/Schedule/RSTConfig.cpp
+    opm/input/eclipse/Schedule/RXXKeywordHandlers.cpp
+    opm/input/eclipse/Schedule/Schedule.cpp
+    opm/input/eclipse/Schedule/ScheduleBlock.cpp
+    opm/input/eclipse/Schedule/ScheduleDeck.cpp
+    opm/input/eclipse/Schedule/ScheduleGrid.cpp
+    opm/input/eclipse/Schedule/ScheduleRestartInfo.cpp
+    opm/input/eclipse/Schedule/ScheduleState.cpp
+    opm/input/eclipse/Schedule/ScheduleStatic.cpp
+    opm/input/eclipse/Schedule/ScheduleTypes.cpp
+    opm/input/eclipse/Schedule/Source.cpp
+    opm/input/eclipse/Schedule/SummaryState.cpp
+    opm/input/eclipse/Schedule/Tuning.cpp
+    opm/input/eclipse/Schedule/VFPInjTable.cpp
+    opm/input/eclipse/Schedule/VFPProdTable.cpp
+    opm/input/eclipse/Schedule/WriteRestartFileEvents.cpp
     opm/input/eclipse/Schedule/Action/ActionAST.cpp
     opm/input/eclipse/Schedule/Action/ActionContext.cpp
     opm/input/eclipse/Schedule/Action/ActionResult.cpp
@@ -162,13 +233,6 @@ if(ENABLE_ECL_INPUT)
     opm/input/eclipse/Schedule/Action/PyAction.cpp
     opm/input/eclipse/Schedule/Action/State.cpp
     opm/input/eclipse/Schedule/Action/WGNames.cpp
-    src/opm/input/eclipse/Schedule/ArrayDimChecker.cpp
-    src/opm/input/eclipse/Schedule/BCProp.cpp
-    src/opm/input/eclipse/Schedule/CompletedCells.cpp
-    src/opm/input/eclipse/Schedule/eval_uda.cpp
-    src/opm/input/eclipse/Schedule/Events.cpp
-    src/opm/input/eclipse/Schedule/GasLiftOpt.cpp
-    src/opm/input/eclipse/Schedule/GasLiftOptKeywordHandlers.cpp
     opm/input/eclipse/Schedule/Group/GPMaint.cpp
     opm/input/eclipse/Schedule/Group/Group.cpp
     opm/input/eclipse/Schedule/Group/GroupKeywordHandlers.cpp
@@ -180,10 +244,6 @@ if(ENABLE_ECL_INPUT)
     opm/input/eclipse/Schedule/Group/GConSump.cpp
     opm/input/eclipse/Schedule/Group/GroupEconProductionLimits.cpp
     opm/input/eclipse/Schedule/Group/GTNode.cpp
-    src/opm/input/eclipse/Schedule/HandlerContext.cpp
-    src/opm/input/eclipse/Schedule/KeywordHandlers.cpp
-    src/opm/input/eclipse/Schedule/MessageLimits.cpp
-    src/opm/input/eclipse/Schedule/MixingRateControlKeywordHandlers.cpp
     opm/input/eclipse/Schedule/MSW/AICD.cpp
     opm/input/eclipse/Schedule/MSW/Compsegs.cpp
     opm/input/eclipse/Schedule/MSW/icd.cpp
@@ -199,23 +259,23 @@ if(ENABLE_ECL_INPUT)
     opm/input/eclipse/Schedule/Network/ExtNetwork.cpp
     opm/input/eclipse/Schedule/Network/NetworkKeywordHandlers.cpp
     opm/input/eclipse/Schedule/Network/Node.cpp
-    src/opm/input/eclipse/Schedule/OilVaporizationProperties.cpp
-    src/opm/input/eclipse/Schedule/RFTConfig.cpp
-    src/opm/input/eclipse/Schedule/RPTConfig.cpp
-    src/opm/input/eclipse/Schedule/RSTConfig.cpp
-    src/opm/input/eclipse/Schedule/RXXKeywordHandlers.cpp
-    src/opm/input/eclipse/Schedule/Schedule.cpp
-    src/opm/input/eclipse/Schedule/ScheduleBlock.cpp
-    src/opm/input/eclipse/Schedule/ScheduleDeck.cpp
-    src/opm/input/eclipse/Schedule/ScheduleGrid.cpp
-    src/opm/input/eclipse/Schedule/ScheduleRestartInfo.cpp
-    src/opm/input/eclipse/Schedule/ScheduleState.cpp
-    src/opm/input/eclipse/Schedule/ScheduleStatic.cpp
-    src/opm/input/eclipse/Schedule/ScheduleTypes.cpp
-    src/opm/input/eclipse/Schedule/Source.cpp
-    src/opm/input/eclipse/Schedule/SummaryState.cpp
-    src/opm/input/eclipse/Schedule/Tuning.cpp
-    src/opm/input/eclipse/Schedule/WriteRestartFileEvents.cpp
+    opm/input/eclipse/Schedule/UDQ/UDQKeywordHandlers.cpp
+    opm/input/eclipse/Schedule/UDQ/UDQActive.cpp
+    opm/input/eclipse/Schedule/UDQ/UDQAssign.cpp
+    opm/input/eclipse/Schedule/UDQ/UDQASTNode.cpp
+    opm/input/eclipse/Schedule/UDQ/UDQConfig.cpp
+    opm/input/eclipse/Schedule/UDQ/UDQContext.cpp
+    opm/input/eclipse/Schedule/UDQ/UDQDefine.cpp
+    opm/input/eclipse/Schedule/UDQ/UDQEnums.cpp
+    opm/input/eclipse/Schedule/UDQ/UDQFunction.cpp
+    opm/input/eclipse/Schedule/UDQ/UDQFunctionTable.cpp
+    opm/input/eclipse/Schedule/UDQ/UDQInput.cpp
+    opm/input/eclipse/Schedule/UDQ/UDQParams.cpp
+    opm/input/eclipse/Schedule/UDQ/UDQParser.cpp
+    opm/input/eclipse/Schedule/UDQ/UDQSet.cpp
+    opm/input/eclipse/Schedule/UDQ/UDQState.cpp
+    opm/input/eclipse/Schedule/UDQ/UDQToken.cpp
+    opm/input/eclipse/Schedule/UDQ/UDT.cpp
     opm/input/eclipse/Schedule/Well/Connection.cpp
     opm/input/eclipse/Schedule/Well/FilterCake.cpp
     opm/input/eclipse/Schedule/Well/injection.cpp
@@ -248,66 +308,6 @@ if(ENABLE_ECL_INPUT)
     opm/input/eclipse/Schedule/Well/WVFPDP.cpp
     opm/input/eclipse/Schedule/Well/WVFPEXP.cpp
     opm/input/eclipse/Schedule/WellTraj/RigEclipseWellLogExtractor.cpp
-    opm/input/eclipse/EclipseState/SimulationConfig/BCConfig.cpp
-    opm/input/eclipse/EclipseState/SimulationConfig/RockConfig.cpp
-    opm/input/eclipse/EclipseState/SimulationConfig/SimulationConfig.cpp
-    opm/input/eclipse/EclipseState/SimulationConfig/ThresholdPressure.cpp
-    opm/input/eclipse/EclipseState/SummaryConfig/SummaryConfig.cpp
-    opm/input/eclipse/EclipseState/Tables/Aqudims.cpp
-    opm/input/eclipse/EclipseState/Tables/ColumnSchema.cpp
-    opm/input/eclipse/EclipseState/Tables/DenT.cpp
-    opm/input/eclipse/EclipseState/Tables/JouleThomson.cpp
-    opm/input/eclipse/EclipseState/Tables/Eqldims.cpp
-    opm/input/eclipse/EclipseState/Tables/JFunc.cpp
-    opm/input/eclipse/EclipseState/Tables/PvtxTable.cpp
-    opm/input/eclipse/EclipseState/Tables/Regdims.cpp
-    opm/input/eclipse/EclipseState/Tables/SimpleTable.cpp
-    opm/input/eclipse/EclipseState/Tables/PolyInjTables.cpp
-    opm/input/eclipse/EclipseState/Tables/StandardCond.cpp
-    opm/input/eclipse/EclipseState/Tables/TableColumn.cpp
-    opm/input/eclipse/EclipseState/Tables/TableContainer.cpp
-    opm/input/eclipse/EclipseState/Tables/TableIndex.cpp
-    opm/input/eclipse/EclipseState/Tables/TLMixpar.cpp
-    opm/input/eclipse/EclipseState/Tables/Ppcwmax.cpp
-    opm/input/eclipse/EclipseState/Tables/TableManager.cpp
-    opm/input/eclipse/EclipseState/Tables/TableSchema.cpp
-    opm/input/eclipse/EclipseState/Tables/Tables.cpp
-    opm/input/eclipse/EclipseState/Tables/Rock2dTable.cpp
-    opm/input/eclipse/EclipseState/Tables/Rock2dtrTable.cpp
-    opm/input/eclipse/EclipseState/Tables/PvtwsaltTable.cpp
-    opm/input/eclipse/EclipseState/Tables/BrineDensityTable.cpp
-    opm/input/eclipse/EclipseState/Tables/SolventDensityTable.cpp
-    opm/input/eclipse/EclipseState/Tables/Tabdims.cpp
-    opm/input/eclipse/Schedule/UDQ/UDQKeywordHandlers.cpp
-    opm/input/eclipse/Schedule/UDQ/UDQActive.cpp
-    opm/input/eclipse/Schedule/UDQ/UDQAssign.cpp
-    opm/input/eclipse/Schedule/UDQ/UDQASTNode.cpp
-    opm/input/eclipse/Schedule/UDQ/UDQConfig.cpp
-    opm/input/eclipse/Schedule/UDQ/UDQContext.cpp
-    opm/input/eclipse/Schedule/UDQ/UDQDefine.cpp
-    opm/input/eclipse/Schedule/UDQ/UDQEnums.cpp
-    opm/input/eclipse/Schedule/UDQ/UDQFunction.cpp
-    opm/input/eclipse/Schedule/UDQ/UDQFunctionTable.cpp
-    opm/input/eclipse/Schedule/UDQ/UDQInput.cpp
-    opm/input/eclipse/Schedule/UDQ/UDQParams.cpp
-    opm/input/eclipse/Schedule/UDQ/UDQParser.cpp
-    opm/input/eclipse/Schedule/UDQ/UDQSet.cpp
-    opm/input/eclipse/Schedule/UDQ/UDQState.cpp
-    opm/input/eclipse/Schedule/UDQ/UDQToken.cpp
-    opm/input/eclipse/Schedule/UDQ/UDT.cpp
-    src/opm/input/eclipse/Schedule/VFPInjTable.cpp
-    src/opm/input/eclipse/Schedule/VFPProdTable.cpp
-    opm/input/eclipse/Parser/ErrorGuard.cpp
-    opm/input/eclipse/Parser/InputErrorAction.cpp
-    opm/input/eclipse/Parser/ParseContext.cpp
-    opm/input/eclipse/Parser/Parser.cpp
-    opm/input/eclipse/Parser/ParserEnums.cpp
-    opm/input/eclipse/Parser/ParserItem.cpp
-    opm/input/eclipse/Parser/ParserKeyword.cpp
-    opm/input/eclipse/Parser/ParserRecord.cpp
-    opm/input/eclipse/Parser/raw/RawKeyword.cpp
-    opm/input/eclipse/Parser/raw/RawRecord.cpp
-    opm/input/eclipse/Parser/raw/StarToken.cpp
     opm/input/eclipse/Units/Dimension.cpp
     opm/input/eclipse/Units/UnitSystem.cpp
     src/opm/input/eclipse/Utility/Functional.cpp

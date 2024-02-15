@@ -53,7 +53,7 @@
 #include <opm/input/eclipse/Deck/DeckKeyword.hpp>
 
 #include "../MSW/Compsegs.hpp"
-#include "src/opm/input/eclipse/Schedule/eval_uda.hpp" // TODO: make relative again
+#include "../eval_uda.hpp"
 
 #include <cassert>
 #include <cmath>

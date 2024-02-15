@@ -31,7 +31,7 @@
 #include <opm/input/eclipse/Schedule/VFPProdTable.hpp>
 #include <opm/input/eclipse/Schedule/Well/Well.hpp>
 
-#include "src/opm/input/eclipse/Schedule/eval_uda.hpp" // TODO: make relative again
+#include "../eval_uda.hpp"
 
 namespace Opm {
 

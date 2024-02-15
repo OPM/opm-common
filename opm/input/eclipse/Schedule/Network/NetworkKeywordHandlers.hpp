@@ -19,7 +19,7 @@
 #ifndef NETWORK_KEYWORD_HANDLERS_HPP
 #define NETWORK_KEYWORD_HANDLERS_HPP
 
-#include "src/opm/input/eclipse/Schedule/KeywordHandlers.hpp" // TODO: make relative again
+#include "../KeywordHandlers.hpp"
 
 #include <string>
 #include <utility>

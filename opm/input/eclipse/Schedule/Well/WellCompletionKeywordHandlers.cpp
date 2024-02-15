@@ -32,7 +32,7 @@
 
 #include <opm/input/eclipse/Parser/ParserKeywords/C.hpp>
 
-#include "src/opm/input/eclipse/Schedule/HandlerContext.hpp" // TODO: make relative again
+#include "../HandlerContext.hpp"
 
 #include <fmt/format.h>
 

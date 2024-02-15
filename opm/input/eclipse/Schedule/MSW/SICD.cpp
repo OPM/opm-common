@@ -26,8 +26,8 @@
 #include <limits>
 #include <cmath>
 
-#include "opm/input/eclipse/Schedule/MSW/icd_convert.hpp" // TODO: make relative again
-#include "opm/input/eclipse/Schedule/MSW/FromWSEG.hpp" // TODO: make relative again
+#include "icd_convert.hpp"
+#include "FromWSEG.hpp"
 
 
 
