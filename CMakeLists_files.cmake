@@ -310,7 +310,7 @@ if(ENABLE_ECL_INPUT)
     opm/input/eclipse/Schedule/WellTraj/RigEclipseWellLogExtractor.cpp
     opm/input/eclipse/Units/Dimension.cpp
     opm/input/eclipse/Units/UnitSystem.cpp
-    src/opm/input/eclipse/Utility/Functional.cpp
+    opm/input/eclipse/Utility/Functional.cpp
     opm/material/fluidmatrixinteractions/EclEpsConfig.cpp
     opm/material/fluidmatrixinteractions/EclEpsGridProperties.cpp
     opm/material/fluidmatrixinteractions/EclHysteresisConfig.cpp
