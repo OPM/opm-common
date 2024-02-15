@@ -194,11 +194,11 @@ if(ENABLE_ECL_INPUT)
     src/opm/input/eclipse/Schedule/MSW/AICD.cpp
     src/opm/input/eclipse/Schedule/MSW/SICD.cpp
     src/opm/input/eclipse/Schedule/MSW/Valve.cpp
-    src/opm/input/eclipse/Schedule/Network/Balance.cpp
-    src/opm/input/eclipse/Schedule/Network/Branch.cpp
-    src/opm/input/eclipse/Schedule/Network/ExtNetwork.cpp
-    src/opm/input/eclipse/Schedule/Network/NetworkKeywordHandlers.cpp
-    src/opm/input/eclipse/Schedule/Network/Node.cpp
+    opm/input/eclipse/Schedule/Network/Balance.cpp
+    opm/input/eclipse/Schedule/Network/Branch.cpp
+    opm/input/eclipse/Schedule/Network/ExtNetwork.cpp
+    opm/input/eclipse/Schedule/Network/NetworkKeywordHandlers.cpp
+    opm/input/eclipse/Schedule/Network/Node.cpp
     src/opm/input/eclipse/Schedule/OilVaporizationProperties.cpp
     src/opm/input/eclipse/Schedule/RFTConfig.cpp
     src/opm/input/eclipse/Schedule/RPTConfig.cpp
