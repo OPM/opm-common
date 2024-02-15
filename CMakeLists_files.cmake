@@ -252,7 +252,7 @@ if(ENABLE_ECL_INPUT)
     opm/input/eclipse/EclipseState/SimulationConfig/RockConfig.cpp
     opm/input/eclipse/EclipseState/SimulationConfig/SimulationConfig.cpp
     opm/input/eclipse/EclipseState/SimulationConfig/ThresholdPressure.cpp
-    src/opm/input/eclipse/EclipseState/SummaryConfig/SummaryConfig.cpp
+    opm/input/eclipse/EclipseState/SummaryConfig/SummaryConfig.cpp
     opm/input/eclipse/EclipseState/Tables/Aqudims.cpp
     opm/input/eclipse/EclipseState/Tables/ColumnSchema.cpp
     opm/input/eclipse/EclipseState/Tables/DenT.cpp
