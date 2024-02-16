@@ -3,9 +3,8 @@
 # probe the GCC version, returns empty string if GCC is not compiler
 function (get_gcc_version language ver_name)
   if(CMAKE_${language}_COMPILER_ID STREQUAL GNU)  
-    # exec_program is deprecated, but execute_process does't work :-(
-    exec_program (${CMAKE_${language}_COMPILER}
-      ARGS ${CMAKE_${language}_COMPILER_ARG1} -dumpversion
+    execute_process (
+      COMMAND ${CMAKE_${language}_COMPILER} ${CMAKE_${language}_COMPILER_ARG1} -dumpversion
       OUTPUT_VARIABLE _version
     )
     set (${ver_name} ${_version} PARENT_SCOPE)
@@ -17,9 +16,8 @@ endfunction (get_gcc_version ver_name)
 # less reliable, but includes the patch number
 function (get_gcc_patch language ver_name)
   if(CMAKE_${language}_COMPILER_ID STREQUAL GNU)
-    # exec_program is deprecated, but execute_process does't work :-(
-    exec_program (${CMAKE_${language}_COMPILER}
-      ARGS ${CMAKE_${language}_COMPILER_ARG1} --version
+    execute_process (
+      COMMAND ${CMAKE_${language}_COMPILER} ${CMAKE_${language}_COMPILER_ARG1} --version
       OUTPUT_VARIABLE _version
     )
     # split multi-line string into list
@@ -50,9 +48,8 @@ function (get_ld_version ver_name)
   # run linker to get the version number. interestingly, this option works
   # (for our purposes) on all major platforms (Linux, Mac OS X and Windows);
   # it returns the program version although it may have ended in error
-  exec_program (
-    ${CMAKE_LINKER}
-    ARGS "-v"
+  execute_process (
+    COMMAND ${CMAKE_LINKER} -v
     OUTPUT_VARIABLE _version
   )
 
