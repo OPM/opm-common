@@ -29,18 +29,14 @@ function (vcs_info)
     # and we won't be able to identify the git dir to use from only a work
     # tree, so we handle that like a regular unpacked tarball
 
-    # exec_program is used because execute_process is buggy on common
-    # platforms (notable CMake 2.8.7 in Ubuntu Precise 12.04)
-
     # get hash code
-    exec_program (
-      ${GIT_EXECUTABLE} ${PROJECT_SOURCE_DIR}
-      ARGS rev-parse --short --verify HEAD
+    execute_process (
+      COMMAND ${GIT_EXECUTABLE} rev-parse --short --verify HEAD
+      WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
       OUTPUT_VARIABLE VCS_SHA1
-      RETURN_VALUE has_sha
+      RESULT_VARIABLE has_sha
     )
 
-    # exec_program mashes together output and error
     if (NOT ${has_sha} EQUAL 0)
       set (VCS_SHA1 "")
     endif (NOT ${has_sha} EQUAL 0)
@@ -48,31 +44,31 @@ function (vcs_info)
     # only proceed if we actually found a source tree in there
     if (VCS_SHA1)
       # check for unstaged local changes
-      exec_program (
-        ${GIT_EXECUTABLE} ${PROJECT_SOURCE_DIR}
-        ARGS diff --no-ext-diff --quiet --exit-code
-        RETURN_VALUE dirty
+      execute_process (
+        COMMAND ${GIT_EXECUTABLE} diff --no-ext-diff --quiet --exit-code
+        WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
         OUTPUT_VARIABLE _dummy
+        RESULT_VARIABLE dirty
       )
       if (NOT ${dirty} EQUAL 0)
         list (APPEND VCS_DECOR "*")
       endif (NOT ${dirty} EQUAL 0)
 
       # check for staged local changes
-      exec_program (
-        ${GIT_EXECUTABLE} ${PROJECT_SOURCE_DIR}
-        ARGS diff-index --no-ext-diff --cached --quiet --exit-code HEAD --
-        RETURN_VALUE staged
+      execute_process (
+        COMMAND ${GIT_EXECUTABLE} diff-index --no-ext-diff --cached --quiet --exit-code HEAD --
+        WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
         OUTPUT_VARIABLE _dummy
+        RESULT_VARIABLE staged
       )
       if (NOT ${staged} EQUAL 0)
         list (APPEND VCS_DECOR "+")
       endif (NOT ${staged} EQUAL 0)
 
       # check for untracked files
-      exec_program (
-        ${GIT_EXECUTABLE} ${PROJECT_SOURCE_DIR}
-        ARGS ls-files --others --exclude-standard
+      execute_process (
+        COMMAND ${GIT_EXECUTABLE} ls-files --others --exclude-standard
+        WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
         OUTPUT_VARIABLE untracked
       )
       if (untracked)
