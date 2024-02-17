@@ -160,6 +160,18 @@ public:
         }
     }
 
+    bool mixingEnergy(){
+        switch (gasPvtApproach_) {
+        case GasPvtApproach::ThermalGas: {
+            return true;
+            break;
+        }
+        default: {
+            return false;
+        }
+        }
+    }
+
 #if HAVE_ECL_INPUT
     /*!
      * \brief Initialize the parameters for gas using an ECL deck.
@@ -179,7 +191,7 @@ public:
         case GasPvtApproach::DryHumidGas:
             realGasPvt_ = new DryHumidGasPvt<Scalar>;
             break;
-        
+
         case GasPvtApproach::WetHumidGas:
             realGasPvt_ = new WetHumidGasPvt<Scalar>;
             break;
@@ -196,7 +208,7 @@ public:
             realGasPvt_ = new Co2GasPvt<Scalar>;
             break;
 
-	    case GasPvtApproach::H2Gas:
+        case GasPvtApproach::H2Gas:
             realGasPvt_ = new H2GasPvt<Scalar>;
             break;
 
@@ -237,6 +249,9 @@ public:
                         const Evaluation& Rv,
                         const Evaluation& Rvw) const
     { OPM_GAS_PVT_MULTIPLEXER_CALL(return pvtImpl.internalEnergy(regionIdx, temperature, pressure, Rv, Rvw)); return 0; }
+
+    Scalar hVap(unsigned regionIdx) const
+    { OPM_GAS_PVT_MULTIPLEXER_CALL(return pvtImpl.hVap(regionIdx)); return 0; }
 
     /*!
      * \brief Returns the dynamic viscosity [Pa s] of the fluid phase given a set of parameters.
@@ -306,14 +321,14 @@ public:
                                               const Evaluation& temperature,
                                               const Evaluation& pressure) const
     { OPM_GAS_PVT_MULTIPLEXER_CALL(return pvtImpl.saturatedWaterVaporizationFactor(regionIdx, temperature, pressure)); return 0; }
-    
+
     /*!
      * \brief Returns the water vaporization factor \f$R_vw\f$ [m^3/m^3] of water saturated gas.
      */
     template <class Evaluation = Scalar>
     Evaluation saturatedWaterVaporizationFactor(unsigned regionIdx,
                                               const Evaluation& temperature,
-                                              const Evaluation& pressure, 
+                                              const Evaluation& pressure,
                                               const Evaluation& saltConcentration) const
     { OPM_GAS_PVT_MULTIPLEXER_CALL(return pvtImpl.saturatedWaterVaporizationFactor(regionIdx, temperature, pressure, saltConcentration)); return 0; }
 
@@ -474,7 +489,7 @@ public:
         case GasPvtApproach::Co2Gas:
             realGasPvt_ = new Co2GasPvt<Scalar>(*static_cast<const Co2GasPvt<Scalar>*>(data.realGasPvt_));
             break;
-	case GasPvtApproach::H2Gas:
+    case GasPvtApproach::H2Gas:
             realGasPvt_ = new H2GasPvt<Scalar>(*static_cast<const H2GasPvt<Scalar>*>(data.realGasPvt_));
             break;
         default:

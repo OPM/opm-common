@@ -195,7 +195,7 @@ public:
     Evaluation eval(const Evaluation& x, const Evaluation& y, bool extrapolate) const
     {
 #ifndef NDEBUG
-        if (!extrapolate && !applies(x,y)) {
+        if (!applies(x,y)) {
             std::string msg = "Attempt to get tabulated value for ("
                 +std::to_string(double(scalarValue(x)))+", "+std::to_string(double(scalarValue(y)))
                 +") on a table of extent "
@@ -212,6 +212,15 @@ public:
             }
 
         };
+#else
+        if (!extrapolate && !applies(x,y)){
+            std::string msg = "Attempt to get tabulated value for ("
+                +std::to_string(double(scalarValue(x)))+", "+std::to_string(double(scalarValue(y)))
+                +") on a table of extent "
+                +std::to_string(xMin())+" to "+std::to_string(xMax())+" times "
+                +std::to_string(yMin())+" to "+std::to_string(yMax());
+            throw NumericalProblem(msg);
+        }
 #endif
 
         Evaluation alpha = xToI(x);
