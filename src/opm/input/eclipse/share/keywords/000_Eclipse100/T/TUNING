@@ -22,7 +22,7 @@
         "name": "TSMINZ",
         "value_type": "DOUBLE",
         "dimension": "Time",
-        "default": 0.1
+        "default": 1.0e-12
       },
       {
         "name": "TSMCHP",
@@ -43,12 +43,12 @@
       {
         "name": "TSFCNV",
         "value_type": "DOUBLE",
-        "default": 0.1
+        "default": 0.33
       },
       {
         "name": "TFDIFF",
         "value_type": "DOUBLE",
-        "default": 1.25
+        "default": 2.0
       },
       {
         "name": "THRUPT",
