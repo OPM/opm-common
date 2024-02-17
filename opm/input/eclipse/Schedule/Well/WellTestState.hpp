@@ -95,11 +95,13 @@ public:
 
         int num_attempt{0};
         bool closed{true};
+        bool close_on_next_step{false};
         std::optional<int> wtest_report_step;
 
         WTestWell() = default;
-        WTestWell(const std::string& wname, WTest::Reason reason_, double last_test);
+        WTestWell(const std::string& wname, WTest::Reason reason_, double last_test, bool close_now = false);
 
+        void close_now(double sim_time);
         int int_reason() const;
         static WTest::Reason inverse_ecl_reason(int ecl_reason);
 
@@ -109,6 +111,7 @@ public:
                    this->last_test == other.last_test &&
                    this->num_attempt == other.num_attempt &&
                    this->closed == other.closed &&
+                   this->close_on_next_step == other.close_on_next_step &&
                    this->wtest_report_step == other.wtest_report_step;
         }
 
@@ -122,6 +125,7 @@ public:
             serializer(this->last_test);
             serializer(this->num_attempt);
             serializer(this->closed);
+            serializer(this->close_on_next_step);
             serializer(this->wtest_report_step);
         }
 
@@ -132,6 +136,7 @@ public:
             buffer.write(this->last_test);
             buffer.write(this->num_attempt);
             buffer.write(this->closed);
+            buffer.write(this->close_on_next_step);
             buffer.write(this->wtest_report_step);
         }
 
@@ -142,6 +147,7 @@ public:
             buffer.read(this->last_test);
             buffer.read(this->num_attempt);
             buffer.read(this->closed);
+            buffer.read(this->close_on_next_step);
             buffer.read(this->wtest_report_step);
         }
     };
@@ -211,6 +217,8 @@ public:
       That is the reason we do not have any xxx_is_open() predicates.
     */
     void close_well(const std::string& well_name, WTest::Reason reason, double sim_time);
+    void close_well_on_next_step(const std::string& well_name, WTest::Reason reason, double sim_time);
+    void update_close_on_next_step_wells(double sim_time);
     bool well_is_closed(const std::string& well_name) const;
     void open_well(const std::string& well_name);
     std::size_t num_closed_wells() const;
