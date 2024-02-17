@@ -71,7 +71,7 @@ public:
     {
         // Throw an error if reference state is not (T, p) = (15.56 C, 1 atm) = (288.71 K, 1.01325e5 Pa)
         if (T_ref != Scalar(288.71) || P_ref != Scalar(1.01325e5)) {
-            OPM_THROW(std::runtime_error, 
+            OPM_THROW(std::runtime_error,
                 "BrineCo2Pvt class can only be used with default reference state (T, P) = (288.71 K, 1.01325e5 Pa)!");
         }
         setActivityModelSalt(activityModel);
@@ -146,6 +146,9 @@ public:
     unsigned numRegions() const
     { return gasReferenceDensity_.size(); }
 
+    Scalar hVap(unsigned ) const{
+        return 0;
+    }
     /*!
      * \brief Returns the specific enthalpy [J/kg] of gas given a set of parameters.
      */
@@ -158,7 +161,7 @@ public:
     {
         OPM_TIMEBLOCK_LOCAL(internalEnergy);
         // use the gasInternalEnergy of CO2
-        return CO2::gasInternalEnergy(temperature, pressure, extrapolate); 
+        return CO2::gasInternalEnergy(temperature, pressure, extrapolate);
 
         // account for H2O in the gas phase
         // Evaluation result = 0;

@@ -142,7 +142,7 @@ public:
             delete &getRealPvt<OilPvtApproach::BrineCo2>();
             break;
         }
-	    case OilPvtApproach::BrineH2: {
+        case OilPvtApproach::BrineH2: {
             delete &getRealPvt<OilPvtApproach::BrineH2>();
             break;
         }
@@ -151,6 +151,17 @@ public:
         }
     }
 
+    bool mixingEnergy(){
+        switch (approach_) {
+        case OilPvtApproach::ThermalOil: {
+            return true;
+            break;
+        }
+        default: {
+            return false;
+        }
+        }
+    }
 #if HAVE_ECL_INPUT
     /*!
      * \brief Initialize the parameters for water using an ECL state.
@@ -191,6 +202,8 @@ public:
                         const Evaluation& Rs) const
     { OPM_OIL_PVT_MULTIPLEXER_CALL(return pvtImpl.internalEnergy(regionIdx, temperature, pressure, Rs)); return 0; }
 
+    Scalar hVap(unsigned regionIdx) const
+    { OPM_OIL_PVT_MULTIPLEXER_CALL(return pvtImpl.hVap(regionIdx)); return 0; }
     /*!
      * \brief Returns the dynamic viscosity [Pa s] of the fluid phase given a set of parameters.
      */
@@ -421,7 +434,7 @@ public:
         case OilPvtApproach::BrineCo2:
             realOilPvt_ = new BrineCo2Pvt<Scalar>(*static_cast<const BrineCo2Pvt<Scalar>*>(data.realOilPvt_));
             break;
-	    case OilPvtApproach::BrineH2:
+        case OilPvtApproach::BrineH2:
             realOilPvt_ = new BrineH2Pvt<Scalar>(*static_cast<const BrineH2Pvt<Scalar>*>(data.realOilPvt_));
             break;
         default:
