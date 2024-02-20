@@ -253,31 +253,31 @@ if(ENABLE_ECL_INPUT)
     opm/input/eclipse/EclipseState/SimulationConfig/SimulationConfig.cpp
     opm/input/eclipse/EclipseState/SimulationConfig/ThresholdPressure.cpp
     src/opm/input/eclipse/EclipseState/SummaryConfig/SummaryConfig.cpp
-    src/opm/input/eclipse/EclipseState/Tables/Aqudims.cpp
-    src/opm/input/eclipse/EclipseState/Tables/ColumnSchema.cpp
-    src/opm/input/eclipse/EclipseState/Tables/DenT.cpp
-    src/opm/input/eclipse/EclipseState/Tables/JouleThomson.cpp
-    src/opm/input/eclipse/EclipseState/Tables/Eqldims.cpp
-    src/opm/input/eclipse/EclipseState/Tables/JFunc.cpp
-    src/opm/input/eclipse/EclipseState/Tables/PvtxTable.cpp
-    src/opm/input/eclipse/EclipseState/Tables/Regdims.cpp
-    src/opm/input/eclipse/EclipseState/Tables/SimpleTable.cpp
-    src/opm/input/eclipse/EclipseState/Tables/PolyInjTables.cpp
-    src/opm/input/eclipse/EclipseState/Tables/StandardCond.cpp
-    src/opm/input/eclipse/EclipseState/Tables/TableColumn.cpp
-    src/opm/input/eclipse/EclipseState/Tables/TableContainer.cpp
-    src/opm/input/eclipse/EclipseState/Tables/TableIndex.cpp
-    src/opm/input/eclipse/EclipseState/Tables/TLMixpar.cpp
-    src/opm/input/eclipse/EclipseState/Tables/Ppcwmax.cpp
-    src/opm/input/eclipse/EclipseState/Tables/TableManager.cpp
-    src/opm/input/eclipse/EclipseState/Tables/TableSchema.cpp
-    src/opm/input/eclipse/EclipseState/Tables/Tables.cpp
-    src/opm/input/eclipse/EclipseState/Tables/Rock2dTable.cpp
-    src/opm/input/eclipse/EclipseState/Tables/Rock2dtrTable.cpp
-    src/opm/input/eclipse/EclipseState/Tables/PvtwsaltTable.cpp
-    src/opm/input/eclipse/EclipseState/Tables/BrineDensityTable.cpp
-    src/opm/input/eclipse/EclipseState/Tables/SolventDensityTable.cpp
-    src/opm/input/eclipse/EclipseState/Tables/Tabdims.cpp
+    opm/input/eclipse/EclipseState/Tables/Aqudims.cpp
+    opm/input/eclipse/EclipseState/Tables/ColumnSchema.cpp
+    opm/input/eclipse/EclipseState/Tables/DenT.cpp
+    opm/input/eclipse/EclipseState/Tables/JouleThomson.cpp
+    opm/input/eclipse/EclipseState/Tables/Eqldims.cpp
+    opm/input/eclipse/EclipseState/Tables/JFunc.cpp
+    opm/input/eclipse/EclipseState/Tables/PvtxTable.cpp
+    opm/input/eclipse/EclipseState/Tables/Regdims.cpp
+    opm/input/eclipse/EclipseState/Tables/SimpleTable.cpp
+    opm/input/eclipse/EclipseState/Tables/PolyInjTables.cpp
+    opm/input/eclipse/EclipseState/Tables/StandardCond.cpp
+    opm/input/eclipse/EclipseState/Tables/TableColumn.cpp
+    opm/input/eclipse/EclipseState/Tables/TableContainer.cpp
+    opm/input/eclipse/EclipseState/Tables/TableIndex.cpp
+    opm/input/eclipse/EclipseState/Tables/TLMixpar.cpp
+    opm/input/eclipse/EclipseState/Tables/Ppcwmax.cpp
+    opm/input/eclipse/EclipseState/Tables/TableManager.cpp
+    opm/input/eclipse/EclipseState/Tables/TableSchema.cpp
+    opm/input/eclipse/EclipseState/Tables/Tables.cpp
+    opm/input/eclipse/EclipseState/Tables/Rock2dTable.cpp
+    opm/input/eclipse/EclipseState/Tables/Rock2dtrTable.cpp
+    opm/input/eclipse/EclipseState/Tables/PvtwsaltTable.cpp
+    opm/input/eclipse/EclipseState/Tables/BrineDensityTable.cpp
+    opm/input/eclipse/EclipseState/Tables/SolventDensityTable.cpp
+    opm/input/eclipse/EclipseState/Tables/Tabdims.cpp
     src/opm/input/eclipse/Schedule/UDQ/UDQKeywordHandlers.cpp
     src/opm/input/eclipse/Schedule/UDQ/UDQActive.cpp
     src/opm/input/eclipse/Schedule/UDQ/UDQAssign.cpp
