@@ -435,7 +435,7 @@ if(ENABLE_ECL_OUTPUT)
           src/opm/output/eclipse/WriteRFT.cpp
           src/opm/output/eclipse/WriteRPT.cpp
           src/opm/output/eclipse/report/WELSPECS.cpp
-          src/opm/utility/EModel.cpp
+          opm/utility/EModel.cpp
       )
 endif()
 
