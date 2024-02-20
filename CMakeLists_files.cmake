@@ -46,10 +46,10 @@ list (APPEND MAIN_SOURCE_FILES
       src/opm/common/utility/shmatch.cpp
       src/opm/common/utility/String.cpp
       src/opm/common/utility/TimeService.cpp
-      src/opm/material/common/Spline.cpp
-      src/opm/material/common/Tabulated1DFunction.cpp
-      src/opm/material/common/TridiagonalMatrix.cpp
-      src/opm/material/common/UniformXTabulated2DFunction.cpp
+      opm/material/common/Spline.cpp
+      opm/material/common/Tabulated1DFunction.cpp
+      opm/material/common/TridiagonalMatrix.cpp
+      opm/material/common/UniformXTabulated2DFunction.cpp
       src/opm/material/components/CO2.cpp
       src/opm/material/components/H2.cpp
       src/opm/material/densead/Evaluation.cpp
