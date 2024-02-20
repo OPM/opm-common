@@ -19,7 +19,7 @@
 
 #include "NetworkKeywordHandlers.hpp"
 
-#include "../HandlerContext.hpp"
+#include "src/opm/input/eclipse/Schedule/HandlerContext.hpp" // TODO: make relative again
 
 #include <opm/common/OpmLog/OpmLog.hpp>
 #include <opm/common/utility/OpmInputError.hpp>

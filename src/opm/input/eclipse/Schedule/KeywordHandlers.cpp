@@ -50,7 +50,7 @@
 #include "HandlerContext.hpp"
 #include "MixingRateControlKeywordHandlers.hpp"
 #include "MSW/MSWKeywordHandlers.hpp"
-#include "Network/NetworkKeywordHandlers.hpp"
+#include "opm/input/eclipse/Schedule/Network/NetworkKeywordHandlers.hpp" // TODO: make relative again
 #include "RXXKeywordHandlers.hpp"
 #include "UDQ/UDQKeywordHandlers.hpp"
 #include "Well/WellCompletionKeywordHandlers.hpp"
