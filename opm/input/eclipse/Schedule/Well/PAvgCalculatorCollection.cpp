@@ -34,9 +34,11 @@
 
 namespace Opm {
 
+template<class Scalar>
 std::size_t
-PAvgCalculatorCollection::setCalculator(const std::size_t wellID,
-                                        CalculatorPtr     calculator)
+PAvgCalculatorCollection<Scalar>::
+setCalculator(const std::size_t wellID,
+              CalculatorPtr     calculator)
 {
     if (auto indexPos = this->index_.find(wellID);
         indexPos != this->index_.end())
@@ -54,7 +56,9 @@ PAvgCalculatorCollection::setCalculator(const std::size_t wellID,
     }
 }
 
-void PAvgCalculatorCollection::pruneInactiveWBPCells(ActivePredicate isActive)
+template<class Scalar>
+void PAvgCalculatorCollection<Scalar>::
+pruneInactiveWBPCells(ActivePredicate isActive)
 {
     auto wbpCells = std::vector<std::size_t>{};
     auto calcCellSize = std::vector<std::vector<bool>::size_type>{};
@@ -79,29 +83,35 @@ void PAvgCalculatorCollection::pruneInactiveWBPCells(ActivePredicate isActive)
     }
 }
 
-PAvgCalculator<double>&
-PAvgCalculatorCollection::operator[](const std::size_t i)
+template<class Scalar>
+PAvgCalculator<Scalar>&
+PAvgCalculatorCollection<Scalar>::operator[](const std::size_t i)
 {
     return *this->calculators_[i];
 }
 
-const PAvgCalculator<double>&
-PAvgCalculatorCollection::operator[](const std::size_t i) const
+template<class Scalar>
+const PAvgCalculator<Scalar>&
+PAvgCalculatorCollection<Scalar>::operator[](const std::size_t i) const
 {
     return *this->calculators_[i];
 }
 
-bool PAvgCalculatorCollection::empty() const
+template<class Scalar>
+bool PAvgCalculatorCollection<Scalar>::empty() const
 {
     return this->calculators_.empty();
 }
 
-std::size_t PAvgCalculatorCollection::numCalculators() const
+template<class Scalar>
+std::size_t PAvgCalculatorCollection<Scalar>::numCalculators() const
 {
     return this->calculators_.size();
 }
 
-std::vector<std::size_t> PAvgCalculatorCollection::allWBPCells() const
+template<class Scalar>
+std::vector<std::size_t> PAvgCalculatorCollection<Scalar>::
+allWBPCells() const
 {
     auto wbpCells = std::vector<std::size_t>{};
 
@@ -114,5 +124,7 @@ std::vector<std::size_t> PAvgCalculatorCollection::allWBPCells() const
 
     return { wbpCells.begin(), std::unique(wbpCells.begin(), wbpCells.end()) };
 }
+
+template class PAvgCalculatorCollection<double>;
 
 } // namespace Opm

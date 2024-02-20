@@ -258,7 +258,7 @@ END
         }
     }
 
-    PAvgCalculatorCollection calculators {};
+    PAvgCalculatorCollection<double> calculators {};
     BOOST_CHECK_EQUAL(calculators.setCalculator(0, std::make_unique<PAvgCalculator<double>>(grid, w1.getConnections())),
                       std::size_t{0});
     BOOST_CHECK_EQUAL(calculators.setCalculator(1, std::make_unique<PAvgCalculator<double>>(grid, w5.getConnections())),
@@ -289,7 +289,7 @@ END
 
 BOOST_AUTO_TEST_CASE(CalcultorCollection)
 {
-    PAvgCalculatorCollection calc_list{};
+    PAvgCalculatorCollection<double> calc_list{};
 
     BOOST_CHECK_MESSAGE(calc_list.empty(), "Default-constructed Calculator Collection must be empty");
 }

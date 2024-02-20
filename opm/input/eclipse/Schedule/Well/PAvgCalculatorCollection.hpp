@@ -33,6 +33,7 @@ namespace Opm {
 namespace Opm {
 
 /// Collection of WBPn calculation objects, one for each well.
+template<class Scalar>
 class PAvgCalculatorCollection
 {
 public:
@@ -40,7 +41,7 @@ public:
     ///
     /// We use a pointer here to enable polymorphic behaviour at runtime,
     /// e.g., parallel calculation in an MPI-enabled simulation run.
-    using CalculatorPtr = std::unique_ptr<PAvgCalculator<double>>;
+    using CalculatorPtr = std::unique_ptr<PAvgCalculator<Scalar>>;
 
     /// Predicate for whether or not a particular source location is active.
     ///
@@ -102,7 +103,7 @@ public:
     ///   from a previous call to \c setCalculator.
     ///
     /// \return Mutable WBPn calculation object.
-    PAvgCalculator<double>& operator[](const std::size_t i);
+    PAvgCalculator<Scalar>& operator[](const std::size_t i);
 
     /// Access immutable WBPn calculation object.
     ///
@@ -110,7 +111,7 @@ public:
     ///   from a previous call to \c setCalculator.
     ///
     /// \return Immutable WBPn calculation object.
-    const PAvgCalculator<double>& operator[](const std::size_t i) const;
+    const PAvgCalculator<Scalar>& operator[](const std::size_t i) const;
 
     /// Whether or not this collection has any WBPn calculation objects.
     bool empty() const;
@@ -126,7 +127,7 @@ public:
 
 private:
     /// Representation of calculator indices.
-    using CalcIndex = std::vector<CalculatorPtr>::size_type;
+    using CalcIndex = typename std::vector<CalculatorPtr>::size_type;
 
     /// Translation table for mapping Well IDs to calculator indices.
     std::unordered_map<std::size_t, CalcIndex> index_{};
