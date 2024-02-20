@@ -42,9 +42,34 @@ class WellConnections;
 
 namespace Opm {
 
+template<class Scalar> class PAvgCalculator;
+
+/// Form linear combination of WBP result objects.
+///
+/// Typically the very last step of computing the block-averaged well
+/// pressure values; namely a weighted averaged of the CTF-weighted and the
+/// PV-weighted contributions.
+///
+/// \param[in] alpha Coefficient in linear combination.  Typically the F2
+///    weighting factor from the WPAVE (or WWPAVE) keyword.
+///
+/// \param[in] x First WBP result.  Typically the CTF-weighted WBP result.
+///
+/// \param[in] beta Coefficient in linear combination.  Typically 1-F2, with
+///    F2 from WPAVE.
+///
+/// \param[in] y Second WBP result.  Typically the PV-weighted WBP result.
+///
+/// \return \code alpha*x + beta*y \endcode.
+template<class Scalar>
+typename PAvgCalculator<Scalar>::Result
+linearCombination(const Scalar alpha, typename PAvgCalculator<Scalar>::Result        x,
+                  const Scalar beta , const typename PAvgCalculator<Scalar>::Result& y);
+
 /// Facility for deriving well-level pressure values from selected
 /// block-averaging procedures.  Applicable to stopped wells which don't
 /// have a flowing bottom-hole pressure.  Mainly useful for reporting.
+template<class Scalar>
 class PAvgCalculator
 {
 protected:
@@ -61,8 +86,8 @@ public:
 
         /// Grant internal data member access to combination function.
         friend Result
-        linearCombination(const double alpha, Result x,
-                          const double beta , const Result& y);
+        linearCombination<Scalar>(const Scalar alpha, Result x,
+                                  const Scalar beta , const Result& y);
 
     public:
         /// Kind of block-averaged well pressure
@@ -78,7 +103,7 @@ public:
         ///
         /// \param[in] type Block-averaged pressure kind.
         /// \return Block-averaged pressure.
-        double value(const WBPMode type) const
+        Scalar value(const WBPMode type) const
         {
             return this->wbp_[this->index(type)];
         }
@@ -89,7 +114,7 @@ public:
             static_cast<std::size_t>(WBPMode::WBP9) + 1;
 
         /// Storage type for block-averaged well pressure results.
-        using WBPStore = std::array<double, NumModes>;
+        using WBPStore = std::array<Scalar, NumModes>;
 
         /// Block-averaged well pressure results.
         WBPStore wbp_{};
@@ -99,7 +124,7 @@ public:
         /// \param[in] type Block-averaged pressure kind.
         /// \param[in] wbp Block-averaged pressure value.
         /// \return \code *this \endcode.
-        Result& set(const WBPMode type, const double wbp)
+        Result& set(const WBPMode type, const Scalar wbp)
         {
             this->wbp_[this->index(type)] = wbp;
 
@@ -110,9 +135,9 @@ public:
         ///
         /// \param[in] mode Block-averaged pressure kind.
         /// \return Linear index corresponding to \p mode.
-        constexpr WBPStore::size_type index(const WBPMode mode) const
+        constexpr typename WBPStore::size_type index(const WBPMode mode) const
         {
-            return static_cast<WBPStore::size_type>(mode);
+            return static_cast<typename WBPStore::size_type>(mode);
         }
     };
 
@@ -125,7 +150,7 @@ public:
         ///
         /// \param[in] wbSrc Cell-level contributions
         /// \return \code *this \endcode.
-        Sources& wellBlocks(const PAvgDynamicSourceData<double>& wbSrc)
+        Sources& wellBlocks(const PAvgDynamicSourceData<Scalar>& wbSrc)
         {
             this->wb_ = &wbSrc;
             return *this;
@@ -136,30 +161,30 @@ public:
         ///
         /// \param[in] wcSrc Connection-level contributions
         /// \return \code *this \endcode.
-        Sources& wellConns(const PAvgDynamicSourceData<double>& wcSrc)
+        Sources& wellConns(const PAvgDynamicSourceData<Scalar>& wcSrc)
         {
             this->wc_ = &wcSrc;
             return *this;
         }
 
         /// Get read-only access to cell-level contributions.
-        const PAvgDynamicSourceData<double>& wellBlocks() const
+        const PAvgDynamicSourceData<Scalar>& wellBlocks() const
         {
             return *this->wb_;
         }
 
         /// Get read-only access to connection-level contributions.
-        const PAvgDynamicSourceData<double>& wellConns() const
+        const PAvgDynamicSourceData<Scalar>& wellConns() const
         {
             return *this->wc_;
         }
 
     private:
         /// Cell-level contributions.
-        const PAvgDynamicSourceData<double>* wb_{nullptr};
+        const PAvgDynamicSourceData<Scalar>* wb_{nullptr};
 
         /// Connection-level contributions.
-        const PAvgDynamicSourceData<double>* wc_{nullptr};
+        const PAvgDynamicSourceData<Scalar>* wc_{nullptr};
     };
 
     /// Constructor
@@ -200,8 +225,8 @@ public:
     ///   bottom-hole pressure reference depth.
     void inferBlockAveragePressures(const Sources& sources,
                                     const PAvg&    controls,
-                                    const double   gravity,
-                                    const double   refDepth);
+                                    const Scalar   gravity,
+                                    const Scalar   refDepth);
 
     /// List of all cells, global indices in natural ordering, that
     /// contribute to the block-average pressures in this well.
@@ -241,7 +266,7 @@ protected:
         ///
         /// Intended primarily as a means of exchanging intermediate results
         /// in a parallel run.
-        using LocalRunningAverages = std::array<double, 8>;
+        using LocalRunningAverages = std::array<Scalar, 8>;
 
         /// Constructor
         Accumulator();
@@ -274,8 +299,8 @@ protected:
         /// \param[in] weight Pressure weighting factor
         /// \param[in] press Pressure value
         /// \return \code *this \endcode
-        Accumulator& addCentre(const double weight,
-                               const double press);
+        Accumulator& addCentre(const Scalar weight,
+                               const Scalar press);
 
         /// Add contribution from direct, rectangular, level 1 neighbouring
         /// cell
@@ -283,16 +308,16 @@ protected:
         /// \param[in] weight Pressure weighting factor
         /// \param[in] press Pressure value
         /// \return \code *this \endcode
-        Accumulator& addRectangular(const double weight,
-                                    const double press);
+        Accumulator& addRectangular(const Scalar weight,
+                                    const Scalar press);
 
         /// Add contribution from diagonal, level 2 neighbouring cell
         ///
         /// \param[in] weight Pressure weighting factor
         /// \param[in] press Pressure value
         /// \return \code *this \endcode
-        Accumulator& addDiagonal(const double weight,
-                                 const double press);
+        Accumulator& addDiagonal(const Scalar weight,
+                                 const Scalar press);
 
         /// Add contribution from other accumulator
         ///
@@ -302,7 +327,7 @@ protected:
         /// \param[in] weight Pressure weighting factor
         /// \param[in] other Contribution from other accumulation process.
         /// \return \code *this \endcode
-        Accumulator& add(const double       weight,
+        Accumulator& add(const Scalar       weight,
                          const Accumulator& other);
 
         /// Zero out/clear WBP result buffer
@@ -320,7 +345,7 @@ protected:
         ///   weighting is applied.  Typically the F1 weighting factor from
         ///   the WPAVE keyword.  Default value (-1) mainly applicable to
         ///   PV-weighted accumulations.
-        void commitContribution(const double innerWeight = -1.0);
+        void commitContribution(const Scalar innerWeight = -1.0);
 
         // Please note that member functions \c getRunningAverages() and \c
         // assignRunningAverages() are concessions to parallel/MPI runs, and
@@ -399,8 +424,8 @@ private:
         ///
         /// \param[in] cell_arg Connection's connecting cell.  Enumerated
         ///   local contributing cell.
-        PAvgConnection(const double         ctf_arg,
-                       const double         depth_arg,
+        PAvgConnection(const Scalar         ctf_arg,
+                       const Scalar         depth_arg,
                        const ContrIndexType cell_arg)
             : ctf  (ctf_arg)
             , depth(depth_arg)
@@ -408,10 +433,10 @@ private:
         {}
 
         /// Connection transmissiblity factor.
-        double ctf{};
+        Scalar ctf{};
 
         /// Connection's depth.
-        double depth{};
+        Scalar depth{};
 
         /// Index into \c contributingCells_ of connection's cell.
         ContrIndexType cell{};
@@ -431,14 +456,14 @@ private:
     ///
     /// Saved copy of \code .size() \endcode from \c connections constructor
     /// parameter.
-    std::vector<PAvgConnection>::size_type numInputConns_{};
+    typename std::vector<PAvgConnection>::size_type numInputConns_{};
 
     /// Set of well/reservoir connections from which the block-average
     /// pressures derive.
     std::vector<PAvgConnection> connections_{};
 
     /// List of indices into \c connections_ that represent open connections.
-    std::vector<std::vector<PAvgConnection>::size_type> openConns_{};
+    std::vector<typename std::vector<PAvgConnection>::size_type> openConns_{};
 
     /// Map \c connections_ indices to input indices (0..numInputConns_-1).
     ///
@@ -448,7 +473,7 @@ private:
     /// Needed to handle connections to inactive cells.  See
     /// pruneInactiveConnections() and connectionPressureOffsetWell() for
     /// details.
-    std::vector<std::vector<PAvgConnection>::size_type> inputConn_{};
+    std::vector<typename std::vector<PAvgConnection>::size_type> inputConn_{};
 
     /// Collection of all (global) cell indices that potentially contribute
     /// to this block-average well pressure calculation.
@@ -505,8 +530,8 @@ private:
     ///   bottom-hole pressure reference depth.
     void accumulateLocalContributions(const Sources& sources,
                                       const PAvg&    controls,
-                                      const double   gravity,
-                                      const double   refDepth);
+                                      const Scalar   gravity,
+                                      const Scalar   refDepth);
 
     /// Communicate local contributions and collect global (off-rank)
     /// contributions.
@@ -632,7 +657,7 @@ private:
     template <typename ConnIndexMap, typename CTFPressureWeightFunction>
     void accumulateLocalContributions(const Sources&             sources,
                                       const PAvg&                controls,
-                                      const std::vector<double>& connDP,
+                                      const std::vector<Scalar>& connDP,
                                       ConnIndexMap               connIndex,
                                       CTFPressureWeightFunction  ctfPressWeight);
 
@@ -670,7 +695,7 @@ private:
     template <typename ConnIndexMap>
     void accumulateLocalContributions(const Sources&             sources,
                                       const PAvg&                controls,
-                                      const std::vector<double>& connDP,
+                                      const std::vector<Scalar>& connDP,
                                       ConnIndexMap&&             connIndex);
 
     /// First dispatch level before going to calculation routine which
@@ -686,7 +711,7 @@ private:
     ///   connection.
     void accumulateLocalContribOpen(const Sources&             sources,
                                     const PAvg&                controls,
-                                    const std::vector<double>& connDP);
+                                    const std::vector<Scalar>& connDP);
 
     /// First dispatch level before going to calculation routine which
     /// accumulates the local WBP contributions.
@@ -701,7 +726,7 @@ private:
     ///   connection.
     void accumulateLocalContribAll(const Sources&             sources,
                                    const PAvg&                controls,
-                                   const std::vector<double>& connDP);
+                                   const std::vector<Scalar>& connDP);
 
     /// Compute pressure correction term/offset using Well method
     ///
@@ -734,11 +759,11 @@ private:
     ///
     /// \return Pressure correction term for each active connection.
     template <typename ConnIndexMap>
-    std::vector<double>
+    std::vector<Scalar>
     connectionPressureOffsetWell(const std::size_t nconn,
                                  const Sources&    sources,
-                                 const double      gravity,
-                                 const double      refDepth,
+                                 const Scalar      gravity,
+                                 const Scalar      refDepth,
                                  ConnIndexMap      connIndex) const;
 
     /// Compute pressure correction term/offset using Reservoir method
@@ -773,11 +798,11 @@ private:
     ///
     /// \return Pressure correction term for each active connection.
     template <typename ConnIndexMap>
-    std::vector<double>
+    std::vector<Scalar>
     connectionPressureOffsetRes(const std::size_t nconn,
                                 const Sources&    sources,
-                                const double      gravity,
-                                const double      refDepth,
+                                const Scalar      gravity,
+                                const Scalar      refDepth,
                                 ConnIndexMap      connIndex) const;
 
     /// Top-level entry point for computing the pressure correction
@@ -798,33 +823,12 @@ private:
     ///   bottom-hole pressure reference depth.
     ///
     /// \return Pressure correction term for each active connection.
-    std::vector<double>
+    std::vector<Scalar>
     connectionPressureOffset(const Sources& sources,
                              const PAvg&    controls,
-                             const double   gravity,
-                             const double   refDepth) const;
+                             const Scalar   gravity,
+                             const Scalar   refDepth) const;
 };
-
-/// Form linear combination of WBP result objects.
-///
-/// Typically the very last step of computing the block-averaged well
-/// pressure values; namely a weighted averaged of the CTF-weighted and the
-/// PV-weighted contributions.
-///
-/// \param[in] alpha Coefficient in linear combination.  Typically the F2
-///    weighting factor from the WPAVE (or WWPAVE) keyword.
-///
-/// \param[in] x First WBP result.  Typically the CTF-weighted WBP result.
-///
-/// \param[in] beta Coefficient in linear combination.  Typically 1-F2, with
-///    F2 from WPAVE.
-///
-/// \param[in] y Second WBP result.  Typically the PV-weighted WBP result.
-///
-/// \return \code alpha*x + beta*y \endcode.
-PAvgCalculator::Result
-linearCombination(const double alpha, PAvgCalculator::Result        x,
-                  const double beta , const PAvgCalculator::Result& y);
 
 } // namespace Opm
 

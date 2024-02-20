@@ -79,13 +79,13 @@ void PAvgCalculatorCollection::pruneInactiveWBPCells(ActivePredicate isActive)
     }
 }
 
-PAvgCalculator&
+PAvgCalculator<double>&
 PAvgCalculatorCollection::operator[](const std::size_t i)
 {
     return *this->calculators_[i];
 }
 
-const PAvgCalculator&
+const PAvgCalculator<double>&
 PAvgCalculatorCollection::operator[](const std::size_t i) const
 {
     return *this->calculators_[i];

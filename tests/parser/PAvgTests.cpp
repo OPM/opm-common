@@ -222,7 +222,7 @@ END
     const auto summary_config = SummaryConfig{deck, sched, es.fieldProps(), es.aquifer()};
 
     const auto& w1 = sched.getWell("P1", 0);
-    auto calc = PAvgCalculator { grid, w1.getConnections() };
+    auto calc = PAvgCalculator<double> { grid, w1.getConnections() };
 
     {
         const auto& index_list = calc.allWBPCells();
@@ -244,7 +244,7 @@ END
     //----------------------------------------------------
 
     const auto& w5 = sched.getWell("P5", 0);
-    auto calc5 = PAvgCalculator { grid, w5.getConnections() };
+    auto calc5 = PAvgCalculator<double> { grid, w5.getConnections() };
 
     {
         const auto& index_list = calc5.allWBPCells();
@@ -259,11 +259,11 @@ END
     }
 
     PAvgCalculatorCollection calculators {};
-    BOOST_CHECK_EQUAL(calculators.setCalculator(0, std::make_unique<PAvgCalculator>(grid, w1.getConnections())),
+    BOOST_CHECK_EQUAL(calculators.setCalculator(0, std::make_unique<PAvgCalculator<double>>(grid, w1.getConnections())),
                       std::size_t{0});
-    BOOST_CHECK_EQUAL(calculators.setCalculator(1, std::make_unique<PAvgCalculator>(grid, w5.getConnections())),
+    BOOST_CHECK_EQUAL(calculators.setCalculator(1, std::make_unique<PAvgCalculator<double>>(grid, w5.getConnections())),
                       std::size_t{1});
-    BOOST_CHECK_EQUAL(calculators.setCalculator(0, std::make_unique<PAvgCalculator>(grid, w1.getConnections())),
+    BOOST_CHECK_EQUAL(calculators.setCalculator(0, std::make_unique<PAvgCalculator<double>>(grid, w1.getConnections())),
                       std::size_t{0});
 
     {

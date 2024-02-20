@@ -84,10 +84,11 @@ globalCellIndex(const Opm::GridDims& cellIndexMap,
 ///
 /// \param[in] refDepth Reference depth to which to gravity correct a
 ///   pressure value (m)
-double pressureOffset(const double density,
-                      const double depth,
-                      const double gravity,
-                      const double refDepth)
+template<class Scalar>
+Scalar pressureOffset(const Scalar density,
+                      const Scalar depth,
+                      const Scalar gravity,
+                      const Scalar refDepth)
 {
     return density * (refDepth - depth) * gravity;
 }
@@ -309,14 +310,15 @@ void clear(std::array<WeightedRunningAverage<T,W>, N>& avg)
 namespace Opm {
 
 /// Implementation class for calculator's accumulator
-class PAvgCalculator::Accumulator::Impl
+template<class Scalar>
+class PAvgCalculator<Scalar>::Accumulator::Impl
 {
 public:
     /// Add contribution from centre/connecting cell
     ///
     /// \param[in] weight Pressure weighting factor
     /// \param[in] press Pressure value
-    void addCentre(const double weight, const double press)
+    void addCentre(const Scalar weight, const Scalar press)
     {
         this->term_[0].add(press, weight);
     }
@@ -325,7 +327,7 @@ public:
     ///
     /// \param[in] weight Pressure weighting factor
     /// \param[in] press Pressure value
-    void addRectangular(const double weight, const double press)
+    void addRectangular(const Scalar weight, const Scalar press)
     {
         this->term_[1].add(press, weight);
     }
@@ -334,7 +336,7 @@ public:
     ///
     /// \param[in] weight Pressure weighting factor
     /// \param[in] press Pressure value
-    void addDiagonal(const double weight, const double press)
+    void addDiagonal(const Scalar weight, const Scalar press)
     {
         this->term_[2].add(press, weight);
     }
@@ -346,7 +348,7 @@ public:
     ///
     /// \param[in] weight Pressure weighting factor
     /// \param[in] other Contribution from other accumulation process.
-    void add(const double weight, const Impl& other)
+    void add(const Scalar weight, const Impl& other)
     {
         for (auto i = 0*this->avg_.size(); i < this->avg_.size(); ++i) {
             this->avg_[i].add(other.avg_[i], weight);
@@ -373,7 +375,7 @@ public:
     ///   applicable.  If inner weight factor is negative, no weighting is
     ///   applied.  Typically the F1 weighting factor from the WPAVE
     ///   keyword.
-    void commitContribution(const double innerWeight)
+    void commitContribution(const Scalar innerWeight)
     {
         // 1 = Inner only, no weighting
         this->avg_[0] += this->term_[0];
@@ -424,7 +426,7 @@ public:
     /// \param[in] type Kind of block-average pressure
     ///
     /// \return Value of specified block-average pressure quantity
-    double getAverageValue(const Result::WBPMode type) const
+    Scalar getAverageValue(const typename Result::WBPMode type) const
     {
         return value(this->avg_[static_cast<std::size_t>(type)]);
     }
@@ -438,7 +440,7 @@ private:
     ///   [1] -> WBP4 == Rectangular neighbours
     ///   [2] -> WBP5 == Inner + Rectangular
     ///   [3] -> WBP9 == Inner + Rectangular + Diagonal
-    std::array<WeightedRunningAverage<double>, 4> avg_{};
+    std::array<WeightedRunningAverage<Scalar>, 4> avg_{};
 
     /// Term contributions
     ///
@@ -447,7 +449,7 @@ private:
     ///   [0] -> Centre block
     ///   [1] -> Rectangular neighbours
     ///   [2] -> Diagonal neighbours
-    std::array<WeightedRunningAverage<double>, 3> term_{};
+    std::array<WeightedRunningAverage<Scalar>, 3> term_{};
 
     /// Subsume combinations of term values into block-averaged pressures
     ///
@@ -473,7 +475,7 @@ private:
     ///   contributions.  Outer cells weighted by 1-innerWeight where
     ///   applicable.  Typically the F1 weighting factor from the WPAVE
     ///   keyword.
-    void combineWeighted(const double innerWeight)
+    void combineWeighted(const Scalar innerWeight)
     {
         // WBP5 = w*Centre + (1-w)*Rectangular
         this->avg_[2]
@@ -489,96 +491,111 @@ private:
     }
 };
 
-PAvgCalculator::Accumulator::Accumulator()
+template<class Scalar>
+PAvgCalculator<Scalar>::Accumulator::Accumulator()
     : pImpl_ { std::make_unique<Impl>() }
 {}
 
-PAvgCalculator::Accumulator::~Accumulator() = default;
+template<class Scalar>
+PAvgCalculator<Scalar>::Accumulator::~Accumulator() = default;
 
-PAvgCalculator::Accumulator::Accumulator(const Accumulator& rhs)
+template<class Scalar>
+PAvgCalculator<Scalar>::Accumulator::Accumulator(const Accumulator& rhs)
     : pImpl_ { std::make_unique<Impl>(*rhs.pImpl_) }
 {}
 
-PAvgCalculator::Accumulator::Accumulator(Accumulator&& rhs)
+template<class Scalar>
+PAvgCalculator<Scalar>::Accumulator::Accumulator(Accumulator&& rhs)
     : pImpl_ { std::move(rhs.pImpl_) }
 {}
 
-PAvgCalculator::Accumulator&
-PAvgCalculator::Accumulator::operator=(const Accumulator& rhs)
+template<class Scalar>
+typename PAvgCalculator<Scalar>::Accumulator&
+PAvgCalculator<Scalar>::Accumulator::operator=(const Accumulator& rhs)
 {
     this->pImpl_ = std::make_unique<Impl>(*rhs.pImpl_);
     return *this;
 }
 
-PAvgCalculator::Accumulator&
-PAvgCalculator::Accumulator::operator=(Accumulator&& rhs)
+template<class Scalar>
+typename PAvgCalculator<Scalar>::Accumulator&
+PAvgCalculator<Scalar>::Accumulator::operator=(Accumulator&& rhs)
 {
     this->pImpl_ = std::move(rhs.pImpl_);
     return *this;
 }
 
-PAvgCalculator::Accumulator&
-PAvgCalculator::Accumulator::addCentre(const double weight,
-                                       const double press)
+template<class Scalar>
+typename PAvgCalculator<Scalar>::Accumulator&
+PAvgCalculator<Scalar>::Accumulator::addCentre(const Scalar weight,
+                                               const Scalar press)
 {
     this->pImpl_->addCentre(weight, press);
     return *this;
 }
 
-PAvgCalculator::Accumulator&
-PAvgCalculator::Accumulator::addRectangular(const double weight,
-                                            const double press)
+template<class Scalar>
+typename PAvgCalculator<Scalar>::Accumulator&
+PAvgCalculator<Scalar>::Accumulator::addRectangular(const Scalar weight,
+                                                    const Scalar press)
 {
     this->pImpl_->addRectangular(weight, press);
     return *this;
 }
 
-PAvgCalculator::Accumulator&
-PAvgCalculator::Accumulator::addDiagonal(const double weight,
-                                         const double press)
+template<class Scalar>
+typename PAvgCalculator<Scalar>::Accumulator&
+PAvgCalculator<Scalar>::Accumulator::addDiagonal(const Scalar weight,
+                                                 const Scalar press)
 {
     this->pImpl_->addDiagonal(weight, press);
     return *this;
 }
 
-PAvgCalculator::Accumulator&
-PAvgCalculator::Accumulator::add(const double       weight,
-                                 const Accumulator& other)
+template<class Scalar>
+typename PAvgCalculator<Scalar>::Accumulator&
+PAvgCalculator<Scalar>::Accumulator::add(const Scalar       weight,
+                                         const Accumulator& other)
 {
     this->pImpl_->add(weight, *other.pImpl_);
     return *this;
 }
 
-void PAvgCalculator::Accumulator::prepareAccumulation()
+template<class Scalar>
+void PAvgCalculator<Scalar>::Accumulator::prepareAccumulation()
 {
     this->pImpl_->prepareAccumulation();
 }
 
-void PAvgCalculator::Accumulator::prepareContribution()
+template<class Scalar>
+void PAvgCalculator<Scalar>::Accumulator::prepareContribution()
 {
     this->pImpl_->prepareContribution();
 }
 
-void PAvgCalculator::Accumulator::commitContribution(const double innerWeight)
+template<class Scalar>
+void PAvgCalculator<Scalar>::Accumulator::commitContribution(const Scalar innerWeight)
 {
     this->pImpl_->commitContribution(innerWeight);
 }
 
-PAvgCalculator::Accumulator::LocalRunningAverages
-PAvgCalculator::Accumulator::getRunningAverages() const
+template<class Scalar>
+typename PAvgCalculator<Scalar>::Accumulator::LocalRunningAverages
+PAvgCalculator<Scalar>::Accumulator::getRunningAverages() const
 {
     return this->pImpl_->getRunningAverages();
 }
 
-void
-PAvgCalculator::Accumulator::
+template<class Scalar>
+void PAvgCalculator<Scalar>::Accumulator::
 assignRunningAverages(const LocalRunningAverages& avg)
 {
     this->pImpl_->assignRunningAverages(avg);
 }
 
-PAvgCalculator::Result
-PAvgCalculator::Accumulator::getFinalResult() const
+template<class Scalar>
+typename PAvgCalculator<Scalar>::Result
+PAvgCalculator<Scalar>::Accumulator::getFinalResult() const
 {
     auto result = Result{};
 
@@ -597,8 +614,9 @@ PAvgCalculator::Accumulator::getFinalResult() const
 
 // ---------------------------------------------------------------------------
 
-PAvgCalculator::PAvgCalculator(const GridDims&        cellIndexMap,
-                               const WellConnections& connections)
+template<class Scalar>
+PAvgCalculator<Scalar>::PAvgCalculator(const GridDims&        cellIndexMap,
+                                       const WellConnections& connections)
     : numInputConns_ { connections.size() }
 {
     this->openConns_.reserve(this->numInputConns_);
@@ -611,9 +629,11 @@ PAvgCalculator::PAvgCalculator(const GridDims&        cellIndexMap,
     }
 }
 
-PAvgCalculator::~PAvgCalculator() = default;
+template<class Scalar>
+PAvgCalculator<Scalar>::~PAvgCalculator() = default;
 
-void PAvgCalculator::pruneInactiveWBPCells(const std::vector<bool>& isActive)
+template<class Scalar>
+void PAvgCalculator<Scalar>::pruneInactiveWBPCells(const std::vector<bool>& isActive)
 {
     assert (isActive.size() == this->contributingCells_.size());
 
@@ -679,10 +699,12 @@ void PAvgCalculator::pruneInactiveWBPCells(const std::vector<bool>& isActive)
     }
 }
 
-void PAvgCalculator::inferBlockAveragePressures(const Sources& sources,
-                                                const PAvg&    controls,
-                                                const double   gravity,
-                                                const double   refDepth)
+template<class Scalar>
+void PAvgCalculator<Scalar>::
+inferBlockAveragePressures(const Sources& sources,
+                           const PAvg&    controls,
+                           const Scalar   gravity,
+                           const Scalar   refDepth)
 {
     this->accumulateLocalContributions(sources, controls, gravity, refDepth);
 
@@ -691,7 +713,9 @@ void PAvgCalculator::inferBlockAveragePressures(const Sources& sources,
     this->assignResults(controls);
 }
 
-std::vector<std::size_t> PAvgCalculator::allWellConnections() const
+template<class Scalar>
+std::vector<std::size_t> PAvgCalculator<Scalar>::
+allWellConnections() const
 {
     auto ix = std::vector<std::size_t>(this->numInputConns_);
     std::iota(ix.begin(), ix.end(), std::size_t{0});
@@ -699,10 +723,11 @@ std::vector<std::size_t> PAvgCalculator::allWellConnections() const
     return ix;
 }
 
-void PAvgCalculator::accumulateLocalContributions(const Sources& sources,
-                                                  const PAvg&    controls,
-                                                  const double   gravity,
-                                                  const double   refDepth)
+template<class Scalar>
+void PAvgCalculator<Scalar>::accumulateLocalContributions(const Sources& sources,
+                                                          const PAvg&    controls,
+                                                          const Scalar   gravity,
+                                                          const Scalar   refDepth)
 {
     this->accumCTF_.prepareAccumulation();
     this->accumPV_.prepareAccumulation();
@@ -718,21 +743,25 @@ void PAvgCalculator::accumulateLocalContributions(const Sources& sources,
     }
 }
 
-void PAvgCalculator::collectGlobalContributions()
+template<class Scalar>
+void PAvgCalculator<Scalar>::collectGlobalContributions()
 {}
 
-void PAvgCalculator::assignResults(const PAvg& controls)
+template<class Scalar>
+void PAvgCalculator<Scalar>::assignResults(const PAvg& controls)
 {
-    const auto F2 = controls.conn_weight();
+    const Scalar F2 = static_cast<Scalar>(controls.conn_weight());
 
     this->averagePressures_ =
         linearCombination(F2      , this->accumCTF_.getFinalResult(),
-                          1.0 - F2, this->accumPV_ .getFinalResult());
+                          Scalar{1.0} - F2, this->accumPV_ .getFinalResult());
 }
 
-void PAvgCalculator::addConnection(const GridDims&   cellIndexMap,
-                                   const Connection& conn,
-                                   SetupMap&         setupHelperMap)
+template<class Scalar>
+void PAvgCalculator<Scalar>::
+addConnection(const GridDims&   cellIndexMap,
+              const Connection& conn,
+              SetupMap&         setupHelperMap)
 {
     const auto& [localCellPos, newCellInserted] = setupHelperMap
         .emplace(conn.global_index(), this->contributingCells_.size());
@@ -762,11 +791,12 @@ void PAvgCalculator::addConnection(const GridDims&   cellIndexMap,
     }
 }
 
-void PAvgCalculator::pruneInactiveConnections(const std::vector<bool>& isActive)
+template<class Scalar>
+void PAvgCalculator<Scalar>::pruneInactiveConnections(const std::vector<bool>& isActive)
 {
     const auto nConn = this->connections_.size();
 
-    auto keep = std::vector<std::vector<PAvgConnection>::size_type>{};
+    auto keep = std::vector<typename std::vector<PAvgConnection>::size_type>{};
     keep.reserve(nConn);
 
     for (auto connIx = 0*nConn; connIx < nConn; ++connIx) {
@@ -785,7 +815,7 @@ void PAvgCalculator::pruneInactiveConnections(const std::vector<bool>& isActive)
 
     // 1. Extract active subset of open connections in original numbering.
     {
-        auto keepOpen = std::vector<std::vector<PAvgConnection>::size_type>{};
+        auto keepOpen = std::vector<typename std::vector<PAvgConnection>::size_type>{};
         keepOpen.reserve(this->openConns_.size());
 
         for (const auto& openConn : this->openConns_) {
@@ -799,11 +829,11 @@ void PAvgCalculator::pruneInactiveConnections(const std::vector<bool>& isActive)
 
     // 2. Extract active subset of all connections.  Create all->active
     // index map (newConnIDs) in the process.
-    auto newConnIDs = std::vector<std::vector<PAvgConnection>::size_type>(nConn);
+    auto newConnIDs = std::vector<typename std::vector<PAvgConnection>::size_type>(nConn);
 
     {
         auto filteredConns = std::vector<PAvgConnection>{};
-        auto filteredInput = std::vector<std::vector<PAvgConnection>::size_type>{};
+        auto filteredInput = std::vector<typename std::vector<PAvgConnection>::size_type>{};
         filteredConns.reserve(keep.size());
         filteredInput.reserve(keep.size());
 
@@ -824,9 +854,11 @@ void PAvgCalculator::pruneInactiveConnections(const std::vector<bool>& isActive)
     }
 }
 
-void PAvgCalculator::addNeighbour(std::optional<std::size_t> neighbour,
-                                  const NeighbourKind        neighbourKind,
-                                  SetupMap&                  setupHelperMap)
+template<class Scalar>
+void PAvgCalculator<Scalar>::
+addNeighbour(std::optional<std::size_t> neighbour,
+             const NeighbourKind        neighbourKind,
+             SetupMap&                  setupHelperMap)
 {
     if (! neighbour) {
         return;
@@ -846,12 +878,15 @@ void PAvgCalculator::addNeighbour(std::optional<std::size_t> neighbour,
     neighbours.push_back(localCellPos->second);
 }
 
-std::size_t PAvgCalculator::lastConnsCell() const
+template<class Scalar>
+std::size_t PAvgCalculator<Scalar>::lastConnsCell() const
 {
     return this->contributingCells_[this->connections_.back().cell];
 }
 
-void PAvgCalculator::addNeighbours_X(const GridDims& cellIndexMap, SetupMap& setupHelperMap)
+template<class Scalar>
+void PAvgCalculator<Scalar>::
+addNeighbours_X(const GridDims& cellIndexMap, SetupMap& setupHelperMap)
 {
     const auto& [i, j, k] = cellIndexMap.getIJK(this->lastConnsCell());
 
@@ -866,7 +901,9 @@ void PAvgCalculator::addNeighbours_X(const GridDims& cellIndexMap, SetupMap& set
     this->addNeighbour(globalCellIndex(cellIndexMap, i,j-1,k-1), NeighbourKind::Diagonal, setupHelperMap);
 }
 
-void PAvgCalculator::addNeighbours_Y(const GridDims& cellIndexMap, SetupMap& setupHelperMap)
+template<class Scalar>
+void PAvgCalculator<Scalar>::
+addNeighbours_Y(const GridDims& cellIndexMap, SetupMap& setupHelperMap)
 {
     const auto& [i, j, k] = cellIndexMap.getIJK(this->lastConnsCell());
 
@@ -881,7 +918,9 @@ void PAvgCalculator::addNeighbours_Y(const GridDims& cellIndexMap, SetupMap& set
     this->addNeighbour(globalCellIndex(cellIndexMap, i-1,j,k-1), NeighbourKind::Diagonal, setupHelperMap);
 }
 
-void PAvgCalculator::addNeighbours_Z(const GridDims& cellIndexMap, SetupMap& setupHelperMap)
+template<class Scalar>
+void PAvgCalculator<Scalar>::
+addNeighbours_Z(const GridDims& cellIndexMap, SetupMap& setupHelperMap)
 {
     const auto& [i, j, k] = cellIndexMap.getIJK(this->lastConnsCell());
 
@@ -896,16 +935,18 @@ void PAvgCalculator::addNeighbours_Z(const GridDims& cellIndexMap, SetupMap& set
     this->addNeighbour(globalCellIndex(cellIndexMap, i-1,j-1,k), NeighbourKind::Diagonal, setupHelperMap);
 }
 
+template<class Scalar>
 template <typename ConnIndexMap, typename CTFPressureWeightFunction>
-void PAvgCalculator::accumulateLocalContributions(const Sources&             sources,
-                                                  const PAvg&                controls,
-                                                  const std::vector<double>& connDP,
-                                                  ConnIndexMap               connIndex,
-                                                  CTFPressureWeightFunction  ctfPressWeight)
+void PAvgCalculator<Scalar>::
+accumulateLocalContributions(const Sources&             sources,
+                             const PAvg&                controls,
+                             const std::vector<Scalar>& connDP,
+                             ConnIndexMap               connIndex,
+                             CTFPressureWeightFunction  ctfPressWeight)
 {
     using PressureTermHandler =
-        Accumulator& (Accumulator::*)(const double weight,
-                                      const double press);
+        Accumulator& (Accumulator::*)(const Scalar weight,
+                                      const Scalar press);
 
     // PrepareContribution() is not needed for accumCTF_, but on the other
     // hand does no real harm either.  Keep it for symmetry because we *do*
@@ -917,9 +958,9 @@ void PAvgCalculator::accumulateLocalContributions(const Sources&             sou
     auto accumCTF_c = Accumulator{};
 
     auto addContrib = [&sources, &ctfPressWeight, &accumCTF_c, this]
-        (const ContrIndexType i, const double dp, PressureTermHandler handler)
+        (const ContrIndexType i, const Scalar dp, PressureTermHandler handler)
     {
-        using Item = PAvgDynamicSourceData<double>::SourceDataSpan<const double>::Item;
+        using Item = typename PAvgDynamicSourceData<Scalar>::template SourceDataSpan<const Scalar>::Item;
 
         const auto src = sources.wellBlocks()[this->contributingCells_[i]];
         const auto p   = src[Item::Pressure] + dp;
@@ -962,11 +1003,13 @@ void PAvgCalculator::accumulateLocalContributions(const Sources&             sou
     this->accumPV_.commitContribution();
 }
 
+template<class Scalar>
 template <typename ConnIndexMap>
-void PAvgCalculator::accumulateLocalContributions(const Sources&             sources,
-                                                  const PAvg&                controls,
-                                                  const std::vector<double>& connDP,
-                                                  ConnIndexMap&&             connIndex)
+void PAvgCalculator<Scalar>::
+accumulateLocalContributions(const Sources&             sources,
+                             const PAvg&                controls,
+                             const std::vector<Scalar>& connDP,
+                             ConnIndexMap&&             connIndex)
 {
     if (controls.inner_weight() < 0.0) {
         // F1 < 0 => pore-volume weighting of individual cell contributions,
@@ -993,9 +1036,11 @@ void PAvgCalculator::accumulateLocalContributions(const Sources&             sou
     }
 }
 
-void PAvgCalculator::accumulateLocalContribOpen(const Sources&             sources,
-                                                const PAvg&                controls,
-                                                const std::vector<double>& connDP)
+template<class Scalar>
+void PAvgCalculator<Scalar>::
+accumulateLocalContribOpen(const Sources&             sources,
+                           const PAvg&                controls,
+                           const std::vector<Scalar>& connDP)
 {
     assert (connDP.size() == this->openConns_.size());
 
@@ -1004,9 +1049,11 @@ void PAvgCalculator::accumulateLocalContribOpen(const Sources&             sourc
                                        { return this->openConns_[i]; });
 }
 
-void PAvgCalculator::accumulateLocalContribAll(const Sources&             sources,
-                                               const PAvg&                controls,
-                                               const std::vector<double>& connDP)
+template<class Scalar>
+void PAvgCalculator<Scalar>::
+accumulateLocalContribAll(const Sources&             sources,
+                          const PAvg&                controls,
+                          const std::vector<Scalar>& connDP)
 {
     assert (connDP.size() == this->connections_.size());
 
@@ -1014,19 +1061,20 @@ void PAvgCalculator::accumulateLocalContribAll(const Sources&             source
                                        [](const auto i) { return i; });
 }
 
+template<class Scalar>
 template <typename ConnIndexMap>
-std::vector<double>
-PAvgCalculator::connectionPressureOffsetWell(const std::size_t nconn,
-                                             const Sources&    sources,
-                                             const double      gravity,
-                                             const double      refDepth,
-                                             ConnIndexMap      connIndex) const
+std::vector<Scalar> PAvgCalculator<Scalar>::
+connectionPressureOffsetWell(const std::size_t nconn,
+                             const Sources&    sources,
+                             const Scalar      gravity,
+                             const Scalar      refDepth,
+                             ConnIndexMap      connIndex) const
 {
-    auto dp = std::vector<double>(nconn);
+    auto dp = std::vector<Scalar>(nconn);
 
     auto density = [&sources, this](const auto connIx)
     {
-        using Item = PAvgDynamicSourceData<double>::SourceDataSpan<const double>::Item;
+        using Item = typename PAvgDynamicSourceData<Scalar>::template SourceDataSpan<const Scalar>::Item;
 
         return sources.wellConns()[this->inputConn_[connIx]][Item::MixtureDensity];
     };
@@ -1041,26 +1089,27 @@ PAvgCalculator::connectionPressureOffsetWell(const std::size_t nconn,
     return dp;
 }
 
+template<class Scalar>
 template <typename ConnIndexMap>
-std::vector<double>
-PAvgCalculator::connectionPressureOffsetRes(const std::size_t nconn,
-                                            const Sources&    sources,
-                                            const double      gravity,
-                                            const double      refDepth,
-                                            ConnIndexMap      connIndex) const
+std::vector<Scalar> PAvgCalculator<Scalar>::
+connectionPressureOffsetRes(const std::size_t nconn,
+                            const Sources&    sources,
+                            const Scalar      gravity,
+                            const Scalar      refDepth,
+                            ConnIndexMap      connIndex) const
 {
-    auto dp = std::vector<double>(nconn);
+    auto dp = std::vector<Scalar>(nconn);
 
     const auto neighList = std::array {
         &PAvgConnection::rectNeighbours,
         &PAvgConnection::diagNeighbours,
     };
 
-    auto density = WeightedRunningAverage<double, double>{};
+    auto density = WeightedRunningAverage<Scalar, Scalar>{};
 
     auto includeDensity = [this, &sources, &density](const ContrIndexType i)
     {
-        using Item = PAvgDynamicSourceData<double>::SourceDataSpan<const double>::Item;
+        using Item = typename PAvgDynamicSourceData<Scalar>::template SourceDataSpan<const Scalar>::Item;
 
         const auto src = sources.wellBlocks()[this->contributingCells_[i]];
 
@@ -1086,11 +1135,12 @@ PAvgCalculator::connectionPressureOffsetRes(const std::size_t nconn,
     return dp;
 }
 
-std::vector<double>
-PAvgCalculator::connectionPressureOffset(const Sources& sources,
-                                         const PAvg&    controls,
-                                         const double   gravity,
-                                         const double   refDepth) const
+template<class Scalar>
+std::vector<Scalar> PAvgCalculator<Scalar>::
+connectionPressureOffset(const Sources& sources,
+                         const PAvg&    controls,
+                         const Scalar   gravity,
+                         const Scalar   refDepth) const
 {
     const auto nconn = controls.open_connections()
         ? this->openConns_.size()
@@ -1105,7 +1155,7 @@ PAvgCalculator::connectionPressureOffset(const Sources& sources,
         // Unexpected case such as denormalised or non-finite values of
         // 'gravity' go here too.
 
-        return std::vector<double>(nconn, 0.0);
+        return std::vector<Scalar>(nconn, 0.0);
     }
 
     if (controls.depth_correction() == PAvg::DepthCorrection::RES) {
@@ -1142,19 +1192,26 @@ PAvgCalculator::connectionPressureOffset(const Sources& sources,
 
 // ---------------------------------------------------------------------------
 
-PAvgCalculator::Result
-linearCombination(const double alpha, PAvgCalculator::Result        x,
-                  const double beta , const PAvgCalculator::Result& y)
+template<class Scalar>
+typename PAvgCalculator<Scalar>::Result
+linearCombination(const Scalar alpha, typename PAvgCalculator<Scalar>::Result        x,
+                  const Scalar beta , const typename PAvgCalculator<Scalar>::Result& y)
 {
     std::transform(x.wbp_.begin(), x.wbp_.end(),
                    y.wbp_.begin(),
                    x.wbp_.begin(),
-                   [alpha, beta](const double xi, const double yi)
+                   [alpha, beta](const Scalar xi, const Scalar yi)
                    {
                        return alpha*xi + beta*yi;
                    });
 
     return x;
 }
+
+template class PAvgCalculator<double>;
+template PAvgCalculator<double>::Result linearCombination(const double,
+                                                          PAvgCalculator<double>::Result,
+                                                          const double,
+                                                          const PAvgCalculator<double>::Result&);
 
 } // namespace Opm
