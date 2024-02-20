@@ -26,11 +26,11 @@ set(genkw_SOURCES src/opm/json/JsonObject.cpp
                   src/opm/common/utility/OpmInputError.cpp
                   src/opm/common/utility/shmatch.cpp
                   src/opm/common/utility/String.cpp
-                  src/opm/common/OpmLog/OpmLog.cpp
-                  src/opm/common/OpmLog/Logger.cpp
-                  src/opm/common/OpmLog/StreamLog.cpp
-                  src/opm/common/OpmLog/LogBackend.cpp
-                  src/opm/common/OpmLog/LogUtil.cpp
+                  opm/common/OpmLog/OpmLog.cpp
+                  opm/common/OpmLog/Logger.cpp
+                  opm/common/OpmLog/StreamLog.cpp
+                  opm/common/OpmLog/LogBackend.cpp
+                  opm/common/OpmLog/LogUtil.cpp
 )
 if(NOT cjson_FOUND)
   list(APPEND genkw_SOURCES ${cjson_SOURCE_DIR}/cJSON.c)
