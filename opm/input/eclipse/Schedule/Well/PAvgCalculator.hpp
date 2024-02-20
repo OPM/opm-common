@@ -35,7 +35,7 @@ namespace Opm {
 class Connection;
 class GridDims;
 class PAvg;
-class PAvgDynamicSourceData;
+template<class Scalar> class PAvgDynamicSourceData;
 class WellConnections;
 
 } // namespace Opm
@@ -125,7 +125,7 @@ public:
         ///
         /// \param[in] wbSrc Cell-level contributions
         /// \return \code *this \endcode.
-        Sources& wellBlocks(const PAvgDynamicSourceData& wbSrc)
+        Sources& wellBlocks(const PAvgDynamicSourceData<double>& wbSrc)
         {
             this->wb_ = &wbSrc;
             return *this;
@@ -136,30 +136,30 @@ public:
         ///
         /// \param[in] wcSrc Connection-level contributions
         /// \return \code *this \endcode.
-        Sources& wellConns(const PAvgDynamicSourceData& wcSrc)
+        Sources& wellConns(const PAvgDynamicSourceData<double>& wcSrc)
         {
             this->wc_ = &wcSrc;
             return *this;
         }
 
         /// Get read-only access to cell-level contributions.
-        const PAvgDynamicSourceData& wellBlocks() const
+        const PAvgDynamicSourceData<double>& wellBlocks() const
         {
             return *this->wb_;
         }
 
         /// Get read-only access to connection-level contributions.
-        const PAvgDynamicSourceData& wellConns() const
+        const PAvgDynamicSourceData<double>& wellConns() const
         {
             return *this->wc_;
         }
 
     private:
         /// Cell-level contributions.
-        const PAvgDynamicSourceData* wb_{nullptr};
+        const PAvgDynamicSourceData<double>* wb_{nullptr};
 
         /// Connection-level contributions.
-        const PAvgDynamicSourceData* wc_{nullptr};
+        const PAvgDynamicSourceData<double>* wc_{nullptr};
     };
 
     /// Constructor

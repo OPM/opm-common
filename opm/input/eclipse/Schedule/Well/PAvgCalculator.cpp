@@ -919,7 +919,7 @@ void PAvgCalculator::accumulateLocalContributions(const Sources&             sou
     auto addContrib = [&sources, &ctfPressWeight, &accumCTF_c, this]
         (const ContrIndexType i, const double dp, PressureTermHandler handler)
     {
-        using Item = PAvgDynamicSourceData::SourceDataSpan<const double>::Item;
+        using Item = PAvgDynamicSourceData<double>::SourceDataSpan<const double>::Item;
 
         const auto src = sources.wellBlocks()[this->contributingCells_[i]];
         const auto p   = src[Item::Pressure] + dp;
@@ -1026,7 +1026,7 @@ PAvgCalculator::connectionPressureOffsetWell(const std::size_t nconn,
 
     auto density = [&sources, this](const auto connIx)
     {
-        using Item = PAvgDynamicSourceData::SourceDataSpan<const double>::Item;
+        using Item = PAvgDynamicSourceData<double>::SourceDataSpan<const double>::Item;
 
         return sources.wellConns()[this->inputConn_[connIx]][Item::MixtureDensity];
     };
@@ -1060,7 +1060,7 @@ PAvgCalculator::connectionPressureOffsetRes(const std::size_t nconn,
 
     auto includeDensity = [this, &sources, &density](const ContrIndexType i)
     {
-        using Item = PAvgDynamicSourceData::SourceDataSpan<const double>::Item;
+        using Item = PAvgDynamicSourceData<double>::SourceDataSpan<const double>::Item;
 
         const auto src = sources.wellBlocks()[this->contributingCells_[i]];
 

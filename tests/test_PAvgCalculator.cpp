@@ -411,8 +411,8 @@ namespace {
         Opm::PAvgCalculator          calc;
         std::vector<std::size_t>     wbpCells{};
         std::vector<std::size_t>     wbpConns{};
-        Opm::PAvgDynamicSourceData   blockSource;
-        Opm::PAvgDynamicSourceData   connSource;
+        Opm::PAvgDynamicSourceData<double> blockSource;
+        Opm::PAvgDynamicSourceData<double> connSource;
         Opm::PAvgCalculator::Sources sources{};
     };
 
