@@ -101,16 +101,16 @@ if(ENABLE_ECL_INPUT)
     src/opm/input/eclipse/Deck/UDAValue.cpp
     src/opm/input/eclipse/Python/Python.cpp
     src/opm/input/eclipse/Schedule/Action/PyAction.cpp
-    src/opm/input/eclipse/EclipseState/Aquifer/AquiferConfig.cpp
-    src/opm/input/eclipse/EclipseState/Aquifer/AquiferFlux.cpp
-    src/opm/input/eclipse/EclipseState/Aquifer/AquiferCT.cpp
-    src/opm/input/eclipse/EclipseState/Aquifer/Aquifetp.cpp
-    src/opm/input/eclipse/EclipseState/Aquifer/Aquancon.cpp
-    src/opm/input/eclipse/EclipseState/Aquifer/AquiferHelpers.cpp
-    src/opm/input/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquiferCell.cpp
-    src/opm/input/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquiferConnection.cpp
-    src/opm/input/eclipse/EclipseState/Aquifer/NumericalAquifer/SingleNumericalAquifer.cpp
-    src/opm/input/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquifers.cpp
+    opm/input/eclipse/EclipseState/Aquifer/AquiferConfig.cpp
+    opm/input/eclipse/EclipseState/Aquifer/AquiferFlux.cpp
+    opm/input/eclipse/EclipseState/Aquifer/AquiferCT.cpp
+    opm/input/eclipse/EclipseState/Aquifer/Aquifetp.cpp
+    opm/input/eclipse/EclipseState/Aquifer/Aquancon.cpp
+    opm/input/eclipse/EclipseState/Aquifer/AquiferHelpers.cpp
+    opm/input/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquiferCell.cpp
+    opm/input/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquiferConnection.cpp
+    opm/input/eclipse/EclipseState/Aquifer/NumericalAquifer/SingleNumericalAquifer.cpp
+    opm/input/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquifers.cpp
     src/opm/input/eclipse/EclipseState/checkDeck.cpp
     src/opm/input/eclipse/EclipseState/EclipseConfig.cpp
     src/opm/input/eclipse/EclipseState/EclipseState.cpp
