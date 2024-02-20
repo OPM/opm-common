@@ -53,7 +53,7 @@ list (APPEND MAIN_SOURCE_FILES
       opm/material/components/CO2.cpp
       opm/material/components/H2.cpp
       opm/material/densead/Evaluation.cpp
-      src/opm/material/fluidmatrixinteractions/EclEpsScalingPoints.cpp
+      opm/material/fluidmatrixinteractions/EclEpsScalingPoints.cpp
       src/opm/material/fluidsystems/BlackOilFluidSystem.cpp
       opm/material/fluidsystems/blackoilpvt/DeadOilPvt.cpp
       opm/material/fluidsystems/blackoilpvt/DryGasPvt.cpp
@@ -311,13 +311,13 @@ if(ENABLE_ECL_INPUT)
     opm/input/eclipse/Units/Dimension.cpp
     opm/input/eclipse/Units/UnitSystem.cpp
     src/opm/input/eclipse/Utility/Functional.cpp
-    src/opm/material/fluidmatrixinteractions/EclEpsConfig.cpp
-    src/opm/material/fluidmatrixinteractions/EclEpsGridProperties.cpp
-    src/opm/material/fluidmatrixinteractions/EclHysteresisConfig.cpp
-    src/opm/material/fluidmatrixinteractions/EclMaterialLawManager.cpp
-    src/opm/material/fluidmatrixinteractions/EclMaterialLawManagerReadEffectiveParams.cpp
-    src/opm/material/fluidmatrixinteractions/EclMaterialLawManagerInitParams.cpp
-    src/opm/material/fluidmatrixinteractions/EclMaterialLawManagerHystParams.cpp
+    opm/material/fluidmatrixinteractions/EclEpsConfig.cpp
+    opm/material/fluidmatrixinteractions/EclEpsGridProperties.cpp
+    opm/material/fluidmatrixinteractions/EclHysteresisConfig.cpp
+    opm/material/fluidmatrixinteractions/EclMaterialLawManager.cpp
+    opm/material/fluidmatrixinteractions/EclMaterialLawManagerReadEffectiveParams.cpp
+    opm/material/fluidmatrixinteractions/EclMaterialLawManagerInitParams.cpp
+    opm/material/fluidmatrixinteractions/EclMaterialLawManagerHystParams.cpp
     opm/material/fluidsystems/blackoilpvt/BrineCo2Pvt.cpp
     opm/material/fluidsystems/blackoilpvt/Co2GasPvt.cpp
     opm/material/fluidsystems/blackoilpvt/BrineH2Pvt.cpp
