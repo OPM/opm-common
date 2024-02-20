@@ -35,14 +35,14 @@ list (APPEND MAIN_SOURCE_FILES
       src/opm/common/utility/Demangle.cpp
       src/opm/common/utility/FileSystem.cpp
       src/opm/common/utility/MemPacker.cpp
-      src/opm/common/utility/numeric/MonotCubicInterpolator.cpp
       src/opm/common/utility/OpmInputError.cpp
       opm/common/utility/parameters/Parameter.cpp
       opm/common/utility/parameters/ParameterGroup.cpp
       opm/common/utility/parameters/ParameterRequirement.cpp
       opm/common/utility/parameters/ParameterTools.cpp
-      src/opm/common/utility/numeric/calculateCellVol.cpp
-      src/opm/common/utility/numeric/RootFinders.cpp
+      opm/common/utility/numeric/calculateCellVol.cpp
+      opm/common/utility/numeric/MonotCubicInterpolator.cpp
+      opm/common/utility/numeric/RootFinders.cpp
       src/opm/common/utility/shmatch.cpp
       src/opm/common/utility/String.cpp
       src/opm/common/utility/TimeService.cpp
