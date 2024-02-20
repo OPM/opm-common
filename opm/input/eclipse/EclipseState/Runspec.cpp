@@ -419,11 +419,6 @@ EclHysterConfig::EclHysterConfig(const Opm::Deck& deck)
             krHystMod = -1;
         else {
             krHystMod = ehystrKeyword.getRecord(0).getItem("relative_perm_hyst").get<int>(0);
-
-            if (krHystMod != 0 && krHystMod != 1 && krHystMod != 2 && krHystMod != 3)
-                throw std::runtime_error(
-                    "Only the Carlson or Killough relative permeability hysteresis models (indicated by '0', "
-                    "'1', '2', or '3' for the second item of the 'EHYSTR' keyword) are supported");
         }
 
         // this is slightly screwed: it is possible to specify contradicting hysteresis

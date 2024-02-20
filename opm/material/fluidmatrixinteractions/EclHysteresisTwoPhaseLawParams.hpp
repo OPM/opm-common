@@ -38,7 +38,6 @@
 #include <cassert>
 #include <cmath>
 #include <memory>
-
 namespace Opm {
 /*!
  * \ingroup FluidMatrixInteractions
@@ -62,11 +61,10 @@ public:
         // using the drainage curve before the first saturation update.
         pcSwMdc_ = 2.0;
         krnSwMdc_ = 2.0;
+        krwSwMdc_ = -2.0;
         krnSwDrainRevert_ = 2.0;
         krnSwDrainStart_ = -2.0;
         krnSwWAG_ = 2.0;
-
-        // krwSwMdc_ = 2.0;
 
         pcSwMic_ = -1.0;
         initialImb_ = false;
@@ -76,7 +74,7 @@ public:
         pcmaxi_ = 0.0;
 
         deltaSwImbKrn_ = 0.0;
-        // deltaSwImbKrw_ = 0.0;
+        //deltaSwImbKrw_ = 0.0;
 
         Swco_ = 0.0;
         swatImbStart_ = 0.0;
@@ -90,11 +88,15 @@ public:
     {
         EclHysteresisTwoPhaseLawParams<EffLawT> result;
         result.deltaSwImbKrn_ = 1.0;
+        //result.deltaSwImbKrw_ = 1.0;
         result.Sncrt_ = 2.0;
+        result.Swcrt_ = 2.5;
         result.initialImb_ = true;
         result.pcSwMic_ = 3.0;
         result.krnSwMdc_ = 4.0;
+        result.krwSwMdc_ = 4.5;
         result.KrndHy_ = 5.0;
+        result.KrwdHy_ = 6.0;
 
         return result;
     }
@@ -106,11 +108,13 @@ public:
     void finalize()
     {
         if (config().enableHysteresis()) {
-            if (config().krHysteresisModel() == 2 || config().krHysteresisModel() == 3 || config().pcHysteresisModel() == 0) {
+            if (config().krHysteresisModel() == 2 || config().krHysteresisModel() == 3 || config().krHysteresisModel() == 4 || config().pcHysteresisModel() == 0) {
                 C_ = 1.0/(Sncri_ - Sncrd_ + 1.0e-12) - 1.0/(Snmaxd_ - Sncrd_);
                 curvatureCapPrs_ =  config().curvatureCapPrs();
             }
-
+            if (config().krHysteresisModel() == 4) {
+                Cw_ = 1.0/(Swcri_ - Swcrd_ + 1.0e-12) - 1.0/(Swmaxd_ - Swcrd_);
+            }
             updateDynamicParams_();
         }
 
@@ -158,38 +162,55 @@ public:
 
         if (!config().enableHysteresis())
             return;
-        if (config().krHysteresisModel() == 2 || config().krHysteresisModel() == 3 || config().pcHysteresisModel() == 0 || gasOilHysteresisWAG()) {
+        if (config().krHysteresisModel() == 2 || config().krHysteresisModel() == 3 || config().krHysteresisModel() == 4 || config().pcHysteresisModel() == 0 || gasOilHysteresisWAG()) {
             Swco_ = info.Swl;
             if (twoPhaseSystem == EclTwoPhaseSystemType::GasOil) {
                 Sncrd_ = info.Sgcr+info.Swl;
+                Swcrd_ = info.Sogcr + info.Swl;
                 Snmaxd_ = info.Sgu+info.Swl;
                 KrndMax_ = EffLawT::twoPhaseSatKrn(drainageParams(), 1.0-Snmaxd_);
             }
             else if (twoPhaseSystem == EclTwoPhaseSystemType::GasWater) {
                 Sncrd_ = info.Sgcr;
+                Swcrd_ = info.Swcr;
                 Snmaxd_ = info.Sgu;
                 KrndMax_ = EffLawT::twoPhaseSatKrn(drainageParams(), 1.0-Snmaxd_);
             }
             else {
                 assert(twoPhaseSystem == EclTwoPhaseSystemType::OilWater);
                 Sncrd_ = info.Sowcr;
+                Swcrd_ = info.Swcr;
                 Snmaxd_ = 1.0 - info.Swl - info.Sgl;
                 KrndMax_ = EffLawT::twoPhaseSatKrn(drainageParams(), 1.0-Snmaxd_);
+            }
+        }
+
+        if (config().krHysteresisModel() == 4) {
+            //Swco_ = info.Swl;
+            if (twoPhaseSystem == EclTwoPhaseSystemType::GasOil) {
+                Swmaxd_ = 1.0 - info.Sgl - info.Swl; 
+                KrwdMax_ = EffLawT::twoPhaseSatKrw(drainageParams(), Swmaxd_);
+            }
+            else if (twoPhaseSystem == EclTwoPhaseSystemType::GasWater) {
+                Swmaxd_ = info.Swu;
+                KrwdMax_ = EffLawT::twoPhaseSatKrw(drainageParams(), Swmaxd_);
+            }
+            else {
+                assert(twoPhaseSystem == EclTwoPhaseSystemType::OilWater);
+                Swmaxd_ = info.Swu;
+                KrwdMax_ = EffLawT::twoPhaseSatKrw(drainageParams(), Swmaxd_);
             }
         }
 
         // Additional Killough hysteresis model for pc
         if (config().pcHysteresisModel() == 0) {
             if (twoPhaseSystem == EclTwoPhaseSystemType::GasOil) {
-                Swcrd_ = info.Sogcr;
                 pcmaxd_ = info.maxPcgo;
             } else if (twoPhaseSystem == EclTwoPhaseSystemType::GasWater) {
-                Swcrd_ = info.Swcr;
                 pcmaxd_ = info.maxPcgo + info.maxPcow;
             }
             else {
                 assert(twoPhaseSystem == EclTwoPhaseSystemType::OilWater);
-                Swcrd_ = info.Swcr;
                 pcmaxd_ = -17.0; // At this point 'info.maxPcow' holds pre-swatinit value ...;
             }
         }
@@ -237,30 +258,30 @@ public:
         // Store critical nonwetting saturation
         if (twoPhaseSystem == EclTwoPhaseSystemType::GasOil) {
             Sncri_ = info.Sgcr+info.Swl;
+            Swcri_ = info.Sogcr;
         }
         else if (twoPhaseSystem == EclTwoPhaseSystemType::GasWater) {
             Sncri_ = info.Sgcr;
+            Swcri_ = info.Swcr;
         }
         else {
             assert(twoPhaseSystem == EclTwoPhaseSystemType::OilWater);
             Sncri_ = info.Sowcr;
+            Swcri_ = info.Swcr;
         }
 
 
         // Killough hysteresis model for pc
         if (config().pcHysteresisModel() == 0) {
             if (twoPhaseSystem == EclTwoPhaseSystemType::GasOil) {
-                Swcri_ = info.Sogcr;
                 Swmaxi_ = 1.0 - info.Sgl - info.Swl;
                 pcmaxi_ = info.maxPcgo;
             } else if (twoPhaseSystem == EclTwoPhaseSystemType::GasWater) {
-                Swcri_ = info.Swcr;
                 Swmaxi_ = 1.0 - info.Sgl;
                 pcmaxi_ = info.maxPcgo + info.maxPcow;
             }
             else {
                 assert(twoPhaseSystem == EclTwoPhaseSystemType::OilWater);
-                Swcri_ = info.Swcr;
                 Swmaxi_ = info.Swu;
                 pcmaxi_ = info.maxPcow;
             }
@@ -297,9 +318,8 @@ public:
      *        drainage curve (MDC) to imbibition happend on the relperm curve for the
      *        wetting phase.
      */
-    void setKrwSwMdc(Scalar /* value */)
-    {}
-    //    { krwSwMdc_ = value; };
+    void setKrwSwMdc(Scalar value)
+    { krwSwMdc_ = value; };
 
     /*!
      * \brief Get the saturation of the wetting phase where the last switch from the main
@@ -307,8 +327,7 @@ public:
      *        wetting phase.
      */
     Scalar krwSwMdc() const
-    { return 2.0; }
-    //    { return krwSwMdc_; };
+    { return krwSwMdc_; };
 
     /*!
      * \brief Set the saturation of the wetting phase where the last switch from the main
@@ -333,9 +352,8 @@ public:
      * This means that krw(Sw) = krw_drainage(Sw) if Sw < SwMdc and
      * krw(Sw) = krw_imbibition(Sw + Sw_shift,krw) else
      */
-    void setDeltaSwImbKrw(Scalar /* value */)
-    {}
-    //    { deltaSwImbKrw_ = value; }
+    //void setDeltaSwImbKrw(Scalar value)
+    //{ deltaSwImbKrw_ = value; }
 
     /*!
      * \brief Returns the saturation value which must be added if krw is calculated using
@@ -344,9 +362,8 @@ public:
      * This means that krw(Sw) = krw_drainage(Sw) if Sw < SwMdc and
      * krw(Sw) = krw_imbibition(Sw + Sw_shift,krw) else
      */
-    Scalar deltaSwImbKrw() const
-    { return 0.0; }
-//    { return deltaSwImbKrw_; }
+    //Scalar deltaSwImbKrw() const
+    //{ return deltaSwImbKrw_; }
 
     /*!
      * \brief Sets the saturation value which must be added if krn is calculated using
@@ -387,6 +404,9 @@ public:
     Scalar Sncrt() const
     { return Sncrt_; }
 
+    Scalar Swcrt() const
+    { return Swcrt_; }
+
     Scalar SnTrapped() const
     {
         // For Killough the trapped saturation is already computed
@@ -395,20 +415,52 @@ public:
         else // For Carlson we use the shift to compute it from the critial saturation
             return Sncri_ + deltaSwImbKrn_;
     }
+
+    Scalar SwTrapped() const
+    {
+        if( config().krHysteresisModel() == 0 || config().krHysteresisModel() == 2)
+            return Swcrd_;
+        
+        if( config().krHysteresisModel() == 1 || config().krHysteresisModel() == 3)
+            return Swcri_;
+        
+        // For Killough the trapped saturation is already computed
+        if( config().krHysteresisModel() == 4 )
+            return Swcrt_;
+        
+        return 0.0;
+        //else // For Carlson we use the shift to compute it from the critial saturation
+        //    return Swcri_ + deltaSwImbKrw_;
+    }
+
     Scalar SncrtWAG() const
     { return SncrtWAG_; }
 
     Scalar Snmaxd() const
     { return Snmaxd_; }
 
+    Scalar Swmaxd() const
+    { return Swmaxd_; }
+
     Scalar Snhy() const
     { return 1.0 - krnSwMdc_; }
+
+    Scalar Swhy() const
+    { return krwSwMdc_; }
 
     Scalar Swco() const
     { return Swco_; }
 
     Scalar krnWght() const
     { return KrndHy_/KrndMax_; }
+
+    Scalar krwWght() const
+    { 
+        return KrwdHy_/KrwdMax_; }
+
+    Scalar krwdMax() const
+    { 
+        return KrwdMax_; }
 
     Scalar pcWght() const // Aligning pci and pcd at Swir
     {
@@ -535,24 +587,18 @@ public:
             updateParams = true;
         }
 
-/*
-        // This is quite hacky: Eclipse says that it only uses relperm hysteresis for the
-        // wetting phase (indicated by '0' for the second item of the EHYSTER keyword),
-        // even though this makes about zero sense: one would expect that hysteresis can
-        // be limited to the oil phase, but the oil phase is the wetting phase of the
-        // gas-oil twophase system whilst it is non-wetting for water-oil.
-        if (krwSw < krwSwMdc_)
-        {
-            krwSwMdc_ = krwSw;
-            updateParams = true;
-        }
-*/
-
         if (krnSw < krnSwMdc_) {
             krnSwMdc_ = krnSw;
             KrndHy_ = EffLawT::twoPhaseSatKrn(drainageParams(), krnSwMdc_);
             updateParams = true;
         }
+
+        if (krwSw > krwSwMdc_) {
+            krwSwMdc_ = krwSw;
+            KrwdHy_ = EffLawT::twoPhaseSatKrw(drainageParams(), krwSwMdc_);
+            updateParams = true;
+        }
+
 
         if (gasOilHysteresisWAG()) {
 
@@ -612,34 +658,41 @@ public:
     {
         // only serializes dynamic state - see update() and updateDynamic_()
         serializer(deltaSwImbKrn_);
+        //serializer(deltaSwImbKrw_);
         serializer(Sncrt_);
+        serializer(Swcrt_);
         serializer(initialImb_);
         serializer(pcSwMic_);
         serializer(krnSwMdc_);
+        serializer(krwSwMdc_);
         serializer(KrndHy_);
+        serializer(KrwdHy_);
     }
 
     bool operator==(const EclHysteresisTwoPhaseLawParams& rhs) const
     {
         return this->deltaSwImbKrn_ == rhs.deltaSwImbKrn_ &&
+               //this->deltaSwImbKrw_ == rhs.deltaSwImbKrw_ &&
                this->Sncrt_ == rhs.Sncrt_ &&
+               this->Swcrt_ == rhs.Swcrt_ &&
                this->initialImb_ == rhs.initialImb_ &&
                this->pcSwMic_ == rhs.pcSwMic_ &&
                this->krnSwMdc_ == rhs.krnSwMdc_ &&
-               this->KrndHy_ == rhs.KrndHy_;
+               this->krwSwMdc_ == rhs.krwSwMdc_ &&
+               this->KrndHy_ == rhs.KrndHy_ &&
+               this->KrwdHy_ == rhs.KrwdHy_;
     }
 
 private:
     void updateDynamicParams_()
     {
-        // HACK: Eclipse seems to disable the wetting-phase relperm even though this is
-        // quite pointless from the physical POV. (see comment above)
-/*
         // calculate the saturation deltas for the relative permeabilities
-        Scalar krwMdcDrainage = EffLawT::twoPhaseSatKrw(drainageParams(), krwSwMdc_);
-        Scalar SwKrwMdcImbibition = EffLawT::twoPhaseSatKrwInv(imbibitionParams(), krwMdcDrainage);
-        deltaSwImbKrw_ = SwKrwMdcImbibition - krwSwMdc_;
-*/
+        //if (false) { // we dont support Carlson for wetting phase hysteresis
+            //Scalar krwMdcDrainage = EffLawT::twoPhaseSatKrw(drainageParams(), krwSwMdc_);
+            //Scalar SwKrwMdcImbibition = EffLawT::twoPhaseSatKrwInv(imbibitionParams(), krwMdcDrainage);
+            //deltaSwImbKrw_ = SwKrwMdcImbibition - krwSwMdc_;
+        //}   
+
         if (config().krHysteresisModel() == 0 || config().krHysteresisModel() == 1) {
             Scalar krnMdcDrainage = EffLawT::twoPhaseSatKrn(drainageParams(), krnSwMdc_);
             Scalar SwKrnMdcImbibition = EffLawT::twoPhaseSatKrnInv(imbibitionParams(), krnMdcDrainage);
@@ -650,20 +703,23 @@ private:
         // Scalar SwPcMdcImbibition = EffLawT::twoPhaseSatPcnwInv(imbibitionParams(), pcMdcDrainage);
         // deltaSwImbPc_ = SwPcMdcImbibition - pcSwMdc_;
 
-//        assert(std::abs(EffLawT::twoPhaseSatPcnw(imbibitionParams(), pcSwMdc_ + deltaSwImbPc_)
-//                        - EffLawT::twoPhaseSatPcnw(drainageParams(), pcSwMdc_)) < 1e-8);
-//        assert(std::abs(EffLawT::twoPhaseSatKrn(imbibitionParams(), krnSwMdc_ + deltaSwImbKrn_)
-//                        - EffLawT::twoPhaseSatKrn(drainageParams(), krnSwMdc_)) < 1e-8);
-//        assert(std::abs(EffLawT::twoPhaseSatKrw(imbibitionParams(), krwSwMdc_ + deltaSwImbKrw_)
-//                        - EffLawT::twoPhaseSatKrw(drainageParams(), krwSwMdc_)) < 1e-8);
-
-        if (config().krHysteresisModel() == 2 || config().krHysteresisModel() == 3 || config().pcHysteresisModel() == 0) {
+        if (config().krHysteresisModel() == 2 || config().krHysteresisModel() == 3 || config().krHysteresisModel() == 4 || config().pcHysteresisModel() == 0) {
             Scalar Snhy = 1.0 - krnSwMdc_;
             if (Snhy > Sncrd_)
                 Sncrt_ = Sncrd_ + (Snhy - Sncrd_)/((1.0+config().modParamTrapped()*(Snmaxd_-Snhy)) + C_*(Snhy - Sncrd_));
             else
             {
                 Sncrt_ = Sncrd_;
+            }
+        }
+
+        if (config().krHysteresisModel() == 4) {
+            Scalar Swhy = krwSwMdc_;
+            if (Swhy >= Swcrd_) {
+                Swcrt_ = Swcrd_ + (Swhy - Swcrd_)/((1.0+config().modParamTrapped()*(Swmaxd_-Swhy)) + Cw_*(Swhy - Swcrd_));
+            } else
+            {
+                Swcrt_ = Swcrd_;
             }
         }
 
@@ -714,7 +770,7 @@ private:
     // largest wettinging phase saturation which is on the main-drainage curve. These are
     // three different values because the sourounding code can choose to use different
     // definitions for the saturations for different quantities
-    //Scalar krwSwMdc_;
+    Scalar krwSwMdc_;
     Scalar krnSwMdc_;
     Scalar pcSwMdc_;
 
@@ -745,6 +801,8 @@ private:
     //          maximum on the drainage curve
     // C_: factor required to calculate the trapped non-wetting phase saturation using
     //     the Killough approach
+    // Cw_: factor required to calculate the trapped wetting phase saturation using
+    //     the Killough approach
     // Swcod_: connate water saturation value used for wag hysteresis (2. drainage)
     Scalar Sncrd_;
     Scalar Sncri_;
@@ -752,10 +810,14 @@ private:
     Scalar Swcrd_;
     Scalar Swmaxi_;
     Scalar Snmaxd_;
+    Scalar Swmaxd_;
     Scalar C_;
+    Scalar Cw_;
 
     Scalar KrndMax_; // Krn_drain(Snmaxd_)
+    Scalar KrwdMax_; // Krw_drain(Swmaxd_)
     Scalar KrndHy_;  // Krn_drain(1-krnSwMdc_)
+    Scalar KrwdHy_;  // Krw_drain(1-krwSwMdc_)
 
     Scalar pcmaxd_;  // max pc for drain
     Scalar pcmaxi_;  // max pc for imb
@@ -763,6 +825,7 @@ private:
     Scalar curvatureCapPrs_; // curvature parameter used for capillary pressure hysteresis
 
     Scalar Sncrt_; // trapped non-wetting phase saturation
+    Scalar Swcrt_; // trapped wetting phase saturation
 
     // Used for WAG hysteresis
     Scalar Swco_;               // Connate water.
