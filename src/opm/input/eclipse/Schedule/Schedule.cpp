@@ -91,7 +91,7 @@
 #include "KeywordHandlers.hpp"
 #include "MSW/Compsegs.hpp"
 #include "MSW/WelSegsSet.hpp"
-#include "Well/injection.hpp"
+#include "opm/input/eclipse/Schedule/Well/injection.hpp" // TODO: make relative again
 
 #include <algorithm>
 #include <ctime>

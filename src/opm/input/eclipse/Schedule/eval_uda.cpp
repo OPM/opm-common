@@ -22,7 +22,7 @@
 #include <opm/input/eclipse/Deck/UDAValue.hpp>
 #include <opm/input/eclipse/Schedule/SummaryState.hpp>
 
-#include "Well/injection.hpp"
+#include "opm/input/eclipse/Schedule/Well/injection.hpp" // TODO: make relative again
 #include "eval_uda.hpp"
 
 namespace Opm {

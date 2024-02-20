@@ -20,7 +20,6 @@
 #include <fmt/format.h>
 #include <ostream>
 #include <string>
-#include <vector>
 
 #include <opm/common/OpmLog/OpmLog.hpp>
 #include <opm/input/eclipse/Deck/DeckItem.hpp>
@@ -32,7 +31,7 @@
 #include <opm/input/eclipse/Schedule/VFPProdTable.hpp>
 #include <opm/input/eclipse/Schedule/Well/Well.hpp>
 
-#include "../eval_uda.hpp"
+#include "src/opm/input/eclipse/Schedule/eval_uda.hpp" // TODO: make relative again
 
 namespace Opm {
 
