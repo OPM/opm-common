@@ -19,7 +19,7 @@
 
 #include <opm/input/eclipse/Schedule/Group/GConSump.hpp>
 
-#include "../eval_uda.hpp"
+#include "src/opm/input/eclipse/Schedule/eval_uda.hpp" // TODO: make relative again
 
 namespace Opm {
 

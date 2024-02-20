@@ -45,8 +45,8 @@
 #include <opm/input/eclipse/Parser/ParserKeywords/P.hpp>
 
 #include "GasLiftOptKeywordHandlers.hpp"
-#include "Group/GroupKeywordHandlers.hpp"
-#include "Group/GuideRateKeywordHandlers.hpp"
+#include "opm/input/eclipse/Schedule/Group/GroupKeywordHandlers.hpp" // TODO: make relative again
+#include "opm/input/eclipse/Schedule/Group/GuideRateKeywordHandlers.hpp" // TODO: make relative again
 #include "HandlerContext.hpp"
 #include "MixingRateControlKeywordHandlers.hpp"
 #include "MSW/MSWKeywordHandlers.hpp"

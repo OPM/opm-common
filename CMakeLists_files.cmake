@@ -169,17 +169,17 @@ if(ENABLE_ECL_INPUT)
     src/opm/input/eclipse/Schedule/Events.cpp
     src/opm/input/eclipse/Schedule/GasLiftOpt.cpp
     src/opm/input/eclipse/Schedule/GasLiftOptKeywordHandlers.cpp
-    src/opm/input/eclipse/Schedule/Group/GPMaint.cpp
-    src/opm/input/eclipse/Schedule/Group/Group.cpp
-    src/opm/input/eclipse/Schedule/Group/GroupKeywordHandlers.cpp
-    src/opm/input/eclipse/Schedule/Group/GuideRate.cpp
-    src/opm/input/eclipse/Schedule/Group/GuideRateConfig.cpp
-    src/opm/input/eclipse/Schedule/Group/GuideRateKeywordHandlers.cpp
-    src/opm/input/eclipse/Schedule/Group/GuideRateModel.cpp
-    src/opm/input/eclipse/Schedule/Group/GConSale.cpp
-    src/opm/input/eclipse/Schedule/Group/GConSump.cpp
-    src/opm/input/eclipse/Schedule/Group/GroupEconProductionLimits.cpp
-    src/opm/input/eclipse/Schedule/Group/GTNode.cpp
+    opm/input/eclipse/Schedule/Group/GPMaint.cpp
+    opm/input/eclipse/Schedule/Group/Group.cpp
+    opm/input/eclipse/Schedule/Group/GroupKeywordHandlers.cpp
+    opm/input/eclipse/Schedule/Group/GuideRate.cpp
+    opm/input/eclipse/Schedule/Group/GuideRateConfig.cpp
+    opm/input/eclipse/Schedule/Group/GuideRateKeywordHandlers.cpp
+    opm/input/eclipse/Schedule/Group/GuideRateModel.cpp
+    opm/input/eclipse/Schedule/Group/GConSale.cpp
+    opm/input/eclipse/Schedule/Group/GConSump.cpp
+    opm/input/eclipse/Schedule/Group/GroupEconProductionLimits.cpp
+    opm/input/eclipse/Schedule/Group/GTNode.cpp
     src/opm/input/eclipse/Schedule/HandlerContext.cpp
     src/opm/input/eclipse/Schedule/KeywordHandlers.cpp
     src/opm/input/eclipse/Schedule/MessageLimits.cpp

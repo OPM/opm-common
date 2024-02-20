@@ -19,7 +19,7 @@
 #ifndef GUIDERATE_KEYWORD_HANDLERS_HPP
 #define GUIDERATE_KEYWORD_HANDLERS_HPP
 
-#include "../KeywordHandlers.hpp"
+#include "src/opm/input/eclipse/Schedule/KeywordHandlers.hpp" // TODO: make relative again
 
 #include <string>
 #include <utility>
