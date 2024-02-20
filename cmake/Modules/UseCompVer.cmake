@@ -51,6 +51,7 @@ function (get_ld_version ver_name)
   execute_process (
     COMMAND ${CMAKE_LINKER} -v
     OUTPUT_VARIABLE _version
+    ERROR_VARIABLE _version
   )
 
   # keep only first line, even on Mac OS X there is no line end
