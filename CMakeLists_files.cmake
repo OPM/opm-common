@@ -402,38 +402,38 @@ if(ENABLE_ECL_OUTPUT)
           src/opm/output/data/Aquifer.cpp
           src/opm/output/data/InterRegFlowMap.cpp
           src/opm/output/data/Solution.cpp
-          src/opm/output/eclipse/ActiveIndexByColumns.cpp
-          src/opm/output/eclipse/AggregateActionxData.cpp
-          src/opm/output/eclipse/AggregateAquiferData.cpp
-          src/opm/output/eclipse/AggregateConnectionData.cpp
-          src/opm/output/eclipse/AggregateGroupData.cpp
-          src/opm/output/eclipse/AggregateNetworkData.cpp
-          src/opm/output/eclipse/AggregateMSWData.cpp
-          src/opm/output/eclipse/AggregateUDQData.cpp
-          src/opm/output/eclipse/AggregateWellData.cpp
-          src/opm/output/eclipse/AggregateWListData.cpp
-          src/opm/output/eclipse/CreateActionRSTDims.cpp
-          src/opm/output/eclipse/CreateDoubHead.cpp
-          src/opm/output/eclipse/CreateInteHead.cpp
-          src/opm/output/eclipse/CreateLogiHead.cpp
-          src/opm/output/eclipse/CreateUdqDims.cpp
-          src/opm/output/eclipse/DoubHEAD.cpp
-          src/opm/output/eclipse/EclipseGridInspector.cpp
-          src/opm/output/eclipse/EclipseIO.cpp
-          src/opm/output/eclipse/InteHEAD.cpp
-          src/opm/output/eclipse/LinearisedOutputTable.cpp
-          src/opm/output/eclipse/LoadRestart.cpp
-          src/opm/output/eclipse/LogiHEAD.cpp
-          src/opm/output/eclipse/RestartIO.cpp
-          src/opm/output/eclipse/Inplace.cpp
-          src/opm/output/eclipse/Summary.cpp
-          src/opm/output/eclipse/Tables.cpp
-          src/opm/output/eclipse/UDQDims.cpp
-          src/opm/output/eclipse/RegionCache.cpp
-          src/opm/output/eclipse/RestartValue.cpp
-          src/opm/output/eclipse/WriteInit.cpp
-          src/opm/output/eclipse/WriteRFT.cpp
-          src/opm/output/eclipse/WriteRPT.cpp
+          opm/output/eclipse/ActiveIndexByColumns.cpp
+          opm/output/eclipse/AggregateActionxData.cpp
+          opm/output/eclipse/AggregateAquiferData.cpp
+          opm/output/eclipse/AggregateConnectionData.cpp
+          opm/output/eclipse/AggregateGroupData.cpp
+          opm/output/eclipse/AggregateNetworkData.cpp
+          opm/output/eclipse/AggregateMSWData.cpp
+          opm/output/eclipse/AggregateUDQData.cpp
+          opm/output/eclipse/AggregateWellData.cpp
+          opm/output/eclipse/AggregateWListData.cpp
+          opm/output/eclipse/CreateActionRSTDims.cpp
+          opm/output/eclipse/CreateDoubHead.cpp
+          opm/output/eclipse/CreateInteHead.cpp
+          opm/output/eclipse/CreateLogiHead.cpp
+          opm/output/eclipse/CreateUdqDims.cpp
+          opm/output/eclipse/DoubHEAD.cpp
+          opm/output/eclipse/EclipseGridInspector.cpp
+          opm/output/eclipse/EclipseIO.cpp
+          opm/output/eclipse/InteHEAD.cpp
+          opm/output/eclipse/LinearisedOutputTable.cpp
+          opm/output/eclipse/LoadRestart.cpp
+          opm/output/eclipse/LogiHEAD.cpp
+          opm/output/eclipse/RestartIO.cpp
+          opm/output/eclipse/Inplace.cpp
+          opm/output/eclipse/Summary.cpp
+          opm/output/eclipse/Tables.cpp
+          opm/output/eclipse/UDQDims.cpp
+          opm/output/eclipse/RegionCache.cpp
+          opm/output/eclipse/RestartValue.cpp
+          opm/output/eclipse/WriteInit.cpp
+          opm/output/eclipse/WriteRFT.cpp
+          opm/output/eclipse/WriteRPT.cpp
           src/opm/output/eclipse/report/WELSPECS.cpp
           opm/utility/EModel.cpp
       )
