@@ -99,7 +99,7 @@ if(ENABLE_ECL_INPUT)
     src/opm/input/eclipse/Deck/DeckSection.cpp
     src/opm/input/eclipse/Deck/ImportContainer.cpp
     src/opm/input/eclipse/Deck/UDAValue.cpp
-    src/opm/input/eclipse/Python/Python.cpp
+    opm/input/eclipse/Python/Python.cpp
     src/opm/input/eclipse/Schedule/Action/PyAction.cpp
     opm/input/eclipse/EclipseState/Aquifer/AquiferConfig.cpp
     opm/input/eclipse/EclipseState/Aquifer/AquiferFlux.cpp
@@ -359,11 +359,11 @@ if(ENABLE_ECL_INPUT)
 
   if (OPM_ENABLE_EMBEDDED_PYTHON)
     set_source_files_properties(${PYTHON_CXX_SOURCE_FILES} PROPERTIES COMPILE_FLAGS -Wno-shadow)
-    set_source_files_properties(src/opm/input/eclipse/Python/PythonInterp.cpp PROPERTIES COMPILE_FLAGS -Wno-shadow)
-    set_source_files_properties(src/opm/input/eclipse/Schedule/Action/PyAction.cpp PROPERTIES COMPILE_FLAGS -Wno-shadow)
+    set_source_files_properties(opm/input/eclipse/Python/PythonInterp.cpp PROPERTIES COMPILE_FLAGS -Wno-shadow)
+    set_source_files_properties(opm/input/eclipse/Schedule/Action/PyAction.cpp PROPERTIES COMPILE_FLAGS -Wno-shadow)
     list( APPEND MAIN_SOURCE_FILES
-      src/opm/input/eclipse/Python/PythonInterp.cpp
-      src/opm/input/eclipse/Python/PyRunModule.cpp
+      opm/input/eclipse/Python/PythonInterp.cpp
+      opm/input/eclipse/Python/PyRunModule.cpp
       ${PYTHON_CXX_SOURCE_FILES})
   endif()
 
