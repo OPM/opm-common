@@ -52,7 +52,7 @@ list (APPEND MAIN_SOURCE_FILES
       opm/material/common/UniformXTabulated2DFunction.cpp
       src/opm/material/components/CO2.cpp
       src/opm/material/components/H2.cpp
-      src/opm/material/densead/Evaluation.cpp
+      opm/material/densead/Evaluation.cpp
       src/opm/material/fluidmatrixinteractions/EclEpsScalingPoints.cpp
       src/opm/material/fluidsystems/BlackOilFluidSystem.cpp
       src/opm/material/fluidsystems/blackoilpvt/DeadOilPvt.cpp
