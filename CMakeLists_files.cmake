@@ -399,9 +399,9 @@ if(ENABLE_ECL_OUTPUT)
           opm/io/eclipse/rst/segment.cpp
           opm/io/eclipse/rst/state.cpp
           opm/io/eclipse/rst/well.cpp
-          src/opm/output/data/Aquifer.cpp
-          src/opm/output/data/InterRegFlowMap.cpp
-          src/opm/output/data/Solution.cpp
+          opm/output/data/Aquifer.cpp
+          opm/output/data/InterRegFlowMap.cpp
+          opm/output/data/Solution.cpp
           opm/output/eclipse/ActiveIndexByColumns.cpp
           opm/output/eclipse/AggregateActionxData.cpp
           opm/output/eclipse/AggregateAquiferData.cpp
