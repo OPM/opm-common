@@ -89,8 +89,8 @@
 
 #include "HandlerContext.hpp"
 #include "KeywordHandlers.hpp"
-#include "MSW/Compsegs.hpp"
-#include "MSW/WelSegsSet.hpp"
+#include "opm/input/eclipse/Schedule/MSW/Compsegs.hpp" // TODO: make relative again
+#include "opm/input/eclipse/Schedule/MSW/WelSegsSet.hpp" // TODO: make relative again
 #include "opm/input/eclipse/Schedule/Well/injection.hpp" // TODO: make relative again
 
 #include <algorithm>

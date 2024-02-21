@@ -184,16 +184,16 @@ if(ENABLE_ECL_INPUT)
     src/opm/input/eclipse/Schedule/KeywordHandlers.cpp
     src/opm/input/eclipse/Schedule/MessageLimits.cpp
     src/opm/input/eclipse/Schedule/MixingRateControlKeywordHandlers.cpp
-    src/opm/input/eclipse/Schedule/MSW/icd.cpp
-    src/opm/input/eclipse/Schedule/MSW/Compsegs.cpp
-    src/opm/input/eclipse/Schedule/MSW/MSWKeywordHandlers.cpp
-    src/opm/input/eclipse/Schedule/MSW/Segment.cpp
-    src/opm/input/eclipse/Schedule/MSW/SegmentMatcher.cpp
-    src/opm/input/eclipse/Schedule/MSW/WellSegments.cpp
-    src/opm/input/eclipse/Schedule/MSW/WelSegsSet.cpp
-    src/opm/input/eclipse/Schedule/MSW/AICD.cpp
-    src/opm/input/eclipse/Schedule/MSW/SICD.cpp
-    src/opm/input/eclipse/Schedule/MSW/Valve.cpp
+    opm/input/eclipse/Schedule/MSW/AICD.cpp
+    opm/input/eclipse/Schedule/MSW/Compsegs.cpp
+    opm/input/eclipse/Schedule/MSW/icd.cpp
+    opm/input/eclipse/Schedule/MSW/MSWKeywordHandlers.cpp
+    opm/input/eclipse/Schedule/MSW/Segment.cpp
+    opm/input/eclipse/Schedule/MSW/SegmentMatcher.cpp
+    opm/input/eclipse/Schedule/MSW/SICD.cpp
+    opm/input/eclipse/Schedule/MSW/Valve.cpp
+    opm/input/eclipse/Schedule/MSW/WellSegments.cpp
+    opm/input/eclipse/Schedule/MSW/WelSegsSet.cpp
     opm/input/eclipse/Schedule/Network/Balance.cpp
     opm/input/eclipse/Schedule/Network/Branch.cpp
     opm/input/eclipse/Schedule/Network/ExtNetwork.cpp

@@ -49,7 +49,7 @@
 #include "opm/input/eclipse/Schedule/Group/GuideRateKeywordHandlers.hpp" // TODO: make relative again
 #include "HandlerContext.hpp"
 #include "MixingRateControlKeywordHandlers.hpp"
-#include "MSW/MSWKeywordHandlers.hpp"
+#include "opm/input/eclipse/Schedule/MSW/MSWKeywordHandlers.hpp" // TODO: make relative again
 #include "opm/input/eclipse/Schedule/Network/NetworkKeywordHandlers.hpp" // TODO: make relative again
 #include "RXXKeywordHandlers.hpp"
 #include "UDQ/UDQKeywordHandlers.hpp"
