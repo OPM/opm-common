@@ -39,7 +39,7 @@
 #include <opm/input/eclipse/Parser/ParserRecord.hpp>
 #include <opm/common/OpmLog/KeywordLocation.hpp>
 
-#include "src/opm/input/eclipse/Parser/raw/RawRecord.hpp"
+#include "../../opm/input/eclipse/Parser/raw/RawRecord.hpp"
 
 using namespace Opm;
 

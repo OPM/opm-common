@@ -297,17 +297,17 @@ if(ENABLE_ECL_INPUT)
     src/opm/input/eclipse/Schedule/UDQ/UDT.cpp
     src/opm/input/eclipse/Schedule/VFPInjTable.cpp
     src/opm/input/eclipse/Schedule/VFPProdTable.cpp
-    src/opm/input/eclipse/Parser/ErrorGuard.cpp
-    src/opm/input/eclipse/Parser/InputErrorAction.cpp
-    src/opm/input/eclipse/Parser/ParseContext.cpp
-    src/opm/input/eclipse/Parser/Parser.cpp
-    src/opm/input/eclipse/Parser/ParserEnums.cpp
-    src/opm/input/eclipse/Parser/ParserItem.cpp
-    src/opm/input/eclipse/Parser/ParserKeyword.cpp
-    src/opm/input/eclipse/Parser/ParserRecord.cpp
-    src/opm/input/eclipse/Parser/raw/RawKeyword.cpp
-    src/opm/input/eclipse/Parser/raw/RawRecord.cpp
-    src/opm/input/eclipse/Parser/raw/StarToken.cpp
+    opm/input/eclipse/Parser/ErrorGuard.cpp
+    opm/input/eclipse/Parser/InputErrorAction.cpp
+    opm/input/eclipse/Parser/ParseContext.cpp
+    opm/input/eclipse/Parser/Parser.cpp
+    opm/input/eclipse/Parser/ParserEnums.cpp
+    opm/input/eclipse/Parser/ParserItem.cpp
+    opm/input/eclipse/Parser/ParserKeyword.cpp
+    opm/input/eclipse/Parser/ParserRecord.cpp
+    opm/input/eclipse/Parser/raw/RawKeyword.cpp
+    opm/input/eclipse/Parser/raw/RawRecord.cpp
+    opm/input/eclipse/Parser/raw/StarToken.cpp
     opm/input/eclipse/Units/Dimension.cpp
     opm/input/eclipse/Units/UnitSystem.cpp
     src/opm/input/eclipse/Utility/Functional.cpp
