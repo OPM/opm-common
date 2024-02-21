@@ -707,7 +707,13 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
       Well pointer that will go stale and needs to be refreshed.
     */
     bool Schedule::updateWellStatus( const std::string& well_name, std::size_t reportStep , Well::Status status, std::optional<KeywordLocation> location) {
+
+        bool update2 = false;
+        bool update = false;
+        if (reportStep==0){
+        
         auto well2 = this->snapshots[reportStep].wells.get(well_name);
+      
         if (well2.getConnections().empty() && status == Well::Status::OPEN) {
             if (location) {
                 auto msg = fmt::format("Problem with {}\n"
@@ -718,9 +724,44 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                 OpmLog::warning(fmt::format("Well {} has no connections to grid and will remain SHUT", well_name));
             return false;
         }
-
+        
         auto old_status = well2.getStatus();
-        bool update = false;
+        //bool update = false;
+        if (well2.updateStatus(status)) {
+            if (status == Well::Status::OPEN) {
+                auto new_rft = this->snapshots.back().rft_config().well_open(well_name);
+                if (new_rft.has_value())
+                    this->snapshots.back().rft_config.update( std::move(*new_rft) );
+            }
+
+            if (old_status != status) {
+                this->snapshots.back().events().addEvent( ScheduleEvents::WELL_STATUS_CHANGE);
+                this->snapshots.back().wellgroup_events().addEvent( well2.name(), ScheduleEvents::WELL_STATUS_CHANGE);
+            }
+
+
+            this->snapshots[reportStep].wells.update( well2 );
+           
+            update = true;
+        }
+ 
+        }else{
+        auto well2 = this->snapshots[reportStep].wells.get(well_name);
+        auto well3 = this->snapshots[reportStep+1].wells.get(well_name);
+        
+        if (well2.getConnections().empty() && status == Well::Status::OPEN) {
+            if (location) {
+                auto msg = fmt::format("Problem with{}\n",
+                                       "In {} line{}\n"
+                                       "Well {} has no connections to grid and will remain SHUT", location->keyword, location->filename, location->lineno, well_name);
+                OpmLog::warning(msg);
+            } else
+                OpmLog::warning(fmt::format("Well {} has no connections to grid and will remain SHUT", well_name));
+            return false;
+        }
+        
+        auto old_status = well2.getStatus();
+        //bool update = false;
         if (well2.updateStatus(status)) {
             if (status == Well::Status::OPEN) {
                 auto new_rft = this->snapshots.back().rft_config().well_open(well_name);
@@ -739,12 +780,36 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                 this->snapshots.back().events().addEvent( ScheduleEvents::WELL_STATUS_CHANGE);
                 this->snapshots.back().wellgroup_events().addEvent( well2.name(), ScheduleEvents::WELL_STATUS_CHANGE);
             }
-            this->snapshots[reportStep].wells.update( std::move(well2) );
+
+            //Well well3=well2;
+
+            this->snapshots[reportStep].wells.update( well2 );
+           
             update = true;
         }
+        auto old_status2 = well3.getStatus();
+        //bool update2 = false;
+        if (well3.updateStatus(status)) {
+            if (status == Well::Status::OPEN) {
+                auto new_rft2 = this->snapshots.back().rft_config().well_open(well_name);
+                if (new_rft2.has_value())
+                    this->snapshots.back().rft_config.update( std::move(*new_rft2) );
+            }
+            
+            if (old_status2 != status) {
+                this->snapshots.back().events().addEvent( ScheduleEvents::WELL_STATUS_CHANGE);
+                this->snapshots.back().wellgroup_events().addEvent( well3.name(), ScheduleEvents::WELL_STATUS_CHANGE);
+            }
+            this->snapshots[reportStep+1].wells.update( well3 );
+            update2= true;
+        }
+        }
+
+
+
         return update;
     }
-
+ 
 
     bool Schedule::updateWPAVE(const std::string& wname, std::size_t report_step, const PAvg& pavg) {
         const auto& well = this->getWell(wname, report_step);
@@ -1569,7 +1634,10 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
             sim_update = this->applyAction(reportStep, action_name, matching_wells);
         };
 
+        //fieldP=fieldProps(ecl_state)
+
         auto result = pyaction.run(ecl_state, *this, reportStep, summary_state, apply_action_callback);
+        //change ecl_state here
         action_state.add_run(pyaction, result);
         return sim_update;
     }
