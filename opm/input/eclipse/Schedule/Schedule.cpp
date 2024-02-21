@@ -24,6 +24,7 @@
 #include <opm/common/OpmLog/LogUtil.hpp>
 #include <opm/common/OpmLog/OpmLog.hpp>
 #include <opm/common/utility/OpmInputError.hpp>
+#include <opm/input/eclipse/Parser/InputErrorAction.hpp>
 #include <opm/common/utility/String.hpp>
 #include <opm/common/utility/numeric/cmp.hpp>
 #include <opm/common/utility/shmatch.hpp>
@@ -246,7 +247,7 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const std::optional
     Schedule Schedule::serializationTestObject()
     {
         Schedule result;
-
+        result.m_treat_critical_as_non_critical = false;
         result.m_static = ScheduleStatic::serializationTestObject();
         result.m_sched_deck = ScheduleDeck::serializationTestObject();
         result.action_wgnames = Action::WGNames::serializationTestObject();
@@ -1414,6 +1415,10 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
     {
         const std::string prefix = "| ";
         ParseContext parseContext;
+        if (this->m_treat_critical_as_non_critical) { // Continue with invalid names if parsing strictness is set to low
+            parseContext.update(ParseContext::SCHEDULE_INVALID_NAME, InputErrorAction::WARN);
+        }
+
         ErrorGuard errors;
         SimulatorUpdate sim_update;
         ScheduleGrid grid(this->completed_cells);
@@ -1651,6 +1656,7 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
 
     bool Schedule::operator==(const Schedule& data) const {
         return this->m_static == data.m_static &&
+               this->m_treat_critical_as_non_critical == data.m_treat_critical_as_non_critical &&
                this->m_sched_deck == data.m_sched_deck &&
                this->action_wgnames == data.action_wgnames &&
                this->exit_status == data.exit_status &&
