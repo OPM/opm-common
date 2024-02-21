@@ -19,7 +19,7 @@
 
 #include "UDQKeywordHandlers.hpp"
 
-#include "../HandlerContext.hpp"
+#include "src/opm/input/eclipse/Schedule/HandlerContext.hpp" // TODO: make relative again
 
 #include <opm/common/utility/OpmInputError.hpp>
 

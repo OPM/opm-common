@@ -278,23 +278,23 @@ if(ENABLE_ECL_INPUT)
     opm/input/eclipse/EclipseState/Tables/BrineDensityTable.cpp
     opm/input/eclipse/EclipseState/Tables/SolventDensityTable.cpp
     opm/input/eclipse/EclipseState/Tables/Tabdims.cpp
-    src/opm/input/eclipse/Schedule/UDQ/UDQKeywordHandlers.cpp
-    src/opm/input/eclipse/Schedule/UDQ/UDQActive.cpp
-    src/opm/input/eclipse/Schedule/UDQ/UDQAssign.cpp
-    src/opm/input/eclipse/Schedule/UDQ/UDQASTNode.cpp
-    src/opm/input/eclipse/Schedule/UDQ/UDQConfig.cpp
-    src/opm/input/eclipse/Schedule/UDQ/UDQContext.cpp
-    src/opm/input/eclipse/Schedule/UDQ/UDQDefine.cpp
-    src/opm/input/eclipse/Schedule/UDQ/UDQEnums.cpp
-    src/opm/input/eclipse/Schedule/UDQ/UDQFunction.cpp
-    src/opm/input/eclipse/Schedule/UDQ/UDQFunctionTable.cpp
-    src/opm/input/eclipse/Schedule/UDQ/UDQInput.cpp
-    src/opm/input/eclipse/Schedule/UDQ/UDQParams.cpp
-    src/opm/input/eclipse/Schedule/UDQ/UDQParser.cpp
-    src/opm/input/eclipse/Schedule/UDQ/UDQSet.cpp
-    src/opm/input/eclipse/Schedule/UDQ/UDQState.cpp
-    src/opm/input/eclipse/Schedule/UDQ/UDQToken.cpp
-    src/opm/input/eclipse/Schedule/UDQ/UDT.cpp
+    opm/input/eclipse/Schedule/UDQ/UDQKeywordHandlers.cpp
+    opm/input/eclipse/Schedule/UDQ/UDQActive.cpp
+    opm/input/eclipse/Schedule/UDQ/UDQAssign.cpp
+    opm/input/eclipse/Schedule/UDQ/UDQASTNode.cpp
+    opm/input/eclipse/Schedule/UDQ/UDQConfig.cpp
+    opm/input/eclipse/Schedule/UDQ/UDQContext.cpp
+    opm/input/eclipse/Schedule/UDQ/UDQDefine.cpp
+    opm/input/eclipse/Schedule/UDQ/UDQEnums.cpp
+    opm/input/eclipse/Schedule/UDQ/UDQFunction.cpp
+    opm/input/eclipse/Schedule/UDQ/UDQFunctionTable.cpp
+    opm/input/eclipse/Schedule/UDQ/UDQInput.cpp
+    opm/input/eclipse/Schedule/UDQ/UDQParams.cpp
+    opm/input/eclipse/Schedule/UDQ/UDQParser.cpp
+    opm/input/eclipse/Schedule/UDQ/UDQSet.cpp
+    opm/input/eclipse/Schedule/UDQ/UDQState.cpp
+    opm/input/eclipse/Schedule/UDQ/UDQToken.cpp
+    opm/input/eclipse/Schedule/UDQ/UDT.cpp
     src/opm/input/eclipse/Schedule/VFPInjTable.cpp
     src/opm/input/eclipse/Schedule/VFPProdTable.cpp
     opm/input/eclipse/Parser/ErrorGuard.cpp

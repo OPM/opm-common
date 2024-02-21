@@ -52,7 +52,7 @@
 #include "opm/input/eclipse/Schedule/MSW/MSWKeywordHandlers.hpp" // TODO: make relative again
 #include "opm/input/eclipse/Schedule/Network/NetworkKeywordHandlers.hpp" // TODO: make relative again
 #include "RXXKeywordHandlers.hpp"
-#include "UDQ/UDQKeywordHandlers.hpp"
+#include "opm/input/eclipse/Schedule/UDQ/UDQKeywordHandlers.hpp" // TODO: make relative again
 #include "opm/input/eclipse/Schedule/Well/WellCompletionKeywordHandlers.hpp" // TODO: make relative again
 #include "opm/input/eclipse/Schedule/Well/WellKeywordHandlers.hpp"// TODO: make relative again
 #include "opm/input/eclipse/Schedule/Well/WellPropertiesKeywordHandlers.hpp" // TODO: make relative again
