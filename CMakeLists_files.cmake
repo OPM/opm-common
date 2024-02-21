@@ -100,7 +100,6 @@ if(ENABLE_ECL_INPUT)
     opm/input/eclipse/Deck/ImportContainer.cpp
     opm/input/eclipse/Deck/UDAValue.cpp
     opm/input/eclipse/Python/Python.cpp
-    src/opm/input/eclipse/Schedule/Action/PyAction.cpp
     opm/input/eclipse/EclipseState/Aquifer/AquiferConfig.cpp
     opm/input/eclipse/EclipseState/Aquifer/AquiferFlux.cpp
     opm/input/eclipse/EclipseState/Aquifer/AquiferCT.cpp
@@ -149,19 +148,20 @@ if(ENABLE_ECL_INPUT)
     opm/input/eclipse/EclipseState/InitConfig/InitConfig.cpp
     src/opm/input/eclipse/EclipseState/IOConfig/FIPConfig.cpp
     src/opm/input/eclipse/EclipseState/IOConfig/IOConfig.cpp
-    src/opm/input/eclipse/Schedule/Action/ActionAST.cpp
-    src/opm/input/eclipse/Schedule/Action/ActionContext.cpp
-    src/opm/input/eclipse/Schedule/Action/ActionResult.cpp
-    src/opm/input/eclipse/Schedule/Action/Actdims.cpp
-    src/opm/input/eclipse/Schedule/Action/Actions.cpp
-    src/opm/input/eclipse/Schedule/Action/ActionX.cpp
-    src/opm/input/eclipse/Schedule/Action/ActionParser.cpp
-    src/opm/input/eclipse/Schedule/Action/ActionValue.cpp
-    src/opm/input/eclipse/Schedule/Action/ASTNode.cpp
-    src/opm/input/eclipse/Schedule/Action/Condition.cpp
-    src/opm/input/eclipse/Schedule/Action/Enums.cpp
-    src/opm/input/eclipse/Schedule/Action/State.cpp
-    src/opm/input/eclipse/Schedule/Action/WGNames.cpp
+    opm/input/eclipse/Schedule/Action/ActionAST.cpp
+    opm/input/eclipse/Schedule/Action/ActionContext.cpp
+    opm/input/eclipse/Schedule/Action/ActionResult.cpp
+    opm/input/eclipse/Schedule/Action/Actdims.cpp
+    opm/input/eclipse/Schedule/Action/Actions.cpp
+    opm/input/eclipse/Schedule/Action/ActionX.cpp
+    opm/input/eclipse/Schedule/Action/ActionParser.cpp
+    opm/input/eclipse/Schedule/Action/ActionValue.cpp
+    opm/input/eclipse/Schedule/Action/ASTNode.cpp
+    opm/input/eclipse/Schedule/Action/Condition.cpp
+    opm/input/eclipse/Schedule/Action/Enums.cpp
+    opm/input/eclipse/Schedule/Action/PyAction.cpp
+    opm/input/eclipse/Schedule/Action/State.cpp
+    opm/input/eclipse/Schedule/Action/WGNames.cpp
     src/opm/input/eclipse/Schedule/ArrayDimChecker.cpp
     src/opm/input/eclipse/Schedule/BCProp.cpp
     src/opm/input/eclipse/Schedule/CompletedCells.cpp
