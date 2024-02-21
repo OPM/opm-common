@@ -1,14 +1,14 @@
 set(genkw_SOURCES opm/json/JsonObject.cpp
                   src/opm/input/eclipse/Parser/createDefaultKeywordList.cpp
-                  src/opm/input/eclipse/Deck/UDAValue.cpp
-                  src/opm/input/eclipse/Deck/DeckTree.cpp
-                  src/opm/input/eclipse/Deck/DeckValue.cpp
-                  src/opm/input/eclipse/Deck/Deck.cpp
-                  src/opm/input/eclipse/Deck/DeckView.cpp
-                  src/opm/input/eclipse/Deck/DeckItem.cpp
-                  src/opm/input/eclipse/Deck/DeckKeyword.cpp
-                  src/opm/input/eclipse/Deck/DeckRecord.cpp
-                  src/opm/input/eclipse/Deck/DeckOutput.cpp
+                  opm/input/eclipse/Deck/DeckTree.cpp
+                  opm/input/eclipse/Deck/DeckValue.cpp
+                  opm/input/eclipse/Deck/Deck.cpp
+                  opm/input/eclipse/Deck/DeckView.cpp
+                  opm/input/eclipse/Deck/DeckItem.cpp
+                  opm/input/eclipse/Deck/DeckKeyword.cpp
+                  opm/input/eclipse/Deck/DeckRecord.cpp
+                  opm/input/eclipse/Deck/DeckOutput.cpp
+                  opm/input/eclipse/Deck/UDAValue.cpp
                   opm/input/eclipse/Generator/KeywordGenerator.cpp
                   opm/input/eclipse/Generator/KeywordLoader.cpp
                   src/opm/input/eclipse/Schedule/UDQ/UDQEnums.cpp

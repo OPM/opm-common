@@ -87,18 +87,18 @@ if(ENABLE_ECL_INPUT)
     external/resinsight/cafHexGridIntersectionTools/cafHexGridIntersectionTools.cpp
     opm/io/eclipse/SummaryNode.cpp
     opm/json/JsonObject.cpp
-    src/opm/input/eclipse/Deck/Deck.cpp
-    src/opm/input/eclipse/Deck/DeckView.cpp
-    src/opm/input/eclipse/Deck/DeckTree.cpp
-    src/opm/input/eclipse/Deck/FileDeck.cpp
-    src/opm/input/eclipse/Deck/DeckItem.cpp
-    src/opm/input/eclipse/Deck/DeckValue.cpp
-    src/opm/input/eclipse/Deck/DeckKeyword.cpp
-    src/opm/input/eclipse/Deck/DeckRecord.cpp
-    src/opm/input/eclipse/Deck/DeckOutput.cpp
-    src/opm/input/eclipse/Deck/DeckSection.cpp
-    src/opm/input/eclipse/Deck/ImportContainer.cpp
-    src/opm/input/eclipse/Deck/UDAValue.cpp
+    opm/input/eclipse/Deck/Deck.cpp
+    opm/input/eclipse/Deck/DeckView.cpp
+    opm/input/eclipse/Deck/DeckTree.cpp
+    opm/input/eclipse/Deck/FileDeck.cpp
+    opm/input/eclipse/Deck/DeckItem.cpp
+    opm/input/eclipse/Deck/DeckValue.cpp
+    opm/input/eclipse/Deck/DeckKeyword.cpp
+    opm/input/eclipse/Deck/DeckRecord.cpp
+    opm/input/eclipse/Deck/DeckOutput.cpp
+    opm/input/eclipse/Deck/DeckSection.cpp
+    opm/input/eclipse/Deck/ImportContainer.cpp
+    opm/input/eclipse/Deck/UDAValue.cpp
     opm/input/eclipse/Python/Python.cpp
     src/opm/input/eclipse/Schedule/Action/PyAction.cpp
     opm/input/eclipse/EclipseState/Aquifer/AquiferConfig.cpp
