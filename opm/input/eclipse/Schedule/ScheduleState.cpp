@@ -379,8 +379,8 @@ Tuning& ScheduleState::tuning() {
 }
 
 // Returns -1 if there is no active limit on next step (from TUNING or NEXT[STEP])
-double ScheduleState::max_next_tstep() const {
-    double tuning_value = this->m_tuning.TSINIT.has_value() ? this->m_tuning.TSINIT.value() : -1.0;
+double ScheduleState::max_next_tstep(const bool enableTUNING) const {
+    double tuning_value = (enableTUNING && this->m_tuning.TSINIT.has_value())  ? this->m_tuning.TSINIT.value() : -1.0;
     double next_value = this->next_tstep.has_value() ? this->next_tstep->value() : -1.0;
     return std::max(next_value, tuning_value);
 }

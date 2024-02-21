@@ -354,7 +354,8 @@ BOOST_AUTO_TEST_CASE(TuningTest) {
       const auto& event = schedule[timestep].events();
       BOOST_CHECK(event.hasEvent(ScheduleEvents::TUNING_CHANGE));
 
-      BOOST_CHECK_CLOSE(schedule[timestep].max_next_tstep(), 2*Metric::Time, diff);
+      /* Assume --enable-tuning=true, so the next time step spec in TUNING has an effect */
+      BOOST_CHECK_CLOSE(schedule[timestep].max_next_tstep(true), 2*Metric::Time, diff);
   }
 
   /*** TIMESTEP 10 ***/

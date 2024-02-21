@@ -331,7 +331,7 @@ namespace Opm {
         void update_tuning(Tuning tuning);
         Tuning& tuning();
         const Tuning& tuning() const;
-        double max_next_tstep() const;
+        double max_next_tstep(const bool enableTUNING = false) const;
 
         void init_nupcol(Nupcol nupcol);
         void update_nupcol(int nupcol);
