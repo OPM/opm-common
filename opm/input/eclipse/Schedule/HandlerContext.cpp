@@ -31,8 +31,7 @@
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 #include <opm/input/eclipse/Schedule/Well/Well.hpp>
 
-
-#include "opm/input/eclipse/Schedule/MSW/WelSegsSet.hpp" // TODO: make relative again
+#include "MSW/WelSegsSet.hpp"
 
 #include <fmt/format.h>
 

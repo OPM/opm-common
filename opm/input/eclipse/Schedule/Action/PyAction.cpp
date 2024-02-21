@@ -19,7 +19,7 @@
 #include <memory>
 
 #ifdef EMBEDDED_PYTHON
-#include "opm/input/eclipse/Python/PyRunModule.hpp" // TODO: make relative again
+#include "../../Python/PyRunModule.hpp"
 #include <pybind11/embed.h>
 #include <pybind11/pybind11.h>
 namespace py = pybind11;

@@ -45,17 +45,17 @@
 #include <opm/input/eclipse/Parser/ParserKeywords/P.hpp>
 
 #include "GasLiftOptKeywordHandlers.hpp"
-#include "opm/input/eclipse/Schedule/Group/GroupKeywordHandlers.hpp" // TODO: make relative again
-#include "opm/input/eclipse/Schedule/Group/GuideRateKeywordHandlers.hpp" // TODO: make relative again
+#include "Group/GroupKeywordHandlers.hpp"
+#include "Group/GuideRateKeywordHandlers.hpp"
 #include "HandlerContext.hpp"
 #include "MixingRateControlKeywordHandlers.hpp"
-#include "opm/input/eclipse/Schedule/MSW/MSWKeywordHandlers.hpp" // TODO: make relative again
-#include "opm/input/eclipse/Schedule/Network/NetworkKeywordHandlers.hpp" // TODO: make relative again
+#include "MSW/MSWKeywordHandlers.hpp"
+#include "Network/NetworkKeywordHandlers.hpp"
 #include "RXXKeywordHandlers.hpp"
-#include "opm/input/eclipse/Schedule/UDQ/UDQKeywordHandlers.hpp" // TODO: make relative again
-#include "opm/input/eclipse/Schedule/Well/WellCompletionKeywordHandlers.hpp" // TODO: make relative again
-#include "opm/input/eclipse/Schedule/Well/WellKeywordHandlers.hpp"// TODO: make relative again
-#include "opm/input/eclipse/Schedule/Well/WellPropertiesKeywordHandlers.hpp" // TODO: make relative again
+#include "UDQ/UDQKeywordHandlers.hpp"
+#include "Well/WellCompletionKeywordHandlers.hpp"
+#include "Well/WellKeywordHandlers.hpp"
+#include "Well/WellPropertiesKeywordHandlers.hpp"
 
 #include <fmt/format.h>
 

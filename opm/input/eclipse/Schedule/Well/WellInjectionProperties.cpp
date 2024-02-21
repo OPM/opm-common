@@ -29,7 +29,7 @@
 #include <opm/input/eclipse/Schedule/ScheduleTypes.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQActive.hpp>
 
-#include "src/opm/input/eclipse/Schedule/eval_uda.hpp" // TODO: make relative again
+#include "../eval_uda.hpp"
 
 #include <fmt/format.h>
 

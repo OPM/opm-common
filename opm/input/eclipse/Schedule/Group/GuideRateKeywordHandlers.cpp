@@ -30,7 +30,7 @@
 #include <opm/input/eclipse/Schedule/ScheduleState.hpp>
 #include <opm/input/eclipse/Schedule/Well/Well.hpp>
 
-#include "src/opm/input/eclipse/Schedule/HandlerContext.hpp" // TODO: make relative again
+#include "../HandlerContext.hpp"
 
 namespace Opm {
 

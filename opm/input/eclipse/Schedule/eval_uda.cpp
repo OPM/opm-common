@@ -17,13 +17,13 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include "eval_uda.hpp"
 
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
 #include <opm/input/eclipse/Deck/UDAValue.hpp>
 #include <opm/input/eclipse/Schedule/SummaryState.hpp>
 
-#include "opm/input/eclipse/Schedule/Well/injection.hpp" // TODO: make relative again
-#include "eval_uda.hpp"
+#include "Well/injection.hpp"
 
 namespace Opm {
 namespace UDA {

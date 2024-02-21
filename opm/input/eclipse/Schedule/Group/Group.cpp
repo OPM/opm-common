@@ -24,7 +24,7 @@
 
 #include <opm/io/eclipse/rst/group.hpp>
 
-#include "src/opm/input/eclipse/Schedule/eval_uda.hpp" // TODO: make relative again
+#include "../eval_uda.hpp"
 
 #include <fmt/format.h>
 
