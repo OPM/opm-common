@@ -104,7 +104,7 @@ BOOST_AUTO_TEST_CASE(TuningTest) {
       // Because NEXTSTEP is persistent a tuning event is triggered at each report step
       BOOST_CHECK(event.hasEvent(ScheduleEvents::TUNING_CHANGE));
 
-			const auto& tuning = schedule[timestep].tuning();
+      const auto& tuning = schedule[timestep].tuning();
       std::optional<double> TSINIT_default = tuning.TSINIT;
       BOOST_CHECK(TSINIT_default == std::nullopt);
 

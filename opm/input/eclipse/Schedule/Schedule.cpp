@@ -746,6 +746,12 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
         return update;
     }
 
+    void Schedule::clear_event(ScheduleEvents::Events event, std::size_t report_step) {
+        auto events = this->snapshots[report_step].events();
+        events.clearEvent(event);
+        this->snapshots[report_step].update_events(events);
+    }
+
 
     bool Schedule::updateWPAVE(const std::string& wname, std::size_t report_step, const PAvg& pavg) {
         const auto& well = this->getWell(wname, report_step);

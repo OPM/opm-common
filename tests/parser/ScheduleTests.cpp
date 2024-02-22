@@ -6028,3 +6028,31 @@ SOURCE
                       schedule.getUnits().to_si("Mass/Time", 0.01));
     }
 }
+
+BOOST_AUTO_TEST_CASE(clearEvent) {
+    std::string input = R"(
+START             -- 0
+19 JUN 2007 /
+
+SOLUTION
+
+SCHEDULE
+DATES             -- 1
+ 10  OKT 2008 /
+/
+
+NEXTSTEP
+ 10 /
+
+DATES             -- 1
+ 10  NOV 2008 /
+/
+)";
+    
+    auto schedule = make_schedule(input);
+    BOOST_CHECK(schedule[1].events().hasEvent(ScheduleEvents::TUNING_CHANGE));
+    // TUNING_CHANGE because NEXTSTEP cleared
+    BOOST_CHECK(schedule[2].events().hasEvent(ScheduleEvents::TUNING_CHANGE));
+    schedule.clear_event(ScheduleEvents::TUNING_CHANGE, 1);
+    BOOST_CHECK(!schedule[1].events().hasEvent(ScheduleEvents::TUNING_CHANGE));
+}
