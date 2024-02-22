@@ -35,8 +35,6 @@
 
 #include <fmt/format.h>
 
-namespace Opm {
-
 namespace {
 
 static constexpr auto SCHEDIntegerKeywords = std::array {
@@ -164,12 +162,12 @@ bool is_int(const std::string& x)
         && std::all_of(x.begin() + 1, x.end(), is_digit);
 }
 
-bool is_RPTRST_mnemonic( const std::string& kw ) {
-    /* all eclipse 100 keywords we want to not simply ignore. The list is
-     * sorted, so we can use binary_search for log(n) lookup. It is important
-     * that the list is sorted, but these are all the keywords listed in the
-     * manual and unlikely to change at all
-     */
+bool is_RPTRST_mnemonic(const std::string& kw)
+{
+    // Every ECLIPSE 100 keyword we want to not simply ignore when handling
+    // RPTRST.  The list is sorted, so we can use binary_search for log(n)
+    // lookup.  It is important that the list is sorted, but these are all
+    // the keywords listed in the manual and unlikely to change at all
     static constexpr const char* valid[] = {
         "ACIP",     "ACIS",     "ALLPROPS", "BASIC",    "BG",     "BO",
         "BW",       "CELLINDX", "COMPRESS", "CONV",     "DEN",    "DENG",
@@ -185,11 +183,11 @@ bool is_RPTRST_mnemonic( const std::string& kw ) {
         "VWAT",
     };
 
-    return std::binary_search( std::begin( valid ), std::end( valid ), kw );
+    return std::binary_search(std::begin(valid), std::end(valid), kw);
 }
 
-
-bool is_RPTSCHED_mnemonic( const std::string& kw ) {
+bool is_RPTSCHED_mnemonic(const std::string& kw)
+{
     static constexpr const char* valid[] = {
         "ALKALINE", "ANIONS",  "AQUCT",    "AQUFET",   "AQUFETP",  "BFORG",
         "CATIONS",  "CPU",     "DENG",     "DENO",     "DENW",     "ESALPLY",
@@ -211,186 +209,236 @@ bool is_RPTSCHED_mnemonic( const std::string& kw ) {
         "WOC",      "WOCDIFF", "WOCGOC",
     };
 
-    return std::binary_search( std::begin( valid ), std::end( valid ), kw );
+    return std::binary_search(std::begin(valid), std::end(valid), kw);
 }
 
-inline std::map< std::string, int >
-RPTSCHED_integer( const std::vector< int >& ints ) {
-    const size_t size = std::min( ints.size(), SCHEDIntegerKeywords.size() );
+std::map<std::string, int>
+RPTSCHED_integer(const std::vector<int>& ints)
+{
+    const std::size_t size = std::min(ints.size(), SCHEDIntegerKeywords.size());
 
-    std::map< std::string, int > mnemonics;
-    for( size_t i = 0; i < size; ++i )
-        mnemonics[ SCHEDIntegerKeywords[ i ] ] = ints[ i ];
-
-    return mnemonics;
-}
-
-inline std::map< std::string, int >
-RPTRST_integer( const std::vector< int >& ints ) {
-    const size_t PCO_index = 26;
-    const size_t BASIC_index = 0;
-
-    std::map< std::string, int > mnemonics;
-    const size_t size = std::min( ints.size(), RSTIntegerKeywords.size() );
-
-    /* fun with special cases. Eclipse seems to ignore the BASIC=0, interpreting
-     * it as sort-of "don't modify". Handle this by *not* adding/updating the
-     * integer list sourced BASIC mnemonic, should it be zero. I'm not sure if
-     * this applies to other mnemonics, but the eclipse manual indicates that
-     * any zero here should disable the output.
-     *
-     * See https://github.com/OPM/opm-parser/issues/886 for reference
-     *
-     * The current treatment of a mix on RPTRST and RPTSCHED integer keywords is
-     * probably not correct, but it is extremely difficult to comprehend exactly
-     * how it should be. Current code is a rather arbitrary hack to get through
-     * the tests.
-     */
-
-    if (size >= 26) {
-        for( size_t i = 0; i < std::min( size, PCO_index ); ++i )
-            mnemonics[ RSTIntegerKeywords[ i ] ] = ints[ i ];
-    } else {
-        if( size > 0 && ints[ BASIC_index ] != 0)
-            mnemonics[ RSTIntegerKeywords[ BASIC_index ] ] = ints[ BASIC_index ];
-
-        for( size_t i = 1; i < std::min( size, PCO_index ); ++i )
-            mnemonics[ RSTIntegerKeywords[ i ] ] = ints[ i ];
-    }
-
-    for( size_t i = PCO_index + 1; i < size; ++i )
-        mnemonics[ RSTIntegerKeywords[ i ] ] = ints[ i ];
-
-    /* item 27 (index 26) sets both PCOW and PCOG, so we special case it */
-    if( ints.size() >= PCO_index ) {
-        mnemonics[ "PCOW" ] = ints[ PCO_index ];
-        mnemonics[ "PCOG" ] = ints[ PCO_index ];
+    std::map<std::string, int> mnemonics;
+    for (std::size_t i = 0; i < size; ++i) {
+        mnemonics[SCHEDIntegerKeywords[i]] = ints[i];
     }
 
     return mnemonics;
 }
 
+std::map<std::string, int>
+RPTRST_integer(const std::vector<int>& ints)
+{
+    std::map<std::string, int> mnemonics;
 
-template< typename F, typename G >
-inline std::map< std::string, int > RPT( const DeckKeyword& keyword,
-                                         const ParseContext& parseContext,
-                                         ErrorGuard& errors,
-                                         F is_mnemonic,
-                                         G integer_mnemonic ) {
+    const std::size_t PCO_index = 26;
+    const std::size_t BASIC_index = 0;
 
+    const std::size_t size = std::min(ints.size(), RSTIntegerKeywords.size());
+
+    // Fun with special cases.  ECLIPSE seems to ignore the BASIC=0,
+    // interpreting it as sort-of "don't modify".  Handle this by *not*
+    // adding/updating the integer list sourced BASIC mnemonic, should it be
+    // zero.  I'm not sure if this applies to other mnemonics, but the
+    // ECLIPSE manual indicates that any zero here should disable the
+    // output.
+    //
+    // See https://github.com/OPM/opm-parser/issues/886 for reference
+    //
+    // The current treatment of a mix on RPTRST and RPTSCHED integer
+    // keywords is probably not correct, but it is extremely difficult to
+    // comprehend exactly how it should be. Current code is a rather
+    // arbitrary hack to get through the tests.
+
+    if (size >= PCO_index) {
+        for (std::size_t i = 0; i < std::min(size, PCO_index); ++i) {
+            mnemonics[RSTIntegerKeywords[i]] = ints[i];
+        }
+    }
+    else {
+        if ((size > 0) && (ints[BASIC_index] != 0)) {
+            mnemonics[RSTIntegerKeywords[BASIC_index]] = ints[BASIC_index];
+        }
+
+        for (std::size_t i = 1; i < std::min(size, PCO_index); ++i) {
+            mnemonics[RSTIntegerKeywords[i]] = ints[i];
+        }
+    }
+
+    for (std::size_t i = PCO_index + 1; i < size; ++i) {
+        mnemonics[RSTIntegerKeywords[i]] = ints[i];
+    }
+
+    // Item 27 (index 26) sets both PCOW and PCOG, so we special case it here.
+    if (ints.size() > PCO_index) {
+        mnemonics["PCOW"] = ints[PCO_index];
+        mnemonics["PCOG"] = ints[PCO_index];
+    }
+
+    return mnemonics;
+}
+
+template <typename F, typename G>
+std::map<std::string, int>
+RPT(const Opm::DeckKeyword&  keyword,
+    const Opm::ParseContext& parseContext,
+    Opm::ErrorGuard&         errors,
+    F                        is_mnemonic,
+    G                        integer_mnemonic)
+{
     std::vector<std::string> items;
+
     const auto& deck_items = keyword.getStringData();
-    const auto ints = std::any_of( deck_items.begin(), deck_items.end(), is_int );
-    const auto strs = !std::all_of( deck_items.begin(), deck_items.end(), is_int );
+    const auto ints =  std::any_of(deck_items.begin(), deck_items.end(), is_int);
+    const auto strs = !std::all_of(deck_items.begin(), deck_items.end(), is_int);
 
-    /* if any of the values are pure integers we assume this is meant to be the
-     * slash-terminated list of integers way of configuring. If integers and
-     * non-integers are mixed, this is an error; however if the error mode
-     * RPT_MIXED_STYLE is permissive we try some desperate heuristics to
-     * interpret this as list of mnemonics. See the the documentation of the
-     * RPT_MIXED_STYLE error handler for more details.
-     */
-    auto stoi = []( const std::string& str ) { return std::stoi( str ); };
-    if( !strs )
-        return integer_mnemonic( fun::map( stoi, deck_items ) );
-
+    // If any of the values are pure integers we assume this is meant to be
+    // the slash-terminated list of integers way of configuring.  If
+    // integers and non-integers are mixed, this is an error; however if the
+    // error mode RPT_MIXED_STYLE is permissive we try some desperate
+    // heuristics to interpret this as list of mnemonics.  See the
+    // documentation of the RPT_MIXED_STYLE error handler for more details.
+    if (! strs) {
+        auto stoi = [](const std::string& str) { return std::stoi(str); };
+        return integer_mnemonic(Opm::fun::map(stoi, deck_items));
+    }
 
     if (ints && strs) {
+        const auto msg = std::string {
+            "Error in keyword {keyword}--mixing "
+            "mnemonics and integers is not permitted\n"
+            "In {file} line {line}."
+        };
+
         const auto& location = keyword.location();
-        std::string msg = "Error in keyword {keyword}, mixing mnemonics and integers is not allowed\n"
-                          "In {file} line {line}.";
-        parseContext.handleError(ParseContext::RPT_MIXED_STYLE, msg, location, errors);
+        parseContext.handleError(Opm::ParseContext::RPT_MIXED_STYLE,
+                                 msg, location, errors);
 
         std::vector<std::string> stack;
-        for (size_t index=0; index < deck_items.size(); index++) {
+        for (std::size_t index = 0; index < deck_items.size(); ++index) {
             if (is_int(deck_items[index])) {
-
-                if (stack.size() < 2)
-                    throw OpmInputError("Problem processing {keyword}\nIn {file} line {line}.", location);
+                if (stack.size() < 2) {
+                    throw Opm::OpmInputError {
+                        "Problem processing {keyword}\nIn {file} line {line}.", location
+                    };
+                }
 
                 if (stack.back() == "=") {
                     stack.pop_back();
-                    std::string mnemonic = stack.back();
+                    const std::string mnemonic = stack.back();
                     stack.pop_back();
 
                     items.insert(items.begin(), stack.begin(), stack.end());
+
                     stack.clear();
-                    items.push_back( mnemonic + "=" + deck_items[index]);
-                } else
-                    throw OpmInputError("Problem processing {keyword}\nIn {file} line {line}.", location);
-
-            } else
+                    items.push_back(mnemonic + "=" + deck_items[index]);
+                }
+                else {
+                    throw Opm::OpmInputError {
+                        "Problem processing {keyword}\nIn {file} line {line}.", location
+                    };
+                }
+            }
+            else {
                 stack.push_back(deck_items[index]);
+            }
         }
-        items.insert(items.begin(), stack.begin(), stack.end());
-    } else
-        items = deck_items;
 
-    std::map< std::string, int > mnemonics;
-    for( const auto& mnemonic : items ) {
+        items.insert(items.begin(), stack.begin(), stack.end());
+    }
+    else {
+        items = deck_items;
+    }
+
+    std::map<std::string, int> mnemonics;
+    for (const auto& mnemonic : items) {
         const auto sep_pos = mnemonic.find_first_of( "= " );
 
-        std::string base = mnemonic.substr( 0, sep_pos );
-        if( !is_mnemonic( base ) ) {
-            std::string msg_fmt = fmt::format("Error in keyword {{keyword}}, unrecognized mnemonic {}\nIn {{file}} line {{line}}.", base);
-            parseContext.handleError(ParseContext::RPT_UNKNOWN_MNEMONIC, msg_fmt, keyword.location(), errors);
+        const auto base = mnemonic.substr(0, sep_pos);
+        if (! is_mnemonic(base)) {
+            const auto msg_fmt =
+                fmt::format("Error in keyword {{keyword}}, "
+                            "unrecognized mnemonic {}\n"
+                            "In {{file}} line {{line}}.", base);
+
+            parseContext.handleError(Opm::ParseContext::RPT_UNKNOWN_MNEMONIC,
+                                     msg_fmt, keyword.location(), errors);
             continue;
         }
 
         int val = 1;
         if (sep_pos != std::string::npos) {
             const auto value_pos = mnemonic.find_first_not_of("= ", sep_pos);
-            if (value_pos != std::string::npos)
+            if (value_pos != std::string::npos) {
                 val = std::stoi(mnemonic.substr(value_pos));
+            }
         }
 
-        mnemonics.emplace( base, val );
+        mnemonics.emplace(base, val);
     }
 
     return mnemonics;
 }
 
-inline void expand_RPTRST_mnemonics(std::map< std::string, int >& mnemonics) {
-    const auto allprops_iter = mnemonics.find( "ALLPROPS");
-    if (allprops_iter != mnemonics.end()) {
-        const auto value = allprops_iter->second;
-        mnemonics.erase( allprops_iter );
+void expand_RPTRST_mnemonics(std::map<std::string, int>& mnemonics)
+{
+    auto allprops_iter = mnemonics.find("ALLPROPS");
+    if (allprops_iter == mnemonics.end()) {
+        return;
+    }
 
-        for (const auto& kw : {"BG","BO","BW","KRG","KRO","KRW","VOIL","VGAS","VWAT","DEN"})
-            mnemonics[kw] = value;
+    const auto value = allprops_iter->second;
+    mnemonics.erase(allprops_iter);
+
+    for (const auto& kw : {"BG", "BO", "BW", "KRG", "KRO", "KRW", "VOIL", "VGAS", "VWAT", "DEN"}) {
+        mnemonics[kw] = value;
     }
 }
 
-std::optional<int> extract(std::map<std::string, int>& mnemonics, const std::string& key) {
+std::optional<int> extract(std::map<std::string, int>& mnemonics, const std::string& key)
+{
     auto iter = mnemonics.find(key);
-    if (iter == mnemonics.end())
+    if (iter == mnemonics.end()) {
         return {};
+    }
 
     int value = iter->second;
     mnemonics.erase(iter);
     return value;
 }
 
+std::pair<
+    std::map<std::string, int>,
+    std::pair<std::optional<int>, std::optional<int>>
+    >
+RPTRST(const Opm::DeckKeyword&  keyword,
+       const Opm::ParseContext& parseContext,
+       Opm::ErrorGuard&         errors)
+{
+    auto mnemonics = RPT(keyword, parseContext, errors,
+                         is_RPTRST_mnemonic, RPTRST_integer);
 
-inline std::pair< std::map< std::string, int >, std::pair<std::optional<int>, std::optional<int>>>
-RPTRST( const DeckKeyword& keyword, const ParseContext& parseContext, ErrorGuard& errors) {
-    auto mnemonics = RPT( keyword, parseContext, errors, is_RPTRST_mnemonic, RPTRST_integer );
-    std::optional<int> basic = extract(mnemonics, "BASIC");
-    std::optional<int> freq  = extract(mnemonics, "FREQ");
+    const auto basic = extract(mnemonics, "BASIC");
+    const auto freq  = extract(mnemonics, "FREQ");
 
-    expand_RPTRST_mnemonics( mnemonics );
-    return {mnemonics, { basic, freq }};
+    expand_RPTRST_mnemonics(mnemonics);
+
+    return { mnemonics, { basic, freq }};
 }
-
 
 template <typename T>
-void update_optional(std::optional<T>& target, const std::optional<T>& src) {
-    if (src.has_value())
+void update_optional(std::optional<T>&       target,
+                     const std::optional<T>& src)
+{
+    if (src.has_value()) {
         target = src;
+    }
 }
 
+} // Anonymous namespace
 
-}
+// ---------------------------------------------------------------------------
+
+namespace Opm {
 
 // The handleRPTSOL() function is only invoked from the constructor which uses
 // the SOLUTION section, and the only information actually extracted is whether
