@@ -417,14 +417,14 @@ public:
     {
         if (xPos_.empty() || xPos_.back() < nextX) {
             xPos_.push_back(nextX);
-            yPos_.push_back(-1e100);
+            yPos_.push_back(-1e30);
             samples_.push_back({});
             return xPos_.size() - 1;
         }
         else if (xPos_.front() > nextX) {
             // this is slow, but so what?
             xPos_.insert(xPos_.begin(), nextX);
-            yPos_.insert(yPos_.begin(), -1e100);
+            yPos_.insert(yPos_.begin(), -1e30);
             samples_.insert(samples_.begin(), std::vector<SamplePoint>());
             return 0;
         }
