@@ -440,6 +440,82 @@ void update_optional(std::optional<T>&       target,
 
 namespace Opm {
 
+RSTConfig::RSTConfig(const SOLUTIONSection& solution_section, const ParseContext& parseContext, ErrorGuard& errors) :
+      write_rst_file(false)
+{
+    if (solution_section.hasKeyword<ParserKeywords::RPTRST>()) {
+        const auto& keyword = solution_section.get<ParserKeywords::RPTRST>().back();
+        this->handleRPTRST(keyword, parseContext, errors);
+
+        // Guessing on eclipse rules for write of initial RESTART file (at time 0):
+        // Write of initial restart file is (due to the eclipse reference manual)
+        // governed by RPTSOL RESTART in solution section,
+        // if RPTSOL RESTART > 1 initial restart file is written.
+        // but - due to initial restart file written from Eclipse
+        // for data where RPTSOL RESTART not set - guessing that
+        // when RPTRST is set in SOLUTION (no basic though...) -> write inital restart.
+        this->write_rst_file = true;
+    }
+
+    if (solution_section.hasKeyword<ParserKeywords::RPTSOL>()) {
+        const auto& keyword = solution_section.get<ParserKeywords::RPTSOL>().back();
+        this->handleRPTSOL(keyword);
+    }
+}
+
+void RSTConfig::update(const DeckKeyword& keyword, const ParseContext& parseContext, ErrorGuard& errors) {
+    if (keyword.name() == ParserKeywords::RPTRST::keywordName)
+        this->handleRPTRST(keyword, parseContext, errors);
+    else if (keyword.name() == ParserKeywords::RPTSCHED::keywordName) {
+        this->handleRPTSCHED(keyword, parseContext, errors);
+    } else
+        throw std::logic_error("The RSTConfig object can only use RPTRST and RPTSCHED keywords");
+}
+
+/*
+  The RPTRST keyword is treated differently in the SOLUTION section and in the
+  SCHEDULE section. This function takes a RSTConfig object created from the
+  solution section and creates a transformed copy suitable as the first
+  RSTConfig to represent the Schedule section.
+*/
+RSTConfig RSTConfig::first(const RSTConfig& solution_config ) {
+    RSTConfig rst_config(solution_config);
+    auto basic = rst_config.basic;
+    if (!basic.has_value()) {
+        rst_config.write_rst_file = false;
+        return rst_config;
+    }
+
+    auto basic_value = basic.value();
+    if (basic_value == 0)
+        rst_config.write_rst_file = false;
+    else if (basic_value == 1 || basic_value == 2)
+        rst_config.write_rst_file = true;
+    else if (basic_value >= 3)
+        rst_config.write_rst_file = {};
+
+    return rst_config;
+}
+
+RSTConfig RSTConfig::serializationTestObject() {
+    RSTConfig rst_config;
+    rst_config.basic = 10;
+    rst_config.freq = {};
+    rst_config.write_rst_file = true;
+    rst_config.save = true;
+    rst_config.keywords = {{"S1", 1}, {"S2", 2}};
+    return rst_config;
+}
+
+bool RSTConfig::operator==(const RSTConfig& other) const {
+    return (this->write_rst_file == other.write_rst_file)
+        && (this->keywords == other.keywords)
+        && (this->basic == other.basic)
+        && (this->freq == other.freq)
+        && (this->save == other.save)
+        ;
+}
+
 // The handleRPTSOL() function is only invoked from the constructor which uses
 // the SOLUTION section, and the only information actually extracted is whether
 // to write the initial restart file.
@@ -470,30 +546,6 @@ void RSTConfig::handleRPTSOL( const DeckKeyword& keyword) {
     }
 }
 
-bool RSTConfig::operator==(const RSTConfig& other) const {
-    return this->write_rst_file == other.write_rst_file &&
-           this->keywords == other.keywords &&
-           this->basic == other.basic &&
-           this->freq == other.freq &&
-           this->save == other.save;
-}
-
-
-void RSTConfig::update_schedule(const std::pair<std::optional<int>, std::optional<int>>& basic_freq) {
-    update_optional(this->basic, basic_freq.first);
-    update_optional(this->freq, basic_freq.second);
-    if (this->basic.has_value()) {
-        auto basic_value = this->basic.value();
-        if (basic_value == 0)
-            this->write_rst_file = false;
-        else if (basic_value == 1 || basic_value == 2)
-            this->write_rst_file = true;
-        else
-            this->write_rst_file = {};
-    }
-}
-
-
 void RSTConfig::handleRPTRST(const DeckKeyword& keyword, const ParseContext& parseContext, ErrorGuard& errors) {
     const auto& [mnemonics, basic_freq] = RPTRST(keyword, parseContext, errors);
     this->update_schedule(basic_freq);
@@ -521,74 +573,18 @@ void RSTConfig::handleRPTSCHED(const DeckKeyword& keyword, const ParseContext& p
         this->keywords[kw] = num;
 }
 
-
-RSTConfig::RSTConfig(const SOLUTIONSection& solution_section, const ParseContext& parseContext, ErrorGuard& errors) :
-      write_rst_file(false)
-{
-    if (solution_section.hasKeyword<ParserKeywords::RPTRST>()) {
-        const auto& keyword = solution_section.get<ParserKeywords::RPTRST>().back();
-        this->handleRPTRST(keyword, parseContext, errors);
-
-        // Guessing on eclipse rules for write of initial RESTART file (at time 0):
-        // Write of initial restart file is (due to the eclipse reference manual)
-        // governed by RPTSOL RESTART in solution section,
-        // if RPTSOL RESTART > 1 initial restart file is written.
-        // but - due to initial restart file written from Eclipse
-        // for data where RPTSOL RESTART not set - guessing that
-        // when RPTRST is set in SOLUTION (no basic though...) -> write inital restart.
-        this->write_rst_file = true;
+void RSTConfig::update_schedule(const std::pair<std::optional<int>, std::optional<int>>& basic_freq) {
+    update_optional(this->basic, basic_freq.first);
+    update_optional(this->freq, basic_freq.second);
+    if (this->basic.has_value()) {
+        auto basic_value = this->basic.value();
+        if (basic_value == 0)
+            this->write_rst_file = false;
+        else if (basic_value == 1 || basic_value == 2)
+            this->write_rst_file = true;
+        else
+            this->write_rst_file = {};
     }
-
-    if (solution_section.hasKeyword<ParserKeywords::RPTSOL>()) {
-        const auto& keyword = solution_section.get<ParserKeywords::RPTSOL>().back();
-        this->handleRPTSOL(keyword);
-    }
-}
-
-
-void RSTConfig::update(const DeckKeyword& keyword, const ParseContext& parseContext, ErrorGuard& errors) {
-    if (keyword.name() == ParserKeywords::RPTRST::keywordName)
-        this->handleRPTRST(keyword, parseContext, errors);
-    else if (keyword.name() == ParserKeywords::RPTSCHED::keywordName) {
-        this->handleRPTSCHED(keyword, parseContext, errors);
-    } else
-        throw std::logic_error("The RSTConfig object can only use RPTRST and RPTSCHED keywords");
-}
-
-
-RSTConfig RSTConfig::serializationTestObject() {
-    RSTConfig rst_config;
-    rst_config.basic = 10;
-    rst_config.freq = {};
-    rst_config.write_rst_file = true;
-    rst_config.save = true;
-    rst_config.keywords = {{"S1", 1}, {"S2", 2}};
-    return rst_config;
-}
-
-/*
-  The RPTRST keyword is treated differently in the SOLUTION section and in the
-  SCHEDULE section. This function takes a RSTConfig object created from the
-  solution section and creates a transformed copy suitable as the first
-  RSTConfig to represent the Schedule section.
-*/
-RSTConfig RSTConfig::first(const RSTConfig& solution_config ) {
-    RSTConfig rst_config(solution_config);
-    auto basic = rst_config.basic;
-    if (!basic.has_value()) {
-        rst_config.write_rst_file = false;
-        return rst_config;
-    }
-
-    auto basic_value = basic.value();
-    if (basic_value == 0)
-        rst_config.write_rst_file = false;
-    else if (basic_value == 1 || basic_value == 2)
-        rst_config.write_rst_file = true;
-    else if (basic_value >= 3)
-        rst_config.write_rst_file = {};
-
-    return rst_config;
 }
 
 }
