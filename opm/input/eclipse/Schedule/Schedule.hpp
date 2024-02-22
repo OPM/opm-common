@@ -261,6 +261,7 @@ namespace Opm
         void create_next(const ScheduleBlock& block);
         void create_first(const time_point& start_time, const std::optional<time_point>& end_time);
 
+        void treat_critical_as_non_critical(bool value) { this->m_treat_critical_as_non_critical = value; }
 
         /*
           The cmp() function compares two schedule instances in a context aware
@@ -281,6 +282,7 @@ namespace Opm
             serializer(this->snapshots);
             serializer(this->restart_output);
             serializer(this->completed_cells);
+            serializer(this->m_treat_critical_as_non_critical);
 
             this->template pack_unpack<PAvg>(serializer);
             this->template pack_unpack<WellTestConfig>(serializer);
@@ -451,6 +453,7 @@ namespace Opm
         //   - serializationTestObject()
         //   - serializeOp(Serializer&)
         // when you update/change this list of data members.
+        bool m_treat_critical_as_non_critical = false;
         ScheduleStatic m_static;
         ScheduleDeck m_sched_deck;
         Action::WGNames action_wgnames;
