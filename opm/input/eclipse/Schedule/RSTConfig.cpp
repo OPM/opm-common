@@ -16,142 +16,153 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include <optional>
-#include <fmt/format.h>
+
+#include <opm/input/eclipse/Schedule/RSTConfig.hpp>
+
+#include <opm/common/utility/OpmInputError.hpp>
+
+#include <opm/input/eclipse/Utility/Functional.hpp>
 
 #include <opm/input/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/input/eclipse/Deck/DeckSection.hpp>
+
 #include <opm/input/eclipse/Parser/ErrorGuard.hpp>
 #include <opm/input/eclipse/Parser/ParseContext.hpp>
-#include <opm/input/eclipse/Schedule/RSTConfig.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/R.hpp>
-#include <opm/input/eclipse/Utility/Functional.hpp>
-#include <opm/common/utility/OpmInputError.hpp>
 
+#include <array>
+#include <optional>
+
+#include <fmt/format.h>
 
 namespace Opm {
 
 namespace {
 
-inline bool is_int( const std::string& x ) {
-    auto is_digit = []( char c ) { return std::isdigit( c ); };
+static constexpr auto SCHEDIntegerKeywords = std::array {
+    "PRES",    // 1
+    "SOIL",    // 2
+    "SWAT",    // 3
+    "SGAS",    // 4
+    "RS",      // 5
+    "RV",      // 6
+    "RESTART", // 7
+    "FIP",     // 8
+    "WELLS",   // 9
+    "VFPPROD", // 10
+    "SUMMARY", // 11
+    "CPU",     // 12
+    "AQUCT",   // 13
+    "WELSPECS",// 14
+    "NEWTON",  // 15
+    "POILD",   // 16
+    "PWAT",    // 17
+    "PWATD",   // 18
+    "PGAS",    // 19
+    "PGASD",   // 20
+    "FIPVE",   // 21
+    "WOC",     // 22
+    "GOC",     // 23
+    "WOCDIFF", // 24
+    "GOCDIFF", // 25
+    "WOCGOC",  // 26
+    "ODGAS",   // 27
+    "ODWAT",   // 28
+    "GDOWAT",  // 29
+    "WDOGAS",  // 30
+    "OILAPI",  // 31
+    "FIPITR",  // 32
+    "TBLK",    // 33
+    "PBLK",    // 34
+    "SALT",    // 35
+    "PLYADS",  // 36
+    "RK",      // 37
+    "FIPSALT", // 38
+    "TUNING",  // 39
+    "GI",      // 40
+    "ROCKC",   // 41
+    "SPENWAT", // 42
+    "FIPSOL",  // 43
+    "SURFBLK", // 44
+    "SURFADS", // 45
+    "FIPSURF", // 46
+    "TRADS",   // 47
+    "VOIL",    // 48
+    "VWAT",    // 49
+    "VGAS",    // 50
+    "DENO",    // 51
+    "DENW",    // 52
+    "DENG",    // 53
+    "GASCONC", // 54
+    "PB",      // 55
+    "PD",      // 56
+    "KRW",     // 57
+    "KRO",     // 58
+    "KRG",     // 59
+    "MULT",    // 60
+    "UNKNOWN", // 61 (not listed in the manual)
+    "UNKNOWN", // 62 (not listed in the manual)
+    "FOAM",    // 63
+    "FIPFOAM", // 64
+    "TEMP",    // 65
+    "FIPTEMP", // 66
+    "POTC",    // 67
+    "FOAMADS", // 68
+    "FOAMDCY", // 69
+    "FOAMMOB", // 70
+    "RECOV",   // 71
+    "FLOOIL",  // 72
+    "FLOWAT",  // 73
+    "FLOGAS",  // 74
+    "SGTRAP",  // 75
+    "FIPRESV", // 76
+    "FLOSOL",  // 77
+    "KRN",     // 78
+    "GRAD",    // 79
+};
+
+static constexpr auto RSTIntegerKeywords = std::array {
+    "BASIC",      //  1
+    "FLOWS",      //  2
+    "FIP",        //  3
+    "POT",        //  4
+    "PBPD",       //  5
+    "FREQ",       //  6
+    "PRES",       //  7
+    "VISC",       //  8
+    "DEN",        //  9
+    "DRAIN",      // 10
+    "KRO",        // 11
+    "KRW",        // 12
+    "KRG",        // 13
+    "PORO",       // 14
+    "NOGRAD",     // 15
+    "NORST",      // 16 NORST - not supported
+    "SAVE",       // 17
+    "SFREQ",      // 18 SFREQ=?? - not supported
+    "ALLPROPS",   // 19
+    "ROCKC",      // 20
+    "SGTRAP",     // 21
+    "",           // 22 - Blank - ignored.
+    "RSSAT",      // 23
+    "RVSAT",      // 24
+    "GIMULT",     // 25
+    "SURFBLK",    // 26
+    "",           // 27 - PCOW, PCOG, special cased
+    "STREAM",     // 28 STREAM=?? - not supported
+    "RK",         // 29
+    "VELOCITY",   // 30
+    "COMPRESS",   // 31
+};
+
+bool is_int(const std::string& x)
+{
+    auto is_digit = [](char c) { return std::isdigit(c); };
 
     return !x.empty()
-        && ( x.front() == '-' || is_digit( x.front() ) )
-        && std::all_of( x.begin() + 1, x.end(), is_digit );
+        && ((x.front() == '-') || is_digit(x.front()))
+        && std::all_of(x.begin() + 1, x.end(), is_digit);
 }
-
-constexpr const char* SCHEDIntegerKeywords[] = { "PRES",    // 1
-                                                 "SOIL",    // 2
-                                                 "SWAT",    // 3
-                                                 "SGAS",    // 4
-                                                 "RS",      // 5
-                                                 "RV",      // 6
-                                                 "RESTART", // 7
-                                                 "FIP",     // 8
-                                                 "WELLS",   // 9
-                                                 "VFPPROD", // 10
-                                                 "SUMMARY", // 11
-                                                 "CPU",     // 12
-                                                 "AQUCT",   // 13
-                                                 "WELSPECS",// 14
-                                                 "NEWTON",  // 15
-                                                 "POILD",   // 16
-                                                 "PWAT",    // 17
-                                                 "PWATD",   // 18
-                                                 "PGAS",    // 19
-                                                 "PGASD",   // 20
-                                                 "FIPVE",   // 21
-                                                 "WOC",     // 22
-                                                 "GOC",     // 23
-                                                 "WOCDIFF", // 24
-                                                 "GOCDIFF", // 25
-                                                 "WOCGOC",  // 26
-                                                 "ODGAS",   // 27
-                                                 "ODWAT",   // 28
-                                                 "GDOWAT",  // 29
-                                                 "WDOGAS",  // 30
-                                                 "OILAPI",  // 31
-                                                 "FIPITR",  // 32
-                                                 "TBLK",    // 33
-                                                 "PBLK",    // 34
-                                                 "SALT",    // 35
-                                                 "PLYADS",  // 36
-                                                 "RK",      // 37
-                                                 "FIPSALT", // 38
-                                                 "TUNING",  // 39
-                                                 "GI",      // 40
-                                                 "ROCKC",   // 41
-                                                 "SPENWAT", // 42
-                                                 "FIPSOL",  // 43
-                                                 "SURFBLK", // 44
-                                                 "SURFADS", // 45
-                                                 "FIPSURF", // 46
-                                                 "TRADS",   // 47
-                                                 "VOIL",    // 48
-                                                 "VWAT",    // 49
-                                                 "VGAS",    // 50
-                                                 "DENO",    // 51
-                                                 "DENW",    // 52
-                                                 "DENG",    // 53
-                                                 "GASCONC", // 54
-                                                 "PB",      // 55
-                                                 "PD",      // 56
-                                                 "KRW",     // 57
-                                                 "KRO",     // 58
-                                                 "KRG",     // 59
-                                                 "MULT",    // 60
-                                                 "UNKNOWN", // 61 61 and 62 are not listed in the manual
-                                                 "UNKNOWN", // 62
-                                                 "FOAM",    // 63
-                                                 "FIPFOAM", // 64
-                                                 "TEMP",    // 65
-                                                 "FIPTEMP", // 66
-                                                 "POTC",    // 67
-                                                 "FOAMADS", // 68
-                                                 "FOAMDCY", // 69
-                                                 "FOAMMOB", // 70
-                                                 "RECOV",   // 71
-                                                 "FLOOIL",  // 72
-                                                 "FLOWAT",  // 73
-                                                 "FLOGAS",  // 74
-                                                 "SGTRAP",  // 75
-                                                 "FIPRESV", // 76
-                                                 "FLOSOL",  // 77
-                                                 "KRN",     // 78
-                                                 "GRAD",    // 79
-                                               };
-constexpr const char* RSTIntegerKeywords[] = { "BASIC",      //  1
-                                               "FLOWS",      //  2
-                                               "FIP",        //  3
-                                               "POT",        //  4
-                                               "PBPD",       //  5
-                                               "FREQ",       //  6
-                                               "PRES",       //  7
-                                               "VISC",       //  8
-                                               "DEN",        //  9
-                                               "DRAIN",      // 10
-                                               "KRO",        // 11
-                                               "KRW",        // 12
-                                               "KRG",        // 13
-                                               "PORO",       // 14
-                                               "NOGRAD",     // 15
-                                               "NORST",      // 16 NORST - not supported
-                                               "SAVE",       // 17
-                                               "SFREQ",      // 18 SFREQ=?? - not supported
-                                               "ALLPROPS",   // 19
-                                               "ROCKC",      // 20
-                                               "SGTRAP",     // 21
-                                               "",           // 22 - Blank - ignored.
-                                               "RSSAT",      // 23
-                                               "RVSAT",      // 24
-                                               "GIMULT",     // 25
-                                               "SURFBLK",    // 26
-                                               "",           // 27 - PCOW, PCOG, special cased
-                                               "STREAM",     // 28 STREAM=?? - not supported
-                                               "RK",         // 29
-                                               "VELOCITY",   // 30
-                                               "COMPRESS" }; // 31
 
 bool is_RPTRST_mnemonic( const std::string& kw ) {
     /* all eclipse 100 keywords we want to not simply ignore. The list is
@@ -205,7 +216,7 @@ bool is_RPTSCHED_mnemonic( const std::string& kw ) {
 
 inline std::map< std::string, int >
 RPTSCHED_integer( const std::vector< int >& ints ) {
-    const size_t size = std::min( ints.size(), sizeof( SCHEDIntegerKeywords ) );
+    const size_t size = std::min( ints.size(), SCHEDIntegerKeywords.size() );
 
     std::map< std::string, int > mnemonics;
     for( size_t i = 0; i < size; ++i )
@@ -220,7 +231,7 @@ RPTRST_integer( const std::vector< int >& ints ) {
     const size_t BASIC_index = 0;
 
     std::map< std::string, int > mnemonics;
-    const size_t size = std::min( ints.size(), sizeof( RSTIntegerKeywords ) );
+    const size_t size = std::min( ints.size(), RSTIntegerKeywords.size() );
 
     /* fun with special cases. Eclipse seems to ignore the BASIC=0, interpreting
      * it as sort-of "don't modify". Handle this by *not* adding/updating the
