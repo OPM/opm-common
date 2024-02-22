@@ -30,8 +30,16 @@
 #include <opm/input/eclipse/Parser/ParseContext.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/R.hpp>
 
+#include <algorithm>
 #include <array>
+#include <cctype>
+#include <cstddef>
+#include <iterator>
+#include <map>
 #include <optional>
+#include <stdexcept>
+#include <utility>
+#include <vector>
 
 #include <fmt/format.h>
 
@@ -440,153 +448,212 @@ void update_optional(std::optional<T>&       target,
 
 namespace Opm {
 
-RSTConfig::RSTConfig(const SOLUTIONSection& solution_section, const ParseContext& parseContext, ErrorGuard& errors) :
-      write_rst_file(false)
+RSTConfig::RSTConfig(const SOLUTIONSection& solution_section,
+                     const ParseContext&    parseContext,
+                     ErrorGuard&            errors)
+    : write_rst_file(false)
 {
-    if (solution_section.hasKeyword<ParserKeywords::RPTRST>()) {
-        const auto& keyword = solution_section.get<ParserKeywords::RPTRST>().back();
-        this->handleRPTRST(keyword, parseContext, errors);
+    for (const auto& keyword : solution_section) {
+        if (keyword.name() == ParserKeywords::RPTRST::keywordName) {
+            const auto in_solution = true;
+            this->handleRPTRST(keyword, parseContext, errors, in_solution);
 
-        // Guessing on eclipse rules for write of initial RESTART file (at time 0):
-        // Write of initial restart file is (due to the eclipse reference manual)
-        // governed by RPTSOL RESTART in solution section,
-        // if RPTSOL RESTART > 1 initial restart file is written.
-        // but - due to initial restart file written from Eclipse
-        // for data where RPTSOL RESTART not set - guessing that
-        // when RPTRST is set in SOLUTION (no basic though...) -> write inital restart.
-        this->write_rst_file = true;
-    }
-
-    if (solution_section.hasKeyword<ParserKeywords::RPTSOL>()) {
-        const auto& keyword = solution_section.get<ParserKeywords::RPTSOL>().back();
-        this->handleRPTSOL(keyword);
+            // Generating restart file output at time zero is normally
+            // governed by setting the 'RESTART' mnemonic to a value greater
+            // than one (1) in the RPTSOL keyword.  Here, when handling the
+            // RPTRST keyword in the SOLUTION section, we unconditionally
+            // request that restart file output be generated at time zero.
+            this->write_rst_file = true;
+        }
+        else if (keyword.name() == ParserKeywords::RPTSOL::keywordName) {
+            this->handleRPTSOL(keyword, parseContext, errors);
+        }
     }
 }
 
-void RSTConfig::update(const DeckKeyword& keyword, const ParseContext& parseContext, ErrorGuard& errors) {
-    if (keyword.name() == ParserKeywords::RPTRST::keywordName)
+void RSTConfig::update(const DeckKeyword&  keyword,
+                       const ParseContext& parseContext,
+                       ErrorGuard&         errors)
+{
+    if (keyword.name() == ParserKeywords::RPTRST::keywordName) {
         this->handleRPTRST(keyword, parseContext, errors);
+    }
     else if (keyword.name() == ParserKeywords::RPTSCHED::keywordName) {
         this->handleRPTSCHED(keyword, parseContext, errors);
-    } else
+    }
+    else {
         throw std::logic_error("The RSTConfig object can only use RPTRST and RPTSCHED keywords");
+    }
 }
 
-/*
-  The RPTRST keyword is treated differently in the SOLUTION section and in the
-  SCHEDULE section. This function takes a RSTConfig object created from the
-  solution section and creates a transformed copy suitable as the first
-  RSTConfig to represent the Schedule section.
-*/
-RSTConfig RSTConfig::first(const RSTConfig& solution_config ) {
-    RSTConfig rst_config(solution_config);
-    auto basic = rst_config.basic;
+// The RPTRST keyword semantics differs between the SOLUTION and SCHEDULE
+// sections.  This function takes an RSTConfig object constructed from
+// SOLUTION section information and creates a transformed copy suitable as
+// the first RSTConfig object in the SCHEDULE section.
+RSTConfig RSTConfig::first(const RSTConfig& solution_config)
+{
+    auto rst_config = solution_config;
+
+    rst_config.solution_only_keywords.clear();
+    for (const auto& kw : solution_config.solution_only_keywords) {
+        rst_config.keywords.erase(kw);
+    }
+
+    const auto basic = rst_config.basic;
     if (!basic.has_value()) {
         rst_config.write_rst_file = false;
         return rst_config;
     }
 
-    auto basic_value = basic.value();
-    if (basic_value == 0)
+    const auto basic_value = basic.value();
+    if (basic_value == 0) {
         rst_config.write_rst_file = false;
-    else if (basic_value == 1 || basic_value == 2)
+    }
+    else if ((basic_value == 1) || (basic_value == 2)) {
         rst_config.write_rst_file = true;
-    else if (basic_value >= 3)
+    }
+    else if (basic_value >= 3) {
         rst_config.write_rst_file = {};
+    }
 
     return rst_config;
 }
 
-RSTConfig RSTConfig::serializationTestObject() {
+RSTConfig RSTConfig::serializationTestObject()
+{
     RSTConfig rst_config;
+
     rst_config.basic = 10;
     rst_config.freq = {};
     rst_config.write_rst_file = true;
     rst_config.save = true;
     rst_config.keywords = {{"S1", 1}, {"S2", 2}};
+    rst_config.solution_only_keywords = { "FIP" };
+
     return rst_config;
 }
 
-bool RSTConfig::operator==(const RSTConfig& other) const {
+bool RSTConfig::operator==(const RSTConfig& other) const
+{
     return (this->write_rst_file == other.write_rst_file)
         && (this->keywords == other.keywords)
         && (this->basic == other.basic)
         && (this->freq == other.freq)
         && (this->save == other.save)
+        && (this->solution_only_keywords == other.solution_only_keywords)
         ;
 }
 
-// The handleRPTSOL() function is only invoked from the constructor which uses
-// the SOLUTION section, and the only information actually extracted is whether
-// to write the initial restart file.
+// Recall that handleRPTSOL() is private and invoked only from the
+// RSTConfig constructor processing SOLUTION section information.
 
-void RSTConfig::handleRPTSOL( const DeckKeyword& keyword) {
-    const auto& record = keyword.getRecord(0);
-    const auto& item = record.getItem(0);
-    for (const auto& mnemonic : item.getData<std::string>()) {
-        auto mnemonic_RESTART_pos = mnemonic.find("RESTART=");
-        if (mnemonic_RESTART_pos != std::string::npos) {
-            std::string restart_no = mnemonic.substr(mnemonic_RESTART_pos + 8, mnemonic.size());
-            auto restart = std::strtoul(restart_no.c_str(), nullptr, 10);
-            this->write_rst_file = (restart > 1);
-            return;
+void RSTConfig::handleRPTSOL(const DeckKeyword&  keyword,
+                             const ParseContext& parseContext,
+                             ErrorGuard&         errors)
+{
+    // Note: We intentionally use RPTSCHED mnemonic handling here.  While
+    // potentially misleading, this process does do what we want for the
+    // typical cases.  Older style integer controls are however only
+    // partially handled and we may choose to refine this logic by
+    // introducing predicates specific to the RPTSOL keyword later.
+    auto mnemonics = RPT(keyword, parseContext, errors,
+                         is_RPTSCHED_mnemonic,
+                         RPTSCHED_integer);
+
+    const auto restart = extract(mnemonics, "RESTART");
+    const auto request_restart =
+        (restart.has_value() && (*restart > 1));
+
+    this->write_rst_file =
+        (this->write_rst_file.has_value() && *this->write_rst_file)
+        || request_restart;
+
+    if (request_restart) {
+        // RPTSOL's RESTART flag is set.  Internalise new flags, as
+        // "SOLUTION" only properties, from 'mnemonics'.
+        this->keywords.swap(mnemonics);
+        for (const auto& kw : this->keywords) {
+            this->solution_only_keywords.insert(kw.first);
+        }
+
+        for (const auto& [key, value] : mnemonics) {
+            // Note: Using emplace() after swap() means that the mnemonics
+            // from RPTSOL overwrite those that might already have been
+            // present in 'keywords'.  Recall that emplace() will not insert
+            // a new element with the same key as an existing element.
+            this->keywords.emplace(key, value);
         }
     }
+}
 
+void RSTConfig::handleRPTRST(const DeckKeyword&  keyword,
+                             const ParseContext& parseContext,
+                             ErrorGuard&         errors,
+                             const bool          in_solution)
+{
+    const auto& [mnemonics, basic_freq] = RPTRST(keyword, parseContext, errors);
 
-    /* If no RESTART mnemonic is found, either it is not present or we might
-       have an old data set containing integer controls instead of mnemonics.
-       Restart integer switch is integer control nr 7 */
+    this->update_schedule(basic_freq);
 
-    if (item.data_size() >= 7) {
-        const std::string& integer_control = item.get<std::string>(6);
-        auto restart = std::strtoul(integer_control.c_str(), nullptr, 10);
-        this->write_rst_file = (restart > 1);
-        return;
+    for (const auto& [kw, num] : mnemonics) {
+        // Insert_or_assign() to overwrite existing 'kw' elements.
+        this->keywords.insert_or_assign(kw, num);
+    }
+
+    if (in_solution) {
+        // We're processing RPTRST in the SOLUTION section.  Mnemonics from
+        // RPTRST should persist beyond the SOLUTION section in this case so
+        // prune these from the list of solution-only keywords.
+        for (const auto& kw : mnemonics) {
+            this->solution_only_keywords.erase(kw.first);
+        }
     }
 }
 
-void RSTConfig::handleRPTRST(const DeckKeyword& keyword, const ParseContext& parseContext, ErrorGuard& errors) {
-    const auto& [mnemonics, basic_freq] = RPTRST(keyword, parseContext, errors);
-    this->update_schedule(basic_freq);
-    for (const auto& [kw,num] : mnemonics)
-        this->keywords[kw] = num;
-}
+void RSTConfig::handleRPTSCHED(const DeckKeyword&  keyword,
+                               const ParseContext& parseContext,
+                               ErrorGuard&         errors)
+{
+    auto mnemonics = RPT(keyword, parseContext, errors,
+                         is_RPTSCHED_mnemonic,
+                         RPTSCHED_integer);
 
-void RSTConfig::handleRPTSCHED(const DeckKeyword& keyword, const ParseContext& parseContext, ErrorGuard& errors) {
-    auto mnemonics = RPT( keyword, parseContext, errors, is_RPTSCHED_mnemonic, RPTSCHED_integer );
-    auto nothing = extract(mnemonics, "NOTHING");
-    if (nothing.has_value()) {
+    if (const auto nothing = extract(mnemonics, "NOTHING"); nothing.has_value()) {
         this->basic = {};
         this->keywords.clear();
     }
 
     if (this->basic.value_or(2) <= 2) {
-        auto restart = extract(mnemonics, "RESTART");
+        const auto restart = extract(mnemonics, "RESTART");
+
         if (restart.has_value()) {
-            auto basic_value = std::min(2, restart.value());
-            this->update_schedule({basic_value , 1});
+            const auto basic_value = std::min(2, restart.value());
+            this->update_schedule({basic_value, 1});
         }
     }
 
-    for (const auto& [kw,num] : mnemonics)
-        this->keywords[kw] = num;
-}
-
-void RSTConfig::update_schedule(const std::pair<std::optional<int>, std::optional<int>>& basic_freq) {
-    update_optional(this->basic, basic_freq.first);
-    update_optional(this->freq, basic_freq.second);
-    if (this->basic.has_value()) {
-        auto basic_value = this->basic.value();
-        if (basic_value == 0)
-            this->write_rst_file = false;
-        else if (basic_value == 1 || basic_value == 2)
-            this->write_rst_file = true;
-        else
-            this->write_rst_file = {};
+    for (const auto& [kw, num] : mnemonics) {
+        this->keywords.insert_or_assign(kw, num);
     }
 }
 
+void RSTConfig::update_schedule(const std::pair<std::optional<int>, std::optional<int>>& basic_freq)
+{
+    update_optional(this->basic, basic_freq.first);
+    update_optional(this->freq, basic_freq.second);
+
+    if (this->basic.has_value()) {
+        const auto basic_value = this->basic.value();
+        if (basic_value == 0) {
+            this->write_rst_file = false;
+        }
+        else if ((basic_value == 1) || (basic_value == 2)) {
+            this->write_rst_file = true;
+        }
+        else {
+            this->write_rst_file = {};
+        }
+    }
 }
 
-
+} // namespace Opm
