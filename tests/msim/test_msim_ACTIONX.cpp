@@ -478,6 +478,30 @@ BOOST_AUTO_TEST_CASE(COMPDAT) {
         BOOST_CHECK_NO_THROW(sim.run(io, true));
     }
 }
+BOOST_AUTO_TEST_CASE(ACTIONX_OPEN_CLOSED_WELL) {
+    const auto& deck = Parser().parseFile("msim/MSIM_ACTIONX.DATA");
+    test_data td( deck );
+    msim sim(td.state, td.schedule);
+    {
+        WorkArea work_area("test_msim");
+        EclipseIO io(td.state, td.state.getInputGrid(), sim.schedule, td.summary_config);
+
+        {
+            const auto& w1 = sim.schedule.getWell("P1", 1);
+            BOOST_CHECK(w1.getStatus() == Well::Status::SHUT);
+        }
+
+        sim.run(io, false);
+        {
+            const auto& w1_at_reportstep1 = sim.schedule.getWell("P1", 1);
+            BOOST_CHECK(w1_at_reportstep1.getStatus() == Well::Status::SHUT);
+            const auto& w1_at_reportstep6 = sim.schedule.getWell("P1", 6);
+            BOOST_CHECK(w1_at_reportstep6.getStatus() == Well::Status::OPEN); //This is failing because the well was initially shut
+        }
+
+    }
+}
+
 
 #ifdef EMBEDDED_PYTHON
 

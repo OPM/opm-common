@@ -158,7 +158,7 @@ BOOST_AUTO_TEST_CASE(PYACTION)
     const auto& well1 = schedule.getWell("PROD1", 10);
     const auto& well2 = schedule.getWell("PROD2", 10);
     BOOST_CHECK( well1.getStatus() == Well::Status::SHUT );
-    BOOST_CHECK( well2.getStatus() == Well::Status::OPEN );
+    BOOST_CHECK( well2.getStatus() == Well::Status::OPEN ); //This is failing because the well was initially shut - this error appears as well though when opening a well using ACTIONX only
     BOOST_CHECK( st.has("RUN_COUNT") );
 
     std::map<std::string, Action::PyAction> action_map;
