@@ -147,9 +147,15 @@ ScheduleState::ScheduleState(const ScheduleState& src, const time_point& start_t
         if (!this->next_tstep->every_report()) {
             this->next_tstep = std::nullopt;
         }
-    // Need to signal an event also for the persistance to take effect
-    this->events().addEvent(ScheduleEvents::TUNING_CHANGE);
+        // Need to signal an event also for the persistance to take effect
+        this->events().addEvent(ScheduleEvents::TUNING_CHANGE);
     }
+
+    // TSINIT from TUNING should only apply to one report step, but TUNING
+    // was copied from last ScheduleState. If that has TSINIT set then
+    // the first time step would be limited if a TUNING_CHANGE event happens
+    // e.g. because of above or because of NEXTSTEP in ACTIONX
+    this->m_tuning.TSINIT.reset();
 
     {
         auto new_udq = this->udq();
