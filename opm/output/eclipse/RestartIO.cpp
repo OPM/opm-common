@@ -63,6 +63,7 @@
 #include <algorithm>
 #include <cstddef>
 #include <iterator>
+#include <regex>
 #include <stdexcept>
 #include <string>
 #include <unordered_set>
@@ -75,14 +76,19 @@
 namespace Opm { namespace RestartIO {
 
 namespace {
-    /*
-      The RestartValue structure has an 'extra' container which can be used to
-      add extra fields to the restart file. The extra field is used both to add
-      OPM specific fields like 'OPMEXTRA', and eclipse standard fields like
-      THRESHPR. In the case of e.g. THRESHPR this should - if present - be added
-      in the SOLUTION section of the restart file. The extra_solution object
-      identifies the keys which should be output in the solution section.
-    */
+    bool isFluidInPlace(const std::string& vector)
+    {
+        const auto fipRegex = std::regex { R"([RS]?FIP(OIL|GAS|WAT))" };
+
+        return std::regex_match(vector, fipRegex);
+    }
+
+    // The RestartValue structure has an 'extra' container which can be used to
+    // add extra fields to the restart file. The extra field is used both to add
+    // OPM specific fields like 'OPMEXTRA', and eclipse standard fields like
+    // THRESHPR. In the case of e.g. THRESHPR this should - if present - be added
+    // in the SOLUTION section of the restart file. The extra_solution object
+    // identifies the keys which should be output in the solution section.
 
     bool extraInSolution(const std::string& vector)
     {
@@ -101,7 +107,7 @@ namespace {
         return extra_solution.count(vector) > 0;
     }
 
-    double nextStepSize(const Opm::RestartValue& rst_value)
+    double nextStepSize(const RestartValue& rst_value)
     {
         return rst_value.hasExtra("OPMEXTRA")
             ? rst_value.getExtra("OPMEXTRA")[0]
@@ -503,7 +509,6 @@ namespace {
 
     void writeDynamicData(const int                                     sim_step,
                           const bool                                    ecl_compatible_rst,
-                          const Phases&                                 phases,
                           const EclipseGrid&                            grid,
                           const EclipseState&                           es,
                           const Schedule&                               schedule,
@@ -540,6 +545,8 @@ namespace {
                 writeMSWData(sim_step, schedule.getUnits(), schedule, grid,
                              sumState, wellSol, inteHD, rstFile);
             }
+
+            const auto& phases = es.runspec().phases();
 
             writeWell(sim_step, ecl_compatible_rst, phases, grid, schedule, es.tracer(),
                       wells, wellSol, action_state, wtest_state, sumState, inteHD, rstFile);
@@ -598,7 +605,26 @@ namespace {
         vectors.reserve(value.solution.size());
 
         for (const auto& [name, vector] : value.solution) {
-            if (vector.target == data::TargetType::RESTART_SOLUTION) {
+            if ((vector.target == data::TargetType::RESTART_SOLUTION) &&
+                ! isFluidInPlace(name))
+            {
+                vectors.push_back(name);
+            }
+        }
+
+        return vectors;
+    }
+
+    std::vector<std::string>
+    fluidInPlaceVectorNames(const RestartValue& value)
+    {
+        auto vectors = std::vector<std::string>{};
+        vectors.reserve(value.solution.size());
+
+        for (const auto& [name, vector] : value.solution) {
+            if ((vector.target == data::TargetType::RESTART_SOLUTION) &&
+                isFluidInPlace(name))
+            {
                 vectors.push_back(name);
             }
         }
@@ -654,6 +680,64 @@ namespace {
                              std::forward<OutputVectorInt>(writeVectorI));
     }
 
+    void writeFluidInPlace(const RestartValue&           value,
+                           const EclipseState&           es,
+                           const bool                    writeDouble,
+                           EclIO::OutputStream::Restart& rstFile)
+    {
+        const auto vectors = fluidInPlaceVectorNames(value);
+
+        if (vectors.empty()) {
+            return;
+        }
+
+        {
+            auto regSets = es.fieldProps().fip_regions();
+            std::sort(regSets.begin(), regSets.end());
+            rstFile.write("FIPFAMNA", regSets);
+        }
+
+        auto writeVector =
+            [writeDouble, &rstFile](const std::string&         arrayName,
+                                    const std::vector<double>& fipArray)
+        {
+            if (writeDouble) {
+                rstFile.write(arrayName, fipArray);
+            }
+            else {
+                rstFile.write(arrayName, std::vector<float> {
+                    fipArray.begin(), fipArray.end()
+                });
+            }
+        };
+
+        auto anyRSFip = false;
+        for (const auto& vector : vectors) {
+            writeVector(vector, value.solution.at(vector).data<double>());
+
+            if ((vector.front() == 'R') || (vector.front() == 'S')) {
+                // The vector name is RFIP* or SFIP*.  These refer to
+                // reservoir and surface condition volumes, respectively,
+                // meaning the simulator provides in-place arrays that have
+                // been properly tagged.
+                anyRSFip = true;
+            }
+        }
+
+        if (anyRSFip) {
+            // The simulator provides properly tagged in-place arrays.  No
+            // further action needed.
+            return;
+        }
+
+        // If we get here, all fluid-in-place vectors have the name FIP* and
+        // represent surface condition volumes.  Output the same vectors
+        // using the corresponding SFIP name as well.
+        for (const auto& vector : vectors) {
+            writeVector('S' + vector, value.solution.at(vector).data<double>());
+        }
+    }
+
     template <class OutputVector, class OutputVectorInt>
     void writeExtendedSolutionVectors(const RestartValue& value,
                                       OutputVector&&      writeVectorF,
@@ -707,10 +791,10 @@ namespace {
         }
     }
 
-    void writeTracerVectors(const UnitSystem&               unit_system,
-                            const TracerConfig&             tracer_config,
-                            const RestartValue&             value,
-                            const bool                      write_double,
+    void writeTracerVectors(const UnitSystem&             unit_system,
+                            const TracerConfig&           tracer_config,
+                            const RestartValue&           value,
+                            const bool                    write_double,
                             EclIO::OutputStream::Restart& rstFile)
     {
         for (const auto& [tracer_rst_name, vector] : value.solution) {
@@ -742,9 +826,9 @@ namespace {
     }
 
     void writeSolution(const RestartValue&           value,
+                       const EclipseState&           es,
                        const Schedule&               schedule,
                        const UDQState&               udq_state,
-                       const TracerConfig&           tracer_config,
                        int                           report_step,
                        int                           sim_step,
                        const bool                    ecl_compatible_rst,
@@ -780,7 +864,8 @@ namespace {
         rstFile.message("STARTSOL");
 
         writeRegularSolutionVectors(value, writeDorF, writeInt);
-        writeTracerVectors(schedule.getUnits(), tracer_config, value,
+        writeFluidInPlace(value, es, write_double_arg, rstFile);
+        writeTracerVectors(schedule.getUnits(), es.tracer(), value,
                            write_double_arg, rstFile);
         writeUDQ(report_step, sim_step, schedule, udq_state, inteHD, rstFile);
 
@@ -873,14 +958,14 @@ void save(EclIO::OutputStream::Restart&                 rstFile,
                     seconds_elapsed, schedule, grid, es, rstFile);
 
     if (report_step > 0) {
-        writeDynamicData(sim_step, ecl_compatible_rst, es.runspec().phases(),
-                         grid, es, schedule, value.wells, action_state, wtest_state,
+        writeDynamicData(sim_step, ecl_compatible_rst, grid, es, schedule,
+                         value.wells, action_state, wtest_state,
                          sumState, inteHD, value.aquifer, aquiferData, rstFile);
     }
 
     writeActionx(report_step, sim_step, schedule, action_state, sumState, rstFile);
 
-    writeSolution(value, schedule, udqState, es.tracer(), report_step, sim_step,
+    writeSolution(value, es, schedule, udqState, report_step, sim_step,
                   ecl_compatible_rst, write_double, inteHD, rstFile);
 
     if (! ecl_compatible_rst) {
