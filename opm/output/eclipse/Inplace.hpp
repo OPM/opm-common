@@ -20,35 +20,40 @@
 #ifndef ORIGINAL_OIP
 #define ORIGINAL_OIP
 
+#include <cstddef>
 #include <string>
 #include <unordered_map>
 #include <vector>
 
 namespace Opm {
 
-
-class Inplace {
+// The purpose of this class is to transport in-place values from the
+// simulator code to the summary output code.  The code is written very much
+// to fit in with the current implementation in the simulator.  Note that
+// the functions which don't take both a region name and a region number
+// argument are intended for totals, i.e., field-level values.
+class Inplace
+{
 public:
-
+    // The Inplace class is implemented in close relation to the black-oil
+    // output module in opm-simulators.  There are certain idiosyncracies
+    // here which are due to that coupling.  For instance the enum values
+    // PressurePV, HydroCarbonPV, PressureHydroCarbonPV, and
+    // DynamicPoreVolume are *not* included in the return value from
+    // phases().
     enum class Phase {
-        WATER = 0,
-        OIL = 1,
-        GAS = 2,
+        WATER = 0,              // Omitted from mixingPhases()
+        OIL = 1,                // Omitted from mixingPhases()
+        GAS = 2,                // Omitted from mixingPhases()
         OilInLiquidPhase = 3,
         OilInGasPhase = 4,
         GasInLiquidPhase = 5,
         GasInGasPhase = 6,
         PoreVolume = 7,
-        // The Inplace class is implemented in close relation to the
-        // ecloutputblackoilmodule in opm-simulators, ane there are
-        // certainly idiosyncracies here due to that coupling. For instance
-        // the enum values PressurePV, HydroCarbonPV, PressureHydroCarbonPV,
-        // and DynamicPoreVolume are *not* included in the return value from
-        // phases().
-        PressurePV = 8,
-        HydroCarbonPV = 9,
-        PressureHydroCarbonPV = 10,
-        DynamicPoreVolume = 11,
+        PressurePV = 8,             // Omitted from both phases() and mixingPhases()
+        HydroCarbonPV = 9,          // Omitted from both phases() and mixingPhases()
+        PressureHydroCarbonPV = 10, // Omitted from both phases() and mixingPhases()
+        DynamicPoreVolume = 11,     // Omitted from both phases() and mixingPhases()
         WaterResVolume = 12,
         OilResVolume = 13,
         GasResVolume = 14,
@@ -65,14 +70,6 @@ public:
         CO2MassInGasPhaseMob = 25,
     };
 
-    /*
-      The purpose of this class is to transport inplace values from the
-      simulator code to the summary output code. The code is written very much
-      to fit in with the current implementation in the simulator. The functions
-      which don't accept region_name & region_number arguments should be called
-      for totals, i.e. field properties.
-    */
-
     static Inplace serializationTestObject();
 
     void add(const std::string& region, Phase phase, std::size_t region_number, double value);
@@ -87,15 +84,14 @@ public:
     std::size_t max_region() const;
     std::size_t max_region(const std::string& region_name) const;
 
-    /*
-      The get_vector functions return a vector length max_region() which
-      contains the values added with the add() function and indexed with
-      (region_number - 1). This is an incarnation of id <-> index confusion and
-      should be replaced with a std::map instead.
-    */
+    // The get_vector functions return a vector length max_region() which
+    // contains the values added with the add() function and indexed with
+    // (region_number - 1). This is an incarnation of id <-> index confusion
+    // and should be replaced with a std::map instead.
     std::vector<double> get_vector(const std::string& region, Phase phase) const;
 
     static const std::vector<Phase>& phases();
+    static const std::vector<Phase>& mixingPhases();
 
     template<class Serializer>
     void serializeOp(Serializer& serializer)
@@ -109,7 +105,6 @@ private:
     std::unordered_map<std::string, std::unordered_map<Phase, std::unordered_map<std::size_t, double>>> phase_values;
 };
 
+} // namespace Opm
 
-}
-
-#endif
+#endif // ORIGINAL_OIP
