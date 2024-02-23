@@ -21,18 +21,26 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include <opm/input/eclipse/Deck/Deck.hpp>
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
-#include <opm/input/eclipse/Parser/InputErrorAction.hpp>
-#include <opm/input/eclipse/Parser/Parser.hpp>
-#include <opm/input/eclipse/Parser/ParseContext.hpp>
-#include <opm/input/eclipse/Parser/ErrorGuard.hpp>
+
+#include <opm/input/eclipse/Schedule/RSTConfig.hpp>
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
+
 #include <opm/common/utility/OpmInputError.hpp>
+
+#include <opm/input/eclipse/Deck/Deck.hpp>
+
+#include <opm/input/eclipse/Parser/ErrorGuard.hpp>
+#include <opm/input/eclipse/Parser/InputErrorAction.hpp>
+#include <opm/input/eclipse/Parser/ParseContext.hpp>
+#include <opm/input/eclipse/Parser/Parser.hpp>
 
 #include <cstddef>
 #include <map>
+#include <stdexcept>
 #include <string>
+#include <tuple>
+#include <utility>
 #include <vector>
 
 using namespace Opm;
@@ -1581,4 +1589,57 @@ DATES       -- 4
     const auto expected2 = { "COMPRESS", "RK", "VELOCITY" };
     BOOST_CHECK_EQUAL_COLLECTIONS( expected2.begin(), expected2.end(),
                                    kw_list2.begin(), kw_list2.end() );
+}
+
+BOOST_AUTO_TEST_CASE(RPTSOL_Properties)
+{
+    const auto deck = Parser{}.parseString(R"(RUNSPEC
+DIMENS
+1 5 2 /
+GRID
+DXV
+1*100 /
+DYV
+5*100 /
+DZV
+2*10 /
+TOPS
+5*2000 /
+SOLUTION
+RPTSOL
+ 'RESTART=2' 'FIP' /
+SCHEDULE
+RPTRST
+ 'BASIC=3' 'FREQ=5' /
+TSTEP
+ 5*5 /
+END
+)");
+
+    const auto es = EclipseState { deck };
+    const auto sched = Schedule { deck, es };
+
+    // SEQNUM = 0
+    {
+        const auto expect = std::map {
+            std::pair { std::string("FIP"), 1 },
+        };
+
+        BOOST_CHECK_MESSAGE(sched.write_rst_file(0), "Must write initial restart file");
+        BOOST_CHECK_MESSAGE(sched.rst_keywords(0) == expect,
+                            R"(Initial restart must request exactly "FIP=1')");
+    }
+
+    BOOST_CHECK_MESSAGE(! sched.write_rst_file(1), "Must NOT write restart file for report step 1");
+    BOOST_CHECK_MESSAGE(! sched.write_rst_file(2), "Must NOT write restart file for report step 2");
+    BOOST_CHECK_MESSAGE(! sched.write_rst_file(3), "Must NOT write restart file for report step 3");
+    BOOST_CHECK_MESSAGE(! sched.write_rst_file(4), "Must NOT write restart file for report step 4");
+
+    // SEQNUM = 5
+    {
+        BOOST_CHECK_MESSAGE(sched.write_rst_file(5), "Must write restart file for report step 5");
+        BOOST_CHECK_MESSAGE(sched.rst_keywords(5).empty(),
+                            "Must not request any additional "
+                            "properties for report step 5");
+    }
 }

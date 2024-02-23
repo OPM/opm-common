@@ -20,7 +20,6 @@
 #ifndef OPM_RST_CONFIG_HPP
 #define OPM_RST_CONFIG_HPP
 
-
 /*
   The RestartConfig class internalizes information of when (at which
   report steps) we should save restart files, and which properties
@@ -182,10 +181,11 @@
   the SAVE and SFREQ mneomics are not supported.
 */
 
-#include <unordered_map>
 #include <map>
 #include <optional>
 #include <string>
+#include <unordered_set>
+#include <utility>
 
 namespace Opm {
 
@@ -194,43 +194,63 @@ class ErrorGuard;
 class ParseContext;
 class SOLUTIONSection;
 
-class RSTConfig {
+} // namespace Opm
+
+namespace Opm {
+
+class RSTConfig
+{
 public:
     RSTConfig() = default;
-    RSTConfig(const SOLUTIONSection& solution_section, const ParseContext& parseContext, ErrorGuard& errors);
-    void update(const DeckKeyword& keyword, const ParseContext& parseContext, ErrorGuard& errors);
-    void init_next();
+    RSTConfig(const SOLUTIONSection& solution_section,
+              const ParseContext& parseContext,
+              ErrorGuard& errors);
+
+    void update(const DeckKeyword& keyword,
+                const ParseContext& parseContext,
+                ErrorGuard& errors);
+
     static RSTConfig first(const RSTConfig& src);
     static RSTConfig serializationTestObject();
 
     template<class Serializer>
-    void serializeOp(Serializer& serializer) {
+    void serializeOp(Serializer& serializer)
+    {
         serializer(write_rst_file);
         serializer(keywords);
         serializer(basic);
         serializer(freq);
         serializer(save);
+        serializer(this->solution_only_keywords);
     }
 
     bool operator==(const RSTConfig& other) const;
 
-    std::optional<bool> write_rst_file;
-    std::map<std::string, int> keywords;
-    std::optional<int> basic;
-    std::optional<int> freq;
-    bool save = false;
+    std::optional<bool> write_rst_file{};
+    std::map<std::string, int> keywords{};
+    std::optional<int> basic{};
+    std::optional<int> freq{};
+    bool save { false };
 
 private:
-    void handleRPTSOL(const DeckKeyword& keyword);
-    void handleRPTRST(const DeckKeyword& keyword, const ParseContext& parse_context, ErrorGuard& errors);
-    void handleRPTSCHED(const DeckKeyword& keyword, const ParseContext& parse_context, ErrorGuard& errors);
+    std::unordered_set<std::string> solution_only_keywords{};
+
+    void handleRPTSOL(const DeckKeyword& keyword,
+                      const ParseContext& parse_context,
+                      ErrorGuard& errors);
+
+    void handleRPTRST(const DeckKeyword& keyword,
+                      const ParseContext& parse_context,
+                      ErrorGuard& errors,
+                      bool in_solution = false);
+
+    void handleRPTSCHED(const DeckKeyword& keyword,
+                        const ParseContext& parse_context,
+                        ErrorGuard& errors);
+
     void update_schedule(const std::pair<std::optional<int>, std::optional<int>>& basic_freq);
 };
 
+} // namespace Opm
 
-
-} //namespace Opm
-
-
-
-#endif
+#endif // OPM_RST_CONFIG_HPP
