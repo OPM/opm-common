@@ -85,7 +85,6 @@ if(ENABLE_ECL_INPUT)
     external/resinsight/CommonCode/cvfStructGrid.cpp
     external/resinsight/cafPdmCore/cafSignal.cpp
     external/resinsight/cafHexGridIntersectionTools/cafHexGridIntersectionTools.cpp
-
     opm/io/eclipse/SummaryNode.cpp
     opm/json/JsonObject.cpp
     opm/input/eclipse/Deck/Deck.cpp
