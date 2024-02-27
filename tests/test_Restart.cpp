@@ -238,10 +238,10 @@ data::Solution mkSolution(int numCells)
     fun::iota rvi( 400.0, 400.0 + numCells );
 
     sol.insert("RS", measure::identity,
-               { rsi.begin(), rsi.end() },
+               std::vector<double>{ rsi.begin(), rsi.end() },
                data::TargetType::RESTART_SOLUTION);
     sol.insert("RV", measure::identity,
-               { rvi.begin(), rvi.end() },
+               std::vector<double>{ rvi.begin(), rvi.end() },
                data::TargetType::RESTART_SOLUTION);
 
     return sol;
