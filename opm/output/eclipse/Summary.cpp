@@ -2820,7 +2820,9 @@ find_wells(const Opm::Schedule&           schedule,
 
 bool need_wells(const Opm::EclIO::SummaryNode& node)
 {
-    static const std::regex region_keyword_regex { "R[OGW][IP][RT]" };
+    static const std::regex region_keyword_regex {
+        "R[OGW][IP][RT](_[A-Z0-9_]{1,3})?"
+    };
     static const std::regex group_guiderate_regex { "G[OGWV][IP]GR" };
 
     using Cat = Opm::EclIO::SummaryNode::Category;
