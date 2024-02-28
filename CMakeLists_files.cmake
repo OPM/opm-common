@@ -148,6 +148,7 @@ if(ENABLE_ECL_INPUT)
     opm/input/eclipse/EclipseState/IOConfig/FIPConfig.cpp
     opm/input/eclipse/EclipseState/IOConfig/IOConfig.cpp
     opm/input/eclipse/EclipseState/SimulationConfig/BCConfig.cpp
+    opm/input/eclipse/EclipseState/SimulationConfig/DatumDepth.cpp
     opm/input/eclipse/EclipseState/SimulationConfig/RockConfig.cpp
     opm/input/eclipse/EclipseState/SimulationConfig/SimulationConfig.cpp
     opm/input/eclipse/EclipseState/SimulationConfig/ThresholdPressure.cpp
@@ -481,6 +482,7 @@ if(ENABLE_ECL_INPUT)
     tests/test_ActiveGridCells.cpp
     tests/test_CopyablePtr.cpp
     tests/test_CSRGraphFromCoordinates.cpp
+    tests/test_DatumDepth.cpp
     tests/test_ERsm.cpp
     tests/test_GuideRate.cpp
     tests/test_RestartFileView.cpp
@@ -1321,10 +1323,11 @@ if(ENABLE_ECL_INPUT)
        opm/input/eclipse/Schedule/MSW/WellSegments.hpp
        opm/input/eclipse/Schedule/MSW/AICD.hpp
        opm/input/eclipse/Schedule/MSW/SICD.hpp
-       opm/input/eclipse/EclipseState/SimulationConfig/ThresholdPressure.hpp
        opm/input/eclipse/EclipseState/SimulationConfig/BCConfig.hpp
+       opm/input/eclipse/EclipseState/SimulationConfig/DatumDepth.hpp
        opm/input/eclipse/EclipseState/SimulationConfig/RockConfig.hpp
        opm/input/eclipse/EclipseState/SimulationConfig/SimulationConfig.hpp
+       opm/input/eclipse/EclipseState/SimulationConfig/ThresholdPressure.hpp
        opm/input/eclipse/Schedule/MSW/Valve.hpp
        opm/input/eclipse/EclipseState/IOConfig/FIPConfig.hpp
        opm/input/eclipse/EclipseState/IOConfig/IOConfig.hpp
