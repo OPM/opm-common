@@ -17,20 +17,24 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <opm/input/eclipse/EclipseState/SimulationConfig/SimulationConfig.hpp>
+
+#include <opm/input/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
+
+#include <opm/input/eclipse/EclipseState/SimulationConfig/BCConfig.hpp>
+#include <opm/input/eclipse/EclipseState/SimulationConfig/DatumDepth.hpp>
+#include <opm/input/eclipse/EclipseState/SimulationConfig/RockConfig.hpp>
+#include <opm/input/eclipse/EclipseState/SimulationConfig/ThresholdPressure.hpp>
 
 #include <opm/input/eclipse/Deck/DeckSection.hpp>
-#include <opm/input/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
-#include <opm/input/eclipse/EclipseState/SimulationConfig/SimulationConfig.hpp>
-#include <opm/input/eclipse/EclipseState/SimulationConfig/ThresholdPressure.hpp>
+
 #include <opm/input/eclipse/Parser/ParserKeywords/C.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/D.hpp>
-#include <opm/input/eclipse/Parser/ParserKeywords/N.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/G.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/N.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/P.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/T.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/V.hpp>
-
-
 
 /*
   The internalization of the CPR keyword has been temporarily
@@ -45,37 +49,15 @@
 
 */
 
-
 namespace Opm {
-
-    SimulationConfig::SimulationConfig() :
-        m_useCPR(false),
-        m_useNONNC(false),
-        m_DISGAS(false),
-        m_DISGASW(false),
-        m_VAPOIL(false),
-        m_VAPWAT(false),
-        m_isThermal(false),
-        m_diffuse(false),
-        m_PRECSALT(false)
-    {
-    }
 
     SimulationConfig::SimulationConfig(bool restart,
                                        const Deck& deck,
-                                       const FieldPropsManager& fp) :
-        m_ThresholdPressure( restart, deck, fp),
-        m_bcconfig(deck),
-        m_rock_config(deck, fp),
-        m_useCPR(false),
-        m_useNONNC(false),
-        m_DISGAS(false),
-        m_DISGASW(false),
-        m_VAPOIL(false),
-        m_VAPWAT(false),
-        m_isThermal(false),
-        m_diffuse(false),
-        m_PRECSALT(false)
+                                       const FieldPropsManager& fp)
+        : m_ThresholdPressure { restart, deck, fp }
+        , m_bcconfig          { deck }
+        , m_rock_config       { deck, fp }
+        , m_datum_depth       { SOLUTIONSection { deck } }
     {
         if (DeckSection::hasRUNSPEC(deck)) {
             const RUNSPECSection runspec(deck);
@@ -122,17 +104,22 @@ namespace Opm {
         result.m_ThresholdPressure = ThresholdPressure::serializationTestObject();
         result.m_bcconfig = BCConfig::serializationTestObject();
         result.m_rock_config = RockConfig::serializationTestObject();
-        result.m_useCPR = false;
+        result.m_datum_depth = DatumDepth::serializationTestObjectUserDefined();
+        result.m_useCPR = true;
         result.m_useNONNC = true;
         result.m_DISGAS = true;
         result.m_DISGASW = true;
-        result.m_VAPOIL = false;
-        result.m_VAPWAT = false;
+        result.m_VAPOIL = true;
+        result.m_VAPWAT = true;
         result.m_isThermal = true;
         result.m_diffuse = true;
         result.m_PRECSALT = true;
 
         return result;
+    }
+
+    const RockConfig& SimulationConfig::rock_config() const {
+        return this->m_rock_config;
     }
 
     const ThresholdPressure& SimulationConfig::getThresholdPressure() const {
@@ -143,8 +130,9 @@ namespace Opm {
         return m_bcconfig;
     }
 
-    const RockConfig& SimulationConfig::rock_config() const {
-        return this->m_rock_config;
+    const DatumDepth& SimulationConfig::datumDepths() const
+    {
+        return this->m_datum_depth;
     }
 
     bool SimulationConfig::useThresholdPressure() const {
@@ -187,35 +175,41 @@ namespace Opm {
         return m_PRECSALT;
     }
 
-    bool SimulationConfig::operator==(const SimulationConfig& data) const {
-        return this->getThresholdPressure() == data.getThresholdPressure() &&
-               this->bcconfig() == data.bcconfig() &&
-               this->rock_config() == data.rock_config() &&
-               this->useCPR() == data.useCPR() &&
-               this->useNONNC() == data.useNONNC() &&
-               this->hasDISGAS() == data.hasDISGAS() &&
-               this->hasDISGASW() == data.hasDISGASW() &&
-               this->hasVAPOIL() == data.hasVAPOIL() &&
-               this->hasVAPWAT() == data.hasVAPWAT() &&
-               this->isThermal() == data.isThermal() &&
-               this->isDiffusive() == data.isDiffusive() &&
-               this->hasPRECSALT() == data.hasPRECSALT();
+    bool SimulationConfig::operator==(const SimulationConfig& data) const
+    {
+        return (this->getThresholdPressure() == data.getThresholdPressure())
+            && (this->bcconfig() == data.bcconfig())
+            && (this->rock_config() == data.rock_config())
+            && (this->datumDepths() == data.datumDepths())
+            && (this->useCPR() == data.useCPR())
+            && (this->useNONNC() == data.useNONNC())
+            && (this->hasDISGAS() == data.hasDISGAS())
+            && (this->hasDISGASW() == data.hasDISGASW())
+            && (this->hasVAPOIL() == data.hasVAPOIL())
+            && (this->hasVAPWAT() == data.hasVAPWAT())
+            && (this->isThermal() == data.isThermal())
+            && (this->isDiffusive() == data.isDiffusive())
+            && (this->hasPRECSALT() == data.hasPRECSALT())
+            ;
     }
 
-    bool SimulationConfig::rst_cmp(const SimulationConfig& full_config, const SimulationConfig& rst_config) {
-        return ThresholdPressure::rst_cmp(full_config.getThresholdPressure(), rst_config.getThresholdPressure()) &&
-               full_config.bcconfig() == rst_config.bcconfig() &&
-               full_config.rock_config() == rst_config.rock_config() &&
-               full_config.useCPR() == rst_config.useCPR() &&
-               full_config.useNONNC() == rst_config.useNONNC() &&
-               full_config.hasDISGAS() == rst_config.hasDISGAS() &&
-               full_config.hasDISGASW() == rst_config.hasDISGASW() &&
-               full_config.hasVAPOIL() == rst_config.hasVAPOIL() &&
-               full_config.hasVAPWAT() == rst_config.hasVAPWAT() &&
-               full_config.isThermal() == rst_config.isThermal() &&
-               full_config.isDiffusive() == rst_config.isDiffusive() &&
-               full_config.hasPRECSALT() == rst_config.hasPRECSALT();
+    bool SimulationConfig::rst_cmp(const SimulationConfig& full_config,
+                                   const SimulationConfig& rst_config)
+    {
+        return ThresholdPressure::rst_cmp(full_config.getThresholdPressure(), rst_config.getThresholdPressure())
+            && (full_config.bcconfig() == rst_config.bcconfig())
+            && (full_config.rock_config() == rst_config.rock_config())
+            && (full_config.datumDepths() == rst_config.datumDepths())
+            && (full_config.useCPR() == rst_config.useCPR())
+            && (full_config.useNONNC() == rst_config.useNONNC())
+            && (full_config.hasDISGAS() == rst_config.hasDISGAS())
+            && (full_config.hasDISGASW() == rst_config.hasDISGASW())
+            && (full_config.hasVAPOIL() == rst_config.hasVAPOIL())
+            && (full_config.hasVAPWAT() == rst_config.hasVAPWAT())
+            && (full_config.isThermal() == rst_config.isThermal())
+            && (full_config.isDiffusive() == rst_config.isDiffusive())
+            && (full_config.hasPRECSALT() == rst_config.hasPRECSALT())
+            ;
     }
 
-
-} //namespace Opm
+} // namespace Opm

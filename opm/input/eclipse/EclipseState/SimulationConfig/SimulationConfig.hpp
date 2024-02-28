@@ -15,25 +15,29 @@
 
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
- */
+*/
 
 #ifndef OPM_SIMULATION_CONFIG_HPP
 #define OPM_SIMULATION_CONFIG_HPP
 
+#include <opm/input/eclipse/EclipseState/SimulationConfig/BCConfig.hpp>
+#include <opm/input/eclipse/EclipseState/SimulationConfig/DatumDepth.hpp>
 #include <opm/input/eclipse/EclipseState/SimulationConfig/RockConfig.hpp>
 #include <opm/input/eclipse/EclipseState/SimulationConfig/ThresholdPressure.hpp>
-#include <opm/input/eclipse/EclipseState/SimulationConfig/BCConfig.hpp>
 
 namespace Opm {
 
     class Deck;
     class FieldPropsManager;
 
-    class SimulationConfig {
+} // namespace Opm
 
+namespace Opm {
+
+    class SimulationConfig
+    {
     public:
-
-        SimulationConfig();
+        SimulationConfig() = default;
         SimulationConfig(bool restart,
                          const Deck& deck,
                          const FieldPropsManager& fp);
@@ -43,6 +47,8 @@ namespace Opm {
         const RockConfig& rock_config() const;
         const ThresholdPressure& getThresholdPressure() const;
         const BCConfig& bcconfig() const;
+        const DatumDepth& datumDepths() const;
+
         bool useThresholdPressure() const;
         bool useCPR() const;
         bool useNONNC() const;
@@ -55,7 +61,8 @@ namespace Opm {
         bool hasPRECSALT() const;
 
         bool operator==(const SimulationConfig& data) const;
-        static bool rst_cmp(const SimulationConfig& full_config, const SimulationConfig& rst_config);
+        static bool rst_cmp(const SimulationConfig& full_config,
+                            const SimulationConfig& rst_config);
 
         template<class Serializer>
         void serializeOp(Serializer& serializer)
@@ -63,6 +70,7 @@ namespace Opm {
             serializer(m_ThresholdPressure);
             serializer(m_bcconfig);
             serializer(m_rock_config);
+            serializer(this->m_datum_depth);
             serializer(m_useCPR);
             serializer(m_useNONNC);
             serializer(m_DISGAS);
@@ -76,22 +84,22 @@ namespace Opm {
 
     private:
         friend class EclipseState;
-        ThresholdPressure m_ThresholdPressure;
-        BCConfig m_bcconfig;
-        RockConfig m_rock_config;
-        bool m_useCPR;
-        bool m_useNONNC;
-        bool m_DISGAS;
-        bool m_DISGASW;
-        bool m_VAPOIL;
-        bool m_VAPWAT;
-        bool m_isThermal;
-        bool m_diffuse;
-        bool m_PRECSALT;
+
+        ThresholdPressure m_ThresholdPressure{};
+        BCConfig m_bcconfig{};
+        RockConfig m_rock_config{};
+        DatumDepth m_datum_depth{};
+        bool m_useCPR{false};
+        bool m_useNONNC{false};
+        bool m_DISGAS{false};
+        bool m_DISGASW{false};
+        bool m_VAPOIL{false};
+        bool m_VAPWAT{false};
+        bool m_isThermal{false};
+        bool m_diffuse{false};
+        bool m_PRECSALT{false};
     };
 
-} //namespace Opm
+} // namespace Opm
 
-
-
-#endif
+#endif // OPM_SIMULATION_CONFIG_HPP
