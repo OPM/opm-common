@@ -24,20 +24,19 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include <memory>
-#include <tuple>
-#include <utility>
-
 #include <opm/common/OpmLog/KeywordLocation.hpp>
+
+#include <opm/output/data/Aquifer.hpp>
+#include <opm/output/eclipse/RestartValue.hpp>
+
 #include <opm/input/eclipse/Deck/Deck.hpp>
 #include <opm/input/eclipse/Deck/DeckItem.hpp>
+
 #include <opm/input/eclipse/EclipseState/Aquifer/Aquancon.hpp>
 #include <opm/input/eclipse/EclipseState/Aquifer/AquiferCT.hpp>
 #include <opm/input/eclipse/EclipseState/Aquifer/AquiferConfig.hpp>
 #include <opm/input/eclipse/EclipseState/Aquifer/Aquifetp.hpp>
 #include <opm/input/eclipse/EclipseState/EclipseConfig.hpp>
-#include <opm/input/eclipse/EclipseState/Runspec.hpp>
-#include <opm/input/eclipse/EclipseState/TracerConfig.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/FaceDir.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/Fault.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/FaultCollection.hpp>
@@ -46,85 +45,22 @@
 #include <opm/input/eclipse/EclipseState/Grid/NNC.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/TranCalculator.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/TransMult.hpp>
+#include <opm/input/eclipse/EclipseState/IOConfig/IOConfig.hpp>
 #include <opm/input/eclipse/EclipseState/InitConfig/Equil.hpp>
 #include <opm/input/eclipse/EclipseState/InitConfig/FoamConfig.hpp>
 #include <opm/input/eclipse/EclipseState/InitConfig/InitConfig.hpp>
-#include <opm/input/eclipse/EclipseState/IOConfig/IOConfig.hpp>
-#include <opm/input/eclipse/Schedule/GasLiftOpt.hpp>
-#include <opm/input/eclipse/Schedule/RSTConfig.hpp>
-#include <opm/input/eclipse/Schedule/SummaryState.hpp>
-#include <opm/input/eclipse/Schedule/Action/ActionResult.hpp>
-#include <opm/input/eclipse/Schedule/Action/State.hpp>
-#include <opm/input/eclipse/Schedule/Action/ActionAST.hpp>
-#include <opm/input/eclipse/Schedule/Action/PyAction.hpp>
-#include <opm/input/eclipse/Schedule/Action/Actions.hpp>
-#include <opm/input/eclipse/Schedule/Action/ActionX.hpp>
-#include <opm/input/eclipse/Schedule/Action/ASTNode.hpp>
-#include <opm/input/eclipse/Schedule/Action/Condition.hpp>
-#include <opm/input/eclipse/Schedule/Events.hpp>
-#include <opm/input/eclipse/Schedule/Group/GConSale.hpp>
-#include <opm/input/eclipse/Schedule/Group/GConSump.hpp>
-#include <opm/input/eclipse/Schedule/Group/GroupEconProductionLimits.hpp>
-#include <opm/input/eclipse/Schedule/Group/Group.hpp>
-#include <opm/input/eclipse/Schedule/Group/GuideRateConfig.hpp>
-#include <opm/input/eclipse/Schedule/Group/GuideRateModel.hpp>
-#include <opm/input/eclipse/Schedule/MessageLimits.hpp>
-#include <opm/input/eclipse/Schedule/MSW/icd.hpp>
-#include <opm/input/eclipse/Schedule/MSW/AICD.hpp>
-#include <opm/input/eclipse/Schedule/MSW/SICD.hpp>
-#include <opm/input/eclipse/Schedule/MSW/Valve.hpp>
-#include <opm/input/eclipse/Schedule/MSW/WellSegments.hpp>
-#include <opm/input/eclipse/Schedule/Network/Balance.hpp>
-#include <opm/input/eclipse/Schedule/Network/ExtNetwork.hpp>
-#include <opm/input/eclipse/Schedule/Well/FilterCake.hpp>
-#include <opm/input/eclipse/Schedule/Network/Node.hpp>
-#include <opm/input/eclipse/Schedule/OilVaporizationProperties.hpp>
-#include <opm/input/eclipse/Schedule/RFTConfig.hpp>
-#include <opm/input/eclipse/Schedule/RPTConfig.hpp>
-#include <opm/input/eclipse/Schedule/Schedule.hpp>
-#include <opm/input/eclipse/Schedule/ScheduleTypes.hpp>
-#include <opm/input/eclipse/Schedule/Tuning.hpp>
-#include <opm/input/eclipse/Schedule/UDQ/UDQActive.hpp>
-#include <opm/input/eclipse/Schedule/UDQ/UDQAssign.hpp>
-#include <opm/input/eclipse/Schedule/UDQ/UDQASTNode.hpp>
-#include <opm/input/eclipse/Schedule/UDQ/UDQConfig.hpp>
-#include <opm/input/eclipse/Schedule/UDQ/UDQDefine.hpp>
-#include <opm/input/eclipse/Schedule/UDQ/UDQFunction.hpp>
-#include <opm/input/eclipse/Schedule/UDQ/UDQFunctionTable.hpp>
-#include <opm/input/eclipse/Schedule/UDQ/UDQInput.hpp>
-#include <opm/input/eclipse/Schedule/UDQ/UDQState.hpp>
-#include <opm/input/eclipse/Schedule/VFPInjTable.hpp>
-#include <opm/input/eclipse/Schedule/VFPProdTable.hpp>
-#include <opm/input/eclipse/Schedule/Well/Connection.hpp>
-#include <opm/input/eclipse/Schedule/Well/NameOrder.hpp>
-#include <opm/input/eclipse/Schedule/Well/PAvg.hpp>
-#include <opm/input/eclipse/Schedule/Well/WDFAC.hpp>
-#include <opm/input/eclipse/Schedule/Well/Well.hpp>
-#include <opm/input/eclipse/Schedule/Well/WellBrineProperties.hpp>
-#include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
-#include <opm/input/eclipse/Schedule/Well/WellEconProductionLimits.hpp>
-#include <opm/input/eclipse/Schedule/Well/WellFoamProperties.hpp>
-#include <opm/input/eclipse/Schedule/Well/WellMICPProperties.hpp>
-#include <opm/input/eclipse/Schedule/Well/WellPolymerProperties.hpp>
-#include <opm/input/eclipse/Schedule/Well/WellTracerProperties.hpp>
-#include <opm/input/eclipse/Schedule/Well/WellTestConfig.hpp>
-#include <opm/input/eclipse/Schedule/Well/WellTestState.hpp>
-#include <opm/input/eclipse/Schedule/Well/WList.hpp>
-#include <opm/input/eclipse/Schedule/Well/WListManager.hpp>
-#include <opm/input/eclipse/Schedule/Well/WVFPDP.hpp>
-
-#include <opm/input/eclipse/Schedule/Well/WVFPEXP.hpp>
-#include <opm/input/eclipse/Schedule/WriteRestartFileEvents.hpp>
+#include <opm/input/eclipse/EclipseState/Runspec.hpp>
 #include <opm/input/eclipse/EclipseState/SimulationConfig/BCConfig.hpp>
+#include <opm/input/eclipse/EclipseState/SimulationConfig/DatumDepth.hpp>
 #include <opm/input/eclipse/EclipseState/SimulationConfig/RockConfig.hpp>
 #include <opm/input/eclipse/EclipseState/SimulationConfig/SimulationConfig.hpp>
 #include <opm/input/eclipse/EclipseState/SimulationConfig/ThresholdPressure.hpp>
 #include <opm/input/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/Aqudims.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/ColumnSchema.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/DenT.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/Eqldims.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/FlatTable.hpp>
-#include <opm/input/eclipse/EclipseState/Tables/DenT.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/JFunc.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/PlymwinjTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/PlyshlogTable.hpp>
@@ -142,25 +78,95 @@
 #include <opm/input/eclipse/EclipseState/Tables/TableContainer.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/TableSchema.hpp>
-#include <opm/output/data/Aquifer.hpp>
-#include <opm/output/eclipse/RestartValue.hpp>
+#include <opm/input/eclipse/EclipseState/TracerConfig.hpp>
+
+#include <opm/input/eclipse/Schedule/Action/ASTNode.hpp>
+#include <opm/input/eclipse/Schedule/Action/ActionAST.hpp>
+#include <opm/input/eclipse/Schedule/Action/ActionResult.hpp>
+#include <opm/input/eclipse/Schedule/Action/ActionX.hpp>
+#include <opm/input/eclipse/Schedule/Action/Actions.hpp>
+#include <opm/input/eclipse/Schedule/Action/Condition.hpp>
+#include <opm/input/eclipse/Schedule/Action/PyAction.hpp>
+#include <opm/input/eclipse/Schedule/Action/State.hpp>
+#include <opm/input/eclipse/Schedule/Events.hpp>
+#include <opm/input/eclipse/Schedule/GasLiftOpt.hpp>
+#include <opm/input/eclipse/Schedule/Group/GConSale.hpp>
+#include <opm/input/eclipse/Schedule/Group/GConSump.hpp>
+#include <opm/input/eclipse/Schedule/Group/Group.hpp>
+#include <opm/input/eclipse/Schedule/Group/GroupEconProductionLimits.hpp>
+#include <opm/input/eclipse/Schedule/Group/GuideRateConfig.hpp>
+#include <opm/input/eclipse/Schedule/Group/GuideRateModel.hpp>
+#include <opm/input/eclipse/Schedule/MSW/AICD.hpp>
+#include <opm/input/eclipse/Schedule/MSW/SICD.hpp>
+#include <opm/input/eclipse/Schedule/MSW/Valve.hpp>
+#include <opm/input/eclipse/Schedule/MSW/WellSegments.hpp>
+#include <opm/input/eclipse/Schedule/MSW/icd.hpp>
+#include <opm/input/eclipse/Schedule/MessageLimits.hpp>
+#include <opm/input/eclipse/Schedule/Network/Balance.hpp>
+#include <opm/input/eclipse/Schedule/Network/ExtNetwork.hpp>
+#include <opm/input/eclipse/Schedule/Network/Node.hpp>
+#include <opm/input/eclipse/Schedule/OilVaporizationProperties.hpp>
+#include <opm/input/eclipse/Schedule/RFTConfig.hpp>
+#include <opm/input/eclipse/Schedule/RPTConfig.hpp>
+#include <opm/input/eclipse/Schedule/RSTConfig.hpp>
+#include <opm/input/eclipse/Schedule/Schedule.hpp>
+#include <opm/input/eclipse/Schedule/ScheduleTypes.hpp>
+#include <opm/input/eclipse/Schedule/SummaryState.hpp>
+#include <opm/input/eclipse/Schedule/Tuning.hpp>
+#include <opm/input/eclipse/Schedule/UDQ/UDQASTNode.hpp>
+#include <opm/input/eclipse/Schedule/UDQ/UDQActive.hpp>
+#include <opm/input/eclipse/Schedule/UDQ/UDQAssign.hpp>
+#include <opm/input/eclipse/Schedule/UDQ/UDQConfig.hpp>
+#include <opm/input/eclipse/Schedule/UDQ/UDQDefine.hpp>
+#include <opm/input/eclipse/Schedule/UDQ/UDQFunction.hpp>
+#include <opm/input/eclipse/Schedule/UDQ/UDQFunctionTable.hpp>
+#include <opm/input/eclipse/Schedule/UDQ/UDQInput.hpp>
+#include <opm/input/eclipse/Schedule/UDQ/UDQState.hpp>
+#include <opm/input/eclipse/Schedule/VFPInjTable.hpp>
+#include <opm/input/eclipse/Schedule/VFPProdTable.hpp>
+#include <opm/input/eclipse/Schedule/Well/Connection.hpp>
+#include <opm/input/eclipse/Schedule/Well/FilterCake.hpp>
+#include <opm/input/eclipse/Schedule/Well/NameOrder.hpp>
+#include <opm/input/eclipse/Schedule/Well/PAvg.hpp>
+#include <opm/input/eclipse/Schedule/Well/WDFAC.hpp>
+#include <opm/input/eclipse/Schedule/Well/WList.hpp>
+#include <opm/input/eclipse/Schedule/Well/WListManager.hpp>
+#include <opm/input/eclipse/Schedule/Well/WVFPDP.hpp>
+#include <opm/input/eclipse/Schedule/Well/WVFPEXP.hpp>
+#include <opm/input/eclipse/Schedule/Well/Well.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellBrineProperties.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellEconProductionLimits.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellFoamProperties.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellMICPProperties.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellPolymerProperties.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellTestConfig.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellTestState.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellTracerProperties.hpp>
+#include <opm/input/eclipse/Schedule/WriteRestartFileEvents.hpp>
+
 #include <opm/common/utility/Serializer.hpp>
 #include <opm/common/utility/MemPacker.hpp>
 
-template<class T>
-std::tuple<T,int,int> PackUnpack(T& in)
-{
-    Opm::Serialization::MemPacker packer;
-    Opm::Serializer ser(packer);
-    ser.pack(in);
-    const size_t pos1 = ser.position();
-    T out{};
-    ser.unpack(out);
-    const size_t pos2 = ser.position();
+#include <memory>
+#include <tuple>
+#include <utility>
 
-    return std::make_tuple(out, pos1, pos2);
+namespace {
+    template<class T>
+    std::tuple<T,int,int> PackUnpack(T& in)
+    {
+        Opm::Serialization::MemPacker packer;
+        Opm::Serializer ser(packer);
+        ser.pack(in);
+        const size_t pos1 = ser.position();
+        T out{};
+        ser.unpack(out);
+        const size_t pos2 = ser.position();
+
+        return std::make_tuple(out, pos1, pos2);
+    }
 }
-
 
 #define TEST_FOR_TYPE_NAMED_OBJ(TYPE, NAME, OBJ) \
 BOOST_AUTO_TEST_CASE(NAME) \
@@ -219,6 +225,10 @@ TEST_FOR_TYPE_NAMED(data::Well, dataWell)
 TEST_FOR_TYPE_NAMED(data::Wells, Wells)
 TEST_FOR_TYPE_NAMED(data::WellBlockAvgPress, dataWBPObject)
 TEST_FOR_TYPE_NAMED(data::WellBlockAveragePressures, dataWBPCollection)
+TEST_FOR_TYPE_NAMED_OBJ(DatumDepth, DatumDepth_Zero, serializationTestObjectZero)
+TEST_FOR_TYPE_NAMED_OBJ(DatumDepth, DatumDepth_Global, serializationTestObjectGlobal)
+TEST_FOR_TYPE_NAMED_OBJ(DatumDepth, DatumDepth_DefaultRegion, serializationTestObjectDefaultRegion)
+TEST_FOR_TYPE_NAMED_OBJ(DatumDepth, DatumDepth_UserDefined, serializationTestObjectUserDefined)
 TEST_FOR_TYPE(Deck)
 TEST_FOR_TYPE(DeckItem)
 TEST_FOR_TYPE(DeckKeyword)
@@ -336,7 +346,6 @@ TEST_FOR_TYPE(WellTestState)
 TEST_FOR_TYPE(WellType)
 TEST_FOR_TYPE(WListManager)
 TEST_FOR_TYPE(WriteRestartFileEvents)
-
 
 namespace {
 
