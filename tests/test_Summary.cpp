@@ -2738,6 +2738,12 @@ BOOST_AUTO_TEST_CASE(efficiency_factor) {
         BOOST_CHECK_CLOSE( 10.1 + 20.1 * 0.2 * 0.01, ecl_sum_get_field_var( resp, 1, "FOPT" ), 1e-5 );
         BOOST_CHECK_CLOSE( 2 * (10.1 + 20.1 * 0.2 * 0.01), ecl_sum_get_field_var( resp, 2, "FOPT" ), 1e-5 );
 
+        BOOST_CHECK_CLOSE(100.1 + (200.1 * 0.2 * 0.01) + (300.1 * 0.3 * 0.02 * 0.03),
+                          ecl_sum_get_general_var(resp, 1, "ROPT_ABC:1"), 1e-5);
+
+        BOOST_CHECK_CLOSE(2 * (100.1 + (200.1 * 0.2 * 0.01)) + (300.1 * 0.3 * 0.02 * (0.03 + 0.04)),
+                          ecl_sum_get_general_var(resp, 2, "ROPT_ABC:1"), 1e-5);
+
         BOOST_CHECK_CLOSE( 30.1 * 0.3 * 0.02 * 0.03, ecl_sum_get_field_var( resp, 1, "FOIR" ), 1e-5 );
         BOOST_CHECK_CLOSE( 30.1 * 0.3 * 0.02 * 0.03, ecl_sum_get_field_var( resp, 1, "FOIT" ), 1e-5 );
         BOOST_CHECK_CLOSE( 30.1 * 0.3 * 0.02 * 0.03 + 30.1 * 0.3 * 0.02 * 0.04, ecl_sum_get_field_var( resp, 2, "FOIT" ), 1e-5 );
