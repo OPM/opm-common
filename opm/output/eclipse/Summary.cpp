@@ -2660,6 +2660,9 @@ static const auto block_units = UnitTable {
     // Pressure quantities
     {"BPR"      , Opm::UnitSystem::measure::pressure},
     {"BPRESSUR" , Opm::UnitSystem::measure::pressure},
+    {"BPPO"     , Opm::UnitSystem::measure::pressure},
+    {"BPPG"     , Opm::UnitSystem::measure::pressure},
+    {"BPPW"     , Opm::UnitSystem::measure::pressure},
 
     // Volumes and ratios
     {"BRPV"     , Opm::UnitSystem::measure::volume},
