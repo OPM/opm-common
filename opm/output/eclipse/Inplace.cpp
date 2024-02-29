@@ -46,11 +46,13 @@ std::size_t region_max(const std::unordered_map<std::size_t, double>& region_map
 std::size_t
 phase_region_max(const std::unordered_map<Opm::Inplace::Phase, std::unordered_map<std::size_t, double>>& phase_map)
 {
-    return std::accumulate(phase_map.begin(), phase_map.end(), std::size_t{0},
-                           [](const std::size_t max, const auto& region_map)
-                           {
-                               return std::max(max, region_max(region_map.second));
-                           });
+    return std::accumulate(phase_map.begin(),
+                           phase_map.end(),
+                           std::size_t{0},
+        [](const std::size_t max, const auto& region_map)
+    {
+        return std::max(max, region_max(region_map.second));
+    });
 }
 
 template <typename Vector>
@@ -72,7 +74,10 @@ Inplace Inplace::serializationTestObject()
     return result;
 }
 
-void Inplace::add(const std::string& region, Inplace::Phase phase, std::size_t region_id, double value)
+void Inplace::add(const std::string&   region,
+                  const Inplace::Phase phase,
+                  const std::size_t    region_id,
+                  const double         value)
 {
     this->phase_values[region][phase][region_id] = value;
 }
@@ -82,23 +87,31 @@ void Inplace::add(Inplace::Phase phase, double value)
     this->add(FIELD_NAME, phase, FIELD_ID, value);
 }
 
-double Inplace::get(const std::string& region, Inplace::Phase phase, std::size_t region_id) const
+double Inplace::get(const std::string&   region,
+                    const Inplace::Phase phase,
+                    const std::size_t    region_id) const
 {
     auto region_iter = this->phase_values.find(region);
     if (region_iter == this->phase_values.end()) {
-        throw std::logic_error(fmt::format("No such region: {}", region));
+        throw std::logic_error {
+            fmt::format("No such region: {}", region)
+        };
     }
 
     auto phase_iter = region_iter->second.find(phase);
     if (phase_iter == region_iter->second.end()) {
-        throw std::logic_error(fmt::format("No such phase: {}:{}",
-                                           region, static_cast<int>(phase)));
+        throw std::logic_error {
+            fmt::format("No such phase: {}:{}",
+                        region, static_cast<int>(phase))
+        };
     }
 
     auto value_iter = phase_iter->second.find(region_id);
     if (value_iter == phase_iter->second.end()) {
-        throw std::logic_error(fmt::format("No such region id: {}:{}:{}",
-                                           region, static_cast<int>(phase), region_id));
+        throw std::logic_error {
+            fmt::format("No such region id: {}:{}:{}",
+                        region, static_cast<int>(phase), region_id)
+        };
     }
 
     return value_iter->second;
@@ -109,7 +122,9 @@ double Inplace::get(Inplace::Phase phase) const
     return this->get(FIELD_NAME, phase, FIELD_ID);
 }
 
-bool Inplace::has(const std::string& region, Phase phase, std::size_t region_id) const
+bool Inplace::has(const std::string& region,
+                  const Phase        phase,
+                  const std::size_t  region_id) const
 {
     auto region_iter = this->phase_values.find(region);
     if (region_iter == this->phase_values.end()) {
@@ -121,7 +136,8 @@ bool Inplace::has(const std::string& region, Phase phase, std::size_t region_id)
         return false;
     }
 
-    return phase_iter->second.find(region_id) != phase_iter->second.end();
+    return phase_iter->second.find(region_id)
+        != phase_iter->second.end();
 }
 
 bool Inplace::has(Phase phase) const
@@ -131,30 +147,51 @@ bool Inplace::has(Phase phase) const
 
 std::size_t Inplace::max_region() const
 {
-    return std::accumulate(this->phase_values.begin(), this->phase_values.end(), std::size_t{0},
-                           [](const std::size_t max, const auto& phase_map)
-                           {
-                               return std::max(max, phase_region_max(phase_map.second));
-                           });
+    return std::accumulate(this->phase_values.begin(),
+                           this->phase_values.end(),
+                           std::size_t{0},
+        [](const std::size_t max, const auto& phase_map)
+    {
+        return std::max(max, phase_region_max(phase_map.second));
+    });
 }
 
 std::size_t Inplace::max_region(const std::string& region_name) const
 {
     auto region_iter = this->phase_values.find(region_name);
     if (region_iter == this->phase_values.end()) {
-        throw std::logic_error(fmt::format("No such region: {}", region_name));
+        throw std::logic_error {
+            fmt::format("No such region: {}", region_name)
+        };
     }
 
     return phase_region_max(region_iter->second);
 }
 
-// This should probably die - temporarily added for porting of ecloutputblackoilmodule
-std::vector<double> Inplace::get_vector(const std::string& region, Phase phase) const
+std::vector<double>
+Inplace::get_vector(const std::string& region,
+                    const Phase        phase) const
 {
-    std::vector<double> v(this->max_region(region), 0);
-    const auto& region_map = this->phase_values.at(region).at(phase);
-    for (const auto& [region_id, value] : region_map)
+    std::vector<double> v(this->max_region(region), 0.0);
+
+    auto region_iter = this->phase_values.find(region);
+    if (region_iter == this->phase_values.end()) {
+        throw std::logic_error {
+            fmt::format("No such region: {}", region)
+        };
+    }
+
+    auto phase_iter = region_iter->second.find(phase);
+    if (phase_iter == region_iter->second.end()) {
+        throw std::logic_error {
+            fmt::format("Phase {} does not exist in region {}",
+                        static_cast<int>(phase), region)
+        };
+    }
+
+    for (const auto& [region_id, value] : phase_iter->second) {
         v[region_id - 1] = value;
+    }
 
     return v;
 }

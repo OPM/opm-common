@@ -29,18 +29,17 @@ namespace Opm {
 
 // The purpose of this class is to transport in-place values from the
 // simulator code to the summary output code.  The code is written very much
-// to fit in with the current implementation in the simulator.  Note that
-// the functions which don't take both a region name and a region number
-// argument are intended for totals, i.e., field-level values.
+// to fit in with the current implementation in the simulator.  Functions
+// which do not take both region set name and region ID arguments are
+// intended for field-level values.
 class Inplace
 {
 public:
-    // The Inplace class is implemented in close relation to the black-oil
+    // The Inplace class is implemented in close connection to the black-oil
     // output module in opm-simulators.  There are certain idiosyncracies
-    // here which are due to that coupling.  For instance the enum values
+    // here which are due to that coupling.  For instance the enumerators
     // PressurePV, HydroCarbonPV, PressureHydroCarbonPV, and
-    // DynamicPoreVolume are *not* included in the return value from
-    // phases().
+    // DynamicPoreVolume are not included in the return value from phases().
     enum class Phase {
         WATER = 0,              // Omitted from mixingPhases()
         OIL = 1,                // Omitted from mixingPhases()
@@ -84,11 +83,19 @@ public:
     std::size_t max_region() const;
     std::size_t max_region(const std::string& region_name) const;
 
-    // The get_vector functions return a vector length max_region() which
-    // contains the values added with the add() function and indexed with
-    // (region_number - 1). This is an incarnation of id <-> index confusion
-    // and should be replaced with a std::map instead.
-    std::vector<double> get_vector(const std::string& region, Phase phase) const;
+    /// Linearised per-region values for a given phase in a specific region
+    /// set.
+    ///
+    /// \param[in] region Region set name, e.g., "FIPNUM" or "FIPABC".
+    ///
+    /// \param[in] Phase In-place quantity.
+    ///
+    /// \return Per-region values of requested quantity in the region set
+    ///   named by \p region.  The get_vector functions return a vector of
+    ///   size max_region() which contains the values added with the add()
+    ///   function and is indexed by (region_number - 1).
+    std::vector<double>
+    get_vector(const std::string& region, Phase phase) const;
 
     static const std::vector<Phase>& phases();
     static const std::vector<Phase>& mixingPhases();
@@ -102,7 +109,11 @@ public:
     bool operator==(const Inplace& rhs) const;
 
 private:
-    std::unordered_map<std::string, std::unordered_map<Phase, std::unordered_map<std::size_t, double>>> phase_values;
+    using ValueMap = std::unordered_map<std::size_t, double>;
+    using PhaseMap = std::unordered_map<Phase, ValueMap>;
+    using RegionMap = std::unordered_map<std::string, PhaseMap>;
+
+    RegionMap phase_values{};
 };
 
 } // namespace Opm
