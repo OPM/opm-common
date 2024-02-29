@@ -69,18 +69,99 @@ public:
         CO2MassInGasPhaseMob = 25,
     };
 
+    /// Create non-defaulted object suitable for testing the serialisation
+    /// operation.
     static Inplace serializationTestObject();
 
-    void add(const std::string& region, Phase phase, std::size_t region_number, double value);
+    /// Assign value of particular quantity in specific region of named
+    /// region set.
+    ///
+    /// \param[in] region Region set name such as FIPNUM or FIPABC.
+    ///
+    /// \param[in] phase In-place quantity.
+    ///
+    /// \param[in] region_number Region ID for which to assign a new
+    ///   in-place quantity value.
+    ///
+    /// \param[in] value Numerical value of \p phase quantity in \p
+    ///   region_number region of \p region region set.
+    void add(const std::string& region,
+             Phase              phase,
+             std::size_t        region_number,
+             double             value);
+
+    /// Assign field-level value of particular quantity.
+    ///
+    /// \param[in] phase In-place quantity.
+    ///
+    /// \param[in] value Numerical value of field-level \p phase quantity.
     void add(Phase phase, double value);
 
-    double get(const std::string& region, Phase phase, std::size_t region_number) const;
+    /// Retrieve numerical value of particular quantity in specific region
+    /// of named region set.
+    ///
+    /// This function will throw an exception if the requested value has not
+    /// been assigned in a previous call to add().
+    ///
+    /// \param[in] region Region set name such as FIPNUM or FIPABC.
+    ///
+    /// \param[in] phase In-place quantity.
+    ///
+    /// \param[in] region_number Region ID for which to retrieve a the
+    ///   in-place quantity value.
+    ///
+    /// \return Numerical value of \p phase quantity in \p region_number
+    ///   region of \p region region set.
+    double get(const std::string& region,
+               Phase              phase,
+               std::size_t        region_number) const;
+
+    /// Retrieve field-level value of particular quantity.
+    ///
+    /// This function will throw an exception if the requested value has not
+    /// been assigned in a previous call to add().
+    ///
+    /// \param[in] phase In-place quantity.
+    ///
+    /// \return Numerical value of field-level \p phase quantity.
     double get(Phase phase) const;
 
-    bool has(const std::string& region, Phase phase, std::size_t region_number) const;
+    /// Check existence of particular quantity in specific region of named
+    /// region set.
+    ///
+    /// \param[in] region Region set name such as FIPNUM or FIPABC.
+    ///
+    /// \param[in] phase In-place quantity.
+    ///
+    /// \param[in] region_number Region ID for which to check existence of
+    ///   the in-place quantity value.
+    ///
+    /// \return Whether or not a value of the specific quantity exists in
+    ///   the specific region of the named region set.
+    bool has(const std::string& region,
+             Phase              phase,
+             std::size_t        region_number) const;
+
+    /// Check existence of specific field-level quantity.
+    ///
+    /// \param[in] phase In-place quantity.
+    ///
+    /// \return Whether or not a value of the specific quantity exists at
+    ///   field level.
     bool has(Phase phase) const;
 
+    /// Retrieve the maximum region ID registered across all quantities in
+    /// all registered region sets.
     std::size_t max_region() const;
+
+    /// Retrieve the maximum region ID across all quantities registered for
+    /// a specific region set.
+    ///
+    /// \param[in] region_name Region set name such as FIPNUM or FIPABC.
+    ///
+    /// \return Maximum region ID across all quantities registered for \p
+    ///   region_name.  Zero if \p region_name does not have any registered
+    ///   quantities in this in-place quantity collection.
     std::size_t max_region(const std::string& region_name) const;
 
     /// Linearised per-region values for a given phase in a specific region
@@ -97,15 +178,31 @@ public:
     std::vector<double>
     get_vector(const std::string& region, Phase phase) const;
 
+    /// Get iterable list of all quantities which can be handled/updated in
+    /// a generic way.
     static const std::vector<Phase>& phases();
+
+    /// Get iterable list of all quantities, other than "pure" phases, which
+    /// can be handled/updated in a generic way.
     static const std::vector<Phase>& mixingPhases();
 
+    /// Serialisation interface.
+    ///
+    /// \tparam Serializer Object serialisation protocol implementation
+    ///
+    /// \param[in,out] serializer Serialisation object
     template<class Serializer>
     void serializeOp(Serializer& serializer)
     {
         serializer(phase_values);
     }
 
+    /// Equality predicate.
+    ///
+    /// \param[in] rhs Object against which \c *this will be compared for
+    /// equality.
+    ///
+    /// \return Whether or not \c *this equals \p rhs.
     bool operator==(const Inplace& rhs) const;
 
 private:
@@ -113,6 +210,8 @@ private:
     using PhaseMap = std::unordered_map<Phase, ValueMap>;
     using RegionMap = std::unordered_map<std::string, PhaseMap>;
 
+    /// Numerical values of all registered quantities in all registered
+    /// region sets.
     RegionMap phase_values{};
 };
 
