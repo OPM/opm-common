@@ -49,6 +49,7 @@ public:
     virtual ~FieldPropsManager() = default;
 
     virtual void reset_actnum(const std::vector<int>& actnum);
+    void deleteMINPVV();
     const std::string& default_region() const;
     virtual std::vector<int> actnum() const;
     virtual std::vector<double> porv(bool global = false) const;

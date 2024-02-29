@@ -39,6 +39,10 @@ FieldPropsManager::FieldPropsManager(const Deck& deck, const Phases& phases, con
     fp(std::make_shared<FieldProps>(deck, phases, grid_arg, tables))
 {}
 
+void FieldPropsManager::deleteMINPVV() {
+    this->fp->deleteMINPVV();
+}
+
 void FieldPropsManager::reset_actnum(const std::vector<int>& actnum) {
     this->fp->reset_actnum(actnum);
 }

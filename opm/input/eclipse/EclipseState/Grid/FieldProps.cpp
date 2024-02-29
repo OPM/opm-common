@@ -563,6 +563,10 @@ FieldProps::FieldProps(const Deck& deck, const EclipseGrid& grid) :
         this->scanGRIDSectionOnlyACTNUM(GRIDSection(deck));
 }
 
+void FieldProps::deleteMINPVV()
+{
+    double_data.erase("MINPVV");
+}
 
 
 void FieldProps::reset_actnum(const std::vector<int>& new_actnum) {
