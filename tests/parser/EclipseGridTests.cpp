@@ -943,7 +943,7 @@ BOOST_AUTO_TEST_CASE(MinPVV) {
     auto deck = createMinpvvAddCPDeck();
     Opm::EclipseState es( deck);
     const auto& grid = es.getInputGrid();
-    std::vector<double> fp_minpvv = {1000, 1000, 1000, 1010, 1010, 1010};
+    std::vector<double> fp_minpvv = {1000., 1000., 1000, 1010., 1010., 1010.};
 
     BOOST_CHECK(grid.getMinpvMode() != Opm::MinpvMode::Inactive);
 
