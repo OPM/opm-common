@@ -31,6 +31,7 @@
 #include <opm/input/eclipse/Parser/ParseContext.hpp>
 
 #include "../../Parser/raw/RawConsts.hpp"
+
 #include "UDQParser.hpp"
 
 #include <cstddef>
@@ -187,7 +188,8 @@ make_udq_tokens(const std::vector<std::string>& string_tokens)
             }
 
             tokens.emplace_back(string_token, selector);
-        } else if (token_type == Opm::UDQTokenType::table_lookup) {
+        }
+        else if (token_type == Opm::UDQTokenType::table_lookup) {
             std::vector<std::string> selector;
             while (token_index < string_tokens.size()) {
                 auto next_token_type = Opm::UDQ::tokenType(string_tokens[token_index]);
@@ -196,19 +198,22 @@ make_udq_tokens(const std::vector<std::string>& string_tokens)
                 }
 
                 if (next_token_type != Opm::UDQTokenType::table_lookup_start) {
-                  const auto& select_token = string_tokens[token_index];
-                  if (Opm::RawConsts::is_quote()(select_token[0])) {
-                      selector.push_back(select_token.substr(1, select_token.size() - 2));
-                  }
-                  else {
-                      selector.push_back(select_token);
-                  }
+                    const auto& select_token = string_tokens[token_index];
+                    if (Opm::RawConsts::is_quote()(select_token[0])) {
+                        selector.push_back(select_token.substr(1, select_token.size() - 2));
+                    }
+                    else {
+                        selector.push_back(select_token);
+                    }
                 }
+
                 ++token_index;
             }
+
             ++token_index;
             tokens.emplace_back(string_token, selector);
-        } else {
+        }
+        else {
             tokens.emplace_back(string_token, token_type);
         }
 
@@ -227,15 +232,8 @@ make_udq_tokens(const std::vector<std::string>& string_tokens)
 bool dynamic_type_check(const Opm::UDQVarType lhs,
                         const Opm::UDQVarType rhs)
 {
-    if (lhs == rhs) {
-        return true;
-    }
-
-    if (rhs == Opm::UDQVarType::SCALAR) {
-        return true;
-    }
-
-    return true;
+    return (lhs == rhs)
+        || (rhs == Opm::UDQVarType::SCALAR);
 }
 
 } // Anonymous namespace
@@ -279,14 +277,13 @@ UDQDefine::UDQDefine(const UDQParams&                udq_params,
     , m_report_step  (report_step)
     , m_update_status(UDQUpdate::ON)
 {
-    this->ast = std::make_shared<UDQASTNode>
-        (UDQParser::parse(udq_params,
-                          this->m_var_type,
-                          this->m_keyword,
-                          this->m_location,
-                          this->m_tokens,
-                          parseContext,
-                          errors));
+    this->ast = parseUDQExpression(udq_params,
+                                   this->m_var_type,
+                                   this->m_keyword,
+                                   this->m_location,
+                                   this->m_tokens,
+                                   parseContext,
+                                   errors);
 }
 
 void UDQDefine::update_status(const UDQUpdate   update,
@@ -317,12 +314,12 @@ void UDQDefine::required_summary(std::unordered_set<std::string>& summary_keys) 
 
 UDQSet UDQDefine::eval(const UDQContext& context) const
 {
-    std::optional<UDQSet> res;
+    auto res = std::optional<UDQSet>{};
     try {
         res = this->ast->eval(this->m_var_type, context);
         res->name(this->m_keyword);
 
-        if (!dynamic_type_check(this->var_type(), res->var_type())) {
+        if (! dynamic_type_check(this->var_type(), res->var_type())) {
             throw std::invalid_argument {
                 "Invalid runtime type conversion "
                 "detected when evaluating UDQ " + this->m_keyword
@@ -341,7 +338,7 @@ UDQSet UDQDefine::eval(const UDQContext& context) const
         std::throw_with_nested(exc);
     }
 
-    if (!res) {
+    if (! res.has_value()) {
         throw std::logic_error("Bug in UDQDefine::eval()");
     }
 

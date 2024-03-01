@@ -36,15 +36,27 @@ namespace Opm {
 class UDQASTNode
 {
 public:
-    UDQVarType var_type = UDQVarType::NONE;
+    UDQVarType var_type { UDQVarType::NONE };
 
     UDQASTNode();
     explicit UDQASTNode(UDQTokenType type_arg);
     explicit UDQASTNode(double scalar_value);
-    UDQASTNode(UDQTokenType type_arg, const std::variant<std::string, double>& value_arg, const UDQASTNode& left_arg);
-    UDQASTNode(UDQTokenType type_arg, const std::variant<std::string, double>& value_arg, const UDQASTNode& left, const UDQASTNode& right);
-    UDQASTNode(UDQTokenType type_arg, const std::variant<std::string, double>& value_arg);
-    UDQASTNode(UDQTokenType type_arg, const std::variant<std::string, double>& value_arg, const std::vector<std::string>& selector);
+
+    UDQASTNode(UDQTokenType type_arg,
+               const std::variant<std::string, double>& value_arg,
+               const UDQASTNode& left_arg);
+
+    UDQASTNode(UDQTokenType type_arg,
+               const std::variant<std::string, double>& value_arg,
+               const UDQASTNode& left,
+               const UDQASTNode& right);
+
+    UDQASTNode(UDQTokenType type_arg,
+               const std::variant<std::string, double>& value_arg);
+
+    UDQASTNode(UDQTokenType type_arg,
+               const std::variant<std::string, double>& value_arg,
+               const std::vector<std::string>& selector);
 
     static UDQASTNode serializationTestObject();
 
@@ -119,13 +131,12 @@ private:
     UDQSet eval_table_lookup_well(const std::string& string_value,
                                   const UDQContext& context) const;
 
-
     void func_tokens(std::set<UDQTokenType>& tokens) const;
 };
 
 UDQASTNode operator*(const UDQASTNode&lhs, double rhs);
 UDQASTNode operator*(double lhs, const UDQASTNode& rhs);
 
-}
+} // namespace Opm
 
-#endif
+#endif // UDQASTNODE_HPP

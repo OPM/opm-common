@@ -20,13 +20,14 @@
 #ifndef UNITSYSTEM_H
 #define UNITSYSTEM_H
 
-#include <string>
-#include <map>
-#include <vector>
-#include <memory>
-
 #include <opm/input/eclipse/Units/Dimension.hpp>
+
 #include <opm/input/eclipse/Schedule/UDQ/UDQEnums.hpp>
+
+#include <map>
+#include <memory>
+#include <string>
+#include <vector>
 
 namespace Opm {
 

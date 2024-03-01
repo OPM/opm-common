@@ -17,13 +17,16 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef GROUP2_HPP
-#define GROUP2_HPP
+#ifndef OPM_GROUP_HPP
+#define OPM_GROUP_HPP
+
+#include <opm/input/eclipse/EclipseState/Phase.hpp>
+#include <opm/input/eclipse/EclipseState/Util/IOrderSet.hpp>
+
+#include <opm/input/eclipse/Schedule/Group/GPMaint.hpp>
 
 #include <opm/input/eclipse/Deck/UDAValue.hpp>
-#include <opm/input/eclipse/EclipseState/Util/IOrderSet.hpp>
-#include <opm/input/eclipse/EclipseState/Phase.hpp>
-#include <opm/input/eclipse/Schedule/Group/GPMaint.hpp>
+
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
 
 #include <cstddef>
@@ -373,4 +376,4 @@ Group::GroupType operator &(Group::GroupType lhs, Group::GroupType rhs);
 
 }
 
-#endif
+#endif // OPM_GROUP_HPP

@@ -20,24 +20,40 @@
 #define OPM_RUNSPEC_HPP
 
 #include <opm/common/OpmLog/KeywordLocation.hpp>
-#include <opm/input/eclipse/EclipseState/Phase.hpp>
-#include <opm/input/eclipse/EclipseState/Tables/Tabdims.hpp>
-#include <opm/input/eclipse/EclipseState/Tables/Regdims.hpp>
-#include <opm/input/eclipse/EclipseState/EndpointScaling.hpp>
-#include <opm/input/eclipse/Schedule/UDQ/UDQParams.hpp>
-#include <opm/input/eclipse/Schedule/Action/Actdims.hpp>
 
+#include <opm/input/eclipse/EclipseState/EndpointScaling.hpp>
+#include <opm/input/eclipse/EclipseState/Phase.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/Regdims.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/Tabdims.hpp>
+
+#include <opm/input/eclipse/Schedule/Action/Actdims.hpp>
+#include <opm/input/eclipse/Schedule/UDQ/UDQParams.hpp>
+
+#include <bitset>
+#include <cstddef>
+#include <ctime>
 #include <optional>
-#include <string>
 
 namespace Opm {
-class Deck;
 
-class Phases {
+    class Deck;
+
+} // namespace Opm
+
+namespace Opm {
+
+class Phases
+{
 public:
     Phases() noexcept = default;
-    Phases( bool oil, bool gas, bool wat, bool solvent = false, bool polymer = false, bool energy = false,
-            bool polymw = false, bool foam = false, bool brine = false, bool zfraction = false ) noexcept;
+    Phases(bool oil, bool gas, bool wat,
+           bool solvent = false,
+           bool polymer = false,
+           bool energy = false,
+           bool polymw = false,
+           bool foam = false,
+           bool brine = false,
+           bool zfraction = false) noexcept;
 
     static Phases serializationTestObject();
 
@@ -53,9 +69,8 @@ public:
     }
 
 private:
-    std::bitset< NUM_PHASES_IN_ENUM > bits;
+    std::bitset<NUM_PHASES_IN_ENUM> bits;
 };
-
 
 class Welldims {
 public:
@@ -546,6 +561,6 @@ private:
 };
 
 
-}
+} // namespace Opm
 
 #endif // OPM_RUNSPEC_HPP

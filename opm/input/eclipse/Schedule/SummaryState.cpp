@@ -35,7 +35,8 @@
 
 namespace {
 
-    bool is_total(const std::string& key) {
+    bool is_total(const std::string& key)
+    {
         static const std::vector<std::string> totals = {
             "OPT"  , "GPT"  , "WPT" , "GIT", "WIT", "OPTF" , "OPTS" , "OIT"  , "OVPT" , "OVIT" , "MWT" ,
             "WVPT" , "WVIT" , "GMT"  , "GPTF" , "SGT"  , "GST" , "FGT" , "GCT" , "GIMT" ,
@@ -67,7 +68,10 @@ namespace {
     using map2 = std::unordered_map<std::string, std::unordered_map<std::string, T>>;
 
     template <class T>
-    bool has_var(const map2<T>& values, const std::string& var1, const std::string& var2) {
+    bool has_var(const map2<T>& values,
+                 const std::string& var1,
+                 const std::string& var2)
+    {
         const auto& var1_iter = values.find(var1);
         if (var1_iter == values.end())
             return false;
@@ -80,7 +84,11 @@ namespace {
     }
 
     template <class T>
-    void erase_var(map2<T>& values, std::set<std::string>& var2_set, const std::string& var1, const std::string& var2) {
+    void erase_var(map2<T>& values,
+                   std::set<std::string>& var2_set,
+                   const std::string& var1,
+                   const std::string& var2)
+    {
         const auto& var1_iter = values.find(var1);
         if (var1_iter == values.end())
             return;
@@ -97,7 +105,9 @@ namespace {
     }
 
     template <class T>
-    std::vector<std::string> var2_list(const map2<T>& values, const std::string& var1) {
+    std::vector<std::string>
+    var2_list(const map2<T>& values, const std::string& var1)
+    {
         const auto& var1_iter = values.find(var1);
         if (var1_iter == values.end())
             return {};
