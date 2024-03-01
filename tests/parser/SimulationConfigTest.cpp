@@ -25,9 +25,10 @@
 
 #include <opm/common/utility/OpmInputError.hpp>
 
-#include <opm/input/eclipse/EclipseState/Runspec.hpp>
-#include <opm/input/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
+#include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
+#include <opm/input/eclipse/EclipseState/Runspec.hpp>
 #include <opm/input/eclipse/EclipseState/SimulationConfig/SimulationConfig.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
 
@@ -416,4 +417,54 @@ ROCK
 
     BOOST_CHECK_CLOSE(comp[2].pref, 271.8*1.0e5, 1.0e-8);
     BOOST_CHECK_CLOSE(comp[2].compressibility, 1.61e-5/1.0e5, 1.0e-8);
+}
+
+BOOST_AUTO_TEST_CASE(DatumDepth_Zero)
+{
+    const auto es = EclipseState { createDeck(R"(RUNSPEC
+DIMENS
+1 5 2 /
+GRID
+DXV
+100.0 /
+DYV
+5*100.0 /
+DZV
+2*10.0 /
+DEPTHZ
+12*2000.0 /
+END
+)") };
+
+    const auto& dd = es.getSimulationConfig().datumDepths();
+
+    BOOST_CHECK_CLOSE(dd(0), 0.0, 1.0e-8);
+}
+
+BOOST_AUTO_TEST_CASE(DatumDepth_Equil)
+{
+    const auto es = EclipseState { createDeck(R"(RUNSPEC
+DIMENS
+1 5 2 /
+EQLDIMS
+/
+GRID
+DXV
+100.0 /
+DYV
+5*100.0 /
+DZV
+2*10.0 /
+DEPTHZ
+12*2000.0 /
+SOLUTION
+EQUIL
+  2005.0 123.4 2015.0 2.34 1995.0 0.0 /
+END
+)") };
+
+    const auto& dd = es.getSimulationConfig().datumDepths();
+
+    BOOST_CHECK_CLOSE(dd("FIPNUM", 0), 2005.0, 1.0e-8);
+    BOOST_CHECK_CLOSE(dd("FIPABC", 42), 2005.0, 1.0e-8);
 }
