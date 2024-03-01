@@ -36,18 +36,16 @@
 #include <opm/input/eclipse/Parser/ParserKeywords/T.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/V.hpp>
 
-/*
-  The internalization of the CPR keyword has been temporarily
-  disabled, suddenly decks with 'CPR' in the summary section turned
-  up. Keywords with section aware keyword semantics is currently not
-  handled by the parser.
+#include <stdexcept>
 
-  When the CPR is added again the following keyword configuration must
-  be added:
-
-    {"name" : "CPR" , "sections" : ["RUNSPEC"], "size": 1 }
-
-*/
+// The internalization of the CPR keyword has been temporarily disabled,
+// suddenly decks with 'CPR' in the summary section turned up. Keywords with
+// section aware keyword semantics is currently not handled by the parser.
+//
+// When the CPR is added again the following keyword configuration must be
+// added:
+//
+//   {"name" : "CPR" , "sections" : ["RUNSPEC"], "size": 1 }
 
 namespace Opm {
 
@@ -61,37 +59,54 @@ namespace Opm {
     {
         if (DeckSection::hasRUNSPEC(deck)) {
             const RUNSPECSection runspec(deck);
+
             if (runspec.hasKeyword<ParserKeywords::CPR>()) {
                 const auto& cpr = runspec.get<ParserKeywords::CPR>().back();
-                if (cpr.size() > 0)
-                    throw std::invalid_argument("ERROR: In the RUNSPEC section the CPR keyword should contain EXACTLY one empty record.");
+                if (cpr.size() > 0) {
+                    throw std::invalid_argument {
+                        "ERROR: In the RUNSPEC section the CPR keyword "
+                        "should contain EXACTLY one empty record."
+                    };
+                }
 
                 m_useCPR = true;
             }
+
             if (runspec.hasKeyword<ParserKeywords::NONNC>()) {
                 const auto& nonnc = runspec.get<ParserKeywords::NONNC>().back();
-                if (nonnc.size() > 0)
-                    throw std::invalid_argument("ERROR: In the RUNSPEC section the NONNC keyword should contain EXACTLY one empty record.");
+                if (nonnc.size() > 0) {
+                    throw std::invalid_argument {
+                        "ERROR: In the RUNSPEC section the NONNC keyword "
+                        "should contain EXACTLY one empty record."
+                    };
+                }
 
                 m_useNONNC = true;
             }
+
             if (runspec.hasKeyword<ParserKeywords::DISGAS>()) {
                 m_DISGAS = true;
             }
+
             if (runspec.hasKeyword<ParserKeywords::DISGASW>()) {
                 m_DISGASW = true;
             }
+
             if (runspec.hasKeyword<ParserKeywords::VAPOIL>()) {
                 m_VAPOIL = true;
             }
+
             if (runspec.hasKeyword<ParserKeywords::VAPWAT>()) {
                 m_VAPWAT = true;
             }
+
             if (runspec.hasKeyword<ParserKeywords::DIFFUSE>()) {
                 m_diffuse = true;
             }
+
             this->m_isThermal = runspec.hasKeyword<ParserKeywords::THERMAL>()
                 || runspec.hasKeyword<ParserKeywords::TEMP>();
+
             if (runspec.hasKeyword<ParserKeywords::PRECSALT>()) {
                 m_PRECSALT = true;
             }
@@ -101,6 +116,7 @@ namespace Opm {
     SimulationConfig SimulationConfig::serializationTestObject()
     {
         SimulationConfig result;
+
         result.m_ThresholdPressure = ThresholdPressure::serializationTestObject();
         result.m_bcconfig = BCConfig::serializationTestObject();
         result.m_rock_config = RockConfig::serializationTestObject();
@@ -118,15 +134,18 @@ namespace Opm {
         return result;
     }
 
-    const RockConfig& SimulationConfig::rock_config() const {
+    const RockConfig& SimulationConfig::rock_config() const
+    {
         return this->m_rock_config;
     }
 
-    const ThresholdPressure& SimulationConfig::getThresholdPressure() const {
+    const ThresholdPressure& SimulationConfig::getThresholdPressure() const
+    {
         return m_ThresholdPressure;
     }
 
-    const BCConfig& SimulationConfig::bcconfig() const {
+    const BCConfig& SimulationConfig::bcconfig() const
+    {
         return m_bcconfig;
     }
 
@@ -135,43 +154,53 @@ namespace Opm {
         return this->m_datum_depth;
     }
 
-    bool SimulationConfig::useThresholdPressure() const {
+    bool SimulationConfig::useThresholdPressure() const
+    {
         return m_ThresholdPressure.active();
     }
 
-    bool SimulationConfig::useCPR() const {
+    bool SimulationConfig::useCPR() const
+    {
         return m_useCPR;
     }
 
-    bool SimulationConfig::useNONNC() const {
+    bool SimulationConfig::useNONNC() const
+    {
         return m_useNONNC;
     }
 
-    bool SimulationConfig::hasDISGAS() const {
+    bool SimulationConfig::hasDISGAS() const
+    {
         return m_DISGAS;
     }
 
-    bool SimulationConfig::hasDISGASW() const {
+    bool SimulationConfig::hasDISGASW() const
+    {
         return m_DISGASW;
     }
 
-    bool SimulationConfig::hasVAPOIL() const {
+    bool SimulationConfig::hasVAPOIL() const
+    {
         return m_VAPOIL;
     }
 
-    bool SimulationConfig::hasVAPWAT() const {
+    bool SimulationConfig::hasVAPWAT() const
+    {
         return m_VAPWAT;
     }
 
-    bool SimulationConfig::isThermal() const {
+    bool SimulationConfig::isThermal() const
+    {
         return this->m_isThermal;
     }
 
-    bool SimulationConfig::isDiffusive() const {
+    bool SimulationConfig::isDiffusive() const
+    {
         return this->m_diffuse;
     }
 
-    bool SimulationConfig::hasPRECSALT() const {
+    bool SimulationConfig::hasPRECSALT() const
+    {
         return m_PRECSALT;
     }
 
