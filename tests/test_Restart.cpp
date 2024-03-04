@@ -62,8 +62,16 @@
 
 #include <opm/common/utility/TimeService.hpp>
 
+#include <ctime>
+#include <map>
+#include <memory>
+#include <optional>
 #include <sstream>
+#include <stdexcept>
+#include <string>
+#include <string_view>
 #include <tuple>
+#include <vector>
 
 #include <tests/WorkArea.hpp>
 
@@ -232,6 +240,28 @@ data::Solution mkSolution(int numCells)
     sol.insert("RV", measure::identity,
                { rvi.begin(), rvi.end() },
                data::TargetType::RESTART_SOLUTION);
+
+    return sol;
+}
+
+data::Solution mkSolutionFIP(const int numCells)
+{    using measure = UnitSystem::measure;
+
+    auto sol = data::Solution {
+        { "PRESSURE", data::CellData { measure::pressure, {}, data::TargetType::RESTART_SOLUTION } },
+        { "SWAT",     data::CellData { measure::identity, {}, data::TargetType::RESTART_SOLUTION } },
+        { "SGAS",     data::CellData { measure::identity, {}, data::TargetType::RESTART_SOLUTION } },
+        { "FIPOIL",   data::CellData { measure::identity, {}, data::TargetType::RESTART_SOLUTION } },
+        { "FIPWAT",   data::CellData { measure::identity, {}, data::TargetType::RESTART_SOLUTION } },
+        { "FIPGAS",   data::CellData { measure::identity, {}, data::TargetType::RESTART_SOLUTION } },
+    };
+
+    sol.data<double>("PRESSURE").assign(numCells, 6.0);
+    sol.data<double>("SWAT").assign(numCells, 8.0);
+    sol.data<double>("SGAS").assign(numCells, 9.0);
+    sol.data<double>("FIPOIL").assign(numCells, 10.0);
+    sol.data<double>("FIPWAT").assign(numCells, 11.0);
+    sol.data<double>("FIPGAS").assign(numCells, 12.0);
 
     return sol;
 }
@@ -1293,4 +1323,91 @@ BOOST_AUTO_TEST_CASE(ReadWrite_NumericalAquifer_Data)
     dest.read(buffer);
 
     BOOST_CHECK_MESSAGE(src == dest, "Serialised/deserialised Numerical aquifer object must be equal to source object");
+}
+
+namespace {
+    void checkAllEntriesAre(const double x,
+                            std::string_view arrayName,
+                            const std::vector<double>& v,
+                            const double tol = 1.0e-8)
+    {
+        auto i = 0;
+        for (const auto& vi : v) {
+            BOOST_TEST_MESSAGE(arrayName << '[' << (i++) << ']');
+            BOOST_CHECK_CLOSE(vi, x, tol);
+        }
+    }
+}
+
+BOOST_AUTO_TEST_CASE(Fluid_In_Place)
+{
+    namespace OS = ::Opm::EclIO::OutputStream;
+
+    WorkArea test_area("test_Restart");
+    test_area.copyIn("BASE_SIM.DATA");
+
+    const Setup base_setup("BASE_SIM.DATA");
+
+    const auto num_cells = base_setup.grid.getNumActive();
+    const auto cells = mkSolutionFIP(num_cells);
+    const auto wells = mkWells();
+    const auto groups = mkGroups();
+    const auto sumState = sim_state(base_setup.schedule);
+    const auto udqState = UDQState{1};
+    auto aquiferData = std::optional<Opm::RestartIO::Helpers::AggregateAquiferData>{std::nullopt};
+    const Action::State action_state{};
+    const WellTestState wtest_state{};
+
+    const RestartValue restart_value(cells, wells, groups, {});
+
+    const auto outputDir = test_area.currentWorkingDirectory();
+
+    {
+        const auto seqnum = 1;
+
+        auto rstFile = OS::Restart {
+            OS::ResultSet{ outputDir, "BASE_SIM" }, seqnum,
+            OS::Formatted{ false }, OS::Unified{ true }
+        };
+
+        RestartIO::save(rstFile, seqnum,
+                        100,
+                        restart_value,
+                        base_setup.es,
+                        base_setup.grid,
+                        base_setup.schedule,
+                        action_state,
+                        wtest_state,
+                        sumState,
+                        udqState,
+                        aquiferData,
+                        true);
+    }
+
+    {
+        const auto rstFile = ::Opm::EclIO::OutputStream::
+            outputFileName({outputDir, "BASE_SIM"}, "UNRST");
+
+        EclIO::ERst rst{ rstFile };
+
+        BOOST_CHECK_MESSAGE(rst.hasKey("FIPOIL"), R"(Restart file must have "FIPOIL" vector)");
+        checkAllEntriesAre(10.0, "FIPOIL", rst.getRestartData<double>("FIPOIL", 1));
+
+        BOOST_CHECK_MESSAGE(rst.hasKey("FIPWAT"), R"(Restart file must have "FIPWAT" vector)");
+        checkAllEntriesAre(11.0, "FIPWAT", rst.getRestartData<double>("FIPWAT", 1));
+
+        BOOST_CHECK_MESSAGE(rst.hasKey("FIPGAS"), R"(Restart file must have "FIPGAS" vector)");
+        checkAllEntriesAre(12.0, "FIPGAS", rst.getRestartData<double>("FIPGAS", 1));
+
+        // SFIP* "alias" arrays must be present when the data::Solution
+        // object "only" provides basic FIP* result arrays.
+        BOOST_CHECK_MESSAGE(rst.hasKey("SFIPOIL"), R"(Restart file must have "SFIPOIL" vector)");
+        checkAllEntriesAre(10.0, "SFIPOIL", rst.getRestartData<double>("SFIPOIL", 1));
+
+        BOOST_CHECK_MESSAGE(rst.hasKey("SFIPWAT"), R"(Restart file must have "SFIPWAT" vector)");
+        checkAllEntriesAre(11.0, "SFIPWAT", rst.getRestartData<double>("SFIPWAT", 1));
+
+        BOOST_CHECK_MESSAGE(rst.hasKey("SFIPGAS"), R"(Restart file must have "SFIPGAS" vector)");
+        checkAllEntriesAre(12.0, "SFIPGAS", rst.getRestartData<double>("SFIPGAS", 1));
+    }
 }
