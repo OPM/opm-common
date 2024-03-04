@@ -49,6 +49,8 @@
 #include <stdexcept>
 #include <type_traits>
 
+#include <fmt/format.h>
+
 namespace Opm {
 
 /*!
@@ -201,20 +203,142 @@ public:
         solve<MaterialLaw>(fluid_state, matParams, globalMolarities, tolerance);
     }
 
-
-protected:
-
-    template <class FlashFluidState>
-    static typename FlashFluidState::Scalar wilsonK_(const FlashFluidState& fluid_state, int compIdx)
+    template <class Vector>
+    static typename Vector::field_type solveRachfordRice_g_(const Vector& K, const Vector& z, int verbosity)
     {
-        const auto& acf = FluidSystem::acentricFactor(compIdx);
-        const auto& T_crit = FluidSystem::criticalTemperature(compIdx);
-        const auto& T = fluid_state.temperature(0);
-        const auto& p_crit = FluidSystem::criticalPressure(compIdx);
-        const auto& p = fluid_state.pressure(0); //for now assume no capillary pressure
+        // Find min and max K. Have to do a laborious for loop to avoid water component (where K=0)
+        // TODO: Replace loop with Dune::min_value() and Dune::max_value() when water component is properly handled
+        using field_type = typename Vector::field_type;
+        constexpr field_type tol = 1e-12;
+        constexpr int itmax = 10000;
+        field_type Kmin = K[0];
+        field_type Kmax = K[0];
+        for (int compIdx = 1; compIdx < numComponents; ++compIdx){
+            if (K[compIdx] < Kmin)
+                Kmin = K[compIdx];
+            else if (K[compIdx] >= Kmax)
+                Kmax = K[compIdx];
+        }
+        // Lower and upper bound for solution
+        auto Vmin = 1 / (1 - Kmax);
+        auto Vmax = 1 / (1 - Kmin);
+        // Initial guess
+        auto V = (Vmin + Vmax)/2;
+        // Print initial guess and header
+        if (verbosity == 3 || verbosity == 4) {
+            std::cout << "Initial guess " << numComponents << "c : V = " << V << " and [Vmin, Vmax] = [" << Vmin << ", " << Vmax << "]" << std::endl;
+            std::cout << std::setw(10) << "Iteration" << std::setw(16) << "abs(step)" << std::setw(16) << "V" << std::endl;
+        }
+        // Newton-Raphson loop
+        for (int iteration = 1; iteration < itmax; ++iteration) {
+            // Calculate function and derivative values
+            field_type denum = 0.0;
+            field_type r = 0.0;
+            for (int compIdx = 0; compIdx < numComponents; ++compIdx){
+                auto dK = K[compIdx] - 1.0;
+                auto a = z[compIdx] * dK;
+                auto b = (1 + V * dK);
+                r += a/b;
+                denum += z[compIdx] * (dK*dK) / (b*b);
+            }
+            auto delta = r / denum;
+            V += delta;
 
-        const auto& tmp = Opm::exp(5.3727 * (1+acf) * (1-T_crit/T)) * (p_crit/p);
-        return tmp;
+            // Check if V is within the bounds, and if not, we apply bisection method
+            if (V < Vmin || V > Vmax)
+                {
+                    // Print info
+                    if (verbosity == 3 || verbosity == 4) {
+                        std::cout << "V = " << V << " is not within the the range [Vmin, Vmax], solve using Bisection method!" << std::endl;
+                    }
+
+                    // Run bisection
+                    auto Lmin = 1 - Vmax;
+                    auto Lmax = 1 - Vmin;
+                    // TODO: This is required for some cases. Not clear why
+                    // since the objective function should be monotone with a
+                    // single zero between the Lmin/Lmax interval defined by
+                    // K-values.
+                    Lmax = 1.0;
+                    Lmin = 0.0;
+                    auto L = bisection_g_(K, Lmin, Lmax, z, verbosity);
+
+                    // Print final result
+                    if (verbosity >= 1) {
+                        std::cout << "Rachford-Rice (Bisection) converged to final solution L = " << L << std::endl;
+                    }
+                    return L;
+                }
+
+            // Print iteration info
+            if (verbosity == 3 || verbosity == 4) {
+                std::cout << std::setw(10) << iteration << std::setw(16) << Opm::abs(delta) << std::setw(16) << V << std::endl;
+            }
+            // Check for convergence
+            if ( Opm::abs(r) < tol ) {
+                auto L = 1 - V;
+                // Should we make sure the range of L is within (0, 1)?
+
+                // Print final result
+                if (verbosity >= 1) {
+                    std::cout << "Rachford-Rice converged to final solution L = " << L << std::endl;
+                }
+                return L;
+            }
+        }
+
+        // Throw error if Rachford-Rice fails
+        throw std::runtime_error(" Rachford-Rice did not converge within maximum number of iterations" );
+    }
+
+    template <class Vector>
+    static typename Vector::field_type bisection_g_(const Vector& K, typename Vector::field_type Lmin,
+                                                    typename Vector::field_type Lmax, const Vector& z, int verbosity)
+    {
+        // Calculate for g(Lmin) for first comparison with gMid = g(L)
+        typename Vector::field_type gLmin = rachfordRice_g_(K, Lmin, z);
+
+        // Print new header
+        if (verbosity >= 3) {
+                std::cout << std::setw(10) << "Iteration" << std::setw(16) << "g(Lmid)" << std::setw(16) << "L" << std::endl;
+        }
+
+        constexpr int max_it = 10000;
+
+        auto closeLmaxLmin = [](double max_v, double min_v) {
+            return Opm::abs(max_v - min_v) / 2. < 1e-10;
+            // what if max_v < min_v?
+        };
+
+        // Bisection loop
+        if (closeLmaxLmin(Lmax, Lmin) ){
+            throw std::runtime_error(fmt::format("Strange bisection with Lmax {} and Lmin {}?", Lmax, Lmin));
+        }
+        for (int iteration = 0; iteration < max_it; ++iteration){
+            // New midpoint
+            auto L = (Lmin + Lmax) / 2;
+            auto gMid = rachfordRice_g_(K, L, z);
+            // std::cout << ">>> Lmin = " << Lmin << "g(Lmin) = " << gLmin << " L = " << L << " g(L) = " << gMid << std::endl;
+            if (verbosity == 3 || verbosity == 4) {
+                std::cout << std::setw(10) << iteration << std::setw(16) << gMid << std::setw(16) << L << std::endl;
+            }
+
+            // Check if midpoint fulfills g=0 or L - Lmin is sufficiently small
+            if (Opm::abs(gMid) < 1e-16 || closeLmaxLmin(Lmax, Lmin)){
+                return L;
+            }
+            // Else we repeat with midpoint being either Lmin og Lmax (depending on the signs).
+            else if (Dune::sign(gMid) != Dune::sign(gLmin)) {
+                // gMid has different sign as gLmin, so we set L as the new Lmax
+                Lmax = L;
+            }
+            else {
+                // gMid and gLmin have same sign so we set L as the new Lmin
+                Lmin = L;
+                gLmin = gMid;
+            }
+        }
+        throw std::runtime_error(" Rachford-Rice bisection failed with " + std::to_string(max_it) + " iterations!");
     }
 
     template <class Vector, class FlashFluidState>
@@ -269,153 +393,6 @@ protected:
         return L;
     }
 
-    template <class Vector>
-    static typename Vector::field_type rachfordRice_g_(const Vector& K, typename Vector::field_type L, const Vector& z)
-    {
-        typename Vector::field_type g=0;
-        for (int compIdx=0; compIdx<numComponents; ++compIdx){
-            g += (z[compIdx]*(K[compIdx]-1))/(K[compIdx]-L*(K[compIdx]-1));
-        }
-        return g;
-    }
-
-    template <class Vector>
-    static typename Vector::field_type rachfordRice_dg_dL_(const Vector& K, const typename Vector::field_type L, const Vector& z)
-    {
-        typename Vector::field_type dg=0;
-        for (int compIdx=0; compIdx<numComponents; ++compIdx){
-            dg += (z[compIdx]*(K[compIdx]-1)*(K[compIdx]-1))/((K[compIdx]-L*(K[compIdx]-1))*(K[compIdx]-L*(K[compIdx]-1)));
-        }
-        return dg;
-    }
-
-    template <class Vector>
-    static typename Vector::field_type solveRachfordRice_g_(const Vector& K, const Vector& z, int verbosity)
-    {
-        // Find min and max K. Have to do a laborious for loop to avoid water component (where K=0)
-        // TODO: Replace loop with Dune::min_value() and Dune::max_value() when water component is properly handled
-        typename Vector::field_type Kmin = K[0];
-        typename Vector::field_type Kmax = K[0];
-        for (int compIdx=1; compIdx<numComponents; ++compIdx){
-            if (K[compIdx] < Kmin)
-                Kmin = K[compIdx];
-            else if (K[compIdx] >= Kmax)
-                Kmax = K[compIdx];
-        }
-
-        // Lower and upper bound for solution
-        auto Lmin = (Kmin / (Kmin - 1));
-        auto Lmax = Kmax / (Kmax - 1);
-
-        // Check if Lmin < Lmax, and switch if not
-        if (Lmin > Lmax)
-        {
-            auto Ltmp = Lmin;
-            Lmin = Lmax;
-            Lmax = Ltmp;
-        }
-
-        // Initial guess
-        auto L = (Lmin + Lmax)/2;
-
-        // Print initial guess and header
-        if (verbosity == 3 || verbosity == 4) {
-            std::cout << "Initial guess: L = " << L << " and [Lmin, Lmax] = [" << Lmin << ", " << Lmax << "]" << std::endl;
-            std::cout << std::setw(10) << "Iteration" << std::setw(16) << "abs(step)" << std::setw(16) << "L" << std::endl;
-        }
-
-        // Newton-Raphson loop
-        for (int iteration=1; iteration<100; ++iteration){
-            // Calculate function and derivative values
-            auto g = rachfordRice_g_(K, L, z);
-            auto dg_dL = rachfordRice_dg_dL_(K, L, z);
-
-            // Lnew = Lold - g/dg;
-            auto delta = g/dg_dL;
-            L -= delta;
-
-            // Check if L is within the bounds, and if not, we apply bisection method
-            if (L < Lmin || L > Lmax)
-                {
-                    // Print info
-                    if (verbosity == 3 || verbosity == 4) {
-                        std::cout << "L is not within the the range [Lmin, Lmax], solve using Bisection method!" << std::endl;
-                    }
-
-                    // Run bisection
-                    L = bisection_g_(K, Lmin, Lmax, z, verbosity);
-
-                    // Ensure that L is in the range (0, 1)
-                    L = Opm::min(Opm::max(L, 0.0), 1.0);
-
-                    // Print final result
-                    if (verbosity >= 1) {
-                        std::cout << "Rachford-Rice (Bisection) converged to final solution L = " << L << std::endl;
-                    }
-                    return L;
-                }
-
-            // Print iteration info
-            if (verbosity == 3 || verbosity == 4) {
-                std::cout << std::setw(10) << iteration << std::setw(16) << Opm::abs(delta) << std::setw(16) << L << std::endl;
-            }
-            // Check for convergence
-            if ( Opm::abs(delta) < 1e-10 ) {
-                // Ensure that L is in the range (0, 1)
-                L = Opm::min(Opm::max(L, 0.0), 1.0);
-
-                // Print final result
-                if (verbosity >= 1) {
-                    std::cout << "Rachford-Rice converged to final solution L = " << L << std::endl;
-                }
-                return L;
-            }
-        }
-        // Throw error if Rachford-Rice fails
-        throw std::runtime_error(" Rachford-Rice did not converge within maximum number of iterations" );
-    }
-
-    template <class Vector>
-    static typename Vector::field_type bisection_g_(const Vector& K, typename Vector::field_type Lmin,
-                                                    typename Vector::field_type Lmax, const Vector& z, int verbosity)
-    {
-        // Calculate for g(Lmin) for first comparison with gMid = g(L)
-        typename Vector::field_type gLmin = rachfordRice_g_(K, Lmin, z);
-
-        // Print new header
-        if (verbosity >= 3) {
-                std::cout << std::setw(10) << "Iteration" << std::setw(16) << "g(Lmid)" << std::setw(16) << "L" << std::endl;
-        }
-
-        constexpr int max_it = 100;
-        // Bisection loop
-        for (int iteration = 0; iteration < max_it; ++iteration){
-            // New midpoint
-            auto L = (Lmin + Lmax) / 2;
-            auto gMid = rachfordRice_g_(K, L, z);
-            if (verbosity == 3 || verbosity == 4) {
-                std::cout << std::setw(10) << iteration << std::setw(16) << gMid << std::setw(16) << L << std::endl;
-            }
-
-            // Check if midpoint fulfills g=0 or L - Lmin is sufficiently small
-            if (Opm::abs(gMid) < 1e-10 || Opm::abs((Lmax - Lmin) / 2) < 1e-10){
-                return L;
-            }
-
-            // Else we repeat with midpoint being either Lmin og Lmax (depending on the signs).
-            else if (Dune::sign(gMid) != Dune::sign(gLmin)) {
-                // gMid has same sign as gLmax, so we set L as the new Lmax
-                Lmax = L;
-            }
-            else {
-                // gMid and gLmin have same sign so we set L as the new Lmin
-                Lmin = L;
-                gLmin = gMid;
-            }
-        }
-        throw std::runtime_error(" Rachford-Rice with bisection failed with " + std::to_string(max_it) + " iterations!");
-    }
-
     template <class FlashFluidState, class ComponentVector>
     static void phaseStabilityTest_(bool& isStable, ComponentVector& K, FlashFluidState& fluid_state, const ComponentVector& z, int verbosity)
     {
@@ -456,6 +433,41 @@ protected:
                 K[compIdx] = y[compIdx] / x[compIdx];
             }
         }
+    }
+
+protected:
+
+    template <class FlashFluidState>
+    static typename FlashFluidState::Scalar wilsonK_(const FlashFluidState& fluid_state, int compIdx)
+    {
+        const auto& acf = FluidSystem::acentricFactor(compIdx);
+        const auto& T_crit = FluidSystem::criticalTemperature(compIdx);
+        const auto& T = fluid_state.temperature(0);
+        const auto& p_crit = FluidSystem::criticalPressure(compIdx);
+        const auto& p = fluid_state.pressure(0); //for now assume no capillary pressure
+
+        const auto& tmp = Opm::exp(5.3727 * (1+acf) * (1-T_crit/T)) * (p_crit/p);
+        return tmp;
+    }
+
+    template <class Vector>
+    static typename Vector::field_type rachfordRice_g_(const Vector& K, typename Vector::field_type L, const Vector& z)
+    {
+        typename Vector::field_type g=0;
+        for (int compIdx=0; compIdx<numComponents; ++compIdx){
+            g += (z[compIdx]*(K[compIdx]-1))/(K[compIdx]-L*(K[compIdx]-1));
+        }
+        return g;
+    }
+
+    template <class Vector>
+    static typename Vector::field_type rachfordRice_dg_dL_(const Vector& K, const typename Vector::field_type L, const Vector& z)
+    {
+        typename Vector::field_type dg=0;
+        for (int compIdx=0; compIdx<numComponents; ++compIdx){
+            dg += (z[compIdx]*(K[compIdx]-1)*(K[compIdx]-1))/((K[compIdx]-L*(K[compIdx]-1))*(K[compIdx]-L*(K[compIdx]-1)));
+        }
+        return dg;
     }
 
     template <class FlashFluidState, class ComponentVector>
