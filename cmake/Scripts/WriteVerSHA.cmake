@@ -47,8 +47,6 @@ if (sha1)
   endif ()
 endif ()
 
-string (TIMESTAMP build_timestamp "%Y-%m-%d at %H:%M:%S hrs")
-
 # write the content to a temporary file in a C compatible format
 file (WRITE "${PROJECT_BINARY_DIR}/project-version.tmp"
       "#ifndef OPM_GENERATED_OPM_VERSION_HEADER_INCLUDED\n"
@@ -67,9 +65,13 @@ execute_process (COMMAND
   )
 
 # Write header file with build timestamp
-file (WRITE "${PROJECT_BINARY_DIR}/project-timestamp.h"
-      "#ifndef OPM_GENERATED_OPM_TIMESTAMP_HEADER_INCLUDED\n"
-      "#define OPM_GENERATED_OPM_TIMESTAMP_HEADER_INCLUDED\n"
-      "#define BUILD_TIMESTAMP \"${build_timestamp}\"\n"
-      "#endif // OPM_GENERATED_OPM_TIMESTAMP_HEADER_INCLUDED\n"
-      )
+if(OPM_USE_BUILD_TIMESTAMP)
+  string (TIMESTAMP build_timestamp "%Y-%m-%d at %H:%M:%S hrs")
+
+  file (WRITE "${PROJECT_BINARY_DIR}/project-timestamp.h"
+        "#ifndef OPM_GENERATED_OPM_TIMESTAMP_HEADER_INCLUDED\n"
+        "#define OPM_GENERATED_OPM_TIMESTAMP_HEADER_INCLUDED\n"
+        "#define BUILD_TIMESTAMP \"${build_timestamp}\"\n"
+        "#endif // OPM_GENERATED_OPM_TIMESTAMP_HEADER_INCLUDED\n"
+        )
+endif()
