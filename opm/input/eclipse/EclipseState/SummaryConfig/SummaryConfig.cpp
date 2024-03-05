@@ -1542,6 +1542,10 @@ inline void handleKW( SummaryConfig::keyword_list& list,
 
 SummaryConfigNode::Type parseKeywordType(std::string keyword)
 {
+    if (parseKeywordCategory(keyword) == SummaryConfigNode::Category::Region) {
+        keyword = EclIO::SummaryNode::normalise_region_keyword(keyword);
+    }
+
     if (is_well_completion(keyword)) {
         keyword.pop_back();
     }
