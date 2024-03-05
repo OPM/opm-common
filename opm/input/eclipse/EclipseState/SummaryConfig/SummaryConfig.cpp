@@ -991,13 +991,13 @@ inline void keywordR2R(const DeckKeyword&           keyword,
 }
 
 
-inline void keywordR(SummaryConfig::keyword_list& list,
-                     SummaryConfigContext&        context,
-                     const DeckKeyword&           deck_keyword,
-                     const Schedule&              schedule,
-                     const FieldPropsManager&     field_props,
-                     const ParseContext&          parseContext,
-                     ErrorGuard&                  errors)
+void keywordR(SummaryConfig::keyword_list& list,
+              SummaryConfigContext&        context,
+              const DeckKeyword&           deck_keyword,
+              const Schedule&              schedule,
+              const FieldPropsManager&     field_props,
+              const ParseContext&          parseContext,
+              ErrorGuard&                  errors)
 {
     const auto keyword = deck_keyword.name();
     if (is_region_to_region(keyword)) {
@@ -1005,9 +1005,10 @@ inline void keywordR(SummaryConfig::keyword_list& list,
         return;
     }
 
-    const auto region_name = establishRegionContext(deck_keyword, field_props,
-                                                    parseContext, errors,
-                                                    context);
+    const auto region_name =
+        establishRegionContext(deck_keyword, field_props,
+                               parseContext, errors,
+                               context);
 
     if (! region_name.has_value()) {
         return;
@@ -1016,21 +1017,22 @@ inline void keywordR(SummaryConfig::keyword_list& list,
     const auto& item = deck_keyword.getDataRecord().getDataItem();
     std::vector<int> regions;
 
-    /*
-      Assume that the FIPNUM array contains the values {1,2,4}; i.e. the maximum
-      value is 4 and the value 3 is missing. Values which are too large, i.e. >
-      4 in this case - and values which are missing in the range are treated
-      differently:
 
-         region_id >= 5: The requested region results are completely ignored.
+    // Assume that the FIPNUM array contains the values {1,2,4}; i.e. the
+    // maximum value is 4 and the value 3 is missing.  Values which are too
+    // large, i.e., > 4 in this case - and values which are missing in the
+    // range are treated differently:
+    //
+    //    region_id >= 5: The requested region results are completely ignored.
+    //
+    //    region_id == 3: The summary file will contain a vector Rxxx:3 with the
+    //    value 0.
+    //
+    // These behaviors are closely tied to the implementation in
+    // opm-simulators which actually performs the region summation; and that
+    // is also the main reason to treat these quite similar error conditions
+    // differently.
 
-         region_id == 3: The summary file will contain a vector Rxxx:3 with the
-         value 0.
-
-      These behaviors are closely tied to the implementation in opm-simulators
-      which actually performs the region summation; and that is also the main
-      reason to treat these quite similar error conditions differently.
-    */
 
     if (item.data_size() > 0) {
         for (const auto& region_id : item.getData<int>()) {
@@ -1051,12 +1053,13 @@ inline void keywordR(SummaryConfig::keyword_list& list,
                 parseContext.handleError(ParseContext::SUMMARY_EMPTY_REGION, msg_fmt, deck_keyword.location(), errors);
             }
 
-            regions.push_back( region_id );
+            regions.push_back(region_id);
         }
     }
     else {
-        for (const auto& region_id : context.regions.at(region_name.value()))
-            regions.push_back( region_id );
+        for (const auto& region_id : context.regions.at(region_name.value())) {
+            regions.push_back(region_id);
+        }
     }
 
     // See comment on function roew() in Summary.cpp for this weirdness.
@@ -1077,11 +1080,12 @@ inline void keywordR(SummaryConfig::keyword_list& list,
         keyword, SummaryConfigNode::Category::Region, deck_keyword.location()
     }
     .parameterType(parseKeywordType(EclIO::SummaryNode::normalise_region_keyword(keyword)))
-    .fip_region( region_name.value() )
-    .isUserDefined( is_udq(keyword) );
+    .fip_region   (region_name.value())
+    .isUserDefined(is_udq(keyword));
 
-    for (const auto& region : regions)
-        list.push_back( param.number( region ) );
+    for (const auto& region : regions) {
+        list.push_back(param.number(region));
+    }
 }
 
 
@@ -1530,25 +1534,28 @@ inline void handleKW( SummaryConfig::keyword_list& list,
           item_index++;
       }
   }
-}
+
+} // Anonymous namespace
 
 // =====================================================================
 
 SummaryConfigNode::Type parseKeywordType(std::string keyword)
 {
-    if (is_well_completion(keyword))
+    if (is_well_completion(keyword)) {
         keyword.pop_back();
+    }
 
-    if (is_connection_completion(keyword))
+    if (is_connection_completion(keyword)) {
         keyword.pop_back();
+    }
 
-    if (is_rate(keyword)) return SummaryConfigNode::Type::Rate;
-    if (is_total(keyword)) return SummaryConfigNode::Type::Total;
-    if (is_ratio(keyword)) return SummaryConfigNode::Type::Ratio;
-    if (is_pressure(keyword)) return SummaryConfigNode::Type::Pressure;
-    if (is_count(keyword)) return SummaryConfigNode::Type::Count;
-    if (is_control_mode(keyword)) return SummaryConfigNode::Type::Mode;
-    if (is_prod_index(keyword)) return SummaryConfigNode::Type::ProdIndex;
+    if (is_rate(keyword)) { return SummaryConfigNode::Type::Rate; }
+    if (is_total(keyword)) { return SummaryConfigNode::Type::Total; }
+    if (is_ratio(keyword)) { return SummaryConfigNode::Type::Ratio; }
+    if (is_pressure(keyword)) { return SummaryConfigNode::Type::Pressure; }
+    if (is_count(keyword)) { return SummaryConfigNode::Type::Count; }
+    if (is_control_mode(keyword)) { return SummaryConfigNode::Type::Mode; }
+    if (is_prod_index(keyword)) { return SummaryConfigNode::Type::ProdIndex; }
 
     return SummaryConfigNode::Type::Undefined;
 }
