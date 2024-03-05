@@ -1014,9 +1014,7 @@ void keywordR(SummaryConfig::keyword_list& list,
         return;
     }
 
-    const auto& item = deck_keyword.getDataRecord().getDataItem();
-    std::vector<int> regions;
-
+    auto regions = std::vector<int>{};
 
     // Assume that the FIPNUM array contains the values {1,2,4}; i.e. the
     // maximum value is 4 and the value 3 is missing.  Values which are too
@@ -1033,8 +1031,11 @@ void keywordR(SummaryConfig::keyword_list& list,
     // is also the main reason to treat these quite similar error conditions
     // differently.
 
+    if (! deck_keyword.empty() &&
+        (deck_keyword.getDataRecord().getDataItem().data_size() > 0))
+    {
+        const auto& item = deck_keyword.getDataRecord().getDataItem();
 
-    if (item.data_size() > 0) {
         for (const auto& region_id : item.getData<int>()) {
             const auto& region_set = context.regions.at(region_name.value());
             auto max_iter = region_set.rbegin();
