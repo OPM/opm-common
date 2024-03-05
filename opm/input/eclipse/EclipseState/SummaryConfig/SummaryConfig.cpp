@@ -27,6 +27,7 @@
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/GridDims.hpp>
+
 #include <opm/input/eclipse/Schedule/Group/Group.hpp>
 #include <opm/input/eclipse/Schedule/Network/ExtNetwork.hpp>
 #include <opm/input/eclipse/Schedule/MSW/WellSegments.hpp>
@@ -117,7 +118,6 @@ struct SummaryConfigContext {
          "DAY", "MONTH", "YEAR"
     };
 
-
     /*
       The variable type 'ECL_SMSPEC_MISC_TYPE' is a catch-all variable
       type, and will by default internalize keywords like 'ALL' and
@@ -131,30 +131,26 @@ struct SummaryConfigContext {
                                                                            {"FMWSET", FMWSET_keywords},
                                                                            {"GMWSET", GMWSET_keywords}};
 
-    /*
-      This is a hardcoded mapping between 3D field keywords,
-      e.g. 'PRESSURE' and 'SWAT' and summary keywords like 'RPR' and
-      'BPR'. The purpose of this mapping is to maintain an overview of
-      which 3D field keywords are needed by the Summary calculation
-      machinery, based on which summary keywords are requested. The
-      Summary calculations are implemented in the opm-output
-      repository.
-    */
+    // This is a hardcoded mapping between 3D field keywords,
+    // e.g. 'PRESSURE' and 'SWAT' and summary keywords like 'RPR' and
+    // 'BPR'. The purpose of this mapping is to maintain an overview of
+    // which 3D field keywords are needed by the Summary calculation
+    // machinery, based on which summary keywords are requested.
     const std::map<std::string , std::set<std::string>> required_fields =  {
-         {"PRESSURE", {"FPR" , "RPR" , "BPR"}},
-         {"RPV", {"FRPV" , "RRPV"}},
-         {"OIP"  , {"ROIP" , "FOIP" , "FOE"}},
+         {"PRESSURE", {"FPR" , "RPR*" , "BPR"}},
+         {"RPV", {"FRPV", "RRPV*"}},
+         {"OIP"  , {"ROIP*" , "FOIP" , "FOE"}},
          {"OIPR" , {"FOIPR"}},
-         {"OIPL" , {"ROIPL" ,"FOIPL" }},
-         {"OIPG" , {"ROIPG" ,"FOIPG"}},
-         {"GIP"  , {"RGIP" , "FGIP"}},
+         {"OIPL" , {"ROIPL*" ,"FOIPL" }},
+         {"OIPG" , {"ROIPG*" ,"FOIPG"}},
+         {"GIP"  , {"RGIP*", "FGIP"}},
          {"GIPR" , {"FGIPR"}},
-         {"GIPL" , {"RGIPL" , "FGIPL"}},
-         {"GIPG" , {"RGIPG", "FGIPG"}},
-         {"WIP"  , {"RWIP" , "FWIP"}},
+         {"GIPL" , {"RGIPL*" , "FGIPL"}},
+         {"GIPG" , {"RGIPG*", "FGIPG"}},
+         {"WIP"  , {"RWIP*" , "FWIP"}},
          {"WIPR" , {"FWIPR"}},
-         {"WIPL" , {"RWIPL" , "FWIPL"}},
-         {"WIPG" , {"RWIPG", "FWIPG"}},
+         {"WIPL" , {"RWIPL*" , "FWIPL"}},
+         {"WIPG" , {"RWIPG*", "FWIPG"}},
          {"WCD"  , {"RWCD", "FWCD"}},
          {"GCDI"  , {"RGCDI", "FGCDI"}},
          {"GCDM"  , {"RGCDM", "FGCDM"}},
@@ -1920,28 +1916,18 @@ size_t SummaryConfig::size() const {
     return this->m_keywords.size();
 }
 
-/*
-  Can be used to query if a certain 3D field, e.g. PRESSURE, is
-  required to calculate the summary variables.
-
-  The implementation is based on the hardcoded datastructure
-  required_fields defined in a anonymous namespaces at the top of this
-  file; the content of this datastructure again is based on the
-  implementation of the Summary calculations in the opm-output
-  repository: opm/output/eclipse/Summary.cpp.
-*/
-
-bool SummaryConfig::require3DField( const std::string& keyword ) const {
-    const auto iter = required_fields.find( keyword );
-    if (iter == required_fields.end())
+// Can be used to query if a certain 3D field, e.g. PRESSURE, is required to
+// calculate a summary variable.
+bool SummaryConfig::require3DField(const std::string& keyword) const
+{
+    auto iter = required_fields.find(keyword);
+    if (iter == required_fields.end()) {
         return false;
-
-    for (const auto& kw : iter->second) {
-        if (this->hasKeyword( kw ))
-            return true;
     }
 
-    return false;
+    return std::any_of(iter->second.begin(), iter->second.end(),
+                       [this](const std::string& smryKw)
+                       { return this->match(smryKw); });
 }
 
 
