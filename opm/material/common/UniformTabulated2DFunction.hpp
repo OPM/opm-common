@@ -33,9 +33,10 @@
 
 #include <opm/material/common/MathToolbox.hpp>
 
+#include <algorithm>
+#include <cassert>
+#include <string>
 #include <vector>
-
-#include <assert.h>
 
 namespace Opm {
 
@@ -192,7 +193,9 @@ public:
      * an exception might be thrown.
      */
     template <class Evaluation>
-    Evaluation eval(const Evaluation& x, const Evaluation& y, bool extrapolate) const
+    Evaluation eval(const Evaluation& x,
+                    const Evaluation& y,
+                    [[maybe_unused]] bool extrapolate) const
     {
 #ifndef NDEBUG
         if (!extrapolate && !applies(x,y)) {
@@ -211,7 +214,7 @@ public:
                 OpmLog::warning("PVT Table evaluation:" + msg + ". Will use extrapolation");
             }
 
-        };
+        }
 #endif
 
         Evaluation alpha = xToI(x);
