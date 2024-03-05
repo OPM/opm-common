@@ -312,7 +312,7 @@ Well::Well(const RestartIO::RstWell& rst_well,
     injection(std::make_shared<WellInjectionProperties>(unit_system_arg, wname)),
     wvfpdp(std::make_shared<WVFPDP>()),
     wvfpexp(explicitTHPOptions(rst_well)),
-    wdfac(std::make_shared<WDFAC>()),
+    wdfac(std::make_shared<WDFAC>(rst_well)),
     status(status_from_int(rst_well.well_status)),
     well_temperature(Metric::TemperatureOffset + ParserKeywords::STCOND::TEMPERATURE::defaultValue),
     well_inj_mult(std::nullopt)

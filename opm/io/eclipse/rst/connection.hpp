@@ -60,6 +60,7 @@ struct RstConnection
     float kh;
     float denom;
     float length;
+    float static_dfac_corr_coeff;
     float segdist_end;
     float segdist_start;
 

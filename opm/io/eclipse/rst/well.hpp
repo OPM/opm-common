@@ -126,6 +126,9 @@ struct RstWell
     float glift_min_rate;
     float glift_weight_factor;
     float glift_inc_weight_factor;
+    float dfac_corr_coeff_a{};
+    float dfac_corr_exponent_b{};
+    float dfac_corr_exponent_c{};
     std::vector<float> tracer_concentration_injection;
 
     double oil_rate;

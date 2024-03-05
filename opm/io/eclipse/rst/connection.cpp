@@ -70,6 +70,15 @@ float as_float(const double x)
     return static_cast<float>(x);
 }
 
+float staticDFactorCorrCoeff(const Opm::UnitSystem& usys,
+                             const float            coeff)
+{
+    using M = ::Opm::UnitSystem::measure;
+
+    // Coefficient's units are [D] * [viscosity]
+    return as_float(usys.to_si(M::viscosity, usys.to_si(M::dfactor, coeff)));
+}
+
 double pressEquivRadius(const float denom,
                         const float skin,
                         const float rw)
@@ -116,6 +125,7 @@ Opm::RestartIO::RstConnection::RstConnection(const UnitSystem& unit_system,
     , kh                     { as_float(unit_system.to_si(M::effective_Kh, scon[VI::SConn::EffectiveKH])) }
     , denom                  { scon[VI::SConn::CFDenom] }
     , length                 { as_float(unit_system.to_si(M::length, scon[VI::SConn::EffectiveLength])) }
+    , static_dfac_corr_coeff { staticDFactorCorrCoeff(unit_system, scon[VI::SConn::StaticDFacCorrCoeff]) }
     , segdist_end            { as_float(unit_system.to_si(M::length, scon[VI::SConn::SegDistEnd])) }
     , segdist_start          { as_float(unit_system.to_si(M::length, scon[VI::SConn::SegDistStart])) }
       // -----------------------------------------------------------------
