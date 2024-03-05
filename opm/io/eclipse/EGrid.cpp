@@ -54,7 +54,7 @@ EGrid::EGrid(const std::string &filename, std::string grid_name) :
     actnum_array_index = -1;
     nnc1_array_index = -1;
     nnc2_array_index = -1;
-    coordsys_array_index = -1;    
+    coordsys_array_index = -1;
     m_radial = false;
 
     int hostnum_index = -1;
@@ -93,11 +93,13 @@ EGrid::EGrid(const std::string &filename, std::string grid_name) :
                 nijk[0] = gridhead[1];
                 nijk[1] = gridhead[2];
                 nijk[2] = gridhead[3];
-                
-                numres = gridhead[24];
-               
-                if (gridhead.size() > 26)
+
+                numres == (gridhead.size() > 24)
+                    ? gridhead[24] : 1;
+
+                if (gridhead.size() > 26) {
                     m_radial = gridhead[26] > 0 ? true: false;
+                }
             }
 
             if (array_name[n] == "COORD")
@@ -124,19 +126,19 @@ EGrid::EGrid(const std::string &filename, std::string grid_name) :
         }
 
     }
-    
+
     if (coordsys_array_index == -1){
         for (int l = 0; l < nijk[2]; l ++)
             res[l] = 0;
     } else {
         auto coordsys = get<int>(coordsys_array_index);
-        
+
         for (int r = 0; r < numres; r++){
             int l1 = coordsys[r*6 + 0];
             int l2 = coordsys[r*6 + 1];
-            
+
             for (int l = l1 -1; l < l2; l++)
-                res[l] = r;    
+                res[l] = r;
         }
     }
 
