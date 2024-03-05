@@ -15,11 +15,12 @@
 
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
- */
+*/
 
 #ifndef OPM_REGION_CACHE_HPP
 #define OPM_REGION_CACHE_HPP
 
+#include <cstddef>
 #include <map>
 #include <set>
 #include <string>
@@ -29,22 +30,36 @@ namespace Opm {
     class Schedule;
     class EclipseGrid;
     class FieldPropsManager;
+} // namespace Opm
 
-namespace out {
+namespace Opm { namespace out {
     class RegionCache {
     public:
         RegionCache() = default;
-        RegionCache(const std::set<std::string>& fip_regions, const FieldPropsManager& fp, const EclipseGrid& grid, const Schedule& schedule);
-        const std::vector<std::pair<std::string,size_t>>& connections( const std::string& region_name, int region_id ) const;
+        RegionCache(const std::set<std::string>& fip_regions,
+                    const FieldPropsManager&     fp,
+                    const EclipseGrid&           grid,
+                    const Schedule&              schedule);
 
-        // A well is assigned to the region_id where the first connection is
+        void buildCache(const std::set<std::string>& fip_regions,
+                        const FieldPropsManager&     fp,
+                        const EclipseGrid&           grid,
+                        const Schedule&              schedule);
+
+        const std::vector<std::pair<std::string, std::size_t>>&
+        connections(const std::string& region_name, int region_id) const;
+
+        // A well is assigned to the region_id of its first connection.
         std::vector<std::string> wells(const std::string& region_name, int region_id) const;
-    private:
-        std::vector<std::pair<std::string,size_t>> connections_empty;
-        std::map<std::pair<std::string, int> , std::vector<std::pair<std::string,size_t>>> connection_map;
-        std::map<std::pair<std::string, int>, std::vector<std::string>> well_map;
-    };
-}
-}
 
-#endif
+    private:
+        std::vector<std::pair<std::string, std::size_t>> connections_empty{};
+
+        std::map<std::pair<std::string, int>,
+                 std::vector<std::pair<std::string, std::size_t>>> connection_map{};
+
+        std::map<std::pair<std::string, int>, std::vector<std::string>> well_map{};
+    };
+}} // namespace Opm::out
+
+#endif // OPM_REGION_CACHE_HPP
