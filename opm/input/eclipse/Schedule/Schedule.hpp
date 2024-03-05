@@ -205,6 +205,7 @@ namespace Opm
         void shut_well(const std::string& well_name, std::size_t report_step);
         void stop_well(const std::string& well_name, std::size_t report_step);
         void open_well(const std::string& well_name, std::size_t report_step);
+        void clear_event(ScheduleEvents::Events, std::size_t report_step);
         void applyWellProdIndexScaling(const std::string& well_name, const std::size_t reportStep, const double scalingFactor);
 
         std::vector<const Group*> getChildGroups2(const std::string& group_name, std::size_t timeStep) const;
