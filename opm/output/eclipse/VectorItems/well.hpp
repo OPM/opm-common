@@ -331,6 +331,9 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
             VfpBhpScalingFact = 83, // Tubing pressure loss scaling factor (WVFPDP(3))
             WGrupConGRScaling = 84, // Guide rate scaling factor (WGRUPCON(5))
 
+            DFacCorrCoeffA = 104, // Coefficient 'A' of D-factor correlation (WDFACCOR(2))
+            DFacCorrExpB   = 105, // Exponent 'B' of D-factor correlation (WDFACCOR(3))
+            DFacCorrExpC   = 106, // Exponent 'C' of D-factor correlation (WDFACCOR(4))
 
             LOincFac          = 115,
 

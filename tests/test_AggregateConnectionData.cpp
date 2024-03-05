@@ -25,6 +25,7 @@
 
 #include <opm/output/eclipse/AggregateMSWData.hpp>
 #include <opm/output/eclipse/AggregateWellData.hpp>
+
 #include <opm/output/eclipse/VectorItems/connection.hpp>
 #include <opm/output/eclipse/VectorItems/intehead.hpp>
 #include <opm/output/eclipse/VectorItems/well.hpp>
@@ -34,70 +35,100 @@
 
 #include <opm/output/data/Wells.hpp>
 
-#include <opm/input/eclipse/Deck/Deck.hpp>
-#include <opm/input/eclipse/Parser/Parser.hpp>
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
+
+#include <opm/input/eclipse/Python/Python.hpp>
+
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 #include <opm/input/eclipse/Schedule/SummaryState.hpp>
 #include <opm/input/eclipse/Schedule/Well/Well.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
-#include <opm/input/eclipse/Python/Python.hpp>
+
+#include <opm/input/eclipse/Units/Units.hpp>
 
 #include <opm/common/utility/TimeService.hpp>
 
+#include <opm/input/eclipse/Deck/Deck.hpp>
+
+#include <opm/input/eclipse/Parser/Parser.hpp>
+
+#include <cmath>
 #include <cstddef>
 #include <exception>
+#include <memory>
 #include <stdexcept>
+#include <string>
+#include <tuple>
 #include <utility>
 #include <vector>
 
-struct MockIH
-{
-    MockIH(const int numWells,
+namespace {
+    struct MockIH
+    {
+        MockIH(const int numWells,
+               const int nsegWell     =  1,   // E100
+               const int ncwMax       = 20,
+               const int iConnPerConn =  25,  // NICONZ
+               const int sConnPerConn =  41,  // NSCONZ
+               const int xConnPerConn =  58); // NXCONZ
 
-	   const int nsegWell 	  =  1,  // E100
-	   const int ncwMax       = 20,
-	   const int iConnPerConn =  25,  // NICONZ
-	   const int sConnPerConn =  41,  // NSCONZ
-	   const int xConnPerConn =  58);  // NXCONZ
+        std::vector<int> value;
 
+        using Sz = std::vector<int>::size_type;
 
-    std::vector<int> value;
+        Sz nwells;
+        Sz nsegwl;
+        Sz nsegmx;
+        Sz nswlmx;
+        Sz ncwmax;
+        Sz niconz;
+        Sz nsconz;
+        Sz nxconz;
+    };
 
-    using Sz = std::vector<int>::size_type;
+    MockIH::MockIH(const int numWells,
+                   const int nsegWell,
+                   const int ncwMax,
+                   const int iConnPerConn,
+                   const int sConnPerConn,
+                   const int xConnPerConn)
+        : value(411, 0)
+    {
+        using Ix = ::Opm::RestartIO::Helpers::VectorItems::intehead;
 
-    Sz nwells;
-    Sz nsegwl;
-    Sz nsegmx;
-    Sz nswlmx;
-    Sz ncwmax;
-    Sz niconz;
-    Sz nsconz;
-    Sz nxconz;
-};
+        this->nwells = this->value[Ix::NWELLS] = numWells;
 
-MockIH::MockIH(const int numWells,
-	       const int nsegWell,
-	       const int /* ncwMax */,
-	       const int iConnPerConn,
-	       const int sConnPerConn,
-	       const int xConnPerConn)
-    : value(411, 0)
-{
-    using Ix = ::Opm::RestartIO::Helpers::VectorItems::intehead;
+        this->nsegwl = this->value[Ix::NSEGWL] = nsegWell;
+        this->ncwmax = this->value[Ix::NCWMAX] = ncwMax;
+        this->nswlmx = this->value[Ix::NSWLMX] = nsegWell;
+        this->nsegmx = this->value[Ix::NSEGMX] = 32;
+        this->niconz = this->value[Ix::NICONZ] = iConnPerConn;
+        this->nsconz = this->value[Ix::NSCONZ] = sConnPerConn;
+        this->nxconz = this->value[Ix::NXCONZ] = xConnPerConn;
+    }
 
-    this->nwells = this->value[Ix::NWELLS] = numWells;
+    struct SimulationCase
+    {
+        explicit SimulationCase(const Opm::Deck& deck)
+            : es   (deck)
+            , grid (deck)
+            , sched(deck, es, std::make_shared<Opm::Python>())
+        {}
 
-    this->nsegwl = this->value[Ix::NSEGWL] = nsegWell;
-    this->ncwmax = this->value[Ix::NCWMAX] = 20;
-    this->nswlmx = this->value[Ix::NSWLMX] = 1;
-    this->nsegmx = this->value[Ix::NSEGMX] = 32;
-    this->niconz = this->value[Ix::NICONZ] = iConnPerConn;
-    this->nsconz = this->value[Ix::NSCONZ] = sConnPerConn;
-    this->nxconz = this->value[Ix::NXCONZ] = xConnPerConn;
-}
+        // Order requirement: 'es' must be declared/initialised before 'sched'.
+        Opm::EclipseState es;
+        Opm::EclipseGrid grid;
+        Opm::Schedule sched;
+    };
+
+} // Anonymous namespace
+
+// =====================================================================
+
+BOOST_AUTO_TEST_SUITE(Aggregate_ConnData)
 
 namespace {
+
     Opm::Deck first_sim()
     {
         // Mostly copy of tests/FIRST_SIM.DATA
@@ -474,7 +505,8 @@ END
         return Opm::Parser{}.parseString(input);
     }
 
-    std::pair<Opm::data::Wells, Opm::SummaryState> wr(const Opm::Schedule& sched)
+    std::pair<Opm::data::Wells, Opm::SummaryState>
+    wr(const Opm::Schedule& sched)
     {
         using o = ::Opm::data::Rates::opt;
 
@@ -564,24 +596,8 @@ END
 
         return { std::move(xw), std::move(sum_state) };
     }
-} // namespace
 
-struct SimulationCase {
-    explicit SimulationCase(const Opm::Deck& deck)
-        : es   (deck)
-        , grid (deck)
-        , sched(deck, es, std::make_shared<Opm::Python>())
-    {}
-
-    // Order requirement: 'es' must be declared/initialised before 'sched'.
-    Opm::EclipseState es;
-    Opm::EclipseGrid grid;
-    Opm::Schedule sched;
-};
-
-// =====================================================================
-
-BOOST_AUTO_TEST_SUITE(Aggregate_ConnData)
+} // Anonymous namespace
 
 // test dimensions of Connection data
 BOOST_AUTO_TEST_CASE (Constructor)
@@ -816,10 +832,12 @@ BOOST_AUTO_TEST_CASE(Declared_Connection_Data)
     }
 }
 
-BOOST_AUTO_TEST_CASE(InactiveCell) {
+BOOST_AUTO_TEST_CASE(InactiveCell)
+{
     auto simCase = SimulationCase{first_sim()};
     const auto rptStep = std::size_t{1};
     const auto ih = MockIH {static_cast<int>(simCase.sched.getWells(rptStep).size())};
+
     const auto& [wrc, sum_state] = wr(simCase.sched);
     auto conn0 = Opm::RestartIO::Helpers::AggregateConnectionData{ih.value};
     conn0.captureDeclaredConnData(simCase.sched,
@@ -827,11 +845,10 @@ BOOST_AUTO_TEST_CASE(InactiveCell) {
                                   simCase.es.getUnits(),
                                   wrc,
                                   sum_state,
-                                  rptStep
-                                  );
+                                  rptStep);
 
-    std::vector<int> actnum(500, 1);
     // Here we deactive the cell holding connection number 2.
+    std::vector<int> actnum(500, 1);
     actnum[simCase.grid.getGlobalIndex(2,4,1)] = 0;
     simCase.grid.resetACTNUM(actnum);
 
@@ -841,62 +858,330 @@ BOOST_AUTO_TEST_CASE(InactiveCell) {
                                   simCase.es.getUnits(),
                                   wrc,
                                   sum_state,
-                                  rptStep
-                                  );
+                                  rptStep);
 
     const std::size_t num_test_connections = 4;
 
-    {
-        using IC = ::Opm::RestartIO::Helpers::VectorItems::IConn::index;
-        const auto iconn0 = conn0.getIConn();
-        const auto iconn1 = conn1.getIConn();
-        for (std::size_t conn_index = 0; conn_index < num_test_connections; conn_index++) {
-            std::size_t offset1 = conn_index * ih.niconz;
-            std::size_t offset0 = offset1;
+    using IC = ::Opm::RestartIO::Helpers::VectorItems::IConn::index;
 
-            if (conn_index >= 2)
-                offset0 += ih.niconz;
+    const auto iconn0 = conn0.getIConn();
+    const auto iconn1 = conn1.getIConn();
 
-            for (std::size_t elm_index = 0; elm_index < ih.niconz; elm_index++) {
-                if (elm_index == IC::SeqIndex && conn_index >= 2) {
-                    // Comparing the connection ID - which should be different;
-                    BOOST_CHECK_EQUAL(iconn1[offset1 + elm_index] + 1 , iconn0[offset0 + elm_index]);
-                } else
-                    BOOST_CHECK_EQUAL(iconn1[offset1 + elm_index], iconn0[offset0 + elm_index]);
+    for (std::size_t conn_index = 0; conn_index < num_test_connections; ++conn_index) {
+        const std::size_t offset1 = conn_index * ih.niconz;
+        const std::size_t offset0 = offset1 + (conn_index >= 2)*ih.niconz;
+
+        for (std::size_t elm_index = 0; elm_index < ih.niconz; ++elm_index) {
+            if (elm_index == IC::SeqIndex && conn_index >= 2) {
+                // Comparing the connection ID - which should be different;
+                BOOST_CHECK_EQUAL(iconn1[offset1 + elm_index] + 1,
+                                  iconn0[offset0 + elm_index]);
+            }
+            else {
+                BOOST_CHECK_EQUAL(iconn1[offset1 + elm_index],
+                                  iconn0[offset0 + elm_index]);
             }
         }
     }
 
-
     {
         const auto sconn0 = conn0.getSConn();
         const auto sconn1 = conn1.getSConn();
-        for (std::size_t conn_index = 0; conn_index < num_test_connections; conn_index++) {
-            std::size_t offset1 = conn_index * ih.nsconz;
-            std::size_t offset0 = offset1;
 
-            if (conn_index >= 2)
-                offset0 += ih.nsconz;
+        for (std::size_t conn_index = 0; conn_index < num_test_connections; ++conn_index) {
+            const std::size_t offset1 = conn_index * ih.nsconz;
+            const std::size_t offset0 = offset1 + (conn_index >= 2)*ih.nsconz;
 
-            for (std::size_t elm_index = 0; elm_index < ih.nsconz; elm_index++)
-                BOOST_CHECK_EQUAL(sconn1[offset1 + elm_index], sconn0[offset0 + elm_index]);
+            for (std::size_t elm_index = 0; elm_index < ih.nsconz; ++elm_index) {
+                BOOST_CHECK_EQUAL(sconn1[offset1 + elm_index],
+                                  sconn0[offset0 + elm_index]);
+            }
         }
     }
 
     {
         const auto xconn0 = conn0.getXConn();
         const auto xconn1 = conn1.getXConn();
-        for (std::size_t conn_index = 0; conn_index < num_test_connections; conn_index++) {
+
+        for (std::size_t conn_index = 0; conn_index < num_test_connections; ++conn_index) {
             std::size_t offset1 = conn_index * ih.nxconz;
             std::size_t offset0 = offset1;
 
-            if (conn_index >= 2)
+            if (conn_index >= 2) {
                 offset0 += ih.nxconz;
+            }
 
-            for (std::size_t elm_index = 0; elm_index < ih.nxconz; elm_index++)
-                BOOST_CHECK_EQUAL(xconn1[offset1 + elm_index], xconn0[offset0 + elm_index]);
+            for (std::size_t elm_index = 0; elm_index < ih.nxconz; ++elm_index) {
+                BOOST_CHECK_EQUAL(xconn1[offset1 + elm_index],
+                                  xconn0[offset0 + elm_index]);
+            }
         }
     }
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BOOST_AUTO_TEST_SUITE_END()     // Aggregate_ConnData
+
+// ---------------------------------------------------------------------------
+
+BOOST_AUTO_TEST_SUITE(DFactor_Correlation)
+
+namespace {
+
+    SimulationCase wdfaccorCase()
+    {
+        return SimulationCase { Opm::Parser{}.parseString(R"(
+DIMENS
+ 10 10 10 /
+
+START         -- 0
+ 19 JUN 2007 /
+
+GRID
+
+DXV
+ 10*100.0 /
+DYV
+ 10*100.0 /
+DZV
+ 10*10.0 /
+DEPTHZ
+121*2000.0 /
+
+PORO
+    1000*0.1 /
+PERMX
+    1000*1 /
+PERMY
+    1000*0.1 /
+PERMZ
+    1000*0.01 /
+
+SCHEDULE
+
+DATES        -- 1
+ 10  OKT 2008 /
+/
+
+WELSPECS
+ 'W1' 'G1'  3 3 2873.94 'WATER' 0.00 'STD' 'SHUT' 'NO' 0 'SEG' /
+ 'W2' 'G2'  5 5 1       'OIL'   0.00 'STD' 'SHUT' 'NO' 0 'SEG' /
+/
+
+COMPDAT
+ 'W1'  3 3   1 1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
+ 'W2'  3 3   2 2 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
+/
+
+WDFACCOR
+ 'W2' 1.984e-7 -1.1045 0.0 /
+/
+
+WCONINJE
+  'W1' 'WATER' 'OPEN' 'RATE' 4000.0 1* 850.0 /
+/
+
+WCONPROD
+  'W2' 'OPEN' 'ORAT' 5000.0 4* 20.0 /
+/
+
+DATES        -- 2
+ 12  NOV 2008 /
+/
+
+END
+)") };
+    }
+
+    std::pair<Opm::data::Wells, Opm::SummaryState>
+    dynamicState(const Opm::Schedule& sched)
+    {
+        auto dyn_state = std::pair<Opm::data::Wells, Opm::SummaryState> {
+            std::piecewise_construct,
+            std::forward_as_tuple(),
+            std::forward_as_tuple(Opm::TimeService::now())
+        };
+
+        using o = ::Opm::data::Rates::opt;
+
+        auto& [xw, sum_state] = dyn_state;
+
+        const double qv = 12.34*Opm::unit::cubic(Opm::unit::meter)/Opm::unit::day;
+
+        {
+            const auto wname = std::string { "W2" };
+
+            xw[wname].rates.set(o::wat, 1.0).set(o::oil, 2.0).set(o::gas, 3.0);
+            xw[wname].bhp = 213.0*Opm::unit::barsa;
+
+            {
+                const double qw =  4.0*Opm::unit::cubic(Opm::unit::meter)/Opm::unit::day;
+                const double qo =  5.0*Opm::unit::cubic(Opm::unit::meter)/Opm::unit::day;
+                const double qg = 50.0*Opm::unit::cubic(Opm::unit::meter)/Opm::unit::day;
+
+                const auto& well = sched.getWell(wname, 1);
+                const auto& connections = well.getConnections();
+                for (auto i = 0*connections.size(); i < connections.size(); ++i) {
+                    auto& c = xw[wname].connections.emplace_back();
+
+                    c.rates
+                        .set(o::wat, qw * (float(i) + 1.0)*Opm::unit::cubic(Opm::unit::meter)/Opm::unit::day)
+                        .set(o::oil, qo * (float(i) + 1.0)*Opm::unit::cubic(Opm::unit::meter)/Opm::unit::day)
+                        .set(o::gas, qg * (float(i) + 1.0)*Opm::unit::cubic(Opm::unit::meter)/Opm::unit::day);
+                    c.pressure = 215.0*Opm::unit::barsa;
+                    c.index = connections[i].global_index();
+                    c.trans_factor = connections[i].CF();
+                    c.cell_pressure = 200.0*Opm::unit::barsa;
+                    c.cell_saturation_water = 0.55;
+                    c.cell_saturation_gas =.038;
+                    c.effective_Kh = 100*Opm::prefix::milli*Opm::unit::darcy*Opm::unit::meter;
+                    c.d_factor = 3.0e-6*Opm::unit::day/Opm::unit::cubic(Opm::unit::meter);
+                    c.compact_mult = 0.875;
+
+                    const auto& global_index = connections[i].global_index();
+                    sum_state.update_conn_var(wname, "CWPR", global_index + 1, qw * (i + 1));
+                    sum_state.update_conn_var(wname, "COPR", global_index + 1, qo * (i + 1));
+                    sum_state.update_conn_var(wname, "CGPR", global_index + 1, qg * (i + 1));
+                    sum_state.update_conn_var(wname, "CVPR", global_index + 1, qv * (i + 1));
+
+                    sum_state.update_conn_var(wname, "COPT", global_index + 1, qo * (i + 1) * 2.0);
+                    sum_state.update_conn_var(wname, "CWPT", global_index + 1, qw * (i + 1) * 2.0);
+                    sum_state.update_conn_var(wname, "CGPT", global_index + 1, qg * (i + 1) * 2.0);
+                    sum_state.update_conn_var(wname, "CVPT", global_index + 1, qv * (i + 1) * 2.0);
+
+                    sum_state.update_conn_var(wname, "CGOR", global_index + 1, qg / qo);
+
+                    sum_state.update_conn_var(wname, "CPR",  global_index + 1, 215.0);
+                }
+            }
+        }
+
+        {
+            const auto wname = std::string { "W1" };
+
+            const auto& well = sched.getWell(wname, 1);
+            const auto& connections = well.getConnections();
+
+            xw[wname].bhp = 234.0*Opm::unit::barsa;
+            xw[wname].rates
+                .set(o::wat, 5.0*Opm::unit::cubic(Opm::unit::meter)/Opm::unit::day)
+                .set(o::oil, 0.0*Opm::unit::cubic(Opm::unit::meter)/Opm::unit::day)
+                .set(o::gas, 0.0*Opm::unit::cubic(Opm::unit::meter)/Opm::unit::day);
+
+            const double qw = 7.0;
+            for (auto i = 0*connections.size(); i < connections.size(); ++i) {
+                xw[wname].connections.emplace_back();
+                auto& c = xw[wname].connections.back();
+
+                c.rates.set(o::wat, qw * (float(i) + 1.0)).set(o::oil, 0.0).set(o::gas, 0.0);
+                c.pressure = 218.0*Opm::unit::barsa;
+                c.index = connections[i].global_index();
+                c.trans_factor = connections[i].CF();
+                c.cell_pressure = 230.0*Opm::unit::barsa;
+                c.cell_saturation_water = 0.15;
+                c.cell_saturation_gas = 0.50;
+                c.effective_Kh = 100*Opm::prefix::milli*Opm::unit::darcy*Opm::unit::meter;
+                c.d_factor = 3.0e-6*Opm::unit::day/Opm::unit::cubic(Opm::unit::meter);
+                c.compact_mult = 0.987;
+
+                const auto& global_index = connections[i].global_index();
+                sum_state.update_conn_var(wname, "CWIR", global_index+ 1, qw*(i + 1));
+                sum_state.update_conn_var(wname, "COIR", global_index+ 1, 0.0);
+                sum_state.update_conn_var(wname, "CGIR", global_index+ 1, 0.0);
+                sum_state.update_conn_var(wname, "CVIR", global_index+ 1, qv*(i + 1));
+
+                sum_state.update_conn_var(wname, "COIT", global_index + 1, 543.21 * (i + 1));
+                sum_state.update_conn_var(wname, "CWIT", global_index + 1, qw * (i + 1) * 2.0);
+                sum_state.update_conn_var(wname, "CGIT", global_index + 1, 9876.54 * (i + 1));
+                sum_state.update_conn_var(wname, "CVIT", global_index + 1, qv * (i + 1) * 2.0);
+
+                sum_state.update_conn_var(wname, "CPR", global_index + 1, 218.0);
+            }
+        }
+
+        return dyn_state;
+    }
+
+} // Anonymous namespace
+
+BOOST_AUTO_TEST_CASE(Basic)
+{
+    const auto cse = wdfaccorCase();
+
+    const auto ih = MockIH { 2, 0, 1 };
+
+    const auto& [wrc, sum_state] = dynamicState(cse.sched);
+
+    auto amconn = Opm::RestartIO::Helpers::AggregateConnectionData {ih.value};
+
+    {
+        const auto rptStep = std::size_t {0};
+
+        amconn.captureDeclaredConnData(cse.sched,
+                                       cse.grid,
+                                       cse.es.getUnits(),
+                                       wrc, sum_state, rptStep);
+
+        // W1 (injector)
+        {
+            using Ix = ::Opm::RestartIO::Helpers::VectorItems::SConn::index;
+            const auto& sconn = amconn.getSConn();
+
+            const auto wellNo = 1;
+            const auto connNo = 1;
+            const auto wellStart = (wellNo - 1) * ih.ncwmax * ih.nsconz;
+            const auto start = wellStart + (connNo - 1) * ih.nsconz;
+
+            BOOST_CHECK_CLOSE(sconn[start + Ix::StaticDFacCorrCoeff], 0.0, 1.0e-7);
+        }
+
+        // W2 (producer)
+        {
+            using Ix = ::Opm::RestartIO::Helpers::VectorItems::SConn::index;
+            const auto& sconn = amconn.getSConn();
+
+            const auto wellNo = 2;
+            const auto connNo = 1;
+            const auto wellStart = (wellNo - 1) * ih.ncwmax * ih.nsconz;
+            const auto start = wellStart + (connNo - 1)*ih.nsconz;
+
+            BOOST_CHECK_CLOSE(sconn[start + Ix::StaticDFacCorrCoeff], 0.0, 1.0e-7);
+        }
+    }
+
+    {
+        const auto rptStep = std::size_t {1};
+
+        amconn.captureDeclaredConnData(cse.sched,
+                                       cse.grid,
+                                       cse.es.getUnits(),
+                                       wrc, sum_state, rptStep);
+
+        // W1 (injector)
+        {
+            using Ix = ::Opm::RestartIO::Helpers::VectorItems::SConn::index;
+            const auto& sconn = amconn.getSConn();
+
+            const auto wellNo = 1;
+            const auto connNo = 1;
+            const auto wellStart = (wellNo - 1) * ih.ncwmax * ih.nsconz;
+            const auto start = wellStart + (connNo - 1) * ih.nsconz;
+
+            BOOST_CHECK_CLOSE(sconn[start + Ix::StaticDFacCorrCoeff], 0.0, 1.0e-7);
+        }
+
+        // W2 (producer)
+        {
+            using Ix = ::Opm::RestartIO::Helpers::VectorItems::SConn::index;
+            const auto& sconn = amconn.getSConn();
+
+            const auto wellNo = 2;
+            const auto connNo = 1;
+            const auto wellStart = (wellNo - 1) * ih.ncwmax * ih.nsconz;
+            const auto start = wellStart + (connNo - 1)*ih.nsconz;
+
+            BOOST_CHECK_CLOSE(sconn[start + Ix::StaticDFacCorrCoeff], 1.89919365e-11, 1.0e-7);
+        }
+    }
+}
+
+BOOST_AUTO_TEST_SUITE_END()     // DFactor_Correlation

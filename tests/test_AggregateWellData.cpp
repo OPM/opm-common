@@ -51,6 +51,8 @@
 #include <opm/input/eclipse/Schedule/Well/WellTestConfig.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellTestState.hpp>
 
+#include <opm/input/eclipse/Units/Units.hpp>
+
 #include <opm/input/eclipse/Parser/Parser.hpp>
 #include <opm/input/eclipse/Deck/Deck.hpp>
 
@@ -64,42 +66,65 @@
 
 #include "tests/WorkArea.hpp"
 
-struct MockIH
-{
-    MockIH(const int numWells,
-           const int iwelPerWell = 155,  // E100
-           const int swelPerWell = 122,  // E100
-           const int xwelPerWell = 130,  // E100
-           const int zwelPerWell =   3); // E100
+namespace {
 
-    std::vector<int> value;
+    struct MockIH
+    {
+        MockIH(const int numWells,
+               const int iwelPerWell = 155,  // E100
+               const int swelPerWell = 122,  // E100
+               const int xwelPerWell = 130,  // E100
+               const int zwelPerWell =   3); // E100
 
-    using Sz = std::vector<int>::size_type;
+        std::vector<int> value;
 
-    Sz nwells;
-    Sz niwelz;
-    Sz nswelz;
-    Sz nxwelz;
-    Sz nzwelz;
-};
+        using Sz = std::vector<int>::size_type;
 
-MockIH::MockIH(const int numWells,
-               const int iwelPerWell,
-               const int swelPerWell,
-               const int xwelPerWell,
-               const int zwelPerWell)
-    : value(411, 0)
-{
-    using Ix = ::Opm::RestartIO::Helpers::VectorItems::intehead;
+        Sz nwells;
+        Sz niwelz;
+        Sz nswelz;
+        Sz nxwelz;
+        Sz nzwelz;
+    };
 
-    this->nwells = this->value[Ix::NWELLS] = numWells;
-    this->niwelz = this->value[Ix::NIWELZ] = iwelPerWell;
-    this->nswelz = this->value[Ix::NSWELZ] = swelPerWell;
-    this->nxwelz = this->value[Ix::NXWELZ] = xwelPerWell;
-    this->nzwelz = this->value[Ix::NZWELZ] = zwelPerWell;
-}
+    MockIH::MockIH(const int numWells,
+                   const int iwelPerWell,
+                   const int swelPerWell,
+                   const int xwelPerWell,
+                   const int zwelPerWell)
+        : value(411, 0)
+    {
+        using Ix = ::Opm::RestartIO::Helpers::VectorItems::intehead;
+
+        this->nwells = this->value[Ix::NWELLS] = numWells;
+        this->niwelz = this->value[Ix::NIWELZ] = iwelPerWell;
+        this->nswelz = this->value[Ix::NSWELZ] = swelPerWell;
+        this->nxwelz = this->value[Ix::NXWELZ] = xwelPerWell;
+        this->nzwelz = this->value[Ix::NZWELZ] = zwelPerWell;
+    }
+
+    struct SimulationCase
+    {
+        explicit SimulationCase(const Opm::Deck& deck)
+            : es   { deck }
+            , grid { deck }
+            , sched{ deck, es, std::make_shared<Opm::Python>() }
+        {}
+
+        // Order requirement: 'es' must be declared/initialised before 'sched'.
+        Opm::EclipseState es;
+        Opm::EclipseGrid  grid;
+        Opm::Schedule     sched;
+    };
+
+} // Anonymous namespace
+
+// =====================================================================
+
+BOOST_AUTO_TEST_SUITE(Aggregate_WD)
 
 namespace {
+
     Opm::Deck first_sim()
     {
         // Mostly copy of tests/FIRST_SIM.DATA
@@ -817,25 +842,8 @@ TSTEP            -- 3
 
         return xw;
     }
-} // namespace
 
-struct SimulationCase
-{
-    explicit SimulationCase(const Opm::Deck& deck)
-        : es   { deck }
-        , grid { deck }
-        , sched{ deck, es, std::make_shared<Opm::Python>() }
-    {}
-
-    // Order requirement: 'es' must be declared/initialised before 'sched'.
-    Opm::EclipseState es;
-    Opm::EclipseGrid  grid;
-    Opm::Schedule     sched;
-};
-
-// =====================================================================
-
-BOOST_AUTO_TEST_SUITE(Aggregate_WD)
+} // Anonymous namespace
 
 BOOST_AUTO_TEST_CASE (Constructor)
 {
@@ -1822,3 +1830,156 @@ BOOST_AUTO_TEST_CASE(WELL_POD)
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+// ===========================================================================
+
+BOOST_AUTO_TEST_SUITE(Extra_Effects)
+
+namespace {
+
+    SimulationCase wdfaccorCase()
+    {
+        return SimulationCase { Opm::Parser{}.parseString(R"~(
+DIMENS
+ 10 10 10 /
+
+START         -- 0
+ 19 JUN 2007 /
+
+GRID
+
+DXV
+ 10*100.0 /
+DYV
+ 10*100.0 /
+DZV
+ 10*10.0 /
+DEPTHZ
+121*2000.0 /
+
+PORO
+    1000*0.1 /
+PERMX
+    1000*1 /
+PERMY
+    1000*0.1 /
+PERMZ
+    1000*0.01 /
+
+SCHEDULE
+
+DATES        -- 1
+ 10  OKT 2008 /
+/
+
+WELSPECS
+ 'W1' 'G1'  3 3 2873.94 'WATER' 0.00 'STD' 'SHUT' 'NO' 0 'SEG' /
+ 'W2' 'G2'  5 5 1       'OIL'   0.00 'STD' 'SHUT' 'NO' 0 'SEG' /
+/
+
+COMPDAT
+ 'W1'  3 3   1 1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
+ 'W2'  3 3   2 2 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
+/
+
+WDFACCOR
+ 'W2' 1.984e-7 -1.1045 0.0 /
+/
+
+WCONINJE
+  'W1' 'WATER' 'OPEN' 'RATE' 4000.0 1* 850.0 /
+/
+
+WCONPROD
+  'W2' 'OPEN' 'ORAT' 5000.0 4* 20.0 /
+/
+
+DATES        -- 2
+ 12  NOV 2008 /
+/
+
+END
+)~") };
+    }
+
+    std::pair<Opm::data::Wells, Opm::SummaryState> dynamicStateWDFacCorr()
+    {
+        auto dyn_state = std::pair<Opm::data::Wells, Opm::SummaryState> {
+            std::piecewise_construct,
+            std::forward_as_tuple(),
+            std::forward_as_tuple(Opm::TimeService::now())
+        };
+
+        using o = ::Opm::data::Rates::opt;
+
+        auto& [xw, sum_state] = dyn_state;
+
+        {
+            const auto wname = std::string { "W2" };
+
+            xw[wname].rates.set(o::wat, 1.0).set(o::oil, 2.0).set(o::gas, 3.0);
+            xw[wname].bhp = 213.0*Opm::unit::barsa;
+        }
+
+        {
+            const auto wname = std::string { "W1" };
+
+            xw[wname].bhp = 234.0*Opm::unit::barsa;
+            xw[wname].rates
+                .set(o::wat, 5.0*Opm::unit::cubic(Opm::unit::meter)/Opm::unit::day)
+                .set(o::oil, 0.0*Opm::unit::cubic(Opm::unit::meter)/Opm::unit::day)
+                .set(o::gas, 0.0*Opm::unit::cubic(Opm::unit::meter)/Opm::unit::day);
+        }
+
+        return dyn_state;
+    }
+
+} // Anonymous namespace
+
+BOOST_AUTO_TEST_CASE(WdFac_Correlation)
+{
+    const auto cse = wdfaccorCase();
+    const auto& [xw, smry] = dynamicStateWDFacCorr();
+
+    const auto ih = MockIH{ 2 };
+
+    const auto action_state = Opm::Action::State{};
+    const auto wtest_state = Opm::WellTestState{};
+
+    const auto rptStep = std::size_t{1};
+
+    auto awd = Opm::RestartIO::Helpers::AggregateWellData{ ih.value };
+    awd.captureDeclaredWellData(cse.sched,
+                                cse.es.tracer(),
+                                rptStep,
+                                action_state,
+                                wtest_state,
+                                smry,
+                                ih.value);
+
+    // W1 (injector)
+    {
+        using Ix = ::Opm::RestartIO::Helpers::VectorItems::SWell::index;
+
+        const auto i1 = 0*ih.nswelz;
+
+        const auto& swell = awd.getSWell();
+        BOOST_CHECK_CLOSE(swell[i1 + Ix::DFacCorrCoeffA], 0.0f, 1.0e-7f);
+        BOOST_CHECK_CLOSE(swell[i1 + Ix::DFacCorrExpB]  , 0.0f, 1.0e-7f);
+        BOOST_CHECK_CLOSE(swell[i1 + Ix::DFacCorrExpC]  , 0.0f, 1.0e-7f);
+    }
+
+    // W2 (producer)
+    {
+        using Ix = ::Opm::RestartIO::Helpers::VectorItems::SWell::index;
+
+        const auto i1 = 1*ih.nswelz;
+
+        const auto& swell = awd.getSWell();
+        BOOST_CHECK_CLOSE(swell[i1 + Ix::DFacCorrCoeffA],  1.984e-7f, 1.0e-7f);
+        BOOST_CHECK_CLOSE(swell[i1 + Ix::DFacCorrExpB]  , -1.1045f  , 1.0e-7f);
+        BOOST_CHECK_CLOSE(swell[i1 + Ix::DFacCorrExpC]  ,  0.0f     , 1.0e-7f);
+    }
+}
+
+BOOST_AUTO_TEST_SUITE_END()     // Extra_Effects
