@@ -412,3 +412,7 @@ const Opm::out::Summary& Opm::EclipseIO::summary() const
     return this->impl->summary;
 }
 
+const Opm::SummaryConfig& Opm::EclipseIO::finalSummaryConfig() const
+{
+    return this->impl->summaryConfig;
+}

@@ -184,6 +184,7 @@ public:
                              const std::vector<RestartKey>& extra_keys = {}) const;
 
     const out::Summary& summary() const;
+    const SummaryConfig& finalSummaryConfig() const;
 
 private:
     class Impl;
