@@ -161,7 +161,7 @@ Opm::EclipseIO::Impl::Impl(const EclipseState& eclipseState,
     , outputDir     (eclipseState.getIOConfig().getOutputDir())
     , baseName      (uppercase(eclipseState.getIOConfig().getBaseName()))
     , summaryConfig (summary_config)
-    , summary       (eclipseState, summaryConfig, grid, schedule, base_name, writeEsmry)
+    , summary       (summaryConfig, eclipseState, grid, schedule, base_name, writeEsmry)
     , output_enabled(eclipseState.getIOConfig().getOutputEnabled())
 {
     if (const auto& aqConfig = this->es.aquifer();
