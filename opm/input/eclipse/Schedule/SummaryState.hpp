@@ -129,17 +129,17 @@ public:
     template<class Serializer>
     void serializeOp(Serializer& serializer)
     {
-      serializer(sim_start);
-      serializer(elapsed);
-      serializer(values);
-      serializer(well_values);
-      serializer(m_wells);
-      serializer(well_names);
-      serializer(group_values);
-      serializer(m_groups);
-      serializer(group_names);
-      serializer(conn_values);
-      serializer(segment_values);
+        serializer(sim_start);
+        serializer(elapsed);
+        serializer(values);
+        serializer(well_values);
+        serializer(m_wells);
+        serializer(well_names);
+        serializer(group_values);
+        serializer(m_groups);
+        serializer(group_names);
+        serializer(conn_values);
+        serializer(segment_values);
     }
 
     static SummaryState serializationTestObject();

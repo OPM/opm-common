@@ -18,6 +18,13 @@
 
 #include <opm/input/eclipse/EclipseState/Runspec.hpp>
 
+#include <opm/input/eclipse/EclipseState/Tables/Regdims.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/Tabdims.hpp>
+
+#include <opm/common/utility/TimeService.hpp>
+
+#include <opm/common/OpmLog/OpmLog.hpp>
+
 #include <opm/input/eclipse/Deck/Deck.hpp>
 #include <opm/input/eclipse/Deck/DeckSection.hpp>
 
@@ -34,17 +41,16 @@
 #include <opm/input/eclipse/Parser/ParserKeywords/S.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/T.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/W.hpp>
-#include <opm/common/utility/TimeService.hpp>
-
-#include <opm/common/OpmLog/OpmLog.hpp>
 
 #include <algorithm>
-#include <ostream>
+#include <ctime>
 #include <stdexcept>
-#include <type_traits>
+#include <string>
+
 #include <fmt/format.h>
 
 namespace {
+
     Opm::Phases inferActivePhases(const Opm::Deck& deck)
     {
         return {
@@ -119,37 +125,45 @@ namespace {
         return Opm::SatFuncControls::KeywordFamily::Undefined;
     }
 
+    std::time_t create_start_time(const Opm::Deck& deck)
+    {
+        if (deck.hasKeyword("START")) {
+            const auto& keyword = deck["START"].back();
+            return Opm::TimeService::timeFromEclipse(keyword.getRecord(0));
+        }
+        else {
+            // Default to START keyword's default date (1st January 1983).
+            return Opm::TimeService::mkdate(1983, 1, 1);
+        }
+    }
 
-std::time_t create_start_time(const Opm::Deck& deck) {
-    if (deck.hasKeyword("START")) {
-        const auto& keyword = deck["START"].back();
-        return Opm::TimeService::timeFromEclipse(keyword.getRecord(0));
-    } else
-        // The default start date is not specified in the Eclipse
-        // reference manual. We hence just assume it is same as for
-        // the START keyword for Eclipse E100, i.e., January 1st,
-        // 1983...
-        return Opm::TimeService::mkdate(1983, 1, 1);
-}
+    unsigned long long phaseBit(const bool isSet, const Opm::Phase p)
+    {
+        return isSet
+            ? (1ULL << static_cast<unsigned long long>(p))
+            : 0ULL;
+    }
 
 }
 
 namespace Opm {
 
-using un = std::underlying_type<Phase>::type;
-
-Phases::Phases( bool oil, bool gas, bool wat, bool sol, bool pol, bool energy, bool polymw, bool foam, bool brine, bool zfraction) noexcept :
-    bits( (oil ? (1 << static_cast< un >( Phase::OIL ) )     : 0) |
-          (gas ? (1 << static_cast< un >( Phase::GAS ) )     : 0) |
-          (wat ? (1 << static_cast< un >( Phase::WATER ) )   : 0) |
-          (sol ? (1 << static_cast< un >( Phase::SOLVENT ) ) : 0) |
-          (pol ? (1 << static_cast< un >( Phase::POLYMER ) ) : 0) |
-          (energy ? (1 << static_cast< un >( Phase::ENERGY ) ) : 0) |
-          (polymw ? (1 << static_cast< un >( Phase::POLYMW ) ) : 0) |
-          (foam ? (1 << static_cast< un >( Phase::FOAM ) ) : 0) |
-          (brine ? (1 << static_cast< un >( Phase::BRINE ) ) : 0) |
-          (zfraction ? (1 << static_cast< un >( Phase::ZFRACTION ) ) : 0) )
-
+Phases::Phases(bool oil, bool gas, bool wat,
+               bool sol, bool pol, bool energy,
+               bool polymw,
+               bool foam,
+               bool brine,
+               bool zfraction) noexcept
+    : bits { phaseBit(oil       , Phase::OIL)     |
+             phaseBit(gas       , Phase::GAS)     |
+             phaseBit(wat       , Phase::WATER)   |
+             phaseBit(sol       , Phase::SOLVENT) |
+             phaseBit(pol       , Phase::POLYMER) |
+             phaseBit(energy    , Phase::ENERGY)  |
+             phaseBit(polymw    , Phase::POLYMW)  |
+             phaseBit(foam      , Phase::FOAM)    |
+             phaseBit(brine     , Phase::BRINE)   |
+             phaseBit(zfraction , Phase::ZFRACTION) }
 {}
 
 Phases Phases::serializationTestObject()
@@ -453,30 +467,32 @@ EclHysterConfig EclHysterConfig::serializationTestObject()
 }
 
 bool EclHysterConfig::active() const
-    { return activeHyst; }
+{ return activeHyst; }
 
 int EclHysterConfig::pcHysteresisModel() const
-    { return pcHystMod; }
+{ return pcHystMod; }
 
 int EclHysterConfig::krHysteresisModel() const
-    { return krHystMod; }
+{ return krHystMod; }
 
 double EclHysterConfig::modParamTrapped() const
-    { return modParamTrappedValue; }
+{ return modParamTrappedValue; }
 
 double EclHysterConfig::curvatureCapPrs() const
-    { return curvatureCapPrsValue; }
+{ return curvatureCapPrsValue; }
 
 bool EclHysterConfig::activeWag() const
-    { return activeWagHyst; }
+{ return activeWagHyst; }
 
-bool EclHysterConfig::operator==(const EclHysterConfig& data) const {
-    return this->active() == data.active() &&
-           this->pcHysteresisModel() == data.pcHysteresisModel() &&
-           this->krHysteresisModel() == data.krHysteresisModel() &&
-           this->modParamTrapped() == data.modParamTrapped() &&
-           this->curvatureCapPrs() == data.curvatureCapPrs() &&
-           this->activeWag() == data.activeWag();
+bool EclHysterConfig::operator==(const EclHysterConfig& data) const
+{
+    return (this->active() == data.active())
+        && (this->pcHysteresisModel() == data.pcHysteresisModel())
+        && (this->krHysteresisModel() == data.krHysteresisModel())
+        && (this->modParamTrapped() == data.modParamTrapped())
+        && (this->curvatureCapPrs() == data.curvatureCapPrs())
+        && (this->activeWag() == data.activeWag())
+        ;
 }
 
 SatFuncControls::SatFuncControls()
@@ -521,20 +537,26 @@ bool SatFuncControls::operator==(const SatFuncControls& rhs) const
         && (this->family() == rhs.family());
 }
 
-Nupcol::Nupcol() :
-    Nupcol(ParserKeywords::MINNPCOL::VALUE::defaultValue)
+Nupcol::Nupcol()
+    : Nupcol { ParserKeywords::MINNPCOL::VALUE::defaultValue }
+{}
+
+Nupcol::Nupcol(int min_value)
+    : min_nupcol(min_value)
 {
+    this->update(ParserKeywords::NUPCOL::NUM_ITER::defaultValue);
 }
 
-Nupcol::Nupcol(int min_value) :
-    min_nupcol(min_value)
+void Nupcol::update(int value)
 {
-    this->update( ParserKeywords::NUPCOL::NUM_ITER::defaultValue );
-}
+    if ((value < this->min_nupcol) &&
+        (this->min_nupcol == ParserKeywords::MINNPCOL::VALUE::defaultValue))
+    {
+        OpmLog::note(fmt::format("Minimum NUPCOL value is {} - see keyword "
+                                 "MINNPCOL to adjust the minimum value",
+                                 this->min_nupcol));
+    }
 
-void Nupcol::update(int value) {
-    if (value < this->min_nupcol && this->min_nupcol == ParserKeywords::MINNPCOL::VALUE::defaultValue)
-        OpmLog::note(fmt::format("Minimum NUPCOL value is {} - see keyword MINNPCOL to adjust the minimum value", this->min_nupcol));
     this->nupcol_value = std::max(value, this->min_nupcol);
 }
 
@@ -544,7 +566,8 @@ Nupcol Nupcol::serializationTestObject() {
     return nc;
 }
 
-int Nupcol::value() const {
+int Nupcol::value() const
+{
     return this->nupcol_value;
 }
 
@@ -608,33 +631,36 @@ const Tracers& Runspec::tracers() const {
     return this->m_tracers;
 }
 
-Runspec::Runspec( const Deck& deck )
-    : m_start_time( create_start_time(deck) )
-    , active_phases( inferActivePhases(deck) )
-    , m_tabdims( deck )
-    , m_regdims( deck )
-    , endscale( deck )
-    , welldims( deck )
-    , wsegdims( deck )
-    , netwrkdims( deck )
-    , aquiferdims( deck )
-    , udq_params( deck )
-    , hystpar( deck )
-    , m_actdims( deck )
-    , m_sfuncctrl( deck )
-    , m_nupcol( )
-    , m_tracers( deck )
+Runspec::Runspec(const Deck& deck)
+    : m_start_time (create_start_time(deck))
+    , active_phases(inferActivePhases(deck))
+    , m_tabdims    (deck)
+    , m_regdims    (deck)
+    , endscale     (deck)
+    , welldims     (deck)
+    , wsegdims     (deck)
+    , netwrkdims   (deck)
+    , aquiferdims  (deck)
+    , udq_params   (deck)
+    , hystpar      (deck)
+    , m_actdims    (deck)
+    , m_sfuncctrl  (deck)
+    , m_nupcol     ()
+    , m_tracers    (deck)
     , m_co2storage (false)
-    , m_co2sol (false)
-    , m_h2sol (false)
-    , m_h2storage (false)
-    , m_micp (false)
-    , m_mech (false)
+    , m_co2sol     (false)
+    , m_h2sol      (false)
+    , m_h2storage  (false)
+    , m_micp       (false)
+    , m_mech       (false)
 {
     if (DeckSection::hasRUNSPEC(deck)) {
         const RUNSPECSection runspecSection{deck};
+
         if (runspecSection.hasKeyword<ParserKeywords::MINNPCOL>()) {
-            const auto& min_item = runspecSection.get<ParserKeywords::MINNPCOL>().back().getRecord(0).getItem<ParserKeywords::MINNPCOL::VALUE>();
+            const auto& min_item = runspecSection.get<ParserKeywords::MINNPCOL>()
+                .back().getRecord(0).getItem<ParserKeywords::MINNPCOL::VALUE>();
+
             auto min_value = min_item.get<int>(0);
             this->m_nupcol = Nupcol(min_value);
         }
@@ -642,69 +668,94 @@ Runspec::Runspec( const Deck& deck )
         using NC = ParserKeywords::NUPCOL;
         if (runspecSection.hasKeyword<NC>()) {
             const auto& item = runspecSection.get<NC>().back()[0].getItem<NC::NUM_ITER>();
+
             if (item.defaultApplied(0)) {
-                std::string msg = fmt::format("OPM Flow uses {} as default NUPCOL value", NC::NUM_ITER::defaultValue);
+                const auto msg = fmt::format("OPM Flow uses {} as default "
+                                             "NUPCOL value", NC::NUM_ITER::defaultValue);
                 OpmLog::note(msg);
             }
+
             auto deck_nupcol = item.get<int>(0);
             this->m_nupcol.update(deck_nupcol);
         }
 
         if (runspecSection.hasKeyword<ParserKeywords::CO2STORE>() ||
-                runspecSection.hasKeyword<ParserKeywords::CO2STOR>()) {
+            runspecSection.hasKeyword<ParserKeywords::CO2STOR>())
+        {
             m_co2storage = true;
-            if (phases().active(Phase::GAS) && (phases().active(Phase::OIL) || phases().active(Phase::WATER))) {
-                std::string msg = "The CO2 storage option is given. PVT properties from the Brine-CO2 system is used \n"
-                                  "See the OPM manual for details on the used models.";
-                OpmLog::note(msg);
-            } else {
-                throw std::runtime_error("The CO2 storage option is given. Activate GAS, plus WATER or OIL ");
-            }
 
+            if (phases().active(Phase::GAS) &&
+                (phases().active(Phase::OIL) || phases().active(Phase::WATER)))
+            {
+                const std::string msg = "The CO2 storage option is given. PVT properties "
+                    "from the Brine-CO2 system is used\n"
+                    "See the OPM manual for details on the used models.";
+
+                OpmLog::note(msg);
+            }
+            else {
+                throw std::runtime_error {
+                    "The CO2 storage option is given. Activate GAS, plus WATER or OIL"
+                };
+            }
         }
 
         if (runspecSection.hasKeyword<ParserKeywords::CO2SOL>()) {
             m_co2sol = true;
+
             if (phases().active(Phase::SOLVENT)) {
-                std::string msg = "The CO2SOL option is given together with SOLVENT. PVT properties from the CO2-Brine system is used \n"
-                                  "See the OPM manual for details on the used models.";
+                const std::string msg = "The CO2SOL option is given together "
+                    "with SOLVENT. PVT properties from the CO2-Brine system is used\n"
+                    "See the OPM manual for details on the used models.";
+
                 OpmLog::note(msg);
-            } else {
+            }
+            else {
                 throw std::runtime_error("The CO2SOL option is given. Activate SOLVENT.");
             }
-
         }
 
         if (runspecSection.hasKeyword<ParserKeywords::H2SOL>()) {
             m_h2sol = true;
+
             if (phases().active(Phase::SOLVENT)) {
-                std::string msg = "The H2SOL option is given together with SOLVENT. PVT properties from the H2-Brine system is used \n"
-                                  "See the OPM manual for details on the used models.";
+                const std::string msg = "The H2SOL option is given together with SOLVENT. "
+                    "PVT properties from the H2-Brine system is used\n"
+                    "See the OPM manual for details on the used models.";
+
                 OpmLog::note(msg);
-            } else {
+            }
+            else {
                 throw std::runtime_error("The H2SOL option is given. Activate SOLVENT.");
             }
-
         }
 
         if (runspecSection.hasKeyword<ParserKeywords::H2STORE>()) {
             m_h2storage = true;
-            std::string msg = "The H2 storage option is given. PVT properties from the Brine-H2 system is used \n"
-                              "See the OPM manual for details on the used models.";
+
+            const std::string msg = "The H2 storage option is given. PVT properties "
+                "from the Brine-H2 system is used\n"
+                "See the OPM manual for details on the used models.";
+
             OpmLog::note(msg);
         }
 
         if (runspecSection.hasKeyword<ParserKeywords::MICP>()) {
             m_micp = true;
-            std::string msg = "The MICP option is given. Single phase (WATER) + 3 transported components + \n"
-                              "3 solid phases are used. See https://doi.org/10.1016/j.ijggc.2021.103256 \n"
-                              "for details on the used model.";
+
+            const std::string msg = "The MICP option is given. Single phase (WATER) "
+                "+ 3 transported components\n + 3 solid phases are used. See "
+                "https://doi.org/10.1016/j.ijggc.2021.103256\n"
+                "for details on the used model.";
+
             OpmLog::note(msg);
         }
 
         if (runspecSection.hasKeyword<ParserKeywords::MECH>()) {
             m_mech = true;
+
             const std::string msg = "Simulation will solve for mechanical quantities";
+
             OpmLog::note(msg);
         }
     }
@@ -825,12 +876,10 @@ std::time_t Runspec::start_time() const noexcept
     return this->m_start_time;
 }
 
-
-/*
-  Returns an integer in the range 0...7 which can be used to indicate
-  available phases in Eclipse restart and init files.
-*/
-int Runspec::eclPhaseMask( ) const noexcept {
+// Returns an integer in the range 0...7 which can be used to indicate
+// available phases in Eclipse restart and init files.
+int Runspec::eclPhaseMask() const noexcept
+{
     const int water = 1 << 2;
     const int oil   = 1 << 0;
     const int gas   = 1 << 1;
@@ -840,12 +889,13 @@ int Runspec::eclPhaseMask( ) const noexcept {
          | ( active_phases.active( Phase::GAS ) ? gas : 0 );
 }
 
-
-const UDQParams& Runspec::udqParams() const noexcept {
+const UDQParams& Runspec::udqParams() const noexcept
+{
     return this->udq_params;
 }
 
-bool Runspec::rst_cmp(const Runspec& full_spec, const Runspec& rst_spec) {
+bool Runspec::rst_cmp(const Runspec& full_spec, const Runspec& rst_spec)
+{
     return full_spec.phases() == rst_spec.phases() &&
         full_spec.tabdims() == rst_spec.tabdims() &&
         full_spec.regdims() == rst_spec.regdims() &&
@@ -865,25 +915,26 @@ bool Runspec::rst_cmp(const Runspec& full_spec, const Runspec& rst_spec) {
         Welldims::rst_cmp(full_spec.wellDimensions(), rst_spec.wellDimensions());
 }
 
-bool Runspec::operator==(const Runspec& data) const {
-    return this->phases() == data.phases() &&
-           this->tabdims() == data.tabdims() &&
-           this->regdims() == data.regdims() &&
-           this->endpointScaling() == data.endpointScaling() &&
-           this->wellDimensions() == data.wellDimensions() &&
-           this->wellSegmentDimensions() == data.wellSegmentDimensions() &&
-          (this->aquiferDimensions() == data.aquiferDimensions()) &&
-           this->hysterPar() == data.hysterPar() &&
-           this->actdims() == data.actdims() &&
-           this->saturationFunctionControls() == data.saturationFunctionControls() &&
-           this->m_nupcol == data.m_nupcol &&
-           this->m_co2storage == data.m_co2storage &&
-           this->m_co2sol == data.m_co2sol &&
-           this->m_h2sol == data.m_h2sol &&
-           this->m_h2storage == data.m_h2storage &&
-           this->m_micp == data.m_micp &&
-           this->m_mech == data.m_mech;
+bool Runspec::operator==(const Runspec& data) const
+{
+    return (this->phases() == data.phases())
+        && (this->tabdims() == data.tabdims())
+        && (this->regdims() == data.regdims())
+        && (this->endpointScaling() == data.endpointScaling())
+        && (this->wellDimensions() == data.wellDimensions())
+        && (this->wellSegmentDimensions() == data.wellSegmentDimensions())
+        && (this->aquiferDimensions() == data.aquiferDimensions())
+        && (this->hysterPar() == data.hysterPar())
+        && (this->actdims() == data.actdims())
+        && (this->saturationFunctionControls() == data.saturationFunctionControls())
+        && (this->m_nupcol == data.m_nupcol)
+        && (this->m_co2storage == data.m_co2storage)
+        && (this->m_co2sol == data.m_co2sol)
+        && (this->m_h2sol == data.m_h2sol)
+        && (this->m_h2storage == data.m_h2storage)
+        && (this->m_micp == data.m_micp)
+        && (this->m_mech == data.m_mech)
+        ;
 }
 
-
-}
+} // namespace Opm

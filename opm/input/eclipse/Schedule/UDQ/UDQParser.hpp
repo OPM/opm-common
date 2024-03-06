@@ -19,102 +19,33 @@
 #ifndef UDQPARSER_HPP
 #define UDQPARSER_HPP
 
-#include <opm/input/eclipse/Schedule/UDQ/UDQASTNode.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQEnums.hpp>
-#include <opm/input/eclipse/Schedule/UDQ/UDQFunctionTable.hpp>
-#include <opm/input/eclipse/Schedule/UDQ/UDQParams.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQToken.hpp>
 
+#include <memory>
 #include <string>
-#include <variant>
 #include <vector>
 
 namespace Opm {
 
-class ParseContext;
 class ErrorGuard;
 class KeywordLocation;
+class ParseContext;
+class UDQASTNode;
+class UDQParams;
 
 } // namespace Opm
 
 namespace Opm {
 
-struct UDQParseNode
-{
-    UDQParseNode(const UDQTokenType                       type_arg,
-                 const std::variant<std::string, double>& value_arg,
-                 const std::vector<std::string>&          selector_arg)
-        : type(type_arg)
-        , value(value_arg)
-        , selector(selector_arg)
-    {
-        if (type_arg == UDQTokenType::ecl_expr) {
-            this->var_type = UDQ::targetType(std::get<std::string>(value_arg), selector_arg);
-        }
-    }
-
-    UDQParseNode(UDQTokenType type_arg, const std::variant<std::string, double>& value_arg)
-        : UDQParseNode(type_arg, value_arg, {})
-    {}
-
-    // Implicit converting constructor.
-    UDQParseNode(UDQTokenType type_arg) : UDQParseNode(type_arg, "")
-    {}
-
-    std::string string() const
-    {
-        if (std::holds_alternative<std::string>(this->value)) {
-            return std::get<std::string>(this->value);
-        }
-        else {
-            return std::to_string(std::get<double>(this->value));
-        }
-    }
-
-    UDQTokenType type;
-    std::variant<std::string, double> value;
-    std::vector<std::string> selector;
-    UDQVarType var_type = UDQVarType::NONE;
-};
-
-class UDQParser
-{
-public:
-    static UDQASTNode
-    parse(const UDQParams&             udq_params,
-          UDQVarType                   target_type,
-          const std::string&           target_var,
-          const KeywordLocation&       location,
-          const std::vector<UDQToken>& tokens_,
-          const ParseContext&          parseContext,
-          ErrorGuard&                  errors);
-
-private:
-    UDQParser(const UDQParams&             udq_params1,
-              const std::vector<UDQToken>& tokens_)
-        : udq_params(udq_params1)
-        , udqft(UDQFunctionTable(udq_params))
-        , tokens(tokens_)
-    {}
-
-    UDQASTNode parse_set();
-    UDQASTNode parse_cmp();
-    UDQASTNode parse_add();
-    UDQASTNode parse_factor();
-    UDQASTNode parse_mul();
-    UDQASTNode parse_pow();
-
-    UDQParseNode current() const;
-    UDQParseNode next();
-    UDQTokenType get_type(const std::string& arg) const;
-    std::size_t current_size() const;
-    bool empty() const;
-
-    const UDQParams& udq_params;
-    UDQFunctionTable udqft;
-    std::vector<UDQToken> tokens;
-    ssize_t current_pos = -1;
-};
+    std::unique_ptr<UDQASTNode>
+    parseUDQExpression(const UDQParams&             udq_params,
+                       UDQVarType                   target_type,
+                       const std::string&           target_var,
+                       const KeywordLocation&       location,
+                       const std::vector<UDQToken>& tokens_,
+                       const ParseContext&          parseContext,
+                       ErrorGuard&                  errors);
 
 } // namespace Opm
 

@@ -20,36 +20,33 @@
 */
 
 #include <opm/output/eclipse/Summary.hpp>
-#include <opm/output/eclipse/WStat.hpp>
 
 #include <opm/common/OpmLog/OpmLog.hpp>
 #include <opm/common/OpmLog/KeywordLocation.hpp>
 #include <opm/common/utility/OpmInputError.hpp>
 #include <opm/common/utility/TimeService.hpp>
 
-#include <opm/output/eclipse/Inplace.hpp>
-#include <opm/input/eclipse/EclipseState/Aquifer/AquiferConfig.hpp>
 #include <opm/input/eclipse/EclipseState/Aquifer/AquiferCT.hpp>
+#include <opm/input/eclipse/EclipseState/Aquifer/AquiferConfig.hpp>
 #include <opm/input/eclipse/EclipseState/Aquifer/Aquifetp.hpp>
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/EclipseState/IOConfig/IOConfig.hpp>
 #include <opm/input/eclipse/EclipseState/Phase.hpp>
+#include <opm/input/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
+
 #include <opm/input/eclipse/Schedule/Action/Actions.hpp>
 #include <opm/input/eclipse/Schedule/GasLiftOpt.hpp>
 #include <opm/input/eclipse/Schedule/Group/Group.hpp>
-#include <opm/input/eclipse/Schedule/MSW/WellSegments.hpp>
 #include <opm/input/eclipse/Schedule/MSW/Segment.hpp>
-#include <opm/input/eclipse/Schedule/ScheduleState.hpp>
+#include <opm/input/eclipse/Schedule/MSW/WellSegments.hpp>
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
+#include <opm/input/eclipse/Schedule/ScheduleState.hpp>
 #include <opm/input/eclipse/Schedule/SummaryState.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQConfig.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQContext.hpp>
 #include <opm/input/eclipse/Schedule/VFPProdTable.hpp>
 #include <opm/input/eclipse/Schedule/Well/Well.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
-#include <opm/input/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
-#include <opm/input/eclipse/Schedule/UDQ/UDQConfig.hpp>
-#include <opm/common/utility/TimeService.hpp>
 
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
 #include <opm/input/eclipse/Units/Units.hpp>
@@ -59,19 +56,20 @@
 #include <opm/io/eclipse/OutputStream.hpp>
 #include <opm/io/eclipse/ExtSmryOutput.hpp>
 
+#include <opm/output/data/Aquifer.hpp>
 #include <opm/output/data/Groups.hpp>
 #include <opm/output/data/GuideRateValue.hpp>
 #include <opm/output/data/Wells.hpp>
-#include <opm/output/data/Aquifer.hpp>
 #include <opm/output/eclipse/Inplace.hpp>
 #include <opm/output/eclipse/RegionCache.hpp>
+#include <opm/output/eclipse/WStat.hpp>
 
 #include <algorithm>
 #include <array>
 #include <cassert>
+#include <cctype>
 #include <chrono>
 #include <cstddef>
-#include <cctype>
 #include <ctime>
 #include <exception>
 #include <filesystem>
@@ -90,25 +88,57 @@
 
 #include <fmt/format.h>
 
-template <> struct fmt::formatter<Opm::EclIO::SummaryNode::Category>: fmt::formatter<string_view> {
+template <>
+struct fmt::formatter<Opm::EclIO::SummaryNode::Category> : fmt::formatter<string_view>
+{
     // parse is inherited from formatter<string_view>.
     template <typename FormatContext>
-    auto format(Opm::EclIO::SummaryNode::Category c, FormatContext& ctx) {
+    auto format(Opm::EclIO::SummaryNode::Category c, FormatContext& ctx)
+    {
         using Category = Opm::EclIO::SummaryNode::Category;
+
         string_view name = "unknown";
+
         switch (c) {
-        case Category::Well:          name = "Well"; break;
-        case Category::Group:         name = "Group"; break;
-        case Category::Field:         name = "Field"; break;
-        case Category::Region:        name = "Region"; break;
-        case Category::Block:         name = "Block"; break;
-        case Category::Connection:    name = "Connection"; break;
-        case Category::Completion:    name = "Completion"; break;
-        case Category::Segment:       name = "Segment"; break;
-        case Category::Aquifer:       name = "Aquifer"; break;
-        case Category::Node:          name = "Node"; break;
+        case Category::Well:          name = "Well";          break;
+        case Category::Group:         name = "Group";         break;
+        case Category::Field:         name = "Field";         break;
+        case Category::Region:        name = "Region";        break;
+        case Category::Block:         name = "Block";         break;
+        case Category::Connection:    name = "Connection";    break;
+        case Category::Completion:    name = "Completion";    break;
+        case Category::Segment:       name = "Segment";       break;
+        case Category::Aquifer:       name = "Aquifer";       break;
+        case Category::Node:          name = "Node";          break;
         case Category::Miscellaneous: name = "Miscellaneous"; break;
         }
+
+        return formatter<string_view>::format(name, ctx);
+    }
+};
+
+template <>
+struct fmt::formatter<Opm::EclIO::SummaryNode::Type> : fmt::formatter<string_view>
+{
+    // parse is inherited from formatter<string_view>.
+    template <typename FormatContext>
+    auto format(Opm::EclIO::SummaryNode::Type t, FormatContext& ctx)
+    {
+        using Type = Opm::EclIO::SummaryNode::Type;
+
+        string_view name = "unknown";
+
+        switch (t) {
+        case Type::Rate:      name = "Rate";      break;
+        case Type::Total:     name = "Total";     break;
+        case Type::Ratio:     name = "Ratio";     break;
+        case Type::Pressure:  name = "Pressure";  break;
+        case Type::Count:     name = "Count";     break;
+        case Type::Mode:      name = "Mode";      break;
+        case Type::ProdIndex: name = "PI/II";     break;
+        case Type::Undefined: name = "Undefined"; break;
+        }
+
         return formatter<string_view>::format(name, ctx);
     }
 };
@@ -119,7 +149,6 @@ namespace {
         std::string kw;
         Opm::EclIO::SummaryNode::Type type;
     };
-
 
     std::vector<ParamCTorArgs> requiredRestartVectors()
     {
@@ -3143,16 +3172,23 @@ namespace Evaluator {
                     const SimulatorResults& simRes,
                     Opm::SummaryState&      st) const override
         {
-            if (this->node_.number < 0)
+            if (this->node_.number < 0) {
                 return;
+            }
 
             auto xPos = simRes.region.find(this->node_.keyword);
-            if (xPos == simRes.region.end())
+            if (xPos == simRes.region.end()) {
+                // Vector (e.g., RPR) not available from simulator.
+                // Typically at time zero.
                 return;
+            }
 
             const auto ix = this->index();
-            if (ix >= xPos->second.size())
+            if (ix >= xPos->second.size()) {
+                // Region ID outside active set (e.g., the node specifies
+                // region ID 12 when max(FIPNUM) == 10)
                 return;
+            }
 
             const auto  val  = xPos->second[ix];
             const auto& usys = input.es.getUnits();
@@ -4077,8 +4113,9 @@ void validateElapsedTime(const double             secs_elapsed,
                          const Opm::EclipseState& es,
                          const Opm::SummaryState& st)
 {
-    if (! (secs_elapsed < st.get_elapsed()))
+    if (! (secs_elapsed < st.get_elapsed())) {
         return;
+    }
 
     const auto& usys    = es.getUnits();
     const auto  elapsed = usys.from_si(measure::time, secs_elapsed);
@@ -4140,7 +4177,7 @@ private:
     std::reference_wrapper<const Opm::EclipseGrid> grid_;
     std::reference_wrapper<const Opm::EclipseState> es_;
     std::reference_wrapper<const Opm::Schedule> sched_;
-    Opm::out::RegionCache regCache_;
+    Opm::out::RegionCache regCache_{};
 
     std::unique_ptr<SMSpecStreamDeferredCreation> deferredSMSpec_;
 
@@ -4223,11 +4260,14 @@ SummaryImplementation(const EclipseState&  es,
     if (std::filesystem::exists(esmryFileName))
         std::filesystem::remove(esmryFileName);
 
-    if ((writeEsmry) and (es.cfg().io().getFMTOUT()==false))
-        this->esmry_ = std::make_unique<Opm::EclIO::ExtSmryOutput>(this->valueKeys_, this->valueUnits_, es, sched.posixStartTime());
+    if (writeEsmry && !es.cfg().io().getFMTOUT()) {
+        this->esmry_ = std::make_unique<Opm::EclIO::ExtSmryOutput>
+            (this->valueKeys_, this->valueUnits_, es, sched.posixStartTime());
+    }
 
-    if ((writeEsmry) and (es.cfg().io().getFMTOUT()))
-        OpmLog::warning("ESMRY only supported for unformatted output.  Request ignored.");
+    if (writeEsmry && es.cfg().io().getFMTOUT()) {
+        OpmLog::warning("ESMRY only supported for unformatted output. Request ignored.");
+    }
 }
 
 void Opm::out::Summary::SummaryImplementation::
@@ -4266,6 +4306,7 @@ eval(const int                              sim_step,
     validateElapsedTime(secs_elapsed, this->es_, st);
 
     const auto duration = secs_elapsed - st.get_elapsed();
+
     single_values["TIMESTEP"] = duration;
     st.update("TIMESTEP", this->es_.get().getUnits().from_si(Opm::UnitSystem::measure::time, duration));
 
@@ -4298,11 +4339,10 @@ eval(const int                              sim_step,
 void Opm::out::Summary::SummaryImplementation::write(const bool is_final_summary)
 {
     const auto zero = std::vector<MiniStep>::size_type{0};
-    if (this->numUnwritten_ == zero)
+    if (this->numUnwritten_ == zero) {
         // No unwritten data.  Nothing to do so return early.
         return;
-
-
+    }
 
     this->createSMSpecIfNecessary();
 
@@ -4310,15 +4350,18 @@ void Opm::out::Summary::SummaryImplementation::write(const bool is_final_summary
         this->smspec_->write(this->outputParameters_.summarySpecification());
     }
 
-    for (auto i = 0*this->numUnwritten_; i < this->numUnwritten_; ++i)
+    for (auto i = 0*this->numUnwritten_; i < this->numUnwritten_; ++i) {
         this->write(this->unwritten_[i]);
+    }
 
     // Eagerly output last set of parameters to permanent storage.
     this->stream_->flushStream();
 
-    if (this->esmry_ != nullptr){
-        for (auto i = 0*this->numUnwritten_; i < this->numUnwritten_; ++i){
-            this->esmry_->write(this->unwritten_[i].params, !this->unwritten_[i].isSubstep, is_final_summary);
+    if (this->esmry_ != nullptr) {
+        for (auto i = 0*this->numUnwritten_; i < this->numUnwritten_; ++i) {
+            this->esmry_->write(this->unwritten_[i].params,
+                                !this->unwritten_[i].isSubstep,
+                                is_final_summary);
         }
     }
 
@@ -4346,7 +4389,7 @@ void
 Opm::out::Summary::SummaryImplementation::
 configureTimeVector(const EclipseState& es, const std::string& kw)
 {
-    const auto dfltwgname = std::string(":+:+:+:+");
+    const auto dfltwgname = makeWGName("");
     const auto dfltnum    = 0;
 
     this->valueKeys_.push_back(kw);
@@ -4441,8 +4484,9 @@ configureSummaryInput(const SummaryConfig& sumcfg,
                            std::move(prmDescr.evaluator));
     }
 
-    if (! unsuppkw.empty())
+    if (! unsuppkw.empty()) {
         reportUnsupportedKeywords(std::move(unsuppkw));
+    }
 }
 
 // These nodes are added to the summary evaluation list because they are
@@ -4639,32 +4683,37 @@ configureRequiredRestartParameters(const SummaryConfig& sumcfg,
             .emplace(node.unique_key(), std::move(descriptor.evaluator));
     };
 
-    for (const auto& node : requiredRestartVectors(sched))
+    for (const auto& node : requiredRestartVectors(sched)) {
         makeEvaluator(node);
+    }
 
-    for (const auto& node : requiredSegmentVectors(sched))
+    for (const auto& node : requiredSegmentVectors(sched)) {
         makeEvaluator(node);
+    }
 
     if (aqConfig.hasAnalyticalAquifer()) {
         const auto aquiferIDs = analyticAquiferIDs(aqConfig);
 
-        for (const auto& node : requiredAquiferVectors(aquiferIDs))
+        for (const auto& node : requiredAquiferVectors(aquiferIDs)) {
             makeEvaluator(node);
+        }
     }
 
     if (aqConfig.hasNumericalAquifer()) {
         const auto aquiferIDs = numericAquiferIDs(aqConfig);
 
-        for (const auto& node : requiredNumericAquiferVectors(aquiferIDs))
+        for (const auto& node : requiredNumericAquiferVectors(aquiferIDs)) {
             makeEvaluator(node);
+        }
     }
 }
 
 Opm::out::Summary::SummaryImplementation::MiniStep&
 Opm::out::Summary::SummaryImplementation::getNextMiniStep(const int report_step, bool isSubstep)
 {
-    if (this->numUnwritten_ == this->unwritten_.size())
+    if (this->numUnwritten_ == this->unwritten_.size()) {
         this->unwritten_.emplace_back();
+    }
 
     assert ((this->numUnwritten_ < this->unwritten_.size()) &&
             "Internal inconsistency in 'unwritten' counter");

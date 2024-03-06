@@ -20,26 +20,27 @@
 #ifndef OPM_ECLIPSE_STATE_HPP
 #define OPM_ECLIPSE_STATE_HPP
 
-#include <cstddef>
-#include <memory>
-#include <vector>
-#include <optional>
-
 #include <opm/input/eclipse/EclipseState/Aquifer/AquiferConfig.hpp>
 #include <opm/input/eclipse/EclipseState/EclipseConfig.hpp>
-#include <opm/input/eclipse/EclipseState/TracerConfig.hpp>
-#include <opm/input/eclipse/EclipseState/MICPpara.hpp>
-#include <opm/input/eclipse/EclipseState/WagHysteresisConfig.hpp>
-#include <opm/input/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/FaultCollection.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/LgrCollection.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/NNC.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/TransMult.hpp>
-#include <opm/input/eclipse/EclipseState/Grid/LgrCollection.hpp>
+#include <opm/input/eclipse/EclipseState/MICPpara.hpp>
 #include <opm/input/eclipse/EclipseState/Runspec.hpp>
-#include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
 #include <opm/input/eclipse/EclipseState/SimulationConfig/SimulationConfig.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
+#include <opm/input/eclipse/EclipseState/TracerConfig.hpp>
+#include <opm/input/eclipse/EclipseState/WagHysteresisConfig.hpp>
+
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
+
+#include <cstddef>
+#include <memory>
+#include <optional>
+#include <vector>
 
 namespace Opm {
     class Deck;
@@ -152,7 +153,6 @@ namespace Opm {
         }
 
         static bool rst_cmp(const EclipseState& full_state, const EclipseState& rst_state);
-
 
     private:
         void initIOConfigPostSchedule(const Deck& deck);
