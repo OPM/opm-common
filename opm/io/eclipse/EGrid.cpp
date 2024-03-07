@@ -97,9 +97,8 @@ EGrid::EGrid(const std::string &filename, std::string grid_name) :
                 numres == (gridhead.size() > 24)
                     ? gridhead[24] : 1;
 
-                if (gridhead.size() > 26) {
-                    m_radial = gridhead[26] > 0 ? true: false;
-                }
+                m_radial = (gridhead.size() > 26)
+                    && (gridhead[26] > 0);
             }
 
             if (array_name[n] == "COORD")
