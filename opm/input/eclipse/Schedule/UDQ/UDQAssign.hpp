@@ -42,7 +42,7 @@ public:
     {
         std::vector<std::string> input_selector{};
         std::unordered_set<std::string> rst_selector{};
-        std::vector<UDQSet::EnumeratedWellItems> numbered_selector{};
+        std::vector<UDQSet::EnumeratedItems> numbered_selector{};
         double value{};
         std::size_t report_step{};
 
@@ -64,17 +64,17 @@ public:
             , report_step (report_step_arg)
         {}
 
-        AssignRecord(const std::vector<UDQSet::EnumeratedWellItems>& selector,
-                     const double                                    value_arg,
-                     const std::size_t                               report_step_arg)
+        AssignRecord(const std::vector<UDQSet::EnumeratedItems>& selector,
+                     const double                                value_arg,
+                     const std::size_t                           report_step_arg)
             : numbered_selector(selector)
             , value            (value_arg)
             , report_step      (report_step_arg)
         {}
 
-        AssignRecord(std::vector<UDQSet::EnumeratedWellItems>&& selector,
-                     const double                               value_arg,
-                     const std::size_t                          report_step_arg)
+        AssignRecord(std::vector<UDQSet::EnumeratedItems>&& selector,
+                     const double                           value_arg,
+                     const std::size_t                      report_step_arg)
             : numbered_selector(std::move(selector))
             , value            (value_arg)
             , report_step      (report_step_arg)
@@ -106,15 +106,15 @@ public:
               double                                 value,
               std::size_t                            report_step);
 
-    UDQAssign(const std::string&                              keyword,
-              const std::vector<UDQSet::EnumeratedWellItems>& selector,
-              double                                          value,
-              std::size_t                                     report_step);
+    UDQAssign(const std::string&                          keyword,
+              const std::vector<UDQSet::EnumeratedItems>& selector,
+              double                                      value,
+              std::size_t                                 report_step);
 
-    UDQAssign(const std::string&                         keyword,
-              std::vector<UDQSet::EnumeratedWellItems>&& selector,
-              double                                     value,
-              std::size_t                                report_step);
+    UDQAssign(const std::string&                     keyword,
+              std::vector<UDQSet::EnumeratedItems>&& selector,
+              double                                 value,
+              std::size_t                            report_step);
 
     static UDQAssign serializationTestObject();
 
@@ -129,15 +129,15 @@ public:
                     double                                 value,
                     std::size_t                            report_step);
 
-    void add_record(const std::vector<UDQSet::EnumeratedWellItems>& selector,
-                    double                                          value,
-                    std::size_t                                     report_step);
+    void add_record(const std::vector<UDQSet::EnumeratedItems>& selector,
+                    double                                      value,
+                    std::size_t                                 report_step);
 
-    void add_record(std::vector<UDQSet::EnumeratedWellItems>&& selector,
-                    double                                     value,
-                    std::size_t                                report_step);
+    void add_record(std::vector<UDQSet::EnumeratedItems>&& selector,
+                    double                                 value,
+                    std::size_t                            report_step);
 
-    UDQSet eval(const std::vector<UDQSet::EnumeratedWellItems>& items) const;
+    UDQSet eval(const std::vector<UDQSet::EnumeratedItems>& items) const;
     UDQSet eval(const std::vector<std::string>& wells) const;
     UDQSet eval() const;
     std::size_t report_step() const;

@@ -488,10 +488,12 @@ UDQSet UDQDefine::scatter_scalar_segment_value(const UDQContext&            cont
                                                const std::optional<double>& value) const
 {
     if (! value.has_value()) {
-        return UDQSet::segments(this->m_keyword, UDQSet::getSegmentItems(context.segments()));
+        return UDQSet::segments(this->m_keyword, UDQSet::enumerateItems(context.segments()));
     }
 
-    return UDQSet::segments(this->m_keyword, UDQSet::getSegmentItems(context.segments()), *value);
+    return UDQSet::segments(this->m_keyword,
+                            UDQSet::enumerateItems(context.segments()),
+                            *value);
 }
 
 } // namespace Opm
