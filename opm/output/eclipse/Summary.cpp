@@ -2911,6 +2911,11 @@ void updateValue(const Opm::EclIO::SummaryNode& node, const double value, Opm::S
         st.update_segment_var(node.wgname, node.keyword, node.number, value);
         break;
 
+    case Cat::Region:
+        st.update_region_var(node.fip_region.value_or("FIPNUM"),
+                             node.keyword, node.number, value);
+        break;
+
     default:
         st.update(node.unique_key(), value);
         break;
