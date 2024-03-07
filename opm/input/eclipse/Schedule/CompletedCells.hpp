@@ -116,6 +116,26 @@ public:
         serializer(this->cells);
     }
 
+    std::unordered_map<std::size_t, Cell>::iterator begin()
+    {
+        return cells.begin();
+    }
+
+    std::unordered_map<std::size_t, Cell>::const_iterator begin() const
+    {
+        return cells.begin();
+    }
+
+    std::unordered_map<std::size_t, Cell>::iterator end()
+    {
+        return cells.end();
+    }
+
+    std::unordered_map<std::size_t, Cell>::const_iterator end() const
+    {
+        return cells.end();
+    }
+
 private:
     GridDims dims;
     std::unordered_map<std::size_t, Cell> cells;
