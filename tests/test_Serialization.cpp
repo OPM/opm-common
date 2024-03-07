@@ -41,6 +41,7 @@
 #include <opm/input/eclipse/EclipseState/Grid/Fault.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/FaultCollection.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/FaultFace.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/FIPRegionStatistics.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/MULTREGTScanner.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/NNC.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/TranCalculator.hpp>
@@ -248,6 +249,7 @@ TEST_FOR_TYPE(FilterCake)
 TEST_FOR_TYPE(Fault)
 TEST_FOR_TYPE(FaultCollection)
 TEST_FOR_TYPE(FaultFace)
+TEST_FOR_TYPE(FIPRegionStatistics)
 TEST_FOR_TYPE_NAMED(Fieldprops::TranCalculator, TranCalculator)
 TEST_FOR_TYPE(FoamConfig)
 TEST_FOR_TYPE(FoamData)

@@ -131,6 +131,7 @@ if(ENABLE_ECL_INPUT)
     opm/input/eclipse/EclipseState/Grid/Fault.cpp
     opm/input/eclipse/EclipseState/Grid/FaultCollection.cpp
     opm/input/eclipse/EclipseState/Grid/FaultFace.cpp
+    opm/input/eclipse/EclipseState/Grid/FIPRegionStatistics.cpp
     opm/input/eclipse/EclipseState/Grid/GridDims.cpp
     opm/input/eclipse/EclipseState/Grid/MapAxes.cpp
     opm/input/eclipse/EclipseState/Grid/MinpvMode.cpp
@@ -494,6 +495,7 @@ if(ENABLE_ECL_INPUT)
     tests/test_ERst.cpp
     tests/test_ESmry.cpp
     tests/test_ExtESmry.cpp
+    tests/test_FIPRegionStatistics.cpp
     tests/test_PAvgCalculator.cpp
     tests/test_PAvgDynamicSourceData.cpp
     tests/test_Serialization.cpp
@@ -580,7 +582,8 @@ if(ENABLE_ECL_INPUT)
     tests/parser/WellTests.cpp
     tests/parser/WLIST.cpp
     tests/parser/WriteRestartFileEventsTests.cpp
-    tests/parser/WTEST.cpp)
+    tests/parser/WTEST.cpp
+    )
 endif()
 
 if(ENABLE_ECL_OUTPUT)
@@ -588,38 +591,38 @@ if(ENABLE_ECL_OUTPUT)
           tests/test_ActiveIndexByColumns.cpp
           tests/test_AggregateActionxData.cpp
           tests/test_AggregateAquiferData.cpp
-          tests/test_AggregateWellData.cpp
-          tests/test_AggregateGroupData.cpp
-          tests/test_AggregateNetworkData.cpp
-          tests/test_AggregateWListData.cpp
-          tests/test_AggregateMSWData.cpp
           tests/test_AggregateConnectionData.cpp
+          tests/test_AggregateGroupData.cpp
+          tests/test_AggregateMSWData.cpp
+          tests/test_AggregateNetworkData.cpp
           tests/test_AggregateUDQData.cpp
+          tests/test_AggregateWListData.cpp
+          tests/test_AggregateWellData.cpp
           tests/test_ArrayDimChecker.cpp
-          tests/test_data_GuideRateValue.cpp
-          tests/test_EclipseIO.cpp
           tests/test_DoubHEAD.cpp
-          tests/test_InteHEAD.cpp
+          tests/test_data_GuideRateValue.cpp
           tests/test_data_InterRegFlow.cpp
           tests/test_data_InterRegFlowMap.cpp
+          tests/test_EclipseIO.cpp
+          tests/test_Inplace.cpp
+          tests/test_InteHEAD.cpp
+          tests/test_LGOData.cpp
           tests/test_LinearisedOutputTable.cpp
           tests/test_LogiHEAD.cpp
-          tests/test_LGOData.cpp
           tests/test_OutputStream.cpp
-          tests/test_regionCache.cpp
           tests/test_PaddedOutputString.cpp
-          tests/test_Restart.cpp
-          tests/test_RFT.cpp
+          tests/test_regionCache.cpp
+          tests/test_restartwellinfo.cpp
           tests/test_rst.cpp
           tests/test_rst_netbalan.cpp
+          tests/test_Restart.cpp
+          tests/test_RFT.cpp
           tests/test_Solution.cpp
-          tests/test_Inplace.cpp
           tests/test_Summary.cpp
           tests/test_Summary_Group.cpp
           tests/test_Tables.cpp
           tests/test_Wells.cpp
           tests/test_WindowedArray.cpp
-          tests/test_restartwellinfo.cpp
       )
 endif()
 
@@ -1132,6 +1135,7 @@ if(ENABLE_ECL_INPUT)
        opm/input/eclipse/EclipseState/Grid/LgrCollection.hpp
        opm/input/eclipse/EclipseState/Grid/FieldProps.hpp
        opm/input/eclipse/EclipseState/Grid/FieldPropsManager.hpp
+       opm/input/eclipse/EclipseState/Grid/FIPRegionStatistics.hpp
        opm/input/eclipse/EclipseState/Grid/FaultFace.hpp
        opm/input/eclipse/EclipseState/Grid/NNC.hpp
        opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp
