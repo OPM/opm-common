@@ -1,5 +1,5 @@
-project(opm-common C CXX)
 cmake_minimum_required (VERSION 3.10)
+project(opm-common C CXX)
 
 option(SIBLING_SEARCH "Search for other modules in sibling directories?" ON)
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/Modules)
