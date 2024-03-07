@@ -140,6 +140,7 @@ if(ENABLE_ECL_INPUT)
     opm/input/eclipse/EclipseState/Grid/Operate.cpp
     opm/input/eclipse/EclipseState/Grid/PinchMode.cpp
     opm/input/eclipse/EclipseState/Grid/readKeywordCarfin.cpp
+    opm/input/eclipse/EclipseState/Grid/RegionSetMatcher.cpp
     opm/input/eclipse/EclipseState/Grid/SatfuncPropertyInitializers.cpp
     opm/input/eclipse/EclipseState/Grid/setKeywordBox.cpp
     opm/input/eclipse/EclipseState/Grid/TranCalculator.cpp
@@ -496,6 +497,7 @@ if(ENABLE_ECL_INPUT)
     tests/test_ESmry.cpp
     tests/test_ExtESmry.cpp
     tests/test_FIPRegionStatistics.cpp
+    tests/test_RegionSetMatcher.cpp
     tests/test_PAvgCalculator.cpp
     tests/test_PAvgDynamicSourceData.cpp
     tests/test_Serialization.cpp
@@ -1132,6 +1134,7 @@ if(ENABLE_ECL_INPUT)
        opm/input/eclipse/EclipseState/Grid/PinchMode.hpp
        opm/input/eclipse/EclipseState/Grid/MULTREGTScanner.hpp
        opm/input/eclipse/EclipseState/Grid/FaultCollection.hpp
+       opm/input/eclipse/EclipseState/Grid/RegionSetMatcher.hpp
        opm/input/eclipse/EclipseState/Grid/SatfuncPropertyInitializers.hpp
        opm/input/eclipse/EclipseState/Grid/Fault.hpp
        opm/input/eclipse/EclipseState/Grid/Box.hpp
