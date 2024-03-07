@@ -35,6 +35,7 @@ function (vcs_info)
       WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
       OUTPUT_VARIABLE VCS_SHA1
       RESULT_VARIABLE has_sha
+      OUTPUT_STRIP_TRAILING_WHITESPACE
     )
 
     if (NOT ${has_sha} EQUAL 0)

@@ -8,16 +8,13 @@
 #
 
 # get hash code
-exec_program (
-  ${GIT_EXECUTABLE} ${PROJECT_SOURCE_DIR}
-  ARGS rev-parse --short --verify HEAD
-  OUTPUT_VARIABLE sha1
-  RETURN_VALUE has_sha
-  )
+execute_process(COMMAND ${GIT_EXECUTABLE} rev-parse --short --verify HEAD
+                WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+                OUTPUT_VARIABLE sha1
+                RESULT_VARIABLE has_sha
+                OUTPUT_STRIP_TRAILING_WHITESPACE
+)
 
-# exec_program unfortunately mashes together both output
-# and error streams, so we must use the return code to make
-# sure that we only get the output
 if (NOT ${has_sha} EQUAL 0)
   set (sha1 "")
 endif ()
@@ -25,19 +22,17 @@ endif ()
 # check for local changes
 if (sha1)
   # unstaged
-  exec_program (
-	${GIT_EXECUTABLE} ${PROJECT_SOURCE_DIR}
-	ARGS diff --no-ext-diff --quiet --exit-code
-	RETURN_VALUE dirty
-	OUTPUT_VARIABLE _dummy
+  execute_process(COMMAND ${GIT_EXECUTABLE} diff --no-ext-diff --quiet --exit-code
+                  WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+	                OUTPUT_VARIABLE _dummy
+                  RESULT_VARIABLE dirty
 	)
 
   # staged
-  exec_program (
-	${GIT_EXECUTABLE} ${PROJECT_SOURCE_DIR}
-	ARGS diff-index --no-ext-diff --cached --quiet --exit-code HEAD --
-	RETURN_VALUE staged
-	OUTPUT_VARIABLE _dummy
+  execute_process(COMMAND ${GIT_EXECUTABLE} diff-index --no-ext-diff --cached --quiet --exit-code HEAD --
+                  WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+	                OUTPUT_VARIABLE _dummy
+                  RESULT_VARIABLE staged
 	)
 
   # if we found any changes, then append an asterisk to
@@ -57,9 +52,7 @@ file (WRITE "${PROJECT_BINARY_DIR}/project-version.tmp"
       "#endif // OPM_GENERATED_OPM_VERSION_HEADER_INCLUDED\n"
       )
 
-# only commit this to source code if it actually changed. here
-# we use execute_process instead of exec_program to avoid having
-# it printed on the console every time
+# only commit this to source code if it actually changed.
 execute_process (COMMAND
   ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_BINARY_DIR}/project-version.tmp" "${PROJECT_BINARY_DIR}/project-version.h"
   )
