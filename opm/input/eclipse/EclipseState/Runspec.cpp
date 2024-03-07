@@ -959,4 +959,10 @@ bool Runspec::operator==(const Runspec& data) const
         ;
 }
 
+std::size_t declaredMaxRegionID(const Runspec& rspec)
+{
+    return std::max(rspec.tabdims().getNumFIPRegions(),
+                    rspec.regdims().getNTFIP());
+}
+
 } // namespace Opm
