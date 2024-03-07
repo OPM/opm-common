@@ -24,6 +24,7 @@
 #include <opm/input/eclipse/EclipseState/Compositional/CompositionalConfig.hpp>
 #include <opm/input/eclipse/EclipseState/EclipseConfig.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/FIPRegionStatistics.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/FaultCollection.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/LgrCollection.hpp>
@@ -95,6 +96,10 @@ namespace Opm {
         virtual const FieldPropsManager& fieldProps() const;
         // Always the non-parallel field properties
         virtual const FieldPropsManager& globalFieldProps() const;
+
+        virtual void computeFipRegionStatistics();
+        const FIPRegionStatistics& fipRegionStatistics() const;
+
         const TableManager& getTableManager() const;
         const EclipseConfig& getEclipseConfig() const;
         const EclipseConfig& cfg() const;
@@ -152,6 +157,7 @@ namespace Opm {
             serializer(tracer_config);
             serializer(m_micppara);
             serializer(wag_hyst_config);
+            serializer(this->fipRegionStatistics_);
         }
 
         static bool rst_cmp(const EclipseState& full_state, const EclipseState& rst_state);
@@ -193,6 +199,8 @@ namespace Opm {
         FaultCollection m_faults{};
 
         std::optional<std::map<std::string, double> > m_restart_network_pressures{std::nullopt};
+
+        std::optional<FIPRegionStatistics> fipRegionStatistics_{std::nullopt};
     };
 } // namespace Opm
 
