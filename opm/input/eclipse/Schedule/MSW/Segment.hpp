@@ -20,45 +20,19 @@
 #ifndef SEGMENT_HPP_HEADER_INCLUDED
 #define SEGMENT_HPP_HEADER_INCLUDED
 
+#include <opm/input/eclipse/Schedule/MSW/AICD.hpp>
+#include <opm/input/eclipse/Schedule/MSW/SICD.hpp>
+#include <opm/input/eclipse/Schedule/MSW/Valve.hpp>
+
 #include <optional>
 #include <variant>
 #include <vector>
 
-#include <opm/input/eclipse/Schedule/MSW/Valve.hpp>
-#include <opm/input/eclipse/Schedule/MSW/SICD.hpp>
-#include <opm/input/eclipse/Schedule/MSW/AICD.hpp>
-
-
-namespace Opm {
-    namespace RestartIO {
-        struct RstSegment;
-    }
-}
+namespace Opm { namespace RestartIO {
+    struct RstSegment;
+}} // namespace Opm::RestartIO
 
 namespace Opm {
-
-    /*
-      The current serialization of std::variant<> requires that all the types in
-      the variant have serializeOp() method, that is why this RegularSegment
-      type is introduced, ideally the icd variant should just have
-      std::monostate to represent the regular non ICD segment.
-    */
-    struct RegularSegment : std::monostate {
-
-        template<class Serializer>
-        void serializeOp(Serializer&) {
-        }
-
-        static RegularSegment serializationTestObject() {
-            return RegularSegment();
-        }
-
-
-        bool operator==(const RegularSegment& ) {
-            return true;
-        }
-    };
-
 
     class Segment {
     public:
@@ -110,7 +84,6 @@ namespace Opm {
 
         SegmentType segmentType() const;
         int ecl_type_id() const;
-
 
         const std::vector<int>& inletSegments() const;
 
@@ -172,54 +145,79 @@ namespace Opm {
         }
 
     private:
-        void updateValve__(Valve& valve, const double segment_length);
+        // The current serialization of std::variant<> requires that all the
+        // types in the variant have a serializeOp() method.  We introduce
+        // this RegularSegment to meet this requirement.  Ideally, the ICD
+        // variant<> would use std::monostate to represent non-ICD segments.
+        struct RegularSegment
+        {
+            template <class Serializer>
+            void serializeOp(Serializer&) {}
+
+            static RegularSegment serializationTestObject() { return {}; }
+
+            bool operator==(const RegularSegment&) const { return true; }
+        };
+
         // segment number
         // it should work as a ID.
         int m_segment_number;
+
         // branch number
         // for top segment, it should always be 1
         int m_branch;
+
         // the outlet junction segment
         // for top segment, it should be -1
         int m_outlet_segment;
+
         // the segments whose outlet segments are the current segment
         std::vector<int> m_inlet_segments;
+
         // length of the segment node to the bhp reference point.
         // when reading in from deck, with 'INC',
         // it will be incremental length before processing.
         // After processing and in the class Well, it always stores the 'ABS' value.
         // which means the total_length
         double m_total_length;
+
         // depth of the nodes to the bhp reference point
         // when reading in from deck, with 'INC',
         // it will be the incremental depth before processing.
         // in the class Well, it always stores the 'ABS' value.
         // TODO: to check if it is good to use 'ABS' always.
         double m_depth;
+
         // tubing internal diameter
         // or the equivalent diameter for annular cross-sections
         // for top segment, it is UNDEFINED
         // we use invalid_value for the top segment
         double m_internal_diameter;
+
         // effective roughness of the tubing
         // used to calculate the Fanning friction factor
         // for top segment, it is UNDEFINED
         // we use invalid_value for the top segment
         double m_roughness;
+
         // cross-sectional area for fluid flow
         // not defined for the top segment,
         // we use invalid_value for the top segment.
         double m_cross_area;
+
         // valume of the segment;
         // it is defined for top segment.
         // TODO: to check if the definition is the same with other segments.
         double m_volume;
+
         // indicate if the data related to 'INC' or 'ABS' is ready
         // the volume will be updated at a final step.
         bool m_data_ready;
+
         // Length of segment projected onto the X axis.  Not used in
         // simulations, but needed for the SEG option in WRFTPLT.
         double m_x{};
+
         // Length of segment projected onto the Y axis.  Not used in
         // simulations, but needed for the SEG option in WRFTPLT.
         double m_y{};
@@ -229,6 +227,8 @@ namespace Opm {
 
         // There are three other properties for the segment pertaining to
         // thermal conduction.  These are not currently supported.
+
+        void updateValve__(Valve& valve, const double segment_length);
     };
 
 }
