@@ -122,6 +122,37 @@ namespace {
             || (selector.front().find("*") != std::string::npos);
     }
 
+    bool is_single_region(const std::vector<std::string>& selector)
+    {
+        if (selector.size() != std::vector<std::string>::size_type{1}) {
+            return false;
+        }
+
+        auto regNumStr = dequote(selector.front());
+        if (regNumStr.empty()) {
+            // Not specified
+            return false;
+        }
+
+        const auto end = regNumStr.data() + regNumStr.size();
+        auto regNum = 0;
+        auto [ptr, ec] { std::from_chars(regNumStr.data(), end, regNum) };
+
+        if ((ec == std::errc{}) && (ptr == end)) {
+            return regNum > 0;
+        }
+        else if ((ec == std::errc::invalid_argument) && is_asterisk(regNumStr)) {
+            // Region number is '*'.  Treat as all regions.
+            return false;
+        }
+        else {
+            // Region number is some unrecognized number string other than '*'.
+            throw std::invalid_argument {
+                "Invalid region number string |" + selector.front() + '|'
+            };
+        }
+    }
+
     const auto cmp_func = std::set<Opm::UDQTokenType> {
         Opm::UDQTokenType::binary_cmp_eq,
         Opm::UDQTokenType::binary_cmp_ne,
@@ -254,6 +285,12 @@ UDQVarType targetType(const std::string&              keyword,
     if ((varType == UDQVarType::SEGMENT_VAR) && !is_segment_set(selector)) {
         // Segment variables that apply to a single segment in a single MS
         // well are treated as scalar.
+        return UDQVarType::SCALAR;
+    }
+
+    if ((varType == UDQVarType::REGION_VAR) && is_single_region(selector)) {
+        // Region variables which apply to a single region are treated as
+        // scalars.
         return UDQVarType::SCALAR;
     }
 
