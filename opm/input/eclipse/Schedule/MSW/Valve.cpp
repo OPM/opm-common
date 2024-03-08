@@ -19,6 +19,8 @@
 
 #include <opm/input/eclipse/Schedule/MSW/Valve.hpp>
 
+#include <opm/io/eclipse/rst/segment.hpp>
+
 #include <opm/input/eclipse/Deck/DeckRecord.hpp>
 #include <opm/input/eclipse/Deck/DeckKeyword.hpp>
 
@@ -60,6 +62,24 @@ namespace Opm {
 
         return value.get_dim().convertRawToSi(output_value);
     }
+
+    // Note: The pipe diameter, roughness, and cross-sectional area are not
+    // available in OPM's restart file so we use default WSEGVALV values
+    // here--i.e., the values from the enclosing segment.  If, however,
+    // these parameters were originally assigned non-default values in the
+    // base run's input file, those will *not* be picked up in a restarted
+    // run.
+    Valve::Valve(const RestartIO::RstSegment& rstSegment)
+        : m_con_flow_coeff        (rstSegment.valve_flow_coeff)
+        , m_con_cross_area        (rstSegment.valve_area)
+        , m_con_cross_area_value  (rstSegment.valve_area)
+        , m_con_max_cross_area    (rstSegment.valve_max_area)
+        , m_pipe_additional_length(rstSegment.valve_length)
+        , m_pipe_diameter         (rstSegment.diameter)  // Enclosing segment's value
+        , m_pipe_roughness        (rstSegment.roughness) // Enclosing segment's value
+        , m_pipe_cross_area       (rstSegment.area)      // Enclosing segment's value
+        , m_status                (from_int<ICDStatus>(rstSegment.icd_status))
+    {}
 
     Valve::Valve(const double    conFlowCoeff,
                  const double    conCrossA,

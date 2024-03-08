@@ -18,6 +18,9 @@
 */
 
 #include <opm/input/eclipse/Schedule/MSW/AICD.hpp>
+
+#include <opm/io/eclipse/rst/segment.hpp>
+
 #include <opm/input/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/input/eclipse/Deck/DeckRecord.hpp>
 
@@ -63,6 +66,9 @@ AutoICD::AutoICD(const DeckRecord& record)
     , m_gas_viscosity_exponent  (record.getItem<AICD::GAS_VISC_FRACTION>().get<double>(0))
 {}
 
+AutoICD::AutoICD(const RestartIO::RstSegment& rstSegment)
+    : SICD { rstSegment }
+{}
 
 // the function will return a map
 // [

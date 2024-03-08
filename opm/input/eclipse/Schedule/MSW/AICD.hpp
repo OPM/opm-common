@@ -34,6 +34,10 @@ namespace Opm {
 
 } // namespace Opm
 
+namespace Opm { namespace RestartIO {
+    struct RstSegment;
+}} // namespace Opm::RestartIO
+
 namespace Opm {
 
     class AutoICD : public SICD
@@ -41,6 +45,7 @@ namespace Opm {
     public:
         AutoICD() = default;
         explicit AutoICD(const DeckRecord& record);
+        explicit AutoICD(const RestartIO::RstSegment& rstSegment);
 
         static AutoICD serializationTestObject();
 

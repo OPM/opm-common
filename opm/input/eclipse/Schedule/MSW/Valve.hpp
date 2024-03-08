@@ -40,6 +40,10 @@ namespace Opm {
 
 } // namespace Opm
 
+namespace Opm { namespace RestartIO {
+    struct RstSegment;
+}} // namespace Opm::RestartIO
+
 namespace Opm {
 
     struct ValveUDAEval
@@ -60,6 +64,8 @@ namespace Opm {
     public:
         Valve() = default;
         explicit Valve(const DeckRecord& record, const double udq_default = 0.0);
+        explicit Valve(const RestartIO::RstSegment& rstSegment);
+
         Valve(double conFlowCoeff,
               double conCrossA,
               double conMaxCrossA,
