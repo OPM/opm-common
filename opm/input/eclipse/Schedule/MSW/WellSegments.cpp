@@ -343,7 +343,7 @@ namespace Opm {
             m_segments[outlet_segment_index].addInletSegment(segment.segmentNumber());
         }
 
-        this->process(length_depth_type, depth_top, length_top);
+        this->process(wname, length_depth_type, depth_top, length_top);
     }
 
     const Segment& WellSegments::getFromSegmentNumber(const int segment_number) const {
@@ -357,7 +357,8 @@ namespace Opm {
         return m_segments[segment_index];
     }
 
-    void WellSegments::process(const LengthDepth length_depth,
+    void WellSegments::process(const std::string& well_name,
+                               const LengthDepth length_depth,
                                const double      depth_top,
                                const double      length_top)
     {
@@ -374,6 +375,7 @@ namespace Opm {
                             static_cast<int>(length_depth))
             };
         }
+        this->checkSegmentDepthConsistency(well_name);
     }
 
     void WellSegments::processABS()
@@ -616,6 +618,22 @@ namespace Opm {
         return segment.depth() - outlet_segment.depth();
     }
 
+    void WellSegments::checkSegmentDepthConsistency(const std::string& well_name) const {
+        for (const auto& segment : this->m_segments) {
+            const int segment_number = segment.segmentNumber();
+            if (segment_number == 1) {
+                continue; // not check the top segment for now
+            }
+            const double segment_length = this->segmentLength(segment_number);
+            const double segment_depth_change = this->segmentDepthChange(segment_number);
+            if (std::abs(segment_depth_change) > 1.001 * segment_length) { // 0.1% tolerance for comparison
+                const std::string msg = fmt::format(" Segment {} of well {} has a depth change of {} meters,"
+                                                    " while it has a length of {} meters, which is unphysical.",
+                                                    segment_number, well_name, segment_depth_change, segment_length);
+                OpmLog::warning(msg);
+            }
+        }
+    }
 
     std::set<int> WellSegments::branches() const {
         std::set<int> bset;

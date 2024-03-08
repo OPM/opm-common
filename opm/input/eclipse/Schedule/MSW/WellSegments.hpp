@@ -111,6 +111,8 @@ namespace Opm {
         const std::vector<Segment>::const_iterator begin() const;
         const std::vector<Segment>::const_iterator end() const;
 
+        void checkSegmentDepthConsistency(const std::string& well_name) const;
+
         template<class Serializer>
         void serializeOp(Serializer& serializer)
         {
@@ -122,7 +124,7 @@ namespace Opm {
     private:
         void processABS();
         void processINC(double depth_top, double length_top);
-        void process(LengthDepth length_depth, double depth_top, double length_top);
+        void process(const std::string& well_name, LengthDepth length_depth, double depth_top, double length_top);
         void addSegment(const Segment& new_segment);
         void addSegment(const int segment_number,
                         const int branch,
