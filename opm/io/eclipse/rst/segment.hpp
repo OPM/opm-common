@@ -70,6 +70,15 @@ struct RstSegment
     double icd_length{};
     double valve_area_fraction{};
 
+    double aicd_flowrate_exponent{};
+    double aicd_viscosity_exponent{};
+    double aicd_oil_dens_exponent{};
+    double aicd_wat_dens_exponent{};
+    double aicd_gas_dens_exponent{};
+    double aicd_oil_visc_exponent{};
+    double aicd_wat_visc_exponent{};
+    double aicd_gas_visc_exponent{};
+
     std::vector<int> inflow_segments;
 };
 
