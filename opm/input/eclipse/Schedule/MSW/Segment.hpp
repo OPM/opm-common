@@ -88,7 +88,6 @@ namespace Opm {
         const std::vector<int>& inletSegments() const;
 
         static double invalidValue();
-        static SegmentType type_from_int(int ecl_id);
 
         bool operator==( const Segment& ) const;
         bool operator!=( const Segment& ) const;
