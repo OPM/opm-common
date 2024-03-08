@@ -78,46 +78,19 @@ namespace Opm {
         , m_y                (0.0)
     {
         if (rst_segment.segment_type == SegmentType::SICD) {
-            double scalingFactor = -1;  // The scaling factor will be and updated from the simulator.
-
-            SICD icd(rst_segment.base_strength,
-                    rst_segment.icd_length,
-                    rst_segment.fluid_density,
-                    rst_segment.fluid_viscosity,
-                    rst_segment.critical_water_fraction,
-                    rst_segment.transition_region_width,
-                    rst_segment.max_emulsion_ratio,
-                    rst_segment.icd_scaling_mode,
-                    rst_segment.max_valid_flow_rate,
-                    rst_segment.icd_status,
-                    scalingFactor);
-
-            this->updateSpiralICD(icd);
+            this->m_icd.emplace<SICD>(rst_segment);
+        }
+        else if (rst_segment.segment_type == SegmentType::AICD) {
+            this->m_icd.emplace<AutoICD>(rst_segment);
         }
 
-        if (rst_segment.segment_type == SegmentType::VALVE) {
-            /*
-              These three variables are currently not stored in the restart
-              file; here we initialize with the default values, but if they have
-              originally been assigned in the deck with non-default values, that
-              will *not* be picked in a restarted run.
-            */
-
-            double pipeDiam = this->m_internal_diameter;
-            double pipeRough = this->m_roughness;
-            double pipeCrossA = this->m_cross_area;
-
-            Valve valve(rst_segment.valve_flow_coeff,
-                        rst_segment.valve_area,
-                        rst_segment.valve_max_area,
-                        rst_segment.valve_length,
-                        pipeDiam,
-                        pipeRough,
-                        pipeCrossA,
-                        rst_segment.icd_status);
-
-            this->updateValve(valve);
+        else if (rst_segment.segment_type == SegmentType::VALVE) {
+            this->m_icd.emplace<Valve>(rst_segment);
         }
+
+        // If none of the above type-specific conditions trigger, then this
+        // is a RegularSegment and 'm_icd' is fully formed by the variant's
+        // default constructor.
     }
 
     Segment::Segment(const int    segment_number_in,
