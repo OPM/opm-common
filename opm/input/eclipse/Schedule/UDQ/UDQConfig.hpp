@@ -44,6 +44,7 @@ namespace Opm {
 
     class DeckRecord;
     class KeywordLocation;
+    class RegionSetMatcher;
     class Schedule;
     class SegmentMatcher;
     class SummaryState;
@@ -61,6 +62,7 @@ namespace Opm {
     class UDQConfig
     {
     public:
+        using RegionSetMatcherFactory = std::function<std::unique_ptr<RegionSetMatcher>()>;
         using SegmentMatcherFactory = std::function<std::unique_ptr<SegmentMatcher>()>;
 
         UDQConfig() = default;
@@ -113,12 +115,13 @@ namespace Opm {
                          SummaryState&         st,
                          UDQState&             udq_state) const;
 
-        void eval(std::size_t           report_step,
-                  const Schedule&       sched,
-                  const WellMatcher&    wm,
-                  SegmentMatcherFactory create_segment_matcher,
-                  SummaryState&         st,
-                  UDQState&             udq_state) const;
+        void eval(std::size_t             report_step,
+                  const Schedule&         sched,
+                  const WellMatcher&      wm,
+                  SegmentMatcherFactory   create_segment_matcher,
+                  RegionSetMatcherFactory create_region_matcher,
+                  SummaryState&           st,
+                  UDQState&               udq_state) const;
 
         const UDQDefine& define(const std::string& key) const;
         const UDQAssign& assign(const std::string& key) const;

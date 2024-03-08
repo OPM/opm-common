@@ -17,9 +17,8 @@
 */
 #include "config.h"
 
-#include <cstdlib>
+#define BOOST_TEST_MODULE Restart_File_IO
 
-#define BOOST_TEST_MODULE EclipseIO
 #include <boost/test/unit_test.hpp>
 
 #include <opm/output/data/Cells.hpp>
@@ -36,6 +35,8 @@
 
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/FIPRegionStatistics.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/RegionSetMatcher.hpp>
 #include <opm/input/eclipse/EclipseState/IOConfig/IOConfig.hpp>
 #include <opm/input/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/Eqldims.hpp>
@@ -54,14 +55,16 @@
 #include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellMatcher.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellTestState.hpp>
+
 #include <opm/input/eclipse/Utility/Functional.hpp>
-
-#include <opm/input/eclipse/Parser/Parser.hpp>
-
-#include <opm/input/eclipse/Deck/Deck.hpp>
 
 #include <opm/common/utility/TimeService.hpp>
 
+#include <opm/input/eclipse/Deck/Deck.hpp>
+
+#include <opm/input/eclipse/Parser/Parser.hpp>
+
+#include <cstdlib>
 #include <ctime>
 #include <map>
 #include <memory>
@@ -462,11 +465,13 @@ first_sim(const Setup&   setup,
     const auto groups = mkGroups();
     const auto& udq = setup.schedule.getUDQConfig(report_step);
     auto segmentMatcherFactory = []() { return std::make_unique<SegmentMatcher>(ScheduleState{}); };
+    auto regionSetMatcherFactory = []() { return std::make_unique<RegionSetMatcher>(FIPRegionStatistics {}); };
 
     udq.eval(report_step,
              setup.schedule,
              setup.schedule.wellMatcher(report_step),
              segmentMatcherFactory,
+             regionSetMatcherFactory,
              st, udq_state);
 
     RestartValue restart_value(sol, wells, groups, {});

@@ -200,8 +200,7 @@ BOOST_AUTO_TEST_CASE(GROUP_VARIABLES)
     UDQDefine def_group(udqp, "GUOPRL", 0, location, {"(", "5000",  "-",  "GOPR",  "LOWER",  "*", "0.13",  "-",  "GOPR",  "UPPER",  "*", "0.15", ")" , "*",  "0.89"});
     SummaryState st(TimeService::now());
     UDQState udq_state(udqp.undefinedValue());
-    auto segmentMatcherFactory = []() { return std::make_unique<SegmentMatcher>(ScheduleState {}); };
-    UDQContext context(udqft, {}, {}, segmentMatcherFactory, st, udq_state);
+    UDQContext context(udqft, {}, {}, UDQContext::MatcherFactories{}, st, udq_state);
     double gopr_lower = 1234;
     double gopr_upper = 4321;
 
@@ -231,13 +230,14 @@ BOOST_AUTO_TEST_CASE(SINGLE_SEGMENT_VARIABLES)
     auto st = SummaryState { TimeService::now() };
     auto udq_state = UDQState { udqp.undefinedValue() };
 
-    auto segmentMatcherFactory = [sched_state = dynamicInputData()]()
+    auto factories = UDQContext::MatcherFactories{};
+    factories.segments = [sched_state = dynamicInputData()]()
     {
         return std::make_unique<SegmentMatcher>(sched_state);
     };
 
     auto context = UDQContext {
-        udqft, {}, {}, segmentMatcherFactory, st, udq_state
+        udqft, {}, {}, factories, st, udq_state
     };
 
     const auto sofr_p1_3 = 1234.0;
@@ -262,8 +262,7 @@ BOOST_AUTO_TEST_CASE(SUBTRACT)
     SummaryState st(TimeService::now());
     UDQState udq_state(udqp.undefinedValue());
     WellMatcher wm(NameOrder({"P1"}));
-    auto segmentMatcherFactory = []() { return std::make_unique<SegmentMatcher>(ScheduleState {}); };
-    UDQContext context(udqft, wm, {}, segmentMatcherFactory, st, udq_state);
+    UDQContext context(udqft, wm, {}, UDQContext::MatcherFactories{}, st, udq_state);
 
     st.update_well_var("P1", "WOPR", 4);
     auto res = def.eval(context);
@@ -286,8 +285,7 @@ BOOST_AUTO_TEST_CASE(TEST)
     SummaryState st(TimeService::now());
     UDQState udq_state(udqp.undefinedValue());
     WellMatcher wm(NameOrder({"P1", "P2"}));
-    auto segmentMatcherFactory = []() { return std::make_unique<SegmentMatcher>(ScheduleState {}); };
-    UDQContext context(udqft, wm, {}, segmentMatcherFactory, st, udq_state);
+    UDQContext context(udqft, wm, {}, UDQContext::MatcherFactories{}, st, udq_state);
 
     st.update_group_var("MAU", "GOPR", 4);
     st.update_group_var("XXX", "GOPR", 5);
@@ -328,8 +326,7 @@ BOOST_AUTO_TEST_CASE(MIX_SCALAR) {
     SummaryState st(TimeService::now());
     UDQState udq_state(udqp.undefinedValue());
     WellMatcher wm(NameOrder({"P1"}));
-    auto segmentMatcherFactory = []() { return std::make_unique<SegmentMatcher>(ScheduleState {}); };
-    UDQContext context(udqft, wm, {}, segmentMatcherFactory, st, udq_state);
+    UDQContext context(udqft, wm, {}, UDQContext::MatcherFactories{}, st, udq_state);
 
     st.update_well_var("P1", "WOPR", 1);
 
@@ -345,8 +342,7 @@ BOOST_AUTO_TEST_CASE(UDQFieldSetTest) {
     SummaryState st(TimeService::now());
     UDQState udq_state(udqp.undefinedValue());
     WellMatcher wm(NameOrder({"P1", "P2", "P3", "P4"}));
-    auto segmentMatcherFactory = []() { return std::make_unique<SegmentMatcher>(ScheduleState {}); };
-    UDQContext context(udqft, wm, {}, segmentMatcherFactory, st, udq_state);
+    UDQContext context(udqft, wm, {}, UDQContext::MatcherFactories{}, st, udq_state);
 
     st.update_well_var("P1", "WOPR", 1.0);
     st.update_well_var("P2", "WOPR", 2.0);
@@ -448,8 +444,7 @@ BOOST_AUTO_TEST_CASE(UDQ_GROUP_TEST) {
         UDQDefine def_fopr(udqp, "FUOPR",0, location, {"SUM", "(", "GOPR", ")"});
         SummaryState st(TimeService::now());
         UDQState udq_state(udqp.undefinedValue());
-        auto segmentMatcherFactory = []() { return std::make_unique<SegmentMatcher>(ScheduleState {}); };
-        UDQContext context(udqft, {}, {}, segmentMatcherFactory, st, udq_state);
+        UDQContext context(udqft, {}, {}, UDQContext::MatcherFactories{}, st, udq_state);
 
         st.update_group_var("G1", "GOPR", 1.0);
         st.update_group_var("G2", "GOPR", 2.0);
@@ -471,8 +466,7 @@ BOOST_AUTO_TEST_CASE(UDQ_DEFINETEST) {
         SummaryState st(TimeService::now());
         UDQState udq_state(udqp.undefinedValue());
         WellMatcher wm(NameOrder({"W1", "W2", "W3"}));
-        auto segmentMatcherFactory = []() { return std::make_unique<SegmentMatcher>(ScheduleState {}); };
-        UDQContext context(udqft, wm, {}, segmentMatcherFactory, st, udq_state);
+        UDQContext context(udqft, wm, {}, UDQContext::MatcherFactories{}, st, udq_state);
 
         st.update_well_var("W1", "WBHP", 11);
         st.update_well_var("W2", "WBHP", 2);
@@ -492,8 +486,7 @@ BOOST_AUTO_TEST_CASE(UDQ_DEFINETEST) {
         SummaryState st(TimeService::now());
         UDQState udq_state(udqp.undefinedValue());
         WellMatcher wm(NameOrder({"I1", "I2", "P1", "P2"}));
-        auto segmentMatcherFactory = []() { return std::make_unique<SegmentMatcher>(ScheduleState {}); };
-        UDQContext context(udqft, wm, {}, segmentMatcherFactory, st, udq_state);
+        UDQContext context(udqft, wm, {}, UDQContext::MatcherFactories{}, st, udq_state);
 
         st.update_well_var("P1", "WBHP", 1);
         st.update_well_var("P2", "WBHP", 2);
@@ -511,8 +504,7 @@ BOOST_AUTO_TEST_CASE(UDQ_DEFINETEST) {
         SummaryState st(TimeService::now());
         UDQState udq_state(udqp.undefinedValue());
         WellMatcher wm(NameOrder({"P1", "P2", "I1", "I2"}));
-        auto segmentMatcherFactory = []() { return std::make_unique<SegmentMatcher>(ScheduleState {}); };
-        UDQContext context(udqft, wm, {}, segmentMatcherFactory, st, udq_state);
+        UDQContext context(udqft, wm, {}, UDQContext::MatcherFactories{}, st, udq_state);
         st.update_well_var("P1", "WBHP", 4);
         st.update_well_var("P2", "WBHP", 3);
         st.update_well_var("I1", "WBHP", 2);
@@ -714,8 +706,7 @@ BOOST_AUTO_TEST_CASE(UDQ_CONTEXT) {
     UDQFunctionTable func_table;
     UDQParams udqp;
     UDQState udq_state(udqp.undefinedValue());
-    auto segmentMatcherFactory = []() { return std::make_unique<SegmentMatcher>(ScheduleState {}); };
-    UDQContext ctx(func_table, {}, {}, segmentMatcherFactory, st, udq_state);
+    UDQContext ctx(func_table, {}, {}, UDQContext::MatcherFactories{}, st, udq_state);
     BOOST_CHECK_EQUAL(*ctx.get("JAN"), 1.0);
     BOOST_CHECK_THROW(ctx.get("NO_SUCH_KEY"), std::out_of_range);
 
@@ -1172,8 +1163,7 @@ BOOST_AUTO_TEST_CASE(UDQ_POW_TEST) {
     UDQState udq_state(udqp.undefinedValue());
     NameOrder wo; wo.add("P1");
     WellMatcher wm(wo);
-    auto segmentMatcherFactory = []() { return std::make_unique<SegmentMatcher>(ScheduleState {}); };
-    UDQContext context(udqft, wm, {}, segmentMatcherFactory, st, udq_state);
+    UDQContext context(udqft, wm, {}, UDQContext::MatcherFactories{}, st, udq_state);
 
     st.update_well_var("P1", "WOPR", 1);
     st.update_well_var("P1", "WWPR", 2);
@@ -1195,8 +1185,7 @@ BOOST_AUTO_TEST_CASE(UDQ_CMP_TEST) {
     SummaryState st(TimeService::now());
     UDQState udq_state(udqp.undefinedValue());
     WellMatcher wm(NameOrder({"P1", "P2"}));
-    auto segmentMatcherFactory = []() { return std::make_unique<SegmentMatcher>(ScheduleState {}); };
-    UDQContext context(udqft, wm, {}, segmentMatcherFactory, st, udq_state);
+    UDQContext context(udqft, wm, {}, UDQContext::MatcherFactories{}, st, udq_state);
 
     st.update_well_var("P1", "WOPR",  0);
     st.update_well_var("P1", "WWPR", 10);
@@ -1227,8 +1216,7 @@ BOOST_AUTO_TEST_CASE(UDQ_SCALAR_SET) {
     SummaryState st(TimeService::now());
     UDQState udq_state(udqp.undefinedValue());
     WellMatcher wm(NameOrder({"PA1", "PB2", "PC3", "PD4"}));
-    auto segmentMatcherFactory = []() { return std::make_unique<SegmentMatcher>(ScheduleState {}); };
-    UDQContext context(udqft, wm, {}, segmentMatcherFactory, st, udq_state);
+    UDQContext context(udqft, wm, {}, UDQContext::MatcherFactories{}, st, udq_state);
 
     st.update_well_var("PA1", "WOPR", 1);
     st.update_well_var("PB2", "WOPR", 2);
@@ -1299,8 +1287,7 @@ BOOST_AUTO_TEST_CASE(UDQ_SORTD_NAN) {
     SummaryState st(TimeService::now());
     UDQState udq_state(udqp.undefinedValue());
     WellMatcher wm(NameOrder({"OP1", "OP2", "OP3", "OP4"}));
-    auto segmentMatcherFactory = []() { return std::make_unique<SegmentMatcher>(ScheduleState {}); };
-    UDQContext context(udqft, wm, {}, segmentMatcherFactory, st, udq_state);
+    UDQContext context(udqft, wm, {}, UDQContext::MatcherFactories{}, st, udq_state);
 
     st.update_well_var("OP1", "WWIR", 1.0);
     st.update_well_var("OP2", "WWIR", 2.0);
@@ -1345,8 +1332,7 @@ BOOST_AUTO_TEST_CASE(UDQ_SORTA) {
     SummaryState st(TimeService::now());
     UDQState udq_state(udqp.undefinedValue());
     WellMatcher wm(NameOrder({"OPL01", "OPL02", "OPU01", "OPU02"}));
-    auto segmentMatcherFactory = []() { return std::make_unique<SegmentMatcher>(ScheduleState {}); };
-    UDQContext context(udqft, wm, {}, segmentMatcherFactory, st, udq_state);
+    UDQContext context(udqft, wm, {}, UDQContext::MatcherFactories{}, st, udq_state);
 
     st.update_well_var("OPL01", "WWCT", 0.7);
     st.update_well_var("OPL02", "WWCT", 0.8);
@@ -1375,8 +1361,7 @@ BOOST_AUTO_TEST_CASE(UDQ_BASIC_MATH_TEST) {
     SummaryState st(TimeService::now());
     UDQState udq_state(udqp.undefinedValue());
     WellMatcher wm(NameOrder({"P1", "P2", "P3", "P4"}));
-    auto segmentMatcherFactory = []() { return std::make_unique<SegmentMatcher>(ScheduleState {}); };
-    UDQContext context(udqft, wm, {}, segmentMatcherFactory, st, udq_state);
+    UDQContext context(udqft, wm, {}, UDQContext::MatcherFactories{}, st, udq_state);
 
     st.update_well_var("P1", "WOPR", 1);
     st.update_well_var("P2", "WOPR", 2);
@@ -1439,8 +1424,7 @@ BOOST_AUTO_TEST_CASE(DECK_TEST) {
     SummaryState st(TimeService::now());
     UDQState udq_state(udqp.undefinedValue());
     WellMatcher wm(NameOrder({"OP1", "OP2", "OP3"}));
-    auto segmentMatcherFactory = []() { return std::make_unique<SegmentMatcher>(ScheduleState {}); };
-    UDQContext context(udqft, wm, {}, segmentMatcherFactory, st, udq_state);
+    UDQContext context(udqft, wm, {}, UDQContext::MatcherFactories{}, st, udq_state);
 
     st.update_well_var("OP1", "WOPR", 300);
     st.update_well_var("OP2", "WOPR", 3000);
@@ -1495,8 +1479,7 @@ BOOST_AUTO_TEST_CASE(UDQ_PARSE_ERROR) {
         UDQFunctionTable udqft(udqp);
         UDQState udq_state(udqp.undefinedValue());
         WellMatcher wm(NameOrder({"P1"}));
-        auto segmentMatcherFactory = []() { return std::make_unique<SegmentMatcher>(ScheduleState {}); };
-        UDQContext context(udqft, wm, {}, segmentMatcherFactory, st, udq_state);
+        UDQContext context(udqft, wm, {}, UDQContext::MatcherFactories{}, st, udq_state);
         st.update_well_var("P1", "WBHP", 1);
 
         auto res = def1.eval(context);
@@ -1523,8 +1506,7 @@ BOOST_AUTO_TEST_CASE(UDQ_TYPE_ERROR) {
         UDQFunctionTable udqft(udqp);
         UDQState udq_state(udqp.undefinedValue());
         WellMatcher wm(NameOrder({"P1", "P2"}));
-        auto segmentMatcherFactory = []() { return std::make_unique<SegmentMatcher>(ScheduleState {}); };
-        UDQContext context(udqft, wm, {}, segmentMatcherFactory, st, udq_state);
+        UDQContext context(udqft, wm, {}, UDQContext::MatcherFactories{}, st, udq_state);
         st.update_well_var("P1", "WBHP", 1);
         st.update_well_var("P2", "WBHP", 2);
 
@@ -1981,8 +1963,7 @@ UDQ
     SummaryState st(TimeService::now());
     UDQFunctionTable udqft(udqp);
     UDQState udq_state(udqp.undefinedValue());
-    auto segmentMatcherFactory = []() { return std::make_unique<SegmentMatcher>(ScheduleState {}); };
-    UDQContext context(udqft, {}, {}, segmentMatcherFactory, st, udq_state);
+    UDQContext context(udqft, {}, {}, UDQContext::MatcherFactories{}, st, udq_state);
 
     auto res0 = def0.eval(context);
     BOOST_CHECK_CLOSE( res0[0].get(), -0.00125*3, 1e-6);
@@ -2007,8 +1988,7 @@ UDQ
     SummaryState st(TimeService::now());
     UDQFunctionTable udqft(udqp);
     UDQState udq_state(udqp.undefinedValue());
-    auto segmentMatcherFactory = []() { return std::make_unique<SegmentMatcher>(ScheduleState {}); };
-    UDQContext context(udqft, {}, {}, segmentMatcherFactory, st, udq_state);
+    UDQContext context(udqft, {}, {}, UDQContext::MatcherFactories{}, st, udq_state);
     const double fwpr = 7;
     const double fopr = 4;
     const double fgpr = 7;
@@ -2051,8 +2031,7 @@ UDQ
     UDQFunctionTable udqft(udqp);
     UDQState udq_state(udqp.undefinedValue());
     WellMatcher wm(NameOrder({"W1", "W2", "W3"}));
-    auto segmentMatcherFactory = []() { return std::make_unique<SegmentMatcher>(ScheduleState {}); };
-    UDQContext context(udqft, wm, {}, segmentMatcherFactory, st, udq_state);
+    UDQContext context(udqft, wm, {}, UDQContext::MatcherFactories{}, st, udq_state);
     st.update_well_var("W1", "WOPR", 1);
     st.update_well_var("W2", "WOPR", 2);
     st.update_well_var("W3", "WOPR", 3);
@@ -2091,7 +2070,8 @@ UDQ
     auto undefined_value =  udq.params().undefinedValue();
     UDQState udq_state(undefined_value);
     auto segmentMatcherFactory = []() { return std::make_unique<SegmentMatcher>(ScheduleState {}); };
-    udq.eval(0, schedule, {}, segmentMatcherFactory, st, udq_state);
+    auto regionSetMatcherFactory = []() { return std::make_unique<RegionSetMatcher>(FIPRegionStatistics {}); };
+    udq.eval(0, schedule, {}, segmentMatcherFactory, regionSetMatcherFactory, st, udq_state);
 
     BOOST_CHECK_EQUAL( st.get("FU_UADD"), 12);   // 10 + 2
 
@@ -2118,7 +2098,8 @@ DEFINE FU_PAR2 FU_PAR3 /
     UDQState udq_state(undefined_value);
     st.update("FMWPR", 100);
     auto segmentMatcherFactory = []() { return std::make_unique<SegmentMatcher>(ScheduleState {}); };
-    udq.eval(0, schedule, {}, segmentMatcherFactory, st, udq_state);
+    auto regionSetMatcherFactory = []() { return std::make_unique<RegionSetMatcher>(FIPRegionStatistics {}); };
+    udq.eval(0, schedule, {}, segmentMatcherFactory, regionSetMatcherFactory, st, udq_state);
 
     BOOST_CHECK_EQUAL(st.get("FU_PAR2"), 100);
 }
@@ -2137,7 +2118,8 @@ DEFINE FU_PAR3 FU_PAR2 + 1/
     auto undefined_value =  udq.params().undefinedValue();
     UDQState udq_state(undefined_value);
     auto segmentMatcherFactory = []() { return std::make_unique<SegmentMatcher>(ScheduleState {}); };
-    udq.eval(0, schedule, {}, segmentMatcherFactory, st, udq_state);
+    auto regionSetMatcherFactory = []() { return std::make_unique<RegionSetMatcher>(FIPRegionStatistics {}); };
+    udq.eval(0, schedule, {}, segmentMatcherFactory, regionSetMatcherFactory, st, udq_state);
 
     BOOST_CHECK_EQUAL(st.get("FU_PAR2"), undefined_value);
     BOOST_CHECK_EQUAL(st.get("FU_PAR3"), undefined_value);
@@ -2248,7 +2230,8 @@ DEFINE WUGASRA  750000 - WGLIR '*' /
     NameOrder wo({"W1", "W2", "W3"});
     WellMatcher wm(wo);
     auto segmentMatcherFactory = []() { return std::make_unique<SegmentMatcher>(ScheduleState {}); };
-    udq.eval(0, schedule, wm, segmentMatcherFactory, st, udq_state);
+    auto regionSetMatcherFactory = []() { return std::make_unique<RegionSetMatcher>(FIPRegionStatistics {}); };
+    udq.eval(0, schedule, wm, segmentMatcherFactory, regionSetMatcherFactory, st, udq_state);
 
     const auto required_keys = [&udq]()
     {
@@ -2465,7 +2448,8 @@ DEFINE FU_VAR91 GOPR TEST  /
     st.update_group_var("TEST", "GOPR", 1);
 
     auto segmentMatcherFactory = []() { return std::make_unique<SegmentMatcher>(ScheduleState {}); };
-    udq.eval(0, schedule, {}, segmentMatcherFactory, st, udq_state);
+    auto regionSetMatcherFactory = []() { return std::make_unique<RegionSetMatcher>(FIPRegionStatistics {}); };
+    udq.eval(0, schedule, {}, segmentMatcherFactory, regionSetMatcherFactory, st, udq_state);
 }
 
 BOOST_AUTO_TEST_CASE(UDQ_KEY_ERROR) {
@@ -2485,7 +2469,8 @@ UDQ
     SummaryState st(TimeService::now());
 
     auto segmentMatcherFactory = []() { return std::make_unique<SegmentMatcher>(ScheduleState {}); };
-    BOOST_CHECK_THROW(udq.eval(0, schedule, {}, segmentMatcherFactory, st, udq_state), std::exception);
+    auto regionSetMatcherFactory = []() { return std::make_unique<RegionSetMatcher>(FIPRegionStatistics {}); };
+    BOOST_CHECK_THROW(udq.eval(0, schedule, {}, segmentMatcherFactory, regionSetMatcherFactory, st, udq_state), std::exception);
 }
 
 BOOST_AUTO_TEST_CASE(UDQ_ASSIGN) {
@@ -2522,7 +2507,8 @@ UDQ
                                   expected_keys.begin(), expected_keys.end());
 
     auto segmentMatcherFactory = []() { return std::make_unique<SegmentMatcher>(ScheduleState {}); };
-    udq.eval(0, schedule, {}, segmentMatcherFactory, st, udq_state);
+    auto regionSetMatcherFactory = []() { return std::make_unique<RegionSetMatcher>(FIPRegionStatistics {}); };
+    udq.eval(0, schedule, {}, segmentMatcherFactory, regionSetMatcherFactory, st, udq_state);
     BOOST_CHECK_EQUAL(st.get("FU_VAR1"), 10);
 }
 
@@ -2564,7 +2550,8 @@ TSTEP
     for (std::size_t report_step = 0; report_step < 5; report_step++) {
         const auto& udq = schedule.getUDQConfig(report_step);
         auto segmentMatcherFactory = []() { return std::make_unique<SegmentMatcher>(ScheduleState {}); };
-        udq.eval(report_step, schedule, schedule.wellMatcher(report_step), segmentMatcherFactory, st, udq_state);
+        auto regionSetMatcherFactory = []() { return std::make_unique<RegionSetMatcher>(FIPRegionStatistics {}); };
+        udq.eval(report_step, schedule, schedule.wellMatcher(report_step), segmentMatcherFactory, regionSetMatcherFactory, st, udq_state);
         auto fu_var1 = st.get("FU_VAR1");
         BOOST_CHECK_EQUAL(fu_var1, report_step + 1);
     }
@@ -2573,7 +2560,8 @@ TSTEP
     for (std::size_t report_step = 5; report_step < 10; report_step++) {
         const auto& udq = schedule.getUDQConfig(report_step);
         auto segmentMatcherFactory = []() { return std::make_unique<SegmentMatcher>(ScheduleState {}); };
-        udq.eval(report_step, schedule, schedule.wellMatcher(report_step), segmentMatcherFactory, st, udq_state);
+        auto regionSetMatcherFactory = []() { return std::make_unique<RegionSetMatcher>(FIPRegionStatistics {}); };
+        udq.eval(report_step, schedule, schedule.wellMatcher(report_step), segmentMatcherFactory, regionSetMatcherFactory, st, udq_state);
         auto fu_var1 = st.get("FU_VAR1");
         BOOST_CHECK_EQUAL(fu_var1, report_step - 4);
     }
@@ -2582,7 +2570,8 @@ TSTEP
     for (std::size_t report_step = 10; report_step < 15; report_step++) {
         const auto& udq = schedule.getUDQConfig(report_step);
         auto segmentMatcherFactory = []() { return std::make_unique<SegmentMatcher>(ScheduleState {}); };
-        udq.eval(report_step, schedule, schedule.wellMatcher(report_step), segmentMatcherFactory, st, udq_state);
+        auto regionSetMatcherFactory = []() { return std::make_unique<RegionSetMatcher>(FIPRegionStatistics {}); };
+        udq.eval(report_step, schedule, schedule.wellMatcher(report_step), segmentMatcherFactory, regionSetMatcherFactory, st, udq_state);
         auto fu_var1 = st.get("FU_VAR1");
         BOOST_CHECK_EQUAL(fu_var1, 0);
     }
@@ -2606,8 +2595,7 @@ BOOST_AUTO_TEST_CASE(UDQ_DIV_TEST) {
     UDQDefine def_div(udqp, "FU",0, location, {"128", "/", "2", "/", "4", "/", "8"});
     SummaryState st(TimeService::now());
     UDQState udq_state(udqp.undefinedValue());
-    auto segmentMatcherFactory = []() { return std::make_unique<SegmentMatcher>(ScheduleState {}); };
-    UDQContext context(udqft, {}, {}, segmentMatcherFactory, st, udq_state);
+    UDQContext context(udqft, {}, {}, UDQContext::MatcherFactories{}, st, udq_state);
 
     auto res_div = def_div.eval(context);
     BOOST_CHECK_EQUAL( res_div[0].get() , 2.0);
@@ -2635,7 +2623,8 @@ UDQ
 
     const auto& udq = schedule.getUDQConfig(0);
     auto segmentMatcherFactory = []() { return std::make_unique<SegmentMatcher>(ScheduleState {}); };
-    udq.eval(0, schedule, {}, segmentMatcherFactory, st, udq_state);
+    auto regionSetMatcherFactory = []() { return std::make_unique<RegionSetMatcher>(FIPRegionStatistics {}); };
+    udq.eval(0, schedule, {}, segmentMatcherFactory, regionSetMatcherFactory, st, udq_state);
     auto fu_var1 = st.get("FU_VAR1");
     auto fu_var2 = st.get("FU_VAR2");
     auto fu_var3 = st.get("FU_VAR3");
@@ -2681,7 +2670,8 @@ UDQ
     st.update_well_var("P4", "WOPR", 4);
 
     auto segmentMatcherFactory = []() { return std::make_unique<SegmentMatcher>(ScheduleState {}); };
-    udq.eval(0, schedule, schedule.wellMatcher(0), segmentMatcherFactory, st, udq_state);
+    auto regionSetMatcherFactory = []() { return std::make_unique<RegionSetMatcher>(FIPRegionStatistics {}); };
+    udq.eval(0, schedule, schedule.wellMatcher(0), segmentMatcherFactory, regionSetMatcherFactory, st, udq_state);
     auto fu_var1 = st.get("FU_VAR1");
     auto fu_var2 = st.get("FU_VAR2");
     auto fu_var3 = st.get("FU_VAR3");
@@ -2708,7 +2698,8 @@ UDQ
     SummaryState st(TimeService::now());
     const auto& udq = schedule.getUDQConfig(0);
     auto segmentMatcherFactory = []() { return std::make_unique<SegmentMatcher>(ScheduleState {}); };
-    udq.eval(0, schedule, schedule.wellMatcher(0), segmentMatcherFactory, st, udq_state);
+    auto regionSetMatcherFactory = []() { return std::make_unique<RegionSetMatcher>(FIPRegionStatistics {}); };
+    udq.eval(0, schedule, schedule.wellMatcher(0), segmentMatcherFactory, regionSetMatcherFactory, st, udq_state);
 
     auto fu_var1 = st.get("FU_VAR1");
     auto fu_var2 = st.get("FU_VAR2");
@@ -2836,8 +2827,7 @@ UDQ
     SummaryState st(TimeService::now());
     UDQFunctionTable udqft;
     WellMatcher wm(NameOrder({"W1", "W2", "W3"}));
-    auto segmentMatcherFactory = []() { return std::make_unique<SegmentMatcher>(ScheduleState {}); };
-    UDQContext context(udqft, wm, {}, segmentMatcherFactory, st, udq_state);
+    UDQContext context(udqft, wm, {}, UDQContext::MatcherFactories{}, st, udq_state);
     st.update_well_var("W1", "WBHP", 400);
     st.update_well_var("W2", "WBHP", 300);
     st.update_well_var("W3", "WBHP", 200);
@@ -2954,8 +2944,7 @@ DEFINE FU_WBHP TU_FBHP[FU_FOPR] UMIN FU_WBHP0 /
     UDQFunctionTable udqft;
     WellMatcher wm(NameOrder({"W1", "W2", "W3"}));
     const auto& udq = schedule.getUDQConfig(0);
-    auto segmentMatcherFactory = []() { return std::make_unique<SegmentMatcher>(ScheduleState {}); };
-    UDQContext context(udqft, wm, udq.tables(), segmentMatcherFactory, st, udq_state);
+    UDQContext context(udqft, wm, udq.tables(), UDQContext::MatcherFactories{}, st, udq_state);
 
     const auto& ass = udq.assign("FU_WBHP");
     context.update_assign("FU_WBHP", ass.eval());
@@ -3006,7 +2995,8 @@ DEFINE WU_WBHP TU_FBHP[WOPR] UMIN WU_WBHP0 /
     st.update_well_var("PROD2", "WOPR", 450.0);
 
     auto segmentMatcherFactory = []() { return std::make_unique<SegmentMatcher>(ScheduleState {}); };
-    udq.eval(0, schedule, wm, segmentMatcherFactory, st, udq_state);
+    auto regionSetMatcherFactory = []() { return std::make_unique<RegionSetMatcher>(FIPRegionStatistics {}); };
+    udq.eval(0, schedule, wm, segmentMatcherFactory, regionSetMatcherFactory, st, udq_state);
 
     const double wu_wbhp1 = st.get_well_var("PROD1", "WU_WBHP");
     const double wu_wbhp2 = st.get_well_var("PROD2", "WU_WBHP");
