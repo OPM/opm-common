@@ -1,21 +1,21 @@
 #ifndef ISIM_MAIN_HPP
 #define ISIM_MAIN_HPP
 
-#include <chrono>
-#include <functional>
-#include <map>
-#include <string>
-
-#include <opm/input/eclipse/Schedule/SummaryState.hpp>
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
-#include <opm/input/eclipse/Schedule/Schedule.hpp>
 #include <opm/input/eclipse/Schedule/Action/State.hpp>
+#include <opm/input/eclipse/Schedule/Schedule.hpp>
+#include <opm/input/eclipse/Schedule/SummaryState.hpp>
 
 #include <opm/output/data/Solution.hpp>
 #include <opm/output/data/Wells.hpp>
 #include <opm/output/data/Groups.hpp>
+
 #include <opm/input/eclipse/Deck/UDAValue.hpp>
 
+#include <chrono>
+#include <functional>
+#include <map>
+#include <string>
 
 namespace Opm {
 
@@ -60,7 +60,7 @@ public:
     Action::State action_state;
     SummaryState st;
 };
-}
 
+} // namespace Opm
 
-#endif
+#endif // ISIM_MAIN_HPP
