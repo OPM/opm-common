@@ -20,6 +20,9 @@
 #ifndef UDQ_CONTEXT_HPP
 #define UDQ_CONTEXT_HPP
 
+#include <opm/input/eclipse/EclipseState/Grid/RegionSetMatcher.hpp>
+#include <opm/input/eclipse/Schedule/MSW/SegmentMatcher.hpp>
+
 #include <cstddef>
 #include <functional>
 #include <memory>
@@ -30,7 +33,6 @@
 
 namespace Opm {
 
-    class SegmentMatcher;
     class SegmentSet;
     class SummaryState;
     class UDQFunctionTable;
@@ -46,24 +48,39 @@ namespace Opm {
     class UDQContext
     {
     public:
-        using SegmentMatcherFactory = std::function<std::unique_ptr<SegmentMatcher>()>;
+        struct MatcherFactories
+        {
+            std::function<std::unique_ptr<SegmentMatcher>()> segments{};
+            std::function<std::unique_ptr<RegionSetMatcher>()> regions{};
+        };
 
         UDQContext(const UDQFunctionTable& udqft,
                    const WellMatcher&      wm,
                    const std::unordered_map<std::string, UDT>& tables,
-                   SegmentMatcherFactory   create_segment_matcher,
+                   MatcherFactories        create_matchers,
                    SummaryState&           summary_state,
                    UDQState&               udq_state);
 
         std::optional<double> get(const std::string& key) const;
-        std::optional<double> get_well_var(const std::string& well, const std::string& var) const;
-        std::optional<double> get_group_var(const std::string& group, const std::string& var) const;
-        std::optional<double> get_segment_var(const std::string& well, const std::string& var, std::size_t segment) const;
+
+        std::optional<double>
+        get_well_var(const std::string& well, const std::string& var) const;
+
+        std::optional<double>
+        get_group_var(const std::string& group, const std::string& var) const;
+
+        std::optional<double>
+        get_segment_var(const std::string& well,
+                        const std::string& var,
+                        std::size_t segment) const;
+
         const UDT& get_udt(const std::string& name) const;
 
         void add(const std::string& key, double value);
         void update_assign(const std::string& keyword, const UDQSet& udq_result);
-        void update_define(std::size_t report_step, const std::string& keyword, const UDQSet& udq_result);
+        void update_define(std::size_t report_step,
+                           const std::string& keyword,
+                           const UDQSet& udq_result);
 
         const UDQFunctionTable& function_table() const;
 
@@ -74,14 +91,21 @@ namespace Opm {
         SegmentSet segments(const std::vector<std::string>& set_descriptor) const;
 
     private:
+        struct Matchers
+        {
+            std::unique_ptr<SegmentMatcher> segments{};
+            std::unique_ptr<RegionSetMatcher> regions{};
+        };
+
         const UDQFunctionTable& udqft;
         const WellMatcher& well_matcher;
         const std::unordered_map<std::string, UDT>& udt;
 
-        SegmentMatcherFactory create_segment_matcher;
-        mutable std::unique_ptr<SegmentMatcher> segment_matcher;
         SummaryState& summary_state;
         UDQState& udq_state;
+
+        MatcherFactories create_matchers_{};
+        mutable Matchers matchers_{};
 
         //std::unordered_map<std::string, UDQSet> udq_results;
         std::unordered_map<std::string, double> values;

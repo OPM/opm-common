@@ -29,6 +29,8 @@
 
 #include <opm/input/eclipse/Python/Python.hpp>
 
+#include <opm/input/eclipse/EclipseState/EclipseState.hpp>
+
 #include <opm/input/eclipse/Schedule/Action/ActionContext.hpp>
 #include <opm/input/eclipse/Schedule/Action/Actions.hpp>
 #include <opm/input/eclipse/Schedule/Action/SimulatorUpdate.hpp>
@@ -51,6 +53,19 @@
 #include <memory>
 #include <string>
 #include <utility>
+
+namespace {
+    std::function<std::unique_ptr<Opm::RegionSetMatcher>()>
+    createRegionSetMatcherFactory(const Opm::EclipseState& es)
+    {
+        return {
+            [es = std::cref(es)]() {
+                return std::make_unique<Opm::RegionSetMatcher>
+                    (es.get().fipRegionStatistics());
+            }
+        };
+    }
+} // Anonymous namespace
 
 namespace Opm {
 
@@ -179,6 +194,7 @@ void msim::run_step(WellTestState& wtest_state,
                   this->schedule,
                   this->schedule.wellMatcher(report_step),
                   this->schedule.segmentMatcherFactory(report_step),
+                  createRegionSetMatcherFactory(this->state),
                   this->st,
                   udq_state);
 

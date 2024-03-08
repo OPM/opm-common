@@ -639,16 +639,23 @@ namespace Opm {
         }
     }
 
-    void UDQConfig::eval(const std::size_t     report_step,
-                         const Schedule&       sched,
-                         const WellMatcher&    wm,
-                         SegmentMatcherFactory create_segment_matcher,
-                         SummaryState&         st,
-                         UDQState&             udq_state) const
+    void UDQConfig::eval(const std::size_t       report_step,
+                         const Schedule&         sched,
+                         const WellMatcher&      wm,
+                         SegmentMatcherFactory   create_segment_matcher,
+                         RegionSetMatcherFactory create_region_matcher,
+                         SummaryState&           st,
+                         UDQState&               udq_state) const
     {
-        UDQContext context {
-            this->function_table(), wm, m_tables, std::move(create_segment_matcher), st, udq_state
+        auto factories = UDQContext::MatcherFactories {};
+        factories.segments = std::move(create_segment_matcher);
+        factories.regions  = std::move(create_region_matcher);
+
+        auto context = UDQContext {
+            this->function_table(), wm, this->m_tables,
+            std::move(factories), st, udq_state
         };
+
         this->eval_assign(report_step, sched, context);
         this->eval_define(report_step, udq_state, context);
     }
@@ -660,9 +667,14 @@ namespace Opm {
                                 SummaryState&         st,
                                 UDQState&             udq_state) const
     {
-        UDQContext context {
-            this->function_table(), wm, m_tables, std::move(create_segment_matcher), st, udq_state
+        auto factories = UDQContext::MatcherFactories{};
+        factories.segments = std::move(create_segment_matcher);
+
+        auto context = UDQContext {
+            this->function_table(), wm, this->m_tables,
+            std::move(factories), st, udq_state
         };
+
         this->eval_assign(report_step, sched, context);
     }
 

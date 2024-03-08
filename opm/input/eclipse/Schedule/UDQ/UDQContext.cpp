@@ -19,6 +19,8 @@
 
 #include <opm/input/eclipse/Schedule/UDQ/UDQContext.hpp>
 
+#include <opm/input/eclipse/EclipseState/Grid/RegionSetMatcher.hpp>
+
 #include <opm/input/eclipse/Schedule/MSW/SegmentMatcher.hpp>
 #include <opm/input/eclipse/Schedule/SummaryState.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQState.hpp>
@@ -54,15 +56,15 @@ namespace Opm {
     UDQContext::UDQContext(const UDQFunctionTable& udqft_arg,
                            const WellMatcher&      wm,
                            const std::unordered_map<std::string, UDT>& tables,
-                           SegmentMatcherFactory   create_segment_matcher_arg,
+                           MatcherFactories        create_matchers,
                            SummaryState&           summary_state_arg,
                            UDQState&               udq_state_arg)
-        : udqft                 (udqft_arg)
-        , well_matcher          (wm)
-        , udt(tables)
-        , create_segment_matcher(std::move(create_segment_matcher_arg))
-        , summary_state         (summary_state_arg)
-        , udq_state             (udq_state_arg)
+        : udqft           (udqft_arg)
+        , well_matcher    (wm)
+        , udt             (tables)
+        , summary_state   (summary_state_arg)
+        , udq_state       (udq_state_arg)
+        , create_matchers_(std::move(create_matchers))
     {
         for (const auto& [month, index] : TimeService::eclipseMonthIndices()) {
             this->add(month, index);
@@ -208,7 +210,7 @@ namespace Opm {
         // Empty descriptor matches all segments in all existing MS wells.
 
         this->ensure_segment_matcher_exists();
-        return this->segment_matcher->findSegments(SegmentMatcher::SetDescriptor{});
+        return this->matchers_.segments->findSegments(SegmentMatcher::SetDescriptor{});
     }
 
     SegmentSet UDQContext::segments(const std::vector<std::string>& set_descriptor) const
@@ -225,7 +227,7 @@ namespace Opm {
         }
 
         this->ensure_segment_matcher_exists();
-        return this->segment_matcher->findSegments(desc);
+        return this->matchers_.segments->findSegments(desc);
     }
 
     const UDQFunctionTable& UDQContext::function_table() const
@@ -250,8 +252,8 @@ namespace Opm {
 
     void UDQContext::ensure_segment_matcher_exists() const
     {
-        if (this->segment_matcher == nullptr) {
-            this->segment_matcher = this->create_segment_matcher();
+        if (this->matchers_.segments == nullptr) {
+            this->matchers_.segments = this->create_matchers_.segments();
         }
     }
 }
