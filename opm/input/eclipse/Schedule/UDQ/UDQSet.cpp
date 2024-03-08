@@ -19,6 +19,7 @@
 
 #include <opm/input/eclipse/Schedule/UDQ/UDQSet.hpp>
 
+#include <opm/input/eclipse/EclipseState/Grid/RegionSetMatcher.hpp>
 #include <opm/input/eclipse/Schedule/MSW/SegmentMatcher.hpp>
 
 #include <opm/common/utility/shmatch.hpp>
@@ -283,6 +284,21 @@ UDQSet UDQSet::segments(const std::string&                  name,
                         const double                        scalar_value)
 {
     auto us = UDQSet::segments(name, segments);
+    us.assign(scalar_value);
+    return us;
+}
+
+UDQSet UDQSet::regions(const std::string&                  name,
+                       const std::vector<EnumeratedItems>& regSetColl)
+{
+    return { name, UDQVarType::REGION_VAR, regSetColl };
+}
+
+UDQSet UDQSet::regions(const std::string&                  name,
+                       const std::vector<EnumeratedItems>& regSetColl,
+                       const double                        scalar_value)
+{
+    auto us = UDQSet::regions(name, regSetColl);
     us.assign(scalar_value);
     return us;
 }
@@ -783,6 +799,24 @@ UDQSet::enumerateItems(const SegmentSet& segSet)
 
         items[wellID].name = segRange.well();
         items[wellID].numbers.assign(segRange.begin(), segRange.end());
+    }
+
+    return items;
+}
+
+std::vector<UDQSet::EnumeratedItems>
+UDQSet::enumerateItems(const RegionSetMatchResult& regSetColl)
+{
+    const auto numRegSets = regSetColl.numRegionSets();
+
+    auto items = std::vector<Opm::UDQSet::EnumeratedItems>(numRegSets);
+    for (auto rsetIx = 0*numRegSets; rsetIx < numRegSets; ++rsetIx) {
+        auto regIxRange = regSetColl.regions(rsetIx);
+
+        if (regIxRange.empty()) { continue; }
+
+        items[rsetIx].name = regIxRange.regionSet();
+        items[rsetIx].numbers.assign(regIxRange.begin(), regIxRange.end());
     }
 
     return items;

@@ -178,6 +178,23 @@ namespace Opm {
         };
     }
 
+    std::optional<double>
+    UDQContext::get_region_var(const std::string& regSet,
+                               const std::string& var,
+                               const std::size_t region) const
+    {
+        if (this->summary_state.has_region_var(regSet, var, region)) {
+            return this->summary_state.get_region_var(regSet, var, region);
+        }
+
+        throw std::logic_error {
+            fmt::format("Region summary variable {} not "
+                        "registered/supported for region "
+                        "{} in region set {}",
+                        var, region, regSet)
+        };
+    }
+
     const UDT&
     UDQContext::get_udt(const std::string& name) const
     {
@@ -230,6 +247,29 @@ namespace Opm {
         return this->matchers_.segments->findSegments(desc);
     }
 
+    RegionSetMatchResult UDQContext::regions() const
+    {
+        // Empty descriptor matches all regions in all region sets.
+
+        this->ensure_region_matcher_exists();
+        return this->matchers_.regions->findRegions(RegionSetMatcher::SetDescriptor{});
+    }
+
+    RegionSetMatchResult
+    UDQContext::regions(const std::string&              vector_name,
+                        const std::vector<std::string>& set_descriptor) const
+    {
+        auto desc = RegionSetMatcher::SetDescriptor{}
+            .vectorName(vector_name);
+
+        if (! set_descriptor.empty()) {
+            desc.regionID(set_descriptor.front());
+        }
+
+        this->ensure_region_matcher_exists();
+        return this->matchers_.regions->findRegions(desc);
+    }
+
     const UDQFunctionTable& UDQContext::function_table() const
     {
         return this->udqft;
@@ -254,6 +294,13 @@ namespace Opm {
     {
         if (this->matchers_.segments == nullptr) {
             this->matchers_.segments = this->create_matchers_.segments();
+        }
+    }
+
+    void UDQContext::ensure_region_matcher_exists() const
+    {
+        if (this->matchers_.regions == nullptr) {
+            this->matchers_.regions = this->create_matchers_.regions();
         }
     }
 }

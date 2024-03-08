@@ -74,6 +74,11 @@ namespace Opm {
                         const std::string& var,
                         std::size_t segment) const;
 
+        std::optional<double>
+        get_region_var(const std::string& regSet,
+                       const std::string& var,
+                       std::size_t region) const;
+
         const UDT& get_udt(const std::string& name) const;
 
         void add(const std::string& key, double value);
@@ -89,6 +94,10 @@ namespace Opm {
         std::vector<std::string> groups() const;
         SegmentSet segments() const;
         SegmentSet segments(const std::vector<std::string>& set_descriptor) const;
+
+        RegionSetMatchResult regions() const;
+        RegionSetMatchResult regions(const std::string&              vector_name,
+                                     const std::vector<std::string>& set_descriptor) const;
 
     private:
         struct Matchers
@@ -111,6 +120,7 @@ namespace Opm {
         std::unordered_map<std::string, double> values;
 
         void ensure_segment_matcher_exists() const;
+        void ensure_region_matcher_exists() const;
     };
 
 } // namespace Opm

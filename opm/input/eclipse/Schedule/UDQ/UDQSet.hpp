@@ -30,6 +30,7 @@
 #include <vector>
 
 namespace Opm {
+    class RegionSetMatchResult;
     class SegmentSet;
 } // namespace Opm
 
@@ -203,6 +204,9 @@ public:
     };
 
     static std::vector<EnumeratedItems>
+    enumerateItems(const RegionSetMatchResult& regionSet);
+
+    static std::vector<EnumeratedItems>
     enumerateItems(const SegmentSet& segmentSet);
 
     /// Construct empty, named UDQ set of specific variable type
@@ -327,6 +331,12 @@ public:
     static UDQSet segments(const std::string&                  name,
                            const std::vector<EnumeratedItems>& segments,
                            const double                        scalar_value);
+
+    static UDQSet regions(const std::string&                  name,
+                          const std::vector<EnumeratedItems>& regSetColl);
+    static UDQSet regions(const std::string&                  name,
+                          const std::vector<EnumeratedItems>& regSetColl,
+                          const double                        scalar_value);
 
     /// Assign value to every element of the UDQ set
     ///
