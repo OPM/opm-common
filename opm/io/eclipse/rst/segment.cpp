@@ -33,6 +33,25 @@ double area_to_si(const Opm::UnitSystem& unit_system, const double raw_value)
     return unit_system.to_si(M::length, unit_system.to_si(M::length, raw_value));
 }
 
+double
+load_icd_scaling_factor(const Opm::UnitSystem& unit_system,
+                        const int*             iseg,
+                        const double*          rseg)
+{
+    const auto scalingFactor = rseg[VI::RSeg::ScalingFactor];
+    const auto scalingMethod = iseg[VI::ISeg::ICDScalingMode];
+
+    if ((scalingMethod == 1) ||
+        ((scalingMethod < 0) && (rseg[VI::RSeg::ICDLength] < 0.0)))
+    {
+        // Scaling factor is a length.  Convert to SI.
+        return unit_system.to_si(M::length, scalingFactor);
+    }
+
+    // Scaling factor is a relative measure.  No unit conversion needed.
+    return scalingFactor;
+}
+
 } // Anonymous namespace
 
 Opm::RestartIO::RstSegment::RstSegment(const UnitSystem& unit_system,
@@ -69,6 +88,7 @@ Opm::RestartIO::RstSegment::RstSegment(const UnitSystem& unit_system,
     , max_emulsion_ratio(                                        rseg[VI::RSeg::MaxEmulsionRatio])
     , max_valid_flow_rate(    unit_system.to_si(M::rate,         rseg[VI::RSeg::MaxValidFlowRate]))
     , icd_length(             unit_system.to_si(M::length,       rseg[VI::RSeg::ICDLength]))
+    , icd_scaling_factor(load_icd_scaling_factor(unit_system, iseg, rseg))
     , valve_area_fraction(                                       rseg[VI::RSeg::ValveAreaFraction])
     , aicd_flowrate_exponent(                                    rseg[VI::RSeg::FlowRateExponent])
     , aicd_viscosity_exponent(                                   rseg[VI::RSeg::ViscFuncExponent])

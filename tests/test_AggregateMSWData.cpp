@@ -1086,7 +1086,7 @@ BOOST_AUTO_TEST_CASE(MSW_AICD)
 
     }
 
-        // RSEG (PROD)
+    // RSEG (PROD)
     {
         // well no 1 - PROD
         const auto& rseg = amswd.getRSeg();
