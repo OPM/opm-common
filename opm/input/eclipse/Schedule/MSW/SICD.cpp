@@ -22,6 +22,8 @@
 
 #include <opm/input/eclipse/Schedule/MSW/icd.hpp>
 
+#include <opm/io/eclipse/rst/segment.hpp>
+
 #include <opm/input/eclipse/Deck/DeckRecord.hpp>
 #include <opm/input/eclipse/Deck/DeckKeyword.hpp>
 
@@ -60,6 +62,20 @@ namespace Opm {
             ? ICDStatus::OPEN
             : ICDStatus::SHUT;
     }
+
+    SICD::SICD(const RestartIO::RstSegment& rstSegment)
+        : m_strength               (rstSegment.base_strength)
+        , m_length                 (rstSegment.icd_length)
+        , m_density_calibration    (rstSegment.fluid_density)
+        , m_viscosity_calibration  (rstSegment.fluid_viscosity)
+        , m_critical_value         (rstSegment.critical_water_fraction)
+        , m_width_transition_region(rstSegment.transition_region_width)
+        , m_max_viscosity_ratio    (rstSegment.max_emulsion_ratio)
+        , m_method_flow_scaling    (rstSegment.icd_scaling_mode)
+        , m_max_absolute_rate      (rstSegment.max_valid_flow_rate)
+        , m_status                 (from_int<ICDStatus>(rstSegment.icd_status))
+        , m_scaling_factor         (-1.0)
+    {}
 
     SICD::SICD(const double                 strength,
                const double                 length,

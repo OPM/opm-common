@@ -36,6 +36,10 @@ namespace Opm {
 
 } // namespace Opm
 
+namespace Opm { namespace RestartIO {
+    struct RstSegment;
+}} // namespace Opm::RestartIO
+
 namespace Opm {
 
     class SICD
@@ -43,6 +47,8 @@ namespace Opm {
     public:
         SICD() = default;
         explicit SICD(const DeckRecord& record);
+        explicit SICD(const RestartIO::RstSegment& rstSegment);
+
         SICD(double strength,
              double length,
              double densityCalibration,
