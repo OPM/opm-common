@@ -74,7 +74,7 @@ namespace Opm {
         , m_method_flow_scaling    (rstSegment.icd_scaling_mode)
         , m_max_absolute_rate      (rstSegment.max_valid_flow_rate)
         , m_status                 (from_int<ICDStatus>(rstSegment.icd_status))
-        , m_scaling_factor         (-1.0)
+        , m_scaling_factor         (rstSegment.icd_scaling_factor)
     {}
 
     SICD::SICD(const double                 strength,
