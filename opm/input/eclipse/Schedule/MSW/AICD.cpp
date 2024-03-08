@@ -68,6 +68,14 @@ AutoICD::AutoICD(const DeckRecord& record)
 
 AutoICD::AutoICD(const RestartIO::RstSegment& rstSegment)
     : SICD { rstSegment }
+    , m_flow_rate_exponent      (rstSegment.aicd_flowrate_exponent)
+    , m_visc_exponent           (rstSegment.aicd_viscosity_exponent)
+    , m_oil_density_exponent    (rstSegment.aicd_oil_dens_exponent)
+    , m_water_density_exponent  (rstSegment.aicd_wat_dens_exponent)
+    , m_gas_density_exponent    (rstSegment.aicd_gas_dens_exponent)
+    , m_oil_viscosity_exponent  (rstSegment.aicd_oil_visc_exponent)
+    , m_water_viscosity_exponent(rstSegment.aicd_wat_visc_exponent)
+    , m_gas_viscosity_exponent  (rstSegment.aicd_gas_visc_exponent)
 {}
 
 // the function will return a map

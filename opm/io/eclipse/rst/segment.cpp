@@ -70,6 +70,14 @@ Opm::RestartIO::RstSegment::RstSegment(const UnitSystem& unit_system,
     , max_valid_flow_rate(    unit_system.to_si(M::rate,         rseg[VI::RSeg::MaxValidFlowRate]))
     , icd_length(             unit_system.to_si(M::length,       rseg[VI::RSeg::ICDLength]))
     , valve_area_fraction(                                       rseg[VI::RSeg::ValveAreaFraction])
+    , aicd_flowrate_exponent(                                    rseg[VI::RSeg::FlowRateExponent])
+    , aicd_viscosity_exponent(                                   rseg[VI::RSeg::ViscFuncExponent])
+    , aicd_oil_dens_exponent(                                    rseg[VI::RSeg::flowFractionOilDensityExponent])
+    , aicd_wat_dens_exponent(                                    rseg[VI::RSeg::flowFractionWaterDensityExponent])
+    , aicd_gas_dens_exponent(                                    rseg[VI::RSeg::flowFractionGasDensityExponent])
+    , aicd_oil_visc_exponent(                                    rseg[VI::RSeg::flowFractionOilViscosityExponent])
+    , aicd_wat_visc_exponent(                                    rseg[VI::RSeg::flowFractionWaterViscosityExponent])
+    , aicd_gas_visc_exponent(                                    rseg[VI::RSeg::flowFractionGasViscosityExponent])
 {
     if (iseg[VI::ISeg::InSegCurBranch] != 0) {
         this->inflow_segments.push_back(iseg[VI::ISeg::InSegCurBranch]);

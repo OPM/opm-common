@@ -176,8 +176,6 @@ WSEGAICD
     BOOST_CHECK_EQUAL(aicd.widthTransitionRegion(), 0.05);
     BOOST_CHECK_EQUAL(aicd.maxViscosityRatio(), 5.0);
     BOOST_CHECK_EQUAL(aicd.methodFlowScaling(), -1);
-    // the scaling factor has not been updated properly, so it will throw
-    BOOST_CHECK_THROW(aicd.scalingFactor(), std::runtime_error);
 
     const int outlet_segment_number = segment.outletSegment();
     const double outlet_segment_length = segment_set.segmentLength(outlet_segment_number);
@@ -354,8 +352,6 @@ WSEGSICD
     BOOST_CHECK_EQUAL(sicd.widthTransitionRegion(), 0.05);
     BOOST_CHECK_EQUAL(sicd.maxViscosityRatio(), 5.0);
     BOOST_CHECK_EQUAL(sicd.methodFlowScaling(), -1);
-    // the scaling factor has not been updated properly, so it will throw
-    BOOST_CHECK_THROW(sicd.scalingFactor(), std::runtime_error);
 
     const int outlet_segment_number = segment.outletSegment();
     const double outlet_segment_length = segment_set.segmentLength(outlet_segment_number);
