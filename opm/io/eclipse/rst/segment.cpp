@@ -20,36 +20,17 @@
 #include <opm/io/eclipse/rst/segment.hpp>
 
 #include <opm/output/eclipse/VectorItems/msw.hpp>
-#include <opm/input/eclipse/Schedule/MSW/icd.hpp>
-#include <opm/input/eclipse/Schedule/MSW/Segment.hpp>
+
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
 
-#include "opm/input/eclipse/Schedule/MSW/icd_convert.hpp" // TODO: make relative again
-
 namespace VI = ::Opm::RestartIO::Helpers::VectorItems;
-
-namespace Opm {
-
-namespace {
-
-template <typename T>
-T from_ecl(int ecl_value);
-
-template <>
-Segment::SegmentType from_ecl(int int_type) {
-    return Segment::type_from_int(int_type);
-}
-
-}
-
-namespace RestartIO {
-
 using M  = ::Opm::UnitSystem::measure;
 
 namespace {
-double area_to_si(const UnitSystem& unit_system, double raw_value) {
-    return unit_system.to_si( M::length, unit_system.to_si( M::length, raw_value));
-}
+
+double area_to_si(const Opm::UnitSystem& unit_system, const double raw_value)
+{
+    return unit_system.to_si(M::length, unit_system.to_si(M::length, raw_value));
 }
 
 } // Anonymous namespace
@@ -61,7 +42,7 @@ Opm::RestartIO::RstSegment::RstSegment(const UnitSystem& unit_system,
     : segment(                                                   segment_number)
     , outlet_segment(                                            iseg[VI::ISeg::OutSeg])
     , branch(                                                    iseg[VI::ISeg::BranchNo])
-    , segment_type(                                              from_ecl<Segment::SegmentType>(iseg[VI::ISeg::SegmentType])),
+    , segment_type(                                              iseg[VI::ISeg::SegmentType])
     , icd_scaling_mode(                                          iseg[VI::ISeg::ICDScalingMode])
     , icd_status(                                                iseg[VI::ISeg::ICDOpenShutFlag])
     , dist_outlet(            unit_system.to_si(M::length,       rseg[VI::RSeg::DistOutlet]))

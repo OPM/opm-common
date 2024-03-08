@@ -44,6 +44,22 @@ namespace {
             : rst_value;
     }
 
+    Opm::Segment::SegmentType segmentTypeFromInt(const int ecl_id)
+    {
+        using Type = Opm::Segment::SegmentType;
+
+        switch (ecl_id) {
+        case -1: return Type::REGULAR;
+        case -7: return Type::SICD;
+        case -8: return Type::AICD;
+        case -5: return Type::VALVE;
+        }
+
+        throw std::invalid_argument {
+            fmt::format("Unhandeled integer segment type {} ", ecl_id)
+        };
+    }
+
 } // Anonymous namespace
 
 namespace Opm {
@@ -77,14 +93,15 @@ namespace Opm {
         , m_x                (0.0)
         , m_y                (0.0)
     {
-        if (rst_segment.segment_type == SegmentType::SICD) {
+        const auto segmentType = segmentTypeFromInt(rst_segment.segment_type);
+
+        if (segmentType == SegmentType::SICD) {
             this->m_icd.emplace<SICD>(rst_segment);
         }
-        else if (rst_segment.segment_type == SegmentType::AICD) {
+        else if (segmentType == SegmentType::AICD) {
             this->m_icd.emplace<AutoICD>(rst_segment);
         }
-
-        else if (rst_segment.segment_type == SegmentType::VALVE) {
+        else if (segmentType == SegmentType::VALVE) {
             this->m_icd.emplace<Valve>(rst_segment);
         }
 
@@ -384,34 +401,20 @@ namespace Opm {
         return std::get<Valve>(this->m_icd);
     }
 
-    int Segment::ecl_type_id() const {
-        switch (this->segmentType()) {
-        case SegmentType::REGULAR:
-            return -1;
-        case SegmentType::SICD:
-            return -7;
-        case SegmentType::AICD:
-            return -8;
-        case SegmentType::VALVE:
-            return -5;
-        default:
-            throw std::invalid_argument("Unhanedled segment type");
+    int Segment::ecl_type_id() const
+    {
+        switch (this->segmentType())
+        {
+        case SegmentType::REGULAR: return -1;
+        case SegmentType::SICD:    return -7;
+        case SegmentType::AICD:    return -8;
+        case SegmentType::VALVE:   return -5;
         }
-    }
 
-    Segment::SegmentType Segment::type_from_int(int ecl_id) {
-        switch(ecl_id) {
-        case -1:
-            return SegmentType::REGULAR;
-        case -7:
-            return SegmentType::SICD;
-        case -8:
-            return SegmentType::AICD;
-        case -5:
-            return SegmentType::VALVE;
-        default:
-            throw std::invalid_argument("Unhandeled segment type: " + std::to_string(ecl_id));
-        }
+        throw std::invalid_argument {
+            fmt::format("Unhandled segment type '{}'",
+                        static_cast<int>(this->segmentType()))
+        };
     }
 
 } // namespace Opm

@@ -22,9 +22,6 @@
 
 #include <vector>
 
-#include <opm/input/eclipse/Schedule/MSW/Segment.hpp>
-#include <opm/input/eclipse/Schedule/MSW/icd.hpp>
-
 namespace Opm {
 
 class UnitSystem;
@@ -43,7 +40,7 @@ struct RstSegment
     int segment{};
     int outlet_segment{};
     int branch{};
-    Segment::SegmentType segment_type;
+    int segment_type{};
     int icd_scaling_mode{};
     int icd_status{};
 
