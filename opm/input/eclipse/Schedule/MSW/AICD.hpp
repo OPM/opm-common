@@ -20,19 +20,24 @@
 #ifndef AICD_HPP_HEADER_INCLUDED
 #define AICD_HPP_HEADER_INCLUDED
 
+#include <opm/input/eclipse/Schedule/MSW/SICD.hpp>
+
 #include <map>
+#include <string>
 #include <utility>
 #include <vector>
-#include <string>
-
-#include <opm/input/eclipse/Schedule/MSW/SICD.hpp>
 
 namespace Opm {
 
     class DeckRecord;
     class DeckKeyword;
 
-    class AutoICD : public SICD {
+} // namespace Opm
+
+namespace Opm {
+
+    class AutoICD : public SICD
+    {
     public:
         AutoICD() = default;
         explicit AutoICD(const DeckRecord& record);
@@ -43,7 +48,7 @@ namespace Opm {
         // [
         //     "WELL1" : [<seg1, aicd1>, <seg2, aicd2> ...]
         //     ....
-        static std::map<std::string, std::vector<std::pair<int, AutoICD> > >
+        static std::map<std::string, std::vector<std::pair<int, AutoICD>>>
         fromWSEGAICD(const DeckKeyword& wsegaicd);
 
         bool operator==(const AutoICD& data) const;
@@ -72,15 +77,15 @@ namespace Opm {
         double gasViscExponent() const;
 
     private:
-        double m_flow_rate_exponent;
-        double m_visc_exponent;
-        double m_oil_density_exponent;
-        double m_water_density_exponent;
-        double m_gas_density_exponent;
-        double m_oil_viscosity_exponent;
-        double m_water_viscosity_exponent;
-        double m_gas_viscosity_exponent;
+        double m_flow_rate_exponent {};
+        double m_visc_exponent {};
+        double m_oil_density_exponent {};
+        double m_water_density_exponent {};
+        double m_gas_density_exponent {};
+        double m_oil_viscosity_exponent {};
+        double m_water_viscosity_exponent {};
+        double m_gas_viscosity_exponent {};
     };
-}
+} // namespace Opm
 
-#endif
+#endif // AICD_HPP_HEADER_INCLUDED
