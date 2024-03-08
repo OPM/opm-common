@@ -3,7 +3,8 @@
 
   This file is part of the Open Porous Media project (OPM).
 
-  OPM is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by
+  OPM is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
   the Free Software Foundation, either version 3 of the License, or
   (at your option) any later version.
 
@@ -15,9 +16,9 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include <stdio.h>
 
 #include <opm/io/eclipse/rst/segment.hpp>
+
 #include <opm/output/eclipse/VectorItems/msw.hpp>
 #include <opm/input/eclipse/Schedule/MSW/icd.hpp>
 #include <opm/input/eclipse/Schedule/MSW/Segment.hpp>
@@ -51,7 +52,6 @@ double area_to_si(const UnitSystem& unit_system, double raw_value) {
 }
 }
 
-
 RstSegment::RstSegment(const ::Opm::UnitSystem& unit_system, int segment_number, const int * iseg, const double * rseg) :
     segment(                                                    segment_number),
     outlet_segment(                                             iseg[VI::ISeg::OutSeg]),
@@ -82,7 +82,7 @@ RstSegment::RstSegment(const ::Opm::UnitSystem& unit_system, int segment_number,
     transition_region_width(unit_system.to_si(M::length,        rseg[VI::RSeg::TransitionRegWidth])),
     max_emulsion_ratio(                                         rseg[VI::RSeg::MaxEmulsionRatio]),
     max_valid_flow_rate(    unit_system.to_si(M::rate,          rseg[VI::RSeg::MaxValidFlowRate])),
-    icd_length(             unit_system.to_si(M::rate,          rseg[VI::RSeg::ICDLength])),
+    icd_length(             unit_system.to_si(M::length,        rseg[VI::RSeg::ICDLength])),
     valve_area_fraction(                                        rseg[VI::RSeg::ValveAreaFraction])
 {
     if (iseg[VI::ISeg::InSegCurBranch] != 0)
