@@ -1508,91 +1508,26 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
         return sim_update;
     }
 
-
-    /*
-      This function will typically be called from the apply_action_callback()
-      which is invoked in a PYACTION plugin, i.e. the arguments here are
-      supplied by the user in a script - can very well be wrong.
-    */
-    SimulatorUpdate Schedule::applyAction(std::size_t reportStep, const std::string& action_name, const std::vector<std::string>& matching_wells) {
-        const auto& actions = this->snapshots[reportStep].actions();
-        if (actions.has(action_name)) {
-            const auto& action = this->snapshots[reportStep].actions()[action_name];
-
-            std::vector<std::string> well_names;
-            for (const auto& wname : matching_wells) {
-                if (this->hasWell(wname, reportStep))
-                    well_names.push_back(wname);
-                else
-                    OpmLog::error(fmt::format("Tried to apply action: {} on non existing well: {}", action_name, wname));
-            }
-
-            return this->applyAction(reportStep, action, well_names, {});
-        } else {
-            OpmLog::error(fmt::format("Tried to apply action unknown action: {}", action_name));
-            return {};
-        }
-    }
-
-
     /*
       The runPyAction() method is a utility to run PYACTION keywords. The
       PYACTION keywords contain a link to file with Python code and a function
       run() which will eventually be invoked.
 
-      In principal the python code can do "anything" - but when it comes to
-      modifications of the Schedule information - e.g. by opening or closing
-      wells, the recommended way to do it is unfortunately to utilize the normal
-      ACTIONX machinery and apply a ACTIONX keyword in order to invoke the
-      keywords in the ACTIONX block. In order to set this up correctly we need
-      to align three different systems:
-
-         1. The Python code executes normally, and will possibly decide to
-            apply an ACTIONX keyword.
-
-         2. When an AXTIONX keyword is applied the Schedule implementation will
-            need to add the new keywords to the correct ScheduleBlock and
-            reiterate the Schedule section.
-
-         3. As part of the Schedule iteration we record which changes which must
-            be taken into account in the simulator afterwards. These changes are
-            recorded in a Action::SimulatorUpdate instance.
-
-      An important part of the implementation is the lambda
-      'apply_action_callback' which is used from Python to call back in to C++
-      in order to run the ACTIONX keywords. The sequence of calls goes like
-      this:
+      In principal the python code can do "anything" - including
+      modifications of the Schedule information, e.g. opening or closing wells.
+      We record which changes which must be taken into account in the simulator
+      afterwards. These changes are recorded in a Action::SimulatorUpdate instance.
+      The sequence of calls goes like this:
 
          1. The simulator calls the method Schedule::runPyAction()
 
          2. The Schedule::runPyAction() method creates a SimulatorUpdate
-            instance and captures a reference to that in the lambda
-            apply_action_callback. When calling the pyaction.run() method the
-            apply_action_callback is passed as a callable all the way down to
-            the python run() method.
-
-         3. In python the apply_action_callback comes in as the parameter
-            'actionx_callback' in the run() function. If the python code decides
-            to invoke the keywords from an actionx it will be like:
-
-            def run(ecl_state, schedule, report_step, summary_state, actionx_callback):
-                ...
-                ...
-                wells = ["W1", "W2"]
-                actionx_callback("ACTION_NAME", wells)
-
-            Observe that the wells argument must be a Python lvalue (otherwise
-            hard crash???)
-
-         4. The callable will go back into C++ and eventually reach the
-            Schedule::applyAction() which will invoke the
-            Schedule::iterateScheduleSection() and return an update
-            SimulatorUpdate which will be assigned to the instance in the
-            Schedule::runPyAction().
-
-         5. When the pyaction.run() method returns the Schedule structure and
-            the sim_update variable have been correctly updated, and the
-            sim_update is returned to the simulator.
+            instance. In the pyaction.run() method, the actual
+            python code gets executed. Functions that change the Schedule
+            information do that creating an internal ACTIONX. This ACTIONX
+            is executed and returns a SimulatorUpdate. All SimulatorUpdates
+            that result from the pyaction.run() method get returned to
+            the simulator.
     */
 
 
@@ -1600,9 +1535,7 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
         // Reset simUpdateFromPython, we will now run through the whole pyaction function, the calls in the pyaction function that trigger an ACTIONX will write their changes to the simUpdateFromPython
         this->simUpdateFromPython->reset();
 
-        auto apply_action_callback = [&sim_update, &reportStep, this](const std::string& action_name, const std::vector<std::string>& matching_wells) {};
-
-        auto result = pyaction.run(ecl_state, *this, reportStep, summary_state, apply_action_callback);
+        auto result = pyaction.run(ecl_state, *this, reportStep, summary_state);
         action_state.add_run(pyaction, result);
 
         // We ran through the whole pyaction function, now we return the simUpdateFromPython

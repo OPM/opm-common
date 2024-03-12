@@ -142,18 +142,17 @@ BOOST_AUTO_TEST_CASE(PYACTION)
     const auto& pyaction_kw = deck.get<ParserKeywords::PYACTION>().front();
     const std::string& fname = pyaction_kw.getRecord(1).getItem(0).get<std::string>(0);
     Action::PyAction py_action(python, "WCLOSE", Action::PyAction::RunCount::unlimited, deck.makeDeckPath(fname));
-    auto actionx_callback = [] (const std::string&, const std::vector<std::string>&) { ;};
     Action::State action_state;
 
     st.update_well_var("PROD1", "WWCT", 0);
-    py_action.run(ecl_state, schedule, 10, st, actionx_callback);
+    py_action.run(ecl_state, schedule, 10, st);
 
     st.update("FOPR", 0);
-    py_action.run(ecl_state, schedule, 10, st, actionx_callback);
+    py_action.run(ecl_state, schedule, 10, st);
 
     st.update("FOPR", 100);
     st.update_well_var("PROD1", "WWCT", 0.90);
-    py_action.run(ecl_state, schedule, 10, st, actionx_callback);
+    py_action.run(ecl_state, schedule, 10, st);
 
     const auto& well1 = schedule.getWell("PROD1", 10);
     const auto& well2 = schedule.getWell("PROD2", 10);

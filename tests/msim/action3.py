@@ -1,6 +1,6 @@
 import sys
 
-def run(ecl_state, schedule, report_step, summary_state, actionx_callback):
+def run(ecl_state, schedule, report_step, summary_state):
     P1 = schedule.get_well("P1", report_step)
     P2 = schedule.get_well("P2", report_step)
     P3 = schedule.get_well("P3", report_step)

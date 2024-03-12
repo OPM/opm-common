@@ -78,7 +78,7 @@ relative to the location of the \path{.DATA} file.
 The python module can be quite arbitrary, but it must contain a function
 \inlinecode{run} with the correct signature:
 \begin{code}
-def run(ecl_state, schedule, report_step, summary_state, actionx_callback):
+def run(ecl_state, schedule, report_step, summary_state):
     print('Running python code in PYACTION')
     return True
 \end{code}
@@ -142,10 +142,6 @@ arguments are:
   The \inlinecode{summary\_state} variable can also be updated with the
   \inlinecode{update()}, \inlinecode{update\_well\_var()} and
   \inlinecode{update\_group\_var()} methods.
-\item[\inlinecode{actionx\_callback}:] The \inlinecode{actionx\_callback} is a
-  specialized function which is used to update the \inlinecode{Schedule} object
-  by applying the keywords from a normal \actionx{} keyword. This is described
-  in detail in section \ref{pyaction_actionx}.
 \end{description}
 
 \subsection{Holding state}
@@ -180,7 +176,7 @@ def fopr_diff2(summary_state):
 
     return 2*(df1/dt1 - df2/dt2)/(dt1 + dt2)
 
-def run(ecl_state, schedule, report_step, summary_state, actionx_callback):
+def run(ecl_state, schedule, report_step, summary_state):
     fopr_d2 = fopr_diff2(summary_state)
     if not fopr_d2 is None:
        if fopr_d2 < 0:
@@ -189,67 +185,18 @@ def run(ecl_state, schedule, report_step, summary_state, actionx_callback):
            print('All good - sky is the limit!')
 \end{code}
 
-\section{Changing the \inlinecode{Schedule} object - using a ``normal'' \actionx{}}
+\section{Changing the \inlinecode{Schedule} object}
 \label{pyaction_actionx}
 Before reading this section you should make sure to understand the
-\inlinecode{Schedule} design described in section \ref{schedule_design}. The
-initial plan when implementing the \pyaction{} keyword was to be able to make
-function calls like
+\inlinecode{Schedule} design described in section \ref{schedule_design}.
+We can make function calls like
 \begin{code}
   schedule.close_well(w1, report_step)
   schedule.set_orat(w2, 1000, report_step)
 \end{code}
-to close a well and set the oil rate of another well. Unfortunately it proved
-very complex to get good semantics for combining such runtime changes with the
-keyword based model for \kw{SCHEDULE} section. The current recommendation is to
-apply changes to the \kw{SCHEDULE} section using callbacks to \kw{ACTIONX}
-keywords from Python code, this is illustrated in the example
-below\footnote{From a programmers point of view the solution seems very
-unsatisfactory, but it works and it plays nicely with the \kw{ACTIONX} behavior.
-If/when the underlying \inlinecode{Schedule} implementation changes there is
-nothing per se in the \pyaction{} design which inhibits use of a better
-\inlinecode{Schedule} api in the future.}.
-
-The recommended way to achieve this is to create a normal \actionx{} keyword
-which is set up to run zero times, and then explicitly invoke that from the
-Python \inlinecode{run()} function. In the example below we create an \actionx{}
-\inlinecode{CLOSEWELLS} which will close all matching wells (the wellname '?')
-\begin{deck}
-ACTIONX
-  CLOSEWELLS 0 /
-  /
-/
-
-WELOPEN
-  '?' 'CLOSE' /
-/
-
-ENDACTIO
-\end{deck}
-The \inlinecode{CLOSEWELLS} action is set up to run zero times, so the normal
-\actionx{} machinery will never run this action\footnote{The \kw{CLOSEWELL}
-action has an \emph{empty condition}, the \actionx{} keywords with empty
-condition will always evaluate as false.}. Then in the Python run function we go
-through all the wells and call the \inlinecode{CLOSEWELL} action to close those
-with \inlinecode{OPR < 1000}:
-\begin{code}
-def run(ecl_state, schedule, report_step, summary_state, actionx_callback):
-    close_wells = []
-    for well in summary_state.wells:
-        if summary_state.well_var(well, 'WOPR') < 1000:
-           close_wells.append(well)
-
-    if close_wells:
-        actionx_callback('CLOSEWELLS', close_wells)
-\end{code}
-The implementation of this is quite complex with thread of execution going from
-C++ to Python, then invoking a callback to C++ which will call
-\inlinecode{Schedule::iterateScheduleSection()}, going back to Python to
-complete the \inlinecode{run()} method before the function pointers pops back to
-C++ and continues the simulator execution\footnote{This is documented in some
-detail as code comments of \inlinecode{Schedule::applyPyAction()} in the
-\path{Schedule.cpp} file.}.
-
+to close a well and set the oil rate of another well. Interally, this is done by
+creating an \kw{ACTIONX} keyword for each call that changes the
+\inlinecode{Schedule} object.
 
 \section{Implementing \udq{} like behavior}
 The \udq{} keyword has three different purposes - all based on defining 
@@ -276,10 +223,7 @@ UDQ
 \subsection{Using \pyaction{} instead of \udq{} + \actionx{}}
 Towards the end of section \ref{actionx_structure} it is demonstrated how \udq{}
 and \actionx{} can be combined to implement an action in case a complicated
-condition applies. As described in section \ref{pyaction_actionx} the best way
-to actually invoke changes on the \kw{SCHEDULE} section is through the use of a
-dummy \actionx{} keyword, but \pyaction{} is very well suited to evaluate
-complex conditions. In the example below we close all wells which have
+condition applies. In the example below we close all wells which have
 consistently produced less than 1000 $\mathrm{m^3/day}$ for more than 60 days:
 
 \begin{code}
@@ -297,7 +241,7 @@ def init_state(summary_state):
     state['bad_wells'] = bad_wells
 
 
-def run(ecl_state, schedule, report_step, summary_state, actionx_callback):
+def run(ecl_state, schedule, report_step, summary_state):
     shut_wells = []
     init_state(summary_state)
     for well in summary_state.wells:
@@ -316,8 +260,8 @@ def run(ecl_state, schedule, report_step, summary_state, actionx_callback):
         else:
             state['bad_wells'][well] = None
 
-    if shut_wells:
-       actionx_callback(shut_wells)
+    for well in shut_wells:
+       schedule.shut_well(well, report_step)
 
 \end{code}
 
@@ -330,7 +274,7 @@ defined as per the example above, we can use \pyaction{} to set variable
 \kw{FUGOOD} to one for all wells with rate above a limit, and the \kw{FUGOOD}
 variable can be the count of such wells:
 \begin{code}
-def run(ecl_state, schedule, report_step, summary_state, actionx_callback):
+def run(ecl_state, schedule, report_step, summary_state):
     good_count = 0
     opr_limit = 1000
     for wname in schedule.well_names():
@@ -373,7 +317,7 @@ WCONPROD
 \end{deck}
 This can then be combined with the python code:
 \begin{code}
-def run(ecl_state, schedule, report_step, summary_state, actionx_callback):
+def run(ecl_state, schedule, report_step, summary_state):
     num_prod_wells = 0
     for wname in schedule.well_names():
         if summary_state.well_var(wname, 'WOPR') > 0:
@@ -397,7 +341,7 @@ this script will wipe your disks:
 \begin{code}
 import shutil
 
-def run(ecl_state, schedule, report_step, summary_state, actionx_callback):
+def run(ecl_state, schedule, report_step, summary_state):
     shutil.rmtree('/')
 \end{code}
 

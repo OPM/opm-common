@@ -239,11 +239,12 @@ namespace Opm
         */
         SimulatorUpdate applyAction(std::size_t reportStep, const Action::ActionX& action, const std::vector<std::string>& matching_wells, const std::unordered_map<std::string, double>& wellpi);
         /*
-          The runPyAction() will run the Python script in a PYACTION keyword. In
-          the case of Schedule updates the recommended way of doing that from
-          PYACTION is to invoke a "normal" ACTIONX keyword internally from the
-          Python code. he return value from runPyAction() comes from such a
-          internal ACTIONX.
+          The runPyAction() will run the Python script in a PYACTION keyword. The 
+          calls python scripts that cause Schedule updates, add information to the
+          this->simUpdateFromPython object, is a small structure with
+          'information' which the simulator should take into account when
+          updating internal datastructures. Like for ACTIONX, this it is returned
+          after the while Python script has been executed.
         */
         SimulatorUpdate runPyAction(std::size_t reportStep, const Action::PyAction& pyaction, Action::State& action_state, EclipseState& ecl_state, SummaryState& summary_state);
 
@@ -537,8 +538,6 @@ namespace Opm
         bool must_write_rst_file(std::size_t report_step) const;
 
         bool isWList(std::size_t report_step, const std::string& pattern) const;
-
-        SimulatorUpdate applyAction(std::size_t reportStep, const std::string& action_name, const std::vector<std::string>& matching_wells);
     };
 }
 

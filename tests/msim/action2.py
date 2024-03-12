@@ -1,4 +1,4 @@
-def run(ecl_state, schedule, report_step, sim, actionx_callback):
+def run(ecl_state, schedule, report_step, sim):
     wells_shut = False
 
     for well in sim.wells:

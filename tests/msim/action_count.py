@@ -1,6 +1,6 @@
 import math
 
-def run(ecl_state, schedule, report_step, summary_state, actionx_callback):
+def run(ecl_state, schedule, report_step, summary_state):
     if not "run_count" in summary_state:
         summary_state["run_count"] = 0
     summary_state["run_count"] += 1
