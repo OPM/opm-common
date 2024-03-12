@@ -33,6 +33,7 @@
 #include <vector>
 
 #include <opm/input/eclipse/Schedule/Action/WGNames.hpp>
+#include <opm/input/eclipse/Schedule/Action/SimulatorUpdate.hpp>
 #include <opm/input/eclipse/Schedule/CompletedCells.hpp>
 #include <opm/input/eclipse/Schedule/Group/Group.hpp>
 #include <opm/input/eclipse/Schedule/ScheduleDeck.hpp>
@@ -71,7 +72,6 @@ namespace Opm
     class ScheduleGrid;
     class SCHEDULESection;
     class SegmentMatcher;
-    struct SimulatorUpdate;
     class SummaryState;
     class TracerConfig;
     class UDQConfig;
@@ -284,6 +284,7 @@ namespace Opm
             serializer(this->restart_output);
             serializer(this->completed_cells);
             serializer(this->m_treat_critical_as_non_critical);
+            serializer(this->simUpdateFromPython);
 
             this->template pack_unpack<PAvg>(serializer);
             this->template pack_unpack<WellTestConfig>(serializer);
@@ -462,6 +463,7 @@ namespace Opm
         std::vector<ScheduleState> snapshots;
         WriteRestartFileEvents restart_output;
         CompletedCells completed_cells;
+        std::shared_ptr<SimulatorUpdate> simUpdateFromPython;
 
         void load_rst(const RestartIO::RstState& rst,
                       const TracerConfig& tracer_config,
@@ -521,6 +523,7 @@ namespace Opm
                            WelSegsSet* welsegs_wells = nullptr,
                            std::set<std::string>* compsegs_wells = nullptr);
 
+        void internalWELOPENACTIONXFromPYACTION(const std::string& well_name, std::size_t report_step, const std::string& wellStatus);
         void prefetch_cell_properties(const ScheduleGrid& grid, const DeckKeyword& keyword);
         void store_wgnames(const DeckKeyword& keyword);
         std::vector<std::string> wellNames(const std::string& pattern,

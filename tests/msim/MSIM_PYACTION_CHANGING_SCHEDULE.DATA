@@ -3,7 +3,7 @@
 -- individual contents of the database are licensed under the Database Contents
 -- License: http://opendatacommons.org/licenses/dbcl/1.0/
 
--- Copyright (C) 2015 Statoil
+-- Copyright (C) 1015-2024 Equinor ASA
 
 -- This simulation is based on the data given in 
 -- 'Comparison of Solutions to a Three-Dimensional
@@ -60,7 +60,7 @@ WELLDIMS
 -- 	   - we are dealing with only one 'group'
 -- Item 4: maximum number of wells in any one group
 -- 	   - there must be two wells in a group as there are two wells in total
-   5 1 1 2 /
+   5 1 1 5 /
 
 UNIFOUT
 
@@ -442,20 +442,8 @@ WCONINJE
 -- BHP upper limit (item 7) should not be exceeding the highest
 -- pressure in the PVT table=9014.7psia (default is 100 000psia)
 
-ACTIONX
-CLOSEWELL 0 /
-DAY = 60 /
-/
-
-WELOPEN
-  '?'  'SHUT' /
-/
-
-ENDACTIO
-
-
 PYACTION
-   ACTION2 UNLIMITED /
+   ACTION3 UNLIMITED /
    'action3.py' /
 
 DATES
