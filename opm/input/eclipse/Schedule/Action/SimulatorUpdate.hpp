@@ -31,6 +31,22 @@ namespace Opm {
 
 struct SimulatorUpdate
 {
+    static SimulatorUpdate serializationTestObject() {
+      SimulatorUpdate simulatorUpdate;
+      simulatorUpdate.tran_update = false;
+      simulatorUpdate.well_structure_changed = false;
+      simulatorUpdate.affected_wells = {"test"};
+      return simulatorUpdate;
+    }
+
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(affected_wells);
+        serializer(tran_update);
+        serializer(well_structure_changed);
+    }
+
     // Wells affected by ACTIONX and for which the simulator needs to
     // reapply rates and state from the newly updated Schedule object.
     std::unordered_set<std::string> affected_wells;
@@ -44,6 +60,26 @@ struct SimulatorUpdate
     /// block.  Typically because of a keyword like WELSPECS, COMPDAT,
     /// and/or WELOPEN.
     bool well_structure_changed{false};
+
+    void append(SimulatorUpdate& otherSimUpdate) {
+      this->tran_update = otherSimUpdate.tran_update or this->tran_update;
+      this->well_structure_changed = otherSimUpdate.well_structure_changed or this->well_structure_changed;
+      for (auto it = otherSimUpdate.affected_wells.begin(); it != otherSimUpdate.affected_wells.end(); ++it) {
+        affected_wells.insert(*it);
+      }
+    }
+
+    void reset() {
+      tran_update = false;
+      well_structure_changed = false;
+      affected_wells.clear();
+    }
+
+    bool operator==(const SimulatorUpdate& data) const {
+    return tran_update == data.tran_update &&
+           well_structure_changed == data.well_structure_changed &&
+           affected_wells == data.affected_wells;
+    }
 };
 
 } // namespace Opm

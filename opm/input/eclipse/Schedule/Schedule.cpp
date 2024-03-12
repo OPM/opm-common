@@ -137,6 +137,8 @@ namespace Opm {
         this->restart_output.resize(this->m_sched_deck.size());
         this->restart_output.clearRemainingEvents(0);
 
+        this->simUpdateFromPython = std::make_shared<SimulatorUpdate>();
+
         //const ScheduleGridWrapper gridWrapper { grid } ;
         ScheduleGrid grid(ecl_grid, fp, this->completed_cells);
 
@@ -255,6 +257,7 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const std::optional
         result.snapshots = { ScheduleState::serializationTestObject() };
         result.restart_output = WriteRestartFileEvents::serializationTestObject();
         result.completed_cells = CompletedCells::serializationTestObject();
+        result.simUpdateFromPython = std::make_shared<SimulatorUpdate>(SimulatorUpdate::serializationTestObject());
 
         return result;
     }
@@ -692,15 +695,35 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
     }
 
     void Schedule::shut_well(const std::string& well_name, std::size_t report_step) {
-        this->updateWellStatus(well_name, report_step, Well::Status::SHUT);
+        this->internalWELOPENACTIONXFromPYACTION(well_name, report_step, "SHUT");
     }
 
     void Schedule::open_well(const std::string& well_name, std::size_t report_step) {
-        this->updateWellStatus(well_name, report_step, Well::Status::OPEN);
+        this->internalWELOPENACTIONXFromPYACTION(well_name, report_step, "OPEN");
     }
 
     void Schedule::stop_well(const std::string& well_name, std::size_t report_step) {
-        this->updateWellStatus(well_name, report_step, Well::Status::STOP);
+        this->internalWELOPENACTIONXFromPYACTION(well_name, report_step, "STOP");
+    }
+
+    void Schedule::internalWELOPENACTIONXFromPYACTION(const std::string& well_name, std::size_t report_step, const std::string& wellStatus) {
+        std::time_t start_time = std::chrono::system_clock::to_time_t(this->snapshots[report_step].start_time());
+        Opm::Action::ActionX action("openwell", 1, 0.0, start_time);
+        DeckItem wellItem("WELL", std::string());
+        wellItem.push_back("?");
+        DeckItem statusItem("STATUS", std::string());
+        statusItem.push_back(wellStatus);
+        DeckRecord deckRecord;
+        deckRecord.addItem(std::move(wellItem));
+        deckRecord.addItem(std::move(statusItem));
+        ParserKeyword parserKeyword("WELOPEN", KeywordSize(SLASH_TERMINATED));
+
+        DeckKeyword action_keyword(parserKeyword);
+        action_keyword.addRecord(std::move(deckRecord));
+        action.addKeyword(action_keyword);
+        std::vector<std::string> matching_wells = {well_name};
+        SimulatorUpdate delta = this->applyAction(report_step, action, matching_wells, {}/*target_wellpi*/);
+        this->simUpdateFromPython->append(delta);
     }
 
     /*
@@ -1574,15 +1597,16 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
 
 
     SimulatorUpdate Schedule::runPyAction(std::size_t reportStep, const Action::PyAction& pyaction, Action::State& action_state, EclipseState& ecl_state, SummaryState& summary_state) {
-        SimulatorUpdate sim_update;
+        // Reset simUpdateFromPython, we will now run through the whole pyaction function, the calls in the pyaction function that trigger an ACTIONX will write their changes to the simUpdateFromPython
+        this->simUpdateFromPython->reset();
 
-        auto apply_action_callback = [&sim_update, &reportStep, this](const std::string& action_name, const std::vector<std::string>& matching_wells) {
-            sim_update = this->applyAction(reportStep, action_name, matching_wells);
-        };
+        auto apply_action_callback = [&sim_update, &reportStep, this](const std::string& action_name, const std::vector<std::string>& matching_wells) {};
 
         auto result = pyaction.run(ecl_state, *this, reportStep, summary_state, apply_action_callback);
         action_state.add_run(pyaction, result);
-        return sim_update;
+
+        // We ran through the whole pyaction function, now we return the simUpdateFromPython
+        return *(this->simUpdateFromPython);
     }
 
     void Schedule::applyWellProdIndexScaling(const std::string& well_name, const std::size_t reportStep, const double newWellPI) {
@@ -1661,6 +1685,15 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
     }
 
     bool Schedule::operator==(const Schedule& data) const {
+        // If this has a simUpdateFromPython pointer and data does not
+        // (or the other way round), then they are *not* equal.
+        if ((this->simUpdateFromPython && !data.simUpdateFromPython) ||
+            (!this->simUpdateFromPython && data.simUpdateFromPython))
+            return false;
+
+        bool simUpdateFromPythonIsEqual = !this->simUpdateFromPython ||
+             (*(this->simUpdateFromPython) == *(data.simUpdateFromPython));
+
         return this->m_static == data.m_static &&
                this->m_treat_critical_as_non_critical == data.m_treat_critical_as_non_critical &&
                this->m_sched_deck == data.m_sched_deck &&
@@ -1668,7 +1701,8 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
                this->exit_status == data.exit_status &&
                this->snapshots == data.snapshots &&
                this->restart_output == data.restart_output &&
-               this->completed_cells == data.completed_cells;
+               this->completed_cells == data.completed_cells &&
+               simUpdateFromPythonIsEqual;
      }
 
 
