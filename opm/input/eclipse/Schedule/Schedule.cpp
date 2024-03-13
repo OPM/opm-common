@@ -258,6 +258,7 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const std::optional
         result.restart_output = WriteRestartFileEvents::serializationTestObject();
         result.completed_cells = CompletedCells::serializationTestObject();
         result.simUpdateFromPython = std::make_shared<SimulatorUpdate>(SimulatorUpdate::serializationTestObject());
+        result.wellPIPointer = nullptr;
 
         return result;
     }
@@ -1401,6 +1402,14 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
         ScheduleGrid grid(this->completed_cells);
         SimulatorUpdate sim_update;
         std::unordered_map<std::string, double> target_wellpi;
+        bool actionx_mode = false;
+        // Get the well production indices from the simulation up until now
+        // and use in the calculation for the overall production indices.
+        // This is done by passing actionx_mode = true to the handleKeyword method
+        if (this->wellPIPointer) {
+            target_wellpi = *(this->wellPIPointer);
+            actionx_mode = true;
+        }
         std::vector<std::string> matching_wells;
         const std::string prefix = "| "; /* logger prefix string */
         this->snapshots.resize(reportStep + 1);
@@ -1415,7 +1424,7 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
                                 errors,
                                 grid,
                                 matching_wells,
-                                /*actionx_mode=*/false,
+                                actionx_mode,
                                 &sim_update,
                                 &target_wellpi,
                                 wpimult_global_factor);

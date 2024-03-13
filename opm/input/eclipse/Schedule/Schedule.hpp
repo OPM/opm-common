@@ -447,6 +447,7 @@ namespace Opm
         friend std::ostream& operator<<(std::ostream& os, const Schedule& sched);
         void dump_deck(std::ostream& os) const;
 
+        std::shared_ptr<std::unordered_map<std::string, double>> wellPIPointer = nullptr;
     private:
         friend class HandlerContext;
 
