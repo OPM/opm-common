@@ -481,6 +481,28 @@ BOOST_AUTO_TEST_CASE(COMPDAT) {
 
 #ifdef EMBEDDED_PYTHON
 
+BOOST_AUTO_TEST_CASE(MSIM_PYACTION_INSERT_KEYWORD) {
+    const auto& deck = Parser().parseFile("msim/MSIM_PYACTION_INSERT_KEYWORD.DATA");
+    test_data td( deck );
+    msim sim(td.state, td.schedule);
+    {
+        WorkArea work_area("test_msim");
+        EclipseIO io(td.state, td.state.getInputGrid(), sim.schedule, td.summary_config);
+        {
+            const auto& w1 = sim.schedule.getWell("P1", 1);
+            BOOST_CHECK(w1.getStatus() == Well::Status::OPEN );
+        }
+
+        sim.run(io, false);
+
+        {
+            const auto& w1_2 = sim.schedule.getWell("P1", 2); // Closed well P1 at report step 2
+            const auto& w1_3 = sim.schedule.getWell("P1", 3); // And scheduled for reopening at the report step after that
+            BOOST_CHECK(w1_2.getStatus() ==  Well::Status::SHUT);
+            BOOST_CHECK(w1_3.getStatus() ==  Well::Status::OPEN);
+        }
+    }
+}
 BOOST_AUTO_TEST_CASE(PYTHON_WELL_CLOSE_EXAMPLE) {
     const auto& deck = Parser().parseFile("msim/MSIM_PYACTION.DATA");
     test_data td( deck );
