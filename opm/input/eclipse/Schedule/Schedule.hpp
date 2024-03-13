@@ -271,7 +271,8 @@ namespace Opm
           for the schedule instances created by loading a restart file.
         */
         static bool cmp(const Schedule& sched1, const Schedule& sched2, std::size_t report_step);
-        void applyKeywords(std::vector<DeckKeyword*>& keywords, std::size_t report_step);
+        void applyKeywords(std::vector<std::unique_ptr<DeckKeyword>>& keywords, std::size_t report_step);
+        void applyKeywords(std::vector<std::unique_ptr<DeckKeyword>>& keywords);
 
         template<class Serializer>
         void serializeOp(Serializer& serializer)
@@ -463,6 +464,11 @@ namespace Opm
         std::vector<ScheduleState> snapshots;
         WriteRestartFileEvents restart_output;
         CompletedCells completed_cells;
+
+        // The current_report_step is set to the current report step when a PYACTION call is executed.
+        // This is needed since the Schedule object does not know the current report step of the simulator and
+        // we only allow PYACTIONS for the current and future report steps. 
+        std::size_t current_report_step = 0;
         // The simUpdateFromPython points to a SimulatorUpdate collecting all updates from one PYACTION call.
         // The SimulatorUpdate is reset before a new PYACTION call is executed.
         // It is a shared_ptr, so a Schedule can be constructed using the copy constructor sharing the simUpdateFromPython.
