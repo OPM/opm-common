@@ -39,6 +39,7 @@ static void printHelp() {
               << "\nIn addition, the program takes these options (which must be given before the arguments):\n\n"
               << "-h Print help and exit.\n"
               << "-l list all summary vectors.\n"
+              << "-n print summary vectors without headers.\n"
               << "-r extract data only for report steps. \n\n";
 }
 
@@ -77,14 +78,18 @@ int main(int argc, char **argv) {
     int c                          = 0;
     bool reportStepsOnly           = false;
     bool listKeys                  = false;
+    bool headers                   = true;
 
-    while ((c = getopt(argc, argv, "hrl")) != -1) {
+    while ((c = getopt(argc, argv, "hrnl")) != -1) {
         switch (c) {
         case 'h':
             printHelp();
             return 0;
         case 'r':
             reportStepsOnly=true;
+            break;
+        case 'n':
+            headers=false;
             break;
         case 'l':
             listKeys=true;
@@ -203,17 +208,22 @@ int main(int argc, char **argv) {
 
         smryData.push_back(vect);
     }
-
-    printHeader(smryList, width);
+    
+    if (headers)
+        printHeader(smryList, width);
 
     for (size_t s=0; s<smryData[0].size(); s++){
         for (size_t n=0; n < smryData.size(); n++){
-            std::cout << formatString(smryData[n][s], width[n]);
+            if (headers)
+                std::cout << formatString(smryData[n][s], width[n]);
+            else
+                std::cout << std::scientific << std::setprecision(8) << smryData[n][s] << " ";
         }
         std::cout << std::endl;
     }
-
-    std::cout << std::endl;
-
+ 
+    if (headers)
+        std::cout << std::endl;
+    
     return 0;
 }
