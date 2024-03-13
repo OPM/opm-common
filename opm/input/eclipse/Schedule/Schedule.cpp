@@ -1432,6 +1432,7 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
                 &target_wellpi,
                 prefix);
         }
+        this->simUpdateFromPython->append(sim_update);
     }
 
 

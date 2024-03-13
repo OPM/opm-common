@@ -165,6 +165,16 @@ namespace {
         sch.applyKeywords(keywords, report_step);
     }
 
+    void insert_keywords(
+        Schedule& sch,
+        const std::string& deck_string,
+        std::size_t report_step
+    )
+    {
+        UnitSystem unit_system = sch.getUnits();
+        insert_keywords(sch, deck_string, report_step, unit_system);
+    }
+
     // NOTE: this overload does currently not work, see PR #2833. The plan
     //  is to fix this in a later commit. For now, the overload insert_keywords()
     //  above taking a deck_string (std::string) instead of a list of DeckKeywords
@@ -223,6 +233,10 @@ void python::common::export_Schedule(py::module& module) {
                Schedule&, const std::string&, std::size_t, const UnitSystem&
            >(&insert_keywords),
         py::arg("data"), py::arg("step"), py::arg("unit_system"))
+    .def( "insert_keywords",
+        py::overload_cast<
+               Schedule&, const std::string&, std::size_t>(&insert_keywords),
+        py::arg("data"), py::arg("step"))
     .def( "__contains__", &has_well );
 
 }
