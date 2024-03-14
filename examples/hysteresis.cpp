@@ -139,9 +139,9 @@ int main(int argc, char **argv)
         std::cout << "USAGE:" << std::endl;
         std::cout << "hysteresis <fn_data> <fn_saturation> <fn_relperm> <wphase> <cellIdx>"<< std::endl;
         std::cout << "fn_data: Data file name that contains SGOF, EHYSTR etc. " << std::endl;
-        std::cout << "fn_saturation: Data file name that contains saturations (s = water or gas depending on two-phase-system types). Single saturation per line " << std::endl;
+        std::cout << "fn_saturation: Data file name that contains saturations (s = water or gas depending on two-phase-system type). Single saturation per line " << std::endl;
         std::cout << "fn_relperm: Data file name that contains [s, kr, kro, krnSwMdc(So at turning point), Sn(trapped s) ]." << std::endl;
-        std::cout << "two-phase-system: = {W, G}, W=water-oil, G=gas-oil" << std::endl;
+        std::cout << "two-phase-system: = {WO, GO, GW}, WO=water-oil, GO=gas-oil, GW=gas-water" << std::endl;
         std::cout << "cellIdx: cell index (default = 0), used to map SATNUM/IMBNUM" << std::endl;
         return EXIT_FAILURE;
     }
@@ -151,12 +151,6 @@ int main(int argc, char **argv)
     std::vector<double> saturations = readCSVToVector(input_csv);
     std::string output_csv = argv[3];
     std::string two_phase_system = argv[4];
-    int phaseIdx = -1;
-    if (two_phase_system == "W")
-        phaseIdx = Fixture<double>::waterPhaseIdx;
-    if (two_phase_system == "G")
-        phaseIdx = Fixture<double>::gasPhaseIdx;
-
     double cellIdx = 0; 
     if (argc > 5)
         cellIdx = std::stod(argv[5]);
@@ -175,40 +169,69 @@ int main(int argc, char **argv)
     materialLawManager.initParamsForElements(eclState, n, doOldLookup, doNothing); 
     auto& param = materialLawManager.materialLawParams(cellIdx);   
 
-    double Sw = 0;
-    double Sg = 0;
+    const auto& ph = eclState.runspec().phases();
+    bool hasGas = ph.active(Opm::Phase::GAS);
+    bool hasOil = ph.active(Opm::Phase::OIL);
+    bool hasWater = ph.active(Opm::Phase::WATER);
+
+    int phaseIdx1 = -1; // saturations
+    int phaseIdx2 = -1; // 1 - saturations
+    int phaseIdx3 = -1; // 0
+
+    if (two_phase_system == "WO" && hasWater && hasOil) {
+        phaseIdx1 = Fixture<double>::waterPhaseIdx;
+        phaseIdx2 = Fixture<double>::oilPhaseIdx;
+        phaseIdx3 = Fixture<double>::gasPhaseIdx;
+    } else if (two_phase_system == "GO" && hasGas && hasOil) {
+        phaseIdx1 = Fixture<double>::gasPhaseIdx;
+        phaseIdx2 = Fixture<double>::oilPhaseIdx;
+        phaseIdx3 = Fixture<double>::waterPhaseIdx;
+    } else if (two_phase_system == "GW" && hasGas && hasWater) {
+        phaseIdx1 = Fixture<double>::gasPhaseIdx;
+        phaseIdx2 = Fixture<double>::waterPhaseIdx;
+        phaseIdx3 = Fixture<double>::oilPhaseIdx;
+    } else {
+        std::cout << "Invalid or inconsistant two-phase-system. " << std::endl;
+        std::cout << "Valid two-phase-system: = {WO, GO, GW}, WO=water-oil, GO=gas-oil, GW=gas-water" << std::endl;
+        std::cout << "Also make sure that the input deck is valid for the given two-phase-sytem." << std::endl;
+        return EXIT_FAILURE;
+    }
+
     typename Fixture<double>::FluidState fs;
     std::ofstream outfile;
     outfile.open (output_csv);
 
     for (const auto& s : saturations) {
         outfile << s << ",";
-        if (phaseIdx == Fixture<double>::waterPhaseIdx)
-            Sw = s;
-        if (phaseIdx == Fixture<double>::gasPhaseIdx)
-            Sg = s;
-        double So = 1 - s;
-        fs.setSaturation(Fixture<double>::waterPhaseIdx, Sw);
-        fs.setSaturation(Fixture<double>::oilPhaseIdx, So);
-        fs.setSaturation(Fixture<double>::gasPhaseIdx, Sg);
+        fs.setSaturation(phaseIdx1, s);
+        fs.setSaturation(phaseIdx2, 1 - s);
+        fs.setSaturation(phaseIdx3, 0);
         auto relperm = relativePermeabilities<double>(param, fs);
-        outfile << relperm[phaseIdx] << "," << relperm[Fixture<double>::oilPhaseIdx]<< ",";
+        outfile << relperm[phaseIdx1] << "," << relperm[phaseIdx2]<< ",";
 
         MaterialLaw::updateHysteresis(param, fs);
         double krnSwMdc_out = 0.0;
         double pcSwMdc_out = 0.0;
         double trapped_out = 0.0;
-        if (phaseIdx == Fixture<double>::waterPhaseIdx) {
+        if (two_phase_system == "WO") {
             MaterialLaw::oilWaterHysteresisParams(pcSwMdc_out,
                                                 krnSwMdc_out,
                                                 param);
         }
-        if (phaseIdx == Fixture<double>::gasPhaseIdx) {
+        if (two_phase_system == "GO") {
             MaterialLaw::gasOilHysteresisParams(pcSwMdc_out,
                                                 krnSwMdc_out,
                                                 param);
-            trapped_out = MaterialLaw::trappedGasSaturation(param);
         }
+        if (two_phase_system == "GW") {
+            // The GW hysteresis params is not possible to get directly from the 3p MaterialLaw 
+            //MaterialLaw::gasWaterHysteresisParams(pcSwMdc_out,
+            //                                    krnSwMdc_out,
+            //                                    param);
+        } 
+
+        trapped_out = MaterialLaw::trappedGasSaturation(param);
+
         outfile << krnSwMdc_out << "," << trapped_out << std::endl;
     }
 
