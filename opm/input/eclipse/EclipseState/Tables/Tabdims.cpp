@@ -32,7 +32,9 @@ Tabdims::Tabdims() :
     m_nssfun( ParserKeywords::TABDIMS::NSSFUN::defaultValue ),
     m_nppvt(  ParserKeywords::TABDIMS::NPPVT::defaultValue ),
     m_ntfip(  ParserKeywords::TABDIMS::NTFIP::defaultValue ),
-    m_nrpvt(  ParserKeywords::TABDIMS::NRPVT::defaultValue )
+    m_nrpvt(  ParserKeywords::TABDIMS::NRPVT::defaultValue ),
+    m_neosres( ParserKeywords::TABDIMS::NUM_EOS_RES::defaultValue ),
+    m_neossur( ParserKeywords::TABDIMS::NUM_EOS_SURFACE::defaultValue )
 { }
 
 
@@ -47,6 +49,8 @@ Tabdims::Tabdims(const Deck& deck) :
         m_nppvt  = record.getItem("NPPVT").get<int>(0);
         m_ntfip  = record.getItem("NTFIP").get<int>(0);
         m_nrpvt  = record.getItem("NRPVT").get<int>(0);
+        m_neosres = record.getItem("NUM_EOS_RES").get<int>(0);
+        m_neossur = record.getItem("NUM_EOS_SURFACE").get<int>(0);
     }
 }
 

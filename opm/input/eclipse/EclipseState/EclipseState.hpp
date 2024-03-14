@@ -21,6 +21,7 @@
 #define OPM_ECLIPSE_STATE_HPP
 
 #include <opm/input/eclipse/EclipseState/Aquifer/AquiferConfig.hpp>
+#include <opm/input/eclipse/EclipseState/Compositional/CompositionalConfig.hpp>
 #include <opm/input/eclipse/EclipseState/EclipseConfig.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/FaultCollection.hpp>
@@ -144,6 +145,7 @@ namespace Opm {
             serializer(m_lgrs);
             serializer(m_simulationConfig);
             serializer(aquifer_config);
+            serializer(compositional_config),
             serializer(m_transMult);
             serializer(m_faults);
             serializer(m_title);
@@ -181,6 +183,7 @@ namespace Opm {
         LgrCollection m_lgrs;
         SimulationConfig m_simulationConfig;
         AquiferConfig aquifer_config;
+        CompositionalConfig compositional_config;
         TransMult m_transMult;
         TracerConfig tracer_config;
         MICPpara m_micppara;

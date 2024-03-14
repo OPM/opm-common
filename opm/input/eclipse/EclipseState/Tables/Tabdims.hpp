@@ -54,6 +54,8 @@ namespace Opm {
             result.m_nppvt = 4;
             result.m_ntfip = 5;
             result.m_nrpvt = 6;
+            result.m_neosres = 7;
+            result.m_neossur = 8;
 
             return result;
         }
@@ -82,13 +84,23 @@ namespace Opm {
             return m_nrpvt;
         }
 
+        size_t getNumEosRes() const {
+            return m_neosres;
+        }
+
+        size_t getNumEosSur() const {
+            return m_neossur;
+        }
+
         bool operator==(const Tabdims& data) const {
             return this->getNumSatTables() == data.getNumSatTables() &&
                    this->getNumPVTTables() == data.getNumPVTTables() &&
                    this->getNumSatNodes() == data.getNumSatNodes() &&
                    this->getNumPressureNodes() == data.getNumPressureNodes() &&
                    this->getNumFIPRegions() == data.getNumFIPRegions() &&
-                   this->getNumRSNodes() == data.getNumRSNodes();
+                   this->getNumRSNodes() == data.getNumRSNodes() &&
+                   this->getNumEosRes() == data.getNumEosRes() &&
+                   this->getNumEosSur() == data.getNumEosSur();
         }
 
         template<class Serializer>
@@ -100,10 +112,12 @@ namespace Opm {
             serializer(m_nppvt);
             serializer(m_ntfip);
             serializer(m_nrpvt);
+            serializer(m_neosres);
+            serializer(m_neossur);
         }
 
     private:
-        size_t m_ntsfun,m_ntpvt,m_nssfun,m_nppvt,m_ntfip,m_nrpvt;
+        size_t m_ntsfun,m_ntpvt,m_nssfun,m_nppvt,m_ntfip,m_nrpvt, m_neosres, m_neossur;
     };
 }
 

@@ -240,6 +240,7 @@ static const std::set<std::string> satfunc = {"SWLPC", "ISWLPC", "SGLPC", "ISGLP
 namespace REGIONS {
 
 static const std::unordered_map<std::string, keyword_info<int>> int_keywords = {{"ENDNUM",   keyword_info<int>{}.init(1)},
+                                                                                {"EOSNUM",   keyword_info<int>{}.init(1)},
                                                                                 {"EQLNUM",   keyword_info<int>{}.init(1)},
                                                                                 {"FIPNUM",   keyword_info<int>{}.init(1)},
                                                                                 {"IMBNUM",   keyword_info<int>{}.init(1)},

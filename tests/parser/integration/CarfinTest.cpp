@@ -36,7 +36,7 @@ using namespace Opm;
 
 namespace {
 
-std::string prefix() {
+std::string pathprefix() {
 #if BOOST_VERSION / 100000 == 1 && BOOST_VERSION / 100 % 1000 < 71
     return boost::unit_test::framework::master_test_suite().argv[2];
 #else
@@ -53,7 +53,7 @@ Deck makeDeck(const std::string& fileName) {
 }
 
 BOOST_AUTO_TEST_CASE( CONSTRUCTOR_AND_UPDATE ) {
-    auto deck = makeDeck( prefix() + "CARFIN/CARFINTEST1" );
+    auto deck = makeDeck( pathprefix() + "CARFIN/CARFINTEST1" );
     EclipseGrid grid(deck);
     const auto& carfin_keyword1 = deck["CARFIN"][0];
     const auto& carfin_keyword2 = deck["CARFIN"][1];
