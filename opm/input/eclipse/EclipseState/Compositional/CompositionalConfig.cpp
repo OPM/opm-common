@@ -17,11 +17,18 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <opm/input/eclipse/Deck/Deck.hpp>
-#include <opm/input/eclipse/Deck/DeckSection.hpp>
-#include <opm/input/eclipse/EclipseState/Runspec.hpp>
 #include <opm/input/eclipse/EclipseState/Compositional/CompositionalConfig.hpp>
+
+#include <opm/input/eclipse/EclipseState/Runspec.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/Tabdims.hpp>
+
+#include <opm/common/utility/OpmInputError.hpp>
+#include <opm/common/OpmLog/OpmLog.hpp>
+
+#include <opm/input/eclipse/Deck/Deck.hpp>
+#include <opm/input/eclipse/Deck/DeckKeyword.hpp>
+#include <opm/input/eclipse/Deck/DeckSection.hpp>
+
 #include <opm/input/eclipse/Parser/ParserKeywords/A.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/B.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/C.hpp>
@@ -33,14 +40,129 @@
 #include <opm/input/eclipse/Parser/ParserKeywords/T.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/V.hpp>
 
-#include <opm/common/utility/OpmInputError.hpp>
-#include <opm/common/OpmLog/OpmLog.hpp>
-
 #include <fmt/format.h>
 
+#include <algorithm>
+#include <array>
+#include <cstddef>
+#include <iterator>
+#include <optional>
 #include <stdexcept>
 #include <string>
+#include <string_view>
 #include <unordered_map>
+#include <utility>
+#include <vector>
+
+namespace {
+
+    // The following function is used to parse the following keywords:
+    // MW, ACF, BIC, PCRIT, TCRIT and VCRIT
+    template <typename Keyword>
+    void processKeyword(const Opm::PROPSSection& props_section,
+                        std::vector<std::vector<double>>& target,
+                        const std::size_t num_eos_res,
+                        const std::size_t num_values,
+                        const std::string& kw_name,
+                        const std::optional<double> default_value = std::nullopt)
+    {
+        if (! props_section.hasKeyword<Keyword>() ) {
+            return;
+        }
+
+        target.resize(num_eos_res);
+        for (auto& vec : target) {
+            if (default_value.has_value()) {
+                vec.resize(num_values, default_value.value());
+            } else {
+                vec.resize(num_values);
+            }
+        }
+
+        const auto& keywords = props_section.get<Keyword>();
+        // we do not allow multiple input of the keyword unless proven otherwise
+        if (keywords.size() > 1) {
+            throw Opm::OpmInputError {
+                fmt::format("there are multiple {} "
+                            "keyword specifications", kw_name),
+                keywords.begin()->location()
+            };
+        }
+
+        // there is no default value, we make sure we specify the exact
+        // number of values for all the EOS regions and components
+        const auto& kw = keywords.back();
+        if (kw.size() != num_eos_res) {
+            throw Opm::OpmInputError {
+                fmt::format("there are {} EOS regions, while only {} "
+                            "regions are specified in {}",
+                            num_eos_res, kw.size(),
+                            kw_name), kw.location()
+            };
+        }
+
+        for (std::size_t i = 0; i < kw.size(); ++i) {
+            const auto& item = kw.getRecord(i).template getItem<typename Keyword::DATA>();
+            const auto& data = item.getSIDoubleData();
+            if (! default_value.has_value()) {
+                // when there is no default values, we should specify all the values
+                if (data.size() != num_values) {
+                    const auto msg = fmt::format("in keyword {}, {} values are specified, "
+                                                 "which is different from the "
+                                                 "number of components {}",
+                                                 kw_name, data.size(), num_values);
+                    throw Opm::OpmInputError(msg, kw.location());
+                }
+            }
+            else if (data.size() > num_values) {
+                // when there is default values, we should not specify more
+                // values than needed
+                const auto msg = fmt::format("in keyword {}, {} values are specified, "
+                                             "which is bigger than the number "
+                                             "{} should be specified",
+                                             kw_name, data.size(), num_values);
+
+                throw Opm::OpmInputError(msg, kw.location());
+            }
+
+            // using copy here to consider the situation that there is
+            // default values, we might not specify all the values and keep
+            // the rest to be the default values
+            std::copy(data.begin(), data.end(), target[i].begin());
+        }
+    }
+
+    void warningForExistingCompKeywords(const Opm::PROPSSection& section)
+    {
+        using namespace std::string_view_literals;
+
+        const auto keywordCheckers = std::array {
+            std::pair {"NCOMPS"sv, section.hasKeyword<Opm::ParserKeywords::NCOMPS>() },
+            std::pair {"CNAMES"sv, section.hasKeyword<Opm::ParserKeywords::CNAMES>() },
+            std::pair {"EOS"sv,    section.hasKeyword<Opm::ParserKeywords::EOS>() },
+            std::pair {"STCOND"sv, section.hasKeyword<Opm::ParserKeywords::STCOND>() },
+            std::pair {"PCRIT"sv,  section.hasKeyword<Opm::ParserKeywords::PCRIT>() },
+            std::pair {"TCRIT"sv,  section.hasKeyword<Opm::ParserKeywords::TCRIT>() },
+            std::pair {"VCRIT"sv,  section.hasKeyword<Opm::ParserKeywords::VCRIT>() },
+            std::pair {"ACF"sv,    section.hasKeyword<Opm::ParserKeywords::ACF>() },
+            std::pair {"BIC"sv,    section.hasKeyword<Opm::ParserKeywords::BIC>() },
+        };
+
+        bool any_comp_prop_kw = false;
+        std::string msg {" COMPS is not specified, the following keywords related to compositional simulation in PROPS section will be ignored:\n"};
+
+        for (const auto& [kwname, hasKw] : keywordCheckers) {
+            if (hasKw) {
+                any_comp_prop_kw = true;
+                fmt::format_to(std::back_inserter(msg), " {}", kwname);
+            }
+        }
+
+        if (any_comp_prop_kw) {
+            Opm::OpmLog::warning(msg);
+        }
+    }
+}
 
 namespace Opm {
 
@@ -140,20 +262,20 @@ CompositionalConfig::CompositionalConfig(const Deck& deck, const Runspec& runspe
         }
     }
 
-    CompositionalConfig::processKeyword<ParserKeywords::MW>(props_section, this->molecular_weights,
-                                                            num_eos_res, this->num_comps, "MW");
-    CompositionalConfig::processKeyword<ParserKeywords::ACF>(props_section, this->acentric_factors,
-                                                            num_eos_res, this->num_comps, "ACF");
-    CompositionalConfig::processKeyword<ParserKeywords::PCRIT>(props_section, this->critical_pressure,
-                                                              num_eos_res, this->num_comps, "PCRIT");
-    CompositionalConfig::processKeyword<ParserKeywords::TCRIT>(props_section, this->critical_temperature,
-                                                              num_eos_res, this->num_comps, "TCRIT");
-    CompositionalConfig::processKeyword<ParserKeywords::VCRIT>(props_section, this->critical_volume,
-                                                              num_eos_res, this->num_comps, "VCRIT");
+    processKeyword<ParserKeywords::MW>(props_section, this->molecular_weights,
+                                       num_eos_res, this->num_comps, "MW");
+    processKeyword<ParserKeywords::ACF>(props_section, this->acentric_factors,
+                                        num_eos_res, this->num_comps, "ACF");
+    processKeyword<ParserKeywords::PCRIT>(props_section, this->critical_pressure,
+                                          num_eos_res, this->num_comps, "PCRIT");
+    processKeyword<ParserKeywords::TCRIT>(props_section, this->critical_temperature,
+                                          num_eos_res, this->num_comps, "TCRIT");
+    processKeyword<ParserKeywords::VCRIT>(props_section, this->critical_volume,
+                                          num_eos_res, this->num_comps, "VCRIT");
 
     const std::size_t bic_size = this->num_comps * (this->num_comps - 1) / 2;
-    CompositionalConfig::processKeyword<ParserKeywords::BIC>(props_section, this->binary_interaction_coefficient,
-                                                             num_eos_res, bic_size, "ACF", 0.);
+    processKeyword<ParserKeywords::BIC>(props_section, this->binary_interaction_coefficient,
+                                        num_eos_res, bic_size, "ACF", 0.);
 }
 
 bool CompositionalConfig::operator==(const CompositionalConfig& other) const {
@@ -204,34 +326,6 @@ std::string CompositionalConfig::eosTypeToString(Opm::CompositionalConfig::EOSTy
         case EOSType::SRK: return "SRK";
         case EOSType::ZJ: return "ZJ";
         default: throw std::invalid_argument("Unknown EOSType");
-    }
-}
-
-void CompositionalConfig::warningForExistingCompKeywords(const PROPSSection& props_section) {
-    bool any_comp_prop_kw = false;
-    std::string msg {" COMPS is not specified, the following keywords related to compositional simulation in PROPS section will be ignored:\n"};
-
-    static const std::unordered_map<std::string, std::function<bool(const PROPSSection&)>> keywordCheckers = {
-        {"NCOMPS", [](const PROPSSection& section) -> bool { return section.hasKeyword<ParserKeywords::NCOMPS>(); }},
-        {"CNAMES", [](const PROPSSection& section) -> bool { return section.hasKeyword<ParserKeywords::CNAMES>(); }},
-        {"EOS",    [](const PROPSSection& section) -> bool { return section.hasKeyword<ParserKeywords::EOS>(); }},
-        {"STCOND", [](const PROPSSection& section) -> bool { return section.hasKeyword<ParserKeywords::STCOND>(); }},
-        {"PCRIT",  [](const PROPSSection& section) -> bool { return section.hasKeyword<ParserKeywords::PCRIT>(); }},
-        {"TCRIT",  [](const PROPSSection& section) -> bool { return section.hasKeyword<ParserKeywords::TCRIT>(); }},
-        {"VCRIT",  [](const PROPSSection& section) -> bool { return section.hasKeyword<ParserKeywords::VCRIT>(); }},
-        {"ACF",    [](const PROPSSection& section) -> bool { return section.hasKeyword<ParserKeywords::ACF>(); }},
-        {"BIC",    [](const PROPSSection& section) -> bool { return section.hasKeyword<ParserKeywords::BIC>(); }},
-    };
-
-    for (const auto& [kwname, checker] : keywordCheckers) {
-        if (checker(props_section)) {
-            any_comp_prop_kw = true;
-            fmt::format_to(std::back_inserter(msg),  " {}", kwname);
-        }
-    }
-
-    if (any_comp_prop_kw) {
-        OpmLog::warning(msg);
     }
 }
 
