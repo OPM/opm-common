@@ -144,14 +144,14 @@ namespace {
     }
 
 
-    const ScheduleState& getitem(const Schedule& sch, std::size_t index) {
-        return sch[index];
+    const ScheduleState& getitem(const Schedule& sch, std::size_t report_step) {
+        return sch[report_step];
     }
 
     void insert_keywords(
         Schedule& sch,
         const std::string& deck_string,
-        std::size_t index,
+        std::size_t report_step,
         const UnitSystem& unit_system
     )
     {
@@ -162,7 +162,7 @@ namespace {
         for (auto &keyword : deck) {
             keywords.push_back(&keyword);
         }
-        sch.applyKeywords(keywords, index);
+        sch.applyKeywords(keywords, report_step);
     }
 
     // NOTE: this overload does currently not work, see PR #2833. The plan
@@ -170,7 +170,7 @@ namespace {
     //  above taking a deck_string (std::string) instead of a list of DeckKeywords
     //  has to be used instead.
     void insert_keywords(
-        Schedule& sch, py::list& deck_keywords, std::size_t index)
+        Schedule& sch, py::list& deck_keywords, std::size_t report_step)
     {
         Parser parser;
         std::vector<DeckKeyword*> keywords;
@@ -178,7 +178,7 @@ namespace {
             DeckKeyword &keyword = item.cast<DeckKeyword&>();
             keywords.push_back(&keyword);
         }
-        sch.applyKeywords(keywords, index);
+        sch.applyKeywords(keywords, report_step);
     }
 }
 
