@@ -271,7 +271,7 @@ namespace Opm
           for the schedule instances created by loading a restart file.
         */
         static bool cmp(const Schedule& sched1, const Schedule& sched2, std::size_t report_step);
-        void applyKeywords(std::vector<DeckKeyword*>& keywords, std::size_t timeStep);
+        void applyKeywords(std::vector<DeckKeyword*>& keywords, std::size_t report_step);
 
         template<class Serializer>
         void serializeOp(Serializer& serializer)
