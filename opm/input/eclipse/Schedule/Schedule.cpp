@@ -1323,8 +1323,7 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
         // Due MINPV/PINCH processing more of the completed_cells might now
         // inactive. Hence we update them here.
         for ([[maybe_unused]] auto& [index, cell] : this->completed_cells) {
-            if (!grid.cellActive(cell.i, cell.j, cell.k)) {
-                assert(cell.props);
+            if (!grid.cellActive(cell.i, cell.j, cell.k) && cell.is_active()) {
                 cell.props.value().active_index = -1;
             }
         }
