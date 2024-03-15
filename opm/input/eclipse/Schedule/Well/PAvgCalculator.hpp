@@ -427,12 +427,28 @@ private:
         std::vector<ContrIndexType> diagNeighbours{};
     };
 
+    /// Number of input connections.
+    ///
+    /// Saved copy of \code .size() \endcode from \c connections constructor
+    /// parameter.
+    std::vector<PAvgConnection>::size_type numInputConns_{};
+
     /// Set of well/reservoir connections from which the block-average
     /// pressures derive.
     std::vector<PAvgConnection> connections_{};
 
     /// List of indices into \c connections_ that represent open connections.
     std::vector<std::vector<PAvgConnection>::size_type> openConns_{};
+
+    /// Map \c connections_ indices to input indices (0..numInputConns_-1).
+    ///
+    /// In particular, \code connections_[i] \endcode corresponds to input
+    /// connection \code inputConn_[i] \endcode.
+    ///
+    /// Needed to handle connections to inactive cells.  See
+    /// pruneInactiveConnections() and connectionPressureOffsetWell() for
+    /// details.
+    std::vector<std::vector<PAvgConnection>::size_type> inputConn_{};
 
     /// Collection of all (global) cell indices that potentially contribute
     /// to this block-average well pressure calculation.
@@ -459,6 +475,18 @@ private:
     void addConnection(const GridDims&   cellIndexMap,
                        const Connection& conn,
                        SetupMap&         setupHelperMap);
+
+    /// Finish construction by pruning inactive PAvgConnections.
+    ///
+    /// \param[in] isActive Linearised predicate for whether or not given
+    ///   cell amongst \code allWBPCells() \endcode is actually active in
+    ///   the model.
+    ///
+    ///   Assumed to have the same size--number of elements--as the return
+    ///   value from member function \code allWBPCells() \endcode, and
+    ///   organise its elements such that \code isActive[i] \endcode holds
+    ///   the active status of \code allWBPCells()[i] \endcode.
+    void pruneInactiveConnections(const std::vector<bool>& isActive);
 
     /// Top-level entry point for accumulating local WBP contributions.
     ///
