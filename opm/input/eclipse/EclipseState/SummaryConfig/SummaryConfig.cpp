@@ -118,51 +118,47 @@ struct SummaryConfigContext {
          "DAY", "MONTH", "YEAR"
     };
 
-    /*
-      The variable type 'ECL_SMSPEC_MISC_TYPE' is a catch-all variable
-      type, and will by default internalize keywords like 'ALL' and
-      'PERFORMA', where only the keywords in the expanded list should
-      be included.
-    */
-    const std::map<std::string, std::vector<std::string>> meta_keywords = {{"PERFORMA", PERFORMA_keywords},
-                                                                           {"NMESSAGE", NMESSAGE_keywords},
-                                                                           {"DATE", DATE_keywords},
-                                                                           {"ALL", ALL_keywords},
-                                                                           {"FMWSET", FMWSET_keywords},
-                                                                           {"GMWSET", GMWSET_keywords}};
+    const std::map<std::string, std::vector<std::string>> meta_keywords = {
+        {"PERFORMA", PERFORMA_keywords},
+        {"NMESSAGE", NMESSAGE_keywords},
+        {"DATE",     DATE_keywords},
+        {"ALL",      ALL_keywords},
+        {"FMWSET",   FMWSET_keywords},
+        {"GMWSET",   GMWSET_keywords},
+    };
 
     // This is a hardcoded mapping between 3D field keywords,
     // e.g. 'PRESSURE' and 'SWAT' and summary keywords like 'RPR' and
     // 'BPR'. The purpose of this mapping is to maintain an overview of
     // which 3D field keywords are needed by the Summary calculation
     // machinery, based on which summary keywords are requested.
-    const std::map<std::string , std::set<std::string>> required_fields =  {
-         {"PRESSURE", {"FPR" , "RPR*" , "BPR"}},
-         {"RPV", {"FRPV", "RRPV*"}},
-         {"OIP"  , {"ROIP*" , "FOIP" , "FOE"}},
-         {"OIPR" , {"FOIPR"}},
-         {"OIPL" , {"ROIPL*" ,"FOIPL" }},
-         {"OIPG" , {"ROIPG*" ,"FOIPG"}},
-         {"GIP"  , {"RGIP*", "FGIP"}},
-         {"GIPR" , {"FGIPR"}},
-         {"GIPL" , {"RGIPL*" , "FGIPL"}},
-         {"GIPG" , {"RGIPG*", "FGIPG"}},
-         {"WIP"  , {"RWIP*" , "FWIP"}},
-         {"WIPR" , {"FWIPR"}},
-         {"WIPL" , {"RWIPL*" , "FWIPL"}},
-         {"WIPG" , {"RWIPG*", "FWIPG"}},
-         {"WCD"  , {"RWCD", "FWCD"}},
-         {"GCDI"  , {"RGCDI", "FGCDI"}},
-         {"GCDM"  , {"RGCDM", "FGCDM"}},
-         {"SWAT" , {"BSWAT"}},
-         {"SGAS" , {"BSGAS"}},
-         {"SALT" , {"FSIP"}},
-         {"TEMP" , {"BTCNFHEA"}},
-         {"GMIP"  , {"RGMIP", "FGMIP"}},
-         {"GMGP"  , {"RGMGP", "FGMGP"}},
-         {"GMDS"  , {"RGMDS", "FGMDS"}},
-         {"GMTR"  , {"RGMTR", "FGMTR"}},
-         {"GMMO"  , {"RGMMO", "FGMMO"}}
+    const std::map<std::string, std::set<std::string>> required_fields = {
+         {"PRESSURE", {"FPR", "RPR*", "BPR"}},
+         {"RPV",      {"FRPV", "RRPV*"}},
+         {"OIP",      {"ROIP*", "FOIP", "FOE"}},
+         {"OIPR",     {"FOIPR"}},
+         {"OIPL",     {"ROIPL*", "FOIPL"}},
+         {"OIPG",     {"ROIPG*", "FOIPG"}},
+         {"GIP",      {"RGIP*", "FGIP" }},
+         {"GIPR",     {"FGIPR"}},
+         {"GIPL",     {"RGIPL*", "FGIPL"}},
+         {"GIPG",     {"RGIPG*", "FGIPG"}},
+         {"WIP",      {"RWIP*", "FWIP" }},
+         {"WIPR",     {"FWIPR"}},
+         {"WIPL",     {"RWIPL*", "FWIPL"}},
+         {"WIPG",     {"RWIPG*", "FWIPG"}},
+         {"WCD",      {"RWCD", "FWCD" }},
+         {"GCDI",     {"RGCDI", "FGCDI"}},
+         {"GCDM",     {"RGCDM", "FGCDM"}},
+         {"SWAT",     {"BSWAT"}},
+         {"SGAS",     {"BSGAS"}},
+         {"SALT",     {"FSIP"}},
+         {"TEMP",     {"BTCNFHEA"}},
+         {"GMIP",     {"RGMIP", "FGMIP"}},
+         {"GMGP",     {"RGMGP", "FGMGP"}},
+         {"GMDS",     {"RGMDS", "FGMDS"}},
+         {"GMTR",     {"RGMTR", "FGMTR"}},
+         {"GMMO",     {"RGMMO", "FGMMO"}},
     };
 
     using keyword_set = std::unordered_set<std::string>;
