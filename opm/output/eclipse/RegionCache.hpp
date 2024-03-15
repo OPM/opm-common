@@ -53,12 +53,12 @@ namespace Opm { namespace out {
         std::vector<std::string> wells(const std::string& region_name, int region_id) const;
 
     private:
-        std::vector<std::pair<std::string, std::size_t>> connections_empty{};
+        using RegID = std::pair<std::string, int>;            // { Region set, region ID }
+        using WellConn = std::pair<std::string, std::size_t>; // { Well name, cell ID }
 
-        std::map<std::pair<std::string, int>,
-                 std::vector<std::pair<std::string, std::size_t>>> connection_map{};
-
-        std::map<std::pair<std::string, int>, std::vector<std::string>> well_map{};
+        std::vector<WellConn> connections_empty{};
+        std::map<RegID, std::vector<WellConn>> connection_map{};
+        std::map<RegID, std::vector<std::string>> well_map{};
     };
 }} // namespace Opm::out
 
