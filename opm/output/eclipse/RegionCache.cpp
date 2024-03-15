@@ -19,64 +19,97 @@
 
 #include <opm/output/eclipse/RegionCache.hpp>
 
+#include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
+
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 #include <opm/input/eclipse/Schedule/Well/Connection.hpp>
 #include <opm/input/eclipse/Schedule/Well/Well.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
-#include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellMatcher.hpp>
 
-namespace Opm {
-namespace out {
+#include <cstddef>
+#include <functional>
+#include <map>
+#include <memory>
+#include <set>
+#include <string>
+#include <vector>
 
-RegionCache::RegionCache(const std::set<std::string>& fip_regions, const FieldPropsManager& fp, const EclipseGrid& grid, const Schedule& schedule) {
-    for (const auto& fip_name : fip_regions) {
-        const auto& fip_region = fp.get_int(fip_name);
+Opm::out::RegionCache::RegionCache(const std::set<std::string>& fip_regions,
+                                   const FieldPropsManager&     fp,
+                                   const EclipseGrid&           grid,
+                                   const Schedule&              schedule)
+{
+    this->buildCache(fip_regions, fp, grid, schedule);
+}
 
-        const auto& wells = schedule.getWellsatEnd();
-        for (const auto& well : wells) {
-            const auto& connections = well.getConnections( );
-            if (connections.empty())
-                continue;
+void Opm::out::RegionCache::buildCache(const std::set<std::string>& fip_regions,
+                                       const FieldPropsManager&     fp,
+                                       const EclipseGrid&           grid,
+                                       const Schedule&              schedule)
+{
+    if (fip_regions.empty()) {
+        return;
+    }
 
-            for (const auto& c : connections) {
-                if (grid.cellActive(c.global_index())) {
-                    size_t active_index = grid.activeIndex(c.global_index());
-                    int region_id = fip_region[active_index];
-                    auto key = std::make_pair(fip_name, region_id);
-                    auto& well_index_list = this->connection_map[ key ];
-                    well_index_list.emplace_back(well.name(), c.global_index());
+    auto regions = std::vector<std::reference_wrapper<const std::vector<int>>>{};
+    for (const auto& fipReg : fip_regions) {
+        regions.push_back(std::cref(fp.get_int(fipReg)));
+    }
+
+    for (const auto& wname : schedule.back().well_order()) {
+        const auto& conns = schedule.back().wells(wname).getConnections();
+        if (conns.empty()) { continue; }
+
+        auto regID = regions.begin();
+        for (const auto& fipReg : fip_regions) {
+            auto first = true;
+
+            for (const auto& conn : conns) {
+                if (! grid.cellActive(conn.global_index())) {
+                    continue;
+                }
+
+                const auto region = regID->get()[grid.activeIndex(conn.global_index())];
+                const auto reg_pair = std::make_pair(fipReg, region);
+
+                this->connection_map[reg_pair]
+                    .emplace_back(wname, conn.global_index());
+
+                if (first) {
+                    this->well_map[reg_pair].push_back(wname);
+
+                    first = false;
                 }
             }
 
-            const auto& conn0 = connections[0];
-            auto region_id = fip_region[grid.activeIndex(conn0.global_index())];
-            auto key = std::make_pair(fip_name, region_id);
-            this->well_map[ key ].push_back(well.name());
+            ++regID;
         }
     }
 }
 
 
-    const std::vector<std::pair<std::string,size_t>>& RegionCache::connections( const std::string& region_name, int region_id ) const {
-        auto key = std::make_pair(region_name, region_id);
-        const auto iter = this->connection_map.find( key );
-        if (iter == this->connection_map.end())
-            return this->connections_empty;
-        else
-            return iter->second;
-    }
+const std::vector<std::pair<std::string, std::size_t>>&
+Opm::out::RegionCache::connections(const std::string& region_name,
+                                   const int          region_id) const
+{
+    const auto key = std::make_pair(region_name, region_id);
+    auto iter = this->connection_map.find(key);
 
-
-    std::vector<std::string> RegionCache::wells(const std::string& region_name, int region_id) const {
-        auto key = std::make_pair(region_name, region_id);
-        const auto iter = this->well_map.find( key );
-        if (iter == this->well_map.end())
-            return {};
-        else
-            return iter->second;
-    }
-
-}
+    return (iter == this->connection_map.end())
+        ? this->connections_empty
+        : iter->second;
 }
 
+std::vector<std::string>
+Opm::out::RegionCache::wells(const std::string& region_name,
+                             const int          region_id) const
+{
+    const auto key = std::make_pair(region_name, region_id);
+    auto iter = this->well_map.find(key);
+
+    return (iter == this->well_map.end())
+        ? std::vector<std::string> {}
+        : iter->second;
+}

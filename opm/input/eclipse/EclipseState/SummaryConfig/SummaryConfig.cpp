@@ -27,6 +27,7 @@
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/GridDims.hpp>
+
 #include <opm/input/eclipse/Schedule/Group/Group.hpp>
 #include <opm/input/eclipse/Schedule/Network/ExtNetwork.hpp>
 #include <opm/input/eclipse/Schedule/MSW/WellSegments.hpp>
@@ -117,56 +118,47 @@ struct SummaryConfigContext {
          "DAY", "MONTH", "YEAR"
     };
 
+    const std::map<std::string, std::vector<std::string>> meta_keywords = {
+        {"PERFORMA", PERFORMA_keywords},
+        {"NMESSAGE", NMESSAGE_keywords},
+        {"DATE",     DATE_keywords},
+        {"ALL",      ALL_keywords},
+        {"FMWSET",   FMWSET_keywords},
+        {"GMWSET",   GMWSET_keywords},
+    };
 
-    /*
-      The variable type 'ECL_SMSPEC_MISC_TYPE' is a catch-all variable
-      type, and will by default internalize keywords like 'ALL' and
-      'PERFORMA', where only the keywords in the expanded list should
-      be included.
-    */
-    const std::map<std::string, std::vector<std::string>> meta_keywords = {{"PERFORMA", PERFORMA_keywords},
-                                                                           {"NMESSAGE", NMESSAGE_keywords},
-                                                                           {"DATE", DATE_keywords},
-                                                                           {"ALL", ALL_keywords},
-                                                                           {"FMWSET", FMWSET_keywords},
-                                                                           {"GMWSET", GMWSET_keywords}};
-
-    /*
-      This is a hardcoded mapping between 3D field keywords,
-      e.g. 'PRESSURE' and 'SWAT' and summary keywords like 'RPR' and
-      'BPR'. The purpose of this mapping is to maintain an overview of
-      which 3D field keywords are needed by the Summary calculation
-      machinery, based on which summary keywords are requested. The
-      Summary calculations are implemented in the opm-output
-      repository.
-    */
-    const std::map<std::string , std::set<std::string>> required_fields =  {
-         {"PRESSURE", {"FPR" , "RPR" , "BPR"}},
-         {"RPV", {"FRPV" , "RRPV"}},
-         {"OIP"  , {"ROIP" , "FOIP" , "FOE"}},
-         {"OIPR" , {"FOIPR"}},
-         {"OIPL" , {"ROIPL" ,"FOIPL" }},
-         {"OIPG" , {"ROIPG" ,"FOIPG"}},
-         {"GIP"  , {"RGIP" , "FGIP"}},
-         {"GIPR" , {"FGIPR"}},
-         {"GIPL" , {"RGIPL" , "FGIPL"}},
-         {"GIPG" , {"RGIPG", "FGIPG"}},
-         {"WIP"  , {"RWIP" , "FWIP"}},
-         {"WIPR" , {"FWIPR"}},
-         {"WIPL" , {"RWIPL" , "FWIPL"}},
-         {"WIPG" , {"RWIPG", "FWIPG"}},
-         {"WCD"  , {"RWCD", "FWCD"}},
-         {"GCDI"  , {"RGCDI", "FGCDI"}},
-         {"GCDM"  , {"RGCDM", "FGCDM"}},
-         {"SWAT" , {"BSWAT"}},
-         {"SGAS" , {"BSGAS"}},
-         {"SALT" , {"FSIP"}},
-         {"TEMP" , {"BTCNFHEA"}},
-         {"GMIP"  , {"RGMIP", "FGMIP"}},
-         {"GMGP"  , {"RGMGP", "FGMGP"}},
-         {"GMDS"  , {"RGMDS", "FGMDS"}},
-         {"GMTR"  , {"RGMTR", "FGMTR"}},
-         {"GMMO"  , {"RGMMO", "FGMMO"}}
+    // This is a hardcoded mapping between 3D field keywords,
+    // e.g. 'PRESSURE' and 'SWAT' and summary keywords like 'RPR' and
+    // 'BPR'. The purpose of this mapping is to maintain an overview of
+    // which 3D field keywords are needed by the Summary calculation
+    // machinery, based on which summary keywords are requested.
+    const std::map<std::string, std::set<std::string>> required_fields = {
+         {"PRESSURE", {"FPR", "RPR*", "BPR"}},
+         {"RPV",      {"FRPV", "RRPV*"}},
+         {"OIP",      {"ROIP*", "FOIP", "FOE"}},
+         {"OIPR",     {"FOIPR"}},
+         {"OIPL",     {"ROIPL*", "FOIPL"}},
+         {"OIPG",     {"ROIPG*", "FOIPG"}},
+         {"GIP",      {"RGIP*", "FGIP" }},
+         {"GIPR",     {"FGIPR"}},
+         {"GIPL",     {"RGIPL*", "FGIPL"}},
+         {"GIPG",     {"RGIPG*", "FGIPG"}},
+         {"WIP",      {"RWIP*", "FWIP" }},
+         {"WIPR",     {"FWIPR"}},
+         {"WIPL",     {"RWIPL*", "FWIPL"}},
+         {"WIPG",     {"RWIPG*", "FWIPG"}},
+         {"WCD",      {"RWCD", "FWCD" }},
+         {"GCDI",     {"RGCDI", "FGCDI"}},
+         {"GCDM",     {"RGCDM", "FGCDM"}},
+         {"SWAT",     {"BSWAT"}},
+         {"SGAS",     {"BSGAS"}},
+         {"SALT",     {"FSIP"}},
+         {"TEMP",     {"BTCNFHEA"}},
+         {"GMIP",     {"RGMIP", "FGMIP"}},
+         {"GMGP",     {"RGMGP", "FGMGP"}},
+         {"GMDS",     {"RGMDS", "FGMDS"}},
+         {"GMTR",     {"RGMTR", "FGMTR"}},
+         {"GMMO",     {"RGMMO", "FGMMO"}},
     };
 
     using keyword_set = std::unordered_set<std::string>;
@@ -995,13 +987,13 @@ inline void keywordR2R(const DeckKeyword&           keyword,
 }
 
 
-inline void keywordR(SummaryConfig::keyword_list& list,
-                     SummaryConfigContext&        context,
-                     const DeckKeyword&           deck_keyword,
-                     const Schedule&              schedule,
-                     const FieldPropsManager&     field_props,
-                     const ParseContext&          parseContext,
-                     ErrorGuard&                  errors)
+void keywordR(SummaryConfig::keyword_list& list,
+              SummaryConfigContext&        context,
+              const DeckKeyword&           deck_keyword,
+              const Schedule&              schedule,
+              const FieldPropsManager&     field_props,
+              const ParseContext&          parseContext,
+              ErrorGuard&                  errors)
 {
     const auto keyword = deck_keyword.name();
     if (is_region_to_region(keyword)) {
@@ -1009,34 +1001,37 @@ inline void keywordR(SummaryConfig::keyword_list& list,
         return;
     }
 
-    const auto region_name = establishRegionContext(deck_keyword, field_props,
-                                                    parseContext, errors,
-                                                    context);
+    const auto region_name =
+        establishRegionContext(deck_keyword, field_props,
+                               parseContext, errors,
+                               context);
 
     if (! region_name.has_value()) {
         return;
     }
 
-    const auto& item = deck_keyword.getDataRecord().getDataItem();
-    std::vector<int> regions;
+    auto regions = std::vector<int>{};
 
-    /*
-      Assume that the FIPNUM array contains the values {1,2,4}; i.e. the maximum
-      value is 4 and the value 3 is missing. Values which are too large, i.e. >
-      4 in this case - and values which are missing in the range are treated
-      differently:
+    // Assume that the FIPNUM array contains the values {1,2,4}; i.e. the
+    // maximum value is 4 and the value 3 is missing.  Values which are too
+    // large, i.e., > 4 in this case - and values which are missing in the
+    // range are treated differently:
+    //
+    //    region_id >= 5: The requested region results are completely ignored.
+    //
+    //    region_id == 3: The summary file will contain a vector Rxxx:3 with the
+    //    value 0.
+    //
+    // These behaviors are closely tied to the implementation in
+    // opm-simulators which actually performs the region summation; and that
+    // is also the main reason to treat these quite similar error conditions
+    // differently.
 
-         region_id >= 5: The requested region results are completely ignored.
+    if (! deck_keyword.empty() &&
+        (deck_keyword.getDataRecord().getDataItem().data_size() > 0))
+    {
+        const auto& item = deck_keyword.getDataRecord().getDataItem();
 
-         region_id == 3: The summary file will contain a vector Rxxx:3 with the
-         value 0.
-
-      These behaviors are closely tied to the implementation in opm-simulators
-      which actually performs the region summation; and that is also the main
-      reason to treat these quite similar error conditions differently.
-    */
-
-    if (item.data_size() > 0) {
         for (const auto& region_id : item.getData<int>()) {
             const auto& region_set = context.regions.at(region_name.value());
             auto max_iter = region_set.rbegin();
@@ -1055,12 +1050,13 @@ inline void keywordR(SummaryConfig::keyword_list& list,
                 parseContext.handleError(ParseContext::SUMMARY_EMPTY_REGION, msg_fmt, deck_keyword.location(), errors);
             }
 
-            regions.push_back( region_id );
+            regions.push_back(region_id);
         }
     }
     else {
-        for (const auto& region_id : context.regions.at(region_name.value()))
-            regions.push_back( region_id );
+        for (const auto& region_id : context.regions.at(region_name.value())) {
+            regions.push_back(region_id);
+        }
     }
 
     // See comment on function roew() in Summary.cpp for this weirdness.
@@ -1081,11 +1077,12 @@ inline void keywordR(SummaryConfig::keyword_list& list,
         keyword, SummaryConfigNode::Category::Region, deck_keyword.location()
     }
     .parameterType(parseKeywordType(EclIO::SummaryNode::normalise_region_keyword(keyword)))
-    .fip_region( region_name.value() )
-    .isUserDefined( is_udq(keyword) );
+    .fip_region   (region_name.value())
+    .isUserDefined(is_udq(keyword));
 
-    for (const auto& region : regions)
-        list.push_back( param.number( region ) );
+    for (const auto& region : regions) {
+        list.push_back(param.number(region));
+    }
 }
 
 
@@ -1534,25 +1531,32 @@ inline void handleKW( SummaryConfig::keyword_list& list,
           item_index++;
       }
   }
-}
+
+} // Anonymous namespace
 
 // =====================================================================
 
 SummaryConfigNode::Type parseKeywordType(std::string keyword)
 {
-    if (is_well_completion(keyword))
-        keyword.pop_back();
+    if (parseKeywordCategory(keyword) == SummaryConfigNode::Category::Region) {
+        keyword = EclIO::SummaryNode::normalise_region_keyword(keyword);
+    }
 
-    if (is_connection_completion(keyword))
+    if (is_well_completion(keyword)) {
         keyword.pop_back();
+    }
 
-    if (is_rate(keyword)) return SummaryConfigNode::Type::Rate;
-    if (is_total(keyword)) return SummaryConfigNode::Type::Total;
-    if (is_ratio(keyword)) return SummaryConfigNode::Type::Ratio;
-    if (is_pressure(keyword)) return SummaryConfigNode::Type::Pressure;
-    if (is_count(keyword)) return SummaryConfigNode::Type::Count;
-    if (is_control_mode(keyword)) return SummaryConfigNode::Type::Mode;
-    if (is_prod_index(keyword)) return SummaryConfigNode::Type::ProdIndex;
+    if (is_connection_completion(keyword)) {
+        keyword.pop_back();
+    }
+
+    if (is_rate(keyword)) { return SummaryConfigNode::Type::Rate; }
+    if (is_total(keyword)) { return SummaryConfigNode::Type::Total; }
+    if (is_ratio(keyword)) { return SummaryConfigNode::Type::Ratio; }
+    if (is_pressure(keyword)) { return SummaryConfigNode::Type::Pressure; }
+    if (is_count(keyword)) { return SummaryConfigNode::Type::Count; }
+    if (is_control_mode(keyword)) { return SummaryConfigNode::Type::Mode; }
+    if (is_prod_index(keyword)) { return SummaryConfigNode::Type::ProdIndex; }
 
     return SummaryConfigNode::Type::Undefined;
 }
@@ -1920,28 +1924,18 @@ size_t SummaryConfig::size() const {
     return this->m_keywords.size();
 }
 
-/*
-  Can be used to query if a certain 3D field, e.g. PRESSURE, is
-  required to calculate the summary variables.
-
-  The implementation is based on the hardcoded datastructure
-  required_fields defined in a anonymous namespaces at the top of this
-  file; the content of this datastructure again is based on the
-  implementation of the Summary calculations in the opm-output
-  repository: opm/output/eclipse/Summary.cpp.
-*/
-
-bool SummaryConfig::require3DField( const std::string& keyword ) const {
-    const auto iter = required_fields.find( keyword );
-    if (iter == required_fields.end())
+// Can be used to query if a certain 3D field, e.g. PRESSURE, is required to
+// calculate a summary variable.
+bool SummaryConfig::require3DField(const std::string& keyword) const
+{
+    auto iter = required_fields.find(keyword);
+    if (iter == required_fields.end()) {
         return false;
-
-    for (const auto& kw : iter->second) {
-        if (this->hasKeyword( kw ))
-            return true;
     }
 
-    return false;
+    return std::any_of(iter->second.begin(), iter->second.end(),
+                       [this](const std::string& smryKw)
+                       { return this->match(smryKw); });
 }
 
 
