@@ -24,6 +24,7 @@
 #include <opm/common/utility/shmatch.hpp>
 
 #include <opm/input/eclipse/EclipseState/Aquifer/AquiferConfig.hpp>
+#include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/GridDims.hpp>
@@ -38,6 +39,7 @@
 #include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
 
 #include <opm/input/eclipse/Parser/ErrorGuard.hpp>
+#include <opm/input/eclipse/Parser/InputErrorAction.hpp>
 #include <opm/input/eclipse/Parser/ParseContext.hpp>
 
 #include <opm/input/eclipse/Deck/Deck.hpp>
@@ -1883,6 +1885,67 @@ SummaryConfig& SummaryConfig::merge( SummaryConfig&& other ) {
     return *this;
 }
 
+SummaryConfig::keyword_list
+SummaryConfig::registerRequisiteUDQorActionSummaryKeys(const std::vector<std::string>& extraKeys,
+                                                       const EclipseState&             es,
+                                                       const Schedule&                 sched)
+{
+    auto summaryNodes = keyword_list{};
+
+    if (extraKeys.empty()) {
+        return summaryNodes;
+    }
+
+    const auto node_names =
+        std::any_of(extraKeys.begin(), extraKeys.end(), &is_node_keyword)
+        ? collect_node_names(sched)
+        : std::vector<std::string>{};
+
+    const auto analyticAquifers = analyticAquiferIDs(es.aquifer());
+    const auto numericAquifers = numericAquiferIDs(es.aquifer());
+
+    const auto parseCtx = ParseContext { InputErrorAction::IGNORE };
+    auto errors = ErrorGuard {};
+    auto ctxt   = SummaryConfigContext {};
+
+    auto candidateSummaryNodes = SummaryConfig::keyword_list{};
+
+    for (const auto& vector_name : extraKeys) {
+        handleKW(candidateSummaryNodes, ctxt, node_names,
+                 analyticAquifers, numericAquifers,
+                 DeckKeyword { KeywordLocation{}, vector_name },
+                 sched, es.globalFieldProps(),
+                 parseCtx, errors, es.gridDims());
+    }
+
+    std::sort(candidateSummaryNodes.begin(), candidateSummaryNodes.end());
+
+    summaryNodes.reserve(candidateSummaryNodes.size());
+    std::set_difference(candidateSummaryNodes.begin(), candidateSummaryNodes.end(),
+                        this->m_keywords.begin(), this->m_keywords.end(),
+                        std::back_inserter(summaryNodes));
+
+    if (summaryNodes.empty()) {
+        // No new summary keywords encountered.
+        return summaryNodes;
+    }
+
+    for (const auto newKw : summaryNodes) {
+        this->short_keywords.insert(newKw.keyword());
+        this->summary_keywords.insert(newKw.uniqueNodeKey());
+    }
+
+    const auto numOrig = this->m_keywords.size();
+    this->m_keywords.insert(this->m_keywords.end(),
+                            summaryNodes.begin(),
+                            summaryNodes.end());
+
+    std::inplace_merge(this->m_keywords.begin(),
+                       this->m_keywords.begin() + numOrig,
+                       this->m_keywords.end());
+
+    return summaryNodes;
+}
 
 bool SummaryConfig::hasKeyword( const std::string& keyword ) const {
     return short_keywords.find(keyword) != short_keywords.end();

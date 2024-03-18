@@ -169,6 +169,11 @@ namespace Opm {
             SummaryConfig& merge( const SummaryConfig& );
             SummaryConfig& merge( SummaryConfig&& );
 
+            keyword_list
+            registerRequisiteUDQorActionSummaryKeys(const std::vector<std::string>& extraKeys,
+                                                    const EclipseState&             es,
+                                                    const Schedule&                 sched);
+
             /*
               The hasKeyword() method will consult the internal set
               'short_keywords', i.e. the query should be based on pure
