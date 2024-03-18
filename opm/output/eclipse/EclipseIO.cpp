@@ -50,6 +50,8 @@
 #include <opm/io/eclipse/ESmry.hpp>
 #include <opm/io/eclipse/OutputStream.hpp>
 
+#include <opm/common/utility/String.hpp>
+
 #include <algorithm>
 #include <cstddef>
 #include <cstdlib>
@@ -65,14 +67,6 @@
 #include <vector>
 
 namespace {
-
-std::string uppercase(std::string x)
-{
-    std::transform(x.begin(), x.end(), x.begin(),
-                   [](char c) { return std::toupper(c); });
-
-    return x;
-}
 
 void ensure_directory_exists(const std::filesystem::path& odir)
 {
