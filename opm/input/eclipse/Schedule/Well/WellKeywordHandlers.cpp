@@ -51,6 +51,7 @@
 
 #include <algorithm>
 #include <memory>
+#include <iostream>
 
 namespace Opm {
 
@@ -304,6 +305,7 @@ void handleWCONINJH(HandlerContext& handlerContext)
 
 void handleWCONPROD(HandlerContext& handlerContext)
 {
+    std::cout << "handleWCONPROD" << std::endl;
     for (const auto& record : handlerContext.keyword) {
         const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
         const auto well_names = handlerContext.wellNames(wellNamePattern, false);

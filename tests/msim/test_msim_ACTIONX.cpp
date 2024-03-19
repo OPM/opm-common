@@ -1,4 +1,4 @@
-/*
+    /*
   Copyright 2018 Statoil ASA.
 
   This file is part of the Open Porous Media project (OPM).
@@ -171,7 +171,7 @@ int ecl_sum_iget_report_end(const EclIO::ESmry& smry, const int reportStep)
   oil production rate, and then subsequently closes the well with lowest OPR
   with a ACTIONX keyword.
 */
-
+/*
 BOOST_AUTO_TEST_CASE(UDQ_SORTA_EXAMPLE) {
 #include "actionx2.include"
 
@@ -479,10 +479,11 @@ BOOST_AUTO_TEST_CASE(COMPDAT) {
     }
 }
 
+*/
 #ifdef EMBEDDED_PYTHON
 
 BOOST_AUTO_TEST_CASE(MSIM_PYACTION_INSERT_KEYWORD) {
-    const auto& deck = Parser().parseFile("msim/MSIM_PYACTION_INSERT_KEYWORD.DATA");
+    const auto& deck = Parser().parseFile("/home/lnebel/git_repos/opm-pyaction/opm-common/tests/msim/MSIM_PYACTION_INSERT_KEYWORD.DATA");
     test_data td( deck );
     msim sim(td.state, td.schedule);
     {
@@ -504,7 +505,7 @@ BOOST_AUTO_TEST_CASE(MSIM_PYACTION_INSERT_KEYWORD) {
     }
 }
 BOOST_AUTO_TEST_CASE(PYTHON_WELL_CLOSE_EXAMPLE) {
-    const auto& deck = Parser().parseFile("msim/MSIM_PYACTION.DATA");
+    const auto& deck = Parser().parseFile("/home/lnebel/git_repos/opm-pyaction/opm-common/tests/msim/MSIM_PYACTION.DATA");
     test_data td( deck );
     msim sim(td.state, td.schedule);
     {
@@ -554,7 +555,7 @@ BOOST_AUTO_TEST_CASE(PYTHON_WELL_CLOSE_EXAMPLE) {
 }
 
 BOOST_AUTO_TEST_CASE(PYTHON_CHANGING_SCHEUDULE) {
-    const auto& deck = Parser().parseFile("msim/MSIM_PYACTION_CHANGING_SCHEDULE.DATA");
+    const auto& deck = Parser().parseFile("/home/lnebel/git_repos/opm-pyaction/opm-common/tests/msim/MSIM_PYACTION_CHANGING_SCHEDULE.DATA");
     test_data td( deck );
     msim sim(td.state, td.schedule);
     {

@@ -65,6 +65,7 @@ public:
         serializer(module_file);
         serializer(m_active);
     }
+    static bool valid_keyword(const std::string& keyword);
 
 private:
     void update(bool result) const;

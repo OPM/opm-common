@@ -217,6 +217,7 @@ void python::common::export_Schedule(py::module& module) {
     .def_property_readonly( "timesteps", &get_timesteps )
     .def("__len__", &Schedule::size)
     .def("__getitem__", &getitem)
+    .def( "set_welpi", &Schedule::set_welpi)
     .def( "shut_well", &Schedule::shut_well)
     .def( "open_well", &Schedule::open_well)
     .def( "stop_well", &Schedule::stop_well)
