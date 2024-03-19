@@ -716,7 +716,7 @@ private:
     // largest wettinging phase saturation which is on the main-drainage curve. These are
     // three different values because the sourounding code can choose to use different
     // definitions for the saturations for different quantities
-    Scalar krwSwMdc_;
+    //Scalar krwSwMdc_;
     Scalar krnSwMdc_;
     Scalar pcSwMdc_;
 
