@@ -1930,7 +1930,7 @@ SummaryConfig::registerRequisiteUDQorActionSummaryKeys(const std::vector<std::st
         return summaryNodes;
     }
 
-    for (const auto newKw : summaryNodes) {
+    for (const auto& newKw : summaryNodes) {
         this->short_keywords.insert(newKw.keyword());
         this->summary_keywords.insert(newKw.uniqueNodeKey());
     }
