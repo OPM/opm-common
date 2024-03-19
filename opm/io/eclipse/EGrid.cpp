@@ -94,7 +94,7 @@ EGrid::EGrid(const std::string &filename, std::string grid_name) :
                 nijk[1] = gridhead[2];
                 nijk[2] = gridhead[3];
 
-                numres == (gridhead.size() > 24)
+                numres = (gridhead.size() > 24)
                     ? gridhead[24] : 1;
 
                 m_radial = (gridhead.size() > 26)
