@@ -274,7 +274,10 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const std::optional
     std::time_t Schedule::posixEndTime() const {
         // This should indeed access the start_time() property of the last
         // snapshot.
-        return std::chrono::system_clock::to_time_t(this->snapshots.back().start_time());
+        if (this->snapshots.size() > 0)
+            return std::chrono::system_clock::to_time_t(this->snapshots.back().start_time());
+        else
+            return this->posixStartTime( );
     }
 
 

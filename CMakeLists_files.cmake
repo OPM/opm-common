@@ -693,7 +693,6 @@ if(ENABLE_ECL_OUTPUT)
           tests/MSW_2WELSEGS.DATA
           tests/EXIT_TEST.DATA
           tests/action_syntax_error.py
-          tests/action_missing_run.py
           tests/EMBEDDED_PYTHON.DATA
           tests/ACTIONX_M1.DATA
           tests/ACTIONX_M1_MULTIPLE.DATA
@@ -705,12 +704,15 @@ if(ENABLE_ECL_OUTPUT)
           tests/msim/MSIM_PYACTION_CHANGING_SCHEDULE.DATA
           tests/msim/MSIM_PYACTION_CHANGING_SCHEDULE_ACTIONX_CALLBACK.DATA
           tests/msim/MSIM_PYACTION_INSERT_KEYWORD.DATA
+          tests/msim/MSIM_PYACTION_NO_RUN_FUNCTION.DATA
           tests/msim/action1.py
           tests/msim/action2.py
+          tests/msim/action2_no_run_function.py
           tests/msim/action3.py
           tests/msim/action3_actionx_callback.py
           tests/msim/action_count.py
           tests/msim/insert_keyword.py
+          tests/msim/action_count_no_run_function.py
           tests/VFP_CASE.DATA)
 endif()
 
