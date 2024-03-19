@@ -1,6 +1,8 @@
 import sys
 
 def run(ecl_state, schedule, report_step, summary_state, actionx_callback):
+    if (report_step == 1):
+        schedule.shut_well("PROD2", report_step)
     sys.stdout.write("Running PYACTION arg1:{}\n".format(ecl_state))
     if "FOPR" in summary_state:
         sys.stdout.write("Have FOPR: {}\n".format( summary_state["FOPR"] ))
