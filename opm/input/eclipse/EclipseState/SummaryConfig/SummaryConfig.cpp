@@ -714,54 +714,64 @@ inline void keywordW( SummaryConfig::keyword_list& list,
         keywordW( list, schedule.wellNames(), param );
 }
 
-inline void keywordG( SummaryConfig::keyword_list& list,
-                      const std::string& keyword,
-                      KeywordLocation loc,
-                      const Schedule& schedule ) {
+void keywordG(SummaryConfig::keyword_list& list,
+              const std::string&           keyword,
+              const KeywordLocation&       loc,
+              const Schedule&              schedule)
+{
     auto param = SummaryConfigNode {
-        keyword, SummaryConfigNode::Category::Group, std::move(loc)
+        keyword, SummaryConfigNode::Category::Group, loc
     }
-    .parameterType( parseKeywordType(keyword) )
-    .isUserDefined( is_udq(keyword) );
+    .parameterType(parseKeywordType(keyword))
+    .isUserDefined(is_udq(keyword));
 
-    for( const auto& group : schedule.groupNames() ) {
-        if( group == "FIELD" ) continue;
-        list.push_back( param.namedEntity(group) );
+    for (const auto& group : schedule.groupNames() ) {
+        if (group == "FIELD") { continue; }
+
+        list.push_back(param.namedEntity(group));
     }
 }
 
-
-inline void keywordG( SummaryConfig::keyword_list& list,
-                      const ParseContext& parseContext,
-                      ErrorGuard& errors,
-                      const DeckKeyword& keyword,
-                      const Schedule& schedule ) {
-
-    if( keyword.name() == "GMWSET" ) return;
+void keywordG(SummaryConfig::keyword_list& list,
+              const ParseContext&          parseContext,
+              ErrorGuard&                  errors,
+              const DeckKeyword&           keyword,
+              const Schedule&              schedule,
+              const bool excludeFieldFromGroupKw = true)
+{
+    if (keyword.name() == "GMWSET") {
+        return;
+    }
 
     auto param = SummaryConfigNode {
         keyword.name(), SummaryConfigNode::Category::Group, keyword.location()
     }
-    .parameterType( parseKeywordType(keyword.name()) )
-    .isUserDefined( is_udq(keyword.name()) );
+    .parameterType(parseKeywordType(keyword.name()))
+    .isUserDefined(is_udq(keyword.name()));
 
-    if( keyword.empty() ||
-        !keyword.getDataRecord().getDataItem().hasValue( 0 ) ) {
+    if (keyword.empty() ||
+        ! keyword.getDataRecord().getDataItem().hasValue(0))
+    {
+        for (const auto& group : schedule.groupNames()) {
+            if (excludeFieldFromGroupKw && (group == "FIELD")) {
+                continue;
+            }
 
-        for( const auto& group : schedule.groupNames() ) {
-            if( group == "FIELD" ) continue;
-            list.push_back( param.namedEntity(group) );
+            list.push_back(param.namedEntity(group));
         }
+
         return;
     }
 
     const auto& item = keyword.getDataRecord().getDataItem();
 
-    for( const std::string& group : item.getData< std::string >() ) {
-        if( schedule.back().groups.has( group ) )
-            list.push_back( param.namedEntity(group) );
-        else
-            handleMissingGroup( parseContext, errors, keyword.location(), group );
+    for (const auto& group : item.getData<std::string>()) {
+        if (schedule.back().groups.has(group)) {
+            list.push_back( param.namedEntity(group));
+        }
+        else {
+            handleMissingGroup(parseContext, errors, keyword.location(), group);
+        }
     }
 }
 
@@ -1370,17 +1380,18 @@ inline void keywordMISC( SummaryConfig::keyword_list& list,
         }
     }
 
-inline void handleKW( SummaryConfig::keyword_list& list,
-                      SummaryConfigContext& context,
-                      const std::vector<std::string>& node_names,
-                      const std::vector<int>& analyticAquiferIDs,
-                      const std::vector<int>& numericAquiferIDs,
-                      const DeckKeyword& keyword,
-                      const Schedule& schedule,
-                      const FieldPropsManager& field_props,
-                      const ParseContext& parseContext,
-                      ErrorGuard& errors,
-                      const GridDims& dims)
+void handleKW(SummaryConfig::keyword_list&    list,
+              SummaryConfigContext&           context,
+              const std::vector<std::string>& node_names,
+              const std::vector<int>&         analyticAquiferIDs,
+              const std::vector<int>&         numericAquiferIDs,
+              const DeckKeyword&              keyword,
+              const Schedule&                 schedule,
+              const FieldPropsManager&        field_props,
+              const ParseContext&             parseContext,
+              ErrorGuard&                     errors,
+              const GridDims&                 dims,
+              const bool excludeFieldFromGroupKw = true)
 {
     using Cat = SummaryConfigNode::Category;
 
@@ -1392,15 +1403,16 @@ inline void handleKW( SummaryConfig::keyword_list& list,
     case Cat::Well:
         if (is_well_comp(keyword.name())) {
             Opm::OpmLog::warning(Opm::OpmInputError::format("Unhandled summary keyword {keyword}\n"
-                                                        "In {file} line {line}", keyword.location()));
-        return;
+                                                            "In {file} line {line}", keyword.location()));
+            return;
         }
 
         keywordW(list, parseContext, errors, keyword, schedule);
         break;
 
     case Cat::Group:
-        keywordG(list, parseContext, errors, keyword, schedule);
+        keywordG(list, parseContext, errors, keyword, schedule,
+                 excludeFieldFromGroupKw);
         break;
 
     case Cat::Field:
@@ -1896,26 +1908,40 @@ SummaryConfig::registerRequisiteUDQorActionSummaryKeys(const std::vector<std::st
         return summaryNodes;
     }
 
-    const auto node_names =
-        std::any_of(extraKeys.begin(), extraKeys.end(), &is_node_keyword)
-        ? collect_node_names(sched)
-        : std::vector<std::string>{};
+    auto candidateSummaryNodes = keyword_list{};
 
-    const auto analyticAquifers = analyticAquiferIDs(es.aquifer());
-    const auto numericAquifers = numericAquiferIDs(es.aquifer());
+    // Note: When handling UDQs or, especially, ACTIONX condition blocks, it
+    // is permissible to treat 'FIELD' as a regular group.  In particular,
+    // an ACTIONX condition block might use conditions such as
+    //
+    //    GGOR 'FIELD' > 123.4 AND /
+    //    GOPR 'FIELD' < 654.3 /
+    //
+    // and we need to be prepared to handle those.  We therefore bypass the
+    // check for group == "FIELD" in keywordG() in this particular context.
+    {
+        const auto excludeFieldFromGroupKw = false;
 
-    const auto parseCtx = ParseContext { InputErrorAction::IGNORE };
-    auto errors = ErrorGuard {};
-    auto ctxt   = SummaryConfigContext {};
+        const auto node_names =
+            std::any_of(extraKeys.begin(), extraKeys.end(), &is_node_keyword)
+            ? collect_node_names(sched)
+            : std::vector<std::string>{};
 
-    auto candidateSummaryNodes = SummaryConfig::keyword_list{};
+        const auto analyticAquifers = analyticAquiferIDs(es.aquifer());
+        const auto numericAquifers = numericAquiferIDs(es.aquifer());
 
-    for (const auto& vector_name : extraKeys) {
-        handleKW(candidateSummaryNodes, ctxt, node_names,
-                 analyticAquifers, numericAquifers,
-                 DeckKeyword { KeywordLocation{}, vector_name },
-                 sched, es.globalFieldProps(),
-                 parseCtx, errors, es.gridDims());
+        const auto parseCtx = ParseContext { InputErrorAction::IGNORE };
+        auto errors = ErrorGuard {};
+        auto ctxt   = SummaryConfigContext {};
+
+        for (const auto& vector_name : extraKeys) {
+            handleKW(candidateSummaryNodes, ctxt, node_names,
+                     analyticAquifers, numericAquifers,
+                     DeckKeyword { KeywordLocation{}, vector_name },
+                     sched, es.globalFieldProps(),
+                     parseCtx, errors, es.gridDims(),
+                     excludeFieldFromGroupKw);
+        }
     }
 
     std::sort(candidateSummaryNodes.begin(), candidateSummaryNodes.end());
