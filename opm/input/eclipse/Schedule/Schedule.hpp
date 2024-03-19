@@ -88,6 +88,7 @@ namespace Opm
     class Schedule {
     public:
         Schedule() = default;
+        ~Schedule() = default;
         explicit Schedule(std::shared_ptr<const Python> python_handle);
         Schedule(const Deck& deck,
                  const EclipseGrid& grid,

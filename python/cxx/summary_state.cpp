@@ -42,7 +42,7 @@ std::vector<std::string> wells(const SummaryState * st) {
 
 void python::common::export_SummaryState(py::module& module) {
 
-    py::class_<SummaryState>(module, "SummaryState")
+    py::class_<SummaryState, std::shared_ptr<SummaryState>>(module, "SummaryState")
         .def(py::init<std::time_t>())
         .def("update", &SummaryState::update)
         .def("update_well_var", &SummaryState::update_well_var)
