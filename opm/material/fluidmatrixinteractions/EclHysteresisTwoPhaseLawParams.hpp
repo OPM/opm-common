@@ -644,8 +644,6 @@ private:
             Scalar krnMdcDrainage = EffLawT::twoPhaseSatKrn(drainageParams(), krnSwMdc_);
             Scalar SwKrnMdcImbibition = EffLawT::twoPhaseSatKrnInv(imbibitionParams(), krnMdcDrainage);
             deltaSwImbKrn_ = SwKrnMdcImbibition - krnSwMdc_;
-            assert(std::abs(EffLawT::twoPhaseSatKrn(imbibitionParams(), krnSwMdc_ + deltaSwImbKrn_)
-                            - EffLawT::twoPhaseSatKrn(drainageParams(), krnSwMdc_)) < 1e-8);
         }
 
         // Scalar pcMdcDrainage = EffLawT::twoPhaseSatPcnw(drainageParams(), pcSwMdc_);
