@@ -54,7 +54,7 @@ WELSPECS
 
 COMPDAT
 	'PROD1'	10	10	3	3	'OPEN'	1*	1*	0.5 /
-	'PROD2'	5	  5 	3	3	'SHUT'	1*	1*	0.5 /
+	'PROD2'	5	  5 	3	3	'OPEN'	1*	1*	0.5 /
 	'INJ'	1	1	1	1	'OPEN'	1*	1*	0.5 /
 /
 

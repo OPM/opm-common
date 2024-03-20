@@ -3,16 +3,20 @@
 -- individual contents of the database are licensed under the Database Contents
 -- License: http://opendatacommons.org/licenses/dbcl/1.0/
 
--- Copyright (C) 2015 Statoil
+-- Copyright (C) 2015-2024 Equinor ASA
 
 -- This simulation is based on the data given in 
 -- 'Comparison of Solutions to a Three-Dimensional
 -- Black-Oil Reservoir Simulation Problem' by Aziz S. Odeh,
 -- Journal of Petroleum Technology, January 1981
---
+
 -- Here in this case the deck has been modified by adding a PYACTION and ACTIONX
--- keyword. The deck is used in a integration test with the dummy simulator
--- msim.
+-- keyword. The modifications are done via calls to the actionx_callback function
+-- in the given python file action3_actionx_callback.py. The same modifications
+-- without an actionx_callback are tested with MSIM_PYATION_CHANGING_SCHEDULE.DATA
+-- and action3.py.
+
+-- The deck is used in a integration test with the dummy simulator msim.
 
 
 
@@ -60,7 +64,7 @@ WELLDIMS
 -- 	   - we are dealing with only one 'group'
 -- Item 4: maximum number of wells in any one group
 -- 	   - there must be two wells in a group as there are two wells in total
-   5 1 1 2 /
+   5 1 1 5 /
 
 UNIFOUT
 
@@ -453,10 +457,20 @@ WELOPEN
 
 ENDACTIO
 
+ACTIONX
+OPENWELL 0 /
+DAY = 60 /
+/
+
+WELOPEN
+  '?'  'OPEN' /
+/
+
+ENDACTIO
 
 PYACTION
-   ACTION2 UNLIMITED /
-   'action3.py' /
+   ACTION3 UNLIMITED /
+   'action3_actionx_callback.py' /
 
 DATES
    1 'JAN'  2015 /

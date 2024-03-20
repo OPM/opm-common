@@ -1,15 +1,12 @@
-import math
-
 def run(ecl_state, schedule, report_step, summary_state, actionx_callback):
 
-    wells = []
     if report_step == 1:
-        wells = ["P1"]
+        schedule.shut_well("P1", report_step)
     elif report_step == 2:
-        wells = ["P2"]
+        schedule.shut_well("P2", report_step)
     elif report_step == 3:
-        wells = ["P3"]
+        schedule.shut_well("P3", report_step)
     elif report_step == 4:
-        wells = ["P4"]
-
-    actionx_callback("CLOSEWELL", wells)
+        schedule.shut_well("P4", report_step)
+    elif report_step == 5:
+        schedule.open_well("P1", report_step)

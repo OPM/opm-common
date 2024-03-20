@@ -531,48 +531,67 @@ BOOST_AUTO_TEST_CASE(PYTHON_WELL_CLOSE_EXAMPLE) {
     BOOST_CHECK_EQUAL( sim.st.get("run_count"), 13);
 }
 
-BOOST_AUTO_TEST_CASE(PYTHON_ACTIONX) {
-    const auto& deck = Parser().parseFile("msim/MSIM_PYACTION_ACTIONX.DATA");
-    test_data td( deck );
-    msim sim(td.state, td.schedule);
-    {
-        WorkArea work_area("test_msim");
-        EclipseIO io(td.state, td.state.getInputGrid(), sim.schedule, td.summary_config);
-
-        sim.well_rate("P1", data::Rates::opt::oil, prod_opr);
-        sim.well_rate("P2", data::Rates::opt::oil, prod_opr);
-        sim.well_rate("P3", data::Rates::opt::oil, prod_opr);
-        sim.well_rate("P4", data::Rates::opt::oil, prod_opr);
-
-        sim.well_rate("P1", data::Rates::opt::wat, prod_wpr_P1);
-        sim.well_rate("P2", data::Rates::opt::wat, prod_wpr_P2);
-        sim.well_rate("P3", data::Rates::opt::wat, prod_wpr_P3);
-        sim.well_rate("P4", data::Rates::opt::wat, prod_wpr_P4);
-
+BOOST_AUTO_TEST_CASE(PYTHON_CHANGING_SCHEUDULE) {
+    // Both decks test the same modifications, deck1 without an actionx_callback function, deck2 with an actionx_callback function 
+    const auto& deck1 = Parser().parseFile("msim/MSIM_PYACTION_CHANGING_SCHEDULE.DATA");
+    const auto& deck2 = Parser().parseFile("msim/MSIM_PYACTION_CHANGING_SCHEDULE_ACTIONX_CALLBACK.DATA");
+    std::vector<Deck> decks = {deck1, deck2};
+    for (auto&& deck : decks) {
+        test_data td( deck );
+        msim sim(td.state, td.schedule);
         {
-            const auto& w1 = sim.schedule.getWell("P1", 0);
-            const auto& w2 = sim.schedule.getWell("P2", 0);
-            const auto& w3 = sim.schedule.getWell("P3", 0);
-            const auto& w4 = sim.schedule.getWell("P4", 0);
+            WorkArea work_area("test_msim");
+            EclipseIO io(td.state, td.state.getInputGrid(), sim.schedule, td.summary_config);
 
-            BOOST_CHECK(w1.getStatus() == Well::Status::OPEN );
-            BOOST_CHECK(w2.getStatus() == Well::Status::OPEN );
-            BOOST_CHECK(w3.getStatus() == Well::Status::OPEN );
-            BOOST_CHECK(w4.getStatus() == Well::Status::OPEN );
-        }
+            sim.well_rate("P1", data::Rates::opt::oil, prod_opr);
+            sim.well_rate("P2", data::Rates::opt::oil, prod_opr);
+            sim.well_rate("P3", data::Rates::opt::oil, prod_opr);
+            sim.well_rate("P4", data::Rates::opt::oil, prod_opr);
+
+            sim.well_rate("P1", data::Rates::opt::wat, prod_wpr_P1);
+            sim.well_rate("P2", data::Rates::opt::wat, prod_wpr_P2);
+            sim.well_rate("P3", data::Rates::opt::wat, prod_wpr_P3);
+            sim.well_rate("P4", data::Rates::opt::wat, prod_wpr_P4);
+
+            {
+                const auto& w1 = sim.schedule.getWell("P1", 0);
+                const auto& w2 = sim.schedule.getWell("P2", 0);
+                const auto& w3 = sim.schedule.getWell("P3", 0);
+                const auto& w4 = sim.schedule.getWell("P4", 0);
+
+                BOOST_CHECK(w1.getStatus() == Well::Status::OPEN );
+                BOOST_CHECK(w2.getStatus() == Well::Status::OPEN );
+                BOOST_CHECK(w3.getStatus() == Well::Status::OPEN );
+                BOOST_CHECK(w4.getStatus() == Well::Status::OPEN );
+            }
 
 
-        sim.run(io, false);
+            sim.run(io, false);
 
-        {
-            const auto& w1 = sim.schedule.getWell("P1", 1);
-            const auto& w2 = sim.schedule.getWell("P2", 2);
-            const auto& w3 = sim.schedule.getWell("P3", 3);
-            const auto& w4 = sim.schedule.getWell("P4", 4);
-            BOOST_CHECK(w1.getStatus() ==  Well::Status::SHUT );
-            BOOST_CHECK(w2.getStatus() ==  Well::Status::SHUT );
-            BOOST_CHECK(w3.getStatus() ==  Well::Status::SHUT );
-            BOOST_CHECK(w4.getStatus() ==  Well::Status::SHUT );
+            {
+                const auto& w1_at_reportstep1 = sim.schedule.getWell("P1", 1);
+                const auto& w2_at_reportstep2 = sim.schedule.getWell("P2", 2);
+                const auto& w3_at_reportstep3 = sim.schedule.getWell("P3", 3);
+                const auto& w4_at_reportstep4 = sim.schedule.getWell("P4", 4);
+                BOOST_CHECK(w1_at_reportstep1.getStatus() ==  Well::Status::SHUT );
+                BOOST_CHECK(w2_at_reportstep2.getStatus() ==  Well::Status::SHUT );
+                BOOST_CHECK(w3_at_reportstep3.getStatus() ==  Well::Status::SHUT );
+                BOOST_CHECK(w4_at_reportstep4.getStatus() ==  Well::Status::SHUT );
+            }
+            {
+                const auto& w1_at_reportstep4 = sim.schedule.getWell("P1", 4);
+                const auto& w1_at_reportstep5 = sim.schedule.getWell("P1", 5);
+                const auto& w1_at_reportstep6 = sim.schedule.getWell("P1", 6);
+                const auto& w2_at_reportstep6 = sim.schedule.getWell("P2", 6);
+                const auto& w3_at_reportstep6 = sim.schedule.getWell("P3", 6);
+                const auto& w4_at_reportstep6 = sim.schedule.getWell("P4", 6);
+                BOOST_CHECK(w1_at_reportstep4.getStatus() ==  Well::Status::SHUT ); // Opened P1 again at step 5
+                BOOST_CHECK(w1_at_reportstep5.getStatus() ==  Well::Status::OPEN ); // Opened P1 again at step 5
+                BOOST_CHECK(w1_at_reportstep6.getStatus() ==  Well::Status::OPEN ); // Opened P1 again at step 5
+                BOOST_CHECK(w2_at_reportstep6.getStatus() ==  Well::Status::SHUT ); 
+                BOOST_CHECK(w3_at_reportstep6.getStatus() ==  Well::Status::SHUT );
+                BOOST_CHECK(w4_at_reportstep6.getStatus() ==  Well::Status::SHUT );
+            }
         }
     }
 }

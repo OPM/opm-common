@@ -156,9 +156,11 @@ BOOST_AUTO_TEST_CASE(PYACTION)
     py_action.run(ecl_state, schedule, 10, st, actionx_callback);
 
     const auto& well1 = schedule.getWell("PROD1", 10);
-    const auto& well2 = schedule.getWell("PROD2", 10);
+    const auto& well2_1 = schedule.getWell("PROD2", 1);
+    const auto& well2_10 = schedule.getWell("PROD2", 10);
     BOOST_CHECK( well1.getStatus() == Well::Status::SHUT );
-    BOOST_CHECK( well2.getStatus() == Well::Status::OPEN );
+    BOOST_CHECK( well2_1.getStatus() == Well::Status::SHUT );
+    BOOST_CHECK( well2_10.getStatus() == Well::Status::OPEN );
     BOOST_CHECK( st.has("RUN_COUNT") );
 
     std::map<std::string, Action::PyAction> action_map;

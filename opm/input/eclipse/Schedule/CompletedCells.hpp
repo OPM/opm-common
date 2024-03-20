@@ -100,6 +100,7 @@ public:
     };
 
     CompletedCells() = default;
+    ~CompletedCells() = default;
     explicit CompletedCells(const GridDims& dims);
     CompletedCells(std::size_t nx, std::size_t ny, std::size_t nz);
 
