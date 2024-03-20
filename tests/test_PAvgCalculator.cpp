@@ -35,8 +35,8 @@
 #include <algorithm>
 #include <array>
 #include <cstddef>
-#include <utility>
 #include <type_traits>
+#include <utility>
 #include <vector>
 
 // ===========================================================================
@@ -177,6 +177,21 @@ namespace {
         std::sort(v.begin(), v.end());
         return v;
     }
+
+    template <typename T>
+    std::vector<bool>
+    makeActiveMap(const std::vector<T>& v, const std::vector<T>& activeElements)
+    {
+        auto isActive = std::vector<bool>{};
+        isActive.reserve(v.size());
+
+        for (const auto& elm : v) {
+            isActive.push_back(std::binary_search(activeElements.begin(),
+                                                  activeElements.end(), elm));
+        }
+
+        return isActive;
+    }
 } // Anonymous namespace
 
 BOOST_AUTO_TEST_SUITE(Basic_Operations)
@@ -289,6 +304,88 @@ BOOST_AUTO_TEST_CASE(Construct_Horizontal_X_5_Cols)
     BOOST_CHECK_EQUAL_COLLECTIONS(wbpCells   .begin(), wbpCells   .end(),
                                   expectCells.begin(), expectCells.end());
 
+    BOOST_CHECK_EQUAL_COLLECTIONS(wbpConns   .begin(), wbpConns   .end(),
+                                  expectConns.begin(), expectConns.end());
+}
+
+BOOST_AUTO_TEST_CASE(Prune_Inactive_Cells)
+{
+    const auto dims = std::array { 10, 10, 3 };
+
+    // Producer connected in Z direction in column (9,9) of all layers,
+    // meaning cells (9,9,1), (9,9,2), and (9,9,3).
+    auto prod = Opm::PAvgCalculator {
+        shoeBox(dims), qfsProducer(dims)
+    };
+
+    const auto expectCells = sort(std::vector {
+        globIndex({7, 7, 0}, dims),                             globIndex({9, 7, 0}, dims),
+                                    globIndex({8, 8, 0}, dims),
+        globIndex({7, 9, 0}, dims),                             globIndex({9, 9, 0}, dims),
+
+                                    globIndex({8, 7, 1}, dims),
+        globIndex({7, 8, 1}, dims), globIndex({8, 8, 1}, dims), globIndex({9, 8, 1}, dims),
+                                    globIndex({8, 9, 1}, dims),
+
+        globIndex({7, 7, 2}, dims), globIndex({8, 7, 2}, dims), globIndex({9, 7, 2}, dims),
+        globIndex({7, 8, 2}, dims), globIndex({8, 8, 2}, dims), globIndex({9, 8, 2}, dims),
+        globIndex({7, 9, 2}, dims), globIndex({8, 9, 2}, dims), globIndex({9, 9, 2}, dims),
+    });
+
+    prod.pruneInactiveWBPCells(makeActiveMap(prod.allWBPCells(), expectCells));
+
+    const auto wbpCells = sort(prod.allWBPCells());
+    const auto wbpConns = sort(prod.allWellConnections());
+
+    const auto expectConns = std::vector {
+        std::size_t{0}, std::size_t{1}, std::size_t{2},
+    };
+
+    BOOST_CHECK_EQUAL_COLLECTIONS(wbpCells   .begin(), wbpCells   .end(),
+                                  expectCells.begin(), expectCells.end());
+
+    BOOST_CHECK_EQUAL_COLLECTIONS(wbpConns   .begin(), wbpConns   .end(),
+                                  expectConns.begin(), expectConns.end());
+}
+
+BOOST_AUTO_TEST_CASE(Prune_Inactive_Connections)
+{
+    const auto dims = std::array { 10, 10, 3 };
+
+    // Producer connected in Z direction in column (9,9) of all layers,
+    // meaning cells (9,9,1), (9,9,2), and (9,9,3).
+    auto prod = Opm::PAvgCalculator {
+        shoeBox(dims), qfsProducer(dims)
+    };
+
+    const auto expectCells = sort(std::vector {
+        globIndex({7, 7, 0}, dims), globIndex({8, 7, 0}, dims), globIndex({9, 7, 0}, dims),
+        globIndex({7, 8, 0}, dims),                             globIndex({9, 8, 0}, dims),
+        globIndex({7, 9, 0}, dims), globIndex({8, 9, 0}, dims), globIndex({9, 9, 0}, dims),
+
+        globIndex({7, 7, 1}, dims), globIndex({8, 7, 1}, dims), globIndex({9, 7, 1}, dims),
+        globIndex({7, 8, 1}, dims),                             globIndex({9, 8, 1}, dims),
+        globIndex({7, 9, 1}, dims), globIndex({8, 9, 1}, dims), globIndex({9, 9, 1}, dims),
+
+        globIndex({7, 7, 2}, dims), globIndex({8, 7, 2}, dims), globIndex({9, 7, 2}, dims),
+        globIndex({7, 8, 2}, dims),                             globIndex({9, 8, 2}, dims),
+        globIndex({7, 9, 2}, dims), globIndex({8, 9, 2}, dims), globIndex({9, 9, 2}, dims),
+    });
+
+    prod.pruneInactiveWBPCells(makeActiveMap(prod.allWBPCells(), expectCells));
+
+    const auto wbpCells = sort(prod.allWBPCells());
+    const auto wbpConns = sort(prod.allWellConnections());
+
+    const auto expectConns = std::vector {
+        std::size_t{0}, std::size_t{1}, std::size_t{2},
+    };
+
+    BOOST_CHECK_EQUAL_COLLECTIONS(wbpCells   .begin(), wbpCells   .end(),
+                                  expectCells.begin(), expectCells.end());
+
+    // Well connection source locations must be full input set even if all
+    // connections are in deactivated cells.
     BOOST_CHECK_EQUAL_COLLECTIONS(wbpConns   .begin(), wbpConns   .end(),
                                   expectConns.begin(), expectConns.end());
 }

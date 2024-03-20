@@ -599,8 +599,9 @@ PAvgCalculator::Accumulator::getFinalResult() const
 
 PAvgCalculator::PAvgCalculator(const GridDims&        cellIndexMap,
                                const WellConnections& connections)
+    : numInputConns_ { connections.size() }
 {
-    this->openConns_.reserve(connections.size());
+    this->openConns_.reserve(this->numInputConns_);
 
     auto setupHelperMap = SetupMap{};
 
@@ -640,6 +641,9 @@ void PAvgCalculator::pruneInactiveWBPCells(const std::vector<bool>& isActive)
 
         this->contributingCells_.swap(newWBPCells);
     }
+
+    // Filter connections_ down to active cells only.
+    this->pruneInactiveConnections(isActive);
 
     // Re-map/renumber original element indices to active cells only.
     //
@@ -689,7 +693,7 @@ void PAvgCalculator::inferBlockAveragePressures(const Sources& sources,
 
 std::vector<std::size_t> PAvgCalculator::allWellConnections() const
 {
-    auto ix = std::vector<std::size_t>(this->connections_.size());
+    auto ix = std::vector<std::size_t>(this->numInputConns_);
     std::iota(ix.begin(), ix.end(), std::size_t{0});
 
     return ix;
@@ -742,6 +746,8 @@ void PAvgCalculator::addConnection(const GridDims&   cellIndexMap,
         this->openConns_.push_back(this->connections_.size());
     }
 
+    this->inputConn_.push_back(this->connections_.size());
+
     this->connections_.emplace_back(conn.CF(), conn.depth(),
                                     localCellPos->second);
 
@@ -753,6 +759,68 @@ void PAvgCalculator::addConnection(const GridDims&   cellIndexMap,
     }
     else if (conn.dir() == Connection::Direction::Z) {
         this->addNeighbours_Z(cellIndexMap, setupHelperMap);
+    }
+}
+
+void PAvgCalculator::pruneInactiveConnections(const std::vector<bool>& isActive)
+{
+    const auto nConn = this->connections_.size();
+
+    auto keep = std::vector<std::vector<PAvgConnection>::size_type>{};
+    keep.reserve(nConn);
+
+    for (auto connIx = 0*nConn; connIx < nConn; ++connIx) {
+        if (isActive[this->connections_[connIx].cell]) {
+            keep.push_back(connIx);
+        }
+    }
+
+    if (keep.size() == nConn) {
+        // All existing connections are active.  Nothing to do.
+        return;
+    }
+
+    // If we get here, not all existing connections are active.  Filter
+    // connections_ and openConns_ down to active set only.
+
+    // 1. Extract active subset of open connections in original numbering.
+    {
+        auto keepOpen = std::vector<std::vector<PAvgConnection>::size_type>{};
+        keepOpen.reserve(this->openConns_.size());
+
+        for (const auto& openConn : this->openConns_) {
+            if (isActive[this->connections_[openConn].cell]) {
+                keepOpen.push_back(openConn);
+            }
+        }
+
+        this->openConns_.swap(keepOpen);
+    }
+
+    // 2. Extract active subset of all connections.  Create all->active
+    // index map (newConnIDs) in the process.
+    auto newConnIDs = std::vector<std::vector<PAvgConnection>::size_type>(nConn);
+
+    {
+        auto filteredConns = std::vector<PAvgConnection>{};
+        auto filteredInput = std::vector<std::vector<PAvgConnection>::size_type>{};
+        filteredConns.reserve(keep.size());
+        filteredInput.reserve(keep.size());
+
+        for (const auto& keepConn : keep) {
+            newConnIDs[keepConn] = filteredConns.size();
+            filteredConns.push_back(this->connections_[keepConn]);
+            filteredInput.push_back(this->inputConn_[keepConn]);
+        }
+
+        this->connections_.swap(filteredConns);
+        this->inputConn_  .swap(filteredInput);
+    }
+
+    // 3. Renumber set of open connections to match new sequence of active
+    // connections_.
+    for (auto& openConnID : this->openConns_) {
+        openConnID = newConnIDs[openConnID];
     }
 }
 
@@ -956,18 +1024,18 @@ PAvgCalculator::connectionPressureOffsetWell(const std::size_t nconn,
 {
     auto dp = std::vector<double>(nconn);
 
-    auto density = [&sources](const auto connIx)
+    auto density = [&sources, this](const auto connIx)
     {
         using Item = PAvgDynamicSourceData::SourceDataSpan<const double>::Item;
 
-        return sources.wellConns()[connIx][Item::MixtureDensity];
+        return sources.wellConns()[this->inputConn_[connIx]][Item::MixtureDensity];
     };
 
     for (auto connID = 0*nconn; connID < nconn; ++connID) {
-        const auto  connIx = connIndex(connID);
-        const auto& conn = this->connections_[connIx];
+        const auto connIx = connIndex(connID);
+        const auto depth  = this->connections_[connIx].depth;
 
-        dp[connID] = pressureOffset(density(connIx), conn.depth, gravity, refDepth);
+        dp[connID] = pressureOffset(density(connIx), depth, gravity, refDepth);
     }
 
     return dp;
