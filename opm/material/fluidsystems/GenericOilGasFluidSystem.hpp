@@ -60,8 +60,14 @@ namespace Opm {
         // Possibly when with a dummy phase like water?
         static const int numMiscibleComponents = NumComp;
         // TODO: phase location should be more general
+        static constexpr int waterPhaseIdx = -1;
         static constexpr int oilPhaseIdx = 0;
         static constexpr int gasPhaseIdx = 1;
+
+        static constexpr int waterCompIdx = -1;
+        static constexpr int oilCompIdx = 0;
+        static constexpr int gasCompIdx = 1;
+        static constexpr int compositionSwitchIdx = -1; //equil initilizer
 
         template <class ValueType>
         using ParameterCache = Opm::PTFlashParameterCache<ValueType, GenericOilGasFluidSystem<Scalar, NumComp>>;
