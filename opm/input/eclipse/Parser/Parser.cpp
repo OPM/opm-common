@@ -1097,6 +1097,7 @@ std::unique_ptr<RawKeyword> tryParseKeyword( ParserState& parserState, const Par
 
 std::string_view advance_parser_state( ParserState& parserState, const std::string& to_keyw )
 {
+    
     auto line = parserState.getline();
 
     while (line != to_keyw) {
@@ -1195,13 +1196,16 @@ void cleanup_deck_keyword_list(ParserState& parserState, const std::set<Opm::Ecl
     if (ignore_regions){
 
         auto iter_from = std::find(keyw_names.begin(), keyw_names.end(), "REGIONS");            
-        auto iter_to = std::find(keyw_names.begin(), keyw_names.end(), "SOLUTION");
+
+        if (iter_from != keyw_names.end()){
+            auto iter_to = std::find(keyw_names.begin(), keyw_names.end(), "SOLUTION");
         
-        auto n1 = std::distance(keyw_names.begin(), iter_from);
-        auto n2 = std::distance(keyw_names.begin(), iter_to);
+            auto n1 = std::distance(keyw_names.begin(), iter_from);
+            auto n2 = std::distance(keyw_names.begin(), iter_to);
         
-        parserState.deck.remove_keywords(n1, n2);
-        keyw_names.erase(keyw_names.begin() + n1, keyw_names.begin() + n2);
+            parserState.deck.remove_keywords(n1, n2);
+            keyw_names.erase(keyw_names.begin() + n1, keyw_names.begin() + n2);
+        }
     }
 
     if (ignore_solution){
@@ -1309,8 +1313,15 @@ bool parseState( ParserState& parserState, const Parser& parser ) {
         if ((ignore_props) && (keyw=="PROPS")){
             do_not_add = true;
             addSectionKeyword(parserState, "PROPS");
-            keyw = advance_parser_state( parserState, "REGIONS" );
-            addSectionKeyword(parserState, "REGIONS");
+
+            if (has_regions){
+                keyw = advance_parser_state( parserState, "REGIONS" );
+                addSectionKeyword(parserState, "REGIONS");
+            } else {
+                keyw = advance_parser_state( parserState, "SOLUTION" );
+                addSectionKeyword(parserState, "SOLUTION");
+            }
+            
         }
         
         if ((ignore_regions) && (keyw=="REGIONS")){
@@ -1323,8 +1334,14 @@ bool parseState( ParserState& parserState, const Parser& parser ) {
         if ((ignore_solution) && (keyw=="SOLUTION")){
             do_not_add = true;
             addSectionKeyword(parserState, "SOLUTION");
-            keyw = advance_parser_state( parserState, "SUMMARY" );
-            addSectionKeyword(parserState, "SUMMARY");
+
+            if (has_summary){
+                keyw = advance_parser_state( parserState, "SUMMARY" );
+                addSectionKeyword(parserState, "SUMMARY");
+            } else {
+                keyw = advance_parser_state( parserState, "SCHEDULE" );
+                addSectionKeyword(parserState, "SCHEDULE");
+            }
         }
         
         if ((ignore_summary) && (keyw=="SUMMARY")){
@@ -1510,6 +1527,7 @@ bool parseState( ParserState& parserState, const Parser& parser ) {
     Deck Parser::parseFile(const std::string &dataFileName, const ParseContext& parseContext,
                            ErrorGuard& errors, const std::vector<Opm::Ecl::SectionType>& sections) const {
 
+        
         std::set<Opm::Ecl::SectionType> ignore_sections;
 
         if (sections.size() > 0) {
@@ -1547,10 +1565,10 @@ bool parseState( ParserState& parserState, const Parser& parser ) {
         parseState( parserState, *this );
         
         auto ignore = parserState.get_ignore();
-
+        
         if (ignore.size() > 0)
             cleanup_deck_keyword_list(parserState, ignore);
-        
+
         return std::move( parserState.deck );
     }
 
