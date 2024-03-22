@@ -108,6 +108,31 @@ namespace Opm {
             }
         }
 
+#if HAVE_ECL_INPUT
+        /*!
+     * \brief Initialize the fluid system using an ECL deck object
+     */
+        static void initFromState(const EclipseState& eclState, const Schedule& schedule){
+            using FluidSystem = GenericOilGasFluidSystem<Scalar, NumComp>;
+            FluidSystem::init();
+            std::size_t numRegions = eclState.runspec().tabdims().getNumPVTTables();
+            using CompParm = typename FluidSystem::ComponentParam;
+            using CO2 = Opm::SimpleCO2<Scalar>;
+            using C1 = Opm::C1<Scalar>;
+            using C10 = Opm::C10<Scalar>;
+            FluidSystem::addComponent(CompParm {CO2::name(), CO2::molarMass(), CO2::criticalTemperature(),
+                                                CO2::criticalPressure(), CO2::criticalVolume(), CO2::acentricFactor()});
+            FluidSystem::addComponent(CompParm {C1::name(), C1::molarMass(), C1::criticalTemperature(),
+                                                C1::criticalPressure(), C1::criticalVolume(), C1::acentricFactor()});
+            FluidSystem::addComponent(CompParm{C10::name(), C10::molarMass(), C10::criticalTemperature(),
+                                               C10::criticalPressure(), C10::criticalVolume(), C10::acentricFactor()});
+
+        }
+#endif // HAVE_ECL_INPUT
+
+
+
+
         static void init()
         {
             component_param_.reserve(numComponents);
