@@ -113,11 +113,23 @@ namespace Opm {
      * \brief Initialize the fluid system using an ECL deck object
      */
         static void initFromState(const EclipseState& eclState, const Schedule& schedule){
+            const auto& comp_config = eclState.compositionalConfig();
+            // how should we utilize the numComps from the CompositionalConfig?
             using FluidSystem = GenericOilGasFluidSystem<Scalar, NumComp>;
+            const std::size_t num_comps = comp_config.numComps();
+            // const std::size_t num_eos_region = comp_config.
+            assert(num_comps == NumComp);
+            const auto& names = comp_config.compName();
+            const auto& eos_type = comp_config.eosType(0);
+            const auto& molar_weight = comp_config.molecularWeights(0);
+            const auto& acentric_factor = comp_config.acentricFactors(0);
+            const auto& critic_pressure = comp_config.criticalPressure(0);
+            const auto& critic_temp = comp_config.criticalTemperature(0);
+            const auto& critic_volume = comp_config.criticalVolume(0);
             FluidSystem::init();
             std::size_t numRegions = eclState.runspec().tabdims().getNumPVTTables();
             using CompParm = typename FluidSystem::ComponentParam;
-            using CO2 = Opm::SimpleCO2<Scalar>;
+            /* using CO2 = Opm::SimpleCO2<Scalar>;
             using C1 = Opm::C1<Scalar>;
             using C10 = Opm::C10<Scalar>;
             FluidSystem::addComponent(CompParm {CO2::name(), CO2::molarMass(), CO2::criticalTemperature(),
@@ -126,7 +138,11 @@ namespace Opm {
                                                 C1::criticalPressure(), C1::criticalVolume(), C1::acentricFactor()});
             FluidSystem::addComponent(CompParm{C10::name(), C10::molarMass(), C10::criticalTemperature(),
                                                C10::criticalPressure(), C10::criticalVolume(), C10::acentricFactor()});
-
+            */
+            for (std::size_t c = 0; c < num_comps; ++c) {
+                FluidSystem::addComponent(CompParm{names[c], molar_weight[c], critic_temp[c], critic_pressure[c],
+                                                          critic_volume[c], acentric_factor[c]});
+            }
         }
 #endif // HAVE_ECL_INPUT
 
