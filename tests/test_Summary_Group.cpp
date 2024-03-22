@@ -91,14 +91,9 @@ namespace {
         return smry->get(variable + ':' + groupname)[timeIdx];
     }
 
-} // Anonymous
-
-
+} // Anonymous namespace
 
 namespace {
-/* conversion factor for whenever 'day' is the unit of measure, whereas we
- * expect input in SI units (seconds)
- */
 
 std::unique_ptr< EclIO::ESmry > readsum( const std::string& base ) {
     return std::make_unique<EclIO::ESmry>(base);
@@ -107,6 +102,10 @@ std::unique_ptr< EclIO::ESmry > readsum( const std::string& base ) {
 using p_cmode = Opm::Group::ProductionCMode;
 using i_cmode = Opm::Group::InjectionCMode;
 
+/*
+ * conversion factor for whenever 'day' is the unit of measure, whereas we
+ * expect input in SI units (seconds)
+ */
 static const int day = 24 * 60 * 60;
 
 static data::Wells result_wells() {
@@ -264,7 +263,7 @@ BOOST_AUTO_TEST_CASE(group_keywords) {
 
     SummaryState st(TimeService::now());
 
-    out::Summary writer( cfg.es, cfg.config, cfg.grid, cfg.schedule , cfg.name );
+    out::Summary writer(cfg.config, cfg.es, cfg.grid, cfg.schedule, cfg.name);
     writer.eval(st, 0, 0*day, cfg.wells, cfg.wbp, cfg.grp_nwrk, {}, {}, {}, {});
     writer.add_timestep( st, 0, false);
 
@@ -279,7 +278,6 @@ BOOST_AUTO_TEST_CASE(group_keywords) {
     //BOOST_CHECK( ecl_sum_has_report_step( resp, 1 ) );
     BOOST_CHECK( ecl_sum_has_group_var( resp, "TEST", "GMCTP" ) );
 
-
     // Integer flag indicating current active group control
     BOOST_CHECK_EQUAL( static_cast<int>(ecl_sum_get_group_var( resp, 1, "TEST", "GMCTP" )), 0 );
     BOOST_CHECK_EQUAL( static_cast<int>(ecl_sum_get_group_var( resp, 1, "LOWER", "GMCTW" )), 3 );
@@ -288,8 +286,6 @@ BOOST_AUTO_TEST_CASE(group_keywords) {
     BOOST_CHECK_EQUAL( static_cast<int>(ecl_sum_get_group_var( resp, 1, "UPPER", "GMCTP" )), 3 );
     BOOST_CHECK_EQUAL( static_cast<int>(ecl_sum_get_group_var( resp, 1, "UPPER", "GMCTW" )), 4 );
     BOOST_CHECK_EQUAL( static_cast<int>(ecl_sum_get_group_var( resp, 1, "UPPER", "GMCTG" )), 3 );
-
-
 }
 
 BOOST_AUTO_TEST_SUITE_END()

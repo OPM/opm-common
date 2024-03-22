@@ -50,6 +50,8 @@
 #include <opm/io/eclipse/ESmry.hpp>
 #include <opm/io/eclipse/OutputStream.hpp>
 
+#include <opm/common/utility/String.hpp>
+
 #include <algorithm>
 #include <cstddef>
 #include <cstdlib>
@@ -62,30 +64,25 @@
 #include <sstream>
 #include <unordered_map>
 #include <utility>    // move
-
+#include <vector>
 
 namespace {
 
-inline std::string uppercase( std::string x ) {
-    std::transform( x.begin(), x.end(), x.begin(),
-        []( char c ) { return std::toupper( c ); } );
-
-    return x;
-}
-
-void ensure_directory_exists( const std::filesystem::path& odir )
+void ensure_directory_exists(const std::filesystem::path& odir)
 {
     namespace fs = std::filesystem;
 
-    if (fs::exists( odir ) && !fs::is_directory( odir ))
+    if (fs::exists(odir) && !fs::is_directory(odir)) {
         throw std::runtime_error {
             "Filesystem element '" + odir.generic_string()
             + "' already exists but is not a directory"
         };
+    }
 
     std::error_code ec{};
-    if (! fs::exists( odir ))
-        fs::create_directories( odir, ec );
+    if (! fs::exists(odir)) {
+        fs::create_directories(odir, ec);
+    }
 
     if (ec) {
         std::ostringstream msg;
@@ -98,31 +95,43 @@ void ensure_directory_exists( const std::filesystem::path& odir )
     }
 }
 
-}
+} // Anonymous namespace
 
-namespace Opm {
-class EclipseIO::Impl {
-    public:
-    Impl( const EclipseState&, EclipseGrid, const Schedule&, const SummaryConfig& , const std::string& baseName, const bool& writeEsmry);
-        void writeINITFile( const data::Solution& simProps, std::map<std::string, std::vector<int> > int_data, const std::vector<NNCdata>& nnc) const;
-        void writeEGRIDFile( const std::vector<NNCdata>& nnc );
-        std::pair<bool, bool> wantRFTOutput( const int report_step, const bool isSubstep ) const;
+class Opm::EclipseIO::Impl
+{
+public:
+    Impl(const EclipseState&,
+         EclipseGrid,
+         const Schedule&,
+         const SummaryConfig&,
+         const std::string& baseName,
+         const bool writeEsmry);
 
-        bool wantSummaryOutput(const int    report_step,
-                               const bool   isSubstep,
-                               const double secs_elapsed) const;
+    void writeINITFile(const data::Solution&                   simProps,
+                       std::map<std::string, std::vector<int>> int_data,
+                       const std::vector<NNCdata>&             nnc) const;
 
-        void recordSummaryOutput(const double secs_elapsed);
+    void writeEGRIDFile(const std::vector<NNCdata>& nnc);
 
-        const EclipseState& es;
-        EclipseGrid grid;
-        const Schedule& schedule;
-        std::string outputDir;
-        std::string baseName;
-        SummaryConfig summaryConfig;
-        out::Summary summary;
-        bool output_enabled;
-        std::optional<RestartIO::Helpers::AggregateAquiferData> aquiferData{std::nullopt};
+    std::pair<bool, bool> wantRFTOutput(const int report_step, const bool isSubstep) const;
+
+    bool wantSummaryOutput(const int    report_step,
+                           const bool   isSubstep,
+                           const double secs_elapsed) const;
+
+    void recordSummaryOutput(const double secs_elapsed);
+
+    const EclipseState& es;
+    EclipseGrid grid;
+
+    const Schedule& schedule;
+    std::string outputDir;
+    std::string baseName;
+    SummaryConfig summaryConfig;
+    out::Summary summary;
+    bool output_enabled;
+
+    std::optional<RestartIO::Helpers::AggregateAquiferData> aquiferData{std::nullopt};
 
 private:
     mutable bool sumthin_active_{false};
@@ -134,20 +143,20 @@ private:
     bool summaryAtRptOnly(const int report_step) const;
 };
 
-EclipseIO::Impl::Impl( const EclipseState& eclipseState,
-                       EclipseGrid grid_,
-                       const Schedule& schedule_,
-                       const SummaryConfig& summary_config,
-                       const std::string& base_name,
-                       const bool& writeEsmry)
-    : es( eclipseState )
-    , grid( std::move( grid_ ) )
-    , schedule( schedule_ )
-    , outputDir( eclipseState.getIOConfig().getOutputDir() )
-    , baseName( uppercase( eclipseState.getIOConfig().getBaseName() ) )
-    , summaryConfig( summary_config )
-    , summary( eclipseState, summaryConfig, grid , schedule, base_name, writeEsmry )
-    , output_enabled( eclipseState.getIOConfig().getOutputEnabled() )
+Opm::EclipseIO::Impl::Impl(const EclipseState& eclipseState,
+                           EclipseGrid          grid_,
+                           const Schedule&      schedule_,
+                           const SummaryConfig& summary_config,
+                           const std::string&   base_name,
+                           const bool           writeEsmry)
+    : es            (eclipseState)
+    , grid          (std::move(grid_))
+    , schedule      (schedule_)
+    , outputDir     (eclipseState.getIOConfig().getOutputDir())
+    , baseName      (uppercase(eclipseState.getIOConfig().getBaseName()))
+    , summaryConfig (summary_config)
+    , summary       (summaryConfig, eclipseState, grid, schedule, base_name, writeEsmry)
+    , output_enabled(eclipseState.getIOConfig().getOutputEnabled())
 {
     if (const auto& aqConfig = this->es.aquifer();
         aqConfig.connections().active() || aqConfig.hasNumericalAquifer())
@@ -158,10 +167,9 @@ EclipseIO::Impl::Impl( const EclipseState& eclipseState,
     }
 }
 
-
-void EclipseIO::Impl::writeINITFile(const data::Solution&                   simProps,
-                                    std::map<std::string, std::vector<int>> int_data,
-                                    const std::vector<NNCdata>&             nnc) const
+void Opm::EclipseIO::Impl::writeINITFile(const data::Solution&                   simProps,
+                                         std::map<std::string, std::vector<int>> int_data,
+                                         const std::vector<NNCdata>&             nnc) const
 {
     EclIO::OutputStream::Init initFile {
         EclIO::OutputStream::ResultSet { this->outputDir, this->baseName },
@@ -172,8 +180,8 @@ void EclipseIO::Impl::writeINITFile(const data::Solution&                   simP
                   simProps, std::move(int_data), nnc, initFile);
 }
 
-
-void EclipseIO::Impl::writeEGRIDFile( const std::vector<NNCdata>& nnc ) {
+void Opm::EclipseIO::Impl::writeEGRIDFile(const std::vector<NNCdata>& nnc)
+{
     const auto formatted = this->es.cfg().io().getFMTOUT();
 
     const auto ext = '.'
@@ -183,12 +191,12 @@ void EclipseIO::Impl::writeEGRIDFile( const std::vector<NNCdata>& nnc ) {
     const auto egridFile = (std::filesystem::path{ this->outputDir }
         / (this->baseName + ext)).generic_string();
 
-    this->grid.save( egridFile, formatted, nnc, this->es.getDeckUnitSystem());
+    this->grid.save(egridFile, formatted, nnc, this->es.getDeckUnitSystem());
 }
 
 std::pair<bool, bool>
-EclipseIO::Impl::wantRFTOutput( const int  report_step,
-                                const bool isSubstep ) const
+Opm::EclipseIO::Impl::wantRFTOutput(const int  report_step,
+                                    const bool isSubstep) const
 {
     if (isSubstep)
         return std::make_pair(false, false);
@@ -203,9 +211,9 @@ EclipseIO::Impl::wantRFTOutput( const int  report_step,
     return std::make_pair(step >= first_rft_out, step > first_rft_out);
 }
 
-bool EclipseIO::Impl::wantSummaryOutput(const int    report_step,
-                                        const bool   isSubstep,
-                                        const double secs_elapsed) const
+bool Opm::EclipseIO::Impl::wantSummaryOutput(const int    report_step,
+                                             const bool   isSubstep,
+                                             const double secs_elapsed) const
 {
     // Check this condition first because the end of a SUMTHIN interval
     // might coincide with a report step.  In that case we also need to
@@ -218,14 +226,14 @@ bool EclipseIO::Impl::wantSummaryOutput(const int    report_step,
             && (!this->sumthin_active_ || this->sumthin_triggered_));
 }
 
-void EclipseIO::Impl::recordSummaryOutput(const double secs_elapsed)
+void Opm::EclipseIO::Impl::recordSummaryOutput(const double secs_elapsed)
 {
     if (this->sumthin_triggered_)
         this->last_sumthin_output_ = secs_elapsed;
 }
 
-bool EclipseIO::Impl::checkAndRecordIfSumthinTriggered(const int    report_step,
-                                                       const double secs_elapsed) const
+bool Opm::EclipseIO::Impl::checkAndRecordIfSumthinTriggered(const int    report_step,
+                                                            const double secs_elapsed) const
 {
     const auto& sumthin = this->schedule[report_step - 1].sumthin();
 
@@ -235,45 +243,68 @@ bool EclipseIO::Impl::checkAndRecordIfSumthinTriggered(const int    report_step,
         && ! (secs_elapsed < this->last_sumthin_output_ + sumthin.value());
 }
 
-bool EclipseIO::Impl::summaryAtRptOnly(const int report_step) const
+bool Opm::EclipseIO::Impl::summaryAtRptOnly(const int report_step) const
 {
     return this->schedule[report_step - 1].rptonly();
 }
 
-/*
-int_data: Writes key(string) and integers vector to INIT file as eclipse keywords
-- Key: Max 8 chars.
-- Wrong input: invalid_argument exception.
-*/
-void EclipseIO::writeInitial( data::Solution simProps, std::map<std::string, std::vector<int> > int_data, const std::vector<NNCdata>& nnc) {
-    if( !this->impl->output_enabled )
+// ---------------------------------------------------------------------------
+
+Opm::EclipseIO::EclipseIO(const EclipseState&  es,
+                          EclipseGrid          grid,
+                          const Schedule&      schedule,
+                          const SummaryConfig& summary_config,
+                          const std::string&   baseName,
+                          const bool           writeEsmry)
+    : impl { std::make_unique<Impl>(es, std::move(grid),
+                                    schedule, summary_config,
+                                    baseName, writeEsmry) }
+{
+    if (! this->impl->output_enabled) {
         return;
+    }
 
-    {
-        const auto& es = this->impl->es;
-        const IOConfig& ioConfig = es.cfg().io();
+    ensure_directory_exists(this->impl->outputDir);
+}
 
-        simProps.convertFromSI( es.getUnits() );
-        if( ioConfig.getWriteINITFile() )
-            this->impl->writeINITFile( simProps , std::move(int_data), nnc );
+Opm::EclipseIO::~EclipseIO() = default;
 
-        if( ioConfig.getWriteEGRIDFile( ) )
-            this->impl->writeEGRIDFile( nnc );
+// int_data: Writes key(string) and integers vector to INIT file as eclipse keywords
+//  - Key: Max 8 chars.
+//  - Wrong input: invalid_argument exception.
+void Opm::EclipseIO::writeInitial(data::Solution                          simProps,
+                                  std::map<std::string, std::vector<int>> int_data,
+                                  const std::vector<NNCdata>&             nnc)
+{
+    if (! this->impl->output_enabled) {
+        return;
+    }
+
+    const auto& es = this->impl->es;
+    const auto& ioConfig = es.cfg().io();
+
+    if (ioConfig.getWriteINITFile()) {
+        simProps.convertFromSI(es.getUnits());
+        this->impl->writeINITFile(simProps, std::move(int_data), nnc);
+    }
+
+    if (ioConfig.getWriteEGRIDFile()) {
+        this->impl->writeEGRIDFile(nnc);
     }
 
 }
 
 // implementation of the writeTimeStep method
-void EclipseIO::writeTimeStep(const Action::State& action_state,
-                              const WellTestState& wtest_state,
-                              const SummaryState& st,
-                              const UDQState& udq_state,
-                              int report_step,
-                              bool  isSubstep,
-                              double secs_elapsed,
-                              RestartValue value,
-                              const bool write_double)
- {
+void Opm::EclipseIO::writeTimeStep(const Action::State& action_state,
+                                   const WellTestState& wtest_state,
+                                   const SummaryState&  st,
+                                   const UDQState&      udq_state,
+                                   const int            report_step,
+                                   const bool           isSubstep,
+                                   const double         secs_elapsed,
+                                   RestartValue         value,
+                                   const bool           write_double)
+{
     if (! this->impl->output_enabled) {
         return;
     }
@@ -295,20 +326,16 @@ void EclipseIO::writeTimeStep(const Action::State& action_state,
         this->impl->recordSummaryOutput(secs_elapsed);
     }
 
-
     if (final_step && !isSubstep && this->impl->summaryConfig.createRunSummary()) {
         std::filesystem::path outputDir { this->impl->outputDir } ;
         std::filesystem::path outputFile { outputDir / this->impl->baseName } ;
         EclIO::ESmry(outputFile).write_rsm_file();
     }
 
-    /*
-      Current implementation will not write restart files for substep,
-      but there is an unsupported option to the RPTSCHED keyword which
-      will request restart output from every timestep.
-    */
-    if(!isSubstep && schedule.write_rst_file(report_step))
-    {
+    // Current implementation will not write restart files for substep, but
+    // there is an unsupported option to the RPTSCHED keyword which will
+    // request restart output from every timestep.
+    if (!isSubstep && schedule.write_rst_file(report_step)) {
         EclIO::OutputStream::Restart rstFile {
             EclIO::OutputStream::ResultSet { this->impl->outputDir,
                                              this->impl->baseName },
@@ -348,51 +375,38 @@ void EclipseIO::writeTimeStep(const Action::State& action_state,
             std::stringstream ss;
             const auto& unit_system = this->impl->es.getUnits();
 
-            RptIO::write_report(ss, report.first, report.second, schedule, grid, unit_system, report_step);
+            RptIO::write_report(ss, report.first, report.second,
+                                schedule, grid, unit_system, report_step);
 
             auto log_string = ss.str();
-            if (!log_string.empty())
+            if (!log_string.empty()) {
                 OpmLog::note(log_string);
+            }
         }
     }
- }
+}
 
-
-RestartValue EclipseIO::loadRestart(Action::State& action_state, SummaryState& summary_state, const std::vector<RestartKey>& solution_keys, const std::vector<RestartKey>& extra_keys) const {
-    const auto& es                       = this->impl->es;
-    const auto& grid                     = this->impl->grid;
-    const auto& schedule                 = this->impl->schedule;
-    const InitConfig& initConfig         = es.getInitConfig();
-    const auto& ioConfig                 = es.getIOConfig();
-    const int report_step                = initConfig.getRestartStep();
-    const std::string filename           = ioConfig.getRestartFileName( initConfig.getRestartRootName(),
-                                                                        report_step,
-                                                                        false );
+Opm::RestartValue
+Opm::EclipseIO::loadRestart(Action::State&                 action_state,
+                            SummaryState&                  summary_state,
+                            const std::vector<RestartKey>& solution_keys,
+                            const std::vector<RestartKey>& extra_keys) const
+{
+    const auto& initConfig  = this->impl->es.getInitConfig();
+    const auto  report_step = initConfig.getRestartStep();
+    const auto  filename    = this->impl->es.getIOConfig()
+        .getRestartFileName(initConfig.getRestartRootName(), report_step, false);
 
     return RestartIO::load(filename, report_step, action_state, summary_state, solution_keys,
-                           es, grid, schedule, extra_keys);
+                           this->impl->es, this->impl->grid, this->impl->schedule, extra_keys);
 }
 
-EclipseIO::EclipseIO( const EclipseState& es,
-                      EclipseGrid grid,
-                      const Schedule& schedule,
-                      const SummaryConfig& summary_config,
-                      const std::string& baseName,
-                      const bool writeEsmry
-                    )
-    : impl( new Impl( es, std::move( grid ), schedule , summary_config, baseName, writeEsmry) )
+const Opm::out::Summary& Opm::EclipseIO::summary() const
 {
-    if( !this->impl->output_enabled )
-        return;
-
-    ensure_directory_exists( this->impl->outputDir );
-}
-
-const out::Summary& EclipseIO::summary() {
     return this->impl->summary;
 }
 
-
-EclipseIO::~EclipseIO() {}
-
-} // namespace Opm
+const Opm::SummaryConfig& Opm::EclipseIO::finalSummaryConfig() const
+{
+    return this->impl->summaryConfig;
+}

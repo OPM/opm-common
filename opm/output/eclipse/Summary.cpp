@@ -4134,12 +4134,12 @@ void validateElapsedTime(const double             secs_elapsed,
 class Opm::out::Summary::SummaryImplementation
 {
 public:
-    explicit SummaryImplementation(const EclipseState&  es,
-                                   const SummaryConfig& sumcfg,
-                                   const EclipseGrid&   grid,
-                                   const Schedule&      sched,
-                                   const std::string&   basename,
-                                   const bool           writeEsmry);
+    explicit SummaryImplementation(SummaryConfig&      sumcfg,
+                                   const EclipseState& es,
+                                   const EclipseGrid&  grid,
+                                   const Schedule&     sched,
+                                   const std::string&  basename,
+                                   const bool          writeEsmry);
 
     SummaryImplementation(const SummaryImplementation& rhs) = delete;
     SummaryImplementation(SummaryImplementation&& rhs) = default;
@@ -4214,7 +4214,10 @@ private:
                                             const Schedule&      sched,
                                             Evaluator::Factory&  evaluatorFactory);
 
-    void configureUDQ(const EclipseState& es, const SummaryConfig& summary_config, const Schedule& sched);
+    void configureUDQ(const EclipseState& es,
+                      const Schedule&     sched,
+                      Evaluator::Factory& evaluatorFactory,
+                      SummaryConfig&      summary_config);
 
     MiniStep& getNextMiniStep(const int report_step, bool isSubstep);
     const MiniStep& lastUnwritten() const;
@@ -4226,16 +4229,15 @@ private:
 };
 
 Opm::out::Summary::SummaryImplementation::
-SummaryImplementation(const EclipseState&  es,
-                      const SummaryConfig& sumcfg,
-                      const EclipseGrid&   grid,
-                      const Schedule&      sched,
-                      const std::string&   basename,
-                      const bool           writeEsmry)
+SummaryImplementation(SummaryConfig&      sumcfg,
+                      const EclipseState& es,
+                      const EclipseGrid&  grid,
+                      const Schedule&     sched,
+                      const std::string&  basename,
+                      const bool          writeEsmry)
     : grid_          (std::cref(grid))
     , es_            (std::cref(es))
     , sched_         (std::cref(sched))
-    , regCache_      (sumcfg.fip_regions(), es.globalFieldProps(), grid, sched)
     , deferredSMSpec_(makeDeferredSMSpecCreation(es, grid, sched))
     , rset_          (makeResultSet(es.cfg().io(), basename))
     , fmt_           { es.cfg().io().getFMTOUT() }
@@ -4253,12 +4255,19 @@ SummaryImplementation(const EclipseState&  es,
     this->configureSummaryInput(sumcfg, evaluatorFactory);
     this->configureRequiredRestartParameters(sumcfg, es.aquifer(),
                                              sched, evaluatorFactory);
-    this->configureUDQ(es, sumcfg, sched);
 
-    std::string esmryFileName = EclIO::OutputStream::outputFileName(this->rset_, "ESMRY");
+    this->configureUDQ(es, sched, evaluatorFactory, sumcfg);
 
-    if (std::filesystem::exists(esmryFileName))
+    this->regCache_.buildCache(sumcfg.fip_regions(),
+                               es.globalFieldProps(),
+                               grid, sched);
+
+    const auto esmryFileName = EclIO::OutputStream::
+        outputFileName(this->rset_, "ESMRY");
+
+    if (std::filesystem::exists(esmryFileName)) {
         std::filesystem::remove(esmryFileName);
+    }
 
     if (writeEsmry && !es.cfg().io().getFMTOUT()) {
         this->esmry_ = std::make_unique<Opm::EclIO::ExtSmryOutput>
@@ -4495,84 +4504,87 @@ configureSummaryInput(const SummaryConfig& sumcfg,
 // what has been requested in the UDQ code.
 
 namespace {
-    std::vector<int>
-    unique_segment_numbers(const Opm::WellSegments& segments)
+
+    template <typename... ExtraArgs>
+    Opm::EclIO::SummaryNode
+    make_node(const Opm::SummaryConfigNode& node,
+              ExtraArgs&&...                extraArgs)
     {
-        auto seg_num = std::vector<int>{};
-        seg_num.reserve(segments.size());
-
-        std::transform(segments.begin(), segments.end(),
-                       std::back_inserter(seg_num),
-            [](const Opm::Segment& segment)
-        {
-            return segment.segmentNumber();
-        });
-
-        std::sort(seg_num.begin(), seg_num.end());
-
-        auto u = std::unique(seg_num.begin(), seg_num.end());
-        if (u != seg_num.end()) {
-            seg_num.erase(u, seg_num.end());
-        }
-
-        return seg_num;
+        return {
+            node.keyword(), node.category(), node.type(),
+            std::forward<ExtraArgs>(extraArgs)...
+        };
     }
 
-    template <typename... Args>
-    Opm::EclIO::SummaryNode make_node(Args&&... args)
+    Opm::EclIO::SummaryNode translate_node(const Opm::SummaryConfigNode& node)
     {
-        return { std::forward<Args>(args)... };
+        using Cat = Opm::SummaryConfigNode::Category;
+
+        switch (node.category()) {
+        case Cat::Field:
+        case Cat::Miscellaneous:
+            return make_node(node);
+
+        case Cat::Group:
+        case Cat::Node:
+        case Cat::Well:
+            return make_node(node, node.namedEntity());
+
+        case Cat::Connection:
+        case Cat::Completion:
+        case Cat::Segment:
+            return make_node(node, node.namedEntity(), node.number());
+
+        case Cat::Block:
+        case Cat::Aquifer:
+            // No named entity in these categories
+            return make_node(node, std::string {}, node.number());
+
+        case Cat::Region:
+            // No named entity in this category
+            return make_node(node, std::string {}, node.number(), node.fip_region());
+        }
+
+        throw std::logic_error {
+            fmt::format("Keyword category '{}' (e.g., summary "
+                        "keyword {}) is not supported in ACTIONX",
+                        node.category(), node.keyword())
+        };
     }
 
     std::vector<Opm::EclIO::SummaryNode>
-    make_default_nodes(const std::string&   keyword,
-                       const Opm::Schedule& sched)
+    requisite_udq_and_action_summary_nodes(const Opm::EclipseState& es,
+                                           const Opm::Schedule&     sched,
+                                           Opm::SummaryConfig&      smcfg)
     {
-        auto nodes = std::vector<Opm::EclIO::SummaryNode> {};
+        auto nodes = std::vector<Opm::EclIO::SummaryNode>{};
 
-        if (Opm::TimeService::valid_month(keyword)) {
-            return nodes;
+        auto summary_keys = std::unordered_set<std::string>{};
+
+        for (const auto& unique_udqs : sched.unique<Opm::UDQConfig>()) {
+            unique_udqs.second.required_summary(summary_keys);
         }
 
-        const auto category = Opm::parseKeywordCategory(keyword);
-        const auto type = Opm::parseKeywordType(keyword);
-
-        switch (category) {
-        case Opm::EclIO::SummaryNode::Category::Field:
-        case Opm::EclIO::SummaryNode::Category::Miscellaneous:
-            nodes.push_back(make_node(keyword, category, type));
-        break;
-
-        case Opm::EclIO::SummaryNode::Category::Well: {
-            for (const auto& well : sched.wellNames()) {
-                nodes.push_back(make_node(keyword, category, type, well));
-            }
+        for (const auto& action : sched.back().actions.get()) {
+            action.required_summary(summary_keys);
         }
-            break;
 
-        case Opm::EclIO::SummaryNode::Category::Group: {
-            for (const auto& group : sched.groupNames()) {
-                nodes.push_back(make_node(keyword, category, type, group));
-            }
-        }
-            break;
+        // Individual month names--typically used in ACTIONX conditions
+        // involving time--are handled elsewhere (Opm::Action::Context
+        // constructor) so exclude those from processing here.
+        auto extraKeys = std::vector<std::string>{};
+        extraKeys.reserve(summary_keys.size());
 
-        case Opm::EclIO::SummaryNode::Category::Segment: {
-            for (const auto& wname : sched.wellNames()) {
-                if (const auto& well = sched.getWellatEnd(wname); well.isMultiSegment()) {
-                    for (const auto& seg_num : unique_segment_numbers(well.getSegments())) {
-                        nodes.push_back(make_node(keyword, category, type, wname, seg_num));
-                    }
-                }
-            }
-        }
-            break;
+        std::copy_if(summary_keys.begin(), summary_keys.end(),
+                     std::back_inserter(extraKeys),
+                     [](const std::string& key)
+                     { return ! Opm::TimeService::valid_month(key); });
 
-        default:
-            throw std::logic_error {
-                fmt::format("Keyword category '{}' (e.g., summary keyword {}) "
-                            "is not supported in ACTIONX", category, keyword)
-            };
+        const auto newNodes = smcfg
+            .registerRequisiteUDQorActionSummaryKeys(extraKeys, es, sched);
+
+        for (const auto& newNode : newNodes) {
+            nodes.push_back(translate_node(newNode));
         }
 
         return nodes;
@@ -4582,29 +4594,13 @@ namespace {
 void
 Opm::out::Summary::SummaryImplementation::
 configureUDQ(const EclipseState& es,
-             const SummaryConfig& summary_config,
-             const Schedule& sched)
+             const Schedule&     sched,
+             Evaluator::Factory& evaluatorFactory,
+             SummaryConfig&      summary_config)
 {
-    auto nodes = std::vector<Opm::EclIO::SummaryNode>{};
-
     const auto time_vectors = std::unordered_set<std::string> {
         "TIME", "DAY", "MONTH", "YEAR", "YEARS", "MNTH",
     };
-
-    auto summary_keys = std::unordered_set<std::string>{};
-    for (const auto& unique_udqs : sched.unique<UDQConfig>()) {
-        unique_udqs.second.required_summary(summary_keys);
-    }
-
-    for (const auto& action : sched.back().actions.get()) {
-        action.required_summary(summary_keys);
-    }
-
-    for (const auto& key : summary_keys) {
-        for (const auto& def_node : make_default_nodes(key, sched)) {
-            nodes.push_back(def_node);
-        }
-    }
 
     auto has_evaluator = [this](const auto& key)
     {
@@ -4613,49 +4609,39 @@ configureUDQ(const EclipseState& es,
             != this->valueKeys_.end();
     };
 
-    for (const auto& node : nodes) {
-        // Handler already configured/requested through the normal
-        // SummaryConfig path.
-        if (summary_config.hasSummaryKey(node.unique_key())) {
-            continue;
-        }
-
+    for (const auto& node : requisite_udq_and_action_summary_nodes(es, sched, summary_config)) {
         // Time related vectors are special cased in the valueKeys_ vector
         // and must be checked explicitly.
         if ((time_vectors.find(node.keyword) != time_vectors.end()) &&
             ! has_evaluator(node.keyword))
         {
             this->configureTimeVector(es, node.keyword);
+
             continue;
         }
 
-        // Handler already registered in the summary evaluator in some other
-        // way.
         if (has_evaluator(node.unique_key())) {
+            // Handler already registered in the summary evaluator in some
+            // other way--e.g., the required restart vectors.
+
             continue;
         }
 
-        auto fun_pos = funs.find(node.keyword);
-        if (fun_pos != funs.end()) {
-            this->extra_parameters
-                .emplace(node.unique_key(), std::make_unique<Evaluator::FunctionRelation>(node, fun_pos->second));
-            continue;
+        auto descr = evaluatorFactory.create(node);
+
+        if (descr.evaluator == nullptr) {
+            if (node.is_user_defined()) {
+                continue;
+            }
+
+            throw std::logic_error {
+                fmt::format("Evaluation function for summary "
+                            "vector '{}' ({}/{}) not found",
+                            node.keyword, node.category, node.type)
+            };
         }
 
-        auto unit = single_values_units.find(node.keyword);
-        if (unit != single_values_units.end()) {
-            this->extra_parameters
-                .emplace(node.unique_key(), std::make_unique<Evaluator::GlobalProcessValue>(node, unit->second));
-            continue;
-        }
-
-        if (node.is_user_defined()) {
-            continue;
-        }
-
-        throw std::logic_error {
-            fmt::format("Evaluation function for: {} not found ", node.keyword)
-        };
+        this->extra_parameters.emplace(descr.uniquekey, std::move(descr.evaluator));
     }
 }
 
@@ -4775,13 +4761,13 @@ createSmryStreamIfNecessary(const int report_step)
 
 namespace Opm { namespace out {
 
-Summary::Summary(const EclipseState&  es,
-                 const SummaryConfig& sumcfg,
+Summary::Summary(SummaryConfig&       sumcfg,
+                 const EclipseState&  es,
                  const EclipseGrid&   grid,
                  const Schedule&      sched,
                  const std::string&   basename,
                  const bool           writeEsmry)
-    : pImpl_ { std::make_unique<SummaryImplementation>(es, sumcfg, grid, sched, basename, writeEsmry) }
+    : pImpl_ { std::make_unique<SummaryImplementation>(sumcfg, es, grid, sched, basename, writeEsmry) }
 {}
 
 void Summary::eval(SummaryState&                          st,

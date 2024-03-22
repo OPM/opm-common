@@ -56,12 +56,12 @@ public:
     using BlockValues = std::map<std::pair<std::string, int>, double>;
     using InterRegFlowValues = std::unordered_map<std::string, data::InterRegFlowMap>;
 
-    Summary(const EclipseState&  es,
-            const SummaryConfig& sumcfg,
-            const EclipseGrid&   grid,
-            const Schedule&      sched,
-            const std::string&   basename = "",
-            const bool           writeEsmry = false);
+    Summary(SummaryConfig&      sumcfg,
+            const EclipseState& es,
+            const EclipseGrid&  grid,
+            const Schedule&     sched,
+            const std::string&  basename = "",
+            const bool          writeEsmry = false);
 
     ~Summary();
 
