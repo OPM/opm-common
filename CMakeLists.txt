@@ -456,6 +456,11 @@ if (OPM_ENABLE_PYTHON)
       ## Need to install this Python script such that it can be used by opm-simulators when building against an installed
       ##  opm-common
       install( PROGRAMS "python/install.py" DESTINATION "${OPM_PYTHON_COMMON_DIR}" )
+
+      # Install the convenience library for PYACTION script development
+      if (OPM_ENABLE_EMBEDDED_PYTHON)
+            install(TARGETS opm_embedded DESTINATION ${DEST_PREFIX}${CMAKE_INSTALL_PREFIX}/${PYTHON_INSTALL_PREFIX})
+      endif()
   endif()
 
   # Observe that if the opmcommon library has been built as a shared library the
