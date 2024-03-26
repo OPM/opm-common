@@ -1,28 +1,30 @@
 /*
-Copyright 2016 Statoil ASA.
+  Copyright 2016 Statoil ASA.
 
-This file is part of the Open Porous Media project (OPM).
+  This file is part of the Open Porous Media project (OPM).
 
-OPM is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
+  OPM is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
 
-OPM is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+  OPM is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
 
-You should have received a copy of the GNU General Public License
-along with OPM.  If not, see <http://www.gnu.org/licenses/>.
+  You should have received a copy of the GNU General Public License
+  along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #define BOOST_TEST_MODULE RunspecTests
 
 #include <boost/test/unit_test.hpp>
 
-#include <opm/input/eclipse/Deck/Deck.hpp>
 #include <opm/input/eclipse/EclipseState/Runspec.hpp>
+
+#include <opm/input/eclipse/Deck/Deck.hpp>
+
 #include <opm/input/eclipse/Parser/Parser.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/N.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/M.hpp>
@@ -1222,4 +1224,90 @@ GRUPNET
     BOOST_CHECK_EQUAL(nd.maxNONodes(), 0);
     BOOST_CHECK_EQUAL(nd.maxNoBranches(), 0);
     BOOST_CHECK_EQUAL(nd.maxNoBranchesConToNode(), 20);
+}
+
+BOOST_AUTO_TEST_CASE(Declared_Maximum_RegionIndex_Default)
+{
+    const auto deck = Parser{}.parseString(R"(
+TABDIMS
+/
+)");
+
+    const auto maxID = declaredMaxRegionID(Runspec{deck});
+
+    BOOST_CHECK_EQUAL(maxID, std::size_t{1});
+}
+
+BOOST_AUTO_TEST_CASE(Declared_Maximum_RegionIndex_TABDIMS)
+{
+    const auto deck = Parser{}.parseString(R"(
+TABDIMS
+  4* 5
+/
+)");
+
+    const auto maxID = declaredMaxRegionID(Runspec{deck});
+
+    BOOST_CHECK_EQUAL(maxID, std::size_t{5});
+}
+
+BOOST_AUTO_TEST_CASE(Declared_Maximum_RegionIndex_REGDIMS)
+{
+    const auto deck = Parser{}.parseString(R"(
+REGDIMS
+  3
+/
+)");
+
+    const auto maxID = declaredMaxRegionID(Runspec{deck});
+
+    BOOST_CHECK_EQUAL(maxID, std::size_t{3});
+}
+
+BOOST_AUTO_TEST_CASE(Declared_Maximum_RegionIndex_BOTH)
+{
+    const auto deck = Parser{}.parseString(R"(
+TABDIMS
+  4* 3
+/
+REGDIMS
+  3
+/
+)");
+
+    const auto maxID = declaredMaxRegionID(Runspec{deck});
+
+    BOOST_CHECK_EQUAL(maxID, std::size_t{3});
+}
+
+BOOST_AUTO_TEST_CASE(Declared_Maximum_RegionIndex_TABDIMS_Max)
+{
+    const auto deck = Parser{}.parseString(R"(
+TABDIMS
+  4* 5
+/
+REGDIMS
+  3
+/
+)");
+
+    const auto maxID = declaredMaxRegionID(Runspec{deck});
+
+    BOOST_CHECK_EQUAL(maxID, std::size_t{5});
+}
+
+BOOST_AUTO_TEST_CASE(Declared_Maximum_RegionIndex_REGDIMS_Max)
+{
+    const auto deck = Parser{}.parseString(R"(
+TABDIMS
+  4* 3
+/
+REGDIMS
+  6
+/
+)");
+
+    const auto maxID = declaredMaxRegionID(Runspec{deck});
+
+    BOOST_CHECK_EQUAL(maxID, std::size_t{6});
 }

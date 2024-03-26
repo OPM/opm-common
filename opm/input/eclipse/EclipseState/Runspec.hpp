@@ -564,6 +564,7 @@ private:
     bool m_mech;
 };
 
+std::size_t declaredMaxRegionID(const Runspec& rspec);
 
 } // namespace Opm
 
