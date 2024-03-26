@@ -28,6 +28,12 @@
 
 #include <opm/common/OpmLog/OpmLog.hpp>
 
+#if HAVE_ECL_INPUT
+#include <opm/input/eclipse/EclipseState/EclipseState.hpp>
+#include <opm/input/eclipse/Schedule/Schedule.hpp>
+#endif
+
+#include <opm/material/eos/PengRobinsonMixture.hpp>
 #include <opm/material/fluidsystems/BaseFluidSystem.hpp>
 #include <opm/material/fluidsystems/PTFlashParameterCache.hpp> // TODO: this is something else need to check
 #include <opm/material/viscositymodels/LBC.hpp>
@@ -39,10 +45,12 @@
 #include <fmt/format.h>
 
 namespace Opm {
-
+    template<typename Scalar>
+    class DummyOilPvt;
 
 /*!
  * \ingroup FluidSystem
+ *
  *
  * \brief A two phase system that can contain NumComp components
  *
@@ -93,6 +101,12 @@ namespace Opm {
             {}
         };
 
+        static bool phaseIsActive(unsigned phaseIdx)
+        {
+            assert(phaseIdx < numPhases);
+            return phaseIdx == oilPhaseIdx || phaseIdx == gasPhaseIdx;
+        }
+
         template<typename Param>
         static void addComponent(const Param& param)
         {
@@ -112,7 +126,7 @@ namespace Opm {
         /*!
      * \brief Initialize the fluid system using an ECL deck object
      */
-        static void initFromState(const EclipseState& eclState, const Schedule& schedule){
+        static void initFromState(const EclipseState& eclState, const Schedule& /* schedule */){
             const auto& comp_config = eclState.compositionalConfig();
             // how should we utilize the numComps from the CompositionalConfig?
             using FluidSystem = GenericOilGasFluidSystem<Scalar, NumComp>;
@@ -120,34 +134,20 @@ namespace Opm {
             // const std::size_t num_eos_region = comp_config.
             assert(num_comps == NumComp);
             const auto& names = comp_config.compName();
-            const auto& eos_type = comp_config.eosType(0);
+            // const auto& eos_type = comp_config.eosType(0);
             const auto& molar_weight = comp_config.molecularWeights(0);
             const auto& acentric_factor = comp_config.acentricFactors(0);
             const auto& critic_pressure = comp_config.criticalPressure(0);
             const auto& critic_temp = comp_config.criticalTemperature(0);
             const auto& critic_volume = comp_config.criticalVolume(0);
             FluidSystem::init();
-            std::size_t numRegions = eclState.runspec().tabdims().getNumPVTTables();
             using CompParm = typename FluidSystem::ComponentParam;
-            /* using CO2 = Opm::SimpleCO2<Scalar>;
-            using C1 = Opm::C1<Scalar>;
-            using C10 = Opm::C10<Scalar>;
-            FluidSystem::addComponent(CompParm {CO2::name(), CO2::molarMass(), CO2::criticalTemperature(),
-                                                CO2::criticalPressure(), CO2::criticalVolume(), CO2::acentricFactor()});
-            FluidSystem::addComponent(CompParm {C1::name(), C1::molarMass(), C1::criticalTemperature(),
-                                                C1::criticalPressure(), C1::criticalVolume(), C1::acentricFactor()});
-            FluidSystem::addComponent(CompParm{C10::name(), C10::molarMass(), C10::criticalTemperature(),
-                                               C10::criticalPressure(), C10::criticalVolume(), C10::acentricFactor()});
-            */
             for (std::size_t c = 0; c < num_comps; ++c) {
                 FluidSystem::addComponent(CompParm{names[c], molar_weight[c], critic_temp[c], critic_pressure[c],
                                                           critic_volume[c], acentric_factor[c]});
             }
         }
 #endif // HAVE_ECL_INPUT
-
-
-
 
         static void init()
         {
@@ -317,12 +317,84 @@ namespace Opm {
 
             return (phaseIdx == 1);
         }
+
+        // The following are dummy functions, remaining to be cleaned up later
+        static DummyOilPvt<Scalar> oilPvt() {
+            assert(false);
+            return dummy_oil_pvt_;
+        }
+
+        static Scalar referenceDensity(unsigned /*phase*/,
+                                       unsigned /*reg_id*/)
+        {
+            assert(false);
+            return 0.;
+        }
+
+        static bool enableVaporizedOil() {
+            assert(false);
+            return false;
+        }
+
+        static bool enableDissolvedGas() {
+            assert(false);
+            return false;
+        }
     private:
         static bool isConsistent() {
             return component_param_.size() == NumComp;
         }
 
         static std::vector<ComponentParam> component_param_;
+        static constexpr DummyOilPvt<Scalar> dummy_oil_pvt_{};
+    };
+
+    // TODO: the following is a dummy function to avoid changing FlowGenericProblem.
+    template <typename Scalar>
+    class DummyOilPvt {
+    public:
+        DummyOilPvt() = default;
+
+        template <typename ValueType>
+        ValueType saturatedGasDissolutionFactor(unsigned /*reg_id*/,
+                                                const ValueType& /*temperature*/,
+                                                const ValueType& /*pressure*/) const
+        {
+            return 0;
+        }
+
+        template <typename ValueType>
+        ValueType saturatedInverseFormationVolumeFactor(unsigned /*reg_id*/,
+                                                        const ValueType& /*temperature*/,
+                                                        const ValueType& /*pressure*/) const
+        {
+            return 0;
+        }
+
+        template <typename ValueType>
+        ValueType inverseFormationVolumeFactor(unsigned /*reg_id*/,
+                                               const ValueType& /*temperature*/,
+                                               const ValueType& /*pressure*/,
+                                               const ValueType& /*rs*/) const
+        {
+            return 0;
+        }
+
+        Scalar oilReferenceDensity(unsigned  /*reg_id*/) const
+        {
+            return 0.;
+        }
+
+
+
+        template <typename ValueType>
+        ValueType viscosity(unsigned /*reg_id*/,
+                            const ValueType& /*temperature*/,
+                            const ValueType& /*pressure*/,
+                            const ValueType& /*rs*/) const
+        {
+            return 0;
+        }
     };
 
     template <class Scalar, int NumComp>
