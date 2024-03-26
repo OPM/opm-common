@@ -291,7 +291,7 @@ public:
 
 
     //! \brief Returns whether a fluid phase is active
-    static unsigned phaseIsActive(unsigned /*phaseIdx*/)
+    static bool phaseIsActive(unsigned /*phaseIdx*/)
     {
         return true;
     }
