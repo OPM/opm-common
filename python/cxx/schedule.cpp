@@ -144,25 +144,37 @@ namespace {
     }
 
 
-    const ScheduleState& getitem(const Schedule& sch, std::size_t index) {
-        return sch[index];
+    const ScheduleState& getitem(const Schedule& sch, std::size_t report_step) {
+        return sch[report_step];
     }
 
-    void insert_keywords(
-        Schedule& sch,
-        const std::string& deck_string,
-        std::size_t index,
-        const UnitSystem& unit_system
-    )
+    std::vector<std::unique_ptr<DeckKeyword>> parseKeywords(const std::string& deck_string, const UnitSystem& unit_system)
     {
         Parser parser;
         std::string str {unit_system.deck_name() + "\n\n" + deck_string};
         auto deck = parser.parseString(str);
-        std::vector<DeckKeyword*> keywords;
+        std::vector<std::unique_ptr<DeckKeyword>> keywords;
         for (auto &keyword : deck) {
-            keywords.push_back(&keyword);
+            keywords.push_back(std::make_unique<DeckKeyword>(keyword));
         }
-        sch.applyKeywords(keywords, index);
+        return keywords;
+    }
+    void insert_keywords(Schedule& sch, const std::string& deck_string, std::size_t report_step, const UnitSystem& unit_system)
+    {
+        auto kws = parseKeywords(deck_string, unit_system);
+        sch.applyKeywords(kws, report_step);
+    }
+
+    void insert_keywords(Schedule& sch, const std::string& deck_string, std::size_t report_step)
+    {
+        auto kws = parseKeywords(deck_string,sch.getUnits());
+        sch.applyKeywords(kws, report_step);
+    }
+
+    void insert_keywords(Schedule& sch, const std::string& deck_string)
+    {
+        auto kws = parseKeywords(deck_string,sch.getUnits());
+        sch.applyKeywords(kws);
     }
 
     // NOTE: this overload does currently not work, see PR #2833. The plan
@@ -170,15 +182,14 @@ namespace {
     //  above taking a deck_string (std::string) instead of a list of DeckKeywords
     //  has to be used instead.
     void insert_keywords(
-        Schedule& sch, py::list& deck_keywords, std::size_t index)
+        Schedule& sch, py::list& deck_keywords, std::size_t report_step)
     {
-        Parser parser;
-        std::vector<DeckKeyword*> keywords;
+        std::vector<std::unique_ptr<DeckKeyword>> keywords;
         for (py::handle item : deck_keywords) {
             DeckKeyword &keyword = item.cast<DeckKeyword&>();
-            keywords.push_back(&keyword);
+            keywords.push_back(std::make_unique<DeckKeyword>(keyword));
         }
-        sch.applyKeywords(keywords, index);
+        sch.applyKeywords(keywords, report_step);
     }
 }
 
@@ -215,14 +226,10 @@ void python::common::export_Schedule(py::module& module) {
     .def( "get_production_properties", &get_production_properties, py::arg("well_name"), py::arg("report_step"))
     .def("well_names", py::overload_cast<const std::string&>(&Schedule::wellNames, py::const_))
     .def( "get_well", &get_well)
-    .def( "insert_keywords",
-        py::overload_cast<Schedule&, py::list&, std::size_t>(&insert_keywords),
-        py::arg("keywords"), py::arg("step"))
-    .def( "insert_keywords",
-        py::overload_cast<
-               Schedule&, const std::string&, std::size_t, const UnitSystem&
-           >(&insert_keywords),
-        py::arg("data"), py::arg("step"), py::arg("unit_system"))
+    .def( "insert_keywords", py::overload_cast<Schedule&, py::list&, std::size_t>(&insert_keywords), py::arg("keywords"), py::arg("step"))
+    .def( "insert_keywords", py::overload_cast<Schedule&, const std::string&, std::size_t, const UnitSystem&>(&insert_keywords), py::arg("data"), py::arg("step"), py::arg("unit_system"))
+    .def( "insert_keywords", py::overload_cast<Schedule&, const std::string&, std::size_t>(&insert_keywords), py::arg("data"), py::arg("step"))
+    .def( "insert_keywords", py::overload_cast<Schedule&, const std::string&>(&insert_keywords),py::arg("data"))
     .def( "__contains__", &has_well );
 
 }

@@ -257,6 +257,7 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const std::optional
         result.snapshots = { ScheduleState::serializationTestObject() };
         result.restart_output = WriteRestartFileEvents::serializationTestObject();
         result.completed_cells = CompletedCells::serializationTestObject();
+        result.current_report_step = 0;
         result.simUpdateFromPython = std::make_shared<SimulatorUpdate>(SimulatorUpdate::serializationTestObject());
 
         return result;
@@ -1394,8 +1395,17 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
         return std::chrono::duration_cast<std::chrono::seconds>(end - start).count();
     }
 
+    void Schedule::applyKeywords(std::vector<std::unique_ptr<DeckKeyword>>& keywords) {
+        Schedule::applyKeywords(keywords, this->current_report_step);
+    }
+
     void Schedule::applyKeywords(
-             std::vector<DeckKeyword*>& keywords, std::size_t reportStep) {
+             std::vector<std::unique_ptr<DeckKeyword>>& keywords, std::size_t reportStep) {
+        if (reportStep < this->current_report_step) {
+            throw std::invalid_argument("Insert keyword for past report step " + std::to_string(reportStep) + " requested, current report step is " + std::to_string(this->current_report_step) + ".");
+        } else if (reportStep >= this->m_sched_deck.size()) {
+            throw std::invalid_argument("Insert keyword for report step " + std::to_string(reportStep) + " requested, this exceeds the total number of report steps, being " + std::to_string(this->m_sched_deck.size() -1) + ".");
+        }
         ParseContext parseContext;
         ErrorGuard errors;
         ScheduleGrid grid(this->completed_cells);
@@ -1406,7 +1416,7 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
         this->snapshots.resize(reportStep + 1);
         auto& input_block = this->m_sched_deck[reportStep];
         std::unordered_map<std::string, double> wpimult_global_factor;
-        for (auto keyword : keywords) {
+        for (auto& keyword : keywords) {
             input_block.push_back(*keyword);
             this->handleKeyword(reportStep,
                                 input_block,
@@ -1432,6 +1442,7 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
                 &target_wellpi,
                 prefix);
         }
+        this->simUpdateFromPython->append(sim_update);
     }
 
 
@@ -1596,8 +1607,10 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
 
 
     SimulatorUpdate Schedule::runPyAction(std::size_t reportStep, const Action::PyAction& pyaction, Action::State& action_state, EclipseState& ecl_state, SummaryState& summary_state) {
-        // Reset simUpdateFromPython, pyaction.run(...) will run through the pyaction script, the calls that trigger a simulator update will append this to simUpdateFromPython.
+        // Reset simUpdateFromPython, pyaction.run(...) will run through the PyAction script, the calls that trigger a simulator update will append this to simUpdateFromPython.
         this->simUpdateFromPython->reset();
+        // Set the current_report_step to the report step in which this PyAction was triggered.
+        this->current_report_step = reportStep;
 
         // Set up the actionx_callback - simulator updates from this also get appended to simUpdateFromPython.
         auto apply_action_callback = [&reportStep, this](const std::string& action_name, const std::vector<std::string>& matching_wells) {
@@ -1705,6 +1718,7 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
                this->snapshots == data.snapshots &&
                this->restart_output == data.restart_output &&
                this->completed_cells == data.completed_cells &&
+               this->current_report_step == data.current_report_step &&
                simUpdateFromPythonIsEqual;
      }
 

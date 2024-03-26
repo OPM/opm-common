@@ -701,11 +701,13 @@ if(ENABLE_ECL_OUTPUT)
           tests/msim/MSIM_PYACTION.DATA
           tests/msim/MSIM_PYACTION_CHANGING_SCHEDULE.DATA
           tests/msim/MSIM_PYACTION_CHANGING_SCHEDULE_ACTIONX_CALLBACK.DATA
+          tests/msim/MSIM_PYACTION_INSERT_KEYWORD.DATA
           tests/msim/action1.py
           tests/msim/action2.py
           tests/msim/action3.py
           tests/msim/action3_actionx_callback.py
           tests/msim/action_count.py
+          tests/msim/insert_keyword.py
           tests/VFP_CASE.DATA)
 endif()
 
