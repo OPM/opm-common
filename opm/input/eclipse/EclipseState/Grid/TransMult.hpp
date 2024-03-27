@@ -38,6 +38,10 @@
 #include <opm/input/eclipse/EclipseState/Grid/MULTREGTScanner.hpp>
 
 namespace Opm {
+    namespace data {
+        class Solution;
+    }
+
     template< typename > class GridProperty;
     class Fault;
     class FaultCollection;
@@ -61,6 +65,11 @@ namespace Opm {
         void applyMULTFLT(const FaultCollection& faults);
         void applyMULTFLT(const Fault& fault);
         void applyNumericalAquifer(const std::vector<std::size_t>& aquifer_cells);
+
+        /// \brief Creates a solution object with all multipliers for output
+        /// \param active_cells If the model has no multipliers then this number is used as the size of
+        ///                     the array (containing 1) that are constructed in this case.
+        data::Solution convertToSimProps(std::size_t active_cells) const;
 
         bool operator==(const TransMult& data) const;
 

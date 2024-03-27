@@ -54,6 +54,8 @@
 #include <opm/input/eclipse/Parser/ParserKeywords/R.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/T.hpp>
 
+#include <opm/output/data/Solution.hpp>
+
 #include <fmt/format.h>
 
 #include <cstddef>
@@ -293,6 +295,10 @@ namespace Opm {
         return m_transMult;
     }
 
+    data::Solution EclipseState::getMultSimProps() const
+    {
+        return getTransMult().convertToSimProps(m_inputGrid.getNumActive());
+    }
     const NNC& EclipseState::getInputNNC() const {
         return m_inputNnc;
     }
