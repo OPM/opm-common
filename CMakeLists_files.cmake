@@ -754,6 +754,7 @@ if(ENABLE_ECL_INPUT)
     examples/wellgraph.cpp
     examples/make_ext_smry.cpp
     examples/co2brinepvt.cpp
+    examples/hysteresis.cpp
   )
 endif()
 
@@ -769,6 +770,7 @@ if(ENABLE_ECL_INPUT)
     examples/rst_deck.cpp
     examples/make_esmry.cpp
     examples/co2brinepvt.cpp
+    examples/hysteresis.cpp
   )
 endif()
 
