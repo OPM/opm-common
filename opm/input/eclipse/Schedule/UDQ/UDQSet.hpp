@@ -186,23 +186,24 @@ class UDQSet
 {
 public:
     // Connections and segments.
-    struct EnumeratedWellItems {
-        std::string well{};
+    struct EnumeratedItems
+    {
+        std::string name{};
         std::vector<std::size_t> numbers{};
 
-        bool operator==(const EnumeratedWellItems& rhs) const;
-        static EnumeratedWellItems serializationTestObject();
+        bool operator==(const EnumeratedItems& rhs) const;
+        static EnumeratedItems serializationTestObject();
 
         template <class Serializer>
         void serializeOp(Serializer& serializer)
         {
-            serializer(this->well);
+            serializer(this->name);
             serializer(this->numbers);
         }
     };
 
-    static std::vector<EnumeratedWellItems>
-    getSegmentItems(const SegmentSet& segmentSet);
+    static std::vector<EnumeratedItems>
+    enumerateItems(const SegmentSet& segmentSet);
 
     /// Construct empty, named UDQ set of specific variable type
     ///
@@ -219,7 +220,8 @@ public:
     /// \param[in] var_type UDQ set's variable type.
     ///
     /// \param[in] wgnames Well or group names.
-    UDQSet(const std::string& name, UDQVarType var_type, const std::vector<std::string>& wgnames);
+    UDQSet(const std::string& name, UDQVarType var_type,
+           const std::vector<std::string>& wgnames);
 
     /// Construct named UDQ set of specific variable type for numbered well
     /// items-typically segments or connections.
@@ -231,7 +233,8 @@ public:
     /// \param[in] items Enumerated entities for which this UDQ set is
     ///    defined.  Typically represents a set of segments in an MS well or
     ///    a set of well/reservoir connections.
-    UDQSet(const std::string& name, UDQVarType var_type, const std::vector<EnumeratedWellItems>& items);
+    UDQSet(const std::string& name, UDQVarType var_type,
+           const std::vector<EnumeratedItems>& items);
 
     /// Construct empty, named UDQ set of specific variable type
     ///
@@ -252,7 +255,8 @@ public:
     /// \param[in] scalar_value Initial numeric value of this scalar set.
     ///    Empty optional or non-finite contained value leaves the UDQ set
     ///    undefined.
-    static UDQSet scalar(const std::string& name, const std::optional<double>& scalar_value);
+    static UDQSet scalar(const std::string& name,
+                         const std::optional<double>& scalar_value);
 
     /// Form a UDQ set pertaining to a single scalar value.
     ///
@@ -272,7 +276,8 @@ public:
     /// \param[in] name UDQ set name
     ///
     /// \param[in] wells Collection of named wells.
-    static UDQSet wells(const std::string& name, const std::vector<std::string>& wells);
+    static UDQSet wells(const std::string& name,
+                        const std::vector<std::string>& wells);
 
     /// Form a UDQ set pertaining to a set of named wells
     ///
@@ -283,14 +288,17 @@ public:
     /// \param[in] scalar_value Initial numeric value of every element of
     ///    this UDQ set.  Non-finite value leaves the UDQ set elements
     ///    undefined.
-    static UDQSet wells(const std::string& name, const std::vector<std::string>& wells, double scalar_value);
+    static UDQSet wells(const std::string& name,
+                        const std::vector<std::string>& wells,
+                        double scalar_value);
 
     /// Form a UDQ set pertaining to a set of named groups
     ///
     /// \param[in] name UDQ set name
     ///
     /// \param[in] wells Collection of named groups.
-    static UDQSet groups(const std::string& name, const std::vector<std::string>& groups);
+    static UDQSet groups(const std::string& name,
+                         const std::vector<std::string>& groups);
 
     /// Form a UDQ set pertaining to a set of named groups
     ///
@@ -301,7 +309,9 @@ public:
     /// \param[in] scalar_value Initial numeric value of every element of
     ///    this UDQ set.  Non-finite value leaves the UDQ set elements
     ///    undefined.
-    static UDQSet groups(const std::string& name, const std::vector<std::string>& groups, double scalar_value);
+    static UDQSet groups(const std::string& name,
+                         const std::vector<std::string>& groups,
+                         double scalar_value);
 
     /// Form a UDQ set at the field level
     ///
@@ -311,11 +321,12 @@ public:
     ///    this UDQ set.  Non-finite value leaves the UDQ set element
     ///    undefined.
     static UDQSet field(const std::string& name, double scalar_value);
-    static UDQSet segments(const std::string&                      name,
-                           const std::vector<EnumeratedWellItems>& segments);
-    static UDQSet segments(const std::string&                      name,
-                           const std::vector<EnumeratedWellItems>& segments,
-                           const double                            scalar_value);
+
+    static UDQSet segments(const std::string&                  name,
+                           const std::vector<EnumeratedItems>& segments);
+    static UDQSet segments(const std::string&                  name,
+                           const std::vector<EnumeratedItems>& segments,
+                           const double                        scalar_value);
 
     /// Assign value to every element of the UDQ set
     ///

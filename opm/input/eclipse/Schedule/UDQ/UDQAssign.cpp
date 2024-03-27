@@ -52,7 +52,7 @@ void UDQAssign::AssignRecord::eval(UDQSet& values) const
     else {
         for (const auto& item : this->numbered_selector) {
             for (const auto& number : item.numbers) {
-                values.assign(item.well, number, this->value);
+                values.assign(item.name, number, this->value);
             }
         }
     }
@@ -87,20 +87,20 @@ UDQAssign::UDQAssign(const std::string&                     keyword,
     this->add_record(rst_selector, value, report_step);
 }
 
-UDQAssign::UDQAssign(const std::string&                              keyword,
-                     const std::vector<UDQSet::EnumeratedWellItems>& selector,
-                     double                                          value,
-                     std::size_t                                     report_step)
+UDQAssign::UDQAssign(const std::string&                          keyword,
+                     const std::vector<UDQSet::EnumeratedItems>& selector,
+                     double                                      value,
+                     std::size_t                                 report_step)
     : m_keyword(keyword)
     , m_var_type(UDQ::varType(keyword))
 {
     this->add_record(selector, value, report_step);
 }
 
-UDQAssign::UDQAssign(const std::string&                         keyword,
-                     std::vector<UDQSet::EnumeratedWellItems>&& selector,
-                     double                                     value,
-                     std::size_t                                report_step)
+UDQAssign::UDQAssign(const std::string&                     keyword,
+                     std::vector<UDQSet::EnumeratedItems>&& selector,
+                     double                                 value,
+                     std::size_t                            report_step)
     : m_keyword(keyword)
     , m_var_type(UDQ::varType(keyword))
 {
@@ -117,7 +117,7 @@ UDQAssign UDQAssign::serializationTestObject()
     result.records.emplace_back(std::unordered_set<std::string>{ "I-45" }, 3.1415, 3);
 
     // Class-template argument deduction for the vector element type.
-    result.records.emplace_back(std::vector { UDQSet::EnumeratedWellItems::serializationTestObject() }, 2.71828, 42);
+    result.records.emplace_back(std::vector { UDQSet::EnumeratedItems::serializationTestObject() }, 2.71828, 42);
 
     return result;
 }
@@ -136,16 +136,16 @@ void UDQAssign::add_record(const std::unordered_set<std::string>& rst_selector,
     this->records.emplace_back(rst_selector, value, report_step);
 }
 
-void UDQAssign::add_record(const std::vector<UDQSet::EnumeratedWellItems>& selector,
-                           const double                                    value,
-                           const std::size_t                               report_step)
+void UDQAssign::add_record(const std::vector<UDQSet::EnumeratedItems>& selector,
+                           const double                                value,
+                           const std::size_t                           report_step)
 {
     this->records.emplace_back(selector, value, report_step);
 }
 
-void UDQAssign::add_record(std::vector<UDQSet::EnumeratedWellItems>&& selector,
-                           const double                               value,
-                           const std::size_t                          report_step)
+void UDQAssign::add_record(std::vector<UDQSet::EnumeratedItems>&& selector,
+                           const double                           value,
+                           const std::size_t                      report_step)
 {
     this->records.emplace_back(std::move(selector), value, report_step);
 }
@@ -184,7 +184,7 @@ UDQSet UDQAssign::eval(const std::vector<std::string>& wgnames) const
     };
 }
 
-UDQSet UDQAssign::eval(const std::vector<UDQSet::EnumeratedWellItems>& items) const
+UDQSet UDQAssign::eval(const std::vector<UDQSet::EnumeratedItems>& items) const
 {
     if (this->m_var_type == UDQVarType::SEGMENT_VAR) {
         auto us = UDQSet { this->m_keyword, this->m_var_type, items };
