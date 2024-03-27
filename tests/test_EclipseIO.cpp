@@ -435,3 +435,232 @@ WELSPECS
     // the file
     BOOST_CHECK_EQUAL(file_size, write_and_check(3, 5));
 }
+
+std::pair<std::string,std::array<std::array<std::vector<float>,2>,3>>
+createMULTXYZDECK(std::array<std::bitset<2>,3> doxyz)
+{
+     auto deckString = std::string { R"(RUNSPEC
+DIMENS
+ 3 2 3  /
+
+OIL
+WATER
+GAS
+DISGAS
+VAPOIL
+
+METRIC
+
+START
+ 01  'NOV' 2018 /
+
+FAULTDIM
+ 10 /         -- max. number os fault segments
+
+
+UNIFIN
+UNIFOUT
+
+GRID
+NEWTRAN
+
+GRIDFILE
+0  1 /
+
+INIT
+
+SPECGRID
+ 3 2 3 1 F / 
+
+COORD
+  2000.0000  2000.0000  2000.0000   2000.0000  2000.0000  2009.0000 
+  2100.0000  2000.0000  2000.0000   2100.0000  2000.0000  2009.0000 
+  2200.0000  2000.0000  2000.0000   2200.0000  2000.0000  2009.0000 
+  2300.0000  2000.0000  2000.0000   2300.0000  2000.0000  2009.0000 
+  2000.0000  2100.0000  2000.0000   2000.0000  2100.0000  2009.0000 
+  2100.0000  2100.0000  2000.0000   2100.0000  2100.0000  2009.0000 
+  2200.0000  2100.0000  2000.0000   2200.0000  2100.0000  2009.0000 
+  2300.0000  2100.0000  2000.0000   2300.0000  2100.0000  2009.0000 
+  2000.0000  2200.0000  2000.0000   2000.0000  2200.0000  2009.0000 
+  2100.0000  2200.0000  2000.0000   2100.0000  2200.0000  2009.0000 
+  2200.0000  2200.0000  2000.0000   2200.0000  2200.0000  2009.0000 
+  2300.0000  2200.0000  2000.0000   2300.0000  2200.0000  2009.0000 
+/ 
+
+ZCORN
+  2000.0000  2000.0000  2000.0000  2000.0000  2000.0000  2000.0000
+  2000.0000  2000.0000  2000.0000  2000.0000  2000.0000  2000.0000
+  2000.0000  2000.0000  2000.0000  2000.0000  2000.0000  2000.0000
+  2000.0000  2000.0000  2000.0000  2000.0000  2000.0000  2000.0000
+  2002.5000  2002.5000  2002.5000  2002.5000  2002.5000  2002.5000
+  2002.5000  2002.5000  2002.5000  2002.5000  2002.5000  2002.5000
+  2002.5000  2002.5000  2002.5000  2002.5000  2002.5000  2002.5000
+  2002.5000  2002.5000  2002.5000  2002.5000  2002.5000  2002.5000
+  2002.5000  2002.5000  2002.5000  2002.5000  2002.5000  2002.5000
+  2002.5000  2002.5000  2002.5000  2002.5000  2002.5000  2002.5000
+  2002.5000  2002.5000  2002.5000  2002.5000  2002.5000  2002.5000
+  2002.5000  2002.5000  2002.5000  2002.5000  2002.5000  2002.5000
+  2005.5000  2005.5000  2005.5000  2005.5000  2005.5000  2005.5000
+  2005.5000  2005.5000  2005.5000  2005.5000  2005.5000  2005.5000
+  2005.5000  2005.5000  2005.5000  2005.5000  2005.5000  2005.5000
+  2005.5000  2005.5000  2005.5000  2005.5000  2005.5000  2005.5000
+  2005.5000  2005.5000  2005.5000  2005.5000  2005.5000  2005.5000
+  2005.5000  2005.5000  2005.5000  2005.5000  2005.5000  2005.5000
+  2005.5000  2005.5000  2005.5000  2005.5000  2005.5000  2005.5000
+  2005.5000  2005.5000  2005.5000  2005.5000  2005.5000  2005.5000
+  2009.0000  2009.0000  2009.0000  2009.0000  2009.0000  2009.0000
+  2009.0000  2009.0000  2009.0000  2009.0000  2009.0000  2009.0000
+  2009.0000  2009.0000  2009.0000  2009.0000  2009.0000  2009.0000
+  2009.0000  2009.0000  2009.0000  2009.0000  2009.0000  2009.0000
+/
+
+NTG
+ 18*0.9 /
+
+PORO
+ 18*0.25 /
+ 
+PERMX
+ 18*100.0 /
+  
+PERMZ
+ 18*10.0 /
+
+COPY
+ PERMX PERMY /
+/
+)"};
+
+     std::array<std::array<std::vector<float>, 2>, 3> exspected_multipliers;
+
+     for(auto&& pair: exspected_multipliers)
+         for(auto&& entry: pair)
+             entry.resize(18, 1.);
+
+     if (doxyz[0].test(0)) {
+         deckString += std::string{ R"(MULTX
+ 18*0.5 /
+)"};
+         exspected_multipliers[0][0].assign(18, .5);
+     }
+     if (doxyz[0].test(1)) {
+         deckString += std::string{ R"(MULTX-
+ 18*2.0 /
+)"};
+         exspected_multipliers[0][1].assign(18, 2.);
+     }
+     if (doxyz[1].test(0)) {
+         deckString += std::string{ R"(MULTY
+ 18*0.1435 /
+)"};
+         exspected_multipliers[1][0].assign(18, .1435);
+     }
+     if (doxyz[1].test(0)) {
+         deckString += std::string{ R"(MULTY-
+ 18*2.1435 /
+)"};
+         exspected_multipliers[1][1].assign(18, 2.1435);
+     }
+     if (doxyz[2].test(0)) {
+         deckString += std::string{ R"(MULTZ
+ 18*0.34325 / 
+)"};
+         exspected_multipliers[2][0].assign(18, 0.34325);
+     }
+
+     if (doxyz[2].test(1)) {
+         deckString += std::string{ R"(MULTZ-
+ 18*0.554325 / 
+)"};
+         exspected_multipliers[2][1].assign(18, 0.554325);
+     }
+     if(doxyz[0].any() || doxyz[1].any() || doxyz[2].any())
+     {
+         deckString += std::string{ R"(EQUALS
+)"};
+         if (doxyz[0].test(0)) {
+             deckString += std::string{ R"('MULTX' 0.87794567  1 1 1 1 1 1 /
+)"};
+             exspected_multipliers[0][0][0] = 0.87794567;
+         }
+         if (doxyz[0].test(1)) {
+             deckString += std::string{ R"('MULTX-' 0.7447794567  2 2 1 1 1 1 /
+)"};
+             exspected_multipliers[0][1][1] = 0.7447794567;
+         }
+         if (doxyz[1].test(0)) {
+             deckString += std::string{ R"('MULTY' 0.94567  3 3 1 1 1 1 / 
+)"};
+             exspected_multipliers[1][0][2] = 0.94567;
+         }
+         if (doxyz[1].test(0)) {
+             deckString += std::string{ R"('MULTY-' 0.6647794567  1 1  2 2 1 1 /
+)"};
+             exspected_multipliers[1][1][3] = 0.6647794567;
+         }
+         if (doxyz[2].test(0)) {
+             deckString += std::string{ R"('MULTZ' 0.094567  2 2 2 2 1 1 /
+)"};
+             exspected_multipliers[2][0][4] = 0.094567;
+         }
+         if (doxyz[2].test(1)) {
+             deckString += std::string{ R"('MULTZ-' 0.089567  3 3 2 2 1 1 /
+)"};
+             exspected_multipliers[2][1][5] = 0.089567;
+         }
+
+         deckString += std::string{ R"(/
+)"};
+     }
+     return {deckString, exspected_multipliers};
+}
+
+void testMultxyz(std::array<std::bitset<2>,3> doxyz)
+{
+    const auto [deckString, exspectedMult] = createMULTXYZDECK(doxyz);
+    std::cout << "deck:" <<std::endl<<deckString <<std::endl;
+    const auto deck = Parser().parseString(deckString);
+    auto es = EclipseState( deck );
+    const auto& eclGrid = es.getInputGrid();
+    const Schedule schedule(deck, es, std::make_shared<Python>());
+    const SummaryConfig summary_config( deck, schedule, es.fieldProps(), es.aquifer());
+    const SummaryState st(TimeService::now());
+    es.getIOConfig().setBaseName( "MULTXFOO" );
+    EclipseIO eclWriter( es, eclGrid , schedule, summary_config);
+    eclWriter.writeInitial( );
+
+    EclIO::EclFile initFile { "MULTXFOO.INIT" };
+
+    std::array<std::string, 6> multipliers{"MULTX", "MULTX-", "MULTY", "MULTY-", "MULTZ", "MULTZ-"};
+    int i=0;
+    for (const auto& mult: multipliers) {
+       BOOST_CHECK_MESSAGE( initFile.hasKey(mult), R"(INIT file must have ")" + mult + R"(" array)" );
+       const auto& multValues   = initFile.get<float>(mult);
+       auto exspect = exspectedMult[i/2][i%2].begin();
+       BOOST_CHECK(multValues.size() == exspectedMult[i/2][i%2].size());
+
+       for (auto mult = multValues.begin(); mult != multValues.end(); ++mult, ++exspect)
+       {
+           BOOST_CHECK_CLOSE(*mult, *exspect, 1e-8);
+       }
+       ++i;
+    }
+}
+
+
+BOOST_AUTO_TEST_CASE(MULTXYZInit)
+{
+    testMultxyz({ '0', '0' , '0'});
+    testMultxyz({ '0', '0' , '1'});
+    testMultxyz({ '0', '0' , '2'});
+    testMultxyz({ '0', '0' , '3'});
+    testMultxyz({ '1', '0' , '0'});
+    testMultxyz({ '1', '0' , '1'});
+    testMultxyz({ '1', '0' , '3'});
+    testMultxyz({ '2', '0' , '0'});
+    testMultxyz({ '1', '1' , '0'});
+    testMultxyz({ '3', '3' , '0'});
+    testMultxyz({ '3', '3' , '1'});
+    testMultxyz({ '3', '3' , '2'});
+    testMultxyz({ '3', '3' , '3'});
+}
