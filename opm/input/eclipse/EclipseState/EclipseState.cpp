@@ -34,6 +34,7 @@
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/Fault.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/FaultCollection.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/FIPRegionStatistics.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/MULTREGTScanner.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/NNC.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/SatfuncPropertyInitializers.hpp>
@@ -56,6 +57,14 @@
 #include <fmt/format.h>
 
 #include <filesystem>
+#include <map>
+#include <stdexcept>
+#include <string>
+#include <unordered_set>
+#include <utility>
+#include <vector>
+
+#include <stddef.h>
 
 namespace {
     void verify_consistent_restart_information(const Opm::DeckKeyword& restart_keyword,
@@ -199,6 +208,26 @@ namespace Opm {
         return this->field_props;
     }
 
+    void EclipseState::computeFipRegionStatistics()
+    {
+        if (! this->fipRegionStatistics_.has_value()) {
+            this->fipRegionStatistics_
+                .emplace(declaredMaxRegionID(this->runspec()),
+                         this->fieldProps(),
+                         [](std::vector<int>&) { /* do nothing*/ });
+        }
+    }
+
+    const FIPRegionStatistics& EclipseState::fipRegionStatistics() const
+    {
+        if (! this->fipRegionStatistics_.has_value()) {
+            throw std::logic_error {
+                "FIP Region Statistics have not been prepared"
+            };
+        }
+
+        return *this->fipRegionStatistics_;
+    }
 
     const TableManager& EclipseState::getTableManager() const {
         return m_tables;
