@@ -21,24 +21,34 @@
 #ifndef SPIRALICD_HPP_HEADER_INCLUDED
 #define SPIRALICD_HPP_HEADER_INCLUDED
 
+#include <opm/input/eclipse/Schedule/MSW/icd.hpp>
+
 #include <map>
 #include <optional>
+#include <string>
 #include <utility>
 #include <vector>
-#include <string>
-
-#include <opm/input/eclipse/Schedule/MSW/icd.hpp>
 
 namespace Opm {
 
     class DeckRecord;
     class DeckKeyword;
 
-    class SICD {
-    public:
+} // namespace Opm
 
-        SICD();
+namespace Opm { namespace RestartIO {
+    struct RstSegment;
+}} // namespace Opm::RestartIO
+
+namespace Opm {
+
+    class SICD
+    {
+    public:
+        SICD() = default;
         explicit SICD(const DeckRecord& record);
+        explicit SICD(const RestartIO::RstSegment& rstSegment);
+
         SICD(double strength,
              double length,
              double densityCalibration,
@@ -51,13 +61,15 @@ namespace Opm {
              ICDStatus status,
              double scalingFactor);
 
+        virtual ~SICD() = default;
+
         static SICD serializationTestObject();
 
         // the function will return a map
         // [
         //     "WELL1" : [<seg1, sicd1>, <seg2, sicd2> ...]
         //     ....
-        static std::map<std::string, std::vector<std::pair<int, SICD> > >
+        static std::map<std::string, std::vector<std::pair<int, SICD>>>
         fromWSEGSICD(const DeckKeyword& wsegsicd);
 
         const std::optional<double>& maxAbsoluteRate() const;
@@ -93,21 +105,22 @@ namespace Opm {
         }
 
     private:
-        double m_strength;
-        double m_length;
-        double m_density_calibration;
-        double m_viscosity_calibration;
-        double m_critical_value;
-        double m_width_transition_region;
-        double m_max_viscosity_ratio;
-        int m_method_flow_scaling;
-        std::optional<double> m_max_absolute_rate;
-        ICDStatus m_status;
-        // scaling factor is the only one can not be gotten from deck directly, needs to be
-        // updated afterwards
-        std::optional<double> m_scaling_factor;
-};
+        double m_strength { 0.0 };
+        double m_length { 0.0 };
+        double m_density_calibration { 0.0 };
+        double m_viscosity_calibration { 0.0 };
+        double m_critical_value { 0.0 };
+        double m_width_transition_region { 0.0 };
+        double m_max_viscosity_ratio { 0.0 };
+        int m_method_flow_scaling { 0 };
+        std::optional<double> m_max_absolute_rate {};
+        ICDStatus m_status { ICDStatus::SHUT };
 
-}
+        // scaling factor is the only one can not be gotten from deck
+        // directly, needs to be updated afterwards
+        std::optional<double> m_scaling_factor { 1.0 };
+    };
 
-#endif
+} // namespace Opm
+
+#endif // SPIRALICD_HPP_HEADER_INCLUDED

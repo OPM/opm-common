@@ -20,16 +20,17 @@
 #ifndef VALVE_HPP_HEADER_INCLUDED
 #define VALVE_HPP_HEADER_INCLUDED
 
-#include <map>
-#include <utility>
-#include <vector>
-#include <string>
-#include <optional>
-
 #include <opm/input/eclipse/Schedule/MSW/icd.hpp>
-#include <opm/input/eclipse/Deck/UDAValue.hpp>
 #include <opm/input/eclipse/Schedule/SummaryState.hpp>
 
+#include <opm/input/eclipse/Deck/UDAValue.hpp>
+
+#include <cstddef>
+#include <map>
+#include <optional>
+#include <string>
+#include <utility>
+#include <vector>
 
 namespace Opm {
 
@@ -37,24 +38,34 @@ namespace Opm {
     class DeckKeyword;
     class Segment;
 
-    struct ValveUDAEval {
+} // namespace Opm
+
+namespace Opm { namespace RestartIO {
+    struct RstSegment;
+}} // namespace Opm::RestartIO
+
+namespace Opm {
+
+    struct ValveUDAEval
+    {
         const SummaryState& summary_state;
         const std::string& well_name;
-        const size_t segment_number;
+        const std::size_t segment_number;
 
         ValveUDAEval(const SummaryState& summary_state_,
                      const std::string& well_name_,
-                     const size_t segment_number_);
+                     const std::size_t segment_number_);
 
         double value(const UDAValue& value, const double udq_default = 0.0) const;
     };
 
-
-    class Valve {
+    class Valve
+    {
     public:
-
-        Valve();
+        Valve() = default;
         explicit Valve(const DeckRecord& record, const double udq_default = 0.0);
+        explicit Valve(const RestartIO::RstSegment& rstSegment);
+
         Valve(double conFlowCoeff,
               double conCrossA,
               double conMaxCrossA,
@@ -70,7 +81,8 @@ namespace Opm {
         // [
         //     "WELL1" : [<seg1, valv1>, <seg2, valv2> ...]
         //     ....
-        static std::map<std::string, std::vector<std::pair<int, Valve> > > fromWSEGVALV(const DeckKeyword& keyword, const double udq_default = 0.0);
+        static std::map<std::string, std::vector<std::pair<int, Valve>>>
+        fromWSEGVALV(const DeckKeyword& keyword, const double udq_default = 0.0);
 
         // parameters for constriction pressure loss
         double conFlowCoefficient() const;
@@ -113,20 +125,20 @@ namespace Opm {
         }
 
     private:
-        double m_con_flow_coeff;
-        UDAValue m_con_cross_area;
-        mutable double m_con_cross_area_value;
-        double m_con_max_cross_area;
+        double m_con_flow_coeff {0.0};
+        UDAValue m_con_cross_area {0.0};
+        mutable double m_con_cross_area_value {0.0};
+        double m_con_max_cross_area {0.0};
 
-        double m_pipe_additional_length;
-        double m_pipe_diameter;
-        double m_pipe_roughness;
-        double m_pipe_cross_area;
-        ICDStatus m_status;
+        double m_pipe_additional_length {0.0};
+        double m_pipe_diameter {0.0};
+        double m_pipe_roughness {0.0};
+        double m_pipe_cross_area {0.0};
+        ICDStatus m_status {ICDStatus::SHUT};
 
         double m_udq_default{0.0};
     };
 
-}
+} // namespace Opm
 
-#endif
+#endif // VALVE_HPP_HEADER_INCLUDED

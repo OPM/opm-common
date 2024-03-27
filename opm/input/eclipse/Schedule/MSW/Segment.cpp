@@ -21,6 +21,7 @@
 
 #include <opm/io/eclipse/rst/segment.hpp>
 
+#include <opm/input/eclipse/Schedule/MSW/AICD.hpp>
 #include <opm/input/eclipse/Schedule/MSW/SICD.hpp>
 #include <opm/input/eclipse/Schedule/MSW/Valve.hpp>
 
@@ -29,6 +30,8 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
+
+#include <fmt/format.h>
 
 namespace {
 
@@ -41,106 +44,96 @@ namespace {
             : rst_value;
     }
 
+    Opm::Segment::SegmentType segmentTypeFromInt(const int ecl_id)
+    {
+        using Type = Opm::Segment::SegmentType;
+
+        switch (ecl_id) {
+        case -1: return Type::REGULAR;
+        case -7: return Type::SICD;
+        case -8: return Type::AICD;
+        case -5: return Type::VALVE;
+        }
+
+        throw std::invalid_argument {
+            fmt::format("Unhandeled integer segment type {} ", ecl_id)
+        };
+    }
+
 } // Anonymous namespace
 
 namespace Opm {
 
     Segment::Segment()
-        : m_segment_number(-1)
-        , m_branch(-1)
-        , m_outlet_segment(-1)
-        , m_total_length(invalid_value)
-        , m_depth(invalid_value)
+        : m_segment_number   (-1)
+        , m_branch           (-1)
+        , m_outlet_segment   (-1)
+        , m_total_length     (invalid_value)
+        , m_depth            (invalid_value)
         , m_internal_diameter(invalid_value)
-        , m_roughness(invalid_value)
-        , m_cross_area(invalid_value)
-        , m_volume(invalid_value)
-        , m_data_ready(false)
-        , m_x(0.0)
-        , m_y(0.0)
+        , m_roughness        (invalid_value)
+        , m_cross_area       (invalid_value)
+        , m_volume           (invalid_value)
+        , m_data_ready       (false)
+        , m_x                (0.0)
+        , m_y                (0.0)
     {}
 
     Segment::Segment(const RestartIO::RstSegment& rst_segment)
-        : m_segment_number(rst_segment.segment)
-        , m_branch(rst_segment.branch)
-        , m_outlet_segment(rst_segment.outlet_segment)
-        , m_total_length( rst_segment.dist_bhp_ref )
-        , m_depth(rst_segment.node_depth)
+        : m_segment_number   (rst_segment.segment)
+        , m_branch           (rst_segment.branch)
+        , m_outlet_segment   (rst_segment.outlet_segment)
+        , m_total_length     (rst_segment.dist_bhp_ref)
+        , m_depth            (rst_segment.node_depth)
         , m_internal_diameter(if_invalid_value(rst_segment.diameter))
-        , m_roughness(if_invalid_value(rst_segment.roughness))
-        , m_cross_area(if_invalid_value(rst_segment.area))
-        , m_volume(rst_segment.volume)
-        , m_data_ready(true)
-        , m_x(0.0)
-        , m_y(0.0)
+        , m_roughness        (if_invalid_value(rst_segment.roughness))
+        , m_cross_area       (if_invalid_value(rst_segment.area))
+        , m_volume           (rst_segment.volume)
+        , m_data_ready       (true)
+        , m_x                (0.0)
+        , m_y                (0.0)
     {
-        if (rst_segment.segment_type == SegmentType::SICD) {
-            double scalingFactor = -1;  // The scaling factor will be and updated from the simulator.
+        const auto segmentType = segmentTypeFromInt(rst_segment.segment_type);
 
-            SICD icd(rst_segment.base_strength,
-                    rst_segment.icd_length,
-                    rst_segment.fluid_density,
-                    rst_segment.fluid_viscosity,
-                    rst_segment.critical_water_fraction,
-                    rst_segment.transition_region_width,
-                    rst_segment.max_emulsion_ratio,
-                    rst_segment.icd_scaling_mode,
-                    rst_segment.max_valid_flow_rate,
-                    rst_segment.icd_status,
-                    scalingFactor);
-
-            this->updateSpiralICD(icd);
+        if (segmentType == SegmentType::SICD) {
+            this->m_icd.emplace<SICD>(rst_segment);
+        }
+        else if (segmentType == SegmentType::AICD) {
+            this->m_icd.emplace<AutoICD>(rst_segment);
+        }
+        else if (segmentType == SegmentType::VALVE) {
+            this->m_icd.emplace<Valve>(rst_segment);
         }
 
-        if (rst_segment.segment_type == SegmentType::VALVE) {
-            /*
-              These three variables are currently not stored in the restart
-              file; here we initialize with the default values, but if they have
-              originally been assigned in the deck with non-default values, that
-              will *not* be picked in a restarted run.
-            */
-
-            double pipeDiam = this->m_internal_diameter;
-            double pipeRough = this->m_roughness;
-            double pipeCrossA = this->m_cross_area;
-
-            Valve valve(rst_segment.valve_flow_coeff,
-                        rst_segment.valve_area,
-                        rst_segment.valve_max_area,
-                        rst_segment.valve_length,
-                        pipeDiam,
-                        pipeRough,
-                        pipeCrossA,
-                        rst_segment.icd_status);
-
-            this->updateValve(valve);
-        }
+        // If none of the above type-specific conditions trigger, then this
+        // is a RegularSegment and 'm_icd' is fully formed by the variant's
+        // default constructor.
     }
 
-    Segment::Segment(const int segment_number_in,
-                     const int branch_in,
-                     const int outlet_segment_in,
+    Segment::Segment(const int    segment_number_in,
+                     const int    branch_in,
+                     const int    outlet_segment_in,
                      const double length_in,
                      const double depth_in,
                      const double internal_diameter_in,
                      const double roughness_in,
                      const double cross_area_in,
                      const double volume_in,
-                     const bool data_ready_in,
+                     const bool   data_ready_in,
                      const double x_in,
                      const double y_in)
-        : m_segment_number(segment_number_in)
-        , m_branch(branch_in)
-        , m_outlet_segment(outlet_segment_in)
-        , m_total_length(length_in)
-        , m_depth(depth_in)
+        : m_segment_number   (segment_number_in)
+        , m_branch           (branch_in)
+        , m_outlet_segment   (outlet_segment_in)
+        , m_total_length     (length_in)
+        , m_depth            (depth_in)
         , m_internal_diameter(internal_diameter_in)
-        , m_roughness(roughness_in)
-        , m_cross_area(cross_area_in)
-        , m_volume(volume_in)
-        , m_data_ready(data_ready_in)
-        , m_x(x_in)
-        , m_y(y_in)
+        , m_roughness        (roughness_in)
+        , m_cross_area       (cross_area_in)
+        , m_volume           (volume_in)
+        , m_data_ready       (data_ready_in)
+        , m_x                (x_in)
+        , m_y                (y_in)
     {}
 
     Segment::Segment(const Segment& src,
@@ -212,54 +205,66 @@ namespace Opm {
         return result;
     }
 
-    int Segment::segmentNumber() const {
+    int Segment::segmentNumber() const
+    {
         return m_segment_number;
     }
 
-    int Segment::branchNumber() const {
+    int Segment::branchNumber() const
+    {
         return m_branch;
     }
 
-    int Segment::outletSegment() const {
+    int Segment::outletSegment() const
+    {
         return m_outlet_segment;
     }
 
-    double Segment::totalLength() const {
+    double Segment::totalLength() const
+    {
         return m_total_length;
     }
 
     double Segment::node_X() const { return this->m_x; }
     double Segment::node_Y() const { return this->m_y; }
 
-    double Segment::depth() const {
+    double Segment::depth() const
+    {
         return m_depth;
     }
 
-    double Segment::perfLength() const {
+    double Segment::perfLength() const
+    {
         return *this->m_perf_length;
     }
 
-    double Segment::internalDiameter() const {
+    double Segment::internalDiameter() const
+    {
         return m_internal_diameter;
     }
 
-    double Segment::roughness() const {
+    double Segment::roughness() const
+    {
         return m_roughness;
     }
 
-    double Segment::crossArea() const {
+    double Segment::crossArea() const
+    {
         return m_cross_area;
     }
 
-    double Segment::volume() const {
+    double Segment::volume() const
+    {
         return m_volume;
     }
 
-    bool Segment::dataReady() const {
+    bool Segment::dataReady() const
+    {
         return m_data_ready;
     }
 
-    Segment::SegmentType Segment::segmentType() const {
+    Segment::SegmentType Segment::segmentType() const
+    {
         if (this->isRegular())
             return SegmentType::REGULAR;
 
@@ -275,7 +280,8 @@ namespace Opm {
         throw std::logic_error("This just should not happen ");
     }
 
-    const std::vector<int>& Segment::inletSegments() const {
+    const std::vector<int>& Segment::inletSegments() const
+    {
         return m_inlet_segments;
     }
 
@@ -290,11 +296,13 @@ namespace Opm {
         }
     }
 
-    double Segment::invalidValue() {
+    double Segment::invalidValue()
+    {
         return invalid_value;
     }
 
-    bool Segment::operator==( const Segment& rhs ) const {
+    bool Segment::operator==(const Segment& rhs) const
+    {
         return this->m_segment_number    == rhs.m_segment_number
             && this->m_branch            == rhs.m_branch
             && this->m_outlet_segment    == rhs.m_outlet_segment
@@ -312,27 +320,33 @@ namespace Opm {
             ;
     }
 
-    bool Segment::operator!=( const Segment& rhs ) const {
-        return !this->operator==(rhs);
+    bool Segment::operator!=(const Segment& rhs) const
+    {
+        return ! (*this == rhs);
     }
 
-    void Segment::updateSpiralICD(const SICD& spiral_icd) {
+    void Segment::updateSpiralICD(const SICD& spiral_icd)
+    {
         this->m_icd = spiral_icd;
     }
 
-    const SICD& Segment::spiralICD() const {
+    const SICD& Segment::spiralICD() const
+    {
         return std::get<SICD>(this->m_icd);
     }
 
-    void Segment::updateAutoICD(const AutoICD& aicd) {
+    void Segment::updateAutoICD(const AutoICD& aicd)
+    {
         this->m_icd = aicd;
     }
 
-    const AutoICD& Segment::autoICD() const {
+    const AutoICD& Segment::autoICD() const
+    {
         return std::get<AutoICD>(this->m_icd);
     }
 
-    void Segment::updateValve(const Valve& input_valve) {
+    void Segment::updateValve(const Valve& input_valve)
+    {
         // we need to update some values for the vale
         auto valve = input_valve;
         if (valve.pipeAdditionalLength() < 0)
@@ -363,54 +377,44 @@ namespace Opm {
         this->m_icd= valve;
     }
 
-    void Segment::updateValve__(Valve& valve, const double segment_length) {
+    void Segment::updateValve__(Valve& valve, const double segment_length)
+    {
         if (valve.pipeAdditionalLength() < 0)
             valve.setPipeAdditionalLength(segment_length);
 
         this->updateValve(valve);
     }
 
-    void Segment::updateValve(const Valve& valve, const double segment_length) {
+    void Segment::updateValve(const Valve& valve, const double segment_length)
+    {
         auto new_valve = valve;
         this->updateValve__(new_valve, segment_length);
     }
 
-    void Segment::updatePerfLength(double perf_length) {
+    void Segment::updatePerfLength(double perf_length)
+    {
         this->m_perf_length = perf_length;
     }
 
-    const Valve& Segment::valve() const {
+    const Valve& Segment::valve() const
+    {
         return std::get<Valve>(this->m_icd);
     }
 
-    int Segment::ecl_type_id() const {
-        switch (this->segmentType()) {
-        case SegmentType::REGULAR:
-            return -1;
-        case SegmentType::SICD:
-            return -7;
-        case SegmentType::AICD:
-            return -8;
-        case SegmentType::VALVE:
-            return -5;
-        default:
-            throw std::invalid_argument("Unhanedled segment type");
+    int Segment::ecl_type_id() const
+    {
+        switch (this->segmentType())
+        {
+        case SegmentType::REGULAR: return -1;
+        case SegmentType::SICD:    return -7;
+        case SegmentType::AICD:    return -8;
+        case SegmentType::VALVE:   return -5;
         }
-    }
 
-    Segment::SegmentType Segment::type_from_int(int ecl_id) {
-        switch(ecl_id) {
-        case -1:
-            return SegmentType::REGULAR;
-        case -7:
-            return SegmentType::SICD;
-        case -8:
-            return SegmentType::AICD;
-        case -5:
-            return SegmentType::VALVE;
-        default:
-            throw std::invalid_argument("Unhandeled segment type: " + std::to_string(ecl_id));
-        }
+        throw std::invalid_argument {
+            fmt::format("Unhandled segment type '{}'",
+                        static_cast<int>(this->segmentType()))
+        };
     }
 
 } // namespace Opm
