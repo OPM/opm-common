@@ -75,6 +75,7 @@ public:
 
     // Only used for testing purposes.
     SummaryState() : SummaryState(std::time_t{0}) {}
+    ~SummaryState() = default;
 
     // The canonical way to update the SummaryState is through the
     // update_xxx() methods which will inspect the variable and either

@@ -27,17 +27,16 @@ error BUG: The PyRunModule.hpp header should *not* be included in a configuratio
 #include <pybind11/pybind11.h>
 namespace py = pybind11;
 
+#include <filesystem>
 #include <functional>
 #include <memory>
 #include <string>
 #include <opm/input/eclipse/Python/Python.hpp>
+#include <opm/input/eclipse/EclipseState/EclipseState.hpp>
+#include <opm/input/eclipse/Schedule/Schedule.hpp>
+#include <opm/input/eclipse/Schedule/SummaryState.hpp>
 
 namespace Opm {
-
-class EclipseState;
-class Schedule;
-class SummaryState;
-
 
 class __attribute__((visibility("default"))) PyRunModule {
 public:
@@ -49,8 +48,11 @@ private:
     py::object run_function = py::none();
     std::shared_ptr<const Python> python_handle;
     py::module module;
+    std::filesystem::path module_path;
+    std::string module_name;
     py::module opm_embedded;
     py::dict storage;
+    bool executeInnerRunFunction(const std::function<void(const std::string&, const std::vector<std::string>&)>& actionx_callback);
 };
 
 }

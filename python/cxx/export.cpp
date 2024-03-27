@@ -1,6 +1,9 @@
 #include <pybind11/pybind11.h>
 #include "export.hpp"
 
+#include <opm/input/eclipse/EclipseState/EclipseState.hpp>
+#include <opm/input/eclipse/Schedule/Schedule.hpp>
+#include <opm/input/eclipse/Schedule/SummaryState.hpp>
 
 void python::common::export_all(py::module& module) {
     export_ParseContext(module);
@@ -27,4 +30,46 @@ void python::common::export_all(py::module& module) {
 
 PYBIND11_MODULE(opmcommon_python, module) {
     python::common::export_all(module);
+}
+
+void python::common::export_all_opm_embedded(py::module& module) {
+    python::common::export_all(module);
+    module.attr("current_ecl_state") = std::make_shared<EclipseState>();
+    module.attr("current_summary_state") = std::make_shared<SummaryState>();
+    module.attr("current_schedule") = std::make_shared<Schedule>();
+    module.attr("current_report_step") = 0;
+    module.doc() = R"pbdoc(
+        opm_embedded
+        -----------------------
+
+        .. currentmodule:: opm_embedded
+
+        .. autosummary::
+           :toctree: _generate
+
+           ParseContext
+           Parser
+           Deck
+           DeckKeyword
+           Schedule
+           Well
+           Group
+           Connection
+           EclipseConfig
+           FieldProperties
+           EclipseState
+           EclipseGrid
+           UnitSystem
+           EModel
+           SummaryState
+    )pbdoc";
+}
+
+/*
+  PYBIND11_MODULE create a Python of all the Python/C++ classes which are
+  generated in the python::common::export_all_opm_embedded() function in the wrapping code.
+  The same module is created as an embedded python module in PythonInterp.cpp
+*/
+PYBIND11_MODULE(opm_embedded, module) {
+    python::common::export_all_opm_embedded(module);
 }

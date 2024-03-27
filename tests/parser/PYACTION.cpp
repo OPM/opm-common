@@ -25,7 +25,10 @@
 #include <opm/input/eclipse/Parser/Parser.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/P.hpp>
 #include <opm/input/eclipse/Python/Python.hpp>
+#include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/Schedule/Action/PyAction.hpp>
+#include <opm/input/eclipse/Schedule/Schedule.hpp>
+#include <opm/input/eclipse/Schedule/SummaryState.hpp>
 
 using namespace Opm;
 
@@ -46,23 +49,6 @@ BOOST_AUTO_TEST_CASE(ParsePYACTION) {
 
 
 #ifdef EMBEDDED_PYTHON
-BOOST_AUTO_TEST_CASE(ParsePYACTION_Module_Run_Missing) {
-    Parser parser;
-    auto python = std::make_shared<Python>();
-    auto deck = parser.parseFile("PYACTION.DATA");
-    auto keyword = deck.get<ParserKeywords::PYACTION>().front();
-    const auto& record0 = keyword.getRecord(0);
-    const auto& record1 = keyword.getRecord(1);
-
-    auto run_count = Action::PyAction::from_string(record0.getItem(1).get<std::string>(0));
-    const std::string& ok_module = deck.makeDeckPath(record1.getItem(0).get<std::string>(0));
-    Action::PyAction pyaction(python, "ACT1", run_count, ok_module);
-
-    const std::string& broken_module = deck.makeDeckPath("action_missing_run.py");
-    BOOST_CHECK_THROW(Action::PyAction(python , "ACT2", run_count, broken_module), std::runtime_error);
-
-}
-
 BOOST_AUTO_TEST_CASE(ParsePYACTION_Module_Syntax_Error) {
     Parser parser;
     auto python = std::make_shared<Python>();
@@ -73,11 +59,15 @@ BOOST_AUTO_TEST_CASE(ParsePYACTION_Module_Syntax_Error) {
 
     auto run_count = Action::PyAction::from_string(record0.getItem(1).get<std::string>(0));
     const std::string& ok_module = deck.makeDeckPath(record1.getItem(0).get<std::string>(0));
-    Action::PyAction pyaction(python, "ACT1", run_count, ok_module);
-
+    Action::PyAction pyaction1(python, "ACT1", run_count, ok_module);
     const std::string& broken_module2 = deck.makeDeckPath("action_syntax_error.py");
-    BOOST_CHECK_THROW(Action::PyAction(python , "ACT2", run_count, broken_module2), std::exception);
+    Action::PyAction pyaction2(python , "ACT2", run_count, broken_module2);
+    EclipseState state;
+    Schedule schedule;
+    SummaryState summary_state;
+    const std::function<void(const std::string&, const std::vector<std::string>&)> actionx_callback;
 
+    BOOST_CHECK_THROW(pyaction2.run(state, schedule, 0, summary_state, actionx_callback), std::exception);
 }
 
 BOOST_AUTO_TEST_CASE(ParsePYACTION_ModuleMissing) {
