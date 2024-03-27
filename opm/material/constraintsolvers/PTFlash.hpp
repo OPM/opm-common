@@ -614,27 +614,34 @@ protected:
 
         // Calculate composition using nonlinear solver
         // Newton
+        bool converged = false;
         if (flash_2p_method == "newton") {
             if (verbosity >= 1) {
                 std::cout << "Calculate composition using Newton." << std::endl;
             }
-            newtonComposition_(K_scalar, L_scalar, fluid_state_scalar, z_scalar, verbosity);
+            converged = newtonComposition_(K_scalar, L_scalar, fluid_state_scalar, z_scalar, verbosity);
         } else if (flash_2p_method == "ssi") {
             // Successive substitution
             if (verbosity >= 1) {
                 std::cout << "Calculate composition using Succcessive Substitution." << std::endl;
             }
-            successiveSubstitutionComposition_(K_scalar, L_scalar, fluid_state_scalar, z_scalar, false, verbosity);
+            converged = successiveSubstitutionComposition_(K_scalar, L_scalar, fluid_state_scalar, z_scalar, false, verbosity);
         } else if (flash_2p_method == "ssi+newton") {
-            successiveSubstitutionComposition_(K_scalar, L_scalar, fluid_state_scalar, z_scalar, true, verbosity);
-            newtonComposition_(K_scalar, L_scalar, fluid_state_scalar, z_scalar, verbosity);
+            converged = successiveSubstitutionComposition_(K_scalar, L_scalar, fluid_state_scalar, z_scalar, true, verbosity);
+            if (!converged) {
+                converged = newtonComposition_(K_scalar, L_scalar, fluid_state_scalar, z_scalar, verbosity);
+            }
         } else {
-            throw std::runtime_error("unknown two phase flash method " + flash_2p_method + " is specified");
+            throw std::logic_error("unknown two phase flash method " + flash_2p_method + " is specified");
+        }
+
+        if (!converged) {
+            throw std::runtime_error("flash calculation did not get converged with " + flash_2p_method);
         }
     }
 
     template <class FlashFluidState, class ComponentVector>
-    static void newtonComposition_(ComponentVector& K, typename FlashFluidState::Scalar& L,
+    static bool newtonComposition_(ComponentVector& K, typename FlashFluidState::Scalar& L,
                                    FlashFluidState& fluid_state, const ComponentVector& z,
                                    int verbosity)
     {
@@ -792,6 +799,7 @@ protected:
         }
         L = Opm::getValue(l);
         fluid_state.setLvalue(L);
+        return converged;
     }
 
     // TODO: the interface will need to refactor for later usage
@@ -1133,11 +1141,11 @@ protected:
 
     // TODO: or use typename FlashFluidState::Scalar
     template <class FlashFluidState, class ComponentVector>
-    static void successiveSubstitutionComposition_(ComponentVector& K, typename ComponentVector::field_type& L, FlashFluidState& fluid_state, const ComponentVector& z,
+    static bool successiveSubstitutionComposition_(ComponentVector& K, typename ComponentVector::field_type& L, FlashFluidState& fluid_state, const ComponentVector& z,
                                                    const bool newton_afterwards, const int verbosity)
     {
         // Determine max. iterations based on if it will be used as a standalone flash or as a pre-process to Newton (or other) method.
-        const int maxIterations = newton_afterwards ? 3 : 100;
+        const int maxIterations = newton_afterwards ? 5 : 100;
 
         // Store cout format before manipulation
         std::ios_base::fmtflags f(std::cout.flags());
@@ -1194,7 +1202,7 @@ protected:
             }
 
             // Check convergence
-            if (convFugRatio.two_norm() < 1e-6) {
+            if (convFugRatio.two_norm() < 1.e-6) {
                 // Restore cout format
                 std::cout.flags(f);
 
@@ -1202,7 +1210,7 @@ protected:
                 if (verbosity >= 1) {
                     std::cout << "Solution converged to the following result :" << std::endl;
                     std::cout << "x = [";
-                    for (int compIdx=0; compIdx<numComponents; ++compIdx){
+                    for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
                         if (compIdx < numComponents - 1)
                             std::cout << fluid_state.moleFraction(oilPhaseIdx, compIdx) << " ";
                         else
@@ -1210,7 +1218,7 @@ protected:
                     }
                     std::cout << "]" << std::endl;
                     std::cout << "y = [";
-                    for (int compIdx=0; compIdx<numComponents; ++compIdx){
+                    for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
                         if (compIdx < numComponents - 1)
                             std::cout << fluid_state.moleFraction(gasPhaseIdx, compIdx) << " ";
                         else
@@ -1221,11 +1229,10 @@ protected:
                     std::cout << "L = " << L << std::endl;
                 }
                 // Restore cout format format
-                return;
+                return true;
             }
-
             //  If convergence is not met, K is updated in a successive substitution manner
-            else{
+            else {
                 // Update K
                 for (int compIdx=0; compIdx<numComponents; ++compIdx){
                     K[compIdx] *= newFugRatio[compIdx];
@@ -1234,12 +1241,13 @@ protected:
                 // Solve Rachford-Rice to get L from updated K
                 L = solveRachfordRice_g_(K, z, 0);
             }
-
         }
-        if (!newton_afterwards) {
-            throw std::runtime_error(
-                    "Successive substitution composition update did not converge within maxIterations " + std::to_string(maxIterations));
+        // did not get converged. check whether will do more newton later afterward
+        if (newton_afterwards && verbosity > 0) {
+            std::cout << "Successive substitution composition update did not converge within maxIterations "
+                      << maxIterations << std::endl;
         }
+        return false;
     }
 
 };//end PTFlash
