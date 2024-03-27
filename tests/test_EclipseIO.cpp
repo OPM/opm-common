@@ -192,6 +192,10 @@ void checkInitFile(const Deck& deck, const data::Solution& simProps)
     BOOST_CHECK_MESSAGE( initFile.hasKey("NTG"), R"(INIT file must have "NTG" array)" );
     BOOST_CHECK_MESSAGE( initFile.hasKey("FIPNUM"), R"(INIT file must have "FIPNUM" array)");
     BOOST_CHECK_MESSAGE( initFile.hasKey("SATNUM"), R"(INIT file must have "SATNUM" array)");
+    std::array<std::string, 6> multipliers{"MULTX", "MULTX-", "MULTY", "MULTY-", "MULTZ", "MULTZ-"};
+    for (const auto& mult: multipliers) {
+       BOOST_CHECK_MESSAGE( initFile.hasKey(mult), R"(INIT file must have ")" + mult + R"(" array)" );
+    }
 
     for (const auto& prop : simProps) {
         BOOST_CHECK_MESSAGE( initFile.hasKey(prop.first), R"(INIT file must have ")" + prop.first + R"(" array)" );

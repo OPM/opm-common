@@ -57,6 +57,9 @@ namespace Opm { namespace RestartIO {
 }} // namespace Opm::RestartIO
 
 namespace Opm {
+    namespace data {
+        class Solution;
+    }
 
     class EclipseState {
     public:
@@ -83,6 +86,11 @@ namespace Opm {
         const FaultCollection& getFaults() const;
         const TransMult& getTransMult() const;
         TransMult& getTransMult();
+
+        /// \brief Get the multipliers (MULTX, MULTX-, etc.) for output
+        ///
+        /// These will have the fault multipliers applied.
+        data::Solution getMultSimProps() const;
 
         /// non-neighboring connections
         /// the non-standard adjacencies as specified in input deck
