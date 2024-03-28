@@ -179,10 +179,7 @@ void handlePYACTION(HandlerContext& handlerContext)
     if (!handlerContext.static_schedule().m_python_handle->enabled()) {
         //Must have a real Python instance here - to ensure that IMPORT works
         const auto& loc = handlerContext.keyword.location();
-        OpmLog::warning(fmt::format("This version of flow is built without support for Python. "
-                                    "Keyword PYACTION in file: {} line: {} is ignored.",
-                                    loc.filename, loc.lineno));
-        return;
+        throw OpmInputError("This version of flow is built without support for Python. The Keyword PYACTION is ignored.", loc);
     }
 
     const auto& keyword = handlerContext.keyword;
