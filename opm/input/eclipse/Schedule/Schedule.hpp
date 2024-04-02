@@ -457,13 +457,13 @@ namespace Opm
         //   - serializeOp(Serializer&)
         // when you update/change this list of data members.
         bool m_treat_critical_as_non_critical = false;
-        ScheduleStatic m_static;
-        ScheduleDeck m_sched_deck;
-        Action::WGNames action_wgnames;
-        std::optional<int> exit_status;
-        std::vector<ScheduleState> snapshots;
-        WriteRestartFileEvents restart_output;
-        CompletedCells completed_cells;
+        ScheduleStatic m_static{};
+        ScheduleDeck m_sched_deck{};
+        Action::WGNames action_wgnames{};
+        std::optional<int> exit_status{};
+        std::vector<ScheduleState> snapshots{};
+        WriteRestartFileEvents restart_output{};
+        CompletedCells completed_cells{};
 
         // The current_report_step is set to the current report step when a PYACTION call is executed.
         // This is needed since the Schedule object does not know the current report step of the simulator and
@@ -473,7 +473,7 @@ namespace Opm
         // The SimulatorUpdate is reset before a new PYACTION call is executed.
         // It is a shared_ptr, so a Schedule can be constructed using the copy constructor sharing the simUpdateFromPython.
         // The copy constructor is needed for creating a mocked simulator (msim).
-        std::shared_ptr<SimulatorUpdate> simUpdateFromPython;
+        std::shared_ptr<SimulatorUpdate> simUpdateFromPython{};
 
         void load_rst(const RestartIO::RstState& rst,
                       const TracerConfig& tracer_config,
