@@ -59,15 +59,21 @@ public:
 
     int countDev() { return  deviations.size(); }
 
-    // Accept extra keywords: If this switch is set to true the comparison
-    // will ignore extra keywords which are only present
-    // in the new simulation.
 
     void setReportStepOnly(bool reportStepOnlyArg) {
         this->reportStepOnly = reportStepOnlyArg;
     }
 
+    // Accept extra keywords: If this switch is set to true the comparison
+    // will ignore extra keywords which are only present
+    // in the new simulation.
     void setAcceptExtraKeywords(bool acceptExtraKeywordsArg) {
+        this->acceptExtraKeywords = acceptExtraKeywordsArg;
+    }
+
+    //Accept extra keywords in both simulations and compare only the keywords available in both runs
+    void setAcceptExtraKeywordsBoth(bool acceptExtraKeywordsArg) {
+        this->acceptExtraKeywordsBoth = acceptExtraKeywordsArg;
         this->acceptExtraKeywords = acceptExtraKeywordsArg;
     }
 
@@ -185,6 +191,7 @@ private:
 
     // Accept extra keywords in the restart file of the 'new' simulation.
     bool acceptExtraKeywords = false;
+    bool acceptExtraKeywordsBoth = false;
 
     Opm::EclIO::EGrid* grid1 = nullptr;
     Opm::EclIO::EGrid* grid2 = nullptr;

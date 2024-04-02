@@ -52,6 +52,7 @@ static void printHelp() {
               << "    -t SMRY  \t Compare two cases consistent of (unified) summary files.\n"
               << "    -t RSM   \t Compare RSM file against a summary file.\n"
               << "-x Allow extra keywords in case number 2. These additional keywords (not found in case number1) will be ignored in the comparison.\n"
+              << "-y Allow extra keywords in both cases. These additional keywords will be ignored in the comparison.\n"
               << "\nExample usage of the program: \n\n"
               << "compareECL -k PRESSURE <path to first casefile> <path to second casefile> 1e-3 1e-5\n"
               << "compareECL -t INIT -k PORO <path to first casefile> <path to second casefile> 1e-3 1e-5\n"
@@ -90,15 +91,16 @@ int main(int argc, char** argv) {
     bool specificReportStepNumber  = false;
     bool specificFileType          = false;
     bool throwOnError              = true;
-    bool restartFile              = false;
+    bool restartFile               = false;
     bool acceptExtraKeywords       = false;
+    bool acceptExtraKeywordsBoth   = false;
     bool analysis                  = false;
     char* keyword                  = nullptr;
     int c                          = 0;
     int reportStepNumber           = -1;
     std::string fileTypeString;
 
-    while ((c = getopt(argc, argv, "hik:alnpt:Rr:xd")) != -1) {
+    while ((c = getopt(argc, argv, "hik:alnpt:Rr:xdy")) != -1) {
         switch (c) {
         case 'a':
             analysis = true;
@@ -139,6 +141,9 @@ int main(int argc, char** argv) {
             break;
         case 'x':
             acceptExtraKeywords = true;
+            break;
+        case 'y':
+            acceptExtraKeywordsBoth = true;
             break;
         case '?':
             if (optopt == 'k' || optopt == 'm' || optopt == 's') {
@@ -184,6 +189,7 @@ int main(int argc, char** argv) {
         comparator.throwOnErrors(throwOnError);
         comparator.doAnalysis(analysis);
         comparator.setAcceptExtraKeywords(acceptExtraKeywords);
+        comparator.setAcceptExtraKeywordsBoth(acceptExtraKeywordsBoth);
 
         if (integrationTest) {
             comparator.setIntegrationTest(true);
