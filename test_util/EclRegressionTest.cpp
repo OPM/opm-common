@@ -301,7 +301,7 @@ void ECLRegressionTest::compareKeywords(const std::vector<std::string> &keywords
 }
 
 
-void ECLRegressionTest::checkSpesificKeyword(std::vector<std::string>& keywords1,
+void ECLRegressionTest::checkSpecificKeyword(std::vector<std::string>& keywords1,
                                              std::vector<std::string>& keywords2,
                                              std::vector<eclArrType>& arrayType1,
                                              std::vector<eclArrType>& arrayType2,
@@ -653,7 +653,7 @@ void ECLRegressionTest::results_init()
                 } else
                     compareKeywords(keywords1, keywords2, reference);
             } else {
-                checkSpesificKeyword(keywords1, keywords2, arrayType1, arrayType2, reference);
+                checkSpecificKeyword(keywords1, keywords2, arrayType1, arrayType2, reference);
             }
 
             for (size_t i = 0; i < keywords1.size(); i++) {
@@ -848,7 +848,7 @@ void ECLRegressionTest::results_rst()
                 if (specificKeyword.empty()) {
                     compareKeywords(keywords1, keywords2, reference);
                 } else {
-                    checkSpesificKeyword(keywords1, keywords2, arrayType1, arrayType2, reference);
+                    checkSpecificKeyword(keywords1, keywords2, arrayType1, arrayType2, reference);
                 }
 
                 std::unordered_set<std::string> keywords = {"IGRP"};
@@ -1006,7 +1006,7 @@ void ECLRegressionTest::results_smry()
             if (specificKeyword.empty()) {
                 compareKeywords(keywords1, keywords2, reference);
             } else {
-                checkSpesificKeyword(keywords1, keywords2, arrayType1, arrayType2, reference);
+                checkSpecificKeyword(keywords1, keywords2, arrayType1, arrayType2, reference);
             }
 
             std::vector<std::string> blackListed;
@@ -1176,7 +1176,7 @@ void ECLRegressionTest::results_rft()
                 if (specificKeyword.empty()) {
                     compareKeywords(keywords1, keywords2, reference);
                 } else {
-                    checkSpesificKeyword(keywords1, keywords2, arrayType1, arrayType2, reference);
+                    checkSpecificKeyword(keywords1, keywords2, arrayType1, arrayType2, reference);
                 }
 
                 for (auto& array : vectList1 ) {

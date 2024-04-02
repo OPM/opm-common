@@ -79,7 +79,7 @@ public:
         this->printKeywordOnly = printArg;
     }
 
-    void compareSpesificKeyword(std::string keyword) {
+    void compareSpecificKeyword(std::string keyword) {
         this->specificKeyword = std::move(keyword);
     }
     void compareSpesificRstReportStepNumber(int seqn) {
@@ -121,7 +121,7 @@ private:
                          const std::vector<std::string>& keywords2,
                          const std::string& reference);
 
-    void checkSpesificKeyword(std::vector<std::string>& keywords1,
+    void checkSpecificKeyword(std::vector<std::string>& keywords1,
                               std::vector<std::string>& keywords2,
                               std::vector<EIOD::eclArrType>& arrayType1,
                               std::vector<EIOD::eclArrType>& arrayType2,

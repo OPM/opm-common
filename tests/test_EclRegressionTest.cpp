@@ -501,17 +501,17 @@ BOOST_AUTO_TEST_CASE(results_init_1) {
 
     // check with specific kewyword PORV, found in both cases and should be ok
     test1a.setAcceptExtraKeywords(false);
-    test1a.compareSpesificKeyword("PORV");
+    test1a.compareSpecificKeyword("PORV");
 
     test1a.results_init();
 
     // check with specific kewyword PORO, found in second case only, should throw exeption
-    test1a.compareSpesificKeyword("PORO");
+    test1a.compareSpecificKeyword("PORO");
 
     BOOST_CHECK_THROW(test1a.results_init(),std::runtime_error);
 
     // check with specific kewyword not found in any of the cases, should throw exeption
-    test1a.compareSpesificKeyword("XXXXX");
+    test1a.compareSpecificKeyword("XXXXX");
 
     BOOST_CHECK_THROW(test1a.results_init(),std::runtime_error);
 
@@ -582,7 +582,7 @@ BOOST_AUTO_TEST_CASE(results_init_2) {
     // ---------------------------------------------------------------------------
     // compare specific keyword, should be ok sinze PORV not checked in this case
 
-    test2a.compareSpesificKeyword("PERMX");
+    test2a.compareSpecificKeyword("PERMX");
     test2a.doAnalysis(false);
     test2a.results_init();
 
@@ -725,19 +725,19 @@ BOOST_AUTO_TEST_CASE(results_unrst_1) {
 
     // checking for specific keyword PRESSURE, found in both cases
     test2a.setAcceptExtraKeywords(false);
-    test2a.compareSpesificKeyword("PRESSURE");
+    test2a.compareSpecificKeyword("PRESSURE");
 
     // test should be ok
     test2a.results_rst();
 
     // checking for specific keyword RS, only present in one of the cases
-    test2a.compareSpesificKeyword("RS");
+    test2a.compareSpecificKeyword("RS");
 
     // should fail
     BOOST_CHECK_THROW(test2a.results_rst(),std::runtime_error);
 
     // checking for specific keyword XXXX, not found in any of the cases
-    test2a.compareSpesificKeyword("XXXX");
+    test2a.compareSpecificKeyword("XXXX");
 
     // should fail
     BOOST_CHECK_THROW(test2a.results_rst(),std::runtime_error);
@@ -928,11 +928,11 @@ BOOST_AUTO_TEST_CASE(results_unrst_3) {
 
     // check specific keyword RS, should be OK
 
-    test2.compareSpesificKeyword("RS");
+    test2.compareSpecificKeyword("RS");
     test2.results_rst();
 
    // run full analysis, will not throw on first error
-    test2.compareSpesificKeyword("");
+    test2.compareSpecificKeyword("");
     test2.doAnalysis(true);
     test2.results_rst();
 
@@ -1023,15 +1023,15 @@ BOOST_AUTO_TEST_CASE(results_unsmry_1) {
     test2a.setAcceptExtraKeywords(false);
 
     // should be ok, since both cases have vector FOPT
-    test2a.compareSpesificKeyword("FOPT");
+    test2a.compareSpecificKeyword("FOPT");
     test2a.results_smry();
 
     // should fail since vector ROIP only found in first case
-    test2a.compareSpesificKeyword("ROIP:1");
+    test2a.compareSpecificKeyword("ROIP:1");
     BOOST_CHECK_THROW(test2a.results_smry(),std::runtime_error);
 
     // should fail since not found in any of the cases
-    test2a.compareSpesificKeyword("XXXXX");
+    test2a.compareSpecificKeyword("XXXXX");
     BOOST_CHECK_THROW(test2a.results_smry(),std::runtime_error);
 }
 
@@ -1234,13 +1234,13 @@ BOOST_AUTO_TEST_CASE(results_rft_1) {
     // accept extra keyword to false, but check for specific keyword (PRESSSURE)
 
     test1b.setAcceptExtraKeywords(false);
-    test1b.compareSpesificKeyword("PRESSURE");
+    test1b.compareSpecificKeyword("PRESSURE");
 
     // should be ok since both cases have solution PRESSURE, only solution checked
     test1b.results_rft();
 
     // SGAS, only present in second case, should fail
-    test1b.compareSpesificKeyword("SGAS");
+    test1b.compareSpecificKeyword("SGAS");
 
     BOOST_CHECK_THROW(test1b.results_rft(),std::runtime_error);
 

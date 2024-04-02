@@ -202,7 +202,7 @@ int main(int argc, char** argv) {
         }
 
         if (specificKeyword) {
-            comparator.compareSpesificKeyword(keyword);
+            comparator.compareSpecificKeyword(keyword);
         }
 
         if (specificReportStepNumber) {
