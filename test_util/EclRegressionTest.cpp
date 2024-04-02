@@ -1011,14 +1011,14 @@ void ECLRegressionTest::results_smry()
 
             std::vector<std::string> blackListed;
 
-            for (std::vector<std::string>::iterator keywit = keywords1.begin(); keywit != keywords1.end(); ++keywit) {
+            for (auto keywit = keywords1.begin(); keywit != keywords1.end(); ) {
                 auto it = std::find(keywordsBlackList.begin(), keywordsBlackList.end(), *keywit );
 
                 if (it != keywordsBlackList.end()){
                     blackListed.push_back(*keywit);
                     keywit = keywords1.erase(keywit);
-                    if (keywit != keywords1.end())
-                      --keywit;
+                } else {
+                    ++keywit;
                 }
              }
 
