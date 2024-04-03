@@ -1009,18 +1009,18 @@ void ECLRegressionTest::results_smry()
                 checkSpesificKeyword(keywords1, keywords2, arrayType1, arrayType2, reference);
             }
 
+            // Remove blacklisted keywords
             std::vector<std::string> blackListed;
-
-            for (std::vector<std::string>::iterator keywit = keywords1.begin(); keywit != keywords1.end(); ++keywit) {
-                auto it = std::find(keywordsBlackList.begin(), keywordsBlackList.end(), *keywit );
-
-                if (it != keywordsBlackList.end()){
-                    blackListed.push_back(*keywit);
-                    keywit = keywords1.erase(keywit);
-                    if (keywit != keywords1.end())
-                      --keywit;
-                }
-             }
+            keywords1.erase(std::remove_if(keywords1.begin(), keywords1.end(),
+                                           [&blacklist = keywordsBlackList, &blackListed](const auto& kw)
+                                           {
+                                               const auto it =
+                                                  std::find(blacklist.begin(), blacklist.end(), kw);
+                                               if (it != blacklist.end()) {
+                                                   blackListed.push_back(kw);
+                                               }
+                                               return it != blacklist.end();
+                                           }), keywords1.end());
 
             std::cout << "\nChecking " << keywords1.size() << "  vectors  ... ";
 
