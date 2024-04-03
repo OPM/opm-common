@@ -43,6 +43,9 @@ public:
         std::string fname() const {
             return this->name + "F";
         }
+        std::string sname() const {
+            return this->name + "S";
+        }
 
 
         TracerEntry() = default;
