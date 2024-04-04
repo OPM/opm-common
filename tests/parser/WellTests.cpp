@@ -648,7 +648,7 @@ namespace {
             Opm::Well::WellProductionProperties pred(unit_system, "W");
             pred.handleWCONPROD(alq_type,
                                 Opm::ParserKeywords::FBHPDEF::TARGET_BHP::defaultValue * unit::barsa,
-                                unit_system, "WELL", record);
+                                unit_system, "WELL", record, {});
 
             return pred;
         }

@@ -21,6 +21,7 @@
 #include <opm/input/eclipse/Schedule/Well/Well.hpp>
 
 #include <opm/common/OpmLog/OpmLog.hpp>
+#include <opm/common/utility/OpmInputError.hpp>
 #include <opm/input/eclipse/Units/Units.hpp>
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
 #include <opm/input/eclipse/Deck/DeckRecord.hpp>
@@ -88,7 +89,8 @@ namespace Opm {
     void Well::WellInjectionProperties::handleWCONINJE(const DeckRecord& record,
                                                        const double bhp_def,
                                                        bool availableForGroupControl,
-                                                       const std::string& well_name)
+                                                       const std::string& well_name,
+                                                       const KeywordLocation& location)
     {
         this->injectorType = InjectorTypeFromString( record.getItem("TYPE").getTrimmedString(0) );
         this->predictionMode = true;
@@ -106,14 +108,19 @@ namespace Opm {
         } else
             this->dropInjectionControl(InjectorCMode::RESV);
 
+        this->VFPTableNumber = record.getItem("VFP_TABLE").get< int >(0);
 
         if (!record.getItem("THP").defaultApplied(0)) {
             this->THPTarget = record.getItem("THP").get<UDAValue>(0);
             this->addInjectionControl(InjectorCMode::THP);
+            if (this->VFPTableNumber == 0) {
+                const auto msg = fmt::format("Well {} must have a VFP table to handle"
+                                             " non-zero THP constraint", well_name);
+                throw OpmInputError(msg, location);
+            }
         } else
             this->dropInjectionControl(InjectorCMode::THP);
 
-        this->VFPTableNumber = record.getItem("VFP_TABLE").get< int >(0);
 
         /*
           There is a sensible default BHP limit defined, so the BHPLimit can be

@@ -50,6 +50,7 @@ class DeckKeyword;
 class DeckRecord;
 class ErrorGuard;
 class EclipseGrid;
+class KeywordLocation;
 class ParseContext;
 class ScheduleGrid;
 class SICD;
@@ -177,7 +178,8 @@ public:
         void handleWCONINJE(const DeckRecord& record,
                             const double bhp_def,
                             bool availableForGroupControl,
-                            const std::string& well_name);
+                            const std::string& well_name,
+                            const KeywordLocation& location);
 
         //! \brief Handle a WCONINJH keyword.
         //! \param record The deck record to use
@@ -306,7 +308,8 @@ public:
                             const double bhp_def,
                             const UnitSystem& unit_system,
                             const std::string& well,
-                            const DeckRecord& record);
+                            const DeckRecord& record,
+                            const KeywordLocation& location);
 
         //! \brief Handle WCONHIST keyword.
         //! \param alq_type ALQ type
