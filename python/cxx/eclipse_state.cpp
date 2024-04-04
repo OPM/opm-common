@@ -103,7 +103,10 @@ void python::common::export_EclipseState(py::module& module) {
     // this makes it possible to share the returned object with e.g. and
     //   opm.simulators.BlackOilSimulator Python object
     //
-    py::class_< EclipseState, std::shared_ptr<EclipseState> >( module, "EclipseState" )
+    py::class_< EclipseState, std::shared_ptr<EclipseState> >( module, "EclipseState", R"pbdoc(
+            The Opm::EclipseState class - this is a representation of all static properties in the model,
+            ranging from porosity to relperm tables. The content of the EclipseState is immutable and may not
+            be changed at runtime.)pbdoc")
         .def(py::init<const Deck&>())
         .def_property_readonly( "title", &EclipseState::getTitle )
         .def( "field_props",    &get_field_props, ref_internal)
