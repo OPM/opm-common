@@ -470,22 +470,22 @@ GRIDFILE
 INIT
 
 SPECGRID
- 3 2 3 1 F / 
+ 3 2 3 1 F /
 
 COORD
-  2000.0000  2000.0000  2000.0000   2000.0000  2000.0000  2009.0000 
-  2100.0000  2000.0000  2000.0000   2100.0000  2000.0000  2009.0000 
-  2200.0000  2000.0000  2000.0000   2200.0000  2000.0000  2009.0000 
-  2300.0000  2000.0000  2000.0000   2300.0000  2000.0000  2009.0000 
-  2000.0000  2100.0000  2000.0000   2000.0000  2100.0000  2009.0000 
-  2100.0000  2100.0000  2000.0000   2100.0000  2100.0000  2009.0000 
-  2200.0000  2100.0000  2000.0000   2200.0000  2100.0000  2009.0000 
-  2300.0000  2100.0000  2000.0000   2300.0000  2100.0000  2009.0000 
-  2000.0000  2200.0000  2000.0000   2000.0000  2200.0000  2009.0000 
-  2100.0000  2200.0000  2000.0000   2100.0000  2200.0000  2009.0000 
-  2200.0000  2200.0000  2000.0000   2200.0000  2200.0000  2009.0000 
-  2300.0000  2200.0000  2000.0000   2300.0000  2200.0000  2009.0000 
-/ 
+  2000.0000  2000.0000  2000.0000   2000.0000  2000.0000  2009.0000
+  2100.0000  2000.0000  2000.0000   2100.0000  2000.0000  2009.0000
+  2200.0000  2000.0000  2000.0000   2200.0000  2000.0000  2009.0000
+  2300.0000  2000.0000  2000.0000   2300.0000  2000.0000  2009.0000
+  2000.0000  2100.0000  2000.0000   2000.0000  2100.0000  2009.0000
+  2100.0000  2100.0000  2000.0000   2100.0000  2100.0000  2009.0000
+  2200.0000  2100.0000  2000.0000   2200.0000  2100.0000  2009.0000
+  2300.0000  2100.0000  2000.0000   2300.0000  2100.0000  2009.0000
+  2000.0000  2200.0000  2000.0000   2000.0000  2200.0000  2009.0000
+  2100.0000  2200.0000  2000.0000   2100.0000  2200.0000  2009.0000
+  2200.0000  2200.0000  2000.0000   2200.0000  2200.0000  2009.0000
+  2300.0000  2200.0000  2000.0000   2300.0000  2200.0000  2009.0000
+/
 
 ZCORN
   2000.0000  2000.0000  2000.0000  2000.0000  2000.0000  2000.0000
@@ -519,10 +519,10 @@ NTG
 
 PORO
  18*0.25 /
- 
+
 PERMX
  18*100.0 /
-  
+
 PERMZ
  18*10.0 /
 
@@ -563,14 +563,14 @@ COPY
      }
      if (doxyz[2].test(0)) {
          deckString += std::string{ R"(MULTZ
- 18*0.34325 / 
+ 18*0.34325 /
 )"};
          exspected_multipliers[2][0].assign(18, 0.34325);
      }
 
      if (doxyz[2].test(1)) {
          deckString += std::string{ R"(MULTZ-
- 18*0.554325 / 
+ 18*0.554325 /
 )"};
          exspected_multipliers[2][1].assign(18, 0.554325);
      }
@@ -589,7 +589,7 @@ COPY
              exspected_multipliers[0][1][1] = 0.7447794567;
          }
          if (doxyz[1].test(0)) {
-             deckString += std::string{ R"('MULTY' 0.94567  3 3 1 1 1 1 / 
+             deckString += std::string{ R"('MULTY' 0.94567  3 3 1 1 1 1 /
 )"};
              exspected_multipliers[1][0][2] = 0.94567;
          }
@@ -612,13 +612,77 @@ COPY
          deckString += std::string{ R"(/
 )"};
      }
+     std::vector<double> edit_mult_x(18, 1);
+     std::vector<double> edit_mult_z(18, 1);
+     if (doxyz[0].test(0) || doxyz[2].test(1))
+     {
+         // add an EDIT section
+         deckString += std::string{ R"(
+EDIT
+)"};
+
+         if (doxyz[0].test(0))
+         {
+             deckString += std::string{ R"(
+MULTX
+ 18*100 /
+MULTX
+ 18*0.1 /
+)"};
+             edit_mult_x.assign(18, .1);
+         }
+
+         if (doxyz[2].test(1))
+         {
+             deckString += std::string{ R"(
+MULTZ-
+ 18*30 /
+MULTZ-
+ 18*0.3 /
+)"};
+             edit_mult_z.assign(18, .3);
+         }
+         deckString += std::string{ R"(
+EQUALS
+)"};
+         if (doxyz[0].test(0))
+         {
+             deckString += std::string{ R"(
+ 'MULTX' 1.5 3 3 2 2 1 1 / -- Should not overwrite the value of GRID section but of EDIT section
+)"};
+             edit_mult_x[5] = 1.5;
+         }
+
+         if (doxyz[2].test(1))
+         {
+             deckString += std::string{ R"(
+ 'MULTZ-' 3.0 1 1  2 2 1 1 /
+)"};
+             edit_mult_z[3] = 3.0;
+         }
+
+             deckString += std::string{ R"(/
+)"};
+         auto mult = edit_mult_x.begin();
+         if (doxyz[0].test(0)) {
+             for (auto&& val: exspected_multipliers[0][0]) {
+                 val *= *(mult++);
+             }
+         }
+         mult = edit_mult_z.begin();
+         if (doxyz[2].test(1)) {
+             for (auto&& val: exspected_multipliers[2][1]) {
+                 val *= *(mult++);
+             }
+         }
+     }
+
      return {deckString, exspected_multipliers};
 }
 
 void testMultxyz(std::array<std::bitset<2>,3> doxyz)
 {
     const auto [deckString, exspectedMult] = createMULTXYZDECK(doxyz);
-    std::cout << "deck:" <<std::endl<<deckString <<std::endl;
     const auto deck = Parser().parseString(deckString);
     auto es = EclipseState( deck );
     const auto& eclGrid = es.getInputGrid();
@@ -633,6 +697,7 @@ void testMultxyz(std::array<std::bitset<2>,3> doxyz)
 
     std::array<std::string, 6> multipliers{"MULTX", "MULTX-", "MULTY", "MULTY-", "MULTZ", "MULTZ-"};
     int i=0;
+    auto mult = multipliers[i];
     for (const auto& mult: multipliers) {
        BOOST_CHECK_MESSAGE( initFile.hasKey(mult), R"(INIT file must have ")" + mult + R"(" array)" );
        const auto& multValues   = initFile.get<float>(mult);
