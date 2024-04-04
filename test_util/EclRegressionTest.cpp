@@ -276,9 +276,11 @@ void ECLRegressionTest::compareKeywords(const std::vector<std::string> &keywords
                       "\nKeywords not identical in " + reference);
         }
     } else {
+        int extraKeywordsFirstFile = 0;
         for (auto& keyword : keywords1) {
             auto it1 = std::find(keywords2.begin(), keywords2.end(), keyword);
             if (it1 == keywords2.end()) {
+                extraKeywordsFirstFile++;
                 std::cout << "Keyword " << keyword << " missing in second file " << std::endl;
 
                 if (keywords1.size() > 50) {
@@ -286,22 +288,28 @@ void ECLRegressionTest::compareKeywords(const std::vector<std::string> &keywords
                 } else {
                     printComparisonForKeywordLists(keywords1, keywords2);
                 }
-
-                OPM_THROW(std::runtime_error,
-                          "\nKeyword " + keyword + " missing in second file ");
+                if (!acceptExtraKeywordsBoth) {
+                    OPM_THROW(std::runtime_error,
+                              "\nKeyword " + keyword + " missing in second file ");
+                }
             }
         }
 
-        if (keywords2.size() > keywords1.size()) {
+        if (keywords2.size() > keywords1.size() - extraKeywordsFirstFile) {
             std::cout << "\nExtra keywords ("
-                      << std::to_string(keywords2.size() - keywords1.size())
+                      << std::to_string(keywords2.size() - keywords1.size() + extraKeywordsFirstFile)
                       << ") accepted in second file " << std::endl;
+        }
+        if (extraKeywordsFirstFile > 0) {
+            std::cout << "\nExtra keywords ("
+                      << extraKeywordsFirstFile
+                      << ") accepted in first file " << std::endl;
         }
     }
 }
 
 
-void ECLRegressionTest::checkSpesificKeyword(std::vector<std::string>& keywords1,
+void ECLRegressionTest::checkSpecificKeyword(std::vector<std::string>& keywords1,
                                              std::vector<std::string>& keywords2,
                                              std::vector<eclArrType>& arrayType1,
                                              std::vector<eclArrType>& arrayType2,
@@ -653,11 +661,14 @@ void ECLRegressionTest::results_init()
                 } else
                     compareKeywords(keywords1, keywords2, reference);
             } else {
-                checkSpesificKeyword(keywords1, keywords2, arrayType1, arrayType2, reference);
+                checkSpecificKeyword(keywords1, keywords2, arrayType1, arrayType2, reference);
             }
 
             for (size_t i = 0; i < keywords1.size(); i++) {
                 auto it1 = std::find(keywords2.begin(), keywords2.end(), keywords1[i]);
+                if (it1 == keywords2.end() and acceptExtraKeywordsBoth) {
+                    continue;
+                }
                 int ind2 = std::distance(keywords2.begin(),it1);
 
                 if (arrayType1[i] != arrayType2[ind2]) {
@@ -831,6 +842,8 @@ void ECLRegressionTest::results_rst()
                         auto search2 = std::find(keywords2.begin(), keywords2.end(), keywords1[i]);
                         if (search2 != keywords2.end()) {
                             keywords.push_back(keywords1[i]);
+                        } else if (acceptExtraKeywordsBoth) {
+                            continue;
                         }
                     }
                 }
@@ -848,7 +861,7 @@ void ECLRegressionTest::results_rst()
                 if (specificKeyword.empty()) {
                     compareKeywords(keywords1, keywords2, reference);
                 } else {
-                    checkSpesificKeyword(keywords1, keywords2, arrayType1, arrayType2, reference);
+                    checkSpecificKeyword(keywords1, keywords2, arrayType1, arrayType2, reference);
                 }
 
                 std::unordered_set<std::string> keywords = {"IGRP"};
@@ -859,6 +872,9 @@ void ECLRegressionTest::results_rst()
                     //    continue;
 
                     auto it1 = std::find(keywords2.begin(), keywords2.end(), keywords1[i]);
+                    if (it1 == keywords2.end() and acceptExtraKeywordsBoth) {
+                        continue;
+                    }
                     int ind2 = std::distance(keywords2.begin(), it1);
 
                     if (arrayType1[i] != arrayType2[ind2]) {
@@ -985,6 +1001,8 @@ void ECLRegressionTest::results_smry()
                 auto search2 = std::find(keywords2.begin(), keywords2.end(), kw);
                 if (search2 != keywords2.end()) {
                     keywords.push_back(kw);
+                } else if (acceptExtraKeywordsBoth) {
+                    continue;
                 }
             }
 
@@ -1006,7 +1024,7 @@ void ECLRegressionTest::results_smry()
             if (specificKeyword.empty()) {
                 compareKeywords(keywords1, keywords2, reference);
             } else {
-                checkSpesificKeyword(keywords1, keywords2, arrayType1, arrayType2, reference);
+                checkSpecificKeyword(keywords1, keywords2, arrayType1, arrayType2, reference);
             }
 
             // Remove blacklisted keywords
@@ -1025,6 +1043,11 @@ void ECLRegressionTest::results_smry()
             std::cout << "\nChecking " << keywords1.size() << "  vectors  ... ";
 
             for (size_t i = 0; i < keywords1.size(); i++) {
+                auto it1 = std::find(keywords2.begin(), keywords2.end(), keywords1[i]);
+                if (it1 == keywords2.end() and acceptExtraKeywordsBoth) {
+                    std::cout << "\nSkipping comparison for kw " << keywords1[i];
+                    continue;
+                }
 
                 std::vector<float> vect1;
                 std::vector<float> vect2;
@@ -1176,7 +1199,7 @@ void ECLRegressionTest::results_rft()
                 if (specificKeyword.empty()) {
                     compareKeywords(keywords1, keywords2, reference);
                 } else {
-                    checkSpesificKeyword(keywords1, keywords2, arrayType1, arrayType2, reference);
+                    checkSpecificKeyword(keywords1, keywords2, arrayType1, arrayType2, reference);
                 }
 
                 for (auto& array : vectList1 ) {
