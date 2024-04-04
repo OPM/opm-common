@@ -380,16 +380,19 @@ namespace Opm {
     }
 
     void EclipseState::applyMULTXYZ() {
-        const auto& fp = this->field_props;
         static const std::vector<std::pair<std::string, FaceDir::DirEnum>> multipliers = {{"MULTX" , FaceDir::XPlus},
                                                                                           {"MULTX-", FaceDir::XMinus},
                                                                                           {"MULTY" , FaceDir::YPlus},
                                                                                           {"MULTY-", FaceDir::YMinus},
                                                                                           {"MULTZ" , FaceDir::ZPlus},
                                                                                           {"MULTZ-", FaceDir::ZMinus}};
+
+        const auto& fp = this->field_props;
         for (const auto& [field, face] : multipliers) {
             if (fp.has_double(field))
+            {
                 this->m_transMult.applyMULT(fp.get_global_double(field), face);
+            }
         }
     }
 

@@ -18,6 +18,7 @@
 
 #include <opm/input/eclipse/EclipseState/Grid/FieldProps.hpp>
 
+#include <opm/common/ErrorMacros.hpp>
 #include <opm/common/OpmLog/LogUtil.hpp>
 #include <opm/common/OpmLog/OpmLog.hpp>
 
@@ -672,16 +673,62 @@ bool FieldProps::supported<int>(const std::string& keyword) {
     return Fieldprops::keywords::isFipxxx(keyword);
 }
 
+void FieldProps::apply_multipliers()
+{
+    static const auto prefix = getMultiplierPrefix();
+
+    for(const auto& [mult_keyword, kw_info]: multiplier_kw_infos_)
+    {
+        const std::string keyword = mult_keyword.substr(prefix.size());
+        auto mult_iter = this->double_data.find(mult_keyword);
+        assert(mult_iter != this->double_data.end());
+        auto iter = this->double_data.find(keyword);
+        if (iter == this->double_data.end()) {
+            iter = this->double_data
+                .emplace(std::piecewise_construct,
+                         std::forward_as_tuple(keyword),
+                         std::forward_as_tuple(kw_info, this->active_size, kw_info.global ? this->global_size : 0))
+                .first;
+        }
+        using Scalar = typename std::remove_cv_t<std::remove_reference_t<decltype(iter->second.data[0])>>;
+        std::transform(iter->second.data.begin(), iter->second.data.end(),
+                       mult_iter->second.data.begin(), iter->second.data.begin(),
+                       std::multiplies<Scalar>());
+
+        // If data is global, then we also need to set the global_data. I think they should be the same at this stage, though!
+        if (kw_info.global)
+        {
+            assert(mult_iter->second.global_data.has_value() && iter->second.global_data.has_value());
+            std::transform(iter->second.global_data->begin(),
+                           iter->second.global_data->end(),
+                           mult_iter->second.global_data->begin(),
+                           iter->second.global_data->begin(),
+                           std::multiplies<Scalar>());
+        }
+        this->double_data.erase(mult_iter);
+    }
+    multiplier_kw_infos_.clear();
+}
 
 template <>
-Fieldprops::FieldData<double>& FieldProps::init_get(const std::string& keyword_name, const Fieldprops::keywords::keyword_info<double>& kw_info) {
+Fieldprops::FieldData<double>& FieldProps::init_get(const std::string& keyword_name, const Fieldprops::keywords::keyword_info<double>& kw_info,
+                                                    bool multiplier_in_edit) {
+    
+    if(multiplier_in_edit && !kw_info.scalar_init.has_value())
+        OPM_THROW(std::logic_error, std::string("Keyword " +  keyword_name + " is a multiplier and should have a default initial value."));
     const std::string& keyword = Fieldprops::keywords::get_keyword_from_alias(keyword_name);
+    const std::string& mult_keyword = std::string(multiplier_in_edit? getMultiplierPrefix() : "") + keyword;
 
-    auto iter = this->double_data.find(keyword);
-    if (iter != this->double_data.end())
+    auto iter = this->double_data.find(mult_keyword);
+    if (iter != this->double_data.end()) {
         return iter->second;
+    } else if(multiplier_in_edit){
+        assert(keyword != ParserKeywords::PORV::keywordName && keyword != ParserKeywords::TEMPI::keywordName &&
+               (Fieldprops::keywords::PROPS::satfunc.count(keyword) != 1) && !is_capillary_pressure(keyword));
+        multiplier_kw_infos_[mult_keyword] = kw_info;
+    }
 
-    this->double_data[keyword] = Fieldprops::FieldData<double>(kw_info, this->active_size, kw_info.global ? this->global_size : 0);
+    this->double_data[mult_keyword] = Fieldprops::FieldData<double>(kw_info, this->active_size, kw_info.global ? this->global_size : 0);
 
     if (keyword == ParserKeywords::PORV::keywordName)
         this->init_porv(this->double_data[keyword]);
@@ -695,7 +742,7 @@ Fieldprops::FieldData<double>& FieldProps::init_get(const std::string& keyword_n
         this->init_satfunc(keyword, this->double_data[keyword]);
     }
 
-    return this->double_data[keyword];
+    return this->double_data[mult_keyword];
 }
 
 template <>
@@ -707,7 +754,7 @@ Fieldprops::FieldData<double>& FieldProps::init_get(const std::string& keyword,
 
 
 template <>
-Fieldprops::FieldData<int>& FieldProps::init_get(const std::string& keyword, const Fieldprops::keywords::keyword_info<int>& kw_info) {
+Fieldprops::FieldData<int>& FieldProps::init_get(const std::string& keyword, const Fieldprops::keywords::keyword_info<int>& kw_info, bool) {
     auto iter = this->int_data.find(keyword);
     if (iter != this->int_data.end())
         return iter->second;
@@ -870,15 +917,20 @@ void FieldProps::handle_int_keyword(const Fieldprops::keywords::keyword_info<int
 
 
 void FieldProps::handle_double_keyword(Section section, const Fieldprops::keywords::keyword_info<double>& kw_info, const DeckKeyword& keyword, const std::string& keyword_name, const Box& box) {
-    auto& field_data = this->init_get<double>(keyword_name, kw_info);
+    // if second paramter is true then this will not be the actual keyword but one prefixed with __MULT__ that will be used to construct the
+    // multiplier for later application to the actual keyword.
+    auto& field_data = this->init_get<double>(keyword_name, kw_info, section == Section::EDIT && kw_info.multiplier);
     const auto& deck_data = keyword.getSIDoubleData();
     const auto& deck_status = keyword.getValueStatus();
 
-    if ((section == Section::EDIT || section == Section::SCHEDULE) && kw_info.multiplier)
+    if (section == Section::SCHEDULE && kw_info.multiplier)
+    {
+        // Apply all multipliers cumulatively
         multiply_deck(kw_info, keyword, field_data, deck_data, deck_status, box);
-    else
+    } else{
+        // Apply only latest multiplier (overwrite these previous one)
         assign_deck(kw_info, keyword, field_data, deck_data, deck_status, box);
-
+    }
 
     if (section == Section::GRID) {
         if (field_data.valid())
@@ -1035,7 +1087,7 @@ void FieldProps::handle_OPERATE(const DeckKeyword& keyword, Box box) {
 }
 
 
-void FieldProps::handle_operation(const DeckKeyword& keyword, Box box) {
+void FieldProps::handle_operation(Section section, const DeckKeyword& keyword, Box box) {
     std::unordered_map<std::string, std::string> tran_fields;
     for (const auto& record : keyword) {
         const std::string& target_kw = Fieldprops::keywords::get_keyword_from_alias(record.getItem(0).get<std::string>(0));
@@ -1069,7 +1121,7 @@ void FieldProps::handle_operation(const DeckKeyword& keyword, Box box) {
             } else
                 kw_info = Fieldprops::keywords::global_kw_info<double>(target_kw);
 
-            auto& field_data = this->init_get<double>(unique_name, kw_info);
+            auto& field_data = this->init_get<double>(unique_name, kw_info, section == Section::EDIT && kw_info.multiplier);
 
             FieldProps::apply(operation, field_data.data, field_data.value_status, scalar_value, box.index_list());
             if (field_data.global_data)
@@ -1128,11 +1180,11 @@ void FieldProps::handle_COPY(const DeckKeyword& keyword, Box box, bool region) {
     }
 }
 
-void FieldProps::handle_keyword(const DeckKeyword& keyword, Box& box) {
+void FieldProps::handle_keyword(Section section, const DeckKeyword& keyword, Box& box) {
     const std::string& name = keyword.name();
 
     if (Fieldprops::keywords::oper_keywords.count(name) == 1)
-        this->handle_operation(keyword, box);
+        this->handle_operation(section, keyword, box);
 
     else if (name == ParserKeywords::OPERATE::keywordName)
         this->handle_OPERATE(keyword, box);
@@ -1306,7 +1358,7 @@ void FieldProps::scanGRIDSection(const GRIDSection& grid_section) {
             continue;
         }
 
-        this->handle_keyword(keyword, box);
+        this->handle_keyword(Section::GRID, keyword, box);
     }
 }
 
@@ -1318,7 +1370,7 @@ void FieldProps::scanGRIDSectionOnlyACTNUM(const GRIDSection& grid_section) {
         if (name == "ACTNUM") {
             this->handle_int_keyword(Fieldprops::keywords::GRID::int_keywords.at(name), keyword, box);
         } else if (name == "EQUALS" || (Fieldprops::keywords::box_keywords.count(name) == 1)) {
-            this->handle_keyword(keyword, box);
+            this->handle_keyword(Section::GRID, keyword, box);
         }
     }
     const auto iter = this->int_data.find("ACTNUM");
@@ -1353,8 +1405,12 @@ void FieldProps::scanEDITSection(const EDITSection& edit_section) {
             continue;
         }
 
-        this->handle_keyword(keyword, box);
+        this->handle_keyword(Section::EDIT, keyword, box);
     }
+    // Multiplier will not have been applied yet to prevent EQUALS MULT* from overwriting values
+    // and to only honor the last MULT* occurrence
+    // apply recorded multipliers of section to existing ones
+    apply_multipliers();
 }
 
 
@@ -1393,7 +1449,7 @@ void FieldProps::scanPROPSSection(const PROPSSection& props_section) {
             continue;
         }
 
-        this->handle_keyword(keyword, box);
+        this->handle_keyword(Section::PROPS, keyword, box);
     }
 }
 
@@ -1415,7 +1471,7 @@ void FieldProps::scanREGIONSSection(const REGIONSSection& regions_section) {
             continue;
         }
 
-        this->handle_keyword(keyword, box);
+        this->handle_keyword(Section::REGIONS, keyword, box);
     }
 }
 
@@ -1429,7 +1485,7 @@ void FieldProps::scanSOLUTIONSection(const SOLUTIONSection& solution_section) {
             continue;
         }
 
-        this->handle_keyword(keyword, box);
+        this->handle_keyword(Section::SOLUTION, keyword, box);
     }
 }
 
@@ -1437,7 +1493,7 @@ void FieldProps::handle_schedule_keywords(const std::vector<DeckKeyword>& keywor
     auto box = makeGlobalGridBox(this->grid_ptr);
 
     // When called in the SCHEDULE section the context is that the scaling factors
-    // have already been applied.
+    // have already been applied. We set them to zero for reuse here.
     for (const auto& [kw, _] : Fieldprops::keywords::SCHEDULE::double_keywords) {
         (void)_;
         if (this->has<double>(kw)) {

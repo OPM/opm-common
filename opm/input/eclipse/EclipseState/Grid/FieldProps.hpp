@@ -41,6 +41,7 @@
 #include <set>
 #include <stdexcept>
 #include <string>
+#include <string_view>
 #include <unordered_map>
 #include <unordered_set>
 #include <utility>
@@ -585,19 +586,19 @@ private:
     Fieldprops::FieldData<T>& init_get(const std::string& keyword, bool allow_unsupported = false);
 
     template <typename T>
-    Fieldprops::FieldData<T>& init_get(const std::string& keyword, const Fieldprops::keywords::keyword_info<T>& kw_info);
+    Fieldprops::FieldData<T>& init_get(const std::string& keyword, const Fieldprops::keywords::keyword_info<T>& kw_info, bool multiplier_in_edit = false);
 
     std::string region_name(const DeckItem& region_item);
     std::vector<Box::cell_index> region_index( const std::string& region_name, int region_value );
     void handle_OPERATE(const DeckKeyword& keyword, Box box);
-    void handle_operation(const DeckKeyword& keyword, Box box);
+    void handle_operation(Section section, const DeckKeyword& keyword, Box box);
     void handle_region_operation(const DeckKeyword& keyword);
     void handle_COPY(const DeckKeyword& keyword, Box box, bool region);
     void distribute_toplayer(Fieldprops::FieldData<double>& field_data, const std::vector<double>& deck_data, const Box& box);
     double get_beta(const std::string& func_name, const std::string& target_array, double raw_beta);
     double get_alpha(const std::string& func_name, const std::string& target_array, double raw_alpha);
 
-    void handle_keyword(const DeckKeyword& keyword, Box& box);
+    void handle_keyword(Section section, const DeckKeyword& keyword, Box& box);
     void handle_double_keyword(Section section, const Fieldprops::keywords::keyword_info<double>& kw_info, const DeckKeyword& keyword, const std::string& keyword_name, const Box& box);
     void handle_double_keyword(Section section, const Fieldprops::keywords::keyword_info<double>& kw_info, const DeckKeyword& keyword, const Box& box);
     void handle_int_keyword(const Fieldprops::keywords::keyword_info<int>& kw_info, const DeckKeyword& keyword, const Box& box);
@@ -606,6 +607,19 @@ private:
     void init_tempi(Fieldprops::FieldData<double>& tempi);
     std::string canonical_fipreg_name(const std::string& fipreg);
     const std::string& canonical_fipreg_name(const std::string& fipreg) const;
+
+    /// \brief Apply multipliers of the EDIT section
+    ///
+    /// Multipliers are stored intermediately in FieldPropsManager::getMultiplierPrefix()+keyword_name FieldData arrays
+    /// to prevent EQUALS MULT* in the EDIT section from overwriting values from the GRID
+    /// section. This method will now apply them to keyword_name FieldData arrays and throw away the intermediate storage
+    void apply_multipliers();
+
+    static constexpr std::string_view getMultiplierPrefix()
+    {
+        using namespace std::literals;
+        return "__MULT__"sv;
+    }
 
     const UnitSystem unit_system;
     std::size_t nx,ny,nz;
@@ -624,6 +638,13 @@ private:
     std::unordered_map<std::string, std::string> fipreg_shortname_translation{};
 
     std::unordered_map<std::string,Fieldprops::TranCalculator> tran;
+
+    /// \brief A map of multiplier keywords found in the EDIT/SCHEDULE section
+    ///
+    /// key ist the original keyword name. and value is the keyword information.
+    /// This list is used in apply_multipliers, where the multipliers will actually
+    /// be applied.
+    std::unordered_map<std::string,Fieldprops::keywords::keyword_info<double>> multiplier_kw_infos_;
 };
 
 }

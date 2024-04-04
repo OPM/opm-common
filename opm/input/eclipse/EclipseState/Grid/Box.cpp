@@ -40,15 +40,23 @@ namespace {
             };
         }
 
-        if ((l1 < 0) || (l2 < 0) || (l1 > l2)) {
+        if ((l1 < 0) || (l2 < 0)){
             throw std::invalid_argument {
-                "Invalid index values for sub box"
-            };
+                "Invalid index values for sub box (" + std::to_string(l1)
+                + " or " + std::to_string(l2) + " below 0)"};
+        }
+
+        if (l1 > l2) {
+            throw std::invalid_argument {
+                "Invalid index values for sub box (" + std::to_string(l1)
+                + " > " + std::to_string(l2) + ")"};
         }
 
         if (l2 >= len) {
             throw std::invalid_argument {
-                "Invalid index values for sub box"
+                "Invalid index values for sub box. Index "
+                + std::to_string(l2) + " is not below "
+                + std::to_string(len)
             };
         }
     }
