@@ -28,7 +28,6 @@
 #define OPM_ECL_HYSTERESIS_TWO_PHASE_LAW_HPP
 #include <opm/common/TimingMacros.hpp>
 #include "EclHysteresisTwoPhaseLawParams.hpp"
-
 #include <stdexcept>
 
 namespace Opm {
@@ -268,6 +267,7 @@ public:
     template <class Evaluation>
     static Evaluation twoPhaseSatKrw(const Params& params, const Evaluation& Sw)
     {
+
         OPM_TIMEFUNCTION_LOCAL();
         // if no relperm hysteresis is enabled, use the drainage curve
         if (!params.config().enableHysteresis() || params.config().krHysteresisModel() < 0)
@@ -278,8 +278,16 @@ public:
             return EffectiveLaw::twoPhaseSatKrw(params.drainageParams(), Sw);
 
         // use imbibition curve for wetting phase
-        assert(params.config().krHysteresisModel() == 1 || params.config().krHysteresisModel() == 3);
-        return EffectiveLaw::twoPhaseSatKrw(params.imbibitionParams(), Sw);
+        if (params.config().krHysteresisModel() == 1 || params.config().krHysteresisModel() == 3)
+            return EffectiveLaw::twoPhaseSatKrw(params.imbibitionParams(), Sw);
+
+        if (Sw >= params.krwSwMdc())
+            return EffectiveLaw::twoPhaseSatKrw(params.drainageParams(), Sw);
+
+        // Killough hysteresis for the wetting phase
+        assert(params.config().krHysteresisModel() == 4);
+        Evaluation Snorm = params.Swcri()+(Sw-params.Swcrt())*(params.Swmaxd()-params.Swcri())/(params.Swhy()-params.Swcrt());
+        return params.krwWght()*EffectiveLaw::twoPhaseSatKrw(params.imbibitionParams(), Snorm);
     }
 
     /*!
@@ -337,11 +345,11 @@ public:
         if (!params.config().enableHysteresis() || params.config().krHysteresisModel() < 0)
             return EffectiveLaw::twoPhaseSatKrn(params.drainageParams(), Sw);
 
-
         // if it is enabled, use either the drainage or the imbibition curve. if the
         // imbibition curve is used, the saturation must be shifted.
-        if (Sw <= params.krnSwMdc())
+        if (Sw <= params.krnSwMdc()) {
             return EffectiveLaw::twoPhaseSatKrn(params.drainageParams(), Sw);
+        }
 
         if (params.config().krHysteresisModel() <= 1) { //Carlson
             return EffectiveLaw::twoPhaseSatKrn(params.imbibitionParams(),
@@ -349,7 +357,7 @@ public:
         }
 
         // Killough
-        assert(params.config().krHysteresisModel() == 2 || params.config().krHysteresisModel() == 3);
+        assert(params.config().krHysteresisModel() == 2 || params.config().krHysteresisModel() == 3 || params.config().krHysteresisModel() == 4);
         Evaluation Snorm = params.Sncri()+(1.0-Sw-params.Sncrt())*(params.Snmaxd()-params.Sncri())/(params.Snhy()-params.Sncrt());
         return params.krnWght()*EffectiveLaw::twoPhaseSatKrn(params.imbibitionParams(),1.0-Snorm);
     }

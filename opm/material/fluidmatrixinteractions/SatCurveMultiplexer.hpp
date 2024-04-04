@@ -310,9 +310,21 @@ public:
     }
 
     template <class Evaluation>
-    static Evaluation twoPhaseSatKrwInv(const Params&, const Evaluation&)
+    static Evaluation twoPhaseSatKrwInv(const Params& params, const Evaluation& krw)
     {
-        throw std::logic_error("Not implemented: twoPhaseSatKrwInv()");
+        switch (params.approach()) {
+        case SatCurveMultiplexerApproach::LET:
+            return LETTwoPhaseLaw::twoPhaseSatKrwInv(params.template getRealParams<SatCurveMultiplexerApproach::LET>(),
+                                                     krw);
+            break;
+
+        case SatCurveMultiplexerApproach::PiecewiseLinear:
+            return PLTwoPhaseLaw::twoPhaseSatKrwInv(params.template getRealParams<SatCurveMultiplexerApproach::PiecewiseLinear>(),
+                                                    krw);
+            break;
+        }
+
+        return 0.0;
     }
 
     /*!

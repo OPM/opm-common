@@ -304,6 +304,49 @@ public:
         return 0.0;
     }
 
+    static Scalar trappedOilSaturation(const Params& params)
+    {
+        OPM_TIMEFUNCTION_LOCAL();
+        switch (params.approach()) {
+        case EclMultiplexerApproach::Stone1:
+            return params.template getRealParams<EclMultiplexerApproach::Stone1>().oilWaterParams().SnTrapped();
+        case EclMultiplexerApproach::Stone2:
+            return params.template getRealParams<EclMultiplexerApproach::Stone2>().oilWaterParams().SnTrapped();
+        case EclMultiplexerApproach::Default:
+            return params.template getRealParams<EclMultiplexerApproach::Default>().oilWaterParams().SnTrapped();
+        case EclMultiplexerApproach::TwoPhase:
+            if(params.template getRealParams<EclMultiplexerApproach::TwoPhase>().approach() == EclTwoPhaseApproach::GasOil)
+                return params.template getRealParams<EclMultiplexerApproach::TwoPhase>().gasOilParams().SwTrapped();
+            if(params.template getRealParams<EclMultiplexerApproach::TwoPhase>().approach() == EclTwoPhaseApproach::OilWater)
+                return params.template getRealParams<EclMultiplexerApproach::TwoPhase>().oilWaterParams().SnTrapped();
+            return 0.0; // gas-water case
+        case EclMultiplexerApproach::OnePhase:
+            return 0.0;
+        }
+        return 0.0;
+    }
+
+    static Scalar trappedWaterSaturation(const Params& params)
+    {
+        OPM_TIMEFUNCTION_LOCAL();
+        switch (params.approach()) {
+        case EclMultiplexerApproach::Stone1:
+            return params.template getRealParams<EclMultiplexerApproach::Stone1>().oilWaterParams().SwTrapped();
+        case EclMultiplexerApproach::Stone2:
+            return params.template getRealParams<EclMultiplexerApproach::Stone2>().oilWaterParams().SwTrapped();
+        case EclMultiplexerApproach::Default:
+            return params.template getRealParams<EclMultiplexerApproach::Default>().oilWaterParams().SwTrapped();
+        case EclMultiplexerApproach::TwoPhase:
+            if(params.template getRealParams<EclMultiplexerApproach::TwoPhase>().approach() == EclTwoPhaseApproach::GasWater)
+                return params.template getRealParams<EclMultiplexerApproach::TwoPhase>().gasWaterParams().SwTrapped();
+            if(params.template getRealParams<EclMultiplexerApproach::TwoPhase>().approach() == EclTwoPhaseApproach::OilWater)
+                return params.template getRealParams<EclMultiplexerApproach::TwoPhase>().oilWaterParams().SwTrapped();
+            return 0.0; // gas-oil case
+        case EclMultiplexerApproach::OnePhase:
+            return 0.0;
+        }
+        return 0.0;
+    }
     /*
      * Hysteresis parameters for gas-oil
      * @see EclHysteresisTwoPhaseLawParams::pcSwMdc(...)

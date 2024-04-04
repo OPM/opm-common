@@ -251,6 +251,14 @@ public:
             return params.gasWaterParams().SnTrapped();
         return 0.0; // oil-water case
     }
+
+    static Scalar trappedOilSaturation(const Params& params){
+        if(params.approach() == EclTwoPhaseApproach::GasOil)
+            return params.gasOilParams().SwTrapped();
+        if(params.approach() == EclTwoPhaseApproach::OilWater)
+            return params.oilWaterParams().SnTrapped();
+        return 0.0; // gas-water case
+    }
     /*!
      * \brief Capillary pressure between the gas and the non-wetting
      *        liquid (i.e., oil) phase.
@@ -413,7 +421,7 @@ public:
      * \brief Update the hysteresis parameters after a time step.
      *
      * This assumes that the nested two-phase material laws are parameters for
-     * EclHysteresisLaw. If they are not, calling this methid will cause a compiler
+     * EclHysteresisLaw. If they are not, calling this method will cause a compiler
      * error. (But not calling it will still work.)
      */
     template <class FluidState>
@@ -438,7 +446,7 @@ public:
         case EclTwoPhaseApproach::GasWater: {
             Scalar Sw = scalarValue(fluidState.saturation(waterPhaseIdx));
 
-            return params.gasWaterParams().update(/*pcSw=*/1.0, /*krwSw=*/0.0, /*krnSw=*/Sw);
+            return params.gasWaterParams().update(/*pcSw=*/Sw, /*krwSw=*/Sw, /*krnSw=*/Sw);
             break;
         }
         }
