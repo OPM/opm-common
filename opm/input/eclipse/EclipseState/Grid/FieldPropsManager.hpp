@@ -240,11 +240,6 @@ public:
 
     const std::unordered_map<std::string,Fieldprops::TranCalculator>& getTran() const;
 
-    static constexpr std::string_view getMultiplierPrefix()
-    {
-        using namespace std::literals;
-        return "__MULT__"sv;
-    }
 private:
     /*
       Return the keyword values as a std::vector<>. All elements in the return

@@ -586,7 +586,7 @@ private:
     Fieldprops::FieldData<T>& init_get(const std::string& keyword, bool allow_unsupported = false);
 
     template <typename T>
-    Fieldprops::FieldData<T>& init_get(const std::string& keyword, const Fieldprops::keywords::keyword_info<T>& kw_info, bool multiply_variant = false);
+    Fieldprops::FieldData<T>& init_get(const std::string& keyword, const Fieldprops::keywords::keyword_info<T>& kw_info, bool multiplier_in_edit = false);
 
     std::string region_name(const DeckItem& region_item);
     std::vector<Box::cell_index> region_index( const std::string& region_name, int region_value );
@@ -614,6 +614,12 @@ private:
     /// to prevent EQUALS MULT* in the EDIT section from overwriting values from the GRID
     /// section. This method will now apply them to keyword_name FieldData arrays and throw away the intermediate storage
     void apply_multipliers();
+
+    static constexpr std::string_view getMultiplierPrefix()
+    {
+        using namespace std::literals;
+        return "__MULT__"sv;
+    }
 
     const UnitSystem unit_system;
     std::size_t nx,ny,nz;

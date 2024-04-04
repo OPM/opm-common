@@ -16,6 +16,8 @@
   OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <opm/input/eclipse/EclipseState/Grid/FieldProps.hpp>
+
 #include <opm/common/ErrorMacros.hpp>
 #include <opm/common/OpmLog/LogUtil.hpp>
 #include <opm/common/OpmLog/OpmLog.hpp>
@@ -25,7 +27,6 @@
 #include <opm/input/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquifers.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/Box.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
-#include <opm/input/eclipse/EclipseState/Grid/FieldProps.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/FieldPropsManager.hpp> // Layering violation.  Needed for apply_tran() function.
 #include <opm/input/eclipse/EclipseState/Grid/SatfuncPropertyInitializers.hpp>
 #include <opm/input/eclipse/EclipseState/Runspec.hpp>
@@ -674,11 +675,10 @@ bool FieldProps::supported<int>(const std::string& keyword) {
 
 void FieldProps::apply_multipliers()
 {
-    static const auto prefix = FieldPropsManager::getMultiplierPrefix();
+    static const auto prefix = getMultiplierPrefix();
 
-    for(auto pos =multiplier_kw_infos_.begin(); pos != multiplier_kw_infos_.end(); ++pos)
+    for(const auto& [mult_keyword, kw_info]: multiplier_kw_infos_)
     {
-        const auto& [mult_keyword, kw_info] = *pos;
         const std::string keyword = mult_keyword.substr(prefix.size());
         auto mult_iter = this->double_data.find(mult_keyword);
         assert(mult_iter != this->double_data.end());
@@ -690,21 +690,20 @@ void FieldProps::apply_multipliers()
                          std::forward_as_tuple(kw_info, this->active_size, kw_info.global ? this->global_size : 0))
                 .first;
         }
-        auto multiplier = mult_iter->second.data.begin();
-        for(auto data = iter->second.data.begin(); data != iter->second.data.end(); ++data, ++multiplier)
-        {
-            *data *= *multiplier;
-        }
+        using Scalar = typename std::remove_cv_t<std::remove_reference_t<decltype(iter->second.data[0])>>;
+        std::transform(iter->second.data.begin(), iter->second.data.end(),
+                       mult_iter->second.data.begin(), iter->second.data.begin(),
+                       std::multiplies<Scalar>());
+
         // If data is global, then we also need to set the global_data. I think they should be the same at this stage, though!
         if (kw_info.global)
         {
             assert(mult_iter->second.global_data.has_value() && iter->second.global_data.has_value());
-            multiplier = mult_iter->second.global_data.value().begin();
-            auto& global_array = iter->second.global_data.value();
-            for(auto data = global_array.begin(); data != global_array.end(); ++data, ++multiplier)
-            {
-                *data *= *multiplier;
-            }
+            std::transform(iter->second.global_data->begin(),
+                           iter->second.global_data->end(),
+                           mult_iter->second.global_data->begin(),
+                           iter->second.global_data->begin(),
+                           std::multiplies<Scalar>());
         }
         this->double_data.erase(mult_iter);
     }
@@ -713,19 +712,19 @@ void FieldProps::apply_multipliers()
 
 template <>
 Fieldprops::FieldData<double>& FieldProps::init_get(const std::string& keyword_name, const Fieldprops::keywords::keyword_info<double>& kw_info,
-                                                    bool multiply_variant) {
+                                                    bool multiplier_in_edit) {
     
-    if(multiply_variant && !kw_info.scalar_init.has_value())
+    if(multiplier_in_edit && !kw_info.scalar_init.has_value())
         OPM_THROW(std::logic_error, std::string("Keyword " +  keyword_name + " is a multiplier and should have a default initial value."));
     const std::string& keyword = Fieldprops::keywords::get_keyword_from_alias(keyword_name);
-    const std::string& mult_keyword = std::string(multiply_variant? FieldPropsManager::getMultiplierPrefix() : "") + keyword;
+    const std::string& mult_keyword = std::string(multiplier_in_edit? getMultiplierPrefix() : "") + keyword;
 
     auto iter = this->double_data.find(mult_keyword);
     if (iter != this->double_data.end()) {
         return iter->second;
-    } else if(multiply_variant){
-        assert(keyword != ParserKeywords::PORV::keywordName || keyword != ParserKeywords::TEMPI::keywordName ||
-               (Fieldprops::keywords::PROPS::satfunc.count(keyword) == 1) || is_capillary_pressure(keyword));
+    } else if(multiplier_in_edit){
+        assert(keyword != ParserKeywords::PORV::keywordName && keyword != ParserKeywords::TEMPI::keywordName &&
+               (Fieldprops::keywords::PROPS::satfunc.count(keyword) != 1) && !is_capillary_pressure(keyword));
         multiplier_kw_infos_[mult_keyword] = kw_info;
     }
 
@@ -926,7 +925,7 @@ void FieldProps::handle_double_keyword(Section section, const Fieldprops::keywor
 
     if (section == Section::SCHEDULE && kw_info.multiplier)
     {
-        // Apply all multipliers cummulatively
+        // Apply all multipliers cumulatively
         multiply_deck(kw_info, keyword, field_data, deck_data, deck_status, box);
     } else{
         // Apply only latest multiplier (overwrite these previous one)
