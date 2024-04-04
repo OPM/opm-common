@@ -146,7 +146,7 @@ int main(int argc, char **argv) {
     std::vector<std::string> smryList;
     for (int i=0; i<argc - argOffset-1; i++) {
 
-        bool hasKey;
+        bool hasKey = false;
 
         switch(filetype) {
         case SMSPEC:
