@@ -762,10 +762,10 @@ private:
 
     }
 
-    EclHysteresisConfig config_;
-    std::shared_ptr<WagHysteresisConfig::WagHysteresisConfigRecord> wagConfig_;
-    EffLawParams imbibitionParams_;
-    EffLawParams drainageParams_;
+    EclHysteresisConfig config_{};
+    std::shared_ptr<WagHysteresisConfig::WagHysteresisConfigRecord> wagConfig_{};
+    EffLawParams imbibitionParams_{};
+    EffLawParams drainageParams_{};
 
     // largest wettinging phase saturation which is on the main-drainage curve. These are
     // three different values because the sourounding code can choose to use different
@@ -804,50 +804,50 @@ private:
     // Cw_: factor required to calculate the trapped wetting phase saturation using
     //     the Killough approach
     // Swcod_: connate water saturation value used for wag hysteresis (2. drainage)
-    Scalar Sncrd_;
-    Scalar Sncri_;
-    Scalar Swcri_;
-    Scalar Swcrd_;
-    Scalar Swmaxi_;
-    Scalar Snmaxd_;
+    Scalar Sncrd_{};
+    Scalar Sncri_{};
+    Scalar Swcri_{};
+    Scalar Swcrd_{};
+    Scalar Swmaxi_{};
+    Scalar Snmaxd_{};
     Scalar Swmaxd_;
-    Scalar C_;
-    Scalar Cw_;
+    Scalar C_{};
+    Scalar Cw_{};
 
-    Scalar KrndMax_; // Krn_drain(Snmaxd_)
-    Scalar KrwdMax_; // Krw_drain(Swmaxd_)
-    Scalar KrndHy_;  // Krn_drain(1-krnSwMdc_)
-    Scalar KrwdHy_;  // Krw_drain(1-krwSwMdc_)
+    Scalar KrndMax_{}; // Krn_drain(Snmaxd_)
+    Scalar KrwdMax_{}; // Krw_drain(Swmaxd_)
+    Scalar KrndHy_{};  // Krn_drain(1-krnSwMdc_)
+    Scalar KrwdHy_{};  // Krw_drain(1-krwSwMdc_)
 
     Scalar pcmaxd_;  // max pc for drain
     Scalar pcmaxi_;  // max pc for imb
 
-    Scalar curvatureCapPrs_; // curvature parameter used for capillary pressure hysteresis
+    Scalar curvatureCapPrs_{}; // curvature parameter used for capillary pressure hysteresis
 
-    Scalar Sncrt_; // trapped non-wetting phase saturation
-    Scalar Swcrt_; // trapped wetting phase saturation
+    Scalar Sncrt_{}; // trapped non-wetting phase saturation
+    Scalar Swcrt_{}; // trapped wetting phase saturation
 
     // Used for WAG hysteresis
     Scalar Swco_;               // Connate water.
-    Scalar swatImbStart_;       // Water saturation at start of current drainage curve (end of previous imb curve).
-    Scalar swatImbStartNxt_;    // Water saturation at start of next drainage curve (end of current imb curve).
+    Scalar swatImbStart_;     // Water saturation at start of current drainage curve (end of previous imb curve).
+    Scalar swatImbStartNxt_{};    // Water saturation at start of next drainage curve (end of current imb curve).
     Scalar krnSwWAG_;           // Saturation value after latest completed timestep.
     Scalar krnSwDrainRevert_;   // Saturation value at end of current drainage curve.
     Scalar cTransf_;            // Modified Lands constant used for free gas calculations to obtain consistent scanning curve
                                 //  when reversion to imb occurs above historical maximum gas saturation (i.e. Sw > krwSwMdc_).
     Scalar krnSwDrainStart_;    // Saturation value at start of current drainage curve (end of previous imb curve).
-    Scalar krnSwDrainStartNxt_; // Saturation value at start of current drainage curve (end of previous imb curve).
-    Scalar krnImbStart_;        // Relperm at start of current drainage curve (end of previous imb curve).
-    Scalar krnImbStartNxt_;     // Relperm at start of next drainage curve (end of current imb curve).
-    Scalar krnDrainStart_;      // Primary (input) relperm evaluated at start of current drainage curve.
-    Scalar krnDrainStartNxt_;   // Primary (input) relperm evaluated at start of next drainage curve.
+    Scalar krnSwDrainStartNxt_{}; // Saturation value at start of current drainage curve (end of previous imb curve).
+    Scalar krnImbStart_{};      // Relperm at start of current drainage curve (end of previous imb curve).
+    Scalar krnImbStartNxt_{};   // Relperm at start of next drainage curve (end of current imb curve).
+    Scalar krnDrainStart_{};    // Primary (input) relperm evaluated at start of current drainage curve.
+    Scalar krnDrainStartNxt_{}; // Primary (input) relperm evaluated at start of next drainage curve.
     bool isDrain_;              // Status is either drainage or imbibition
-    bool wasDrain_;             // Previous status.
-    Scalar krnSwImbStart_;      // Saturation value where primary drainage relperm equals krnImbStart_
+    bool wasDrain_{};           // Previous status.
+    Scalar krnSwImbStart_{};    // Saturation value where primary drainage relperm equals krnImbStart_
 
     int nState_;                // Number of cycles. Primary cycle is nState_=1.
 
-    Scalar SncrtWAG_;
+    Scalar SncrtWAG_{};
     Scalar tolWAG_;
 };
 
