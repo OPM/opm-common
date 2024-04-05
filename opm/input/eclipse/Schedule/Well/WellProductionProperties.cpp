@@ -200,14 +200,12 @@ namespace Opm {
                     // a zero value THP limit will not be handled as a THP limit
                     if (this->THPTarget.is<double>() && this->THPTarget.zero()) {
                         continue;
-                    } else {
+                    } else if (this->VFPTableNumber == 0) {
                         // make sure we specify a VFP table for it
                         // const int vfp_table = record.getItem("VFP_TABLE").get<int>(0);
-                        if (this->VFPTableNumber == 0) {
                             const auto msg = fmt::format("Well {} must have a VFP table to handle"
                                                          " non-zero THP constraint", well_name);
                             throw OpmInputError(msg, location);
-                        }
                     }
                 }
 
