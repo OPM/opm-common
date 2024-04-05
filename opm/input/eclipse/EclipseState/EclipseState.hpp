@@ -166,6 +166,7 @@ namespace Opm {
             serializer(m_micppara);
             serializer(wag_hyst_config);
             serializer(this->fipRegionStatistics_);
+            serializer(m_write_all_multminus);
         }
 
         static bool rst_cmp(const EclipseState& full_state, const EclipseState& rst_state);
@@ -209,6 +210,12 @@ namespace Opm {
         std::optional<std::map<std::string, double> > m_restart_network_pressures{std::nullopt};
 
         std::optional<FIPRegionStatistics> fipRegionStatistics_{std::nullopt};
+        /// \brief Whether to write out all MULT?- unconditionally
+        ///
+        /// If false we will only write non-defaulted MULT?- arrays to the
+        /// INIT file. Otherwise all.
+        /// Reflects first entry of GRIDOPTS
+        bool m_write_all_multminus{};
     };
 } // namespace Opm
 

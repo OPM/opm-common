@@ -149,6 +149,13 @@ namespace Opm {
         , m_micppara(          deck)
         , wag_hyst_config(     deck)
     {
+        if (deck.hasKeyword("GRIDOPTS")) {
+            const auto& gridOpts = deck["GRIDOPTS"].back();
+            const auto& record = gridOpts.getRecord(0);
+            m_write_all_multminus =
+                record.getItem("TRANMULT").getTrimmedString(0)== "YES";
+        }
+
         this->assignRunTitle(deck);
         this->reportNumberOfActivePhases();
 
@@ -297,7 +304,7 @@ namespace Opm {
 
     data::Solution EclipseState::getMultSimProps() const
     {
-        return getTransMult().convertToSimProps(m_inputGrid.getNumActive());
+        return getTransMult().convertToSimProps(m_inputGrid.getNumActive(), m_write_all_multminus);
     }
     const NNC& EclipseState::getInputNNC() const {
         return m_inputNnc;

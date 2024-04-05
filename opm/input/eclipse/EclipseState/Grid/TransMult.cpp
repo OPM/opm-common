@@ -167,7 +167,8 @@ namespace Opm {
         m_multregtScanner.applyNumericalAquifer(aquifer_cells);
     }
 
-    data::Solution TransMult::convertToSimProps(std::size_t grid_size) const {
+    data::Solution TransMult::convertToSimProps(std::size_t grid_size,
+                                                bool include_all_multminus) const {
         data::Solution solution{false}; // not in si to prevent conversions
         const auto size = m_trans.empty()? grid_size : m_trans.begin()->second.size();
         for(const auto& [face_dir, name]: m_names) {
@@ -177,7 +178,9 @@ namespace Opm {
             {
                 solution.insert(name, UnitSystem::measure::identity, pair->second, data::TargetType::INIT);
             } else {
-                solution.insert(name, UnitSystem::measure::identity, std::vector<double>(size, 1.), data::TargetType::INIT);
+                // defaulted MULT?- are only written if requested
+                if(include_all_multminus or name.size() < 6)
+                    solution.insert(name, UnitSystem::measure::identity, std::vector<double>(size, 1.), data::TargetType::INIT);
             }
         }
         return solution;

@@ -192,7 +192,7 @@ void checkInitFile(const Deck& deck, const data::Solution& simProps)
     BOOST_CHECK_MESSAGE( initFile.hasKey("NTG"), R"(INIT file must have "NTG" array)" );
     BOOST_CHECK_MESSAGE( initFile.hasKey("FIPNUM"), R"(INIT file must have "FIPNUM" array)");
     BOOST_CHECK_MESSAGE( initFile.hasKey("SATNUM"), R"(INIT file must have "SATNUM" array)");
-    std::array<std::string, 6> multipliers{"MULTX", "MULTX-", "MULTY", "MULTY-", "MULTZ", "MULTZ-"};
+    std::array<std::string, 3> multipliers{"MULTX", "MULTY", "MULTZ"};
     for (const auto& mult: multipliers) {
        BOOST_CHECK_MESSAGE( initFile.hasKey(mult), R"(INIT file must have ")" + mult + R"(" array)" );
     }
@@ -437,12 +437,17 @@ WELSPECS
 }
 
 std::pair<std::string,std::array<std::array<std::vector<float>,2>,3>>
-createMULTXYZDECK(std::array<std::bitset<2>,3> doxyz)
+createMULTXYZDECK(std::array<std::bitset<2>,3> doxyz, bool write_all_multminus)
 {
      auto deckString = std::string { R"(RUNSPEC
 DIMENS
  3 2 3  /
-
+)"};
+     if (write_all_multminus)
+         deckString += std::string { R"(GRIDOPTS
+YES /
+)"};
+     deckString += std::string { R"(
 OIL
 WATER
 GAS
@@ -680,9 +685,15 @@ EQUALS
      return {deckString, exspected_multipliers};
 }
 
-void testMultxyz(std::array<std::bitset<2>,3> doxyz)
+/// \brief Test the MULTXYZ writing
+///
+/// \param doxyz Inidicates for each direction which multipliers should be test
+///              no bit set means none, 1st bit set positive, 2nd bit set negative
+/// \param write_all_mult_minus If true we will request that even defaulted MULT?- arrays will be
+///                  written via first record of GRIDOPTS
+void testMultxyz(std::array<std::bitset<2>,3> doxyz, bool write_all_multminus = false)
 {
-    const auto [deckString, exspectedMult] = createMULTXYZDECK(doxyz);
+    const auto [deckString, exspectedMult] = createMULTXYZDECK(doxyz, write_all_multminus);
     const auto deck = Parser().parseString(deckString);
     auto es = EclipseState( deck );
     const auto& eclGrid = es.getInputGrid();
@@ -697,18 +708,17 @@ void testMultxyz(std::array<std::bitset<2>,3> doxyz)
 
     std::array<std::string, 6> multipliers{"MULTX", "MULTX-", "MULTY", "MULTY-", "MULTZ", "MULTZ-"};
     int i=0;
-    auto mult = multipliers[i];
     for (const auto& mult: multipliers) {
-       BOOST_CHECK_MESSAGE( initFile.hasKey(mult), R"(INIT file must have ")" + mult + R"(" array)" );
-       const auto& multValues   = initFile.get<float>(mult);
-       auto exspect = exspectedMult[i/2][i%2].begin();
-       BOOST_CHECK(multValues.size() == exspectedMult[i/2][i%2].size());
-
-       for (auto mult = multValues.begin(); mult != multValues.end(); ++mult, ++exspect)
-       {
-           BOOST_CHECK_CLOSE(*mult, *exspect, 1e-8);
-       }
-       ++i;
+        if (i%2==0 || write_all_multminus || doxyz[i/2].test(1)) {
+            BOOST_CHECK_MESSAGE( initFile.hasKey(mult), R"(INIT file must have ")" + mult + R"(" array)" );
+            const auto& multValues   = initFile.get<float>(mult);
+            auto exspect = exspectedMult[i/2][i%2].begin();
+            BOOST_CHECK(multValues.size() == exspectedMult[i/2][i%2].size());
+            for (auto multVal = multValues.begin(); multVal != multValues.end(); ++multVal, ++exspect) {
+                BOOST_CHECK_CLOSE(*multVal, *exspect, 1e-8);
+            }
+        }
+        ++i;
     }
 }
 
@@ -716,16 +726,16 @@ void testMultxyz(std::array<std::bitset<2>,3> doxyz)
 BOOST_AUTO_TEST_CASE(MULTXYZInit)
 {
     testMultxyz({ '0', '0' , '0'});
-    testMultxyz({ '0', '0' , '1'});
+    testMultxyz({ '0', '0' , '1'}, true);
     testMultxyz({ '0', '0' , '2'});
     testMultxyz({ '0', '0' , '3'});
     testMultxyz({ '1', '0' , '0'});
     testMultxyz({ '1', '0' , '1'});
     testMultxyz({ '1', '0' , '3'});
-    testMultxyz({ '2', '0' , '0'});
+    testMultxyz({ '2', '0' , '0'}, true);
     testMultxyz({ '1', '1' , '0'});
     testMultxyz({ '3', '3' , '0'});
     testMultxyz({ '3', '3' , '1'});
-    testMultxyz({ '3', '3' , '2'});
+    testMultxyz({ '3', '3' , '2'}, true);
     testMultxyz({ '3', '3' , '3'});
 }

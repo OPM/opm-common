@@ -69,7 +69,10 @@ namespace Opm {
         /// \brief Creates a solution object with all multipliers for output
         /// \param active_cells If the model has no multipliers then this number is used as the size of
         ///                     the array (containing 1) that are constructed in this case.
-        data::Solution convertToSimProps(std::size_t active_cells) const;
+        /// \param include_all_multminus If false only non-defaulted MULT?- arrays will
+        ///                              included. Otherwise even defaulted ones.
+        data::Solution convertToSimProps(std::size_t active_cells,
+                                         bool include_all_multminus) const;
 
         bool operator==(const TransMult& data) const;
 
