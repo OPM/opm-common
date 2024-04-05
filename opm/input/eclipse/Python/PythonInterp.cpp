@@ -22,7 +22,6 @@
 #include <pybind11/embed.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
-#include <pybind11/pytypes.h>
 
 #include <opm/input/eclipse/Deck/Deck.hpp>
 #include <opm/input/eclipse/Parser/Parser.hpp>
@@ -38,11 +37,12 @@ namespace Opm {
 
 /*
   OPM_EMBEDDED_MODULE create a Python of all the Python/C++ classes which are
-  generated in the python::common::export_all() function in the wrapping code.
+  generated in the python::common::export_all_opm_embedded() function in the wrapping code.
+  The same module is created as a Pybind 11 module in export.cpp
 */
 
 OPM_EMBEDDED_MODULE(opm_embedded, module) {
-    python::common::export_all(module);
+    python::common::export_all_opm_embedded(module);
 }
 
 

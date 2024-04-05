@@ -42,7 +42,10 @@ std::vector<std::string> wells(const SummaryState * st) {
 
 void python::common::export_SummaryState(py::module& module) {
 
-    py::class_<SummaryState>(module, "SummaryState")
+    py::class_<SummaryState, std::shared_ptr<SummaryState>>(module, "SummaryState", R"pbdoc(
+            The Opm::SummaryState class - this is where the current summary results of the simulator are stored.
+            The SummaryState class has methods to get hold of well, group and general variables.
+        )pbdoc")
         .def(py::init<std::time_t>())
         .def("update", &SummaryState::update)
         .def("update_well_var", &SummaryState::update_well_var)

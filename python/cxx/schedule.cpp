@@ -210,7 +210,10 @@ void python::common::export_Schedule(py::module& module) {
     // this makes it possible to share the returned object with e.g. and
     //   opm.simulators.BlackOilSimulator Python object
     //
-    py::class_< Schedule, std::shared_ptr<Schedule> >( module, "Schedule")
+    py::class_< Schedule, std::shared_ptr<Schedule> >( module, "Schedule", R"pbdoc(
+        The Opm::Schedule class - this is a representation of all the content from
+        the SCHEDULE section, notably all well and group information and the timestepping.
+    )pbdoc")
     .def(py::init<const Deck&, const EclipseState& >())
     .def("_groups", &get_groups )
     .def_property_readonly( "start",  &get_start_time )
