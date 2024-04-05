@@ -1012,12 +1012,12 @@ COMPDAT
 /
 
 WCONPROD
---  Well_name  Status  Ctrl  Orate   Wrate  Grate Lrate   RFV  FBHP   WHP  VFP Glift
-   'B-1H'      OPEN    ORAT  4000.0  1*     1*    6000.0  1*   100.0  30   0   1*  /
-   'B-2H'      SHUT    ORAT  4000.0  1*     1*    6000.0  1*   100.0  30   0   1*  /
-   'B-3H'      OPEN    ORAT  4000.0  1*     1*    6000.0  1*   100.0  30   0   1*  /
-   'C-1H'      OPEN    ORAT  4000.0  1*     1*    6000.0  1*   100.0  30   0   1*  /
-   'C-2H'      SHUT    ORAT  4000.0  1*     1*    6000.0  1*   100.0  30   0   1*  /
+--  Well_name  Status  Ctrl  Orate   Wrate  Grate Lrate   RFV  FBHP   THP  VFP Glift
+   'B-1H'      OPEN    ORAT  4000.0  1*     1*    6000.0  1*   100.0  1*   0   1*  /
+   'B-2H'      SHUT    ORAT  4000.0  1*     1*    6000.0  1*   100.0  1*   0   1*  /
+   'B-3H'      OPEN    ORAT  4000.0  1*     1*    6000.0  1*   100.0  1*   0   1*  /
+   'C-1H'      OPEN    ORAT  4000.0  1*     1*    6000.0  1*   100.0  1*   0   1*  /
+   'C-2H'      SHUT    ORAT  4000.0  1*     1*    6000.0  1*   100.0  1*   0   1*  /
 /
 
 GCONINJE

@@ -50,6 +50,7 @@ class DeckKeyword;
 class DeckRecord;
 class ErrorGuard;
 class EclipseGrid;
+class KeywordLocation;
 class ParseContext;
 class ScheduleGrid;
 class SICD;
@@ -174,17 +175,19 @@ public:
         //! \param bhp_def The default BHP target in input units
         //! \param availableForGroupControl True if available for group control
         //! \param well_name Name of well
+        //! \param location Location of keyword for logging purpose
         void handleWCONINJE(const DeckRecord& record,
                             const double bhp_def,
                             bool availableForGroupControl,
-                            const std::string& well_name);
+                            const std::string& well_name,
+                            const KeywordLocation& location);
 
         //! \brief Handle a WCONINJH keyword.
         //! \param record The deck record to use
         //! \param bhp_def The default BHP limit in SI units
         //! \param is_producer True if well is a producer
         //! \param well_name Name of well
-        //! \param loc Location of keyword for logging purpuses
+        //! \param loc Location of keyword for logging purpose
         void handleWCONINJH(const DeckRecord& record,
                             const double bhp_def,
                             const bool is_producer,
@@ -302,11 +305,13 @@ public:
         //! \param unit_system Unit system to use
         //! \param well Well name
         //! \param record Deck record to use
+        //! \param location Location of keyword for logging purpose
         void handleWCONPROD(const std::optional<VFPProdTable::ALQ_TYPE>& alq_type,
                             const double bhp_def,
                             const UnitSystem& unit_system,
                             const std::string& well,
-                            const DeckRecord& record);
+                            const DeckRecord& record,
+                            const KeywordLocation& location);
 
         //! \brief Handle WCONHIST keyword.
         //! \param alq_type ALQ type

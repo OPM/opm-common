@@ -197,8 +197,21 @@ void handleWCONINJE(HandlerContext& handlerContext)
                                                  default_bhp_limit);
             }
 
+            auto table_nr = record.getItem("VFP_TABLE").get< int >(0);
+            if (record.getItem("VFP_TABLE").defaultApplied(0)) {
+                table_nr = injection->VFPTableNumber;
+            }
+
+            if (table_nr != 0) {
+                const auto& vfpinj = handlerContext.state().vfpinj;
+                if (!vfpinj.has(table_nr)) {
+                    std::string reason = fmt::format("Problem with well:{} VFP table: {} not defined", well_name, table_nr);
+                    throw OpmInputError(reason, handlerContext.keyword.location());
+                }
+            }
+
             injection->handleWCONINJE(record, default_bhp_limit,
-                                      well2.isAvailableForGroupControl(), well_name);
+                                      well2.isAvailableForGroupControl(), well_name, handlerContext.keyword.location());
 
             const bool switching_from_producer = well2.isProducer();
             if (well2.updateInjection(injection)) {
@@ -261,6 +274,19 @@ void handleWCONINJH(HandlerContext& handlerContext)
             } else {
                 default_bhp_limit = UnitSystem::newMETRIC().to_si(UnitSystem::measure::pressure,
                                                                   6891.2);
+            }
+
+            auto table_nr = record.getItem("VFP_TABLE").get< int >(0);
+            if (record.getItem("VFP_TABLE").defaultApplied(0)) {
+                table_nr = injection->VFPTableNumber;
+            }
+
+            if (table_nr != 0) {
+                const auto& vfpinj = handlerContext.state().vfpinj;
+                if (!vfpinj.has(table_nr)) {
+                    std::string reason = fmt::format("Problem with well:{} VFP table: {} not defined", well_name, table_nr);
+                    throw OpmInputError(reason, handlerContext.keyword.location());
+                }
             }
 
             injection->handleWCONINJH(record, default_bhp_limit,
@@ -347,7 +373,7 @@ void handleWCONPROD(HandlerContext& handlerContext)
 
             properties->handleWCONPROD(alq_type, default_bhp_target,
                                        handlerContext.static_schedule().m_unit_system,
-                                       well_name, record);
+                                       well_name, record, handlerContext.keyword.location());
 
             if (switching_from_injector) {
                 if (properties->bhp_hist_limit_defaulted) {

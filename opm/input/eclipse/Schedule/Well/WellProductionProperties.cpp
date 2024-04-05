@@ -21,7 +21,9 @@
 #include <ostream>
 #include <string>
 
+#include <opm/common/OpmLog/KeywordLocation.hpp>
 #include <opm/common/OpmLog/OpmLog.hpp>
+#include <opm/common/utility/OpmInputError.hpp>
 #include <opm/input/eclipse/Deck/DeckItem.hpp>
 #include <opm/input/eclipse/Deck/DeckRecord.hpp>
 #include <opm/input/eclipse/Deck/UDAValue.hpp>
@@ -166,8 +168,9 @@ namespace Opm {
     void Well::WellProductionProperties::handleWCONPROD(const std::optional<VFPProdTable::ALQ_TYPE>& alq_type,
                                                         const double bhp_def,
                                                         const UnitSystem& unit_system_arg,
-                                                        const std::string& /* well */,
-                                                        const DeckRecord& record)
+                                                        const std::string& well_name,
+                                                        const DeckRecord& record,
+                                                        const KeywordLocation& location)
     {
         this->predictionMode = true;
         this->init_vfp(alq_type, unit_system_arg, record);
@@ -193,9 +196,18 @@ namespace Opm {
         for( const auto& cmode : modes ) {
             if( !record.getItem( cmode.first ).defaultApplied( 0 ) ) {
 
-                // a zero value THP limit will not be handled as a THP limit
-                if (cmode.first == "THP" && this->THPTarget.is<double>() && this->THPTarget.zero())
-                    continue;
+                if (cmode.first == "THP") {
+                    // a zero value THP limit will not be handled as a THP limit
+                    if (this->THPTarget.is<double>() && this->THPTarget.zero()) {
+                        continue;
+                    } else if (this->VFPTableNumber == 0) {
+                        // make sure we specify a VFP table for it
+                        // const int vfp_table = record.getItem("VFP_TABLE").get<int>(0);
+                            const auto msg = fmt::format("Well {} must have a VFP table to handle"
+                                                         " non-zero THP constraint", well_name);
+                            throw OpmInputError(msg, location);
+                    }
+                }
 
                 this->addProductionControl( cmode.second );
             }
