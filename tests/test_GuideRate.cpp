@@ -160,11 +160,11 @@ GUIDERAT
 
         const auto epilog = std::string { R"(
 WCONPROD
-  P* OPEN GRUP 150 100 15E+3 250 1* 50 25 /
+  P* OPEN GRUP 150 100 15E+3 250 1* 50 /
 /
 
 WCONINJE
-  I1 GAS OPEN RATE 20.0E+3 1* 500 350 /
+  I1 GAS OPEN RATE 20.0E+3 1* 500 /
 /
 
 GCONPROD

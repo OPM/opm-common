@@ -1241,7 +1241,7 @@ DATES             -- 2
 /
 
 WCONPROD
- 'P' 'OPEN' 'BHP' 1 2 3 2* 20. 10. 0 13 /
+ 'P' 'OPEN' 'BHP' 1 2 3 2* 20. 2* 13 /
 /
 
 WCONINJE

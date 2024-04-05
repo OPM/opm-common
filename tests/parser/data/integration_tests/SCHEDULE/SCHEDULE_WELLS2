@@ -136,9 +136,21 @@ DATES
    10  AUG 2008 /
 /
 
+VFPINJ
+-- Table Depth  Rate   TAB  UNITS  BODY
+-- ----- ----- ----- ----- ------ -----
+       5  32.9   WAT   THP METRIC   BHP /
+-- Rate axis
+1 3 5 /
+-- THP axis
+7 11 /
+-- Table data with THP# <values 1-num_rates>
+1 1.5 2.5 3.5 /
+2 4.5 5.5 6.5 /
+
 -- 10
 WCONINJE
-     'W_1'     'WATER'  1*      'RATE'  20000.000  200000.000 123 678 4* /
+     'W_1'     'WATER'  1*      'RATE'  20000.000  200000.000 123 678 5 4* /
 /
 
 DATES
@@ -156,9 +168,10 @@ DATES
    10  SEP 2008 /
 /
 
+
 -- 12
 WCONINJE
-     'W_1'     'WATER'  'OPEN'      'RATE'  20000.000  * 123 678 4* /
+     'W_1'     'WATER'  'OPEN'      'RATE'  20000.000  * 123 678 5 4* /
 /
 
 DATES
@@ -167,7 +180,7 @@ DATES
 
 -- 13
 WCONINJE
-     'W_1'     'WATER'  'OPEN'      'RATE'  0.000  * 123 678 4* /
+     'W_1'     'WATER'  'OPEN'      'RATE'  0.000  * 123 678 5 4* /
 /
 
 DATES

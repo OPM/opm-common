@@ -3608,7 +3608,7 @@ WCONHIST
  P SHUT ORAT 6  500 0 0 0 1.2 1.1 /
 /
 WCONPROD
- P1 SHUT ORAT 6  500 0 0 0 3.2 3.1 /
+ P1 SHUT ORAT 6  500 0 0 0 3.2 /
 /
 WCONINJH
  I WATER STOP 100 2.1 2.2 /
@@ -4351,6 +4351,17 @@ WELSPECS
      'W6'    'G3'   2 4  3.92       'OIL'  3*  NO /
      'W7'    'G3'   3 2  3.92       'OIL'  3*  NO /
 /
+VFPINJ
+-- Table Depth  Rate   TAB  UNITS  BODY
+-- ----- ----- ----- ----- ------ -----
+       5  32.9   WAT   THP METRIC   BHP /
+-- Rate axis
+1 3 5 /
+-- THP axis
+7 11 /
+-- Table data with THP# <values 1-num_rates>
+1 1.5 2.5 3.5 /
+2 4.5 5.5 6.5 /
 
 WCONINJE
   'W1' 'WATER'  'OPEN'  'GRUP' /
@@ -4359,7 +4370,7 @@ WCONINJE
   'W4' 'WATER'  'OPEN'  'RATE'  200  1*  450.0 /
   'W5' 'WATER'  'OPEN'  'RESV'  200  175  450.0 /
   'W6' 'GAS'  'OPEN'  'BHP'  200  1*  450.0 /
-  'W7' 'GAS'  'OPEN'  'THP'  200  1*  450.0 150 /
+  'W7' 'GAS'  'OPEN'  'THP'  200  1*  450.0 150 5 /
 /
 
 TSTEP
@@ -4384,6 +4395,18 @@ BOOST_AUTO_TEST_CASE(Production_Control_Mode_From_Well) {
     const auto input = R"(RUNSPEC
 
 SCHEDULE
+VFPPROD
+-- table_num, datum_depth, flo, wfr, gfr, pressure, alq, unit, table_vals
+42 7.0E+03 LIQ WCT GOR THP ' ' METRIC BHP /
+1.0 / flo axis
+0.0 1.0 / THP axis
+0.0 / WFR axis
+0.0 / GFR axis
+0.0 / ALQ axis
+-- Table itself: thp_idx wfr_idx gfr_idx alq_idx <vals>
+1 1 1 1 0.0 /
+2 1 1 1 1.0 /
+
 WELSPECS
      'W1'    'G1'   1 2  3.33       'OIL'  7*/
      'W2'    'G2'   1 3  3.33       'OIL'  3*  YES /
@@ -4403,7 +4426,7 @@ WCONPROD
   'W5' 'OPEN'  'LRAT' 1000.0 250.0 30.0e3 1500.0 /
   'W6' 'OPEN'  'RESV' 1000.0 250.0 30.0e3 1500.0 314.15 /
   'W7' 'OPEN'  'BHP' 1000.0 250.0 30.0e3 1500.0 314.15 27.1828 /
-  'W8' 'OPEN'  'THP' 1000.0 250.0 30.0e3 1500.0 314.15 27.1828 31.415 /
+  'W8' 'OPEN'  'THP' 1000.0 250.0 30.0e3 1500.0 314.15 27.1828 31.415 42 /
 /
 
 TSTEP
