@@ -122,6 +122,37 @@ namespace {
             || (selector.front().find("*") != std::string::npos);
     }
 
+    bool is_single_region(const std::vector<std::string>& selector)
+    {
+        if (selector.size() != std::vector<std::string>::size_type{1}) {
+            return false;
+        }
+
+        auto regNumStr = dequote(selector.front());
+        if (regNumStr.empty()) {
+            // Not specified
+            return false;
+        }
+
+        const auto end = regNumStr.data() + regNumStr.size();
+        auto regNum = 0;
+        auto [ptr, ec] { std::from_chars(regNumStr.data(), end, regNum) };
+
+        if ((ec == std::errc{}) && (ptr == end)) {
+            return regNum > 0;
+        }
+        else if ((ec == std::errc::invalid_argument) && is_asterisk(regNumStr)) {
+            // Region number is '*'.  Treat as all regions.
+            return false;
+        }
+        else {
+            // Region number is some unrecognized number string other than '*'.
+            throw std::invalid_argument {
+                "Invalid region number string |" + selector.front() + '|'
+            };
+        }
+    }
+
     const auto cmp_func = std::set<Opm::UDQTokenType> {
         Opm::UDQTokenType::binary_cmp_eq,
         Opm::UDQTokenType::binary_cmp_ne,
@@ -233,13 +264,51 @@ namespace {
 
 namespace Opm { namespace UDQ {
 
+UDQVarType targetType(const std::string&              keyword,
+                      const std::vector<std::string>& selector)
+{
+    const auto varType = targetType(keyword);
+
+    if ((varType == UDQVarType::NONE) || (varType == UDQVarType::FIELD_VAR)) {
+        // Field variables and "none" (e.g., TIME) are treated as scalar.
+        return UDQVarType::SCALAR;
+    }
+
+    if (((varType == UDQVarType::WELL_VAR) || (varType == UDQVarType::GROUP_VAR))
+        && !is_wgname_set(selector))
+    {
+        // Well/group variables that apply to a single well/group are
+        // treated as scalar.
+        return UDQVarType::SCALAR;
+    }
+
+    if ((varType == UDQVarType::SEGMENT_VAR) && !is_segment_set(selector)) {
+        // Segment variables that apply to a single segment in a single MS
+        // well are treated as scalar.
+        return UDQVarType::SCALAR;
+    }
+
+    if ((varType == UDQVarType::REGION_VAR) && is_single_region(selector)) {
+        // Region variables which apply to a single region are treated as
+        // scalars.
+        return UDQVarType::SCALAR;
+    }
+
+    // All other targets keep the type inferred from the keyword.
+    return varType;
+}
+
 UDQVarType targetType(const std::string& keyword)
 {
+    if (keyword.empty()) {
+        return UDQVarType::NONE;
+    }
+
     if (keyword.substr(0,3) == "TU_") {
         return UDQVarType::TABLE_LOOKUP;
     }
-    const char first_char = keyword[0];
-    switch (first_char) {
+
+    switch (keyword.front()) {
     case 'C': return UDQVarType::CONNECTION_VAR;
     case 'R': return UDQVarType::REGION_VAR;
     case 'F': return UDQVarType::FIELD_VAR;
@@ -258,34 +327,6 @@ UDQVarType targetType(const std::string& keyword)
 
         return UDQVarType::NONE;
     }
-}
-
-UDQVarType targetType(const std::string&              keyword,
-                      const std::vector<std::string>& selector)
-{
-    const auto tt = targetType(keyword);
-
-    if ((tt == UDQVarType::NONE) || (tt == UDQVarType::FIELD_VAR)) {
-        // Field variables and "none" (e.g., TIME) are treated as scalar.
-        return UDQVarType::SCALAR;
-    }
-
-    if (((tt == UDQVarType::WELL_VAR) || (tt == UDQVarType::GROUP_VAR))
-        && !is_wgname_set(selector))
-    {
-        // Well/group variables that apply to a single well/group are
-        // treated as scalar.
-        return UDQVarType::SCALAR;
-    }
-
-    if ((tt == UDQVarType::SEGMENT_VAR) && !is_segment_set(selector)) {
-        // Segment variables that apply to a single segment in a single MS
-        // well are treated as scalar.
-        return UDQVarType::SCALAR;
-    }
-
-    // All other targets keep the type inferred from the keyword.
-    return tt;
 }
 
 UDQVarType varType(const std::string& keyword)
