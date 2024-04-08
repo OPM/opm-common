@@ -19,9 +19,11 @@
 
 #include <opm/input/eclipse/Schedule/SummaryState.hpp>
 
+#include <opm/common/utility/TimeService.hpp>
+
 #include <opm/input/eclipse/Schedule/UDQ/UDQSet.hpp>
 
-#include <opm/common/utility/TimeService.hpp>
+#include <opm/io/eclipse/SummaryNode.hpp>
 
 #include <cstddef>
 #include <cstring>
@@ -30,8 +32,11 @@
 #include <ostream>
 #include <set>
 #include <string>
+#include <string_view>
 #include <unordered_map>
 #include <vector>
+
+#include <fmt/format.h>
 
 namespace {
 
@@ -116,6 +121,42 @@ namespace {
         for (const auto& pair : var1_iter->second)
             l.push_back(pair.first);
         return l;
+    }
+
+    std::string normalise_region_set_name(const std::string& regSet)
+    {
+        if (regSet.empty()) {
+            return "NUM";       // "" -> FIPNUM
+        }
+
+        // Discard initial "FIP" prefix if it exists.
+        const auto maxchar = std::string::size_type{3};
+        const auto prefix = std::string_view { "FIP" };
+        const auto start = prefix.size() * (regSet.find(prefix) == std::string::size_type{0});
+        return regSet.substr(start, maxchar);
+    }
+
+    std::string region_key(const std::string& variable,
+                           const std::string& regSet,
+                           const std::size_t  region)
+    {
+        auto node = Opm::EclIO::SummaryNode {
+            variable, Opm::EclIO::SummaryNode::Category::Region
+        };
+
+        node.number = static_cast<int>(region);
+
+        if (! regSet.empty() && (regSet != "NUM") && (regSet != "FIPNUM")) {
+            // Generate summary vector names of the forms
+            //   * RPR__ABC
+            //   * ROPT_ABC
+            //   * RODENABC
+            // to uniquely identify vectors in the 'FIPABC' region set.
+            node.keyword = fmt::format("{:_<5}{}", node.keyword,
+                                       normalise_region_set_name(regSet));
+        }
+
+        return node.unique_key();
     }
 
 } // Anonymous namespace
@@ -215,6 +256,25 @@ namespace Opm
         }
 
         return wellPos->second.find(segment) != wellPos->second.end();
+    }
+
+    bool SummaryState::has_region_var(const std::string& regSet,
+                                      const std::string& var,
+                                      const std::size_t  region) const
+    {
+        // Region Values = [var][regSet][region] -> double
+
+        auto varPos = this->region_values.find(EclIO::SummaryNode::normalise_region_keyword(var));
+        if (varPos == this->region_values.end()) {
+            return false;
+        }
+
+        auto regSetPos = varPos->second.find(normalise_region_set_name(regSet));
+        if (regSetPos == varPos->second.end()) {
+            return false;
+        }
+
+        return regSetPos->second.find(region) != regSetPos->second.end();
     }
 
     void SummaryState::update(const std::string& key, double value) {
@@ -329,6 +389,25 @@ namespace Opm
         }
     }
 
+    void SummaryState::update_region_var(const std::string& regSet,
+                                         const std::string& var,
+                                         const std::size_t  region,
+                                         const double       value)
+    {
+        const auto regKw = EclIO::SummaryNode::normalise_region_keyword(var);
+
+        auto& val_ref  = this->values[region_key(regKw, regSet, region)];
+        auto& rval_ref = this->region_values[regKw][normalise_region_set_name(regSet)][region];
+
+        if (is_total(regKw)) {
+            val_ref  += value;
+            rval_ref += value;
+        }
+        else {
+            val_ref = rval_ref = value;
+        }
+    }
+
     double SummaryState::get(const std::string& key) const
     {
         const auto iter = this->values.find(key);
@@ -372,6 +451,16 @@ namespace Opm
                                          const std::size_t  segment) const
     {
         return this->segment_values.at(var).at(well).at(segment);
+    }
+
+    double SummaryState::get_region_var(const std::string& regSet,
+                                        const std::string& var,
+                                        const std::size_t  region) const
+    {
+        return this->region_values
+            .at(EclIO::SummaryNode::normalise_region_keyword(var))
+            .at(normalise_region_set_name(regSet))
+            .at(region);
     }
 
     double SummaryState::get_well_var(const std::string& well, const std::string& var, double default_value) const
@@ -505,7 +594,9 @@ namespace Opm
             && (this->m_groups == other.m_groups)
             && (this->groups() == other.groups())
             && (this->conn_values == other.conn_values)
-            && (this->segment_values == other.segment_values);
+            && (this->segment_values == other.segment_values)
+            && (this->region_values == other.region_values)
+            ;
     }
 
     SummaryState SummaryState::serializationTestObject()
@@ -538,6 +629,20 @@ namespace Opm
         {
             auto& sval = st.segment_values["SUVIS"];
             sval.emplace("I2", std::unordered_map<std::size_t, double> {
+                    { std::size_t{17},  29.0   },
+                    { std::size_t{42}, - 1.618 },
+                });
+        }
+
+        {
+            auto& rval = st.region_values["ROPT"]["NUM"];
+            rval.emplace(12, 34.56);
+            rval.emplace(3,  14.15926);
+        }
+
+        {
+            auto& rval = st.region_values["RGPR"];
+            rval.try_emplace("RE2", std::unordered_map<std::size_t, double> {
                     { std::size_t{17},  29.0   },
                     { std::size_t{42}, - 1.618 },
                 });

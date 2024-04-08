@@ -95,6 +95,7 @@ public:
     bool has_group_var(const std::string& var) const;
     bool has_conn_var(const std::string& well, const std::string& var, std::size_t global_index) const;
     bool has_segment_var(const std::string& well, const std::string& var, std::size_t segment) const;
+    bool has_region_var(const std::string& regSet, const std::string& var, std::size_t region) const;
 
     void update(const std::string& key, double value);
     void update_well_var(const std::string& well, const std::string& var, double value);
@@ -103,6 +104,7 @@ public:
     void update_udq(const UDQSet& udq_set, double undefined_value);
     void update_conn_var(const std::string& well, const std::string& var, std::size_t global_index, double value);
     void update_segment_var(const std::string& well, const std::string& var, std::size_t segment, double value);
+    void update_region_var(const std::string& regSet, const std::string& var, std::size_t region, double value);
 
     double get(const std::string&) const;
     double get(const std::string&, double) const;
@@ -111,10 +113,12 @@ public:
     double get_group_var(const std::string& group, const std::string& var) const;
     double get_conn_var(const std::string& conn, const std::string& var, std::size_t global_index) const;
     double get_segment_var(const std::string& well, const std::string& var, std::size_t segment) const;
+    double get_region_var(const std::string& regSet, const std::string& var, std::size_t region) const;
     double get_well_var(const std::string& well, const std::string& var, double) const;
     double get_group_var(const std::string& group, const std::string& var, double) const;
     double get_conn_var(const std::string& conn, const std::string& var, std::size_t global_index, double) const;
     double get_segment_var(const std::string& well, const std::string& var, std::size_t segment, double) const;
+    double get_region_var(const std::string& regSet, const std::string& var, std::size_t region, double) const;
 
     const std::vector<std::string>& wells() const;
     std::vector<std::string> wells(const std::string& var) const;
@@ -141,6 +145,7 @@ public:
         serializer(group_names);
         serializer(conn_values);
         serializer(segment_values);
+        serializer(this->region_values);
     }
 
     static SummaryState serializationTestObject();
@@ -167,6 +172,10 @@ private:
     // The first key is the variable and the second key is the well and the
     // third is the one-based segment number.
     std::unordered_map<std::string, std::unordered_map<std::string, std::unordered_map<std::size_t, double>>> segment_values;
+
+    // First key is variable (e.g., ROIP), second key is region set (e.g.,
+    // FIPNUM, FIPABC), and the third key is the one-based region number.
+    std::unordered_map<std::string, std::unordered_map<std::string, std::unordered_map<std::size_t, double>>> region_values;
 };
 
 std::ostream& operator<<(std::ostream& stream, const SummaryState& st);
