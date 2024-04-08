@@ -56,6 +56,7 @@
 
 #include <fmt/format.h>
 
+#include <cstddef>
 #include <filesystem>
 #include <map>
 #include <stdexcept>
@@ -63,8 +64,6 @@
 #include <unordered_set>
 #include <utility>
 #include <vector>
-
-#include <stddef.h>
 
 namespace {
     void verify_consistent_restart_information(const Opm::DeckKeyword& restart_keyword,
@@ -446,7 +445,7 @@ namespace Opm {
         // Set error to false
         bool error = false;
         std::map<std::string,double> prev;
-        for (size_t index=0; index < section.count("MULTFLT"); index++) {
+        for (std::size_t index = 0; index < section.count("MULTFLT"); index++) {
             const auto& faultsKeyword = section.getKeyword("MULTFLT" , index);
             OpmLog::info(OpmInputError::format("\nApplying {keyword} in {file} line {line}", faultsKeyword.location()));
             InfoLogger logger("MULTFLT",3);
@@ -490,10 +489,10 @@ namespace Opm {
 
     void EclipseState::complainAboutAmbiguousKeyword(const Deck& deck, const std::string& keywordName) {
         OpmLog::error("The " + keywordName + " keyword must be unique in the deck. Ignoring all!");
-        auto keywords = deck.getKeywordList(keywordName);
-        for (size_t i = 0; i < keywords.size(); ++i) {
-            std::string msg = "Ambiguous keyword "+keywordName+" defined here";
-            OpmLog::error(Log::fileMessage(keywords[i]->location(), msg));
+        const auto keywords = deck.getKeywordList(keywordName);
+        for (const auto* kw : keywords) {
+            const std::string msg = "Ambiguous keyword " + keywordName + " defined here";
+            OpmLog::error(Log::fileMessage(kw->location(), msg));
         }
     }
 
