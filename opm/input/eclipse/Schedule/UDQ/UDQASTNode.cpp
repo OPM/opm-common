@@ -319,6 +319,10 @@ UDQASTNode::eval_expression(const UDQContext& context) const
         return this->eval_segment_expression(string_value, context);
     }
 
+    if (data_type == UDQVarType::REGION_VAR) {
+        return this->eval_region_expression(string_value, context);
+    }
+
     if (data_type == UDQVarType::FIELD_VAR) {
         return UDQSet::scalar(string_value, context.get(string_value));
     }
@@ -445,6 +449,42 @@ UDQASTNode::eval_segment_expression(const std::string& string_value,
         const auto well = std::string { segSet.well() };
         for (const auto& segment : segSet) {
             res.assign(well, segment, context.get_segment_var(well, string_value, segment));
+        }
+    }
+
+    return res;
+}
+
+UDQSet
+UDQASTNode::eval_region_expression(const std::string& string_value,
+                                   const UDQContext&  context) const
+{
+    const auto selected_region_sets = context.regions(string_value, this->selector);
+
+    if (selected_region_sets.empty()) {
+        // No matching region sets.  Could be because the 'selector' only
+        // applies to undefined region sets, or because the regions don't
+        // exist in the pertinent region set.
+        return UDQSet::empty(string_value);
+    }
+    else if (selected_region_sets.isScalar()) {
+        // Selector matches a single segment in a single MS well.
+        const auto regIxRange = selected_region_sets.regions(0);
+        const auto regSet = std::string { regIxRange.regionSet() };
+        return UDQSet::scalar(string_value, context.get_region_var(regSet, string_value,
+                                                                   *regIxRange.begin()));
+    }
+
+    // If we get here, the selector matches at least one region in at least
+    // one region set.
+    auto res = UDQSet::regions(string_value, UDQSet::enumerateItems(context.regions()));
+
+    const auto numRegSets = selected_region_sets.numRegionSets();
+    for (auto regSetIx = 0*numRegSets; regSetIx < numRegSets; ++regSetIx) {
+        const auto regIxRange = selected_region_sets.regions(regSetIx);
+        const auto regSet = std::string { regIxRange.regionSet() };
+        for (const auto& regIx : regIxRange) {
+            res.assign(regSet, regIx, context.get_region_var(regSet, string_value, regIx));
         }
     }
 

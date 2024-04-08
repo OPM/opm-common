@@ -106,6 +106,9 @@ private:
     UDQSet eval_segment_expression(const std::string& string_value,
                                    const UDQContext&  context) const;
 
+    UDQSet eval_region_expression(const std::string& string_value,
+                                  const UDQContext&  context) const;
+
     UDQSet eval_scalar_function(const UDQVarType  target_type,
                                 const UDQContext& context) const;
 
