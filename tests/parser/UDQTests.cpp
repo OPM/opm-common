@@ -1112,7 +1112,7 @@ BOOST_AUTO_TEST_CASE(UDQASSIGN_TEST) {
 BOOST_AUTO_TEST_CASE(UDQASSIGN_NUMBERED_ITEMS_TEST) {
     using Vsz = std::vector<std::size_t>;
 
-    const auto selector = UDQSet::EnumeratedWellItems {
+    const auto selector = UDQSet::EnumeratedItems {
         "PROD01", Vsz { 1, 3, 5, 7 }
     };
 
@@ -1121,10 +1121,10 @@ BOOST_AUTO_TEST_CASE(UDQASSIGN_NUMBERED_ITEMS_TEST) {
     };
 
     const auto segments = std::vector {
-        UDQSet::EnumeratedWellItems { "PROD01", Vsz { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, } },
-        UDQSet::EnumeratedWellItems { "PROD02", Vsz { 1, 2, 3, 4, 5, } },
-        UDQSet::EnumeratedWellItems { "PROD06", Vsz { 2, 4, 6, 8, 10, } },
-        UDQSet::EnumeratedWellItems { "I-45", Vsz { 1, 2, 3, } },
+        UDQSet::EnumeratedItems { "PROD01", Vsz { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, } },
+        UDQSet::EnumeratedItems { "PROD02", Vsz { 1, 2, 3, 4, 5, } },
+        UDQSet::EnumeratedItems { "PROD06", Vsz { 2, 4, 6, 8, 10, } },
+        UDQSet::EnumeratedItems { "I-45", Vsz { 1, 2, 3, } },
     };
 
     const auto us = as.eval(segments);

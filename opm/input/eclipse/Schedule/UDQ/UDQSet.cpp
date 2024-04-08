@@ -148,14 +148,14 @@ bool UDQScalar::operator==(const UDQScalar& other) const
 // UDQSet Implementation Below Separator
 // ------------------------------------------------------------------------
 
-bool UDQSet::EnumeratedWellItems::operator==(const EnumeratedWellItems& that) const
+bool UDQSet::EnumeratedItems::operator==(const EnumeratedItems& that) const
 {
-    return (this->well == that.well)
+    return (this->name == that.name)
         && (this->numbers == that.numbers);
 }
 
-UDQSet::EnumeratedWellItems
-UDQSet::EnumeratedWellItems::serializationTestObject()
+UDQSet::EnumeratedItems
+UDQSet::EnumeratedItems::serializationTestObject()
 {
     return { "PROD01", std::vector<std::size_t>{ 17, 29 } };
 }
@@ -187,15 +187,15 @@ UDQSet::UDQSet(const std::string&              name,
         this->values.emplace_back(wgname);
 }
 
-UDQSet::UDQSet(const std::string&                      name,
-               const UDQVarType                        var_type,
-               const std::vector<EnumeratedWellItems>& items)
+UDQSet::UDQSet(const std::string&                  name,
+               const UDQVarType                    var_type,
+               const std::vector<EnumeratedItems>& items)
     : m_name    (name)
     , m_var_type(var_type)
 {
     for (const auto& item : items) {
         for (const auto& number : item.numbers) {
-            this->values.emplace_back(item.well, number);
+            this->values.emplace_back(item.name, number);
         }
     }
 }
@@ -272,15 +272,15 @@ UDQSet UDQSet::groups(const std::string&              name,
     return us;
 }
 
-UDQSet UDQSet::segments(const std::string&                      name,
-                        const std::vector<EnumeratedWellItems>& segments)
+UDQSet UDQSet::segments(const std::string&                  name,
+                        const std::vector<EnumeratedItems>& segments)
 {
     return { name, UDQVarType::SEGMENT_VAR, segments };
 }
 
-UDQSet UDQSet::segments(const std::string&                      name,
-                        const std::vector<EnumeratedWellItems>& segments,
-                        const double                            scalar_value)
+UDQSet UDQSet::segments(const std::string&                  name,
+                        const std::vector<EnumeratedItems>& segments,
+                        const double                        scalar_value)
 {
     auto us = UDQSet::segments(name, segments);
     us.assign(scalar_value);
@@ -772,16 +772,16 @@ bool UDQSet::operator==(const UDQSet& other) const
         && (this->values == other.values);
 }
 
-std::vector<UDQSet::EnumeratedWellItems>
-UDQSet::getSegmentItems(const SegmentSet& segSet)
+std::vector<UDQSet::EnumeratedItems>
+UDQSet::enumerateItems(const SegmentSet& segSet)
 {
     const auto numWells = segSet.numWells();
 
-    auto items = std::vector<Opm::UDQSet::EnumeratedWellItems>(numWells);
+    auto items = std::vector<Opm::UDQSet::EnumeratedItems>(numWells);
     for (auto wellID = 0*numWells; wellID < numWells; ++wellID) {
         auto segRange = segSet.segments(wellID);
 
-        items[wellID].well = segRange.well();
+        items[wellID].name = segRange.well();
         items[wellID].numbers.assign(segRange.begin(), segRange.end());
     }
 

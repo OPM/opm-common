@@ -101,7 +101,7 @@ namespace {
                 // segments.
                 const auto segSet = context.segments();
 
-                return [items = Opm::UDQSet::getSegmentItems(segSet)](const auto& assign)
+                return [items = Opm::UDQSet::enumerateItems(segSet)](const auto& assign)
                 {
                     return assign.eval(items);
                 };
@@ -705,7 +705,7 @@ namespace Opm {
         }
 
         auto items = UDQSet::
-            getSegmentItems(segmentMatcher->findSegments(setDescriptor));
+            enumerateItems(segmentMatcher->findSegments(setDescriptor));
 
         auto [asgnPos, inserted] = this->m_assignments
             .emplace(std::piecewise_construct,

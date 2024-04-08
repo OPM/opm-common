@@ -35,6 +35,8 @@
 #include <variant>
 #include <vector>
 
+#include <fmt/format.h>
+
 namespace {
 
 bool is_udq_blacklist(const std::string& keyword)
@@ -78,8 +80,7 @@ UDQASTNode::UDQASTNode()
 {}
 
 UDQASTNode::UDQASTNode(const UDQTokenType type_arg)
-    : var_type(UDQVarType::NONE)
-    , type    (type_arg)
+    : type(type_arg)
 {
     if ((this->type == UDQTokenType::error) ||
         (this->type == UDQTokenType::binary_op_add) ||
@@ -152,7 +153,9 @@ UDQASTNode::UDQASTNode(const UDQTokenType                       type_arg,
         (this->var_type == UDQVarType::BLOCK_VAR))
     {
         throw std::invalid_argument {
-            "UDQ variable of type: " + UDQ::typeName(this->var_type) + " not yet supported in flow"
+            fmt::format("UDQ variable type {} is not "
+                        "currently supported for non-scalar uses",
+                        UDQ::typeName(this->var_type))
         };
     }
 }
@@ -216,12 +219,9 @@ std::set<UDQTokenType> UDQASTNode::func_tokens() const
 
 void UDQASTNode::update_type(const UDQASTNode& arg)
 {
-    if (this->var_type == UDQVarType::NONE) {
-        this->var_type = arg.var_type;
-    }
-    else {
-        this->var_type = UDQ::coerce(this->var_type, arg.var_type);
-    }
+    this->var_type = (this->var_type == UDQVarType::NONE)
+        ? arg.var_type
+        : UDQ::coerce(this->var_type, arg.var_type);
 }
 
 void UDQASTNode::set_left(const UDQASTNode& arg)
@@ -405,14 +405,16 @@ UDQSet
 UDQASTNode::eval_segment_expression(const std::string& string_value,
                                     const UDQContext&  context) const
 {
-    const auto all_msw_segments = UDQSet::getSegmentItems(context.segments());
+    const auto all_msw_segments = UDQSet::enumerateItems(context.segments());
     if (this->selector.empty()) {
         auto res = UDQSet::segments(string_value, all_msw_segments);
 
         auto index = std::size_t{0};
         for (const auto& ms_well : all_msw_segments) {
             for (const auto& segment : ms_well.numbers) {
-                res.assign(index++, context.get_segment_var(ms_well.well, string_value, segment));
+                res.assign(index++, context.get_segment_var(ms_well.name,
+                                                            string_value,
+                                                            segment));
             }
         }
 
@@ -503,7 +505,9 @@ UDQASTNode::eval_number(const UDQVarType  target_type,
         return UDQSet::groups(dummy_name, context.groups(), numeric_value);
 
     case UDQVarType::SEGMENT_VAR:
-        return UDQSet::segments(dummy_name, UDQSet::getSegmentItems(context.segments()), numeric_value);
+        return UDQSet::segments(dummy_name,
+                                UDQSet::enumerateItems(context.segments()),
+                                numeric_value);
 
     case UDQVarType::SCALAR:
         return UDQSet::scalar(dummy_name, numeric_value);
@@ -574,13 +578,18 @@ UDQASTNode::eval_table_lookup_segment(const std::string& string_value,
                                       const UDQContext& context) const
 {
     const UDT& udt = context.get_udt(string_value);
-    const auto all_msw_segments = UDQSet::getSegmentItems(context.segments());
+
+    const auto all_msw_segments = UDQSet::enumerateItems(context.segments());
     UDQSet result = UDQSet::segments("dummy", all_msw_segments);
+
     for (const auto& ms_well : all_msw_segments) {
         for (const auto& segment : ms_well.numbers) {
-            const auto xvar = context.get_segment_var(ms_well.well, this->selector[0], segment);
+            const auto xvar = context.get_segment_var(ms_well.name,
+                                                      this->selector.front(),
+                                                      segment);
+
             if (xvar.has_value()) {
-                result.assign(ms_well.well, segment, udt(*xvar));
+                result.assign(ms_well.name, segment, udt(*xvar));
             }
         }
     }
