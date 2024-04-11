@@ -263,7 +263,7 @@ void ECLRegressionTest::printDeviationReport()
 
 void ECLRegressionTest::compareKeywords(const std::vector<std::string> &keywords1, const std::vector<std::string> &keywords2, const std::string &reference) {
 
-    if (!acceptExtraKeywords) {
+    if (!(acceptExtraKeywords or acceptExtraKeywordsBoth)) {
         if (keywords1 != keywords2) {
             std::cout << "not same keywords in " << reference << std::endl;
 

@@ -74,7 +74,6 @@ public:
     //Accept extra keywords in both simulations and compare only the keywords available in both runs
     void setAcceptExtraKeywordsBoth(bool acceptExtraKeywordsArg) {
         this->acceptExtraKeywordsBoth = acceptExtraKeywordsArg;
-        this->acceptExtraKeywords = acceptExtraKeywordsArg;
     }
 
     void setIntegrationTest(bool inregrationTestArg) {
