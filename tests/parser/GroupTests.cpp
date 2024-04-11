@@ -220,26 +220,97 @@ GRUPTREE
 GCONPROD
   'G1' 'ORAT' 10000 3* 'RATE' 3* 'RATE' 'NONE' 'RATE'/
   'G2' 'RESV' 10000 3* 'CON' /
-  'G3' 'ORAT' 10000 3*  1* /
-/)";
+  'G3' 'ORAT' 10000 3*  1* / 
+/
+
+TSTEP
+  1 /
+
+GCONPROD
+  'G1' 'NONE' 4* 'NONE'/
+  'G2' 'NONE' 4* 'NONE'/
+  'G3' 'NONE' 4* 'NONE'/ 
+/
+
+TSTEP
+  1 /
+
+GCONPROD
+  'G1' 'NONE' 10000 3* 'RATE'/
+  'G2' 'NONE' 10000 3* 'WELL'/
+  'G3' 'NONE' 10000 3* 'NONE'/ 
+/
+
+)";
 
     auto schedule = create_schedule(input);
     SummaryState st(TimeService::now());
+    double metric_to_si = 1.0 / (24.0 * 3600.0);  //cubic meters / day
+    double oil_rate_si = 10000 * metric_to_si;
 
-    const auto& group1 = schedule.getGroup("G1", 0);
-    const auto& group2 = schedule.getGroup("G2", 0);
-    const auto& group3 = schedule.getGroup("G3", 0);
+    { // step 0
+      const auto& group1 = schedule.getGroup("G1", 0);
+      const auto& group2 = schedule.getGroup("G2", 0);
+      const auto& group3 = schedule.getGroup("G3", 0);
 
-    auto ctrl1 = group1.productionControls(st);
-    auto ctrl2 = group2.productionControls(st);
-    auto ctrl3 = group3.productionControls(st);
+      auto ctrl1 = group1.productionControls(st);
+      auto ctrl2 = group2.productionControls(st);
+      auto ctrl3 = group3.productionControls(st);
 
-    BOOST_CHECK(ctrl1.group_limit_action.allRates == Group::ExceedAction::RATE);
-    BOOST_CHECK(ctrl1.group_limit_action.water == Group::ExceedAction::RATE);
-    BOOST_CHECK(ctrl1.group_limit_action.gas == Group::ExceedAction::NONE);
-    BOOST_CHECK(ctrl1.group_limit_action.liquid == Group::ExceedAction::RATE);
-    BOOST_CHECK(ctrl2.group_limit_action.allRates == Group::ExceedAction::CON);
-    BOOST_CHECK(ctrl3.group_limit_action.allRates == Group::ExceedAction::NONE);
+      BOOST_CHECK(ctrl1.group_limit_action.allRates == Group::ExceedAction::RATE);
+      BOOST_CHECK(ctrl1.group_limit_action.water == Group::ExceedAction::RATE);
+      BOOST_CHECK(ctrl1.group_limit_action.gas == Group::ExceedAction::NONE);
+      BOOST_CHECK(ctrl1.group_limit_action.liquid == Group::ExceedAction::RATE);
+      BOOST_CHECK(ctrl2.group_limit_action.allRates == Group::ExceedAction::CON);
+      BOOST_CHECK(ctrl3.group_limit_action.allRates == Group::ExceedAction::NONE);
+      BOOST_CHECK(ctrl1.oil_target == oil_rate_si);
+      BOOST_CHECK(ctrl2.oil_target == oil_rate_si);
+      BOOST_CHECK(ctrl3.oil_target == oil_rate_si);
+      BOOST_CHECK(group1.has_control(Group::ProductionCMode::ORAT));
+      BOOST_CHECK(group2.has_control(Group::ProductionCMode::ORAT));
+      BOOST_CHECK(group3.has_control(Group::ProductionCMode::ORAT));
+    }
+
+    { // step 1
+      const auto& group1 = schedule.getGroup("G1", 1);
+      const auto& group2 = schedule.getGroup("G2", 1);
+      const auto& group3 = schedule.getGroup("G3", 1);
+
+      auto ctrl1 = group1.productionControls(st);
+      auto ctrl2 = group2.productionControls(st);
+      auto ctrl3 = group3.productionControls(st);
+
+      BOOST_CHECK(ctrl1.group_limit_action.allRates == Group::ExceedAction::NONE);
+      BOOST_CHECK(ctrl2.group_limit_action.allRates == Group::ExceedAction::NONE);
+      BOOST_CHECK(ctrl3.group_limit_action.allRates == Group::ExceedAction::NONE);
+      BOOST_CHECK(ctrl1.oil_target == 0);
+      BOOST_CHECK(ctrl2.oil_target == 0);
+      BOOST_CHECK(ctrl3.oil_target == 0);
+      BOOST_CHECK(!group1.has_control(Group::ProductionCMode::ORAT));
+      BOOST_CHECK(!group2.has_control(Group::ProductionCMode::ORAT));
+      BOOST_CHECK(!group3.has_control(Group::ProductionCMode::ORAT));
+    }
+
+    { // step 2
+      const auto& group1 = schedule.getGroup("G1", 2);
+      const auto& group2 = schedule.getGroup("G2", 2);
+      const auto& group3 = schedule.getGroup("G3", 2);
+
+      auto ctrl1 = group1.productionControls(st);
+      auto ctrl2 = group2.productionControls(st);
+      auto ctrl3 = group3.productionControls(st);
+
+      BOOST_CHECK(ctrl1.group_limit_action.allRates == Group::ExceedAction::RATE);
+      BOOST_CHECK(ctrl2.group_limit_action.allRates == Group::ExceedAction::WELL);
+      BOOST_CHECK(ctrl3.group_limit_action.allRates == Group::ExceedAction::NONE);
+
+      BOOST_CHECK(ctrl1.oil_target == oil_rate_si);
+      BOOST_CHECK(ctrl2.oil_target == oil_rate_si);
+      BOOST_CHECK(ctrl3.oil_target == oil_rate_si);
+      BOOST_CHECK(group1.has_control(Group::ProductionCMode::ORAT));
+      BOOST_CHECK(group2.has_control(Group::ProductionCMode::ORAT));
+      BOOST_CHECK(!group3.has_control(Group::ProductionCMode::ORAT));
+    }
 }
 
 BOOST_AUTO_TEST_CASE(TESTGuideRateModel) {
