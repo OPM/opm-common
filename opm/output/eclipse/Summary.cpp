@@ -2573,6 +2573,8 @@ static const auto single_values_units = UnitTable {
     {"FHPV"     , Opm::UnitSystem::measure::volume },
     {"FGCDI"    , Opm::UnitSystem::measure::moles },
     {"FGCDM"    , Opm::UnitSystem::measure::moles },
+    {"FGKDI"    , Opm::UnitSystem::measure::moles },
+    {"FGKDM"    , Opm::UnitSystem::measure::moles },
     {"FWCD"     , Opm::UnitSystem::measure::moles },
     {"FWIPG"    , Opm::UnitSystem::measure::liquid_surface_volume },
     {"FWIPL"    , Opm::UnitSystem::measure::liquid_surface_volume },
@@ -2581,6 +2583,8 @@ static const auto single_values_units = UnitTable {
     {"FGMDS"    , Opm::UnitSystem::measure::mass },
     {"FGMTR"    , Opm::UnitSystem::measure::mass },
     {"FGMMO"    , Opm::UnitSystem::measure::mass },
+    {"FGKTR"    , Opm::UnitSystem::measure::mass },
+    {"FGKMO"    , Opm::UnitSystem::measure::mass },
 };
 
 static const auto region_units = UnitTable {
@@ -2598,6 +2602,8 @@ static const auto region_units = UnitTable {
     {"RRPV"  , Opm::UnitSystem::measure::geometric_volume },
     {"RGCDI" , Opm::UnitSystem::measure::moles },
     {"RGCDM" , Opm::UnitSystem::measure::moles },
+    {"RGKDI" , Opm::UnitSystem::measure::moles },
+    {"RGKDM" , Opm::UnitSystem::measure::moles },
     {"RWCD"  , Opm::UnitSystem::measure::moles },
     {"RWIPG" , Opm::UnitSystem::measure::liquid_surface_volume },
     {"RWIPL" , Opm::UnitSystem::measure::liquid_surface_volume },
@@ -2606,6 +2612,8 @@ static const auto region_units = UnitTable {
     {"RGMDS" , Opm::UnitSystem::measure::mass },
     {"RGMTR" , Opm::UnitSystem::measure::mass },
     {"RGMMO" , Opm::UnitSystem::measure::mass },
+    {"RGKTR" , Opm::UnitSystem::measure::mass },
+    {"RGKMO" , Opm::UnitSystem::measure::mass },
 };
 
 static const auto interregion_units = UnitTable {

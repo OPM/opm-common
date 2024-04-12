@@ -152,6 +152,8 @@ struct SummaryConfigContext {
          {"WCD",      {"RWCD", "FWCD" }},
          {"GCDI",     {"RGCDI", "FGCDI"}},
          {"GCDM",     {"RGCDM", "FGCDM"}},
+         {"GKDI",     {"RGKDI", "FGKDI"}},
+         {"GKDM",     {"RGKDM", "FGKDM"}},
          {"SWAT",     {"BSWAT"}},
          {"SGAS",     {"BSGAS"}},
          {"SALT",     {"FSIP"}},
@@ -161,6 +163,8 @@ struct SummaryConfigContext {
          {"GMDS",     {"RGMDS", "FGMDS"}},
          {"GMTR",     {"RGMTR", "FGMTR"}},
          {"GMMO",     {"RGMMO", "FGMMO"}},
+         {"GKTR",     {"RGKTR", "FGKTR"}},
+         {"GKMO",     {"RGKMO", "FGKMO"}},
     };
 
     using keyword_set = std::unordered_set<std::string>;

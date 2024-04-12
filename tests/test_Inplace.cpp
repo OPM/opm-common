@@ -127,6 +127,12 @@ BOOST_AUTO_TEST_CASE(InPlace_Phases)
     BOOST_CHECK_MESSAGE(contains(phases, Inplace::Phase::CO2InGasPhaseMob),
                         R"(phases() must have "CO2InGasPhaseMob")");
 
+    BOOST_CHECK_MESSAGE(contains(phases, Inplace::Phase::CO2InGasPhaseInMobKrg),
+                        R"(phases() must have "CO2InGasPhaseInMobKrg")");
+
+    BOOST_CHECK_MESSAGE(contains(phases, Inplace::Phase::CO2InGasPhaseMobKrg),
+                        R"(phases() must have "CO2InGasPhaseMobKrg")");
+
     BOOST_CHECK_MESSAGE(contains(phases, Inplace::Phase::WaterInGasPhase),
                         R"(phases() must have "WaterInGasPhase")");
 
@@ -147,6 +153,12 @@ BOOST_AUTO_TEST_CASE(InPlace_Phases)
 
     BOOST_CHECK_MESSAGE(contains(phases, Inplace::Phase::CO2MassInGasPhaseMob),
                         R"(phases() must have "CO2MassInGasPhaseMob")");
+
+    BOOST_CHECK_MESSAGE(contains(phases, Inplace::Phase::CO2MassInGasPhaseInMobKrg),
+                        R"(phases() must have "CO2MassInGasPhaseInMobKrg")");
+
+    BOOST_CHECK_MESSAGE(contains(phases, Inplace::Phase::CO2MassInGasPhaseMobKrg),
+                        R"(phases() must have "CO2MassInGasPhaseMobKrg")");
 }
 
 BOOST_AUTO_TEST_CASE(InPlace_Mixing_Phases)
@@ -210,6 +222,12 @@ BOOST_AUTO_TEST_CASE(InPlace_Mixing_Phases)
     BOOST_CHECK_MESSAGE(contains(phases, Inplace::Phase::CO2InGasPhaseMob),
                         R"(mixingPhases() must have "CO2InGasPhaseMob")");
 
+    BOOST_CHECK_MESSAGE(contains(phases, Inplace::Phase::CO2InGasPhaseInMobKrg),
+                        R"(mixingPhases() must have "CO2InGasPhaseInMobKrg")");
+
+    BOOST_CHECK_MESSAGE(contains(phases, Inplace::Phase::CO2InGasPhaseMobKrg),
+                        R"(mixingPhases() must have "CO2InGasPhaseMobKrg")");
+
     BOOST_CHECK_MESSAGE(contains(phases, Inplace::Phase::WaterInGasPhase),
                         R"(mixingPhases() must have "WaterInGasPhase")");
 
@@ -230,4 +248,10 @@ BOOST_AUTO_TEST_CASE(InPlace_Mixing_Phases)
 
     BOOST_CHECK_MESSAGE(contains(phases, Inplace::Phase::CO2MassInGasPhaseMob),
                         R"(mixingPhases() must have "CO2MassInGasPhaseMob")");
+
+    BOOST_CHECK_MESSAGE(contains(phases, Inplace::Phase::CO2MassInGasPhaseInMobKrg),
+                        R"(mixingPhases() must have "CO2MassInGasPhaseInMobKrg")");
+
+    BOOST_CHECK_MESSAGE(contains(phases, Inplace::Phase::CO2MassInGasPhaseMobKrg),
+                        R"(mixingPhases() must have "CO2MassInGasPhaseMobKrg")");
 }

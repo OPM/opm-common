@@ -5,6 +5,10 @@
   ],
   "comment": "Field-level summary vectors supported only by OPM Flow",
   "deck_names": [
+    "FGKDI",
+    "FGKDM",
+    "FGKMO",
+    "FGKTR",
     "FGMDS",
     "FGMGP",
     "FGMIP",
