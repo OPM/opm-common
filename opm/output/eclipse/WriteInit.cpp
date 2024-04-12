@@ -656,18 +656,34 @@ void Opm::InitIO::write(const ::Opm::EclipseState&              es,
     // active/inactive cell mapping can be inferred by reading the PORV
     // vector from the result set.
     writePoreVolume(es, units, initFile);
+
     writeGridGeometry(grid, units, initFile);
+
     writeDoubleCellProperties(es, units, initFile);
     writeSimulatorProperties(grid, simProps, initFile);
-    writeSimulatorProperties(grid, es.getMultSimProps(), initFile);
+
+    // Size defaulted MULT* arrays according to the number of active cells
+    // in the processed simulation grid--i.e., grid.getNumActive().
+    {
+        const auto writeAll = es.cfg().io().writeAllTransMultipliers();
+
+        const auto tranMult = es.getTransMult()
+            .convertToSimProps(grid.getNumActive(), writeAll);
+
+        writeSimulatorProperties(grid, tranMult, initFile);
+    }
+
     writeTableData(es, units, initFile);
+
     writeIntegerCellProperties(es, initFile);
     writeIntegerMaps(std::move(int_data), initFile);
+
     writeSatFuncScaling(es, units, initFile);
 
     if (!nnc.empty()) {
         writeNonNeighbourConnections(nnc, units, initFile);
     }
+
     if (es.aquifer().active()) {
         writeAquifers(es.aquifer(), grid, initFile);
     }
