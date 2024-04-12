@@ -659,6 +659,7 @@ void Opm::InitIO::write(const ::Opm::EclipseState&              es,
     writeGridGeometry(grid, units, initFile);
     writeDoubleCellProperties(es, units, initFile);
     writeSimulatorProperties(grid, simProps, initFile);
+    writeSimulatorProperties(grid, es.getMultSimProps(), initFile);
     writeTableData(es, units, initFile);
     writeIntegerCellProperties(es, initFile);
     writeIntegerMaps(std::move(int_data), initFile);

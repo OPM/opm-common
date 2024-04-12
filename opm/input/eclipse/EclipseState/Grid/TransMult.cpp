@@ -36,6 +36,9 @@
 #include <opm/input/eclipse/EclipseState/Grid/GridDims.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/MULTREGTScanner.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/M.hpp>
+#include <opm/input/eclipse/Units/UnitSystem.hpp>
+#include <opm/output/data/Cells.hpp>
+#include <opm/output/data/Solution.hpp>
 
 
 namespace Opm {
@@ -162,6 +165,25 @@ namespace Opm {
 
     void TransMult::applyNumericalAquifer(const std::vector<std::size_t>& aquifer_cells) {
         m_multregtScanner.applyNumericalAquifer(aquifer_cells);
+    }
+
+    data::Solution TransMult::convertToSimProps(std::size_t grid_size,
+                                                bool include_all_multminus) const {
+        data::Solution solution{false}; // not in si to prevent conversions
+        const auto size = m_trans.empty()? grid_size : m_trans.begin()->second.size();
+        for(const auto& [face_dir, name]: m_names) {
+            const auto pair = m_trans.find(face_dir);
+
+            if (pair != m_trans.end())
+            {
+                solution.insert(name, UnitSystem::measure::identity, pair->second, data::TargetType::INIT);
+            } else {
+                // defaulted MULT?- are only written if requested
+                if(include_all_multminus or name.size() < 6)
+                    solution.insert(name, UnitSystem::measure::identity, std::vector<double>(size, 1.), data::TargetType::INIT);
+            }
+        }
+        return solution;
     }
 
     bool TransMult::operator==(const TransMult& data) const {

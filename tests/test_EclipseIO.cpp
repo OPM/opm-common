@@ -192,6 +192,10 @@ void checkInitFile(const Deck& deck, const data::Solution& simProps)
     BOOST_CHECK_MESSAGE( initFile.hasKey("NTG"), R"(INIT file must have "NTG" array)" );
     BOOST_CHECK_MESSAGE( initFile.hasKey("FIPNUM"), R"(INIT file must have "FIPNUM" array)");
     BOOST_CHECK_MESSAGE( initFile.hasKey("SATNUM"), R"(INIT file must have "SATNUM" array)");
+    std::array<std::string, 3> multipliers{"MULTX", "MULTY", "MULTZ"};
+    for (const auto& mult: multipliers) {
+       BOOST_CHECK_MESSAGE( initFile.hasKey(mult), R"(INIT file must have ")" + mult + R"(" array)" );
+    }
 
     for (const auto& prop : simProps) {
         BOOST_CHECK_MESSAGE( initFile.hasKey(prop.first), R"(INIT file must have ")" + prop.first + R"(" array)" );
@@ -430,4 +434,308 @@ WELSPECS
     // Verify that restarting a simulation, then writing fewer steps truncates
     // the file
     BOOST_CHECK_EQUAL(file_size, write_and_check(3, 5));
+}
+
+std::pair<std::string,std::array<std::array<std::vector<float>,2>,3>>
+createMULTXYZDECK(std::array<std::bitset<2>,3> doxyz, bool write_all_multminus)
+{
+     auto deckString = std::string { R"(RUNSPEC
+DIMENS
+ 3 2 3  /
+)"};
+     if (write_all_multminus)
+         deckString += std::string { R"(GRIDOPTS
+YES /
+)"};
+     deckString += std::string { R"(
+OIL
+WATER
+GAS
+DISGAS
+VAPOIL
+
+METRIC
+
+START
+ 01  'NOV' 2018 /
+
+FAULTDIM
+ 10 /         -- max. number os fault segments
+
+
+UNIFIN
+UNIFOUT
+
+GRID
+NEWTRAN
+
+GRIDFILE
+0  1 /
+
+INIT
+
+SPECGRID
+ 3 2 3 1 F /
+
+COORD
+  2000.0000  2000.0000  2000.0000   2000.0000  2000.0000  2009.0000
+  2100.0000  2000.0000  2000.0000   2100.0000  2000.0000  2009.0000
+  2200.0000  2000.0000  2000.0000   2200.0000  2000.0000  2009.0000
+  2300.0000  2000.0000  2000.0000   2300.0000  2000.0000  2009.0000
+  2000.0000  2100.0000  2000.0000   2000.0000  2100.0000  2009.0000
+  2100.0000  2100.0000  2000.0000   2100.0000  2100.0000  2009.0000
+  2200.0000  2100.0000  2000.0000   2200.0000  2100.0000  2009.0000
+  2300.0000  2100.0000  2000.0000   2300.0000  2100.0000  2009.0000
+  2000.0000  2200.0000  2000.0000   2000.0000  2200.0000  2009.0000
+  2100.0000  2200.0000  2000.0000   2100.0000  2200.0000  2009.0000
+  2200.0000  2200.0000  2000.0000   2200.0000  2200.0000  2009.0000
+  2300.0000  2200.0000  2000.0000   2300.0000  2200.0000  2009.0000
+/
+
+ZCORN
+  2000.0000  2000.0000  2000.0000  2000.0000  2000.0000  2000.0000
+  2000.0000  2000.0000  2000.0000  2000.0000  2000.0000  2000.0000
+  2000.0000  2000.0000  2000.0000  2000.0000  2000.0000  2000.0000
+  2000.0000  2000.0000  2000.0000  2000.0000  2000.0000  2000.0000
+  2002.5000  2002.5000  2002.5000  2002.5000  2002.5000  2002.5000
+  2002.5000  2002.5000  2002.5000  2002.5000  2002.5000  2002.5000
+  2002.5000  2002.5000  2002.5000  2002.5000  2002.5000  2002.5000
+  2002.5000  2002.5000  2002.5000  2002.5000  2002.5000  2002.5000
+  2002.5000  2002.5000  2002.5000  2002.5000  2002.5000  2002.5000
+  2002.5000  2002.5000  2002.5000  2002.5000  2002.5000  2002.5000
+  2002.5000  2002.5000  2002.5000  2002.5000  2002.5000  2002.5000
+  2002.5000  2002.5000  2002.5000  2002.5000  2002.5000  2002.5000
+  2005.5000  2005.5000  2005.5000  2005.5000  2005.5000  2005.5000
+  2005.5000  2005.5000  2005.5000  2005.5000  2005.5000  2005.5000
+  2005.5000  2005.5000  2005.5000  2005.5000  2005.5000  2005.5000
+  2005.5000  2005.5000  2005.5000  2005.5000  2005.5000  2005.5000
+  2005.5000  2005.5000  2005.5000  2005.5000  2005.5000  2005.5000
+  2005.5000  2005.5000  2005.5000  2005.5000  2005.5000  2005.5000
+  2005.5000  2005.5000  2005.5000  2005.5000  2005.5000  2005.5000
+  2005.5000  2005.5000  2005.5000  2005.5000  2005.5000  2005.5000
+  2009.0000  2009.0000  2009.0000  2009.0000  2009.0000  2009.0000
+  2009.0000  2009.0000  2009.0000  2009.0000  2009.0000  2009.0000
+  2009.0000  2009.0000  2009.0000  2009.0000  2009.0000  2009.0000
+  2009.0000  2009.0000  2009.0000  2009.0000  2009.0000  2009.0000
+/
+
+NTG
+ 18*0.9 /
+
+PORO
+ 18*0.25 /
+
+PERMX
+ 18*100.0 /
+
+PERMZ
+ 18*10.0 /
+
+COPY
+ PERMX PERMY /
+/
+)"};
+
+     std::array<std::array<std::vector<float>, 2>, 3> exspected_multipliers;
+
+     for(auto&& pair: exspected_multipliers)
+         for(auto&& entry: pair)
+             entry.resize(18, 1.);
+
+     if (doxyz[0].test(0)) {
+         deckString += std::string{ R"(MULTX
+ 18*0.5 /
+)"};
+         exspected_multipliers[0][0].assign(18, .5);
+     }
+     if (doxyz[0].test(1)) {
+         deckString += std::string{ R"(MULTX-
+ 18*2.0 /
+)"};
+         exspected_multipliers[0][1].assign(18, 2.);
+     }
+     if (doxyz[1].test(0)) {
+         deckString += std::string{ R"(MULTY
+ 18*0.1435 /
+)"};
+         exspected_multipliers[1][0].assign(18, .1435);
+     }
+     if (doxyz[1].test(0)) {
+         deckString += std::string{ R"(MULTY-
+ 18*2.1435 /
+)"};
+         exspected_multipliers[1][1].assign(18, 2.1435);
+     }
+     if (doxyz[2].test(0)) {
+         deckString += std::string{ R"(MULTZ
+ 18*0.34325 /
+)"};
+         exspected_multipliers[2][0].assign(18, 0.34325);
+     }
+
+     if (doxyz[2].test(1)) {
+         deckString += std::string{ R"(MULTZ-
+ 18*0.554325 /
+)"};
+         exspected_multipliers[2][1].assign(18, 0.554325);
+     }
+     if(doxyz[0].any() || doxyz[1].any() || doxyz[2].any())
+     {
+         deckString += std::string{ R"(EQUALS
+)"};
+         if (doxyz[0].test(0)) {
+             deckString += std::string{ R"('MULTX' 0.87794567  1 1 1 1 1 1 /
+)"};
+             exspected_multipliers[0][0][0] = 0.87794567;
+         }
+         if (doxyz[0].test(1)) {
+             deckString += std::string{ R"('MULTX-' 0.7447794567  2 2 1 1 1 1 /
+)"};
+             exspected_multipliers[0][1][1] = 0.7447794567;
+         }
+         if (doxyz[1].test(0)) {
+             deckString += std::string{ R"('MULTY' 0.94567  3 3 1 1 1 1 /
+)"};
+             exspected_multipliers[1][0][2] = 0.94567;
+         }
+         if (doxyz[1].test(0)) {
+             deckString += std::string{ R"('MULTY-' 0.6647794567  1 1  2 2 1 1 /
+)"};
+             exspected_multipliers[1][1][3] = 0.6647794567;
+         }
+         if (doxyz[2].test(0)) {
+             deckString += std::string{ R"('MULTZ' 0.094567  2 2 2 2 1 1 /
+)"};
+             exspected_multipliers[2][0][4] = 0.094567;
+         }
+         if (doxyz[2].test(1)) {
+             deckString += std::string{ R"('MULTZ-' 0.089567  3 3 2 2 1 1 /
+)"};
+             exspected_multipliers[2][1][5] = 0.089567;
+         }
+
+         deckString += std::string{ R"(/
+)"};
+     }
+     std::vector<double> edit_mult_x(18, 1);
+     std::vector<double> edit_mult_z(18, 1);
+     if (doxyz[0].test(0) || doxyz[2].test(1))
+     {
+         // add an EDIT section
+         deckString += std::string{ R"(
+EDIT
+)"};
+
+         if (doxyz[0].test(0))
+         {
+             deckString += std::string{ R"(
+MULTX
+ 18*100 /
+MULTX
+ 18*0.1 /
+)"};
+             edit_mult_x.assign(18, .1);
+         }
+
+         if (doxyz[2].test(1))
+         {
+             deckString += std::string{ R"(
+MULTZ-
+ 18*30 /
+MULTZ-
+ 18*0.3 /
+)"};
+             edit_mult_z.assign(18, .3);
+         }
+         deckString += std::string{ R"(
+EQUALS
+)"};
+         if (doxyz[0].test(0))
+         {
+             deckString += std::string{ R"(
+ 'MULTX' 1.5 3 3 2 2 1 1 / -- Should not overwrite the value of GRID section but of EDIT section
+)"};
+             edit_mult_x[5] = 1.5;
+         }
+
+         if (doxyz[2].test(1))
+         {
+             deckString += std::string{ R"(
+ 'MULTZ-' 3.0 1 1  2 2 1 1 /
+)"};
+             edit_mult_z[3] = 3.0;
+         }
+
+             deckString += std::string{ R"(/
+)"};
+         auto mult = edit_mult_x.begin();
+         if (doxyz[0].test(0)) {
+             for (auto&& val: exspected_multipliers[0][0]) {
+                 val *= *(mult++);
+             }
+         }
+         mult = edit_mult_z.begin();
+         if (doxyz[2].test(1)) {
+             for (auto&& val: exspected_multipliers[2][1]) {
+                 val *= *(mult++);
+             }
+         }
+     }
+
+     return {deckString, exspected_multipliers};
+}
+
+/// \brief Test the MULTXYZ writing
+///
+/// \param doxyz Inidicates for each direction which multipliers should be test
+///              no bit set means none, 1st bit set positive, 2nd bit set negative
+/// \param write_all_mult_minus If true we will request that even defaulted MULT?- arrays will be
+///                  written via first record of GRIDOPTS
+void testMultxyz(std::array<std::bitset<2>,3> doxyz, bool write_all_multminus = false)
+{
+    const auto [deckString, exspectedMult] = createMULTXYZDECK(doxyz, write_all_multminus);
+    const auto deck = Parser().parseString(deckString);
+    auto es = EclipseState( deck );
+    const auto& eclGrid = es.getInputGrid();
+    const Schedule schedule(deck, es, std::make_shared<Python>());
+    const SummaryConfig summary_config( deck, schedule, es.fieldProps(), es.aquifer());
+    const SummaryState st(TimeService::now());
+    es.getIOConfig().setBaseName( "MULTXFOO" );
+    EclipseIO eclWriter( es, eclGrid , schedule, summary_config);
+    eclWriter.writeInitial( );
+
+    EclIO::EclFile initFile { "MULTXFOO.INIT" };
+
+    std::array<std::string, 6> multipliers{"MULTX", "MULTX-", "MULTY", "MULTY-", "MULTZ", "MULTZ-"};
+    int i=0;
+    for (const auto& mult: multipliers) {
+        if (i%2==0 || write_all_multminus || doxyz[i/2].test(1)) {
+            BOOST_CHECK_MESSAGE( initFile.hasKey(mult), R"(INIT file must have ")" + mult + R"(" array)" );
+            const auto& multValues   = initFile.get<float>(mult);
+            auto exspect = exspectedMult[i/2][i%2].begin();
+            BOOST_CHECK(multValues.size() == exspectedMult[i/2][i%2].size());
+            for (auto multVal = multValues.begin(); multVal != multValues.end(); ++multVal, ++exspect) {
+                BOOST_CHECK_CLOSE(*multVal, *exspect, 1e-8);
+            }
+        }
+        ++i;
+    }
+}
+
+
+BOOST_AUTO_TEST_CASE(MULTXYZInit)
+{
+    testMultxyz({ '0', '0' , '0'});
+    testMultxyz({ '0', '0' , '1'}, true);
+    testMultxyz({ '0', '0' , '2'});
+    testMultxyz({ '0', '0' , '3'});
+    testMultxyz({ '1', '0' , '0'});
+    testMultxyz({ '1', '0' , '1'});
+    testMultxyz({ '1', '0' , '3'});
+    testMultxyz({ '2', '0' , '0'}, true);
+    testMultxyz({ '1', '1' , '0'});
+    testMultxyz({ '3', '3' , '0'});
+    testMultxyz({ '3', '3' , '1'});
+    testMultxyz({ '3', '3' , '2'}, true);
+    testMultxyz({ '3', '3' , '3'});
 }
