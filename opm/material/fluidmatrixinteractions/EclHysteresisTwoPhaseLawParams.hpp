@@ -409,6 +409,10 @@ public:
 
     Scalar SnTrapped() const
     {
+
+        if(isDrain_)
+            return 0.0;
+
         // For Killough the trapped saturation is already computed
         if( config().krHysteresisModel() > 1 )
             return Sncrt_;
@@ -599,9 +603,15 @@ public:
             updateParams = true;
         }
 
-
-        if (gasOilHysteresisWAG()) {
-
+        // for non WAG hysteresis we still keep track of the process
+        // for output purpose.
+        if (!gasOilHysteresisWAG()) {
+            if (krnSw < krnSwMdc_) {
+                isDrain_ = true;
+            } else {
+                isDrain_ = false;
+            }
+        } else {
             wasDrain_ = isDrain_;
 
             if (swatImbStartNxt_ < 0.0) { // Initial check ...
@@ -705,8 +715,9 @@ private:
 
         if (config().krHysteresisModel() == 2 || config().krHysteresisModel() == 3 || config().krHysteresisModel() == 4 || config().pcHysteresisModel() == 0) {
             Scalar Snhy = 1.0 - krnSwMdc_;
-            if (Snhy > Sncrd_)
+            if (Snhy > Sncrd_) {
                 Sncrt_ = Sncrd_ + (Snhy - Sncrd_)/((1.0+config().modParamTrapped()*(Snmaxd_-Snhy)) + C_*(Snhy - Sncrd_));
+            }
             else
             {
                 Sncrt_ = Sncrd_;
