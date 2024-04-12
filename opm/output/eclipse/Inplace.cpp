@@ -222,6 +222,8 @@ const std::vector<Inplace::Phase>& Inplace::mixingPhases()
         Inplace::Phase::CO2InWaterPhase,
         Inplace::Phase::CO2InGasPhaseInMob,
         Inplace::Phase::CO2InGasPhaseMob,
+        Inplace::Phase::CO2InGasPhaseInMobKrg,
+        Inplace::Phase::CO2InGasPhaseMobKrg,
         Inplace::Phase::WaterInGasPhase,
         Inplace::Phase::WaterInWaterPhase,
         Inplace::Phase::CO2Mass,
@@ -229,6 +231,8 @@ const std::vector<Inplace::Phase>& Inplace::mixingPhases()
         Inplace::Phase::CO2MassInGasPhase,
         Inplace::Phase::CO2MassInGasPhaseInMob,
         Inplace::Phase::CO2MassInGasPhaseMob,
+        Inplace::Phase::CO2MassInGasPhaseInMobKrg,
+        Inplace::Phase::CO2MassInGasPhaseMobKrg,
     };
 
     return mixingPhases_;
