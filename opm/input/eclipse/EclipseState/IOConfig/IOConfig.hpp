@@ -149,8 +149,8 @@ namespace Opm {
     public:
 
         IOConfig() = default;
-        explicit IOConfig( const Deck& );
-        explicit IOConfig( const std::string& input_path );
+        explicit IOConfig(const Deck&);
+        explicit IOConfig(const std::string& input_path);
 
         static IOConfig serializationTestObject();
 
@@ -172,7 +172,7 @@ namespace Opm {
         bool getOutputEnabled() const;
         void setOutputEnabled(bool enabled);
 
-        std::string getOutputDir() const;
+        const std::string& getOutputDir() const;
         void setOutputDir(const std::string& outputDir);
 
         const std::string& getBaseName() const;
@@ -180,7 +180,7 @@ namespace Opm {
 
         /// Return a string consisting of outputpath and basename;
         /// i.e. /path/to/sim/CASE
-        std::string fullBasePath( ) const;
+        std::string fullBasePath() const;
 
         std::string getInputDir() const;
 
@@ -189,43 +189,47 @@ namespace Opm {
         bool operator==(const IOConfig& data) const;
         static bool rst_cmp(const IOConfig& full_config, const IOConfig& rst_config);
 
-
         template<class Serializer>
         void serializeOp(Serializer& serializer)
         {
+            serializer(m_deck_filename);
+            serializer(m_output_dir);
+
             serializer(m_write_INIT_file);
             serializer(m_write_EGRID_file);
-            serializer(m_UNIFIN);
-            serializer(m_UNIFOUT);
             serializer(m_FMTIN);
             serializer(m_FMTOUT);
-            serializer(m_deck_filename);
-            serializer(m_output_enabled);
-            serializer(m_output_dir);
             serializer(m_nosim);
             serializer(m_base_name);
+            serializer(m_UNIFIN);
+            serializer(m_UNIFOUT);
+
+            serializer(m_output_enabled);
             serializer(ecl_compatible_rst);
         }
 
     private:
-        bool            m_write_INIT_file = false;
-        bool            m_write_EGRID_file = true;
-        bool            m_UNIFIN = false;
-        bool            m_UNIFOUT = false;
-        bool            m_FMTIN = false;
-        bool            m_FMTOUT = false;
-        std::string     m_deck_filename;
-        bool            m_output_enabled = true;
-        std::string     m_output_dir;
-        bool            m_nosim;
-        std::string     m_base_name;
-        bool            ecl_compatible_rst = true;
+        std::string m_deck_filename{};
+        std::string m_output_dir{};
 
-        IOConfig( const GRIDSection&,
-                  const RUNSPECSection&,
-                  bool nosim,
-                  const std::string& input_path );
+        bool m_write_INIT_file { false };
+        bool m_write_EGRID_file { true };
+        bool m_FMTIN { false };
+        bool m_FMTOUT { false };
+        bool m_nosim { false };
 
+        std::string m_base_name{};
+
+        bool m_UNIFIN { false };
+        bool m_UNIFOUT { false };
+
+        bool m_output_enabled { true };
+        bool ecl_compatible_rst { true };
+
+        IOConfig(const GRIDSection&,
+                 const RUNSPECSection&,
+                 bool nosim,
+                 const std::string& input_path);
     };
 
 } //namespace Opm
