@@ -46,6 +46,20 @@ namespace {
 
     const char* default_dir = ".";
 
+    bool write_all_trans_multipliers(const Opm::RUNSPECSection& runspec)
+    {
+        using Kw = Opm::ParserKeywords::GRIDOPTS;
+
+        if (! runspec.hasKeyword<Kw>()) {
+            return false;
+        }
+
+        return runspec.get<Kw>().back()
+            .getRecord(0)
+            .getItem<Kw::TRANMULT>()
+            .getTrimmedString(0) == "YES";
+    }
+
     bool write_egrid_file(const Opm::GRIDSection& grid)
     {
         if (grid.hasKeyword<Opm::ParserKeywords::NOGGF>()) {
@@ -150,6 +164,7 @@ namespace Opm {
         result.m_FMTOUT = true;
 
         result.m_nosim = true;
+        result.m_write_all_multminus = true;
 
         result.m_base_name = "test3";
 
@@ -173,6 +188,7 @@ namespace Opm {
         , m_FMTIN              (runspec.hasKeyword<ParserKeywords::FMTIN>())
         , m_FMTOUT             (runspec.hasKeyword<ParserKeywords::FMTOUT>())
         , m_nosim              (nosim)
+        , m_write_all_multminus(write_all_trans_multipliers(runspec))
     {
         this->setBaseName(basename(input_path));
 

@@ -162,6 +162,12 @@ namespace Opm {
         bool getUNIFIN() const;
         bool getFMTIN() const;
         bool getFMTOUT() const;
+
+        bool writeAllTransMultipliers() const
+        {
+            return this->m_write_all_multminus;
+        }
+
         const std::string& getEclipseInputPath() const;
 
         void overrideNOSIM(bool nosim);
@@ -200,6 +206,8 @@ namespace Opm {
             serializer(m_FMTIN);
             serializer(m_FMTOUT);
             serializer(m_nosim);
+            serializer(m_write_all_multminus);
+
             serializer(m_base_name);
             serializer(m_UNIFIN);
             serializer(m_UNIFOUT);
@@ -217,6 +225,14 @@ namespace Opm {
         bool m_FMTIN { false };
         bool m_FMTOUT { false };
         bool m_nosim { false };
+
+        /// \brief Whether to write out all MULT?- unconditionally
+        ///
+        /// Reflects first entry of GRIDOPTS
+        ///
+        /// If false we will only write non-defaulted MULT?- arrays to the
+        /// INIT file. Otherwise all.
+        bool m_write_all_multminus {false};
 
         std::string m_base_name{};
 
