@@ -122,15 +122,19 @@ int main(int argc, char **argv)
 
     if (argc < 5 || help) {
         std::cout << "USAGE:" << std::endl;
-        std::cout << "co2brinepvt <prop> <phase> <p> <T> <salinity> <rs> <saltmodel>"<< std::endl;
+        std::cout << "co2brinepvt <prop> <phase> <p> <T> <salinity> <rs> <rv> <saltmodel> <thermalmixingmodelgas> <thermalmixingmodelliquid> <thermalmixingmodelsalt>"<< std::endl;
         std::cout << "prop = {density, invB, B, viscosity, rsSat, internalEnergy, enthalpy, diffusionCoefficient}" << std::endl;
         std::cout << "phase = {CO2, brine}" << std::endl;
         std::cout << "p: pressure in bar" << std::endl;
         std::cout << "T: temperature in celcius" << std::endl;
         std::cout << "salinity(optional): salt molality in mol/kg" << std::endl;
         std::cout << "rs(optional): amount of dissolved CO2 in Brine in SM3/SM3" << std::endl;
+        std::cout << "rv(optional): amount of vapporized water in Gas in SM3/SM3" << std::endl;
         std::cout << "saltmodel(optional): 0 = no salt activity; 1 = Rumpf et al (1996) [default];"
                      " 2 = Duan-Sun in Spycher & Pruess (2009); 3 = Duan-Sun in Sycher & Pruess (2005)" << std::endl;
+        std::cout << "thermalmixingmodelgas(optional): 0 = pure component [default]; 1 = ideal mixing;" << std::endl;
+        std::cout << "thermalmixingmodelliquid(optional): 0 = pure component; 1 = ideal mixing; 2 = heat of dissolution according to duan sun [default]"  << std::endl;
+        std::cout << "thermalmixingmodelsalt(optional): 0 = pure water; 1 = model in MICHAELIDES [default];" << std::endl;
         std::cout << "OPTIONS:" << std::endl;
         std::cout << "--h/--help Print help and exit." << std::endl;
         std::cout << "DESCRIPTION:" << std::endl;
@@ -148,23 +152,35 @@ int main(int argc, char **argv)
     double T = atof(argv[4]) + 273.15;
     double molality = 0.0;
     double rs = 0.0;
-    double rv = 0.0; // only support 0.0 for now
+    double rv = 0.0;
     int activityModel = 1;
+    int thermalmixgas = 0;
+    int thermalmixliquid = 2;
+    int thermalmixsalt = 1;
     if (argc > 5)
         molality = atof(argv[5]);
     if (argc > 6)
         rs = atof(argv[6]);
     if (argc > 7)
-        activityModel = atoi(argv[7]);
+        rv = atof(argv[7]);
+
+    if (argc > 8)
+        activityModel = atoi(argv[8]);
+    if (argc > 9)
+        thermalmixgas = atoi(argv[9]);
+    if (argc > 10)
+        thermalmixliquid = atoi(argv[10]);
+    if (argc > 11)
+        thermalmixsalt = atoi(argv[11]);    
 
     const double MmNaCl = 58.44e-3; // molar mass of NaCl [kg/mol]
     // convert to mass fraction
     std::vector<double> salinity = {0.0};
     if (molality > 0.0)
         salinity[0] = 1 / ( 1 + 1 / (molality*MmNaCl));
-    Opm::BrineCo2Pvt<double> brineCo2Pvt(salinity, activityModel);
+    Opm::BrineCo2Pvt<double> brineCo2Pvt(salinity, activityModel, thermalmixsalt, thermalmixliquid);
 
-    Opm::Co2GasPvt<double> co2Pvt(salinity, activityModel);
+    Opm::Co2GasPvt<double> co2Pvt(salinity, activityModel, thermalmixgas);
 
     double value;
     if (prop == "density") {

@@ -100,6 +100,7 @@ if(ENABLE_ECL_INPUT)
     opm/input/eclipse/Deck/ImportContainer.cpp
     opm/input/eclipse/Deck/UDAValue.cpp
     opm/input/eclipse/EclipseState/checkDeck.cpp
+    opm/input/eclipse/EclipseState/Co2StoreConfig.cpp
     opm/input/eclipse/EclipseState/EclipseConfig.cpp
     opm/input/eclipse/EclipseState/EclipseState.cpp
     opm/input/eclipse/EclipseState/EndpointScaling.cpp
@@ -1247,6 +1248,7 @@ if(ENABLE_ECL_INPUT)
        opm/input/eclipse/EclipseState/Tables/Sof3Table.hpp
        opm/input/eclipse/EclipseState/Tables/SgofTable.hpp
        opm/input/eclipse/EclipseState/Tables/TracerVdTable.hpp
+       opm/input/eclipse/EclipseState/Co2StoreConfig.hpp
        opm/input/eclipse/EclipseState/EclipseState.hpp
        opm/input/eclipse/EclipseState/EclipseConfig.hpp
        opm/input/eclipse/EclipseState/Aquifer/Aquancon.hpp
