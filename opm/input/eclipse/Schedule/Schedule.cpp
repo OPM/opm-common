@@ -1420,18 +1420,23 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
         auto& input_block = this->m_sched_deck[reportStep];
         std::unordered_map<std::string, double> wpimult_global_factor;
         for (auto& keyword : keywords) {
-            input_block.push_back(*keyword);
-            this->handleKeyword(reportStep,
-                                input_block,
-                                *keyword,
-                                parseContext,
-                                errors,
-                                grid,
-                                matching_wells,
-                                /*actionx_mode=*/false,
-                                &sim_update,
-                                &target_wellpi,
-                                wpimult_global_factor);
+            if (Action::PyAction::valid_keyword(keyword->name())) {
+                input_block.push_back(*keyword);
+                this->handleKeyword(reportStep,
+                                    input_block,
+                                    *keyword,
+                                    parseContext,
+                                    errors,
+                                    grid,
+                                    matching_wells,
+                                    /*actionx_mode=*/false,
+                                    &sim_update,
+                                    &target_wellpi,
+                                    wpimult_global_factor);    
+            } else {
+                const std::string msg_fmt = fmt::format("The keyword {} is not supported for inserting it from Python into a simulation", keyword->name());
+                parseContext.handleError(ParseContext::PYACTION_ILLEGAL_KEYWORD, msg_fmt, keyword->location(), errors);
+            }
         }
         this->applyGlobalWPIMULT(wpimult_global_factor);
         this->end_report(reportStep);

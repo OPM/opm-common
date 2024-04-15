@@ -309,10 +309,11 @@ class KeywordLocation;
 
         /*
           Only keywords explicitly white-listed can be included in the ACTIONX
-          block. This error flag controls what should happen when an illegal
-          keyword is encountered in an ACTIONX block.
+          or PYACTION block. These error flags controls what should happen when
+          an illegal keyword is encountered in an ACTIONX and a PYACTION block.
          */
         const static std::string ACTIONX_ILLEGAL_KEYWORD;
+        const static std::string PYACTION_ILLEGAL_KEYWORD;
 
         /*
           Error flag marking parser errors ic ACTIONX conditions

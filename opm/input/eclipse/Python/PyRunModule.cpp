@@ -137,7 +137,14 @@ help(opm_embedded.current_summary_state)
         if (!this->run_function.is_none()) {
             return this->executeInnerRunFunction(actionx_callback);            
         } else {
-            this->module.reload();
+            try {
+                this->module.reload();
+            } catch (const std::exception& e) {
+                OpmLog::error(fmt::format("Exception thrown in python module {}: {}", this->module_name, e.what()));
+                throw e;
+            } catch(...) {
+                OPM_THROW(std::runtime_error, fmt::format("General exception thrown in python module {}", this->module_name));
+            }
         }
     }
 
