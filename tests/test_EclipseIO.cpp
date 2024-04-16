@@ -739,3 +739,118 @@ BOOST_AUTO_TEST_CASE(MULTXYZInit)
     testMultxyz({ '3', '3' , '2'}, true);
     testMultxyz({ '3', '3' , '3'});
 }
+
+
+std::pair<std::string,std::vector<float>>
+createMULTPVDECK(bool edit)
+{
+    auto deckString = std::string { R"(RUNSPEC
+
+TITLE
+   1D OIL WATER
+
+
+
+DIMENS
+   100 1 1 /
+
+EQLDIMS
+/
+TABDIMS
+  2 1 100 /
+
+OIL
+WATER
+
+ENDSCALE
+/
+
+METRIC
+
+START
+   1 'JAN' 2024 /
+
+WELLDIMS
+   3 3 2 2 /
+
+UNIFIN
+UNIFOUT
+
+GRID
+
+INIT
+
+DX 
+  100*1 /
+DY
+        100*10 /
+DZ
+  100*1 /
+
+TOPS
+  100*2000 /
+
+PORO
+  100*0.3 /
+
+MULTPV
+  100*10 /  -- overwritten by the next
+
+MULTPV
+  70*1 10*1.5 20*1 /
+
+EDIT
+)"};
+    std::vector<float> multpv(70, 1.);
+    multpv.insert(multpv.end(), 10, 1.5);
+    multpv.insert(multpv.end(), 20, 1.);
+
+    if (edit) {
+        deckString += std::string { R"(MULTPV
+  75*10 25*10 / -- overwritten by the next
+MULTPV
+  75*0.8 25*1 /
+)"};
+        std::transform(multpv.begin(), multpv.begin() + 75, multpv.begin(),
+                       [](float f) { return f*.8; });
+    }
+    deckString += std::string { R"(PROPS
+
+SOLUTION
+SCHEDULE
+)"};
+    return { deckString, multpv };
+}
+
+void checkMULTPV(const std::pair<std::string, std::vector<float>>& deckAndValues)
+{
+    const auto [deckString, exspectedMultPV] = deckAndValues;
+    const auto deck = Parser().parseString(deckString);
+    auto es = EclipseState( deck );
+    const auto& eclGrid = es.getInputGrid();
+    const Schedule schedule(deck, es, std::make_shared<Python>());
+    const SummaryConfig summary_config( deck, schedule, es.fieldProps(), es.aquifer());
+    const SummaryState st(TimeService::now());
+    es.getIOConfig().setBaseName( "MULTPVFOO" );
+    EclipseIO eclWriter( es, eclGrid , schedule, summary_config);
+    eclWriter.writeInitial( );
+
+    EclIO::EclFile initFile { "MULTPVFOO.INIT" };
+    BOOST_CHECK_MESSAGE( initFile.hasKey("MULTPV"),
+                         R"(INIT file must have MULTPV array)" );
+    const auto& multPVValues = initFile.get<float>("MULTPV");
+    auto exspect = exspectedMultPV.begin();
+    BOOST_CHECK(multPVValues.size() == exspectedMultPV.size());
+
+    for (auto multVal = multPVValues.begin(); multVal != multPVValues.end();
+         ++multVal, ++exspect) {
+        BOOST_CHECK_CLOSE(*multVal, *exspect, 1e-8);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(MULTPVInit)
+{
+    checkMULTPV(createMULTPVDECK(false));
+    checkMULTPV(createMULTPVDECK(true));
+    
+}
