@@ -1353,11 +1353,22 @@ quantity roew(const fn_args& args) {
     return { oil_prod / args.initial_inplace.get( region_name, Opm::Inplace::Phase::OIL, args.num ) , measure::identity };
 }
 
-template< bool injection = true>
-inline quantity temperature( const fn_args& args ) {
-    const quantity zero = { 0, measure::temperature };
-    if (args.schedule_wells.empty())
+template <bool injection = true>
+quantity temperature(const fn_args& args)
+{
+    const auto zero = quantity {
+        // Note: We use to_si(0.0) to properly handle different temperature
+        // scales.  This value will convert back to 0.0 of the appropriate
+        // unit when we later call .from_si().  If a plain value 0.0 is
+        // entered here, it will be treated as 0.0 K which is typically not
+        // what we want in our output files (i.e., -273.15 C or -459.67 F).
+        args.unit_system.to_si(measure::temperature, 0.0),
+        measure::temperature
+    };
+
+    if (args.schedule_wells.empty()) {
         return zero;
+    }
 
     const auto p = args.wells.find(args.schedule_wells.front()->name());
     if ((p == args.wells.end()) ||
