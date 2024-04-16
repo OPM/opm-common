@@ -838,7 +838,7 @@ SCHEDULE
 
 void checkMULTPV(const std::pair<std::string, std::vector<float>>& deckAndValues)
 {
-    const auto [deckString, exspectedMultPV] = deckAndValues;
+    const auto [deckString, expectedMultPV] = deckAndValues;
     const auto deck = Parser().parseString(deckString);
     auto es = EclipseState( deck );
     const auto& eclGrid = es.getInputGrid();
@@ -853,12 +853,12 @@ void checkMULTPV(const std::pair<std::string, std::vector<float>>& deckAndValues
     BOOST_CHECK_MESSAGE( initFile.hasKey("MULTPV"),
                          R"(INIT file must have MULTPV array)" );
     const auto& multPVValues = initFile.get<float>("MULTPV");
-    auto exspect = exspectedMultPV.begin();
-    BOOST_CHECK(multPVValues.size() == exspectedMultPV.size());
+    auto expect = expectedMultPV.begin();
+    BOOST_CHECK(multPVValues.size() == expectedMultPV.size());
 
     for (auto multVal = multPVValues.begin(); multVal != multPVValues.end();
-         ++multVal, ++exspect) {
-        BOOST_CHECK_CLOSE(*multVal, *exspect, 1e-8);
+         ++multVal, ++expect) {
+        BOOST_CHECK_CLOSE(*multVal, *expect, 1e-8);
     }
 }
 
@@ -867,4 +867,77 @@ BOOST_AUTO_TEST_CASE(MULTPVInit)
     checkMULTPV(createMULTPVDECK(false));
     checkMULTPV(createMULTPVDECK(true));
     
+}
+
+std::pair<std::string,std::vector<float>>
+createMULTPVBOXDECK()
+{
+    auto deckString = std::string { R"(RUNSPEC
+
+TITLE
+   1D OIL WATER
+
+
+
+DIMENS
+   100 1 1 /
+
+EQLDIMS
+/
+TABDIMS
+  2 1 100 /
+
+OIL
+WATER
+
+ENDSCALE
+/
+
+METRIC
+
+START
+   1 'JAN' 2024 /
+
+WELLDIMS
+   3 3 2 2 /
+
+UNIFIN
+UNIFOUT
+
+GRID
+
+INIT
+
+DX 
+  100*1 /
+DY
+        100*10 /
+DZ
+  100*1 /
+
+TOPS
+  100*2000 /
+
+PORO
+  100*0.3 /
+
+BOX
+  11 100 1 1 1 1 /
+MULTPV
+  90*1.5 /
+ENDBOX
+
+EDIT
+PROPS
+SOLUTION
+SCHEDULE
+)"};
+    std::vector<float> expected(10, 1.);
+    expected.insert(expected.end(), 90, 1.5);
+    return { deckString, expected };
+}
+
+BOOST_AUTO_TEST_CASE(MULTPVBOXInit)
+{
+    checkMULTPV(createMULTPVBOXDECK());
 }
