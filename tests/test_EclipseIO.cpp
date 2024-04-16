@@ -794,16 +794,30 @@ PORO
   100*0.3 /
 
 MULTPV
-  100*10 /  -- overwritten by the next
+  100*5 /  -- overwritten by the next MULTPV keyword
 
 MULTPV
-  70*1 10*1.5 20*1 /
+  100*10 /  -- partly overwritten by the next BOX statements
+
+BOX
+  69 75 1 1 1 1 /
+MULTPV
+  2*1 5*1.5 /
+ENDBOX
+
+BOX
+  76 85 1 1 1 1 /
+MULTPV
+  5*1.5 5*1 /
+ENDBOX
 
 EDIT
 )"};
-    std::vector<float> multpv(70, 1.);
+    std::vector<float> multpv(68, 10.);
+    multpv.insert(multpv.end(), 2, 1);
     multpv.insert(multpv.end(), 10, 1.5);
-    multpv.insert(multpv.end(), 20, 1.);
+    multpv.insert(multpv.end(), 5, 1.);
+    multpv.insert(multpv.end(), 15, 10.);
 
     if (edit) {
         deckString += std::string { R"(MULTPV
