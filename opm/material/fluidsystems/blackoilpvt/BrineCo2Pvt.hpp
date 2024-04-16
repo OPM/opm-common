@@ -648,10 +648,10 @@ private:
         /* heat of dissolution for CO2 according to Fig. 6 in Duan and Sun 2003. (kJ/kg)
            In the relevant temperature ranges CO2 dissolution is
            exothermal */
-        delta_hCO2 = (-57.4375 + T * 0.1325) * 1000/44;
+        // delta_hCO2 = (-57.4375 + T * 0.1325) * 1000/44;
 
         /* enthalpy contribution of CO2 (kJ/kg) */
-        hg = CO2::gasEnthalpy(T, p, extrapolate)/1E3 + delta_hCO2;
+        hg = CO2::gasEnthalpy(T, p, extrapolate)/1E3;  //+ delta_hCO2;
 
         /* Enthalpy of brine with dissolved CO2 */
         return (h_ls1 - X_CO2_w*hw + hg*X_CO2_w)*1E3; /*J/kg*/
