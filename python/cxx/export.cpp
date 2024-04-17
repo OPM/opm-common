@@ -11,6 +11,7 @@ void python::common::export_all(py::module& module) {
     export_Deck(module);
     export_DeckKeyword(module);
     export_Schedule(module);
+    export_ScheduleState(module);
     export_Well(module);
     export_Group(module);
     export_Connection(module);
