@@ -62,6 +62,9 @@ initFromState(const EclipseState& eclState, const Schedule&)
     setEnableDissolvedGas(co2sol_dis || co2storage_dis);
     setEnableSaltConcentration(eclState.runspec().phases().active(Phase::BRINE));
     setActivityModelSalt(eclState.getTableManager().actco2s());
+    saltMixType_ = eclState.getCo2StoreConfig().brine_type;
+    liquidMixType_ = eclState.getCo2StoreConfig().liquid_type;
+
     // We only supported single pvt region for the co2-brine module
     size_t numRegions = 1;
     setNumRegions(numRegions);

@@ -35,6 +35,7 @@
 #include <opm/input/eclipse/EclipseState/SimulationConfig/SimulationConfig.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
 #include <opm/input/eclipse/EclipseState/TracerConfig.hpp>
+#include <opm/input/eclipse/EclipseState/Co2StoreConfig.hpp>
 #include <opm/input/eclipse/EclipseState/WagHysteresisConfig.hpp>
 
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
@@ -123,6 +124,7 @@ namespace Opm {
         const TracerConfig& tracer() const;
         const MICPpara& getMICPpara() const;
         const WagHysteresisConfig& getWagHysteresis() const;
+        const Co2StoreConfig& getCo2StoreConfig() const;
 
         void reset_actnum(const std::vector<int>& new_actnum);
         void pruneDeactivatedAquiferConnections(const std::vector<std::size_t>& deactivated_cells);
@@ -157,6 +159,7 @@ namespace Opm {
             serializer(tracer_config);
             serializer(m_micppara);
             serializer(wag_hyst_config);
+            serializer(co2_store_config);
             serializer(this->fipRegionStatistics_);
         }
 
@@ -194,6 +197,7 @@ namespace Opm {
         TracerConfig tracer_config;
         MICPpara m_micppara;
         WagHysteresisConfig wag_hyst_config;
+        Co2StoreConfig co2_store_config;
 
         std::string m_title{};
         FaultCollection m_faults{};

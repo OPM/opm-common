@@ -1,0 +1,24 @@
+{
+  "name": "THCO2MIX",
+  "sections": [
+    "PROPS"
+  ],
+  "size": 1,
+  "items": [
+    {
+        "name": "MIXING_MODEL_SALT",
+        "value_type": "STRING",
+        "default": "MICHAELIDES" 
+    },
+    {
+      "name": "MIXING_MODEL_LIQUID",
+      "value_type": "STRING",
+      "default": "DUANSUN"
+    },
+    {
+        "name": "MIXING_MODEL_GAS",
+        "value_type": "STRING",
+        "default": "NONE"
+    }
+  ]
+}

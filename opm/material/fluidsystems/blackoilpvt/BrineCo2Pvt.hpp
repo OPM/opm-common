@@ -41,14 +41,16 @@
 #include <opm/material/binarycoefficients/H2O_CO2.hpp>
 #include <opm/material/binarycoefficients/Brine_CO2.hpp>
 
+#include <opm/input/eclipse/EclipseState/Co2StoreConfig.hpp>
+
+
 #include <vector>
 
 namespace Opm {
 
-#if HAVE_ECL_INPUT
 class EclipseState;
 class Schedule;
-#endif
+class Co2StoreConfig;
 
 /*!
  * \brief This class represents the Pressure-Volume-Temperature relations of the liquid phase
@@ -79,6 +81,8 @@ public:
 
     BrineCo2Pvt(const std::vector<Scalar>& salinity,
                 int activityModel = 3,
+                int thermalMixingModelSalt = 1,
+                int thermalMixingModelLiquid = 2,
                 Scalar T_ref = 288.71, //(273.15 + 15.56)
                 Scalar P_ref = 101325)
         : salinity_(salinity)
@@ -89,6 +93,7 @@ public:
                 "BrineCo2Pvt class can only be used with default reference state (T, P) = (288.71 K, 1.01325e5 Pa)!");
         }
         setActivityModelSalt(activityModel);
+        setThermalMixingModel(thermalMixingModelSalt, thermalMixingModelLiquid);
         int num_regions =  salinity_.size();
         co2ReferenceDensity_.resize(num_regions);
         brineReferenceDensity_.resize(num_regions);
@@ -166,6 +171,28 @@ public:
             OPM_THROW(std::runtime_error, "The salt activity model options are 1, 2 or 3");
         }
         activityModel_ = activityModel;
+    }
+
+    /*!
+    * \brief Set thermal mixing model for co2 in brine
+    */
+    void setThermalMixingModel(int thermalMixingModelSalt, int thermalMixingModelLiquid)
+    {
+        if (thermalMixingModelSalt == 0)
+            saltMixType_ = Co2StoreConfig::SaltMixingType::NONE;
+        else if (thermalMixingModelSalt == 1)
+            saltMixType_ = Co2StoreConfig::SaltMixingType::MICHAELIDES;
+        else 
+            OPM_THROW(std::runtime_error, "The thermal mixing model option for salt are 0 or 1");
+
+        if (thermalMixingModelLiquid == 0)
+            liquidMixType_ = Co2StoreConfig::LiquidMixingType::NONE;
+        else if (thermalMixingModelLiquid == 1)
+            liquidMixType_ = Co2StoreConfig::LiquidMixingType::IDEAL;
+        else if (thermalMixingModelLiquid == 2)
+            liquidMixType_ = Co2StoreConfig::LiquidMixingType::DUANSUN;
+        else 
+            OPM_THROW(std::runtime_error, "The thermal mixing model option for liquid are 0, 1 and 2");
     }
 
     /*!
@@ -470,6 +497,8 @@ private:
     bool enableDissolution_ = true;
     bool enableSaltConcentration_ = false;
     int activityModel_;
+    Co2StoreConfig::LiquidMixingType liquidMixType_; 
+    Co2StoreConfig::SaltMixingType saltMixType_; 
 
     template <class LhsEval>
     LhsEval liquidDensity_(const LhsEval& T,
@@ -586,70 +615,86 @@ private:
     }
 
     template <class LhsEval>
-    static LhsEval liquidEnthalpyBrineCO2_(const LhsEval& T,
-                                           const LhsEval& p,
-                                           const LhsEval& salinity,
-                                           const LhsEval& X_CO2_w)
+    LhsEval liquidEnthalpyBrineCO2_(const LhsEval& T,
+                                    const LhsEval& p,
+                                    const LhsEval& salinity, 
+                                    const LhsEval& X_CO2_w) const
     {
-        /* X_CO2_w : mass fraction of CO2 in brine */
 
-        /* same function as enthalpy_brine, only extended by CO2 content */
 
-        /*Numerical coefficents from PALLISER*/
-        static constexpr Scalar f[] = {
-            2.63500E-1, 7.48368E-6, 1.44611E-6, -3.80860E-10
-        };
+        if (liquidMixType_ == Co2StoreConfig::LiquidMixingType::NONE 
+            && saltMixType_ == Co2StoreConfig::SaltMixingType::NONE)
+            return H2O::liquidEnthalpy(T, p);
 
-        /*Numerical coefficents from MICHAELIDES for the enthalpy of brine*/
-        static constexpr Scalar a[4][3] = {
-            { 9633.6, -4080.0, +286.49 },
-            { +166.58, +68.577, -4.6856 },
-            { -0.90963, -0.36524, +0.249667E-1 },
-            { +0.17965E-2, +0.71924E-3, -0.4900E-4 }
-        };
+        LhsEval hw = H2O::liquidEnthalpy(T, p) /1E3; /* kJ/kg */
+        LhsEval h_ls1 = hw;
+        // Use mixing model for salt by MICHAELIDES
+        if (saltMixType_ == Co2StoreConfig::SaltMixingType::MICHAELIDES) {
 
-        LhsEval theta, h_NaCl;
-        LhsEval h_ls1, d_h;
-        LhsEval delta_h;
-        LhsEval delta_hCO2, hg, hw;
+            /* X_CO2_w : mass fraction of CO2 in brine */
 
-        theta = T - 273.15;
+            /* same function as enthalpy_brine, only extended by CO2 content */
 
-        // Regularization
-        Scalar scalarTheta = scalarValue(theta);
-        Scalar S_lSAT = f[0] + scalarTheta*(f[1] + scalarTheta*(f[2] + scalarTheta*f[3]));
+            /*Numerical coefficents from PALLISER*/
+            static constexpr Scalar f[] = {
+                2.63500E-1, 7.48368E-6, 1.44611E-6, -3.80860E-10
+            };
 
-        LhsEval S = salinity;
-        if (S > S_lSAT)
-            S = S_lSAT;
+            /*Numerical coefficents from MICHAELIDES for the enthalpy of brine*/
+            static constexpr Scalar a[4][3] = {
+                { 9633.6, -4080.0, +286.49 },
+                { +166.58, +68.577, -4.6856 },
+                { -0.90963, -0.36524, +0.249667E-1 },
+                { +0.17965E-2, +0.71924E-3, -0.4900E-4 }
+            };
 
-        hw = H2O::liquidEnthalpy(T, p) /1E3; /* kJ/kg */
+            LhsEval theta, h_NaCl;
+            LhsEval d_h, delta_h;
 
-        /*DAUBERT and DANNER*/
-        /*U=*/h_NaCl = (3.6710E4*T + 0.5*(6.2770E1)*T*T - ((6.6670E-2)/3)*T*T*T
-                        +((2.8000E-5)/4)*(T*T*T*T))/(58.44E3)- 2.045698e+02; /* kJ/kg */
+            theta = T - 273.15;
 
-        LhsEval m = 1E3/58.44 * S/(1-S);
-        int i = 0;
-        int j = 0;
-        d_h = 0;
+            // Regularization
+            Scalar scalarTheta = scalarValue(theta);
+            Scalar S_lSAT = f[0] + scalarTheta*(f[1] + scalarTheta*(f[2] + scalarTheta*f[3]));
 
-        for (i = 0; i<=3; i++) {
-            for (j=0; j<=2; j++) {
-                d_h = d_h + a[i][j] * pow(theta, static_cast<Scalar>(i)) * pow(m, j);
+            LhsEval S = salinity;
+            if (S > S_lSAT)
+                S = S_lSAT;
+
+            /*DAUBERT and DANNER*/
+            /*U=*/h_NaCl = (3.6710E4*T + 0.5*(6.2770E1)*T*T - ((6.6670E-2)/3)*T*T*T
+                            +((2.8000E-5)/4)*(T*T*T*T))/(58.44E3)- 2.045698e+02; /* kJ/kg */
+
+            LhsEval m = 1E3/58.44 * S/(1-S);
+            int i = 0;
+            int j = 0;
+            d_h = 0;
+
+            for (i = 0; i<=3; i++) {
+                for (j=0; j<=2; j++) {
+                    d_h = d_h + a[i][j] * pow(theta, static_cast<Scalar>(i)) * pow(m, j);
+                }
             }
+            /* heat of dissolution for halite according to Michaelides 1971 */
+            delta_h = (4.184/(1E3 + (58.44 * m)))*d_h;
+
+            /* Enthalpy of brine without CO2 */
+            h_ls1 =(1-S)*hw + S*h_NaCl + S*delta_h; /* kJ/kg */
+
+            // Use Enthalpy of brine without CO2
+            if (liquidMixType_ == Co2StoreConfig::LiquidMixingType::NONE)
+                return  h_ls1*1E3;
         }
-        /* heat of dissolution for halite according to Michaelides 1971 */
-        delta_h = (4.184/(1E3 + (58.44 * m)))*d_h;
 
-        /* Enthalpy of brine without CO2 */
-        h_ls1 =(1-S)*hw + S*h_NaCl + S*delta_h; /* kJ/kg */
-
+        LhsEval delta_hCO2, hg;
         /* heat of dissolution for CO2 according to Fig. 6 in Duan and Sun 2003. (kJ/kg)
            In the relevant temperature ranges CO2 dissolution is
            exothermal */
-        delta_hCO2 = (-57.4375 + T * 0.1325) * 1000/44;
-
+        if (liquidMixType_ == Co2StoreConfig::LiquidMixingType::DUANSUN)
+            delta_hCO2 = (-57.4375 + T * 0.1325) * 1000/44;
+        else 
+            delta_hCO2 = 0.0;
+            
         /* enthalpy contribution of CO2 (kJ/kg) */
         hg = CO2::gasEnthalpy(T, p, extrapolate)/1E3 + delta_hCO2;
 

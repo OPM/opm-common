@@ -495,3 +495,39 @@ BOOST_AUTO_TEST_CASE(TestBox) {
 
 }
 
+BOOST_AUTO_TEST_CASE(THCO2MIX) {
+    const auto deck_string = R"(
+RUNSPEC
+
+DIMENS
+ 2 2 1 /
+
+GRID
+
+DX 
+ 4*1 /
+DY
+ 4*1 /
+DZ 
+ 4*1 /
+TOPS 
+ 4*0.0 /
+
+PORO
+ 4*0.3 /
+ 
+PROPS
+
+THCO2MIX
+  NONE IDEAL IDEAL  /
+
+)";
+    
+    Parser parser;
+    const auto& deck = parser.parseString(deck_string);
+    EclipseState state(deck);
+    Co2StoreConfig config = state.getCo2StoreConfig();
+    BOOST_CHECK( config.brine_type == Co2StoreConfig::SaltMixingType::NONE);
+    BOOST_CHECK( config.liquid_type == Co2StoreConfig::LiquidMixingType::IDEAL);
+    BOOST_CHECK( config.gas_type == Co2StoreConfig::GasMixingType::IDEAL);
+}

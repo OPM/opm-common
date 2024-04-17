@@ -146,6 +146,7 @@ namespace Opm {
         , tracer_config(       m_deckUnitSystem, deck)
         , m_micppara(          deck)
         , wag_hyst_config(     deck)
+        , co2_store_config(    deck)
     {
         this->assignRunTitle(deck);
         this->reportNumberOfActivePhases();
@@ -283,6 +284,10 @@ namespace Opm {
 
     const WagHysteresisConfig& EclipseState::getWagHysteresis() const {
         return wag_hyst_config;
+    }
+
+    const Co2StoreConfig& EclipseState::getCo2StoreConfig() const {
+        return co2_store_config;
     }
 
     const TransMult& EclipseState::getTransMult() const {
