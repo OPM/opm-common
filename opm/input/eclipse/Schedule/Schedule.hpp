@@ -286,6 +286,7 @@ namespace Opm
             serializer(this->restart_output);
             serializer(this->completed_cells);
             serializer(this->m_treat_critical_as_non_critical);
+            serializer(this->current_report_step);
             serializer(this->simUpdateFromPython);
 
             this->template pack_unpack<PAvg>(serializer);
