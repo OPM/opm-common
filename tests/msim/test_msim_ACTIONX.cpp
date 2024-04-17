@@ -634,5 +634,20 @@ BOOST_AUTO_TEST_CASE(MSIM_PYACTION_INSERT_INVALID_KEYWORD) {
     }
 }
 
+BOOST_AUTO_TEST_CASE(PYTHON_OPEN_WELL_AT_INVALID_REPORT_STEP) {
+    const auto& deck1 = Parser().parseFile("msim/MSIM_PYACTION_OPEN_WELL_AT_PAST_REPORT_STEP.DATA");
+    const auto& deck2 = Parser().parseFile("msim/MSIM_PYACTION_OPEN_WELL_AT_TOO_LATE_REPORT_STEP.DATA");
+    std::vector<Deck> decks = {deck1, deck2};
+    for (auto&& deck : decks) {
+        test_data td( deck );
+        msim sim(td.state, td.schedule);
+        {
+            WorkArea work_area("test_msim");
+            EclipseIO io(td.state, td.state.getInputGrid(), sim.schedule, td.summary_config);
+            BOOST_CHECK_THROW(sim.run(io, false), std::exception);
+        }
+    }
+}
+
 #endif
 

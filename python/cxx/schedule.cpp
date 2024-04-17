@@ -221,9 +221,72 @@ void python::common::export_Schedule(py::module& module) {
     .def_property_readonly( "timesteps", &get_timesteps )
     .def("__len__", &Schedule::size)
     .def("__getitem__", &getitem)
-    .def( "shut_well", &Schedule::shut_well)
-    .def( "open_well", &Schedule::open_well)
-    .def( "stop_well", &Schedule::stop_well)
+    .def("shut_well", py::overload_cast<const std::string&, std::size_t>(&Schedule::shut_well), py::arg("well_name"), py::arg("step"), R"(
+    Shut down a well at a given report step.
+
+    Args:
+        well_name (str): The name of the well to shut down.
+        report_step (int): The report step at which to shut down the well.
+
+    Raises:
+        ValueError: If the report step is in the past or exceeds the duration of the simulation.
+
+    Returns:
+        None
+    )")
+    .def("shut_well", py::overload_cast<const std::string&>(&Schedule::shut_well), py::arg("well_name"), R"(
+    Shut down a well at the current report step.
+
+    Args:
+        well_name (str): The name of the well to shut down.
+
+    Returns:
+        None
+    )")
+    .def("open_well", py::overload_cast<const std::string&, std::size_t>(&Schedule::open_well), py::arg("well_name"), py::arg("step"), R"(
+    Open a well at a given report step.
+
+    Args:
+        well_name (str): The name of the well to open.
+        report_step (int): The report step at which to open the well.
+
+    Raises:
+        ValueError: If the report step is in the past or exceeds the duration of the simulation.
+
+    Returns:
+        None
+    )")
+    .def("open_well", py::overload_cast<const std::string&>(&Schedule::open_well), py::arg("well_name"), R"(
+    Open a well at the current report step.
+
+    Args:
+        well_name (str): The name of the well to open.
+
+    Returns:
+        None
+    )")
+    .def("stop_well", py::overload_cast<const std::string&, std::size_t>(&Schedule::stop_well), py::arg("well_name"), py::arg("step"), R"(
+    Stop a well at a given report step.
+
+    Args:
+        well_name (str): The name of the well to stop.
+        report_step (int): The report step at which to stop the well.
+
+    Raises:
+        ValueError: If the report step is in the past or exceeds the duration of the simulation.
+
+    Returns:
+        None
+    )")
+    .def("stop_well", py::overload_cast<const std::string&>(&Schedule::stop_well), py::arg("well_name"), R"(
+    Stop a well at the current report step.
+
+    Args:
+        well_name (str): The name of the well to stop.
+
+    Returns:
+        None
+    )")
     .def( "get_wells", &Schedule::getWells)
     .def( "get_injection_properties", &get_injection_properties, py::arg("well_name"), py::arg("report_step"))
     .def( "get_production_properties", &get_production_properties, py::arg("well_name"), py::arg("report_step"))
