@@ -26,6 +26,7 @@ void export_EclipseState(py::module& module);
 void export_Group(py::module& module);
 void export_ParseContext(py::module& module);
 void export_Parser(py::module& module);
+void export_SimulationConfig(py::module& module);
 void export_Schedule(py::module& module);
 void export_ScheduleState(py::module& module);
 void export_TableManager(py::module& module);
