@@ -37,6 +37,19 @@ namespace py = pybind11;
 namespace Opm {
 namespace Action {
 
+bool PyAction::valid_keyword(const std::string& keyword) {
+    static std::unordered_set<std::string> pyaction_allowed_list = {
+        "BOX",
+        "FIELD",
+        "ENDBOX",
+        "GCONINJE", "GCONPROD",
+        "METRIC", "MULTX", "MULTX-", "MULTY", "MULTY-", "MULTZ", "MULTZ-",
+        "NEXT", "NEXTSTEP",
+        "WCONINJE", "WCONPROD", "WEFAC", "WELOPEN", "WELTARG"
+    };
+    return pyaction_allowed_list.find(keyword) != pyaction_allowed_list.end();
+}
+
 PyAction::RunCount PyAction::from_string(std::string run_count) {
     run_count = uppercase(run_count);
 

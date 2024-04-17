@@ -21,6 +21,7 @@ error BUG: The PyRunModule.hpp header should *not* be included in a configuratio
 #endif
 
 
+#include <opm/common/ErrorMacros.hpp>
 #include <opm/common/OpmLog/OpmLog.hpp>
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
@@ -39,12 +40,12 @@ PyRunModule::PyRunModule(std::shared_ptr<const Python> python, const std::string
     if (python->enabled())
         this->python_handle = python;
     else
-        throw std::logic_error("Tried to make a PYACTION object with an invalid Python handle");
+        OPM_THROW(std::logic_error, "Tried to make a PYACTION object with an invalid Python handle");
 
 
     fs::path file(fname);
     if (!fs::is_regular_file(file))
-        throw std::invalid_argument("No such module: " + fname);
+        OPM_THROW(std::invalid_argument, "No such module: " + fname);
 
     this->module_path = fs::current_path().string() / file.parent_path();
     this->module_name = file.filename().stem();
@@ -56,9 +57,7 @@ PyRunModule::PyRunModule(std::shared_ptr<const Python> python, const std::string
         OpmLog::error(fmt::format("Exception thrown when loading Python module opm_embedded: {}"), e.what());
         throw e;
     } catch (...) {
-        std::string errorMessage = "General exception thrown when loading Python module opm_embedded!";
-        OpmLog::error(errorMessage);
-        throw std::runtime_error(errorMessage);
+        OPM_THROW(std::runtime_error, "General exception thrown when loading Python module opm_embedded!");
     }
 }
 
@@ -79,9 +78,7 @@ bool PyRunModule::executeInnerRunFunction(const std::function<void(const std::st
         OpmLog::error(fmt::format("Exception thrown when calling run(ecl_state, schedule, report_step, summary_state, actionx_callback) function of {}: {}", this->module_name, e.what()));
         throw e;
     } catch(...) {
-        auto errorMessage = fmt::format("General exception thrown when calling run(ecl_state, schedule, report_step, summary_state, actionx_callback) function of {}", this->module_name);
-        OpmLog::error(errorMessage);
-        throw std::runtime_error(errorMessage);
+        OPM_THROW(std::runtime_error, fmt::format("General exception thrown when calling run(ecl_state, schedule, report_step, summary_state, actionx_callback) function of {}", this->module_name));
     }
 }
 
@@ -114,15 +111,11 @@ bool PyRunModule::run(EclipseState& ecl_state, Schedule& sched, std::size_t repo
             OpmLog::error(fmt::format("Exception thrown when loading Python module {}: {}", this->module_name, e.what()));
             throw e;
         } catch (...) {
-            auto errorMessage = fmt::format("General exception thrown when loading Python module {}", this->module_name);
-            OpmLog::error(errorMessage);
-            throw std::runtime_error(errorMessage);
+            OPM_THROW(std::runtime_error, fmt::format("General exception thrown when loading Python module {}", this->module_name));
         }
 
         if (this->module.is_none()) {
-            auto errorMessage = fmt::format("Syntax error when loading Python module: {}", this->module_name);
-            OpmLog::error(errorMessage);
-            throw std::runtime_error(errorMessage);
+            OPM_THROW(std::runtime_error, fmt::format("Syntax error when loading Python module: {}", this->module_name));
         }
 
         this->module.attr("storage") = this->storage;
@@ -144,7 +137,14 @@ help(opm_embedded.current_summary_state)
         if (!this->run_function.is_none()) {
             return this->executeInnerRunFunction(actionx_callback);            
         } else {
-            this->module.reload();
+            try {
+                this->module.reload();
+            } catch (const std::exception& e) {
+                OpmLog::error(fmt::format("Exception thrown in python module {}: {}", this->module_name, e.what()));
+                throw e;
+            } catch(...) {
+                OPM_THROW(std::runtime_error, fmt::format("General exception thrown in python module {}", this->module_name));
+            }
         }
     }
 

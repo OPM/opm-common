@@ -622,5 +622,17 @@ BOOST_AUTO_TEST_CASE(PYTHON_CHANGING_SCHEUDULE) {
     }
 }
 
+BOOST_AUTO_TEST_CASE(MSIM_PYACTION_INSERT_INVALID_KEYWORD) {
+    const auto& deck = Parser().parseFile("msim/MSIM_PYACTION_INSERT_INVALID_KEYWORD.DATA");
+    test_data td( deck );
+    msim sim(td.state, td.schedule);
+    {
+        WorkArea work_area("test_msim");
+        EclipseIO io(td.state, td.state.getInputGrid(), sim.schedule, td.summary_config);
+
+        BOOST_CHECK_THROW(sim.run(io, false), std::exception);
+    }
+}
+
 #endif
 

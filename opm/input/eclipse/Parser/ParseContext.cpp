@@ -114,6 +114,7 @@ namespace Opm {
         this->addKey(SUMMARY_REGION_TOO_LARGE, InputErrorAction::WARN);
 
         addKey(ACTIONX_ILLEGAL_KEYWORD, InputErrorAction::THROW_EXCEPTION);
+        addKey(PYACTION_ILLEGAL_KEYWORD, InputErrorAction::THROW_EXCEPTION);
         addKey(ACTIONX_CONDITION_ERROR, InputErrorAction::THROW_EXCEPTION);
         addKey(ACTIONX_NO_CONDITION, InputErrorAction::WARN);
 
@@ -371,6 +372,7 @@ namespace Opm {
 
     const std::string ParseContext::SCHEDULE_INVALID_NAME = "SCHEDULE_INVALID_NAME";
     const std::string ParseContext::ACTIONX_ILLEGAL_KEYWORD = "ACTIONX_ILLEGAL_KEYWORD";
+    const std::string ParseContext::PYACTION_ILLEGAL_KEYWORD = "PYACTION_ILLEGAL_KEYWORD";
     const std::string ParseContext::ACTIONX_CONDITION_ERROR = "ACTIONX_CONDITION_ERROR";
     const std::string ParseContext::ACTIONX_NO_CONDITION = "ACTIONX_NO_CONDITION";
 
