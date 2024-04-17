@@ -673,43 +673,6 @@ bool FieldProps::supported<int>(const std::string& keyword) {
     return Fieldprops::keywords::isFipxxx(keyword);
 }
 
-void FieldProps::apply_multipliers()
-{
-    static const auto prefix = getMultiplierPrefix();
-
-    for(const auto& [mult_keyword, kw_info]: multiplier_kw_infos_)
-    {
-        const std::string keyword = mult_keyword.substr(prefix.size());
-        auto mult_iter = this->double_data.find(mult_keyword);
-        assert(mult_iter != this->double_data.end());
-        auto iter = this->double_data.find(keyword);
-        if (iter == this->double_data.end()) {
-            iter = this->double_data
-                .emplace(std::piecewise_construct,
-                         std::forward_as_tuple(keyword),
-                         std::forward_as_tuple(kw_info, this->active_size, kw_info.global ? this->global_size : 0))
-                .first;
-        }
-        using Scalar = typename std::remove_cv_t<std::remove_reference_t<decltype(iter->second.data[0])>>;
-        std::transform(iter->second.data.begin(), iter->second.data.end(),
-                       mult_iter->second.data.begin(), iter->second.data.begin(),
-                       std::multiplies<Scalar>());
-
-        // If data is global, then we also need to set the global_data. I think they should be the same at this stage, though!
-        if (kw_info.global)
-        {
-            assert(mult_iter->second.global_data.has_value() && iter->second.global_data.has_value());
-            std::transform(iter->second.global_data->begin(),
-                           iter->second.global_data->end(),
-                           mult_iter->second.global_data->begin(),
-                           iter->second.global_data->begin(),
-                           std::multiplies<Scalar>());
-        }
-        this->double_data.erase(mult_iter);
-    }
-    multiplier_kw_infos_.clear();
-}
-
 template <>
 Fieldprops::FieldData<double>& FieldProps::init_get(const std::string& keyword_name, const Fieldprops::keywords::keyword_info<double>& kw_info,
                                                     bool multiplier_in_edit) {
@@ -773,6 +736,50 @@ Fieldprops::FieldData<int>& FieldProps::init_get(const std::string& keyword, boo
         const Fieldprops::keywords::keyword_info<int>& kw_info = Fieldprops::keywords::global_kw_info<int>(keyword);
         return this->init_get(keyword, kw_info);
     }
+}
+
+void FieldProps::apply_multipliers()
+{
+    static const auto prefix = getMultiplierPrefix();
+
+    for(const auto& [mult_keyword, kw_info]: multiplier_kw_infos_)
+    {
+        const std::string keyword = mult_keyword.substr(prefix.size());
+        auto mult_iter = this->double_data.find(mult_keyword);
+        assert(mult_iter != this->double_data.end());
+        auto iter = this->double_data.find(keyword);
+        if (iter == this->double_data.end()) {
+            iter = this->double_data
+                .emplace(std::piecewise_construct,
+                         std::forward_as_tuple(keyword),
+                         std::forward_as_tuple(kw_info, this->active_size, kw_info.global ? this->global_size : 0))
+                .first;
+        }
+        using Scalar = typename std::remove_cv_t<std::remove_reference_t<decltype(iter->second.data[0])>>;
+        std::transform(iter->second.data.begin(), iter->second.data.end(),
+                       mult_iter->second.data.begin(), iter->second.data.begin(),
+                       std::multiplies<Scalar>());
+
+        // If data is global, then we also need to set the global_data. I think they should be the same at this stage, though!
+        if (kw_info.global)
+        {
+            assert(mult_iter->second.global_data.has_value() && iter->second.global_data.has_value());
+            std::transform(iter->second.global_data->begin(),
+                           iter->second.global_data->end(),
+                           mult_iter->second.global_data->begin(),
+                           iter->second.global_data->begin(),
+                           std::multiplies<Scalar>());
+        }
+        // If this is MULTPV we also need to apply the additional multiplier to the pore volume
+        if (keyword == ParserKeywords::MULTPV::keywordName)
+        {
+            auto& porv = this->init_get<double>(ParserKeywords::PORV::keywordName);
+            auto& porv_data = porv.data;
+            std::transform(porv_data.begin(), porv_data.end(), mult_iter->second.data.begin(), porv_data.begin(), std::multiplies<double>());
+        }
+        this->double_data.erase(mult_iter);
+    }
+    multiplier_kw_infos_.clear();
 }
 
 
