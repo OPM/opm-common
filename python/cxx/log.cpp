@@ -39,11 +39,11 @@ void note(const std::string& msg) {
 void python::common::export_Log(py::module& module)
 {
     py::class_<OpmLog>(module, "OpmLog")
-        .def_static("info", info )
-        .def_static("warning", warning)
-        .def_static("error", error)
-        .def_static("problem", problem)
-        .def_static("bug", bug)
-        .def_static("debug", debug)
-        .def_static("note", note);
+        .def_static("info", info, "Add an info message to the opm log.")
+        .def_static("warning", warning, "Add a warning message to the opm log.")
+        .def_static("error", error, "Add an error message to the opm log.")
+        .def_static("problem", problem, "Add a problem message to the opm log.")
+        .def_static("bug", bug, "Add a bug message to the opm log.")
+        .def_static("debug", debug, "Add a debug message to the opm log.")
+        .def_static("note", note, "Add a note to the opm log.");
 }
