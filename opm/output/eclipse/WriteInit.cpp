@@ -667,15 +667,10 @@ void Opm::InitIO::write(const ::Opm::EclipseState&              es,
     {
         const auto writeAll = es.cfg().io().writeAllTransMultipliers();
 
-        auto multipliers = es.getTransMult()
+        const auto tranMult = es.getTransMult()
             .convertToSimProps(grid.getNumActive(), writeAll);
-        if (es.fieldProps().has_double("MULTPV")) {
-            multipliers.insert("MULTPV", UnitSystem::measure::identity,
-                        es.fieldProps().get_double("MULTPV"),
-                        data::TargetType::INIT);
-        }
 
-        writeSimulatorProperties(grid, multipliers, initFile);
+        writeSimulatorProperties(grid, tranMult, initFile);
     }
 
     writeTableData(es, units, initFile);
