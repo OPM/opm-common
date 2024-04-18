@@ -709,6 +709,8 @@ if(ENABLE_ECL_OUTPUT)
           tests/msim/MSIM_PYACTION_INSERT_KEYWORD.DATA
           tests/msim/MSIM_PYACTION_INSERT_INVALID_KEYWORD.DATA
           tests/msim/MSIM_PYACTION_NO_RUN_FUNCTION.DATA
+          tests/msim/MSIM_PYACTION_OPEN_WELL_AT_PAST_REPORT_STEP.DATA
+          tests/msim/MSIM_PYACTION_OPEN_WELL_AT_TOO_LATE_REPORT_STEP.DATA
           tests/msim/action1.py
           tests/msim/action2.py
           tests/msim/action2_no_run_function.py
@@ -718,6 +720,8 @@ if(ENABLE_ECL_OUTPUT)
           tests/msim/insert_keyword.py
           tests/msim/insert_invalid_keyword.py
           tests/msim/action_count_no_run_function.py
+          tests/msim/open_well_past.py
+          tests/msim/open_well_too_late.py
           tests/VFP_CASE.DATA)
 endif()
 

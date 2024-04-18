@@ -701,16 +701,30 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
     void Schedule::shut_well(const std::string& well_name, std::size_t report_step) {
         this->internalWELLSTATUSACTIONXFromPYACTION(well_name, report_step, "SHUT");
     }
+    void Schedule::shut_well(const std::string& well_name) {
+        this->shut_well(well_name, this->current_report_step);
+    }
 
     void Schedule::open_well(const std::string& well_name, std::size_t report_step) {
         this->internalWELLSTATUSACTIONXFromPYACTION(well_name, report_step, "OPEN");
+    }
+    void Schedule::open_well(const std::string& well_name) {
+        this->open_well(well_name, this->current_report_step);
     }
 
     void Schedule::stop_well(const std::string& well_name, std::size_t report_step) {
         this->internalWELLSTATUSACTIONXFromPYACTION(well_name, report_step, "STOP");
     }
+    void Schedule::stop_well(const std::string& well_name) {
+        this->stop_well(well_name, this->current_report_step);
+    }
 
     void Schedule::internalWELLSTATUSACTIONXFromPYACTION(const std::string& well_name, std::size_t report_step, const std::string& wellStatus) {
+        if (report_step < this->current_report_step) {
+            throw std::invalid_argument(fmt::format("Well status change for past report step {} requested, current report step is {}.", report_step, this->current_report_step));
+        } else if (report_step >= this->m_sched_deck.size()) {
+            throw std::invalid_argument(fmt::format("Well status change for report step {} requested, this exceeds the total number of report steps, being {}.", report_step, this->m_sched_deck.size() - 1));
+        }
         std::time_t start_time = std::chrono::system_clock::to_time_t(std::chrono::system_clock::from_time_t(0));
         Opm::Action::ActionX action("openwell", 1, 0.0, start_time);
         DeckItem wellItem("WELL", std::string());
