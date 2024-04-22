@@ -738,6 +738,45 @@ Fieldprops::FieldData<int>& FieldProps::init_get(const std::string& keyword, boo
     }
 }
 
+
+std::vector<Box::cell_index> FieldProps::region_index( const std::string& region_name, int region_value ) {
+    const auto& region = this->init_get<int>(region_name);
+    if (!region.valid())
+        throw std::invalid_argument("Trying to work with invalid region: " + region_name);
+
+    std::vector<Box::cell_index> index_list;
+    std::size_t active_index = 0;
+    const auto& region_data = region.data;
+    for (std::size_t g = 0; g < this->m_actnum.size(); g++) {
+        if (this->m_actnum[g] != 0) {
+            if (region_data[active_index] == region_value)
+                index_list.emplace_back( g, active_index, g );
+            active_index += 1;
+        }
+    }
+    return index_list;
+}
+
+
+
+std::string FieldProps::region_name(const DeckItem& region_item) {
+    return region_item.defaultApplied(0) ? this->m_default_region : make_region_name(region_item.get<std::string>(0));
+}
+
+template <>
+bool FieldProps::has<double>(const std::string& keyword_name) const {
+    const std::string& keyword = Fieldprops::keywords::get_keyword_from_alias(keyword_name);
+    return (this->double_data.count(keyword) != 0);
+}
+
+template <>
+bool FieldProps::has<int>(const std::string& keyword) const {
+    return Fieldprops::keywords::isFipxxx(keyword)
+        ? this->int_data.count(this->canonical_fipreg_name(keyword)) != 0
+        : this->int_data.count(keyword) != 0;
+}
+
+
 void FieldProps::apply_multipliers()
 {
     bool hasPorvBefore = (this->double_data.find(ParserKeywords::PORV::keywordName) == this->double_data.end());
@@ -783,45 +822,6 @@ void FieldProps::apply_multipliers()
     }
     multiplier_kw_infos_.clear();
 }
-
-
-std::vector<Box::cell_index> FieldProps::region_index( const std::string& region_name, int region_value ) {
-    const auto& region = this->init_get<int>(region_name);
-    if (!region.valid())
-        throw std::invalid_argument("Trying to work with invalid region: " + region_name);
-
-    std::vector<Box::cell_index> index_list;
-    std::size_t active_index = 0;
-    const auto& region_data = region.data;
-    for (std::size_t g = 0; g < this->m_actnum.size(); g++) {
-        if (this->m_actnum[g] != 0) {
-            if (region_data[active_index] == region_value)
-                index_list.emplace_back( g, active_index, g );
-            active_index += 1;
-        }
-    }
-    return index_list;
-}
-
-
-
-std::string FieldProps::region_name(const DeckItem& region_item) {
-    return region_item.defaultApplied(0) ? this->m_default_region : make_region_name(region_item.get<std::string>(0));
-}
-
-template <>
-bool FieldProps::has<double>(const std::string& keyword_name) const {
-    const std::string& keyword = Fieldprops::keywords::get_keyword_from_alias(keyword_name);
-    return (this->double_data.count(keyword) != 0);
-}
-
-template <>
-bool FieldProps::has<int>(const std::string& keyword) const {
-    return Fieldprops::keywords::isFipxxx(keyword)
-        ? this->int_data.count(this->canonical_fipreg_name(keyword)) != 0
-        : this->int_data.count(keyword) != 0;
-}
-
 
 /*
   The ACTNUM and PORV keywords are special cased with quite extensive
