@@ -740,6 +740,7 @@ Fieldprops::FieldData<int>& FieldProps::init_get(const std::string& keyword, boo
 
 void FieldProps::apply_multipliers()
 {
+    bool hasPorvBefore = (this->double_data.find(ParserKeywords::PORV::keywordName) == this->double_data.end());
     static const auto prefix = getMultiplierPrefix();
 
     for(const auto& [mult_keyword, kw_info]: multiplier_kw_infos_)
@@ -770,9 +771,10 @@ void FieldProps::apply_multipliers()
                            iter->second.global_data->begin(),
                            std::multiplies<Scalar>());
         }
-        // If this is MULTPV we also need to apply the additional multiplier to the pore volume
-        if (keyword == ParserKeywords::MULTPV::keywordName)
-        {
+        // If this is MULTPV we also need to apply the additional multiplier to PORV if that was initialized already.
+        // Note that the check for PORV is essential as otherwise the value constructed durig init_get will already apply
+        // current MULTPV.
+        if (keyword == ParserKeywords::MULTPV::keywordName && !hasPorvBefore) {
             auto& porv = this->init_get<double>(ParserKeywords::PORV::keywordName);
             auto& porv_data = porv.data;
             std::transform(porv_data.begin(), porv_data.end(), mult_iter->second.data.begin(), porv_data.begin(), std::multiplies<double>());
