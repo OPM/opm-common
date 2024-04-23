@@ -33,18 +33,6 @@
 namespace py = pybind11;
 namespace Opm {
 
-
-/*
-  PYBIND11_EMBEDDED_MODULE create a Python of all the Python/C++ classes which are
-  generated in the python::common::export_all_opm_embedded() function in the wrapping code.
-  The same module is created as a Pybind 11 module in export.cpp
-*/
-
-PYBIND11_EMBEDDED_MODULE(opm_embedded, module) {
-    python::common::export_all_opm_embedded(module);
-}
-
-
 bool PythonInterp::exec(const std::string& python_code, py::module& context) {
     py::bool_ def_result = false;
     context.attr("result") = &def_result;
