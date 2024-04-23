@@ -273,7 +273,7 @@ private:
         if (x >= xValues.back())
             return yValues.back();
 
-        size_t segIdx = findSegmentIndex_(xValues, scalarValue(x));
+        size_t segIdx = findSegmentIndexInInterval_(xValues, scalarValue(x));
 
         return eval(xValues, yValues, x, segIdx);
     }
@@ -289,7 +289,7 @@ private:
         if (x <= xValues.back())
             return yValues.back();
 
-        size_t segIdx = findSegmentIndexDescending_(xValues, scalarValue(x));
+        size_t segIdx = findSegmentIndexDescendingInInterval_(xValues, scalarValue(x));
 
         return eval(xValues, yValues, x, segIdx);
     }
@@ -339,6 +339,25 @@ private:
         return lowIdx;
     }
 
+    template<class ScalarT>
+    static size_t findSegmentIndexInInterval_(const ValueVector& xValues, const ScalarT& x)
+    {
+        OPM_TIMEFUNCTION_LOCAL();
+        assert(xValues.size() > 1); // we need at least two sampling points!
+        size_t n = xValues.size() - 1;
+               // bisection
+        size_t lowIdx = 0, highIdx = n;
+        while (lowIdx + 1 < highIdx) {
+            size_t curIdx = (lowIdx + highIdx)/2;
+            if (xValues[curIdx] < x)
+                lowIdx = curIdx;
+            else
+                highIdx = curIdx;
+        }
+
+        return lowIdx;
+    }
+
     static size_t findSegmentIndexDescending_(const ValueVector& xValues, Scalar x)
     {
         OPM_TIMEFUNCTION_LOCAL();
@@ -350,6 +369,24 @@ private:
             return 0;
 
         // bisection
+        size_t lowIdx = 0, highIdx = n;
+        while (lowIdx + 1 < highIdx) {
+            size_t curIdx = (lowIdx + highIdx)/2;
+            if (xValues[curIdx] >= x)
+                lowIdx = curIdx;
+            else
+                highIdx = curIdx;
+        }
+
+        return lowIdx;
+    }
+    static size_t findSegmentIndexDescendingInInterval_(const ValueVector& xValues, Scalar x)
+    {
+        OPM_TIMEFUNCTION_LOCAL();
+        assert(xValues.size() > 1); // we need at least two sampling points!
+        size_t n = xValues.size() - 1;
+
+               // bisection
         size_t lowIdx = 0, highIdx = n;
         while (lowIdx + 1 < highIdx) {
             size_t curIdx = (lowIdx + highIdx)/2;
