@@ -293,6 +293,8 @@ if (ENABLE_MOCKSIM AND ENABLE_ECL_INPUT)
         WORKING_DIRECTORY ${PROJECT_BINARY_DIR}/tests
         CONDITION ${HAVE_ECL_INPUT})
     endforeach()
+    set_tests_properties(msim_ACTIONX PROPERTIES
+                        ENVIRONMENT "PYTHONPATH=${PROJECT_BINARY_DIR}/python:$ENV{PYTHONPATH}")
   endif()
 endif()
 
@@ -370,6 +372,10 @@ if(Boost_UNIT_TEST_FRAMEWORK_FOUND)
   foreach(src ${DUNE_TEST_SOURCE_FILES})
     get_filename_component(tgt ${src} NAME_WE)
     target_link_libraries(${tgt} dunecommon)
+  endforeach()
+  foreach(test ACTIONX EmbeddedPython PYACTION)
+    set_tests_properties(${test} PROPERTIES
+                        ENVIRONMENT "PYTHONPATH=${PROJECT_BINARY_DIR}/python:$ENV{PYTHONPATH}")
   endforeach()
 endif()
 if(BUILD_EXAMPLES)
