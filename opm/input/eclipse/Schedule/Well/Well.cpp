@@ -918,6 +918,14 @@ bool Well::handleCOMPSEGS(const DeckKeyword& keyword,
                           const ScheduleGrid& grid,
                           const ParseContext& parseContext,
                           ErrorGuard& errors) {
+    if (!this->segments) {
+        throw OpmInputError{
+                fmt::format("WELSEGS must be specified for well {} "
+                            "before COMPSEGS being input.",
+                            this->name()),
+                keyword.location()
+        };
+    }
     auto [new_connections, new_segments] = Compsegs::processCOMPSEGS(
         keyword,
         *this->connections,
