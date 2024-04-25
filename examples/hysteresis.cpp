@@ -191,7 +191,7 @@ int main(int argc, char **argv)
         phaseIdx2 = Fixture<double>::waterPhaseIdx;
         phaseIdx3 = Fixture<double>::oilPhaseIdx;
     } else {
-        std::cout << "Invalid or inconsistant two-phase-system. " << std::endl;
+        std::cout << "Invalid or inconsistent two-phase-system. " << std::endl;
         std::cout << "Valid two-phase-system: = {WO, GO, GW}, WO=water-oil, GO=gas-oil, GW=gas-water" << std::endl;
         std::cout << "Also make sure that the input deck is valid for the given two-phase-sytem." << std::endl;
         return EXIT_FAILURE;
