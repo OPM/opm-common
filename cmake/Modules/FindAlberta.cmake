@@ -1,3 +1,4 @@
+set(ALBERTA_MAX_WORLD_DIM "3" CACHE STRING "Maximal world dimension to check for Alberta library.")
 find_library(ALBERTA_LTDL_LIB
   NAMES ltdl
   PATH_SUFFIXES lib lib32 lib64
@@ -22,7 +23,7 @@ find_library(ALBERTA_UTIL_LIB
   NAMES alberta_util alberta_utilities
   PATH_SUFFIXES lib lib32 lib64)
 
-foreach(dim RANGE 1 9)
+foreach(dim RANGE 1 ${ALBERTA_MAX_WORLD_DIM})
   find_library(ALBERTA_${dim}D_LIB alberta_${dim}d
     PATHS ${ALBERTA_ROOT}
     PATH_SUFFIXES lib lib32 lib64
@@ -43,4 +44,18 @@ if(ALBERTA_LIBRARIES AND ALBERTA_INCLUDE_DIR)
 else()
   set(ALBERTA_FOUND OFF)
   set(Alberta_FOUND OFF)
+endif()
+
+# PkgConfig targets are required if OPM modules are used as DUNE modules
+# (e.g. in Debian's Packaging automatic tests)
+find_package(PkgConfig)
+if(PkgConfig_FOUND)
+  set(_opm_alberta_bkup_path  ${CMAKE_PREFIX_PATH})
+  set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} ${ALBERTA_ROOT})
+
+  foreach(dim RANGE 1 ${ALBERTA_MAX_WORLD_DIM})
+    pkg_check_modules(Alberta${dim}d IMPORTED_TARGET GLOBAL "alberta-grid_${dim}d")
+  endforeach()
+
+  set(CMAKE_PREFIX_PATH ${_opm_alberta_bkup_path})
 endif()
