@@ -239,6 +239,11 @@ if (OPM_ENABLE_PYTHON)
       message(SEND_ERROR "OPM requires python >= 3.3 but only version ${Python3_VERSION} was found")
     endif()
 
+    if(OPM_ENABLE_EMBEDDED_PYTHON AND PYTHON_VERSION_MAJOR EQUAL 3 AND PYTHON_VERSION_MINOR GREATER_EQUAL 12)
+      message("Python version is 3.12 or larger, for this embedded Python is not supported, therefore setting OPM_ENABLE_EMBEDDED_PYTHON=OFF")
+      set(OPM_ENABLE_EMBEDDED_PYTHON OFF CACHE BOOL "Enable embedded python?" FORCE)
+    endif()
+
     # Compatibility settings for PythonInterp and PythonLibs
     # used e.g. in FindCwrap, pybind11
     set(PYTHON_EXECUTABLE ${Python3_EXECUTABLE})
