@@ -61,7 +61,7 @@ public:
      * \brief The molar mass in \f$\mathrm{[kg/mol]}\f$ of molecular n-Decane.
      */
     static Scalar molarMass()
-    { return 0.0142;}
+    { return 0.142;}
 
     /*!
      * \brief Returns the critical temperature \f$\mathrm{[K]}\f$ of molecular n-Decane.
