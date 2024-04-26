@@ -42,7 +42,7 @@ namespace Opm {
 */
 
 OPM_EMBEDDED_MODULE(opm_embedded, module) {
-    python::common::export_all_opm_embedded(module);
+    python::common::export_all(module);
 }
 
 

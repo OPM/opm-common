@@ -706,6 +706,7 @@ if(ENABLE_ECL_OUTPUT)
           tests/ACTIONX_M1.X0010
           tests/wclose.py
           tests/msim/MSIM_PYACTION.DATA
+          tests/msim/MSIM_PYACTION_RETRIEVE_INFO.DATA
           tests/msim/MSIM_PYACTION_CHANGING_SCHEDULE.DATA
           tests/msim/MSIM_PYACTION_CHANGING_SCHEDULE_ACTIONX_CALLBACK.DATA
           tests/msim/MSIM_PYACTION_INSERT_KEYWORD.DATA
@@ -713,6 +714,7 @@ if(ENABLE_ECL_OUTPUT)
           tests/msim/MSIM_PYACTION_NO_RUN_FUNCTION.DATA
           tests/msim/MSIM_PYACTION_OPEN_WELL_AT_PAST_REPORT_STEP.DATA
           tests/msim/MSIM_PYACTION_OPEN_WELL_AT_TOO_LATE_REPORT_STEP.DATA
+          tests/msim/retrieve_info.py
           tests/msim/action1.py
           tests/msim/action2.py
           tests/msim/action2_no_run_function.py
