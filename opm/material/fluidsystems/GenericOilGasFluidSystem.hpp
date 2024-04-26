@@ -84,11 +84,11 @@ namespace Opm {
 
         struct ComponentParam {
             std::string name;
-            Scalar molar_mass;
-            Scalar critic_temp;
-            Scalar critic_pres;
-            Scalar critic_vol;
-            Scalar acentric_factor;
+            Scalar molar_mass; // unit: g/mol
+            Scalar critic_temp; // unit: K
+            Scalar critic_pres; // unit: parscal
+            Scalar critic_vol; // unit: m^3/kmol
+            Scalar acentric_factor; // unit: dimension less
 
             ComponentParam(const std::string_view name_, const Scalar molar_mass_, const Scalar critic_temp_,
                            const Scalar critic_pres_, const Scalar critic_vol_, const Scalar acentric_factor_)
@@ -143,9 +143,11 @@ namespace Opm {
             FluidSystem::init();
             using CompParm = typename FluidSystem::ComponentParam;
             for (std::size_t c = 0; c < num_comps; ++c) {
+                // we use m^3/kmol for the critic volume in the flash calculation, so we multiply 1.e3 for the critic volume
                 FluidSystem::addComponent(CompParm{names[c], molar_weight[c], critic_temp[c], critic_pressure[c],
-                                                          critic_volume[c], acentric_factor[c]});
+                                                          critic_volume[c] * 1.e3, acentric_factor[c]});
             }
+            FluidSystem::printComponentParams();
         }
 #endif // HAVE_ECL_INPUT
 
@@ -347,6 +349,20 @@ namespace Opm {
 
         static std::vector<ComponentParam> component_param_;
         static constexpr DummyOilPvt<Scalar> dummy_oil_pvt_{};
+    public:
+        static std::string printComponentParams() {
+            std::string result = "Components Information:\n";
+            for (const auto& param : component_param_) {
+                result += fmt::format("Name: {}\n", param.name);
+                result += fmt::format("Molar Mass: {} g/mol\n", param.molar_mass);
+                result += fmt::format("Critical Temperature: {} K\n", param.critic_temp);
+                result += fmt::format("Critical Pressure: {} Pascal\n", param.critic_pres);
+                result += fmt::format("Critical Volume: {} m^3/kmol\n", param.critic_vol);
+                result += fmt::format("Acentric Factor: {}\n", param.acentric_factor);
+                result += "---------------------------------\n";
+            }
+            return result;
+        }
     };
 
     // TODO: the following is a dummy function to avoid changing FlowGenericProblem.
