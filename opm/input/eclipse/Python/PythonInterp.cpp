@@ -29,23 +29,21 @@
 
 #include "python/cxx/export.hpp"
 #include "PythonInterp.hpp"
-#include "EmbedModule.hpp"
 
 namespace py = pybind11;
 namespace Opm {
 
-
-/*
-  OPM_EMBEDDED_MODULE create a Python of all the Python/C++ classes which are
-  generated in the python::common::export_all_opm_embedded() function in the wrapping code.
-  The same module is created as a Pybind 11 module in export.cpp
-*/
-
-OPM_EMBEDDED_MODULE(opm_embedded, module) {
-    python::common::export_all(module);
-}
-
-
+/**
+ * @brief Executes Python code within a specified context.
+ *
+ * This function executes the provided Python code within the given context.
+ * 
+ * @param python_code The Python code to execute, provided as a string.
+ * @param context The Python module providing the context for execution.
+ *
+ * @return bool The return value set at the "result" attribute in the context module.
+ *
+ */
 bool PythonInterp::exec(const std::string& python_code, py::module& context) {
     py::bool_ def_result = false;
     context.attr("result") = &def_result;
@@ -55,7 +53,19 @@ bool PythonInterp::exec(const std::string& python_code, py::module& context) {
 }
 
 
-
+/**
+ * @brief Executes Python code within a specified context.
+ *
+ * This function imports the module "opm_embedded" (initialized at opm-common/python/opm_embeded/__init__.py)
+ * as the context module, adds the parser and deck to the context and executes the given Python code.
+ * 
+ * @param python_code The Python code to execute, provided as a string.
+ * @param parser The parser.
+ * @param deck   The current deck.
+ *
+ * @return bool The return value set at the "result" attribute in the context module.
+ *
+ */
 bool PythonInterp::exec(const std::string& python_code, const Parser& parser, Deck& deck) {
     if (!this->guard)
         throw std::logic_error("Python interpreter not enabled");
@@ -67,7 +77,17 @@ bool PythonInterp::exec(const std::string& python_code, const Parser& parser, De
 }
 
 
-
+/**
+ * @brief Executes Python code within a specified context.
+ *
+ * This function imports the module "opm_embedded" (initialized at opm-common/python/opm_embeded/__init__.py)
+ * as the context module and executes the given Python code.
+ * 
+ * @param python_code The Python code to execute, provided as a string.
+ *
+ * @return bool The return value set at the "result" attribute in the context module.
+ *
+ */
 bool PythonInterp::exec(const std::string& python_code) {
     if (!this->guard)
         throw std::logic_error("Python interpreter not enabled");

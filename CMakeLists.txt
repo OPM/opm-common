@@ -431,7 +431,7 @@ if (OPM_ENABLE_PYTHON)
   # setup.py install manually - optionally with the generated script
   # setup-install.sh - and completely bypass cmake in the installation phase.
   # If OPM_ENABLE_EMBEDDED_PYTHON is enabled, we also install opmcommon_python,
-  # to make it available in a Python console.
+  # to make it available in a Python console and for e.g. opm-simulators.
   if (OPM_INSTALL_PYTHON OR OPM_ENABLE_EMBEDDED_PYTHON)
       include(PyInstallPrefix)
       install(TARGETS opmcommon_python DESTINATION ${DEST_PREFIX}${CMAKE_INSTALL_PREFIX}/${PYTHON_INSTALL_PREFIX}/opm)
@@ -442,11 +442,18 @@ if (OPM_ENABLE_PYTHON)
                     python/install.py
                     ${PROJECT_BINARY_DIR}/python/opm
                     ${DEST_PREFIX}${CMAKE_INSTALL_PREFIX}/${PYTHON_INSTALL_PREFIX} 1)")
-
-        ## Need to install this Python script such that it can be used by opm-simulators when building against an installed
-        ##  opm-common
-        install( PROGRAMS "python/install.py" DESTINATION "${OPM_PYTHON_COMMON_DIR}" )
       endif()
+      if (OPM_ENABLE_EMBEDDED_PYTHON)
+        install(
+          CODE "execute_process(
+            COMMAND ${PYTHON_EXECUTABLE}
+                    python/install.py
+                    ${PROJECT_BINARY_DIR}/python/opm_embedded
+                    ${DEST_PREFIX}${CMAKE_INSTALL_PREFIX}/${PYTHON_INSTALL_PREFIX} 1)")
+      endif()
+      ## Need to install this Python script such that it can be used by opm-simulators when building against an installed
+      ##  opm-common
+      install( PROGRAMS "python/install.py" DESTINATION "${OPM_PYTHON_COMMON_DIR}" )
   endif()
 
   # Observe that if the opmcommon library has been built as a shared library the
