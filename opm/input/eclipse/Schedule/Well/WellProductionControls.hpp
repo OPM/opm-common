@@ -78,8 +78,18 @@ public:
             return true;
         }
 
-        if (this->hasControl(WellProducerCMode::RESV) && is_zero(this->resv_rate)) {
-            return true;
+        if (this->hasControl(WellProducerCMode::RESV)) {
+            // currently, the RESV constraint for a history matching producers will be calculated based on the reservoir condition
+            // at the moment it is used, and we do not have a fixed resv_rate to check against zero. as a result,
+            // we check whether the historic rates for oil, gas and water are all zero to determine whether it is under zero
+            // RESV constraint for history matching producers.
+            const auto zero_rate = this->prediction_mode
+                ? is_zero(this->resv_rate)
+                : is_zero(this->oil_rate) && is_zero(this->water_rate) && is_zero(this->gas_rate);
+
+            if (zero_rate) {
+                return true;
+            }
         }
 
         return false;
