@@ -649,5 +649,17 @@ BOOST_AUTO_TEST_CASE(PYTHON_OPEN_WELL_AT_INVALID_REPORT_STEP) {
     }
 }
 
+BOOST_AUTO_TEST_CASE(MSIM_PYACTION_RETRIEVE_INFO) {
+    const auto& deck = Parser().parseFile("msim/MSIM_PYACTION_RETRIEVE_INFO.DATA");
+    test_data td( deck );
+    msim sim(td.state, td.schedule);
+    {
+        WorkArea work_area("test_msim");
+        EclipseIO io(td.state, td.state.getInputGrid(), sim.schedule, td.summary_config);
+
+        BOOST_CHECK_NO_THROW(sim.run(io, false));
+    }
+}
+
 #endif
 

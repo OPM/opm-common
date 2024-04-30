@@ -11,10 +11,12 @@ void python::common::export_all(py::module& module) {
     export_Deck(module);
     export_DeckKeyword(module);
     export_Schedule(module);
+    export_ScheduleState(module);
     export_Well(module);
     export_Group(module);
     export_Connection(module);
     export_EclipseConfig(module);
+    export_SimulationConfig(module);
     export_FieldProperties(module);
     export_EclipseState(module);
     export_TableManager(module);
@@ -30,22 +32,13 @@ void python::common::export_all(py::module& module) {
 
 PYBIND11_MODULE(opmcommon_python, module) {
     python::common::export_all(module);
-}
 
-void python::common::export_all_opm_embedded(py::module& module) {
-    python::common::export_all(module);
-    module.attr("current_ecl_state") = std::make_shared<EclipseState>();
-    module.attr("current_summary_state") = std::make_shared<SummaryState>();
-    module.attr("current_schedule") = std::make_shared<Schedule>();
-    module.attr("current_report_step") = 0;
-    module.doc() = R"pbdoc(This is the opm_embedded module for embedding python code in PYACTION.)pbdoc";
-}
+    pybind11::module submodule = module.def_submodule("embedded");
 
-/*
-  PYBIND11_MODULE create a Python of all the Python/C++ classes which are
-  generated in the python::common::export_all_opm_embedded() function in the wrapping code.
-  The same module is created as an embedded python module in PythonInterp.cpp
-*/
-PYBIND11_MODULE(opm_embedded, module) {
-    python::common::export_all_opm_embedded(module);
+    // These attributes are placeholders, they get set to the actual EclipseState, Schedule and SummaryState in PyRunModule.cpp
+    // If you change anything here, please recreate and update the python stub file for opm_embedded as described in python/README.md
+    submodule.attr("current_ecl_state") = std::make_shared<EclipseState>();
+    submodule.attr("current_summary_state") = std::make_shared<SummaryState>();
+    submodule.attr("current_schedule") = std::make_shared<Schedule>();
+    submodule.attr("current_report_step") = 0;
 }

@@ -26,7 +26,7 @@ void python::common::export_Connection(py::module& module) {
     .def_property_readonly("state",                &state )
     .def_property_readonly( "i",                   &Connection::getI )
     .def_property_readonly( "j",                   &Connection::getJ )
-    .def_property_readonly( "j",                   &Connection::getK )
+    .def_property_readonly( "k",                   &Connection::getK )
     .def_property_readonly( "pos",                 &get_pos )
     .def_property_readonly( "attached_to_segment", &Connection::attachedToSegment )
     .def_property_readonly( "center_depth",        &Connection::depth)

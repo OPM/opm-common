@@ -37,14 +37,5 @@ void python::common::export_EclipseConfig(py::module& module)
         .def( "getRestartStep"  ,   &InitConfig::getRestartStep );
 
     py::class_< IOConfig >( module, "IOConfig");
-
-    py::class_< SimulationConfig >( module, "SimulationConfig")
-        .def("hasThresholdPressure", &SimulationConfig::useThresholdPressure )
-        .def("useCPR",               &SimulationConfig::useCPR )
-        .def("useNONNC",             &SimulationConfig::useNONNC )
-        .def("hasDISGAS",            &SimulationConfig::hasDISGAS )
-        .def("hasDISGASW",            &SimulationConfig::hasDISGASW )
-        .def("hasVAPOIL",            &SimulationConfig::hasVAPOIL )
-        .def("hasVAPWAT",            &SimulationConfig::hasVAPWAT );
 }
 

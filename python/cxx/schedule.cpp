@@ -139,11 +139,6 @@ namespace {
         return sch.hasWell( wellName );
     }
 
-    const Group& get_group(const ScheduleState& st, const std::string& group_name) {
-        return st.groups.get(group_name);
-    }
-
-
     const ScheduleState& getitem(const Schedule& sch, std::size_t report_step) {
         return sch[report_step];
     }
@@ -196,12 +191,6 @@ namespace {
 
 
 void python::common::export_Schedule(py::module& module) {
-
-
-    py::class_<ScheduleState>(module, "ScheduleState")
-        .def_property_readonly("nupcol", py::overload_cast<>(&ScheduleState::nupcol, py::const_))
-        .def("group", &get_group, ref_internal);
-
 
     // Note: In the below class we use std::shared_ptr as the holder type, see:
     //
