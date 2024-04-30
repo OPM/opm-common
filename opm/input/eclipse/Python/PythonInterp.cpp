@@ -22,6 +22,10 @@
 #include <pybind11/embed.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
+#include <fmt/format.h>
+
+#include <opm/common/ErrorMacros.hpp>
+#include <opm/common/OpmLog/OpmLog.hpp>
 
 #include <opm/input/eclipse/Deck/Deck.hpp>
 #include <opm/input/eclipse/Parser/Parser.hpp>
@@ -70,7 +74,15 @@ bool PythonInterp::exec(const std::string& python_code, const Parser& parser, De
     if (!this->guard)
         throw std::logic_error("Python interpreter not enabled");
 
-    auto context = py::module::import("opm_embedded");
+    py::module context;
+    try {
+        context = py::module::import("opm_embedded");
+    } catch (const std::exception& e) {
+        OpmLog::error(fmt::format("Exception thrown when loading Python module opm_embedded: {}", e.what()));
+        throw e;
+    } catch (...) {
+        OPM_THROW(std::runtime_error, "General exception thrown when loading Python module opm_embedded!");
+    }
     context.attr("deck") = &deck;
     context.attr("parser") = &parser;
     return this->exec(python_code, context);
@@ -92,7 +104,15 @@ bool PythonInterp::exec(const std::string& python_code) {
     if (!this->guard)
         throw std::logic_error("Python interpreter not enabled");
 
-    auto context = py::module::import("opm_embedded");
+    py::module context;
+    try {
+        context = py::module::import("opm_embedded");
+    } catch (const std::exception& e) {
+        OpmLog::error(fmt::format("Exception thrown when loading Python module opm_embedded: {}", e.what()));
+        throw e;
+    } catch (...) {
+        OPM_THROW(std::runtime_error, "General exception thrown when loading Python module opm_embedded!");
+    }
     return this->exec(python_code, context);
 }
 
