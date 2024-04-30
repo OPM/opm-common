@@ -14,7 +14,6 @@ const py::return_value_policy move         = py::return_value_policy::move;
 
 namespace python::common {
 void export_all(py::module& module);
-void export_all_opm_embedded(py::module& module);
 void export_UnitSystem(py::module& module);
 void export_Connection(py::module& module);
 void export_Deck(py::module& module);
@@ -26,7 +25,9 @@ void export_EclipseState(py::module& module);
 void export_Group(py::module& module);
 void export_ParseContext(py::module& module);
 void export_Parser(py::module& module);
+void export_SimulationConfig(py::module& module);
 void export_Schedule(py::module& module);
+void export_ScheduleState(py::module& module);
 void export_TableManager(py::module& module);
 void export_Well(py::module& module);
 void export_Log(py::module& module);

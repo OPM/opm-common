@@ -404,34 +404,15 @@ if (OPM_ENABLE_PYTHON)
 
   target_link_libraries(opmcommon_python PRIVATE
                         opmcommon)
-  if(OPM_ENABLE_EMBEDDED_PYTHON)
-    pybind11_add_module(opm_embedded
-                        ${PYTHON_CXX_SOURCE_FILES}
-                        ${PROJECT_BINARY_DIR}/python/cxx/builtin_pybind11.cpp)
-    target_link_libraries(opm_embedded PRIVATE
-                          opmcommon)
-  endif()
   if(TARGET pybind11::pybind11)
     target_link_libraries(opmcommon_python PRIVATE
                           pybind11::pybind11)
-    if(OPM_ENABLE_EMBEDDED_PYTHON)
-      target_link_libraries(opm_embedded PRIVATE
-                            pybind11::pybind11)
-    endif()
   else()
     target_include_directories(opmcommon_python SYSTEM PRIVATE ${pybind11_INCLUDE_DIRS})
-    if(OPM_ENABLE_EMBEDDED_PYTHON)
-      target_include_directories(opm_embedded SYSTEM PRIVATE ${pybind11_INCLUDE_DIRS})
-    endif()
   endif()
   set_target_properties(opmcommon_python PROPERTIES
                         LIBRARY_OUTPUT_DIRECTORY python/opm)
   add_dependencies(opmcommon_python copy_python)
-  if(OPM_ENABLE_EMBEDDED_PYTHON)
-    set_target_properties(opm_embedded PROPERTIES
-                          LIBRARY_OUTPUT_DIRECTORY python)
-    add_dependencies(opm_embedded copy_python)
-  endif()
 
   # Generate versioned setup.py
   configure_file(${PROJECT_SOURCE_DIR}/python/setup.py.in
@@ -443,23 +424,22 @@ if (OPM_ENABLE_PYTHON)
   # extra cmake switch, OPM_INSTALL_PYTHON. If you prefer you can still invoke
   # setup.py install manually - optionally with the generated script
   # setup-install.sh - and completely bypass cmake in the installation phase.
-  if (OPM_INSTALL_PYTHON)
+  # If OPM_ENABLE_EMBEDDED_PYTHON is enabled, we also install opmcommon_python,
+  # to make it available in a Python console.
+  if (OPM_INSTALL_PYTHON OR OPM_ENABLE_EMBEDDED_PYTHON)
       include(PyInstallPrefix)
       install(TARGETS opmcommon_python DESTINATION ${DEST_PREFIX}${CMAKE_INSTALL_PREFIX}/${PYTHON_INSTALL_PREFIX}/opm)
-      install(
-        CODE "execute_process(
-          COMMAND ${PYTHON_EXECUTABLE}
-                  python/install.py
-                  ${PROJECT_BINARY_DIR}/python/opm
-                  ${DEST_PREFIX}${CMAKE_INSTALL_PREFIX}/${PYTHON_INSTALL_PREFIX} 1)")
+      if (OPM_INSTALL_PYTHON)
+        install(
+          CODE "execute_process(
+            COMMAND ${PYTHON_EXECUTABLE}
+                    python/install.py
+                    ${PROJECT_BINARY_DIR}/python/opm
+                    ${DEST_PREFIX}${CMAKE_INSTALL_PREFIX}/${PYTHON_INSTALL_PREFIX} 1)")
 
-      ## Need to install this Python script such that it can be used by opm-simulators when building against an installed
-      ##  opm-common
-      install( PROGRAMS "python/install.py" DESTINATION "${OPM_PYTHON_COMMON_DIR}" )
-
-      # Install the convenience library for PYACTION script development
-      if (OPM_ENABLE_EMBEDDED_PYTHON)
-            install(TARGETS opm_embedded DESTINATION ${DEST_PREFIX}${CMAKE_INSTALL_PREFIX}/${PYTHON_INSTALL_PREFIX})
+        ## Need to install this Python script such that it can be used by opm-simulators when building against an installed
+        ##  opm-common
+        install( PROGRAMS "python/install.py" DESTINATION "${OPM_PYTHON_COMMON_DIR}" )
       endif()
   endif()
 
