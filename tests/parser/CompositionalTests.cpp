@@ -164,10 +164,10 @@ BOOST_AUTO_TEST_CASE(CompositionalParsingTest) {
     {
         const auto& ct0 = comp_config.criticalTemperature(0);
         BOOST_CHECK_EQUAL(num_comps, ct0.size());
-        const std::vector<double> ref_ct0 = {usys.to_si(M::temperature, 600), usys.to_si(M::temperature, 300), usys.to_si(M::temperature, 190)};
+        const std::vector<double> ref_ct0 = {usys.to_si(M::temperature_absolute, 600), usys.to_si(M::temperature_absolute, 300), usys.to_si(M::temperature_absolute, 190)};
         check_vectors_close(ref_ct0, ct0, tolerance);
         const auto& ct1 = comp_config.criticalTemperature(1);
-        const std::vector<double> ref_ct1 = {usys.to_si(M::temperature, 601), usys.to_si(M::temperature, 301), usys.to_si(M::temperature, 191)};
+        const std::vector<double> ref_ct1 = {usys.to_si(M::temperature_absolute, 601), usys.to_si(M::temperature_absolute, 301), usys.to_si(M::temperature_absolute, 191)};
         check_vectors_close(ref_ct1, ct1, tolerance);
     }
 
