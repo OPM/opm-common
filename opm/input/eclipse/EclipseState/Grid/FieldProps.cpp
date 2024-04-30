@@ -779,7 +779,18 @@ bool FieldProps::has<int>(const std::string& keyword) const {
 
 void FieldProps::apply_multipliers()
 {
-    bool hasPorvBefore = (this->double_data.find(ParserKeywords::PORV::keywordName) == this->double_data.end());
+    // We need to manually search for PORV in the map here instead of using
+    // the get method. The latter one will compute PORV from the cell volume
+    // using MULTPV, NTG, and PORO. Our intend here in the EDIT section is
+    // is to multiply exsisting MULTPV with new new ones and consistently
+    // change PORV as well. If PORV has been created before this is as easy
+    // as multiplying it and MULTPV with the additional MULTPV. In the other
+    // case we do not create PORV at all but just change MULTPV as PORV will
+    // be correctly computed from it.
+    // Hence we need to know whether PORV is already there
+    const bool hasPorvBefore =
+        (this->double_data.find(ParserKeywords::PORV::keywordName) ==
+         this->double_data.end());
     static const auto prefix = getMultiplierPrefix();
 
     for(const auto& [mult_keyword, kw_info]: multiplier_kw_infos_)
