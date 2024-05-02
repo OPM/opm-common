@@ -54,10 +54,10 @@ PyRunModule::PyRunModule(std::shared_ptr<const Python> python, const std::string
     try {
         this->opm_embedded = py::module::import("opm_embedded");
     } catch (const std::exception& e) {
-        OpmLog::error(fmt::format("Exception thrown when loading Python module opm_embedded: {}"), e.what());
+        OpmLog::error(fmt::format("Exception thrown when loading Python module opm_embedded: {}. Possibly the PYTHONPATH of the system is not set correctly.", e.what()));
         throw e;
     } catch (...) {
-        OPM_THROW(std::runtime_error, "General exception thrown when loading Python module opm_embedded!");
+        OPM_THROW(std::runtime_error, "General exception thrown when loading Python module opm_embedded, possibly the PYTHONPATH of the system is not set correctly.");
     }
 }
 
