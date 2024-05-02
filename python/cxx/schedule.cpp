@@ -203,8 +203,8 @@ void python::common::export_Schedule(py::module& module) {
         The Opm::Schedule class - this is a representation of all the content from
         the SCHEDULE section, notably all well and group information and the timestepping.
     )pbdoc")
-    .def(py::init<const Deck&, const EclipseState& >())
-    .def("_groups", &get_groups )
+    .def(py::init<const Deck&, const EclipseState& >(), py::arg("deck"), py::arg("eclipse_state"))
+    .def("_groups", &get_groups, py::arg("report_step"))
     .def_property_readonly( "start",  &get_start_time )
     .def_property_readonly( "end",    &get_end_time )
     .def_property_readonly( "timesteps", &get_timesteps )
@@ -276,15 +276,15 @@ void python::common::export_Schedule(py::module& module) {
     Returns:
         None
     )")
-    .def( "get_wells", &Schedule::getWells)
+    .def( "get_wells", &Schedule::getWells, py::arg("well_name_pattern"))
     .def( "get_injection_properties", &get_injection_properties, py::arg("well_name"), py::arg("report_step"))
     .def( "get_production_properties", &get_production_properties, py::arg("well_name"), py::arg("report_step"))
-    .def("well_names", py::overload_cast<const std::string&>(&Schedule::wellNames, py::const_))
-    .def( "get_well", &get_well)
+    .def("well_names", py::overload_cast<const std::string&>(&Schedule::wellNames, py::const_), py::arg("well_name_pattern"))
+    .def( "get_well", &get_well, py::arg("well_name"), py::arg("report_step"))
     .def( "insert_keywords", py::overload_cast<Schedule&, py::list&, std::size_t>(&insert_keywords), py::arg("keywords"), py::arg("step"))
     .def( "insert_keywords", py::overload_cast<Schedule&, const std::string&, std::size_t, const UnitSystem&>(&insert_keywords), py::arg("data"), py::arg("step"), py::arg("unit_system"))
     .def( "insert_keywords", py::overload_cast<Schedule&, const std::string&, std::size_t>(&insert_keywords), py::arg("data"), py::arg("step"))
     .def( "insert_keywords", py::overload_cast<Schedule&, const std::string&>(&insert_keywords),py::arg("data"))
-    .def( "__contains__", &has_well );
-
+    .def("__contains__", &has_well, py::arg("well_name"))
+    ;
 }

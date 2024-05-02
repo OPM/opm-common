@@ -20,6 +20,6 @@ void python::common::export_ScheduleState(py::module& module) {
 
     py::class_<ScheduleState>(module, "ScheduleState")
         .def_property_readonly("nupcol", py::overload_cast<>(&ScheduleState::nupcol, py::const_))
-        .def("group", &get_group, ref_internal)
+        .def("group", &get_group, ref_internal, py::arg("group_name"))
         ;
 }
