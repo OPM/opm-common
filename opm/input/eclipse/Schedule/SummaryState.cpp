@@ -31,6 +31,7 @@
 #include <iomanip>
 #include <ostream>
 #include <set>
+#include <stdexcept>
 #include <string>
 #include <string_view>
 #include <unordered_map>
@@ -210,7 +211,8 @@ namespace Opm
         return this->values.find(key) != this->values.end();
     }
 
-    bool SummaryState::has_well_var(const std::string& well, const std::string& var) const
+    bool SummaryState::has_well_var(const std::string& well,
+                                    const std::string& var) const
     {
         return has_var(this->well_values, var, well);
     }
@@ -220,7 +222,8 @@ namespace Opm
         return this->well_values.count(var) != 0;
     }
 
-    bool SummaryState::has_group_var(const std::string& group, const std::string& var) const
+    bool SummaryState::has_group_var(const std::string& group,
+                                     const std::string& var) const
     {
         return has_var(this->group_values, var, group);
     }
@@ -230,13 +233,23 @@ namespace Opm
         return this->group_values.count(var) != 0;
     }
 
-    bool SummaryState::has_conn_var(const std::string& well, const std::string& var, std::size_t global_index) const
+    bool SummaryState::has_conn_var(const std::string& well,
+                                    const std::string& var,
+                                    const std::size_t  global_index) const
     {
-        if (!has_var(this->conn_values, var, well))
-            return false;
+        // Connection Values = [var][well][index] -> double
 
-        const auto& index_map = this->conn_values.at(var).at(well);
-        return (index_map.count(global_index) > 0);
+        auto varPos = this->conn_values.find(var);
+        if (varPos == this->conn_values.end()) {
+            return false;
+        }
+
+        auto wellPos = varPos->second.find(well);
+        if (wellPos == varPos->second.end()) {
+            return false;
+        }
+
+        return wellPos->second.find(global_index) != wellPos->second.end();
     }
 
     bool SummaryState::has_segment_var(const std::string& well,
@@ -277,37 +290,54 @@ namespace Opm
         return regSetPos->second.find(region) != regSetPos->second.end();
     }
 
-    void SummaryState::update(const std::string& key, double value) {
-        if (is_total(key))
-            this->values[key] += value;
-        else
-            this->values[key] = value;
+    void SummaryState::update(const std::string& key, double value)
+    {
+        auto& val_ref = this->values[key];
+
+        if (is_total(key)) {
+            val_ref += value;
+        }
+        else {
+            val_ref = value;
+        }
     }
 
-    void SummaryState::update_well_var(const std::string& well, const std::string& var, double value) {
-        std::string key = var + ":" + well;
+    void SummaryState::update_well_var(const std::string& well,
+                                       const std::string& var,
+                                       const double       value)
+    {
+        auto& val_ref  = this->values[fmt::format("{}:{}", var, well)];
+        auto& wval_ref = this->well_values[var][well];
+
         if (is_total(var)) {
-            this->values[key] += value;
-            this->well_values[var][well] += value;
-        } else {
-            this->values[key] = value;
-            this->well_values[var][well] = value;
+            val_ref  += value;
+            wval_ref += value;
         }
+        else {
+            val_ref = wval_ref = value;
+        }
+
         if (this->m_wells.count(well) == 0) {
             this->m_wells.insert(well);
             this->well_names.reset();
         }
     }
 
-    void SummaryState::update_group_var(const std::string& group, const std::string& var, double value) {
-        std::string key = var + ":" + group;
+    void SummaryState::update_group_var(const std::string& group,
+                                        const std::string& var,
+                                        const double       value)
+    {
+        auto& val_ref  = this->values[fmt::format("{}:{}", var, group)];
+        auto& gval_ref = this->group_values[var][group];
+
         if (is_total(var)) {
-            this->values[key] += value;
-            this->group_values[var][group] += value;
-        } else {
-            this->values[key] = value;
-            this->group_values[var][group] = value;
+            val_ref  += value;
+            gval_ref += value;
         }
+        else {
+            val_ref = gval_ref = value;
+        }
+
         if (this->m_groups.count(group) == 0) {
             this->m_groups.insert(group);
             this->group_names.reset();
@@ -319,7 +349,8 @@ namespace Opm
         this->elapsed += delta;
     }
 
-    void SummaryState::update_udq(const UDQSet& udq_set, double undefined_value)
+    void SummaryState::update_udq(const UDQSet& udq_set,
+                                  const double  undefined_value)
     {
         const auto var_type = udq_set.var_type();
         if (var_type == UDQVarType::WELL_VAR) {
@@ -360,15 +391,20 @@ namespace Opm
         }
     }
 
-    void SummaryState::update_conn_var(const std::string& well, const std::string& var, std::size_t global_index, double value)
+    void SummaryState::update_conn_var(const std::string& well,
+                                       const std::string& var,
+                                       const std::size_t  global_index,
+                                       const double       value)
     {
-        std::string key = var + ":" + well + ":" + std::to_string(global_index);
+        auto& val_ref  = this->values[fmt::format("{}:{}:{}", var, well, global_index)];
+        auto& cval_ref = this->conn_values[var][well][global_index];
+
         if (is_total(var)) {
-            this->values[key] += value;
-            this->conn_values[var][well][global_index] += value;
-        } else {
-            this->values[key] = value;
-            this->conn_values[var][well][global_index] = value;
+            val_ref  += value;
+            cval_ref += value;
+        }
+        else {
+            val_ref = cval_ref = value;
         }
     }
 
@@ -377,7 +413,7 @@ namespace Opm
                                           const std::size_t  segment,
                                           const double       value)
     {
-        auto& val_ref  = this->values[var + ':' + well + ':' + std::to_string(segment)];
+        auto& val_ref  = this->values[fmt::format("{}:{}:{}", var, well, segment)];
         auto& sval_ref = this->segment_values[var][well][segment];
 
         if (is_total(var)) {
@@ -410,20 +446,25 @@ namespace Opm
 
     double SummaryState::get(const std::string& key) const
     {
-        const auto iter = this->values.find(key);
-        if (iter == this->values.end())
-            throw std::out_of_range("No such key: " + key);
+        auto iter = this->values.find(key);
+        if (iter != this->values.end()) {
+            return iter->second;
+        }
 
-        return iter->second;
+        throw std::out_of_range {
+            fmt::format("Summary vector {} is unknown", key)
+        };
     }
 
-    double SummaryState::get(const std::string& key, double default_value) const
+    double SummaryState::get(const std::string& key,
+                             const double       default_value) const
     {
-        const auto iter = this->values.find(key);
-        if (iter == this->values.end())
-            return default_value;
+        auto iter = this->values.find(key);
+        if (iter != this->values.end()) {
+            return iter->second;
+        }
 
-        return iter->second;
+        return default_value;
     }
 
     double SummaryState::get_elapsed() const
@@ -431,59 +472,210 @@ namespace Opm
         return this->elapsed;
     }
 
-    double SummaryState::get_well_var(const std::string& well, const std::string& var) const
+    double SummaryState::get_well_var(const std::string& well,
+                                      const std::string& var) const
     {
-        return this->well_values.at(var).at(well);
+        auto varPos = this->well_values.find(var);
+        if (varPos == this->well_values.end()) {
+                throw std::invalid_argument {
+                    fmt::format("Summary vector {} does not "
+                                "exist at the well level", var)
+                };
+        }
+
+        auto wellPos = varPos->second.find(well);
+        if (wellPos == varPos->second.end()) {
+                throw std::invalid_argument {
+                    fmt::format("Summary vector {} does not "
+                                "exist at the well level for well {}",
+                                var, well)
+                };
+        }
+
+        return wellPos->second;
     }
 
-    double SummaryState::get_group_var(const std::string& group, const std::string& var) const
+    double SummaryState::get_group_var(const std::string& group,
+                                       const std::string& var) const
     {
-        return this->group_values.at(var).at(group);
+        auto varPos = this->group_values.find(var);
+        if (varPos == this->group_values.end()) {
+                throw std::invalid_argument {
+                    fmt::format("Summary vector {} does not "
+                                "exist at the group level", var)
+                };
+        }
+
+        auto groupPos = varPos->second.find(group);
+        if (groupPos == varPos->second.end()) {
+                throw std::invalid_argument {
+                    fmt::format("Summary vector {} does not "
+                                "exist at the group level for group {}",
+                                var, group)
+                };
+        }
+
+        return groupPos->second;
     }
 
-    double SummaryState::get_conn_var(const std::string& well, const std::string& var, std::size_t global_index) const
+    double SummaryState::get_conn_var(const std::string& well,
+                                      const std::string& var,
+                                      const std::size_t  global_index) const
     {
-        return this->conn_values.at(var).at(well).at(global_index);
+        auto varPos = this->conn_values.find(var);
+        if (varPos == this->conn_values.end()) {
+            throw std::invalid_argument {
+                fmt::format("Summary vector {} does not "
+                            "exist at the connection level", var)
+            };
+        }
+
+        auto wellPos = varPos->second.find(well);
+        if (wellPos == varPos->second.end()) {
+            throw std::invalid_argument {
+                fmt::format("Summary vector {} does not "
+                            "exist at the connection "
+                            "level for well {}",
+                            var, well)
+            };
+        }
+
+        auto connPos = wellPos->second.find(global_index);
+        if (connPos == wellPos->second.end()) {
+            throw std::invalid_argument {
+                fmt::format("Summary vector {} does not "
+                            "exist for connection {} "
+                            "in well {}",
+                            var, global_index, well)
+            };
+        }
+
+        return connPos->second;
     }
 
     double SummaryState::get_segment_var(const std::string& well,
                                          const std::string& var,
                                          const std::size_t  segment) const
     {
-        return this->segment_values.at(var).at(well).at(segment);
+        auto varPos = this->segment_values.find(var);
+        if (varPos == this->segment_values.end()) {
+                throw std::invalid_argument {
+                    fmt::format("Summary vector {} does not "
+                                "exist at the segment level", var)
+                };
+        }
+
+        auto wellPos = varPos->second.find(well);
+        if (wellPos == varPos->second.end()) {
+                throw std::invalid_argument {
+                    fmt::format("Summary vector {} does not "
+                                "exist at the segment "
+                                "level for well {}",
+                                var, well)
+                };
+        }
+
+        auto segPos = wellPos->second.find(segment);
+        if (segPos == wellPos->second.end()) {
+                throw std::invalid_argument {
+                    fmt::format("Summary vector {} does not "
+                                "exist for segment {} "
+                                "in well {}",
+                                var, segment, well)
+                };
+        }
+
+        return segPos->second;
     }
 
     double SummaryState::get_region_var(const std::string& regSet,
                                         const std::string& var,
                                         const std::size_t  region) const
     {
-        return this->region_values
-            .at(EclIO::SummaryNode::normalise_region_keyword(var))
-            .at(normalise_region_set_name(regSet))
-            .at(region);
+        auto varPos = this->region_values.find(EclIO::SummaryNode::normalise_region_keyword(var));
+        if (varPos == this->region_values.end()) {
+            throw std::invalid_argument {
+                fmt::format("Summary vector {} does not "
+                            "exist at the region level", var)
+            };
+        }
+
+        auto regSetPos = varPos->second.find(normalise_region_set_name(regSet));
+        if (regSetPos == varPos->second.end()) {
+            throw std::invalid_argument {
+                fmt::format("Summary vector {} does not "
+                            "exist at the region "
+                            "level for region set {}",
+                            var, regSet)
+            };
+        }
+
+        auto regionPos = regSetPos->second.find(region);
+        if (regionPos == regSetPos->second.end()) {
+            throw std::invalid_argument {
+                fmt::format("Summary vector {} does not "
+                            "exist for region {} "
+                            "in region set {}",
+                            var, region, regSet)
+            };
+        }
+
+        return regionPos->second;
     }
 
-    double SummaryState::get_well_var(const std::string& well, const std::string& var, double default_value) const
+    double SummaryState::get_well_var(const std::string& well,
+                                      const std::string& var,
+                                      const double       default_value) const
     {
-        if (this->has_well_var(well, var))
-            return this->get_well_var(well, var);
+        const auto fallback = default_value;
 
-        return default_value;
+        auto varPos = this->well_values.find(var);
+        if (varPos == this->well_values.end()) {
+            return fallback;
+        }
+
+        auto wellPos = varPos->second.find(well);
+        return (wellPos == varPos->second.end())
+            ? fallback
+            : wellPos->second;
     }
 
-    double SummaryState::get_group_var(const std::string& group, const std::string& var, double default_value) const
+    double SummaryState::get_group_var(const std::string& group,
+                                       const std::string& var,
+                                       const double       default_value) const
     {
-        if (this->has_group_var(group, var))
-            return this->get_group_var(group, var);
+        const auto fallback = default_value;
 
-        return default_value;
+        auto varPos = this->group_values.find(var);
+        if (varPos == this->group_values.end()) {
+            return fallback;
+        }
+
+        auto groupPos = varPos->second.find(group);
+        return (groupPos == varPos->second.end())
+            ? fallback
+            : groupPos->second;
     }
 
-    double SummaryState::get_conn_var(const std::string& well, const std::string& var, std::size_t global_index, double default_value) const
+    double SummaryState::get_conn_var(const std::string& well,
+                                      const std::string& var,
+                                      const std::size_t  global_index,
+                                      const double       default_value) const
     {
-        if (this->has_conn_var(well, var, global_index))
-            return this->get_conn_var(well, var, global_index);
-        return default_value;
+        auto varPos = this->conn_values.find(var);
+        if (varPos == this->conn_values.end()) {
+            return default_value;
+        }
+
+        auto wellPos = varPos->second.find(well);
+        if (wellPos == varPos->second.end()) {
+            return default_value;
+        }
+
+        auto connPos = wellPos->second.find(global_index);
+        return (connPos == wellPos->second.end())
+            ? default_value
+            : connPos->second;
     }
 
     double SummaryState::get_segment_var(const std::string& well,
@@ -509,8 +701,8 @@ namespace Opm
 
     const std::vector<std::string>& SummaryState::wells() const
     {
-        if (!this->well_names) {
-            this->well_names = std::vector<std::string>(this->m_wells.begin(), this->m_wells.end());
+        if (!this->well_names.has_value()) {
+            this->well_names.emplace(this->m_wells.begin(), this->m_wells.end());
         }
 
         return *this->well_names;
@@ -523,8 +715,8 @@ namespace Opm
 
     const std::vector<std::string>& SummaryState::groups() const
     {
-        if (!this->group_names) {
-            this->group_names = std::vector<std::string>(this->m_groups.begin(), this->m_groups.end());
+        if (!this->group_names.has_value()) {
+            this->group_names.emplace(this->m_groups.begin(), this->m_groups.end());
         }
 
         return *this->group_names;
