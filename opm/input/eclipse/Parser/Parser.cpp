@@ -964,7 +964,7 @@ std::unique_ptr<RawKeyword> tryParseKeyword( ParserState& parserState, const Par
 
         std::string keywordString;
         std::string deck_name = str::make_deck_name( line );
-        if (deck_name == "SKIP" || deck_name == "SKIP100" || deck_name == "SKIP300") {
+        if (parserState.parseContext.isActiveSkipKeyword(deck_name)) {
             skip = true;
             auto msg = fmt::format("{:5} Reading {:<8} in {} line {} \n      ... ignoring everything until 'ENDSKIP' ... ", "", "SKIP", parserState.current_path().string(), parserState.line());
             OpmLog::info(msg);

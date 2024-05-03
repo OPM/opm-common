@@ -376,6 +376,9 @@ class KeywordLocation;
         const static std::string SIMULATOR_KEYWORD_ITEM_NOT_SUPPORTED;
         const static std::string SIMULATOR_KEYWORD_ITEM_NOT_SUPPORTED_CRITICAL;
 
+        void setInputSkipMode(const std::string& skip_mode);
+        bool isActiveSkipKeyword(const std::string& deck_name) const;
+
     private:
         void initDefault();
         void initEnv();
@@ -384,6 +387,7 @@ class KeywordLocation;
 
         std::map<std::string , InputErrorAction> m_errorContexts;
         std::set<std::string> ignore_keywords;
+        std::string m_input_skip_mode{"100"};
     };
 }
 

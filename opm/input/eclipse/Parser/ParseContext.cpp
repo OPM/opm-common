@@ -328,6 +328,26 @@ namespace Opm {
         }
     }
 
+    void ParseContext::setInputSkipMode(const std::string& skip_mode) {
+        this->m_input_skip_mode = skip_mode;
+    }
+
+    bool ParseContext::isActiveSkipKeyword(const std::string& deck_name) const {
+        if (deck_name.compare(0, 4, "SKIP") != 0)
+            return false;
+
+        if (deck_name == "SKIP")
+            return true;
+
+        if (deck_name == "SKIP100" && (this->m_input_skip_mode == "100" || this->m_input_skip_mode == "all"))
+            return true;
+
+        if (deck_name == "SKIP300" && (this->m_input_skip_mode == "300" || this->m_input_skip_mode == "all"))
+            return true;
+
+        return false;
+    }
+
     const std::string ParseContext::PARSE_EXTRA_RECORDS = "PARSE_EXTRA_RECORDS";
     const std::string ParseContext::PARSE_UNKNOWN_KEYWORD = "PARSE_UNKNOWN_KEYWORD";
     const std::string ParseContext::PARSE_RANDOM_TEXT = "PARSE_RANDOM_TEXT";
