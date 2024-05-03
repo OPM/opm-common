@@ -1540,8 +1540,8 @@ namespace { namespace SatFunc {
                    }
 
                    const double Ss = std::min(1.0, (S-let.s1_residual)/(1.0 - let.s1_residual - let.s2_residual));
-                   const double powS = std::pow(Ss,let.l_pc);
-                   const double pow1mS = std::pow(1.0-Ss,let.t_pc);
+                   const double powS = std::pow(Ss,let.t_pc);
+                   const double pow1mS = std::pow(1.0-Ss,let.l_pc);
                    const double Pc = let.pct_pc+(let.pcir_pc-let.pct_pc)*pow1mS/(pow1mS+powS*let.e_pc);
 
                    letTab[k*numRows+i] = S;
