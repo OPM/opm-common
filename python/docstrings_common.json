@@ -1,0 +1,35 @@
+{
+    "ScheduleClass": {
+        "type": "class",
+        "signature": "opm.io.schedule.Schedule",
+        "doc": "The Schedule class - this is a representation of all the content from the SCHEDULE section, notably all well and group information and the timestepping."
+    },
+    "Schedule_getitem": {
+        "signature": "opm.io.schedule.Schedule.__getitem__(report_step: int) -> ScheduleState",
+        "doc": "Return the ScheduleState at the given report step.\n\n:param report_step: The report step.\n:type report_step: int\n\n:return: The ScheduleState at the given report step.\n:type return: ScheduleState"
+    },
+    "Schedule_shut_well_well_name_step": {
+        "signature": "opm.io.schedule.Schedule.shut_well(well_name: str, step: int) -> None",
+        "doc": "Shut down a well at a given report step.\n\n:param well_name: The name of the well to shut down.\n:type well_name: str\n:param step: The report step at which to shut down the well.\n:type step: int"
+    },
+    "Schedule_shut_well_well_name": {
+        "signature": "opm.io.schedule.Schedule.shut_well(well_name: str) -> None",
+        "doc": "Shut down a well at the current report step.\n\n:param well_name: The name of the well to shut down.\n:type well_name: str"
+    },
+    "Schedule_open_well_well_name_step": {
+        "signature": "opm.io.schedule.Schedule.open_well(well_name: str, step: int) -> None",
+        "doc": "Open a well at a given report step.\n\n:param well_name: The name of the well to open.\n:type well_name: str\n:param step: The report step at which to open the well.\n:type step: int\n:raises ValueError: If the report step is in the past or exceeds the duration of the simulation."
+    },
+    "Schedule_open_well_well_name": {
+        "signature": "opm.io.schedule.Schedule.open_well(well_name: str) -> None",
+        "doc": "Open a well at the current report step.\n\n:param well_name: The name of the well to open.\n:type well_name: str"
+    },
+    "Schedule_stop_well_well_name_step":{
+        "signature": "opm.io.schedule.Schedule.stop_well(well_name: str, step: int) -> None",
+        "doc": "Stop a well at a given report step.\n\n:param well_name: The name of the well to stop.\n:type well_name: str\n:param step: The report step at which to stop the well.\n:type step: int\n:raises ValueError: If the report step is in the past or exceeds the duration of the simulation."
+    },
+    "Schedule_stop_well_well_name": {
+        "signature": "opm.io.schedule.Schedule.stop_well(well_name: str) -> None",
+        "doc": "Stop a well at the current report step.\n\n:param well_name: The name of the well to stop.\n:type well_name: str"
+    }
+}

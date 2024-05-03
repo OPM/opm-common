@@ -16,6 +16,7 @@
 #include <pybind11/chrono.h>
 #include "export.hpp"
 
+#include <python/cxx/OpmCommonPythonDoc.hpp>
 
 namespace {
 
@@ -192,6 +193,8 @@ namespace {
 
 void python::common::export_Schedule(py::module& module) {
 
+    using namespace Opm::Common::DocStrings;
+
     // Note: In the below class we use std::shared_ptr as the holder type, see:
     //
     //  https://pybind11.readthedocs.io/en/stable/advanced/smart_ptrs.html
@@ -199,83 +202,20 @@ void python::common::export_Schedule(py::module& module) {
     // this makes it possible to share the returned object with e.g. and
     //   opm.simulators.BlackOilSimulator Python object
     //
-    py::class_< Schedule, std::shared_ptr<Schedule> >( module, "Schedule", R"pbdoc(
-        The Opm::Schedule class - this is a representation of all the content from
-        the SCHEDULE section, notably all well and group information and the timestepping.
-    )pbdoc")
+    py::class_< Schedule, std::shared_ptr<Schedule> >( module, "Schedule", ScheduleClass_docstring)
     .def(py::init<const Deck&, const EclipseState& >(), py::arg("deck"), py::arg("eclipse_state"))
     .def("_groups", &get_groups, py::arg("report_step"))
     .def_property_readonly( "start",  &get_start_time )
     .def_property_readonly( "end",    &get_end_time )
     .def_property_readonly( "timesteps", &get_timesteps )
     .def("__len__", &Schedule::size)
-    .def("__getitem__", &getitem)
-    .def("shut_well", py::overload_cast<const std::string&, std::size_t>(&Schedule::shut_well), py::arg("well_name"), py::arg("step"), R"(
-    Shut down a well at a given report step.
-
-    Args:
-        well_name (str): The name of the well to shut down.
-        report_step (int): The report step at which to shut down the well.
-
-    Raises:
-        ValueError: If the report step is in the past or exceeds the duration of the simulation.
-
-    Returns:
-        None
-    )")
-    .def("shut_well", py::overload_cast<const std::string&>(&Schedule::shut_well), py::arg("well_name"), R"(
-    Shut down a well at the current report step.
-
-    Args:
-        well_name (str): The name of the well to shut down.
-
-    Returns:
-        None
-    )")
-    .def("open_well", py::overload_cast<const std::string&, std::size_t>(&Schedule::open_well), py::arg("well_name"), py::arg("step"), R"(
-    Open a well at a given report step.
-
-    Args:
-        well_name (str): The name of the well to open.
-        report_step (int): The report step at which to open the well.
-
-    Raises:
-        ValueError: If the report step is in the past or exceeds the duration of the simulation.
-
-    Returns:
-        None
-    )")
-    .def("open_well", py::overload_cast<const std::string&>(&Schedule::open_well), py::arg("well_name"), R"(
-    Open a well at the current report step.
-
-    Args:
-        well_name (str): The name of the well to open.
-
-    Returns:
-        None
-    )")
-    .def("stop_well", py::overload_cast<const std::string&, std::size_t>(&Schedule::stop_well), py::arg("well_name"), py::arg("step"), R"(
-    Stop a well at a given report step.
-
-    Args:
-        well_name (str): The name of the well to stop.
-        report_step (int): The report step at which to stop the well.
-
-    Raises:
-        ValueError: If the report step is in the past or exceeds the duration of the simulation.
-
-    Returns:
-        None
-    )")
-    .def("stop_well", py::overload_cast<const std::string&>(&Schedule::stop_well), py::arg("well_name"), R"(
-    Stop a well at the current report step.
-
-    Args:
-        well_name (str): The name of the well to stop.
-
-    Returns:
-        None
-    )")
+    .def("__getitem__", &getitem, py::arg("report_step"), Schedule_getitem_docstring)
+    .def("shut_well", py::overload_cast<const std::string&, std::size_t>(&Schedule::shut_well), py::arg("well_name"), py::arg("step"), Schedule_shut_well_well_name_step_docstring)
+    .def("shut_well", py::overload_cast<const std::string&>(&Schedule::shut_well), py::arg("well_name"), Schedule_shut_well_well_name_docstring)
+    .def("open_well", py::overload_cast<const std::string&, std::size_t>(&Schedule::open_well), py::arg("well_name"), py::arg("step"), Schedule_open_well_well_name_step_docstring)
+    .def("open_well", py::overload_cast<const std::string&>(&Schedule::open_well), py::arg("well_name"), Schedule_open_well_well_name_docstring)
+    .def("stop_well", py::overload_cast<const std::string&, std::size_t>(&Schedule::stop_well), py::arg("well_name"), py::arg("step"), Schedule_stop_well_well_name_step_docstring)
+    .def("stop_well", py::overload_cast<const std::string&>(&Schedule::stop_well), py::arg("well_name"), Schedule_stop_well_well_name_docstring)
     .def( "get_wells", &Schedule::getWells, py::arg("well_name_pattern"))
     .def( "get_injection_properties", &get_injection_properties, py::arg("well_name"), py::arg("report_step"))
     .def( "get_production_properties", &get_production_properties, py::arg("well_name"), py::arg("report_step"))
