@@ -117,7 +117,7 @@ void python::common::export_EclipseState(py::module& module) {
         .def( "simulation",     &EclipseState::getSimulationConfig, ref_internal)
         .def( "input_nnc",      &getNNC )
         .def( "faultNames",     &faultNames )
-        .def( "faultFaces",     &faultFaces )
+        .def( "faultFaces",     &faultFaces, py::arg("fault_name"))
         .def( "jfunc",          &jfunc )
         ;
 
