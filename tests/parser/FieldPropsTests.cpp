@@ -463,6 +463,132 @@ ENDBOX
         BOOST_CHECK_EQUAL(porv_global[g], porv[g]);
     }
 }
+BOOST_AUTO_TEST_CASE(PORV2) {
+    std::string deck_string = R"(
+GRID
+
+PORO
+  500*0.10 /
+
+BOX
+  1 10 1 10 2 2 /
+
+NTG
+  100*2 /
+
+ENDBOX
+
+MULTNUM
+  500*1 /
+
+BOX
+   1 10 1 10 5 5 /
+
+MULTNUM
+  100*2 /
+
+ENDBOX
+
+EDIT
+
+BOX
+  1 10 1 10 3 3 /
+
+PORV
+  100*3 /
+
+ENDBOX
+
+BOX
+  1 10 1 10 4 4 /
+
+MULTPV
+  100*4 /
+
+ENDBOX
+
+
+MULTREGP
+  2 8 F /  -- This should be ignored
+/
+
+MULTREGP
+  2 5 M /
+/
+
+ENDBOX
+
+)";
+
+    EclipseGrid grid(10,10, 5);
+    Deck deck = Parser{}.parseString(deck_string);
+    FieldPropsManager fpm(deck, Phases{true, true, true}, grid, TableManager());
+    const auto& poro = fpm.get_double("PORO");
+    const auto& ntg = fpm.get_double("NTG");
+    const auto& multpv = fpm.get_double("MULTPV");
+    const auto& porv = fpm.porv();
+
+    // All cells should be active for this grid
+    BOOST_CHECK_EQUAL(porv.size(), grid.getNumActive());
+    BOOST_CHECK_EQUAL(porv.size(), grid.getCartesianSize());
+
+    // k = 0: poro * V
+    for (std::size_t g = 0; g < 100; g++) {
+        BOOST_CHECK_CLOSE(porv[g], grid.getCellVolume(g) * poro[g], 1e-13);
+        BOOST_CHECK_EQUAL(porv[g], 0.10);
+        BOOST_CHECK_EQUAL(poro[g], 0.10);
+        BOOST_CHECK_EQUAL(ntg[g], 1.0);
+        BOOST_CHECK_EQUAL(multpv[g], 1.0);
+    }
+
+    // k = 1: poro * NTG * V
+    for (std::size_t g = 100; g < 200; g++) {
+        BOOST_CHECK_CLOSE(porv[g], grid.getCellVolume(g) * poro[g] * ntg[g], 1e-13);
+        BOOST_CHECK_EQUAL(porv[g], 0.20);
+        BOOST_CHECK_EQUAL(poro[g], 0.10);
+        BOOST_CHECK_EQUAL(ntg[g], 2.0);
+        BOOST_CHECK_EQUAL(multpv[g], 1.0);
+    }
+
+    // k = 2: PORV - explicitly set
+    for (std::size_t g = 200; g < 300; g++) {
+        BOOST_CHECK_EQUAL(poro[g], 0.10);
+        BOOST_CHECK_EQUAL(ntg[g], 1.0);
+        BOOST_CHECK_EQUAL(multpv[g], 1.0);
+        BOOST_CHECK_EQUAL(porv[g], 3.0);
+    }
+
+    // k = 3: poro * V * multpv
+    for (std::size_t g = 300; g < 400; g++) {
+        BOOST_CHECK_CLOSE(porv[g], multpv[g] * grid.getCellVolume(g) * poro[g] * ntg[g], 1e-13);
+        BOOST_CHECK_EQUAL(porv[g], 0.40);
+        BOOST_CHECK_EQUAL(poro[g], 0.10);
+        BOOST_CHECK_EQUAL(ntg[g], 1.0);
+        BOOST_CHECK_EQUAL(multpv[g], 4.0);
+    }
+
+    // k = 4: poro * V * MULTREGP
+    for (std::size_t g = 400; g < 500; g++) {
+        BOOST_CHECK_CLOSE(porv[g], grid.getCellVolume(g) * poro[g] * 5.0, 1e-13);
+        BOOST_CHECK_EQUAL(porv[g], 0.50);
+        BOOST_CHECK_EQUAL(poro[g], 0.10);
+    }
+
+    std::vector<int> actnum(500, 1);
+    actnum[0] = 0;
+    grid.resetACTNUM(actnum);
+
+    fpm.reset_actnum(actnum);
+    auto porv_global = fpm.porv(true);
+    auto porv_active = fpm.porv(false);
+    BOOST_CHECK_EQUAL( porv_active.size(), grid.getNumActive());
+    BOOST_CHECK_EQUAL( porv_global.size(), grid.getCartesianSize());
+    BOOST_CHECK_EQUAL( porv_global[0], 0);
+    for (std::size_t g = 1; g < grid.getCartesianSize(); g++) {
+        BOOST_CHECK_EQUAL(porv_active[g - 1], porv_global[g]);
+        BOOST_CHECK_EQUAL(porv_global[g], porv[g]);
+    }
+}
 
 
 BOOST_AUTO_TEST_CASE(LATE_GET_SATFUNC) {
