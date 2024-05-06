@@ -1090,25 +1090,33 @@ BOOST_AUTO_TEST_CASE(well_keywords_dynamic_close) {
     }
 }
 
-BOOST_AUTO_TEST_CASE(udq_keywords) {
-    setup cfg( "test_summary_udq" );
+BOOST_AUTO_TEST_CASE(udq_keywords)
+{
+    setup cfg("test_summary_udq");
 
-    out::Summary writer(cfg.config, cfg.es, cfg.grid, cfg.schedule, cfg.name);
-    SummaryState st(TimeService::now());
-    writer.eval( st, 0, 0 * day, cfg.wells, cfg.wbp, cfg.grp_nwrk, {}, {}, {}, {});
-    writer.add_timestep( st, 0, false);
-    writer.eval( st, 1, 1 * day, cfg.wells, cfg.wbp, cfg.grp_nwrk, {}, {}, {}, {});
-    writer.add_timestep( st, 1, false);
-    writer.eval( st, 2, 2 * day, cfg.wells, cfg.wbp, cfg.grp_nwrk, {}, {}, {}, {});
-    writer.add_timestep( st, 2, false);
+    const auto udqUndef = cfg.es.runspec().udqParams().undefinedValue();
+
+    auto st = SummaryState { TimeService::now(), udqUndef };
+
+    auto writer = out::Summary {
+        cfg.config, cfg.es, cfg.grid, cfg.schedule, cfg.name
+    };
+
+    for (auto rptStep = 0; rptStep < 3; ++rptStep) {
+        writer.eval(st, rptStep, rptStep*day,
+                    cfg.wells, cfg.wbp, cfg.grp_nwrk,
+                    {}, {}, {}, {});
+
+        const auto isSubstep = false;
+        writer.add_timestep(st, 0, isSubstep);
+    }
+
     writer.write();
 
-    auto res = readsum( cfg.name );
-    const auto* resp = res.get();
+    const auto res = readsum(cfg.name);
 
-    const auto& udq_params = cfg.es.runspec().udqParams();
-    BOOST_CHECK_CLOSE( ecl_sum_get_well_var(resp, 1, "W_1", "WUBHP"), udq_params.undefinedValue(), 1e-5 );
-    BOOST_CHECK_CLOSE( ecl_sum_get_well_var(resp, 1, "W_3", "WUBHP"), udq_params.undefinedValue(), 1e-5 );
+    BOOST_CHECK_CLOSE(ecl_sum_get_well_var(res.get(), 1, "W_1", "WUBHP"), udqUndef, 1.0e-5);
+    BOOST_CHECK_CLOSE(ecl_sum_get_well_var(res.get(), 1, "W_3", "WUBHP"), udqUndef, 1.0e-5);
 
 #if 0
     BOOST_CHECK_EQUAL( std::string(ecl_sum_get_unit(resp, "WUBHP:W_1")), "BARSA");
