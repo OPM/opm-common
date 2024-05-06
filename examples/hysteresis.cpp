@@ -230,7 +230,7 @@ int main(int argc, char **argv)
             //                                    param);
         } 
 
-        trapped_out = MaterialLaw::trappedGasSaturation(param);
+        trapped_out = MaterialLaw::trappedGasSaturation(param, /*maximumTrapping*/ false);
 
         outfile << krnSwMdc_out << "," << trapped_out << std::endl;
     }

@@ -2592,10 +2592,12 @@ static const auto single_values_units = UnitTable {
     {"FGMIP"    , Opm::UnitSystem::measure::mass },
     {"FGMGP"    , Opm::UnitSystem::measure::mass },
     {"FGMDS"    , Opm::UnitSystem::measure::mass },
-    {"FGMTR"    , Opm::UnitSystem::measure::mass },
+    {"FGMIM"    , Opm::UnitSystem::measure::mass },
     {"FGMMO"    , Opm::UnitSystem::measure::mass },
     {"FGKTR"    , Opm::UnitSystem::measure::mass },
     {"FGKMO"    , Opm::UnitSystem::measure::mass },
+    {"FGMST"    , Opm::UnitSystem::measure::mass },
+    {"FGMUS"    , Opm::UnitSystem::measure::mass },
 };
 
 static const auto region_units = UnitTable {
@@ -2621,10 +2623,12 @@ static const auto region_units = UnitTable {
     {"RGMIP" , Opm::UnitSystem::measure::mass },
     {"RGMGP" , Opm::UnitSystem::measure::mass },
     {"RGMDS" , Opm::UnitSystem::measure::mass },
-    {"RGMTR" , Opm::UnitSystem::measure::mass },
+    {"RGMIM" , Opm::UnitSystem::measure::mass },
     {"RGMMO" , Opm::UnitSystem::measure::mass },
     {"RGKTR" , Opm::UnitSystem::measure::mass },
     {"RGKMO" , Opm::UnitSystem::measure::mass },
+    {"RGMST" , Opm::UnitSystem::measure::mass },
+    {"RGMUS" , Opm::UnitSystem::measure::mass },
 };
 
 static const auto interregion_units = UnitTable {

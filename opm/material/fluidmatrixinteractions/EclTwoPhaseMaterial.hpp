@@ -244,19 +244,27 @@ public:
         params.gasOilParams().update(pcSwMdc, krwSw, krnSwMdc);
     }
 
-    static Scalar trappedGasSaturation(const Params& params){
+    static Scalar trappedGasSaturation(const Params& params, bool maximumTrapping){
         if(params.approach() == EclTwoPhaseApproach::GasOil)
-            return params.gasOilParams().SnTrapped();
+            return params.gasOilParams().SnTrapped(maximumTrapping);
         if(params.approach() == EclTwoPhaseApproach::GasWater)
-            return params.gasWaterParams().SnTrapped();
+            return params.gasWaterParams().SnTrapped(maximumTrapping);
         return 0.0; // oil-water case
     }
 
-    static Scalar trappedOilSaturation(const Params& params){
+    static Scalar strandedGasSaturation(const Params& params, Scalar Sg, Scalar Kg){
+        if(params.approach() == EclTwoPhaseApproach::GasOil)
+            return params.gasOilParams().SnStranded(Sg, Kg);
+        if(params.approach() == EclTwoPhaseApproach::GasWater)
+            return params.gasWaterParams().SnStranded(Sg, Kg);
+        return 0.0; // oil-water case
+    }
+
+    static Scalar trappedOilSaturation(const Params& params, bool maximumTrapping){
         if(params.approach() == EclTwoPhaseApproach::GasOil)
             return params.gasOilParams().SwTrapped();
         if(params.approach() == EclTwoPhaseApproach::OilWater)
-            return params.oilWaterParams().SnTrapped();
+            return params.oilWaterParams().SnTrapped(maximumTrapping);
         return 0.0; // gas-water case
     }
     /*!

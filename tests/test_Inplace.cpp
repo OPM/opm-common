@@ -159,6 +159,14 @@ BOOST_AUTO_TEST_CASE(InPlace_Phases)
 
     BOOST_CHECK_MESSAGE(contains(phases, Inplace::Phase::CO2MassInGasPhaseMobKrg),
                         R"(phases() must have "CO2MassInGasPhaseMobKrg")");
+    BOOST_CHECK_MESSAGE(contains(phases, Inplace::Phase::CO2MassInGasPhaseEffectiveTrapped),
+                        R"(phases() must have "CO2MassInGasPhaseEffectiveTrapped")");
+    BOOST_CHECK_MESSAGE(contains(phases, Inplace::Phase::CO2MassInGasPhaseEffectiveUnTrapped),
+                        R"(phases() must have "CO2MassInGasPhaseEffectiveUnTrapped")");
+    BOOST_CHECK_MESSAGE(contains(phases, Inplace::Phase::CO2MassInGasPhaseMaximumTrapped),
+                        R"(phases() must have "CO2MassInGasPhaseMaximumTrapped")");
+    BOOST_CHECK_MESSAGE(contains(phases, Inplace::Phase::CO2MassInGasPhaseMaximumUnTrapped),
+                        R"(phases() must have "CO2MassInGasPhaseMaximumUnTrapped")");
 }
 
 BOOST_AUTO_TEST_CASE(InPlace_Mixing_Phases)
@@ -251,7 +259,12 @@ BOOST_AUTO_TEST_CASE(InPlace_Mixing_Phases)
 
     BOOST_CHECK_MESSAGE(contains(phases, Inplace::Phase::CO2MassInGasPhaseInMobKrg),
                         R"(mixingPhases() must have "CO2MassInGasPhaseInMobKrg")");
-
-    BOOST_CHECK_MESSAGE(contains(phases, Inplace::Phase::CO2MassInGasPhaseMobKrg),
-                        R"(mixingPhases() must have "CO2MassInGasPhaseMobKrg")");
+    BOOST_CHECK_MESSAGE(contains(phases, Inplace::Phase::CO2MassInGasPhaseEffectiveTrapped),
+                        R"(mixingPhases() must have "CO2MassInGasPhaseEffectiveTrapped")");
+    BOOST_CHECK_MESSAGE(contains(phases, Inplace::Phase::CO2MassInGasPhaseEffectiveUnTrapped),
+                        R"(mixingPhases() must have "CO2MassInGasPhaseEffectiveUnTrapped")");
+    BOOST_CHECK_MESSAGE(contains(phases, Inplace::Phase::CO2MassInGasPhaseMaximumTrapped),
+                        R"(mixingPhases() must have "CO2MassInGasPhaseMaximumTrapped")");
+    BOOST_CHECK_MESSAGE(contains(phases, Inplace::Phase::CO2MassInGasPhaseMaximumUnTrapped),
+                        R"(mixingPhases() must have "CO2MassInGasPhaseMaximumUnTrapped")");
 }
