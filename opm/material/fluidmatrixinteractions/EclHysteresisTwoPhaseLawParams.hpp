@@ -821,7 +821,7 @@ private:
     Scalar Swcrd_{};
     Scalar Swmaxi_{};
     Scalar Snmaxd_{};
-    Scalar Swmaxd_;
+    Scalar Swmaxd_{};
     Scalar C_{};
     Scalar Cw_{};
 
