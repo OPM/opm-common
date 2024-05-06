@@ -308,7 +308,7 @@ WELSPECS
         const auto& eclGrid = es.getInputGrid();
         const Schedule schedule(deck, es, std::make_shared<Python>());
         const SummaryConfig summary_config( deck, schedule, es.fieldProps(), es.aquifer());
-        const SummaryState st(TimeService::now());
+        const SummaryState st(TimeService::now(), 0.0);
         es.getIOConfig().setBaseName( "FOO" );
 
         EclipseIO eclWriter( es, eclGrid , schedule, summary_config);
@@ -435,6 +435,8 @@ WELSPECS
     // the file
     BOOST_CHECK_EQUAL(file_size, write_and_check(3, 5));
 }
+
+namespace {
 
 std::pair<std::string,std::array<std::array<std::vector<float>,2>,3>>
 createMULTXYZDECK(std::array<std::bitset<2>,3> doxyz, bool write_all_multminus)
@@ -699,7 +701,7 @@ void testMultxyz(std::array<std::bitset<2>,3> doxyz, bool write_all_multminus = 
     const auto& eclGrid = es.getInputGrid();
     const Schedule schedule(deck, es, std::make_shared<Python>());
     const SummaryConfig summary_config( deck, schedule, es.fieldProps(), es.aquifer());
-    const SummaryState st(TimeService::now());
+    const SummaryState st(TimeService::now(), 0.0);
     es.getIOConfig().setBaseName( "MULTXFOO" );
     EclipseIO eclWriter( es, eclGrid , schedule, summary_config);
     eclWriter.writeInitial( );
@@ -722,6 +724,7 @@ void testMultxyz(std::array<std::bitset<2>,3> doxyz, bool write_all_multminus = 
     }
 }
 
+} // Anonymous namespace
 
 BOOST_AUTO_TEST_CASE(MULTXYZInit)
 {
@@ -740,6 +743,7 @@ BOOST_AUTO_TEST_CASE(MULTXYZInit)
     testMultxyz({ '3', '3' , '3'});
 }
 
+namespace {
 
 std::pair<std::string,std::vector<float>>
 createMULTPVDECK(bool edit)
@@ -844,7 +848,7 @@ void checkMULTPV(const std::pair<std::string, std::vector<float>>& deckAndValues
     const auto& eclGrid = es.getInputGrid();
     const Schedule schedule(deck, es, std::make_shared<Python>());
     const SummaryConfig summary_config( deck, schedule, es.fieldProps(), es.aquifer());
-    const SummaryState st(TimeService::now());
+    const SummaryState st(TimeService::now(), 0.0);
     es.getIOConfig().setBaseName( "MULTPVFOO" );
     EclipseIO eclWriter( es, eclGrid , schedule, summary_config);
     eclWriter.writeInitial( );
@@ -862,12 +866,16 @@ void checkMULTPV(const std::pair<std::string, std::vector<float>>& deckAndValues
     }
 }
 
+} // Anonymous namespace
+
 BOOST_AUTO_TEST_CASE(MULTPVInit)
 {
     checkMULTPV(createMULTPVDECK(false));
     checkMULTPV(createMULTPVDECK(true));
     
 }
+
+namespace {
 
 std::pair<std::string,std::vector<float>>
 createMULTPVBOXDECK()
@@ -936,6 +944,8 @@ SCHEDULE
     expected.insert(expected.end(), 90, 1.5);
     return { deckString, expected };
 }
+
+} // Anonymous namespace
 
 BOOST_AUTO_TEST_CASE(MULTPVBOXInit)
 {

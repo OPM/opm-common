@@ -1335,7 +1335,7 @@ I1 THP 4 /
     double siFactorL = unitSystem.parse("LiquidSurfaceVolume/Time").getSIScaling();
     double siFactorG = unitSystem.parse("GasSurfaceVolume/Time").getSIScaling();
     double siFactorP = unitSystem.parse("Pressure").getSIScaling();
-    SummaryState st(TimeService::now());
+    SummaryState st(TimeService::now(), 0.0);
 
     const auto& well_1 = schedule.getWell("OP_1", 1);
     const auto wpp_1 = well_1.getProductionProperties();
@@ -1425,7 +1425,7 @@ WELTARG
 )";
 
     const auto& schedule = make_schedule(input);
-    SummaryState st(TimeService::now());
+    SummaryState st(TimeService::now(), 0.0);
     Opm::UnitSystem unitSystem = UnitSystem( UnitSystem::UnitType::UNIT_TYPE_METRIC );
     double siFactorL = unitSystem.parse("LiquidSurfaceVolume/Time").getSIScaling();
 
@@ -1876,7 +1876,7 @@ BOOST_AUTO_TEST_CASE(createDeckModifyMultipleGCONPROD) {
         )";
 
         const auto& schedule = make_schedule(input);
-        Opm::SummaryState st(TimeService::now());
+        Opm::SummaryState st(TimeService::now(), 0.0);
 
         Opm::UnitSystem unitSystem = UnitSystem(UnitSystem::UnitType::UNIT_TYPE_METRIC);
         double siFactorL = unitSystem.parse("LiquidSurfaceVolume/Time").getSIScaling();
@@ -2163,7 +2163,7 @@ WCONINJH
 )";
 
     const auto& sched = make_schedule(input);
-    const auto st = ::Opm::SummaryState{ TimeService::now() };
+    const auto st = ::Opm::SummaryState{ TimeService::now(), 0.0 };
     UnitSystem unit_system(UnitSystem::UnitType::UNIT_TYPE_METRIC);
 
     // The BHP limit should not be effected by WCONHIST
@@ -4380,7 +4380,7 @@ END
 )";
 
     const auto sched = make_schedule(input);
-    const auto st = ::Opm::SummaryState{ TimeService::now() };
+    const auto st = ::Opm::SummaryState{ TimeService::now(), 0.0 };
 
     BOOST_CHECK_EQUAL(Well::eclipseControlMode(sched.getWell("W1", 10), st), -1);
     BOOST_CHECK_EQUAL(Well::eclipseControlMode(sched.getWell("W2", 10), st), 3);
@@ -4436,7 +4436,7 @@ END
 )";
 
     const auto sched = make_schedule(input);
-    const auto st = ::Opm::SummaryState{ TimeService::now() };
+    const auto st = ::Opm::SummaryState{ TimeService::now(), 0.0 };
 
     BOOST_CHECK_EQUAL(Well::eclipseControlMode(sched.getWell("W1", 10), st), -1);
     BOOST_CHECK_EQUAL(Well::eclipseControlMode(sched.getWell("W2", 10), st), 1);
@@ -5434,7 +5434,7 @@ WCONPROD
     auto       sched = Schedule{ deck, es };
     const auto& well1 = sched.getWell("P1", 0);
     const auto& well2 = sched.getWell("P2", 0);
-    SummaryState st(TimeService::now());
+    SummaryState st(TimeService::now(), 0.0);
 
     st.update("FU_GAS", 123);
     const auto& controls1 = well1.productionControls(st);

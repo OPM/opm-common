@@ -271,7 +271,11 @@ data::Solution mkSolutionFIP(const int numCells)
 
 Opm::SummaryState sim_state(const Opm::Schedule& sched)
 {
-    auto state = Opm::SummaryState{TimeService::now()};
+    auto state = Opm::SummaryState {
+        TimeService::now(),
+        sched.back().udq().params().undefinedValue()
+    };
+
     for (const auto& well : sched.getWellsatEnd()) {
         for (const auto& connection : well.getConnections()) {
             state.update_conn_var(well.name(), "CPR", connection.global_index() + 1, 111);
@@ -697,7 +701,7 @@ BOOST_AUTO_TEST_CASE(WriteWrongSOlutionSize) {
         auto cells = mkSolution( num_cells );
         auto wells = mkWells();
         auto groups = mkGroups();
-        Opm::SummaryState sumState(TimeService::now());
+        Opm::SummaryState sumState(TimeService::now(), 0.0);
         Opm::Action::State action_state;
         Opm::UDQState udq_state(19);
         Opm::WellTestState wtest_state;
@@ -764,7 +768,7 @@ BOOST_AUTO_TEST_CASE(ExtraData_content) {
         const auto& units = setup.es.getUnits();
         {
             RestartValue restart_value(cells, wells, groups, {});
-            SummaryState st(TimeService::now());
+            SummaryState st(TimeService::now(), 0.0);
             const auto sumState = sim_state(setup.schedule);
 
             restart_value.addExtra("EXTRA", UnitSystem::measure::pressure, {10,1,2,3});
@@ -976,10 +980,10 @@ BOOST_AUTO_TEST_CASE(Restore_Cumulatives)
     }
 
     Action::State action_state;
-    SummaryState rstSumState(TimeService::now());
+    SummaryState rstSumState(TimeService::now(), 0.0);
     RestartIO::load(OS::outputFileName(rset, "UNRST"), seqnum, action_state, rstSumState,
                     /* solution_keys = */ {
-                                           RestartKey("SWAT", UnitSystem::measure::identity),
+                        RestartKey("SWAT", UnitSystem::measure::identity),
                     },
                     setup.es, setup.grid, setup.schedule,
                     /* extra_keys = */ {});
@@ -1128,8 +1132,8 @@ BOOST_AUTO_TEST_CASE(UDQ_RESTART) {
     test_area.copyIn("UDQ_RESTART.DATA");
 
     Setup base_setup("UDQ_BASE.DATA");
-    SummaryState st1(TimeService::now());
-    SummaryState st2(TimeService::now());
+    SummaryState st1(TimeService::now(), 0.0);
+    SummaryState st2(TimeService::now(), 0.0);
     Action::State action_state;
     UDQState udq_state(1);
     init_st(st1);

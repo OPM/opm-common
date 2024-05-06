@@ -658,8 +658,8 @@ namespace {
 
 BOOST_AUTO_TEST_CASE(WCH_All_Specified_BHP_Defaulted)
 {
-    Opm::SummaryState st(TimeService::now());
-    const Opm::Well::WellProductionProperties& p =
+    Opm::SummaryState st(TimeService::now(), 0.0);
+    const Opm::Well::WellProductionProperties p =
         WCONHIST::properties(WCONHIST::all_specified());
 
     BOOST_CHECK(p.hasProductionControl(Opm::Well::ProducerCMode::ORAT));
@@ -678,8 +678,8 @@ BOOST_AUTO_TEST_CASE(WCH_All_Specified_BHP_Defaulted)
 
 BOOST_AUTO_TEST_CASE(WCH_ORAT_Defaulted_BHP_Defaulted)
 {
-    Opm::SummaryState st(TimeService::now());
-    const Opm::Well::WellProductionProperties& p =
+    Opm::SummaryState st(TimeService::now(), 0.0);
+    const Opm::Well::WellProductionProperties p =
         WCONHIST::properties(WCONHIST::orat_defaulted());
 
     BOOST_CHECK( !p.hasProductionControl(Opm::Well::ProducerCMode::ORAT));
@@ -696,8 +696,8 @@ BOOST_AUTO_TEST_CASE(WCH_ORAT_Defaulted_BHP_Defaulted)
 
 BOOST_AUTO_TEST_CASE(WCH_OWRAT_Defaulted_BHP_Defaulted)
 {
-    Opm::SummaryState st(TimeService::now());
-    const Opm::Well::WellProductionProperties& p =
+    Opm::SummaryState st(TimeService::now(), 0.0);
+    const Opm::Well::WellProductionProperties p =
         WCONHIST::properties(WCONHIST::owrat_defaulted());
 
     BOOST_CHECK( !p.hasProductionControl(Opm::Well::ProducerCMode::ORAT));
@@ -714,8 +714,8 @@ BOOST_AUTO_TEST_CASE(WCH_OWRAT_Defaulted_BHP_Defaulted)
 
 BOOST_AUTO_TEST_CASE(WCH_Rates_Defaulted_BHP_Defaulted)
 {
-    Opm::SummaryState st(TimeService::now());
-    const Opm::Well::WellProductionProperties& p =
+    Opm::SummaryState st(TimeService::now(), 0.0);
+    const Opm::Well::WellProductionProperties p =
         WCONHIST::properties(WCONHIST::all_defaulted());
 
     BOOST_CHECK( !p.hasProductionControl(Opm::Well::ProducerCMode::ORAT));
@@ -732,8 +732,8 @@ BOOST_AUTO_TEST_CASE(WCH_Rates_Defaulted_BHP_Defaulted)
 
 BOOST_AUTO_TEST_CASE(WCH_Rates_Defaulted_BHP_Specified)
 {
-    Opm::SummaryState st(TimeService::now());
-    const Opm::Well::WellProductionProperties& p =
+    Opm::SummaryState st(TimeService::now(), 0.0);
+    const Opm::Well::WellProductionProperties p =
         WCONHIST::properties(WCONHIST::all_defaulted_with_bhp());
 
     BOOST_CHECK( !p.hasProductionControl(Opm::Well::ProducerCMode::ORAT));
@@ -751,8 +751,8 @@ BOOST_AUTO_TEST_CASE(WCH_Rates_Defaulted_BHP_Specified)
 
 BOOST_AUTO_TEST_CASE(WCH_Rates_NON_Defaulted_VFP)
 {
-    Opm::SummaryState st(TimeService::now());
-    const Opm::Well::WellProductionProperties& p =
+    Opm::SummaryState st(TimeService::now(), 0.0);
+    const Opm::Well::WellProductionProperties p =
         WCONHIST::properties(WCONHIST::all_defaulted_with_bhp_vfp_table(), VFPProdTable::ALQ_TYPE::ALQ_UNDEF);
 
     BOOST_CHECK( !p.hasProductionControl(Opm::Well::ProducerCMode::ORAT));
@@ -772,8 +772,8 @@ BOOST_AUTO_TEST_CASE(WCH_Rates_NON_Defaulted_VFP)
 
 BOOST_AUTO_TEST_CASE(WCH_BHP_Specified)
 {
-    Opm::SummaryState st(TimeService::now());
-    const Opm::Well::WellProductionProperties& p =
+    Opm::SummaryState st(TimeService::now(), 0.0);
+    const Opm::Well::WellProductionProperties p =
         WCONHIST::properties(WCONHIST::bhp_defaulted());
 
     BOOST_CHECK( !p.hasProductionControl(Opm::Well::ProducerCMode::ORAT));
@@ -880,7 +880,7 @@ BOOST_AUTO_TEST_CASE(WELL_CONTROLS) {
     auto unit_system = UnitSystem::newMETRIC();
     Opm::Well well("WELL", "GROUP", 0, 0, 0, 0, 1000, Opm::WellType(Opm::Phase::OIL), Opm::Well::ProducerCMode::CMODE_UNDEFINED, Opm::Connection::Order::DEPTH, unit_system, 0, 1.0, false, false, 0, Opm::Well::GasInflowEquation::STD);
     Opm::Well::WellProductionProperties prod(unit_system, "OP1");
-    Opm::SummaryState st(Opm::TimeService::now());
+    Opm::SummaryState st(Opm::TimeService::now(), 0.0);
     well.productionControls(st);
 
     // Use a scalar FIELD variable - that should work; although it is a bit weird.

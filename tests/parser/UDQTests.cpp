@@ -198,7 +198,7 @@ BOOST_AUTO_TEST_CASE(GROUP_VARIABLES)
     UDQParams udqp;
     UDQFunctionTable udqft;
     UDQDefine def_group(udqp, "GUOPRL", 0, location, {"(", "5000",  "-",  "GOPR",  "LOWER",  "*", "0.13",  "-",  "GOPR",  "UPPER",  "*", "0.15", ")" , "*",  "0.89"});
-    SummaryState st(TimeService::now());
+    SummaryState st(TimeService::now(), udqp.undefinedValue());
     UDQState udq_state(udqp.undefinedValue());
     UDQContext context(udqft, {}, {}, UDQContext::MatcherFactories{}, st, udq_state);
     double gopr_lower = 1234;
@@ -227,7 +227,7 @@ BOOST_AUTO_TEST_CASE(SINGLE_SEGMENT_VARIABLES)
         { "(", "5000", "-", "SOFR", "'OP-*'", "3", "*", "0.13", ")" , "*",  "0.89" }
     };
 
-    auto st = SummaryState { TimeService::now() };
+    auto st = SummaryState { TimeService::now(), udqp.undefinedValue() };
     auto udq_state = UDQState { udqp.undefinedValue() };
 
     auto factories = UDQContext::MatcherFactories{};
@@ -259,7 +259,7 @@ BOOST_AUTO_TEST_CASE(SUBTRACT)
     UDQDefine def(udqp, "WU", 0, location, {"16", "-", "8", "-", "4", "-", "2", "-", "1"});
     UDQDefine scalar(udqp, "WU", 0, location, {"16"});
 
-    SummaryState st(TimeService::now());
+    SummaryState st(TimeService::now(), udqp.undefinedValue());
     UDQState udq_state(udqp.undefinedValue());
     WellMatcher wm(NameOrder({"P1"}));
     UDQContext context(udqft, wm, {}, UDQContext::MatcherFactories{}, st, udq_state);
@@ -282,7 +282,7 @@ BOOST_AUTO_TEST_CASE(TEST)
     UDQDefine def3(udqp, "WUWI3",0, location, {"GOPR" , "FIELD", "-", "2.0", "*", "3"});
     UDQDefine def4(udqp, "WUWI3",0, location, {"FOPR" , "/",  "2"});
 
-    SummaryState st(TimeService::now());
+    SummaryState st(TimeService::now(), udqp.undefinedValue());
     UDQState udq_state(udqp.undefinedValue());
     WellMatcher wm(NameOrder({"P1", "P2"}));
     UDQContext context(udqft, wm, {}, UDQContext::MatcherFactories{}, st, udq_state);
@@ -323,7 +323,7 @@ BOOST_AUTO_TEST_CASE(MIX_SCALAR) {
     UDQParams udqp;
     KeywordLocation location;
     UDQDefine def_add(udqp, "WU",0, location, {"WOPR", "+", "1"});
-    SummaryState st(TimeService::now());
+    SummaryState st(TimeService::now(), udqp.undefinedValue());
     UDQState udq_state(udqp.undefinedValue());
     WellMatcher wm(NameOrder({"P1"}));
     UDQContext context(udqft, wm, {}, UDQContext::MatcherFactories{}, st, udq_state);
@@ -339,7 +339,7 @@ BOOST_AUTO_TEST_CASE(UDQFieldSetTest) {
     KeywordLocation location;
     UDQParams udqp;
     UDQFunctionTable udqft(udqp);
-    SummaryState st(TimeService::now());
+    SummaryState st(TimeService::now(), udqp.undefinedValue());
     UDQState udq_state(udqp.undefinedValue());
     WellMatcher wm(NameOrder({"P1", "P2", "P3", "P4"}));
     UDQContext context(udqft, wm, {}, UDQContext::MatcherFactories{}, st, udq_state);
@@ -442,7 +442,7 @@ BOOST_AUTO_TEST_CASE(UDQ_GROUP_TEST) {
         UDQParams udqp;
         UDQFunctionTable udqft(udqp);
         UDQDefine def_fopr(udqp, "FUOPR",0, location, {"SUM", "(", "GOPR", ")"});
-        SummaryState st(TimeService::now());
+        SummaryState st(TimeService::now(), udqp.undefinedValue());
         UDQState udq_state(udqp.undefinedValue());
         UDQContext context(udqft, {}, {}, UDQContext::MatcherFactories{}, st, udq_state);
 
@@ -463,7 +463,7 @@ BOOST_AUTO_TEST_CASE(UDQ_DEFINETEST) {
     KeywordLocation location;
     {
         UDQDefine def(udqp, "WUBHP",0, location, {"WBHP"});
-        SummaryState st(TimeService::now());
+        SummaryState st(TimeService::now(), udqp.undefinedValue());
         UDQState udq_state(udqp.undefinedValue());
         WellMatcher wm(NameOrder({"W1", "W2", "W3"}));
         UDQContext context(udqft, wm, {}, UDQContext::MatcherFactories{}, st, udq_state);
@@ -483,7 +483,7 @@ BOOST_AUTO_TEST_CASE(UDQ_DEFINETEST) {
     }
     {
         UDQDefine def(udqp, "WUBHP",0, location, {"WBHP" , "'P*'"});
-        SummaryState st(TimeService::now());
+        SummaryState st(TimeService::now(), udqp.undefinedValue());
         UDQState udq_state(udqp.undefinedValue());
         WellMatcher wm(NameOrder({"I1", "I2", "P1", "P2"}));
         UDQContext context(udqft, wm, {}, UDQContext::MatcherFactories{}, st, udq_state);
@@ -501,7 +501,7 @@ BOOST_AUTO_TEST_CASE(UDQ_DEFINETEST) {
     }
     {
         UDQDefine def(udqp, "WUBHP",0, location, {"NINT" , "(", "WBHP", ")"});
-        SummaryState st(TimeService::now());
+        SummaryState st(TimeService::now(), udqp.undefinedValue());
         UDQState udq_state(udqp.undefinedValue());
         WellMatcher wm(NameOrder({"P1", "P2", "I1", "I2"}));
         UDQContext context(udqft, wm, {}, UDQContext::MatcherFactories{}, st, udq_state);
@@ -702,9 +702,9 @@ ASSIGN WU2 8.0 /
 }
 
 BOOST_AUTO_TEST_CASE(UDQ_CONTEXT) {
-    SummaryState st(TimeService::now());
-    UDQFunctionTable func_table;
     UDQParams udqp;
+    UDQFunctionTable func_table;
+    SummaryState st(TimeService::now(), udqp.undefinedValue());
     UDQState udq_state(udqp.undefinedValue());
     UDQContext ctx(func_table, {}, {}, UDQContext::MatcherFactories{}, st, udq_state);
     BOOST_CHECK_EQUAL(*ctx.get("JAN"), 1.0);
@@ -1159,7 +1159,7 @@ BOOST_AUTO_TEST_CASE(UDQ_POW_TEST) {
     UDQParams udqp;
     UDQDefine def_pow1(udqp, "WU",0, location, {"WOPR", "+", "WWPR", "*", "WGOR", "^", "WWIR"});
     UDQDefine def_pow2(udqp, "WU",0, location, {"(", "WOPR", "+", "WWPR", ")", "^", "(", "WOPR", "+" , "WGOR", "*", "WWIR", "-", "WBHP", ")"});
-    SummaryState st(TimeService::now());
+    SummaryState st(TimeService::now(), udqp.undefinedValue());
     UDQState udq_state(udqp.undefinedValue());
     NameOrder wo; wo.add("P1");
     WellMatcher wm(wo);
@@ -1182,7 +1182,7 @@ BOOST_AUTO_TEST_CASE(UDQ_CMP_TEST) {
     UDQFunctionTable udqft;
     UDQParams udqp;
     UDQDefine def_cmp(udqp, "WU",0, location, {"WOPR", ">", "WWPR", "+", "WGOR", "*", "WWIR"});
-    SummaryState st(TimeService::now());
+    SummaryState st(TimeService::now(), udqp.undefinedValue());
     UDQState udq_state(udqp.undefinedValue());
     WellMatcher wm(NameOrder({"P1", "P2"}));
     UDQContext context(udqft, wm, {}, UDQContext::MatcherFactories{}, st, udq_state);
@@ -1213,7 +1213,7 @@ BOOST_AUTO_TEST_CASE(UDQ_SCALAR_SET) {
     KeywordLocation location;
     UDQParams udqp;
     UDQFunctionTable udqft;
-    SummaryState st(TimeService::now());
+    SummaryState st(TimeService::now(), udqp.undefinedValue());
     UDQState udq_state(udqp.undefinedValue());
     WellMatcher wm(NameOrder({"PA1", "PB2", "PC3", "PD4"}));
     UDQContext context(udqft, wm, {}, UDQContext::MatcherFactories{}, st, udq_state);
@@ -1284,7 +1284,7 @@ BOOST_AUTO_TEST_CASE(UDQ_SORTD_NAN) {
     KeywordLocation location;
     UDQDefine def(udqp, "WUPR1" ,0, location, {"1", "/", "(", "WWIR", "'OP*'" , ")"});
     UDQDefine def_sort(udqp , "WUPR3",0, location, {"SORTD", "(", "WUPR1", ")" });
-    SummaryState st(TimeService::now());
+    SummaryState st(TimeService::now(), udqp.undefinedValue());
     UDQState udq_state(udqp.undefinedValue());
     WellMatcher wm(NameOrder({"OP1", "OP2", "OP3", "OP4"}));
     UDQContext context(udqft, wm, {}, UDQContext::MatcherFactories{}, st, udq_state);
@@ -1329,7 +1329,7 @@ BOOST_AUTO_TEST_CASE(UDQ_SORTA) {
     UDQFunctionTable udqft;
     UDQDefine def1(udqp, "WUPR1" ,0, location, {"1", "/", "(", "WWCT", "'OP*'", "+", "0.00001", ")"});
     UDQDefine def_sort(udqp , "WUPR3",0, location, {"SORTA", "(", "WUPR1", ")" });
-    SummaryState st(TimeService::now());
+    SummaryState st(TimeService::now(), udqp.undefinedValue());
     UDQState udq_state(udqp.undefinedValue());
     WellMatcher wm(NameOrder({"OPL01", "OPL02", "OPU01", "OPU02"}));
     UDQContext context(udqft, wm, {}, UDQContext::MatcherFactories{}, st, udq_state);
@@ -1358,7 +1358,7 @@ BOOST_AUTO_TEST_CASE(UDQ_BASIC_MATH_TEST) {
     UDQDefine def_div(udqp, "WU2OPR",0, location, {"WOPR", "/", "WOPR"});
     UDQDefine def_muladd(udqp, "WUX",0, location, {"WOPR", "+", "WOPR", "*", "WOPR"});
     UDQDefine def_wuwct(udqp , "WUWCT",0, location, {"WWPR", "/", "(", "WOPR", "+", "WWPR", ")"});
-    SummaryState st(TimeService::now());
+    SummaryState st(TimeService::now(), udqp.undefinedValue());
     UDQState udq_state(udqp.undefinedValue());
     WellMatcher wm(NameOrder({"P1", "P2", "P3", "P4"}));
     UDQContext context(udqft, wm, {}, UDQContext::MatcherFactories{}, st, udq_state);
@@ -1421,7 +1421,7 @@ BOOST_AUTO_TEST_CASE(DECK_TEST) {
     UDQParams udqp;
     UDQFunctionTable udqft(udqp);
     UDQDefine def(udqp, "WUOPRL",0, location, {"(", "WOPR", "OP1", "-", "150", ")", "*", "0.90"});
-    SummaryState st(TimeService::now());
+    SummaryState st(TimeService::now(), udqp.undefinedValue());
     UDQState udq_state(udqp.undefinedValue());
     WellMatcher wm(NameOrder({"OP1", "OP2", "OP3"}));
     UDQContext context(udqft, wm, {}, UDQContext::MatcherFactories{}, st, udq_state);
@@ -1475,7 +1475,7 @@ BOOST_AUTO_TEST_CASE(UDQ_PARSE_ERROR) {
     parseContext.update(ParseContext::UDQ_PARSE_ERROR, InputErrorAction::IGNORE);
     {
         UDQDefine def1(udqp, "WUBHP",0, location, tokens, parseContext, errors);
-        SummaryState st(TimeService::now());
+        SummaryState st(TimeService::now(), udqp.undefinedValue());
         UDQFunctionTable udqft(udqp);
         UDQState udq_state(udqp.undefinedValue());
         WellMatcher wm(NameOrder({"P1"}));
@@ -1502,7 +1502,7 @@ BOOST_AUTO_TEST_CASE(UDQ_TYPE_ERROR) {
         UDQDefine def1(udqp, "FUBHP",0, location, tokens1, parseContext, errors);
         UDQDefine def2(udqp, "WUBHP",0, location, tokens2, parseContext, errors);
 
-        SummaryState st(TimeService::now());
+        SummaryState st(TimeService::now(), udqp.undefinedValue());
         UDQFunctionTable udqft(udqp);
         UDQState udq_state(udqp.undefinedValue());
         WellMatcher wm(NameOrder({"P1", "P2"}));
@@ -1960,7 +1960,7 @@ UDQ
     const auto& udq = schedule.getUDQConfig(0);
     UDQParams udqp;
     auto def0 = udq.definitions()[0];
-    SummaryState st(TimeService::now());
+    SummaryState st(TimeService::now(), udqp.undefinedValue());
     UDQFunctionTable udqft(udqp);
     UDQState udq_state(udqp.undefinedValue());
     UDQContext context(udqft, {}, {}, UDQContext::MatcherFactories{}, st, udq_state);
@@ -1985,7 +1985,7 @@ UDQ
     auto def0 = udq.definitions()[0];
     auto def1 = udq.definitions()[1];
     auto def2 = udq.definitions()[2];
-    SummaryState st(TimeService::now());
+    SummaryState st(TimeService::now(), udqp.undefinedValue());
     UDQFunctionTable udqft(udqp);
     UDQState udq_state(udqp.undefinedValue());
     UDQContext context(udqft, {}, {}, UDQContext::MatcherFactories{}, st, udq_state);
@@ -2027,7 +2027,7 @@ UDQ
     UDQParams udqp;
     auto def0 = udq.definitions()[0];
     auto def1 = udq.definitions()[1];
-    SummaryState st(TimeService::now());
+    SummaryState st(TimeService::now(), udqp.undefinedValue());
     UDQFunctionTable udqft(udqp);
     UDQState udq_state(udqp.undefinedValue());
     WellMatcher wm(NameOrder({"W1", "W2", "W3"}));
@@ -2066,8 +2066,8 @@ UDQ
 
     auto schedule = make_schedule(deck_string);
     const auto& udq = schedule.getUDQConfig(0);
-    SummaryState st(TimeService::now());
-    auto undefined_value =  udq.params().undefinedValue();
+    const auto undefined_value =  udq.params().undefinedValue();
+    SummaryState st(TimeService::now(), undefined_value);
     UDQState udq_state(undefined_value);
     auto segmentMatcherFactory = []() { return std::make_unique<SegmentMatcher>(ScheduleState {}); };
     auto regionSetMatcherFactory = []() { return std::make_unique<RegionSetMatcher>(FIPRegionStatistics {}); };
@@ -2093,8 +2093,8 @@ DEFINE FU_PAR2 FU_PAR3 /
 )";
     auto schedule = make_schedule(deck_string);
     const auto& udq = schedule.getUDQConfig(0);
-    SummaryState st(TimeService::now());
-    auto undefined_value =  udq.params().undefinedValue();
+    const auto undefined_value =  udq.params().undefinedValue();
+    SummaryState st(TimeService::now(), undefined_value);
     UDQState udq_state(undefined_value);
     st.update("FMWPR", 100);
     auto segmentMatcherFactory = []() { return std::make_unique<SegmentMatcher>(ScheduleState {}); };
@@ -2114,8 +2114,8 @@ DEFINE FU_PAR3 FU_PAR2 + 1/
 )";
     auto schedule = make_schedule(deck_string);
     const auto& udq = schedule.getUDQConfig(0);
-    SummaryState st(TimeService::now());
-    auto undefined_value =  udq.params().undefinedValue();
+    const auto undefined_value =  udq.params().undefinedValue();
+    SummaryState st(TimeService::now(), undefined_value);
     UDQState udq_state(undefined_value);
     auto segmentMatcherFactory = []() { return std::make_unique<SegmentMatcher>(ScheduleState {}); };
     auto regionSetMatcherFactory = []() { return std::make_unique<RegionSetMatcher>(FIPRegionStatistics {}); };
@@ -2213,9 +2213,9 @@ DEFINE WUGASRA  750000 - WGLIR '*' /
 )";
     auto schedule = make_schedule(deck_string);
     const auto& udq = schedule.getUDQConfig(0);
-    auto undefined_value =  udq.params().undefinedValue();
+    const auto undefined_value =  udq.params().undefinedValue();
     UDQState udq_state(undefined_value);
-    SummaryState st(TimeService::now());
+    SummaryState st(TimeService::now(), undefined_value);
 
     st.update("TIMESTEP", 100);
     st.update("FMWPR", 100);
@@ -2433,9 +2433,9 @@ DEFINE FU_VAR91 GOPR TEST  /
 )";
     auto schedule = make_schedule(deck_string);
     const auto& udq = schedule.getUDQConfig(0);
-    auto undefined_value =  udq.params().undefinedValue();
+    const auto undefined_value =  udq.params().undefinedValue();
     UDQState udq_state(undefined_value);
-    SummaryState st(TimeService::now());
+    SummaryState st(TimeService::now(), undefined_value);
     st.update("FMWPR", 100);
     st.update("FMWIN", 100);
     st.update("FMWPA", 100);
@@ -2464,9 +2464,9 @@ UDQ
 
     auto schedule = make_schedule(deck_string);
     const auto& udq = schedule.getUDQConfig(0);
-    auto undefined_value =  udq.params().undefinedValue();
+    const auto undefined_value =  udq.params().undefinedValue();
     UDQState udq_state(undefined_value);
-    SummaryState st(TimeService::now());
+    SummaryState st(TimeService::now(), undefined_value);
 
     auto segmentMatcherFactory = []() { return std::make_unique<SegmentMatcher>(ScheduleState {}); };
     auto regionSetMatcherFactory = []() { return std::make_unique<RegionSetMatcher>(FIPRegionStatistics {}); };
@@ -2486,9 +2486,9 @@ UDQ
 
     auto schedule = make_schedule(deck_string);
     const auto& udq = schedule.getUDQConfig(0);
-    auto undefined_value =  udq.params().undefinedValue();
+    const auto undefined_value =  udq.params().undefinedValue();
     UDQState udq_state(undefined_value);
-    SummaryState st(TimeService::now());
+    SummaryState st(TimeService::now(), undefined_value);
 
     const auto required_keys = [&udq]()
     {
@@ -2544,7 +2544,7 @@ TSTEP
 
     auto schedule = make_schedule(deck_string);
     UDQState udq_state(0);
-    SummaryState st(TimeService::now());
+    SummaryState st(TimeService::now(), schedule.back().udq().params().undefinedValue());
 
     // Counting: 1,2,3,4,5
     for (std::size_t report_step = 0; report_step < 5; report_step++) {
@@ -2593,7 +2593,7 @@ BOOST_AUTO_TEST_CASE(UDQ_DIV_TEST) {
     UDQFunctionTable udqft;
     UDQParams udqp;
     UDQDefine def_div(udqp, "FU",0, location, {"128", "/", "2", "/", "4", "/", "8"});
-    SummaryState st(TimeService::now());
+    SummaryState st(TimeService::now(), udqp.undefinedValue());
     UDQState udq_state(udqp.undefinedValue());
     UDQContext context(udqft, {}, {}, UDQContext::MatcherFactories{}, st, udq_state);
 
@@ -2619,7 +2619,7 @@ UDQ
 
     auto schedule = make_schedule(deck_string);
     UDQState udq_state(0);
-    SummaryState st(TimeService::now());
+    SummaryState st(TimeService::now(), schedule.back().udq().params().undefinedValue());
 
     const auto& udq = schedule.getUDQConfig(0);
     auto segmentMatcherFactory = []() { return std::make_unique<SegmentMatcher>(ScheduleState {}); };
@@ -2662,7 +2662,7 @@ UDQ
 
     auto schedule = make_schedule(deck_string);
     UDQState udq_state(0);
-    SummaryState st(TimeService::now());
+    SummaryState st(TimeService::now(), schedule.back().udq().params().undefinedValue());
     const auto& udq = schedule.getUDQConfig(0);
     st.update_well_var("P1", "WOPR", 1);
     st.update_well_var("P2", "WOPR", 2);
@@ -2695,7 +2695,7 @@ UDQ
 
     auto schedule = make_schedule(deck_string);
     UDQState udq_state(0);
-    SummaryState st(TimeService::now());
+    SummaryState st(TimeService::now(), schedule.back().udq().params().undefinedValue());
     const auto& udq = schedule.getUDQConfig(0);
     auto segmentMatcherFactory = []() { return std::make_unique<SegmentMatcher>(ScheduleState {}); };
     auto regionSetMatcherFactory = []() { return std::make_unique<RegionSetMatcher>(FIPRegionStatistics {}); };
@@ -2763,7 +2763,7 @@ TSTEP
     BOOST_CHECK_THROW(make_schedule(invalid1), std::exception);
     auto schedule = make_schedule(valid);
     UDQState udq_state(0);
-    SummaryState st(TimeService::now());
+    SummaryState st(TimeService::now(), schedule.back().udq().params().undefinedValue());
     UDQSet result = UDQSet::scalar("RES", 0);
     {
         const auto& udq = schedule.getUDQConfig(0);
@@ -2820,11 +2820,9 @@ UDQ
 
 )";
 
-
-
     auto schedule = make_schedule(valid);
     UDQState udq_state(0);
-    SummaryState st(TimeService::now());
+    SummaryState st(TimeService::now(), schedule.back().udq().params().undefinedValue());
     UDQFunctionTable udqft;
     WellMatcher wm(NameOrder({"W1", "W2", "W3"}));
     UDQContext context(udqft, wm, {}, UDQContext::MatcherFactories{}, st, udq_state);
@@ -2892,7 +2890,7 @@ BOOST_AUTO_TEST_CASE(UDQ_ASSIGN_SEGMENT)
 
 BOOST_AUTO_TEST_CASE(UDQ_Update_SummaryState)
 {
-    auto st = SummaryState { TimeService::now() };
+    auto st = SummaryState { TimeService::now(), 0.0 };
 
     // P2 not yet online
     st.update_well_var("P1", "WBHP",  42.0);
@@ -2940,7 +2938,7 @@ DEFINE FU_WBHP TU_FBHP[FU_FOPR] UMIN FU_WBHP0 /
 
     auto schedule = make_schedule(valid);
     UDQState udq_state(0);
-    SummaryState st(TimeService::now());
+    SummaryState st(TimeService::now(), schedule.back().udq().params().undefinedValue());
     UDQFunctionTable udqft;
     WellMatcher wm(NameOrder({"W1", "W2", "W3"}));
     const auto& udq = schedule.getUDQConfig(0);
@@ -2986,7 +2984,7 @@ DEFINE WU_WBHP TU_FBHP[WOPR] UMIN WU_WBHP0 /
 
     auto schedule = make_schedule(valid);
     UDQState udq_state(0);
-    SummaryState st(TimeService::now());
+    SummaryState st(TimeService::now(), schedule.back().udq().params().undefinedValue());
     UDQFunctionTable udqft;
     WellMatcher wm(NameOrder({"PROD1", "PROD2"}));
     const auto& udq = schedule.getUDQConfig(0);

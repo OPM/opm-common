@@ -2,79 +2,73 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include <opm/input/eclipse/Deck/Deck.hpp>
-#include <opm/input/eclipse/EclipseState/EclipseState.hpp>
-#include <opm/input/eclipse/Schedule/Action/State.hpp>
-#include <opm/input/eclipse/Schedule/Schedule.hpp>
-#include <opm/input/eclipse/Schedule/SummaryState.hpp>
-#include <opm/input/eclipse/Schedule/Well/Well.hpp>
-#include <opm/input/eclipse/Schedule/Well/WellTestState.hpp>
-#include <opm/input/eclipse/Parser/Parser.hpp>
-#include <opm/input/eclipse/EclipseState/TracerConfig.hpp>
-
-#include <opm/output/eclipse/AggregateWellData.hpp>
-#include <opm/output/eclipse/WriteRestartHelpers.hpp>
-
 #include <opm/output/eclipse/DoubHEAD.hpp>
 #include <opm/output/eclipse/InteHEAD.hpp>
 #include <opm/output/eclipse/VectorItems/doubhead.hpp>
 #include <opm/output/eclipse/VectorItems/intehead.hpp>
 #include <opm/output/eclipse/VectorItems/well.hpp>
+
+#include <opm/output/eclipse/AggregateWellData.hpp>
+#include <opm/output/eclipse/WriteRestartHelpers.hpp>
+
+#include <opm/input/eclipse/EclipseState/EclipseState.hpp>
+#include <opm/input/eclipse/EclipseState/TracerConfig.hpp>
+
 #include <opm/input/eclipse/Python/Python.hpp>
+
+#include <opm/input/eclipse/Schedule/Action/State.hpp>
+#include <opm/input/eclipse/Schedule/Schedule.hpp>
+#include <opm/input/eclipse/Schedule/SummaryState.hpp>
+#include <opm/input/eclipse/Schedule/Well/Well.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellTestState.hpp>
 
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
 #include <opm/input/eclipse/Units/Units.hpp>
 #include <opm/common/utility/TimeService.hpp>
 
+#include <opm/input/eclipse/Deck/Deck.hpp>
+#include <opm/input/eclipse/Parser/Parser.hpp>
+
+#include <cstddef>
 #include <exception>
-#include <iostream>
+#include <memory>
 #include <stdexcept>
 #include <string>
 #include <utility>
 #include <vector>
 
-namespace
-{
+namespace {
 
-Opm::Deck
-first_sim(std::string fname)
+Opm::Deck first_sim(const std::string& fname)
 {
-    return Opm::Parser {}.parseFile(fname);
+    return Opm::Parser{}.parseFile(fname);
 }
-} // namespace
 
-
-
-Opm::SummaryState
-sum_state()
+Opm::SummaryState sum_state()
 {
-    auto state = Opm::SummaryState {Opm::TimeService::now()};
-    state.update("FULPR", 460.);
+    auto state = Opm::SummaryState {Opm::TimeService::now(), 0.0};
+    state.update("FULPR", 460.0);
 
     return state;
 }
 
-
-// int main(int argc, char* argv[])
-struct SimulationCase {
+struct SimulationCase
+{
     explicit SimulationCase(const Opm::Deck& deck)
-        : es {deck}
-        , grid {deck}
-        , python {std::make_shared<Opm::Python>()}
-        , sched {deck, es, python}
-    {
-    }
+        : es    {deck}
+        , grid  {deck}
+        , sched {deck, es, std::make_shared<Opm::Python>()}
+    {}
 
     // Order requirement: 'es' must be declared/initialised before 'sched'.
     Opm::EclipseState es;
     Opm::EclipseGrid grid;
-    std::shared_ptr<Opm::Python> python;
     Opm::Schedule sched;
 };
 
+} // namespace
+
 BOOST_AUTO_TEST_SUITE(LiftGasOptimization)
-
-
 
 // test lift gas optimisation data
 BOOST_AUTO_TEST_CASE(liftGasOptimzation_data)

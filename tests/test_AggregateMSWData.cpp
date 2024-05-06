@@ -64,9 +64,9 @@ Opm::Deck first_sim(const std::string& fname)
     return Opm::Parser {}.parseFile(fname);
 }
 
-Opm::SummaryState sim_state()
+Opm::SummaryState sim_state(const double udqUndef)
 {
-     auto state = Opm::SummaryState{Opm::TimeService::now()};
+    auto state = Opm::SummaryState{Opm::TimeService::now(), udqUndef};
 
     state.update("SPR:PROD:1",   235.);
     state.update("SPR:PROD:2",   237.);
@@ -377,7 +377,7 @@ BOOST_AUTO_TEST_CASE (Constructor)
 
     Opm::EclipseState es = simCase.es;
     Opm::Runspec rspec   = es.runspec();
-    Opm::SummaryState st = sim_state();
+    Opm::SummaryState st = sim_state(rspec.udqParams().undefinedValue());
     Opm::Schedule     sched = simCase.sched;
     Opm::EclipseGrid  grid = simCase.grid;
 
@@ -411,7 +411,7 @@ BOOST_AUTO_TEST_CASE (Declared_MSW_Data)
     const auto& grid  = simCase.grid;
     const auto& sched = simCase.sched;
     const auto& units = es.getUnits();
-    const auto  smry  = sim_state();
+    const auto  smry  = sim_state(es.runspec().udqParams().undefinedValue());
 
     // Report Step 1: 2008-10-10 --> 2011-01-20
     const auto rptStep = std::size_t {1};
@@ -622,7 +622,10 @@ BOOST_AUTO_TEST_CASE(Multilateral_Branches)
     const auto& grid  = cse.grid;
     const auto& sched = cse.sched;
     const auto& units = es.getUnits();
-    const auto  smry  = Opm::SummaryState { Opm::TimeService::now() };
+    const auto  smry  = Opm::SummaryState {
+        Opm::TimeService::now(),
+        es.runspec().udqParams().undefinedValue()
+    };
 
     // Report Step 1: 2023-09-29 --> 2023-10-23
     const auto rptStep = std::size_t {1};
@@ -746,7 +749,10 @@ BOOST_AUTO_TEST_CASE(Multilateral_Segments_ISEG_0)
     const auto& grid  = cse.grid;
     const auto& sched = cse.sched;
     const auto& units = es.getUnits();
-    const auto  smry  = Opm::SummaryState { Opm::TimeService::now() };
+    const auto  smry  = Opm::SummaryState {
+        Opm::TimeService::now(),
+        es.runspec().udqParams().undefinedValue()
+    };
 
     // Report Step 1: 2023-09-29 --> 2023-10-23
     const auto rptStep = std::size_t {1};
@@ -819,7 +825,10 @@ BOOST_AUTO_TEST_CASE(Multilateral_Branches_ICD_Valve)
 
     // No dynamic data needed for this test.  We're checking the structure
     // only.
-    const auto smry = Opm::SummaryState { Opm::TimeService::now() };
+    const auto smry = Opm::SummaryState {
+        Opm::TimeService::now(),
+        es.runspec().udqParams().undefinedValue()
+    };
     const auto xw   = Opm::data::Wells {};
 
     auto amswd = Opm::RestartIO::Helpers::AggregateMSWData {ih};
@@ -992,7 +1001,10 @@ BOOST_AUTO_TEST_CASE(Multilateral_ICD_Valve_ISEG_0)
 
     // No dynamic data needed for this test.  We're checking the structure
     // only.
-    const auto smry = Opm::SummaryState { Opm::TimeService::now() };
+    const auto smry = Opm::SummaryState {
+        Opm::TimeService::now(),
+        es.runspec().udqParams().undefinedValue()
+    };
     const auto xw   = Opm::data::Wells {};
 
     auto amswd = Opm::RestartIO::Helpers::AggregateMSWData {ih};
@@ -1036,7 +1048,7 @@ BOOST_AUTO_TEST_CASE(MSW_AICD)
     const auto& grid  = simCase.grid;
     const auto& sched = simCase.sched;
     const auto& units = es.getUnits();
-    const auto  smry  = sim_state();
+    const auto  smry  = sim_state(es.runspec().udqParams().undefinedValue());
 
     // Report Step 1: 2008-10-10 --> 2011-01-20
     const auto rptStep = std::size_t {1};
@@ -1129,7 +1141,7 @@ BOOST_AUTO_TEST_CASE(MSW_RST)
     const auto& grid  = simCase.grid;
     const auto& sched = simCase.sched;
     const auto& units = es.getUnits();
-    const auto  smry  = sim_state();
+    const auto  smry  = sim_state(es.runspec().udqParams().undefinedValue());
 
     // Report Step 1: 2008-10-10 --> 2011-01-20
     const auto rptStep = std::size_t {1};

@@ -60,9 +60,9 @@ namespace {
         return Opm::Parser{}.parseFile(fname);
     }
 
-    Opm::SummaryState sum_state_TEST1()
+    Opm::SummaryState sum_state_TEST1(const double udqUndef)
     {
-        auto state = Opm::SummaryState{Opm::TimeService::now()};
+        auto state = Opm::SummaryState{Opm::TimeService::now(), udqUndef};
         state.update_well_var("OPU01", "WWPR", 21.);
         state.update_well_var("OPU02", "WWPR", 22.);
         state.update_well_var("OPL01", "WWPR", 23.);
@@ -136,7 +136,7 @@ BOOST_AUTO_TEST_CASE(Declared_Actionx_data)
     const auto simCase = SimulationCase {first_sim("UDQ_ACTIONX_TEST1.DATA")};
 
     const auto& es = simCase.es;
-    const auto st = sum_state_TEST1();
+    const auto st = sum_state_TEST1(es.runspec().udqParams().undefinedValue());
     const auto udq_state = Opm::UDQState{1};
     const auto& sched = simCase.sched;
     const auto& grid = simCase.grid;
@@ -1078,7 +1078,11 @@ BOOST_AUTO_TEST_CASE(Declared_Actionx_data)
                 auto year = 2020;
                 auto day = 1;
                 for (std::size_t month = 1; month <= 12; month++) {
-                    auto state = Opm::SummaryState {Opm::asTimePoint(Opm::TimeStampUTC(year, month, day))};
+                    auto state = Opm::SummaryState {
+                        Opm::asTimePoint(Opm::TimeStampUTC(year, month, day)),
+                        es.runspec().udqParams().undefinedValue()
+                    };
+
                     Opm::Action::Context context(state, wlm);
                     for (const auto& key : rst_keys) {
                         const auto& first_char = key[0];
@@ -1185,7 +1189,7 @@ END
     const auto action_state = Opm::Action::State {};
     const auto simStep = 5;
 
-    auto smstate = Opm::SummaryState { Opm::TimeService::now() };
+    auto smstate = Opm::SummaryState { Opm::TimeService::now(), 0.0 };
     smstate.update("DAY", 3);
     smstate.update("MNTH", 5);
     smstate.update("YEAR", 2024);

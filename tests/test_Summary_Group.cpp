@@ -15,12 +15,37 @@
 
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
- */
+*/
 
 #include "config.h"
 
 #define BOOST_TEST_MODULE Wells
 #include <boost/test/unit_test.hpp>
+
+#include <opm/output/data/Wells.hpp>
+#include <opm/output/data/Groups.hpp>
+#include <opm/output/eclipse/Summary.hpp>
+#include <opm/output/eclipse/Inplace.hpp>
+
+#include <opm/input/eclipse/EclipseState/EclipseState.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
+#include <opm/input/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
+
+#include <opm/input/eclipse/Python/Python.hpp>
+
+#include <opm/input/eclipse/Schedule/Schedule.hpp>
+#include <opm/input/eclipse/Schedule/SummaryState.hpp>
+#include <opm/input/eclipse/Schedule/Well/Well.hpp>
+#include <opm/input/eclipse/Units/UnitSystem.hpp>
+
+#include <opm/input/eclipse/Units/Units.hpp>
+
+#include <opm/common/utility/TimeService.hpp>
+
+#include <opm/io/eclipse/ESmry.hpp>
+
+#include <opm/input/eclipse/Deck/Deck.hpp>
+#include <opm/input/eclipse/Parser/Parser.hpp>
 
 #include <cctype>
 #include <chrono>
@@ -34,27 +59,6 @@
 #include <unordered_map>
 #include <utility>
 
-#include <opm/output/data/Wells.hpp>
-#include <opm/output/data/Groups.hpp>
-#include <opm/output/eclipse/Summary.hpp>
-#include <opm/output/eclipse/Inplace.hpp>
-
-#include <opm/input/eclipse/Python/Python.hpp>
-#include <opm/input/eclipse/Schedule/SummaryState.hpp>
-#include <opm/input/eclipse/Deck/Deck.hpp>
-#include <opm/input/eclipse/Units/UnitSystem.hpp>
-#include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
-#include <opm/input/eclipse/EclipseState/EclipseState.hpp>
-#include <opm/input/eclipse/Schedule/Schedule.hpp>
-#include <opm/input/eclipse/Schedule/Well/Well.hpp>
-#include <opm/input/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
-#include <opm/input/eclipse/Parser/Parser.hpp>
-#include <opm/common/utility/TimeService.hpp>
-
-#include <opm/input/eclipse/Units/Units.hpp>
-
-#include <opm/io/eclipse/ESmry.hpp>
-
 #include <tests/WorkArea.hpp>
 
 using namespace Opm;
@@ -63,7 +67,7 @@ using rt = data::Rates::opt;
 namespace {
     double sm3_pr_day()
     {
-       return unit::cubic(unit::meter) / unit::day;
+        return unit::cubic(unit::meter) / unit::day;
     }
 
     std::string toupper(std::string input)
@@ -76,17 +80,17 @@ namespace {
         return input;
     }
 
-    bool ecl_sum_has_group_var( const EclIO::ESmry* smry,
-                           const std::string&  groupname,
-                           const std::string&  variable )
+    bool ecl_sum_has_group_var(const EclIO::ESmry* smry,
+                               const std::string&  groupname,
+                               const std::string&  variable)
     {
         return smry->hasKey(variable + ':' + groupname);
     }
 
-    double ecl_sum_get_group_var( const EclIO::ESmry* smry,
-                              const int           timeIdx,
-                              const std::string&  groupname,
-                              const std::string&  variable )
+    double ecl_sum_get_group_var(const EclIO::ESmry* smry,
+                                 const int           timeIdx,
+                                 const std::string&  groupname,
+                                 const std::string&  variable)
     {
         return smry->get(variable + ':' + groupname)[timeIdx];
     }
@@ -95,7 +99,8 @@ namespace {
 
 namespace {
 
-std::unique_ptr< EclIO::ESmry > readsum( const std::string& base ) {
+std::unique_ptr<EclIO::ESmry> readsum(const std::string& base)
+{
     return std::make_unique<EclIO::ESmry>(base);
 }
 
@@ -108,8 +113,9 @@ using i_cmode = Opm::Group::InjectionCMode;
  */
 static const int day = 24 * 60 * 60;
 
-static data::Wells result_wells() {
-        /* populate with the following pattern:
+data::Wells result_wells()
+{
+    /* populate with the following pattern:
      *
      * Wells are named W_1, W_2 etc, i.e. wells are 1 indexed.
      *
@@ -196,7 +202,8 @@ static data::Wells result_wells() {
 
 }
 
-static data::GroupAndNetworkValues result_group_network() {
+data::GroupAndNetworkValues result_group_network()
+{
     data::GroupAndNetworkValues grp_nwrk;
     data::GroupConstraints cgc_group;
 
@@ -253,7 +260,8 @@ BOOST_AUTO_TEST_SUITE(Summary)
  * Tests works by reading the Deck, write the summary output, then immediately
  * read it again (with ERT), and compare the read values with the input.
  */
-BOOST_AUTO_TEST_CASE(group_keywords) {
+BOOST_AUTO_TEST_CASE(group_keywords)
+{
     setup cfg( "test_summary_group_constraints");
 
     // Force to run in a directory, to make sure the basename with
@@ -261,7 +269,7 @@ BOOST_AUTO_TEST_CASE(group_keywords) {
     cfg.ta.makeSubDir( "PATH" );
     cfg.name = "PATH/CASE";
 
-    SummaryState st(TimeService::now());
+    SummaryState st(TimeService::now(), 0.0);
 
     out::Summary writer(cfg.config, cfg.es, cfg.grid, cfg.schedule, cfg.name);
     writer.eval(st, 0, 0*day, cfg.wells, cfg.wbp, cfg.grp_nwrk, {}, {}, {}, {});

@@ -32,6 +32,7 @@
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/EclipseState/IOConfig/IOConfig.hpp>
 #include <opm/input/eclipse/EclipseState/Phase.hpp>
+#include <opm/input/eclipse/EclipseState/Runspec.hpp>
 #include <opm/input/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
 
 #include <opm/input/eclipse/Schedule/Action/Actions.hpp>
@@ -44,6 +45,7 @@
 #include <opm/input/eclipse/Schedule/SummaryState.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQConfig.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQContext.hpp>
+#include <opm/input/eclipse/Schedule/UDQ/UDQParams.hpp>
 #include <opm/input/eclipse/Schedule/VFPProdTable.hpp>
 #include <opm/input/eclipse/Schedule/Well/Well.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
@@ -4272,7 +4274,8 @@ SummaryImplementation(SummaryConfig&      sumcfg,
     , unif_          { es.cfg().io().getUNIFOUT() }
 {
     const auto st = SummaryState {
-        TimeService::from_time_t(sched.getStartTime())
+        TimeService::from_time_t(sched.getStartTime()),
+        es.runspec().udqParams().undefinedValue()
     };
 
     Evaluator::Factory evaluatorFactory {
