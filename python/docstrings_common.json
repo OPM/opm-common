@@ -31,5 +31,25 @@
     "Schedule_stop_well_well_name": {
         "signature": "opm.io.schedule.Schedule.stop_well(well_name: str) -> None",
         "doc": "Stop a well at the current report step.\n\n:param well_name: The name of the well to stop.\n:type well_name: str"
+    },
+    "Schedule_get_injection_properties": {
+        "signature": "opm.io.schedule.Schedule.get_injection_properties(well_name: str, report_step: int) -> dict",
+        "doc": "Get injection properties for a well at a specific report step.\n\n:param well_name: The name of the well.\n:type well_name: str\n:param report_step: The report step to retrieve properties for.\n:type report_step: int\n\n:return: A dict containing the properties surf_inj_rate, resv_inj_rate, bhp_target, thp_target. \n:type return: dict"
+    },
+    "Schedule_get_production_properties": {
+        "signature": "opm.io.schedule.Schedule.get_production_properties(well_name: str, report_step: int) -> dict",
+        "doc": "Get production properties for a well at a specific report step.\n\n:param well_name: The name of the well.\n:type well_name: str\n:param report_step: The report step to retrieve properties for.\n:type report_step: int\n\n:return: A dict containing the properties oil_rate, gas_rate, water_rate, liquid_rate, resv_rate, bhp_target, thp_target, alq_value. \n:type return: dict"
+    },
+    "Schedule_groups": {
+        "signature": "opm.io.schedule.Schedule._groups(report_step: int) -> list",
+        "doc": "Get a list of all groups at a specified report step.\n\n:param report_step: The report step to retrieve groups for.\n:type report_step: int\n\n:return: A list containing all groups at the specified report step. \n:type return: list"
+    },
+    "Schedule_get_well": {
+        "signature": "opm.io.schedule.Schedule.get_well(well_name: str, report_step: int) -> Well",
+        "doc": "Retrieve a well at a given report step.\n\n:param well_name: The name of the well.\n:type well_name: str\n:param report_step: The report step.\n:type report_step: int\n\n:return: Well object at the given report step. \n:type return: well"
+    },
+    "Schedule_get_wells": {
+        "signature": "opm.io.schedule.Schedule.get_wells(well_name_pattern: str) -> list",
+        "doc": "Get the names of wells matching a specified pattern.\n\n:param well_name_pattern: The pattern for well names, where '*' acts as a wildcard.\n:type well_name_pattern: str\n\n:return: A list containing the names of wells that match the specified pattern. \n:type return: list"
     }
 }
