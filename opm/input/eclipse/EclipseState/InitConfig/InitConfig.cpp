@@ -78,6 +78,8 @@ namespace Opm {
         const std::string& root = record.getItem( 0 ).get< std::string >( 0 );
         const std::string& input_path = deck.getInputPath();
 
+        // Need the restart path as input (absolute or relative .DATA file) for writing to SMSPEC
+        this->m_restartRootNameInput = root;
         if (root[0] == '/' || input_path.empty())
             this->setRestart(root, step);
         else
@@ -95,6 +97,7 @@ namespace Opm {
         result.m_restartRequested = true;
         result.m_restartStep = 20;
         result.m_restartRootName = "test1";
+        result.m_restartRootNameInput = "test2";
 
         return result;
     }
@@ -115,6 +118,10 @@ namespace Opm {
 
     const std::string& InitConfig::getRestartRootName() const {
         return m_restartRootName;
+    }
+
+    const std::string& InitConfig::getRestartRootNameInput() const {
+        return m_restartRootNameInput;
     }
 
     bool InitConfig::hasEquil() const {
@@ -163,7 +170,8 @@ namespace Opm {
                m_gravity == data.m_gravity &&
                m_restartRequested == data.m_restartRequested &&
                m_restartStep == data.m_restartStep &&
-               m_restartRootName == data.m_restartRootName;
+               m_restartRootName == data.m_restartRootName &&
+               m_restartRootNameInput == data.m_restartRootNameInput;
     }
 
     bool InitConfig::rst_cmp(const InitConfig& full_config, const InitConfig& rst_config) {

@@ -41,6 +41,7 @@ namespace Opm {
         bool restartRequested() const;
         int getRestartStep() const;
         const std::string& getRestartRootName() const;
+        const std::string& getRestartRootNameInput() const;
 
         bool hasEquil() const;
         const Equil& getEquil() const;
@@ -74,6 +75,7 @@ namespace Opm {
             serializer(m_restartRequested);
             serializer(m_restartStep);
             serializer(m_restartRootName);
+            serializer(m_restartRootNameInput);
         }
 
     private:
@@ -86,6 +88,7 @@ namespace Opm {
         bool m_restartRequested = false;
         int m_restartStep = 0;
         std::string m_restartRootName;
+        std::string m_restartRootNameInput;
     };
 
 } //namespace Opm
