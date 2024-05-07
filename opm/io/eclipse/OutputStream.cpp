@@ -588,6 +588,9 @@ namespace {
         const auto substrLength    = std::size_t{8};
         const auto maxSubstrings   = std::size_t{9};
         const auto maxStringLength = maxSubstrings * substrLength;
+        // If the length of the path is 72 < N <= 132, 17 8-character words are used
+        const auto maxSubstrings2  = std::size_t{17};
+        const auto maxStringLength2 = std::size_t{132};
 
         auto ret = std::vector<PaddedOutputString<substrLength>>{};
 
@@ -596,20 +599,23 @@ namespace {
             return ret;
         }
 
-        if (restart.root.size() > maxStringLength) {
+        if (restart.root.size() > maxStringLength2) {
             const auto msg = "Restart root name of size "
                 + std::to_string(restart.root.size())
                 + " exceeds "
-                + std::to_string(maxStringLength)
+                + std::to_string(maxStringLength2)
                 + " character limit (Ignored)";
 
             Opm::OpmLog::warning(msg);
 
-            ret.resize(maxSubstrings);
+            ret.resize(maxSubstrings2);
             return ret;
         }
 
-        ret.resize(maxSubstrings);
+        if (restart.root.size() > maxStringLength)
+            ret.resize(maxSubstrings2);
+        else
+            ret.resize(maxSubstrings);
 
         auto remain = restart.root.size();
 
