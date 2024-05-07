@@ -1,4 +1,29 @@
 {
+    "EclipseStateClass": {
+        "type": "class",
+        "signature": "opm.io.ecl_state.EclipseState",
+        "doc": "The EclipseState class - this is a representation of all static properties in the model,ranging from porosity to relperm tables.\nThe content of the EclipseState is immutable and may not be changed at runtime."
+    },
+    "EclipseState_input_nnc": {
+        "signature": "opm.io.ecl_state.EclipseState.input_nnc() -> list",
+        "doc": "Returns a list of non-neighboring connections.\n\nOne non-neighboring connection is a tuple containing the following elements:\n- index1 (int): Index of the first cell.\n- index2 (int): Index of the second cell.\n- transmissibility (double): Transmissibility between the two cells.\n\n:return: A list of non-neighboring connections. \n:type return: list"
+    },
+    "EclipseState_faultNames": {
+        "signature": "opm.io.ecl_state.EclipseState.faultNames() -> list",
+        "doc": "Returns a list of fault names.\n\n:return: A list containing the names of faults. \n:type return: list"
+    },
+    "EclipseState_faultFaces": {
+        "signature": "opm.io.ecl_state.EclipseState.faultFaces(fault_name: str) -> list",
+        "doc": "Returns a list of faces of a fault with the given name.\n\n:param fault_name: The name of the fault.\n:type fault_name: str\n\n:return: A list containing the faces of the specified fault. \n:type return: list"
+    },
+    "EclipseState_jfunc": {
+        "signature": "opm.io.ecl_state.EclipseState.jfunc() -> dict",
+        "doc": "Function returning a dictionary with the following entries: ['FLAG', 'DIRECTION', 'ALPHA_FACTOR', 'BETA_FACTOR', 'OIL_WATER', 'GAS_OIL']\n\n:return: A dictionary containing the specified entries. \n:type return: dict"
+    },
+    "EclipseState_simulation": {
+        "signature": "opm.io.ecl_state.EclipseState.simulation() -> SimulationConfiguration",
+        "doc": "Returns the simulation configuration.\n\n:return: The simulation configuration. \n:type return: SimulationConfiguration"
+    },
     "ScheduleClass": {
         "type": "class",
         "signature": "opm.io.schedule.Schedule",
