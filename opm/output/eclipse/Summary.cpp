@@ -4075,7 +4075,7 @@ SMSpecStreamDeferredCreation(const Opm::InitConfig&          initcfg,
     , start_   (Opm::TimeService::from_time_t(start))
 {
     if (initcfg.restartRequested()) {
-        this->restart_.root = initcfg.getRestartRootName();
+        this->restart_.root = initcfg.getRestartRootNameInput();
         this->restart_.step = initcfg.getRestartStep();
     }
 }
