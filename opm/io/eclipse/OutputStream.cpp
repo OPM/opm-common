@@ -608,7 +608,7 @@ namespace {
                 + std::to_string(N)
                 + " exceeds "
                 + std::to_string(maxStringLength)
-                + " character limit (Ignored)";
+                + " character limit (will be truncated)";
 
             Opm::OpmLog::warning(msg);
 
