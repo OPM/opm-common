@@ -104,7 +104,7 @@ void handleWCONHIST(HandlerContext& handlerContext)
 
             auto table_nr = record.getItem("VFP_TABLE").get< int >(0);
             if (record.getItem("VFP_TABLE").defaultApplied(0)) {
-                table_nr = properties->VFPTableNumber;
+                table_nr = 0;
             }
 
             if (table_nr != 0) {
@@ -350,7 +350,7 @@ void handleWCONPROD(HandlerContext& handlerContext)
 
             auto table_nr = record.getItem("VFP_TABLE").get< int >(0);
             if (record.getItem("VFP_TABLE").defaultApplied(0)) {
-                table_nr = properties->VFPTableNumber;
+                table_nr = 0;
             }
 
             if (table_nr != 0) {

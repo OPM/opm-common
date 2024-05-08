@@ -94,9 +94,8 @@ namespace Opm {
 
 
     void Well::WellProductionProperties::init_vfp(const std::optional<VFPProdTable::ALQ_TYPE>& alq_type, const UnitSystem& unit_system_arg, const DeckRecord& record) {
+        this->VFPTableNumber = record.getItem("VFP_TABLE").defaultApplied(0) ? 0 : record.getItem("VFP_TABLE").get< int >(0);
         if (alq_type) {
-            if (!record.getItem("VFP_TABLE").defaultApplied(0))
-                this->VFPTableNumber = record.getItem("VFP_TABLE").get< int >(0);
             const auto alq_dim = VFPProdTable::ALQDimension(*alq_type, unit_system_arg);
             const auto& alq_input = record.getItem("ALQ").get<UDAValue>(0);
             if (alq_input.is<double>())
@@ -108,8 +107,7 @@ namespace Opm {
                 this->ALQValue = UDAValue(alq_input.get<std::string>(), alq_dim);
             }
         } else {
-            const auto table_nr = record.getItem("VFP_TABLE").get< int >(0);
-            if (table_nr != 0)
+            if (this->VFPTableNumber != 0)
                 throw std::logic_error("VFP table inconsistency - BUG");
         }
     }
