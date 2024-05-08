@@ -815,6 +815,7 @@ list( APPEND PUBLIC_HEADER_FILES
       opm/common/utility/CSRGraphFromCoordinates_impl.hpp
       opm/common/utility/Demangle.hpp
       opm/common/utility/FileSystem.hpp
+      opm/common/utility/gpuDecorators.hpp
       opm/common/utility/MemPacker.hpp
       opm/common/utility/numeric/cmp.hpp
       opm/common/utility/numeric/blas_lapack.h

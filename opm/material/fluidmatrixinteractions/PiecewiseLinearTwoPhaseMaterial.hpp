@@ -34,6 +34,9 @@
 #include <stdexcept>
 #include <type_traits>
 
+
+#include <opm/common/utility/gpuDecorators.hpp>
+
 namespace Opm {
 /*!
  * \ingroup FluidMatrixInteractions
@@ -94,7 +97,7 @@ public:
      * \brief The capillary pressure-saturation curve.
      */
     template <class Container, class FluidState>
-    static void capillaryPressures(Container& values, const Params& params, const FluidState& fs)
+    OPM_HOST_DEVICE static void capillaryPressures(Container& values, const Params& params, const FluidState& fs)
     {
         OPM_TIMEFUNCTION_LOCAL();
         using Evaluation = typename std::remove_reference<decltype(values[0])>::type;
@@ -108,14 +111,14 @@ public:
      *        pressure differences.
      */
     template <class Container, class FluidState>
-    static void saturations(Container& /* values */, const Params& /* params */, const FluidState& /* fs */)
+    OPM_HOST_DEVICE static void saturations(Container& /* values */, const Params& /* params */, const FluidState& /* fs */)
     { throw std::logic_error("Not implemented: saturations()"); }
 
     /*!
      * \brief The relative permeabilities
      */
     template <class Container, class FluidState>
-    static void relativePermeabilities(Container& values, const Params& params, const FluidState& fs)
+    OPM_HOST_DEVICE static void relativePermeabilities(Container& values, const Params& params, const FluidState& fs)
     {
         OPM_TIMEFUNCTION_LOCAL();
         using Evaluation = typename std::remove_reference<decltype(values[0])>::type;
@@ -128,7 +131,7 @@ public:
      * \brief The capillary pressure-saturation curve
      */
     template <class FluidState, class Evaluation = typename FluidState::Scalar>
-    static Evaluation pcnw(const Params& params, const FluidState& fs)
+    OPM_HOST_DEVICE static Evaluation pcnw(const Params& params, const FluidState& fs)
     {
         OPM_TIMEFUNCTION_LOCAL();
         const auto& Sw =
@@ -141,7 +144,7 @@ public:
      * \brief The saturation-capillary pressure curve
      */
     template <class Evaluation>
-    static Evaluation twoPhaseSatPcnw(const Params& params, const Evaluation& Sw)
+    OPM_HOST_DEVICE static Evaluation twoPhaseSatPcnw(const Params& params, const Evaluation& Sw)
     {
         OPM_TIMEFUNCTION_LOCAL();
         return eval_(params.SwPcwnSamples(), params.pcwnSamples(), Sw);
@@ -155,11 +158,11 @@ public:
      * \brief The saturation-capillary pressure curve
      */
     template <class FluidState, class Evaluation = typename FluidState::Scalar>
-    static Evaluation Sw(const Params& /* params */, const FluidState& /* fs */)
+    OPM_HOST_DEVICE static Evaluation Sw(const Params& /* params */, const FluidState& /* fs */)
     { throw std::logic_error("Not implemented: Sw()"); }
 
     template <class Evaluation>
-    static Evaluation twoPhaseSatSw(const Params& /* params */, const Evaluation& /* pC */)
+    OPM_HOST_DEVICE static Evaluation twoPhaseSatSw(const Params& /* params */, const Evaluation& /* pC */)
     { throw std::logic_error("Not implemented: twoPhaseSatSw()"); }
 
     /*!
@@ -167,11 +170,11 @@ public:
      *        the phase pressures.
      */
     template <class FluidState, class Evaluation = typename FluidState::Scalar>
-    static Evaluation Sn(const Params& params, const FluidState& fs)
+    OPM_HOST_DEVICE static Evaluation Sn(const Params& params, const FluidState& fs)
     { return 1 - Sw<FluidState, Scalar>(params, fs); }
 
     template <class Evaluation>
-    static Evaluation twoPhaseSatSn(const Params& params, const Evaluation& pC)
+    OPM_HOST_DEVICE static Evaluation twoPhaseSatSn(const Params& params, const Evaluation& pC)
     { return 1 - twoPhaseSatSw(params, pC); }
 
     /*!
@@ -179,7 +182,7 @@ public:
      *        porous medium
      */
     template <class FluidState, class Evaluation = typename FluidState::Scalar>
-    static Evaluation krw(const Params& params, const FluidState& fs)
+    OPM_HOST_DEVICE static Evaluation krw(const Params& params, const FluidState& fs)
     {
         OPM_TIMEFUNCTION_LOCAL();
         const auto& Sw =
@@ -189,14 +192,14 @@ public:
     }
 
     template <class Evaluation>
-    static Evaluation twoPhaseSatKrw(const Params& params, const Evaluation& Sw)
+    OPM_HOST_DEVICE static Evaluation twoPhaseSatKrw(const Params& params, const Evaluation& Sw)
     {
         OPM_TIMEFUNCTION_LOCAL();
         return eval_(params.SwKrwSamples(), params.krwSamples(), Sw);
     }
 
     template <class Evaluation>
-    static Evaluation twoPhaseSatKrwInv(const Params& params, const Evaluation& krw)
+    OPM_HOST_DEVICE static Evaluation twoPhaseSatKrwInv(const Params& params, const Evaluation& krw)
     {
         OPM_TIMEFUNCTION_LOCAL();
         return eval_(params.krwSamples(), params.SwKrwSamples(), krw);
@@ -207,7 +210,7 @@ public:
      *        of the porous medium
      */
     template <class FluidState, class Evaluation = typename FluidState::Scalar>
-    static Evaluation krn(const Params& params, const FluidState& fs)
+    OPM_HOST_DEVICE static Evaluation krn(const Params& params, const FluidState& fs)
     {
         OPM_TIMEFUNCTION_LOCAL();
         const auto& Sw =
@@ -217,28 +220,28 @@ public:
     }
 
     template <class Evaluation>
-    static Evaluation twoPhaseSatKrn(const Params& params, const Evaluation& Sw)
+    OPM_HOST_DEVICE static Evaluation twoPhaseSatKrn(const Params& params, const Evaluation& Sw)
     {
         OPM_TIMEFUNCTION_LOCAL();
         return eval_(params.SwKrnSamples(), params.krnSamples(), Sw);
     }
 
     template <class Evaluation>
-    static Evaluation twoPhaseSatKrnInv(const Params& params, const Evaluation& krn)
+    OPM_HOST_DEVICE static Evaluation twoPhaseSatKrnInv(const Params& params, const Evaluation& krn)
     { return eval_(params.krnSamples(), params.SwKrnSamples(), krn); }
 
     template <class Evaluation>
-    static size_t findSegmentIndex(const ValueVector& xValues, const Evaluation& x){
+    OPM_HOST_DEVICE static size_t findSegmentIndex(const ValueVector& xValues, const Evaluation& x){
         return findSegmentIndex_(xValues, scalarValue(x));
     }
 
     template <class Evaluation>
-    static size_t findSegmentIndexDescending(const ValueVector& xValues, const Evaluation& x){
+    OPM_HOST_DEVICE static size_t findSegmentIndexDescending(const ValueVector& xValues, const Evaluation& x){
         return findSegmentIndexDescending_(xValues, scalarValue(x));
     }
 
     template <class Evaluation>
-    static Evaluation eval(const ValueVector& xValues, const ValueVector& yValues, const Evaluation& x, unsigned segIdx){
+    OPM_HOST_DEVICE static Evaluation eval(const ValueVector& xValues, const ValueVector& yValues, const Evaluation& x, unsigned segIdx){
         Scalar x0 = xValues[segIdx];
         Scalar x1 = xValues[segIdx + 1];
 
@@ -252,7 +255,7 @@ public:
 
 private:
     template <class Evaluation>
-    static Evaluation eval_(const ValueVector& xValues,
+    OPM_HOST_DEVICE static Evaluation eval_(const ValueVector& xValues,
                             const ValueVector& yValues,
                             const Evaluation& x)
     {
@@ -263,7 +266,7 @@ private:
     }
 
     template <class Evaluation>
-    static Evaluation evalAscending_(const ValueVector& xValues,
+    OPM_HOST_DEVICE static Evaluation evalAscending_(const ValueVector& xValues,
                                      const ValueVector& yValues,
                                      const Evaluation& x)
     {
@@ -279,7 +282,7 @@ private:
     }
 
     template <class Evaluation>
-    static Evaluation evalDescending_(const ValueVector& xValues,
+    OPM_HOST_DEVICE static Evaluation evalDescending_(const ValueVector& xValues,
                                       const ValueVector& yValues,
                                       const Evaluation& x)
     {
@@ -295,7 +298,7 @@ private:
     }
 
     template <class Evaluation>
-    static Evaluation evalDeriv_(const ValueVector& xValues,
+    OPM_HOST_DEVICE static Evaluation evalDeriv_(const ValueVector& xValues,
                                  const ValueVector& yValues,
                                  const Evaluation& x)
     {
@@ -316,7 +319,7 @@ private:
         return (y1 - y0)/(x1 - x0);
     }
     template<class ScalarT>
-    static size_t findSegmentIndex_(const ValueVector& xValues, const ScalarT& x)
+    OPM_HOST_DEVICE static size_t findSegmentIndex_(const ValueVector& xValues, const ScalarT& x)
     {
         OPM_TIMEFUNCTION_LOCAL();
         assert(xValues.size() > 1); // we need at least two sampling points!
@@ -339,7 +342,7 @@ private:
         return lowIdx;
     }
 
-    static size_t findSegmentIndexDescending_(const ValueVector& xValues, Scalar x)
+    OPM_HOST_DEVICE static size_t findSegmentIndexDescending_(const ValueVector& xValues, Scalar x)
     {
         OPM_TIMEFUNCTION_LOCAL();
         assert(xValues.size() > 1); // we need at least two sampling points!

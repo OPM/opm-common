@@ -36,6 +36,7 @@
 
 #include <opm/material/common/MathToolbox.hpp>
 
+#include <opm/common/utility/gpuDecorators.hpp>
 namespace Opm {
 namespace DenseAd {
 // forward declaration of the Evaluation template class
@@ -44,16 +45,16 @@ class Evaluation;
 
 // provide some algebraic functions
 template <class ValueType, int numVars, unsigned staticSize>
-Evaluation<ValueType, numVars, staticSize> abs(const Evaluation<ValueType, numVars, staticSize>& x)
+OPM_HOST_DEVICE Evaluation<ValueType, numVars, staticSize> abs(const Evaluation<ValueType, numVars, staticSize>& x)
 { return (x > 0.0)?x:-x; }
 
 template <class ValueType, int numVars, unsigned staticSize>
-Evaluation<ValueType, numVars, staticSize> min(const Evaluation<ValueType, numVars, staticSize>& x1,
+OPM_HOST_DEVICE Evaluation<ValueType, numVars, staticSize> min(const Evaluation<ValueType, numVars, staticSize>& x1,
                                                const Evaluation<ValueType, numVars, staticSize>& x2)
 { return (x1 < x2)?x1:x2; }
 
 template <class Arg1ValueType, class ValueType, int numVars, unsigned staticSize>
-Evaluation<ValueType, numVars, staticSize> min(const Arg1ValueType& x1,
+OPM_HOST_DEVICE Evaluation<ValueType, numVars, staticSize> min(const Arg1ValueType& x1,
                                                const Evaluation<ValueType, numVars, staticSize>& x2)
 {
     if (x1 < x2) {
@@ -66,17 +67,17 @@ Evaluation<ValueType, numVars, staticSize> min(const Arg1ValueType& x1,
 }
 
 template <class ValueType, int numVars, unsigned staticSize, class Arg2ValueType>
-Evaluation<ValueType, numVars, staticSize> min(const Evaluation<ValueType, numVars, staticSize>& x1,
+OPM_HOST_DEVICE Evaluation<ValueType, numVars, staticSize> min(const Evaluation<ValueType, numVars, staticSize>& x1,
                                                const Arg2ValueType& x2)
 { return min(x2, x1); }
 
 template <class ValueType, int numVars, unsigned staticSize>
-Evaluation<ValueType, numVars, staticSize> max(const Evaluation<ValueType, numVars, staticSize>& x1,
+OPM_HOST_DEVICE Evaluation<ValueType, numVars, staticSize> max(const Evaluation<ValueType, numVars, staticSize>& x1,
                                                const Evaluation<ValueType, numVars, staticSize>& x2)
 { return (x1 > x2)?x1:x2; }
 
 template <class Arg1ValueType, class ValueType, int numVars, unsigned staticSize>
-Evaluation<ValueType, numVars, staticSize> max(const Arg1ValueType& x1,
+OPM_HOST_DEVICE Evaluation<ValueType, numVars, staticSize> max(const Arg1ValueType& x1,
                                                const Evaluation<ValueType, numVars, staticSize>& x2)
 {
     if (x1 > x2) {
@@ -89,12 +90,12 @@ Evaluation<ValueType, numVars, staticSize> max(const Arg1ValueType& x1,
 }
 
 template <class ValueType, int numVars, unsigned staticSize, class Arg2ValueType>
-Evaluation<ValueType, numVars, staticSize> max(const Evaluation<ValueType, numVars, staticSize>& x1,
+OPM_HOST_DEVICE Evaluation<ValueType, numVars, staticSize> max(const Evaluation<ValueType, numVars, staticSize>& x1,
                                                const Arg2ValueType& x2)
 { return max(x2, x1); }
 
 template <class ValueType, int numVars, unsigned staticSize>
-Evaluation<ValueType, numVars, staticSize> tan(const Evaluation<ValueType, numVars, staticSize>& x)
+OPM_HOST_DEVICE Evaluation<ValueType, numVars, staticSize> tan(const Evaluation<ValueType, numVars, staticSize>& x)
 {
     typedef MathToolbox<ValueType> ValueTypeToolbox;
 
@@ -112,7 +113,7 @@ Evaluation<ValueType, numVars, staticSize> tan(const Evaluation<ValueType, numVa
 }
 
 template <class ValueType, int numVars, unsigned staticSize>
-Evaluation<ValueType, numVars, staticSize> atan(const Evaluation<ValueType, numVars, staticSize>& x)
+OPM_HOST_DEVICE Evaluation<ValueType, numVars, staticSize> atan(const Evaluation<ValueType, numVars, staticSize>& x)
 {
     typedef MathToolbox<ValueType> ValueTypeToolbox;
 
@@ -129,7 +130,7 @@ Evaluation<ValueType, numVars, staticSize> atan(const Evaluation<ValueType, numV
 }
 
 template <class ValueType, int numVars, unsigned staticSize>
-Evaluation<ValueType, numVars, staticSize> atan2(const Evaluation<ValueType, numVars, staticSize>& x,
+OPM_HOST_DEVICE Evaluation<ValueType, numVars, staticSize> atan2(const Evaluation<ValueType, numVars, staticSize>& x,
                                                  const Evaluation<ValueType, numVars, staticSize>& y)
 {
     typedef MathToolbox<ValueType> ValueTypeToolbox;
@@ -150,7 +151,7 @@ Evaluation<ValueType, numVars, staticSize> atan2(const Evaluation<ValueType, num
 }
 
 template <class ValueType, int numVars, unsigned staticSize>
-Evaluation<ValueType, numVars, staticSize> atan2(const Evaluation<ValueType, numVars, staticSize>& x,
+OPM_HOST_DEVICE Evaluation<ValueType, numVars, staticSize> atan2(const Evaluation<ValueType, numVars, staticSize>& x,
                                                  const ValueType& y)
 {
     typedef MathToolbox<ValueType> ValueTypeToolbox;
@@ -171,7 +172,7 @@ Evaluation<ValueType, numVars, staticSize> atan2(const Evaluation<ValueType, num
 }
 
 template <class ValueType, int numVars, unsigned staticSize>
-Evaluation<ValueType, numVars, staticSize> atan2(const ValueType& x,
+OPM_HOST_DEVICE Evaluation<ValueType, numVars, staticSize> atan2(const ValueType& x,
                                                  const Evaluation<ValueType, numVars, staticSize>& y)
 {
     typedef MathToolbox<ValueType> ValueTypeToolbox;
@@ -192,7 +193,7 @@ Evaluation<ValueType, numVars, staticSize> atan2(const ValueType& x,
 }
 
 template <class ValueType, int numVars, unsigned staticSize>
-Evaluation<ValueType, numVars, staticSize> sin(const Evaluation<ValueType, numVars, staticSize>& x)
+OPM_HOST_DEVICE Evaluation<ValueType, numVars, staticSize> sin(const Evaluation<ValueType, numVars, staticSize>& x)
 {
     typedef MathToolbox<ValueType> ValueTypeToolbox;
 
@@ -209,7 +210,7 @@ Evaluation<ValueType, numVars, staticSize> sin(const Evaluation<ValueType, numVa
 }
 
 template <class ValueType, int numVars, unsigned staticSize>
-Evaluation<ValueType, numVars, staticSize> asin(const Evaluation<ValueType, numVars, staticSize>& x)
+OPM_HOST_DEVICE Evaluation<ValueType, numVars, staticSize> asin(const Evaluation<ValueType, numVars, staticSize>& x)
 {
     typedef MathToolbox<ValueType> ValueTypeToolbox;
 
@@ -226,7 +227,7 @@ Evaluation<ValueType, numVars, staticSize> asin(const Evaluation<ValueType, numV
 }
 
 template <class ValueType, int numVars, unsigned staticSize>
-Evaluation<ValueType, numVars, staticSize> sinh(const Evaluation<ValueType, numVars, staticSize>& x)
+OPM_HOST_DEVICE Evaluation<ValueType, numVars, staticSize> sinh(const Evaluation<ValueType, numVars, staticSize>& x)
 {
     typedef MathToolbox<ValueType> ValueTypeToolbox;
 
@@ -243,7 +244,7 @@ Evaluation<ValueType, numVars, staticSize> sinh(const Evaluation<ValueType, numV
 }
 
 template <class ValueType, int numVars, unsigned staticSize>
-Evaluation<ValueType, numVars, staticSize> asinh(const Evaluation<ValueType, numVars, staticSize>& x)
+OPM_HOST_DEVICE Evaluation<ValueType, numVars, staticSize> asinh(const Evaluation<ValueType, numVars, staticSize>& x)
 {
     typedef MathToolbox<ValueType> ValueTypeToolbox;
 
@@ -260,7 +261,7 @@ Evaluation<ValueType, numVars, staticSize> asinh(const Evaluation<ValueType, num
 }
 
 template <class ValueType, int numVars, unsigned staticSize>
-Evaluation<ValueType, numVars, staticSize> cos(const Evaluation<ValueType, numVars, staticSize>& x)
+OPM_HOST_DEVICE Evaluation<ValueType, numVars, staticSize> cos(const Evaluation<ValueType, numVars, staticSize>& x)
 {
     typedef MathToolbox<ValueType> ValueTypeToolbox;
 
@@ -277,7 +278,7 @@ Evaluation<ValueType, numVars, staticSize> cos(const Evaluation<ValueType, numVa
 }
 
 template <class ValueType, int numVars, unsigned staticSize>
-Evaluation<ValueType, numVars, staticSize> acos(const Evaluation<ValueType, numVars, staticSize>& x)
+OPM_HOST_DEVICE Evaluation<ValueType, numVars, staticSize> acos(const Evaluation<ValueType, numVars, staticSize>& x)
 {
     typedef MathToolbox<ValueType> ValueTypeToolbox;
 
@@ -294,7 +295,7 @@ Evaluation<ValueType, numVars, staticSize> acos(const Evaluation<ValueType, numV
 }
 
 template <class ValueType, int numVars, unsigned staticSize>
-Evaluation<ValueType, numVars, staticSize> cosh(const Evaluation<ValueType, numVars, staticSize>& x)
+OPM_HOST_DEVICE Evaluation<ValueType, numVars, staticSize> cosh(const Evaluation<ValueType, numVars, staticSize>& x)
 {
     typedef MathToolbox<ValueType> ValueTypeToolbox;
 
@@ -311,7 +312,7 @@ Evaluation<ValueType, numVars, staticSize> cosh(const Evaluation<ValueType, numV
 }
 
 template <class ValueType, int numVars, unsigned staticSize>
-Evaluation<ValueType, numVars, staticSize> acosh(const Evaluation<ValueType, numVars, staticSize>& x)
+OPM_HOST_DEVICE Evaluation<ValueType, numVars, staticSize> acosh(const Evaluation<ValueType, numVars, staticSize>& x)
 {
     typedef MathToolbox<ValueType> ValueTypeToolbox;
 
@@ -328,7 +329,7 @@ Evaluation<ValueType, numVars, staticSize> acosh(const Evaluation<ValueType, num
 }
 
 template <class ValueType, int numVars, unsigned staticSize>
-Evaluation<ValueType, numVars, staticSize> sqrt(const Evaluation<ValueType, numVars, staticSize>& x)
+OPM_HOST_DEVICE Evaluation<ValueType, numVars, staticSize> sqrt(const Evaluation<ValueType, numVars, staticSize>& x)
 {
     typedef MathToolbox<ValueType> ValueTypeToolbox;
 
@@ -347,7 +348,7 @@ Evaluation<ValueType, numVars, staticSize> sqrt(const Evaluation<ValueType, numV
 }
 
 template <class ValueType, int numVars, unsigned staticSize>
-Evaluation<ValueType, numVars, staticSize> exp(const Evaluation<ValueType, numVars, staticSize>& x)
+OPM_HOST_DEVICE Evaluation<ValueType, numVars, staticSize> exp(const Evaluation<ValueType, numVars, staticSize>& x)
 {
     typedef MathToolbox<ValueType> ValueTypeToolbox;
     Evaluation<ValueType, numVars, staticSize> result(x);
@@ -365,7 +366,7 @@ Evaluation<ValueType, numVars, staticSize> exp(const Evaluation<ValueType, numVa
 
 // exponentiation of arbitrary base with a fixed constant
 template <class ValueType, int numVars, unsigned staticSize, class ExpType>
-Evaluation<ValueType, numVars, staticSize> pow(const Evaluation<ValueType, numVars, staticSize>& base,
+OPM_HOST_DEVICE Evaluation<ValueType, numVars, staticSize> pow(const Evaluation<ValueType, numVars, staticSize>& base,
                                                const ExpType& exp)
 {
     typedef MathToolbox<ValueType> ValueTypeToolbox;
@@ -391,7 +392,7 @@ Evaluation<ValueType, numVars, staticSize> pow(const Evaluation<ValueType, numVa
 
 // exponentiation of constant base with an arbitrary exponent
 template <class BaseType, class ValueType, int numVars, unsigned staticSize>
-Evaluation<ValueType, numVars, staticSize> pow(const BaseType& base,
+OPM_HOST_DEVICE Evaluation<ValueType, numVars, staticSize> pow(const BaseType& base,
                                                const Evaluation<ValueType, numVars, staticSize>& exp)
 {
     typedef MathToolbox<ValueType> ValueTypeToolbox;
@@ -419,7 +420,7 @@ Evaluation<ValueType, numVars, staticSize> pow(const BaseType& base,
 // this is the most expensive power function. Computationally it is pretty expensive, so
 // one of the above two variants above should be preferred if possible.
 template <class ValueType, int numVars, unsigned staticSize>
-Evaluation<ValueType, numVars, staticSize> pow(const Evaluation<ValueType, numVars, staticSize>& base,
+OPM_HOST_DEVICE Evaluation<ValueType, numVars, staticSize> pow(const Evaluation<ValueType, numVars, staticSize>& base,
                                                const Evaluation<ValueType, numVars, staticSize>& exp)
 {
     typedef MathToolbox<ValueType> ValueTypeToolbox;
@@ -451,7 +452,7 @@ Evaluation<ValueType, numVars, staticSize> pow(const Evaluation<ValueType, numVa
 }
 
 template <class ValueType, int numVars, unsigned staticSize>
-Evaluation<ValueType, numVars, staticSize> log(const Evaluation<ValueType, numVars, staticSize>& x)
+OPM_HOST_DEVICE Evaluation<ValueType, numVars, staticSize> log(const Evaluation<ValueType, numVars, staticSize>& x)
 {
     typedef MathToolbox<ValueType> ValueTypeToolbox;
 
@@ -469,7 +470,7 @@ Evaluation<ValueType, numVars, staticSize> log(const Evaluation<ValueType, numVa
 
 
 template <class ValueType, int numVars, unsigned staticSize>
-Evaluation<ValueType, numVars, staticSize> log10(const Evaluation<ValueType, numVars, staticSize>& x)
+OPM_HOST_DEVICE Evaluation<ValueType, numVars, staticSize> log10(const Evaluation<ValueType, numVars, staticSize>& x)
 {
     typedef MathToolbox<ValueType> ValueTypeToolbox;
 
@@ -499,53 +500,53 @@ public:
     typedef typename InnerToolbox::Scalar Scalar;
     typedef DenseAd::Evaluation<ValueType, numVars, staticSize> Evaluation;
 
-    static ValueType value(const Evaluation& eval)
+    OPM_HOST_DEVICE static ValueType value(const Evaluation& eval)
     { return eval.value(); }
 
-    static decltype(InnerToolbox::scalarValue(0.0)) scalarValue(const Evaluation& eval)
+    OPM_HOST_DEVICE static decltype(InnerToolbox::scalarValue(0.0)) scalarValue(const Evaluation& eval)
     { return InnerToolbox::scalarValue(eval.value()); }
 
-    static Evaluation createBlank(const Evaluation& x)
+    OPM_HOST_DEVICE static Evaluation createBlank(const Evaluation& x)
     { return Evaluation::createBlank(x); }
 
-    static Evaluation createConstantZero(const Evaluation& x)
+    OPM_HOST_DEVICE static Evaluation createConstantZero(const Evaluation& x)
     { return Evaluation::createConstantZero(x); }
 
-    static Evaluation createConstantOne(const Evaluation& x)
+    OPM_HOST_DEVICE static Evaluation createConstantOne(const Evaluation& x)
     { return Evaluation::createConstantOne(x); }
 
-    static Evaluation createConstant(ValueType value)
+    OPM_HOST_DEVICE static Evaluation createConstant(ValueType value)
     { return Evaluation::createConstant(value); }
 
-    static Evaluation createConstant(unsigned numDeriv, const ValueType value)
+    OPM_HOST_DEVICE static Evaluation createConstant(unsigned numDeriv, const ValueType value)
     { return Evaluation::createConstant(numDeriv, value); }
 
-    static Evaluation createConstant(const Evaluation& x, const ValueType value)
+    OPM_HOST_DEVICE static Evaluation createConstant(const Evaluation& x, const ValueType value)
     { return Evaluation::createConstant(x, value); }
 
-    static Evaluation createVariable(ValueType value, int varIdx)
+    OPM_HOST_DEVICE static Evaluation createVariable(ValueType value, int varIdx)
     { return Evaluation::createVariable(value, varIdx); }
 
     template <class LhsEval>
-    static typename std::enable_if<std::is_same<Evaluation, LhsEval>::value,
+    OPM_HOST_DEVICE static typename std::enable_if<std::is_same<Evaluation, LhsEval>::value,
                                    LhsEval>::type
     decay(const Evaluation& eval)
     { return eval; }
 
     template <class LhsEval>
-    static typename std::enable_if<std::is_same<Evaluation, LhsEval>::value,
+    OPM_HOST_DEVICE static typename std::enable_if<std::is_same<Evaluation, LhsEval>::value,
                                    LhsEval>::type
     decay(const Evaluation&& eval)
     { return eval; }
 
     template <class LhsEval>
-    static typename std::enable_if<std::is_floating_point<LhsEval>::value,
+    OPM_HOST_DEVICE static typename std::enable_if<std::is_floating_point<LhsEval>::value,
                                    LhsEval>::type
     decay(const Evaluation& eval)
     { return eval.value(); }
 
     // comparison
-    static bool isSame(const Evaluation& a, const Evaluation& b, Scalar tolerance)
+    OPM_HOST_DEVICE static bool isSame(const Evaluation& a, const Evaluation& b, Scalar tolerance)
     {
         typedef MathToolbox<ValueType> ValueTypeToolbox;
 
@@ -563,69 +564,69 @@ public:
 
     // arithmetic functions
     template <class Arg1Eval, class Arg2Eval>
-    static Evaluation max(const Arg1Eval& arg1, const Arg2Eval& arg2)
+    OPM_HOST_DEVICE static Evaluation max(const Arg1Eval& arg1, const Arg2Eval& arg2)
     { return DenseAd::max(arg1, arg2); }
 
     template <class Arg1Eval, class Arg2Eval>
-    static Evaluation min(const Arg1Eval& arg1, const Arg2Eval& arg2)
+    OPM_HOST_DEVICE static Evaluation min(const Arg1Eval& arg1, const Arg2Eval& arg2)
     { return DenseAd::min(arg1, arg2); }
 
-    static Evaluation abs(const Evaluation& arg)
+    OPM_HOST_DEVICE static Evaluation abs(const Evaluation& arg)
     { return DenseAd::abs(arg); }
 
-    static Evaluation tan(const Evaluation& arg)
+    OPM_HOST_DEVICE static Evaluation tan(const Evaluation& arg)
     { return DenseAd::tan(arg); }
 
-    static Evaluation atan(const Evaluation& arg)
+    OPM_HOST_DEVICE static Evaluation atan(const Evaluation& arg)
     { return DenseAd::atan(arg); }
 
-    static Evaluation atan2(const Evaluation& arg1, const Evaluation& arg2)
+    OPM_HOST_DEVICE static Evaluation atan2(const Evaluation& arg1, const Evaluation& arg2)
     { return DenseAd::atan2(arg1, arg2); }
 
     template <class Eval2>
-    static Evaluation atan2(const Evaluation& arg1, const Eval2& arg2)
+    OPM_HOST_DEVICE static Evaluation atan2(const Evaluation& arg1, const Eval2& arg2)
     { return DenseAd::atan2(arg1, arg2); }
 
     template <class Eval1>
-    static Evaluation atan2(const Eval1& arg1, const Evaluation& arg2)
+    OPM_HOST_DEVICE static Evaluation atan2(const Eval1& arg1, const Evaluation& arg2)
     { return DenseAd::atan2(arg1, arg2); }
 
-    static Evaluation sin(const Evaluation& arg)
+    OPM_HOST_DEVICE static Evaluation sin(const Evaluation& arg)
     { return DenseAd::sin(arg); }
 
-    static Evaluation asin(const Evaluation& arg)
+    OPM_HOST_DEVICE static Evaluation asin(const Evaluation& arg)
     { return DenseAd::asin(arg); }
 
-    static Evaluation cos(const Evaluation& arg)
+    OPM_HOST_DEVICE static Evaluation cos(const Evaluation& arg)
     { return DenseAd::cos(arg); }
 
-    static Evaluation acos(const Evaluation& arg)
+    OPM_HOST_DEVICE static Evaluation acos(const Evaluation& arg)
     { return DenseAd::acos(arg); }
 
-    static Evaluation sqrt(const Evaluation& arg)
+    OPM_HOST_DEVICE static Evaluation sqrt(const Evaluation& arg)
     { return DenseAd::sqrt(arg); }
 
-    static Evaluation exp(const Evaluation& arg)
+    OPM_HOST_DEVICE static Evaluation exp(const Evaluation& arg)
     { return DenseAd::exp(arg); }
 
-    static Evaluation log(const Evaluation& arg)
+    OPM_HOST_DEVICE static Evaluation log(const Evaluation& arg)
     { return DenseAd::log(arg); }
 
-    static Evaluation log10(const Evaluation& arg)
+    OPM_HOST_DEVICE static Evaluation log10(const Evaluation& arg)
     { return DenseAd::log10(arg); }
 
     template <class RhsValueType>
-    static Evaluation pow(const Evaluation& arg1, const RhsValueType& arg2)
+    OPM_HOST_DEVICE static Evaluation pow(const Evaluation& arg1, const RhsValueType& arg2)
     { return DenseAd::pow(arg1, arg2); }
 
     template <class RhsValueType>
-    static Evaluation pow(const RhsValueType& arg1, const Evaluation& arg2)
+    OPM_HOST_DEVICE static Evaluation pow(const RhsValueType& arg1, const Evaluation& arg2)
     { return DenseAd::pow(arg1, arg2); }
 
-    static Evaluation pow(const Evaluation& arg1, const Evaluation& arg2)
+    OPM_HOST_DEVICE static Evaluation pow(const Evaluation& arg1, const Evaluation& arg2)
     { return DenseAd::pow(arg1, arg2); }
 
-    static bool isfinite(const Evaluation& arg)
+    OPM_HOST_DEVICE static bool isfinite(const Evaluation& arg)
     {
         if (!InnerToolbox::isfinite(arg.value()))
             return false;
@@ -637,7 +638,7 @@ public:
         return true;
     }
 
-    static bool isnan(const Evaluation& arg)
+    OPM_HOST_DEVICE static bool isnan(const Evaluation& arg)
     {
         if (InnerToolbox::isnan(arg.value()))
             return true;
