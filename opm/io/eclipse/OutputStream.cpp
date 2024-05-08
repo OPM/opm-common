@@ -585,40 +585,46 @@ namespace {
     std::vector<PaddedOutputString<8>>
     restartRoot(const SummarySpecification::RestartSpecification& restart)
     {
-        const auto substrLength    = std::size_t{8};
-        const auto maxSubstrings   = std::size_t{9};
-        const auto maxStringLength = maxSubstrings * substrLength;
+        // If the length of the path is N <= 72, 9 8-character words are used
         // If the length of the path is 72 < N <= 132, 17 8-character words are used
-        const auto maxSubstrings2  = std::size_t{17};
-        const auto maxStringLength2 = std::size_t{132};
+        const auto substrLength = std::size_t{8};
+        const auto N = restart.root.size();
+        auto maxStringLength = std::string::size_type{72};
+        auto numSubstrings = std::size_t{9};
+        if (N > maxStringLength) {
+            maxStringLength = 132;
+            numSubstrings = 17;
+        }
 
-        auto ret = std::vector<PaddedOutputString<substrLength>>{};
+        auto ret = std::vector<PaddedOutputString<substrLength>>{numSubstrings};
 
-        if (restart.root.empty()) {
-            ret.resize(maxSubstrings);
+        if (N==0) {
             return ret;
         }
 
-        if (restart.root.size() > maxStringLength2) {
+        // Return front-truncated string if path length exceeds maximum allowed
+        if (N > maxStringLength) {
             const auto msg = "Restart root name of size "
-                + std::to_string(restart.root.size())
+                + std::to_string(N)
                 + " exceeds "
-                + std::to_string(maxStringLength2)
+                + std::to_string(maxStringLength)
                 + " character limit (Ignored)";
 
             Opm::OpmLog::warning(msg);
 
-            ret.resize(maxSubstrings2);
+            auto start = N - maxStringLength;
+            auto curLength = decltype(start){0};
+            for (std::size_t i=0; i<numSubstrings; ++i) {
+                const auto nchar = std::min(substrLength, maxStringLength-curLength);
+                ret[i] = restart.root.substr(start, nchar);
+                start += nchar;
+                curLength += nchar;
+            }
             return ret;
         }
 
-        if (restart.root.size() > maxStringLength)
-            ret.resize(maxSubstrings2);
-        else
-            ret.resize(maxSubstrings);
-
-        auto remain = restart.root.size();
-
+        // Return tail-padded string
+        auto remain = N;
         auto i = decltype(ret.size()){0};
         auto p = decltype(remain){0};
         while (remain > decltype(remain){0}) {
