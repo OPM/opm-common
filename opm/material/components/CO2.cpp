@@ -27,7 +27,7 @@
 #include <opm/material/common/quad.hpp>
 #endif
 
-#include "co2tables.inc"
+#include "co2tables_rc.inc"
 
 namespace Opm {
 

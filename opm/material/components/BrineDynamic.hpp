@@ -262,24 +262,31 @@ public:
     template <class Evaluation>
     static Evaluation liquidDensity(const Evaluation& temperature, const Evaluation& pressure, const Evaluation& salinity, bool extrapolate = false)
     {
-        Evaluation tempC = temperature - 273.15;
-        Evaluation pMPa = pressure/1.0E6;
-
+        // Evaluation tempC = temperature - 273.15;
+        // Evaluation pMPa = pressure/1.0E6;
         const Evaluation rhow = H2O::liquidDensity(temperature, pressure, extrapolate);
-        return
-            rhow +
-            1000*salinity*(
-                0.668 +
-                0.44*salinity +
-                1.0E-6*(
-                    300*pMPa -
-                    2400*pMPa*salinity +
-                    tempC*(
-                        80.0 +
-                        3*tempC -
-                        3300*salinity -
-                        13*pMPa +
-                        47*pMPa*salinity)));
+        static constexpr Scalar a[3] = {0.30960, -0.000069, 0.0};
+        
+        const Evaluation& T = temperature - 273.15;
+        const Evaluation coeff = a[0] + T * (a[1] + a[2] * T);
+        const Evaluation exponent = coeff * salinity;
+
+        return rhow * pow(10.0, exponent);
+
+        // return
+        //     rhow +
+        //     1000*salinity*(
+        //         0.668 +
+        //         0.44*salinity +
+        //         1.0E-6*(
+        //             300*pMPa -
+        //             2400*pMPa*salinity +
+        //             tempC*(
+        //                 80.0 +
+        //                 3*tempC -
+        //                 3300*salinity -
+        //                 13*pMPa +
+        //                 47*pMPa*salinity)));
     }
 
     /*!
@@ -337,16 +344,24 @@ public:
      *   "Equations of State for basin geofluids"
      */
     template <class Evaluation>
-    static Evaluation liquidViscosity(const Evaluation& temperature, const Evaluation& /*pressure*/, const Evaluation& salinity)
+    static Evaluation liquidViscosity(const Evaluation& temperature, const Evaluation& pressure, const Evaluation& salinity, bool extrapolate = false)
     {
-        Evaluation T_C = temperature - 273.15;
-        if(temperature <= 275.) // regularization
-            T_C = 275.0;
+        const Evaluation muw = H2O::liquidViscosity(temperature, pressure, extrapolate);
+        static constexpr Scalar a[3] = {0.718000, 0.003590, 0.0};
 
-        Evaluation A = (0.42*Opm::pow((Opm::pow(salinity, 0.8)-0.17), 2) + 0.045)*pow(T_C, 0.8);
-        Evaluation mu_brine = 0.1 + 0.333*salinity + (1.65+91.9*salinity*salinity*salinity)*exp(-A);
+        const Evaluation& T = temperature - 273.15;
+        const Evaluation coeff = a[0] + T * (a[1] + a[2] * T);
+        const Evaluation exponent = coeff * salinity;
 
-        return mu_brine/1000.0; // convert to [Pa s] (todo: check if correct cP->Pa s is times 10...)
+        return muw * pow(10.0, exponent);
+        // Evaluation T_C = temperature - 273.15;
+        // if(temperature <= 275.) // regularization
+        //     T_C = 275.0;
+
+        // Evaluation A = (0.42*Opm::pow((Opm::pow(salinity, 0.8)-0.17), 2) + 0.045)*pow(T_C, 0.8);
+        // Evaluation mu_brine = 0.1 + 0.333*salinity + (1.65+91.9*salinity*salinity*salinity)*exp(-A);
+
+        // return mu_brine/1000.0; // convert to [Pa s] (todo: check if correct cP->Pa s is times 10...)
     }
 
     //Molar mass salt (assumes pure NaCl) [kg/mol]

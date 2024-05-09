@@ -38,11 +38,7 @@ initFromState(const EclipseState& eclState, const Schedule&)
 {
 
     bool co2sol = eclState.runspec().co2Sol();
-    if (!co2sol && !eclState.getTableManager().getDensityTable().empty()) {
-        OpmLog::warning("CO2STORE is enabled but DENSITY is in the deck. \n"
-                        "The surface density is computed based on CO2-BRINE "
-                        "PVT at standard conditions (STCOND) and DENSITY is ignored");
-    }
+
 
     if (!co2sol && (eclState.getTableManager().hasTables("PVDO") ||
         !eclState.getTableManager().getPvtoTables().empty())) {
@@ -68,30 +64,37 @@ initFromState(const EclipseState& eclState, const Schedule&)
     // We only supported single pvt region for the co2-brine module
     size_t numRegions = 1;
     setNumRegions(numRegions);
+
     size_t regionIdx = 0;
     // Currently we only support constant salinity
     const Scalar molality = eclState.getTableManager().salinity(); // mol/kg
     const Scalar MmNaCl = 58.44e-3; // molar mass of NaCl [kg/mol]
     // convert to mass fraction
     salinity_[regionIdx] = 1 / ( 1 + 1 / (molality*MmNaCl));
-    // set the surface conditions using the STCOND keyword
-    Scalar T_ref = eclState.getTableManager().stCond().temperature;
-    Scalar P_ref = eclState.getTableManager().stCond().pressure;
-    
-    // Throw an error if STCOND is not (T, p) = (15.56 C, 1 atm) = (288.71 K, 1.01325e5 Pa)
-    if (T_ref != Scalar(288.71) || P_ref != Scalar(1.01325e5)) {
-        OPM_THROW(std::runtime_error, "CO2STORE can only be used with default values for STCOND!");
+
+    if (co2sol) {
+        brineReferenceDensity_[regionIdx] = eclState.getTableManager().getDensityTable()[regionIdx].water;
+        Scalar T_ref = eclState.getTableManager().stCond().temperature;
+        Scalar P_ref = eclState.getTableManager().stCond().pressure;
+        // Throw an error if STCOND is not (T, p) = (15.56 C, 1 atm) = (288.71 K, 1.01325e5 Pa)
+        if (T_ref != Scalar(288.71) || P_ref != Scalar(1.01325e5)) {
+            OPM_THROW(std::runtime_error, "CO2SOL can only be used with default values for STCOND!");
+        }
+        co2ReferenceDensity_[regionIdx] = CO2::gasDensity(T_ref, P_ref, extrapolate);
+    } else if (!eclState.getTableManager().getDensityTable().empty()) {
+        brineReferenceDensity_[regionIdx] = eclState.getTableManager().getDensityTable()[regionIdx].water;
+        co2ReferenceDensity_[regionIdx] = eclState.getTableManager().getDensityTable()[regionIdx].gas;
+    } else {
+        Scalar T_ref = eclState.getTableManager().stCond().temperature;
+        Scalar P_ref = eclState.getTableManager().stCond().pressure;
+        // Throw an error if STCOND is not (T, p) = (15.56 C, 1 atm) = (288.71 K, 1.01325e5 Pa)
+        if (T_ref != Scalar(288.71) || P_ref != Scalar(1.01325e5)) {
+            OPM_THROW(std::runtime_error, "CO2STORE can only be used with default values for STCOND!");
+        }
+        co2ReferenceDensity_[regionIdx] = CO2::gasDensity(T_ref, P_ref, extrapolate);
+        brineReferenceDensity_[regionIdx] = Brine::liquidDensity(T_ref, P_ref, salinity_[regionIdx], extrapolate);
     }
 
-    brineReferenceDensity_[regionIdx] = Brine::liquidDensity(T_ref, P_ref, salinity_[regionIdx], extrapolate);
-    co2ReferenceDensity_[regionIdx] = CO2::gasDensity(T_ref, P_ref, extrapolate);
-
-    OpmLog::info("CO2STORE/CO2SOL is enabled. \n The surface density of CO2 is  " + std::to_string(co2ReferenceDensity_[regionIdx])
-                 + "kg/m3 \n The surface density of Brine is  " + std::to_string(brineReferenceDensity_[regionIdx])
-                 + "kg/m3"
-                 + "\n The surface densities are computed using the reference pressure ( " + std::to_string(P_ref) 
-                 + "Pa) and the reference temperature (" +  std::to_string(T_ref) + "K)." 
-                 );
 }
 
 template class BrineCo2Pvt<double>;

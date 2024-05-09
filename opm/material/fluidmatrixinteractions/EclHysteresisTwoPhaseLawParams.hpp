@@ -595,6 +595,9 @@ public:
             krnSwMdc_ = krnSw;
             KrndHy_ = EffLawT::twoPhaseSatKrn(drainageParams(), krnSwMdc_);
             updateParams = true;
+            isDrain_ = true;
+        } else {
+            isDrain_ = false;
         }
 
         if (krwSw > krwSwMdc_) {
