@@ -714,6 +714,8 @@ if(ENABLE_ECL_OUTPUT)
           tests/msim/MSIM_PYACTION_NO_RUN_FUNCTION.DATA
           tests/msim/MSIM_PYACTION_OPEN_WELL_AT_PAST_REPORT_STEP.DATA
           tests/msim/MSIM_PYACTION_OPEN_WELL_AT_TOO_LATE_REPORT_STEP.DATA
+          tests/msim/MSIM_PYACTION_EXIT.DATA
+          tests/msim/exit.py
           tests/msim/retrieve_info.py
           tests/msim/action1.py
           tests/msim/action2.py

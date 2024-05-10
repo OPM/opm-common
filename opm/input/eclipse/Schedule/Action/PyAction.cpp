@@ -41,7 +41,7 @@ bool PyAction::valid_keyword(const std::string& keyword) {
     static std::unordered_set<std::string> pyaction_allowed_list = {
         "BOX",
         "FIELD",
-        "ENDBOX",
+        "ENDBOX", "EXIT",
         "GCONINJE", "GCONPROD",
         "METRIC", "MULTX", "MULTX-", "MULTY", "MULTY-", "MULTZ", "MULTZ-",
         "NEXT", "NEXTSTEP",
