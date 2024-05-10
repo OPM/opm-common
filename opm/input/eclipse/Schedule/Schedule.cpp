@@ -1434,48 +1434,73 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
         } else if (reportStep >= this->m_sched_deck.size()) {
             throw std::invalid_argument("Insert keyword for report step " + std::to_string(reportStep) + " requested, this exceeds the total number of report steps, being " + std::to_string(this->m_sched_deck.size() -1) + ".");
         }
+
         ParseContext parseContext;
         ErrorGuard errors;
-        ScheduleGrid grid(this->completed_cells);
-        SimulatorUpdate sim_update;
-        std::unordered_map<std::string, double> target_wellpi;
-        std::vector<std::string> matching_wells;
-        const std::string prefix = "| "; /* logger prefix string */
-        this->snapshots.resize(reportStep + 1);
-        auto& input_block = this->m_sched_deck[reportStep];
-        std::unordered_map<std::string, double> wpimult_global_factor;
+
+        std::time_t start_time = std::chrono::system_clock::to_time_t(std::chrono::system_clock::from_time_t(0));
+        Opm::Action::ActionX action("insertkwaction", 1, 0.0, start_time);
         for (auto& keyword : keywords) {
             if (Action::PyAction::valid_keyword(keyword->name())) {
-                input_block.push_back(*keyword);
-                this->handleKeyword(reportStep,
-                                    input_block,
-                                    *keyword,
-                                    parseContext,
-                                    errors,
-                                    grid,
-                                    matching_wells,
-                                    /*actionx_mode=*/false,
-                                    &sim_update,
-                                    &target_wellpi,
-                                    wpimult_global_factor);    
+                action.addKeyword(*keyword);    
             } else {
                 const std::string msg_fmt = fmt::format("The keyword {} is not supported for inserting it from Python into a simulation", keyword->name());
                 parseContext.handleError(ParseContext::PYACTION_ILLEGAL_KEYWORD, msg_fmt, keyword->location(), errors);
             }
         }
-        this->applyGlobalWPIMULT(wpimult_global_factor);
-        this->end_report(reportStep);
-        if (reportStep < this->m_sched_deck.size() - 1) {
-            iterateScheduleSection(
-                reportStep + 1,
-                this->m_sched_deck.size(),
-                parseContext,
-                errors,
-                grid,
-                &target_wellpi,
-                prefix);
-        }
-        this->simUpdateFromPython->append(sim_update);
+        SimulatorUpdate delta = this->applyAction(reportStep, action, {} /*matching_wells*/, {}/*target_wellpi*/);
+        this->simUpdateFromPython->append(delta);
+
+//        ScheduleGrid grid(this->completed_cells);
+//        SimulatorUpdate sim_update;
+//        std::unordered_map<std::string, double> target_wellpi;
+//        std::vector<std::string> matching_wells;
+//        const std::string prefix = "| "; /* logger prefix string */
+//        this->snapshots.resize(reportStep + 1);
+//        auto& input_block = this->m_sched_deck[reportStep];
+//        std::unordered_map<std::string, double> wpimult_global_factor;
+//        for (auto& keyword : keywords) {
+//            if (Action::PyAction::valid_keyword(keyword->name())) {
+//                input_block.push_back(*keyword);
+//                this->handleKeyword(reportStep,
+//                                    input_block,
+//                                    *keyword,
+//                                    parseContext,
+//                                    errors,
+//                                    grid,
+//                                    matching_wells,
+//                                    /*actionx_mode=*/false,
+//                                    &sim_update,
+//                                    &target_wellpi,
+//                                    wpimult_global_factor);    
+//            } else {
+//                const std::string msg_fmt = fmt::format("The keyword {} is not supported for inserting it from Python into a simulation", keyword->name());
+//                parseContext.handleError(ParseContext::PYACTION_ILLEGAL_KEYWORD, msg_fmt, keyword->location(), errors);
+//            }
+//        }
+//        this->applyGlobalWPIMULT(wpimult_global_factor);
+//        this->end_report(reportStep);
+//        if (! sim_update.affected_wells.empty()) {
+//            this->snapshots.back().events()
+//                .addEvent(ScheduleEvents::ACTIONX_WELL_EVENT);
+//
+//            auto& wgEvents = this->snapshots.back().wellgroup_events();
+//
+//            for (const auto& well: sim_update.affected_wells) {
+//                wgEvents.addEvent(well, ScheduleEvents::ACTIONX_WELL_EVENT);
+//            }
+//        }
+//        if (reportStep < this->m_sched_deck.size() - 1) {
+//            iterateScheduleSection(
+//                reportStep + 1,
+//                this->m_sched_deck.size(),
+//                parseContext,
+//                errors,
+//                grid,
+//                &target_wellpi,
+//                prefix);
+//        }
+//        this->simUpdateFromPython->append(sim_update);
     }
 
 
