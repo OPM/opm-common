@@ -28,6 +28,7 @@
 #include <string>
 
 #include <fmt/format.h>
+#include <iostream>
 
 Opm::ScheduleGrid::ScheduleGrid(const Opm::EclipseGrid& ecl_grid,
                                 const Opm::FieldPropsManager& fpm,
@@ -66,7 +67,10 @@ namespace {
 const Opm::CompletedCells::Cell&
 Opm::ScheduleGrid::get_cell(std::size_t i, std::size_t j, std::size_t k) const
 {
+    std::cout << "In ScheduleGrid::get_cell" << std::endl;
+
     if (this->grid == nullptr) {
+        std::cout << " no EclipseGrid set!" << std::endl;
         return this->cells.get(i, j, k);
     }
 

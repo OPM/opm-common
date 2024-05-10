@@ -8,9 +8,9 @@ set(OPM_MACROS_ROOT ${PROJECT_SOURCE_DIR})
 option(ENABLE_ECL_INPUT "Enable eclipse input support?" ON)
 option(ENABLE_ECL_OUTPUT "Enable eclipse output support?" ON)
 option(ENABLE_MOCKSIM "Build the mock simulator for io testing" ON)
-option(OPM_ENABLE_PYTHON "Enable python bindings?" OFF)
+option(OPM_ENABLE_PYTHON "Enable python bindings?" ON)
 option(OPM_INSTALL_PYTHON "Install python bindings?" ON)
-option(OPM_ENABLE_EMBEDDED_PYTHON "Enable embedded python?" OFF)
+option(OPM_ENABLE_EMBEDDED_PYTHON "Enable embedded python?" ON)
 
 # Output implies input
 if(ENABLE_ECL_OUTPUT)
