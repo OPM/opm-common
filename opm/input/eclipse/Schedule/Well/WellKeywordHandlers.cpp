@@ -103,9 +103,6 @@ void handleWCONHIST(HandlerContext& handlerContext)
             bool update_well = false;
 
             auto table_nr = record.getItem("VFP_TABLE").get< int >(0);
-            if (record.getItem("VFP_TABLE").defaultApplied(0)) {
-                table_nr = properties->VFPTableNumber;
-            }
 
             if (table_nr != 0) {
                 const auto& vfpprod = handlerContext.state().vfpprod;
@@ -198,9 +195,6 @@ void handleWCONINJE(HandlerContext& handlerContext)
             }
 
             auto table_nr = record.getItem("VFP_TABLE").get< int >(0);
-            if (record.getItem("VFP_TABLE").defaultApplied(0)) {
-                table_nr = injection->VFPTableNumber;
-            }
 
             if (table_nr != 0) {
                 const auto& vfpinj = handlerContext.state().vfpinj;
@@ -277,9 +271,6 @@ void handleWCONINJH(HandlerContext& handlerContext)
             }
 
             auto table_nr = record.getItem("VFP_TABLE").get< int >(0);
-            if (record.getItem("VFP_TABLE").defaultApplied(0)) {
-                table_nr = injection->VFPTableNumber;
-            }
 
             if (table_nr != 0) {
                 const auto& vfpinj = handlerContext.state().vfpinj;
@@ -349,9 +340,6 @@ void handleWCONPROD(HandlerContext& handlerContext)
             }
 
             auto table_nr = record.getItem("VFP_TABLE").get< int >(0);
-            if (record.getItem("VFP_TABLE").defaultApplied(0)) {
-                table_nr = properties->VFPTableNumber;
-            }
 
             if (table_nr != 0) {
                 const auto& vfpprod = handlerContext.state().vfpprod;

@@ -258,10 +258,8 @@ namespace Opm {
         this->controlMode = newControlMode;
         this->predictionMode = false;
 
-        const int VFPTableNumberArg = record.getItem("VFP_TABLE").get< int >(0);
-        if (VFPTableNumberArg > 0) {
-            this->VFPTableNumber = VFPTableNumberArg;
-        }
+        this->VFPTableNumber = record.getItem("VFP_TABLE").get< int >(0);
+
         this->rsRvInj = record.getItem("VAPOIL_C").getSIDouble(0);
         if (this->injectorType == InjectorType::OIL && this->rsRvInj > 0) {
             double factor = record.getItem("VAPOIL_C").getSIDouble(0) / record.getItem("VAPOIL_C").get<double>(0);
