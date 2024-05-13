@@ -1443,7 +1443,7 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
                                     errors,
                                     grid,
                                     matching_wells,
-                                    /*actionx_mode=*/true,
+                                    /*actionx_mode=*/false,
                                     &sim_update,
                                     &target_wellpi,
                                     wpimult_global_factor);    

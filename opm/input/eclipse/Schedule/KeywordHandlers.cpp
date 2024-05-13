@@ -107,15 +107,13 @@ void handleSource(HandlerContext& handlerContext)
 
 void handleEXIT(HandlerContext& handlerContext)
 {
-    if (handlerContext.actionx_mode) {
-        using ES = ParserKeywords::EXIT;
-        int status = handlerContext.keyword.getRecord(0).getItem<ES::STATUS_CODE>().get<int>(0);
-        OpmLog::info("Simulation exit with status: " +
-                     std::to_string(status) +
-                     " requested by an action keyword at report_step: " +
-                     std::to_string(handlerContext.currentStep));
-        handlerContext.setExitCode(status);
-    }
+    using ES = ParserKeywords::EXIT;
+    int status = handlerContext.keyword.getRecord(0).getItem<ES::STATUS_CODE>().get<int>(0);
+    OpmLog::info("Simulation exit with status: " +
+                 std::to_string(status) +
+                 " requested by an action keyword at report_step: " +
+                 std::to_string(handlerContext.currentStep));
+    handlerContext.setExitCode(status);
 }
 
 void handleFBHPDEF(HandlerContext& handlerContext)
