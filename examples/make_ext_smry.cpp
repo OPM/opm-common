@@ -17,7 +17,7 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-
+#include <algorithm>
 #include <filesystem>
 #include <iostream>
 #include <getopt.h>
