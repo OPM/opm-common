@@ -282,21 +282,21 @@ public:
         }
     }
 
-    static Scalar trappedGasSaturation(const Params& params)
+    static Scalar trappedGasSaturation(const Params& params, bool maximumTrapping)
     {
         OPM_TIMEFUNCTION_LOCAL();
         switch (params.approach()) {
         case EclMultiplexerApproach::Stone1:
-            return params.template getRealParams<EclMultiplexerApproach::Stone1>().gasOilParams().SnTrapped();
+            return params.template getRealParams<EclMultiplexerApproach::Stone1>().gasOilParams().SnTrapped(maximumTrapping);
         case EclMultiplexerApproach::Stone2:
-            return params.template getRealParams<EclMultiplexerApproach::Stone2>().gasOilParams().SnTrapped();
+            return params.template getRealParams<EclMultiplexerApproach::Stone2>().gasOilParams().SnTrapped(maximumTrapping);
         case EclMultiplexerApproach::Default:
-            return params.template getRealParams<EclMultiplexerApproach::Default>().gasOilParams().SnTrapped();
+            return params.template getRealParams<EclMultiplexerApproach::Default>().gasOilParams().SnTrapped(maximumTrapping);
         case EclMultiplexerApproach::TwoPhase:
             if(params.template getRealParams<EclMultiplexerApproach::TwoPhase>().approach() == EclTwoPhaseApproach::GasOil)
-                return params.template getRealParams<EclMultiplexerApproach::TwoPhase>().gasOilParams().SnTrapped();
+                return params.template getRealParams<EclMultiplexerApproach::TwoPhase>().gasOilParams().SnTrapped(maximumTrapping);
             if(params.template getRealParams<EclMultiplexerApproach::TwoPhase>().approach() == EclTwoPhaseApproach::GasWater)
-                return params.template getRealParams<EclMultiplexerApproach::TwoPhase>().gasWaterParams().SnTrapped();
+                return params.template getRealParams<EclMultiplexerApproach::TwoPhase>().gasWaterParams().SnTrapped(maximumTrapping);
             return 0.0; // oil-water case
         case EclMultiplexerApproach::OnePhase:
             return 0.0;
@@ -304,21 +304,43 @@ public:
         return 0.0;
     }
 
-    static Scalar trappedOilSaturation(const Params& params)
+    static Scalar strandedGasSaturation(const Params& params, Scalar Sg, Scalar Kg)
     {
         OPM_TIMEFUNCTION_LOCAL();
         switch (params.approach()) {
         case EclMultiplexerApproach::Stone1:
-            return params.template getRealParams<EclMultiplexerApproach::Stone1>().oilWaterParams().SnTrapped();
+            return params.template getRealParams<EclMultiplexerApproach::Stone1>().gasOilParams().SnStranded(Sg, Kg);
         case EclMultiplexerApproach::Stone2:
-            return params.template getRealParams<EclMultiplexerApproach::Stone2>().oilWaterParams().SnTrapped();
+            return params.template getRealParams<EclMultiplexerApproach::Stone2>().gasOilParams().SnStranded(Sg, Kg);
         case EclMultiplexerApproach::Default:
-            return params.template getRealParams<EclMultiplexerApproach::Default>().oilWaterParams().SnTrapped();
+            return params.template getRealParams<EclMultiplexerApproach::Default>().gasOilParams().SnStranded(Sg, Kg);
+        case EclMultiplexerApproach::TwoPhase:
+            if(params.template getRealParams<EclMultiplexerApproach::TwoPhase>().approach() == EclTwoPhaseApproach::GasOil)
+                return params.template getRealParams<EclMultiplexerApproach::TwoPhase>().gasOilParams().SnStranded(Sg, Kg);
+            if(params.template getRealParams<EclMultiplexerApproach::TwoPhase>().approach() == EclTwoPhaseApproach::GasWater)
+                return params.template getRealParams<EclMultiplexerApproach::TwoPhase>().gasWaterParams().SnStranded(Sg, Kg);
+            return 0.0; // oil-water case
+        case EclMultiplexerApproach::OnePhase:
+            return 0.0;
+        }
+        return 0.0;
+    }
+
+    static Scalar trappedOilSaturation(const Params& params, bool maximumTrapping) 
+    {
+        OPM_TIMEFUNCTION_LOCAL();
+        switch (params.approach()) {
+        case EclMultiplexerApproach::Stone1:
+            return params.template getRealParams<EclMultiplexerApproach::Stone1>().oilWaterParams().SnTrapped(maximumTrapping);
+        case EclMultiplexerApproach::Stone2:
+            return params.template getRealParams<EclMultiplexerApproach::Stone2>().oilWaterParams().SnTrapped(maximumTrapping);
+        case EclMultiplexerApproach::Default:
+            return params.template getRealParams<EclMultiplexerApproach::Default>().oilWaterParams().SnTrapped(maximumTrapping);
         case EclMultiplexerApproach::TwoPhase:
             if(params.template getRealParams<EclMultiplexerApproach::TwoPhase>().approach() == EclTwoPhaseApproach::GasOil)
                 return params.template getRealParams<EclMultiplexerApproach::TwoPhase>().gasOilParams().SwTrapped();
             if(params.template getRealParams<EclMultiplexerApproach::TwoPhase>().approach() == EclTwoPhaseApproach::OilWater)
-                return params.template getRealParams<EclMultiplexerApproach::TwoPhase>().oilWaterParams().SnTrapped();
+                return params.template getRealParams<EclMultiplexerApproach::TwoPhase>().oilWaterParams().SnTrapped(maximumTrapping);
             return 0.0; // gas-water case
         case EclMultiplexerApproach::OnePhase:
             return 0.0;

@@ -502,7 +502,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(HysteresisKilloughGasOilScanning, Scalar, Types)
         BOOST_CHECK_CLOSE(So, kr[Fixture<Scalar>::oilPhaseIdx], tol);
         BOOST_CHECK_CLOSE(Sg, kr[Fixture<Scalar>::gasPhaseIdx], tol);
     }
-    Scalar trappedSg = MaterialLaw::trappedGasSaturation(param);
+    Scalar trappedSg = MaterialLaw::trappedGasSaturation(param, /*maximumTrapping*/true);
     Scalar krnSwMdc_out = 0.0;
     Scalar pcSwMdc_out = 0.0;
     MaterialLaw::gasOilHysteresisParams(pcSwMdc_out,
@@ -526,7 +526,6 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(HysteresisKilloughGasOilScanning, Scalar, Types)
         fs.setSaturation(Fixture<Scalar>::waterPhaseIdx, Sw);
         fs.setSaturation(Fixture<Scalar>::oilPhaseIdx, So);
         fs.setSaturation(Fixture<Scalar>::gasPhaseIdx, Sg);
-
         MaterialLaw::relativePermeabilities(kr,
                                             param,
                                             fs);
@@ -568,17 +567,16 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(HysteresisKilloughGasOilScanningWetting, Scalar, T
         fs.setSaturation(Fixture<Scalar>::oilPhaseIdx, So);
         fs.setSaturation(Fixture<Scalar>::gasPhaseIdx, Sg);
 
-        MaterialLaw::updateHysteresis(param, fs);
         MaterialLaw::relativePermeabilities(kr,
                                             param,
                                             fs);
-
+        MaterialLaw::updateHysteresis(param, fs);
         Scalar Khyst = (Sg > 0.88)? 1.0 :1 - (1 - Sg - 0.12) * ( 1.0/ (1.0 - 0.12)); 
         BOOST_CHECK_CLOSE(Sw, kr[Fixture<Scalar>::waterPhaseIdx], tol);
         BOOST_CHECK_CLOSE(So, kr[Fixture<Scalar>::oilPhaseIdx], tol);
         BOOST_CHECK_CLOSE(Khyst, kr[Fixture<Scalar>::gasPhaseIdx], tol);
     }
-    Scalar trappedSg = MaterialLaw::trappedGasSaturation(param);
+    Scalar trappedSg = MaterialLaw::trappedGasSaturation(param, /*maximumTrapping*/true);
     Scalar krnSwMdc_out = 0.0;
     Scalar pcSwMdc_out = 0.0;
     MaterialLaw::gasOilHysteresisParams(pcSwMdc_out,
@@ -596,7 +594,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(HysteresisKilloughGasOilScanningWetting, Scalar, T
     Scalar maxKro = 0.5;
     Scalar Snr = 1 / ( (C + killoughScalingParam) + 1.0/maxSo);
     BOOST_CHECK_SMALL(trappedSg, tol);
-    Scalar trappedSo = MaterialLaw::trappedOilSaturation(param);
+    Scalar trappedSo = MaterialLaw::trappedOilSaturation(param, /*maximumTrapping*/true);
     BOOST_CHECK_CLOSE(trappedSo, Snr, tol);
 
     for (int i = 50; i >= 0; -- i) {
@@ -606,12 +604,12 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(HysteresisKilloughGasOilScanningWetting, Scalar, T
         fs.setSaturation(Fixture<Scalar>::waterPhaseIdx, Sw);
         fs.setSaturation(Fixture<Scalar>::oilPhaseIdx, So);
         fs.setSaturation(Fixture<Scalar>::gasPhaseIdx, Sg);
-        MaterialLaw::updateHysteresis(param, fs);
         MaterialLaw::relativePermeabilities(kr,
                                             param,
                                             fs);
         Scalar KhystO = (So < trappedSo)? 0.0 : (So - trappedSo) * ( maxKro/ (maxSo - trappedSo)); 
-        Scalar Khyst = (Sg > 0.88)? 1.0 :1 - (1 - Sg - 0.12) * ( 1.0/ (1.0 - 0.12)); 
+        Scalar Khyst = (Sg > 0.88)? 1.0 :1 - (1 - Sg - 0.12) * ( 1.0/ (1.0 - 0.12));
+        MaterialLaw::updateHysteresis(param, fs);
         BOOST_CHECK_CLOSE(Sw, kr[Fixture<Scalar>::waterPhaseIdx], tol);
         BOOST_CHECK_CLOSE(KhystO, kr[Fixture<Scalar>::oilPhaseIdx], tol);
         BOOST_CHECK_CLOSE(Khyst, kr[Fixture<Scalar>::gasPhaseIdx], tol);
@@ -656,7 +654,10 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(HysteresisCarlsonGasOilScanning, Scalar, Types)
         BOOST_CHECK_CLOSE(So, kr[Fixture<Scalar>::oilPhaseIdx], tol);
         BOOST_CHECK_CLOSE(Sg, kr[Fixture<Scalar>::gasPhaseIdx], tol);
     }
-    Scalar trappedSg = MaterialLaw::trappedGasSaturation(param);
+    Scalar trappedSg = MaterialLaw::trappedGasSaturation(param, /*maximumTrapping*/true);
+    // if false the trapped saturation will be 0 during primary drainage
+    Scalar trappedSg_active = MaterialLaw::trappedGasSaturation(param, /*maximumTrapping*/false);
+    BOOST_CHECK_CLOSE(0.0, trappedSg_active, tol);
     Scalar krnSwMdc_out = 0.0;
     Scalar pcSwMdc_out = 0.0;
     MaterialLaw::gasOilHysteresisParams(pcSwMdc_out,
@@ -692,6 +693,14 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(HysteresisCarlsonGasOilScanning, Scalar, Types)
         MaterialLaw::relativePermeabilities(kr,
                                             param,
                                             fs);
+
+        // get stranded gas saturation
+        // that is the distance between the drainage and imbibition at sg
+        // i.e. sg_i - sg_d + sg_r where sg_d is the solution of kr_d(s) = kr_i(sg)
+        // for linear relperm the solution is just s = kr_i
+        Scalar strandedSg = MaterialLaw::strandedGasSaturation(param, Sg, kr[Fixture<Scalar>::gasPhaseIdx]);
+        BOOST_CHECK_CLOSE(strandedSg, Sg - kr[Fixture<Scalar>::gasPhaseIdx], tol);
+
         MaterialLaw::updateHysteresis(param, fs);
         Scalar Khyst = (Sg < trappedSg)? 0.0 : (Sg - trappedSg) * ( maxKrg/ (maxSg - trappedSg)); 
 
@@ -802,7 +811,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(HysteresisKilloughOilWaterScanning, Scalar, Types)
         BOOST_CHECK_CLOSE(Sg, kr[Fixture<Scalar>::gasPhaseIdx], tol);
     }
 
-    Scalar trappedSo = MaterialLaw::trappedOilSaturation(param);
+    Scalar trappedSo = MaterialLaw::trappedOilSaturation(param, /*maximumTrapping*/false);
     Scalar krnSwMdc_out = 0.0;
     Scalar pcSwMdc_out = 0.0;
     MaterialLaw::oilWaterHysteresisParams(pcSwMdc_out,
@@ -880,7 +889,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(HysteresisKilloughWettingOilWater, Scalar, Types)
         BOOST_CHECK_CLOSE(Sg, kr[Fixture<Scalar>::gasPhaseIdx], tol);
     }
 
-    Scalar trappedSo = MaterialLaw::trappedOilSaturation(param);
+    Scalar trappedSo = MaterialLaw::trappedOilSaturation(param, /*maximumTrapping*/false);
     Scalar krnSwMdc_out = 0.0;
     Scalar pcSwMdc_out = 0.0;
     MaterialLaw::oilWaterHysteresisParams(pcSwMdc_out,

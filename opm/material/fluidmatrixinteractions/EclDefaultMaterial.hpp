@@ -201,11 +201,17 @@ public:
     }
 
 
-    static Scalar trappedGasSaturation(const Params& params)
+    static Scalar trappedGasSaturation(const Params& params, bool maximumTrapping)
     {
 
-        return params.gasOilParams().SnTrapped();
+        return params.gasOilParams().SnTrapped(maximumTrapping);
     }
+    static Scalar strandedGasSaturation(const Params& params, Scalar Sg, Scalar Kg)
+    {
+
+        return params.gasOilParams().SnStranded(Sg, Kg);
+    }
+
     /*
      * Hysteresis parameters for gas-oil
      * @see EclHysteresisTwoPhaseLawParams::pcSwMdc(...)

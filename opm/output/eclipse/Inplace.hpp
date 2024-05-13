@@ -71,6 +71,10 @@ public:
         CO2MassInGasPhaseMob = 27,
         CO2MassInGasPhaseInMobKrg = 28,
         CO2MassInGasPhaseMobKrg = 29,
+        CO2MassInGasPhaseEffectiveTrapped = 30,
+        CO2MassInGasPhaseEffectiveUnTrapped = 31,
+        CO2MassInGasPhaseMaximumTrapped = 32,
+        CO2MassInGasPhaseMaximumUnTrapped = 33,
     };
 
     /// Create non-defaulted object suitable for testing the serialisation

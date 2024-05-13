@@ -407,10 +407,9 @@ public:
     Scalar Swcrt() const
     { return Swcrt_; }
 
-    Scalar SnTrapped() const
+    Scalar SnTrapped(bool maximumTrapping) const
     {
-
-        if(isDrain_)
+        if(!maximumTrapping && isDrain_)
             return 0.0;
 
         // For Killough the trapped saturation is already computed
@@ -418,6 +417,11 @@ public:
             return Sncrt_;
         else // For Carlson we use the shift to compute it from the critial saturation
             return Sncri_ + deltaSwImbKrn_;
+    }
+
+    Scalar SnStranded(Scalar sg, Scalar krg) const {
+        const Scalar sn = EffLawT::twoPhaseSatKrnInv(drainageParams_, krg);
+        return sg - (1.0 - sn) + Sncrd_;
     }
 
     Scalar SwTrapped() const
@@ -606,11 +610,7 @@ public:
         // for non WAG hysteresis we still keep track of the process
         // for output purpose.
         if (!gasOilHysteresisWAG()) {
-            if (krnSw < krnSwMdc_) {
-                isDrain_ = true;
-            } else {
-                isDrain_ = false;
-            }
+            this->isDrain_ = (krnSw <= this->krnSwMdc_);
         } else {
             wasDrain_ = isDrain_;
 
