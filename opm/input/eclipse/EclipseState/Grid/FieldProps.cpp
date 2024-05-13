@@ -673,43 +673,6 @@ bool FieldProps::supported<int>(const std::string& keyword) {
     return Fieldprops::keywords::isFipxxx(keyword);
 }
 
-void FieldProps::apply_multipliers()
-{
-    static const auto prefix = getMultiplierPrefix();
-
-    for(const auto& [mult_keyword, kw_info]: multiplier_kw_infos_)
-    {
-        const std::string keyword = mult_keyword.substr(prefix.size());
-        auto mult_iter = this->double_data.find(mult_keyword);
-        assert(mult_iter != this->double_data.end());
-        auto iter = this->double_data.find(keyword);
-        if (iter == this->double_data.end()) {
-            iter = this->double_data
-                .emplace(std::piecewise_construct,
-                         std::forward_as_tuple(keyword),
-                         std::forward_as_tuple(kw_info, this->active_size, kw_info.global ? this->global_size : 0))
-                .first;
-        }
-        using Scalar = typename std::remove_cv_t<std::remove_reference_t<decltype(iter->second.data[0])>>;
-        std::transform(iter->second.data.begin(), iter->second.data.end(),
-                       mult_iter->second.data.begin(), iter->second.data.begin(),
-                       std::multiplies<Scalar>());
-
-        // If data is global, then we also need to set the global_data. I think they should be the same at this stage, though!
-        if (kw_info.global)
-        {
-            assert(mult_iter->second.global_data.has_value() && iter->second.global_data.has_value());
-            std::transform(iter->second.global_data->begin(),
-                           iter->second.global_data->end(),
-                           mult_iter->second.global_data->begin(),
-                           iter->second.global_data->begin(),
-                           std::multiplies<Scalar>());
-        }
-        this->double_data.erase(mult_iter);
-    }
-    multiplier_kw_infos_.clear();
-}
-
 template <>
 Fieldprops::FieldData<double>& FieldProps::init_get(const std::string& keyword_name, const Fieldprops::keywords::keyword_info<double>& kw_info,
                                                     bool multiplier_in_edit) {
@@ -813,6 +776,63 @@ bool FieldProps::has<int>(const std::string& keyword) const {
         : this->int_data.count(keyword) != 0;
 }
 
+
+void FieldProps::apply_multipliers()
+{
+    // We need to manually search for PORV in the map here instead of using
+    // the get method. The latter one will compute PORV from the cell volume
+    // using MULTPV, NTG, and PORO. Our intend here in the EDIT section is
+    // is to multiply exsisting MULTPV with new new ones and consistently
+    // change PORV as well. If PORV has been created before this is as easy
+    // as multiplying it and MULTPV with the additional MULTPV. In the other
+    // case we do not create PORV at all but just change MULTPV as PORV will
+    // be correctly computed from it.
+    // Hence we need to know whether PORV is already there
+    const bool hasPorvBefore =
+        (this->double_data.find(ParserKeywords::PORV::keywordName) ==
+         this->double_data.end());
+    static const auto prefix = getMultiplierPrefix();
+
+    for(const auto& [mult_keyword, kw_info]: multiplier_kw_infos_)
+    {
+        const std::string keyword = mult_keyword.substr(prefix.size());
+        auto mult_iter = this->double_data.find(mult_keyword);
+        assert(mult_iter != this->double_data.end());
+        auto iter = this->double_data.find(keyword);
+        if (iter == this->double_data.end()) {
+            iter = this->double_data
+                .emplace(std::piecewise_construct,
+                         std::forward_as_tuple(keyword),
+                         std::forward_as_tuple(kw_info, this->active_size, kw_info.global ? this->global_size : 0))
+                .first;
+        }
+
+        std::transform(iter->second.data.begin(), iter->second.data.end(),
+                       mult_iter->second.data.begin(), iter->second.data.begin(),
+                       std::multiplies<>());
+
+        // If data is global, then we also need to set the global_data. I think they should be the same at this stage, though!
+        if (kw_info.global)
+        {
+            assert(mult_iter->second.global_data.has_value() && iter->second.global_data.has_value());
+            std::transform(iter->second.global_data->begin(),
+                           iter->second.global_data->end(),
+                           mult_iter->second.global_data->begin(),
+                           iter->second.global_data->begin(),
+                           std::multiplies<>());
+        }
+        // If this is MULTPV we also need to apply the additional multiplier to PORV if that was initialized already.
+        // Note that the check for PORV is essential as otherwise the value constructed durig init_get will already apply
+        // current MULTPV.
+        if (keyword == ParserKeywords::MULTPV::keywordName && !hasPorvBefore) {
+            auto& porv = this->init_get<double>(ParserKeywords::PORV::keywordName);
+            auto& porv_data = porv.data;
+            std::transform(porv_data.begin(), porv_data.end(), mult_iter->second.data.begin(), porv_data.begin(), std::multiplies<>());
+        }
+        this->double_data.erase(mult_iter);
+    }
+    multiplier_kw_infos_.clear();
+}
 
 /*
   The ACTNUM and PORV keywords are special cased with quite extensive
@@ -1245,7 +1265,7 @@ void FieldProps::init_porv(Fieldprops::FieldData<double>& porv) {
 
     if (this->has<double>("MULTPV")) {
         const auto& multpv = this->get<double>("MULTPV");
-        std::transform(porv_data.begin(), porv_data.end(), multpv.begin(), porv_data.begin(), std::multiplies<double>());
+        std::transform(porv_data.begin(), porv_data.end(), multpv.begin(), porv_data.begin(), std::multiplies<>());
     }
 
     for (const auto& mregp: this->multregp) {
