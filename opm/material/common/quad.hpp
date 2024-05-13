@@ -45,6 +45,7 @@ typedef __float128 quad;
 
 namespace std {
 
+#if !LIMITS_HAS_QUAD
 // provide the numeric limits for the quad precision type
 template <>
 class numeric_limits<quad>
@@ -97,6 +98,7 @@ public:
     static constexpr bool tinyness_before = std::numeric_limits<double>::tinyness_before;
     static constexpr float_round_style round_style = round_to_nearest;
 };
+#endif // LIMITS_HAS_QUAD
 
 // provide some type traits for the quadruple precision type
 template <>
