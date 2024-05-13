@@ -481,6 +481,35 @@ BOOST_AUTO_TEST_CASE(COMPDAT) {
 
 #ifdef EMBEDDED_PYTHON
 
+BOOST_AUTO_TEST_CASE(MSIM_EXIT_TEST_PYACTION) {
+    Opm::Parser parser;
+    auto python = std::make_shared<Opm::Python>();
+
+    Opm::Deck deck = parser.parseFile("msim/MSIM_PYACTION_EXIT.DATA");
+    Opm::EclipseState state(deck);
+    Opm::Schedule schedule(deck, state, python);
+    Opm::SummaryConfig summary_config(deck, schedule, state.fieldProps(), state.aquifer());
+
+    {
+        WorkArea work_area("test_msim");
+        Opm::msim msim(state, schedule);
+        Opm::EclipseIO io(state, state.getInputGrid(), schedule, summary_config);
+        msim.well_rate("P1", data::Rates::opt::oil, prod_opr);
+        msim.well_rate("P2", data::Rates::opt::oil, prod_opr);
+        msim.well_rate("P3", data::Rates::opt::oil, prod_opr);
+        msim.well_rate("P4", data::Rates::opt::oil, prod_opr);
+
+        msim.well_rate("P1", data::Rates::opt::wat, prod_wpr_P1);
+        msim.well_rate("P2", data::Rates::opt::wat, prod_wpr_P2);
+        msim.well_rate("P3", data::Rates::opt::wat, prod_wpr_P3);
+        msim.well_rate("P4", data::Rates::opt::wat, prod_wpr_P4);
+        msim.run(io, false);
+
+        auto exit_status = msim.schedule.exitStatus();
+        BOOST_CHECK( exit_status.has_value() );
+        BOOST_CHECK_EQUAL(exit_status.value(), 99);
+    }
+}
 BOOST_AUTO_TEST_CASE(MSIM_PYACTION_INSERT_KEYWORD) {
     const auto& deck = Parser().parseFile("msim/MSIM_PYACTION_INSERT_KEYWORD.DATA");
     test_data td( deck );
