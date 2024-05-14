@@ -66,6 +66,7 @@ public:
     double prop_constant() const;
     double time_constant() const;
     double rate(State& state, double current_rate, double error, double dt) const;
+    void resetState(State& state) const;
     std::optional<std::pair<std::string, int>> region() const;
     FlowTarget flow_target() const;
     bool operator==(const GPMaint& other) const;

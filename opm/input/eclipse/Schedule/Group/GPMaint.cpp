@@ -130,4 +130,10 @@ double GPMaint::rate(GPMaint::State& state, double current_rate, double error, d
     return new_rate;
 }
 
+void GPMaint::resetState(GPMaint::State& state) const {
+    state.report_step = this->m_report_step;
+    state.error_integral = 0;
+    state.initial_rate = 0.0;
+}
+
 }
