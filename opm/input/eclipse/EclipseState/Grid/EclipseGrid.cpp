@@ -1807,7 +1807,7 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
         std::vector<float> zcorn_f;
         zcorn_f.resize(m_zcorn.size());
 
-        if (m_input_coord.has_value()) {
+        if (m_input_zcorn.has_value()) {
             std::transform(m_input_zcorn.value().begin(), m_input_zcorn.value().end(), zcorn_f.begin(), convert_length);
         } else {
             std::transform(m_zcorn.begin(), m_zcorn.end(), zcorn_f.begin(), convert_length);
