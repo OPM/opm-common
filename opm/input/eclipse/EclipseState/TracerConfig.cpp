@@ -191,7 +191,14 @@ bool TracerConfig::operator==(const TracerConfig& other) const {
 
 std::string TracerConfig::get_unit_string(const UnitSystem& unit_system, const std::string & tracer_kw) const {
     if (tracer_kw.length() > 4 ) {
-        std::string tracer_name = tracer_kw.substr(4);
+        int istart;
+        if (tracer_kw[4] == 'F' || tracer_kw[4] == 'S') {
+            istart = 5;
+        }
+        else {
+            istart = 4;
+        }
+        std::string tracer_name = tracer_kw.substr(istart);
         for (const auto& tracer : tracers) {
             if (tracer.name == tracer_name) {
                 std::string unit_string(tracer.unit_string);

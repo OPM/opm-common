@@ -46,6 +46,12 @@ public:
         std::string sname() const {
             return this->name + "S";
         }
+        std::string wellfname() const {
+            return "F" + this->name;
+        }
+        std::string wellsname() const {
+            return "S" + this->name;
+        }
 
 
         TracerEntry() = default;
