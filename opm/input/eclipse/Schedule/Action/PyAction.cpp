@@ -40,6 +40,7 @@ namespace Action {
 bool PyAction::valid_keyword(const std::string& keyword) {
     static std::unordered_set<std::string> pyaction_allowed_list = {
         "BOX",
+        "COMPLUMP", "COMPDAT", //"COMPSEGS",
         "FIELD",
         "ENDBOX", "EXIT",
         "GCONINJE", "GCONPROD",
