@@ -42,7 +42,7 @@ bool PyAction::valid_keyword(const std::string& keyword) {
         "BOX",
         "FIELD",
         "ENDBOX", "EXIT",
-        "GCONINJE", "GCONPROD", "GRUPTREE",
+        "GCONINJE", "GCONPROD", "GCONSUMP","GRUPTREE",
         "METRIC", "MULTX", "MULTX-", "MULTY", "MULTY-", "MULTZ", "MULTZ-",
         "NEXT", "NEXTSTEP",
         "WCONINJE", "WCONPROD", "WEFAC", "WELOPEN", "WELTARG", "WGRUPCON", "WELSPECS"
