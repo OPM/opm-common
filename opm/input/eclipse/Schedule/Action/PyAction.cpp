@@ -40,12 +40,13 @@ namespace Action {
 bool PyAction::valid_keyword(const std::string& keyword) {
     static std::unordered_set<std::string> pyaction_allowed_list = {
         "BOX",
+        "COMPSEGS",
         "FIELD",
         "ENDBOX", "EXIT",
         "GCONINJE", "GCONPROD", "GCONSUMP","GRUPTREE",
         "METRIC", "MULTX", "MULTX-", "MULTY", "MULTY-", "MULTZ", "MULTZ-",
         "NEXT", "NEXTSTEP",
-        "WCONINJE", "WCONPROD", "WECON", "WEFAC", "WELOPEN", "WELTARG", "WGRUPCON", "WELSPECS", "WTEST"
+        "WCONINJE", "WCONPROD", "WECON", "WEFAC", "WELOPEN", "WELTARG", "WGRUPCON", "WELSEGS", "WELSPECS", "WSEGVALV", "WTEST"
     };
     return pyaction_allowed_list.find(keyword) != pyaction_allowed_list.end();
 }
