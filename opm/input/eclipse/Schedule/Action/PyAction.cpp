@@ -45,7 +45,7 @@ bool PyAction::valid_keyword(const std::string& keyword) {
         "GCONINJE", "GCONPROD", "GRUPTREE",
         "METRIC", "MULTX", "MULTX-", "MULTY", "MULTY-", "MULTZ", "MULTZ-",
         "NEXT", "NEXTSTEP",
-        "WCONINJE", "WCONPROD", "WEFAC", "WELOPEN", "WELTARG", "WGRUPCON", "WELSPECS"
+        "WCONINJE", "WCONPROD", "WECON", "WEFAC", "WELOPEN", "WELTARG", "WGRUPCON", "WELSPECS", "WTEST"
     };
     return pyaction_allowed_list.find(keyword) != pyaction_allowed_list.end();
 }
