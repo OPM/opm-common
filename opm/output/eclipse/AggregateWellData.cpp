@@ -1077,8 +1077,10 @@ namespace {
             auto output_index = static_cast<std::size_t>(VI::SWell::index::TracerOffset);
 
             for (const auto& tracer : tracers) {
-                sWell[output_index++] =
-                    smry.get_well_var(wname, fmt::format("WTIC{}", tracer.name), 0.0);
+                if (tracer.phase == Opm::Phase::WATER) {
+                    sWell[output_index++] =
+                        smry.get_well_var(wname, fmt::format("WTIC{}", tracer.name), 0.0);
+                }
             }
         }
 
@@ -1332,7 +1334,7 @@ namespace {
                               const Opm::Well& well,
                               XWellArray& xWell)
         {
-            if (tracers.empty())
+            if (tracers.empty() || tracer_dims.water_tracers() == 0)
                 return;
 
             using Ix = ::Opm::RestartIO::Helpers::VectorItems::XWell::index;
