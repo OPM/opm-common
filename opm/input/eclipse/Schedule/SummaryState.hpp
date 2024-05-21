@@ -22,7 +22,8 @@
 
 #include <opm/common/utility/TimeService.hpp>
 
-#include <chrono>
+#include <cstddef>
+#include <ctime>
 #include <iosfwd>
 #include <optional>
 #include <set>
@@ -34,10 +35,12 @@ namespace Opm {
 
 class UDQSet;
 
-// The purpose of this class is to serve as a small container object for
-// computed, ready to use summary values. The values will typically be used
-// by the UDQ, WTEST and ACTIONX calculations. Observe that all value *have
-// been converted to the correct output units*.
+} // namespace Opm
+
+// The purpose of the SummaryState class is to serve as a small container
+// object for computed, ready to use summary values.  The values will
+// typically be used by the UDQ, WTEST and ACTIONX calculations.  Observe
+// that all values are stored in the run's output unit conventions.
 //
 // The main key used to access the content of this container is the eclipse
 // style colon separated string - i.e. 'WWCT:OPX' to get the watercut in
@@ -47,7 +50,7 @@ class UDQSet;
 // keywords. For that reason some of the data is duplicated both in the
 // general structure and a specialized structure:
 //
-//     SummaryState st;
+//     SummaryState st { start, udqUndefined };
 //
 //     st.add_well_var("OPX", "WWCT", 0.75);
 //     st.add("WGOR:OPY", 120);
@@ -58,16 +61,20 @@ class UDQSet;
 //     st.has("WWCT:OPX") => True
 //     st.has_well_var("OPX", "WWCT") => True
 //
-//
 //     // The WGOR:OPY key is added with the general add("WGOR:OPY") and is *not*
 //     // accessible through the specialized st.has_well_var("OPY", "WGOR").
 //     st.has("WGOR:OPY") => True
 //     st.has_well_var("OPY", "WGOR") => False
 
+namespace Opm {
+
 class SummaryState
 {
 public:
-    typedef std::unordered_map<std::string, double>::const_iterator const_iterator;
+    using const_iterator = std::unordered_map<std::string, double>::const_iterator;
+
+    explicit SummaryState(time_point sim_start_arg, double udqUndefined);
+
     explicit SummaryState(time_point sim_start_arg);
 
     // The std::time_t constructor is only for export to Python
@@ -135,6 +142,7 @@ public:
     void serializeOp(Serializer& serializer)
     {
         serializer(sim_start);
+        serializer(this->udq_undefined);
         serializer(elapsed);
         serializer(values);
         serializer(well_values);
@@ -152,6 +160,7 @@ public:
 
 private:
     time_point sim_start;
+    double udq_undefined{};
     double elapsed = 0;
     std::unordered_map<std::string,double> values;
 

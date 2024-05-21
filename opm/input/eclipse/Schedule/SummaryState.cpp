@@ -29,6 +29,7 @@
 #include <cstring>
 #include <ctime>
 #include <iomanip>
+#include <limits>
 #include <ostream>
 #include <set>
 #include <stdexcept>
@@ -165,14 +166,21 @@ namespace {
 namespace Opm
 {
 
-    SummaryState::SummaryState(time_point sim_start_arg)
-        : sim_start(sim_start_arg)
+    SummaryState::SummaryState(const time_point sim_start_arg,
+                               const double     udqUndefined)
+        : sim_start     { sim_start_arg }
+        , udq_undefined { udqUndefined }
     {
         this->update_elapsed(0);
     }
 
-    SummaryState::SummaryState(std::time_t sim_start_arg)
-        : SummaryState { TimeService::from_time_t(sim_start_arg) }
+    SummaryState::SummaryState(const time_point sim_start_arg)
+        : SummaryState { sim_start_arg, std::numeric_limits<double>::lowest() }
+    {}
+
+    SummaryState::SummaryState(const std::time_t sim_start_arg)
+        : SummaryState { TimeService::from_time_t(sim_start_arg),
+                         std::numeric_limits<double>::lowest() }
     {}
 
     void SummaryState::set(const std::string& key, double value)
@@ -777,6 +785,7 @@ namespace Opm
     bool SummaryState::operator==(const SummaryState& other) const
     {
         return (this->sim_start == other.sim_start)
+            && (this->udq_undefined == other.udq_undefined)
             && (this->elapsed == other.elapsed)
             && (this->values == other.values)
             && (this->well_values == other.well_values)
@@ -793,7 +802,7 @@ namespace Opm
 
     SummaryState SummaryState::serializationTestObject()
     {
-        auto st = SummaryState{TimeService::from_time_t(101)};
+        auto st = SummaryState{TimeService::from_time_t(101), 1.234};
 
         st.elapsed = 1.0;
         st.values = {{"test1", 2.0}};
