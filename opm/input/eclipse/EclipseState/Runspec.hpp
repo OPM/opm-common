@@ -449,7 +449,7 @@ public:
     Tracers() = default;
 
     explicit Tracers(const Deck& );
-    int water_tracers() const;
+    int all_tracers() const;
 
     template<class Serializer>
     void serializeOp(Serializer& serializer) {
