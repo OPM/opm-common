@@ -750,7 +750,8 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
         DeckKeyword action_keyword(parserKeyword);
         action_keyword.addRecord(std::move(deckRecord));
         action.addKeyword(action_keyword);
-        SimulatorUpdate delta = this->applyAction(report_step, action, {} /*matching_wells*/, {}/*target_wellpi*/);
+        SimulatorUpdate delta = this->applyAction(report_step, action, {} /*matching_wells*/,
+                                                  std::unordered_map<std::string,double>{}/*target_wellpi*/);
         this->simUpdateFromPython->append(delta);
     }
 
@@ -1492,6 +1493,21 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
     Schedule::applyAction(std::size_t reportStep,
                           const Action::ActionX& action,
                           const std::vector<std::string>& matching_wells,
+                          const std::unordered_map<std::string, float>& target_wellpi)
+    {
+        std::unordered_map<std::string, double> dtarget_wellpi;
+        for (const auto& w : target_wellpi) {
+            dtarget_wellpi.emplace(w.first, w.second);
+        }
+
+        return this->applyAction(reportStep, action, matching_wells, dtarget_wellpi);
+    }
+
+
+    SimulatorUpdate
+    Schedule::applyAction(std::size_t reportStep,
+                          const Action::ActionX& action,
+                          const std::vector<std::string>& matching_wells,
                           const std::unordered_map<std::string, double>& target_wellpi)
     {
         const std::string prefix = "| ";
@@ -1579,7 +1595,8 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
                     OpmLog::error(fmt::format("Tried to apply action: {} on non existing well: {}", action_name, wname));
             }
 
-            return this->applyAction(reportStep, action, well_names, {});
+            return this->applyAction(reportStep, action, well_names,
+                                     std::unordered_map<std::string,double>{});
         } else {
             OpmLog::error(fmt::format("Tried to apply action unknown action: {}", action_name));
             return {};
