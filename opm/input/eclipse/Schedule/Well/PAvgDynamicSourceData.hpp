@@ -31,6 +31,7 @@
 namespace Opm {
 
 /// Dynamic source data for block-average pressure calculations
+template <typename Scalar>
 class PAvgDynamicSourceData
 {
 public:
@@ -39,12 +40,11 @@ public:
     ///
     /// \tparam T Element type.  Const or non-const as needed.  Typically \c
     ///   double or \code const double \endcode.
-    template <typename T>
+    template<typename T>
     class SourceDataSpan
     {
     private:
-        friend class PAvgDynamicSourceData;
-
+        friend class PAvgDynamicSourceData<Scalar>;
     public:
         /// Supported items of dynamic data per source location
         enum class Item
@@ -154,7 +154,7 @@ public:
     ///   constructor.
     ///
     /// \return Read/write span of data items.
-    [[nodiscard]] SourceDataSpan<double>
+    [[nodiscard]] SourceDataSpan<Scalar>
     operator[](const std::size_t source);
 
     /// Acquire read-only span of data items corresponding to a single
@@ -167,7 +167,7 @@ public:
     ///   constructor.
     ///
     /// \return Read-only span of data items.
-    [[nodiscard]] SourceDataSpan<const double>
+    [[nodiscard]] SourceDataSpan<const Scalar>
     operator[](const std::size_t source) const;
 
 protected:
@@ -175,7 +175,7 @@ protected:
     ///
     /// Intentionally accessible to derived classes for use in parallel
     /// runs.
-    std::vector<double> src_{};
+    std::vector<Scalar> src_{};
 
     /// Form mutable data span into non-default backing store.
     ///
@@ -187,8 +187,8 @@ protected:
     /// \param[in,out] src Source term backing store.
     ///
     /// \return Mutable view into \p src.
-    [[nodiscard]] SourceDataSpan<double>
-    sourceTerm(const std::size_t ix, std::vector<double>& src);
+    [[nodiscard]] SourceDataSpan<Scalar>
+    sourceTerm(const std::size_t ix, std::vector<Scalar>& src);
 
     /// Reconstruct Source Data backing storage and internal mapping tables
     ///
@@ -209,13 +209,13 @@ protected:
     /// \return Number of span items.
     static constexpr std::size_t numSpanItems() noexcept
     {
-        return SourceDataSpan<const double>::NumItems;
+        return SourceDataSpan<const Scalar>::NumItems;
     }
 
 private:
     /// Translate non-contiguous source locations to starting indices in \c
     /// src_.
-    std::unordered_map<std::size_t, std::vector<double>::size_type> ix_{};
+    std::unordered_map<std::size_t, typename std::vector<Scalar>::size_type> ix_{};
 
     /// Form source location to index translation table.
     ///
@@ -232,7 +232,7 @@ private:
     /// \param[in] source Source location.
     ///
     /// \return Starting index.  Nullopt if no index exists for \p source.
-    [[nodiscard]] std::optional<std::vector<double>::size_type>
+    [[nodiscard]] std::optional<typename std::vector<Scalar>::size_type>
     index(const std::size_t source) const;
 
     /// Translate element index into storage index.
@@ -244,8 +244,8 @@ private:
     /// \param[in] elemIndex Source element index.
     ///
     /// \return Storage (starting) index in \c src_.
-    [[nodiscard]] virtual std::vector<double>::size_type
-    storageIndex(std::vector<double>::size_type elemIndex) const
+    [[nodiscard]] virtual typename std::vector<Scalar>::size_type
+    storageIndex(typename std::vector<Scalar>::size_type elemIndex) const
     {
         return elemIndex;
     }

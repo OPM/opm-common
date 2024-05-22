@@ -44,12 +44,12 @@ namespace {
         return { 1, 2, 3, 5, 3, };
     }
 
-    Opm::PAvgDynamicSourceData smallResult()
+    Opm::PAvgDynamicSourceData<double> smallResult()
     {
-        using S = decltype(std::declval<Opm::PAvgDynamicSourceData>()[0]);
+        using S = decltype(std::declval<Opm::PAvgDynamicSourceData<double>>()[0]);
         using I = typename S::Item;
 
-        auto src = Opm::PAvgDynamicSourceData { small() };
+        auto src = Opm::PAvgDynamicSourceData<double> { small() };
 
         src[1].set(I::Pressure, 123.4).set(I::MixtureDensity, 121.2).set(I::PoreVol, 543.21);
         src[2].set(I::Pressure, 12.34).set(I::MixtureDensity, 12.12).set(I::PoreVol, 54.321);
@@ -62,10 +62,10 @@ namespace {
 
 BOOST_AUTO_TEST_CASE(Mutable)
 {
-    using S = decltype(std::declval<Opm::PAvgDynamicSourceData>()[0]);
+    using S = decltype(std::declval<Opm::PAvgDynamicSourceData<double>>()[0]);
     using I = typename S::Item;
 
-    auto src = Opm::PAvgDynamicSourceData { small() };
+    auto src = Opm::PAvgDynamicSourceData<double>{ small() };
 
     src[1].set(I::Pressure, 123.4).set(I::MixtureDensity, 121.2).set(I::PoreVol, 543.21);
 
@@ -144,7 +144,7 @@ BOOST_AUTO_TEST_CASE(Immutable)
 
 BOOST_AUTO_TEST_CASE(Repeated)
 {
-    BOOST_CHECK_THROW(std::ignore = Opm::PAvgDynamicSourceData{ repeated() },
+    BOOST_CHECK_THROW(std::ignore = Opm::PAvgDynamicSourceData<double>{ repeated() },
                       std::invalid_argument);
 }
 

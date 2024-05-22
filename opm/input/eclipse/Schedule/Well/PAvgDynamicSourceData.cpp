@@ -30,14 +30,17 @@
 
 #include <fmt/format.h>
 
-Opm::PAvgDynamicSourceData::PAvgDynamicSourceData(const std::vector<std::size_t>& sourceLocations)
+template<class Scalar>
+Opm::PAvgDynamicSourceData<Scalar>::
+PAvgDynamicSourceData(const std::vector<std::size_t>& sourceLocations)
     : src_(numSpanItems() * sourceLocations.size(), 0.0)
 {
     this->buildLocationMapping(sourceLocations);
 }
 
-Opm::PAvgDynamicSourceData::SourceDataSpan<double>
-Opm::PAvgDynamicSourceData::operator[](const std::size_t source)
+template<class Scalar>
+typename Opm::PAvgDynamicSourceData<Scalar>::template SourceDataSpan<Scalar>
+Opm::PAvgDynamicSourceData<Scalar>::operator[](const std::size_t source)
 {
     const auto i = this->index(source);
     if (! i.has_value()) {
@@ -46,11 +49,12 @@ Opm::PAvgDynamicSourceData::operator[](const std::size_t source)
                                     "'{}' is not registered", source));
     }
 
-    return SourceDataSpan<double>{ &this->src_[*i] };
+    return SourceDataSpan<Scalar>{ &this->src_[*i] };
 }
 
-Opm::PAvgDynamicSourceData::SourceDataSpan<const double>
-Opm::PAvgDynamicSourceData::operator[](const std::size_t source) const
+template<class Scalar>
+typename Opm::PAvgDynamicSourceData<Scalar>::template SourceDataSpan<const Scalar>
+Opm::PAvgDynamicSourceData<Scalar>::operator[](const std::size_t source) const
 {
     const auto i = this->index(source);
     if (! i.has_value()) {
@@ -59,17 +63,19 @@ Opm::PAvgDynamicSourceData::operator[](const std::size_t source) const
                                     "'{}' is not registered", source));
     }
 
-    return SourceDataSpan<const double>{ &this->src_[*i] };
+    return SourceDataSpan<const Scalar>{ &this->src_[*i] };
 }
 
-Opm::PAvgDynamicSourceData::SourceDataSpan<double>
-Opm::PAvgDynamicSourceData::sourceTerm(const std::size_t ix, std::vector<double>& src)
+template<class Scalar>
+typename Opm::PAvgDynamicSourceData<Scalar>::template SourceDataSpan<Scalar>
+Opm::PAvgDynamicSourceData<Scalar>::sourceTerm(const std::size_t ix,
+                                               std::vector<Scalar>& src)
 {
-    return SourceDataSpan<double> { &src[ix*numSpanItems() + 0] };
+    return SourceDataSpan<Scalar> { &src[ix*numSpanItems() + 0] };
 }
 
-void
-Opm::PAvgDynamicSourceData::
+template<class Scalar>
+void Opm::PAvgDynamicSourceData<Scalar>::
 reconstruct(const std::vector<std::size_t>& sourceLocations)
 {
     this->src_.assign(numSpanItems() * sourceLocations.size(), 0.0);
@@ -77,13 +83,13 @@ reconstruct(const std::vector<std::size_t>& sourceLocations)
     this->buildLocationMapping(sourceLocations);
 }
 
-void
-Opm::PAvgDynamicSourceData::
+template<class Scalar>
+void Opm::PAvgDynamicSourceData<Scalar>::
 buildLocationMapping(const std::vector<std::size_t>& sourceLocations)
 {
     this->ix_.clear();
 
-    auto ix = std::vector<double>::size_type{0};
+    auto ix = typename std::vector<Scalar>::size_type{0};
     for (const auto& srcLoc : sourceLocations) {
         auto elm = this->ix_.emplace(srcLoc, ix++);
         if (! elm.second) {
@@ -95,8 +101,10 @@ buildLocationMapping(const std::vector<std::size_t>& sourceLocations)
     }
 }
 
-std::optional<std::vector<double>::size_type>
-Opm::PAvgDynamicSourceData::index(const std::size_t source) const
+template<class Scalar>
+std::optional<typename std::vector<Scalar>::size_type>
+Opm::PAvgDynamicSourceData<Scalar>::
+index(const std::size_t source) const
 {
     auto pos = this->ix_.find(source);
     if (pos == this->ix_.end()) {
@@ -105,3 +113,5 @@ Opm::PAvgDynamicSourceData::index(const std::size_t source) const
 
     return numSpanItems() * this->storageIndex(pos->second);
 }
+
+template class Opm::PAvgDynamicSourceData<double>;
