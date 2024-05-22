@@ -44,18 +44,21 @@
 
 using namespace Opm;
 
+namespace {
 
-Opm::Schedule create_schedule(const std::string& deck_string) {
-    Opm::Parser parser;
-    auto python = std::make_shared<Python>();
-    auto deck = parser.parseString(deck_string);
-    EclipseGrid grid(10,10,10);
-    TableManager table ( deck );
-    FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
-    Runspec runspec (deck );
-    return Opm::Schedule(deck,  grid, fp, runspec, python);
+Schedule create_schedule(const std::string& deck_string)
+{
+    const auto deck = Parser{}.parseString(deck_string);
+
+    const EclipseGrid grid(10, 10, 10);
+    const TableManager table(deck);
+    const FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
+    const Runspec runspec(deck);
+
+    return { deck, grid, fp, runspec, std::make_shared<Python>() };
 }
 
+} // Anonymous namespace
 
 BOOST_AUTO_TEST_CASE(CreateGroup_CorrectNameAndDefaultValues) {
     Opm::Group group("G1" , 1, 0, UnitSystem::newMETRIC());
@@ -244,7 +247,7 @@ GCONPROD
 )";
 
     auto schedule = create_schedule(input);
-    SummaryState st(TimeService::now());
+    SummaryState st(TimeService::now(), 0.0);
     double metric_to_si = 1.0 / (24.0 * 3600.0);  //cubic meters / day
     double oil_rate_si = 10000 * metric_to_si;
 
@@ -404,7 +407,7 @@ GCONSUMP
 
     auto schedule = create_schedule(input);
     double metric_to_si = 1.0 / (24.0 * 3600.0);  //cubic meters / day
-    SummaryState st(TimeService::now());
+    SummaryState st(TimeService::now(), 0.0);
 
     {
         const auto& gconsale = schedule[0].gconsale.get();
@@ -502,7 +505,7 @@ GCONINJE
 /)";
 
     auto schedule = create_schedule(input);
-    SummaryState st(TimeService::now());
+    SummaryState st(TimeService::now(), 0.0);
     // Step 0
     {
         const auto& g1 = schedule.getGroup("G1", 0);

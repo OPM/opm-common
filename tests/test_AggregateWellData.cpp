@@ -677,7 +677,7 @@ TSTEP            -- 3
 
     Opm::SummaryState sim_state()
     {
-        auto state = Opm::SummaryState{Opm::TimeService::now()};
+        auto state = Opm::SummaryState{Opm::TimeService::now(), 0.0};
 
         state.update_well_var("OP_1", "WOPR" ,    1.0);
         state.update_well_var("OP_1", "WWPR" ,    2.0);
@@ -1750,7 +1750,7 @@ BOOST_AUTO_TEST_CASE(WELL_POD)
     const auto rptStep = std::size_t{2};
     const auto sim_step = rptStep - 1;
 
-    const auto sumState = Opm::SummaryState { Opm::TimeService::now() };
+    const auto sumState = Opm::SummaryState { Opm::TimeService::now(), 0.0 };
 
     const auto xw = well_rates_1();
     const auto ih =
@@ -1907,7 +1907,7 @@ END
         auto dyn_state = std::pair<Opm::data::Wells, Opm::SummaryState> {
             std::piecewise_construct,
             std::forward_as_tuple(),
-            std::forward_as_tuple(Opm::TimeService::now())
+            std::forward_as_tuple(Opm::TimeService::now(), 0.0)
         };
 
         using o = ::Opm::data::Rates::opt;

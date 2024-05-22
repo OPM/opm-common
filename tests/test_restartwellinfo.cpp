@@ -20,33 +20,44 @@
 #include "config.h"
 
 #define BOOST_TEST_MODULE EclipseWriter
+
 #include <opm/common/utility/platform_dependent/disable_warnings.h>
 #include <boost/test/unit_test.hpp>
 #include <opm/common/utility/platform_dependent/reenable_warnings.h>
 
-#include <opm/input/eclipse/Deck/Deck.hpp>
 #include <opm/output/eclipse/EclipseIO.hpp>
 #include <opm/output/eclipse/RestartValue.hpp>
+
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
-#include <opm/input/eclipse/Schedule/Schedule.hpp>
-#include <opm/input/eclipse/Schedule/SummaryState.hpp>
 #include <opm/input/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
-#include <opm/input/eclipse/Schedule/Well/Well.hpp>
-#include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
-#include <opm/input/eclipse/Parser/ParseContext.hpp>
-#include <opm/input/eclipse/Parser/Parser.hpp>
+
 #include <opm/input/eclipse/Python/Python.hpp>
-#include <opm/common/utility/TimeService.hpp>
 
 #include <opm/input/eclipse/Schedule/Action/State.hpp>
+#include <opm/input/eclipse/Schedule/Schedule.hpp>
+#include <opm/input/eclipse/Schedule/SummaryState.hpp>
+#include <opm/input/eclipse/Schedule/UDQ/UDQConfig.hpp>
+#include <opm/input/eclipse/Schedule/UDQ/UDQParams.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQState.hpp>
+#include <opm/input/eclipse/Schedule/Well/Well.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellTestState.hpp>
+
+#include <opm/common/utility/TimeService.hpp>
 
 #include <opm/io/eclipse/EclFile.hpp>
 
+#include <opm/input/eclipse/Deck/Deck.hpp>
+
+#include <opm/input/eclipse/Parser/ParseContext.hpp>
+#include <opm/input/eclipse/Parser/Parser.hpp>
+
+#include <cstddef>
+#include <memory>
+#include <string>
 #include <tuple>
-#include <stdio.h>
+#include <vector>
 
 #include "tests/WorkArea.hpp"
 
@@ -204,17 +215,18 @@ BOOST_AUTO_TEST_CASE(EclipseWriteRestartWellInfo) {
     std::string eclipse_data_filename    = "testblackoilstate3.DATA";
     work.copyIn(eclipse_data_filename);
 
-    auto python = std::make_shared<Opm::Python>();
-    Opm::Parser parser;
-    Opm::Deck deck( parser.parseFile( eclipse_data_filename ));
-    Opm::EclipseState es(deck);
+    const Opm::Deck deck( Opm::Parser{}.parseFile( eclipse_data_filename ));
+    const Opm::EclipseState es(deck);
     const Opm::EclipseGrid& grid = es.getInputGrid();
-    Opm::Schedule schedule( deck, es, python);
-    Opm::SummaryConfig summary_config( deck, schedule, es.fieldProps(), es.aquifer());
+    const Opm::Schedule schedule(deck, es, std::make_shared<Opm::Python>());
+    const Opm::SummaryConfig summary_config( deck, schedule, es.fieldProps(), es.aquifer());
     const auto num_cells = grid.getCartesianSize();
-    Opm::EclipseIO eclipseWriter( es,  grid , schedule, summary_config);
-    int countTimeStep = schedule.size() - 1;
-    Opm::SummaryState st(Opm::TimeService::from_time_t(schedule.getStartTime()));
+    Opm::EclipseIO eclipseWriter(es,  grid , schedule, summary_config);
+    const int countTimeStep = schedule.size() - 1;
+    Opm::SummaryState st {
+        Opm::TimeService::from_time_t(schedule.getStartTime()),
+        schedule.back().udq().params().undefinedValue()
+    };
     Opm::Action::State action_state;
     Opm::UDQState udq_state(123);
 
@@ -227,7 +239,6 @@ BOOST_AUTO_TEST_CASE(EclipseWriteRestartWellInfo) {
     Opm::WellTestState wtest_state;
 
     for(int timestep = 0; timestep <= countTimeStep; ++timestep) {
-
         eclipseWriter.writeTimeStep( action_state,
                                      wtest_state,
                                      st,

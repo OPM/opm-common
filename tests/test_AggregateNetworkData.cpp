@@ -18,17 +18,20 @@
 */
 
 #define BOOST_TEST_MODULE Aggregate_Group_Data
-#include <opm/output/eclipse/AggregateGroupData.hpp>
-#include <opm/output/eclipse/AggregateNetworkData.hpp>
-#include <opm/output/eclipse/WriteRestartHelpers.hpp>
 
 #include <boost/test/unit_test.hpp>
+
+#include <opm/output/eclipse/AggregateNetworkData.hpp>
+
+#include <opm/output/eclipse/AggregateGroupData.hpp>
+#include <opm/output/eclipse/WriteRestartHelpers.hpp>
 
 #include <opm/output/eclipse/AggregateWellData.hpp>
 
 #include <opm/output/eclipse/VectorItems/intehead.hpp>
 #include <opm/output/eclipse/VectorItems/group.hpp>
 #include <opm/output/eclipse/VectorItems/well.hpp>
+
 #include <opm/input/eclipse/Python/Python.hpp>
 
 #include <opm/output/data/Wells.hpp>
@@ -43,14 +46,13 @@
 #include <opm/common/utility/TimeService.hpp>
 
 #include <exception>
+#include <memory>
 #include <stdexcept>
 #include <utility>
 #include <vector>
-#include <iostream>
 #include <cstddef>
 
 namespace {
-
 
     Opm::Deck first_sim(std::string fname) {
         return Opm::Parser{}.parseFile(fname);
@@ -58,7 +60,7 @@ namespace {
 
     Opm::SummaryState sum_state()
     {
-        auto state = Opm::SummaryState{Opm::TimeService::now()};
+        auto state = Opm::SummaryState{Opm::TimeService::now(), 0.0};
 
         state.update_well_var("P1", "WOPR", 3342.673828);
         state.update_well_var("P1", "WWPR", 0.000005);
@@ -95,21 +97,18 @@ struct SimulationCase
     explicit SimulationCase(const Opm::Deck& deck)
         : es   ( deck )
         , grid { deck }
-        , python( std::make_shared<Opm::Python>() )
-        , sched (deck, es, python )
+        , sched(deck, es, std::make_shared<Opm::Python>())
     {}
 
     // Order requirement: 'es' must be declared/initialised before 'sched'.
     Opm::EclipseState es;
     Opm::EclipseGrid  grid;
-    std::shared_ptr<Opm::Python> python;
     Opm::Schedule     sched;
 };
 
 // =====================================================================
 
 BOOST_AUTO_TEST_SUITE(Aggregate_Network)
-
 
 // test dimensions of multisegment data
 BOOST_AUTO_TEST_CASE (Constructor)

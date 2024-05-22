@@ -160,10 +160,16 @@ BOOST_AUTO_TEST_CASE(LoadRestartSim) {
 }
 
 
-BOOST_AUTO_TEST_CASE(LoadUDQRestartSim) {
-    const auto& [sched, restart_sched, rst_state] = load_schedule_pair("UDQ_WCONPROD.DATA", "UDQ_WCONPROD_RESTART.DATA", "UDQ_WCONPROD.X0006", 6);
+BOOST_AUTO_TEST_CASE(LoadUDQRestartSim)
+{
+    const auto& [sched, restart_sched, rst_state] =
+        load_schedule_pair("UDQ_WCONPROD.DATA",
+                           "UDQ_WCONPROD_RESTART.DATA",
+                           "UDQ_WCONPROD.X0006", 6);
+
     std::size_t report_step = 10;
-    SummaryState st(TimeService::now());
+    SummaryState st(TimeService::now(), rst_state.header.udq_undefined);
+
     st.update_well_var("OPL02", "WUOPRL", 1);
     st.update_well_var("OPL02", "WULPRL", 11);
     st.update_well_var("OPU02", "WUOPRU", 111);

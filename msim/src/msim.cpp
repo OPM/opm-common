@@ -30,12 +30,14 @@
 #include <opm/input/eclipse/Python/Python.hpp>
 
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
+#include <opm/input/eclipse/EclipseState/Runspec.hpp>
 
 #include <opm/input/eclipse/Schedule/Action/ActionContext.hpp>
 #include <opm/input/eclipse/Schedule/Action/Actions.hpp>
 #include <opm/input/eclipse/Schedule/Action/SimulatorUpdate.hpp>
-#include <opm/input/eclipse/Schedule/UDQ/UDQState.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQConfig.hpp>
+#include <opm/input/eclipse/Schedule/UDQ/UDQParams.hpp>
+#include <opm/input/eclipse/Schedule/UDQ/UDQState.hpp>
 #include <opm/input/eclipse/Schedule/Well/Well.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellMatcher.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellTestState.hpp>
@@ -70,9 +72,10 @@ namespace {
 namespace Opm {
 
 msim::msim(const EclipseState& state_arg, const Schedule& schedule_arg)
-    : state(state_arg)
+    : state   (state_arg)
     , schedule(schedule_arg)
-    , st(TimeService::from_time_t(this->schedule.getStartTime()))
+    , st { TimeService::from_time_t(this->schedule.getStartTime()),
+           state.runspec().udqParams().undefinedValue() }
 {}
 
 

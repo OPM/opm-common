@@ -511,7 +511,7 @@ END
         using o = ::Opm::data::Rates::opt;
 
         auto xw = ::Opm::data::Wells {};
-        Opm::SummaryState sum_state(Opm::TimeService::now());
+        Opm::SummaryState sum_state(Opm::TimeService::now(), 0.0);
 
         {
             xw["PROD"].rates.set(o::wat, 1.0).set(o::oil, 2.0).set(o::gas, 3.0);
@@ -998,7 +998,7 @@ END
         auto dyn_state = std::pair<Opm::data::Wells, Opm::SummaryState> {
             std::piecewise_construct,
             std::forward_as_tuple(),
-            std::forward_as_tuple(Opm::TimeService::now())
+            std::forward_as_tuple(Opm::TimeService::now(), 0.0)
         };
 
         using o = ::Opm::data::Rates::opt;

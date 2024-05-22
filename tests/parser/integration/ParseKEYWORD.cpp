@@ -15,7 +15,7 @@
 
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
- */
+*/
 
 #define BOOST_TEST_MODULE ParserKeywordsIntegrationTests
 #include <boost/test/unit_test.hpp>
@@ -23,30 +23,39 @@
 #include <boost/version.hpp>
 
 #include <opm/common/utility/OpmInputError.hpp>
-#include <opm/input/eclipse/Deck/Deck.hpp>
-#include <opm/input/eclipse/Python/Python.hpp>
+
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
 #include <opm/input/eclipse/EclipseState/Runspec.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/SgofTable.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/SlgofTable.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/SwofTable.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/TlpmixpaTable.hpp>
+
+#include <opm/input/eclipse/Python/Python.hpp>
+
 #include <opm/input/eclipse/Schedule/MSW/WellSegments.hpp>
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 #include <opm/input/eclipse/Schedule/SummaryState.hpp>
 #include <opm/input/eclipse/Schedule/Well/Well.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
-#include <opm/input/eclipse/EclipseState/Tables/SgofTable.hpp>
-#include <opm/input/eclipse/EclipseState/Tables/SlgofTable.hpp>
-#include <opm/input/eclipse/EclipseState/Tables/SwofTable.hpp>
-#include <opm/input/eclipse/EclipseState/Tables/TlpmixpaTable.hpp>
 #include <opm/input/eclipse/Units/Units.hpp>
+
+#include <opm/common/utility/TimeService.hpp>
+
+#include <opm/input/eclipse/Deck/Deck.hpp>
+
 #include <opm/input/eclipse/Parser/ErrorGuard.hpp>
 #include <opm/input/eclipse/Parser/InputErrorAction.hpp>
 #include <opm/input/eclipse/Parser/ParseContext.hpp>
 #include <opm/input/eclipse/Parser/Parser.hpp>
-#include <opm/common/utility/TimeService.hpp>
 
 using namespace Opm;
 
-inline std::string pathprefix() {
+namespace {
+
+std::string pathprefix()
+{
 #if BOOST_VERSION / 100000 == 1 && BOOST_VERSION / 100 % 1000 < 71
     return boost::unit_test::framework::master_test_suite().argv[2];
 #else
@@ -54,8 +63,10 @@ inline std::string pathprefix() {
 #endif
 }
 
+} // Anonymous namespace
+
 BOOST_AUTO_TEST_CASE( debug ) {
-    Parser().parseFile( pathprefix() + "DEBUG/DEBUG.DATA" );
+    Parser{}.parseFile(pathprefix() + "DEBUG/DEBUG.DATA" );
 }
 
 BOOST_AUTO_TEST_CASE( CECON ) {
@@ -65,7 +76,7 @@ CECON
         'P*'  2* 2 2 1* 3.5 /
 /
         )";
-    Parser().parseString( input );
+    Parser{}.parseString( input );
 }
 
 BOOST_AUTO_TEST_CASE( COORDSYS ) {
@@ -1428,17 +1439,16 @@ BOOST_AUTO_TEST_CASE( WCONPROD ) {
 }
 
 
-BOOST_AUTO_TEST_CASE( WCONINJE ) {
-    Parser parser;
-    std::string wconprodFile(pathprefix() + "WellWithWildcards/WCONINJE1");
-    auto deck = parser.parseFile(wconprodFile);
-    auto python = std::make_shared<Python>();
-    EclipseGrid grid(30,30,30);
-    TableManager table ( deck );
-    FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
-    Runspec runspec (deck);
-    Schedule sched( deck, grid, fp, runspec, python);
-    SummaryState st(TimeService::now());
+BOOST_AUTO_TEST_CASE( WCONINJE )
+{
+    const std::string wconprodFile(pathprefix() + "WellWithWildcards/WCONINJE1");
+    const auto deck = Parser{}.parseFile(wconprodFile);
+    const EclipseGrid grid(30,30,30);
+    const TableManager table (deck);
+    const FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
+    const Runspec runspec(deck);
+    const Schedule sched(deck, grid, fp, runspec, std::make_shared<Python>());
+    SummaryState st(TimeService::now(), runspec.udqParams().undefinedValue());
 
     BOOST_CHECK_EQUAL(5U, sched.numWells());
     BOOST_CHECK(sched.hasWell("PROD1"));

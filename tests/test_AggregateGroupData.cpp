@@ -18,27 +18,32 @@
 */
 
 #define BOOST_TEST_MODULE Aggregate_Group_Data
+
 #include <opm/output/eclipse/AggregateGroupData.hpp>
-#include <opm/output/eclipse/WriteRestartHelpers.hpp>
 
 #include <boost/test/unit_test.hpp>
 
 #include <opm/output/eclipse/AggregateWellData.hpp>
+#include <opm/output/eclipse/WriteRestartHelpers.hpp>
 
 #include <opm/output/eclipse/VectorItems/intehead.hpp>
 #include <opm/output/eclipse/VectorItems/group.hpp>
 #include <opm/output/eclipse/VectorItems/well.hpp>
-#include <opm/input/eclipse/Python/Python.hpp>
 
 #include <opm/output/data/Wells.hpp>
 
-#include <opm/input/eclipse/Deck/Deck.hpp>
-#include <opm/input/eclipse/Parser/Parser.hpp>
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
+
+#include <opm/input/eclipse/Python/Python.hpp>
+
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 #include <opm/input/eclipse/Schedule/SummaryState.hpp>
 #include <opm/input/eclipse/Schedule/Well/Well.hpp>
+
 #include <opm/common/utility/TimeService.hpp>
+
+#include <opm/input/eclipse/Deck/Deck.hpp>
+#include <opm/input/eclipse/Parser/Parser.hpp>
 
 #include <cstddef>
 #include <exception>
@@ -447,7 +452,7 @@ Opm::Deck first_sim()
 
 Opm::SummaryState sim_state()
 {
-    auto state = Opm::SummaryState {Opm::TimeService::now()};
+    auto state = Opm::SummaryState {Opm::TimeService::now(), 0.0};
 
     state.update_group_var("GRP1", "GOPR",   235.);
     state.update_group_var("GRP1", "GGPR",   100237.);
@@ -491,7 +496,7 @@ Opm::SummaryState sim_state()
 
 Opm::SummaryState sim_state_2()
 {
-    auto state = Opm::SummaryState {Opm::TimeService::now()};
+    auto state = Opm::SummaryState {Opm::TimeService::now(), 0.0};
     state.update_group_var("UPPER", "GMCTP", -1.);
     state.update_group_var("UPPER", "GMCTW",  0.);
     state.update_group_var("UPPER", "GMCTG",  0.);
@@ -554,7 +559,7 @@ Opm::SummaryState sim_state_2()
 
 Opm::SummaryState sim_state_3()
 {
-    auto state = Opm::SummaryState {Opm::TimeService::now()};
+    auto state = Opm::SummaryState {Opm::TimeService::now(), 0.0};
 
     state.update("FMCTP", 0.0);  // FIELD: Production mode NONE
     state.update("FMCTW", 3.0);  // FIELD: Injection mode VREP for water

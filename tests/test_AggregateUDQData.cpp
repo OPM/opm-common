@@ -144,9 +144,9 @@ namespace {
         return state;
     }
 
-    Opm::SummaryState sum_state()
+    Opm::SummaryState sum_state(const double udqUndef)
     {
-        auto state = Opm::SummaryState{Opm::TimeService::now()};
+        auto state = Opm::SummaryState{Opm::TimeService::now(), udqUndef};
         state.update_well_var("PROD1", "WUOPRL", 210.);
         state.update_well_var("PROD2", "WUOPRL", 211.);
         state.update_well_var("WINJ1", "WUOPRL", 212.);
@@ -229,7 +229,7 @@ BOOST_AUTO_TEST_CASE (Declared_UDQ_data)
     const auto simCase = SimulationCase{first_sim("UDQ_TEST_WCONPROD_IUAD-2.DATA")};
 
     Opm::EclipseState es = simCase.es;
-    Opm::SummaryState st = sum_state();
+    Opm::SummaryState st = sum_state(es.runspec().udqParams().undefinedValue());
     Opm::UDQState     udq_state = make_udq_state();
     Opm::Schedule     sched = simCase.sched;
     Opm::EclipseGrid  grid = simCase.grid;
@@ -930,7 +930,7 @@ BOOST_AUTO_TEST_CASE (Declared_UDQ_data_2)
     const auto simCase = SimulationCase{first_sim("9_4C_WINJ_GINJ_UDQ_MSW-UDARATE_TEST_PACK.DATA")};
 
     Opm::EclipseState es = simCase.es;
-    Opm::SummaryState st = sum_state();
+    Opm::SummaryState st = sum_state(es.runspec().udqParams().undefinedValue());
     Opm::UDQState     udq_state = make_udq_state();
     Opm::Schedule     sched = simCase.sched;
     Opm::EclipseGrid  grid = simCase.grid;

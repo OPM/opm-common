@@ -613,7 +613,7 @@ AQUANCON
 
     Opm::SummaryState sim_state()
     {
-        auto state = Opm::SummaryState{Opm::TimeService::now()};
+        auto state = Opm::SummaryState{Opm::TimeService::now(), 0.0};
 
         state.update("AAQP:1", 123.456);
         state.update("AAQR:1", 234.567);
@@ -648,7 +648,7 @@ AQUANCON
 
     Opm::SummaryState aqunum_sim_state()
     {
-        auto state = Opm::SummaryState{Opm::TimeService::now()};
+        auto state = Opm::SummaryState{Opm::TimeService::now(), 0.0};
 
         state.update("ANQP:1", 123.456);
         state.update("ANQR:1", 234.567);

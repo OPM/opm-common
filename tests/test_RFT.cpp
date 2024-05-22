@@ -715,7 +715,7 @@ BOOST_AUTO_TEST_CASE(test_RFT)
         const auto start_time = schedule.posixStartTime();
         const auto step_time  = timeStamp(::Opm::EclIO::ERft::RftDate{ 2008, 10, 10 });
 
-        Opm::SummaryState st(Opm::TimeService::now());
+        Opm::SummaryState st(Opm::TimeService::now(), 0.0);
         Opm::Action::State action_state;
         Opm::UDQState udq_state(1234);
         Opm::WellTestState wtest_state;
@@ -848,7 +848,7 @@ BOOST_AUTO_TEST_CASE(test_RFT2)
 
         Opm::Schedule schedule(deck, eclipseState, python);
         Opm::SummaryConfig summary_config( deck, schedule, eclipseState.fieldProps(), eclipseState.aquifer() );
-        Opm::SummaryState st(Opm::TimeService::now());
+        Opm::SummaryState st(Opm::TimeService::now(), 0.0);
         Opm::Action::State action_state;
         Opm::UDQState udq_state(10);
         Opm::WellTestState wtest_state;
