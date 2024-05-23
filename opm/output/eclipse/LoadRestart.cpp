@@ -616,66 +616,6 @@ namespace {
         insertSolutionVector(kwdata, value, numcells, sol);
     }
 
-    void loadHysteresisIfAvailable(const std::string&                   primary,
-                                   const Opm::RestartKey&               fallback_key,
-                                   const std::vector<double>::size_type numcells,
-                                   const Opm::EclIO::RestartFileView&   rst_view,
-                                   Opm::data::Solution&                 sol)
-    {
-        auto kwdata = double_vector(primary, rst_view);
-
-        if (kwdata.empty()) {
-            // Primary key does not exist in rst_view.  Attempt to load
-            // fallback keys directly.
-
-            loadIfAvailable(fallback_key, numcells, rst_view, sol);
-        }
-        else {
-            // Primary exists in rst_view.  Translate to Flow's hysteresis
-            // parameter.
-            auto smax = std::move(kwdata);
-
-            std::transform(std::begin(smax), std::end(smax), std::begin(smax),
-                           [](const double s) { return 1.0 - s; });
-
-            insertSolutionVector(smax, fallback_key, numcells, sol);
-        }
-    }
-
-    bool isHysteresis(const std::string& vector)
-    {
-        for (const auto* flow_hyst_key : { "KRNSW_OW", "PCSWM_OW",
-                                           "KRNSW_GO", "PCSWM_GO", })
-        {
-            if (vector == flow_hyst_key) { return true; }
-        }
-
-        return false;
-    }
-
-    void restoreHysteresisVector(const Opm::RestartKey&             value,
-                                 const int                          numcells,
-                                 const Opm::EclIO::RestartFileView& rst_view,
-                                 Opm::data::Solution&               sol)
-    {
-        const auto& key = value.key;
-
-        if ((key == "KRNSW_OW") || (key == "PCSWM_OW"))
-        {
-            // Attempt to load from SOMAX, fall back to value.key if
-            // unavailable--typically in OPM Extended restart file.
-            loadHysteresisIfAvailable("SOMAX", value, numcells,
-                                      rst_view, sol);
-        }
-        else if ((key == "KRNSW_GO") || (key == "PCSWM_GO"))
-        {
-            // Attempt to load from SGMAX, fall back to value.key if
-            // unavailable--typically in OPM Extended restart file.
-            loadHysteresisIfAvailable("SGMAX", value, numcells,
-                                      rst_view, sol);
-        }
-    }
-
     std::vector<double>
     getOpmExtraFromDoubHEAD(const bool                         required,
                             const Opm::UnitSystem&             usys,
@@ -702,15 +642,7 @@ namespace {
         Opm::data::Solution sol(/* init_si = */ false);
 
         for (const auto& value : solution_keys) {
-            if (isHysteresis(value.key)) {
-                // Special case handling of hysteresis data.  Possibly needs
-                // translation from ECLIPSE-compatible set to Flow's known
-                // set of hysteresis vectors.
-                restoreHysteresisVector(value, numcells, rst_view, sol);
-                continue;
-            }
-
-            // Load regular (non-hysteresis) vector if available.
+            // Load vector if available.
             loadIfAvailable(value, numcells, rst_view, sol);
         }
 

@@ -270,7 +270,6 @@ public:
             Swcri_ = info.Swcr;
         }
 
-
         // Killough hysteresis model for pc
         if (config().pcHysteresisModel() == 0) {
             if (twoPhaseSystem == EclTwoPhaseSystemType::GasOil) {

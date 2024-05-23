@@ -718,29 +718,31 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(Fam1Fam2Hysteresis, Scalar, Types)
 
                 // This should ideally test each of the materials (stone1, stone2, default, two-phase),
                 // but currently only tests default
-                const std::array<Scalar,2> pcSwMdc_in =  {1.0 / 2.0, 1.0 / 3.0};
-                const std::array<Scalar,2> krnSwMdc_in = {1.0 / 5.0, 1.0 / 7.0};
-                hysterMaterialLawManager.setOilWaterHysteresisParams(pcSwMdc_in[0],
-                                                                     krnSwMdc_in[0],
+                const std::array<Scalar,3> sowmax_in =  {1.0 / 2.0, 1.0 / 3.0, 1.0 / 4.0};
+                const std::array<Scalar,3> sgomax_in = {1.0 / 5.0, 1.0 / 7.0,  1.0 / 9.0};
+                hysterMaterialLawManager.setOilWaterHysteresisParams(sowmax_in[0],
+                                                                     sowmax_in[1],
+                                                                     sowmax_in[2],
                                                                      elemIdx);
-                hysterMaterialLawManager.setGasOilHysteresisParams(pcSwMdc_in[1],
-                                                                   krnSwMdc_in[1],
+                hysterMaterialLawManager.setGasOilHysteresisParams(sgomax_in[0],
+                                                                   sgomax_in[1],
+                                                                   sgomax_in[2],
                                                                    elemIdx);
 
-                std::array<Scalar,2> pcSwMdc_out = {0.0, 0.0};
-                std::array<Scalar,2> krnSwMdc_out = {0.0, 0.0};
-                hysterMaterialLawManager.oilWaterHysteresisParams(pcSwMdc_out[0],
-                                                                  krnSwMdc_out[0],
+                std::array<Scalar,3> sowmax_out = {0.0, 0.0, 0.0};
+                std::array<Scalar,3> sgomax_out = {0.0, 0.0, 0.0};
+                hysterMaterialLawManager.oilWaterHysteresisParams(sowmax_out[0],
+                                                                  sowmax_out[1],
+                                                                  sowmax_out[2],
                                                                   elemIdx);
-                hysterMaterialLawManager.gasOilHysteresisParams(pcSwMdc_out[1],
-                                                                krnSwMdc_out[1],
+                hysterMaterialLawManager.gasOilHysteresisParams(sgomax_out[0],
+                                                                sgomax_out[1],
+                                                                sgomax_out[2],
                                                                 elemIdx);
 
-                for (unsigned phasePairIdx = 0; phasePairIdx < 2; ++phasePairIdx) {
-                    BOOST_CHECK_MESSAGE(pcSwMdc_in[phasePairIdx] == pcSwMdc_out[phasePairIdx],
-                                        "Hysteresis parameters did not propagate correctly");
-                    BOOST_CHECK_MESSAGE(krnSwMdc_in[phasePairIdx] == krnSwMdc_out[phasePairIdx],
-                                        "Hysteresis parameters did not propagate correctly");
+                for (unsigned phasePairIdx = 0; phasePairIdx < 3; ++phasePairIdx) {
+                    BOOST_CHECK_CLOSE(sowmax_in[phasePairIdx], sowmax_out[phasePairIdx], 1e-5);
+                    BOOST_CHECK_CLOSE(sgomax_in[phasePairIdx], sgomax_out[phasePairIdx], 1e-5);     
                 }
             }
         }

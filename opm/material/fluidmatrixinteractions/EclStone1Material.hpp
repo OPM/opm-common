@@ -147,72 +147,98 @@ public:
 
     /*
      * Hysteresis parameters for oil-water
-     * @see EclHysteresisTwoPhaseLawParams::pcSwMdc(...)
-     * @see EclHysteresisTwoPhaseLawParams::krnSwMdc(...)
+     * @see EclHysteresisTwoPhaseLawParams::soMax(...)
+     * @see EclHysteresisTwoPhaseLawParams::swMax(...)
+     * @see EclHysteresisTwoPhaseLawParams::swMin(...)
      * \param params Parameters
      */
-    static void oilWaterHysteresisParams(Scalar& pcSwMdc,
-                                         Scalar& krnSwMdc,
+    static void oilWaterHysteresisParams(Scalar& soMax,
+                                         Scalar& swMax,
+                                         Scalar& swMin,
                                          const Params& params)
     {
-        pcSwMdc = params.oilWaterParams().pcSwMdc();
-        krnSwMdc = params.oilWaterParams().krnSwMdc();
-
-        Valgrind::CheckDefined(pcSwMdc);
-        Valgrind::CheckDefined(krnSwMdc);
+        soMax = 1.0 - params.oilWaterParams().krnSwMdc();
+        swMax = params.oilWaterParams().krwSwMdc();
+        swMin = params.oilWaterParams().pcSwMdc();
+        Valgrind::CheckDefined(soMax);
+        Valgrind::CheckDefined(swMax);
+        Valgrind::CheckDefined(swMin);
     }
 
     /*
      * Hysteresis parameters for oil-water
-     * @see EclHysteresisTwoPhaseLawParams::pcSwMdc(...)
-     * @see EclHysteresisTwoPhaseLawParams::krnSwMdc(...)
+     * @see EclHysteresisTwoPhaseLawParams::soMax(...)
+     * @see EclHysteresisTwoPhaseLawParams::swMax(...)
+     * @see EclHysteresisTwoPhaseLawParams::swMin(...)
      * \param params Parameters
      */
-    static void setOilWaterHysteresisParams(const Scalar& pcSwMdc,
-                                            const Scalar& krnSwMdc,
+    static void setOilWaterHysteresisParams(const Scalar& soMax,
+                                            const Scalar& swMax,
+                                            const Scalar& swMin,
                                             Params& params)
     {
-        constexpr const double krwSw = 2.0; //Should not be used
-        params.oilWaterParams().update(pcSwMdc, krwSw, krnSwMdc);
+        params.oilWaterParams().update(swMin, swMax, 1.0 - soMax);
     }
 
     /*
      * Hysteresis parameters for gas-oil
-     * @see EclHysteresisTwoPhaseLawParams::pcSwMdc(...)
-     * @see EclHysteresisTwoPhaseLawParams::krnSwMdc(...)
+     * @see EclHysteresisTwoPhaseLawParams::sgMax(...)
+     * @see EclHysteresisTwoPhaseLawParams::shMax(...)
+     * @see EclHysteresisTwoPhaseLawParams::soMin(...)
      * \param params Parameters
      */
-    static void gasOilHysteresisParams(Scalar& pcSwMdc,
-                                       Scalar& krnSwMdc,
+    static void gasOilHysteresisParams(Scalar& sgMax,
+                                       Scalar& shMax,
+                                       Scalar& soMin,
                                        const Params& params)
     {
         const auto Swco = params.Swl();
+        sgMax = 1.0 - params.gasOilParams().krnSwMdc() - Swco;
+        shMax = params.gasOilParams().krwSwMdc();
+        soMin = params.gasOilParams().pcSwMdc();
 
-        // Pretend oil saturation is 'Swco' larger than it really is in
-        // order to infer correct maximum Sg values in output layer.
-        pcSwMdc = std::min(params.gasOilParams().pcSwMdc() + Swco, Scalar{2.0});
-        krnSwMdc = std::min(params.gasOilParams().krnSwMdc() + Swco, Scalar{2.0});
-
-        Valgrind::CheckDefined(pcSwMdc);
-        Valgrind::CheckDefined(krnSwMdc);
+        Valgrind::CheckDefined(sgMax);
+        Valgrind::CheckDefined(shMax);
+        Valgrind::CheckDefined(soMin);
     }
 
     /*
      * Hysteresis parameters for gas-oil
-     * @see EclHysteresisTwoPhaseLawParams::pcSwMdc(...)
-     * @see EclHysteresisTwoPhaseLawParams::krnSwMdc(...)
+     * @see EclHysteresisTwoPhaseLawParams::sgMax(...)
+     * @see EclHysteresisTwoPhaseLawParams::shMax(...)
+     * @see EclHysteresisTwoPhaseLawParams::soMin(...)
      * \param params Parameters
      */
-    static void setGasOilHysteresisParams(const Scalar& pcSwMdc,
-                                          const Scalar& krnSwMdc,
+    static void setGasOilHysteresisParams(const Scalar& sgMax,
+                                          const Scalar& shMax,
+                                          const Scalar& soMin,
                                           Params& params)
     {
-        // Maximum attainable oil saturation is 1-SWL
         const auto Swco = params.Swl();
-        constexpr const double krwSw = 2.0; //Should not be used
-        params.gasOilParams().update(pcSwMdc - Swco, krwSw, krnSwMdc - Swco);
+        params.gasOilParams().update(soMin, shMax, 1.0 - sgMax - Swco);
     }
 
+    static Scalar trappedGasSaturation(const Params& params, bool maximumTrapping)
+    {
+        const auto Swco = params.Swl();
+        return params.gasOilParams().SnTrapped(maximumTrapping) - Swco;
+    }
+
+    static Scalar trappedOilSaturation(const Params& params, bool maximumTrapping)
+    {
+        return params.oilWaterParams().SnTrapped(maximumTrapping) + params.gasOilParams().SwTrapped();
+    }
+
+    static Scalar trappedWaterSaturation(const Params& params)
+    {
+        return params.oilWaterParams().SwTrapped();
+    }
+
+    static Scalar strandedGasSaturation(const Params& params, Scalar Sg, Scalar Kg)
+    {
+        const auto Swco = params.Swl();
+        return params.gasOilParams().SnStranded(Sg, Kg) - Swco;
+    }
     /*!
      * \brief Capillary pressure between the gas and the non-wetting
      *        liquid (i.e., oil) phase.
@@ -413,21 +439,29 @@ public:
      * \brief Update the hysteresis parameters after a time step.
      *
      * This assumes that the nested two-phase material laws are parameters for
-     * EclHysteresisLaw. If they are not, calling this methid will cause a compiler
+     * EclHysteresisLaw. If they are not, calling this method will cause a compiler
      * error. (But not calling it will still work.)
      */
     template <class FluidState>
     static bool updateHysteresis(Params& params, const FluidState& fluidState)
     {
         const Scalar Swco = params.Swl();
-        const Scalar Sw = scalarValue(fluidState.saturation(waterPhaseIdx));
-        const Scalar Sg = scalarValue(fluidState.saturation(gasPhaseIdx));
-        bool changed = false;
-        changed = changed || params.oilWaterParams().update(/*pcSw=*/Sw, /*krwSw=*/Sw, /*krnSw=*/Sw);
-        changed = changed || params.gasOilParams().update(/*pcSw=*/  1.0 - Swco - Sg,
-                                                          /*krwSw=*/ 1.0 - Swco - Sg,
+        const Scalar Sw = clampSaturation(fluidState, waterPhaseIdx);
+        const Scalar So = clampSaturation(fluidState, oilPhaseIdx);
+        const Scalar Sg = clampSaturation(fluidState, gasPhaseIdx);
+        bool owChanged = params.oilWaterParams().update(/*pcSw=*/Sw, /*krwSw=*/Sw, /*krnSw=*/1 - So);
+        bool gochanged = params.gasOilParams().update(/*pcSw=*/  So,
+                                                          /*krwSw=*/ So,
                                                           /*krnSw=*/ 1.0 - Swco - Sg);
-        return changed;
+        return owChanged || gochanged;
+    }
+    
+    template <class FluidState>
+    static Scalar clampSaturation(const FluidState& fluidState, const int phaseIndex)
+    {
+        OPM_TIMEFUNCTION_LOCAL();
+        const auto sat = scalarValue(fluidState.saturation(phaseIndex));
+        return std::clamp(sat, Scalar{0.0}, Scalar{1.0});
     }
 };
 

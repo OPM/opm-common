@@ -340,7 +340,6 @@ public:
                 return KrgDrainNxt;
             }
         }
-
         // if no relperm hysteresis is enabled, use the drainage curve
         if (!params.config().enableHysteresis() || params.config().krHysteresisModel() < 0)
             return EffectiveLaw::twoPhaseSatKrn(params.drainageParams(), Sw);
