@@ -3939,13 +3939,7 @@ namespace Evaluator {
             return false;
         }
 
-        int istart;
-        if (normKw[4] == 'F' || normKw[4] == 'S') {
-            istart = 5;
-        }
-        else {
-            istart = 4;
-        }
+        const auto istart = 4 + ((normKw[4] == 'F') || (normKw[4] == 'S'));
 
         const auto tracer_name = normKw.substr(istart);
 
