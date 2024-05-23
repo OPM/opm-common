@@ -875,8 +875,10 @@ inline quantity filtrate_well_quantities( const fn_args& args ) {
 template< rt tracer, rt phase, bool injection = true >
 inline quantity ratetracer( const fn_args& args ) {
     double sum = 0.0;
-
-    std::string tracer_name = args.keyword_name.substr(4);
+    
+    // All well-related tracer keywords, e.g. WTPCxx, WTPRxx, FTPTxx, have a 4-letter prefix length
+    constexpr auto prefix_len = 4;
+    std::string tracer_name = args.keyword_name.substr(prefix_len);
 
     for (const auto* sched_well : args.schedule_wells) {
         const auto& name = sched_well->name();
