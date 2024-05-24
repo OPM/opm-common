@@ -63,11 +63,11 @@ public:
         serializer(m_alq_eq);
     }
 private:
-    std::string m_downtree_node;
-    std::string m_uptree_node;
-    int m_vfp_table;
-    std::optional<double> m_alq_value;
-    AlqEQ m_alq_eq;
+    std::string m_downtree_node{};
+    std::string m_uptree_node{};
+    int m_vfp_table = 0;
+    std::optional<double> m_alq_value{};
+    AlqEQ m_alq_eq{AlqEQ::OIL_DENSITY};
 };
 
 }
