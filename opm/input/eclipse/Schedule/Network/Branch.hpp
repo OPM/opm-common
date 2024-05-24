@@ -40,8 +40,12 @@ public:
     static AlqEQ AlqEqfromString(const std::string& input_string);
 
     Branch() = default;
-    Branch(const std::string& downtree_node, const std::string& uptree_node, int vfp_table, double alq);
-    Branch(const std::string& downtree_node, const std::string& uptree_node, int vfp_table, AlqEQ alq_eq);
+    Branch(const std::string& downtree_node,
+           const std::string& uptree_node,
+           int vfp_table, double alq);
+    Branch(const std::string& downtree_node,
+           const std::string& uptree_node,
+           int vfp_table, AlqEQ alq_eq);
 
     const std::string& downtree_node() const;
     const std::string& uptree_node() const;
