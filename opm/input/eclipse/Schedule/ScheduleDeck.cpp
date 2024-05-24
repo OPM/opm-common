@@ -263,12 +263,14 @@ bool ScheduleDeck::operator==(const ScheduleDeck& other) const {
            this->m_blocks == other.m_blocks;
 }
 
-ScheduleDeck ScheduleDeck::serializationTestObject() {
+ScheduleDeck ScheduleDeck::serializationTestObject()
+{
     ScheduleDeck deck;
     deck.m_restart_time = TimeService::from_time_t( asTimeT( TimeStampUTC( 2013, 12, 12 )));
     deck.m_restart_offset = 123;
     deck.m_location = KeywordLocation::serializationTestObject();
     deck.m_blocks = { ScheduleBlock::serializationTestObject(), ScheduleBlock::serializationTestObject() };
+    deck.skiprest = true;
     return deck;
 }
 
