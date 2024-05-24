@@ -587,6 +587,7 @@ Tracers Tracers::serializationTestObject() {
     Tracers tracers;
     tracers.m_oil_tracers = 123;
     tracers.m_gas_tracers = 77;
+    tracers.m_water_tracers = 5;
     tracers.max_iter = 11;
     return tracers;
 }
