@@ -215,6 +215,7 @@ GroupEconProductionLimits::GEconGroup GroupEconProductionLimits::GEconGroup::ser
     group.m_workover = EconWorkover::CON;
     group.m_end_run = false;
     group.m_max_open_wells = 6;
+    group.m_report_step = 7;
     return group;
 }
 

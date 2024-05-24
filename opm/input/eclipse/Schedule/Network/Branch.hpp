@@ -40,8 +40,12 @@ public:
     static AlqEQ AlqEqfromString(const std::string& input_string);
 
     Branch() = default;
-    Branch(const std::string& downtree_node, const std::string& uptree_node, int vfp_table, double alq);
-    Branch(const std::string& downtree_node, const std::string& uptree_node, int vfp_table, AlqEQ alq_eq);
+    Branch(const std::string& downtree_node,
+           const std::string& uptree_node,
+           int vfp_table, double alq);
+    Branch(const std::string& downtree_node,
+           const std::string& uptree_node,
+           int vfp_table, AlqEQ alq_eq);
 
     const std::string& downtree_node() const;
     const std::string& uptree_node() const;
@@ -63,11 +67,11 @@ public:
         serializer(m_alq_eq);
     }
 private:
-    std::string m_downtree_node;
-    std::string m_uptree_node;
-    int m_vfp_table;
-    std::optional<double> m_alq_value;
-    AlqEQ m_alq_eq;
+    std::string m_downtree_node{};
+    std::string m_uptree_node{};
+    int m_vfp_table = 0;
+    std::optional<double> m_alq_value{};
+    AlqEQ m_alq_eq{AlqEQ::OIL_DENSITY};
 };
 
 }
