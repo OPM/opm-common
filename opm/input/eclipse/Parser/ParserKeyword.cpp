@@ -678,12 +678,16 @@ void set_dimensions( ParserItem& item,
         return this->m_validSectionNames;
     }
 
-    void ParserKeyword::addRecord( ParserRecord record ) {
-        m_records.push_back( std::move( record ) );
-        if (record.rawStringRecord())
-            this->raw_string_keyword = true;
-    }
+    void ParserKeyword::addRecord(ParserRecord record)
+    {
+        const auto isRaw = record.rawStringRecord();
 
+        this->m_records.push_back(std::move(record));
+
+        if (isRaw) {
+            this->raw_string_keyword = true;
+        }
+    }
 
     void ParserKeyword::addDataRecord( ParserRecord record) {
         if (this->keyword_size.size_type() != FIXED)
