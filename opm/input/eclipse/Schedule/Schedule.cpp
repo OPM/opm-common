@@ -1835,21 +1835,23 @@ namespace {
             }
 
             if (rst_well.segments.empty()) {
-                Opm::WellConnections connections(order_from_int(rst_well.completion_ordering),
-                                                 rst_well.ij[0],
-                                                 rst_well.ij[1],
-                                                 rst_connections);
-                well.updateConnections( std::make_shared<WellConnections>( std::move(connections) ), grid);
-            } else {
-                std::unordered_map<int, Opm::Segment> rst_segments;
+                auto connections = std::make_shared<WellConnections>
+                    (order_from_int(rst_well.completion_ordering),
+                     rst_well.ij[0], rst_well.ij[1], rst_connections);
+
+                well.updateConnections(std::move(connections), grid);
+            }
+            else {
+                auto rst_segments = std::unordered_map<int, Segment>{};
                 for (const auto& rst_segment : rst_well.segments) {
-                    Opm::Segment segment(rst_segment);
-                    rst_segments.insert(std::make_pair(rst_segment.segment, std::move(segment)));
+                    rst_segments.try_emplace(rst_segment.segment, rst_segment);
                 }
 
-                auto [connections, segments] = Compsegs::rstUpdate(rst_well, rst_connections, rst_segments);
-                well.updateConnections( std::make_shared<WellConnections>(std::move(connections)), grid);
-                well.updateSegments( std::make_shared<WellSegments>(std::move(segments) ));
+                const auto& [connections, segments] =
+                    Compsegs::rstUpdate(rst_well, rst_connections, rst_segments);
+
+                well.updateConnections(std::make_shared<WellConnections>(connections), grid);
+                well.updateSegments(std::make_shared<WellSegments>(segments));
             }
 
             this->addWell(well);
@@ -1857,9 +1859,11 @@ namespace {
 
             OpmLog::info(fmt::format("Adding well {} from restart file", rst_well.name));
 
-            if (GasLiftWell::active(rst_well))
+            if (GasLiftWell::active(rst_well)) {
                 glo.add_well(GasLiftWell(rst_well));
+            }
         }
+
         this->snapshots.back().glo.update( std::move(glo) );
         this->snapshots.back().update_tuning(rst_state.tuning);
         this->snapshots.back().events().addEvent( ScheduleEvents::TUNING_CHANGE );
@@ -1964,8 +1968,9 @@ namespace {
             aqPos.first->second.active = true;
         }
 
-        if (!rst_state.wlists.empty())
-            this->snapshots.back().wlist_manager.update( WListManager(rst_state) );
+        if (!rst_state.wlists.empty()) {
+            this->snapshots.back().wlist_manager.update(WListManager(rst_state));
+        }
 
         if (rst_state.network.isActive()) {
             auto network = this->snapshots.back().network();
