@@ -93,7 +93,7 @@ namespace {
                 ? nullptr : &well_iter->second;
 
             connectionLoop(grid, sched.getWell(wname, sim_step),
-                           wellRes, std::forward<ConnOp>(connOp));
+                           wellRes, connOp);
         }
     }
 
