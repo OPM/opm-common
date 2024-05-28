@@ -29,17 +29,18 @@
 
 #include <algorithm>
 #include <cassert>
-#include <vector>
 #include <opm/material/common/EnsureFinalized.hpp>
+#include <vector>
 
-namespace Opm {
+namespace Opm
+{
 /*!
  * \ingroup FluidMatrixInteractions
  *
  * \brief Specification of the material parameters for a two-phase material law which
  *        uses a table and piecewise constant interpolation.
  */
-template<class TraitsT, class VectorT=std::vector<typename TraitsT::Scalar>>
+template <class TraitsT, class VectorT = std::vector<typename TraitsT::Scalar>>
 class PiecewiseLinearTwoPhaseMaterialParams : public EnsureFinalized
 {
     using Scalar = typename TraitsT::Scalar;
@@ -54,17 +55,17 @@ public:
     }
 
     PiecewiseLinearTwoPhaseMaterialParams(ValueVector SwPcwnSamples,
-                                            ValueVector pcwnSamples,
-                                            ValueVector SwKrwSamples,
-                                            ValueVector krwSamples,
-                                            ValueVector SwKrnSamples,
-                                            ValueVector krnSamples)
-                                        : SwPcwnSamples_(SwPcwnSamples),
-                                            SwKrwSamples_(SwKrwSamples),
-                                            SwKrnSamples_(SwKrnSamples),
-                                            pcwnSamples_(pcwnSamples),
-                                            krwSamples_(krwSamples),
-                                            krnSamples_(krnSamples)
+                                          ValueVector pcwnSamples,
+                                          ValueVector SwKrwSamples,
+                                          ValueVector krwSamples,
+                                          ValueVector SwKrnSamples,
+                                          ValueVector krnSamples)
+        : SwPcwnSamples_(SwPcwnSamples)
+        , SwKrwSamples_(SwKrwSamples)
+        , SwKrnSamples_(SwKrnSamples)
+        , pcwnSamples_(pcwnSamples)
+        , krwSamples_(krwSamples)
+        , krnSamples_(krnSamples)
     {
         finalize();
     }
@@ -75,7 +76,7 @@ public:
      */
     void finalize()
     {
-        EnsureFinalized :: finalize ();
+        EnsureFinalized ::finalize();
 
         // revert the order of the sampling points if they were given
         // in reverse direction.
@@ -83,7 +84,7 @@ public:
         // The const expr ensures we can create constant parameter views.
         using vecElementType = typename ValueVector::value_type;
         using vecElementTypeNoConst = std::remove_const_t<vecElementType>;
-        if constexpr(std::is_same_v<vecElementType, vecElementTypeNoConst>){
+        if constexpr (std::is_same_v<vecElementType, vecElementTypeNoConst>) {
             if (SwPcwnSamples_.front() > SwPcwnSamples_.back())
                 swapOrder_(SwPcwnSamples_, pcwnSamples_);
 
@@ -99,19 +100,28 @@ public:
      * \brief Return the wetting-phase saturation values of all sampling points.
      */
     const ValueVector& SwKrwSamples() const
-    { EnsureFinalized::check(); return SwKrwSamples_; }
+    {
+        EnsureFinalized::check();
+        return SwKrwSamples_;
+    }
 
     /*!
      * \brief Return the wetting-phase saturation values of all sampling points.
      */
     const ValueVector& SwKrnSamples() const
-    { EnsureFinalized::check(); return SwKrnSamples_; }
+    {
+        EnsureFinalized::check();
+        return SwKrnSamples_;
+    }
 
     /*!
      * \brief Return the wetting-phase saturation values of all sampling points.
      */
     const ValueVector& SwPcwnSamples() const
-    { EnsureFinalized::check(); return SwPcwnSamples_; }
+    {
+        EnsureFinalized::check();
+        return SwPcwnSamples_;
+    }
 
     /*!
      * \brief Return the sampling points for the capillary pressure curve.
@@ -119,7 +129,10 @@ public:
      * This curve is assumed to depend on the wetting phase saturation
      */
     const ValueVector& pcwnSamples() const
-    { EnsureFinalized::check(); return pcwnSamples_; }
+    {
+        EnsureFinalized::check();
+        return pcwnSamples_;
+    }
 
     /*!
      * \brief Set the sampling points for the capillary pressure curve.
@@ -146,7 +159,10 @@ public:
      * This curve is assumed to depend on the wetting phase saturation
      */
     const ValueVector& krwSamples() const
-    { EnsureFinalized::check(); return krwSamples_; }
+    {
+        EnsureFinalized::check();
+        return krwSamples_;
+    }
 
     /*!
      * \brief Set the sampling points for the relative permeability
@@ -174,7 +190,10 @@ public:
      * This curve is assumed to depend on the wetting phase saturation
      */
     const ValueVector& krnSamples() const
-    { EnsureFinalized::check(); return krnSamples_; }
+    {
+        EnsureFinalized::check();
+        return krnSamples_;
+    }
 
     /*!
      * \brief Set the sampling points for the relative permeability
@@ -199,10 +218,7 @@ private:
     void swapOrder_(ValueVector& swValues, ValueVector& values) const
     {
         if (swValues.front() > values.back()) {
-            for (unsigned origSampleIdx = 0;
-                 origSampleIdx < swValues.size() / 2;
-                 ++ origSampleIdx)
-            {
+            for (unsigned origSampleIdx = 0; origSampleIdx < swValues.size() / 2; ++origSampleIdx) {
                 size_t newSampleIdx = swValues.size() - origSampleIdx - 1;
 
                 std::swap(swValues[origSampleIdx], swValues[newSampleIdx]);
