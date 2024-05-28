@@ -885,15 +885,23 @@ void ESmry::loadData() const
 
             const auto fileStr = std::string_view(buffer.data(), size);
             std::size_t p = 0;
-            std::int64_t p1= 0;
+            std::size_t p1= 0;
 
             for (int i=0; i< nParamsSpecFile[specInd]; ++i, ++p) {
                 p1 = fileStr.find_first_not_of(' ',p1);
-                const std::int64_t p2 = fileStr.find_first_of(' ', p1);
+                const std::size_t p2 = fileStr.find_first_of(' ', p1);
 
-                if ((keywpos[p] > -1) && !vectorLoaded[keywpos[p]]) {
-                    const auto dtmpv = std::strtof(fileStr.substr(p1, p2-p1).data(), nullptr);
-                    vectorData[keywpos[p]].push_back(dtmpv);
+                if (p1 == std::string::npos) {
+                    // File possibly corrupted. Adding an obviously invalid value.
+                    if ((keywpos[p] > -1) && !vectorLoaded[keywpos[p]]) {
+                        const float invalid_value = -1e20f;
+                        vectorData[keywpos[p]].push_back(invalid_value);
+                    }
+                } else {
+                    if ((keywpos[p] > -1) && !vectorLoaded[keywpos[p]]) {
+                        const auto dtmpv = std::strtof(fileStr.substr(p1, p2-p1).data(), nullptr);
+                        vectorData[keywpos[p]].push_back(dtmpv);
+                    }
                 }
 
                 p1 = fileStr.find_first_not_of(' ',p2);
