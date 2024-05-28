@@ -112,15 +112,17 @@ int main(int argc, char **argv) {
 
     smryFileType filetype;
 
-    if (inputFileName.extension()==".SMSPEC"){
+    if (const auto& ext = inputFileName.extension();
+        (ext == ".SMSPEC") || (ext == ".FSMSPEC"))
+    {
         filetype = SMSPEC;
         esmry = std::make_unique<Opm::EclIO::ESmry>(inputFileName);
-    } else if (inputFileName.extension()==".ESMRY"){
+    } else if (ext == ".ESMRY") {
         filetype = ESMRY;
         ext_esmry = std::make_unique<Opm::EclIO::ExtESmry>(inputFileName);
-    } else
+    } else {
         throw std::runtime_error("invalid input file for summary");
-
+    }
 
     if (listKeys){
         std::vector<std::string> list;
