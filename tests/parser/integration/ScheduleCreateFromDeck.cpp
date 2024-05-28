@@ -560,7 +560,7 @@ COMPDAT
 END
 )");
 
-    const EclipseGrid grid(30,30,10);
+    EclipseGrid grid(30,30,10);
     const TableManager table (deck);
     const FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
     const Runspec runspec (deck);

@@ -86,7 +86,7 @@ Schedule make_schedule(const std::string& deck_string,
                        const ParseContext& parseContext = {})
 {
     const auto deck = Parser{}.parseString(deck_string);
-    const EclipseGrid grid1(10, 10, 10);
+    EclipseGrid grid1(10, 10, 10);
     const TableManager table(deck);
     const FieldPropsManager fp(deck, Phases{true, true, true}, grid1, table);
     const Runspec runspec(deck);
@@ -1055,7 +1055,7 @@ ENDACTIO
     };
 
     const auto deck = Parser{}.parseString(deck_string);
-    const EclipseGrid grid1(10,10,10);
+    EclipseGrid grid1(10,10,10);
     const TableManager table (deck);
     const FieldPropsManager fp(deck, Phases{true, true, true}, grid1, table);
 

@@ -69,7 +69,7 @@ namespace {
         const auto wdfac = Opm::WDFAC{};
         const auto loc = Opm::KeywordLocation{};
 
-        const Opm::EclipseGrid grid { 10, 10, 10 };
+        Opm::EclipseGrid grid { 10, 10, 10 };
         const Opm::FieldPropsManager field_props {
             deck, Opm::Phases{true, true, true}, grid, Opm::TableManager{}
         };

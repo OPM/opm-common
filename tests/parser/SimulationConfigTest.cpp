@@ -316,7 +316,7 @@ BOOST_AUTO_TEST_CASE(SimulationConfig_TEMP_THERMAL)
     {
         const auto deck = createDeck(inputStr);
         const auto tm = TableManager(deck);
-        const auto eg = EclipseGrid(10, 3, 4);
+        auto eg = EclipseGrid(10, 3, 4);
         const auto fp = FieldPropsManager(deck, Phases{true, true, true}, eg, tm);
         const auto simulationConfig = Opm::SimulationConfig(false, deck, fp);
 
@@ -326,7 +326,7 @@ BOOST_AUTO_TEST_CASE(SimulationConfig_TEMP_THERMAL)
     {
         const auto deck = createDeck(simDeckStringTEMP());
         const auto tm = TableManager(deck);
-        const auto eg = EclipseGrid(10, 3, 4);
+        auto eg = EclipseGrid(10, 3, 4);
         const auto fp = FieldPropsManager(deck, Phases{true, true, true}, eg, tm);
         const auto simulationConfig = Opm::SimulationConfig(false, deck, fp);
 
@@ -336,7 +336,7 @@ BOOST_AUTO_TEST_CASE(SimulationConfig_TEMP_THERMAL)
     {
         const auto deck = createDeck(simDeckStringTHERMAL());
         const auto tm = TableManager(deck);
-        const auto eg = EclipseGrid(10, 3, 4);
+        auto eg = EclipseGrid(10, 3, 4);
         const auto fp = FieldPropsManager(deck, Phases{true, true, true}, eg, tm);
         const auto simulationConfig = Opm::SimulationConfig(false, deck, fp);
 
@@ -397,7 +397,7 @@ ROCK
 
 )");
 
-    const auto grid = EclipseGrid { 10, 10, 10 };
+    auto grid = EclipseGrid { 10, 10, 10 };
     const auto fp = FieldPropsManager {
         deck, Phases{true, true, true}, grid, TableManager()
     };

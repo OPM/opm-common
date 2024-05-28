@@ -1944,7 +1944,7 @@ FIPUNIX
   100*3 100*4 /
 )";
 
-    const EclipseGrid grid { 10, 10, 2 };
+    EclipseGrid grid { 10, 10, 2 };
     const Deck deck = Parser{}.parseString(deck_string);
 
     BOOST_CHECK_MESSAGE(deck.hasKeyword("FIPUNIT"),
