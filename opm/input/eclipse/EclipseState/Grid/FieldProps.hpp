@@ -389,7 +389,7 @@ public:
     };
 
     /// Normal constructor for FieldProps.
-    FieldProps(const Deck& deck, const Phases& phases, const EclipseGrid& grid, const TableManager& table_arg);
+    FieldProps(const Deck& deck, const Phases& phases, EclipseGrid& grid, const TableManager& table_arg);
 
     /// Special case constructor used to process ACTNUM only.
     FieldProps(const Deck& deck, const EclipseGrid& grid);

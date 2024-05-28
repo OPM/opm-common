@@ -478,7 +478,7 @@ bool FieldProps::rst_cmp(const FieldProps& full_arg, const FieldProps& rst_arg) 
 }
 
 
-FieldProps::FieldProps(const Deck& deck, const Phases& phases, const EclipseGrid& grid, const TableManager& tables_arg) :
+FieldProps::FieldProps(const Deck& deck, const Phases& phases, EclipseGrid& grid, const TableManager& tables_arg) :
     active_size(grid.getNumActive()),
     global_size(grid.getCartesianSize()),
     unit_system(deck.getActiveUnitSystem()),
@@ -527,6 +527,10 @@ FieldProps::FieldProps(const Deck& deck, const Phases& phases, const EclipseGrid
 
     if (DeckSection::hasEDIT(deck))
         this->scanEDITSection(EDITSection(deck));
+
+    grid.resetACTNUM(this->actnum());
+    this->reset_actnum(grid.getACTNUM());
+
 
     if (DeckSection::hasREGIONS(deck))
         this->scanREGIONSSection(REGIONSSection(deck));
