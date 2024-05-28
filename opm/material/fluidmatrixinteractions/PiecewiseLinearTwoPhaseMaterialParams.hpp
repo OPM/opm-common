@@ -30,7 +30,6 @@
 #include <algorithm>
 #include <cassert>
 #include <vector>
-
 #include <opm/material/common/EnsureFinalized.hpp>
 
 namespace Opm {
@@ -40,18 +39,34 @@ namespace Opm {
  * \brief Specification of the material parameters for a two-phase material law which
  *        uses a table and piecewise constant interpolation.
  */
-template<class TraitsT>
+template<class TraitsT, class VectorT=std::vector<typename TraitsT::Scalar>>
 class PiecewiseLinearTwoPhaseMaterialParams : public EnsureFinalized
 {
     using Scalar = typename TraitsT::Scalar;
 
 public:
-    using ValueVector = std::vector<Scalar>;
+    using ValueVector = VectorT;
 
     using Traits = TraitsT;
 
     PiecewiseLinearTwoPhaseMaterialParams()
     {
+    }
+
+    PiecewiseLinearTwoPhaseMaterialParams(ValueVector SwPcwnSamples,
+                                            ValueVector pcwnSamples,
+                                            ValueVector SwKrwSamples,
+                                            ValueVector krwSamples,
+                                            ValueVector SwKrnSamples,
+                                            ValueVector krnSamples)
+                                        : SwPcwnSamples_(SwPcwnSamples),
+                                            SwKrwSamples_(SwKrwSamples),
+                                            SwKrnSamples_(SwKrnSamples),
+                                            pcwnSamples_(pcwnSamples),
+                                            krwSamples_(krwSamples),
+                                            krnSamples_(krnSamples)
+    {
+        finalize();
     }
 
     /*!
@@ -64,16 +79,20 @@ public:
 
         // revert the order of the sampling points if they were given
         // in reverse direction.
-        if (SwPcwnSamples_.front() > SwPcwnSamples_.back())
-            swapOrder_(SwPcwnSamples_, pcwnSamples_);
+        // Reverting the order involves swapping which only works for non-consts.
+        // The const expr ensures we can create constant parameter views.
+        using vecElementType = typename ValueVector::value_type;
+        using vecElementTypeNoConst = std::remove_const_t<vecElementType>;
+        if constexpr(std::is_same_v<vecElementType, vecElementTypeNoConst>){
+            if (SwPcwnSamples_.front() > SwPcwnSamples_.back())
+                swapOrder_(SwPcwnSamples_, pcwnSamples_);
 
-        if (SwKrwSamples_.front() > SwKrwSamples_.back())
-            swapOrder_(SwKrwSamples_, krwSamples_);
+            if (SwKrwSamples_.front() > SwKrwSamples_.back())
+                swapOrder_(SwKrwSamples_, krwSamples_);
 
-
-        if (SwKrnSamples_.front() > SwKrnSamples_.back())
-            swapOrder_(SwKrnSamples_, krnSamples_);
-
+            if (SwKrnSamples_.front() > SwKrnSamples_.back())
+                swapOrder_(SwKrnSamples_, krnSamples_);
+        }
     }
 
     /*!
@@ -99,7 +118,7 @@ public:
      *
      * This curve is assumed to depend on the wetting phase saturation
      */
-    const ValueVector& pcnwSamples() const
+    const ValueVector& pcwnSamples() const
     { EnsureFinalized::check(); return pcwnSamples_; }
 
     /*!

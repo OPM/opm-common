@@ -144,12 +144,12 @@ public:
     static Evaluation twoPhaseSatPcnw(const Params& params, const Evaluation& Sw)
     {
         OPM_TIMEFUNCTION_LOCAL();
-        return eval_(params.SwPcwnSamples(), params.pcnwSamples(), Sw);
+        return eval_(params.SwPcwnSamples(), params.pcwnSamples(), Sw);
     }
 
     template <class Evaluation>
     static Evaluation twoPhaseSatPcnwInv(const Params& params, const Evaluation& pcnw)
-    { return eval_(params.pcnwSamples(), params.SwPcwnSamples(), pcnw); }
+    { return eval_(params.pcwnSamples(), params.SwPcwnSamples(), pcnw); }
 
     /*!
      * \brief The saturation-capillary pressure curve
