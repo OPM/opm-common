@@ -395,7 +395,8 @@ public:
          bool allow_xflow,
          bool auto_shutin,
          int pvt_table,
-         GasInflowEquation inflow_eq);
+         GasInflowEquation inflow_eq,
+         bool temp_option = false);
 
     Well(const RestartIO::RstWell& rst_well,
          int report_step,

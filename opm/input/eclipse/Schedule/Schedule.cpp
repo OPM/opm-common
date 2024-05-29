@@ -944,7 +944,8 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                   allowCrossFlow,
                   automaticShutIn,
                   pvt_table,
-                  gas_inflow);
+                  gas_inflow,
+                  this->m_static.m_runspec.temp());
 
         this->addWell( std::move(well) );
 

@@ -468,7 +468,8 @@ Well::Well(const std::string& wname_arg,
            bool allow_xflow,
            bool auto_shutin,
            int pvt_table_,
-           GasInflowEquation inflow_eq):
+           GasInflowEquation inflow_eq,
+           bool temp_option):
     wname(wname_arg),
     group_name(gname),
     init_step(init_step_arg),
@@ -504,6 +505,10 @@ Well::Well(const std::string& wname_arg,
     well_temperature(Metric::TemperatureOffset + ParserKeywords::STCOND::TEMPERATURE::defaultValue),
     well_inj_mult(std::nullopt)
 {
+    if (temp_option) {
+        well_temperature = Metric::TemperatureOffset + 0.0;
+    }
+
     auto p = std::make_shared<WellProductionProperties>(this->unit_system, this->wname);
     p->whistctl_cmode = whistctl_cmode;
     this->updateProduction(p);
@@ -918,14 +923,6 @@ bool Well::handleCOMPSEGS(const DeckKeyword& keyword,
                           const ScheduleGrid& grid,
                           const ParseContext& parseContext,
                           ErrorGuard& errors) {
-    if (!this->segments) {
-        throw OpmInputError{
-                fmt::format("WELSEGS must be specified for well {} "
-                            "before COMPSEGS being input.",
-                            this->name()),
-                keyword.location()
-        };
-    }
     auto [new_connections, new_segments] = Compsegs::processCOMPSEGS(
         keyword,
         *this->connections,
