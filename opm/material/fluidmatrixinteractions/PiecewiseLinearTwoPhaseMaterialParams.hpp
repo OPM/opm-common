@@ -83,7 +83,7 @@ public:
         // in reverse direction.
         // Reverting the order involves swapping which only works for non-consts.
         // The const expr ensures we can create constant parameter views.
-        if constexpr (!std::is_const_v<typename ValueVector::value_type>) {
+        if constexpr (!std::is_const_v<typename ValueVector::value_type> && !std::is_const_v<ValueVector>) {
             if (SwPcwnSamples_.front() > SwPcwnSamples_.back())
                 swapOrder_(SwPcwnSamples_, pcwnSamples_);
 
