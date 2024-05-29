@@ -20,26 +20,25 @@
 #ifndef ACTION_PARSER_HPP
 #define ACTION_PARSER_HPP
 
-#include <vector>
-#include <string>
-
 #include <opm/input/eclipse/Schedule/Action/ASTNode.hpp>
 #include <opm/input/eclipse/Schedule/Action/ActionValue.hpp>
 
-namespace Opm {
+#include <string>
+#include <vector>
 
-namespace Action {
+namespace Opm { namespace Action {
 
-struct ParseNode {
-    ParseNode(TokenType type_arg, const std::string& value_arg) :
-        type(type_arg),
-        value(value_arg)
+struct ParseNode
+{
+    ParseNode(TokenType type_arg, const std::string& value_arg)
+        : type (type_arg)
+        , value(value_arg)
     {}
 
     // Implicit converting constructor.
-    ParseNode(TokenType type_arg) : ParseNode(type_arg, "")
+    ParseNode(TokenType type_arg)
+        : ParseNode(type_arg, "")
     {}
-
 
     TokenType type;
     std::string value;
@@ -47,7 +46,8 @@ struct ParseNode {
 
 
 
-class Parser {
+class Parser
+{
 public:
     static Action::ASTNode parse(const std::vector<std::string>& tokens);
     static TokenType get_type(const std::string& arg);
@@ -70,7 +70,6 @@ private:
     ssize_t current_pos = -1;
 };
 
+}} // namespace Opm::Action
 
-}
-}
-#endif
+#endif // ACTION_PARSER_HPP

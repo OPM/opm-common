@@ -17,26 +17,27 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <algorithm>
-#include <cstring>
-#include <cstdlib>
-#include <stdexcept>
-
-#include <fmt/format.h>
+#include "ActionParser.hpp"
 
 #include <opm/input/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
 
-#include "ActionParser.hpp"
+#include <algorithm>
+#include <cstdlib>
+#include <cstring>
+#include <stdexcept>
+#include <string>
+#include <vector>
 
-namespace Opm {
-namespace Action {
+#include <fmt/format.h>
 
-Parser::Parser(const std::vector<std::string>& tokens_arg) :
-    tokens(tokens_arg)
+namespace Opm { namespace Action {
+
+Parser::Parser(const std::vector<std::string>& tokens_arg)
+    : tokens(tokens_arg)
 {}
 
-
-TokenType Parser::get_type(const std::string& arg) {
+TokenType Parser::get_type(const std::string& arg)
+{
     std::string lower_arg = arg;
     std::for_each(lower_arg.begin(),
                   lower_arg.end(),
@@ -44,51 +45,60 @@ TokenType Parser::get_type(const std::string& arg) {
                       c = std::tolower(static_cast<unsigned char>(c));
                   });
 
-    if (lower_arg == "and")
+    if (lower_arg == "and") {
         return TokenType::op_and;
+    }
 
-    if (lower_arg == "or")
+    if (lower_arg == "or") {
         return TokenType::op_or;
+    }
 
-    if (lower_arg == "(")
+    if (lower_arg == "(") {
         return TokenType::open_paren;
+    }
 
-    if (lower_arg == ")")
+    if (lower_arg == ")") {
         return TokenType::close_paren;
+    }
 
-    if (lower_arg == ">" || lower_arg == ".gt.")
+    if ((lower_arg == ">") || (lower_arg == ".gt.")) {
         return TokenType::op_gt;
+    }
 
-    if (lower_arg == ">=" || lower_arg == ".ge.")
+    if ((lower_arg == ">=") || (lower_arg == ".ge.")) {
         return TokenType::op_ge;
+    }
 
-    if (lower_arg == "<=" || lower_arg == ".le.")
-        return TokenType::op_le;
-
-    if (lower_arg == "<" || lower_arg == ".lt.")
+    if ((lower_arg == "<") || (lower_arg == ".lt.")) {
         return TokenType::op_lt;
+    }
 
-    if (lower_arg == "<=" || lower_arg == ".le.")
+    if ((lower_arg == "<=") || (lower_arg == ".le.")) {
         return TokenType::op_le;
+    }
 
-    if (lower_arg == "=" || lower_arg == ".eq.")
+    if ((lower_arg == "=") || (lower_arg == ".eq.")) {
         return TokenType::op_eq;
+    }
 
-    if (lower_arg == "!=" || lower_arg == ".ne.")
+    if ((lower_arg == "!=") || (lower_arg == ".ne.")) {
         return TokenType::op_ne;
+    }
 
     {
-        char * end_ptr;
+        char* end_ptr = nullptr;
         std::strtod(lower_arg.c_str(), &end_ptr);
-        if (std::strlen(end_ptr) == 0)
+
+        if (std::strlen(end_ptr) == 0) {
             return TokenType::number;
+        }
     }
 
     return TokenType::ecl_expr;
 }
 
-FuncType Parser::get_func(const std::string& arg) {
-
+FuncType Parser::get_func(const std::string& arg)
+{
     if (arg == "YEAR") return FuncType::time;
     if (arg == "MNTH") return FuncType::time_month;
     if (arg == "DAY")  return FuncType::time;
@@ -107,85 +117,100 @@ FuncType Parser::get_func(const std::string& arg) {
     }
 }
 
-
-ParseNode Parser::next() {
+ParseNode Parser::next()
+{
     this->current_pos++;
-    if (static_cast<size_t>(this->current_pos) == this->tokens.size())
+    if (static_cast<size_t>(this->current_pos) == this->tokens.size()) {
         return TokenType::end;
+    }
 
     std::string arg = this->tokens[this->current_pos];
     return ParseNode(get_type(arg), arg);
 }
 
-
-ParseNode Parser::current() const {
-    if (static_cast<size_t>(this->current_pos) == this->tokens.size())
+ParseNode Parser::current() const
+{
+    if (static_cast<size_t>(this->current_pos) == this->tokens.size()) {
         return TokenType::end;
+    }
 
     std::string arg = this->tokens[this->current_pos];
     return ParseNode(get_type(arg), arg);
 }
 
-
-Action::ASTNode Parser::parse_left() {
+ASTNode Parser::parse_left()
+{
     auto current = this->current();
-    if (current.type != TokenType::ecl_expr)
-        throw std::invalid_argument(fmt::format("Expected expression as left hand side "
-                                                "of comparison, but got {} instead.",
-                                                current.value));
+    if (current.type != TokenType::ecl_expr) {
+        throw std::invalid_argument {
+            fmt::format("Expected expression as left hand side "
+                        "of comparison, but got {} instead.",
+                        current.value)
+        };
+    }
 
     std::string func = current.value;
     FuncType func_type = get_func(current.value);
     std::vector<std::string> arg_list;
     current = this->next();
-    while (current.type == TokenType::ecl_expr || current.type == TokenType::number) {
+    while ((current.type == TokenType::ecl_expr) ||
+           (current.type == TokenType::number))
+    {
         arg_list.push_back(current.value);
         current = this->next();
     }
 
-    return Action::ASTNode(TokenType::ecl_expr, func_type, func, arg_list);
+    return ASTNode { TokenType::ecl_expr, func_type, func, arg_list };
 }
 
-Action::ASTNode Parser::parse_op() {
-    auto current = this->current();
-    if (current.type == TokenType::op_gt ||
-        current.type == TokenType::op_ge ||
-        current.type == TokenType::op_lt ||
-        current.type == TokenType::op_le ||
-        current.type == TokenType::op_eq ||
-        current.type == TokenType::op_ne) {
+ASTNode Parser::parse_op()
+{
+    const auto current = this->current();
+
+    if ((current.type == TokenType::op_gt) ||
+        (current.type == TokenType::op_ge) ||
+        (current.type == TokenType::op_lt) ||
+        (current.type == TokenType::op_le) ||
+        (current.type == TokenType::op_eq) ||
+        (current.type == TokenType::op_ne))
+    {
         this->next();
-        return current.type;
+
+        return ASTNode { current.type };
     }
-    return TokenType::error;
+
+    return ASTNode { TokenType::error };
 }
 
-
-Action::ASTNode Parser::parse_right() {
+ASTNode Parser::parse_right()
+{
     auto current = this->current();
     if (current.type == TokenType::number) {
         this->next();
-        return Action::ASTNode( strtod(current.value.c_str(), nullptr) );
+        return ASTNode { strtod(current.value.c_str(), nullptr) };
     }
 
     current = this->current();
-    if (current.type != TokenType::ecl_expr)
-        return TokenType::error;
+    if (current.type != TokenType::ecl_expr) {
+        return ASTNode { TokenType::error };
+    }
 
     std::string func = current.value;
     FuncType func_type = FuncType::none;
     std::vector<std::string> arg_list;
     current = this->next();
-    while (current.type == TokenType::ecl_expr || current.type == TokenType::number) {
+    while ((current.type == TokenType::ecl_expr) ||
+           (current.type == TokenType::number))
+    {
         arg_list.push_back(current.value);
         current = this->next();
     }
-    return Action::ASTNode(TokenType::ecl_expr, func_type, func, arg_list);
+
+    return ASTNode { TokenType::ecl_expr, func_type, func, arg_list };
 }
 
-
-
-Action::ASTNode Parser::parse_cmp() {
+ASTNode Parser::parse_cmp()
+{
     auto current = this->current();
 
     if (current.type == TokenType::open_paren) {
@@ -193,100 +218,122 @@ Action::ASTNode Parser::parse_cmp() {
         auto inner_expr = this->parse_or();
 
         current = this->current();
-        if (current.type != TokenType::close_paren)
-            return TokenType::error;
+        if (current.type != TokenType::close_paren) {
+            return ASTNode { TokenType::error };
+        }
 
         this->next();
-        return inner_expr;
-    } else {
+
+        return ASTNode { inner_expr };
+    }
+    else {
         auto left_node = this->parse_left();
-        if (left_node.type == TokenType::error)
-            return TokenType::error;
+        if (left_node.type == TokenType::error) {
+            return ASTNode { TokenType::error };
+        }
 
         auto op_node = this->parse_op();
-        if (op_node.type == TokenType::error)
-            return TokenType::error;
+        if (op_node.type == TokenType::error) {
+            return ASTNode { TokenType::error };
+        }
 
         auto right_node = this->parse_right();
-        if (right_node.type == TokenType::error)
-            return TokenType::error;
+        if (right_node.type == TokenType::error) {
+            return ASTNode { TokenType::error };
+        }
 
         op_node.add_child(left_node);
         op_node.add_child(right_node);
+
         return op_node;
     }
 }
 
-Action::ASTNode Parser::parse_and() {
+ASTNode Parser::parse_and()
+{
     auto left = this->parse_cmp();
-    if (left.type == TokenType::error)
-        return TokenType::error;
+    if (left.type == TokenType::error) {
+        return ASTNode { TokenType::error };
+    }
 
     auto current = this->current();
     if (current.type == TokenType::op_and) {
-        Action::ASTNode and_node(TokenType::op_and);
+        ASTNode and_node(TokenType::op_and);
         and_node.add_child(left);
 
         while (this->current().type == TokenType::op_and) {
             this->next();
             auto next_cmp = this->parse_cmp();
-            if (next_cmp.type == TokenType::error)
-                return TokenType::error;
+            if (next_cmp.type == TokenType::error) {
+                return ASTNode { TokenType::error };
+            }
 
             and_node.add_child(next_cmp);
         }
+
         return and_node;
     }
 
     return left;
 }
 
-
-Action::ASTNode Parser::parse_or() {
+ASTNode Parser::parse_or()
+{
     auto left = this->parse_and();
-    if (left.type == TokenType::error)
-        return TokenType::error;
+    if (left.type == TokenType::error) {
+        return ASTNode { TokenType::error };
+    }
 
     auto current = this->current();
     if (current.type == TokenType::op_or) {
-        Action::ASTNode or_node(TokenType::op_or);
+        ASTNode or_node(TokenType::op_or);
         or_node.add_child(left);
 
         while (this->current().type == TokenType::op_or) {
             this->next();
             auto next_cmp = this->parse_or();
-            if (next_cmp.type == TokenType::error)
-                return TokenType::error;
+            if (next_cmp.type == TokenType::error) {
+                return ASTNode { TokenType::error };
+            }
 
             or_node.add_child(next_cmp);
         }
+
         return or_node;
     }
 
     return left;
 }
 
-
-Action::ASTNode Parser::parse(const std::vector<std::string>& tokens) {
+ASTNode Parser::parse(const std::vector<std::string>& tokens)
+{
     Parser parser(tokens);
+
     auto start_node = parser.next();
-    if (start_node.type == TokenType::end)
-        return ASTNode( start_node.type );
+    if (start_node.type == TokenType::end) {
+        return ASTNode { start_node.type };
+    }
 
     auto tree = parser.parse_or();
 
-    if (tree.type == TokenType::error)
-        throw std::invalid_argument("Failed to parse ACTIONX condition.");
+    if (tree.type == TokenType::error) {
+        throw std::invalid_argument {
+            "Failed to parse ACTIONX condition."
+        };
+    }
 
     auto current = parser.current();
     if (current.type != TokenType::end) {
-        size_t index = parser.current_pos;
-        throw std::invalid_argument("Extra unhandled data starting with token[" + std::to_string(index) + "] = " + current.value+
-                                    " in ACTIONX condition.");
+        const auto index = parser.current_pos;
+
+        throw std::invalid_argument {
+            fmt::format("Extra unhandled data starting with "
+                        "token[{}] = {} in ACTIONX condition",
+                        index, current.value)
+        };
     }
 
     return tree;
 }
-}
-}
 
+}} // namespace Opm::Action
