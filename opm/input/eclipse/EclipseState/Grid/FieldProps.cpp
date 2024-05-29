@@ -1335,6 +1335,12 @@ const std::string& FieldProps::canonical_fipreg_name(const std::string& fipreg) 
 */
 std::vector<int> FieldProps::actnum() {
     auto actnum = this->m_actnum;
+
+    // Avoid de-activating all cells if PORO has not yet been read (typically in tests)
+    if (!this->has<double>("PORO")) {
+        return actnum;
+    }
+
     const auto& deck_actnum = this->init_get<int>("ACTNUM");
 
     std::vector<int> global_map(this->active_size);
