@@ -21,14 +21,16 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include <opm/input/eclipse/Python/Python.hpp>
-
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
+#include <opm/input/eclipse/EclipseState/Runspec.hpp>
+
+#include <opm/input/eclipse/Python/Python.hpp>
 
 #include <opm/input/eclipse/Schedule/Action/Actions.hpp>
 #include <opm/input/eclipse/Schedule/Action/State.hpp>
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 #include <opm/input/eclipse/Schedule/SummaryState.hpp>
+#include <opm/input/eclipse/Schedule/UDQ/UDQParams.hpp>
 #include <opm/input/eclipse/Schedule/Well/Well.hpp>
 
 #include <opm/common/utility/TimeService.hpp>
@@ -138,7 +140,7 @@ BOOST_AUTO_TEST_CASE(PYACTION)
     auto ecl_state = EclipseState(deck);
     auto schedule = Schedule(deck, ecl_state, python);
 
-    SummaryState st(TimeService::now());
+    SummaryState st(TimeService::now(), ecl_state.runspec().udqParams().undefinedValue());
     const auto& pyaction_kw = deck.get<ParserKeywords::PYACTION>().front();
     const std::string& fname = pyaction_kw.getRecord(1).getItem(0).get<std::string>(0);
     Action::PyAction py_action(python, "WCLOSE", Action::PyAction::RunCount::unlimited, deck.makeDeckPath(fname));

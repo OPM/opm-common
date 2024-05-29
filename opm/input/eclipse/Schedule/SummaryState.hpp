@@ -75,8 +75,6 @@ public:
 
     explicit SummaryState(time_point sim_start_arg, double udqUndefined);
 
-    explicit SummaryState(time_point sim_start_arg);
-
     // The std::time_t constructor is only for export to Python
     explicit SummaryState(std::time_t sim_start_arg);
 

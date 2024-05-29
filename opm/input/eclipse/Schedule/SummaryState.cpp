@@ -42,6 +42,47 @@
 
 namespace {
 
+    bool is_udq(std::string_view keyword)
+    {
+        // Does 'keyword' match one of the patterns
+        //   AU*, BU*, CU*, FU*, GU*, RU*, SU*, or WU*?
+        using sz_t = std::string_view::size_type;
+
+        return (keyword.size() > sz_t{1})
+            && (keyword[1] == 'U')
+            && (keyword.find_first_of("WGFCRBSA") == sz_t{0});
+    }
+
+    bool is_well_udq(std::string_view keyword)
+    {
+        // Does 'keyword' match the pattern
+        //   WU*?
+        using sz_t = std::string_view::size_type;
+
+        return (keyword.size() > sz_t{1})
+            && (keyword.compare(0, 2, "WU") == 0);
+    }
+
+    bool is_group_udq(std::string_view keyword)
+    {
+        // Does 'keyword' match the pattern
+        //   GU*?
+        using sz_t = std::string_view::size_type;
+
+        return (keyword.size() > sz_t{1})
+            && (keyword.compare(0, 2, "GU") == 0);
+    }
+
+    bool is_segment_udq(std::string_view keyword)
+    {
+        // Does 'keyword' match the pattern
+        //   SU*?
+        using sz_t = std::string_view::size_type;
+
+        return (keyword.size() > sz_t{1})
+            && (keyword.compare(0, 2, "SU") == 0);
+    }
+
     bool is_total(const std::string& key)
     {
         static const std::vector<std::string> totals = {
@@ -174,10 +215,6 @@ namespace Opm
         this->update_elapsed(0);
     }
 
-    SummaryState::SummaryState(const time_point sim_start_arg)
-        : SummaryState { sim_start_arg, std::numeric_limits<double>::lowest() }
-    {}
-
     SummaryState::SummaryState(const std::time_t sim_start_arg)
         : SummaryState { TimeService::from_time_t(sim_start_arg),
                          std::numeric_limits<double>::lowest() }
@@ -216,29 +253,30 @@ namespace Opm
 
     bool SummaryState::has(const std::string& key) const
     {
-        return this->values.find(key) != this->values.end();
+        return (this->values.find(key) != this->values.end()) || is_udq(key);
     }
 
     bool SummaryState::has_well_var(const std::string& well,
                                     const std::string& var) const
     {
-        return has_var(this->well_values, var, well);
+        return has_var(this->well_values, var, well)
+            || is_well_udq(var);
     }
 
     bool SummaryState::has_well_var(const std::string& var) const
     {
-        return this->well_values.count(var) != 0;
+        return (this->well_values.count(var) != 0) || is_well_udq(var);
     }
 
     bool SummaryState::has_group_var(const std::string& group,
                                      const std::string& var) const
     {
-        return has_var(this->group_values, var, group);
+        return has_var(this->group_values, var, group) || is_group_udq(var);
     }
 
     bool SummaryState::has_group_var(const std::string& var) const
     {
-        return this->group_values.count(var) != 0;
+        return (this->group_values.count(var) != 0) || is_group_udq(var);
     }
 
     bool SummaryState::has_conn_var(const std::string& well,
@@ -276,7 +314,8 @@ namespace Opm
             return false;
         }
 
-        return wellPos->second.find(segment) != wellPos->second.end();
+        return (wellPos->second.find(segment) != wellPos->second.end())
+            || is_segment_udq(var);
     }
 
     bool SummaryState::has_region_var(const std::string& regSet,
@@ -459,6 +498,10 @@ namespace Opm
             return iter->second;
         }
 
+        if (is_udq(key)) {
+            return this->udq_undefined;
+        }
+
         throw std::out_of_range {
             fmt::format("Summary vector {} is unknown", key)
         };
@@ -472,6 +515,10 @@ namespace Opm
             return iter->second;
         }
 
+        if (is_udq(key)) {
+            return this->udq_undefined;
+        }
+
         return default_value;
     }
 
@@ -483,21 +530,31 @@ namespace Opm
     double SummaryState::get_well_var(const std::string& well,
                                       const std::string& var) const
     {
+        const auto use_udq_fallback = is_well_udq(var);
+
         auto varPos = this->well_values.find(var);
         if (varPos == this->well_values.end()) {
+            if (! use_udq_fallback) {
                 throw std::invalid_argument {
                     fmt::format("Summary vector {} does not "
                                 "exist at the well level", var)
                 };
+            }
+
+            return this->udq_undefined;
         }
 
         auto wellPos = varPos->second.find(well);
         if (wellPos == varPos->second.end()) {
+            if (! use_udq_fallback) {
                 throw std::invalid_argument {
                     fmt::format("Summary vector {} does not "
                                 "exist at the well level for well {}",
                                 var, well)
                 };
+            }
+
+            return this->udq_undefined;
         }
 
         return wellPos->second;
@@ -506,21 +563,31 @@ namespace Opm
     double SummaryState::get_group_var(const std::string& group,
                                        const std::string& var) const
     {
+        const auto use_udq_fallback = is_group_udq(var);
+
         auto varPos = this->group_values.find(var);
         if (varPos == this->group_values.end()) {
+            if (! use_udq_fallback) {
                 throw std::invalid_argument {
                     fmt::format("Summary vector {} does not "
                                 "exist at the group level", var)
                 };
+            }
+
+            return this->udq_undefined;
         }
 
         auto groupPos = varPos->second.find(group);
         if (groupPos == varPos->second.end()) {
+            if (! use_udq_fallback) {
                 throw std::invalid_argument {
                     fmt::format("Summary vector {} does not "
                                 "exist at the group level for group {}",
                                 var, group)
                 };
+            }
+
+            return this->udq_undefined;
         }
 
         return groupPos->second;
@@ -565,32 +632,46 @@ namespace Opm
                                          const std::string& var,
                                          const std::size_t  segment) const
     {
+        const auto use_udq_fallback = is_segment_udq(var);
+
         auto varPos = this->segment_values.find(var);
         if (varPos == this->segment_values.end()) {
+            if (! use_udq_fallback) {
                 throw std::invalid_argument {
                     fmt::format("Summary vector {} does not "
                                 "exist at the segment level", var)
                 };
+            }
+
+            return this->udq_undefined;
         }
 
         auto wellPos = varPos->second.find(well);
         if (wellPos == varPos->second.end()) {
+            if (! use_udq_fallback) {
                 throw std::invalid_argument {
                     fmt::format("Summary vector {} does not "
                                 "exist at the segment "
                                 "level for well {}",
                                 var, well)
                 };
+            }
+
+            return this->udq_undefined;
         }
 
         auto segPos = wellPos->second.find(segment);
         if (segPos == wellPos->second.end()) {
+            if (! use_udq_fallback) {
                 throw std::invalid_argument {
                     fmt::format("Summary vector {} does not "
                                 "exist for segment {} "
                                 "in well {}",
                                 var, segment, well)
                 };
+            }
+
+            return this->udq_undefined;
         }
 
         return segPos->second;
@@ -635,7 +716,9 @@ namespace Opm
                                       const std::string& var,
                                       const double       default_value) const
     {
-        const auto fallback = default_value;
+        const auto fallback = is_well_udq(var)
+            ? this->udq_undefined
+            : default_value;
 
         auto varPos = this->well_values.find(var);
         if (varPos == this->well_values.end()) {
@@ -652,7 +735,9 @@ namespace Opm
                                        const std::string& var,
                                        const double       default_value) const
     {
-        const auto fallback = default_value;
+        const auto fallback = is_group_udq(var)
+            ? this->udq_undefined
+            : default_value;
 
         auto varPos = this->group_values.find(var);
         if (varPos == this->group_values.end()) {
