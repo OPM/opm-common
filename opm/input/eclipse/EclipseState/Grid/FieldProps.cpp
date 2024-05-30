@@ -535,6 +535,19 @@ FieldProps::FieldProps(const Deck& deck, const Phases& phases, EclipseGrid& grid
     if (DeckSection::hasREGIONS(deck))
         this->scanREGIONSSection(REGIONSSection(deck));
 
+    // Update PVTNUM/SATNUM for numerical aquifer cells
+    const std::map<size_t, std::array<int, 2>>& aqcell_tabnums = grid.getAquiferCellTabnums();
+    const bool has_pvtnum = this->int_data.count("PVTNUM") != 0;
+    const bool has_satnum = this->int_data.count("SATNUM") != 0;
+
+    std::vector<int>* pvtnum = has_pvtnum ? &(this->int_data["PVTNUM"].data) : 0;
+    std::vector<int>* satnum = has_satnum ? &(this->int_data["SATNUM"].data) : 0;
+    for (const auto& it : aqcell_tabnums) {
+        const auto aix = grid.activeIndex(it.first);
+        if (has_pvtnum) (*pvtnum)[aix] = std::max(it.second[0], (*pvtnum)[aix]);
+        if (has_satnum) (*satnum)[aix] = std::max(it.second[1], (*satnum)[aix]);
+    }
+
     if (DeckSection::hasPROPS(deck))
         this->scanPROPSSection(PROPSSection(deck));
 

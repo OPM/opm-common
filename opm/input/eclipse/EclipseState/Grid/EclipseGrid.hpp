@@ -197,6 +197,9 @@ namespace Opm {
         const std::vector<double>& getZCORN() const;
         const std::vector<int>& getACTNUM( ) const;
 
+
+        const std::map<size_t, std::array<int,2>>& getAquiferCellTabnums() const;
+
         /*
           The fixupZCORN method is run as part of constructiong the grid. This will adjust the
           z-coordinates to ensure that cells do not overlap. The return value is the number of
@@ -261,8 +264,9 @@ namespace Opm {
         std::vector<int> m_global_to_active;
         // Numerical aquifer cells, needs to be active
         std::unordered_set<size_t> m_aquifer_cells;
-        // Keep track of aquifer cell depths
+        // Keep track of aquifer cell depths and (pvtnum,satnum)
         std::map<size_t, double> m_aquifer_cell_depths;
+        std::map<size_t, std::array<int,2>> m_aquifer_cell_tabnums;
 
         // Radial grids need this for volume calculations.
         std::optional<std::vector<double>> m_thetav;
