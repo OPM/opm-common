@@ -61,7 +61,7 @@ BOOST_AUTO_TEST_CASE(AICDWellTest)
     const auto dir_x = Opm::Connection::Direction::X;
     const auto kind = Opm::Connection::CTFKind::DeckValue;
 
-    const Opm::EclipseGrid grid { 20,20,20, 1.0, 1.0, 25.0, 2500.0 };
+    Opm::EclipseGrid grid { 20,20,20, 1.0, 1.0, 25.0, 2500.0 };
 
     const auto depth = 0.0;
     const auto state = Opm::Connection::State::OPEN;
@@ -231,7 +231,7 @@ BOOST_AUTO_TEST_CASE(MultisegmentWellTest)
     const auto dir_z = Opm::Connection::Direction::Z;
     const auto dir_x = Opm::Connection::Direction::X;
     const auto kind = Opm::Connection::CTFKind::DeckValue;
-    const Opm::EclipseGrid grid { 20,20,20, 1.0, 1.0, 25.0, 2500.0 };
+    Opm::EclipseGrid grid { 20,20,20, 1.0, 1.0, 25.0, 2500.0 };
 
     const auto depth = 0.0;
     const auto state = Opm::Connection::State::OPEN;
@@ -411,7 +411,7 @@ BOOST_AUTO_TEST_CASE(WrongDistanceCOMPSEGS)
     const auto dir_x = Opm::Connection::Direction::X;
     const auto kind = Opm::Connection::CTFKind::DeckValue;
 
-    const Opm::EclipseGrid grid { 20,20,20, 1.0, 1.0, 25., 2500.0 };
+    Opm::EclipseGrid grid { 20,20,20, 1.0, 1.0, 25., 2500.0 };
 
     const auto depth = 0.0;
     const auto state = Opm::Connection::State::OPEN;
@@ -493,7 +493,7 @@ BOOST_AUTO_TEST_CASE(NegativeDepthCOMPSEGS)
     const auto dir_x = Opm::Connection::Direction::X;
     const auto kind = Opm::Connection::CTFKind::DeckValue;
 
-    const Opm::EclipseGrid grid { 20,20,20, 1.0, 1.0, 25.0, 2500.0 };
+    Opm::EclipseGrid grid { 20,20,20, 1.0, 1.0, 25.0, 2500.0 };
 
     const auto depth = 0.0;
     const auto state = Opm::Connection::State::OPEN;
@@ -574,7 +574,7 @@ BOOST_AUTO_TEST_CASE(testwsegvalv)
     const auto dir_z = Opm::Connection::Direction::Z;
     const auto dir_x = Opm::Connection::Direction::X;
     const auto kind = Opm::Connection::CTFKind::DeckValue;
-    const Opm::EclipseGrid grid { 20,20,20, 1.0, 1.0, 25.0, 2500.0 };
+    Opm::EclipseGrid grid { 20,20,20, 1.0, 1.0, 25.0, 2500.0 };
 
     const auto depth = 0.0;
     const auto state = Opm::Connection::State::OPEN;

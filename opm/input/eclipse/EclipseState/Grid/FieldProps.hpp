@@ -132,7 +132,7 @@ namespace ALIAS {
 
 namespace GRID {
 static const std::unordered_map<std::string, keyword_info<double>> double_keywords = {{"DISPERC",keyword_info<double>{}.unit_string("Length")},
-                                                                                      {"MINPVV",  keyword_info<double>{}.unit_string("ReservoirVolume").global_kw(true)},
+                                                                                      {"MINPVV",  keyword_info<double>{}.init(0.0).unit_string("ReservoirVolume").global_kw(true)},
                                                                                       {"MULTPV",  keyword_info<double>{}.init(1.0).mult(true)},
                                                                                       {"NTG",     keyword_info<double>{}.init(1.0)},
                                                                                       {"PORO",    keyword_info<double>{}.distribute_top(true)},
@@ -389,7 +389,7 @@ public:
     };
 
     /// Normal constructor for FieldProps.
-    FieldProps(const Deck& deck, const Phases& phases, const EclipseGrid& grid, const TableManager& table_arg);
+    FieldProps(const Deck& deck, const Phases& phases, EclipseGrid& grid, const TableManager& table_arg);
 
     /// Special case constructor used to process ACTNUM only.
     FieldProps(const Deck& deck, const EclipseGrid& grid);

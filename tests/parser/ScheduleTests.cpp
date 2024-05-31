@@ -111,7 +111,7 @@ namespace {
     {
         const auto deck = Parser{}.parseString(deck_string);
 
-        const EclipseGrid grid(10, 10, 10);
+        EclipseGrid grid(10, 10, 10);
         const TableManager table (deck);
         const FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
         const Runspec runspec (deck);
@@ -2753,7 +2753,7 @@ COMPDAT
 END
 )");
 
-    const EclipseGrid grid(10,10,10);
+    EclipseGrid grid(10,10,10);
     const TableManager table (deck);
     const FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
     const Runspec runspec (deck);
@@ -2806,7 +2806,7 @@ COMPDAT
 /
 )");
 
-    const EclipseGrid grid(10, 10, 10);
+    EclipseGrid grid(10, 10, 10);
     const TableManager table (deck);
     const FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
     const Runspec runspec (deck);
@@ -2876,7 +2876,7 @@ COMPDAT
 /
 )");
 
-    const EclipseGrid grid(10,10,10);
+    EclipseGrid grid(10,10,10);
     const TableManager table (deck);
     const FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
     const Runspec runspec (deck);
@@ -2972,7 +2972,7 @@ WELOPEN
     constexpr auto open = Connection::State::OPEN;
     constexpr auto shut = Connection::State::SHUT;
 
-    const EclipseGrid grid(10,10,10);
+    EclipseGrid grid(10,10,10);
     const TableManager table (deck);
     const FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
     const Runspec runspec (deck);
@@ -3091,7 +3091,7 @@ WELOPEN
     constexpr auto open = Connection::State::OPEN;
     constexpr auto shut = Connection::State::SHUT;
 
-    const EclipseGrid grid(10, 10, 10);
+    EclipseGrid grid(10, 10, 10);
     const TableManager table (deck );
     const FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
     const Runspec runspec (deck);

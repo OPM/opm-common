@@ -490,7 +490,7 @@ AQUCON
 BOOST_AUTO_TEST_CASE(AQUNNC_Handling_OneAquCell)
 {
     const auto deck = aquNNCDeck_OneAquCell();
-    const auto grid = Opm::EclipseGrid { deck };
+    auto grid = Opm::EclipseGrid { deck };
     const auto fp   = Opm::FieldPropsManager {
         deck, Opm::Phases { true, true, true },
         grid, Opm::TableManager { deck }
@@ -628,7 +628,7 @@ BOOST_AUTO_TEST_CASE(AQUNNC_Handling_OneAquCell)
 BOOST_AUTO_TEST_CASE(AQUNNC_Handling_ThreeAquCells)
 {
     const auto deck = aquNNCDeck_ThreeAquCells();
-    const auto grid = Opm::EclipseGrid { deck };
+    auto grid = Opm::EclipseGrid { deck };
     const auto fp   = Opm::FieldPropsManager {
         deck, Opm::Phases { true, true, true },
         grid, Opm::TableManager { deck }

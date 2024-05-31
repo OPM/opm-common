@@ -1443,7 +1443,7 @@ BOOST_AUTO_TEST_CASE( WCONINJE )
 {
     const std::string wconprodFile(pathprefix() + "WellWithWildcards/WCONINJE1");
     const auto deck = Parser{}.parseFile(wconprodFile);
-    const EclipseGrid grid(30,30,30);
+    EclipseGrid grid(30,30,30);
     const TableManager table (deck);
     const FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
     const Runspec runspec(deck);

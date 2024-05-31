@@ -1760,6 +1760,10 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
         return this->getCellDepth(globalIndex);
     }
 
+    const std::map<size_t, std::array<int,2>>& EclipseGrid::getAquiferCellTabnums() const {
+        return m_aquifer_cell_tabnums;
+    }
+
     const std::vector<int>& EclipseGrid::getACTNUM( ) const {
 
         return m_actnum;
@@ -1969,6 +1973,11 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
 
                 if (! record.getItem<AQUNUM::DEPTH>().defaultApplied(0))
                     this->m_aquifer_cell_depths.insert_or_assign(global_index, record.getItem<AQUNUM::DEPTH>().getSIDouble(0));
+
+                // Create map global_index -> (PVTNUM, SATNUM) to allow QC during FieldProps creation
+                const int pvtnum = record.getItem<AQUNUM::PVT_TABLE_NUM>().defaultApplied(0) ? 0 : record.getItem<AQUNUM::PVT_TABLE_NUM>().get<int>(0);
+                const int satnum = record.getItem<AQUNUM::SAT_TABLE_NUM>().defaultApplied(0) ? 0 : record.getItem<AQUNUM::SAT_TABLE_NUM>().get<int>(0);
+                this->m_aquifer_cell_tabnums.insert_or_assign(global_index, std::array<int,2>{pvtnum, satnum});
             }
         }
     }

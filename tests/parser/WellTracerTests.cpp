@@ -157,7 +157,7 @@ BOOST_AUTO_TEST_CASE(TestNoTracer)
 {
     const auto deck = createDeckWithOutTracer();
 
-    const EclipseGrid grid(10,10,10);
+    EclipseGrid grid(10,10,10);
     const TableManager table (deck);
     const FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
     const Runspec runspec (deck);
@@ -171,7 +171,7 @@ BOOST_AUTO_TEST_CASE(TestDynamicWTRACER)
 {
     const auto deck = createDeckWithDynamicWTRACER();
 
-    const EclipseGrid grid(10,10,10);
+    EclipseGrid grid(10,10,10);
     const TableManager table (deck);
     const FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
     const Runspec runspec (deck);
@@ -197,7 +197,7 @@ BOOST_AUTO_TEST_CASE(TestDynamicWTRACER)
 BOOST_AUTO_TEST_CASE(TestTracerInProducerTHROW)
 {
     const auto deck = createDeckWithTracerInProducer();
-    const EclipseGrid grid(10,10,10);
+    EclipseGrid grid(10,10,10);
     const TableManager table (deck);
     const FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
     const Runspec runspec (deck);

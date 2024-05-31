@@ -50,7 +50,7 @@ Schedule create_schedule(const std::string& deck_string)
 {
     const auto deck = Parser{}.parseString(deck_string);
 
-    const EclipseGrid grid(10, 10, 10);
+    EclipseGrid grid(10, 10, 10);
     const TableManager table(deck);
     const FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
     const Runspec runspec(deck);

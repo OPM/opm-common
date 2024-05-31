@@ -508,7 +508,7 @@ namespace {
     {
         const auto deck = Opm::Parser{}.parseString(deck_string);
 
-        const Opm::EclipseGrid grid(10, 10, 10);
+        Opm::EclipseGrid grid(10, 10, 10);
         const Opm::TableManager table(deck);
         const Opm::FieldPropsManager fp(deck, Opm::Phases{true, true, true}, grid, table);
         const Opm::Runspec runspec(deck);

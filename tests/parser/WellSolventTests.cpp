@@ -201,7 +201,7 @@ END
 BOOST_AUTO_TEST_CASE(TestNoSolvent)
 {
     const auto deck = createDeckWithOutSolvent();
-    const EclipseGrid grid(10,10,10);
+    EclipseGrid grid(10,10,10);
     const TableManager table (deck);
     const FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
     const Runspec runspec(deck);
@@ -212,7 +212,7 @@ BOOST_AUTO_TEST_CASE(TestNoSolvent)
 
 BOOST_AUTO_TEST_CASE(TestGasInjector) {
     const auto deck = createDeckWithGasInjector();
-    const EclipseGrid grid(10,10,10);
+    EclipseGrid grid(10,10,10);
     const TableManager table (deck);
     const FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
     const Runspec runspec(deck);
@@ -224,7 +224,7 @@ BOOST_AUTO_TEST_CASE(TestGasInjector) {
 BOOST_AUTO_TEST_CASE(TestDynamicWSOLVENT)
 {
     const auto deck = createDeckWithDynamicWSOLVENT();
-    const EclipseGrid grid(10,10,10);
+    EclipseGrid grid(10,10,10);
     const TableManager table (deck);
     const FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
     const Runspec runspec(deck);
@@ -247,7 +247,7 @@ BOOST_AUTO_TEST_CASE(TestDynamicWSOLVENT)
 BOOST_AUTO_TEST_CASE(TestOilInjector)
 {
     const auto deck = createDeckWithOilInjector();
-    const EclipseGrid grid(10,10,10);
+    EclipseGrid grid(10,10,10);
     const TableManager table (deck);
     const FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
     const Runspec runspec(deck);
@@ -258,7 +258,7 @@ BOOST_AUTO_TEST_CASE(TestOilInjector)
 BOOST_AUTO_TEST_CASE(TestWaterInjector)
 {
     const auto deck = createDeckWithWaterInjector();
-    const EclipseGrid grid(10,10,10);
+    EclipseGrid grid(10,10,10);
     const TableManager table ( deck );
     const FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
     const Runspec runspec(deck);

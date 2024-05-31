@@ -152,8 +152,6 @@ namespace Opm {
         this->reportNumberOfActivePhases();
 
         this->conveyNumericalAquiferEffects();
-        this->m_inputGrid.resetACTNUM(this->field_props.actnum());
-        this->field_props.reset_actnum(this->getInputGrid().getACTNUM());
         if (field_props.has_double("MINPVV")) {
             this->m_inputGrid.setMINPVV(field_props.get_global_double("MINPVV"));
             field_props.deleteMINPVV();
