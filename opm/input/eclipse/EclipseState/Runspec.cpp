@@ -772,12 +772,14 @@ Runspec::Runspec(const Deck& deck)
 Runspec Runspec::serializationTestObject()
 {
     Runspec result;
+    result.m_start_time = 1234;
     result.active_phases = Phases::serializationTestObject();
     result.m_tabdims = Tabdims::serializationTestObject();
     result.m_regdims = Regdims::serializationTestObject();
     result.endscale = EndpointScaling::serializationTestObject();
     result.welldims = Welldims::serializationTestObject();
     result.wsegdims = WellSegmentDims::serializationTestObject();
+    result.netwrkdims = NetworkDims::serializationTestObject();
     result.aquiferdims = AquiferDimensions::serializationTestObject();
     result.udq_params = UDQParams::serializationTestObject();
     result.hystpar = EclHysterConfig::serializationTestObject();
@@ -916,12 +918,16 @@ const UDQParams& Runspec::udqParams() const noexcept
 
 bool Runspec::rst_cmp(const Runspec& full_spec, const Runspec& rst_spec)
 {
-    return full_spec.phases() == rst_spec.phases() &&
+    return
+        // full_spec.start_time() == rst_spec.start_time() &&  // Can be different between base and restart.
+        full_spec.phases() == rst_spec.phases() &&
         full_spec.tabdims() == rst_spec.tabdims() &&
         full_spec.regdims() == rst_spec.regdims() &&
         full_spec.endpointScaling() == rst_spec.endpointScaling() &&
         full_spec.wellSegmentDimensions() == rst_spec.wellSegmentDimensions() &&
+        full_spec.networkDimensions() == rst_spec.networkDimensions() &&
         full_spec.aquiferDimensions() == rst_spec.aquiferDimensions() &&
+        // full_spec.udqParams() == rst_spec.udqParams() &&   // Can be different between base and restart.
         full_spec.hysterPar() == rst_spec.hysterPar() &&
         full_spec.actdims() == rst_spec.actdims() &&
         full_spec.saturationFunctionControls() == rst_spec.saturationFunctionControls() &&
@@ -934,18 +940,21 @@ bool Runspec::rst_cmp(const Runspec& full_spec, const Runspec& rst_spec)
         full_spec.m_h2storage == rst_spec.m_h2storage &&
         full_spec.m_micp == rst_spec.m_micp &&
         full_spec.m_mech == rst_spec.m_mech &&
-        Welldims::rst_cmp(full_spec.wellDimensions(), rst_spec.wellDimensions());
+        Welldims::rst_cmp(full_spec.wellDimensions(), rst_spec.wellDimensions()); // Can be partially different between base and restart.
 }
 
 bool Runspec::operator==(const Runspec& data) const
 {
-    return (this->phases() == data.phases())
+    return (this->start_time() == data.start_time())
+        && (this->phases() == data.phases())
         && (this->tabdims() == data.tabdims())
         && (this->regdims() == data.regdims())
         && (this->endpointScaling() == data.endpointScaling())
         && (this->wellDimensions() == data.wellDimensions())
         && (this->wellSegmentDimensions() == data.wellSegmentDimensions())
+        && (this->networkDimensions() == data.networkDimensions())
         && (this->aquiferDimensions() == data.aquiferDimensions())
+        && (this->udqParams() == data.udqParams())
         && (this->hysterPar() == data.hysterPar())
         && (this->actdims() == data.actdims())
         && (this->saturationFunctionControls() == data.saturationFunctionControls())
