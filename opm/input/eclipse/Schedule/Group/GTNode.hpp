@@ -20,15 +20,18 @@
 #ifndef GROUPTREE2
 #define GROUPTREE2
 
-#include <optional>
-#include <vector>
-
 #include <opm/input/eclipse/Schedule/Group/Group.hpp>
 #include <opm/input/eclipse/Schedule/Well/Well.hpp>
 
+#include <cstddef>
+#include <optional>
+#include <string>
+#include <vector>
+
 namespace Opm {
 
-class GTNode {
+class GTNode
+{
 public:
     GTNode(const Group& group, std::size_t level, const std::optional<std::string>& parent_name);
 
@@ -43,17 +46,18 @@ public:
     const Group& group() const;
     std::size_t level() const;
     std::vector<const GTNode*> all_nodes() const;
+
 private:
-    const Group m_group;
-    std::size_t m_level;
-    std::optional<std::string> m_parent_name;
-    /*
-      Class T with a stl container <T> - supposedly undefined behavior before
-      C++17 - but it compiles without warnings.
-    */
-    std::vector<GTNode> m_child_groups;
-    std::vector<Well> m_wells;
+    Group m_group;
+    std::size_t m_level{};
+    std::optional<std::string> m_parent_name {std::nullopt};
+
+    // Class T with a stl container <T> - supposedly undefined behavior
+    // before C++17 - but it compiles without warnings.
+    std::vector<GTNode> m_child_groups{};
+    std::vector<Well> m_wells{};
 };
 
-}
-#endif
+} // namespace Opm
+
+#endif // GROUPTREE2
