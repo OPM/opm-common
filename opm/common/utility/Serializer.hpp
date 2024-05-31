@@ -314,6 +314,8 @@ protected:
                 T res{};
                 (*this)(res);
                 const_cast<std::optional<T>&>(data) = res;
+            } else {
+                const_cast<std::optional<T>&>(data) = std::nullopt;
             }
         } else {
             (*this)(data.has_value());
