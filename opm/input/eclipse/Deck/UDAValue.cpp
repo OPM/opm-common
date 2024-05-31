@@ -51,13 +51,11 @@ bool is_udq(const std::string& keyword)
 namespace Opm {
 
 UDAValue::UDAValue(double value):
-    numeric_value(true),
     double_value(value)
 {
 }
 
 UDAValue::UDAValue(double value, const Dimension& dim_):
-    numeric_value(true),
     double_value(value),
     dim(dim_)
 {
@@ -73,7 +71,6 @@ UDAValue::UDAValue() :
 {}
 
 UDAValue::UDAValue(const std::string& value):
-    numeric_value(false),
     string_value(value)
 {
     if (! is_udq(value)) {
@@ -83,7 +80,6 @@ UDAValue::UDAValue(const std::string& value):
 }
 
 UDAValue::UDAValue(const std::string& value, const Dimension& dim_):
-    numeric_value(false),
     string_value(value),
     dim(dim_)
 {
@@ -96,7 +92,6 @@ UDAValue::UDAValue(const std::string& value, const Dimension& dim_):
 UDAValue UDAValue::serializationTestObject()
 {
     UDAValue result;
-    result.numeric_value = true;
     result.double_value = 1.0;
     result.string_value = "test";
     result.dim = Dimension::serializationTestObject();
@@ -106,7 +101,7 @@ UDAValue UDAValue::serializationTestObject()
 
 
 void UDAValue::assert_numeric() const {
-    if (!this->numeric_value) {
+    if (!this->is_numeric()) {
         std::string msg = fmt::format("Internal error: The support for use of UDQ/UDA is not complete in opm/flow. The string: '{}' must be numeric", this->string_value);
         this->assert_numeric(msg);
     }
@@ -114,7 +109,7 @@ void UDAValue::assert_numeric() const {
 
 
 void UDAValue::assert_numeric(const std::string& error_msg) const {
-    if (this->numeric_value)
+    if (this->is_numeric())
         return;
 
     throw std::invalid_argument(error_msg);
@@ -125,44 +120,43 @@ double UDAValue::epsilonLimit() const {
 
 template<>
 bool UDAValue::is<double>() const {
-    return this->numeric_value;
+    return this->is_numeric();
 }
 
 
 template<>
 bool UDAValue::is<std::string>() const {
-  return !this->numeric_value;
+  return !this->is_numeric();
 }
 
 
 template<>
 double UDAValue::get() const {
     this->assert_numeric();
-    return this->double_value;
+    return *this->double_value;
 }
 
 
 double UDAValue::getSI() const {
     this->assert_numeric();
-    return this->dim.convertRawToSi(this->double_value);
+    return this->dim.convertRawToSi(*this->double_value);
 }
 
 
 void UDAValue::update(double value) {
     this->double_value = value;
-    this->numeric_value = true;
 }
 
 void UDAValue::update(const std::string& value) {
+    this->double_value = std::nullopt;
     this->string_value = value;
-    this->numeric_value = false;
 }
 
 
 
 template<>
 std::string UDAValue::get() const {
-    if (!this->numeric_value)
+    if (!this->is_numeric())
         return this->string_value;
 
     throw std::invalid_argument("UDAValue does not hold a string value");
@@ -179,14 +173,11 @@ const Dimension& UDAValue::get_dim() const {
 
 
 bool UDAValue::operator==(const UDAValue& other) const {
-    if (this->numeric_value != other.numeric_value)
+    if (this->double_value != other.double_value)
         return false;
 
     if (this->dim != other.dim)
         return false;
-
-    if (this->numeric_value)
-        return (this->double_value == other.double_value);
 
     return this->string_value == other.string_value;
 }
@@ -207,16 +198,15 @@ std::ostream& operator<<( std::ostream& stream, const UDAValue& uda_value ) {
 void UDAValue::update_value(const UDAValue& other) {
     if (other.is<double>()) {
         this->double_value = other.get<double>();
-        this->numeric_value = true;
     } else {
         this->string_value = other.get<std::string>();
-        this->numeric_value = false;
+        this->double_value = std::nullopt;
     }
 }
 
 void UDAValue::operator*=(double factor) {
     if (this->is<double>())
-        this->double_value *=factor;
+        (*this->double_value) *=factor;
     else
         throw std::logic_error(fmt::format("Can not multiply UDA: {} with numeric value", this->get<std::string>()));
 }
