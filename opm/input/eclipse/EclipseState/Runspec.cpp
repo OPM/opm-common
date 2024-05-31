@@ -586,9 +586,12 @@ bool Tracers::operator==(const Tracers& other) const {
 Tracers Tracers::serializationTestObject() {
     Tracers tracers;
     tracers.m_oil_tracers = 123;
-    tracers.m_gas_tracers = 77;
     tracers.m_water_tracers = 5;
+    tracers.m_gas_tracers = 77;
+    tracers.m_env_tracers = 43;
+    tracers.diffusion_control = false;
     tracers.max_iter = 11;
+    tracers.min_iter = 9;
     return tracers;
 }
 
@@ -781,6 +784,7 @@ Runspec Runspec::serializationTestObject()
     result.m_actdims = Actdims::serializationTestObject();
     result.m_sfuncctrl = SatFuncControls::serializationTestObject();
     result.m_nupcol = Nupcol::serializationTestObject();
+    result.m_tracers = Tracers::serializationTestObject();
     result.m_comps = 3;
     result.m_co2storage = true;
     result.m_co2sol = true;
@@ -922,6 +926,7 @@ bool Runspec::rst_cmp(const Runspec& full_spec, const Runspec& rst_spec)
         full_spec.actdims() == rst_spec.actdims() &&
         full_spec.saturationFunctionControls() == rst_spec.saturationFunctionControls() &&
         full_spec.m_nupcol == rst_spec.m_nupcol &&
+        full_spec.m_tracers == rst_spec.m_tracers &&
         full_spec.m_comps == rst_spec.m_comps &&
         full_spec.m_co2storage == rst_spec.m_co2storage &&
         full_spec.m_co2sol == rst_spec.m_co2sol &&
@@ -945,7 +950,8 @@ bool Runspec::operator==(const Runspec& data) const
         && (this->actdims() == data.actdims())
         && (this->saturationFunctionControls() == data.saturationFunctionControls())
         && (this->m_nupcol == data.m_nupcol)
-	&& (this->m_comps == data.m_comps)
+        && (this->m_tracers == data.m_tracers)
+        && (this->m_comps == data.m_comps)
         && (this->m_co2storage == data.m_co2storage)
         && (this->m_co2sol == data.m_co2sol)
         && (this->m_h2sol == data.m_h2sol)

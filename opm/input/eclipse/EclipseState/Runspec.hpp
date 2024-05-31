@@ -530,6 +530,7 @@ public:
         serializer(m_actdims);
         serializer(m_sfuncctrl);
         serializer(m_nupcol);
+        serializer(m_tracers);
         serializer(m_comps);
         serializer(m_co2storage);
         serializer(m_co2sol);
