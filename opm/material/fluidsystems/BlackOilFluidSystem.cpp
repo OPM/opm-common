@@ -392,6 +392,69 @@ resizeArrays_(std::size_t numRegions)
     referenceDensity_.resize(numRegions);
 }
 
+template<> unsigned char BlackOilFluidSystem<double, BlackOilDefaultIndexTraits>::numActivePhases_ = 0;
+template<> std::array<bool, BlackOilFluidSystem<double, BlackOilDefaultIndexTraits>::numPhases>
+BlackOilFluidSystem<double, BlackOilDefaultIndexTraits>::phaseIsActive_ = {false, false, false};
+
+template<> unsigned char BlackOilFluidSystem<float, BlackOilDefaultIndexTraits>::numActivePhases_ = 0;
+template<> std::array<bool, BlackOilFluidSystem<float, BlackOilDefaultIndexTraits>::numPhases>
+BlackOilFluidSystem<float, BlackOilDefaultIndexTraits>::phaseIsActive_ = {false, false, false};
+
+template<> std::array<short, BlackOilFluidSystem<double, BlackOilDefaultIndexTraits>::numPhases> BlackOilFluidSystem<double, BlackOilDefaultIndexTraits>::activeToCanonicalPhaseIdx_ = {0, 1, 2};
+
+template<> std::array<short, BlackOilFluidSystem<float, BlackOilDefaultIndexTraits>::numPhases> BlackOilFluidSystem<float, BlackOilDefaultIndexTraits>::activeToCanonicalPhaseIdx_ = {0, 1, 2};
+
+template<> std::array<short, BlackOilFluidSystem<double, BlackOilDefaultIndexTraits>::numPhases> BlackOilFluidSystem<double, BlackOilDefaultIndexTraits>::canonicalToActivePhaseIdx_ = {0, 1, 2};
+
+template<> std::array<short, BlackOilFluidSystem<float, BlackOilDefaultIndexTraits>::numPhases> BlackOilFluidSystem<float, BlackOilDefaultIndexTraits>::canonicalToActivePhaseIdx_ = {0, 1, 2};
+
+template<> double BlackOilFluidSystem<double, BlackOilDefaultIndexTraits>::surfaceTemperature = 0.0;
+template<> float BlackOilFluidSystem<float, BlackOilDefaultIndexTraits>::surfaceTemperature = 0.0;
+
+template<> double BlackOilFluidSystem<double, BlackOilDefaultIndexTraits>::surfacePressure = 0.0;
+template<> float BlackOilFluidSystem<float, BlackOilDefaultIndexTraits>::surfacePressure = 0.0;
+
+template<> double BlackOilFluidSystem<double, BlackOilDefaultIndexTraits>::reservoirTemperature_ = 0.0;
+template<> float BlackOilFluidSystem<float, BlackOilDefaultIndexTraits>::reservoirTemperature_ = 0.0;
+
+template<> bool BlackOilFluidSystem<double, BlackOilDefaultIndexTraits>::enableDissolvedGas_ = true;
+template<> bool BlackOilFluidSystem<float, BlackOilDefaultIndexTraits>::enableDissolvedGas_ = true;
+
+template <> bool BlackOilFluidSystem<double, BlackOilDefaultIndexTraits>::enableDissolvedGasInWater_ = false;
+template <> bool BlackOilFluidSystem<float, BlackOilDefaultIndexTraits>::enableDissolvedGasInWater_ = false;
+
+template <> bool BlackOilFluidSystem<double, BlackOilDefaultIndexTraits>::enableVaporizedOil_ = false;
+template <> bool BlackOilFluidSystem<float, BlackOilDefaultIndexTraits>::enableVaporizedOil_ = false;
+
+template <> bool BlackOilFluidSystem<double, BlackOilDefaultIndexTraits>::enableVaporizedWater_ = false;
+template <> bool BlackOilFluidSystem<float, BlackOilDefaultIndexTraits>::enableVaporizedWater_ = false;
+
+template <> bool BlackOilFluidSystem<double, BlackOilDefaultIndexTraits>::enableDiffusion_ = false;
+template <> bool BlackOilFluidSystem<float, BlackOilDefaultIndexTraits>::enableDiffusion_ = false;
+
+template <> std::shared_ptr<OilPvtMultiplexer<double>> BlackOilFluidSystem<double, BlackOilDefaultIndexTraits>::oilPvt_ = nullptr;
+template <> std::shared_ptr<OilPvtMultiplexer<float>> BlackOilFluidSystem<float, BlackOilDefaultIndexTraits>::oilPvt_ = nullptr;
+
+template <> std::shared_ptr<GasPvtMultiplexer<double>> BlackOilFluidSystem<double, BlackOilDefaultIndexTraits>::gasPvt_ = nullptr;
+template <> std::shared_ptr<GasPvtMultiplexer<float>> BlackOilFluidSystem<float, BlackOilDefaultIndexTraits>::gasPvt_ = nullptr;
+
+template <> std::shared_ptr<WaterPvtMultiplexer<double>> BlackOilFluidSystem<double, BlackOilDefaultIndexTraits>::waterPvt_ = nullptr;
+template <> std::shared_ptr<WaterPvtMultiplexer<float>> BlackOilFluidSystem<float, BlackOilDefaultIndexTraits>::waterPvt_ = nullptr;
+
+template <> std::vector<std::array<double, 3>> BlackOilFluidSystem<double, BlackOilDefaultIndexTraits>::referenceDensity_ = {};
+template <> std::vector<std::array<float, 3>> BlackOilFluidSystem<float, BlackOilDefaultIndexTraits>::referenceDensity_ = {};
+
+template <> std::vector<std::array<double, 3>> BlackOilFluidSystem<double, BlackOilDefaultIndexTraits>::molarMass_ = {};
+template <> std::vector<std::array<float, 3>> BlackOilFluidSystem<float, BlackOilDefaultIndexTraits>::molarMass_ = {};
+
+template <> std::vector<std::array<double, 9>> BlackOilFluidSystem<double, BlackOilDefaultIndexTraits>::diffusionCoefficients_ = {};
+template <> std::vector<std::array<float, 9>> BlackOilFluidSystem<float, BlackOilDefaultIndexTraits>::diffusionCoefficients_ = {};
+
+template <> bool BlackOilFluidSystem<double, BlackOilDefaultIndexTraits>::isInitialized_ = false;
+template <> bool BlackOilFluidSystem<float, BlackOilDefaultIndexTraits>::isInitialized_ = false;
+
+// IMPORTANT: The following two lines must come after the template specializations above
+//    or else the static variable above will appear as undefined in the generated object file.
 template class BlackOilFluidSystem<double,BlackOilDefaultIndexTraits>;
 template class BlackOilFluidSystem<float,BlackOilDefaultIndexTraits>;
 
