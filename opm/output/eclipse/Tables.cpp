@@ -1505,6 +1505,7 @@ namespace { namespace SatFunc {
         ///
         /// \param[in] paramLET LET parameters for all saturation regions.
         ///
+        /// \param[in] scon minimum saturation of the other phase
         /// \return Linearised and padded 'TAB' vector values sampled from LET.
         ///    Unit-converted pc. Derivatives for all curves.
         template <typename ParamLET>
@@ -1512,7 +1513,8 @@ namespace { namespace SatFunc {
         sampleLET(const std::size_t          numRows,
                   const double               tolcrit,
                   const Opm::UnitSystem&     units,
-                  const ParamLET&            paramLET)
+                  const ParamLET&            paramLET,
+                  const std::vector<double>& scon)
         {
 
            std::vector<double> letTab(5*numRows*paramLET.size(), +2.0e20);
@@ -1525,21 +1527,21 @@ namespace { namespace SatFunc {
                const auto let = paramLET[k];
 
                const double sMin = let.s1_residual;
-               const double sMax = 1.0-let.s2_residual;
+               const double sMax = 1.0-let.s2_residual - scon[k];
                const double ds = (sMax-sMin)/(numRows-1);
                for (size_t i=0; i<numRows; ++i) {
                    const double S = sMin+i*ds;
 
                    double Kr = 0.0;
                    if (S > let.s1_critical) {
-                       const double Ss = std::min(1.0, (S-let.s1_critical)/(1.0 - let.s1_critical - let.s2_critical));
+                       const double Ss = std::min(1.0, (S-let.s1_critical)/(1.0 - scon[k] - let.s1_critical - let.s2_critical));
                        const double powS = std::pow(Ss,let.l1_relperm);
                        const double pow1mS = std::pow(1.0-Ss,let.t1_relperm);
                        Kr = let.krt1_relperm*powS/(powS+pow1mS*let.e1_relperm);
                        Kr = (Kr > tolcrit) ? Kr : 0.0;
                    }
 
-                   const double Ss = std::min(1.0, (S-let.s1_residual)/(1.0 - let.s1_residual - let.s2_residual));
+                   const double Ss = std::min(1.0, (S-let.s1_residual)/(1.0 - scon[k] - let.s1_residual - let.s2_residual));
                    const double powS = std::pow(Ss,let.t_pc);
                    const double pow1mS = std::pow(1.0-Ss,let.l_pc);
                    const double Pc = let.pct_pc+(let.pcir_pc-let.pct_pc)*pow1mS/(pow1mS+powS*let.e_pc);
@@ -1612,15 +1614,17 @@ namespace { namespace SatFunc {
 
                double sMin = 1.0;
                double sMax = 0.0;
+               double Swco = 0.0;
 
                if (!swofLET.empty()) {
+                  Swco = swofLET[k].s1_residual;
                   sMin = std::min(sMin, swofLET[k].s2_residual);
                   sMax = std::max(sMax, 1.0-swofLET[k].s1_residual);
                }
 
                if (!sgofLET.empty()) {
-                  sMin = std::min(sMin, sgofLET[k].s2_residual);
-                  sMax = std::max(sMax, 1.0-sgofLET[k].s1_residual);
+                  sMin = std::min(sMin, sgofLET[k].s2_residual + Swco);
+                  sMax = std::max(sMax, 1.0-sgofLET[k].s1_residual - Swco);
                }
 
                const double ds = (sMax-sMin)/(numRows-1);
@@ -1630,12 +1634,9 @@ namespace { namespace SatFunc {
                    const double S = sMin+i*ds;
                    letTab[k*numRows+i] = S;
 
-                   double Swco = 0.0;
-
                    if (!swofLET.empty()) {
                        double Krow = 0.0;
                        const auto letw = swofLET[k];
-                       Swco = letw.s1_residual;
                        if (S > letw.s2_critical) {
                            const double Sow = std::min(1.0, (S-letw.s2_critical)/(1.0 - letw.s1_critical - letw.s2_critical));
                            const double powS = std::pow(Sow,letw.l2_relperm);
@@ -1660,7 +1661,7 @@ namespace { namespace SatFunc {
                        }
                        letTab[(1+dOff)*offset+k*numRows+i] = Krog;
                        if (i>0)
-                           letTab[2*(1+dOff)*offset+k*numRows+i] = (letTab[(1+dOff)*offset+k*numRows+i] - letTab[(1+dOff)*offset+k*numRows+i-1])/ds;
+                           letTab[(3+dOff)*offset+k*numRows+i] = (letTab[(1+dOff)*offset+k*numRows+i] - letTab[(1+dOff)*offset+k*numRows+i-1])/ds;
                    }
 
                }
@@ -2665,14 +2666,18 @@ namespace Opm {
             .saturationFunctionControls()
             .minimumRelpermMobilityThreshold();
         std::size_t tabSize;
-
         if (gas) {
 
             std::vector<double> sgfn;
-
             if ( !tabMgr.getSgofletTable().empty() ) {
-                sgfn = SatFunc::SampleLET::sampleLET(nssfun, tolcrit, this->units, tabMgr.getSgofletTable());
                 tabSize = tabMgr.getSgofletTable().size();
+                std::vector<double> swmin(tabSize, 0.0);
+                if (!tabMgr.getSwofletTable().empty() ) {
+                    for (size_t k=0; k<tabSize; ++k) { 
+                        swmin[k] = tabMgr.getSwofletTable()[k].s1_residual;
+                    }
+                }
+                sgfn = SatFunc::SampleLET::sampleLET(nssfun, tolcrit, this->units, tabMgr.getSgofletTable(), swmin);
             }
             else {
                 const auto& tables = tabMgr.getSgofTables();
@@ -2752,8 +2757,9 @@ namespace Opm {
             std::vector<double> swfn;
 
             if ( !tabMgr.getSwofletTable().empty() ) {
-                swfn = SatFunc::SampleLET::sampleLET(nssfun, tolcrit, this->units, tabMgr.getSwofletTable());
                 tabSize = tabMgr.getSwofletTable().size();
+                std::vector<double> sgmin(tabSize, 0.0);
+                swfn = SatFunc::SampleLET::sampleLET(nssfun, tolcrit, this->units, tabMgr.getSwofletTable(), sgmin);
             }
             else {
                 const auto& tables = tabMgr.getSwofTables();
