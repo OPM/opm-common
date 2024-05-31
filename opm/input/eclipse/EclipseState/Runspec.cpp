@@ -586,9 +586,12 @@ bool Tracers::operator==(const Tracers& other) const {
 Tracers Tracers::serializationTestObject() {
     Tracers tracers;
     tracers.m_oil_tracers = 123;
-    tracers.m_gas_tracers = 77;
     tracers.m_water_tracers = 5;
+    tracers.m_gas_tracers = 77;
+    tracers.m_env_tracers = 43;
+    tracers.diffusion_control = false;
     tracers.max_iter = 11;
+    tracers.min_iter = 9;
     return tracers;
 }
 
@@ -769,18 +772,21 @@ Runspec::Runspec(const Deck& deck)
 Runspec Runspec::serializationTestObject()
 {
     Runspec result;
+    result.m_start_time = 1234;
     result.active_phases = Phases::serializationTestObject();
     result.m_tabdims = Tabdims::serializationTestObject();
     result.m_regdims = Regdims::serializationTestObject();
     result.endscale = EndpointScaling::serializationTestObject();
     result.welldims = Welldims::serializationTestObject();
     result.wsegdims = WellSegmentDims::serializationTestObject();
+    result.netwrkdims = NetworkDims::serializationTestObject();
     result.aquiferdims = AquiferDimensions::serializationTestObject();
     result.udq_params = UDQParams::serializationTestObject();
     result.hystpar = EclHysterConfig::serializationTestObject();
     result.m_actdims = Actdims::serializationTestObject();
     result.m_sfuncctrl = SatFuncControls::serializationTestObject();
     result.m_nupcol = Nupcol::serializationTestObject();
+    result.m_tracers = Tracers::serializationTestObject();
     result.m_comps = 3;
     result.m_co2storage = true;
     result.m_co2sol = true;
@@ -912,16 +918,21 @@ const UDQParams& Runspec::udqParams() const noexcept
 
 bool Runspec::rst_cmp(const Runspec& full_spec, const Runspec& rst_spec)
 {
-    return full_spec.phases() == rst_spec.phases() &&
+    return
+        // full_spec.start_time() == rst_spec.start_time() &&  // Can be different between base and restart.
+        full_spec.phases() == rst_spec.phases() &&
         full_spec.tabdims() == rst_spec.tabdims() &&
         full_spec.regdims() == rst_spec.regdims() &&
         full_spec.endpointScaling() == rst_spec.endpointScaling() &&
         full_spec.wellSegmentDimensions() == rst_spec.wellSegmentDimensions() &&
+        full_spec.networkDimensions() == rst_spec.networkDimensions() &&
         full_spec.aquiferDimensions() == rst_spec.aquiferDimensions() &&
+        // full_spec.udqParams() == rst_spec.udqParams() &&   // Can be different between base and restart.
         full_spec.hysterPar() == rst_spec.hysterPar() &&
         full_spec.actdims() == rst_spec.actdims() &&
         full_spec.saturationFunctionControls() == rst_spec.saturationFunctionControls() &&
         full_spec.m_nupcol == rst_spec.m_nupcol &&
+        full_spec.m_tracers == rst_spec.m_tracers &&
         full_spec.m_comps == rst_spec.m_comps &&
         full_spec.m_co2storage == rst_spec.m_co2storage &&
         full_spec.m_co2sol == rst_spec.m_co2sol &&
@@ -929,23 +940,27 @@ bool Runspec::rst_cmp(const Runspec& full_spec, const Runspec& rst_spec)
         full_spec.m_h2storage == rst_spec.m_h2storage &&
         full_spec.m_micp == rst_spec.m_micp &&
         full_spec.m_mech == rst_spec.m_mech &&
-        Welldims::rst_cmp(full_spec.wellDimensions(), rst_spec.wellDimensions());
+        Welldims::rst_cmp(full_spec.wellDimensions(), rst_spec.wellDimensions()); // Can be partially different between base and restart.
 }
 
 bool Runspec::operator==(const Runspec& data) const
 {
-    return (this->phases() == data.phases())
+    return (this->start_time() == data.start_time())
+        && (this->phases() == data.phases())
         && (this->tabdims() == data.tabdims())
         && (this->regdims() == data.regdims())
         && (this->endpointScaling() == data.endpointScaling())
         && (this->wellDimensions() == data.wellDimensions())
         && (this->wellSegmentDimensions() == data.wellSegmentDimensions())
+        && (this->networkDimensions() == data.networkDimensions())
         && (this->aquiferDimensions() == data.aquiferDimensions())
+        && (this->udqParams() == data.udqParams())
         && (this->hysterPar() == data.hysterPar())
         && (this->actdims() == data.actdims())
         && (this->saturationFunctionControls() == data.saturationFunctionControls())
         && (this->m_nupcol == data.m_nupcol)
-	&& (this->m_comps == data.m_comps)
+        && (this->m_tracers == data.m_tracers)
+        && (this->m_comps == data.m_comps)
         && (this->m_co2storage == data.m_co2storage)
         && (this->m_co2sol == data.m_co2sol)
         && (this->m_h2sol == data.m_h2sol)
