@@ -43,7 +43,6 @@
 
 #include <opm/input/eclipse/EclipseState/Co2StoreConfig.hpp>
 
-
 #include <vector>
 
 namespace Opm {
@@ -51,6 +50,7 @@ namespace Opm {
 class EclipseState;
 class Schedule;
 class Co2StoreConfig;
+class EzrokhiTable;
 
 /*!
  * \brief This class represents the Pressure-Volume-Temperature relations of the liquid phase
@@ -195,6 +195,31 @@ public:
             OPM_THROW(std::runtime_error, "The thermal mixing model option for liquid are 0, 1 and 2");
     }
 
+    void setEzrokhiDenCoeff(const std::vector<EzrokhiTable>& denaqa)
+    {
+        if (denaqa.empty())
+            return;
+
+        enableEzrokhiDensity_ = true;
+        ezrokhiDenNaClCoeff_ = {static_cast<Scalar>(denaqa[0].getC0("NACL")), 
+                                static_cast<Scalar>(denaqa[0].getC1("NACL")), 
+                                static_cast<Scalar>(denaqa[0].getC2("NACL"))};
+        ezrokhiDenCo2Coeff_ = {static_cast<Scalar>(denaqa[0].getC0("CO2")), 
+                               static_cast<Scalar>(denaqa[0].getC1("CO2")), 
+                               static_cast<Scalar>(denaqa[0].getC2("CO2"))};
+    }
+
+    void setEzrokhiViscCoeff(const std::vector<EzrokhiTable>& viscaqa)
+    {
+        if (viscaqa.empty())
+            return;
+
+        enableEzrokhiViscosity_ = true;
+        ezrokhiViscNaClCoeff_ = {static_cast<Scalar>(viscaqa[0].getC0("NACL")), 
+                                 static_cast<Scalar>(viscaqa[0].getC1("NACL")), 
+                                 static_cast<Scalar>(viscaqa[0].getC2("NACL"))};
+    }
+
     /*!
      * \brief Return the number of PVT regions which are considered by this PVT-object.
      */
@@ -262,7 +287,14 @@ public:
     {
         OPM_TIMEFUNCTION_LOCAL();
         const Evaluation salinity = salinityFromConcentration(regionIdx, temperature, pressure, saltConcentration);
-        return Brine::liquidViscosity(temperature, pressure, salinity);
+        if (enableEzrokhiViscosity_) {
+            const Evaluation& mu_pure = H2O::liquidViscosity(temperature, pressure, extrapolate);
+            const Evaluation& nacl_exponent = ezrokhiExponent_(temperature, ezrokhiViscNaClCoeff_);
+            return mu_pure * pow(10.0, nacl_exponent * salinity);
+        }
+        else {
+            return Brine::liquidViscosity(temperature, pressure, salinity);
+        }
     }
 
     /*!
@@ -289,7 +321,15 @@ public:
                                   const Evaluation& pressure) const
     {
         OPM_TIMEFUNCTION_LOCAL();
-        return Brine::liquidViscosity(temperature, pressure, Evaluation(salinity_[regionIdx]));
+        if (enableEzrokhiViscosity_) {
+            const Evaluation& mu_pure = H2O::liquidViscosity(temperature, pressure, extrapolate);
+            const Evaluation& nacl_exponent = ezrokhiExponent_(temperature, ezrokhiViscNaClCoeff_);
+            return mu_pure * pow(10.0, nacl_exponent * Evaluation(salinity_[regionIdx]));
+        }
+        else {
+            return Brine::liquidViscosity(temperature, pressure, Evaluation(salinity_[regionIdx]));
+        }
+        
     }
 
 
@@ -437,7 +477,14 @@ public:
 
         //Diffusion coefficient of CO2 in the brine phase modified following (Ratcliff and Holdcroft,1963 and Al-Rawajfeh, 2004)
         const Evaluation& mu_H20 = H2O::liquidViscosity(temperature, pressure, extrapolate); // Water viscosity
-        const Evaluation& mu_Brine = Brine::liquidViscosity(temperature, pressure, Evaluation(salinity_[0])); // Brine viscosity
+        Evaluation mu_Brine;
+        if (enableEzrokhiViscosity_) {
+            const Evaluation& nacl_exponent = ezrokhiExponent_(temperature, ezrokhiViscNaClCoeff_);
+            mu_Brine = mu_H20 * pow(10.0, nacl_exponent * Evaluation(salinity_[0]));
+        }
+        else {
+            mu_Brine = Brine::liquidViscosity(temperature, pressure, Evaluation(salinity_[0])); // Brine viscosity
+        }
         const Evaluation log_D_Brine = log_D_H20 - 0.87*log10(mu_Brine / mu_H20);
 
         return pow(Evaluation(10), log_D_Brine) * 1e-4; // convert from cm2/s to m2/s
@@ -494,12 +541,25 @@ private:
     std::vector<Scalar> brineReferenceDensity_;
     std::vector<Scalar> co2ReferenceDensity_;
     std::vector<Scalar> salinity_;
+    std::vector<Scalar> ezrokhiDenNaClCoeff_;
+    std::vector<Scalar> ezrokhiDenCo2Coeff_;
+    std::vector<Scalar> ezrokhiViscNaClCoeff_;
+    bool enableEzrokhiDensity_ = false;
+    bool enableEzrokhiViscosity_ = false;
     bool enableDissolution_ = true;
     bool enableSaltConcentration_ = false;
     int activityModel_;
     Co2StoreConfig::LiquidMixingType liquidMixType_; 
     Co2StoreConfig::SaltMixingType saltMixType_; 
 
+    template <class LhsEval>
+    LhsEval ezrokhiExponent_(const LhsEval& temperature,
+                             const std::vector<Scalar>& ezrokhiCoeff) const
+    {
+        const LhsEval& tempC = temperature - 273.15;
+        return ezrokhiCoeff[0] + tempC * (ezrokhiCoeff[1] + ezrokhiCoeff[2] * tempC);
+    }
+    
     template <class LhsEval>
     LhsEval liquidDensity_(const LhsEval& T,
                            const LhsEval& pl,
@@ -526,12 +586,19 @@ private:
             throw NumericalProblem(msg);
         }
 
-        const LhsEval& rho_brine = Brine::liquidDensity(T, pl, salinity, extrapolate);
         const LhsEval& rho_pure = H2O::liquidDensity(T, pl, extrapolate);
-        const LhsEval& rho_lCO2 = liquidDensityWaterCO2_(T, pl, xlCO2);
-        const LhsEval& contribCO2 = rho_lCO2 - rho_pure;
-
-        return rho_brine + contribCO2;
+        if (enableEzrokhiDensity_) {
+            const LhsEval& nacl_exponent = ezrokhiExponent_(T, ezrokhiDenNaClCoeff_);
+            const LhsEval& co2_exponent = ezrokhiExponent_(T, ezrokhiDenCo2Coeff_);
+            const LhsEval& XCO2 = convertxoGToXoG(xlCO2, salinity);
+            return rho_pure * pow(10.0, nacl_exponent * salinity + co2_exponent * XCO2);
+        }
+        else {
+            const LhsEval& rho_brine = Brine::liquidDensity(T, pl, salinity, extrapolate);
+            const LhsEval& rho_lCO2 = liquidDensityWaterCO2_(T, pl, xlCO2);
+            const LhsEval& contribCO2 = rho_lCO2 - rho_pure;
+            return rho_brine + contribCO2;
+        }
     }
 
     template <class LhsEval>

@@ -29,6 +29,7 @@
 
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/EzrokhiTable.hpp>
 
 namespace Opm {
 
@@ -83,14 +84,42 @@ initFromState(const EclipseState& eclState, const Schedule&)
         OPM_THROW(std::runtime_error, "CO2STORE can only be used with default values for STCOND!");
     }
 
-    brineReferenceDensity_[regionIdx] = Brine::liquidDensity(T_ref, P_ref, salinity_[regionIdx], extrapolate);
+    // Check for Ezrokhi tables DENAQA and VISCAQA
+    setEzrokhiDenCoeff(eclState.getCo2StoreConfig().getDenaqaTables());
+    setEzrokhiViscCoeff(eclState.getCo2StoreConfig().getViscaqaTables());
+    std::string ezrokhi_msg;
+    if (enableEzrokhiDensity_) {
+        ezrokhi_msg = "\nEzrokhi density coefficients : \n\tNaCl = " 
+                      + std::to_string(ezrokhiDenNaClCoeff_[0]) + " " + std::to_string(ezrokhiDenNaClCoeff_[1]) 
+                      + " " + std::to_string(ezrokhiDenNaClCoeff_[1])
+                      + "\n\tCO2 = " + std::to_string(ezrokhiDenCo2Coeff_[0]) + " " + std::to_string(ezrokhiDenCo2Coeff_[1]) 
+                      + " " + std::to_string(ezrokhiDenCo2Coeff_[1]);
+    }
+    else {
+        ezrokhi_msg = "";
+    }
+    if (enableEzrokhiViscosity_) {
+        ezrokhi_msg += "\nEzrokhi viscosity coefficients : \n\tNaCl = " 
+                       + std::to_string(ezrokhiViscNaClCoeff_[0]) + " " + std::to_string(ezrokhiViscNaClCoeff_[1]) 
+                       + " " + std::to_string(ezrokhiViscNaClCoeff_[1]);
+    }
+    
+    if (enableEzrokhiDensity_) {
+        const Scalar& rho_pure = H2O::liquidDensity(T_ref, P_ref, extrapolate);
+        const Scalar& nacl_exponent = ezrokhiExponent_(T_ref, ezrokhiDenNaClCoeff_);
+        brineReferenceDensity_[regionIdx] = rho_pure * pow(10.0, nacl_exponent * salinity_[regionIdx]);
+    }
+    else {
+        brineReferenceDensity_[regionIdx] = Brine::liquidDensity(T_ref, P_ref, salinity_[regionIdx], extrapolate);
+    }
     co2ReferenceDensity_[regionIdx] = CO2::gasDensity(T_ref, P_ref, extrapolate);
 
     OpmLog::info("CO2STORE/CO2SOL is enabled. \n The surface density of CO2 is  " + std::to_string(co2ReferenceDensity_[regionIdx])
                  + "kg/m3 \n The surface density of Brine is  " + std::to_string(brineReferenceDensity_[regionIdx])
                  + "kg/m3"
                  + "\n The surface densities are computed using the reference pressure ( " + std::to_string(P_ref) 
-                 + "Pa) and the reference temperature (" +  std::to_string(T_ref) + "K)." 
+                 + "Pa) and the reference temperature (" +  std::to_string(T_ref) + "K)."
+                 + ezrokhi_msg
                  );
 }
 

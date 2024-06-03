@@ -169,6 +169,10 @@ namespace Opm {
 CompositionalConfig::CompositionalConfig(const Deck& deck, const Runspec& runspec) {
     if (!DeckSection::hasPROPS(deck)) return;
 
+    // Return if CO2STORE is active with compositional keywords
+    if (deck.hasKeyword("CO2STORE"))
+        return;
+
     const PROPSSection props_section {deck};
     const bool comp_mode_runspec = runspec.compositionalMode(); // TODO: the way to use comp_mode_runspec should be refactored
     if (!comp_mode_runspec) {

@@ -531,3 +531,79 @@ THCO2MIX
     BOOST_CHECK( config.liquid_type == Co2StoreConfig::LiquidMixingType::IDEAL);
     BOOST_CHECK( config.gas_type == Co2StoreConfig::GasMixingType::IDEAL);
 }
+
+BOOST_AUTO_TEST_CASE(EzrokhiTablesTest) {
+    const auto deck_string = R"(
+        RUNSPEC
+
+        DIMENS
+        2 2 1 /
+
+        TABDIMS
+        8* 1 /
+
+        GRID
+
+        DX 
+        4*1 /
+        DY
+        4*1 /
+        DZ 
+        4*1 /
+        TOPS 
+        4*0.0 /
+
+        PORO
+        4*0.3 /
+
+        PROPS
+
+        CNAMES
+        H2O CO2 NACL /
+
+        DENAQA
+        1.0 2.0 3.0
+        4.0 5.0 6.0
+        7.0 8.0 9.0
+        /
+
+        VISCAQA
+        11.0 12.0 13.0
+        14.0 15.0 16.0
+        17.0 18.0 19.0
+        /
+
+    )";
+
+    Opm::Parser parser;
+    auto deck = parser.parseString(deck_string);
+    EclipseState state(deck);
+    Co2StoreConfig config = state.getCo2StoreConfig();
+
+    const auto& denaqa = config.getDenaqaTables();
+    const double epsilon = 0.00001;
+    BOOST_CHECK_CLOSE(1.0, denaqa[0].getC0("H2O"), epsilon);
+    BOOST_CHECK_CLOSE(2.0, denaqa[0].getC1("H2O"), epsilon);
+    BOOST_CHECK_CLOSE(3.0, denaqa[0].getC2("H2O"), epsilon);
+    
+    BOOST_CHECK_CLOSE(4.0, denaqa[0].getC0("CO2"), epsilon);
+    BOOST_CHECK_CLOSE(5.0, denaqa[0].getC1("CO2"), epsilon);
+    BOOST_CHECK_CLOSE(6.0, denaqa[0].getC2("CO2"), epsilon);
+
+    BOOST_CHECK_CLOSE(7.0, denaqa[0].getC0("NACL"), epsilon);
+    BOOST_CHECK_CLOSE(8.0, denaqa[0].getC1("NACL"), epsilon);
+    BOOST_CHECK_CLOSE(9.0, denaqa[0].getC2("NACL"), epsilon);
+
+    const auto& viscaqa = config.getViscaqaTables();
+    BOOST_CHECK_CLOSE(11.0, viscaqa[0].getC0("H2O"), epsilon);
+    BOOST_CHECK_CLOSE(12.0, viscaqa[0].getC1("H2O"), epsilon);
+    BOOST_CHECK_CLOSE(13.0, viscaqa[0].getC2("H2O"), epsilon);
+    
+    BOOST_CHECK_CLOSE(14.0, viscaqa[0].getC0("CO2"), epsilon);
+    BOOST_CHECK_CLOSE(15.0, viscaqa[0].getC1("CO2"), epsilon);
+    BOOST_CHECK_CLOSE(16.0, viscaqa[0].getC2("CO2"), epsilon);
+    
+    BOOST_CHECK_CLOSE(17.0, viscaqa[0].getC0("NACL"), epsilon);
+    BOOST_CHECK_CLOSE(18.0, viscaqa[0].getC1("NACL"), epsilon);
+    BOOST_CHECK_CLOSE(19.0, viscaqa[0].getC2("NACL"), epsilon);
+}

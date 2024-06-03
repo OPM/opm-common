@@ -22,6 +22,9 @@
 #include <cstddef>
 #include <vector>
 #include <string>
+#include <map>
+
+#include <opm/input/eclipse/EclipseState/Tables/EzrokhiTable.hpp>
 
 namespace Opm {
 
@@ -50,6 +53,9 @@ class Deck;
 
     explicit Co2StoreConfig(const Deck& deck);
 
+    const std::vector<EzrokhiTable>& getDenaqaTables() const;
+    const std::vector<EzrokhiTable>& getViscaqaTables() const;
+
     template<class Serializer>
     void serializeOp(Serializer& serializer)
     {
@@ -67,7 +73,12 @@ class Deck;
 
     SaltMixingType string2enumSalt(const std::string& input) const;
     LiquidMixingType string2enumLiquid(const std::string& input) const;
-    GasMixingType string2enumGas(const std::string& input) const; 
+    GasMixingType string2enumGas(const std::string& input) const;
+    
+    // std::vector<std::pair<std::string, int> > cnames;
+    std::map<std::string, int> cnames;
+    std::vector<EzrokhiTable> denaqa_tables;
+    std::vector<EzrokhiTable> viscaqa_tables;
   };
 }
 
