@@ -37,6 +37,7 @@ namespace WTest {
 */
 
 namespace EclConfigReason {
+constexpr int NOTUSED   =  1;
 constexpr int PHYSICAL   = 2;
 constexpr int ECONOMIC   = 3;
 constexpr int GCON       = 5;
@@ -45,6 +46,7 @@ constexpr int CONNECTION = 11;
 }
 
 namespace EclCloseReason {
+constexpr int NOTUSED  = 1; // May be written to UNRST during history
 constexpr int PHYSICAL = 3;
 constexpr int ECONOMIC = 5;
 constexpr int GCON     = 6;
@@ -52,6 +54,7 @@ constexpr int THPLimit = 9;
 }
 
 enum class Reason {
+    NOTUSED  = 0,
     PHYSICAL = 1,
     ECONOMIC = 2,
     GROUP = 4,

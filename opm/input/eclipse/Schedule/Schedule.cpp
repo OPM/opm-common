@@ -1896,7 +1896,9 @@ namespace {
                     use_free_gas
                 };
 
-                this->updateGuideRateModel(guide_rate_model, report_step);
+                // A NONE target written to .UNRST may indicate no GUIDERAT (i.e., during history)
+                if (! (guide_rate_model.target()==GuideRateModel::Target::NONE))
+                    this->updateGuideRateModel(guide_rate_model, report_step);
             }
         }
 
