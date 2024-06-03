@@ -65,6 +65,11 @@ class Deck;
        serializer(brine_type);
        serializer(liquid_type);
        serializer(gas_type);
+       serializer(cnames);
+       serializer(denaqa_tables);
+       serializer(viscaqa_tables);
+       serializer(salt);
+       serializer(activityModel);
     }
     bool operator==(const Co2StoreConfig& other) const;
 
@@ -78,7 +83,6 @@ class Deck;
     LiquidMixingType string2enumLiquid(const std::string& input) const;
     GasMixingType string2enumGas(const std::string& input) const;
     
-    // std::vector<std::pair<std::string, int> > cnames;
     std::map<std::string, int> cnames;
     std::vector<EzrokhiTable> denaqa_tables;
     std::vector<EzrokhiTable> viscaqa_tables;

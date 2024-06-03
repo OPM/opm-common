@@ -50,15 +50,19 @@ namespace {
         const auto& keyword = deck[keyword_name].back();
         for (std::size_t tableIdx = 0; tableIdx < num_eos_res; ++tableIdx) {
             const auto& record = keyword.getRecord(tableIdx);
-            if (record.getItem("DATA").data_size() < 3 * cnames.size()) {
-                auto msg = "The " + keyword_name + " table does not have C0, C1 and C2 for all CNAMES: ";
-                for (const auto& [cname, val]: cnames) {
-                    msg += cname + " ";
+            for (const auto& [cname, index]: cnames) {
+                // Check if CNAMES include H2O, CO2 and NACL
+                if (index < 0) {
+                    const auto msg = "CNAMES must include " + cname + " to use "
+                                     + keyword_name + " in combination with CO2STORE";
+                    throw Opm::OpmInputError(msg, keyword.location());
                 }
-                throw Opm::OpmInputError(msg, keyword.location());
-            }
-            for (const auto& cname: cnames) {
-                ezrokhitable[tableIdx].init(record, cname.first, cname.second);
+                // Check if table has entries for queried cname
+                if (3 * static_cast<std::size_t>(index) >= record.getItem("DATA").data_size()) {
+                    auto msg = keyword_name + " does not have C0, C1 and C2 entries for CNAMES = " + cname;
+                    throw Opm::OpmInputError(msg, keyword.location());
+                }
+                ezrokhitable[tableIdx].init(record, cname, index);
             }
         }
     }
@@ -106,12 +110,6 @@ namespace Opm {
                 const auto& name = item.getTrimmedString(c);
                 if (cnames.find(name) != cnames.end()) {
                     cnames[name] = c;
-                }
-            }
-            for (const auto& cname: cnames) {
-                if (cname.second < 0) {
-                    const auto msg = "Component " + cname.first + " is required in CNAMES when CO2STORE is active!";
-                    throw OpmInputError(msg, keyword.location());
                 }
             }
         }
@@ -164,7 +162,12 @@ namespace Opm {
     bool Co2StoreConfig::operator==(const Co2StoreConfig& other) const {
         return this->brine_type == other.brine_type 
                 && this->liquid_type == other.liquid_type
-                && this->gas_type == other.gas_type;
+                && this->gas_type == other.gas_type
+                && this->denaqa_tables == other.denaqa_tables
+                && this->viscaqa_tables == other.viscaqa_tables
+                && this->salt == other.salt
+                && this->activityModel == other.activityModel
+                && this->cnames == other.cnames;
     }
 
     enum class SaltMixingType {
