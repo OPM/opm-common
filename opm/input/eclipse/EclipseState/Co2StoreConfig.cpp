@@ -22,6 +22,7 @@
 
 #include <opm/input/eclipse/Deck/Deck.hpp>
 #include <opm/input/eclipse/Deck/DeckSection.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/A.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/C.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/D.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/S.hpp>
@@ -134,7 +135,14 @@ namespace Opm {
             const auto& mole_frac = deck["SALTMF"].back().getRecord(0).getItem("MOLE_FRACTION").get<double>(0);
             salt = mole_frac * MmNaCl / (mole_frac * (MmNaCl - MmH2O) + MmH2O);
         }
-        
+
+        // ACTCO2S
+        if (props_section.hasKeyword<ParserKeywords::ACTCO2S>()) {
+            activityModel = deck["ACTCO2S"].back().getRecord(0).getItem("ACTIVITY_MODEL").get<int>(0);
+        }
+        else {
+            activityModel = ParserKeywords::ACTCO2S::ACTIVITY_MODEL::defaultValue;
+        }
     }
 
     const std::vector<EzrokhiTable>& Co2StoreConfig::getDenaqaTables() const {
@@ -147,6 +155,10 @@ namespace Opm {
 
     double Co2StoreConfig::salinity() const {
         return salt;
+    }
+
+    int Co2StoreConfig::actco2s() const {
+        return activityModel;
     }
 
     bool Co2StoreConfig::operator==(const Co2StoreConfig& other) const {

@@ -38,7 +38,7 @@ initFromState(const EclipseState& eclState, const Schedule&)
 {
 
     setEnableVaporizationWater(eclState.getSimulationConfig().hasVAPOIL() || eclState.getSimulationConfig().hasVAPWAT());
-    setActivityModelSalt(eclState.getTableManager().actco2s());
+    setActivityModelSalt(eclState.getCo2StoreConfig().actco2s());
     gastype_ = eclState.getCo2StoreConfig().gas_type;
     bool co2sol = eclState.runspec().co2Sol();
     if (!co2sol && (eclState.getTableManager().hasTables("PVDG") ||

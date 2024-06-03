@@ -61,7 +61,7 @@ initFromState(const EclipseState& eclState, const Schedule&)
     bool co2storage_dis = eclState.runspec().co2Storage() && (eclState.getSimulationConfig().hasDISGASW() || eclState.getSimulationConfig().hasDISGAS());
     setEnableDissolvedGas(co2sol_dis || co2storage_dis);
     setEnableSaltConcentration(eclState.runspec().phases().active(Phase::BRINE));
-    setActivityModelSalt(eclState.getTableManager().actco2s());
+    setActivityModelSalt(eclState.getCo2StoreConfig().actco2s());
     saltMixType_ = eclState.getCo2StoreConfig().brine_type;
     liquidMixType_ = eclState.getCo2StoreConfig().liquid_type;
 

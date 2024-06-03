@@ -202,8 +202,6 @@ namespace Opm {
 
         double salinity() const;
 
-        int actco2s() const;
-
         bool diffMoleFraction() const;
 
         bool operator==(const TableManager& data) const;
@@ -266,7 +264,6 @@ namespace Opm {
             serializer(m_gas_comp_index);
             serializer(m_rtemp);
             serializer(m_salinity);
-            serializer(m_actco2s);
             serializer(m_diff_mole_fraction);
             serializer(m_tlmixpar);
             serializer(m_ppcwmax);
@@ -419,7 +416,6 @@ namespace Opm {
         std::size_t m_gas_comp_index = 77;
         double m_rtemp {288.7056}; // 60 Fahrenheit in Kelvin
         double m_salinity {0.0};
-        int m_actco2s {3};
         bool m_diff_mole_fraction {true};
 
         struct SplitSimpleTables {

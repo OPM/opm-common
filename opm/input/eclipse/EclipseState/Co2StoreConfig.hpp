@@ -57,6 +57,7 @@ class Deck;
     const std::vector<EzrokhiTable>& getViscaqaTables() const;
     
     double salinity() const;
+    int actco2s() const;
 
     template<class Serializer>
     void serializeOp(Serializer& serializer)
@@ -84,6 +85,7 @@ class Deck;
     double salt {0.0};
     double MmNaCl = 58.44e-3;
     double MmH2O = 18e-3;
+    int activityModel {3};
   };
 }
 
