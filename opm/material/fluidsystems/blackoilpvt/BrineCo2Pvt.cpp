@@ -29,7 +29,6 @@
 
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
-#include <opm/input/eclipse/EclipseState/Tables/EzrokhiTable.hpp>
 
 namespace Opm {
 
@@ -70,11 +69,8 @@ initFromState(const EclipseState& eclState, const Schedule&)
     size_t numRegions = 1;
     setNumRegions(numRegions);
     size_t regionIdx = 0;
-    // Currently we only support constant salinity
-    const Scalar molality = eclState.getTableManager().salinity(); // mol/kg
-    const Scalar MmNaCl = 58.44e-3; // molar mass of NaCl [kg/mol]
-    // convert to mass fraction
-    salinity_[regionIdx] = 1 / ( 1 + 1 / (molality*MmNaCl));
+    // Currently we only support constant salinity converted to mass fraction
+    salinity_[regionIdx] = eclState.getCo2StoreConfig().salinity();
     // set the surface conditions using the STCOND keyword
     Scalar T_ref = eclState.getTableManager().stCond().temperature;
     Scalar P_ref = eclState.getTableManager().stCond().pressure;

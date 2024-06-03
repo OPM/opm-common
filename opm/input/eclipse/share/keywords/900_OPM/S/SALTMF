@@ -1,15 +1,15 @@
 {
-  "name": "SALINITY",
+  "name": "SALTMF",
   "sections": [
     "PROPS"
   ],
   "prohibits": [
-    "SALTMF"
+    "SALINITY"
   ],
   "size": 1,
   "items": [
     {
-      "name": "MOLALITY",
+      "name": "MOLE_FRACTION",
       "value_type": "DOUBLE",
       "default": 0.0
     }

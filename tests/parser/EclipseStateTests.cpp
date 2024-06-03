@@ -607,3 +607,70 @@ BOOST_AUTO_TEST_CASE(EzrokhiTablesTest) {
     BOOST_CHECK_CLOSE(18.0, viscaqa[0].getC1("NACL"), epsilon);
     BOOST_CHECK_CLOSE(19.0, viscaqa[0].getC2("NACL"), epsilon);
 }
+
+BOOST_AUTO_TEST_CASE(SALTMFTest) {
+    const auto deck_salinity_input = R"(
+        RUNSPEC
+
+        DIMENS
+        2 2 1 /
+
+        GRID
+
+        DX 
+        4*1 /
+        DY
+        4*1 /
+        DZ 
+        4*1 /
+        TOPS 
+        4*0.0 /
+
+        PORO
+        4*0.3 /
+
+        PROPS
+
+        SALINITY
+        0.7 /
+    )";
+    const auto deck_saltmf_input = R"(
+        RUNSPEC
+
+        DIMENS
+        2 2 1 /
+
+        GRID
+
+        DX 
+        4*1 /
+        DY
+        4*1 /
+        DZ 
+        4*1 /
+        TOPS 
+        4*0.0 /
+
+        PORO
+        4*0.3 /
+
+        PROPS
+
+        SALTMF
+        0.012443215484890378/
+    )";
+
+    Opm::Parser parser_salinity;
+    Opm::Parser parser_saltmf;
+    auto deck_salinity = parser_salinity.parseString(deck_salinity_input);
+    auto deck_saltmf = parser_saltmf.parseString(deck_saltmf_input);
+    EclipseState state_salinity(deck_salinity);
+    EclipseState state_saltmf(deck_saltmf);
+    Co2StoreConfig config_salinity = state_salinity.getCo2StoreConfig();
+    Co2StoreConfig config_saltmf = state_saltmf.getCo2StoreConfig();
+
+    const auto& salinity = config_salinity.salinity();
+    const auto& saltmf = config_saltmf.salinity();
+    const double epsilon = 0.00001;
+    BOOST_CHECK_CLOSE(salinity, saltmf, epsilon);
+}

@@ -24,6 +24,7 @@
 #include <opm/input/eclipse/Deck/DeckSection.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/C.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/D.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/S.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/T.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/V.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/Tabdims.hpp>
@@ -123,6 +124,17 @@ namespace Opm {
         if (props_section.hasKeyword<ParserKeywords::VISCAQA>()) {
             initEzrokhiTable(deck, "VISCAQA", num_eos_res, cnames, viscaqa_tables);
         }
+
+        // SALINITY or SALTMF convert to mass fraction.
+        if (props_section.hasKeyword<ParserKeywords::SALINITY>()) {
+            const auto& molality = deck["SALINITY"].back().getRecord(0).getItem("MOLALITY").get<double>(0);
+            salt = 1.0 / (1.0 + 1.0 / (molality * MmNaCl));
+        }
+        else if (props_section.hasKeyword<ParserKeywords::SALTMF>()) {
+            const auto& mole_frac = deck["SALTMF"].back().getRecord(0).getItem("MOLE_FRACTION").get<double>(0);
+            salt = mole_frac * MmNaCl / (mole_frac * (MmNaCl - MmH2O) + MmH2O);
+        }
+        
     }
 
     const std::vector<EzrokhiTable>& Co2StoreConfig::getDenaqaTables() const {
@@ -131,6 +143,10 @@ namespace Opm {
 
     const std::vector<EzrokhiTable>& Co2StoreConfig::getViscaqaTables() const {
         return viscaqa_tables;
+    }
+
+    double Co2StoreConfig::salinity() const {
+        return salt;
     }
 
     bool Co2StoreConfig::operator==(const Co2StoreConfig& other) const {
