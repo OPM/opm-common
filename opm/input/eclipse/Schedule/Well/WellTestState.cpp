@@ -39,6 +39,7 @@ namespace Opm {
             return 0;
 
         switch (this->reason) {
+        case WellTestConfig::Reason::NONE:       return WTest::EclCloseReason::NONE;
         case WellTestConfig::Reason::PHYSICAL:   return WTest::EclCloseReason::PHYSICAL;
         case WellTestConfig::Reason::ECONOMIC:   return WTest::EclCloseReason::ECONOMIC;
         case WellTestConfig::Reason::GROUP:      return WTest::EclCloseReason::GCON;
@@ -50,6 +51,7 @@ namespace Opm {
 
     WellTestConfig::Reason WellTestState::WTestWell::inverse_ecl_reason(int ecl_reason) {
         switch (ecl_reason) {
+        case  WTest::EclCloseReason::NONE:     return WellTestConfig::Reason::NONE;
         case  WTest::EclCloseReason::PHYSICAL: return WellTestConfig::Reason::PHYSICAL;
         case  WTest::EclCloseReason::ECONOMIC: return WellTestConfig::Reason::ECONOMIC;
         case  WTest::EclCloseReason::GCON:     return WellTestConfig::Reason::GROUP;
