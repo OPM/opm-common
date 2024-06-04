@@ -1870,7 +1870,10 @@ namespace {
 
         {
             const auto& header = rst_state.header;
-            if (GuideRateModel::rst_valid(header.guide_rate_delay,
+            // A NONE target written to .UNRST may indicate no GUIDERAT (i.e., during history)
+            const auto target = GuideRateModel::TargetFromRestart(header.guide_rate_nominated_phase);
+            if ((target != GuideRateModel::Target::NONE) &&
+                GuideRateModel::rst_valid(header.guide_rate_delay,
                                           header.guide_rate_a,
                                           header.guide_rate_b,
                                           header.guide_rate_c,
@@ -1884,7 +1887,7 @@ namespace {
 
                 const auto guide_rate_model = GuideRateModel {
                     header.guide_rate_delay,
-                    GuideRateModel::TargetFromRestart(header.guide_rate_nominated_phase),
+                    target,
                     header.guide_rate_a,
                     header.guide_rate_b,
                     header.guide_rate_c,
@@ -1896,9 +1899,7 @@ namespace {
                     use_free_gas
                 };
 
-                // A NONE target written to .UNRST may indicate no GUIDERAT (i.e., during history)
-                if (! (guide_rate_model.target()==GuideRateModel::Target::NONE))
-                    this->updateGuideRateModel(guide_rate_model, report_step);
+                this->updateGuideRateModel(guide_rate_model, report_step);
             }
         }
 

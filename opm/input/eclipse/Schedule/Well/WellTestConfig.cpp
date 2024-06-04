@@ -50,7 +50,7 @@ bool WellTestConfig::WTESTWell::test_well(int num_attempt, double elapsed) const
 
 int WellTestConfig::WTESTWell::ecl_reasons() const
 {
-    int ecl_value = 1;
+    int ecl_value = WTest::EclConfigReason::NONE;
 
     if (this->reasons & static_cast<int>(Reason::PHYSICAL))
         ecl_value *= WTest::EclConfigReason::PHYSICAL;
