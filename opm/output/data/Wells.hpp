@@ -27,6 +27,7 @@
 
 #include <algorithm>
 #include <array>
+#include <climits>
 #include <cstddef>
 #include <map>
 #include <stdexcept>
@@ -474,6 +475,9 @@ namespace Opm { namespace data {
     private:
         enum { Size = static_cast<std::size_t>(Item::NumItems) };
 
+        static_assert(Size <= static_cast<std::size_t>(CHAR_BIT),
+                      "Number of items must not exceed CHAR_BIT");
+
         /// Whether or not item has a defined value.  We use the bottom
         /// 'Size' bits.
         unsigned char has_{};
@@ -758,6 +762,47 @@ namespace Opm { namespace data {
         void read(MessageBufferType& buffer);
     };
 
+    struct WellControlLimitItems
+    {
+        enum class Item {
+            Bhp, OilRate, WaterRate, GasRate, ResVRate, LiquidRate,
+
+            // -- Must be last enumerator --
+            NumItems,
+        };
+
+        static std::string itemName(const Item p)
+        {
+            switch (p) {
+            case Item::Bhp:        return "Bhp";
+            case Item::OilRate:    return "OilRate";
+            case Item::WaterRate:  return "WaterRate";
+            case Item::GasRate:    return "GasRate";
+            case Item::ResVRate:   return "ResVRate";
+            case Item::LiquidRate: return "LiquidRate";
+
+            case Item::NumItems:
+                return "Out of bounds (NumItems)";
+            }
+
+            return "Unknown (" + std::to_string(static_cast<int>(p)) + ')';
+        }
+
+        static auto serializationTestItems()
+        {
+            return std::vector {
+                std::pair { Item::Bhp       , 321.09 },
+                std::pair { Item::OilRate   , 987.65 },
+                std::pair { Item::WaterRate , 975.31 },
+                std::pair { Item::GasRate   , 765.43 },
+                std::pair { Item::ResVRate  , 876.54 },
+                std::pair { Item::LiquidRate,  54.32 },
+            };
+        }
+    };
+
+    using WellControlLimits = QuantityCollection<WellControlLimitItems>;
+
     struct Well
     {
         Rates rates{};
@@ -775,6 +820,7 @@ namespace Opm { namespace data {
         std::unordered_map<std::size_t, Segment> segments{};
         CurrentControl current_control{};
         GuideRateValue guide_rates{};
+        WellControlLimits limits{};
 
         inline bool flowing() const noexcept;
 
@@ -829,6 +875,7 @@ namespace Opm { namespace data {
                 && (this->segments == well2.segments)
                 && (this->current_control == well2.current_control)
                 && (this->guide_rates == well2.guide_rates)
+                && (this->limits == well2.limits)
                 ;
         }
 
@@ -846,6 +893,7 @@ namespace Opm { namespace data {
             serializer(segments);
             serializer(current_control);
             serializer(guide_rates);
+            serializer(limits);
         }
 
         static Well serializationTestObject()
@@ -861,7 +909,8 @@ namespace Opm { namespace data {
                 {Connection::serializationTestObject()},
                 {{0, Segment::serializationTestObject()}},
                 CurrentControl::serializationTestObject(),
-                GuideRateValue::serializationTestObject()
+                GuideRateValue::serializationTestObject(),
+                WellControlLimits::serializationTestObject()
             };
         }
     };
@@ -1305,6 +1354,7 @@ namespace Opm { namespace data {
 
         this->current_control.write(buffer);
         this->guide_rates.write(buffer);
+        this->limits.write(buffer);
     }
 
     template <class MessageBufferType>
@@ -1472,6 +1522,7 @@ namespace Opm { namespace data {
 
         this->current_control.read(buffer);
         this->guide_rates.read(buffer);
+        this->limits.read(buffer);
     }
 
     template <class MessageBufferType>
