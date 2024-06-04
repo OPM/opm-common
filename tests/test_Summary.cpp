@@ -151,24 +151,21 @@ double gas_PI_unit()
     return UnitSystem::newMETRIC().to_si(UnitSystem::measure::gas_productivity_index, 1.0);
 }
 
-/*
-  This is quite misleading, because the values prepared in the test
-  input deck are NOT used.
-*/
+// This is quite misleading, because the values prepared in the test input
+// deck are NOT used.
 data::Wells result_wells(const bool w3_injector = true)
 {
-    /* populate with the following pattern:
-     *
-     * Wells are named W_1, W_2 etc, i.e. wells are 1 indexed.
-     *
-     * rates on a well are populated with 10 * wellidx . type (where type is
-     * 0-1-2 from owg)
-     *
-     * bhp is wellidx.1
-     * bhp is wellidx.2
-     *
-     * completions are 100*wellidx . type
-     */
+    // populate with the following pattern:
+    //
+    // Wells are named W_1, W_2 etc, i.e. wells are 1 indexed.
+    //
+    // rates on a well are populated with 10 * wellidx . type (where type is
+    // 0-1-2 from owg)
+    //
+    // bhp is wellidx.1
+    // bhp is wellidx.2
+    //
+    // completions are 100*wellidx . type
 
     // conversion factor Pascal (simulator output) <-> barsa
     const double ps = 100000;
@@ -345,6 +342,14 @@ data::Wells result_wells(const bool w3_injector = true)
     well1.guide_rates.set(data::GuideRateValue::Item::Oil, 123.456*sm3_pr_day())
                      .set(data::GuideRateValue::Item::Gas, 2345.67*sm3_pr_day());
 
+    well1.limits
+        .set(data::WellControlLimits::Item::Bhp, 123.456*barsa())
+        .set(data::WellControlLimits::Item::OilRate, 1618.034*sm3_pr_day())
+        .set(data::WellControlLimits::Item::GasRate, 31415.926*sm3_pr_day())
+        .set(data::WellControlLimits::Item::ResVRate, 2109.876*rm3_pr_day())
+        .set(data::WellControlLimits::Item::LiquidRate, 2000.0*sm3_pr_day())
+        .set(data::WellControlLimits::Item::WaterRate, 381.966*sm3_pr_day());
+
     using SegRes = decltype(well1.segments);
     using Ctrl = data::CurrentControl;
     using GRValue = data::GuideRateValue;
@@ -361,6 +366,14 @@ data::Wells result_wells(const bool w3_injector = true)
     well2.current_control.prod = ::Opm::Well::ProducerCMode::ORAT;
     well2.guide_rates.set(GRValue::Item::Water, 654.321*sm3_pr_day());
 
+    // No LRAT limit.
+    well2.limits
+        .set(data::WellControlLimits::Item::Bhp, 12.345*barsa())
+        .set(data::WellControlLimits::Item::OilRate, 2121.21*sm3_pr_day())
+        .set(data::WellControlLimits::Item::GasRate, 12121.2*sm3_pr_day())
+        .set(data::WellControlLimits::Item::ResVRate, 121.21*rm3_pr_day())
+        .set(data::WellControlLimits::Item::WaterRate, 212.121*sm3_pr_day());
+
     data::Well well3 {
         rates3, 2.1 * ps, 2.2 * ps, 2.3 * ps, 3,
         well_filtrate,
@@ -369,9 +382,16 @@ data::Wells result_wells(const bool w3_injector = true)
 
         { {well3_comp1} }, SegRes{}, Ctrl{}, GRValue{}
     };
+    well3.limits
+        .set(data::WellControlLimits::Item::Bhp, 234.5*barsa());
+
     well3.current_control.isProducer = !w3_injector;
     if (! well3.current_control.isProducer) { // W_3 is injector
         well3.current_control.inj = ::Opm::Well::InjectorCMode::BHP;
+
+        // Injector, preferred phase = WATER => WRAT only.
+        well3.limits
+            .set(data::WellControlLimits::Item::WaterRate, 345.67*sm3_pr_day());
     }
     else {
         well3.current_control.prod = ::Opm::Well::ProducerCMode::BHP;
@@ -386,6 +406,11 @@ data::Wells result_wells(const bool w3_injector = true)
         {
             xc.rates.set(p, - xc.rates.get(p));
         }
+
+        // Only GRAT and LRAT limits.
+        well3.limits
+            .set(data::WellControlLimits::Item::GasRate, 34567.89*sm3_pr_day())
+            .set(data::WellControlLimits::Item::LiquidRate, 333.444*sm3_pr_day());
     }
 
     well3.guide_rates.set(GRValue::Item::ResV, 355.113*sm3_pr_day());
@@ -402,6 +427,10 @@ data::Wells result_wells(const bool w3_injector = true)
     well6.current_control.inj = ::Opm::Well::InjectorCMode::GRUP;
     well6.guide_rates.set(GRValue::Item::Gas, 222.333*sm3_pr_day())
                      .set(GRValue::Item::Water, 333.444*sm3_pr_day());
+
+    // GRAT only
+    well6.limits
+        .set(data::WellControlLimits::Item::GasRate, 30.0e3*sm3_pr_day());
 
     data::Wells wellrates;
 
@@ -795,10 +824,75 @@ BOOST_AUTO_TEST_CASE(well_keywords)
     BOOST_CHECK_CLOSE( 60.0, ecl_sum_get_well_var( resp, 2, "W_3", "WWITH" ), 1e-5 );
     BOOST_CHECK_CLOSE( 0,    ecl_sum_get_well_var( resp, 2, "W_3", "WGITH" ), 1e-5 );
 
-    /* Production targets */
-    BOOST_CHECK_CLOSE( 30.1 , ecl_sum_get_well_var( resp, 1, "W_5", "WVPRT" ), 1e-5 );
+    // ---------------------------------------------------------------------------
+    // Targets/limits
 
-    /* WWCT - water cut */
+    // W_1
+    BOOST_CHECK_CLOSE( 123.456, ecl_sum_get_well_var(resp, 1, "W_1", "WBHPT" ), 1.0e-5 );
+
+    // Production limits
+    BOOST_CHECK_CLOSE(  1618.034, ecl_sum_get_well_var(resp, 1, "W_1", "WOPRT" ), 1.0e-5 );
+    BOOST_CHECK_CLOSE( 31415.926, ecl_sum_get_well_var(resp, 1, "W_1", "WGPRT" ), 1.0e-5 );
+    BOOST_CHECK_CLOSE(  2000.0  , ecl_sum_get_well_var(resp, 1, "W_1", "WLPRT" ), 1.0e-5 );
+    BOOST_CHECK_CLOSE(  2109.876, ecl_sum_get_well_var(resp, 1, "W_1", "WVPRT" ), 1.0e-5 );
+    BOOST_CHECK_CLOSE(   381.966, ecl_sum_get_well_var(resp, 1, "W_1", "WWPRT" ), 1.0e-5 );
+
+    // Injection limits.  Note: W_1 is producer => all WxIRT values zero.
+    BOOST_CHECK_CLOSE( 0.0, ecl_sum_get_well_var(resp, 1, "W_1", "WOIRT" ), 1.0e-5 );
+    BOOST_CHECK_CLOSE( 0.0, ecl_sum_get_well_var(resp, 1, "W_1", "WGIRT" ), 1.0e-5 );
+    BOOST_CHECK_CLOSE( 0.0, ecl_sum_get_well_var(resp, 1, "W_1", "WVIRT" ), 1.0e-5 );
+    BOOST_CHECK_CLOSE( 0.0, ecl_sum_get_well_var(resp, 1, "W_1", "WWIRT" ), 1.0e-5 );
+
+    // W_2
+    BOOST_CHECK_CLOSE( 12.345, ecl_sum_get_well_var(resp, 1, "W_2", "WBHPT" ), 1.0e-5 );
+
+    // Production limits.  LRAT unset => 0.0
+    BOOST_CHECK_CLOSE(  2121.21 , ecl_sum_get_well_var(resp, 1, "W_2", "WOPRT" ), 1.0e-5 );
+    BOOST_CHECK_CLOSE( 12121.2  , ecl_sum_get_well_var(resp, 1, "W_2", "WGPRT" ), 1.0e-5 );
+    BOOST_CHECK_CLOSE(     0.0  , ecl_sum_get_well_var(resp, 1, "W_2", "WLPRT" ), 1.0e-5 );
+    BOOST_CHECK_CLOSE(   121.21 , ecl_sum_get_well_var(resp, 1, "W_2", "WVPRT" ), 1.0e-5 );
+    BOOST_CHECK_CLOSE(   212.121, ecl_sum_get_well_var(resp, 1, "W_2", "WWPRT" ), 1.0e-5 );
+
+    // Injection limits.  Note: W_2 is producer => all WxIRT values zero.
+    BOOST_CHECK_CLOSE( 0.0, ecl_sum_get_well_var(resp, 1, "W_2", "WOIRT" ), 1.0e-5 );
+    BOOST_CHECK_CLOSE( 0.0, ecl_sum_get_well_var(resp, 1, "W_2", "WGIRT" ), 1.0e-5 );
+    BOOST_CHECK_CLOSE( 0.0, ecl_sum_get_well_var(resp, 1, "W_2", "WVIRT" ), 1.0e-5 );
+    BOOST_CHECK_CLOSE( 0.0, ecl_sum_get_well_var(resp, 1, "W_2", "WWIRT" ), 1.0e-5 );
+
+    // W_3
+    BOOST_CHECK_CLOSE( 234.5, ecl_sum_get_well_var(resp, 1, "W_3", "WBHPT" ), 1.0e-5 );
+
+    // Production limits.  W_3 is injector => all WxPRT values zero.
+    BOOST_CHECK_CLOSE( 0.0, ecl_sum_get_well_var(resp, 1, "W_3", "WOPRT" ), 1.0e-5 );
+    BOOST_CHECK_CLOSE( 0.0, ecl_sum_get_well_var(resp, 1, "W_3", "WGPRT" ), 1.0e-5 );
+    BOOST_CHECK_CLOSE( 0.0, ecl_sum_get_well_var(resp, 1, "W_3", "WLPRT" ), 1.0e-5 );
+    BOOST_CHECK_CLOSE( 0.0, ecl_sum_get_well_var(resp, 1, "W_3", "WVPRT" ), 1.0e-5 );
+    BOOST_CHECK_CLOSE( 0.0, ecl_sum_get_well_var(resp, 1, "W_3", "WWPRT" ), 1.0e-5 );
+
+    // Injection limits.  Note: W_3 is WATER injector => WWIRT non-zero, others zero.
+    BOOST_CHECK_CLOSE(   0.0 , ecl_sum_get_well_var(resp, 1, "W_3", "WOIRT" ), 1.0e-5 );
+    BOOST_CHECK_CLOSE(   0.0 , ecl_sum_get_well_var(resp, 1, "W_3", "WGIRT" ), 1.0e-5 );
+    BOOST_CHECK_CLOSE(   0.0 , ecl_sum_get_well_var(resp, 1, "W_3", "WVIRT" ), 1.0e-5 );
+    BOOST_CHECK_CLOSE( 345.67, ecl_sum_get_well_var(resp, 1, "W_3", "WWIRT" ), 1.0e-5 );
+
+    // W_6.  RATE constrained GAS injector.  Others 0.0.
+    BOOST_CHECK_CLOSE( 0.0, ecl_sum_get_well_var(resp, 1, "W_6", "WBHPT" ), 1.0e-5 );
+
+    // Production limits.  W_6 is injector => all WxPRT values zero.
+    BOOST_CHECK_CLOSE( 0.0, ecl_sum_get_well_var(resp, 1, "W_6", "WOPRT" ), 1.0e-5 );
+    BOOST_CHECK_CLOSE( 0.0, ecl_sum_get_well_var(resp, 1, "W_6", "WGPRT" ), 1.0e-5 );
+    BOOST_CHECK_CLOSE( 0.0, ecl_sum_get_well_var(resp, 1, "W_6", "WLPRT" ), 1.0e-5 );
+    BOOST_CHECK_CLOSE( 0.0, ecl_sum_get_well_var(resp, 1, "W_6", "WVPRT" ), 1.0e-5 );
+    BOOST_CHECK_CLOSE( 0.0, ecl_sum_get_well_var(resp, 1, "W_6", "WWPRT" ), 1.0e-5 );
+
+    // Injection limits.  Note: W_6 is GAS injector => WGIRT non-zero, others zero.
+    BOOST_CHECK_CLOSE(  0.0  , ecl_sum_get_well_var(resp, 1, "W_6", "WOIRT" ), 1.0e-5 );
+    BOOST_CHECK_CLOSE( 30.0e3, ecl_sum_get_well_var(resp, 1, "W_6", "WGIRT" ), 1.0e-5 );
+    BOOST_CHECK_CLOSE(  0.0  , ecl_sum_get_well_var(resp, 1, "W_6", "WVIRT" ), 1.0e-5 );
+    BOOST_CHECK_CLOSE(  0.0  , ecl_sum_get_well_var(resp, 1, "W_6", "WWIRT" ), 1.0e-5 );
+
+    // ---------------------------------------------------------------------------
+    // WWCT - water cut
     const double wwcut1 = 10.0 / ( 10.0 + 10.1 );
     const double wwcut2 = 20.0 / ( 20.0 + 20.1 );
     const double wwcut3 = 0;

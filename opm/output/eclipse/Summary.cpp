@@ -602,6 +602,30 @@ measure rate_unit<Opm::data::GuideRateValue::Item::Gas>() { return measure::gas_
 template <> constexpr
 measure rate_unit<Opm::data::GuideRateValue::Item::ResV>() { return measure::rate; }
 
+template <Opm::data::WellControlLimits::Item>
+[[nodiscard]] constexpr measure controlLimitUnit() noexcept
+{
+    return measure::liquid_surface_rate;
+}
+
+template <>
+[[nodiscard]] constexpr measure controlLimitUnit<Opm::data::WellControlLimits::Item::Bhp>() noexcept
+{
+    return measure::pressure;
+}
+
+template <>
+[[nodiscard]] constexpr measure controlLimitUnit<Opm::data::WellControlLimits::Item::GasRate>() noexcept
+{
+    return measure::gas_surface_rate;
+}
+
+template <>
+[[nodiscard]] constexpr measure controlLimitUnit<Opm::data::WellControlLimits::Item::ResVRate>() noexcept
+{
+    return measure::rate;
+}
+
 double efac( const std::vector<std::pair<std::string,double>>& eff_factors, const std::string& name)
 {
     auto it = std::find_if(eff_factors.begin(), eff_factors.end(),
@@ -676,7 +700,6 @@ inline quantity artificial_lift_quantity( const fn_args& args ) {
     return { alq_rate, dimension };
 }
 
-
 inline quantity glir( const fn_args& args ) {
     if (args.schedule_wells.empty()) {
         return { 0.0, measure::gas_surface_rate };
@@ -718,23 +741,6 @@ inline quantity glir( const fn_args& args ) {
     }
 
     return { alq_rate, measure::gas_surface_rate };
-}
-
-inline quantity wwirt( const fn_args& args ) {
-    const quantity zero = { 0, rate_unit< Opm::Phase::WATER >() };
-
-    if (args.schedule_wells.empty()) {
-        return zero;
-    }
-
-    const auto* well  = args.schedule_wells.front();
-    const auto& wtype = well->wellType();
-    if (wtype.producer() || (wtype.injector_type() != Opm::InjectorType::WATER)) {
-        return zero;
-    }
-
-    const auto& injection = well->injectionControls(args.st);
-    return { injection.surface_rate, rate_unit<Opm::Phase::WATER>() };
 }
 
 template< rt phase, bool injection = true >
@@ -1568,6 +1574,31 @@ inline quantity res_vol_production_target( const fn_args& args )
     return { sum, measure::rate };
 }
 
+template <bool injection, Opm::data::WellControlLimits::Item i>
+quantity well_control_limit(const fn_args& args)
+{
+    constexpr auto m = controlLimitUnit<i>();
+    const auto zero = quantity { 0.0, m };
+
+    if (args.schedule_wells.empty() ||
+        ((i != Opm::data::WellControlLimits::Item::Bhp) &&
+         (args.schedule_wells.front()->isProducer() == injection)))
+    {
+        return zero;
+    }
+
+    const auto& name = args.schedule_wells.front()->name();
+
+    auto xwPos = args.wells.find(name);
+    if (xwPos == args.wells.end()) {
+        return zero;
+    }
+
+    return xwPos->second.limits.has(i)
+        ? quantity { xwPos->second.limits.get(i), m }
+        : zero;
+}
+
 inline quantity duration( const fn_args& args ) {
     return { args.duration, measure::time };
 }
@@ -2002,7 +2033,6 @@ using UnitTable = std::unordered_map<std::string, Opm::UnitSystem::measure>;
 
 static const auto funs = std::unordered_map<std::string, ofun> {
     { "WWIR", rate< rt::wat, injector > },
-    { "WWIRT", wwirt },
     { "WOIR", rate< rt::oil, injector > },
     { "WGIR", rate< rt::gas, injector > },
     { "WEIR", rate< rt::energy, injector > },
@@ -2165,7 +2195,17 @@ static const auto funs = std::unordered_map<std::string, ofun> {
     { "WBP9", well_block_average_pressure<Opm::data::WellBlockAvgPress::Quantity::WBP9> },
     { "WTPCHEA", temperature< producer >},
     { "WTICHEA", temperature< injector >},
-    { "WVPRT", res_vol_production_target },
+
+    { "WBHPT", well_control_limit<producer, Opm::data::WellControlLimits::Item::Bhp> },
+    { "WOIRT", well_control_limit<injector, Opm::data::WellControlLimits::Item::OilRate> },
+    { "WOPRT", well_control_limit<producer, Opm::data::WellControlLimits::Item::OilRate> },
+    { "WWIRT", well_control_limit<injector, Opm::data::WellControlLimits::Item::WaterRate> },
+    { "WWPRT", well_control_limit<producer, Opm::data::WellControlLimits::Item::WaterRate> },
+    { "WGIRT", well_control_limit<injector, Opm::data::WellControlLimits::Item::GasRate> },
+    { "WGPRT", well_control_limit<producer, Opm::data::WellControlLimits::Item::GasRate> },
+    { "WVIRT", well_control_limit<injector, Opm::data::WellControlLimits::Item::ResVRate> },
+    { "WVPRT", well_control_limit<producer, Opm::data::WellControlLimits::Item::ResVRate> },
+    { "WLPRT", well_control_limit<producer, Opm::data::WellControlLimits::Item::LiquidRate> },
 
     { "WMCTL", well_control_mode },
 

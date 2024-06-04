@@ -652,7 +652,7 @@ WNIT
 WTIRSEA
 /
 
--- Production Cummulatives
+-- Production Cumulatives
 WWPT
 /
 WWPTH
@@ -678,7 +678,7 @@ WOPTS
 -- Tracers
 WTPTSEA
 /
--- Injection Cummulatives
+-- Injection Cumulatives
 WWIT
   W_3
 /
@@ -705,6 +705,27 @@ WTITSEA
 WTICSEA
 /
 
+-- Targets/limits
+WBHPT
+W_1 W_2 W_3 W_6 /
+WOPRT
+W_1 W_2 W_3 W_6 /
+WGPRT
+W_1 W_2 W_3 W_6 /
+WLPRT
+W_1 W_2 W_3 W_6 /
+WVPRT
+W_1 W_2 W_3 W_6 /
+WWPRT
+W_1 W_2 W_3 W_6 /
+WOIRT
+W_1 W_2 W_3 W_6 /
+WGIRT
+W_1 W_2 W_3 W_6 /
+WVIRT
+W_1 W_2 W_3 W_6 /
+WWIRT
+W_1 W_2 W_3 W_6 /
 
 -- Performance
 WBHP
@@ -765,8 +786,6 @@ WGLIR
 WVPR
 /
 WVPT
-/
-WVPRT
 /
 WOPP
 /
