@@ -15,7 +15,7 @@
 
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
- */
+*/
 
 #ifndef OPM_OUTPUT_WELLS_HPP
 #define OPM_OUTPUT_WELLS_HPP
@@ -193,7 +193,8 @@ namespace Opm { namespace data {
             double vaporized_water = 0.0;
     };
 
-    struct ConnectionFiltrate {
+    struct ConnectionFiltrate
+    {
         double rate;
         double total;
         double skin_factor;
@@ -240,8 +241,9 @@ namespace Opm { namespace data {
         void read(MessageBufferType& buffer);
     };
 
-    struct Connection {
-        using global_index = size_t;
+    struct Connection
+    {
+        using global_index = std::size_t;
         static const constexpr int restart_size = 6;
 
         global_index index{};
@@ -310,7 +312,8 @@ namespace Opm { namespace data {
         }
     };
 
-    class SegmentPressures {
+    class SegmentPressures
+    {
     public:
         enum class Value : std::size_t {
             Pressure, PDrop, PDropHydrostatic, PDropAccel, PDropFriction,
@@ -377,7 +380,7 @@ namespace Opm { namespace data {
     };
 
     template <typename Items>
-    class SegmentQuantity
+    class QuantityCollection
     {
     public:
         using Item = typename Items::Item;
@@ -395,10 +398,10 @@ namespace Opm { namespace data {
             return (i < Size) && this->hasItem(i);
         }
 
-        bool operator==(const SegmentQuantity& vec) const
+        bool operator==(const QuantityCollection& that) const
         {
-            return (this->has_   == vec.has_)
-                && (this->value_ == vec.value_);
+            return (this->has_   == that.has_)
+                && (this->value_ == that.value_);
         }
 
         double get(const Item p) const
@@ -412,7 +415,7 @@ namespace Opm { namespace data {
             return this->value_[ this->index(p) ];
         }
 
-        SegmentQuantity& set(const Item p, const double value)
+        QuantityCollection& set(const Item p, const double value)
         {
             const auto i = this->index(p);
 
@@ -457,9 +460,9 @@ namespace Opm { namespace data {
             serializer(this->value_);
         }
 
-        static SegmentQuantity serializationTestObject()
+        static QuantityCollection serializationTestObject()
         {
-            auto quant = SegmentQuantity{};
+            auto quant = QuantityCollection{};
 
             for (const auto& [item, value] : Items::serializationTestItems()) {
                 quant.set(item, value);
@@ -559,8 +562,8 @@ namespace Opm { namespace data {
         }
     };
 
-    using SegmentPhaseQuantity = SegmentQuantity<PhaseItems>;
-    using SegmentPhaseDensity = SegmentQuantity<DensityItems>;
+    using SegmentPhaseQuantity = QuantityCollection<PhaseItems>;
+    using SegmentPhaseDensity = QuantityCollection<DensityItems>;
 
     struct Segment
     {
@@ -615,7 +618,8 @@ namespace Opm { namespace data {
         }
     };
 
-    struct CurrentControl {
+    struct CurrentControl
+    {
         bool isProducer{true};
 
         ::Opm::WellProducerCMode prod {
@@ -720,7 +724,8 @@ namespace Opm { namespace data {
         std::array<double, NumQuantities> wbp_{};
     };
 
-    struct WellFiltrate {
+    struct WellFiltrate
+    {
         double rate{0.};
         double total{0.};
         double concentration{0.};
@@ -753,8 +758,10 @@ namespace Opm { namespace data {
         void read(MessageBufferType& buffer);
     };
 
-    struct Well {
+    struct Well
+    {
         Rates rates{};
+
         double bhp{0.0};
         double thp{0.0};
         double temperature{0.0};
@@ -764,39 +771,47 @@ namespace Opm { namespace data {
 
         ::Opm::WellStatus dynamicStatus { Opm::WellStatus::OPEN };
 
-        std::vector< Connection > connections{};
+        std::vector<Connection> connections{};
         std::unordered_map<std::size_t, Segment> segments{};
         CurrentControl current_control{};
         GuideRateValue guide_rates{};
 
         inline bool flowing() const noexcept;
+
         template <class MessageBufferType>
         void write(MessageBufferType& buffer) const;
+
         template <class MessageBufferType>
         void read(MessageBufferType& buffer);
 
         inline void init_json(Json::JsonObject& json_data) const;
 
-        const Connection* find_connection(Connection::global_index connection_grid_index) const {
-            const auto connection = std::find_if( this->connections.begin() ,
-                                                  this->connections.end() ,
-                                                  [=]( const Connection& c ) {
-                                                      return c.index == connection_grid_index; });
+        const Connection*
+        find_connection(const Connection::global_index connection_grid_index) const
+        {
+            auto connection = std::find_if(this->connections.begin(),
+                                           this->connections.end(),
+                                           [connection_grid_index](const Connection& c)
+                                           { return c.index == connection_grid_index; });
 
-            if( connection == this->connections.end() )
+            if (connection == this->connections.end()) {
                 return nullptr;
+            }
 
             return &*connection;
         }
 
-        Connection* find_connection(Connection::global_index connection_grid_index) {
-            auto connection = std::find_if( this->connections.begin() ,
-                                            this->connections.end() ,
-                                            [=]( const Connection& c ) {
-                                                return c.index == connection_grid_index; });
+        Connection*
+        find_connection(const Connection::global_index connection_grid_index)
+        {
+            auto connection = std::find_if(this->connections.begin(),
+                                           this->connections.end(),
+                                           [connection_grid_index](const Connection& c)
+                                           { return c.index == connection_grid_index; });
 
-            if( connection == this->connections.end() )
+            if (connection == this->connections.end()) {
                 return nullptr;
+            }
 
             return &*connection;
         }
@@ -1253,12 +1268,15 @@ namespace Opm { namespace data {
     }
 
     template <class MessageBufferType>
-    void Well::write(MessageBufferType& buffer) const {
+    void Well::write(MessageBufferType& buffer) const
+    {
         this->rates.write(buffer);
+
         buffer.write(this->bhp);
         buffer.write(this->thp);
         buffer.write(this->temperature);
         buffer.write(this->control);
+
         this->filtrate.write(buffer);
 
         {
@@ -1266,10 +1284,14 @@ namespace Opm { namespace data {
             buffer.write(status);
         }
 
-        unsigned int size = this->connections.size();
-        buffer.write(size);
-        for (const Connection& comp : this->connections)
-            comp.write(buffer);
+        {
+            const unsigned int size = this->connections.size();
+            buffer.write(size);
+
+            for (const Connection& comp : this->connections) {
+                comp.write(buffer);
+            }
+        }
 
         {
             const auto nSeg =
@@ -1403,12 +1425,15 @@ namespace Opm { namespace data {
     }
 
     template <class MessageBufferType>
-    void Well::read(MessageBufferType& buffer) {
+    void Well::read(MessageBufferType& buffer)
+    {
         this->rates.read(buffer);
+
         buffer.read(this->bhp);
         buffer.read(this->thp);
         buffer.read(this->temperature);
         buffer.read(this->control);
+
         this->filtrate.read(buffer);
 
         {
@@ -1418,13 +1443,14 @@ namespace Opm { namespace data {
         }
 
         // Connection information
-        unsigned int size = 0.0; //this->connections.size();
-        buffer.read(size);
-        this->connections.resize(size);
-        for (size_t i = 0;  i < size; ++i)
         {
-            auto& comp = this->connections[ i ];
-            comp.read(buffer);
+            unsigned int size = 0;
+            buffer.read(size);
+
+            this->connections.resize(size);
+            for (auto& connection : this->connections) {
+                connection.read(buffer);
+            }
         }
 
         // Segment information (if applicable)
