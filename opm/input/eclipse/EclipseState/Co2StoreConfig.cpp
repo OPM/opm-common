@@ -44,7 +44,7 @@ namespace {
         if (cnames.empty()) {
             const auto msg = "CNAMES must be defined together with " + keyword_name;
             throw Opm::OpmInputError(msg, deck[keyword_name].begin()->location());
-        }    
+        }
         
         ezrokhitable.resize(num_eos_res);
         const auto& keyword = deck[keyword_name].back();
@@ -58,7 +58,7 @@ namespace {
                     throw Opm::OpmInputError(msg, keyword.location());
                 }
                 // Check if table has entries for queried cname
-                if (3 * static_cast<std::size_t>(index) >= record.getItem("DATA").data_size()) {
+                if (3 * static_cast<std::size_t>(index) + 3 > record.getItem("DATA").data_size()) {
                     auto msg = keyword_name + " does not have C0, C1 and C2 entries for CNAMES = " + cname;
                     throw Opm::OpmInputError(msg, keyword.location());
                 }
@@ -102,6 +102,8 @@ namespace Opm {
             if (cnames_keyword.size() > 1){
                 throw OpmInputError("Multiple CNAMES keywords defined in deck", cnames_keyword.begin()->location());
             }
+
+            // Only read CNAMES for H2O, CO2 and NACL
             const auto& keyword = cnames_keyword.back();
             const auto& item = keyword.getRecord(0).getItem<ParserKeywords::CNAMES::data>();
             const auto num_comp = item.getData<std::string>().size();
