@@ -24,6 +24,7 @@
 #include <vector>
 #include <string>
 #include <iosfwd>
+#include <optional>
 
 #include <opm/input/eclipse/Units/Dimension.hpp>
 
@@ -80,12 +81,11 @@ public:
     bool operator==(const UDAValue& other) const;
     bool operator!=(const UDAValue& other) const;
 
-    bool is_numeric() const { return numeric_value; }
+    bool is_numeric() const { return double_value.has_value(); }
 
     template<class Serializer>
     void serializeOp(Serializer& serializer)
     {
-        serializer(numeric_value);
         serializer(double_value);
         serializer(string_value);
         serializer(dim);
@@ -95,8 +95,7 @@ public:
 
 
 private:
-    bool numeric_value;
-    double double_value;
+    std::optional<double> double_value;
     std::string string_value;
 
     Dimension dim;
