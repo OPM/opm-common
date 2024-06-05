@@ -603,6 +603,8 @@ void handleWTMULT(HandlerContext& handlerContext)
                     handlerContext.state().wells.update(std::move(well));
                 }
             }
+
+            handlerContext.affected_well(well_name);
         }
     }
 }
