@@ -1,5 +1,5 @@
 /*
-  Copyright (C) 2024 Equinor
+  Copyright (C) 2024 Norce
 
   This file is part of the Open Porous Media project (OPM).
 
@@ -60,16 +60,16 @@ public:
 
     static EzrokhiTable serializationTestObject();
 
-    void init(const DeckRecord& record, const std::string cname, const int icomp);
+    void init(const DeckRecord& record, const std::string& cname, const int icomp);
     std::size_t size() const;
     bool empty() const;
     std::unordered_map<std::string, EzrokhiRecord>::const_iterator begin() const;
     std::unordered_map<std::string, EzrokhiRecord>::const_iterator end() const;
-    const EzrokhiRecord& operator[](const std::string name) const;
+    const EzrokhiRecord& operator[](const std::string& name) const;
 
-    double getC0(const std::string name) const;
-    double getC1(const std::string name) const;
-    double getC2(const std::string name) const;
+    double getC0(const std::string& name) const;
+    double getC1(const std::string& name) const;
+    double getC2(const std::string& name) const;
 
     bool operator==(const EzrokhiTable& other) const {
         return this->data == other.data;

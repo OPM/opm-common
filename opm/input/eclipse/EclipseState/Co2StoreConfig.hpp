@@ -87,8 +87,8 @@ class Deck;
     std::vector<EzrokhiTable> denaqa_tables;
     std::vector<EzrokhiTable> viscaqa_tables;
     double salt {0.0};
-    double MmNaCl = 58.44e-3;
-    double MmH2O = 18e-3;
+    static constexpr double MmNaCl = 58.44e-3;
+    static constexpr double MmH2O = 18e-3;
     int activityModel {3};
   };
 }

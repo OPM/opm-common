@@ -1,5 +1,5 @@
 /*
-  Copyright 2024 Equinor
+  Copyright 2024 Norce
 
   This file is part of the Open Porous Media project (OPM).
 
@@ -25,7 +25,7 @@
 
 namespace Opm {
 
-    void EzrokhiTable::init(const DeckRecord& record, const std::string cname, const int icomp) 
+    void EzrokhiTable::init(const DeckRecord& record, const std::string& cname, const int icomp) 
     {
         // DATA is a flattened (ncomps, 3) table
         const double c0 = record.getItem("DATA").getSIDouble(3 * icomp);
@@ -36,17 +36,17 @@ namespace Opm {
         this->data.emplace(std::piecewise_construct, std::forward_as_tuple(cname), std::forward_as_tuple(c0, c1, c2));
     }
 
-double EzrokhiTable::getC0(const std::string name) const
+double EzrokhiTable::getC0(const std::string& name) const
 {
     return this->data.at(name).c0;
 }
 
-double EzrokhiTable::getC1(const std::string name) const
+double EzrokhiTable::getC1(const std::string& name) const
 {
     return this->data.at(name).c1;
 }
 
-double EzrokhiTable::getC2(const std::string name) const
+double EzrokhiTable::getC2(const std::string& name) const
 {
     return this->data.at(name).c2;
 }
@@ -71,7 +71,7 @@ std::unordered_map<std::string, EzrokhiRecord>::const_iterator EzrokhiTable::end
     return this->data.end();
 }
 
-const EzrokhiRecord& EzrokhiTable::operator[](const std::string name) const {
+const EzrokhiRecord& EzrokhiTable::operator[](const std::string& name) const {
     return this->data.at(name);
 }
 
