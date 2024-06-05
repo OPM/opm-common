@@ -1091,22 +1091,23 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
             this->snapshots[report_step].guide_rate.update( std::move(new_config) );
     }
 
-    /*
-      There are many SCHEDULE keyword which take a wellname as argument. In
-      addition to giving a fully qualified name like 'W1' you can also specify
-      shell wildcard patterns like like 'W*', you can get all the wells in the
-      well-list '*WL'[1] and the wellname '?' is used to get all the wells which
-      already have matched a condition in a ACTIONX keyword. This function
-      should be one-stop function to get all well names according to a input
-      pattern. The timestep argument is used to check that the wells have
-      indeed been defined at the point in time we are considering.
-
-      [1]: The leading '*' in a WLIST name should not be interpreted as a shell
-           wildcard!
-    */
-
-
-    std::vector<std::string> Schedule::wellNames(const std::string& pattern, std::size_t timeStep, const std::vector<std::string>& matching_wells) const {
+    // There are many SCHEDULE keyword which take a wellname as argument.
+    // In addition to giving a fully qualified name like 'W1' you can also
+    // specify shell wildcard patterns like like 'W*', you can get all the
+    // wells in the well-list '*WL'[1] and the wellname '?' is used to get
+    // all the wells which already have matched a condition in a ACTIONX
+    // keyword.  This function should be one-stop function to get all well
+    // names according to a input pattern.  The timestep argument is used to
+    // check that the wells have indeed been defined at the point in time we
+    // are considering.
+    //
+    // [1]: The leading '*' in a WLIST name should not be interpreted as a
+    //      shell wildcard!
+    std::vector<std::string>
+    Schedule::wellNames(const std::string&              pattern,
+                        const std::size_t               timeStep,
+                        const std::vector<std::string>& matching_wells) const
+    {
         const auto wm = this->wellMatcher(timeStep);
 
         return (pattern == "?")
@@ -1116,24 +1117,28 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
 
 
 
-    std::vector<std::string> Schedule::wellNames(const std::string& pattern,
-                                                 const HandlerContext& context,
-                                                 bool allowEmpty)
+    std::vector<std::string>
+    Schedule::wellNames(const std::string&    pattern,
+                        const HandlerContext& context,
+                        const bool            allowEmpty)
     {
-        std::vector<std::string> valid_names;
-        const auto& report_step = context.currentStep;
-        auto names = this->wellNames(pattern, report_step, context.matching_wells);
+        auto names = this->wellNames(pattern, context.currentStep, context.matching_wells);
+
         if (names.empty() && !allowEmpty) {
-            const auto& location = context.keyword.location();
             if (this->action_wgnames.has_well(pattern)) {
-                std::string msg = fmt::format(R"(Well: {} not yet defined for keyword {}.
+                const auto& location = context.keyword.location();
+
+                const auto msg = fmt::format(R"(Well: {} not yet defined for keyword {}.
 Expecting well to be defined with WELSPECS in ACTIONX before actual use.
 File {} line {}.)", pattern, location.keyword, location.filename, location.lineno);
+
                 OpmLog::warning(msg);
-            } else {
+            }
+            else {
                 context.invalidNamePattern(pattern);
             }
         }
+
         return names;
     }
 
