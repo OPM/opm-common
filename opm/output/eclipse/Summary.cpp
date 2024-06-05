@@ -1194,6 +1194,21 @@ inline quantity srate(const fn_args& args)
     });
 }
 
+template< rt tracer, rt phase>
+inline quantity sratetracer(const fn_args& args)
+{
+    return segment_quantity(args, rate_unit<phase>(), 
+        [&args](const Opm::data::Segment& segment)
+    {
+        // Tracer-related keywords, STFRx and STFCx, have a 4-letter prefix length
+        constexpr auto prefix_len = 4;
+        std::string tracer_name = args.keyword_name.substr(prefix_len);
+        
+        return - segment.rates.get(tracer, 0.0, tracer_name)
+            * efac(args.eff_factors, args.schedule_wells.front()->name());
+    });
+}
+
 template <typename Items>
 double segment_phase_quantity_value(const Opm::data::QuantityCollection<Items>& q,
                                     const typename Items::Item                  p)
@@ -2594,6 +2609,12 @@ static const auto funs = std::unordered_map<std::string, ofun> {
     { "SPRDH", segpress<Opm::data::SegmentPressures::Value::PDropHydrostatic> },
     { "SPRDF", segpress<Opm::data::SegmentPressures::Value::PDropFriction> },
     { "SPRDA", segpress<Opm::data::SegmentPressures::Value::PDropAccel> },
+    { "STFR#W", sratetracer<rt::tracer, rt::wat> }, // #W: Water tracers
+    { "STFR#O", sratetracer<rt::tracer, rt::oil> }, // #O: Oil tracers
+    { "STFR#G", sratetracer<rt::tracer, rt::gas> }, // #G: Gas tracers
+    { "STFC#W", div( sratetracer<rt::tracer, rt::wat>, srate<rt::wat> ) }, // #W: Water tracers
+    { "STFC#O", div( sratetracer<rt::tracer, rt::oil>, srate<rt::oil> ) }, // #O: Oil tracers
+    { "STFC#G", div( sratetracer<rt::tracer, rt::gas>, srate<rt::gas> ) }, // #G: Gas tracers
 
     // Well productivity index
     { "WPI", preferred_phase_productivty_index },

@@ -238,7 +238,7 @@ struct SummaryConfigContext {
         static const keyword_set ratekw {
             "OPR", "GPR", "WPR", "GLIR", "LPR", "NPR", "CPR", "VPR", "TPR", "TPC",
 
-            "OFR", "OFRF", "OFRS", "OFR+", "OFR-",
+            "OFR", "OFRF", "OFRS", "OFR+", "OFR-", "TFR"
             "GFR", "GFRF", "GFRS", "GFR+", "GFR-",
             "WFR", "WFR+", "WFR-",
 
@@ -259,7 +259,7 @@ struct SummaryConfigContext {
 
         return is_in_set(ratekw, keyword.substr(1))
             || ((keyword.length() > 4) &&
-                is_in_set({ "TPR", "TPC", "TIR", "TIC" },
+                is_in_set({ "TPR", "TPC", "TIR", "TIC", "TFR" },
                           keyword.substr(1, 3)));
     }
 
@@ -1192,7 +1192,8 @@ inline void keywordMISC( SummaryConfig::keyword_list& list,
             [&kw](const char* known)
         {
             return kw == known;
-        });
+        }) 
+        || is_in_set({ "STFR", "STFC" }, kw.substr(0, 4));
     }
 
 
