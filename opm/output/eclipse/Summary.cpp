@@ -1193,8 +1193,8 @@ inline quantity srate(const fn_args& args)
 }
 
 template <typename Items>
-double segment_phase_quantity_value(const Opm::data::SegmentQuantity<Items>& q,
-                                    const typename Items::Item               p)
+double segment_phase_quantity_value(const Opm::data::QuantityCollection<Items>& q,
+                                    const typename Items::Item                  p)
 {
     return q.has(p) ? q.get(p) : 0.0;
 }
