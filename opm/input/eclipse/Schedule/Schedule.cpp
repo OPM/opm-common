@@ -1091,18 +1091,18 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
             this->snapshots[report_step].guide_rate.update( std::move(new_config) );
     }
 
-    // There are many SCHEDULE keyword which take a wellname as argument.
-    // In addition to giving a fully qualified name like 'W1' you can also
-    // specify shell wildcard patterns like like 'W*', you can get all the
-    // wells in the well-list '*WL'[1] and the wellname '?' is used to get
-    // all the wells which already have matched a condition in a ACTIONX
-    // keyword.  This function should be one-stop function to get all well
-    // names according to a input pattern.  The timestep argument is used to
-    // check that the wells have indeed been defined at the point in time we
-    // are considering.
+    // There are many SCHEDULE keywords which operate on well names.  In
+    // addition to fully qualified names like 'W1', there are shell-style
+    // wildcard patterns like 'W*'.  Similarly, you can request all wells in
+    // a well list '*WL'[1] and the well name '?', when used in an ACTIONX
+    // keyword block, matches all wells which trigger the condition in the
+    // same ACTIONX keyword.  This function is intended to be the final
+    // arbiter for well names matching these kinds of patterns.  The time
+    // step argument filters out wells which do not exist at that time level
+    // (i.e., zero-based report step index).
     //
-    // [1]: The leading '*' in a WLIST name should not be interpreted as a
-    //      shell wildcard!
+    // [1]: The leading '*' in a WLIST name should not be treated as a
+    //      pattern matching wildcard.
     std::vector<std::string>
     Schedule::wellNames(const std::string&              pattern,
                         const std::size_t               timeStep,
