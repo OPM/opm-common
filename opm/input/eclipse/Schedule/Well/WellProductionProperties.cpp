@@ -415,6 +415,7 @@ void Well::WellProductionProperties::handleWCONHIST(const std::optional<VFPProdT
         controls.bhp_history = this->BHPH;
         controls.thp_history = this->THPH;
         controls.vfp_table_number = this->VFPTableNumber;
+        controls.prediction_mode = this->predictionMode;
         controls.cmode = this->controlMode;
 
         return controls;
