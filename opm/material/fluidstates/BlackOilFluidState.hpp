@@ -689,6 +689,7 @@ private:
     ConditionalStorage<enableDissolutionInWater,Scalar> Rsw_;
     ConditionalStorage<enableBrine, Scalar> saltConcentration_;
     ConditionalStorage<enableSaltPrecipitation, Scalar> saltSaturation_;
+
     unsigned short pvtRegionIdx_;
 };
 

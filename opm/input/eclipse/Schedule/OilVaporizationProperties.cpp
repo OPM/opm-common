@@ -33,7 +33,9 @@ namespace Opm {
          m_vap2(-1.0),
          m_maxDRSDT(numPvtRegionIdx, -1.0),
          m_maxDRSDT_allCells(numPvtRegionIdx),
-         m_maxDRVDT(numPvtRegionIdx, -1.0)
+         m_maxDRVDT(numPvtRegionIdx, -1.0),
+         m_psi(numPvtRegionIdx, -1.0),
+         m_omega(numPvtRegionIdx, -1.0)
     {  }
 
     OilVaporizationProperties OilVaporizationProperties::serializationTestObject()
@@ -45,6 +47,8 @@ namespace Opm {
         result.m_maxDRSDT = {3.0};
         result.m_maxDRSDT_allCells = {true};
         result.m_maxDRVDT = {5.0};
+        result.m_psi = {4.0};
+        result.m_omega = {6.0};
 
         return result;
     }
@@ -73,6 +77,22 @@ namespace Opm {
         }
     }
 
+    double OilVaporizationProperties::getOmega(const size_t pvtRegionIdx) const{
+        if (drsdtConvective()){
+            return m_omega[pvtRegionIdx];
+        }else{
+            throw std::logic_error("Only valid if DRSDTCON is active");
+        }
+    }
+
+    double OilVaporizationProperties::getPsi(const size_t pvtRegionIdx) const{
+        if (drsdtConvective()){
+            return m_psi[pvtRegionIdx];
+        }else{
+            throw std::logic_error("Only valid if DRSDTCON is active");
+        }
+    }
+
     OilVaporizationProperties::OilVaporization OilVaporizationProperties::getType() const{
         return m_type;
     }
@@ -91,9 +111,12 @@ namespace Opm {
         }
     }
 
-    void OilVaporizationProperties::updateDRSDTCON(OilVaporizationProperties& ovp, const std::vector<double>& maximums, const std::vector<std::string>& options){
+    void OilVaporizationProperties::updateDRSDTCON(OilVaporizationProperties& ovp, const std::vector<double>& maximums, const std::vector<std::string>& options, 
+                                                   const std::vector<double>& psi, const std::vector<double>& omega){
         ovp.m_type = OilVaporization::DRSDTCON;
         ovp.m_maxDRSDT = maximums;
+        ovp.m_omega = omega;
+        ovp.m_psi = psi;
         for (size_t pvtRegionIdx = 0; pvtRegionIdx < options.size(); ++pvtRegionIdx) {
             if (options[pvtRegionIdx] == "ALL"){
                 ovp.m_maxDRSDT_allCells[pvtRegionIdx] = true;
