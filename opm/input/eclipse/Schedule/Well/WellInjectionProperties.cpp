@@ -340,6 +340,7 @@ namespace Opm {
         controls.injector_type = this->injectorType;
         controls.cmode = this->controlMode;
         controls.vfp_table_number = this->VFPTableNumber;
+        controls.prediction_mode = this->predictionMode;
         controls.injector_type = this->injectorType;
         controls.rs_rv_inj = this->rsRvInj;
 
