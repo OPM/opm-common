@@ -3962,11 +3962,11 @@ namespace Evaluator {
             return false;
         }
 
-        const auto istart = 4 + ((normKw[4] == 'F') || (normKw[4] == 'S'));
-
-        const auto tracer_name = normKw.substr(istart);
-
         const auto& tracers = this->es_.tracer();
+
+        // Check for tracer names twice to allow for tracers starting with S or F
+        auto istart = 4;
+        auto tracer_name = normKw.substr(istart);
         auto trPos = std::find_if(tracers.begin(), tracers.end(),
                                   [&tracer_name](const auto& tracer)
                                   {
@@ -3974,7 +3974,19 @@ namespace Evaluator {
                                   });
 
         if (trPos == tracers.end()) {
-            return false;
+            if ((normKw[4] == 'F') || (normKw[4] == 'S'))
+                istart = 5;
+            else
+                return false;
+            tracer_name = normKw.substr(istart);
+            trPos = std::find_if(tracers.begin(), tracers.end(),
+                                    [&tracer_name](const auto& tracer)
+                                    {
+                                        return tracer.name == tracer_name;
+                                    });
+
+            if (trPos == tracers.end())
+                return false;
         }
 
         auto tracer_tag = normKw.substr(0, istart);

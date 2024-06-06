@@ -238,7 +238,7 @@ struct SummaryConfigContext {
         static const keyword_set ratekw {
             "OPR", "GPR", "WPR", "GLIR", "LPR", "NPR", "CPR", "VPR", "TPR", "TPC",
 
-            "OFR", "OFRF", "OFRS", "OFR+", "OFR-", "TFR"
+            "OFR", "OFRF", "OFRS", "OFR+", "OFR-", "TFR",
             "GFR", "GFRF", "GFRS", "GFR+", "GFR-",
             "WFR", "WFR+", "WFR-",
 
