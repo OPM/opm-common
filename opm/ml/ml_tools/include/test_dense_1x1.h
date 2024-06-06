@@ -22,7 +22,7 @@ bool test_dense_1x1(Evaluation* load_time, Evaluation* apply_time)
     load_timer.Start();
 
     KerasModel<Evaluation> model;
-    KASSERT(model.LoadModel("/Users/macbookn/bikagit/opm-common/opm/ml/ml_tools/models/test_dense_1x1.model"), "Failed to load model");
+    KASSERT(model.LoadModel("/Users/macbookn/hackatonwork/opm-common/opm/ml/ml_tools/models/test_dense_1x1.model"), "Failed to load model");
 
     *load_time = load_timer.Stop();
 

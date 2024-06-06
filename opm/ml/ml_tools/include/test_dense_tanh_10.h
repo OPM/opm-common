@@ -13,18 +13,18 @@ bool test_dense_tanh_10(Evaluation* load_time, Evaluation* apply_time)
     KASSERT(apply_time, "Invalid Evaluation");
 
     Opm::Tensor<Evaluation> in{10};
-    in.data_ = {0.03345425,0.78990555,0.33485138,0.09934332,0.74528086,0.6406323,
-0.78257537,0.17336933,0.06393018,0.94946647};
+    in.data_ = {0.26271367,0.57310253,0.4322339,0.018163363,0.42448965,0.6118086,
+0.20635886,0.38553724,0.97148365,0.2353917};
 
     Opm::Tensor<Evaluation> out{10};
-    out.data_ = {-0.10979327,0.31542704,0.3152341,0.42501545,0.31062323,-0.18132454,
--0.763928,0.15322652,0.73196095,-0.19889684};
+    out.data_ = {-0.5350144,-0.36773947,-0.015882624,0.020122323,0.11873825,
+0.42103818,-0.27925694,0.060885787,0.5043703,0.029599192};
 
     KerasTimer load_timer;
     load_timer.Start();
 
     KerasModel<Evaluation> model;
-    KASSERT(model.LoadModel("/Users/macbookn/bikagit/opm-common/opm/ml/ml_tools/models/test_dense_tanh_10.model"), "Failed to load model");
+    KASSERT(model.LoadModel("/Users/macbookn/hackatonwork/opm-common/opm/ml/ml_tools/models/test_dense_tanh_10.model"), "Failed to load model");
 
     *load_time = load_timer.Stop();
 

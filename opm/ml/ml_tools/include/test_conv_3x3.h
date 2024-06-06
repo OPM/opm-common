@@ -13,17 +13,17 @@ bool test_conv_3x3(Evaluation* load_time, Evaluation* apply_time)
     KASSERT(apply_time, "Invalid Evaluation");
 
     Opm::Tensor<Evaluation> in{3,3,1};
-    in.data_ = {0.8302591,0.7126048,0.049354695,0.065839484,0.022077054,0.8151628,
-0.8770473,0.93242997,0.5808531};
+    in.data_ = {0.31915146,0.46648613,0.713153,0.7186029,0.4189023,0.93898046,
+0.21495701,0.22672214,0.6468133};
 
     Opm::Tensor<Evaluation> out{1};
-    out.data_ = {0.1281208};
+    out.data_ = {0.012564741};
 
     KerasTimer load_timer;
     load_timer.Start();
 
     KerasModel<Evaluation> model;
-    KASSERT(model.LoadModel("/Users/macbookn/bikagit/opm-common/opm/ml/ml_tools/models/test_conv_3x3.model"), "Failed to load model");
+    KASSERT(model.LoadModel("/Users/macbookn/hackatonwork/opm-common/opm/ml/ml_tools/models/test_conv_3x3.model"), "Failed to load model");
 
     *load_time = load_timer.Stop();
 

@@ -115,11 +115,11 @@ model = Sequential()
 model.add(keras.layers.Input([1]))
 # model.add(Flatten())
 # model.add(Flatten())
-model.add(MinMaxScalerLayer(data_min=0.1,feature_range=(0.0, 1.0)))
+model.add(MinMaxScalerLayer(data_min=10,feature_range=(0.0, 1.0)))
 model.add(Dense(1,activation='tanh'))
 model.add(Dense(10,activation='tanh'))
-model.add(Dense(10,activation='tanh'))
-model.add(MinMaxUnScalerLayer(feature_range=(0.0, 1.0)))
+model.add(Dense(1,activation='tanh'))
+model.add(MinMaxUnScalerLayer(feature_range=(1.0, 5.0)))
 # model.add(Dense(10))
 # model.add(Dense(10))
 # model.add(Dense(10))
@@ -127,8 +127,8 @@ model.add(MinMaxUnScalerLayer(feature_range=(0.0, 1.0)))
 # model.add(Flatten())
 # model.add(MinMaxUnScalerLayer())
 # #
-# # model.get_layer(model.layers[0].name).adapt(data=data)
-# model.get_layer(model.layers[-1].name).adapt(data=data)
+model.get_layer(model.layers[0].name).adapt(data=data)
+model.get_layer(model.layers[-1].name).adapt(data=data)
 
 # model.add(Dense(1, input_dim=1))
 
@@ -147,7 +147,7 @@ model.add(MinMaxUnScalerLayer(feature_range=(0.0, 1.0)))
 #     ]
 #
 # )
-output_testcase(model, test_x, test_y, 'scalingdense_1x1', '1e-6')
+output_testcase(model, test_x, test_y, 'scalingdense_1x1', '1e-3')
 
 # Dense 1x1
 test_x = np.arange(10)

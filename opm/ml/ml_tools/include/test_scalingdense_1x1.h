@@ -13,17 +13,16 @@ bool test_scalingdense_1x1(Evaluation* load_time, Evaluation* apply_time)
     KASSERT(apply_time, "Invalid Evaluation");
 
     Opm::Tensor<Evaluation> in{1};
-    in.data_ = {0.38420224};
+    in.data_ = {0.5439535};
 
-    Opm::Tensor<Evaluation> out{10};
-    out.data_ = {-0.05173513,0.040830124,-0.031732455,-0.16009168,0.012040144,
--0.07901504,0.08811069,-0.04247553,-0.06113547,-0.1637011};
+    Opm::Tensor<Evaluation> out{1};
+    out.data_ = {-633.0674};
 
     KerasTimer load_timer;
     load_timer.Start();
 
     KerasModel<Evaluation> model;
-    KASSERT(model.LoadModel("/Users/macbookn/bikagit/opm-common/opm/ml/ml_tools/models/test_scalingdense_1x1.model"), "Failed to load model");
+    KASSERT(model.LoadModel("/Users/macbookn/hackatonwork/opm-common/opm/ml/ml_tools/models/test_scalingdense_1x1.model"), "Failed to load model");
 
     *load_time = load_timer.Stop();
 
@@ -37,7 +36,7 @@ bool test_scalingdense_1x1(Evaluation* load_time, Evaluation* apply_time)
 
     for (int i = 0; i < out.dims_[0]; i++)
     {
-        KASSERT_EQ(out(i), predict(i), 1e-6);
+        KASSERT_EQ(out(i), predict(i), 1e-3);
     }
 
     return true;

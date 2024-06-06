@@ -20,37 +20,11 @@ ACTIVATION_TANH = 5
 ACTIVATION_HARD_SIGMOID = 6
 
 def write_scaling(f):
-    # weights = layer.get_weights()[0]
-    # biases = layer.get_weights()[1]
-
-    # print(weights)
-    # activation = layer.get_config()['activation']
     f.write(struct.pack('I', LAYER_SCALING))
-    # f.write(struct.pack('I', weights.shape[0]))
-    # # f.write(struct.pack('I', weights.shape[1]))
-    # f.write(struct.pack('I', biases.shape[0]))
-    #
-    # # weights = weights.flatten()
-    # # biases = biases.flatten()
-    # write_floats(f, weights)
-    # write_floats(f, biases)
-    # write_activation(activation)
+
 
 def write_unscaling(f):
-    # weights = layer.get_weights()[0]
-    # biases = layer.get_weights()[1]
-
-    # activation = layer.get_config()['activation']
     f.write(struct.pack('I', LAYER_UNSCALING))
-    # f.write(struct.pack('I', weights.shape[0]))
-    # # f.write(struct.pack('I', weights.shape[1]))
-    # f.write(struct.pack('I', biases.shape[0]))
-    #
-    # # weights = weights.flatten()
-    # # biases = biases.flatten()
-    # write_floats(f, weights)
-    # write_floats(f, biases)
-    # write_activation(activation)
 
 
 def write_tensor(f, data, dims=1):
@@ -120,12 +94,24 @@ def export_model(model, filename):
 
             if layer_type == 'MinMaxScalerLayer':
                 write_scaling(f)
+                feat_inf = layer.get_weights()[0]
+                feat_sup = layer.get_weights()[1]
                 f.write(struct.pack('f', layer.data_min))
-                # write_floats(f, weights)
+                f.write(struct.pack('f', layer.data_max))
+                f.write(struct.pack('f', feat_inf))
+                f.write(struct.pack('f', feat_sup))
 
 
             elif layer_type == 'MinMaxUnScalerLayer':
                 write_unscaling(f)
+                feat_inf = layer.get_weights()[0]
+                feat_sup = layer.get_weights()[1]
+                # feat = layer.get_weights()[2][0]
+                f.write(struct.pack('f', layer.data_min))
+                f.write(struct.pack('f', layer.data_max))
+                f.write(struct.pack('f', feat_inf))
+                f.write(struct.pack('f', feat_sup))
+
 
             elif layer_type == 'Dense':
                 weights = layer.get_weights()[0]

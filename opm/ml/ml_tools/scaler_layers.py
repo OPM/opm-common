@@ -62,7 +62,7 @@ class ScalerLayer(keras.layers.Layer):
             ``self.data_min``, ``self.data_max``, ``self.feature_range``
 
         """
-        return [self.data_min, self.data_max, self.feature_range]
+        return [self.feature_range[0], self.feature_range[1], self.data_min, self.data_max, self.feature_range]
 
     def set_weights(self, weights: list[ArrayLike]) -> None:
         """Set parameters of the scaling.

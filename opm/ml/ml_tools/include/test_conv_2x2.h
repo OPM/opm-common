@@ -13,16 +13,16 @@ bool test_conv_2x2(Evaluation* load_time, Evaluation* apply_time)
     KASSERT(apply_time, "Invalid Evaluation");
 
     Opm::Tensor<Evaluation> in{2,2,1};
-    in.data_ = {0.750075,0.10270854,0.21013065,0.29597324};
+    in.data_ = {0.062906526,0.34327188,0.7227239,0.17407319};
 
     Opm::Tensor<Evaluation> out{1};
-    out.data_ = {0.027571658};
+    out.data_ = {-0.05085864};
 
     KerasTimer load_timer;
     load_timer.Start();
 
     KerasModel<Evaluation> model;
-    KASSERT(model.LoadModel("/Users/macbookn/bikagit/opm-common/opm/ml/ml_tools/models/test_conv_2x2.model"), "Failed to load model");
+    KASSERT(model.LoadModel("/Users/macbookn/hackatonwork/opm-common/opm/ml/ml_tools/models/test_conv_2x2.model"), "Failed to load model");
 
     *load_time = load_timer.Stop();
 

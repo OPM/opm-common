@@ -13,17 +13,17 @@ bool test_elu_10(Evaluation* load_time, Evaluation* apply_time)
     KASSERT(apply_time, "Invalid Evaluation");
 
     Opm::Tensor<Evaluation> in{10};
-    in.data_ = {0.3842556,0.91849715,0.74334174,0.3313295,0.34599218,0.48829415,
-0.80283946,0.58847773,0.5926601,0.9469626};
+    in.data_ = {0.9834945,0.5741797,0.027460653,0.07063913,0.7403407,0.72907645,
+0.009775176,0.309714,0.5252622,0.090779774};
 
     Opm::Tensor<Evaluation> out{1};
-    out.data_ = {0.021793796};
+    out.data_ = {0.50609195};
 
     KerasTimer load_timer;
     load_timer.Start();
 
     KerasModel<Evaluation> model;
-    KASSERT(model.LoadModel("/Users/macbookn/bikagit/opm-common/opm/ml/ml_tools/models/test_elu_10.model"), "Failed to load model");
+    KASSERT(model.LoadModel("/Users/macbookn/hackatonwork/opm-common/opm/ml/ml_tools/models/test_elu_10.model"), "Failed to load model");
 
     *load_time = load_timer.Stop();
 

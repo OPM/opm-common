@@ -13,16 +13,16 @@ bool test_dense_2x2(Evaluation* load_time, Evaluation* apply_time)
     KASSERT(apply_time, "Invalid Evaluation");
 
     Opm::Tensor<Evaluation> in{2};
-    in.data_ = {0.6887023,0.58510196};
+    in.data_ = {0.9365942,0.34521446};
 
     Opm::Tensor<Evaluation> out{1};
-    out.data_ = {0.30864304};
+    out.data_ = {0.086802945};
 
     KerasTimer load_timer;
     load_timer.Start();
 
     KerasModel<Evaluation> model;
-    KASSERT(model.LoadModel("/Users/macbookn/bikagit/opm-common/opm/ml/ml_tools/models/test_dense_2x2.model"), "Failed to load model");
+    KASSERT(model.LoadModel("/Users/macbookn/hackatonwork/opm-common/opm/ml/ml_tools/models/test_dense_2x2.model"), "Failed to load model");
 
     *load_time = load_timer.Stop();
 

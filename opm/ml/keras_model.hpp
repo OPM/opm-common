@@ -310,7 +310,7 @@ class KerasLayerActivation : public KerasLayer<Evaluation> {
 template<class Evaluation>
 class KerasLayerScaling : public KerasLayer<Evaluation> {
   public:
-    KerasLayerScaling(): data_min(1.0f) {}
+    KerasLayerScaling(): data_min(1.0f), data_max(1.0f), feat_inf(1.0f), feat_sup(1.0f) {}
 
     virtual ~KerasLayerScaling() {}
 
@@ -322,6 +322,12 @@ class KerasLayerScaling : public KerasLayer<Evaluation> {
     Tensor<float> weights_;
     Tensor<float> biases_;
     float data_min;
+    float data_max;
+    float feat_inf;
+    float feat_sup;
+
+    // float feat;
+    // float feature_range;
 
     // KerasLayerActivation<Evaluation> activation_;
 };
@@ -329,7 +335,7 @@ class KerasLayerScaling : public KerasLayer<Evaluation> {
 template<class Evaluation>
 class KerasLayerUnScaling : public KerasLayer<Evaluation> {
   public:
-    KerasLayerUnScaling() {}
+    KerasLayerUnScaling(): data_min(1.0f), data_max(1.0f), feat_inf(1.0f), feat_sup(1.0f) {}
 
     virtual ~KerasLayerUnScaling() {}
 
@@ -340,6 +346,10 @@ class KerasLayerUnScaling : public KerasLayer<Evaluation> {
   private:
     Tensor<float> weights_;
     Tensor<float> biases_;
+    float data_min;
+    float data_max;
+    float feat_inf;
+    float feat_sup;
 
     // KerasLayerActivation<Evaluation> activation_;
 };

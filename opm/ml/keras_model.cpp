@@ -143,8 +143,12 @@ template<class Evaluation>
 bool KerasLayerScaling<Evaluation>::LoadLayer(std::ifstream* file) {
     KASSERT(file, "Invalid file stream");
 
-    KASSERT(ReadFloat(file, &data_min), "Failed to read max");
+    KASSERT(ReadFloat(file, &data_min), "Failed to read min");
+    KASSERT(ReadFloat(file, &data_max), "Failed to read max");
+    KASSERT(ReadFloat(file, &feat_inf), "Failed to read max");
+    KASSERT(ReadFloat(file, &feat_sup), "Failed to read max");
 
+    // KASSERT(ReadFloat(file, &feat), "Failed to read max");
     return true;
 }
 
@@ -153,11 +157,16 @@ bool KerasLayerScaling<Evaluation>::Apply(Tensor<Evaluation>* in, Tensor<Evaluat
     KASSERT(in, "Invalid input");
     KASSERT(out, "Invalid output");
 
+    Tensor<Evaluation> temp_in, temp_out;
+
     *out = *in;
-    // out->Flatten();
-     std::cout<<out->data_[0]<<std::endl;
-     // std::cout<<out->data_[1]<<std::endl;
-     std::cout<<data_min<<std::endl;
+
+    for (size_t i = 0; i < out->data_.size(); i++) {
+        std::cout<<"out->data_[i]"<<std::endl;
+        std::cout<<out->data_[i]<<std::endl;
+        auto tempscale = (out->data_[i] - data_min)/(data_max - data_min);
+        out->data_[i] = tempscale * (feat_sup - feat_inf) + feat_inf;
+    }
 
     return true;
 }
@@ -165,6 +174,12 @@ bool KerasLayerScaling<Evaluation>::Apply(Tensor<Evaluation>* in, Tensor<Evaluat
 template<class Evaluation>
 bool KerasLayerUnScaling<Evaluation>::LoadLayer(std::ifstream* file) {
     KASSERT(file, "Invalid file stream");
+
+    KASSERT(ReadFloat(file, &data_min), "Failed to read min");
+    KASSERT(ReadFloat(file, &data_max), "Failed to read max");
+    KASSERT(ReadFloat(file, &feat_inf), "Failed to read inf");
+    KASSERT(ReadFloat(file, &feat_sup), "Failed to read sup");
+
     return true;
 }
 
@@ -173,8 +188,18 @@ bool KerasLayerUnScaling<Evaluation>::Apply(Tensor<Evaluation>* in, Tensor<Evalu
     KASSERT(in, "Invalid input");
     KASSERT(out, "Invalid output");
 
+
     *out = *in;
     // out->Flatten();
+
+    for (size_t i = 0; i < out->data_.size(); i++) {
+        std::cout<<"out->data_[i]"<<std::endl;
+        std::cout<<out->data_[i]<<std::endl;
+        auto tempscale = (out->data_[i] - feat_inf)/(feat_sup - feat_inf);
+
+        out->data_[i] = tempscale * (data_max - data_min) + data_min;
+    }
+
 
     return true;
 }

@@ -13,20 +13,20 @@ bool test_conv_3x3x3(Evaluation* load_time, Evaluation* apply_time)
     KASSERT(apply_time, "Invalid Evaluation");
 
     Opm::Tensor<Evaluation> in{3,3,3};
-    in.data_ = {0.87271255,0.93225205,0.454738,0.7743667,0.07311473,0.43917352,
-0.06562502,0.10534243,0.84919333,0.05485726,0.26453573,0.43184462,
-0.31198752,0.3685557,0.33569786,0.5550908,0.30508468,0.5998162,
-0.5240912,0.084725335,0.68967754,0.99210244,0.99117345,0.9305709,
-0.9118958,0.84186167,0.566753};
+    in.data_ = {0.99366415,0.8214218,0.78640515,0.2603204,0.16119346,0.33790612,
+0.003531503,0.8499332,0.45968544,0.4627597,0.13754487,0.10913391,
+0.14221385,0.6451374,0.84302205,0.4868773,0.083437696,0.27630988,
+0.22067706,0.11169723,0.3520237,0.58716524,0.05329963,0.26573667,
+0.4124315,0.18437439,0.74106956};
 
     Opm::Tensor<Evaluation> out{1};
-    out.data_ = {0.26097965};
+    out.data_ = {-0.32770187};
 
     KerasTimer load_timer;
     load_timer.Start();
 
     KerasModel<Evaluation> model;
-    KASSERT(model.LoadModel("/Users/macbookn/bikagit/opm-common/opm/ml/ml_tools/models/test_conv_3x3x3.model"), "Failed to load model");
+    KASSERT(model.LoadModel("/Users/macbookn/hackatonwork/opm-common/opm/ml/ml_tools/models/test_conv_3x3x3.model"), "Failed to load model");
 
     *load_time = load_timer.Stop();
 

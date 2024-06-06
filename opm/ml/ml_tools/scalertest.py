@@ -13,7 +13,7 @@ from kerasify import export_model
 from scaler_layers import MinMaxScalerLayer, MinMaxUnScalerLayer
 
 from keras.models import Sequential
-
+from keras.layers import Conv2D, Dense, Flatten, Activation, MaxPooling2D, Dropout, BatchNormalization, ELU, Embedding, LSTM
 
 savepath = pathlib.Path(__file__).parent / "model_with_scaler_layers.opm"
 
@@ -41,8 +41,12 @@ model = Sequential()
 model.add(keras.layers.Input([1]))
 model.add(MinMaxScalerLayer(feature_range=(0.0, 1.0)))
 # model.add(Flatten())
-# model.add(Dense(1, input_dim=1))
-model.add(MinMaxUnScalerLayer(feature_range=(-3.7, 0.0)))
+model.add(Dense(1, input_dim=1))
+model.add(Dense(1, input_dim=1))
+model.add(Dense(1, input_dim=1))
+model.add(Dense(1, input_dim=1))
+
+model.add(MinMaxUnScalerLayer(feature_range=(-3.7, -1.0)))
 #
 # model.get_layer(model.layers[0].name).adapt(data=data)
 # model.get_layer(model.layers[-1].name).adapt(data=data)
