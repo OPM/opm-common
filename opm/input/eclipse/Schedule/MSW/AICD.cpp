@@ -17,20 +17,30 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-
 #include <opm/input/eclipse/Schedule/MSW/AICD.hpp>
-#include <opm/input/eclipse/Parser/ParserKeywords/W.hpp>
+
+#include <opm/io/eclipse/rst/segment.hpp>
+
 #include <opm/input/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/input/eclipse/Deck/DeckRecord.hpp>
 
+#include <opm/input/eclipse/Parser/ParserKeywords/W.hpp>
+
 #include "FromWSEG.hpp"
 
+#include <map>
+#include <string>
+#include <utility>
+#include <vector>
 
 namespace Opm {
 
-AutoICD AutoICD::serializationTestObject() {
+AutoICD AutoICD::serializationTestObject()
+{
     AutoICD aicd;
+
     static_cast<SICD&>(aicd) = SICD::serializationTestObject();
+
     aicd.m_flow_rate_exponent = 1.0;
     aicd.m_visc_exponent = 2.0;
     aicd.m_oil_density_exponent = 3.0;
@@ -39,78 +49,97 @@ AutoICD AutoICD::serializationTestObject() {
     aicd.m_oil_viscosity_exponent = 6.0;
     aicd.m_water_viscosity_exponent = 7.0;
     aicd.m_gas_viscosity_exponent = 8.0;
+
     return aicd;
 }
 
 using AICD = ParserKeywords::WSEGAICD;
-AutoICD::AutoICD(const DeckRecord& record) :
-    SICD(record),
-    m_flow_rate_exponent(record.getItem<AICD::FLOW_RATE_EXPONENT>().get<double>(0)),
-    m_visc_exponent(record.getItem<AICD::VISC_EXPONENT>().get<double>(0)),
-    m_oil_density_exponent(record.getItem<AICD::OIL_FLOW_FRACTION>().get<double>(0)),
-    m_water_density_exponent(record.getItem<AICD::WATER_FLOW_FRACTION>().get<double>(0)),
-    m_gas_density_exponent(record.getItem<AICD::GAS_FLOW_FRACTION>().get<double>(0)),
-    m_oil_viscosity_exponent(record.getItem<AICD::OIL_VISC_FRACTION>().get<double>(0)),
-    m_water_viscosity_exponent(record.getItem<AICD::WATER_VISC_FRACTION>().get<double>(0)),
-    m_gas_viscosity_exponent(record.getItem<AICD::GAS_VISC_FRACTION>().get<double>(0))
-{
+AutoICD::AutoICD(const DeckRecord& record)
+    : SICD { record }
+    , m_flow_rate_exponent      (record.getItem<AICD::FLOW_RATE_EXPONENT>().get<double>(0))
+    , m_visc_exponent           (record.getItem<AICD::VISC_EXPONENT>().get<double>(0))
+    , m_oil_density_exponent    (record.getItem<AICD::OIL_FLOW_FRACTION>().get<double>(0))
+    , m_water_density_exponent  (record.getItem<AICD::WATER_FLOW_FRACTION>().get<double>(0))
+    , m_gas_density_exponent    (record.getItem<AICD::GAS_FLOW_FRACTION>().get<double>(0))
+    , m_oil_viscosity_exponent  (record.getItem<AICD::OIL_VISC_FRACTION>().get<double>(0))
+    , m_water_viscosity_exponent(record.getItem<AICD::WATER_VISC_FRACTION>().get<double>(0))
+    , m_gas_viscosity_exponent  (record.getItem<AICD::GAS_VISC_FRACTION>().get<double>(0))
+{}
 
-}
-
+AutoICD::AutoICD(const RestartIO::RstSegment& rstSegment)
+    : SICD { rstSegment }
+    , m_flow_rate_exponent      (rstSegment.aicd_flowrate_exponent)
+    , m_visc_exponent           (rstSegment.aicd_viscosity_exponent)
+    , m_oil_density_exponent    (rstSegment.aicd_oil_dens_exponent)
+    , m_water_density_exponent  (rstSegment.aicd_wat_dens_exponent)
+    , m_gas_density_exponent    (rstSegment.aicd_gas_dens_exponent)
+    , m_oil_viscosity_exponent  (rstSegment.aicd_oil_visc_exponent)
+    , m_water_viscosity_exponent(rstSegment.aicd_wat_visc_exponent)
+    , m_gas_viscosity_exponent  (rstSegment.aicd_gas_visc_exponent)
+{}
 
 // the function will return a map
 // [
 //     "WELL1" : [<seg1, aicd1>, <seg2, aicd2> ...]
 //     ....
-std::map<std::string, std::vector<std::pair<int, AutoICD> > >
-AutoICD::fromWSEGAICD(const DeckKeyword& wsegaicd) {
+std::map<std::string, std::vector<std::pair<int, AutoICD>>>
+AutoICD::fromWSEGAICD(const DeckKeyword& wsegaicd)
+{
     return fromWSEG<AutoICD>(wsegaicd);
 }
 
-
-bool AutoICD::operator==(const AutoICD& other) const {
-    return SICD::operator==(other) &&
-        this->m_flow_rate_exponent == other.m_flow_rate_exponent &&
-        this->m_visc_exponent == other.m_visc_exponent &&
-        this->m_oil_density_exponent == other.m_oil_density_exponent &&
-        this->m_water_density_exponent == other.m_water_density_exponent &&
-        this->m_gas_density_exponent == other.m_gas_density_exponent &&
-        this->m_oil_viscosity_exponent == other.m_oil_viscosity_exponent &&
-        this->m_water_viscosity_exponent == other.m_water_viscosity_exponent &&
-        this->m_gas_viscosity_exponent == other.m_gas_viscosity_exponent;
+bool AutoICD::operator==(const AutoICD& other) const
+{
+    return SICD::operator==(other)
+        && (this->m_flow_rate_exponent == other.m_flow_rate_exponent)
+        && (this->m_visc_exponent == other.m_visc_exponent)
+        && (this->m_oil_density_exponent == other.m_oil_density_exponent)
+        && (this->m_water_density_exponent == other.m_water_density_exponent)
+        && (this->m_gas_density_exponent == other.m_gas_density_exponent)
+        && (this->m_oil_viscosity_exponent == other.m_oil_viscosity_exponent)
+        && (this->m_water_viscosity_exponent == other.m_water_viscosity_exponent)
+        && (this->m_gas_viscosity_exponent == other.m_gas_viscosity_exponent)
+        ;
 }
 
-double AutoICD::flowRateExponent() const {
+double AutoICD::flowRateExponent() const
+{
     return this->m_flow_rate_exponent;
 }
 
-double AutoICD::viscExponent() const {
+double AutoICD::viscExponent() const
+{
     return this->m_visc_exponent;
 }
 
-double AutoICD::oilDensityExponent() const {
+double AutoICD::oilDensityExponent() const
+{
     return this->m_oil_density_exponent;
 }
 
-double AutoICD::waterDensityExponent() const {
+double AutoICD::waterDensityExponent() const
+{
     return this->m_water_density_exponent;
 }
 
-double AutoICD::gasDensityExponent() const {
+double AutoICD::gasDensityExponent() const
+{
     return this->m_gas_density_exponent;
 }
 
-double AutoICD::oilViscExponent() const {
+double AutoICD::oilViscExponent() const
+{
     return this->m_oil_viscosity_exponent;
 }
 
-double AutoICD::waterViscExponent() const {
+double AutoICD::waterViscExponent() const
+{
     return this->m_water_viscosity_exponent;
 }
 
-double AutoICD::gasViscExponent() const {
+double AutoICD::gasViscExponent() const
+{
     return this->m_gas_viscosity_exponent;
 }
 
-
-}
+} // namespace Opm

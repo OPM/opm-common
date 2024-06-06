@@ -18,72 +18,88 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <opm/input/eclipse/Schedule/MSW/icd.hpp>
 #include <opm/input/eclipse/Schedule/MSW/SICD.hpp>
+
+#include <opm/input/eclipse/Schedule/MSW/icd.hpp>
+
+#include <opm/io/eclipse/rst/segment.hpp>
+
 #include <opm/input/eclipse/Deck/DeckRecord.hpp>
 #include <opm/input/eclipse/Deck/DeckKeyword.hpp>
 
-#include <limits>
+#include <opm/input/eclipse/Parser/ParserKeywords/W.hpp>
+
 #include <cmath>
+#include <map>
+#include <optional>
+#include <stdexcept>
+#include <string>
+#include <utility>
+#include <vector>
 
 #include "icd_convert.hpp"
 #include "FromWSEG.hpp"
 
-
-
 namespace Opm {
 
-    SICD::SICD()
-        : SICD(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, {}, ICDStatus::SHUT, 1.0)
-    {
-    }
-
-    SICD::SICD(double strength,
-               double length,
-               double densityCalibration,
-               double viscosityCalibration,
-               double criticalValue,
-               double widthTransitionRegion,
-               double maxViscosityRatio,
-               int flowScaling,
-               const std::optional<double>& maxAbsoluteRate,
-               ICDStatus status,
-               double scalingFactor)
-        : m_strength(strength),
-          m_length(length),
-          m_density_calibration(densityCalibration),
-          m_viscosity_calibration(viscosityCalibration),
-          m_critical_value(criticalValue),
-          m_width_transition_region(widthTransitionRegion),
-          m_max_viscosity_ratio(maxViscosityRatio),
-          m_method_flow_scaling(flowScaling),
-          m_max_absolute_rate(maxAbsoluteRate),
-          m_status(status),
-          m_scaling_factor(scalingFactor)
-    {
-    }
-
-
     SICD::SICD(const DeckRecord& record)
-            : m_strength(record.getItem("STRENGTH").getSIDouble(0)),
-              m_length(record.getItem("LENGTH").getSIDouble(0)),
-              m_density_calibration(record.getItem("DENSITY_CALI").getSIDouble(0)),
-              m_viscosity_calibration(record.getItem("VISCOSITY_CALI").getSIDouble(0)),
-              m_critical_value(record.getItem("CRITICAL_VALUE").getSIDouble(0)),
-              m_width_transition_region(record.getItem("WIDTH_TRANS").get<double>(0)),
-              m_max_viscosity_ratio(record.getItem("MAX_VISC_RATIO").get<double>(0)),
-              m_method_flow_scaling(record.getItem("METHOD_SCALING_FACTOR").get<int>(0))
+        : m_strength               (record.getItem<ParserKeywords::WSEGSICD::STRENGTH>().getSIDouble(0))
+        , m_length                 (record.getItem<ParserKeywords::WSEGSICD::LENGTH>().getSIDouble(0))
+        , m_density_calibration    (record.getItem<ParserKeywords::WSEGSICD::DENSITY_CALI>().getSIDouble(0))
+        , m_viscosity_calibration  (record.getItem<ParserKeywords::WSEGSICD::VISCOSITY_CALI>().getSIDouble(0))
+        , m_critical_value         (record.getItem<ParserKeywords::WSEGSICD::CRITICAL_VALUE>().getSIDouble(0))
+        , m_width_transition_region(record.getItem<ParserKeywords::WSEGSICD::WIDTH_TRANS>().get<double>(0))
+        , m_max_viscosity_ratio    (record.getItem<ParserKeywords::WSEGSICD::MAX_VISC_RATIO>().get<double>(0))
+        , m_method_flow_scaling    (record.getItem<ParserKeywords::WSEGSICD::METHOD_SCALING_FACTOR>().get<int>(0))
     {
-        if (record.getItem("MAX_ABS_RATE").hasValue(0))
-            this->m_max_absolute_rate = record.getItem("MAX_ABS_RATE").getSIDouble(0);
-
-        if (record.getItem("STATUS").getTrimmedString(0) == "OPEN") {
-            m_status = ICDStatus::OPEN;
-        } else {
-            m_status = ICDStatus::SHUT;
+        if (const auto& maxAbsRate = record.getItem<ParserKeywords::WSEGSICD::MAX_ABS_RATE>();
+            maxAbsRate.hasValue(0))
+        {
+            this->m_max_absolute_rate = maxAbsRate.getSIDouble(0);
         }
+
+        this->m_status = (record.getItem<ParserKeywords::WSEGSICD::STATUS>().getTrimmedString(0) == "OPEN")
+            ? ICDStatus::OPEN
+            : ICDStatus::SHUT;
     }
 
+    SICD::SICD(const RestartIO::RstSegment& rstSegment)
+        : m_strength               (rstSegment.base_strength)
+        , m_length                 (rstSegment.icd_length)
+        , m_density_calibration    (rstSegment.fluid_density)
+        , m_viscosity_calibration  (rstSegment.fluid_viscosity)
+        , m_critical_value         (rstSegment.critical_water_fraction)
+        , m_width_transition_region(rstSegment.transition_region_width)
+        , m_max_viscosity_ratio    (rstSegment.max_emulsion_ratio)
+        , m_method_flow_scaling    (rstSegment.icd_scaling_mode)
+        , m_max_absolute_rate      (rstSegment.max_valid_flow_rate)
+        , m_status                 (from_int<ICDStatus>(rstSegment.icd_status))
+        , m_scaling_factor         (-1.0)
+    {}
+
+    SICD::SICD(const double                 strength,
+               const double                 length,
+               const double                 densityCalibration,
+               const double                 viscosityCalibration,
+               const double                 criticalValue,
+               const double                 widthTransitionRegion,
+               const double                 maxViscosityRatio,
+               const int                    flowScaling,
+               const std::optional<double>& maxAbsoluteRate,
+               const ICDStatus              status,
+               const double                 scalingFactor)
+        : m_strength               (strength)
+        , m_length                 (length)
+        , m_density_calibration    (densityCalibration)
+        , m_viscosity_calibration  (viscosityCalibration)
+        , m_critical_value         (criticalValue)
+        , m_width_transition_region(widthTransitionRegion)
+        , m_max_viscosity_ratio    (maxViscosityRatio)
+        , m_method_flow_scaling    (flowScaling)
+        , m_max_absolute_rate      (maxAbsoluteRate)
+        , m_status                 (status)
+        , m_scaling_factor         (scalingFactor)
+    {}
 
     SICD SICD::serializationTestObject()
     {
@@ -103,32 +119,34 @@ namespace Opm {
         return result;
     }
 
-
-
-
-    std::map<std::string, std::vector<std::pair<int, SICD> > >
+    std::map<std::string, std::vector<std::pair<int, SICD>>>
     SICD::fromWSEGSICD(const DeckKeyword& wsegsicd)
     {
         return fromWSEG<SICD>(wsegsicd);
     }
 
-    const std::optional<double>& SICD::maxAbsoluteRate() const {
+    const std::optional<double>& SICD::maxAbsoluteRate() const
+    {
         return m_max_absolute_rate;
     }
 
-    ICDStatus SICD::status() const {
+    ICDStatus SICD::status() const
+    {
         return m_status;
     }
 
-    double SICD::strength() const {
+    double SICD::strength() const
+    {
         return m_strength;
     }
 
-    double SICD::length() const {
+    double SICD::length() const
+    {
         return m_length;
     }
 
-    double SICD::densityCalibration() const {
+    double SICD::densityCalibration() const
+    {
         return m_density_calibration;
     }
 
@@ -137,7 +155,8 @@ namespace Opm {
         return m_viscosity_calibration;
     }
 
-    double SICD::criticalValue() const {
+    double SICD::criticalValue() const
+    {
         return m_critical_value;
     }
 
@@ -158,57 +177,79 @@ namespace Opm {
 
     double SICD::scalingFactor() const
     {
-        if (!this->m_scaling_factor.has_value())
-            throw std::runtime_error("The scaling factor has not been updated with updateScalingFactor()");
+        if (!this->m_scaling_factor.has_value()) {
+            throw std::runtime_error {
+                "The scaling factor has not been updated with updateScalingFactor()"
+            };
+        }
 
         return m_scaling_factor.value();
     }
 
-    void SICD::updateScalingFactor(const double outlet_segment_length, const double completion_length)
+    void SICD::updateScalingFactor(const double outlet_segment_length,
+                                   const double completion_length)
     {
         if (m_method_flow_scaling < 0) {
             if (m_length > 0.) { // icd length / outlet segment length
                 m_scaling_factor = m_length / outlet_segment_length;
-            } else if (m_length < 0.) {
-                m_scaling_factor = std::abs(m_length);
-            } else { // icd length is zero, not sure the proper way to handle this yet
-                throw std::logic_error("Zero-value length of SICD is found when calcuating scaling factor");
             }
-        } else if (m_method_flow_scaling == 0) {
-            if (m_length  <= 0.)
-                throw std::logic_error("Non positive length of SICD if found when method of scaling is zero");
+            else if (m_length < 0.) {
+                m_scaling_factor = std::abs(m_length);
+            }
+            else { // icd length is zero, not sure the proper way to handle this yet
+                throw std::logic_error {
+                    "Zero-value length of SICD is found when calcuating scaling factor"
+                };
+            }
+        }
+        else if (m_method_flow_scaling == 0) {
+            if (m_length  <= 0.) {
+                throw std::logic_error {
+                    "Non positive length of SICD if found when method of scaling is zero"
+                };
+            }
 
             m_scaling_factor = m_length / outlet_segment_length;
-        } else if (m_method_flow_scaling == 1) {
+        }
+        else if (m_method_flow_scaling == 1) {
             m_scaling_factor = std::abs(m_length);
-        } else if (m_method_flow_scaling == 2) {
+        }
+        else if (m_method_flow_scaling == 2) {
             if (completion_length == 0.) {
-                throw std::logic_error("Zero connection length is found. No way to update scaling factor for this SICD segment");
+                throw std::logic_error {
+                    "Zero connection length is found. No way to "
+                    "update scaling factor for this SICD segment"
+                };
             }
+
             m_scaling_factor = m_length / completion_length;
-        } else {
-            throw std::logic_error(" invalid method specified to calculate flow scaling factor for SICD");
+        }
+        else {
+            throw std::logic_error {
+                "Invalid method specified to calculate flow scaling factor for SICD"
+            };
         }
     }
 
-
-    bool SICD::operator==(const SICD& data) const {
-        return this->strength() == data.strength() &&
-               this->length() == data.length() &&
-               this->densityCalibration() == data.densityCalibration() &&
-               this->viscosityCalibration() == data.viscosityCalibration() &&
-               this->criticalValue() == data.criticalValue() &&
-               this->widthTransitionRegion() == data.widthTransitionRegion() &&
-               this->maxViscosityRatio() == data.maxViscosityRatio() &&
-               this->methodFlowScaling() == data.methodFlowScaling() &&
-               this->maxAbsoluteRate() == data.maxAbsoluteRate() &&
-               this->status() == data.status() &&
-               this->scalingFactor() == data.scalingFactor();
+    bool SICD::operator==(const SICD& data) const
+    {
+        return (this->strength() == data.strength())
+            && (this->length() == data.length())
+            && (this->densityCalibration() == data.densityCalibration())
+            && (this->viscosityCalibration() == data.viscosityCalibration())
+            && (this->criticalValue() == data.criticalValue())
+            && (this->widthTransitionRegion() == data.widthTransitionRegion())
+            && (this->maxViscosityRatio() == data.maxViscosityRatio())
+            && (this->methodFlowScaling() == data.methodFlowScaling())
+            && (this->maxAbsoluteRate() == data.maxAbsoluteRate())
+            && (this->status() == data.status())
+            && (this->scalingFactor() == data.scalingFactor())
+            ;
     }
 
-int SICD::ecl_status() const {
-    return to_int(this->m_status);
-}
+    int SICD::ecl_status() const
+    {
+        return to_int(this->m_status);
+    }
 
-
-}
+} // namespace Opm
