@@ -61,7 +61,7 @@ initFromState(const EclipseState& eclState, const Schedule&)
     bool co2storage_dis = eclState.runspec().co2Storage() && (eclState.getSimulationConfig().hasDISGASW() || eclState.getSimulationConfig().hasDISGAS());
     setEnableDissolvedGas(co2sol_dis || co2storage_dis);
     setEnableSaltConcentration(eclState.runspec().phases().active(Phase::BRINE));
-    setActivityModelSalt(eclState.getTableManager().actco2s());
+    setActivityModelSalt(eclState.getCo2StoreConfig().actco2s());
     saltMixType_ = eclState.getCo2StoreConfig().brine_type;
     liquidMixType_ = eclState.getCo2StoreConfig().liquid_type;
 
@@ -69,11 +69,8 @@ initFromState(const EclipseState& eclState, const Schedule&)
     size_t numRegions = 1;
     setNumRegions(numRegions);
     size_t regionIdx = 0;
-    // Currently we only support constant salinity
-    const Scalar molality = eclState.getTableManager().salinity(); // mol/kg
-    const Scalar MmNaCl = 58.44e-3; // molar mass of NaCl [kg/mol]
-    // convert to mass fraction
-    salinity_[regionIdx] = 1 / ( 1 + 1 / (molality*MmNaCl));
+    // Currently we only support constant salinity converted to mass fraction
+    salinity_[regionIdx] = eclState.getCo2StoreConfig().salinity();
     // set the surface conditions using the STCOND keyword
     Scalar T_ref = eclState.getTableManager().stCond().temperature;
     Scalar P_ref = eclState.getTableManager().stCond().pressure;
@@ -83,14 +80,42 @@ initFromState(const EclipseState& eclState, const Schedule&)
         OPM_THROW(std::runtime_error, "CO2STORE can only be used with default values for STCOND!");
     }
 
-    brineReferenceDensity_[regionIdx] = Brine::liquidDensity(T_ref, P_ref, salinity_[regionIdx], extrapolate);
+    // Check for Ezrokhi tables DENAQA and VISCAQA
+    setEzrokhiDenCoeff(eclState.getCo2StoreConfig().getDenaqaTables());
+    setEzrokhiViscCoeff(eclState.getCo2StoreConfig().getViscaqaTables());
+    std::string ezrokhi_msg;
+    if (enableEzrokhiDensity_) {
+        ezrokhi_msg = "\nEzrokhi density coefficients : \n\tNaCl = " 
+                      + std::to_string(ezrokhiDenNaClCoeff_[0]) + " " + std::to_string(ezrokhiDenNaClCoeff_[1]) 
+                      + " " + std::to_string(ezrokhiDenNaClCoeff_[1])
+                      + "\n\tCO2 = " + std::to_string(ezrokhiDenCo2Coeff_[0]) + " " + std::to_string(ezrokhiDenCo2Coeff_[1]) 
+                      + " " + std::to_string(ezrokhiDenCo2Coeff_[1]);
+    }
+    else {
+        ezrokhi_msg = "";
+    }
+    if (enableEzrokhiViscosity_) {
+        ezrokhi_msg += "\nEzrokhi viscosity coefficients : \n\tNaCl = " 
+                       + std::to_string(ezrokhiViscNaClCoeff_[0]) + " " + std::to_string(ezrokhiViscNaClCoeff_[1]) 
+                       + " " + std::to_string(ezrokhiViscNaClCoeff_[1]);
+    }
+    
+    if (enableEzrokhiDensity_) {
+        const Scalar& rho_pure = H2O::liquidDensity(T_ref, P_ref, extrapolate);
+        const Scalar& nacl_exponent = ezrokhiExponent_(T_ref, ezrokhiDenNaClCoeff_);
+        brineReferenceDensity_[regionIdx] = rho_pure * pow(10.0, nacl_exponent * salinity_[regionIdx]);
+    }
+    else {
+        brineReferenceDensity_[regionIdx] = Brine::liquidDensity(T_ref, P_ref, salinity_[regionIdx], extrapolate);
+    }
     co2ReferenceDensity_[regionIdx] = CO2::gasDensity(T_ref, P_ref, extrapolate);
 
     OpmLog::info("CO2STORE/CO2SOL is enabled. \n The surface density of CO2 is  " + std::to_string(co2ReferenceDensity_[regionIdx])
                  + "kg/m3 \n The surface density of Brine is  " + std::to_string(brineReferenceDensity_[regionIdx])
                  + "kg/m3"
                  + "\n The surface densities are computed using the reference pressure ( " + std::to_string(P_ref) 
-                 + "Pa) and the reference temperature (" +  std::to_string(T_ref) + "K)." 
+                 + "Pa) and the reference temperature (" +  std::to_string(T_ref) + "K)."
+                 + ezrokhi_msg
                  );
 }
 

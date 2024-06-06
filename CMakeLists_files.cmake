@@ -173,6 +173,7 @@ if(ENABLE_ECL_INPUT)
     opm/input/eclipse/EclipseState/Tables/TableIndex.cpp
     opm/input/eclipse/EclipseState/Tables/TLMixpar.cpp
     opm/input/eclipse/EclipseState/Tables/Ppcwmax.cpp
+    opm/input/eclipse/EclipseState/Tables/EzrokhiTable.cpp
     opm/input/eclipse/EclipseState/Tables/TableManager.cpp
     opm/input/eclipse/EclipseState/Tables/TableSchema.cpp
     opm/input/eclipse/EclipseState/Tables/Tables.cpp
@@ -1203,6 +1204,7 @@ if(ENABLE_ECL_INPUT)
        opm/input/eclipse/EclipseState/Tables/Sof2Table.hpp
        opm/input/eclipse/EclipseState/Tables/TLMixpar.hpp
        opm/input/eclipse/EclipseState/Tables/Ppcwmax.hpp
+       opm/input/eclipse/EclipseState/Tables/EzrokhiTable.hpp
        opm/input/eclipse/EclipseState/Tables/TableManager.hpp
        opm/input/eclipse/EclipseState/Tables/SwfnTable.hpp
        opm/input/eclipse/EclipseState/Tables/EnptvdTable.hpp

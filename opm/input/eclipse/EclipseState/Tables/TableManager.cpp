@@ -148,8 +148,6 @@ std::optional<JFunc> make_jfunc(const Deck& deck) {
 
         m_salinity = ParserKeywords::SALINITY::MOLALITY::defaultValue;
 
-        m_actco2s = ParserKeywords::ACTCO2S::ACTIVITY_MODEL::defaultValue;
-
         initDims( deck );
         initSimpleTables( deck );
         initFullTables(deck, "PVTG", m_pvtgTables);
@@ -214,9 +212,6 @@ std::optional<JFunc> make_jfunc(const Deck& deck) {
 
         if( deck.hasKeyword( "SALINITY" ) )
             m_salinity = deck["SALINITY"].back().getRecord(0).getItem("MOLALITY").get<double>( 0 ); //unit independent of unit systems
-
-        if ( deck.hasKeyword( "ACTCO2S" ) )
-            m_actco2s = deck["ACTCO2S"].back().getRecord(0).getItem("ACTIVITY_MODEL").get<int>( 0 );
 
         if ( deck.hasKeyword( "ROCK2D") )
             initRockTables(deck, "ROCK2D", m_rock2dTables );
@@ -335,7 +330,6 @@ std::optional<JFunc> make_jfunc(const Deck& deck) {
         result.m_gas_comp_index = 77;
         result.m_rtemp = 1.0;
         result.m_salinity = 1.0;
-        result.m_actco2s = 3;
         result.m_diff_mole_fraction = true;
         result.m_tlmixpar = TLMixpar::serializationTestObject();
         result.m_ppcwmax = Ppcwmax::serializationTestObject();
@@ -1266,10 +1260,6 @@ std::optional<JFunc> make_jfunc(const Deck& deck) {
         return this->m_salinity;
     }
 
-    int TableManager::actco2s() const {
-        return this->m_actco2s;
-    }
-
     bool TableManager::diffMoleFraction() const {
         return this->m_diff_mole_fraction;
     }
@@ -1327,7 +1317,6 @@ std::optional<JFunc> make_jfunc(const Deck& deck) {
                jfunc == data.jfunc &&
                m_rtemp == data.m_rtemp &&
                m_salinity == data.m_salinity &&
-               m_actco2s == data.m_actco2s &&
                m_diff_mole_fraction == data.m_diff_mole_fraction &&
                m_gas_comp_index == data.m_gas_comp_index;
     }

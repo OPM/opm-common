@@ -1057,6 +1057,7 @@ set( keywords
      001_Eclipse300/C/CREF
      001_Eclipse300/C/CREFW
      001_Eclipse300/C/CREFWS
+     001_Eclipse300/D/DENAQA
      001_Eclipse300/D/DIFFAGAS
      001_Eclipse300/D/DIFFAWAT
      001_Eclipse300/D/DIFFCGAS
@@ -1100,6 +1101,7 @@ set( keywords
      001_Eclipse300/T/TREF
      001_Eclipse300/T/TREFS
      001_Eclipse300/V/VCRIT
+     001_Eclipse300/V/VISCAQA
      001_Eclipse300/W/WELLSTRE
      001_Eclipse300/W/WELL_PROBE_COMP
      001_Eclipse300/W/WINJGAS
@@ -1159,6 +1161,7 @@ set( keywords
      900_OPM/R/RVW
      900_OPM/R/RVWVD
      900_OPM/R/RWGSALT
+     900_OPM/S/SALTMF
      900_OPM/S/SALTP
      900_OPM/S/SALTPVD
      900_OPM/S/SALTSOL

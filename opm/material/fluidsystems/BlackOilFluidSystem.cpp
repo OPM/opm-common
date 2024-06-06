@@ -126,10 +126,7 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
     // use molarMass of CO2 and Brine as default
     // when we are using the the CO2STORE option
     if (eclState.runspec().co2Storage()) {
-        const Scalar molality = eclState.getTableManager().salinity(); // mol/kg
-        const Scalar MmNaCl = 58.44e-3; // molar mass of NaCl [kg/mol]
-        // convert to mass fraction
-        const Scalar salinity = 1 / ( 1 + 1 / (molality*MmNaCl));
+        const Scalar salinity = eclState.getCo2StoreConfig().salinity();  // mass fraction
         for (unsigned regionIdx = 0; regionIdx < numRegions; ++regionIdx) {
             if (phaseIsActive(oilPhaseIdx)) // The oil component is used for the brine if OIL is active
                 molarMass_[regionIdx][oilCompIdx] = BrineCo2Pvt<Scalar>::Brine::molarMass(salinity);
