@@ -89,5 +89,26 @@
     "ScheduleState_get_group": {
         "signature": "ScheduleState.get_group(group_name: str) -> Group",
         "doc": "Get the group with the specified name from the schedule state.\n\n:param group_name: The name of the group to retrieve from the schedule state.\n:type group_name: str\n\n:return: The group with the specified name from the schedule state. \n:type return: Group"
+    },
+    "WellClass": {
+        "type": "class",
+        "signature": "Well",
+        "doc": "The Well class."
+    },
+    "Well_pos": {
+        "signature": "Well.pos() -> tuple",
+        "doc": "Retrieve the position of the well.\n\n:return: A tuple containing the (i, j) coordinates and the reference depth of the well. \n:type return: tuple"
+    },
+    "Well_isdefined": {
+        "signature": "Well.isdefined(report_step: int) -> bool",
+        "doc": "Check if the well is defined at a specific report step.\n\n:param report_step: The report step to check for the well's definition.\n:type report_step: int\n\n:return: True if the well is defined at the specified report step, False otherwise. \n:type return: bool"
+    },
+    "Well_available_gctrl": {
+        "signature": "Well.available_gctrl() -> bool",
+        "doc": "Check if the well is available for group control.\n\n:return: True if the well is available for group control, False otherwise. \n:type return: bool"
+    },
+    "Well_connections": {
+        "signature": "Well.connections() -> list",
+        "doc": "Get a list of all connections associated with the well.\n\n:return: A list containing all connections of the well. \n:type return: list"
     }
 }
