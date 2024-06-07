@@ -1,4 +1,45 @@
 {
+    "SummaryStateClass":{
+        "type": "class",
+        "signature": "opm.io.sim.SummaryState",
+        "doc": "The SummaryState class - this is where the current summary results of the simulator are stored.\nThe SummaryState class has methods to get hold of well, group and general variables."
+    },
+    "SummaryState_update_well_var": {
+        "signature": "opm.io.sim.SummaryState.update_well_var(well_name: str, variable_name: str, new_value: double) -> None",
+        "doc": "Update the variable of a well.\n\n:param well_name: The name of the well.\n:type well_name: str\n:param variable_name: The name of the variable to update.\n:type variable_name: str\n:param new_value: The new value of the variable.\n:type new_value: double"
+    },
+    "SummaryState_update_group_var": {
+        "signature": "opm.io.sim.SummaryState.update_group_var(group_name: str, variable_name: str, new_value: double) -> None",
+        "doc": "Update the variable of a group.\n\n:param group_name: The name of the group.\n:type group_name: str\n:param variable_name: The name of the variable to update.\n:type variable_name: str\n:param new_value: The new value of the variable.\n:type new_value: double"
+    },
+    "SummaryState_well_var": {
+        "signature": "opm.io.sim.SummaryState.well_var(well_name: str, variable_name: str) -> double",
+        "doc": "Get the value of a variable for a well.\n\n:param well_name: The name of the well.\n:type well_name: str\n:param variable_name: The name of the variable to retrieve.\n:type variable_name: str\n\n:return: The value of the specified variable for the well. \n:type return: double"
+    },
+    "SummaryState_group_var": {
+        "signature": "opm.io.sim.SummaryState.group_var(group_name: str, variable_name: str) -> double",
+        "doc": "Get the value of a variable for a group.\n\n:param group_name: The name of the group.\n:type group_name: str\n:param variable_name: The name of the variable to retrieve.\n:type variable_name: str\n\n:return: The value of the specified variable for the group. \n:type return: double"
+    },
+    "SummaryState_elapsed": {
+        "signature": "opm.io.sim.SummaryState.elapsed() -> double",
+        "doc": "Return the elapsed time in seconds of the current simulation.\n\n:return: The elapsed time in seconds. \n:type return: double"
+    },
+    "SummaryState_groups": {
+        "signature": "opm.io.sim.SummaryState.groups -> list",
+        "doc": "Return a list of strings containing all group names.\n\n:return: A list of strings representing all group names. \n:type return: list"
+    },
+    "SummaryState_wells": {
+        "signature": "opm.io.sim.SummaryState.wells -> list",
+        "doc": "Return a list of strings containing all well names.\n\n:return: A list of strings representing all well names. \n:type return: list"
+    },
+    "SummaryState_has_well_var": {
+        "signature": "opm.io.sim.SummaryState.has_well_var(well_name: str, variable_name: str) -> bool",
+        "doc": "Check if a well variable exists.\n\n:param well_name: The name of the well.\n:type well_name: str\n:param variable_name: The name of the variable to check.\n:type variable_name: str\n\n:return: True if the variable exists for the well, False otherwise. \n:type return: bool"
+    },
+    "SummaryState_has_group_var": {
+        "signature": "opm.io.sim.SummaryState.has_group_var(group_name: str, variable_name: str) -> bool",
+        "doc": "Check if a group variable exists.\n\n:param group_name: The name of the group.\n:type group_name: str\n:param variable_name: The name of the variable to check.\n:type variable_name: str\n\n:return: True if the variable exists for the group, False otherwise. \n:type return: bool"
+    },
     "EclipseStateClass": {
         "type": "class",
         "signature": "opm.io.ecl_state.EclipseState",
