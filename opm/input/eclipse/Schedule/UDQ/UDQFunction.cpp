@@ -360,39 +360,43 @@ namespace {
 
 }
 
-UDQSet UDQUnaryElementalFunction::SORT(const UDQSet& arg, bool ascending)
+UDQSet UDQUnaryElementalFunction::SORT(const UDQSet& arg,
+                                       const bool    ascending)
 {
-    auto sort_nodes = std::vector<std::pair<std::size_t, double>> {};
+    auto result = arg;
+
+    auto ix = std::vector<int>{};
+    {
+        auto i = 0;
+        for (const auto& elm : arg) {
+            if (elm.defined()) {
+                ix.push_back(i);
+            }
+
+            ++i;
+        }
+    }
+
+    if (ix.empty()) {
+        return result;
+    }
 
     if (ascending) {
-        for (std::size_t index = 0; index < arg.size(); ++index) {
-            if (const auto& value = arg[index]; value.defined()) {
-                sort_nodes.emplace_back(index, value.get());
-            }
-        }
+        std::sort(ix.begin(), ix.end(), [&arg](const int i1, const int i2)
+        {
+            return *arg[i1].value() < *arg[i2].value();
+        });
     }
     else {
-        for (std::size_t index = 0; index < arg.size(); ++index) {
-            if (const auto& value = arg[index]; value.defined()) {
-                sort_nodes.emplace_back(index, -value.get());
-            }
-        }
+        std::sort(ix.begin(), ix.end(), [&arg](const int i1, const int i2)
+        {
+            return *arg[i1].value() > *arg[i2].value();
+        });
     }
 
-    std::sort(sort_nodes.begin(), sort_nodes.end(),
-              [](const auto& s1, const auto& s2)
-              {
-                  return s1.second < s2.second;
-              });
-
-    auto result = arg;
-    double sort_value = 1;
-    for (const auto& node : sort_nodes) {
-        const auto& index = node.first;
-        if (result[index].defined()) {
-            result.assign(index, sort_value);
-            sort_value += 1;
-        }
+    auto sort_value = 1.0;
+    for (const auto& i : ix) {
+        result.assign(i, sort_value++);
     }
 
     return result;

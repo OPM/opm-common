@@ -105,7 +105,7 @@ UDQFunctionTable::UDQFunctionTable(const UDQParams& param,
 void UDQFunctionTable::insert_function(std::shared_ptr<UDQFunction> func)
 {
     auto name = func->name();
-    this->function_table.emplace( std::move(name), std::move(func) );
+    this->function_table.emplace(std::move(name), std::move(func));
 }
 
 bool UDQFunctionTable::has_function(const std::string& name) const
@@ -115,14 +115,14 @@ bool UDQFunctionTable::has_function(const std::string& name) const
 
 const UDQFunction& UDQFunctionTable::get(const std::string& name) const
 {
-    if (!this->has_function(name)) {
+    auto funcPos = this->function_table.find(name);
+    if (funcPos == this->function_table.end()) {
         throw std::invalid_argument {
             "No such function registered: " + name
         };
     }
 
-    const auto& pair_ptr = this->function_table.find(name);
-    return *pair_ptr->second;
+    return *funcPos->second;
 }
 
 const UDQParams& UDQFunctionTable::getParams() const
@@ -130,7 +130,8 @@ const UDQParams& UDQFunctionTable::getParams() const
     return this->params;
 }
 
-const UDQFunctionTable::FunctionMap& UDQFunctionTable::functionMap() const
+const UDQFunctionTable::FunctionMap&
+UDQFunctionTable::functionMap() const
 {
     return this->function_table;
 }
