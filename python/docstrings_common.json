@@ -76,5 +76,18 @@
     "Schedule_get_wells": {
         "signature": "opm.io.schedule.Schedule.get_wells(well_name_pattern: str) -> list",
         "doc": "Get the names of wells matching a specified pattern.\n\n:param well_name_pattern: The pattern for well names, where '*' acts as a wildcard.\n:type well_name_pattern: str\n\n:return: A list containing the names of wells that match the specified pattern. \n:type return: list"
+    },
+    "ScheduleStateClass": {
+        "signature": "ScheduleState",
+        "type": "class",
+        "doc": "The ScheduleState class."
+    },
+    "ScheduleState_nupcol": {
+        "signature": "ScheduleState.nupcol",
+        "doc": "The NUPCOL value at this Schedule State. This is a positive integer that defines the maximum number of Newton iterations used to update well targets within a time step."
+    },
+    "ScheduleState_get_group": {
+        "signature": "ScheduleState.get_group(group_name: str) -> Group",
+        "doc": "Get the group with the specified name from the schedule state.\n\n:param group_name: The name of the group to retrieve from the schedule state.\n:type group_name: str\n\n:return: The group with the specified name from the schedule state. \n:type return: Group"
     }
 }

@@ -2,6 +2,8 @@
 
 #include "export.hpp"
 
+#include <python/cxx/OpmCommonPythonDoc.hpp>
+
 namespace {
         const Group& get_group(const ScheduleState& st, const std::string& group_name) {
         return st.groups.get(group_name);
@@ -18,8 +20,10 @@ namespace {
  */
 void python::common::export_ScheduleState(py::module& module) {
 
-    py::class_<ScheduleState>(module, "ScheduleState")
-        .def_property_readonly("nupcol", py::overload_cast<>(&ScheduleState::nupcol, py::const_))
-        .def("group", &get_group, ref_internal, py::arg("group_name"))
+    using namespace Opm::Common::DocStrings;
+
+    py::class_<ScheduleState>(module, "ScheduleState", ScheduleStateClass_docstring)
+        .def_property_readonly("nupcol", py::overload_cast<>(&ScheduleState::nupcol, py::const_), ScheduleState_nupcol_docstring)
+        .def("group", &get_group, ref_internal, py::arg("group_name"), ScheduleState_get_group_docstring)
         ;
 }
