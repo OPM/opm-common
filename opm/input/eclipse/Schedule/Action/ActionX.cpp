@@ -15,25 +15,38 @@
 
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
- */
+*/
 
-#include <optional>
-#include <sstream>
-#include <unordered_set>
-#include <fmt/format.h>
-
-#include <opm/input/eclipse/Utility/Typetools.hpp>
-#include <opm/input/eclipse/Deck/DeckKeyword.hpp>
-#include <opm/input/eclipse/Deck/DeckOutput.hpp>
-#include <opm/input/eclipse/Schedule/Action/ActionValue.hpp>
 #include <opm/input/eclipse/Schedule/Action/ActionX.hpp>
+
+#include <opm/common/utility/OpmInputError.hpp>
+
+#include <opm/io/eclipse/rst/action.hpp>
+
+#include <opm/input/eclipse/Schedule/Action/ActionValue.hpp>
 #include <opm/input/eclipse/Schedule/Action/Actdims.hpp>
 #include <opm/input/eclipse/Schedule/Action/State.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellMatcher.hpp>
+
+#include <opm/input/eclipse/Utility/Typetools.hpp>
+
+#include <opm/input/eclipse/Deck/DeckKeyword.hpp>
+#include <opm/input/eclipse/Deck/DeckOutput.hpp>
+
 #include <opm/input/eclipse/Parser/ParseContext.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/W.hpp>
-#include <opm/io/eclipse/rst/action.hpp>
-#include <opm/common/utility/OpmInputError.hpp>
+
+#include <ctime>
+#include <optional>
+#include <sstream>
+#include <stdexcept>
+#include <string>
+#include <tuple>
+#include <unordered_set>
+#include <utility>
+#include <vector>
+
+#include <fmt/format.h>
 
 #include "ActionParser.hpp"
 
@@ -59,19 +72,38 @@ std::string dequote(const std::string& token, const std::optional<KeywordLocatio
 }
 
 
-bool ActionX::valid_keyword(const std::string& keyword) {
-    static std::unordered_set<std::string> actionx_allowed_list = {
+bool ActionX::valid_keyword(const std::string& keyword)
+{
+    static const auto actionx_allowed_list = std::unordered_set<std::string> {
         "BOX",
+
         "COMPLUMP", "COMPDAT", "COMPSEGS",
+
         "ENDBOX", "EXIT",
-        "GCONINJE", "GCONPROD", "GCONSUMP", "GLIFTOPT", "GRUPNET", "GRUPTARG", "GRUPTREE", "GSATINJE", "GSATPROD",
+
+        "GCONINJE", "GCONPROD", "GCONSUMP",
+        "GLIFTOPT",
+        "GRUPNET", "GRUPTARG", "GRUPTREE",
+        "GSATINJE", "GSATPROD",
+
         "MULTX", "MULTX-", "MULTY", "MULTY-", "MULTZ", "MULTZ-",
         "NEXT", "NEXTSTEP",
+
         "UDQ",
-        "WCONINJE", "WCONPROD", "WECON", "WEFAC", "WELOPEN", "WELPI", "WELTARG", "WGRUPCON", "WPIMULT", "WELSEGS", "WELSPECS", "WSEGVALV", "WTEST", "WTMULT", "WLIST",
-        "TEST"
+
+        "WCONINJE", "WCONPROD",
+        "WECON", "WEFAC",
+        "WELOPEN", "WELPI", "WELSEGS", "WELSPECS", "WELTARG",
+        "WGRUPCON",
+        "WLIST",
+        "WPIMULT",
+        "WSEGVALV",
+        "WTEST", "WTMULT",
+
+        "TEST",
     };
-    return (actionx_allowed_list.find(keyword) != actionx_allowed_list.end());
+
+    return actionx_allowed_list.find(keyword) != actionx_allowed_list.end();
 }
 
 std::tuple<ActionX, std::vector<std::pair<std::string, std::string>>>

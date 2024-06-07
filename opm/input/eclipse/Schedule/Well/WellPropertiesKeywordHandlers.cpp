@@ -526,57 +526,85 @@ void handleWTEMP(HandlerContext& handlerContext)
 void handleWTMULT(HandlerContext& handlerContext)
 {
     for (const auto& record : handlerContext.keyword) {
-        const auto& wellNamePattern = record.getItem<ParserKeywords::WTMULT::WELL>().getTrimmedString(0);
-        const auto& control = record.getItem<ParserKeywords::WTMULT::CONTROL>().get<std::string>(0);
         const auto& factor = record.getItem<ParserKeywords::WTMULT::FACTOR>().get<UDAValue>(0);
-        const auto& num = record.getItem<ParserKeywords::WTMULT::NUM>().get<int>(0);
-
         if (factor.is<std::string>()) {
-            std::string reason = fmt::format("Use of UDA value: {} is not supported as multiplier", factor.get<std::string>());
-            throw OpmInputError(reason, handlerContext.keyword.location());
+            const auto reason =
+                fmt::format("UDA value {} is not supported "
+                            "as multiplier", factor.get<std::string>());
+
+            throw OpmInputError {
+                reason, handlerContext.keyword.location()
+            };
         }
 
+        const auto& control = record.getItem<ParserKeywords::WTMULT::CONTROL>().get<std::string>(0);
         if (handlerContext.state().udq().has_keyword(control)) {
-            std::string reason = fmt::format("Use of UDA value: {} is not supported for control target", control);
-            throw OpmInputError(reason, handlerContext.keyword.location());
+            const auto reason =
+                fmt::format("UDA value {} is not supported "
+                            "for control target", control);
+
+            throw OpmInputError {
+                reason, handlerContext.keyword.location()
+            };
         }
 
+        const auto num = record.getItem<ParserKeywords::WTMULT::NUM>().get<int>(0);
         if (num != 1) {
-            std::string reason = fmt::format("Only NUM=1 is supported in WTMULT keyword");
-            throw OpmInputError(reason, handlerContext.keyword.location());
+            throw OpmInputError {
+                "Only NUM=1 is supported in WTMULT keyword",
+                handlerContext.keyword.location()
+            };
         }
 
         const auto cmode = WellWELTARGCModeFromString(control);
-        if (cmode == Well::WELTARGCMode::GUID)
-            throw std::logic_error("Multiplying guide rate is not implemented");
+        if (cmode == Well::WELTARGCMode::GUID) {
+            throw OpmInputError {
+                "Multiplying the guide rate is not supported",
+                handlerContext.keyword.location()
+            };
+        }
 
+        const auto& wellNamePattern = record.getItem<ParserKeywords::WTMULT::WELL>().getTrimmedString(0);
         const auto well_names = handlerContext.wellNames(wellNamePattern);
         for (const auto& well_name : well_names) {
             auto well = handlerContext.state().wells.get(well_name);
+
             if (well.isInjector()) {
-                bool update_well = true;
+                const bool update_well = true;
+
                 auto properties = std::make_shared<Well::WellInjectionProperties>(well.getInjectionProperties());
-                properties->handleWTMULT( cmode, factor.get<double>());
+                properties->handleWTMULT(cmode, factor.get<double>());
 
                 well.updateInjection(properties);
                 if (update_well) {
-                    handlerContext.state().events().addEvent(ScheduleEvents::INJECTION_UPDATE);
-                    handlerContext.state().wellgroup_events().addEvent(well_name, ScheduleEvents::INJECTION_UPDATE);
-                    handlerContext.state().wells.update(std::move(well));
-                }
-            } else {
-                bool update_well = true;
-                auto properties = std::make_shared<Well::WellProductionProperties>(well.getProductionProperties());
-                properties->handleWTMULT( cmode, factor.get<double>());
+                    handlerContext.state().events()
+                        .addEvent(ScheduleEvents::INJECTION_UPDATE);
 
-                well.updateProduction(properties);
-                if (update_well) {
-                    handlerContext.state().events().addEvent(ScheduleEvents::PRODUCTION_UPDATE);
-                    handlerContext.state().wellgroup_events().addEvent(well_name,
-                                                                     ScheduleEvents::PRODUCTION_UPDATE);
+                    handlerContext.state().wellgroup_events()
+                        .addEvent(well_name, ScheduleEvents::INJECTION_UPDATE);
+
                     handlerContext.state().wells.update(std::move(well));
                 }
             }
+            else {
+                const bool update_well = true;
+
+                auto properties = std::make_shared<Well::WellProductionProperties>(well.getProductionProperties());
+                properties->handleWTMULT(cmode, factor.get<double>());
+
+                well.updateProduction(properties);
+                if (update_well) {
+                    handlerContext.state().events()
+                        .addEvent(ScheduleEvents::PRODUCTION_UPDATE);
+
+                    handlerContext.state().wellgroup_events()
+                        .addEvent(well_name, ScheduleEvents::PRODUCTION_UPDATE);
+
+                    handlerContext.state().wells.update(std::move(well));
+                }
+            }
+
+            handlerContext.affected_well(well_name);
         }
     }
 }
