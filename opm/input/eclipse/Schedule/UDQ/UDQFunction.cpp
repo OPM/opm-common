@@ -22,6 +22,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
+#include <functional>
 #include <numeric>
 #include <random>
 #include <stdexcept>
@@ -358,10 +359,8 @@ namespace {
         return result;
     }
 
-}
-
-UDQSet UDQUnaryElementalFunction::SORT(const UDQSet& arg,
-                                       const bool    ascending)
+template <typename Compare>
+UDQSet sortOrder(const UDQSet& arg, Compare&& cmp)
 {
     auto result = arg;
 
@@ -378,21 +377,15 @@ UDQSet UDQUnaryElementalFunction::SORT(const UDQSet& arg,
     }
 
     if (ix.empty()) {
+        // No defined values in UDQ set 'arg'.  Nothing to do.
         return result;
     }
 
-    if (ascending) {
-        std::sort(ix.begin(), ix.end(), [&arg](const int i1, const int i2)
-        {
-            return *arg[i1].value() < *arg[i2].value();
-        });
-    }
-    else {
-        std::sort(ix.begin(), ix.end(), [&arg](const int i1, const int i2)
-        {
-            return *arg[i1].value() > *arg[i2].value();
-        });
-    }
+    std::sort(ix.begin(), ix.end(), [&arg, cmp = std::forward<Compare>(cmp)]
+              (const int i1, const int i2)
+    {
+        return cmp(*arg[i1].value(), *arg[i2].value());
+    });
 
     auto sort_value = 1.0;
     for (const auto& i : ix) {
@@ -402,14 +395,18 @@ UDQSet UDQUnaryElementalFunction::SORT(const UDQSet& arg,
     return result;
 }
 
-UDQSet UDQUnaryElementalFunction::SORTD(const UDQSet& arg)
-{
-    return UDQUnaryElementalFunction::SORT(arg, false);
-}
+} // Anonymous namespace
 
 UDQSet UDQUnaryElementalFunction::SORTA(const UDQSet& arg)
 {
-    return UDQUnaryElementalFunction::SORT(arg, true);
+    // Order by '<' => ascending.
+    return sortOrder(arg, std::less<>{});
+}
+
+UDQSet UDQUnaryElementalFunction::SORTD(const UDQSet& arg)
+{
+    // Order by '>' => descending.
+    return sortOrder(arg, std::greater<>{});
 }
 
 UDQBinaryFunction::UDQBinaryFunction(const std::string& name, std::function<UDQSet(const UDQSet& lhs, const UDQSet& rhs)> f)
@@ -612,4 +609,4 @@ UDQSet UDQBinaryFunction::POW(const UDQSet& lhs, const UDQSet& rhs)
     return result;
 }
 
-}
+} // namespace Opm
