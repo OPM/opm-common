@@ -47,11 +47,6 @@ initFromState(const EclipseState& eclState, const Schedule&)
                         "CO2 PVT properties are computed based on the Span-Wagner "
                         "pvt model and PVDG/PVTG input is ignored.");
     }
-
-    // We only supported single pvt region for the co2-brine module
-    size_t numRegions = 1;
-    setNumRegions(numRegions);
-    size_t regionIdx = 0;
     Scalar T_ref = eclState.getTableManager().stCond().temperature;
     Scalar P_ref = eclState.getTableManager().stCond().pressure;
 
@@ -60,8 +55,15 @@ initFromState(const EclipseState& eclState, const Schedule&)
         OPM_THROW(std::runtime_error, "CO2STORE/CO2SOL can only be used with default values for STCOND!");
     }
 
-    gasReferenceDensity_[regionIdx] = CO2::gasDensity(T_ref, P_ref, extrapolate);
-    brineReferenceDensity_[regionIdx] = Brine::liquidDensity(T_ref, P_ref, salinity_[regionIdx], extrapolate);
+    std::size_t numRegions = eclState.runspec().tabdims().getNumPVTTables();
+    setNumRegions(numRegions);
+    for (size_t regionIdx = 0; regionIdx < numRegions; ++regionIdx) {
+        // Currently we only support constant salinity converted to mass fraction
+        salinity_[regionIdx] = eclState.getCo2StoreConfig().salinity();
+        gasReferenceDensity_[regionIdx] = CO2::gasDensity(T_ref, P_ref, extrapolate);
+        brineReferenceDensity_[regionIdx] = Brine::liquidDensity(T_ref, P_ref, salinity_[regionIdx], extrapolate);
+    }
+
     initEnd();
 }
 
