@@ -29,6 +29,8 @@
     "SPRDA",
     "SPRDF",
     "SPRDH",
+    "STFC",
+    "STFR",
     "SWCT",
     "SWDEN",
     "SWFR",
@@ -39,7 +41,7 @@
     "SWVIS"
   ],
   "comment": "This list is incomplete",
-  "deck_name_regex": "SU.+",
+  "deck_name_regex": "SU.+|STFC.+|STFR.+",
   "items": [
     {
       "name": "Well",

@@ -875,8 +875,10 @@ inline quantity filtrate_well_quantities( const fn_args& args ) {
 template< rt tracer, rt phase, bool injection = true >
 inline quantity ratetracer( const fn_args& args ) {
     double sum = 0.0;
-
-    std::string tracer_name = args.keyword_name.substr(4);
+    
+    // All well-related tracer keywords, e.g. WTPCxx, WTPRxx, FTPTxx, have a 4-letter prefix length
+    constexpr auto prefix_len = 4;
+    std::string tracer_name = args.keyword_name.substr(prefix_len);
 
     for (const auto* sched_well : args.schedule_wells) {
         const auto& name = sched_well->name();
@@ -1188,6 +1190,21 @@ inline quantity srate(const fn_args& args)
     {
         // Note: Opposite flow rate sign conventions in Flow vs. ECLIPSE.
         return - segment.rates.get(phase, 0.0)
+            * efac(args.eff_factors, args.schedule_wells.front()->name());
+    });
+}
+
+template< rt tracer, rt phase>
+inline quantity sratetracer(const fn_args& args)
+{
+    return segment_quantity(args, rate_unit<phase>(), 
+        [&args](const Opm::data::Segment& segment)
+    {
+        // Tracer-related keywords, STFRx and STFCx, have a 4-letter prefix length
+        constexpr auto prefix_len = 4;
+        std::string tracer_name = args.keyword_name.substr(prefix_len);
+        
+        return - segment.rates.get(tracer, 0.0, tracer_name)
             * efac(args.eff_factors, args.schedule_wells.front()->name());
     });
 }
@@ -1997,9 +2014,21 @@ static const auto funs = std::unordered_map<std::string, ofun> {
     { "WTIR#W", ratetracer< rt::tracer, rt::wat, injector > }, // #W: Water tracers
     { "WTIR#O", ratetracer< rt::tracer, rt::oil, injector > }, // #O: Oil tracers
     { "WTIR#G", ratetracer< rt::tracer, rt::gas, injector > }, // #G: Gas tracers
+    { "WTIRF#W", ratetracer< rt::tracer, rt::wat, injector > }, // #W: Water tracers
+    { "WTIRF#O", ratetracer< rt::tracer, rt::oil, injector > }, // #O: Oil tracers
+    { "WTIRF#G", ratetracer< rt::tracer, rt::gas, injector > }, // #G: Gas tracers
+    { "WTIRS#W", ratetracer< rt::tracer, rt::wat, injector > }, // #W: Water tracers
+    { "WTIRS#O", ratetracer< rt::tracer, rt::oil, injector > }, // #O: Oil tracers
+    { "WTIRS#G", ratetracer< rt::tracer, rt::gas, injector > }, // #G: Gas tracers
     { "WTIC#W", div( ratetracer< rt::tracer, rt::wat, injector >, rate< rt::wat, injector >) },
     { "WTIC#O", div( ratetracer< rt::tracer, rt::oil, injector >, rate< rt::oil, injector >) },
     { "WTIC#G", div( ratetracer< rt::tracer, rt::gas, injector >, rate< rt::gas, injector >) },
+    { "WTICF#W", div( ratetracer< rt::tracer, rt::wat, injector >, rate< rt::wat, injector >) },
+    { "WTICF#O", div( ratetracer< rt::tracer, rt::oil, injector >, rate< rt::oil, injector >) },
+    { "WTICF#G", div( ratetracer< rt::tracer, rt::gas, injector >, rate< rt::gas, injector >) },
+    { "WTICS#W", div( ratetracer< rt::tracer, rt::wat, injector >, rate< rt::wat, injector >) },
+    { "WTICS#O", div( ratetracer< rt::tracer, rt::oil, injector >, rate< rt::oil, injector >) },
+    { "WTICS#G", div( ratetracer< rt::tracer, rt::gas, injector >, rate< rt::gas, injector >) },
     { "WVIR", sum( sum( rate< rt::reservoir_water, injector >, rate< rt::reservoir_oil, injector > ),
                        rate< rt::reservoir_gas, injector > ) },
     { "WGIGR", well_guiderate<injector, Opm::data::GuideRateValue::Item::Gas> },
@@ -2016,6 +2045,12 @@ static const auto funs = std::unordered_map<std::string, ofun> {
     { "WTIT#W", mul( ratetracer< rt::tracer, rt::wat, injector >, duration ) },
     { "WTIT#O", mul( ratetracer< rt::tracer, rt::oil, injector >, duration ) },
     { "WTIT#G", mul( ratetracer< rt::tracer, rt::gas, injector >, duration ) },
+    { "WTITF#W", mul( ratetracer< rt::tracer, rt::wat, injector >, duration ) },
+    { "WTITF#O", mul( ratetracer< rt::tracer, rt::oil, injector >, duration ) },
+    { "WTITF#G", mul( ratetracer< rt::tracer, rt::gas, injector >, duration ) },
+    { "WTITS#W", mul( ratetracer< rt::tracer, rt::wat, injector >, duration ) },
+    { "WTITS#O", mul( ratetracer< rt::tracer, rt::oil, injector >, duration ) },
+    { "WTITS#G", mul( ratetracer< rt::tracer, rt::gas, injector >, duration ) },
     { "WVIT", mul( sum( sum( rate< rt::reservoir_water, injector >, rate< rt::reservoir_oil, injector > ),
                         rate< rt::reservoir_gas, injector > ), duration ) },
 
@@ -2047,9 +2082,21 @@ static const auto funs = std::unordered_map<std::string, ofun> {
     { "WTPR#W", ratetracer< rt::tracer, rt::wat, producer > },
     { "WTPR#O", ratetracer< rt::tracer, rt::oil, producer > },
     { "WTPR#G", ratetracer< rt::tracer, rt::gas, producer > },
+    { "WTPRF#W", ratetracer< rt::tracer, rt::wat, producer> },
+    { "WTPRF#O", ratetracer< rt::tracer, rt::oil, producer> },
+    { "WTPRF#G", ratetracer< rt::tracer, rt::gas, producer> },
+    { "WTPRS#W", ratetracer< rt::tracer, rt::wat, producer> },
+    { "WTPRS#O", ratetracer< rt::tracer, rt::oil, producer> },
+    { "WTPRS#G", ratetracer< rt::tracer, rt::gas, producer> },
     { "WTPC#W", div( ratetracer< rt::tracer, rt::wat, producer >, rate< rt::wat, producer >) },
     { "WTPC#O", div( ratetracer< rt::tracer, rt::oil, producer >, rate< rt::oil, producer >) },
     { "WTPC#G", div( ratetracer< rt::tracer, rt::gas, producer >, rate< rt::gas, producer >) },
+    { "WTPCF#W", div( ratetracer< rt::tracer, rt::wat, producer >, rate< rt::wat, producer >) },
+    { "WTPCF#O", div( ratetracer< rt::tracer, rt::oil, producer >, rate< rt::oil, producer >) },
+    { "WTPCF#G", div( ratetracer< rt::tracer, rt::gas, producer >, rate< rt::gas, producer >) },
+    { "WTPCS#W", div( ratetracer< rt::tracer, rt::wat, producer >, rate< rt::wat, producer >) },
+    { "WTPCS#O", div( ratetracer< rt::tracer, rt::oil, producer >, rate< rt::oil, producer >) },
+    { "WTPCS#G", div( ratetracer< rt::tracer, rt::gas, producer >, rate< rt::gas, producer >) },
     { "WCPC", div( rate< rt::polymer, producer >, rate< rt::wat, producer >) },
     { "WSPC", div( rate< rt::brine, producer >, rate< rt::wat, producer >) },
 
@@ -2078,6 +2125,12 @@ static const auto funs = std::unordered_map<std::string, ofun> {
     { "WTPT#W", mul( ratetracer< rt::tracer, rt::wat, producer >, duration ) },
     { "WTPT#O", mul( ratetracer< rt::tracer, rt::oil, producer >, duration ) },
     { "WTPT#G", mul( ratetracer< rt::tracer, rt::gas, producer >, duration ) },
+    { "WTPTF#W", mul( ratetracer< rt::tracer, rt::wat, producer >, duration ) },
+    { "WTPTF#O", mul( ratetracer< rt::tracer, rt::oil, producer >, duration ) },
+    { "WTPTF#G", mul( ratetracer< rt::tracer, rt::gas, producer >, duration ) },
+    { "WTPTS#W", mul( ratetracer< rt::tracer, rt::wat, producer >, duration ) },
+    { "WTPTS#O", mul( ratetracer< rt::tracer, rt::oil, producer >, duration ) },
+    { "WTPTS#G", mul( ratetracer< rt::tracer, rt::gas, producer >, duration ) },
     { "WLPT", mul( sum( rate< rt::wat, producer >, rate< rt::oil, producer > ),
                    duration ) },
     { "WGPTS", mul( rate< rt::dissolved_gas, producer >, duration )},
@@ -2353,9 +2406,21 @@ static const auto funs = std::unordered_map<std::string, ofun> {
     { "FTPR#W", ratetracer< rt::tracer, rt::wat, producer > },
     { "FTPR#O", ratetracer< rt::tracer, rt::oil, producer > },
     { "FTPR#G", ratetracer< rt::tracer, rt::gas, producer > },
+    { "FTPRF#W", ratetracer< rt::tracer, rt::wat, producer > },
+    { "FTPRF#O", ratetracer< rt::tracer, rt::oil, producer > },
+    { "FTPRF#G", ratetracer< rt::tracer, rt::gas, producer > },
+    { "FTPRS#W", ratetracer< rt::tracer, rt::wat, producer > },
+    { "FTPRS#O", ratetracer< rt::tracer, rt::oil, producer > },
+    { "FTPRS#G", ratetracer< rt::tracer, rt::gas, producer > },
     { "FTPC#W", div( ratetracer< rt::tracer, rt::wat, producer >, rate< rt::wat, producer >) },
     { "FTPC#O", div( ratetracer< rt::tracer, rt::oil, producer >, rate< rt::oil, producer >) },
     { "FTPC#G", div( ratetracer< rt::tracer, rt::gas, producer >, rate< rt::gas, producer >) },
+    { "FTPCF#W", div( ratetracer< rt::tracer, rt::wat, producer >, rate< rt::wat, producer >) },
+    { "FTPCF#O", div( ratetracer< rt::tracer, rt::oil, producer >, rate< rt::oil, producer >) },
+    { "FTPCF#G", div( ratetracer< rt::tracer, rt::gas, producer >, rate< rt::gas, producer >) },
+    { "FTPCS#W", div( ratetracer< rt::tracer, rt::wat, producer >, rate< rt::wat, producer >) },
+    { "FTPCS#O", div( ratetracer< rt::tracer, rt::oil, producer >, rate< rt::oil, producer >) },
+    { "FTPCS#G", div( ratetracer< rt::tracer, rt::gas, producer >, rate< rt::gas, producer >) },
     { "FVPR", sum( sum( rate< rt::reservoir_water, producer>, rate< rt::reservoir_oil, producer >),
                    rate< rt::reservoir_gas, producer>)},
     { "FGPRS", rate< rt::dissolved_gas, producer > },
@@ -2375,6 +2440,12 @@ static const auto funs = std::unordered_map<std::string, ofun> {
     { "FTPT#W", mul( ratetracer< rt::tracer, rt::wat, producer >, duration ) },
     { "FTPT#O", mul( ratetracer< rt::tracer, rt::oil, producer >, duration ) },
     { "FTPT#G", mul( ratetracer< rt::tracer, rt::gas, producer >, duration ) },
+    { "FTPTF#W", mul( ratetracer< rt::tracer, rt::wat, producer >, duration ) },
+    { "FTPTF#O", mul( ratetracer< rt::tracer, rt::oil, producer >, duration ) },
+    { "FTPTF#G", mul( ratetracer< rt::tracer, rt::gas, producer >, duration ) },
+    { "FTPTS#W", mul( ratetracer< rt::tracer, rt::wat, producer >, duration ) },
+    { "FTPTS#O", mul( ratetracer< rt::tracer, rt::oil, producer >, duration ) },
+    { "FTPTS#G", mul( ratetracer< rt::tracer, rt::gas, producer >, duration ) },
     { "FLPT", mul( sum( rate< rt::wat, producer >, rate< rt::oil, producer > ),
                    duration ) },
     { "FVPT", mul(sum (sum( rate< rt::reservoir_water, producer>, rate< rt::reservoir_oil, producer >),
@@ -2397,9 +2468,21 @@ static const auto funs = std::unordered_map<std::string, ofun> {
     { "FTIR#W", ratetracer< rt::tracer, rt::wat, injector > },
     { "FTIR#O", ratetracer< rt::tracer, rt::oil, injector > },
     { "FTIR#G", ratetracer< rt::tracer, rt::gas, injector > },
+    { "FTIRF#W", ratetracer< rt::tracer, rt::wat, injector > },
+    { "FTIRF#O", ratetracer< rt::tracer, rt::oil, injector > },
+    { "FTIRF#G", ratetracer< rt::tracer, rt::gas, injector > },
+    { "FTIRS#W", ratetracer< rt::tracer, rt::wat, injector > },
+    { "FTIRS#O", ratetracer< rt::tracer, rt::oil, injector > },
+    { "FTIRS#G", ratetracer< rt::tracer, rt::gas, injector > },
     { "FTIC#W", div( ratetracer< rt::tracer, rt::wat, injector >, rate< rt::wat, injector >) },
     { "FTIC#O", div( ratetracer< rt::tracer, rt::oil, injector >, rate< rt::oil, injector >) },
     { "FTIC#G", div( ratetracer< rt::tracer, rt::gas, injector >, rate< rt::gas, injector >) },
+    { "FTICF#W", div( ratetracer< rt::tracer, rt::wat, injector >, rate< rt::wat, injector >) },
+    { "FTICF#O", div( ratetracer< rt::tracer, rt::oil, injector >, rate< rt::oil, injector >) },
+    { "FTICF#G", div( ratetracer< rt::tracer, rt::gas, injector >, rate< rt::gas, injector >) },
+    { "FTICS#W", div( ratetracer< rt::tracer, rt::wat, injector >, rate< rt::wat, injector >) },
+    { "FTICS#O", div( ratetracer< rt::tracer, rt::oil, injector >, rate< rt::oil, injector >) },
+    { "FTICS#G", div( ratetracer< rt::tracer, rt::gas, injector >, rate< rt::gas, injector >) },
     { "FVIR", sum( sum( rate< rt::reservoir_water, injector>, rate< rt::reservoir_oil, injector >),
                    rate< rt::reservoir_gas, injector>)},
 
@@ -2415,6 +2498,12 @@ static const auto funs = std::unordered_map<std::string, ofun> {
     { "FTIT#W", mul( ratetracer< rt::tracer, rt::wat, injector >, duration ) },
     { "FTIT#O", mul( ratetracer< rt::tracer, rt::oil, injector >, duration ) },
     { "FTIT#G", mul( ratetracer< rt::tracer, rt::gas, injector >, duration ) },
+    { "FTITF#W", mul( ratetracer< rt::tracer, rt::wat, injector >, duration ) },
+    { "FTITF#O", mul( ratetracer< rt::tracer, rt::oil, injector >, duration ) },
+    { "FTITF#G", mul( ratetracer< rt::tracer, rt::gas, injector >, duration ) },
+    { "FTITS#W", mul( ratetracer< rt::tracer, rt::wat, injector >, duration ) },
+    { "FTITS#O", mul( ratetracer< rt::tracer, rt::oil, injector >, duration ) },
+    { "FTITS#G", mul( ratetracer< rt::tracer, rt::gas, injector >, duration ) },
     { "FLIT", mul( sum( rate< rt::wat, injector >, rate< rt::oil, injector > ),
                    duration ) },
     { "FVIT", mul( sum( sum( rate< rt::reservoir_water, injector>, rate< rt::reservoir_oil, injector >),
@@ -2520,6 +2609,12 @@ static const auto funs = std::unordered_map<std::string, ofun> {
     { "SPRDH", segpress<Opm::data::SegmentPressures::Value::PDropHydrostatic> },
     { "SPRDF", segpress<Opm::data::SegmentPressures::Value::PDropFriction> },
     { "SPRDA", segpress<Opm::data::SegmentPressures::Value::PDropAccel> },
+    { "STFR#W", sratetracer<rt::tracer, rt::wat> }, // #W: Water tracers
+    { "STFR#O", sratetracer<rt::tracer, rt::oil> }, // #O: Oil tracers
+    { "STFR#G", sratetracer<rt::tracer, rt::gas> }, // #G: Gas tracers
+    { "STFC#W", div( sratetracer<rt::tracer, rt::wat>, srate<rt::wat> ) }, // #W: Water tracers
+    { "STFC#O", div( sratetracer<rt::tracer, rt::oil>, srate<rt::oil> ) }, // #O: Oil tracers
+    { "STFC#G", div( sratetracer<rt::tracer, rt::gas>, srate<rt::gas> ) }, // #G: Gas tracers
 
     // Well productivity index
     { "WPI", preferred_phase_productivty_index },
@@ -3867,9 +3962,11 @@ namespace Evaluator {
             return false;
         }
 
-        const auto tracer_name = normKw.substr(4);
-
         const auto& tracers = this->es_.tracer();
+
+        // Check for tracer names twice to allow for tracers starting with S or F
+        auto istart = 4;
+        auto tracer_name = normKw.substr(istart);
         auto trPos = std::find_if(tracers.begin(), tracers.end(),
                                   [&tracer_name](const auto& tracer)
                                   {
@@ -3877,10 +3974,22 @@ namespace Evaluator {
                                   });
 
         if (trPos == tracers.end()) {
-            return false;
+            if ((normKw[4] == 'F') || (normKw[4] == 'S'))
+                istart = 5;
+            else
+                return false;
+            tracer_name = normKw.substr(istart);
+            trPos = std::find_if(tracers.begin(), tracers.end(),
+                                    [&tracer_name](const auto& tracer)
+                                    {
+                                        return tracer.name == tracer_name;
+                                    });
+
+            if (trPos == tracers.end())
+                return false;
         }
 
-        auto tracer_tag = normKw.substr(0, 4);
+        auto tracer_tag = normKw.substr(0, istart);
         switch (trPos->phase) {
         case Opm::Phase::WATER:
             tracer_tag += "#W";
