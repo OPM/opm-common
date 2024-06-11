@@ -330,7 +330,26 @@ public:
     Scalar salinity(unsigned regionIdx) const
     { return salinity_[regionIdx]; }
 
+    void setEzrokhiDenCoeff(const std::vector<EzrokhiTable>& denaqa)
+    {
+        if (denaqa.empty())
+            return;
+
+        enableEzrokhiDensity_ = true;
+        ezrokhiDenNaClCoeff_ = {static_cast<Scalar>(denaqa[0].getC0("NACL")), 
+                                static_cast<Scalar>(denaqa[0].getC1("NACL")), 
+                                static_cast<Scalar>(denaqa[0].getC2("NACL"))};
+    }
+
 private:
+
+    template <class LhsEval>
+    LhsEval ezrokhiExponent_(const LhsEval& temperature,
+                             const std::vector<Scalar>& ezrokhiCoeff) const
+    {
+        const LhsEval& tempC = temperature - 273.15;
+        return ezrokhiCoeff[0] + tempC * (ezrokhiCoeff[1] + ezrokhiCoeff[2] * tempC);
+    }
 
     template <class LhsEval>
     LhsEval rvwSat_(unsigned regionIdx,
@@ -409,6 +428,8 @@ private:
     std::vector<Scalar> brineReferenceDensity_;
     std::vector<Scalar> gasReferenceDensity_;
     std::vector<Scalar> salinity_;
+    std::vector<Scalar> ezrokhiDenNaClCoeff_;
+    bool enableEzrokhiDensity_ = false;
     bool enableVaporization_ = true;
     int activityModel_;
     Co2StoreConfig::GasMixingType gastype_; 

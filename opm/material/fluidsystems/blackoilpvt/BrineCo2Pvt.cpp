@@ -96,7 +96,7 @@ initFromState(const EclipseState& eclState, const Schedule&)
     
     std::size_t numRegions = eclState.runspec().tabdims().getNumPVTTables();
     setNumRegions(numRegions);
-    for (size_t regionIdx = 0; regionIdx < numRegions; ++regionIdx) {
+    for (std::size_t regionIdx = 0; regionIdx < numRegions; ++regionIdx) {
         // Currently we only support constant salinity converted to mass fraction
         salinity_[regionIdx] = eclState.getCo2StoreConfig().salinity();
         if (enableEzrokhiDensity_) {
