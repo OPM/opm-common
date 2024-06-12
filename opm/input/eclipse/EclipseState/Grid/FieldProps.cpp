@@ -86,19 +86,25 @@ namespace {
         return (keyword == "PCW")  || (keyword == "PCG")
             || (keyword == "IPCG") || (keyword == "IPCW");
     }
-}
+} // Anonymous namespace
 
 namespace Opm {
 
-namespace Fieldprops
-{
+namespace Fieldprops { namespace keywords {
 
-namespace keywords {
+namespace {
+    std::string get_keyword_from_alias(const std::string& name)
+    {
+        auto kwPos = ALIAS::aliased_keywords.find(name);
+
+        return (kwPos == ALIAS::aliased_keywords.end())
+            ? name : kwPos->second;
+    }
+} // Anonymous namespace
 
 static const std::set<std::string> oper_keywords = {"ADD", "EQUALS", "MAXVALUE", "MINVALUE", "MULTIPLY"};
 static const std::set<std::string> region_oper_keywords = {"MULTIREG", "ADDREG", "EQUALREG", "OPERATER"};
 static const std::set<std::string> box_keywords = {"BOX", "ENDBOX"};
-
 
 bool is_oper_keyword(const std::string& name)
 {
@@ -106,67 +112,97 @@ bool is_oper_keyword(const std::string& name)
             || region_oper_keywords.find(name) != region_oper_keywords.end());
 }
 
-std::string get_keyword_from_alias(const std::string& name) {
-    if (ALIAS::aliased_keywords.count(name))
-        return ALIAS::aliased_keywords.at(name);
-    return name;
+template <>
+keyword_info<double>
+global_kw_info(const std::string& name, const bool allow_unsupported)
+{
+    if (auto kwPos = GRID::double_keywords.find(name);
+        kwPos != GRID::double_keywords.end())
+    {
+        return kwPos->second;
+    }
+
+    if (auto kwPos = EDIT::double_keywords.find(name);
+        kwPos != EDIT::double_keywords.end())
+    {
+        return kwPos->second;
+    }
+
+    if (auto kwPos = PROPS::double_keywords.find(name);
+        kwPos != PROPS::double_keywords.end())
+    {
+        return kwPos->second;
+    }
+
+    if (PROPS::satfunc.count(name)) {
+        return keyword_info<double>{};
+    }
+
+    if (auto kwPos = SOLUTION::double_keywords.find(name);
+        kwPos != SOLUTION::double_keywords.end())
+    {
+        return kwPos->second;
+    }
+
+    if (auto kwPos = SCHEDULE::double_keywords.find(name);
+        kwPos != SCHEDULE::double_keywords.end())
+    {
+        return kwPos->second;
+    }
+
+    if (allow_unsupported) {
+        return keyword_info<double>{};
+    }
+
+    throw std::out_of_range {
+        fmt::format("INFO: '{}' is not a double precision property.", name)
+    };
 }
 
-
 template <>
-keyword_info<double> global_kw_info(const std::string& name,
-                                    bool allow_unsupported) {
-    if (GRID::double_keywords.count(name))
-        return GRID::double_keywords.at(name);
+keyword_info<int>
+global_kw_info(const std::string& name, bool)
+{
+    if (auto kwPos = GRID::int_keywords.find(name);
+        kwPos != GRID::int_keywords.end())
+    {
+        return kwPos->second;
+    }
 
-    if (EDIT::double_keywords.count(name))
-        return EDIT::double_keywords.at(name);
+    if (auto kwPos = EDIT::int_keywords.find(name);
+        kwPos != EDIT::int_keywords.end())
+    {
+        return kwPos->second;
+    }
 
-    if (PROPS::double_keywords.count(name))
-        return PROPS::double_keywords.at(name);
+    if (auto kwPos = PROPS::int_keywords.find(name);
+        kwPos != PROPS::int_keywords.end())
+    {
+        return kwPos->second;
+    }
 
-    if (PROPS::satfunc.count(name))
-        return keyword_info<double>{};
+    if (auto kwPos = REGIONS::int_keywords.find(name);
+        kwPos != REGIONS::int_keywords.end())
+    {
+        return kwPos->second;
+    }
 
-    if (SOLUTION::double_keywords.count(name))
-        return SOLUTION::double_keywords.at(name);
+    if (auto kwPos = SCHEDULE::int_keywords.find(name);
+        kwPos != SCHEDULE::int_keywords.end())
+    {
+        return kwPos->second;
+    }
 
-    if (SCHEDULE::double_keywords.count(name))
-        return SCHEDULE::double_keywords.at(name);
-
-    if (allow_unsupported)
-        return keyword_info<double>{};
-
-    throw std::out_of_range("INFO: No such keyword: " + name);
-}
-
-
-template <>
-keyword_info<int> global_kw_info(const std::string& name, bool) {
-    if (GRID::int_keywords.count(name))
-        return GRID::int_keywords.at(name);
-
-    if (EDIT::int_keywords.count(name))
-        return EDIT::int_keywords.at(name);
-
-    if (PROPS::int_keywords.count(name))
-        return PROPS::int_keywords.at(name);
-
-    if (REGIONS::int_keywords.count(name))
-        return REGIONS::int_keywords.at(name);
-
-    if (SCHEDULE::int_keywords.count(name))
-        return SCHEDULE::int_keywords.at(name);
-
-    if (isFipxxx(name))
+    if (isFipxxx(name)) {
         return keyword_info<int>{}.init(1);
+    }
 
-    throw std::out_of_range("No such keyword: " + name);
+    throw std::out_of_range {
+        fmt::format("INFO: '{}' is not an integer property", name)
+    };
 }
 
-} // end namespace keywords
-
-} // end namespace Fieldprops
+}} // namespace Fieldprops::keywords
 
 
 namespace {
@@ -425,7 +461,7 @@ bool rst_compare_data(const std::unordered_map<std::string, Fieldprops::FieldDat
 }
 
 
-}
+} // Anonymous namespace
 
 
 
