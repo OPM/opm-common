@@ -770,7 +770,7 @@ void staticContrib(const Opm::Schedule&     sched,
 
         //assign values to group number (according to group sequence)
         iGrp[nwgmax+88] = group.insert_index();
-        iGrp[nwgmax+89] = group.insert_index();
+
         iGrp[nwgmax+95] = group.insert_index();
         iGrp[nwgmax+96] = group.insert_index();
     }
