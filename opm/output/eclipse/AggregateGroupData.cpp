@@ -755,7 +755,7 @@ void staticContrib(const Opm::Schedule&     sched,
         iGrp[nwgmax + IGroup::WInjHighLevCtrl] = 0;
         iGrp[nwgmax + IGroup::GInjHighLevCtrl] = 0;
         iGrp[nwgmax+88] = ngmaxz;
-
+        if (iGrp[nwgmax+89] < 1) iGrp[nwgmax+89] = ngmaxz;
         iGrp[nwgmax+95] = ngmaxz;
         iGrp[nwgmax+96] = ngmaxz;
     }
