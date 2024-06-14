@@ -56,7 +56,7 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
                          //   1 => Cross flow IS supported.
 
             WGrupConControllable = 24, // Well controllable by group (WGRUPCON(2))
-                                       // -1 => YES, 0 => NO
+                                       // -1 => YES, 0 => NO (E100: 1 ==> YES and is active)
 
             EconLimitEndRun = 29,      // Whether or not to end simulation run at next report time
                                        // if well is shut or stopped for any reason (WECON(8)).

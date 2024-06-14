@@ -152,6 +152,11 @@ namespace Opm {
             if (! this->restart_output.writeRestartFile(restart_step))
                 this->restart_output.addRestartOutput(restart_step);
             this->iterateScheduleSection( restart_step, this->m_sched_deck.size(), parseContext, errors, grid, nullptr, "");
+            // Events added during restart reading well be added to previous step, but need to be active at the
+            // restart step to ensure well potentials and guide rates are available at the first step.
+            const auto prev_step = std::max(static_cast<int>(restart_step-1), 0);
+            this->snapshots[restart_step].update_wellgroup_events(this->snapshots[prev_step].wellgroup_events());
+            this->snapshots[restart_step].update_events(this->snapshots[prev_step].events());
         } else {
             this->iterateScheduleSection( 0, this->m_sched_deck.size(), parseContext, errors, grid, nullptr, "");
         }
@@ -1784,9 +1789,11 @@ namespace {
     {
         const auto report_step = rst_state.header.report_step - 1;
 
+        std::map<int, std::string> rst_group_names;
         for (const auto& rst_group : rst_state.groups) {
             this->addGroup(rst_group, report_step);
             const auto& group = this->snapshots.back().groups.get( rst_group.name );
+            rst_group_names[group.insert_index()] = rst_group.name;
             if (group.isProductionGroup()) {
                 // Was originally at report_step + 1
                 this->snapshots.back().events().addEvent(ScheduleEvents::GROUP_PRODUCTION_UPDATE );
@@ -1909,12 +1916,21 @@ namespace {
         }
 
         for (const auto& rst_group : rst_state.groups) {
-            const auto& group = this->snapshots.back().groups.get( rst_group.name );
+            auto& group = this->snapshots.back().groups.get( rst_group.name );
             if (group.isProductionGroup()) {
                 auto new_config = this->snapshots.back().guide_rate();
                 new_config.update_production_group(group);
                 this->snapshots.back().guide_rate.update(std::move(new_config));
-            }
+            } else if (group.isInjectionGroup()) {
+                // Set name of VREP group if different than default
+                if (static_cast<int>(group.insert_index()) != rst_group.voidage_group_index) {
+                    for (const auto& [phase, orig_inj_prop] : group.injectionProperties()) {
+                        Group::GroupInjectionProperties inj_prop(orig_inj_prop);
+                        inj_prop.voidage_group = rst_group_names[rst_group.voidage_group_index];
+                        group.updateInjection(inj_prop);
+                    }
+                }
+             }
         }
 
         this->snapshots.back().udq.update( UDQConfig(this->m_static.m_runspec.udqParams(), rst_state) );

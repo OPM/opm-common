@@ -1046,7 +1046,10 @@ namespace {
                                Opm::data::Well&   xw)
     {
         const auto iwel = wellData.iwel(wellID);
-        const auto act  = iwel[VI::IWell::index::ActWCtrl];
+        // For E100 it appears that +1 instead of -1 is written for group_controllable_flag when the 
+        // group control is aactive, so using this to correct active_control (where ind.ctrl. is written)
+        const auto grpc = iwel[VI::IWell::index::WGrupConControllable];
+        const auto act  = grpc > 0 ? VI::IWell::Value::WellCtrlMode::Group : iwel[VI::IWell::index::ActWCtrl];
         const auto wtyp = iwel[VI::IWell::index::WType];
 
         auto& curr = xw.current_control;
