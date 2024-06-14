@@ -27,7 +27,7 @@
 #ifndef OPM_BASE_FLUID_SYSTEM_HPP
 #define OPM_BASE_FLUID_SYSTEM_HPP
 
-#include <opm/common/utility/Demangle.hpp>
+#include <opm/common/utility/GetTypeName.hpp>
 
 #include <stdexcept>
 #include <string_view>
@@ -300,7 +300,7 @@ private:
     static std::string not_implemented(const std::string_view method)
     {
         return "Not implemented: The fluid system '" +
-               demangle(typeid(Implementation).name()) +
+                getTypeName<Implementation>() +
                "'  does not provide a " + method.data() + "() method!";
     }
 };
