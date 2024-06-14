@@ -303,7 +303,8 @@ void Opm::EclipseIO::writeTimeStep(const Action::State& action_state,
                                    const bool           isSubstep,
                                    const double         secs_elapsed,
                                    RestartValue         value,
-                                   const bool           write_double)
+                                   const bool           write_double,
+                                   std::optional<int>   time_step)
 {
     if (! this->impl->output_enabled) {
         return;
@@ -317,12 +318,13 @@ void Opm::EclipseIO::writeTimeStep(const Action::State& action_state,
     const bool final_step { report_step == static_cast<int>(schedule.size()) - 1 };
     const bool is_final_summary = final_step && !isSubstep;
 
-    if ((report_step > 0) &&
-        this->impl->wantSummaryOutput(report_step, isSubstep, secs_elapsed))
+    // If --enable-write-all-solutions=true we will output every timestep
+    int report_index = time_step ? (*time_step+1) : report_step;
+    if (((report_step > 0) &&
+        this->impl->wantSummaryOutput(report_step, isSubstep, secs_elapsed)) || time_step)
     {
-        this->impl->summary.add_timestep(st, report_step, isSubstep);
+        this->impl->summary.add_timestep(st, report_index, !time_step || isSubstep);
         this->impl->summary.write(is_final_summary);
-
         this->impl->recordSummaryOutput(secs_elapsed);
     }
 
@@ -332,14 +334,11 @@ void Opm::EclipseIO::writeTimeStep(const Action::State& action_state,
         EclIO::ESmry(outputFile).write_rsm_file();
     }
 
-    // Current implementation will not write restart files for substep, but
-    // there is an unsupported option to the RPTSCHED keyword which will
-    // request restart output from every timestep.
-    if (!isSubstep && schedule.write_rst_file(report_step)) {
+    if ( (time_step && *time_step > 0 ) || (!isSubstep && schedule.write_rst_file(report_step))) {
         EclIO::OutputStream::Restart rstFile {
             EclIO::OutputStream::ResultSet { this->impl->outputDir,
                                              this->impl->baseName },
-            report_step,
+            report_index,
             EclIO::OutputStream::Formatted { ioConfig.getFMTOUT() },
             EclIO::OutputStream::Unified   { ioConfig.getUNIFOUT() }
         };
