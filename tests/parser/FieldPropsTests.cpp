@@ -207,9 +207,13 @@ COPY
 /
 )";
 
-    EclipseGrid grid(EclipseGrid(10,10,10));
-    Deck deck = Parser{}.parseString(deck_string);
-    BOOST_CHECK_THROW( FieldPropsManager(deck, Phases{true, true, true}, grid, TableManager()), std::out_of_range);
+    const auto deck = Parser{}.parseString(deck_string);
+
+    // Note: 'grid' must be mutable.
+    auto grid = EclipseGrid { 10, 10, 10 };
+
+    BOOST_CHECK_THROW(FieldPropsManager(deck, Phases{true, true, true}, grid, TableManager{}),
+                      OpmInputError);
 }
 
 BOOST_AUTO_TEST_CASE(INVALID_COPY_UNDEFINED_BOX)
@@ -278,6 +282,41 @@ EQUALS
 /
 COPY
   SGL SWL 2* 2* 4 7 /
+/
+)");
+
+    // Note: 'grid' must be mutable.
+    auto grid = EclipseGrid { 10, 10, 10 };
+
+    BOOST_CHECK_THROW(FieldPropsManager(deck, Phases{true, true, true}, grid, TableManager{deck}),
+                      OpmInputError);
+}
+
+BOOST_AUTO_TEST_CASE(INVALID_ADD)
+{
+    const auto deck = Parser{}.parseString(R"(RUNSPEC
+OIL
+GAS
+WATER
+TABDIMS
+/
+DIMENS
+ 10 10 10 /
+PROPS
+SGFN
+ 0.0 0.0 0.0
+ 0.8 1.0 0.0
+/
+SWFN
+ 0.2 0.0 0.0
+ 1.0 1.0 0.0
+/
+SOF3
+ 0.0 0.0 0.0
+ 0.8 1.0 1.0
+/
+ADD
+  SGU 0.123 /
 /
 )");
 
