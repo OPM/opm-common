@@ -47,11 +47,6 @@ initFromState(const EclipseState& eclState, const Schedule&)
                         "CO2 PVT properties are computed based on the Span-Wagner "
                         "pvt model and PVDG/PVTG input is ignored.");
     }
-
-    // We only supported single pvt region for the co2-brine module
-    size_t numRegions = 1;
-    setNumRegions(numRegions);
-    size_t regionIdx = 0;
     Scalar T_ref = eclState.getTableManager().stCond().temperature;
     Scalar P_ref = eclState.getTableManager().stCond().pressure;
 
@@ -59,9 +54,25 @@ initFromState(const EclipseState& eclState, const Schedule&)
     if (T_ref != Scalar(288.71) || P_ref != Scalar(1.01325e5)) {
         OPM_THROW(std::runtime_error, "CO2STORE/CO2SOL can only be used with default values for STCOND!");
     }
+    setEzrokhiDenCoeff(eclState.getCo2StoreConfig().getDenaqaTables());
 
-    gasReferenceDensity_[regionIdx] = CO2::gasDensity(T_ref, P_ref, extrapolate);
-    brineReferenceDensity_[regionIdx] = Brine::liquidDensity(T_ref, P_ref, salinity_[regionIdx], extrapolate);
+    std::size_t numRegions = eclState.runspec().tabdims().getNumPVTTables();
+    setNumRegions(numRegions);
+    for (std::size_t regionIdx = 0; regionIdx < numRegions; ++regionIdx) {
+        // Currently we only support constant salinity converted to mass fraction
+        salinity_[regionIdx] = eclState.getCo2StoreConfig().salinity();
+        // For consistency we compute the reference density the same way as in BrineCo2Pvt.cpp
+        if (enableEzrokhiDensity_) { 
+            const Scalar& rho_pure = H2O::liquidDensity(T_ref, P_ref, extrapolate);
+            const Scalar& nacl_exponent = ezrokhiExponent_(T_ref, ezrokhiDenNaClCoeff_);
+            brineReferenceDensity_[regionIdx] = rho_pure * pow(10.0, nacl_exponent * salinity_[regionIdx]);
+        }
+        else {
+            brineReferenceDensity_[regionIdx] = Brine::liquidDensity(T_ref, P_ref, salinity_[regionIdx], extrapolate);
+        }
+        gasReferenceDensity_[regionIdx] = CO2::gasDensity(T_ref, P_ref, extrapolate);
+    }
+
     initEnd();
 }
 
