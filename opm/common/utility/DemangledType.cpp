@@ -18,10 +18,9 @@
 */
 
 #include <config.h>
-#include <opm/common/utility/Demangle.hpp>
+#include <opm/common/utility/DemangledType.hpp>
 
 #include <cstdlib>
-#include <typeinfo>
 
 #if HAVE_CXA_DEMANGLE
 #include <cxxabi.h>
