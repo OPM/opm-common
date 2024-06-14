@@ -20,37 +20,28 @@
 #ifndef VALUE_STATUS
 #define VALUE_STATUS
 
-namespace Opm {
+namespace Opm::value {
 
-namespace value {
+enum class status : unsigned char {
+    uninitialized = 0,
+    deck_value    = 1,
+    empty_default = 2,
+    valid_default = 3,
+};
 
-enum class status : unsigned char { uninitialized = 0,
-                                    deck_value = 1,
-                                    empty_default = 2,
-                                    valid_default = 3 };
-
-
-inline bool defaulted(status st) {
-    if (st == status::empty_default)
-        return true;
-
-    if (st == status::valid_default)
-        return true;
-
-    return false;
+inline bool defaulted(const status st)
+{
+    return (st == status::empty_default)
+        || (st == status::valid_default);
 }
 
+inline bool has_value(const status st)
+{
+    return (st == status::deck_value)
+        || (st == status::valid_default);
 
-inline bool has_value(status st) {
-    if (st == status::deck_value)
-        return true;
-
-    if (st == status::valid_default)
-        return true;
-
-    return false;
-}
-}
 }
 
-#endif
+} // namespace Opm::value
+
+#endif // VALUE_STATUS
