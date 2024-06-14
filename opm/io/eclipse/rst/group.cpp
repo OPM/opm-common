@@ -56,7 +56,6 @@ RstGroup::RstGroup(const ::Opm::UnitSystem& unit_system,
     exceed_action(igrp[header.nwgmax + VI::IGroup::ExceedAction]),
     inj_water_guide_rate_def(igrp[header.nwgmax + VI::IGroup::GConInjeWaterGuideRateMode]),
     inj_gas_guide_rate_def(igrp[header.nwgmax + VI::IGroup::GConInjeGasGuideRateMode]),
-    voidage_group_index(igrp[header.nwgmax + VI::IGroup::VoidageGroupIndex]),
     // The values oil_rate_limit -> gas_voidage_limit will be used in UDA
     // values. The UDA values are responsible for unit conversion and raw values
     // are internalized here.

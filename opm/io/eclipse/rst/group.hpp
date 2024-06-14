@@ -48,7 +48,6 @@ struct RstGroup {
     int exceed_action;
     int inj_water_guide_rate_def;
     int inj_gas_guide_rate_def;
-    int voidage_group_index;
 
     float oil_rate_limit;
     float water_rate_limit;
