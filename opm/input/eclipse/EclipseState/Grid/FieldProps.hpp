@@ -19,6 +19,8 @@
 #ifndef FIELDPROPS_HPP
 #define FIELDPROPS_HPP
 
+#include <opm/common/utility/OpmInputError.hpp>
+
 #include <opm/input/eclipse/EclipseState/Grid/Box.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/FieldData.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/Keywords.hpp>
@@ -355,7 +357,36 @@ public:
             , data_ptr(d)
         {}
 
+        void verify_status(const KeywordLocation& loc,
+                           const std::string&     descr,
+                           const std::string&     operation) const
+        {
+            switch (this->status) {
+            case FieldProps::GetStatus::OK:
+                return;
 
+            case FieldProps::GetStatus::INVALID_DATA:
+                throw OpmInputError {
+                    descr + " " + this->keyword +
+                    " is not fully initialised for " + operation,
+                    loc
+                };
+
+            case FieldProps::GetStatus::MISSING_KEYWORD:
+                throw OpmInputError {
+                    descr + " " + this->keyword +
+                    " does not exist in input deck for " + operation,
+                    loc
+                };
+
+            case FieldProps::GetStatus::NOT_SUPPPORTED_KEYWORD:
+                throw OpmInputError {
+                    descr + " " + this->keyword +
+                    " is not supported for " + operation,
+                    loc
+                };
+            }
+        }
 
         void verify_status() const
         {
