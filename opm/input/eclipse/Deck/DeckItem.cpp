@@ -325,35 +325,36 @@ const std::vector<double>& DeckItem::getData() const {
     return data;
 }
 
-const std::vector< double >& DeckItem::getSIDoubleData() const {
-    auto& data = (const_cast<DeckItem*>(this))->value_ref< double >();
-    if (!this->raw_data)
+const std::vector<double>& DeckItem::getSIDoubleData() const
+{
+    auto& data = (const_cast<DeckItem*>(this))->value_ref<double>();
+    if (!this->raw_data) {
         return data;
+    }
 
+    if (this->active_dimensions.empty()) {
+        throw std::invalid_argument {
+            "No dimension defined for item '"
+            + this->name()
+            + "'; cannot request SI data."
+        };
+    }
 
-    if( this->active_dimensions.empty() )
-        throw std::invalid_argument("No dimension has been set for item'"
-                                    + this->name()
-                                    + "'; can not ask for SI data");
-
-    /*
-     * This is an unobservable state change - SIData is lazily converted to
-     * SI units, so externally the object still behaves as const
-     */
+    // This is an unobservable state change - SIData is lazily converted to
+    // SI units, so externally the object still behaves as const.
 
     const auto dim_size = this->active_dimensions.size();
     const auto sz = data.size();
-    for( size_t index = 0; index < sz; index++ ) {
-        const auto dimIndex = index % dim_size;
-        if (value::defaulted(this->value_status[index])) {
-            const auto& dim = this->default_dimensions[dimIndex];
-            data[ index ] = dim.convertRawToSi( data[ index ] );
-        } else {
-            const auto& dim = this->active_dimensions[dimIndex];
-            data[ index ] = dim.convertRawToSi( data[ index ] );
-        }
+    for (auto index = 0*sz; index < sz; ++index) {
+        const auto& dim = value::defaulted(this->value_status[index])
+            ? this->default_dimensions
+            : this->active_dimensions;
+
+        data[index] = dim[index % dim_size].convertRawToSi(data[index]);
     }
+
     this->raw_data = false;
+
     return data;
 }
 
