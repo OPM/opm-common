@@ -628,13 +628,6 @@ private:
                  const std::vector<Box::cell_index>& index_list);
 
     template <typename T>
-    static void apply(ScalarOperation op,
-                      std::vector<T>& data,
-                      std::vector<value::status>& value_status,
-                      T scalar_value,
-                      const std::vector<Box::cell_index>& index_list);
-
-    template <typename T>
     Fieldprops::FieldData<T>&
     init_get(const std::string& keyword, bool allow_unsupported = false);
 
