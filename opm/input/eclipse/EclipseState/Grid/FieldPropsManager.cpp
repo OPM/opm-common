@@ -86,7 +86,11 @@ const Fieldprops::FieldData<double>&
 FieldPropsManager::get_double_field_data(const std::string& keyword,
                                          bool allow_unsupported) const
 {
-    const auto& data = this->fp->try_get<double>(keyword, allow_unsupported);
+    const auto flags = allow_unsupported
+        ? FieldProps::TryGetFlags::AllowUnsupported
+        : 0u;
+
+    const auto& data = this->fp->try_get<double>(keyword, flags);
     if (allow_unsupported || data.valid())
         return data.field_data();
 

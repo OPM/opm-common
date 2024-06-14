@@ -1526,6 +1526,31 @@ void FieldProps::handle_operation(const Section      section,
                                   const DeckKeyword& keyword,
                                   Box                box)
 {
+    // Keyword handler for ADD, EQUALS, MAXVALUE, MINVALUE, and MULTIPLY.
+    //
+    // General keyword structure:
+    //
+    //   KWNAME -- e.g., ADD or EQUALS
+    //     Array Scalar Box /
+    //     Array Scalar Box /
+    //   -- ...
+    //   /
+    //
+    // For example
+    //
+    //    ADD
+    //      PERMX  12.3  1 10   2 4   5 6 /
+    //    /
+    //
+    // which adds 12.3 mD to the PERMX array in all cells within the box
+    // {1..10, 2..4, 5..6}.  The array being operated on must already exist
+    // and be well defined for all elements in the box unless the operation
+    // is "EQUALS" or we're processing one of the TRAN* arrays or PORV in
+    // the EDIT section.  Final TRAN* array processing is deferred to a
+    // later stage and at this point we're only collecting descriptors of
+    // what operations to apply when we get to that stage.
+
+    const auto mustExist = keyword.name() != ParserKeywords::EQUALS::keywordName;
     const auto editSect  = section == Section::EDIT;
     const auto operation = fromString(keyword.name());
 
@@ -1541,11 +1566,8 @@ void FieldProps::handle_operation(const Section      section,
             FieldProps::supported<double>(target_kw) ||
             (tran_iter != this->tran.end()))
         {
-            const auto scalar_value = this->
-                getSIValue(operation, target_kw, record.getItem(1).get<double>(0));
-
             auto kw_info = Fieldprops::keywords::global_kw_info<double>
-                (target_kw, tran_iter != this->tran.end());
+                (target_kw, /* allow_unsupported = */ tran_iter != this->tran.end());
 
             auto unique_name = target_kw;
 
@@ -1570,9 +1592,23 @@ void FieldProps::handle_operation(const Section      section,
                     unique_name = tran_field_iter->second;
                 }
             }
+            else if (mustExist &&
+                     !(editSect && (unique_name == ParserKeywords::PORV::keywordName)) &&
+                     (this->double_data.find(unique_name) == this->double_data.end()))
+            {
+                throw OpmInputError {
+                    fmt::format("Target array {} must already "
+                                "exist when operated upon in {}.",
+                                target_kw, keyword.name()),
+                    keyword.location()
+                };
+            }
+
+            const auto scalar_value = this->
+                getSIValue(operation, target_kw, record.getItem(1).get<double>(0));
 
             auto& field_data = this->init_get<double>
-                (unique_name, kw_info, editSect && kw_info.multiplier);
+                (unique_name, kw_info, /* multiplier_in_edit =*/ editSect && kw_info.multiplier);
 
             apply(operation, keyword.location(), target_kw,
                   field_data.data, field_data.value_status,
@@ -1589,6 +1625,15 @@ void FieldProps::handle_operation(const Section      section,
         }
 
         if (FieldProps::supported<int>(target_kw)) {
+            if (mustExist && (this->int_data.find(target_kw) == this->int_data.end())) {
+                throw OpmInputError {
+                    fmt::format("Target array {} must already "
+                                "exist when operated upon in {}.",
+                                target_kw, keyword.name()),
+                    keyword.location()
+                };
+            }
+
             const auto scalar_value = static_cast<int>(record.getItem(1).get<double>(0));
 
             auto& field_data = this->init_get<int>(target_kw);
@@ -1646,8 +1691,8 @@ void FieldProps::handle_COPY(const DeckKeyword& keyword,
         }
 
         if (FieldProps::supported<double>(src_kw)) {
-            const auto& src_data = this->try_get<double>(src_kw);
-            src_data.verify_status();
+            const auto& src_data = this->try_get<double>(src_kw, TryGetFlags::MustExist);
+            src_data.verify_status(keyword.location(), "Source array", "COPY");
 
             auto& target_data = this->init_get<double>(target_kw);
             target_data.checkInitialisedCopy(src_data.field_data(), index_list,
@@ -1657,8 +1702,8 @@ void FieldProps::handle_COPY(const DeckKeyword& keyword,
         }
 
         if (FieldProps::supported<int>(src_kw)) {
-            const auto& src_data = this->try_get<int>(src_kw);
-            src_data.verify_status();
+            const auto& src_data = this->try_get<int>(src_kw, TryGetFlags::MustExist);
+            src_data.verify_status(keyword.location(), "Source array", "COPY");
 
             auto& target_data = this->init_get<int>(target_kw);
             target_data.checkInitialisedCopy(src_data.field_data(), index_list,
