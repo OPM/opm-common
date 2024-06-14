@@ -1623,6 +1623,7 @@ void FieldProps::handle_COPY(const DeckKeyword& keyword,
         const auto target_kw = arrayName(record.getItem(1));
 
         std::vector<Box::cell_index> index_list;
+        auto srcDescr = std::string {};
 
         if (isRegionOperation) {
             using Kw = ParserKeywords::COPYREG;
@@ -1630,11 +1631,18 @@ void FieldProps::handle_COPY(const DeckKeyword& keyword,
             const auto& regionName = this->region_name(record.getItem<Kw::REGION_NAME>());
 
             index_list = this->region_index(regionName, regionId);
+            srcDescr = fmt::format("{} in region {} of region set {}",
+                                   src_kw, regionId, regionName);
         }
         else {
             box.update(record);
             index_list = box.index_list();
 
+            srcDescr = fmt::format("{} in BOX ({}-{}, {}-{}, {}-{})",
+                                   src_kw,
+                                   box.I1() + 1, box.I2() + 1,
+                                   box.J1() + 1, box.J2() + 1,
+                                   box.K1() + 1, box.K2() + 1);
         }
 
         if (FieldProps::supported<double>(src_kw)) {
@@ -1642,7 +1650,9 @@ void FieldProps::handle_COPY(const DeckKeyword& keyword,
             src_data.verify_status();
 
             auto& target_data = this->init_get<double>(target_kw);
-            target_data.copy(src_data.field_data(), index_list);
+            target_data.checkInitialisedCopy(src_data.field_data(), index_list,
+                                             srcDescr, target_kw,
+                                             keyword.location());
             continue;
         }
 
@@ -1651,7 +1661,9 @@ void FieldProps::handle_COPY(const DeckKeyword& keyword,
             src_data.verify_status();
 
             auto& target_data = this->init_get<int>(target_kw);
-            target_data.copy(src_data.field_data(), index_list);
+            target_data.checkInitialisedCopy(src_data.field_data(), index_list,
+                                             srcDescr, target_kw,
+                                             keyword.location());
             continue;
         }
     }

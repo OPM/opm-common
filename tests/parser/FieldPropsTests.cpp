@@ -212,6 +212,82 @@ COPY
     BOOST_CHECK_THROW( FieldPropsManager(deck, Phases{true, true, true}, grid, TableManager()), std::out_of_range);
 }
 
+BOOST_AUTO_TEST_CASE(INVALID_COPY_UNDEFINED_BOX)
+{
+    const auto deck = Parser{}.parseString(R"(RUNSPEC
+OIL
+GAS
+WATER
+TABDIMS
+/
+DIMENS
+ 10 10 10 /
+PROPS
+SGFN
+ 0.0 0.0 0.0
+ 0.8 1.0 0.0
+/
+SWFN
+ 0.2 0.0 0.0
+ 1.0 1.0 0.0
+/
+SOF3
+ 0.0 0.0 0.0
+ 0.8 1.0 1.0
+/
+EQUALS
+ 'SGL' 0.0 2* 2* 1 5 /
+/
+COPY
+  SGL SWL 2* 2* 6 10 /
+/
+)");
+
+    // Note: 'grid' must be mutable.
+    auto grid = EclipseGrid { 10, 10, 10 };
+
+    BOOST_CHECK_THROW(FieldPropsManager(deck, Phases{true, true, true}, grid, TableManager{deck}),
+                      OpmInputError);
+}
+
+BOOST_AUTO_TEST_CASE(INVALID_COPY_PARTIALLY_DEFINED)
+{
+    const auto deck = Parser{}.parseString(R"(RUNSPEC
+OIL
+GAS
+WATER
+TABDIMS
+/
+DIMENS
+ 10 10 10 /
+PROPS
+SGFN
+ 0.0 0.0 0.0
+ 0.8 1.0 0.0
+/
+SWFN
+ 0.2 0.0 0.0
+ 1.0 1.0 0.0
+/
+SOF3
+ 0.0 0.0 0.0
+ 0.8 1.0 1.0
+/
+EQUALS
+ 'SGL' 0.0 2* 2* 1 5 /
+/
+COPY
+  SGL SWL 2* 2* 4 7 /
+/
+)");
+
+    // Note: 'grid' must be mutable.
+    auto grid = EclipseGrid { 10, 10, 10 };
+
+    BOOST_CHECK_THROW(FieldPropsManager(deck, Phases{true, true, true}, grid, TableManager{deck}),
+                      OpmInputError);
+}
+
 BOOST_AUTO_TEST_CASE(GRID_RESET) {
     std::string deck_string = R"(
 REGIONS

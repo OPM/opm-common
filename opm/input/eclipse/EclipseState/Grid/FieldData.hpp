@@ -33,6 +33,10 @@
 #include <string>
 #include <vector>
 
+namespace Opm {
+    class KeywordLocation;
+} // namespace Opm
+
 namespace Opm::Fieldprops {
 
     template <typename T>
@@ -148,12 +152,11 @@ namespace Opm::Fieldprops {
             Fieldprops::compress(this->value_status, active_map, this->numValuePerCell());
         }
 
-        void copy(const FieldData<T>& src, const std::vector<Box::cell_index>& index_list) {
-            for (const auto& ci : index_list) {
-                this->data[ci.active_index] = src.data[ci.active_index];
-                this->value_status[ci.active_index] = src.value_status[ci.active_index];
-            }
-        }
+        void checkInitialisedCopy(const FieldData&                    src,
+                                  const std::vector<Box::cell_index>& index_list,
+                                  const std::string&                  from,
+                                  const std::string&                  to,
+                                  const KeywordLocation&              loc);
 
         void default_assign(T value)
         {
