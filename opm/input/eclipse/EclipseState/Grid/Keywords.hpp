@@ -34,15 +34,18 @@ struct keyword_info {
     bool multiplier = false;
     bool top = false;
     bool global = false;
+    // TODO: checking whether mutable can be removed
+    std::size_t num_value = 1;
+
 
     bool operator==(const keyword_info& other) const {
         return this->unit == other.unit &&
                this->scalar_init == other.scalar_init &&
                this->multiplier == other.multiplier &&
                this->top == other.top &&
-               this->global == other.global;
+               this->global == other.global &&
+               this->num_value == other.num_value;
     }
-
 
     keyword_info<T>& init(T init_value) {
         this->scalar_init = init_value;
@@ -66,6 +69,11 @@ struct keyword_info {
 
     keyword_info<T>& global_kw(bool g) {
         this->global = g;
+        return *this;
+    }
+
+    const keyword_info<T>& num_value_per_cell(const std::size_t n) const {
+        this->num_value = n;
         return *this;
     }
 };
