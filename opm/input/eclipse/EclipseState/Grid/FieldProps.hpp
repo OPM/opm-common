@@ -284,6 +284,9 @@ static const std::unordered_map<std::string, keyword_info<double>> double_keywor
                                                                                       {"RVW",      keyword_info<double>{}.unit_string("OilDissolutionFactor")}
                                                                                       };
 
+static const std::unordered_map<std::string, keyword_info<double>> composition_keywords = {{"XMF", keyword_info<double>{}},
+                                                                                           {"YMF", keyword_info<double>{}}
+                                                                                          };
 }
 
 namespace SCHEDULE {
@@ -397,7 +400,8 @@ public:
     };
 
     /// Normal constructor for FieldProps.
-    FieldProps(const Deck& deck, const Phases& phases, EclipseGrid& grid, const TableManager& table_arg);
+    FieldProps(const Deck& deck, const Phases& phases, EclipseGrid& grid, const TableManager& table_arg,
+               const std::size_t ncomps);
 
     /// Special case constructor used to process ACTNUM only.
     FieldProps(const Deck& deck, const EclipseGrid& grid);
@@ -560,7 +564,7 @@ private:
     void scanEDITSection(const EDITSection& edit_section);
     void scanPROPSSection(const PROPSSection& props_section);
     void scanREGIONSSection(const REGIONSSection& regions_section);
-    void scanSOLUTIONSection(const SOLUTIONSection& solution_section);
+    void scanSOLUTIONSection(const SOLUTIONSection& solution_section, const std::size_t ncomps);
     double getSIValue(const std::string& keyword, double raw_value) const;
     double getSIValue(ScalarOperation op, const std::string& keyword, double raw_value) const;
 

@@ -64,6 +64,7 @@ public:
     const std::vector<double>& criticalVolume(std::size_t eos_region) const;
     // binary_interaction_coefficient will likely need some design when we know how we use it
     const std::vector<double>& binaryInteractionCoefficient(size_t eos_region) const;
+    std::size_t numComps() const;
 
     template<class Serializer>
     void serializeOp(Serializer& serializer)

@@ -373,4 +373,8 @@ const std::vector<double>& CompositionalConfig::binaryInteractionCoefficient(siz
     return this->binary_interaction_coefficient[eos_region];
 }
 
+std::size_t CompositionalConfig::numComps() const {
+    return this->num_comps;
+}
+
 }

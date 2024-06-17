@@ -35,8 +35,9 @@ bool FieldPropsManager::rst_cmp(const FieldPropsManager& full_arg, const FieldPr
     return FieldProps::rst_cmp(*full_arg.fp, *rst_arg.fp);
 }
 
-FieldPropsManager::FieldPropsManager(const Deck& deck, const Phases& phases, EclipseGrid& grid_arg, const TableManager& tables) :
-    fp(std::make_shared<FieldProps>(deck, phases, grid_arg, tables))
+FieldPropsManager::FieldPropsManager(const Deck& deck, const Phases& phases, EclipseGrid& grid_arg,
+                                     const TableManager& tables, const std::size_t ncomps) :
+    fp(std::make_shared<FieldProps>(deck, phases, grid_arg, tables, ncomps))
 {}
 
 void FieldPropsManager::deleteMINPVV() {

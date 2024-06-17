@@ -34,8 +34,12 @@ struct keyword_info {
     bool multiplier = false;
     bool top = false;
     bool global = false;
-    // TODO: checking whether mutable can be removed
-    std::size_t num_value = 1;
+
+    // For FieldProps-related keywords, each grid cell can have multiple values.
+    // This occurs specifically during compositional simulations, where the number
+    // of values depends on the number of compositions. In other simulations, num_value is typically one.
+    // The 'mutable' keyword allows num_value to be updated at a later stage when parsing relevant keywords.
+    mutable std::size_t num_value = 1;
 
 
     bool operator==(const keyword_info& other) const {
@@ -73,7 +77,9 @@ struct keyword_info {
     }
 
     const keyword_info<T>& num_value_per_cell(const std::size_t n) const {
-        this->num_value = n;
+        if (n > 0) {
+            this->num_value = n;
+        }
         return *this;
     }
 };
