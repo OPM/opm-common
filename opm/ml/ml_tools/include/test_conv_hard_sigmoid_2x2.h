@@ -13,10 +13,10 @@ bool test_conv_hard_sigmoid_2x2(Evaluation* load_time, Evaluation* apply_time)
     KASSERT(apply_time, "Invalid Evaluation");
 
     Opm::Tensor<Evaluation> in{2,2,1};
-    in.data_ = {0.50463355,0.9183773,0.38787946,0.43078265};
+    in.data_ = {0.86426544,0.8477615,0.5583865,0.5447023};
 
     Opm::Tensor<Evaluation> out{1};
-    out.data_ = {0.32929042};
+    out.data_ = {-0.8503885};
 
     KerasTimer load_timer;
     load_timer.Start();

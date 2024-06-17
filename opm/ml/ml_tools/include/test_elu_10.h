@@ -13,11 +13,11 @@ bool test_elu_10(Evaluation* load_time, Evaluation* apply_time)
     KASSERT(apply_time, "Invalid Evaluation");
 
     Opm::Tensor<Evaluation> in{10};
-    in.data_ = {0.9834945,0.5741797,0.027460653,0.07063913,0.7403407,0.72907645,
-0.009775176,0.309714,0.5252622,0.090779774};
+    in.data_ = {0.18739146,0.70936984,0.9280732,0.62002677,0.40296188,0.1884241,
+0.84437937,0.023707515,0.09143902,0.5966835};
 
     Opm::Tensor<Evaluation> out{1};
-    out.data_ = {0.50609195};
+    out.data_ = {0.589676};
 
     KerasTimer load_timer;
     load_timer.Start();

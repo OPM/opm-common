@@ -162,8 +162,8 @@ bool KerasLayerScaling<Evaluation>::Apply(Tensor<Evaluation>* in, Tensor<Evaluat
     *out = *in;
 
     for (size_t i = 0; i < out->data_.size(); i++) {
-        std::cout<<"out->data_[i]"<<std::endl;
-        std::cout<<out->data_[i]<<std::endl;
+        // std::cout<<"out->data_[i]"<<std::endl;
+        // std::cout<<out->data_[i]<<std::endl;
         auto tempscale = (out->data_[i] - data_min)/(data_max - data_min);
         out->data_[i] = tempscale * (feat_sup - feat_inf) + feat_inf;
     }
@@ -193,8 +193,8 @@ bool KerasLayerUnScaling<Evaluation>::Apply(Tensor<Evaluation>* in, Tensor<Evalu
     // out->Flatten();
 
     for (size_t i = 0; i < out->data_.size(); i++) {
-        std::cout<<"out->data_[i]"<<std::endl;
-        std::cout<<out->data_[i]<<std::endl;
+        // std::cout<<"out->data_[i]"<<std::endl;
+        // std::cout<<out->data_[i]<<std::endl;
         auto tempscale = (out->data_[i] - feat_inf)/(feat_sup - feat_inf);
 
         out->data_[i] = tempscale * (data_max - data_min) + data_min;
@@ -240,6 +240,13 @@ bool KerasLayerDense<Evaluation>::Apply(Tensor<Evaluation>* in, Tensor<Evaluatio
     KASSERT(in, "Invalid input");
     KASSERT(out, "Invalid output");
     KASSERT(in->dims_.size() <= 2, "Invalid input dimensions");
+
+
+    // if (in->dims_.size() == 1) {
+    //     KASSERT(in->dims_[0] == weights_.dims_[0], "Dimension mismatch %d %d",
+    //             in->dims_[0], weights_.dims_[0]);
+    // }
+
 
     if (in->dims_.size() == 2) {
         KASSERT(in->dims_[1] == weights_.dims_[0], "Dimension mismatch %d %d",

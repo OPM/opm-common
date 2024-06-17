@@ -13,11 +13,11 @@ bool test_conv_3x3(Evaluation* load_time, Evaluation* apply_time)
     KASSERT(apply_time, "Invalid Evaluation");
 
     Opm::Tensor<Evaluation> in{3,3,1};
-    in.data_ = {0.31915146,0.46648613,0.713153,0.7186029,0.4189023,0.93898046,
-0.21495701,0.22672214,0.6468133};
+    in.data_ = {0.88527423,0.8638909,0.86746955,0.42614478,0.031315308,0.84676105,
+0.8503915,0.3592089,0.098730415};
 
     Opm::Tensor<Evaluation> out{1};
-    out.data_ = {0.012564741};
+    out.data_ = {0.891428};
 
     KerasTimer load_timer;
     load_timer.Start();

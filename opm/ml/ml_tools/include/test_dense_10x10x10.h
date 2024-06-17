@@ -13,15 +13,18 @@ bool test_dense_10x10x10(Evaluation* load_time, Evaluation* apply_time)
     KASSERT(apply_time, "Invalid Evaluation");
 
     Opm::Tensor<Evaluation> in{10};
-    in.data_ = {0.7104989,0.4149288,0.71831465,0.5625794,0.7118615,0.8625888,
-0.35311338,0.70555335,0.19741295,0.6377552};
+    in.data_ = {0.9307595,0.623219,0.26583958,0.58003414,0.030215342,0.06587499,
+0.9004415,0.03221161,0.4206354,0.8563274};
+
 
     Opm::Tensor<Evaluation> out{10};
-    out.data_ = {-0.047795724,0.55596924,-0.08081586,-0.5206654,0.17288932,
--0.5772272,0.45383403,-0.38085136,-0.5176138,0.2733392};
+    out.data_ = {0.068457894,0.03991737,-0.30497518,-0.19265954,-0.32966894,
+-0.6756333,0.4275365,1.121752,0.14004697,0.30182698};
 
     KerasTimer load_timer;
     load_timer.Start();
+    std::cout<<"in->dims_.size() "<<in.dims_.size()<<std::endl;
+
 
     KerasModel<Evaluation> model;
     KASSERT(model.LoadModel("/Users/macbookn/hackatonwork/opm-common/opm/ml/ml_tools/models/test_dense_10x10x10.model"), "Failed to load model");

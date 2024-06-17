@@ -13,11 +13,11 @@ bool test_dense_10x10(Evaluation* load_time, Evaluation* apply_time)
     KASSERT(apply_time, "Invalid Evaluation");
 
     Opm::Tensor<Evaluation> in{10};
-    in.data_ = {0.6189273,0.92638606,0.5629345,0.66560996,0.8742824,0.49490887,
-0.6071822,0.51056105,0.012800761,0.45888036};
+    in.data_ = {0.28370148,0.6116727,0.123164214,0.86745644,0.5565164,0.5560578,
+0.56472105,0.34990314,0.8911647,0.41991234};
 
     Opm::Tensor<Evaluation> out{1};
-    out.data_ = {-1.2550222};
+    out.data_ = {1.1963887};
 
     KerasTimer load_timer;
     load_timer.Start();

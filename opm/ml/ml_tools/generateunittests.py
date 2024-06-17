@@ -108,24 +108,22 @@ def output_testcase(model, test_x, test_y, name, eps):
 # scaling 1x1
 data: np.ndarray = np.random.uniform(-500, 500, (5, 1))
 feature_ranges: list[tuple[float, float]] = [(0.0, 1.0), (-3.7, 0.0)]
-test_x = np.random.rand(1).astype('f')
-test_y = np.random.rand(1).astype('f')
+test_x = np.random.rand(10, 10).astype('f')
+test_y = np.random.rand(10).astype('f')
 data_min = 10.0
 model = Sequential()
-model.add(keras.layers.Input([1]))
-# model.add(Flatten())
-# model.add(Flatten())
-model.add(MinMaxScalerLayer(data_min=10,feature_range=(0.0, 1.0)))
-model.add(Dense(1,activation='tanh'))
+model.add(keras.layers.Input([10]))
+# model.add(Dense(1, input_dim=10))
+model.add(MinMaxScalerLayer(feature_range=(0.0, 1.0)))
+
+# model.add(Dense(1,activation='tanh'))
 model.add(Dense(10,activation='tanh'))
-model.add(Dense(1,activation='tanh'))
-model.add(MinMaxUnScalerLayer(feature_range=(1.0, 5.0)))
-# model.add(Dense(10))
-# model.add(Dense(10))
-# model.add(Dense(10))
-# model.add(MinMaxScalerLayer(feature_range=(0.0, 1.0)))
+model.add(Dense(10,activation='tanh'))
+model.add(Dense(10,activation='tanh'))
+model.add(Dense(10,activation='tanh'))
 # model.add(Flatten())
-# model.add(MinMaxUnScalerLayer())
+model.add(MinMaxUnScalerLayer(feature_range=(-3.7, -1.0)))
+
 # #
 model.get_layer(model.layers[0].name).adapt(data=data)
 model.get_layer(model.layers[-1].name).adapt(data=data)

@@ -12,11 +12,13 @@ bool test_scalingdense_1x1(Evaluation* load_time, Evaluation* apply_time)
     KASSERT(load_time, "Invalid Evaluation");
     KASSERT(apply_time, "Invalid Evaluation");
 
-    Opm::Tensor<Evaluation> in{1};
-    in.data_ = {0.5439535};
+    Opm::Tensor<Evaluation> in{10};
+    in.data_ = {0.35745713,0.5183338,0.43530357,0.7207405,0.96301425,0.47163334,
+0.10632531,0.49405062,0.48787624,0.23182626};
 
-    Opm::Tensor<Evaluation> out{1};
-    out.data_ = {-633.0674};
+    Opm::Tensor<Evaluation> out{10};
+    out.data_ = {80.98062,133.76828,113.56729,180.86313,126.80325,148.15707,
+111.01114,41.78473,51.552124,153.05319};
 
     KerasTimer load_timer;
     load_timer.Start();

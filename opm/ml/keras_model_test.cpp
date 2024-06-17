@@ -138,34 +138,35 @@ bool tensor_test() {
 
 int main() {
     typedef Opm::DenseAd::Evaluation<double, 1> Evaluation;
-
+    // typedef float Evaluation;
+ 
     Evaluation load_time = 0.0;
     Evaluation apply_time = 0.0;
 
-    // if (!tensor_test<Evaluation>()) {
-    //     return 1;
-    // }
-    //
-    // if (!test_dense_1x1<Evaluation>(&load_time, &apply_time)) {
-    //     return 1;
-    // }
-    //
-    // if (!test_dense_10x1<Evaluation>(&load_time, &apply_time)) {
-    //     return 1;
-    // }
-    //
-    // if (!test_dense_2x2<Evaluation>(&load_time, &apply_time)) {
-    //     return 1;
-    // }
-    //
-    // if (!test_dense_10x10<Evaluation>(&load_time, &apply_time)) {
-    //     return 1;
-    // }
-    //
-    // if (!test_dense_10x10x10<Evaluation>(&load_time, &apply_time)) {
-    //     return 1;
-    // }
-    //
+    if (!tensor_test<Evaluation>()) {
+        return 1;
+    }
+    
+    if (!test_dense_1x1<Evaluation>(&load_time, &apply_time)) {
+        return 1;
+    }
+    
+    if (!test_dense_10x1<Evaluation>(&load_time, &apply_time)) {
+        return 1;
+    }
+    
+    if (!test_dense_2x2<Evaluation>(&load_time, &apply_time)) {
+        return 1;
+    }
+    
+    if (!test_dense_10x10<Evaluation>(&load_time, &apply_time)) {
+        return 1;
+    }
+    
+    if (!test_dense_10x10x10<Evaluation>(&load_time, &apply_time)) {
+        return 1;
+    }
+    
     // if (!test_conv_2x2<Evaluation>(&load_time, &apply_time)) {
     //     return 1;
     // }
@@ -173,7 +174,7 @@ int main() {
     // if (!test_conv_3x3<Evaluation>(&load_time, &apply_time)) {
     //     return 1;
     // }
-    //
+    
     // if (!test_conv_3x3x3<Evaluation>(&load_time, &apply_time)) {
     //     return 1;
     // }
@@ -185,7 +186,7 @@ int main() {
     // if (!test_relu_10<Evaluation>(&load_time, &apply_time)) {
     //     return 1;
     // }
-    //
+    
     // if (!test_dense_relu_10<Evaluation>(&load_time, &apply_time)) {
     //     return 1;
     // }
@@ -210,17 +211,17 @@ int main() {
         return 1;
     }
 
-    // Run benchmark 5 times and report duration.
-    Evaluation total_load_time = 0.0;
-    Evaluation total_apply_time = 0.0;
+    // // Run benchmark 5 times and report duration.
+    // Evaluation total_load_time = 0.0;
+    // Evaluation total_apply_time = 0.0;
 
-    for (int i = 0; i < 5; i++) {
-        total_load_time += load_time;
-        total_apply_time += apply_time;
-    }
+    // for (int i = 0; i < 5; i++) {
+    //     total_load_time += load_time;
+    //     total_apply_time += apply_time;
+    // }
 
-    printf("Benchmark network loads in %fs\n", total_load_time / 5);
-    printf("Benchmark network runs in %fs\n", total_apply_time / 5);
+    // printf("Benchmark network loads in %fs\n", total_load_time / 5);
+    // printf("Benchmark network runs in %fs\n", total_apply_time / 5);
 
     return 0;
 }
