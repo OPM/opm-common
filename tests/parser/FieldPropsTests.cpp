@@ -15,19 +15,12 @@
 
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
- */
-
-#include <algorithm>
-#include <iomanip>
-#include <memory>
-#include <numeric>
-#include <stdexcept>
-#include <sstream>
-#include <string>
+*/
 
 #define BOOST_TEST_MODULE FieldPropsTests
 
 #include <boost/test/unit_test.hpp>
+
 #include <boost/version.hpp>
 #if BOOST_VERSION / 100000 == 1 && BOOST_VERSION / 100 % 1000 < 71
 #include <boost/test/floating_point_comparison.hpp>
@@ -35,25 +28,39 @@
 #include <boost/test/tools/floating_point_comparison.hpp>
 #endif
 
+#include <opm/input/eclipse/EclipseState/Grid/FieldProps.hpp>
+
 #include <opm/common/utility/OpmInputError.hpp>
+
+#include <opm/input/eclipse/EclipseState/EclipseState.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/SatfuncPropertyInitializers.hpp>
+#include <opm/input/eclipse/EclipseState/Runspec.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
+
+#include <opm/input/eclipse/Python/Python.hpp>
+
+#include <opm/input/eclipse/Schedule/Schedule.hpp>
+
+#include <opm/input/eclipse/Units/Units.hpp>
+#include <opm/input/eclipse/Units/UnitSystem.hpp>
+
+#include <opm/input/eclipse/Deck/Deck.hpp>
+#include <opm/input/eclipse/Deck/DeckKeyword.hpp>
+#include <opm/input/eclipse/Deck/DeckSection.hpp>
 
 #include <opm/input/eclipse/Parser/Parser.hpp>
 
-#include <opm/input/eclipse/Python/Python.hpp>
-#include <opm/input/eclipse/Units/Units.hpp>
-#include <opm/input/eclipse/Units/UnitSystem.hpp>
-#include <opm/input/eclipse/Deck/DeckSection.hpp>
-#include <opm/input/eclipse/Deck/Deck.hpp>
-#include <opm/input/eclipse/Deck/DeckKeyword.hpp>
-#include <opm/input/eclipse/EclipseState/EclipseState.hpp>
-#include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
-#include <opm/input/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
-#include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
-#include <opm/input/eclipse/EclipseState/Grid/SatfuncPropertyInitializers.hpp>
-#include <opm/input/eclipse/EclipseState/Runspec.hpp>
-#include <opm/input/eclipse/Schedule/Schedule.hpp>
-
-#include <opm/input/eclipse/EclipseState/Grid/FieldProps.hpp>
+#include <algorithm>
+#include <cstddef>
+#include <iomanip>
+#include <memory>
+#include <numeric>
+#include <sstream>
+#include <stdexcept>
+#include <string>
+#include <vector>
 
 using namespace Opm;
 
@@ -2105,8 +2112,8 @@ FieldPropsManager make_fp(const std::string& deck_string) {
 }
 
 BOOST_AUTO_TEST_CASE(GLOBAL_UNSUPPORTED) {
-    // Operations involving two keywords can not update a global keyword.
-    std::string invalid_copy = R"(
+    // Operations involving two keywords cannot update a global keyword.
+    const std::string invalid_copy { R"(
 GRID
 
 PORO
@@ -2122,10 +2129,10 @@ COPY
    MULTX MULTZ
 /
 
-)";
+)" };
 
-    // Can not update a global keyword with xxxxREG operations
-    std::string invalid_region = R"(
+    // Cannot update a global keyword with xxxxREG operations
+    const std::string invalid_region { R"(
 GRID
 
 PORO
@@ -2141,10 +2148,10 @@ EQUALREG
    MULTZ  2.0 1 /
 /
 
-)";
+)" };
 
-    // Can not update a global keyword with the OPERATE keyword
-    std::string invalid_operate = R"(
+    // Cannot update a global keyword with the OPERATE keyword
+    const std::string invalid_operate { R"(
 GRID
 
 PORO
@@ -2160,11 +2167,10 @@ OPERATE
    MULTZ 1  3   1  1   1   1  'MAXLIM'   MULTZ 0.50 /
 /
 
-)";
-
+)" };
 
     BOOST_CHECK_THROW(make_fp(invalid_copy), OpmInputError);
-    BOOST_CHECK_THROW(make_fp(invalid_region), std::logic_error);
+    BOOST_CHECK_THROW(make_fp(invalid_region), OpmInputError);
     BOOST_CHECK_THROW(make_fp(invalid_operate), std::logic_error);
 }
 
@@ -2541,7 +2547,7 @@ MAXVALUE
 }
 
 BOOST_AUTO_TEST_CASE(REGION_OPERATION) {
-    std::string deck_string1 = R"(
+    const std::string deck_string1 { R"(
 GRID
 
 PORO
@@ -2567,18 +2573,27 @@ MULTIREG
 /
 
 COPYREG
-   PERMX  PERMY  1 M  /
-   PERMX  PERMY  2 M  /
-   PERMX  PERMY  3 M  /
+   PERMX  PERMY  1 M /
+   PERMX  PERMY  2 M /
+   PERMX  PERMY  3 M /
 /
 
-)";
+)" };
 
-    UnitSystem unit_system(UnitSystem::UnitType::UNIT_TYPE_METRIC);
-    auto to_si = [&unit_system](double raw_value) { return unit_system.to_si(UnitSystem::measure::permeability, raw_value); };
-    EclipseGrid grid(10,10, 2);
-    Deck deck1 = Parser{}.parseString(deck_string1);
-    FieldPropsManager fp(deck1, Phases{true, true, true}, grid, TableManager());
+    auto to_si = [unit_system = UnitSystem{UnitSystem::UnitType::UNIT_TYPE_METRIC}]
+        (double raw_value)
+    {
+        return unit_system.to_si(UnitSystem::measure::permeability, raw_value);
+    };
+
+    // Note: 'grid' must be mutable.
+    auto grid = EclipseGrid { 10, 10, 2 };
+
+    const auto deck1 = Parser{}.parseString(deck_string1);
+    const auto fp = FieldPropsManager {
+        deck1, Phases{true, true, true}, grid, TableManager{}
+    };
+
     const auto& permx = fp.get_double("PERMX");
     const auto& permy = fp.get_double("PERMY");
     const auto& multn = fp.get_int("MULTNUM");

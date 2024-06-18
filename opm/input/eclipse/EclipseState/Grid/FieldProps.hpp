@@ -42,6 +42,7 @@
 #include <stdexcept>
 #include <string>
 #include <string_view>
+#include <type_traits>
 #include <unordered_map>
 #include <unordered_set>
 #include <utility>
@@ -339,53 +340,60 @@ public:
     };
 
     template<typename T>
-    struct FieldDataManager {
+    struct FieldDataManager
+    {
         const std::string& keyword;
         GetStatus status;
-        using Data = Fieldprops::FieldData<T>;
-        const Data * data_ptr;
+        const Fieldprops::FieldData<T>* data_ptr;
 
-        FieldDataManager(const std::string& k, GetStatus s, const Data * d) :
-            keyword(k),
-            status(s),
-            data_ptr(d)
-        { }
+        FieldDataManager(const std::string& k, GetStatus s, const Fieldprops::FieldData<T>* d)
+            : keyword(k)
+            , status(s)
+            , data_ptr(d)
+        {}
 
 
-        void verify_status() const {
+
+        void verify_status() const
+        {
             switch (status) {
             case FieldProps::GetStatus::OK:
                 return;
+
             case FieldProps::GetStatus::INVALID_DATA:
                 throw std::runtime_error("The keyword: " + keyword + " has not been fully initialized");
+
             case FieldProps::GetStatus::MISSING_KEYWORD:
                 throw std::out_of_range("No such keyword in deck: " + keyword);
+
             case FieldProps::GetStatus::NOT_SUPPPORTED_KEYWORD:
                 throw std::logic_error("The keyword  " + keyword + " is not supported");
             }
         }
 
-        const std::vector<T>* ptr() const {
-            if (this->data_ptr)
-                return std::addressof(this->data_ptr->data);
-            else
-                return nullptr;
+        const std::vector<T>* ptr() const
+        {
+            return (this->data_ptr != nullptr)
+                ? &this->data_ptr->data
+                : nullptr;
         }
 
-        const std::vector<T>& data() const {
+        const std::vector<T>& data() const
+        {
             this->verify_status();
             return this->data_ptr->data;
         }
 
-        const Data& field_data() const {
+        const Fieldprops::FieldData<T>& field_data() const
+        {
             this->verify_status();
             return *this->data_ptr;
         }
 
-        bool valid() const {
-            return (this->status == GetStatus::OK);
+        bool valid() const
+        {
+            return this->status == GetStatus::OK;
         }
-
     };
 
     /// Normal constructor for FieldProps.
@@ -422,8 +430,8 @@ public:
 
         const auto has0 = this->template has<T>(keyword);
 
-        const auto& field_data =
-            this->template init_get<T>(keyword, std::is_same<T,double>::value && allow_unsupported);
+        const auto& field_data = this->template
+            init_get<T>(keyword, std::is_same_v<T, double> && allow_unsupported);
 
         if (field_data.valid() || allow_unsupported) {
             // Note: FieldDataManager depends on init_get<>() producing a
@@ -546,6 +554,7 @@ public:
     void deleteMINPVV();
 
 private:
+    void processMULTREGP(const Deck& deck);
     void scanGRIDSection(const GRIDSection& grid_section);
     void scanGRIDSectionOnlyACTNUM(const GRIDSection& grid_section);
     void scanEDITSection(const EDITSection& edit_section);
@@ -554,6 +563,7 @@ private:
     void scanSOLUTIONSection(const SOLUTIONSection& solution_section);
     double getSIValue(const std::string& keyword, double raw_value) const;
     double getSIValue(ScalarOperation op, const std::string& keyword, double raw_value) const;
+
     template <typename T>
     void erase(const std::string& keyword);
 
@@ -577,34 +587,65 @@ private:
     }
 
     template <typename T>
-    void operate(const DeckRecord& record, Fieldprops::FieldData<T>& target_data, const Fieldprops::FieldData<T>& src_data, const std::vector<Box::cell_index>& index_list);
+    void operate(const DeckRecord& record,
+                 Fieldprops::FieldData<T>& target_data,
+                 const Fieldprops::FieldData<T>& src_data,
+                 const std::vector<Box::cell_index>& index_list);
 
     template <typename T>
-    static void apply(ScalarOperation op, std::vector<T>& data, std::vector<value::status>& value_status, T scalar_value, const std::vector<Box::cell_index>& index_list);
+    static void apply(ScalarOperation op,
+                      std::vector<T>& data,
+                      std::vector<value::status>& value_status,
+                      T scalar_value,
+                      const std::vector<Box::cell_index>& index_list);
 
     template <typename T>
-    Fieldprops::FieldData<T>& init_get(const std::string& keyword, bool allow_unsupported = false);
+    Fieldprops::FieldData<T>&
+    init_get(const std::string& keyword, bool allow_unsupported = false);
 
     template <typename T>
-    Fieldprops::FieldData<T>& init_get(const std::string& keyword, const Fieldprops::keywords::keyword_info<T>& kw_info, bool multiplier_in_edit = false);
+    Fieldprops::FieldData<T>&
+    init_get(const std::string& keyword,
+             const Fieldprops::keywords::keyword_info<T>& kw_info,
+             const bool multiplier_in_edit = false);
 
-    std::string region_name(const DeckItem& region_item);
-    std::vector<Box::cell_index> region_index( const std::string& region_name, int region_value );
+    std::string region_name(const DeckItem& region_item) const;
+
+    std::vector<Box::cell_index>
+    region_index(const std::string& region_name, int region_value);
+
     void handle_OPERATE(const DeckKeyword& keyword, Box box);
     void handle_operation(Section section, const DeckKeyword& keyword, Box box);
+    void handle_operateR(const DeckKeyword& keyword);
     void handle_region_operation(const DeckKeyword& keyword);
     void handle_COPY(const DeckKeyword& keyword, Box box, bool region);
-    void distribute_toplayer(Fieldprops::FieldData<double>& field_data, const std::vector<double>& deck_data, const Box& box);
+    void distribute_toplayer(Fieldprops::FieldData<double>& field_data,
+                             const std::vector<double>& deck_data,
+                             const Box& box);
+
     double get_beta(const std::string& func_name, const std::string& target_array, double raw_beta);
     double get_alpha(const std::string& func_name, const std::string& target_array, double raw_alpha);
 
     void handle_keyword(Section section, const DeckKeyword& keyword, Box& box);
-    void handle_double_keyword(Section section, const Fieldprops::keywords::keyword_info<double>& kw_info, const DeckKeyword& keyword, const std::string& keyword_name, const Box& box);
-    void handle_double_keyword(Section section, const Fieldprops::keywords::keyword_info<double>& kw_info, const DeckKeyword& keyword, const Box& box);
-    void handle_int_keyword(const Fieldprops::keywords::keyword_info<int>& kw_info, const DeckKeyword& keyword, const Box& box);
+    void handle_double_keyword(Section section,
+                               const Fieldprops::keywords::keyword_info<double>& kw_info,
+                               const DeckKeyword& keyword,
+                               const std::string& keyword_name,
+                               const Box& box);
+
+    void handle_double_keyword(Section section,
+                               const Fieldprops::keywords::keyword_info<double>& kw_info,
+                               const DeckKeyword& keyword,
+                               const Box& box);
+
+    void handle_int_keyword(const Fieldprops::keywords::keyword_info<int>& kw_info,
+                            const DeckKeyword& keyword,
+                            const Box& box);
+
     void init_satfunc(const std::string& keyword, Fieldprops::FieldData<double>& satfunc);
     void init_porv(Fieldprops::FieldData<double>& porv);
     void init_tempi(Fieldprops::FieldData<double>& tempi);
+
     std::string canonical_fipreg_name(const std::string& fipreg);
     const std::string& canonical_fipreg_name(const std::string& fipreg) const;
 
