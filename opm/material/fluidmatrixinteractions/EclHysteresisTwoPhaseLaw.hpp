@@ -281,7 +281,7 @@ public:
         if (params.config().krHysteresisModel() == 1 || params.config().krHysteresisModel() == 3)
             return EffectiveLaw::twoPhaseSatKrw(params.imbibitionParams(), Sw);
 
-        if (Sw >= params.krwSwMdc())
+        if (Sw <= params.krwSwMdc())
             return EffectiveLaw::twoPhaseSatKrw(params.drainageParams(), Sw);
 
         // Killough hysteresis for the wetting phase
