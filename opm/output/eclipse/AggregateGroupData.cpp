@@ -614,12 +614,12 @@ void injectionGroup(const Opm::Schedule&     sched,
     {
         iGrp[nwgmax + IGroup::VoidageGroupIndex] = group.insert_index();
         for (const auto& [phase, inj_prop] : group.injectionProperties()) {
-            if (inj_prop.cmode == Opm::Group::InjectionCMode::VREP) {
-                if (inj_prop.voidage_group.has_value()) {
-                    const auto& vgrpname = inj_prop.voidage_group.value();
-                    if (sched.hasGroup(vgrpname, simStep)) {
-                        iGrp[nwgmax + IGroup::VoidageGroupIndex] = sched.getGroup(vgrpname, simStep).insert_index();
-                    }
+            if (inj_prop.cmode == Opm::Group::InjectionCMode::VREP &&
+                inj_prop.voidage_group.has_value()) {
+
+                const auto& vgrpname = inj_prop.voidage_group.value();
+                if (sched.hasGroup(vgrpname, simStep)) {
+                    iGrp[nwgmax + IGroup::VoidageGroupIndex] = sched.getGroup(vgrpname, simStep).insert_index();
                 }
             }
         }

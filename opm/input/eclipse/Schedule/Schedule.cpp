@@ -1921,7 +1921,8 @@ namespace {
                 auto new_config = this->snapshots.back().guide_rate();
                 new_config.update_production_group(group);
                 this->snapshots.back().guide_rate.update(std::move(new_config));
-            } else if (group.isInjectionGroup()) {
+            }
+            if (group.isInjectionGroup()) {
                 // Set name of VREP group if different than default
                 if (static_cast<int>(group.insert_index()) != rst_group.voidage_group_index) {
                     for (const auto& [phase, orig_inj_prop] : group.injectionProperties()) {
