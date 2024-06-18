@@ -34,6 +34,23 @@ double area_to_si(const Opm::UnitSystem& unit_system, const double raw_value)
 }
 
 double
+load_device_base_strength(const Opm::UnitSystem& unit_system,
+                          const int              segment_type,
+                          const double           base_strength_raw)
+{
+    auto unit = Opm::UnitSystem::measure::identity;
+
+    if (segment_type == -7) {   // SICD
+        unit = Opm::UnitSystem::measure::icd_strength;
+    }
+    else if (segment_type == -8) { // AICD
+        unit = Opm::UnitSystem::measure::aicd_strength;
+    }
+
+    return unit_system.to_si(unit, base_strength_raw);
+}
+
+double
 load_icd_scaling_factor(const Opm::UnitSystem& unit_system,
                         const int*             iseg,
                         const double*          rseg)
@@ -80,7 +97,7 @@ Opm::RestartIO::RstSegment::RstSegment(const UnitSystem& unit_system,
     , valve_area(             area_to_si(unit_system,            rseg[VI::RSeg::ValveArea]))
     , valve_flow_coeff(                                          rseg[VI::RSeg::ValveFlowCoeff])
     , valve_max_area(         area_to_si(unit_system,            rseg[VI::RSeg::ValveMaxArea]))
-    , base_strength(          unit_system.to_si(M::icd_strength, rseg[VI::RSeg::DeviceBaseStrength]))
+    , base_strength(load_device_base_strength(unit_system, segment_type, rseg[VI::RSeg::DeviceBaseStrength]))
     , fluid_density(          unit_system.to_si(M::density,      rseg[VI::RSeg::CalibrFluidDensity]))
     , fluid_viscosity(        unit_system.to_si(M::viscosity,    rseg[VI::RSeg::CalibrFluidViscosity]))
     , critical_water_fraction(                                   rseg[VI::RSeg::CriticalWaterFraction])
