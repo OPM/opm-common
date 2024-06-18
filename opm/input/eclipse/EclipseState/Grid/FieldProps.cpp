@@ -233,7 +233,7 @@ namespace {
 //
 // This quite weird behaviour comes from reading the GRIDOPTS and MULTNUM
 // documentation, and practical experience with ECLIPSE simulations.
-// Ufortunately the documentation of the xxxREG keywords does not confirm
+// Unfortunately the documentation of the xxxREG keywords does not confirm
 // this.
 std::string default_region_keyword(const Deck& deck)
 {
@@ -838,10 +838,10 @@ FieldProps::init_get(const std::string& keyword_name,
         return iter->second;
     }
     else if (multiplier_in_edit) {
-        assert((keyword != ParserKeywords::PORV::keywordName) &&
-               (keyword != ParserKeywords::TEMPI::keywordName) &&
-               (Fieldprops::keywords::PROPS::satfunc.count(keyword) != 1) &&
-               !is_capillary_pressure(keyword));
+        assert(keyword != ParserKeywords::PORV::keywordName);
+        assert(keyword != ParserKeywords::TEMPI::keywordName);
+        assert(Fieldprops::keywords::PROPS::satfunc.count(keyword) != 1);
+        assert(!is_capillary_pressure(keyword));
 
         this->multiplier_kw_infos_.insert_or_assign(mult_keyword, kw_info);
     }
@@ -992,7 +992,8 @@ void FieldProps::apply_multipliers()
         // If data is global, then we also need to set the global_data. I think they should be the same at this stage, though!
         if (kw_info.global)
         {
-            assert(mult_iter->second.global_data.has_value() && iter->second.global_data.has_value());
+            assert(mult_iter->second.global_data.has_value());
+            assert(iter->second.global_data.has_value());
             std::transform(iter->second.global_data->begin(),
                            iter->second.global_data->end(),
                            mult_iter->second.global_data->begin(),
@@ -1013,14 +1014,14 @@ void FieldProps::apply_multipliers()
 }
 
 // The ACTNUM and PORV keywords are special cased with quite extensive
-// postprocessing, and should be access through the special ::porv() and
+// postprocessing, and should be accessed through the special ::porv() and
 // ::actnum() methods instead of the general ::get<T>( ) method. These two
 // keywords are also hidden from the keys<T>() vectors.
 //
-// If there are TRAN? fields in the container they are transferred even if they
-// are not completely defined. This is because that TRAN? fields will ultimately
-// be combined with the TRAN? values calculated from the simulator, it does
-// therefore not make sense to require that these fields are fully defined.
+// If there are TRAN? fields in the container, these will be transferred
+// even if they are not fully defined. These TRAN? fields will ultimately be
+// combined with the TRAN? values calculated from the simulator, and it does
+// therefore not make sense to require fully defined fields.
 
 template <>
 std::vector<std::string> FieldProps::keys<double>() const
@@ -1685,12 +1686,12 @@ FieldProps::canonical_fipreg_name(const std::string& fipreg) const
         : fipreg;
 }
 
-// This function generates a new ACTNUM vector.The ACTNUM vector which is
-// returned is joined result of three different data sources:
+// Generate a combined ACTNUM property array from three distinct data
+// sources.
 //
-//    1. The ACTNUM of if the grid which is part of this FieldProps structure.
+//    1. The property array stored internally in this FieldProps object.
 //
-//    2. If there have been ACTNUM operations in the DECK of the type:
+//    2. Direct ACTNUM array operations of the form
 //
 //       EQUALS
 //           ACTNUM 0 1 10 1 10 1 3 /
@@ -1698,9 +1699,8 @@ FieldProps::canonical_fipreg_name(const std::string& fipreg) const
 //
 //    3. Cells with PORV == 0 will get ACTNUM = 0.
 //
-// Observe that due to steps 2 and 3 the ACTNUM vector returned from this
-// function will in general differ from the internal ACTNUM used in the
-// FieldProps instance.
+// Note that steps 2 and 3 generally forms an ACTNUM property which differs
+// from the ACTNUM property stored internally in the FieldProps instance.
 std::vector<int> FieldProps::actnum()
 {
     auto actnum = this->m_actnum;

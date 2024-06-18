@@ -33,7 +33,7 @@
 #include <string>
 #include <vector>
 
-namespace Opm { namespace Fieldprops {
+namespace Opm::Fieldprops {
 
     template <typename T>
     static void compress(std::vector<T>&          data,
@@ -194,6 +194,6 @@ namespace Opm { namespace Fieldprops {
         }
     };
 
-}} // namespace Opm::Fieldprops
+} // namespace Opm::Fieldprops
 
 #endif // FIELD_DATA_HPP
