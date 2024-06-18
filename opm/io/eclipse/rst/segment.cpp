@@ -38,13 +38,14 @@ load_device_base_strength(const Opm::UnitSystem& unit_system,
                           const int              segment_type,
                           const double           base_strength_raw)
 {
-    auto unit = Opm::UnitSystem::measure::identity;
+    using VI::ISeg::Value::Type;
 
-    if (segment_type == -7) {   // SICD
-        unit = Opm::UnitSystem::measure::icd_strength;
+    auto unit = M::identity;
+    if (segment_type == Type::SpiralICD) {
+        unit = M::icd_strength;
     }
-    else if (segment_type == -8) { // AICD
-        unit = Opm::UnitSystem::measure::aicd_strength;
+    else if (segment_type == Type::AutoICD) {
+        unit = M::aicd_strength;
     }
 
     return unit_system.to_si(unit, base_strength_raw);
