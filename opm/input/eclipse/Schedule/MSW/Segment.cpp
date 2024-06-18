@@ -21,6 +21,8 @@
 
 #include <opm/io/eclipse/rst/segment.hpp>
 
+#include <opm/output/eclipse/VectorItems/msw.hpp>
+
 #include <opm/input/eclipse/Schedule/MSW/AICD.hpp>
 #include <opm/input/eclipse/Schedule/MSW/SICD.hpp>
 #include <opm/input/eclipse/Schedule/MSW/Valve.hpp>
@@ -46,17 +48,18 @@ namespace {
 
     Opm::Segment::SegmentType segmentTypeFromInt(const int ecl_id)
     {
-        using Type = Opm::Segment::SegmentType;
+        using SType = Opm::Segment::SegmentType;
+        using IType = Opm::RestartIO::Helpers::VectorItems::ISeg::Value::Type;
 
         switch (ecl_id) {
-        case -1: return Type::REGULAR;
-        case -7: return Type::SICD;
-        case -8: return Type::AICD;
-        case -5: return Type::VALVE;
+        case IType::Regular:   return SType::REGULAR;
+        case IType::SpiralICD: return SType::SICD;
+        case IType::AutoICD:   return SType::AICD;
+        case IType::Valve:     return SType::VALVE;
         }
 
         throw std::invalid_argument {
-            fmt::format("Unhandeled integer segment type {} ", ecl_id)
+            fmt::format("Unhandled integer segment type {}", ecl_id)
         };
     }
 
@@ -403,12 +406,13 @@ namespace Opm {
 
     int Segment::ecl_type_id() const
     {
-        switch (this->segmentType())
-        {
-        case SegmentType::REGULAR: return -1;
-        case SegmentType::SICD:    return -7;
-        case SegmentType::AICD:    return -8;
-        case SegmentType::VALVE:   return -5;
+        using IType = RestartIO::Helpers::VectorItems::ISeg::Value::Type;
+
+        switch (this->segmentType()) {
+        case SegmentType::REGULAR: return IType::Regular;
+        case SegmentType::SICD:    return IType::SpiralICD;
+        case SegmentType::AICD:    return IType::AutoICD;
+        case SegmentType::VALVE:   return IType::Valve;
         }
 
         throw std::invalid_argument {

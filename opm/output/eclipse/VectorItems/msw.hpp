@@ -22,7 +22,7 @@
 
 #include <vector>
 
-namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems {
+namespace Opm::RestartIO::Helpers::VectorItems {
 
     namespace ISeg {
 
@@ -37,6 +37,15 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
             ICDScalingMode  = 18,
             ICDOpenShutFlag = 19,
         };
+
+        namespace Value {
+            enum Type {
+                AutoICD   = -8, // Segment is an AICD
+                SpiralICD = -7, // Segment is an SICD
+                Valve     = -5, // Segment is a Valve
+                Regular   = -1, // Regular segment (i.e., not a device &c)
+            };
+        } // Value
 
     } // ISeg
 
@@ -104,6 +113,6 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
         };
     } // RSeg
 
-}}}} // Opm::RestartIO::Helpers::VectorItems
+} // Opm::RestartIO::Helpers::VectorItems
 
 #endif // OPM_OUTPUT_ECLIPSE_VECTOR_MSW_HPP

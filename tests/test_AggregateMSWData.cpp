@@ -1066,27 +1066,26 @@ BOOST_AUTO_TEST_CASE(MSW_AICD)
 
     // ISEG (PROD)
     {
+        using VI::ISeg::Value::Type;
+
         const auto& iSeg = amswd.getISeg();
         auto start = 7*ih[VI::intehead::NISEGZ];
-        BOOST_CHECK_EQUAL(iSeg[start + VI::ISeg::index::SegmentType],     -8); // PROD-segment 8,
+        BOOST_CHECK_EQUAL(iSeg[start + VI::ISeg::index::SegmentType], Type::AutoICD); // PROD-segment 8,
         BOOST_CHECK_EQUAL(iSeg[start + VI::ISeg::index::ICDScalingMode],   1); // PROD-segment 8,
         BOOST_CHECK_EQUAL(iSeg[start + VI::ISeg::index::ICDOpenShutFlag],  0); // PROD-segment 8,
 
         start = 8*ih[VI::intehead::NISEGZ];
-        BOOST_CHECK_EQUAL(iSeg[start + VI::ISeg::index::SegmentType],     -8); // PROD-segment 9,
+        BOOST_CHECK_EQUAL(iSeg[start + VI::ISeg::index::SegmentType], Type::AutoICD); // PROD-segment 9,
         BOOST_CHECK_EQUAL(iSeg[start + VI::ISeg::index::ICDScalingMode],   1); // PROD-segment 9,
         BOOST_CHECK_EQUAL(iSeg[start + VI::ISeg::index::ICDOpenShutFlag],  0); // PROD-segment 9,
 
         start = 9*ih[VI::intehead::NISEGZ];
-        BOOST_CHECK_EQUAL(iSeg[start + VI::ISeg::index::SegmentType],     -8); // PROD-segment 10,
+        BOOST_CHECK_EQUAL(iSeg[start + VI::ISeg::index::SegmentType], Type::AutoICD); // PROD-segment 10,
         BOOST_CHECK_EQUAL(iSeg[start + VI::ISeg::index::ICDScalingMode],   0); // PROD-segment 10,
         BOOST_CHECK_EQUAL(iSeg[start + VI::ISeg::index::ICDOpenShutFlag],  0); // PROD-segment 10,
-
-
-
     }
 
-        // RSEG (PROD)
+    // RSEG (PROD)
     {
         // well no 1 - PROD
         const auto& rseg = amswd.getRSeg();

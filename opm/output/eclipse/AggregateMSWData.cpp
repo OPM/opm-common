@@ -549,20 +549,20 @@ namespace {
             // about their origins, other than the fact that they depend on
             // the active unit conventions.
             switch (uType) {
-                case UType::UNIT_TYPE_METRIC:
-                    return 1.340e-15f;
+            case UType::UNIT_TYPE_METRIC:
+                return 1.340e-15f;
 
-                case UType::UNIT_TYPE_FIELD:
-                    return 2.892e-14f;
+            case UType::UNIT_TYPE_FIELD:
+                return 2.892e-14f;
 
-                case UType::UNIT_TYPE_LAB:
-                    return 7.615e-14f;
+            case UType::UNIT_TYPE_LAB:
+                return 7.615e-14f;
 
-                case UType::UNIT_TYPE_PVT_M:
-                    return 1.322e-15f;
+            case UType::UNIT_TYPE_PVT_M:
+                return 1.322e-15f;
 
-                default:
-                    break;
+            default:
+                break;
             }
 
             throw std::invalid_argument {
@@ -603,6 +603,51 @@ namespace {
         }
 
         template <class RSegArray>
+        void assignICDBaseCharacteristics(const ::Opm::SICD&       sicd,
+                                          const ::Opm::UnitSystem& usys,
+                                          const int                baseIndex,
+                                          RSegArray&               rSeg)
+        {
+            using Ix = ::Opm::RestartIO::Helpers::VectorItems::RSeg::index;
+            using M  = ::Opm::UnitSystem::measure;
+
+            rSeg[baseIndex + Ix::CalibrFluidDensity] =
+                usys.from_si(M::density, sicd.densityCalibration());
+
+            rSeg[baseIndex + Ix::CalibrFluidViscosity] =
+                usys.from_si(M::viscosity, sicd.viscosityCalibration());
+
+            rSeg[baseIndex + Ix::CriticalWaterFraction] =
+                sicd.criticalValue();
+
+            rSeg[baseIndex + Ix::TransitionRegWidth] =
+                sicd.widthTransitionRegion();
+
+            rSeg[baseIndex + Ix::MaxEmulsionRatio] =
+                sicd.maxViscosityRatio();
+
+            rSeg[baseIndex + Ix::ICDLength] =
+                usys.from_si(M::length, sicd.length());
+
+            // The scalingFactor's output value depends on the scaling
+            // method (item 11 of WSEGAICD/WSEGSICD).  If either
+            //
+            //   1. Item 11 is 1, or
+            //   2. Item 11 is negative and the scalingFactor is negative
+            //
+            // then the scalingFactor is a length and needs unit conversion.
+            // Otherwise the scalingFactor is a dimensionless relative
+            // measure and does not need unit conversion.
+            const auto convertScalingFactor =
+                (sicd.methodFlowScaling() == 1) ||
+                ((sicd.methodFlowScaling() < 0) && (sicd.length() < 0.0));
+
+            rSeg[baseIndex + Ix::ScalingFactor] = convertScalingFactor
+                ? usys.from_si(M::length, sicd.scalingFactor())
+                : sicd.scalingFactor();
+        }
+
+        template <class RSegArray>
         void assignSpiralICDCharacteristics(const ::Opm::Segment&    segment,
                                             const ::Opm::UnitSystem& usys,
                                             const int                baseIndex,
@@ -613,35 +658,25 @@ namespace {
 
             const auto& sicd = segment.spiralICD();
 
+            assignICDBaseCharacteristics(sicd, usys, baseIndex, rSeg);
+
             rSeg[baseIndex + Ix::DeviceBaseStrength] =
                 usys.from_si(M::icd_strength, sicd.strength());
 
-            rSeg[baseIndex + Ix::CalibrFluidDensity] =
-                usys.from_si(M::density, sicd.densityCalibration());
+            {
+                const auto& max_rate = sicd.maxAbsoluteRate();
 
-            rSeg[baseIndex + Ix::CalibrFluidViscosity] =
-                usys.from_si(M::viscosity, sicd.viscosityCalibration());
-
-            rSeg[baseIndex + Ix::CriticalWaterFraction] = sicd.criticalValue();
-
-            rSeg[baseIndex + Ix::TransitionRegWidth] =
-                sicd.widthTransitionRegion();
-
-            rSeg[baseIndex + Ix::MaxEmulsionRatio] =
-                sicd.maxViscosityRatio();
-
-            const auto& max_rate = sicd.maxAbsoluteRate();
-            rSeg[baseIndex + Ix::MaxValidFlowRate] = max_rate.has_value() ? usys.from_si(M::geometric_volume_rate, max_rate.value()) : -1;
-
-            rSeg[baseIndex + Ix::ICDLength] =
-                usys.from_si(M::length, sicd.length());
+                rSeg[baseIndex + Ix::MaxValidFlowRate] = max_rate.has_value()
+                    ? usys.from_si(M::geometric_volume_rate, max_rate.value())
+                    : -1.0;
+            }
         }
 
         template <class RSegArray>
         void assignAICDCharacteristics(const ::Opm::Segment&    segment,
-                                            const ::Opm::UnitSystem& usys,
-                                            const int                baseIndex,
-                                            RSegArray&               rSeg)
+                                       const ::Opm::UnitSystem& usys,
+                                       const int                baseIndex,
+                                       RSegArray&               rSeg)
         {
             using Ix = ::Opm::RestartIO::Helpers::VectorItems::RSeg::index;
             using M  = ::Opm::UnitSystem::measure;
@@ -649,32 +684,10 @@ namespace {
 
             const auto& aicd = segment.autoICD();
 
+            assignICDBaseCharacteristics(aicd, usys, baseIndex, rSeg);
+
             rSeg[baseIndex + Ix::DeviceBaseStrength] =
                 usys.from_si(M::aicd_strength, aicd.strength());
-
-            // The value of the scalingFactor depends on the option used:
-            // if 1. item 11 on the WSEGAICD keyword is 1, or
-            // 2. item 11 is negative plus the value of the scalingFactor is negative then
-            // the scalingFactor is an absolute length and need unit conversion
-            // In other cases the scalingFactor is a relative length - and is unitless and do not need unit conversion
-            //
-            rSeg[baseIndex + Ix::ScalingFactor] = ((aicd.methodFlowScaling() == 1) ||
-             ((aicd.methodFlowScaling() < 0) && (aicd.length() < 0))) ?
-                usys.from_si(M::length, aicd.scalingFactor()) : aicd.scalingFactor();
-
-            rSeg[baseIndex + Ix::CalibrFluidDensity] =
-                usys.from_si(M::density, aicd.densityCalibration());
-
-            rSeg[baseIndex + Ix::CalibrFluidViscosity] =
-                usys.from_si(M::viscosity, aicd.viscosityCalibration());
-
-            rSeg[baseIndex + Ix::CriticalWaterFraction] = aicd.criticalValue();
-
-            rSeg[baseIndex + Ix::TransitionRegWidth] =
-                aicd.widthTransitionRegion();
-
-            rSeg[baseIndex + Ix::MaxEmulsionRatio] =
-                aicd.maxViscosityRatio();
 
             rSeg[baseIndex + Ix::FlowRateExponent] =
                 aicd.flowRateExponent();
@@ -682,14 +695,13 @@ namespace {
             rSeg[baseIndex + Ix::ViscFuncExponent] =
                 aicd.viscExponent();
 
-            const auto& max_rate  = aicd.maxAbsoluteRate();
-            if (max_rate.has_value())
-                rSeg[baseIndex + Ix::MaxValidFlowRate] = usys.from_si(M::geometric_volume_rate, max_rate.value());
-            else
-                rSeg[baseIndex + Ix::MaxValidFlowRate] = -2 * infinity;
+            {
+                const auto& max_rate = aicd.maxAbsoluteRate();
 
-            rSeg[baseIndex + Ix::ICDLength] =
-                usys.from_si(M::length, aicd.length());
+                rSeg[baseIndex + Ix::MaxValidFlowRate] = max_rate.has_value()
+                    ? usys.from_si(M::geometric_volume_rate, max_rate.value())
+                    : -2 * infinity;
+            }
 
             rSeg[baseIndex + Ix::flowFractionOilDensityExponent] =
                 aicd.oilDensityExponent();
@@ -708,9 +720,7 @@ namespace {
 
             rSeg[baseIndex + Ix::flowFractionGasViscosityExponent] =
                 aicd.gasViscExponent();
-
         }
-
 
         template <class RSegArray>
         void assignSegmentTypeCharacteristics(const ::Opm::Segment&    segment,
@@ -732,9 +742,9 @@ namespace {
         }
 
         template <class RSegArray>
-        void assignTracerData(std::size_t segment_offset,
+        void assignTracerData(const std::size_t   segment_offset,
                               const Opm::Runspec& runspec,
-                              RSegArray& rSeg)
+                              RSegArray&          rSeg)
         {
             auto tracer_offset = segment_offset + Opm::RestartIO::InteHEAD::numRsegElem(runspec.phases());
             auto tracer_end    = tracer_offset + runspec.tracers().water_tracers() * 8;
@@ -743,14 +753,14 @@ namespace {
         }
 
         template <class RSegArray>
-        void staticContrib_useMSW(const Opm::Runspec&         runspec,
-                                  const Opm::Well&            well,
-                                  const std::vector<int>&     inteHead,
-                                  const Opm::EclipseGrid&     grid,
-                                  const Opm::UnitSystem&      units,
-                                  const ::Opm::SummaryState&  smry,
-                                  const Opm::data::Wells& wr,
-                                  RSegArray&                  rSeg)
+        void staticContrib(const Opm::Runspec&      runspec,
+                           const Opm::Well&         well,
+                           const std::vector<int>&  inteHead,
+                           const Opm::EclipseGrid&  grid,
+                           const Opm::UnitSystem&   units,
+                           const Opm::SummaryState& smry,
+                           const Opm::data::Wells&  wr,
+                           RSegArray&               rSeg)
         {
             using Ix = ::Opm::RestartIO::Helpers::VectorItems::RSeg::index;
             if (well.isMultiSegment()) {
@@ -1333,12 +1343,12 @@ captureDeclaredMSWData(const Schedule&          sched,
     MSWLoop(msw, [&units, &inteHead, &sched, &grid, &smry, &wr, this]
         (const Well& well, const std::size_t mswID)
     {
-        auto imsw = this->iSeg_[mswID];
-        auto rmsw = this->rSeg_[mswID];
+        auto iseg = this->iSeg_[mswID];
+        auto rseg = this->rSeg_[mswID];
 
-        ISeg::staticContrib(well, inteHead, imsw);
-        RSeg::staticContrib_useMSW(sched.runspec(), well, inteHead,
-                                   grid, units, smry, wr, rmsw);
+        ISeg::staticContrib(well, inteHead, iseg);
+        RSeg::staticContrib(sched.runspec(), well, inteHead,
+                            grid, units, smry, wr, rseg);
     });
 
     // Extract contributions to the ILBS and ILBR arrays.

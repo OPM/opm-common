@@ -68,6 +68,7 @@ struct RstSegment
     double max_emulsion_ratio{};
     double max_valid_flow_rate{};
     double icd_length{};
+    double icd_scaling_factor{};
     double valve_area_fraction{};
 
     double aicd_flowrate_exponent{};

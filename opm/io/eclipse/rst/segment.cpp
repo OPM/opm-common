@@ -33,6 +33,43 @@ double area_to_si(const Opm::UnitSystem& unit_system, const double raw_value)
     return unit_system.to_si(M::length, unit_system.to_si(M::length, raw_value));
 }
 
+double
+load_device_base_strength(const Opm::UnitSystem& unit_system,
+                          const int              segment_type,
+                          const double           base_strength_raw)
+{
+    using VI::ISeg::Value::Type;
+
+    auto unit = M::identity;
+    if (segment_type == Type::SpiralICD) {
+        unit = M::icd_strength;
+    }
+    else if (segment_type == Type::AutoICD) {
+        unit = M::aicd_strength;
+    }
+
+    return unit_system.to_si(unit, base_strength_raw);
+}
+
+double
+load_icd_scaling_factor(const Opm::UnitSystem& unit_system,
+                        const int*             iseg,
+                        const double*          rseg)
+{
+    const auto scalingFactor = rseg[VI::RSeg::ScalingFactor];
+    const auto scalingMethod = iseg[VI::ISeg::ICDScalingMode];
+
+    if ((scalingMethod == 1) ||
+        ((scalingMethod < 0) && (rseg[VI::RSeg::ICDLength] < 0.0)))
+    {
+        // Scaling factor is a length.  Convert to SI.
+        return unit_system.to_si(M::length, scalingFactor);
+    }
+
+    // Scaling factor is a relative measure.  No unit conversion needed.
+    return scalingFactor;
+}
+
 } // Anonymous namespace
 
 Opm::RestartIO::RstSegment::RstSegment(const UnitSystem& unit_system,
@@ -61,7 +98,7 @@ Opm::RestartIO::RstSegment::RstSegment(const UnitSystem& unit_system,
     , valve_area(             area_to_si(unit_system,            rseg[VI::RSeg::ValveArea]))
     , valve_flow_coeff(                                          rseg[VI::RSeg::ValveFlowCoeff])
     , valve_max_area(         area_to_si(unit_system,            rseg[VI::RSeg::ValveMaxArea]))
-    , base_strength(          unit_system.to_si(M::icd_strength, rseg[VI::RSeg::DeviceBaseStrength]))
+    , base_strength(load_device_base_strength(unit_system, segment_type, rseg[VI::RSeg::DeviceBaseStrength]))
     , fluid_density(          unit_system.to_si(M::density,      rseg[VI::RSeg::CalibrFluidDensity]))
     , fluid_viscosity(        unit_system.to_si(M::viscosity,    rseg[VI::RSeg::CalibrFluidViscosity]))
     , critical_water_fraction(                                   rseg[VI::RSeg::CriticalWaterFraction])
@@ -69,6 +106,7 @@ Opm::RestartIO::RstSegment::RstSegment(const UnitSystem& unit_system,
     , max_emulsion_ratio(                                        rseg[VI::RSeg::MaxEmulsionRatio])
     , max_valid_flow_rate(    unit_system.to_si(M::rate,         rseg[VI::RSeg::MaxValidFlowRate]))
     , icd_length(             unit_system.to_si(M::length,       rseg[VI::RSeg::ICDLength]))
+    , icd_scaling_factor(load_icd_scaling_factor(unit_system, iseg, rseg))
     , valve_area_fraction(                                       rseg[VI::RSeg::ValveAreaFraction])
     , aicd_flowrate_exponent(                                    rseg[VI::RSeg::FlowRateExponent])
     , aicd_viscosity_exponent(                                   rseg[VI::RSeg::ViscFuncExponent])
