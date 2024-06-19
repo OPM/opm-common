@@ -146,7 +146,8 @@ public:
                        bool                 isSubstep,
                        double               seconds_elapsed,
                        RestartValue         value,
-                       const bool write_double = false);
+                       const bool write_double = false,
+                       std::optional<int>   time_step = std::nullopt);
 
     /// Will load solution data and wellstate from the restart file.  This
     /// method will consult the IOConfig object to get filename and report
