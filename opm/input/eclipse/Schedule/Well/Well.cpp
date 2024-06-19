@@ -363,7 +363,7 @@ Well::Well(const RestartIO::RstWell& rst_well,
         p->addProductionControl(Well::ProducerCMode::BHP);
         if (! p->predictionMode) {
             p->BHPTarget.update(0.0);
-            p->setBHPLimit(rst_well.bhp_target_float);
+            p->setBHPLimit(unit_system.to_si(UnitSystem::measure::pressure, rst_well.bhp_target_float));
             p->controlMode = producer_cmode_from_int(rst_well.hist_requested_control);
         }
         else if (this->isAvailableForGroupControl())
