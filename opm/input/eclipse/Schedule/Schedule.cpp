@@ -53,6 +53,7 @@
 #include <opm/input/eclipse/Schedule/Network/ExtNetwork.hpp>
 #include <opm/input/eclipse/Schedule/Network/Node.hpp>
 #include <opm/input/eclipse/Schedule/OilVaporizationProperties.hpp>
+#include <opm/input/eclipse/Schedule/ResCoup/ReservoirCouplingInfo.hpp>
 #include <opm/input/eclipse/Schedule/RFTConfig.hpp>
 #include <opm/input/eclipse/Schedule/RPTConfig.hpp>
 #include <opm/input/eclipse/Schedule/ScheduleGrid.hpp>
@@ -2325,6 +2326,7 @@ void Schedule::create_first(const time_point& start_time, const std::optional<ti
     sched_state.gecon.update( GroupEconProductionLimits() );
     sched_state.wlist_manager.update( WListManager() );
     sched_state.network.update( Network::ExtNetwork() );
+    sched_state.rescoup.update( ReservoirCoupling::CouplingInfo() );
     sched_state.rpt_config.update( RPTConfig() );
     sched_state.actions.update( Action::Actions() );
     sched_state.udq_active.update( UDQActive() );

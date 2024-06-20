@@ -51,6 +51,7 @@
 #include "MixingRateControlKeywordHandlers.hpp"
 #include "MSW/MSWKeywordHandlers.hpp"
 #include "Network/NetworkKeywordHandlers.hpp"
+#include "ResCoup/ReservoirCouplingKeywordHandlers.hpp"
 #include "RXXKeywordHandlers.hpp"
 #include "UDQ/UDQKeywordHandlers.hpp"
 #include "Well/WellCompletionKeywordHandlers.hpp"
@@ -371,6 +372,7 @@ KeywordHandlers::KeywordHandlers()
                                        getMSWHandlers,
                                        getNetworkHandlers,
                                        getUDQHandlers,
+                                       getReservoirCouplingHandlers,
                                        getRXXHandlers,
                                        getWellCompletionHandlers,
                                        getWellHandlers,

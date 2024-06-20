@@ -265,6 +265,8 @@ if(ENABLE_ECL_INPUT)
     opm/input/eclipse/Schedule/Network/ExtNetwork.cpp
     opm/input/eclipse/Schedule/Network/NetworkKeywordHandlers.cpp
     opm/input/eclipse/Schedule/Network/Node.cpp
+    opm/input/eclipse/Schedule/ResCoup/ReservoirCouplingInfo.cpp
+    opm/input/eclipse/Schedule/ResCoup/ReservoirCouplingKeywordHandlers.cpp
     opm/input/eclipse/Schedule/UDQ/UDQKeywordHandlers.cpp
     opm/input/eclipse/Schedule/UDQ/UDQActive.cpp
     opm/input/eclipse/Schedule/UDQ/UDQAssign.cpp
@@ -553,6 +555,7 @@ if(ENABLE_ECL_INPUT)
     tests/parser/PAvgTests.cpp
     tests/parser/PYACTION.cpp
     tests/parser/RawKeywordTests.cpp
+    tests/parser/ReservoirCouplingTests.cpp
     tests/parser/test_ReportConfig.cpp
     tests/parser/ResinsightTest.cpp
     tests/parser/RestartConfigTests.cpp

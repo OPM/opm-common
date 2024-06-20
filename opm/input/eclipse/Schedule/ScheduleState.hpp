@@ -73,6 +73,9 @@ namespace Opm {
         class Balance;
         class ExtNetwork;
     }
+    namespace ReservoirCoupling {
+        class CouplingInfo;
+    }
     class RFTConfig;
     class RPTConfig;
     class UDQActive;
@@ -398,6 +401,7 @@ namespace Opm {
         ptr_member<GasLiftOpt> glo;
         ptr_member<Network::ExtNetwork> network;
         ptr_member<Network::Balance> network_balance;
+        ptr_member<ReservoirCoupling::CouplingInfo> rescoup;
 
         ptr_member<RPTConfig> rpt_config;
         ptr_member<RFTConfig> rft_config;
