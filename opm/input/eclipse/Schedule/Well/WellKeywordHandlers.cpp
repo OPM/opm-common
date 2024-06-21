@@ -129,6 +129,7 @@ void handleWCONHIST(HandlerContext& handlerContext)
                 if (properties->bhp_hist_limit_defaulted) {
                     properties->setBHPLimit(default_bhp);
                 }
+                properties->whistctl_cmode = handlerContext.state().whistctl();
 
                 auto inj_props = std::make_shared<Well::WellInjectionProperties>(well2.getInjectionProperties());
                 inj_props->resetBHPLimit();
