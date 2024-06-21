@@ -31,7 +31,8 @@ namespace Opm {
         default_count( 0 ),
         row_count( 0 ),
         record_on( false ),
-        org_precision( os.precision(precision) )
+        org_precision( os.precision(precision) ),
+        split_line( false )
     {}
 
 
