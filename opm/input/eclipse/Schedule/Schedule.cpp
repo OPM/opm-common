@@ -65,6 +65,7 @@
 #include <opm/input/eclipse/Schedule/Well/WListManager.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellBrineProperties.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellEnums.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellFoamProperties.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellMatcher.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellMICPProperties.hpp>
@@ -1962,6 +1963,9 @@ namespace {
                 this->updateGuideRateModel(guide_rate_model, report_step);
             }
         }
+
+        if (rst_state.header.histctl_override > 0)
+            this->snapshots.back().update_whistctl(WellProducerCModeFromInt(rst_state.header.histctl_override));
 
         for (const auto& rst_group : rst_state.groups) {
             auto& group = this->snapshots.back().groups.get( rst_group.name );

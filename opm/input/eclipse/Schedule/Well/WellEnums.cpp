@@ -19,9 +19,13 @@
 
 #include <config.h>
 #include <opm/input/eclipse/Schedule/Well/WellEnums.hpp>
+#include <opm/input/eclipse/Schedule/Well/Well.hpp>
+#include <opm/output/eclipse/VectorItems/well.hpp>
 
 #include <ostream>
 #include <stdexcept>
+
+#include <fmt/format.h>
 
 namespace Opm {
 
@@ -155,6 +159,26 @@ WellProducerCMode WellProducerCModeFromString(const std::string& stringValue)
         return WellProducerCMode::NONE;
     else
         throw std::invalid_argument("Unknown enum state string: " + stringValue);
+}
+
+WellProducerCMode WellProducerCModeFromInt(const int pmode) {
+    using CModeVal = ::Opm::RestartIO::Helpers::VectorItems::
+        IWell::Value::WellCtrlMode;
+
+    switch (pmode) {
+    case CModeVal::Group:    return Opm::Well::ProducerCMode::GRUP;
+    case CModeVal::OilRate:  return Opm::Well::ProducerCMode::ORAT;
+    case CModeVal::WatRate:  return Opm::Well::ProducerCMode::WRAT;
+    case CModeVal::GasRate:  return Opm::Well::ProducerCMode::GRAT;
+    case CModeVal::LiqRate:  return Opm::Well::ProducerCMode::LRAT;
+    case CModeVal::ResVRate: return Opm::Well::ProducerCMode::RESV;
+    case CModeVal::THP:      return Opm::Well::ProducerCMode::THP;
+    case CModeVal::BHP:      return Opm::Well::ProducerCMode::BHP;
+    }
+
+    throw std::invalid_argument {
+        fmt::format("Cannot convert integer value {} to producer control mode", pmode)
+    };
 }
 
 std::ostream& operator<<(std::ostream& os, const WellProducerCMode& cm)
