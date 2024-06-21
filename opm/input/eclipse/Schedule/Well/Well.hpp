@@ -452,6 +452,7 @@ public:
     bool hasConnections() const;
     std::vector<const Connection *> getConnections(int completion) const;
     const WellConnections& getConnections() const;
+    WellConnections& getConnections();
     const WellSegments& getSegments() const;
     int maxSegmentID() const;
     int maxBranchID() const;

@@ -1786,6 +1786,82 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
         return sim_update;
     }
 
+    SimulatorUpdate
+    Schedule::modifyCompletions(const std::size_t reportStep, 
+                                    const std::map<std::string,std::vector<Opm::Connection>>& 
+                                    extraConns
+    )   
+    {
+        ParseContext parseContext;
+        if (this->m_treat_critical_as_non_critical) { // Continue with invalid names if parsing strictness is set to low
+            parseContext.update(ParseContext::SCHEDULE_INVALID_NAME, InputErrorAction::WARN);
+        }
+        SimulatorUpdate sim_update;
+        this->snapshots.resize(reportStep + 1);
+        auto wells = this->snapshots[reportStep].wells();
+        for (auto& wellmap : wells) {
+            // auto& conns = wellmap.second->getConnections();
+            // auto wname = wellmap.first;
+            auto& conns = wellmap.get().getConnections();
+            const auto& wname = wellmap.get().name();
+            if(!(extraConns.find(wname) == extraConns.end())){
+                for(const auto& eperf : extraConns.at(wname) ){
+                    bool perf_exist=false;
+                    for(auto& conn: conns){
+                        bool is_equal = (conn.getI() == eperf.getI()) 
+                                    && (conn.getJ() == eperf.getJ())
+                                    && (conn.getK() == eperf.getK());
+                        if(is_equal){
+                            perf_exist = true;
+                            if(eperf.CF()> conn.CF()){
+                                conn.setCF(eperf.CF());
+                            }
+                            //auto ctf = conn.CF() + eperf.CF();
+                            //conn.setCF(ctf);
+                            
+                        }    
+                    }
+                    if(!perf_exist){
+                     sim_update.well_structure_changed = true; 
+                     sim_update.affected_wells.insert(wname);
+                     //sim_update.trans_update ..
+                     size_t sort_value = conns.size();
+                     conns.addConnection(eperf.getI(), 
+                                        eperf.getJ(), 
+                                        eperf.getK(),
+                                        eperf.global_index(),
+                                        eperf.state(),
+                                        eperf.depth(),
+                                        eperf.ctfProperties(),
+                                        1,//eperf.satTableId(),
+                                        eperf.dir(),
+                                        eperf.kind(),
+                                        sort_value,
+                                        /*default table indx*/false);
+                         
+                     //conns.add(eperf);
+
+                    }
+                     //Need to set sort_value and or complnum???
+
+                }
+            }
+        }
+        const std::string prefix = "| "; /* logger prefix string */
+        ErrorGuard errors;
+        std::unordered_map<std::string, double> target_wellpi; //???
+        ScheduleGrid grid(this->completed_cells);
+        if (reportStep < this->m_sched_deck.size() - 1) {
+            const auto log_to_debug = true;
+            this->iterateScheduleSection(reportStep + 1, this->m_sched_deck.size(),
+                                         parseContext, errors, grid, &target_wellpi,
+                                         prefix, log_to_debug);
+        } 
+
+        //fill sim_update
+        return sim_update; 
+    }
+
 
     // This function will typically be called from the apply_action_callback()
     // which is invoked in a PYACTION plugin, i.e. the arguments here are
