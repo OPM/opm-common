@@ -121,6 +121,7 @@ void handleWCONHIST(HandlerContext& handlerContext)
                                                             ParserKeywords::FBHPDEF::TARGET_BHP::defaultValue);
             }
 
+            properties->whistctl_cmode = handlerContext.state().whistctl();
             properties->handleWCONHIST(alq_type,
                                        default_bhp,
                                        handlerContext.static_schedule().m_unit_system, record);
@@ -129,7 +130,6 @@ void handleWCONHIST(HandlerContext& handlerContext)
                 if (properties->bhp_hist_limit_defaulted) {
                     properties->setBHPLimit(default_bhp);
                 }
-                properties->whistctl_cmode = handlerContext.state().whistctl();
 
                 auto inj_props = std::make_shared<Well::WellInjectionProperties>(well2.getInjectionProperties());
                 inj_props->resetBHPLimit();
