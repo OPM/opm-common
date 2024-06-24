@@ -27,6 +27,59 @@
 
 namespace Opm {
 namespace ReservoirCoupling {
+class MasterGroup {
+public:
+    MasterGroup() = default;
+
+    explicit MasterGroup(const std::string& name, const std::string& slave_name, const std::string& slave_group_name, double flow_limit_fraction) :
+        m_name{name},
+        m_slave_name{slave_name},
+        m_slave_group_name{slave_group_name},
+        m_flow_limit_fraction{flow_limit_fraction}
+    {}
+    static MasterGroup serializationTestObject();
+
+    const std::string name() const {
+        return this->m_name;
+    }
+    const std::string slaveName() const {
+        return this->m_slave_name;
+    }
+    const std::string slaveGroupName() const {
+        return this->m_slave_group_name;
+    }
+    double flowLimitFraction() const {
+        return this->m_flow_limit_fraction;
+    }
+    void name(const std::string& value) {
+        this->m_name = value;
+    }
+    void slaveName(const std::string& value) {
+        this->m_slave_name = value;
+    }
+    void slaveGroupName(const std::string& value) {
+        this->m_slave_group_name = value;
+    }
+    void flowLimitFraction(double value) {
+        this->m_flow_limit_fraction = value;
+    }
+    bool operator==(const MasterGroup& other) const;
+
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(m_name);
+        serializer(m_slave_name);
+        serializer(m_slave_group_name);
+        serializer(m_flow_limit_fraction);
+    }
+
+private:
+    std::string m_name;
+    std::string m_slave_name;
+    std::string m_slave_group_name;
+    double m_flow_limit_fraction;
+};
 
 class Slave {
 public:
@@ -90,20 +143,31 @@ public:
     std::map<std::string, Slave>& slaves() {
         return this->m_slaves;
     }
+    std::map<std::string, MasterGroup>& masterGroups() {
+        return this->m_master_groups;
+    }
     bool operator==(const CouplingInfo& other) const;
-    bool has_slave(const std::string& name) const {
+    bool hasSlave(const std::string& name) const {
         return m_slaves.find(name) != m_slaves.end();
     }
     const Slave& slave(const std::string& name) const {
         return m_slaves.at(name);
     }
+    bool hasMasterGroup(const std::string& name) const {
+        return m_master_groups.find(name) != m_master_groups.end();
+    }
+    const MasterGroup& masterGroup(const std::string& name) const {
+        return m_master_groups.at(name);
+    }
     template<class Serializer>
     void serializeOp(Serializer& serializer)
     {
         serializer(m_slaves);
+        serializer(m_master_groups);
     }
 private:
     std::map<std::string, Slave> m_slaves;
+    std::map<std::string, MasterGroup> m_master_groups;
 };
 
 } // namespace ReservoirCoupling

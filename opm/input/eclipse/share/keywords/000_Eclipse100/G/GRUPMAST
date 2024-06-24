@@ -19,7 +19,8 @@
     {
       "name": "LIMITING_FRACTION",
       "value_type": "DOUBLE",
-      "dimension": "1"
+      "dimension": "1",
+      "default": 1e+20
     }
   ]
 }

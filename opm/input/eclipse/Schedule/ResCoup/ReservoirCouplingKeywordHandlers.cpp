@@ -24,6 +24,7 @@
 #include <opm/common/OpmLog/OpmLog.hpp>
 #include <opm/common/utility/OpmInputError.hpp>
 
+#include <opm/input/eclipse/Parser/ParserKeywords/G.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/S.hpp>
 
 #include <opm/input/eclipse/Schedule/ScheduleState.hpp>
@@ -33,6 +34,27 @@
 namespace Opm {
 
 namespace {
+
+void handleGRUPMAST(HandlerContext& handlerContext)
+{
+    auto rescoup = handlerContext.state().rescoup();
+    const auto& keyword = handlerContext.keyword;
+    for (const auto& record : keyword) {
+        const std::string& name =
+           record.getItem<ParserKeywords::GRUPMAST::MASTER_GROUP>().getTrimmedString(0);
+        const std::string& slave_name =
+           record.getItem<ParserKeywords::GRUPMAST::SLAVE_RESERVOIR>().getTrimmedString(0);
+        const std::string& slave_group_name =
+           record.getItem<ParserKeywords::GRUPMAST::SLAVE_GROUP>().getTrimmedString(0);
+        double flow_limit_fraction =
+              record.getItem<ParserKeywords::GRUPMAST::LIMITING_FRACTION>().get<double>(0);
+        ReservoirCoupling::MasterGroup master_group{
+             name, slave_name, slave_group_name, flow_limit_fraction
+        };
+        rescoup.masterGroups().emplace( name, std::move( master_group ));
+    }
+    handlerContext.state().rescoup.update( std::move( rescoup ));
+}
 
 void handleSLAVES(HandlerContext& handlerContext)
 {
@@ -62,6 +84,7 @@ getReservoirCouplingHandlers()
 {
     return {
         { "SLAVES", &handleSLAVES },
+        { "GRUPMAST", &handleGRUPMAST}
     };
 }
 

@@ -58,10 +58,32 @@ SLAVES
 
     const auto& schedule = make_schedule(deck_string);
     const auto& rescoup = schedule[0].rescoup();
-    BOOST_CHECK(rescoup.has_slave("RES-1"));
+    BOOST_CHECK(rescoup.hasSlave("RES-1"));
     auto slave = rescoup.slave("RES-1");
     BOOST_CHECK_EQUAL(slave.name(), "RES-1");
     BOOST_CHECK_EQUAL(slave.dataFilename(), "RC-01_MOD1_PRED");
     BOOST_CHECK_EQUAL(slave.directoryPath(), "../mod1");
     BOOST_CHECK_EQUAL(slave.numprocs(), 4);
+}
+
+BOOST_AUTO_TEST_CASE(GRUPMAST) {
+    std::string deck_string = R"(
+
+SCHEDULE
+GRUPMAST
+  'D1_M' 'RES-1'  'MANI-D'  1*  /
+  'B1_M' 'RES-1'  'MANI-B'  1*  /
+  'C1_M' 'RES-1'  'MANI-C'  1*  /
+  'E1_M' 'RES-2'  'E1'  1*  /
+/
+)";
+
+    const auto& schedule = make_schedule(deck_string);
+    const auto& rescoup = schedule[0].rescoup();
+    BOOST_CHECK(rescoup.hasMasterGroup("D1_M"));
+    auto master_group = rescoup.masterGroup("D1_M");
+    BOOST_CHECK_EQUAL(master_group.name(), "D1_M");
+    BOOST_CHECK_EQUAL(master_group.slaveName(), "RES-1");
+    BOOST_CHECK_EQUAL(master_group.slaveGroupName(), "MANI-D");
+    BOOST_CHECK_EQUAL(master_group.flowLimitFraction(), 1e+20);
 }
