@@ -3,6 +3,7 @@
   "sections": [
     "PROPS"
   ],
+  "requires": ["ENDSCALE"],
   "size": 1,
   "items": [
     {
