@@ -1543,6 +1543,34 @@ private:
     static bool isInitialized_;
 };
 
+template <typename T> using BOFS = BlackOilFluidSystem<T, BlackOilDefaultIndexTraits>;
+
+#define DECLARE_INSTANCE(T) \
+template<> unsigned char BOFS<T>::numActivePhases_; \
+template<> std::array<bool, BOFS<T>::numPhases> BOFS<T>::phaseIsActive_; \
+template<> std::array<short, BOFS<T>::numPhases> BOFS<T>::activeToCanonicalPhaseIdx_; \
+template<> std::array<short, BOFS<T>::numPhases> BOFS<T>::canonicalToActivePhaseIdx_; \
+template<> T BOFS<T>::surfaceTemperature; \
+template<> T BOFS<T>::surfacePressure; \
+template<> T BOFS<T>::reservoirTemperature_; \
+template<> bool BOFS<T>::enableDissolvedGas_; \
+template<> bool BOFS<T>::enableDissolvedGasInWater_; \
+template<> bool BOFS<T>::enableVaporizedOil_; \
+template<> bool BOFS<T>::enableVaporizedWater_; \
+template<> bool BOFS<T>::enableDiffusion_; \
+template<> std::shared_ptr<OilPvtMultiplexer<T>> BOFS<T>::oilPvt_; \
+template<> std::shared_ptr<GasPvtMultiplexer<T>> BOFS<T>::gasPvt_; \
+template<> std::shared_ptr<WaterPvtMultiplexer<T>> BOFS<T>::waterPvt_; \
+template<> std::vector<std::array<T, 3>> BOFS<T>::referenceDensity_; \
+template<> std::vector<std::array<T, 3>> BOFS<T>::molarMass_; \
+template<> std::vector<std::array<T, 9>> BOFS<T>::diffusionCoefficients_; \
+template<> bool BOFS<T>::isInitialized_;
+
+DECLARE_INSTANCE(float)
+DECLARE_INSTANCE(double)
+
+#undef DECLARE_INSTANCE
+
 } // namespace Opm
 
 #endif
