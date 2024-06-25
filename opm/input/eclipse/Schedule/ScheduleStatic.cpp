@@ -80,7 +80,7 @@ ScheduleStatic::ScheduleStatic(std::shared_ptr<const Python> python_handle,
                                const std::optional<int>& output_interval_,
                                const ParseContext& parseContext,
                                ErrorGuard& errors,
-                               const bool slave_mode) :
+                               bool slave_mode_) :
     m_python_handle(python_handle),
     m_input_path(deck.getInputPath()),
     rst_info(restart_info),
@@ -89,12 +89,12 @@ ScheduleStatic::ScheduleStatic(std::shared_ptr<const Python> python_handle,
     m_runspec( runspec ),
     rst_config( SOLUTIONSection(deck), parseContext, errors ),
     output_interval(output_interval_),
-    slave_mode(slave_mode),
     sumthin(sumthin_summary_section(SUMMARYSection{ deck })),
     rptonly(rptonly_summary_section(SUMMARYSection{ deck })),
     gaslift_opt_active(deck.hasKeyword<ParserKeywords::LIFTOPT>()),
     oilVap(vappars_solution_section(SOLUTIONSection{deck},
-                                    runspec.tabdims().getNumPVTTables()))
+                                    runspec.tabdims().getNumPVTTables())),
+    slave_mode{slave_mode_}
 {}
 
 ScheduleStatic ScheduleStatic::serializationTestObject()
