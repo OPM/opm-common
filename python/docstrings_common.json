@@ -6,39 +6,39 @@
     },
     "SummaryState_update_well_var": {
         "signature": "opm.io.sim.SummaryState.update_well_var(well_name: str, variable_name: str, new_value: double) -> None",
-        "doc": "Update the variable of a well.\n\n:param well_name: The name of the well.\n:type well_name: str\n:param variable_name: The name of the variable to update.\n:type variable_name: str\n:param new_value: The new value of the variable.\n:type new_value: double"
+        "doc": "Updates the variable of a well.\n\n:param well_name: The name of the well.\n:type well_name: str\n:param variable_name: The name of the variable to update.\n:type variable_name: str\n:param new_value: The new value of the variable.\n:type new_value: double"
     },
     "SummaryState_update_group_var": {
         "signature": "opm.io.sim.SummaryState.update_group_var(group_name: str, variable_name: str, new_value: double) -> None",
-        "doc": "Update the variable of a group.\n\n:param group_name: The name of the group.\n:type group_name: str\n:param variable_name: The name of the variable to update.\n:type variable_name: str\n:param new_value: The new value of the variable.\n:type new_value: double"
+        "doc": "Updates the variable of a group.\n\n:param group_name: The name of the group.\n:type group_name: str\n:param variable_name: The name of the variable to update.\n:type variable_name: str\n:param new_value: The new value of the variable.\n:type new_value: double"
     },
     "SummaryState_well_var": {
         "signature": "opm.io.sim.SummaryState.well_var(well_name: str, variable_name: str) -> double",
-        "doc": "Get the value of a variable for a well.\n\n:param well_name: The name of the well.\n:type well_name: str\n:param variable_name: The name of the variable to retrieve.\n:type variable_name: str\n\n:return: The value of the specified variable for the well. \n:type return: double"
+        "doc": "Gets the value of a variable for a well.\n\n:param well_name: The name of the well.\n:type well_name: str\n:param variable_name: The name of the variable to retrieve.\n:type variable_name: str\n\n:return: The value of the specified variable for the well. \n:type return: double"
     },
     "SummaryState_group_var": {
         "signature": "opm.io.sim.SummaryState.group_var(group_name: str, variable_name: str) -> double",
-        "doc": "Get the value of a variable for a group.\n\n:param group_name: The name of the group.\n:type group_name: str\n:param variable_name: The name of the variable to retrieve.\n:type variable_name: str\n\n:return: The value of the specified variable for the group. \n:type return: double"
+        "doc": "Gets the value of a variable for a group.\n\n:param group_name: The name of the group.\n:type group_name: str\n:param variable_name: The name of the variable to retrieve.\n:type variable_name: str\n\n:return: The value of the specified variable for the group. \n:type return: double"
     },
     "SummaryState_elapsed": {
         "signature": "opm.io.sim.SummaryState.elapsed() -> double",
-        "doc": "Return the elapsed time in seconds of the current simulation.\n\n:return: The elapsed time in seconds. \n:type return: double"
+        "doc": "Returns the elapsed time in seconds of the current simulation.\n\n:return: The elapsed time in seconds. \n:type return: double"
     },
     "SummaryState_groups": {
         "signature": "opm.io.sim.SummaryState.groups -> list",
-        "doc": "Return a list of strings containing all group names.\n\n:return: A list of strings representing all group names. \n:type return: list"
+        "doc": "Returns a list of strings containing all group names.\n\n:return: A list of strings representing all group names. \n:type return: list"
     },
     "SummaryState_wells": {
         "signature": "opm.io.sim.SummaryState.wells -> list",
-        "doc": "Return a list of strings containing all well names.\n\n:return: A list of strings representing all well names. \n:type return: list"
+        "doc": "Returns a list of strings containing all well names.\n\n:return: A list of strings representing all well names. \n:type return: list"
     },
     "SummaryState_has_well_var": {
         "signature": "opm.io.sim.SummaryState.has_well_var(well_name: str, variable_name: str) -> bool",
-        "doc": "Check if a well variable exists.\n\n:param well_name: The name of the well.\n:type well_name: str\n:param variable_name: The name of the variable to check.\n:type variable_name: str\n\n:return: True if the variable exists for the well, False otherwise. \n:type return: bool"
+        "doc": "Checks if a well variable exists.\n\n:param well_name: The name of the well.\n:type well_name: str\n:param variable_name: The name of the variable to check.\n:type variable_name: str\n\n:return: True if the variable exists for the well, False otherwise. \n:type return: bool"
     },
     "SummaryState_has_group_var": {
         "signature": "opm.io.sim.SummaryState.has_group_var(group_name: str, variable_name: str) -> bool",
-        "doc": "Check if a group variable exists.\n\n:param group_name: The name of the group.\n:type group_name: str\n:param variable_name: The name of the variable to check.\n:type variable_name: str\n\n:return: True if the variable exists for the group, False otherwise. \n:type return: bool"
+        "doc": "Checks if a group variable exists.\n\n:param group_name: The name of the group.\n:type group_name: str\n:param variable_name: The name of the variable to check.\n:type variable_name: str\n\n:return: True if the variable exists for the group, False otherwise. \n:type return: bool"
     },
     "EclipseStateClass": {
         "type": "class",
@@ -72,43 +72,43 @@
     },
     "Schedule_getitem": {
         "signature": "opm.io.schedule.Schedule.__getitem__(report_step: int) -> ScheduleState",
-        "doc": "Return the ScheduleState at the given report step.\n\n:param report_step: The report step.\n:type report_step: int\n\n:return: The ScheduleState at the given report step.\n:type return: ScheduleState"
+        "doc": "Returns the ScheduleState at the given report step.\n\n:param report_step: The report step.\n:type report_step: int\n\n:return: The ScheduleState at the given report step.\n:type return: ScheduleState"
     },
     "Schedule_shut_well_well_name_step": {
         "signature": "opm.io.schedule.Schedule.shut_well(well_name: str, step: int) -> None",
-        "doc": "Shut down a well at a given report step.\n\n:param well_name: The name of the well to shut down.\n:type well_name: str\n:param step: The report step at which to shut down the well.\n:type step: int"
+        "doc": "Shuts down a well at a given report step.\n\n:param well_name: The name of the well to shut down.\n:type well_name: str\n:param step: The report step at which to shut down the well.\n:type step: int"
     },
     "Schedule_shut_well_well_name": {
         "signature": "opm.io.schedule.Schedule.shut_well(well_name: str) -> None",
-        "doc": "Shut down a well at the current report step.\n\n:param well_name: The name of the well to shut down.\n:type well_name: str"
+        "doc": "Shuts down a well at the current report step.\n\n:param well_name: The name of the well to shut down.\n:type well_name: str"
     },
     "Schedule_open_well_well_name_step": {
         "signature": "opm.io.schedule.Schedule.open_well(well_name: str, step: int) -> None",
-        "doc": "Open a well at a given report step.\n\n:param well_name: The name of the well to open.\n:type well_name: str\n:param step: The report step at which to open the well.\n:type step: int\n:raises ValueError: If the report step is in the past or exceeds the duration of the simulation."
+        "doc": "Opens a well at a given report step.\n\n:param well_name: The name of the well to open.\n:type well_name: str\n:param step: The report step at which to open the well.\n:type step: int\n:raises ValueError: If the report step is in the past or exceeds the duration of the simulation."
     },
     "Schedule_open_well_well_name": {
         "signature": "opm.io.schedule.Schedule.open_well(well_name: str) -> None",
-        "doc": "Open a well at the current report step.\n\n:param well_name: The name of the well to open.\n:type well_name: str"
+        "doc": "Opens a well at the current report step.\n\n:param well_name: The name of the well to open.\n:type well_name: str"
     },
     "Schedule_stop_well_well_name_step":{
         "signature": "opm.io.schedule.Schedule.stop_well(well_name: str, step: int) -> None",
-        "doc": "Stop a well at a given report step.\n\n:param well_name: The name of the well to stop.\n:type well_name: str\n:param step: The report step at which to stop the well.\n:type step: int\n:raises ValueError: If the report step is in the past or exceeds the duration of the simulation."
+        "doc": "Stops a well at a given report step.\n\n:param well_name: The name of the well to stop.\n:type well_name: str\n:param step: The report step at which to stop the well.\n:type step: int\n:raises ValueError: If the report step is in the past or exceeds the duration of the simulation."
     },
     "Schedule_stop_well_well_name": {
         "signature": "opm.io.schedule.Schedule.stop_well(well_name: str) -> None",
-        "doc": "Stop a well at the current report step.\n\n:param well_name: The name of the well to stop.\n:type well_name: str"
+        "doc": "Stops a well at the current report step.\n\n:param well_name: The name of the well to stop.\n:type well_name: str"
     },
     "Schedule_get_injection_properties": {
         "signature": "opm.io.schedule.Schedule.get_injection_properties(well_name: str, report_step: int) -> dict",
-        "doc": "Get injection properties for a well at a specific report step.\n\n:param well_name: The name of the well.\n:type well_name: str\n:param report_step: The report step to retrieve properties for.\n:type report_step: int\n\n:return: A dict containing the properties surf_inj_rate, resv_inj_rate, bhp_target, thp_target. \n:type return: dict"
+        "doc": "Gets injection properties for a well at a specific report step.\n\n:param well_name: The name of the well.\n:type well_name: str\n:param report_step: The report step to retrieve properties for.\n:type report_step: int\n\n:return: A dict containing the properties surf_inj_rate, resv_inj_rate, bhp_target, thp_target. \n:type return: dict"
     },
     "Schedule_get_production_properties": {
         "signature": "opm.io.schedule.Schedule.get_production_properties(well_name: str, report_step: int) -> dict",
-        "doc": "Get production properties for a well at a specific report step.\n\n:param well_name: The name of the well.\n:type well_name: str\n:param report_step: The report step to retrieve properties for.\n:type report_step: int\n\n:return: A dict containing the properties oil_rate, gas_rate, water_rate, liquid_rate, resv_rate, bhp_target, thp_target, alq_value. \n:type return: dict"
+        "doc": "Gets production properties for a well at a specific report step.\n\n:param well_name: The name of the well.\n:type well_name: str\n:param report_step: The report step to retrieve properties for.\n:type report_step: int\n\n:return: A dict containing the properties oil_rate, gas_rate, water_rate, liquid_rate, resv_rate, bhp_target, thp_target, alq_value. \n:type return: dict"
     },
     "Schedule_groups": {
         "signature": "opm.io.schedule.Schedule._groups(report_step: int) -> list",
-        "doc": "Get a list of all groups at a specified report step.\n\n:param report_step: The report step to retrieve groups for.\n:type report_step: int\n\n:return: A list containing all groups at the specified report step. \n:type return: list"
+        "doc": "Gets a list of all groups at a specified report step.\n\n:param report_step: The report step to retrieve groups for.\n:type report_step: int\n\n:return: A list containing all groups at the specified report step. \n:type return: list"
     },
     "Schedule_get_well": {
         "signature": "opm.io.schedule.Schedule.get_well(well_name: str, report_step: int) -> Well",
@@ -116,7 +116,7 @@
     },
     "Schedule_get_wells": {
         "signature": "opm.io.schedule.Schedule.get_wells(well_name_pattern: str) -> list",
-        "doc": "Get the names of wells matching a specified pattern.\n\n:param well_name_pattern: The pattern for well names, where '*' acts as a wildcard.\n:type well_name_pattern: str\n\n:return: A list containing the names of wells that match the specified pattern. \n:type return: list"
+        "doc": "Gets the names of wells matching a specified pattern.\n\n:param well_name_pattern: The pattern for well names, where '*' acts as a wildcard.\n:type well_name_pattern: str\n\n:return: A list containing the names of wells that match the specified pattern. \n:type return: list"
     },
     "GroupClass": {
         "signature": "Group",
@@ -128,11 +128,11 @@
         "doc": "Returns the name of this group.\n\n:return: The name of this group.\n:type return: str"
     },
     "Group_num_wells": {
-        "signature": "Group.name",
+        "signature": "Group.num_wells",
         "doc": "Returns the number of wells in this group.\n\n:return: The number of wells in this group.\n:type return: int"
     },
     "Group_well_names": {
-        "signature": "Group.name",
+        "signature": "Group.well_names",
         "doc": "Returns a list of all well names in this group.\n\n:return: A list of all well names in this group.\n:type return: list"
     },
     "ScheduleStateClass": {
@@ -146,7 +146,7 @@
     },
     "ScheduleState_get_group": {
         "signature": "ScheduleState.get_group(group_name: str) -> Group",
-        "doc": "Get the group with the specified name from the schedule state.\n\n:param group_name: The name of the group to retrieve from the schedule state.\n:type group_name: str\n\n:return: The group with the specified name from the schedule state. \n:type return: Group"
+        "doc": "Gets the group with the specified name from the schedule state.\n\n:param group_name: The name of the group to retrieve from the schedule state.\n:type group_name: str\n\n:return: The group with the specified name from the schedule state. \n:type return: Group"
     },
     "WellClass": {
         "type": "class",
@@ -159,14 +159,14 @@
     },
     "Well_isdefined": {
         "signature": "Well.isdefined(report_step: int) -> bool",
-        "doc": "Check if the well is defined at a specific report step.\n\n:param report_step: The report step to check for the well's definition.\n:type report_step: int\n\n:return: True if the well is defined at the specified report step, False otherwise. \n:type return: bool"
+        "doc": "Checks if the well is defined at a specific report step.\n\n:param report_step: The report step to check for the well's definition.\n:type report_step: int\n\n:return: True if the well is defined at the specified report step, False otherwise. \n:type return: bool"
     },
     "Well_available_gctrl": {
         "signature": "Well.available_gctrl() -> bool",
-        "doc": "Check if the well is available for group control.\n\n:return: True if the well is available for group control, False otherwise. \n:type return: bool"
+        "doc": "Checks if the well is available for group control.\n\n:return: True if the well is available for group control, False otherwise. \n:type return: bool"
     },
     "Well_connections": {
         "signature": "Well.connections() -> list",
-        "doc": "Get a list of all connections associated with the well.\n\n:return: A list containing all connections of the well. \n:type return: list"
+        "doc": "Gets a list of all connections associated with the well.\n\n:return: A list containing all connections of the well. \n:type return: list"
     }
 }
