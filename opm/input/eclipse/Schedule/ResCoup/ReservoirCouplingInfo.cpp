@@ -18,11 +18,13 @@
 */
 
 #include <stdexcept>
-
+#include <limits>
 #include <opm/input/eclipse/Schedule/ResCoup/ReservoirCouplingInfo.hpp>
 
 namespace Opm {
 namespace ReservoirCoupling {
+// Class Slave
+// ----------------
 Slave Slave::serializationTestObject()
 {
     return Slave{"RES-1", "RC-01_MOD1_PRED", "../mod1", 1};
@@ -31,6 +33,21 @@ Slave Slave::serializationTestObject()
 bool Slave::operator==(const Slave& rhs) const {
     return this->m_name == rhs.m_name;
 }
+
+
+// Class MasterGroup
+// -----------------
+MasterGroup MasterGroup::serializationTestObject()
+{
+    return MasterGroup{"D1-M", "RES-1", "MANI-D", 1e+20};
+}
+
+bool MasterGroup::operator==(const MasterGroup& rhs) const {
+    return this->m_name == rhs.m_name;
+}
+
+// Class CouplingInfo
+// -------------------
 
 bool CouplingInfo::operator==(const CouplingInfo& rhs) const {
     return this->m_slaves == rhs.m_slaves;
