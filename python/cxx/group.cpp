@@ -2,6 +2,7 @@
 #include <pybind11/stl.h>
 #include "export.hpp"
 
+#include <python/cxx/OpmCommonPythonDoc.hpp>
 
 namespace {
 
@@ -12,9 +13,11 @@ namespace {
 
 void python::common::export_Group(py::module& module) {
 
-  py::class_< Group >( module, "Group")
-    .def_property_readonly( "name", &Group::name)
-    .def_property_readonly( "num_wells", &Group::numWells)
-    .def_property_readonly( "well_names", &wellnames );
+  using namespace Opm::Common::DocStrings;
+
+  py::class_< Group >( module, "Group", GroupClass_docstring)
+    .def_property_readonly( "name", &Group::name, Group_name_docstring)
+    .def_property_readonly( "num_wells", &Group::numWells, Group_num_wells_docstring)
+    .def_property_readonly( "well_names", &wellnames, Group_well_names_docstring);
 
 }

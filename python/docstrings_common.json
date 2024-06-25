@@ -118,6 +118,23 @@
         "signature": "opm.io.schedule.Schedule.get_wells(well_name_pattern: str) -> list",
         "doc": "Get the names of wells matching a specified pattern.\n\n:param well_name_pattern: The pattern for well names, where '*' acts as a wildcard.\n:type well_name_pattern: str\n\n:return: A list containing the names of wells that match the specified pattern. \n:type return: list"
     },
+    "GroupClass": {
+        "signature": "Group",
+        "type": "class",
+        "doc": "The Group class."
+    },
+    "Group_name": {
+        "signature": "Group.name",
+        "doc": "Returns the name of this group.\n\n:return: The name of this group.\n:type return: str"
+    },
+    "Group_num_wells": {
+        "signature": "Group.name",
+        "doc": "Returns the number of wells in this group.\n\n:return: The number of wells in this group.\n:type return: int"
+    },
+    "Group_well_names": {
+        "signature": "Group.name",
+        "doc": "Returns a list of all well names in this group.\n\n:return: A list of all well names in this group.\n:type return: list"
+    },
     "ScheduleStateClass": {
         "signature": "ScheduleState",
         "type": "class",
