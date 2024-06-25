@@ -97,7 +97,11 @@ namespace Opm
                  const ParseContext& parseContext,
                  ErrorGuard& errors,
                  std::shared_ptr<const Python> python,
+<<<<<<< HEAD
                  const bool lowActionParsingStrictness = false,
+=======
+                 const bool slave_mode = false,
+>>>>>>> e1da6ae52 (Add support for GRUPSLAV)
                  const std::optional<int>& output_interval = {},
                  const RestartIO::RstState* rst = nullptr,
                  const TracerConfig* tracer_config = nullptr);
@@ -111,6 +115,7 @@ namespace Opm
                  T&& errors,
                  std::shared_ptr<const Python> python,
                  const bool lowActionParsingStrictness = false,
+                 const bool slave_mode = false,
                  const std::optional<int>& output_interval = {},
                  const RestartIO::RstState* rst = nullptr,
                  const TracerConfig* tracer_config = nullptr);
@@ -121,6 +126,7 @@ namespace Opm
                  const Runspec &runspec,
                  std::shared_ptr<const Python> python,
                  const bool lowActionParsingStrictness = false,
+                 const bool slave_mode = false,
                  const std::optional<int>& output_interval = {},
                  const RestartIO::RstState* rst = nullptr,
                  const TracerConfig* tracer_config = nullptr);
@@ -131,6 +137,7 @@ namespace Opm
                  ErrorGuard& errors,
                  std::shared_ptr<const Python> python,
                  const bool lowActionParsingStrictness = false,
+                 const bool slave_mode = false,
                  const std::optional<int>& output_interval = {},
                  const RestartIO::RstState* rst = nullptr);
 
@@ -141,6 +148,7 @@ namespace Opm
                  T&& errors,
                  std::shared_ptr<const Python> python,
                  const bool lowActionParsingStrictness = false,
+                 bool slave_mode = false,
                  const std::optional<int>& output_interval = {},
                  const RestartIO::RstState* rst = nullptr);
 
@@ -148,6 +156,7 @@ namespace Opm
                  const EclipseState& es,
                  std::shared_ptr<const Python> python,
                  const bool lowActionParsingStrictness = false,
+                 bool slave_mode = false,
                  const std::optional<int>& output_interval = {},
                  const RestartIO::RstState* rst = nullptr);
 
