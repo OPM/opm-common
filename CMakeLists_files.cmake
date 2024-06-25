@@ -281,6 +281,9 @@ if(ENABLE_ECL_INPUT)
     opm/input/eclipse/Schedule/Network/Node.cpp
     opm/input/eclipse/Schedule/ResCoup/ReservoirCouplingInfo.cpp
     opm/input/eclipse/Schedule/ResCoup/ReservoirCouplingKeywordHandlers.cpp
+    opm/input/eclipse/Schedule/ResCoup/GrupSlav.cpp
+    opm/input/eclipse/Schedule/ResCoup/MasterGroup.cpp
+    opm/input/eclipse/Schedule/ResCoup/Slaves.cpp
     opm/input/eclipse/Schedule/UDQ/UDQKeywordHandlers.cpp
     opm/input/eclipse/Schedule/UDQ/UDQActive.cpp
     opm/input/eclipse/Schedule/UDQ/UDQAssign.cpp

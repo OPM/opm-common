@@ -23,34 +23,11 @@
 
 namespace Opm {
 namespace ReservoirCoupling {
-// Class Slave
-// ----------------
-Slave Slave::serializationTestObject()
-{
-    return Slave{"RES-1", "RC-01_MOD1_PRED", "../mod1", 1};
-}
-
-bool Slave::operator==(const Slave& rhs) const {
-    return this->m_name == rhs.m_name;
-}
-
-
-// Class MasterGroup
-// -----------------
-MasterGroup MasterGroup::serializationTestObject()
-{
-    return MasterGroup{"D1-M", "RES-1", "MANI-D", 1e+20};
-}
-
-bool MasterGroup::operator==(const MasterGroup& rhs) const {
-    return this->m_name == rhs.m_name;
-}
-
-// Class CouplingInfo
-// -------------------
 
 bool CouplingInfo::operator==(const CouplingInfo& rhs) const {
-    return this->m_slaves == rhs.m_slaves;
+    return this->m_slaves == rhs.m_slaves &&
+           this->m_master_groups == rhs.m_master_groups &&
+           this->m_grup_slavs == rhs.m_grup_slavs;
 }
 
 CouplingInfo CouplingInfo::serializationTestObject()

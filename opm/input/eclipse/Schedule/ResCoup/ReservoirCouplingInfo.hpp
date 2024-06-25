@@ -16,9 +16,12 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
-#ifndef RESERVOIR_COUPLING_SLAVES_HPP
-#define RESERVOIR_COUPLING_SLAVES_HPP
+#ifndef RESERVOIR_COUPLING_INFO_HPP
+#define RESERVOIR_COUPLING_INFO_HPP
 
+#include <opm/input/eclipse/Schedule/ResCoup/Slaves.hpp>
+#include <opm/input/eclipse/Schedule/ResCoup/GrupSlav.hpp>
+#include <opm/input/eclipse/Schedule/ResCoup/MasterGroup.hpp>
 #include <opm/io/eclipse/rst/group.hpp>
 #include <opm/io/eclipse/rst/well.hpp>
 
@@ -147,12 +150,21 @@ public:
     std::map<std::string, MasterGroup>& masterGroups() {
         return this->m_master_groups;
     }
+    std::map<std::string, GrupSlav>& grupSlavs() {
+        return this->m_grup_slavs;
+    }
     bool operator==(const CouplingInfo& other) const;
     bool hasSlave(const std::string& name) const {
         return m_slaves.find(name) != m_slaves.end();
     }
     const Slave& slave(const std::string& name) const {
         return m_slaves.at(name);
+    }
+    bool hasGrupSlav(const std::string& name) const {
+        return m_grup_slavs.find(name) != m_grup_slavs.end();
+    }
+    const GrupSlav& grupSlav(const std::string& name) const {
+        return m_grup_slavs.at(name);
     }
     bool hasMasterGroup(const std::string& name) const {
         return m_master_groups.find(name) != m_master_groups.end();
@@ -165,10 +177,12 @@ public:
     {
         serializer(m_slaves);
         serializer(m_master_groups);
+        serializer(m_grup_slavs);
     }
 private:
     std::map<std::string, Slave> m_slaves;
     std::map<std::string, MasterGroup> m_master_groups;
+    std::map<std::string, GrupSlav> m_grup_slavs;
 };
 
 } // namespace Opm::ReservoirCoupling

@@ -50,6 +50,7 @@ struct ScheduleStatic
     bool rptonly{false};
     bool gaslift_opt_active{false};
     std::optional<OilVaporizationProperties> oilVap;
+    bool slave_mode{false};
 
     ScheduleStatic() = default;
 
@@ -63,7 +64,8 @@ struct ScheduleStatic
                    const Runspec& runspec,
                    const std::optional<int>& output_interval_,
                    const ParseContext& parseContext,
-                   ErrorGuard& errors);
+                   ErrorGuard& errors,
+                   const bool slave_mode);
 
     template<class Serializer>
     void serializeOp(Serializer& serializer)
