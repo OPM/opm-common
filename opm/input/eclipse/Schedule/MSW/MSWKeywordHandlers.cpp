@@ -182,6 +182,8 @@ void handleWSEGVALV(HandlerContext& handlerContext)
             auto well = handlerContext.state().wells( well_name );
             if (well.updateWSEGVALV(valve_pairs))
                 handlerContext.state().wells.update( std::move(well) );
+
+            handlerContext.affected_well(well_name);
         }
     }
 }
