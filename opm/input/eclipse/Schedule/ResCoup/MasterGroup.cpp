@@ -17,19 +17,20 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <stdexcept>
-#include <limits>
-#include <opm/common/OpmLog/OpmLog.hpp>
-#include <opm/common/utility/OpmInputError.hpp>
-#include <opm/input/eclipse/Schedule/ResCoup/ReservoirCouplingInfo.hpp>
 #include <opm/input/eclipse/Schedule/ResCoup/MasterGroup.hpp>
+#include <opm/input/eclipse/Schedule/ResCoup/ReservoirCouplingInfo.hpp>
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 #include <opm/input/eclipse/Schedule/ScheduleState.hpp>
 #include <opm/input/eclipse/Schedule/ScheduleStatic.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/G.hpp>
+#include <opm/common/OpmLog/OpmLog.hpp>
+#include <opm/common/utility/OpmInputError.hpp>
 #include "../HandlerContext.hpp"
 
 #include <fmt/format.h>
+
+#include <limits>
+#include <stdexcept>
 
 namespace Opm {
 namespace ReservoirCoupling {

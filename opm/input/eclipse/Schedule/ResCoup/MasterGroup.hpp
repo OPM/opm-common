@@ -19,13 +19,14 @@
 #ifndef RESERVOIR_COUPLING_MASTER_GROUP_HPP
 #define RESERVOIR_COUPLING_MASTER_GROUP_HPP
 
-#include <string>
 #include <map>
-#include "../HandlerContext.hpp"
-
 #include <stdexcept>
+#include <string>
 
 namespace Opm {
+
+class HandlerContext;
+
 namespace ReservoirCoupling {
 
 class MasterGroup {
