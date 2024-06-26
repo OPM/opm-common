@@ -288,6 +288,13 @@ public:
     static void setEnableDiffusion(bool yesno)
     { enableDiffusion_ = yesno; }
 
+    /*!
+     * \brief Specify whether the saturated tables should be used
+     *
+     * By default, saturated tables are used
+     */
+    static void setUseSaturatedTables(bool yesno)
+    { useSaturatedTables_ = yesno; }
 
     /*!
      * \brief Set the pressure-volume-saturation (PVT) relations for the gas phase.
@@ -485,6 +492,14 @@ public:
      */
     static bool enableDiffusion()
     { return enableDiffusion_; }
+
+    /*!
+     * \brief Returns whether the saturated tables should be used
+     *
+     * By default, saturated tables are used. If false the unsaturated tables are extrapolated
+     */
+    static bool useSaturatedTables()
+    { return useSaturatedTables_; }
 
     /*!
      * \brief Returns the density of a fluid phase at surface pressure [kg/m^3]
@@ -751,7 +766,7 @@ public:
         case oilPhaseIdx: {
             if (enableDissolvedGas()) {
                 const auto& Rs = BlackOil::template getRs_<ThisType, FluidState, LhsEval>(fluidState, regionIdx);
-                if (fluidState.saturation(gasPhaseIdx) > 0.0
+                if (useSaturatedTables() && fluidState.saturation(gasPhaseIdx) > 0.0
                     && Rs >= (1.0 - 1e-10)*oilPvt_->saturatedGasDissolutionFactor(regionIdx, scalarValue(T), scalarValue(p)))
                 {
                     return oilPvt_->saturatedInverseFormationVolumeFactor(regionIdx, T, p);
@@ -767,20 +782,20 @@ public:
             if (enableVaporizedOil() && enableVaporizedWater()) {
                  const auto& Rvw = BlackOil::template getRvw_<ThisType, FluidState, LhsEval>(fluidState, regionIdx);
                  const auto& Rv = BlackOil::template getRv_<ThisType, FluidState, LhsEval>(fluidState, regionIdx);
-                 if (fluidState.saturation(waterPhaseIdx) > 0.0
+                 if (useSaturatedTables() && fluidState.saturation(waterPhaseIdx) > 0.0
                     && Rvw >= (1.0 - 1e-10)*gasPvt_->saturatedWaterVaporizationFactor(regionIdx, scalarValue(T), scalarValue(p))
                     && fluidState.saturation(oilPhaseIdx) > 0.0
                     && Rv >= (1.0 - 1e-10)*gasPvt_->saturatedOilVaporizationFactor(regionIdx, scalarValue(T), scalarValue(p)))
                  { 
                     return gasPvt_->saturatedInverseFormationVolumeFactor(regionIdx, T, p);
                  } else {
-                     return gasPvt_->inverseFormationVolumeFactor(regionIdx, T, p, Rv, Rvw);
+                    return gasPvt_->inverseFormationVolumeFactor(regionIdx, T, p, Rv, Rvw);
                  }
             }
 
             if (enableVaporizedOil()) {
                 const auto& Rv = BlackOil::template getRv_<ThisType, FluidState, LhsEval>(fluidState, regionIdx);
-                if (fluidState.saturation(oilPhaseIdx) > 0.0
+                if (useSaturatedTables() && fluidState.saturation(oilPhaseIdx) > 0.0
                     && Rv >= (1.0 - 1e-10)*gasPvt_->saturatedOilVaporizationFactor(regionIdx, scalarValue(T), scalarValue(p)))
                 {
                     return gasPvt_->saturatedInverseFormationVolumeFactor(regionIdx, T, p);
@@ -792,7 +807,7 @@ public:
 
             if (enableVaporizedWater()) { 
                 const auto& Rvw = BlackOil::template getRvw_<ThisType, FluidState, LhsEval>(fluidState, regionIdx);
-                if (fluidState.saturation(waterPhaseIdx) > 0.0
+                if (useSaturatedTables() && fluidState.saturation(waterPhaseIdx) > 0.0
                     && Rvw >= (1.0 - 1e-10)*gasPvt_->saturatedWaterVaporizationFactor(regionIdx, scalarValue(T), scalarValue(p)))
                 {
                     return gasPvt_->saturatedInverseFormationVolumeFactor(regionIdx, T, p);
@@ -811,7 +826,7 @@ public:
             const auto& saltConcentration = BlackOil::template getSaltConcentration_<ThisType, FluidState, LhsEval>(fluidState, regionIdx);
             if (enableDissolvedGasInWater()) {
                 const auto& Rsw = BlackOil::template getRsw_<ThisType, FluidState, LhsEval>(fluidState, regionIdx);
-                if (fluidState.saturation(gasPhaseIdx) > 0.0
+                if (useSaturatedTables() && fluidState.saturation(gasPhaseIdx) > 0.0
                     && Rsw >= (1.0 - 1e-10)*waterPvt_->saturatedGasDissolutionFactor(regionIdx, scalarValue(T), scalarValue(p), scalarValue(saltConcentration)))
                 {
                     return waterPvt_->saturatedInverseFormationVolumeFactor(regionIdx, T, p, saltConcentration);
@@ -995,7 +1010,7 @@ public:
         case oilPhaseIdx: {
             if (enableDissolvedGas()) {
                 const auto& Rs = BlackOil::template getRs_<ThisType, FluidState, LhsEval>(fluidState, regionIdx);
-                if (fluidState.saturation(gasPhaseIdx) > 0.0
+                if (useSaturatedTables() && fluidState.saturation(gasPhaseIdx) > 0.0
                     && Rs >= (1.0 - 1e-10)*oilPvt_->saturatedGasDissolutionFactor(regionIdx, scalarValue(T), scalarValue(p)))
                 {
                     return oilPvt_->saturatedViscosity(regionIdx, T, p);
@@ -1012,7 +1027,7 @@ public:
              if (enableVaporizedOil() && enableVaporizedWater()) {
                  const auto& Rvw = BlackOil::template getRvw_<ThisType, FluidState, LhsEval>(fluidState, regionIdx);
                  const auto& Rv = BlackOil::template getRv_<ThisType, FluidState, LhsEval>(fluidState, regionIdx);
-                 if (fluidState.saturation(waterPhaseIdx) > 0.0
+                 if (useSaturatedTables() && fluidState.saturation(waterPhaseIdx) > 0.0
                     && Rvw >= (1.0 - 1e-10)*gasPvt_->saturatedWaterVaporizationFactor(regionIdx, scalarValue(T), scalarValue(p))
                     && fluidState.saturation(oilPhaseIdx) > 0.0
                     && Rv >= (1.0 - 1e-10)*gasPvt_->saturatedOilVaporizationFactor(regionIdx, scalarValue(T), scalarValue(p)))
@@ -1024,7 +1039,7 @@ public:
             }
             if (enableVaporizedOil()) {
                 const auto& Rv = BlackOil::template getRv_<ThisType, FluidState, LhsEval>(fluidState, regionIdx);
-                if (fluidState.saturation(oilPhaseIdx) > 0.0
+                if (useSaturatedTables() && fluidState.saturation(oilPhaseIdx) > 0.0
                     && Rv >= (1.0 - 1e-10)*gasPvt_->saturatedOilVaporizationFactor(regionIdx, scalarValue(T), scalarValue(p)))
                 {
                     return gasPvt_->saturatedViscosity(regionIdx, T, p);
@@ -1035,7 +1050,7 @@ public:
             }
             if (enableVaporizedWater()) {
                 const auto& Rvw = BlackOil::template getRvw_<ThisType, FluidState, LhsEval>(fluidState, regionIdx);
-                if (fluidState.saturation(waterPhaseIdx) > 0.0
+                if (useSaturatedTables() && fluidState.saturation(waterPhaseIdx) > 0.0
                     && Rvw >= (1.0 - 1e-10)*gasPvt_->saturatedWaterVaporizationFactor(regionIdx, scalarValue(T), scalarValue(p)))
                 {
                     return gasPvt_->saturatedViscosity(regionIdx, T, p); 
@@ -1055,7 +1070,7 @@ public:
             const LhsEval& saltConcentration = BlackOil::template getSaltConcentration_<ThisType, FluidState, LhsEval>(fluidState, regionIdx);
             if (enableDissolvedGasInWater()) {
                 const auto& Rsw = BlackOil::template getRsw_<ThisType, FluidState, LhsEval>(fluidState, regionIdx);
-                if (fluidState.saturation(gasPhaseIdx) > 0.0
+                if (useSaturatedTables() && fluidState.saturation(gasPhaseIdx) > 0.0
                     && Rsw >= (1.0 - 1e-10)*waterPvt_->saturatedGasDissolutionFactor(regionIdx, scalarValue(T), scalarValue(p), scalarValue(saltConcentration)))
                 {
                     return waterPvt_->saturatedViscosity(regionIdx, T, p, saltConcentration);
@@ -1541,6 +1556,8 @@ private:
     static std::array<short, numPhases> canonicalToActivePhaseIdx_;
 
     static bool isInitialized_;
+
+    static bool useSaturatedTables_;
 };
 
 template <typename T> using BOFS = BlackOilFluidSystem<T, BlackOilDefaultIndexTraits>;
@@ -1564,7 +1581,8 @@ template<> std::shared_ptr<WaterPvtMultiplexer<T>> BOFS<T>::waterPvt_; \
 template<> std::vector<std::array<T, 3>> BOFS<T>::referenceDensity_; \
 template<> std::vector<std::array<T, 3>> BOFS<T>::molarMass_; \
 template<> std::vector<std::array<T, 9>> BOFS<T>::diffusionCoefficients_; \
-template<> bool BOFS<T>::isInitialized_;
+template<> bool BOFS<T>::isInitialized_; \
+template<> bool BOFS<T>::useSaturatedTables_;
 
 DECLARE_INSTANCE(float)
 DECLARE_INSTANCE(double)
