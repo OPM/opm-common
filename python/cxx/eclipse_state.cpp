@@ -5,6 +5,7 @@
 
 #include "export.hpp"
 
+#include <python/cxx/OpmCommonPythonDoc.hpp>
 
 namespace {
 
@@ -96,6 +97,8 @@ namespace {
 
 void python::common::export_EclipseState(py::module& module) {
 
+    using namespace Opm::Common::DocStrings;
+
     // Note: In the below class we std::shared_ptr as the holder type, see:
     //
     //  https://pybind11.readthedocs.io/en/stable/advanced/smart_ptrs.html
@@ -103,10 +106,7 @@ void python::common::export_EclipseState(py::module& module) {
     // this makes it possible to share the returned object with e.g. and
     //   opm.simulators.BlackOilSimulator Python object
     //
-    py::class_< EclipseState, std::shared_ptr<EclipseState> >( module, "EclipseState", R"pbdoc(
-            The Opm::EclipseState class - this is a representation of all static properties in the model,
-            ranging from porosity to relperm tables. The content of the EclipseState is immutable and may not
-            be changed at runtime.)pbdoc")
+    py::class_< EclipseState, std::shared_ptr<EclipseState> >( module, "EclipseState", EclipseStateClass_docstring)
         .def(py::init<const Deck&>())
         .def_property_readonly( "title", &EclipseState::getTitle )
         .def( "field_props",    &get_field_props, ref_internal)
@@ -114,11 +114,11 @@ void python::common::export_EclipseState(py::module& module) {
         .def( "config",         &EclipseState::cfg, ref_internal)
         .def( "tables",         &EclipseState::getTableManager, ref_internal)
         .def( "has_input_nnc",  &EclipseState::hasInputNNC )
-        .def( "simulation",     &EclipseState::getSimulationConfig, ref_internal)
-        .def( "input_nnc",      &getNNC )
-        .def( "faultNames",     &faultNames )
-        .def( "faultFaces",     &faultFaces, py::arg("fault_name"))
-        .def( "jfunc",          &jfunc )
+        .def( "simulation",     &EclipseState::getSimulationConfig, ref_internal, EclipseState_simulation_docstring)
+        .def( "input_nnc",      &getNNC, EclipseState_input_nnc_docstring)
+        .def( "faultNames",     &faultNames, EclipseState_faultNames_docstring)
+        .def( "faultFaces",     &faultFaces, py::arg("fault_name"), EclipseState_faultFaces_docstring)
+        .def( "jfunc",          &jfunc, EclipseState_jfunc_docstring)
         ;
 
 }

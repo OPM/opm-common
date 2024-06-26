@@ -149,6 +149,21 @@ macro (sources_hook)
   endif()
   set_source_files_properties(src/opm/input/eclipse/Python/Python.cpp
                               PROPERTIES COMPILE_FLAGS -Wno-shadow)
+  if (OPM_ENABLE_PYTHON)
+    # Set the path to the input docstrings.json file and the output .hpp file
+    set(PYTHON_DOCSTRINGS_FILE "${PROJECT_SOURCE_DIR}/python/docstrings_common.json")
+    set(PYTHON_DOCSTRINGS_GENERATED_HPP "${PROJECT_BINARY_DIR}/python/cxx/OpmCommonPythonDoc.hpp")
+    # Command to run the Python script
+    add_custom_command(
+        OUTPUT ${PYTHON_DOCSTRINGS_GENERATED_HPP}
+        COMMAND ${PYTHON_EXECUTABLE} ${PROJECT_SOURCE_DIR}/python/generate_docstring_hpp.py
+                ${PYTHON_DOCSTRINGS_FILE} ${PYTHON_DOCSTRINGS_GENERATED_HPP} OPMCOMMONPYTHONDOC_HPP "Opm::Common::DocStrings"
+        DEPENDS ${PYTHON_DOCSTRINGS_FILE}
+        COMMENT "Generating OpmCommonPythonDoc.hpp from JSON file"
+    )
+    list(INSERT opm-common_SOURCES 0 ${PYTHON_DOCSTRINGS_GENERATED_HPP})
+  endif()
+
   if(QuadMath_FOUND)
     get_target_property(qm_defs QuadMath::QuadMath INTERFACE_COMPILE_DEFINITIONS)
     get_target_property(qm_options QuadMath::QuadMath INTERFACE_COMPILE_OPTIONS)
@@ -157,7 +172,6 @@ macro (sources_hook)
                                 PROPERTIES COMPILE_DEFINITIONS "${qm_defs}"
                                 COMPILE_OPTIONS "${qm_options}")
   endif()
-
 endmacro (sources_hook)
 
 macro (fortran_hook)
@@ -454,6 +468,13 @@ if (OPM_ENABLE_PYTHON)
       ## Need to install this Python script such that it can be used by opm-simulators when building against an installed
       ##  opm-common
       install( PROGRAMS "python/install.py" DESTINATION "${OPM_PYTHON_COMMON_DIR}" )
+  endif()
+
+  if (OPM_ENABLE_PYTHON OR OPM_INSTALL_PYTHON) # if OPM_ENABLE_EMBEDDED_PYTHON is true, then OPM_ENABLE_PYTHON is also automatically true
+    ## Need to install this Python script such that it can be used by opm-simulators when building against an installed
+    ##  opm-common
+    install( PROGRAMS "python/generate_docstring_hpp.py" DESTINATION "${OPM_PYTHON_COMMON_DIR}" )
+    install( FILES "python/docstrings_common.json" DESTINATION "${OPM_PYTHON_COMMON_DIR}" )
   endif()
 
   # Observe that if the opmcommon library has been built as a shared library the
