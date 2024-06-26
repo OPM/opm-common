@@ -159,6 +159,10 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
         }
     }
 
+    // For co2storage and h2storage we dont have a concept of tables and should not spend time on
+    // checking if we are at the saturated front
+    setUseSaturatedTables(!(eclState.runspec().h2Storage() || eclState.runspec().co2Storage()));
+
     setEnableDiffusion(eclState.getSimulationConfig().isDiffusive());
     if (enableDiffusion()) {
         const auto& diffCoeffTables = eclState.getTableManager().getDiffusionCoefficientTable();
@@ -220,6 +224,7 @@ void BlackOilFluidSystem<Scalar,IndexTraits>::
 initBegin(std::size_t numPvtRegions)
 {
     isInitialized_ = false;
+    useSaturatedTables_ = true;
 
     enableDissolvedGas_ = true;
     enableDissolvedGasInWater_ = false;
@@ -449,6 +454,9 @@ template <> std::vector<std::array<float, 9>> BlackOilFluidSystem<float, BlackOi
 
 template <> bool BlackOilFluidSystem<double, BlackOilDefaultIndexTraits>::isInitialized_ = false;
 template <> bool BlackOilFluidSystem<float, BlackOilDefaultIndexTraits>::isInitialized_ = false;
+
+template <> bool BlackOilFluidSystem<double, BlackOilDefaultIndexTraits>::useSaturatedTables_ = false;
+template <> bool BlackOilFluidSystem<float, BlackOilDefaultIndexTraits>::useSaturatedTables_ = false;
 
 // IMPORTANT: The following two lines must come after the template specializations above
 //    or else the static variable above will appear as undefined in the generated object file.
