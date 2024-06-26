@@ -21,9 +21,11 @@
 
 #include <string>
 #include <map>
-#include "../HandlerContext.hpp"
 
 namespace Opm {
+
+class HandlerContext;
+
 namespace ReservoirCoupling {
 class Slave {
 public:
