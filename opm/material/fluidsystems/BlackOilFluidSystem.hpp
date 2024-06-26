@@ -610,7 +610,7 @@ public:
         case waterPhaseIdx:
             if (enableDissolvedGasInWater()) {
                  // gas miscible in water
-                const LhsEval& Rsw = saturatedDissolutionFactor<FluidState, LhsEval>(fluidState, waterPhaseIdx, regionIdx);
+                const LhsEval& Rsw =BlackOil::template getRsw_<ThisType, FluidState, LhsEval>(fluidState, regionIdx);
                 const LhsEval& bw = waterPvt_->inverseFormationVolumeFactor(regionIdx, T, p, Rsw, saltConcentration);
                 return
                     bw*referenceDensity(waterPhaseIdx, regionIdx)
