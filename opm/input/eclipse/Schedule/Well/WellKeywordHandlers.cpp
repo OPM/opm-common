@@ -121,6 +121,7 @@ void handleWCONHIST(HandlerContext& handlerContext)
                                                             ParserKeywords::FBHPDEF::TARGET_BHP::defaultValue);
             }
 
+            properties->whistctl_cmode = handlerContext.state().whistctl();
             properties->handleWCONHIST(alq_type,
                                        default_bhp,
                                        handlerContext.static_schedule().m_unit_system, record);
