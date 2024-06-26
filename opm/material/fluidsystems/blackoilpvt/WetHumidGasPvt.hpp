@@ -132,7 +132,9 @@ public:
     {
         throw std::runtime_error("Requested the enthalpy of gas but the thermal option is not enabled");
     }
-
+    Scalar hVap(unsigned) const{
+        throw std::runtime_error("Requested the hvap of oil but the thermal option is not enabled");
+    }
     /*!
      * \brief Returns the dynamic viscosity [Pa s] of the fluid phase given a set of parameters.
      */
@@ -190,7 +192,7 @@ public:
                                             const Evaluation& Rvw) const
     {
         const Evaluation& temperature = 1E30;
-        
+
         if (Rv >= (1.0 - 1e-10)*saturatedOilVaporizationFactor(regionIdx, temperature, pressure)) {
             return inverseGasBRvSat_[regionIdx].eval(pressure, Rvw, /*extrapolate=*/true);
         }

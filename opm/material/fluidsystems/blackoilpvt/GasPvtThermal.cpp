@@ -85,12 +85,12 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
 
             viscrefPress_[regionIdx] = viscrefTable[regionIdx].reference_pressure;
 
-            // Temperature used to calculate the reference viscosity [K]. 
+            // Temperature used to calculate the reference viscosity [K].
             // The value dooes not matter as the underlying PVT object is isothermal.
             constexpr const Scalar Tref = 273.15 + 20;
-            //TODO: For now I just assumed the default references RV and RVW = 0, 
-            // we could add these two parameters to a new item keyword VISCREF 
-            //or create a new keyword for gas. 
+            //TODO: For now I just assumed the default references RV and RVW = 0,
+            // we could add these two parameters to a new item keyword VISCREF
+            //or create a new keyword for gas.
             constexpr const Scalar Rvref = 0.0;
             constexpr const Scalar Rvwref = 0.0;
             // compute the reference viscosity using the isothermal PVT object.
@@ -98,7 +98,7 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
                 isothermalPvt_->viscosity(regionIdx,
                                           Tref,
                                           viscrefPress_[regionIdx],
-                                          Rvref, 
+                                          Rvref,
                                           Rvwref);
         }
     }
@@ -163,14 +163,8 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
 
             std::vector<double> uSamples(temperatureColumn.size());
 
-            // the specific enthalpy of vaporization. since ECL does not seem to
-            // feature a proper way to specify this quantity, we use the value for
-            // methane. A proper model would also need to consider the enthalpy
-            // change due to dissolution, i.e. the enthalpies of the gas and oil
-            // phases should depend on the phase composition
-            const Scalar hVap = 480.6e3; // [J / kg]
-
-            Scalar u = temperatureColumn[0]*cvGasColumn[0] + hVap;
+            // this is the heat capasity for gas without dissolution which is handled else where
+            Scalar u = temperatureColumn[0]*cvGasColumn[0];
             for (size_t i = 0;; ++i) {
                 uSamples[i] = u;
 

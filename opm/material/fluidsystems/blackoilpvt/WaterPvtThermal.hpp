@@ -130,6 +130,7 @@ public:
         watJTRefPres_.resize(numRegions);
         watJTC_.resize(numRegions);
         internalEnergyCurves_.resize(numRegions);
+        hVap_.resize(numRegions,0.0);
     }
 
     void setVapPars(const Scalar par1, const Scalar par2)
@@ -161,6 +162,10 @@ public:
     bool enableThermalViscosity() const
     { return enableThermalViscosity_; }
 
+    Scalar hVap(unsigned regionIdx) const {
+        return this->hVap_[regionIdx];
+    }
+
     size_t numRegions() const
     { return pvtwRefPress_.size(); }
 
@@ -185,7 +190,7 @@ public:
         }
         else {
             Evaluation Tref = watdentRefTemp_[regionIdx];
-            Evaluation Pref = watJTRefPres_[regionIdx]; 
+            Evaluation Pref = watJTRefPres_[regionIdx];
             Scalar JTC =watJTC_[regionIdx]; // if JTC is default then JTC is calculated
 
             Evaluation invB = inverseFormationVolumeFactor(regionIdx, temperature, pressure, Rsw, saltconcentration);
@@ -209,9 +214,9 @@ public:
                 for (size_t i = 0; i < N; ++i) {
                     Evaluation Pnew = Pref + i * deltaP;
                     Evaluation rho = inverseFormationVolumeFactor(regionIdx, temperature, Pnew, Rsw, saltconcentration) * waterReferenceDensity(regionIdx);
-                    Evaluation jouleThomsonCoefficient = -(1.0/Cp) * (1.0 - alpha * temperature)/rho;  
+                    Evaluation jouleThomsonCoefficient = -(1.0/Cp) * (1.0 - alpha * temperature)/rho;
                     Evaluation deltaEnthalpyPres = -Cp * jouleThomsonCoefficient * deltaP;
-                    enthalpyPres = enthalpyPresPrev + deltaEnthalpyPres; 
+                    enthalpyPres = enthalpyPresPrev + deltaEnthalpyPres;
                     enthalpyPresPrev = enthalpyPres;
                 }
             }
@@ -464,6 +469,7 @@ private:
 
     // piecewise linear curve representing the internal energy of water
     std::vector<TabulatedOneDFunction> internalEnergyCurves_;
+    std::vector<Scalar> hVap_;
 
     bool enableThermalDensity_;
     bool enableJouleThomson_;

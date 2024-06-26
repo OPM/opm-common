@@ -125,6 +125,9 @@ public:
     unsigned numRegions() const
     { return gasReferenceDensity_.size(); }
 
+    Scalar hVap(unsigned ) const{
+        return 0;
+    }
     /*!
     * \brief Returns the specific enthalpy [J/kg] of gas given a set of parameters.
     *
@@ -138,7 +141,7 @@ public:
     {
         // use the gasInternalEnergy of H2
         return H2::gasInternalEnergy(temperature, pressure, extrapolate);
-        
+
         // TODO: account for H2O in the gas phase
         // Init output
         //Evaluation result = 0;
@@ -162,8 +165,8 @@ public:
                          const Evaluation& pressure,
                          const Evaluation& /*Rv*/,
                          const Evaluation& /*Rvw*/) const
-    { 
-        return saturatedViscosity(regionIdx, temperature, pressure); 
+    {
+        return saturatedViscosity(regionIdx, temperature, pressure);
     }
 
     /*!
@@ -232,7 +235,7 @@ public:
     Evaluation saturatedWaterVaporizationFactor(unsigned regionIdx,
                                               const Evaluation& temperature,
                                               const Evaluation& pressure) const
-    { 
+    {
         return rvwSat_(regionIdx, temperature, pressure, Evaluation(salinity_[regionIdx]));
     }
 
@@ -242,9 +245,9 @@ public:
     template <class Evaluation = Scalar>
     Evaluation saturatedWaterVaporizationFactor(unsigned regionIdx,
                                               const Evaluation& temperature,
-                                              const Evaluation& pressure, 
+                                              const Evaluation& pressure,
                                               const Evaluation& saltConcentration) const
-    { 
+    {
         const Evaluation salinity = salinityFromConcentration(temperature, pressure, saltConcentration);
         return rvwSat_(regionIdx, temperature, pressure, salinity);
      }
@@ -258,8 +261,8 @@ public:
                                               const Evaluation& pressure,
                                               const Evaluation& /*oilSaturation*/,
                                               const Evaluation& /*maxOilSaturation*/) const
-    { 
-        return rvwSat_(regionIdx, temperature, pressure, Evaluation(salinity_[regionIdx])); 
+    {
+        return rvwSat_(regionIdx, temperature, pressure, Evaluation(salinity_[regionIdx]));
     }
 
     /*!
@@ -269,7 +272,7 @@ public:
     Evaluation saturatedOilVaporizationFactor(unsigned regionIdx,
                                               const Evaluation& temperature,
                                               const Evaluation& pressure) const
-    { 
+    {
         return rvwSat_(regionIdx, temperature, pressure, Evaluation(salinity_[regionIdx]));
     }
 
@@ -308,11 +311,11 @@ private:
         // If water vaporization is disabled, we return zero
         if (!enableVaporization_)
             return 0.0;
-        
+
         // From Li et al., Int. J. Hydrogen Energ., 2018, water mole fraction is calculated assuming ideal mixing
         LhsEval pw_sat = H2O::vaporPressure(temperature);
         LhsEval yH2O = pw_sat / pressure;
-        
+
         // normalize the phase compositions
         yH2O = max(0.0, min(1.0, yH2O));
         return convertXgWToRvw(convertxgWToXgW(yH2O, salinity), regionIdx);
@@ -359,8 +362,8 @@ private:
 
     template <class LhsEval>
     const LhsEval salinityFromConcentration(const LhsEval&T, const LhsEval& P, const LhsEval& saltConcentration) const
-    { 
-        return saltConcentration / H2O::liquidDensity(T, P, true); 
+    {
+        return saltConcentration / H2O::liquidDensity(T, P, true);
     }
 
 };  // end class H2GasPvt

@@ -510,7 +510,12 @@ public:
      * exception!
      */
     Scalar internalEnergy(unsigned phaseIdx) const
-    { return (*enthalpy_)[canonicalToStoragePhaseIndex_(phaseIdx)] - pressure(phaseIdx)/density(phaseIdx); }
+    {   auto energy = (*enthalpy_)[canonicalToStoragePhaseIndex_(phaseIdx)];
+        if(!FluidSystem::enthalpyEqualEnergy()){
+            energy -= pressure(phaseIdx)/density(phaseIdx);
+        }
+        return energy;
+    }
 
     //////
     // slow methods

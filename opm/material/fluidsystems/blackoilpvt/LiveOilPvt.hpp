@@ -161,6 +161,10 @@ public:
         throw std::runtime_error("Requested the enthalpy of oil but the thermal option is not enabled");
     }
 
+    Scalar hVap(unsigned) const{
+        throw std::runtime_error("Requested the hvap of oil but the thermal option is not enabled");
+    }
+
     /*!
      * \brief Returns the dynamic viscosity [Pa s] of the fluid phase given a set of parameters.
      */

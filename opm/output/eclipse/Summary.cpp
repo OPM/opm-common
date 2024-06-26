@@ -1653,13 +1653,13 @@ inline quantity potential_rate( const fn_args& args )
         }
 
         if (sched_well->isInjector() && outputInjector) {
-	    const auto v = xwPos->second.rates.get(phase, 0.0);
-	    sum += v * efac(args.eff_factors, name);
-	}
-	else if (sched_well->isProducer() && outputProducer) {
-	    const auto v = xwPos->second.rates.get(phase, 0.0);
-	    sum += v * efac(args.eff_factors, name);
-	}
+            const auto v = xwPos->second.rates.get(phase, 0.0);
+            sum += v * efac(args.eff_factors, name);
+        }
+        else if (sched_well->isProducer() && outputProducer) {
+            const auto v = xwPos->second.rates.get(phase, 0.0);
+            sum += v * efac(args.eff_factors, name);
+        }
     }
 
     return { sum, rate_unit< phase >() };

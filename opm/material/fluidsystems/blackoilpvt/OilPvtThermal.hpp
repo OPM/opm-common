@@ -122,6 +122,7 @@ public:
         oilJTRefPres_.resize(numRegions);
         oilJTC_.resize(numRegions);
         rhoRefG_.resize(numRegions);
+        hVap_.resize(numRegions, 0.0);
     }
 
     void setVapPars(const Scalar par1, const Scalar par2)
@@ -175,8 +176,9 @@ public:
             return internalEnergyCurves_[regionIdx].eval(temperature, /*extrapolate=*/true);
         }
         else {
+            OpmLog::warning("Experimental code for jouleThomson: simulation will be slower");
             Evaluation Tref = oildentRefTemp_[regionIdx];
-            Evaluation Pref = oilJTRefPres_[regionIdx]; 
+            Evaluation Pref = oilJTRefPres_[regionIdx];
             Scalar JTC = oilJTC_[regionIdx]; // if JTC is default then JTC is calculated
 
             Evaluation invB = inverseFormationVolumeFactor(regionIdx, temperature, pressure, Rs);
@@ -202,9 +204,9 @@ public:
                     Evaluation rho = inverseFormationVolumeFactor(regionIdx, temperature, Pnew, Rs) *
                                      (oilReferenceDensity(regionIdx) + Rs * rhoRefG_[regionIdx]) ;
                     // see e.g.https://en.wikipedia.org/wiki/Joule-Thomson_effect for a derivation of the Joule-Thomson coeff.
-                    Evaluation jouleThomsonCoefficient = -(1.0/Cp) * (1.0 - alpha * temperature)/rho;  
+                    Evaluation jouleThomsonCoefficient = -(1.0/Cp) * (1.0 - alpha * temperature)/rho;
                     Evaluation deltaEnthalpyPres = -Cp * jouleThomsonCoefficient * deltaP;
-                    enthalpyPres = enthalpyPresPrev + deltaEnthalpyPres; 
+                    enthalpyPres = enthalpyPresPrev + deltaEnthalpyPres;
                     enthalpyPresPrev = enthalpyPres;
                 }
             }
@@ -358,6 +360,10 @@ public:
     const Scalar oilReferenceDensity(unsigned regionIdx) const
     { return isothermalPvt_->oilReferenceDensity(regionIdx); }
 
+    const Scalar hVap(unsigned regionIdx) const {
+        return this->hVap_[regionIdx];
+    }
+
     const std::vector<TabulatedOneDFunction>& oilvisctCurves() const
     { return oilvisctCurves_; }
 
@@ -457,6 +463,7 @@ private:
     std::vector<Scalar> oilJTC_;
 
     std::vector<Scalar> rhoRefG_;
+    std::vector<Scalar> hVap_;
 
     // piecewise linear curve representing the internal energy of oil
     std::vector<TabulatedOneDFunction> internalEnergyCurves_;

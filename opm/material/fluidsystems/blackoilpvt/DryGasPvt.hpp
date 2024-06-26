@@ -126,7 +126,9 @@ public:
     {
         throw std::runtime_error("Requested the enthalpy of gas but the thermal option is not enabled");
     }
-
+    Scalar hVap(unsigned) const{
+        throw std::runtime_error("Requested the hvap of oil but the thermal option is not enabled");
+    }
     /*!
      * \brief Returns the dynamic viscosity [Pa s] of the fluid phase given a set of parameters.
      */
@@ -199,10 +201,10 @@ public:
     template <class Evaluation = Scalar>
     Evaluation saturatedWaterVaporizationFactor(unsigned /*regionIdx*/,
                                               const Evaluation& /*temperature*/,
-                                              const Evaluation& /*pressure*/, 
+                                              const Evaluation& /*pressure*/,
                                               const Evaluation& /*saltConcentration*/) const
     { return 0.0; }
-    
+
 
     /*!
      * \brief Returns the oil vaporization factor \f$R_v\f$ [m^3/m^3] of the oil phase.

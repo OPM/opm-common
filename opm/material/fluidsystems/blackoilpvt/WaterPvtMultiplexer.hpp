@@ -131,7 +131,17 @@ public:
             break;
         }
     }
-
+    bool mixingEnergy(){
+        switch (approach_) {
+        case WaterPvtApproach::ThermalWater: {
+            return true;
+            break;
+        }
+        default: {
+            return false;
+        }
+        }
+    }
 #if HAVE_ECL_INPUT
     /*!
      * \brief Initialize the parameters for water using an ECL deck.
@@ -172,6 +182,8 @@ public:
                         const Evaluation& saltconcentration) const
     { OPM_WATER_PVT_MULTIPLEXER_CALL(return pvtImpl.internalEnergy(regionIdx, temperature, pressure, Rsw, saltconcentration)); return 0; }
 
+    Scalar hVap(unsigned regionIdx) const
+    { OPM_WATER_PVT_MULTIPLEXER_CALL(return pvtImpl.hVap(regionIdx)); return 0; }
     /*!
      * \brief Returns the dynamic viscosity [Pa s] of the fluid phase given a set of parameters.
      */
@@ -208,7 +220,7 @@ public:
                                             const Evaluation& pressure,
                                             const Evaluation& Rsw,
                                             const Evaluation& saltconcentration) const
-    {   
+    {
         OPM_WATER_PVT_MULTIPLEXER_CALL(return pvtImpl.inverseFormationVolumeFactor(regionIdx, temperature, pressure, Rsw, saltconcentration));
         return 0;
     }
@@ -221,7 +233,7 @@ public:
                                                      const Evaluation& temperature,
                                                      const Evaluation& pressure,
                                                      const Evaluation& saltconcentration) const
-    {   
+    {
         OPM_WATER_PVT_MULTIPLEXER_CALL(return pvtImpl.saturatedInverseFormationVolumeFactor(regionIdx, temperature, pressure, saltconcentration));
         return 0;
     }
@@ -234,9 +246,9 @@ public:
                                              const Evaluation& temperature,
                                              const Evaluation& pressure,
                                              const Evaluation& saltconcentration) const
-    { 
-        OPM_WATER_PVT_MULTIPLEXER_CALL(return pvtImpl.saturatedGasDissolutionFactor(regionIdx, temperature, pressure, saltconcentration)); 
-        return 0; 
+    {
+        OPM_WATER_PVT_MULTIPLEXER_CALL(return pvtImpl.saturatedGasDissolutionFactor(regionIdx, temperature, pressure, saltconcentration));
+        return 0;
     }
 
     /*!
@@ -262,7 +274,7 @@ public:
                                     const Evaluation& pressure,
                                     unsigned compIdx) const
     {
-      OPM_WATER_PVT_MULTIPLEXER_CALL(return pvtImpl.diffusionCoefficient(temperature, pressure, compIdx)); 
+      OPM_WATER_PVT_MULTIPLEXER_CALL(return pvtImpl.diffusionCoefficient(temperature, pressure, compIdx));
       return 0;
     }
 
