@@ -19,14 +19,15 @@
 #ifndef RESERVOIR_COUPLING_GRUPSLAV_HPP
 #define RESERVOIR_COUPLING_GRUPSLAV_HPP
 
-#include <string>
-#include <map>
-#include "../HandlerContext.hpp"
-
 #include <iostream>
+#include <map>
 #include <stdexcept>
+#include <string>
 
 namespace Opm {
+
+class HandlerContext;
+
 namespace ReservoirCoupling {
 class GrupSlav {
 public:
