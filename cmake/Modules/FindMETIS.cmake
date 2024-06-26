@@ -4,12 +4,13 @@
 #
 # Once done, this will define:
 #
-#  METIS_FOUND         - system has the libMETIS graph partioning library
-#  HAVE_METIS          - like METIS_FOUND, but for the inclusion in config.h
-#  METIS_INCLUDE_DIRS  - incude paths to use libMETIS
-#  METIS_LIBRARIES     - Link these to use libMETIS
-#  METIS::METIS        - Imported metis target needed for DUNE 2.8.0
-#  METIS_API_VERSION   - The METIS api version scotch is supporting.
+#  METIS_FOUND            - system has the libMETIS graph partioning library
+#  HAVE_METIS             - like METIS_FOUND, but for the inclusion in config.h
+#  METIS_INCLUDE_DIRS     - incude paths to use libMETIS
+#  METIS_LIBRARIES        - Link these to use libMETIS
+#  METIS::METIS           - Imported metis target needed for DUNE 2.8.0
+#  METIS_API_VERSION      - The METIS api version scotch is supporting.
+#  IS_SCOTCH_METIS_HEADER - If true, we are using the SCOTCH replacement for METIS, if false we are using "just METIS"
 
 set(METIS_API_VERSION 0 CACHE STRING
   "METIS API version provided by METIS or scotch-metis library")
@@ -28,12 +29,12 @@ find_path (METIS_INCLUDE_DIRS
   ${METIS_NO_DEFAULT_PATH})
 
 # Check if this is scotch for some special casing
-set(IS_SCOTCH_METIS_HEADER FALSE)
+set(IS_SCOTCH_METIS_HEADER 0)
 if (METIS_INCLUDE_DIRS)
   file(READ "${METIS_INCLUDE_DIRS}/metis.h" metisheader)
   string(FIND "${metisheader}" "SCOTCH_METIS_PREFIX" IS_SCOTCH_METIS_HEADER)
   if(NOT IS_SCOTCH_METIS_HEADER EQUAL "-1")
-    set(IS_SCOTCH_METIS_HEADER TRUE)
+    set(IS_SCOTCH_METIS_HEADER 1)
   endif()
 endif()
 
@@ -51,7 +52,7 @@ find_library(METIS_LIBRARY
 set (METIS_FOUND FALSE)
 
 if (METIS_INCLUDE_DIRS OR METIS_LIBRARY)
-  set(METIS_FOUND TRUE)
+  set(METIS_FOUND 1)
   set(HAVE_METIS 1)
   string(REGEX MATCH "#define METIS_VER_MAJOR[ ]+([0-9]+)" METIS_MAJOR_VERSION ${metisheader})
   if(NOT METIS_API_VERSION AND METIS_MAJOR_VERSION)
