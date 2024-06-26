@@ -565,38 +565,6 @@ namespace {
         }
     }
 
-    bool haveHysteresis(const RestartValue& value)
-    {
-        for (const auto* key : { "KRNSW_OW", "PCSWM_OW",
-                                 "KRNSW_GO", "PCSWM_GO", })
-        {
-            if (value.solution.has(key)) { return true; }
-        }
-
-        return false;
-    }
-
-    std::vector<double>
-    convertedHysteresisSat(const RestartValue& value,
-                           const std::string&  primary,
-                           const std::string&  fallback)
-    {
-        auto smax = std::vector<double>{};
-
-        if (value.solution.has(primary)) {
-            smax = value.solution.data<double>(primary);
-        }
-        else if (value.solution.has(fallback)) {
-            smax = value.solution.data<double>(fallback);
-        }
-
-        if (! smax.empty()) {
-            std::transform(std::begin(smax), std::end(smax), std::begin(smax),
-                           [](const double s) { return 1.0 - s; });
-        }
-
-        return smax;
-    }
 
     std::vector<std::string>
     solutionVectorNames(const RestartValue& value)
@@ -762,35 +730,6 @@ namespace {
         }
     }
 
-    template <class OutputVector>
-    void writeEclipseCompatHysteresis(const RestartValue& value,
-                                      OutputVector&       writeVector)
-    {
-        // Convert Flow-specific vectors {KRNSW,PCSWM}_OW to ECLIPSE's
-        // requisite SOMAX vector.  Only partially characterised.
-        // Sufficient for Norne.
-        {
-            const auto somax =
-                convertedHysteresisSat(value, "KRNSW_OW", "PCSWM_OW");
-
-            if (! somax.empty()) {
-                writeVector("SOMAX", somax);
-            }
-        }
-
-        // Convert Flow-specific vectors {KRNSW,PCSWM}_GO to ECLIPSE's
-        // requisite SGMAX vector.  Only partially characterised.
-        // Sufficient for Norne.
-        {
-            const auto sgmax =
-                convertedHysteresisSat(value, "KRNSW_GO", "PCSWM_GO");
-
-            if (! sgmax.empty()) {
-                writeVector("SGMAX", sgmax);
-            }
-        }
-    }
-
     void writeTracerVectors(const UnitSystem&             unit_system,
                             const TracerConfig&           tracer_config,
                             const RestartValue&           value,
@@ -870,10 +809,6 @@ namespace {
         writeUDQ(report_step, sim_step, schedule, udq_state, inteHD, rstFile);
 
         writeExtraVectors(value, writeDouble);
-
-        if (ecl_compatible_rst && haveHysteresis(value)) {
-            writeEclipseCompatHysteresis(value, writeDorF);
-        }
 
         if (! ecl_compatible_rst) {
             writeExtendedSolutionVectors(value, writeDorF, writeInt);

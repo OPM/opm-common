@@ -210,29 +210,34 @@ int main(int argc, char **argv)
         outfile << relperm[phaseIdx1] << "," << relperm[phaseIdx2]<< ",";
 
         MaterialLaw::updateHysteresis(param, fs);
-        double krnSwMdc_out = 0.0;
-        double pcSwMdc_out = 0.0;
+        double somax_out = 0.0;
+        double shmax_out = 0.0;
+        double swmax_out = 0.0;
+        double swmin_out = 0.0;
+        double sowmin_out = 0.0;
         double trapped_out = 0.0;
         if (two_phase_system == "WO") {
-            MaterialLaw::oilWaterHysteresisParams(pcSwMdc_out,
-                                                krnSwMdc_out,
+            MaterialLaw::oilWaterHysteresisParams(somax_out,
+                                                swmax_out,
+                                                swmin_out,
                                                 param);
         }
         if (two_phase_system == "GO") {
-            MaterialLaw::gasOilHysteresisParams(pcSwMdc_out,
-                                                krnSwMdc_out,
+            MaterialLaw::gasOilHysteresisParams(somax_out,
+                                                shmax_out,
+                                                sowmin_out,
                                                 param);
         }
         if (two_phase_system == "GW") {
             // The GW hysteresis params is not possible to get directly from the 3p MaterialLaw 
             //MaterialLaw::gasWaterHysteresisParams(pcSwMdc_out,
-            //                                    krnSwMdc_out,
+            //                                    somax_out,
             //                                    param);
         } 
 
         trapped_out = MaterialLaw::trappedGasSaturation(param, /*maximumTrapping*/ false);
 
-        outfile << krnSwMdc_out << "," << trapped_out << std::endl;
+        outfile << somax_out << "," << trapped_out << std::endl;
     }
 
     outfile.close();

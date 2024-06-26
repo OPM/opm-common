@@ -313,6 +313,15 @@ public:
     bool enableHysteresis() const
     { return hysteresisConfig_->enableHysteresis(); }
 
+    bool enablePCHysteresis() const
+    { return (enableHysteresis() && hysteresisConfig_->pcHysteresisModel() >= 0); }
+
+    bool enableWettingHysteresis() const
+    { return (enableHysteresis() && hysteresisConfig_->krHysteresisModel() >= 4); }
+
+    bool enableNonWettingHysteresis() const
+    { return (enableHysteresis() && hysteresisConfig_->krHysteresisModel() >= 0); }
+
     MaterialLawParams& materialLawParams(unsigned elemIdx)
     {
         assert(elemIdx <  materialLawParams_.size());
@@ -384,20 +393,24 @@ public:
         return changed;
     }
 
-    void oilWaterHysteresisParams(Scalar& pcSwMdc,
-                                  Scalar& krnSwMdc,
+    void oilWaterHysteresisParams(Scalar& soMax,
+                                  Scalar& swMax,
+                                  Scalar& swMin,
                                   unsigned elemIdx) const;
 
-    void setOilWaterHysteresisParams(const Scalar& pcSwMdc,
-                                     const Scalar& krnSwMdc,
+    void setOilWaterHysteresisParams(const Scalar& soMax,
+                                     const Scalar& swMax,
+                                     const Scalar& swMin,
                                      unsigned elemIdx);
 
-    void gasOilHysteresisParams(Scalar& pcSwMdc,
-                                Scalar& krnSwMdc,
+    void gasOilHysteresisParams(Scalar& sgmax,
+                                Scalar& shmax,
+                                Scalar& somin,
                                 unsigned elemIdx) const;
 
-    void setGasOilHysteresisParams(const Scalar& pcSwMdc,
-                                   const Scalar& krnSwMdc,
+    void setGasOilHysteresisParams(const Scalar& sgmax,
+                                   const Scalar& shmax,
+                                   const Scalar& somin,
                                    unsigned elemIdx);
 
     EclEpsScalingPoints<Scalar>& oilWaterScaledEpsPointsDrainage(unsigned elemIdx);

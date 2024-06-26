@@ -165,9 +165,9 @@ public:
         if (config().krHysteresisModel() == 2 || config().krHysteresisModel() == 3 || config().krHysteresisModel() == 4 || config().pcHysteresisModel() == 0 || gasOilHysteresisWAG()) {
             Swco_ = info.Swl;
             if (twoPhaseSystem == EclTwoPhaseSystemType::GasOil) {
-                Sncrd_ = info.Sgcr+info.Swl;
-                Swcrd_ = info.Sogcr + info.Swl;
-                Snmaxd_ = info.Sgu+info.Swl;
+                Sncrd_ = info.Sgcr + info.Swl;
+                Swcrd_ = info.Sogcr;
+                Snmaxd_ = info.Sgu + info.Swl;
                 KrndMax_ = EffLawT::twoPhaseSatKrn(drainageParams(), 1.0-Snmaxd_);
             }
             else if (twoPhaseSystem == EclTwoPhaseSystemType::GasWater) {
@@ -257,7 +257,7 @@ public:
 
         // Store critical nonwetting saturation
         if (twoPhaseSystem == EclTwoPhaseSystemType::GasOil) {
-            Sncri_ = info.Sgcr+info.Swl;
+            Sncri_ = info.Sgcr + info.Swl;
             Swcri_ = info.Sogcr;
         }
         else if (twoPhaseSystem == EclTwoPhaseSystemType::GasWater) {
@@ -269,7 +269,6 @@ public:
             Sncri_ = info.Sowcr;
             Swcri_ = info.Swcr;
         }
-
 
         // Killough hysteresis model for pc
         if (config().pcHysteresisModel() == 0) {

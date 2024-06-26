@@ -352,54 +352,58 @@ getKrnumSatIdx(unsigned elemIdx, FaceDir::DirEnum facedir) const
 
 template<class TraitsT>
 void EclMaterialLawManager<TraitsT>::
-oilWaterHysteresisParams(Scalar& pcSwMdc,
-                         Scalar& krnSwMdc,
+oilWaterHysteresisParams(Scalar& soMax,
+                         Scalar& swMax,
+                         Scalar& swMin,
                          unsigned elemIdx) const
 {
     if (!enableHysteresis())
         throw std::runtime_error("Cannot get hysteresis parameters if hysteresis not enabled.");
 
     const auto& params = materialLawParams(elemIdx);
-    MaterialLaw::oilWaterHysteresisParams(pcSwMdc, krnSwMdc, params);
+    MaterialLaw::oilWaterHysteresisParams(soMax, swMax, swMin, params);
 }
 
 template<class TraitsT>
 void EclMaterialLawManager<TraitsT>::
-setOilWaterHysteresisParams(const Scalar& pcSwMdc,
-                            const Scalar& krnSwMdc,
+setOilWaterHysteresisParams(const Scalar& soMax,
+                            const Scalar& swMax,
+                            const Scalar& swMin,
                             unsigned elemIdx)
 {
     if (!enableHysteresis())
         throw std::runtime_error("Cannot set hysteresis parameters if hysteresis not enabled.");
 
     auto& params = materialLawParams(elemIdx);
-    MaterialLaw::setOilWaterHysteresisParams(pcSwMdc, krnSwMdc, params);
+    MaterialLaw::setOilWaterHysteresisParams(soMax, swMax, swMin, params);
 }
 
 template<class TraitsT>
 void EclMaterialLawManager<TraitsT>::
-gasOilHysteresisParams(Scalar& pcSwMdc,
-                       Scalar& krnSwMdc,
+gasOilHysteresisParams(Scalar& sgmax,
+                       Scalar& shmax,
+                       Scalar& somin,
                        unsigned elemIdx) const
 {
     if (!enableHysteresis())
         throw std::runtime_error("Cannot get hysteresis parameters if hysteresis not enabled.");
 
     const auto& params = materialLawParams(elemIdx);
-    MaterialLaw::gasOilHysteresisParams(pcSwMdc, krnSwMdc, params);
+    MaterialLaw::gasOilHysteresisParams(sgmax, shmax, somin, params);
 }
 
 template<class TraitsT>
 void EclMaterialLawManager<TraitsT>::
-setGasOilHysteresisParams(const Scalar& pcSwMdc,
-                          const Scalar& krnSwMdc,
+setGasOilHysteresisParams(const Scalar& sgmax,
+                          const Scalar& shmax,
+                          const Scalar& somin,
                           unsigned elemIdx)
 {
     if (!enableHysteresis())
         throw std::runtime_error("Cannot set hysteresis parameters if hysteresis not enabled.");
 
     auto& params = materialLawParams(elemIdx);
-    MaterialLaw::setGasOilHysteresisParams(pcSwMdc, krnSwMdc, params);
+    MaterialLaw::setGasOilHysteresisParams(sgmax, shmax, somin, params);
 }
 
 template<class TraitsT>
