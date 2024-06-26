@@ -501,7 +501,7 @@ public:
     std::vector<bool> defaulted(const std::string& keyword)
     {
         const auto& field = this->template init_get<T>(keyword);
-        std::vector<bool> def(field.size());
+        std::vector<bool> def(field.numCells());
 
         for (std::size_t i = 0; i < def.size(); ++i) {
             def[i] = value::defaulted(field.value_status[i]);

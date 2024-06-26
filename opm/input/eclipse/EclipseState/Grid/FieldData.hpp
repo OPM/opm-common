@@ -92,8 +92,8 @@ namespace Opm::Fieldprops {
             , all_set     (false)
         {
             if (global_size != 0) {
-                this->global_data.emplace(global_size * kw_info.num_value);
-                this->global_value_status.emplace(global_size * kw_info.num_value, value::status::uninitialized);
+                this->global_data.emplace(global_size * this->numValuePerCell());
+                this->global_value_status.emplace(global_size * this->numValuePerCell(), value::status::uninitialized);
             }
 
             if (info.scalar_init) {
@@ -101,12 +101,17 @@ namespace Opm::Fieldprops {
             }
         }
 
-        std::size_t size() const
+        std::size_t numCells() const
         {
-            return this->data.size() / this->numPerCell();
+            return this->data.size() / this->numValuePerCell();
         }
 
-        std::size_t numPerCell() const
+        std::size_t dataSize() const
+        {
+            return this->data.size();
+        }
+
+        std::size_t numValuePerCell() const
         {
             return this->kw_info.num_value;
         }
@@ -139,8 +144,8 @@ namespace Opm::Fieldprops {
 
         void compress(const std::vector<bool>& active_map)
         {
-            Fieldprops::compress(this->data, active_map, this->kw_info.num_value);
-            Fieldprops::compress(this->value_status, active_map, this->kw_info.num_value);
+            Fieldprops::compress(this->data, active_map, this->numValuePerCell());
+            Fieldprops::compress(this->value_status, active_map, this->numValuePerCell());
         }
 
         void copy(const FieldData<T>& src, const std::vector<Box::cell_index>& index_list) {
@@ -169,10 +174,10 @@ namespace Opm::Fieldprops {
 
         void default_assign(const std::vector<T>& src)
         {
-            if (src.size() != this->data.size()) {
+            if (src.size() != this->dataSize()) {
                 throw std::invalid_argument {
                     "Size mismatch got: " + std::to_string(src.size()) +
-                    ", expected: " + std::to_string(this->data.size())
+                    ", expected: " + std::to_string(this->dataSize())
                 };
             }
 
@@ -183,10 +188,10 @@ namespace Opm::Fieldprops {
 
         void default_update(const std::vector<T>& src)
         {
-            if (src.size() != this->data.size()) {
+            if (src.size() != this->dataSize()) {
                 throw std::invalid_argument {
                     "Size mismatch got: " + std::to_string(src.size()) +
-                    ", expected: " + std::to_string(this->data.size())
+                    ", expected: " + std::to_string(this->dataSize())
                 };
             }
 
