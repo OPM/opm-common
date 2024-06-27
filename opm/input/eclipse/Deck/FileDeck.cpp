@@ -457,8 +457,16 @@ void FileDeck::skip(int report_step) {
     while (index < end_pos) {
         const auto& keyword = this->operator[](index);
         if (FileDeck::rst_keep_in_schedule.count(keyword.name()) == 0) {
+            auto next_index = index + 1;
             this->erase(index);
-            end_pos--;
+            if (next_index.file_index != index.file_index) {
+                // Erased the last element on this block, move to the next.
+                index = next_index;
+            }
+            if (index.file_index == end_pos.file_index) {
+                // On the last block.
+                end_pos--;
+            }
         } else
             index++;
     }
