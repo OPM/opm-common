@@ -115,6 +115,7 @@ template <class ScalarT,
           bool enableBrine = false,
           bool enableSaltPrecipitation = false,
           bool enableDissolutionInWater = false,
+          bool enableConvectiveMixing = false,
           unsigned numStoragePhases = FluidSystem::numPhases>
 class BlackOilFluidState
 {
@@ -327,6 +328,24 @@ public:
     void setRsw(const Scalar& newRsw)
     { *Rsw_ = newRsw; }
 
+
+    /*!
+     * \brief Set the maximum gas dissolution factor [m^3/m^3] of the water phase..
+     *
+     * This quantity is very specific to the black-oil model.
+     */
+    void setRswSat(const Scalar& newRswSat)
+    { *RswSat_ = newRswSat; }
+
+    /*!
+     * \brief Set the maximum gas dissolution factor [m^3/m^3] of the oil phase..
+     *
+     * This quantity is very specific to the black-oil model.
+     */
+    void setRsSat(const Scalar& newRsSat)
+    { *RsSat_ = newRsSat; }
+
+
     /*!
      * \brief Set the salt concentration.
      */
@@ -449,6 +468,40 @@ public:
     {
         if constexpr (enableDissolutionInWater) {
             return *Rsw_;
+        } else {
+            static Scalar null = 0.0;
+            return null;
+        }
+    }
+
+    /*!
+     * \brief Return the maximum gas dissolution factor of water [m^3/m^3].
+     *
+     * I.e., the amount of gas which can be present in the water phase in terms of cubic meters
+     * of gas at surface conditions per cubic meter of water at surface
+     * conditions. This method is specific to the black-oil model.
+     */
+    const Scalar& RswSat() const
+    {
+        if constexpr (enableDissolutionInWater) {
+            return *RswSat_;
+        } else {
+            static Scalar null = 0.0;
+            return null;
+        }
+    }
+
+    /*!
+     * \brief Return the maximum gas dissolution factor of oil [m^3/m^3].
+     *
+     * I.e., the amount of gas which can be present in the oil phase in terms of cubic meters
+     * of gas at surface conditions per cubic meter of water at surface
+     * conditions. This method is specific to the black-oil model.
+     */
+    const Scalar& RsSat() const
+    {
+        if constexpr (enableDissolution) {
+            return *RsSat_;
         } else {
             static Scalar null = 0.0;
             return null;
@@ -694,7 +747,8 @@ private:
     ConditionalStorage<enableDissolutionInWater,Scalar> Rsw_{};
     ConditionalStorage<enableBrine, Scalar> saltConcentration_{};
     ConditionalStorage<enableSaltPrecipitation, Scalar> saltSaturation_{};
-
+    ConditionalStorage<enableConvectiveMixing && enableDissolutionInWater,Scalar> RswSat_{};
+    ConditionalStorage<enableConvectiveMixing && enableDissolution,Scalar> RsSat_{};
     unsigned short pvtRegionIdx_{};
 };
 
