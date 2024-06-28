@@ -14,7 +14,7 @@
       "default": 1
     },
     {
-      "name": "TRANSFER_EXT_NET",
+      "name": "USE_GEFAC_IN_NETWORK",
       "value_type": "STRING",
       "default": "YES",
       "comment": "Not supported"
