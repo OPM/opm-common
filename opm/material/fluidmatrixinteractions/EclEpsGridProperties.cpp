@@ -27,58 +27,60 @@
 
 #include <string>
 
-namespace Opm {
-
-EclEpsGridProperties::EclEpsGridProperties(const EclipseState& eclState,
-                                           bool useImbibition)
+Opm::EclEpsGridProperties::
+EclEpsGridProperties(const EclipseState& eclState,
+                     const bool          useImbibition)
 {
-    const std::string kwPrefix = useImbibition ? "I" : "";
-
     const auto& fp = eclState.fieldProps();
-    std::vector<double> empty;
-    auto try_get = [&fp,&empty](const std::string& keyword) -> const std::vector<double>&
-    {
-        if (fp.has_double(keyword))
-            return fp.get_double(keyword);
 
-        return empty;
+    auto try_get = [&fp, kwPrefix = useImbibition ? "I" : ""]
+        (const std::string& keyword)
+    {
+        return fp.has_double(kwPrefix + keyword)
+            ? &fp.get_double(kwPrefix + keyword)
+            : nullptr;
     };
 
-    compressed_satnum = useImbibition
-        ? fp.get_int("IMBNUM") : fp.get_int("SATNUM");
+    this->satnum_ = useImbibition
+        ? &fp.get_int("IMBNUM")
+        : &fp.get_int("SATNUM");
 
-    this->compressed_swl = try_get(kwPrefix + "SWL");
-    this->compressed_sgl = try_get(kwPrefix + "SGL");
-    this->compressed_swcr = try_get(kwPrefix + "SWCR");
-    this->compressed_sgcr = try_get(kwPrefix + "SGCR");
-    this->compressed_sowcr = try_get(kwPrefix + "SOWCR");
-    this->compressed_sogcr = try_get(kwPrefix + "SOGCR");
-    this->compressed_swu = try_get(kwPrefix + "SWU");
-    this->compressed_sgu = try_get(kwPrefix + "SGU");
-    this->compressed_pcw = try_get(kwPrefix + "PCW");
-    this->compressed_pcg = try_get(kwPrefix + "PCG");
-    this->compressed_krw = try_get(kwPrefix + "KRW");
-    this->compressed_krwr = try_get(kwPrefix + "KRWR");
-    this->compressed_kro = try_get(kwPrefix + "KRO");
-    this->compressed_krorg = try_get(kwPrefix + "KRORG");
-    this->compressed_krorw = try_get(kwPrefix + "KRORW");
-    this->compressed_krg = try_get(kwPrefix + "KRG");
-    this->compressed_krgr = try_get(kwPrefix + "KRGR");
+    this->swl_   = try_get("SWL");
+    this->sgl_   = try_get("SGL");
+
+    this->swcr_  = try_get("SWCR");
+    this->sgcr_  = try_get("SGCR");
+    this->sowcr_ = try_get("SOWCR");
+    this->sogcr_ = try_get("SOGCR");
+
+    this->swu_   = try_get("SWU");
+    this->sgu_   = try_get("SGU");
+
+    this->pcw_   = try_get("PCW");
+    this->pcg_   = try_get("PCG");
+
+    this->krw_   = try_get("KRW");
+    this->krwr_  = try_get("KRWR");
+    this->kro_   = try_get("KRO");
+    this->krorg_ = try_get("KRORG");
+    this->krorw_ = try_get("KRORW");
+    this->krg_   = try_get("KRG");
+    this->krgr_  = try_get("KRGR");
 
     // _may_ be needed to calculate the Leverett capillary pressure scaling factor
-    if (fp.has_double("PORO"))
-        this->compressed_poro = fp.get_double("PORO");
+    if (fp.has_double("PORO")) {
+        this->poro_ = &fp.get_double("PORO");
+    }
 
-    this->compressed_permx = fp.has_double("PERMX")
-        ? fp.get_double("PERMX")
-        : std::vector<double>(this->compressed_satnum.size());
+    this->permx_ = fp.has_double("PERMX")
+        ? &fp.get_double("PERMX")
+        : nullptr;
 
-    this->compressed_permy = fp.has_double("PERMY")
-        ? fp.get_double("PERMY") : this->compressed_permx;
+    this->permy_ = fp.has_double("PERMY")
+        ? &fp.get_double("PERMY")
+        : this->permx_;
 
-    this->compressed_permz = fp.has_double("PERMZ")
-        ? fp.get_double("PERMZ") : this->compressed_permx;
+    this->permz_ = fp.has_double("PERMZ")
+        ? &fp.get_double("PERMZ")
+        : this->permx_;
 }
-
-}
-

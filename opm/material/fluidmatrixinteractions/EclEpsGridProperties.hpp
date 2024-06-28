@@ -52,127 +52,162 @@ public:
                          bool useImbibition);
 #endif
 
-    unsigned satRegion(std::size_t active_index) const {
-        return this->compressed_satnum[active_index] - 1;
+    int satRegion(const std::size_t active_index) const
+    {
+        return (*this->satnum_)[active_index] - 1;
     }
 
-    double permx(std::size_t active_index) const {
-        return this->compressed_permx[active_index];
+    double permx(const std::size_t active_index) const
+    {
+        return this->perm(this->permx_, active_index);
     }
 
-    double permy(std::size_t active_index) const {
-        return this->compressed_permy[active_index];
+    double permy(const std::size_t active_index) const
+    {
+        return this->perm(this->permy_, active_index);
     }
 
-    double permz(std::size_t active_index) const {
-        return this->compressed_permz[active_index];
+    double permz(const std::size_t active_index) const
+    {
+        return this->perm(this->permy_, active_index);
     }
 
-    double poro(std::size_t active_index) const {
-        return this->compressed_poro[active_index];
+    double poro(const std::size_t active_index) const
+    {
+        return (*this->poro_)[active_index];
     }
 
-    const double * swl(std::size_t active_index) const {
-        return this->satfunc(this->compressed_swl, active_index);
+    const double* swl(const std::size_t active_index) const
+    {
+        return this->satfunc(this->swl_, active_index);
     }
 
-    const double * sgl(std::size_t active_index) const {
-        return this->satfunc(this->compressed_sgl, active_index);
+    const double* sgl(const std::size_t active_index) const
+    {
+        return this->satfunc(this->sgl_, active_index);
     }
 
-    const double * swcr(std::size_t active_index) const {
-        return this->satfunc(this->compressed_swcr, active_index);
+    const double* swcr(const std::size_t active_index) const
+    {
+        return this->satfunc(this->swcr_, active_index);
     }
 
-    const double * sgcr(std::size_t active_index) const {
-        return this->satfunc(this->compressed_sgcr, active_index);
+    const double* sgcr(const std::size_t active_index) const
+    {
+        return this->satfunc(this->sgcr_, active_index);
     }
 
-    const double * sowcr(std::size_t active_index) const {
-        return this->satfunc(this->compressed_sowcr, active_index);
+    const double* sowcr(const std::size_t active_index) const
+    {
+        return this->satfunc(this->sowcr_, active_index);
     }
 
-    const double * sogcr(std::size_t active_index) const {
-        return this->satfunc(this->compressed_sogcr, active_index);
+    const double* sogcr(const std::size_t active_index) const
+    {
+        return this->satfunc(this->sogcr_, active_index);
     }
 
-    const double * swu(std::size_t active_index) const {
-        return this->satfunc(this->compressed_swu, active_index);
+    const double* swu(const std::size_t active_index) const
+    {
+        return this->satfunc(this->swu_, active_index);
     }
 
-    const double * sgu(std::size_t active_index) const {
-        return this->satfunc(this->compressed_sgu, active_index);
+    const double* sgu(const std::size_t active_index) const
+    {
+        return this->satfunc(this->sgu_, active_index);
     }
 
-    const double * pcw(std::size_t active_index) const {
-        return this->satfunc(this->compressed_pcw, active_index);
+    const double* pcw(const std::size_t active_index) const
+    {
+        return this->satfunc(this->pcw_, active_index);
     }
 
-    const double * pcg(std::size_t active_index) const {
-        return this->satfunc(this->compressed_pcg, active_index);
+    const double* pcg(const std::size_t active_index) const
+    {
+        return this->satfunc(this->pcg_, active_index);
     }
 
-    const double * krw(std::size_t active_index) const {
-        return this->satfunc(this->compressed_krw, active_index);
+    const double* krw(const std::size_t active_index) const
+    {
+        return this->satfunc(this->krw_, active_index);
     }
 
-    const double * krwr(std::size_t active_index) const {
-        return this->satfunc(this->compressed_krwr, active_index);
+    const double* krwr(const std::size_t active_index) const
+    {
+        return this->satfunc(this->krwr_, active_index);
     }
 
-    const double * krg(std::size_t active_index) const {
-        return this->satfunc(this->compressed_krg, active_index);
+    const double* krg(const std::size_t active_index) const
+    {
+        return this->satfunc(this->krg_, active_index);
     }
 
-    const double * krgr(std::size_t active_index) const {
-        return this->satfunc(this->compressed_krgr, active_index);
+    const double* krgr(const std::size_t active_index) const
+    {
+        return this->satfunc(this->krgr_, active_index);
     }
 
-    const double * kro(std::size_t active_index) const {
-        return this->satfunc(this->compressed_kro, active_index);
+    const double* kro(const std::size_t active_index) const
+    {
+        return this->satfunc(this->kro_, active_index);
     }
 
-    const double * krorg(std::size_t active_index) const {
-        return this->satfunc(this->compressed_krorg, active_index);
+    const double* krorg(const std::size_t active_index) const
+    {
+        return this->satfunc(this->krorg_, active_index);
     }
 
-    const double * krorw(std::size_t active_index) const {
-        return this->satfunc(this->compressed_krorw, active_index);
+    const double* krorw(const std::size_t active_index) const
+    {
+        return this->satfunc(this->krorw_, active_index);
     }
 
 private:
-    const double *
-    satfunc(const std::vector<double>& data,
+    const std::vector<int>* satnum_ { nullptr };
+
+    const std::vector<double>* swl_ { nullptr };
+    const std::vector<double>* sgl_ { nullptr };
+    const std::vector<double>* swcr_ { nullptr };
+    const std::vector<double>* sgcr_ { nullptr };
+    const std::vector<double>* sowcr_ { nullptr };
+    const std::vector<double>* sogcr_ { nullptr };
+    const std::vector<double>* swu_ { nullptr };
+    const std::vector<double>* sgu_ { nullptr };
+
+    const std::vector<double>* pcw_ { nullptr };
+    const std::vector<double>* pcg_ { nullptr };
+
+    const std::vector<double>* krw_ { nullptr };
+    const std::vector<double>* krwr_ { nullptr };
+    const std::vector<double>* kro_ { nullptr };
+    const std::vector<double>* krorg_ { nullptr };
+    const std::vector<double>* krorw_ { nullptr };
+    const std::vector<double>* krg_ { nullptr };
+    const std::vector<double>* krgr_ { nullptr };
+
+    const std::vector<double>* permx_ { nullptr };
+    const std::vector<double>* permy_ { nullptr };
+    const std::vector<double>* permz_ { nullptr };
+    const std::vector<double>* poro_ { nullptr };
+
+    const double*
+    satfunc(const std::vector<double>* data,
             const std::size_t          active_index) const
     {
-        return data.empty() ? nullptr : &data[active_index];
+        return ((data == nullptr) || data->empty())
+            ? nullptr
+            : &(*data)[active_index];
     }
 
-
-    std::vector<int> compressed_satnum;
-    std::vector<double> compressed_swl;
-    std::vector<double> compressed_sgl;
-    std::vector<double> compressed_swcr;
-    std::vector<double> compressed_sgcr;
-    std::vector<double> compressed_sowcr;
-    std::vector<double> compressed_sogcr;
-    std::vector<double> compressed_swu;
-    std::vector<double> compressed_sgu;
-    std::vector<double> compressed_pcw;
-    std::vector<double> compressed_pcg;
-    std::vector<double> compressed_krw;
-    std::vector<double> compressed_krwr;
-    std::vector<double> compressed_kro;
-    std::vector<double> compressed_krorg;
-    std::vector<double> compressed_krorw;
-    std::vector<double> compressed_krg;
-    std::vector<double> compressed_krgr;
-
-    std::vector<double> compressed_permx;
-    std::vector<double> compressed_permy;
-    std::vector<double> compressed_permz;
-    std::vector<double> compressed_poro;
+    double perm(const std::vector<double>* data,
+                const std::size_t          active_index) const
+    {
+        return ((data == nullptr) || data->empty())
+            ? 0.0
+            : (*data)[active_index];
+    }
 };
-}
-#endif
 
+} // namespace Opm
+
+#endif
