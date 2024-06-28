@@ -1301,6 +1301,11 @@ if(ENABLE_ECL_INPUT)
        opm/input/eclipse/Schedule/Network/Branch.hpp
        opm/input/eclipse/Schedule/Network/ExtNetwork.hpp
        opm/input/eclipse/Schedule/Network/Node.hpp
+       opm/input/eclipse/Schedule/ResCoup/ReservoirCouplingInfo.hpp
+       opm/input/eclipse/Schedule/ResCoup/ReservoirCouplingKeywordHandlers.hpp
+       opm/input/eclipse/Schedule/ResCoup/GrupSlav.hpp
+       opm/input/eclipse/Schedule/ResCoup/MasterGroup.hpp
+       opm/input/eclipse/Schedule/ResCoup/Slaves.hpp
        opm/input/eclipse/Schedule/VFPInjTable.hpp
        opm/input/eclipse/Schedule/VFPProdTable.hpp
        opm/input/eclipse/Schedule/Well/Connection.hpp
