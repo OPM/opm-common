@@ -52,12 +52,25 @@ bool Slave::operator==(const Slave& rhs) const {
 
 void handleSLAVES(HandlerContext& handlerContext)
 {
-    auto rescoup = handlerContext.state().rescoup();
+    auto schedule_state = handlerContext.state();
+    auto rescoup = schedule_state.rescoup();
     const auto& keyword = handlerContext.keyword;
     bool slave_mode = handlerContext.static_schedule().slave_mode;
     if (slave_mode) {
         std::string msg = fmt::format("SLAVES keyword is not allowed in slave mode.");
         throw OpmInputError(msg, handlerContext.keyword.location());
+    }
+    if (schedule_state.sim_step() != 0) {
+        // Currently, I cannot see any reason why SLAVES should be allowed at
+        // any other report step than the first one. So to keep it simple, we throw
+        // an error if it is used in any other step. This will also simplify the
+        // implementation details of MPI communication between master and slave for now..
+        std::string msg = fmt::format("SLAVES is only allowed in the first simulation step.");
+        throw OpmInputError(msg, handlerContext.keyword.location());
+    }
+    if (rescoup.masterGroupCount() > 0) {
+        // Since GRUPMAST has been defined, we are now certain that we are in master mode
+        rescoup.masterMode(true);
     }
     for (const auto& record : keyword) {
         const std::string& slave_name =
