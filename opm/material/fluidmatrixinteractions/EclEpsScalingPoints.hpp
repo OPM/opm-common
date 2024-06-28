@@ -92,26 +92,27 @@ struct EclEpsScalingPointsInfo
 
     bool operator==(const EclEpsScalingPointsInfo<Scalar>& data) const
     {
-        return Swl == data.Swl &&
-               Sgl == data.Sgl &&
-               Swcr == data.Swcr &&
-               Sgcr == data.Sgcr &&
-               Sowcr == data.Sowcr &&
-               Sogcr == data.Sogcr &&
-               Swu == data.Swu &&
-               Sgu == data.Sgu &&
-               maxPcow == data.maxPcow &&
-               maxPcgo == data.maxPcgo &&
-               pcowLeverettFactor == data.pcowLeverettFactor &&
-               pcgoLeverettFactor == data.pcgoLeverettFactor &&
-               Krwr == data.Krwr &&
-               Krgr == data.Krgr &&
-               Krorw == data.Krorw &&
-               Krorg == data.Krorg &&
-               maxKrw == data.maxKrw &&
-               maxKrow == data.maxKrow &&
-               maxKrog == data.maxKrog &&
-               maxKrg == data.maxKrg;
+        return (Swl == data.Swl)
+            && (Sgl == data.Sgl)
+            && (Swcr == data.Swcr)
+            && (Sgcr == data.Sgcr)
+            && (Sowcr == data.Sowcr)
+            && (Sogcr == data.Sogcr)
+            && (Swu == data.Swu)
+            && (Sgu == data.Sgu)
+            && (maxPcow == data.maxPcow)
+            && (maxPcgo == data.maxPcgo)
+            && (pcowLeverettFactor == data.pcowLeverettFactor)
+            && (pcgoLeverettFactor == data.pcgoLeverettFactor)
+            && (Krwr == data.Krwr)
+            && (Krgr == data.Krgr)
+            && (Krorw == data.Krorw)
+            && (Krorg == data.Krorg)
+            && (maxKrw == data.maxKrw)
+            && (maxKrow == data.maxKrow)
+            && (maxKrog == data.maxKrog)
+            && (maxKrg == data.maxKrg)
+            ;
     }
 
     void print() const;
@@ -123,15 +124,9 @@ struct EclEpsScalingPointsInfo
      * I.e., the values which are used for the nested Fluid-Matrix interactions and which
      * are produced by them.
      */
-    void extractUnscaled(const satfunc::RawTableEndPoints& rtep,
-                         const satfunc::RawFunctionValues& rfunc,
+    void extractUnscaled(const satfunc::RawTableEndPoints&    rtep,
+                         const satfunc::RawFunctionValues&    rfunc,
                          const std::vector<double>::size_type satRegionIdx);
-
-    void update(Scalar& targetValue, const double * value_ptr)
-    {
-        if (value_ptr)
-            targetValue = *value_ptr;
-    }
 
     /*!
      * \brief Extract the values of the scaled scaling parameters.
@@ -141,18 +136,12 @@ struct EclEpsScalingPointsInfo
     void extractScaled(const EclipseState& eclState,
                        const EclEpsGridProperties& epsProperties,
                        unsigned activeIndex);
-#endif
 
 private:
-    void extractGridPropertyValue_(Scalar& targetValue,
-                                   const std::vector<double>* propData,
-                                   unsigned cartesianCellIdx)
-    {
-        if (!propData)
-            return;
-
-        targetValue = (*propData)[cartesianCellIdx];
-    }
+    void calculateLeverettFactors(const EclipseState& eclState,
+                                  const EclEpsGridProperties& epsProperties,
+                                  unsigned activeIndex);
+#endif  // HAVE_ECL_INPUT
 };
 
 /*!

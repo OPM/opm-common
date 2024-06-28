@@ -22,6 +22,7 @@
 */
 
 #include <config.h>
+
 #include <opm/material/fluidmatrixinteractions/EclEpsScalingPoints.hpp>
 
 #include <opm/material/fluidmatrixinteractions/EclEpsConfig.hpp>
@@ -30,20 +31,34 @@
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/SatfuncPropertyInitializers.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
+
 #include <opm/material/common/Means.hpp>
+
+#include <opm/material/fluidmatrixinteractions/EclEpsGridProperties.hpp>
+
 #include <cmath>
 #include <stdexcept>
-#include <opm/material/fluidmatrixinteractions/EclEpsGridProperties.hpp>
-#endif
+#include <vector>
+#endif // HAVE_ECL_INPUT
 
 #include <cassert>
 #include <iostream>
 #include <string>
 
-namespace Opm {
+#if HAVE_ECL_INPUT
+namespace {
+    template <typename Scalar>
+    void updateIfNonNull(Scalar& targetValue, const double* value_ptr)
+    {
+        if (value_ptr != nullptr) {
+            targetValue = static_cast<Scalar>(*value_ptr);
+        }
+    }
+} // Anonymous namespace
+#endif // HAVE_ECL_INPUT
 
 template<class Scalar>
-void EclEpsScalingPointsInfo<Scalar>::print() const
+void Opm::EclEpsScalingPointsInfo<Scalar>::print() const
 {
     std::cout << "    Swl: " << Swl << '\n'
               << "    Sgl: " << Sgl << '\n'
@@ -69,10 +84,10 @@ void EclEpsScalingPointsInfo<Scalar>::print() const
 
 #if HAVE_ECL_INPUT
 template<class Scalar>
-void EclEpsScalingPointsInfo<Scalar>::
-extractUnscaled(const satfunc::RawTableEndPoints& rtep,
-                const satfunc::RawFunctionValues& rfunc,
-                const std::vector<double>::size_type   satRegionIdx)
+void Opm::EclEpsScalingPointsInfo<Scalar>::
+extractUnscaled(const satfunc::RawTableEndPoints&    rtep,
+                const satfunc::RawFunctionValues&    rfunc,
+                const std::vector<double>::size_type satRegionIdx)
 {
     this->Swl = rtep.connate.water[satRegionIdx];
     this->Sgl = rtep.connate.gas  [satRegionIdx];
@@ -104,104 +119,127 @@ extractUnscaled(const satfunc::RawTableEndPoints& rtep,
 }
 
 template<class Scalar>
-void EclEpsScalingPointsInfo<Scalar>::
-extractScaled(const EclipseState& eclState,
-               const EclEpsGridProperties& epsProperties,
-               unsigned activeIndex)
+void Opm::EclEpsScalingPointsInfo<Scalar>::
+extractScaled(const EclipseState&         eclState,
+              const EclEpsGridProperties& epsProperties,
+              unsigned                    activeIndex)
 {
     // overwrite the unscaled values with the values for the cell if it is
     // explicitly specified by the corresponding keyword.
-    update(Swl,     epsProperties.swl(activeIndex));
-    update(Sgl,     epsProperties.sgl(activeIndex));
-    update(Swcr,    epsProperties.swcr(activeIndex));
-    update(Sgcr,    epsProperties.sgcr(activeIndex));
+    updateIfNonNull(this->Swl,     epsProperties.swl(activeIndex));
+    updateIfNonNull(this->Sgl,     epsProperties.sgl(activeIndex));
+    updateIfNonNull(this->Swcr,    epsProperties.swcr(activeIndex));
+    updateIfNonNull(this->Sgcr,    epsProperties.sgcr(activeIndex));
 
-    update(Sowcr,   epsProperties.sowcr(activeIndex));
-    update(Sogcr,   epsProperties.sogcr(activeIndex));
-    update(Swu,     epsProperties.swu(activeIndex));
-    update(Sgu,     epsProperties.sgu(activeIndex));
-    update(maxPcow, epsProperties.pcw(activeIndex));
-    update(maxPcgo, epsProperties.pcg(activeIndex));
+    updateIfNonNull(this->Sowcr,   epsProperties.sowcr(activeIndex));
+    updateIfNonNull(this->Sogcr,   epsProperties.sogcr(activeIndex));
+    updateIfNonNull(this->Swu,     epsProperties.swu(activeIndex));
+    updateIfNonNull(this->Sgu,     epsProperties.sgu(activeIndex));
+    updateIfNonNull(this->maxPcow, epsProperties.pcw(activeIndex));
+    updateIfNonNull(this->maxPcgo, epsProperties.pcg(activeIndex));
 
-    update(this->Krwr,  epsProperties.krwr(activeIndex));
-    update(this->Krgr,  epsProperties.krgr(activeIndex));
-    update(this->Krorw, epsProperties.krorw(activeIndex));
-    update(this->Krorg, epsProperties.krorg(activeIndex));
+    updateIfNonNull(this->Krwr,  epsProperties.krwr(activeIndex));
+    updateIfNonNull(this->Krgr,  epsProperties.krgr(activeIndex));
+    updateIfNonNull(this->Krorw, epsProperties.krorw(activeIndex));
+    updateIfNonNull(this->Krorg, epsProperties.krorg(activeIndex));
 
-    update(maxKrw,  epsProperties.krw(activeIndex));
-    update(maxKrg,  epsProperties.krg(activeIndex));
-    update(maxKrow, epsProperties.kro(activeIndex));
-    update(maxKrog, epsProperties.kro(activeIndex));
+    updateIfNonNull(this->maxKrw,  epsProperties.krw(activeIndex));
+    updateIfNonNull(this->maxKrg,  epsProperties.krg(activeIndex));
+    updateIfNonNull(this->maxKrow, epsProperties.kro(activeIndex));
+    updateIfNonNull(this->maxKrog, epsProperties.kro(activeIndex));
 
-    // compute the Leverett capillary pressure scaling factors if applicable.  note
-    // that this needs to be done using non-SI units to make it correspond to the
-    // documentation.
-    pcowLeverettFactor = 1.0;
-    pcgoLeverettFactor = 1.0;
+    this->pcowLeverettFactor = 1.0;
+    this->pcgoLeverettFactor = 1.0;
+
     if (eclState.getTableManager().useJFunc()) {
-        const auto& jfunc = eclState.getTableManager().getJFunc();
-        const auto& jfuncDir = jfunc.direction();
-
-        Scalar perm;
-        if (jfuncDir == JFunc::Direction::X)
-            perm = epsProperties.permx(activeIndex);
-        else if (jfuncDir == JFunc::Direction::Y)
-            perm = epsProperties.permy(activeIndex);
-        else if (jfuncDir == JFunc::Direction::Z)
-            perm = epsProperties.permz(activeIndex);
-        else if (jfuncDir == JFunc::Direction::XY)
-            // TODO: verify that this really is the arithmetic mean. (the
-            // documentation just says that the "average" should be used, IMO the
-            // harmonic mean would be more appropriate because that's what's usually
-            // applied when calculating the fluxes.)
-        {
-            double permx = epsProperties.permx(activeIndex);
-            double permy = epsProperties.permy(activeIndex);
-            perm = arithmeticMean(permx, permy);
-        } else
-            throw std::runtime_error("Illegal direction indicator for the JFUNC "
-                                     "keyword ("+std::to_string(int(jfuncDir))+")");
-
-        // convert permeability from m^2 to mD
-        perm *= 1.01325e15;
-
-        Scalar poro = epsProperties.poro(activeIndex);
-        Scalar alpha = jfunc.alphaFactor();
-        Scalar beta = jfunc.betaFactor();
-
-        // the part of the Leverett capillary pressure which does not depend on
-        // surface tension.
-        Scalar commonFactor = std::pow(poro, alpha)/std::pow(perm, beta);
-
-        // multiply the documented constant by 10^5 because we want the pressures
-        // in [Pa], not in [bar]
-        const Scalar Uconst = 0.318316 * 1e5;
-
-        // compute the oil-water Leverett factor.
-        const auto& jfuncFlag = jfunc.flag();
-        if (jfuncFlag == JFunc::Flag::WATER || jfuncFlag == JFunc::Flag::BOTH) {
-            // note that we use the surface tension in terms of [dyn/cm]
-            Scalar gamma =
-                jfunc.owSurfaceTension();
-            pcowLeverettFactor = commonFactor*gamma*Uconst;
-        }
-
-        // compute the gas-oil Leverett factor.
-        if (jfuncFlag == JFunc::Flag::GAS || jfuncFlag == JFunc::Flag::BOTH) {
-            // note that we use the surface tension in terms of [dyn/cm]
-            Scalar gamma =
-                jfunc.goSurfaceTension();
-            pcgoLeverettFactor = commonFactor*gamma*Uconst;
-        }
+        this->calculateLeverettFactors(eclState, epsProperties, activeIndex);
     }
 }
-#endif
+
+template <typename Scalar>
+void Opm::EclEpsScalingPointsInfo<Scalar>::
+calculateLeverettFactors(const EclipseState&         eclState,
+                         const EclEpsGridProperties& epsProperties,
+                         const unsigned              activeIndex)
+{
+    // compute the Leverett capillary pressure scaling factors if
+    // applicable.  note that this needs to be done using non-SI units to
+    // make it correspond to the documentation.
+
+    const auto& jfunc = eclState.getTableManager().getJFunc();
+    const auto jfuncDir = jfunc.direction();
+
+    Scalar perm;
+    if (jfuncDir == JFunc::Direction::X) {
+        perm = epsProperties.permx(activeIndex);
+    }
+    else if (jfuncDir == JFunc::Direction::Y) {
+        perm = epsProperties.permy(activeIndex);
+    }
+    else if (jfuncDir == JFunc::Direction::Z) {
+        perm = epsProperties.permz(activeIndex);
+    }
+    else if (jfuncDir == JFunc::Direction::XY) {
+        // TODO: verify that this really is the arithmetic mean.
+        //
+        // The documentation just says that the "average" should be
+        // used,  IMO the harmonic mean would be more appropriate because
+        // that's what's usually applied when calculating the fluxes.
+
+        double permx = epsProperties.permx(activeIndex);
+        double permy = epsProperties.permy(activeIndex);
+        perm = arithmeticMean(permx, permy);
+    }
+    else {
+        throw std::runtime_error {
+            "Illegal direction indicator for the JFUNC "
+            "keyword (" + std::to_string(int(jfuncDir)) + ")"
+        };
+    }
+
+    // convert permeability from m^2 to mD
+    perm *= 1.01325e15;
+
+    const Scalar poro  = epsProperties.poro(activeIndex);
+    const Scalar alpha = jfunc.alphaFactor();
+    const Scalar beta  = jfunc.betaFactor();
+
+    // the part of the Leverett capillary pressure which does not depend
+    // on surface tension.
+    const Scalar commonFactor = std::pow(poro, alpha) / std::pow(perm, beta);
+
+    // multiply the documented constant by 10^5 because we want the
+    // pressures in [Pa], not in [bar]
+    const Scalar Uconst = 0.318316 * 1e5;
+
+    // compute the oil-water Leverett factor.
+    const auto& jfuncFlag = jfunc.flag();
+    if ((jfuncFlag == JFunc::Flag::WATER) ||
+        (jfuncFlag == JFunc::Flag::BOTH))
+    {
+        // note that we use the surface tension in terms of [dyn/cm]
+        const Scalar gamma = jfunc.owSurfaceTension();
+        this->pcowLeverettFactor = commonFactor * gamma * Uconst;
+    }
+
+    // compute the gas-oil Leverett factor.
+    if ((jfuncFlag == JFunc::Flag::GAS) ||
+        (jfuncFlag == JFunc::Flag::BOTH))
+    {
+        // note that we use the surface tension in terms of [dyn/cm]
+        const Scalar gamma = jfunc.goSurfaceTension();
+        this->pcgoLeverettFactor = commonFactor * gamma * Uconst;
+    }
+}
+#endif  // HAVE_ECL_INPUT
+
+// ---------------------------------------------------------------------------
 
 template<class Scalar>
-void EclEpsScalingPoints<Scalar>::
+void Opm::EclEpsScalingPoints<Scalar>::
 init(const EclEpsScalingPointsInfo<Scalar>& epsInfo,
-     const EclEpsConfig& config,
-     EclTwoPhaseSystemType epsSystemType)
+     const EclEpsConfig&                    config,
+     const EclTwoPhaseSystemType            epsSystemType)
 {
     if (epsSystemType == EclTwoPhaseSystemType::OilWater) {
         // saturation scaling for capillary pressure
@@ -269,18 +307,19 @@ init(const EclEpsScalingPointsInfo<Scalar>& epsInfo,
 }
 
 template<class Scalar>
-void EclEpsScalingPoints<Scalar>::print() const
+void Opm::EclEpsScalingPoints<Scalar>::print() const
 {
     std::cout << "    saturationKrnPoints_[0]: " << saturationKrnPoints_[0] << "\n"
               << "    saturationKrnPoints_[1]: " << saturationKrnPoints_[1] << "\n"
               << "    saturationKrnPoints_[2]: " << saturationKrnPoints_[2] << "\n";
-
 }
 
-template struct EclEpsScalingPointsInfo<float>;
-template struct EclEpsScalingPointsInfo<double>;
+// ===========================================================================
 
-template class EclEpsScalingPoints<float>;
-template class EclEpsScalingPoints<double>;
+template struct Opm::EclEpsScalingPointsInfo<float>;
+template struct Opm::EclEpsScalingPointsInfo<double>;
 
-} // namespace Opm
+// ---------------------------------------------------------------------------
+
+template class Opm::EclEpsScalingPoints<float>;
+template class Opm::EclEpsScalingPoints<double>;
