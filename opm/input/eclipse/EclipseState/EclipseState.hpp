@@ -121,6 +121,7 @@ namespace Opm {
 
         const Runspec& runspec() const;
         const AquiferConfig& aquifer() const;
+        const CompositionalConfig& compositionalConfig() const;
         const TracerConfig& tracer() const;
         const MICPpara& getMICPpara() const;
         const WagHysteresisConfig& getWagHysteresis() const;

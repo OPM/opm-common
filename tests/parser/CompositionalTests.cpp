@@ -49,8 +49,48 @@ METRIC
 TABDIMS
 8* 2 3/
 
+OIL
+GAS
+DIMENS
+4 1 1
+/
+
 COMPS
 3 /
+
+------------------------------------------------------------------------
+GRID
+------------------------------------------------------------------------
+DX
+4*10
+/
+DY
+4*1
+/
+DZ
+4*1
+/
+
+TOPS
+4*0
+/
+
+
+PERMX
+4*100
+/
+
+PERMY
+4*100
+/
+
+PERMZ
+4*100
+/
+
+PORO
+1. 2*0.1  1.
+/
 
 ------------------------------------------------------------------------
 PROPS
@@ -98,6 +138,50 @@ VCRIT
 
 STCOND
 15.0 /
+
+SGOF
+-- Sg    Krg    Kro    Pcgo
+   0.0   0.0    1.0    0.0
+   0.1   0.1    0.9    0.0
+   0.2   0.2    0.8    0.0
+   0.3   0.3    0.7    0.0
+   0.4   0.4    0.6    0.0
+   0.5   0.5    0.5    0.0
+   0.6   0.6    0.4    0.0
+   0.7   0.7    0.3    0.0
+   0.8   0.8    0.2    0.0
+   0.9   0.9    0.1    0.0
+   1.0   1.0    0.0    0.0
+/
+
+
+------------------------------------------------------------------------
+SOLUTION
+------------------------------------------------------------------------
+
+PRESSURE
+1*150 2*75. 1*37.5
+/
+
+SGAS
+4*1.
+/
+
+TEMPI
+4*150
+/
+
+XMF
+1*0.99 3*0.5
+1*0.009 3*0.3
+1*0.001 3*0.2
+/
+
+YMF
+1*0.009 3*0.3
+1*0.001 3*0.2
+1*0.99  3*0.5
+/
 
 END
 )");
@@ -211,6 +295,35 @@ BOOST_AUTO_TEST_CASE(CompositionalParsingTest) {
                                             usys.to_si( "Mass/Moles", 44.1),
                                             usys.to_si( "Mass/Moles", 16.1) };
         check_vectors_close(ref_mw1, mw1, tolerance);
+    }
+
+    EclipseState es(deck);
+    const auto& fp = es.fieldProps();
+    const std::size_t num_cell = es.getInputGrid().getNumActive();
+    {
+        const auto& xmf = fp.get_double("XMF");
+        BOOST_CHECK_EQUAL(xmf.size(), num_comps * num_cell);
+        std::vector<double> ref_xmf{0.99, 0.5, 0.5, 0.5,
+                                    0.009, 0.3, 0.3, 0.3,
+                                    0.001, 0.2, 0.2, 0.2};
+        check_vectors_close(xmf, ref_xmf, tolerance);
+    }
+
+    {
+        const auto& ymf = fp.get_double("YMF");
+        BOOST_CHECK_EQUAL(ymf.size(), num_comps * num_cell);
+        std::vector<double> ref_ymf{0.009, 0.3, 0.3, 0.3,
+                                    0.001, 0.2, 0.2, 0.2,
+                                    0.99, 0.5, 0.5, 0.5};
+
+        check_vectors_close(ymf, ref_ymf, tolerance);
+    }
+
+    {
+        const auto& tempi = fp.get_double("TEMPI");
+        BOOST_CHECK_EQUAL(tempi.size(), num_cell);
+        std::vector<double> ref_tempi(4, 150. + 273.15);
+        check_vectors_close(tempi, ref_tempi, tolerance);
     }
 }
 

@@ -35,14 +35,21 @@ struct keyword_info {
     bool top = false;
     bool global = false;
 
+    // For FieldProps-related keywords, each grid cell can have multiple values.
+    // This occurs specifically during compositional simulations, where the number
+    // of values depends on the number of compositions. In other simulations, num_value is typically one.
+    // The 'mutable' keyword allows num_value to be updated at a later stage when parsing relevant keywords.
+    mutable std::size_t num_value = 1;
+
+
     bool operator==(const keyword_info& other) const {
         return this->unit == other.unit &&
                this->scalar_init == other.scalar_init &&
                this->multiplier == other.multiplier &&
                this->top == other.top &&
-               this->global == other.global;
+               this->global == other.global &&
+               this->num_value == other.num_value;
     }
-
 
     keyword_info<T>& init(T init_value) {
         this->scalar_init = init_value;
@@ -66,6 +73,13 @@ struct keyword_info {
 
     keyword_info<T>& global_kw(bool g) {
         this->global = g;
+        return *this;
+    }
+
+    const keyword_info<T>& num_value_per_cell(const std::size_t n) const {
+        if (n > 0) {
+            this->num_value = n;
+        }
         return *this;
     }
 };

@@ -37,19 +37,27 @@ namespace Opm::Fieldprops {
 
     template <typename T>
     static void compress(std::vector<T>&          data,
-                         const std::vector<bool>& active_map)
+                         const std::vector<bool>& active_map,
+                         const std::size_t values_per_cell = 1)
     {
-        std::size_t shift = 0;
-        for (std::size_t g = 0; g < active_map.size(); ++g) {
-            if (active_map[g] && shift > 0) {
-                data[g - shift] = data[g];
-                continue;
-            }
+       const std::size_t num_cells = active_map.size();
+       if (data.size() != num_cells * values_per_cell) {
+           throw std::invalid_argument("Data size does not match the size of active_map times values_per_cell.");
+       }
 
-            if (!active_map[g]) {
-                shift += 1;
-            }
-        }
+       std::size_t shift = 0;
+       for (std::size_t value_index = 0; value_index < values_per_cell; ++value_index) {
+           for (std::size_t g = 0; g < active_map.size(); ++g) {
+               if (active_map[g] && shift > 0) {
+                   const std::size_t orig_index = value_index * num_cells + g;
+                   data[orig_index - shift] = data[orig_index];
+                   continue;
+               }
+               if (!active_map[g]) {
+                   shift += 1;
+               }
+           }
+       }
 
         data.resize(data.size() - shift);
     }
@@ -78,14 +86,14 @@ namespace Opm::Fieldprops {
         FieldData(const keywords::keyword_info<T>& info,
                   const std::size_t                active_size,
                   const std::size_t                global_size)
-            : data        (active_size)
-            , value_status(active_size, value::status::uninitialized)
+            : data        (active_size * info.num_value)
+            , value_status(active_size * info.num_value, value::status::uninitialized)
             , kw_info     (info)
             , all_set     (false)
         {
             if (global_size != 0) {
-                this->global_data.emplace(global_size);
-                this->global_value_status.emplace(global_size, value::status::uninitialized);
+                this->global_data.emplace(global_size * this->numValuePerCell());
+                this->global_value_status.emplace(global_size * this->numValuePerCell(), value::status::uninitialized);
             }
 
             if (info.scalar_init) {
@@ -93,9 +101,19 @@ namespace Opm::Fieldprops {
             }
         }
 
-        std::size_t size() const
+        std::size_t numCells() const
+        {
+            return this->data.size() / this->numValuePerCell();
+        }
+
+        std::size_t dataSize() const
         {
             return this->data.size();
+        }
+
+        std::size_t numValuePerCell() const
+        {
+            return this->kw_info.num_value;
         }
 
         bool valid() const
@@ -126,8 +144,8 @@ namespace Opm::Fieldprops {
 
         void compress(const std::vector<bool>& active_map)
         {
-            Fieldprops::compress(this->data, active_map);
-            Fieldprops::compress(this->value_status, active_map);
+            Fieldprops::compress(this->data, active_map, this->numValuePerCell());
+            Fieldprops::compress(this->value_status, active_map, this->numValuePerCell());
         }
 
         void copy(const FieldData<T>& src, const std::vector<Box::cell_index>& index_list) {
@@ -156,10 +174,10 @@ namespace Opm::Fieldprops {
 
         void default_assign(const std::vector<T>& src)
         {
-            if (src.size() != this->size()) {
+            if (src.size() != this->dataSize()) {
                 throw std::invalid_argument {
                     "Size mismatch got: " + std::to_string(src.size()) +
-                    ", expected: " + std::to_string(this->size())
+                    ", expected: " + std::to_string(this->dataSize())
                 };
             }
 
@@ -170,10 +188,10 @@ namespace Opm::Fieldprops {
 
         void default_update(const std::vector<T>& src)
         {
-            if (src.size() != this->size()) {
+            if (src.size() != this->dataSize()) {
                 throw std::invalid_argument {
                     "Size mismatch got: " + std::to_string(src.size()) +
-                    ", expected: " + std::to_string(this->size())
+                    ", expected: " + std::to_string(this->dataSize())
                 };
             }
 

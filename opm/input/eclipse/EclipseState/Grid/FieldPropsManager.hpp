@@ -46,7 +46,8 @@ public:
     // The default constructor should be removed when the FieldPropsManager is mandatory
     // The default constructed fieldProps object is **NOT** usable
     FieldPropsManager() = default;
-    FieldPropsManager(const Deck& deck, const Phases& ph, EclipseGrid& grid, const TableManager& tables);
+    FieldPropsManager(const Deck& deck, const Phases& ph, EclipseGrid& grid, const TableManager& tables,
+                      const std::size_t ncomps = 0); // TODO: removing the default value for ncomps
     virtual ~FieldPropsManager() = default;
 
     virtual void reset_actnum(const std::vector<int>& actnum);

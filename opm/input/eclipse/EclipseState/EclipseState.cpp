@@ -138,10 +138,10 @@ namespace Opm {
         , m_inputGrid(         deck, nullptr )
         , m_inputNnc(          m_inputGrid, deck)
         , m_gridDims(          deck )
-        , field_props(         deck, m_runspec.phases(), m_inputGrid, m_tables)
+        , field_props(         deck, m_runspec.phases(), m_inputGrid, m_tables, m_runspec.numComps())
         , m_simulationConfig(  m_eclipseConfig.init().restartRequested(), deck, field_props)
         , aquifer_config(      m_tables, m_inputGrid, deck, field_props)
-        , compositional_config(  deck, m_runspec)
+        , compositional_config(deck, m_runspec)
         , m_transMult(         GridDims(deck), deck, field_props)
         , tracer_config(       m_deckUnitSystem, deck)
         , m_micppara(          deck)
@@ -335,6 +335,10 @@ namespace Opm {
 
     const AquiferConfig& EclipseState::aquifer() const {
         return this->aquifer_config;
+    }
+
+    const CompositionalConfig& EclipseState::compositionalConfig() const {
+        return this->compositional_config;
     }
 
     const TracerConfig& EclipseState::tracer() const {

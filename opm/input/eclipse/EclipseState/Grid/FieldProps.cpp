@@ -144,6 +144,12 @@ global_kw_info(const std::string& name, const bool allow_unsupported)
     {
         return kwPos->second;
     }
+    
+    if (auto kwPos = SOLUTION::composition_keywords.find(name);
+        kwPos != SOLUTION::composition_keywords.end())
+    {
+        return kwPos->second;
+    }
 
     if (auto kwPos = SCHEDULE::double_keywords.find(name);
         kwPos != SCHEDULE::double_keywords.end())
@@ -251,15 +257,17 @@ std::string default_region_keyword(const Deck& deck)
 }
 
 template <typename T>
-void verify_deck_data(const DeckKeyword&    keyword,
-                      const std::vector<T>& deck_data,
-                      const Box&            box)
+void verify_deck_data(const Fieldprops::keywords::keyword_info<T>& kw_info,
+                      const DeckKeyword&                           keyword,
+                      const std::vector<T>&                        deck_data,
+                      const Box&                                   box)
 {
-    if (box.size() != deck_data.size()) {
+    // there can be multiple values for each grid cell
+    if (box.size() * kw_info.num_value != deck_data.size()) {
         const auto& location = keyword.location();
         std::string msg = "Fundamental error with keyword: " + keyword.name() +
             " at: " + location.filename + ", line: " + std::to_string(location.lineno) +
-            " got " + std::to_string(deck_data.size()) + " elements - expected : " + std::to_string(box.size());
+            " got " + std::to_string(deck_data.size()) + " elements - expected : " + std::to_string(box.size() * kw_info.num_value);
         throw std::invalid_argument(msg);
     }
 }
@@ -285,18 +293,21 @@ void assign_deck(const Fieldprops::keywords::keyword_info<T>& kw_info,
                  const std::vector<value::status>& deck_status,
                  const Box& box)
 {
-    verify_deck_data(keyword, deck_data, box);
+    verify_deck_data(kw_info, keyword, deck_data, box);
 
     for (const auto& cell_index : box.index_list()) {
         auto active_index = cell_index.active_index;
         auto data_index = cell_index.data_index;
+        for (size_t i = 0; i < kw_info.num_value; ++i) {
+            auto deck_data_index = i* box.size() + data_index;
+            auto data_active_index = i * box.size() + active_index;
 
-        if (value::has_value(deck_status[data_index])) {
-            if ((deck_status[data_index] == value::status::deck_value) ||
-                (field_data.value_status[active_index] == value::status::uninitialized))
-            {
-                field_data.data[active_index] = deck_data[data_index];
-                field_data.value_status[active_index] = deck_status[data_index];
+            if (value::has_value(deck_status[deck_data_index])) {
+                if (deck_status[deck_data_index] == value::status::deck_value ||
+                    field_data.value_status[data_active_index] == value::status::uninitialized) {
+                    field_data.data[data_active_index] = deck_data[deck_data_index];
+                    field_data.value_status[data_active_index] = deck_status[deck_data_index];
+                }
             }
         }
     }
@@ -325,8 +336,7 @@ void multiply_deck(const Fieldprops::keywords::keyword_info<T>& kw_info,
                    const std::vector<value::status>& deck_status,
                    const Box& box)
 {
-    verify_deck_data(keyword, deck_data, box);
-
+    verify_deck_data(kw_info, keyword, deck_data, box);
     for (const auto& cell_index : box.index_list()) {
         auto active_index = cell_index.active_index;
         auto data_index = cell_index.data_index;
@@ -593,7 +603,8 @@ bool FieldProps::rst_cmp(const FieldProps& full_arg, const FieldProps& rst_arg)
 FieldProps::FieldProps(const Deck& deck,
                        const Phases& phases,
                        EclipseGrid& grid,
-                       const TableManager& tables_arg)
+                       const TableManager& tables_arg,
+                       const std::size_t ncomps)
     : active_size(grid.getNumActive())
     , global_size(grid.getCartesianSize())
     , unit_system(deck.getActiveUnitSystem())
@@ -653,7 +664,7 @@ FieldProps::FieldProps(const Deck& deck,
     }
 
     if (DeckSection::hasSOLUTION(deck)) {
-        this->scanSOLUTIONSection(SOLUTIONSection(deck));
+        this->scanSOLUTIONSection(SOLUTIONSection(deck), ncomps);
     }
 }
 
@@ -794,7 +805,8 @@ bool FieldProps::supported<double>(const std::string& keyword)
         return true;
     }
 
-    if (Fieldprops::keywords::SOLUTION::double_keywords.count(keyword) != 0) {
+    if (Fieldprops::keywords::SOLUTION::double_keywords.count(keyword) != 0 ||
+        Fieldprops::keywords::SOLUTION::composition_keywords.count(keyword) != 0) {
         return true;
     }
 
@@ -1912,13 +1924,27 @@ void FieldProps::scanREGIONSSection(const REGIONSSection& regions_section)
     }
 }
 
-void FieldProps::scanSOLUTIONSection(const SOLUTIONSection& solution_section)
+void FieldProps::scanSOLUTIONSection(const SOLUTIONSection& solution_section,
+                                     const std::size_t      ncomps)
 {
     auto box = makeGlobalGridBox(this->grid_ptr);
     for (const auto& keyword : solution_section) {
         const std::string& name = keyword.name();
         if (Fieldprops::keywords::SOLUTION::double_keywords.count(name) == 1) {
             this->handle_double_keyword(Section::SOLUTION, Fieldprops::keywords::SOLUTION::double_keywords.at(name), keyword, box);
+            continue;
+        }
+
+        if (Fieldprops::keywords::SOLUTION::composition_keywords.count(name) == 1) {
+            if (ncomps < 1) {
+                throw std::logic_error {
+                    fmt::format("With compostional keyword {} defined in SOLUTION, while the DATA file "
+                                "does not appear to be a compostional case.", name)
+                };
+            }
+            // TODO: maybe we should go to the function handle_keyword for more flexibility
+            const auto& kw_info = Fieldprops::keywords::SOLUTION::composition_keywords.at(name).num_value_per_cell(ncomps);
+            this->handle_double_keyword(Section::SOLUTION, kw_info, keyword, box);
             continue;
         }
 
