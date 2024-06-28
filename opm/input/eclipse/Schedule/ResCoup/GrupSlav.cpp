@@ -100,11 +100,20 @@ ReservoirCoupling::GrupSlav::FilterFlag getFilterFlag(const DeckItem& keyword, H
 
 void handleGRUPSLAV(HandlerContext& handlerContext)
 {
-    auto rescoup = handlerContext.state().rescoup();
+    auto schedule_state = handlerContext.state();
+    auto rescoup = schedule_state.rescoup();
     const auto& keyword = handlerContext.keyword;
     bool slave_mode = handlerContext.static_schedule().slave_mode;
     if (!slave_mode) {
         std::string msg = fmt::format("GRUPSLAV is only allowed in slave mode.");
+        throw OpmInputError(msg, handlerContext.keyword.location());
+    }
+    if (schedule_state.sim_step() != 0) {
+        // Currently, I cannot see any reason why GRUPSLAV should be allowed at
+        // any other report step than the first one. So to keep it simple, we throw
+        // an error if it is used in any other step. This will also simplify the
+        // implementation details of MPI communication between master and slave for now..
+        std::string msg = fmt::format("GRUPSLAV is only allowed in the first simulation step.");
         throw OpmInputError(msg, handlerContext.keyword.location());
     }
     for (const auto& record : keyword) {
