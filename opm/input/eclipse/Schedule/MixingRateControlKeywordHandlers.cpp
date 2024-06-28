@@ -52,13 +52,19 @@ void handleDRSDTCON(HandlerContext& handlerContext)
     const std::size_t numPvtRegions = handlerContext.static_schedule().m_runspec.tabdims().getNumPVTTables();
     std::vector<double> maximums(numPvtRegions);
     std::vector<std::string> options(numPvtRegions);
+    std::vector<double> psis(numPvtRegions);
+    std::vector<double> omegas(numPvtRegions);
     for (const auto& record : handlerContext.keyword) {
         const auto& max = record.getItem<ParserKeywords::DRSDTCON::DRSDT_MAX>().getSIDouble(0);
+        const auto& omega = record.getItem<ParserKeywords::DRSDTCON::OMEGA>().getSIDouble(0);
+        const auto& psi = record.getItem<ParserKeywords::DRSDTCON::PSI>().getSIDouble(0);
         const auto& option = record.getItem<ParserKeywords::DRSDTCON::OPTION>().get< std::string >(0);
         std::fill(maximums.begin(), maximums.end(), max);
         std::fill(options.begin(), options.end(), option);
+        std::fill(psis.begin(), psis.end(), psi);
+        std::fill(omegas.begin(), omegas.end(), omega);
         auto& ovp = handlerContext.state().oilvap();
-        OilVaporizationProperties::updateDRSDTCON(ovp, maximums, options);
+        OilVaporizationProperties::updateDRSDTCON(ovp, maximums, options, psis, omegas);
     }
 }
 
