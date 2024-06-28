@@ -127,17 +127,17 @@ namespace Opm {
                         const ParseContext& parseContext,
                         ErrorGuard& errors,
                         std::shared_ptr<const Python> python,
+                        const bool slave_mode,
                         const std::optional<int>& output_interval,
                         const RestartIO::RstState * rst,
                         const TracerConfig * tracer_config)
     try :
-        m_static( python, ScheduleRestartInfo(rst, deck), deck, runspec, output_interval, parseContext, errors ),
+        m_static( python, ScheduleRestartInfo(rst, deck), deck, runspec, output_interval, parseContext, errors, slave_mode ),
         m_sched_deck(TimeService::from_time_t(runspec.start_time()), deck, m_static.rst_info ),
         completed_cells(ecl_grid.getNX(), ecl_grid.getNY(), ecl_grid.getNZ())
     {
         this->restart_output.resize(this->m_sched_deck.size());
         this->restart_output.clearRemainingEvents(0);
-
         this->simUpdateFromPython = std::make_shared<SimulatorUpdate>();
 
         //const ScheduleGridWrapper gridWrapper { grid } ;
@@ -183,10 +183,11 @@ namespace Opm {
                         const ParseContext& parseContext,
                         T&& errors,
                         std::shared_ptr<const Python> python,
+                        const bool slave_mode,
                         const std::optional<int>& output_interval,
                         const RestartIO::RstState * rst,
                         const TracerConfig* tracer_config) :
-        Schedule(deck, grid, fp, runspec, parseContext, errors, python, output_interval, rst, tracer_config)
+        Schedule(deck, grid, fp, runspec, parseContext, errors, python, slave_mode, output_interval, rst, tracer_config)
     {}
 
 
@@ -195,14 +196,15 @@ namespace Opm {
                         const FieldPropsManager& fp,
                         const Runspec &runspec,
                         std::shared_ptr<const Python> python,
+                        const bool slave_mode,
                         const std::optional<int>& output_interval,
                         const RestartIO::RstState * rst,
                         const TracerConfig* tracer_config) :
-        Schedule(deck, grid, fp, runspec, ParseContext(), ErrorGuard(), python, output_interval, rst, tracer_config)
+        Schedule(deck, grid, fp, runspec, ParseContext(), ErrorGuard(), python, slave_mode, output_interval, rst, tracer_config)
     {}
 
 
-    Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext& parse_context, ErrorGuard& errors, std::shared_ptr<const Python> python, const std::optional<int>& output_interval, const RestartIO::RstState * rst) :
+    Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext& parse_context, ErrorGuard& errors, std::shared_ptr<const Python> python, const bool slave_mode, const std::optional<int>& output_interval, const RestartIO::RstState * rst) :
         Schedule(deck,
                  es.getInputGrid(),
                  es.fieldProps(),
@@ -210,6 +212,7 @@ namespace Opm {
                  parse_context,
                  errors,
                  python,
+                 slave_mode,
                  output_interval,
                  rst,
                  &es.tracer())
@@ -217,7 +220,7 @@ namespace Opm {
 
 
     template <typename T>
-    Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext& parse_context, T&& errors, std::shared_ptr<const Python> python, const std::optional<int>& output_interval, const RestartIO::RstState * rst) :
+    Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext& parse_context, T&& errors, std::shared_ptr<const Python> python, const bool slave_mode, const std::optional<int>& output_interval, const RestartIO::RstState * rst) :
         Schedule(deck,
                  es.getInputGrid(),
                  es.fieldProps(),
@@ -225,19 +228,20 @@ namespace Opm {
                  parse_context,
                  errors,
                  python,
+                 slave_mode,
                  output_interval,
                  rst,
                  &es.tracer())
     {}
 
 
-Schedule::Schedule(const Deck& deck, const EclipseState& es, std::shared_ptr<const Python> python, const std::optional<int>& output_interval, const RestartIO::RstState * rst) :
-    Schedule(deck, es, ParseContext(), ErrorGuard(), python, output_interval, rst)
+Schedule::Schedule(const Deck& deck, const EclipseState& es, std::shared_ptr<const Python> python, const bool slave_mode, const std::optional<int>& output_interval, const RestartIO::RstState * rst) :
+    Schedule(deck, es, ParseContext(), ErrorGuard(), python, slave_mode, output_interval, rst)
 {}
 
 
 Schedule::Schedule(const Deck& deck, const EclipseState& es, const std::optional<int>& output_interval, const RestartIO::RstState * rst) :
-    Schedule(deck, es, ParseContext(), ErrorGuard(), std::make_shared<const Python>(), output_interval, rst)
+    Schedule(deck, es, ParseContext(), ErrorGuard(), std::make_shared<const Python>(), /* slave_mode=*/false, output_interval, rst)
     {}
 
     Schedule::Schedule(std::shared_ptr<const Python> python_handle) :

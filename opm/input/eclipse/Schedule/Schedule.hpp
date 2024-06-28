@@ -97,6 +97,7 @@ namespace Opm
                  const ParseContext& parseContext,
                  ErrorGuard& errors,
                  std::shared_ptr<const Python> python,
+                 const bool slave_mode = false,
                  const std::optional<int>& output_interval = {},
                  const RestartIO::RstState* rst = nullptr,
                  const TracerConfig* tracer_config = nullptr);
@@ -109,6 +110,7 @@ namespace Opm
                  const ParseContext& parseContext,
                  T&& errors,
                  std::shared_ptr<const Python> python,
+                 const bool slave_mode = false,
                  const std::optional<int>& output_interval = {},
                  const RestartIO::RstState* rst = nullptr,
                  const TracerConfig* tracer_config = nullptr);
@@ -118,6 +120,7 @@ namespace Opm
                  const FieldPropsManager& fp,
                  const Runspec &runspec,
                  std::shared_ptr<const Python> python,
+                 const bool slave_mode = false,
                  const std::optional<int>& output_interval = {},
                  const RestartIO::RstState* rst = nullptr,
                  const TracerConfig* tracer_config = nullptr);
@@ -127,6 +130,7 @@ namespace Opm
                  const ParseContext& parseContext,
                  ErrorGuard& errors,
                  std::shared_ptr<const Python> python,
+                 const bool slave_mode = false,
                  const std::optional<int>& output_interval = {},
                  const RestartIO::RstState* rst = nullptr);
 
@@ -136,12 +140,14 @@ namespace Opm
                  const ParseContext& parseContext,
                  T&& errors,
                  std::shared_ptr<const Python> python,
+                 bool slave_mode = false,
                  const std::optional<int>& output_interval = {},
                  const RestartIO::RstState* rst = nullptr);
 
         Schedule(const Deck& deck,
                  const EclipseState& es,
                  std::shared_ptr<const Python> python,
+                 bool slave_mode = false,
                  const std::optional<int>& output_interval = {},
                  const RestartIO::RstState* rst = nullptr);
 
