@@ -144,11 +144,20 @@ public:
     CouplingInfo() = default;
 
     static CouplingInfo serializationTestObject();
+    const std::map<std::string, Slave>& slaves() const {
+        return this->m_slaves;
+    }
     std::map<std::string, Slave>& slaves() {
         return this->m_slaves;
     }
+    const std::map<std::string, MasterGroup>& masterGroups() const {
+        return this->m_master_groups;
+    }
     std::map<std::string, MasterGroup>& masterGroups() {
         return this->m_master_groups;
+    }
+    const std::map<std::string, GrupSlav>& grupSlavs() const {
+        return this->m_grup_slavs;
     }
     std::map<std::string, GrupSlav>& grupSlavs() {
         return this->m_grup_slavs;
@@ -159,6 +168,9 @@ public:
     }
     const Slave& slave(const std::string& name) const {
         return m_slaves.at(name);
+    }
+    int slaveCount() const {
+        return m_slaves.size();
     }
     bool hasGrupSlav(const std::string& name) const {
         return m_grup_slavs.find(name) != m_grup_slavs.end();
@@ -172,17 +184,28 @@ public:
     const MasterGroup& masterGroup(const std::string& name) const {
         return m_master_groups.at(name);
     }
+    int masterGroupCount() const {
+        return m_master_groups.size();
+    }
+    bool masterMode() const {
+        return m_master_mode;
+    }
+    void masterMode(bool master_mode) {
+        m_master_mode = master_mode;
+    }
     template<class Serializer>
     void serializeOp(Serializer& serializer)
     {
         serializer(m_slaves);
         serializer(m_master_groups);
         serializer(m_grup_slavs);
+        serializer(m_master_mode);
     }
 private:
     std::map<std::string, Slave> m_slaves;
     std::map<std::string, MasterGroup> m_master_groups;
     std::map<std::string, GrupSlav> m_grup_slavs;
+    bool m_master_mode{false};
 };
 
 } // namespace Opm::ReservoirCoupling

@@ -27,7 +27,8 @@ namespace ReservoirCoupling {
 bool CouplingInfo::operator==(const CouplingInfo& rhs) const {
     return this->m_slaves == rhs.m_slaves &&
            this->m_master_groups == rhs.m_master_groups &&
-           this->m_grup_slavs == rhs.m_grup_slavs;
+           this->m_grup_slavs == rhs.m_grup_slavs &&
+           this->m_master_mode == rhs.m_master_mode;
 }
 
 CouplingInfo CouplingInfo::serializationTestObject()
