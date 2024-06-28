@@ -189,7 +189,7 @@ Opm::RestartIO::RstWell::RstWell(const UnitSystem&  unit_system,
     }
 
     for (std::size_t tracer_index = 0;
-         tracer_index < static_cast<std::size_t>(header.runspec.tracers().water_tracers());
+         tracer_index < static_cast<std::size_t>(header.runspec.tracers().all_tracers());
          ++tracer_index)
     {
         this->tracer_concentration_injection.push_back(swel[VI::SWell::TracerOffset + tracer_index]);

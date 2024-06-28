@@ -747,7 +747,7 @@ namespace {
                               RSegArray&          rSeg)
         {
             auto tracer_offset = segment_offset + Opm::RestartIO::InteHEAD::numRsegElem(runspec.phases());
-            auto tracer_end    = tracer_offset + runspec.tracers().water_tracers() * 8;
+            auto tracer_end    = tracer_offset + runspec.tracers().all_tracers() * 8;
 
             std::fill(rSeg.begin() + tracer_offset, rSeg.begin() + tracer_end, 0.0);
         }

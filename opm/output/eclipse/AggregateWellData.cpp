@@ -1356,7 +1356,7 @@ namespace {
 
             for (std::size_t tracer_index=0; tracer_index < tracers.size(); tracer_index++) {
                 const auto& tracer = tracers[tracer_index];
-                std::size_t output_index = Ix::TracerOffset + tracer_dims.water_tracers() + tracer_index;
+                std::size_t output_index = Ix::TracerOffset + tracer_dims.all_tracers() + tracer_index;
                 if (well.isProducer()) {
                     const auto& wtpr = smry.get_well_var(well.name(), fmt::format("WTPT{}", tracer.name), 0);
                     xWell[output_index] = wtpr;
@@ -1365,7 +1365,7 @@ namespace {
 
             for (std::size_t tracer_index=0; tracer_index < tracers.size(); tracer_index++) {
                 const auto& tracer = tracers[tracer_index];
-                std::size_t output_index = Ix::TracerOffset + 2*tracer_dims.water_tracers() + tracer_index;
+                std::size_t output_index = Ix::TracerOffset + 2*tracer_dims.all_tracers() + tracer_index;
                 if (well.isInjector()) {
                     const auto& wtir = smry.get_well_var(well.name(), fmt::format("WTIT{}", tracer.name), 0);
                     xWell[output_index] = wtir;
@@ -1375,7 +1375,7 @@ namespace {
             for (std::size_t n=0; n < 2; n++) {
                 for (std::size_t tracer_index=0; tracer_index < tracers.size(); tracer_index++) {
                     const auto& tracer = tracers[tracer_index];
-                    std::size_t output_index = Ix::TracerOffset + (3 + n)*tracer_dims.water_tracers() + tracer_index;
+                    std::size_t output_index = Ix::TracerOffset + (3 + n)*tracer_dims.all_tracers() + tracer_index;
                     const auto& wtic = smry.get_well_var(well.name(), fmt::format("WTIC{}", tracer.name), 0);
                     const auto& wtpc = smry.get_well_var(well.name(), fmt::format("WTPC{}", tracer.name), 0);
 
@@ -1386,7 +1386,7 @@ namespace {
                 }
             }
 
-            std::size_t output_index = Ix::TracerOffset + 5*tracer_dims.water_tracers();
+            std::size_t output_index = Ix::TracerOffset + 5*tracer_dims.all_tracers();
             xWell[output_index] = 0;
             xWell[output_index + 1] = 0;
         }

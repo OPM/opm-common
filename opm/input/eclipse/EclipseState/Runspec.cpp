@@ -595,8 +595,8 @@ Tracers Tracers::serializationTestObject() {
     return tracers;
 }
 
-int Tracers::water_tracers() const {
-    return this->m_water_tracers;
+int Tracers::all_tracers() const {
+    return this->m_water_tracers + this->m_oil_tracers + this->m_gas_tracers;
 }
 
 
