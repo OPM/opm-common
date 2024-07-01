@@ -126,13 +126,11 @@ void HandlerContext::invalidNamePattern(const std::string& namePattern) const
 {
     std::string msg_fmt = fmt::format("No wells/groups match the pattern: \'{}\'", namePattern);
     if (namePattern == "?") {
-        /*
-          In particular when an ACTIONX keyword is called via PYACTION
-          coming in here with an empty list of matching wells is not
-          entirely unheard of. It is probably not what the user wanted and
-          we give a warning, but the simulation continues.
-        */
-        auto msg = OpmInputError::format("No matching wells for ACTIONX {keyword}"
+        // In particular when an ACTIONX keyword is called via PYACTION
+        // coming in here with an empty list of matching wells is not
+        // entirely unheard of. It is probably not what the user wanted and
+        // we give a warning, but the simulation continues.
+        auto msg = OpmInputError::format("No matching wells for ACTIONX keyword '{keyword}' "
                                          "in {file} line {line}.", keyword.location());
         OpmLog::warning(msg);
     } else {
