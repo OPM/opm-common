@@ -840,11 +840,12 @@ captureDeclaredUDQData(const Opm::Schedule&                 sched,
         int cnt_iuad = 0;
         for (std::size_t index = 0; index < udq_records.size(); index++) {
             const auto& record = udq_records[index];
-            auto i_uad = this->iUAD_[cnt_iuad];
             const auto& ctrl = record.control;
             const auto wg_key = Opm::UDQ::keyword(ctrl);
             if (((wg_key == Opm::UDAKeyword::GCONPROD) || (wg_key == Opm::UDAKeyword::GCONINJE)) && (record.wg_name() == "FIELD"))
                 continue;
+
+            auto i_uad = this->iUAD_[cnt_iuad];
 
             auto use_count_diff = static_cast<int>(index) - cnt_iuad;
             iUad::staticContrib(record, i_uad, use_count_diff);
