@@ -45,12 +45,12 @@
 #include <fmt/format.h>
 
 namespace Opm {
+
     template<typename Scalar>
     class DummyOilPvt;
 
 /*!
  * \ingroup FluidSystem
- *
  *
  * \brief A two phase system that can contain NumComp components
  *
@@ -123,10 +123,11 @@ namespace Opm {
         }
 
 #if HAVE_ECL_INPUT
-        /*!
+    /*!
      * \brief Initialize the fluid system using an ECL deck object
      */
         static void initFromState(const EclipseState& eclState, const Schedule& /* schedule */){
+            // TODO: we are not considering the EOS region for now
             const auto& comp_config = eclState.compositionalConfig();
             // how should we utilize the numComps from the CompositionalConfig?
             using FluidSystem = GenericOilGasFluidSystem<Scalar, NumComp>;
@@ -148,6 +149,7 @@ namespace Opm {
                                                           critic_volume[c] * 1.e3, acentric_factor[c]});
             }
             FluidSystem::printComponentParams();
+            interaction_coefficients_ = comp_config.binaryInteractionCoefficient(0);
         }
 #endif // HAVE_ECL_INPUT
 
@@ -218,11 +220,18 @@ namespace Opm {
          * \brief Returns the interaction coefficient for two components.
          *.
          */
-        static Scalar interactionCoefficient(unsigned /*comp1Idx*/, unsigned /*comp2Idx*/)
+        static Scalar interactionCoefficient(unsigned comp1Idx, unsigned comp2Idx)
         {
             assert(isConsistent());
-            // TODO: some data structure is needed to support this
-            return 0.0;
+            assert(comp1Idx < numComponents);
+            assert(comp2Idx < numComponents);
+            if (interaction_coefficients_.empty() || comp2Idx == comp1Idx) {
+                return 0.0;
+            }
+            // make sure row is the bigger value compared to column number
+            const auto [column, row] = std::minmax(comp1Idx, comp2Idx);
+            const unsigned index = (row * (row - 1) / 2 + column); // it is the current understanding
+            return interaction_coefficients_[index];
         }
 
         //! \copydoc BaseFluidSystem::phaseName
@@ -348,6 +357,7 @@ namespace Opm {
         }
 
         static std::vector<ComponentParam> component_param_;
+        static std::vector<Scalar> interaction_coefficients_;
         static constexpr DummyOilPvt<Scalar> dummy_oil_pvt_{};
     public:
         static std::string printComponentParams() {
@@ -366,6 +376,7 @@ namespace Opm {
     };
 
     // TODO: the following is a dummy function to avoid changing FlowGenericProblem.
+    // TODO: mostly related to MixingRateControls<FluidSystem> mixControls_;
     template <typename Scalar>
     class DummyOilPvt {
     public:
@@ -416,5 +427,9 @@ namespace Opm {
     template <class Scalar, int NumComp>
     std::vector<typename GenericOilGasFluidSystem<Scalar, NumComp>::ComponentParam>
     GenericOilGasFluidSystem<Scalar, NumComp>::component_param_;
+
+    template <class Scalar, int NumComp>
+    std::vector<Scalar>
+    GenericOilGasFluidSystem<Scalar, NumComp>::interaction_coefficients_;
 }
 #endif // OPM_GENERICOILGASFLUIDSYSTEM_HPP
