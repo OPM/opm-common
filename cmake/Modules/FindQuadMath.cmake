@@ -41,7 +41,7 @@ if(QuadMath_FOUND AND NOT TARGET QuadMath::QuadMath)
   target_link_libraries(QuadMath::QuadMath INTERFACE quadmath)
 
   target_compile_definitions(QuadMath::QuadMath INTERFACE
-    _GLIBCXX_USE_FLOAT128 HAVE_QUAD=1
+    _GLIBCXX_USE_FLOAT128
   )
   target_compile_options(QuadMath::QuadMath INTERFACE
     $<$<CXX_COMPILER_ID:GNU>:-fext-numeric-literals>
