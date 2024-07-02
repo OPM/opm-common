@@ -55,7 +55,7 @@ public:
                    const ScheduleGrid& grid_,
                    const std::size_t currentStep_,
                    const std::vector<std::string>& matching_wells_,
-                   bool actionx_mode_,
+                   bool welpi_action_mode_,
                    const ParseContext& parseContext_,
                    ErrorGuard& errors_,
                    SimulatorUpdate* sim_update_,
@@ -67,7 +67,7 @@ public:
         , keyword(keyword_)
         , currentStep(currentStep_)
         , matching_wells(matching_wells_)
-        , actionx_mode(actionx_mode_)
+        , welpi_action_mode(welpi_action_mode_)
         , parseContext(parseContext_)
         , errors(errors_)
         , wpimult_global_factor(wpimult_global_factor_)
@@ -157,7 +157,7 @@ public:
     const DeckKeyword& keyword;
     const std::size_t currentStep;
     const std::vector<std::string>& matching_wells;
-    const bool actionx_mode;
+    const bool welpi_action_mode;
     const ParseContext& parseContext;
     ErrorGuard& errors;
     std::unordered_map<std::string, double>& wpimult_global_factor;
