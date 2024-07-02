@@ -96,6 +96,18 @@ namespace Opm {
         this->addExtra(key, UnitSystem::measure::identity, std::move(data));
     }
 
+    void RestartValue::addExtra(const std::string& key, std::vector<float> data) {
+        std::vector<double> ddata(data.size());
+        std::copy(data.begin(), data.end(), ddata.begin());
+        this->addExtra(key, UnitSystem::measure::identity, std::move(ddata));
+    }
+
+    void RestartValue::addExtra(const std::string& key, UnitSystem::measure dimension, std::vector<float> data) {
+        std::vector<double> ddata(data.size());
+        std::copy(data.begin(), data.end(), ddata.begin());
+        this->addExtra(key, dimension, std::move(ddata));
+    }
+
     void RestartValue::convertFromSI(const UnitSystem& units) {
         this->solution.convertFromSI(units);
         for (auto & extra_value : this->extra) {

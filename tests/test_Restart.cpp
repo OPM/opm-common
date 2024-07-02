@@ -238,10 +238,10 @@ data::Solution mkSolution(int numCells)
     fun::iota rvi( 400.0, 400.0 + numCells );
 
     sol.insert("RS", measure::identity,
-               { rsi.begin(), rsi.end() },
+               std::vector<double>{ rsi.begin(), rsi.end() },
                data::TargetType::RESTART_SOLUTION);
     sol.insert("RV", measure::identity,
-               { rvi.begin(), rvi.end() },
+               std::vector<double>{ rvi.begin(), rvi.end() },
                data::TargetType::RESTART_SOLUTION);
 
     return sol;
@@ -571,7 +571,7 @@ BOOST_AUTO_TEST_CASE(ECL_FORMATTED) {
             RestartValue restart_value(cells, wells, groups, {});
 
             io_config.setEclCompatibleRST( false );
-            restart_value.addExtra("EXTRA", UnitSystem::measure::pressure, {10,1,2,3});
+            restart_value.addExtra("EXTRA", UnitSystem::measure::pressure, std::vector<double>{10.0,1.0,2.0,3.0});
 
             const auto outputDir = test_area.currentWorkingDirectory();
 
@@ -736,17 +736,17 @@ BOOST_AUTO_TEST_CASE(ExtraData_KEYS) {
     auto groups = mkGroups();
     RestartValue restart_value(cells, wells, groups, {});
 
-    BOOST_CHECK_THROW( restart_value.addExtra("TOO-LONG-KEY", {0,1,2}), std::runtime_error);
+    BOOST_CHECK_THROW( restart_value.addExtra("TOO-LONG-KEY", std::vector{0.0,1.0,2.0}), std::runtime_error);
 
     // Keys must be unique
-    restart_value.addExtra("KEY", {0,1,1});
-    BOOST_CHECK_THROW( restart_value.addExtra("KEY", {0,1,1}), std::runtime_error);
+    restart_value.addExtra("KEY", std::vector{0.0,1.0,1.0});
+    BOOST_CHECK_THROW( restart_value.addExtra("KEY", std::vector{0.0,1.0,1.0}), std::runtime_error);
 
     /* The keys must be unique across solution and extra_data */
-    BOOST_CHECK_THROW( restart_value.addExtra("PRESSURE", {0,1}), std::runtime_error);
+    BOOST_CHECK_THROW( restart_value.addExtra("PRESSURE", std::vector{0.0,1.0}), std::runtime_error);
 
     /* Must avoid using reserved keys like 'LOGIHEAD' */
-    BOOST_CHECK_THROW( restart_value.addExtra("LOGIHEAD", {0,1}), std::runtime_error);
+    BOOST_CHECK_THROW( restart_value.addExtra("LOGIHEAD", std::vector{0.0,1.0}), std::runtime_error);
 }
 
 BOOST_AUTO_TEST_CASE(ExtraData_content) {
@@ -771,7 +771,7 @@ BOOST_AUTO_TEST_CASE(ExtraData_content) {
             SummaryState st(TimeService::now(), 0.0);
             const auto sumState = sim_state(setup.schedule);
 
-            restart_value.addExtra("EXTRA", UnitSystem::measure::pressure, {10,1,2,3});
+            restart_value.addExtra("EXTRA", UnitSystem::measure::pressure, std::vector<double>{10.0,1.0,2.0,3.0});
 
             const auto outputDir = test_area.currentWorkingDirectory();
 
@@ -865,7 +865,7 @@ BOOST_AUTO_TEST_CASE(STORE_THPRES) {
                                                setup.schedule), std::runtime_error);
             */
 
-            restart_value.addExtra("THRESHPR", UnitSystem::measure::pressure, {0,1});
+            restart_value.addExtra("THRESHPR", UnitSystem::measure::pressure, std::vector<double>{0.0,1.0});
             const auto sumState = sim_state(base_setup.schedule);
             Action::State action_state;
             UDQState udq_state(99);

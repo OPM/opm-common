@@ -115,3 +115,4 @@ index(const std::size_t source) const
 }
 
 template class Opm::PAvgDynamicSourceData<double>;
+template class Opm::PAvgDynamicSourceData<float>;
