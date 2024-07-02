@@ -265,6 +265,7 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const std::optional
         result.completed_cells = CompletedCells::serializationTestObject();
         result.current_report_step = 0;
         result.simUpdateFromPython = std::make_shared<SimulatorUpdate>(SimulatorUpdate::serializationTestObject());
+        result.wellPIPointer = nullptr;
 
         return result;
     }
@@ -1439,6 +1440,11 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
         ScheduleGrid grid(this->completed_cells);
         SimulatorUpdate sim_update;
         std::unordered_map<std::string, double> target_wellpi;
+        // Get the well production indices from the simulation up until now
+        // and use in the calculation for the overall production indices.
+        if (this->wellPIPointer) {
+            target_wellpi = *(this->wellPIPointer);
+        }
         std::vector<std::string> matching_wells;
         const std::string prefix = "| "; /* logger prefix string */
         this->snapshots.resize(reportStep + 1);
@@ -1454,7 +1460,7 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
                                     errors,
                                     grid,
                                     matching_wells,
-                                    /*welpi_action_mode=*/false,
+                                    this->welpi_action_mode,
                                     &sim_update,
                                     &target_wellpi,
                                     wpimult_global_factor);    
@@ -1640,6 +1646,8 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
 
 
     SimulatorUpdate Schedule::runPyAction(std::size_t reportStep, const Action::PyAction& pyaction, Action::State& action_state, EclipseState& ecl_state, SummaryState& summary_state) {
+        // Set welpi_action_mode to true, this is necessary for the keyword WELPI
+        this->welpi_action_mode = true;
         // Reset simUpdateFromPython, pyaction.run(...) will run through the PyAction script, the calls that trigger a simulator update will append this to simUpdateFromPython.
         this->simUpdateFromPython->reset();
         // Set the current_report_step to the report step in which this PyAction was triggered.
@@ -1654,7 +1662,8 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
         auto result = pyaction.run(ecl_state, *this, reportStep, summary_state, apply_action_callback);
         action_state.add_run(pyaction, result);
 
-        // The whole pyaction script was executed, now the simUpdateFromPython is returned.
+        // The whole pyaction script was executed, welpi_action_mode is set to false and the simUpdateFromPython is returned.
+        this->welpi_action_mode = false;
         return *(this->simUpdateFromPython);
     }
 
