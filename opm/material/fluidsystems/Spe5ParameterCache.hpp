@@ -27,13 +27,13 @@
 #ifndef OPM_SPE5_PARAMETER_CACHE_HPP
 #define OPM_SPE5_PARAMETER_CACHE_HPP
 
-#include <cassert>
-
 #include <opm/material/components/H2O.hpp>
 #include <opm/material/fluidsystems/ParameterCacheBase.hpp>
 
 #include <opm/material/eos/PengRobinson.hpp>
 #include <opm/material/eos/PengRobinsonParamsMixture.hpp>
+
+#include <cassert>
 
 namespace Opm {
 
@@ -56,6 +56,18 @@ class Spe5ParameterCache
     enum { oilPhaseIdx = FluidSystem::oilPhaseIdx };
     enum { gasPhaseIdx = FluidSystem::gasPhaseIdx };
 
+    static_assert(static_cast<int>(oilPhaseIdx) >= 0, "Oil phase index must be non-negative");
+    static_assert(static_cast<int>(oilPhaseIdx) < static_cast<int>(numPhases),
+                  "Oil phase index must be strictly less than FluidSystem's number of phases");
+
+    static_assert(static_cast<int>(gasPhaseIdx) >= 0, "Gas phase index must be non-negative");
+    static_assert(static_cast<int>(gasPhaseIdx) < static_cast<int>(numPhases),
+                  "Gas phase index must be strictly less than FluidSystem's number of phases");
+
+    static_assert(static_cast<int>(waterPhaseIdx) >= 0, "Water phase index must be non-negative");
+    static_assert(static_cast<int>(waterPhaseIdx) < static_cast<int>(numPhases),
+                  "Water phase index must be strictly less than FluidSystem's number of phases");
+
 public:
     //! The cached parameters for the oil phase
     typedef PengRobinsonParamsMixture<Scalar, FluidSystem, oilPhaseIdx, /*useSpe5=*/true> OilPhaseParams;
@@ -76,6 +88,10 @@ public:
                      unsigned phaseIdx,
                      int exceptQuantities = ParentType::None)
     {
+        assert ((phaseIdx == static_cast<unsigned int>(oilPhaseIdx)) ||
+                (phaseIdx == static_cast<unsigned int>(gasPhaseIdx)) ||
+                (phaseIdx == static_cast<unsigned int>(waterPhaseIdx)));
+
         updateEosParams(fluidState, phaseIdx, exceptQuantities);
 
         // if we don't need to recalculate the molar volume, we exit
@@ -93,6 +109,10 @@ public:
                                   unsigned phaseIdx,
                                   unsigned compIdx)
     {
+        assert ((phaseIdx == static_cast<unsigned int>(oilPhaseIdx)) ||
+                (phaseIdx == static_cast<unsigned int>(gasPhaseIdx)) ||
+                (phaseIdx == static_cast<unsigned int>(waterPhaseIdx)));
+
         if (phaseIdx == oilPhaseIdx)
             oilPhaseParams_.updateSingleMoleFraction(fluidState, compIdx);
         else if (phaseIdx == gasPhaseIdx)
@@ -230,6 +250,10 @@ public:
                          unsigned phaseIdx,
                          int exceptQuantities = ParentType::None)
     {
+        assert ((phaseIdx == static_cast<unsigned int>(oilPhaseIdx)) ||
+                (phaseIdx == static_cast<unsigned int>(gasPhaseIdx)) ||
+                (phaseIdx == static_cast<unsigned int>(waterPhaseIdx)));
+
         if (!(exceptQuantities & ParentType::Temperature))
         {
             updatePure_(fluidState, phaseIdx);
@@ -341,8 +365,8 @@ protected:
             // convert water density [kg/m^3] to molar volume [m^3/mol]
             Vm_[waterPhaseIdx] = fluidState.averageMolarMass(waterPhaseIdx)/waterDensity;
             break;
-        };
-        };
+        }
+        }
     }
 
     bool VmUpToDate_[numPhases];

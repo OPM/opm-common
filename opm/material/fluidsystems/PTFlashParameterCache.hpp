@@ -30,11 +30,11 @@
 #ifndef OPM_PTFlash_PARAMETER_CACHE_HPP
 #define OPM_PTFlash_PARAMETER_CACHE_HPP
 
-#include <cassert>
-
 #include <opm/material/fluidsystems/ParameterCacheBase.hpp>
 #include <opm/material/eos/PengRobinson.hpp>
 #include <opm/material/eos/PengRobinsonParamsMixture.hpp>
+
+#include <cassert>
 
 namespace Opm {
 
@@ -52,7 +52,15 @@ class PTFlashParameterCache
 
     enum { numPhases = FluidSystem::numPhases };
     enum { oilPhaseIdx = FluidSystem::oilPhaseIdx };
-    enum { gasPhaseIdx = FluidSystem::gasPhaseIdx};
+    enum { gasPhaseIdx = FluidSystem::gasPhaseIdx };
+
+    static_assert(static_cast<int>(oilPhaseIdx) >= 0, "Oil phase index must be non-negative");
+    static_assert(static_cast<int>(oilPhaseIdx) < static_cast<int>(numPhases),
+                  "Oil phase index must be strictly less than FluidSystem's number of phases");
+
+    static_assert(static_cast<int>(gasPhaseIdx) >= 0, "Gas phase index must be non-negative");
+    static_assert(static_cast<int>(gasPhaseIdx) < static_cast<int>(numPhases),
+                  "Gas phase index must be strictly less than FluidSystem's number of phases");
 
 public:
     //! The cached parameters for the oil phase
@@ -74,6 +82,9 @@ public:
                      unsigned phaseIdx,
                      int exceptQuantities = ParentType::None)
     {
+        assert ((phaseIdx == static_cast<unsigned int>(oilPhaseIdx)) ||
+                (phaseIdx == static_cast<unsigned int>(gasPhaseIdx)));
+
         updateEosParams(fluidState, phaseIdx, exceptQuantities);
 
         // update the phase's molar volume
@@ -228,6 +239,9 @@ public:
                          unsigned phaseIdx,
                          int exceptQuantities = ParentType::None)
     {
+        assert ((phaseIdx == static_cast<unsigned int>(oilPhaseIdx)) ||
+                (phaseIdx == static_cast<unsigned int>(gasPhaseIdx)));
+
         if (!(exceptQuantities & ParentType::Temperature))
         {
             updatePure_(fluidState, phaseIdx);

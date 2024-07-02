@@ -36,6 +36,7 @@
 
 #include <opm/material/common/PolynomialUtils.hpp>
 
+#include <cassert>
 #include <csignal>
 #include <string>
 
@@ -465,7 +466,9 @@ protected:
         // invert resulting cubic polynomial analytically
         std::array<Evaluation,4> allV;
         allV[0] = V;
-        int numSol = 1 + invertCubicPolynomial<Evaluation>(allV.data() + 1, b1, b2, b3, b4);
+        const decltype(allV.size()) numSol = 1 + invertCubicPolynomial<Evaluation>(allV.data() + 1, b1, b2, b3, b4);
+
+        assert (numSol <= allV.size());
 
         // sort all roots of the derivative
         std::sort(allV.begin(), allV.begin() + numSol);
