@@ -294,7 +294,7 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const std::optional
                                  ErrorGuard& errors,
                                  const ScheduleGrid& grid,
                                  const std::vector<std::string>& matching_wells,
-                                 bool actionx_mode,
+                                 bool welpi_action_mode,
                                  SimulatorUpdate* sim_update,
                                  const std::unordered_map<std::string, double>* target_wellpi,
                                  std::unordered_map<std::string, double>& wpimult_global_factor,
@@ -302,7 +302,7 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const std::optional
                                  std::set<std::string>* compsegs_wells)
     {
         HandlerContext handlerContext { *this, block, keyword, grid, currentStep,
-                                        matching_wells, actionx_mode,
+                                        matching_wells, welpi_action_mode,
                                         parseContext, errors, sim_update, target_wellpi,
                                         wpimult_global_factor, welsegs_wells, compsegs_wells};
 
@@ -1454,7 +1454,7 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
                                     errors,
                                     grid,
                                     matching_wells,
-                                    /*actionx_mode=*/false,
+                                    /*welpi_action_mode=*/false,
                                     &sim_update,
                                     &target_wellpi,
                                     wpimult_global_factor);    
