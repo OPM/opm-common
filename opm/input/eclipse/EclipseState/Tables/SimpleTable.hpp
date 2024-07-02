@@ -39,6 +39,8 @@ namespace Opm {
         SimpleTable(TableSchema, const std::string& tableName, const DeckItem& deckItem, const int tableID);
         explicit SimpleTable( TableSchema );
 
+        virtual ~SimpleTable() = default;
+
         static SimpleTable serializationTestObject();
 
         void addColumns();
