@@ -192,7 +192,7 @@ void handleWELPIRuntime(HandlerContext& handlerContext)
 
 void handleWELPI(HandlerContext& handlerContext)
 {
-    if (handlerContext.actionx_mode) {
+    if (handlerContext.action_mode) {
         handleWELPIRuntime(handlerContext);
         return;
     }
