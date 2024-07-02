@@ -393,7 +393,7 @@ namespace Opm {
                                  ErrorGuard& errors,
                                  const ScheduleGrid& grid,
                                  const Action::Result::MatchingEntities& matches,
-                                 const bool actionx_mode,
+                                 const bool welpi_action_mode,
                                  SimulatorUpdate* sim_update,
                                  const std::unordered_map<std::string, double>* target_wellpi,
                                  std::unordered_map<std::string, double>& wpimult_global_factor,
@@ -401,7 +401,7 @@ namespace Opm {
                                  std::set<std::string>* compsegs_wells)
     {
         HandlerContext handlerContext { *this, block, keyword, grid, currentStep,
-                                        matches, actionx_mode,
+                                        matches, welpi_action_mode,
                                         parseContext, errors, sim_update, target_wellpi,
                                         wpimult_global_factor, welsegs_wells, compsegs_wells};
 
@@ -1664,7 +1664,7 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
         auto& input_block = this->m_sched_deck[reportStep];
         ScheduleLogger logger(ScheduleLogger::select_stream(false, false), // will log to OpmLog::info
                               prefix, this->m_sched_deck.location());
-        
+
         for (const auto& keyword : keywords) {
             const auto valid = Action::PyAction::valid_keyword(keyword->name());
 
@@ -1685,7 +1685,7 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
                                     errors,
                                     grid,
                                     matches,
-                                    /* actionx_mode= */ false,
+                                    /*welpi_action_mode=*/false,
                                     &sim_update,
                                     &target_wellpi,
                                     wpimult_global_factor);    
