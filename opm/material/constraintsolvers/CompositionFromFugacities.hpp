@@ -35,6 +35,7 @@
 #include <dune/common/fvector.hh>
 #include <dune/common/fmatrix.hh>
 
+#include <cassert>
 #include <limits>
 #include <string_view>
 
@@ -84,6 +85,8 @@ public:
                       unsigned phaseIdx,
                       const ComponentVector& targetFug)
     {
+        assert (phaseIdx < static_cast<unsigned int>(FluidSystem::numPhases));
+
         // use a much more efficient method in case the phase is an
         // ideal mixture
         if (FluidSystem::isIdealMixture(phaseIdx)) {
