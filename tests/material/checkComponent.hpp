@@ -27,7 +27,7 @@
 #ifndef OPM_CHECK_COMPONENT_HPP
 #define OPM_CHECK_COMPONENT_HPP
 
-#include <opm/common/utility/Demangle.hpp>
+#include <opm/common/utility/GetTypeName.hpp>
 
 #include <iostream>
 #include <string>
@@ -42,8 +42,8 @@ template <class Component, class Evaluation>
 void checkComponent()
 {
     std::cout << "Testing component '"
-              << Opm::demangle(typeid(Component).name()) << "', Evaluation='"
-              << Opm::demangle(typeid(Evaluation).name()) << "'\n";
+              << Opm::getTypeName<Component>() << "', Evaluation='"
+              << Opm::getTypeName<Evaluation>() << "'\n";
 
     // make sure the necessary typedefs exist
     typedef typename Component::Scalar Scalar;
