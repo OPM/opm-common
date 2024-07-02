@@ -228,6 +228,9 @@ public:
                          unsigned phaseIdx,
                          int exceptQuantities = ParentType::None)
     {
+        if (phaseIdx >= numPhases) {
+            throw std::logic_error("PTFlashParameterCache: Tried to update eos parameters for invalid phase");
+        }
         if (!(exceptQuantities & ParentType::Temperature))
         {
             updatePure_(fluidState, phaseIdx);
