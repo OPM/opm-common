@@ -27,24 +27,28 @@
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/input/eclipse/EclipseState/Runspec.hpp>
-#include <opm/input/eclipse/Schedule/ArrayDimChecker.hpp>
-#include <opm/input/eclipse/Schedule/Group/GuideRateConfig.hpp>
-#include <opm/input/eclipse/Schedule/Group/GuideRateModel.hpp>
-#include <opm/input/eclipse/Schedule/GasLiftOpt.hpp>
-#include <opm/input/eclipse/Schedule/Network/Balance.hpp>
-#include <opm/input/eclipse/Schedule/Network/ExtNetwork.hpp>
-#include <opm/input/eclipse/Schedule/Schedule.hpp>
-#include <opm/input/eclipse/Schedule/UDQ/UDQConfig.hpp>
-#include <opm/input/eclipse/Schedule/UDQ/UDQActive.hpp>
-#include <opm/input/eclipse/Schedule/Well/Well.hpp>
-#include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
-#include <opm/input/eclipse/Schedule/Action/Actions.hpp>
-#include <opm/input/eclipse/Schedule/Action/ActionX.hpp>
-#include <opm/input/eclipse/Schedule/Tuning.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/Regdims.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
 
+#include <opm/input/eclipse/Schedule/Action/ActionX.hpp>
+#include <opm/input/eclipse/Schedule/Action/Actions.hpp>
+#include <opm/input/eclipse/Schedule/ArrayDimChecker.hpp>
+#include <opm/input/eclipse/Schedule/GasLiftOpt.hpp>
+#include <opm/input/eclipse/Schedule/Group/GuideRateConfig.hpp>
+#include <opm/input/eclipse/Schedule/Group/GuideRateModel.hpp>
+#include <opm/input/eclipse/Schedule/Network/Balance.hpp>
+#include <opm/input/eclipse/Schedule/Network/ExtNetwork.hpp>
+#include <opm/input/eclipse/Schedule/Schedule.hpp>
+#include <opm/input/eclipse/Schedule/Tuning.hpp>
+#include <opm/input/eclipse/Schedule/UDQ/UDQActive.hpp>
+#include <opm/input/eclipse/Schedule/UDQ/UDQConfig.hpp>
+#include <opm/input/eclipse/Schedule/UDQ/UDQEnums.hpp>
+#include <opm/input/eclipse/Schedule/UDQ/UDQInput.hpp>
+#include <opm/input/eclipse/Schedule/Well/Well.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
+
 #include <algorithm>
+#include <array>
 #include <cstddef>
 #include <exception>
 #include <iterator>
@@ -137,42 +141,9 @@ namespace {
         return gctrl;
     }
 
-    int noWellUdqs(const Opm::Schedule& sched,
-                   const std::size_t    rptStep,
-                   const std::size_t    simStep)
-    {
-        if (rptStep == std::size_t{0}) {
-            return 0;
-        }
-
-        const auto& udqCfg = sched.getUDQConfig(simStep);
-        std::size_t i_wudq = 0;
-        for (const auto& udq_input : udqCfg.input()) {
-            if (udq_input.var_type() ==  Opm::UDQVarType::WELL_VAR) {
-                i_wudq++;
-            }
-        }
-
-        return i_wudq;
-    }
-
-    int noGroupUdqs(const Opm::Schedule& sched,
-                    const std::size_t    rptStep,
-                    const std::size_t    simStep)
-    {
-        if (rptStep == std::size_t{0}) {
-            return 0;
-        }
-
-        const auto& udqCfg = sched.getUDQConfig(simStep);
-        const auto& input = udqCfg.input();
-
-        return std::count_if(input.begin(), input.end(), [](const Opm::UDQInput inp) { return (inp.var_type() == Opm::UDQVarType::GROUP_VAR); });
-    }
-
     int noIuads(const Opm::Schedule& sched,
-                    const std::size_t    rptStep,
-                    const std::size_t    simStep)
+                const std::size_t    rptStep,
+                const std::size_t    simStep)
     {
         if (rptStep == std::size_t{0}) {
             return 0;
@@ -181,14 +152,20 @@ namespace {
         const auto& udqAct = sched[simStep].udq_active.get();
         const auto& iuad = udqAct.iuad();
 
-        return std::count_if(iuad.begin(), iuad.end(), [](const Opm::UDQActive::OutputRecord rec) {
-            return (!(((Opm::UDQ::keyword(rec.control) == Opm::UDAKeyword::GCONPROD) || (Opm::UDQ::keyword(rec.control) == Opm::UDAKeyword::GCONINJE))
-            && (rec.wg_name() == "FIELD"))); });
+        return std::count_if(iuad.begin(), iuad.end(),
+            [](const Opm::UDQActive::OutputRecord& rec)
+        {
+            const auto kw = Opm::UDQ::keyword(rec.control);
+
+            return ! (((kw == Opm::UDAKeyword::GCONPROD) ||
+                       (kw == Opm::UDAKeyword::GCONINJE)) &&
+                      (rec.wg_name() == "FIELD"));
+        });
     }
 
     int noIuaps(const Opm::Schedule& sched,
-                    const std::size_t    rptStep,
-                    const std::size_t    simStep)
+                const std::size_t    rptStep,
+                const std::size_t    simStep)
     {
         if (rptStep == std::size_t{0}) {
             return 0;
@@ -197,29 +174,15 @@ namespace {
         const auto& udqAct = sched[simStep].udq_active.get();
         const auto& iuap = udqAct.iuap();
 
-        return std::count_if(iuap.begin(), iuap.end(), [](const Opm::UDQActive::InputRecord rec) {
-            return (!(((Opm::UDQ::keyword(rec.control) == Opm::UDAKeyword::GCONPROD) || (Opm::UDQ::keyword(rec.control) == Opm::UDAKeyword::GCONINJE))
-            && (rec.wgname == "FIELD"))); });
-    }
+        return std::count_if(iuap.begin(), iuap.end(),
+            [](const Opm::UDQActive::InputRecord& rec)
+        {
+            const auto kw = Opm::UDQ::keyword(rec.control);
 
-
-    int noFieldUdqs(const Opm::Schedule& sched,
-                    const std::size_t    rptStep,
-                    const std::size_t    simStep)
-    {
-        if (rptStep == std::size_t{0}) {
-            return 0;
-        }
-
-        const auto& udqCfg = sched.getUDQConfig(simStep);
-        std::size_t i_fudq = 0;
-        for (const auto& udq_input : udqCfg.input()) {
-            if (udq_input.var_type() ==  Opm::UDQVarType::FIELD_VAR) {
-                i_fudq++;
-            }
-        }
-
-        return i_fudq;
+            return ! (((kw == Opm::UDAKeyword::GCONPROD) ||
+                       (kw == Opm::UDAKeyword::GCONINJE)) &&
+                      (rec.wgname == "FIELD"));
+        });
     }
 
     int numMultiSegWells(const ::Opm::Schedule& sched,
@@ -370,12 +333,10 @@ namespace {
 
         param.udqParam_1 = rspec.udqParams().rand_seed();
 
-        param.num_field_udqs = noFieldUdqs(sched, rptStep, simStep);
-        param.num_group_udqs = noGroupUdqs(sched, rptStep, simStep);
-        param.num_well_udqs  = noWellUdqs (sched, rptStep, simStep);
-
         param.num_iuads = noIuads(sched, rptStep, simStep);
         param.num_iuaps = noIuaps(sched, rptStep, simStep);
+
+        sched[simStep].udq().exportTypeCount(param.numUDQs);
 
         return param;
     }
