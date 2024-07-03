@@ -442,6 +442,15 @@ namespace Opm {
                              });
     }
 
+    void UDQConfig::exportTypeCount(std::array<int, static_cast<std::size_t>(UDQVarType::NumTypes)>& count) const
+    {
+        count.fill(0);
+
+        for (const auto& [type, cnt] : this->type_count) {
+            count[static_cast<std::size_t>(type)] = cnt;
+        }
+    }
+
     std::vector<UDQAssign> UDQConfig::assignments() const
     {
         std::vector<UDQAssign> ret;
