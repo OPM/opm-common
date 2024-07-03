@@ -21,6 +21,8 @@
 #define OPM_UDQDIMS_HPP
 
 #include <cstddef>
+#include <functional>
+#include <optional>
 #include <vector>
 
 namespace Opm {
@@ -56,13 +58,24 @@ public:
 
     const std::vector<int>& data() const
     {
-        return this->m_data;
+        if (! this->dimensionData_.has_value()) {
+            this->collectDimensions();
+        }
+
+        return *this->dimensionData_;
     }
 
 private:
-    std::vector<int> m_data;
+    std::size_t totalNumUDQs_{};
+    std::reference_wrapper<const std::vector<int>> intehead_;
+
+    mutable std::optional<std::vector<int>> dimensionData_;
+
+    void collectDimensions() const;
+
+    std::size_t intehead(const std::vector<int>::size_type i) const;
 };
 
 } // namespace Opm
 
-#endif  // OPM_UDQDIMS_HPP
+#endif // OPM_UDQDIMS_HPP

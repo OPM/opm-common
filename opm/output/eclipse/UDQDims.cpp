@@ -24,77 +24,89 @@
 #include <opm/input/eclipse/Schedule/UDQ/UDQConfig.hpp>
 
 #include <cstddef>
+#include <functional>
+#include <optional>
 #include <vector>
 
 namespace VI = ::Opm::RestartIO::Helpers::VectorItems;
 
 Opm::UDQDims::UDQDims(const UDQConfig&        config,
                       const std::vector<int>& inteHead)
-    : m_data(13, 0)
-{
-    this->m_data[ 0] = config.size();
-
-    this->m_data[ 1] = entriesPerIUDQ();
-    this->m_data[ 2] = inteHead[VI::intehead::NO_IUADS];
-    this->m_data[ 3] = entriesPerIUAD();
-    this->m_data[ 4] = entriesPerZUDN();
-    this->m_data[ 5] = entriesPerZUDL();
-
-    this->m_data[ 6] = (inteHead[VI::intehead::NO_IUADS] > 0)
-        ? inteHead[VI::intehead::NGMAXZ] : 0;
-
-    this->m_data[ 7] = inteHead[VI::intehead::NO_IUAPS];
-
-    this->m_data[ 8] = inteHead[VI::intehead::NWMAXZ];
-    this->m_data[ 9] = inteHead[VI::intehead::NO_WELL_UDQS];
-
-    this->m_data[10] = inteHead[VI::intehead::NGMAXZ];
-    this->m_data[11] = inteHead[VI::intehead::NO_GROUP_UDQS];
-
-    this->m_data[12] = inteHead[VI::intehead::NO_FIELD_UDQS];
-}
+    : totalNumUDQs_ { config.size() }
+    , intehead_     { std::cref(inteHead) }
+{}
 
 std::size_t Opm::UDQDims::totalNumUDQs() const
 {
-    return this->m_data[0];
+    return this->totalNumUDQs_;
 }
 
 std::size_t Opm::UDQDims::numIUAD() const
 {
-    return this->m_data[2];
+    return this->intehead(VI::intehead::NO_IUADS);
 }
 
 std::size_t Opm::UDQDims::numIGPH() const
 {
-    return this->m_data[6];
+    return (this->numIUAD() > 0)
+        ? this->intehead(VI::intehead::NGMAXZ)
+        : std::size_t{0};
 }
 
 std::size_t Opm::UDQDims::numIUAP() const
 {
-    return this->m_data[7];
+    return this->intehead(VI::intehead::NO_IUAPS);
 }
 
 std::size_t Opm::UDQDims::numFieldUDQs() const
 {
-    return this->m_data[12];
+    return this->intehead(VI::intehead::NO_FIELD_UDQS);
 }
 
 std::size_t Opm::UDQDims::maxNumGroups() const
 {
-    return this->m_data[10];
+    return this->intehead(VI::intehead::NGMAXZ);
 }
 
 std::size_t Opm::UDQDims::numGroupUDQs() const
 {
-    return this->m_data[11];
+    return this->intehead(VI::intehead::NO_GROUP_UDQS);
 }
 
 std::size_t Opm::UDQDims::maxNumWells() const
 {
-    return this->m_data[8];
+    return this->intehead(VI::intehead::NWMAXZ);
 }
 
 std::size_t Opm::UDQDims::numWellUDQs() const
 {
-    return this->m_data[9];
+    return this->intehead(VI::intehead::NO_WELL_UDQS);
+}
+
+void Opm::UDQDims::collectDimensions() const
+{
+    this->dimensionData_.emplace(13, 0);
+
+    (*this->dimensionData_)[0] = this->totalNumUDQs();
+    (*this->dimensionData_)[1] = entriesPerIUDQ();
+    (*this->dimensionData_)[2] = this->numIUAD();
+    (*this->dimensionData_)[3] = entriesPerIUAD();
+    (*this->dimensionData_)[4] = entriesPerZUDN();
+    (*this->dimensionData_)[5] = entriesPerZUDL();
+
+    (*this->dimensionData_)[6] = this->numIGPH();
+    (*this->dimensionData_)[7] = this->numIUAP();
+
+    (*this->dimensionData_)[8] = this->maxNumWells();
+    (*this->dimensionData_)[9] = this->numWellUDQs();
+
+    (*this->dimensionData_)[10] = this->maxNumGroups();
+    (*this->dimensionData_)[11] = this->numGroupUDQs();
+
+    (*this->dimensionData_)[12] = this->numFieldUDQs();
+}
+
+std::size_t Opm::UDQDims::intehead(const std::vector<int>::size_type i) const
+{
+    return this->intehead_.get()[i];
 }
