@@ -413,10 +413,10 @@ namespace Opm {
                 ? this->unit(key) : std::string{};
 
             if (index.action == UDQAction::DEFINE) {
-                res.push_back(UDQInput(index, this->m_definitions.at(key), u));
+                res.emplace_back(index, &this->m_definitions.at(key), u);
             }
             else if (index.action == UDQAction::ASSIGN) {
-                res.push_back(UDQInput(index, this->m_assignments.at(key), u));
+                res.emplace_back(index, &this->m_assignments.at(key), u);
             }
         }
 
@@ -487,7 +487,7 @@ namespace Opm {
 
     UDQInput UDQConfig::operator[](const std::string& keyword) const
     {
-        const auto index_iter = this->input_index.find(keyword);
+        auto index_iter = this->input_index.find(keyword);
         if (index_iter == this->input_index.end()) {
             throw std::invalid_argument("Keyword: '" + keyword +
                                         "' not recognized as ASSIGN/DEFINE UDQ");
@@ -497,11 +497,11 @@ namespace Opm {
             ? this->unit(keyword) : std::string{};
 
         if (index_iter->second.action == UDQAction::ASSIGN) {
-            return UDQInput(this->input_index.at(keyword), this->m_assignments.at(keyword), u);
+            return { index_iter->second, &this->m_assignments.at(keyword), u };
         }
 
         if (index_iter->second.action == UDQAction::DEFINE) {
-            return UDQInput(this->input_index.at(keyword), this->m_definitions.at(keyword), u);
+            return { index_iter->second, &this->m_definitions.at(keyword), u };
         }
 
         throw std::logic_error("Internal error - should not be here");
@@ -524,11 +524,11 @@ namespace Opm {
             ? this->unit(keyword) : std::string{};
 
         if (index.action == UDQAction::ASSIGN) {
-            return UDQInput(index, this->m_assignments.at(keyword), u);
+            return { index, &this->m_assignments.at(keyword), u };
         }
 
         if (index.action == UDQAction::DEFINE) {
-            return UDQInput(index, this->m_definitions.at(keyword), u);
+            return { index, &this->m_definitions.at(keyword), u };
         }
 
         throw std::logic_error("Internal error - should not be here");
