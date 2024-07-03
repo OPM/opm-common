@@ -31,6 +31,7 @@
 #include <opm/input/eclipse/EclipseState/Util/OrderedMap.hpp>
 #include <opm/input/eclipse/EclipseState/Util/IOrderSet.hpp>
 
+#include <array>
 #include <cstddef>
 #include <functional>
 #include <map>
@@ -129,6 +130,8 @@ namespace Opm {
         std::vector<UDQDefine> definitions() const;
         std::vector<UDQDefine> definitions(UDQVarType var_type) const;
         std::vector<UDQInput> input() const;
+
+        void exportTypeCount(std::array<int, static_cast<std::size_t>(UDQVarType::NumTypes)>& count) const;
 
         // The size() method will return the number of active DEFINE and ASSIGN
         // statements; this will correspond to the length of the vector returned

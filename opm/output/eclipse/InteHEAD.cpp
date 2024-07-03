@@ -31,12 +31,14 @@
 
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 #include <opm/input/eclipse/Schedule/ScheduleState.hpp>
+#include <opm/input/eclipse/Schedule/UDQ/UDQEnums.hpp>
 
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
 
 #include <opm/common/utility/TimeService.hpp>
 
 #include <algorithm>
+#include <array>
 #include <chrono>
 #include <cmath>
 #include <ctime>
@@ -744,20 +746,24 @@ ngroups(const Group& gr)
 }
 
 Opm::RestartIO::InteHEAD&
-Opm::RestartIO::InteHEAD::
-udqParam_1(const UdqParam& udq_par)
+Opm::RestartIO::InteHEAD::udqParam_1(const UdqParam& udq_par)
 {
     this->data_[UDQPAR_1] = - udq_par.udqParam_1;
     this->data_[R_SEED]   = - udq_par.udqParam_1;
 
-    this->data_[NUM_CONN_UDQS]  = udq_par.num_conn_udqs;
-    this->data_[NUM_FIELD_UDQS] = udq_par.num_field_udqs;
-    this->data_[NUM_REG_UDQS]   = udq_par.num_reg_udqs;
-    this->data_[NUM_GROUP_UDQS] = udq_par.num_group_udqs;
-    this->data_[NUM_SEG_UDQS]   = udq_par.num_seg_udqs;
-    this->data_[NUM_WELL_UDQS]  = udq_par.num_well_udqs;
-    this->data_[NUM_AQU_UDQS]   = udq_par.num_aqu_udqs;
-    this->data_[NUM_BLK_UDQS]   = udq_par.num_blk_udqs;
+    for (const auto& [countIx, vtype] : std::array {
+            std::pair { NUM_CONN_UDQS , UDQVarType::CONNECTION_VAR },
+            std::pair { NUM_FIELD_UDQS, UDQVarType::FIELD_VAR      },
+            std::pair { NUM_REG_UDQS  , UDQVarType::REGION_VAR     },
+            std::pair { NUM_GROUP_UDQS, UDQVarType::GROUP_VAR      },
+            std::pair { NUM_SEG_UDQS  , UDQVarType::SEGMENT_VAR    },
+            std::pair { NUM_WELL_UDQS , UDQVarType::WELL_VAR       },
+            std::pair { NUM_AQU_UDQS  , UDQVarType::AQUIFER_VAR    },
+            std::pair { NUM_BLK_UDQS  , UDQVarType::BLOCK_VAR      },
+        })
+    {
+        this->data_[countIx] = udq_par.numUDQs[static_cast<std::size_t>(vtype)];
+    }
 
     this->data_[NUM_IUADS] = udq_par.num_iuads;
     this->data_[NUM_IUAPS] = udq_par.num_iuaps;
