@@ -554,13 +554,13 @@ namespace {
     namespace iUdq {
 
         Opm::RestartIO::Helpers::WindowedArray<int>
-        allocate(const std::vector<int>& udqDims)
+        allocate(const Opm::UDQDims& udqDims)
         {
             using WV = Opm::RestartIO::Helpers::WindowedArray<int>;
-            int nwin = std::max(udqDims[0], 1);
+
             return WV {
-                WV::NumWindows{ static_cast<std::size_t>(nwin) },
-                WV::WindowSize{ static_cast<std::size_t>(udqDims[1]) }
+                WV::NumWindows{ std::max(udqDims.totalNumUDQs(), std::size_t{1}) },
+                WV::WindowSize{ Opm::UDQDims::entriesPerIUDQ() }
             };
         }
 
@@ -589,22 +589,24 @@ namespace {
     namespace iUad {
 
         std::optional<Opm::RestartIO::Helpers::WindowedArray<int>>
-        allocate(const std::vector<int>& udqDims)
+        allocate(const Opm::UDQDims& udqDims)
         {
             using WV = Opm::RestartIO::Helpers::WindowedArray<int>;
 
             auto iuad = std::optional<WV>{};
 
-            if (const auto numIUAD = udqDims[2]; numIUAD > 0) {
-                iuad.emplace(WV::NumWindows{ static_cast<std::size_t>(numIUAD) },
-                             WV::WindowSize{ static_cast<std::size_t>(udqDims[3]) });
+            if (udqDims.numIUAD() > 0) {
+                iuad.emplace(WV::NumWindows{ udqDims.numIUAD() },
+                             WV::WindowSize{ Opm::UDQDims::entriesPerIUAD() });
             }
 
             return iuad;
         }
 
         template <class IUADArray>
-        void staticContrib(const Opm::UDQActive::OutputRecord& udq_record, IUADArray& iUad, int use_cnt_diff)
+        void staticContrib(const Opm::UDQActive::OutputRecord& udq_record,
+                           const int                           use_cnt_diff,
+                           IUADArray&                          iUad)
         {
             iUad[0] = udq_record.uda_code;
             iUad[1] = udq_record.input_index + 1;
@@ -623,14 +625,17 @@ namespace {
         Opm::RestartIO::Helpers::WindowedArray<
             Opm::EclIO::PaddedOutputString<8>
         >
-        allocate(const std::vector<int>& udqDims)
+        allocate(const Opm::UDQDims& udqDims)
         {
             using WV = Opm::RestartIO::Helpers::WindowedArray<
-                Opm::EclIO::PaddedOutputString<8>>;
-            int nwin = std::max(udqDims[0], 1);
+                Opm::EclIO::PaddedOutputString<8>
+                >;
+
+            const auto nwin = std::max(udqDims.totalNumUDQs(), std::size_t{1});
+
             return WV {
-                WV::NumWindows{ static_cast<std::size_t>(nwin) },
-                WV::WindowSize{ static_cast<std::size_t>(udqDims[4]) }
+                WV::NumWindows{ nwin },
+                WV::WindowSize{ Opm::UDQDims::entriesPerZUDN() }
             };
         }
 
@@ -649,15 +654,17 @@ namespace {
         Opm::RestartIO::Helpers::WindowedArray<
             Opm::EclIO::PaddedOutputString<8>
         >
-        allocate(const std::vector<int>& udqDims)
+        allocate(const Opm::UDQDims& udqDims)
         {
             using WV = Opm::RestartIO::Helpers::WindowedArray<
-                Opm::EclIO::PaddedOutputString<8>>;
+                Opm::EclIO::PaddedOutputString<8>
+                >;
 
-            const int nwin = std::max(udqDims[0], 1);
+            const auto nwin = std::max(udqDims.totalNumUDQs(), std::size_t{1});
+
             return WV {
-                WV::NumWindows{ static_cast<std::size_t>(nwin) },
-                WV::WindowSize{ static_cast<std::size_t>(udqDims[5]) }
+                WV::NumWindows{ nwin },
+                WV::WindowSize{ Opm::UDQDims::entriesPerZUDL() }
             };
         }
 
@@ -715,15 +722,15 @@ namespace {
     namespace iGph {
 
         std::optional<Opm::RestartIO::Helpers::WindowedArray<int>>
-        allocate(const std::vector<int>& udqDims)
+        allocate(const Opm::UDQDims& udqDims)
         {
             using WV = Opm::RestartIO::Helpers::WindowedArray<int>;
 
             auto igph = std::optional<WV>{};
 
-            if (const auto numIGPH = udqDims[6]; numIGPH > 0) {
-                igph.emplace(WV::NumWindows{ static_cast<std::size_t>(numIGPH) },
-                             WV::WindowSize{ static_cast<std::size_t>(1) });
+            if (udqDims.numIGPH() > 0) {
+                igph.emplace(WV::NumWindows{ udqDims.numIGPH() },
+                             WV::WindowSize{ std::size_t{1} });
             }
 
             return igph;
@@ -741,15 +748,15 @@ namespace {
     namespace iUap {
 
         std::optional<Opm::RestartIO::Helpers::WindowedArray<int>>
-        allocate(const std::vector<int>& udqDims)
+        allocate(const Opm::UDQDims& udqDims)
         {
             using WV = Opm::RestartIO::Helpers::WindowedArray<int>;
 
             auto iuap = std::optional<WV>{};
 
-            if (const auto numIUAP = udqDims[7]; numIUAP > 0) {
-                iuap.emplace(WV::NumWindows{ static_cast<std::size_t>(numIUAP) },
-                             WV::WindowSize{ static_cast<std::size_t>(1) });
+            if (udqDims.numIUAP() > 0) {
+                iuap.emplace(WV::NumWindows{ udqDims.numIUAP() },
+                             WV::WindowSize{ std::size_t{1} });
             }
 
             return iuap;
@@ -767,15 +774,15 @@ namespace {
     namespace dUdf {
 
         std::optional<Opm::RestartIO::Helpers::WindowedArray<double>>
-        allocate(const std::vector<int>& udqDims)
+        allocate(const Opm::UDQDims& udqDims)
         {
             using WV = Opm::RestartIO::Helpers::WindowedArray<double>;
 
             auto dudf = std::optional<WV>{};
 
-            if (const auto numFieldUDQs = udqDims[12]; numFieldUDQs > 0) {
-                dudf.emplace(WV::NumWindows { static_cast<std::size_t>(numFieldUDQs) },
-                             WV::WindowSize { static_cast<std::size_t>(1) });
+            if (udqDims.numFieldUDQs() > 0) {
+                dudf.emplace(WV::NumWindows { udqDims.numFieldUDQs() },
+                             WV::WindowSize { std::size_t{1} });
             }
 
             return dudf;
@@ -797,15 +804,15 @@ namespace {
     namespace dUdg {
 
         std::optional<Opm::RestartIO::Helpers::WindowedArray<double>>
-        allocate(const std::vector<int>& udqDims)
+        allocate(const Opm::UDQDims& udqDims)
         {
             using WV = Opm::RestartIO::Helpers::WindowedArray<double>;
 
             auto dudg = std::optional<WV>{};
 
-            if (const auto numGroupUDQs = udqDims[11]; numGroupUDQs > 0) {
-                dudg.emplace(WV::NumWindows{ static_cast<std::size_t>(numGroupUDQs) },
-                             WV::WindowSize{ static_cast<std::size_t>(udqDims[10]) });
+            if (udqDims.numGroupUDQs() > 0) {
+                dudg.emplace(WV::NumWindows{ udqDims.numGroupUDQs() },
+                             WV::WindowSize{ udqDims.maxNumGroups() });
             }
 
             return dudg;
@@ -835,17 +842,18 @@ namespace {
     namespace dUdw {
 
         std::optional<Opm::RestartIO::Helpers::WindowedArray<double>>
-        allocate(const std::vector<int>& udqDims)
+        allocate(const Opm::UDQDims& udqDims)
         {
             using WV = Opm::RestartIO::Helpers::WindowedArray<double>;
 
             auto dudw = std::optional<WV>{};
 
-            if (const auto numWellUDQs = udqDims[9]; numWellUDQs > 0) {
-                const auto numWells = std::max(udqDims[8], 1);
+            if (udqDims.numWellUDQs() > 0) {
+                const auto numWells =
+                    std::max(udqDims.maxNumWells(), std::size_t{1});
 
-                dudw.emplace(WV::NumWindows{ static_cast<std::size_t>(numWellUDQs) },
-                             WV::WindowSize{ static_cast<std::size_t>(numWells) });
+                dudw.emplace(WV::NumWindows{ udqDims.numWellUDQs() },
+                             WV::WindowSize{ numWells });
             }
 
             return dudw;
@@ -876,16 +884,16 @@ namespace {
 
 Opm::RestartIO::Helpers::AggregateUDQData::
 AggregateUDQData(const UDQDims& udqDims)
-    : iUDQ_ { iUdq::allocate(udqDims.data()) }
-    , iUAD_ { iUad::allocate(udqDims.data()) }
-    , zUDN_ { zUdn::allocate(udqDims.data()) }
-    , zUDL_ { zUdl::allocate(udqDims.data()) }
-    , iGPH_ { iGph::allocate(udqDims.data()) }
-    , iUAP_ { iUap::allocate(udqDims.data()) }
+    : iUDQ_ { iUdq::allocate(udqDims) }
+    , iUAD_ { iUad::allocate(udqDims) }
+    , zUDN_ { zUdn::allocate(udqDims) }
+    , zUDL_ { zUdl::allocate(udqDims) }
+    , iGPH_ { iGph::allocate(udqDims) }
+    , iUAP_ { iUap::allocate(udqDims) }
       // ------------------------------------------------------------
-    , dUDF_ { dUdf::allocate(udqDims.data()) }
-    , dUDG_ { dUdg::allocate(udqDims.data()) }
-    , dUDW_ { dUdw::allocate(udqDims.data()) }
+    , dUDF_ { dUdf::allocate(udqDims) }
+    , dUDG_ { dUdg::allocate(udqDims) }
+    , dUDW_ { dUdw::allocate(udqDims) }
 {}
 
 // ---------------------------------------------------------------------------
@@ -986,7 +994,7 @@ collectUserDefinedArguments(const Schedule&         sched,
             auto iuad = (*this->iUAD_)[cnt];
 
             const auto use_count_diff = static_cast<int>(index) - cnt;
-            iUad::staticContrib(record, iuad, use_count_diff);
+            iUad::staticContrib(record, use_count_diff, iuad);
 
             ++cnt;
         }

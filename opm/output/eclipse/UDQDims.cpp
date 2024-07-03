@@ -23,12 +23,10 @@
 
 #include <opm/input/eclipse/Schedule/UDQ/UDQConfig.hpp>
 
-namespace VI = ::Opm::RestartIO::Helpers::VectorItems;
+#include <cstddef>
+#include <vector>
 
-const std::vector<int>& Opm::UDQDims::data() const
-{
-    return this->m_data;
-}
+namespace VI = ::Opm::RestartIO::Helpers::VectorItems;
 
 Opm::UDQDims::UDQDims(const UDQConfig&        config,
                       const std::vector<int>& inteHead)
@@ -54,4 +52,49 @@ Opm::UDQDims::UDQDims(const UDQConfig&        config,
     this->m_data[11] = inteHead[VI::intehead::NO_GROUP_UDQS];
 
     this->m_data[12] = inteHead[VI::intehead::NO_FIELD_UDQS];
+}
+
+std::size_t Opm::UDQDims::totalNumUDQs() const
+{
+    return this->m_data[0];
+}
+
+std::size_t Opm::UDQDims::numIUAD() const
+{
+    return this->m_data[2];
+}
+
+std::size_t Opm::UDQDims::numIGPH() const
+{
+    return this->m_data[6];
+}
+
+std::size_t Opm::UDQDims::numIUAP() const
+{
+    return this->m_data[7];
+}
+
+std::size_t Opm::UDQDims::numFieldUDQs() const
+{
+    return this->m_data[12];
+}
+
+std::size_t Opm::UDQDims::maxNumGroups() const
+{
+    return this->m_data[10];
+}
+
+std::size_t Opm::UDQDims::numGroupUDQs() const
+{
+    return this->m_data[11];
+}
+
+std::size_t Opm::UDQDims::maxNumWells() const
+{
+    return this->m_data[8];
+}
+
+std::size_t Opm::UDQDims::numWellUDQs() const
+{
+    return this->m_data[9];
 }
