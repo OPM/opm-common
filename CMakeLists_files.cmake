@@ -426,7 +426,6 @@ if(ENABLE_ECL_OUTPUT)
           opm/output/eclipse/CreateDoubHead.cpp
           opm/output/eclipse/CreateInteHead.cpp
           opm/output/eclipse/CreateLogiHead.cpp
-          opm/output/eclipse/CreateUdqDims.cpp
           opm/output/eclipse/DoubHEAD.cpp
           opm/output/eclipse/EclipseGridInspector.cpp
           opm/output/eclipse/EclipseIO.cpp

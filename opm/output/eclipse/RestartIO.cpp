@@ -36,6 +36,7 @@
 #include <opm/output/eclipse/AggregateUDQData.hpp>
 #include <opm/output/eclipse/AggregateActionxData.hpp>
 #include <opm/output/eclipse/RestartValue.hpp>
+#include <opm/output/eclipse/UDQDims.hpp>
 
 #include <opm/output/eclipse/WriteRestartHelpers.hpp>
 
@@ -55,6 +56,7 @@
 #include <opm/input/eclipse/Schedule/ScheduleState.hpp>
 #include <opm/input/eclipse/Schedule/SummaryState.hpp>
 #include <opm/input/eclipse/Schedule/Tuning.hpp>
+#include <opm/input/eclipse/Schedule/UDQ/UDQConfig.hpp>
 #include <opm/input/eclipse/Schedule/Well/Well.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
 
@@ -349,29 +351,39 @@ namespace {
                   const std::vector<int>&       ih,
                   EclIO::OutputStream::Restart& rstFile)
     {
-        if (report_step == 0) {
-            // Initial condition.  No UDQs yet.
+        const auto& udqConfig = schedule[sim_step].udq();
+
+        if ((report_step == 0) || (udqConfig.size() == 0)) {
+            // Initial condition or no UDQs in run.
             return;
         }
 
-        // write UDQ - data to restart file
-        const std::size_t simStep = static_cast<size_t> (sim_step);
+        const auto simStep = static_cast<std::size_t>(sim_step);
+        const auto udqDims = UDQDims { udqConfig, ih };
 
-        const auto udqDims = Helpers::createUdqDims(schedule, simStep, ih);
-        auto  udqData = Helpers::AggregateUDQData(udqDims);
+        // UDQs are active in run.  Write UDQ related data to restart file.
+        auto udqData = Helpers::AggregateUDQData(udqDims);
         udqData.captureDeclaredUDQData(schedule, simStep, udq_state, ih);
         
-        if (udqDims[0] >= 1) {
-            rstFile.write("ZUDN", udqData.getZUDN());
-            rstFile.write("ZUDL", udqData.getZUDL());
-            rstFile.write("IUDQ", udqData.getIUDQ());
-            if (udqDims[12] >= 1) rstFile.write("DUDF", udqData.getDUDF());
-            if (udqDims[11] >= 1) rstFile.write("DUDG", udqData.getDUDG());
-            if (udqDims[ 9] >= 1) rstFile.write("DUDW", udqData.getDUDW());
-            if (udqDims[ 2] >= 1) rstFile.write("IUAD", udqData.getIUAD());
-            if (udqDims[ 7] >= 1) rstFile.write("IUAP", udqData.getIUAP());
-            if (udqDims[ 6] >= 1) rstFile.write("IGPH", udqData.getIGPH());
+        rstFile.write("ZUDN", udqData.getZUDN());
+        rstFile.write("ZUDL", udqData.getZUDL());
+        rstFile.write("IUDQ", udqData.getIUDQ());
+
+        if (const auto& dudf = udqData.getDUDF(); dudf.has_value()) {
+            rstFile.write("DUDF", dudf->data());
         }
+
+        if (const auto& dudg = udqData.getDUDG(); dudg.has_value()) {
+            rstFile.write("DUDG", dudg->data());
+        }
+
+        if (const auto& dudw = udqData.getDUDW(); dudw.has_value()) {
+            rstFile.write("DUDW", dudw->data());
+        }
+
+        if (udqDims.data()[2] > 0) { rstFile.write("IUAD", udqData.getIUAD()); }
+        if (udqDims.data()[7] > 0) { rstFile.write("IUAP", udqData.getIUAP()); }
+        if (udqDims.data()[6] > 0) { rstFile.write("IGPH", udqData.getIGPH()); }
     }
 
     void writeActionx(const int                     report_step,
@@ -381,14 +393,15 @@ namespace {
                       const SummaryState&           sum_state,
                       EclIO::OutputStream::Restart& rstFile)
     {
-        if (report_step == 0)
+        if ((report_step == 0) || (schedule[sim_step].actions().ecl_size() == 0)) {
             return;
+        }
 
-        if (schedule[sim_step].actions().ecl_size() == 0)
-            return;
+        const auto simStep = static_cast<std::size_t>(sim_step);
 
-        const std::size_t simStep = static_cast<size_t> (sim_step);
-        Opm::RestartIO::Helpers::AggregateActionxData actionxData{schedule, action_state, sum_state, simStep};
+        const auto actionxData = RestartIO::Helpers::AggregateActionxData {
+            schedule, action_state, sum_state, simStep
+        };
 
         rstFile.write("IACT", actionxData.getIACT());
         rstFile.write("SACT", actionxData.getSACT());
@@ -398,7 +411,6 @@ namespace {
         rstFile.write("IACN", actionxData.getIACN());
         rstFile.write("SACN", actionxData.getSACN());
     }
-
 
     void writeWell(int                             sim_step,
                    const bool                      ecl_compatible_rst,
@@ -430,8 +442,7 @@ namespace {
         rstFile.write("IWLS", wListData.getIWls());
 
         // Extended set of OPM well vectors
-        if (!ecl_compatible_rst)
-        {
+        if (!ecl_compatible_rst) {
             const auto opm_xwel =
                 serialize_OPM_XWEL(wells, schedule, well_names,
                                    sim_step, phases, grid);
@@ -564,7 +575,6 @@ namespace {
                                       rstFile);
         }
     }
-
 
     std::vector<std::string>
     solutionVectorNames(const RestartValue& value)
