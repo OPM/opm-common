@@ -588,15 +588,19 @@ namespace {
 
     namespace iUad {
 
-        Opm::RestartIO::Helpers::WindowedArray<int>
+        std::optional<Opm::RestartIO::Helpers::WindowedArray<int>>
         allocate(const std::vector<int>& udqDims)
         {
             using WV = Opm::RestartIO::Helpers::WindowedArray<int>;
-            int nwin = std::max(udqDims[2], 1);
-            return WV {
-                WV::NumWindows{ static_cast<std::size_t>(nwin) },
-                WV::WindowSize{ static_cast<std::size_t>(udqDims[3]) }
-            };
+
+            auto iuad = std::optional<WV>{};
+
+            if (const auto numIUAD = udqDims[2]; numIUAD > 0) {
+                iuad.emplace(WV::NumWindows{ static_cast<std::size_t>(numIUAD) },
+                             WV::WindowSize{ static_cast<std::size_t>(udqDims[3]) });
+            }
+
+            return iuad;
         }
 
         template <class IUADArray>
@@ -611,6 +615,7 @@ namespace {
             iUad[3] = udq_record.use_count;
             iUad[4] = udq_record.use_index + 1 - use_cnt_diff;
         }
+
     } // iUad
 
     namespace zUdn {
@@ -709,15 +714,19 @@ namespace {
 
     namespace iGph {
 
-        Opm::RestartIO::Helpers::WindowedArray<int>
+        std::optional<Opm::RestartIO::Helpers::WindowedArray<int>>
         allocate(const std::vector<int>& udqDims)
         {
             using WV = Opm::RestartIO::Helpers::WindowedArray<int>;
 
-            return WV {
-                WV::NumWindows{ static_cast<std::size_t>(udqDims[6]) },
-                WV::WindowSize{ static_cast<std::size_t>(1) }
-            };
+            auto igph = std::optional<WV>{};
+
+            if (const auto numIGPH = udqDims[6]; numIGPH > 0) {
+                igph.emplace(WV::NumWindows{ static_cast<std::size_t>(numIGPH) },
+                             WV::WindowSize{ static_cast<std::size_t>(1) });
+            }
+
+            return igph;
         }
 
         template <class IGPHArray>
@@ -726,20 +735,24 @@ namespace {
         {
             iGph[0] = inj_phase;
         }
+
     } // iGph
 
     namespace iUap {
 
-        Opm::RestartIO::Helpers::WindowedArray<int>
+        std::optional<Opm::RestartIO::Helpers::WindowedArray<int>>
         allocate(const std::vector<int>& udqDims)
         {
             using WV = Opm::RestartIO::Helpers::WindowedArray<int>;
 
-            const int nwin = std::max(udqDims[7], 1);
-            return WV {
-                WV::NumWindows{ static_cast<std::size_t>(nwin) },
-                WV::WindowSize{ static_cast<std::size_t>(1) }
-            };
+            auto iuap = std::optional<WV>{};
+
+            if (const auto numIUAP = udqDims[7]; numIUAP > 0) {
+                iuap.emplace(WV::NumWindows{ static_cast<std::size_t>(numIUAP) },
+                             WV::WindowSize{ static_cast<std::size_t>(1) });
+            }
+
+            return iuap;
         }
 
         template <class IUAPArray>
@@ -970,7 +983,7 @@ collectUserDefinedArguments(const Schedule&         sched,
                 continue;
             }
 
-            auto iuad = this->iUAD_[cnt];
+            auto iuad = (*this->iUAD_)[cnt];
 
             const auto use_count_diff = static_cast<int>(index) - cnt;
             iUad::staticContrib(record, iuad, use_count_diff);
@@ -995,7 +1008,7 @@ collectUserDefinedArguments(const Schedule&         sched,
         }
 
         for (std::size_t index = 0; index < iuap_vect.size(); ++index) {
-            auto iuap = this->iUAP_[index];
+            auto iuap = (*this->iUAP_)[index];
             iUap::staticContrib(iuap_vect[index], iuap);
         }
     }
@@ -1004,7 +1017,7 @@ collectUserDefinedArguments(const Schedule&         sched,
         const auto phs = ig_phase(sched, simStep, inteHead);
 
         for (std::size_t index = 0; index < phs.size(); ++index) {
-            auto igph = this->iGPH_[index];
+            auto igph = (*this->iGPH_)[index];
             iGph::staticContrib(phs[index], igph);
         }
 

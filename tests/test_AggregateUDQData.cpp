@@ -319,9 +319,9 @@ BOOST_AUTO_TEST_CASE (Declared_UDQ_data)
             rstFile.write("DUDG", udqData.getDUDG()->data());
             rstFile.write("DUDW", udqData.getDUDW()->data());
 
-            rstFile.write("IUAD", udqData.getIUAD());
-            rstFile.write("IUAP", udqData.getIUAP());
-            rstFile.write("IGPH", udqData.getIGPH());
+            rstFile.write("IUAD", udqData.getIUAD()->data());
+            rstFile.write("IUAP", udqData.getIUAP()->data());
+            rstFile.write("IGPH", udqData.getIGPH()->data());
         }
 
         {
@@ -706,7 +706,7 @@ BOOST_AUTO_TEST_CASE (Declared_UDQ_data)
             // item (5)  - the sequence number for the first use of the actual UDQ (index  i+1) = 1+sum over <the first i
             // udq's in use >(no_use_udq(i))
 
-            const auto& iUad = udqData.getIUAD();
+            const auto& iUad = udqData.getIUAD()->data();
 
             auto start = 0 * udqDims.data()[3];
             BOOST_CHECK_EQUAL(iUad[start + 0], 300004); // iuad NO. 1
@@ -966,7 +966,7 @@ BOOST_AUTO_TEST_CASE (Declared_UDQ_data_2)
     udqData.captureDeclaredUDQData(sched, simStep, udq_state, ih);
 
     {
-        const auto& iGph = udqData.getIGPH();
+        const auto& iGph = udqData.getIGPH()->data();
 
         auto start = 0*udqDims.data()[1];
         BOOST_CHECK_EQUAL(iGph[start + 0] ,  3); // (3 - gas injection)
@@ -992,7 +992,7 @@ BOOST_AUTO_TEST_CASE (Declared_UDQ_data_2)
     udqData.captureDeclaredUDQData(sched, simStep, udq_state, ih);
 
     {
-        const auto& iGph = udqData.getIGPH();
+        const auto& iGph = udqData.getIGPH()->data();
 
         auto start = 0*udqDims.data()[1];
         BOOST_CHECK_EQUAL(iGph[start + 0] ,  2); // (2 - water injection)

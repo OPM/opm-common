@@ -381,9 +381,17 @@ namespace {
             rstFile.write("DUDW", dudw->data());
         }
 
-        if (udqDims.data()[2] > 0) { rstFile.write("IUAD", udqData.getIUAD()); }
-        if (udqDims.data()[7] > 0) { rstFile.write("IUAP", udqData.getIUAP()); }
-        if (udqDims.data()[6] > 0) { rstFile.write("IGPH", udqData.getIGPH()); }
+        if (const auto& iuad = udqData.getIUAD(); iuad.has_value()) {
+            rstFile.write("IUAD", iuad->data());
+        }
+
+        if (const auto& iuap = udqData.getIUAP(); iuap.has_value()) {
+            rstFile.write("IUAP", iuap->data());
+        }
+
+        if (const auto& igph = udqData.getIGPH(); igph.has_value()) {
+            rstFile.write("IGPH", igph->data());
+        }
     }
 
     void writeActionx(const int                     report_step,

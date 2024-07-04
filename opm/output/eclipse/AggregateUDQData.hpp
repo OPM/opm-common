@@ -55,9 +55,10 @@ public:
         return this->iUDQ_.data();
     }
 
-    const std::vector<int>& getIUAD() const
+    /// Retrieve UDA descriptive data.  Nullopt if no UDAs in use.
+    const std::optional<WindowedArray<int>>& getIUAD() const
     {
-        return this->iUAD_.data();
+        return this->iUAD_;
     }
 
     const std::vector<EclIO::PaddedOutputString<8>>& getZUDN() const
@@ -70,14 +71,17 @@ public:
         return this->zUDL_.data();
     }
 
-    const std::vector<int>& getIGPH() const
+    /// Retrive group level injection phase UDAs.  Nullopt if no injection
+    /// phase is described by a UDA for any groups.
+    const std::optional<WindowedArray<int>>& getIGPH() const
     {
-        return this->iGPH_.data();
+        return this->iGPH_;
     }
 
-    const std::vector<int>& getIUAP() const
+    /// Associate well/group IDs for IUAD.  Nullopt if no UDAs in use.
+    const std::optional<WindowedArray<int>>& getIUAP() const
     {
-        return this->iUAP_.data();
+        return this->iUAP_;
     }
 
     /// Retrieve values of field level UDQs.  Nullopt if no such UDQs exist.
@@ -107,7 +111,8 @@ private:
     /// Aggregate 'IUAD' array (Integer) for all UDQ data
     ///
     /// 5 integers pr UDQ that is used for various well and group controls.
-    WindowedArray<int> iUAD_;
+    /// Nullopt if no UDAs.
+    std::optional<WindowedArray<int>> iUAD_;
 
     /// Aggregate 'ZUDN' array (Character) for all UDQ data.
     ///
@@ -121,13 +126,14 @@ private:
 
     /// Aggregate 'IGPH' array (Integer) for all UDQ data
     ///
-    /// 3 - zeroes - as of current understanding
-    WindowedArray<int> iGPH_;
+    /// 3 - zeroes - as of current understanding.  Nullopt if no injection
+    /// phase is determined by a UDA for any group.
+    std::optional<WindowedArray<int>> iGPH_;
 
     /// Aggregate 'IUAP' array for all UDQ data
     ///
-    /// 1 integer pr UDQ constraint used
-    WindowedArray<int> iUAP_;
+    /// 1 integer pr UDQ constraint used.  Nullopt if no UDAs.
+    std::optional<WindowedArray<int>> iUAP_;
 
     /// Numeric values of field level UDQs.
     ///
