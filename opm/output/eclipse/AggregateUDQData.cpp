@@ -450,44 +450,39 @@ namespace {
     {
         std::vector<int> inj_phase(ngmaxz(inteHead), 0);
 
-        auto update_phase = [](int& phase, int new_phase) {
-            if (phase != 0) {
-                throw std::logic_error {
-                    "Can not write restart files with UDA "
-                    "control on multiple phases in same group"
-                };
+        auto update_phase = [](const int phase, const int new_phase) {
+            if (phase == 0) {
+                return new_phase;
             }
 
-            phase = new_phase;
+            throw std::logic_error {
+                "Cannot write restart files with UDA "
+                "control on multiple phases in same group"
+            };
         };
 
-        const auto curGroups = sched.restart_groups(simStep);
-        for (std::size_t ind = 0; ind < curGroups.size(); ++ind) {
-            if (curGroups[ind] != nullptr) {
-                const auto& group = *curGroups[ind];
-                if (group.isInjectionGroup()) {
-                    int int_phase{0};
+        for (const auto* group : sched.restart_groups(simStep)) {
+            if ((group == nullptr) || !group->isInjectionGroup()) {
+                continue;
+            }
 
-                    for (const auto& [phase, int_value] : std::array {
-                            std::pair {Opm::Phase::OIL,   1},
-                            std::pair {Opm::Phase::WATER, 2},
-                            std::pair {Opm::Phase::GAS,   3},
-                        })
-                    {
-                        if (group.hasInjectionControl(phase)) {
-                            const auto& gas_props = group.injectionProperties(phase);
+            auto& int_phase = (group->name() == "FIELD")
+                ? inj_phase.back()
+                : inj_phase[group->insert_index() - 1];
 
-                            if (gas_props.uda_phase()) {
-                                update_phase(int_phase, int_value);
-                            }
-                        }
-                    }
+            int_phase = 0;
+            for (const auto& [phase, int_value] : std::array {
+                    std::pair {Opm::Phase::OIL,   1},
+                    std::pair {Opm::Phase::WATER, 2},
+                    std::pair {Opm::Phase::GAS,   3},
+                })
+            {
+                if (! group->hasInjectionControl(phase)) {
+                    continue;
+                }
 
-                    if (group.name() == "FIELD") {
-                        inj_phase[ngmaxz(inteHead) - 1] = int_phase;
-                    } else {
-                        inj_phase[group.insert_index() - 1] = int_phase;
-                    }
+                if (group->injectionProperties(phase).uda_phase()) {
+                    int_phase = update_phase(int_phase, int_value);
                 }
             }
         }
