@@ -46,7 +46,6 @@
 #include <algorithm>
 #include <cstddef>
 #include <cstring>
-#include <iostream>
 #include <map>
 #include <optional>
 #include <string>
@@ -439,13 +438,16 @@ namespace {
                         // count the number of operators & parenthes in this sub-expression
                         def_type -= noOperators(substTokVec);
                     } else {
-                        std::cout << "comp_expr index: " << ind_ce << std::endl;
-                        throw std::invalid_argument( "Invalid comp_expr index" );
+                        const auto msg = fmt::format("Invalid compound expression index {}", ind_ce);
+                        Opm::OpmLog::error(msg);
+                        throw std::invalid_argument { msg };
                     }
                 } else if ((expr.highestLevOperators[ind].type() != Opm::UDQTokenType::ecl_expr) &&
-                        (expr.highestLevOperators[ind].type() != Opm::UDQTokenType::number)) {
+                           (expr.highestLevOperators[ind].type() != Opm::UDQTokenType::number))
+                {
                     // unknown token - write warning
-                    Opm::OpmLog::warning("define_type - unknown tokenType: " + expr.highestLevOperators[ind].str());
+                    Opm::OpmLog::warning(fmt::format("Unknown tokenType '{}' in define_type()",
+                                                     expr.highestLevOperators[ind].str()));
                 }
             }
         }
@@ -533,12 +535,12 @@ namespace {
                 }
             }
             else {
-                std::cout << "Invalid Control keyword: "
-                          << static_cast<int>(ctrl) << std::endl;
+                const auto msg = fmt::format("Invalid control keyword {} for UDQ {}",
+                                             static_cast<int>(ctrl), iuap[ind].udq);
 
-                throw std::invalid_argument {
-                    "UDQ - variable: " + iuap[ind].udq
-                };
+                Opm::OpmLog::error(msg);
+
+                throw std::invalid_argument { msg };
             }
         }
 
@@ -680,43 +682,43 @@ namespace {
             }
 
             const auto l_sstr    = std::string::size_type {8};
-            const auto max_l_str = 16 * l_sstr;
+            const auto max_l_str = Opm::UDQDims::entriesPerZUDL() * l_sstr;
 
             const auto& udq_define = input.get<Opm::UDQDefine>();
             const auto& z_data = udq_define.input_string();
 
             if (z_data.size() > max_l_str) {
-                std::cout << "Too long input data string (max "
-                          << max_l_str << " characters): "
-                          << z_data << std::endl;
+                const auto msg =
+                    fmt::format(R"(DEFINE expression for UDQ {} is too long.
+  Number of characters {} exceeds upper limit of {}.
+  Expression: {})",
+                                udq_define.keyword(),
+                                z_data.size(), max_l_str,
+                                z_data);
 
-                throw std::invalid_argument {
-                    "UDQ - variable: " + udq_define.keyword()
-                };
+                throw std::invalid_argument { msg };
             }
-            else {
-                const auto n_sstr = z_data.size() / l_sstr;
 
-                for (auto i = 0*n_sstr; i < n_sstr; ++i) {
-                    if (i == 0) {
-                        auto temp_str = z_data.substr(i * l_sstr, l_sstr);
+            const auto n_sstr = z_data.size() / l_sstr;
+            for (auto i = 0*n_sstr; i < n_sstr; ++i) {
+                if (i == 0) {
+                    auto temp_str = z_data.substr(i * l_sstr, l_sstr);
 
-                        // If first character is a minus sign, change to ~
-                        if (temp_str.compare(0, 1, "-") == 0) {
-                            temp_str.replace(0, 1, "~");
-                        }
-
-                        zUdl[i] = temp_str;
+                    // If first character is a minus sign, change to ~
+                    if (temp_str.compare(0, 1, "-") == 0) {
+                        temp_str.replace(0, 1, "~");
                     }
-                    else {
-                        zUdl[i] = z_data.substr(i * l_sstr, l_sstr);
-                    }
-                }
 
-                // Add remainder of last non-zero string
-                if ((z_data.size() % l_sstr) > 0) {
-                    zUdl[n_sstr] = z_data.substr(n_sstr * l_sstr);
+                    zUdl[i] = temp_str;
                 }
+                else {
+                    zUdl[i] = z_data.substr(i * l_sstr, l_sstr);
+                }
+            }
+
+            // Add remainder of last non-zero string
+            if ((z_data.size() % l_sstr) > 0) {
+                zUdl[n_sstr] = z_data.substr(n_sstr * l_sstr);
             }
         }
 
