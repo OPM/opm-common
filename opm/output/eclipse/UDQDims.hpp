@@ -20,27 +20,33 @@
 #ifndef OPM_UDQDIMS_HPP
 #define OPM_UDQDIMS_HPP
 
+#include <cstddef>
 #include <vector>
 
 namespace Opm {
 
 class UDQConfig;
 
+} // namespace Opm
 
-class UDQDims {
+namespace Opm {
+
+class UDQDims
+{
 public:
-    UDQDims(const UDQConfig& config, const std::vector<int>& intehead);
+    explicit UDQDims(const UDQConfig& config, const std::vector<int>& intehead);
+
     const std::vector<int>& data() const;
 
-    static std::size_t entriesPerIUDQ();
-    static std::size_t entriesPerIUAD();
-    static std::size_t entriesPerZUDN();
-    static std::size_t entriesPerZUDL();
+    static std::size_t entriesPerIUDQ() { return  3; }
+    static std::size_t entriesPerIUAD() { return  5; }
+    static std::size_t entriesPerZUDN() { return  2; }
+    static std::size_t entriesPerZUDL() { return 16; }
 
 private:
     std::vector<int> m_data;
 };
 
-}
+} // namespace Opm
 
-#endif
+#endif  // OPM_UDQDIMS_HPP

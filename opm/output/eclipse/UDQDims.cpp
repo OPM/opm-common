@@ -18,59 +18,40 @@
 */
 
 #include <opm/output/eclipse/UDQDims.hpp>
-#include <opm/output/eclipse/VectorItems/intehead.hpp>
-#include <opm/input/eclipse/Schedule/UDQ/UDQConfig.hpp>
 
+#include <opm/output/eclipse/VectorItems/intehead.hpp>
+
+#include <opm/input/eclipse/Schedule/UDQ/UDQConfig.hpp>
 
 namespace VI = ::Opm::RestartIO::Helpers::VectorItems;
 
-namespace Opm {
-
-std::size_t UDQDims::entriesPerIUDQ()
+const std::vector<int>& Opm::UDQDims::data() const
 {
-    std::size_t no_entries = 3;
-    return no_entries;
-}
-
-std::size_t UDQDims::entriesPerIUAD()
-{
-    std::size_t no_entries = 5;
-    return no_entries;
-}
-
-std::size_t UDQDims::entriesPerZUDN()
-{
-    std::size_t no_entries = 2;
-    return no_entries;
-}
-
-std::size_t UDQDims::entriesPerZUDL()
-{
-    std::size_t no_entries = 16;
-    return no_entries;
-}
-
-const std::vector<int>& UDQDims::data() const {
     return this->m_data;
 }
 
-
-UDQDims::UDQDims(const UDQConfig& config, const std::vector<int>& inteHead)
+Opm::UDQDims::UDQDims(const UDQConfig&        config,
+                      const std::vector<int>& inteHead)
+    : m_data(13, 0)
 {
-    this->m_data.resize(13,0);
-
     this->m_data[ 0] = config.size();
+
     this->m_data[ 1] = entriesPerIUDQ();
     this->m_data[ 2] = inteHead[VI::intehead::NO_IUADS];
     this->m_data[ 3] = entriesPerIUAD();
     this->m_data[ 4] = entriesPerZUDN();
     this->m_data[ 5] = entriesPerZUDL();
-    this->m_data[ 6] = (inteHead[VI::intehead::NO_IUADS] > 0) ? inteHead[20] : 0;
+
+    this->m_data[ 6] = (inteHead[VI::intehead::NO_IUADS] > 0)
+        ? inteHead[VI::intehead::NGMAXZ] : 0;
+
     this->m_data[ 7] = inteHead[VI::intehead::NO_IUAPS];
+
     this->m_data[ 8] = inteHead[VI::intehead::NWMAXZ];
     this->m_data[ 9] = inteHead[VI::intehead::NO_WELL_UDQS];
+
     this->m_data[10] = inteHead[VI::intehead::NGMAXZ];
     this->m_data[11] = inteHead[VI::intehead::NO_GROUP_UDQS];
+
     this->m_data[12] = inteHead[VI::intehead::NO_FIELD_UDQS];
-}
 }

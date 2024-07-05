@@ -20,6 +20,7 @@
 #ifndef OPM_WRITE_RESTART_HELPERS_HPP
 #define OPM_WRITE_RESTART_HELPERS_HPP
 
+#include <cstddef>
 #include <vector>
 
 // Forward declarations
@@ -37,7 +38,7 @@ namespace Opm {
 
 } // Opm
 
-namespace Opm { namespace RestartIO { namespace Helpers {
+namespace Opm::RestartIO::Helpers {
 
     std::vector<double>
     createDoubHead(const EclipseState& es,
@@ -58,11 +59,6 @@ namespace Opm { namespace RestartIO { namespace Helpers {
 
     std::vector<bool>
     createLogiHead(const EclipseState& es);
-
-    std::vector<int>
-    createUdqDims(const Schedule&     		sched,
-                  const std::size_t       lookup_step,
-                  const std::vector<int>& inteHead);
 
     std::size_t
     entriesPerSACT();
@@ -86,6 +82,6 @@ namespace Opm { namespace RestartIO { namespace Helpers {
     createActionRSTDims(const Schedule&     sched,
                         const std::size_t   simStep);
 
-}}} // Opm::RestartIO::Helpers
+} // Opm::RestartIO::Helpers
 
 #endif  // OPM_WRITE_RESTART_HELPERS_HPP

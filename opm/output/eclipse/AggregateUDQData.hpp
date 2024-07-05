@@ -21,45 +21,44 @@
 #define OPM_AGGREGATE_UDQ_DATA_HPP
 
 #include <opm/output/eclipse/WindowedArray.hpp>
+
 #include <opm/io/eclipse/PaddedOutputString.hpp>
 
 #include <cstddef>
+#include <optional>
 #include <string>
 #include <vector>
-#include <map>
 
 namespace Opm {
+    class Group;
     class Schedule;
+    class UDQConfig;
+    class UDQDims;
     class UDQInput;
-    class UDQActive;
     class UDQState;
 } // Opm
 
-namespace Opm { namespace RestartIO { namespace Helpers {
-
-class igphData {
-public:
-    const std::vector<int> ig_phase(const Opm::Schedule& sched, const std::size_t simStep, const std::vector<int>& inteHead);
-};
+namespace Opm::RestartIO::Helpers {
 
 class AggregateUDQData
 {
 public:
-    explicit AggregateUDQData(const std::vector<int>& udqDims);
+    explicit AggregateUDQData(const UDQDims& udqDims);
 
-void captureDeclaredUDQData(const Opm::Schedule&                 sched,
-                       const std::size_t                    simStep,
-                       const Opm::UDQState&                 udqState,
-                       const std::vector<int>&              inteHead);
+    void captureDeclaredUDQData(const Schedule&         sched,
+                                const std::size_t       simStep,
+                                const UDQState&         udqState,
+                                const std::vector<int>& inteHead);
 
     const std::vector<int>& getIUDQ() const
     {
         return this->iUDQ_.data();
     }
 
-    const std::vector<int>& getIUAD() const
+    /// Retrieve UDA descriptive data.  Nullopt if no UDAs in use.
+    const std::optional<WindowedArray<int>>& getIUAD() const
     {
-        return this->iUAD_.data();
+        return this->iUAD_;
     }
 
     const std::vector<EclIO::PaddedOutputString<8>>& getZUDN() const
@@ -72,63 +71,111 @@ void captureDeclaredUDQData(const Opm::Schedule&                 sched,
         return this->zUDL_.data();
     }
 
-    const std::vector<int>& getIGPH() const
+    /// Retrive group level injection phase UDAs.  Nullopt if no injection
+    /// phase is described by a UDA for any groups.
+    const std::optional<WindowedArray<int>>& getIGPH() const
     {
-        return this->iGPH_.data();
+        return this->iGPH_;
     }
 
-    const std::vector<int>& getIUAP() const
+    /// Associate well/group IDs for IUAD.  Nullopt if no UDAs in use.
+    const std::optional<WindowedArray<int>>& getIUAP() const
     {
-        return this->iUAP_.data();
+        return this->iUAP_;
     }
 
-    const std::vector<double>& getDUDW() const
+    /// Retrieve values of field level UDQs.  Nullopt if no such UDQs exist.
+    const std::optional<WindowedArray<double>>& getDUDF() const
     {
-        return this->dUDW_.data();
+        return this->dUDF_;
     }
 
-        const std::vector<double>& getDUDG() const
+    /// Retrieve values of group level UDQs.  Nullopt if no such UDQs exist.
+    const std::optional<WindowedArray<double>>& getDUDG() const
     {
-        return this->dUDG_.data();
+        return this->dUDG_;
     }
 
-    const std::vector<double>& getDUDF() const
+    /// Retrieve values of well level UDQs.  Nullopt if no such UDQs exist.
+    const std::optional<WindowedArray<double>>& getDUDW() const
     {
-        return this->dUDF_.data();
+        return this->dUDW_;
     }
 
 private:
-    /// Aggregate 'IUDQ' array (Integer) for all UDQ data  (3 integers pr UDQ)
+    /// Aggregate 'IUDQ' array (Integer) for all UDQ data
+    ///
+    /// 3 integers pr UDQ.
     WindowedArray<int> iUDQ_;
 
-    /// Aggregate 'IUAD' array (Integer) for all UDQ data  (5 integers pr UDQ that is used for various well and group controls)
-    WindowedArray<int> iUAD_;
+    /// Aggregate 'IUAD' array (Integer) for all UDQ data
+    ///
+    /// 5 integers pr UDQ that is used for various well and group controls.
+    /// Nullopt if no UDAs.
+    std::optional<WindowedArray<int>> iUAD_;
 
-
-    /// Aggregate 'ZUDN' array (Character) for all UDQ data. (2 * 8 chars pr UDQ -> UNIT keyword)
+    /// Aggregate 'ZUDN' array (Character) for all UDQ data.
+    ///
+    /// 2 * 8 chars pr UDQ -> UNIT keyword.
     WindowedArray<EclIO::PaddedOutputString<8>> zUDN_;
 
-    /// Aggregate 'ZUDL' array (Character) for all UDQ data.  (16 * 8 chars pr UDQ DEFINE "Data for operation - Msth Expression)
+    /// Aggregate 'ZUDL' array (Character) for all UDQ data.
+    ///
+    /// 16 * 8 chars pr UDQ DEFINE, Data for operation - Math Expression
     WindowedArray<EclIO::PaddedOutputString<8>> zUDL_;
 
-    /// Aggregate 'IGPH' array (Integer) for all UDQ data  (3 - zeroes - as of current understanding)
-    WindowedArray<int> iGPH_;
+    /// Aggregate 'IGPH' array (Integer) for all UDQ data
+    ///
+    /// 3 - zeroes - as of current understanding.  Nullopt if no injection
+    /// phase is determined by a UDA for any group.
+    std::optional<WindowedArray<int>> iGPH_;
 
-    /// Aggregate 'IUAP' array (ICharArrayNullTermnteger) for all UDQ data  (1 integer pr UDQ constraint used)
-    WindowedArray<int> iUAP_;
+    /// Aggregate 'IUAP' array for all UDQ data
+    ///
+    /// 1 integer pr UDQ constraint used.  Nullopt if no UDAs.
+    std::optional<WindowedArray<int>> iUAP_;
 
-    /// Aggregate 'DUDW' array (Double Precision) for all UDQ data. (Dimension = max no wells * noOfUDQ's)
-    WindowedArray<double> dUDW_;
+    /// Numeric values of field level UDQs.
+    ///
+    /// Nullopt if no such UDQs exist, number of field level UDQs otherwise.
+    std::optional<WindowedArray<double>> dUDF_{};
 
-    /// Aggregate 'DUDG' array (Double Precision) for all UDQ data. (Dimension = (max no groups + 1) * noOfUDQ's)
-    WindowedArray<double> dUDG_;
+    /// Numeric values of group level UDQs.
+    ///
+    /// Nullopt if no such UDQs exist, declared maximum #groups + 1 elements
+    /// for each group level UDQ otherwise.
+    std::optional<WindowedArray<double>> dUDG_{};
 
-    /// Aggregate 'DUDF' array (Double Precision) for all UDQ data.  (Dimension = Number of FU - UDQ's, with value equal to the actual constraint)
-    WindowedArray<double> dUDF_;
+    /// Numeric values of well level UDQs.
+    ///
+    /// Nullopt if no such UDQs exist, declared maximum #wells elements for
+    /// each well level UDQ otherwise.
+    std::optional<WindowedArray<double>> dUDW_{};
 
+    void collectUserDefinedQuantities(const std::vector<UDQInput>& udqInput,
+                                      const std::vector<int>&      inteHead);
 
+    void collectUserDefinedArguments(const Schedule&         sched,
+                                     const std::size_t       simStep,
+                                     const std::vector<int>& inteHead);
+
+    void collectFieldUDQValues(const std::vector<UDQInput>& udqInput,
+                               const UDQState&              udq_state,
+                               const int                    expectNumFieldUDQs);
+
+    void collectGroupUDQValues(const std::vector<UDQInput>&     udqInput,
+                               const UDQState&                  udqState,
+                               const std::size_t                ngmax,
+                               const std::vector<const Group*>& groups,
+                               const int                        expectedNumGroupUDQs);
+
+    void collectWellUDQValues(const std::vector<UDQInput>&    udqInput,
+                              const UDQState&                 udqState,
+                              const std::size_t               nwmax,
+                              const std::vector<std::string>& wells,
+                              const int                       expectedNumWellUDQs);
 };
 
-}}} // Opm::RestartIO::Helpers
+} // Opm::RestartIO::Helpers
 
-#endif //OPM_AGGREGATE_WELL_DATA_HPP
+#endif // OPM_AGGREGATE_UDQ_DATA_HPP
