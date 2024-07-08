@@ -223,6 +223,7 @@ namespace Opm {
         InjectorCMode newControlMode = WellInjectorCModeFromString(cmodeString);
 
         if ( !(newControlMode == InjectorCMode::RATE || newControlMode == InjectorCMode::BHP) ) {
+            const auto inputControlMode = newControlMode;
             newControlMode = InjectorCMode::RATE;
             const auto& sir = this->surfaceInjectionRate;
             std::string target = sir.is<double>() ? std::to_string(sir.get<double>()) : sir.get<std::string>();
@@ -233,7 +234,7 @@ namespace Opm {
                                           loc.filename,
                                           loc.lineno,
                                           well_name,
-                                          WellInjectorCMode2String(newControlMode),
+                                          WellInjectorCMode2String(inputControlMode),
                                           target);
             OpmLog::warning(msg);
         }
