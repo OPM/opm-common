@@ -363,6 +363,7 @@ namespace Opm {
         result.completed_cells = CompletedCells::serializationTestObject();
         result.current_report_step = 0;
         result.m_lowActionParsingStrictness = false;
+        result.welpi_action_mode = false;
         result.simUpdateFromPython = std::make_shared<SimulatorUpdate>(SimulatorUpdate::serializationTestObject());
 
         return result;
@@ -2101,6 +2102,7 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
             && this->completed_cells == data.completed_cells
             && this->current_report_step == data.current_report_step
             && this->m_lowActionParsingStrictness == data.m_lowActionParsingStrictness
+            && this->welpi_action_mode == data.welpi_action_mode
             && simUpdateFromPythonIsEqual
             ;
      }
