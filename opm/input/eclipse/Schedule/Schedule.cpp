@@ -295,7 +295,6 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const std::optional
                                  ErrorGuard& errors,
                                  const ScheduleGrid& grid,
                                  const std::vector<std::string>& matching_wells,
-                                 bool _welpi_action_mode,
                                  SimulatorUpdate* sim_update,
                                  const std::unordered_map<std::string, double>* target_wellpi,
                                  std::unordered_map<std::string, double>& wpimult_global_factor,
@@ -303,7 +302,7 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const std::optional
                                  std::set<std::string>* compsegs_wells)
     {
         HandlerContext handlerContext { *this, block, keyword, grid, currentStep,
-                                        matching_wells, _welpi_action_mode,
+                                        matching_wells, this->welpi_action_mode,
                                         parseContext, errors, sim_update, target_wellpi,
                                         wpimult_global_factor, welsegs_wells, compsegs_wells};
 
@@ -612,7 +611,6 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                                     errors,
                                     grid,
                                     {},
-                                    false,
                                     nullptr,
                                     target_wellpi,
                                     wpimult_global_factor,
@@ -1464,7 +1462,6 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
                                     errors,
                                     grid,
                                     matching_wells,
-                                    this->welpi_action_mode,
                                     &sim_update,
                                     &target_wellpi,
                                     wpimult_global_factor);    
@@ -1514,6 +1511,10 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
         auto& input_block = this->m_sched_deck[reportStep];
 
         std::unordered_map<std::string, double> wpimult_global_factor;
+
+        // Set welpi_action_mode to true, this is necessary for the keyword WELPI.
+        // This keyword is handled differently when it's called during a running simulation (see functions handleWELPI and handleWELPIRuntime).
+        this->welpi_action_mode = true;
         for (const auto& keyword : action) {
             input_block.push_back(keyword);
 
@@ -1528,11 +1529,12 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
                                 errors,
                                 grid,
                                 matching_wells,
-                                true,
                                 &sim_update,
                                 &target_wellpi,
                                 wpimult_global_factor);
         }
+        // The whole ACTIONX was executed, welpi_action_mode is set to false.
+        this->welpi_action_mode = false;
 
         this->applyGlobalWPIMULT(wpimult_global_factor);
 

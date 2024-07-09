@@ -543,7 +543,6 @@ namespace Opm
                            ErrorGuard& errors,
                            const ScheduleGrid& grid,
                            const std::vector<std::string>& matching_wells,
-                           bool welpi_action_mode,
                            SimulatorUpdate* sim_update,
                            const std::unordered_map<std::string, double>* target_wellpi,
                            std::unordered_map<std::string, double>& wpimult_global_factor,
