@@ -36,8 +36,8 @@ template <bool pod, class T>
 struct Packing
 {
     static std::size_t packSize(const T&);
-    static void pack(const T&, std::vector<char>&, int&);
-    static void unpack(T&, std::vector<char>&, int&);
+    static void pack(const T&, std::vector<char>&, std::size_t&);
+    static void unpack(T&, std::vector<char>&, std::size_t&);
 };
 
 //! \brief Packaging for pod data.
@@ -65,7 +65,7 @@ struct Packing<true,T>
     //! \param position Position in buffer to use
     static void pack(const T& data,
                      std::vector<char>& buffer,
-                     int& position)
+                     std::size_t& position)
     {
         pack(&data, 1, buffer, position);
     }
@@ -78,7 +78,7 @@ struct Packing<true,T>
     static void pack(const T* data,
                      std::size_t n,
                      std::vector<char>& buffer,
-                     int& position)
+                     std::size_t& position)
     {
         std::memcpy(buffer.data() + position, data, n*sizeof(T));
         position += n*sizeof(T);
@@ -90,7 +90,7 @@ struct Packing<true,T>
     //! \param position Position in buffer to use
     static void unpack(T& data,
                        std::vector<char>& buffer,
-                       int& position)
+                       std::size_t& position)
     {
         unpack(&data, 1, buffer, position);
     }
@@ -103,7 +103,7 @@ struct Packing<true,T>
     static void unpack(T* data,
                        std::size_t n,
                        std::vector<char>& buffer,
-                       int& position)
+                       std::size_t& position)
     {
         std::memcpy(data, buffer.data() + position, n*sizeof(T));
         position += n*sizeof(T);
@@ -120,12 +120,12 @@ struct Packing<false,T>
         return 0;
     }
 
-    static void pack(const T&, std::vector<char>&, int&)
+    static void pack(const T&, std::vector<char>&, std::size_t&)
     {
         static_assert(!std::is_same_v<T,T>, "Packing not supported for type");
     }
 
-    static void unpack(T&, std::vector<char>&, int&)
+    static void unpack(T&, std::vector<char>&, std::size_t&)
     {
         static_assert(!std::is_same_v<T,T>, "Packing not supported for type");
     }
@@ -138,10 +138,10 @@ struct Packing<false,std::bitset<Size>>
     static std::size_t packSize(const std::bitset<Size>& data);
 
     static void pack(const std::bitset<Size>& data,
-                     std::vector<char>& buffer, int& position);
+                     std::vector<char>& buffer, std::size_t& position);
 
     static void unpack(std::bitset<Size>& data,
-                       std::vector<char>& buffer, int& position);
+                       std::vector<char>& buffer, std::size_t& position);
 };
 
 template<>
@@ -150,9 +150,9 @@ struct Packing<false,std::string>
     static std::size_t packSize(const std::string& data);
 
     static void pack(const std::string& data,
-                     std::vector<char>& buffer, int& position);
+                     std::vector<char>& buffer, std::size_t& position);
 
-    static void unpack(std::string& data, std::vector<char>& buffer, int& position);
+    static void unpack(std::string& data, std::vector<char>& buffer, std::size_t& position);
 };
 
 template<>
@@ -161,9 +161,9 @@ struct Packing<false,time_point>
     static std::size_t packSize(const time_point&);
 
     static void pack(const time_point& data,
-                     std::vector<char>& buffer, int& position);
+                     std::vector<char>& buffer, std::size_t& position);
 
-    static void unpack(time_point& data, std::vector<char>& buffer, int& position);
+    static void unpack(time_point& data, std::vector<char>& buffer, std::size_t& position);
 };
 
 }
@@ -198,7 +198,7 @@ struct MemPacker {
     template<class T>
     void pack(const T& data,
               std::vector<char>& buffer,
-              int& position) const
+              std::size_t& position) const
     {
         detail::Packing<std::is_pod_v<T>,T>::pack(data, buffer, position);
     }
@@ -213,7 +213,7 @@ struct MemPacker {
     void pack(const T* data,
               std::size_t n,
               std::vector<char>& buffer,
-              int& position) const
+              std::size_t& position) const
     {
         static_assert(std::is_pod_v<T>, "Array packing not supported for non-pod data");
         detail::Packing<true,T>::pack(data, n, buffer, position);
@@ -227,7 +227,7 @@ struct MemPacker {
     template<class T>
     void unpack(T& data,
                 std::vector<char>& buffer,
-                int& position) const
+                std::size_t& position) const
     {
         detail::Packing<std::is_pod_v<T>,T>::unpack(data, buffer, position);
     }
@@ -242,7 +242,7 @@ struct MemPacker {
     void unpack(T* data,
                 std::size_t n,
                 std::vector<char>& buffer,
-                int& position) const
+                std::size_t& position) const
     {
         static_assert(std::is_pod_v<T>, "Array packing not supported for non-pod data");
         detail::Packing<true,T>::unpack(data, n, buffer, position);

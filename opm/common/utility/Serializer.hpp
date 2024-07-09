@@ -560,7 +560,7 @@ protected:
     const Packer& m_packer; //!< Packer to use
     Operation m_op = Operation::PACKSIZE; //!< Current operation
     size_t m_packSize = 0; //!< Required buffer size after PACKSIZE has been done
-    int m_position = 0; //!< Current position in buffer
+    size_t m_position = 0; //!< Current position in buffer
     std::vector<char> m_buffer; //!< Buffer for serialized data
 };
 
