@@ -21,6 +21,8 @@
 #define OPM_UDQDIMS_HPP
 
 #include <cstddef>
+#include <functional>
+#include <optional>
 #include <vector>
 
 namespace Opm {
@@ -36,17 +38,44 @@ class UDQDims
 public:
     explicit UDQDims(const UDQConfig& config, const std::vector<int>& intehead);
 
-    const std::vector<int>& data() const;
-
     static std::size_t entriesPerIUDQ() { return  3; }
     static std::size_t entriesPerIUAD() { return  5; }
     static std::size_t entriesPerZUDN() { return  2; }
     static std::size_t entriesPerZUDL() { return 16; }
 
+    std::size_t totalNumUDQs() const;
+    std::size_t numIUAD() const;
+    std::size_t numIGPH() const;
+    std::size_t numIUAP() const;
+
+    std::size_t numFieldUDQs() const;
+
+    std::size_t maxNumGroups() const;
+    std::size_t numGroupUDQs() const;
+
+    std::size_t maxNumWells() const;
+    std::size_t numWellUDQs() const;
+
+    const std::vector<int>& data() const
+    {
+        if (! this->dimensionData_.has_value()) {
+            this->collectDimensions();
+        }
+
+        return *this->dimensionData_;
+    }
+
 private:
-    std::vector<int> m_data;
+    std::size_t totalNumUDQs_{};
+    std::reference_wrapper<const std::vector<int>> intehead_;
+
+    mutable std::optional<std::vector<int>> dimensionData_;
+
+    void collectDimensions() const;
+
+    std::size_t intehead(const std::vector<int>::size_type i) const;
 };
 
 } // namespace Opm
 
-#endif  // OPM_UDQDIMS_HPP
+#endif // OPM_UDQDIMS_HPP
