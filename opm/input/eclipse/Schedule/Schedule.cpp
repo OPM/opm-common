@@ -1686,7 +1686,7 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
                                     errors,
                                     grid,
                                     matches,
-                                    /*welpi_action_mode=*/false,
+                                    this->welpi_action_mode,
                                     &sim_update,
                                     &target_wellpi,
                                     wpimult_global_factor);    
@@ -1982,6 +1982,9 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
     */
 
     SimulatorUpdate Schedule::runPyAction(std::size_t reportStep, const Action::PyAction& pyaction, Action::State& action_state, EclipseState& ecl_state, SummaryState& summary_state) {
+        // Set welpi_action_mode to true, this is necessary for the keyword WELPI.
+        // This keyword is handled differently when it's called during a running simulation (see functions handleWELPI and handleWELPIRuntime).
+        this->welpi_action_mode = true;
         // Reset simUpdateFromPython, pyaction.run(...) will run through the PyAction script, the calls that trigger a simulator update will append this to simUpdateFromPython.
         this->simUpdateFromPython->reset();
         // Set the current_report_step to the report step in which this PyAction was triggered.
@@ -1996,7 +1999,8 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
         auto result = pyaction.run(ecl_state, *this, reportStep, summary_state, apply_action_callback);
         action_state.add_run(pyaction, result);
 
-        // The whole pyaction script was executed, now the simUpdateFromPython is returned.
+        // The whole PyAction was executed, welpi_action_mode is set to false and the simUpdateFromPython is returned.
+        this->welpi_action_mode = false;
         return *(this->simUpdateFromPython);
     }
 
