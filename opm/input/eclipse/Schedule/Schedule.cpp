@@ -264,6 +264,7 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const std::optional
         result.restart_output = WriteRestartFileEvents::serializationTestObject();
         result.completed_cells = CompletedCells::serializationTestObject();
         result.current_report_step = 0;
+        result.welpi_action_mode = false;
         result.simUpdateFromPython = std::make_shared<SimulatorUpdate>(SimulatorUpdate::serializationTestObject());
 
         return result;
@@ -1760,6 +1761,7 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
                this->snapshots == data.snapshots &&
                this->restart_output == data.restart_output &&
                this->completed_cells == data.completed_cells &&
+               this->welpi_action_mode == data.welpi_action_mode &&
                this->current_report_step == data.current_report_step &&
                simUpdateFromPythonIsEqual;
      }
