@@ -528,7 +528,6 @@ namespace Opm
                                     const ParseContext& parseContext,
                                     ErrorGuard& errors,
                                     const ScheduleGrid& grid,
-                                    const std::unordered_map<std::string, double> * target_wellpi,
                                     const std::string& prefix,
                                     const bool log_to_debug = false);
         void addACTIONX(const Action::ActionX& action);

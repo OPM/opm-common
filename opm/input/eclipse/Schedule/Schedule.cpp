@@ -148,18 +148,18 @@ namespace Opm {
                 throw std::logic_error("Bug: when loading from restart a valid TracerConfig object must be supplied");
 
             auto restart_step = this->m_static.rst_info.report_step;
-            this->iterateScheduleSection( 0, restart_step, parseContext, errors, grid, nullptr, "");
+            this->iterateScheduleSection( 0, restart_step, parseContext, errors, grid, "");
             this->load_rst(*rst, *tracer_config, grid, fp);
             if (! this->restart_output.writeRestartFile(restart_step))
                 this->restart_output.addRestartOutput(restart_step);
-            this->iterateScheduleSection( restart_step, this->m_sched_deck.size(), parseContext, errors, grid, nullptr, "");
+            this->iterateScheduleSection( restart_step, this->m_sched_deck.size(), parseContext, errors, grid, "");
             // Events added during restart reading well be added to previous step, but need to be active at the
             // restart step to ensure well potentials and guide rates are available at the first step.
             const auto prev_step = std::max(static_cast<int>(restart_step-1), 0);
             this->snapshots[restart_step].update_wellgroup_events(this->snapshots[prev_step].wellgroup_events());
             this->snapshots[restart_step].update_events(this->snapshots[prev_step].events());
         } else {
-            this->iterateScheduleSection( 0, this->m_sched_deck.size(), parseContext, errors, grid, nullptr, "");
+            this->iterateScheduleSection( 0, this->m_sched_deck.size(), parseContext, errors, grid, "");
         }
     }
     catch (const OpmInputError& opm_error) {
@@ -476,7 +476,6 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                                       const ParseContext& parseContext,
                                       ErrorGuard& errors,
                                       const ScheduleGrid& grid,
-                                      const std::unordered_map<std::string, double> * target_wellpi,
                                       const std::string& prefix,
                                       const bool log_to_debug) {
 
@@ -1476,7 +1475,6 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
                 parseContext,
                 errors,
                 grid,
-                &(this->m_wellPIMap),
                 prefix);
         }
         this->simUpdateFromPython->append(sim_update);
@@ -1549,7 +1547,7 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
         if (reportStep < this->m_sched_deck.size() - 1) {
             const auto log_to_debug = true;
             this->iterateScheduleSection(reportStep + 1, this->m_sched_deck.size(),
-                                         parseContext, errors, grid, &(this->m_wellPIMap),
+                                         parseContext, errors, grid,
                                          prefix, log_to_debug);
         }
 
