@@ -396,14 +396,13 @@ namespace Opm {
                                  const ScheduleGrid& grid,
                                  const Action::Result::MatchingEntities& matches,
                                  SimulatorUpdate* sim_update,
-                                 const std::unordered_map<std::string, double>* target_wellpi,
                                  std::unordered_map<std::string, double>& wpimult_global_factor,
                                  WelSegsSet* welsegs_wells,
                                  std::set<std::string>* compsegs_wells)
     {
         HandlerContext handlerContext { *this, block, keyword, grid, currentStep,
                                         matches, this->welpi_action_mode,
-                                        parseContext, errors, sim_update, target_wellpi,
+                                        parseContext, errors, sim_update, &(this->m_wellPIMap),
                                         wpimult_global_factor, welsegs_wells, compsegs_wells};
 
         if (!KeywordHandlers::getInstance().handleKeyword(handlerContext)) {
@@ -719,7 +718,6 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                                     grid,
                                     matches,
                                     /* sim_update = */ nullptr,
-                                    target_wellpi,
                                     wpimult_global_factor,
                                     &welsegs_wells,
                                     &compsegs_wells);
@@ -908,8 +906,7 @@ Defaulted grid coordinates is not allowed for COMPDAT as part of ACTIONX)"
         action_keyword.addRecord(std::move(deckRecord));
         action.addKeyword(action_keyword);
         SimulatorUpdate delta = this->applyAction(report_step, action,
-                                                  /* matches = */ Action::Result{false}.matches(),
-                                                  std::unordered_map<std::string,double>{}/*target_wellpi*/);
+                                                  /* matches = */ Action::Result{false}.matches());
         this->simUpdateFromPython->append(delta);
     }
 
@@ -1685,8 +1682,7 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
                                     grid,
                                     matches,
                                     &sim_update,
-                                    &(this->m_wellPIMap),
-                                    wpimult_global_factor);    
+                                    wpimult_global_factor);
             }
             else {
                 const std::string msg_fmt =
@@ -1707,7 +1703,7 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
                                          parseContext,
                                          errors,
                                          grid,
-                                         &target_wellpi,
+                                         &(this->m_wellPIMap),
                                          prefix,
                                          /* keepKeywords = */ true);
         }
@@ -1717,25 +1713,9 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
 
 
     SimulatorUpdate
-    Schedule::applyAction(const std::size_t reportStep,
-                          const Action::ActionX& action,
-                          const Action::Result::MatchingEntities& matches,
-                          const std::unordered_map<std::string, float>& target_wellpi)
-    {
-        std::unordered_map<std::string, double> dtarget_wellpi;
-        for (const auto& w : target_wellpi) {
-            dtarget_wellpi.emplace(w.first, w.second);
-        }
-
-        return this->applyAction(reportStep, action, matches, dtarget_wellpi);
-    }
-
-
-    SimulatorUpdate
     Schedule::applyAction(std::size_t reportStep,
                           const Action::ActionX& action,
-                          const Action::Result::MatchingEntities& matches,
-                          const std::unordered_map<std::string, double>& target_wellpi)
+                          const Action::Result::MatchingEntities& matches)
     {
         const std::string prefix = "| ";
         ParseContext parseContext;
@@ -1775,7 +1755,6 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
                                 grid,
                                 matches,
                                 &sim_update,
-                                &target_wellpi,
                                 wpimult_global_factor);
         }
         // The whole ACTIONX was executed, welpi_action_mode is set to false.
@@ -1800,7 +1779,7 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
             const auto keepKeywords = true;
             const auto log_to_debug = true;
             this->iterateScheduleSection(reportStep + 1, this->m_sched_deck.size(),
-                                         parseContext, errors, grid, &target_wellpi,
+                                         parseContext, errors, grid, &(this->m_wellPIMap),
                                          prefix, keepKeywords, log_to_debug);
         }
 
@@ -1913,8 +1892,7 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
             }
 
             return this->applyAction(reportStep, actions[action_name],
-                                     Action::Result{true}.wells(well_names).matches(),
-                                     std::unordered_map<std::string,double>{});
+                                     Action::Result{true}.wells(well_names).matches());
         }
         else {
             OpmLog::error(fmt::format("Tried to apply unknown action: '{}'", action_name));

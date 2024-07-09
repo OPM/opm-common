@@ -141,8 +141,7 @@ void msim::post_step(data::Solution& /* sol */,
     for (const auto& action : actions.pending(this->action_state, std::chrono::system_clock::to_time_t(sim_time))) {
         const auto result = action->eval(context);
         if (result.conditionSatisfied()) {
-            this->schedule.applyAction(report_step, *action, result.matches(),
-                                       std::unordered_map<std::string,double>{});
+            this->schedule.applyAction(report_step, *action, result.matches());
         }
     }
 
