@@ -297,14 +297,13 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const std::optional
                                  const ScheduleGrid& grid,
                                  const std::vector<std::string>& matching_wells,
                                  SimulatorUpdate* sim_update,
-                                 const std::unordered_map<std::string, double>* target_wellpi,
                                  std::unordered_map<std::string, double>& wpimult_global_factor,
                                  WelSegsSet* welsegs_wells,
                                  std::set<std::string>* compsegs_wells)
     {
         HandlerContext handlerContext { *this, block, keyword, grid, currentStep,
                                         matching_wells, this->welpi_action_mode,
-                                        parseContext, errors, sim_update, target_wellpi,
+                                        parseContext, errors, sim_update, &(this->m_wellPIMap),
                                         wpimult_global_factor, welsegs_wells, compsegs_wells};
 
         if (!KeywordHandlers::getInstance().handleKeyword(handlerContext)) {
@@ -613,7 +612,6 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                                     grid,
                                     {},
                                     nullptr,
-                                    target_wellpi,
                                     wpimult_global_factor,
                                     &welsegs_wells,
                                     &compsegs_wells);
@@ -750,7 +748,7 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
         DeckKeyword action_keyword(parserKeyword);
         action_keyword.addRecord(std::move(deckRecord));
         action.addKeyword(action_keyword);
-        SimulatorUpdate delta = this->applyAction(report_step, action, {} /*matching_wells*/, {}/*target_wellpi*/);
+        SimulatorUpdate delta = this->applyAction(report_step, action, {} /*matching_wells*/);
         this->simUpdateFromPython->append(delta);
     }
 
@@ -1463,7 +1461,6 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
                                     grid,
                                     matching_wells,
                                     &sim_update,
-                                    &(this->m_wellPIMap),
                                     wpimult_global_factor);    
             } else {
                 const std::string msg_fmt = fmt::format("The keyword {} is not supported for inserting it from Python into a simulation", keyword->name());
@@ -1479,7 +1476,7 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
                 parseContext,
                 errors,
                 grid,
-                &target_wellpi,
+                &(this->m_wellPIMap),
                 prefix);
         }
         this->simUpdateFromPython->append(sim_update);
@@ -1489,8 +1486,7 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
     SimulatorUpdate
     Schedule::applyAction(std::size_t reportStep,
                           const Action::ActionX& action,
-                          const std::vector<std::string>& matching_wells,
-                          const std::unordered_map<std::string, double>& target_wellpi)
+                          const std::vector<std::string>& matching_wells)
     {
         const std::string prefix = "| ";
         ParseContext parseContext;
@@ -1530,7 +1526,6 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
                                 grid,
                                 matching_wells,
                                 &sim_update,
-                                &target_wellpi,
                                 wpimult_global_factor);
         }
         // The whole ACTIONX was executed, welpi_action_mode is set to false.
@@ -1554,7 +1549,7 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
         if (reportStep < this->m_sched_deck.size() - 1) {
             const auto log_to_debug = true;
             this->iterateScheduleSection(reportStep + 1, this->m_sched_deck.size(),
-                                         parseContext, errors, grid, &target_wellpi,
+                                         parseContext, errors, grid, &(this->m_wellPIMap),
                                          prefix, log_to_debug);
         }
 
@@ -1582,7 +1577,7 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
                     OpmLog::error(fmt::format("Tried to apply action: {} on non existing well: {}", action_name, wname));
             }
 
-            return this->applyAction(reportStep, action, well_names, {});
+            return this->applyAction(reportStep, action, well_names);
         } else {
             OpmLog::error(fmt::format("Tried to apply action unknown action: {}", action_name));
             return {};

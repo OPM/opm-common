@@ -244,7 +244,7 @@ namespace Opm
           updating internal datastructures after the ACTIONX keywords have been
           applied.
         */
-        SimulatorUpdate applyAction(std::size_t reportStep, const Action::ActionX& action, const std::vector<std::string>& matching_wells, const std::unordered_map<std::string, double>& wellpi);
+        SimulatorUpdate applyAction(std::size_t reportStep, const Action::ActionX& action, const std::vector<std::string>& matching_wells);
         /*
           The runPyAction() will run the Python script in a PYACTION keyword. In
           the case of Schedule updates the recommended way of doing that from
@@ -550,7 +550,6 @@ namespace Opm
                            const ScheduleGrid& grid,
                            const std::vector<std::string>& matching_wells,
                            SimulatorUpdate* sim_update,
-                           const std::unordered_map<std::string, double>* target_wellpi,
                            std::unordered_map<std::string, double>& wpimult_global_factor,
                            WelSegsSet* welsegs_wells = nullptr,
                            std::set<std::string>* compsegs_wells = nullptr);
