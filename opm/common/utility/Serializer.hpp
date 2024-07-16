@@ -73,6 +73,12 @@ decltype(auto) make_variant(std::size_t index)
 template<class T>
 using remove_cvr_t = std::remove_cv_t<std::remove_reference_t<T>>;
 
+template <typename T>
+struct is_unique_ptr : std::false_type {};
+
+template <typename T>
+struct is_unique_ptr<std::unique_ptr<T>> : std::true_type {};
+
 } // namespace detail
 
 /*! \brief Class for (de-)serializing.
@@ -94,7 +100,11 @@ public:
     void operator()(const T& data)
     {
         if constexpr (is_ptr<T>::value) {
-            ptr(data);
+            if constexpr (detail::is_unique_ptr<T>::value) {
+                uniqueptr(data);
+            } else {
+                ptr(data);
+            }
         } else if constexpr (is_pair_or_tuple<T>::value) {
             tuple(data);
         } else if constexpr (is_variant<T>::value) {
@@ -127,11 +137,13 @@ public:
     template<class T>
     void pack(const T& data)
     {
+        m_ptrmap.clear();
         m_op = Operation::PACKSIZE;
         m_packSize = 0;
         (*this)(data);
         m_position = 0;
         m_buffer.resize(m_packSize);
+        m_ptrmap.clear();
         m_op = Operation::PACK;
         (*this)(data);
     }
@@ -142,11 +154,13 @@ public:
     template<class... Args>
     void pack(const Args&... data)
     {
+        m_ptrmap.clear();
         m_op = Operation::PACKSIZE;
         m_packSize = 0;
         variadic_call(data...);
         m_position = 0;
         m_buffer.resize(m_packSize);
+        m_ptrmap.clear();
         m_op = Operation::PACK;
         variadic_call(data...);
     }
@@ -158,6 +172,7 @@ public:
     void unpack(T& data)
     {
         m_position = 0;
+        m_ptrmap.clear();
         m_op = Operation::UNPACK;
         (*this)(data);
     }
@@ -169,6 +184,7 @@ public:
     void unpack(Args&... data)
     {
         m_position = 0;
+        m_ptrmap.clear();
         m_op = Operation::UNPACK;
         variadic_call(data...);
     }
@@ -547,13 +563,49 @@ protected:
     void ptr(const PtrType& data)
     {
         using T1 = typename PtrType::element_type;
-        bool value = data ? true : false;
-        (*this)(value);
-        if (m_op == Operation::UNPACK && value) {
-            const_cast<PtrType&>(data).reset(new T1);
+        void* data_ptr = reinterpret_cast<void*>(&(*data));
+        (*this)(data_ptr);
+        if (!data_ptr)
+            return;
+
+        if (m_op == Operation::PACK || m_op == Operation::PACKSIZE) {
+            if (m_ptrmap.count(data_ptr) == 0) {
+                (*this)(*data);
+                m_ptrmap[data_ptr] = nullptr;
+            }
+        } else {  // m_op == Operation::UNPACK
+            if (m_ptrmap.count(data_ptr) == 0) {
+                const_cast<PtrType&>(data).reset(new T1);
+                m_ptrmap[data_ptr] = reinterpret_cast<void*>(& const_cast<PtrType&>(data));
+                (*this)(*data);
+            } else {
+                const_cast<PtrType&>(data) = *(reinterpret_cast<PtrType*>(m_ptrmap[data_ptr]));
+            }
         }
-        if (data) {
-            (*this)(*data);
+    }
+
+    template<class PtrType>
+    void uniqueptr(const PtrType& data)
+    {
+        using T1 = typename PtrType::element_type;
+        void* data_ptr = reinterpret_cast<void*>(&(*data));
+        (*this)(data_ptr);
+        if (!data_ptr)
+            return;
+
+        if (m_op == Operation::PACK || m_op == Operation::PACKSIZE) {
+            if (m_ptrmap.count(data_ptr) == 0) {
+                (*this)(*data);
+                m_ptrmap[data_ptr] = nullptr;
+            }
+        } else {  // m_op == Operation::UNPACK
+            if (m_ptrmap.count(data_ptr) == 0) {
+                const_cast<PtrType&>(data).reset(new T1);
+                m_ptrmap[data_ptr] = reinterpret_cast<void*>(& const_cast<PtrType&>(data));
+                (*this)(*data);
+            } else {
+                throw std::runtime_error("Should never have to reconstruct more than one unique_ptr!");
+            }
         }
     }
 
@@ -562,6 +614,7 @@ protected:
     size_t m_packSize = 0; //!< Required buffer size after PACKSIZE has been done
     size_t m_position = 0; //!< Current position in buffer
     std::vector<char> m_buffer; //!< Buffer for serialized data
+    std::map<void*, void*> m_ptrmap; //!< Map to keep track of which pointer data has been serialized and actual pointers during unpacking
 };
 
 }
