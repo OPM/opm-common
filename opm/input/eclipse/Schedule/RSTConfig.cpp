@@ -177,18 +177,18 @@ bool is_RPTRST_mnemonic(const std::string& kw)
     // lookup.  It is important that the list is sorted, but these are all
     // the keywords listed in the manual and unlikely to change at all
     static constexpr const char* valid[] = {
-        "ACIP",     "ACIS",     "ALLPROPS", "BASIC",    "BG",     "BO",
-        "BW",       "CELLINDX", "COMPRESS", "CONV",     "DEN",    "DENG",
-        "DENO",     "DENW",     "DRAIN",    "DRAINAGE", "DYNREG", "FIP",
-        "FLORES",   "FLORES-",  "FLOWS",    "FLOWS-",   "FREQ",   "GIMULT",
-        "HYDH",     "HYDHFW",   "KRG",      "KRO",      "KRW",    "NOGRAD",
-        "NORST",    "NPMREB",   "PBPD",     "PCGW",     "PCOG",   "PCOW",
-        "PERMREDN", "POIS",     "PORO",     "PORV",     "POT",    "PRES",
-        "RESIDUAL", "RFIP",     "RK",       "ROCKC",    "RPORV",  "RSSAT",
-        "RVSAT",    "SAVE",     "SDENO",    "SFIP",     "SFREQ",  "SGTRAP",
-        "SIGM_MOD", "STREAM",   "SURFBLK",  "TEMP",     "TRAS",   "VELGAS",
-        "VELOCITY", "VELOIL",   "VELWAT",   "VGAS",     "VISC",   "VOIL",
-        "VWAT",
+        "ACIP",     "ACIS",     "ALLPROPS", "BASIC",    "BG",      "BO",
+        "BW",       "CELLINDX", "COMPRESS", "CONV",     "DEN",     "DENG",
+        "DENO",     "DENW",     "DRAIN",    "DRAINAGE", "DYNREG",  "FIP",
+        "FLORES",   "FLORES-",  "FLOWS",    "FLOWS-",   "FREQ",    "GIMULT",
+        "HYDH",     "HYDHFW",   "KRG",      "KRO",      "KRW",     "NOGRAD",
+        "NORST",    "NPMREB",   "PBPD",     "PCGW",     "PCOG",    "PCOW",
+        "PERMREDN", "POIS",     "PORO",     "PORV",     "POT",     "PRES",
+        "RESIDUAL", "RFIP",     "RK",       "ROCKC",    "RPORV",   "RSSAT",
+        "RSWSAT",   "RVSAT",    "RVWSAT",   "SAVE",     "SDENO",   "SFIP",
+        "SFREQ",    "SGTRAP",   "SIGM_MOD", "STREAM",   "SURFBLK", "TEMP",
+        "TRAS",     "VELGAS",   "VELOCITY", "VELOIL",   "VELWAT",  "VGAS",
+        "VISC",     "VOIL",     "VWAT",
     };
 
     return std::binary_search(std::begin(valid), std::end(valid), kw);
