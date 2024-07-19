@@ -372,11 +372,17 @@ void EGrid::getCellCorners(const std::array<int, 3>& ijk,
             yb = coord_array[pind[n] + 4];
         }
 
-        X[n] = xt + (xb-xt) / (zt-zb) * (zt - Z[n]);
-        X[n+4] = xt + (xb-xt) / (zt-zb) * (zt-Z[n+4]);
-
-        Y[n] = yt+(yb-yt)/(zt-zb)*(zt-Z[n]);
-        Y[n+4] = yt+(yb-yt)/(zt-zb)*(zt-Z[n+4]);
+        if (zt == zb) {
+            X[n] = xt;
+            X[n+4] = xt;
+            Y[n] = yt;
+            Y[n+4] = yt;
+        } else {
+            X[n] = xt + (xb-xt) / (zt-zb) * (zt - Z[n]);
+            X[n+4] = xt + (xb-xt) / (zt-zb) * (zt-Z[n+4]);
+            Y[n] = yt+(yb-yt)/(zt-zb)*(zt-Z[n]);
+            Y[n+4] = yt+(yb-yt)/(zt-zb)*(zt-Z[n+4]);
+        }
     }
 }
 
