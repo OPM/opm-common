@@ -71,6 +71,8 @@ if (METIS_INCLUDE_DIRS OR METIS_LIBRARY)
     # Silently assume version 5, it is >=2024 after all...
     set(METIS_API_VERSION "5")
     find_package(PTScotch)
+    # If we use scotchmetis, we need Scotch, which is automatically installed then
+    find_package(Scotch REQUIRED)
   endif()
   if (NOT TARGET METIS::METIS)
     add_library(METIS::METIS UNKNOWN IMPORTED)
@@ -85,6 +87,14 @@ if (METIS_INCLUDE_DIRS OR METIS_LIBRARY)
       set_property(TARGET METIS::METIS APPEND PROPERTY
         INTERFACE_COMPILE_DEFINITIONS
          SCOTCH_METIS_VERSION=${METIS_API_VERSION})
+    endif()
+    if(Scotch_FOUND)
+        set_property(TARGET METIS::METIS APPEND PROPERTY
+          INTERFACE_INCLUDE_DIRECTORIES ${SCOTCH_INCLUDE_DIRS})
+        set_property(TARGET METIS::METIS APPEND PROPERTY
+          INTERFACE_LINK_LIBRARIES ${SCOTCH_LIBRARIES})
+    else()
+        message(FATAL_ERROR "Scotch library not found")
     endif()
     # Force our build system to use the target
     set(METIS_LIBRARIES METIS::METIS)
