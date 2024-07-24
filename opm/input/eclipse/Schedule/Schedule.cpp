@@ -127,13 +127,15 @@ namespace Opm {
                         const ParseContext& parseContext,
                         ErrorGuard& errors,
                         std::shared_ptr<const Python> python,
+                        const bool lowActionParsingStrictness,
                         const std::optional<int>& output_interval,
                         const RestartIO::RstState * rst,
                         const TracerConfig * tracer_config)
     try :
         m_static( python, ScheduleRestartInfo(rst, deck), deck, runspec, output_interval, parseContext, errors ),
         m_sched_deck(TimeService::from_time_t(runspec.start_time()), deck, m_static.rst_info ),
-        completed_cells(ecl_grid.getNX(), ecl_grid.getNY(), ecl_grid.getNZ())
+        completed_cells(ecl_grid.getNX(), ecl_grid.getNY(), ecl_grid.getNZ()),
+        m_lowActionParsingStrictness(lowActionParsingStrictness)
     {
         this->restart_output.resize(this->m_sched_deck.size());
         this->restart_output.clearRemainingEvents(0);
@@ -183,10 +185,11 @@ namespace Opm {
                         const ParseContext& parseContext,
                         T&& errors,
                         std::shared_ptr<const Python> python,
+                        const bool lowActionParsingStrictness,
                         const std::optional<int>& output_interval,
                         const RestartIO::RstState * rst,
                         const TracerConfig* tracer_config) :
-        Schedule(deck, grid, fp, runspec, parseContext, errors, python, output_interval, rst, tracer_config)
+        Schedule(deck, grid, fp, runspec, parseContext, errors, python, lowActionParsingStrictness, output_interval, rst, tracer_config)
     {}
 
 
@@ -195,14 +198,15 @@ namespace Opm {
                         const FieldPropsManager& fp,
                         const Runspec &runspec,
                         std::shared_ptr<const Python> python,
+                        const bool lowActionParsingStrictness,
                         const std::optional<int>& output_interval,
                         const RestartIO::RstState * rst,
                         const TracerConfig* tracer_config) :
-        Schedule(deck, grid, fp, runspec, ParseContext(), ErrorGuard(), python, output_interval, rst, tracer_config)
+        Schedule(deck, grid, fp, runspec, ParseContext(), ErrorGuard(), python, lowActionParsingStrictness, output_interval, rst, tracer_config)
     {}
 
 
-    Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext& parse_context, ErrorGuard& errors, std::shared_ptr<const Python> python, const std::optional<int>& output_interval, const RestartIO::RstState * rst) :
+    Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext& parse_context, ErrorGuard& errors, std::shared_ptr<const Python> python, bool lowActionParsingStrictness, const std::optional<int>& output_interval, const RestartIO::RstState * rst) :
         Schedule(deck,
                  es.getInputGrid(),
                  es.fieldProps(),
@@ -210,6 +214,7 @@ namespace Opm {
                  parse_context,
                  errors,
                  python,
+                 lowActionParsingStrictness,
                  output_interval,
                  rst,
                  &es.tracer())
@@ -217,7 +222,7 @@ namespace Opm {
 
 
     template <typename T>
-    Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext& parse_context, T&& errors, std::shared_ptr<const Python> python, const std::optional<int>& output_interval, const RestartIO::RstState * rst) :
+    Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext& parse_context, T&& errors, std::shared_ptr<const Python> python, bool lowActionParsingStrictness, const std::optional<int>& output_interval, const RestartIO::RstState * rst) :
         Schedule(deck,
                  es.getInputGrid(),
                  es.fieldProps(),
@@ -225,19 +230,20 @@ namespace Opm {
                  parse_context,
                  errors,
                  python,
+                 lowActionParsingStrictness,
                  output_interval,
                  rst,
                  &es.tracer())
     {}
 
 
-Schedule::Schedule(const Deck& deck, const EclipseState& es, std::shared_ptr<const Python> python, const std::optional<int>& output_interval, const RestartIO::RstState * rst) :
-    Schedule(deck, es, ParseContext(), ErrorGuard(), python, output_interval, rst)
+Schedule::Schedule(const Deck& deck, const EclipseState& es, std::shared_ptr<const Python> python, bool lowActionParsingStrictness, const std::optional<int>& output_interval, const RestartIO::RstState * rst) :
+    Schedule(deck, es, ParseContext(), ErrorGuard(), python, lowActionParsingStrictness, output_interval, rst)
 {}
 
 
 Schedule::Schedule(const Deck& deck, const EclipseState& es, const std::optional<int>& output_interval, const RestartIO::RstState * rst) :
-    Schedule(deck, es, ParseContext(), ErrorGuard(), std::make_shared<const Python>(), output_interval, rst)
+    Schedule(deck, es, ParseContext(), ErrorGuard(), std::make_shared<const Python>(), false, output_interval, rst)
     {}
 
     Schedule::Schedule(std::shared_ptr<const Python> python_handle) :
@@ -264,6 +270,7 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const std::optional
         result.restart_output = WriteRestartFileEvents::serializationTestObject();
         result.completed_cells = CompletedCells::serializationTestObject();
         result.current_report_step = 0;
+        result.m_lowActionParsingStrictness = false;
         result.simUpdateFromPython = std::make_shared<SimulatorUpdate>(SimulatorUpdate::serializationTestObject());
 
         return result;
@@ -588,7 +595,11 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                         if (action_keyword.is<ParserKeywords::ENDACTIO>())
                             break;
 
-                        if (Action::ActionX::valid_keyword(action_keyword.name())){
+                        bool valid = Action::ActionX::valid_keyword(action_keyword.name());
+                        if (this->m_lowActionParsingStrictness or valid){
+                            if (this->m_lowActionParsingStrictness and !valid) {
+                                logger(fmt::format("The keyword {} is not supported in the ACTIONX block, but you have set --action-parsing-strictness = low, so flow will try to apply the keyword still.", action_keyword.name()));
+                            }
                             action.addKeyword(action_keyword);
                             this->prefetchPossibleFutureConnections(grid, action_keyword);
                             this->store_wgnames(action_keyword);
@@ -1453,8 +1464,15 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
         this->snapshots.resize(reportStep + 1);
         auto& input_block = this->m_sched_deck[reportStep];
         std::unordered_map<std::string, double> wpimult_global_factor;
+        ScheduleLogger logger(ScheduleLogger::select_stream(false, false), // will log to OpmLog::info
+                              prefix, this->m_sched_deck.location());
+        
         for (auto& keyword : keywords) {
-            if (Action::PyAction::valid_keyword(keyword->name())) {
+            bool valid = Action::PyAction::valid_keyword(keyword->name());
+            if (this->m_lowActionParsingStrictness or valid) {
+                if (this->m_lowActionParsingStrictness and !valid) {
+                    logger(fmt::format("The keyword {} is not supported for inserting it from Python into a simulation, but you have set --action-parsing-strictness = low, so flow will try to apply the keyword still.", keyword->name()));
+                }
                 input_block.push_back(*keyword);
                 this->handleKeyword(reportStep,
                                     input_block,
@@ -1761,6 +1779,7 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
                this->restart_output == data.restart_output &&
                this->completed_cells == data.completed_cells &&
                this->current_report_step == data.current_report_step &&
+               this->m_lowActionParsingStrictness == data.m_lowActionParsingStrictness &&
                simUpdateFromPythonIsEqual;
      }
 

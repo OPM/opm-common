@@ -97,6 +97,7 @@ namespace Opm
                  const ParseContext& parseContext,
                  ErrorGuard& errors,
                  std::shared_ptr<const Python> python,
+                 const bool lowActionParsingStrictness = false,
                  const std::optional<int>& output_interval = {},
                  const RestartIO::RstState* rst = nullptr,
                  const TracerConfig* tracer_config = nullptr);
@@ -109,6 +110,7 @@ namespace Opm
                  const ParseContext& parseContext,
                  T&& errors,
                  std::shared_ptr<const Python> python,
+                 const bool lowActionParsingStrictness = false,
                  const std::optional<int>& output_interval = {},
                  const RestartIO::RstState* rst = nullptr,
                  const TracerConfig* tracer_config = nullptr);
@@ -118,6 +120,7 @@ namespace Opm
                  const FieldPropsManager& fp,
                  const Runspec &runspec,
                  std::shared_ptr<const Python> python,
+                 const bool lowActionParsingStrictness = false,
                  const std::optional<int>& output_interval = {},
                  const RestartIO::RstState* rst = nullptr,
                  const TracerConfig* tracer_config = nullptr);
@@ -127,6 +130,7 @@ namespace Opm
                  const ParseContext& parseContext,
                  ErrorGuard& errors,
                  std::shared_ptr<const Python> python,
+                 const bool lowActionParsingStrictness = false,
                  const std::optional<int>& output_interval = {},
                  const RestartIO::RstState* rst = nullptr);
 
@@ -136,12 +140,14 @@ namespace Opm
                  const ParseContext& parseContext,
                  T&& errors,
                  std::shared_ptr<const Python> python,
+                 const bool lowActionParsingStrictness = false,
                  const std::optional<int>& output_interval = {},
                  const RestartIO::RstState* rst = nullptr);
 
         Schedule(const Deck& deck,
                  const EclipseState& es,
                  std::shared_ptr<const Python> python,
+                 const bool lowActionParsingStrictness = false,
                  const std::optional<int>& output_interval = {},
                  const RestartIO::RstState* rst = nullptr);
 
@@ -293,6 +299,7 @@ namespace Opm
             serializer(this->completed_cells);
             serializer(this->m_treat_critical_as_non_critical);
             serializer(this->current_report_step);
+            serializer(this->m_lowActionParsingStrictness);
             serializer(this->simUpdateFromPython);
 
             this->template pack_unpack<PAvg>(serializer);
@@ -472,6 +479,12 @@ namespace Opm
         std::vector<ScheduleState> snapshots{};
         WriteRestartFileEvents restart_output{};
         CompletedCells completed_cells{};
+
+        // Boolean indicating the strictness of parsing process for ActionX and PyAction.
+        // If lowActionParsingStrictness is true, the simulator tries to apply unsupported
+        // keywords, if lowActionParsingStrictness is false, the simulator only applies
+        // supported keywords.
+        bool m_lowActionParsingStrictness = false;
 
         // This unordered_map contains possible future connections of wells that might get added through an ACTIONX.
         // For parallel runs, this unordered_map is retrieved by the grid partitioner to ensure these connections
