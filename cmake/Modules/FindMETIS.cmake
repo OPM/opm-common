@@ -87,14 +87,14 @@ if (METIS_INCLUDE_DIRS OR METIS_LIBRARY)
       set_property(TARGET METIS::METIS APPEND PROPERTY
         INTERFACE_COMPILE_DEFINITIONS
          SCOTCH_METIS_VERSION=${METIS_API_VERSION})
-    endif()
-    if(Scotch_FOUND)
+      if(Scotch_FOUND)
         set_property(TARGET METIS::METIS APPEND PROPERTY
           INTERFACE_INCLUDE_DIRECTORIES ${SCOTCH_INCLUDE_DIRS})
         set_property(TARGET METIS::METIS APPEND PROPERTY
           INTERFACE_LINK_LIBRARIES ${SCOTCH_LIBRARIES})
-    else()
-        message(FATAL_ERROR "Scotch library not found")
+      else()
+        message(FATAL_ERROR "Using scotchmetis, but Scotch library not found")
+      endif()
     endif()
     # Force our build system to use the target
     set(METIS_LIBRARIES METIS::METIS)
