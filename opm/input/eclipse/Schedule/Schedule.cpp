@@ -590,7 +590,7 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
 
                         if (Action::ActionX::valid_keyword(action_keyword.name())){
                             action.addKeyword(action_keyword);
-                            this->prefetch_cell_properties(grid, action_keyword);
+                            this->prefetchPossibleFutureConnections(grid, action_keyword);
                             this->store_wgnames(action_keyword);
                         }
                         else {
@@ -658,7 +658,7 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
     }
 
 
-    void Schedule::prefetch_cell_properties(const ScheduleGrid& grid, const DeckKeyword& keyword){
+    void Schedule::prefetchPossibleFutureConnections(const ScheduleGrid& grid, const DeckKeyword& keyword){
         if(keyword.is<ParserKeywords::COMPDAT>()){
             for (auto record : keyword){
                 const auto& itemI = record.getItem("I");
@@ -674,10 +674,16 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                 int K1 = record.getItem("K1").get<int>(0) - 1;
                 int K2 = record.getItem("K2").get<int>(0) - 1;
 
+                const auto wellName = record.getItem("WELL").getTrimmedString(0);
+
+                // Retrieve or create the set of future connections for the well
+                auto& currentSet = this->possibleFutureConnections[wellName];
                 for (int k = K1; k <= K2; k++){
                     auto cell = grid.get_cell(I, J, k);
                     (void) cell;
                     //Only interested in activating the cells.
+                    std::array<int,3> ijk{I,J,k};
+                    currentSet.insert(ijk);
                 }
             }
             return;
@@ -1057,6 +1063,10 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
 
     const Well& Schedule::getWellatEnd(const std::string& well_name) const {
         return this->getWell(well_name, this->snapshots.size() - 1);
+    }
+
+    const std::unordered_map<std::string, std::set<std::array<int,3>>>& Schedule::getPossibleFutureConnections() const {
+        return this->possibleFutureConnections;
     }
 
     std::unordered_set<int> Schedule::getAquiferFluxSchedule() const {

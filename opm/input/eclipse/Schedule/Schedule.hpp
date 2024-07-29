@@ -203,6 +203,9 @@ namespace Opm
         std::unordered_set<int> getAquiferFluxSchedule() const;
         std::vector<Well> getWells(std::size_t timeStep) const;
         std::vector<Well> getWellsatEnd() const;
+
+        const std::unordered_map<std::string, std::set<std::array<int,3>>>& getPossibleFutureConnections() const;
+
         void shut_well(const std::string& well_name, std::size_t report_step);
         void shut_well(const std::string& well_name);
         void stop_well(const std::string& well_name, std::size_t report_step);
@@ -470,6 +473,11 @@ namespace Opm
         WriteRestartFileEvents restart_output{};
         CompletedCells completed_cells{};
 
+        // This unordered_map contains possible future connections of wells that might get added through an ACTIONX.
+        // For parallel runs, this unordered_map is retrieved by the grid partitioner to ensure these connections
+        // end up on the same partition.
+        std::unordered_map<std::string, std::set<std::array<int,3>>> possibleFutureConnections;
+
         // The current_report_step is set to the current report step when a PYACTION call is executed.
         // This is needed since the Schedule object does not know the current report step of the simulator and
         // we only allow PYACTIONS for the current and future report steps. 
@@ -539,7 +547,7 @@ namespace Opm
                            std::set<std::string>* compsegs_wells = nullptr);
 
         void internalWELLSTATUSACTIONXFromPYACTION(const std::string& well_name, std::size_t report_step, const std::string& wellStatus);
-        void prefetch_cell_properties(const ScheduleGrid& grid, const DeckKeyword& keyword);
+        void prefetchPossibleFutureConnections(const ScheduleGrid& grid, const DeckKeyword& keyword);
         void store_wgnames(const DeckKeyword& keyword);
         std::vector<std::string> wellNames(const std::string& pattern,
                                            const HandlerContext& context,
