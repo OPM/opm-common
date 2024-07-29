@@ -332,7 +332,7 @@ void handleWINJTEMP(HandlerContext& handlerContext)
 
         for (const auto& well_name : well_names) {
             const auto& well = handlerContext.state().wells.get(well_name);
-            const double current_temp = !well.isProducer()? well.temperature(): 0.0;
+            const double current_temp = well.hasTemperature()? well.temperature(): 0.0;
             if (current_temp != temp) {
                 auto well2 = handlerContext.state().wells( well_name );
                 well2.setWellTemperature(temp);
@@ -500,7 +500,7 @@ void handleWTEMP(HandlerContext& handlerContext)
 
         for (const auto& well_name : well_names) {
             const auto& well = handlerContext.state().wells.get(well_name);
-            const double current_temp = !well.isProducer()? well.temperature(): 0.0;
+            const double current_temp = well.hasTemperature()? well.temperature(): 0.0;
             if (current_temp != temp) {
                 auto well2 = handlerContext.state().wells( well_name );
                 well2.setWellTemperature(temp);

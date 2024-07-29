@@ -554,6 +554,7 @@ public:
     bool segmented_density_calculation() const { return true; }
     double alq_value(const SummaryState& st) const;
     double temperature() const;
+    bool hasTemperature() const;
     void setWellTemperature(const double temp);
     bool hasInjected( ) const;
     bool hasProduced( ) const;
@@ -661,7 +662,7 @@ private:
 
     Status status;
     PAvg m_pavg;
-    double well_temperature;
+    std::optional<double> well_temperature;
     InjMultMode inj_mult_mode = InjMultMode::NONE;
     std::optional<InjMult> well_inj_mult;
     UDAValue m_filter_concentration;

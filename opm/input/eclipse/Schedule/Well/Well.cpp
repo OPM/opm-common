@@ -314,7 +314,7 @@ Well::Well(const RestartIO::RstWell& rst_well,
     wvfpexp(explicitTHPOptions(rst_well)),
     wdfac(std::make_shared<WDFAC>(rst_well)),
     status(status_from_int(rst_well.well_status)),
-    well_temperature(Metric::TemperatureOffset + ParserKeywords::STCOND::TEMPERATURE::defaultValue),
+    well_temperature(std::nullopt),
     well_inj_mult(std::nullopt)
 {
     if (this->wtype.producer()) {
@@ -501,7 +501,7 @@ Well::Well(const std::string& wname_arg,
     wvfpexp(std::make_shared<WVFPEXP>()),
     wdfac(std::make_shared<WDFAC>()),
     status(Status::SHUT),
-    well_temperature(Metric::TemperatureOffset + ParserKeywords::STCOND::TEMPERATURE::defaultValue),
+    well_temperature(std::nullopt),
     well_inj_mult(std::nullopt)
 {
     auto p = std::make_shared<WellProductionProperties>(this->unit_system, this->wname);
@@ -1733,10 +1733,14 @@ int Well::vfp_table_number() const {
 }
 
 double Well::temperature() const {
-    if (!this->wtype.producer())
-        return this->well_temperature;
+    if (!this->wtype.producer() && this->well_temperature)
+        return *this->well_temperature;
 
-    throw std::runtime_error("Can only ask for temperature in an injector");
+    throw std::runtime_error("Can only ask for well temperature for" 
+                    "injectors with non-default temperature.");
+}
+bool Well::hasTemperature() const {
+    return this->well_temperature.has_value(); 
 }
 void Well::setWellTemperature(const double temp) {
     this->well_temperature = temp;

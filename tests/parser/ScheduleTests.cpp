@@ -2721,12 +2721,14 @@ BOOST_AUTO_TEST_CASE(WTEMPINJ_well_template) {
         Schedule schedule( deck, grid, fp, runspec, python);
 
         BOOST_CHECK_THROW(schedule.getWell("W1", 1).temperature(), std::runtime_error);
+        BOOST_CHECK_THROW(schedule.getWell("W2", 1).temperature(), std::runtime_error);
+        BOOST_CHECK_THROW(schedule.getWell("W3", 1).temperature(), std::runtime_error);
+
+        BOOST_CHECK(schedule.getWell("W1", 2).hasTemperature());
         BOOST_CHECK_THROW(schedule.getWell("W1", 2).temperature(), std::runtime_error);
-
-        BOOST_CHECK_CLOSE(288.71, schedule.getWell("W2", 1).temperature(), 1e-5);
+        BOOST_CHECK(schedule.getWell("W2", 2).hasTemperature());
         BOOST_CHECK_CLOSE(313.15, schedule.getWell("W2", 2).temperature(), 1e-5);
-
-        BOOST_CHECK_CLOSE(288.71, schedule.getWell("W2", 1).temperature(), 1e-5);
+        BOOST_CHECK(schedule.getWell("W3", 2).hasTemperature());
         BOOST_CHECK_CLOSE(313.15, schedule.getWell("W3", 2).temperature(), 1e-5);
 }
 
