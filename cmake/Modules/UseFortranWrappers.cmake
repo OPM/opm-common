@@ -73,7 +73,7 @@ function (define_fc_func verb file)
 	  )
 
 	# massage it to look like the one AC_FC_WRAPPERS provide
-	string (REPLACE "FortranCInterface_GLOBAL" "FC_FUNC" _str ${_str})
+	string (REPLACE "FortranCInterface_GLOBAL" "FC_FUNC" _str "${_str}")
 
 	endif (USE_UNDERSCORING)
 
