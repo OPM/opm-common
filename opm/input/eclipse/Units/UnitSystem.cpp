@@ -1536,12 +1536,18 @@ namespace {
         for( const auto& x : dimensionList ) {
             auto dim = this->getDimension( x );
 
-            // all constituing dimension must be compositable. The
+            // all constituting dimensions must be compositable. The
             // only exception is if there is the "composite" dimension
             // consists of exactly a single atomic dimension...
-            if (dimensionList.size() > 1 && !dim.isCompositable())
-                throw std::invalid_argument("Composite dimensions currently cannot require a conversion offset");
-
+            if ( !dim.isCompositable() ) {
+                if (dimensionList.size() > 1) {
+                    throw std::invalid_argument("Composite dimensions currently cannot handle conversion offsets");
+                } else {
+                    // If there is only one single dimension, and it's not compositable (involving conversion offsets),
+                    // return it directly
+                    return dim;
+                }
+            }
             SIfactor *= dim.getSIScaling();
         }
         return Dimension( SIfactor );
@@ -1560,8 +1566,9 @@ namespace {
         Dimension dividend = this->parseFactor( parts[0] );
         Dimension divisor = this->parseFactor( parts[1] );
 
-        if (dividend.getSIOffset() != 0.0 || divisor.getSIOffset() != 0.0)
-            throw std::invalid_argument("Composite dimensions cannot currently require a conversion offset");
+        if (!dividend.isCompositable() || !divisor.isCompositable()) {
+            throw std::invalid_argument("Composite dimensions cannot currently handle conversion offset");
+        }
 
         return Dimension( dividend.getSIScaling() / divisor.getSIScaling() );
     }
