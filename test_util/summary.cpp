@@ -84,7 +84,7 @@ int main(int argc, char **argv) {
         switch (c) {
         case 'h':
             printHelp();
-            return 0;
+            return EXIT_SUCCESS;
         case 'r':
             reportStepsOnly=true;
             break;
@@ -99,7 +99,13 @@ int main(int argc, char **argv) {
         }
     }
 
-    int argOffset = optind;
+    const int argOffset = optind;
+    if (argOffset > argc - 1) {
+        printHelp();
+        // Returning failure since the user did not
+        // give the correct number of arguments.
+        return EXIT_FAILURE;
+    }
 
     std::unique_ptr<Opm::EclIO::ESmry> esmry;
     std::unique_ptr<Opm::EclIO::ExtESmry> ext_esmry;
