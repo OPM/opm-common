@@ -17,9 +17,9 @@
     {
       "name": "JOULE_THOMSON_COEFFICIENT",
       "value_type": "DOUBLE",
-      "dimension": "Temperature/Pressure",
+      "dimension": "AbsoluteTemperature/Pressure",
       "default": 0,
-      "comment": "if defaulted the JT coefficient is calculated"
+      "comment": "if defaulted the JT coefficient is calculated. Unit Temperature can not be used due to conversion offset"
     }
   ]
 }
