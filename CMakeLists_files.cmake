@@ -323,8 +323,12 @@ if(ENABLE_ECL_INPUT)
     opm/material/fluidmatrixinteractions/EclEpsGridProperties.cpp
     opm/material/fluidmatrixinteractions/EclHysteresisConfig.cpp
     opm/material/fluidmatrixinteractions/EclMaterialLawManager.cpp
+    opm/material/fluidmatrixinteractions/EclMaterialLawManagerSimple.cpp
+    opm/material/fluidmatrixinteractions/EclMaterialLawManagerSimpleReadEffectiveParams.cpp
+    opm/material/fluidmatrixinteractions/EclMaterialLawManagerSimpleHystParams.cpp
     opm/material/fluidmatrixinteractions/EclMaterialLawManagerReadEffectiveParams.cpp
     opm/material/fluidmatrixinteractions/EclMaterialLawManagerInitParams.cpp
+    opm/material/fluidmatrixinteractions/EclMaterialLawManagerInitParamsSimple.cpp
     opm/material/fluidmatrixinteractions/EclMaterialLawManagerHystParams.cpp
     opm/material/fluidsystems/blackoilpvt/BrineCo2Pvt.cpp
     opm/material/fluidsystems/blackoilpvt/Co2GasPvt.cpp
@@ -981,6 +985,7 @@ list( APPEND PUBLIC_HEADER_FILES
       opm/material/fluidmatrixinteractions/EclEpsTwoPhaseLaw.hpp
       opm/material/fluidmatrixinteractions/TwoPhaseLETCurves.hpp
       opm/material/fluidmatrixinteractions/EclMaterialLawManager.hpp
+      opm/material/fluidmatrixinteractions/EclMaterialLawManagerSimple.hpp
       opm/material/fluidmatrixinteractions/DirectionalMaterialLawParams.hpp
       opm/material/fluidmatrixinteractions/DirectionalMaterialLawParams.hpp
       opm/material/fluidmatrixinteractions/RegularizedVanGenuchten.hpp
