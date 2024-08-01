@@ -6,6 +6,7 @@
   "description": "The THERMEXR item is used to set the thermal expansion ratio for a cell in mechanics models.",
   "data": {
     "value_type": "DOUBLE",
-    "dimension": "1/Temperature"
+    "dimension": "1/AbsoluteTemperature",
+    "comment": "Unit Temperature can not be used due to conversion offset"
   }
 }

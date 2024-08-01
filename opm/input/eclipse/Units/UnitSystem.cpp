@@ -1567,7 +1567,7 @@ namespace {
         Dimension divisor = this->parseFactor( parts[1] );
 
         if (!dividend.isCompositable() || !divisor.isCompositable()) {
-            throw std::invalid_argument("Composite dimensions cannot currently handle conversion offset");
+            throw std::invalid_argument("Composite dimensions currently cannot handle conversion offsets");
         }
 
         return Dimension( dividend.getSIScaling() / divisor.getSIScaling() );
