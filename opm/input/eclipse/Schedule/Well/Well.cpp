@@ -314,7 +314,7 @@ Well::Well(const RestartIO::RstWell& rst_well,
     wvfpexp(explicitTHPOptions(rst_well)),
     wdfac(std::make_shared<WDFAC>(rst_well)),
     status(status_from_int(rst_well.well_status)),
-    well_temperature(std::nullopt),
+    well_inj_temperature(std::nullopt),
     well_inj_mult(std::nullopt)
 {
     if (this->wtype.producer()) {
@@ -501,7 +501,7 @@ Well::Well(const std::string& wname_arg,
     wvfpexp(std::make_shared<WVFPEXP>()),
     wdfac(std::make_shared<WDFAC>()),
     status(Status::SHUT),
-    well_temperature(std::nullopt),
+    well_inj_temperature(std::nullopt),
     well_inj_mult(std::nullopt)
 {
     auto p = std::make_shared<WellProductionProperties>(this->unit_system, this->wname);
@@ -546,7 +546,7 @@ Well Well::serializationTestObject()
     result.wvfpexp = std::make_shared<WVFPEXP>(WVFPEXP::serializationTestObject());
     result.wdfac = std::make_shared<WDFAC>(WDFAC::serializationTestObject());
     result.m_pavg = PAvg();
-    result.well_temperature = 10.0;
+    result.well_inj_temperature = 10.0;
     result.well_inj_mult = InjMult::serializationTestObject();
     result.m_filter_concentration = UDAValue::serializationTestObject();
 
@@ -1732,18 +1732,18 @@ int Well::vfp_table_number() const {
         return this->injection->VFPTableNumber;
 }
 
-double Well::temperature() const {
-    if (!this->wtype.producer() && this->well_temperature)
-        return *this->well_temperature;
+double Well::inj_temperature() const {
+    if (this->wtype.injector() && this->well_inj_temperature)
+        return *this->well_inj_temperature;
 
     throw std::runtime_error("Can only ask for well temperature for" 
                     "injectors with non-default temperature.");
 }
-bool Well::hasTemperature() const {
-    return this->well_temperature.has_value(); 
+bool Well::hasInjTemperature() const {
+    return this->well_inj_temperature.has_value(); 
 }
-void Well::setWellTemperature(const double temp) {
-    this->well_temperature = temp;
+void Well::setWellInjTemperature(const double temp) {
+    this->well_inj_temperature = temp;
 }
 
 bool Well::cmp_structure(const Well& other) const {
@@ -1796,7 +1796,7 @@ bool Well::operator==(const Well& data) const {
         && (this->getProductionProperties() == data.getProductionProperties())
         && (this->m_pavg == data.m_pavg)
         && (this->getInjectionProperties() == data.getInjectionProperties())
-        && (this->well_temperature == data.well_temperature)
+        && (this->well_inj_temperature == data.well_inj_temperature)
         && (this->inj_mult_mode == data.inj_mult_mode)
         && (this->well_inj_mult == data.well_inj_mult)
         && (this->m_filter_concentration == data.m_filter_concentration)

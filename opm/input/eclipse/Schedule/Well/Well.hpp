@@ -553,9 +553,9 @@ public:
     GasInflowEquation gas_inflow_equation() const;
     bool segmented_density_calculation() const { return true; }
     double alq_value(const SummaryState& st) const;
-    double temperature() const;
-    bool hasTemperature() const;
-    void setWellTemperature(const double temp);
+    double inj_temperature() const;
+    bool hasInjTemperature() const;
+    void setWellInjTemperature(const double temp);
     bool hasInjected( ) const;
     bool hasProduced( ) const;
     bool updateHasInjected( );
@@ -610,7 +610,7 @@ public:
         serializer(wdfac);
         serializer(wvfpexp);
         serializer(m_pavg);
-        serializer(well_temperature);
+        serializer(well_inj_temperature);
         serializer(inj_mult_mode);
         serializer(well_inj_mult);
         serializer(m_filter_concentration);
@@ -662,7 +662,7 @@ private:
 
     Status status;
     PAvg m_pavg;
-    std::optional<double> well_temperature;
+    std::optional<double> well_inj_temperature;
     InjMultMode inj_mult_mode = InjMultMode::NONE;
     std::optional<InjMult> well_inj_mult;
     UDAValue m_filter_concentration;

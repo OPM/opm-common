@@ -332,10 +332,10 @@ void handleWINJTEMP(HandlerContext& handlerContext)
 
         for (const auto& well_name : well_names) {
             const auto& well = handlerContext.state().wells.get(well_name);
-            const double current_temp = well.hasTemperature()? well.temperature(): 0.0;
+            const double current_temp = well.hasInjTemperature()? well.inj_temperature(): 0.0;
             if (current_temp != temp) {
                 auto well2 = handlerContext.state().wells( well_name );
-                well2.setWellTemperature(temp);
+                well2.setWellInjTemperature(temp);
                 handlerContext.state().wells.update( std::move(well2) );
             }
         }
@@ -500,10 +500,10 @@ void handleWTEMP(HandlerContext& handlerContext)
 
         for (const auto& well_name : well_names) {
             const auto& well = handlerContext.state().wells.get(well_name);
-            const double current_temp = well.hasTemperature()? well.temperature(): 0.0;
+            const double current_temp = well.hasInjTemperature()? well.inj_temperature(): 0.0;
             if (current_temp != temp) {
                 auto well2 = handlerContext.state().wells( well_name );
-                well2.setWellTemperature(temp);
+                well2.setWellInjTemperature(temp);
                 handlerContext.state().wells.update( std::move(well2) );
             }
         }
