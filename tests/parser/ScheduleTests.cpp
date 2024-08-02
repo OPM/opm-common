@@ -2673,14 +2673,14 @@ BOOST_AUTO_TEST_CASE(WTEMP_well_template) {
     Runspec runspec (deck);
     Schedule schedule( deck, grid, fp, runspec, python);
 
-    BOOST_CHECK_THROW(schedule.getWell("W1", 1).temperature(), std::runtime_error);
-    BOOST_CHECK_THROW(schedule.getWell("W1", 2).temperature(), std::runtime_error);
+    BOOST_CHECK_THROW(schedule.getWell("W1", 1).inj_temperature(), std::runtime_error);
+    BOOST_CHECK_THROW(schedule.getWell("W1", 2).inj_temperature(), std::runtime_error);
 
-    BOOST_CHECK_THROW(schedule.getWell("W2", 1).temperature(), std::runtime_error);
-    BOOST_CHECK_CLOSE(313.15, schedule.getWell("W2", 2).temperature(), 1e-5);
+    BOOST_CHECK_THROW(schedule.getWell("W2", 1).inj_temperature(), std::runtime_error);
+    BOOST_CHECK_CLOSE(313.15, schedule.getWell("W2", 2).inj_temperature(), 1e-5);
 
-    BOOST_CHECK_THROW(schedule.getWell("W3", 1).temperature(), std::runtime_error);
-    BOOST_CHECK_CLOSE(313.15, schedule.getWell("W3", 2).temperature(), 1e-5);
+    BOOST_CHECK_THROW(schedule.getWell("W3", 1).inj_temperature(), std::runtime_error);
+    BOOST_CHECK_CLOSE(313.15, schedule.getWell("W3", 2).inj_temperature(), 1e-5);
 }
 
 
@@ -2720,14 +2720,16 @@ BOOST_AUTO_TEST_CASE(WTEMPINJ_well_template) {
         Runspec runspec (deck);
         Schedule schedule( deck, grid, fp, runspec, python);
 
-        BOOST_CHECK_THROW(schedule.getWell("W1", 1).temperature(), std::runtime_error);
-        BOOST_CHECK_THROW(schedule.getWell("W1", 2).temperature(), std::runtime_error);
+        BOOST_CHECK_THROW(schedule.getWell("W1", 1).inj_temperature(), std::runtime_error);
+        BOOST_CHECK_THROW(schedule.getWell("W2", 1).inj_temperature(), std::runtime_error);
+        BOOST_CHECK_THROW(schedule.getWell("W3", 1).inj_temperature(), std::runtime_error);
 
-        BOOST_CHECK_CLOSE(288.71, schedule.getWell("W2", 1).temperature(), 1e-5);
-        BOOST_CHECK_CLOSE(313.15, schedule.getWell("W2", 2).temperature(), 1e-5);
-
-        BOOST_CHECK_CLOSE(288.71, schedule.getWell("W2", 1).temperature(), 1e-5);
-        BOOST_CHECK_CLOSE(313.15, schedule.getWell("W3", 2).temperature(), 1e-5);
+        BOOST_CHECK(schedule.getWell("W1", 2).hasInjTemperature());
+        BOOST_CHECK_THROW(schedule.getWell("W1", 2).inj_temperature(), std::runtime_error);
+        BOOST_CHECK(schedule.getWell("W2", 2).hasInjTemperature());
+        BOOST_CHECK_CLOSE(313.15, schedule.getWell("W2", 2).inj_temperature(), 1e-5);
+        BOOST_CHECK(schedule.getWell("W3", 2).hasInjTemperature());
+        BOOST_CHECK_CLOSE(313.15, schedule.getWell("W3", 2).inj_temperature(), 1e-5);
 }
 
 BOOST_AUTO_TEST_CASE( COMPDAT_sets_automatic_complnum ) {
