@@ -94,17 +94,17 @@ private:
     using GasWaterEffectiveTwoPhaseParams = typename GasWaterEffectiveTwoPhaseLaw::Params;
 
     // the two-phase material law which is defined on absolute (scaled) saturations
-    using GasOilEpsTwoPhaseLaw = EclEpsTwoPhaseLaw<GasOilEffectiveTwoPhaseLaw>;
-    using OilWaterEpsTwoPhaseLaw = EclEpsTwoPhaseLaw<OilWaterEffectiveTwoPhaseLaw>;
-    using GasWaterEpsTwoPhaseLaw = EclEpsTwoPhaseLaw<GasWaterEffectiveTwoPhaseLaw>;
-    using GasOilEpsTwoPhaseParams = typename GasOilEpsTwoPhaseLaw::Params;
-    using OilWaterEpsTwoPhaseParams = typename OilWaterEpsTwoPhaseLaw::Params;
-    using GasWaterEpsTwoPhaseParams = typename GasWaterEpsTwoPhaseLaw::Params;
+    // using GasOilEpsTwoPhaseLaw = EclEpsTwoPhaseLaw<GasOilEffectiveTwoPhaseLaw>;
+    // using OilWaterEpsTwoPhaseLaw = EclEpsTwoPhaseLaw<OilWaterEffectiveTwoPhaseLaw>;
+    // using GasWaterEpsTwoPhaseLaw = EclEpsTwoPhaseLaw<GasWaterEffectiveTwoPhaseLaw>;
+    // using GasOilEpsTwoPhaseParams = typename GasOilEpsTwoPhaseLaw::Params;
+    // using OilWaterEpsTwoPhaseParams = typename OilWaterEpsTwoPhaseLaw::Params;
+    // using GasWaterEpsTwoPhaseParams = typename GasWaterEpsTwoPhaseLaw::Params;
 
     // the scaled two-phase material laws with hystersis
-    using GasOilTwoPhaseLaw = EclHysteresisTwoPhaseLaw<GasOilEpsTwoPhaseLaw>;
-    using OilWaterTwoPhaseLaw = EclHysteresisTwoPhaseLaw<OilWaterEpsTwoPhaseLaw>;
-    using GasWaterTwoPhaseLaw = EclHysteresisTwoPhaseLaw<GasWaterEpsTwoPhaseLaw>;
+    using GasOilTwoPhaseLaw = EclHysteresisTwoPhaseLaw<GasOilEffectiveTwoPhaseLaw>;
+    using OilWaterTwoPhaseLaw = EclHysteresisTwoPhaseLaw<OilWaterEffectiveTwoPhaseLaw>;
+    using GasWaterTwoPhaseLaw = EclHysteresisTwoPhaseLaw<GasWaterEffectiveTwoPhaseLaw>;
     using GasOilTwoPhaseHystParams = typename GasOilTwoPhaseLaw::Params;
     using OilWaterTwoPhaseHystParams = typename OilWaterTwoPhaseLaw::Params;
     using GasWaterTwoPhaseHystParams = typename GasWaterTwoPhaseLaw::Params;

@@ -99,15 +99,15 @@ setDrainageParamsGasWater(unsigned elemIdx, unsigned satRegionIdx,
                           const std::function<unsigned(unsigned)>& lookupIdxOnLevelZeroAssigner)
 {
     if (hasGasWater_()) {
-        auto [gasWaterScaledInfo, gasWaterScaledPoints]
-            = readScaledEpsPointsDrainage_(elemIdx, EclTwoPhaseSystemType::GasWater, lookupIdxOnLevelZeroAssigner);
-        GasWaterEpsTwoPhaseParams gasWaterDrainParams;
-        gasWaterDrainParams.setConfig(this->parent_.gasWaterConfig_);
-        gasWaterDrainParams.setUnscaledPoints(this->parent_.gasWaterUnscaledPointsVector_[satRegionIdx]);
-        gasWaterDrainParams.setScaledPoints(gasWaterScaledPoints);
-        gasWaterDrainParams.setEffectiveLawParams(this->parent_.gasWaterEffectiveParamVector_[satRegionIdx]);
-        gasWaterDrainParams.finalize();
-        this->gasWaterParams_->setDrainageParams(gasWaterDrainParams, gasWaterScaledInfo, EclTwoPhaseSystemType::GasWater);
+        // auto [gasWaterScaledInfo, gasWaterScaledPoints]
+        //     = readScaledEpsPointsDrainage_(elemIdx, EclTwoPhaseSystemType::GasWater, lookupIdxOnLevelZeroAssigner);
+        // GasWaterEpsTwoPhaseParams gasWaterDrainParams;
+        // gasWaterDrainParams.setConfig(this->parent_.gasWaterConfig_);
+        // gasWaterDrainParams.setUnscaledPoints(this->parent_.gasWaterUnscaledPointsVector_[satRegionIdx]);
+        // gasWaterDrainParams.setScaledPoints(gasWaterScaledPoints);
+        // gasWaterDrainParams.setEffectiveLawParams(this->parent_.gasWaterEffectiveParamVector_[satRegionIdx]);
+        // gasWaterDrainParams.finalize();
+        // this->gasWaterParams_->setDrainageParams(gasWaterDrainParams, gasWaterScaledInfo, EclTwoPhaseSystemType::GasWater);
     }
 }
 
@@ -118,15 +118,15 @@ setDrainageParamsOilGas(unsigned elemIdx, unsigned satRegionIdx,
                         const std::function<unsigned(unsigned)>& lookupIdxOnLevelZeroAssigner)
 {
     if (hasGasOil_()) {
-        auto [gasOilScaledInfo, gasOilScaledPoints]
-            = readScaledEpsPointsDrainage_(elemIdx, EclTwoPhaseSystemType::GasOil, lookupIdxOnLevelZeroAssigner);
-        GasOilEpsTwoPhaseParams gasOilDrainParams;
-        gasOilDrainParams.setConfig(this->parent_.gasOilConfig_);
-        gasOilDrainParams.setUnscaledPoints(this->parent_.gasOilUnscaledPointsVector_[satRegionIdx]);
-        gasOilDrainParams.setScaledPoints(gasOilScaledPoints);
-        gasOilDrainParams.setEffectiveLawParams(this->parent_.gasOilEffectiveParamVector_[satRegionIdx]);
-        gasOilDrainParams.finalize();
-        this->gasOilParams_->setDrainageParams(gasOilDrainParams, gasOilScaledInfo, EclTwoPhaseSystemType::GasOil);
+        // auto [gasOilScaledInfo, gasOilScaledPoints]
+        //     = readScaledEpsPointsDrainage_(elemIdx, EclTwoPhaseSystemType::GasOil, lookupIdxOnLevelZeroAssigner);
+        // GasOilEpsTwoPhaseParams gasOilDrainParams;
+        // gasOilDrainParams.setConfig(this->parent_.gasOilConfig_);
+        // gasOilDrainParams.setUnscaledPoints(this->parent_.gasOilUnscaledPointsVector_[satRegionIdx]);
+        // gasOilDrainParams.setScaledPoints(gasOilScaledPoints);
+        // gasOilDrainParams.setEffectiveLawParams(this->parent_.gasOilEffectiveParamVector_[satRegionIdx]);
+        // gasOilDrainParams.finalize();
+        // this->gasOilParams_->setDrainageParams(gasOilDrainParams, gasOilScaledInfo, EclTwoPhaseSystemType::GasOil);
     }
 }
 
@@ -140,22 +140,22 @@ setDrainageParamsOilWater(unsigned elemIdx, unsigned satRegionIdx,
     // water (e.g. gas-oil). The reason is that the oil-water scaled info is used when computing
     // the initial condition see e.g. equilibrationhelpers.cc and initstateequil.cc
     // Therefore, the below 7 lines should not be put inside the if(hasOilWater_){} below.
-    auto [oilWaterScaledInfo, oilWaterScaledPoints]
-        = readScaledEpsPointsDrainage_(elemIdx, EclTwoPhaseSystemType::OilWater, lookupIdxOnLevelZeroAssigner);
-    // TODO: This will reassign the same EclEpsScalingPointsInfo for each facedir
-    //  since we currently does not support facedir for the scaling points info
-    //  When such support is added, we need to extend the below vector which has info for each cell
-    //   to include three more vectors, one with info for each facedir of a cell
-    this->parent_.oilWaterScaledEpsInfoDrainage_[elemIdx] = oilWaterScaledInfo;
-    if (hasOilWater_()) {
-        OilWaterEpsTwoPhaseParams oilWaterDrainParams;
-        oilWaterDrainParams.setConfig(this->parent_.oilWaterConfig_);
-        oilWaterDrainParams.setUnscaledPoints(this->parent_.oilWaterUnscaledPointsVector_[satRegionIdx]);
-        oilWaterDrainParams.setScaledPoints(oilWaterScaledPoints);
-        oilWaterDrainParams.setEffectiveLawParams(this->parent_.oilWaterEffectiveParamVector_[satRegionIdx]);
-        oilWaterDrainParams.finalize();
-        oilWaterParams_->setDrainageParams(oilWaterDrainParams, oilWaterScaledInfo, EclTwoPhaseSystemType::OilWater);
-    }
+    // auto [oilWaterScaledInfo, oilWaterScaledPoints]
+    //     = readScaledEpsPointsDrainage_(elemIdx, EclTwoPhaseSystemType::OilWater, lookupIdxOnLevelZeroAssigner);
+    // // TODO: This will reassign the same EclEpsScalingPointsInfo for each facedir
+    // //  since we currently does not support facedir for the scaling points info
+    // //  When such support is added, we need to extend the below vector which has info for each cell
+    // //   to include three more vectors, one with info for each facedir of a cell
+    // this->parent_.oilWaterScaledEpsInfoDrainage_[elemIdx] = oilWaterScaledInfo;
+    // if (hasOilWater_()) {
+    //     OilWaterEpsTwoPhaseParams oilWaterDrainParams;
+    //     oilWaterDrainParams.setConfig(this->parent_.oilWaterConfig_);
+    //     oilWaterDrainParams.setUnscaledPoints(this->parent_.oilWaterUnscaledPointsVector_[satRegionIdx]);
+    //     oilWaterDrainParams.setScaledPoints(oilWaterScaledPoints);
+    //     oilWaterDrainParams.setEffectiveLawParams(this->parent_.oilWaterEffectiveParamVector_[satRegionIdx]);
+    //     oilWaterDrainParams.finalize();
+    //     oilWaterParams_->setDrainageParams(oilWaterDrainParams, oilWaterScaledInfo, EclTwoPhaseSystemType::OilWater);
+    // }
 }
 
 template <class Traits>
@@ -165,17 +165,17 @@ setImbibitionParamsGasWater(unsigned elemIdx, unsigned imbRegionIdx,
                             const std::function<unsigned(unsigned)>& lookupIdxOnLevelZeroAssigner)
 {
     if (hasGasWater_()) {
-        auto [gasWaterScaledInfo, gasWaterScaledPoints]
-            = readScaledEpsPointsImbibition_(elemIdx, EclTwoPhaseSystemType::GasWater, lookupIdxOnLevelZeroAssigner);
-        GasWaterEpsTwoPhaseParams gasWaterImbParamsHyst;
-        gasWaterImbParamsHyst.setConfig(this->parent_.gasWaterConfig_);
-        gasWaterImbParamsHyst.setUnscaledPoints(this->parent_.gasWaterUnscaledPointsVector_[imbRegionIdx]);
-        gasWaterImbParamsHyst.setScaledPoints(gasWaterScaledPoints);
-        gasWaterImbParamsHyst.setEffectiveLawParams(this->parent_.gasWaterEffectiveParamVector_[imbRegionIdx]);
-        gasWaterImbParamsHyst.finalize();
-        this->gasWaterParams_->setImbibitionParams(gasWaterImbParamsHyst,
-                                                   gasWaterScaledInfo,
-                                                   EclTwoPhaseSystemType::GasWater);
+        // auto [gasWaterScaledInfo, gasWaterScaledPoints]
+        //     = readScaledEpsPointsImbibition_(elemIdx, EclTwoPhaseSystemType::GasWater, lookupIdxOnLevelZeroAssigner);
+        // GasWaterEpsTwoPhaseParams gasWaterImbParamsHyst;
+        // gasWaterImbParamsHyst.setConfig(this->parent_.gasWaterConfig_);
+        // gasWaterImbParamsHyst.setUnscaledPoints(this->parent_.gasWaterUnscaledPointsVector_[imbRegionIdx]);
+        // gasWaterImbParamsHyst.setScaledPoints(gasWaterScaledPoints);
+        // gasWaterImbParamsHyst.setEffectiveLawParams(this->parent_.gasWaterEffectiveParamVector_[imbRegionIdx]);
+        // gasWaterImbParamsHyst.finalize();
+        // this->gasWaterParams_->setImbibitionParams(gasWaterImbParamsHyst,
+        //                                            gasWaterScaledInfo,
+        //                                            EclTwoPhaseSystemType::GasWater);
 
     }
 }
@@ -187,18 +187,18 @@ setImbibitionParamsOilGas(unsigned elemIdx, unsigned imbRegionIdx,
                           const std::function<unsigned(unsigned)>& lookupIdxOnLevelZeroAssigner)
 {
     if (hasGasOil_()) {
-        auto [gasOilScaledInfo, gasOilScaledPoints]
-            = readScaledEpsPointsImbibition_(elemIdx, EclTwoPhaseSystemType::GasOil, lookupIdxOnLevelZeroAssigner);
+        // auto [gasOilScaledInfo, gasOilScaledPoints]
+        //     = readScaledEpsPointsImbibition_(elemIdx, EclTwoPhaseSystemType::GasOil, lookupIdxOnLevelZeroAssigner);
 
-        GasOilEpsTwoPhaseParams gasOilImbParamsHyst;
-        gasOilImbParamsHyst.setConfig(this->parent_.gasOilConfig_);
-        gasOilImbParamsHyst.setUnscaledPoints(this->parent_.gasOilUnscaledPointsVector_[imbRegionIdx]);
-        gasOilImbParamsHyst.setScaledPoints(gasOilScaledPoints);
-        gasOilImbParamsHyst.setEffectiveLawParams(this->parent_.gasOilEffectiveParamVector_[imbRegionIdx]);
-        gasOilImbParamsHyst.finalize();
-        this->gasOilParams_->setImbibitionParams(gasOilImbParamsHyst,
-                                                 gasOilScaledInfo,
-                                                 EclTwoPhaseSystemType::GasOil);
+        // GasOilEpsTwoPhaseParams gasOilImbParamsHyst;
+        // gasOilImbParamsHyst.setConfig(this->parent_.gasOilConfig_);
+        // gasOilImbParamsHyst.setUnscaledPoints(this->parent_.gasOilUnscaledPointsVector_[imbRegionIdx]);
+        // gasOilImbParamsHyst.setScaledPoints(gasOilScaledPoints);
+        // gasOilImbParamsHyst.setEffectiveLawParams(this->parent_.gasOilEffectiveParamVector_[imbRegionIdx]);
+        // gasOilImbParamsHyst.finalize();
+        // this->gasOilParams_->setImbibitionParams(gasOilImbParamsHyst,
+        //                                          gasOilScaledInfo,
+        //                                          EclTwoPhaseSystemType::GasOil);
     }
 }
 
@@ -209,17 +209,17 @@ setImbibitionParamsOilWater(unsigned elemIdx, unsigned imbRegionIdx,
                             const std::function<unsigned(unsigned)>& lookupIdxOnLevelZeroAssigner)
 {
     if (hasOilWater_()) {
-        auto [oilWaterScaledInfo, oilWaterScaledPoints]
-            = readScaledEpsPointsImbibition_(elemIdx, EclTwoPhaseSystemType::OilWater, lookupIdxOnLevelZeroAssigner);
-        OilWaterEpsTwoPhaseParams oilWaterImbParamsHyst;
-        oilWaterImbParamsHyst.setConfig(this->parent_.oilWaterConfig_);
-        oilWaterImbParamsHyst.setUnscaledPoints(this->parent_.oilWaterUnscaledPointsVector_[imbRegionIdx]);
-        oilWaterImbParamsHyst.setScaledPoints(oilWaterScaledPoints);
-        oilWaterImbParamsHyst.setEffectiveLawParams(this->parent_.oilWaterEffectiveParamVector_[imbRegionIdx]);
-        oilWaterImbParamsHyst.finalize();
-        this->oilWaterParams_->setImbibitionParams(oilWaterImbParamsHyst,
-                                                   oilWaterScaledInfo,
-                                                   EclTwoPhaseSystemType::OilWater);
+        // auto [oilWaterScaledInfo, oilWaterScaledPoints]
+        //     = readScaledEpsPointsImbibition_(elemIdx, EclTwoPhaseSystemType::OilWater, lookupIdxOnLevelZeroAssigner);
+        // OilWaterEpsTwoPhaseParams oilWaterImbParamsHyst;
+        // oilWaterImbParamsHyst.setConfig(this->parent_.oilWaterConfig_);
+        // oilWaterImbParamsHyst.setUnscaledPoints(this->parent_.oilWaterUnscaledPointsVector_[imbRegionIdx]);
+        // oilWaterImbParamsHyst.setScaledPoints(oilWaterScaledPoints);
+        // oilWaterImbParamsHyst.setEffectiveLawParams(this->parent_.oilWaterEffectiveParamVector_[imbRegionIdx]);
+        // oilWaterImbParamsHyst.finalize();
+        // this->oilWaterParams_->setImbibitionParams(oilWaterImbParamsHyst,
+        //                                            oilWaterScaledInfo,
+        //                                            EclTwoPhaseSystemType::OilWater);
 
     }
 }
