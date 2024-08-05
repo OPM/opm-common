@@ -84,7 +84,6 @@ specializationTemplate = \
 #include <array>
 {% endif %}\
 #include <cassert>
-#include <config.h>
 #include <iosfwd>
 #include <stdexcept>
 
