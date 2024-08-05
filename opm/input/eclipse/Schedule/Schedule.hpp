@@ -204,7 +204,7 @@ namespace Opm
         std::vector<Well> getWells(std::size_t timeStep) const;
         std::vector<Well> getWellsatEnd() const;
 
-        const std::unordered_map<std::string, std::set<std::array<int,3>>>& getPossibleFutureConnections() const;
+        const std::unordered_map<std::string, std::set<int>>& getPossibleFutureConnections() const;
 
         void shut_well(const std::string& well_name, std::size_t report_step);
         void shut_well(const std::string& well_name);
@@ -476,7 +476,7 @@ namespace Opm
         // This unordered_map contains possible future connections of wells that might get added through an ACTIONX.
         // For parallel runs, this unordered_map is retrieved by the grid partitioner to ensure these connections
         // end up on the same partition.
-        std::unordered_map<std::string, std::set<std::array<int,3>>> possibleFutureConnections;
+        std::unordered_map<std::string, std::set<int>> possibleFutureConnections;
 
         // The current_report_step is set to the current report step when a PYACTION call is executed.
         // This is needed since the Schedule object does not know the current report step of the simulator and
