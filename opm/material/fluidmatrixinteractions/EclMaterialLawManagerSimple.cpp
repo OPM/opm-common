@@ -147,72 +147,76 @@ applySwatinit(unsigned elemIdx,
               Scalar pcow,
               Scalar Sw)
 {
+
+    // TODO: currently just trying to compile without supporting SWATINIT
+    throw std::runtime_error("currently not supporting SWATINIT");
     // Default is no SWATINIT scaling of the negative part of the Pcow curve, so look up saturation using the input Pcow curve
-    if (pcow <= 0.0) {
-        return {Sw, /*newSwatInit*/ true};
-    }
+    // if (pcow <= 0.0) {
+    //     return {Sw, /*newSwatInit*/ true};
+    // }
 
-    auto& elemScaledEpsInfo = oilWaterScaledEpsInfoDrainage_[elemIdx];
-    if (Sw <= elemScaledEpsInfo.Swl)
-        Sw = elemScaledEpsInfo.Swl;
+    // auto& elemScaledEpsInfo = oilWaterScaledEpsInfoDrainage_[elemIdx];
+    // if (Sw <= elemScaledEpsInfo.Swl)
+    //     Sw = elemScaledEpsInfo.Swl;
 
-    // specify a fluid state which only stores the saturations
-    using FluidState = SimpleModularFluidState<Scalar,
-                                                numPhases,
-                                                /*numComponents=*/0,
-                                                /*FluidSystem=*/void, /* -> don't care */
-                                                /*storePressure=*/false,
-                                                /*storeTemperature=*/false,
-                                                /*storeComposition=*/false,
-                                                /*storeFugacity=*/false,
-                                                /*storeSaturation=*/true,
-                                                /*storeDensity=*/false,
-                                                /*storeViscosity=*/false,
-                                                /*storeEnthalpy=*/false>;
-    FluidState fs;
-    fs.setSaturation(waterPhaseIdx, Sw);
-    fs.setSaturation(gasPhaseIdx, 0);
-    fs.setSaturation(oilPhaseIdx, 0);
-    std::array<Scalar, numPhases> pc = { 0 };
-    MaterialLaw::capillaryPressures(pc, materialLawParams(elemIdx), fs);
-    Scalar pcowAtSw = pc[oilPhaseIdx] - pc[waterPhaseIdx];
-    constexpr const Scalar pcowAtSwThreshold = 1.0e-6; //Pascal
+    // // specify a fluid state which only stores the saturations
+    // using FluidState = SimpleModularFluidState<Scalar,
+    //                                             numPhases,
+    //                                             /*numComponents=*/0,
+    //                                             /*FluidSystem=*/void, /* -> don't care */
+    //                                             /*storePressure=*/false,
+    //                                             /*storeTemperature=*/false,
+    //                                             /*storeComposition=*/false,
+    //                                             /*storeFugacity=*/false,
+    //                                             /*storeSaturation=*/true,
+    //                                             /*storeDensity=*/false,
+    //                                             /*storeViscosity=*/false,
+    //                                             /*storeEnthalpy=*/false>;
+    // FluidState fs;
+    // fs.setSaturation(waterPhaseIdx, Sw);
+    // fs.setSaturation(gasPhaseIdx, 0);
+    // fs.setSaturation(oilPhaseIdx, 0);
+    // std::array<Scalar, numPhases> pc = { 0 };
+    // MaterialLaw::capillaryPressures(pc, materialLawParams(elemIdx), fs);
+    // Scalar pcowAtSw = pc[oilPhaseIdx] - pc[waterPhaseIdx];
+    // constexpr const Scalar pcowAtSwThreshold = 1.0e-6; //Pascal
 
-    // avoid division by very small number and avoid negative PCW at connate Sw
-    // (look up saturation on input Pcow curve in this case)
-    if (pcowAtSw < pcowAtSwThreshold) {
-        return {Sw, /*newSwatInit*/ true};
-    }
+    // // avoid division by very small number and avoid negative PCW at connate Sw
+    // // (look up saturation on input Pcow curve in this case)
+    // if (pcowAtSw < pcowAtSwThreshold) {
+    //     return {Sw, /*newSwatInit*/ true};
+    // }
 
-    // Sufficiently positive value, continue with max. capillary pressure (PCW) scaling to honor SWATINIT value
-    Scalar newMaxPcow = elemScaledEpsInfo.maxPcow * (pcow/pcowAtSw);
+    // // Sufficiently positive value, continue with max. capillary pressure (PCW) scaling to honor SWATINIT value
+    // Scalar newMaxPcow = elemScaledEpsInfo.maxPcow * (pcow/pcowAtSw);
 
-    // Limit max. capillary pressure with PPCWMAX
-    bool newSwatInit = false;
-    int satRegionIdx = satnumRegionIdx(elemIdx);
-    if (enablePpcwmax() && (newMaxPcow > maxAllowPc_[satRegionIdx])) {
-        // Two options in PPCWMAX to modify connate Sw or not.  In both cases, init. Sw needs to be
-        // re-calculated (done in opm-simulators)
-        newSwatInit = true;
-        if (modifySwl_[satRegionIdx] == false) {
-            // Max. cap. pressure set to PCWO in PPCWMAX
-            elemScaledEpsInfo.maxPcow = maxAllowPc_[satRegionIdx];
-        }
-        else {
-            // Max. cap. pressure remains unscaled and connate Sw is set to SWATINIT value
-            elemScaledEpsInfo.Swl = Sw;
-        }
-    }
-    // Max. cap. pressure adjusted from SWATINIT data
-    else
-        elemScaledEpsInfo.maxPcow = newMaxPcow;
+    // // Limit max. capillary pressure with PPCWMAX
+    // bool newSwatInit = false;
+    // int satRegionIdx = satnumRegionIdx(elemIdx);
+    // if (enablePpcwmax() && (newMaxPcow > maxAllowPc_[satRegionIdx])) {
+    //     // Two options in PPCWMAX to modify connate Sw or not.  In both cases, init. Sw needs to be
+    //     // re-calculated (done in opm-simulators)
+    //     newSwatInit = true;
+    //     if (modifySwl_[satRegionIdx] == false) {
+    //         // Max. cap. pressure set to PCWO in PPCWMAX
+    //         elemScaledEpsInfo.maxPcow = maxAllowPc_[satRegionIdx];
+    //     }
+    //     else {
+    //         // Max. cap. pressure remains unscaled and connate Sw is set to SWATINIT value
+    //         elemScaledEpsInfo.Swl = Sw;
+    //     }
+    // }
+    // // Max. cap. pressure adjusted from SWATINIT data
+    // else
+    //     elemScaledEpsInfo.maxPcow = newMaxPcow;
 
-    auto& elemEclEpsScalingPoints = oilWaterScaledEpsPointsDrainage(elemIdx);
-    elemEclEpsScalingPoints.init(elemScaledEpsInfo,
-                                    *oilWaterEclEpsConfig_,
-                                    EclTwoPhaseSystemType::OilWater);
+    // auto& elemEclEpsScalingPoints = oilWaterScaledEpsPointsDrainage(elemIdx);
+    // elemEclEpsScalingPoints.init(elemScaledEpsInfo,
+    //                                 *oilWaterEclEpsConfig_,
+    //                                 EclTwoPhaseSystemType::OilWater);
 
-    return {Sw, newSwatInit};
+    // return {Sw, newSwatInit};
+    return {Sw, true};
 }
 
 template<class TraitsT>
@@ -222,15 +226,18 @@ EclMaterialLawManagerSimple<TraitsT>::applyRestartSwatInit(const unsigned elemId
 {
     // Maximum capillary pressure adjusted from SWATINIT data.
 
-    auto& elemScaledEpsInfo =
-        this->oilWaterScaledEpsInfoDrainage_[elemIdx];
+    // TODO: currently just trying to compile without supporting SWATINIT
+    throw std::runtime_error("currently not supporting SWATINIT");
+    // auto& elemScaledEpsInfo =
+    //     this->oilWaterScaledEpsInfoDrainage_[elemIdx];
 
-    elemScaledEpsInfo.maxPcow = maxPcow;
+    // elemScaledEpsInfo.maxPcow = maxPcow;
 
-    this->oilWaterScaledEpsPointsDrainage(elemIdx)
-        .init(elemScaledEpsInfo,
-              *this->oilWaterEclEpsConfig_,
-              EclTwoPhaseSystemType::OilWater);
+    // TODO just remove because it has to do with EPS?
+    // this->oilWaterScaledEpsPointsDrainage(elemIdx)
+    //     .init(elemScaledEpsInfo,
+    //           *this->oilWaterEclEpsConfig_,
+    //           EclTwoPhaseSystemType::OilWater);
 }
 
 template<class TraitsT>
@@ -247,73 +254,33 @@ connectionMaterialLawParams(unsigned satRegionIdx, unsigned elemIdx) const
 
     // change the sat table it points to.
     switch (mlp.approach()) {
-    case EclMultiplexerApproach::Stone1: {
-        auto& realParams = mlp.template getRealParams<EclMultiplexerApproach::Stone1>();
-
-        realParams.oilWaterParams().drainageParams().setUnscaledPoints(oilWaterUnscaledPointsVector_[satRegionIdx]);
-        realParams.oilWaterParams().drainageParams().setEffectiveLawParams(oilWaterEffectiveParamVector_[satRegionIdx]);
-        realParams.gasOilParams().drainageParams().setUnscaledPoints(gasOilUnscaledPointsVector_[satRegionIdx]);
-        realParams.gasOilParams().drainageParams().setEffectiveLawParams(gasOilEffectiveParamVector_[satRegionIdx]);
-//            if (enableHysteresis()) {
-//                realParams.oilWaterParams().imbibitionParams().setUnscaledPoints(oilWaterUnscaledPointsVector_[impRegionIdx]);
-//                realParams.oilWaterParams().imbibitionParams().setEffectiveLawParams(oilWaterEffectiveParamVector_[impRegionIdx]);
-//                realParams.gasOilParams().imbibitionParams().setUnscaledPoints(gasOilUnscaledPointsVector_[impRegionIdx]);
-//                realParams.gasOilParams().imbibitionParams().setEffectiveLawParams(gasOilEffectiveParamVector_[impRegionIdx]);
-//            }
-    }
+    case EclMultiplexerApproach::Stone1:
+        throw std::runtime_error("Stone1 not supported");
         break;
 
-    case EclMultiplexerApproach::Stone2: {
-        auto& realParams = mlp.template getRealParams<EclMultiplexerApproach::Stone2>();
-        realParams.oilWaterParams().drainageParams().setUnscaledPoints(oilWaterUnscaledPointsVector_[satRegionIdx]);
-        realParams.oilWaterParams().drainageParams().setEffectiveLawParams(oilWaterEffectiveParamVector_[satRegionIdx]);
-        realParams.gasOilParams().drainageParams().setUnscaledPoints(gasOilUnscaledPointsVector_[satRegionIdx]);
-        realParams.gasOilParams().drainageParams().setEffectiveLawParams(gasOilEffectiveParamVector_[satRegionIdx]);
-//            if (enableHysteresis()) {
-//                realParams.oilWaterParams().imbibitionParams().setUnscaledPoints(oilWaterUnscaledPointsVector_[impRegionIdx]);
-//                realParams.oilWaterParams().imbibitionParams().setEffectiveLawParams(oilWaterEffectiveParamVector_[impRegionIdx]);
-//                realParams.gasOilParams().imbibitionParams().setUnscaledPoints(gasOilUnscaledPointsVector_[impRegionIdx]);
-//                realParams.gasOilParams().imbibitionParams().setEffectiveLawParams(gasOilEffectiveParamVector_[impRegionIdx]);
-//            }
-    }
+    case EclMultiplexerApproach::Stone2:
+        throw std::runtime_error("Stone2 not supported");
         break;
 
-    case EclMultiplexerApproach::Default: {
-        auto& realParams = mlp.template getRealParams<EclMultiplexerApproach::Default>();
-        realParams.oilWaterParams().drainageParams().setUnscaledPoints(oilWaterUnscaledPointsVector_[satRegionIdx]);
-        realParams.oilWaterParams().drainageParams().setEffectiveLawParams(oilWaterEffectiveParamVector_[satRegionIdx]);
-        realParams.gasOilParams().drainageParams().setUnscaledPoints(gasOilUnscaledPointsVector_[satRegionIdx]);
-        realParams.gasOilParams().drainageParams().setEffectiveLawParams(gasOilEffectiveParamVector_[satRegionIdx]);
-//            if (enableHysteresis()) {
-//                realParams.oilWaterParams().imbibitionParams().setUnscaledPoints(oilWaterUnscaledPointsVector_[impRegionIdx]);
-//                realParams.oilWaterParams().imbibitionParams().setEffectiveLawParams(oilWaterEffectiveParamVector_[impRegionIdx]);
-//                realParams.gasOilParams().imbibitionParams().setUnscaledPoints(gasOilUnscaledPointsVector_[impRegionIdx]);
-//                realParams.gasOilParams().imbibitionParams().setEffectiveLawParams(gasOilEffectiveParamVector_[impRegionIdx]);
-//            }
-    }
+    case EclMultiplexerApproach::Default:
+        throw std::runtime_error("three-phase not supported");
         break;
 
-    case EclMultiplexerApproach::TwoPhase: {
-        auto& realParams = mlp.template getRealParams<EclMultiplexerApproach::TwoPhase>();
-        if (realParams.approach() == EclTwoPhaseApproach::GasOil) {
-            realParams.gasOilParams().drainageParams().setUnscaledPoints(gasOilUnscaledPointsVector_[satRegionIdx]);
-            realParams.gasOilParams().drainageParams().setEffectiveLawParams(gasOilEffectiveParamVector_[satRegionIdx]);
-        }
-        else if (realParams.approach() == EclTwoPhaseApproach::GasWater) {
-            realParams.gasWaterParams().drainageParams().setUnscaledPoints(gasWaterUnscaledPointsVector_[satRegionIdx]);
-            realParams.gasWaterParams().drainageParams().setEffectiveLawParams(gasWaterEffectiveParamVector_[satRegionIdx]);
-        }
-        else if (realParams.approach() == EclTwoPhaseApproach::OilWater) {
-            realParams.oilWaterParams().drainageParams().setUnscaledPoints(oilWaterUnscaledPointsVector_[satRegionIdx]);
-            realParams.oilWaterParams().drainageParams().setEffectiveLawParams(oilWaterEffectiveParamVector_[satRegionIdx]);
-        }
-//            if (enableHysteresis()) {
-//                realParams.oilWaterParams().imbibitionParams().setUnscaledPoints(oilWaterUnscaledPointsVector_[impRegionIdx]);
-//                realParams.oilWaterParams().imbibitionParams().setEffectiveLawParams(oilWaterEffectiveParamVector_[impRegionIdx]);
-//                realParams.gasOilParams().imbibitionParams().setUnscaledPoints(gasOilUnscaledPointsVector_[impRegionIdx]);
-//                realParams.gasOilParams().imbibitionParams().setEffectiveLawParams(gasOilEffectiveParamVector_[impRegionIdx]);
-//            }
-    }
+    case EclMultiplexerApproach::TwoPhase:
+        // TODO: should I even do anything here if I do not care about end point scaling?
+        // auto& realParams = mlp.template getRealParams<EclMultiplexerApproach::TwoPhase>();
+        // if (realParams.approach() == EclTwoPhaseApproach::GasOil) {
+        //     realParams.gasOilParams().drainageParams().setUnscaledPoints(gasOilUnscaledPointsVector_[satRegionIdx]);
+        //     realParams.gasOilParams().drainageParams().setEffectiveLawParams(gasOilEffectiveParamVector_[satRegionIdx]);
+        // }
+        // else if (realParams.approach() == EclTwoPhaseApproach::GasWater) {
+        //     realParams.gasWaterParams().drainageParams().setUnscaledPoints(gasWaterUnscaledPointsVector_[satRegionIdx]);
+        //     realParams.gasWaterParams().drainageParams().setEffectiveLawParams(gasWaterEffectiveParamVector_[satRegionIdx]);
+        // }
+        // else if (realParams.approach() == EclTwoPhaseApproach::OilWater) {
+        //     realParams.oilWaterParams().drainageParams().setUnscaledPoints(oilWaterUnscaledPointsVector_[satRegionIdx]);
+        //     realParams.oilWaterParams().drainageParams().setEffectiveLawParams(oilWaterEffectiveParamVector_[satRegionIdx]);
+        // }
         break;
 
     default:
@@ -406,36 +373,34 @@ setGasOilHysteresisParams(const Scalar& sgmax,
     MaterialLaw::setGasOilHysteresisParams(sgmax, shmax, somin, params);
 }
 
-template<class TraitsT>
-EclEpsScalingPoints<typename TraitsT::Scalar>&
-EclMaterialLawManagerSimple<TraitsT>::
-oilWaterScaledEpsPointsDrainage(unsigned elemIdx)
-{
-    auto& materialParams = materialLawParams_[elemIdx];
-    switch (materialParams.approach()) {
-    case EclMultiplexerApproach::Stone1: {
-        auto& realParams = materialParams.template getRealParams<EclMultiplexerApproach::Stone1>();
-        return realParams.oilWaterParams().drainageParams().scaledPoints();
-    }
+// template<class TraitsT>
+// EclEpsScalingPoints<typename TraitsT::Scalar>&
+// EclMaterialLawManagerSimple<TraitsT>::
+// oilWaterScaledEpsPointsDrainage(unsigned elemIdx)
+// {
+//     auto& materialParams = materialLawParams_[elemIdx];
+//     switch (materialParams.approach()) {
+//     case EclMultiplexerApproach::Stone1: {
+//         throw std::runtime_error("Stone1 not supported");
+//     }
 
-    case EclMultiplexerApproach::Stone2: {
-        auto& realParams = materialParams.template getRealParams<EclMultiplexerApproach::Stone2>();
-        return realParams.oilWaterParams().drainageParams().scaledPoints();
-    }
+//     case EclMultiplexerApproach::Stone2: {
+//         throw std::runtime_error("Stone2 not supported");
+//     }
 
-    case EclMultiplexerApproach::Default: {
-        auto& realParams = materialParams.template getRealParams<EclMultiplexerApproach::Default>();
-        return realParams.oilWaterParams().drainageParams().scaledPoints();
-    }
+//     case EclMultiplexerApproach::Default: {
+//         throw std::runtime_error("three-phase not supported");
+//     }
 
-    case EclMultiplexerApproach::TwoPhase: {
-        auto& realParams = materialParams.template getRealParams<EclMultiplexerApproach::TwoPhase>();
-        return realParams.oilWaterParams().drainageParams().scaledPoints();
-    }
-    default:
-        throw std::logic_error("Enum value for material approach unknown!");
-    }
-}
+//     case EclMultiplexerApproach::TwoPhase: {
+//         auto& realParams = materialParams.template getRealParams<EclMultiplexerApproach::TwoPhase>();
+//         // TODO: how do I get these values correctly without using EPS?
+//         return realParams.oilWaterParams().drainageParams().scaledPoints();
+//     }
+//     default:
+//         throw std::logic_error("Enum value for material approach unknown!");
+//     }
+// }
 
 template<class TraitsT>
 const typename EclMaterialLawManagerSimple<TraitsT>::MaterialLawParams& EclMaterialLawManagerSimple<TraitsT>::
