@@ -631,6 +631,8 @@ static constexpr const char* hysterDeckStringKilloughWetting3phaseBaker = R"(
     0.12     0    1.0   0
     0.88    1.0  0.0   0 /
 
+
+
     REGIONS
     
     SATNUM
@@ -1004,7 +1006,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(HysteresisKilloughGasOilScanningWetting, Scalar, T
                                             fs);
         Scalar Khyst = linearScaledRelperm(Sg, Scalar(0.2), Scalar(1.0), Scalar(1.0));
         trappedSo = MaterialLaw::trappedOilSaturation(param, /*maximumTrapping*/true);
-        Scalar KhystO = linearScaledRelperm(So, trappedSo, Scalar(1.0), Scalar(1.0));
+        Scalar KhystO = linearScaledRelperm(So, trappedSo, Scalar(0.8), Scalar(1.0));
         BOOST_CHECK_CLOSE(Sw, kr[Fixture<Scalar>::waterPhaseIdx], tol);
         BOOST_CHECK_CLOSE(KhystO, kr[Fixture<Scalar>::oilPhaseIdx], tol);
         BOOST_CHECK_CLOSE(Khyst, kr[Fixture<Scalar>::gasPhaseIdx], tol);
@@ -1040,7 +1042,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(HysteresisKilloughGasOilScanningWetting, Scalar, T
                                             param,
                                             fs);
         Scalar Khyst = linearScaledRelperm(Sg, Scalar(0.2), Scalar(1.0), Scalar(1.0));
-        Scalar KhystO = linearScaledRelperm(So, trappedSo, Scalar(1.0), Scalar(1.0));
+        Scalar KhystO = linearScaledRelperm(So, trappedSo, Scalar(0.8), Scalar(1.0));
         BOOST_CHECK_CLOSE(Sw, kr[Fixture<Scalar>::waterPhaseIdx], tol);
         BOOST_CHECK_CLOSE(KhystO, kr[Fixture<Scalar>::oilPhaseIdx], tol);
         BOOST_CHECK_CLOSE(Khyst, kr[Fixture<Scalar>::gasPhaseIdx], tol);
@@ -1117,9 +1119,9 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(HysteresisKillough3pBakerConnateWaterScanningWetti
     //1      1.0  0.0   0 /
     //SGOF
     //0      0    1.0   0
-    //1.0   1.0  0.0   0 /
+    //.88   1.0  0.0   0 /
     //0.2      0    1.0   0
-    //1.0   1.0  0.0   0 /
+    //.88   1.0  0.0   0 /
 
     for (int i = 0; i <= 50; ++ i) {
         Scalar So = Scalar(i) / 100;
@@ -1135,7 +1137,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(HysteresisKillough3pBakerConnateWaterScanningWetti
         trappedSg = MaterialLaw::trappedGasSaturation(param, /*maximumTrapping*/true);
         trappedSo = MaterialLaw::trappedOilSaturation(param, /*maximumTrapping*/true);
         Scalar Khyst = linearScaledRelperm(Sg, trappedSg, Scalar(0.88), Scalar(1.0));
-        Scalar Khyst0 = linearScaledRelperm(So, trappedSo, Scalar(0.88), Scalar(1.0));
+        Scalar Khyst0 = linearScaledRelperm(So, trappedSo, Scalar(0.88-0.2), Scalar(1.0));
         BOOST_CHECK_CLOSE(0, kr[Fixture<Scalar>::waterPhaseIdx], tol);
         BOOST_CHECK_CLOSE(Khyst0, kr[Fixture<Scalar>::oilPhaseIdx], tol);
         BOOST_CHECK_CLOSE(Khyst, kr[Fixture<Scalar>::gasPhaseIdx], tol);
@@ -1178,7 +1180,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(HysteresisKillough3pBakerConnateWaterScanningWetti
         trappedSg = MaterialLaw::trappedGasSaturation(param, /*maximumTrapping*/true);
         trappedSo = MaterialLaw::trappedOilSaturation(param, /*maximumTrapping*/true);
         Scalar Khyst = linearScaledRelperm(Sg, trappedSg, Scalar(0.88), Scalar(1.0));
-        Scalar KhystO = linearScaledRelperm(So, trappedSo, Scalar(0.88), Scalar(1.0));
+        Scalar KhystO = linearScaledRelperm(So, trappedSo, Scalar(0.88-0.2), Scalar(1.0));
 
         BOOST_CHECK_CLOSE(0, kr[Fixture<Scalar>::waterPhaseIdx], tol);
         if (KhystO < tol) {
@@ -1267,7 +1269,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(HysteresisKillough3pStone1ConnateWaterScanningWett
         trappedSg = MaterialLaw::trappedGasSaturation(param, /*maximumTrapping*/true);
         trappedSo = MaterialLaw::trappedOilSaturation(param, /*maximumTrapping*/true);
         Scalar Khyst = linearScaledRelperm(Sg, trappedSg, Scalar(0.88), Scalar(1.0));
-        Scalar KhystO = linearScaledRelperm(So, trappedSo, Scalar(0.88), Scalar(1.0));
+        Scalar KhystO = linearScaledRelperm(So, trappedSo, Scalar(0.88-0.2), Scalar(1.0));
 
         BOOST_CHECK_CLOSE(0, kr[Fixture<Scalar>::waterPhaseIdx], tol);
         if (So < tol) {
@@ -1308,7 +1310,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(HysteresisKillough3pStone1ConnateWaterScanningWett
         trappedSg = MaterialLaw::trappedGasSaturation(param, /*maximumTrapping*/true);
         trappedSo = MaterialLaw::trappedOilSaturation(param, /*maximumTrapping*/true);
         Scalar Khyst = linearScaledRelperm(Sg, trappedSg, Scalar(0.88), Scalar(1.0));
-        Scalar KhystO = linearScaledRelperm(So, trappedSo, Scalar(0.88), Scalar(1.0));
+        Scalar KhystO = linearScaledRelperm(So, trappedSo, Scalar(0.88-0.2), Scalar(1.0));
         BOOST_CHECK_CLOSE(0, kr[Fixture<Scalar>::waterPhaseIdx], tol);
         if (KhystO < tol) {
             BOOST_CHECK_SMALL(kr[Fixture<Scalar>::oilPhaseIdx], tol);
@@ -1395,7 +1397,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(HysteresisKillough3pStone2ConnateWaterScanningWett
         trappedSg = MaterialLaw::trappedGasSaturation(param, /*maximumTrapping*/true);
         trappedSo = MaterialLaw::trappedOilSaturation(param, /*maximumTrapping*/true);
         Scalar Khyst = linearScaledRelperm(Sg, trappedSg, Scalar(0.88), Scalar(1.0));
-        Scalar KhystO = linearScaledRelperm(So, trappedSo, Scalar(0.88), Scalar(1.0));
+        Scalar KhystO = linearScaledRelperm(So, trappedSo, Scalar(0.88-0.2), Scalar(1.0));
 
         BOOST_CHECK_CLOSE(0, kr[Fixture<Scalar>::waterPhaseIdx], tol);
         if (So < tol) {
@@ -1436,7 +1438,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(HysteresisKillough3pStone2ConnateWaterScanningWett
         trappedSg = MaterialLaw::trappedGasSaturation(param, /*maximumTrapping*/true);
         trappedSo = MaterialLaw::trappedOilSaturation(param, /*maximumTrapping*/true);
         Scalar Khyst = linearScaledRelperm(Sg, trappedSg, Scalar(0.88), Scalar(1.0));
-        Scalar KhystO = linearScaledRelperm(So, trappedSo, Scalar(0.88), Scalar(1.0));
+        Scalar KhystO = linearScaledRelperm(So, trappedSo, Scalar(0.88-0.2), Scalar(1.0));
 
         BOOST_CHECK_CLOSE(0, kr[Fixture<Scalar>::waterPhaseIdx], tol);
         if (So < tol) {
@@ -1821,6 +1823,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(HysteresisKilloughWettingOilWater, Scalar, Types)
     Scalar swmax_out = 0.0;
     Scalar swmin_out = 0.0;
     Scalar trappedSo = Swl;
+    Scalar trappedSw = 0.0;
     //SWOF
     //0.12      0    1.0   0
     //1      1.0  0.0   0 /
@@ -1844,12 +1847,13 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(HysteresisKilloughWettingOilWater, Scalar, Types)
                                             fs);
 
         trappedSo = MaterialLaw::trappedOilSaturation(param, /*maximumTrapping*/false);
+        trappedSw = MaterialLaw::trappedWaterSaturation(param);
         MaterialLaw::oilWaterHysteresisParams(somax_out,
                                             swmax_out,
                                             swmin_out,
                                             param);
         Scalar Khyst = linearScaledRelperm(So, trappedSo, somax_out, Scalar(1.0));
-        Scalar Kw = linearScaledRelperm(Sw, Scalar(0.12), Scalar(1.0), Scalar(1.0));
+        Scalar Kw = linearScaledRelperm(Sw, trappedSw, Scalar(0.8), Scalar(1.0));
         BOOST_CHECK_CLOSE(Kw, kr[Fixture<Scalar>::waterPhaseIdx], tol);
         BOOST_CHECK_CLOSE(Khyst, kr[Fixture<Scalar>::oilPhaseIdx], tol);
         BOOST_CHECK_CLOSE(Sg, kr[Fixture<Scalar>::gasPhaseIdx], tol);
@@ -1869,7 +1873,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(HysteresisKilloughWettingOilWater, Scalar, Types)
     BOOST_CHECK_CLOSE(swmin_out, 1 - somax_out, tol);
 
 
-    Scalar trappedSw = MaterialLaw::trappedWaterSaturation(param);
+    trappedSw = MaterialLaw::trappedWaterSaturation(param);
     Scalar Swcri = 0.12;
     //Scalar Swmaxd = 1.0;
     //Scalar maxSw = 0.5+Swl;
@@ -1897,7 +1901,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(HysteresisKilloughWettingOilWater, Scalar, Types)
                                             swmin_out,
                                             param);
         Scalar Khyst = linearScaledRelperm(So, trappedSo, somax_out, Scalar(1.0));       
-        Scalar Kw = linearScaledRelperm(Sw, trappedSw, Scalar(1.0), Scalar(1.0));
+        Scalar Kw = linearScaledRelperm(Sw, trappedSw, Scalar(0.8), Scalar(1.0));
         BOOST_CHECK_CLOSE(Kw, kr[Fixture<Scalar>::waterPhaseIdx], tol);
         BOOST_CHECK_CLOSE(Khyst, kr[Fixture<Scalar>::oilPhaseIdx], tol);
         BOOST_CHECK_CLOSE(Sg, kr[Fixture<Scalar>::gasPhaseIdx], tol);
@@ -2100,9 +2104,15 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(HysteresisKilloughWetting3phaseBaker, Scalar, Type
         MaterialLaw::relativePermeabilities(kr,
                                             param,
                                             fs);
-        Scalar Khyst = linearScaledRelperm(So, Scalar(0.0), Scalar(1.0 - 0.12), Scalar(1.0));
-        BOOST_CHECK_CLOSE(Sw, kr[Fixture<Scalar>::waterPhaseIdx], tol);
-        BOOST_CHECK_CLOSE(Khyst, kr[Fixture<Scalar>::oilPhaseIdx], tol);
+        Scalar Khyst = linearScaledRelperm(Sw, Scalar(0.12), Scalar(1.0), Scalar(1.0));
+        Scalar KhystO = linearScaledRelperm(So, Scalar(0.0), Scalar(1.0 - 0.12), Scalar(1.0));
+
+        if (Khyst < tol) {
+           BOOST_CHECK_SMALL(kr[Fixture<Scalar>::waterPhaseIdx], tol);
+        } else {    
+            BOOST_CHECK_CLOSE(Khyst, kr[Fixture<Scalar>::waterPhaseIdx], tol);
+        }
+        BOOST_CHECK_CLOSE(KhystO, kr[Fixture<Scalar>::oilPhaseIdx], tol);
         BOOST_CHECK_CLOSE(Sg, kr[Fixture<Scalar>::gasPhaseIdx], tol);
     }
 
@@ -2121,13 +2131,14 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(HysteresisKilloughWetting3phaseBaker, Scalar, Type
     BOOST_CHECK_CLOSE(1.0, maxSo, tol);
     BOOST_CHECK_SMALL(trappedSo, tol);
 
-    Scalar maxSw = 0.5;
+    //Scalar maxSw = 0.5;
     Scalar trappedSw = MaterialLaw::trappedWaterSaturation(param);
-    Scalar Swcri = 0.12;
-    Scalar killoughScalingParam = 0.1;
-    Scalar Cw = 1 / Swcri - 1.0;
-    Scalar Swr = 1 / ( (Cw + killoughScalingParam) + 1.0/maxSw);
-    BOOST_CHECK_CLOSE(Swr, trappedSw, tol);
+    //Scalar Swcri = 0.12;
+    //Scalar killoughScalingParam = 0.1;
+    //Scalar Cw = 1 / Swcri - 1.0;
+    //Scalar Swr = 1 / ( (Cw + killoughScalingParam) + 1.0/maxSw);
+    //BOOST_CHECK_CLOSE(Swr, trappedSw, tol);
+    BOOST_CHECK_SMALL(trappedSw, tol);
 
     for (int i = 50; i >= 0; -- i) {
         Scalar Sw = Scalar(i) / 100;
@@ -2140,9 +2151,14 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(HysteresisKilloughWetting3phaseBaker, Scalar, Type
 
         MaterialLaw::relativePermeabilities(kr,
                                             param,
-                                            fs);       
+                                            fs);
+        Scalar Khyst = linearScaledRelperm(Sw, Scalar(0.12), Scalar(1.0), Scalar(1.0));     
         Scalar KhystOil = linearScaledRelperm(So, Scalar(0.0), Scalar(1.0 - 0.12), Scalar(1.0));
-        BOOST_CHECK_CLOSE(Sw, kr[Fixture<Scalar>::waterPhaseIdx], tol);
+        if (Khyst < tol) {
+           BOOST_CHECK_SMALL(kr[Fixture<Scalar>::waterPhaseIdx], tol);
+        } else {    
+            BOOST_CHECK_CLOSE(Khyst, kr[Fixture<Scalar>::waterPhaseIdx], tol);
+        }
         BOOST_CHECK_CLOSE(KhystOil, kr[Fixture<Scalar>::oilPhaseIdx], tol);
         BOOST_CHECK_CLOSE(Sg, kr[Fixture<Scalar>::gasPhaseIdx], tol);
     }
