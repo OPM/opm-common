@@ -29,6 +29,7 @@
 #include <opm/input/eclipse/Schedule/Group/GuideRateConfig.hpp>
 #include <opm/input/eclipse/Schedule/Network/Balance.hpp>
 #include <opm/input/eclipse/Schedule/Network/ExtNetwork.hpp>
+#include <opm/input/eclipse/Schedule/ResCoup/ReservoirCouplingInfo.hpp>
 #include <opm/input/eclipse/Schedule/RFTConfig.hpp>
 #include <opm/input/eclipse/Schedule/RPTConfig.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQActive.hpp>
@@ -354,6 +355,7 @@ ScheduleState ScheduleState::serializationTestObject() {
     ts.gconsump.update( GConSump::serializationTestObject() );
     ts.gconsale.update( GConSale::serializationTestObject() );
     ts.gecon.update( GroupEconProductionLimits::serializationTestObject() );
+    ts.rescoup.update( ReservoirCoupling::CouplingInfo::serializationTestObject() );
     ts.wlist_manager.update( WListManager::serializationTestObject() );
     ts.rpt_config.update( RPTConfig::serializationTestObject() );
     ts.actions.update( Action::Actions::serializationTestObject() );
