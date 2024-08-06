@@ -68,6 +68,9 @@ namespace Opm
     enum class InputErrorAction;
     class ParseContext;
     class Python;
+    namespace ReservoirCoupling {
+        class CouplingInfo;
+    }
     class Runspec;
     class RPTConfig;
     class ScheduleGrid;
@@ -345,6 +348,7 @@ namespace Opm
             this->template pack_unpack<GConSale>(serializer);
             this->template pack_unpack<GConSump>(serializer);
             this->template pack_unpack<GroupEconProductionLimits>(serializer);
+            this->template pack_unpack<ReservoirCoupling::CouplingInfo>(serializer);
             this->template pack_unpack<WListManager>(serializer);
             this->template pack_unpack<Network::ExtNetwork>(serializer);
             this->template pack_unpack<Network::Balance>(serializer);
