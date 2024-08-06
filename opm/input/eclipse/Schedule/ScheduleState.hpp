@@ -121,10 +121,6 @@ namespace Opm {
                 return *this->m_data;
             }
 
-            bool empty() const {
-                return !this->m_data;
-            }
-
             /*
               This will allocate new storage and assign @object to the new
               storage.
