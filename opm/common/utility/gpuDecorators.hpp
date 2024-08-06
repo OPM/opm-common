@@ -39,12 +39,6 @@
   // true inside device version of functions marked __device__
   #define OPM_IS_INSIDE_DEVICE_FUNCTION (defined(__CUDA_ARCH__) || (defined(__HIP_DEVICE_COMPILE__) && __HIP_DEVICE_COMPILE__ > 0))
 
-  // Default macros for non-GPU compilation
-  #define OPM_HOST_DEVICE
-  #define OPM_DEVICE
-  #define OPM_HOST
-  #define OPM_IS_USING_GPU 0
-
   #if HAVE_CUDA // if we will compile with GPU support
 
     //handle inclusion of correct gpu runtime headerfiles
@@ -58,7 +52,11 @@
     #define OPM_DEVICE __device__
     #define OPM_HOST __host__
     #define OPM_IS_USING_GPU 1
-
+  #else
+    #define OPM_HOST_DEVICE
+    #define OPM_DEVICE
+    #define OPM_HOST
+    #define OPM_IS_USING_GPU 0
   #endif // END ELSE
 
 #endif // END HEADER GUARD
