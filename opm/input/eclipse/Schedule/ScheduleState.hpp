@@ -440,6 +440,8 @@ namespace Opm {
                                   return this->network;
             else if constexpr ( std::is_same_v<T, Network::Balance> )
                                   return this->network_balance;
+            else if constexpr ( std::is_same_v<T, ReservoirCoupling::CouplingInfo> )
+                                  return this->rescoup;
             else if constexpr ( std::is_same_v<T, RPTConfig> )
                                   return this->rpt_config;
             else if constexpr ( std::is_same_v<T, Action::Actions> )
