@@ -63,6 +63,9 @@ namespace Opm {
     enum class InputErrorAction;
     class ParseContext;
     class Python;
+    namespace ReservoirCoupling {
+        class CouplingInfo;
+    }
     class Runspec;
     class RPTConfig;
     class ScheduleGrid;
