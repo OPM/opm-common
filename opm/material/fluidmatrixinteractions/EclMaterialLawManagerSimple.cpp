@@ -263,7 +263,8 @@ connectionMaterialLawParams(unsigned satRegionIdx, unsigned elemIdx) const
         break;
 
     case EclMultiplexerApproach::Default:
-        throw std::runtime_error("three-phase not supported");
+        //TODO should I instead be implementing this one?
+        // throw std::runtime_error("three-phase not supported");
         break;
 
     case EclMultiplexerApproach::TwoPhase:
