@@ -34,10 +34,18 @@
   #include <config.h>
 
   // true if using nvcc/hipcc gpu compiler
-  #define OPM_IS_COMPILING_WITH_GPU_COMPILER defined(__NVCC__) || defined(__HIPCC__)
+  #if defined(__NVCC__) || defined(__HIPCC__)
+  #define OPM_IS_COMPILING_WITH_GPU_COMPILER 1
+  #else
+  #define OPM_IS_COMPILING_WITH_GPU_COMPILER 0
+  #endif
 
   // true inside device version of functions marked __device__
-  #define OPM_IS_INSIDE_DEVICE_FUNCTION (defined(__CUDA_ARCH__) || (defined(__HIP_DEVICE_COMPILE__) && __HIP_DEVICE_COMPILE__ > 0))
+  #if defined(__CUDA_ARCH__) || (defined(__HIP_DEVICE_COMPILE__) && __HIP_DEVICE_COMPILE__ > 0)
+  #define OPM_IS_INSIDE_DEVICE_FUNCTION 1
+  #else
+  #define OPM_IS_INSIDE_DEVICE_FUNCTION 0
+  #endif
 
   #if HAVE_CUDA // if we will compile with GPU support
 
