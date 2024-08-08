@@ -679,11 +679,10 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                 // Retrieve or create the set of future connections for the well
                 auto& currentSet = this->possibleFutureConnections[wellName];
                 for (int k = K1; k <= K2; k++){
+                    // Adds this cell to the "active cells" of the schedule grid by calling grid.get_cell(I, J, k) 
                     auto cell = grid.get_cell(I, J, k);
-                    (void) cell;
-                    //Only interested in activating the cells.
-                    std::array<int,3> ijk{I,J,k};
-                    currentSet.insert(ijk);
+                    // Insert the global id of the cell into the possible future connections of the well
+                    currentSet.insert(cell.global_index);
                 }
             }
             return;
@@ -1065,7 +1064,7 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
         return this->getWell(well_name, this->snapshots.size() - 1);
     }
 
-    const std::unordered_map<std::string, std::set<std::array<int,3>>>& Schedule::getPossibleFutureConnections() const {
+    const std::unordered_map<std::string, std::set<int>>& Schedule::getPossibleFutureConnections() const {
         return this->possibleFutureConnections;
     }
 
