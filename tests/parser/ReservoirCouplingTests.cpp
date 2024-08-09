@@ -61,21 +61,15 @@ void addStringLogger(std::ostringstream& stream_buffer) {
 }
 
 void assertRaisesInputErrorException(const std::string& schedule_string, bool slave_mode, const std::string& exception_string) {
-    bool exception_thrown = false;
+    BOOST_CHECK_THROW(make_schedule(schedule_string, slave_mode), Opm::OpmInputError);
     try {
+        // Now that we know that it will throw the specific exception Opm::OpmInputError,
+        //  we can check that the exception message is correct
         make_schedule(schedule_string, slave_mode);
     }
     catch (const Opm::OpmInputError& e) {
         BOOST_CHECK_EQUAL(std::string(e.what()), exception_string);
-        exception_thrown = true;
     }
-    catch (const std::exception& e) {
-        BOOST_FAIL("Expected Opm::OpmInputError but caught std::exception");
-    }
-    catch (...) {
-        BOOST_FAIL("Expected Opm::OpmInputError but caught unknown exception");
-    }
-    BOOST_CHECK_MESSAGE(exception_thrown, "Expected Opm::OpmInputError not thrown");
 }
 
 void checkLastLineStringBuffer(

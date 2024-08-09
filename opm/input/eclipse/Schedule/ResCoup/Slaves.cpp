@@ -52,7 +52,7 @@ bool Slave::operator==(const Slave& rhs) const {
 
 void handleSLAVES(HandlerContext& handlerContext)
 {
-    auto schedule_state = handlerContext.state();
+    const auto& schedule_state = handlerContext.state();
     auto rescoup = schedule_state.rescoup();
     const auto& keyword = handlerContext.keyword;
     bool slave_mode = handlerContext.static_schedule().slave_mode;

@@ -69,7 +69,7 @@ void checkValidGroupName(const std::string& name, HandlerContext& handlerContext
 
 void checkValidSlaveName(const std::string& name, HandlerContext& handlerContext)
 {
-    auto rescoup = handlerContext.state().rescoup();
+    const auto& rescoup = handlerContext.state().rescoup();
     if (!rescoup.hasSlave(name)) {
         std::string msg = fmt::format("Slave reservoir '{}': Not defined. Slave reservoirs should be defined in advance by using SLAVES before referenced in GRUPMAST.", name);
         throw OpmInputError(msg, handlerContext.keyword.location());
@@ -78,7 +78,7 @@ void checkValidSlaveName(const std::string& name, HandlerContext& handlerContext
 
 void handleGRUPMAST(HandlerContext& handlerContext)
 {
-    auto schedule_state = handlerContext.state();
+    const auto& schedule_state = handlerContext.state();
     auto rescoup = schedule_state.rescoup();
     const auto& keyword = handlerContext.keyword;
     bool slave_mode = handlerContext.static_schedule().slave_mode;
