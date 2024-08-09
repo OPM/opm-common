@@ -76,12 +76,12 @@ std::ostream& operator<<(std::ostream& os, const GrupSlav::FilterFlag& flag) {
 
 void checkValidSlaveGroupName(const std::string& name, HandlerContext& handlerContext)
 {
-    auto rescoup = handlerContext.state().rescoup();
+    const auto& rescoup = handlerContext.state().rescoup();
     if (rescoup.hasGrupSlav(name)) {
         std::string msg = fmt::format("GRUPSLAV group {} already defined. Redefining", name);
         OpmLog::warning(OpmInputError::format(msg, handlerContext.keyword.location()));
     }
-    auto groups = handlerContext.state().groups;
+    const auto& groups = handlerContext.state().groups;
     if (!groups.has(name)) {
         std::string msg = fmt::format("Group '{}': Not defined. Slave groups should be defined in advance by using GRUPTREE or WELSPECS before referenced in GRUPSLAV.", name);
         throw OpmInputError(msg, handlerContext.keyword.location());
@@ -100,7 +100,7 @@ ReservoirCoupling::GrupSlav::FilterFlag getFilterFlag(const DeckItem& keyword, H
 
 void handleGRUPSLAV(HandlerContext& handlerContext)
 {
-    auto schedule_state = handlerContext.state();
+    const auto& schedule_state = handlerContext.state();
     auto rescoup = schedule_state.rescoup();
     const auto& keyword = handlerContext.keyword;
     bool slave_mode = handlerContext.static_schedule().slave_mode;
