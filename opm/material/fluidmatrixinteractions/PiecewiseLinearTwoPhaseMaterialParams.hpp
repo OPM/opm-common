@@ -245,7 +245,7 @@ private:
 };
 } // namespace Opm
 
-namespace Opm::cuistl{
+namespace Opm::gpuistl{
 
 /// @brief this function is intented to make a GPU friendly view of the PiecewiseLinearTwoPhaseMaterialParams
 /// @tparam TraitsT the same traits as in PiecewiseLinearTwoPhaseMaterialParams
