@@ -27,7 +27,9 @@
     from both GPUs and CPUs.
 */
 
-// HAVE_CUDA and USE_HIP are found in config.h
+/// Decorators for GPU functions
+///
+/// @note This file requires that config.h has already been included
 #ifndef OPM_GPUDECORATORS_HPP
   #define OPM_GPUDECORATORS_HPP
 
