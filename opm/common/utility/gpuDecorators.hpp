@@ -31,7 +31,7 @@
 #ifndef OPM_GPUDECORATORS_HPP
   #define OPM_GPUDECORATORS_HPP
 
-  #include <config.h>
+  //TODO Should probably include config.h if config.h becomes installable
 
   // true if using nvcc/hipcc gpu compiler
   #if defined(__NVCC__) || defined(__HIPCC__)
