@@ -51,7 +51,7 @@ bool MasterGroup::operator==(const MasterGroup& rhs) const {
 
 void checkValidGroupName(const std::string& name, HandlerContext& handlerContext)
 {
-    auto groups = handlerContext.state().groups;
+    const auto& groups = handlerContext.state().groups;
     if (!groups.has(name)) {
         std::string msg = fmt::format("Group '{}': Not defined. Master groups should be defined in advance by using GRUPTREE before referenced in GRUPMAST.", name);
         throw OpmInputError(msg, handlerContext.keyword.location());
