@@ -29,12 +29,13 @@
 #endif
 
 #include <ostream>
+#include <opm/common/utility/gpuDecorators.hpp>
 
 namespace Opm {
 namespace DenseAd {
 
 template <class ValueT, int numDerivs, unsigned staticSize>
-void printEvaluation(std::ostream& os,
+OPM_HOST_DEVICE void printEvaluation(std::ostream& os,
                      const Evaluation<ValueT,numDerivs,staticSize>& eval,
                      bool withDer)
 {

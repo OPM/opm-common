@@ -36,6 +36,7 @@
 #include <algorithm>
 #include <type_traits>
 #include <stdexcept>
+#include <opm/common/utility/gpuDecorators.hpp>
 
 namespace Opm {
 /*
@@ -80,7 +81,7 @@ public:
      * For this toolbox, there are no derivatives so this method is the identity
      * function.
      */
-    static Scalar value(Scalar value)
+    OPM_HOST_DEVICE static Scalar value(Scalar value)
     { return value; }
 
     /*!
@@ -89,7 +90,7 @@ public:
      * Since this toolbox's value objects are primitive scalars, this method just passes
      * through the argument it was given.
      */
-    static Scalar scalarValue(Scalar value)
+    OPM_HOST_DEVICE static Scalar scalarValue(Scalar value)
     { return value; }
 
     /*!
@@ -98,7 +99,7 @@ public:
      * This basically boils down to creating an uninitialized object of sufficient size.
      * This is method only non-trivial for dynamically-sized Evaluation objects.
      */
-    static Scalar createBlank(Scalar /*value*/)
+    OPM_HOST_DEVICE static Scalar createBlank(Scalar /*value*/)
     { return Scalar(); }
 
     /*!
@@ -108,7 +109,7 @@ public:
      * function. In general, this returns an evaluation object for which all derivatives
      * are zero.
      */
-    static Scalar createConstant(Scalar value)
+    OPM_HOST_DEVICE static Scalar createConstant(Scalar value)
     { return value; }
 
     /*!
@@ -119,7 +120,7 @@ public:
      * function. In general, this returns an evaluation object for which all derivatives
      * are zero.
      */
-    static Scalar createConstant(unsigned numDerivatives, Scalar value)
+    OPM_HOST_DEVICE static Scalar createConstant(unsigned numDerivatives, Scalar value)
     {
         if (numDerivatives != 0)
             throw std::logic_error("Plain floating point objects cannot represent any derivatives");
@@ -134,7 +135,7 @@ public:
      * function. In general, this returns an evaluation object for which all derivatives
      * are zero.
      */
-    static Scalar createConstant(Scalar /*x*/, Scalar value)
+    OPM_HOST_DEVICE static Scalar createConstant(Scalar /*x*/, Scalar value)
     { return value; }
 
     /*!
@@ -144,7 +145,7 @@ public:
      * regard to x. For scalars (which do not consider derivatives), this method does
      * nothing.
      */
-    static Scalar createVariable(Scalar /*value*/, unsigned /*varIdx*/)
+    OPM_HOST_DEVICE static Scalar createVariable(Scalar /*value*/, unsigned /*varIdx*/)
     { throw std::logic_error("Plain floating point objects cannot represent variables"); }
 
     /*!
@@ -155,7 +156,7 @@ public:
      * regard to x. For scalars (which do not consider derivatives), this method does
      * nothing.
      */
-    static Scalar createVariable(Scalar /*x*/, Scalar /*value*/, unsigned /*varIdx*/)
+    OPM_HOST_DEVICE static Scalar createVariable(Scalar /*x*/, Scalar /*value*/, unsigned /*varIdx*/)
     { throw std::logic_error("Plain floating point objects cannot represent variables"); }
 
     /*!
@@ -170,7 +171,7 @@ public:
      * in scalar computations.
      */
     template <class LhsEval>
-    static LhsEval decay(Scalar value)
+    OPM_HOST_DEVICE static LhsEval decay(Scalar value)
     {
         static_assert(std::is_floating_point<LhsEval>::value,
                       "The left-hand side must be a primitive floating point type!");
@@ -181,7 +182,7 @@ public:
     /*!
      * \brief Returns true if two values are identical up to a specified tolerance
      */
-    static bool isSame(Scalar a, Scalar b, Scalar tolerance)
+    OPM_HOST_DEVICE static bool isSame(Scalar a, Scalar b, Scalar tolerance)
     {
         Scalar valueDiff = a - b;
         Scalar denom = std::max<Scalar>(1.0, std::abs(a + b));
@@ -194,87 +195,87 @@ public:
     ////////////
 
     //! The maximum of two arguments
-    static Scalar max(Scalar arg1, Scalar arg2)
+    OPM_HOST_DEVICE static Scalar max(Scalar arg1, Scalar arg2)
     { return std::max(arg1, arg2); }
 
     //! The minimum of two arguments
-    static Scalar min(Scalar arg1, Scalar arg2)
+    OPM_HOST_DEVICE static Scalar min(Scalar arg1, Scalar arg2)
     { return std::min(arg1, arg2); }
 
     //! The absolute value
-    static Scalar abs(Scalar arg)
+    OPM_HOST_DEVICE static Scalar abs(Scalar arg)
     { return std::abs(arg); }
 
     //! The tangens of a value
-    static Scalar tan(Scalar arg)
+    OPM_HOST_DEVICE static Scalar tan(Scalar arg)
     { return std::tan(arg); }
 
     //! The arcus tangens of a value
-    static Scalar atan(Scalar arg)
+    OPM_HOST_DEVICE static Scalar atan(Scalar arg)
     { return std::atan(arg); }
 
     //! The arcus tangens of a value
-    static Scalar atan2(Scalar arg1, Scalar arg2)
+    OPM_HOST_DEVICE static Scalar atan2(Scalar arg1, Scalar arg2)
     { return std::atan2(arg1, arg2); }
 
     //! The sine of a value
-    static Scalar sin(Scalar arg)
+    OPM_HOST_DEVICE static Scalar sin(Scalar arg)
     { return std::sin(arg); }
 
     //! The arcus sine of a value
-    static Scalar asin(Scalar arg)
+    OPM_HOST_DEVICE static Scalar asin(Scalar arg)
     { return std::asin(arg); }
 
     //! The sine hyperbolicus of a value
-    static Scalar sinh(Scalar arg)
+    OPM_HOST_DEVICE static Scalar sinh(Scalar arg)
     { return std::sinh(arg); }
 
     //! The arcus sine hyperbolicus of a value
-    static Scalar asinh(Scalar arg)
+    OPM_HOST_DEVICE static Scalar asinh(Scalar arg)
     { return std::asinh(arg); }
 
     //! The cosine of a value
-    static Scalar cos(Scalar arg)
+    OPM_HOST_DEVICE static Scalar cos(Scalar arg)
     { return std::cos(arg); }
 
     //! The arcus cosine of a value
-    static Scalar acos(Scalar arg)
+    OPM_HOST_DEVICE static Scalar acos(Scalar arg)
     { return std::acos(arg); }
 
     //! The cosine hyperbolicus of a value
-    static Scalar cosh(Scalar arg)
+    OPM_HOST_DEVICE static Scalar cosh(Scalar arg)
     { return std::cosh(arg); }
 
     //! The arcus cosine hyperbolicus of a value
-    static Scalar acosh(Scalar arg)
+    OPM_HOST_DEVICE static Scalar acosh(Scalar arg)
     { return std::acosh(arg); }
 
     //! The square root of a value
-    static Scalar sqrt(Scalar arg)
+    OPM_HOST_DEVICE static Scalar sqrt(Scalar arg)
     { return std::sqrt(arg); }
 
     //! The natural exponentiation of a value
-    static Scalar exp(Scalar arg)
+    OPM_HOST_DEVICE static Scalar exp(Scalar arg)
     { return std::exp(arg); }
 
     //! The 10 logarithm of a value
-    static Scalar log10(Scalar arg)
+    OPM_HOST_DEVICE static Scalar log10(Scalar arg)
     { return std::log10(arg); }
 
     //! The natural logarithm of a value
-    static Scalar log(Scalar arg)
+    OPM_HOST_DEVICE static Scalar log(Scalar arg)
     { return std::log(arg); }
 
     //! Exponentiation to an arbitrary base
-    static Scalar pow(Scalar base, Scalar exp)
+    OPM_HOST_DEVICE static Scalar pow(Scalar base, Scalar exp)
     { return std::pow(base, exp); }
 
     //! Return true iff the argument's value and all its derivatives are finite values
-    static bool isfinite(Scalar arg)
+    OPM_HOST_DEVICE static bool isfinite(Scalar arg)
     { return std::isfinite(arg); }
 
     //! Return true iff the argument's value or any of its derivatives are NaN values
-    static bool isnan(Scalar arg)
+    OPM_HOST_DEVICE static bool isnan(Scalar arg)
     { return std::isnan(arg); }
 };
 
@@ -294,134 +295,134 @@ struct ReturnEval_
 
 // these are convenience functions for not having to type MathToolbox<Scalar>::foo()
 template <class Evaluation>
-Evaluation blank(const Evaluation& x)
+OPM_HOST_DEVICE Evaluation blank(const Evaluation& x)
 { return MathToolbox<Evaluation>::createBlank(x); }
 
 template <class Evaluation, class Scalar>
-Evaluation constant(const Scalar& value)
+OPM_HOST_DEVICE Evaluation constant(const Scalar& value)
 { return MathToolbox<Evaluation>::createConstant(value); }
 
 template <class Evaluation, class Scalar>
-Evaluation constant(unsigned numDeriv, const Scalar& value)
+OPM_HOST_DEVICE Evaluation constant(unsigned numDeriv, const Scalar& value)
 { return MathToolbox<Evaluation>::createConstant(numDeriv, value); }
 
 template <class Evaluation, class Scalar>
-Evaluation constant(const Evaluation& x, const Scalar& value)
+OPM_HOST_DEVICE Evaluation constant(const Evaluation& x, const Scalar& value)
 { return MathToolbox<Evaluation>::createConstant(x, value); }
 
 template <class Evaluation, class Scalar>
-Evaluation variable(unsigned numDeriv, const Scalar& value, unsigned idx)
+OPM_HOST_DEVICE Evaluation variable(unsigned numDeriv, const Scalar& value, unsigned idx)
 { return MathToolbox<Evaluation>::createVariable(numDeriv, value, idx); }
 
 template <class Evaluation, class Scalar>
-Evaluation variable(const Evaluation& x, const Scalar& value, unsigned idx)
+OPM_HOST_DEVICE Evaluation variable(const Evaluation& x, const Scalar& value, unsigned idx)
 { return MathToolbox<Evaluation>::createVariable(x, value, idx); }
 
 template <class Evaluation, class Scalar>
-Evaluation variable(const Scalar& value, unsigned idx)
+OPM_HOST_DEVICE Evaluation variable(const Scalar& value, unsigned idx)
 { return MathToolbox<Evaluation>::createVariable(value, idx); }
 
 template <class ResultEval, class Evaluation>
-auto decay(const Evaluation& value)
+OPM_HOST_DEVICE auto decay(const Evaluation& value)
     -> decltype(MathToolbox<Evaluation>::template decay<ResultEval>(value))
 { return MathToolbox<Evaluation>::template decay<ResultEval>(value); }
 
 template <class Evaluation>
-auto getValue(const Evaluation& val)
+OPM_HOST_DEVICE auto getValue(const Evaluation& val)
     -> decltype(MathToolbox<Evaluation>::value(val))
 { return MathToolbox<Evaluation>::value(val); }
 
 template <class Evaluation>
-auto scalarValue(const Evaluation& val)
+OPM_HOST_DEVICE auto scalarValue(const Evaluation& val)
     -> decltype(MathToolbox<Evaluation>::scalarValue(val))
 { return MathToolbox<Evaluation>::scalarValue(val); }
 
 template <class Evaluation1, class Evaluation2>
 typename ReturnEval_<Evaluation1, Evaluation2>::type
-max(const Evaluation1& arg1, const Evaluation2& arg2)
+OPM_HOST_DEVICE max(const Evaluation1& arg1, const Evaluation2& arg2)
 { return MathToolbox<typename ReturnEval_<Evaluation1, Evaluation2>::type>::max(arg1, arg2); }
 
 template <class Evaluation1, class Evaluation2>
 typename ReturnEval_<Evaluation1, Evaluation2>::type
-min(const Evaluation1& arg1, const Evaluation2& arg2)
+OPM_HOST_DEVICE min(const Evaluation1& arg1, const Evaluation2& arg2)
 { return MathToolbox<typename ReturnEval_<Evaluation1, Evaluation2>::type>::min(arg1, arg2); }
 
 template <class Evaluation>
-Evaluation abs(const Evaluation& value)
+OPM_HOST_DEVICE Evaluation abs(const Evaluation& value)
 { return MathToolbox<Evaluation>::abs(value); }
 
 template <class Evaluation>
-Evaluation tan(const Evaluation& value)
+OPM_HOST_DEVICE Evaluation tan(const Evaluation& value)
 { return MathToolbox<Evaluation>::tan(value); }
 
 template <class Evaluation>
-Evaluation atan(const Evaluation& value)
+OPM_HOST_DEVICE Evaluation atan(const Evaluation& value)
 { return MathToolbox<Evaluation>::atan(value); }
 
 template <class Evaluation1, class Evaluation2>
 typename ReturnEval_<Evaluation1, Evaluation2>::type
-atan2(const Evaluation1& value1, const Evaluation2& value2)
+OPM_HOST_DEVICE atan2(const Evaluation1& value1, const Evaluation2& value2)
 { return MathToolbox<typename ReturnEval_<Evaluation1, Evaluation2>::type>::atan2(value1, value2); }
 
 template <class Evaluation>
-Evaluation sin(const Evaluation& value)
+OPM_HOST_DEVICE Evaluation sin(const Evaluation& value)
 { return MathToolbox<Evaluation>::sin(value); }
 
 template <class Evaluation>
-Evaluation asin(const Evaluation& value)
+OPM_HOST_DEVICE Evaluation asin(const Evaluation& value)
 { return MathToolbox<Evaluation>::asin(value); }
 
 template <class Evaluation>
-Evaluation sinh(const Evaluation& value)
+OPM_HOST_DEVICE Evaluation sinh(const Evaluation& value)
 { return MathToolbox<Evaluation>::sinh(value); }
 
 template <class Evaluation>
-Evaluation asinh(const Evaluation& value)
+OPM_HOST_DEVICE Evaluation asinh(const Evaluation& value)
 { return MathToolbox<Evaluation>::asinh(value); }
 
 template <class Evaluation>
-Evaluation cos(const Evaluation& value)
+OPM_HOST_DEVICE Evaluation cos(const Evaluation& value)
 { return MathToolbox<Evaluation>::cos(value); }
 
 template <class Evaluation>
-Evaluation acos(const Evaluation& value)
+OPM_HOST_DEVICE Evaluation acos(const Evaluation& value)
 { return MathToolbox<Evaluation>::acos(value); }
 
 template <class Evaluation>
-Evaluation cosh(const Evaluation& value)
+OPM_HOST_DEVICE Evaluation cosh(const Evaluation& value)
 { return MathToolbox<Evaluation>::cosh(value); }
 
 template <class Evaluation>
-Evaluation acosh(const Evaluation& value)
+OPM_HOST_DEVICE Evaluation acosh(const Evaluation& value)
 { return MathToolbox<Evaluation>::acosh(value); }
 
 template <class Evaluation>
-Evaluation sqrt(const Evaluation& value)
+OPM_HOST_DEVICE Evaluation sqrt(const Evaluation& value)
 { return MathToolbox<Evaluation>::sqrt(value); }
 
 template <class Evaluation>
-Evaluation exp(const Evaluation& value)
+OPM_HOST_DEVICE Evaluation exp(const Evaluation& value)
 { return MathToolbox<Evaluation>::exp(value); }
 
 template <class Evaluation>
-Evaluation log(const Evaluation& value)
+OPM_HOST_DEVICE Evaluation log(const Evaluation& value)
 { return MathToolbox<Evaluation>::log(value); }
 
 template <class Evaluation>
-Evaluation log10(const Evaluation& value)
+OPM_HOST_DEVICE Evaluation log10(const Evaluation& value)
 { return MathToolbox<Evaluation>::log10(value); }
 
 template <class Evaluation1, class Evaluation2>
 typename ReturnEval_<Evaluation1, Evaluation2>::type
-pow(const Evaluation1& base, const Evaluation2& exp)
+OPM_HOST_DEVICE pow(const Evaluation1& base, const Evaluation2& exp)
 { return MathToolbox<typename ReturnEval_<Evaluation1, Evaluation2>::type>::pow(base, exp); }
 
 template <class Evaluation>
-bool isfinite(const Evaluation& value)
+OPM_HOST_DEVICE bool isfinite(const Evaluation& value)
 { return MathToolbox<Evaluation>::isfinite(value); }
 
 template <class Evaluation>
-bool isnan(const Evaluation& value)
+OPM_HOST_DEVICE bool isnan(const Evaluation& value)
 { return MathToolbox<Evaluation>::isnan(value); }
 
 } // namespace Opm

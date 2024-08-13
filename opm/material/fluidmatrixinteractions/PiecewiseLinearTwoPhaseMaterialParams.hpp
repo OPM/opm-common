@@ -31,12 +31,15 @@
 #include <cassert>
 #include <vector>
 #include <stdexcept>
+#include <type_traits>
 
 #include <opm/common/ErrorMacros.hpp>
 #include <opm/material/common/EnsureFinalized.hpp>
+#include <vector>
 
-namespace Opm
-{
+#include <opm/common/utility/gpuDecorators.hpp>
+
+namespace Opm {
 /*!
  * \ingroup FluidMatrixInteractions
  *
@@ -96,7 +99,7 @@ public:
     /*!
      * \brief Return the wetting-phase saturation values of all sampling points.
      */
-    const ValueVector& SwKrwSamples() const
+    OPM_HOST_DEVICE const ValueVector& SwKrwSamples() const
     {
         EnsureFinalized::check();
         return SwKrwSamples_;
@@ -105,7 +108,7 @@ public:
     /*!
      * \brief Return the wetting-phase saturation values of all sampling points.
      */
-    const ValueVector& SwKrnSamples() const
+    OPM_HOST_DEVICE const ValueVector& SwKrnSamples() const
     {
         EnsureFinalized::check();
         return SwKrnSamples_;
@@ -114,7 +117,7 @@ public:
     /*!
      * \brief Return the wetting-phase saturation values of all sampling points.
      */
-    const ValueVector& SwPcwnSamples() const
+    OPM_HOST_DEVICE const ValueVector& SwPcwnSamples() const
     {
         EnsureFinalized::check();
         return SwPcwnSamples_;
@@ -125,7 +128,7 @@ public:
      *
      * This curve is assumed to depend on the wetting phase saturation
      */
-    const ValueVector& pcwnSamples() const
+    OPM_HOST_DEVICE const ValueVector& pcwnSamples() const
     {
         EnsureFinalized::check();
         return pcwnSamples_;
@@ -155,7 +158,7 @@ public:
      *
      * This curve is assumed to depend on the wetting phase saturation
      */
-    const ValueVector& krwSamples() const
+    OPM_HOST_DEVICE const ValueVector& krwSamples() const
     {
         EnsureFinalized::check();
         return krwSamples_;
@@ -186,7 +189,7 @@ public:
      *
      * This curve is assumed to depend on the wetting phase saturation
      */
-    const ValueVector& krnSamples() const
+    OPM_HOST_DEVICE const ValueVector& krnSamples() const
     {
         EnsureFinalized::check();
         return krnSamples_;
@@ -212,7 +215,7 @@ public:
     }
 
 private:
-    void swapOrderIfPossibleThrowOtherwise_(ValueVector& swValues, ValueVector& values) const
+    OPM_HOST_DEVICE void swapOrderIfPossibleThrowOtherwise_(ValueVector& swValues, ValueVector& values) const
     {
         // TODO: comparing saturation values to the actual values we sample from looks strange
         // TODO: yet changing to swValues.back() breaks tests
@@ -241,5 +244,37 @@ private:
     ValueVector krnSamples_;
 };
 } // namespace Opm
+
+namespace Opm::gpuistl{
+
+/// @brief this function is intented to make a GPU friendly view of the PiecewiseLinearTwoPhaseMaterialParams
+/// @tparam TraitsT the same traits as in PiecewiseLinearTwoPhaseMaterialParams
+/// @tparam ContainerType typically const gpuBuffer<scalarType>
+/// @tparam ViewType  typically gpuView<const scalarType>
+/// @param params the parameters object instansiated with gpuBuffers or similar
+/// @return the GPU view of the GPU PiecewiseLinearTwoPhaseMaterialParams object
+template <class TraitsT, class ContainerType, class ViewType>
+PiecewiseLinearTwoPhaseMaterialParams<TraitsT, ViewType> make_view(const PiecewiseLinearTwoPhaseMaterialParams<TraitsT, ContainerType>& params) {
+
+    using containedType = typename ContainerType::value_type;
+    using viewedTypeNoConst = typename std::remove_const_t<typename ViewType::value_type>;
+
+    static_assert(std::is_same_v<containedType, viewedTypeNoConst>);
+
+    ViewType SwPcwnSamples = make_view<viewedTypeNoConst>(params.SwPcwnSamples());
+    ViewType pcwnSamples = make_view<viewedTypeNoConst>(params.pcwnSamples());
+    ViewType SwKrwSamples = make_view<viewedTypeNoConst>(params.SwKrwSamples());
+    ViewType krwSamples = make_view<viewedTypeNoConst>(params.krwSamples());
+    ViewType SwKrnSamples = make_view<viewedTypeNoConst>(params.SwKrnSamples());
+    ViewType krnSamples = make_view<viewedTypeNoConst>(params.krnSamples());
+
+    return PiecewiseLinearTwoPhaseMaterialParams<TraitsT, ViewType> (SwPcwnSamples,
+                                                                        pcwnSamples,
+                                                                        SwKrwSamples,
+                                                                        krwSamples,
+                                                                        SwKrnSamples,
+                                                                        krnSamples);
+}
+}
 
 #endif
