@@ -1,3 +1,21 @@
+#  Copyright (c) 2024 Birane Kane
+#  Copyright (c) 2024 Tor Harald Sandve
+
+#   This file is part of the Open Porous Media project (OPM).
+
+#   OPM is free software: you can redistribute it and/or modify
+#   it under the terms of the GNU General Public License as published by
+#   the Free Software Foundation, either version 3 of the License, or
+#   (at your option) any later version.
+
+#   OPM is distributed in the hope that it will be useful,
+#   but WITHOUT ANY WARRANTY; without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#   GNU General Public License for more details.
+
+#   You should have received a copy of the GNU General Public License
+#   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
+
 import numpy as np
 import struct
 
@@ -6,11 +24,6 @@ LAYER_SCALING = 2
 LAYER_UNSCALING = 3
 LAYER_DENSE = 4
 LAYER_ACTIVATION = 5
-LAYER_MAXPOOLING2D = 6
-LAYER_LSTM = 7
-LAYER_EMBEDDING = 8
-LAYER_ELU = 9
-LAYER_CONV2D = 10
 
 ACTIVATION_LINEAR = 1
 ACTIVATION_RELU = 2
@@ -106,12 +119,10 @@ def export_model(model, filename):
                 write_unscaling(f)
                 feat_inf = layer.get_weights()[0]
                 feat_sup = layer.get_weights()[1]
-                # feat = layer.get_weights()[2][0]
                 f.write(struct.pack('f', layer.data_min))
                 f.write(struct.pack('f', layer.data_max))
                 f.write(struct.pack('f', feat_inf))
                 f.write(struct.pack('f', feat_sup))
-
 
             elif layer_type == 'Dense':
                 weights = layer.get_weights()[0]
@@ -131,179 +142,14 @@ def export_model(model, filename):
 
                 write_activation(activation)
 
-            elif layer_type == 'Conv2D':
-                assert layer.padding == 'valid', "Only border_mode=valid is implemented"
-
-
-                # shape: (outputs, rows, cols, depth)
-                weights = layer.get_weights()[0].transpose(3, 0, 1, 2)
-                # biases = layer.get_weights()[1]
-                # activation = layer.get_config()['activation']
-
-                # weights = layer.get_weights()[0]
-                biases = layer.get_weights()[1]
-                activation = layer.get_config()['activation']
-
-                # weights = weights.flatten()
-                # biases = biases.flatten()
-                # write_tensor(f, weights, 4)
-                # write_tensor(f, biases)
-
-                # #
-                # weights = layer.get_weights()[0]
-                # biases = layer.get_weights()[1]
-                # activation = layer.get_config()['activation']
-                #
-                # The kernel is accessed in reverse order. To simplify the C side we'll
-                # flip the weight matrix for each kernel.
-                # weights = weights[:,:,::-1,::-1]
-
-                f.write(struct.pack('I', LAYER_CONV2D))
-                f.write(struct.pack('I', weights.shape[0]))
-                f.write(struct.pack('I', weights.shape[1]))
-                f.write(struct.pack('I', weights.shape[2]))
-                f.write(struct.pack('I', weights.shape[3]))
-                f.write(struct.pack('I', biases.shape[0]))
-
-                weights = weights.flatten()
-                biases = biases.flatten()
-
-                write_floats(f, weights)
-                write_floats(f, biases)
-
-                write_activation(activation)
-
             elif layer_type == 'Flatten':
                 f.write(struct.pack('I', LAYER_FLATTEN))
-
-            elif layer_type == 'ELU':
-                f.write(struct.pack('I', LAYER_ELU))
-                f.write(struct.pack('f', layer.alpha))
 
             elif layer_type == 'Activation':
                 activation = layer.get_config()['activation']
 
                 f.write(struct.pack('I', LAYER_ACTIVATION))
                 write_activation(activation)
-
-            elif layer_type == 'MaxPooling2D':
-                assert layer.padding == 'valid', "Only border_mode=valid is implemented"
-
-                pool_size = layer.get_config()['pool_size']
-                f.write(struct.pack('I', LAYER_MAXPOOLING2D))
-                f.write(struct.pack('I', pool_size[0]))
-                f.write(struct.pack('I', pool_size[1]))
-
-
-            elif layer_type == 'LSTM':
-
-                inner_activation = layer.get_config()['recurrent_activation']
-                activation = layer.get_config()['activation']
-                return_sequences = int(layer.get_config()['return_sequences'])
-
-                weights = layer.get_weights()
-                units = layer.units
-
-                kernel, rkernel, bias = ([x[i: i+units] for i in range(0, 4*units, units)]
-                                         for x in (weights[0].transpose(),
-                                                   weights[1].transpose(),
-                                                   weights[2]))
-                bias = [x.reshape(1, -1) for x in bias]
-                for tensors in zip(kernel, rkernel, bias):
-                    for tensor in tensors:
-                        write_tensor(f, tensor, 2)
-
-                # export_activation(inner_activation, f)
-                # export_activation(activation, f)
-                # f.write(struct.pack('I', return_sequences))
-
-
-                # inner_activation = layer.get_config()['recurrent_activation']
-                # activation = layer.get_config()['activation']
-                # return_sequences = int(layer.get_config()['return_sequences'])
-                #
-                # weights = layer.get_weights()
-                # W_i = weights[0]
-                # U_i = weights[1]
-                # b_i = weights[2]
-                #
-                # W_c = weights[3]
-                # U_c = weights[4]
-                # b_c = weights[5]
-                #
-                # W_f = weights[6]
-                # U_f = weights[7]
-                # b_f = weights[8]
-                #
-                # W_o = weights[9]
-                # U_o = weights[10]
-                # b_o = weights[11]
-                #
-                # f.write(struct.pack('I', LAYER_LSTM))
-                # f.write(struct.pack('I', W_i.shape[0]))
-                # f.write(struct.pack('I', W_i.shape[1]))
-                # f.write(struct.pack('I', U_i.shape[0]))
-                # f.write(struct.pack('I', U_i.shape[1]))
-                # f.write(struct.pack('I', b_i.shape[0]))
-                #
-                # f.write(struct.pack('I', W_f.shape[0]))
-                # f.write(struct.pack('I', W_f.shape[1]))
-                # f.write(struct.pack('I', U_f.shape[0]))
-                # f.write(struct.pack('I', U_f.shape[1]))
-                # f.write(struct.pack('I', b_f.shape[0]))
-                #
-                # f.write(struct.pack('I', W_c.shape[0]))
-                # f.write(struct.pack('I', W_c.shape[1]))
-                # f.write(struct.pack('I', U_c.shape[0]))
-                # f.write(struct.pack('I', U_c.shape[1]))
-                # f.write(struct.pack('I', b_c.shape[0]))
-                #
-                # f.write(struct.pack('I', W_o.shape[0]))
-                # f.write(struct.pack('I', W_o.shape[1]))
-                # f.write(struct.pack('I', U_o.shape[0]))
-                # f.write(struct.pack('I', U_o.shape[1]))
-                # f.write(struct.pack('I', b_o.shape[0]))
-                #
-                # W_i = W_i.flatten()
-                # U_i = U_i.flatten()
-                # b_i = b_i.flatten()
-                # W_f = W_f.flatten()
-                # U_f = U_f.flatten()
-                # b_f = b_f.flatten()
-                # W_c = W_c.flatten()
-                # U_c = U_c.flatten()
-                # b_c = b_c.flatten()
-                # W_o = W_o.flatten()
-                # U_o = U_o.flatten()
-                # b_o = b_o.flatten()
-                #
-                # write_floats(f, W_i)
-                # write_floats(f, U_i)
-                # write_floats(f, b_i)
-                # write_floats(f, W_f)
-                # write_floats(f, U_f)
-                # write_floats(f, b_f)
-                # write_floats(f, W_c)
-                # write_floats(f, U_c)
-                # write_floats(f, b_c)
-                # write_floats(f, W_o)
-                # write_floats(f, U_o)
-                # write_floats(f, b_o)
-
-                write_activation(inner_activation)
-                write_activation(activation)
-                f.write(struct.pack('I', return_sequences))
-
-            elif layer_type == 'Embedding':
-                weights = layer.get_weights()[0]
-
-                f.write(struct.pack('I', LAYER_EMBEDDING))
-                f.write(struct.pack('I', weights.shape[0]))
-                f.write(struct.pack('I', weights.shape[1]))
-
-                weights = weights.flatten()
-
-                write_floats(f, weights)
 
             else:
                 assert False, "Unsupported layer type: %s" % layer_type

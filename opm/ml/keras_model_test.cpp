@@ -1,25 +1,41 @@
-#include "keras_model.hpp"
+/*
 
+ * Copyright (c) 2016 Robert W. Rose
+ * Copyright (c) 2018 Paul Maevskikh
+ *
+ * MIT License, see LICENSE.OLD file.
+ */ 
+
+/*
+ * Copyright (c) 2024 Birane Kane
+ * Copyright (c) 2024 Tor Harald Sandve
+  This file is part of the Open Porous Media project (OPM).
+
+  OPM is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  OPM is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with OPM.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+#include "keras_model.hpp"
 #include <iostream>
 #include <stdio.h>
-
-#include "ml_tools/include/test_conv_2x2.h"
-#include "ml_tools/include/test_conv_3x3.h"
-#include "ml_tools/include/test_conv_3x3x3.h"
-#include "ml_tools/include/test_conv_hard_sigmoid_2x2.h"
-#include "ml_tools/include/test_conv_sigmoid_2x2.h"
-#include "ml_tools/include/test_conv_softplus_2x2.h"
 #include "ml_tools/include/test_dense_10x1.h"
 #include "ml_tools/include/test_dense_10x10.h"
 #include "ml_tools/include/test_dense_10x10x10.h"
 #include "ml_tools/include/test_dense_1x1.h"
 #include "ml_tools/include/test_dense_2x2.h"
+#include "ml_tools/include/test_relu_10.h"
 #include "ml_tools/include/test_dense_relu_10.h"
 #include "ml_tools/include/test_dense_tanh_10.h"
-#include "ml_tools/include/test_elu_10.h"
-#include "ml_tools/include/test_relu_10.h"
-
-
 #include "ml_tools/include/test_scalingdense_1x1.h"
 
 
@@ -138,7 +154,6 @@ bool tensor_test() {
 
 int main() {
     typedef Opm::DenseAd::Evaluation<double, 1> Evaluation;
-    // typedef float Evaluation;
  
     Evaluation load_time = 0.0;
     Evaluation apply_time = 0.0;
@@ -166,63 +181,22 @@ int main() {
     if (!test_dense_10x10x10<Evaluation>(&load_time, &apply_time)) {
         return 1;
     }
+
+    if (!test_relu_10<Evaluation>(&load_time, &apply_time)) {
+        return 1;
+    }
     
-    // if (!test_conv_2x2<Evaluation>(&load_time, &apply_time)) {
-    //     return 1;
-    // }
-    // //
-    // if (!test_conv_3x3<Evaluation>(&load_time, &apply_time)) {
-    //     return 1;
-    // }
+    if (!test_dense_relu_10<Evaluation>(&load_time, &apply_time)) {
+        return 1;
+    }
     
-    // if (!test_conv_3x3x3<Evaluation>(&load_time, &apply_time)) {
-    //     return 1;
-    // }
-    // //
-    // if (!test_elu_10<Evaluation>(&load_time, &apply_time)) {
-    //     return 1;
-    // }
-    // //
-    // if (!test_relu_10<Evaluation>(&load_time, &apply_time)) {
-    //     return 1;
-    // }
-    
-    // if (!test_dense_relu_10<Evaluation>(&load_time, &apply_time)) {
-    //     return 1;
-    // }
-    //
-    // if (!test_dense_tanh_10<Evaluation>(&load_time, &apply_time)) {
-    //     return 1;
-    // }
-    //
-    // if (!test_conv_softplus_2x2<Evaluation>(&load_time, &apply_time)) {
-    //     return 1;
-    // }
-    //
-    // if (!test_conv_hard_sigmoid_2x2<Evaluation>(&load_time, &apply_time)) {
-    //     return 1;
-    // }
-    //
-    // if (!test_conv_sigmoid_2x2<Evaluation>(&load_time, &apply_time)) {
-    //     return 1;
-    // }
+    if (!test_dense_tanh_10<Evaluation>(&load_time, &apply_time)) {
+        return 1;
+    }
 
     if (!test_scalingdense_1x1<Evaluation>(&load_time, &apply_time)) {
         return 1;
     }
 
-    // // Run benchmark 5 times and report duration.
-    // Evaluation total_load_time = 0.0;
-    // Evaluation total_apply_time = 0.0;
-
-    // for (int i = 0; i < 5; i++) {
-    //     total_load_time += load_time;
-    //     total_apply_time += apply_time;
-    // }
-
-    // printf("Benchmark network loads in %fs\n", total_load_time / 5);
-    // printf("Benchmark network runs in %fs\n", total_apply_time / 5);
-
     return 0;
 }
-// }

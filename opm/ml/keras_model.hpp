@@ -1,3 +1,30 @@
+/*
+
+ * Copyright (c) 2016 Robert W. Rose
+ * Copyright (c) 2018 Paul Maevskikh
+ *
+ * MIT License, see LICENSE.OLD file.
+ */ 
+
+/*
+ * Copyright (c) 2024 Birane Kane
+ * Copyright (c) 2024 Tor Harald Sandve
+  This file is part of the Open Porous Media project (OPM).
+
+  OPM is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  OPM is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with OPM.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 #ifndef KERAS_MODEL_H_
 #define KERAS_MODEL_H_
 
@@ -11,11 +38,6 @@
 #include <opm/material/densead/Math.hpp>
 #include <sstream>
 
-// typedef double Scalar;
-
-//typedef Opm::DenseAd::Evaluation<double, 3> Evaluation;
-//typedef float Evaluation;
-//typedef double Evaluation;
 namespace Opm {
 
 #define KASSERT(x, ...)                                                        \
@@ -27,8 +49,8 @@ namespace Opm {
     }
 
 #define KASSERT_EQ(x, y, eps)                                                  \
-    if (fabs(x.value() - y.value()) > eps) {                                                   \
-        printf("KASSERT: Expected %f, got %f\n", y.value(), x.value());                        \
+    if (fabs(x.value() - y.value()) > eps) {                                   \
+        printf("KASSERT: Expected %f, got %f\n", y.value(), x.value());        \
         return false;                                                          \
     }
 
@@ -207,66 +229,6 @@ class Tensor {
         return tmp;
     }
 
-    // void Print() {
-    //     if (dims_.size() == 1) {
-    //         printf("[ ");
-    //         for (int i = 0; i < dims_[0]; i++) {
-    //             printf("%f ", (*this)(i));
-    //         }
-    //         printf("]\n");
-    //     } else if (dims_.size() == 2) {
-    //         printf("[\n");
-    //         for (int i = 0; i < dims_[0]; i++) {
-    //             printf(" [ ");
-    //             for (int j = 0; j < dims_[1]; j++) {
-    //                 printf("%f ", (*this)(i, j));
-    //             }
-    //             printf("]\n");
-    //         }
-    //         printf("]\n");
-    //     } else if (dims_.size() == 3) {
-    //         printf("[\n");
-    //         for (int i = 0; i < dims_[0]; i++) {
-    //             printf(" [\n");
-    //             for (int j = 0; j < dims_[1]; j++) {
-    //                 printf("  [ ");
-    //                 for (int k = 0; k < dims_[2]; k++) {
-    //                     printf("%f ", (*this)(i, j, k));
-    //                 }
-    //                 printf("  ]\n");
-    //             }
-    //             printf(" ]\n");
-    //         }
-    //         printf("]\n");
-    //     } else if (dims_.size() == 4) {
-    //         printf("[\n");
-    //         for (int i = 0; i < dims_[0]; i++) {
-    //             printf(" [\n");
-    //             for (int j = 0; j < dims_[1]; j++) {
-    //                 printf("  [\n");
-    //                 for (int k = 0; k < dims_[2]; k++) {
-    //                     printf("   [");
-    //                     for (int l = 0; l < dims_[3]; l++) {
-    //                         printf("%f ", (*this)(i, j, k, l));
-    //                     }
-    //                     printf("]\n");
-    //                 }
-    //                 printf("  ]\n");
-    //             }
-    //             printf(" ]\n");
-    //         }
-    //         printf("]\n");
-    //     }
-    // }
-
-    // void PrintShape() {
-    //     printf("(");
-    //     for (unsigned int i = 0; i < dims_.size(); i++) {
-    //         printf("%d ", dims_[i]);
-    //     }
-    //     printf(")\n");
-    // }
-
     std::vector<int> dims_;
     std::vector<Foo> data_;
 };
@@ -325,11 +287,6 @@ class KerasLayerScaling : public KerasLayer<Evaluation> {
     float data_max;
     float feat_inf;
     float feat_sup;
-
-    // float feat;
-    // float feature_range;
-
-    // KerasLayerActivation<Evaluation> activation_;
 };
 
 template<class Evaluation>
@@ -350,8 +307,6 @@ class KerasLayerUnScaling : public KerasLayer<Evaluation> {
     float data_max;
     float feat_inf;
     float feat_sup;
-
-    // KerasLayerActivation<Evaluation> activation_;
 };
 
 
@@ -361,24 +316,6 @@ class KerasLayerDense : public KerasLayer<Evaluation> {
     KerasLayerDense() {}
 
     virtual ~KerasLayerDense() {}
-
-    virtual bool LoadLayer(std::ifstream* file);
-
-    virtual bool Apply(Tensor<Evaluation>* in, Tensor<Evaluation>* out);
-
-  private:
-    Tensor<float> weights_;
-    Tensor<float> biases_;
-
-    KerasLayerActivation<Evaluation> activation_;
-};
-
-template<class Evaluation>
-class KerasLayerConvolution2d: public KerasLayer<Evaluation> {
-  public:
-    KerasLayerConvolution2d() {}
-
-    virtual ~KerasLayerConvolution2d() {}
 
     virtual bool LoadLayer(std::ifstream* file);
 
@@ -405,69 +342,6 @@ class KerasLayerFlatten : public KerasLayer<Evaluation> {
   private:
 };
 
-template<class Evaluation>
-class KerasLayerElu : public KerasLayer<Evaluation> {
-  public:
-    KerasLayerElu() : alpha_(1.0f) {}
-
-    virtual ~KerasLayerElu() {}
-
-    virtual bool LoadLayer(std::ifstream* file);
-
-    virtual bool Apply(Tensor<Evaluation>* in, Tensor<Evaluation>* out);
-
-  private:
-    float alpha_;
-};
-
-template<class Evaluation>
-class KerasLayerMaxPooling2d : public KerasLayer<Evaluation> {
-  public:
-    KerasLayerMaxPooling2d() : pool_size_j_(0), pool_size_k_(0) {}
-
-    virtual ~KerasLayerMaxPooling2d() {}
-
-    virtual bool LoadLayer(std::ifstream* file);
-
-    virtual bool Apply(Tensor<Evaluation>* in, Tensor<Evaluation>* out);
-
-  private:
-    unsigned int pool_size_j_;
-    unsigned int pool_size_k_;
-};
-
-// template<class Evaluation>
-// class KerasLayerLSTM : public KerasLayer<Evaluation> {
-//   public:
-//     KerasLayerLSTM() : return_sequences_(false) {}
-//
-//     virtual ~KerasLayerLSTM() {}
-//
-//     virtual bool LoadLayer(std::ifstream* file);
-//
-//     virtual bool Apply(Tensor<Evaluation>* in, Tensor<Evaluation>* out);
-//
-//   private:
-//     bool Step(Tensor<Evaluation>* x, Tensor<Evaluation>* out, Tensor<Evaluation>* ht_1, Tensor<Evaluation>* ct_1);
-//
-//     Tensor<float> Wi_;
-//     Tensor<float> Ui_;
-//     Tensor<float> bi_;
-//     Tensor<float> Wf_;
-//     Tensor<float> Uf_;
-//     Tensor<float> bf_;
-//     Tensor<float> Wc_;
-//     Tensor<float> Uc_;
-//     Tensor<float> bc_;
-//     Tensor<float> Wo_;
-//     Tensor<float> Uo_;
-//     Tensor<float> bo_;
-//
-//     KerasLayerActivation<Evaluation> innerActivation_;
-//     KerasLayerActivation<Evaluation> activation_;
-//     bool return_sequences_;
-// };
-
 
 template<class Evaluation>
 class KerasLayerEmbedding : public KerasLayer<Evaluation> {
@@ -488,12 +362,7 @@ template<class Evaluation>
 class KerasModel {
   public:
     enum LayerType {
-        // kConvolution2d = 2,
         kFlatten = 1,
-        // kElu = 4,
-        // kMaxPooling2D = 6,
-        // kLSTM = 7,
-        // kEmbedding = 8,
         kScaling = 2,
         kUnScaling = 3,
         kDense = 4,

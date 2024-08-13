@@ -1,4 +1,30 @@
 
+/*
+
+ * Copyright (c) 2016 Robert W. Rose
+ * Copyright (c) 2018 Paul Maevskikh
+ *
+ * MIT License, see LICENSE.OLD file.
+ */ 
+
+/*
+ * Copyright (c) 2024 Birane Kane
+ * Copyright (c) 2024 Tor Harald Sandve
+  This file is part of the Open Porous Media project (OPM).
+
+  OPM is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  OPM is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with OPM.  If not, see <http://www.gnu.org/licenses/>.
+*/
 #include <filesystem>
 #include <iostream>
 namespace fs = std::filesystem;
@@ -13,11 +39,11 @@ bool test_dense_10x10(Evaluation* load_time, Evaluation* apply_time)
     KASSERT(apply_time, "Invalid Evaluation");
 
     Opm::Tensor<Evaluation> in{10};
-    in.data_ = {0.28370148,0.6116727,0.123164214,0.86745644,0.5565164,0.5560578,
-0.56472105,0.34990314,0.8911647,0.41991234};
+    in.data_ = {0.74464816,0.063315846,0.2233216,0.3184675,0.017677268,0.24977225,
+0.5242765,0.27742663,0.009411842,0.27946305};
 
     Opm::Tensor<Evaluation> out{1};
-    out.data_ = {1.1963887};
+    out.data_ = {0.06583358};
 
     KerasTimer load_timer;
     load_timer.Start();

@@ -1,3 +1,22 @@
+#  Copyright (c) 2024 Birane Kane
+#  Copyright (c) 2024 Tor Harald Sandve
+
+#   This file is part of the Open Porous Media project (OPM).
+
+#   OPM is free software: you can redistribute it and/or modify
+#   it under the terms of the GNU General Public License as published by
+#   the Free Software Foundation, either version 3 of the License, or
+#   (at your option) any later version.
+
+#   OPM is distributed in the hope that it will be useful,
+#   but WITHOUT ANY WARRANTY; without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#   GNU General Public License for more details.
+
+#   You should have received a copy of the GNU General Public License
+#   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
+
+
 import numpy as np
 import pprint
 import os
@@ -23,6 +42,33 @@ def c_array(a):
 
 
 TEST_CASE = '''
+/*
+
+ * Copyright (c) 2016 Robert W. Rose
+ * Copyright (c) 2018 Paul Maevskikh
+ *
+ * MIT License, see LICENSE.OLD file.
+ */ 
+
+/*
+ * Copyright (c) 2024 Birane Kane
+ * Copyright (c) 2024 Tor Harald Sandve
+  This file is part of the Open Porous Media project (OPM).
+
+  OPM is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  OPM is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with OPM.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 #include <filesystem>
 #include <iostream>
 namespace fs = std::filesystem;
@@ -115,7 +161,6 @@ model = Sequential()
 model.add(keras.layers.Input([10]))
 # model.add(Dense(1, input_dim=10))
 model.add(MinMaxScalerLayer(feature_range=(0.0, 1.0)))
-
 # model.add(Dense(1,activation='tanh'))
 model.add(Dense(10,activation='tanh'))
 model.add(Dense(10,activation='tanh'))
@@ -123,7 +168,6 @@ model.add(Dense(10,activation='tanh'))
 model.add(Dense(10,activation='tanh'))
 # model.add(Flatten())
 model.add(MinMaxUnScalerLayer(feature_range=(-3.7, -1.0)))
-
 # #
 model.get_layer(model.layers[0].name).adapt(data=data)
 model.get_layer(model.layers[-1].name).adapt(data=data)
@@ -185,46 +229,6 @@ model.add(Dense(10, input_dim=10))
 model.add(Dense(10))
 output_testcase(model, test_x, test_y, 'dense_10x10x10', '1e-6')
 
-# Conv 2x2
-test_x = np.random.rand(10, 2, 2,1).astype('f')
-test_y = np.random.rand(10, 1).astype('f')
-model = Sequential()
-model.add(Conv2D(1,(2, 2), padding='valid', input_shape=(2, 2, 1)))
-model.add(Flatten())
-model.add(Dense(1))
-output_testcase(model, test_x, test_y, 'conv_2x2', '1e-6')
-
-# Conv 3x3
-test_x = np.random.rand(10, 3, 3, 1).astype('f').astype('f')
-test_y = np.random.rand(10, 1).astype('f')
-model = Sequential([
-    Conv2D(1, (3, 3), input_shape=(3, 3, 1)),
-    Flatten(),
-    Dense(1)
-])
-output_testcase(model, test_x, test_y, 'conv_3x3', '1e-6')
-
-# Conv 3x3x3
-test_x = np.random.rand(10, 3, 3, 3).astype('f')
-test_y = np.random.rand(10, 1).astype('f')
-model = Sequential([
-    Conv2D(3, (3, 3), input_shape=(3, 3, 3)),
-    Flatten(),
-    # BatchNormalization(),
-    Dense(1)
-])
-output_testcase(model, test_x, test_y, 'conv_3x3x3', '1e-6')
-
-# Activation ELU
-test_x = np.random.rand(1, 10).astype('f')
-test_y = np.random.rand(1, 1).astype('f')
-model = Sequential([
-    Dense(10, input_dim=10),
-    ELU(alpha=0.5),
-    Dense(1)
-])
-output_testcase(model, test_x, test_y, 'elu_10', '1e-6')
-
 # Activation relu
 test_x = np.random.rand(1, 10).astype('f')
 test_y = np.random.rand(1, 10).astype('f')
@@ -251,42 +255,3 @@ model.add(Dense(10, input_dim=10, activation='tanh'))
 model.add(Dense(10, input_dim=10, activation='tanh'))
 output_testcase(model, test_x, test_y, 'dense_tanh_10', '1e-6')
 
-# Conv softplus
-test_x = np.random.rand(10, 2, 2, 1).astype('f')
-test_y = np.random.rand(10, 1).astype('f')
-model = Sequential([
-    Conv2D(1, (2, 2), input_shape=(2, 2, 1), activation='softplus'),
-    Flatten(),
-    Dense(1)
-])
-output_testcase(model, test_x, test_y, 'conv_softplus_2x2', '1e-6')
-
-# Conv hardsigmoid
-test_x = np.random.rand(10, 2, 2, 1).astype('f')
-test_y = np.random.rand(10, 1).astype('f')
-model = Sequential([
-    Conv2D(1, (2, 2), input_shape=(2, 2, 1), activation='hard_sigmoid'),
-    Flatten(),
-    Dense(1)
-])
-output_testcase(model, test_x, test_y, 'conv_hard_sigmoid_2x2', '1e-6')
-
-# Conv sigmoid
-test_x = np.random.rand(10, 2, 2, 1).astype('f')
-test_y = np.random.rand(10, 1).astype('f')
-model = Sequential([
-    Conv2D(1, (2, 2), input_shape=(2, 2, 1), activation='sigmoid'),
-    Flatten(),
-    Dense(1)
-])
-output_testcase(model, test_x, test_y, 'conv_sigmoid_2x2', '1e-6')
-
-# Maxpooling2D 1x1
-test_x = np.random.rand(10, 10, 10, 1).astype('f')
-test_y = np.random.rand(10, 1).astype('f')
-model = Sequential([
-    MaxPooling2D(pool_size=(1, 1), input_shape=(10, 10, 1)),
-    Flatten(),
-    Dense(1)
-])
-output_testcase(model, test_x, test_y, 'maxpool2d_1x1', '1e-6')
