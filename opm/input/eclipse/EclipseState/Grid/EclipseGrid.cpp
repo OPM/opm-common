@@ -25,6 +25,7 @@
 #include <opm/common/ErrorMacros.hpp>
 #include <opm/common/OpmLog/OpmLog.hpp>
 #include <opm/common/utility/numeric/calculateCellVol.hpp>
+#include <opm/common/utility/numeric/VectorOps.hpp>
 #include <opm/common/utility/String.hpp>
 
 #include <opm/io/eclipse/EclFile.hpp>
@@ -1653,6 +1654,57 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
 
             return getCellDims(globalIndex);
         }
+    }
+
+
+    std::tuple<std::array<double, 3>,std::array<double, 3>,std::array<double, 3>>
+    EclipseGrid::getCellAndBottomCenterNormal(size_t globalIndex) const {
+        // bottom face is spanned by corners 4, ..., 7 and connects cells
+        // with vertical index k and k+1
+        assertGlobalIndex( globalIndex );
+        std::array<double,8> X;
+        std::array<double,8> Y;
+        std::array<double,8> Z;
+        this->getCellCorners(globalIndex, X, Y, Z );
+        std::array<double,3> bottomCenter{{std::accumulate(X.begin() + 4, X.end(), 0.0) / 4.0,
+                                           std::accumulate(Y.begin() + 4, Y.end(), 0.0) / 4.0,
+                                           std::accumulate(Z.begin() + 4, Z.end(), 0.0) / 4.0}};
+
+        // Calculate normal scaled with area via the triangles spanned by the center and two neighboring
+        // corners.
+        std::array<double,3> bottomFaceNormal{};
+        // Reorder counter-clock.wise
+        std::array<std::size_t,4> bottomIndices = {4, 5, 7, 6};
+        std::array<double,3> oldCorner{ *(X.begin() + 6),
+                                        *(Y.begin() + 6),
+                                        *(Z.begin() + 6)};
+
+        for(const auto cornerIndex: bottomIndices)
+        {
+            std::array<double,3> newCorner{ *(X.begin() + cornerIndex), *(Y.begin() + cornerIndex),
+                                            *(Z.begin() + cornerIndex) };
+            std::array<double,3> side1, side2, normalTriangle;
+            std::transform(oldCorner.begin(), oldCorner.end(), bottomCenter.begin(),
+                           side1.begin(), std::minus<double>());
+            std::transform(newCorner.begin(), newCorner.end(), bottomCenter.begin(),
+                           side2.begin(), std::minus<double>());
+
+            cross(side1, side2, normalTriangle);
+            // use std::plus to make normal point outwards (Z-axis points downwards)
+            std::transform(bottomFaceNormal.begin(), bottomFaceNormal.end(),
+                           normalTriangle.begin(), bottomFaceNormal.begin(),
+                           std::plus<double>());
+            oldCorner = newCorner;
+        }
+
+        std::transform(bottomFaceNormal.begin(), bottomFaceNormal.end(),
+                       bottomFaceNormal.begin(), [](const double& a){ return 0.5 * a;});
+        std::array<double,3> cellCenter = { std::accumulate(X.begin(), X.end(), 0.0) / 8.0,
+                                             std::accumulate(Y.begin(), Y.end(), 0.0) / 8.0,
+                                             std::accumulate(Z.begin(), Z.end(), 0.0) / 8.0 };
+            return std::make_tuple(cellCenter,
+                                   bottomCenter,
+                                   bottomFaceNormal);
     }
 
     std::array<double, 3> EclipseGrid::getCellCenter(size_t globalIndex) const {

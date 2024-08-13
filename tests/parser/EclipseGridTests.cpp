@@ -175,6 +175,23 @@ BOOST_AUTO_TEST_CASE(CheckGridIndex) {
     BOOST_CHECK_EQUAL(std::size_t(17 * 19 * 41), grid.getCartesianSize());
 }
 
+BOOST_AUTO_TEST_CASE(CheckGridGetCenterBottomCenterNormal) {
+    Opm::EclipseGrid grid(1, 1, 3, 10, 10, 10, 0);
+    for(std::size_t i = 0; i < 3; ++i)
+    {
+        auto [center, center_bottom, normal] = grid.getCellAndBottomCenterNormal(i);
+        std::array<double, 3> exp_center{5, 5, static_cast<double>(i*10+5)};
+        std::array<double, 3> exp_center_bottom{5, 5, static_cast<double>((i+1)*10)};
+        std::array<double, 3> exp_normal{0, 0, 100};
+        for(std::size_t j = 0; j < 3; ++j)
+        {
+            BOOST_CHECK_CLOSE(center[j], exp_center[j], 1e-10);
+            BOOST_CHECK_CLOSE(center_bottom[j], exp_center_bottom[j], 1e-10);
+            BOOST_CHECK_CLOSE(normal[j], exp_normal[j], 1e-10);
+        }
+    }
+}
+
 static Opm::Deck createCPDeck() {
     const char* deckData =
         "RUNSPEC\n"

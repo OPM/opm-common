@@ -160,6 +160,9 @@ namespace Opm {
         /// Will return a vector a length num_active; where the value
         /// of each element is the corresponding global index.
         const std::vector<int>& getActiveMap() const;
+        /// \brief get cell center, and center and normal of bottom face
+        std::tuple<std::array<double, 3>,std::array<double, 3>,std::array<double, 3>>
+        getCellAndBottomCenterNormal(size_t globalIndex) const;
         std::array<double, 3> getCellCenter(size_t i,size_t j, size_t k) const;
         std::array<double, 3> getCellCenter(size_t globalIndex) const;
         std::array<double, 3> getCornerPos(size_t i,size_t j, size_t k, size_t corner_index) const;
