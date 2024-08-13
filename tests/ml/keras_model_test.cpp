@@ -3,12 +3,11 @@
  * Copyright (c) 2016 Robert W. Rose
  * Copyright (c) 2018 Paul Maevskikh
  *
- * MIT License, see LICENSE.OLD file.
+ * MIT License, see LICENSE.MIT file.
  */ 
 
 /*
- * Copyright (c) 2024 Birane Kane
- * Copyright (c) 2024 Tor Harald Sandve
+  Copyright (c) 2024 NORCE
   This file is part of the Open Porous Media project (OPM).
 
   OPM is free software: you can redistribute it and/or modify
@@ -25,18 +24,18 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "keras_model.hpp"
+#include <opm/ml/keras_model.hpp>
 #include <iostream>
 #include <stdio.h>
-#include "ml_tools/include/test_dense_10x1.h"
-#include "ml_tools/include/test_dense_10x10.h"
-#include "ml_tools/include/test_dense_10x10x10.h"
-#include "ml_tools/include/test_dense_1x1.h"
-#include "ml_tools/include/test_dense_2x2.h"
-#include "ml_tools/include/test_relu_10.h"
-#include "ml_tools/include/test_dense_relu_10.h"
-#include "ml_tools/include/test_dense_tanh_10.h"
-#include "ml_tools/include/test_scalingdense_1x1.h"
+#include <tests/ml/ml_tools/include/test_dense_10x1.hpp>
+#include <tests/ml/ml_tools/include/test_dense_10x10.hpp>
+#include <tests/ml/ml_tools/include/test_dense_10x10x10.hpp>
+#include <tests/ml/ml_tools/include/test_dense_1x1.hpp>
+#include <tests/ml/ml_tools/include/test_dense_2x2.hpp>
+#include <tests/ml/ml_tools/include/test_relu_10.hpp>
+#include <tests/ml/ml_tools/include/test_dense_relu_10.hpp>
+#include <tests/ml/ml_tools/include/test_dense_tanh_10.hpp>
+#include <tests/ml/ml_tools/include/test_scalingdense_10x1.hpp>
 
 
 namespace Opm {
@@ -149,8 +148,8 @@ bool tensor_test() {
     return true;
 }
 
-
 }
+
 
 int main() {
     typedef Opm::DenseAd::Evaluation<double, 1> Evaluation;
@@ -194,7 +193,7 @@ int main() {
         return 1;
     }
 
-    if (!test_scalingdense_1x1<Evaluation>(&load_time, &apply_time)) {
+    if (!test_scalingdense_10x1<Evaluation>(&load_time, &apply_time)) {
         return 1;
     }
 

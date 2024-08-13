@@ -4,12 +4,11 @@
  * Copyright (c) 2016 Robert W. Rose
  * Copyright (c) 2018 Paul Maevskikh
  *
- * MIT License, see LICENSE.OLD file.
+ * MIT License, see LICENSE.MIT file.
  */ 
 
 /*
- * Copyright (c) 2024 Birane Kane
- * Copyright (c) 2024 Tor Harald Sandve
+ * Copyright (c) 2024 NORCE
   This file is part of the Open Porous Media project (OPM).
 
   OPM is free software: you can redistribute it and/or modify
@@ -25,32 +24,32 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
+
 #include <filesystem>
 #include <iostream>
 namespace fs = std::filesystem;
 
 using namespace Opm;
 template<class Evaluation>
-bool test_relu_10(Evaluation* load_time, Evaluation* apply_time)
+bool test_dense_10x10(Evaluation* load_time, Evaluation* apply_time)
 {
-    printf("TEST relu_10\n");
+    printf("TEST dense_10x10\n");
 
     KASSERT(load_time, "Invalid Evaluation");
     KASSERT(apply_time, "Invalid Evaluation");
 
     Opm::Tensor<Evaluation> in{10};
-    in.data_ = {0.120741345,0.59726936,0.9251051,0.87210053,0.6669108,0.13732599,
-0.3093547,0.77527475,0.3986614,0.943842};
+    in.data_ = {0.9865467,0.36973363,0.36496657,0.34069845,0.28187922,0.061007407,
+0.7788553,0.620593,0.54009753,0.09182126};
 
-    Opm::Tensor<Evaluation> out{10};
-    out.data_ = {0.,0.,0.48979148,0.,1.1085179,0.,
-0.,0.33353794,0.7359366,0.8868316};
+    Opm::Tensor<Evaluation> out{1};
+    out.data_ = {0.09297238};
 
     KerasTimer load_timer;
     load_timer.Start();
 
     KerasModel<Evaluation> model;
-    KASSERT(model.LoadModel("/Users/macbookn/hackatonwork/opm-common/opm/ml/ml_tools/models/test_relu_10.model"), "Failed to load model");
+    KASSERT(model.LoadModel("./ml/ml_tools/models/test_dense_10x10.model"), "Failed to load model");
 
     *load_time = load_timer.Stop();
 

@@ -1,6 +1,4 @@
-#  Copyright (c) 2024 Birane Kane
-#  Copyright (c) 2024 Tor Harald Sandve
-
+#  Copyright (c) 2024 NORCE
 #   This file is part of the Open Porous Media project (OPM).
 
 #   OPM is free software: you can redistribute it and/or modify
@@ -16,14 +14,16 @@
 #   You should have received a copy of the GNU General Public License
 #   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 
-
 import numpy as np
 import pprint
-import os
+import os, sys
 from tensorflow import keras
 
 from keras.models import Sequential
 from keras.layers import Conv2D, Dense, Flatten, Activation, MaxPooling2D, Dropout, BatchNormalization, ELU, Embedding, LSTM
+
+sys.path.append('../../../opm/ml/ml_tools')
+
 from kerasify import export_model
 from scaler_layers import MinMaxScalerLayer, MinMaxUnScalerLayer
 
@@ -47,12 +47,11 @@ TEST_CASE = '''
  * Copyright (c) 2016 Robert W. Rose
  * Copyright (c) 2018 Paul Maevskikh
  *
- * MIT License, see LICENSE.OLD file.
+ * MIT License, see LICENSE.MIT file.
  */ 
 
 /*
- * Copyright (c) 2024 Birane Kane
- * Copyright (c) 2024 Tor Harald Sandve
+ * Copyright (c) 2024 NORCE
   This file is part of the Open Porous Media project (OPM).
 
   OPM is free software: you can redistribute it and/or modify
@@ -113,19 +112,16 @@ bool test_%s(Evaluation* load_time, Evaluation* apply_time)
 }
 '''
 
-
 directory = os.getcwd()
 directory1 = "models"
 directory2 = "include"
 
-# path1=os.path.abspath(directory)
 if os.path.isdir(directory1):
     print(f"{directory1} exists.")
 else:
     print(f"{directory1} does not exist.")
     path1 = os.path.join(directory, directory1)
     os.makedirs(path1)
-
 
 if os.path.isdir(directory2):
     print(f"{directory2} exists.")
@@ -142,16 +138,15 @@ def output_testcase(model, test_x, test_y, name, eps):
     print(model.summary())
 
     export_model(model, 'models/test_%s.model' % name)
-    path = os.path.abspath(f'models/test_{name}.model')
-    with open('include/test_%s.h' % name, 'w') as f:
+    path = f'./ml/ml_tools/models/test_{name}.model'
+    with open('include/test_%s.hpp' % name, 'w') as f:
         x_shape, x_data = c_array(test_x[0])
         y_shape, y_data = c_array(predict_y[0])
 
         f.write(TEST_CASE % (name, name, x_shape, x_data, y_shape, y_data, path, eps))
 
 
-
-# scaling 1x1
+# scaling 10x1
 data: np.ndarray = np.random.uniform(-500, 500, (5, 1))
 feature_ranges: list[tuple[float, float]] = [(0.0, 1.0), (-3.7, 0.0)]
 test_x = np.random.rand(10, 10).astype('f')
@@ -159,37 +154,16 @@ test_y = np.random.rand(10).astype('f')
 data_min = 10.0
 model = Sequential()
 model.add(keras.layers.Input([10]))
-# model.add(Dense(1, input_dim=10))
 model.add(MinMaxScalerLayer(feature_range=(0.0, 1.0)))
-# model.add(Dense(1,activation='tanh'))
 model.add(Dense(10,activation='tanh'))
 model.add(Dense(10,activation='tanh'))
 model.add(Dense(10,activation='tanh'))
 model.add(Dense(10,activation='tanh'))
-# model.add(Flatten())
 model.add(MinMaxUnScalerLayer(feature_range=(-3.7, -1.0)))
 # #
 model.get_layer(model.layers[0].name).adapt(data=data)
 model.get_layer(model.layers[-1].name).adapt(data=data)
-
-# model.add(Dense(1, input_dim=1))
-
-# model: keras.Model = keras.Sequential(
-#
-#     [
-#
-#         keras.layers.Input([1]),
-#
-#         MinMaxScalerLayer(feature_range=(0.0, 1.0)),
-#
-#         # keras.layers.Dense(1, input_dim=1),
-#
-#         # MinMaxUnScalerLayer(feature_range=(0.0, 1.0)),
-#
-#     ]
-#
-# )
-output_testcase(model, test_x, test_y, 'scalingdense_1x1', '1e-3')
+output_testcase(model, test_x, test_y, 'scalingdense_10x1', '1e-3')
 
 # Dense 1x1
 test_x = np.arange(10)
@@ -254,4 +228,3 @@ model.add(Dense(10, input_dim=10, activation='tanh'))
 model.add(Dense(10, input_dim=10, activation='tanh'))
 model.add(Dense(10, input_dim=10, activation='tanh'))
 output_testcase(model, test_x, test_y, 'dense_tanh_10', '1e-6')
-

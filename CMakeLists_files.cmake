@@ -475,7 +475,7 @@ list (APPEND TEST_SOURCE_FILES
       tests/material/test_spline.cpp
       tests/material/test_tabulation.cpp
       tests/test_Visitor.cpp
-      opm/ml/keras_model_test.cpp
+      tests/ml/keras_model_test.cpp
 )
 
 # tests that need to be linked to dune-common
@@ -648,6 +648,15 @@ list (APPEND TEST_DATA_FILES
       tests/material/co2_unittest_below_sat.json
       tests/material/h2o_unittest.json
       tests/material/h2_unittest.json
+      tests/ml/ml_tools/models/test_dense_1x1.model
+      tests/ml/ml_tools/models/test_dense_2x2.model
+      tests/ml/ml_tools/models/test_dense_10x1.model
+      tests/ml/ml_tools/models/test_dense_10x10.model
+      tests/ml/ml_tools/models/test_dense_10x10x10.model
+      tests/ml/ml_tools/models/test_dense_relu_10.model
+      tests/ml/ml_tools/models/test_dense_tanh_10.model
+      tests/ml/ml_tools/models/test_relu_10.model
+      tests/ml/ml_tools/models/test_scalingdense_10x1.model
 )
 if(ENABLE_ECL_OUTPUT)
   list (APPEND TEST_DATA_FILES

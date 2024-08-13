@@ -1,6 +1,5 @@
-#  Copyright (c) 2024 Birane Kane
-#  Copyright (c) 2024 Tor Harald Sandve
-#  Copyright (c) 2024 Peter Moritz von Schultzendorff
+#  Copyright (c) 2024 NORCE
+#  Copyright (c) 2024 UiB
 
 #   This file is part of the Open Porous Media project (OPM).
 

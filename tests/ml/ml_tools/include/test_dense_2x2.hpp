@@ -4,12 +4,11 @@
  * Copyright (c) 2016 Robert W. Rose
  * Copyright (c) 2018 Paul Maevskikh
  *
- * MIT License, see LICENSE.OLD file.
+ * MIT License, see LICENSE.MIT file.
  */ 
 
 /*
- * Copyright (c) 2024 Birane Kane
- * Copyright (c) 2024 Tor Harald Sandve
+ * Copyright (c) 2024 NORCE
   This file is part of the Open Porous Media project (OPM).
 
   OPM is free software: you can redistribute it and/or modify
@@ -25,30 +24,31 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
+
 #include <filesystem>
 #include <iostream>
 namespace fs = std::filesystem;
 
 using namespace Opm;
 template<class Evaluation>
-bool test_dense_1x1(Evaluation* load_time, Evaluation* apply_time)
+bool test_dense_2x2(Evaluation* load_time, Evaluation* apply_time)
 {
-    printf("TEST dense_1x1\n");
+    printf("TEST dense_2x2\n");
 
     KASSERT(load_time, "Invalid Evaluation");
     KASSERT(apply_time, "Invalid Evaluation");
 
-    Opm::Tensor<Evaluation> in{1};
-    in.data_ = {0};
+    Opm::Tensor<Evaluation> in{2};
+    in.data_ = {0.4572911,0.40170738};
 
     Opm::Tensor<Evaluation> out{1};
-    out.data_ = {0.001};
+    out.data_ = {0.22109468};
 
     KerasTimer load_timer;
     load_timer.Start();
 
     KerasModel<Evaluation> model;
-    KASSERT(model.LoadModel("/Users/macbookn/hackatonwork/opm-common/opm/ml/ml_tools/models/test_dense_1x1.model"), "Failed to load model");
+    KASSERT(model.LoadModel("./ml/ml_tools/models/test_dense_2x2.model"), "Failed to load model");
 
     *load_time = load_timer.Stop();
 

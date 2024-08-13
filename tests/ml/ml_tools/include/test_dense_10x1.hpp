@@ -4,12 +4,11 @@
  * Copyright (c) 2016 Robert W. Rose
  * Copyright (c) 2018 Paul Maevskikh
  *
- * MIT License, see LICENSE.OLD file.
+ * MIT License, see LICENSE.MIT file.
  */ 
 
 /*
- * Copyright (c) 2024 Birane Kane
- * Copyright (c) 2024 Tor Harald Sandve
+ * Copyright (c) 2024 NORCE
   This file is part of the Open Porous Media project (OPM).
 
   OPM is free software: you can redistribute it and/or modify
@@ -25,32 +24,32 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
+
 #include <filesystem>
 #include <iostream>
 namespace fs = std::filesystem;
 
 using namespace Opm;
 template<class Evaluation>
-bool test_scalingdense_1x1(Evaluation* load_time, Evaluation* apply_time)
+bool test_dense_10x1(Evaluation* load_time, Evaluation* apply_time)
 {
-    printf("TEST scalingdense_1x1\n");
+    printf("TEST dense_10x1\n");
 
     KASSERT(load_time, "Invalid Evaluation");
     KASSERT(apply_time, "Invalid Evaluation");
 
     Opm::Tensor<Evaluation> in{10};
-    in.data_ = {0.22338921,0.8132339,0.43024784,0.26458433,0.92503846,0.6615654,
-0.88089544,0.34508273,0.6916904,0.57852364};
+    in.data_ = {0.3686802,0.37949404,0.42777044,0.3353853,0.9465501,0.045944117,
+0.877874,0.11395996,0.6830254,0.40130788};
 
-    Opm::Tensor<Evaluation> out{10};
-    out.data_ = {670.77625,672.4989,709.0858,640.06885,827.44714,736.1234,617.30554,
-638.03955,629.93115,653.84595};
+    Opm::Tensor<Evaluation> out{1};
+    out.data_ = {-1.4414413};
 
     KerasTimer load_timer;
     load_timer.Start();
 
     KerasModel<Evaluation> model;
-    KASSERT(model.LoadModel("/Users/macbookn/hackatonwork/opm-common/opm/ml/ml_tools/models/test_scalingdense_1x1.model"), "Failed to load model");
+    KASSERT(model.LoadModel("./ml/ml_tools/models/test_dense_10x1.model"), "Failed to load model");
 
     *load_time = load_timer.Stop();
 
@@ -64,7 +63,7 @@ bool test_scalingdense_1x1(Evaluation* load_time, Evaluation* apply_time)
 
     for (int i = 0; i < out.dims_[0]; i++)
     {
-        KASSERT_EQ(out(i), predict(i), 1e-3);
+        KASSERT_EQ(out(i), predict(i), 1e-6);
     }
 
     return true;
