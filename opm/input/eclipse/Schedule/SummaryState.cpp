@@ -92,7 +92,7 @@ namespace {
             "TPT", "TIT", "CPT", "CIT", "SPT", "SIT", "EPT", "EIT", "TPTHEA", "TITHEA",
             "OFT", "OFT+", "OFT-", "OFTG", "OFTL",
             "GFT", "GFT+", "GFT-", "GFTG", "GFTL",
-            "WFT", "WFT+", "WFT-",
+            "WFT", "WFT+", "WFT-", "GMIT",
         };
 
         auto sep_pos = key.find(':');

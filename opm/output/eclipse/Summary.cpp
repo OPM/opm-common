@@ -579,6 +579,10 @@ template<> constexpr
 measure rate_unit< rt::reservoir_gas >() { return measure::rate; }
 
 template<> constexpr
+measure rate_unit< rt::mass_gas >() { return measure::mass_rate; }
+
+
+template<> constexpr
 measure rate_unit < rt::productivity_index_water > () { return measure::liquid_productivity_index; }
 
 template<> constexpr
@@ -2035,6 +2039,7 @@ static const auto funs = std::unordered_map<std::string, ofun> {
     { "WWIR", rate< rt::wat, injector > },
     { "WOIR", rate< rt::oil, injector > },
     { "WGIR", rate< rt::gas, injector > },
+    { "WGMIR", rate< rt::mass_gas, injector > },
     { "WEIR", rate< rt::energy, injector > },
     { "WTIRHEA", rate< rt::energy, injector > },
     { "WNIR", rate< rt::solvent, injector > },
@@ -2067,6 +2072,7 @@ static const auto funs = std::unordered_map<std::string, ofun> {
     { "WWIT", mul( rate< rt::wat, injector >, duration ) },
     { "WOIT", mul( rate< rt::oil, injector >, duration ) },
     { "WGIT", mul( rate< rt::gas, injector >, duration ) },
+    { "WGMIT", mul( rate< rt::mass_gas, injector >, duration ) },
     { "WEIT", mul( rate< rt::energy, injector >, duration ) },
     { "WTITHEA", mul( rate< rt::energy, injector >, duration ) },
     { "WNIT", mul( rate< rt::solvent, injector >, duration ) },
@@ -2214,6 +2220,7 @@ static const auto funs = std::unordered_map<std::string, ofun> {
     { "WWVIR", rate< rt::reservoir_water, injector >},
     { "GOIR", rate< rt::oil, injector > },
     { "GGIR", rate< rt::gas, injector > },
+    { "GGMIR", rate< rt::mass_gas, injector > },
     { "GEIR", rate< rt::energy, injector > },
     { "GTIRHEA", rate< rt::energy, injector > },
     { "GNIR", rate< rt::solvent, injector > },
@@ -2228,6 +2235,7 @@ static const auto funs = std::unordered_map<std::string, ofun> {
     { "GWIT", mul( rate< rt::wat, injector >, duration ) },
     { "GOIT", mul( rate< rt::oil, injector >, duration ) },
     { "GGIT", mul( rate< rt::gas, injector >, duration ) },
+    { "GGMIT", mul( rate< rt::mass_gas, injector >, duration ) },
     { "GEIT", mul( rate< rt::energy, injector >, duration ) },
     { "GTITHEA", mul( rate< rt::energy, injector >, duration ) },
     { "GNIT", mul( rate< rt::solvent, injector >, duration ) },
@@ -2500,6 +2508,7 @@ static const auto funs = std::unordered_map<std::string, ofun> {
     { "FWIR", rate< rt::wat, injector > },
     { "FOIR", rate< rt::oil, injector > },
     { "FGIR", rate< rt::gas, injector > },
+    { "FGMIR", rate< rt::mass_gas, injector > },
     { "FEIR", rate< rt::energy, injector > },
     { "FTIRHEA", rate< rt::energy, injector > },
     { "FNIR", rate< rt::solvent, injector > },
@@ -2530,6 +2539,7 @@ static const auto funs = std::unordered_map<std::string, ofun> {
     { "FWIT", mul( rate< rt::wat, injector >, duration ) },
     { "FOIT", mul( rate< rt::oil, injector >, duration ) },
     { "FGIT", mul( rate< rt::gas, injector >, duration ) },
+    { "FGMIT", mul( rate< rt::mass_gas, injector >, duration ) },
     { "FEIT", mul( rate< rt::energy, injector >, duration ) },
     { "FTITHEA", mul( rate< rt::energy, injector >, duration ) },
     { "FNIT", mul( rate< rt::solvent, injector >, duration ) },
