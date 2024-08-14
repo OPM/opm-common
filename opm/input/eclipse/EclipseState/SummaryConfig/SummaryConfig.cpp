@@ -161,7 +161,7 @@ struct SummaryConfigContext {
          {"GMIP",     {"RGMIP", "FGMIP"}},
          {"GMGP",     {"RGMGP", "FGMGP"}},
          {"GMDS",     {"RGMDS", "FGMDS"}},
-         {"GMIM",     {"RGMIM", "FGMIM"}},
+         {"GMTR",     {"RGMTR", "FGMTR"}},
          {"GMST",     {"RGMST", "FGMST"}},
          {"GMMO",     {"RGMMO", "FGMMO"}},
          {"GMUS",     {"RGMUS", "FGMUS"}},
