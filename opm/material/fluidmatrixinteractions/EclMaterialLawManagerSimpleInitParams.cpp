@@ -199,64 +199,20 @@ void
 EclMaterialLawManagerSimple<Traits>::InitParams::
 initThreePhaseParams_(HystParams &hystParams,
                       MaterialLawParams& materialParams,
-                      unsigned satRegionIdx,
-                      unsigned elemIdx)
+                      [[maybe_unused]] unsigned satRegionIdx,
+                      [[maybe_unused]] unsigned elemIdx)
 {
-    const auto& epsInfo = this->parent_.oilWaterScaledEpsInfoDrainage_[elemIdx];
+    // const auto& epsInfo = this->parent_.oilWaterScaledEpsInfoDrainage_[elemIdx];
 
     auto oilWaterParams = hystParams.getOilWaterParams();
     auto gasOilParams = hystParams.getGasOilParams();
     auto gasWaterParams = hystParams.getGasWaterParams();
-    materialParams.setApproach(this->parent_.threePhaseApproach_);
-    switch (materialParams.approach()) {
-        case EclMultiplexerApproach::Stone1: {
-            auto& realParams = materialParams.template getRealParams<EclMultiplexerApproach::Stone1>();
-            realParams.setGasOilParams(gasOilParams);
-            realParams.setOilWaterParams(oilWaterParams);
-            realParams.setSwl(epsInfo.Swl);
-
-            if (!this->parent_.stoneEtas_.empty()) {
-                realParams.setEta(this->parent_.stoneEtas_[satRegionIdx]);
-            }
-            else
-                realParams.setEta(1.0);
-            realParams.finalize();
-            break;
-        }
-
-        case EclMultiplexerApproach::Stone2: {
-            auto& realParams = materialParams.template getRealParams<EclMultiplexerApproach::Stone2>();
-            realParams.setGasOilParams(gasOilParams);
-            realParams.setOilWaterParams(oilWaterParams);
-            realParams.setSwl(epsInfo.Swl);
-            realParams.finalize();
-            break;
-        }
-
-        case EclMultiplexerApproach::Default: {
-            auto& realParams = materialParams.template getRealParams<EclMultiplexerApproach::Default>();
-            realParams.setGasOilParams(gasOilParams);
-            realParams.setOilWaterParams(oilWaterParams);
-            realParams.setSwl(epsInfo.Swl);
-            realParams.finalize();
-            break;
-        }
-
-        case EclMultiplexerApproach::TwoPhase: {
-            auto& realParams = materialParams.template getRealParams<EclMultiplexerApproach::TwoPhase>();
-            realParams.setGasOilParams(gasOilParams);
-            realParams.setOilWaterParams(oilWaterParams);
-            realParams.setGasWaterParams(gasWaterParams);
-            realParams.setApproach(this->parent_.twoPhaseApproach_);
-            realParams.finalize();
-            break;
-        }
-
-        case EclMultiplexerApproach::OnePhase: {
-            // Nothing to do, no parameters.
-            break;
-        }
-    } // end switch()
+    auto& realParams = materialParams;
+    realParams.setGasOilParams(gasOilParams);
+    realParams.setOilWaterParams(oilWaterParams);
+    realParams.setGasWaterParams(gasWaterParams);
+    realParams.setApproach(this->parent_.twoPhaseApproach_);
+    realParams.finalize();
 }
 
 template <class Traits>

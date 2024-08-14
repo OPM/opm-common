@@ -33,6 +33,7 @@
 
 #include <opm/material/common/Valgrind.hpp>
 #include <opm/material/common/MathToolbox.hpp>
+#include <opm/common/TimingMacros.hpp>
 
 namespace Opm {
 
