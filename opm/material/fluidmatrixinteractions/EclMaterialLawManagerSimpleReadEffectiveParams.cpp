@@ -113,43 +113,7 @@ readGasOilParameters_(GasOilEffectiveParamVector& dest, unsigned satRegionIdx)
         else if (!slgofTables.empty())
             readGasOilSlgof_(effParams, Swco, tolcrit, slgofTables.template getTable<SlgofTable>(satRegionIdx));
         else if ( !tableManager.getSgofletTable().empty() ) {
-            const auto& letSgofTab = tableManager.getSgofletTable()[satRegionIdx];
-            const std::vector<Scalar> dum; // dummy arg to comform with existing interface
-
-            effParams.setApproach(SatCurveMultiplexerApproach::LET);
-            auto& realParams = effParams.template getRealParams<SatCurveMultiplexerApproach::LET>();
-
-            // S=(So-Sogcr)/(1-Sogcr-Sgcr-Swco),  krog = Krt*S^L/[S^L+E*(1.0-S)^T]
-            const Scalar s_min_w = letSgofTab.s2_critical;
-            const Scalar s_max_w = 1.0-letSgofTab.s1_critical-Swco;
-            const std::vector<Scalar>& letCoeffsOil = {s_min_w, s_max_w,
-                                                        static_cast<Scalar>(letSgofTab.l2_relperm),
-                                                        static_cast<Scalar>(letSgofTab.e2_relperm),
-                                                        static_cast<Scalar>(letSgofTab.t2_relperm),
-                                                        static_cast<Scalar>(letSgofTab.krt2_relperm)};
-            realParams.setKrwSamples(letCoeffsOil, dum);
-
-            // S=(1-So-Sgcr-Swco)/(1-Sogcr-Sgcr-Swco), krg = Krt*S^L/[S^L+E*(1.0-S)^T]
-            const Scalar s_min_nw = letSgofTab.s1_critical+Swco;
-            const Scalar s_max_nw = 1.0-letSgofTab.s2_critical;
-            const std::vector<Scalar>& letCoeffsGas = {s_min_nw, s_max_nw,
-                                                        static_cast<Scalar>(letSgofTab.l1_relperm),
-                                                        static_cast<Scalar>(letSgofTab.e1_relperm),
-                                                        static_cast<Scalar>(letSgofTab.t1_relperm),
-                                                        static_cast<Scalar>(letSgofTab.krt1_relperm)};
-            realParams.setKrnSamples(letCoeffsGas, dum);
-
-            // S=(So-Sorg)/(1-Sorg-Sgl-Swco), Pc = Pct + (pcir_pc-Pct)*(1-S)^L/[(1-S)^L+E*S^T]
-            const std::vector<Scalar>& letCoeffsPc = {static_cast<Scalar>(letSgofTab.s2_residual),
-                                                        static_cast<Scalar>(letSgofTab.s1_residual+Swco),
-                                                        static_cast<Scalar>(letSgofTab.l_pc),
-                                                        static_cast<Scalar>(letSgofTab.e_pc),
-                                                        static_cast<Scalar>(letSgofTab.t_pc),
-                                                        static_cast<Scalar>(letSgofTab.pcir_pc),
-                                                        static_cast<Scalar>(letSgofTab.pct_pc)};
-            realParams.setPcnwSamples(letCoeffsPc, dum);
-
-            realParams.finalize();
+            throw std::runtime_error("LET tables not supported!");
         }
         break;
     }
@@ -197,8 +161,7 @@ readGasOilFamily2_(GasOilEffectiveTwoPhaseParams& effParams,
         SoSamples[sampleIdx] = (1.0 - Swco) - sgfnTable.get("SG", sampleIdx);
     }
 
-    effParams.setApproach(SatCurveMultiplexerApproach::PiecewiseLinear);
-    auto& realParams = effParams.template getRealParams<SatCurveMultiplexerApproach::PiecewiseLinear>();
+    auto& realParams = effParams;
 
     realParams.setKrwSamples(SoColumn, normalizeKrValues_(tolcrit, sofTable.getColumn(columnName)));
     realParams.setKrnSamples(SoSamples, normalizeKrValues_(tolcrit, sgfnTable.getColumn("KRG")));
@@ -220,8 +183,7 @@ readGasOilSgof_(GasOilEffectiveTwoPhaseParams& effParams,
         SoSamples[sampleIdx] = (1.0 - Swco) - sgofTable.get("SG", sampleIdx);
     }
 
-    effParams.setApproach(SatCurveMultiplexerApproach::PiecewiseLinear);
-    auto& realParams = effParams.template getRealParams<SatCurveMultiplexerApproach::PiecewiseLinear>();
+    auto& realParams = effParams;
 
     realParams.setKrwSamples(SoSamples, normalizeKrValues_(tolcrit, sgofTable.getColumn("KROG")));
     realParams.setKrnSamples(SoSamples, normalizeKrValues_(tolcrit, sgofTable.getColumn("KRG")));
@@ -243,8 +205,7 @@ readGasOilSlgof_(GasOilEffectiveTwoPhaseParams& effParams,
         SoSamples[sampleIdx] = slgofTable.get("SL", sampleIdx) - Swco;
     }
 
-    effParams.setApproach(SatCurveMultiplexerApproach::PiecewiseLinear);
-    auto& realParams = effParams.template getRealParams<SatCurveMultiplexerApproach::PiecewiseLinear>();
+    auto& realParams = effParams;
 
     realParams.setKrwSamples(SoSamples, normalizeKrValues_(tolcrit, slgofTable.getColumn("KROG")));
     realParams.setKrnSamples(SoSamples, normalizeKrValues_(tolcrit, slgofTable.getColumn("KRG")));
@@ -279,8 +240,7 @@ readGasWaterParameters_(GasWaterEffectiveParamVector& dest, unsigned satRegionId
     case SatFuncControls::KeywordFamily::Family_II:
     {
         const TableContainer& sgwfnTables = tableManager.getSgwfnTables();
-        effParams.setApproach(SatCurveMultiplexerApproach::PiecewiseLinear);
-        auto& realParams = effParams.template getRealParams<SatCurveMultiplexerApproach::PiecewiseLinear>();
+        auto& realParams = effParams;
         if (!sgwfnTables.empty()){
             const SgwfnTable& sgwfnTable = tableManager.getSgwfnTables().template getTable<SgwfnTable>( satRegionIdx );
             std::vector<double> SwSamples(sgwfnTable.numRows());
@@ -314,8 +274,7 @@ readGasWaterParameters_(GasWaterEffectiveParamVector& dest, unsigned satRegionId
         const GsfTable& gsfTable = tableManager.getGsfTables().template getTable<GsfTable>( satRegionIdx );
         const WsfTable& wsfTable = tableManager.getWsfTables().template getTable<WsfTable>( satRegionIdx );
 
-        effParams.setApproach(SatCurveMultiplexerApproach::PiecewiseLinear);
-        auto& realParams = effParams.template getRealParams<SatCurveMultiplexerApproach::PiecewiseLinear>();
+        auto& realParams = effParams;
 
         std::vector<double> SwColumn = wsfTable.getColumn("SW").vectorCopy();
 
@@ -359,8 +318,7 @@ readOilWaterParameters_(OilWaterEffectiveParamVector& dest, unsigned satRegionId
             const auto& swofTable = tableManager.getSwofTables().template getTable<SwofTable>(satRegionIdx);
             const std::vector<double> SwColumn = swofTable.getColumn("SW").vectorCopy();
 
-            effParams.setApproach(SatCurveMultiplexerApproach::PiecewiseLinear);
-            auto& realParams = effParams.template getRealParams<SatCurveMultiplexerApproach::PiecewiseLinear>();
+            auto& realParams = effParams;
 
             realParams.setKrwSamples(SwColumn, normalizeKrValues_(tolcrit, swofTable.getColumn("KRW")));
             realParams.setKrnSamples(SwColumn, normalizeKrValues_(tolcrit, swofTable.getColumn("KROW")));
@@ -368,43 +326,7 @@ readOilWaterParameters_(OilWaterEffectiveParamVector& dest, unsigned satRegionId
             realParams.finalize();
         }
         else if ( !tableManager.getSwofletTable().empty() ) {
-            const auto& letTab = tableManager.getSwofletTable()[satRegionIdx];
-            const std::vector<Scalar> dum; // dummy arg to conform with existing interface
-
-            effParams.setApproach(SatCurveMultiplexerApproach::LET);
-            auto& realParams = effParams.template getRealParams<SatCurveMultiplexerApproach::LET>();
-
-            // S=(Sw-Swcr)/(1-Sowcr-Swcr),  krw = Krt*S^L/[S^L+E*(1.0-S)^T]
-            const Scalar s_min_w = letTab.s1_critical;
-            const Scalar s_max_w = 1.0-letTab.s2_critical;
-            const std::vector<Scalar>& letCoeffsWat = {s_min_w, s_max_w,
-                                                        static_cast<Scalar>(letTab.l1_relperm),
-                                                        static_cast<Scalar>(letTab.e1_relperm),
-                                                        static_cast<Scalar>(letTab.t1_relperm),
-                                                        static_cast<Scalar>(letTab.krt1_relperm)};
-            realParams.setKrwSamples(letCoeffsWat, dum);
-
-            // S=(So-Sowcr)/(1-Sowcr-Swcr), krow = Krt*S^L/[S^L+E*(1.0-S)^T]
-            const Scalar s_min_nw = letTab.s2_critical;
-            const Scalar s_max_nw = 1.0-letTab.s1_critical;
-            const std::vector<Scalar>& letCoeffsOil = {s_min_nw, s_max_nw,
-                                                        static_cast<Scalar>(letTab.l2_relperm),
-                                                        static_cast<Scalar>(letTab.e2_relperm),
-                                                        static_cast<Scalar>(letTab.t2_relperm),
-                                                        static_cast<Scalar>(letTab.krt2_relperm)};
-            realParams.setKrnSamples(letCoeffsOil, dum);
-
-            // S=(Sw-Swco)/(1-Swco-Sorw), Pc = Pct + (Pcir-Pct)*(1-S)^L/[(1-S)^L+E*S^T]
-            const std::vector<Scalar>& letCoeffsPc = {static_cast<Scalar>(letTab.s1_residual),
-                                                        static_cast<Scalar>(letTab.s2_residual),
-                                                        static_cast<Scalar>(letTab.l_pc),
-                                                        static_cast<Scalar>(letTab.e_pc),
-                                                        static_cast<Scalar>(letTab.t_pc),
-                                                        static_cast<Scalar>(letTab.pcir_pc),
-                                                        static_cast<Scalar>(letTab.pct_pc)};
-            realParams.setPcnwSamples(letCoeffsPc, dum);
-
-            realParams.finalize();
+            throw std::runtime_error("LET tables not supported!");
         }
         break;
     }
@@ -414,8 +336,7 @@ readOilWaterParameters_(OilWaterEffectiveParamVector& dest, unsigned satRegionId
         const auto& swfnTable = tableManager.getSwfnTables().template getTable<SwfnTable>(satRegionIdx);
         const std::vector<double> SwColumn = swfnTable.getColumn("SW").vectorCopy();
 
-        effParams.setApproach(SatCurveMultiplexerApproach::PiecewiseLinear);
-        auto& realParams = effParams.template getRealParams<SatCurveMultiplexerApproach::PiecewiseLinear>();
+        auto& realParams = effParams;
 
         realParams.setKrwSamples(SwColumn, normalizeKrValues_(tolcrit, swfnTable.getColumn("KRW")));
         realParams.setPcnwSamples(SwColumn, swfnTable.getColumn("PCOW").vectorCopy());
