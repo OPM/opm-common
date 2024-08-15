@@ -251,6 +251,7 @@ struct SummaryConfigContext {
             "OIGR", "GIGR", "WIGR",
             "OIRH", "GIRH", "WIRH",
             "OVIR", "GVIR", "WVIR",
+            "GMIR",
 
             "OPI", "OPP", "GPI", "GPP", "WPI", "WPP",
 
@@ -284,7 +285,7 @@ struct SummaryConfigContext {
             "WFT", "WFT+", "WFT-",
 
             "WIT", "OIT", "GIT", "LIT", "NIT", "CIT", "VIT", "TIT",
-            "WITH", "OITH", "GITH", "WVIT", "OVIT", "GVIT",
+            "WITH", "OITH", "GITH", "WVIT", "OVIT", "GVIT", "GMIT",
 
             "AQT", "AQTG", "NQT",
         };

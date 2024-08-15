@@ -1,0 +1,19 @@
+{
+  "name": "GROUP_PROBE_OPM",
+  "sections": [
+    "SUMMARY"
+  ],
+  "comment": "Group summary keywords only supported by OPM-flow",
+  "deck_names": [
+    "GGMIR",
+    "GGMIT"
+  ],
+  "size": 1,
+  "items": [
+    {
+      "name": "GROUPS",
+      "size_type": "ALL",
+      "value_type": "STRING"
+    }
+  ]
+}

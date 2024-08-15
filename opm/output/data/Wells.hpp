@@ -72,7 +72,8 @@ namespace Opm { namespace data {
                 alq              = (1 << 18),
                 tracer           = (1 << 19),
                 micp             = (1 << 20),
-                vaporized_water     = (1 << 21)
+                vaporized_water  = (1 << 21),
+                mass_gas         = (1 << 22)
             };
 
             using enum_size = std::underlying_type< opt >::type;
@@ -131,6 +132,7 @@ namespace Opm { namespace data {
                 serializer(tracer);
                 serializer(micp);
                 serializer(vaporized_water);
+                serializer(mass_gas);
             }
 
             static Rates serializationTestObject()
@@ -157,6 +159,7 @@ namespace Opm { namespace data {
                 rat1.set(opt::alq, 19.0);
                 rat1.set(opt::micp, 21.0);
                 rat1.set(opt::vaporized_water, 22.0);
+                rat1.set(opt::mass_gas, 23.0);
                 rat1.tracer.insert({"test_tracer", 1.0});
 
                 return rat1;
@@ -192,6 +195,7 @@ namespace Opm { namespace data {
             std::map<std::string, double> tracer{};
             double micp = 0.0;
             double vaporized_water = 0.0;
+            double mass_gas = 0.0;
     };
 
     struct ConnectionFiltrate
@@ -1109,7 +1113,8 @@ namespace Opm { namespace data {
              alq == rate.alq &&
              tracer == rate.tracer &&
              micp == rate.micp &&
-             vaporized_water == rate.vaporized_water;
+             vaporized_water == rate.vaporized_water &&
+             mass_gas == rate.mass_gas;
     }
 
 
@@ -1147,6 +1152,7 @@ namespace Opm { namespace data {
                 break;
             case opt::micp: return this->micp;
             case opt::vaporized_water: return this->vaporized_water;
+            case opt::mass_gas: return this->mass_gas;
         }
 
         throw std::invalid_argument(
@@ -1230,6 +1236,7 @@ namespace Opm { namespace data {
 
             buffer.write(this->micp);
             buffer.write(this->vaporized_water);
+            buffer.write(this->mass_gas);
     }
 
     template <class MessageBufferType>
@@ -1404,6 +1411,7 @@ namespace Opm { namespace data {
 
             buffer.read(this->micp);
             buffer.read(this->vaporized_water);
+            buffer.read(this->mass_gas);
     }
 
     template <class MessageBufferType>
