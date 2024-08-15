@@ -381,7 +381,7 @@ protected:
             (*this)(size);
             auto& data_mut = const_cast<Set&>(data);
             for (size_t i = 0; i < size; ++i) {
-                typename Set::value_type entry;
+                typename Set::value_type entry{};
                 (*this)(entry);
                 data_mut.insert(entry);
             }
