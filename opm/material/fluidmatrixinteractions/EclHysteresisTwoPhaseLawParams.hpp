@@ -114,10 +114,10 @@ public:
             }
             if (config().krHysteresisModel() == 4) {
                 Cw_ = 1.0/(Swcri_ - Swcrd_ + 1.0e-12) - 1.0/(Swmaxd_ - Swcrd_);
+                Krwd_sncri_ = EffLawT::twoPhaseSatKrw(drainageParams(), 1 - Sncri());
             }
             updateDynamicParams_();
         }
-
         EnsureFinalized :: finalize();
     }
 
@@ -284,6 +284,11 @@ public:
                 Swmaxi_ = info.Swu;
                 pcmaxi_ = info.maxPcow;
             }
+        }
+
+        if (config().krHysteresisModel() == 4) {
+            Krwi_snmax_ = EffLawT::twoPhaseSatKrw(imbibitionParams(), 1 - Snmaxd());
+            Krwi_snrmax_ = EffLawT::twoPhaseSatKrw(imbibitionParams(), 1 - Sncri());
         }
     }
 
@@ -462,12 +467,42 @@ public:
     { return KrndHy_/KrndMax_; }
 
     Scalar krwWght() const
-    { 
-        return KrwdHy_/KrwdMax_; }
+    {
+        // a = 1 (deltaKrw)^a Formulation according to KILLOUGH 1976
+        Scalar deltaKrw = Krwi_snrmax() - Krwd_sncri();
+        Scalar Krwi_snr = Krwd_sncrt() + deltaKrw * (Sncrt() / max(1e-12, Sncri()));
+        return (Krwi_snr - KrwdHy()) / ( Krwi_snrmax() - Krwi_snmax());
+    }
 
     Scalar krwdMax() const
     { 
         return KrwdMax_; }
+
+    Scalar KrwdHy() const
+    {
+        return KrwdHy_;
+    }
+
+
+    Scalar Krwd_sncri() const
+    {
+        return Krwd_sncri_;
+    }
+
+    Scalar Krwi_snmax() const
+    {
+        return Krwi_snmax_;
+    }
+
+    Scalar Krwi_snrmax() const
+    {
+        return Krwi_snrmax_;
+    }
+
+    Scalar Krwd_sncrt() const
+    {
+        return Krwd_sncrt_;
+    }
 
     Scalar pcWght() const // Aligning pci and pcd at Swir
     {
@@ -597,13 +632,13 @@ public:
         if (krnSw < krnSwMdc_) {
             krnSwMdc_ = krnSw;
             KrndHy_ = EffLawT::twoPhaseSatKrn(drainageParams(), krnSwMdc_);
+            if (config().krHysteresisModel() == 4) {
+                KrwdHy_ = EffLawT::twoPhaseSatKrw(drainageParams(), krnSwMdc_);
+            }
             updateParams = true;
         }
-
         if (krwSw > krwSwMdc_) {
-            krwSwMdc_ = krwSw;
-            KrwdHy_ = EffLawT::twoPhaseSatKrw(drainageParams(), krwSwMdc_);
-            updateParams = true;
+            krwSwMdc_ = krwSw; // Only used for output at the moment
         }
 
         // for non WAG hysteresis we still keep track of the process
@@ -724,13 +759,14 @@ private:
         }
 
         if (config().krHysteresisModel() == 4) {
-            Scalar Swhy = krwSwMdc_;
+            Scalar Swhy = krnSwMdc_;
             if (Swhy >= Swcrd_) {
                 Swcrt_ = Swcrd_ + (Swhy - Swcrd_)/((1.0+config().modParamTrapped()*(Swmaxd_-Swhy)) + Cw_*(Swhy - Swcrd_));
             } else
             {
                 Swcrt_ = Swcrd_;
             }
+            Krwd_sncrt_ = EffLawT::twoPhaseSatKrw(drainageParams(), 1 - Sncrt());
         }
 
 
@@ -822,12 +858,20 @@ private:
     Scalar Snmaxd_{};
     Scalar Swmaxd_{};
     Scalar C_{};
-    Scalar Cw_{};
 
     Scalar KrndMax_{}; // Krn_drain(Snmaxd_)
     Scalar KrwdMax_{}; // Krw_drain(Swmaxd_)
     Scalar KrndHy_{};  // Krn_drain(1-krnSwMdc_)
-    Scalar KrwdHy_{};  // Krw_drain(1-krwSwMdc_)
+
+
+    // For wetting hysterese Killough
+    Scalar Cw_{};
+    Scalar KrwdHy_{};
+    Scalar Krwd_sncri_{};
+    Scalar Krwi_snmax_{};
+    Scalar Krwi_snrmax_{};
+    Scalar Krwd_sncrt_{};
+    Scalar Swcrt_{}; // trapped wetting phase saturation
 
     Scalar pcmaxd_;  // max pc for drain
     Scalar pcmaxi_;  // max pc for imb
@@ -835,7 +879,6 @@ private:
     Scalar curvatureCapPrs_{}; // curvature parameter used for capillary pressure hysteresis
 
     Scalar Sncrt_{}; // trapped non-wetting phase saturation
-    Scalar Swcrt_{}; // trapped wetting phase saturation
 
     // Used for WAG hysteresis
     Scalar Swco_;               // Connate water.

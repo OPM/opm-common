@@ -281,13 +281,14 @@ public:
         if (params.config().krHysteresisModel() == 1 || params.config().krHysteresisModel() == 3)
             return EffectiveLaw::twoPhaseSatKrw(params.imbibitionParams(), Sw);
 
-        if (Sw <= params.krwSwMdc())
+        if (Sw <= params.krnSwMdc()) {
             return EffectiveLaw::twoPhaseSatKrw(params.drainageParams(), Sw);
-
+        }
         // Killough hysteresis for the wetting phase
         assert(params.config().krHysteresisModel() == 4);
-        Evaluation Snorm = params.Swcri()+(Sw-params.Swcrt())*(params.Swmaxd()-params.Swcri())/(params.Swhy()-params.Swcrt());
-        return params.krwWght()*EffectiveLaw::twoPhaseSatKrw(params.imbibitionParams(), Snorm);
+        Evaluation Snorm = params.Sncri()+(1.0-Sw-params.Sncrt())*(params.Snmaxd()-params.Sncri())/(params.Snhy()-params.Sncrt());
+        Evaluation Krwi_snorm = EffectiveLaw::twoPhaseSatKrw(params.imbibitionParams(), 1 - Snorm);
+        return params.KrwdHy() +  params.krwWght() * (Krwi_snorm - params.Krwi_snmax());
     }
 
     /*!
