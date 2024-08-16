@@ -90,10 +90,23 @@ RstState::RstState(std::shared_ptr<EclIO::RestartFileView> rstView,
     , aquifers(rstView, grid, unit_system)
     , netbalan(rstView->intehead(), rstView->doubhead(), unit_system)
     , network(rstView, unit_system)
+    , oilvap(runspec.tabdims().getNumPVTTables())
 {
     this->load_tuning(rstView->intehead(), rstView->doubhead());
+    this->load_oil_vaporization(rstView->intehead(), rstView->doubhead());
 }
 
+void RstState::load_oil_vaporization(const std::vector<int>& intehead,
+                                     const std::vector<double>& doubhead)
+{
+    const std::size_t numPvtRegions = this->oilvap.numPvtRegions();
+    std::vector<double> maximums(numPvtRegions);
+    std::vector<std::string> options(numPvtRegions);
+    const auto tconv = this->unit_system.to_si(::Opm::UnitSystem::measure::time, 1.0);
+    std::fill(maximums.begin(), maximums.end(), doubhead[VI::doubhead::dRsDt]/tconv);
+    std::fill(options.begin(), options.end(), intehead[VI::intehead::DRSDT_FREE]==1 ? "FREE" : "ALL");
+    OilVaporizationProperties::updateDRSDT(this->oilvap, maximums, options);
+}
 
 void RstState::load_tuning(const std::vector<int>& intehead,
                            const std::vector<double>& doubhead)

@@ -1891,6 +1891,8 @@ namespace {
         this->snapshots.back().update_tuning(rst_state.tuning);
         this->snapshots.back().events().addEvent( ScheduleEvents::TUNING_CHANGE );
 
+        this->snapshots.back().update_oilvap(rst_state.oilvap);
+
         {
             const auto& header = rst_state.header;
             // A NONE target written to .UNRST may indicate no GUIDERAT (i.e., during history)
