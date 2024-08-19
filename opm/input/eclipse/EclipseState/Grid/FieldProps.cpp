@@ -1934,15 +1934,17 @@ void FieldProps::scanGRIDSection(const GRIDSection& grid_section)
     auto box = makeGlobalGridBox(this->grid_ptr);
 
     for (const auto& keyword : grid_section) {
-        const std::string& name = keyword.name();
-
-        if (Fieldprops::keywords::GRID::double_keywords.count(name) == 1) {
-            this->handle_double_keyword(Section::GRID, Fieldprops::keywords::GRID::double_keywords.at(name), keyword, box);
+        if (auto kwPos = Fieldprops::keywords::GRID::double_keywords.find(keyword.name());
+            kwPos != Fieldprops::keywords::GRID::double_keywords.end())
+        {
+            this->handle_double_keyword(Section::GRID, kwPos->second, keyword, box);
             continue;
         }
 
-        if (Fieldprops::keywords::GRID::int_keywords.count(name) == 1) {
-            this->handle_int_keyword(Fieldprops::keywords::GRID::int_keywords.at(name), keyword, box);
+        if (auto kwPos = Fieldprops::keywords::GRID::int_keywords.find(keyword.name());
+            kwPos != Fieldprops::keywords::GRID::int_keywords.end())
+        {
+            this->handle_int_keyword(kwPos->second, keyword, box);
             continue;
         }
 
@@ -1956,16 +1958,21 @@ void FieldProps::scanGRIDSectionOnlyACTNUM(const GRIDSection& grid_section)
 
     for (const auto& keyword : grid_section) {
         const std::string& name = keyword.name();
+
         if (name == "ACTNUM") {
             this->handle_int_keyword(Fieldprops::keywords::GRID::int_keywords.at(name), keyword, box);
-        } else if (name == "EQUALS" || (Fieldprops::keywords::box_keywords.count(name) == 1)) {
+        }
+        else if ((name == "EQUALS") || (Fieldprops::keywords::box_keywords.count(name) == 1)) {
             this->handle_keyword(Section::GRID, keyword, box);
         }
     }
-    const auto iter = this->int_data.find("ACTNUM");
-    if (iter == this->int_data.end()) {
+
+    if (auto iter = this->int_data.find("ACTNUM");
+        iter == this->int_data.end())
+    {
         m_actnum.assign(this->grid_ptr->getCartesianSize(), 1);
-    } else {
+    }
+    else {
         m_actnum = iter->second.data;
     }
 }
@@ -1973,11 +1980,13 @@ void FieldProps::scanGRIDSectionOnlyACTNUM(const GRIDSection& grid_section)
 void FieldProps::scanEDITSection(const EDITSection& edit_section)
 {
     auto box = makeGlobalGridBox(this->grid_ptr);
+
     for (const auto& keyword : edit_section) {
         const std::string& name = keyword.name();
 
-        auto tran_iter = this->tran.find(name);
-        if (tran_iter!= this->tran.end()) {
+        if (auto tran_iter = this->tran.find(name);
+            tran_iter!= this->tran.end())
+        {
             auto& tran_calc = tran_iter->second;
             auto unique_name = tran_calc.next_name();
             this->handle_double_keyword(Section::EDIT, {}, keyword, unique_name, box);
@@ -1985,13 +1994,17 @@ void FieldProps::scanEDITSection(const EDITSection& edit_section)
             continue;
         }
 
-        if (Fieldprops::keywords::EDIT::double_keywords.count(name) == 1) {
-            this->handle_double_keyword(Section::EDIT, Fieldprops::keywords::EDIT::double_keywords.at(name), keyword, box);
+        if (auto kwPos = Fieldprops::keywords::EDIT::double_keywords.find(name);
+            kwPos != Fieldprops::keywords::EDIT::double_keywords.end())
+        {
+            this->handle_double_keyword(Section::EDIT, kwPos->second, keyword, box);
             continue;
         }
 
-        if (Fieldprops::keywords::EDIT::int_keywords.count(name) == 1) {
-            this->handle_int_keyword(Fieldprops::keywords::GRID::int_keywords.at(name), keyword, box);
+        if (auto kwPos = Fieldprops::keywords::EDIT::int_keywords.find(name);
+            kwPos != Fieldprops::keywords::EDIT::int_keywords.end())
+        {
+            this->handle_int_keyword(kwPos->second, keyword, box);
             continue;
         }
 
@@ -2030,13 +2043,17 @@ void FieldProps::scanPROPSSection(const PROPSSection& props_section)
             continue;
         }
 
-        if (Fieldprops::keywords::PROPS::double_keywords.count(name) == 1) {
-            this->handle_double_keyword(Section::PROPS, Fieldprops::keywords::PROPS::double_keywords.at(name), keyword, box);
+        if (auto kwPos = Fieldprops::keywords::PROPS::double_keywords.find(name);
+            kwPos != Fieldprops::keywords::PROPS::double_keywords.end())
+        {
+            this->handle_double_keyword(Section::PROPS, kwPos->second, keyword, box);
             continue;
         }
 
-        if (Fieldprops::keywords::PROPS::int_keywords.count(name) == 1) {
-            this->handle_int_keyword(Fieldprops::keywords::PROPS::int_keywords.at(name), keyword, box);
+        if (auto kwPos = Fieldprops::keywords::PROPS::int_keywords.find(name);
+            kwPos != Fieldprops::keywords::PROPS::int_keywords.end())
+        {
+            this->handle_int_keyword(kwPos->second, keyword, box);
             continue;
         }
 
@@ -2050,8 +2067,11 @@ void FieldProps::scanREGIONSSection(const REGIONSSection& regions_section)
 
     for (const auto& keyword : regions_section) {
         const std::string& name = keyword.name();
-        if (Fieldprops::keywords::REGIONS::int_keywords.count(name)) {
-            this->handle_int_keyword(Fieldprops::keywords::REGIONS::int_keywords.at(name), keyword, box);
+
+        if (auto kwPos = Fieldprops::keywords::REGIONS::int_keywords.find(name);
+            kwPos != Fieldprops::keywords::REGIONS::int_keywords.end())
+        {
+            this->handle_int_keyword(kwPos->second, keyword, box);
             continue;
         }
 
@@ -2070,22 +2090,29 @@ void FieldProps::scanSOLUTIONSection(const SOLUTIONSection& solution_section,
                                      const std::size_t      ncomps)
 {
     auto box = makeGlobalGridBox(this->grid_ptr);
+
     for (const auto& keyword : solution_section) {
         const std::string& name = keyword.name();
-        if (Fieldprops::keywords::SOLUTION::double_keywords.count(name) == 1) {
-            this->handle_double_keyword(Section::SOLUTION, Fieldprops::keywords::SOLUTION::double_keywords.at(name), keyword, box);
+
+        if (auto kwPos = Fieldprops::keywords::SOLUTION::double_keywords.find(name);
+            kwPos != Fieldprops::keywords::SOLUTION::double_keywords.end())
+        {
+            this->handle_double_keyword(Section::SOLUTION, kwPos->second, keyword, box);
             continue;
         }
 
-        if (Fieldprops::keywords::SOLUTION::composition_keywords.count(name) == 1) {
+        if (auto kwPos = Fieldprops::keywords::SOLUTION::composition_keywords.find(name);
+            kwPos != Fieldprops::keywords::SOLUTION::composition_keywords.end())
+        {
             if (ncomps < 1) {
                 throw std::logic_error {
                     fmt::format("With compostional keyword {} defined in SOLUTION, while the DATA file "
                                 "does not appear to be a compostional case.", name)
                 };
             }
+
             // TODO: maybe we should go to the function handle_keyword for more flexibility
-            const auto& kw_info = Fieldprops::keywords::SOLUTION::composition_keywords.at(name).num_value_per_cell(ncomps);
+            const auto& kw_info = kwPos->second.num_value_per_cell(ncomps);
             this->handle_double_keyword(Section::SOLUTION, kw_info, keyword, box);
             continue;
         }
@@ -2108,11 +2135,13 @@ void FieldProps::handle_schedule_keywords(const std::vector<DeckKeyword>& keywor
         }
     }
 
-
     for (const auto& keyword : keywords) {
         const std::string& name = keyword.name();
-        if (Fieldprops::keywords::SCHEDULE::double_keywords.count(name) == 1) {
-            this->handle_double_keyword(Section::SCHEDULE, Fieldprops::keywords::SCHEDULE::double_keywords.at(name), keyword, box);
+
+        if (auto kwPos = Fieldprops::keywords::SCHEDULE::double_keywords.find(name);
+            kwPos != Fieldprops::keywords::SCHEDULE::double_keywords.end())
+        {
+            this->handle_double_keyword(Section::SCHEDULE, kwPos->second, keyword, box);
             continue;
         }
 
