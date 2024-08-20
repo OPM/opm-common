@@ -46,9 +46,6 @@
 
 namespace Opm {
 
-    template<typename Scalar>
-    class DummyOilPvt;
-
 /*!
  * \ingroup FluidSystem
  *
@@ -297,6 +294,7 @@ namespace Opm {
             return decay<LhsEval>(PengRobinsonMixture::computeFugacityCoefficient(fluidState, paramCache, phaseIdx, compIdx));
         }
 
+        // TODO: will check whether the following interface functions are needed
         //! \copydoc BaseFluidSystem::isCompressible
         static bool isCompressible([[maybe_unused]] unsigned phaseIdx)
         {
@@ -328,29 +326,6 @@ namespace Opm {
 
             return (phaseIdx == 1);
         }
-
-        // The following are dummy functions, remaining to be cleaned up later
-        static DummyOilPvt<Scalar> oilPvt() {
-            assert(false);
-            return dummy_oil_pvt_;
-        }
-
-        static Scalar referenceDensity(unsigned /*phase*/,
-                                       unsigned /*reg_id*/)
-        {
-            assert(false);
-            return 0.;
-        }
-
-        static bool enableVaporizedOil() {
-            assert(false);
-            return false;
-        }
-
-        static bool enableDissolvedGas() {
-            assert(false);
-            return false;
-        }
     private:
         static bool isConsistent() {
             return component_param_.size() == NumComp;
@@ -358,7 +333,6 @@ namespace Opm {
 
         static std::vector<ComponentParam> component_param_;
         static std::vector<Scalar> interaction_coefficients_;
-        static constexpr DummyOilPvt<Scalar> dummy_oil_pvt_{};
     public:
         static std::string printComponentParams() {
             std::string result = "Components Information:\n";
@@ -372,55 +346,6 @@ namespace Opm {
                 result += "---------------------------------\n";
             }
             return result;
-        }
-    };
-
-    // TODO: the following is a dummy function to avoid changing FlowGenericProblem.
-    // TODO: mostly related to MixingRateControls<FluidSystem> mixControls_;
-    template <typename Scalar>
-    class DummyOilPvt {
-    public:
-        DummyOilPvt() = default;
-
-        template <typename ValueType>
-        ValueType saturatedGasDissolutionFactor(unsigned /*reg_id*/,
-                                                const ValueType& /*temperature*/,
-                                                const ValueType& /*pressure*/) const
-        {
-            return 0;
-        }
-
-        template <typename ValueType>
-        ValueType saturatedInverseFormationVolumeFactor(unsigned /*reg_id*/,
-                                                        const ValueType& /*temperature*/,
-                                                        const ValueType& /*pressure*/) const
-        {
-            return 0;
-        }
-
-        template <typename ValueType>
-        ValueType inverseFormationVolumeFactor(unsigned /*reg_id*/,
-                                               const ValueType& /*temperature*/,
-                                               const ValueType& /*pressure*/,
-                                               const ValueType& /*rs*/) const
-        {
-            return 0;
-        }
-
-        Scalar oilReferenceDensity(unsigned  /*reg_id*/) const
-        {
-            return 0.;
-        }
-
-
-
-        template <typename ValueType>
-        ValueType viscosity(unsigned /*reg_id*/,
-                            const ValueType& /*temperature*/,
-                            const ValueType& /*pressure*/,
-                            const ValueType& /*rs*/) const
-        {
-            return 0;
         }
     };
 
