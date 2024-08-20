@@ -517,25 +517,31 @@ void apply(const Fieldprops::ScalarOperation   op,
            const T                             scalar_value,
            const std::vector<Box::cell_index>& index_list)
 {
-    if (op == Fieldprops::ScalarOperation::EQUAL) {
+    switch (op) {
+    case Fieldprops::ScalarOperation::EQUAL:
         assign_scalar(data, value_status, scalar_value, index_list);
-    }
+        return;
 
-    else if (op == Fieldprops::ScalarOperation::MUL) {
+    case Fieldprops::ScalarOperation::MUL:
         multiply_scalar(loc, arrayName, data, value_status, scalar_value, index_list);
-    }
+        return;
 
-    else if (op == Fieldprops::ScalarOperation::ADD) {
+    case Fieldprops::ScalarOperation::ADD:
         add_scalar(loc, arrayName, data, value_status, scalar_value, index_list);
-    }
+        return;
 
-    else if (op == Fieldprops::ScalarOperation::MIN) {
+    case Fieldprops::ScalarOperation::MIN:
         min_value(loc, arrayName, data, value_status, scalar_value, index_list);
+        return;
+
+    case Fieldprops::ScalarOperation::MAX:
+        max_value(loc, arrayName, data, value_status, scalar_value, index_list);
+        return;
     }
 
-    else if (op == Fieldprops::ScalarOperation::MAX) {
-        max_value(loc, arrayName, data, value_status, scalar_value, index_list);
-    }
+    throw std::invalid_argument {
+        fmt::format("'{}' is not a known operation.", static_cast<int>(op))
+    };
 }
 
 std::string make_region_name(const std::string& deck_value)

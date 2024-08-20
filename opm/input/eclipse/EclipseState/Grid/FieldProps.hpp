@@ -339,7 +339,7 @@ public:
 
     /// Property array existence status
     enum class GetStatus {
-        /// Property exists and its property data is well formed.
+        /// Property exists and its property data is fully defined.
         OK = 1,
 
         /// Property array has not been fully initialised.
@@ -401,7 +401,7 @@ public:
         /// \code this->status \endcode is not \code GetStatus::OK \endcode.
         /// Does nothing otherwise.
         ///
-        /// \param[in] Input keyword which prompted request
+        /// \param[in] Input keyword which prompted request.
         ///
         /// \param[in] descr Textual description of context in which request
         ///   occurred.
@@ -462,7 +462,7 @@ public:
 
         /// Access underlying property data elements
         ///
-        /// Returns \c nullptr if property data is not well formed.
+        /// Returns \c nullptr if property data is not fully defined.
         const std::vector<T>* ptr() const
         {
             return (this->data_ptr != nullptr)
@@ -473,7 +473,7 @@ public:
         /// Access underlying property data elements
         ///
         /// Throws an exception as outlined in \c GetStatus if property data
-        /// is not well formed.
+        /// is not fully defined.
         const std::vector<T>& data() const
         {
             this->verify_status();
@@ -483,7 +483,7 @@ public:
         /// Read-only access to contained FieldData object
         ///
         /// Throws an exception as outlined in \c GetStatus if property data
-        /// is not well formed.
+        /// is not fully defined.
         const Fieldprops::FieldData<T>& field_data() const
         {
             this->verify_status();
@@ -492,7 +492,7 @@ public:
 
         /// Property validity predicate.
         ///
-        /// Returns true if propery exists and has well defined data
+        /// Returns true if property exists and has fully defined data
         /// elements.  False otherwise.
         bool valid() const
         {
