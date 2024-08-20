@@ -17,10 +17,11 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef OPM_DEMANGLE_HPP
-#define OPM_DEMANGLE_HPP
+#ifndef OPM_DEMANGLEDTYPE_HPP
+#define OPM_DEMANGLEDTYPE_HPP
 
 #include <string>
+#include <typeinfo>
 
 namespace Opm {
 
@@ -28,5 +29,12 @@ namespace Opm {
 //! \details Non-demangled name is return if demangling is not supported
 std::string demangle(const char* mangled_symbol);
 
+//! \brief Returns demangled information of a type.
+//! \details Non-demangled type-id symbol is returned if demangling is not supported
+template<typename T>
+std::string getDemangledType() {
+    return demangle(typeid(T).name());
 }
-#endif //OPM_DEMANGLE_HPP
+
+}
+#endif //OPM_DEMANGLEDTYPE_HPP

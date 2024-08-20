@@ -32,7 +32,7 @@ list (APPEND MAIN_SOURCE_FILES
       opm/common/OpmLog/StreamLog.cpp
       opm/common/OpmLog/TimerLog.cpp
       opm/common/utility/ActiveGridCells.cpp
-      opm/common/utility/Demangle.cpp
+      opm/common/utility/DemangledType.cpp
       opm/common/utility/FileSystem.cpp
       opm/common/utility/MemPacker.cpp
       opm/common/utility/OpmInputError.cpp
@@ -813,7 +813,7 @@ list( APPEND PUBLIC_HEADER_FILES
       opm/common/utility/ActiveGridCells.hpp
       opm/common/utility/CSRGraphFromCoordinates.hpp
       opm/common/utility/CSRGraphFromCoordinates_impl.hpp
-      opm/common/utility/Demangle.hpp
+      opm/common/utility/DemangledType.hpp
       opm/common/utility/FileSystem.hpp
       opm/common/utility/gpuDecorators.hpp
       opm/common/utility/MemPacker.hpp

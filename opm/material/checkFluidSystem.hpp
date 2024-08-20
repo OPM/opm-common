@@ -27,7 +27,7 @@
 #ifndef OPM_CHECK_FLUIDSYSTEM_HPP
 #define OPM_CHECK_FLUIDSYSTEM_HPP
 
-#include <opm/common/utility/Demangle.hpp>
+#include <opm/common/utility/DemangledType.hpp>
 
 // include all fluid systems in opm-material
 #include <opm/material/fluidsystems/SinglePhaseFluidSystem.hpp>
@@ -276,9 +276,9 @@ template <class Scalar, class FluidSystem, class RhsEval, class LhsEval>
 void checkFluidSystem()
 {
     std::cout << "Testing fluid system '"
-              << Opm::demangle(typeid(FluidSystem).name())
-              << ", RhsEval = " << Opm::demangle(typeid(RhsEval).name())
-              << ", LhsEval = " << Opm::demangle(typeid(LhsEval).name()) << "'\n";
+              << Opm::getDemangledType<FluidSystem>()
+              << ", RhsEval = " << Opm::getDemangledType<RhsEval>()
+              << ", LhsEval = " << Opm::getDemangledType<LhsEval>() << "'\n";
 
     // make sure the fluid system provides the number of phases and
     // the number of components
