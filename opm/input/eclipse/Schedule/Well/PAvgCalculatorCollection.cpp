@@ -126,5 +126,6 @@ allWBPCells() const
 }
 
 template class PAvgCalculatorCollection<double>;
+template class PAvgCalculatorCollection<float>;
 
 } // namespace Opm

@@ -1208,10 +1208,15 @@ linearCombination(const Scalar alpha, typename PAvgCalculator<Scalar>::Result   
     return x;
 }
 
-template class PAvgCalculator<double>;
-template PAvgCalculator<double>::Result linearCombination(const double,
-                                                          PAvgCalculator<double>::Result,
-                                                          const double,
-                                                          const PAvgCalculator<double>::Result&);
+#define INSTANTIATE_TYPE(T) \
+    template class PAvgCalculator<T>;            \
+    template PAvgCalculator<T>::Result           \
+    linearCombination(const T,                   \
+                      PAvgCalculator<T>::Result, \
+                      const T,                   \
+                      const PAvgCalculator<T>::Result&);
+
+INSTANTIATE_TYPE(double)
+INSTANTIATE_TYPE(float)
 
 } // namespace Opm
