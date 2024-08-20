@@ -126,6 +126,7 @@ if(ENABLE_ECL_INPUT)
     opm/input/eclipse/EclipseState/Grid/CarfinManager.cpp
     opm/input/eclipse/EclipseState/Grid/LgrCollection.cpp
     opm/input/eclipse/EclipseState/Grid/EclipseGrid.cpp
+    opm/input/eclipse/EclipseState/Grid/FieldData.cpp
     opm/input/eclipse/EclipseState/Grid/FieldProps.cpp
     opm/input/eclipse/EclipseState/Grid/FieldPropsManager.cpp
     opm/input/eclipse/EclipseState/Grid/FaceDir.cpp

@@ -58,6 +58,7 @@
 #include <set>
 #include <stdexcept>
 #include <string>
+#include <string_view>
 #include <tuple>
 #include <unordered_map>
 #include <unordered_set>
@@ -211,7 +212,6 @@ global_kw_info(const std::string& name, bool)
 
 }} // namespace Fieldprops::keywords
 
-
 namespace {
 
 // The EQUALREG, MULTREG, COPYREG, ... keywords are used to manipulate
@@ -254,6 +254,23 @@ std::string default_region_keyword(const Deck& deck)
     }
 
     return "FLUXNUM";
+}
+
+void reject_undefined_operation(const KeywordLocation& loc,
+                                const std::size_t      numUnInit,
+                                const std::size_t      numElements,
+                                std::string_view       operation,
+                                std::string_view       arrayName)
+{
+    const auto* plural = (numElements > 1) ? "s" : "";
+
+    throw OpmInputError {
+        fmt::format
+        (R"({0} operation on array {1} would
+generate an undefined result in {2} out of {3} block{4}.)",
+         operation, arrayName, numUnInit, numElements, plural),
+        loc
+    };
 }
 
 template <typename T>
@@ -366,9 +383,9 @@ void multiply_deck(const Fieldprops::keywords::keyword_info<T>& kw_info,
 }
 
 template <typename T>
-void assign_scalar(std::vector<T>& data,
-                   std::vector<value::status>& value_status,
-                   T value,
+void assign_scalar(std::vector<T>&                     data,
+                   std::vector<value::status>&         value_status,
+                   const T                             value,
                    const std::vector<Box::cell_index>& index_list)
 {
     for (const auto& cell_index : index_list) {
@@ -378,57 +395,153 @@ void assign_scalar(std::vector<T>& data,
 }
 
 template <typename T>
-void multiply_scalar(std::vector<T>& data,
-                     std::vector<value::status>& value_status,
-                     T value,
+void multiply_scalar(const KeywordLocation&              loc,
+                     std::string_view                    arrayName,
+                     std::vector<T>&                     data,
+                     std::vector<value::status>&         value_status,
+                     const T                             value,
                      const std::vector<Box::cell_index>& index_list)
 {
+    auto unInit = 0;
+
     for (const auto& cell_index : index_list) {
-        if (value::has_value(value_status[cell_index.active_index])) {
-            data[cell_index.active_index] *= value;
+        const auto ix = cell_index.active_index;
+
+        if (value::has_value(value_status[ix])) {
+            data[ix] *= value;
         }
+        else {
+            ++unInit;
+        }
+    }
+
+    if (unInit > 0) {
+        reject_undefined_operation(loc, unInit,
+                                   index_list.size(),
+                                   "Multiplication", arrayName);
     }
 }
 
 template <typename T>
-void add_scalar(std::vector<T>& data,
-                std::vector<value::status>& value_status,
-                T value,
+void add_scalar(const KeywordLocation&              loc,
+                std::string_view                    arrayName,
+                std::vector<T>&                     data,
+                std::vector<value::status>&         value_status,
+                const T                             value,
                 const std::vector<Box::cell_index>& index_list)
 {
+    auto unInit = 0;
+
     for (const auto& cell_index : index_list) {
-        if (value::has_value(value_status[cell_index.active_index])) {
-            data[cell_index.active_index] += value;
+        const auto ix = cell_index.active_index;
+
+        if (value::has_value(value_status[ix])) {
+            data[ix] += value;
         }
+        else {
+            ++unInit;
+        }
+    }
+
+    if (unInit > 0) {
+        reject_undefined_operation(loc, unInit,
+                                   index_list.size(),
+                                   "Addition", arrayName);
     }
 }
 
 template <typename T>
-void min_value(std::vector<T>& data,
-               std::vector<value::status>& value_status,
-               T min_value,
+void min_value(const KeywordLocation&              loc,
+               std::string_view                    arrayName,
+               std::vector<T>&                     data,
+               std::vector<value::status>&         value_status,
+               const T                             value,
                const std::vector<Box::cell_index>& index_list)
 {
+    auto unInit = 0;
+
     for (const auto& cell_index : index_list) {
-        if (value::has_value(value_status[cell_index.active_index])) {
-            T value = data[cell_index.active_index];
-            data[cell_index.active_index] = std::max(value, min_value);
+        const auto ix = cell_index.active_index;
+
+        if (value::has_value(value_status[ix])) {
+            data[ix] = std::max(data[ix], value);
         }
+        else {
+            ++unInit;
+        }
+    }
+
+    if (unInit > 0) {
+        reject_undefined_operation(loc, unInit,
+                                   index_list.size(),
+                                   "Minimum threshold",
+                                   arrayName);
     }
 }
 
 template <typename T>
-void max_value(std::vector<T>& data,
-               std::vector<value::status>& value_status,
-               T max_value,
+void max_value(const KeywordLocation&              loc,
+               std::string_view                    arrayName,
+               std::vector<T>&                     data,
+               std::vector<value::status>&         value_status,
+               const T                             value,
                const std::vector<Box::cell_index>& index_list)
 {
+    auto unInit = 0;
+
     for (const auto& cell_index : index_list) {
-        if (value::has_value(value_status[cell_index.active_index])) {
-            T value = data[cell_index.active_index];
-            data[cell_index.active_index] = std::min(value, max_value);
+        const auto ix = cell_index.active_index;
+
+        if (value::has_value(value_status[ix])) {
+            data[ix] = std::min(data[ix], value);
+        }
+        else {
+            ++unInit;
         }
     }
+
+    if (unInit > 0) {
+        reject_undefined_operation(loc, unInit,
+                                   index_list.size(),
+                                   "Maximum threshold",
+                                   arrayName);
+    }
+}
+
+template <typename T>
+void apply(const Fieldprops::ScalarOperation   op,
+           const KeywordLocation&              loc,
+           std::string_view                    arrayName,
+           std::vector<T>&                     data,
+           std::vector<value::status>&         value_status,
+           const T                             scalar_value,
+           const std::vector<Box::cell_index>& index_list)
+{
+    switch (op) {
+    case Fieldprops::ScalarOperation::EQUAL:
+        assign_scalar(data, value_status, scalar_value, index_list);
+        return;
+
+    case Fieldprops::ScalarOperation::MUL:
+        multiply_scalar(loc, arrayName, data, value_status, scalar_value, index_list);
+        return;
+
+    case Fieldprops::ScalarOperation::ADD:
+        add_scalar(loc, arrayName, data, value_status, scalar_value, index_list);
+        return;
+
+    case Fieldprops::ScalarOperation::MIN:
+        min_value(loc, arrayName, data, value_status, scalar_value, index_list);
+        return;
+
+    case Fieldprops::ScalarOperation::MAX:
+        max_value(loc, arrayName, data, value_status, scalar_value, index_list);
+        return;
+    }
+
+    throw std::invalid_argument {
+        fmt::format("'{}' is not a known operation.", static_cast<int>(op))
+    };
 }
 
 std::string make_region_name(const std::string& deck_value)
@@ -546,7 +659,6 @@ bool rst_compare_data(const std::unordered_map<std::string, Fieldprops::FieldDat
 }
 
 } // Anonymous namespace
-
 
 bool FieldProps::operator==(const FieldProps& other) const
 {
@@ -1068,7 +1180,6 @@ std::vector<std::string> FieldProps::keys<int>() const
     return klist;
 }
 
-
 template <>
 void FieldProps::erase<int>(const std::string& keyword)
 {
@@ -1133,7 +1244,6 @@ double FieldProps::getSIValue(const ScalarOperation op,
         : this->getSIValue(keyword, raw_value);
 }
 
-
 void FieldProps::handle_int_keyword(const Fieldprops::keywords::keyword_info<int>& kw_info,
                                     const DeckKeyword& keyword,
                                     const Box& box)
@@ -1187,34 +1297,6 @@ void FieldProps::handle_double_keyword(const Section section,
                                        const Box& box)
 {
     this->handle_double_keyword(section, kw_info, keyword, keyword.name(), box);
-}
-
-template <typename T>
-void FieldProps::apply(const Fieldprops::ScalarOperation op,
-                       std::vector<T>& data,
-                       std::vector<value::status>& value_status,
-                       const T scalar_value,
-                       const std::vector<Box::cell_index>& index_list)
-{
-    if (op == Fieldprops::ScalarOperation::EQUAL) {
-        assign_scalar(data, value_status, scalar_value, index_list);
-    }
-
-    else if (op == Fieldprops::ScalarOperation::MUL) {
-        multiply_scalar(data, value_status, scalar_value, index_list);
-    }
-
-    else if (op == Fieldprops::ScalarOperation::ADD) {
-        add_scalar(data, value_status, scalar_value, index_list);
-    }
-
-    else if (op == Fieldprops::ScalarOperation::MIN) {
-        min_value(data, value_status, scalar_value, index_list);
-    }
-
-    else if (op == Fieldprops::ScalarOperation::MAX) {
-        max_value(data, value_status, scalar_value, index_list);
-    }
 }
 
 double FieldProps::get_alpha(const std::string& func_name,
@@ -1404,9 +1486,9 @@ void FieldProps::handle_region_operation(const DeckKeyword& keyword)
             const auto scalar_value =
                 this->getSIValue(operation, target_kw, record.getItem(1).get<double>(0));
 
-            FieldProps::apply(operation, field_data.data,
-                              field_data.value_status,
-                              scalar_value, index_list);
+            apply(operation, keyword.location(), target_kw,
+                  field_data.data, field_data.value_status,
+                  scalar_value, index_list);
 
             continue;
         }
@@ -1450,6 +1532,31 @@ void FieldProps::handle_operation(const Section      section,
                                   const DeckKeyword& keyword,
                                   Box                box)
 {
+    // Keyword handler for ADD, EQUALS, MAXVALUE, MINVALUE, and MULTIPLY.
+    //
+    // General keyword structure:
+    //
+    //   KWNAME -- e.g., ADD or EQUALS
+    //     Array Scalar Box /
+    //     Array Scalar Box /
+    //   -- ...
+    //   /
+    //
+    // For example
+    //
+    //    ADD
+    //      PERMX  12.3  1 10   2 4   5 6 /
+    //    /
+    //
+    // which adds 12.3 mD to the PERMX array in all cells within the box
+    // {1..10, 2..4, 5..6}.  The array being operated on must already exist
+    // and be well defined for all elements in the box unless the operation
+    // is "EQUALS" or we're processing one of the TRAN* arrays or PORV in
+    // the EDIT section.  Final TRAN* array processing is deferred to a
+    // later stage and at this point we're only collecting descriptors of
+    // what operations to apply when we get to that stage.
+
+    const auto mustExist = keyword.name() != ParserKeywords::EQUALS::keywordName;
     const auto editSect  = section == Section::EDIT;
     const auto operation = fromString(keyword.name());
 
@@ -1465,11 +1572,8 @@ void FieldProps::handle_operation(const Section      section,
             FieldProps::supported<double>(target_kw) ||
             (tran_iter != this->tran.end()))
         {
-            const auto scalar_value = this->
-                getSIValue(operation, target_kw, record.getItem(1).get<double>(0));
-
             auto kw_info = Fieldprops::keywords::global_kw_info<double>
-                (target_kw, tran_iter != this->tran.end());
+                (target_kw, /* allow_unsupported = */ tran_iter != this->tran.end());
 
             auto unique_name = target_kw;
 
@@ -1494,31 +1598,57 @@ void FieldProps::handle_operation(const Section      section,
                     unique_name = tran_field_iter->second;
                 }
             }
+            else if (mustExist &&
+                     !(editSect && (unique_name == ParserKeywords::PORV::keywordName)) &&
+                     (this->double_data.find(unique_name) == this->double_data.end()))
+            {
+                throw OpmInputError {
+                    fmt::format("Target array {} must already "
+                                "exist when operated upon in {}.",
+                                target_kw, keyword.name()),
+                    keyword.location()
+                };
+            }
+
+            const auto scalar_value = this->
+                getSIValue(operation, target_kw, record.getItem(1).get<double>(0));
 
             auto& field_data = this->init_get<double>
-                (unique_name, kw_info, editSect && kw_info.multiplier);
+                (unique_name, kw_info, /* multiplier_in_edit =*/ editSect && kw_info.multiplier);
 
-            FieldProps::apply(operation, field_data.data,
-                              field_data.value_status,
-                              scalar_value, box.index_list());
+            apply(operation, keyword.location(), target_kw,
+                  field_data.data, field_data.value_status,
+                  scalar_value, box.index_list());
 
             if (field_data.global_data) {
-                FieldProps::apply(operation, *field_data.global_data,
-                                  *field_data.global_value_status,
-                                  scalar_value, box.global_index_list());
+                apply(operation, keyword.location(), target_kw,
+                      *field_data.global_data,
+                      *field_data.global_value_status,
+                      scalar_value, box.global_index_list());
             }
 
             continue;
         }
 
         if (FieldProps::supported<int>(target_kw)) {
+            if (mustExist && (this->int_data.find(target_kw) == this->int_data.end())) {
+                throw OpmInputError {
+                    fmt::format("Target array {} must already "
+                                "exist when operated upon in {}.",
+                                target_kw, keyword.name()),
+                    keyword.location()
+                };
+            }
+
             const auto scalar_value = static_cast<int>(record.getItem(1).get<double>(0));
 
             auto& field_data = this->init_get<int>(target_kw);
 
-            FieldProps::apply(operation, field_data.data,
-                              field_data.value_status,
-                              scalar_value, box.index_list());
+            apply(operation, keyword.location(), target_kw,
+                  field_data.data,
+                  field_data.value_status,
+                  scalar_value, box.index_list());
+
             continue;
         }
 
@@ -1544,6 +1674,7 @@ void FieldProps::handle_COPY(const DeckKeyword& keyword,
         const auto target_kw = arrayName(record.getItem(1));
 
         std::vector<Box::cell_index> index_list;
+        auto srcDescr = std::string {};
 
         if (isRegionOperation) {
             using Kw = ParserKeywords::COPYREG;
@@ -1551,28 +1682,39 @@ void FieldProps::handle_COPY(const DeckKeyword& keyword,
             const auto& regionName = this->region_name(record.getItem<Kw::REGION_NAME>());
 
             index_list = this->region_index(regionName, regionId);
+            srcDescr = fmt::format("{} in region {} of region set {}",
+                                   src_kw, regionId, regionName);
         }
         else {
             box.update(record);
             index_list = box.index_list();
 
+            srcDescr = fmt::format("{} in BOX ({}-{}, {}-{}, {}-{})",
+                                   src_kw,
+                                   box.I1() + 1, box.I2() + 1,
+                                   box.J1() + 1, box.J2() + 1,
+                                   box.K1() + 1, box.K2() + 1);
         }
 
         if (FieldProps::supported<double>(src_kw)) {
-            const auto& src_data = this->try_get<double>(src_kw);
-            src_data.verify_status();
+            const auto& src_data = this->try_get<double>(src_kw, TryGetFlags::MustExist);
+            src_data.verify_status(keyword.location(), "Source array", "COPY");
 
             auto& target_data = this->init_get<double>(target_kw);
-            target_data.copy(src_data.field_data(), index_list);
+            target_data.checkInitialisedCopy(src_data.field_data(), index_list,
+                                             srcDescr, target_kw,
+                                             keyword.location());
             continue;
         }
 
         if (FieldProps::supported<int>(src_kw)) {
-            const auto& src_data = this->try_get<int>(src_kw);
-            src_data.verify_status();
+            const auto& src_data = this->try_get<int>(src_kw, TryGetFlags::MustExist);
+            src_data.verify_status(keyword.location(), "Source array", "COPY");
 
             auto& target_data = this->init_get<int>(target_kw);
-            target_data.copy(src_data.field_data(), index_list);
+            target_data.checkInitialisedCopy(src_data.field_data(), index_list,
+                                             srcDescr, target_kw,
+                                             keyword.location());
             continue;
         }
     }

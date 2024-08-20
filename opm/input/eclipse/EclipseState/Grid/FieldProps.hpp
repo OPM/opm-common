@@ -19,6 +19,8 @@
 #ifndef FIELDPROPS_HPP
 #define FIELDPROPS_HPP
 
+#include <opm/common/utility/OpmInputError.hpp>
+
 #include <opm/input/eclipse/EclipseState/Grid/Box.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/FieldData.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/Keywords.hpp>
@@ -308,7 +310,7 @@ keyword_info<T> global_kw_info(const std::string& name, bool allow_unsupported =
 bool is_oper_keyword(const std::string& name);
 } // end namespace keywords
 
-} // end namespace FieldProps
+} // end namespace Fieldprops
 
 class FieldProps {
 public:
@@ -335,28 +337,112 @@ public:
         }
     };
 
+    /// Property array existence status
     enum class GetStatus {
-         OK = 1,
-         INVALID_DATA = 2,               // std::runtime_error
-         MISSING_KEYWORD = 3,            // std::out_of_range
-         NOT_SUPPPORTED_KEYWORD = 4      // std::logic_error
+        /// Property exists and its property data is fully defined.
+        OK = 1,
+
+        /// Property array has not been fully initialised.
+        ///
+        /// At least one data element is uninitialised or has an empty
+        /// default.
+        ///
+        /// Will throw an exception of type \code std::runtime_error
+        /// \endcode in FieldDataManager::verify_status().
+        INVALID_DATA = 2,
+
+        /// Property has not yet been defined in the input file.
+        ///
+        /// Will throw an exception of type \code std::out_of_range \endcode
+        /// in FieldDataManager::verify_status().
+        MISSING_KEYWORD = 3,
+
+        /// Named property is not known to the internal handling mechanism.
+        ///
+        /// Might for instance be because the client code requested a
+        /// property of type \c int, but the name is only known as property
+        /// of type \c double, or because there was a misprint in the
+        /// property name.
+        ///
+        /// Will throw an exception of type \code std::logic_error \endcode
+        /// in FieldDataManager::verify_status().
+        NOT_SUPPPORTED_KEYWORD = 4,
     };
 
+    /// Wrapper type for field properties
+    ///
+    /// \tparam T Property element type.  Typically \c double or \c int.
     template<typename T>
     struct FieldDataManager
     {
+        /// Property name.
         const std::string& keyword;
+
+        /// Request status.
         GetStatus status;
+
+        /// Property data.
         const Fieldprops::FieldData<T>* data_ptr;
 
+        /// Constructor
+        ///
+        /// \param[in] k Property name
+        /// \param[in] s Request status
+        /// \param[in] d Property data.  Pass \c nullptr for missing property data.
         FieldDataManager(const std::string& k, GetStatus s, const Fieldprops::FieldData<T>* d)
             : keyword(k)
             , status(s)
             , data_ptr(d)
         {}
 
+        /// Validate result of \code try_get<>() \endcode request
+        ///
+        /// Throws an exception of type \code OpmInputError \endcode if
+        /// \code this->status \endcode is not \code GetStatus::OK \endcode.
+        /// Does nothing otherwise.
+        ///
+        /// \param[in] Input keyword which prompted request.
+        ///
+        /// \param[in] descr Textual description of context in which request
+        ///   occurred.
+        ///
+        /// \param[in] operation Name of operation which prompted request.
+        void verify_status(const KeywordLocation& loc,
+                           const std::string&     descr,
+                           const std::string&     operation) const
+        {
+            switch (this->status) {
+            case FieldProps::GetStatus::OK:
+                return;
 
+            case FieldProps::GetStatus::INVALID_DATA:
+                throw OpmInputError {
+                    descr + " " + this->keyword +
+                    " is not fully initialised for " + operation,
+                    loc
+                };
 
+            case FieldProps::GetStatus::MISSING_KEYWORD:
+                throw OpmInputError {
+                    descr + " " + this->keyword +
+                    " does not exist in input deck for " + operation,
+                    loc
+                };
+
+            case FieldProps::GetStatus::NOT_SUPPPORTED_KEYWORD:
+                throw OpmInputError {
+                    descr + " " + this->keyword +
+                    " is not supported for " + operation,
+                    loc
+                };
+            }
+        }
+
+        /// Validate result of \code try_get<>() \endcode request
+        ///
+        /// Throws an exception as outlined in \c GetStatus if \code
+        /// this->status \endcode is not \code GetStatus::OK \endcode.  Does
+        /// nothing otherwise.
         void verify_status() const
         {
             switch (status) {
@@ -374,6 +460,9 @@ public:
             }
         }
 
+        /// Access underlying property data elements
+        ///
+        /// Returns \c nullptr if property data is not fully defined.
         const std::vector<T>* ptr() const
         {
             return (this->data_ptr != nullptr)
@@ -381,22 +470,54 @@ public:
                 : nullptr;
         }
 
+        /// Access underlying property data elements
+        ///
+        /// Throws an exception as outlined in \c GetStatus if property data
+        /// is not fully defined.
         const std::vector<T>& data() const
         {
             this->verify_status();
             return this->data_ptr->data;
         }
 
+        /// Read-only access to contained FieldData object
+        ///
+        /// Throws an exception as outlined in \c GetStatus if property data
+        /// is not fully defined.
         const Fieldprops::FieldData<T>& field_data() const
         {
             this->verify_status();
             return *this->data_ptr;
         }
 
+        /// Property validity predicate.
+        ///
+        /// Returns true if property exists and has fully defined data
+        /// elements.  False otherwise.
         bool valid() const
         {
             return this->status == GetStatus::OK;
         }
+    };
+
+    /// Options to restrict or relax a try_get() request.
+    ///
+    /// For instance, the source array of a COPY operation must exist and be
+    /// fully defined, whereas the target array need not be either.  On the
+    /// other hand, certain use cases might want to look up property names
+    /// of an unsupported keyword type--e.g., transmissibility keywords
+    /// among the integer properties--and those requests should specify the
+    /// AllowUnsupported flag.
+    ///
+    /// Note: We would ideally use strong enums (i.e., "enum class") for
+    /// this, but those don't mesh very well with bitwise operations.
+    enum TryGetFlags : unsigned int {
+        /// Whether or not to permit looking up property names of unmatching
+        /// types.
+        AllowUnsupported = (1u << 0),
+
+        /// Whether or not the property must already exist.
+        MustExist = (1u << 1),
     };
 
     /// Normal constructor for FieldProps.
@@ -424,15 +545,36 @@ public:
     template <typename T>
     std::vector<std::string> keys() const;
 
+    /// Request read-only property array from internal cache
+    ///
+    /// Will create property array if permitted and possible.
+    ///
+    /// \tparam T Property element type.  Typically \c double or \c int.
+    ///
+    /// \param[in] keyword Property name
+    ///
+    /// \param[in] flags Options to limit or relax request processing.
+    ///   Treated as a bitwise mask of \c TryGetFlags.
+    ///
+    /// \return Access structure for requested property array.
     template <typename T>
     FieldDataManager<T>
-    try_get(const std::string& keyword, const bool allow_unsupported = false)
+    try_get(const std::string& keyword, const unsigned int flags = 0u)
     {
+        const auto allow_unsupported =
+            (flags & TryGetFlags::AllowUnsupported) != 0u;
+
         if (!allow_unsupported && !FieldProps::template supported<T>(keyword)) {
             return { keyword, GetStatus::NOT_SUPPPORTED_KEYWORD, nullptr };
         }
 
         const auto has0 = this->template has<T>(keyword);
+        if (!has0 && ((flags & TryGetFlags::MustExist) != 0)) {
+            // Client requested a property which must exist, e.g., as a
+            // source array for a COPY operation, but the property has not
+            // (yet) been defined in the run's input.
+            return { keyword, GetStatus::MISSING_KEYWORD, nullptr };
+        }
 
         const auto& field_data = this->template
             init_get<T>(keyword, std::is_same_v<T, double> && allow_unsupported);
@@ -444,11 +586,15 @@ public:
         }
 
         if (! has0) {
+            // Client requested a property which did not exist and which
+            // could not be created from a default description.
             this->template erase<T>(keyword);
 
             return { keyword, GetStatus::MISSING_KEYWORD, nullptr };
         }
 
+        // If we get here then the property exists but has not been fully
+        // defined yet.
         return { keyword, GetStatus::INVALID_DATA, nullptr };
     }
 
@@ -595,13 +741,6 @@ private:
                  Fieldprops::FieldData<T>& target_data,
                  const Fieldprops::FieldData<T>& src_data,
                  const std::vector<Box::cell_index>& index_list);
-
-    template <typename T>
-    static void apply(ScalarOperation op,
-                      std::vector<T>& data,
-                      std::vector<value::status>& value_status,
-                      T scalar_value,
-                      const std::vector<Box::cell_index>& index_list);
 
     template <typename T>
     Fieldprops::FieldData<T>&
