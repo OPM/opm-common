@@ -244,7 +244,7 @@ namespace Opm
           updating internal datastructures after the ACTIONX keywords have been
           applied.
         */
-        SimulatorUpdate applyAction(std::size_t reportStep, const Action::ActionX& action, const std::vector<std::string>& matching_wells, const std::unordered_map<std::string, double>& wellpi);
+        SimulatorUpdate applyAction(std::size_t reportStep, const Action::ActionX& action, const std::vector<std::string>& matching_wells);
         /*
           The runPyAction() will run the Python script in a PYACTION keyword. In
           the case of Schedule updates the recommended way of doing that from
@@ -254,6 +254,7 @@ namespace Opm
         */
         SimulatorUpdate runPyAction(std::size_t reportStep, const Action::PyAction& pyaction, Action::State& action_state, EclipseState& ecl_state, SummaryState& summary_state);
 
+        void setWellPIMap(std::unordered_map<std::string, double>);
 
         const GasLiftOpt& glo(std::size_t report_step) const;
 
@@ -293,7 +294,9 @@ namespace Opm
             serializer(this->completed_cells);
             serializer(this->m_treat_critical_as_non_critical);
             serializer(this->current_report_step);
+            serializer(this->welpi_action_mode);
             serializer(this->simUpdateFromPython);
+            serializer(this->m_wellPIMap);
 
             this->template pack_unpack<PAvg>(serializer);
             this->template pack_unpack<WellTestConfig>(serializer);
@@ -478,6 +481,9 @@ namespace Opm
         // end up on the same partition.
         std::unordered_map<std::string, std::set<int>> possibleFutureConnections;
 
+        // The action mode is set to true when a PYACTION call is executed, when the PYACTION execution is
+        // over, it is set to false again. This is needed for handling the keyword WELPI from a PYACTION.
+        bool welpi_action_mode = false;
         // The current_report_step is set to the current report step when a PYACTION call is executed.
         // This is needed since the Schedule object does not know the current report step of the simulator and
         // we only allow PYACTIONS for the current and future report steps. 
@@ -487,6 +493,10 @@ namespace Opm
         // It is a shared_ptr, so a Schedule can be constructed using the copy constructor sharing the simUpdateFromPython.
         // The copy constructor is needed for creating a mocked simulator (msim).
         std::shared_ptr<SimulatorUpdate> simUpdateFromPython{};
+        // The wellPIMap is used when a PYACTION is executed for handling the keyword WELPI.
+        // It is a map containing wells and their production index.
+        // This map is set in the ActionHandler with the setWellPIMap function of the Schedule.
+        std::unordered_map<std::string, double> m_wellPIMap;
 
         void load_rst(const RestartIO::RstState& rst,
                       const TracerConfig& tracer_config,
@@ -518,7 +528,6 @@ namespace Opm
                                     const ParseContext& parseContext,
                                     ErrorGuard& errors,
                                     const ScheduleGrid& grid,
-                                    const std::unordered_map<std::string, double> * target_wellpi,
                                     const std::string& prefix,
                                     const bool log_to_debug = false);
         void addACTIONX(const Action::ActionX& action);
@@ -539,9 +548,7 @@ namespace Opm
                            ErrorGuard& errors,
                            const ScheduleGrid& grid,
                            const std::vector<std::string>& matching_wells,
-                           bool actionx_mode,
                            SimulatorUpdate* sim_update,
-                           const std::unordered_map<std::string, double>* target_wellpi,
                            std::unordered_map<std::string, double>& wpimult_global_factor,
                            WelSegsSet* welsegs_wells = nullptr,
                            std::set<std::string>* compsegs_wells = nullptr);
