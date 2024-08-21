@@ -59,6 +59,11 @@ class Solution : public std::map<std::string, data::CellData>
                                          TargetType );
 
         std::pair<iterator, bool> insert(std::string name,
+                                         UnitSystem::measure,
+                                         std::vector<float>,
+                                         TargetType );
+
+        std::pair<iterator, bool> insert(std::string name,
                                          std::vector<int>,
                                          TargetType );
 

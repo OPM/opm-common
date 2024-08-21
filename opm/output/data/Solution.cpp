@@ -66,6 +66,19 @@ Solution::insert(std::string               name,
 
 std::pair<Solution::iterator, bool>
 Solution::insert(std::string               name,
+                 const UnitSystem::measure m,
+                 std::vector<float>        xs,
+                 const TargetType          type)
+{
+    std::vector<double> xsd(xs.begin(), xs.end());
+    return this->emplace(std::piecewise_construct,
+                         std::forward_as_tuple(std::move(name)),
+                         std::forward_as_tuple(m, std::move(xsd), type));
+}
+
+
+std::pair<Solution::iterator, bool>
+Solution::insert(std::string               name,
                  std::vector<int>          xs,
                  const TargetType          type)
 {
