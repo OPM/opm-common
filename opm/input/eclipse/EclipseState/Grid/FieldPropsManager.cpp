@@ -140,8 +140,8 @@ std::vector<std::string> FieldPropsManager::fip_regions() const
     return this->fp->fip_regions();
 }
 
-std::vector<int> FieldPropsManager::actnum() const {
-    return this->fp->actnum();
+std::vector<int> FieldPropsManager::actnum(const std::vector<double>* minpvv) const {
+    return this->fp->actnum(minpvv);
 }
 
 std::vector<double> FieldPropsManager::porv(bool global) const {

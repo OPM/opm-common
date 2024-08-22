@@ -1851,11 +1851,11 @@ FieldProps::canonical_fipreg_name(const std::string& fipreg) const
 //           ACTNUM 0 1 10 1 10 1 3 /
 //       /
 //
-//    3. Cells with PORV == 0 will get ACTNUM = 0.
+//    3. Cells with PORV == 0 or PORV < MINPVV will get ACTNUM = 0.
 //
 // Note that steps 2 and 3 generally forms an ACTNUM property which differs
 // from the ACTNUM property stored internally in the FieldProps instance.
-std::vector<int> FieldProps::actnum()
+std::vector<int> FieldProps::actnum(const std::vector<double>* minpvv)
 {
     auto actnum = this->m_actnum;
 
@@ -1883,7 +1883,8 @@ std::vector<int> FieldProps::actnum()
     for (std::size_t active_index = 0; active_index < this->active_size; active_index++) {
         auto global_index = global_map[active_index];
         actnum[global_index] = deck_actnum.data[active_index];
-        if (porv_data[active_index] == 0)
+        const double pv = porv_data[active_index];
+        if (pv == 0 || (minpvv && pv < (*minpvv)[global_index]))
             actnum[global_index] = 0;
     }
     return actnum;

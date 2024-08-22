@@ -156,6 +156,12 @@ namespace Opm {
             this->m_inputGrid.setMINPVV(field_props.get_global_double("MINPVV"));
             field_props.deleteMINPVV();
         }
+        // Update ACTNUM taking MINPV/MINPVV into account
+        if (this->m_inputGrid.getMinpvMode() != MinpvMode::Inactive) {
+            this->m_inputGrid.resetACTNUM(this->field_props.actnum(& (this->getInputGrid().getMinpvVector())));
+            this->field_props.reset_actnum(this->getInputGrid().getACTNUM());
+        }
+
         this->initLgrs(deck);
         this->aquifer_config.load_connections(deck, this->getInputGrid());
 

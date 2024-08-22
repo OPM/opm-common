@@ -533,7 +533,7 @@ public:
 
     const std::string& default_region() const;
 
-    std::vector<int> actnum();
+    std::vector<int> actnum(const std::vector<double>* minpvv = nullptr);
     const std::vector<int>& actnumRaw() const;
 
     template <typename T>
