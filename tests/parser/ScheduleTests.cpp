@@ -1944,22 +1944,25 @@ DRSDT
 }
 
 BOOST_AUTO_TEST_CASE(createDeckWithDRSDTCON) {
-    std::string input =
-            "START             -- 0 \n"
-            "19 JUN 2007 / \n"
-            "SCHEDULE\n"
-            "DATES             -- 1\n"
-            " 10  OKT 2008 / \n"
-            "/\n"
-            "DRSDTCON\n"
-            "/\n"
-            "DATES             -- 2\n"
-            " 15  OKT 2008 / \n"
-            "/\n"
-            "DRSDTCON\n"
-            "0.01 0.3 1e-7\n"
-            "/\n";
-
+        std::string input = R"(
+START             -- 0
+19 JUN 2007 /
+TABDIMS
+ 1* 2 /
+SCHEDULE
+DATES             -- 1
+ 10  OKT 2008 /
+/
+DRSDTCON
+/
+/
+DATES             -- 1
+ 15  OKT 2008 /
+/
+DRSDTCON
+0.01 0.3 1e-7 /
+/
+)";
     const auto& schedule = make_schedule(input);
     size_t currentStep = 1;
     const auto& ovap = schedule[currentStep].oilvap();
@@ -1967,17 +1970,22 @@ BOOST_AUTO_TEST_CASE(createDeckWithDRSDTCON) {
     BOOST_CHECK_EQUAL(true,   ovap.getOption(0));
     BOOST_CHECK(ovap.getType() == OilVaporizationProperties::OilVaporization::DRSDTCON);
 
-    BOOST_CHECK_EQUAL(true,   ovap.drsdtActive());
-    BOOST_CHECK_EQUAL(false,   ovap.drvdtActive());
-    BOOST_CHECK_EQUAL(true,   ovap.drsdtConvective());
+    BOOST_CHECK_EQUAL(true,   ovap.drsdtActive(0));
+    BOOST_CHECK_EQUAL(false,   ovap.drvdtActive(0));
+    BOOST_CHECK_EQUAL(true,   ovap.drsdtConvective(0));
     BOOST_CHECK_CLOSE(ovap.getMaxDRSDT(0), 0.04, 1e-9);
     BOOST_CHECK_CLOSE(ovap.getOmega(0), 3e-9, 1e-9);
     BOOST_CHECK_CLOSE(ovap.getPsi(0), 0.34, 1e-9);
-
+    BOOST_CHECK_CLOSE(ovap.getMaxDRSDT(1), 0.04, 1e-9);
+    BOOST_CHECK_CLOSE(ovap.getOmega(1), 3e-9, 1e-9);
+    BOOST_CHECK_CLOSE(ovap.getPsi(1), 0.34, 1e-9);
     const auto& ovap2 = schedule[2].oilvap();
     BOOST_CHECK_CLOSE(ovap2.getMaxDRSDT(0), 0.01, 1e-9);
     BOOST_CHECK_CLOSE(ovap2.getOmega(0), 1e-7, 1e-9);
     BOOST_CHECK_CLOSE(ovap2.getPsi(0), 0.3, 1e-9);
+    BOOST_CHECK_CLOSE(ovap2.getMaxDRSDT(1), 0.04, 1e-9);
+    BOOST_CHECK_CLOSE(ovap2.getOmega(1), 3e-9, 1e-9);
+    BOOST_CHECK_CLOSE(ovap2.getPsi(1), 0.34, 1e-9);
 
 }
 
@@ -2006,11 +2014,15 @@ DRSDTR
         double value = unitSystem.to_si( UnitSystem::measure::gas_surface_rate, i );
         BOOST_CHECK_EQUAL(value, ovap.getMaxDRSDT(i));
         BOOST_CHECK_EQUAL(true,   ovap.getOption(i));
+        BOOST_CHECK_EQUAL(true,   ovap.drsdtActive(i));
+        BOOST_CHECK_EQUAL(false,   ovap.drvdtActive(i));
     }
 
-    BOOST_CHECK(ovap.getType() == OilVaporizationProperties::OilVaporization::DRDT);
     BOOST_CHECK_EQUAL(true,   ovap.drsdtActive());
     BOOST_CHECK_EQUAL(false,   ovap.drvdtActive());
+
+    BOOST_CHECK(ovap.getType() == OilVaporizationProperties::OilVaporization::DRDT);
+
 }
 
 

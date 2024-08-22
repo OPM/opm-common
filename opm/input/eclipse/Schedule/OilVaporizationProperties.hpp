@@ -56,9 +56,14 @@ namespace Opm
         double getMaxDRSDT(const size_t pvtRegionIdx) const;
         double getMaxDRVDT(const size_t pvtRegionIdx) const;
         bool getOption(const size_t pvtRegionIdx) const;
+        bool drsdtActive(const size_t pvtRegionIdx) const;
+        bool drvdtActive(const size_t pvtRegionIdx) const;
+        bool drsdtConvective(const size_t pvtRegionIdx) const;
+        
         bool drsdtActive() const;
         bool drvdtActive() const;
         bool drsdtConvective() const;
+
         bool defined() const;
         size_t numPvtRegions() const {return m_maxDRSDT.size();}
 

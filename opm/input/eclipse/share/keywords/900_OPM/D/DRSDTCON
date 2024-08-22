@@ -3,7 +3,10 @@
   "sections": [
     "SCHEDULE"
   ],
-  "size": 1,
+  "size": {
+    "keyword": "TABDIMS",
+    "item": "NTPVT"
+  },
   "items": [
     {
       "name": "DRSDT_MAX",
