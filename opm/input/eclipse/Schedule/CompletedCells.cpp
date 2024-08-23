@@ -18,7 +18,7 @@
 */
 
 #include <opm/input/eclipse/Schedule/CompletedCells.hpp>
-
+#include <iostream>
 bool Opm::CompletedCells::Cell::Props::operator==(const Props& other) const
 {
     return (this->active_index == other.active_index)
@@ -83,7 +83,24 @@ Opm::CompletedCells::CompletedCells(const Opm::GridDims& dims_)
 const Opm::CompletedCells::Cell&
 Opm::CompletedCells::get(std::size_t i, std::size_t j, std::size_t k) const
 {
-    return this->cells.at(this->dims.getGlobalIndex(i, j, k));
+    std::cout << "looping over cells" << std::endl;
+    for (auto& cell : this->cells) {
+        std::cout << cell.first  << ", (i,j,k) = ("  << cell.second.i << ", "  << cell.second.j << ", "  << cell.second.k << ")" << std::endl;
+    }
+    try {
+        std::cout << "this->dims.getGlobalIndex(" << i << ", " << j << ", " << k << ") = " << this->dims.getGlobalIndex(i, j, k) << std::endl;
+    } catch (std::exception& e) {
+        std::cout << "this->dims.getGlobalIndex(" << i << ", " << j << ", " << k << ") not found " << std::endl;
+        std::cout << e.what() << std::endl;
+    }
+    try { 
+        return this->cells.at(this->dims.getGlobalIndex(i, j, k));
+    } catch (std::exception& e) {
+        std::cout << e.what() << std::endl;
+        Opm::CompletedCells::Cell cell;
+        return cell;
+    }
+
 }
 
 std::pair<bool, Opm::CompletedCells::Cell&>
