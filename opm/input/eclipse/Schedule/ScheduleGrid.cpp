@@ -77,16 +77,19 @@ Opm::ScheduleGrid::get_cell(std::size_t i, std::size_t j, std::size_t k) const
         cellRef.dimensions = this->grid->getCellDimensions(i, j, k);
 
         if (this->grid->cellActive(i, j, k)) {
-            auto& props = cellRef.props.emplace(CompletedCells::Cell::Props{});
-
-            props.active_index = this->grid->getActiveIndex(i, j, k);
-            props.permx = try_get_value(*this->fp, "PERMX", props.active_index);
-            props.permy = try_get_value(*this->fp, "PERMY", props.active_index);
-            props.permz = try_get_value(*this->fp, "PERMZ", props.active_index);
-            props.poro = try_get_value(*this->fp, "PORO", props.active_index);
-            props.satnum = this->fp->get_int("SATNUM").at(props.active_index);
-            props.pvtnum = this->fp->get_int("PVTNUM").at(props.active_index);
-            props.ntg = try_get_ntg_value(*this->fp, "NTG", props.active_index);
+            const auto active_index = this->grid->getActiveIndex(i, j, k);
+            const double porv = try_get_value(*this->fp, "PORV", active_index);
+            if (this->grid->cellActiveAfterMINPV(i, j, k, porv)) {
+                auto& props = cellRef.props.emplace(CompletedCells::Cell::Props{});
+                props.active_index = active_index;
+                props.permx = try_get_value(*this->fp, "PERMX", props.active_index);
+                props.permy = try_get_value(*this->fp, "PERMY", props.active_index);
+                props.permz = try_get_value(*this->fp, "PERMZ", props.active_index);
+                props.poro = try_get_value(*this->fp, "PORO", props.active_index);
+                props.satnum = this->fp->get_int("SATNUM").at(props.active_index);
+                props.pvtnum = this->fp->get_int("PVTNUM").at(props.active_index);
+                props.ntg = try_get_ntg_value(*this->fp, "NTG", props.active_index);
+            }
         }
     }
 

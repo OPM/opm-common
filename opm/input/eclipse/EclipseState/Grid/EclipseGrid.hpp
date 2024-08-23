@@ -172,6 +172,7 @@ namespace Opm {
         std::array<double, 3> getCellDims(size_t globalIndex) const;
         bool cellActive( size_t globalIndex ) const;
         bool cellActive( size_t i , size_t j, size_t k ) const;
+        bool cellActiveAfterMINPV( size_t i , size_t j , size_t k, double cell_porv ) const;
 
         std::array<double, 3> getCellDimensions(size_t i, size_t j, size_t k) const {
             return getCellDims(i, j, k);
