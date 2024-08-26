@@ -1524,6 +1524,16 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
         return this->cellActive(globalIndex);
     }
 
+    bool EclipseGrid::cellActiveAfterMINPV( size_t i , size_t j , size_t k, double cell_porv ) const {
+        assertIJK(i,j,k);
+
+        size_t globalIndex = getGlobalIndex(i,j,k);
+        if (!this->cellActive(globalIndex))
+            return false;
+
+        return m_minpvMode == MinpvMode::Inactive || cell_porv >= m_minpvVector[globalIndex];
+    }
+
     const std::vector<double>& EclipseGrid::activeVolume() const {
         if (!this->active_volume.has_value()) {
             std::vector<double> volume(this->m_nactive);
