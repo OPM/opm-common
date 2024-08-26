@@ -299,7 +299,7 @@ namespace Opm {
             };
         }
 
-        if (this->m_definitions.count(keyword) == 0) {
+        if (this->m_definitions.count(keyword) == 0 && this->m_assignments.count(keyword) == 0) {
             throw OpmInputError {
                 fmt::format("UDQ variable: {} must be defined before you can use UPDATE", keyword),
                 location
