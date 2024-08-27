@@ -22,6 +22,7 @@
 #include <opm/io/eclipse/rst/state.hpp>
 
 #include <opm/common/OpmLog/KeywordLocation.hpp>
+#include <opm/common/OpmLog/OpmLog.hpp>
 #include <opm/common/utility/OpmInputError.hpp>
 
 #include <opm/input/eclipse/Schedule/MSW/SegmentMatcher.hpp>
@@ -299,7 +300,12 @@ namespace Opm {
             };
         }
 
-        if (this->m_definitions.count(keyword) == 0 && this->m_assignments.count(keyword) == 0) {
+        if (this->m_definitions.count(keyword) == 0) {
+            if (this->m_assignments.count(keyword) > 0) {
+                OpmLog::warning(fmt::format("UDQ variable {} is constant, so UPDATE will have no effect.", keyword));
+                return;
+            }
+
             throw OpmInputError {
                 fmt::format("UDQ variable: {} must be defined before you can use UPDATE", keyword),
                 location
