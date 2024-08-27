@@ -1423,8 +1423,8 @@ namespace {
 
         for (std::size_t tracer_index = 0; tracer_index < tracer_config.size(); tracer_index++) {
             const auto& tracer_name = tracer_config[tracer_index].name;
-            auto wtpt_offset = VI::XWell::index::TracerOffset +   tracer_dims.water_tracers();
-            auto wtit_offset = VI::XWell::index::TracerOffset + 2*tracer_dims.water_tracers();
+            auto wtpt_offset = VI::XWell::index::TracerOffset +   tracer_dims.all_tracers();
+            auto wtit_offset = VI::XWell::index::TracerOffset + 2*tracer_dims.all_tracers();
 
             smry.update_well_var(well, fmt::format("WTPT{}", tracer_name), xwel[wtpt_offset + tracer_index]);
             smry.update_well_var(well, fmt::format("WTIT{}", tracer_name), xwel[wtit_offset + tracer_index]);
