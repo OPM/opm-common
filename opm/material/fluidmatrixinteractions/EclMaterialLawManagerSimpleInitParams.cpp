@@ -55,7 +55,7 @@ EclMaterialLawManagerSimple<Traits>::InitParams::
 run(const std::function<std::vector<int>(const FieldPropsManager&, const std::string&, bool)>&
     fieldPropIntOnLeafAssigner,
     const std::function<unsigned(unsigned)>& lookupIdxOnLevelZeroAssigner) {
-    readUnscaledEpsPointsVectors_();
+    // readUnscaledEpsPointsVectors_();
     readEffectiveParameters_();
     initSatnumRegionArray_(fieldPropIntOnLeafAssigner);
     copySatnumArrays_(fieldPropIntOnLeafAssigner);
@@ -70,19 +70,19 @@ run(const std::function<std::vector<int>(const FieldPropsManager&, const std::st
         for (unsigned elemIdx = 0; elemIdx < this->numCompressedElems_; ++elemIdx) {
             unsigned satRegionIdx = satRegion_(*satnumArray[i], elemIdx);
             //unsigned satNumCell = this->parent_.satnumRegionArray_[elemIdx];
-            HystParams hystParams {*this};
-            hystParams.setConfig(satRegionIdx);
-            hystParams.setDrainageParamsOilGas(elemIdx, satRegionIdx, lookupIdxOnLevelZeroAssigner);
-            hystParams.setDrainageParamsOilWater(elemIdx, satRegionIdx, lookupIdxOnLevelZeroAssigner);
-            hystParams.setDrainageParamsGasWater(elemIdx, satRegionIdx, lookupIdxOnLevelZeroAssigner);
-            if (this->parent_.enableHysteresis()) {
-                unsigned imbRegionIdx = imbRegion_(*imbnumArray[i], elemIdx);
-                hystParams.setImbibitionParamsOilGas(elemIdx, imbRegionIdx, lookupIdxOnLevelZeroAssigner);
-                hystParams.setImbibitionParamsOilWater(elemIdx, imbRegionIdx, lookupIdxOnLevelZeroAssigner);
-                hystParams.setImbibitionParamsGasWater(elemIdx, imbRegionIdx, lookupIdxOnLevelZeroAssigner);
-            }
-            hystParams.finalize();
-            initThreePhaseParams_(hystParams, (*mlpArray[i])[elemIdx], satRegionIdx, elemIdx);
+            // HystParams hystParams {*this};
+            // hystParams.setConfig(satRegionIdx);
+            // hystParams.setDrainageParamsOilGas(elemIdx, satRegionIdx, lookupIdxOnLevelZeroAssigner);
+            // hystParams.setDrainageParamsOilWater(elemIdx, satRegionIdx, lookupIdxOnLevelZeroAssigner);
+            // hystParams.setDrainageParamsGasWater(elemIdx, satRegionIdx, lookupIdxOnLevelZeroAssigner);
+            // if (this->parent_.enableHysteresis()) {
+            //     unsigned imbRegionIdx = imbRegion_(*imbnumArray[i], elemIdx);
+            //     hystParams.setImbibitionParamsOilGas(elemIdx, imbRegionIdx, lookupIdxOnLevelZeroAssigner);
+            //     hystParams.setImbibitionParamsOilWater(elemIdx, imbRegionIdx, lookupIdxOnLevelZeroAssigner);
+            //     hystParams.setImbibitionParamsGasWater(elemIdx, imbRegionIdx, lookupIdxOnLevelZeroAssigner);
+            // }
+            // hystParams.finalize();
+            initThreePhaseParams_(/*hystParams,*/ (*mlpArray[i])[elemIdx], satRegionIdx, elemIdx);
         }
     }
 }
@@ -197,20 +197,20 @@ initSatnumRegionArray_(const std::function<std::vector<int>(const FieldPropsMana
 template <class Traits>
 void
 EclMaterialLawManagerSimple<Traits>::InitParams::
-initThreePhaseParams_(HystParams &hystParams,
+initThreePhaseParams_(//HystParams &hystParams,
                       MaterialLawParams& materialParams,
                       [[maybe_unused]] unsigned satRegionIdx,
                       [[maybe_unused]] unsigned elemIdx)
 {
     // const auto& epsInfo = this->parent_.oilWaterScaledEpsInfoDrainage_[elemIdx];
 
-    auto oilWaterParams = hystParams.getOilWaterParams();
-    auto gasOilParams = hystParams.getGasOilParams();
-    auto gasWaterParams = hystParams.getGasWaterParams();
+    // auto oilWaterParams = hystParams.getOilWaterParams();
+    // auto gasOilParams = hystParams.getGasOilParams();
+    // auto gasWaterParams = hystParams.getGasWaterParams();
     auto& realParams = materialParams;
-    realParams.setGasOilParams(gasOilParams);
-    realParams.setOilWaterParams(oilWaterParams);
-    realParams.setGasWaterParams(gasWaterParams);
+    // realParams.setGasOilParams(gasOilParams);
+    // realParams.setOilWaterParams(oilWaterParams);
+    // realParams.setGasWaterParams(gasWaterParams);
     realParams.setApproach(this->parent_.twoPhaseApproach_);
     realParams.finalize();
 }
@@ -225,47 +225,47 @@ readEffectiveParameters_()
     effectiveReader.read();
 }
 
-template <class Traits>
-void
-EclMaterialLawManagerSimple<Traits>::InitParams::
-readUnscaledEpsPointsVectors_()
-{
-    if (this->parent_.hasGas && this->parent_.hasOil) {
-        readUnscaledEpsPoints_(
-            this->parent_.gasOilUnscaledPointsVector_,
-            this->parent_.gasOilConfig_,
-            EclTwoPhaseSystemType::GasOil
-        );
-    }
-    if (this->parent_.hasOil && this->parent_.hasWater) {
-        readUnscaledEpsPoints_(
-            this->parent_.oilWaterUnscaledPointsVector_,
-            this->parent_.oilWaterConfig_,
-            EclTwoPhaseSystemType::OilWater
-        );
-    }
-    if (!this->parent_.hasOil) {
-        readUnscaledEpsPoints_(
-            this->parent_.gasWaterUnscaledPointsVector_,
-            this->parent_.gasWaterConfig_,
-            EclTwoPhaseSystemType::GasWater
-        );
-    }
-}
+// template <class Traits>
+// void
+// EclMaterialLawManagerSimple<Traits>::InitParams::
+// readUnscaledEpsPointsVectors_()
+// {
+//     if (this->parent_.hasGas && this->parent_.hasOil) {
+//         readUnscaledEpsPoints_(
+//             this->parent_.gasOilUnscaledPointsVector_,
+//             this->parent_.gasOilConfig_,
+//             EclTwoPhaseSystemType::GasOil
+//         );
+//     }
+//     if (this->parent_.hasOil && this->parent_.hasWater) {
+//         readUnscaledEpsPoints_(
+//             this->parent_.oilWaterUnscaledPointsVector_,
+//             this->parent_.oilWaterConfig_,
+//             EclTwoPhaseSystemType::OilWater
+//         );
+//     }
+//     if (!this->parent_.hasOil) {
+//         readUnscaledEpsPoints_(
+//             this->parent_.gasWaterUnscaledPointsVector_,
+//             this->parent_.gasWaterConfig_,
+//             EclTwoPhaseSystemType::GasWater
+//         );
+//     }
+// }
 
-template <class Traits>
-template <class Container>
-void
-EclMaterialLawManagerSimple<Traits>::InitParams::
-readUnscaledEpsPoints_(Container& dest, std::shared_ptr<EclEpsConfig> config, EclTwoPhaseSystemType system_type)
-{
-    const size_t numSatRegions = this->eclState_.runspec().tabdims().getNumSatTables();
-    dest.resize(numSatRegions);
-    for (unsigned satRegionIdx = 0; satRegionIdx < numSatRegions; ++satRegionIdx) {
-        dest[satRegionIdx] = std::make_shared<EclEpsScalingPoints<Scalar> >();
-        dest[satRegionIdx]->init(this->parent_.unscaledEpsInfo_[satRegionIdx], *config, system_type);
-    }
-}
+// template <class Traits>
+// template <class Container>
+// void
+// EclMaterialLawManagerSimple<Traits>::InitParams::
+// readUnscaledEpsPoints_(Container& dest, std::shared_ptr<EclEpsConfig> config, EclTwoPhaseSystemType system_type)
+// {
+//     const size_t numSatRegions = this->eclState_.runspec().tabdims().getNumSatTables();
+//     dest.resize(numSatRegions);
+//     for (unsigned satRegionIdx = 0; satRegionIdx < numSatRegions; ++satRegionIdx) {
+//         dest[satRegionIdx] = std::make_shared<EclEpsScalingPoints<Scalar> >();
+//         dest[satRegionIdx]->init(this->parent_.unscaledEpsInfo_[satRegionIdx], *config, system_type);
+//     }
+// }
 
 template <class Traits>
 unsigned
