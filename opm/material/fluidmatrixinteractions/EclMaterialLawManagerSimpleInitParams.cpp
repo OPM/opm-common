@@ -199,19 +199,21 @@ void
 EclMaterialLawManagerSimple<Traits>::InitParams::
 initThreePhaseParams_(//HystParams &hystParams,
                       MaterialLawParams& materialParams,
-                      [[maybe_unused]] unsigned satRegionIdx,
+                      unsigned satRegionIdx,
                       [[maybe_unused]] unsigned elemIdx)
 {
-    // const auto& epsInfo = this->parent_.oilWaterScaledEpsInfoDrainage_[elemIdx];
-
-    // auto oilWaterParams = hystParams.getOilWaterParams();
-    // auto gasOilParams = hystParams.getGasOilParams();
-    // auto gasWaterParams = hystParams.getGasWaterParams();
     auto& realParams = materialParams;
-    // realParams.setGasOilParams(gasOilParams);
-    // realParams.setOilWaterParams(oilWaterParams);
-    // realParams.setGasWaterParams(gasWaterParams);
     realParams.setApproach(this->parent_.twoPhaseApproach_);
+
+    if (realParams.approach() == EclTwoPhaseApproach::GasOil) {
+        realParams.setGasOilParams(this->parent_.gasOilEffectiveParamVector_[satRegionIdx]);
+    }
+    else if (realParams.approach() == EclTwoPhaseApproach::GasWater) {
+        realParams.setGasWaterParams(this->parent_.gasWaterEffectiveParamVector_[satRegionIdx]);
+    }
+    else if (realParams.approach() == EclTwoPhaseApproach::OilWater) {
+        realParams.setOilWaterParams(this->parent_.oilWaterEffectiveParamVector_[satRegionIdx]);
+    }
     realParams.finalize();
 }
 
