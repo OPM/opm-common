@@ -54,17 +54,17 @@ initFromState(const EclipseState& eclState)
     this->hasOil = ph.active(Phase::OIL);
     this->hasWater = ph.active(Phase::WATER);
 
-    readGlobalEpsOptions_(eclState);
-    readGlobalHysteresisOptions_(eclState);
+    // readGlobalEpsOptions_(eclState);
+    // readGlobalHysteresisOptions_(eclState);
     readGlobalThreePhaseOptions_(runspec);
 
     // Read the end point scaling configuration (once per run).
-    gasOilConfig_ = std::make_shared<EclEpsConfig>();
-    oilWaterConfig_ = std::make_shared<EclEpsConfig>();
-    gasWaterConfig_ = std::make_shared<EclEpsConfig>();
-    gasOilConfig_->initFromState(eclState, EclTwoPhaseSystemType::GasOil);
-    oilWaterConfig_->initFromState(eclState, EclTwoPhaseSystemType::OilWater);
-    gasWaterConfig_->initFromState(eclState, EclTwoPhaseSystemType::GasWater);
+    // gasOilConfig_ = std::make_shared<EclEpsConfig>();
+    // oilWaterConfig_ = std::make_shared<EclEpsConfig>();
+    // gasWaterConfig_ = std::make_shared<EclEpsConfig>();
+    // gasOilConfig_->initFromState(eclState, EclTwoPhaseSystemType::GasOil);
+    // oilWaterConfig_->initFromState(eclState, EclTwoPhaseSystemType::OilWater);
+    // gasWaterConfig_->initFromState(eclState, EclTwoPhaseSystemType::GasWater);
 
 
     const auto& tables = eclState.getTableManager();
@@ -118,15 +118,15 @@ initFromState(const EclipseState& eclState)
     }
 
     // WAG hysteresis parameters per SATNUM.
-    if (eclState.runspec().hysterPar().activeWag()) {
-        if (numSatRegions != eclState.getWagHysteresis().size())
-            throw std::runtime_error("Inconsistent Wag-hysteresis data");
-        wagHystersisConfig_.resize(numSatRegions);
-        for (unsigned satRegionIdx = 0; satRegionIdx < numSatRegions; ++satRegionIdx) {
-            wagHystersisConfig_[satRegionIdx] = std::make_shared<WagHysteresisConfig::
-                WagHysteresisConfigRecord >(eclState.getWagHysteresis()[satRegionIdx]);
-        }
-    }
+    // if (eclState.runspec().hysterPar().activeWag()) {
+    //     if (numSatRegions != eclState.getWagHysteresis().size())
+    //         throw std::runtime_error("Inconsistent Wag-hysteresis data");
+    //     wagHystersisConfig_.resize(numSatRegions);
+    //     for (unsigned satRegionIdx = 0; satRegionIdx < numSatRegions; ++satRegionIdx) {
+    //         wagHystersisConfig_[satRegionIdx] = std::make_shared<WagHysteresisConfig::
+    //             WagHysteresisConfigRecord >(eclState.getWagHysteresis()[satRegionIdx]);
+    //     }
+    // }
 }
 
 template<class TraitsT>
@@ -207,10 +207,10 @@ applySwatinit(unsigned elemIdx,
     else
         elemScaledEpsInfo.maxPcow = newMaxPcow;
 
-    auto& elemEclEpsScalingPoints = oilWaterScaledEpsPointsDrainage(elemIdx);
-    elemEclEpsScalingPoints.init(elemScaledEpsInfo,
-                                    *oilWaterEclEpsConfig_,
-                                    EclTwoPhaseSystemType::OilWater);
+    // auto& elemEclEpsScalingPoints = oilWaterScaledEpsPointsDrainage(elemIdx);
+    // elemEclEpsScalingPoints.init(elemScaledEpsInfo,
+    //                                 *oilWaterEclEpsConfig_,
+    //                                 EclTwoPhaseSystemType::OilWater);
 
     return {Sw, newSwatInit};
 }
@@ -227,10 +227,10 @@ EclMaterialLawManagerSimple<TraitsT>::applyRestartSwatInit(const unsigned elemId
 
     elemScaledEpsInfo.maxPcow = maxPcow;
 
-    this->oilWaterScaledEpsPointsDrainage(elemIdx)
-        .init(elemScaledEpsInfo,
-              *this->oilWaterEclEpsConfig_,
-              EclTwoPhaseSystemType::OilWater);
+    // this->oilWaterScaledEpsPointsDrainage(elemIdx)
+    //     .init(elemScaledEpsInfo,
+    //           *this->oilWaterEclEpsConfig_,
+    //           EclTwoPhaseSystemType::OilWater);
 }
 
 template<class TraitsT>
@@ -245,16 +245,13 @@ connectionMaterialLawParams(unsigned satRegionIdx, unsigned elemIdx) const
 
     auto& realParams = mlp;
     if (realParams.approach() == EclTwoPhaseApproach::GasOil) {
-        realParams.gasOilParams().drainageParams().setUnscaledPoints(gasOilUnscaledPointsVector_[satRegionIdx]);
-        realParams.gasOilParams().drainageParams().setEffectiveLawParams(gasOilEffectiveParamVector_[satRegionIdx]);
+        realParams.setGasOilParams(gasOilEffectiveParamVector_[satRegionIdx]);
     }
     else if (realParams.approach() == EclTwoPhaseApproach::GasWater) {
-        realParams.gasWaterParams().drainageParams().setUnscaledPoints(gasWaterUnscaledPointsVector_[satRegionIdx]);
-        realParams.gasWaterParams().drainageParams().setEffectiveLawParams(gasWaterEffectiveParamVector_[satRegionIdx]);
+        realParams.setGasWaterParams(gasWaterEffectiveParamVector_[satRegionIdx]);
     }
     else if (realParams.approach() == EclTwoPhaseApproach::OilWater) {
-        realParams.oilWaterParams().drainageParams().setUnscaledPoints(oilWaterUnscaledPointsVector_[satRegionIdx]);
-        realParams.oilWaterParams().drainageParams().setEffectiveLawParams(oilWaterEffectiveParamVector_[satRegionIdx]);
+        realParams.setOilWaterParams(oilWaterEffectiveParamVector_[satRegionIdx]);
     }
     return mlp;
 }
@@ -342,15 +339,15 @@ setGasOilHysteresisParams(const Scalar& sgmax,
     MaterialLaw::setGasOilHysteresisParams(sgmax, shmax, somin, params);
 }
 
-template<class TraitsT>
-EclEpsScalingPoints<typename TraitsT::Scalar>&
-EclMaterialLawManagerSimple<TraitsT>::
-oilWaterScaledEpsPointsDrainage(unsigned elemIdx)
-{
-    auto& materialParams = materialLawParams_[elemIdx];
-    auto& realParams = materialParams;
-    return realParams.oilWaterParams().drainageParams().scaledPoints();
-}
+// template<class TraitsT>
+// EclEpsScalingPoints<typename TraitsT::Scalar>&
+// EclMaterialLawManagerSimple<TraitsT>::
+// oilWaterScaledEpsPointsDrainage(unsigned elemIdx)
+// {
+//     auto& materialParams = materialLawParams_[elemIdx];
+//     auto& realParams = materialParams;
+//     return realParams.oilWaterParams().drainageParams().scaledPoints();
+// }
 
 template<class TraitsT>
 const typename EclMaterialLawManagerSimple<TraitsT>::MaterialLawParams& EclMaterialLawManagerSimple<TraitsT>::
@@ -377,23 +374,23 @@ materialLawParamsFunc_(unsigned elemIdx, FaceDir::DirEnum facedir) const
     }
 }
 
-template<class TraitsT>
-void EclMaterialLawManagerSimple<TraitsT>::
-readGlobalEpsOptions_(const EclipseState& eclState)
-{
-    oilWaterEclEpsConfig_ = std::make_shared<EclEpsConfig>();
-    oilWaterEclEpsConfig_->initFromState(eclState, EclTwoPhaseSystemType::OilWater);
+// template<class TraitsT>
+// void EclMaterialLawManagerSimple<TraitsT>::
+// readGlobalEpsOptions_(const EclipseState& eclState)
+// {
+//     oilWaterEclEpsConfig_ = std::make_shared<EclEpsConfig>();
+//     oilWaterEclEpsConfig_->initFromState(eclState, EclTwoPhaseSystemType::OilWater);
 
-    enableEndPointScaling_ = eclState.getTableManager().hasTables("ENKRVD");
-}
+//     enableEndPointScaling_ = eclState.getTableManager().hasTables("ENKRVD");
+// }
 
-template<class TraitsT>
-void EclMaterialLawManagerSimple<TraitsT>::
-readGlobalHysteresisOptions_(const EclipseState& state)
-{
-    hysteresisConfig_ = std::make_shared<EclHysteresisConfig>();
-    hysteresisConfig_->initFromState(state.runspec());
-}
+// template<class TraitsT>
+// void EclMaterialLawManagerSimple<TraitsT>::
+// readGlobalHysteresisOptions_(const EclipseState& state)
+// {
+//     hysteresisConfig_ = std::make_shared<EclHysteresisConfig>();
+//     hysteresisConfig_->initFromState(state.runspec());
+// }
 
 template<class TraitsT>
 void EclMaterialLawManagerSimple<TraitsT>::

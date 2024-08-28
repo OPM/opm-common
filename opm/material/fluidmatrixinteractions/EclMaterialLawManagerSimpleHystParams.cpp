@@ -18,6 +18,8 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#if 0
+
 #include <config.h>
 #include <opm/material/fluidmatrixinteractions/EclMaterialLawManagerSimple.hpp>
 #include <opm/material/fluidmatrixinteractions/EclEpsGridProperties.hpp>
@@ -308,3 +310,5 @@ template class EclMaterialLawManagerSimple<ThreePhaseMaterialTraits<float,0,1,2>
 
 
 } // namespace Opm
+
+#endif // 0

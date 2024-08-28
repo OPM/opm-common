@@ -95,20 +95,24 @@ private:
     using GasWaterEffectiveTwoPhaseParams = typename GasWaterEffectiveTwoPhaseLaw::Params;
 
     // the two-phase material law which is defined on absolute (scaled) saturations
-    using GasOilEpsTwoPhaseLaw = EclEpsTwoPhaseLaw<GasOilEffectiveTwoPhaseLaw>;
-    using OilWaterEpsTwoPhaseLaw = EclEpsTwoPhaseLaw<OilWaterEffectiveTwoPhaseLaw>;
-    using GasWaterEpsTwoPhaseLaw = EclEpsTwoPhaseLaw<GasWaterEffectiveTwoPhaseLaw>;
-    using GasOilEpsTwoPhaseParams = typename GasOilEpsTwoPhaseLaw::Params;
-    using OilWaterEpsTwoPhaseParams = typename OilWaterEpsTwoPhaseLaw::Params;
-    using GasWaterEpsTwoPhaseParams = typename GasWaterEpsTwoPhaseLaw::Params;
+    // using GasOilEpsTwoPhaseLaw = EclEpsTwoPhaseLaw<GasOilEffectiveTwoPhaseLaw>;
+    // using OilWaterEpsTwoPhaseLaw = EclEpsTwoPhaseLaw<OilWaterEffectiveTwoPhaseLaw>;
+    // using GasWaterEpsTwoPhaseLaw = EclEpsTwoPhaseLaw<GasWaterEffectiveTwoPhaseLaw>;
+    // using GasOilEpsTwoPhaseParams = typename GasOilEpsTwoPhaseLaw::Params;
+    // using OilWaterEpsTwoPhaseParams = typename OilWaterEpsTwoPhaseLaw::Params;
+    // using GasWaterEpsTwoPhaseParams = typename GasWaterEpsTwoPhaseLaw::Params;
 
     // the scaled two-phase material laws with hystersis
-    using GasOilTwoPhaseLaw = EclHysteresisTwoPhaseLaw<GasOilEpsTwoPhaseLaw>;
-    using OilWaterTwoPhaseLaw = EclHysteresisTwoPhaseLaw<OilWaterEpsTwoPhaseLaw>;
-    using GasWaterTwoPhaseLaw = EclHysteresisTwoPhaseLaw<GasWaterEpsTwoPhaseLaw>;
-    using GasOilTwoPhaseHystParams = typename GasOilTwoPhaseLaw::Params;
-    using OilWaterTwoPhaseHystParams = typename OilWaterTwoPhaseLaw::Params;
-    using GasWaterTwoPhaseHystParams = typename GasWaterTwoPhaseLaw::Params;
+    // using GasOilTwoPhaseLaw = EclHysteresisTwoPhaseLaw<GasOilEpsTwoPhaseLaw>;
+    // using OilWaterTwoPhaseLaw = EclHysteresisTwoPhaseLaw<OilWaterEpsTwoPhaseLaw>;
+    // using GasWaterTwoPhaseLaw = EclHysteresisTwoPhaseLaw<GasWaterEpsTwoPhaseLaw>;
+    // using GasOilTwoPhaseHystParams = typename GasOilTwoPhaseLaw::Params;
+    // using OilWaterTwoPhaseHystParams = typename OilWaterTwoPhaseLaw::Params;
+    // using GasWaterTwoPhaseHystParams = typename GasWaterTwoPhaseLaw::Params;
+
+    using GasOilTwoPhaseLaw = GasOilEffectiveTwoPhaseLaw;
+    using OilWaterTwoPhaseLaw = OilWaterEffectiveTwoPhaseLaw;
+    using GasWaterTwoPhaseLaw = GasWaterEffectiveTwoPhaseLaw;
 
 public:
     // the three-phase material law used by the simulation
@@ -126,13 +130,13 @@ private:
     using OilWaterEffectiveParamVector = std::vector<std::shared_ptr<OilWaterEffectiveTwoPhaseParams>>;
     using GasWaterEffectiveParamVector = std::vector<std::shared_ptr<GasWaterEffectiveTwoPhaseParams>>;
 
-    using GasOilScalingPointsVector = std::vector<std::shared_ptr<EclEpsScalingPoints<Scalar>>>;
-    using OilWaterScalingPointsVector = std::vector<std::shared_ptr<EclEpsScalingPoints<Scalar>>>;
-    using GasWaterScalingPointsVector = std::vector<std::shared_ptr<EclEpsScalingPoints<Scalar>>>;
+    // using GasOilScalingPointsVector = std::vector<std::shared_ptr<EclEpsScalingPoints<Scalar>>>;
+    // using OilWaterScalingPointsVector = std::vector<std::shared_ptr<EclEpsScalingPoints<Scalar>>>;
+    // using GasWaterScalingPointsVector = std::vector<std::shared_ptr<EclEpsScalingPoints<Scalar>>>;
     using OilWaterScalingInfoVector = std::vector<EclEpsScalingPointsInfo<Scalar>>;
-    using GasOilParamVector = std::vector<std::shared_ptr<GasOilTwoPhaseHystParams>>;
-    using OilWaterParamVector = std::vector<std::shared_ptr<OilWaterTwoPhaseHystParams>>;
-    using GasWaterParamVector = std::vector<std::shared_ptr<GasWaterTwoPhaseHystParams>>;
+    // using GasOilParamVector = std::vector<std::shared_ptr<GasOilTwoPhaseHystParams>>;
+    // using OilWaterParamVector = std::vector<std::shared_ptr<OilWaterTwoPhaseHystParams>>;
+    // using GasWaterParamVector = std::vector<std::shared_ptr<GasWaterTwoPhaseHystParams>>;
     using MaterialLawParamsVector = std::vector<std::shared_ptr<MaterialLawParams>>;
 
     // helper classes
@@ -148,7 +152,7 @@ private:
         void run(const std::function<std::vector<int>(const FieldPropsManager&, const std::string&, bool)>& fieldPropIntOnLeafAssigner,
                  const std::function<unsigned(unsigned)>& lookupIdxOnLevelZeroAssigner);
     private:
-        class HystParams;
+        // class HystParams;
         // \brief Function argument 'fieldPropIntOnLeadAssigner' needed to lookup
         //        field properties of cells on the leaf grid view for CpGrid with local grid refinement.
         void copySatnumArrays_(const std::function<std::vector<int>(const FieldPropsManager&, const std::string&, bool)>&
@@ -170,17 +174,17 @@ private:
         void initSatnumRegionArray_(const std::function<std::vector<int>(const FieldPropsManager&, const std::string&, bool)>&
                                     fieldPropIntOnLeafAssigner);
         void initThreePhaseParams_(
-                                   HystParams &hystParams,
+                                   // HystParams &hystParams,
                                    MaterialLawParams& materialParams,
                                    unsigned satRegionIdx,
                                    unsigned elemIdx);
         void readEffectiveParameters_();
-        void readUnscaledEpsPointsVectors_();
-        template <class Container>
-        void readUnscaledEpsPoints_(Container& dest, std::shared_ptr<EclEpsConfig> config, EclTwoPhaseSystemType system_type);
+        // void readUnscaledEpsPointsVectors_();
+        // template <class Container>
+        // void readUnscaledEpsPoints_(Container& dest, std::shared_ptr<EclEpsConfig> config, EclTwoPhaseSystemType system_type);
         unsigned satRegion_(std::vector<int>& array, unsigned elemIdx);
         unsigned satOrImbRegion_(std::vector<int>& array, std::vector<int>& default_vec, unsigned elemIdx);
-
+/*
         // This class' implementation is defined in "EclMaterialLawManagerSimpleHystParams.cpp"
         class HystParams {
         public:
@@ -228,6 +232,7 @@ private:
             std::shared_ptr<OilWaterTwoPhaseHystParams> oilWaterParams_;
             std::shared_ptr<GasWaterTwoPhaseHystParams> gasWaterParams_;
         };
+*/
 
         // This class' implementation is defined in "EclMaterialLawManagerSimpleReadEffectiveParams.cpp"
         class ReadEffectiveParams {
@@ -313,16 +318,20 @@ public:
     { return enablePpcwmax_; }
 
     bool enableHysteresis() const
-    { return hysteresisConfig_->enableHysteresis(); }
+    //{ return hysteresisConfig_->enableHysteresis(); }
+    { return false; }
 
     bool enablePCHysteresis() const
-    { return (enableHysteresis() && hysteresisConfig_->pcHysteresisModel() >= 0); }
+    //{ return (enableHysteresis() && hysteresisConfig_->pcHysteresisModel() >= 0); }
+    { return false; }
 
     bool enableWettingHysteresis() const
-    { return (enableHysteresis() && hysteresisConfig_->krHysteresisModel() >= 4); }
+    //{ return (enableHysteresis() && hysteresisConfig_->krHysteresisModel() >= 4); }
+    { return false; }
 
     bool enableNonWettingHysteresis() const
-    { return (enableHysteresis() && hysteresisConfig_->krHysteresisModel() >= 0); }
+    //{ return (enableHysteresis() && hysteresisConfig_->krHysteresisModel() >= 0); }
+    { return false; }
 
     MaterialLawParams& materialLawParams(unsigned elemIdx)
     {
@@ -415,7 +424,7 @@ public:
                                    const Scalar& somin,
                                    unsigned elemIdx);
 
-    EclEpsScalingPoints<Scalar>& oilWaterScaledEpsPointsDrainage(unsigned elemIdx);
+    // EclEpsScalingPoints<Scalar>& oilWaterScaledEpsPointsDrainage(unsigned elemIdx);
 
     const EclEpsScalingPointsInfo<Scalar>& oilWaterScaledEpsInfoDrainage(size_t elemIdx) const
     { return oilWaterScaledEpsInfoDrainage_[elemIdx]; }
@@ -435,26 +444,26 @@ public:
 private:
     const MaterialLawParams& materialLawParamsFunc_(unsigned elemIdx, FaceDir::DirEnum facedir) const;
 
-    void readGlobalEpsOptions_(const EclipseState& eclState);
+    // void readGlobalEpsOptions_(const EclipseState& eclState);
 
-    void readGlobalHysteresisOptions_(const EclipseState& state);
+    // void readGlobalHysteresisOptions_(const EclipseState& state);
 
     void readGlobalThreePhaseOptions_(const Runspec& runspec);
 
     bool enableEndPointScaling_;
-    std::shared_ptr<EclHysteresisConfig> hysteresisConfig_;
-    std::vector<std::shared_ptr<WagHysteresisConfig::WagHysteresisConfigRecord>> wagHystersisConfig_;
+    // std::shared_ptr<EclHysteresisConfig> hysteresisConfig_;
+    // std::vector<std::shared_ptr<WagHysteresisConfig::WagHysteresisConfigRecord>> wagHystersisConfig_;
 
 
     std::shared_ptr<EclEpsConfig> oilWaterEclEpsConfig_;
     std::vector<EclEpsScalingPointsInfo<Scalar>> unscaledEpsInfo_;
     OilWaterScalingInfoVector oilWaterScaledEpsInfoDrainage_;
 
-    std::shared_ptr<EclEpsConfig> gasWaterEclEpsConfig_;
+    // std::shared_ptr<EclEpsConfig> gasWaterEclEpsConfig_;
 
-    GasOilScalingPointsVector gasOilUnscaledPointsVector_;
-    OilWaterScalingPointsVector oilWaterUnscaledPointsVector_;
-    GasWaterScalingPointsVector gasWaterUnscaledPointsVector_;
+    // GasOilScalingPointsVector gasOilUnscaledPointsVector_;
+    // OilWaterScalingPointsVector oilWaterUnscaledPointsVector_;
+    // GasWaterScalingPointsVector gasWaterUnscaledPointsVector_;
 
     GasOilEffectiveParamVector gasOilEffectiveParamVector_;
     OilWaterEffectiveParamVector oilWaterEffectiveParamVector_;
@@ -462,7 +471,7 @@ private:
 
     EclMultiplexerApproach threePhaseApproach_ = EclMultiplexerApproach::Default;
     // this attribute only makes sense for twophase simulations!
-    enum EclTwoPhaseApproach twoPhaseApproach_ = EclTwoPhaseApproach::GasOil;
+    enum EclTwoPhaseApproach twoPhaseApproach_ = EclTwoPhaseApproach::GasWater;
 
     std::vector<MaterialLawParams> materialLawParams_;
     DirectionalMaterialLawParamsPtr dirMaterialLawParams_;
