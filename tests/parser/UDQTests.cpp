@@ -2890,7 +2890,8 @@ BOOST_AUTO_TEST_CASE(UDQ_ASSIGN_SEGMENT)
 
 BOOST_AUTO_TEST_CASE(UDQ_Update_SummaryState)
 {
-    auto st = SummaryState { TimeService::now(), 0.0 };
+    const double udq_undefined = 0.0;
+    auto st = SummaryState { TimeService::now(), udq_undefined };
 
     // P2 not yet online
     st.update_well_var("P1", "WBHP",  42.0);
@@ -2903,15 +2904,16 @@ BOOST_AUTO_TEST_CASE(UDQ_Update_SummaryState)
     st.update_group_var("AA", "GOPR", 1234.5);
 
     // P2 not yet online
-    st.update_udq(UDQSet::wells("WUBAR", { "P1", "P3" }, 17.29), -123.4);
+    st.update_udq(UDQSet::wells("WUBAR", { "P1", "P3" }, 17.29));
+    std::cout << "JALLA: " << st.get_well_var("P2", "WUBAR") << std::endl;
     BOOST_CHECK_CLOSE(st.get_well_var("P1", "WUBAR"),   17.29, 1.0e-8);
-    BOOST_CHECK_CLOSE(st.get_well_var("P2", "WUBAR"), -123.4 , 1.0e-8);
+    BOOST_CHECK_CLOSE(st.get_well_var("P2", "WUBAR"), udq_undefined, 1.0e-8);
     BOOST_CHECK_CLOSE(st.get_well_var("P3", "WUBAR"),   17.29, 1.0e-8);
 
     // BB not yet online
-    st.update_udq(UDQSet::groups("GUNDA_ST", { "G1", "AA" }, 652.44), -123.4);
+    st.update_udq(UDQSet::groups("GUNDA_ST", { "G1", "AA" }, 652.44));
     BOOST_CHECK_CLOSE(st.get_group_var("AA", "GUNDA_ST"),  652.44, 1.0e-8);
-    BOOST_CHECK_CLOSE(st.get_group_var("BB", "GUNDA_ST"), -123.4 , 1.0e-8);
+    BOOST_CHECK_CLOSE(st.get_group_var("BB", "GUNDA_ST"), udq_undefined, 1.0e-8);
     BOOST_CHECK_CLOSE(st.get_group_var("G1", "GUNDA_ST"),  652.44, 1.0e-8);
 }
 

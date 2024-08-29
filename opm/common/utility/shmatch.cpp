@@ -21,23 +21,11 @@
 
 #include <opm/common/utility/shmatch.hpp>
 
-namespace {
-    std::string unquote(const std::string& pattern) {
-        if (pattern.size() < 3)
-            return pattern;
-
-        const auto last = pattern.size()-1;
-        if ( (pattern[0]=='\'' && pattern[last]=='\'') || (pattern[0]=='"' && pattern[last]=='"') )
-            return pattern.substr(1, last-1);
-
-        return pattern;
-    }
-}
 
 bool Opm::shmatch(const std::string& pattern, const std::string& symbol) {
     // Shell patterns should implicitly be interpreted as anchored at beginning
     // and end.
-    std::string re_pattern = "^" + unquote(pattern) + "$";
+    std::string re_pattern = "^" + pattern + "$";
 
     {
         // Shell wildcard '*' should be regular expression arbitrary character '.'
@@ -54,6 +42,6 @@ bool Opm::shmatch(const std::string& pattern, const std::string& symbol) {
     }
 
     std::regex regexp(re_pattern);
-    return std::regex_search(unquote(symbol), regexp);
+    return std::regex_search(symbol, regexp);
 }
 

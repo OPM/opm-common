@@ -279,7 +279,7 @@ namespace Opm {
                                    const UDQSet&      udq_result)
     {
         this->udq_state.add_assign(keyword, udq_result);
-        this->summary_state.update_udq(udq_result, this->udq_state.undefined_value());
+        this->summary_state.update_udq(udq_result);
     }
 
     void UDQContext::update_define(const std::size_t  report_step,
@@ -287,7 +287,7 @@ namespace Opm {
                                    const UDQSet&      udq_result)
     {
         this->udq_state.add_define(report_step, keyword, udq_result);
-        this->summary_state.update_udq(udq_result, this->udq_state.undefined_value());
+        this->summary_state.update_udq(udq_result);
     }
 
     void UDQContext::ensure_segment_matcher_exists() const

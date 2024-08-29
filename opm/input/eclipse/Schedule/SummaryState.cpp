@@ -396,18 +396,17 @@ namespace Opm
         this->elapsed += delta;
     }
 
-    void SummaryState::update_udq(const UDQSet& udq_set,
-                                  const double  undefined_value)
+    void SummaryState::update_udq(const UDQSet& udq_set)
     {
         const auto var_type = udq_set.var_type();
         if (var_type == UDQVarType::WELL_VAR) {
             for (const auto& udq_value : udq_set) {
-                this->update_well_var(udq_value.wgname(), udq_set.name(), udq_value.value().value_or(undefined_value));
+                this->update_well_var(udq_value.wgname(), udq_set.name(), udq_value.value().value_or(this->udq_undefined));
             }
         }
         else if (var_type == UDQVarType::GROUP_VAR) {
             for (const auto& udq_value : udq_set) {
-                this->update_group_var(udq_value.wgname(), udq_set.name(), udq_value.value().value_or(undefined_value));
+                this->update_group_var(udq_value.wgname(), udq_set.name(), udq_value.value().value_or(this->udq_undefined));
             }
         }
         else if (var_type == UDQVarType::SEGMENT_VAR) {
@@ -415,12 +414,12 @@ namespace Opm
                 this->update_segment_var(udq_value.wgname(),
                                          udq_set.name(),
                                          udq_value.number(),
-                                         udq_value.value().value_or(undefined_value));
+                                         udq_value.value().value_or(this->udq_undefined));
             }
         }
         else {
             const auto& udq_var = udq_set[0].value();
-            this->update(udq_set.name(), udq_var.value_or(undefined_value));
+            this->update(udq_set.name(), udq_var.value_or(this->udq_undefined));
         }
     }
 
