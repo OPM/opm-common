@@ -100,11 +100,9 @@ void RstState::load_oil_vaporization(const std::vector<int>& intehead,
                                      const std::vector<double>& doubhead)
 {
     const std::size_t numPvtRegions = this->oilvap.numPvtRegions();
-    std::vector<double> maximums(numPvtRegions);
-    std::vector<std::string> options(numPvtRegions);
     const auto tconv = this->unit_system.to_si(::Opm::UnitSystem::measure::time, 1.0);
-    std::fill(maximums.begin(), maximums.end(), doubhead[VI::doubhead::dRsDt]/tconv);
-    std::fill(options.begin(), options.end(), intehead[VI::intehead::DRSDT_FREE]==1 ? "FREE" : "ALL");
+    std::vector<double> maximums(numPvtRegions, doubhead[VI::doubhead::dRsDt]/tconv);
+    std::vector<std::string> options(numPvtRegions, intehead[VI::intehead::DRSDT_FREE]==1 ? "FREE" : "ALL");
     OilVaporizationProperties::updateDRSDT(this->oilvap, maximums, options);
 }
 
