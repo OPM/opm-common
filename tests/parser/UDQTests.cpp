@@ -2890,7 +2890,7 @@ BOOST_AUTO_TEST_CASE(UDQ_ASSIGN_SEGMENT)
 
 BOOST_AUTO_TEST_CASE(UDQ_Update_SummaryState)
 {
-    const double udq_undefined = 0.0;
+    const double udq_undefined = 987.6;
     auto st = SummaryState { TimeService::now(), udq_undefined };
 
     // P2 not yet online
