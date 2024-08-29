@@ -31,6 +31,7 @@ namespace Opm {
 class EclipseGrid;
 class EclipseState;
 class Phases;
+class Schedule;
 class ScheduleState;
 class UnitSystem;
 
@@ -234,6 +235,9 @@ namespace Opm { namespace RestartIO {
 
         InteHEAD& calendarDate(const TimePoint& date);
         InteHEAD& activePhases(const Phases& phases);
+
+        InteHEAD& drsdt(const Schedule&   sched,
+                        const std::size_t lookup_step);
 
         InteHEAD& params_NWELZ(const int niwelz, const int nswelz, const int nxwelz, const int nzwelz);
         InteHEAD& params_NCON(const int niconz, const int nsconz, const int nxconz);

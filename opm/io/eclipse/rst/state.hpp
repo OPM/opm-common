@@ -29,6 +29,7 @@
 #include <opm/io/eclipse/rst/udq.hpp>
 #include <opm/io/eclipse/rst/well.hpp>
 
+#include <opm/input/eclipse/Schedule/OilVaporizationProperties.hpp>
 #include <opm/input/eclipse/Schedule/Tuning.hpp>
 
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
@@ -74,9 +75,13 @@ struct RstState
     RstUDQActive udq_active;
     std::vector<RstAction> actions;
     Tuning tuning;
+    OilVaporizationProperties oilvap;
     std::unordered_map<std::string, std::vector<std::string>> wlists;
 
 private:
+    void load_oil_vaporization(const std::vector<int>& intehead,
+                               const std::vector<double>& doubhead);
+
     void load_tuning(const std::vector<int>& intehead,
                      const std::vector<double>& doubhead);
 

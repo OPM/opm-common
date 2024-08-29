@@ -144,7 +144,9 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
 
         IHOURZ = 206, // IHOURZ = current simulation time HH:MM:SS – number of hours (HH) (0-23).
         IMINTS = 207, // IMINTS = current simulation time HH:MM:SS – number of minutes (MM) (0-59).
-        
+
+        DRSDT_FREE = 199, // Option flag in DRSDT: 0 = ALL (default), 1 = FREE (only apply DRSDT limit to cells contatining free gas)
+
         WSEGITR_IT2 = 208, // NR - maximum no of times that a new iteration cycle with a reduced Wp will be started
 
         NIIAQN = 223, // Number of data elements in IAQN array pr AQUNUM record

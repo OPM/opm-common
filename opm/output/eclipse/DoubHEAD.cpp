@@ -74,7 +74,7 @@ enum Index : std::vector<double>::size_type {
     dh_022  =  22,
     dh_023  =  23,
     dh_024  =  24,
-    dRsdt   =  25,
+    dRsdt   =  VI::doubhead::dRsDt,
     dh_026  =  26,
     dh_027  =  27,
     dh_028  =  28,

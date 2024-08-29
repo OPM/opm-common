@@ -29,6 +29,7 @@
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/input/eclipse/EclipseState/Runspec.hpp>
 
+#include <opm/input/eclipse/Schedule/Schedule.hpp>
 #include <opm/input/eclipse/Schedule/ScheduleState.hpp>
 
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
@@ -254,7 +255,7 @@ enum index : std::vector<int>::size_type {
   ih_196       =      196       ,              //       0
   ih_197       =      197       ,              //       0
   ih_198       =      198       ,              //       0
-  ih_199       =      199       ,              //       0
+  DRSDT_FREE   =      VI::intehead::DRSDT_FREE,//       (0,1)  0  // Value of 1 means DRSDT limit is only applied to cells with free gas, default (0) is all cells
   ih_200       =      200       ,              //       0
   ih_201       =      201       ,              //       0
   ih_202       =      202       ,              //       0
@@ -561,6 +562,20 @@ Opm::RestartIO::InteHEAD::activePhases(const Phases& phases)
 
     return *this;
 }
+
+Opm::RestartIO::InteHEAD&
+Opm::RestartIO::InteHEAD::InteHEAD::drsdt(const Schedule&   sched,
+                                          const std::size_t lookup_step) {
+    const auto& vappar = sched[lookup_step].oilvap();
+
+    this->data_[DRSDT_FREE] =
+        (vappar.getType() == Opm::OilVaporizationProperties::OilVaporization::DRDT && (!vappar.getOption(0)))
+        ? 1
+        : 0;
+
+    return *this;
+}
+
 
 Opm::RestartIO::InteHEAD&
 Opm::RestartIO::InteHEAD::

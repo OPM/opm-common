@@ -45,6 +45,8 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
         XxxLCV  = 19,
         XxxWFL  = 20,
 
+        dRsDt   = 25,
+
         Netbalthpc    = 50,    //  Network balancing THP convergence limit (NETBALAN(4))
         Netbalint     = 51,    //  Network balancing interval (NETBALAN(1))
         Netbalnpre    = 53,    //  Network balancing nodal pressure
