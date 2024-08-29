@@ -852,8 +852,9 @@ namespace {
 
             sWell[Ix::HistBHPTarget] = sWell[Ix::BHPTarget];
 
-            if (pc.alq_value != 0.0) {
-                const auto alqType = sched[sim_step].vfpprod(pc.vfp_table_number).getALQType();
+            const auto& vfpprod = sched[sim_step].vfpprod;
+            if (pc.alq_value != 0.0 && vfpprod.has(pc.vfp_table_number)) {
+                const auto alqType = vfpprod(pc.vfp_table_number).getALQType();
                 assignALQProd(alqType, pc.alq_value, std::forward<SWProp>(swprop), sWell);
             }
 
