@@ -209,7 +209,7 @@ namespace Opm {
     {}
 
 
-    Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext& parse_context, ErrorGuard& errors, std::shared_ptr<const Python> python, const bool slave_mode, bool lowActionParsingStrictness, const std::optional<int>& output_interval, const RestartIO::RstState * rst) :
+    Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext& parse_context, ErrorGuard& errors, std::shared_ptr<const Python> python, const bool lowActionParsingStrictness, const bool slave_mode, const std::optional<int>& output_interval, const RestartIO::RstState * rst) :
         Schedule(deck,
                  es.getInputGrid(),
                  es.fieldProps(),
@@ -226,7 +226,7 @@ namespace Opm {
 
 
     template <typename T>
-    Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext& parse_context, T&& errors, std::shared_ptr<const Python> python, bool lowActionParsingStrictness, const bool slave_mode, const std::optional<int>& output_interval, const RestartIO::RstState * rst) :
+    Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext& parse_context, T&& errors, std::shared_ptr<const Python> python, const bool lowActionParsingStrictness, const bool slave_mode, const std::optional<int>& output_interval, const RestartIO::RstState * rst) :
         Schedule(deck,
                  es.getInputGrid(),
                  es.fieldProps(),
@@ -242,7 +242,7 @@ namespace Opm {
     {}
 
 
-Schedule::Schedule(const Deck& deck, const EclipseState& es, std::shared_ptr<const Python> python, const bool slave_mode, bool lowActionParsingStrictness, const std::optional<int>& output_interval, const RestartIO::RstState * rst) :
+Schedule::Schedule(const Deck& deck, const EclipseState& es, std::shared_ptr<const Python> python, const bool lowActionParsingStrictness, const bool slave_mode, const std::optional<int>& output_interval, const RestartIO::RstState * rst) :
     Schedule(deck, es, ParseContext(), ErrorGuard(), python, lowActionParsingStrictness, slave_mode, output_interval, rst)
 {}
 
