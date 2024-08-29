@@ -106,7 +106,7 @@ public:
     void update_well_var(const std::string& well, const std::string& var, double value);
     void update_group_var(const std::string& group, const std::string& var, double value);
     void update_elapsed(double delta);
-    void update_udq(const UDQSet& udq_set, double undefined_value);
+    void update_udq(const UDQSet& udq_set);
     void update_conn_var(const std::string& well, const std::string& var, std::size_t global_index, double value);
     void update_segment_var(const std::string& well, const std::string& var, std::size_t segment, double value);
     void update_region_var(const std::string& regSet, const std::string& var, std::size_t region, double value);

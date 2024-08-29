@@ -336,7 +336,8 @@ namespace Opm {
             this->add_unit(quantity, data.front());
         }
         else if (action == UDQAction::ASSIGN) {
-            const auto selector = std::vector<std::string>(data.begin(), data.end() - 1);
+            auto selector = std::vector<std::string>(data.begin(), data.end() - 1);
+            std::transform(selector.cbegin(), selector.cend(), selector.begin(), strip_quotes);
             const auto value = std::stod(data.back());
             this->add_assign(quantity,
                              std::move(create_segment_matcher),
