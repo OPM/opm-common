@@ -701,15 +701,12 @@ void handleWHISTCTL(HandlerContext& handlerContext)
     const std::string& cmodeString = record.getItem("CMODE").getTrimmedString(0);
     const auto controlMode = WellProducerCModeFromString(cmodeString);
 
-    if (controlMode != Well::ProducerCMode::NONE) {
-        if (!Well::WellProductionProperties::effectiveHistoryProductionControl(controlMode) ) {
-            std::string msg = "The WHISTCTL keyword specifies an un-supported control mode " + cmodeString
-                + ", which makes WHISTCTL keyword not affect the simulation at all";
-            OpmLog::warning(msg);
-        } else {
-            handlerContext.state().update_whistctl( controlMode );
-        }
+    if (controlMode != Well::ProducerCMode::NONE && !Well::WellProductionProperties::effectiveHistoryProductionControl(controlMode) ) {
+        std::string msg = "The WHISTCTL keyword specifies an un-supported control mode " + cmodeString
+            + ", which makes WHISTCTL keyword not affect the simulation at all";
+        OpmLog::warning(msg);
     }
+    handlerContext.state().update_whistctl( controlMode );
 
     const std::string bhp_terminate = record.getItem("BPH_TERMINATE").getTrimmedString(0);
     if (bhp_terminate == "YES") {
