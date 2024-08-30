@@ -121,7 +121,12 @@ void handleWCONHIST(HandlerContext& handlerContext)
                                                             ParserKeywords::FBHPDEF::TARGET_BHP::defaultValue);
             }
 
-            properties->whistctl_cmode = handlerContext.state().whistctl();
+            // Injectors at a restart time will not have any WellProductionProperties with the
+            // proper whistctl_cmode, so this needs to be set before the call to handleWCONHIST
+            if (switching_from_injector) {
+                properties->whistctl_cmode = handlerContext.state().whistctl();
+            }
+
             properties->handleWCONHIST(alq_type,
                                        default_bhp,
                                        handlerContext.static_schedule().m_unit_system, record);
