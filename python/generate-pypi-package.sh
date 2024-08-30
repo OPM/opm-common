@@ -33,6 +33,7 @@ do
     # make step is necessary until the generated ParserKeywords/*.hpp are generated in the Python step
     make opmcommon_python -j${BUILD_JOBS}
     cd python
+    echo -e "include opm/*\ninclude opm/io/summary/__init__.py" > MANIFEST.in
     ${python_versions[$tag]} setup.py sdist bdist_wheel --plat-name manylinux2014_x86_64 --python-tag $tag
     ${python_versions[$tag]} -m auditwheel repair dist/*$tag*.whl
     cp dist/*$tag*.whl /tmp/opm-common/wheelhouse
