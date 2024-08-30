@@ -9,6 +9,9 @@ if setupdir != '':
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
+with open("requirements.txt", "r") as fh:
+    requires = [line.rstrip() for line in fh]
+
 setup(
     name='opm',
     version = '@opm-common_VERSION@' + '@opm-common_PYTHON_PACKAGE_VERSION@',
@@ -35,6 +38,7 @@ setup(
     license='Open Source',
     test_suite='tests',
     setup_requires=["pytest-runner", 'setuptools_scm'],
+    install_requires=requires,
     python_requires='>=3.6',
     classifiers=[
         "Programming Language :: Python :: 3",
