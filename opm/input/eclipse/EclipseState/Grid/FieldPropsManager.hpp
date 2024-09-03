@@ -286,6 +286,12 @@ void apply_tran(const std::unordered_map<std::string, Fieldprops::TranCalculator
                 std::size_t active_size,
                 const std::string& keyword, std::vector<double>& data);
 
+template<class MapType>
+void apply_tran(const Fieldprops::TranCalculator& tranCalc,
+                const MapType& double_data,
+                const std::vector<std::size_t>& indices,
+                std::vector<double>& data);
+
 }
 
 #endif
