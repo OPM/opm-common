@@ -2236,6 +2236,12 @@ void FieldProps::apply_tran(const std::string& keyword, std::vector<double>& dat
     ::Opm::apply_tran(this->tran, this->double_data, this->active_size, keyword, data);
 }
 
+
+void FieldProps::apply_tranz_global(const std::vector<size_t>& indices, std::vector<double>& data) const
+{
+    ::Opm::apply_tran(this->tran.at("TRANZ"), this->double_data, indices, data);
+}
+
 bool FieldProps::tran_active(const std::string& keyword) const
 {
     auto calculator = this->tran.find(keyword);

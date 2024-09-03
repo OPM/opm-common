@@ -160,6 +160,11 @@ void FieldPropsManager::apply_tran(const std::string& keyword, std::vector<doubl
     this->fp->apply_tran(keyword, data);
 }
 
+void FieldPropsManager::apply_tranz_global(const std::vector<std::size_t>& indices,
+                                           std::vector<double>& data) const {
+    this->fp->apply_tranz_global(indices, data);
+}
+
 bool FieldPropsManager::tran_active(const std::string& keyword) const {
     return this->fp->tran_active(keyword);
 }
@@ -174,31 +179,36 @@ FieldPropsManager::getTran() const
     return this->fp->getTran();
 }
 
+void FieldPropsManager::prune_global_for_schedule_run()
+{
+    this->fp->prune_global_for_schedule_run();
+}
+
 void apply_action(const Fieldprops::ScalarOperation& op,
-                  const Fieldprops::FieldData<double>& action_data,
+                  const std::vector<double>& action_data,
                   std::vector<double>& data,
                   std::size_t action_index,
                   std::size_t data_index)
 {
     switch (op) {
     case Fieldprops::ScalarOperation::EQUAL:
-        data[data_index] = action_data.data[action_index];
+        data[data_index] = action_data[action_index];
         break;
 
     case Fieldprops::ScalarOperation::MUL:
-        data[data_index] *= action_data.data[action_index];
+        data[data_index] *= action_data[action_index];
         break;
 
     case Fieldprops::ScalarOperation::ADD:
-        data[data_index] += action_data.data[action_index];
+        data[data_index] += action_data[action_index];
         break;
 
     case Fieldprops::ScalarOperation::MAX:
-        data[data_index] = std::min(action_data.data[action_index], data[data_index]);
+        data[data_index] = std::min(action_data[action_index], data[data_index]);
         break;
 
     case Fieldprops::ScalarOperation::MIN:
-        data[data_index] = std::max(action_data.data[action_index], data[data_index]);
+        data[data_index] = std::max(action_data[action_index], data[data_index]);
         break;
 
     default:
@@ -221,7 +231,7 @@ void apply_tran(const std::unordered_map<std::string, Fieldprops::TranCalculator
             if (!value::has_value(action_data.value_status[index]))
                 continue;
 
-            apply_action(action.op, action_data, data, index, index);
+            apply_action(action.op, action_data.data, data, index, index);
         }
     }
 }
@@ -239,12 +249,12 @@ void apply_tran(const Fieldprops::TranCalculator& calculator,
         for (auto action_index = indices.begin(); action_index != indices.end();
              ++action_index)
         {
-            if (!value::has_value(action_data.value_status[*action_index]))
+            if (!value::has_value((*action_data.global_value_status)[*action_index]))
             {
                 continue;
             }
 
-            apply_action(action.op, action_data, data, *action_index,
+            apply_action(action.op, *action_data.global_data, data, *action_index,
                          action_index-indices.begin());
         }
     }

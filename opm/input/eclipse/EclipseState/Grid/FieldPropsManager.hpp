@@ -237,6 +237,14 @@ public:
     */
     virtual void apply_tran(const std::string& keyword, std::vector<double>& tran_data) const;
 
+    /// \brief Apply TRANZ modifiers using global indices
+    ///
+    /// Needed for calculation transmissibility of NNCs over pinched out cells.
+    /// \param indices The cartesian indices of the cells that contribute to the pinch out
+    ///                transmissibilities.
+    void apply_tranz_global(const std::vector<std::size_t>& indices,
+                            std::vector<double>& data) const;
+
     void apply_numerical_aquifers(const NumericalAquifers& aquifers);
 
     const std::unordered_map<std::string,Fieldprops::TranCalculator>& getTran() const;

@@ -691,6 +691,7 @@ public:
     void handle_schedule_keywords(const std::vector<DeckKeyword>& keywords);
     bool tran_active(const std::string& keyword) const;
     void apply_tran(const std::string& keyword, std::vector<double>& data);
+    void apply_tranz_global(const std::vector<size_t>& indices, std::vector<double>& data) const;
     bool operator==(const FieldProps& other) const;
     static bool rst_cmp(const FieldProps& full_arg, const FieldProps& rst_arg);
 
