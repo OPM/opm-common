@@ -46,7 +46,7 @@ namespace Opm {
         std::optional<double> flow_area;
         // skin factor multiplier
         // it is controlled by keyword WINJCLN
-        double sf_multiplier{1.};
+        mutable double sf_multiplier{1.};
 
         FilterCake() = default;
 
