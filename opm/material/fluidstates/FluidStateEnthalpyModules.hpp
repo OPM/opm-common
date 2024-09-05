@@ -31,7 +31,7 @@
 #include <opm/material/common/MathToolbox.hpp>
 #include <opm/material/common/Valgrind.hpp>
 
-#include <algorithm>
+#include <array>
 
 namespace Opm {
 /*!
@@ -94,7 +94,7 @@ protected:
     const Implementation& asImp_() const
     { return *static_cast<const Implementation*>(this); }
 
-    Scalar enthalpy_[numPhases];
+    std::array<Scalar, numPhases> enthalpy_{};
 };
 
 /*!
