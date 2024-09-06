@@ -34,6 +34,8 @@ class TestEclFile(unittest.TestCase):
         self.assertEqual(len(dates), len(smry1))
         self.assertEqual(dates[0], smry1.start_date + datetime.timedelta(days=1))
 
+        self.assertEqual(smry1.units('FGOR'), 'STB/MSCF')
+
         with self.assertRaises(ValueError):
             test = smry1["XXX"]
 

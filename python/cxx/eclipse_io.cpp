@@ -135,6 +135,16 @@ public:
             return m_ext_esmry->keywordList(pattern);
     }
 
+    std::string units(const std::string& field) const
+    {
+        if (m_esmry != nullptr) {
+            return m_esmry->get_unit(field);
+        }
+        else {
+            return m_ext_esmry->get_unit(field);
+        }
+    }
+
 private:
     std::unique_ptr<Opm::EclIO::ESmry> m_esmry;
     std::unique_ptr<Opm::EclIO::ExtESmry> m_ext_esmry;
@@ -449,7 +459,8 @@ void python::common::export_IO(py::module& m) {
             &ESmryBind::keywordList)
         .def("keys", (std::vector<std::string> (ESmryBind::*) (const std::string&) const)
             &ESmryBind::keywordList)
-        .def("dates", &ESmryBind::dates);
+        .def("dates", &ESmryBind::dates)
+        .def("units", &ESmryBind::units);
 
    py::class_<Opm::EclIO::EGrid>(m, "EGrid")
         .def(py::init<const std::string &>())
