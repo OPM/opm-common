@@ -99,6 +99,26 @@ public:
         return TimeService::from_time_t( local_time_t );
     }
 
+    std::vector<time_point> dates() const
+    {
+        std::vector<time_point> result;
+        std::vector<time_point> times;
+        if (m_esmry != nullptr) {
+            times = m_esmry->dates();
+        } else {
+            times = m_ext_esmry->dates();
+        }
+        result.reserve(times.size());
+        for (std::size_t i = 0; i < times.size(); ++i) {
+            auto utc_time_t   = std::chrono::system_clock::to_time_t(times[i]);
+            auto utc_ts       = Opm::TimeStampUTC(utc_time_t);
+            auto local_time_t = Opm::asLocalTimeT(utc_ts);
+            result.push_back(TimeService::from_time_t(local_time_t));
+        }
+
+        return result;
+    }
+
     const std::vector<std::string>& keywordList() const
     {
         if (m_esmry != nullptr)
@@ -428,8 +448,8 @@ void python::common::export_IO(py::module& m) {
         .def("keys", (const std::vector<std::string>& (ESmryBind::*) (void) const)
             &ESmryBind::keywordList)
         .def("keys", (std::vector<std::string> (ESmryBind::*) (const std::string&) const)
-            &ESmryBind::keywordList);
-
+            &ESmryBind::keywordList)
+        .def("dates", &ESmryBind::dates);
 
    py::class_<Opm::EclIO::EGrid>(m, "EGrid")
         .def(py::init<const std::string &>())
