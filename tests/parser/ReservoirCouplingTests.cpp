@@ -49,7 +49,7 @@ Schedule make_schedule(const std::string& schedule_string, bool slave_mode) {
     TableManager table ( deck );
     FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
     Runspec runspec (deck);
-    Schedule schedule(deck, grid , fp, runspec, python, slave_mode);
+    Schedule schedule(deck, grid , fp, runspec, python, /*lowActionParsingStrictness=*/false, slave_mode);
     return schedule;
 }
 
