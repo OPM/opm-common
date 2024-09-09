@@ -2905,7 +2905,6 @@ BOOST_AUTO_TEST_CASE(UDQ_Update_SummaryState)
 
     // P2 not yet online
     st.update_udq(UDQSet::wells("WUBAR", { "P1", "P3" }, 17.29));
-    std::cout << "JALLA: " << st.get_well_var("P2", "WUBAR") << std::endl;
     BOOST_CHECK_CLOSE(st.get_well_var("P1", "WUBAR"),   17.29, 1.0e-8);
     BOOST_CHECK_CLOSE(st.get_well_var("P2", "WUBAR"), udq_undefined, 1.0e-8);
     BOOST_CHECK_CLOSE(st.get_well_var("P3", "WUBAR"),   17.29, 1.0e-8);
