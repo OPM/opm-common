@@ -84,8 +84,8 @@ public:
     { b_ = value; }
 
 protected:
-    Scalar a_;
-    Scalar b_;
+    Scalar a_{};
+    Scalar b_{};
 };
 
 } // namespace Opm
