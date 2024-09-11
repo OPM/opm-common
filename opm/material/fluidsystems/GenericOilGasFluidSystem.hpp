@@ -28,18 +28,24 @@
 
 #include <opm/common/OpmLog/OpmLog.hpp>
 
+#if HAVE_ECL_INPUT
+#include <opm/input/eclipse/EclipseState/EclipseState.hpp>
+#include <opm/input/eclipse/Schedule/Schedule.hpp>
+#endif
+
+#include <opm/material/eos/PengRobinsonMixture.hpp>
 #include <opm/material/fluidsystems/BaseFluidSystem.hpp>
 #include <opm/material/fluidsystems/PTFlashParameterCache.hpp> // TODO: this is something else need to check
 #include <opm/material/viscositymodels/LBC.hpp>
 
 #include <cassert>
+#include <cstddef>
 #include <string>
 #include <string_view>
 
 #include <fmt/format.h>
 
 namespace Opm {
-
 
 /*!
  * \ingroup FluidSystem
@@ -60,8 +66,14 @@ namespace Opm {
         // Possibly when with a dummy phase like water?
         static const int numMiscibleComponents = NumComp;
         // TODO: phase location should be more general
+        static constexpr int waterPhaseIdx = -1;
         static constexpr int oilPhaseIdx = 0;
         static constexpr int gasPhaseIdx = 1;
+
+        static constexpr int waterCompIdx = -1;
+        static constexpr int oilCompIdx = 0;
+        static constexpr int gasCompIdx = 1;
+        static constexpr int compositionSwitchIdx = -1; // equil initializer
 
         template <class ValueType>
         using ParameterCache = Opm::PTFlashParameterCache<ValueType, GenericOilGasFluidSystem<Scalar, NumComp>>;
@@ -70,11 +82,11 @@ namespace Opm {
 
         struct ComponentParam {
             std::string name;
-            Scalar molar_mass;
-            Scalar critic_temp;
-            Scalar critic_pres;
-            Scalar critic_vol;
-            Scalar acentric_factor;
+            Scalar molar_mass; // unit: g/mol
+            Scalar critic_temp; // unit: K
+            Scalar critic_pres; // unit: parscal
+            Scalar critic_vol; // unit: m^3/kmol
+            Scalar acentric_factor; // unit: dimension less
 
             ComponentParam(const std::string_view name_, const Scalar molar_mass_, const Scalar critic_temp_,
                            const Scalar critic_pres_, const Scalar critic_vol_, const Scalar acentric_factor_)
@@ -86,6 +98,12 @@ namespace Opm {
                       acentric_factor(acentric_factor_)
             {}
         };
+
+        static bool phaseIsActive(unsigned phaseIdx)
+        {
+            assert(phaseIdx < numPhases);
+            return phaseIdx == oilPhaseIdx || phaseIdx == gasPhaseIdx;
+        }
 
         template<typename Param>
         static void addComponent(const Param& param)
@@ -101,6 +119,38 @@ namespace Opm {
                 // Optionally, throw an exception?
             }
         }
+
+#if HAVE_ECL_INPUT
+        /*!
+         * \brief Initialize the fluid system using an ECL deck object
+         */
+        static void initFromState(const EclipseState& eclState, const Schedule& /* schedule */)
+        {
+            // TODO: we are not considering the EOS region for now
+            const auto& comp_config = eclState.compositionalConfig();
+            // how should we utilize the numComps from the CompositionalConfig?
+            using FluidSystem = GenericOilGasFluidSystem<Scalar, NumComp>;
+            const std::size_t num_comps = comp_config.numComps();
+            // const std::size_t num_eos_region = comp_config.
+            assert(num_comps == NumComp);
+            const auto& names = comp_config.compName();
+            // const auto& eos_type = comp_config.eosType(0);
+            const auto& molar_weight = comp_config.molecularWeights(0);
+            const auto& acentric_factor = comp_config.acentricFactors(0);
+            const auto& critic_pressure = comp_config.criticalPressure(0);
+            const auto& critic_temp = comp_config.criticalTemperature(0);
+            const auto& critic_volume = comp_config.criticalVolume(0);
+            FluidSystem::init();
+            using CompParm = typename FluidSystem::ComponentParam;
+            for (std::size_t c = 0; c < num_comps; ++c) {
+                // we use m^3/kmol for the critic volume in the flash calculation, so we multiply 1.e3 for the critic volume
+                FluidSystem::addComponent(CompParm{names[c], molar_weight[c], critic_temp[c], critic_pressure[c],
+                                                   critic_volume[c] * 1.e3, acentric_factor[c]});
+            }
+            FluidSystem::printComponentParams();
+            interaction_coefficients_ = comp_config.binaryInteractionCoefficient(0);
+        }
+#endif // HAVE_ECL_INPUT
 
         static void init()
         {
@@ -169,11 +219,18 @@ namespace Opm {
          * \brief Returns the interaction coefficient for two components.
          *.
          */
-        static Scalar interactionCoefficient(unsigned /*comp1Idx*/, unsigned /*comp2Idx*/)
+        static Scalar interactionCoefficient(unsigned comp1Idx, unsigned comp2Idx)
         {
             assert(isConsistent());
-            // TODO: some data structure is needed to support this
-            return 0.0;
+            assert(comp1Idx < numComponents);
+            assert(comp2Idx < numComponents);
+            if (interaction_coefficients_.empty() || comp2Idx == comp1Idx) {
+                return 0.0;
+            }
+            // make sure row is the bigger value compared to column number
+            const auto [column, row] = std::minmax(comp1Idx, comp2Idx);
+            const unsigned index = (row * (row - 1) / 2 + column); // it is the current understanding
+            return interaction_coefficients_[index];
         }
 
         //! \copydoc BaseFluidSystem::phaseName
@@ -239,6 +296,7 @@ namespace Opm {
             return decay<LhsEval>(PengRobinsonMixture::computeFugacityCoefficient(fluidState, paramCache, phaseIdx, compIdx));
         }
 
+        // TODO: the following interfaces are needed by function checkFluidSystem()
         //! \copydoc BaseFluidSystem::isCompressible
         static bool isCompressible([[maybe_unused]] unsigned phaseIdx)
         {
@@ -270,16 +328,37 @@ namespace Opm {
 
             return (phaseIdx == 1);
         }
+
     private:
         static bool isConsistent() {
             return component_param_.size() == NumComp;
         }
 
         static std::vector<ComponentParam> component_param_;
+        static std::vector<Scalar> interaction_coefficients_;
+
+    public:
+        static std::string printComponentParams() {
+            std::string result = "Components Information:\n";
+            for (const auto& param : component_param_) {
+                result += fmt::format("Name: {}\n", param.name);
+                result += fmt::format("Molar Mass: {} g/mol\n", param.molar_mass);
+                result += fmt::format("Critical Temperature: {} K\n", param.critic_temp);
+                result += fmt::format("Critical Pressure: {} Pascal\n", param.critic_pres);
+                result += fmt::format("Critical Volume: {} m^3/kmol\n", param.critic_vol);
+                result += fmt::format("Acentric Factor: {}\n", param.acentric_factor);
+                result += "---------------------------------\n";
+            }
+            return result;
+        }
     };
 
     template <class Scalar, int NumComp>
     std::vector<typename GenericOilGasFluidSystem<Scalar, NumComp>::ComponentParam>
     GenericOilGasFluidSystem<Scalar, NumComp>::component_param_;
+
+    template <class Scalar, int NumComp>
+    std::vector<Scalar>
+    GenericOilGasFluidSystem<Scalar, NumComp>::interaction_coefficients_;
 }
 #endif // OPM_GENERICOILGASFLUIDSYSTEM_HPP
