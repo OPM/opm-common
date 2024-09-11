@@ -435,7 +435,7 @@ namespace {
         std::string grid_block(const context&, std::size_t, std::size_t) const {
             const std::array<int,3> ijk { connection.getI() + 1, connection.getJ() + 1, connection.getK() + 1 } ;
 
-            auto compose_coordinates { [](std::string& out, int in) -> std::string {
+            auto compose_coordinates { [](const std::string& out, const int in) -> std::string {
                 constexpr auto delimiter { ',' } ;
                 std::string coordinate_part { std::to_string(in) } ;
                 right_align(coordinate_part, 3);

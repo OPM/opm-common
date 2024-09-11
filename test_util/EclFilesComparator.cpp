@@ -26,9 +26,7 @@
 #include <algorithm>
 #include <cmath>
 #include <iostream>
-#include <iomanip>
 #include <numeric>
-#include <set>
 #include <type_traits>
 #include <vector>
 
@@ -46,7 +44,14 @@
 using Opm::EclIO::EGrid;
 
 template <typename T>
-void ECLFilesComparator::printValuesForCell(const std::string& keyword, const std::string& reference, size_t kw_size, size_t cell, EGrid *grid, const T& value1, const T& value2) const {
+void ECLFilesComparator::
+printValuesForCell(const std::string& keyword,
+                   const std::string& reference,
+                   size_t kw_size, size_t cell,
+                   const EGrid *grid,
+                   const T& value1,
+                   const T& value2) const
+{
     if (grid) {
         int nActive = grid->activeCells();
         int nTot = grid->totalNumberOfCells();
@@ -85,15 +90,24 @@ void ECLFilesComparator::printValuesForCell(const std::string& keyword, const st
               << "(first value, second value) = (" << value1 << ", " << value2 << ")\n\n";
 }
 
-template void ECLFilesComparator::printValuesForCell<bool>       (const std::string& keyword, const std::string& reference, size_t kw_size, size_t cell, EGrid *grid, const bool&        value1, const bool&        value2) const;
-template void ECLFilesComparator::printValuesForCell<int>        (const std::string& keyword, const std::string& reference, size_t kw_size, size_t cell, EGrid *grid, const int&         value1, const int&         value2) const;
-template void ECLFilesComparator::printValuesForCell<double>     (const std::string& keyword, const std::string& reference, size_t kw_size, size_t cell, EGrid *grid, const double&      value1, const double&      value2) const;
-template void ECLFilesComparator::printValuesForCell<std::string>(const std::string& keyword, const std::string& reference, size_t kw_size, size_t cell, EGrid *grid, const std::string& value1, const std::string& value2) const;
+#define INSTANTIATE_PRINTCELL(T) \
+    template void ECLFilesComparator::printValuesForCell(const std::string&, \
+                                                         const std::string&, \
+                                                         size_t, size_t,     \
+                                                         const EGrid *grid,  \
+                                                         const T&,           \
+                                                         const T&) const;
+
 // Hack to work around case where std::vector<bool>::const_reference is not a bool. If it is we will initialize printValuesForCell<char> otherwise printValuesForCell<std::vector<bool>::const_reference>
 using boolConstReference = typename std::vector<bool>::const_reference;
 using boolTypeHelper = typename std::remove_const<typename std::remove_reference<boolConstReference>::type>::type;
 using boolType = typename std::conditional<std::is_same<boolTypeHelper, bool>::value, char, boolTypeHelper>::type;
-template void ECLFilesComparator::printValuesForCell<boolType>       (const std::string& keyword, const std::string& reference, size_t kw_size, size_t cell, EGrid *grid, const boolType& value1, const boolType& value2) const;
+
+INSTANTIATE_PRINTCELL(bool)
+INSTANTIATE_PRINTCELL(int)
+INSTANTIATE_PRINTCELL(double)
+INSTANTIATE_PRINTCELL(std::string)
+INSTANTIATE_PRINTCELL(boolType)
 
 ECLFilesComparator::ECLFilesComparator(const std::string& basename1,
                                        const std::string& basename2,

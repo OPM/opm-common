@@ -81,7 +81,7 @@ protected:
                             const std::string& reference,
                             size_t kw_size,
                             size_t cell,
-                            Opm::EclIO::EGrid *grid,
+                            const Opm::EclIO::EGrid *grid,
                             const T& value1,
                             const T& value2) const;
 

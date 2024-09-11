@@ -608,7 +608,7 @@ namespace Opm {
     }
 
     void UDQConfig::eval_define(const std::size_t report_step,
-                                UDQState&         udq_state,
+                                const UDQState&   udq_state,
                                 UDQContext&       context) const
     {
         auto var_type_bit = [](const UDQVarType var_type)

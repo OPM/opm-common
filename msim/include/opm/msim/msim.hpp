@@ -42,9 +42,23 @@ public:
     void post_step(data::Solution& sol, data::Wells& well_data, data::GroupAndNetworkValues& group_nwrk_data, size_t report_step, const time_point& sim_time);
 
 private:
+    void run_step(const WellTestState& wtest_state,
+                  UDQState& udq_state,
+                  data::Solution& sol,
+                  data::Wells& well_data,
+                  data::GroupAndNetworkValues& group_nwrk_data,
+                  size_t report_step,
+                  EclipseIO& io);
 
-    void run_step(WellTestState& wtest_state, UDQState& udq_state, data::Solution& sol, data::Wells& well_data, data::GroupAndNetworkValues& group_nwrk_data, size_t report_step, EclipseIO& io);
-    void run_step(WellTestState& wtest_state, UDQState& udq_state, data::Solution& sol, data::Wells& well_data, data::GroupAndNetworkValues& group_nwrk_data, size_t report_step, double dt, EclipseIO& io);
+    void run_step(const WellTestState& wtest_state,
+                  UDQState& udq_state,
+                  data::Solution& sol,
+                  data::Wells& well_data,
+                  data::GroupAndNetworkValues& group_nwrk_data,
+                  size_t report_step,
+                  double dt,
+                  EclipseIO& io);
+
     void output(const WellTestState& wtest_state, const UDQState& udq_state,
                 size_t report_step, bool substep, double seconds_elapsed,
                 const data::Solution& sol, const data::Wells& well_data,

@@ -70,12 +70,12 @@ namespace Opm {
 
 namespace {
 
-void handleAQUCT(HandlerContext& handlerContext)
+void handleAQUCT(const HandlerContext& handlerContext)
 {
     throw OpmInputError("AQUCT is not supported as SCHEDULE keyword", handlerContext.keyword.location());
 }
 
-void handleAQUFETP(HandlerContext& handlerContext)
+void handleAQUFETP(const HandlerContext& handlerContext)
 {
     throw OpmInputError("AQUFETP is not supported as SCHEDULE keyword", handlerContext.keyword.location());
 }

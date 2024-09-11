@@ -120,7 +120,7 @@ std::optional<int> findInVector(const std::vector<T>  & vecOfElements, const T  
     return (it != vecOfElements.end()) ? std::optional<int>{std::distance(vecOfElements.begin(), it)} : std::nullopt;
 }
 
-int next_branch(int node_no, std::vector<int>& inlets, std::vector<int>& outlets)
+int next_branch(int node_no, const std::vector<int>& inlets, const std::vector<int>& outlets)
 {
     int nxt_br = 0;
     auto res_inlets = findInVector<int>(inlets, node_no);

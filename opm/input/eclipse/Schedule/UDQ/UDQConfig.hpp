@@ -196,7 +196,7 @@ namespace Opm {
                          UDQContext&     context) const;
 
         void eval_define(std::size_t report_step,
-                         UDQState&   udq_state,
+                         const UDQState& udq_state,
                          UDQContext& context) const;
 
         void add_named_assign(const std::string&              quantity,

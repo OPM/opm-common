@@ -25,9 +25,7 @@
 #include <opm/io/eclipse/PaddedOutputString.hpp>
 
 #include <cstddef>
-#include <string>
 #include <vector>
-#include <map>
 
 namespace Opm {
     class Actdims;
