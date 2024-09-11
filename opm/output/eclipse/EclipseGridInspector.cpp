@@ -225,31 +225,31 @@ double EclipseGridInspector::cellVolumeVerticalPillars(int i, int j, int k) cons
     // Computing the base area as half the 2d cross product of the diagonals.
     int numxpill = logical_gridsize_[0] + 1;
     int pix = i + j*numxpill;
-    double px[4] = { pillc[6*pix],
-		     pillc[6*(pix + 1)],
-		     pillc[6*(pix + numxpill)],
-		     pillc[6*(pix + numxpill + 1)] };
-    double py[4] = { pillc[6*pix + 1],
-		     pillc[6*(pix + 1) + 1],
-		     pillc[6*(pix + numxpill) + 1],
-		     pillc[6*(pix + numxpill + 1) + 1] };
-    double diag1[2] = { px[3] - px[0], py[3] - py[0] };
-    double diag2[2] = { px[2] - px[1], py[2] - py[1] };
-    double area = 0.5*(diag1[0]*diag2[1] - diag1[1]*diag2[0]);
+    const double px[4] = {pillc[6 * pix],
+                          pillc[6 * (pix + 1)],
+                          pillc[6 * (pix + numxpill)],
+                          pillc[6 * (pix + numxpill + 1)]};
+    const double py[4] = {pillc[6 * pix + 1],
+                          pillc[6 * (pix + 1) + 1],
+                          pillc[6 * (pix + numxpill) + 1],
+                          pillc[6 * (pix + numxpill + 1) + 1]};
+    const double diag1[2] = {px[3] - px[0], py[3] - py[0]};
+    const double diag2[2] = {px[2] - px[1], py[2] - py[1]};
+    const double area = 0.5*(diag1[0] * diag2[1] - diag1[1] * diag2[0]);
 
     // Computing the average of the z-differences along each pillar.
-    int delta[3] = { 1,
-		     2*logical_gridsize_[0],
-		     4*logical_gridsize_[0]*logical_gridsize_[1] };
+    const int delta[3] = {1,
+                          2 * logical_gridsize_[0],
+                          4 * logical_gridsize_[0] * logical_gridsize_[1]};
     int ix = 2*(i*delta[0] + j*delta[1] + k*delta[2]);
-    double cellz[8] = { z[ix], z[ix + delta[0]],
-			z[ix + delta[1]], z[ix + delta[1] + delta[0]],
-			z[ix + delta[2]], z[ix + delta[2] + delta[0]],
-			z[ix + delta[2] + delta[1]], z[ix + delta[2] + delta[1] + delta[0]] };
-    double diffz[4] = { cellz[4] - cellz[0],
-			cellz[5] - cellz[1],
-			cellz[6] - cellz[2],
-			cellz[7] - cellz[3] };
+    const double cellz[8] = {z[ix], z[ix + delta[0]],
+                             z[ix + delta[1]], z[ix + delta[1] + delta[0]],
+                             z[ix + delta[2]], z[ix + delta[2] + delta[0]],
+                             z[ix + delta[2] + delta[1]], z[ix + delta[2] + delta[1] + delta[0]]};
+    const double diffz[4] = {cellz[4] - cellz[0],
+                             cellz[5] - cellz[1],
+                             cellz[6] - cellz[2],
+                             cellz[7] - cellz[3]};
     double averzdiff = 0.25*std::accumulate(diffz, diffz + 4, 0.0);
     return averzdiff*area;
 }

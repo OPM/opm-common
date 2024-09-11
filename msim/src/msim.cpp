@@ -148,7 +148,7 @@ void msim::post_step(data::Solution& /* sol */,
 }
 
 
-void msim::run_step(WellTestState& wtest_state,
+void msim::run_step(const WellTestState& wtest_state,
                     UDQState& udq_state,
                     data::Solution& sol,
                     data::Wells& well_data,
@@ -160,7 +160,7 @@ void msim::run_step(WellTestState& wtest_state,
                    report_step, schedule.stepLength(report_step - 1), io);
 }
 
-void msim::run_step(WellTestState& wtest_state,
+void msim::run_step(const WellTestState& wtest_state,
                     UDQState& udq_state,
                     data::Solution& sol,
                     data::Wells& well_data,

@@ -75,7 +75,9 @@ bool operator==(const std::vector<T> & t1, const std::vector<T> & t2)
     return std::equal(t1.begin(), t1.end(), t2.begin(), t2.end());
 }
 
-void write_header(std::ofstream& ofileH, std::string& arrName, int size, std::string arrtype){
+void write_header(std::ofstream& ofileH, const std::string& arrName,
+                  int size, const std::string& arrtype)
+{
 
     int bhead = flipEndianInt(16);
     int fsize = flipEndianInt(size);

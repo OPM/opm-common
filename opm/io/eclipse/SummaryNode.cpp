@@ -151,7 +151,7 @@ std::string Opm::EclIO::SummaryNode::unique_key(number_renderer render_number) c
     if (auto opt = display_number(render_number))
         key_parts.emplace_back(opt.value());
 
-    auto compose_key = [](std::string& key, const std::string& key_part) -> std::string {
+    auto compose_key = [](const std::string& key, const std::string& key_part) -> std::string {
         constexpr auto delimiter { ':' } ;
         return key.empty() ? key_part : key + delimiter + key_part;
     };

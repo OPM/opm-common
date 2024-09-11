@@ -5290,7 +5290,8 @@ bool compare_dates(const time_point& t, int year, int month, int day) {
     return t == TimeService::from_time_t( asTimeT( TimeStampUTC(year, month, day)));
 }
 
-bool compare_dates(const time_point& t, std::array<int, 3>& ymd) {
+bool compare_dates(const time_point& t, const std::array<int, 3>& ymd)
+{
     return compare_dates(t, ymd[0], ymd[1], ymd[2]);
 }
 

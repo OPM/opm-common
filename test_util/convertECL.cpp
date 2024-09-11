@@ -84,14 +84,17 @@ void writeArray(std::string name, eclArrType arrType, T& file1, int index, int r
 }
 
 
-void writeC0nnArray(std::string name, int elementSize, EclFile& file1, int index, EclOutput& outFile)
+void writeC0nnArray(const std::string& name, int elementSize, EclFile& file1, int index, EclOutput& outFile)
 {
     auto vect = file1.get<std::string>(index);
     outFile.write(name, vect, elementSize);
 }
 
 
-void writeArrayList(std::vector<EclEntry>& arrayList, std::vector<int>& elementSizeList, EclFile file1, EclOutput& outFile) {
+void writeArrayList(std::vector<EclEntry>& arrayList,
+                    const std::vector<int>& elementSizeList,
+                    EclFile& file1, EclOutput& outFile)
+{
 
     for (size_t index = 0; index < arrayList.size(); index++) {
         std::string name = std::get<0>(arrayList[index]);

@@ -455,7 +455,7 @@ namespace
 /// \brief Check whether each MS well has COMPSEGS entry andissue error if not.
 /// \param welsegs All wells with a WELSEGS entry together with the location.
 /// \param compegs All wells with a COMPSEGS entry
-void check_compsegs_consistency(Opm::WelSegsSet& welsegs,
+void check_compsegs_consistency(const Opm::WelSegsSet& welsegs,
                                 const std::set<std::string>& compsegs,
                                 const std::vector<::Opm::Well>& wells)
 {
