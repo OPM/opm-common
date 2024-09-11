@@ -563,7 +563,7 @@ protected:
     void ptr(const PtrType& data)
     {
         using T1 = typename PtrType::element_type;
-        void* data_ptr = reinterpret_cast<void*>(&(*data));
+        void* data_ptr = reinterpret_cast<void*>(data.get());
         (*this)(data_ptr);
         if (!data_ptr)
             return;
