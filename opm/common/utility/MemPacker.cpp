@@ -45,7 +45,7 @@ pack(const std::bitset<Size>& data,
 template <std::size_t Size>
 void Packing<false,std::bitset<Size>>::
 unpack(std::bitset<Size>& data,
-       std::vector<char>& buffer, std::size_t& position)
+       const std::vector<char>& buffer, std::size_t& position)
 {
     unsigned long long d;
     Packing<true,unsigned long long>::unpack(d, buffer, position);
@@ -67,7 +67,7 @@ pack(const std::string& data,
 }
 
 void Packing<false,std::string>::
-unpack(std::string& data, std::vector<char>& buffer, std::size_t& position)
+unpack(std::string& data, const std::vector<char>& buffer, std::size_t& position)
 {
     std::size_t length = 0;
     Packing<true,std::size_t>::unpack(length, buffer, position);
@@ -92,7 +92,7 @@ pack(const time_point& data,
 }
 
 void Packing<false,time_point>::
-unpack(time_point& data, std::vector<char>& buffer, std::size_t& position)
+unpack(time_point& data, const std::vector<char>& buffer, std::size_t& position)
 {
     std::time_t res;
     Packing<true,std::time_t>::unpack(res, buffer, position);
