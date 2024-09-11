@@ -25,6 +25,7 @@
 #include <opm/input/eclipse/Schedule/GasLiftOpt.hpp>
 #include <opm/input/eclipse/Schedule/Group/GConSale.hpp>
 #include <opm/input/eclipse/Schedule/Group/GConSump.hpp>
+#include <opm/input/eclipse/Schedule/Group/GSatProd.hpp>
 #include <opm/input/eclipse/Schedule/Group/GroupEconProductionLimits.hpp>
 #include <opm/input/eclipse/Schedule/Group/GuideRateConfig.hpp>
 #include <opm/input/eclipse/Schedule/Network/Balance.hpp>
@@ -298,6 +299,7 @@ bool ScheduleState::operator==(const ScheduleState& other) const {
         && this->group_order.get() == other.group_order.get()
         && this->gconsale.get() == other.gconsale.get()
         && this->gconsump.get() == other.gconsump.get()
+        && this->gsatprod.get() == other.gsatprod.get()
         && this->wlist_manager.get() == other.wlist_manager.get()
         && this->rpt_config.get() == other.rpt_config.get()
         && this->actions.get() == other.actions.get()
@@ -345,6 +347,7 @@ ScheduleState ScheduleState::serializationTestObject() {
     ts.wtest_config.update( WellTestConfig::serializationTestObject() );
     ts.gconsump.update( GConSump::serializationTestObject() );
     ts.gconsale.update( GConSale::serializationTestObject() );
+    ts.gsatprod.update( GSatProd::serializationTestObject() );
     ts.gecon.update( GroupEconProductionLimits::serializationTestObject() );
     ts.rescoup.update( ReservoirCoupling::CouplingInfo::serializationTestObject() );
     ts.wlist_manager.update( WListManager::serializationTestObject() );

@@ -29,6 +29,7 @@
 #include <opm/input/eclipse/Schedule/GasLiftOpt.hpp>
 #include <opm/input/eclipse/Schedule/Group/GConSale.hpp>
 #include <opm/input/eclipse/Schedule/Group/GConSump.hpp>
+#include <opm/input/eclipse/Schedule/Group/GSatProd.hpp>
 #include <opm/input/eclipse/Schedule/Group/Group.hpp>
 #include <opm/input/eclipse/Schedule/Group/GroupEconProductionLimits.hpp>
 #include <opm/input/eclipse/Schedule/Group/GuideRateConfig.hpp>
@@ -308,6 +309,39 @@ void handleGCONPROD(HandlerContext& handlerContext)
     }
 }
 
+void handleGSATPROD(HandlerContext& handlerContext)
+{
+    const auto& keyword = handlerContext.keyword;
+    auto new_gsatprod = handlerContext.state().gsatprod.get();
+
+    for (const auto& record : keyword) {
+        const std::string& groupNamePattern = record.getItem("SATELLITE_GROUP_NAME_OR_GROUP_NAME_ROOT").getTrimmedString(0);
+        const auto group_names = handlerContext.groupNames(groupNamePattern);
+        if (group_names.empty()) {
+            handlerContext.invalidNamePattern(groupNamePattern);
+        }
+        const auto oil_rate = record.getItem("OIL_PRODUCTION_RATE").getSIDouble(0);
+        const auto gas_rate = record.getItem("GAS_PRODUCTION_RATE").getSIDouble(0);
+        const auto water_rate = record.getItem("WATER_PRODUCTION_RATE").getSIDouble(0);
+        const auto resv_rate = record.getItem("RES_FLUID_VOL_PRODUCTION_RATE").getSIDouble(0);
+        const auto glift_rate = record.getItem("LIFT_GAS_SUPPLY_RATE").getSIDouble(0);
+
+        for (const auto& group_name : group_names) {
+            const bool is_field { group_name == "FIELD" } ;
+            if (is_field) {
+                std::string msg_fmt = "Problem with {keyword}\n"
+                    "In {file} line {line}\n"
+                    "GSATPROD group cannot be named FIELD ";
+                const auto& parseContext = handlerContext.parseContext;
+                auto& errors = handlerContext.errors;
+                parseContext.handleError(ParseContext::SCHEDULE_GROUP_ERROR, msg_fmt, keyword.location(), errors);
+            }
+            new_gsatprod.add(group_name, oil_rate, gas_rate, water_rate, resv_rate, glift_rate);
+        }
+    }
+    handlerContext.state().gsatprod.update( std::move(new_gsatprod) );
+}
+
 void handleGCONSALE(HandlerContext& handlerContext)
 {
     auto new_gconsale = handlerContext.state().gconsale.get();
@@ -452,6 +486,7 @@ getGroupHandlers()
         { "GCONPROD", &handleGCONPROD },
         { "GCONSALE", &handleGCONSALE },
         { "GCONSUMP", &handleGCONSUMP },
+        { "GSATPROD", &handleGSATPROD },
         { "GECON"   , &handleGECON    },
         { "GEFAC"   , &handleGEFAC    },
         { "GPMAINT" , &handleGPMAINT  },

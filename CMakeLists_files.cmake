@@ -265,6 +265,7 @@ if(ENABLE_ECL_INPUT)
     opm/input/eclipse/Schedule/Group/GConSale.cpp
     opm/input/eclipse/Schedule/Group/GConSump.cpp
     opm/input/eclipse/Schedule/Group/GroupEconProductionLimits.cpp
+    opm/input/eclipse/Schedule/Group/GSatProd.cpp
     opm/input/eclipse/Schedule/Group/GTNode.cpp
     opm/input/eclipse/Schedule/MSW/AICD.cpp
     opm/input/eclipse/Schedule/MSW/Compsegs.cpp
@@ -1373,6 +1374,7 @@ if(ENABLE_ECL_INPUT)
        opm/input/eclipse/Schedule/Group/GuideRate.hpp
        opm/input/eclipse/Schedule/Group/GConSale.hpp
        opm/input/eclipse/Schedule/Group/GConSump.hpp
+       opm/input/eclipse/Schedule/Group/GSatProd.hpp
        opm/input/eclipse/Schedule/Group/GroupEconProductionLimits.hpp
        opm/input/eclipse/Schedule/Group/GuideRateConfig.hpp
        opm/input/eclipse/Schedule/Group/GuideRateModel.hpp
