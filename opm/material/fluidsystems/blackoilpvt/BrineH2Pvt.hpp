@@ -141,6 +141,10 @@ public:
     /*!
     * \brief Returns the specific enthalpy [J/kg] of gas given a set of parameters.
     */
+    Scalar hVap(unsigned /*regionIdx*/) const{
+        return 0.0;
+    }
+
     template <class Evaluation>
     Evaluation internalEnergy(unsigned regionIdx,
                         const Evaluation& temperature,
@@ -236,7 +240,7 @@ public:
     {
         const Evaluation salinity = salinityFromConcentration(regionIdx, temperature, pressure, saltconcentration);
         Evaluation rsSat = rsSat_(regionIdx, temperature, pressure, salinity);
-        return (1.0 - convertRsToXoG_(rsSat,regionIdx)) * 
+        return (1.0 - convertRsToXoG_(rsSat,regionIdx)) *
             density_(regionIdx, temperature, pressure, rsSat, salinity) / brineReferenceDensity_[regionIdx];
     }
 
@@ -251,7 +255,7 @@ public:
                                             const Evaluation& saltConcentration) const
     {
         const Evaluation salinity = salinityFromConcentration(regionIdx, temperature, pressure, saltConcentration);
-        return (1.0 - convertRsToXoG_(Rs,regionIdx)) * 
+        return (1.0 - convertRsToXoG_(Rs,regionIdx)) *
             density_(regionIdx, temperature, pressure, Rs, salinity) / brineReferenceDensity_[regionIdx];
     }
 
@@ -264,8 +268,8 @@ public:
                                             const Evaluation& pressure,
                                             const Evaluation& Rs) const
     {
-        return (1.0 - convertRsToXoG_(Rs, regionIdx)) * 
-            density_(regionIdx, temperature, pressure, Rs, Evaluation(salinity_[regionIdx])) / 
+        return (1.0 - convertRsToXoG_(Rs, regionIdx)) *
+            density_(regionIdx, temperature, pressure, Rs, Evaluation(salinity_[regionIdx])) /
                 brineReferenceDensity_[regionIdx];
     }
 
@@ -278,8 +282,8 @@ public:
                                                      const Evaluation& pressure) const
     {
         Evaluation rsSat = rsSat_(regionIdx, temperature, pressure, Evaluation(salinity_[regionIdx]));
-        return (1.0 - convertRsToXoG_(rsSat, regionIdx)) * 
-            density_(regionIdx, temperature, pressure, rsSat, Evaluation(salinity_[regionIdx])) / 
+        return (1.0 - convertRsToXoG_(rsSat, regionIdx)) *
+            density_(regionIdx, temperature, pressure, rsSat, Evaluation(salinity_[regionIdx])) /
                 brineReferenceDensity_[regionIdx];
     }
 
@@ -398,7 +402,7 @@ private:
 
     /*!
     * \brief Calculate density of aqueous solution (H2O-NaCl/brine and H2).
-    * 
+    *
     * \param temperature temperature [K]
     * \param pressure pressure [Pa]
     * \param Rs gas dissolution factor [-]
@@ -426,7 +430,7 @@ private:
     /*!
     * \brief Calculated the density of the aqueous solution where contributions of salinity and dissolved H2 is taken
     * into account.
-    * 
+    *
     * \param T temperature [K]
     * \param pl liquid pressure [Pa]
     * \param xlH2 mole fraction H2 [-]
@@ -444,9 +448,9 @@ private:
 
         // check if pressure and temperature is valid
         if(!extrapolate && T < 273.15) {
-            const std::string msg = 
+            const std::string msg =
                 "Liquid density for Brine and H2 is only "
-                "defined above 273.15K (is " + 
+                "defined above 273.15K (is " +
                 std::to_string(getValue(T)) + "K)";
             throw NumericalProblem(msg);
         }
@@ -470,7 +474,7 @@ private:
     /*!
     * \brief Density of aqueous solution with dissolved H2. Formula from Li et al. (2018) and Garica, Lawrence Berkeley
     * National Laboratory, 2001.
-    * 
+    *
     * \param temperature [K]
     * \param pl liquid pressure [Pa]
     * \param xlH2 mole fraction [-]
@@ -503,7 +507,7 @@ private:
     /*!
     * \brief Convert a gas dissolution factor to the the corresponding mass fraction of the gas component in the oil
     * phase.
-    * 
+    *
     * \param Rs gass dissolution factor [-]
     * \param regionIdx region index
     */
@@ -547,7 +551,7 @@ private:
     /*!
     * \brief Convert the mass fraction of the gas component in the oil phase to the corresponding gas dissolution
     * factor.
-    * 
+    *
     * \param XoG mass fraction [-]
     * \param regionIdx region index
     */
@@ -579,7 +583,7 @@ private:
 
         // calulate the equilibrium composition for the given temperature and pressure
         LhsEval xlH2 = BinaryCoeffBrineH2::calculateMoleFractions(temperature, pressure, salinity, extrapolate);
-        
+
         // normalize the phase compositions
         xlH2 = max(0.0, min(1.0, xlH2));
 
@@ -654,9 +658,9 @@ private:
     }
 
     template <class LhsEval>
-    const LhsEval salinityFromConcentration(unsigned regionIdx, 
-                                            const LhsEval&T, 
-                                            const LhsEval& P, 
+    const LhsEval salinityFromConcentration(unsigned regionIdx,
+                                            const LhsEval&T,
+                                            const LhsEval& P,
                                             const LhsEval& saltConcentration) const
     {
         if (enableSaltConcentration_)

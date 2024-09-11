@@ -107,6 +107,18 @@ namespace Opm {
             this->m_isThermal = runspec.hasKeyword<ParserKeywords::THERMAL>()
                 || runspec.hasKeyword<ParserKeywords::TEMP>();
 
+            this->m_useEnthalpy = runspec.hasKeyword<ParserKeywords::THERMAL>();
+
+            if(runspec.hasKeyword<ParserKeywords::TEMP>()){
+                this->m_useEnthalpy = false;
+                if(runspec.hasKeyword<ParserKeywords::THERMAL>()){
+                    throw std::invalid_argument {
+                        "ERROR: In the RUNSPEC section the BOTH TEMP and THERMAL keyword "
+                        "only one should be spesified"
+                    };
+                }
+            }
+
             if (runspec.hasKeyword<ParserKeywords::PRECSALT>()) {
                 m_PRECSALT = true;
             }
@@ -192,6 +204,11 @@ namespace Opm {
     bool SimulationConfig::isThermal() const
     {
         return this->m_isThermal;
+    }
+
+    bool SimulationConfig::useEnthalpy() const
+    {
+        return this->m_useEnthalpy;
     }
 
     bool SimulationConfig::isDiffusive() const
