@@ -39,6 +39,7 @@
 #include <opm/material/viscositymodels/LBC.hpp>
 
 #include <cassert>
+#include <cstddef>
 #include <string>
 #include <string_view>
 
@@ -72,7 +73,7 @@ namespace Opm {
         static constexpr int waterCompIdx = -1;
         static constexpr int oilCompIdx = 0;
         static constexpr int gasCompIdx = 1;
-        static constexpr int compositionSwitchIdx = -1; //equil initilizer
+        static constexpr int compositionSwitchIdx = -1; // equil initializer
 
         template <class ValueType>
         using ParameterCache = Opm::PTFlashParameterCache<ValueType, GenericOilGasFluidSystem<Scalar, NumComp>>;
@@ -120,10 +121,11 @@ namespace Opm {
         }
 
 #if HAVE_ECL_INPUT
-    /*!
-     * \brief Initialize the fluid system using an ECL deck object
-     */
-        static void initFromState(const EclipseState& eclState, const Schedule& /* schedule */){
+        /*!
+         * \brief Initialize the fluid system using an ECL deck object
+         */
+        static void initFromState(const EclipseState& eclState, const Schedule& /* schedule */)
+        {
             // TODO: we are not considering the EOS region for now
             const auto& comp_config = eclState.compositionalConfig();
             // how should we utilize the numComps from the CompositionalConfig?
@@ -143,7 +145,7 @@ namespace Opm {
             for (std::size_t c = 0; c < num_comps; ++c) {
                 // we use m^3/kmol for the critic volume in the flash calculation, so we multiply 1.e3 for the critic volume
                 FluidSystem::addComponent(CompParm{names[c], molar_weight[c], critic_temp[c], critic_pressure[c],
-                                                          critic_volume[c] * 1.e3, acentric_factor[c]});
+                                                   critic_volume[c] * 1.e3, acentric_factor[c]});
             }
             FluidSystem::printComponentParams();
             interaction_coefficients_ = comp_config.binaryInteractionCoefficient(0);
@@ -294,7 +296,7 @@ namespace Opm {
             return decay<LhsEval>(PengRobinsonMixture::computeFugacityCoefficient(fluidState, paramCache, phaseIdx, compIdx));
         }
 
-        // TODO: will check whether the following interface functions are needed
+        // TODO: the following interfaces are needed by function checkFluidSystem()
         //! \copydoc BaseFluidSystem::isCompressible
         static bool isCompressible([[maybe_unused]] unsigned phaseIdx)
         {
@@ -326,6 +328,7 @@ namespace Opm {
 
             return (phaseIdx == 1);
         }
+
     private:
         static bool isConsistent() {
             return component_param_.size() == NumComp;
@@ -333,6 +336,7 @@ namespace Opm {
 
         static std::vector<ComponentParam> component_param_;
         static std::vector<Scalar> interaction_coefficients_;
+
     public:
         static std::string printComponentParams() {
             std::string result = "Components Information:\n";
