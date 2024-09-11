@@ -128,10 +128,10 @@ private:
 
 template<typename T1, typename T2> inline bool operator==(const ref<T1>& a, const ref<T2>& b)   { return a.p() == b.p(); }  ///< Returns true if the internal pointers of refs \a a and \a b are equal.
 template<typename T1, typename T2> inline bool operator!=(const ref<T1>& a, const ref<T2>& b)   { return a.p() != b.p(); }  ///< Returns true if the internal pointers of refs \a a and \a b are different.
-template<typename T1, typename T2> inline bool operator==(const ref<T1>& a, T2* b)              { return a.p() == b; }      ///< Returns true if the internal pointer of ref \a a is equal to the naked pointer \a b.
-template<typename T1, typename T2> inline bool operator!=(const ref<T1>& a, T2* b)              { return a.p() != b; }      ///< Returns true if the internal pointer of ref \a a is different from the naked pointer \a b.
-template<typename T1, typename T2> inline bool operator==(T1* a, const ref<T2>& b)              { return a == b.p(); }      ///< Returns true if the naked pointer \a a is equal to the internal pointer of ref \a b.
-template<typename T1, typename T2> inline bool operator!=(T1* a, const ref<T2>& b)              { return a != b.p(); }      ///< Returns true if the naked pointer \a a is different from the internal pointer of ref \a b.
+template<typename T1, typename T2> inline bool operator==(const ref<T1>& a, const T2* b)              { return a.p() == b; }      ///< Returns true if the internal pointer of ref \a a is equal to the naked pointer \a b.
+template<typename T1, typename T2> inline bool operator!=(const ref<T1>& a, const T2* b)              { return a.p() != b; }      ///< Returns true if the internal pointer of ref \a a is different from the naked pointer \a b.
+template<typename T1, typename T2> inline bool operator==(const T1* a, const ref<T2>& b)              { return a == b.p(); }      ///< Returns true if the naked pointer \a a is equal to the internal pointer of ref \a b.
+template<typename T1, typename T2> inline bool operator!=(const T1* a, const ref<T2>& b)              { return a != b.p(); }      ///< Returns true if the naked pointer \a a is different from the internal pointer of ref \a b.
 
 /// Swap contents of \a a and \a b. Matches signature of std::swap().
 /// \todo Need to investigate which STL algorithms actually utilize the swap() function.
@@ -176,10 +176,10 @@ private:
 
 template<typename T1, typename T2> inline bool operator==(const cref<T1>& a, const cref<T2>& b)  { return a.p() == b.p(); }  ///< Returns true if the internal pointers of refs \a a and \a b are equal.
 template<typename T1, typename T2> inline bool operator!=(const cref<T1>& a, const cref<T2>& b)  { return a.p() != b.p(); }  ///< Returns true if the internal pointers of refs \a a and \a b are different.
-template<typename T1, typename T2> inline bool operator==(const cref<T1>& a, T2* b)              { return a.p() == b; }      ///< Returns true if the internal pointer of ref \a a is equal to the naked pointer \a b.
-template<typename T1, typename T2> inline bool operator!=(const cref<T1>& a, T2* b)              { return a.p() != b; }      ///< Returns true if the internal pointer of ref \a a is different from the naked pointer \a b.
-template<typename T1, typename T2> inline bool operator==(T1* a, const cref<T2>& b)              { return a == b.p(); }      ///< Returns true if the naked pointer \a a is equal to the internal pointer of ref \a b.
-template<typename T1, typename T2> inline bool operator!=(T1* a, const cref<T2>& b)              { return a != b.p(); }      ///< Returns true if the naked pointer \a a is different from the internal pointer of ref \a b.
+template<typename T1, typename T2> inline bool operator==(const cref<T1>& a, const T2* b)              { return a.p() == b; }      ///< Returns true if the internal pointer of ref \a a is equal to the naked pointer \a b.
+template<typename T1, typename T2> inline bool operator!=(const cref<T1>& a, const T2* b)              { return a.p() != b; }      ///< Returns true if the internal pointer of ref \a a is different from the naked pointer \a b.
+template<typename T1, typename T2> inline bool operator==(const T1* a, const cref<T2>& b)              { return a == b.p(); }      ///< Returns true if the naked pointer \a a is equal to the internal pointer of ref \a b.
+template<typename T1, typename T2> inline bool operator!=(const T1* a, const cref<T2>& b)              { return a != b.p(); }      ///< Returns true if the naked pointer \a a is different from the internal pointer of ref \a b.
 
 //==================================================================================================
 //
