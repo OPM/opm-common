@@ -93,6 +93,7 @@
 #include <opm/input/eclipse/Schedule/GasLiftOpt.hpp>
 #include <opm/input/eclipse/Schedule/Group/GConSale.hpp>
 #include <opm/input/eclipse/Schedule/Group/GConSump.hpp>
+#include <opm/input/eclipse/Schedule/Group/GSatProd.hpp>
 #include <opm/input/eclipse/Schedule/Group/Group.hpp>
 #include <opm/input/eclipse/Schedule/Group/GroupEconProductionLimits.hpp>
 #include <opm/input/eclipse/Schedule/Group/GuideRateConfig.hpp>
@@ -255,6 +256,7 @@ TEST_FOR_TYPE(FoamConfig)
 TEST_FOR_TYPE(FoamData)
 TEST_FOR_TYPE(GConSale)
 TEST_FOR_TYPE(GConSump)
+TEST_FOR_TYPE(GSatProd)
 TEST_FOR_TYPE(GroupEconProductionLimits)
 TEST_FOR_TYPE(GridDims)
 TEST_FOR_TYPE(Group)
