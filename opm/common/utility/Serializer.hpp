@@ -230,16 +230,22 @@ protected:
         if constexpr (std::is_pod_v<typename Vector::value_type>) {
           if (m_op == Operation::PACKSIZE) {
               (*this)(data.size());
-              m_packSize += m_packer.packSize(data.data(), data.size());
+              if (data.size() > 0) {
+                  m_packSize += m_packer.packSize(data.data(), data.size());
+              }
           } else if (m_op == Operation::PACK) {
               (*this)(data.size());
-              m_packer.pack(getVectorData(data), data.size(), m_buffer, m_position);
+              if (data.size() > 0) {
+                  m_packer.pack(getVectorData(data), data.size(), m_buffer, m_position);
+              }
           } else if (m_op == Operation::UNPACK) {
               std::size_t size = 0;
               (*this)(size);
               auto& data_mut = const_cast<Vector&>(data);
               data_mut.resize(size);
-              m_packer.unpack(getVectorData(data_mut), size, m_buffer, m_position);
+              if (size > 0) {
+                  m_packer.unpack(getVectorData(data_mut), size, m_buffer, m_position);
+              }
           }
         } else {
             if (m_op == Operation::UNPACK) {
