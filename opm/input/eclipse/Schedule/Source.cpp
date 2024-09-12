@@ -138,7 +138,7 @@ std::vector<Source::SourceCell>::const_iterator Source::end() const {
 }
 
 bool Source::hasSource(const std::array<int, 3>& input) const {
-    for (auto& source : m_cells) {
+    for (const auto& source : m_cells) {
         if (source.ijk == input)
             {
                 return true;
@@ -148,7 +148,7 @@ bool Source::hasSource(const std::array<int, 3>& input) const {
 }
 
 double Source::rate(const std::pair<std::array<int, 3>, SourceComponent>& input) const {
-    for (auto& source : m_cells) {
+    for (const auto& source : m_cells) {
         if (source.isSame(input))
             {
                 return source.rate;

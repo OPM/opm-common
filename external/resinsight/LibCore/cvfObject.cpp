@@ -75,7 +75,7 @@ void Object::dumpActiveObjectInstances()
 {
     Trace::show("Dumping active object instances:");
 
-    std::set<Object*>* objInstances = Object::activeObjectInstances();
+    const std::set<Object*>* objInstances = Object::activeObjectInstances();
     size_t numInstances = objInstances->size();
     
 #if ((CVF_TRACK_ACTIVE_OBJECT_INSTANCES >= 1 && defined(_DEBUG)) || CVF_TRACK_ACTIVE_OBJECT_INSTANCES == 2)

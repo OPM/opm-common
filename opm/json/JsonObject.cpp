@@ -151,7 +151,7 @@ namespace Json {
 
 
     bool JsonObject::has_item( const std::string& key) const {
-        cJSON * object = cJSON_GetObjectItem( this->root , key.c_str() );
+        const cJSON * object = cJSON_GetObjectItem( this->root , key.c_str() );
         if (object)
             return true;
         else

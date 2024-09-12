@@ -164,7 +164,7 @@ bool Ray::triangleIntersect(const Vec3d& v1, const Vec3d& v2, const Vec3d& v3, V
     }
 
     Vec3d fp = origin() + direction()*t;
-    Vec3d pts[] = { v1, v2, v3, v1 };
+    const Vec3d pts[] = { v1, v2, v3, v1 };
     
     int i;
     for(i = 0; i <  3; i++)
@@ -229,7 +229,7 @@ bool Ray::quadIntersect(const Vec3d& v1, const Vec3d& v2, const Vec3d& v3, const
     }
 
     Vec3d fp = origin() + direction()*t;
-    Vec3d pts[] = { v1, v2, v3, v4, v1 };
+    const Vec3d pts[] = { v1, v2, v3, v4, v1 };
 
     int i;
     for(i = 0; i <  4; i++)

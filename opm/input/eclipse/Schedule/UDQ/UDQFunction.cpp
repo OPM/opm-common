@@ -211,7 +211,7 @@ UDQSet UDQUnaryElementalFunction::DEF(const UDQSet& arg)
 {
     auto result = arg;
     for (std::size_t index=0; index < result.size(); ++index) {
-        auto& udq_value = result[index];
+        const auto& udq_value = result[index];
         if (udq_value) {
             result.assign(index, 1);
         }
@@ -224,7 +224,7 @@ UDQSet UDQUnaryElementalFunction::UNDEF(const UDQSet& arg)
 {
     UDQSet result(arg.name(), arg.size());
     for (std::size_t index=0; index < result.size(); ++index) {
-        auto& udq_value = arg[index];
+        const auto& udq_value = arg[index];
         if (!udq_value) {
             result.assign( index, 1 );
         }
@@ -272,7 +272,7 @@ UDQSet UDQUnaryElementalFunction::RANDN(std::mt19937& rng, const UDQSet& arg)
     auto result = arg;
     std::normal_distribution<double> dist(0.0, 1.0);
     for (std::size_t index = 0; index < result.size(); ++index) {
-        if (auto& udq_value = result[index]; udq_value) {
+        if (const auto& udq_value = result[index]; udq_value) {
             result.assign(index, dist(rng));
         }
     }
@@ -285,7 +285,7 @@ UDQSet UDQUnaryElementalFunction::RANDU(std::mt19937& rng, const UDQSet& arg)
     auto result = arg;
     std::uniform_real_distribution<double> dist(-1.0, 1.0);
     for (std::size_t index = 0; index < result.size(); ++index) {
-        if (auto& udq_value = result[index]; udq_value) {
+        if (const auto& udq_value = result[index]; udq_value) {
             result.assign(index, dist(rng));
         }
     }

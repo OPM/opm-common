@@ -1547,8 +1547,8 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
                 this->getCellCorners(global_index, X, Y, Z );
                 if (m_rv && m_thetav) {
                     const auto[i,j,k] = this->getIJK(global_index);
-                    auto& r = *m_rv;
-                    auto& t = *m_thetav;
+                    const auto& r = *m_rv;
+                    const auto& t = *m_thetav;
                     volume[active_index] = calculateCylindricalCellVol(r[i], r[i+1], t[j], Z[4] - Z[0]);
                 } else
                     volume[active_index] = calculateCellVol(X, Y, Z);
@@ -1574,8 +1574,8 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
         this->getCellCorners(globalIndex, X, Y, Z );
         if (m_rv && m_thetav) {
             const auto[i,j,k] = this->getIJK(globalIndex);
-            auto& r = *m_rv;
-            auto& t = *m_thetav;
+            const auto& r = *m_rv;
+            const auto& t = *m_thetav;
            return calculateCylindricalCellVol(r[i], r[i+1], t[j], Z[4] - Z[0]);
         } else {
             return calculateCellVol(X, Y, Z);

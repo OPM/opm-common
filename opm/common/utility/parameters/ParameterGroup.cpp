@@ -74,8 +74,8 @@ namespace Opm {
 	    } else if (name_path.second == "") {
 		return true;
 	    } else {
-		ParameterGroup& pg = dynamic_cast<ParameterGroup&>(*(*it).second);
-		return pg.has(name_path.second);
+                const ParameterGroup& pg = dynamic_cast<ParameterGroup&>(*(*it).second);
+                return pg.has(name_path.second);
 	    }
 	}
 
@@ -153,7 +153,7 @@ namespace Opm {
 	    }
 	    for (map_type::const_iterator it = map_.begin(); it != map_.end(); ++it) {
 		if ( (*it).second->getTag() == ID_xmltag__param_grp ) {
-		    ParameterGroup& pg = dynamic_cast<ParameterGroup&>(*(*it).second);
+                    const ParameterGroup& pg = dynamic_cast<ParameterGroup&>(*(*it).second);
 		    pg.writeParamToStream(os);
 		} else if ( (*it).second->getTag() == ID_xmltag__param) {
 		    os << this->path() << "/" << (*it).first << ID_delimiter_assignment
@@ -269,7 +269,7 @@ namespace Opm {
             }
 	    for (map_type::const_iterator it = map_.begin(); it != map_.end(); ++it) {
 		if (it->second->getTag() == ID_xmltag__param_grp) {
-		    ParameterGroup& pg = dynamic_cast<ParameterGroup&>(*(it->second));
+                    const ParameterGroup& pg = dynamic_cast<ParameterGroup&>(*(it->second));
 		    if (pg.anyUnused()) {
                         return true;
                     }
@@ -289,7 +289,7 @@ namespace Opm {
 	    }
 	    for (map_type::const_iterator it = map_.begin(); it != map_.end(); ++it) {
 		if (it->second->getTag() == ID_xmltag__param_grp) {
-		    ParameterGroup& pg = dynamic_cast<ParameterGroup&>(*(it->second));
+                    const ParameterGroup& pg = dynamic_cast<ParameterGroup&>(*(it->second));
 		    pg.displayUsage(used_params);
 		} else if (it->second->getTag() == ID_xmltag__param) {
 		    if (it->second->used() == used_params) {

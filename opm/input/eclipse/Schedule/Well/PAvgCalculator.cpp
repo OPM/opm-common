@@ -684,7 +684,7 @@ void PAvgCalculator<Scalar>::pruneInactiveWBPCells(const std::vector<bool>& isAc
     for (auto& conn : this->connections_) {
         conn.cell = newIndex[conn.cell]; // Known to be active.
 
-        for (auto& neighbours : neighList) {
+        for (const auto& neighbours : neighList) {
             auto newNeigbour = std::vector<ContrIndexType>{};
             newNeigbour.reserve((conn.*neighbours).size());
 

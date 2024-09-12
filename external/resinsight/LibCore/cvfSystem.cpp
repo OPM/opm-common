@@ -62,7 +62,7 @@ bool System::is64Bit()
 bool System::isBigEndian()
 {
     int iInt = 1;
-    char* pcChar = reinterpret_cast<char*>(&iInt);
+    const char* pcChar = reinterpret_cast<const char*>(&iInt);
 
     return !(*pcChar);
 }
