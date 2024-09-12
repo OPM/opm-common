@@ -202,25 +202,6 @@ public:
     }
 
 protected:
-    /// Utility function for missing data() member function in FieldVector of DUNE 2.6
-    template<typename Vector>
-    const typename Vector::value_type* getVectorData(const Vector& data)
-    {
-        if (data.size() == 0)
-            return nullptr;
-        else
-            return &(data[0]);
-    }
-
-    /// Utility function for missing data() member function in FieldVector of DUNE 2.6
-    template<typename Vector>
-    typename Vector::value_type* getVectorData(Vector& data)
-    {
-        if (data.size() == 0)
-            return nullptr;
-        else
-            return &(data[0]);
-    }
     //! \brief Handler for vectors.
     //! \tparam T Type for vector elements
     //! \param data The vector to (de-)serialize
@@ -230,16 +211,22 @@ protected:
         if constexpr (std::is_pod_v<typename Vector::value_type>) {
           if (m_op == Operation::PACKSIZE) {
               (*this)(data.size());
-              m_packSize += m_packer.packSize(data.data(), data.size());
+              if (data.size() > 0) {
+                  m_packSize += m_packer.packSize(data.data(), data.size());
+              }
           } else if (m_op == Operation::PACK) {
               (*this)(data.size());
-              m_packer.pack(getVectorData(data), data.size(), m_buffer, m_position);
+              if (data.size() > 0) {
+                  m_packer.pack(data.data(), data.size(), m_buffer, m_position);
+              }
           } else if (m_op == Operation::UNPACK) {
               std::size_t size = 0;
               (*this)(size);
               auto& data_mut = const_cast<Vector&>(data);
               data_mut.resize(size);
-              m_packer.unpack(getVectorData(data_mut), size, m_buffer, m_position);
+              if (size > 0) {
+                  m_packer.unpack(data_mut.data(), size, m_buffer, m_position);
+              }
           }
         } else {
             if (m_op == Operation::UNPACK) {
@@ -288,12 +275,12 @@ protected:
 
         if constexpr (std::is_pod_v<T>) {
             if (m_op == Operation::PACKSIZE)
-                m_packSize += m_packer.packSize(getVectorData(data), data.size());
+                m_packSize += m_packer.packSize(data.data(), data.size());
             else if (m_op == Operation::PACK)
-                m_packer.pack(getVectorData(data), data.size(), m_buffer, m_position);
+                m_packer.pack(data.data(), data.size(), m_buffer, m_position);
             else if (m_op == Operation::UNPACK) {
                 auto& data_mut = const_cast<Array&>(data);
-                m_packer.unpack(getVectorData(data_mut), data_mut.size(), m_buffer, m_position);
+                m_packer.unpack(data_mut.data(), data_mut.size(), m_buffer, m_position);
             }
         } else {
             std::for_each(data.begin(), data.end(), std::ref(*this));
