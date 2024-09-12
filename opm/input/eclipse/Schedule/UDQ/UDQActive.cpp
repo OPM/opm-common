@@ -117,7 +117,7 @@ int UDQActive::update(const UDQConfig& udq_config, const UDAValue& uda, const st
     }
 
     for (auto iter = this->input_data.begin(); iter != this->input_data.end(); ++iter) {
-        auto& record = *iter;
+        const auto& record = *iter;
         if ((record.wgname == wgname) && (record.control == control)) {
             if (uda.is<double>()) {
                 // Alternative 2

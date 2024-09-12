@@ -472,7 +472,7 @@ bool AABBTree::buildTree()
     m_pRoot = createNode();
     m_pRoot->setBoundingBox(box);
         
-    bool bRes = buildTree((AABBTreeNodeInternal*)m_pRoot, 0, m_iNumLeaves - 1, 0, 4);
+    bool bRes = buildTree(static_cast<AABBTreeNodeInternal*>(m_pRoot), 0, m_iNumLeaves - 1, 0, 4);
 
 #pragma omp parallel
     {
@@ -562,7 +562,7 @@ bool AABBTree::buildTree(AABBTreeNodeInternal* pNode, size_t iFromIdx, size_t iT
         newNode->setBoundingBox(box);
         pNode->setLeft(newNode);
 
-        if (!buildTree((AABBTreeNodeInternal*)pNode->left(), iFromIdx, iMid, currentLevel + 1, maxLevel)) return false;
+        if (!buildTree(static_cast<AABBTreeNodeInternal*>(pNode->left()), iFromIdx, iMid, currentLevel + 1, maxLevel)) return false;
     }
     else
     {
@@ -578,7 +578,7 @@ bool AABBTree::buildTree(AABBTreeNodeInternal* pNode, size_t iFromIdx, size_t iT
         newNode->setBoundingBox(box);
         pNode->setRight(newNode);
 
-        if (!buildTree((AABBTreeNodeInternal*)pNode->right(), iMid + 1, iToIdx, currentLevel + 1, maxLevel)) return false;
+        if (!buildTree(static_cast<AABBTreeNodeInternal*>(pNode->right()), iMid + 1, iToIdx, currentLevel + 1, maxLevel)) return false;
     }
     else
     {
@@ -641,7 +641,7 @@ size_t AABBTree::treeSize(const AABBTreeNode* pNode) const
         return treeNodeSize(pNode);
     }
 
-    const AABBTreeNodeInternal* pInt = (const AABBTreeNodeInternal*)pNode;
+    const AABBTreeNodeInternal* pInt = static_cast<const AABBTreeNodeInternal*>(pNode);
 
     return treeNodeSize(pInt) + treeSize(pInt->left()) + treeSize(pInt->right());
 }
@@ -687,7 +687,7 @@ size_t AABBTree::treeHeight(const AABBTreeNode* pNode, size_t iLevel, size_t* pi
         return iLevel;
     }
 
-    const AABBTreeNodeInternal* pInt = (const AABBTreeNodeInternal*)pNode;
+    const AABBTreeNodeInternal* pInt = static_cast<const AABBTreeNodeInternal*>(pNode);
 
     iLevel++;
 

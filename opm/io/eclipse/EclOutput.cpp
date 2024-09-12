@@ -276,7 +276,7 @@ void EclOutput::writeBinaryArray(const std::vector<T>& data)
             for (int m = 0; m < num; m++)
                 flipped_data[m] = flipEndianInt(data[m + offset]);
 
-            ofileH.write((char*)(flipped_data.data()), flipped_data.size() * sizeof(int)) ;
+            ofileH.write(reinterpret_cast<char*>(flipped_data.data()), flipped_data.size() * sizeof(int)) ;
 
         } else if (arrType == REAL) {
 
@@ -286,7 +286,7 @@ void EclOutput::writeBinaryArray(const std::vector<T>& data)
             for (int m = 0; m < num; m++)
                 flipped_data[m] = flipEndianFloat(data[m + offset]);
 
-            ofileH.write((char*)(flipped_data.data()), flipped_data.size() * sizeof(float)) ;
+            ofileH.write(reinterpret_cast<char*>(flipped_data.data()), flipped_data.size() * sizeof(float)) ;
 
         } else if (arrType == DOUB) {
 
@@ -296,7 +296,7 @@ void EclOutput::writeBinaryArray(const std::vector<T>& data)
             for (int m = 0; m < num; m++)
                 flipped_data[m] = flipEndianDouble(data[m + offset]);
 
-            ofileH.write((char*)(flipped_data.data()), flipped_data.size() * sizeof(double)) ;
+            ofileH.write(reinterpret_cast<char*>(flipped_data.data()), flipped_data.size() * sizeof(double)) ;
 
         } else if (arrType == LOGI) {
 
@@ -309,7 +309,7 @@ void EclOutput::writeBinaryArray(const std::vector<T>& data)
                 else
                     logi_data[m] = false_value;
 
-            ofileH.write((char*)(logi_data.data()), logi_data.size() * sizeof(int)) ;
+            ofileH.write(reinterpret_cast<char*>(logi_data.data()), logi_data.size() * sizeof(int)) ;
 
         } else {
 

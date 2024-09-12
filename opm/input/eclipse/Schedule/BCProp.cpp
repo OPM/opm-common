@@ -214,7 +214,7 @@ std::vector<BCProp::BCFace>::const_iterator BCProp::end() const {
 }
 
 const BCProp::BCFace& BCProp::operator[](int index) const {
-    for (auto& bc : m_faces) {
+    for (const auto& bc : m_faces) {
         if (bc.index == index)
             {
                 return bc;

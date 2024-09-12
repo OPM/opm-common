@@ -142,7 +142,7 @@ namespace {
         while (newSInd < segSet.size()) {
             endOrigBranch = true;
             const auto& iSInd = inflowSegmentsIndex(segSet, newSInd);
-            for (auto& isi : iSInd )  {
+            for (const auto& isi : iSInd )  {
                 const auto& inflowBranch = segSet[isi].branchNumber();
                 if (origBranchNo == inflowBranch) {
                     endOrigBranch = false;

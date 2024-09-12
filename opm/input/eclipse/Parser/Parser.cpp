@@ -993,7 +993,7 @@ std::unique_ptr<RawKeyword> tryParseKeyword( ParserState& parserState, const Par
                  container.
             */
             if (ParserKeyword::validDeckName(deck_name)) {
-                auto ptr = newRawKeyword( deck_name, parserState, parser, line );
+                const auto ptr = newRawKeyword( deck_name, parserState, parser, line );
                 if (ptr) {
                     rawKeyword.reset( ptr );
                     parserKeyword = parser.getParserKeywordFromDeckName(rawKeyword->getKeywordName());

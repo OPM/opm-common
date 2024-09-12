@@ -793,11 +793,11 @@ void ECLRegressionTest::results_rst()
             std::vector<std::string> seqnStrList1;
             std::vector<std::string> seqnStrList2;
 
-            for (auto& val : seqnums1) {
+            for (const auto& val : seqnums1) {
                 seqnStrList1.push_back(std::to_string(val));
             }
 
-            for (auto& val : seqnums2) {
+            for (const auto& val : seqnums2) {
                 seqnStrList2.push_back(std::to_string(val));
             }
             std::cout << "\nrestart sequences " << std::endl;
@@ -1275,7 +1275,7 @@ void ECLRegressionTest::printComparisonForKeywordLists(const std::vector<std::st
         commonList.insert(key);
     }
 
-    for (auto& key : commonList) {
+    for (const auto& key : commonList) {
         if (key.size() > maxLen) {
             maxLen = key.size();
         }
@@ -1364,7 +1364,7 @@ void ECLRegressionTest::printComparisonForKeywordLists(const std::vector<std::st
         commonList.insert(key);
     }
 
-    for (auto& key : commonList) {
+    for (const auto& key : commonList) {
         if (key.size() > maxLen) {
             maxLen = key.size();
         }
