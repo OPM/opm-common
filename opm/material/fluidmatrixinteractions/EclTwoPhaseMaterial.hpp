@@ -51,10 +51,12 @@ template <class TraitsT,
           class GasOilMaterialLawT,
           class OilWaterMaterialLawT,
           class GasWaterMaterialLawT,
+          bool useSmartPointers = true,
           class ParamsT = EclTwoPhaseMaterialParams<TraitsT,
                                                     typename GasOilMaterialLawT::Params,
                                                     typename OilWaterMaterialLawT::Params,
-                                                    typename GasWaterMaterialLawT::Params> >
+                                                    typename GasWaterMaterialLawT::Params,
+                                                    useSmartPointers> >
 class EclTwoPhaseMaterial : public TraitsT
 {
 public:
@@ -121,16 +123,20 @@ public:
     template <class ContainerT, class FluidState>
     OPM_HOST_DEVICE static Scalar relpermOilInOilGasSystem(const Params& /*params*/,
                                            const FluidState& /*fluidState*/) {
+#if !OPM_IS_INSIDE_DEVICE_FUNCTION
         throw std::logic_error {
             "relpermOilInOilGasSystem() is specific to three phases"
                 };
+#endif
     }
     template <class ContainerT, class FluidState>
     OPM_HOST_DEVICE static Scalar relpermOilInOilWaterSystem(const Params& /*params*/,
                                                  const FluidState& /*fluidState*/) {
+#if !OPM_IS_INSIDE_DEVICE_FUNCTION
         throw std::logic_error {
                 "relpermOilInOilWaterSystem() is specific to three phases"
                     };
+#endif
     }
 
     /*!
@@ -311,7 +317,9 @@ public:
     OPM_HOST_DEVICE static Evaluation pcgn(const Params& /* params */,
                            const FluidState& /* fs */)
     {
+#if !OPM_IS_INSIDE_DEVICE_FUNCTION
         throw std::logic_error("Not implemented: pcgn()");
+#endif
     }
 
     /*!
@@ -327,7 +335,9 @@ public:
     OPM_HOST_DEVICE static Evaluation pcnw(const Params& /* params */,
                            const FluidState& /* fs */)
     {
+#if !OPM_IS_INSIDE_DEVICE_FUNCTION
         throw std::logic_error("Not implemented: pcnw()");
+#endif
     }
 
     /*!
@@ -338,7 +348,9 @@ public:
                             const Params& /* params */,
                             const FluidState& /* fs */)
     {
+#if !OPM_IS_INSIDE_DEVICE_FUNCTION
         throw std::logic_error("Not implemented: saturations()");
+#endif
     }
 
     /*!
@@ -348,7 +360,9 @@ public:
     OPM_HOST_DEVICE static Evaluation Sg(const Params& /* params */,
                          const FluidState& /* fluidState */)
     {
+#if !OPM_IS_INSIDE_DEVICE_FUNCTION
         throw std::logic_error("Not implemented: Sg()");
+#endif
     }
 
     /*!
@@ -358,7 +372,9 @@ public:
     OPM_HOST_DEVICE static Evaluation Sn(const Params& /* params */,
                          const FluidState& /* fluidState */)
     {
+#if !OPM_IS_INSIDE_DEVICE_FUNCTION
         throw std::logic_error("Not implemented: Sn()");
+#endif
     }
 
     /*!
@@ -368,7 +384,9 @@ public:
     OPM_HOST_DEVICE static Evaluation Sw(const Params& /* params */,
                          const FluidState& /* fluidState */)
     {
+#if !OPM_IS_INSIDE_DEVICE_FUNCTION
         throw std::logic_error("Not implemented: Sw()");
+#endif
     }
 
     /*!
@@ -432,7 +450,9 @@ public:
     OPM_HOST_DEVICE static Evaluation krg(const Params& /* params */,
                           const FluidState& /* fluidState */)
     {
+#if !OPM_IS_INSIDE_DEVICE_FUNCTION
         throw std::logic_error("Not implemented: krg()");
+#endif
     }
 
     /*!
@@ -442,7 +462,9 @@ public:
     OPM_HOST_DEVICE static Evaluation krw(const Params& /* params */,
                           const FluidState& /* fluidState */)
     {
+#if !OPM_IS_INSIDE_DEVICE_FUNCTION
         throw std::logic_error("Not implemented: krw()");
+#endif
     }
 
     /*!
@@ -452,9 +474,10 @@ public:
     OPM_HOST_DEVICE static Evaluation krn(const Params& /* params */,
                           const FluidState& /* fluidState */)
     {
+#if !OPM_IS_INSIDE_DEVICE_FUNCTION
         throw std::logic_error("Not implemented: krn()");
+#endif
     }
-
 
     /*!
      * \brief Update the hysteresis parameters after a time step.

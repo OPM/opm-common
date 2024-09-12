@@ -169,20 +169,20 @@ namespace Opm::gpuistl{
 /// @param params the parameters object instansiated with gpuBuffers or similar
 /// @return the GPU view of the GPU EclTwoPhaseMaterialParams object
 template <class TraitsT, class GasOilParamsT, class OilWaterParamsT, class GasWwaterParamsT>
-EclTwoPhaseMaterialParams<TraitsT, GasOilParamsT, OilWaterParamsT, GasWwaterParamsT, false> make_view(const EclTwoPhaseMaterialParams<TraitsT, GasOilParamsT, OilWaterParamsT, GasWwaterParamsT, true>& params) {
+EclTwoPhaseMaterialParams<TraitsT, GasOilParamsT, OilWaterParamsT, GasWwaterParamsT, false> make_view(const EclTwoPhaseMaterialParams<TraitsT, GasOilParamsT, OilWaterParamsT, GasWwaterParamsT, false>& params) {
 
-    // In order to make this function create a proper view we only need to avoid using smart pointers
-    using twoPhaseParamsWithShared = EclTwoPhaseMaterialParams<TraitsT, GasOilParamsT, OilWaterParamsT, GasWwaterParamsT, true>;
-    typename twoPhaseParamsWithShared::GasOilParams* gasOilParams = params.gasOilParams().get();
-    typename twoPhaseParamsWithShared::OilWaterParams* oilWaterParams = params.oilWaterParams().get();
-    typename twoPhaseParamsWithShared::GasWaterParams* gasWaterParams = params.gasWaterParams().get();
+    // Since the view should mainly work for stuff already initialized on the GPU we know that we already have raw
+    // pointers that do not need to be further dealt with, this make_view should just pass it on to fit the API
+    // using twoPhaseParamsWithShared = EclTwoPhaseMaterialParams<TraitsT, GasOilParamsT, OilWaterParamsT, GasWwaterParamsT, true>;
+    // typename twoPhaseParamsWithShared::GasOilParams* gasOilParams = params.gasOilParams().get();
+    // typename twoPhaseParamsWithShared::OilWaterParams* oilWaterParams = params.oilWaterParams().get();
+    // typename twoPhaseParamsWithShared::GasWaterParams* gasWaterParams = params.gasWaterParams().get();
 
     auto resultView = EclTwoPhaseMaterialParams<TraitsT, GasOilParamsT, OilWaterParamsT, GasWwaterParamsT, false>();
-    resultView.setGasOilParams(gasOilParams);
-    resultView.setOilWaterParams(oilWaterParams);
-    resultView.setGasWaterParams(gasWaterParams);
+    resultView.setGasOilParams(params.gasOilParams());
+    resultView.setOilWaterParams(params.oilWaterParams());
+    resultView.setGasWaterParams(params.gasWaterParams());
     resultView.setApproach(params.approach());
-
     resultView.finalize();
 
     return resultView;
