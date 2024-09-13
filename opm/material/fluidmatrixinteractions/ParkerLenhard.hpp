@@ -58,14 +58,14 @@ public:
     PLScanningCurve(Scalar Swr)
     {
         loopNum_ = 0;
-        prev_ = new PLScanningCurve(NULL, // prev
+        prev_ = new PLScanningCurve(nullptr, // prev
                                     this, // next
                                     -1, // loop number
                                     Swr, // Sw
                                     1e12, // pcnw
                                     Swr, // SwMic
                                     Swr); // SwMdc
-        next_ = NULL;
+        next_ = nullptr;
 
         Sw_ = 1.0;
         pcnw_ = 0.0;
@@ -132,12 +132,12 @@ public:
                  Scalar SwMiCurve,
                  Scalar SwMdCurve)
     {
-        // if next_ is NULL, delete does nothing, so
+        // if next_ is nullptr, delete does nothing, so
         // this is valid!!
         delete next_;
 
         next_ = new PLScanningCurve(this, // prev
-                                    NULL, // next
+                                    nullptr, // next
                                     loopNum() + 1,
                                     SwReversal,
                                     pcnwReversal,
@@ -288,10 +288,10 @@ public:
      */
     static void reset(Params& params)
     {
-        delete params.mdc(); // this will work even if mdc_ == NULL!
+        delete params.mdc(); // this will work even if mdc_ == nullptr!
         params.setMdc(new ScanningCurve(params.SwrPc()));
         params.setCsc(params.mdc());
-        params.setPisc(NULL);
+        params.setPisc(nullptr);
         params.setCurrentSnr(0.0);
     }
 
@@ -562,7 +562,7 @@ private:
     template <class Evaluation>
     static Evaluation effectiveToApparentSw_(const Params& params, const Evaluation& Swe)
     {
-        if (params.pisc() == NULL ||
+        if (params.pisc() == nullptr ||
             Swe <= absoluteToEffectiveSw_(params, params.pisc()->Sw()))
         {
             // we are on the main drainage curve, i.e.  no non-wetting
@@ -582,7 +582,7 @@ private:
     static Evaluation apparentToEffectiveSw_(const Params& params, const Evaluation& Swapp)
     {
         Scalar SwePisc = absoluteToEffectiveSw_(params, params.pisc()->Sw());
-        if (params.pisc() == NULL || Swapp <= SwePisc) {
+        if (params.pisc() == nullptr || Swapp <= SwePisc) {
             // we are on the main drainage curve, i.e.
             // no non-wetting fluid is trapped
             // -> apparent saturation == effective saturation
@@ -600,7 +600,7 @@ private:
     // saturation has to be
     static ScanningCurve* findScanningCurve_(const Params& params, Scalar Sw)
     {
-        if (params.pisc() == NULL || Sw <= params.pisc()->Sw()) {
+        if (params.pisc() == nullptr || Sw <= params.pisc()->Sw()) {
             // we don't have a PISC yet, or the effective
             // saturation is smaller than the saturation where the
             // PISC begins. In this case are on the MDC
@@ -611,7 +611,7 @@ private:
         // effective saturation is higher than the beginning of
         // the secondary drainage curve. this means we are on the
         // PISC again.
-        if (params.pisc()->next() == NULL ||
+        if (params.pisc()->next() == nullptr ||
             params.pisc()->next()->Sw() < Sw)
         {
             return params.pisc();

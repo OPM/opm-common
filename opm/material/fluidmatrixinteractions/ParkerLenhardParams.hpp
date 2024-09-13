@@ -57,7 +57,7 @@ public:
     {
         currentSnr_ = 0;
         mdc_ = new ScanningCurve(/*Swr=*/0);
-        pisc_ = csc_ = NULL;
+        pisc_ = csc_ = nullptr;
     }
 
     ParkerLenhardParams(const ParkerLenhardParams& p)
@@ -66,7 +66,7 @@ public:
         currentSnr_ = 0;
         SwrPc_ = p.SwrPc_;
         mdc_ = new ScanningCurve(SwrPc_);
-        pisc_ = csc_ = NULL;
+        pisc_ = csc_ = nullptr;
     }
 
     ~ParkerLenhardParams()
