@@ -39,7 +39,7 @@
 namespace {
     struct Setup
     {
-        Setup(const ::Opm::Deck& deck);
+        explicit Setup(const ::Opm::Deck& deck);
 
         ::Opm::EclipseState es;
         ::Opm::Schedule     sched;
@@ -52,7 +52,7 @@ namespace {
 
     Setup parseDeckString(const std::string& input)
     {
-        return { ::Opm::Parser{}.parseString(input) };
+        return Setup{ ::Opm::Parser{}.parseString(input) };
     }
 
     std::string basesetup_5x5x5()

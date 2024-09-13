@@ -106,7 +106,7 @@ struct UDQParseNode
     {}
 
     // Implicit converting constructor.
-    UDQParseNode(const Opm::UDQTokenType type_arg)
+    explicit UDQParseNode(const Opm::UDQTokenType type_arg)
         : UDQParseNode(type_arg, "")
     {}
 
@@ -211,7 +211,7 @@ UDQParseNode UDQParser::next()
 UDQParseNode UDQParser::current() const
 {
     if (this->empty()) {
-        return { Opm::UDQTokenType::end };
+        return UDQParseNode{ Opm::UDQTokenType::end };
     }
 
     const auto& token = this->tokens[current_pos];

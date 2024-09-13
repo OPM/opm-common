@@ -414,7 +414,7 @@ cvf::ref<RigWellPath> RigWellPath::commonGeometry( const std::vector<const RigWe
 {
     const double eps = 1.0e-3;
 
-    if ( allGeometries.empty() ) return nullptr;
+    if ( allGeometries.empty() ) return cvf::ref<RigWellPath>{};
 
     if ( allGeometries.size() == 1u ) return cvf::ref<RigWellPath>( new RigWellPath( *allGeometries.front() ) );
 

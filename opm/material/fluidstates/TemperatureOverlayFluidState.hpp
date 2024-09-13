@@ -55,7 +55,7 @@ public:
      * like the underlying fluid state, provided that the underlying
      * fluid state is in thermal equilibrium.
      */
-    TemperatureOverlayFluidState(const FluidState& fs)
+    explicit TemperatureOverlayFluidState(const FluidState& fs)
         : fs_(&fs)
     {
         temperature_ = fs.temperature(/*phaseIdx=*/0);

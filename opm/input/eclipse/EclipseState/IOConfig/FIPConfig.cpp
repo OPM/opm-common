@@ -33,7 +33,7 @@ FIPConfig::FIPConfig(const Deck& deck)
 {
     SOLUTIONSection solution_section(deck);
     if (solution_section.hasKeyword<ParserKeywords::RPTSOL>()) {
-        this->parseRPT(solution_section.get<ParserKeywords::RPTSOL>().back());
+        this->parseRPT(RPTConfig(solution_section.get<ParserKeywords::RPTSOL>().back()));
     }
 }
 

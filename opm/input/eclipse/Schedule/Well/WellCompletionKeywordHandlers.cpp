@@ -130,7 +130,7 @@ void handleCOMPTRAJ(HandlerContext& handlerContext)
 {
     // Keyword WELTRAJ must be read first
     std::unordered_set<std::string> wells;
-    external::cvf::ref<external::cvf::BoundingBoxTree> cellSearchTree = nullptr;
+    external::cvf::ref<external::cvf::BoundingBoxTree> cellSearchTree{};
 
     for (const auto& record : handlerContext.keyword) {
         const auto wellNamePattern = record.getItem("WELL").getTrimmedString(0);

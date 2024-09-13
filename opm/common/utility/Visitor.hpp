@@ -43,7 +43,7 @@ template<class... Ts> VisitorOverloadSet(Ts...) -> VisitorOverloadSet<Ts...>;
 //! \details Throws an exception
 template<class Exception>
 struct MonoThrowHandler {
-    MonoThrowHandler(const std::string& message)
+    explicit MonoThrowHandler(const std::string& message)
         : message_(message)
     {}
 

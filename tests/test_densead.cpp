@@ -638,7 +638,7 @@ struct DynamicTestEnv : public TestEnvBase<Opm::DenseAd::DynamicEvaluation<Scala
                                            DynamicTestEnv<Scalar, staticSize> >
 {
     typedef Opm::DenseAd::DynamicEvaluation<Scalar, staticSize> Eval;
-    DynamicTestEnv(int numDerivs)
+    explicit DynamicTestEnv(int numDerivs)
         : numDerivs_(numDerivs)
     {}
 

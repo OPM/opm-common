@@ -179,9 +179,9 @@ public:
      * \param periodic Indicates whether a natural or a periodic spline should be created
      */
     template <class PointContainer>
-    Spline(const PointContainer& points,
-           SplineType splineType = Natural,
-           bool sortInputs = true)
+    explicit Spline(const PointContainer& points,
+                    SplineType splineType = Natural,
+                    bool sortInputs = true)
     { this->setContainerOfPoints(points, splineType, sortInputs); }
 
     /*!
@@ -994,7 +994,7 @@ protected:
      */
     struct ComparatorX_
     {
-        ComparatorX_(const std::vector<Scalar>& x)
+        explicit ComparatorX_(const std::vector<Scalar>& x)
             : x_(x)
         {}
 

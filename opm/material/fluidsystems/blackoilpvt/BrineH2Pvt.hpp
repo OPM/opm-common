@@ -62,9 +62,9 @@ public:
 
     explicit BrineH2Pvt() = default;
 
-    BrineH2Pvt(const std::vector<Scalar>& salinity,
-                Scalar T_ref = 288.71, //(273.15 + 15.56)
-                Scalar P_ref = 101325)
+    explicit BrineH2Pvt(const std::vector<Scalar>& salinity,
+                        Scalar T_ref = 288.71, //(273.15 + 15.56)
+                        Scalar P_ref = 101325)
         : salinity_(salinity)
     {
         int num_regions =  salinity_.size();

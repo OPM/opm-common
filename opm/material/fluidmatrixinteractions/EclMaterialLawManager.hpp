@@ -182,7 +182,7 @@ private:
         // This class' implementation is defined in "EclMaterialLawManagerHystParams.cpp"
         class HystParams {
         public:
-            HystParams(EclMaterialLawManager<TraitsT>::InitParams& init_params);
+            explicit HystParams(EclMaterialLawManager<TraitsT>::InitParams& init_params);
             void finalize();
             std::shared_ptr<GasOilTwoPhaseHystParams> getGasOilParams();
             std::shared_ptr<OilWaterTwoPhaseHystParams> getOilWaterParams();
@@ -230,7 +230,7 @@ private:
         // This class' implementation is defined in "EclMaterialLawManagerReadEffectiveParams.cpp"
         class ReadEffectiveParams {
         public:
-            ReadEffectiveParams(EclMaterialLawManager<TraitsT>::InitParams& init_params);
+            explicit ReadEffectiveParams(EclMaterialLawManager<TraitsT>::InitParams& init_params);
             void read();
         private:
             std::vector<double> normalizeKrValues_(const double tolcrit, const TableColumn& krValues) const;

@@ -35,7 +35,7 @@ namespace Opm {
 
 class StarToken {
 public:
-    StarToken(const std::string_view& token)
+    explicit StarToken(const std::string_view& token)
     {
         if (!isStarToken(token, m_countString, m_valueString))
             throw std::invalid_argument("Token \""+ std::string(token) +"\" is not a repetition specifier");

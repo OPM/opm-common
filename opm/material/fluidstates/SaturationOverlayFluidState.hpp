@@ -55,7 +55,7 @@ public:
      * argument, so it initially behaves exactly like the underlying
      * fluid state.
      */
-    SaturationOverlayFluidState(const FluidState& fs)
+    explicit SaturationOverlayFluidState(const FluidState& fs)
         : fs_(&fs)
     {
         for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)

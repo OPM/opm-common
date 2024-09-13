@@ -51,7 +51,7 @@ public:
     ConditionalStorage()
     {}
 
-    ConditionalStorage(const T& v)
+    explicit ConditionalStorage(const T& v)
         : data_(v)
     {}
 
