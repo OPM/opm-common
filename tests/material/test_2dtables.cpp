@@ -343,7 +343,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(IntervalTabulatedFunction1, Scalar, Types)
     const unsigned m = 250;
 
     const Scalar yMin = -2. / 2.0;
-    const Scalar yMax = 3. / 3.0;
+    const Scalar yMax = 1.0; // 3. / 3.0;
     const unsigned n = 170;
 
     // extrapolation and interpolation involved, the tolerance needs to be bigger
@@ -367,7 +367,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(IntervalTabulatedFunction2, Scalar, Types)
     const unsigned m = 250;
 
     const Scalar yMin = -2. / 2.0;
-    const Scalar yMax = 3. / 3.0;
+    const Scalar yMax = 1.0; // 3. / 3.0;
     const unsigned n = 170;
 
     // extrapolation and interpolation involved, the tolerance needs to be bigger
@@ -391,7 +391,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(IntervalTabulatedFunction3, Scalar, Types)
     const unsigned m = 250;
 
     const Scalar yMin = -2. / 2.0;
-    const Scalar yMax = 3. / 3.0;
+    const Scalar yMax = 1.0; // 3. / 3.0;
     const unsigned n = 170;
 
     // extrapolation and interpolation involved, the tolerance needs to be bigger

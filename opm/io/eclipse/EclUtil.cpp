@@ -505,7 +505,7 @@ std::vector<bool> Opm::EclIO::readBinaryLogiArray(std::fstream &fileH, const std
 {
     std::function<bool(unsigned int)> f = [](unsigned int intVal)
                                           {
-                                              bool value;
+                                              bool value = false;
                                               if (intVal == Opm::EclIO::true_value_ecl) {
                                                   value = true;
                                               } else if (intVal == Opm::EclIO::false_value) {

@@ -59,7 +59,7 @@ namespace {
                const std::size_t               udq_index)
     {
         auto zudl_begin = zudl.begin();
-        auto zudl_end = zudl.begin();
+        auto zudl_end = zudl_begin;
         std::advance( zudl_begin, (udq_index + 0) * Opm::UDQDims::entriesPerZUDL() );
         std::advance( zudl_end  , (udq_index + 1) * Opm::UDQDims::entriesPerZUDL() );
 
