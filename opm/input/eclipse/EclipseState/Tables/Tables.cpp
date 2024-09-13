@@ -1108,7 +1108,7 @@ PlyshlogTable::setHasRefSalinity(const bool has)
 void
 PlyshlogTable::setHasRefTemperature(const bool has)
 {
-    m_refTemperature = has;
+    m_hasRefTemperature = has;
 }
 
 const TableColumn&
