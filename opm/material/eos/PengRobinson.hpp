@@ -348,7 +348,8 @@ protected:
             // epsilon was added to the temperature. (this is case
             // rarely happens, though)
             const Scalar eps = - 1e-11;
-            assert(findExtrema_(minVm, maxVm, minP, maxP, a, b, T + eps));
+            [[maybe_unused]] bool found = findExtrema_(minVm, maxVm, minP, maxP, a, b, T + eps);
+            assert(found);
             assert(std::isfinite(scalarValue(maxVm)));
             Evaluation fStar = maxVm - minVm;
 
