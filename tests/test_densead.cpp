@@ -38,7 +38,6 @@
 #include <opm/material/densead/Math.hpp>
 
 #include <iostream>
-#include <array>
 #include <cmath>
 #include <algorithm>
 #include <cassert>

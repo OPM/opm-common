@@ -21,6 +21,7 @@
 
 #include <cstddef>
 #include <unordered_map>
+#include <string>
 
 namespace Opm {
 class DeckRecord;

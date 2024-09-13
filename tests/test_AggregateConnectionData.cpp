@@ -54,9 +54,7 @@
 
 #include <cmath>
 #include <cstddef>
-#include <exception>
 #include <memory>
-#include <stdexcept>
 #include <string>
 #include <tuple>
 #include <utility>

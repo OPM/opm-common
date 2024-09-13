@@ -21,7 +21,6 @@
 #include <filesystem>
 #include <iostream>
 #include <sstream>
-#include <stdexcept>
 #include <cctype>
 #include <fmt/format.h>
 

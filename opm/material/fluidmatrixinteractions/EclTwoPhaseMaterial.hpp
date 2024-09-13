@@ -27,12 +27,12 @@
 #ifndef OPM_ECL_TWO_PHASE_MATERIAL_HPP
 #define OPM_ECL_TWO_PHASE_MATERIAL_HPP
 
-#include "EclTwoPhaseMaterialParams.hpp"
+#include <opm/material/fluidmatrixinteractions/EclTwoPhaseMaterialParams.hpp>
+
+#include <opm/common/TimingMacros.hpp>
 
 #include <opm/material/common/Valgrind.hpp>
 #include <opm/material/common/MathToolbox.hpp>
-
-#include <algorithm>
 
 namespace Opm {
 
