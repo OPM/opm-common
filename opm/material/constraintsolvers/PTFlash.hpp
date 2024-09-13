@@ -81,7 +81,7 @@ public:
     template <class FluidState>
     static void solve(FluidState& fluid_state,
                       const Dune::FieldVector<typename FluidState::Scalar, numComponents>& z,
-                      std::string twoPhaseMethod,
+                      const std::string& twoPhaseMethod,
                       Scalar tolerance = -1.,
                       int verbosity = 0)
     {

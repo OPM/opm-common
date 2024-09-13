@@ -115,7 +115,8 @@ namespace {
             os << string_data;
         }
 
-        std::string header_line(std::size_t row, context ctx) const {
+        std::string header_line(std::size_t row, const context& ctx) const
+        {
             if (row == header_height && dimension) {
                 return ctx.unit_system.name(dimension.value());
             } else {
@@ -123,7 +124,8 @@ namespace {
             }
         }
 
-        void print_header(std::ostream& os, std::size_t row, context ctx) const {
+        void print_header(std::ostream& os, std::size_t row, const context& ctx) const
+        {
             std::string line { header_line(row, ctx) } ;
             centre_align(line, total_width());
             os << line;

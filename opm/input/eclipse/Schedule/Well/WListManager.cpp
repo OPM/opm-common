@@ -105,7 +105,7 @@ namespace Opm {
         }
     }
 
-    std::size_t WListManager::getNoWListsWell(std::string wname) const {
+    std::size_t WListManager::getNoWListsWell(const std::string& wname) const {
         return this->no_wlists_well.at(wname);
     }
 

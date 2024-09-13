@@ -28,11 +28,19 @@ namespace Opm {
     {
     public:
         explicit CarfinManager(const GridDims& gridDims,
-                            Carfin::IsActive   isActive,
-                            Carfin::ActiveIdx  activeIdx);
+                               Carfin::IsActive   isActive,
+                               Carfin::ActiveIdx  activeIdx);
 
-        void setInputCarfin(std::string name, int i1, int i2, int j1, int j2, int k1, int k2, int nx , int ny , int nz);
-        void readKeywordCarfin(std::string name, int i1, int i2, int j1, int j2, int k1, int k2, int nx , int ny , int nz);
+        void setInputCarfin(const std::string& name,
+                            int i1, int i2,
+                            int j1, int j2,
+                            int k1, int k2,
+                            int nx, int ny, int nz);
+        void readKeywordCarfin(const std::string& name,
+                               int i1, int i2,
+                               int j1, int j2,
+                               int k1, int k2,
+                               int nx, int ny, int nz);
 
         void endSection();
         void endInputCarfin();

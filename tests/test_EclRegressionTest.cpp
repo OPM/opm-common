@@ -30,19 +30,18 @@
 #include <opm/io/eclipse/ESmry.hpp>
 #include <opm/io/eclipse/EclOutput.hpp>
 
-#include <iomanip>
 #include "tests/WorkArea.hpp"
 
 using Opm::EclIO::EGrid;
 using Opm::EclIO::ESmry;
 using Opm::EclIO::EclOutput;
 
-void makeEgridFile(const std::string &fileName, const std::vector<float> &coord,
-                   const std::vector<float> &zcorn, const std::vector<int> &gridhead,
-		               const std::vector<int> &filehead,
-                   const std::vector<std::string> &gridunits,
-                   const std::vector<int> actnum, const std::vector<int> &nnc1,
-                   const std::vector<int> &nnc2)
+void makeEgridFile(const std::string& fileName, const std::vector<float>& coord,
+                   const std::vector<float>& zcorn, const std::vector<int>& gridhead,
+                   const std::vector<int>& filehead,
+                   const std::vector<std::string>& gridunits,
+                   const std::vector<int>& actnum, const std::vector<int>& nnc1,
+                   const std::vector<int>& nnc2)
 {
     EclOutput eclTest(fileName, false);
 

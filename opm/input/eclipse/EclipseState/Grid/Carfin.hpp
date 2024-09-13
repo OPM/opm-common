@@ -58,17 +58,18 @@ namespace Opm
         Carfin() = default;
 
         explicit Carfin(const GridDims& gridDims,
-                     IsActive        isActive,
-                     ActiveIdx       activeIdx);
+                        IsActive        isActive,
+                        ActiveIdx       activeIdx);
 
         Carfin(const GridDims& gridDims,
-            IsActive        isActive,
-            ActiveIdx       activeIdx,
-            std::string name, int i1, int i2,
-            int j1, int j2,
-            int k1, int k2,
-            int nx, int ny,
-            int nz);
+               IsActive        isActive,
+               ActiveIdx       activeIdx,
+               const std::string& name,
+               int i1, int i2,
+               int j1, int j2,
+               int k1, int k2,
+               int nx, int ny,
+               int nz);
 
         void update(const DeckRecord& deckRecord);
         void reset();
@@ -116,7 +117,11 @@ namespace Opm
         std::vector<cell_index> m_active_index_list;
         std::vector<cell_index> m_global_index_list;
 
-        void init(std::string name, int i1, int i2, int j1, int j2, int k1, int k2, int nx , int ny , int nz);
+        void init(const std::string& name,
+                  int i1, int i2,
+                  int j1, int j2,
+                  int k1, int k2,
+                  int nx, int ny, int nz);
         void initIndexList();
         int lower(int dim) const;
         int upper(int dim) const;

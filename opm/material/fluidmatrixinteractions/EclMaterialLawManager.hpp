@@ -153,7 +153,7 @@ private:
                                fieldPropIntOnLeafAssigner);
         // \brief Function argument 'fieldPropIntOnLeadAssigner' needed to lookup
         //        field properties of cells on the leaf grid view for CpGrid with local grid refinement.
-        void copyIntArray_(std::vector<int>& dest, const std::string keyword,
+        void copyIntArray_(std::vector<int>& dest, const std::string& keyword,
                            const std::function<std::vector<int>(const FieldPropsManager&, const std::string&, bool)>&
                            fieldPropIntOnLeafAssigner);
         unsigned imbRegion_(std::vector<int>& array, unsigned elemIdx);

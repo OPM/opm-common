@@ -51,7 +51,7 @@ double EzrokhiTable::getC2(const std::string& name) const
     return this->data.at(name).c2;
 }
 
-EzrokhiTable::EzrokhiTable(std::unordered_map<std::string, EzrokhiRecord> records)
+EzrokhiTable::EzrokhiTable(const std::unordered_map<std::string, EzrokhiRecord>& records)
     : data{ records }
 {}
 

@@ -884,9 +884,10 @@ BOOST_AUTO_TEST_CASE( summary_GMWSET ) {
 
     std::vector< std::string > all;
 
-    for( std::string kw : GMWSET_keywords ) {
-        all.emplace_back(kw + ":G");
-        all.emplace_back(kw + ":OP");
+    using namespace std::string_literals;
+    for (const char* kw : GMWSET_keywords ) {
+        all.emplace_back(kw + ":G"s);
+        all.emplace_back(kw + ":OP"s);
     }
 
     std::sort( all.begin(), all.end() );

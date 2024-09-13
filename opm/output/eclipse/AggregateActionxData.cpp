@@ -218,7 +218,7 @@ namespace {
             std::size_t offset = 0;
             // write out the schedule Actionx conditions
             const auto& actx_cond = actx.conditions();
-            for (auto z_data : actx_cond) {
+            for (const auto& z_data : actx_cond) {
                 // left hand quantity
                 if (!z_data.lhs.date())
                     zAcn[offset + Ix::LHSQuantity] = z_data.lhs.quantity;

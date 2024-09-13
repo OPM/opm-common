@@ -500,7 +500,7 @@ namespace {
         initFile.write("TAB"    , tables.tab());
     }
 
-    void writeIntegerMaps(std::map<std::string, std::vector<int>> mapData,
+    void writeIntegerMaps(const std::map<std::string, std::vector<int>>& mapData,
                           ::Opm::EclIO::OutputStream::Init&       initFile)
     {
         for (const auto& pair : mapData) {

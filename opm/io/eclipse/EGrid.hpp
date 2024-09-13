@@ -32,7 +32,7 @@ namespace Opm { namespace EclIO {
 class EGrid : public EclFile
 {
 public:
-    explicit EGrid(const std::string& filename, std::string grid_name = "global");
+    explicit EGrid(const std::string& filename, const std::string& grid_name = "global");
 
     int global_index(int i, int j, int k) const;
     int active_index(int i, int j, int k) const;

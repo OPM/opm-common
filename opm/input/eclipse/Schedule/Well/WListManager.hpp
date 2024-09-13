@@ -44,7 +44,7 @@ public:
     WList& newList(const std::string& name, const std::vector<std::string>& wname);
 
     const std::vector<std::string>& getWListNames(const std::string& wname) const;
-    std::size_t getNoWListsWell(std::string wname) const;
+    std::size_t getNoWListsWell(const std::string& wname) const;
     bool hasWList(const std::string& wname) const;
     void addWListWell(const std::string& wname, const std::string& wlname);
     void delWell(const std::string& wname);

@@ -343,7 +343,7 @@ bool EclFile::is_ix() const
                 auto realStr = get_fmt_real_raw_str_values(n);
                 int p, first;
 
-                for (auto val : realStr) {
+                for (const auto& val : realStr) {
                     double dtmpv = fabs(std::stod(val));
 
                     if (dtmpv > 0.0) {

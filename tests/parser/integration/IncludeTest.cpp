@@ -37,7 +37,7 @@ using namespace Opm;
 using namespace std::filesystem;
 
 static void
-createDeckWithInclude(path& datafile, std::string addEndKeyword)
+createDeckWithInclude(path& datafile, const std::string& addEndKeyword)
 {
     path tmpdir = temp_directory_path();
     path root = tmpdir / unique_path("%%%%-%%%%");

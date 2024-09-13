@@ -27,8 +27,8 @@
 
 namespace {
 
-    void assert_dims(std::string name, int l1 , int l2, int nlgr, int nglobal) {
-
+    void assert_dims(const std::string& name, int l1 , int l2, int nlgr, int nglobal)
+    {
         if ((l1 < 0) || (l2 < 0) || (l1 > l2))
             throw std::invalid_argument(name + ": Invalid index values for lgr");
 
@@ -40,7 +40,7 @@ namespace {
     }
 
     bool update_default_index(const Opm::DeckItem& item,
-                        int&                 value)
+                              int&                 value)
     {
         if (item.defaultApplied(0)) {
             return true;
@@ -87,13 +87,14 @@ namespace Opm
     }
 
     Carfin::Carfin(const GridDims& gridDims,
-             IsActive        isActive,
-             ActiveIdx       activeIdx,
-            const std::string name, const int i1, const int i2,
-            const int j1, const int j2,
-            const int k1, const int k2,
-            const int nx, const int ny,
-            const int nz)
+                   IsActive        isActive,
+                   ActiveIdx       activeIdx,
+                   const std::string& name,
+                   const int i1, const int i2,
+                   const int j1, const int j2,
+                   const int k1, const int k2,
+                   const int nx, const int ny,
+                   const int nz)
         : m_globalGridDims_ (gridDims)
         , m_globalIsActive_ (std::move(isActive))
         , m_globalActiveIdx_(std::move(activeIdx))
@@ -145,11 +146,12 @@ namespace Opm
                    this->m_globalGridDims_.getNX(), this->m_globalGridDims_.getNY(), this->m_globalGridDims_.getNZ());
     }
 
-    void Carfin::init(const std::string name, const int i1, const int i2,
-                   const int j1, const int j2,
-                   const int k1, const int k2,
-                   const int nx, const int ny,
-                   const int nz)
+    void Carfin::init(const std::string& name,
+                      const int i1, const int i2,
+                      const int j1, const int j2,
+                      const int k1, const int k2,
+                      const int nx, const int ny,
+                      const int nz)
     {
         assert_dims(name, i1 , i2, nx, this->m_globalGridDims_.getNX());
         assert_dims(name, j1 , j2, ny, this->m_globalGridDims_.getNY());

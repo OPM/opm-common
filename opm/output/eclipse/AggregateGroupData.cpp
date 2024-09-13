@@ -265,8 +265,8 @@ std::optional<Opm::Group> controlGroup(const Opm::Schedule& sched,
 std::optional<Opm::Group>  injectionControlGroup(const Opm::Schedule& sched,
         const Opm::SummaryState& sumState,
         const Opm::Group& group,
-        const std::string curGroupInjCtrlKey,
-        const std::string curFieldInjCtrlKey,
+        const std::string& curGroupInjCtrlKey,
+        const std::string& curFieldInjCtrlKey,
         const size_t simStep)
 //
 // returns group of higher (highest) level group with active control different from (NONE or FLD)

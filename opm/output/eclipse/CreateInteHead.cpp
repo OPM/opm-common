@@ -181,9 +181,13 @@ namespace {
         const auto& udqAct = sched[simStep].udq_active.get();
         const auto& iuad = udqAct.iuad();
 
-        return std::count_if(iuad.begin(), iuad.end(), [](const Opm::UDQActive::OutputRecord rec) {
-            return (!(((Opm::UDQ::keyword(rec.control) == Opm::UDAKeyword::GCONPROD) || (Opm::UDQ::keyword(rec.control) == Opm::UDAKeyword::GCONINJE))
-            && (rec.wg_name() == "FIELD"))); });
+        return std::count_if(iuad.begin(), iuad.end(),
+                             [](const Opm::UDQActive::OutputRecord& rec)
+                             {
+                                  return (!(((Opm::UDQ::keyword(rec.control) == Opm::UDAKeyword::GCONPROD)
+                                            || (Opm::UDQ::keyword(rec.control) == Opm::UDAKeyword::GCONINJE))
+                                            && (rec.wg_name() == "FIELD")));
+                            });
     }
 
     int noIuaps(const Opm::Schedule& sched,
@@ -197,9 +201,13 @@ namespace {
         const auto& udqAct = sched[simStep].udq_active.get();
         const auto& iuap = udqAct.iuap();
 
-        return std::count_if(iuap.begin(), iuap.end(), [](const Opm::UDQActive::InputRecord rec) {
-            return (!(((Opm::UDQ::keyword(rec.control) == Opm::UDAKeyword::GCONPROD) || (Opm::UDQ::keyword(rec.control) == Opm::UDAKeyword::GCONINJE))
-            && (rec.wgname == "FIELD"))); });
+        return std::count_if(iuap.begin(), iuap.end(),
+                             [](const Opm::UDQActive::InputRecord& rec)
+                             {
+                                return (!(((Opm::UDQ::keyword(rec.control) == Opm::UDAKeyword::GCONPROD)
+                                         || (Opm::UDQ::keyword(rec.control) == Opm::UDAKeyword::GCONINJE))
+                                         && (rec.wgname == "FIELD")));
+                             });
     }
 
 

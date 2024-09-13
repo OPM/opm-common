@@ -127,7 +127,7 @@ private:
 
     double& operator()(size_t thp_idx, size_t flo_idx);
 
-    static FLO_TYPE getFloType(std::string flo_string);
+    static FLO_TYPE getFloType(const std::string& flo_string);
 
     static void scaleValues(std::vector<double>& values,
                             const double& scaling_factor);

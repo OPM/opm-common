@@ -862,7 +862,7 @@ namespace {
         template <class DUDWArray>
         void staticContrib(const Opm::UDQState&            udq_state,
                            const std::vector<std::string>& wells,
-                           const std::string               udq,
+                           const std::string&              udq,
                            const std::size_t               nwmaxz,
                            DUDWArray&                      dUdw)
         {

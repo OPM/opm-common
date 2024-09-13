@@ -248,7 +248,8 @@ void VFPInjTable::check() {
 
 
 
-VFPInjTable::FLO_TYPE VFPInjTable::getFloType(std::string flo_string) {
+VFPInjTable::FLO_TYPE VFPInjTable::getFloType(const std::string& flo_string)
+{
     if (flo_string == "OIL")
         return FLO_TYPE::FLO_OIL;
 
