@@ -92,7 +92,7 @@ namespace Opm {
                            const bool enable_output);
 
 	    // From ParameterMapItem
-	    virtual ~ParameterGroup();
+            ~ParameterGroup() override;
             std::string getTag() const override;
 
 	    /// \brief A constructor typically used to initialize a

@@ -32,10 +32,10 @@ class StreamLog : public LogBackend {
 public:
     StreamLog(const std::string& logFile , int64_t messageMask, bool append = false);
     StreamLog(std::ostream& os , int64_t messageMask);
-    ~StreamLog();
+    ~StreamLog() override;
 
 protected:
-    virtual void addMessageUnconditionally(int64_t messageType, const std::string& message) override;
+    void addMessageUnconditionally(int64_t messageType, const std::string& message) override;
 
 private:
     void close();

@@ -48,7 +48,7 @@ namespace Opm {
 	public:
 	    /// @brief
 	    /// @todo Doc me!
-	    virtual ~Parameter() {}
+            ~Parameter() override {}
 	    /// @brief
 	    /// @todo Doc me!
 	    /// @return

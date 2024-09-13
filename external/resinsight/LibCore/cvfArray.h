@@ -62,7 +62,7 @@ public:
     explicit Array(size_t size);
     explicit Array(const ValueArray<T>& other);
     explicit Array(const std::vector<T>& other);
-    ~Array();
+    ~Array() override;
 
     inline const T& operator[](size_t index) const;
     inline T&       operator[](size_t index);
