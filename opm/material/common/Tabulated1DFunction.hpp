@@ -93,8 +93,8 @@ public:
      *               have a size() method)
      */
     template <class PointContainer>
-    Tabulated1DFunction(const PointContainer& points,
-                        bool sortInputs = true)
+    explicit Tabulated1DFunction(const PointContainer& points,
+                                 bool sortInputs = true)
     { this->setContainerOfTuples(points, sortInputs); }
 
     /*!
