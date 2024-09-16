@@ -327,6 +327,51 @@ ADD
                       OpmInputError);
 }
 
+BOOST_AUTO_TEST_CASE(Multiply_Defaulted_MultX)
+{
+    const auto deck = Parser{}.parseString(R"(RUNSPEC
+OIL
+GAS
+WATER
+TABDIMS
+/
+DIMENS
+ 3 3 3 /
+GRID
+MULTIPLY
+ 'MULTX' 0.123 1 3 1 1 2 2 /
+ 'MULTX' 0.234 1 3 2 2 2 2 /
+ 'MULTX' 0.345 1 3 3 3 2 2 /
+/
+)");
+
+    // Note: 'grid' must be mutable in FieldPropsManager constructor.
+    auto grid = EclipseGrid { 3, 3, 3 };
+
+    const auto fpMgr = FieldPropsManager {
+        deck, Phases{true, true, true}, grid, TableManager{deck}
+    };
+
+    const auto& multX = fpMgr.get_double("MULTX");
+
+    const auto expect = std::vector {
+        1.0, 1.0, 1.0,
+        1.0, 1.0, 1.0,
+        1.0, 1.0, 1.0,
+
+        0.123, 0.123, 0.123,
+        0.234, 0.234, 0.234,
+        0.345, 0.345, 0.345,
+
+        1.0, 1.0, 1.0,
+        1.0, 1.0, 1.0,
+        1.0, 1.0, 1.0,
+    };
+
+    BOOST_CHECK_EQUAL_COLLECTIONS(multX .begin(), multX .end(),
+                                  expect.begin(), expect.end());
+}
+
 BOOST_AUTO_TEST_CASE(GRID_RESET) {
     std::string deck_string = R"(
 REGIONS
