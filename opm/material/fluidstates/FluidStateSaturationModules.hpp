@@ -47,7 +47,11 @@ class FluidStateExplicitSaturationModule
 {
 public:
     OPM_HOST_DEVICE FluidStateExplicitSaturationModule()
-    { Valgrind::SetUndefined(saturation_); }
+    {
+#if !OPM_IS_INSIDE_DEVICE_FUNCTION
+        Valgrind::SetUndefined(saturation_);
+#endif
+    }
 
     /*!
      * \brief The saturation of a fluid phase [-]
