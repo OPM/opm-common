@@ -168,6 +168,12 @@ void HandlerContext::addGroup(const std::string& groupName)
     schedule_.addGroup(groupName, currentStep);
 }
 
+void HandlerContext::addGroupLGR(const std::string& lgrGroup)
+{
+    schedule_.addGroupLGR(lgrGroup);
+}
+
+
 void HandlerContext::addGroupToGroup(const std::string& parent_group,
                                      const std::string& child_group)
 {

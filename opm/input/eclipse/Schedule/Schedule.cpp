@@ -1296,6 +1296,12 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
                 field.updateInjection(new_group.injectionProperties(phase));
     }
 
+    void Schedule::addGroupLGR(const std::string& lgr_group_key) {
+        if (lgr_groups.count(lgr_group_key) == 0) {
+            lgr_groups.insert(lgr_group_key);
+        }
+    }
+
 
     void Schedule::addGroupToGroup( const std::string& parent_name, const std::string& child_name) {
         auto parent_group = this->snapshots.back().groups.get(parent_name);

@@ -1602,7 +1602,7 @@ bool parseState( ParserState& parserState, const Parser& parser ) {
 
     Deck Parser::parseString(const std::string &data, const ParseContext& parseContext) const {
         ErrorGuard errors;
-        return this->parseString(data, parseContext, errors);
+        return this->parseString(data, parseContext, errors);   
     }
 
     Deck Parser::parseString(const std::string &data) const {

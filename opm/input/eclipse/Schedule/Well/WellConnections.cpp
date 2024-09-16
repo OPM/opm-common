@@ -405,7 +405,7 @@ namespace Opm {
         for (int k = K1; k <= K2; ++k) {
             const auto& cell = grid.get_cell(I, J, k);
             if (!cell.is_active()) {
-                auto msg = fmt::format(R"(Problem with COMPDAT keyword
+                auto msg = fmt::format(R"(Problem with COMPDATX keyword
 In {} line {}
 The cell ({},{},{}) in well {} is not active and the connection will be ignored)",
                                        location.filename, location.lineno,
@@ -542,6 +542,19 @@ The cell ({},{},{}) in well {} is not active and the connection will be ignored)
                 prev->updateSegment(conSegNo, cell.depth, css_ind, perf_range);
             }
         }
+    }
+
+
+    void WellConnections::loadCOMPDATL(const DeckRecord&      record,
+                                       const ScheduleGrid&    grid,
+                                       const std::string&     wname,
+                                       const WDFAC&           wdfac,
+                                       const KeywordLocation& location,
+                                       const std::string&     lgr_group)
+    {
+        this->lgr_well = true;
+        loadCOMPDAT(record, grid, wname, wdfac, location);
+        
     }
 
     void WellConnections::loadCOMPTRAJ(const DeckRecord&      record,
@@ -1005,6 +1018,12 @@ CF and Kh items for well {} must both be specified or both defaulted/negative)",
     {
         return this->headJ;
     }
+
+    bool WellConnections::isLGR() const
+    {
+        return this->lgr_well;
+    }
+ 
 
     const std::vector<double>& WellConnections::getMD() const
     {

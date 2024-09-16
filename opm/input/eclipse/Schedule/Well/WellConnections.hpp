@@ -92,6 +92,13 @@ namespace Opm {
                          const WDFAC&           wdfac,
                          const KeywordLocation& location);
 
+        void loadCOMPDATL(const DeckRecord&     record,
+                         const ScheduleGrid&    grid,
+                         const std::string&     wname,
+                         const WDFAC&           wdfac,
+                         const KeywordLocation& location,
+                         const std::string&     lgr_group);
+
         void loadCOMPTRAJ(const DeckRecord&      record,
                           const ScheduleGrid&    grid,
                           const std::string&     wname,
@@ -108,6 +115,7 @@ namespace Opm {
 
         int getHeadI() const;
         int getHeadJ() const;
+        bool isLGR() const;
         const std::vector<double>& getMD() const;
         std::size_t size() const;
         bool empty() const;
@@ -180,6 +188,7 @@ namespace Opm {
         Connection::Order m_ordering { Connection::Order::TRACK };
         int headI{0};
         int headJ{0};
+        bool lgr_well = false;
         std::vector<Connection> m_connections{};
 
         std::array<std::vector<double>, 3> coord{};

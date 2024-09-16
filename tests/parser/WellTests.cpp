@@ -231,7 +231,7 @@ BOOST_AUTO_TEST_CASE(WellCOMPDATtestDefaultTRACK) {
 }
 
 BOOST_AUTO_TEST_CASE(WellCOMPDATtestINPUT) {
-    Opm::Parser parser;
+     Opm::Parser parser;
     std::string input =
                 "START             -- 0 \n"
                 "19 JUN 2007 / \n"
@@ -285,6 +285,69 @@ BOOST_AUTO_TEST_CASE(WellCOMPDATtestINPUT) {
     BOOST_CHECK_EQUAL(completions.get( 7 ).getK(), 8);
     BOOST_CHECK_EQUAL(completions.get( 8 ).getK(), 1);
 }
+
+BOOST_AUTO_TEST_CASE(WellCOMPDATLtestINPUT) {
+    Opm::Parser parser;
+    std::string input =
+                "START             -- 0 \n"
+                "19 JUN 2007 / \n"
+                "GRID\n"
+                "PORO\n"
+                "1000*0.1  /\n"
+                "PERMX \n"
+                "1000*1 /\n"
+                "PERMY \n"
+                "1000*0.1 /\n"
+                "PERMZ \n"
+                "1000*0.01 /\n"
+                "SCHEDULE\n"
+                "DATES             -- 1\n"
+                " 10  OKT 2008 / \n"
+                "/\n"
+                "WELSPECL\n"
+                "    'PROD' 'G1' 'LGR2' 6  6 8400  'OIL' / \n"
+                "/\n"
+                "COMPORD\n"
+                " OP_1 INPUT / \n"
+                "/\n"
+                "COMPDATL\n"
+                " 'PROD' 'LGR2' 6 6 9 9 'OPEN' 1* 1* 0.5 / \n"
+                "/\n"
+                "DATES             -- 2\n"
+                " 20  JAN 2010 / \n"
+                "/\n";
+
+
+    auto deck = parser.parseString(input);
+    Opm::EclipseGrid grid(10,10,10);
+    Opm::ErrorGuard errors;
+    TableManager table ( deck );
+    FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
+    Opm::Runspec runspec (deck);
+    auto python = std::make_shared<Python>();
+    Opm::Schedule schedule(deck, grid , fp, runspec, Opm::ParseContext(), errors, python);
+    const auto& op_1 = schedule.getWell("OP_1", 2);
+
+    const auto& completions = op_1.getConnections();
+    BOOST_CHECK_EQUAL(9U, completions.size());
+    BOOST_CHECK_EQUAL(completions.get( 1 ).getK(), 2);
+    BOOST_CHECK_EQUAL(completions.get( 2 ).getK(), 3);
+    BOOST_CHECK_EQUAL(completions.get( 3 ).getK(), 4);
+    BOOST_CHECK_EQUAL(completions.get( 4 ).getK(), 5);
+    BOOST_CHECK_EQUAL(completions.get( 5 ).getK(), 6);
+    BOOST_CHECK_EQUAL(completions.get( 6 ).getK(), 7);
+    BOOST_CHECK_EQUAL(completions.get( 7 ).getK(), 8);
+    BOOST_CHECK_EQUAL(completions.get( 8 ).getK(), 1);
+}
+
+
+
+
+
+
+
+
+
 
 BOOST_AUTO_TEST_CASE(NewWellZeroCompletions) {
     Opm::Well well("WELL1", "GROUP", 0, 1, 0, 0, 0.0, Opm::WellType(Opm::Phase::OIL), Opm::Well::ProducerCMode::CMODE_UNDEFINED,  Connection::Order::DEPTH, UnitSystem::newMETRIC(), 0, 1.0, false, false, 0, Opm::Well::GasInflowEquation::STD);

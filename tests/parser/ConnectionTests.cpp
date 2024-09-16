@@ -84,6 +84,40 @@ namespace {
 
         return connections;
     }
+
+    Opm::WellConnections
+    loadCOMPDATL(const std::string& compdat_keyword)
+    {
+        Opm::WellConnections connections {
+            Opm::Connection::Order::TRACK, 10, 10
+        };
+
+        const auto deck = Opm::Parser{}.parseString(compdat_keyword);
+        const auto wdfac = Opm::WDFAC{};
+        const auto loc = Opm::KeywordLocation{};
+        const std::string lgr_group = "LGR1";
+
+        Opm::EclipseGrid grid { 10, 10, 10 };
+        const Opm::FieldPropsManager field_props {
+            deck, Opm::Phases{true, true, true}, grid, Opm::TableManager{}
+        };
+
+        // Must be mutable.
+        Opm::CompletedCells completed_cells(grid);
+        const auto sg = Opm::ScheduleGrid { grid, field_props, completed_cells };
+
+        for (const auto& rec : deck["COMPDATL"][0]) {
+            connections.loadCOMPDATL(rec, sg, "WELL", wdfac, loc, lgr_group);
+        }
+
+        return connections;
+    }
+
+
+
+
+
+
 }
 
 namespace Opm {
@@ -310,6 +344,78 @@ COMPDAT
         BOOST_CHECK_EQUAL(conn0.Kh(), units.to_si(Opm::UnitSystem::measure::effective_Kh, 0.10 * 1.0));
     }
 }
+
+
+
+BOOST_AUTO_TEST_CASE(loadCOMPDATLTEST) {
+
+    const Opm::UnitSystem units(Opm::UnitSystem::UnitType::UNIT_TYPE_METRIC); // Unit system used in deck FIRST_SIM.DATA.
+
+    {
+        const std::string deck = R"(GRID
+
+PERMX
+  1000*0.10 /
+
+COPY
+  'PERMX' 'PERMZ' /
+  'PERMX' 'PERMY' /
+/
+
+PORO
+  1000*0.3 /
+
+SCHEDULE
+
+WELSPECL
+-- Item #: 1	 2	3	4	5	 6 7
+	'PROD'	'G1' 'LGR2'	6	6	8400	'OIL' /
+/
+
+COMPDATL
+-- Item #: 1	2	3	4	5	6	7	8	9 10
+	'PROD' 'LGR2'	6	6	9	9	'OPEN'	1*	1*	0.5 /
+/)";
+
+        const Opm::WellConnections connections = loadCOMPDATL(deck);
+        const auto& conn0 = connections[0];
+        BOOST_CHECK_EQUAL(conn0.CF(), units.to_si(Opm::UnitSystem::measure::transmissibility, 1.168));
+        BOOST_CHECK_EQUAL(conn0.Kh(), units.to_si(Opm::UnitSystem::measure::effective_Kh, 107.872));
+        BOOST_CHECK_MESSAGE(conn0.ctfAssignedFromInput(), "CTF Must be Assigned From Input");
+    }
+
+//     {
+//         const std::string deck = R"(GRID
+
+// PERMX
+//   1000*0.10 /
+
+// COPY
+//   'PERMX' 'PERMZ' /
+//   'PERMX' 'PERMY' /
+// /
+
+// PORO
+//   1000*0.3 /
+
+// SCHEDULE
+
+// COMPDAT
+// --                                CF      Diam    Kh      Skin   Df
+// 'WELL'  1  1   1   1 'OPEN' 1*    1.168   0.311   0       1*     1*  'Z'  21.925 /
+// /)";
+
+//         const Opm::WellConnections connections = loadCOMPDAT(deck);
+//         const auto& conn0 = connections[0];
+//         BOOST_CHECK_EQUAL(conn0.CF(), units.to_si(Opm::UnitSystem::measure::transmissibility, 1.168));
+//         BOOST_CHECK_EQUAL(conn0.Kh(), units.to_si(Opm::UnitSystem::measure::effective_Kh, 0.10 * 1.0));
+//     }
+
+}
+
+
+
+
 
 
 BOOST_AUTO_TEST_CASE(loadCOMPDATTESTSPE1) {

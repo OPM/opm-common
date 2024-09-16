@@ -104,6 +104,73 @@ Well {} is not connected to grid - will remain SHUT)",
     }
 }
 
+void handleCOMPDATL(HandlerContext& handlerContext)
+// handleWCOMPDATL copies msot of the structure handleWCOMPDAT and add
+//  the support for LGR. handling LGR group has not been implemented yet.
+{
+    std::unordered_set<std::string> wells;
+    for (const auto& record : handlerContext.keyword) {
+        const auto wellNamePattern = record.getItem("WELL").getTrimmedString(0);
+        const auto wellnames = handlerContext.wellNames(wellNamePattern);
+        const auto lgr_group = record.getItem("LGR").getTrimmedString(0);
+
+
+        for (const auto& name : wellnames) {
+            auto well2 = handlerContext.state().wells.get(name);
+
+            auto connections = std::make_shared<WellConnections>(well2.getConnections());
+            const auto origWellConnSetIsEmpty = connections->empty();
+
+            connections->loadCOMPDATL(record, handlerContext.grid, name,
+                                     well2.getWDFAC(), handlerContext.keyword.location(), lgr_group);
+            const auto newWellConnSetIsEmpty = connections->empty();
+
+            if (well2.updateConnections(std::move(connections), handlerContext.grid)) {
+                auto wdfac = std::make_shared<WDFAC>(well2.getWDFAC());
+                wdfac->updateWDFACType(well2.getConnections());
+
+                well2.updateWDFAC(std::move(wdfac));
+                handlerContext.state().wells.update( well2 );
+
+                wells.insert(name);
+            }
+
+            if (origWellConnSetIsEmpty && newWellConnSetIsEmpty) {
+                const auto& location = handlerContext.keyword.location();
+
+                const auto msg = fmt::format(R"(Problem with COMPDATL/{}
+In {} line {}
+Well {} is not connected to grid - will remain SHUT)",
+                                             name, location.filename,
+                                             location.lineno, name);
+
+                OpmLog::warning(msg);
+            }
+
+            handlerContext.state().wellgroup_events()
+                .addEvent(name, ScheduleEvents::COMPLETION_CHANGE);
+        }
+    }
+
+    handlerContext.state().events().addEvent(ScheduleEvents::COMPLETION_CHANGE);
+
+    // In the case the wells reference depth has been defaulted in the
+    // WELSPECS keyword we need to force a calculation of the wells
+    // reference depth exactly when the COMPDAT keyword has been completely
+    // processed.
+    for (const auto& wname : wells) {
+        auto well = handlerContext.state().wells.get( wname );
+        well.updateRefDepth();
+
+        handlerContext.state().wells.update(std::move(well));
+    }
+
+    if (! wells.empty()) {
+        handlerContext.record_well_structure_change();
+    }
+}
+
+
 void handleCOMPLUMP(HandlerContext& handlerContext)
 {
     for (const auto& record : handlerContext.keyword) {
@@ -219,6 +286,7 @@ getWellCompletionHandlers()
 {
     return {
         { "COMPDAT" , &handleCOMPDAT  },
+        { "COMPDATL", &handleCOMPDATL },       
         { "COMPLUMP", &handleCOMPLUMP },
         { "COMPORD" , &handleCOMPORD  },
         { "COMPTRAJ", &handleCOMPTRAJ },

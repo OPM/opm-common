@@ -477,6 +477,9 @@ namespace Opm
         // For parallel runs, this unordered_map is retrieved by the grid partitioner to ensure these connections
         // end up on the same partition.
         std::unordered_map<std::string, std::set<std::array<int,3>>> possibleFutureConnections;
+    
+        // Set of labels for each LGR group
+        std::set<std::string> lgr_groups;
 
         // The current_report_step is set to the current report step when a PYACTION call is executed.
         // This is needed since the Schedule object does not know the current report step of the simulator and
@@ -526,6 +529,7 @@ namespace Opm
         void addGroup(const std::string& groupName , std::size_t timeStep);
         void addGroup(Group group);
         void addGroup(const RestartIO::RstGroup& rst_group, std::size_t timeStep);
+        void addGroupLGR(const std::string& lgrGroup);
         void addWell(const std::string& wellName, const DeckRecord& record,
                     std::size_t timeStep, ConnectionOrder connection_order);
         void checkIfAllConnectionsIsShut(std::size_t currentStep);

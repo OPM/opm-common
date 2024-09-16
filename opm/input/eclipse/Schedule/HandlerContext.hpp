@@ -113,6 +113,11 @@ public:
 
     //! \brief Adds a group to the schedule.
     void addGroup(const std::string& groupName);
+
+    //! \brief Adds a group to the LGR group set.
+    void addGroupLGR(const std::string& lgrGroup);
+
+
     //! \brief Adds a group to a group.
     void addGroupToGroup(const std::string& parent_group,
                          const std::string& child_group);
@@ -166,6 +171,7 @@ public:
 private:
     const std::unordered_map<std::string, double>* target_wellpi{nullptr};
     WelSegsSet* welsegs_wells{nullptr};
+    std::set<std::string> lgr_groups;
     std::set<std::string>* compsegs_wells{nullptr};
     SimulatorUpdate* sim_update{nullptr};
     Schedule& schedule_;
