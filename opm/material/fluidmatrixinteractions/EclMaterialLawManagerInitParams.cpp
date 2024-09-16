@@ -111,7 +111,7 @@ copySatnumArrays_(const std::function<std::vector<int>(const FieldPropsManager&,
 template <class Traits>
 void
 EclMaterialLawManager<Traits>::InitParams::
-copyIntArray_(std::vector<int>& dest, const std::string keyword,
+copyIntArray_(std::vector<int>& dest, const std::string& keyword,
               const std::function<std::vector<int>(const FieldPropsManager&, const std::string&, bool)>& fieldPropIntOnLeafAssigner)
 {
     if (this->eclState_.fieldProps().has_int(keyword)) {

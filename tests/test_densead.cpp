@@ -38,7 +38,6 @@
 #include <opm/material/densead/Math.hpp>
 
 #include <iostream>
-#include <array>
 #include <cmath>
 #include <algorithm>
 #include <cassert>
@@ -638,7 +637,7 @@ struct DynamicTestEnv : public TestEnvBase<Opm::DenseAd::DynamicEvaluation<Scala
                                            DynamicTestEnv<Scalar, staticSize> >
 {
     typedef Opm::DenseAd::DynamicEvaluation<Scalar, staticSize> Eval;
-    DynamicTestEnv(int numDerivs)
+    explicit DynamicTestEnv(int numDerivs)
         : numDerivs_(numDerivs)
     {}
 

@@ -196,7 +196,6 @@ namespace Opm {
             else {
                 std::string msg = "The THPRES value for regions " + std::to_string(r1) + " and " + std::to_string(r2) + " has not been initialized. Using 0.0";
                 throw std::invalid_argument(msg);
-                return 0;
             }
         }
 

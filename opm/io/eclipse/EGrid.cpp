@@ -38,8 +38,8 @@ namespace Opm { namespace EclIO {
 
 using NNCentry = std::tuple<int, int, int, int, int,int, float>;
 
-EGrid::EGrid(const std::string &filename, std::string grid_name) :
-    EclFile(filename), inputFileName { filename }, m_grid_name {grid_name}
+EGrid::EGrid(const std::string& filename, const std::string& grid_name)
+    : EclFile(filename), inputFileName { filename }, m_grid_name {grid_name}
 {
     initFileName = inputFileName.parent_path() / inputFileName.stem();
 

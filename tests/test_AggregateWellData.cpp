@@ -58,8 +58,6 @@
 
 #include <opm/common/utility/TimeService.hpp>
 
-#include <exception>
-#include <stdexcept>
 #include <string>
 #include <utility>
 #include <vector>
@@ -70,11 +68,11 @@ namespace {
 
     struct MockIH
     {
-        MockIH(const int numWells,
-               const int iwelPerWell = 155,  // E100
-               const int swelPerWell = 122,  // E100
-               const int xwelPerWell = 130,  // E100
-               const int zwelPerWell =   3); // E100
+        explicit MockIH(const int numWells,
+                        const int iwelPerWell = 155,  // E100
+                        const int swelPerWell = 122,  // E100
+                        const int xwelPerWell = 130,  // E100
+                        const int zwelPerWell =   3); // E100
 
         std::vector<int> value;
 

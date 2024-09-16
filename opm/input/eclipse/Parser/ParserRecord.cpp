@@ -36,7 +36,7 @@ namespace Opm {
 
 namespace {
     struct name_eq {
-        name_eq( const std::string& x ) : name( x ) {}
+        explicit name_eq( const std::string& x ) : name( x ) {}
         const std::string& name;
         bool operator()( const ParserItem& x ) const {
             return x.name() == this->name;

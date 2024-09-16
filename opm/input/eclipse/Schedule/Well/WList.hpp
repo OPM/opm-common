@@ -31,7 +31,7 @@ public:
     using storage = std::vector<std::string>;
 
     WList() = default;
-    WList(const storage& wlist, std::string wlname);
+    WList(const storage& wlist, const std::string& wlname);
     std::size_t size() const;
     void add(const std::string& well);
     void del(const std::string& well);

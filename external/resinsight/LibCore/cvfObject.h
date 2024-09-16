@@ -97,7 +97,7 @@ template <typename T>
 class ref
 {
 public:
-    ref(T* object = NULL);
+    explicit ref(T* object = nullptr);
     ref(const ref& other);
     template<typename T2> explicit ref(const ref<T2>& other);
     ~ref();
@@ -148,7 +148,7 @@ template <typename T>
 class cref
 {
 public:
-    cref(const T* object = NULL);
+    explicit cref(const T* object = nullptr);
     cref(const cref& other);
     template<typename T2> explicit cref(const cref<T2>& other);
     ~cref();

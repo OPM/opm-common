@@ -81,7 +81,7 @@ public:
     template <class FluidState>
     static void solve(FluidState& fluid_state,
                       const Dune::FieldVector<typename FluidState::Scalar, numComponents>& z,
-                      std::string twoPhaseMethod,
+                      const std::string& twoPhaseMethod,
                       Scalar tolerance = -1.,
                       int verbosity = 0)
     {
@@ -652,12 +652,10 @@ protected:
 
         // Compute x and y from K, L and Z
         computeLiquidVapor_(fluid_state, L, K, z);
-        if (verbosity >= 1) {
-            std::cout << " the current L is " << Opm::getValue(L) << std::endl;
-        }
 
         // Print initial condition
         if (verbosity >= 1) {
+            std::cout << " the current L is " << Opm::getValue(L) << std::endl;
             std::cout << "Initial guess: x = [";
             for (int compIdx=0; compIdx<numComponents; ++compIdx){
                 if (compIdx < numComponents - 1)

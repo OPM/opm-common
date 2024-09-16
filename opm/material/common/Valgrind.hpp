@@ -91,7 +91,7 @@ inline bool CheckDefined([[maybe_unused]] const T& value)
  * Example:
  *
  * \code
- * int* i = NULL;
+ * int* i = nullptr;
  * Valgrind::CheckAddressable(*i); // Valgrind complains!
  * \endcode
  *

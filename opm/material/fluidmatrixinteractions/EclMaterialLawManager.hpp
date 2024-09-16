@@ -153,7 +153,7 @@ private:
                                fieldPropIntOnLeafAssigner);
         // \brief Function argument 'fieldPropIntOnLeadAssigner' needed to lookup
         //        field properties of cells on the leaf grid view for CpGrid with local grid refinement.
-        void copyIntArray_(std::vector<int>& dest, const std::string keyword,
+        void copyIntArray_(std::vector<int>& dest, const std::string& keyword,
                            const std::function<std::vector<int>(const FieldPropsManager&, const std::string&, bool)>&
                            fieldPropIntOnLeafAssigner);
         unsigned imbRegion_(std::vector<int>& array, unsigned elemIdx);
@@ -182,7 +182,7 @@ private:
         // This class' implementation is defined in "EclMaterialLawManagerHystParams.cpp"
         class HystParams {
         public:
-            HystParams(EclMaterialLawManager<TraitsT>::InitParams& init_params);
+            explicit HystParams(EclMaterialLawManager<TraitsT>::InitParams& init_params);
             void finalize();
             std::shared_ptr<GasOilTwoPhaseHystParams> getGasOilParams();
             std::shared_ptr<OilWaterTwoPhaseHystParams> getOilWaterParams();
@@ -230,7 +230,7 @@ private:
         // This class' implementation is defined in "EclMaterialLawManagerReadEffectiveParams.cpp"
         class ReadEffectiveParams {
         public:
-            ReadEffectiveParams(EclMaterialLawManager<TraitsT>::InitParams& init_params);
+            explicit ReadEffectiveParams(EclMaterialLawManager<TraitsT>::InitParams& init_params);
             void read();
         private:
             std::vector<double> normalizeKrValues_(const double tolcrit, const TableColumn& krValues) const;

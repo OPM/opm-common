@@ -21,6 +21,7 @@
 
 #include <cstddef>
 #include <unordered_map>
+#include <string>
 
 namespace Opm {
 class DeckRecord;
@@ -56,7 +57,7 @@ struct EzrokhiRecord {
 class EzrokhiTable {
 public:
     EzrokhiTable() = default;
-    explicit EzrokhiTable( std::unordered_map<std::string, EzrokhiRecord> records);
+    explicit EzrokhiTable(const std::unordered_map<std::string, EzrokhiRecord>& records);
 
     static EzrokhiTable serializationTestObject();
 

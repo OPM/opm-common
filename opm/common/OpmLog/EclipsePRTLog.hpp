@@ -33,7 +33,7 @@ public:
 
     size_t numMessages(int64_t messageType) const;
 
-    ~EclipsePRTLog();
+    ~EclipsePRTLog() override;
 
     /// \brief Construct a logger to the <MODLE>.PRT file
     /// \param logFile The name of the logfile to use.

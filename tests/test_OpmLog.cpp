@@ -115,7 +115,7 @@ BOOST_AUTO_TEST_CASE(LoggerAddTypes_PowerOf2) {
 
 class TestLog: public LogBackend {
 public:
-    TestLog( int64_t messageMask ) : LogBackend( messageMask )
+    explicit TestLog( int64_t messageMask ) : LogBackend( messageMask )
     {
         m_defaultMessages = 0;
         m_specialMessages = 0;

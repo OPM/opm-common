@@ -126,17 +126,17 @@ public:
             /// Accessible to RegionIndexRange only.
             ///
             /// \param[in] index range element value.
-            Iterator(int i) : i_{i} {}
+            explicit Iterator(int i) : i_{i} {}
 
             /// Index range element value
             int i_;
         };
 
         /// Start of Range.
-        Iterator begin() const { return { this->begin_ }; }
+        Iterator begin() const { return Iterator{this->begin_}; }
 
         /// End of Range.
-        Iterator end() const { return { this->end_ }; }
+        Iterator end() const { return Iterator{this->end_}; }
 
         /// Predicate for empty index range.
         bool empty() const { return this->end_ <= this->begin_; }

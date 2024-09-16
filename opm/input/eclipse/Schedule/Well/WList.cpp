@@ -22,9 +22,9 @@
 
 namespace Opm {
 
-WList::WList(const storage& wlist, std::string wlname) :
-    well_list(wlist),
-    name(wlname)
+WList::WList(const storage& wlist, const std::string& wlname)
+    : well_list(wlist)
+    , name(wlname)
 {
 }
 

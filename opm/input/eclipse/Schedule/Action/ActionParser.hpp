@@ -36,7 +36,7 @@ struct ParseNode
     {}
 
     // Implicit converting constructor.
-    ParseNode(TokenType type_arg)
+    explicit ParseNode(TokenType type_arg)
         : ParseNode(type_arg, "")
     {}
 

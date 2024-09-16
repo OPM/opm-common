@@ -210,7 +210,7 @@ namespace cvf {
     private:
         friend class BoundingBoxTree;
 
-        cvf::BoundingBox createLeaves();
+        cvf::BoundingBox createLeaves() override;
         void findIntersections(const cvf::BoundingBox& bb, std::vector<size_t>& bbIds) const;
 
         void findIntersections(const cvf::BoundingBox& bb, const AABBTreeNode* node, std::vector<size_t>& indices) const;

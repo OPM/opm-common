@@ -551,7 +551,7 @@ private:
      */
     struct ComparatorX_
     {
-        ComparatorX_(const std::vector<Scalar>& x)
+        explicit ComparatorX_(const std::vector<Scalar>& x)
             : x_(x)
         {}
 

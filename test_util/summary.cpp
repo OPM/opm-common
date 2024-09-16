@@ -199,10 +199,10 @@ int main(int argc, char **argv) {
     std::vector<std::vector<float>> smryData;
     std::vector<int> width;
 
-    for (auto name : smryList)
+    for (const auto& name : smryList)
         width.push_back(name.size());
 
-    for (auto key : smryList) {
+    for (const auto& key : smryList) {
         std::vector<float> vect;
 
         switch(filetype) {

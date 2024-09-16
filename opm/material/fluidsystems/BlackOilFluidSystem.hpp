@@ -174,7 +174,7 @@ public:
         using Evaluation = EvaluationT;
 
     public:
-        ParameterCache(Scalar maxOilSat = 1.0, unsigned regionIdx=0)
+        explicit ParameterCache(Scalar maxOilSat = 1.0, unsigned regionIdx = 0)
         {
             maxOilSat_ = maxOilSat;
             regionIdx_ = regionIdx;

@@ -149,7 +149,10 @@ namespace {
         os << '\n';
     }
 
-    void write_scale_columns(std::ostream& os, const std::vector<std::pair<std::vector<float>, int>> data, char prefix = ' ') {
+    void write_scale_columns(std::ostream& os,
+                             const std::vector<std::pair<std::vector<float>, int>>& data,
+                             char prefix = ' ')
+    {
         os << prefix;
 
         print_text_element(os, "");

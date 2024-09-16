@@ -105,7 +105,7 @@ public:
     template <typename T>
     using Window = boost::iterator_range<typename std::vector<T>::const_iterator>;
 
-    UDQVectors(std::shared_ptr<Opm::EclIO::RestartFileView> rst_view)
+    explicit UDQVectors(std::shared_ptr<Opm::EclIO::RestartFileView> rst_view)
         : rstView_{ std::move(rst_view) }
     {
         const auto& intehead = this->rstView_->getKeyword<int>("INTEHEAD");

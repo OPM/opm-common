@@ -30,7 +30,7 @@ class RPTConfig {
 public:
     using Map = std::unordered_map<std::string, unsigned>;
     RPTConfig() = default;
-    RPTConfig(const DeckKeyword&);
+    explicit RPTConfig(const DeckKeyword&);
     bool contains(const std::string& key) const;
 
     template<class Serializer>

@@ -54,9 +54,7 @@
 
 #include <cmath>
 #include <cstddef>
-#include <exception>
 #include <memory>
-#include <stdexcept>
 #include <string>
 #include <tuple>
 #include <utility>
@@ -65,12 +63,12 @@
 namespace {
     struct MockIH
     {
-        MockIH(const int numWells,
-               const int nsegWell     =  1,   // E100
-               const int ncwMax       = 20,
-               const int iConnPerConn =  25,  // NICONZ
-               const int sConnPerConn =  41,  // NSCONZ
-               const int xConnPerConn =  58); // NXCONZ
+        explicit MockIH(const int numWells,
+                        const int nsegWell     =  1,   // E100
+                        const int ncwMax       = 20,
+                        const int iConnPerConn =  25,  // NICONZ
+                        const int sConnPerConn =  41,  // NSCONZ
+                        const int xConnPerConn =  58); // NXCONZ
 
         std::vector<int> value;
 
@@ -700,7 +698,7 @@ BOOST_AUTO_TEST_CASE(Declared_Connection_Data)
         using Ix = ::Opm::RestartIO::Helpers::VectorItems::SConn::index;
         const auto& sconn = amconn.getSConn();
         int connNo = 1;
-        auto i0 = (connNo - 1) * ih.nsconz;
+        decltype(connNo*ih.nxconz) i0 = 0;
         BOOST_CHECK_CLOSE(sconn[i0 + Ix::EffConnTrans], 2.55826545, 1.0e-5); // PROD - conn 1 : Effective transmissibility factor
         BOOST_CHECK_CLOSE(sconn[i0 + Ix::Depth], 7050., 1.0e-5); // PROD - conn 1 : Centre depth
         BOOST_CHECK_CLOSE(sconn[i0 + Ix::Diameter], 0.20, 1.0e-5); // PROD - conn 1 : diameter
@@ -750,7 +748,7 @@ BOOST_AUTO_TEST_CASE(Declared_Connection_Data)
 
         // PROD well
         int connNo = 1;
-        auto i0 = (connNo - 1) * ih.nxconz;
+        decltype(connNo*ih.nxconz) i0 = 0;
         BOOST_CHECK_CLOSE(xconn[i0 + Ix::OilRate], 5.0 * (float(connNo)),
                           1.0e-5); // PROD - conn 1 : Surface oil rate
         BOOST_CHECK_CLOSE(xconn[i0 + Ix::WaterRate], 4.0 * (float(connNo)),

@@ -130,7 +130,7 @@ namespace {
         } // namespace exceptions
 
         std::string
-        centre(std::string s, const std::string::size_type width = 8)
+        centre(const std::string& s, const std::string::size_type width = 8)
         {
             if (s.size() >  width) { return s.substr(0, width); }
             if (s.size() == width) { return s; }
@@ -141,7 +141,7 @@ namespace {
             return std::string(left, ' ') + s;
         }
 
-        std::string combine(std::string left, std::string right)
+        std::string combine(const std::string& left, const std::string& right)
         {
             return left + '/' + right;
         }

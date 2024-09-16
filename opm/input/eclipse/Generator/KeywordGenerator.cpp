@@ -21,7 +21,6 @@
 #include <filesystem>
 #include <iostream>
 #include <sstream>
-#include <stdexcept>
 #include <cctype>
 #include <fmt/format.h>
 
@@ -79,7 +78,7 @@ namespace Opm {
     }
 
     void
-    write_file(const std::string& content, const std::string& file, bool verbose, std::string desc = "source")
+    write_file(const std::string& content, const std::string& file, bool verbose, const std::string& desc = "source")
     {
         Opm::updateFile(content, file);
         if (verbose)
@@ -88,7 +87,7 @@ namespace Opm {
 
 
     static void
-    write_file(const std::stringstream& stream, const std::string& file, bool verbose, std::string desc = "source")
+    write_file(const std::stringstream& stream, const std::string& file, bool verbose, const std::string& desc = "source")
     {
         write_file(stream.str(), file, verbose, desc);
     }

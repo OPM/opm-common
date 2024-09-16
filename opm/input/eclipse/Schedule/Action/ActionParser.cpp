@@ -121,7 +121,7 @@ ParseNode Parser::next()
 {
     this->current_pos++;
     if (static_cast<size_t>(this->current_pos) == this->tokens.size()) {
-        return TokenType::end;
+        return ParseNode(TokenType::end);
     }
 
     std::string arg = this->tokens[this->current_pos];
@@ -131,7 +131,7 @@ ParseNode Parser::next()
 ParseNode Parser::current() const
 {
     if (static_cast<size_t>(this->current_pos) == this->tokens.size()) {
-        return TokenType::end;
+        return ParseNode(TokenType::end);
     }
 
     std::string arg = this->tokens[this->current_pos];

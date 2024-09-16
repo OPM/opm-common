@@ -147,7 +147,9 @@ private:
         return result;
     }
 
-    std::vector<std::tuple <std::string, uint64_t>> getListOfArrays(std::string filename, bool formatted);
+    std::vector<std::tuple <std::string, uint64_t>>
+    getListOfArrays(const std::string& filename, bool formatted);
+
     std::vector<int> makeKeywPosVector(int speInd) const;
     std::string read_string_from_disk(std::fstream& fileH, uint64_t size) const;
 

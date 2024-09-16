@@ -27,12 +27,12 @@
 #ifndef OPM_ECL_TWO_PHASE_MATERIAL_HPP
 #define OPM_ECL_TWO_PHASE_MATERIAL_HPP
 
-#include "EclTwoPhaseMaterialParams.hpp"
+#include <opm/material/fluidmatrixinteractions/EclTwoPhaseMaterialParams.hpp>
+
+#include <opm/common/TimingMacros.hpp>
 
 #include <opm/material/common/Valgrind.hpp>
 #include <opm/material/common/MathToolbox.hpp>
-
-#include <algorithm>
 
 namespace Opm {
 
@@ -457,21 +457,18 @@ public:
             Scalar So = scalarValue(fluidState.saturation(oilPhaseIdx));
 
             return params.gasOilParams().update(/*pcSw=*/So, /*krwSw=*/So, /*krnSw=*/So);
-            break;
         }
 
         case EclTwoPhaseApproach::OilWater: {
             Scalar Sw = scalarValue(fluidState.saturation(waterPhaseIdx));
 
             return params.oilWaterParams().update(/*pcSw=*/Sw, /*krwSw=*/Sw, /*krnSw=*/Sw);
-            break;
         }
 
         case EclTwoPhaseApproach::GasWater: {
             Scalar Sw = scalarValue(fluidState.saturation(waterPhaseIdx));
 
             return params.gasWaterParams().update(/*pcSw=*/Sw, /*krwSw=*/Sw, /*krnSw=*/Sw);
-            break;
         }
         }
 

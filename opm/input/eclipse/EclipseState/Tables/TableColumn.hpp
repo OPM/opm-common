@@ -40,10 +40,11 @@ namespace Opm {
 
         size_t size( ) const;
         const std::string& name() const;
-        void assertOrder(double value1 , double value2, size_t index, std::string tableName) const;
-        void addValue(double, std::string tableName);
-        void addDefault(std::string tableName);
-        void updateValue(size_t index, double value, std::string tableName);
+        void assertOrder(double value1 , double value2, size_t index,
+                         const std::string& tableName) const;
+        void addValue(double, const std::string& tableName);
+        void addDefault(const std::string& tableName);
+        void updateValue(size_t index, double value, const std::string& tableName);
         double operator[](size_t index) const;
         bool defaultApplied(size_t index) const;
         bool hasDefault( ) const;
@@ -59,7 +60,7 @@ namespace Opm {
         */
         TableIndex lookup(double argValue) const;
         double eval( const TableIndex& index) const;
-        void applyDefaults( const TableColumn& argColumn, std::string tableName );
+        void applyDefaults( const TableColumn& argColumn, const std::string& tableName);
         void assertUnitRange() const;
         TableColumn& operator= (const TableColumn& other);
 
@@ -80,9 +81,9 @@ namespace Opm {
         }
 
     private:
-        void assertUpdate(std::string tableName, size_t index, double value) const;
-        void assertPrevious(std::string tableName, size_t index , double value) const;
-        void assertNext(std::string tableName, size_t index , double value) const;
+        void assertUpdate(const std::string& tableName, size_t index, double value) const;
+        void assertPrevious(const std::string& tableName, size_t index , double value) const;
+        void assertNext(const std::string& tableName, size_t index , double value) const;
 
         ColumnSchema m_schema;
         std::string m_name;

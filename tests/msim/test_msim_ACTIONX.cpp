@@ -60,7 +60,7 @@ struct test_data {
     Schedule schedule;
     SummaryConfig summary_config;
 
-    test_data(const Deck& deck_arg) :
+    explicit test_data(const Deck& deck_arg) :
         deck(deck_arg),
         state( this->deck ),
         python( std::make_shared<Python>() ),
@@ -71,7 +71,7 @@ struct test_data {
         ioconfig.setBaseName("MSIM");
     }
 
-    test_data(const std::string& deck_string) :
+    explicit test_data(const std::string& deck_string) :
         test_data( Parser().parseString(deck_string) )
     {}
 

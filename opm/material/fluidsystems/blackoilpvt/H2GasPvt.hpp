@@ -59,9 +59,9 @@ public:
 
     explicit H2GasPvt() = default;
 
-    H2GasPvt(const std::vector<Scalar>& salinity,
-              Scalar T_ref = 288.71, //(273.15 + 15.56)
-              Scalar P_ref = 101325)
+    explicit H2GasPvt(const std::vector<Scalar>& salinity,
+                      Scalar T_ref = 288.71, //(273.15 + 15.56)
+                      Scalar P_ref = 101325)
         : salinity_(salinity)
     {
         int numRegions = salinity_.size();

@@ -39,7 +39,7 @@ struct DirectionalMaterialLawParams {
         , materialLawParamsZ_{}
     {}
 
-    DirectionalMaterialLawParams(std::size_t size)
+    explicit DirectionalMaterialLawParams(std::size_t size)
         : materialLawParamsX_(size)
         , materialLawParamsY_(size)
         , materialLawParamsZ_(size)

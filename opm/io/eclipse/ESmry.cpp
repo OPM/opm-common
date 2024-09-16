@@ -417,7 +417,7 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData) :
     std::map<std::string, int> keyIndex;
     {
         size_t m = 0;
-        for (auto key : keywList)
+        for (const auto& key : keywList)
             if (!key.empty())
                 keyIndex[key] = m++;
     }
@@ -952,7 +952,7 @@ void ESmry::loadData() const
 
 
 std::vector<std::tuple <std::string, uint64_t>>
-ESmry::getListOfArrays(std::string filename, bool formatted)
+ESmry::getListOfArrays(const std::string& filename, bool formatted)
 {
     std::vector<std::tuple <std::string, uint64_t>> resultVect;
 

@@ -749,10 +749,8 @@ void set_dimensions( ParserItem& item,
         DeckKeyword keyword( rawKeyword.location(), rawKeyword.getKeywordName() );
         keyword.setDataKeyword( isDataKeyword() );
 
-        if (double_records)
-            keyword.setDoubleRecordKeyword();
-
         if (double_records) {
+            keyword.setDoubleRecordKeyword();
             /* Note: this merely dumps all records sequentially into m_recordList.
                Each block of records is separated by an empty DeckRecord.
             */
