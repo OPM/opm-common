@@ -21,8 +21,6 @@
 #define GROUP_ECON_PRODUCTION_LIMITS_H
 
 #include <opm/input/eclipse/Deck/UDAValue.hpp>
-#include <opm/common/utility/Serializer.hpp>
-#include <opm/common/utility/MemPacker.hpp>
 
 #include <map>
 #include <optional>
