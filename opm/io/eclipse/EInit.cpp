@@ -27,7 +27,6 @@ namespace Opm { namespace EclIO {
 EInit::EInit(const std::string &filename) : EclFile(filename)
 {
     std::string lgrname;
-    std::string nncname;
 
     lgrname = "global";
 

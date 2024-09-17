@@ -962,7 +962,6 @@ std::unique_ptr<RawKeyword> tryParseKeyword( ParserState& parserState, const Par
         if( line.empty() && !rawKeyword ) continue;
         if( line.empty() && !is_title ) continue;
 
-        std::string keywordString;
         std::string deck_name = str::make_deck_name( line );
         if (parserState.parseContext.isActiveSkipKeyword(deck_name)) {
             skip = true;

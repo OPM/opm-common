@@ -316,7 +316,6 @@ namespace Opm {
     void ParseContext::update(const std::string& keyString , InputErrorAction action) {
         std::vector<std::string> keys = split_string(keyString, ":|");
         for (const auto& input_key : keys) {
-            std::vector<std::string> matching_keys;
             size_t wildcard_pos = input_key.find("*");
 
             if (wildcard_pos == std::string::npos) {
