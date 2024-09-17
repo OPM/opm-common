@@ -378,7 +378,7 @@ public:
     const std::vector<TabulatedOneDFunction>& watvisctCurves() const
     { return watvisctCurves_; }
 
-    const std::vector<TabulatedOneDFunction> internalEnergyCurves() const
+    const std::vector<TabulatedOneDFunction>& internalEnergyCurves() const
     { return internalEnergyCurves_; }
 
     bool enableInternalEnergy() const

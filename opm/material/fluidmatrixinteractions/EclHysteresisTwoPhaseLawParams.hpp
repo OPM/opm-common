@@ -54,36 +54,6 @@ class EclHysteresisTwoPhaseLawParams : public EnsureFinalized
 public:
     using Traits = typename EffLawParams::Traits;
 
-    EclHysteresisTwoPhaseLawParams()
-    {
-        // These are initialized to two (even though they represent saturations)
-        // to signify that the values are larger than physically possible, and force
-        // using the drainage curve before the first saturation update.
-        pcSwMdc_ = 2.0;
-        krnSwMdc_ = 2.0;
-        krwSwMdc_ = -2.0;
-        krnSwDrainRevert_ = 2.0;
-        krnSwDrainStart_ = -2.0;
-        krnSwWAG_ = 2.0;
-
-        pcSwMic_ = -1.0;
-        initialImb_ = false;
-        oilWaterSystem_ = false;
-        gasOilSystem_ = false;
-        pcmaxd_ = 0.0;
-        pcmaxi_ = 0.0;
-
-        deltaSwImbKrn_ = 0.0;
-        //deltaSwImbKrw_ = 0.0;
-
-        Swco_ = 0.0;
-        swatImbStart_ = 0.0;
-        isDrain_ = true;
-        cTransf_ = 0.0;
-        tolWAG_ = 0.001;
-        nState_ = 0;
-    }
-
     static EclHysteresisTwoPhaseLawParams serializationTestObject()
     {
         EclHysteresisTwoPhaseLawParams<EffLawT> result;
@@ -816,24 +786,24 @@ private:
     // largest wettinging phase saturation which is on the main-drainage curve. These are
     // three different values because the sourounding code can choose to use different
     // definitions for the saturations for different quantities
-    Scalar krwSwMdc_;
-    Scalar krnSwMdc_;
-    Scalar pcSwMdc_;
+    Scalar krwSwMdc_{-2.0};
+    Scalar krnSwMdc_{2.0};
+    Scalar pcSwMdc_{2.0};
 
     // largest wettinging phase saturation along main imbibition curve
-    Scalar pcSwMic_;
+    Scalar pcSwMic_{1.0};
     // Initial process is imbibition (for initial saturations at or below critical drainage saturation)
-    bool initialImb_;
+    bool initialImb_{false};
 
-    bool oilWaterSystem_;
-    bool gasOilSystem_;
+    bool oilWaterSystem_{false};
+    bool gasOilSystem_{false};
 
 
     // offsets added to wetting phase saturation uf using the imbibition curves need to
     // be used to calculate the wetting phase relperm, the non-wetting phase relperm and
     // the capillary pressure
-    //Scalar deltaSwImbKrw_;
-    Scalar deltaSwImbKrn_;
+    //Scalar deltaSwImbKrw_{};
+    Scalar deltaSwImbKrn_{};
     //Scalar deltaSwImbPc_;
 
     // the following uses the conventions of the Eclipse technical description:
@@ -873,35 +843,35 @@ private:
     Scalar Krwd_sncrt_{};
     Scalar Swcrt_{}; // trapped wetting phase saturation
 
-    Scalar pcmaxd_;  // max pc for drain
-    Scalar pcmaxi_;  // max pc for imb
+    Scalar pcmaxd_{};  // max pc for drain
+    Scalar pcmaxi_{};  // max pc for imb
 
     Scalar curvatureCapPrs_{}; // curvature parameter used for capillary pressure hysteresis
 
     Scalar Sncrt_{}; // trapped non-wetting phase saturation
 
     // Used for WAG hysteresis
-    Scalar Swco_;               // Connate water.
-    Scalar swatImbStart_;     // Water saturation at start of current drainage curve (end of previous imb curve).
-    Scalar swatImbStartNxt_{};    // Water saturation at start of next drainage curve (end of current imb curve).
-    Scalar krnSwWAG_;           // Saturation value after latest completed timestep.
-    Scalar krnSwDrainRevert_;   // Saturation value at end of current drainage curve.
-    Scalar cTransf_;            // Modified Lands constant used for free gas calculations to obtain consistent scanning curve
-                                //  when reversion to imb occurs above historical maximum gas saturation (i.e. Sw > krwSwMdc_).
-    Scalar krnSwDrainStart_;    // Saturation value at start of current drainage curve (end of previous imb curve).
-    Scalar krnSwDrainStartNxt_{}; // Saturation value at start of current drainage curve (end of previous imb curve).
-    Scalar krnImbStart_{};      // Relperm at start of current drainage curve (end of previous imb curve).
-    Scalar krnImbStartNxt_{};   // Relperm at start of next drainage curve (end of current imb curve).
-    Scalar krnDrainStart_{};    // Primary (input) relperm evaluated at start of current drainage curve.
-    Scalar krnDrainStartNxt_{}; // Primary (input) relperm evaluated at start of next drainage curve.
-    bool isDrain_;              // Status is either drainage or imbibition
-    bool wasDrain_{};           // Previous status.
-    Scalar krnSwImbStart_{};    // Saturation value where primary drainage relperm equals krnImbStart_
+    Scalar Swco_{};                // Connate water.
+    Scalar swatImbStart_{};        // Water saturation at start of current drainage curve (end of previous imb curve).
+    Scalar swatImbStartNxt_{};     // Water saturation at start of next drainage curve (end of current imb curve).
+    Scalar krnSwWAG_{2.0};         // Saturation value after latest completed timestep.
+    Scalar krnSwDrainRevert_{2.0}; // Saturation value at end of current drainage curve.
+    Scalar cTransf_{};             // Modified Lands constant used for free gas calculations to obtain consistent scanning curve
+                                   //  when reversion to imb occurs above historical maximum gas saturation (i.e. Sw > krwSwMdc_).
+    Scalar krnSwDrainStart_{-2.0}; // Saturation value at start of current drainage curve (end of previous imb curve).
+    Scalar krnSwDrainStartNxt_{};  // Saturation value at start of current drainage curve (end of previous imb curve).
+    Scalar krnImbStart_{};         // Relperm at start of current drainage curve (end of previous imb curve).
+    Scalar krnImbStartNxt_{};      // Relperm at start of next drainage curve (end of current imb curve).
+    Scalar krnDrainStart_{};       // Primary (input) relperm evaluated at start of current drainage curve.
+    Scalar krnDrainStartNxt_{};    // Primary (input) relperm evaluated at start of next drainage curve.
+    bool isDrain_{true};           // Status is either drainage or imbibition
+    bool wasDrain_{};              // Previous status.
+    Scalar krnSwImbStart_{};       // Saturation value where primary drainage relperm equals krnImbStart_
 
-    int nState_;                // Number of cycles. Primary cycle is nState_=1.
+    int nState_{};                 // Number of cycles. Primary cycle is nState_=1.
 
     Scalar SncrtWAG_{};
-    Scalar tolWAG_;
+    Scalar tolWAG_{0.001};
 };
 
 } // namespace Opm

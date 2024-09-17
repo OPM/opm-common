@@ -59,15 +59,16 @@ Ray::Ray()
 //--------------------------------------------------------------------------------------------------
 /// 
 //--------------------------------------------------------------------------------------------------
-Ray::Ray(const Ray& other) : Object()
+Ray::Ray(const Ray& other)
+    : Object{}
+    , m_origin(other.origin())
+    , m_direction(other.direction())
+    , m_minDistance(other.m_minDistance)
+    , m_maxDistance(other.m_maxDistance)
+    , m_minDistanceSquared(other.m_minDistanceSquared)
+    , m_maxDistanceSquared(other.m_maxDistanceSquared)
+    , m_distanceLimitedRay(other.m_distanceLimitedRay)
 {
-    m_origin = other.origin();
-    m_direction = other.direction();
-    m_minDistance = other.m_minDistance;
-    m_maxDistance = other.m_maxDistance;
-    m_minDistanceSquared = other.m_minDistanceSquared;
-    m_maxDistanceSquared = other.m_maxDistanceSquared;
-    m_distanceLimitedRay = other.m_distanceLimitedRay;
 }
 
 

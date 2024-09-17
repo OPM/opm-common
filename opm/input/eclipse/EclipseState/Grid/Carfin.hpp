@@ -84,7 +84,7 @@ namespace Opm
         bool operator==(const Carfin& other) const;
         bool equal(const Carfin& other) const;
 
-        std::string NAME() const; 
+        const std::string& NAME() const;
         int I1() const;
         int I2() const;
         int J1() const;

@@ -136,21 +136,20 @@ VFPProdTable::VFPProdTable(int table_num,
                            const std::vector<double>& wfr_data,
                            const std::vector<double>& gfr_data,
                            const std::vector<double>& alq_data,
-                           const std::vector<double>& data) {
-
-    m_table_num = table_num;
-    m_datum_depth = datum_depth;
-    m_flo_type = flo_type;
-    m_wfr_type = wfr_type;
-    m_gfr_type = gfr_type;
-    m_alq_type = alq_type;
-    m_flo_data = flo_data;
-    m_thp_data = thp_data;
-    m_wfr_data = wfr_data;
-    m_gfr_data = gfr_data;
-    m_alq_data = alq_data;
-    m_data = data;
-
+                           const std::vector<double>& data)
+    : m_table_num(table_num)
+    , m_datum_depth(datum_depth)
+    , m_flo_type(flo_type)
+    , m_wfr_type(wfr_type)
+    , m_gfr_type(gfr_type)
+    , m_alq_type(alq_type)
+    , m_flo_data(flo_data)
+    , m_thp_data(thp_data)
+    , m_wfr_data(wfr_data)
+    , m_gfr_data(gfr_data)
+    , m_alq_data(alq_data)
+    , m_data(data)
+{
     if (data.size() != flo_data.size() * thp_data.size() * wfr_data.size() * gfr_data.size() * alq_data.size())
         throw std::invalid_argument("Wrong data size");
     this->check();

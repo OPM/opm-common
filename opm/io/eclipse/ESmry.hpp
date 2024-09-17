@@ -62,7 +62,7 @@ public:
     bool make_esmry_file();
 
     time_point startdate() const { return tp_startdat; }
-    std::vector<int> start_v() const { return start_vect; }
+    const std::vector<int>& start_v() const { return start_vect; }
 
     const std::vector<std::string>& keywordList() const;
     std::vector<std::string> keywordList(const std::string& pattern) const;

@@ -256,7 +256,8 @@ void ParserItem::push_backDimension( const std::string& dim ) {
         return m_name;
     }
 
-    const std::string ParserItem::className() const {
+    const std::string& ParserItem::className() const
+    {
         return m_name;
     }
 
@@ -274,7 +275,8 @@ void ParserItem::push_backDimension( const std::string& dim ) {
         return this->m_sizeType == item_size::SINGLE;
     }
 
-    std::string ParserItem::getDescription() const {
+    const std::string& ParserItem::getDescription() const
+    {
         return m_description;
     }
 

@@ -189,10 +189,8 @@ namespace Opm {
         else {
             auto pair_pair = *iter;
             auto value_pair = pair_pair.second;
-            bool   valid = value_pair.first;
-            double value = value_pair.second;
-            if (valid)
-                return value;
+            if (value_pair.first)
+                return value_pair.second;
             else {
                 std::string msg = "The THPRES value for regions " + std::to_string(r1) + " and " + std::to_string(r2) + " has not been initialized. Using 0.0";
                 throw std::invalid_argument(msg);

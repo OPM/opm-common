@@ -111,7 +111,7 @@ namespace Opm {
         size_t getFixedSize() const;
         bool hasFixedSize() const;
         bool isTableCollection() const;
-        std::string getDescription() const;
+        const std::string& getDescription() const;
         void setDescription(const std::string &description);
 
         bool hasMultipleDeckNames() const;

@@ -399,8 +399,6 @@ std::vector<unsigned int> EclFile::get_bin_logi_raw_values(int arrIndex) const
 
 std::vector<std::string> EclFile::get_fmt_real_raw_str_values(int arrIndex) const
 {
-    std::vector<std::string> real_vect;
-
     if (array_type[arrIndex] != Opm::EclIO::REAL)
         OPM_THROW(std::runtime_error, "Error, selected array is not of type REAL");
 

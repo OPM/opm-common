@@ -962,7 +962,6 @@ std::unique_ptr<RawKeyword> tryParseKeyword( ParserState& parserState, const Par
         if( line.empty() && !rawKeyword ) continue;
         if( line.empty() && !is_title ) continue;
 
-        std::string keywordString;
         std::string deck_name = str::make_deck_name( line );
         if (parserState.parseContext.isActiveSkipKeyword(deck_name)) {
             skip = true;
@@ -1662,15 +1661,15 @@ void Parser::addParserKeyword( ParserKeyword parserKeyword ) {
 
     this->keyword_storage.push_back( std::move( parserKeyword ) );
     const ParserKeyword * ptr = std::addressof(this->keyword_storage.back());
-    std::string_view name( ptr->getName() );
-
     for (const auto& deck_name : ptr->deck_names())
     {
         m_deckParserKeywords[deck_name] = ptr;
     }
 
-    if (ptr->hasMatchRegex())
+    if (ptr->hasMatchRegex()) {
+        std::string_view name( ptr->getName() );
         m_wildCardKeywords[ name ] = ptr;
+    }
 
     if (ptr->isCodeKeyword())
         this->code_keywords.emplace_back( ptr->getName(), ptr->codeEnd() );

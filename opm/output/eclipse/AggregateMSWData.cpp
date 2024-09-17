@@ -407,7 +407,7 @@ namespace {
         {
             // inteHead(176) = NSEGMX
             // inteHead(178) = NISEGZ
-            return inteHead[176] * inteHead[178];
+            return static_cast<std::size_t>(inteHead[176]) * inteHead[178];
         }
 
         Opm::RestartIO::Helpers::WindowedArray<int>
@@ -527,7 +527,7 @@ namespace {
         {
             // inteHead(176) = NSEGMX
             // inteHead(179) = NRSEGZ
-            return inteHead[176] * inteHead[179];
+            return static_cast<std::size_t>(inteHead[176]) * inteHead[179];
         }
 
         Opm::RestartIO::Helpers::WindowedArray<double>

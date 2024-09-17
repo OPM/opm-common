@@ -570,12 +570,6 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
         return m_active_to_global.at(active_index);
     }
 
-    size_t EclipseGrid::getGlobalIndex(size_t i, size_t j, size_t k) const {
-
-        return GridDims::getGlobalIndex(i,j,k);
-    }
-
-
     bool EclipseGrid::isPinchActive( ) const {
         return m_pinch.has_value();
     }
@@ -712,13 +706,11 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
 
 
         for (int  n=0; n<4; n++) {
-            double xt = m_coord[pind[n]];
-            double yt = m_coord[pind[n] + 1];
-            double zt = m_coord[pind[n] + 2];
+            const double xt = m_coord[pind[n]];
+            const double yt = m_coord[pind[n] + 1];
+            const double zt = m_coord[pind[n] + 2];
 
-            double xb = m_coord[pind[n] + 3];
-            double yb = m_coord[pind[n] + 4];
-            double zb = m_coord[pind[n]+5];
+            const double zb = m_coord[pind[n]+5];
 
             if (zt == zb) {
                 X[n] = xt;
@@ -727,6 +719,8 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
                 Y[n] = yt;
                 Y[n + 4] = yt;
             } else {
+                const double xb = m_coord[pind[n] + 3];
+                const double yb = m_coord[pind[n] + 4];
                 X[n] = xt + (xb-xt) / (zt-zb) * (zt - Z[n]);
                 X[n+4] = xt + (xb-xt) / (zt-zb) * (zt-Z[n+4]);
 
@@ -897,12 +891,12 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
 
         for (std::size_t j = 0; j < ny; j++) {
 
-            double y0 = 0;
             double zt = tops[0];
             double zb = zt + sum_kdir[0 + 0*nx];
 
             if (j == 0) {
                 double x0 = 0.0;
+                double y0 = 0;
 
                 coord.push_back(x0);
                 coord.push_back(y0);
@@ -1385,7 +1379,6 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
     std::vector<double> EclipseGrid::createTOPSVector(const std::array<int, 3>& dims,
             const std::vector<double>& DZ, const Deck& deck)
     {
-        double z_tolerance = 1e-6;
         size_t volume = dims[0] * dims[1] * dims[2];
         size_t area = dims[0] * dims[1];
         const auto& TOPSKeyWord = deck.get<ParserKeywords::TOPS>().back();
@@ -1402,6 +1395,7 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
                 if (targetIndex >= initialTOPSize)
                     TOPS[targetIndex] = nextValue;
                 else {
+                    constexpr double z_tolerance = 1e-6;
                     if (std::abs(nextValue - TOPS[targetIndex]) < z_tolerance)
                         TOPS[targetIndex] = nextValue;
                 }
@@ -1419,12 +1413,11 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
             const std::string& DVKey, const Deck& deck)
     {
         size_t volume = dims[0] * dims[1] * dims[2];
-        size_t area = dims[0] * dims[1];
         std::vector<double> D;
         if (deck.hasKeyword(DKey)) {
             D = deck[DKey].back().getSIDoubleData();
 
-
+            const size_t area = dims[0] * dims[1];
             if (D.size() >= area && D.size() < volume) {
                 /*
                   Only the top layer is required; for layers below the

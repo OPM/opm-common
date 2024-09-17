@@ -57,8 +57,8 @@ public:
      */
     explicit TemperatureOverlayFluidState(const FluidState& fs)
         : fs_(&fs)
+        , temperature_(fs.temperature(/*phaseIdx=*/0))
     {
-        temperature_ = fs.temperature(/*phaseIdx=*/0);
     }
 
     TemperatureOverlayFluidState(Scalar T, const FluidState& fs)

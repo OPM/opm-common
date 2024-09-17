@@ -261,7 +261,7 @@ BOOST_AUTO_TEST_CASE(TestFileDeck)
         auto index = fd.start();
         for (const auto& kw : deck) {
             BOOST_CHECK(kw == fd[index]);
-            index++;
+            ++index;
         }
     }
 

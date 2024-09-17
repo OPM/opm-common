@@ -60,11 +60,6 @@ public:
     using HeatcrLawParams = EclHeatcrLawParams<ScalarT>;
     using SpecrockLawParams = EclSpecrockLawParams<ScalarT>;
 
-    EclSolidEnergyLawMultiplexerParams(const EclSolidEnergyLawMultiplexerParams&) = default;
-
-    EclSolidEnergyLawMultiplexerParams()
-    { solidEnergyApproach_ = EclSolidEnergyApproach::Undefined; }
-
     ~EclSolidEnergyLawMultiplexerParams()
     { destroy_(); }
 
@@ -150,8 +145,8 @@ private:
         solidEnergyApproach_ = EclSolidEnergyApproach::Undefined;
     }
 
-    EclSolidEnergyApproach solidEnergyApproach_;
-    ParamPointerType realParams_;
+    EclSolidEnergyApproach solidEnergyApproach_{EclSolidEnergyApproach::Undefined};
+    ParamPointerType realParams_{nullptr};
 };
 
 } // namespace Opm

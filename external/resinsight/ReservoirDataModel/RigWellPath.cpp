@@ -218,7 +218,7 @@ cvf::Vec3d
                                                         double* horizontalLengthAlongWellToStartClipPoint /*= nullptr*/ ) const
 {
     CVF_ASSERT( vectorValuesAlongWellPath.size() == m_wellPathPoints.size() );
-    cvf::Vec3d interpolatedVector = cvf::Vec3d::ZERO;
+    cvf::Vec3d interpolatedVector;
 
     if ( horizontalLengthAlongWellToStartClipPoint ) *horizontalLengthAlongWellToStartClipPoint = 0.0;
 

@@ -49,8 +49,7 @@
 
 #include <iostream>
 #include <string>
-#include <string_view>
-#include <typeinfo>
+#include <tuple>
 
 /*!
  * \brief This is a fluid state which makes sure that only the quantities
@@ -247,25 +246,21 @@ void checkFluidState(const BaseFluidState& fs)
 
     // make sure the fluid state provides all mandatory methods
     while (false) {
-        Scalar val = 1.0;
-
-        val = 2*val; // get rid of GCC warning (only occurs with paranoid warning flags)
-
-        val = fs.temperature(/*phaseIdx=*/0);
-        val = fs.pressure(/*phaseIdx=*/0);
-        val = fs.moleFraction(/*phaseIdx=*/0, /*compIdx=*/0);
-        val = fs.massFraction(/*phaseIdx=*/0, /*compIdx=*/0);
-        val = fs.averageMolarMass(/*phaseIdx=*/0);
-        val = fs.molarity(/*phaseIdx=*/0, /*compIdx=*/0);
-        val = fs.molarDensity(/*phaseIdx=*/0);
-        val = fs.molarVolume(/*phaseIdx=*/0);
-        val = fs.density(/*phaseIdx=*/0);
-        val = fs.saturation(/*phaseIdx=*/0);
-        val = fs.fugacity(/*phaseIdx=*/0, /*compIdx=*/0);
-        val = fs.fugacityCoefficient(/*phaseIdx=*/0, /*compIdx=*/0);
-        val = fs.enthalpy(/*phaseIdx=*/0);
-        val = fs.internalEnergy(/*phaseIdx=*/0);
-        val = fs.viscosity(/*phaseIdx=*/0);
+        std::ignore = fs.temperature(/*phaseIdx=*/0);
+        std::ignore = fs.pressure(/*phaseIdx=*/0);
+        std::ignore = fs.moleFraction(/*phaseIdx=*/0, /*compIdx=*/0);
+        std::ignore = fs.massFraction(/*phaseIdx=*/0, /*compIdx=*/0);
+        std::ignore = fs.averageMolarMass(/*phaseIdx=*/0);
+        std::ignore = fs.molarity(/*phaseIdx=*/0, /*compIdx=*/0);
+        std::ignore = fs.molarDensity(/*phaseIdx=*/0);
+        std::ignore = fs.molarVolume(/*phaseIdx=*/0);
+        std::ignore = fs.density(/*phaseIdx=*/0);
+        std::ignore = fs.saturation(/*phaseIdx=*/0);
+        std::ignore = fs.fugacity(/*phaseIdx=*/0, /*compIdx=*/0);
+        std::ignore = fs.fugacityCoefficient(/*phaseIdx=*/0, /*compIdx=*/0);
+        std::ignore = fs.enthalpy(/*phaseIdx=*/0);
+        std::ignore = fs.internalEnergy(/*phaseIdx=*/0);
+        std::ignore = fs.viscosity(/*phaseIdx=*/0);
     };
 }
 
@@ -375,9 +370,8 @@ void checkFluidSystem()
     // test for phaseName(), isLiquid() and isIdealGas()
     for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++ phaseIdx) {
         [[maybe_unused]] std::string name{FluidSystem::phaseName(phaseIdx)};
-        bool bVal = FluidSystem::isLiquid(phaseIdx);
-        bVal = FluidSystem::isIdealGas(phaseIdx);
-        bVal = !bVal; // get rid of GCC warning (only occurs with paranoid warning flags)
+        std::ignore = FluidSystem::isLiquid(phaseIdx);
+        std::ignore = FluidSystem::isIdealGas(phaseIdx);
     }
 
     // test for molarMass() and componentName()

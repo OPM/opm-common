@@ -59,11 +59,6 @@ public:
     using ThconrLawParams = EclThconrLawParams<ScalarT>;
     using ThcLawParams = EclThcLawParams<ScalarT>;
 
-    EclThermalConductionLawMultiplexerParams(const EclThermalConductionLawMultiplexerParams&) = default;
-
-    EclThermalConductionLawMultiplexerParams()
-    { thermalConductionApproach_ = EclThermalConductionApproach::Undefined; }
-
     ~EclThermalConductionLawMultiplexerParams()
     { destroy_(); }
 
@@ -149,8 +144,8 @@ private:
         thermalConductionApproach_ = EclThermalConductionApproach::Undefined;
     }
 
-    EclThermalConductionApproach thermalConductionApproach_;
-    ParamPointerType realParams_;
+    EclThermalConductionApproach thermalConductionApproach_{EclThermalConductionApproach::Undefined};
+    ParamPointerType realParams_{nullptr};
 };
 
 } // namespace Opm

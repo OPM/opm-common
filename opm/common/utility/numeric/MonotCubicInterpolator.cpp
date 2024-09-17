@@ -244,12 +244,10 @@ vector<double>
 MonotCubicInterpolator::
 get_xVector() const
 {
-  map<double,double>::const_iterator xf_iterator = data.begin();
-
   vector<double> outputvector;
   outputvector.reserve(data.size());
-  for (xf_iterator = data.begin(); xf_iterator != data.end(); ++xf_iterator) {
-    outputvector.push_back(xf_iterator->first);
+  for (const auto& xf_iterator : data) {
+    outputvector.push_back(xf_iterator.first);
   }
   return outputvector;
 }
@@ -259,13 +257,10 @@ vector<double>
 MonotCubicInterpolator::
 get_fVector() const
 {
-
-  map<double,double>::const_iterator xf_iterator = data.begin();
-
   vector<double> outputvector;
   outputvector.reserve(data.size());
-  for (xf_iterator = data.begin(); xf_iterator != data.end(); ++xf_iterator) {
-    outputvector.push_back(xf_iterator->second);
+  for (const auto& xf_iterator : data) {
+    outputvector.push_back(xf_iterator.second);
   }
   return outputvector;
 }

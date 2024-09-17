@@ -388,9 +388,9 @@ public:
 
             Scalar m = evalDerivative_(xMax(), /*segmentIdx=*/numSamples() - 2);
             if (m < 0)
-                return (r < 0 || r==3)?-1:0;
+                return (r < 0 || r==3) ? -1 : 0;
             else if (m > 0)
-                return (r > 0 || r==3)?1:0;
+                return r > 0 ? 1 : 0;
 
             return r;
         }

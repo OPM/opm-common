@@ -425,9 +425,6 @@ bool double_equal(double value1, double value2, double abs_eps , double rel_eps)
 
 
 bool DeckItem::equal(const DeckItem& other, bool cmp_default, bool cmp_numeric) const {
-    double rel_eps = 1e-4;
-    double abs_eps = 1e-4;
-
     if (this->type != other.type)
         return false;
 
@@ -452,6 +449,8 @@ bool DeckItem::equal(const DeckItem& other, bool cmp_default, bool cmp_numeric) 
         break;
     case type_tag::fdouble:
         if (cmp_numeric) {
+            constexpr double rel_eps = 1e-4;
+            constexpr double abs_eps = 1e-4;
             const auto& this_data = this->getData<double>();
             const auto& other_data = other.getData<double>();
             for (size_t i=0; i < this_data.size(); i++) {

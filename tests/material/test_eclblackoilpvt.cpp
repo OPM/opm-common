@@ -58,6 +58,8 @@
 #include <opm/input/eclipse/Python/Python.hpp>
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 
+#include <tuple>
+
 // values of strings based on the first SPE1 test case of opm-data.  note that in the
 // real world it does not make much sense to specify a fluid phase using more than a
 // single keyword, but for a unit test, this saves a lot of boiler-plate code.
@@ -150,84 +152,80 @@ void ensurePvtApi(const OilPvt& oilPvt, const GasPvt& gasPvt, const WaterPvt& wa
         Evaluation Rvw = 0.0;
         Evaluation So = 0.5;
         Evaluation maxSo = 1.0;
-        [[maybe_unused]] Evaluation tmp;
 
         /////
         // water PVT API
         /////
-        tmp = waterPvt.viscosity(/*regionIdx=*/0,
-                                 temperature,
-                                 pressure,
-                                 Rsw,
-                                 saltconcentration);
-        tmp = waterPvt.inverseFormationVolumeFactor(/*regionIdx=*/0,
-                                                    temperature,
-                                                    pressure,
-                                                    Rsw,
-                                                    saltconcentration);
+        std::ignore = waterPvt.viscosity(/*regionIdx=*/0,
+                                         temperature,
+                                         pressure,
+                                         Rsw,
+                                         saltconcentration);
+        std::ignore = waterPvt.inverseFormationVolumeFactor(/*regionIdx=*/0,
+                                                            temperature,
+                                                            pressure,
+                                                            Rsw,
+                                                            saltconcentration);
 
         /////
         // oil PVT API
         /////
-        tmp = oilPvt.viscosity(/*regionIdx=*/0,
-                               temperature,
-                               pressure,
-                               Rs);
-        tmp = oilPvt.inverseFormationVolumeFactor(/*regionIdx=*/0,
-                                                  temperature,
-                                                  pressure,
-                                                  Rs);
-        tmp = oilPvt.saturatedViscosity(/*regionIdx=*/0,
-                                        temperature,
-                                        pressure);
-        tmp = oilPvt.saturatedInverseFormationVolumeFactor(/*regionIdx=*/0,
+        std::ignore = oilPvt.viscosity(/*regionIdx=*/0,
+                                       temperature,
+                                       pressure,
+                                       Rs);
+        std::ignore = oilPvt.inverseFormationVolumeFactor(/*regionIdx=*/0,
+                                                          temperature,
+                                                          pressure,
+                                                          Rs);
+        std::ignore = oilPvt.saturatedViscosity(/*regionIdx=*/0,
+                                                temperature,
+                                                pressure);
+        std::ignore = oilPvt.saturatedInverseFormationVolumeFactor(/*regionIdx=*/0,
+                                                                   temperature,
+                                                                   pressure);
+        std::ignore = oilPvt.saturationPressure(/*regionIdx=*/0,
+                                                temperature,
+                                                Rs);
+        std::ignore = oilPvt.saturatedGasDissolutionFactor(/*regionIdx=*/0,
                                                            temperature,
                                                            pressure);
-        tmp = oilPvt.saturationPressure(/*regionIdx=*/0,
-                                        temperature,
-                                        Rs);
-        tmp = oilPvt.saturatedGasDissolutionFactor(/*regionIdx=*/0,
-                                                   temperature,
-                                                   pressure);
-        tmp = oilPvt.saturatedGasDissolutionFactor(/*regionIdx=*/0,
-                                                   temperature,
-                                                   pressure,
-                                                   So,
-                                                   maxSo);
+        std::ignore = oilPvt.saturatedGasDissolutionFactor(/*regionIdx=*/0,
+                                                           temperature,
+                                                           pressure,
+                                                           So,
+                                                           maxSo);
 
         /////
         // gas PVT API
         /////
-        tmp = gasPvt.viscosity(/*regionIdx=*/0,
-                               temperature,
-                               pressure,
-                               Rv,
-                               Rvw);
-        tmp = gasPvt.inverseFormationVolumeFactor(/*regionIdx=*/0,
-                                                  temperature,
-                                                  pressure,
-                                                  Rv,
-                                                  Rvw);
-        tmp = gasPvt.saturatedViscosity(/*regionIdx=*/0,
-                                        temperature,
-                                        pressure);
-        tmp = gasPvt.saturatedInverseFormationVolumeFactor(/*regionIdx=*/0,
-                                                           temperature,
-                                                           pressure);
-        tmp = gasPvt.saturationPressure(/*regionIdx=*/0,
-                                        temperature,
-                                        Rv);
-        tmp = gasPvt.saturatedOilVaporizationFactor(/*regionIdx=*/0,
-                                                    temperature,
-                                                    pressure);
-        tmp = gasPvt.saturatedOilVaporizationFactor(/*regionIdx=*/0,
-                                                    temperature,
-                                                    pressure,
-                                                    So,
-                                                    maxSo);
-
-        // prevent GCC from producing a "variable assigned but unused" warning
-        tmp = 2.0*tmp;
+        std::ignore = gasPvt.viscosity(/*regionIdx=*/0,
+                                       temperature,
+                                       pressure,
+                                       Rv,
+                                       Rvw);
+        std::ignore = gasPvt.inverseFormationVolumeFactor(/*regionIdx=*/0,
+                                                          temperature,
+                                                          pressure,
+                                                          Rv,
+                                                          Rvw);
+        std::ignore = gasPvt.saturatedViscosity(/*regionIdx=*/0,
+                                                temperature,
+                                                pressure);
+        std::ignore = gasPvt.saturatedInverseFormationVolumeFactor(/*regionIdx=*/0,
+                                                                   temperature,
+                                                                   pressure);
+        std::ignore = gasPvt.saturationPressure(/*regionIdx=*/0,
+                                                temperature,
+                                                Rv);
+        std::ignore = gasPvt.saturatedOilVaporizationFactor(/*regionIdx=*/0,
+                                                            temperature,
+                                                            pressure);
+        std::ignore = gasPvt.saturatedOilVaporizationFactor(/*regionIdx=*/0,
+                                                            temperature,
+                                                            pressure,
+                                                            So,
+                                                            maxSo);
     }
 }
 

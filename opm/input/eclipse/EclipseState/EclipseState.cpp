@@ -329,7 +329,8 @@ namespace Opm {
     }
 
 
-    std::string EclipseState::getTitle() const {
+    const std::string& EclipseState::getTitle() const
+    {
         return m_title;
     }
 

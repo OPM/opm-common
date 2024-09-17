@@ -203,11 +203,9 @@ std::optional<std::size_t> verify_extension(const std::string& extension, bool u
         print_help_and_exit("Deck has expected unformatted unified input - expected restart extension: .UNRST");
     }
 
-    std::size_t report_step;
     if ((formatted && (extension[1] == 'F')) || (!formatted && (extension[1] == 'X'))) {
         try {
-            report_step = std::stoi(extension.substr(2));
-            return report_step;
+            return std::stoi(extension.substr(2));
         }
         catch (...) {}
     }

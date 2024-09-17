@@ -77,10 +77,10 @@ Rect<T>::Rect(T minX, T minY, T width, T height)
 //--------------------------------------------------------------------------------------------------
 template <typename T>
 Rect<T>::Rect(const Vector2<T>& min, T width, T height)
+    : m_minPos(min)
+    , m_width(width)
+    , m_height(height)
 {
-    m_minPos = min;
-    m_width = width;
-    m_height = height;
 }
 
 
@@ -89,10 +89,10 @@ Rect<T>::Rect(const Vector2<T>& min, T width, T height)
 //--------------------------------------------------------------------------------------------------
 template <typename T>
 Rect<T>::Rect(const Rect& rect)
+    : m_minPos(rect.min())
+    , m_width(rect.width())
+    , m_height(rect.height())
 {
-    m_minPos = rect.min();
-    m_width = rect.width();
-    m_height = rect.height();
 }
 
 
@@ -514,7 +514,6 @@ bool Rect<T>::segmentIntersect(const Vec2d& p1, const Vec2d& p2, Vec2d* intersec
     double u1 = 0.0;
     double u2 = 1.0;
     double dx = p2.x() - p1.x();
-    double dy;
 
     Vec2d maxPos = max();
 
@@ -522,7 +521,7 @@ bool Rect<T>::segmentIntersect(const Vec2d& p1, const Vec2d& p2, Vec2d* intersec
     {
         if (clipTest(dx, maxPos.x() - p1.x(), &u1, &u2))
         {
-            dy = p2.y() - p1.y();
+            double dy = p2.y() - p1.y();
             if (clipTest (-dy, p1.y() - m_minPos.y(), &u1, &u2))
             {
                 if (clipTest (dy, maxPos.y() - p1.y(), &u1, &u2))

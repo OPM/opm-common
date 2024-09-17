@@ -331,7 +331,6 @@ BOOST_AUTO_TEST_CASE(TestActions) {
     Opm::WListManager wlm;
     Opm::Action::Context context(st, wlm);
     Opm::Action::Actions config;
-    std::vector<std::string> matching_wells;
     auto python = std::make_shared<Opm::Python>();
     BOOST_CHECK_EQUAL(config.ecl_size(), 0U);
     BOOST_CHECK(config.empty());
@@ -413,7 +412,6 @@ BOOST_AUTO_TEST_CASE(TestAction_AST_BASIC) {
     SummaryState st(TimeService::now(), 0.0);
     WListManager wlm;
     Action::Context context(st, wlm);
-    std::vector<std::string> matching_wells;
 
     context.add("WWCT", "OPX", 100);
     BOOST_CHECK(ast1.eval(context));

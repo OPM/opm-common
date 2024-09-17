@@ -328,8 +328,7 @@ const KeywordHandlers& KeywordHandlers::getInstance()
 }
 
 KeywordHandlers::KeywordHandlers()
-{
-    handler_functions = {
+    : handler_functions{
         { "AQUCT",    &handleAQUCT      },
         { "AQUFETP",  &handleAQUFETP    },
         { "AQUFLUX",  &handleAQUFLUX    },
@@ -363,8 +362,8 @@ KeywordHandlers::KeywordHandlers()
         { "TUNING"  , &handleTUNING     },
         { "VFPINJ"  , &handleVFPINJ     },
         { "VFPPROD" , &handleVFPPROD    },
-    };
-
+    }
+{
     for (const auto& handlerFactory : {getGasLiftOptHandlers,
                                        getGroupHandlers,
                                        getGuideRateHandlers,

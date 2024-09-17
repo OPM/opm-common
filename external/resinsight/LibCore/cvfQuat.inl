@@ -94,11 +94,11 @@ Quat<S>::Quat(const Quat& other)
 template<typename S>
 template<typename T>
 Quat<S>::Quat(const T& other)
+    : m_x(static_cast<S>(other.x()))
+    , m_y(static_cast<S>(other.y()))
+    , m_z(static_cast<S>(other.z()))
+    , m_w(static_cast<S>(other.w()))
 {
-    m_x = static_cast<S>(other.x());
-    m_y = static_cast<S>(other.y());
-    m_z = static_cast<S>(other.z());
-    m_w = static_cast<S>(other.w());
 }
 
 

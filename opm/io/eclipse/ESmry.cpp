@@ -636,7 +636,6 @@ void ESmry::read_ministeps_from_disk()
 {
     auto specInd = std::get<0>(miniStepList[0]);
     auto dataFileIndex = std::get<1>(miniStepList[0]);
-    uint64_t stepFilePos;
 
     std::fstream fileH;
 
@@ -660,7 +659,7 @@ void ESmry::read_ministeps_from_disk()
                 fileH.open(dataFileList[dataFileIndex], std::ios::in |  std::ios::binary);
         }
 
-        stepFilePos = std::get<2>(miniStepList[n]);
+        uint64_t stepFilePos = std::get<2>(miniStepList[n]);
 
         fileH.seekg (stepFilePos , fileH.beg);
 

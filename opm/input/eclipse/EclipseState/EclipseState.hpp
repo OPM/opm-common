@@ -115,7 +115,7 @@ namespace Opm {
         const UnitSystem& getDeckUnitSystem() const;
         const UnitSystem& getUnits() const;
 
-        std::string getTitle() const;
+        const std::string& getTitle() const;
 
         void apply_schedule_keywords(const std::vector<DeckKeyword>& keywords);
 

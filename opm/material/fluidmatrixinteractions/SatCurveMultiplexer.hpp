@@ -51,7 +51,7 @@ public:
     using PLTwoPhaseLaw = PiecewiseLinearTwoPhaseMaterial<Traits>;
 
     //! The number of fluid phases to which this material law applies.
-    static constexpr int numPhases = Traits::numPhases;
+    using Traits::numPhases;
     static_assert(numPhases == 2,
                   "The Brooks-Corey capillary pressure law only applies "
                   "to the case of two fluid phases");

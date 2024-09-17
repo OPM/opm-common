@@ -42,43 +42,44 @@ class EclipseState;
 class Schedule;
 #endif
 
-#define OPM_GAS_PVT_MULTIPLEXER_CALL(codeToCall)                          \
+#define OPM_GAS_PVT_MULTIPLEXER_CALL(codeToCall, ...)                     \
     switch (gasPvtApproach_) {                                            \
     case GasPvtApproach::DryGas: {                                        \
         auto& pvtImpl = getRealPvt<GasPvtApproach::DryGas>();             \
         codeToCall;                                                       \
-        break;                                                            \
+        __VA_ARGS__;                                                      \
     }                                                                     \
     case GasPvtApproach::DryHumidGas: {                                   \
         auto& pvtImpl = getRealPvt<GasPvtApproach::DryHumidGas>();        \
         codeToCall;                                                       \
-        break;                                                            \
+        __VA_ARGS__;                                                      \
     }                                                                     \
     case GasPvtApproach::WetHumidGas: {                                   \
         auto& pvtImpl = getRealPvt<GasPvtApproach::WetHumidGas>();        \
         codeToCall;                                                       \
-        break;                                                            \
+        __VA_ARGS__;                                                      \
     }                                                                     \
     case GasPvtApproach::WetGas: {                                        \
         auto& pvtImpl = getRealPvt<GasPvtApproach::WetGas>();             \
         codeToCall;                                                       \
-        break;                                                            \
+        __VA_ARGS__;                                                      \
     }                                                                     \
     case GasPvtApproach::ThermalGas: {                                    \
         auto& pvtImpl = getRealPvt<GasPvtApproach::ThermalGas>();         \
         codeToCall;                                                       \
-        break;                                                            \
+        __VA_ARGS__;                                                      \
     }                                                                     \
     case GasPvtApproach::Co2Gas: {                                        \
         auto& pvtImpl = getRealPvt<GasPvtApproach::Co2Gas>();             \
         codeToCall;                                                       \
-        break;                                                            \
+        __VA_ARGS__;                                                      \
     }                                                                     \
-    case GasPvtApproach::H2Gas: {                                      \
-        auto& pvtImpl = getRealPvt<GasPvtApproach::H2Gas>();           \
+    case GasPvtApproach::H2Gas: {                                         \
+        auto& pvtImpl = getRealPvt<GasPvtApproach::H2Gas>();              \
         codeToCall;                                                       \
-        break;                                                            \
+        __VA_ARGS__;                                                      \
     }                                                                     \
+    default:                                                              \
     case GasPvtApproach::NoGas:                                           \
         throw std::logic_error("Not implemented: Gas PVT of this deck!"); \
     }
@@ -109,9 +110,9 @@ class GasPvtMultiplexer
 {
 public:
     GasPvtMultiplexer()
+        : gasPvtApproach_(GasPvtApproach::NoGas)
+        , realGasPvt_(nullptr)
     {
-        gasPvtApproach_ = GasPvtApproach::NoGas;
-        realGasPvt_ = nullptr;
     }
 
     GasPvtMultiplexer(GasPvtApproach approach, void* realGasPvt)
@@ -164,7 +165,6 @@ public:
         switch (gasPvtApproach_) {
         case GasPvtApproach::ThermalGas: {
             return true;
-            break;
         }
         default: {
             return false;
@@ -220,24 +220,24 @@ public:
     }
 
     void initEnd()
-    { OPM_GAS_PVT_MULTIPLEXER_CALL(pvtImpl.initEnd()); }
+    { OPM_GAS_PVT_MULTIPLEXER_CALL(pvtImpl.initEnd(), break); }
 
     /*!
      * \brief Return the number of PVT regions which are considered by this PVT-object.
      */
     unsigned numRegions() const
-    { OPM_GAS_PVT_MULTIPLEXER_CALL(return pvtImpl.numRegions()); return 1; }
+    { OPM_GAS_PVT_MULTIPLEXER_CALL(return pvtImpl.numRegions()); }
 
     void setVapPars(const Scalar par1, const Scalar par2)
     {
-        OPM_GAS_PVT_MULTIPLEXER_CALL(pvtImpl.setVapPars(par1, par2));
+        OPM_GAS_PVT_MULTIPLEXER_CALL(pvtImpl.setVapPars(par1, par2), break);
     }
 
     /*!
      * \brief Return the reference density which are considered by this PVT-object.
      */
     const Scalar gasReferenceDensity(unsigned regionIdx)
-    { OPM_GAS_PVT_MULTIPLEXER_CALL(return pvtImpl.gasReferenceDensity(regionIdx)); return 2.; }
+    { OPM_GAS_PVT_MULTIPLEXER_CALL(return pvtImpl.gasReferenceDensity(regionIdx)); }
 
     /*!
      * \brief Returns the specific enthalpy [J/kg] of gas given a set of parameters.
@@ -248,10 +248,10 @@ public:
                         const Evaluation& pressure,
                         const Evaluation& Rv,
                         const Evaluation& Rvw) const
-    { OPM_GAS_PVT_MULTIPLEXER_CALL(return pvtImpl.internalEnergy(regionIdx, temperature, pressure, Rv, Rvw)); return 0; }
+    { OPM_GAS_PVT_MULTIPLEXER_CALL(return pvtImpl.internalEnergy(regionIdx, temperature, pressure, Rv, Rvw)); }
 
     Scalar hVap(unsigned regionIdx) const
-    { OPM_GAS_PVT_MULTIPLEXER_CALL(return pvtImpl.hVap(regionIdx)); return 0; }
+    { OPM_GAS_PVT_MULTIPLEXER_CALL(return pvtImpl.hVap(regionIdx)); }
 
     /*!
      * \brief Returns the dynamic viscosity [Pa s] of the fluid phase given a set of parameters.
@@ -262,7 +262,7 @@ public:
                          const Evaluation& pressure,
                          const Evaluation& Rv,
                          const Evaluation& Rvw ) const
-    { OPM_GAS_PVT_MULTIPLEXER_CALL(return pvtImpl.viscosity(regionIdx, temperature, pressure, Rv, Rvw)); return 0; }
+    { OPM_GAS_PVT_MULTIPLEXER_CALL(return pvtImpl.viscosity(regionIdx, temperature, pressure, Rv, Rvw)); }
 
     /*!
      * \brief Returns the dynamic viscosity [Pa s] of oil saturated gas given a set of parameters.
@@ -271,7 +271,7 @@ public:
     Evaluation saturatedViscosity(unsigned regionIdx,
                                   const Evaluation& temperature,
                                   const Evaluation& pressure) const
-    { OPM_GAS_PVT_MULTIPLEXER_CALL(return pvtImpl.saturatedViscosity(regionIdx, temperature, pressure)); return 0; }
+    { OPM_GAS_PVT_MULTIPLEXER_CALL(return pvtImpl.saturatedViscosity(regionIdx, temperature, pressure)); }
 
     /*!
      * \brief Returns the formation volume factor [-] of the fluid phase.
@@ -282,7 +282,7 @@ public:
                                             const Evaluation& pressure,
                                             const Evaluation& Rv,
                                             const Evaluation& Rvw) const
-    { OPM_GAS_PVT_MULTIPLEXER_CALL(return pvtImpl.inverseFormationVolumeFactor(regionIdx, temperature, pressure, Rv, Rvw)); return 0; }
+    { OPM_GAS_PVT_MULTIPLEXER_CALL(return pvtImpl.inverseFormationVolumeFactor(regionIdx, temperature, pressure, Rv, Rvw)); }
 
     /*!
      * \brief Returns the formation volume factor [-] of oil saturated gas given a set of parameters.
@@ -291,7 +291,7 @@ public:
     Evaluation saturatedInverseFormationVolumeFactor(unsigned regionIdx,
                                                      const Evaluation& temperature,
                                                      const Evaluation& pressure) const
-    { OPM_GAS_PVT_MULTIPLEXER_CALL(return pvtImpl.saturatedInverseFormationVolumeFactor(regionIdx, temperature, pressure)); return 0; }
+    { OPM_GAS_PVT_MULTIPLEXER_CALL(return pvtImpl.saturatedInverseFormationVolumeFactor(regionIdx, temperature, pressure)); }
 
     /*!
      * \brief Returns the oil vaporization factor \f$R_v\f$ [m^3/m^3] of oil saturated gas.
@@ -300,7 +300,7 @@ public:
     Evaluation saturatedOilVaporizationFactor(unsigned regionIdx,
                                               const Evaluation& temperature,
                                               const Evaluation& pressure) const
-    { OPM_GAS_PVT_MULTIPLEXER_CALL(return pvtImpl.saturatedOilVaporizationFactor(regionIdx, temperature, pressure)); return 0; }
+    { OPM_GAS_PVT_MULTIPLEXER_CALL(return pvtImpl.saturatedOilVaporizationFactor(regionIdx, temperature, pressure)); }
 
     /*!
      * \brief Returns the oil vaporization factor \f$R_v\f$ [m^3/m^3] of oil saturated gas.
@@ -311,7 +311,7 @@ public:
                                               const Evaluation& pressure,
                                               const Evaluation& oilSaturation,
                                               const Evaluation& maxOilSaturation) const
-    { OPM_GAS_PVT_MULTIPLEXER_CALL(return pvtImpl.saturatedOilVaporizationFactor(regionIdx, temperature, pressure, oilSaturation, maxOilSaturation)); return 0; }
+    { OPM_GAS_PVT_MULTIPLEXER_CALL(return pvtImpl.saturatedOilVaporizationFactor(regionIdx, temperature, pressure, oilSaturation, maxOilSaturation)); }
 
     /*!
      * \brief Returns the water vaporization factor \f$R_vw\f$ [m^3/m^3] of water saturated gas.
@@ -320,7 +320,7 @@ public:
     Evaluation saturatedWaterVaporizationFactor(unsigned regionIdx,
                                               const Evaluation& temperature,
                                               const Evaluation& pressure) const
-    { OPM_GAS_PVT_MULTIPLEXER_CALL(return pvtImpl.saturatedWaterVaporizationFactor(regionIdx, temperature, pressure)); return 0; }
+    { OPM_GAS_PVT_MULTIPLEXER_CALL(return pvtImpl.saturatedWaterVaporizationFactor(regionIdx, temperature, pressure)); }
 
     /*!
      * \brief Returns the water vaporization factor \f$R_vw\f$ [m^3/m^3] of water saturated gas.
@@ -330,7 +330,7 @@ public:
                                               const Evaluation& temperature,
                                               const Evaluation& pressure,
                                               const Evaluation& saltConcentration) const
-    { OPM_GAS_PVT_MULTIPLEXER_CALL(return pvtImpl.saturatedWaterVaporizationFactor(regionIdx, temperature, pressure, saltConcentration)); return 0; }
+    { OPM_GAS_PVT_MULTIPLEXER_CALL(return pvtImpl.saturatedWaterVaporizationFactor(regionIdx, temperature, pressure, saltConcentration)); }
 
     /*!
      * \brief Returns the saturation pressure of the gas phase [Pa]
@@ -342,7 +342,7 @@ public:
     Evaluation saturationPressure(unsigned regionIdx,
                                   const Evaluation& temperature,
                                   const Evaluation& Rv) const
-    { OPM_GAS_PVT_MULTIPLEXER_CALL(return pvtImpl.saturationPressure(regionIdx, temperature, Rv)); return 0; }
+    { OPM_GAS_PVT_MULTIPLEXER_CALL(return pvtImpl.saturationPressure(regionIdx, temperature, Rv)); }
 
     /*!
      * \copydoc BaseFluidSystem::diffusionCoefficient
@@ -352,7 +352,7 @@ public:
                                     const Evaluation& pressure,
                                     unsigned compIdx) const
     {
-      OPM_GAS_PVT_MULTIPLEXER_CALL(return pvtImpl.diffusionCoefficient(temperature, pressure, compIdx)); return 0;
+      OPM_GAS_PVT_MULTIPLEXER_CALL(return pvtImpl.diffusionCoefficient(temperature, pressure, compIdx));
     }
 
     /*!
@@ -500,8 +500,8 @@ public:
     }
 
 private:
-    GasPvtApproach gasPvtApproach_;
-    void* realGasPvt_;
+    GasPvtApproach gasPvtApproach_{GasPvtApproach::NoGas};
+    void* realGasPvt_{nullptr};
 };
 
 } // namespace Opm

@@ -385,7 +385,7 @@ public:
     const std::vector<Scalar>& oildentCT2() const
     { return oildentCT2_; }
 
-    const std::vector<TabulatedOneDFunction> internalEnergyCurves() const
+    const std::vector<TabulatedOneDFunction>& internalEnergyCurves() const
     { return internalEnergyCurves_; }
 
     bool enableInternalEnergy() const

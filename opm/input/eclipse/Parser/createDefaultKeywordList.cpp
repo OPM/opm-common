@@ -27,7 +27,6 @@
 
 
 int main(int argc, char ** argv) {
-    const char * keyword_list_file = argv[1];
     const char * source_file_path = argv[2];
     const char * init_file_name = argv[3];
     const char * header_file_base_path = argv[4];
@@ -36,6 +35,7 @@ int main(int argc, char ** argv) {
 
     std::vector<std::string> keyword_list;
     {
+        const char * keyword_list_file = argv[1];
         std::string buffer;
         std::ifstream is(keyword_list_file);
         std::getline( is , buffer );
