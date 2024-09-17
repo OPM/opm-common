@@ -102,8 +102,8 @@ namespace Opm {
           from an active index to a global index must be implemented
           in the current class.
         */
+        using GridDims::getGlobalIndex;
         size_t getGlobalIndex(size_t active_index) const;
-        size_t getGlobalIndex(size_t i, size_t j, size_t k) const;
 
         /*
           For RADIAL grids you can *optionally* use the keyword

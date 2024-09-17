@@ -570,12 +570,6 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
         return m_active_to_global.at(active_index);
     }
 
-    size_t EclipseGrid::getGlobalIndex(size_t i, size_t j, size_t k) const {
-
-        return GridDims::getGlobalIndex(i,j,k);
-    }
-
-
     bool EclipseGrid::isPinchActive( ) const {
         return m_pinch.has_value();
     }
