@@ -674,9 +674,6 @@ struct StaticTestEnv : public TestEnvBase<Opm::DenseAd::Evaluation<Scalar, numDe
 
     Eval createVariable(Scalar v, int varIdx) const
     { return Opm::variable<Eval, Scalar>(v, varIdx); }
-
-private:
-    int numDerivs_;
 };
 
 int main()
