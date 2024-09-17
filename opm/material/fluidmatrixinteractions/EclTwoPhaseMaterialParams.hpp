@@ -70,6 +70,7 @@ public:
      */
     OPM_HOST_DEVICE EclTwoPhaseMaterialParams()
     {
+        // fyll alle felt, av en eller annen grunn må alle feltene være fylt med noe
     }
 
     OPM_HOST_DEVICE void setApproach(EclTwoPhaseApproach newApproach)
