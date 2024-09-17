@@ -613,6 +613,10 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
     {
         const auto& gdfile = deck["GDFILE"].back().getRecord(0);
 
+        const auto formatted = EclIO::EclFile::Formatted {
+            gdfile.getItem("formatted").getTrimmedString(0).front() == 'F'
+        };
+
         auto filename = deck
             .makeDeckPath(gdfile.getItem("filename").getTrimmedString(0));
 
@@ -622,11 +626,11 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
         // keywords with a windows formatted path.  If open fails we give it
         // one more try with the replacement '\'' -> '/'.
         try {
-            egridfile = std::make_unique<Opm::EclIO::EclFile>(filename);
+            egridfile = std::make_unique<Opm::EclIO::EclFile>(filename, formatted);
         }
         catch (const std::runtime_error&) {
             std::replace(filename.begin(), filename.end(), '\\', '/');
-            egridfile = std::make_unique<Opm::EclIO::EclFile>(filename);
+            egridfile = std::make_unique<Opm::EclIO::EclFile>(filename, formatted);
         }
 
         this->initGridFromEGridFile(*egridfile, filename);
