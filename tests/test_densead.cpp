@@ -42,6 +42,7 @@
 #include <algorithm>
 #include <cassert>
 #include <stdexcept>
+#include <tuple>
 
 template <class Eval, int numVars, int staticSize, class Scalar, class Implementation>
 struct TestEnvBase
@@ -575,55 +576,52 @@ struct TestEnvBase
         while (false) {
             [[maybe_unused]] Scalar val1 = 0.0;
             [[maybe_unused]] Scalar val2 = 1.0;
-            [[maybe_unused]] Scalar resultVal;
             [[maybe_unused]] Eval eval1 = asImp_().createConstant(1.0);
             [[maybe_unused]] Eval eval2 = asImp_().createConstant(2.0);
-            [[maybe_unused]] Eval resultEval = asImp_().newBlankEval();;
 
             // make sure that the convenince functions work (i.e., that everything can be
             // accessed without the MathToolbox<Scalar> detour.)
-            resultVal = Opm::constant<Scalar>(val1);
-            resultVal = Opm::variable<Scalar>(val1, /*idx=*/0);
-            resultVal = Opm::decay<Scalar>(val1);
-            resultVal = Opm::scalarValue(val1);
-            resultVal = Opm::getValue(val1);
-            resultVal = Opm::min(val1, val2);
-            resultVal = Opm::max(val1, val2);
-            resultVal = Opm::atan2(val1, val2);
-            resultVal = Opm::pow(val1, val2);
-            resultVal = Opm::abs(val1);
-            resultVal = Opm::atan(val1);
-            resultVal = Opm::sin(val1);
-            resultVal = Opm::asin(val1);
-            resultVal = Opm::cos(val1);
-            resultVal = Opm::acos(val1);
-            resultVal = Opm::sqrt(val1);
-            resultVal = Opm::exp(val1);
-            resultVal = Opm::log(val1);
+            std::ignore = Opm::constant<Scalar>(val1);
+            std::ignore = Opm::variable<Scalar>(val1, /*idx=*/0);
+            std::ignore = Opm::decay<Scalar>(val1);
+            std::ignore = Opm::scalarValue(val1);
+            std::ignore = Opm::getValue(val1);
+            std::ignore = Opm::min(val1, val2);
+            std::ignore = Opm::max(val1, val2);
+            std::ignore = Opm::atan2(val1, val2);
+            std::ignore = Opm::pow(val1, val2);
+            std::ignore = Opm::abs(val1);
+            std::ignore = Opm::atan(val1);
+            std::ignore = Opm::sin(val1);
+            std::ignore = Opm::asin(val1);
+            std::ignore = Opm::cos(val1);
+            std::ignore = Opm::acos(val1);
+            std::ignore = Opm::sqrt(val1);
+            std::ignore = Opm::exp(val1);
+            std::ignore = Opm::log(val1);
 
-            resultEval = Opm::decay<Eval>(eval1);
-            resultVal = Opm::decay<Scalar>(eval1);
-            resultVal = Opm::scalarValue(eval1);
-            resultVal = Opm::getValue(eval1);
-            resultEval = Opm::min(eval1, eval2);
-            resultEval = Opm::min(eval1, val2);
-            resultEval = Opm::max(eval1, eval2);
-            resultEval = Opm::max(eval1, val2);
-            resultEval = Opm::atan2(eval1, eval2);
-            resultEval = Opm::atan2(eval1, val2);
-            resultEval = Opm::pow(eval1, eval2);
-            resultEval = Opm::pow(eval1, val2);
-            resultEval = Opm::abs(eval1);
-            resultEval = Opm::atan(eval1);
-            resultEval = Opm::sin(eval1);
-            resultEval = Opm::asin(eval1);
-            resultEval = Opm::cos(eval1);
-            resultEval = Opm::acos(eval1);
-            resultEval = Opm::sqrt(eval1);
-            resultEval = Opm::exp(eval1);
-            resultEval = Opm::log(eval1);
-            resultEval = Opm::log10(eval1);
-
+            std::ignore = Opm::decay<Eval>(eval1);
+            std::ignore = Opm::decay<Scalar>(eval1);
+            std::ignore = Opm::scalarValue(eval1);
+            std::ignore = Opm::getValue(eval1);
+            std::ignore = Opm::min(eval1, eval2);
+            std::ignore = Opm::min(eval1, val2);
+            std::ignore = Opm::max(eval1, eval2);
+            std::ignore = Opm::max(eval1, val2);
+            std::ignore = Opm::atan2(eval1, eval2);
+            std::ignore = Opm::atan2(eval1, val2);
+            std::ignore = Opm::pow(eval1, eval2);
+            std::ignore = Opm::pow(eval1, val2);
+            std::ignore = Opm::abs(eval1);
+            std::ignore = Opm::atan(eval1);
+            std::ignore = Opm::sin(eval1);
+            std::ignore = Opm::asin(eval1);
+            std::ignore = Opm::cos(eval1);
+            std::ignore = Opm::acos(eval1);
+            std::ignore = Opm::sqrt(eval1);
+            std::ignore = Opm::exp(eval1);
+            std::ignore = Opm::log(eval1);
+            std::ignore = Opm::log10(eval1);
         }
     }
 
