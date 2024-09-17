@@ -1157,10 +1157,11 @@ inline void keywordMISC( SummaryConfig::keyword_list& list,
              */
             for( const auto& connection : well.getConnections() ) {
                 auto cijk = getijk( connection );
-                int global_index = 1 + dims.getGlobalIndex(cijk[0], cijk[1], cijk[2]);
 
-                if( ijk_defaulted || ( cijk == getijk(record) ) )
+                if( ijk_defaulted || ( cijk == getijk(record) ) ) {
+                    const int global_index = 1 + dims.getGlobalIndex(cijk[0], cijk[1], cijk[2]);
                     list.push_back( param.number(global_index) );
+                }
             }
         }
     }

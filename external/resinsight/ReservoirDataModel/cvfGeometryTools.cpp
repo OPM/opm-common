@@ -288,7 +288,6 @@ GeometryTools::IntersectionStatus inPlaneLineIntersect( double  x1,
             return GeometryTools::NO_INTERSECTION;
         }
 
-        double normDist32 = e12 * p32 / length34;
         // double normDist31 = -e12*p13 / length34;
 
         // Set up fractions along lines to the edge2 vertex actually touching edge 1.
@@ -334,6 +333,7 @@ GeometryTools::IntersectionStatus inPlaneLineIntersect( double  x1,
         }
         else // both outside on each side
         {
+            double normDist32 = e12 * p32 / length34;
             // Return End of edge 1
             *fractionAlongLine1 = 1.0;
             *fractionAlongLine2 = normDist32;

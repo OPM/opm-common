@@ -652,10 +652,9 @@ void GeometryTools::calculatePartiallyFreeCubeFacePolygon(
 
     // Build search maps
     {
-        size_t count;
         for ( size_t i = 0; i < faceOverlapPolygons.size(); ++i )
         {
-            count = 0;
+            size_t count = 0;
             for ( typename std::vector<IndexType>::const_iterator pcIt = faceOverlapPolygons[i]->begin();
                   pcIt != faceOverlapPolygons[i]->end();
                   ++pcIt )

@@ -211,18 +211,17 @@ int main(int argc, char **argv)
 
         MaterialLaw::updateHysteresis(param, fs);
         double somax_out = 0.0;
-        double shmax_out = 0.0;
-        double swmax_out = 0.0;
-        double swmin_out = 0.0;
-        double sowmin_out = 0.0;
-        double trapped_out = 0.0;
         if (two_phase_system == "WO") {
+            double swmax_out = 0.0;
+            double swmin_out = 0.0;
             MaterialLaw::oilWaterHysteresisParams(somax_out,
-                                                swmax_out,
-                                                swmin_out,
-                                                param);
+                                                  swmax_out,
+                                                  swmin_out,
+                                                  param);
         }
         if (two_phase_system == "GO") {
+            double shmax_out = 0.0;
+            double sowmin_out = 0.0;
             MaterialLaw::gasOilHysteresisParams(somax_out,
                                                 shmax_out,
                                                 sowmin_out,
@@ -235,7 +234,7 @@ int main(int argc, char **argv)
             //                                    param);
         } 
 
-        trapped_out = MaterialLaw::trappedGasSaturation(param, /*maximumTrapping*/ false);
+        double trapped_out = MaterialLaw::trappedGasSaturation(param, /*maximumTrapping*/ false);
 
         outfile << somax_out << "," << trapped_out << std::endl;
     }

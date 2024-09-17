@@ -164,10 +164,9 @@ namespace {
 
             const auto item = 2; // MAXCONN = WELLDIMS(2)
             const auto* entity = (nconn == 1) ? "connection" : "connections";
-            const auto* hostEntity = "well";
 
             if (const auto& location = wdims.location(); location.has_value()) {
-                reportError(*location, wdims.maxConnPerWell(), nconn, item, hostEntity, entity,
+                reportError(*location, wdims.maxConnPerWell(), nconn, item, "well", entity,
                             Opm::ParseContext::RUNSPEC_CONNS_PER_WELL_TOO_LARGE, ctxt, guard);
             }
             else {
@@ -224,10 +223,8 @@ namespace {
 
             const auto item = 4; // MAX_GROUPSIZE = WELLDIMS(4)
             const auto* entity = (size == 1) ? "child" : "children";
-            const auto* hostEntity = "group";
-
             if (const auto& location = wdims.location(); location.has_value()) {
-                reportError(*location, wdims.maxWellsPerGroup(), size, item, hostEntity, entity,
+                reportError(*location, wdims.maxWellsPerGroup(), size, item, "group", entity,
                             Opm::ParseContext::RUNSPEC_GROUPSIZE_TOO_LARGE, ctxt, guard);
 
             }
@@ -329,10 +326,9 @@ namespace {
                 ? "well segment"
                 : "well segments";
 
-            const auto* hostEntity = "multi-segmented well";
-
             if (const auto& location = wsdims.location(); location.has_value()) {
-                reportError(*location, wsdims.maxSegmentsPerWell(), numSeg, item, hostEntity, entity,
+                reportError(*location, wsdims.maxSegmentsPerWell(), numSeg, item,
+                            "multi-segmented well", entity,
                             Opm::ParseContext::RUNSPEC_NUMSEG_PER_WELL_TOO_LARGE, ctxt, guard);
             }
             else {
@@ -362,11 +358,9 @@ namespace {
                 ? "lateral branch"
                 : "lateral branches";
 
-            const auto* hostEntity = "multi-segmented well";
-
             if (const auto& location = wsdims.location(); location.has_value()) {
                 reportError(*location, wsdims.maxLateralBranchesPerWell(),
-                            numBranch, item, hostEntity, entity,
+                            numBranch, item, "multi-segmented well", entity,
                             Opm::ParseContext::RUNSPEC_NUMBRANCH_TOO_LARGE, ctxt, guard);
             }
             else {

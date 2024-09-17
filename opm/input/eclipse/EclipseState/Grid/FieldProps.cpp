@@ -317,9 +317,8 @@ void assign_deck(const Fieldprops::keywords::keyword_info<T>& kw_info,
         auto data_index = cell_index.data_index;
         for (size_t i = 0; i < kw_info.num_value; ++i) {
             auto deck_data_index = i* box.size() + data_index;
-            auto data_active_index = i * box.size() + active_index;
-
             if (value::has_value(deck_status[deck_data_index])) {
+                auto data_active_index = i * box.size() + active_index;
                 if (deck_status[deck_data_index] == value::status::deck_value ||
                     field_data.value_status[data_active_index] == value::status::uninitialized) {
                     field_data.data[data_active_index] = deck_data[deck_data_index];
