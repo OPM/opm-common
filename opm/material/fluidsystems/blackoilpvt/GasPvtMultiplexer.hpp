@@ -109,9 +109,9 @@ class GasPvtMultiplexer
 {
 public:
     GasPvtMultiplexer()
+        : gasPvtApproach_(GasPvtApproach::NoGas)
+        , realGasPvt_(nullptr)
     {
-        gasPvtApproach_ = GasPvtApproach::NoGas;
-        realGasPvt_ = nullptr;
     }
 
     GasPvtMultiplexer(GasPvtApproach approach, void* realGasPvt)

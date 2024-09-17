@@ -89,9 +89,9 @@ class WaterPvtMultiplexer
 {
 public:
     WaterPvtMultiplexer()
+        : approach_(WaterPvtApproach::NoWater)
+        , realWaterPvt_(nullptr)
     {
-        approach_ = WaterPvtApproach::NoWater;
-        realWaterPvt_ = nullptr;
     }
 
     WaterPvtMultiplexer(WaterPvtApproach approach, void* realWaterPvt)

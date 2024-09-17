@@ -104,9 +104,9 @@ class OilPvtMultiplexer
 {
 public:
     OilPvtMultiplexer()
+        : approach_(OilPvtApproach::NoOil)
+        , realOilPvt_(nullptr)
     {
-        approach_ = OilPvtApproach::NoOil;
-        realOilPvt_ = nullptr;
     }
 
     OilPvtMultiplexer(OilPvtApproach approach, void* realOilPvt)

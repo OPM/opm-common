@@ -175,9 +175,9 @@ public:
 
     public:
         explicit ParameterCache(Scalar maxOilSat = 1.0, unsigned regionIdx = 0)
+            : maxOilSat_(maxOilSat)
+            , regionIdx_(regionIdx)
         {
-            maxOilSat_ = maxOilSat;
-            regionIdx_ = regionIdx;
         }
 
         /*!

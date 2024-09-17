@@ -77,10 +77,10 @@ Rect<T>::Rect(T minX, T minY, T width, T height)
 //--------------------------------------------------------------------------------------------------
 template <typename T>
 Rect<T>::Rect(const Vector2<T>& min, T width, T height)
+    : m_minPos(min)
+    , m_width(width)
+    , m_height(height)
 {
-    m_minPos = min;
-    m_width = width;
-    m_height = height;
 }
 
 
@@ -89,10 +89,10 @@ Rect<T>::Rect(const Vector2<T>& min, T width, T height)
 //--------------------------------------------------------------------------------------------------
 template <typename T>
 Rect<T>::Rect(const Rect& rect)
+    : m_minPos(rect.min())
+    , m_width(rect.width())
+    , m_height(rect.height())
 {
-    m_minPos = rect.min();
-    m_width = rect.width();
-    m_height = rect.height();
 }
 
 

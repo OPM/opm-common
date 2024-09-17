@@ -44,54 +44,49 @@ bool NextStep::every_report() const {
     return this->persist;
 }
 
-
-
-
-
-Tuning::Tuning() {
-    using TuningKw = ParserKeywords::TUNING;
-    using WsegIterKW = ParserKeywords::WSEGITER;
-
+using TuningKw = ParserKeywords::TUNING;
+using WsegIterKW = ParserKeywords::WSEGITER;
+Tuning::Tuning()
     // Record1
-    TSINIT = std::nullopt; // Let simulator choose initial step if not specified
-    TSMAXZ = TuningKw::TSMAXZ::defaultValue * Metric::Time;
-    TSMINZ = TuningKw::TSMINZ::defaultValue * Metric::Time;
-    TSMCHP = TuningKw::TSMCHP::defaultValue * Metric::Time;
-    TSFMAX = TuningKw::TSFMAX::defaultValue;
-    TSFMIN = TuningKw::TSFMIN::defaultValue;
-    TFDIFF = TuningKw::TFDIFF::defaultValue;
-    TSFCNV = TuningKw::TSFCNV::defaultValue;
-    THRUPT = TuningKw::THRUPT::defaultValue;
-
+    : TSINIT(std::nullopt)// Let simulator choose initial step if not specified
+    , TSMAXZ(TuningKw::TSMAXZ::defaultValue * Metric::Time)
+    , TSMINZ(TuningKw::TSMINZ::defaultValue * Metric::Time)
+    , TSMCHP(TuningKw::TSMCHP::defaultValue * Metric::Time)
+    , TSFMAX(TuningKw::TSFMAX::defaultValue)
+    , TSFMIN(TuningKw::TSFMIN::defaultValue)
+    , TFDIFF(TuningKw::TFDIFF::defaultValue)
+    , TSFCNV(TuningKw::TSFCNV::defaultValue)
+    , THRUPT(TuningKw::THRUPT::defaultValue)
     // Record 2
-    TRGTTE = TuningKw::TRGTTE::defaultValue;
-    TRGCNV = TuningKw::TRGCNV::defaultValue;
-    TRGMBE = TuningKw::TRGMBE::defaultValue;
-    TRGLCV = TuningKw::TRGLCV::defaultValue;
-    XXXTTE = TuningKw::XXXTTE::defaultValue;
-    XXXCNV = TuningKw::XXXCNV::defaultValue;
-    XXXMBE = TuningKw::XXXMBE::defaultValue;
-    XXXLCV = TuningKw::XXXLCV::defaultValue;
-    XXXWFL = TuningKw::XXXWFL::defaultValue;
-    TRGFIP = TuningKw::TRGFIP::defaultValue;
-    THIONX = TuningKw::THIONX::defaultValue;
-    TRWGHT = TuningKw::TRWGHT::defaultValue;
+    , TRGTTE(TuningKw::TRGTTE::defaultValue)
+    , TRGCNV(TuningKw::TRGCNV::defaultValue)
+    , TRGMBE(TuningKw::TRGMBE::defaultValue)
+    , TRGLCV(TuningKw::TRGLCV::defaultValue)
+    , XXXTTE(TuningKw::XXXTTE::defaultValue)
+    , XXXCNV(TuningKw::XXXCNV::defaultValue)
+    , XXXMBE(TuningKw::XXXMBE::defaultValue)
+    , XXXLCV(TuningKw::XXXLCV::defaultValue)
+    , XXXWFL(TuningKw::XXXWFL::defaultValue)
+    , TRGFIP(TuningKw::TRGFIP::defaultValue)
+    , THIONX(TuningKw::THIONX::defaultValue)
+    , TRWGHT(TuningKw::TRWGHT::defaultValue)
 
     // Record 3
-    NEWTMX = TuningKw::NEWTMX::defaultValue;
-    NEWTMN = TuningKw::NEWTMN::defaultValue;
-    LITMAX = TuningKw::LITMAX::defaultValue;
-    LITMIN = TuningKw::LITMIN::defaultValue;
-    MXWSIT = TuningKw::MXWSIT::defaultValue;
-    MXWPIT = TuningKw::MXWPIT::defaultValue;
-    DDPLIM = TuningKw::DDPLIM::defaultValue * Metric::Pressure;
-    DDSLIM = TuningKw::DDSLIM::defaultValue;
-    TRGDPR = TuningKw::TRGDPR::defaultValue * Metric::Pressure;
-    XXXDPR = 0.0 * Metric::Pressure;
+    , NEWTMX(TuningKw::NEWTMX::defaultValue)
+    , NEWTMN(TuningKw::NEWTMN::defaultValue)
+    , LITMAX(TuningKw::LITMAX::defaultValue)
+    , LITMIN(TuningKw::LITMIN::defaultValue)
+    , MXWSIT(TuningKw::MXWSIT::defaultValue)
+    , MXWPIT(TuningKw::MXWPIT::defaultValue)
+    , DDPLIM(TuningKw::DDPLIM::defaultValue * Metric::Pressure)
+    , DDSLIM(TuningKw::DDSLIM::defaultValue)
+    , TRGDPR(TuningKw::TRGDPR::defaultValue * Metric::Pressure)
+    , XXXDPR(0.0 * Metric::Pressure)
 
-    WSEG_MAX_RESTART = WsegIterKW::MAX_TIMES_REDUCED::defaultValue;
-    WSEG_REDUCTION_FACTOR = WsegIterKW::REDUCTION_FACTOR::defaultValue;
-    WSEG_INCREASE_FACTOR = WsegIterKW::INCREASING_FACTOR::defaultValue;
+    , WSEG_MAX_RESTART(WsegIterKW::MAX_TIMES_REDUCED::defaultValue)
+    , WSEG_REDUCTION_FACTOR(WsegIterKW::REDUCTION_FACTOR::defaultValue)
+    , WSEG_INCREASE_FACTOR(WsegIterKW::INCREASING_FACTOR::defaultValue)
+{
 }
 
 

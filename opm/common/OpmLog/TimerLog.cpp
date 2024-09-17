@@ -25,20 +25,21 @@
 #include <opm/common/OpmLog/StreamLog.hpp>
 
 #include <cassert>
-#include <iomanip>
+#include <ios>
 #include <sstream>
-#include <stdexcept>
 
 namespace Opm {
 
-TimerLog::TimerLog(const std::string& logFile) : StreamLog( logFile , StopTimer | StartTimer )
+TimerLog::TimerLog(const std::string& logFile)
+    : StreamLog( logFile , StopTimer | StartTimer )
+    , m_start(0)
 {
-    m_start = 0;
 }
 
-TimerLog::TimerLog(std::ostream& os) : StreamLog( os , StopTimer | StartTimer )
+TimerLog::TimerLog(std::ostream& os)
+    : StreamLog( os , StopTimer | StartTimer )
+    , m_start(0)
 {
-    m_start = 0;
 }
 
 
