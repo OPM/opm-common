@@ -32,6 +32,22 @@
 namespace Opm {
 
 template<class Scalar>
+H2GasPvt<Scalar>::
+H2GasPvt(const std::vector<Scalar>& salinity,
+         Scalar T_ref,
+         Scalar P_ref)
+    : salinity_(salinity)
+{
+    int numRegions = salinity_.size();
+    setNumRegions(numRegions);
+    for (int i = 0; i < numRegions; ++i) {
+        gasReferenceDensity_[i] = H2::gasDensity(T_ref, P_ref, extrapolate);
+        brineReferenceDensity_[i] = Brine::liquidDensity(T_ref, P_ref, salinity_[i], extrapolate);
+    }
+}
+
+#if HAVE_ECL_INPUT
+template<class Scalar>
 void H2GasPvt<Scalar>::
 initFromState(const EclipseState& eclState, const Schedule&)
 {
@@ -52,14 +68,35 @@ initFromState(const EclipseState& eclState, const Schedule&)
                                eclState.getSimulationConfig().hasVAPWAT());
 
     // We only supported single pvt region for the H2-brine module
-    size_t numRegions = 1;
+    std::size_t numRegions = 1;
     setNumRegions(numRegions);
-    size_t regionIdx = 0;
+    std::size_t regionIdx = 0;
     Scalar T_ref = eclState.getTableManager().stCond().temperature;
     Scalar P_ref = eclState.getTableManager().stCond().pressure;
     gasReferenceDensity_[regionIdx] = H2::gasDensity(T_ref, P_ref, extrapolate);
     brineReferenceDensity_[regionIdx] = Brine::liquidDensity(T_ref, P_ref, salinity_[regionIdx], extrapolate);
     initEnd();
+}
+#endif
+
+template<class Scalar>
+void H2GasPvt<Scalar>::
+setNumRegions(std::size_t numRegions)
+{
+    gasReferenceDensity_.resize(numRegions);
+    brineReferenceDensity_.resize(numRegions);
+    salinity_.resize(numRegions);
+}
+
+template<class Scalar>
+void H2GasPvt<Scalar>::
+setReferenceDensities(unsigned regionIdx,
+                      Scalar rhoRefBrine,
+                      Scalar rhoRefGas,
+                      Scalar /*rhoRefWater*/)
+{
+    gasReferenceDensity_[regionIdx] = rhoRefGas;
+    brineReferenceDensity_[regionIdx] = rhoRefBrine;
 }
 
 template class H2GasPvt<double>;
