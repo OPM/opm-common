@@ -48,7 +48,7 @@ struct EzrokhiRecord {
     void serializeOp(Serializer& serializer)
     {
         serializer(c0);
-        serializer(c2);
+        serializer(c1);
         serializer(c2);
     }
 

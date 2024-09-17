@@ -81,9 +81,9 @@ initFromState(const EclipseState& eclState, const Schedule&)
     if (enableEzrokhiDensity_) {
         ezrokhi_msg = "\nEzrokhi density coefficients : \n\tNaCl = " 
                       + std::to_string(ezrokhiDenNaClCoeff_[0]) + " " + std::to_string(ezrokhiDenNaClCoeff_[1]) 
-                      + " " + std::to_string(ezrokhiDenNaClCoeff_[1])
+                      + " " + std::to_string(ezrokhiDenNaClCoeff_[2])
                       + "\n\tCO2 = " + std::to_string(ezrokhiDenCo2Coeff_[0]) + " " + std::to_string(ezrokhiDenCo2Coeff_[1]) 
-                      + " " + std::to_string(ezrokhiDenCo2Coeff_[1]);
+                      + " " + std::to_string(ezrokhiDenCo2Coeff_[2]);
     }
     else {
         ezrokhi_msg = "";
