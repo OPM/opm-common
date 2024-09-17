@@ -261,7 +261,7 @@ bool is_neighbor(const EclipseGrid& grid, std::size_t g1, std::size_t g2) {
         result.m_editr= {{1,2,1.0},{2,3,2.0}};
         result.m_nnc_location = {"NNC?", "File", 123};
         result.m_edit_location = {"EDITNNC?", "File", 123};
-        result.m_edit_location = {"EDITNNCR?", "File", 123};
+        result.m_editr_location = {"EDITNNCR?", "File", 123};
         return result;
     }
 
