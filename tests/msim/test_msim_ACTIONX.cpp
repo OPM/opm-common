@@ -332,11 +332,11 @@ BOOST_AUTO_TEST_CASE(UDQ_WUWCT) {
                 std::string wuwct_key = std::string("WUWCT:") + well;
                 std::string wopr_key  = std::string("WOPR:") + well;
 
-                if (ecl_sum_get_general_var(ecl_sum, step, wwct_key.c_str()) != 0)
-                    BOOST_CHECK_EQUAL( ecl_sum_get_general_var(ecl_sum, step, wwct_key.c_str()),
-                                       ecl_sum_get_general_var(ecl_sum, step, wuwct_key.c_str()));
+                if (ecl_sum_get_general_var(ecl_sum, step, wwct_key) != 0)
+                    BOOST_CHECK_EQUAL( ecl_sum_get_general_var(ecl_sum, step, wwct_key),
+                                       ecl_sum_get_general_var(ecl_sum, step, wuwct_key));
 
-                wopr_sum += ecl_sum_get_general_var(ecl_sum, step , wopr_key.c_str());
+                wopr_sum += ecl_sum_get_general_var(ecl_sum, step , wopr_key);
             }
             BOOST_CHECK_EQUAL( ecl_sum_get_general_var(ecl_sum, step, "FOPR"),
                                ecl_sum_get_general_var(ecl_sum, step, "FUOPR"));
@@ -451,7 +451,7 @@ BOOST_AUTO_TEST_CASE(UDA) {
                 int prev_tstep = ecl_sum_iget_report_end(ecl_sum, report_step - 1);
                 for (const auto& well : {"P1", "P2", "P3", "P4"}) {
                     std::string wwpr_key  = std::string("WWPR:") + well;
-                    wwpr_sum += ecl_sum_get_general_var(ecl_sum, prev_tstep, wwpr_key.c_str());
+                    wwpr_sum += ecl_sum_get_general_var(ecl_sum, prev_tstep, wwpr_key);
                 }
                 wwpr_sum = 0.90 * wwpr_sum;
                 wwpr_sum = std::max(eps_lim, wwpr_sum);
