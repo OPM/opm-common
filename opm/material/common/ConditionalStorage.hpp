@@ -29,6 +29,7 @@
 #define OPM_CONDITIONAL_STORAGE_HH
 
 #include <stdexcept>
+#include <type_traits>
 #include <utility>
 
 namespace Opm {
@@ -107,18 +108,12 @@ public:
 
     ConditionalStorage()
     {
-        // ensure that T has a default constructor without actually calling it
-        if (false) {
-            [[maybe_unused]] T dummy; // <- if the compiler bails out here, T does not have a default constructor
-        }
+        static_assert(std::is_default_constructible_v<T>);
     }
 
-    ConditionalStorage(const T& v)
+    ConditionalStorage(const T&)
     {
-        // ensure that T has a default constructor without actually calling it
-        if (false) {
-            [[maybe_unused]] T dummy(v); // <- if the compiler bails out here, T does not have a copy constructor
-        }
+        static_assert(std::is_copy_constructible_v<T>);
     }
 
     ConditionalStorage(const ConditionalStorage &)
@@ -127,24 +122,14 @@ public:
     };
 
     template <class ...Args>
-    ConditionalStorage(Args... args)
+    ConditionalStorage(Args...)
     {
-        // ensure that the arguments are valid without actually calling the constructor
-        // of T
-        if (false) {
-            [[maybe_unused]] T dummy(args...); // <- if the compiler bails out here, T does not have the requested constructor
-        }
+        static_assert(std::is_constructible_v<T, Args...>);
     }
 
     ConditionalStorage& operator=(const ConditionalStorage&)
     {
-        // ensure that the stored object can actually be assined to but not actually do
-        // anything
-        if (false) {
-            T *dummy;
-            (*dummy) = (*dummy);   // <- if the compiler bails out here, T does not have an assignment operator
-        }
-
+        static_assert(std::is_copy_assignable_v<T>);
         return *this;
     }
 
