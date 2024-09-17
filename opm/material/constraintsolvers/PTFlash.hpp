@@ -253,14 +253,12 @@ public:
                     }
 
                     // Run bisection
-                    auto Lmin = 1 - Vmax;
-                    auto Lmax = 1 - Vmin;
                     // TODO: This is required for some cases. Not clear why
                     // since the objective function should be monotone with a
                     // single zero between the Lmin/Lmax interval defined by
                     // K-values.
-                    Lmax = 1.0;
-                    Lmin = 0.0;
+                    decltype(Vmax) Lmin = 1.0;
+                    decltype(Vmin) Lmax = 0.0;
                     auto L = bisection_g_(K, Lmin, Lmax, z, verbosity);
 
                     // Print final result
