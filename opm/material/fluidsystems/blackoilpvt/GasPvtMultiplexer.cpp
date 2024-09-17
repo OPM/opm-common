@@ -51,7 +51,7 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
         setApproach(GasPvtApproach::DryHumidGas);
 
 
-    OPM_GAS_PVT_MULTIPLEXER_CALL(pvtImpl.initFromState(eclState, schedule));
+    OPM_GAS_PVT_MULTIPLEXER_CALL(pvtImpl.initFromState(eclState, schedule), break);
 }
 
 template class GasPvtMultiplexer<double,false>;

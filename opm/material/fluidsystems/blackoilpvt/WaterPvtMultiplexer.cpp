@@ -49,7 +49,7 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
     else if (enableBrine && !eclState.getTableManager().getPvtwSaltTables().empty())
         setApproach(WaterPvtApproach::ConstantCompressibilityBrine);
 
-    OPM_WATER_PVT_MULTIPLEXER_CALL(pvtImpl.initFromState(eclState, schedule));
+    OPM_WATER_PVT_MULTIPLEXER_CALL(pvtImpl.initFromState(eclState, schedule), break);
 }
 
 template class WaterPvtMultiplexer<double,false,false>;

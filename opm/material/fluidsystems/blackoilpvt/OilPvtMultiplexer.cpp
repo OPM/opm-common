@@ -51,7 +51,7 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
     else if (!eclState.getTableManager().getPvtoTables().empty())
         setApproach(OilPvtApproach::LiveOil);
 
-    OPM_OIL_PVT_MULTIPLEXER_CALL(pvtImpl.initFromState(eclState, schedule));
+    OPM_OIL_PVT_MULTIPLEXER_CALL(pvtImpl.initFromState(eclState, schedule), break);
 }
 
 template class OilPvtMultiplexer<double,false>;

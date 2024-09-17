@@ -33,35 +33,36 @@
 #include "BrineCo2Pvt.hpp"
 #include "BrineH2Pvt.hpp"
 
-#define OPM_WATER_PVT_MULTIPLEXER_CALL(codeToCall)                      \
-    switch (approach_) {                                                \
-    case WaterPvtApproach::ConstantCompressibilityWater: {           \
+#define OPM_WATER_PVT_MULTIPLEXER_CALL(codeToCall, ...)                                \
+    switch (approach_) {                                                               \
+    case WaterPvtApproach::ConstantCompressibilityWater: {                             \
         auto& pvtImpl = getRealPvt<WaterPvtApproach::ConstantCompressibilityWater>();  \
-        codeToCall;                                                     \
-        break;                                                          \
-    }                                                                   \
-    case WaterPvtApproach::ConstantCompressibilityBrine: {           \
+        codeToCall;                                                                    \
+        __VA_ARGS__;                                                                   \
+    }                                                                                  \
+    case WaterPvtApproach::ConstantCompressibilityBrine: {                             \
         auto& pvtImpl = getRealPvt<WaterPvtApproach::ConstantCompressibilityBrine>();  \
-        codeToCall;                                                     \
-        break;                                                          \
-    }                                                                   \
-    case WaterPvtApproach::ThermalWater: {                           \
-        auto& pvtImpl = getRealPvt<WaterPvtApproach::ThermalWater>();   \
-        codeToCall;                                                     \
-        break;                                                          \
-    }                                                                    \
-    case WaterPvtApproach::BrineCo2: {                                              \
-        auto& pvtImpl = getRealPvt<WaterPvtApproach::BrineCo2>();                   \
-        codeToCall;                                                                  \
-        break;                                                                       \
-    }                                                                    \
-    case WaterPvtApproach::BrineH2: {                                              \
-        auto& pvtImpl = getRealPvt<WaterPvtApproach::BrineH2>();                   \
-        codeToCall;                                                                  \
-        break;                                                                       \
-    }                                                                    \
-    case WaterPvtApproach::NoWater:                                  \
-        throw std::logic_error("Not implemented: Water PVT of this deck!"); \
+        codeToCall;                                                                    \
+        __VA_ARGS__;                                                                   \
+    }                                                                                  \
+    case WaterPvtApproach::ThermalWater: {                                             \
+        auto& pvtImpl = getRealPvt<WaterPvtApproach::ThermalWater>();                  \
+        codeToCall;                                                                    \
+        __VA_ARGS__;                                                                   \
+    }                                                                                  \
+    case WaterPvtApproach::BrineCo2: {                                                 \
+        auto& pvtImpl = getRealPvt<WaterPvtApproach::BrineCo2>();                      \
+        codeToCall;                                                                    \
+        __VA_ARGS__;                                                                   \
+    }                                                                                  \
+    case WaterPvtApproach::BrineH2: {                                                  \
+        auto& pvtImpl = getRealPvt<WaterPvtApproach::BrineH2>();                       \
+        codeToCall;                                                                    \
+        __VA_ARGS__;                                                                   \
+    }                                                                                  \
+    default:                                                                           \
+    case WaterPvtApproach::NoWater:                                                    \
+        throw std::logic_error("Not implemented: Water PVT of this deck!");            \
     }
 
 namespace Opm {
@@ -152,24 +153,24 @@ public:
 #endif // HAVE_ECL_INPUT
 
     void initEnd()
-    { OPM_WATER_PVT_MULTIPLEXER_CALL(pvtImpl.initEnd()); }
+    { OPM_WATER_PVT_MULTIPLEXER_CALL(pvtImpl.initEnd(), break); }
 
     /*!
      * \brief Return the number of PVT regions which are considered by this PVT-object.
      */
     unsigned numRegions() const
-    { OPM_WATER_PVT_MULTIPLEXER_CALL(return pvtImpl.numRegions()); return 1; }
+    { OPM_WATER_PVT_MULTIPLEXER_CALL(return pvtImpl.numRegions()); }
 
     void setVapPars(const Scalar par1, const Scalar par2)
     {
-        OPM_WATER_PVT_MULTIPLEXER_CALL(pvtImpl.setVapPars(par1, par2));
+        OPM_WATER_PVT_MULTIPLEXER_CALL(pvtImpl.setVapPars(par1, par2), break);
     }
 
     /*!
      * \brief Return the reference density which are considered by this PVT-object.
      */
     const Scalar waterReferenceDensity(unsigned regionIdx) const
-    { OPM_WATER_PVT_MULTIPLEXER_CALL(return pvtImpl.waterReferenceDensity(regionIdx)); return 1000.; }
+    { OPM_WATER_PVT_MULTIPLEXER_CALL(return pvtImpl.waterReferenceDensity(regionIdx)); }
 
     /*!
      * \brief Returns the specific enthalpy [J/kg] of gas given a set of parameters.
@@ -180,10 +181,10 @@ public:
                         const Evaluation& pressure,
                         const Evaluation& Rsw,
                         const Evaluation& saltconcentration) const
-    { OPM_WATER_PVT_MULTIPLEXER_CALL(return pvtImpl.internalEnergy(regionIdx, temperature, pressure, Rsw, saltconcentration)); return 0; }
+    { OPM_WATER_PVT_MULTIPLEXER_CALL(return pvtImpl.internalEnergy(regionIdx, temperature, pressure, Rsw, saltconcentration)); }
 
     Scalar hVap(unsigned regionIdx) const
-    { OPM_WATER_PVT_MULTIPLEXER_CALL(return pvtImpl.hVap(regionIdx)); return 0; }
+    { OPM_WATER_PVT_MULTIPLEXER_CALL(return pvtImpl.hVap(regionIdx)); }
     /*!
      * \brief Returns the dynamic viscosity [Pa s] of the fluid phase given a set of parameters.
      */
@@ -195,7 +196,6 @@ public:
                          const Evaluation& saltconcentration) const
     {
         OPM_WATER_PVT_MULTIPLEXER_CALL(return pvtImpl.viscosity(regionIdx, temperature, pressure, Rsw, saltconcentration));
-        return 0;
     }
 
     /*!
@@ -208,7 +208,6 @@ public:
                                   const Evaluation& saltconcentration) const
     {
         OPM_WATER_PVT_MULTIPLEXER_CALL(return pvtImpl.saturatedViscosity(regionIdx, temperature, pressure, saltconcentration));
-        return 0;
     }
 
     /*!
@@ -222,7 +221,6 @@ public:
                                             const Evaluation& saltconcentration) const
     {
         OPM_WATER_PVT_MULTIPLEXER_CALL(return pvtImpl.inverseFormationVolumeFactor(regionIdx, temperature, pressure, Rsw, saltconcentration));
-        return 0;
     }
 
         /*!
@@ -235,7 +233,6 @@ public:
                                                      const Evaluation& saltconcentration) const
     {
         OPM_WATER_PVT_MULTIPLEXER_CALL(return pvtImpl.saturatedInverseFormationVolumeFactor(regionIdx, temperature, pressure, saltconcentration));
-        return 0;
     }
 
     /*!
@@ -248,7 +245,6 @@ public:
                                              const Evaluation& saltconcentration) const
     {
         OPM_WATER_PVT_MULTIPLEXER_CALL(return pvtImpl.saturatedGasDissolutionFactor(regionIdx, temperature, pressure, saltconcentration));
-        return 0;
     }
 
     /*!
@@ -263,8 +259,7 @@ public:
                                   const Evaluation& temperature,
                                   const Evaluation& Rs,
                                   const Evaluation& saltconcentration) const
-    { OPM_WATER_PVT_MULTIPLEXER_CALL(return pvtImpl.saturationPressure(regionIdx, temperature, Rs, saltconcentration)); return 0; }
-
+    { OPM_WATER_PVT_MULTIPLEXER_CALL(return pvtImpl.saturationPressure(regionIdx, temperature, Rs, saltconcentration)); }
 
     /*!
      * \copydoc BaseFluidSystem::diffusionCoefficient
@@ -275,7 +270,6 @@ public:
                                     unsigned compIdx) const
     {
       OPM_WATER_PVT_MULTIPLEXER_CALL(return pvtImpl.diffusionCoefficient(temperature, pressure, compIdx));
-      return 0;
     }
 
     void setApproach(WaterPvtApproach appr)

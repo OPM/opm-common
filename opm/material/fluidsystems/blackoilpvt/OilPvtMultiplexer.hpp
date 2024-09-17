@@ -41,38 +41,39 @@ class EclipseState;
 class Schedule;
 #endif
 
-#define OPM_OIL_PVT_MULTIPLEXER_CALL(codeToCall)                                  \
+#define OPM_OIL_PVT_MULTIPLEXER_CALL(codeToCall, ...)                             \
     switch (approach_) {                                                          \
     case OilPvtApproach::ConstantCompressibilityOil: {                            \
         auto& pvtImpl = getRealPvt<OilPvtApproach::ConstantCompressibilityOil>(); \
         codeToCall;                                                               \
-        break;                                                                    \
+        __VA_ARGS__;                                                              \
     }                                                                             \
     case OilPvtApproach::DeadOil: {                                               \
         auto& pvtImpl = getRealPvt<OilPvtApproach::DeadOil>();                    \
         codeToCall;                                                               \
-        break;                                                                    \
+        __VA_ARGS__;                                                              \
     }                                                                             \
     case OilPvtApproach::LiveOil: {                                               \
         auto& pvtImpl = getRealPvt<OilPvtApproach::LiveOil>();                    \
         codeToCall;                                                               \
-        break;                                                                    \
+        __VA_ARGS__;                                                              \
     }                                                                             \
     case OilPvtApproach::ThermalOil: {                                            \
         auto& pvtImpl = getRealPvt<OilPvtApproach::ThermalOil>();                 \
         codeToCall;                                                               \
-        break;                                                                    \
+        __VA_ARGS__;                                                              \
     }                                                                             \
     case OilPvtApproach::BrineCo2: {                                              \
         auto& pvtImpl = getRealPvt<OilPvtApproach::BrineCo2>();                   \
         codeToCall;                                                               \
-        break;                                                                    \
+        __VA_ARGS__;                                                              \
     }                                                                             \
     case OilPvtApproach::BrineH2: {                                               \
         auto& pvtImpl = getRealPvt<OilPvtApproach::BrineH2>();                    \
         codeToCall;                                                               \
-        break;                                                                    \
+        __VA_ARGS__;                                                              \
     }                                                                             \
+    default:                                                                      \
     case OilPvtApproach::NoOil:                                                   \
         throw std::logic_error("Not implemented: Oil PVT of this deck!");         \
     }
@@ -173,24 +174,24 @@ public:
 
 
     void initEnd()
-    { OPM_OIL_PVT_MULTIPLEXER_CALL(pvtImpl.initEnd()); }
+    { OPM_OIL_PVT_MULTIPLEXER_CALL(pvtImpl.initEnd(), break); }
 
     /*!
      * \brief Return the number of PVT regions which are considered by this PVT-object.
      */
     unsigned numRegions() const
-    { OPM_OIL_PVT_MULTIPLEXER_CALL(return pvtImpl.numRegions()); return 1; }
+    { OPM_OIL_PVT_MULTIPLEXER_CALL(return pvtImpl.numRegions()); }
 
     void setVapPars(const Scalar par1, const Scalar par2)
     {
-        OPM_OIL_PVT_MULTIPLEXER_CALL(pvtImpl.setVapPars(par1, par2));
+        OPM_OIL_PVT_MULTIPLEXER_CALL(pvtImpl.setVapPars(par1, par2), break);
     }
 
     /*!
      * \brief Return the reference density which are considered by this PVT-object.
      */
     const Scalar oilReferenceDensity(unsigned regionIdx) const
-    { OPM_OIL_PVT_MULTIPLEXER_CALL(return pvtImpl.oilReferenceDensity(regionIdx)); return 700.; }
+    { OPM_OIL_PVT_MULTIPLEXER_CALL(return pvtImpl.oilReferenceDensity(regionIdx)); }
 
     /*!
      * \brief Returns the specific enthalpy [J/kg] oil given a set of parameters.
@@ -200,10 +201,10 @@ public:
                         const Evaluation& temperature,
                         const Evaluation& pressure,
                         const Evaluation& Rs) const
-    { OPM_OIL_PVT_MULTIPLEXER_CALL(return pvtImpl.internalEnergy(regionIdx, temperature, pressure, Rs)); return 0; }
+    { OPM_OIL_PVT_MULTIPLEXER_CALL(return pvtImpl.internalEnergy(regionIdx, temperature, pressure, Rs)); }
 
     Scalar hVap(unsigned regionIdx) const
-    { OPM_OIL_PVT_MULTIPLEXER_CALL(return pvtImpl.hVap(regionIdx)); return 0; }
+    { OPM_OIL_PVT_MULTIPLEXER_CALL(return pvtImpl.hVap(regionIdx)); }
     /*!
      * \brief Returns the dynamic viscosity [Pa s] of the fluid phase given a set of parameters.
      */
@@ -212,7 +213,7 @@ public:
                          const Evaluation& temperature,
                          const Evaluation& pressure,
                          const Evaluation& Rs) const
-    { OPM_OIL_PVT_MULTIPLEXER_CALL(return pvtImpl.viscosity(regionIdx, temperature, pressure, Rs)); return 0; }
+    { OPM_OIL_PVT_MULTIPLEXER_CALL(return pvtImpl.viscosity(regionIdx, temperature, pressure, Rs)); }
 
     /*!
      * \brief Returns the dynamic viscosity [Pa s] of the fluid phase given a set of parameters.
@@ -221,7 +222,7 @@ public:
     Evaluation saturatedViscosity(unsigned regionIdx,
                                   const Evaluation& temperature,
                                   const Evaluation& pressure) const
-    { OPM_OIL_PVT_MULTIPLEXER_CALL(return pvtImpl.saturatedViscosity(regionIdx, temperature, pressure)); return 0; }
+    { OPM_OIL_PVT_MULTIPLEXER_CALL(return pvtImpl.saturatedViscosity(regionIdx, temperature, pressure)); }
 
     /*!
      * \brief Returns the formation volume factor [-] of the fluid phase.
@@ -231,7 +232,7 @@ public:
                                             const Evaluation& temperature,
                                             const Evaluation& pressure,
                                             const Evaluation& Rs) const
-    { OPM_OIL_PVT_MULTIPLEXER_CALL(return pvtImpl.inverseFormationVolumeFactor(regionIdx, temperature, pressure, Rs)); return 0; }
+    { OPM_OIL_PVT_MULTIPLEXER_CALL(return pvtImpl.inverseFormationVolumeFactor(regionIdx, temperature, pressure, Rs)); }
 
     /*!
      * \brief Returns the formation volume factor [-] of the fluid phase.
@@ -240,7 +241,7 @@ public:
     Evaluation saturatedInverseFormationVolumeFactor(unsigned regionIdx,
                                                      const Evaluation& temperature,
                                                      const Evaluation& pressure) const
-    { OPM_OIL_PVT_MULTIPLEXER_CALL(return pvtImpl.saturatedInverseFormationVolumeFactor(regionIdx, temperature, pressure)); return 0; }
+    { OPM_OIL_PVT_MULTIPLEXER_CALL(return pvtImpl.saturatedInverseFormationVolumeFactor(regionIdx, temperature, pressure)); }
 
     /*!
      * \brief Returns the gas dissolution factor \f$R_s\f$ [m^3/m^3] of saturated oil.
@@ -249,7 +250,7 @@ public:
     Evaluation saturatedGasDissolutionFactor(unsigned regionIdx,
                                              const Evaluation& temperature,
                                              const Evaluation& pressure) const
-    { OPM_OIL_PVT_MULTIPLEXER_CALL(return pvtImpl.saturatedGasDissolutionFactor(regionIdx, temperature, pressure)); return 0; }
+    { OPM_OIL_PVT_MULTIPLEXER_CALL(return pvtImpl.saturatedGasDissolutionFactor(regionIdx, temperature, pressure)); }
 
     /*!
      * \brief Returns the gas dissolution factor \f$R_s\f$ [m^3/m^3] of saturated oil.
@@ -260,7 +261,7 @@ public:
                                              const Evaluation& pressure,
                                              const Evaluation& oilSaturation,
                                              const Evaluation& maxOilSaturation) const
-    { OPM_OIL_PVT_MULTIPLEXER_CALL(return pvtImpl.saturatedGasDissolutionFactor(regionIdx, temperature, pressure, oilSaturation, maxOilSaturation)); return 0; }
+    { OPM_OIL_PVT_MULTIPLEXER_CALL(return pvtImpl.saturatedGasDissolutionFactor(regionIdx, temperature, pressure, oilSaturation, maxOilSaturation)); }
 
     /*!
      * \brief Returns the saturation pressure [Pa] of oil given the mass fraction of the
@@ -273,7 +274,7 @@ public:
     Evaluation saturationPressure(unsigned regionIdx,
                                   const Evaluation& temperature,
                                   const Evaluation& Rs) const
-    { OPM_OIL_PVT_MULTIPLEXER_CALL(return pvtImpl.saturationPressure(regionIdx, temperature, Rs)); return 0; }
+    { OPM_OIL_PVT_MULTIPLEXER_CALL(return pvtImpl.saturationPressure(regionIdx, temperature, Rs)); }
 
     /*!
      * \copydoc BaseFluidSystem::diffusionCoefficient
@@ -283,7 +284,7 @@ public:
                                     const Evaluation& pressure,
                                     unsigned compIdx) const
     {
-      OPM_OIL_PVT_MULTIPLEXER_CALL(return pvtImpl.diffusionCoefficient(temperature, pressure, compIdx)); return 0;
+      OPM_OIL_PVT_MULTIPLEXER_CALL(return pvtImpl.diffusionCoefficient(temperature, pressure, compIdx));
     }
 
     void setApproach(OilPvtApproach appr)
