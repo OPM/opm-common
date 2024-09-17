@@ -480,7 +480,7 @@ protected:
         FlashFluidState fluid_state_global = fluid_state;
 
         // Setup output
-        if (verbosity >= 3 || verbosity >= 4) {
+        if (verbosity >= 3) {
             std::cout << std::setw(10) << "Iteration" << std::setw(16) << "K-Norm" << std::setw(16) << "R-Norm" << std::endl;
         }
 
