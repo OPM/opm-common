@@ -27,13 +27,13 @@
 #ifndef OPM_GAS_PVT_MULTIPLEXER_HPP
 #define OPM_GAS_PVT_MULTIPLEXER_HPP
 
-#include "DryGasPvt.hpp"
-#include "DryHumidGasPvt.hpp"
-#include "WetHumidGasPvt.hpp"
-#include "WetGasPvt.hpp"
-#include "GasPvtThermal.hpp"
-#include "Co2GasPvt.hpp"
-#include "H2GasPvt.hpp"
+#include <opm/material/fluidsystems/blackoilpvt/Co2GasPvt.hpp>
+#include <opm/material/fluidsystems/blackoilpvt/DryGasPvt.hpp>
+#include <opm/material/fluidsystems/blackoilpvt/DryHumidGasPvt.hpp>
+#include <opm/material/fluidsystems/blackoilpvt/GasPvtThermal.hpp>
+#include <opm/material/fluidsystems/blackoilpvt/H2GasPvt.hpp>
+#include <opm/material/fluidsystems/blackoilpvt/WetGasPvt.hpp>
+#include <opm/material/fluidsystems/blackoilpvt/WetHumidGasPvt.hpp>
 
 namespace Opm {
 
@@ -125,51 +125,11 @@ public:
         *this = data;
     }
 
-    ~GasPvtMultiplexer()
-    {
-        switch (gasPvtApproach_) {
-        case GasPvtApproach::DryGas: {
-            delete &getRealPvt<GasPvtApproach::DryGas>();
-            break;
-        }
-        case GasPvtApproach::DryHumidGas: {
-            delete &getRealPvt<GasPvtApproach::DryHumidGas>();
-            break;
-        }
-        case GasPvtApproach::WetHumidGas: {
-            delete &getRealPvt<GasPvtApproach::WetHumidGas>();
-            break;
-        }
-        case GasPvtApproach::WetGas: {
-            delete &getRealPvt<GasPvtApproach::WetGas>();
-            break;
-        }
-        case GasPvtApproach::ThermalGas: {
-            delete &getRealPvt<GasPvtApproach::ThermalGas>();
-            break;
-        }
-        case GasPvtApproach::Co2Gas: {
-            delete &getRealPvt<GasPvtApproach::Co2Gas>();
-            break;
-        }
-        case GasPvtApproach::H2Gas: {
-            delete &getRealPvt<GasPvtApproach::H2Gas>();
-            break;
-        }
-        case GasPvtApproach::NoGas:
-            break;
-        }
-    }
+    ~GasPvtMultiplexer();
 
-    bool mixingEnergy(){
-        switch (gasPvtApproach_) {
-        case GasPvtApproach::ThermalGas: {
-            return true;
-        }
-        default: {
-            return false;
-        }
-        }
+    bool mixingEnergy() const
+    {
+        return gasPvtApproach_ == GasPvtApproach::ThermalGas;
     }
 
 #if HAVE_ECL_INPUT
@@ -181,63 +141,21 @@ public:
     void initFromState(const EclipseState& eclState, const Schedule& schedule);
 #endif // HAVE_ECL_INPUT
 
-    void setApproach(GasPvtApproach gasPvtAppr)
-    {
-        switch (gasPvtAppr) {
-        case GasPvtApproach::DryGas:
-            realGasPvt_ = new DryGasPvt<Scalar>;
-            break;
+    void setApproach(GasPvtApproach gasPvtAppr);
 
-        case GasPvtApproach::DryHumidGas:
-            realGasPvt_ = new DryHumidGasPvt<Scalar>;
-            break;
-
-        case GasPvtApproach::WetHumidGas:
-            realGasPvt_ = new WetHumidGasPvt<Scalar>;
-            break;
-
-        case GasPvtApproach::WetGas:
-            realGasPvt_ = new WetGasPvt<Scalar>;
-            break;
-
-        case GasPvtApproach::ThermalGas:
-            realGasPvt_ = new GasPvtThermal<Scalar>;
-            break;
-
-        case GasPvtApproach::Co2Gas:
-            realGasPvt_ = new Co2GasPvt<Scalar>;
-            break;
-
-        case GasPvtApproach::H2Gas:
-            realGasPvt_ = new H2GasPvt<Scalar>;
-            break;
-
-        case GasPvtApproach::NoGas:
-            throw std::logic_error("Not implemented: Gas PVT of this deck!");
-        }
-
-        gasPvtApproach_ = gasPvtAppr;
-    }
-
-    void initEnd()
-    { OPM_GAS_PVT_MULTIPLEXER_CALL(pvtImpl.initEnd(), break); }
+    void initEnd();
 
     /*!
      * \brief Return the number of PVT regions which are considered by this PVT-object.
      */
-    unsigned numRegions() const
-    { OPM_GAS_PVT_MULTIPLEXER_CALL(return pvtImpl.numRegions()); }
+    unsigned numRegions() const;
 
-    void setVapPars(const Scalar par1, const Scalar par2)
-    {
-        OPM_GAS_PVT_MULTIPLEXER_CALL(pvtImpl.setVapPars(par1, par2), break);
-    }
+    void setVapPars(const Scalar par1, const Scalar par2);
 
     /*!
      * \brief Return the reference density which are considered by this PVT-object.
      */
-    const Scalar gasReferenceDensity(unsigned regionIdx)
-    { OPM_GAS_PVT_MULTIPLEXER_CALL(return pvtImpl.gasReferenceDensity(regionIdx)); }
+    Scalar gasReferenceDensity(unsigned regionIdx);
 
     /*!
      * \brief Returns the specific enthalpy [J/kg] of gas given a set of parameters.
@@ -250,8 +168,7 @@ public:
                         const Evaluation& Rvw) const
     { OPM_GAS_PVT_MULTIPLEXER_CALL(return pvtImpl.internalEnergy(regionIdx, temperature, pressure, Rv, Rvw)); }
 
-    Scalar hVap(unsigned regionIdx) const
-    { OPM_GAS_PVT_MULTIPLEXER_CALL(return pvtImpl.hVap(regionIdx)); }
+    Scalar hVap(unsigned regionIdx) const;
 
     /*!
      * \brief Returns the dynamic viscosity [Pa s] of the fluid phase given a set of parameters.
@@ -467,37 +384,8 @@ public:
 
     const void* realGasPvt() const { return realGasPvt_; }
 
-    GasPvtMultiplexer<Scalar,enableThermal>& operator=(const GasPvtMultiplexer<Scalar,enableThermal>& data)
-    {
-        gasPvtApproach_ = data.gasPvtApproach_;
-        switch (gasPvtApproach_) {
-        case GasPvtApproach::DryGas:
-            realGasPvt_ = new DryGasPvt<Scalar>(*static_cast<const DryGasPvt<Scalar>*>(data.realGasPvt_));
-            break;
-        case GasPvtApproach::DryHumidGas:
-            realGasPvt_ = new DryHumidGasPvt<Scalar>(*static_cast<const DryHumidGasPvt<Scalar>*>(data.realGasPvt_));
-            break;
-        case GasPvtApproach::WetHumidGas:
-            realGasPvt_ = new WetHumidGasPvt<Scalar>(*static_cast<const WetHumidGasPvt<Scalar>*>(data.realGasPvt_));
-            break;
-        case GasPvtApproach::WetGas:
-            realGasPvt_ = new WetGasPvt<Scalar>(*static_cast<const WetGasPvt<Scalar>*>(data.realGasPvt_));
-            break;
-        case GasPvtApproach::ThermalGas:
-            realGasPvt_ = new GasPvtThermal<Scalar>(*static_cast<const GasPvtThermal<Scalar>*>(data.realGasPvt_));
-            break;
-        case GasPvtApproach::Co2Gas:
-            realGasPvt_ = new Co2GasPvt<Scalar>(*static_cast<const Co2GasPvt<Scalar>*>(data.realGasPvt_));
-            break;
-    case GasPvtApproach::H2Gas:
-            realGasPvt_ = new H2GasPvt<Scalar>(*static_cast<const H2GasPvt<Scalar>*>(data.realGasPvt_));
-            break;
-        default:
-            break;
-        }
-
-        return *this;
-    }
+    GasPvtMultiplexer<Scalar,enableThermal>&
+    operator=(const GasPvtMultiplexer<Scalar,enableThermal>& data);
 
 private:
     GasPvtApproach gasPvtApproach_{GasPvtApproach::NoGas};
