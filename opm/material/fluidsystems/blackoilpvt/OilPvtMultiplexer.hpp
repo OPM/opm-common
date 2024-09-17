@@ -27,12 +27,12 @@
 #ifndef OPM_OIL_PVT_MULTIPLEXER_HPP
 #define OPM_OIL_PVT_MULTIPLEXER_HPP
 
-#include "ConstantCompressibilityOilPvt.hpp"
-#include "DeadOilPvt.hpp"
-#include "LiveOilPvt.hpp"
-#include "OilPvtThermal.hpp"
-#include "BrineCo2Pvt.hpp"
-#include "BrineH2Pvt.hpp"
+#include <opm/material/fluidsystems/blackoilpvt/BrineCo2Pvt.hpp>
+#include <opm/material/fluidsystems/blackoilpvt/BrineH2Pvt.hpp>
+#include <opm/material/fluidsystems/blackoilpvt/ConstantCompressibilityOilPvt.hpp>
+#include <opm/material/fluidsystems/blackoilpvt/DeadOilPvt.hpp>
+#include <opm/material/fluidsystems/blackoilpvt/LiveOilPvt.hpp>
+#include <opm/material/fluidsystems/blackoilpvt/OilPvtThermal.hpp>
 
 namespace Opm {
 
@@ -120,48 +120,11 @@ public:
         *this = data;
     }
 
-    ~OilPvtMultiplexer()
-    {
-        switch (approach_) {
-        case OilPvtApproach::LiveOil: {
-            delete &getRealPvt<OilPvtApproach::LiveOil>();
-            break;
-        }
-        case OilPvtApproach::DeadOil: {
-            delete &getRealPvt<OilPvtApproach::DeadOil>();
-            break;
-        }
-        case OilPvtApproach::ConstantCompressibilityOil: {
-            delete &getRealPvt<OilPvtApproach::ConstantCompressibilityOil>();
-            break;
-        }
-        case OilPvtApproach::ThermalOil: {
-            delete &getRealPvt<OilPvtApproach::ThermalOil>();
-            break;
-        }
-        case OilPvtApproach::BrineCo2: {
-            delete &getRealPvt<OilPvtApproach::BrineCo2>();
-            break;
-        }
-        case OilPvtApproach::BrineH2: {
-            delete &getRealPvt<OilPvtApproach::BrineH2>();
-            break;
-        }
-        case OilPvtApproach::NoOil:
-            break;
-        }
-    }
+    ~OilPvtMultiplexer();
 
-    bool mixingEnergy(){
-        switch (approach_) {
-        case OilPvtApproach::ThermalOil: {
-            return true;
-            break;
-        }
-        default: {
-            return false;
-        }
-        }
+    bool mixingEnergy() const
+    {
+        return approach_ == OilPvtApproach::ThermalOil;
     }
 #if HAVE_ECL_INPUT
     /*!
@@ -173,25 +136,19 @@ public:
 #endif // HAVE_ECL_INPUT
 
 
-    void initEnd()
-    { OPM_OIL_PVT_MULTIPLEXER_CALL(pvtImpl.initEnd(), break); }
+    void initEnd();
 
     /*!
      * \brief Return the number of PVT regions which are considered by this PVT-object.
      */
-    unsigned numRegions() const
-    { OPM_OIL_PVT_MULTIPLEXER_CALL(return pvtImpl.numRegions()); }
+    unsigned numRegions() const;
 
-    void setVapPars(const Scalar par1, const Scalar par2)
-    {
-        OPM_OIL_PVT_MULTIPLEXER_CALL(pvtImpl.setVapPars(par1, par2), break);
-    }
+    void setVapPars(const Scalar par1, const Scalar par2);
 
     /*!
      * \brief Return the reference density which are considered by this PVT-object.
      */
-    const Scalar oilReferenceDensity(unsigned regionIdx) const
-    { OPM_OIL_PVT_MULTIPLEXER_CALL(return pvtImpl.oilReferenceDensity(regionIdx)); }
+    Scalar oilReferenceDensity(unsigned regionIdx) const;
 
     /*!
      * \brief Returns the specific enthalpy [J/kg] oil given a set of parameters.
@@ -287,39 +244,7 @@ public:
       OPM_OIL_PVT_MULTIPLEXER_CALL(return pvtImpl.diffusionCoefficient(temperature, pressure, compIdx));
     }
 
-    void setApproach(OilPvtApproach appr)
-    {
-        switch (appr) {
-        case OilPvtApproach::LiveOil:
-            realOilPvt_ = new LiveOilPvt<Scalar>;
-            break;
-
-        case OilPvtApproach::DeadOil:
-            realOilPvt_ = new DeadOilPvt<Scalar>;
-            break;
-
-        case OilPvtApproach::ConstantCompressibilityOil:
-            realOilPvt_ = new ConstantCompressibilityOilPvt<Scalar>;
-            break;
-
-        case OilPvtApproach::ThermalOil:
-            realOilPvt_ = new OilPvtThermal<Scalar>;
-            break;
-
-        case OilPvtApproach::BrineCo2:
-            realOilPvt_ = new BrineCo2Pvt<Scalar>;
-            break;
-
-        case OilPvtApproach::BrineH2:
-            realOilPvt_ = new BrineH2Pvt<Scalar>;
-            break;
-
-        case OilPvtApproach::NoOil:
-            throw std::logic_error("Not implemented: Oil PVT of this deck!");
-        }
-
-        approach_ = appr;
-    }
+    void setApproach(OilPvtApproach appr);
 
     /*!
      * \brief Returns the concrete approach for calculating the PVT relations.
@@ -416,38 +341,12 @@ public:
         return *static_cast<const BrineH2Pvt<Scalar>* >(realOilPvt_);
     }
 
-    OilPvtMultiplexer<Scalar,enableThermal>& operator=(const OilPvtMultiplexer<Scalar,enableThermal>& data)
-    {
-        approach_ = data.approach_;
-        switch (approach_) {
-        case OilPvtApproach::ConstantCompressibilityOil:
-            realOilPvt_ = new ConstantCompressibilityOilPvt<Scalar>(*static_cast<const ConstantCompressibilityOilPvt<Scalar>*>(data.realOilPvt_));
-            break;
-        case OilPvtApproach::DeadOil:
-            realOilPvt_ = new DeadOilPvt<Scalar>(*static_cast<const DeadOilPvt<Scalar>*>(data.realOilPvt_));
-            break;
-        case OilPvtApproach::LiveOil:
-            realOilPvt_ = new LiveOilPvt<Scalar>(*static_cast<const LiveOilPvt<Scalar>*>(data.realOilPvt_));
-            break;
-        case OilPvtApproach::ThermalOil:
-            realOilPvt_ = new OilPvtThermal<Scalar>(*static_cast<const OilPvtThermal<Scalar>*>(data.realOilPvt_));
-            break;
-        case OilPvtApproach::BrineCo2:
-            realOilPvt_ = new BrineCo2Pvt<Scalar>(*static_cast<const BrineCo2Pvt<Scalar>*>(data.realOilPvt_));
-            break;
-        case OilPvtApproach::BrineH2:
-            realOilPvt_ = new BrineH2Pvt<Scalar>(*static_cast<const BrineH2Pvt<Scalar>*>(data.realOilPvt_));
-            break;
-        default:
-            break;
-        }
-
-        return *this;
-    }
+    OilPvtMultiplexer<Scalar,enableThermal>&
+    operator=(const OilPvtMultiplexer<Scalar,enableThermal>& data);
 
 private:
-    OilPvtApproach approach_;
-    void* realOilPvt_;
+    OilPvtApproach approach_{OilPvtApproach::NoOil};
+    void* realOilPvt_{nullptr};
 };
 
 } // namespace Opm
