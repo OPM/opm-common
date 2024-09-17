@@ -47,7 +47,7 @@ enum class EclTwoPhaseApproach {
  * Essentially, this class just stores the two parameter objects for
  * the twophase capillary pressure laws.
  */
-template<class Traits, class GasOilParamsT, class OilWaterParamsT, class GasWaterParamsT, bool useSharedPointers = true>
+template<class Traits, class GasOilParamsT, class OilWaterParamsT, class GasWaterParamsT, template <typename> class PtrT = std::shared_ptr>
 class EclTwoPhaseMaterialParams : public EnsureFinalized
 {
     using Scalar = typename Traits::Scalar;
@@ -61,15 +61,9 @@ public:
 
 
     // make it possible to opt out of using shared pointers to stay within valid cuda c++
-    using GasOilParamsPtr = std::conditional_t<useSharedPointers,
-                                               std::shared_ptr<GasOilParams>,
-                                               GasOilParams*>;
-    using OilWaterParamsPtr = std::conditional_t<useSharedPointers,
-                                               std::shared_ptr<OilWaterParams>,
-                                               OilWaterParams*>;
-    using GasWaterParamsPtr = std::conditional_t<useSharedPointers,
-                                               std::shared_ptr<GasWaterParams>,
-                                               GasWaterParams*>;
+    using GasOilParamsPtr = PtrT<GasOilParams>;
+    using OilWaterParamsPtr = PtrT<OilWaterParams>;
+    using GasWaterParamsPtr = PtrT<GasWaterParams>;
 
     /*!
      * \brief The default constructor.
@@ -160,33 +154,33 @@ private:
 
 } // namespace Opm
 
-namespace Opm::gpuistl{
+// namespace Opm::gpuistl{
 
-/// @brief this function is intented to make a GPU friendly view of the EclTwoPhaseMaterialParams
-/// @tparam TraitsT the same traits as in EclTwoPhaseMaterialParams
-/// @tparam ContainerType typically const gpuBuffer<scalarType>
-/// @tparam ViewType  typically gpuView<const scalarType>
-/// @param params the parameters object instansiated with gpuBuffers or similar
-/// @return the GPU view of the GPU EclTwoPhaseMaterialParams object
-template <class TraitsT, class GasOilParamsT, class OilWaterParamsT, class GasWwaterParamsT>
-EclTwoPhaseMaterialParams<TraitsT, GasOilParamsT, OilWaterParamsT, GasWwaterParamsT, false> make_view(const EclTwoPhaseMaterialParams<TraitsT, GasOilParamsT, OilWaterParamsT, GasWwaterParamsT, false>& params) {
+// /// @brief this function is intented to make a GPU friendly view of the EclTwoPhaseMaterialParams
+// /// @tparam TraitsT the same traits as in EclTwoPhaseMaterialParams
+// /// @tparam ContainerType typically const gpuBuffer<scalarType>
+// /// @tparam ViewType  typically gpuView<const scalarType>
+// /// @param params the parameters object instansiated with gpuBuffers or similar
+// /// @return the GPU view of the GPU EclTwoPhaseMaterialParams object
+// template <class TraitsT, class GasOilParamsT, class OilWaterParamsT, class GasWwaterParamsT>
+// EclTwoPhaseMaterialParams<TraitsT, GasOilParamsT, OilWaterParamsT, GasWwaterParamsT, false> make_view(const EclTwoPhaseMaterialParams<TraitsT, GasOilParamsT, OilWaterParamsT, GasWwaterParamsT, false>& params) {
 
-    // Since the view should mainly work for stuff already initialized on the GPU we know that we already have raw
-    // pointers that do not need to be further dealt with, this make_view should just pass it on to fit the API
-    // using twoPhaseParamsWithShared = EclTwoPhaseMaterialParams<TraitsT, GasOilParamsT, OilWaterParamsT, GasWwaterParamsT, true>;
-    // typename twoPhaseParamsWithShared::GasOilParams* gasOilParams = params.gasOilParams().get();
-    // typename twoPhaseParamsWithShared::OilWaterParams* oilWaterParams = params.oilWaterParams().get();
-    // typename twoPhaseParamsWithShared::GasWaterParams* gasWaterParams = params.gasWaterParams().get();
+//     // Since the view should mainly work for stuff already initialized on the GPU we know that we already have raw
+//     // pointers that do not need to be further dealt with, this make_view should just pass it on to fit the API
+//     // using twoPhaseParamsWithShared = EclTwoPhaseMaterialParams<TraitsT, GasOilParamsT, OilWaterParamsT, GasWwaterParamsT, true>;
+//     // typename twoPhaseParamsWithShared::GasOilParams* gasOilParams = params.gasOilParams().get();
+//     // typename twoPhaseParamsWithShared::OilWaterParams* oilWaterParams = params.oilWaterParams().get();
+//     // typename twoPhaseParamsWithShared::GasWaterParams* gasWaterParams = params.gasWaterParams().get();
 
-    auto resultView = EclTwoPhaseMaterialParams<TraitsT, GasOilParamsT, OilWaterParamsT, GasWwaterParamsT, false>();
-    resultView.setGasOilParams(params.gasOilParams());
-    resultView.setOilWaterParams(params.oilWaterParams());
-    resultView.setGasWaterParams(params.gasWaterParams());
-    resultView.setApproach(params.approach());
-    resultView.finalize();
+//     auto resultView = EclTwoPhaseMaterialParams<TraitsT, GasOilParamsT, OilWaterParamsT, GasWwaterParamsT, false>();
+//     resultView.setGasOilParams(params.gasOilParams());
+//     resultView.setOilWaterParams(params.oilWaterParams());
+//     resultView.setGasWaterParams(params.gasWaterParams());
+//     resultView.setApproach(params.approach());
+//     resultView.finalize();
 
-    return resultView;
-}
-}
+//     return resultView;
+// }
+// }
 
 #endif

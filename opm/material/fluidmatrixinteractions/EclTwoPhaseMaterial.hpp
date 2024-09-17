@@ -51,12 +51,12 @@ template <class TraitsT,
           class GasOilMaterialLawT,
           class OilWaterMaterialLawT,
           class GasWaterMaterialLawT,
-          bool useSmartPointers = true,
+          template <typename> class PtrT = std::shared_ptr,
           class ParamsT = EclTwoPhaseMaterialParams<TraitsT,
                                                     typename GasOilMaterialLawT::Params,
                                                     typename OilWaterMaterialLawT::Params,
                                                     typename GasWaterMaterialLawT::Params,
-                                                    useSmartPointers> >
+                                                    PtrT>>
 class EclTwoPhaseMaterial : public TraitsT
 {
 public:
