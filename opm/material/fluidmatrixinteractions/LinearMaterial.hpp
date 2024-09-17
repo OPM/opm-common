@@ -32,7 +32,6 @@
 #include <opm/material/common/MathToolbox.hpp>
 #include <opm/material/common/Valgrind.hpp>
 
-#include <algorithm>
 #include <type_traits>
 
 namespace Opm {
@@ -56,7 +55,7 @@ public:
     typedef typename Traits::Scalar Scalar;
 
     //! The number of fluid phases
-    static const int numPhases = Traits::numPhases;
+    using Traits::numPhases;
 
     //! Specify whether this material law implements the two-phase
     //! convenience API
