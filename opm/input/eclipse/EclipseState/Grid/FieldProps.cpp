@@ -850,7 +850,19 @@ void FieldProps::reset_actnum(const std::vector<int>& new_actnum)
     }
 
     for (auto& data : this->double_data) {
-        data.second.compress(active_map);
+        // we only compress keywords that are not global
+        // FieldData used for the TranCalculator has no valid keyword as key
+        bool has_kw_info = false;
+        Fieldprops::keywords::keyword_info<double> kw_info;
+        try{
+            kw_info = Fieldprops::keywords::global_kw_info<double>(data.first, true);
+            has_kw_info = true;
+        }
+        catch(...)
+        {}
+
+        if  (!has_kw_info || !kw_info.global)
+            data.second.compress(active_map);
     }
 
     for (auto& data : this->int_data) {
