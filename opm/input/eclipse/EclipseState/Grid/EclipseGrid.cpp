@@ -1,5 +1,4 @@
 /*
-
   Copyright 2014 Statoil ASA.
 
   This file is part of the Open Porous Media project (OPM).
@@ -443,7 +442,9 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
         }
     }
 
-    void EclipseGrid::initGridFromEGridFile(Opm::EclIO::EclFile& egridfile, std::string fileName){
+    void EclipseGrid::initGridFromEGridFile(Opm::EclIO::EclFile& egridfile,
+                                            const std::string&   fileName)
+    {
         OpmLog::info(fmt::format("\nCreating grid from: {} ", fileName));
 
         if (!egridfile.hasKey("GRIDHEAD")) {
