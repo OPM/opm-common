@@ -192,19 +192,18 @@ void open_grdecl_output(const std::string& output_fname, const std::string& inpu
         }
 
         ofileH.open(grdeclfile, std::ios::out);
-
-    } else {
+    }
+    else {
         std::filesystem::path grdeclfile(output_fname);
         std::filesystem::path path = grdeclfile.parent_path();
-            
-        if ((path.empty()) || (std::filesystem::exists(path))) {
 
+        if (path.empty() || std::filesystem::exists(path)) {
             if (std::filesystem::exists(grdeclfile)) {
                 std::cout << "\nError, cant make grdecl file " << grdeclfile.string() << ". File exists \n";
                 exit(1);
             }
-                 
-        } else {
+        }
+        else {
             std::cout << "\n!Error, output directory : '" << path.string() << "' doesn't exist \n";
             exit(1);
         }
@@ -214,8 +213,8 @@ void open_grdecl_output(const std::string& output_fname, const std::string& inpu
 }
 
 
-int main(int argc, char **argv) {
-
+int main(int argc, char **argv)
+{
     int c                          = 0;
     int reportStepNumber           = -1;
     bool specificReportStepNumber  = false;
@@ -223,32 +222,45 @@ int main(int argc, char **argv) {
     bool enforce_ix_output         = false;
     bool to_grdecl                 = false;
 
-    std::map<std::string, std::string> to_formatted = {{".EGRID", ".FEGRID"}, {".INIT", ".FINIT"}, {".SMSPEC", ".FSMSPEC"},
-        {".UNSMRY", ".FUNSMRY"}, {".UNRST", ".FUNRST"}, {".RFT", ".FRFT"}, {".ESMRY", ".FESMRY"}};
+    const std::map<std::string, std::string> to_formatted {
+        {".GRID"  , ".FGRID"  },
+        {".EGRID" , ".FEGRID" },
+        {".INIT"  , ".FINIT"  },
+        {".SMSPEC", ".FSMSPEC"},
+        {".UNSMRY", ".FUNSMRY"},
+        {".UNRST" , ".FUNRST" },
+        {".RFT"   , ".FRFT"   },
+        {".ESMRY" , ".FESMRY" },
+    };
 
-    std::map<std::string, std::string> to_binary = {{".FEGRID", ".EGRID"}, {".FINIT", ".INIT"}, {".FSMSPEC", ".SMSPEC"},
-        {".FUNSMRY", ".UNSMRY"}, {".FUNRST", ".UNRST"}, {".FRFT", ".RFT"}, {".FESMRY", ".ESMRY"}};
+    const std::map<std::string, std::string> to_binary {
+        {".FGRID"  , ".GRID"  },
+        {".FEGRID" , ".EGRID" },
+        {".FINIT"  , ".INIT"  },
+        {".FSMSPEC", ".SMSPEC"},
+        {".FUNSMRY", ".UNSMRY"},
+        {".FUNRST" , ".UNRST" },
+        {".FRFT"   , ".RFT"   },
+        {".FESMRY" , ".ESMRY" },
+    };
 
-
-    std::string output_fname;
-
-
+    std::string output_fname{};
     while ((c = getopt(argc, argv, "hr:ligo:")) != -1) {
         switch (c) {
         case 'h':
             printHelp();
             return 0;
         case 'l':
-            listProperties=true;
+            listProperties = true;
             break;
         case 'g':
-            to_grdecl=true;
+            to_grdecl = true;
             break;
         case 'i':
-            enforce_ix_output=true;
+            enforce_ix_output = true;
             break;
         case 'r':
-            specificReportStepNumber=true;
+            specificReportStepNumber = true;
             reportStepNumber = atoi(optarg);
             break;
         case 'o':
@@ -261,7 +273,7 @@ int main(int argc, char **argv) {
 
     int argOffset = optind;
 
-    if ((!output_fname.empty()) && (!to_grdecl)){
+    if (!output_fname.empty() && !to_grdecl) {
         std::cout << "\n!Error, option -o only valid whit option -g \n\n";
         exit(1);
     }
@@ -282,7 +294,6 @@ int main(int argc, char **argv) {
 
 
     if (to_grdecl) {
-    
         auto array_list = file1.getList();
         file1.loadData();
 
@@ -327,16 +338,13 @@ int main(int argc, char **argv) {
     }
 
     if (listProperties) {
-
-        if (extension==".UNRST") {
-
+        if (extension == ".UNRST") {
             ERst rst1(filename);
             rst1.loadData("INTEHEAD");
 
-            std::vector<int> reportStepList=rst1.listOfReportStepNumbers();
+            std::vector<int> reportStepList = rst1.listOfReportStepNumbers();
 
             for (auto seqn : reportStepList) {
-
                 std::vector<int> inteh = rst1.getRestartData<int>("INTEHEAD", seqn, 0);
 
                 std::cout << "Report step number: "
@@ -346,8 +354,8 @@ int main(int argc, char **argv) {
             }
 
             std::cout << std::endl;
-
-        } else {
+        }
+        else {
             std::cout << "\n!ERROR, option -l only only available for unified restart files (*.UNRST) " << std::endl;
             exit(1);
         }
@@ -356,30 +364,33 @@ int main(int argc, char **argv) {
     }
 
     if (formattedOutput) {
-
         auto search = to_formatted.find(extension);
-
         if (search != to_formatted.end()){
             resFile = rootN + search->second;
-        } else if (extension.substr(1,1)=="X"){
+        }
+        else if (extension.substr(1,1) == "X") {
             resFile = rootN + ".F" + extension.substr(2);
-        } else if (extension.substr(1,1)=="S"){
+        }
+        else if (extension.substr(1,1) == "S") {
             resFile = rootN + ".A" + extension.substr(2);
-        } else {
+        }
+        else {
             std::cout << "\n!ERROR, unknown file type for input file '" << rootN + extension << "'\n" << std::endl;
             exit(1);
         }
-    } else {
-
+    }
+    else {
         auto search = to_binary.find(extension);
-
         if (search != to_binary.end()){
             resFile = rootN + search->second;
-        } else if (extension.substr(1,1)=="F"){
+        }
+        else if (extension.substr(1,1) == "F") {
             resFile = rootN + ".X" + extension.substr(2);
-        } else if (extension.substr(1,1)=="A"){
+        }
+        else if (extension.substr(1,1) == "A") {
             resFile = rootN + ".S" + extension.substr(2);
-        } else {
+        }
+        else {
             std::cout << "\n!ERROR, unknown file type for input file '" << rootN + extension << "'\n" << std::endl;
             exit(1);
         }
@@ -389,14 +400,13 @@ int main(int argc, char **argv) {
 
     EclOutput outFile(resFile, formattedOutput);
 
-    if ((file1.is_ix()) || (enforce_ix_output)) {
+    if (file1.is_ix() || enforce_ix_output) {
         std::cout << "setting IX flag on output file \n";
         outFile.set_ix();
     }
 
     if (specificReportStepNumber) {
-
-        if (extension!=".UNRST") {
+        if (extension != ".UNRST") {
             std::cout << "\n!ERROR, option -r only can only be used with unified restart files (*.UNRST) " << std::endl;
             exit(1);
         }
@@ -411,11 +421,9 @@ int main(int argc, char **argv) {
         rst1.loadReportStepNumber(reportStepNumber);
 
         auto arrayList = rst1.listOfRstArrays(reportStepNumber);
-
         writeArrayList(arrayList, rst1, reportStepNumber, outFile);
-
-    } else {
-
+    }
+    else {
         file1.loadData();
         auto arrayList = file1.getList();
         std::vector<int> elementSizeList = file1.getElementSizeList();
