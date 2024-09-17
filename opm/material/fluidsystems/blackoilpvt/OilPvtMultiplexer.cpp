@@ -30,6 +30,40 @@
 namespace Opm {
 
 template <class Scalar, bool enableThermal>
+OilPvtMultiplexer<Scalar,enableThermal>::
+~OilPvtMultiplexer()
+{
+    switch (approach_) {
+    case OilPvtApproach::LiveOil: {
+        delete &getRealPvt<OilPvtApproach::LiveOil>();
+        break;
+    }
+    case OilPvtApproach::DeadOil: {
+        delete &getRealPvt<OilPvtApproach::DeadOil>();
+        break;
+    }
+    case OilPvtApproach::ConstantCompressibilityOil: {
+        delete &getRealPvt<OilPvtApproach::ConstantCompressibilityOil>();
+        break;
+    }
+    case OilPvtApproach::ThermalOil: {
+        delete &getRealPvt<OilPvtApproach::ThermalOil>();
+        break;
+    }
+    case OilPvtApproach::BrineCo2: {
+        delete &getRealPvt<OilPvtApproach::BrineCo2>();
+        break;
+    }
+    case OilPvtApproach::BrineH2: {
+        delete &getRealPvt<OilPvtApproach::BrineH2>();
+        break;
+    }
+    case OilPvtApproach::NoOil:
+        break;
+    }
+}
+
+template <class Scalar, bool enableThermal>
 void OilPvtMultiplexer<Scalar,enableThermal>::
 initFromState(const EclipseState& eclState, const Schedule& schedule)
 {
@@ -52,6 +86,102 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
         setApproach(OilPvtApproach::LiveOil);
 
     OPM_OIL_PVT_MULTIPLEXER_CALL(pvtImpl.initFromState(eclState, schedule), break);
+}
+
+template <class Scalar, bool enableThermal>
+void OilPvtMultiplexer<Scalar,enableThermal>::
+initEnd()
+{
+    OPM_OIL_PVT_MULTIPLEXER_CALL(pvtImpl.initEnd(), break);
+}
+
+template <class Scalar, bool enableThermal>
+unsigned OilPvtMultiplexer<Scalar,enableThermal>::
+numRegions() const
+{
+    OPM_OIL_PVT_MULTIPLEXER_CALL(return pvtImpl.numRegions());
+}
+
+template <class Scalar, bool enableThermal>
+void OilPvtMultiplexer<Scalar,enableThermal>::
+setVapPars(const Scalar par1, const Scalar par2)
+{
+    OPM_OIL_PVT_MULTIPLEXER_CALL(pvtImpl.setVapPars(par1, par2), break);
+}
+
+template <class Scalar, bool enableThermal>
+Scalar OilPvtMultiplexer<Scalar,enableThermal>::
+oilReferenceDensity(unsigned regionIdx) const
+{
+    OPM_OIL_PVT_MULTIPLEXER_CALL(return pvtImpl.oilReferenceDensity(regionIdx));
+}
+
+template <class Scalar, bool enableThermal>
+void OilPvtMultiplexer<Scalar,enableThermal>::
+setApproach(OilPvtApproach appr)
+{
+    switch (appr) {
+    case OilPvtApproach::LiveOil:
+        realOilPvt_ = new LiveOilPvt<Scalar>;
+        break;
+
+    case OilPvtApproach::DeadOil:
+        realOilPvt_ = new DeadOilPvt<Scalar>;
+        break;
+
+    case OilPvtApproach::ConstantCompressibilityOil:
+        realOilPvt_ = new ConstantCompressibilityOilPvt<Scalar>;
+        break;
+
+    case OilPvtApproach::ThermalOil:
+        realOilPvt_ = new OilPvtThermal<Scalar>;
+        break;
+
+    case OilPvtApproach::BrineCo2:
+        realOilPvt_ = new BrineCo2Pvt<Scalar>;
+        break;
+
+    case OilPvtApproach::BrineH2:
+        realOilPvt_ = new BrineH2Pvt<Scalar>;
+        break;
+
+    case OilPvtApproach::NoOil:
+        throw std::logic_error("Not implemented: Oil PVT of this deck!");
+    }
+
+    approach_ = appr;
+}
+
+template <class Scalar, bool enableThermal>
+OilPvtMultiplexer<Scalar,enableThermal>&
+OilPvtMultiplexer<Scalar,enableThermal>::
+operator=(const OilPvtMultiplexer<Scalar,enableThermal>& data)
+{
+    approach_ = data.approach_;
+    switch (approach_) {
+    case OilPvtApproach::ConstantCompressibilityOil:
+        realOilPvt_ = new ConstantCompressibilityOilPvt<Scalar>(*static_cast<const ConstantCompressibilityOilPvt<Scalar>*>(data.realOilPvt_));
+        break;
+    case OilPvtApproach::DeadOil:
+        realOilPvt_ = new DeadOilPvt<Scalar>(*static_cast<const DeadOilPvt<Scalar>*>(data.realOilPvt_));
+        break;
+    case OilPvtApproach::LiveOil:
+        realOilPvt_ = new LiveOilPvt<Scalar>(*static_cast<const LiveOilPvt<Scalar>*>(data.realOilPvt_));
+        break;
+    case OilPvtApproach::ThermalOil:
+        realOilPvt_ = new OilPvtThermal<Scalar>(*static_cast<const OilPvtThermal<Scalar>*>(data.realOilPvt_));
+        break;
+    case OilPvtApproach::BrineCo2:
+        realOilPvt_ = new BrineCo2Pvt<Scalar>(*static_cast<const BrineCo2Pvt<Scalar>*>(data.realOilPvt_));
+        break;
+    case OilPvtApproach::BrineH2:
+        realOilPvt_ = new BrineH2Pvt<Scalar>(*static_cast<const BrineH2Pvt<Scalar>*>(data.realOilPvt_));
+        break;
+    default:
+        break;
+    }
+
+    return *this;
 }
 
 template class OilPvtMultiplexer<double,false>;
