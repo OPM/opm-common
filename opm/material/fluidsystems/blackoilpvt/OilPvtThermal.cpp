@@ -36,6 +36,7 @@
 
 namespace Opm {
 
+#if HAVE_ECL_INPUT
 template<class Scalar>
 void OilPvtThermal<Scalar>::
 initFromState(const EclipseState& eclState, const Schedule& schedule)
@@ -156,7 +157,7 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
             std::vector<double> uSamples(temperatureColumn.size());
 
             Scalar u = temperatureColumn[0]*cvOilColumn[0];
-            for (size_t i = 0;; ++i) {
+            for (std::size_t i = 0;; ++i) {
                 uSamples[i] = u;
 
                 if (i >= temperatureColumn.size() - 1)
@@ -174,6 +175,81 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
             internalEnergyCurves_[regionIdx].setXYContainers(temperatureColumn.vectorCopy(), uSamples);
         }
     }
+}
+#endif
+
+template<class Scalar>
+void OilPvtThermal<Scalar>::
+setNumRegions(std::size_t numRegions)
+{
+    oilvisctCurves_.resize(numRegions);
+    viscrefPress_.resize(numRegions);
+    viscrefRs_.resize(numRegions);
+    viscRef_.resize(numRegions);
+    internalEnergyCurves_.resize(numRegions);
+    oildentRefTemp_.resize(numRegions);
+    oildentCT1_.resize(numRegions);
+    oildentCT2_.resize(numRegions);
+    oilJTRefPres_.resize(numRegions);
+    oilJTC_.resize(numRegions);
+    rhoRefG_.resize(numRegions);
+    hVap_.resize(numRegions, 0.0);
+}
+
+template<class Scalar>
+bool OilPvtThermal<Scalar>::
+operator==(const OilPvtThermal<Scalar>& data) const
+{
+    if (isothermalPvt_ && !data.isothermalPvt_) {
+        return false;
+    }
+    if (!isothermalPvt_ && data.isothermalPvt_) {
+        return false;
+    }
+
+    return  this->oilvisctCurves() == data.oilvisctCurves() &&
+            this->viscrefPress() == data.viscrefPress() &&
+            this->viscrefRs() == data.viscrefRs() &&
+            this->viscRef() == data.viscRef() &&
+            this->oildentRefTemp() == data.oildentRefTemp() &&
+            this->oildentCT1() == data.oildentCT1() &&
+            this->oildentCT2() == data.oildentCT2() &&
+            this->oilJTRefPres() == data.oilJTRefPres() &&
+            this->oilJTC() == data.oilJTC() &&
+            this->internalEnergyCurves() == data.internalEnergyCurves() &&
+            this->enableThermalDensity() == data.enableThermalDensity() &&
+            this->enableJouleThomson() == data.enableJouleThomson() &&
+            this->enableThermalViscosity() == data.enableThermalViscosity() &&
+            this->enableInternalEnergy() == data.enableInternalEnergy();
+}
+
+template<class Scalar>
+OilPvtThermal<Scalar>&
+OilPvtThermal<Scalar>::
+operator=(const OilPvtThermal<Scalar>& data)
+{
+    if (data.isothermalPvt_) {
+        isothermalPvt_ = new IsothermalPvt(*data.isothermalPvt_);
+    }
+    else {
+        isothermalPvt_ = nullptr;
+    }
+    oilvisctCurves_ = data.oilvisctCurves_;
+    viscrefPress_ = data.viscrefPress_;
+    viscrefRs_ = data.viscrefRs_;
+    viscRef_ = data.viscRef_;
+    oildentRefTemp_ = data.oildentRefTemp_;
+    oildentCT1_ = data.oildentCT1_;
+    oildentCT2_ = data.oildentCT2_;
+    oilJTRefPres_ =  data.oilJTRefPres_;
+    oilJTC_ =  data.oilJTC_;
+    internalEnergyCurves_ = data.internalEnergyCurves_;
+    enableThermalDensity_ = data.enableThermalDensity_;
+    enableJouleThomson_ = data.enableJouleThomson_;
+    enableThermalViscosity_ = data.enableThermalViscosity_;
+    enableInternalEnergy_ = data.enableInternalEnergy_;
+
+    return *this;
 }
 
 template class OilPvtThermal<double>;
