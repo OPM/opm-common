@@ -540,7 +540,7 @@ Dimension VFPProdTable::ALQDimension(const ALQ_TYPE& alq_type, const UnitSystem&
     case ALQ_TYPE::ALQ_PUMP:
     case ALQ_TYPE::ALQ_COMP:
     case ALQ_TYPE::ALQ_BEAN:
-        std::logic_error("scaling of the given ALQ type, not implemented ");
+        throw std::logic_error("scaling of the given ALQ type, not implemented ");
         break;
     default:
         throw std::logic_error("Invalid ALQ type");

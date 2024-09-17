@@ -385,7 +385,7 @@ unsigned cubicRoots(SolContainer* sol,
 
         }
         else {
-            std::runtime_error(" p = 0 in cubic root solver!");
+            throw std::runtime_error(" p = 0 in cubic root solver!");
         }
 
         // Transform t to output solution
