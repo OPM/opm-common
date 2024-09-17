@@ -61,6 +61,7 @@
 #include <opm/input/eclipse/EclipseState/Tables/ColumnSchema.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/DenT.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/Eqldims.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/EzrokhiTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/FlatTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/JFunc.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/PlymwinjTable.hpp>
@@ -348,6 +349,7 @@ TEST_FOR_TYPE(WellTestState)
 TEST_FOR_TYPE(WellType)
 TEST_FOR_TYPE(WListManager)
 TEST_FOR_TYPE(WriteRestartFileEvents)
+TEST_FOR_TYPE(EzrokhiTable)
 
 namespace {
 
