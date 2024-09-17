@@ -31,8 +31,6 @@
 #include "blackoilpvt/OilPvtMultiplexer.hpp"
 #include "blackoilpvt/GasPvtMultiplexer.hpp"
 #include "blackoilpvt/WaterPvtMultiplexer.hpp"
-#include "blackoilpvt/BrineCo2Pvt.hpp"
-#include "blackoilpvt/BrineH2Pvt.hpp"
 
 #include <opm/common/TimingMacros.hpp>
 
@@ -42,6 +40,7 @@
 #include <opm/material/common/MathToolbox.hpp>
 #include <opm/material/common/Valgrind.hpp>
 #include <opm/material/common/HasMemberGeneratorMacros.hpp>
+#include <opm/material/fluidsystems/NullParameterCache.hpp>
 
 #include <array>
 #include <cstddef>
