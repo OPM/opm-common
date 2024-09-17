@@ -97,8 +97,8 @@ FileDeck::Index  FileDeck::Index::operator++(int) {
 FileDeck::Index  FileDeck::Index::operator+(std::size_t shift) const {
     auto sum = *this;
 
-    for (std::size_t arg = 0; arg < shift; arg++)
-        sum++;
+    for (std::size_t arg = 0; arg < shift; ++arg)
+        ++sum;
 
     return sum;
 }
@@ -190,7 +190,7 @@ void FileDeck::erase(const FileDeck::Index& index) {
 void FileDeck::erase(const Index& begin, const Index& end) {
     auto current = end;
     while (current != begin) {
-        current--;
+        --current;
         this->erase(current);
     }
 }
@@ -254,7 +254,7 @@ std::size_t FileDeck::count(const std::string& keyword) const {
         if (deck_kw.name() == keyword)
             c += 1;
 
-        index++;
+        ++index;
     }
     return c;
 }
