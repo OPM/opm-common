@@ -117,7 +117,7 @@ namespace Opm {
                 int commentpos = parameter.find(ID_comment);
                 if (commentpos != 0) {
                     if (commentpos != int(std::string::npos)) {
-                        parameter = parameter.substr(0, commentpos);
+                        parameter.resize(commentpos);
                     }
                     int fpos = parameter.find(ID_delimiter_assignment);
                     if (fpos == int(std::string::npos)) {

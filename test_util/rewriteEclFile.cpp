@@ -60,7 +60,8 @@ int main(int argc, char **argv) {
     int p1 = outputFile.find_last_of(".");
     std::string ext = outputFile.substr(p1+1);
 
-    outputFile = outputFile.substr(0,p1) + "_REWRITE." + ext;
+    outputFile.resize(p1);
+    outputFile += "_REWRITE." + ext;
     Opm::EclIO::EclOutput outFile(outputFile, reffile.formattedInput());
 
     if (reffile.is_ix())
