@@ -79,7 +79,8 @@ namespace Opm {
 	    }
 	}
 
-	std::string ParameterGroup::path() const {
+        const std::string& ParameterGroup::path() const
+        {
 	    return path_;
 	}
 

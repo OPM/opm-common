@@ -79,7 +79,7 @@ namespace Opm {
         item_size sizeType() const;
         type_tag dataType() const;
         void setSizeType(item_size size_type);
-        std::string getDescription() const;
+        const std::string& getDescription() const;
         bool scalar() const;
         void setDescription(const std::string& helpText);
 
@@ -96,7 +96,7 @@ namespace Opm {
         DeckItem scan( RawRecord& rawRecord, UnitSystem& active_unitsystem, UnitSystem& default_unitsystem) const;
 
         std::string size_literal() const;
-        const std::string className() const;
+        const std::string& className() const;
         std::string createCode(const std::string& indent) const;
         std::ostream& inlineClass(std::ostream&, const std::string& indent) const;
         std::string inlineClassInit(const std::string& parentClass,

@@ -61,11 +61,12 @@ namespace Opm {
 	    /// @brief
 	    /// @todo Doc me!
 	    /// @return
-	    std::string getValue() const {return value_;}
+            const std::string& getValue() const { return value_; }
 	    /// @brief
 	    /// @todo Doc me!
 	    /// @return
-	    std::string getType() const {return type_;}
+            const std::string& getType() const { return type_; }
+
 	private:
 	    std::string value_;
 	    std::string type_;

@@ -54,7 +54,7 @@ public:
     void loadData(const std::vector<std::string>& stringVect);
 
     time_point startdate() const { return m_startdat; }
-    std::vector<int> start_v() const { return m_start_vect; }
+    const std::vector<int>& start_v() const { return m_start_vect; }
 
     bool hasKey(const std::string& key) const;
 

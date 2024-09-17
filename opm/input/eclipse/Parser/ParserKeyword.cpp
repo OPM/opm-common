@@ -235,7 +235,8 @@ std::string KeywordSize::construct() const
         return this->keyword_size.table_collection();
     }
 
-    std::string ParserKeyword::getDescription() const {
+    const std::string& ParserKeyword::getDescription() const
+    {
         return m_Description;
     }
 
