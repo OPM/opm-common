@@ -33,12 +33,13 @@
 
 namespace Opm {
 
+#if HAVE_ECL_INPUT
 template<class Scalar>
 void ConstantCompressibilityBrinePvt<Scalar>::
 initFromState(const EclipseState& eclState, const Schedule&)
 {
     const auto& tableManager = eclState.getTableManager();
-    size_t numRegions = tableManager.getTabdims().getNumPVTTables();
+    std::size_t numRegions = tableManager.getTabdims().getNumPVTTables();
     const auto& densityTable = tableManager.getDensityTable();
 
     formationVolumeTables_.resize(numRegions);
@@ -77,7 +78,7 @@ initFromState(const EclipseState& eclState, const Schedule&)
     }
 
 
-    size_t numPvtwRegions = numRegions;
+    std::size_t numPvtwRegions = numRegions;
     setNumRegions(numPvtwRegions);
 
     for (unsigned regionIdx = 0; regionIdx < numPvtwRegions; ++regionIdx) {
@@ -86,6 +87,18 @@ initFromState(const EclipseState& eclState, const Schedule&)
     }
 
     initEnd();
+}
+#endif
+
+template<class Scalar>
+void ConstantCompressibilityBrinePvt<Scalar>::
+setNumRegions(std::size_t numRegions)
+{
+    waterReferenceDensity_.resize(numRegions);
+
+    for (unsigned regionIdx = 0; regionIdx < numRegions; ++regionIdx) {
+        setReferenceDensities(regionIdx, 650.0, 1.0, 1000.0);
+    }
 }
 
 template class ConstantCompressibilityBrinePvt<double>;

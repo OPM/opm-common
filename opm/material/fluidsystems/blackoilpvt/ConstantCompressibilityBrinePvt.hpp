@@ -29,6 +29,7 @@
 
 #include <opm/material/common/Tabulated1DFunction.hpp>
 
+#include <cstddef>
 #include <vector>
 
 namespace Opm {
@@ -59,14 +60,7 @@ public:
     void initFromState(const EclipseState& eclState, const Schedule&);
 #endif
 
-    void setNumRegions(size_t numRegions)
-    {
-        waterReferenceDensity_.resize(numRegions);
-
-        for (unsigned regionIdx = 0; regionIdx < numRegions; ++regionIdx) {
-            setReferenceDensities(regionIdx, 650.0, 1.0, 1000.0);
-        }
-    }
+    void setNumRegions(std::size_t numRegions);
 
     void setVapPars(const Scalar, const Scalar)
     {
@@ -87,7 +81,6 @@ public:
     void initEnd()
     { }
 
-
     /*!
      * \brief Return the number of PVT regions which are considered by this PVT-object.
      */
@@ -107,9 +100,11 @@ public:
         throw std::runtime_error("Requested the enthalpy of water but the thermal option is not enabled");
     }
 
-    Scalar hVap(unsigned) const{
+    Scalar hVap(unsigned) const
+    {
         throw std::runtime_error("Requested the hvap of oil but the thermal option is not enabled");
     }
+
     /*!
      * \brief Returns the dynamic viscosity [Pa s] of the fluid phase given a set of parameters.
      */
@@ -130,7 +125,7 @@ public:
 
         const Evaluation& bw = inverseFormationVolumeFactor(regionIdx, temperature, pressure, Rsw, saltconcentration);
 
-        return MuwRef*BwRef*bw/(1 + Y*(1 + Y/2));
+        return MuwRef * BwRef * bw / (1 + Y * (1 + Y/2));
     }
 
 
@@ -152,7 +147,7 @@ public:
 
         const Evaluation& bw = saturatedInverseFormationVolumeFactor(regionIdx, temperature, pressure, saltconcentration);
 
-        return MuwRef*BwRef*bw/(1 + Y*(1 + Y/2));
+        return MuwRef * BwRef * bw / (1 + Y * (1 + Y/2));
     }
 
     /*!
@@ -165,7 +160,8 @@ public:
                                                     const Evaluation& saltconcentration) const
     {
         Evaluation Rsw = 0.0;
-        return inverseFormationVolumeFactor(regionIdx, temperature, pressure, Rsw, saltconcentration);
+        return inverseFormationVolumeFactor(regionIdx, temperature, pressure,
+                                            Rsw, saltconcentration);
     }
     /*!
      * \brief Returns the formation volume factor [-] of the fluid phase.
@@ -183,7 +179,7 @@ public:
         const Evaluation C = compressibilityTables_[regionIdx].eval(saltconcentration, /*extrapolate=*/true);
         const Evaluation X = C * (pressure - pRef);
 
-        return (1.0 + X*(1.0 + X/2.0))/BwRef;
+        return (1.0 + X * (1.0 + X / 2.0)) / BwRef;
 
     }
 
@@ -215,10 +211,11 @@ public:
                                     const Evaluation& /*pressure*/,
                                     unsigned /*compIdx*/) const
     {
-        throw std::runtime_error("Not implemented: The PVT model does not provide a diffusionCoefficient()");
+        throw std::runtime_error("Not implemented: The PVT model does not provide "
+                                 "a diffusionCoefficient()");
     }
 
-    const Scalar waterReferenceDensity(unsigned regionIdx) const
+    Scalar waterReferenceDensity(unsigned regionIdx) const
     { return waterReferenceDensity_[regionIdx]; }
 
     const std::vector<Scalar>& referencePressure() const
@@ -237,12 +234,12 @@ public:
     { return viscosibilityTables_; }
 
 private:
-    std::vector<Scalar> waterReferenceDensity_;
-    std::vector<Scalar> referencePressure_;
-    std::vector<TabulatedFunction> formationVolumeTables_;
-    std::vector<TabulatedFunction> compressibilityTables_;
-    std::vector<TabulatedFunction> viscosityTables_;
-    std::vector<TabulatedFunction> viscosibilityTables_;
+    std::vector<Scalar> waterReferenceDensity_{};
+    std::vector<Scalar> referencePressure_{};
+    std::vector<TabulatedFunction> formationVolumeTables_{};
+    std::vector<TabulatedFunction> compressibilityTables_{};
+    std::vector<TabulatedFunction> viscosityTables_{};
+    std::vector<TabulatedFunction> viscosibilityTables_{};
 };
 
 } // namespace Opm
