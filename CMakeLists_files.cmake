@@ -56,6 +56,7 @@ list (APPEND MAIN_SOURCE_FILES
       opm/material/fluidmatrixinteractions/EclEpsScalingPoints.cpp
       opm/material/fluidsystems/BlackOilFluidSystem.cpp
       opm/material/fluidsystems/blackoilpvt/BrineCo2Pvt.cpp
+      opm/material/fluidsystems/blackoilpvt/BrineH2Pvt.cpp
       opm/material/fluidsystems/blackoilpvt/DeadOilPvt.cpp
       opm/material/fluidsystems/blackoilpvt/DryGasPvt.cpp
       opm/material/fluidsystems/blackoilpvt/DryHumidGasPvt.cpp
@@ -332,7 +333,6 @@ if(ENABLE_ECL_INPUT)
     opm/material/fluidmatrixinteractions/EclMaterialLawManagerInitParams.cpp
     opm/material/fluidmatrixinteractions/EclMaterialLawManagerHystParams.cpp
     opm/material/fluidsystems/blackoilpvt/Co2GasPvt.cpp
-    opm/material/fluidsystems/blackoilpvt/BrineH2Pvt.cpp
     opm/material/fluidsystems/blackoilpvt/H2GasPvt.cpp
     opm/material/fluidsystems/blackoilpvt/ConstantCompressibilityBrinePvt.cpp
     opm/material/fluidsystems/blackoilpvt/ConstantCompressibilityOilPvt.cpp
