@@ -33,10 +33,36 @@
 namespace Opm {
 
 template<class Scalar>
+BrineCo2Pvt<Scalar>::
+BrineCo2Pvt(const std::vector<Scalar>& salinity,
+            int activityModel,
+            int thermalMixingModelSalt,
+            int thermalMixingModelLiquid,
+            Scalar T_ref,
+            Scalar P_ref)
+    : salinity_(salinity)
+{
+    // Throw an error if reference state is not (T, p) = (15.56 C, 1 atm) = (288.71 K, 1.01325e5 Pa)
+    if (T_ref != Scalar(288.71) || P_ref != Scalar(1.01325e5)) {
+        OPM_THROW(std::runtime_error,
+            "BrineCo2Pvt class can only be used with default reference state (T, P) = (288.71 K, 1.01325e5 Pa)!");
+    }
+    setActivityModelSalt(activityModel);
+    setThermalMixingModel(thermalMixingModelSalt, thermalMixingModelLiquid);
+    int num_regions =  salinity_.size();
+    co2ReferenceDensity_.resize(num_regions);
+    brineReferenceDensity_.resize(num_regions);
+    for (int i = 0; i < num_regions; ++i) {
+        co2ReferenceDensity_[i] = CO2::gasDensity(T_ref, P_ref, true);
+        brineReferenceDensity_[i] = Brine::liquidDensity(T_ref, P_ref, salinity_[i], true);
+    }
+}
+
+#if HAVE_ECL_INPUT
+template<class Scalar>
 void BrineCo2Pvt<Scalar>::
 initFromState(const EclipseState& eclState, const Schedule&)
 {
-
     bool co2sol = eclState.runspec().co2Sol();
     if (!co2sol && !eclState.getTableManager().getDensityTable().empty()) {
         OpmLog::warning("CO2STORE is enabled but DENSITY is in the deck. \n"
@@ -118,8 +144,86 @@ initFromState(const EclipseState& eclState, const Schedule&)
             + "Pa) and the reference temperature (" +  std::to_string(T_ref) + "K)."
             + ezrokhi_msg
             );
+}
+#endif
 
+template<class Scalar>
+void BrineCo2Pvt<Scalar>::
+setNumRegions(std::size_t numRegions)
+{
+    brineReferenceDensity_.resize(numRegions);
+    co2ReferenceDensity_.resize(numRegions);
+    salinity_.resize(numRegions);
+}
 
+template<class Scalar>
+void BrineCo2Pvt<Scalar>::
+setReferenceDensities(unsigned regionIdx,
+                      Scalar rhoRefBrine,
+                      Scalar rhoRefCO2,
+                      Scalar /*rhoRefWater*/)
+{
+    brineReferenceDensity_[regionIdx] = rhoRefBrine;
+    co2ReferenceDensity_[regionIdx] = rhoRefCO2;
+}
+
+template<class Scalar>
+void BrineCo2Pvt<Scalar>::
+setActivityModelSalt(int activityModel)
+{
+    switch (activityModel) {
+    case 1:
+    case 2:
+    case 3:  activityModel_ = activityModel; break;
+    default: OPM_THROW(std::runtime_error, "The salt activity model options are 1, 2 or 3");
+    }
+}
+
+template<class Scalar>
+void BrineCo2Pvt<Scalar>::
+setThermalMixingModel(int thermalMixingModelSalt, int thermalMixingModelLiquid)
+{
+    switch (thermalMixingModelSalt) {
+    case 0: saltMixType_ = Co2StoreConfig::SaltMixingType::NONE; break;
+    case 1: saltMixType_ = Co2StoreConfig::SaltMixingType::MICHAELIDES; break;
+    default: OPM_THROW(std::runtime_error, "The thermal mixing model option for salt are 0 or 1");
+    }
+
+    switch (thermalMixingModelLiquid) {
+    case 0: liquidMixType_ = Co2StoreConfig::LiquidMixingType::NONE; break;
+    case 1: liquidMixType_ = Co2StoreConfig::LiquidMixingType::IDEAL; break;
+    case 2: liquidMixType_ = liquidMixType_ = Co2StoreConfig::LiquidMixingType::DUANSUN;; break;
+    default: OPM_THROW(std::runtime_error, "The thermal mixing model option for liquid are 0, 1 and 2");
+    }
+}
+
+template<class Scalar>
+void BrineCo2Pvt<Scalar>::
+setEzrokhiDenCoeff(const std::vector<EzrokhiTable>& denaqa)
+{
+    if (denaqa.empty())
+        return;
+
+    enableEzrokhiDensity_ = true;
+    ezrokhiDenNaClCoeff_ = {static_cast<Scalar>(denaqa[0].getC0("NACL")),
+                            static_cast<Scalar>(denaqa[0].getC1("NACL")),
+                            static_cast<Scalar>(denaqa[0].getC2("NACL"))};
+    ezrokhiDenCo2Coeff_ = {static_cast<Scalar>(denaqa[0].getC0("CO2")),
+                           static_cast<Scalar>(denaqa[0].getC1("CO2")),
+                           static_cast<Scalar>(denaqa[0].getC2("CO2"))};
+}
+
+template<class Scalar>
+void BrineCo2Pvt<Scalar>::
+setEzrokhiViscCoeff(const std::vector<EzrokhiTable>& viscaqa)
+{
+    if (viscaqa.empty())
+        return;
+
+    enableEzrokhiViscosity_ = true;
+    ezrokhiViscNaClCoeff_ = {static_cast<Scalar>(viscaqa[0].getC0("NACL")),
+                             static_cast<Scalar>(viscaqa[0].getC1("NACL")),
+                             static_cast<Scalar>(viscaqa[0].getC2("NACL"))};
 }
 
 template class BrineCo2Pvt<double>;
