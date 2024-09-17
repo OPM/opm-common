@@ -76,9 +76,7 @@ namespace Opm
                                    Log::MessageType::Error,
                                    Log::MessageType::Problem,
                                    Log::MessageType::Bug }) {
-                if (category_limits_.find(category) == category_limits_.end()) {
-                    category_limits_[category] = NoLimit;
-                }
+                category_limits_.try_emplace(category, NoLimit);
             }
         }
 

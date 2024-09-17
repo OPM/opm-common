@@ -181,9 +181,7 @@ namespace Opm {
                 };
             }
 
-            if (this->regions.count(region_name) == 0) {
-                this->regions[region_name] = this->fp->get_global_int(region_name);
-            }
+            this->regions.try_emplace(region_name, this->fp->get_global_int(region_name));
         }
 
         for (const auto& [regPair, recordIx] : searchPairs) {

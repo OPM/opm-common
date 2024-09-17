@@ -109,9 +109,10 @@ namespace Opm {
             const auto num_comp = item.getData<std::string>().size();
             cnames.insert({{"H2O", -1}, {"CO2", -1}, {"NACL", -1}});
             for (size_t c = 0; c < num_comp; ++c) {
-                const auto& name = item.getTrimmedString(c);
-                if (cnames.find(name) != cnames.end()) {
-                    cnames[name] = c;
+                const auto name = item.getTrimmedString(c);
+                auto it = cnames.find(name);
+                if (it != cnames.end()) {
+                    it->second  = c;
                 }
             }
         }
