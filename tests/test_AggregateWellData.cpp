@@ -1027,11 +1027,9 @@ BOOST_AUTO_TEST_CASE (Declared_Well_Data)
 
     {
         WorkArea work;
-        std::string outputDir = "./";
-        std::string baseName = "TEST";
         {
             Opm::EclIO::OutputStream::Restart rstFile {
-                Opm::EclIO::OutputStream::ResultSet {outputDir, baseName},
+                Opm::EclIO::OutputStream::ResultSet {"./", "TEST"},
                 rptStep,
                 Opm::EclIO::OutputStream::Formatted {false},
                 Opm::EclIO::OutputStream::Unified   {true}

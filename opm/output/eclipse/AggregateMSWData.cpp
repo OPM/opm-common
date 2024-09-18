@@ -137,10 +137,9 @@ namespace {
         segIndCB.push_back(segIndex);
         std::size_t newSInd = segIndex;
         const auto& origBranchNo = segSet[segIndex].branchNumber();
-        bool endOrigBranch;
         // loop down branch to find all segments in branch and number from "toe" to "heel"
         while (newSInd < segSet.size()) {
-            endOrigBranch = true;
+            bool endOrigBranch = true;
             const auto& iSInd = inflowSegmentsIndex(segSet, newSInd);
             for (const auto& isi : iSInd )  {
                 const auto& inflowBranch = segSet[isi].branchNumber();

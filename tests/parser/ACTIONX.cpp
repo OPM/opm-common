@@ -340,9 +340,9 @@ BOOST_AUTO_TEST_CASE(TestActions) {
     BOOST_CHECK_EQUAL(config.ecl_size(), 1U);
     BOOST_CHECK(!config.empty());
 
-    double min_wait = 86400;
-    size_t max_eval = 3;
     {
+        constexpr double min_wait = 86400;
+        constexpr size_t max_eval = 3;
         Opm::Action::ActionX action("NAME", max_eval, min_wait, asTimeT(TimeStampUTC(TimeStampUTC::YMD{ 2000, 7, 1 })) );
         config.add(action);
         BOOST_CHECK_EQUAL(config.ecl_size(), 1U);

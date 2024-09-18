@@ -2232,7 +2232,6 @@ BOOST_AUTO_TEST_CASE(SAVE_FIELD_UNITS) {
     const auto& grid1 = es.getInputGrid();
 
     Opm::NNC nnc(grid1,  deck);
-    bool formatted = false;
     {
         WorkArea work;
 
@@ -2240,6 +2239,7 @@ BOOST_AUTO_TEST_CASE(SAVE_FIELD_UNITS) {
         time(&timer);
 
         std::string fileName = "TMP.EGRID";
+        const bool formatted = false;
         grid1.save(fileName, formatted, nnc.input(), units);
 
         Opm::EclIO::EclFile file1(fileName);

@@ -110,8 +110,6 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
         // PVTGW table contains values at saturated Rv
         auto& gasMuRvSat = gasMuRvSat_[regionIdx];
         auto& invGasBRvSat = inverseGasBRvSat_[regionIdx];
-        auto& invSatGasB = inverseSaturatedGasB_[regionIdx];
-        auto& invSatGasBMu = inverseSaturatedGasBMu_[regionIdx];
         auto& waterVaporizationFac = saturatedWaterVaporizationFactorTable_[regionIdx];
 
         waterVaporizationFac.setXYArrays(saturatedTable.numRows(),
@@ -150,6 +148,8 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
 
         {
             std::vector<double> tmpPressure =  saturatedTable.getColumn("PG").vectorCopy();
+            auto& invSatGasB = inverseSaturatedGasB_[regionIdx];
+            auto& invSatGasBMu = inverseSaturatedGasBMu_[regionIdx];
 
             invSatGasB.setXYContainers(tmpPressure, invSatGasBArray);
             invSatGasBMu.setXYContainers(tmpPressure, invSatGasBMuArray);
@@ -202,8 +202,6 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
         // PVTG table contains values at saturated Rvw
         auto& gasMuRvwSat = gasMuRvwSat_[regionIdx];
         auto& invGasBRvwSat = inverseGasBRvwSat_[regionIdx];
-        auto& invSatGasB = inverseSaturatedGasB_[regionIdx];
-        auto& invSatGasBMu = inverseSaturatedGasBMu_[regionIdx];
         auto& oilVaporizationFac = saturatedOilVaporizationFactorTable_[regionIdx];
 
         oilVaporizationFac.setXYArrays(saturatedTable.numRows(),
@@ -242,6 +240,8 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
 
         {
             std::vector<double> tmpPressure =  saturatedTable.getColumn("PG").vectorCopy( );
+            auto& invSatGasB = inverseSaturatedGasB_[regionIdx];
+            auto& invSatGasBMu = inverseSaturatedGasBMu_[regionIdx];
 
             invSatGasB.setXYContainers(tmpPressure, invSatGasBArray);
             invSatGasBMu.setXYContainers(tmpPressure, invSatGasBMuArray);
@@ -530,10 +530,9 @@ updateSaturationPressure_(unsigned regionIdx)
     Scalar delta = (oilVaporizationFac.xMax() - oilVaporizationFac.xMin())/Scalar(n + 1);
 
     SamplingPoints pSatSamplePoints;
-    Scalar Rv = 0;
     for (std::size_t i = 0; i <= n; ++ i) {
-        Scalar pSat = oilVaporizationFac.xMin() + Scalar(i)*delta;
-        Rv = saturatedOilVaporizationFactor(regionIdx, /*temperature=*/Scalar(1e30), pSat);
+        const Scalar pSat = oilVaporizationFac.xMin() + Scalar(i)*delta;
+        const Scalar Rv = saturatedOilVaporizationFactor(regionIdx, /*temperature=*/Scalar(1e30), pSat);
 
         pSatSamplePoints.emplace_back(Rv, pSat);
     }

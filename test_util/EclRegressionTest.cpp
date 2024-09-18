@@ -327,10 +327,9 @@ void ECLRegressionTest::checkSpecificKeyword(std::vector<std::string>& keywords1
         OPM_THROW(std::runtime_error, "\n" + msg);
     }
 
-    eclArrType arrType;
     if (search1 != keywords1.end()) {
         int ind = std::distance(keywords1.begin(), search1);
-        arrType = arrayType1[ind];
+        const eclArrType arrType = arrayType1[ind];
 
         if (search2 == keywords2.end()) {
             const std::string msg =
@@ -612,8 +611,6 @@ void ECLRegressionTest::results_init()
         init1.loadData();
         init2.loadData();
 
-        std::string reference = "Init file";
-
         auto arrayList1 = init1.getList();
         auto arrayList2 = init2.getList();
 
@@ -637,6 +634,7 @@ void ECLRegressionTest::results_init()
             printComparisonForKeywordLists(keywords1,keywords2, arrayType1, arrayType2);
         } else {
             std::cout << "\nComparing init files \n" << std::endl;
+            std::string reference = "Init file";
 
             if (specificKeyword.empty()) {
                 if (keywords1.size() == keywords2.size() && keywords1 != keywords2) {

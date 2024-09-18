@@ -73,8 +73,6 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
 
         auto& gasMu = gasMu_[regionIdx];
         auto& invGasB = inverseGasB_[regionIdx];
-        auto& invSatGasB = inverseSaturatedGasB_[regionIdx];
-        auto& invSatGasBMu = inverseSaturatedGasBMu_[regionIdx];
         auto& oilVaporizationFac = saturatedOilVaporizationFactorTable_[regionIdx];
 
         oilVaporizationFac.setXYArrays(saturatedTable.numRows(),
@@ -113,6 +111,8 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
 
         {
             std::vector<double> tmpPressure =  saturatedTable.getColumn("PG").vectorCopy( );
+            auto& invSatGasB = inverseSaturatedGasB_[regionIdx];
+            auto& invSatGasBMu = inverseSaturatedGasBMu_[regionIdx];
 
             invSatGasB.setXYContainers(tmpPressure, invSatGasBArray);
             invSatGasBMu.setXYContainers(tmpPressure, invSatGasBMuArray);
@@ -382,13 +382,12 @@ updateSaturationPressure_(unsigned regionIdx)
     // create the taublated function representing saturation pressure depending of
     // Rv
     std::size_t n = oilVaporizationFac.numSamples();
-    Scalar delta = (oilVaporizationFac.xMax() - oilVaporizationFac.xMin())/Scalar(n + 1);
+    const Scalar delta = (oilVaporizationFac.xMax() - oilVaporizationFac.xMin()) / Scalar(n + 1);
 
     SamplingPoints pSatSamplePoints;
-    Scalar Rv = 0;
     for (std::size_t i = 0; i <= n; ++ i) {
         Scalar pSat = oilVaporizationFac.xMin() + Scalar(i)*delta;
-        Rv = saturatedOilVaporizationFactor(regionIdx, /*temperature=*/Scalar(1e30), pSat);
+        Scalar Rv = saturatedOilVaporizationFactor(regionIdx, /*temperature=*/Scalar(1e30), pSat);
 
         pSatSamplePoints.emplace_back(Rv, pSat);
     }
