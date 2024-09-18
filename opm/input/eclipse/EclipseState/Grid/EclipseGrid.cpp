@@ -1,5 +1,4 @@
 /*
-
   Copyright 2014 Statoil ASA.
 
   This file is part of the Open Porous Media project (OPM).
@@ -443,7 +442,9 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
         }
     }
 
-    void EclipseGrid::initGridFromEGridFile(Opm::EclIO::EclFile& egridfile, std::string fileName){
+    void EclipseGrid::initGridFromEGridFile(Opm::EclIO::EclFile& egridfile,
+                                            const std::string&   fileName)
+    {
         OpmLog::info(fmt::format("\nCreating grid from: {} ", fileName));
 
         if (!egridfile.hasKey("GRIDHEAD")) {
@@ -462,51 +463,56 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
             throw std::invalid_argument("file: " + fileName + " is not a valid egrid file, GRIDUNIT not found");
         }
 
-        const std::vector<std::string>& gridunit = egridfile.get<std::string>("GRIDUNIT");
+        {
+            const std::vector<int>& gridhead = egridfile.get<int>("GRIDHEAD");
 
-        const std::vector<int>& gridhead = egridfile.get<int>("GRIDHEAD");
-        const std::array<int, 3> dims = {gridhead[1], gridhead[2], gridhead[3]};
+            this->m_nx = gridhead[1];
+            this->m_ny = gridhead[2];
+            this->m_nz = gridhead[3];
+        }
 
-        m_nx=dims[0];
-        m_ny=dims[1];
-        m_nz=dims[2];
+        {
+            const std::vector<float>& coord_f = egridfile.get<float>("COORD");
+            const std::vector<float>& zcorn_f = egridfile.get<float>("ZCORN");
 
-        const std::vector<float>& coord_f = egridfile.get<float>("COORD");
-        const std::vector<float>& zcorn_f = egridfile.get<float>("ZCORN");
+            m_coord.assign(coord_f.begin(), coord_f.end());
+            m_zcorn.assign(zcorn_f.begin(), zcorn_f.end());
+        }
 
-        m_coord.assign(coord_f.begin(), coord_f.end());
-        m_zcorn.assign(zcorn_f.begin(), zcorn_f.end());
-
-        if (gridunit[0] != "METRES") {
-
+        if (const auto& gridunit = egridfile.get<std::string>("GRIDUNIT");
+            gridunit[0] != "METRES")
+        {
             constexpr auto length = ::Opm::UnitSystem::measure::length;
 
-            if (gridunit[0] == "FEET"){
-                Opm::UnitSystem units(Opm::UnitSystem::UnitType::UNIT_TYPE_FIELD );
+            if (gridunit[0] == "FEET") {
+                Opm::UnitSystem units(Opm::UnitSystem::UnitType::UNIT_TYPE_FIELD);
                 units.to_si(length, m_coord);
                 units.to_si(length, m_zcorn);
-            } else if (gridunit[0] == "CM"){
-                Opm::UnitSystem units(Opm::UnitSystem::UnitType::UNIT_TYPE_LAB );
+            }
+            else if (gridunit[0] == "CM") {
+                Opm::UnitSystem units(Opm::UnitSystem::UnitType::UNIT_TYPE_LAB);
                 units.to_si(length, m_coord);
                 units.to_si(length, m_zcorn);
-            } else {
+            }
+            else {
                 std::string message = "gridunit '" + gridunit[0] + "' doesn't correspong to a valid unit system";
                 throw std::invalid_argument(message);
             }
         }
 
-        if ((egridfile.hasKey("ACTNUM")) && (m_useActnumFromGdfile)) {
-            const std::vector<int>& actnum  = egridfile.get<int>("ACTNUM");
-            resetACTNUM( actnum );
-        } else
-            resetACTNUM( );
+        if (egridfile.hasKey("ACTNUM") && m_useActnumFromGdfile) {
+            resetACTNUM(egridfile.get<int>("ACTNUM"));
+        }
+        else {
+            this->resetACTNUM();
+        }
 
-        if (egridfile.hasKey("MAPAXES"))
+        if (egridfile.hasKey("MAPAXES")) {
             this->m_mapaxes = std::make_optional<MapAxes>(egridfile);
+        }
 
-
-        ZcornMapper mapper( getNX(), getNY(), getNZ());
-        zcorn_fixed = mapper.fixupZCORN( m_zcorn );
+        ZcornMapper mapper(getNX(), getNY(), getNZ());
+        zcorn_fixed = mapper.fixupZCORN(m_zcorn);
     }
 
     bool EclipseGrid::keywInputBeforeGdfile(const Deck& deck, const std::string& keyword) const {
@@ -603,24 +609,31 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
         return m_minpvVector;
     }
 
-    void EclipseGrid::initBinaryGrid(const Deck& deck) {
+    void EclipseGrid::initBinaryGrid(const Deck& deck)
+    {
+        const auto& gdfile = deck["GDFILE"].back().getRecord(0);
 
-        const DeckKeyword& gdfile_kw = deck["GDFILE"].back();
-        const std::string& gdfile_arg = gdfile_kw.getRecord(0).getItem("filename").getTrimmedString(0);
-        std::string filename = deck.makeDeckPath(gdfile_arg);
+        const auto formatted = EclIO::EclFile::Formatted {
+            gdfile.getItem("formatted").getTrimmedString(0).front() == 'F'
+        };
 
-        std::unique_ptr<Opm::EclIO::EclFile> egridfile;
-        // Turns out some windows applications export .DATA files with relative
-        // GDFILE keywords with a windows formatted path, if open fails we give
-        // it one more try with the replacement '\'' -> '/'.
+        auto filename = deck
+            .makeDeckPath(gdfile.getItem("filename").getTrimmedString(0));
+
+        std::unique_ptr<EclIO::EclFile> egridfile{};
+
+        // Some windows applications export .DATA files with relative GDFILE
+        // keywords with a windows formatted path.  If open fails we give it
+        // one more try with the replacement '\'' -> '/'.
         try {
-            egridfile = std::make_unique<Opm::EclIO::EclFile>(filename);
-        } catch (const std::runtime_error& ) {
+            egridfile = std::make_unique<Opm::EclIO::EclFile>(filename, formatted);
+        }
+        catch (const std::runtime_error&) {
             std::replace(filename.begin(), filename.end(), '\\', '/');
-            egridfile = std::make_unique<Opm::EclIO::EclFile>(filename);
+            egridfile = std::make_unique<Opm::EclIO::EclFile>(filename, formatted);
         }
 
-        initGridFromEGridFile(*egridfile, filename);
+        this->initGridFromEGridFile(*egridfile, filename);
     }
 
     void EclipseGrid::initCartesianGrid(const Deck& deck) {
