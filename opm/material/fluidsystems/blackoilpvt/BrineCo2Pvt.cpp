@@ -192,7 +192,7 @@ setThermalMixingModel(int thermalMixingModelSalt, int thermalMixingModelLiquid)
     switch (thermalMixingModelLiquid) {
     case 0: liquidMixType_ = Co2StoreConfig::LiquidMixingType::NONE; break;
     case 1: liquidMixType_ = Co2StoreConfig::LiquidMixingType::IDEAL; break;
-    case 2: liquidMixType_ = liquidMixType_ = Co2StoreConfig::LiquidMixingType::DUANSUN;; break;
+    case 2: liquidMixType_ = Co2StoreConfig::LiquidMixingType::DUANSUN; break;
     default: OPM_THROW(std::runtime_error, "The thermal mixing model option for liquid are 0, 1 and 2");
     }
 }
