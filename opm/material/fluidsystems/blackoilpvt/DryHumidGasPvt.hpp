@@ -35,6 +35,8 @@
 #include <opm/material/common/UniformXTabulated2DFunction.hpp>
 #include <opm/material/common/Tabulated1DFunction.hpp>
 
+#include <cstddef>
+
 namespace Opm {
 
 #if HAVE_ECL_INPUT
@@ -72,7 +74,7 @@ private:
 public:
 #endif // HAVE_ECL_INPUT
 
-    void setNumRegions(size_t numRegions);
+    void setNumRegions(std::size_t numRegions);
 
     void setVapPars(const Scalar par1, const Scalar)
     {
@@ -92,7 +94,8 @@ public:
      *
      * \param samplePoints A container of (x,y) values.
      */
-    void setSaturatedGasWaterVaporizationFactor(unsigned regionIdx, const SamplingPoints& samplePoints)
+    void setSaturatedGasWaterVaporizationFactor(unsigned regionIdx,
+                                                const SamplingPoints& samplePoints)
     { saturatedWaterVaporizationFactorTable_[regionIdx].setContainerOfTuples(samplePoints); }
 
     /*!
@@ -107,7 +110,8 @@ public:
      * factor. Also note, that the order of the arguments needs to be \f$(R_s, p_o)\f$
      * and not the other way around.
      */
-    void setInverseGasFormationVolumeFactor(unsigned regionIdx, const TabulatedTwoDFunction& invBg)
+    void setInverseGasFormationVolumeFactor(unsigned regionIdx,
+                                            const TabulatedTwoDFunction& invBg)
     { inverseGasB_[regionIdx] = invBg; }
 
     /*!
@@ -149,11 +153,16 @@ public:
                         const Evaluation&,
                         const Evaluation&) const
     {
-        throw std::runtime_error("Requested the enthalpy of gas but the thermal option is not enabled");
+        throw std::runtime_error("Requested the enthalpy of gas but the thermal "
+                                 "option is not enabled");
     }
-    Scalar hVap(unsigned) const{
-        throw std::runtime_error("Requested the hvap of oil but the thermal option is not enabled");
+
+    Scalar hVap(unsigned) const
+    {
+        throw std::runtime_error("Requested the hvap of oil but the thermal "
+                                 "option is not enabled");
     }
+
     /*!
      * \brief Returns the dynamic viscosity [Pa s] of the fluid phase given a set of parameters.
      */
@@ -167,7 +176,7 @@ public:
         const Evaluation& invBg = inverseGasB_[regionIdx].eval(pressure, Rvw, /*extrapolate=*/true);
         const Evaluation& invMugBg = inverseGasBMu_[regionIdx].eval(pressure, Rvw, /*extrapolate=*/true);
 
-        return invBg/invMugBg;
+        return invBg / invMugBg;
     }
 
     /*!
@@ -181,7 +190,7 @@ public:
         const Evaluation& invBg = inverseSaturatedGasB_[regionIdx].eval(pressure, /*extrapolate=*/true);
         const Evaluation& invMugBg = inverseSaturatedGasBMu_[regionIdx].eval(pressure, /*extrapolate=*/true);
 
-        return invBg/invMugBg;
+        return invBg / invMugBg;
     }
 
     /*!
@@ -209,10 +218,11 @@ public:
      */
     template <class Evaluation>
     Evaluation saturatedWaterVaporizationFactor(unsigned regionIdx,
-                                              const Evaluation& /*temperature*/,
-                                              const Evaluation& pressure) const
+                                                const Evaluation& /*temperature*/,
+                                                const Evaluation& pressure) const
     {
-        return saturatedWaterVaporizationFactorTable_[regionIdx].eval(pressure, /*extrapolate=*/true);
+        return saturatedWaterVaporizationFactorTable_[regionIdx].eval(pressure,
+                                                                      /*extrapolate=*/true);
     }
 
     /*!
@@ -220,14 +230,18 @@ public:
     */
     template <class Evaluation>
     Evaluation saturatedWaterVaporizationFactor(unsigned regionIdx,
-                                              const Evaluation& /*temperature*/,
-                                              const Evaluation& pressure,
-                                              const Evaluation& saltConcentration) const
+                                                const Evaluation& /*temperature*/,
+                                                const Evaluation& pressure,
+                                                const Evaluation& saltConcentration) const
     {
-        if (enableRwgSalt_)
-            return saturatedWaterVaporizationSaltFactorTable_[regionIdx].eval(pressure, saltConcentration, /*extrapolate=*/true);
+        if (enableRwgSalt_) {
+            return saturatedWaterVaporizationSaltFactorTable_[regionIdx].eval(pressure,
+                                                                              saltConcentration,
+                                                                              /*extrapolate=*/true);
+        }
         else {
-            return saturatedWaterVaporizationFactorTable_[regionIdx].eval(pressure, /*extrapolate=*/true);
+            return saturatedWaterVaporizationFactorTable_[regionIdx].eval(pressure,
+                                                                          /*extrapolate=*/true);
         }
     }
 
@@ -255,8 +269,8 @@ public:
      * \brief Returns the saturation pressure of the gas phase [Pa]
      *        depending on its mass fraction of the water component
      *
-     * \param Rw The surface volume of water component dissolved in what will yield one
-     *           cubic meter of gas at the surface [-]
+     * \param Rw The surface volume of water component dissolved in what
+     *           will yield one cubic meter of gas at the surface [-]
      */
     template <class Evaluation>
     Evaluation saturationPressure(unsigned regionIdx,
@@ -266,7 +280,7 @@ public:
         typedef MathToolbox<Evaluation> Toolbox;
 
         const auto& RwTable = saturatedWaterVaporizationFactorTable_[regionIdx];
-        const Scalar eps = std::numeric_limits<typename Toolbox::Scalar>::epsilon()*1e6;
+        const Scalar eps = std::numeric_limits<typename Toolbox::Scalar>::epsilon() * 1e6;
 
         // use the tabulated saturation pressure function to get a pretty good initial value
         Evaluation pSat = saturationPressure_[regionIdx].eval(Rw, /*extrapolate=*/true);
@@ -285,22 +299,24 @@ public:
                 return pSat;
             }
 
-            const Evaluation& delta = f/fPrime;
+            const Evaluation& delta = f / fPrime;
 
             pSat -= delta;
 
             if (pSat < 0.0) {
                 // if the pressure is lower than 0 Pascals, we set it back to 0. if this
                 // happens twice, we give up and just return 0 Pa...
-                if (onProbation)
+                if (onProbation) {
                     return 0.0;
+                }
 
                 onProbation = true;
                 pSat = 0.0;
             }
 
-            if (std::abs(scalarValue(delta)) < std::abs(scalarValue(pSat))*eps)
+            if (std::abs(scalarValue(delta)) < std::abs(scalarValue(pSat)) * eps) {
                 return pSat;
+            }
         }
 
         const std::string msg =
@@ -316,7 +332,8 @@ public:
                                     const Evaluation& /*pressure*/,
                                     unsigned /*compIdx*/) const
     {
-        throw std::runtime_error("Not implemented: The PVT model does not provide a diffusionCoefficient()");
+        throw std::runtime_error("Not implemented: The PVT model does not provide "
+                                 "a diffusionCoefficient()");
     }
 
     Scalar gasReferenceDensity(unsigned regionIdx) const
@@ -325,55 +342,46 @@ public:
     Scalar waterReferenceDensity(unsigned regionIdx) const
     { return waterReferenceDensity_[regionIdx]; }
 
-    const std::vector<TabulatedTwoDFunction>& inverseGasB() const {
-        return inverseGasB_;
-    }
+    const std::vector<TabulatedTwoDFunction>& inverseGasB() const
+    { return inverseGasB_; }
 
-    const std::vector<TabulatedOneDFunction>& inverseSaturatedGasB() const {
-        return inverseSaturatedGasB_;
-    }
+    const std::vector<TabulatedOneDFunction>& inverseSaturatedGasB() const
+    { return inverseSaturatedGasB_; }
 
-    const std::vector<TabulatedTwoDFunction>& gasMu() const {
-        return gasMu_;
-    }
+    const std::vector<TabulatedTwoDFunction>& gasMu() const
+    { return gasMu_; }
 
-    const std::vector<TabulatedTwoDFunction>& inverseGasBMu() const {
-        return inverseGasBMu_;
-    }
+    const std::vector<TabulatedTwoDFunction>& inverseGasBMu() const
+    { return inverseGasBMu_; }
 
-    const std::vector<TabulatedOneDFunction>& inverseSaturatedGasBMu() const {
-        return inverseSaturatedGasBMu_;
-    }
+    const std::vector<TabulatedOneDFunction>& inverseSaturatedGasBMu() const
+    { return inverseSaturatedGasBMu_; }
 
-    const std::vector<TabulatedOneDFunction>& saturatedWaterVaporizationFactorTable() const {
-        return saturatedWaterVaporizationFactorTable_;
-    }
+    const std::vector<TabulatedOneDFunction>& saturatedWaterVaporizationFactorTable() const
+    { return saturatedWaterVaporizationFactorTable_; }
 
-    const std::vector<TabulatedTwoDFunction>& saturatedWaterVaporizationSaltFactorTable() const {
-        return saturatedWaterVaporizationSaltFactorTable_;
-    }
+    const std::vector<TabulatedTwoDFunction>& saturatedWaterVaporizationSaltFactorTable() const
+    { return saturatedWaterVaporizationSaltFactorTable_; }
 
-    const std::vector<TabulatedOneDFunction>& saturationPressure() const {
-        return saturationPressure_;
-    }
+    const std::vector<TabulatedOneDFunction>& saturationPressure() const
+    { return saturationPressure_; }
 
-    Scalar vapPar1() const {
-        return vapPar1_;
-    }
+    Scalar vapPar1() const
+    { return vapPar1_; }
 
 private:
     void updateSaturationPressure_(unsigned regionIdx);
 
-    std::vector<Scalar> gasReferenceDensity_;
-    std::vector<Scalar> waterReferenceDensity_;
-    std::vector<TabulatedTwoDFunction> inverseGasB_;
-    std::vector<TabulatedOneDFunction> inverseSaturatedGasB_;
-    std::vector<TabulatedTwoDFunction> gasMu_;
-    std::vector<TabulatedTwoDFunction> inverseGasBMu_;
-    std::vector<TabulatedOneDFunction> inverseSaturatedGasBMu_;
-    std::vector<TabulatedOneDFunction> saturatedWaterVaporizationFactorTable_;
-    std::vector<TabulatedTwoDFunction> saturatedWaterVaporizationSaltFactorTable_;
-    std::vector<TabulatedOneDFunction> saturationPressure_;
+    std::vector<Scalar> gasReferenceDensity_{};
+    std::vector<Scalar> waterReferenceDensity_{};
+    std::vector<TabulatedTwoDFunction> inverseGasB_{};
+    std::vector<TabulatedOneDFunction> inverseSaturatedGasB_{};
+    std::vector<TabulatedTwoDFunction> gasMu_{};
+    std::vector<TabulatedTwoDFunction> inverseGasBMu_{};
+    std::vector<TabulatedOneDFunction> inverseSaturatedGasBMu_{};
+    std::vector<TabulatedOneDFunction> saturatedWaterVaporizationFactorTable_{};
+    std::vector<TabulatedTwoDFunction> saturatedWaterVaporizationSaltFactorTable_{};
+    std::vector<TabulatedOneDFunction> saturationPressure_{};
 
     bool enableRwgSalt_ = false;
     Scalar vapPar1_ = 0.0;

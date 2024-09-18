@@ -49,7 +49,7 @@ initFromState(const EclipseState& eclState, const Schedule&)
                               pvtgwTables.size(), densityTable.size()));
     }
 
-    size_t numRegions = pvtgwTables.size();
+    std::size_t numRegions = pvtgwTables.size();
     setNumRegions(numRegions);
 
     for (unsigned regionIdx = 0; regionIdx < numRegions; ++regionIdx) {
@@ -78,8 +78,8 @@ initFromState(const EclipseState& eclState, const Schedule&)
                 Scalar pg = saturatedTable.get("PG" , outerIdx);
                 waterVaporizationFac.appendXPos(pg);
 
-                size_t numRows = underSaturatedTable.numRows();
-                for (size_t innerIdx = 0; innerIdx < numRows; ++innerIdx) {
+                std::size_t numRows = underSaturatedTable.numRows();
+                for (std::size_t innerIdx = 0; innerIdx < numRows; ++innerIdx) {
                     Scalar saltConcentration = underSaturatedTable.get("C_SALT" , innerIdx);
                     Scalar rvwSat = underSaturatedTable.get("RVW" , innerIdx);
 
@@ -126,8 +126,8 @@ initFromState(const EclipseState& eclState, const Schedule&)
             assert(gasMu.numX() == outerIdx + 1);
 
             const auto& underSaturatedTable = pvtgwTable.getUnderSaturatedTable(outerIdx);
-            size_t numRows = underSaturatedTable.numRows();
-            for (size_t innerIdx = 0; innerIdx < numRows; ++innerIdx) {
+            std::size_t numRows = underSaturatedTable.numRows();
+            for (std::size_t innerIdx = 0; innerIdx < numRows; ++innerIdx) {
                 Scalar Rw = underSaturatedTable.get("RW" , innerIdx);
                 Scalar Bg = underSaturatedTable.get("BG" , innerIdx);
                 Scalar mug = underSaturatedTable.get("MUG" , innerIdx);
@@ -157,7 +157,7 @@ initFromState(const EclipseState& eclState, const Schedule&)
             // find the master table which will be used as a template to extend the
             // current line. We define master table as the first table which has values
             // for undersaturated gas...
-            size_t masterTableIdx = xIdx + 1;
+            std::size_t masterTableIdx = xIdx + 1;
             for (; masterTableIdx < saturatedTable.numRows(); ++masterTableIdx)
             {
                 if (pvtgwTable.getUnderSaturatedTable(masterTableIdx).numRows() > 1)
@@ -198,7 +198,7 @@ extendPvtgwTable_(unsigned regionIdx,
     auto& invGasB = inverseGasB_[regionIdx];
     auto& gasMu = gasMu_[regionIdx];
 
-    for (size_t newRowIdx = 1; newRowIdx < masterTable.numRows(); ++newRowIdx) {
+    for (std::size_t newRowIdx = 1; newRowIdx < masterTable.numRows(); ++newRowIdx) {
         const auto& RWColumn = masterTable.getColumn("RW");
         const auto& BGColumn = masterTable.getColumn("BG");
         const auto& viscosityColumn = masterTable.getColumn("MUG");
@@ -239,7 +239,7 @@ extendPvtgwTable_(unsigned regionIdx,
 #endif
 
 template<class Scalar>
-void DryHumidGasPvt<Scalar>::setNumRegions(size_t numRegions)
+void DryHumidGasPvt<Scalar>::setNumRegions(std::size_t numRegions)
 {
     waterReferenceDensity_.resize(numRegions);
     gasReferenceDensity_.resize(numRegions);
@@ -276,20 +276,20 @@ setSaturatedGasViscosity(unsigned regionIdx,
     Scalar poMin = samplePoints.front().first;
     Scalar poMax = samplePoints.back().first;
 
-    constexpr const size_t nRw = 20;
-    size_t nP = samplePoints.size()*2;
+    constexpr const std::size_t nRw = 20;
+    std::size_t nP = samplePoints.size()*2;
 
     TabulatedOneDFunction mugTable;
     mugTable.setContainerOfTuples(samplePoints);
 
     // calculate a table of estimated densities depending on pressure and gas mass
     // fraction
-    for (size_t RwIdx = 0; RwIdx < nRw; ++RwIdx) {
+    for (std::size_t RwIdx = 0; RwIdx < nRw; ++RwIdx) {
         Scalar Rw = RwMin + (RwMax - RwMin)*RwIdx/nRw;
 
         gasMu_[regionIdx].appendXPos(Rw);
 
-        for (size_t pIdx = 0; pIdx < nP; ++pIdx) {
+        for (std::size_t pIdx = 0; pIdx < nP; ++pIdx) {
             Scalar pg = poMin + (poMax - poMin)*pIdx/nP;
             Scalar mug = mugTable.eval(pg, /*extrapolate=*/true);
 
@@ -302,7 +302,7 @@ template<class Scalar>
 void DryHumidGasPvt<Scalar>::initEnd()
 {
     // calculate the final 2D functions which are used for interpolation.
-    size_t numRegions = gasMu_.size();
+    std::size_t numRegions = gasMu_.size();
     for (unsigned regionIdx = 0; regionIdx < numRegions; ++ regionIdx) {
         // calculate the table which stores the inverse of the product of the gas
         // formation volume factor and the gas viscosity
@@ -317,13 +317,13 @@ void DryHumidGasPvt<Scalar>::initEnd()
         std::vector<Scalar> satPressuresArray;
         std::vector<Scalar> invSatGasBArray;
         std::vector<Scalar> invSatGasBMuArray;
-        for (size_t pIdx = 0; pIdx < gasMu.numX(); ++pIdx) {
+        for (std::size_t pIdx = 0; pIdx < gasMu.numX(); ++pIdx) {
             invGasBMu.appendXPos(gasMu.xAt(pIdx));
 
             assert(gasMu.numY(pIdx) == invGasB.numY(pIdx));
 
-            size_t numRw = gasMu.numY(pIdx);
-            for (size_t RwIdx = 0; RwIdx < numRw; ++RwIdx)
+            std::size_t numRw = gasMu.numY(pIdx);
+            for (std::size_t RwIdx = 0; RwIdx < numRw; ++RwIdx)
                 invGasBMu.appendSamplePoint(pIdx,
                                             gasMu.yAt(pIdx, RwIdx),
                                             invGasB.valueAt(pIdx, RwIdx)
@@ -352,12 +352,12 @@ updateSaturationPressure_(unsigned regionIdx)
 
     // create the taublated function representing saturation pressure depending of
     // Rw
-    size_t n = waterVaporizationFac.numSamples();
+    std::size_t n = waterVaporizationFac.numSamples();
     const Scalar delta = (waterVaporizationFac.xMax() -
                           waterVaporizationFac.xMin()) / Scalar(n + 1);
 
     SamplingPoints pSatSamplePoints;
-    for (size_t i = 0; i <= n; ++ i) {
+    for (std::size_t i = 0; i <= n; ++ i) {
         const Scalar pSat = waterVaporizationFac.xMin() + i*delta;
         const Scalar Rw = saturatedWaterVaporizationFactor(regionIdx,
                                                            Scalar(1e30),
