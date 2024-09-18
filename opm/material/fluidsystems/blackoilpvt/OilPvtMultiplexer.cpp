@@ -63,6 +63,7 @@ OilPvtMultiplexer<Scalar,enableThermal>::
     }
 }
 
+#if HAVE_ECL_INPUT
 template <class Scalar, bool enableThermal>
 void OilPvtMultiplexer<Scalar,enableThermal>::
 initFromState(const EclipseState& eclState, const Schedule& schedule)
@@ -87,6 +88,7 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
 
     OPM_OIL_PVT_MULTIPLEXER_CALL(pvtImpl.initFromState(eclState, schedule), break);
 }
+#endif
 
 template <class Scalar, bool enableThermal>
 void OilPvtMultiplexer<Scalar,enableThermal>::

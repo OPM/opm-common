@@ -58,8 +58,11 @@ list (APPEND MAIN_SOURCE_FILES
       opm/material/fluidsystems/blackoilpvt/DeadOilPvt.cpp
       opm/material/fluidsystems/blackoilpvt/DryGasPvt.cpp
       opm/material/fluidsystems/blackoilpvt/DryHumidGasPvt.cpp
+      opm/material/fluidsystems/blackoilpvt/GasPvtMultiplexer.cpp
       opm/material/fluidsystems/blackoilpvt/LiveOilPvt.cpp
+      opm/material/fluidsystems/blackoilpvt/OilPvtMultiplexer.cpp
       opm/material/fluidsystems/blackoilpvt/SolventPvt.cpp
+      opm/material/fluidsystems/blackoilpvt/WaterPvtMultiplexer.cpp
       opm/material/fluidsystems/blackoilpvt/WetGasPvt.cpp
       opm/material/fluidsystems/blackoilpvt/WetHumidGasPvt.cpp
 )
@@ -334,11 +337,8 @@ if(ENABLE_ECL_INPUT)
     opm/material/fluidsystems/blackoilpvt/ConstantCompressibilityBrinePvt.cpp
     opm/material/fluidsystems/blackoilpvt/ConstantCompressibilityOilPvt.cpp
     opm/material/fluidsystems/blackoilpvt/ConstantCompressibilityWaterPvt.cpp
-    opm/material/fluidsystems/blackoilpvt/GasPvtMultiplexer.cpp
     opm/material/fluidsystems/blackoilpvt/GasPvtThermal.cpp
-    opm/material/fluidsystems/blackoilpvt/OilPvtMultiplexer.cpp
     opm/material/fluidsystems/blackoilpvt/OilPvtThermal.cpp
-    opm/material/fluidsystems/blackoilpvt/WaterPvtMultiplexer.cpp
     opm/material/fluidsystems/blackoilpvt/WaterPvtThermal.cpp
     opm/material/thermal/EclThermalLawManager.cpp
   )

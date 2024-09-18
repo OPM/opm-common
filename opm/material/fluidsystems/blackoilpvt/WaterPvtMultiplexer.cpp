@@ -59,6 +59,7 @@ WaterPvtMultiplexer<Scalar,enableThermal,enableBrine>::
     }
 }
 
+#if HAVE_ECL_INPUT
 template<class Scalar, bool enableThermal, bool enableBrine>
 void WaterPvtMultiplexer<Scalar,enableThermal,enableBrine>::
 initFromState(const EclipseState& eclState, const Schedule& schedule)
@@ -81,6 +82,7 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
 
     OPM_WATER_PVT_MULTIPLEXER_CALL(pvtImpl.initFromState(eclState, schedule), break);
 }
+#endif
 
 template<class Scalar, bool enableThermal, bool enableBrine>
 void WaterPvtMultiplexer<Scalar,enableThermal,enableBrine>::
