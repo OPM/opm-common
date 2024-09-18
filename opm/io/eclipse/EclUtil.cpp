@@ -1,20 +1,21 @@
 /*
-   Copyright 2019 Equinor ASA.
+  Copyright 2019 Equinor ASA.
 
-   This file is part of the Open Porous Media project (OPM).
+  This file is part of the Open Porous Media project (OPM).
 
-   OPM is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by
-   the Free Software Foundation, either version 3 of the License, or
-   (at your option) any later version.
+  OPM is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
 
-   OPM is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU General Public License for more details.
+  OPM is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
-   */
+  You should have received a copy of the GNU General Public License
+  along with OPM.  If not, see <http://www.gnu.org/licenses/>.
+*/
 
 #include <opm/io/eclipse/EclUtil.hpp>
 
@@ -22,10 +23,13 @@
 
 #include <algorithm>
 #include <array>
-#include <stdexcept>
 #include <cmath>
-#include <fstream>
 #include <cstring>
+#include <filesystem>
+#include <fstream>
+#include <stdexcept>
+#include <string>
+#include <vector>
 
 int Opm::EclIO::flipEndianInt(int num)
 {
@@ -79,11 +83,17 @@ bool Opm::EclIO::is_number(const std::string& numstr)
 
 bool Opm::EclIO::isFormatted(const std::string& filename)
 {
-    const auto p = filename.find_last_of(".");
-    if (p == std::string::npos)
-      OPM_THROW(std::invalid_argument,
-                "Purported ECLIPSE Filename'" + filename + "'does not contain extension");
-    return std::strchr("ABCFGH", static_cast<int>(filename[p+1])) != nullptr;
+    const auto pth = std::filesystem::path { filename };
+
+    const auto& ext = pth.extension();
+    if (ext.empty()) {
+        OPM_THROW(std::invalid_argument,
+                  "Purported ECLIPSE Filename '" +
+                  filename + "' does not contain extension");
+    }
+
+    return (ext != ".GRID")
+        && (ext.string().find_first_of("ABCFGH", 1) == std::string::size_type{1});
 }
 
 bool Opm::EclIO::isEOF(std::fstream* fileH)
