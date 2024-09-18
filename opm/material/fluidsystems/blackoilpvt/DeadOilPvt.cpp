@@ -50,7 +50,7 @@ initFromState(const EclipseState& eclState, const Schedule&)
                               pvdoTables.size(), densityTable.size()));
     }
 
-    size_t numRegions = pvdoTables.size();
+    std::size_t numRegions = pvdoTables.size();
     setNumRegions(numRegions);
 
     for (unsigned regionIdx = 0; regionIdx < numRegions; ++regionIdx) {
@@ -80,7 +80,7 @@ initFromState(const EclipseState& eclState, const Schedule&)
 #endif
 
 template<class Scalar>
-void DeadOilPvt<Scalar>::setNumRegions(size_t numRegions)
+void DeadOilPvt<Scalar>::setNumRegions(std::size_t numRegions)
 {
     oilReferenceDensity_.resize(numRegions);
     inverseOilB_.resize(numRegions);
@@ -92,7 +92,7 @@ template<class Scalar>
 void DeadOilPvt<Scalar>::initEnd()
 {
     // calculate the final 2D functions which are used for interpolation.
-    size_t numRegions = oilMu_.size();
+    std::size_t numRegions = oilMu_.size();
     for (unsigned regionIdx = 0; regionIdx < numRegions; ++ regionIdx) {
         // calculate the table which stores the inverse of the product of the oil
         // formation volume factor and the oil viscosity
