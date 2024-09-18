@@ -50,7 +50,7 @@ initFromState(const EclipseState& eclState, const Schedule&)
                               pvdsTables.size(), sdensityTables.size()));
     }
 
-    size_t numRegions = pvdsTables.size();
+    std::size_t numRegions = pvdsTables.size();
     setNumRegions(numRegions);
 
     for (unsigned regionIdx = 0; regionIdx < numRegions; ++regionIdx) {
@@ -68,7 +68,7 @@ initFromState(const EclipseState& eclState, const Schedule&)
             invB[i] = 1.0 / Bg[i];
         }
 
-        size_t numSamples = invB.size();
+        std::size_t numSamples = invB.size();
         inverseSolventB_[regionIdx].setXYArrays(numSamples, pvdsTable.getPressureColumn(), invB);
         solventMu_[regionIdx].setXYArrays(numSamples, pvdsTable.getPressureColumn(), pvdsTable.getViscosityColumn());
     }
@@ -78,7 +78,7 @@ initFromState(const EclipseState& eclState, const Schedule&)
 #endif
 
 template<class Scalar>
-void SolventPvt<Scalar>::setNumRegions(size_t numRegions)
+void SolventPvt<Scalar>::setNumRegions(std::size_t numRegions)
 {
     solventReferenceDensity_.resize(numRegions);
     inverseSolventB_.resize(numRegions);
@@ -105,7 +105,7 @@ template<class Scalar>
 void SolventPvt<Scalar>::initEnd()
 {
     // calculate the final 2D functions which are used for interpolation.
-    size_t numRegions = solventMu_.size();
+    std::size_t numRegions = solventMu_.size();
     for (unsigned regionIdx = 0; regionIdx < numRegions; ++ regionIdx) {
         // calculate the table which stores the inverse of the product of the solvent
         // formation volume factor and its viscosity
