@@ -197,7 +197,7 @@ public:
     {}
 
     //! copy other function evaluation
-    OPM_HOST_DEVICE Evaluation(const Evaluation& other) = default;
+    Evaluation(const Evaluation& other) = default;
 
 {% if numDerivs < 0 %}\
     //! move other function evaluation (this only makes sense for dynamically
@@ -713,7 +713,7 @@ public:
     }
 
     // copy assignment from evaluation
-    OPM_HOST_DEVICE Evaluation& operator=(const Evaluation& other) = default;
+    Evaluation& operator=(const Evaluation& other) = default;
 
     template <class RhsValueType>
     OPM_HOST_DEVICE bool operator==(const RhsValueType& other) const
