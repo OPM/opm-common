@@ -761,6 +761,7 @@ protected:
                     flash_fluid_state.setFugacityCoefficient(phaseIdx, compIdx, phi);
                 }
             }
+            ++iter;
         }
         if (verbosity >= 1) {
             for (unsigned i = 0; i < num_equations; ++i) {
