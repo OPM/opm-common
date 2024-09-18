@@ -36,6 +36,7 @@
 
 namespace Opm {
 
+#if HAVE_ECL_INPUT
 template<class Scalar>
 void GasPvtThermal<Scalar>::
 initFromState(const EclipseState& eclState, const Schedule& schedule)
@@ -165,7 +166,7 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
 
             // this is the heat capasity for gas without dissolution which is handled else where
             Scalar u = temperatureColumn[0]*cvGasColumn[0];
-            for (size_t i = 0;; ++i) {
+            for (std::size_t i = 0;; ++i) {
                 uSamples[i] = u;
 
                 if (i >= temperatureColumn.size() - 1)
@@ -183,6 +184,79 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
             internalEnergyCurves_[regionIdx].setXYContainers(temperatureColumn.vectorCopy(), uSamples);
         }
     }
+}
+#endif
+
+template<class Scalar>
+void GasPvtThermal<Scalar>::
+setNumRegions(std::size_t numRegions)
+{
+    gasvisctCurves_.resize(numRegions);
+    viscrefPress_.resize(numRegions);
+    viscRef_.resize(numRegions);
+    internalEnergyCurves_.resize(numRegions);
+    gasdentRefTemp_.resize(numRegions);
+    gasdentCT1_.resize(numRegions);
+    gasdentCT2_.resize(numRegions);
+    gasJTRefPres_.resize(numRegions);
+    gasJTC_.resize(numRegions);
+    rhoRefO_.resize(numRegions);
+    hVap_.resize(numRegions, 0.0);
+}
+
+
+template<class Scalar>
+bool GasPvtThermal<Scalar>::
+operator==(const GasPvtThermal<Scalar>& data) const
+{
+    if (isothermalPvt_ && !data.isothermalPvt_) {
+        return false;
+    }
+    if (!isothermalPvt_ && data.isothermalPvt_) {
+        return false;
+    }
+
+    return  this->gasvisctCurves() == data.gasvisctCurves() &&
+            this->viscrefPress() == data.viscrefPress() &&
+            this->viscRef() == data.viscRef() &&
+            this->gasdentRefTemp() == data.gasdentRefTemp() &&
+            this->gasdentCT1() == data.gasdentCT1() &&
+            this->gasdentCT2() == data.gasdentCT2() &&
+            this->gasJTRefPres() == data.gasJTRefPres() &&
+            this->gasJTC() == data.gasJTC() &&
+            this->internalEnergyCurves() == data.internalEnergyCurves() &&
+            this->enableThermalDensity() == data.enableThermalDensity() &&
+            this->enableJouleThomson() == data.enableJouleThomson() &&
+            this->enableThermalViscosity() == data.enableThermalViscosity() &&
+            this->enableInternalEnergy() == data.enableInternalEnergy();
+}
+
+template<class Scalar>
+GasPvtThermal<Scalar>&
+GasPvtThermal<Scalar>::
+operator=(const GasPvtThermal<Scalar>& data)
+{
+    if (data.isothermalPvt_) {
+        isothermalPvt_ = new IsothermalPvt(*data.isothermalPvt_);
+    }
+    else {
+        isothermalPvt_ = nullptr;
+    }
+    gasvisctCurves_ = data.gasvisctCurves_;
+    viscrefPress_ = data.viscrefPress_;
+    viscRef_ = data.viscRef_;
+    gasdentRefTemp_ = data.gasdentRefTemp_;
+    gasdentCT1_ = data.gasdentCT1_;
+    gasdentCT2_ = data.gasdentCT2_;
+    gasJTRefPres_ =  data.gasJTRefPres_;
+    gasJTC_ =  data.gasJTC_;
+    internalEnergyCurves_ = data.internalEnergyCurves_;
+    enableThermalDensity_ = data.enableThermalDensity_;
+    enableJouleThomson_ = data.enableJouleThomson_;
+    enableThermalViscosity_ = data.enableThermalViscosity_;
+    enableInternalEnergy_ = data.enableInternalEnergy_;
+
+    return *this;
 }
 
 template class GasPvtThermal<double>;

@@ -29,6 +29,9 @@
 
 #include <opm/material/common/Tabulated1DFunction.hpp>
 
+#include <cstddef>
+#include <vector>
+
 namespace Opm {
 
 #if HAVE_ECL_INPUT
@@ -53,7 +56,7 @@ public:
     void initFromState(const EclipseState& eclState, const Schedule&);
 #endif // HAVE_ECL_INPUT
 
-    void setNumRegions(size_t numRegions);
+    void setNumRegions(std::size_t numRegions);
 
     void setVapPars(const Scalar, const Scalar)
     {
@@ -80,7 +83,8 @@ public:
      * This method sets \f$1/B_o(p_o)\f$. Note that the mass fraction of the gas
      * component in the oil phase is missing when assuming dead oil.
      */
-    void setInverseOilFormationVolumeFactor(unsigned regionIdx, const TabulatedOneDFunction& invBo)
+    void setInverseOilFormationVolumeFactor(unsigned regionIdx,
+                                            const TabulatedOneDFunction& invBo)
     { inverseOilB_[regionIdx] = invBo; }
 
     /*!
@@ -111,11 +115,14 @@ public:
                         const Evaluation&,
                         const Evaluation&) const
     {
-        throw std::runtime_error("Requested the enthalpy of oil but the thermal option is not enabled");
+        throw std::runtime_error("Requested the enthalpy of oil but the thermal "
+                                 "option is not enabled");
     }
 
-    Scalar hVap(unsigned) const{
-        throw std::runtime_error("Requested the hvap of oil but the thermal option is not enabled");
+    Scalar hVap(unsigned) const
+    {
+        throw std::runtime_error("Requested the hvap of oil but the thermal "
+                                 "option is not enabled");
     }
     /*!
      * \brief Returns the dynamic viscosity [Pa s] of the fluid phase given a set of parameters.
@@ -138,7 +145,7 @@ public:
         const Evaluation& invBo = inverseOilB_[regionIdx].eval(pressure, /*extrapolate=*/true);
         const Evaluation& invMuoBo = inverseOilBMu_[regionIdx].eval(pressure, /*extrapolate=*/true);
 
-        return invBo/invMuoBo;
+        return invBo / invMuoBo;
     }
 
     /*!
@@ -211,7 +218,8 @@ public:
                                     const Evaluation& /*pressure*/,
                                     unsigned /*compIdx*/) const
     {
-        throw std::runtime_error("Not implemented: The PVT model does not provide a diffusionCoefficient()");
+        throw std::runtime_error("Not implemented: The PVT model does not provide "
+                                 "a diffusionCoefficient()");
     }
 
     Scalar oilReferenceDensity(unsigned regionIdx) const
@@ -227,10 +235,10 @@ public:
     { return inverseOilBMu_; }
 
 private:
-    std::vector<Scalar> oilReferenceDensity_;
-    std::vector<TabulatedOneDFunction> inverseOilB_;
-    std::vector<TabulatedOneDFunction> oilMu_;
-    std::vector<TabulatedOneDFunction> inverseOilBMu_;
+    std::vector<Scalar> oilReferenceDensity_{};
+    std::vector<TabulatedOneDFunction> inverseOilB_{};
+    std::vector<TabulatedOneDFunction> oilMu_{};
+    std::vector<TabulatedOneDFunction> inverseOilBMu_{};
 };
 
 } // namespace Opm

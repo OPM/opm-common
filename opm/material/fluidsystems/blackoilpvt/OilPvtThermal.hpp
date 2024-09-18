@@ -29,6 +29,8 @@
 
 #include <opm/material/common/Tabulated1DFunction.hpp>
 
+#include <cstddef>
+
 namespace Opm {
 
 #if HAVE_ECL_INPUT
@@ -52,14 +54,7 @@ public:
     using TabulatedOneDFunction = Tabulated1DFunction<Scalar>;
     using IsothermalPvt = OilPvtMultiplexer<Scalar, /*enableThermal=*/false>;
 
-    OilPvtThermal()
-    {
-        enableThermalDensity_ = false;
-        enableJouleThomson_ = false;
-        enableThermalViscosity_ = false;
-        enableInternalEnergy_ = false;
-        isothermalPvt_ = nullptr;
-    }
+    OilPvtThermal() = default;
 
     OilPvtThermal(IsothermalPvt* isothermalPvt,
                   const std::vector<TabulatedOneDFunction>& oilvisctCurves,
@@ -109,21 +104,7 @@ public:
     /*!
      * \brief Set the number of PVT-regions considered by this object.
      */
-    void setNumRegions(size_t numRegions)
-    {
-        oilvisctCurves_.resize(numRegions);
-        viscrefPress_.resize(numRegions);
-        viscrefRs_.resize(numRegions);
-        viscRef_.resize(numRegions);
-        internalEnergyCurves_.resize(numRegions);
-        oildentRefTemp_.resize(numRegions);
-        oildentCT1_.resize(numRegions);
-        oildentCT2_.resize(numRegions);
-        oilJTRefPres_.resize(numRegions);
-        oilJTC_.resize(numRegions);
-        rhoRefG_.resize(numRegions);
-        hVap_.resize(numRegions, 0.0);
-    }
+    void setNumRegions(std::size_t numRegions);
 
     void setVapPars(const Scalar par1, const Scalar par2)
     {
@@ -154,7 +135,7 @@ public:
     bool enableThermalViscosity() const
     { return enableThermalViscosity_; }
 
-    size_t numRegions() const
+    std::size_t numRegions() const
     { return viscrefRs_.size(); }
 
     /*!
@@ -166,8 +147,9 @@ public:
                               const Evaluation& pressure,
                               const Evaluation& Rs) const
     {
-        if (!enableInternalEnergy_)
-             throw std::runtime_error("Requested the internal energy of oil but it is disabled");
+        if (!enableInternalEnergy_) {
+            throw std::runtime_error("Requested the internal energy of oil but it is disabled");
+        }
 
         if (!enableJouleThomson_) {
             // compute the specific internal energy for the specified tempature. We use linear
@@ -186,10 +168,10 @@ public:
             Evaluation density = invB * (oilReferenceDensity(regionIdx) + Rs * rhoRefG_[regionIdx]);
 
             Evaluation enthalpyPres;
-            if  (JTC != 0) {
-                enthalpyPres = -Cp * JTC * (pressure -Pref);
+            if (JTC != 0) {
+                enthalpyPres = -Cp * JTC * (pressure - Pref);
             }
-            else if(enableThermalDensity_) {
+            else if (enableThermalDensity_) {
                 Scalar c1T = oildentCT1_[regionIdx];
                 Scalar c2T = oildentCT2_[regionIdx];
 
@@ -197,9 +179,9 @@ public:
                     (1 + c1T  *(temperature - Tref) + c2T * (temperature - Tref) * (temperature - Tref));
 
                 const int N = 100; // value is experimental
-                Evaluation deltaP = (pressure - Pref)/N;
+                Evaluation deltaP = (pressure - Pref) / N;
                 Evaluation enthalpyPresPrev = 0;
-                for (size_t i = 0; i < N; ++i) {
+                for (std::size_t i = 0; i < N; ++i) {
                     Evaluation Pnew = Pref + i * deltaP;
                     Evaluation rho = inverseFormationVolumeFactor(regionIdx, temperature, Pnew, Rs) *
                                      (oilReferenceDensity(regionIdx) + Rs * rhoRefG_[regionIdx]) ;
@@ -211,7 +193,8 @@ public:
                 }
             }
             else {
-                  throw std::runtime_error("Requested Joule-thomson calculation but thermal oil density (OILDENT) is not provided");
+                throw std::runtime_error("Requested Joule-thomson calculation but thermal oil"
+                                         "density (OILDENT) is not provided");
             }
 
             Evaluation enthalpy = Cp * (temperature - Tref) + enthalpyPres;
@@ -230,12 +213,13 @@ public:
                          const Evaluation& Rs) const
     {
         const auto& isothermalMu = isothermalPvt_->viscosity(regionIdx, temperature, pressure, Rs);
-        if (!enableThermalViscosity())
+        if (!enableThermalViscosity()) {
             return isothermalMu;
+        }
 
         // compute the viscosity deviation due to temperature
         const auto& muOilvisct = oilvisctCurves_[regionIdx].eval(temperature, /*extrapolate=*/true);
-        return muOilvisct/viscRef_[regionIdx]*isothermalMu;
+        return muOilvisct / viscRef_[regionIdx] * isothermalMu;
     }
 
     /*!
@@ -247,14 +231,14 @@ public:
                                   const Evaluation& pressure) const
     {
         const auto& isothermalMu = isothermalPvt_->saturatedViscosity(regionIdx, temperature, pressure);
-        if (!enableThermalViscosity())
+        if (!enableThermalViscosity()) {
             return isothermalMu;
+        }
 
         // compute the viscosity deviation due to temperature
         const auto& muOilvisct = oilvisctCurves_[regionIdx].eval(temperature, /*extrapolate=*/true);
-        return muOilvisct/viscRef_[regionIdx]*isothermalMu;
+        return muOilvisct / viscRef_[regionIdx] * isothermalMu;
     }
-
 
     /*!
      * \brief Returns the formation volume factor [-] of the fluid phase.
@@ -268,8 +252,9 @@ public:
         const auto& b =
             isothermalPvt_->inverseFormationVolumeFactor(regionIdx, temperature, pressure, Rs);
 
-        if (!enableThermalDensity())
+        if (!enableThermalDensity()) {
             return b;
+        }
 
         // we use the same approach as for the for water here, but with the OPM-specific
         // OILDENT keyword.
@@ -278,7 +263,7 @@ public:
         Scalar cT2 = oildentCT2_[regionIdx];
         const Evaluation& Y = temperature - TRef;
 
-        return b/(1 + (cT1 + cT2*Y)*Y);
+        return b / (1 + (cT1 + cT2 * Y) * Y);
     }
 
     /*!
@@ -292,8 +277,9 @@ public:
         const auto& b =
             isothermalPvt_->saturatedInverseFormationVolumeFactor(regionIdx, temperature, pressure);
 
-        if (!enableThermalDensity())
+        if (!enableThermalDensity()) {
             return b;
+        }
 
         // we use the same approach as for the for water here, but with the OPM-specific
         // OILDENT keyword.
@@ -302,7 +288,7 @@ public:
         Scalar cT2 = oildentCT2_[regionIdx];
         const Evaluation& Y = temperature - TRef;
 
-        return b/(1 + (cT1 + cT2*Y)*Y);
+        return b / (1 + (cT1 + cT2 * Y) * Y);
     }
 
     /*!
@@ -357,12 +343,11 @@ public:
     const IsothermalPvt* isoThermalPvt() const
     { return isothermalPvt_; }
 
-    const Scalar oilReferenceDensity(unsigned regionIdx) const
+    Scalar oilReferenceDensity(unsigned regionIdx) const
     { return isothermalPvt_->oilReferenceDensity(regionIdx); }
 
-    const Scalar hVap(unsigned regionIdx) const {
-        return this->hVap_[regionIdx];
-    }
+    Scalar hVap(unsigned regionIdx) const
+    { return this->hVap_[regionIdx]; }
 
     const std::vector<TabulatedOneDFunction>& oilvisctCurves() const
     { return oilvisctCurves_; }
@@ -394,84 +379,41 @@ public:
     const std::vector<Scalar>& oilJTRefPres() const
     { return  oilJTRefPres_; }
 
-     const std::vector<Scalar>&  oilJTC() const
+    const std::vector<Scalar>&  oilJTC() const
     { return oilJTC_; }
 
-    bool operator==(const OilPvtThermal<Scalar>& data) const
-    {
-        if (isothermalPvt_ && !data.isothermalPvt_)
-            return false;
-        if (!isothermalPvt_ && data.isothermalPvt_)
-            return false;
+    bool operator==(const OilPvtThermal<Scalar>& data) const;
 
-        return  this->oilvisctCurves() == data.oilvisctCurves() &&
-                this->viscrefPress() == data.viscrefPress() &&
-                this->viscrefRs() == data.viscrefRs() &&
-                this->viscRef() == data.viscRef() &&
-                this->oildentRefTemp() == data.oildentRefTemp() &&
-                this->oildentCT1() == data.oildentCT1() &&
-                this->oildentCT2() == data.oildentCT2() &&
-                this->oilJTRefPres() == data.oilJTRefPres() &&
-                this->oilJTC() == data.oilJTC() &&
-                this->internalEnergyCurves() == data.internalEnergyCurves() &&
-                this->enableThermalDensity() == data.enableThermalDensity() &&
-                this->enableJouleThomson() == data.enableJouleThomson() &&
-                this->enableThermalViscosity() == data.enableThermalViscosity() &&
-                this->enableInternalEnergy() == data.enableInternalEnergy();
-    }
-
-    OilPvtThermal<Scalar>& operator=(const OilPvtThermal<Scalar>& data)
-    {
-        if (data.isothermalPvt_)
-            isothermalPvt_ = new IsothermalPvt(*data.isothermalPvt_);
-        else
-            isothermalPvt_ = nullptr;
-        oilvisctCurves_ = data.oilvisctCurves_;
-        viscrefPress_ = data.viscrefPress_;
-        viscrefRs_ = data.viscrefRs_;
-        viscRef_ = data.viscRef_;
-        oildentRefTemp_ = data.oildentRefTemp_;
-        oildentCT1_ = data.oildentCT1_;
-        oildentCT2_ = data.oildentCT2_;
-        oilJTRefPres_ =  data.oilJTRefPres_;
-        oilJTC_ =  data.oilJTC_;
-        internalEnergyCurves_ = data.internalEnergyCurves_;
-        enableThermalDensity_ = data.enableThermalDensity_;
-        enableJouleThomson_ = data.enableJouleThomson_;
-        enableThermalViscosity_ = data.enableThermalViscosity_;
-        enableInternalEnergy_ = data.enableInternalEnergy_;
-
-        return *this;
-    }
+    OilPvtThermal<Scalar>& operator=(const OilPvtThermal<Scalar>& data);
 
 private:
-    IsothermalPvt* isothermalPvt_;
+    IsothermalPvt* isothermalPvt_{nullptr};
 
     // The PVT properties needed for temperature dependence of the viscosity. We need
     // to store one value per PVT region.
-    std::vector<TabulatedOneDFunction> oilvisctCurves_;
-    std::vector<Scalar> viscrefPress_;
-    std::vector<Scalar> viscrefRs_;
-    std::vector<Scalar> viscRef_;
+    std::vector<TabulatedOneDFunction> oilvisctCurves_{};
+    std::vector<Scalar> viscrefPress_{};
+    std::vector<Scalar> viscrefRs_{};
+    std::vector<Scalar> viscRef_{};
 
     // The PVT properties needed for temperature dependence of the density.
-    std::vector<Scalar> oildentRefTemp_;
-    std::vector<Scalar> oildentCT1_;
-    std::vector<Scalar> oildentCT2_;
+    std::vector<Scalar> oildentRefTemp_{};
+    std::vector<Scalar> oildentCT1_{};
+    std::vector<Scalar> oildentCT2_{};
 
-    std::vector<Scalar> oilJTRefPres_;
-    std::vector<Scalar> oilJTC_;
+    std::vector<Scalar> oilJTRefPres_{};
+    std::vector<Scalar> oilJTC_{};
 
-    std::vector<Scalar> rhoRefG_;
-    std::vector<Scalar> hVap_;
+    std::vector<Scalar> rhoRefG_{};
+    std::vector<Scalar> hVap_{};
 
     // piecewise linear curve representing the internal energy of oil
-    std::vector<TabulatedOneDFunction> internalEnergyCurves_;
+    std::vector<TabulatedOneDFunction> internalEnergyCurves_{};
 
-    bool enableThermalDensity_;
-    bool enableJouleThomson_;
-    bool enableThermalViscosity_;
-    bool enableInternalEnergy_;
+    bool enableThermalDensity_{false};
+    bool enableJouleThomson_{false};
+    bool enableThermalViscosity_{false};
+    bool enableInternalEnergy_{false};
 };
 
 } // namespace Opm

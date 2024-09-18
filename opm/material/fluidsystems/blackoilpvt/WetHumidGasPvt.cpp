@@ -56,7 +56,7 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
                               pvtgTables.size(), densityTable.size()));
     }
 
-    size_t numRegions = pvtgwTables.size();
+    std::size_t numRegions = pvtgwTables.size();
     setNumRegions(numRegions);
 
     for (unsigned regionIdx = 0; regionIdx < numRegions; ++regionIdx) {
@@ -86,8 +86,8 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
                 Scalar pg = saturatedTable.get("PG" , outerIdx);
                 waterVaporizationFac.appendXPos(pg);
 
-                size_t numRows = underSaturatedTable.numRows();
-                for (size_t innerIdx = 0; innerIdx < numRows; ++innerIdx) {
+                std::size_t numRows = underSaturatedTable.numRows();
+                for (std::size_t innerIdx = 0; innerIdx < numRows; ++innerIdx) {
                     Scalar saltConcentration = underSaturatedTable.get("C_SALT" , innerIdx);
                     Scalar rvwSat = underSaturatedTable.get("RVW" , innerIdx);
 
@@ -137,8 +137,8 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
             assert(gasMuRvSat.numX() == outerIdx + 1);
 
             const auto& underSaturatedTable = pvtgwTable.getUnderSaturatedTable(outerIdx);
-            size_t numRows = underSaturatedTable.numRows();
-            for (size_t innerIdx = 0; innerIdx < numRows; ++ innerIdx) {
+            std::size_t numRows = underSaturatedTable.numRows();
+            for (std::size_t innerIdx = 0; innerIdx < numRows; ++ innerIdx) {
                 Scalar Rw = underSaturatedTable.get("RW" , innerIdx);
                 Scalar Bg = underSaturatedTable.get("BG" , innerIdx);
                 Scalar mug = underSaturatedTable.get("MUG" , innerIdx);
@@ -168,7 +168,7 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
             // find the master table which will be used as a template to extend the
             // current line. We define master table as the first table which has values
             // for undersaturated gas...
-            size_t masterTableIdx = xIdx + 1;
+            std::size_t masterTableIdx = xIdx + 1;
             for (; masterTableIdx < saturatedTable.numRows(); ++masterTableIdx)
             {
                 if (pvtgwTable.getUnderSaturatedTable(masterTableIdx).numRows() > 1)
@@ -229,8 +229,8 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
             assert(gasMuRvwSat.numX() == outerIdx + 1);
 
             const auto& underSaturatedTable = pvtgTable.getUnderSaturatedTable(outerIdx);
-            size_t numRows = underSaturatedTable.numRows();
-            for (size_t innerIdx = 0; innerIdx < numRows; ++innerIdx) {
+            std::size_t numRows = underSaturatedTable.numRows();
+            for (std::size_t innerIdx = 0; innerIdx < numRows; ++innerIdx) {
                 Scalar Rv = underSaturatedTable.get("RV" , innerIdx);
                 Scalar Bg = underSaturatedTable.get("BG" , innerIdx);
                 Scalar mug = underSaturatedTable.get("MUG" , innerIdx);
@@ -260,7 +260,7 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
             // find the master table which will be used as a template to extend the
             // current line. We define master table as the first table which has values
             // for undersaturated gas...
-            size_t masterTableIdx = xIdx + 1;
+            std::size_t masterTableIdx = xIdx + 1;
             for (; masterTableIdx < saturatedTable.numRows(); ++masterTableIdx)
             {
                 if (pvtgTable.getUnderSaturatedTable(masterTableIdx).numRows() > 1)
@@ -304,7 +304,7 @@ extendPvtgwTable_(unsigned regionIdx,
     auto& invGasBRvSat = inverseGasBRvSat_[regionIdx];
     auto& gasMuRvSat = gasMuRvSat_[regionIdx];
 
-    for (size_t newRowIdx = 1; newRowIdx < masterTable.numRows(); ++newRowIdx) {
+    for (std::size_t newRowIdx = 1; newRowIdx < masterTable.numRows(); ++newRowIdx) {
         const auto& RVColumn = masterTable.getColumn("RW");
         const auto& BGColumn = masterTable.getColumn("BG");
         const auto& viscosityColumn = masterTable.getColumn("MUG");
@@ -357,7 +357,7 @@ extendPvtgTable_(unsigned regionIdx,
     auto& invGasBRvwSat= inverseGasBRvwSat_[regionIdx];
     auto& gasMuRvwSat = gasMuRvwSat_[regionIdx];
 
-    for (size_t newRowIdx = 1; newRowIdx < masterTable.numRows(); ++newRowIdx) {
+    for (std::size_t newRowIdx = 1; newRowIdx < masterTable.numRows(); ++newRowIdx) {
         const auto& RVColumn = masterTable.getColumn("RV");
         const auto& BGColumn = masterTable.getColumn("BG");
         const auto& viscosityColumn = masterTable.getColumn("MUG");
@@ -398,7 +398,7 @@ extendPvtgTable_(unsigned regionIdx,
 #endif
 
 template<class Scalar>
-void WetHumidGasPvt<Scalar>::setNumRegions(size_t numRegions)
+void WetHumidGasPvt<Scalar>::setNumRegions(std::size_t numRegions)
 {
     waterReferenceDensity_.resize(numRegions);
     oilReferenceDensity_.resize(numRegions);
@@ -435,7 +435,7 @@ void WetHumidGasPvt<Scalar>::initEnd()
 
     //PVTGW
     // calculate the final 2D functions which are used for interpolation.
-    size_t numRegions = gasMuRvSat_.size();
+    std::size_t numRegions = gasMuRvSat_.size();
     for (unsigned regionIdx = 0; regionIdx < numRegions; ++ regionIdx) {
         // calculate the table which stores the inverse of the product of the gas
         // formation volume factor and the gas viscosity
@@ -450,13 +450,13 @@ void WetHumidGasPvt<Scalar>::initEnd()
         std::vector<Scalar> satPressuresArray;
         std::vector<Scalar> invSatGasBArray;
         std::vector<Scalar> invSatGasBMuArray;
-        for (size_t pIdx = 0; pIdx < gasMuRvSat.numX(); ++pIdx) {
+        for (std::size_t pIdx = 0; pIdx < gasMuRvSat.numX(); ++pIdx) {
             invGasBMuRvSat.appendXPos(gasMuRvSat.xAt(pIdx));
 
             assert(gasMuRvSat.numY(pIdx) == invGasBRvSat.numY(pIdx));
 
-            size_t numRw = gasMuRvSat.numY(pIdx);
-            for (size_t RwIdx = 0; RwIdx < numRw; ++RwIdx)
+            std::size_t numRw = gasMuRvSat.numY(pIdx);
+            for (std::size_t RwIdx = 0; RwIdx < numRw; ++RwIdx)
                 invGasBMuRvSat.appendSamplePoint(pIdx,
                                             gasMuRvSat.yAt(pIdx, RwIdx),
                                             invGasBRvSat.valueAt(pIdx, RwIdx)
@@ -476,7 +476,7 @@ void WetHumidGasPvt<Scalar>::initEnd()
 
     //PVTG
     // calculate the final 2D functions which are used for interpolation.
-    //size_t numRegions = gasMuRvwSat_.size();
+    //std::size_t numRegions = gasMuRvwSat_.size();
     for (unsigned regionIdx = 0; regionIdx < numRegions; ++ regionIdx) {
         // calculate the table which stores the inverse of the product of the gas
         // formation volume factor and the gas viscosity
@@ -491,13 +491,13 @@ void WetHumidGasPvt<Scalar>::initEnd()
         std::vector<Scalar> satPressuresArray;
         std::vector<Scalar> invSatGasBArray;
         std::vector<Scalar> invSatGasBMuArray;
-        for (size_t pIdx = 0; pIdx < gasMuRvwSat.numX(); ++pIdx) {
+        for (std::size_t pIdx = 0; pIdx < gasMuRvwSat.numX(); ++pIdx) {
             invGasBMuRvwSat.appendXPos(gasMuRvwSat.xAt(pIdx));
 
             assert(gasMuRvwSat.numY(pIdx) == invGasBRvwSat.numY(pIdx));
 
-            size_t numRw = gasMuRvwSat.numY(pIdx);
-            for (size_t RwIdx = 0; RwIdx < numRw; ++RwIdx)
+            std::size_t numRw = gasMuRvwSat.numY(pIdx);
+            for (std::size_t RwIdx = 0; RwIdx < numRw; ++RwIdx)
                 invGasBMuRvwSat.appendSamplePoint(pIdx,
                                             gasMuRvwSat.yAt(pIdx, RwIdx),
                                             invGasBRvwSat.valueAt(pIdx, RwIdx)
@@ -526,12 +526,12 @@ updateSaturationPressure_(unsigned regionIdx)
 
     // create the taublated function representing saturation pressure depending of
     // Rv
-    size_t n = oilVaporizationFac.numSamples();
+    std::size_t n = oilVaporizationFac.numSamples();
     Scalar delta = (oilVaporizationFac.xMax() - oilVaporizationFac.xMin())/Scalar(n + 1);
 
     SamplingPoints pSatSamplePoints;
     Scalar Rv = 0;
-    for (size_t i = 0; i <= n; ++ i) {
+    for (std::size_t i = 0; i <= n; ++ i) {
         Scalar pSat = oilVaporizationFac.xMin() + Scalar(i)*delta;
         Rv = saturatedOilVaporizationFactor(regionIdx, /*temperature=*/Scalar(1e30), pSat);
 

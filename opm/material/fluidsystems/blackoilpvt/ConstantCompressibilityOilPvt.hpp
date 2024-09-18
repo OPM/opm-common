@@ -27,6 +27,7 @@
 #ifndef OPM_CONSTANT_COMPRESSIBILITY_OIL_PVT_HPP
 #define OPM_CONSTANT_COMPRESSIBILITY_OIL_PVT_HPP
 
+#include <cstddef>
 #include <stdexcept>
 #include <vector>
 
@@ -56,20 +57,7 @@ public:
     void initFromState(const EclipseState& eclState, const Schedule&);
 #endif
 
-    void setNumRegions(size_t numRegions)
-    {
-        oilReferenceDensity_.resize(numRegions);
-        oilReferencePressure_.resize(numRegions);
-        oilReferenceFormationVolumeFactor_.resize(numRegions);
-        oilCompressibility_.resize(numRegions);
-        oilViscosity_.resize(numRegions);
-        oilViscosibility_.resize(numRegions);
-
-        for (unsigned regionIdx = 0; regionIdx < numRegions; ++regionIdx) {
-            setReferenceFormationVolumeFactor(regionIdx, 1.0);
-            setReferencePressure(regionIdx, 1.03125);
-        }
-    }
+    void setNumRegions(std::size_t numRegions);
 
     void setVapPars(const Scalar, const Scalar)
     {
@@ -138,10 +126,13 @@ public:
                         const Evaluation&,
                         const Evaluation&) const
     {
-        throw std::runtime_error("Requested the enthalpy of oil but the thermal option is not enabled");
+        throw std::runtime_error("Requested the enthalpy of oil but the thermal "
+                                 "option is not enabled");
     }
-    Scalar hVap(unsigned) const{
-        throw std::runtime_error("Requested the hvap of oil but the thermal option is not enabled");
+    Scalar hVap(unsigned) const
+    {
+        throw std::runtime_error("Requested the hvap of oil but the thermal "
+                                 "option is not enabled");
     }
     /*!
      * \brief Returns the dynamic viscosity [Pa s] of gas saturated oil given a pressure
@@ -169,7 +160,7 @@ public:
         const Evaluation& Y =
             (oilCompressibility_[regionIdx] - oilViscosibility_[regionIdx])
             * (pressure - pRef);
-        return BoMuoRef*bo/(1.0 + Y*(1.0 + Y/2.0));
+        return BoMuoRef * bo / (1.0 + Y * (1.0 + Y / 2.0));
     }
 
     /*!
@@ -225,7 +216,8 @@ public:
      * \brief Returns the saturation pressure of the oil phase [Pa]
      *        depending on its mass fraction of the gas component
      *
-     * \param Rs The surface volume of gas component dissolved in what will yield one cubic meter of oil at the surface [-]
+     * \param Rs The surface volume of gas component dissolved in what
+     *           will yield one cubic meter of oil at the surface [-]
      */
     template <class Evaluation>
     Evaluation saturationPressure(unsigned /*regionIdx*/,
@@ -238,7 +230,8 @@ public:
                                     const Evaluation& /*pressure*/,
                                     unsigned /*compIdx*/) const
     {
-        throw std::runtime_error("Not implemented: The PVT model does not provide a diffusionCoefficient()");
+        throw std::runtime_error("Not implemented: The PVT model does not "
+                                 "provide a diffusionCoefficient()");
     }
 
     Scalar oilReferenceDensity(unsigned regionIdx) const
@@ -257,12 +250,12 @@ public:
     { return oilViscosibility_; }
 
 private:
-    std::vector<Scalar> oilReferenceDensity_;
-    std::vector<Scalar> oilReferencePressure_;
-    std::vector<Scalar> oilReferenceFormationVolumeFactor_;
-    std::vector<Scalar> oilCompressibility_;
-    std::vector<Scalar> oilViscosity_;
-    std::vector<Scalar> oilViscosibility_;
+    std::vector<Scalar> oilReferenceDensity_{};
+    std::vector<Scalar> oilReferencePressure_{};
+    std::vector<Scalar> oilReferenceFormationVolumeFactor_{};
+    std::vector<Scalar> oilCompressibility_{};
+    std::vector<Scalar> oilViscosity_{};
+    std::vector<Scalar> oilViscosibility_{};
 };
 
 } // namespace Opm

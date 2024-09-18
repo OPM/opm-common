@@ -51,7 +51,7 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
                               pvtoTables.size(), densityTable.size()));
     }
 
-    size_t numRegions = pvtoTables.size();
+    std::size_t numRegions = pvtoTables.size();
     setNumRegions(numRegions);
 
     for (unsigned regionIdx = 0; regionIdx < numRegions; ++regionIdx) {
@@ -95,7 +95,7 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
             assert(oilMu.numX() == outerIdx + 1);
 
             const auto& underSaturatedTable = pvtoTable.getUnderSaturatedTable(outerIdx);
-            size_t numRows = underSaturatedTable.numRows();
+            std::size_t numRows = underSaturatedTable.numRows();
             for (unsigned innerIdx = 0; innerIdx < numRows; ++innerIdx) {
                 Scalar po = underSaturatedTable.get("P", innerIdx);
                 Scalar Bo = underSaturatedTable.get("BO", innerIdx);
@@ -131,7 +131,7 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
             // find the master table which will be used as a template to extend the
             // current line. We define master table as the first table which has values
             // for undersaturated oil...
-            size_t masterTableIdx = xIdx + 1;
+            std::size_t masterTableIdx = xIdx + 1;
             for (; masterTableIdx < saturatedTable.numRows(); ++masterTableIdx)
             {
                 if (pvtoTable.getUnderSaturatedTable(masterTableIdx).numRows() > 1)
@@ -216,7 +216,7 @@ extendPvtoTable_(unsigned regionIdx,
 #endif
 
 template<class Scalar>
-void LiveOilPvt<Scalar>::setNumRegions(size_t numRegions)
+void LiveOilPvt<Scalar>::setNumRegions(std::size_t numRegions)
 {
     oilReferenceDensity_.resize(numRegions);
     gasReferenceDensity_.resize(numRegions);
@@ -252,7 +252,7 @@ setSaturatedOilFormationVolumeFactor(unsigned regionIdx,
     updateSaturationPressure_(regionIdx);
 
     // calculate a table of estimated densities of undersatured gas
-    for (size_t pIdx = 0; pIdx < samplePoints.size(); ++pIdx) {
+    for (std::size_t pIdx = 0; pIdx < samplePoints.size(); ++pIdx) {
         Scalar p1 = std::get<0>(samplePoints[pIdx]);
         Scalar p2 = p1 * 2.0;
 
@@ -280,7 +280,7 @@ setSaturatedOilViscosity(unsigned regionIdx,
 
     // calculate a table of estimated viscosities depending on pressure and gas mass
     // fraction for untersaturated oil to make the other code happy
-    for (size_t pIdx = 0; pIdx < samplePoints.size(); ++pIdx) {
+    for (std::size_t pIdx = 0; pIdx < samplePoints.size(); ++pIdx) {
         Scalar p1 = std::get<0>(samplePoints[pIdx]);
         Scalar p2 = p1 * 2.0;
 
@@ -300,7 +300,7 @@ template<class Scalar>
 void LiveOilPvt<Scalar>::initEnd()
 {
     // calculate the final 2D functions which are used for interpolation.
-    size_t numRegions = oilMuTable_.size();
+    std::size_t numRegions = oilMuTable_.size();
     for (unsigned regionIdx = 0; regionIdx < numRegions; ++ regionIdx) {
         // calculate the table which stores the inverse of the product of the oil
         // formation volume factor and the oil viscosity
@@ -321,7 +321,7 @@ void LiveOilPvt<Scalar>::initEnd()
 
             assert(oilMu.numY(rsIdx) == invOilB.numY(rsIdx));
 
-            size_t numPressures = oilMu.numY(rsIdx);
+            std::size_t numPressures = oilMu.numY(rsIdx);
             for (unsigned pIdx = 0; pIdx < numPressures; ++pIdx)
                 invOilBMu.appendSamplePoint(rsIdx,
                                             oilMu.yAt(rsIdx, pIdx),
@@ -350,12 +350,12 @@ void LiveOilPvt<Scalar>::updateSaturationPressure_(unsigned regionIdx)
 
     // create the function representing saturation pressure depending of the mass
     // fraction in gas
-    size_t n = gasDissolutionFac.numSamples();
+    std::size_t n = gasDissolutionFac.numSamples();
     const Scalar delta = (gasDissolutionFac.xMax() -
                           gasDissolutionFac.xMin()) / Scalar(n + 1);
 
     SamplingPoints pSatSamplePoints;
-    for (size_t i = 0; i <= n; ++ i) {
+    for (std::size_t i = 0; i <= n; ++ i) {
         const Scalar pSat = gasDissolutionFac.xMin() + i*delta;
         const Scalar Rs = saturatedGasDissolutionFactor(regionIdx,
                                                         Scalar(1e30),

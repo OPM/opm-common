@@ -50,7 +50,7 @@ initFromState(const EclipseState& eclState, const Schedule&)
                               pvdgTables.size(), densityTable.size()));
     }
 
-    size_t numRegions = pvdgTables.size();
+    std::size_t numRegions = pvdgTables.size();
     setNumRegions(numRegions);
 
     for (unsigned regionIdx = 0; regionIdx < numRegions; ++regionIdx) {
@@ -80,7 +80,7 @@ initFromState(const EclipseState& eclState, const Schedule&)
             invB[i] = 1.0 / Bg[i];
         }
 
-        size_t numSamples = invB.size();
+        std::size_t numSamples = invB.size();
         inverseGasB_[regionIdx].setXYArrays(numSamples, pvdgTable.getPressureColumn(), invB);
         gasMu_[regionIdx].setXYArrays(numSamples, pvdgTable.getPressureColumn(), pvdgTable.getViscosityColumn());
     }
@@ -90,7 +90,7 @@ initFromState(const EclipseState& eclState, const Schedule&)
 #endif
 
 template<class Scalar>
-void DryGasPvt<Scalar>::setNumRegions(size_t numRegions)
+void DryGasPvt<Scalar>::setNumRegions(std::size_t numRegions)
 {
     gasReferenceDensity_.resize(numRegions);
     inverseGasB_.resize(numRegions);
@@ -117,7 +117,7 @@ template<class Scalar>
 void DryGasPvt<Scalar>::initEnd()
 {
     // calculate the final 2D functions which are used for interpolation.
-    size_t numRegions = gasMu_.size();
+    std::size_t numRegions = gasMu_.size();
     for (unsigned regionIdx = 0; regionIdx < numRegions; ++ regionIdx) {
         // calculate the table which stores the inverse of the product of the gas
         // formation volume factor and the gas viscosity

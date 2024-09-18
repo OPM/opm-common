@@ -61,16 +61,7 @@ public:
 
     explicit H2GasPvt(const std::vector<Scalar>& salinity,
                       Scalar T_ref = 288.71, //(273.15 + 15.56)
-                      Scalar P_ref = 101325)
-        : salinity_(salinity)
-    {
-        int numRegions = salinity_.size();
-        setNumRegions(numRegions);
-        for (int i = 0; i < numRegions; ++i) {
-            gasReferenceDensity_[i] = H2::gasDensity(T_ref, P_ref, extrapolate);
-            brineReferenceDensity_[i] = Brine::liquidDensity(T_ref, P_ref, salinity_[i], extrapolate);
-        }
-    }
+                      Scalar P_ref = 101325);
 
 #if HAVE_ECL_INPUT
     /*!
@@ -79,17 +70,11 @@ public:
     void initFromState(const EclipseState& eclState, const Schedule&);
 #endif
 
-    void setNumRegions(size_t numRegions)
-    {
-        gasReferenceDensity_.resize(numRegions);
-        brineReferenceDensity_.resize(numRegions);
-        salinity_.resize(numRegions);
-    }
+    void setNumRegions(size_t numRegions);
 
     void setVapPars(const Scalar, const Scalar)
     {
     }
-
 
     /*!
     * \brief Initialize the reference densities of all fluids for a given PVT region
@@ -97,11 +82,7 @@ public:
     void setReferenceDensities(unsigned regionIdx,
                                Scalar rhoRefBrine,
                                Scalar rhoRefGas,
-                               Scalar /*rhoRefWater*/)
-    {
-        gasReferenceDensity_[regionIdx] = rhoRefGas;
-        brineReferenceDensity_[regionIdx] = rhoRefBrine;
-    }
+                               Scalar /*rhoRefWater*/);
 
     /*!
     * \brief Specify whether the PVT model should consider that the water component can
@@ -125,9 +106,9 @@ public:
     unsigned numRegions() const
     { return gasReferenceDensity_.size(); }
 
-    Scalar hVap(unsigned ) const{
-        return 0;
-    }
+    Scalar hVap(unsigned ) const
+    { return 0.0; }
+
     /*!
     * \brief Returns the specific enthalpy [J/kg] of gas given a set of parameters.
     *
@@ -191,8 +172,10 @@ public:
                                             const Evaluation& rvw) const
     {
         // If vaporization is disabled, return H2 gas volume factor
-        if (!enableVaporization_)
-            return H2::gasDensity(temperature, pressure, extrapolate)/gasReferenceDensity_[regionIdx];
+        if (!enableVaporization_) {
+            return H2::gasDensity(temperature, pressure, extrapolate) /
+                   gasReferenceDensity_[regionIdx];
+        }
 
         // Use CO2 density for the gas phase.
         const auto& rhoH2 = H2::gasDensity(temperature, pressure, extrapolate);
@@ -202,7 +185,8 @@ public:
         //assert(rv == 0.0 || rvw == 0.0);
         //const Evaluation xBrine = convertRvwToXgW_(max(rvw,rv),regionIdx);
         //const auto rho = 1.0/(xBrine/rhoH2O + (1.0 - xBrine)/rhoH2);
-        return rhoH2/(gasReferenceDensity_[regionIdx] + max(rvw,rv)*brineReferenceDensity_[regionIdx]);
+        return rhoH2 / (gasReferenceDensity_[regionIdx] +
+                        max(rvw,rv) * brineReferenceDensity_[regionIdx]);
     }
 
     /*!
@@ -213,14 +197,18 @@ public:
                                                      const Evaluation& temperature,
                                                      const Evaluation& pressure) const
     {
-        const Evaluation rvw = rvwSat_(regionIdx, temperature, pressure, Evaluation(salinity_[regionIdx]));
-        return inverseFormationVolumeFactor(regionIdx, temperature, pressure, Evaluation(0.0), rvw);
+        const Evaluation rvw = rvwSat_(regionIdx, temperature, pressure,
+                                       Evaluation(salinity_[regionIdx]));
+        return inverseFormationVolumeFactor(regionIdx, temperature, pressure,
+                                            Evaluation(0.0), rvw);
     }
 
     /*!
-    * \brief Returns the saturation pressure of the gas phase [Pa] depending on its mass fraction of the oil component
+    * \brief Returns the saturation pressure of the gas phase [Pa] depending
+    *        on its mass fraction of the oil component
     *
-    * \param Rv The surface volume of oil component dissolved in what will yield one cubic meter of gas at the surface [-]
+    * \param Rv The surface volume of oil component dissolved in what
+    *        will yield one cubic meter of gas at the surface [-]
     */
     template <class Evaluation>
     Evaluation saturationPressure(unsigned /*regionIdx*/,
@@ -233,8 +221,8 @@ public:
     */
     template <class Evaluation>
     Evaluation saturatedWaterVaporizationFactor(unsigned regionIdx,
-                                              const Evaluation& temperature,
-                                              const Evaluation& pressure) const
+                                                const Evaluation& temperature,
+                                                const Evaluation& pressure) const
     {
         return rvwSat_(regionIdx, temperature, pressure, Evaluation(salinity_[regionIdx]));
     }
@@ -244,11 +232,12 @@ public:
     */
     template <class Evaluation = Scalar>
     Evaluation saturatedWaterVaporizationFactor(unsigned regionIdx,
-                                              const Evaluation& temperature,
-                                              const Evaluation& pressure,
-                                              const Evaluation& saltConcentration) const
+                                                const Evaluation& temperature,
+                                                const Evaluation& pressure,
+                                                const Evaluation& saltConcentration) const
     {
-        const Evaluation salinity = salinityFromConcentration(temperature, pressure, saltConcentration);
+        const Evaluation salinity = salinityFromConcentration(temperature, pressure,
+                                                              saltConcentration);
         return rvwSat_(regionIdx, temperature, pressure, salinity);
      }
 
@@ -284,7 +273,7 @@ public:
         return BinaryCoeffBrineH2::gasDiffCoeff(temperature, pressure);
     }
 
-    const Scalar gasReferenceDensity(unsigned regionIdx) const
+    Scalar gasReferenceDensity(unsigned regionIdx) const
     { return gasReferenceDensity_[regionIdx]; }
 
     Scalar oilReferenceDensity(unsigned regionIdx) const
@@ -297,11 +286,6 @@ public:
     { return salinity_[regionIdx]; }
 
 private:
-    std::vector<Scalar> gasReferenceDensity_;
-    std::vector<Scalar> brineReferenceDensity_;
-    std::vector<Scalar> salinity_;
-    bool enableVaporization_ = true;
-
     template <class LhsEval>
     LhsEval rvwSat_(unsigned regionIdx,
                     const LhsEval& temperature,
@@ -309,8 +293,9 @@ private:
                     const LhsEval& salinity) const
     {
         // If water vaporization is disabled, we return zero
-        if (!enableVaporization_)
+        if (!enableVaporization_) {
             return 0.0;
+        }
 
         // From Li et al., Int. J. Hydrogen Energ., 2018, water mole fraction is calculated assuming ideal mixing
         LhsEval pw_sat = H2O::vaporPressure(temperature);
@@ -331,7 +316,7 @@ private:
         Scalar rho_wRef = brineReferenceDensity_[regionIdx];
         Scalar rho_gRef = gasReferenceDensity_[regionIdx];
 
-        return XgW/(1.0 - XgW)*(rho_gRef/rho_wRef);
+        return XgW / (1.0 - XgW) * (rho_gRef / rho_wRef);
     }
 
     /*!
@@ -344,8 +329,8 @@ private:
         Scalar rho_wRef = brineReferenceDensity_[regionIdx];
         Scalar rho_gRef = gasReferenceDensity_[regionIdx];
 
-        const LhsEval& rho_wG = Rvw*rho_wRef;
-        return rho_wG/(rho_gRef + rho_wG);
+        const LhsEval& rho_wG = Rvw * rho_wRef;
+        return rho_wG / (rho_gRef + rho_wG);
     }
 
     /*!
@@ -357,15 +342,20 @@ private:
         Scalar M_H2 = H2::molarMass();
         LhsEval M_Brine = Brine::molarMass(salinity);
 
-        return xgW*M_Brine / (xgW*(M_Brine - M_H2) + M_H2);
+        return xgW * M_Brine / (xgW * (M_Brine - M_H2) + M_H2);
     }
 
     template <class LhsEval>
-    const LhsEval salinityFromConcentration(const LhsEval&T, const LhsEval& P, const LhsEval& saltConcentration) const
+    const LhsEval salinityFromConcentration(const LhsEval&T, const LhsEval& P,
+                                            const LhsEval& saltConcentration) const
     {
         return saltConcentration / H2O::liquidDensity(T, P, true);
     }
 
+    std::vector<Scalar> gasReferenceDensity_{};
+    std::vector<Scalar> brineReferenceDensity_{};
+    std::vector<Scalar> salinity_{};
+    bool enableVaporization_ = true;
 };  // end class H2GasPvt
 
 }  // end namspace Opm

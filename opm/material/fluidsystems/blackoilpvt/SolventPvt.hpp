@@ -29,6 +29,7 @@
 
 #include <opm/material/common/Tabulated1DFunction.hpp>
 
+#include <cstddef>
 #include <vector>
 
 namespace Opm {
@@ -59,7 +60,7 @@ public:
     void initFromState(const EclipseState& eclState, const Schedule&);
 #endif
 
-    void setNumRegions(size_t numRegions);
+    void setNumRegions(std::size_t numRegions);
 
     void setVapPars(const Scalar, const Scalar)
     {
@@ -109,7 +110,7 @@ public:
         const Evaluation& invBg = inverseSolventB_[regionIdx].eval(pressure, /*extrapolate=*/true);
         const Evaluation& invMugBg = inverseSolventBMu_[regionIdx].eval(pressure, /*extrapolate=*/true);
 
-        return invBg/invMugBg;
+        return invBg / invMugBg;
     }
 
     template <class Evaluation>
@@ -117,7 +118,8 @@ public:
                                     const Evaluation& /*pressure*/,
                                     unsigned /*compIdx*/) const
     {
-        throw std::runtime_error("Not implemented: The PVT model does not provide a diffusionCoefficient()");
+        throw std::runtime_error("Not implemented: The PVT model does not provide "
+                                 "a diffusionCoefficient()");
     }
 
     /*!
@@ -148,10 +150,10 @@ public:
     { return inverseSolventBMu_; }
 
 private:
-    std::vector<Scalar> solventReferenceDensity_;
-    std::vector<TabulatedOneDFunction> inverseSolventB_;
-    std::vector<TabulatedOneDFunction> solventMu_;
-    std::vector<TabulatedOneDFunction> inverseSolventBMu_;
+    std::vector<Scalar> solventReferenceDensity_{};
+    std::vector<TabulatedOneDFunction> inverseSolventB_{};
+    std::vector<TabulatedOneDFunction> solventMu_{};
+    std::vector<TabulatedOneDFunction> inverseSolventBMu_{};
 };
 
 } // namespace Opm

@@ -90,7 +90,8 @@ public:
      *
      * \param samplePoints A container of (x,y) values.
      */
-    void setSaturatedOilGasDissolutionFactor(unsigned regionIdx, const SamplingPoints& samplePoints)
+    void setSaturatedOilGasDissolutionFactor(unsigned regionIdx,
+                                             const SamplingPoints& samplePoints)
     { saturatedGasDissolutionFactorTable_[regionIdx].setContainerOfTuples(samplePoints); }
 
     /*!
@@ -117,7 +118,8 @@ public:
      * factor. Also note, that the order of the arguments needs to be \f$(R_s, p_o)\f$
      * and not the other way around.
      */
-    void setInverseOilFormationVolumeFactor(unsigned regionIdx, const TabulatedTwoDFunction& invBo)
+    void setInverseOilFormationVolumeFactor(unsigned regionIdx,
+                                            const TabulatedTwoDFunction& invBo)
     { inverseOilBTable_[regionIdx] = invBo; }
 
     /*!
@@ -158,11 +160,14 @@ public:
                         const Evaluation&,
                         const Evaluation&) const
     {
-        throw std::runtime_error("Requested the enthalpy of oil but the thermal option is not enabled");
+        throw std::runtime_error("Requested the enthalpy of oil but the thermal "
+                                 "option is not enabled");
     }
 
-    Scalar hVap(unsigned) const{
-        throw std::runtime_error("Requested the hvap of oil but the thermal option is not enabled");
+    Scalar hVap(unsigned) const
+    {
+        throw std::runtime_error("Requested the hvap of oil but the thermal "
+                                 "option is not enabled");
     }
 
     /*!
@@ -178,7 +183,7 @@ public:
         const Evaluation& invBo = inverseOilBTable_[regionIdx].eval(Rs, pressure, /*extrapolate=*/true);
         const Evaluation& invMuoBo = inverseOilBMuTable_[regionIdx].eval(Rs, pressure, /*extrapolate=*/true);
 
-        return invBo/invMuoBo;
+        return invBo / invMuoBo;
     }
 
     /*!
@@ -193,7 +198,7 @@ public:
         const Evaluation& invBo = inverseSaturatedOilBTable_[regionIdx].eval(pressure, /*extrapolate=*/true);
         const Evaluation& invMuoBo = inverseSaturatedOilBMuTable_[regionIdx].eval(pressure, /*extrapolate=*/true);
 
-        return invBo/invMuoBo;
+        return invBo / invMuoBo;
     }
 
     /*!
@@ -253,7 +258,7 @@ public:
         if (vapPar2_ > 0.0 && maxOilSaturation > 0.01 && oilSaturation < maxOilSaturation) {
             constexpr const Scalar eps = 0.001;
             const Evaluation& So = max(oilSaturation, eps);
-            tmp *= max(1e-3, pow(So/maxOilSaturation, vapPar2_));
+            tmp *= max(1e-3, pow(So / maxOilSaturation, vapPar2_));
         }
 
         return tmp;
@@ -270,10 +275,10 @@ public:
                                   const Evaluation&,
                                   const Evaluation& Rs) const
     {
-        typedef MathToolbox<Evaluation> Toolbox;
+        using Toolbox = MathToolbox<Evaluation>;
 
         const auto& RsTable = saturatedGasDissolutionFactorTable_[regionIdx];
-        constexpr const Scalar eps = std::numeric_limits<typename Toolbox::Scalar>::epsilon()*1e6;
+        constexpr const Scalar eps = std::numeric_limits<typename Toolbox::Scalar>::epsilon() * 1e6;
 
         // use the saturation pressure function to get a pretty good initial value
         Evaluation pSat = saturationPressure_[regionIdx].eval(Rs, /*extrapolate=*/true);
@@ -292,22 +297,24 @@ public:
                 return pSat;
             }
 
-            const Evaluation& delta = f/fPrime;
+            const Evaluation& delta = f / fPrime;
 
             pSat -= delta;
 
             if (pSat < 0.0) {
                 // if the pressure is lower than 0 Pascals, we set it back to 0. if this
                 // happens twice, we give up and just return 0 Pa...
-                if (onProbation)
+                if (onProbation) {
                     return 0.0;
+                }
 
                 onProbation = true;
                 pSat = 0.0;
             }
 
-            if (std::abs(scalarValue(delta)) < std::abs(scalarValue(pSat))*eps)
+            if (std::abs(scalarValue(delta)) < std::abs(scalarValue(pSat))*eps) {
                 return pSat;
+            }
         }
 
         const std::string msg =
@@ -323,7 +330,8 @@ public:
                                     const Evaluation& /*pressure*/,
                                     unsigned /*compIdx*/) const
     {
-        throw std::runtime_error("Not implemented: The PVT model does not provide a diffusionCoefficient()");
+        throw std::runtime_error("Not implemented: The PVT model does not provide "
+                                 "a diffusionCoefficient()");
     }
 
     Scalar gasReferenceDensity(unsigned regionIdx) const
@@ -362,16 +370,16 @@ public:
 private:
     void updateSaturationPressure_(unsigned regionIdx);
 
-    std::vector<Scalar> gasReferenceDensity_;
-    std::vector<Scalar> oilReferenceDensity_;
-    std::vector<TabulatedTwoDFunction> inverseOilBTable_;
-    std::vector<TabulatedTwoDFunction> oilMuTable_;
-    std::vector<TabulatedTwoDFunction> inverseOilBMuTable_;
-    std::vector<TabulatedOneDFunction> saturatedOilMuTable_;
-    std::vector<TabulatedOneDFunction> inverseSaturatedOilBTable_;
-    std::vector<TabulatedOneDFunction> inverseSaturatedOilBMuTable_;
-    std::vector<TabulatedOneDFunction> saturatedGasDissolutionFactorTable_;
-    std::vector<TabulatedOneDFunction> saturationPressure_;
+    std::vector<Scalar> gasReferenceDensity_{};
+    std::vector<Scalar> oilReferenceDensity_{};
+    std::vector<TabulatedTwoDFunction> inverseOilBTable_{};
+    std::vector<TabulatedTwoDFunction> oilMuTable_{};
+    std::vector<TabulatedTwoDFunction> inverseOilBMuTable_{};
+    std::vector<TabulatedOneDFunction> saturatedOilMuTable_{};
+    std::vector<TabulatedOneDFunction> inverseSaturatedOilBTable_{};
+    std::vector<TabulatedOneDFunction> inverseSaturatedOilBMuTable_{};
+    std::vector<TabulatedOneDFunction> saturatedGasDissolutionFactorTable_{};
+    std::vector<TabulatedOneDFunction> saturationPressure_{};
 
     Scalar vapPar2_ = 0.0;
 };

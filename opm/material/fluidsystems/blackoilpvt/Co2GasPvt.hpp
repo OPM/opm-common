@@ -28,7 +28,7 @@
 #define OPM_CO2_GAS_PVT_HPP
 
 #include <opm/material/Constants.hpp>
-#include <opm/common/ErrorMacros.hpp>
+#include <opm/common/TimingMacros.hpp>
 
 #include <opm/material/components/CO2.hpp>
 #include <opm/material/components/BrineDynamic.hpp>
@@ -37,6 +37,7 @@
 #include <opm/material/binarycoefficients/Brine_CO2.hpp>
 #include <opm/input/eclipse/EclipseState/Co2StoreConfig.hpp>
 
+#include <cstddef>
 #include <vector>
 
 namespace Opm {
@@ -47,7 +48,7 @@ class Co2StoreConfig;
 
 /*!
  * \brief This class represents the Pressure-Volume-Temperature relations of the gas phase
- * for CO2
+ *        for CO2.
  */
 template <class Scalar>
 class Co2GasPvt
@@ -67,35 +68,16 @@ public:
                        int activityModel = 3,
                        int thermalMixingModel = 1,
                        Scalar T_ref = 288.71, //(273.15 + 15.56)
-                       Scalar P_ref = 101325)
-        : salinity_(salinity)
-    {
-        // Throw an error if reference state is not (T, p) = (15.56 C, 1 atm) = (288.71 K, 1.01325e5 Pa)
-        if (T_ref != Scalar(288.71) || P_ref != Scalar(1.01325e5)) {
-            OPM_THROW(std::runtime_error,
-                "BrineCo2Pvt class can only be used with default reference state (T, P) = (288.71 K, 1.01325e5 Pa)!");
-        }
-        setActivityModelSalt(activityModel);
-        setThermalMixingModel(thermalMixingModel);
+                       Scalar P_ref = 101325);
 
-        int num_regions = salinity_.size();
-        setNumRegions(num_regions);
-        for (int i = 0; i < num_regions; ++i) {
-            gasReferenceDensity_[i] = CO2::gasDensity(T_ref, P_ref, extrapolate);
-            brineReferenceDensity_[i] = Brine::liquidDensity(T_ref, P_ref, salinity_[i], extrapolate);
-        }
-    }
+#if HAVE_ECL_INPUT
     /*!
      * \brief Initialize the parameters for CO2 gas using an ECL deck.
      */
     void initFromState(const EclipseState& eclState, const Schedule&);
+#endif
 
-    void setNumRegions(size_t numRegions)
-    {
-        gasReferenceDensity_.resize(numRegions);
-        brineReferenceDensity_.resize(numRegions);
-        salinity_.resize(numRegions);
-    }
+    void setNumRegions(std::size_t numRegions);
 
     void setVapPars(const Scalar, const Scalar)
     {
@@ -107,11 +89,7 @@ public:
     void setReferenceDensities(unsigned regionIdx,
                                Scalar rhoRefBrine,
                                Scalar rhoRefGas,
-                               Scalar /*rhoRefWater*/)
-    {
-        gasReferenceDensity_[regionIdx] = rhoRefGas;
-        brineReferenceDensity_[regionIdx] = rhoRefBrine;;
-    }
+                               Scalar /*rhoRefWater*/);
 
     /*!
      * \brief Specify whether the PVT model should consider that the water component can
@@ -125,38 +103,18 @@ public:
     /*!
     * \brief Set activity coefficient model for salt in solubility model
     */
-    void setActivityModelSalt(int activityModel)
-    {
-        // Only 1, 2, and 3 are allowed
-        if (activityModel > 3 || activityModel < 1) {
-            OPM_THROW(std::runtime_error, "The salt activity model options are 1, 2 or 3");
-        }
-        activityModel_ = activityModel;
-    }
+    void setActivityModelSalt(int activityModel);
 
    /*!
     * \brief Set thermal mixing model for co2 in brine
     */
-    void setThermalMixingModel(int thermalMixingModel)
-    {
-        // Only 0 and 1 are allowed
-        // 0 = Use pure CO2 entalpy
-        // 1 = Account for vapporized water in gas phase (Mass fraction)
-        if (thermalMixingModel == 0)
-            gastype_ = Co2StoreConfig::GasMixingType::NONE;
-
-        else if (thermalMixingModel == 1)
-            gastype_ = Co2StoreConfig::GasMixingType::IDEAL;
-        else
-            OPM_THROW(std::runtime_error, "The thermal mixing model options are 0 and 1");
-    }
+    void setThermalMixingModel(int thermalMixingModel);
 
     /*!
      * \brief Finish initializing the co2 phase PVT properties.
      */
     void initEnd()
     {
-
     }
 
     /*!
@@ -165,9 +123,9 @@ public:
     unsigned numRegions() const
     { return gasReferenceDensity_.size(); }
 
-    Scalar hVap(unsigned ) const{
-        return 0;
-    }
+    Scalar hVap(unsigned ) const
+    { return 0.0;  }
+
     /*!
      * \brief Returns the specific enthalpy [J/kg] of gas given a set of parameters.
      */
@@ -179,9 +137,10 @@ public:
                         const Evaluation& rvw) const
     {
         OPM_TIMEBLOCK_LOCAL(internalEnergy);
-        if (gastype_ == Co2StoreConfig::GasMixingType::NONE)
+        if (gastype_ == Co2StoreConfig::GasMixingType::NONE) {
             // use the gasInternalEnergy of CO2
             return CO2::gasInternalEnergy(temperature, pressure, extrapolate);
+        }
 
         assert(gastype_ == Co2StoreConfig::GasMixingType::IDEAL);
         // account for H2O in the gas phase
@@ -196,7 +155,8 @@ public:
     }
 
     /*!
-     * \brief Returns the dynamic viscosity [Pa s] of the fluid phase given a set of parameters.
+     * \brief Returns the dynamic viscosity [Pa s] of the fluid phase
+     *        given a set of parameters.
      */
     template <class Evaluation>
     Evaluation viscosity(unsigned regionIdx,
@@ -230,8 +190,10 @@ public:
                                             const Evaluation& rvw) const
     {
         OPM_TIMEFUNCTION_LOCAL();
-        if (!enableVaporization_)
-            return CO2::gasDensity(temperature, pressure, extrapolate)/gasReferenceDensity_[regionIdx];
+        if (!enableVaporization_) {
+            return CO2::gasDensity(temperature, pressure, extrapolate) /
+                   gasReferenceDensity_[regionIdx];
+        }
 
         // Use CO2 density for the gas phase.
         const auto& rhoCo2 = CO2::gasDensity(temperature, pressure, extrapolate);
@@ -241,7 +203,8 @@ public:
         //assert(rv == 0.0 || rvw == 0.0);
         //const Evaluation xBrine = convertRvwToXgW_(max(rvw,rv),regionIdx);
         //const auto rho = 1.0/(xBrine/rhoH2O + (1.0 - xBrine)/rhoCo2);
-        return rhoCo2/(gasReferenceDensity_[regionIdx] + max(rvw,rv)*brineReferenceDensity_[regionIdx]);
+        return rhoCo2 / (gasReferenceDensity_[regionIdx] +
+               max(rvw,rv) * brineReferenceDensity_[regionIdx]);
     }
 
     /*!
@@ -253,15 +216,18 @@ public:
                                                      const Evaluation& pressure) const
     {
         OPM_TIMEFUNCTION_LOCAL();
-        const Evaluation rvw = rvwSat_(regionIdx, temperature, pressure, Evaluation(salinity_[regionIdx]));
-        return inverseFormationVolumeFactor(regionIdx,temperature,pressure, Evaluation(0.0), rvw);
+        const Evaluation rvw = rvwSat_(regionIdx, temperature, pressure,
+                                       Evaluation(salinity_[regionIdx]));
+        return inverseFormationVolumeFactor(regionIdx, temperature,
+                                            pressure, Evaluation(0.0), rvw);
     }
 
     /*!
      * \brief Returns the saturation pressure of the gas phase [Pa]
      *        depending on its mass fraction of the brine component
      *
-     * \param Rvw The surface volume of brine component vaporized in what will yield one cubic meter of water at the surface [-]
+     * \param Rvw The surface volume of brine component vaporized
+     *            in what will yield one cubic meter of water at the surface [-]
      */
     template <class Evaluation>
     Evaluation saturationPressure(unsigned /*regionIdx*/,
@@ -288,7 +254,8 @@ public:
                                               const Evaluation& saltConcentration) const
     {
         OPM_TIMEFUNCTION_LOCAL();
-        const Evaluation salinity = salinityFromConcentration(temperature, pressure, saltConcentration);
+        const Evaluation salinity = salinityFromConcentration(temperature, pressure,
+                                                              saltConcentration);
         return rvwSat_(regionIdx, temperature, pressure, salinity);
     }
 
@@ -332,19 +299,9 @@ public:
     Scalar salinity(unsigned regionIdx) const
     { return salinity_[regionIdx]; }
 
-    void setEzrokhiDenCoeff(const std::vector<EzrokhiTable>& denaqa)
-    {
-        if (denaqa.empty())
-            return;
-
-        enableEzrokhiDensity_ = true;
-        ezrokhiDenNaClCoeff_ = {static_cast<Scalar>(denaqa[0].getC0("NACL")), 
-                                static_cast<Scalar>(denaqa[0].getC1("NACL")), 
-                                static_cast<Scalar>(denaqa[0].getC2("NACL"))};
-    }
+    void setEzrokhiDenCoeff(const std::vector<EzrokhiTable>& denaqa);
 
 private:
-
     template <class LhsEval>
     LhsEval ezrokhiExponent_(const LhsEval& temperature,
                              const std::vector<Scalar>& ezrokhiCoeff) const
@@ -360,8 +317,9 @@ private:
                     const LhsEval& salinity) const
     {
         OPM_TIMEFUNCTION_LOCAL();
-        if (!enableVaporization_)
+        if (!enableVaporization_) {
             return 0.0;
+        }
 
         // calulate the equilibrium composition for the given
         // temperature and pressure.
@@ -393,7 +351,7 @@ private:
         Scalar rho_wRef = brineReferenceDensity_[regionIdx];
         Scalar rho_gRef = gasReferenceDensity_[regionIdx];
 
-        return XgW/(1.0 - XgW)*(rho_gRef/rho_wRef);
+        return XgW / (1.0 - XgW) * (rho_gRef / rho_wRef);
     }
 
     /*!
@@ -407,8 +365,8 @@ private:
         Scalar rho_wRef = brineReferenceDensity_[regionIdx];
         Scalar rho_gRef = gasReferenceDensity_[regionIdx];
 
-        const LhsEval& rho_wG = Rvw*rho_wRef;
-        return rho_wG/(rho_gRef + rho_wG);
+        const LhsEval& rho_wG = Rvw * rho_wRef;
+        return rho_wG / (rho_gRef + rho_wG);
     }
     /*!
      * \brief Convert a water mole fraction in the gas phase the corresponding mass fraction.
@@ -420,21 +378,22 @@ private:
         Scalar M_CO2 = CO2::molarMass();
         LhsEval M_Brine = Brine::molarMass(salinity);
 
-        return xgW*M_Brine / (xgW*(M_Brine - M_CO2) + M_CO2);
+        return xgW * M_Brine / (xgW * (M_Brine - M_CO2) + M_CO2);
     }
 
     template <class LhsEval>
-    const LhsEval salinityFromConcentration(const LhsEval&T, const LhsEval& P, const LhsEval& saltConcentration) const
+    const LhsEval salinityFromConcentration(const LhsEval&T, const LhsEval& P,
+                                            const LhsEval& saltConcentration) const
     { return saltConcentration/H2O::liquidDensity(T, P, true); }
 
-    std::vector<Scalar> brineReferenceDensity_;
-    std::vector<Scalar> gasReferenceDensity_;
-    std::vector<Scalar> salinity_;
-    std::vector<Scalar> ezrokhiDenNaClCoeff_;
+    std::vector<Scalar> brineReferenceDensity_{};
+    std::vector<Scalar> gasReferenceDensity_{};
+    std::vector<Scalar> salinity_{};
+    std::vector<Scalar> ezrokhiDenNaClCoeff_{};
     bool enableEzrokhiDensity_ = false;
     bool enableVaporization_ = true;
-    int activityModel_;
-    Co2StoreConfig::GasMixingType gastype_;
+    int activityModel_{};
+    Co2StoreConfig::GasMixingType gastype_{};
 };
 
 } // namespace Opm

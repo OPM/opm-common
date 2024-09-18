@@ -29,6 +29,8 @@
 
 #include <opm/material/common/Tabulated1DFunction.hpp>
 
+#include <cstddef>
+
 namespace Opm {
 
 #if HAVE_ECL_INPUT
@@ -52,14 +54,7 @@ public:
     using IsothermalPvt = GasPvtMultiplexer<Scalar, /*enableThermal=*/false>;
     using TabulatedOneDFunction = Tabulated1DFunction<Scalar>;
 
-    GasPvtThermal()
-    {
-        enableThermalDensity_ = false;
-        enableJouleThomson_ = false;
-        enableThermalViscosity_ = false;
-        enableInternalEnergy_ = false;
-        isothermalPvt_ = nullptr;
-    }
+    GasPvtThermal() = default;
 
     GasPvtThermal(IsothermalPvt* isothermalPvt,
                   const std::vector<TabulatedOneDFunction>& gasvisctCurves,
@@ -107,20 +102,7 @@ public:
     /*!
      * \brief Set the number of PVT-regions considered by this object.
      */
-    void setNumRegions(size_t numRegions)
-    {
-        gasvisctCurves_.resize(numRegions);
-        viscrefPress_.resize(numRegions);
-        viscRef_.resize(numRegions);
-        internalEnergyCurves_.resize(numRegions);
-        gasdentRefTemp_.resize(numRegions);
-        gasdentCT1_.resize(numRegions);
-        gasdentCT2_.resize(numRegions);
-        gasJTRefPres_.resize(numRegions);
-        gasJTC_.resize(numRegions);
-        rhoRefO_.resize(numRegions);
-        hVap_.resize(numRegions, 0.0);
-    }
+    void setNumRegions(std::size_t numRegions);
 
     void setVapPars(const Scalar par1, const Scalar par2)
     {
@@ -151,9 +133,8 @@ public:
     bool enableThermalViscosity() const
     { return enableThermalViscosity_; }
 
-    size_t numRegions() const
+    std::size_t numRegions() const
     { return viscrefPress_.size(); }
-
 
     /*!
      * \brief Returns the specific internal energy [J/kg] of gas given a set of parameters.
@@ -165,8 +146,9 @@ public:
                               const Evaluation& Rv,
                               [[maybe_unused]] const Evaluation& RvW) const
     {
-        if (!enableInternalEnergy_)
+        if (!enableInternalEnergy_) {
              throw std::runtime_error("Requested the internal energy of gas but it is disabled");
+        }
 
         if (!enableJouleThomson_) {
             // compute the specific internal energy for the specified tempature. We use linear
@@ -191,7 +173,7 @@ public:
             if  (JTC != 0) {
                 enthalpyPres = -Cp * JTC * (pressure -Pref);
             }
-            else if(enableThermalDensity_) {
+            else if (enableThermalDensity_) {
                 Scalar c1T = gasdentCT1_[regionIdx];
                 Scalar c2T = gasdentCT2_[regionIdx];
 
@@ -201,7 +183,7 @@ public:
                 constexpr const int N = 100; // value is experimental
                 Evaluation deltaP = (pressure - Pref)/N;
                 Evaluation enthalpyPresPrev = 0;
-                for (size_t i = 0; i < N; ++i) {
+                for (std::size_t i = 0; i < N; ++i) {
                     Evaluation Pnew = Pref + i * deltaP;
                     Evaluation rho = inverseFormationVolumeFactor(regionIdx, temperature, Pnew, Rv, Rvw) *
                                      (gasReferenceDensity(regionIdx) + Rv * rhoRefO_[regionIdx]);
@@ -213,7 +195,8 @@ public:
                 }
             }
             else {
-                  throw std::runtime_error("Requested Joule-thomson calculation but thermal gas density (GASDENT) is not provided");
+                throw std::runtime_error("Requested Joule-thomson calculation but thermal "
+                                         "gas density (GASDENT) is not provided");
             }
 
             Evaluation enthalpy = Cp * (temperature - Tref) + enthalpyPres;
@@ -232,7 +215,6 @@ public:
                          const Evaluation& Rv,
                          const Evaluation& Rvw) const
     {
-
         const auto& isothermalMu = isothermalPvt_->viscosity(regionIdx, temperature, pressure, Rv, Rvw);
         if (!enableThermalViscosity())
             return isothermalMu;
@@ -271,10 +253,12 @@ public:
     {
         const Evaluation& Rvw = 0.0;
         const auto& b =
-            isothermalPvt_->inverseFormationVolumeFactor(regionIdx, temperature, pressure, Rv, Rvw);
+            isothermalPvt_->inverseFormationVolumeFactor(regionIdx, temperature,
+                                                         pressure, Rv, Rvw);
 
-        if (!enableThermalDensity())
+        if (!enableThermalDensity()) {
             return b;
+        }
 
         // we use the same approach as for the for water here, but with the OPM-specific
         // GASDENT keyword.
@@ -288,7 +272,7 @@ public:
         Scalar cT2 = gasdentCT2_[regionIdx];
         const Evaluation& Y = temperature - TRef;
 
-        return b/(1 + (cT1 + cT2*Y)*Y);
+        return b / (1 + (cT1 + cT2 * Y) * Y);
     }
 
     /*!
@@ -302,8 +286,9 @@ public:
         const auto& b =
             isothermalPvt_->saturatedInverseFormationVolumeFactor(regionIdx, temperature, pressure);
 
-        if (!enableThermalDensity())
+        if (!enableThermalDensity()) {
             return b;
+        }
 
         // we use the same approach as for the for water here, but with the OPM-specific
         // GASDENT keyword.
@@ -317,7 +302,7 @@ public:
         Scalar cT2 = gasdentCT2_[regionIdx];
         const Evaluation& Y = temperature - TRef;
 
-        return b/(1 + (cT1 + cT2*Y)*Y);
+        return b / (1 + (cT1 + cT2 * Y) * Y);
     }
 
     /*!
@@ -325,8 +310,8 @@ public:
      */
     template <class Evaluation>
     Evaluation saturatedWaterVaporizationFactor(unsigned /*regionIdx*/,
-                                              const Evaluation& /*temperature*/,
-                                              const Evaluation& /*pressure*/) const
+                                                const Evaluation& /*temperature*/,
+                                                const Evaluation& /*pressure*/) const
     { return 0.0; }
 
      /*!
@@ -334,12 +319,10 @@ public:
      */
     template <class Evaluation = Scalar>
     Evaluation saturatedWaterVaporizationFactor(unsigned /*regionIdx*/,
-                                              const Evaluation& /*temperature*/,
-                                              const Evaluation& /*pressure*/,
-                                              const Evaluation& /*saltConcentration*/) const
+                                                const Evaluation& /*temperature*/,
+                                                const Evaluation& /*pressure*/,
+                                                const Evaluation& /*saltConcentration*/) const
     { return 0.0; }
-
-
 
     /*!
      * \brief Returns the oil vaporization factor \f$R_v\f$ [m^3/m^3] of the gas phase.
@@ -367,7 +350,11 @@ public:
                                               const Evaluation& pressure,
                                               const Evaluation& oilSaturation,
                                               const Evaluation& maxOilSaturation) const
-    { return isothermalPvt_->saturatedOilVaporizationFactor(regionIdx, temperature, pressure, oilSaturation, maxOilSaturation); }
+    {
+        return isothermalPvt_->saturatedOilVaporizationFactor(regionIdx, temperature,
+                                                            pressure, oilSaturation,
+                                                            maxOilSaturation);
+    }
 
     /*!
      * \brief Returns the saturation pressure of the gas phase [Pa]
@@ -392,12 +379,11 @@ public:
     const IsothermalPvt* isoThermalPvt() const
     { return isothermalPvt_; }
 
-    const Scalar gasReferenceDensity(unsigned regionIdx) const
+    Scalar gasReferenceDensity(unsigned regionIdx) const
     { return isothermalPvt_->gasReferenceDensity(regionIdx); }
 
-    const Scalar hVap(unsigned regionIdx) const {
-        return this->hVap_[regionIdx];
-    }
+    Scalar hVap(unsigned regionIdx) const
+    { return this->hVap_[regionIdx]; }
 
     const std::vector<TabulatedOneDFunction>& gasvisctCurves() const
     { return gasvisctCurves_; }
@@ -426,81 +412,39 @@ public:
     const std::vector<Scalar>& gasJTRefPres() const
     { return  gasJTRefPres_; }
 
-     const std::vector<Scalar>&  gasJTC() const
+    const std::vector<Scalar>&  gasJTC() const
     { return gasJTC_; }
 
+    bool operator==(const GasPvtThermal<Scalar>& data) const;
 
-    bool operator==(const GasPvtThermal<Scalar>& data) const
-    {
-        if (isothermalPvt_ && !data.isothermalPvt_)
-            return false;
-        if (!isothermalPvt_ && data.isothermalPvt_)
-            return false;
-
-        return  this->gasvisctCurves() == data.gasvisctCurves() &&
-                this->viscrefPress() == data.viscrefPress() &&
-                this->viscRef() == data.viscRef() &&
-                this->gasdentRefTemp() == data.gasdentRefTemp() &&
-                this->gasdentCT1() == data.gasdentCT1() &&
-                this->gasdentCT2() == data.gasdentCT2() &&
-                this->gasJTRefPres() == data.gasJTRefPres() &&
-                this->gasJTC() == data.gasJTC() &&
-                this->internalEnergyCurves() == data.internalEnergyCurves() &&
-                this->enableThermalDensity() == data.enableThermalDensity() &&
-                this->enableJouleThomson() == data.enableJouleThomson() &&
-                this->enableThermalViscosity() == data.enableThermalViscosity() &&
-                this->enableInternalEnergy() == data.enableInternalEnergy();
-    }
-
-    GasPvtThermal<Scalar>& operator=(const GasPvtThermal<Scalar>& data)
-    {
-        if (data.isothermalPvt_)
-            isothermalPvt_ = new IsothermalPvt(*data.isothermalPvt_);
-        else
-            isothermalPvt_ = nullptr;
-        gasvisctCurves_ = data.gasvisctCurves_;
-        viscrefPress_ = data.viscrefPress_;
-        viscRef_ = data.viscRef_;
-        gasdentRefTemp_ = data.gasdentRefTemp_;
-        gasdentCT1_ = data.gasdentCT1_;
-        gasdentCT2_ = data.gasdentCT2_;
-        gasJTRefPres_ =  data.gasJTRefPres_;
-        gasJTC_ =  data.gasJTC_;
-        internalEnergyCurves_ = data.internalEnergyCurves_;
-        enableThermalDensity_ = data.enableThermalDensity_;
-        enableJouleThomson_ = data.enableJouleThomson_;
-        enableThermalViscosity_ = data.enableThermalViscosity_;
-        enableInternalEnergy_ = data.enableInternalEnergy_;
-
-        return *this;
-    }
+    GasPvtThermal<Scalar>& operator=(const GasPvtThermal<Scalar>& data);
 
 private:
-    IsothermalPvt* isothermalPvt_;
+    IsothermalPvt* isothermalPvt_{nullptr};
 
     // The PVT properties needed for temperature dependence of the viscosity. We need
     // to store one value per PVT region.
-    std::vector<TabulatedOneDFunction> gasvisctCurves_;
-    std::vector<Scalar> viscrefPress_;
-    std::vector<Scalar> viscRef_;
+    std::vector<TabulatedOneDFunction> gasvisctCurves_{};
+    std::vector<Scalar> viscrefPress_{};
+    std::vector<Scalar> viscRef_{};
 
-    std::vector<Scalar> gasdentRefTemp_;
-    std::vector<Scalar> gasdentCT1_;
-    std::vector<Scalar> gasdentCT2_;
+    std::vector<Scalar> gasdentRefTemp_{};
+    std::vector<Scalar> gasdentCT1_{};
+    std::vector<Scalar> gasdentCT2_{};
 
-    std::vector<Scalar> gasJTRefPres_;
-    std::vector<Scalar> gasJTC_;
+    std::vector<Scalar> gasJTRefPres_{};
+    std::vector<Scalar> gasJTC_{};
 
-    std::vector<Scalar> rhoRefO_;
-    std::vector<Scalar> hVap_;
+    std::vector<Scalar> rhoRefO_{};
+    std::vector<Scalar> hVap_{};
 
     // piecewise linear curve representing the internal energy of gas
-    std::vector<TabulatedOneDFunction> internalEnergyCurves_;
+    std::vector<TabulatedOneDFunction> internalEnergyCurves_{};
 
-    bool enableThermalDensity_;
-    bool enableJouleThomson_;
-    bool enableThermalViscosity_;
-    bool enableInternalEnergy_;
+    bool enableThermalDensity_{false};
+    bool enableJouleThomson_{false};
+    bool enableThermalViscosity_{false};
+    bool enableInternalEnergy_{false};
 };
 
 } // namespace Opm

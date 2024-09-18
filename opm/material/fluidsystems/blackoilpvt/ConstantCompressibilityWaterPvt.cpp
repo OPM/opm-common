@@ -32,6 +32,7 @@
 
 namespace Opm {
 
+#if HAVE_ECL_INPUT
 template<class Scalar>
 void ConstantCompressibilityWaterPvt<Scalar>::
 initFromState(const EclipseState& eclState, const Schedule&)
@@ -45,7 +46,7 @@ initFromState(const EclipseState& eclState, const Schedule&)
                               pvtwTable.size(), densityTable.size()));
     }
 
-    size_t numRegions = pvtwTable.size();
+    std::size_t numRegions = pvtwTable.size();
     setNumRegions(numRegions);
 
     for (unsigned regionIdx = 0; regionIdx < numRegions; ++regionIdx) {
@@ -59,6 +60,25 @@ initFromState(const EclipseState& eclState, const Schedule&)
     }
 
     initEnd();
+}
+#endif
+
+template<class Scalar>
+void ConstantCompressibilityWaterPvt<Scalar>::
+setNumRegions(std::size_t numRegions)
+{
+    waterReferenceDensity_.resize(numRegions);
+    waterReferencePressure_.resize(numRegions);
+    waterReferenceFormationVolumeFactor_.resize(numRegions);
+    waterCompressibility_.resize(numRegions);
+    waterViscosity_.resize(numRegions);
+    waterViscosibility_.resize(numRegions);
+
+    for (unsigned regionIdx = 0; regionIdx < numRegions; ++regionIdx) {
+        setReferenceDensities(regionIdx, 650.0, 1.0, 1000.0);
+        setReferenceFormationVolumeFactor(regionIdx, 1.0);
+        setReferencePressure(regionIdx, 1e5);
+    }
 }
 
 template class ConstantCompressibilityWaterPvt<double>;

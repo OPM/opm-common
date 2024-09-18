@@ -32,6 +32,23 @@
 namespace Opm {
 
 template<class Scalar>
+BrineH2Pvt<Scalar>::
+BrineH2Pvt(const std::vector<Scalar>& salinity,
+           Scalar T_ref,
+           Scalar P_ref)
+    : salinity_(salinity)
+{
+    std::size_t num_regions = salinity_.size();
+    h2ReferenceDensity_.resize(num_regions);
+    brineReferenceDensity_.resize(num_regions);
+    for (std::size_t i = 0; i < num_regions; ++i) {
+        h2ReferenceDensity_[i] = H2::gasDensity(T_ref, P_ref, true);
+        brineReferenceDensity_[i] = Brine::liquidDensity(T_ref, P_ref, salinity_[i], true);
+    }
+}
+
+#if HAVE_ECL_INPUT
+template<class Scalar>
 void BrineH2Pvt<Scalar>::
 initFromState(const EclipseState& eclState, const Schedule&)
 {
@@ -42,8 +59,9 @@ initFromState(const EclipseState& eclState, const Schedule&)
                         "at standard conditions (STCOND) and DENSITY is ignored ");
     }
 
-    if(!h2sol && (eclState.getTableManager().hasTables("PVDO") || 
-       !eclState.getTableManager().getPvtgTables().empty())) {
+    if (!h2sol && (eclState.getTableManager().hasTables("PVDO") ||
+        !eclState.getTableManager().getPvtgTables().empty()))
+    {
         OpmLog::warning("H2STORE is enabled but PVDO or PVTO is in the deck. \n"
                         "H2 PVT properties are calculated internally, "
                         "and PVDO/PVTO input is ignored.");
@@ -64,9 +82,9 @@ initFromState(const EclipseState& eclState, const Schedule&)
     setEnableSaltConcentration(eclState.runspec().phases().active(Phase::BRINE));
 
     // We only supported single pvt region for the H2-brine module
-    size_t numRegions = 1;
+    std::size_t numRegions = 1;
     setNumRegions(numRegions);
-    size_t regionIdx = 0;
+    std::size_t regionIdx = 0;
 
     // Currently we only support constant salinity
     const Scalar molality = eclState.getTableManager().salinity(); // mol/kg
@@ -79,6 +97,27 @@ initFromState(const EclipseState& eclState, const Schedule&)
 
     brineReferenceDensity_[regionIdx] = Brine::liquidDensity(T_ref, P_ref, salinity_[regionIdx], extrapolate);
     h2ReferenceDensity_[regionIdx] = H2::gasDensity(T_ref, P_ref, extrapolate);
+}
+#endif
+
+template<class Scalar>
+void BrineH2Pvt<Scalar>::
+setNumRegions(std::size_t numRegions)
+{
+    brineReferenceDensity_.resize(numRegions);
+    h2ReferenceDensity_.resize(numRegions);
+    salinity_.resize(numRegions);
+}
+
+template<class Scalar>
+void BrineH2Pvt<Scalar>::
+setReferenceDensities(unsigned regionIdx,
+                      Scalar rhoRefBrine,
+                      Scalar rhoRefH2,
+                      Scalar /*rhoRefWater*/)
+{
+    brineReferenceDensity_[regionIdx] = rhoRefBrine;
+    h2ReferenceDensity_[regionIdx] = rhoRefH2;
 }
 
 template class BrineH2Pvt<double>;

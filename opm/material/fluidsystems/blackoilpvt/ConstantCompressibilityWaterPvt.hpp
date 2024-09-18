@@ -54,21 +54,7 @@ public:
     void initFromState(const EclipseState& eclState, const Schedule&);
 #endif
 
-    void setNumRegions(size_t numRegions)
-    {
-        waterReferenceDensity_.resize(numRegions);
-        waterReferencePressure_.resize(numRegions);
-        waterReferenceFormationVolumeFactor_.resize(numRegions);
-        waterCompressibility_.resize(numRegions);
-        waterViscosity_.resize(numRegions);
-        waterViscosibility_.resize(numRegions);
-
-        for (unsigned regionIdx = 0; regionIdx < numRegions; ++regionIdx) {
-            setReferenceDensities(regionIdx, 650.0, 1.0, 1000.0);
-            setReferenceFormationVolumeFactor(regionIdx, 1.0);
-            setReferencePressure(regionIdx, 1e5);
-        }
-    }
+    void setNumRegions(std::size_t numRegions);
 
     void setVapPars(const Scalar, const Scalar)
     {
@@ -138,10 +124,14 @@ public:
                         const Evaluation&,
                         const Evaluation&) const
     {
-        throw std::runtime_error("Requested the enthalpy of water but the thermal option is not enabled");
+        throw std::runtime_error("Requested the enthalpy of water but the thermal "
+                                 "option is not enabled");
     }
-    Scalar hVap(unsigned) const{
-        throw std::runtime_error("Requested the hvap of oil but the thermal option is not enabled");
+
+    Scalar hVap(unsigned) const
+    {
+        throw std::runtime_error("Requested the hvap of oil but the thermal "
+                                 "option is not enabled");
     }
 
     /*!
@@ -160,8 +150,9 @@ public:
         const Evaluation& Y =
             (waterCompressibility_[regionIdx] - waterViscosibility_[regionIdx])
             * (pressure - pRef);
-        return BwMuwRef*bw/(1 + Y*(1 + Y/2));
+        return BwMuwRef * bw / (1 + Y * (1 + Y / 2));
     }
+
     /*!
      * \brief Returns the dynamic viscosity [Pa s] of the fluid phase given a set of parameters.
      */
@@ -179,7 +170,7 @@ public:
         const Evaluation& Y =
             (waterCompressibility_[regionIdx] - waterViscosibility_[regionIdx])
             * (pressure - pRef);
-        return BwMuwRef*bw/(1 + Y*(1 + Y/2));
+        return BwMuwRef * bw / (1 + Y * (1 + Y / 2));
     }
 
     /*!
@@ -192,7 +183,8 @@ public:
                                                      const Evaluation& saltconcentration) const
     {
       Evaluation Rsw = 0.0;
-      return inverseFormationVolumeFactor(regionIdx, temperature, pressure, Rsw, saltconcentration);
+      return inverseFormationVolumeFactor(regionIdx, temperature, pressure,
+                                          Rsw, saltconcentration);
     }
 
     /*!
@@ -211,7 +203,7 @@ public:
         Scalar BwRef = waterReferenceFormationVolumeFactor_[regionIdx];
 
         // TODO (?): consider the salt concentration of the brine
-        return (1.0 + X*(1.0 + X/2.0))/BwRef;
+        return (1.0 + X * (1.0 + X / 2.0)) / BwRef;
     }
 
     template <class Evaluation>
@@ -219,7 +211,8 @@ public:
                        const Evaluation& /*temperature*/,
                        const Evaluation& pressure,
                        const Evaluation& /*Rsw*/,
-                       const Evaluation& /*saltconcentration*/) const{
+                       const Evaluation& /*saltconcentration*/) const
+    {
         inverseBAndMu(bw, muW, regionIdx,pressure);
     }
 
@@ -233,21 +226,22 @@ public:
         Scalar BwRef = waterReferenceFormationVolumeFactor_[regionIdx];
 
         // TODO (?): consider the salt concentration of the brine
-        bw = (1.0 + X*(1.0 + X/2.0))/BwRef;
+        bw = (1.0 + X * (1.0 + X / 2.0)) / BwRef;
 
         Scalar BwMuwRef = waterViscosity_[regionIdx]*BwRef;
 
         const Evaluation& Y =
             (waterCompressibility_[regionIdx] - waterViscosibility_[regionIdx])
             * (pressure - pRef);
-        muW =  BwMuwRef*bw/(1 + Y*(1 + Y/2));
+        muW =  BwMuwRef * bw / (1 + Y * (1 + Y / 2));
     }
 
     /*!
      * \brief Returns the saturation pressure of the water phase [Pa]
      *        depending on its mass fraction of the gas component
      *
-     * \param Rs The surface volume of gas component dissolved in what will yield one cubic meter of oil at the surface [-]
+     * \param Rs The surface volume of gas component dissolved in what
+     *           will yield one cubic meter of oil at the surface [-]
      */
     template <class Evaluation>
     Evaluation saturationPressure(unsigned /*regionIdx*/,
@@ -261,7 +255,8 @@ public:
                                     const Evaluation& /*pressure*/,
                                     unsigned /*compIdx*/) const
     {
-        throw std::runtime_error("Not implemented: The PVT model does not provide a diffusionCoefficient()");
+        throw std::runtime_error("Not implemented: The PVT model does not provide "
+                                 "a diffusionCoefficient()");
     }
 
     /*!
@@ -293,12 +288,12 @@ public:
     { return waterViscosibility_; }
 
 private:
-    std::vector<Scalar> waterReferenceDensity_;
-    std::vector<Scalar> waterReferencePressure_;
-    std::vector<Scalar> waterReferenceFormationVolumeFactor_;
-    std::vector<Scalar> waterCompressibility_;
-    std::vector<Scalar> waterViscosity_;
-    std::vector<Scalar> waterViscosibility_;
+    std::vector<Scalar> waterReferenceDensity_{};
+    std::vector<Scalar> waterReferencePressure_{};
+    std::vector<Scalar> waterReferenceFormationVolumeFactor_{};
+    std::vector<Scalar> waterCompressibility_{};
+    std::vector<Scalar> waterViscosity_{};
+    std::vector<Scalar> waterViscosibility_{};
 };
 
 } // namespace Opm

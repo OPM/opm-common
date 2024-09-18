@@ -29,6 +29,8 @@
 
 #include <opm/material/common/Tabulated1DFunction.hpp>
 
+#include <cstddef>
+
 namespace Opm {
 
 #if HAVE_ECL_INPUT
@@ -52,14 +54,7 @@ public:
     using TabulatedOneDFunction = Tabulated1DFunction<Scalar>;
     using IsothermalPvt = WaterPvtMultiplexer<Scalar, /*enableThermal=*/false, enableBrine>;
 
-    WaterPvtThermal()
-    {
-        enableThermalDensity_ = false;
-        enableJouleThomson_ = false;
-        enableThermalViscosity_ = false;
-        enableInternalEnergy_ = false;
-        isothermalPvt_ = nullptr;
-    }
+    WaterPvtThermal() = default;
 
     WaterPvtThermal(IsothermalPvt* isothermalPvt,
                     const std::vector<Scalar>& viscrefPress,
@@ -115,23 +110,7 @@ public:
     /*!
      * \brief Set the number of PVT-regions considered by this object.
      */
-    void setNumRegions(size_t numRegions)
-    {
-        pvtwRefPress_.resize(numRegions);
-        pvtwRefB_.resize(numRegions);
-        pvtwCompressibility_.resize(numRegions);
-        pvtwViscosity_.resize(numRegions);
-        pvtwViscosibility_.resize(numRegions);
-        viscrefPress_.resize(numRegions);
-        watvisctCurves_.resize(numRegions);
-        watdentRefTemp_.resize(numRegions);
-        watdentCT1_.resize(numRegions);
-        watdentCT2_.resize(numRegions);
-        watJTRefPres_.resize(numRegions);
-        watJTC_.resize(numRegions);
-        internalEnergyCurves_.resize(numRegions);
-        hVap_.resize(numRegions,0.0);
-    }
+    void setNumRegions(std::size_t numRegions);
 
     void setVapPars(const Scalar par1, const Scalar par2)
     {
@@ -162,11 +141,10 @@ public:
     bool enableThermalViscosity() const
     { return enableThermalViscosity_; }
 
-    Scalar hVap(unsigned regionIdx) const {
-        return this->hVap_[regionIdx];
-    }
+    Scalar hVap(unsigned regionIdx) const
+    { return this->hVap_[regionIdx]; }
 
-    size_t numRegions() const
+    std::size_t numRegions() const
     { return pvtwRefPress_.size(); }
 
     /*!
@@ -179,8 +157,9 @@ public:
                               const Evaluation& Rsw,
                               const Evaluation& saltconcentration) const
     {
-        if (!enableInternalEnergy_)
+        if (!enableInternalEnergy_) {
             throw std::runtime_error("Requested the internal energy of water but it is disabled");
+        }
 
         if (!enableJouleThomson_) {
             // compute the specific internal energy for the specified tempature. We use linear
@@ -191,7 +170,7 @@ public:
         else {
             Evaluation Tref = watdentRefTemp_[regionIdx];
             Evaluation Pref = watJTRefPres_[regionIdx];
-            Scalar JTC =watJTC_[regionIdx]; // if JTC is default then JTC is calculated
+            Scalar JTC = watJTC_[regionIdx]; // if JTC is default then JTC is calculated
 
             Evaluation invB = inverseFormationVolumeFactor(regionIdx, temperature, pressure, Rsw, saltconcentration);
             Evaluation Cp = internalEnergyCurves_[regionIdx].eval(temperature, /*extrapolate=*/true)/temperature;
@@ -199,9 +178,9 @@ public:
 
             Evaluation enthalpyPres;
             if  (JTC != 0) {
-                enthalpyPres = -Cp * JTC * (pressure -Pref);
+                enthalpyPres = -Cp * JTC * (pressure - Pref);
             }
-            else if(enableThermalDensity_) {
+            else if (enableThermalDensity_) {
                 Scalar c1T = watdentCT1_[regionIdx];
                 Scalar c2T = watdentCT2_[regionIdx];
 
@@ -209,19 +188,22 @@ public:
                     (1 + c1T  *(temperature - Tref) + c2T * (temperature - Tref) * (temperature - Tref));
 
                 constexpr const int N = 100; // value is experimental
-                Evaluation deltaP = (pressure - Pref)/N;
+                Evaluation deltaP = (pressure - Pref) / N;
                 Evaluation enthalpyPresPrev = 0;
-                for (size_t i = 0; i < N; ++i) {
+                for (std::size_t i = 0; i < N; ++i) {
                     Evaluation Pnew = Pref + i * deltaP;
-                    Evaluation rho = inverseFormationVolumeFactor(regionIdx, temperature, Pnew, Rsw, saltconcentration) * waterReferenceDensity(regionIdx);
-                    Evaluation jouleThomsonCoefficient = -(1.0/Cp) * (1.0 - alpha * temperature)/rho;
+                    Evaluation rho = inverseFormationVolumeFactor(regionIdx, temperature,
+                                                                  Pnew, Rsw, saltconcentration) *
+                                      waterReferenceDensity(regionIdx);
+                    Evaluation jouleThomsonCoefficient = -(1.0 / Cp) * (1.0 - alpha * temperature) / rho;
                     Evaluation deltaEnthalpyPres = -Cp * jouleThomsonCoefficient * deltaP;
                     enthalpyPres = enthalpyPresPrev + deltaEnthalpyPres;
                     enthalpyPresPrev = enthalpyPres;
                 }
             }
             else {
-                  throw std::runtime_error("Requested Joule-thomson calculation but thermal water density (WATDENT) is not provided");
+                throw std::runtime_error("Requested Joule-thomson calculation but "
+                                         "thermal water density (WATDENT) is not provided");
             }
 
             Evaluation enthalpy = Cp * (temperature - Tref) + enthalpyPres;
@@ -240,16 +222,19 @@ public:
                          const Evaluation& Rsw,
                          const Evaluation& saltconcentration) const
     {
-        const auto& isothermalMu = isothermalPvt_->viscosity(regionIdx, temperature, pressure, Rsw, saltconcentration);
-        if (!enableThermalViscosity())
+        const auto& isothermalMu = isothermalPvt_->viscosity(regionIdx, temperature,
+                                                             pressure, Rsw, saltconcentration);
+        if (!enableThermalViscosity()) {
             return isothermalMu;
+        }
 
-        Scalar x = -pvtwViscosibility_[regionIdx]*(viscrefPress_[regionIdx] - pvtwRefPress_[regionIdx]);
-        Scalar muRef = pvtwViscosity_[regionIdx]/(1.0 + x + 0.5*x*x);
+        Scalar x = -pvtwViscosibility_[regionIdx] * (viscrefPress_[regionIdx] -
+                                                     pvtwRefPress_[regionIdx]);
+        Scalar muRef = pvtwViscosity_[regionIdx] / (1.0 + x + 0.5 * x * x);
 
         // compute the viscosity deviation due to temperature
         const auto& muWatvisct = watvisctCurves_[regionIdx].eval(temperature, true);
-        return isothermalMu * muWatvisct/muRef;
+        return isothermalMu * muWatvisct / muRef;
     }
 
         /*!
@@ -261,16 +246,19 @@ public:
                                   const Evaluation& pressure,
                                   const Evaluation& saltconcentration) const
     {
-        const auto& isothermalMu = isothermalPvt_->saturatedViscosity(regionIdx, temperature, pressure, saltconcentration);
-        if (!enableThermalViscosity())
+        const auto& isothermalMu = isothermalPvt_->saturatedViscosity(regionIdx, temperature,
+                                                                      pressure, saltconcentration);
+        if (!enableThermalViscosity()) {
             return isothermalMu;
+        }
 
-        Scalar x = -pvtwViscosibility_[regionIdx]*(viscrefPress_[regionIdx] - pvtwRefPress_[regionIdx]);
-        Scalar muRef = pvtwViscosity_[regionIdx]/(1.0 + x + 0.5*x*x);
+        Scalar x = -pvtwViscosibility_[regionIdx] * (viscrefPress_[regionIdx] -
+                                                     pvtwRefPress_[regionIdx]);
+        Scalar muRef = pvtwViscosity_[regionIdx] / (1.0 + x + 0.5 * x * x);
 
         // compute the viscosity deviation due to temperature
         const auto& muWatvisct = watvisctCurves_[regionIdx].eval(temperature, true);
-        return isothermalMu * muWatvisct/muRef;
+        return isothermalMu * muWatvisct / muRef;
     }
 
     /*!
@@ -283,7 +271,8 @@ public:
                                                      const Evaluation& saltconcentration) const
     {
         Evaluation Rsw = 0.0;
-        return inverseFormationVolumeFactor(regionIdx, temperature, pressure, Rsw, saltconcentration);
+        return inverseFormationVolumeFactor(regionIdx, temperature, pressure,
+                                            Rsw, saltconcentration);
     }
     /*!
      * \brief Returns the formation volume factor [-] of the fluid phase.
@@ -295,12 +284,15 @@ public:
                                             const Evaluation& Rsw,
                                             const Evaluation& saltconcentration) const
     {
-        if (!enableThermalDensity())
-            return isothermalPvt_->inverseFormationVolumeFactor(regionIdx, temperature, pressure, Rsw, saltconcentration);
+        if (!enableThermalDensity()) {
+            return isothermalPvt_->inverseFormationVolumeFactor(regionIdx, temperature,
+                                                                pressure, Rsw, saltconcentration);
+        }
 
         Scalar BwRef = pvtwRefB_[regionIdx];
         Scalar TRef = watdentRefTemp_[regionIdx];
-        const Evaluation& X = pvtwCompressibility_[regionIdx]*(pressure - pvtwRefPress_[regionIdx]);
+        const Evaluation& X = pvtwCompressibility_[regionIdx] * (pressure -
+                                                                 pvtwRefPress_[regionIdx]);
         Scalar cT1 = watdentCT1_[regionIdx];
         Scalar cT2 = watdentCT2_[regionIdx];
         const Evaluation& Y = temperature - TRef;
@@ -308,14 +300,15 @@ public:
         // this is inconsistent with the density calculation of water in the isothermal
         // case (it misses the quadratic pressure term), but it is the equation given in
         // the documentation.
-        return 1.0/(((1 - X)*(1 + cT1*Y + cT2*Y*Y))*BwRef);
+        return 1.0 / (((1 - X) * (1 + cT1 * Y + cT2 * Y * Y)) * BwRef);
     }
 
     /*!
      * \brief Returns the saturation pressure of the water phase [Pa]
      *        depending on its mass fraction of the gas component
      *
-     * \param Rs The surface volume of gas component dissolved in what will yield one cubic meter of oil at the surface [-]
+     * \param Rs The surface volume of gas component dissolved in what
+     *           will yield one cubic meter of oil at the surface [-]
      */
     template <class Evaluation>
     Evaluation saturationPressure(unsigned /*regionIdx*/,
@@ -339,13 +332,14 @@ public:
                                     const Evaluation& /*pressure*/,
                                     unsigned /*compIdx*/) const
     {
-        throw std::runtime_error("Not implemented: The PVT model does not provide a diffusionCoefficient()");
+        throw std::runtime_error("Not implemented: The PVT model does not provide "
+                                 "a diffusionCoefficient()");
     }
 
     const IsothermalPvt* isoThermalPvt() const
     { return isothermalPvt_; }
 
-    const Scalar waterReferenceDensity(unsigned regionIdx) const
+    Scalar waterReferenceDensity(unsigned regionIdx) const
     { return isothermalPvt_->waterReferenceDensity(regionIdx); }
 
     const std::vector<Scalar>& viscrefPress() const
@@ -390,90 +384,41 @@ public:
      const std::vector<Scalar>&  watJTC() const
     { return watJTC_; }
 
+    bool operator==(const WaterPvtThermal<Scalar, enableBrine>& data) const;
 
-    bool operator==(const WaterPvtThermal<Scalar, enableBrine>& data) const
-    {
-        if (isothermalPvt_ && !data.isothermalPvt_)
-            return false;
-        if (!isothermalPvt_ && data.isothermalPvt_)
-            return false;
-
-        return this->viscrefPress() == data.viscrefPress() &&
-               this->watdentRefTemp() == data.watdentRefTemp() &&
-               this->watdentCT1() == data.watdentCT1() &&
-               this->watdentCT2() == data.watdentCT2() &&
-               this->watJTRefPres() == data.watJTRefPres() &&
-               this->watJTC() == data.watJTC() &&
-               this->pvtwRefPress() == data.pvtwRefPress() &&
-               this->pvtwRefB() == data.pvtwRefB() &&
-               this->pvtwCompressibility() == data.pvtwCompressibility() &&
-               this->pvtwViscosity() == data.pvtwViscosity() &&
-               this->pvtwViscosibility() == data.pvtwViscosibility() &&
-               this->watvisctCurves() == data.watvisctCurves() &&
-               this->internalEnergyCurves() == data.internalEnergyCurves() &&
-               this->enableThermalDensity() == data.enableThermalDensity() &&
-               this->enableJouleThomson() == data.enableJouleThomson() &&
-               this->enableThermalViscosity() == data.enableThermalViscosity() &&
-               this->enableInternalEnergy() == data.enableInternalEnergy();
-    }
-
-    WaterPvtThermal<Scalar, enableBrine>& operator=(const WaterPvtThermal<Scalar, enableBrine>& data)
-    {
-        if (data.isothermalPvt_)
-            isothermalPvt_ = new IsothermalPvt(*data.isothermalPvt_);
-        else
-            isothermalPvt_ = nullptr;
-        viscrefPress_ = data.viscrefPress_;
-        watdentRefTemp_ = data.watdentRefTemp_;
-        watdentCT1_ = data.watdentCT1_;
-        watdentCT2_ = data.watdentCT2_;
-        watJTRefPres_ =  data.watJTRefPres_;
-        watJTC_ =  data.watJTC_;
-        pvtwRefPress_ = data.pvtwRefPress_;
-        pvtwRefB_ = data.pvtwRefB_;
-        pvtwCompressibility_ = data.pvtwCompressibility_;
-        pvtwViscosity_ = data.pvtwViscosity_;
-        pvtwViscosibility_ = data.pvtwViscosibility_;
-        watvisctCurves_ = data.watvisctCurves_;
-        internalEnergyCurves_ = data.internalEnergyCurves_;
-        enableThermalDensity_ = data.enableThermalDensity_;
-        enableJouleThomson_ = data.enableJouleThomson_;
-        enableThermalViscosity_ = data.enableThermalViscosity_;
-        enableInternalEnergy_ = data.enableInternalEnergy_;
-
-        return *this;
-    }
+    WaterPvtThermal<Scalar, enableBrine>&
+    operator=(const WaterPvtThermal<Scalar, enableBrine>& data);
 
 private:
-    IsothermalPvt* isothermalPvt_;
+    IsothermalPvt* isothermalPvt_{nullptr};
 
     // The PVT properties needed for temperature dependence. We need to store one
     // value per PVT region.
-    std::vector<Scalar> viscrefPress_;
+    std::vector<Scalar> viscrefPress_{};
 
-    std::vector<Scalar> watdentRefTemp_;
-    std::vector<Scalar> watdentCT1_;
-    std::vector<Scalar> watdentCT2_;
+    std::vector<Scalar> watdentRefTemp_{};
+    std::vector<Scalar> watdentCT1_{};
+    std::vector<Scalar> watdentCT2_{};
 
-    std::vector<Scalar> watJTRefPres_;
-    std::vector<Scalar> watJTC_;
+    std::vector<Scalar> watJTRefPres_{};
+    std::vector<Scalar> watJTC_{};
 
-    std::vector<Scalar> pvtwRefPress_;
-    std::vector<Scalar> pvtwRefB_;
-    std::vector<Scalar> pvtwCompressibility_;
-    std::vector<Scalar> pvtwViscosity_;
-    std::vector<Scalar> pvtwViscosibility_;
+    std::vector<Scalar> pvtwRefPress_{};
+    std::vector<Scalar> pvtwRefB_{};
+    std::vector<Scalar> pvtwCompressibility_{};
+    std::vector<Scalar> pvtwViscosity_{};
+    std::vector<Scalar> pvtwViscosibility_{};
 
-    std::vector<TabulatedOneDFunction> watvisctCurves_;
+    std::vector<TabulatedOneDFunction> watvisctCurves_{};
 
     // piecewise linear curve representing the internal energy of water
-    std::vector<TabulatedOneDFunction> internalEnergyCurves_;
-    std::vector<Scalar> hVap_;
+    std::vector<TabulatedOneDFunction> internalEnergyCurves_{};
+    std::vector<Scalar> hVap_{};
 
-    bool enableThermalDensity_;
-    bool enableJouleThomson_;
-    bool enableThermalViscosity_;
-    bool enableInternalEnergy_;
+    bool enableThermalDensity_{false};
+    bool enableJouleThomson_{false};
+    bool enableThermalViscosity_{false};
+    bool enableInternalEnergy_{false};
 };
 
 } // namespace Opm

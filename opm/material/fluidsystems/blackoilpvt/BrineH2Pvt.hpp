@@ -36,6 +36,7 @@ copyright holders.
 #include <opm/material/common/UniformTabulated2DFunction.hpp>
 #include <opm/material/common/Valgrind.hpp>
 
+#include <cstddef>
 #include <vector>
 
 namespace Opm {
@@ -64,17 +65,7 @@ public:
 
     explicit BrineH2Pvt(const std::vector<Scalar>& salinity,
                         Scalar T_ref = 288.71, //(273.15 + 15.56)
-                        Scalar P_ref = 101325)
-        : salinity_(salinity)
-    {
-        int num_regions =  salinity_.size();
-        h2ReferenceDensity_.resize(num_regions);
-        brineReferenceDensity_.resize(num_regions);
-        for (int i = 0; i < num_regions; ++i) {
-            h2ReferenceDensity_[i] = H2::gasDensity(T_ref, P_ref, true);
-            brineReferenceDensity_[i] = Brine::liquidDensity(T_ref, P_ref, salinity_[i], true);
-        }
-    }
+                        Scalar P_ref = 101325);
 
 #if HAVE_ECL_INPUT
     /*!
@@ -84,12 +75,7 @@ public:
     void initFromState(const EclipseState& eclState, const Schedule&);
 #endif
 
-    void setNumRegions(size_t numRegions)
-    {
-        brineReferenceDensity_.resize(numRegions);
-        h2ReferenceDensity_.resize(numRegions);
-        salinity_.resize(numRegions);
-    }
+    void setNumRegions(std::size_t numRegions);
 
     void setVapPars(const Scalar, const Scalar)
     {
@@ -101,11 +87,7 @@ public:
     void setReferenceDensities(unsigned regionIdx,
                                Scalar rhoRefBrine,
                                Scalar rhoRefH2,
-                               Scalar /*rhoRefWater*/)
-    {
-        brineReferenceDensity_[regionIdx] = rhoRefBrine;
-        h2ReferenceDensity_[regionIdx] = rhoRefH2;
-    }
+                               Scalar /*rhoRefWater*/);
 
     /*!
     * \brief Finish initializing the oil phase PVT properties.
@@ -141,9 +123,8 @@ public:
     /*!
     * \brief Returns the specific enthalpy [J/kg] of gas given a set of parameters.
     */
-    Scalar hVap(unsigned /*regionIdx*/) const{
-        return 0.0;
-    }
+    Scalar hVap(unsigned /*regionIdx*/) const
+    { return 0.0; }
 
     template <class Evaluation>
     Evaluation internalEnergy(unsigned regionIdx,
@@ -152,13 +133,14 @@ public:
                         const Evaluation& Rs,
                         const Evaluation& saltConcentration) const
     {
-        const Evaluation salinity = salinityFromConcentration(regionIdx, temperature, pressure, saltConcentration);
+        const Evaluation salinity = salinityFromConcentration(regionIdx, temperature,
+                                                              pressure, saltConcentration);
         const Evaluation xlH2 = convertRsToXoG_(Rs,regionIdx);
-        return (liquidEnthalpyBrineH2_(temperature,
-                                       pressure,
-                                       salinity,
-                                       xlH2)
-            - pressure / density_(regionIdx, temperature, pressure, Rs, salinity ));
+        return liquidEnthalpyBrineH2_(temperature,
+                                      pressure,
+                                      salinity,
+                                      xlH2)
+             - pressure / density_(regionIdx, temperature, pressure, Rs, salinity);
     }
 
     /*!
@@ -171,11 +153,12 @@ public:
                         const Evaluation& Rs) const
     {
         const Evaluation xlH2 = convertRsToXoG_(Rs,regionIdx);
-        return (liquidEnthalpyBrineH2_(temperature,
-                                       pressure,
-                                       Evaluation(salinity_[regionIdx]),
-                                       xlH2)
-            - pressure / density_(regionIdx, temperature, pressure, Rs, Evaluation(salinity_[regionIdx])));
+        return liquidEnthalpyBrineH2_(temperature,
+                                      pressure,
+                                      Evaluation(salinity_[regionIdx]),
+                                      xlH2)
+             - pressure / density_(regionIdx, temperature, pressure,
+                                   Rs, Evaluation(salinity_[regionIdx]));
     }
 
     /*!
@@ -200,7 +183,8 @@ public:
                                  const Evaluation& pressure,
                                  const Evaluation& saltConcentration) const
     {
-        const Evaluation salinity = salinityFromConcentration(regionIdx, temperature, pressure, saltConcentration);
+        const Evaluation salinity = salinityFromConcentration(regionIdx, temperature,
+                                                              pressure, saltConcentration);
         return Brine::liquidViscosity(temperature, pressure, salinity);
     }
 
@@ -238,10 +222,12 @@ public:
                                                      const Evaluation& pressure,
                                                      const Evaluation& saltconcentration) const
     {
-        const Evaluation salinity = salinityFromConcentration(regionIdx, temperature, pressure, saltconcentration);
+        const Evaluation salinity = salinityFromConcentration(regionIdx, temperature,
+                                                              pressure, saltconcentration);
         Evaluation rsSat = rsSat_(regionIdx, temperature, pressure, salinity);
-        return (1.0 - convertRsToXoG_(rsSat,regionIdx)) *
-            density_(regionIdx, temperature, pressure, rsSat, salinity) / brineReferenceDensity_[regionIdx];
+        return (1.0 - convertRsToXoG_(rsSat,regionIdx))
+             * density_(regionIdx, temperature, pressure, rsSat, salinity)
+             / brineReferenceDensity_[regionIdx];
     }
 
     /*!
@@ -254,9 +240,11 @@ public:
                                             const Evaluation& Rs,
                                             const Evaluation& saltConcentration) const
     {
-        const Evaluation salinity = salinityFromConcentration(regionIdx, temperature, pressure, saltConcentration);
-        return (1.0 - convertRsToXoG_(Rs,regionIdx)) *
-            density_(regionIdx, temperature, pressure, Rs, salinity) / brineReferenceDensity_[regionIdx];
+        const Evaluation salinity = salinityFromConcentration(regionIdx, temperature,
+                                                              pressure, saltConcentration);
+        return (1.0 - convertRsToXoG_(Rs,regionIdx))
+             * density_(regionIdx, temperature, pressure, Rs, salinity)
+             / brineReferenceDensity_[regionIdx];
     }
 
     /*!
@@ -268,27 +256,31 @@ public:
                                             const Evaluation& pressure,
                                             const Evaluation& Rs) const
     {
-        return (1.0 - convertRsToXoG_(Rs, regionIdx)) *
-            density_(regionIdx, temperature, pressure, Rs, Evaluation(salinity_[regionIdx])) /
-                brineReferenceDensity_[regionIdx];
+        return (1.0 - convertRsToXoG_(Rs, regionIdx))
+             * density_(regionIdx, temperature, pressure, Rs, Evaluation(salinity_[regionIdx]))
+             / brineReferenceDensity_[regionIdx];
     }
 
     /*!
-    * \brief Returns the formation volume factor [-] of brine saturated with H2 at a given pressure.
+    * \brief Returns the formation volume factor [-] of brine saturated
+    *        with H2 at a given pressure.
     */
     template <class Evaluation>
     Evaluation saturatedInverseFormationVolumeFactor(unsigned regionIdx,
                                                      const Evaluation& temperature,
                                                      const Evaluation& pressure) const
     {
-        Evaluation rsSat = rsSat_(regionIdx, temperature, pressure, Evaluation(salinity_[regionIdx]));
-        return (1.0 - convertRsToXoG_(rsSat, regionIdx)) *
-            density_(regionIdx, temperature, pressure, rsSat, Evaluation(salinity_[regionIdx])) /
-                brineReferenceDensity_[regionIdx];
+        Evaluation rsSat = rsSat_(regionIdx, temperature,
+                                  pressure, Evaluation(salinity_[regionIdx]));
+        return (1.0 - convertRsToXoG_(rsSat, regionIdx))
+             * density_(regionIdx, temperature, pressure, rsSat,
+                        Evaluation(salinity_[regionIdx]))
+             /  brineReferenceDensity_[regionIdx];
     }
 
     /*!
-    * \brief Returns the saturation pressure of the brine phase [Pa] depending on its mass fraction of the gas component
+    * \brief Returns the saturation pressure of the brine phase [Pa]
+    *        depending on its mass fraction of the gas component.
     *
     * \param Rs
     */
@@ -297,11 +289,13 @@ public:
                                   const Evaluation& /*temperature*/,
                                   const Evaluation& /*Rs*/) const
     {
-        throw std::runtime_error("Saturation pressure for the Brine-H2 PVT module has not been implemented yet!");
+        throw std::runtime_error("Saturation pressure for the Brine-H2 PVT module "
+                                 "has not been implemented yet!");
     }
 
     /*!
-    * \brief Returns the saturation pressure of the brine phase [Pa] depending on its mass fraction of the gas component
+    * \brief Returns the saturation pressure of the brine phase [Pa]
+    *        depending on its mass fraction of the gas component.
     *
     * \param Rs
     */
@@ -311,11 +305,12 @@ public:
                                   const Evaluation& /*Rs*/,
                                   const Evaluation& /*saltConcentration*/) const
     {
-        throw std::runtime_error("Saturation pressure for the Brine-H2 PVT module has not been implemented yet!");
+        throw std::runtime_error("Saturation pressure for the Brine-H2 PVT module "
+                                 "has not been implemented yet!");
     }
 
     /*!
-    * \brief Returns the gas dissoluiton factor \f$R_s\f$ [m^3/m^3] of the liquid phase.
+    * \brief Returns the gas dissolution factor \f$R_s\f$ [m^3/m^3] of the liquid phase.
     */
     template <class Evaluation>
     Evaluation saturatedGasDissolutionFactor(unsigned regionIdx,
@@ -337,7 +332,8 @@ public:
                                              const Evaluation& pressure,
                                              const Evaluation& saltConcentration) const
     {
-        const Evaluation salinity = salinityFromConcentration(regionIdx, temperature, pressure, saltConcentration);
+        const Evaluation salinity = salinityFromConcentration(regionIdx, temperature,
+                                                              pressure, saltConcentration);
         return rsSat_(regionIdx, temperature, pressure, salinity);
     }
 
@@ -352,16 +348,16 @@ public:
         return rsSat_(regionIdx, temperature, pressure, Evaluation(salinity_[regionIdx]));
     }
 
-    const Scalar oilReferenceDensity(unsigned regionIdx) const
+    Scalar oilReferenceDensity(unsigned regionIdx) const
     { return brineReferenceDensity_[regionIdx]; }
 
-    const Scalar waterReferenceDensity(unsigned regionIdx) const
+    Scalar waterReferenceDensity(unsigned regionIdx) const
     { return brineReferenceDensity_[regionIdx]; }
 
-    const Scalar gasReferenceDensity(unsigned regionIdx) const
+    Scalar gasReferenceDensity(unsigned regionIdx) const
     { return h2ReferenceDensity_[regionIdx]; }
 
-    const Scalar salinity(unsigned regionIdx) const
+    Scalar salinity(unsigned regionIdx) const
     { return salinity_[regionIdx]; }
 
     /*!
@@ -372,34 +368,34 @@ public:
                                     const Evaluation& pressure,
                                     unsigned /*compIdx*/) const
     {
-        // Diffusion coefficient of H2 in pure water according to Ferrell & Himmelbau, AIChE Journal, 13(4), 1967 (Eq.
-        // 23)
+        // Diffusion coefficient of H2 in pure water according to
+        // Ferrell & Himmelbau, AIChE Journal, 13(4), 1967 (Eq. 23)
         // Some intermediate calculations and definitions
-        const Scalar vm = 28.45;  // molar volume at normal boiling point (20.271 K and 1 atm) in cm2/mol
+
+        // molar volume at normal boiling point (20.271 K and 1 atm) in cm2/mol
+        const Scalar vm = 28.45;
         const Scalar sigma = 2.96 * 1e-8; // Lennard-Jones 6-12 potential in cm (1 Å = 1e-8 cm)
         const Scalar avogadro = 6.022e23; // Avogrado's number in mol^-1
         const Scalar alpha = sigma / pow((vm / avogadro), 1 / 3);  // Eq. (19)
         const Scalar lambda = 1.729; // quantum parameter [-]
-        const Evaluation& mu_pure = H2O::liquidViscosity(temperature, pressure, extrapolate) * 1e3;  // [cP]
-        const Evaluation& mu_brine = Brine::liquidViscosity(temperature, pressure, Evaluation(salinity_[0])) * 1e3;
+        const Evaluation mu_pure = H2O::liquidViscosity(temperature, pressure, extrapolate) * 1e3;  // [cP]
+        const Evaluation mu_brine = Brine::liquidViscosity(temperature, pressure,
+                                                           Evaluation(salinity_[0])) * 1e3;
 
         // Diffusion coeff in pure water in cm2/s
-        const Evaluation D_pure = ((4.8e-7 * temperature) / pow(mu_pure, alpha)) * pow((1 + pow(lambda, 2)) / vm, 0.6);
+        const Evaluation D_pure = ((4.8e-7 * temperature) / pow(mu_pure, alpha)) *
+                                  pow((1 + pow(lambda, 2)) / vm, 0.6);
 
-        // Diffusion coefficient in brine using Ratcliff and Holdcroft, J. G. Trans. Inst. Chem. Eng, 1963. OBS: Value
-        // of n is noted as the recommended single value according to Akita, Ind. Eng. Chem. Fundam., 1981.
+        // Diffusion coefficient in brine using Ratcliff and Holdcroft,
+        // J. G. Trans. Inst. Chem. Eng, 1963. OBS: Value
+        // of n is noted as the recommended single value according to
+        // Akita, Ind. Eng. Chem. Fundam., 1981.
         const Evaluation log_D_brine = log10(D_pure) - 0.637 * log10(mu_brine / mu_pure);
 
         return pow(Evaluation(10), log_D_brine) * 1e-4;  // convert from cm2/s to m2/s
     }
 
 private:
-    std::vector<Scalar> brineReferenceDensity_;
-    std::vector<Scalar> h2ReferenceDensity_;
-    std::vector<Scalar> salinity_;
-    bool enableDissolution_ = true;
-    bool enableSaltConcentration_ = false;
-
     /*!
     * \brief Calculate density of aqueous solution (H2O-NaCl/brine and H2).
     *
@@ -428,8 +424,8 @@ private:
     }
 
     /*!
-    * \brief Calculated the density of the aqueous solution where contributions of salinity and dissolved H2 is taken
-    * into account.
+    * \brief Calculated the density of the aqueous solution where contributions
+    *        of salinity and dissolved H2 is taken into account.
     *
     * \param T temperature [K]
     * \param pl liquid pressure [Pa]
@@ -447,14 +443,14 @@ private:
         Valgrind::CheckDefined(xlH2);
 
         // check if pressure and temperature is valid
-        if(!extrapolate && T < 273.15) {
+        if (!extrapolate && T < 273.15) {
             const std::string msg =
                 "Liquid density for Brine and H2 is only "
                 "defined above 273.15K (is " +
                 std::to_string(getValue(T)) + "K)";
             throw NumericalProblem(msg);
         }
-        if(!extrapolate && pl >= 2.5e8) {
+        if (!extrapolate && pl >= 2.5e8) {
             const std::string msg  =
                 "Liquid density for Brine and H2 is only "
                 "defined below 250MPa (is " +
@@ -472,8 +468,9 @@ private:
     }
 
     /*!
-    * \brief Density of aqueous solution with dissolved H2. Formula from Li et al. (2018) and Garica, Lawrence Berkeley
-    * National Laboratory, 2001.
+    * \brief Density of aqueous solution with dissolved H2.
+    *        Formula from Li et al. (2018) and Garica, Lawrence Berkeley
+    *        National Laboratory, 2001.
     *
     * \param temperature [K]
     * \param pl liquid pressure [Pa]
@@ -492,9 +489,11 @@ private:
         const LhsEval& rho_pure = H2O::liquidDensity(temperature, pl, extrapolate);
 
         // (apparent) molar volume of H2, Eq. (14) in Li et al. (2018)
-        const LhsEval& A1 = 51.1904 - 0.208062*temperature + 3.4427e-4*(temperature*temperature);
+        const LhsEval& A1 = 51.1904 - 0.208062 * temperature +
+                            3.4427e-4 * temperature * temperature;
         const LhsEval& A2 = -0.022;
-        const LhsEval& V_phi = (A1 + A2 * (pl / 1e6)) / 1e6;  // pressure in [MPa] and Vphi in [m3/mol] (from [cm3/mol])
+        // pressure in [MPa] and Vphi in [m3/mol] (from [cm3/mol])
+        const LhsEval& V_phi = (A1 + A2 * (pl / 1e6)) / 1e6;
 
         // density of solution, Eq. (19) in Garcia (2001)
         const LhsEval xlH2O = 1.0 - xlH2;
@@ -505,8 +504,8 @@ private:
     }
 
     /*!
-    * \brief Convert a gas dissolution factor to the the corresponding mass fraction of the gas component in the oil
-    * phase.
+    * \brief Convert a gas dissolution factor to the corresponding
+    *        mass fraction of the gas component in the oil phase.
     *
     * \param Rs gass dissolution factor [-]
     * \param regionIdx region index
@@ -522,7 +521,8 @@ private:
     }
 
     /*!
-    * \brief Convert a gas mass fraction in the oil phase the corresponding mole fraction.
+    * \brief Convert a gas mass fraction in the oil phase to the
+    *        corresponding mole fraction.
     *
     * \param XoG mass fraction [-]
     */
@@ -535,7 +535,8 @@ private:
     }
 
     /*!
-    * \brief Convert a gas mole fraction in the oil phase the corresponding mass fraction.
+    * \brief Convert a gas mole fraction in the oil phase to the
+    *        corresponding mass fraction.
     *
     * \param xoG mole fraction [-]
     */
@@ -549,8 +550,8 @@ private:
     }
 
     /*!
-    * \brief Convert the mass fraction of the gas component in the oil phase to the corresponding gas dissolution
-    * factor.
+    * \brief Convert the mass fraction of the gas component in the oil phase
+    *        to the corresponding gas dissolution factor.
     *
     * \param XoG mass fraction [-]
     * \param regionIdx region index
@@ -582,7 +583,8 @@ private:
             return 0.0;
 
         // calulate the equilibrium composition for the given temperature and pressure
-        LhsEval xlH2 = BinaryCoeffBrineH2::calculateMoleFractions(temperature, pressure, salinity, extrapolate);
+        LhsEval xlH2 = BinaryCoeffBrineH2::calculateMoleFractions(temperature, pressure,
+                                                                  salinity, extrapolate);
 
         // normalize the phase compositions
         xlH2 = max(0.0, min(1.0, xlH2));
@@ -625,8 +627,9 @@ private:
         Scalar S_lSAT = f[0] + scalarTheta*(f[1] + scalarTheta*(f[2] + scalarTheta*f[3]));
 
         LhsEval S = salinity;
-        if (S > S_lSAT)
+        if (S > S_lSAT) {
             S = S_lSAT;
+        }
 
         hw = H2O::liquidEnthalpy(T, p) /1E3; /* kJ/kg */
 
@@ -635,12 +638,10 @@ private:
                         +((2.8000E-5)/4)*(T*T*T*T))/(58.44E3)- 2.045698e+02; /* kJ/kg */
 
         LhsEval m = 1E3/58.44 * S/(1-S);
-        int i = 0;
-        int j = 0;
         d_h = 0;
 
-        for (i = 0; i<=3; i++) {
-            for (j=0; j<=2; j++) {
+        for (int i = 0; i <=3 ; ++i) {
+            for (int j = 0; j <= 2; ++j) {
                 d_h = d_h + a[i][j] * pow(theta, static_cast<Scalar>(i)) * pow(m, j);
             }
         }
@@ -663,12 +664,20 @@ private:
                                             const LhsEval& P,
                                             const LhsEval& saltConcentration) const
     {
-        if (enableSaltConcentration_)
+        if (enableSaltConcentration_) {
             return saltConcentration/H2O::liquidDensity(T, P, true);
+        }
 
         return salinity(regionIdx);
     }
 
+    std::vector<Scalar> brineReferenceDensity_{};
+    std::vector<Scalar> h2ReferenceDensity_{};
+    std::vector<Scalar> salinity_{};
+    bool enableDissolution_ = true;
+    bool enableSaltConcentration_ = false;
 };  // end class BrineH2Pvt
+
 }  // end namespace Opm
+
 #endif

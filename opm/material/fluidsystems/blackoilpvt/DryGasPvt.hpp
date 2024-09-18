@@ -31,6 +31,7 @@
 
 #include <opm/material/common/Tabulated1DFunction.hpp>
 
+#include <cstddef>
 #include <vector>
 
 namespace Opm {
@@ -61,7 +62,7 @@ public:
     void initFromState(const EclipseState& eclState, const Schedule&);
 #endif
 
-    void setNumRegions(size_t numRegions);
+    void setNumRegions(std::size_t numRegions);
 
     void setVapPars(const Scalar, const Scalar)
     {
@@ -119,15 +120,19 @@ public:
      */
     template <class Evaluation>
     Evaluation internalEnergy(unsigned,
-                        const Evaluation&,
-                        const Evaluation&,
-                        const Evaluation&,
-                        const Evaluation&) const
+                              const Evaluation&,
+                              const Evaluation&,
+                              const Evaluation&,
+                              const Evaluation&) const
     {
-        throw std::runtime_error("Requested the enthalpy of gas but the thermal option is not enabled");
+        throw std::runtime_error("Requested the enthalpy of gas but the thermal "
+                                 "option is not enabled");
     }
-    Scalar hVap(unsigned) const{
-        throw std::runtime_error("Requested the hvap of oil but the thermal option is not enabled");
+
+    Scalar hVap(unsigned) const
+    {
+        throw std::runtime_error("Requested the hvap of oil but the thermal "
+                                 "option is not enabled");
     }
     /*!
      * \brief Returns the dynamic viscosity [Pa s] of the fluid phase given a set of parameters.
@@ -151,7 +156,7 @@ public:
         const Evaluation& invBg = inverseGasB_[regionIdx].eval(pressure, /*extrapolate=*/true);
         const Evaluation& invMugBg = inverseGasBMu_[regionIdx].eval(pressure, /*extrapolate=*/true);
 
-        return invBg/invMugBg;
+        return invBg / invMugBg;
     }
 
     /*!
@@ -178,7 +183,8 @@ public:
      * \brief Returns the saturation pressure of the gas phase [Pa]
      *        depending on its mass fraction of the oil component
      *
-     * \param Rv The surface volume of oil component dissolved in what will yield one cubic meter of gas at the surface [-]
+     * \param Rv The surface volume of oil component dissolved in what
+     *           will yield one cubic meter of gas at the surface [-]
      */
     template <class Evaluation>
     Evaluation saturationPressure(unsigned /*regionIdx*/,
@@ -205,7 +211,6 @@ public:
                                               const Evaluation& /*saltConcentration*/) const
     { return 0.0; }
 
-
     /*!
      * \brief Returns the oil vaporization factor \f$R_v\f$ [m^3/m^3] of the oil phase.
      */
@@ -231,7 +236,8 @@ public:
                                     const Evaluation& /*pressure*/,
                                     unsigned /*compIdx*/) const
     {
-        throw std::runtime_error("Not implemented: The PVT model does not provide a diffusionCoefficient()");
+        throw std::runtime_error("Not implemented: The PVT model does not provide "
+                                 "a diffusionCoefficient()");
     }
 
     Scalar gasReferenceDensity(unsigned regionIdx) const
@@ -247,10 +253,10 @@ public:
     { return inverseGasBMu_; }
 
 private:
-    std::vector<Scalar> gasReferenceDensity_;
-    std::vector<TabulatedOneDFunction> inverseGasB_;
-    std::vector<TabulatedOneDFunction> gasMu_;
-    std::vector<TabulatedOneDFunction> inverseGasBMu_;
+    std::vector<Scalar> gasReferenceDensity_{};
+    std::vector<TabulatedOneDFunction> inverseGasB_{};
+    std::vector<TabulatedOneDFunction> gasMu_{};
+    std::vector<TabulatedOneDFunction> inverseGasBMu_{};
 };
 
 } // namespace Opm

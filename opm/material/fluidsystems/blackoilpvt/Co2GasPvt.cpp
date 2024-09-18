@@ -33,10 +33,36 @@
 namespace Opm {
 
 template<class Scalar>
+Co2GasPvt<Scalar>::
+Co2GasPvt(const std::vector<Scalar>& salinity,
+          int activityModel,
+          int thermalMixingModel,
+          Scalar T_ref,
+          Scalar P_ref)
+        : salinity_(salinity)
+{
+    // Throw an error if reference state is not (T, p) = (15.56 C, 1 atm) = (288.71 K, 1.01325e5 Pa)
+    if (T_ref != Scalar(288.71) || P_ref != Scalar(1.01325e5)) {
+        OPM_THROW(std::runtime_error,
+            "BrineCo2Pvt class can only be used with default reference state "
+            "(T, P) = (288.71 K, 1.01325e5 Pa)!");
+    }
+    setActivityModelSalt(activityModel);
+    setThermalMixingModel(thermalMixingModel);
+
+    int num_regions = salinity_.size();
+    setNumRegions(num_regions);
+    for (int i = 0; i < num_regions; ++i) {
+        gasReferenceDensity_[i] = CO2::gasDensity(T_ref, P_ref, extrapolate);
+        brineReferenceDensity_[i] = Brine::liquidDensity(T_ref, P_ref, salinity_[i], extrapolate);
+    }
+}
+
+#if HAVE_ECL_INPUT
+template<class Scalar>
 void Co2GasPvt<Scalar>::
 initFromState(const EclipseState& eclState, const Schedule&)
 {
-
     setEnableVaporizationWater(eclState.getSimulationConfig().hasVAPOIL() || eclState.getSimulationConfig().hasVAPWAT());
     setActivityModelSalt(eclState.getCo2StoreConfig().actco2s());
     gastype_ = eclState.getCo2StoreConfig().gas_type;
@@ -74,6 +100,67 @@ initFromState(const EclipseState& eclState, const Schedule&)
     }
 
     initEnd();
+}
+#endif
+
+template<class Scalar>
+void Co2GasPvt<Scalar>::
+setNumRegions(std::size_t numRegions)
+{
+    gasReferenceDensity_.resize(numRegions);
+    brineReferenceDensity_.resize(numRegions);
+    salinity_.resize(numRegions);
+}
+
+template<class Scalar>
+void Co2GasPvt<Scalar>::
+setReferenceDensities(unsigned regionIdx,
+                      Scalar rhoRefBrine,
+                      Scalar rhoRefGas,
+                      Scalar /*rhoRefWater*/)
+{
+    gasReferenceDensity_[regionIdx] = rhoRefGas;
+    brineReferenceDensity_[regionIdx] = rhoRefBrine;;
+}
+
+template<class Scalar>
+void Co2GasPvt<Scalar>::
+setActivityModelSalt(int activityModel)
+{
+    switch (activityModel) {
+    case 1:
+    case 2:
+    case 3: activityModel_ = activityModel; break;
+    default:
+        OPM_THROW(std::runtime_error, "The salt activity model options are 1, 2 or 3");
+    }
+}
+
+template<class Scalar>
+void Co2GasPvt<Scalar>::
+setThermalMixingModel(int thermalMixingModel)
+{
+    switch (thermalMixingModel) {
+    // 0 = Use pure CO2 entalpy
+    case 0:  gastype_ = Co2StoreConfig::GasMixingType::NONE; break;
+    // 1 = Account for vapporized water in gas phase (Mass fraction)
+    case 1:  gastype_ = Co2StoreConfig::GasMixingType::IDEAL; break;
+    default: OPM_THROW(std::runtime_error, "The thermal mixing model options are 0 and 1");
+    }
+}
+
+template<class Scalar>
+void Co2GasPvt<Scalar>::
+setEzrokhiDenCoeff(const std::vector<EzrokhiTable>& denaqa)
+{
+    if (denaqa.empty()) {
+        return;
+    }
+
+    enableEzrokhiDensity_ = true;
+    ezrokhiDenNaClCoeff_ = {static_cast<Scalar>(denaqa[0].getC0("NACL")),
+                            static_cast<Scalar>(denaqa[0].getC1("NACL")),
+                            static_cast<Scalar>(denaqa[0].getC2("NACL"))};
 }
 
 template class Co2GasPvt<double>;

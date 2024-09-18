@@ -36,6 +36,7 @@
 
 namespace Opm {
 
+#if HAVE_ECL_INPUT
 template<class Scalar, bool enableBrine>
 void WaterPvtThermal<Scalar,enableBrine>::
 initFromState(const EclipseState& eclState, const Schedule& schedule)
@@ -158,7 +159,7 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
             std::vector<double> uSamples(temperatureColumn.size());
 
             Scalar u = temperatureColumn[0]*cvWaterColumn[0];
-            for (size_t i = 0;; ++i) {
+            for (std::size_t i = 0;; ++i) {
                 uSamples[i] = u;
 
                 if (i >= temperatureColumn.size() - 1)
@@ -176,6 +177,89 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
             internalEnergyCurves_[regionIdx].setXYContainers(temperatureColumn.vectorCopy(), uSamples);
         }
     }
+}
+#endif
+
+template<class Scalar, bool enableBrine>
+void WaterPvtThermal<Scalar,enableBrine>::
+setNumRegions(std::size_t numRegions)
+{
+    pvtwRefPress_.resize(numRegions);
+    pvtwRefB_.resize(numRegions);
+    pvtwCompressibility_.resize(numRegions);
+    pvtwViscosity_.resize(numRegions);
+    pvtwViscosibility_.resize(numRegions);
+    viscrefPress_.resize(numRegions);
+    watvisctCurves_.resize(numRegions);
+    watdentRefTemp_.resize(numRegions);
+    watdentCT1_.resize(numRegions);
+    watdentCT2_.resize(numRegions);
+    watJTRefPres_.resize(numRegions);
+    watJTC_.resize(numRegions);
+    internalEnergyCurves_.resize(numRegions);
+    hVap_.resize(numRegions,0.0);
+}
+
+template<class Scalar, bool enableBrine>
+bool WaterPvtThermal<Scalar,enableBrine>::
+operator==(const WaterPvtThermal<Scalar, enableBrine>& data) const
+{
+    if (isothermalPvt_ && !data.isothermalPvt_) {
+        return false;
+    }
+    if (!isothermalPvt_ && data.isothermalPvt_) {
+        return false;
+    }
+
+    return this->viscrefPress() == data.viscrefPress() &&
+           this->watdentRefTemp() == data.watdentRefTemp() &&
+           this->watdentCT1() == data.watdentCT1() &&
+           this->watdentCT2() == data.watdentCT2() &&
+           this->watJTRefPres() == data.watJTRefPres() &&
+           this->watJTC() == data.watJTC() &&
+           this->pvtwRefPress() == data.pvtwRefPress() &&
+           this->pvtwRefB() == data.pvtwRefB() &&
+           this->pvtwCompressibility() == data.pvtwCompressibility() &&
+           this->pvtwViscosity() == data.pvtwViscosity() &&
+           this->pvtwViscosibility() == data.pvtwViscosibility() &&
+           this->watvisctCurves() == data.watvisctCurves() &&
+           this->internalEnergyCurves() == data.internalEnergyCurves() &&
+           this->enableThermalDensity() == data.enableThermalDensity() &&
+           this->enableJouleThomson() == data.enableJouleThomson() &&
+           this->enableThermalViscosity() == data.enableThermalViscosity() &&
+           this->enableInternalEnergy() == data.enableInternalEnergy();
+}
+
+template<class Scalar, bool enableBrine>
+WaterPvtThermal<Scalar, enableBrine>&
+WaterPvtThermal<Scalar,enableBrine>::
+operator=(const WaterPvtThermal<Scalar, enableBrine>& data)
+{
+    if (data.isothermalPvt_) {
+        isothermalPvt_ = new IsothermalPvt(*data.isothermalPvt_);
+    }
+    else {
+        isothermalPvt_ = nullptr;
+    }
+    viscrefPress_ = data.viscrefPress_;
+    watdentRefTemp_ = data.watdentRefTemp_;
+    watdentCT1_ = data.watdentCT1_;
+    watdentCT2_ = data.watdentCT2_;
+    watJTRefPres_ =  data.watJTRefPres_;
+    watJTC_ =  data.watJTC_;
+    pvtwRefPress_ = data.pvtwRefPress_;
+    pvtwRefB_ = data.pvtwRefB_;
+    pvtwCompressibility_ = data.pvtwCompressibility_;
+    pvtwViscosity_ = data.pvtwViscosity_;
+    pvtwViscosibility_ = data.pvtwViscosibility_;
+    watvisctCurves_ = data.watvisctCurves_;
+    internalEnergyCurves_ = data.internalEnergyCurves_;
+    enableThermalDensity_ = data.enableThermalDensity_;
+    enableJouleThomson_ = data.enableJouleThomson_;
+    enableThermalViscosity_ = data.enableThermalViscosity_;
+    enableInternalEnergy_ = data.enableInternalEnergy_;
+
+    return *this;
 }
 
 template class WaterPvtThermal<double,false>;

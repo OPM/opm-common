@@ -32,6 +32,7 @@
 
 namespace Opm {
 
+#if HAVE_ECL_INPUT
 template<class Scalar>
 void ConstantCompressibilityOilPvt<Scalar>::
 initFromState(const EclipseState& eclState, const Schedule&)
@@ -45,7 +46,7 @@ initFromState(const EclipseState& eclState, const Schedule&)
                               pvcdoTable.size(), densityTable.size()));
     }
 
-    size_t numRegions = pvcdoTable.size();
+    std::size_t numRegions = pvcdoTable.size();
     setNumRegions(numRegions);
 
     for (unsigned regionIdx = 0; regionIdx < numRegions; ++regionIdx) {
@@ -63,6 +64,24 @@ initFromState(const EclipseState& eclState, const Schedule&)
     }
 
     initEnd();
+}
+#endif
+
+template<class Scalar>
+void ConstantCompressibilityOilPvt<Scalar>::
+setNumRegions(std::size_t numRegions)
+{
+    oilReferenceDensity_.resize(numRegions);
+    oilReferencePressure_.resize(numRegions);
+    oilReferenceFormationVolumeFactor_.resize(numRegions);
+    oilCompressibility_.resize(numRegions);
+    oilViscosity_.resize(numRegions);
+    oilViscosibility_.resize(numRegions);
+
+    for (unsigned regionIdx = 0; regionIdx < numRegions; ++regionIdx) {
+        setReferenceFormationVolumeFactor(regionIdx, 1.0);
+        setReferencePressure(regionIdx, 1.03125);
+    }
 }
 
 template class ConstantCompressibilityOilPvt<double>;
