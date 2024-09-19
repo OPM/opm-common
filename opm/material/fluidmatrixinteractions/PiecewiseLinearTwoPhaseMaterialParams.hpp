@@ -231,7 +231,11 @@ private:
                 }
             }
             else{
+#if OPM_IS_INSIDE_DEVICE_FUNCTION
+                assert(false && "Saturation values in interpolation table provided in wrong order, but table is immutable");
+#else
                 OPM_THROW(std::logic_error, "Saturation values in interpolation table provided in wrong order, but table is immutable");
+#endif
             }
         }
     }
