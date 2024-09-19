@@ -693,6 +693,7 @@ private:
     static constexpr Scalar gamma_[5] = {0.7164, 1.3444, 1.4517, 0.7204, 1.5445};
     static constexpr Scalar D_[5] = {1.506, 0.156, 1.736, 0.670, 1.662};
 
+#if 0
     /*!
     * \brief Objective function in root-finding done in convertPgToReducedRho.
     * 
@@ -714,6 +715,7 @@ private:
         Evaluation obj = rho_red * rho_cRT * (1 + rho_red * dResHelm_dRedRho) - p_MPa;
         return obj;
     }
+#endif
 };
 
 } // end namespace Opm

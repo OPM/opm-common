@@ -514,12 +514,14 @@ private:
     *
     * \param x_NaCl mole fraction of NaCL in brine [mol/mol]
     */
+#if 0
     template <class Evaluation>
     static Evaluation moleFracToMolality_(const Evaluation& x_NaCl)
     {
         // conversion from mol fraction to molality (dissolved CO2 neglected)
         return 55.508 * x_NaCl / (1 - x_NaCl);
     }
+#endif
 
     template <class Evaluation>
     static Evaluation massFracToMolality_(const Evaluation& X_NaCl)
