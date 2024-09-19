@@ -16,10 +16,10 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <algorithm>
-
 #include <opm/input/eclipse/Schedule/Action/Actions.hpp>
 #include <opm/input/eclipse/Schedule/Action/ActionX.hpp>
+
+#include <algorithm>
 
 namespace Opm {
 namespace Action {
@@ -101,12 +101,13 @@ int Actions::max_input_lines() const {
 }
 
 
-bool Actions::ready(const State& state, std::time_t sim_time) const {
-    for (const auto& action : this->actions) {
-        if (action.ready(state, sim_time))
-            return true;
-    }
-    return false;
+bool Actions::ready(const State& state, std::time_t sim_time) const
+{
+    return std::any_of(this->actions.begin(), this->actions.end(),
+                        [&state, sim_time](const auto& action)
+                        {
+                            return action.ready(state, sim_time);
+                        });
 }
 
 std::vector<const PyAction *> Actions::pending_python(const State& state) const {

@@ -18,11 +18,12 @@
   along with OPM.
 */
 
-#include <string>
-
 #include <opm/input/eclipse/Deck/Deck.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/S.hpp>
 #include <opm/input/eclipse/Schedule/Source.hpp>
+
+#include <algorithm>
+#include <string>
 
 namespace Opm {
 namespace {
@@ -137,14 +138,13 @@ std::vector<Source::SourceCell>::const_iterator Source::end() const {
     return this->m_cells.end();
 }
 
-bool Source::hasSource(const std::array<int, 3>& input) const {
-    for (const auto& source : m_cells) {
-        if (source.ijk == input)
-            {
-                return true;
-            }
-    }
-    return false;
+bool Source::hasSource(const std::array<int, 3>& input) const
+{
+    return std::any_of(m_cells.begin(), m_cells.end(),
+                       [&input](const auto& source)
+                       {
+                           return source.ijk == input;
+                       });
 }
 
 double Source::rate(const std::pair<std::array<int, 3>, SourceComponent>& input) const {

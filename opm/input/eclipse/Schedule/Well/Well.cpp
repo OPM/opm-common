@@ -55,6 +55,7 @@
 #include "../MSW/Compsegs.hpp"
 #include "../eval_uda.hpp"
 
+#include <algorithm>
 #include <cassert>
 #include <cmath>
 #include <cstddef>
@@ -1257,12 +1258,13 @@ std::map<int, std::vector<Connection>> Well::getCompletions() const {
     return completions;
 }
 
-bool Well::hasCompletion(int completion) const {
-    for (const auto& conn : *this->connections) {
-        if (conn.complnum() == completion)
-            return true;
-    }
-    return false;
+bool Well::hasCompletion(int completion) const
+{
+    return std::any_of(this->connections->begin(), this->connections->end(),
+                       [completion](const auto& conn)
+                       {
+                           return conn.complnum() == completion;
+                       });
 }
 
 

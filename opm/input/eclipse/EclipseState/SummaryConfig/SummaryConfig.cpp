@@ -1995,12 +1995,13 @@ const SummaryConfigNode& SummaryConfig::operator[](std::size_t index) const {
 }
 
 
-bool SummaryConfig::match(const std::string& keywordPattern) const {
-    for (const auto& keyword : this->short_keywords) {
-        if (shmatch(keywordPattern, keyword))
-            return true;
-    }
-    return false;
+bool SummaryConfig::match(const std::string& keywordPattern) const
+{
+    return std::any_of(this->short_keywords.begin(), this->short_keywords.end(),
+                        [&keywordPattern](const auto& keyword)
+                        {
+                            return shmatch(keywordPattern, keyword);
+                        });
 }
 
 SummaryConfig::keyword_list
