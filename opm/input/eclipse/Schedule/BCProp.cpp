@@ -18,11 +18,12 @@
   along with OPM.
 */
 
-#include <string>
-
 #include <opm/input/eclipse/Deck/Deck.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/B.hpp>
 #include <opm/input/eclipse/Schedule/BCProp.hpp>
+
+#include <algorithm>
+#include <string>
 
 namespace Opm {
 namespace {
@@ -213,13 +214,18 @@ std::vector<BCProp::BCFace>::const_iterator BCProp::end() const {
     return this->m_faces.end();
 }
 
-const BCProp::BCFace& BCProp::operator[](int index) const {
-    for (const auto& bc : m_faces) {
-        if (bc.index == index)
-            {
-                return bc;
-            }
+const BCProp::BCFace& BCProp::operator[](int index) const
+{
+    const auto it = std::find_if(m_faces.begin(), m_faces.end(),
+                                [index](const auto& bc)
+                                 {
+                                     return bc.index == index;
+                                 });
+
+    if (it != m_faces.end()) {
+        return *it;
     }
+
     // add throw
     return this->m_faces[0];
 }

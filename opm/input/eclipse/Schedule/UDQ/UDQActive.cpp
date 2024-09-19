@@ -16,13 +16,15 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include <fmt/format.h>
-
 #include <opm/io/eclipse/rst/state.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQActive.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQConfig.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQEnums.hpp>
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
+
+#include <algorithm>
+
+#include <fmt/format.h>
 
 namespace Opm {
 
@@ -159,17 +161,17 @@ const std::vector<UDQActive::OutputRecord>& UDQActive::iuad() const {
         for (const auto& input_record : this->input_data) {
             const auto& udq = input_record.udq;
             const auto& control = input_record.control;
-            bool found = false;
-            for (auto& output_record : this->output_data) {
-                if ((output_record.udq == udq) && (output_record.control == control)) {
-                    output_record.use_count += 1;
-                    found = true;
-                    break;
-                }
+            auto it = std::find_if(this->output_data.begin(), this->output_data.end(),
+                                  [&udq, &control](const auto& output_record)
+                                  {
+                                      return output_record.udq == udq && output_record.control == control;
+                                  });
+            if (it != this->output_data.end()) {
+                ++it->use_count;
+            } else {
+                this->output_data.emplace_back(input_record.udq, input_record.input_index,
+                                               0, input_record.wgname, input_record.control);
             }
-
-            if (!found)
-                this->output_data.emplace_back(input_record.udq, input_record.input_index, 0, input_record.wgname, input_record.control);
         }
 
         if (!this->output_data.empty()) {
