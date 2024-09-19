@@ -818,11 +818,12 @@ void PAvgCalculator<Scalar>::pruneInactiveConnections(const std::vector<bool>& i
         auto keepOpen = std::vector<typename std::vector<PAvgConnection>::size_type>{};
         keepOpen.reserve(this->openConns_.size());
 
-        for (const auto& openConn : this->openConns_) {
-            if (isActive[this->connections_[openConn].cell]) {
-                keepOpen.push_back(openConn);
-            }
-        }
+        std::copy_if(this->openConns_.begin(),this->openConns_.end(),
+                     std::back_inserter(keepOpen),
+                     [this, &isActive](const auto& openConn)
+                     {
+                         return isActive[this->connections_[openConn].cell];
+                     });
 
         this->openConns_.swap(keepOpen);
     }

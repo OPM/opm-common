@@ -25,13 +25,9 @@
 #include <opm/io/eclipse/EclUtil.hpp>
 
 #include <algorithm>
-#include <numeric>
 #include <chrono>
-#include <exception>
 #include <filesystem>
 #include <iterator>
-#include <limits>
-#include <set>
 #include <stdexcept>
 #include <string>
 #include <fstream>
@@ -600,10 +596,11 @@ std::vector<Opm::time_point> ExtESmry::dates() {
 std::vector<std::string> ExtESmry::keywordList(const std::string& pattern) const
 {
     std::vector<std::string> list;
-
-    for (const auto& key : m_keyword)
-        if (shmatch( pattern, key) )
-            list.push_back(key);
+    std::copy_if(m_keyword.begin(), m_keyword.end(), std::back_inserter(list),
+                 [&pattern](const auto& key)
+                 {
+                     return shmatch(pattern, key);
+                 });
 
     return list;
 }
