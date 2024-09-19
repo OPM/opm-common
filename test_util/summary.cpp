@@ -185,8 +185,7 @@ int main(int argc, char **argv) {
                 return EXIT_FAILURE;
             }
 
-            for (auto vect : list)
-                smryList.push_back(vect);
+            smryList.insert(smryList.end(), list.begin(), list.end());
         }
     }
 

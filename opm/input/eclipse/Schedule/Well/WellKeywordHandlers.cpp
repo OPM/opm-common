@@ -552,9 +552,7 @@ void handleWELSPECS(HandlerContext& handlerContext)
                 fieldWells.push_back(wellName);
             }
             else {
-                for (const auto& existingWell : existingWells) {
-                    fieldWells.push_back(existingWell);
-                }
+                fieldWells.insert(fieldWells.end(), existingWells.begin(), existingWells.end());
             }
         }
 

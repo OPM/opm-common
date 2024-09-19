@@ -1073,9 +1073,8 @@ void keywordR(SummaryConfig::keyword_list& list,
         }
     }
     else {
-        for (const auto& region_id : context.regions.at(region_name.value())) {
-            regions.push_back(region_id);
-        }
+        const auto cregions = context.regions.at(region_name.value());
+        regions.assign(cregions.begin(), cregions.end());
     }
 
     // See comment on function roew() in Summary.cpp for this weirdness.
