@@ -306,7 +306,7 @@ void EModel::updateActiveFilter(const std::vector<T>& paramVect, const std::stri
 template <typename T>
 const std::vector<T>& EModel::get_filter_param(const std::string& param)
 {
-    if constexpr (std::is_same<T, int>::value){
+    if constexpr (std::is_same<T, int>::value) {
         if ((param == "I") || (param == "ROW"))
             return  I;
         else if ((param == "J") || (param == "COLUMN"))
@@ -321,7 +321,7 @@ const std::vector<T>& EModel::get_filter_param(const std::string& param)
                         param);
         throw std::invalid_argument(message);
 
-    } else if constexpr (std::is_same<T, float>::value){
+    } else if constexpr (std::is_same<T, float>::value) {
         if (param == "PORV")
             return  PORV;
         else if (param == "CELLVOL"){
@@ -338,6 +338,8 @@ const std::vector<T>& EModel::get_filter_param(const std::string& param)
             fmt::format("parameter {}, used to set filter, could not be found",
                         param);
         throw std::invalid_argument(message);
+    } else {
+        static_assert(!std::is_same_v<T,T>, "EModel::get_filter_param called for unsupported type");
     }
 }
 

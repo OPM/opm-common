@@ -1,9 +1,9 @@
 #include <chrono>
+#include <filesystem>
+#include <getopt.h>
 #include <iomanip>
 #include <iostream>
-#include <tuple>
-#include <getopt.h>
-#include <filesystem>
+#include <type_traits>
 
 #include <opm/io/eclipse/EclFile.hpp>
 #include <opm/io/eclipse/ERst.hpp>
@@ -149,6 +149,8 @@ GrdeclDataFormatParams getFormat()
         return {8, 6, -1, false, true};
     } else if constexpr (std::is_same<T, std::string>::value) {
         return {5, -1, -1, true, false};
+    } else {
+        static_assert(!std::is_same_v<T,T>, "getFormat() called for invalid type");
     }
 }
 
