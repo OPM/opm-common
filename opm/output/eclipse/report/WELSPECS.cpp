@@ -140,14 +140,13 @@ namespace {
     struct table: std::vector<column<T, header_height>> {
         using std::vector<column<T, header_height>>::vector;
 
-        std::size_t total_width() const {
-            std::size_t r { 1 + this->size() } ;
-
-            for (const auto& column : *this) {
-                r += column.total_width();
-            }
-
-            return r;
+        std::size_t total_width() const
+        {
+            return std::accumulate(this->begin(), this->end(), 1 + this->size(),
+                                   [](const auto acc, const auto& column)
+                                   {
+                                       return acc + column.total_width();
+                                   });
         }
 
         void print_divider(std::ostream& os, char padding = divider_character) const {

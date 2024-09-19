@@ -695,11 +695,12 @@ namespace { namespace SatFunc {
         std::size_t allocatedRows(const std::size_t          nssfun,
                                   const Opm::TableContainer& tables)
         {
-            auto maxActiveRows = std::size_t{0};
-
-            for (const auto& table : tables.tables()) {
-                maxActiveRows = std::max(maxActiveRows, table.second->numRows());
-            }
+            const std::size_t maxActiveRows =
+                std::accumulate(tables.tables().begin(), tables.tables().end(), 0UL,
+                                [](const auto acc, const auto& table)
+                                {
+                                    return std::max(acc, table.second->numRows());
+                                });
 
             return std::max(nssfun, maxActiveRows);
         }

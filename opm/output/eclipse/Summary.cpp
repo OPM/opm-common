@@ -1570,10 +1570,15 @@ inline quantity abandoned_well( const fn_args& args ) {
 
 inline quantity res_vol_production_target( const fn_args& args )
 {
-    double sum = 0.0;
-    for (const auto* sched_well : args.schedule_wells)
-        if (sched_well->getProductionProperties().predictionMode)
-            sum += sched_well->getProductionProperties().ResVRate.getSI();
+    const double sum = std::accumulate(args.schedule_wells.begin(),
+                                       args.schedule_wells.end(), 0.0,
+                                       [](const auto acc, const auto& sched_well)
+                                       {
+                                           return
+                                                sched_well->getProductionProperties().predictionMode
+                                                ? acc + sched_well->getProductionProperties().ResVRate.getSI()
+                                                : acc;
+                                       });
 
     return { sum, measure::rate };
 }
