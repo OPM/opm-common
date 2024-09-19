@@ -304,8 +304,7 @@ BOOST_AUTO_TEST_CASE(TestEcl_Write_binary) {
 
 BOOST_AUTO_TEST_CASE(TestEcl_Write_formatted) {
 
-    std::string inputFile="ECLFILE.FINIT";
-    std::string testFile="TEST.FDAT";
+    const std::string inputFile = "ECLFILE.FINIT";
 
     // loading vectors from formatted input file and write data back to a formatted file1
     // compare input and output file, and delete file.
@@ -321,6 +320,7 @@ BOOST_AUTO_TEST_CASE(TestEcl_Write_formatted) {
     // writing vectors to test file (TEST.FDAT) using class EclOutput
 
     {
+        const std::string testFile = "TEST.FDAT";
         WorkArea work;
         EclOutput eclTest(testFile, true);
 

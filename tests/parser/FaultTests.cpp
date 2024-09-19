@@ -52,14 +52,13 @@ BOOST_AUTO_TEST_CASE(CreateFace) {
     Opm::FaultFace face2(10,10,10,0, 2  , 1 , 1 , 0 , 0 , Opm::FaceDir::YPlus);
     Opm::FaultFace face3(10,10,10,0, 2  , 0 , 0 , 1 , 1 , Opm::FaceDir::YPlus);
 
-    std::vector<size_t> trueValues1{0,1,2};
-    std::vector<size_t> trueValues2{10,11,12};
-    std::vector<size_t> trueValues3{100,101,102};
-    size_t i = 0;
-
     {
+        const std::vector<size_t> trueValues1{0,1,2};
+        const std::vector<size_t> trueValues2{10,11,12};
+        const std::vector<size_t> trueValues3{100,101,102};
         auto iter3 = face3.begin();
         auto iter2 = face2.begin();
+        size_t i = 0;
         for (auto iter1 = face1.begin(); iter1 != face1.end(); ++iter1) {
             size_t index1 = *iter1;
             size_t index2 = *iter2;

@@ -17,9 +17,7 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <cmath>
-
-#include <fmt/format.h>
+#include <opm/input/eclipse/Schedule/MSW/Compsegs.hpp>
 
 #include <opm/input/eclipse/Parser/ParserKeywords/C.hpp>
 #include <opm/input/eclipse/Parser/ParseContext.hpp>
@@ -35,7 +33,10 @@
 #include <opm/input/eclipse/Schedule/Well/Connection.hpp>
 #include <opm/input/eclipse/Schedule/ScheduleGrid.hpp>
 
-#include "Compsegs.hpp"
+#include <algorithm>
+#include <cmath>
+
+#include <fmt/format.h>
 
 namespace Opm {
 namespace Compsegs {
@@ -336,8 +337,12 @@ namespace {
                 }
             }
 
-            for (const auto& connection : new_connection_set) {
-                if (!connection.attachedToSegment())
+            if (std::any_of(new_connection_set.begin(), new_connection_set.end(),
+                            [](const auto& connection)
+                            {
+                                return !connection.attachedToSegment();
+                            }))
+            {
                     throw std::runtime_error("Not all the connections are attached with a segment. "
                                              "The information from COMPSEGS is not complete");
             }

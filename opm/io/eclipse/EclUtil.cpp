@@ -73,11 +73,11 @@ bool Opm::EclIO::fileExists(const std::string& filename){
 
 bool Opm::EclIO::is_number(const std::string& numstr)
 {
-    for (char const &c : numstr)
-        if (std::isdigit(c) == 0)
-            return false;
-
-    return true;
+    return std::all_of(numstr.begin(), numstr.end(),
+                       [](const auto& c)
+                       {
+                           return std::isdigit(c) != 0;
+                       });
 }
 
 

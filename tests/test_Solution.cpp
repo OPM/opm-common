@@ -21,10 +21,11 @@
 #define BOOST_TEST_MODULE Solution
 #include <boost/test/unit_test.hpp>
 
-#include <vector>
-
 #include <opm/output/data/Solution.hpp>
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
+
+#include <algorithm>
+#include <vector>
 
 using namespace Opm;
 
@@ -55,8 +56,8 @@ BOOST_AUTO_TEST_CASE(Create)
         std::vector<std::string> actual;
 
 
-        for (const auto& prop : c)
-            actual.push_back( prop.first );
+        std::transform(c.begin(), c.end(), std::back_inserter(actual),
+                       [](const auto& prop) { return prop.first; });
 
         BOOST_CHECK_EQUAL_COLLECTIONS( expected.begin() , expected.end() , actual.begin() , actual.end() );
     }

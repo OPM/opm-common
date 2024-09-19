@@ -18,11 +18,12 @@
   along with OPM.
 */
 
-#include <string>
-
 #include <opm/input/eclipse/Deck/Deck.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/S.hpp>
 #include <opm/input/eclipse/Schedule/Source.hpp>
+
+#include <algorithm>
+#include <string>
 
 namespace Opm {
 namespace {
@@ -137,62 +138,87 @@ std::vector<Source::SourceCell>::const_iterator Source::end() const {
     return this->m_cells.end();
 }
 
-bool Source::hasSource(const std::array<int, 3>& input) const {
-    for (const auto& source : m_cells) {
-        if (source.ijk == input)
-            {
-                return true;
-            }
-    }
-    return false;
+bool Source::hasSource(const std::array<int, 3>& input) const
+{
+    return std::any_of(m_cells.begin(), m_cells.end(),
+                       [&input](const auto& source)
+                       {
+                           return source.ijk == input;
+                       });
 }
 
-double Source::rate(const std::pair<std::array<int, 3>, SourceComponent>& input) const {
-    for (const auto& source : m_cells) {
-        if (source.isSame(input))
-            {
-                return source.rate;
-            }
+double Source::rate(const std::pair<std::array<int, 3>, SourceComponent>& input) const
+{
+    const auto it = std::find_if(m_cells.begin(), m_cells.end(),
+                                 [&input](const auto& source)
+                                 {
+                                     return source.isSame(input);
+                                 });
+
+    if (it != m_cells.end()) {
+        return it->rate;
     }
+
     return 0.0;
 }
 
-double Source::hrate(const std::pair<std::array<int, 3>, SourceComponent>& input) const {
-    for (auto& source : m_cells) {
-        if (source.isSame(input))
-            {
-                return source.hrate.value();
-            }
+double Source::hrate(const std::pair<std::array<int, 3>, SourceComponent>& input) const
+{
+    const auto it = std::find_if(m_cells.begin(), m_cells.end(),
+                                 [&input](const auto& source)
+                                 {
+                                     return source.isSame(input);
+                                 });
+
+    if (it != m_cells.end()) {
+        return it->hrate.value();
     }
+
     return 0.0;
 }
 
-bool Source::hasHrate(const std::pair<std::array<int, 3>, SourceComponent>& input) const {
-    for (auto& source : m_cells) {
-        if (source.isSame(input))
-            {
-                return source.hrate.has_value();
-            }
+bool Source::hasHrate(const std::pair<std::array<int, 3>, SourceComponent>& input) const
+{
+    const auto it = std::find_if(m_cells.begin(), m_cells.end(),
+                                 [&input](const auto& source)
+                                 {
+                                     return source.isSame(input);
+                                 });
+
+    if (it != m_cells.end()) {
+        return it->hrate.has_value();
     }
+
     return false;
 }
 
-bool Source::hasTemperature(const std::pair<std::array<int, 3>, SourceComponent>& input) const {
-    for (auto& source : m_cells) {
-        if (source.isSame(input))
-            {
-                return source.temperature.has_value();
-            }
+bool Source::hasTemperature(const std::pair<std::array<int, 3>, SourceComponent>& input) const
+{
+    const auto it = std::find_if(m_cells.begin(), m_cells.end(),
+                                 [&input](const auto& source)
+                                 {
+                                     return source.isSame(input);
+                                 });
+
+    if (it != m_cells.end()) {
+        return it->temperature.has_value();
     }
+
     return false;
 }
-double Source::temperature(const std::pair<std::array<int, 3>, SourceComponent>& input) const {
-    for (auto& source : m_cells) {
-        if (source.isSame(input))
-            {
-                return source.temperature.value();
-            }
+
+double Source::temperature(const std::pair<std::array<int, 3>, SourceComponent>& input) const
+{
+    const auto it = std::find_if(m_cells.begin(), m_cells.end(),
+                                 [&input](const auto& source)
+                                 {
+                                     return source.isSame(input);
+                                 });
+
+    if (it != m_cells.end()) {
+        return it->temperature.value();
     }
+
     return 0.0;
 }
 

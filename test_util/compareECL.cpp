@@ -20,11 +20,12 @@
 
 #include <opm/common/ErrorMacros.hpp>
 
+#include <algorithm>
+#include <filesystem>
+#include <getopt.h>
 #include <iostream>
 #include <sstream>
 #include <string>
-#include <getopt.h>
-#include <fstream>
 
 static void printHelp() {
     std::cout << "\ncompareECL compares ECLIPSE files (restart (.RST), unified restart (.UNRST), initial (.INIT), summary (.SMRY), unified summary (.UNSMRY) or .RFT) and gridsizes (from .EGRID or .GRID file) from two simulations.\n"
@@ -70,14 +71,11 @@ static bool has_result_files(const std::string& rootName)
 {
     std::vector<std::string> extList = { "EGRID", "INIT", "UNRST", "SMSPEC", "RFT" };
 
-    for (const auto& ext : extList) {
-        std::ifstream is(rootName + '.' + ext);
-        if (is) {
-            return true;
-        }
-    }
-
-    return false;
+    return std::any_of(extList.begin(), extList.end(),
+                       [&rootName](const auto& ext)
+                       {
+                           return std::filesystem::exists(rootName + '.' + ext);
+                       });
 }
 
 //------------------------------------------------//

@@ -72,10 +72,7 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
         }
 
         auto& oilMu = oilMuTable_[regionIdx];
-        auto& satOilMu = saturatedOilMuTable_[regionIdx];
         auto& invOilB = inverseOilBTable_[regionIdx];
-        auto& invSatOilB = inverseSaturatedOilBTable_[regionIdx];
-        auto& gasDissolutionFac = saturatedGasDissolutionFactorTable_[regionIdx];
         std::vector<Scalar> invSatOilBArray;
         std::vector<Scalar> satOilMuArray;
 
@@ -111,6 +108,9 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
         {
             const auto& tmpPressureColumn = saturatedTable.getColumn("P");
             const auto& tmpGasSolubilityColumn = saturatedTable.getColumn("RS");
+            auto& satOilMu = saturatedOilMuTable_[regionIdx];
+            auto& invSatOilB = inverseSaturatedOilBTable_[regionIdx];
+            auto& gasDissolutionFac = saturatedGasDissolutionFactorTable_[regionIdx];
 
             invSatOilB.setXYContainers(tmpPressureColumn, invSatOilBArray);
             satOilMu.setXYContainers(tmpPressureColumn, satOilMuArray);

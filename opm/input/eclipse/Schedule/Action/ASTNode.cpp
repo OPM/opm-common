@@ -26,6 +26,7 @@
 
 #include <opm/common/utility/shmatch.hpp>
 
+#include <algorithm>
 #include <cmath>
 #include <cstddef>
 #include <stdexcept>
@@ -51,9 +52,12 @@ namespace {
     {
         std::vector<std::string> strings;
 
-        for (const auto& qs : quoted_strings) {
-            strings.push_back(strip_quotes(qs));
-        }
+        std::transform(quoted_strings.begin(), quoted_strings.end(),
+                       std::back_inserter(strings),
+                       [](const std::string& qs)
+                       {
+                           return strip_quotes(qs);
+                       });
 
         return strings;
     }
@@ -152,11 +156,12 @@ Opm::Action::ASTNode::value(const Action::Context& context) const
             wnames = wlm.wells(well_arg);
         }
         else {
-            for (const auto& well : context.wells(this->func)) {
-                if (shmatch(well_arg, well)) {
-                    wnames.push_back(well);
-                }
-            }
+            const auto& wells = context.wells(this->func);
+            std::copy_if(wells.begin(), wells.end(), std::back_inserter(wnames),
+                        [&well_arg](const auto& well)
+                        {
+                            return shmatch(well_arg, well);
+                        });
         }
 
         for (const auto& wname : wnames) {

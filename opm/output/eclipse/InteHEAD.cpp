@@ -948,9 +948,12 @@ namespace {
             }
         }
 
-        for (const auto& aq : sched.aqufluxs) {
-            aquiferIDs.push_back(aq.first);
-        }
+        std::transform(sched.aqufluxs.begin(), sched.aqufluxs.end(),
+                       std::back_inserter(aquiferIDs),
+                       [](const auto& aq)
+                       {
+                           return aq.first;
+                       });
 
         return numUnique(std::move(aquiferIDs));
     }

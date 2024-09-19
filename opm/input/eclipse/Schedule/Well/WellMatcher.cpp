@@ -16,11 +16,11 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include <algorithm>
-#include <utility>
-
 #include <opm/common/utility/shmatch.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellMatcher.hpp>
+
+#include <algorithm>
+#include <utility>
 
 namespace Opm {
 
@@ -67,10 +67,12 @@ std::vector<std::string> WellMatcher::wells(const std::string& pattern) const {
     auto star_pos = pattern.find('*');
     if (star_pos != std::string::npos) {
         std::vector<std::string> names;
-        for (const auto& wname : this->m_well_order) {
-            if (shmatch(pattern, wname))
-                names.push_back(wname);
-        }
+        std::copy_if(this->m_well_order.begin(), this->m_well_order.end(),
+                     std::back_inserter(names),
+                     [&pattern](const auto& wname)
+                     {
+                         return shmatch(pattern, wname);
+                     });
         return names;
     }
 

@@ -16,15 +16,6 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-
-#include <algorithm>
-#include <fstream>
-#include <string>
-#include <cmath>
-#include <chrono>
-
-#include <fmt/format.h>
-
 #include <opm/io/eclipse/ERsm.hpp>
 #include <opm/io/eclipse/ESmry.hpp>
 #include <opm/common/utility/FileSystem.hpp>
@@ -32,6 +23,14 @@
 #include <opm/common/utility/numeric/cmp.hpp>
 #include <opm/common/utility/TimeService.hpp>
 #include <opm/output/eclipse/WStat.hpp>
+
+#include <algorithm>
+#include <chrono>
+#include <cmath>
+#include <fstream>
+#include <string>
+
+#include <fmt/format.h>
 
 namespace Opm {
 namespace EclIO {
@@ -328,20 +327,13 @@ bool cmp(const ESmry& smry, const ERsm& rsm) {
         }
     }
 
-    for (const auto& node : smry.summaryNodeList()) {
+    return std::all_of(smry.summaryNodeList().begin(), smry.summaryNodeList().end(),
+                       [&rsm, &smry](const auto& node) {
         const auto& key = node.unique_key();
 
-        if (key == "TIME")
-            continue;
-
-        if (key == "DAY")
-            continue;
-
-        if (key == "MONTH")
-            continue;
-
-        if (key == "YEAR")
-            continue;
+        if (key == "TIME" || key == "DAY" || key == "MONTH" || key == "YEAR") {
+            return true;
+        }
 
         /*
           The ESmry class and the ERsm class treat block vector keys
@@ -371,9 +363,9 @@ bool cmp(const ESmry& smry, const ERsm& rsm) {
                 }
             }
         }
-    }
 
-    return true;
+        return true;
+    });
 }
 
 }

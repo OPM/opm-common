@@ -455,10 +455,9 @@ BOOST_AUTO_TEST_CASE(Test_all_available) {
     std::vector<std::string> units = { "DAYS", "YEARS", "SM3/SM3", "SM3/DAY",
         "BARSA", "BARSA", "SM3/DAY", "SM3/DAY"};
 
-    std::vector<int> nums (8, 0);
-
     WorkArea work;
     {
+        const std::vector<int> nums (8, 0);
         Opm::EclIO::EclOutput smspec1("TMP1.SMSPEC", false);
         smspec1.write<int>("INTEHEAD", {1,100});
         std::vector<std::string> restart (9,"");

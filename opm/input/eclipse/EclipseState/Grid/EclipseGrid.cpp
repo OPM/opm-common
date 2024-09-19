@@ -1123,9 +1123,7 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
             throw std::invalid_argument("TOPS keyword should have exactly " + std::to_string( this->getNX() * this->getNY() ) + " elements");
 
         {
-            double total_angle = 0;
-            for (auto theta : dthetav)
-                total_angle += theta;
+            double total_angle = std::accumulate(dthetav.begin(), dthetav.end(), 0.0);
 
             if (std::abs( total_angle - 360 ) < 0.01)
                 m_circle = deck.hasKeyword<ParserKeywords::CIRCLE>();

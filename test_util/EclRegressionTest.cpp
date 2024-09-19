@@ -34,14 +34,12 @@
 #include <opm/common/utility/numeric/cmp.hpp>
 
 #include <algorithm>
-#include <chrono>
 #include <cmath>
 #include <filesystem>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <set>
-#include <type_traits>
 #include <typeinfo>
 #include <vector>
 
@@ -327,10 +325,9 @@ void ECLRegressionTest::checkSpecificKeyword(std::vector<std::string>& keywords1
         OPM_THROW(std::runtime_error, "\n" + msg);
     }
 
-    eclArrType arrType;
     if (search1 != keywords1.end()) {
         int ind = std::distance(keywords1.begin(), search1);
-        arrType = arrayType1[ind];
+        const eclArrType arrType = arrayType1[ind];
 
         if (search2 == keywords2.end()) {
             const std::string msg =
@@ -612,8 +609,6 @@ void ECLRegressionTest::results_init()
         init1.loadData();
         init2.loadData();
 
-        std::string reference = "Init file";
-
         auto arrayList1 = init1.getList();
         auto arrayList2 = init2.getList();
 
@@ -637,6 +632,7 @@ void ECLRegressionTest::results_init()
             printComparisonForKeywordLists(keywords1,keywords2, arrayType1, arrayType2);
         } else {
             std::cout << "\nComparing init files \n" << std::endl;
+            std::string reference = "Init file";
 
             if (specificKeyword.empty()) {
                 if (keywords1.size() == keywords2.size() && keywords1 != keywords2) {
@@ -793,15 +789,15 @@ void ECLRegressionTest::results_rst()
             std::vector<std::string> seqnStrList1;
             std::vector<std::string> seqnStrList2;
 
-            for (const auto& val : seqnums1) {
-                seqnStrList1.push_back(std::to_string(val));
-            }
+            std::transform(seqnums1.begin(), seqnums1.end(),
+                           std::back_inserter(seqnStrList1),
+                           [](const auto& val) { return std::to_string(val); });
 
-            for (const auto& val : seqnums2) {
-                seqnStrList2.push_back(std::to_string(val));
-            }
+            std::transform(seqnums2.begin(), seqnums2.end(),
+                           std::back_inserter(seqnStrList2),
+                           [](const auto& val) { return std::to_string(val); });
+
             std::cout << "\nrestart sequences " << std::endl;
-
             printComparisonForKeywordLists(seqnStrList1, seqnStrList2);
             OPM_THROW(std::runtime_error, "\nRestart files not having the same report steps: ");
         }

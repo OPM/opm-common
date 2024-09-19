@@ -28,7 +28,6 @@
 #include <filesystem>
 #include <fstream>
 #include <iterator>
-#include <iomanip>
 #include <numeric>
 #include <string>
 #include <stdexcept>
@@ -165,8 +164,12 @@ EGrid::EGrid(const std::string& filename, const std::string& grid_name)
         auto hostnum = getImpl(hostnum_index, INTE, inte_array, "integer");
         host_cells.reserve(hostnum.size());
 
-        for (auto val : hostnum)
-            host_cells.push_back(val -1);
+        std::transform(hostnum.begin(), hostnum.end(),
+                       std::back_inserter(host_cells),
+                       [](const auto& val)
+                       {
+                           return val - 1;
+                       });
     }
 }
 

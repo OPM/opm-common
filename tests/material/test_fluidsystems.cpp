@@ -93,8 +93,8 @@ void ensureBlackoilApi()
         FluidSystem::initFromState(eclState, schedule);
 #endif
 
-        typedef typename FluidSystem::Scalar Scalar;
-        typedef Opm::BlackOilFluidState<Evaluation, FluidSystem> FluidState;
+        using Scalar = typename FluidSystem::Scalar;
+        using FluidState = Opm::BlackOilFluidState<Evaluation, FluidSystem>;
         FluidState fluidState;
         Evaluation XoG = 0.0;
         Evaluation XwG = 0.0;
@@ -103,21 +103,21 @@ void ensureBlackoilApi()
         Evaluation Rv = 0.0;
 
         // some additional typedefs
-        typedef typename FluidSystem::OilPvt OilPvt;
-        typedef typename FluidSystem::GasPvt GasPvt;
-        typedef typename FluidSystem::WaterPvt WaterPvt;
+        using OilPvt = typename FluidSystem::OilPvt;
+        using GasPvt = typename FluidSystem::GasPvt;
+        using WaterPvt = typename FluidSystem::WaterPvt;
 
         // check the black-oil specific enums
         static_assert(FluidSystem::numPhases == 3, "");
         static_assert(FluidSystem::numComponents == 3, "");
 
-        static_assert(0 <= FluidSystem::oilPhaseIdx && FluidSystem::oilPhaseIdx < 3, "");
-        static_assert(0 <= FluidSystem::gasPhaseIdx && FluidSystem::gasPhaseIdx < 3, "");
-        static_assert(0 <= FluidSystem::waterPhaseIdx && FluidSystem::waterPhaseIdx < 3, "");
+        static_assert(FluidSystem::oilPhaseIdx < 3, "");
+        static_assert(FluidSystem::gasPhaseIdx < 3, "");
+        static_assert(FluidSystem::waterPhaseIdx < 3, "");
 
-        static_assert(0 <= FluidSystem::oilCompIdx && FluidSystem::oilCompIdx < 3, "");
-        static_assert(0 <= FluidSystem::gasCompIdx && FluidSystem::gasCompIdx < 3, "");
-        static_assert(0 <= FluidSystem::waterCompIdx && FluidSystem::waterCompIdx < 3, "");
+        static_assert(FluidSystem::oilCompIdx < 3, "");
+        static_assert(FluidSystem::gasCompIdx < 3, "");
+        static_assert(FluidSystem::waterCompIdx < 3, "");
 
         // check the non-parser initialization
         std::shared_ptr<OilPvt> oilPvt;

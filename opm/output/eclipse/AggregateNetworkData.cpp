@@ -155,11 +155,10 @@ std::vector<int> inobrFunc( const Opm::Schedule&    sched,
     const int used_flag = -9;
     std::vector<int> inlets;
     std::vector<int> outlets;
-    int ind;
 
     for (const auto& branch : branchPtrs) {
         auto dwntr_nd_res = findInVector<std::string>(ntwNdNm, branch->downtree_node());
-        ind = (dwntr_nd_res) ? dwntr_nd_res.value() + 1 : 0 ;
+        int ind = (dwntr_nd_res) ? dwntr_nd_res.value() + 1 : 0 ;
         inlets.push_back(ind);
         auto uptr_nd_res = findInVector<std::string>(ntwNdNm, branch->uptree_node());
         ind = (dwntr_nd_res) ? uptr_nd_res.value() + 1 : 0 ;
@@ -167,12 +166,11 @@ std::vector<int> inobrFunc( const Opm::Schedule&    sched,
     }
 
     int n1 = inlets[0];
-    int ind_br = 0;
     newInobr.push_back(n1 * (-1));
     inlets[0] = used_flag;
 
     while (static_cast<std::size_t>(n1) <= ntwNdNm.size()) {
-        ind_br = next_branch(n1, inlets, outlets);
+        int ind_br = next_branch(n1, inlets, outlets);
         while (ind_br != 0) {
             newInobr.push_back(ind_br);
             if (ind_br > 0) {
@@ -329,12 +327,12 @@ nodeProps nodeRateDensity(const Opm::EclipseState&                  es,
     nodeProps nd_prop;
 
     std::string node_nm = nodeName;
-    bool is_wel_grp = false;
     // loop over downtree branches
     if ((network.has_node(node_nm)) && (network.downtree_branches(node_nm).size() > 0)) {
         for (const auto& br : network.downtree_branches(nodeName)) {
             node_nm = br.downtree_node();
             // check if node is group
+            bool is_wel_grp = false;
             if (sched.hasGroup(node_nm, lookup_step)) {
                 // check if group is a well group
                 const auto& grp = sched.getGroup(node_nm, lookup_step);
@@ -422,11 +420,10 @@ int numberOfBranchesConnToNode(const Opm::Schedule& sched, const std::string& no
 int cumNumberOfBranchesConnToNode(const Opm::Schedule& sched, const std::string& nodeName, const size_t lookup_step)
 {
     auto& network = sched[lookup_step].network();
-    std::size_t ind_name = 0;
-    int cumNoBranches = 1;
     auto result = findInVector<std::string>(network.node_names(), nodeName);
     if (result) {
-        ind_name = result.value();
+        int cumNoBranches = 1;
+        const std::size_t ind_name = result.value();
         if (ind_name == 0) {
             return cumNoBranches;
         } else {

@@ -180,9 +180,8 @@ void checkInitFile(const Deck& deck, const data::Solution& simProps)
         const auto& expect = deck["PERMX"].back().getSIDoubleData();
         auto        permx  = initFile.get<float>("PERMX");
 
-        for (auto& kx : permx) {
-            kx *= 9.869233e-16;
-        }
+        std::transform(permx.begin(), permx.end(), permx.begin(),
+                       [](const auto& kx) { return kx * 9.869233e-16; });
 
         compareErtData(expect, permx, 1e-4);
     }
@@ -217,8 +216,10 @@ void checkRestartFile( int timeStepIdx ) {
 
         if (keywordExists(knownVec, "PRESSURE")) {
             const auto& press = rstFile.getRestartData<float>("PRESSURE", i, 0);
-            for( auto& x : sol.data<double>("PRESSURE") )
-                x /= Metric::Pressure;
+            std::transform(sol.data<double>("PRESSURE").begin(),
+                           sol.data<double>("PRESSURE").end(),
+                           sol.data<double>("PRESSURE").begin(),
+                           [](const auto& x) { return x / Metric::Pressure; });
 
             compareErtData( sol.data<double>("PRESSURE"), press, 1e-4 );
         }

@@ -46,7 +46,6 @@
 
 #include <algorithm>
 #include <cstddef>
-#include <exception>
 #include <iterator>
 #include <stdexcept>
 #include <string>
@@ -146,14 +145,12 @@ namespace {
         }
 
         const auto& udqCfg = sched.getUDQConfig(simStep);
-        std::size_t i_wudq = 0;
-        for (const auto& udq_input : udqCfg.input()) {
-            if (udq_input.var_type() ==  Opm::UDQVarType::WELL_VAR) {
-                i_wudq++;
-            }
-        }
-
-        return i_wudq;
+        const auto input = udqCfg.input();
+        return std::count_if(input.begin(), input.end(),
+                             [](const auto& udq_input)
+                             {
+                                 return udq_input.var_type() == Opm::UDQVarType::WELL_VAR;
+                             });
     }
 
     int noGroupUdqs(const Opm::Schedule& sched,
@@ -220,14 +217,12 @@ namespace {
         }
 
         const auto& udqCfg = sched.getUDQConfig(simStep);
-        std::size_t i_fudq = 0;
-        for (const auto& udq_input : udqCfg.input()) {
-            if (udq_input.var_type() ==  Opm::UDQVarType::FIELD_VAR) {
-                i_fudq++;
-            }
-        }
-
-        return i_fudq;
+        const auto input = udqCfg.input();
+        return std::count_if(input.begin(), input.end(),
+                             [](const auto& udq_input)
+                             {
+                                 return udq_input.var_type() == Opm::UDQVarType::FIELD_VAR;
+                             });
     }
 
     int numMultiSegWells(const ::Opm::Schedule& sched,

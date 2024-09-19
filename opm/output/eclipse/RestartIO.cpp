@@ -168,8 +168,12 @@ namespace {
             xwel.push_back( well.thp );
             xwel.push_back( well.temperature );
 
-            for (auto phase : phases)
-                xwel.push_back(well.rates.get(phase));
+            std::transform(phases.begin(), phases.end(),
+                           std::back_inserter(xwel),
+                           [&well](const auto& phase)
+                           {
+                               return well.rates.get(phase);
+                           });
 
             for (const auto& sc : sched_well.getConnections()) {
                 const auto i = sc.getI(), j = sc.getJ(), k = sc.getK();
@@ -202,8 +206,12 @@ namespace {
                 xwel.push_back(connection->cell_saturation_gas);
                 xwel.push_back(connection->effective_Kh);
 
-                for (auto phase : phases)
-                    xwel.push_back(connection->rates.get(phase));
+                std::transform(phases.begin(), phases.end(),
+                               std::back_inserter(xwel),
+                               [&connection](const auto& phase)
+                               {
+                                   return connection->rates.get(phase);
+                               });
             }
         }
 

@@ -1073,9 +1073,8 @@ void keywordR(SummaryConfig::keyword_list& list,
         }
     }
     else {
-        for (const auto& region_id : context.regions.at(region_name.value())) {
-            regions.push_back(region_id);
-        }
+        const auto cregions = context.regions.at(region_name.value());
+        regions.assign(cregions.begin(), cregions.end());
     }
 
     // See comment on function roew() in Summary.cpp for this weirdness.
@@ -1996,12 +1995,13 @@ const SummaryConfigNode& SummaryConfig::operator[](std::size_t index) const {
 }
 
 
-bool SummaryConfig::match(const std::string& keywordPattern) const {
-    for (const auto& keyword : this->short_keywords) {
-        if (shmatch(keywordPattern, keyword))
-            return true;
-    }
-    return false;
+bool SummaryConfig::match(const std::string& keywordPattern) const
+{
+    return std::any_of(this->short_keywords.begin(), this->short_keywords.end(),
+                        [&keywordPattern](const auto& keyword)
+                        {
+                            return shmatch(keywordPattern, keyword);
+                        });
 }
 
 SummaryConfig::keyword_list

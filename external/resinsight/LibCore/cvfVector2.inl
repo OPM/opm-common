@@ -34,6 +34,7 @@
 //
 //##################################################################################################
 
+#include <type_traits>
 
 namespace external {
 namespace cvf {
@@ -385,7 +386,9 @@ inline S Vector2<S>::lengthSquared() const
 template<typename S>
 bool Vector2<S>::setLength(S newLength)
 {
-    CVF_ASSERT(newLength >= 0);
+    if constexpr (std::is_signed_v<S>) {
+        CVF_ASSERT(newLength >= 0);
+    }
 
     S currLen = length();
 

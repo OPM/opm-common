@@ -40,6 +40,7 @@
 
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
 
+#include <algorithm>
 #include <cstddef>
 #include <initializer_list>
 #include <stdexcept>
@@ -571,9 +572,8 @@ namespace {
         auto tran = std::vector<double>{};
         tran.reserve(nnc.size());
 
-        for (const auto& nd : nnc) {
-            tran.push_back(nd.trans);
-        }
+        std::transform(nnc.begin(), nnc.end(), std::back_inserter(tran),
+                       [](const auto& nd) { return nd.trans; });
 
         units.from_si(::Opm::UnitSystem::measure::transmissibility, tran);
 

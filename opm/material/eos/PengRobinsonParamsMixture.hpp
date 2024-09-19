@@ -210,7 +210,7 @@ public:
      */
     const PureParams& operator[](unsigned compIdx) const
     {
-        assert(0 <= compIdx && compIdx < numComponents);
+        assert(compIdx < numComponents);
         return pureParams_[compIdx];
     }
 

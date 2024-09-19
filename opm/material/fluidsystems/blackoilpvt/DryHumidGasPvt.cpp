@@ -99,8 +99,6 @@ initFromState(const EclipseState& eclState, const Schedule&)
 
         auto& gasMu = gasMu_[regionIdx];
         auto& invGasB = inverseGasB_[regionIdx];
-        auto& invSatGasB = inverseSaturatedGasB_[regionIdx];
-        auto& invSatGasBMu = inverseSaturatedGasBMu_[regionIdx];
         auto& waterVaporizationFac = saturatedWaterVaporizationFactorTable_[regionIdx];
 
         waterVaporizationFac.setXYArrays(saturatedTable.numRows(),
@@ -139,6 +137,8 @@ initFromState(const EclipseState& eclState, const Schedule&)
 
         {
             std::vector<double> tmpPressure =  saturatedTable.getColumn("PG").vectorCopy( );
+            auto& invSatGasB = inverseSaturatedGasB_[regionIdx];
+            auto& invSatGasBMu = inverseSaturatedGasBMu_[regionIdx];
 
             invSatGasB.setXYContainers(tmpPressure, invSatGasBArray);
             invSatGasBMu.setXYContainers(tmpPressure, invSatGasBMuArray);

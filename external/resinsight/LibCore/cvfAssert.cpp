@@ -85,7 +85,9 @@ public:
 
 private:
     static void reportToConsole(const char* fileName, int lineNumber, const char* expr, const char* msg);
+#if 0
     static int  askForUserActionUsingConsole();
+#endif
 #ifdef WIN32
     static void winCreateConsoleAndRedirectIO(bool redirectInput);
 #endif
@@ -155,6 +157,7 @@ void AssertHandlerConsole::reportToConsole(const char* fileName, int lineNumber,
 /// 
 /// \return  One of the USERACTION_ constants
 //--------------------------------------------------------------------------------------------------
+#if 0
 int AssertHandlerConsole::askForUserActionUsingConsole()
 {
 #ifdef WIN32
@@ -200,6 +203,7 @@ int AssertHandlerConsole::askForUserActionUsingConsole()
 
     return USERACTION_ABORT;
 }
+#endif
 
 
 //--------------------------------------------------------------------------------------------------
@@ -276,7 +280,7 @@ public:
 
 private:
     static int  handleUsingDialog(const char* fileName, int lineNumber, const char* expr, const char* msg);
-#ifdef _DEBUG
+#if defined _DEBUG && 0
     static int  handleUsingCrtDbgReport(const char* fileName, int lineNumber, const char* expr, const char* msg);
 #endif
 };
@@ -383,7 +387,7 @@ int AssertHandlerWinDialog::handleUsingDialog(const char* fileName, int lineNumb
 /// This function never returns if the user chooses 'Abort'
 /// Note that the underlying function is only available in debug builds
 //--------------------------------------------------------------------------------------------------
-#if defined WIN32 && defined _DEBUG
+#if defined WIN32 && defined _DEBUG && 0
 int AssertHandlerWinDialog::handleUsingCrtDbgReport(const char* fileName, int lineNumber, const char* expr, const char* msg)
 {
     // Create message combining expression and message

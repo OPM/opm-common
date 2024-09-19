@@ -36,22 +36,22 @@ void Spline<Scalar>::printCSV(Scalar xi0, Scalar xi1,
     Scalar x0 = std::min(xi0, xi1);
     Scalar x1 = std::max(xi0, xi1);
     const size_t n = numSamples() - 1;
+
     for (size_t i = 0; i <= k; ++i) {
-        double x = i*(x1 - x0)/k + x0;
-        double x_p1 = x + (x1 - x0)/k;
+        const double x = i * (x1 - x0) / k + x0;
         double y;
         double dy_dx;
-        double mono = 1;
+        double mono;
         if (!applies(x)) {
             if (x < x_(0)) {
                 dy_dx = evalDerivative(x_(0));
-                y = (x - x_(0))*dy_dx + y_(0);
-                mono = (dy_dx>0)?1:-1;
+                y = (x - x_(0)) * dy_dx + y_(0);
+                mono = dy_dx > 0 ? 1 : -1;
             }
             else if (x > x_(n)) {
                 dy_dx = evalDerivative(x_(n));
-                y = (x - x_(n))*dy_dx + y_(n);
-                mono = (dy_dx>0)?1:-1;
+                y = (x - x_(n)) * dy_dx + y_(n);
+                mono = dy_dx > 0 ? 1 : -1;
             }
             else {
                 throw std::runtime_error("The sampling points given to a spline must be sorted by their x value!");
@@ -60,6 +60,7 @@ void Spline<Scalar>::printCSV(Scalar xi0, Scalar xi1,
         else {
             y = eval(x);
             dy_dx = evalDerivative(x);
+            const double x_p1 = x + (x1 - x0) / k;
             mono = monotonic(x, x_p1, /*extrapolate=*/true);
         }
 

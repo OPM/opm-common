@@ -268,16 +268,21 @@ namespace {
         {
             const auto dflt_num = Opm::EclIO::SummaryNode::default_number;
 
-            // Recall: Cannot use emplace_back() for PODs.
-            for (const auto& vector : vectors) {
-                entities.push_back({ kwpref + vector.kw, cat,
-                                     vector.type, name, dflt_num, {}, {} });
-            }
+            std::string kwp(1, kwpref);
+            auto toNode =
+                [&kwp, &cat, &dflt_num, &name](const auto& vector) -> Opm::EclIO::SummaryNode
+                {
+                    return {kwp + vector.kw, cat,
+                            vector.type, name, dflt_num, {}, {} };
+                };
 
-            for (const auto& extra_vector : extra_vectors) {
-                entities.push_back({ extra_vector.kw, cat,
-                                     extra_vector.type, name, dflt_num, {}, {} });
-            }
+            // Recall: Cannot use emplace_back() for PODs.
+            std::transform(vectors.begin(), vectors.end(),
+                           std::back_inserter(entities), toNode);
+
+            kwp = "";
+            std::transform(extra_vectors.begin(), extra_vectors.end(),
+                           std::back_inserter(entities), toNode);
         };
 
         for (const auto& well_name : sched.wellNames()) {
@@ -285,8 +290,16 @@ namespace {
 
             const auto& well = sched.getWellatEnd(well_name);
             for (const auto& conn : well.getConnections()) {
-                for (const auto& conn_vector : extra_connection_vectors)
-                    entities.push_back( {conn_vector.kw, Cat::Connection, conn_vector.type, well.name(), static_cast<int>(conn.global_index() + 1), {}, {}} );
+                std::transform(extra_connection_vectors.begin(), extra_connection_vectors.end(),
+                               std::back_inserter(entities),
+                               [&well, &conn](const auto& conn_vector) -> Opm::EclIO::SummaryNode
+                               {
+                                   return {conn_vector.kw,
+                                           Cat::Connection,
+                                           conn_vector.type,
+                                           well.name(),
+                                           static_cast<int>(conn.global_index() + 1), {}, {}};
+                               });
             }
         }
 
@@ -321,10 +334,13 @@ namespace {
             const auto  nSeg  = static_cast<int>(well.getSegments().size());
 
             for (auto segID = 0*nSeg + 1; segID <= nSeg; ++segID) {
-                for (const auto& vector : vectors) {
-                    entities.push_back({ vector.kw, Cat::Segment,
-                                         vector.type, wname, segID, {}, {} });
-                }
+                std::transform(vectors.begin(), vectors.end(),
+                               std::back_inserter(entities),
+                               [&wname, &segID](const auto& vector) -> Opm::EclIO::SummaryNode
+                               {
+                                   return {vector.kw, Cat::Segment,
+                                           vector.type, wname, segID, {}, {} };
+                               });
             }
         };
 
@@ -358,10 +374,13 @@ namespace {
         using Cat = Opm::EclIO::SummaryNode::Category;
 
         for (const auto& aquiferID : aquiferIDs) {
-            for (const auto& vector : vectors) {
-                entities.push_back({ vector.kw, Cat::Aquifer,
-                                     vector.type, "", aquiferID, {}, {} });
-            }
+            std::transform(vectors.begin(), vectors.end(),
+                           std::back_inserter(entities),
+                           [&aquiferID](const auto& vector) -> Opm::EclIO::SummaryNode
+                           {
+                               return {vector.kw, Cat::Aquifer,
+                                       vector.type, "", aquiferID, {}, {}};
+                           });
         }
 
         return entities;
@@ -381,10 +400,13 @@ namespace {
         using Cat = Opm::EclIO::SummaryNode::Category;
 
         for (const auto& aquiferID : aquiferIDs) {
-            for (const auto& vector : vectors) {
-                entities.push_back({ vector.kw, Cat::Aquifer,
-                                     vector.type, "", aquiferID, {}, {} });
-            }
+            std::transform(vectors.begin(), vectors.end(),
+                           std::back_inserter(entities),
+                           [&aquiferID](const auto& vector) -> Opm::EclIO::SummaryNode
+                           {
+                               return {vector.kw, Cat::Aquifer,
+                                       vector.type, "", aquiferID, {}, {}};
+                           });
         }
 
         return entities;
@@ -1570,10 +1592,15 @@ inline quantity abandoned_well( const fn_args& args ) {
 
 inline quantity res_vol_production_target( const fn_args& args )
 {
-    double sum = 0.0;
-    for (const auto* sched_well : args.schedule_wells)
-        if (sched_well->getProductionProperties().predictionMode)
-            sum += sched_well->getProductionProperties().ResVRate.getSI();
+    const double sum = std::accumulate(args.schedule_wells.begin(),
+                                       args.schedule_wells.end(), 0.0,
+                                       [](const auto acc, const auto& sched_well)
+                                       {
+                                           return
+                                                sched_well->getProductionProperties().predictionMode
+                                                ? acc + sched_well->getProductionProperties().ResVRate.getSI()
+                                                : acc;
+                                       });
 
     return { sum, measure::rate };
 }
@@ -2954,9 +2981,12 @@ find_group_wells(const Opm::Schedule& schedule,
         const auto& group = schedState.groups.get(downtree[i]);
 
         if (group.wellgroup()) {
-            for (const auto& wname : group.wells()) {
-                groupwells.push_back(& schedState.wells.get(wname));
-            }
+            std::transform(group.wells().begin(), group.wells().end(),
+                           std::back_inserter(groupwells),
+                           [&schedState](const auto& wname)
+                           {
+                               return &schedState.wells.get(wname);
+                           });
         }
         else {
             const auto& children = group.groups();
@@ -2976,9 +3006,13 @@ find_field_wells(const Opm::Schedule& schedule,
     auto fieldwells = std::vector<const Opm::Well*>{};
 
     const auto& wells = schedule[sim_step].wells;
-    for (const auto& well : wells.keys()) {
-        fieldwells.push_back(&wells.get(well));
-    }
+    const auto keys = wells.keys();
+    std::transform(keys.begin(), keys.end(),
+                   std::back_inserter(fieldwells),
+                   [&wells](const auto& well)
+                   {
+                       return &wells.get(well);
+                   });
 
     sort_wells_by_insert_index(fieldwells);
 
@@ -4773,9 +4807,12 @@ namespace {
         const auto newNodes = smcfg
             .registerRequisiteUDQorActionSummaryKeys(extraKeys, es, sched);
 
-        for (const auto& newNode : newNodes) {
-            nodes.push_back(translate_node(newNode));
-        }
+        std::transform(newNodes.begin(), newNodes.end(),
+                       std::back_inserter(nodes),
+                       [](const auto& newNode)
+                       {
+                           return translate_node(newNode);
+                       });
 
         return nodes;
     }

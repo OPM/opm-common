@@ -25,6 +25,7 @@
 
 #include <opm/common/utility/String.hpp>
 
+#include <algorithm>
 #include <initializer_list>
 #include <stdexcept>
 #include <string>
@@ -34,15 +35,12 @@ namespace {
                     const char*                               suffix,
                     const std::initializer_list<std::string>& base)
     {
-        for (const auto& kw : base) {
-            for (const auto* p : {"", "I"}) {
-                if (deck.hasKeyword(p + kw + suffix)) {
-                    return true;
-                }
-            }
-        }
-
-        return false;
+        return std::any_of(base.begin(), base.end(),
+                           [&deck, suffix](const auto& kw)
+                           {
+                               return deck.hasKeyword(kw + suffix) ||
+                                      deck.hasKeyword("I" + kw + suffix);
+                           });
     }
 
     bool hasScaling(const Opm::Deck&                          deck,
@@ -51,14 +49,11 @@ namespace {
         const auto direction = std::initializer_list<const char*> {
             "", "X-", "X", "Y-", "Y", "Z-", "Z"
         };
-
-        for (const auto* suffix : direction) {
-            if (hasScaling(deck, suffix, base)) {
-                return true;
-            }
-        }
-
-        return false;
+        return std::any_of(direction.begin(), direction.end(),
+                           [&deck, &base](const auto& suffix)
+                           {
+                               return hasScaling(deck, suffix, base);
+                           });
     }
 
     bool hasHorzScaling(const Opm::Deck& deck)
