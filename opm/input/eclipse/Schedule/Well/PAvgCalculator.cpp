@@ -655,9 +655,12 @@ void PAvgCalculator<Scalar>::pruneInactiveWBPCells(const std::vector<bool>& isAc
         auto newWBPCells = std::vector<std::size_t>{};
         newWBPCells.reserve(activeIx.size());
 
-        for (const auto origCell : activeIx) {
-            newWBPCells.push_back(this->contributingCells_[origCell]);
-        }
+        std::transform(activeIx.begin(), activeIx.end(),
+                       std::back_inserter(newWBPCells),
+                       [this](const auto& origCell)
+                       {
+                           return this->contributingCells_[origCell];
+                       });
 
         this->contributingCells_.swap(newWBPCells);
     }
@@ -850,9 +853,12 @@ void PAvgCalculator<Scalar>::pruneInactiveConnections(const std::vector<bool>& i
 
     // 3. Renumber set of open connections to match new sequence of active
     // connections_.
-    for (auto& openConnID : this->openConns_) {
-        openConnID = newConnIDs[openConnID];
-    }
+    std::transform(this->openConns_.begin(), this->openConns_.end(),
+                   this->openConns_.begin(),
+                   [&newConnIDs](const auto& openConnID)
+                   {
+                       return newConnIDs[openConnID];
+                   });
 }
 
 template<class Scalar>

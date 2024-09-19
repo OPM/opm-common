@@ -26,15 +26,14 @@
 
 #include <algorithm>
 #include <chrono>
+#include <cmath>
+#include <cstring>
+#include <fstream>
 #include <filesystem>
 #include <iterator>
 #include <stdexcept>
 #include <string>
-#include <fstream>
-#include <cmath>
-#include <cstring>
 #include <thread>
-
 
 namespace {
 
@@ -241,8 +240,12 @@ std::vector<float> ExtESmry::get_at_rstep(const std::string& name)
     std::vector<float> rs_vect;
     rs_vect.reserve(m_seqIndex.size());
 
-    for (auto r : m_seqIndex)
-        rs_vect.push_back(full_vect[r]);
+    std::transform(m_seqIndex.begin(), m_seqIndex.end(),
+                   std::back_inserter(rs_vect),
+                   [&full_vect](const auto& r)
+                   {
+                       return full_vect[r];
+                   });
 
     return rs_vect;
 }
@@ -583,12 +586,18 @@ const std::vector<float>& ExtESmry::get(const std::string& name)
     return m_vectorData[index];
 }
 
-std::vector<Opm::time_point> ExtESmry::dates() {
+std::vector<Opm::time_point> ExtESmry::dates()
+{
     double time_unit = 24 * 3600;
     std::vector<Opm::time_point> d;
 
-    for (const auto& t : this->get("TIME"))
-        d.push_back( this->m_startdat + std::chrono::duration_cast<std::chrono::seconds>( std::chrono::duration<double, std::chrono::seconds::period>( t * time_unit)));
+    const auto time = this->get("TIME");
+    std::transform(time.begin(), time.end(), std::back_inserter(d),
+                  [this, time_unit](const auto& t)
+                  {
+                      using Seconds = std::chrono::duration<double, std::chrono::seconds::period>;
+                      return this->m_startdat + std::chrono::duration_cast<std::chrono::seconds>(Seconds{t * time_unit});
+                  });
 
     return d;
 }

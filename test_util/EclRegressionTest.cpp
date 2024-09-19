@@ -34,14 +34,12 @@
 #include <opm/common/utility/numeric/cmp.hpp>
 
 #include <algorithm>
-#include <chrono>
 #include <cmath>
 #include <filesystem>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <set>
-#include <type_traits>
 #include <typeinfo>
 #include <vector>
 
@@ -791,15 +789,15 @@ void ECLRegressionTest::results_rst()
             std::vector<std::string> seqnStrList1;
             std::vector<std::string> seqnStrList2;
 
-            for (const auto& val : seqnums1) {
-                seqnStrList1.push_back(std::to_string(val));
-            }
+            std::transform(seqnums1.begin(), seqnums1.end(),
+                           std::back_inserter(seqnStrList1),
+                           [](const auto& val) { return std::to_string(val); });
 
-            for (const auto& val : seqnums2) {
-                seqnStrList2.push_back(std::to_string(val));
-            }
+            std::transform(seqnums2.begin(), seqnums2.end(),
+                           std::back_inserter(seqnStrList2),
+                           [](const auto& val) { return std::to_string(val); });
+
             std::cout << "\nrestart sequences " << std::endl;
-
             printComparisonForKeywordLists(seqnStrList1, seqnStrList2);
             OPM_THROW(std::runtime_error, "\nRestart files not having the same report steps: ");
         }

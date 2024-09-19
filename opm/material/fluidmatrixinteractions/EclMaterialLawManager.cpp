@@ -33,6 +33,8 @@
 #include <opm/material/fluidmatrixinteractions/EclEpsGridProperties.hpp>
 #include <opm/material/fluidstates/SimpleModularFluidState.hpp>
 
+#include <algorithm>
+
 namespace Opm {
 
 template<class TraitsT>
@@ -76,9 +78,12 @@ initFromState(const EclipseState& eclState)
             stoneEtas_.clear();
             stoneEtas_.reserve(numSatRegions);
 
-            for (const auto& table : stone1exTables) {
-                stoneEtas_.push_back(table.eta);
-            }
+            std::transform(stone1exTables.begin(), stone1exTables.end(),
+                           std::back_inserter(stoneEtas_),
+                           [](const auto& table)
+                           {
+                               return table.eta;
+                           });
         }
         
         const auto& ppcwmaxTables = tables.getPpcwmax();

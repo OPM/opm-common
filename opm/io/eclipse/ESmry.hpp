@@ -140,9 +140,12 @@ private:
         std::vector<T> result;
         result.reserve(seqIndex.size());
 
-        for (const auto& ind : seqIndex){
-            result.push_back(full_vector[ind]);
-        }
+        std::transform(seqIndex.begin(), seqIndex.end(),
+                       std::back_inserter(result),
+                       [&full_vector](const auto& ind)
+                       {
+                           return full_vector[ind];
+                       });
 
         return result;
     }

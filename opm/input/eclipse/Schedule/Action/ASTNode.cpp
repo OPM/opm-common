@@ -52,9 +52,12 @@ namespace {
     {
         std::vector<std::string> strings;
 
-        for (const auto& qs : quoted_strings) {
-            strings.push_back(strip_quotes(qs));
-        }
+        std::transform(quoted_strings.begin(), quoted_strings.end(),
+                       std::back_inserter(strings),
+                       [](const std::string& qs)
+                       {
+                           return strip_quotes(qs);
+                       });
 
         return strings;
     }

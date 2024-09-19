@@ -58,6 +58,7 @@
 
 #include <opm/common/utility/TimeService.hpp>
 
+#include <algorithm>
 #include <string>
 #include <utility>
 #include <vector>
@@ -1785,9 +1786,9 @@ BOOST_AUTO_TEST_CASE(WELL_POD)
     std::vector<Opm::RestartIO::RstWell> wells;
 
     auto zwel = std::vector<std::string>{};
-    for (const auto& s8 : wellData.getZWell()) {
-        zwel.push_back(s8.c_str());
-    }
+    std::transform(wellData.getZWell().begin(), wellData.getZWell().end(),
+                   std::back_inserter(zwel),
+                   [](const auto& s8) { return s8.c_str(); });
 
     for (auto iw = 0; iw < header.num_wells; ++iw) {
         std::size_t zwel_offset = header.nzwelz * iw;

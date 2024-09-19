@@ -65,6 +65,7 @@
 
 #include <tests/WorkArea.hpp>
 
+#include <algorithm>
 #include <cstddef>
 #include <memory>
 #include <string>
@@ -514,8 +515,8 @@ BOOST_AUTO_TEST_CASE(group_test)
 
     Opm::UnitSystem unit_system(Opm::UnitSystem::UnitType::UNIT_TYPE_METRIC);
     std::vector<std::string> zgrp;
-    for (const auto& s8: zgrp8)
-        zgrp.push_back(s8.c_str());
+    std::transform(zgrp8.begin(), zgrp8.end(), std::back_inserter(zgrp),
+                   [](const auto& s8) { return s8.c_str(); });
 
     Opm::RestartIO::RstHeader header(simCase.es.runspec(), unit_system,ih,lh,dh);
     for (int ig=0; ig < header.ngroup; ig++) {

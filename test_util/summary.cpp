@@ -17,11 +17,11 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <algorithm>
 #include <cmath>
 #include <filesystem>
 #include <iomanip>
 #include <iostream>
-#include <tuple>
 #include <getopt.h>
 #include <sstream>
 
@@ -198,8 +198,8 @@ int main(int argc, char **argv) {
     std::vector<std::vector<float>> smryData;
     std::vector<int> width;
 
-    for (const auto& name : smryList)
-        width.push_back(name.size());
+    std::transform(smryList.begin(), smryList.end(), std::back_inserter(width),
+                   [](const auto& name) { return name.size(); });
 
     for (const auto& key : smryList) {
         std::vector<float> vect;
