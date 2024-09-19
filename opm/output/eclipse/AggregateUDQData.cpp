@@ -93,49 +93,29 @@ namespace {
     // or divide
     bool isTokenTypeBinaryMulDivOp(const Opm::UDQTokenType token)
     {
-        bool type = false;
-
         const auto type_1 = std::array {
             Opm::UDQTokenType::binary_op_div,
             Opm::UDQTokenType::binary_op_mul,
         };
 
-        for (const auto& tok_type : type_1) {
-            if (token == tok_type) {
-                type = true;
-                break;
-            }
-        }
-
-        return type;
+        return std::find(type_1.begin(), type_1.end(), token) != type_1.end();
     }
 
     // function to return true if token is a binary operator: type add or
     // subtract
     bool isTokenTypeBinaryAddSubOp(const Opm::UDQTokenType token)
     {
-        bool type = false;
-
         const auto type_1 = std::array {
             Opm::UDQTokenType::binary_op_add,
             Opm::UDQTokenType::binary_op_sub,
         };
 
-        for (const auto& tok_type : type_1) {
-            if (token == tok_type) {
-                type = true;
-                break;
-            }
-        }
-
-        return type;
+        return std::find(type_1.begin(), type_1.end(), token) != type_1.end();
     }
 
     // function to return true if token is a binary union operator
     bool isTokenTypeBinaryUnionOp(const Opm::UDQTokenType token)
     {
-        bool type = false;
-
         const auto type_1 = std::array {
             Opm::UDQTokenType::binary_op_uadd,
             Opm::UDQTokenType::binary_op_umul,
@@ -143,34 +123,18 @@ namespace {
             Opm::UDQTokenType::binary_op_umax,
         };
 
-        for (const auto& tok_type : type_1) {
-            if (token == tok_type) {
-                type = true;
-                break;
-            }
-        }
-
-        return type;
+        return std::find(type_1.begin(), type_1.end(), token) != type_1.end();
     }
 
     // function to return true if token is an open or close parenthesis token
     bool isTokenTypeParen(const Opm::UDQTokenType token)
     {
-        bool type = false;
-
         const auto type_1 = std::array {
             Opm::UDQTokenType::open_paren,
             Opm::UDQTokenType::close_paren,
         };
 
-        for (const auto& tok_type : type_1) {
-            if (token == tok_type) {
-                type = true;
-                break;
-            }
-        }
-
-        return type;
+        return std::find(type_1.begin(), type_1.end(), token) != type_1.end();
     }
 
     // A function to return true if the token is an operator
