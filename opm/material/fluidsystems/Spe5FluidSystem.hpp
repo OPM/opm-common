@@ -162,7 +162,7 @@ public:
             "C20"
         };
 
-        assert(0 <= compIdx && compIdx < numComponents);
+        assert(compIdx < numComponents);
         return name[compIdx];
     }
 
