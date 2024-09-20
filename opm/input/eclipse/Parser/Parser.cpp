@@ -1620,12 +1620,15 @@ bool parseState( ParserState& parserState, const Parser& parser ) {
         return m_deckParserKeywords.size();
     }
 
-    const ParserKeyword* Parser::matchingKeyword(const std::string_view& name) const {
-        for (auto iter = m_wildCardKeywords.begin(); iter != m_wildCardKeywords.end(); ++iter) {
-            if (iter->second->matches(name))
-                return iter->second;
-        }
-        return nullptr;
+    const ParserKeyword* Parser::matchingKeyword(const std::string_view& name) const
+    {
+        const auto it = std::find_if(m_wildCardKeywords.begin(),
+                                     m_wildCardKeywords.end(),
+                                     [&name](const auto& wild)
+                                     {
+                                         return wild.second->matches(name);
+                                     });
+        return it != m_wildCardKeywords.end() ? it->second : nullptr;
     }
 
     bool Parser::hasWildCardKeyword(const std::string& internalKeywordName) const {
