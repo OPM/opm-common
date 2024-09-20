@@ -33,6 +33,8 @@
 #include <opm/material/common/Valgrind.hpp>
 #include <opm/material/common/MathToolbox.hpp>
 
+#include <opm/common/utility/gpuDecorators.hpp>
+
 #include <cassert>
 #include <cmath>
 #include <iosfwd>
@@ -49,8 +51,11 @@ namespace Opm {
  * "Uniform on the X-axis" means that all Y sampling points must be located along a line
  * for this value. This class can be used when the sampling points are calculated at run
  * time.
+ *
+ * By default the tabulated data is stored in std::vectors, opting out of this is usually done
+ * with GPUBuffers and Views
  */
-template <class Scalar>
+template <class Scalar, template<class> class ContainerT = std::vector>
 class UniformXTabulated2DFunction
 {
 public:
@@ -72,13 +77,13 @@ public:
         Vertical
     };
 
-    explicit UniformXTabulated2DFunction(const InterpolationPolicy interpolationGuide = Vertical)
+    OPM_HOST_DEVICE explicit UniformXTabulated2DFunction(const InterpolationPolicy interpolationGuide = Vertical)
         : interpolationGuide_(interpolationGuide)
     { }
 
-    UniformXTabulated2DFunction(const std::vector<Scalar>& xPos,
-                                const std::vector<Scalar>& yPos,
-                                const std::vector<std::vector<SamplePoint>>& samples,
+    OPM_HOST_DEVICE UniformXTabulated2DFunction(const ContainerT<Scalar>& xPos,
+                                const ContainerT<Scalar>& yPos,
+                                const ContainerT<ContainerT<SamplePoint>>& samples,
                                 InterpolationPolicy interpolationGuide)
         : samples_(samples)
         , xPos_(xPos)
@@ -89,83 +94,83 @@ public:
     /*!
      * \brief Returns the minimum of the X coordinate of the sampling points.
      */
-    Scalar xMin() const
+    OPM_HOST_DEVICE Scalar xMin() const
     { return xPos_.front(); }
 
     /*!
      * \brief Returns the maximum of the X coordinate of the sampling points.
      */
-    Scalar xMax() const
+    OPM_HOST_DEVICE Scalar xMax() const
     { return xPos_.back(); }
 
     /*!
      * \brief Returns the value of the X coordinate of the sampling points.
      */
-    Scalar xAt(size_t i) const
+    OPM_HOST_DEVICE Scalar xAt(size_t i) const
     { return xPos_[i]; }
 
     /*!
      * \brief Returns the value of the Y coordinate of a sampling point.
      */
-    Scalar yAt(size_t i, size_t j) const
+    OPM_HOST_DEVICE Scalar yAt(size_t i, size_t j) const
     { return std::get<1>(samples_[i][j]); }
 
     /*!
      * \brief Returns the value of a sampling point.
      */
-    Scalar valueAt(size_t i, size_t j) const
+    OPM_HOST_DEVICE Scalar valueAt(size_t i, size_t j) const
     { return std::get<2>(samples_[i][j]); }
 
     /*!
      * \brief Returns the number of sampling points in X direction.
      */
-    size_t numX() const
+    OPM_HOST_DEVICE size_t numX() const
     { return xPos_.size(); }
 
     /*!
      * \brief Returns the minimum of the Y coordinate of the sampling points for a given column.
      */
-    Scalar yMin(unsigned i) const
+    OPM_HOST_DEVICE Scalar yMin(unsigned i) const
     { return std::get<1>(samples_.at(i).front()); }
 
     /*!
      * \brief Returns the maximum of the Y coordinate of the sampling points for a given column.
      */
-    Scalar yMax(unsigned i) const
+    OPM_HOST_DEVICE Scalar yMax(unsigned i) const
     { return std::get<1>(samples_.at(i).back()); }
 
     /*!
      * \brief Returns the number of sampling points in Y direction a given column.
      */
-    size_t numY(unsigned i) const
+    OPM_HOST_DEVICE size_t numY(unsigned i) const
     { return samples_.at(i).size(); }
 
     /*!
      * \brief Return the position on the x-axis of the i-th interval.
      */
-    Scalar iToX(unsigned i) const
+    OPM_HOST_DEVICE Scalar iToX(unsigned i) const
     {
         assert(i < numX());
 
         return xPos_.at(i);
     }
 
-    const std::vector<std::vector<SamplePoint>>& samples() const
+    OPM_HOST_DEVICE const ContainerT<ContainerT<SamplePoint>>& samples() const
     {
         return samples_;
     }
 
-    const std::vector<Scalar>& xPos() const
+    OPM_HOST_DEVICE const ContainerT<Scalar>& xPos() const
     {
         return xPos_;
     }
 
-    const std::vector<Scalar>& yPos() const
+    OPM_HOST_DEVICE const ContainerT<Scalar>& yPos() const
     {
         return yPos_;
     }
 
-    InterpolationPolicy interpolationGuide() const
+    OPM_HOST_DEVICE InterpolationPolicy interpolationGuide() const
     {
         return interpolationGuide_;
     }
@@ -173,7 +178,7 @@ public:
     /*!
      * \brief Return the position on the y-axis of the j-th interval.
       */
-    Scalar jToY(unsigned i, unsigned j) const
+    OPM_HOST_DEVICE Scalar jToY(unsigned i, unsigned j) const
     {
         assert(i < numX());
         assert(size_t(j) < samples_[i].size());
@@ -185,7 +190,7 @@ public:
      * \brief Return the interval index of a given position on the x-axis.
      */
     template <class Evaluation>
-    unsigned xSegmentIndex(const Evaluation& x,
+    OPM_HOST_DEVICE unsigned xSegmentIndex(const Evaluation& x,
                            [[maybe_unused]] bool extrapolate = false) const
     {
         assert(extrapolate || (xMin() <= x && x <= xMax()));
@@ -222,7 +227,7 @@ public:
      * the range of the segment. In particular this happens for the extrapolation case.
      */
     template <class Evaluation>
-    Evaluation xToAlpha(const Evaluation& x, unsigned segmentIdx) const
+    OPM_HOST_DEVICE Evaluation xToAlpha(const Evaluation& x, unsigned segmentIdx) const
     {
         Scalar x1 = xPos_[segmentIdx];
         Scalar x2 = xPos_[segmentIdx + 1];
@@ -233,7 +238,7 @@ public:
      * \brief Return the interval index of a given position on the y-axis.
      */
     template <class Evaluation>
-    unsigned ySegmentIndex(const Evaluation& y, unsigned xSampleIdx,
+    OPM_HOST_DEVICE unsigned ySegmentIndex(const Evaluation& y, unsigned xSampleIdx,
                            [[maybe_unused]] bool extrapolate = false) const
     {
         assert(xSampleIdx < numX());
@@ -271,7 +276,7 @@ public:
      * the range of the segment. In particular this happens for the extrapolation case.
      */
     template <class Evaluation>
-    Evaluation yToBeta(const Evaluation& y, unsigned xSampleIdx, unsigned ySegmentIdx) const
+    OPM_HOST_DEVICE Evaluation yToBeta(const Evaluation& y, unsigned xSampleIdx, unsigned ySegmentIdx) const
     {
         assert(xSampleIdx < numX());
         assert(ySegmentIdx < numY(xSampleIdx) - 1);
@@ -288,7 +293,7 @@ public:
      * \brief Returns true iff a coordinate lies in the tabulated range
      */
     template <class Evaluation>
-    bool applies(const Evaluation& x, const Evaluation& y) const
+    OPM_HOST_DEVICE bool applies(const Evaluation& x, const Evaluation& y) const
     {
         if (x < xMin() || xMax() < x)
             return false;
@@ -316,7 +321,7 @@ public:
      * range, a \c Opm::NumericalIssue exception is thrown.
      */
     template <class Evaluation>
-    Evaluation eval(const Evaluation& x, const Evaluation& y, bool extrapolate=false) const
+    OPM_HOST_DEVICE Evaluation eval(const Evaluation& x, const Evaluation& y, bool extrapolate=false) const
     {
         Evaluation alpha, beta1, beta2;
         unsigned i, j1, j2;
@@ -325,7 +330,7 @@ public:
     }
 
     template <class Evaluation>
-    void findPoints(unsigned& i,
+    OPM_HOST_DEVICE void findPoints(unsigned& i,
                     unsigned& j1,
                     unsigned& j2,
                     Evaluation& alpha,
@@ -336,6 +341,7 @@ public:
                     bool extrapolate) const
     {
 #ifndef NDEBUG
+#if !OPM_IS_INSIDE_DEVICE_FUNCTION
         if (!extrapolate && !applies(x, y)) {
             if constexpr (std::is_floating_point_v<Evaluation>) {
                 throw NumericalProblem("Attempt to get undefined table value (" +
@@ -347,6 +353,7 @@ public:
                                        std::to_string(y.value()) + ")");
             }
         };
+#endif
 #endif
 
         // bi-linear interpolation: first, calculate the x and y indices in the lookup
@@ -393,18 +400,21 @@ public:
     }
 
     template <class Evaluation>
-    Evaluation eval(const unsigned& i, const unsigned& j1, const unsigned& j2, const Evaluation& alpha,const Evaluation& beta1,const Evaluation& beta2) const
+    OPM_HOST_DEVICE Evaluation eval(const unsigned& i, const unsigned& j1, const unsigned& j2, const Evaluation& alpha,const Evaluation& beta1,const Evaluation& beta2) const
     {
         // evaluate the two function values for the same y value ...
         const Evaluation& s1 = valueAt(i, j1)*(1.0 - beta1) + valueAt(i, j1 + 1)*beta1;
         const Evaluation& s2 = valueAt(i + 1, j2)*(1.0 - beta2) + valueAt(i + 1, j2 + 1)*beta2;
 
+#if OPM_IS_INSIDE_DEVICE_FUNCTION
         Valgrind::CheckDefined(s1);
         Valgrind::CheckDefined(s2);
-
+#endif
         // ... and combine them using the x position
         const Evaluation& result = s1*(1.0 - alpha) + s2*alpha;
+#if OPM_IS_INSIDE_DEVICE_FUNCTION
         Valgrind::CheckDefined(result);
+#endif
 
         return result;
     }
@@ -426,7 +436,7 @@ public:
             // this is slow, but so what?
             xPos_.insert(xPos_.begin(), nextX);
             yPos_.insert(yPos_.begin(), std::numeric_limits<Scalar>::lowest() / 2);
-            samples_.insert(samples_.begin(), std::vector<SamplePoint>());
+            samples_.insert(samples_.begin(), ContainerT<SamplePoint>());
             return 0;
         }
         throw std::invalid_argument("Sampling points should be specified either monotonically "
@@ -437,6 +447,7 @@ public:
      * \brief Append a sample point.
      *
      * Returns the i index of the new point within its line.
+     * Avoid running this in the GPU code
      */
     size_t appendSamplePoint(size_t i, Scalar y, Scalar value)
     {
@@ -457,7 +468,6 @@ public:
             }
             return 0;
         }
-
         throw std::invalid_argument("Sampling points must be specified in either monotonically "
                                     "ascending or descending order.");
     }
@@ -470,7 +480,7 @@ public:
      */
     void print(std::ostream& os) const;
 
-    bool operator==(const UniformXTabulated2DFunction<Scalar>& data) const {
+    OPM_HOST_DEVICE bool operator==(const UniformXTabulated2DFunction<Scalar>& data) const {
         return this->xPos() == data.xPos() &&
                this->yPos() == data.yPos() &&
                this->samples() == data.samples() &&
@@ -481,14 +491,34 @@ private:
     // the vector which contains the values of the sample points
     // f(x_i, y_j). don't use this directly, use getSamplePoint(i,j)
     // instead!
-    std::vector<std::vector<SamplePoint> > samples_;
+    ContainerT<ContainerT<SamplePoint> > samples_;
 
     // the position of each vertical line on the x-axis
-    std::vector<Scalar> xPos_;
+    ContainerT<Scalar> xPos_;
     // the position on the y-axis of the guide point
-    std::vector<Scalar> yPos_;
+    ContainerT<Scalar> yPos_;
     InterpolationPolicy interpolationGuide_;
 };
 } // namespace Opm
+
+namespace Opm::gpuistl {
+    // Take in a CO2 type that exists on the CPU and move the data into GPU buffers
+    template<class Scalar, class CpuCO2Type, class GpuCO2Type, template<class> class BufferType>
+    GpuCO2Type moveToGpu(UniformXTabulated2DFunction<Scalar> cpuCO2){
+
+        using InterpolationPolicy = typename UniformXTabulated2DFunction<Scalar>::InterpolationPolicy;
+        using SamplePoint = typename UniformXTabulated2DFunction<Scalar>::SamplePoint;
+
+        // TODO cast the vectors into GPUBuffers
+        BufferType<BufferType<SamplePoint>> samples(cpuCO2.samples());
+        BufferType<Scalar> xPos(cpuCO2.xpos());
+        BufferType<Scalar> yPos(cpuCO2.ypos());
+        InterpolationPolicy interpolationGuide = cpuCO2.interpolationGuide();
+
+        return UniformXTabulated2DFunction<Scalar, BufferType>(samples, xPos, yPos, interpolationGuide);
+    }
+
+    // TODO: Create a view so this CO2 object can be cheaply copied
+}
 
 #endif
