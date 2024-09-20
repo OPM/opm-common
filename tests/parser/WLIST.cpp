@@ -59,15 +59,6 @@ BOOST_AUTO_TEST_CASE(CreateWLIST) {
     BOOST_CHECK( std::find(wells.begin(), wells.end(), "W1") != wells.end());
     BOOST_CHECK( std::find(wells.begin(), wells.end(), "W2") != wells.end());
     BOOST_CHECK( std::find(wells.begin(), wells.end(), "W3") != wells.end());
-
-    std::vector<std::string> wells2;
-    for (const auto& well : wlist.wells())
-        wells2.push_back(well);
-
-    BOOST_CHECK_EQUAL(wells2.size(), 3U);
-    BOOST_CHECK( std::find(wells2.begin(), wells2.end(), "W1") != wells2.end());
-    BOOST_CHECK( std::find(wells2.begin(), wells2.end(), "W2") != wells2.end());
-    BOOST_CHECK( std::find(wells2.begin(), wells2.end(), "W3") != wells2.end());
 }
 
 
