@@ -85,8 +85,8 @@ std::optional<UnitSystem> make_grid_units(const std::string& grid_unit) {
 void apply_GRIDUNIT(const UnitSystem& deck_units, const UnitSystem& grid_units, std::vector<double>& data)
 {
     double scale_factor = grid_units.getDimension(UnitSystem::measure::length).getSIScaling() / deck_units.getDimension(UnitSystem::measure::length).getSIScaling();
-    for (auto& v : data)
-        v *= scale_factor;
+    std::transform(data.begin(), data.end(), data.begin(),
+                   [scale_factor](const auto& v) { return v * scale_factor; });
 }
 
 }

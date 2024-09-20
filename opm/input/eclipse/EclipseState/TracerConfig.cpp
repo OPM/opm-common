@@ -113,8 +113,9 @@ TracerConfig::TracerConfig(const UnitSystem& unit_system, const Deck& deck)
                 auto free_concentration = tracer_keyword.getRecord(0).getItem(0).getData<double>();
                 logger(tracer_keyword.location().format("Loading tracer concentration from {keyword} in {file} line {line}"));
 
-                for (auto& c : free_concentration)
-                    c *= inv_volume;
+                std::transform(free_concentration.begin(), free_concentration.end(),
+                               free_concentration.begin(),
+                               [inv_volume](const auto& c) { return c * inv_volume; });
 
                 std::string tracer_field_solution = "TBLKS" + name;
                 if (deck.hasKeyword(tracer_field_solution)) {
@@ -122,8 +123,9 @@ TracerConfig::TracerConfig(const UnitSystem& unit_system, const Deck& deck)
                     auto solution_concentration = tracer_keyword_solution.getRecord(0).getItem(0).getData<double>();
                     logger(tracer_keyword_solution.location().format("Loading tracer concentration from {keyword} in {file} line {line}"));
 
-                    for (auto& c : solution_concentration)
-                        c *= inv_volume;
+                    std::transform(solution_concentration.begin(), solution_concentration.end(),
+                                   solution_concentration.begin(),
+                                   [inv_volume](const auto& c) { return c * inv_volume; });
 
                     this->tracers.emplace_back(name, unit_string, phase, std::move(free_concentration), std::move(solution_concentration)) ;
                     continue;

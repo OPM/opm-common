@@ -71,9 +71,9 @@ namespace {
         const auto& rst_cells = rst_connections.cells();
 
         connections.reserve(rst_cells.size());
-        for (const auto& rst_cell : rst_cells) {
-            connections.push_back(makeAquiferCell(aquiferID, rst_cell));
-        }
+        std::transform(rst_cells.begin(), rst_cells.end(),
+                       std::back_inserter(connections),
+                       [aquiferID](const auto& rst_cell) { return makeAquiferCell(aquiferID, rst_cell); });
 
         return connections;
     }

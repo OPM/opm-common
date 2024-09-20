@@ -507,18 +507,26 @@ void handleMissingAquifer( const ParseContext& parseContext,
 
 inline void keywordW( SummaryConfig::keyword_list& list,
                       const std::vector<std::string>& well_names,
-                      SummaryConfigNode baseWellParam) {
-    for (const auto& wname : well_names)
-        list.push_back( baseWellParam.namedEntity(wname) );
+                      SummaryConfigNode baseWellParam)
+{
+    std::transform(well_names.begin(), well_names.end(),
+                   std::back_inserter(list),
+                   [&baseWellParam](const auto& wname)
+                   {
+                       return baseWellParam.namedEntity(wname);
+                   });
 }
 
 inline void keywordAquifer( SummaryConfig::keyword_list& list,
                             const std::vector<int>& aquiferIDs,
                             SummaryConfigNode baseAquiferParam)
 {
-    for (const auto& id : aquiferIDs) {
-        list.push_back(baseAquiferParam.number(id));
-    }
+    std::transform(aquiferIDs.begin(), aquiferIDs.end(),
+                   std::back_inserter(list),
+                   [&baseAquiferParam](const auto& id)
+                   {
+                       return baseAquiferParam.number(id);
+                   });
 }
 
 // later check whether parseContext and errors are required
@@ -614,8 +622,12 @@ inline void keywordCL(SummaryConfig::keyword_list& list,
 
             node.namedEntity(wname);
             if (ijk_defaulted) {
-                for (const auto& conn : all_connections)
-                    list.push_back(node.number(1 + conn.global_index()));
+                std::transform(all_connections.begin(), all_connections.end(),
+                               std::back_inserter(list),
+                               [&node](const auto& conn)
+                               {
+                                    return node.number(1 + conn.global_index());
+                               });
             } else {
                 const auto& ijk = getijk(record);
                 auto global_index = dims.getGlobalIndex(ijk[0], ijk[1], ijk[2]);
@@ -803,12 +815,14 @@ void keyword_node( SummaryConfig::keyword_list& list,
     .isUserDefined( is_udq(keyword.name()) );
 
     if( keyword.empty() ||
-        !keyword.getDataRecord().getDataItem().hasValue( 0 ) ) {
-
-        for (const auto& node_name : node_names) {
-            list.push_back( param.namedEntity(node_name) );
-        }
-
+        !keyword.getDataRecord().getDataItem().hasValue( 0 ) )
+    {
+        std::transform(node_names.begin(), node_names.end(),
+                       std::back_inserter(list),
+                       [&param](const auto& node_name)
+                       {
+                           return param.namedEntity(node_name);
+                       });
         return;
     }
 
@@ -1098,9 +1112,12 @@ void keywordR(SummaryConfig::keyword_list& list,
     .fip_region   (region_name.value())
     .isUserDefined(is_udq(keyword));
 
-    for (const auto& region : regions) {
-        list.push_back(param.number(region));
-    }
+    std::transform(regions.begin(), regions.end(),
+                   std::back_inserter(list),
+                   [&param](const auto& region)
+                   {
+                       return param.number(region);
+                   });
 }
 
 

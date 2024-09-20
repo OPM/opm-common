@@ -998,13 +998,19 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
         return this->snapshots[timeStep].groups.has(groupName);
     }
 
-    std::vector< const Group* > Schedule::getChildGroups2(const std::string& group_name, std::size_t timeStep) const {
+    std::vector< const Group* > Schedule::getChildGroups2(const std::string& group_name,
+                                                          std::size_t timeStep) const
+    {
         const auto& sched_state = this->snapshots[timeStep];
         const auto& group = sched_state.groups.get(group_name);
 
         std::vector<const Group*> child_groups;
-        for (const auto& child_name : group.groups())
-            child_groups.push_back( std::addressof(this->getGroup(child_name, timeStep)));
+        std::transform(group.groups().begin(), group.groups().end(),
+                       std::back_inserter(child_groups),
+                       [this, timeStep](const auto& child_name)
+                       {
+                           return std::addressof(this->getGroup(child_name, timeStep));
+                       });
 
         return child_groups;
     }
@@ -1021,9 +1027,12 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                 wells.insert(wells.end(), child_wells.begin(), child_wells.end());
             }
         } else {
-            for (const auto& well_name : group.wells()) {
-                wells.push_back( this->getWell(well_name, timeStep));
-            }
+            std::transform(group.wells().begin(), group.wells().end(),
+                           std::back_inserter(wells),
+                           [this, timeStep](const auto& well_name)
+                           {
+                               return this->getWell(well_name, timeStep);
+                           });
         }
         return wells;
     }
@@ -1033,13 +1042,16 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
       *structurally* in the last report_step; wells where only production
       settings have changed will not be included.
     */
-    std::vector<std::string> Schedule::changed_wells(std::size_t report_step) const {
+    std::vector<std::string> Schedule::changed_wells(std::size_t report_step) const
+    {
         std::vector<std::string> wells;
         const auto& state = this->snapshots[report_step];
         const auto& all_wells = state.wells();
 
         if (report_step == 0)
-            std::transform( all_wells.begin(), all_wells.end(), std::back_inserter(wells), [] (const auto& well_ref) { return well_ref.get().name(); });
+            std::transform( all_wells.begin(), all_wells.end(),
+                           std::back_inserter(wells),
+                           [](const auto& well_ref) { return well_ref.get().name(); });
         else {
             const auto& prev_state = this->snapshots[report_step - 1];
             for (const auto& well_ref : all_wells) {
@@ -1057,14 +1069,19 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
     }
 
 
-    std::vector<Well> Schedule::getWells(std::size_t timeStep) const {
+    std::vector<Well> Schedule::getWells(std::size_t timeStep) const
+    {
         std::vector<Well> wells;
         if (timeStep >= this->snapshots.size())
             throw std::invalid_argument("timeStep argument beyond the length of the simulation");
 
         const auto& well_order = this->snapshots[timeStep].well_order();
-        for (const auto& wname : well_order)
-            wells.push_back( this->snapshots[timeStep].wells.get(wname) );
+        std::transform(well_order.begin(), well_order.end(),
+                       std::back_inserter(wells),
+                       [this, timeStep](const auto& wname)
+                       {
+                           return this->snapshots[timeStep].wells.get(wname);
+                       });
 
         return wells;
     }
@@ -1216,10 +1233,12 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
         auto star_pos = pattern.find('*');
         if (star_pos != std::string::npos) {
             std::vector<std::string> names;
-            for (const auto& gname : group_order) {
-                if (name_match(pattern, gname))
-                    names.push_back(gname);
-            }
+            std::copy_if(group_order.begin(), group_order.end(),
+                         std::back_inserter(names),
+                         [&pattern](const auto& gname)
+                         {
+                             return name_match(pattern, gname);
+                         });
             return names;
         }
 
@@ -1889,9 +1908,12 @@ namespace {
             };
 
             auto rst_connections = std::vector<Connection> {};
-            for (const auto& rst_conn : rst_well.connections) {
-                rst_connections.emplace_back(rst_conn, grid, fp);
-            }
+            std::transform(rst_well.connections.begin(), rst_well.connections.end(),
+                           std::back_inserter(rst_connections),
+                           [&grid, &fp](const auto& rst_conn)
+                           {
+                               return Connection{rst_conn, grid, fp};
+                           });
 
             if (rst_well.segments.empty()) {
                 auto connections = std::make_shared<WellConnections>

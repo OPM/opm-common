@@ -179,16 +179,20 @@ bool BCProp::BCFace::operator==(const BCProp::BCFace& other) const {
 
 
 
-void BCProp::updateBCProp(const DeckRecord& record) {
-    const BCProp::BCFace bcnew( record );
-    for (auto& bc : m_faces) {
-        if (bc.index == bcnew.index && bc.component == bcnew.component)
-            {
-                bc = bcnew;
-                return;
-            }
+void BCProp::updateBCProp(const DeckRecord& record)
+{
+    const BCProp::BCFace bcnew(record);
+    auto it = std::find_if(m_faces.begin(), m_faces.end(),
+                           [&bcnew](const auto& bc)
+                           {
+                               return bc.index == bcnew.index &&
+                                      bc.component == bcnew.component;
+                           });
+    if (it != m_faces.end()) {
+        *it = bcnew;
+    } else {
+        this->m_faces.emplace_back(bcnew);
     }
-    this->m_faces.emplace_back( bcnew );
 }
 
 

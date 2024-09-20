@@ -524,9 +524,12 @@ remapCompressedIndex([[maybe_unused]] Start&&                                  c
                      [[maybe_unused]] std::optional<typename Start::size_type> numOrig)
 {
     if constexpr (TrackCompressedIdx) {
-        for (auto& i : compressedIdx) {
-            i = this->compressedIdx_[i];
-        }
+        std::transform(compressedIdx.begin(), compressedIdx.end(),
+                       compressedIdx.begin(),
+                       [this](const auto& i)
+                       {
+                           return this->compressedIdx_[i];
+                       });
 
         if (numOrig.has_value() && (*numOrig < this->compressedIdx_.size())) {
             // Client called add() after compress().  Remap existing portion

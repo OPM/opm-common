@@ -115,10 +115,9 @@ const std::vector<double>& RigWellPath::measuredDepths() const
 std::vector<double> RigWellPath::trueVerticalDepths() const
 {
     std::vector<double> tvds;
-    for ( const cvf::Vec3d& point : m_wellPathPoints )
-    {
-        tvds.push_back( std::fabs( point.z() ) );
-    }
+    std::transform(m_wellPathPoints.begin(), m_wellPathPoints.end(),
+                   std::back_inserter(tvds),
+                   [](const auto& point) { return std::fabs(point.z()); });
     return tvds;
 }
 
@@ -575,12 +574,11 @@ std::vector<cvf::Vec3d>
 //--------------------------------------------------------------------------------------------------
 bool RigWellPath::isAnyPointInsideBoundingBox( const std::vector<cvf::Vec3d>& points, const cvf::BoundingBox& boundingBox )
 {
-    for ( const cvf::Vec3d& point : points )
-    {
-        if ( boundingBox.contains( point ) ) return true;
-    }
-
-    return false;
+    return std::any_of(points.begin(), points.end(),
+                       [&boundingBox](const auto& point)
+                       {
+                           return boundingBox.contains(point);
+                       });
 }
 
 //--------------------------------------------------------------------------------------------------

@@ -16,8 +16,6 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <ostream>
-
 #include <opm/input/eclipse/Utility/Typetools.hpp>
 
 #include <opm/input/eclipse/Parser/ParserKeyword.hpp>
@@ -28,6 +26,8 @@
 #include <opm/input/eclipse/Deck/DeckValue.hpp>
 #include <opm/input/eclipse/Deck/DeckItem.hpp>
 
+#include <algorithm>
+#include <ostream>
 
 namespace Opm {
 
@@ -168,8 +168,7 @@ namespace Opm {
             throw std::invalid_argument("Input to DeckKeyword '" + name() + "': cannot be std::vector<int>.");
 
         DeckItem item(parser_item.name(), int() );
-        for (int val : data)
-            item.push_back(val);
+        std::for_each(data.begin(), data.end(), [&item](const int val) { item.push_back(val); });
 
         DeckRecord deck_record;
         deck_record.addItem( std::move(item) );
@@ -198,8 +197,7 @@ namespace Opm {
              default_dimensions.push_back( system_default.parse(dim[0]) );
         }
         DeckItem item(parser_item.name(), double(), active_dimensions, default_dimensions);
-        for (double val : data)
-            item.push_back(val);
+        std::for_each(data.begin(), data.end(), [&item](const double val) { item.push_back(val); });
 
         DeckRecord deck_record;
         deck_record.addItem( std::move(item) );

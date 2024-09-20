@@ -99,6 +99,17 @@ const std::unordered_map<std::string, std::size_t> section_index = {
         return this->units;
     }
 
+
+std::vector<const DeckKeyword*>
+DeckSection::getKeywordList(const std::string& keyword) const
+{
+    std::vector<const DeckKeyword*> kw_list;
+    auto view = this->operator[](keyword);
+    std::transform(view.begin(), view.end(), std::back_inserter(kw_list),
+                   [](const auto& kw) { return &kw; });
+    return kw_list;
+}
+
 bool DeckSection::hasRUNSPEC(const Deck& deck) { return deck.hasKeyword<ParserKeywords::RUNSPEC>(); }
 bool DeckSection::hasGRID(const Deck& deck) { return deck.hasKeyword<ParserKeywords::GRID>(); }
 bool DeckSection::hasEDIT(const Deck& deck) { return deck.hasKeyword<ParserKeywords::EDIT>(); }

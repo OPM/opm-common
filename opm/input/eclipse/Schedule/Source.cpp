@@ -103,16 +103,20 @@ bool Source::SourceCell::isSame(const std::pair<std::array<int, 3>, SourceCompon
 }
 
 
-void Source::updateSource(const DeckRecord& record) {
-    const Source::SourceCell sourcenew( record );
-    for (auto& source : m_cells) {
-        if (source.isSame(sourcenew))
-            {
-                source = sourcenew;
-                return;
-            }
+void Source::updateSource(const DeckRecord& record)
+{
+    const Source::SourceCell sourcenew(record);
+    auto it = std::find_if(m_cells.begin(), m_cells.end(),
+                           [&sourcenew](const auto& source)
+                           {
+                               return source.isSame(sourcenew);
+                           });
+
+    if (it != m_cells.end()) {
+        *it = sourcenew;
+    } else {
+        this->m_cells.emplace_back(sourcenew);
     }
-    this->m_cells.emplace_back( sourcenew );
 }
 
 

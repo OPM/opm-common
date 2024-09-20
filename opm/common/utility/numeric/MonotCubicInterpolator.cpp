@@ -33,13 +33,14 @@
 #include "config.h"
 #include <opm/common/utility/numeric/MonotCubicInterpolator.hpp>
 
-#include <iomanip>
+#include <algorithm>
+#include <cmath>
 #include <fstream>
+#include <iomanip>
+#include <map>
 #include <sstream>
 #include <string>
 #include <vector>
-#include <map>
-#include <cmath>
 
 using namespace std;
 
@@ -246,9 +247,8 @@ get_xVector() const
 {
   vector<double> outputvector;
   outputvector.reserve(data.size());
-  for (const auto& xf_iterator : data) {
-    outputvector.push_back(xf_iterator.first);
-  }
+  std::transform(data.begin(), data.end(), std::back_inserter(outputvector),
+                 [](const auto& xf) { return xf.first; });
   return outputvector;
 }
 
@@ -259,9 +259,8 @@ get_fVector() const
 {
   vector<double> outputvector;
   outputvector.reserve(data.size());
-  for (const auto& xf_iterator : data) {
-    outputvector.push_back(xf_iterator.second);
-  }
+  std::transform(data.begin(), data.end(), std::back_inserter(outputvector),
+                 [](const auto& xf) { return xf.second; });
   return outputvector;
 }
 

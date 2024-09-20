@@ -805,8 +805,8 @@ DATES
                                          "SCHEDULE", "VFPPROD", "VFPPROD", "WELSPECS", "COMPDAT", "WCONPROD",
                                          "DATES", "DATES", "DATES"};
     std::vector<std::string> actual;
-    for (const auto& kw : dw)
-        actual.push_back(kw.name());
+    std::transform(dw.begin(), dw.end(), std::back_inserter(actual),
+                   [](const auto& kw) { return kw.name(); });
 
     BOOST_CHECK( actual == expected );
 

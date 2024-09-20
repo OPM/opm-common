@@ -25,6 +25,7 @@
 
 #include <opm/io/eclipse/SummaryNode.hpp>
 
+#include <algorithm>
 #include <cstddef>
 #include <cstring>
 #include <ctime>
@@ -102,12 +103,11 @@ namespace {
             return false;
 
         if (sep_pos == std::string::npos) {
-            for (const auto& total : totals) {
-                if (key.compare(1, total.size(), total) == 0)
-                    return true;
-            }
-
-            return false;
+            return std::any_of(totals.begin(), totals.end(),
+                               [&key](const auto& total)
+                               {
+                                   return key.compare(1, total.size(), total) == 0;
+                               });
         } else
             return is_total(key.substr(0,sep_pos));
     }
@@ -161,8 +161,10 @@ namespace {
             return {};
 
         std::vector<std::string> l;
-        for (const auto& pair : var1_iter->second)
-            l.push_back(pair.first);
+        std::transform(var1_iter->second.begin(), var1_iter->second.end(),
+                       std::back_inserter(l),
+                       [](const auto& pair) { return pair.first; });
+
         return l;
     }
 

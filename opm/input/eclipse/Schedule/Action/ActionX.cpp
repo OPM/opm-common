@@ -120,8 +120,9 @@ parseActionX(const DeckKeyword& kw, const Actdims& actdims,
         const auto& cond_tokens = RawString::strings( kw.getRecord(record_index)
                                                       .getItem("CONDITION").getData<RawString>() );
 
-        for (const auto& token : cond_tokens)
-            tokens.push_back(dequote(token, kw.location()));
+        std::transform(cond_tokens.begin(), cond_tokens.end(),
+                       std::back_inserter(tokens),
+                       [&kw](const auto& token) { return dequote(token, kw.location()); });
 
         conditions.emplace_back(cond_tokens, kw.location());
     }
@@ -174,8 +175,10 @@ ActionX::ActionX(const RestartIO::RstAction& rst_action)
     for (const auto& rst_condition : rst_action.conditions) {
         this->m_conditions.emplace_back(rst_condition);
 
-        for (const auto& token : rst_condition.tokens())
-            tokens.push_back(dequote(token, {}));
+        const auto rst_tokens = rst_condition.tokens();
+        std::transform(rst_tokens.begin(), rst_tokens.end(),
+                       std::back_inserter(tokens),
+                       [](const auto& token) { return dequote(token, {}); });
     }
     this->condition = Action::AST(tokens);
     for (const auto& keyword : rst_action.keywords)
