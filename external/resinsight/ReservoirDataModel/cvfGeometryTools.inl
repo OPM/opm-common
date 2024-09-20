@@ -17,6 +17,7 @@
 //
 /////////////////////////////////////////////////////////////////////////////////
 
+#include <algorithm>
 #include <cmath>
 
 namespace external
@@ -75,10 +76,13 @@ bool GeometryTools::insertVertexInPolygon( std::vector<IndexType>*              
     CVF_ASSERT( polygon );
 
     // Check if vertex is directly included already
-
-    for ( typename std::vector<IndexType>::iterator it = polygon->begin(); it != polygon->end(); ++it )
+    if (std::any_of(polygon->begin(), polygon->end(),
+                    [vertexIndex](const auto& vertex)
+                    {
+                        return vertex == vertexIndex;
+                    }))
     {
-        if ( *it == vertexIndex ) return true;
+        return true;
     }
 
 #if 1

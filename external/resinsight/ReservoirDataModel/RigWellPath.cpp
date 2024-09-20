@@ -575,12 +575,11 @@ std::vector<cvf::Vec3d>
 //--------------------------------------------------------------------------------------------------
 bool RigWellPath::isAnyPointInsideBoundingBox( const std::vector<cvf::Vec3d>& points, const cvf::BoundingBox& boundingBox )
 {
-    for ( const cvf::Vec3d& point : points )
-    {
-        if ( boundingBox.contains( point ) ) return true;
-    }
-
-    return false;
+    return std::any_of(points.begin(), points.end(),
+                       [&boundingBox](const auto& point)
+                       {
+                           return boundingBox.contains(point);
+                       });
 }
 
 //--------------------------------------------------------------------------------------------------

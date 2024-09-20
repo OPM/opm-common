@@ -463,11 +463,10 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWellsOrdered) {
 
 namespace {
 
-bool has_well( const std::vector<Well>& wells, const std::string& well_name) {
-    for (const auto& well : wells )
-        if (well.name( ) == well_name)
-            return true;
-    return false;
+bool has_well( const std::vector<Well>& wells, const std::string& well_name)
+{
+    return std::any_of(wells.begin(), wells.end(),
+                       [&well_name](const auto& well) { return well.name() == well_name; });
 }
 
 } // Anonymous namespace
