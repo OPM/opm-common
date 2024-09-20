@@ -170,19 +170,19 @@ namespace Opm {
             if (this->injectorType == InjectorType::OIL)
                 this->surfaceInjectionRate.update_value( new_arg );
             else
-                std::invalid_argument("Well type must be OIL to set the oil rate");
+                throw std::invalid_argument("Well type must be OIL to set the oil rate");
         }
         else if (cmode == WELTARGCMode::WRAT){
             if (this->injectorType == InjectorType::WATER)
                 this->surfaceInjectionRate.update_value( new_arg );
             else
-                std::invalid_argument("Well type must be WATER to set the water rate");
+                throw std::invalid_argument("Well type must be WATER to set the water rate");
         }
         else if (cmode == WELTARGCMode::GRAT){
             if(this->injectorType == InjectorType::GAS)
                 this->surfaceInjectionRate.update_value( new_arg );
             else
-                std::invalid_argument("Well type must be GAS to set the gas rate");
+                throw std::invalid_argument("Well type must be GAS to set the gas rate");
         }
         else if (cmode == WELTARGCMode::THP)
             this->THPTarget.update_value( new_arg );
@@ -464,21 +464,21 @@ namespace Opm {
             if (this->injectorType == InjectorType::OIL)
                 this->surfaceInjectionRate *= factor;
             else
-                std::invalid_argument("Well type must be OIL to scale the oil rate");
+                throw std::invalid_argument("Well type must be OIL to scale the oil rate");
         }
 
         else if (cmode == WELTARGCMode::WRAT) {
             if (this->injectorType == InjectorType::WATER)
                 this->surfaceInjectionRate *= factor;
             else
-                std::invalid_argument("Well type must be WATER to scale the water rate");
+                throw std::invalid_argument("Well type must be WATER to scale the water rate");
         }
 
         else if (cmode == WELTARGCMode::GRAT) {
             if(this->injectorType == InjectorType::GAS)
                 this->surfaceInjectionRate *= factor;
             else
-                std::invalid_argument("Well type must be GAS to scale the gas rate");
+                throw std::invalid_argument("Well type must be GAS to scale the gas rate");
         }
 
         else if (cmode == WELTARGCMode::THP)
