@@ -17,11 +17,11 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <iostream>
-#include <iomanip>
-
 #include <opm/input/eclipse/Parser/ErrorGuard.hpp>
 
+#include <iostream>
+#include <iomanip>
+#include <numeric>
 
 namespace Opm {
 
@@ -36,12 +36,14 @@ namespace Opm {
 
 
     void ErrorGuard::dump() const {
-        std::size_t width = 0;
-        for (const auto& pair : this->warning_list)
-            width = std::max(width, pair.first.size());
-
-        for (const auto& pair : this->error_list)
-            width = std::max(width, pair.first.size());
+        auto maxit = [](const auto acc, const auto& pair)
+                     {
+                         return std::max(acc, pair.first.size());
+                     };
+        std::size_t width = std::accumulate(this->warning_list.begin(),
+                                            this->warning_list.end(), 0UL, maxit);
+        width = std::accumulate(this->error_list.begin(),
+                                this->error_list.end(), width, maxit);
 
         if (!this->warning_list.empty()) {
             std::cerr << "Warnings:" << std::endl;
