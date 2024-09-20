@@ -79,15 +79,22 @@ namespace {
     /// Those are allowed before RUNSPEC.
     /// \return whether keyword is global (ECHO, NOECHO, INCLUDE,
     ///         COLUMNS, FORMFEED, SKIP, SKIP100, SKIP300, END)
-    bool isGlobalKeyword(const Opm::DeckKeyword& keyword ) {
+    bool isGlobalKeyword(const Opm::DeckKeyword& keyword )
+    {
         const auto& name = keyword.name();
-        for( const auto& x : { "ECHO", "NOECHO",
-                              "INCLUDE", "COLUMNS", "FORMFEED",
-                              "SKIP", "ENDSKIP",
-                              "SKIP100", "SKIP300" } )
-            if( name == x ) return true;
-
-        return false;
+        using namespace std::string_view_literals;
+        const auto kw_list = std::array {
+            "ECHO"sv,
+            "NOECHO"sv,
+            "INCLUDE"sv,
+            "COLUMNS"sv,
+            "FORMFEED"sv,
+            "SKIP"sv,
+            "ENDSKIP"sv,
+            "SKIP100"sv,
+            "SKIP300"sv
+        };
+        return std::find(kw_list.begin(), kw_list.end(), name) != kw_list.end();
     }
 
     // If ROCKOPTS does NOT exist, then the number of records is NTPVT (= TABDIMS(2))
@@ -1777,13 +1784,22 @@ std::vector<std::string> Parser::getAllDeckNames () const {
 #endif
 
 
-    static bool isSectionDelimiter( const DeckKeyword& keyword ) {
+    static bool isSectionDelimiter( const DeckKeyword& keyword )
+    {
         const auto& name = keyword.name();
-        for( const auto& x : { "RUNSPEC", "GRID", "EDIT", "PROPS",
-                               "REGIONS", "SOLUTION", "SUMMARY", "SCHEDULE" } )
-            if( name == x ) return true;
+        using namespace std::string_view_literals;
+        const auto delimiters = std::array {
+            "RUNSPEC"sv,
+            "GRID"sv,
+            "EDIT"sv,
+            "PROPS"sv,
+            "REGIONS"sv,
+            "SOLUTION"sv,
+            "SUMMARY"sv,
+            "SCHEDULE"sv
+        };
 
-        return false;
+        return std::find(delimiters.begin(), delimiters.end(), name) != delimiters.end();
     }
 
     bool DeckSection::checkSectionTopology(const Deck& deck,
