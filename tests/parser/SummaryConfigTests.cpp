@@ -174,8 +174,8 @@ static std::vector< std::string > sorted_names( const SummaryConfig& summary ) {
 
 static std::vector< std::string > sorted_keywords( const SummaryConfig& summary ) {
     std::vector< std::string > ret;
-    for( const auto& x : summary )
-        ret.push_back( x.keyword() );
+    std::transform(summary.begin(), summary.end(), std::back_inserter(ret),
+                   [](const auto& x) { return x.keyword(); });
 
     std::sort( ret.begin(), ret.end() );
     return ret;
@@ -183,9 +183,8 @@ static std::vector< std::string > sorted_keywords( const SummaryConfig& summary 
 
 static std::vector< std::string > sorted_key_names( const SummaryConfig& summary ) {
     std::vector< std::string > ret;
-    for( const auto& x : summary ) {
-        ret.push_back( x.uniqueNodeKey() );
-    }
+    std::transform(summary.begin(), summary.end(), std::back_inserter(ret),
+                   [](const auto& x) { return x.uniqueNodeKey(); });
 
     std::sort( ret.begin(), ret.end() );
     return ret;

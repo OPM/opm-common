@@ -673,15 +673,17 @@ EQUALS
 )"};
          auto mult = edit_mult_x.begin();
          if (doxyz[0].test(0)) {
-             for (auto&& val: exspected_multipliers[0][0]) {
-                 val *= *(mult++);
-             }
+             std::transform(exspected_multipliers[0][0].begin(),
+                            exspected_multipliers[0][0].end(),
+                            exspected_multipliers[0][0].begin(),
+                            [&mult](const auto& val) { return val * (*mult++); });
          }
          mult = edit_mult_z.begin();
          if (doxyz[2].test(1)) {
-             for (auto&& val: exspected_multipliers[2][1]) {
-                 val *= *(mult++);
-             }
+             std::transform(exspected_multipliers[2][1].begin(),
+                            exspected_multipliers[2][1].end(),
+                            exspected_multipliers[2][1].begin(),
+                            [&mult](const auto& val) { return val * (*mult++); });
          }
      }
 

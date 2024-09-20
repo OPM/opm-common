@@ -1104,9 +1104,8 @@ bool ESmry::make_esmry_file()
             std::vector<std::string> units;
             units.reserve(keyword.size());
 
-            for (const auto& key : keyword)
-                units.push_back(kwunits.at(key));
-
+            std::transform(keyword.begin(), keyword.end(), std::back_inserter(units),
+                           [this](const auto& key) { return kwunits.at(key); });
 
             Opm::EclIO::EclOutput outFile(smryDataFile, false, std::ios::out);
 
@@ -1417,12 +1416,20 @@ const std::vector<SummaryNode>& ESmry::summaryNodeList() const {
     return summaryNodes;
 }
 
-std::vector<Opm::time_point> ESmry::dates() const {
+std::vector<Opm::time_point> ESmry::dates() const
+{
     double time_unit = 24 * 3600;
     std::vector<Opm::time_point> d;
 
-    for (const auto& t : this->get("TIME"))
-        d.push_back( this->tp_startdat + std::chrono::duration_cast<std::chrono::seconds>( std::chrono::duration<double, std::chrono::seconds::period>( t * time_unit)));
+    std::transform(this->get("TIME").begin(),
+                   this->get("TIME").end(),
+                   std::back_inserter(d),
+                   [this, time_unit](const auto& t)
+                   {
+                       using Seconds = std::chrono::duration<double, std::chrono::seconds::period>;
+                       return this->tp_startdat +
+                              std::chrono::duration_cast<std::chrono::seconds>(Seconds{t * time_unit});
+                   });
 
     return d;
 }

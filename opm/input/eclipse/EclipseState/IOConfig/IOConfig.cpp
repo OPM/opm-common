@@ -110,9 +110,8 @@ namespace {
             return false;
         }
 
-        for (auto& c : s) {
-            c = std::toupper(c);
-        }
+        std::transform(s.begin(), s.end(), s.begin(),
+                       [](const auto& c) { return std::toupper(c); });
 
         return true;
     }

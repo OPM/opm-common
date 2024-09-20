@@ -161,8 +161,10 @@ namespace {
             return {};
 
         std::vector<std::string> l;
-        for (const auto& pair : var1_iter->second)
-            l.push_back(pair.first);
+        std::transform(var1_iter->second.begin(), var1_iter->second.end(),
+                       std::back_inserter(l),
+                       [](const auto& pair) { return pair.first; });
+
         return l;
     }
 

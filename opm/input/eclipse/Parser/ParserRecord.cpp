@@ -123,11 +123,20 @@ namespace {
         return *itr;
     }
 
-    DeckRecord ParserRecord::parse(const ParseContext& parseContext , ErrorGuard& errors , RawRecord& rawRecord, UnitSystem& active_unitsystem, UnitSystem& default_unitsystem, const KeywordLocation& location) const {
+    DeckRecord ParserRecord::parse(const ParseContext& parseContext ,
+                                   ErrorGuard& errors ,
+                                   RawRecord& rawRecord,
+                                   UnitSystem& active_unitsystem,
+                                   UnitSystem& default_unitsystem,
+                                   const KeywordLocation& location) const
+    {
         std::vector< DeckItem > items;
         items.reserve( this->size() );
-        for( const auto& parserItem : *this )
-            items.emplace_back( parserItem.scan( rawRecord, active_unitsystem, default_unitsystem ) );
+        std::transform(this->begin(), this->end(), std::back_inserter(items),
+                       [&rawRecord, &active_unitsystem, &default_unitsystem](const auto& parserItem)
+                       {
+                           return parserItem.scan(rawRecord, active_unitsystem, default_unitsystem);
+                       });
 
         if (rawRecord.size() > 0) {
             std::string msg_format = fmt::format("Record contains too many items in keyword {{0}}. Expected {} items, found {}.\n", this->size(), rawRecord.max_size()) +

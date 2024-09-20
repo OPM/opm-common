@@ -81,13 +81,7 @@ class DeckSection : public DeckView {
         }
 
 
-        std::vector<const DeckKeyword*> getKeywordList(const std::string& keyword) const {
-            std::vector<const DeckKeyword*> kw_list;
-            auto view = this->operator[](keyword);
-            for (const auto& kw : view)
-                kw_list.push_back(&kw);
-            return kw_list;
-        }
+        std::vector<const DeckKeyword*> getKeywordList(const std::string& keyword) const;
 
         template <class Keyword>
         std::vector<const DeckKeyword*> getKeywordList() const {

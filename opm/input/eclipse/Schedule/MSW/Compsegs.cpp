@@ -413,8 +413,9 @@ namespace {
           that this is somewhat important because the first top segment is
           treated differently from the other segment.
         */
-        for (const auto& segment_pair : rst_segments)
-            segments_list.push_back( std::move(segment_pair.second) );
+        std::transform(rst_segments.begin(), rst_segments.end(),
+                       std::back_inserter(segments_list),
+                       [](const auto& segment_pair) { return segment_pair.second; });
 
         std::sort( segments_list.begin(), segments_list.end(),[](const Segment& seg1, const Segment& seg2) { return seg1.segmentNumber() < seg2.segmentNumber(); } );
         auto comp_pressure_drop = pressure_drop_from_int(rst_well.msw_pressure_drop_model);

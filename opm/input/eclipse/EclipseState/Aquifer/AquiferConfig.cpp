@@ -152,14 +152,14 @@ std::vector<int> Opm::analyticAquiferIDs(const AquiferConfig& cfg)
     if (! cfg.hasAnalyticalAquifer())
         return aquiferIDs;
 
-    for (const auto& aquifer : cfg.ct())
-        aquiferIDs.push_back(aquifer.aquiferID);
+    std::transform(cfg.ct().begin(), cfg.ct().end(), std::back_inserter(aquiferIDs),
+                   [](const auto& aquifer) { return aquifer.aquiferID; });
 
-    for (const auto& aquifer : cfg.fetp())
-        aquiferIDs.push_back(aquifer.aquiferID);
+    std::transform(cfg.fetp().begin(), cfg.fetp().end(), std::back_inserter(aquiferIDs),
+                   [](const auto& aquifer) { return aquifer.aquiferID; });
 
-    for (const auto& aquifer : cfg.aquflux())
-        aquiferIDs.push_back(aquifer.second.id);
+    std::transform(cfg.aquflux().begin(), cfg.aquflux().end(), std::back_inserter(aquiferIDs),
+                   [](const auto& aquifer) { return aquifer.second.id; });
 
     std::sort(aquiferIDs.begin(), aquiferIDs.end());
 
@@ -175,8 +175,8 @@ std::vector<int> Opm::numericAquiferIDs(const AquiferConfig& cfg)
 
     const auto& aqunum = cfg.numericalAquifers();
 
-    for (const auto& aq : aqunum.aquifers())
-        aquiferIDs.push_back(static_cast<int>(aq.first));
+    std::transform(aqunum.aquifers().begin(), aqunum.aquifers().end(), std::back_inserter(aquiferIDs),
+                   [](const auto& aquifer) { return static_cast<int>(aquifer.first); });
 
     std::sort(aquiferIDs.begin(), aquiferIDs.end());
 
