@@ -346,6 +346,11 @@ namespace Opm {
         return this->tracer_config;
     }
 
+    void EclipseState::prune_global_for_schedule_run()
+    {
+        this->field_props.prune_global_for_schedule_run();
+    }
+
     void EclipseState::reset_actnum(const std::vector<int>& new_actnum) {
         this->field_props.reset_actnum(new_actnum);
     }

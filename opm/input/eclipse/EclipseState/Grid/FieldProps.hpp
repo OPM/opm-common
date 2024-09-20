@@ -139,11 +139,11 @@ static const std::unordered_map<std::string, keyword_info<double>> double_keywor
                                                                                       {"MULTPV",  keyword_info<double>{}.init(1.0).mult(true)},
                                                                                       {"NTG",     keyword_info<double>{}.init(1.0)},
                                                                                       {"PORO",    keyword_info<double>{}.distribute_top(true)},
-                                                                                      {"PERMX",   keyword_info<double>{}.unit_string("Permeability").distribute_top(true)},
-                                                                                      {"PERMY",   keyword_info<double>{}.unit_string("Permeability").distribute_top(true)},
-                                                                                      {"PERMZ",   keyword_info<double>{}.unit_string("Permeability").distribute_top(true)},
-                                                                                      {"PERMR",   keyword_info<double>{}.unit_string("Permeability").distribute_top(true)},
-                                                                                      {"PERMTHT",   keyword_info<double>{}.unit_string("Permeability").distribute_top(true)},
+                                                                                      {"PERMX",   keyword_info<double>{}.unit_string("Permeability").distribute_top(true).global_kw_until_edit()},
+                                                                                      {"PERMY",   keyword_info<double>{}.unit_string("Permeability").distribute_top(true).global_kw_until_edit()},
+                                                                                      {"PERMZ",   keyword_info<double>{}.unit_string("Permeability").distribute_top(true).global_kw_until_edit()},
+                                                                                      {"PERMR",   keyword_info<double>{}.unit_string("Permeability").distribute_top(true).global_kw_until_edit()},
+                                                                                      {"PERMTHT",   keyword_info<double>{}.unit_string("Permeability").distribute_top(true).global_kw_until_edit()},
                                                                                       {"TEMPI",   keyword_info<double>{}.unit_string("Temperature")},
                                                                                       {"THCONR",  keyword_info<double>{}.unit_string("Energy/AbsoluteTemperature*Length*Time")},
                                                                                       {"THCONSF", keyword_info<double>{}},
@@ -528,6 +528,8 @@ public:
     FieldProps(const Deck& deck, const EclipseGrid& grid);
 
     void reset_actnum(const std::vector<int>& actnum);
+
+    void prune_global_for_schedule_run();
 
     void apply_numerical_aquifers(const NumericalAquifers& numerical_aquifers);
 

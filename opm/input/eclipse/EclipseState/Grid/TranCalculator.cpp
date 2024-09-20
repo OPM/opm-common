@@ -28,8 +28,13 @@ namespace Opm
 namespace Fieldprops
 {
 
-keywords::keyword_info<double> TranCalculator::make_kw_info(ScalarOperation op) {
+keywords::keyword_info<double> TranCalculator::make_kw_info(ScalarOperation op,
+                                                            std::string target_kw) {
     keywords::keyword_info<double> kw_info;
+    // We need global TRANZ for PINCH processing.
+    if(target_kw == "TRANZ")
+        kw_info.global_kw_until_edit();
+
     switch (op) {
     case ScalarOperation::MUL:
         kw_info.init(1);

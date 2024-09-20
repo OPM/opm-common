@@ -249,6 +249,8 @@ public:
 
     const std::unordered_map<std::string,Fieldprops::TranCalculator>& getTran() const;
 
+    void prune_global_for_schedule_run();
+
 private:
     /*
       Return the keyword values as a std::vector<>. All elements in the return
