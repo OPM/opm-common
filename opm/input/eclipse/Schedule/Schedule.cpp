@@ -1216,10 +1216,12 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
         auto star_pos = pattern.find('*');
         if (star_pos != std::string::npos) {
             std::vector<std::string> names;
-            for (const auto& gname : group_order) {
-                if (name_match(pattern, gname))
-                    names.push_back(gname);
-            }
+            std::copy_if(group_order.begin(), group_order.end(),
+                         std::back_inserter(names),
+                         [&pattern](const auto& gname)
+                         {
+                             return name_match(pattern, gname);
+                         });
             return names;
         }
 
