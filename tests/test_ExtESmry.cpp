@@ -170,8 +170,6 @@ BOOST_AUTO_TEST_CASE(TestExtESmry_1) {
 
     getRefSmryVect(time_ref, wgpr_prod_ref, wbhp_prod_ref, wbhp_inj_ref,fgor_ref, bpr_111_ref, bpr_10103_ref);
 
-    auto time = esmry1.get("TIME");
-
     std::vector<float> smryVect = smry1.get("TIME");
     BOOST_CHECK_EQUAL(smryVect == time_ref, true);
 

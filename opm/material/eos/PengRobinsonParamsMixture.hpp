@@ -143,10 +143,6 @@ public:
     void updateMix(const FluidState& fs)
     {
         using FlashEval = typename FluidState::Scalar;
-        Scalar sumx = 0.0;
-        for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx)
-            sumx += decay<Scalar>(fs.moleFraction(phaseIdx, compIdx) );
-        sumx = std::max(Scalar(1e-10), sumx);
 
         // Calculate the Peng-Robinson parameters of the mixture
         //

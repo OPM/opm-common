@@ -204,8 +204,6 @@ BOOST_AUTO_TEST_CASE(lgr_1) {
       {2,3,1,2,4,0,7.67373}, {2,3,2,2,4,1,7.67373}, {2,3,3,2,4,2,7.67373}, {3,3,1,3,4,0,7.67373},
       {3,3,2,3,4,1,7.67373}, {3,3,3,3,4,2,7.67373}};
 
-    const std::vector<std::string> ref_lgr_list = {"LGR1", "LGR2"};
-
     const std::array<int, 3> ref_dim_global = {2,3,5};
     const std::array<int, 3> ref_dim_lgr1 = {4,8,4};
     const std::array<int, 3> ref_dim_lgr2 = {6,8,4};

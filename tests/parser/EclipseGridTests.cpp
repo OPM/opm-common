@@ -2294,7 +2294,6 @@ BOOST_AUTO_TEST_CASE(SAVE_FIELD_UNITS) {
         auto deck2 = parser.parseString(deckData2);
 
         Opm::EclipseState es2(deck2);
-        Opm::UnitSystem units2 = es.getDeckUnitSystem();
         const auto& grid2 = es2.getInputGrid();
         Opm::NNC nnc2(grid2, deck2);
 
@@ -2473,7 +2472,6 @@ BOOST_AUTO_TEST_CASE(SAVE_METRIC_UNITS) {
         }
 
         BOOST_CHECK(file1.hasKey("MAPUNITS"));
-        const std::vector<std::string> mapunits = file1.get<std::string>("MAPUNITS");
         BOOST_CHECK(gridunits[0] == "METRES");
 
         BOOST_CHECK(file1.hasKey("NNCHEAD"));
@@ -2766,7 +2764,6 @@ BOOST_AUTO_TEST_CASE(TEST_altGridConstructors) {
     Opm::EclipseGrid grid1( deck);
 
     std::vector<int> actnum = grid1.getACTNUM();
-    std::vector<double> coord = grid1.getCOORD();
     std::vector<double> zcorn = grid1.getZCORN();
 
     Opm::EclipseGrid grid2( grid1 , zcorn.data(), actnum);
@@ -3135,10 +3132,6 @@ BOOST_AUTO_TEST_CASE(TEST_GDFILE_2) {
 
     std::vector<int> ref_act_egrid = {1, 1, 1, 1, 0, 1, 0, 1};
     std::vector<int> ref_act_deck3 = {1, 0, 1, 0, 1, 1, 1, 1};
-
-    std::vector<double> ref_mapaxes_egrid = { 0.0, 100.0, 0.0, 0.0, 100.0, 0.0 };
-    std::vector<double> ref_mapaxes_deck = { 0.0, 200.0, 0.0, 0.0, 200.0, 0.0 };
-
 
     // egrid file in si units, no conversion requied by grid constructor
     std::vector<double> refDepthGrid3a = {101.42292, 101.90941, 102.30995, 102.84644, 106.25719, 106.60616, 106.43174, 106.78071 };

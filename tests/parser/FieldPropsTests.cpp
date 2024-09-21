@@ -2137,7 +2137,6 @@ MULTZ
     Deck deck = Parser{}.parseString(deck_string);
     FieldPropsManager fpm(deck, Phases{true, true, true}, grid, TableManager());
 
-    auto multz = fpm.get_double("MULTZ");
     auto multz_global = fpm.get_global_double("MULTZ");
     for (std::size_t index = 0; index < multz_global.size(); index++)
         BOOST_CHECK_EQUAL(index * 1.0, multz_global[index]);
@@ -2170,7 +2169,6 @@ MULTZ
     Deck deck = Parser{}.parseString(deck_string);
     FieldPropsManager fpm(deck, Phases{true, true, true}, grid, TableManager());
 
-    auto multz = fpm.get_double("MULTZ");
     auto multz_global = fpm.get_global_double("MULTZ");
     for (std::size_t index = 0; index < multz_global.size(); index++)
         BOOST_CHECK_EQUAL(index * index * 1.0, multz_global[index]);
@@ -2205,7 +2203,6 @@ EQUALS
     Deck deck = Parser{}.parseString(deck_string);
     FieldPropsManager fpm(deck, Phases{true, true, true}, grid, TableManager());
 
-    auto multz = fpm.get_double("MULTZ");
     auto multz_global = fpm.get_global_double("MULTZ");
     for (std::size_t index = 0; index < multz_global.size(); index++) {
         if (index <= 8 || index >= 18)

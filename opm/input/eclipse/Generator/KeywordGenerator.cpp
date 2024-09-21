@@ -184,8 +184,6 @@ void Builtin::emplace{}() const {{
     void KeywordGenerator::updateInitSource(const KeywordLoader& loader , const std::string& sourceFile,
                                             const std::string& sourcePath ) const {
         std::filesystem::path parserInitSource(sourceFile);
-        std::string stem = parserInitSource.stem();
-        std::filesystem::path parentPath = parserInitSource.parent_path();
         std::stringstream newSource;
         newSource << R"(
 #include <opm/input/eclipse/Parser/Parser.hpp>

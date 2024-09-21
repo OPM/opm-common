@@ -499,7 +499,6 @@ std::tuple<int, int, int, int> injectionGroup(const Opm::Schedule&     sched,
                                               const Opm::Phase         phase)
 {
     const bool is_field = group.name() == "FIELD";
-    auto group_parent_list = groupParentSeqIndex(sched, group, simStep);
     int high_level_ctrl = 0;
     int current_cmode = 0;
     int gconinje_cmode = 0;
@@ -591,7 +590,6 @@ void injectionGroup(const Opm::Schedule&     sched,
 {
     using IGroup = ::Opm::RestartIO::Helpers::VectorItems::IGroup::index;
     const bool is_field = group.name() == "FIELD";
-    auto group_parent_list = groupParentSeqIndex(sched, group, simStep);
     using IGroup = ::Opm::RestartIO::Helpers::VectorItems::IGroup::index;
 
 

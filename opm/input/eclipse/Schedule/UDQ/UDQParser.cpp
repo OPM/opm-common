@@ -449,8 +449,6 @@ Opm::UDQASTNode UDQParser::parse_cmp()
     auto current = this->current();
 
     if (Opm::UDQ::cmpFunc(current.type)) {
-        auto func_node = current;
-
         this->next();
         if (this->empty()) {
             return Opm::UDQASTNode { Opm::UDQTokenType::error };
@@ -474,8 +472,6 @@ Opm::UDQASTNode UDQParser::parse_set()
     auto current = this->current();
 
     if (Opm::UDQ::setFunc(current.type)) {
-        auto func_node = current;
-
         this->next();
         if (this->empty()) {
             return Opm::UDQASTNode { Opm::UDQTokenType::error };

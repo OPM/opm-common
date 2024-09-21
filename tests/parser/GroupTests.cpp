@@ -750,7 +750,6 @@ GCONPROD
    FIELD       ORAT  71500 1*    1*    1*    RATE  YES   1*    '   '     1*    1*    1*    1*    1*    /
 /)";
 
-    Opm::UnitSystem unitSystem = UnitSystem( UnitSystem::UnitType::UNIT_TYPE_METRIC );
     const auto sched = create_schedule(input);
     GPMaint::State gpm_state;
     const auto T = 86400;
