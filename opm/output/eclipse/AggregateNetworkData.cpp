@@ -283,9 +283,6 @@ nodeProps wellGroupRateDensity(const Opm::EclipseState&                  es,
     double opr  = 0.;
     double wpr  = 0.;
     double gpr  = 0.;
-    double t_opr = 0.;
-    double t_wpr = 0.;
-    double t_gpr = 0.;
 
     const auto& grp = sched.getGroup(groupName, lookup_step);
     // Calculate average flow rate and surface condition densities for wells in group
@@ -293,21 +290,21 @@ nodeProps wellGroupRateDensity(const Opm::EclipseState&                  es,
         const auto& well = sched.getWell(well_name, lookup_step);
         if (well.isProducer()) {
             const auto& pvtNum = well.pvt_table_number();
-            t_opr = smry.get_well_var(well.name(), "WOPR", 0.0);
+            const double t_opr = smry.get_well_var(well.name(), "WOPR", 0.0);
             deno += t_opr * stdDensityTable[pvtNum-1].oil;
             opr  += t_opr;
-            t_wpr = smry.get_well_var(well.name(), "WWPR", 0.0);
+            const double t_wpr = smry.get_well_var(well.name(), "WWPR", 0.0);
             denw += t_wpr * stdDensityTable[pvtNum-1].water;
             wpr  += t_wpr;
-            t_gpr = (smry.get_well_var(well.name(), "WGPR", 0.0) + smry.get_well_var(well.name(), "WGLIR", 0.0))*
+            const double t_gpr = (smry.get_well_var(well.name(), "WGPR", 0.0) + smry.get_well_var(well.name(), "WGLIR", 0.0))*
             well.getEfficiencyFactor();
             deng += t_gpr * stdDensityTable[pvtNum-1].gas;
             gpr  += t_gpr;
         }
     }
-    deno = (opr > 0.) ? deno/opr : 0.;
-    denw = (wpr > 0.) ? denw/wpr : 0.;
-    deng = (gpr > 0.) ? deng/gpr : 0.;
+    deno = (opr > 0.) ? deno / opr : 0.;
+    denw = (wpr > 0.) ? denw / wpr : 0.;
+    deng = (gpr > 0.) ? deng / gpr : 0.;
 
     return {deno, denw, deng, opr, wpr, gpr};
 

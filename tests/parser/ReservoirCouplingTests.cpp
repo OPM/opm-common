@@ -107,8 +107,8 @@ GRUPMAST
 }
 
 BOOST_AUTO_TEST_CASE(GRUPMAST_FAIL_MISSING_MASTER_GROUP) {
-    std::string deck_string = R"(
-
+    try {
+        std::string deck_string = R"(
 SCHEDULE
 
 SLAVES
@@ -122,14 +122,13 @@ GRUPMAST
   'C1_M' 'RES-1'  'MANI-C'  1*  /
   'E1_M' 'RES-2'  'E1'  1*  /
 /
-)";
-    try {
+        )";
         make_schedule(deck_string);
         BOOST_FAIL("Expected Opm::OpmInputError not thrown");
     }
     catch (const Opm::OpmInputError& e) {
         BOOST_CHECK_EQUAL(std::string(e.what()),
-            "Problem with keyword GRUPMAST\nIn <memory string> line 10\nGroup 'D1_M': Not defined. Master groups should be defined in advance by using GRUPTREE before referenced in GRUPMAST.");
+            "Problem with keyword GRUPMAST\nIn <memory string> line 9\nGroup 'D1_M': Not defined. Master groups should be defined in advance by using GRUPTREE before referenced in GRUPMAST.");
     }
     catch (const std::exception& e) {
         BOOST_FAIL("Expected Opm::OpmInputError but caught std::exception");
@@ -140,8 +139,8 @@ GRUPMAST
 }
 
 BOOST_AUTO_TEST_CASE(GRUPMAST_FAIL_SUBORDINATE_GROUPS) {
-    std::string deck_string = R"(
-
+    try {
+        std::string deck_string = R"(
 SCHEDULE
 
 SLAVES
@@ -167,14 +166,13 @@ GRUPMAST
   'C1_M' 'RES-1'  'MANI-C'  1*  /
   'E1_M' 'RES-2'  'E1'  1*  /
 /
-)";
-    try {
+        )";
         make_schedule(deck_string);
         BOOST_FAIL("Expected Opm::OpmInputError not thrown");
     }
     catch (const Opm::OpmInputError& e) {
         BOOST_CHECK_EQUAL(std::string(e.what()),
-            "Problem with keyword GRUPMAST\nIn <memory string> line 22\nGroup 'FIELD' has subgroups: A master group cannot contain any wells or subordinate groups.");
+            "Problem with keyword GRUPMAST\nIn <memory string> line 21\nGroup 'FIELD' has subgroups: A master group cannot contain any wells or subordinate groups.");
     }
     catch (const std::exception& e) {
         BOOST_FAIL("Expected Opm::OpmInputError but caught std::exception");
@@ -185,7 +183,8 @@ GRUPMAST
 }
 
 BOOST_AUTO_TEST_CASE(GRUPMAST_FAIL_SUBORDINATE_WELLS) {
-    std::string deck_string = R"(
+    try {
+        std::string deck_string = R"(
 
 SCHEDULE
 
@@ -216,8 +215,7 @@ GRUPMAST
   'C1_M' 'RES-1'  'MANI-C'  1*  /
   'E1_M' 'RES-2'  'E1'  1*  /
 /
-)";
-    try {
+        )";
         make_schedule(deck_string);
         BOOST_FAIL("Expected Opm::OpmInputError not thrown");
     }
@@ -234,7 +232,8 @@ GRUPMAST
 }
 
 BOOST_AUTO_TEST_CASE(GRUPMAST_FAIL_MISSING_SLAVE) {
-    std::string deck_string = R"(
+    try {
+        std::string deck_string = R"(
 
 SCHEDULE
 
@@ -256,14 +255,12 @@ GRUPMAST
   'C1_M' 'RES-1'  'MANI-C'  1*  /
   'E1_M' 'RES-2'  'E1'  1*  /
 /
-)";
-
-    try {
+        )";
         make_schedule(deck_string);
         BOOST_FAIL("Expected Opm::OpmInputError not thrown");
     }
     catch (const Opm::OpmInputError& e) {
-        BOOST_CHECK_EQUAL(std::string(e.what()), 
+        BOOST_CHECK_EQUAL(std::string(e.what()),
             "Problem with keyword GRUPMAST\nIn <memory string> line 17\nSlave reservoir 'RES-1': Not defined. Slave reservoirs should be defined in advance by using SLAVES before referenced in GRUPMAST.");
     }
     catch (const std::exception& e) {

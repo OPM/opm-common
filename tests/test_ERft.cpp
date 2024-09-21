@@ -28,7 +28,6 @@
 
 #include <algorithm>
 #include <fstream>
-#include <iomanip>
 #include <iostream>
 #include <math.h>
 #include <stdexcept>
@@ -173,19 +172,15 @@ BOOST_AUTO_TEST_CASE(TestERft_1) {
 }
 
 
-BOOST_AUTO_TEST_CASE(TestERft_2) {
-
-    std::string testFile = "SPE1CASE1.RFT";
-
-    std::string outFile = "TEST.RFT";
-
+BOOST_AUTO_TEST_CASE(TestERft_2)
+{
     {
         WorkArea work;
-        work.copyIn(testFile);
+        work.copyIn("SPE1CASE1.RFT");
         {
-            EclOutput eclTest(outFile, false);
+            EclOutput eclTest("TEST.RFT", false);
 
-            ERft rft1(testFile);
+            ERft rft1("SPE1CASE1.RFT");
 
             auto rftList = rft1.listOfRftReports();
 
@@ -224,6 +219,6 @@ BOOST_AUTO_TEST_CASE(TestERft_2) {
             }
         }
 
-        BOOST_CHECK_EQUAL(compare_files(testFile, outFile), true);
+        BOOST_CHECK_EQUAL(compare_files("SPE1CASE1.RFT", "TEST.RFT"), true);
     }
 }

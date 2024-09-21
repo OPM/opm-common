@@ -171,23 +171,6 @@ BOOST_AUTO_TEST_CASE(Handle_extra_records_2) {
 
 
 BOOST_AUTO_TEST_CASE(TestUnkownKeyword_DATA) {
-    const char * deck_string1 =
-        "RUNSPEC\n"
-        "\n"
-        "UNKNOWN1\n"
-        "\n"
-        "UNKNOWN2\n"
-        "  10 10 10 /n"
-        "\n"
-        "UNKNOWN3\n"
-        "  11 11 11 /n"
-        "/\n"
-        "\n"
-        "DIMENS\n"
-        "  12 12 12 /n"
-        "\n";
-
-
     const char * deck_string2 =
         "RUNSPEC\n"
         "\n"
@@ -218,6 +201,22 @@ BOOST_AUTO_TEST_CASE(TestUnkownKeyword_DATA) {
     parseContext.update(ParseContext::PARSE_UNKNOWN_KEYWORD , InputErrorAction::IGNORE );
     parseContext.update(ParseContext::PARSE_RANDOM_TEXT , InputErrorAction::THROW_EXCEPTION );
     {
+        const char * deck_string1 =
+            "RUNSPEC\n"
+            "\n"
+            "UNKNOWN1\n"
+            "\n"
+            "UNKNOWN2\n"
+            "  10 10 10 /n"
+            "\n"
+            "UNKNOWN3\n"
+            "  11 11 11 /n"
+            "/\n"
+            "\n"
+            "DIMENS\n"
+            "  12 12 12 /n"
+            "\n";
+
         Deck deck = parser.parseString( deck_string1 , parseContext, errors );
         BOOST_CHECK( deck.hasKeyword( "RUNSPEC") );
         BOOST_CHECK( deck.hasKeyword( "DIMENS") );

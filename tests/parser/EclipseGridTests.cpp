@@ -2169,56 +2169,6 @@ BOOST_AUTO_TEST_CASE(SAVE_FIELD_UNITS) {
         "EDIT\n"
         "\n";
 
-    const char* deckData2 =
-
-        "RUNSPEC\n"
-        "\n"
-        "DIMENS\n"
-        " 4 4 3 /\n"
-        "FIELD\n"
-        "GRID\n"
-        "MAPUNITS\n"
-        " METRES /\n"
-        "MAPAXES\n"
-        " 0.0  101.1  0.0  0.0  102.2  0.0  /\n"
-        "DX\n"
-        " 48*300 /\n"
-        "DY\n"
-        " 48*300 /\n"
-        "DZ\n"
-        " 16*20 16*30 16*50 / \n"
-        "TOPS\n"
-        " 16*8325 / \n"
-        "PORO\n"
-        "  48*0.15 /\n"
-        "EDIT\n"
-        "\n";
-
-    const char* deckData3 =
-
-        "RUNSPEC\n"
-        "\n"
-        "DIMENS\n"
-        " 4 4 3 /\n"
-        "FIELD\n"
-        "GRID\n"
-        "MAPUNITS\n"
-        " FEET /\n"
-        "MAPAXES\n"
-        " 0.0  102.2  0.0  0.0  103.3  0.0  /\n"
-        "DX\n"
-        " 48*300 /\n"
-        "DY\n"
-        " 48*300 /\n"
-        "DZ\n"
-        " 16*20 16*30 16*50 / \n"
-        "TOPS\n"
-        " 16*8325 / \n"
-        "PORO\n"
-        "  48*0.15 /\n"
-        "EDIT\n"
-        "\n";
-
     std::vector<float> ref2_mapaxes = {0.0, 101.1, 0.0, 0.0, 102.2, 0.0 };
     std::vector<float> ref3_mapaxes = {0.0, 102.2, 0.0, 0.0, 103.3, 0.0 };
 
@@ -2291,6 +2241,30 @@ BOOST_AUTO_TEST_CASE(SAVE_FIELD_UNITS) {
         BOOST_CHECK(!file1.hasKey("NNC2"));
 
         // testing deck in field units and MAPUNITS in METRES
+        const char* deckData2 =
+            "RUNSPEC\n"
+            "\n"
+            "DIMENS\n"
+            " 4 4 3 /\n"
+            "FIELD\n"
+            "GRID\n"
+            "MAPUNITS\n"
+            " METRES /\n"
+            "MAPAXES\n"
+            " 0.0  101.1  0.0  0.0  102.2  0.0  /\n"
+            "DX\n"
+            " 48*300 /\n"
+            "DY\n"
+            " 48*300 /\n"
+            "DZ\n"
+            " 16*20 16*30 16*50 / \n"
+            "TOPS\n"
+            " 16*8325 / \n"
+            "PORO\n"
+            "  48*0.15 /\n"
+            "EDIT\n"
+            "\n";
+
         auto deck2 = parser.parseString(deckData2);
 
         Opm::EclipseState es2(deck2);
@@ -2316,6 +2290,30 @@ BOOST_AUTO_TEST_CASE(SAVE_FIELD_UNITS) {
         }
 
         // testing deck in field units and MAPUNITS in FEET
+        const char* deckData3 =
+            "RUNSPEC\n"
+            "\n"
+            "DIMENS\n"
+            " 4 4 3 /\n"
+            "FIELD\n"
+            "GRID\n"
+            "MAPUNITS\n"
+            " FEET /\n"
+            "MAPAXES\n"
+            " 0.0  102.2  0.0  0.0  103.3  0.0  /\n"
+            "DX\n"
+            " 48*300 /\n"
+            "DY\n"
+            " 48*300 /\n"
+            "DZ\n"
+            " 16*20 16*30 16*50 / \n"
+            "TOPS\n"
+            " 16*8325 / \n"
+            "PORO\n"
+            "  48*0.15 /\n"
+            "EDIT\n"
+            "\n";
+
         auto deck3 = parser.parseString(deckData3);
 
         Opm::EclipseState es3(deck3);
@@ -2374,35 +2372,6 @@ BOOST_AUTO_TEST_CASE(SAVE_METRIC_UNITS) {
         "EDIT\n"
         "\n";
 
-    const char* deckData2 =
-
-        "RUNSPEC\n"
-        "\n"
-        "DIMENS\n"
-        " 4 4 3 /\n"
-        "GRID\n"
-        "MAPAXES\n"
-        " 0.0 450.0 0.0 0.0 7200.0 0.0 / \n"
-        "MAPUNITS\n"
-        " FEET / \n"
-        "DX\n"
-        " 48*300 /\n"
-        "DY\n"
-        " 48*300 /\n"
-        "DZ\n"
-        " 16*20 16*30 16*50 / \n"
-        "TOPS\n"
-        " 16*8325 / \n"
-        "NNC\n"
-        " 2 2 1  2 3 2   0.95 / \n"
-        " 3 2 1  3 3 2   1.05 / \n"
-        " 4 2 1  4 3 2   1.15 / \n"
-        "/ \n"
-        "PORO\n"
-        "  48*0.15 /\n"
-        "EDIT\n"
-        "\n";
-
     std::vector<float> ref_mapaxes1 = { 0.0, 45000.0, 0.0, 0.0, 720000.0, 0.0 };
     std::vector<float> ref_mapaxes2 = { 0.0, 450.0, 0.0, 0.0, 7200.0, 0.0 };
 
@@ -2416,14 +2385,13 @@ BOOST_AUTO_TEST_CASE(SAVE_METRIC_UNITS) {
     const auto& grid1 = es1.getInputGrid();
     Opm::NNC nnc(grid1, deck1);
 
-    bool formatted = true;
-
     time_t timer;
     time(&timer);
 
     {
         WorkArea work;
         std::string fileName = "TMP.FEGRID";
+        const bool formatted = true;
         grid1.save(fileName, formatted, nnc.input(), units1);
 
         Opm::EclIO::EclFile file1(fileName);
@@ -2499,6 +2467,34 @@ BOOST_AUTO_TEST_CASE(SAVE_METRIC_UNITS) {
         }
 
         // testing deck in metric units with mapaxes in field units
+        const char* deckData2 =
+            "RUNSPEC\n"
+            "\n"
+            "DIMENS\n"
+            " 4 4 3 /\n"
+            "GRID\n"
+            "MAPAXES\n"
+            " 0.0 450.0 0.0 0.0 7200.0 0.0 / \n"
+            "MAPUNITS\n"
+            " FEET / \n"
+            "DX\n"
+            " 48*300 /\n"
+            "DY\n"
+            " 48*300 /\n"
+            "DZ\n"
+            " 16*20 16*30 16*50 / \n"
+            "TOPS\n"
+            " 16*8325 / \n"
+            "NNC\n"
+            " 2 2 1  2 3 2   0.95 / \n"
+            " 3 2 1  3 3 2   1.05 / \n"
+            " 4 2 1  4 3 2   1.15 / \n"
+            "/ \n"
+            "PORO\n"
+            "  48*0.15 /\n"
+            "EDIT\n"
+            "\n";
+
         auto deck2 = parser.parseString(deckData2);
 
         Opm::EclipseState es2(deck2);
@@ -2956,41 +2952,6 @@ BOOST_AUTO_TEST_CASE(TEST_GDFILE_1) {
 
 BOOST_AUTO_TEST_CASE(TEST_GDFILE_2) {
 
-    const char* deckData1 =
-        "RUNSPEC\n"
-        "\n"
-        "DIMENS\n"
-        "2 2 2 /\n"
-        "GRID\n"
-        "SPECGRID\n"
-        " 2 2 2 1 F /\n"
-        "COORD\n"
-        "  2002.0000  2002.0000   100.0000   1999.8255  1999.9127   108.4935\n"
-        "  2011.9939  2000.0000   100.3490   2009.8194  1999.9127   108.8425\n"
-        "  2015.9878  2000.0000   100.6980   2019.8133  1999.9127   109.1915\n"
-        "  2000.0000  2009.9985   100.1745   1999.8255  2009.9112   108.6681 \n"
-        "  2010.9939  2011.9985   100.5235   2009.8194  2009.9112   109.0170\n"
-        "  2019.9878  2009.9985   100.8725   2019.8133  2009.9112   109.3660\n"
-        "  2005.0000  2019.9970   100.3490   1999.8255  2019.9097   108.8426\n"
-        "  2009.9939  2019.9970   100.6980   2009.8194  2019.9097   109.1916\n"
-        "  2016.9878  2019.9970   101.0470   2019.8133  2019.9097   109.5406 /\n"
-        "ZCORN\n"
-        "    98.0000   100.3490    97.3490   100.6980   100.1745   100.5235\n"
-        "   100.5235   100.8725   100.1745   100.5235   100.5235   100.8725\n"
-        "   100.3490   101.6980   101.6980   102.5470   102.4973   102.1463\n"
-        "   103.2463   104.1953   103.6719   104.0209   104.0209   104.3698\n"
-        "   103.6719   104.0209   104.0209   104.3698   103.8464   104.1954\n"
-        "   104.1954   104.5444   103.4973   103.8463   103.8463   104.1953\n"
-        "   103.6719   104.0209   104.0209   104.3698   103.6719   104.0209\n"
-        "   104.0209   104.3698   103.8464   104.1954   104.1954   104.5444\n"
-        "   108.4935   108.8425   108.8425   109.1915   108.6681   109.0170\n"
-        "   109.0170   109.3660   108.6681   109.0170   109.0170   109.3660\n"
-        "   108.8426   109.1916   109.1916   109.5406  /\n"
-        "\n"
-        "PORO\n"
-        "   8*0.15 /\n"
-        "EDIT\n";
-
     const char* deckData1a =
         "RUNSPEC\n"
         "\n"
@@ -3028,106 +2989,6 @@ BOOST_AUTO_TEST_CASE(TEST_GDFILE_2) {
         "   8*0.15 /\n"
         "EDIT\n";
 
-    const char* deckData1b =
-        "RUNSPEC\n"
-        "\n"
-        "DIMENS\n"
-        "2 2 2 /\n"
-        "FIELD\n"
-        "GRID\n"
-        "MAPUNITS\n"
-        " METRES /\n"
-        "MAPAXES\n"
-        " 0.  100.  0.  0.  100.  0.  /\n"
-        "SPECGRID\n"
-        " 2 2 2 1 F /\n"
-        "COORD\n"
-        "  2002.0000  2002.0000   100.0000   1999.8255  1999.9127   108.4935\n"
-        "  2011.9939  2000.0000   100.3490   2009.8194  1999.9127   108.8425\n"
-        "  2015.9878  2000.0000   100.6980   2019.8133  1999.9127   109.1915\n"
-        "  2000.0000  2009.9985   100.1745   1999.8255  2009.9112   108.6681 \n"
-        "  2010.9939  2011.9985   100.5235   2009.8194  2009.9112   109.0170\n"
-        "  2019.9878  2009.9985   100.8725   2019.8133  2009.9112   109.3660\n"
-        "  2005.0000  2019.9970   100.3490   1999.8255  2019.9097   108.8426\n"
-        "  2009.9939  2019.9970   100.6980   2009.8194  2019.9097   109.1916\n"
-        "  2016.9878  2019.9970   101.0470   2019.8133  2019.9097   109.5406 /\n"
-        "ZCORN\n"
-        "    98.0000   100.3490    97.3490   100.6980   100.1745   100.5235\n"
-        "   100.5235   100.8725   100.1745   100.5235   100.5235   100.8725\n"
-        "   100.3490   101.6980   101.6980   102.5470   102.4973   102.1463\n"
-        "   103.2463   104.1953   103.6719   104.0209   104.0209   104.3698\n"
-        "   103.6719   104.0209   104.0209   104.3698   103.8464   104.1954\n"
-        "   104.1954   104.5444   103.4973   103.8463   103.8463   104.1953\n"
-        "   103.6719   104.0209   104.0209   104.3698   103.6719   104.0209\n"
-        "   104.0209   104.3698   103.8464   104.1954   104.1954   104.5444\n"
-        "   108.4935   108.8425   108.8425   109.1915   108.6681   109.0170\n"
-        "   109.0170   109.3660   108.6681   109.0170   109.0170   109.3660\n"
-        "   108.8426   109.1916   109.1916   109.5406  /\n"
-        "\n"
-        "ACTNUM\n"
-        " 1 1 1 1 0 1 0 1 /\n"
-        "PORO\n"
-        "   8*0.15 /\n"
-        "EDIT\n";
-
-    const char* deckData2 =
-        "RUNSPEC\n"
-        "\n"
-        "DIMENS\n"
-        "2 2 2 /\n"
-        "GRID\n"
-        "GDFILE\n"
-        " 'BAD_CP_M.EGRID' /\n"
-        "EDIT\n";
-
-    const char* deckData3a =
-        "RUNSPEC\n"
-        "\n"
-        "DIMENS\n"
-        "2 2 2 /\n"
-        "GRID\n"
-        "ACTNUM\n"
-        " 1 0 1 0 1 1 1 1 /\n"
-        "MAPUNITS\n"
-        " FEET /\n"
-        "MAPAXES\n"
-        " 0.  200.  0.  0.  200.  0.  /\n"
-        "GDFILE\n"
-        " 'BAD_CP_M.EGRID' /\n"
-        "EDIT\n";
-
-    const char* deckData3b =
-        "RUNSPEC\n"
-        "\n"
-        "DIMENS\n"
-        "2 2 2 /\n"
-        "GRID\n"
-        "MAPUNITS\n"
-        " FEET /\n"
-        "MAPAXES\n"
-        " 0.  200.  0.  0.  200.  0.  /\n"
-        "GDFILE\n"
-        " 'BAD_CP_F.EGRID' /\n"
-        "ACTNUM\n"
-        " 1 0 1 0 1 1 1 1 /\n"
-        "EDIT\n";
-
-    const char* deckData3c =
-        "RUNSPEC\n"
-        "\n"
-        "DIMENS\n"
-        "2 2 2 /\n"
-        "GRID\n"
-        "GDFILE\n"
-        " 'BAD_CP_F.EGRID' /\n"
-        "MAPUNITS\n"
-        " FEET /\n"
-        "MAPAXES\n"
-        " 0.  200.  0.  0.  200.  0.  /\n"
-        "ACTNUM\n"
-        " 1 0 1 0 1 1 1 1 /\n"
-        "EDIT\n";
-
     Opm::Parser parser;
 
     std::vector<int> ref_act_egrid = {1, 1, 1, 1, 0, 1, 0, 1};
@@ -3149,6 +3010,47 @@ BOOST_AUTO_TEST_CASE(TEST_GDFILE_2) {
     {
         WorkArea work;
         grid1a.save("BAD_CP_M.EGRID", false, nnc.input(), units1a);
+        const char* deckData1b =
+            "RUNSPEC\n"
+            "\n"
+            "DIMENS\n"
+            "2 2 2 /\n"
+            "FIELD\n"
+            "GRID\n"
+            "MAPUNITS\n"
+            " METRES /\n"
+            "MAPAXES\n"
+            " 0.  100.  0.  0.  100.  0.  /\n"
+            "SPECGRID\n"
+            " 2 2 2 1 F /\n"
+            "COORD\n"
+            "  2002.0000  2002.0000   100.0000   1999.8255  1999.9127   108.4935\n"
+            "  2011.9939  2000.0000   100.3490   2009.8194  1999.9127   108.8425\n"
+            "  2015.9878  2000.0000   100.6980   2019.8133  1999.9127   109.1915\n"
+            "  2000.0000  2009.9985   100.1745   1999.8255  2009.9112   108.6681 \n"
+            "  2010.9939  2011.9985   100.5235   2009.8194  2009.9112   109.0170\n"
+            "  2019.9878  2009.9985   100.8725   2019.8133  2009.9112   109.3660\n"
+            "  2005.0000  2019.9970   100.3490   1999.8255  2019.9097   108.8426\n"
+            "  2009.9939  2019.9970   100.6980   2009.8194  2019.9097   109.1916\n"
+            "  2016.9878  2019.9970   101.0470   2019.8133  2019.9097   109.5406 /\n"
+            "ZCORN\n"
+            "    98.0000   100.3490    97.3490   100.6980   100.1745   100.5235\n"
+            "   100.5235   100.8725   100.1745   100.5235   100.5235   100.8725\n"
+            "   100.3490   101.6980   101.6980   102.5470   102.4973   102.1463\n"
+            "   103.2463   104.1953   103.6719   104.0209   104.0209   104.3698\n"
+            "   103.6719   104.0209   104.0209   104.3698   103.8464   104.1954\n"
+            "   104.1954   104.5444   103.4973   103.8463   103.8463   104.1953\n"
+            "   103.6719   104.0209   104.0209   104.3698   103.6719   104.0209\n"
+            "   104.0209   104.3698   103.8464   104.1954   104.1954   104.5444\n"
+            "   108.4935   108.8425   108.8425   109.1915   108.6681   109.0170\n"
+            "   109.0170   109.3660   108.6681   109.0170   109.0170   109.3660\n"
+            "   108.8426   109.1916   109.1916   109.5406  /\n"
+            "\n"
+            "ACTNUM\n"
+            " 1 1 1 1 0 1 0 1 /\n"
+            "PORO\n"
+            "   8*0.15 /\n"
+            "EDIT\n";
 
         auto deck1b = parser.parseString(deckData1b);
         Opm::EclipseState es1b(deck1b);
@@ -3156,6 +3058,40 @@ BOOST_AUTO_TEST_CASE(TEST_GDFILE_2) {
         const auto& grid1b = es1b.getInputGrid();
 
         grid1b.save("BAD_CP_F.EGRID", false, nnc.input(), units1b);
+        const char* deckData1 =
+            "RUNSPEC\n"
+            "\n"
+            "DIMENS\n"
+            "2 2 2 /\n"
+            "GRID\n"
+            "SPECGRID\n"
+            " 2 2 2 1 F /\n"
+            "COORD\n"
+            "  2002.0000  2002.0000   100.0000   1999.8255  1999.9127   108.4935\n"
+            "  2011.9939  2000.0000   100.3490   2009.8194  1999.9127   108.8425\n"
+            "  2015.9878  2000.0000   100.6980   2019.8133  1999.9127   109.1915\n"
+            "  2000.0000  2009.9985   100.1745   1999.8255  2009.9112   108.6681 \n"
+            "  2010.9939  2011.9985   100.5235   2009.8194  2009.9112   109.0170\n"
+            "  2019.9878  2009.9985   100.8725   2019.8133  2009.9112   109.3660\n"
+            "  2005.0000  2019.9970   100.3490   1999.8255  2019.9097   108.8426\n"
+            "  2009.9939  2019.9970   100.6980   2009.8194  2019.9097   109.1916\n"
+            "  2016.9878  2019.9970   101.0470   2019.8133  2019.9097   109.5406 /\n"
+            "ZCORN\n"
+            "    98.0000   100.3490    97.3490   100.6980   100.1745   100.5235\n"
+            "   100.5235   100.8725   100.1745   100.5235   100.5235   100.8725\n"
+            "   100.3490   101.6980   101.6980   102.5470   102.4973   102.1463\n"
+            "   103.2463   104.1953   103.6719   104.0209   104.0209   104.3698\n"
+            "   103.6719   104.0209   104.0209   104.3698   103.8464   104.1954\n"
+            "   104.1954   104.5444   103.4973   103.8463   103.8463   104.1953\n"
+            "   103.6719   104.0209   104.0209   104.3698   103.6719   104.0209\n"
+            "   104.0209   104.3698   103.8464   104.1954   104.1954   104.5444\n"
+            "   108.4935   108.8425   108.8425   109.1915   108.6681   109.0170\n"
+            "   109.0170   109.3660   108.6681   109.0170   109.0170   109.3660\n"
+            "   108.8426   109.1916   109.1916   109.5406  /\n"
+            "\n"
+            "PORO\n"
+            "   8*0.15 /\n"
+            "EDIT\n";
 
         auto deck1 = parser.parseString(deckData1);
         Opm::EclipseGrid grid1(deck1);
@@ -3191,6 +3127,15 @@ BOOST_AUTO_TEST_CASE(TEST_GDFILE_2) {
             BOOST_CHECK(actGrid1[n] == 1);
         }
 
+        const char* deckData2 =
+            "RUNSPEC\n"
+            "\n"
+            "DIMENS\n"
+            "2 2 2 /\n"
+            "GRID\n"
+            "GDFILE\n"
+            " 'BAD_CP_M.EGRID' /\n"
+            "EDIT\n";
 
         auto deck2 = parser.parseString(deckData2);
         Opm::EclipseGrid grid2(deck2);
@@ -3203,6 +3148,21 @@ BOOST_AUTO_TEST_CASE(TEST_GDFILE_2) {
             BOOST_CHECK(actGrid2[n] == ref_act_egrid[n]);
         }
 
+        const char* deckData3a =
+            "RUNSPEC\n"
+            "\n"
+            "DIMENS\n"
+            "2 2 2 /\n"
+            "GRID\n"
+            "ACTNUM\n"
+            " 1 0 1 0 1 1 1 1 /\n"
+            "MAPUNITS\n"
+            " FEET /\n"
+            "MAPAXES\n"
+            " 0.  200.  0.  0.  200.  0.  /\n"
+            "GDFILE\n"
+            " 'BAD_CP_M.EGRID' /\n"
+            "EDIT\n";
 
         auto deck3a = parser.parseString(deckData3a);
         Opm::EclipseGrid grid3a(deck3a);
@@ -3222,6 +3182,22 @@ BOOST_AUTO_TEST_CASE(TEST_GDFILE_2) {
         for (size_t n = 0; n < refDepthGrid3a.size(); n++) {
             BOOST_CHECK_CLOSE(grid3a.getCellDepth(n), refDepthGrid3a[n], 1e-3);
         }
+
+        const char* deckData3b =
+            "RUNSPEC\n"
+            "\n"
+            "DIMENS\n"
+            "2 2 2 /\n"
+            "GRID\n"
+            "MAPUNITS\n"
+            " FEET /\n"
+            "MAPAXES\n"
+            " 0.  200.  0.  0.  200.  0.  /\n"
+            "GDFILE\n"
+            " 'BAD_CP_F.EGRID' /\n"
+            "ACTNUM\n"
+            " 1 0 1 0 1 1 1 1 /\n"
+            "EDIT\n";
 
         auto deck3b = parser.parseString(deckData3b);
         Opm::EclipseGrid grid3b(deck3b);
@@ -3243,6 +3219,22 @@ BOOST_AUTO_TEST_CASE(TEST_GDFILE_2) {
 
         // mapunits and mapaxes both in egrid and deck. Uses properties
         // from the deck sinze these are input after GDfile
+
+        const char* deckData3c =
+            "RUNSPEC\n"
+            "\n"
+            "DIMENS\n"
+            "2 2 2 /\n"
+            "GRID\n"
+            "GDFILE\n"
+            " 'BAD_CP_F.EGRID' /\n"
+            "MAPUNITS\n"
+            " FEET /\n"
+            "MAPAXES\n"
+            " 0.  200.  0.  0.  200.  0.  /\n"
+            "ACTNUM\n"
+            " 1 0 1 0 1 1 1 1 /\n"
+            "EDIT\n";
 
         auto deck3c = parser.parseString(deckData3c);
         Opm::EclipseGrid grid3c(deck3c);

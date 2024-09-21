@@ -241,8 +241,8 @@ std::optional<Opm::Group> controlGroup(const Opm::Schedule& sched,
                                        const std::size_t simStep) {
     auto current = group;
     bool isField = false;
-    double cur_prod_ctrl= 0.;
     while (!isField) {
+        double cur_prod_ctrl;
         if (current.name() != "FIELD") {
             cur_prod_ctrl = sumState.get_group_var(current.name(), "GMCTP", 0);
         } else {
@@ -274,8 +274,8 @@ std::optional<Opm::Group>  injectionControlGroup(const Opm::Schedule& sched,
 {
     auto current = group;
     bool isField = false;
-    double  cur_inj_ctrl = 0.;
     while (!isField) {
+        double cur_inj_ctrl;
         if (current.name() != "FIELD") {
             cur_inj_ctrl = sumState.get_group_var(current.name(), curGroupInjCtrlKey, 0.);
         } else {
