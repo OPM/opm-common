@@ -299,23 +299,6 @@ std::optional<Opm::Group>  injectionControlGroup(const Opm::Schedule& sched,
     return {};
 } // namespace
 
-
-std::vector<std::size_t> groupParentSeqIndex(const Opm::Schedule& sched,
-        const Opm::Group& group,
-        const size_t simStep)
-//
-// returns a vector with the group sequence index of all parent groups from current parent group to Field level
-//
-{
-    std::vector<std::size_t> seq_numbers;
-    auto current = group;
-    while (current.name() != "FIELD") {
-        current = sched.getGroup(current.parent(), simStep);
-        seq_numbers.push_back(current.insert_index());
-    }
-    return seq_numbers;
-}
-
 namespace IGrp {
 std::size_t entriesPerGroup(const std::vector<int>& inteHead)
 {

@@ -17,10 +17,6 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdexcept>
-#include <memory>
-#include <stdlib.h>
-
 #define BOOST_TEST_MODULE ParseContextTests
 #include <boost/test/unit_test.hpp>
 
@@ -46,11 +42,12 @@
 #include <opm/input/eclipse/EclipseState/Runspec.hpp>
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 
+#include <cstdlib>
+#include <memory>
+#include <stdexcept>
+#include <tuple>
+
 using namespace Opm;
-
-
-
-
 
 BOOST_AUTO_TEST_CASE(TestUnkownKeyword) {
     const char * deck1 =
@@ -398,7 +395,7 @@ BOOST_AUTO_TEST_CASE( test_too_much_data ) {
     BOOST_CHECK_THROW( parser.parseString( deckString , parseContext, errors ) , OpmInputError);
 
     parseContext.update(ParseContext::PARSE_EXTRA_DATA , InputErrorAction::IGNORE );
-    auto deck = parser.parseString( deckString , parseContext, errors );
+    std::ignore = parser.parseString( deckString , parseContext, errors );
 }
 
 

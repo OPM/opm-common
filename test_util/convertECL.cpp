@@ -182,11 +182,10 @@ void open_grdecl_output(const std::string& output_fname, const std::string& inpu
 {
     if (output_fname.empty()) {
         std::filesystem::path inputfile(input_file);
-        std::filesystem::path rootName = inputfile.stem();
-        std::filesystem::path path = inputfile.parent_path();
-        std::filesystem::path grdeclfile;
-
-        grdeclfile = path / rootName += ".grdecl";
+        const std::filesystem::path rootName = inputfile.stem();
+        const std::filesystem::path path = inputfile.parent_path();
+        std::filesystem::path grdeclfile = path / rootName;
+        grdeclfile.replace_extension(".grdecl");
 
         if (std::filesystem::exists(grdeclfile)) {
             std::cout << "\nError, cant make grdecl file " << grdeclfile.string() << ". File exists \n";

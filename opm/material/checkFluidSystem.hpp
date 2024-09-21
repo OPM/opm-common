@@ -376,7 +376,7 @@ void checkFluidSystem()
 
     // test for molarMass() and componentName()
     for (unsigned compIdx = 0; compIdx < numComponents; ++ compIdx) {
-        val = FluidSystem::molarMass(compIdx);
+        std::ignore = FluidSystem::molarMass(compIdx);
         std::string{FluidSystem::componentName(compIdx)};
     }
 }

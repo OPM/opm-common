@@ -606,12 +606,10 @@ private:
                         +((2.8000E-5)/4)*(T*T*T*T))/(58.44E3)- 2.045698e+02; /* kJ/kg */
 
         Scalar m = 1E3/58.44 * S/(1-S);
-        int i = 0;
-        int j = 0;
         d_h = 0;
 
-        for (i = 0; i<=3; i++) {
-            for (j=0; j<=2; j++) {
+        for (int i = 0; i <= 3; ++i) {
+            for (int j = 0; j <= 2; ++j) {
                 d_h = d_h + a[i][j] * pow(theta, static_cast<Scalar>(i)) * std::pow(m, j);
             }
         }
