@@ -704,6 +704,9 @@ public:
     void deleteMINPVV();
 
 private:
+    template<typename T>
+    static void update_global_from_local(Fieldprops::FieldData<T>& data,
+                                         const std::vector<Box::cell_index>& index_list);
     void processMULTREGP(const Deck& deck);
     void scanGRIDSection(const GRIDSection& grid_section);
     void scanGRIDSectionOnlyACTNUM(const GRIDSection& grid_section);
@@ -740,7 +743,8 @@ private:
     void operate(const DeckRecord& record,
                  Fieldprops::FieldData<T>& target_data,
                  const Fieldprops::FieldData<T>& src_data,
-                 const std::vector<Box::cell_index>& index_list);
+                 const std::vector<Box::cell_index>& index_list,
+                 const bool global = false);
 
     template <typename T>
     Fieldprops::FieldData<T>&

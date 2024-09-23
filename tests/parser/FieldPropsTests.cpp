@@ -2276,7 +2276,7 @@ MULTZ
  27*1.0 /
 
 OPERATE
-   MULTZ 1  3   1  1   1   1  'MAXLIM'   MULTZ 0.50 /
+   MULTZ 1  3   1  1   1   1  'MAXLIM'   MULTX 0.50 /
 /
 
 )" };
