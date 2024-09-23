@@ -160,6 +160,10 @@ void UDQAssign::add_record(const RestartIO::RstUDQ& assignRst,
         this->add_well_or_group_records(assignRst, report_step);
         break;
 
+    case UDQVarType::SEGMENT_VAR:
+        this->add_segment_records(assignRst, report_step);
+        break;
+
     default:
         break;
     }
@@ -262,6 +266,33 @@ void UDQAssign::add_well_or_group_records(const RestartIO::RstUDQ& assignRst,
         for (const auto& subValuePair : assignRst[i]) {
             selector.front() = wgnames[nameIdx[i]];
             this->add_record(selector, subValuePair.second, report_step);
+        }
+    }
+}
+
+void UDQAssign::add_segment_records(const RestartIO::RstUDQ& assignRst,
+                                    const std::size_t        report_step)
+{
+    const auto& wgnames = assignRst.entityNames();
+    const auto& nameIdx = assignRst.nameIndex();
+    const auto n = assignRst.numEntities();
+
+    // Note: We intentionally allocate a single EnumeratedItems structure
+    // and reuse that for every add_record() call.  The loop here guarantees
+    // that we handle the case of different values for every segment for
+    // every MS well, albeit at the cost of the 'records' data member being
+    // larger than necessary if all entities do have the same value.
+    auto selector = std::vector<UDQSet::EnumeratedItems>(1);
+    auto& items = selector.front();
+    items.numbers.assign(1, std::size_t{0});
+
+    for (auto i = 0*n; i < n; ++i) {
+        items.name = wgnames[nameIdx[i]];
+
+        for (const auto& [segIx, value] : assignRst[i]) {
+            // +1 since segIx is a zero-based segment number.
+            items.numbers.front() = segIx + 1;
+            this->add_record(selector, value, report_step);
         }
     }
 }

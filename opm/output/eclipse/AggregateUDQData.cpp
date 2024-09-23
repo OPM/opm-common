@@ -29,6 +29,7 @@
 
 #include <opm/input/eclipse/Schedule/Group/Group.hpp>
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
+#include <opm/input/eclipse/Schedule/ScheduleState.hpp>
 
 #include <opm/input/eclipse/Schedule/UDQ/UDQActive.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQAssign.hpp>
@@ -42,10 +43,12 @@
 
 #include <opm/input/eclipse/Schedule/Well/Well.hpp>
 
-#include <array>
 #include <algorithm>
+#include <array>
+#include <cassert>
 #include <cstddef>
 #include <cstring>
+#include <iterator>
 #include <map>
 #include <optional>
 #include <string>
@@ -762,7 +765,7 @@ namespace {
                 : Opm::UDQ::restart_default;
         }
 
-    } // dUdf
+    } // dUdf -- Field level UDQ values (DUDF restart array)
 
     namespace dUdg {
 
@@ -800,7 +803,51 @@ namespace {
             }
         }
 
-    } // dUdg
+    } // dUdg -- Group level UDQ values (DUDG restart array)
+
+    namespace dUds {
+
+        std::vector<std::string>
+        allMsWells(const Opm::ScheduleState&       scheduleBlock,
+                   const std::vector<std::string>& allWells)
+        {
+            auto msWells = std::vector<std::string>{};
+            msWells.reserve(allWells.size());
+
+            std::copy_if(allWells.begin(), allWells.end(),
+                         std::back_inserter(msWells),
+                         [&scheduleBlock](const std::string& wname)
+                         {
+                             auto wptr = scheduleBlock.wells.get_ptr(wname);
+                             return (wptr != nullptr) && wptr->isMultiSegment();
+                         });
+
+            return msWells;
+        }
+
+        std::optional<Opm::RestartIO::Helpers::WindowedMatrix<double>>
+        allocate(const Opm::UDQDims& udqDims)
+        {
+            using WM = Opm::RestartIO::Helpers::WindowedMatrix<double>;
+
+            auto duds = std::optional<WM>{};
+
+            if (udqDims.numSegmentUDQs() > 0) {
+                // maxNumSegments() for each of
+                //    maxNumMsWells() for each of
+                //       numSegmentUDQs().
+                //
+                // Initial value restart_default simplifies collection logic.
+                duds.emplace(WM::NumRows    { udqDims.numSegmentUDQs() },
+                             WM::NumCols    { udqDims.maxNumMsWells()  },
+                             WM::WindowSize { udqDims.maxNumSegments() },
+                             Opm::UDQ::restart_default);
+            }
+
+            return duds;
+        }
+
+    } // dUds -- Segment level UDQ values (DUDS restart array)
 
     namespace dUdw {
 
@@ -840,7 +887,7 @@ namespace {
                 }
             }
         }
-    } // dUdw
+    } // dUdw -- Well level UDQ values (DUDW restart array)
 }
 
 // ===========================================================================
@@ -856,6 +903,7 @@ AggregateUDQData(const UDQDims& udqDims)
       // ------------------------------------------------------------
     , dUDF_ { dUdf::allocate(udqDims) }
     , dUDG_ { dUdg::allocate(udqDims) }
+    , dUDS_ { dUds::allocate(udqDims) }
     , dUDW_ { dUdw::allocate(udqDims) }
 {}
 
@@ -869,6 +917,10 @@ captureDeclaredUDQData(const Schedule&         sched,
                        const std::vector<int>& inteHead)
 {
     const auto udqInput = sched.getUDQConfig(simStep).input();
+
+    const auto allWells = this->dUDW_.has_value() || this->dUDS_.has_value()
+        ? sched.wellNames(simStep)
+        : std::vector<std::string>{};
 
     this->collectUserDefinedQuantities(udqInput, inteHead);
 
@@ -885,9 +937,17 @@ captureDeclaredUDQData(const Schedule&         sched,
                                     inteHead[VI::intehead::NO_GROUP_UDQS]);
     }
 
+    if (this->dUDS_.has_value()) {
+        const auto msWells = dUds::allMsWells(sched[simStep], allWells);
+
+        if (! msWells.empty()) {
+            this->collectSegmentUDQValues(udqInput, udq_state, msWells);
+        }
+    }
+
     if (this->dUDW_.has_value()) {
         this->collectWellUDQValues(udqInput, udq_state, nwmaxz(inteHead),
-                                   sched.wellNames(simStep),
+                                   allWells,
                                    inteHead[VI::intehead::NO_WELL_UDQS]);
     }
 }
@@ -901,7 +961,8 @@ collectUserDefinedQuantities(const std::vector<UDQInput>& udqInput,
 {
     const auto expectNumUDQ = inteHead[VI::intehead::NO_WELL_UDQS]
         + inteHead[VI::intehead::NO_GROUP_UDQS]
-        + inteHead[VI::intehead::NO_FIELD_UDQS];
+        + inteHead[VI::intehead::NO_FIELD_UDQS]
+        + inteHead[VI::intehead::NO_SEG_UDQS];
 
     int cnt = 0;
     for (const auto& udq_input : udqInput) {
@@ -921,7 +982,7 @@ collectUserDefinedQuantities(const std::vector<UDQInput>& udqInput,
 
     if (cnt != expectNumUDQ) {
         OpmLog::error(fmt::format("Inconsistent total number of UDQs: {}, "
-                                  "and sum of field, group, "
+                                  "and sum of field, group, segment, "
                                   "and well UDQs: {}", cnt, expectNumUDQ));
     }
 }
@@ -1059,6 +1120,39 @@ collectGroupUDQValues(const std::vector<UDQInput>&     udqInput,
         OpmLog::error(fmt::format("Inconsistent number of DUDG elements: {}, "
                                   "expected number of DUDG elements {}.",
                                   cnt, expectedNumGroupUDQs));
+    }
+}
+
+// ---------------------------------------------------------------------------
+
+void
+Opm::RestartIO::Helpers::AggregateUDQData::
+collectSegmentUDQValues(const std::vector<UDQInput>&    udqInput,
+                        const UDQState&                 udqState,
+                        const std::vector<std::string>& msWells)
+{
+    assert (msWells.size() <= this->dUDS_->numCols());
+
+    auto udqIdx = WindowedMatrix<double>::Idx{0};
+    for (const auto& udq_input : udqInput) {
+        if (udq_input.var_type() != UDQVarType::SEGMENT_VAR) {
+            continue;
+        }
+
+        if (udqIdx >= this->dUDS_->numRows()) {
+            throw std::logic_error {
+                fmt::format("UDQ variable index {} exceeds number "
+                            "of declared segment level UDQs {}",
+                            udqIdx, this->dUDS_->numRows())
+            };
+        }
+
+        for (auto mswIdx = 0*msWells.size(); mswIdx < msWells.size(); ++mswIdx) {
+            auto duds = (*this->dUDS_)(udqIdx, mswIdx);
+            udqState.exportSegmentUDQ(udq_input.keyword(), msWells[mswIdx], duds);
+        }
+
+        ++udqIdx;
     }
 }
 

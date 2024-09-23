@@ -44,23 +44,25 @@
 #include <opm/output/eclipse/RestartValue.hpp>
 
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
-#include <opm/input/eclipse/EclipseState/TracerConfig.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
-#include <opm/input/eclipse/Schedule/MSW/WellSegments.hpp>
-#include <opm/input/eclipse/Schedule/ScheduleTypes.hpp>
 #include <opm/input/eclipse/EclipseState/Runspec.hpp>
+#include <opm/input/eclipse/EclipseState/TracerConfig.hpp>
+
+#include <opm/input/eclipse/Schedule/MSW/WellSegments.hpp>
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
+#include <opm/input/eclipse/Schedule/ScheduleState.hpp>
 #include <opm/input/eclipse/Schedule/ScheduleTypes.hpp>
 #include <opm/input/eclipse/Schedule/SummaryState.hpp>
+#include <opm/input/eclipse/Schedule/UDQ/UDQEnums.hpp>
 #include <opm/input/eclipse/Schedule/Well/Well.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
-#include <opm/input/eclipse/Schedule/UDQ/UDQEnums.hpp>
 
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
 #include <exception>
 #include <functional>
+#include <iterator>
 #include <initializer_list>
 #include <map>
 #include <memory>
@@ -72,6 +74,7 @@
 #include <unordered_set>
 #include <utility>
 #include <vector>
+
 #include <fmt/format.h>
 
 #include <boost/range.hpp>
@@ -102,47 +105,69 @@ namespace {
 class UDQVectors
 {
 public:
-    template <typename T>
-    using Window = boost::iterator_range<typename std::vector<T>::const_iterator>;
-
     explicit UDQVectors(std::shared_ptr<Opm::EclIO::RestartFileView> rst_view)
         : rstView_{ std::move(rst_view) }
     {
         const auto& intehead = this->rstView_->getKeyword<int>("INTEHEAD");
-        this->num_wells = intehead[VI::intehead::NWMAXZ];
-        this->num_groups = intehead[VI::intehead::NGMAXZ];
+
+        this->maxNumMsWells_  = intehead[VI::intehead::NSWLMX];
+        this->maxNumSegments_ = intehead[VI::intehead::NSEGMX];
+        this->numGroups_      = intehead[VI::intehead::NGMAXZ];
+        this->numWells_       = intehead[VI::intehead::NWMAXZ];
     }
 
-    Window<double> next_dudw() const
-    {
-        return getDataWindow(this->rstView_->getKeyword<double>("DUDW"),
-                             this->num_wells, this->udq_well_index++);
-    }
-
-    Window<double> next_dudg() const
-    {
-        return getDataWindow(this->rstView_->getKeyword<double>("DUDG"),
-                             this->num_groups, this->udq_group_index++);
-    }
-
-    double next_dudf() const
-    {
-        return this->rstView_->getKeyword<double>("DUDF")[ this->udq_field_index++ ];
-    }
+    void prepareNextFieldUDQ()   { ++this->varIx_.field;   }
+    void prepareNextGroupUDQ()   { ++this->varIx_.group;   }
+    void prepareNextSegmentUDQ() { ++this->varIx_.segment; }
+    void prepareNextWellUDQ()    { ++this->varIx_.well;    }
 
     const std::vector<std::string>& zudn() const
     {
         return this->rstView_->getKeyword<std::string>("ZUDN");
     }
 
+    bool hasGroup()   const { return this->rstView_->hasKeyword<double>("DUDG"); }
+    bool hasSegment() const { return this->rstView_->hasKeyword<double>("DUDS"); }
+    bool hasWell()    const { return this->rstView_->hasKeyword<double>("DUDW"); }
+
+    double currentFieldUDQValue() const
+    {
+        return this->rstView_->getKeyword<double>("DUDF")[ this->varIx_.field ];
+    }
+
+    auto currentGroupUDQValue() const
+    {
+        return getDataWindow(this->rstView_->getKeyword<double>("DUDG"),
+                             this->numGroups_, this->varIx_.group);
+    }
+
+    auto currentSegmentUDQValue(const std::size_t msWellIx) const
+    {
+        return getDataWindow(this->rstView_->getKeyword<double>("DUDS"),
+                             this->maxNumSegments_, this->varIx_.segment,
+                             msWellIx, this->maxNumMsWells_);
+    }
+
+    auto currentWellUDQValue() const
+    {
+        return getDataWindow(this->rstView_->getKeyword<double>("DUDW"),
+                             this->numWells_, this->varIx_.well);
+    }
+
 private:
-    std::size_t num_wells;
-    std::size_t num_groups;
     std::shared_ptr<Opm::EclIO::RestartFileView> rstView_;
 
-    mutable std::size_t udq_well_index  = 0;
-    mutable std::size_t udq_group_index = 0;
-    mutable std::size_t udq_field_index = 0;
+    std::size_t maxNumMsWells_{0};
+    std::size_t maxNumSegments_{0};
+    std::size_t numGroups_{0};
+    std::size_t numWells_{0};
+
+    struct {
+        std::size_t field{0};
+        std::size_t group{0};
+        std::size_t segment{0};
+        std::size_t well{0};
+    } varIx_;
 };
 
 // ---------------------------------------------------------------------
@@ -1382,43 +1407,139 @@ namespace {
         update("GITH", xgrp[VI::XGroup::index::HistGasInjTotal]);
     }
 
-    void restore_udq(::Opm::SummaryState&                         smry,
-                     const ::Opm::Schedule&                       schedule,
-                     std::shared_ptr<Opm::EclIO::RestartFileView> rst_view)
+    bool isDefaultedUDQ(const double x)
     {
-        if (!rst_view->hasKeyword<std::string>(std::string("ZUDN")))
-            return;
+        return x == Opm::UDQ::restart_default;
+    }
 
-        const auto sim_step = rst_view->simStep();
-        const auto& wnames = schedule.wellNames(sim_step);
-        const auto& groups = schedule.restart_groups(sim_step);
-        const auto udq_vectors = UDQVectors{ std::move(rst_view) };
+    void restoreFieldUDQValue(const UDQVectors&  udqs,
+                              const std::string& quantity,
+                              Opm::SummaryState& smry)
+    {
+        const auto dudf = udqs.currentFieldUDQValue();
 
-        for (const auto& udq : udq_vectors.zudn()) {
-            if (udq[0] == 'W') {
-                const auto& dudw = udq_vectors.next_dudw();
-                for (std::size_t well_index = 0; well_index < wnames.size(); well_index++) {
-                    const auto& value = dudw[well_index];
-                    if (value != ::Opm::UDQ::restart_default)
-                        smry.update_well_var(wnames[well_index], udq, value);
-                }
+        if (! isDefaultedUDQ(dudf)) {
+            smry.update(quantity, dudf);
+        }
+    }
+
+    void restoreGroupUDQValue(const UDQVectors&                     udqs,
+                              const std::vector<const Opm::Group*>& groups,
+                              const std::string&                    quantity,
+                              Opm::SummaryState&                    smry)
+    {
+        const auto nGrp = groups.size();
+        const auto dudg = udqs.currentGroupUDQValue();
+
+        for (auto iGrp = 0*nGrp; iGrp < nGrp; ++iGrp) {
+            if ((groups[iGrp] == nullptr) || isDefaultedUDQ(dudg[iGrp])) {
+                continue;
             }
 
-            if (udq[0] == 'G')  {
-                const auto& dudg = udq_vectors.next_dudg();
-                for (std::size_t group_index = 0; group_index < groups.size(); group_index++) {
-                    const auto& value = dudg[group_index];
-                    if (value != ::Opm::UDQ::restart_default) {
-                        const auto& group_name = groups[group_index]->name();
-                        smry.update_group_var(group_name, udq, value);
-                    }
+            smry.update_group_var(groups[iGrp]->name(), quantity, dudg[iGrp]);
+        }
+    }
+
+    void restoreSegmentUDQValue(const UDQVectors&               udqs,
+                                const std::vector<std::string>& msWells,
+                                const std::string&              quantity,
+                                Opm::SummaryState&              smry)
+    {
+        const auto nWells = msWells.size();
+
+        for (auto iWell = 0*nWells; iWell < nWells; ++iWell) {
+            const auto duds = udqs.currentSegmentUDQValue(iWell);
+            const auto nSeg = duds.size();
+
+            for (auto iSeg = 0*nSeg; iSeg < nSeg; ++iSeg) {
+                if (isDefaultedUDQ(duds[iSeg])) {
+                    continue;
                 }
+
+                smry.update_segment_var(msWells[iWell],
+                                        quantity,
+                                        iSeg + 1, // One-based segment number.
+                                        duds[iSeg]);
+            }
+        }
+    }
+
+    void restoreWellUDQValue(const UDQVectors&               udqs,
+                             const std::vector<std::string>& wells,
+                             const std::string&              quantity,
+                             Opm::SummaryState&              smry)
+    {
+        const auto nWell = wells.size();
+        const auto dudw  = udqs.currentWellUDQValue();
+
+        for (auto iWell = 0*nWell; iWell < nWell; ++iWell) {
+            if (isDefaultedUDQ(dudw[iWell])) {
+                continue;
             }
 
-            if (udq[0] == 'F')  {
-                const auto& value = udq_vectors.next_dudf();
-                if (value != ::Opm::UDQ::restart_default)
-                    smry.update(udq, value);
+            smry.update_well_var(wells[iWell], quantity, dudw[iWell]);
+        }
+    }
+
+    std::vector<std::string>
+    multiSegmentWells(const Opm::ScheduleState&       scheduleBlock,
+                      const std::vector<std::string>& allWells)
+    {
+        auto msWells = std::vector<std::string>{};
+        msWells.reserve(allWells.size());
+
+        std::copy_if(allWells.begin(), allWells.end(),
+                     std::back_inserter(msWells),
+                     [&scheduleBlock](const std::string& wname)
+                     {
+                         auto wptr = scheduleBlock.wells.get_ptr(wname);
+                         return (wptr != nullptr) && wptr->isMultiSegment();
+                     });
+
+        return msWells;
+    }
+
+    void restoreUDQValues(const Opm::Schedule&                         schedule,
+                          std::shared_ptr<Opm::EclIO::RestartFileView> rst_view,
+                          Opm::SummaryState&                           smry)
+    {
+        const auto simStep = rst_view->simStep();
+
+        auto udqs = UDQVectors { std::move(rst_view) };
+
+        const auto groups = udqs.hasGroup()
+            ? schedule.restart_groups(simStep)
+            : std::vector<const Opm::Group*>{};
+
+        const auto allWells = (udqs.hasWell() || udqs.hasSegment())
+            ? schedule.wellNames(simStep)
+            : std::vector<std::string>{};
+
+        const auto msWells = udqs.hasSegment()
+            ? multiSegmentWells(schedule[simStep], allWells)
+            : std::vector<std::string>{};
+
+        for (const auto& udq : udqs.zudn()) {
+            switch (udq.front()) {
+            case 'F':
+                restoreFieldUDQValue(udqs, udq, smry);
+                udqs.prepareNextFieldUDQ();
+                break;
+
+            case 'G':
+                restoreGroupUDQValue(udqs, groups, udq, smry);
+                udqs.prepareNextGroupUDQ();
+                break;
+
+            case 'S':
+                restoreSegmentUDQValue(udqs, msWells, udq, smry);
+                udqs.prepareNextSegmentUDQ();
+                break;
+
+            case 'W':
+                restoreWellUDQValue(udqs, allWells, udq, smry);
+                udqs.prepareNextWellUDQ();
+                break;
             }
         }
     }
@@ -1486,13 +1607,10 @@ namespace Opm { namespace RestartIO  {
          const Schedule&                schedule,
          const std::vector<RestartKey>& extra_keys)
     {
-        auto rst_file = std::make_shared<Opm::EclIO::ERst>(filename);
         auto rst_view = std::make_shared<Opm::EclIO::RestartFileView>
-            (std::move(rst_file), report_step);
+            (std::make_shared<Opm::EclIO::ERst>(filename), report_step);
 
-        auto xr = restoreSOLUTION(solution_keys,
-                                  grid.getNumActive(), *rst_view);
-
+        auto xr = restoreSOLUTION(solution_keys, grid.getNumActive(), *rst_view);
         xr.convertToSI(es.getUnits());
 
         auto xw = restore_wells(es, grid, schedule, summary_state, rst_view);
@@ -1509,7 +1627,10 @@ namespace Opm { namespace RestartIO  {
             restoreExtra(extra_keys, es.getUnits(), *rst_view, rst_value);
         }
 
-        restore_udq(summary_state, schedule, rst_view);
+        if (rst_view->hasKeyword<std::string>("ZUDN")) {
+            restoreUDQValues(schedule, rst_view, summary_state);
+        }
+
         restore_cumulative(summary_state, schedule, es.tracer(), std::move(rst_view));
 
         return rst_value;
