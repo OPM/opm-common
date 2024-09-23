@@ -283,6 +283,10 @@ namespace {
             rstFile.write("DUDG", dudg->data());
         }
 
+        if (const auto& duds = udqData.getDUDS(); duds.has_value()) {
+            rstFile.write("DUDS", duds->data());
+        }
+
         if (const auto& dudw = udqData.getDUDW(); dudw.has_value()) {
             rstFile.write("DUDW", dudw->data());
         }

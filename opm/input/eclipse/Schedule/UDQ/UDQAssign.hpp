@@ -407,6 +407,17 @@ private:
     /// ensures this behaviour.
     void add_well_or_group_records(const RestartIO::RstUDQ& assignRst,
                                    const std::size_t        report_step);
+
+    /// Reconstitute segment level assignment from restart file information
+    ///
+    /// \param[in] assignRst Aggregate UDQ assignment information restored
+    /// from restart file information.
+    ///
+    /// \param[in] report_step Time at which this assignment happens.
+    /// Assignments should be performed exactly once and the time value
+    /// ensures this behaviour.
+    void add_segment_records(const RestartIO::RstUDQ& assignRst,
+                             const std::size_t        report_step);
 };
 
 } // namespace Opm
