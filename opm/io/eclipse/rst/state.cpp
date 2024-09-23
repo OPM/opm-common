@@ -34,24 +34,40 @@
 #include <opm/common/utility/String.hpp>
 #include <opm/common/utility/TimeService.hpp>
 
-#include <opm/input/eclipse/Schedule/Action/Actdims.hpp>
-#include <opm/input/eclipse/Schedule/Action/Condition.hpp>
-
-#include <opm/input/eclipse/Deck/Deck.hpp>
-#include <opm/input/eclipse/Parser/Parser.hpp>
-
 #include <opm/output/eclipse/UDQDims.hpp>
+
 #include <opm/output/eclipse/VectorItems/connection.hpp>
 #include <opm/output/eclipse/VectorItems/doubhead.hpp>
 #include <opm/output/eclipse/VectorItems/intehead.hpp>
 #include <opm/output/eclipse/VectorItems/well.hpp>
+
 #include <opm/output/eclipse/WriteRestartHelpers.hpp>
 
+#include <opm/input/eclipse/Schedule/Action/Actdims.hpp>
+#include <opm/input/eclipse/Schedule/Action/Condition.hpp>
+
+#include <opm/input/eclipse/Deck/Deck.hpp>
+
+#include <opm/input/eclipse/Parser/Parser.hpp>
+
 #include <algorithm>
+#include <array>
+#include <cstddef>
+#include <functional>
 #include <iterator>
 #include <memory>
 #include <numeric>
 #include <optional>
+#include <stdexcept>
+#include <string>
+#include <utility>
+#include <vector>
+
+#include <fmt/format.h>
+
+#include <boost/range.hpp>
+
+namespace VI = ::Opm::RestartIO::Helpers::VectorItems;
 
 namespace {
     std::string
@@ -60,12 +76,12 @@ namespace {
     {
         auto zudl_begin = zudl.begin();
         auto zudl_end = zudl_begin;
-        std::advance( zudl_begin, (udq_index + 0) * Opm::UDQDims::entriesPerZUDL() );
-        std::advance( zudl_end  , (udq_index + 1) * Opm::UDQDims::entriesPerZUDL() );
+        std::advance(zudl_begin, (udq_index + 0) * Opm::UDQDims::entriesPerZUDL());
+        std::advance(zudl_end  , (udq_index + 1) * Opm::UDQDims::entriesPerZUDL());
 
-        auto define = std::accumulate(zudl_begin, zudl_end, std::string{}, std::plus<>());
-        if (!define.empty() && (define[0] == '~')) {
-            define[0] = '-';
+        auto define = fmt::format("{}", fmt::join(zudl_begin, zudl_end, ""));
+        if (!define.empty() && (define.front() == '~')) {
+            define.front() = '-';
         }
 
         return define;
@@ -76,11 +92,165 @@ namespace {
     {
         return Opm::UDQ::updateType(iudq[udq_index * Opm::UDQDims::entriesPerIUDQ()]);
     }
+
+    template <typename T>
+    boost::iterator_range<typename std::vector<T>::const_iterator>
+    getDataWindow(const std::vector<T>& arr,
+                  const std::size_t     windowSize,
+                  const std::size_t     entity,
+                  const std::size_t     subEntity               = 0,
+                  const std::size_t     maxSubEntitiesPerEntity = 1)
+    {
+        const auto off =
+            windowSize * (subEntity + maxSubEntitiesPerEntity*entity);
+
+        auto begin = arr.begin() + off;
+        auto end   = begin       + windowSize;
+
+        return { begin, end };
+    }
+
+    class UDQVectors
+    {
+    public:
+        UDQVectors(std::shared_ptr<Opm::EclIO::RestartFileView> rst_view)
+            : rstView_{ std::move(rst_view) }
+        {
+            const auto& intehead = this->rstView_->getKeyword<int>("INTEHEAD");
+
+            this->maxNumMsWells_ = intehead[VI::intehead::NSWLMX];
+            this->numGroups_     = intehead[VI::intehead::NGMAXZ]; // Including FIELD
+            this->numWells_      = intehead[VI::intehead::NWMAXZ];
+        }
+
+        enum Type : std::size_t {
+            Field, Group, Segment, Well,
+            // ---- Implementation Helper ----
+            NumTypes
+        };
+
+        void prepareNext(const Type t) { ++this->varIx_[t]; }
+
+        const std::vector<std::string>& zudn() const
+        {
+            return this->rstView_->getKeyword<std::string>("ZUDN");
+        }
+
+        bool hasGroup() const { return this->rstView_->hasKeyword<double>("DUDG"); }
+        bool hasWell()  const { return this->rstView_->hasKeyword<double>("DUDW"); }
+
+        double currentFieldUDQValue() const
+        {
+            return this->rstView_->getKeyword<double>("DUDF")[ this->varIx_[Type::Field] ];
+        }
+
+        auto currentGroupUDQValue() const
+        {
+            return getDataWindow(this->rstView_->getKeyword<double>("DUDG"),
+                                 this->numGroups_, this->varIx_[Type::Group]);
+        }
+
+        auto currentWellUDQValue() const
+        {
+            return getDataWindow(this->rstView_->getKeyword<double>("DUDW"),
+                                 this->numWells_, this->varIx_[Type::Well]);
+        }
+
+    private:
+        std::shared_ptr<Opm::EclIO::RestartFileView> rstView_;
+
+        std::size_t maxNumMsWells_{0};
+        std::size_t numGroups_{0};
+        std::size_t numWells_{0};
+
+        std::array<std::size_t, Type::NumTypes> varIx_{};
+    };
+
+    bool isDefaultedUDQ(const double x)
+    {
+        return x == Opm::UDQ::restart_default;
+    }
+
+    void restoreFieldUDQValue(const UDQVectors&       udqs,
+                              Opm::RestartIO::RstUDQ& udq)
+    {
+        const auto dudf = udqs.currentFieldUDQValue();
+
+        if (! isDefaultedUDQ(dudf)) {
+            udq.assignScalarValue(dudf);
+        }
+    }
+
+    void restoreGroupUDQValue(const UDQVectors&                            udqs,
+                              const std::vector<Opm::RestartIO::RstGroup>& groups,
+                              Opm::RestartIO::RstUDQ&                      udq)
+    {
+        const auto nGrp = groups.size();
+        const auto dudg = udqs.currentGroupUDQValue();
+
+        const auto subEntity = 0;
+        auto entity = 0;
+        for (auto iGrp = 0*nGrp; iGrp < nGrp; ++iGrp) {
+            if (isDefaultedUDQ(dudg[iGrp])) {
+                continue;
+            }
+
+            udq.addValue(entity++, subEntity, dudg[iGrp]);
+            udq.addEntityName(groups[iGrp].name);
+        }
+    }
+
+    void restoreWellUDQValue(const UDQVectors&                           udqs,
+                             const std::vector<Opm::RestartIO::RstWell>& wells,
+                             Opm::RestartIO::RstUDQ&                     udq)
+    {
+        const auto nWell = wells.size();
+        const auto dudw  = udqs.currentWellUDQValue();
+
+        const auto subEntity = 0;
+        auto entity = 0;
+        for (auto iWell = 0*nWell; iWell < nWell; ++iWell) {
+            if (isDefaultedUDQ(dudw[iWell])) {
+                continue;
+            }
+
+            udq.addValue(entity++, subEntity, dudw[iWell]);
+            udq.addEntityName(wells[iWell].name);
+        }
+    }
+
+    void restoreSingleUDQ(const Opm::RestartIO::RstState& rst,
+                          UDQVectors&                     udqValues,
+                          Opm::RestartIO::RstUDQ&         udq)
+    {
+        udq.prepareValues();
+
+        // Note: Categories ordered by enumerator values in UDQEnums.hpp.
+        switch (udq.category) {
+        case Opm::UDQVarType::FIELD_VAR:
+            restoreFieldUDQValue(udqValues, udq);
+            udqValues.prepareNext(UDQVectors::Type::Field);
+            break;
+
+        case Opm::UDQVarType::WELL_VAR:
+            restoreWellUDQValue(udqValues, rst.wells, udq);
+            udqValues.prepareNext(UDQVectors::Type::Well);
+            break;
+
+        case Opm::UDQVarType::GROUP_VAR:
+            restoreGroupUDQValue(udqValues, rst.groups, udq);
+            udqValues.prepareNext(UDQVectors::Type::Group);
+            break;
+
+        default:
+            break;
+        }
+
+        udq.commitValues();
+    }
 }
 
-namespace VI = ::Opm::RestartIO::Helpers::VectorItems;
-
-namespace Opm { namespace RestartIO {
+namespace Opm::RestartIO {
 
 RstState::RstState(std::shared_ptr<EclIO::RestartFileView> rstView,
                    const Runspec&                          runspec,
@@ -186,7 +356,8 @@ void RstState::add_wells(const std::vector<std::string>& zwel,
                          const std::vector<double>& xwel,
                          const std::vector<int>& icon,
                          const std::vector<float>& scon,
-                         const std::vector<double>& xcon) {
+                         const std::vector<double>& xcon)
+{
 
     for (int iw = 0; iw < this->header.num_wells; iw++) {
         std::size_t zwel_offset = iw * this->header.nzwelz;
@@ -223,7 +394,8 @@ void RstState::add_msw(const std::vector<std::string>& zwel,
                        const std::vector<float>& scon,
                        const std::vector<double>& xcon,
                        const std::vector<int>& iseg,
-                       const std::vector<double>& rseg) {
+                       const std::vector<double>& rseg)
+{
 
     for (int iw = 0; iw < this->header.num_wells; iw++) {
         std::size_t zwel_offset = iw * this->header.nzwelz;
@@ -251,59 +423,35 @@ void RstState::add_msw(const std::vector<std::string>& zwel,
     }
 }
 
-void RstState::add_udqs(const std::vector<int>& iudq,
-                        const std::vector<std::string>& zudn,
-                        const std::vector<std::string>& zudl,
-                        const std::vector<double>& dudw,
-                        const std::vector<double>& dudg,
-                        const std::vector<double>& dudf)
+void RstState::add_udqs(std::shared_ptr<EclIO::RestartFileView> rstView)
 {
-    auto well_var  = 0*this->header.num_wells;
-    auto group_var = 0*this->header.ngroup;
-    auto field_var = 0*this->header.num_udq();
+    const auto& iudq = rstView->getKeyword<int>("IUDQ");
+    const auto& zudn = rstView->getKeyword<std::string>("ZUDN");
+    const auto& zudl = rstView->getKeyword<std::string>("ZUDL");
 
-    for (auto udq_index = 0*this->header.num_udq(); udq_index < this->header.num_udq(); ++udq_index) {
+    if (rstView->hasKeyword<int>("IUAD")) {
+        const auto& iuad = rstView->getKeyword<int>("IUAD");
+        const auto& iuap = rstView->getKeyword<int>("IUAP");
+        const auto& igph = rstView->getKeyword<int>("IGPH");
+
+        this->udq_active = RstUDQActive(iuad, iuap, igph);
+    }
+
+    auto udqValues = UDQVectors { std::move(rstView) };
+
+    for (auto udq_index = 0*this->header.num_udq();
+         udq_index < this->header.num_udq(); ++udq_index)
+    {
         const auto& name = zudn[udq_index*UDQDims::entriesPerZUDN() + 0];
         const auto& unit = zudn[udq_index*UDQDims::entriesPerZUDN() + 1];
 
         const auto define = udq_define(zudl, udq_index);
+
         auto& udq = define.empty()
             ? this->udqs.emplace_back(name, unit)
             : this->udqs.emplace_back(name, unit, define, udq_update(iudq, udq_index));
 
-        if (udq.var_type == UDQVarType::WELL_VAR) {
-            for (std::size_t well_index = 0; well_index < this->wells.size(); well_index++) {
-                auto well_value = dudw[ well_var * this->header.max_wells_in_field + well_index ];
-                if (well_value == UDQ::restart_default)
-                    continue;
-
-                const auto& well_name = this->wells[well_index].name;
-                udq.add_value(well_name, well_value);
-            }
-
-            ++well_var;
-        }
-
-        if (udq.var_type == UDQVarType::GROUP_VAR) {
-            for (std::size_t group_index = 0; group_index < this->groups.size(); group_index++) {
-                auto group_value = dudg[ group_var * this->header.max_groups_in_field + group_index ];
-                if (group_value == UDQ::restart_default)
-                    continue;
-
-                const auto& group_name = this->groups[group_index].name;
-                udq.add_value(group_name, group_value);
-            }
-
-            ++group_var;
-        }
-
-        if (udq.var_type == UDQVarType::FIELD_VAR) {
-            auto field_value = dudf[ field_var ];
-            if (field_value != UDQ::restart_default)
-                udq.add_value(field_value);
-
-            ++field_var;
-        }
+        restoreSingleUDQ(*this, udqValues, udq);
     }
 }
 
@@ -402,7 +550,8 @@ void RstState::add_wlist(const std::vector<std::string>& zwls,
     }
 }
 
-const RstWell& RstState::get_well(const std::string& wname) const {
+const RstWell& RstState::get_well(const std::string& wname) const
+{
     const auto well_iter = std::find_if(this->wells.begin(),
                                         this->wells.end(),
                                         [&wname] (const auto& well) {
@@ -428,6 +577,7 @@ RstState RstState::load(std::shared_ptr<EclIO::RestartFileView> rstView,
         const auto& igrp = rstView->getKeyword<int>("IGRP");
         const auto& sgrp = rstView->getKeyword<float>("SGRP");
         const auto& xgrp = rstView->getKeyword<double>("XGRP");
+
         state.add_groups(zgrp, igrp, sgrp, xgrp);
     }
 
@@ -442,15 +592,19 @@ RstState RstState::load(std::shared_ptr<EclIO::RestartFileView> rstView,
         const auto& xcon = rstView->getKeyword<double>("XCON");
 
         if (rstView->hasKeyword<int>("ISEG")) {
+            // Multi-segmented wells in restart file.
             const auto& iseg = rstView->getKeyword<int>("ISEG");
             const auto& rseg = rstView->getKeyword<double>("RSEG");
 
             state.add_msw(zwel, iwel, swel, xwel,
                           icon, scon, xcon,
                           iseg, rseg);
-        } else
+        }
+        else {
+            // Standard wells only.
             state.add_wells(zwel, iwel, swel, xwel,
                             icon, scon, xcon);
+        }
 
         if (rstView->hasKeyword<int>("IWLS")) {
             const auto& iwls = rstView->getKeyword<int>("IWLS");
@@ -461,22 +615,7 @@ RstState RstState::load(std::shared_ptr<EclIO::RestartFileView> rstView,
     }
 
     if (state.header.num_udq() > 0) {
-        const auto& iudq = rstView->getKeyword<int>("IUDQ");
-        const auto& zudn = rstView->getKeyword<std::string>("ZUDN");
-        const auto& zudl = rstView->getKeyword<std::string>("ZUDL");
-
-        const auto& dudw = state.header.nwell_udq  > 0 ? rstView->getKeyword<double>("DUDW") : std::vector<double>{};
-        const auto& dudg = state.header.ngroup_udq > 0 ? rstView->getKeyword<double>("DUDG") : std::vector<double>{};
-        const auto& dudf = state.header.nfield_udq > 0 ? rstView->getKeyword<double>("DUDF") : std::vector<double>{};
-
-        state.add_udqs(iudq, zudn, zudl, dudw, dudg, dudf);
-
-        if (rstView->hasKeyword<int>("IUAD")) {
-            const auto& iuad = rstView->getKeyword<int>("IUAD");
-            const auto& iuap = rstView->getKeyword<int>("IUAP");
-            const auto& igph = rstView->getKeyword<int>("IGPH");
-            state.udq_active = RstUDQActive(iuad, iuap, igph);
-        }
+        state.add_udqs(rstView);
     }
 
     if (state.header.num_action > 0) {
@@ -490,8 +629,7 @@ RstState RstState::load(std::shared_ptr<EclIO::RestartFileView> rstView,
         state.add_actions(parser, runspec, state.header.sim_time(), zact, iact, sact, zacn, iacn, sacn, zlact);
     }
 
-
     return state;
 }
 
-}} // namespace Opm::RestartIO
+} // namespace Opm::RestartIO
