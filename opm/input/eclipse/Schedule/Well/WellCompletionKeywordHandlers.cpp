@@ -45,6 +45,7 @@ namespace {
 void handleCOMPDAT(HandlerContext& handlerContext)
 {
     std::unordered_set<std::string> wells;
+    std::unordered_map<std::string, bool> well_connected;
     for (const auto& record : handlerContext.keyword) {
         const auto wellNamePattern = record.getItem("WELL").getTrimmedString(0);
         const auto wellnames = handlerContext.wellNames(wellNamePattern);
@@ -57,7 +58,12 @@ void handleCOMPDAT(HandlerContext& handlerContext)
 
             connections->loadCOMPDAT(record, handlerContext.grid, name,
                                      well2.getWDFAC(), handlerContext.keyword.location());
-            const auto newWellConnSetIsEmpty = connections->empty();
+
+            const auto isConnected = !origWellConnSetIsEmpty || !connections->empty();
+            if (well_connected.count(name))
+                well_connected[name] = (isConnected || well_connected[name]);
+            else
+                well_connected[name] = isConnected;
 
             if (well2.updateConnections(std::move(connections), handlerContext.grid)) {
                 auto wdfac = std::make_shared<WDFAC>(well2.getWDFAC());
@@ -69,20 +75,22 @@ void handleCOMPDAT(HandlerContext& handlerContext)
                 wells.insert(name);
             }
 
-            if (origWellConnSetIsEmpty && newWellConnSetIsEmpty) {
-                const auto& location = handlerContext.keyword.location();
-
-                const auto msg = fmt::format(R"(Problem with COMPDAT/{}
-In {} line {}
-Well {} is not connected to grid - will remain SHUT)",
-                                             name, location.filename,
-                                             location.lineno, name);
-
-                OpmLog::warning(msg);
-            }
-
             handlerContext.state().wellgroup_events()
                 .addEvent(name, ScheduleEvents::COMPLETION_CHANGE);
+        }
+    }
+    // Output warning messages per well/keyword (not per COMPDAT record..)
+    for (const auto& [wname, connected] : well_connected) {
+        if (!connected) {
+            const auto& location = handlerContext.keyword.location();
+
+            const auto msg = fmt::format(R"(Potential problem with COMPDAT/{}
+In {} line {}
+Well {} is not connected to grid - will remain SHUT)",
+                                         wname, location.filename,
+                                         location.lineno, wname);
+
+            OpmLog::warning(msg);
         }
     }
 
