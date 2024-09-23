@@ -1048,11 +1048,11 @@ FieldProps::init_get(const std::string& keyword, bool)
     return this->init_get(keyword, Fieldprops::keywords::global_kw_info<int>(keyword));
 }
 
-std::vector<Box::cell_index>
+std::pair<std::vector<Box::cell_index>,bool>
 FieldProps::region_index(const std::string& region_name, const int region_value)
 {
     std::vector<Box::cell_index> index_list;
-
+    bool all_active = true;
     const auto& region = this->init_get<int>(region_name);
     if (!region.valid()) {
         throw std::invalid_argument("Trying to work with invalid region: " + region_name);
@@ -1066,10 +1066,12 @@ FieldProps::region_index(const std::string& region_name, const int region_value)
             }
 
             active_index += 1;
+        }else{
+            all_active=false;
         }
     }
 
-    return index_list;
+    return {index_list, all_active};
 }
 
 std::string FieldProps::region_name(const DeckItem& region_item) const
@@ -1428,7 +1430,7 @@ void FieldProps::handle_operateR(const DeckKeyword& keyword)
         const auto reg_name = record.getItem("REGION_NAME").getTrimmedString(0);
         const auto src_kw = record.getItem("ARRAY_PARAMETER").getTrimmedString(0);
 
-        const auto& index_list = this->region_index(reg_name, region_value);
+        const auto& [index_list, all_active] = this->region_index(reg_name, region_value);
         if (index_list.empty()) {
             log_empty_region(keyword, reg_name, region_value, src_kw);
             continue;
@@ -1437,9 +1439,26 @@ void FieldProps::handle_operateR(const DeckKeyword& keyword)
         const auto& src_data = this->init_get<double>(src_kw);
         FieldProps::operate(record, field_data, src_data, index_list);
 
+        // Supporting region operations on global storage arrays would
+        // require global storage for the *NUM region set arrays (i.e.,
+        // FLUXNUM, MULTNUM, OPERNUM).  In order to avoid global storage
+        // for a significant portion of the property arrays we have
+        // decided, as a project policy, to not support such operations
+        // at this time.  There is, however, no technical reason for why
+        // the current implementation could not be extended to support
+        // region operations on global storage arrays.
         // For now regions do not 100% support global storage.
         // Make sure that the global storage at least reflects the local one.
-        update_global_from_local(field_data, index_list);
+        if (field_data.global_data) {
+            if (!all_active) {
+                const auto message =
+                    fmt::format(R"(Region operation on 3D field {} with global storage will not update inactive cells.
+Note that this might cause problems for PINCH option 4 or 5 beging ALL.)", target_kw);
+
+                OpmLog::warning(Log::fileMessage(keyword.location(), message));
+            }
+            update_global_from_local(field_data, index_list);
+        }
     }
 }
 
@@ -1482,24 +1501,8 @@ void FieldProps::handle_region_operation(const DeckKeyword& keyword)
         if (FieldProps::supported<double>(target_kw)) {
             auto& field_data = this->init_get<double>(target_kw);
 
-            // Supporting region operations on global storage arrays would
-            // require global storage for the *NUM region set arrays (i.e.,
-            // FLUXNUM, MULTNUM, OPERNUM).  In order to avoid global storage
-            // for a significant portion of the property arrays we have
-            // decided, as a project policy, to not support such operations
-            // at this time.  There is, however, no technical reason for why
-            // the current implementation could not be extended to support
-            // region operations on global storage arrays.
-            if (field_data.global_data) {
-                throw OpmInputError {
-                    fmt::format("Region operation on 3D field {} with "
-                                "global storage is not implemented.", target_kw),
-                    keyword.location()
-                };
-            }
-
             const auto reg_name = this->region_name(record.getItem("REGION_NAME"));
-            const auto& index_list = this->region_index(reg_name, region_value);
+            const auto& [index_list, all_active] = this->region_index(reg_name, region_value);
             if (index_list.empty()) {
                 log_empty_region(keyword, reg_name, region_value, target_kw);
                 continue;
@@ -1512,6 +1515,25 @@ void FieldProps::handle_region_operation(const DeckKeyword& keyword)
                   field_data.data, field_data.value_status,
                   scalar_value, index_list);
 
+            // Supporting region operations on global storage arrays would
+            // require global storage for the *NUM region set arrays (i.e.,
+            // FLUXNUM, MULTNUM, OPERNUM).  In order to avoid global storage
+            // for a significant portion of the property arrays we have
+            // decided, as a project policy, to not support such operations
+            // at this time.  There is, however, no technical reason for why
+            // the current implementation could not be extended to support
+            // region operations on global storage arrays..
+            // Make sure that the global storage at least reflects the local one.
+            if (field_data.global_data) {
+                if (!all_active) {
+                    const auto message =
+                        fmt::format(R"(Region operation on 3D field {} with global storage will not update inactive cells.
+Note that this might cause problems for PINCH option 4 or 5 beging ALL.)", target_kw);
+
+                    OpmLog::warning(Log::fileMessage(keyword.location(), message));
+                }
+                update_global_from_local(field_data, index_list);
+            }
             continue;
         }
 
@@ -1715,7 +1737,7 @@ void FieldProps::handle_COPY(const DeckKeyword& keyword,
             const auto  regionId   = record.getItem<Kw::REGION_NUMBER>().get<int>(0);
             const auto& regionName = this->region_name(record.getItem<Kw::REGION_NAME>());
 
-            index_list = this->region_index(regionName, regionId);
+            index_list = this->region_index(regionName, regionId).first;
             srcDescr = fmt::format("{} in region {} of region set {}",
                                    src_kw, regionId, regionName);
         }
@@ -1844,7 +1866,7 @@ void FieldProps::init_porv(Fieldprops::FieldData<double>& porv)
     }
 
     for (const auto& mregp: this->multregp) {
-        const auto& index_list = this->region_index(mregp.region_name, mregp.region_value);
+        const auto& index_list = this->region_index(mregp.region_name, mregp.region_value).first;
         for (const auto& cell_index : index_list)
             porv_data[cell_index.active_index] *= mregp.multiplier;
     }
