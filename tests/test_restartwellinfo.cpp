@@ -1,4 +1,3 @@
-
 /*
   Copyright 2014 Statoil IT
   This file is part of the Open Porous Media project (OPM).
@@ -61,7 +60,10 @@
 
 #include "tests/WorkArea.hpp"
 
-void verifyWellState(const std::string& rst_filename, const Opm::Schedule& schedule) {
+namespace {
+
+void verifyWellState(const std::string& rst_filename, const Opm::Schedule& schedule)
+{
 
   /*
       reference variables ref_wellList, ref_wellHead and ref_wellConn are 
@@ -208,9 +210,10 @@ void verifyWellState(const std::string& rst_filename, const Opm::Schedule& sched
     }
 }
 
+} // Anonymous namespace
 
-BOOST_AUTO_TEST_CASE(EclipseWriteRestartWellInfo) {
-
+BOOST_AUTO_TEST_CASE(EclipseWriteRestartWellInfo)
+{
     WorkArea work;
     std::string eclipse_data_filename    = "testblackoilstate3.DATA";
     work.copyIn(eclipse_data_filename);

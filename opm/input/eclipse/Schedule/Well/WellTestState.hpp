@@ -20,12 +20,15 @@
 #define WELLTEST_STATE_H
 
 #include <opm/input/eclipse/Schedule/Well/WellTestConfig.hpp>
+
 #include <opm/io/eclipse/rst/state.hpp>
 
 #include <cstddef>
+#include <ctime>
 #include <optional>
 #include <string>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 namespace {

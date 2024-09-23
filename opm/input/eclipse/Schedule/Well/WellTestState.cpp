@@ -16,14 +16,22 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include <algorithm>
-#include <cassert>
-#include <ctime>
-#include <stdexcept>
+
+#include <opm/input/eclipse/Schedule/Well/WellTestState.hpp>
+
+#include <opm/common/OpmLog/OpmLog.hpp>
 
 #include <opm/input/eclipse/Schedule/Well/WellTestConfig.hpp>
-#include <opm/input/eclipse/Schedule/Well/WellTestState.hpp>
-#include <opm/common/OpmLog/OpmLog.hpp>
+
+#include <algorithm>
+#include <cassert>
+#include <cstddef>
+#include <ctime>
+#include <optional>
+#include <stdexcept>
+#include <string>
+#include <unordered_set>
+#include <vector>
 
 namespace Opm {
 

@@ -919,10 +919,16 @@ BOOST_AUTO_TEST_CASE (Declared_UDQ_data)
             for (const auto& input_assign : input_config.assignments()) {
                 const auto& rst_assign = rst_config.assign(input_assign.keyword());
 
-                auto input_eval = input_assign.eval(wells);
-                auto rst_eval = rst_assign.eval(wells);
+                const auto input_eval = input_assign.eval(wells);
+                const auto rst_eval = rst_assign.eval(wells);
 
-                BOOST_CHECK(input_eval == rst_eval);
+                BOOST_CHECK_MESSAGE(input_eval == rst_eval,
+                                    "UDQ assignments for '"
+                                    << rst_assign.keyword() <<
+                                    "' of type "
+                                    << Opm::UDQ::typeName(rst_assign.var_type())
+                                    << " must provide the same "
+                                    "values in both input and restart cases.");
             }
 
             const auto uda_records =
