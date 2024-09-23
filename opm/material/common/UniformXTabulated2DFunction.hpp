@@ -55,7 +55,7 @@ namespace Opm {
  * By default the tabulated data is stored in std::vectors, opting out of this is usually done
  * with GPUBuffers and Views
  */
-template <class Scalar, template<class> class ContainerT = std::vector>
+template <class Scalar, template<class...> class ContainerT = std::vector>
 class UniformXTabulated2DFunction
 {
 public:
@@ -480,7 +480,7 @@ public:
      */
     void print(std::ostream& os) const;
 
-    OPM_HOST_DEVICE bool operator==(const UniformXTabulated2DFunction<Scalar>& data) const {
+    OPM_HOST_DEVICE bool operator==(const UniformXTabulated2DFunction<Scalar, ContainerT>& data) const {
         return this->xPos() == data.xPos() &&
                this->yPos() == data.yPos() &&
                this->samples() == data.samples() &&
@@ -503,7 +503,8 @@ private:
 
 namespace Opm::gpuistl {
     // Take in a CO2 type that exists on the CPU and move the data into GPU buffers
-    template<class Scalar, class CpuCO2Type, class GpuCO2Type, template<class> class BufferType>
+    // We make the CO2 object on the CPU and just move it to avoid implementing vector::insert on GPU
+    template<class Scalar, class GpuCO2Type, template<class> class BufferType>
     GpuCO2Type moveToGpu(UniformXTabulated2DFunction<Scalar> cpuCO2){
 
         using InterpolationPolicy = typename UniformXTabulated2DFunction<Scalar>::InterpolationPolicy;

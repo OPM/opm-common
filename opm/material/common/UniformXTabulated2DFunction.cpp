@@ -28,7 +28,7 @@
 
 namespace Opm {
 
-template <typename Scalar, template <class> class ContainerT>
+template <typename Scalar, template <class...> class ContainerT>
 void UniformXTabulated2DFunction<Scalar, ContainerT>::print(std::ostream& os) const
 {
     Scalar x0 = xMin();
