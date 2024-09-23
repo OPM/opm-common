@@ -2238,7 +2238,7 @@ MULTX
  27*1.0 /
 
 COPY
-   MULTX MULTZ
+   MULTX MULTZ /
 /
 
 )" };
@@ -2281,7 +2281,7 @@ OPERATE
 
 )" };
 
-    BOOST_CHECK_THROW(make_fp(invalid_copy), OpmInputError);
+    BOOST_CHECK_THROW(make_fp(invalid_copy), std::logic_error);
     BOOST_CHECK_THROW(make_fp(invalid_region), OpmInputError);
     BOOST_CHECK_THROW(make_fp(invalid_operate), std::logic_error);
 }

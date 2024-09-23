@@ -1703,6 +1703,19 @@ void FieldProps::handle_COPY(const DeckKeyword& keyword,
             target_data.checkInitialisedCopy(src_data.field_data(), index_list,
                                              srcDescr, target_kw,
                                              keyword.location());
+            if (target_data.global_data && !isRegionOperation) {
+                if (!src_data.field_data().global_data) {
+                    throw std::logic_error {
+                        fmt::format
+                        (R"(The copying is only supported between keywords with same storage.
+ (COPY {} {})", src_kw, target_kw)
+                    };
+                }
+                target_data.checkInitialisedCopy(src_data.field_data(), box.global_index_list(),
+                                                 srcDescr, target_kw,
+                                                 keyword.location(),
+                                                 true);
+            }
             continue;
         }
 

@@ -39,23 +39,29 @@ checkInitialisedCopy(const FieldData&                    src,
                      const std::vector<Box::cell_index>& index_list,
                      const std::string&                  from,
                      const std::string&                  to,
-                     const KeywordLocation&              loc)
+                     const KeywordLocation&              loc,
+                     const bool                          global)
 {
     auto unInit = 0;
 
+    const auto& from_data = global? *src.global_data: src.data;
+    const auto& from_status = global? *src.global_value_status: src.value_status;
+    auto& to_data = global? *this->global_data : this->data;
+    auto& to_status = global? *this->global_value_status : this->value_status;
+
     for (const auto& ci : index_list) {
+        // This is the global index if global is true and global storage is used.
         const auto ix = ci.active_index;
-        const auto st = src.value_status[ix];
+        const auto st = from_status[ix];
 
         if (st != value::status::deck_value) {
             ++unInit;
             continue;
         }
 
-        this->data[ix] = src.data[ix];
-        this->value_status[ix] = st;
+        to_data[ix] = from_data[ix];
+        to_status[ix] = st;
     }
-
     if (unInit > 0) {
         const auto* plural = (unInit > 1) ? "s" : "";
 
@@ -75,7 +81,8 @@ checkInitialisedCopy(const FieldData&,
                      const std::vector<Box::cell_index>&,
                      const std::string&,
                      const std::string&,
-                     const KeywordLocation&);
+                     const KeywordLocation&,
+                     const bool);
 
 template
 void Opm::Fieldprops::FieldData<int>::
@@ -83,4 +90,5 @@ checkInitialisedCopy(const FieldData&,
                      const std::vector<Box::cell_index>&,
                      const std::string&,
                      const std::string&,
-                     const KeywordLocation&);
+                     const KeywordLocation&,
+                     const bool);

@@ -156,7 +156,8 @@ namespace Opm::Fieldprops {
                                   const std::vector<Box::cell_index>& index_list,
                                   const std::string&                  from,
                                   const std::string&                  to,
-                                  const KeywordLocation&              loc);
+                                  const KeywordLocation&              loc,
+                                  const bool                          global = false);
 
         void default_assign(T value)
         {
