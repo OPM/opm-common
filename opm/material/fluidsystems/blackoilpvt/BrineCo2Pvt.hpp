@@ -58,7 +58,7 @@ class EzrokhiTable;
  * \brief This class represents the Pressure-Volume-Temperature relations of the liquid phase
  * for a CO2-Brine system
  */
-template <class Scalar, class Params = Opm::CO2Tables>
+template <class Scalar, class Params = Opm::CO2Tables<double, std::vector<double>>>
 class BrineCo2Pvt
 {
     static constexpr bool extrapolate = true;

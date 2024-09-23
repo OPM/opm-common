@@ -28,9 +28,18 @@
 #define OPM_CONSTANTS_HPP
 
 #include <cmath>
+#if HAVE_QUAD
+#include <opm/material/common/quad.hpp>
+#endif
 
 namespace Opm
 {
+/*
+    TODO: figure out a less verbose way to make this file support actual scalars being constexpr
+    making this change was done because IdealGas now uses a constexpr R, and this class is
+    sometimes instantiated with evaluation objects which could not be allocated statically or something.
+*/
+
 
 /*!
  * \brief A central place for various physical constants occuring in
@@ -74,6 +83,123 @@ class Constants
      */
     static const Scalar hRed;
 };
+template<>
+class Constants<float>
+{ public:
+    /*!
+     * \brief The ideal gas constant [J/(mol K)]
+     */
+    static constexpr float R = 8.314472;
+
+    /*!
+     * \brief The Avogadro constant [1/mol]
+     */
+    static constexpr float Na = 6.02214179e23;
+
+    /*!
+     * \brief The Boltzmann constant [J/K]
+     */
+    static constexpr float kb = R/Na;
+
+    /*!
+     * \brief Speed of light in vacuum [m/s]
+     */
+    static constexpr float c = 299792458.0;
+
+    /*!
+     * \brief Newtonian constant of gravitation [m^3/(kg s^2)]
+     */
+    static constexpr float G = 6.67428e-11;
+
+    /*!
+     * \brief Planck constant [J s]
+     */
+    static constexpr float h = 6.62606896e-34;
+
+    /*!
+     * \brief Reduced Planck constant [J s]
+     */
+    static constexpr float hRed = h / (2 * M_PI);
+};
+template<>
+class Constants<double>
+{ public:
+    /*!
+     * \brief The ideal gas constant [J/(mol K)]
+     */
+    static constexpr double R = 8.314472;
+
+    /*!
+     * \brief The Avogadro constant [1/mol]
+     */
+    static constexpr double Na = 6.02214179e23;
+
+    /*!
+     * \brief The Boltzmann constant [J/K]
+     */
+    static constexpr double kb = R/Na;
+
+    /*!
+     * \brief Speed of light in vacuum [m/s]
+     */
+    static constexpr double c = 299792458.0;
+
+    /*!
+     * \brief Newtonian constant of gravitation [m^3/(kg s^2)]
+     */
+    static constexpr double G = 6.67428e-11;
+
+    /*!
+     * \brief Planck constant [J s]
+     */
+    static constexpr double h = 6.62606896e-34;
+
+    /*!
+     * \brief Reduced Planck constant [J s]
+     */
+    static constexpr double hRed = h / (2 * M_PI);
+};
+
+#if HAVE_QUAD
+template<>
+class Constants<quad>
+{ public:
+    /*!
+     * \brief The ideal gas constant [J/(mol K)]
+     */
+    static constexpr quad R = 8.314472;
+
+    /*!
+     * \brief The Avogadro constant [1/mol]
+     */
+    static constexpr quad Na = 6.02214179e23;
+
+    /*!
+     * \brief The Boltzmann constant [J/K]
+     */
+    static constexpr quad kb = R/Na;
+
+    /*!
+     * \brief Speed of light in vacuum [m/s]
+     */
+    static constexpr quad c = 299792458.0;
+
+    /*!
+     * \brief Newtonian constant of gravitation [m^3/(kg s^2)]
+     */
+    static constexpr quad G = 6.67428e-11;
+
+    /*!
+     * \brief Planck constant [J s]
+     */
+    static constexpr quad h = 6.62606896e-34;
+
+    /*!
+     * \brief Reduced Planck constant [J s]
+     */
+    static constexpr quad hRed = h / (2 * M_PI);
+};
+#endif
 
 template<class Scalar>
 const Scalar Constants<Scalar>::R = 8.314472;

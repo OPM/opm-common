@@ -31,6 +31,7 @@
 #include <opm/material/IdealGas.hpp>
 #include <opm/material/common/Valgrind.hpp>
 #include <opm/common/TimingMacros.hpp>
+#include <opm/common/utility/gpuDecorators.hpp>
 
 #include <array>
 
@@ -56,7 +57,7 @@ public:
      * \param pressure the phase pressure [Pa]
      */
     template <class Evaluation, class CO2Params>
-    static Evaluation gasDiffCoeff(const CO2Params& params, const Evaluation& temperature, const Evaluation& pressure, bool extrapolate = false)
+    OPM_HOST_DEVICE static Evaluation gasDiffCoeff(const CO2Params& params, const Evaluation& temperature, const Evaluation& pressure, bool extrapolate = false)
     {
         //Diffusion coefficient of water in the CO2 phase
         Scalar k = 1.3806504e-23; // Boltzmann constant
@@ -73,7 +74,7 @@ public:
      * \param pressure the phase pressure [Pa]
      */
     template <class Evaluation>
-    static Evaluation liquidDiffCoeff(const Evaluation& /*temperature*/, const Evaluation& /*pressure*/)
+    OPM_HOST_DEVICE static Evaluation liquidDiffCoeff(const Evaluation& /*temperature*/, const Evaluation& /*pressure*/)
     {
         //Diffusion coefficient of CO2 in the brine phase
         return 2e-9;
@@ -97,7 +98,7 @@ public:
      * \param ygH2O mole fraction of water in the gas phase [mol/mol]
      */
     template <class Evaluation, class CO2Params>
-    static void calculateMoleFractions(const CO2Params& params,
+    OPM_HOST_DEVICE static void calculateMoleFractions(const CO2Params& params,
                                        const Evaluation& temperature,
                                        const Evaluation& pg,
                                        const Evaluation& salinity,
@@ -286,7 +287,7 @@ private:
     * \brief
     */
     template <class Evaluation>
-    static Evaluation aCO2_(const Evaluation& temperature, const bool& highTemp)
+    OPM_HOST_DEVICE static Evaluation aCO2_(const Evaluation& temperature, const bool& highTemp)
     {
         if (highTemp) {
             return 8.008e7 - 4.984e4 * temperature;
@@ -300,7 +301,7 @@ private:
     * \brief
     */
     template <class Evaluation>
-    static Evaluation aH2O_(const Evaluation& temperature, const bool& highTemp)
+    OPM_HOST_DEVICE static Evaluation aH2O_(const Evaluation& temperature, const bool& highTemp)
     {
         if (highTemp) {
             return 1.337e8 - 1.4e4 * temperature;
@@ -314,7 +315,7 @@ private:
     * \brief
     */
     template <class Evaluation>
-    static Evaluation aCO2_H2O_(const Evaluation& temperature, const Evaluation& yH2O, const bool& highTemp)
+    OPM_HOST_DEVICE static Evaluation aCO2_H2O_(const Evaluation& temperature, const Evaluation& yH2O, const bool& highTemp)
     {
         if (highTemp) {
             // Pure parameters
@@ -338,7 +339,7 @@ private:
     * \brief
     */
     template <class Evaluation>
-    static Evaluation aMix_(const Evaluation& temperature, const Evaluation& yH2O, const bool& highTemp)
+    OPM_HOST_DEVICE static Evaluation aMix_(const Evaluation& temperature, const Evaluation& yH2O, const bool& highTemp)
     {
         if (highTemp) {
             // Parameters
@@ -356,7 +357,7 @@ private:
     /*!
     * \brief
     */
-    static Scalar bCO2_(const bool& highTemp)
+    OPM_HOST_DEVICE static Scalar bCO2_(const bool& highTemp)
     {
         if (highTemp) {
             return 28.25;
@@ -369,7 +370,7 @@ private:
     /*!
     * \brief
     */
-    static Scalar bH2O_(const bool& highTemp)
+    OPM_HOST_DEVICE static Scalar bH2O_(const bool& highTemp)
     {
         if (highTemp) {
             return 15.7;
@@ -383,7 +384,7 @@ private:
     * \brief
     */
     template <class Evaluation>
-    static Evaluation bMix_(const Evaluation& yH2O, const bool& highTemp)
+    OPM_HOST_DEVICE static Evaluation bMix_(const Evaluation& yH2O, const bool& highTemp)
     {
         if (highTemp) {
             // Parameters
@@ -401,7 +402,7 @@ private:
     * \brief
     */
     template <class Evaluation>
-    static Evaluation V_avg_CO2_(const Evaluation& temperature, const bool& highTemp)
+    OPM_HOST_DEVICE static Evaluation V_avg_CO2_(const Evaluation& temperature, const bool& highTemp)
     {
         if (highTemp && (temperature > 373.15)) {
             return 32.6 + 3.413e-2 * (temperature - 373.15);
@@ -415,7 +416,7 @@ private:
     * \brief
     */
     template <class Evaluation>
-    static Evaluation V_avg_H2O_(const Evaluation& temperature, const bool& highTemp)
+    OPM_HOST_DEVICE static Evaluation V_avg_H2O_(const Evaluation& temperature, const bool& highTemp)
     {
         if (highTemp && (temperature > 373.15)) {
             return 18.1 + 3.137e-2 * (temperature - 373.15);
@@ -429,7 +430,7 @@ private:
     * \brief
     */
     template <class Evaluation>
-    static Evaluation AM_(const Evaluation& temperature, const bool& highTemp)
+    OPM_HOST_DEVICE static Evaluation AM_(const Evaluation& temperature, const bool& highTemp)
     {
         if (highTemp && temperature > 373.15) {
             Evaluation deltaTk = temperature - 373.15;
@@ -444,7 +445,7 @@ private:
     * \brief
     */
     template <class Evaluation>
-    static Evaluation Pref_(const Evaluation& temperature, const bool& highTemp)
+    OPM_HOST_DEVICE static Evaluation Pref_(const Evaluation& temperature, const bool& highTemp)
     {
         if (highTemp && temperature > 373.15) {
             const Evaluation& temperatureCelcius = temperature - 273.15;
@@ -461,7 +462,7 @@ private:
     * \brief
     */
     template <class Evaluation>
-    static Evaluation activityCoefficientCO2_(const Evaluation& temperature, 
+    OPM_HOST_DEVICE static Evaluation activityCoefficientCO2_(const Evaluation& temperature, 
                                               const Evaluation& xCO2, 
                                               const bool& highTemp)
     {
@@ -480,7 +481,7 @@ private:
     * \brief
     */
     template <class Evaluation>
-    static Evaluation activityCoefficientH2O_(const Evaluation& temperature, 
+    OPM_HOST_DEVICE static Evaluation activityCoefficientH2O_(const Evaluation& temperature, 
                                               const Evaluation& xCO2, 
                                               const bool& highTemp)
     {
@@ -501,7 +502,7 @@ private:
      * \param salinity the salinity [kg NaCl / kg solution]
      */
     template <class Evaluation>
-    static Evaluation salinityToMolFrac_(const Evaluation& salinity) {
+    OPM_HOST_DEVICE static Evaluation salinityToMolFrac_(const Evaluation& salinity) {
         OPM_TIMEFUNCTION_LOCAL();
         const Scalar Mw = H2O::molarMass(); /* molecular weight of water [kg/mol] */
         const Scalar Ms = 58.44e-3; /* molecular weight of NaCl  [kg/mol] */
@@ -519,7 +520,7 @@ private:
     */
 #if 0
     template <class Evaluation>
-    static Evaluation moleFracToMolality_(const Evaluation& x_NaCl)
+    OPM_HOST_DEVICE static Evaluation moleFracToMolality_(const Evaluation& x_NaCl)
     {
         // conversion from mol fraction to molality (dissolved CO2 neglected)
         return 55.508 * x_NaCl / (1 - x_NaCl);
@@ -527,7 +528,7 @@ private:
 #endif
 
     template <class Evaluation>
-    static Evaluation massFracToMolality_(const Evaluation& X_NaCl)
+    OPM_HOST_DEVICE static Evaluation massFracToMolality_(const Evaluation& X_NaCl)
     {
         const Scalar MmNaCl = 58.44e-3;
         return X_NaCl / (MmNaCl * (1 - X_NaCl));
@@ -539,7 +540,7 @@ private:
     * \param x_NaCl mole fraction of NaCL in brine [mol/mol]
     */
     template <class Evaluation>
-    static Evaluation molalityToMoleFrac_(const Evaluation& m_NaCl)
+    OPM_HOST_DEVICE static Evaluation molalityToMoleFrac_(const Evaluation& m_NaCl)
     {
         // conversion from molality to mole fractio (dissolved CO2 neglected)
         return m_NaCl / (55.508 + m_NaCl);
@@ -549,7 +550,7 @@ private:
     * \brief Fixed-point iterations for high-temperature cases
     */
     template <class Evaluation, class CO2Parameters>
-    static std::pair<Evaluation, Evaluation> fixPointIterSolubility_(const CO2Parameters& params,
+    OPM_HOST_DEVICE static std::pair<Evaluation, Evaluation> fixPointIterSolubility_(const CO2Parameters& params,
                                                                      const Evaluation& temperature, 
                                                                      const Evaluation& pg,
                                                                      const Evaluation& m_NaCl,
@@ -608,7 +609,7 @@ private:
     * \brief Fixed-point iterations for high-temperature cases
     */
     template <class Evaluation, class CO2Parameters>
-    static std::pair<Evaluation, Evaluation> nonIterSolubility_(const CO2Parameters& params,
+    OPM_HOST_DEVICE static std::pair<Evaluation, Evaluation> nonIterSolubility_(const CO2Parameters& params,
                                                                 const Evaluation& temperature, 
                                                                 const Evaluation& pg,
                                                                 const Evaluation& m_NaCl,
@@ -635,7 +636,7 @@ private:
     * \brief Mutual solubility according to Spycher & Pruess (2009)
     */
     template <class Evaluation, class CO2Parameters>
-    static std::pair<Evaluation, Evaluation> mutualSolubility_(const CO2Parameters& params,
+    OPM_HOST_DEVICE static std::pair<Evaluation, Evaluation> mutualSolubility_(const CO2Parameters& params,
                                                                const Evaluation& temperature,
                                                                const Evaluation& pg,
                                                                const Evaluation& xCO2,
@@ -670,7 +671,7 @@ private:
     * \brief Mutual solubility according to Spycher & Pruess (2009)
     */
     template <class Evaluation, class CO2Parameters>
-    static std::pair<Evaluation, Evaluation> mutualSolubilitySpycherPruess2005_(const CO2Parameters& params,
+    OPM_HOST_DEVICE static std::pair<Evaluation, Evaluation> mutualSolubilitySpycherPruess2005_(const CO2Parameters& params,
                                                                                 const Evaluation& temperature,
                                                                                 const Evaluation& pg,
                                                                                 const Evaluation& m_NaCl,
@@ -710,7 +711,7 @@ private:
      * \param pg the gas phase pressure [Pa]
      */
     template <class Evaluation, class CO2Params>
-    static Evaluation computeA_(const CO2Params& params,
+    OPM_HOST_DEVICE static Evaluation computeA_(const CO2Params& params,
                                 const Evaluation& temperature, 
                                 const Evaluation& pg, 
                                 const Evaluation& yH2O,
@@ -789,7 +790,7 @@ private:
     * \brief Activity model of salt in Spycher & Pruess (2009)
     */
     template <class Evaluation>
-    static Evaluation activityCoefficientSalt_(const Evaluation& temperature,
+    OPM_HOST_DEVICE static Evaluation activityCoefficientSalt_(const Evaluation& temperature,
                                                const Evaluation& pg, 
                                                const Evaluation& m_NaCl,
                                                const Evaluation& xCO2,
@@ -833,7 +834,7 @@ private:
     * \brief Lambda parameter in Duan & Sun model, as modified and detailed in Spycher & Pruess (2009)
     */
     template <class Evaluation>
-    static Evaluation computeLambdaSpycherPruess2009_(const Evaluation& temperature)
+    OPM_HOST_DEVICE static Evaluation computeLambdaSpycherPruess2009_(const Evaluation& temperature)
     {
         // Table 1
         static const Scalar c[3] = { 2.217e-4, 1.074, 2648. };
@@ -846,7 +847,7 @@ private:
     * \brief Xi parameter in Duan & Sun model, as modified and detailed in Spycher & Pruess (2009)
     */
     template <class Evaluation>
-    static Evaluation computeXiSpycherPruess2009_(const Evaluation& temperature)
+    OPM_HOST_DEVICE static Evaluation computeXiSpycherPruess2009_(const Evaluation& temperature)
     {
         // Table 1
         static const Scalar c[3] = { 1.3e-5, -20.12, 5259. };
@@ -859,7 +860,7 @@ private:
     * \brief Lambda parameter in Rumpf et al. (1994), as detailed in Spycher & Pruess (2005)
     */
     template <class Evaluation>
-    static Evaluation computeLambdaRumpfetal_(const Evaluation& temperature)
+    OPM_HOST_DEVICE static Evaluation computeLambdaRumpfetal_(const Evaluation& temperature)
     {
         // B^(0) below Eq. (A-6)
         static const Scalar c[4] = { 0.254, -76.82, -10656, 6312e3 };
@@ -876,7 +877,7 @@ private:
      * \param pg the gas phase pressure [Pa]
      */
     template <class Evaluation>
-    static Evaluation computeLambdaDuanSun_(const Evaluation& temperature, const Evaluation& pg)
+    OPM_HOST_DEVICE static Evaluation computeLambdaDuanSun_(const Evaluation& temperature, const Evaluation& pg)
     {
         static const Scalar c[6] =
             { -0.411370585, 6.07632013E-4, 97.5347708, -0.0237622469, 0.0170656236, 1.41335834E-5 };
@@ -894,7 +895,7 @@ private:
      * \param pg the gas phase pressure [Pa]
      */
     template <class Evaluation>
-    static Evaluation computeXiDuanSun_(const Evaluation& temperature, const Evaluation& pg)
+    OPM_HOST_DEVICE static Evaluation computeXiDuanSun_(const Evaluation& temperature, const Evaluation& pg)
     {
         static const Scalar c[4] =
             { 3.36389723E-4, -1.98298980E-5, 2.12220830E-3, -5.24873303E-3 };
@@ -944,7 +945,7 @@ private:
      * \param temperature the temperature [K]
      */
     template <class Evaluation>
-    static Evaluation equilibriumConstantH2O_(const Evaluation& temperature, const bool& highTemp)
+    OPM_HOST_DEVICE static Evaluation equilibriumConstantH2O_(const Evaluation& temperature, const bool& highTemp)
     {
         Evaluation temperatureCelcius = temperature - 273.15;
         std::array<Scalar, 5> c;

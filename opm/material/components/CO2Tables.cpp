@@ -30,7 +30,8 @@
 namespace Opm
 {
 
-CO2Tables::CO2Tables()
+template <class Scalar, class ContainerT>
+CO2Tables<Scalar, ContainerT>::CO2Tables()
     : tabulatedDensity {co2TabulatedDensityTraits::xMin,
                         co2TabulatedDensityTraits::xMax,
                         co2TabulatedDensityTraits::numX,
@@ -47,5 +48,8 @@ CO2Tables::CO2Tables()
                         co2TabulatedEnthalpyTraits::vals}
 {
 }
+
+//TODO: avoid this having to be explicitly instantiated, we cannot instantiate with GPU types here
+template CO2Tables<double, std::vector<double>>::CO2Tables();
 
 } // namespace Opm

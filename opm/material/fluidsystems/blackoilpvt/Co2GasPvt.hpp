@@ -29,6 +29,8 @@
 
 #include <opm/material/Constants.hpp>
 #include <opm/common/TimingMacros.hpp>
+#include <opm/common/ErrorMacros.hpp>
+#include <opm/common/utility/gpuDecorators.hpp>
 
 #include <opm/material/components/CO2.hpp>
 #include <opm/material/components/BrineDynamic.hpp>
@@ -37,6 +39,8 @@
 #include <opm/material/binarycoefficients/Brine_CO2.hpp>
 #include <opm/input/eclipse/EclipseState/Co2StoreConfig.hpp>
 #include <opm/material/components/CO2Tables.hpp>
+#include <opm/input/eclipse/EclipseState/EclipseState.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
 
 #include <cstddef>
 #include <vector>
@@ -51,10 +55,10 @@ class Co2StoreConfig;
  * \brief This class represents the Pressure-Volume-Temperature relations of the gas phase
  *        for CO2.
  */
-template <class Scalar, class ParamsT = Opm::CO2Tables>
+template <class Scalar, class ParamsT = Opm::CO2Tables<double, std::vector<double>>, class ContainerT = std::vector<Scalar>>
 class Co2GasPvt
 {
-    using CO2 = ::Opm::CO2<Scalar>;
+    using CO2 = ::Opm::CO2<Scalar, ParamsT>;
     using H2O = SimpleHuDuanH2O<Scalar>;
     using Brine = ::Opm::BrineDynamic<Scalar, H2O>;
     using Params = ParamsT;
@@ -66,29 +70,46 @@ public:
 
     explicit Co2GasPvt() = default;
 
-    explicit Co2GasPvt(const std::vector<Scalar>& salinity,
+    explicit Co2GasPvt(const ContainerT& salinity,
                        int activityModel = 3,
                        int thermalMixingModel = 1,
                        Scalar T_ref = 288.71, //(273.15 + 15.56)
                        Scalar P_ref = 101325);
 
+    explicit Co2GasPvt(Params params,
+                        ContainerT brineReferenceDensity,
+                        ContainerT gasReferenceDensity,
+                        ContainerT salinity,
+                        bool enableEzrokhiDensity,
+                        bool enableVaporization,
+                        int activityModel,
+                        Co2StoreConfig::GasMixingType gastype) :
+                        brineReferenceDensity_(brineReferenceDensity),
+                        gasReferenceDensity_(gasReferenceDensity),
+                        salinity_(salinity),
+                        enableEzrokhiDensity_(enableEzrokhiDensity),
+                        enableVaporization_(enableVaporization),
+                        activityModel_(activityModel),
+                        gastype_(gastype),
+                        co2Tables(params)
+{
+    assert(enableEzrokhiDensity == false && "Ezrokhi density not supported by GPUs");
+}
+
 #if HAVE_ECL_INPUT
-    /*!
-     * \brief Initialize the parameters for CO2 gas using an ECL deck.
-     */
     void initFromState(const EclipseState& eclState, const Schedule&);
 #endif
 
     void setNumRegions(std::size_t numRegions);
 
-    void setVapPars(const Scalar, const Scalar)
+    OPM_HOST_DEVICE void setVapPars(const Scalar, const Scalar)
     {
     }
 
     /*!
      * \brief Initialize the reference densities of all fluids for a given PVT region
      */
-    void setReferenceDensities(unsigned regionIdx,
+    OPM_HOST_DEVICE void setReferenceDensities(unsigned regionIdx,
                                Scalar rhoRefBrine,
                                Scalar rhoRefGas,
                                Scalar /*rhoRefWater*/);
@@ -99,40 +120,40 @@ public:
      *
      * By default, vaporized water is considered.
      */
-    void setEnableVaporizationWater(bool yesno)
+    OPM_HOST_DEVICE void setEnableVaporizationWater(bool yesno)
     { enableVaporization_ = yesno; }
 
     /*!
     * \brief Set activity coefficient model for salt in solubility model
     */
-    void setActivityModelSalt(int activityModel);
+    OPM_HOST_DEVICE void setActivityModelSalt(int activityModel);
 
    /*!
     * \brief Set thermal mixing model for co2 in brine
     */
-    void setThermalMixingModel(int thermalMixingModel);
+    OPM_HOST_DEVICE void setThermalMixingModel(int thermalMixingModel);
 
     /*!
      * \brief Finish initializing the co2 phase PVT properties.
      */
-    void initEnd()
+    OPM_HOST_DEVICE void initEnd()
     {
     }
 
     /*!
      * \brief Return the number of PVT regions which are considered by this PVT-object.
      */
-    unsigned numRegions() const
+    OPM_HOST_DEVICE unsigned numRegions() const
     { return gasReferenceDensity_.size(); }
 
-    Scalar hVap(unsigned ) const
+    OPM_HOST_DEVICE Scalar hVap(unsigned ) const
     { return 0.0;  }
 
     /*!
      * \brief Returns the specific enthalpy [J/kg] of gas given a set of parameters.
      */
     template <class Evaluation>
-    Evaluation internalEnergy(unsigned regionIdx,
+    OPM_HOST_DEVICE Evaluation internalEnergy(unsigned regionIdx,
                         const Evaluation& temperature,
                         const Evaluation& pressure,
                         const Evaluation& rv,
@@ -161,7 +182,7 @@ public:
      *        given a set of parameters.
      */
     template <class Evaluation>
-    Evaluation viscosity(unsigned regionIdx,
+    OPM_HOST_DEVICE Evaluation viscosity(unsigned regionIdx,
                          const Evaluation& temperature,
                          const Evaluation& pressure,
                          const Evaluation& /*Rv*/,
@@ -172,7 +193,7 @@ public:
      * \brief Returns the dynamic viscosity [Pa s] of fluid phase at saturated conditions.
      */
     template <class Evaluation>
-    Evaluation saturatedViscosity(unsigned /*regionIdx*/,
+    OPM_HOST_DEVICE Evaluation saturatedViscosity(unsigned /*regionIdx*/,
                                   const Evaluation& temperature,
                                   const Evaluation& pressure) const
     {
@@ -185,7 +206,7 @@ public:
      * \brief Returns the formation volume factor [-] of the fluid phase.
      */
     template <class Evaluation>
-    Evaluation inverseFormationVolumeFactor(unsigned regionIdx,
+    OPM_HOST_DEVICE Evaluation inverseFormationVolumeFactor(unsigned regionIdx,
                                             const Evaluation& temperature,
                                             const Evaluation& pressure,
                                             const Evaluation& rv,
@@ -213,7 +234,7 @@ public:
      * \brief Returns the formation volume factor [-] of water saturated gas at given pressure.
      */
     template <class Evaluation>
-    Evaluation saturatedInverseFormationVolumeFactor(unsigned regionIdx,
+    OPM_HOST_DEVICE Evaluation saturatedInverseFormationVolumeFactor(unsigned regionIdx,
                                                      const Evaluation& temperature,
                                                      const Evaluation& pressure) const
     {
@@ -232,7 +253,7 @@ public:
      *            in what will yield one cubic meter of water at the surface [-]
      */
     template <class Evaluation>
-    Evaluation saturationPressure(unsigned /*regionIdx*/,
+    OPM_HOST_DEVICE Evaluation saturationPressure(unsigned /*regionIdx*/,
                                   const Evaluation& /*temperature*/,
                                   const Evaluation& /*Rvw*/) const
     { return 0.0; /* not implemented */ }
@@ -241,7 +262,7 @@ public:
      * \brief Returns the water vaporization factor \f$R_vw\f$ [m^3/m^3] of the water phase.
      */
     template <class Evaluation>
-    Evaluation saturatedWaterVaporizationFactor(unsigned regionIdx,
+    OPM_HOST_DEVICE Evaluation saturatedWaterVaporizationFactor(unsigned regionIdx,
                                               const Evaluation& temperature,
                                               const Evaluation& pressure) const
     { return rvwSat_(regionIdx, temperature, pressure, Evaluation(salinity_[regionIdx])); }
@@ -250,7 +271,7 @@ public:
     * \brief Returns the water vaporization factor \f$R_vw\f$ [m^3/m^3] of water phase.
     */
     template <class Evaluation = Scalar>
-    Evaluation saturatedWaterVaporizationFactor(unsigned regionIdx,
+    OPM_HOST_DEVICE Evaluation saturatedWaterVaporizationFactor(unsigned regionIdx,
                                               const Evaluation& temperature,
                                               const Evaluation& pressure,
                                               const Evaluation& saltConcentration) const
@@ -265,7 +286,7 @@ public:
      * \brief Returns the oil vaporization factor \f$R_v\f$ [m^3/m^3] of the oil phase.
      */
     template <class Evaluation>
-    Evaluation saturatedOilVaporizationFactor(unsigned regionIdx,
+    OPM_HOST_DEVICE Evaluation saturatedOilVaporizationFactor(unsigned regionIdx,
                                               const Evaluation& temperature,
                                               const Evaluation& pressure,
                                               const Evaluation& /*oilSaturation*/,
@@ -276,44 +297,69 @@ public:
      * \brief Returns the oil vaporization factor \f$R_v\f$ [m^3/m^3] of the oil phase.
      */
     template <class Evaluation>
-    Evaluation saturatedOilVaporizationFactor(unsigned regionIdx,
+    OPM_HOST_DEVICE Evaluation saturatedOilVaporizationFactor(unsigned regionIdx,
                                               const Evaluation& temperature,
                                               const Evaluation& pressure) const
     { return rvwSat_(regionIdx, temperature, pressure, Evaluation(salinity_[regionIdx])); }
 
     template <class Evaluation>
-    Evaluation diffusionCoefficient(const Evaluation& temperature,
+    OPM_HOST_DEVICE Evaluation diffusionCoefficient(const Evaluation& temperature,
                                     const Evaluation& pressure,
                                     unsigned /*compIdx*/) const
     {
         return BinaryCoeffBrineCO2::gasDiffCoeff(co2Tables, temperature, pressure, extrapolate);
     }
 
-    Scalar gasReferenceDensity(unsigned regionIdx) const
+    OPM_HOST_DEVICE Scalar gasReferenceDensity(unsigned regionIdx) const
     { return gasReferenceDensity_[regionIdx]; }
 
-    Scalar oilReferenceDensity(unsigned regionIdx) const
+    OPM_HOST_DEVICE Scalar oilReferenceDensity(unsigned regionIdx) const
     { return brineReferenceDensity_[regionIdx]; }
 
-    Scalar waterReferenceDensity(unsigned regionIdx) const
+    OPM_HOST_DEVICE Scalar waterReferenceDensity(unsigned regionIdx) const
     { return brineReferenceDensity_[regionIdx]; }
 
-    Scalar salinity(unsigned regionIdx) const
+    OPM_HOST_DEVICE Scalar salinity(unsigned regionIdx) const
     { return salinity_[regionIdx]; }
 
     void setEzrokhiDenCoeff(const std::vector<EzrokhiTable>& denaqa);
 
+    // new get functions that will be needed to move a cpu based Co2GasPvt object to the GPU
+    OPM_HOST_DEVICE const ContainerT& getBrineReferenceDensity() const
+    { return brineReferenceDensity_; }
+
+    OPM_HOST_DEVICE const ContainerT& getGasReferenceDensity() const
+    { return gasReferenceDensity_; }
+
+    OPM_HOST_DEVICE const ContainerT& getSalinity() const
+    { return salinity_; }
+
+    OPM_HOST_DEVICE bool getEnableEzrokhiDensity() const
+    { return enableEzrokhiDensity_; }
+
+    OPM_HOST_DEVICE bool getEnableVaporization() const
+    { return enableVaporization_; }
+
+    OPM_HOST_DEVICE int getActivityModel() const
+    { return activityModel_; }
+
+    OPM_HOST_DEVICE Co2StoreConfig::GasMixingType getGasType() const
+    { return gastype_; }
+
+    OPM_HOST_DEVICE const Params& getParams() const
+    { return co2Tables; }
+
 private:
     template <class LhsEval>
     LhsEval ezrokhiExponent_(const LhsEval& temperature,
-                             const std::vector<Scalar>& ezrokhiCoeff) const
+                             const ContainerT& ezrokhiCoeff) const
     {
         const LhsEval& tempC = temperature - 273.15;
         return ezrokhiCoeff[0] + tempC * (ezrokhiCoeff[1] + ezrokhiCoeff[2] * tempC);
     }
 
     template <class LhsEval>
-    LhsEval rvwSat_(unsigned regionIdx,
+    OPM_HOST_DEVICE LhsEval rvwSat_(unsigned regionIdx,
                     const LhsEval& temperature,
                     const LhsEval& pressure,
                     const LhsEval& salinity) const
@@ -348,7 +394,7 @@ private:
      *        corresponding water vaporization factor.
      */
     template <class LhsEval>
-    LhsEval convertXgWToRvw(const LhsEval& XgW, unsigned regionIdx) const
+    OPM_HOST_DEVICE LhsEval convertXgWToRvw(const LhsEval& XgW, unsigned regionIdx) const
     {
         OPM_TIMEFUNCTION_LOCAL();
         Scalar rho_wRef = brineReferenceDensity_[regionIdx];
@@ -362,7 +408,7 @@ private:
      *        of the water component in the gas phase.
      */
     template <class LhsEval>
-    LhsEval convertRvwToXgW_(const LhsEval& Rvw, unsigned regionIdx) const
+    OPM_HOST_DEVICE LhsEval convertRvwToXgW_(const LhsEval& Rvw, unsigned regionIdx) const
     {
         OPM_TIMEFUNCTION_LOCAL();
         Scalar rho_wRef = brineReferenceDensity_[regionIdx];
@@ -375,7 +421,7 @@ private:
      * \brief Convert a water mole fraction in the gas phase the corresponding mass fraction.
      */
     template <class LhsEval>
-    LhsEval convertxgWToXgW(const LhsEval& xgW, const LhsEval& salinity) const
+    OPM_HOST_DEVICE LhsEval convertxgWToXgW(const LhsEval& xgW, const LhsEval& salinity) const
     {
         OPM_TIMEFUNCTION_LOCAL();
         Scalar M_CO2 = CO2::molarMass();
@@ -385,14 +431,24 @@ private:
     }
 
     template <class LhsEval>
-    const LhsEval salinityFromConcentration(const LhsEval&T, const LhsEval& P,
+    OPM_HOST_DEVICE LhsEval convertxgWToXgW(CO2 co2, const LhsEval& xgW, const LhsEval& salinity) const
+    {
+        OPM_TIMEFUNCTION_LOCAL();
+        Scalar M_CO2 = co2.molarMass();
+        LhsEval M_Brine = Brine::molarMass(salinity);
+
+        return xgW * M_Brine / (xgW * (M_Brine - M_CO2) + M_CO2);
+    }
+
+    template <class LhsEval>
+    OPM_HOST_DEVICE const LhsEval salinityFromConcentration(const LhsEval&T, const LhsEval& P,
                                             const LhsEval& saltConcentration) const
     { return saltConcentration/H2O::liquidDensity(T, P, true); }
 
-    std::vector<Scalar> brineReferenceDensity_{};
-    std::vector<Scalar> gasReferenceDensity_{};
-    std::vector<Scalar> salinity_{};
-    std::vector<Scalar> ezrokhiDenNaClCoeff_{};
+    ContainerT brineReferenceDensity_{};
+    ContainerT gasReferenceDensity_{};
+    ContainerT salinity_{};
+    ContainerT ezrokhiDenNaClCoeff_{};
     bool enableEzrokhiDensity_ = false;
     bool enableVaporization_ = true;
     int activityModel_{};
@@ -401,5 +457,44 @@ private:
 };
 
 } // namespace Opm
+
+namespace Opm::gpuistl{
+    template<class Scalar, class Params, class GPUContainer>
+    Co2GasPvt<Scalar, Params, GPUContainer>
+    move_to_gpu(Co2GasPvt<Scalar> cpuCo2){
+        return Co2GasPvt<Scalar, Params, GPUContainer>(move_to_gpu<Scalar, std::vector<Scalar>, GPUContainer>(cpuCo2.getParams()),
+                                               GPUContainer(cpuCo2.getBrineReferenceDensity()),
+                                               GPUContainer(cpuCo2.getGasReferenceDensity()),
+                                               GPUContainer(cpuCo2.getSalinity()),
+                                               cpuCo2.getEnableEzrokhiDensity(),
+                                               cpuCo2.getEnableVaporization(),
+                                               cpuCo2.getActivityModel(),
+                                               cpuCo2.getGasType());
+    }
+
+    template <class Scalar, class InputParams, class OutputParams, class ContainerType, class ViewType>
+    Co2GasPvt<Scalar, OutputParams, ViewType>
+    make_view(const Co2GasPvt<Scalar, InputParams, ContainerType>& co2GasPvt) {
+
+        using containedType = typename ContainerType::value_type;
+        using viewedTypeNoConst = typename std::remove_const_t<typename ViewType::value_type>;
+
+        static_assert(std::is_same_v<containedType, viewedTypeNoConst>);
+
+        ViewType newBrineReferenceDensity = make_view<viewedTypeNoConst>(co2GasPvt.getBrineReferenceDensity());
+        ViewType newGasReferenceDensity = make_view<viewedTypeNoConst>(co2GasPvt.getGasReferenceDensity());
+        ViewType newSalinity = make_view<viewedTypeNoConst>(co2GasPvt.getSalinity());
+
+        return Co2GasPvt<Scalar, OutputParams, ViewType>(make_view<double, ContainerType, ViewType>(co2GasPvt.getParams()),
+                                           newBrineReferenceDensity,
+                                           newGasReferenceDensity,
+                                           newSalinity,
+                                           co2GasPvt.getEnableEzrokhiDensity(),
+                                           co2GasPvt.getEnableVaporization(),
+                                           co2GasPvt.getActivityModel(),
+                                           co2GasPvt.getGasType());
+    }
+}
+
 
 #endif

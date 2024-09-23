@@ -32,6 +32,7 @@
 #include <opm/common/Exceptions.hpp>
 
 #include <opm/material/common/MathToolbox.hpp>
+#include <opm/common/utility/gpuDecorators.hpp>
 
 #include <algorithm>
 #include <cassert>
@@ -47,12 +48,19 @@ namespace Opm {
  * This class can be used when the sampling points are calculated at
  * run time.
  */
-template <class Scalar>
+template <class Scalar, class ContainerT = std::vector<Scalar>>
 class UniformTabulated2DFunction
 {
 public:
-    UniformTabulated2DFunction()
+    OPM_HOST_DEVICE UniformTabulated2DFunction()
     { }
+
+
+    // Intended for construction of UniformTabulated2DFunction<double, GPUBuffer>
+    UniformTabulated2DFunction(Scalar minX, Scalar maxX, unsigned m,
+                               Scalar minY, Scalar maxY, unsigned n,
+                               const ContainerT samples) : samples_(samples), m_(m), n_(n), xMin_(minX), yMin_(minY), xMax_(maxX), yMax_(maxY){ // intentionally copy this here to that this object owns a copy of the buffer?
+    }
 
      /*!
       * \brief Constructor where the tabulation parameters are already
@@ -109,43 +117,50 @@ public:
     /*!
      * \brief Returns the minimum of the X coordinate of the sampling points.
      */
-    Scalar xMin() const
+    OPM_HOST_DEVICE Scalar xMin() const
     { return xMin_; }
 
     /*!
      * \brief Returns the maximum of the X coordinate of the sampling points.
      */
-    Scalar xMax() const
+    OPM_HOST_DEVICE Scalar xMax() const
     { return xMax_; }
 
     /*!
      * \brief Returns the minimum of the Y coordinate of the sampling points.
      */
-    Scalar yMin() const
+    OPM_HOST_DEVICE Scalar yMin() const
     { return yMin_; }
 
     /*!
      * \brief Returns the maximum of the Y coordinate of the sampling points.
      */
-    Scalar yMax() const
+    OPM_HOST_DEVICE Scalar yMax() const
     { return yMax_; }
 
     /*!
      * \brief Returns the number of sampling points in X direction.
      */
-    unsigned numX() const
+    OPM_HOST_DEVICE unsigned numX() const
     { return m_; }
 
     /*!
      * \brief Returns the number of sampling points in Y direction.
      */
-    unsigned numY() const
+    OPM_HOST_DEVICE unsigned numY() const
     { return n_; }
+
+    /*!
+     * \brief Returns the sampling points.
+     */
+    OPM_HOST_DEVICE const ContainerT& samples() const
+    { return samples_; }
+
 
     /*!
      * \brief Return the position on the x-axis of the i-th interval.
      */
-    Scalar iToX(unsigned i) const
+    OPM_HOST_DEVICE Scalar iToX(unsigned i) const
     {
         assert(i < numX());
 
@@ -155,7 +170,7 @@ public:
     /*!
      * \brief Return the position on the y-axis of the j-th interval.
       */
-    Scalar jToY(unsigned j) const
+    OPM_HOST_DEVICE Scalar jToY(unsigned j) const
     {
         assert(j < numY());
 
@@ -171,7 +186,7 @@ public:
      * sample point.
       */
     template <class Evaluation>
-    Evaluation xToI(const Evaluation& x) const
+    OPM_HOST_DEVICE Evaluation xToI(const Evaluation& x) const
     { return (x - xMin())/(xMax() - xMin())*(numX() - 1); }
 
     /*!
@@ -183,14 +198,14 @@ public:
      * sample point.
      */
     template <class Evaluation>
-    Evaluation yToJ(const Evaluation& y) const
+    OPM_HOST_DEVICE Evaluation yToJ(const Evaluation& y) const
     { return (y - yMin())/(yMax() - yMin())*(numY() - 1); }
 
     /*!
      * \brief Returns true iff a coordinate lies in the tabulated range
      */
     template <class Evaluation>
-    bool applies(const Evaluation& x, const Evaluation& y) const
+    OPM_HOST_DEVICE bool applies(const Evaluation& x, const Evaluation& y) const
     {
         return
             xMin() <= x && x <= xMax() &&
@@ -206,11 +221,12 @@ public:
      * an exception might be thrown.
      */
     template <class Evaluation>
-    Evaluation eval(const Evaluation& x,
+    OPM_HOST_DEVICE Evaluation eval(const Evaluation& x,
                     const Evaluation& y,
                     [[maybe_unused]] bool extrapolate) const
     {
 #ifndef NDEBUG
+#if !OPM_IS_INSIDE_DEVICE_FUNCTION
         if (!extrapolate && !applies(x,y)) {
             std::string msg = "Attempt to get tabulated value for ("
                 +std::to_string(double(scalarValue(x)))+", "+std::to_string(double(scalarValue(y)))
@@ -220,6 +236,7 @@ public:
 
             throw NumericalProblem(msg);
         }
+#endif
 #endif
 
         Evaluation alpha = xToI(x);
@@ -248,7 +265,7 @@ public:
      *         intersection of the \f$i\f$-th interval of the x-Axis
      *         and the \f$j\f$-th of the y-Axis.
      */
-    Scalar getSamplePoint(unsigned i, unsigned j) const
+    OPM_HOST_DEVICE Scalar getSamplePoint(unsigned i, unsigned j) const
     {
         assert(i < m_);
         assert(j < n_);
@@ -269,7 +286,7 @@ public:
         samples_[j*m_ + i] = value;
     }
 
-    bool operator==(const UniformTabulated2DFunction<Scalar>& data) const
+    OPM_HOST_DEVICE bool operator==(const UniformTabulated2DFunction<Scalar>& data) const
     {
         return samples_ == data.samples_ &&
                m_ == data.m_ &&
@@ -281,11 +298,12 @@ public:
     }
 
 
+
 private:
     // the vector which contains the values of the sample points
     // f(x_i, y_j). don't use this directly, use getSamplePoint(i,j)
     // instead!
-    std::vector<Scalar> samples_;
+    ContainerT samples_;
 
     // the number of sample points in x direction
     unsigned m_;
@@ -303,5 +321,27 @@ private:
 };
 
 } // namespace Opm
+
+namespace Opm::gpuistl{
+    template<class Scalar, class GPUContainer>
+    UniformTabulated2DFunction<Scalar, GPUContainer>
+    move_to_gpu(UniformTabulated2DFunction<Scalar> tab){
+        return UniformTabulated2DFunction<Scalar, GPUContainer>(tab.xMin(), tab.xMax(), tab.numX(), tab.yMin(), tab.yMax(), tab.numY(), GPUContainer(tab.samples()));
+    }
+
+    template <class Scalar, class ContainerType, class ViewType>
+    UniformTabulated2DFunction<Scalar, ViewType>
+    make_view(const UniformTabulated2DFunction<Scalar, ContainerType>& tab) {
+
+        using containedType = typename ContainerType::value_type;
+        using viewedTypeNoConst = typename std::remove_const_t<typename ViewType::value_type>;
+
+        static_assert(std::is_same_v<containedType, viewedTypeNoConst>);
+
+        ViewType newTab = make_view<viewedTypeNoConst>(tab.samples());
+
+        return UniformTabulated2DFunction<Scalar, ViewType>(tab.xMin(), tab.xMax(), tab.numX(), tab.yMin(), tab.yMax(), tab.numY(), newTab);
+    }
+}
 
 #endif
