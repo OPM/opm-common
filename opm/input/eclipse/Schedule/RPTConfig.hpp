@@ -30,7 +30,7 @@ class RPTConfig {
 public:
     using Map = std::unordered_map<std::string, unsigned>;
     RPTConfig() = default;
-    explicit RPTConfig(const DeckKeyword&);
+    explicit RPTConfig(const DeckKeyword&, const RPTConfig* prev = nullptr);
     bool contains(const std::string& key) const;
 
     template<class Serializer>
@@ -43,6 +43,7 @@ public:
     std::unordered_map<std::string, unsigned>::const_iterator end() const { return this->m_mnemonics.end(); };
     std::size_t size() const { return this->m_mnemonics.size(); };
     unsigned& at(const std::string& key) { return this->m_mnemonics.at(key); };
+    unsigned at(const std::string& key) const { return this->m_mnemonics.at(key); };
 
     static RPTConfig serializationTestObject();
     bool operator==(const RPTConfig& other) const;

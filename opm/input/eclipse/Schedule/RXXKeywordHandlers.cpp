@@ -43,7 +43,8 @@ void handleRPTONLYO(HandlerContext& handlerContext)
 
 void handleRPTSCHED(HandlerContext& handlerContext)
 {
-    handlerContext.state().rpt_config.update( RPTConfig(handlerContext.keyword ));
+    const RPTConfig& prev = handlerContext.state().rpt_config.get();
+    handlerContext.state().rpt_config.update( RPTConfig(handlerContext.keyword, &prev));
     auto rst_config = handlerContext.state().rst_config();
     rst_config.update(handlerContext.keyword,
                       handlerContext.parseContext,
