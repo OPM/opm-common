@@ -29,121 +29,225 @@
 #include <utility>
 #include <vector>
 
+namespace Opm::RestartIO {
+    class RstUDQ;
+}
+
 namespace Opm {
 
+/// Representation of a UDQ ASSIGN statement
 class UDQAssign
 {
 public:
-    // If the same keyword is assigned several times the different
-    // assignment records are assembled in one UDQAssign instance.  This is
-    // an attempt to support restart in a situation where a full UDQ ASSIGN
-    // statement can be swapped with a UDQ DEFINE statement.
-    struct AssignRecord
-    {
-        std::vector<std::string> input_selector{};
-        std::unordered_set<std::string> rst_selector{};
-        std::vector<UDQSet::EnumeratedItems> numbered_selector{};
-        double value{};
-        std::size_t report_step{};
-
-        AssignRecord() = default;
-
-        AssignRecord(const std::vector<std::string>& selector,
-                     const double                    value_arg,
-                     const std::size_t               report_step_arg)
-            : input_selector(selector)
-            , value         (value_arg)
-            , report_step   (report_step_arg)
-        {}
-
-        AssignRecord(const std::unordered_set<std::string>& selector,
-                     const double                           value_arg,
-                     const std::size_t                      report_step_arg)
-            : rst_selector(selector)
-            , value       (value_arg)
-            , report_step (report_step_arg)
-        {}
-
-        AssignRecord(const std::vector<UDQSet::EnumeratedItems>& selector,
-                     const double                                value_arg,
-                     const std::size_t                           report_step_arg)
-            : numbered_selector(selector)
-            , value            (value_arg)
-            , report_step      (report_step_arg)
-        {}
-
-        AssignRecord(std::vector<UDQSet::EnumeratedItems>&& selector,
-                     const double                           value_arg,
-                     const std::size_t                      report_step_arg)
-            : numbered_selector(std::move(selector))
-            , value            (value_arg)
-            , report_step      (report_step_arg)
-        {}
-
-        void eval(UDQSet& values) const;
-
-        bool operator==(const AssignRecord& data) const;
-
-        template<class Serializer>
-        void serializeOp(Serializer& serializer)
-        {
-            serializer(this->input_selector);
-            serializer(this->rst_selector);
-            serializer(this->numbered_selector);
-            serializer(this->value);
-            serializer(this->report_step);
-        }
-    };
-
+    /// Default constructor.
     UDQAssign() = default;
+
+    /// Constructor.
+    ///
+    /// \param[in] keyword UDQ name.
+    ///
+    /// \param[in] selector Collection of entity names to which this
+    /// assignment applies.  Might, for instance, be a selection of well or
+    /// group names for a well/group level UDQ, or an empty vector for a
+    /// scalar/field level UDQ.
+    ///
+    /// \param[in] value Numeric UDQ value for the entities named in the \p
+    /// selector.
+    ///
+    /// \param[in] report_step Time at which this assignment happens.
+    /// Assignments should be performed exactly once and the time value
+    /// ensures this behaviour.
     UDQAssign(const std::string&              keyword,
               const std::vector<std::string>& selector,
               double                          value,
               std::size_t                     report_step);
 
-    UDQAssign(const std::string&                     keyword,
-              const std::unordered_set<std::string>& selector,
-              double                                 value,
-              std::size_t                            report_step);
-
+    /// Constructor.
+    ///
+    /// \param[in] keyword UDQ name.
+    ///
+    /// \param[in] selector Collection of named and numbered entities to
+    /// which this assignment applies.  Might, for instance, be a selection
+    /// of well segments for a segment level UDQ.
+    ///
+    /// \param[in] value Numeric UDQ value for the entities identified in
+    /// the \p selector.
+    ///
+    /// \param[in] report_step Time at which this assignment happens.
+    /// Assignments should be performed exactly once and the time value
+    /// ensures this behaviour.
     UDQAssign(const std::string&                          keyword,
               const std::vector<UDQSet::EnumeratedItems>& selector,
               double                                      value,
               std::size_t                                 report_step);
 
+    /// Constructor.
+    ///
+    /// Assumes ownership over the selector.
+    ///
+    /// \param[in] keyword UDQ name.
+    ///
+    /// \param[in] selector Collection of named and numbered entities to
+    /// which this assignment applies.  Might, for instance, be a selection
+    /// of well segments for a segment level UDQ.
+    ///
+    /// \param[in] value Numeric UDQ value for the entities identified in
+    /// the \p selector.
+    ///
+    /// \param[in] report_step Time at which this assignment happens.
+    /// Assignments should be performed exactly once and the time value
+    /// ensures this behaviour.
     UDQAssign(const std::string&                     keyword,
               std::vector<UDQSet::EnumeratedItems>&& selector,
               double                                 value,
               std::size_t                            report_step);
 
+    /// Constructor.
+    ///
+    /// Reconstitutes an assignment from restart file information
+    ///
+    /// \param[in] keyword UDQ name.
+    ///
+    /// \param[in] assignRst Aggregate UDQ assignment information restored
+    /// from restart file information.
+    ///
+    /// \param[in] report_step Time at which this assignment happens.
+    /// Assignments should be performed exactly once and the time value
+    /// ensures this behaviour.
+    UDQAssign(const std::string&       keyword,
+              const RestartIO::RstUDQ& assignRst,
+              const std::size_t        report_step);
+
+    /// Create a serialisation test object.
     static UDQAssign serializationTestObject();
 
+    /// Name of UDQ to which this assignment applies.
     const std::string& keyword() const;
+
+    /// Kind of UDQ to which this assignment applies.
     UDQVarType var_type() const;
 
+    /// Add new record to existing UDQ assignment.
+    ///
+    /// \param[in] selector Collection of entity names to which this
+    /// assignment applies.  Might, for instance, be a selection of well or
+    /// group names for a well/group level UDQ, or an empty vector for a
+    /// scalar/field level UDQ.
+    ///
+    /// \param[in] value Numeric UDQ value for the entities named in the \p
+    /// selector.
+    ///
+    /// \param[in] report_step Time at which this assignment happens.
+    /// Assignments should be performed exactly once and the time value
+    /// ensures this behaviour.
     void add_record(const std::vector<std::string>& selector,
                     double                          value,
                     std::size_t                     report_step);
 
-    void add_record(const std::unordered_set<std::string>& rst_selector,
-                    double                                 value,
-                    std::size_t                            report_step);
-
+    /// Add new record to existing UDQ assignment.
+    ///
+    /// \param[in] selector Collection of named and numbered entities to
+    /// which this assignment applies.  Might, for instance, be a selection
+    /// of well segments for a segment level UDQ.
+    ///
+    /// \param[in] value Numeric UDQ value for the entities identified in
+    /// the \p selector.
+    ///
+    /// \param[in] report_step Time at which this assignment happens.
+    /// Assignments should be performed exactly once and the time value
+    /// ensures this behaviour.
     void add_record(const std::vector<UDQSet::EnumeratedItems>& selector,
                     double                                      value,
                     std::size_t                                 report_step);
 
+    /// Add new record to existing UDQ assignment.
+    ///
+    /// Assumes ownership over the selector.
+    ///
+    /// \param[in] selector Collection of named and numbered entities to
+    /// which this assignment applies.  Might, for instance, be a selection
+    /// of well segments for a segment level UDQ.
+    ///
+    /// \param[in] value Numeric UDQ value for the entities identified in
+    /// the \p selector.
+    ///
+    /// \param[in] report_step Time at which this assignment happens.
+    /// Assignments should be performed exactly once and the time value
+    /// ensures this behaviour.
     void add_record(std::vector<UDQSet::EnumeratedItems>&& selector,
                     double                                 value,
                     std::size_t                            report_step);
 
+    /// Add new record to existing UDQ assignment.
+    ///
+    /// Reconstitutes an assignment from restart file information.  Mostly
+    /// needed for interface compatibility in generic code.
+    ///
+    /// \param[in] assignRst Aggregate UDQ assignment information restored
+    /// from restart file information.
+    ///
+    /// \param[in] report_step Time at which this assignment happens.
+    /// Assignments should be performed exactly once and the time value
+    /// ensures this behaviour.
+    void add_record(const RestartIO::RstUDQ& assignRst,
+                    const std::size_t        report_step);
+
+    /// Apply current assignment to a selection of enumerated items.
+    ///
+    /// \param[in] items Collection of named and numbered entities to which
+    /// apply this assignment.  Might, for instance, be a selection of well
+    /// segments for a segment level UDQ.
+    ///
+    /// \return UDQ set of the current assignment applied to \p items.
+    /// Items known at construction time, or defined in subsequent calls to
+    /// member function add_record(), will have a defined value in the
+    /// resulting UDQ set while unrecognised items will have an undefined
+    /// value.
     UDQSet eval(const std::vector<UDQSet::EnumeratedItems>& items) const;
+
+    /// Apply current assignment to a selection of named items.
+    ///
+    /// \param[in] wells Collection of named entities to which apply this
+    /// assignment.  Might, for instance, be a selection of well names for a
+    /// well level UDQ.
+    ///
+    /// \return UDQ set of the current assignment applied to \p wells.
+    /// Named items known at construction time, or defined in subsequent
+    /// calls to member function add_record(), will have a defined value in
+    /// the resulting UDQ set while unrecognised items will have an
+    /// undefined value.
     UDQSet eval(const std::vector<std::string>& wells) const;
+
+    /// Construct scalar UDQ set for a scalar UDQ assignment
+    ///
+    /// Throws an exception of type \code std::invalid_argument \endcode if
+    /// this assignment statement does not pertain to a scalar or field
+    /// level UDQ.
+    ///
+    /// \return UDQ set of the current assignment of a scalar UDQ.
     UDQSet eval() const;
+
+    /// Time at which this assignment happens.
+    ///
+    /// Assignments should be performed exactly once and the time value
+    /// ensures this behaviour.
+    ///
+    /// \return Constructor argument of the same name.
     std::size_t report_step() const;
 
+    /// Equality predicate.
+    ///
+    /// \param[in] data Object against which \code *this \endcode will be
+    /// tested for equality.
+    ///
+    /// \return Whether or not \code *this \endcode is the same as \p data.
     bool operator==(const UDQAssign& data) const;
 
+    /// Convert between byte array and object representation.
+    ///
+    /// \tparam Serializer Byte array conversion protocol.
+    ///
+    /// \param[in,out] serializer Byte array conversion object.
     template<class Serializer>
     void serializeOp(Serializer& serializer)
     {
@@ -153,9 +257,156 @@ public:
     }
 
 private:
+    // If the same keyword is assigned several times the different
+    // assignment records are assembled in one UDQAssign instance.  This is
+    // an attempt to support restart in a situation where a full UDQ ASSIGN
+    // statement can be swapped with a UDQ DEFINE statement.
+    struct AssignRecord
+    {
+        /// Collection of entity names to which this assignment applies.
+        ///
+        /// Might, for instance, be a selection of well or group names for a
+        /// well/group level UDQ, or an empty vector for a scalar/field
+        /// level UDQ.
+        ///
+        /// Empty for an enumerated assignment record.
+        std::vector<std::string> input_selector{};
+
+        /// Collection of named and numbered entities to which this
+        /// assignment applies.
+        ///
+        /// Might, for instance, be a selection of well segments for a
+        /// segment level UDQ.
+        ///
+        /// Empty for a named assignment record.
+        std::vector<UDQSet::EnumeratedItems> numbered_selector{};
+
+        /// Numeric UDQ value for the entities identified in the selector.
+        double value{};
+
+        /// Time at which this assignment happens.
+        ///
+        /// Assignments should be performed exactly once and the time value
+        /// ensures this behaviour.
+        std::size_t report_step{};
+
+        /// Default constructor.
+        AssignRecord() = default;
+
+        /// Constructor.
+        ///
+        /// \param[in] selector Collection of entity names to which this
+        /// assignment applies.  Might, for instance, be a selection of well
+        /// or group names for a well/group level UDQ, or an empty vector
+        /// for a scalar/field level UDQ.
+        ///
+        /// \param[in] value_arg Numeric UDQ value for the entities named in
+        /// the \p selector.
+        ///
+        /// \param[in] report_step_arg Time at which this assignment
+        /// happens.  Assignments should be performed exactly once and the
+        /// time value ensures this behaviour.
+        AssignRecord(const std::vector<std::string>& selector,
+                     const double                    value_arg,
+                     const std::size_t               report_step_arg)
+            : input_selector(selector)
+            , value         (value_arg)
+            , report_step   (report_step_arg)
+        {}
+
+        /// Constructor.
+        ///
+        /// \param[in] selector Collection of named and numbered entities to
+        /// which this assignment applies.  Might, for instance, be a
+        /// selection of well segments for a segment level UDQ.
+        ///
+        /// \param[in] value_arg Numeric UDQ value for the entities
+        /// identified in the \p selector.
+        ///
+        /// \param[in] report_step_arg Time at which this assignment
+        /// happens.  Assignments should be performed exactly once and the
+        /// time value ensures this behaviour.
+        AssignRecord(const std::vector<UDQSet::EnumeratedItems>& selector,
+                     const double                                value_arg,
+                     const std::size_t                           report_step_arg)
+            : numbered_selector(selector)
+            , value            (value_arg)
+            , report_step      (report_step_arg)
+        {}
+
+        /// Constructor.
+        ///
+        /// Assumes ownership over the selector.
+        ///
+        /// \param[in] selector Collection of named and numbered entities to
+        /// which this assignment applies.  Might, for instance, be a
+        /// selection of well segments for a segment level UDQ.
+        ///
+        /// \param[in] value_arg Numeric UDQ value for the entities
+        /// identified in the \p selector.
+        ///
+        /// \param[in] report_step_arg Time at which this assignment happens.
+        /// Assignments should be performed exactly once and the time value
+        /// ensures this behaviour.
+        AssignRecord(std::vector<UDQSet::EnumeratedItems>&& selector,
+                     const double                           value_arg,
+                     const std::size_t                      report_step_arg)
+            : numbered_selector(std::move(selector))
+            , value            (value_arg)
+            , report_step      (report_step_arg)
+        {}
+
+        /// Apply assignment record to existing UDQ set
+        ///
+        /// Populates members of UDQ set that are known to the current
+        /// assignment record.
+        ///
+        /// \param[in,out] values UDQ set for which to assign elements.
+        void eval(UDQSet& values) const;
+
+        /// Equality predicate
+        ///
+        /// \param[in] data Record against which the current object will be
+        /// compared for equality.
+        ///
+        /// \return \code *this == data \endcode.
+        bool operator==(const AssignRecord& data) const;
+
+        /// Convert between byte array and object representation.
+        ///
+        /// \tparam Serializer Byte array conversion protocol.
+        ///
+        /// \param[in,out] serializer Byte array conversion object.
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer(this->input_selector);
+            serializer(this->numbered_selector);
+            serializer(this->value);
+            serializer(this->report_step);
+        }
+    };
+
+    /// Name of UDQ to which this assignment applies.
     std::string m_keyword{};
+
+    /// Kind of UDQ to which this assignment applies.
     UDQVarType m_var_type{UDQVarType::NONE};
+
+    /// Assignment records for this UDQ assignment.
     std::vector<AssignRecord> records{};
+
+    /// Reconstitute well or group level assignment from restart file
+    /// information
+    ///
+    /// \param[in] assignRst Aggregate UDQ assignment information restored
+    /// from restart file information.
+    ///
+    /// \param[in] report_step Time at which this assignment happens.
+    /// Assignments should be performed exactly once and the time value
+    /// ensures this behaviour.
+    void add_well_or_group_records(const RestartIO::RstUDQ& assignRst,
+                                   const std::size_t        report_step);
 };
 
 } // namespace Opm
