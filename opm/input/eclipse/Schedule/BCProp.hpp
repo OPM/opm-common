@@ -85,19 +85,20 @@ struct MechBCValue {
     }
 };
 
-class BCProp {
+class BCProp
+{
 public:
+    struct BCFace
+    {
+        int index{};
+        BCType bctype{BCType::NONE};
+        BCMECHType bcmechtype{BCMECHType::NONE};
+        BCComponent component{BCComponent::NONE};
+        double rate{};
+        std::optional<double> pressure{};
+        std::optional<double> temperature{};
 
-    struct BCFace {
-        int index;
-        BCType bctype;
-        BCMECHType bcmechtype;
-        BCComponent component;
-        double rate;
-        std::optional<double> pressure;
-        std::optional<double> temperature;
-
-        std::optional<MechBCValue> mechbcvalue;
+        std::optional<MechBCValue> mechbcvalue{};
 
         BCFace() = default;
         explicit BCFace(const DeckRecord& record);
@@ -119,7 +120,6 @@ public:
             serializer(mechbcvalue);
         }
     };
-
 
     BCProp() = default;
 
@@ -143,6 +143,6 @@ private:
     std::vector<BCFace> m_faces;
 };
 
-} //namespace Opm
+} // namespace Opm
 
 #endif

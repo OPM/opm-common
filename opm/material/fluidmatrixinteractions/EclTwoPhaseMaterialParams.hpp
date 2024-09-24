@@ -138,7 +138,7 @@ public:
     void setSwl(Scalar) {}
 
 private:
-    EclTwoPhaseApproach approach_;
+    EclTwoPhaseApproach approach_{EclTwoPhaseApproach::GasOil};
 
     std::shared_ptr<GasOilParams> gasOilParams_;
     std::shared_ptr<OilWaterParams> oilWaterParams_;

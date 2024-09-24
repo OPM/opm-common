@@ -89,7 +89,7 @@ public:
 
 private:
     std::vector<std::string> m_name_list;
-    std::size_t m_max_groups;
+    std::size_t m_max_groups{};
 };
 
 } // namespace Opm

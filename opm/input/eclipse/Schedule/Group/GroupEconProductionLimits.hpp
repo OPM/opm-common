@@ -32,7 +32,8 @@ class DeckRecord;
 class Schedule;
 class SummaryState;
 
-class GroupEconProductionLimits {
+class GroupEconProductionLimits
+{
 public:
     enum class EconWorkover {
         NONE = 0,
@@ -43,7 +44,8 @@ public:
         ALL  = 5
     };
 
-    class GEconGroup {
+    class GEconGroup
+    {
     public:
         GEconGroup() = default;
         GEconGroup(const DeckRecord &record, const int report_step);
@@ -72,18 +74,19 @@ public:
         EconWorkover workover() const;
 
     private:
-        UDAValue m_min_oil_rate;
-        UDAValue m_min_gas_rate;
-        UDAValue m_max_water_cut;
-        UDAValue m_max_gas_oil_ratio;
-        UDAValue m_max_water_gas_ratio;
-        EconWorkover m_workover;
-        bool m_end_run;
-        int m_max_open_wells;
-        int m_report_step;  // Used to get UDQ undefined value
+        UDAValue m_min_oil_rate{};
+        UDAValue m_min_gas_rate{};
+        UDAValue m_max_water_cut{};
+        UDAValue m_max_gas_oil_ratio{};
+        UDAValue m_max_water_gas_ratio{};
+        EconWorkover m_workover{EconWorkover::NONE};
+        bool m_end_run{false};
+        int m_max_open_wells{};
+        int m_report_step{};  // Used to get UDQ undefined value
     };
 
-    class GEconGroupProp {
+    class GEconGroupProp
+    {
         /* Same as GEconGroup but with UDA values realized at given report step*/
     public:
         GEconGroupProp(const double min_oil_rate,
@@ -104,14 +107,14 @@ public:
         EconWorkover workover() const;
 
     private:
-        std::optional<double> m_min_oil_rate;
-        std::optional<double> m_min_gas_rate;
-        std::optional<double> m_max_water_cut;
-        std::optional<double> m_max_gas_oil_ratio;
-        std::optional<double> m_max_water_gas_ratio;
-        EconWorkover m_workover;
-        bool m_end_run;
-        int m_max_open_wells;
+        std::optional<double> m_min_oil_rate{};
+        std::optional<double> m_min_gas_rate{};
+        std::optional<double> m_max_water_cut{};
+        std::optional<double> m_max_gas_oil_ratio{};
+        std::optional<double> m_max_water_gas_ratio{};
+        EconWorkover m_workover{EconWorkover::NONE};
+        bool m_end_run{false};
+        int m_max_open_wells{};
     };
 
     GroupEconProductionLimits() = default;
@@ -138,6 +141,5 @@ private:
 };
 
 } // namespace Opm
-
 
 #endif

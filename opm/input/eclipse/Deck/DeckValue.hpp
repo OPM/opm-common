@@ -45,13 +45,12 @@ class DeckValue {
         bool is_compatible() const;
 
     private:
-
-        bool default_value;
-        type_tag value_enum;
-        int int_value;
-        double double_value;
-        std::string string_value;
-        UDAValue uda_value;
+        bool default_value{false};
+        type_tag value_enum{};
+        int int_value{};
+        double double_value{};
+        std::string string_value{};
+        UDAValue uda_value{};
 
 };
 

@@ -251,12 +251,12 @@ public:
 
 private:
     double m_increment = 0;
-    double m_min_eco_gradient;
-    double m_min_wait;
+    double m_min_eco_gradient = 0.0;
+    double m_min_wait = 0.0;
     bool   m_all_newton = true;
 
-    std::map<std::string, GasLiftGroup> m_groups;
-    std::map<std::string, GasLiftWell> m_wells;
+    std::map<std::string, GasLiftGroup> m_groups{};
+    std::map<std::string, GasLiftWell> m_wells{};
 };
 
 }

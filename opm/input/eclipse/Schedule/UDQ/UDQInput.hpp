@@ -74,10 +74,10 @@ public:
         serializer(var_type);
     }
 
-    std::size_t insert_index;
-    std::size_t typed_insert_index;
-    UDQAction action;
-    UDQVarType var_type;
+    std::size_t insert_index{};
+    std::size_t typed_insert_index{};
+    UDQAction action{UDQAction::ASSIGN};
+    UDQVarType var_type{UDQVarType::NONE};
 };
 
 class UDQInput
@@ -100,10 +100,10 @@ public:
     bool operator==(const UDQInput& other) const;
 
 private:
-    std::variant<const UDQDefine*, const UDQAssign*> value;
-    std::string m_keyword;
-    UDQVarType m_var_type;
-    std::string m_unit;
+    std::variant<const UDQDefine*, const UDQAssign*> value{};
+    std::string m_keyword{};
+    UDQVarType m_var_type{UDQVarType::NONE};
+    std::string m_unit{};
 };
 
 } // namespace Opm

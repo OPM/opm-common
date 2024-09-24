@@ -26,8 +26,8 @@ namespace Opm {
 class Deck;
 
 struct PpcwmaxRecord {
-    double max_cap_pres;
-    bool option;
+    double max_cap_pres{};
+    bool option{false};
 
     PpcwmaxRecord() = default;
     PpcwmaxRecord(double pres, bool optn) :

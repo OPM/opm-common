@@ -222,12 +222,12 @@ protected:
         return *static_cast<const Implementation*>(this);
     }
 
-    std::array<std::array<Scalar,numComponents>,numPhases> moleFraction_;
-    std::array<Scalar,numPhases> averageMolarMass_;
-    std::array<Scalar,numPhases> sumMoleFractions_;
-    std::array<Scalar,numPhases> Z_;
-    std::array<Scalar,numComponents> K_;
-    Scalar L_;
+    std::array<std::array<Scalar,numComponents>,numPhases> moleFraction_{};
+    std::array<Scalar,numPhases> averageMolarMass_{};
+    std::array<Scalar,numPhases> sumMoleFractions_{};
+    std::array<Scalar,numPhases> Z_{};
+    std::array<Scalar,numComponents> K_{};
+    Scalar L_{};
 };
 
 /*!

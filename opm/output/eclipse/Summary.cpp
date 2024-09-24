@@ -3798,10 +3798,10 @@ namespace Evaluator {
         const Opm::SummaryState& st_;
         const Opm::UDQConfig&    udq_;
 
-        const Opm::EclIO::SummaryNode* node_;
+        const Opm::EclIO::SummaryNode* node_{};
 
-        Opm::UnitSystem::measure paramUnit_;
-        ofun paramFunction_;
+        Opm::UnitSystem::measure paramUnit_{Opm::UnitSystem::measure::_count};
+        ofun paramFunction_{};
 
         Descriptor functionRelation();
         Descriptor blockValue();

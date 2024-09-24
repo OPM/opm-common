@@ -125,8 +125,8 @@ public:
 
 private:
     void assign(bool value);
-    bool result;
-    std::optional<WellSet> matching_wells;
+    bool result{false};
+    std::optional<WellSet> matching_wells{};
 };
 
 }

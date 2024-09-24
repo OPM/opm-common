@@ -88,8 +88,8 @@ public:
 private:
     static Scalar referenceTemperature_;
 
-    Scalar referenceRockHeatCapacity_;
-    Scalar dRockHeatCapacity_dT_;
+    Scalar referenceRockHeatCapacity_{};
+    Scalar dRockHeatCapacity_dT_{};
 };
 
 template <class ScalarT>

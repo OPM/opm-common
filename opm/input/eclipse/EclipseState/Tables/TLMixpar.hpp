@@ -26,16 +26,16 @@
 namespace Opm {
 class Deck;
 
-struct TLMixRecord {
-    double viscosity_parameter;
-    double density_parameter;
+struct TLMixRecord
+{
+    double viscosity_parameter{};
+    double density_parameter{};
 
     TLMixRecord() = default;
     TLMixRecord(double v, double d) :
         viscosity_parameter(v),
         density_parameter(d)
-    {};
-
+    {}
 
     bool operator==(const TLMixRecord& other) const {
         return this->viscosity_parameter == other.viscosity_parameter &&
@@ -48,13 +48,11 @@ struct TLMixRecord {
         serializer(viscosity_parameter);
         serializer(density_parameter);
     }
-
 };
 
-
-class TLMixpar {
+class TLMixpar
+{
 public:
-
     TLMixpar() = default;
     explicit TLMixpar(const Deck& deck);
     static TLMixpar serializationTestObject();
@@ -75,7 +73,7 @@ public:
 private:
     std::vector<TLMixRecord> data;
 };
-}
 
+}
 
 #endif

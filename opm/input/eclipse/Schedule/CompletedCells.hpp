@@ -35,8 +35,8 @@ class CompletedCells
 public:
     struct Cell
     {
-        std::size_t global_index;
-        std::size_t i, j, k;
+        std::size_t global_index{};
+        std::size_t i{}, j{}, k{};
 
         struct Props
         {
@@ -66,7 +66,7 @@ public:
             }
         };
 
-        std::optional<Props> props;
+        std::optional<Props> props{};
         std::size_t active_index() const;
         bool is_active() const;
 

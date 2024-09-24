@@ -19,12 +19,14 @@
 #ifndef WELLTEST_STATE_H
 #define WELLTEST_STATE_H
 
+#include <opm/input/eclipse/Schedule/Well/WellTestConfig.hpp>
+#include <opm/io/eclipse/rst/state.hpp>
+
 #include <cstddef>
 #include <optional>
 #include <string>
 #include <unordered_map>
 #include <vector>
-#include <opm/io/eclipse/rst/state.hpp>
 
 namespace {
 
@@ -89,13 +91,13 @@ public:
     };
 
     struct WTestWell {
-        std::string name;
-        WTest::Reason reason;
-        double last_test;
+        std::string name{};
+        WTest::Reason reason{WTest::Reason::NONE};
+        double last_test{};
 
         int num_attempt{0};
         bool closed{true};
-        std::optional<int> wtest_report_step;
+        std::optional<int> wtest_report_step{};
 
         WTestWell() = default;
         WTestWell(const std::string& wname, WTest::Reason reason_, double last_test);
@@ -148,10 +150,10 @@ public:
 
 
     struct ClosedCompletion {
-        std::string wellName;
-        int complnum;
-        double last_test;
-        int num_attempt;
+        std::string wellName{};
+        int complnum{};
+        double last_test{};
+        int num_attempt{};
 
         bool operator==(const ClosedCompletion& other) const {
             return this->wellName == other.wellName &&

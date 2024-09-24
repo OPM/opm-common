@@ -69,14 +69,14 @@ class WellTestConfig {
 public:
     using Reason = WTest::Reason;
     struct WTESTWell {
-        std::string name;
-        int reasons;
-        double test_interval;
-        int num_test;
-        double startup_time;
+        std::string name{};
+        int reasons{};
+        double test_interval{};
+        int num_test{};
+        double startup_time{};
         // the related WTEST keywords is entered and will begin
         // taking effects since this report step
-        int begin_report_step;
+        int begin_report_step{};
 
         bool operator==(const WTESTWell& data) const {
             return name == data.name &&

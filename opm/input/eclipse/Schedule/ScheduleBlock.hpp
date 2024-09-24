@@ -85,11 +85,11 @@ public:
                    time_point&       current_time) const;
 
 private:
-    ScheduleTimeType m_time_type;
-    time_point m_start_time;
-    std::optional<time_point> m_end_time;
-    KeywordLocation m_location;
-    std::vector<DeckKeyword> m_keywords;
+    ScheduleTimeType m_time_type{ScheduleTimeType::START};
+    time_point m_start_time{};
+    std::optional<time_point> m_end_time{};
+    KeywordLocation m_location{};
+    std::vector<DeckKeyword> m_keywords{};
 
     void dump_time(const UnitSystem& usys,
                    time_point        current_time,

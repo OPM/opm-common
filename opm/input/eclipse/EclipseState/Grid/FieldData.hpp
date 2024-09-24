@@ -69,12 +69,12 @@ namespace Opm::Fieldprops {
     template <typename T>
     struct FieldData
     {
-        std::vector<T> data;
-        std::vector<value::status> value_status;
-        keywords::keyword_info<T> kw_info;
-        std::optional<std::vector<T>> global_data;
-        std::optional<std::vector<value::status>> global_value_status;
-        mutable bool all_set;
+        std::vector<T> data{};
+        std::vector<value::status> value_status{};
+        keywords::keyword_info<T> kw_info{};
+        std::optional<std::vector<T>> global_data{};
+        std::optional<std::vector<value::status>> global_value_status{std::nullopt};
+        mutable bool all_set{false};
 
         bool operator==(const FieldData& other) const
         {

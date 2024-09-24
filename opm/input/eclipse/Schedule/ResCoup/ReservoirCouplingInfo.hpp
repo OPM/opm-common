@@ -19,15 +19,16 @@
 #ifndef RESERVOIR_COUPLING_SLAVES_HPP
 #define RESERVOIR_COUPLING_SLAVES_HPP
 
-#include <optional>
-#include <string>
-#include <map>
-#include <opm/io/eclipse/rst/well.hpp>
 #include <opm/io/eclipse/rst/group.hpp>
+#include <opm/io/eclipse/rst/well.hpp>
 
-namespace Opm {
-namespace ReservoirCoupling {
-class MasterGroup {
+#include <map>
+#include <string>
+
+namespace Opm::ReservoirCoupling {
+
+class MasterGroup
+{
 public:
     MasterGroup() = default;
 
@@ -75,10 +76,10 @@ public:
     }
 
 private:
-    std::string m_name;
-    std::string m_slave_name;
-    std::string m_slave_group_name;
-    double m_flow_limit_fraction;
+    std::string m_name{};
+    std::string m_slave_name{};
+    std::string m_slave_group_name{};
+    double m_flow_limit_fraction{};
 };
 
 class Slave {
@@ -129,10 +130,10 @@ public:
         serializer(m_numprocs);
     }
 private:
-    std::string m_name;
-    std::string m_data_filename;
-    std::string m_directory_path;
-    unsigned int m_numprocs;
+    std::string m_name{};
+    std::string m_data_filename{};
+    std::string m_directory_path{};
+    unsigned int m_numprocs{};
 };
 
 class CouplingInfo {
@@ -170,6 +171,6 @@ private:
     std::map<std::string, MasterGroup> m_master_groups;
 };
 
-} // namespace ReservoirCoupling
-} // namespace Opm
+} // namespace Opm::ReservoirCoupling
+
 #endif

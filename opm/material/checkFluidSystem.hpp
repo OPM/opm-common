@@ -221,12 +221,12 @@ public:
     }
 
 private:
-    bool allowSaturation_;
-    bool allowTemperature_;
-    bool allowPressure_;
-    bool allowComposition_;
-    bool allowDensity_;
-    int restrictPhaseIdx_;
+    bool allowSaturation_{false};
+    bool allowTemperature_{false};
+    bool allowPressure_{false};
+    bool allowComposition_{false};
+    bool allowDensity_{false};
+    int restrictPhaseIdx_{};
 };
 
 template <class Scalar, class BaseFluidState>

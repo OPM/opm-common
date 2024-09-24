@@ -60,9 +60,9 @@ struct NNCdata {
         return std::tie(this->cell1, this->cell2) < std::tie(other.cell1, other.cell2);
     }
 
-    size_t cell1;
-    size_t cell2;
-    double trans;
+    size_t cell1{};
+    size_t cell2{};
+    double trans{};
 };
 
 

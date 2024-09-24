@@ -66,7 +66,6 @@ namespace Opm {
         static const std::string MultiPhaseModelToString(MultiPhaseModel enumValue);
         static MultiPhaseModel MultiPhaseModelFromString(const std::string& stringValue);
 
-
         WellSegments() = default;
         WellSegments(CompPressureDrop compDrop,
                      const std::vector<Segment>& segments);
@@ -140,14 +139,14 @@ namespace Opm {
         const Segment& topSegment() const;
 
         // components of the pressure drop to be included
-        CompPressureDrop m_comp_pressure_drop;
+        CompPressureDrop m_comp_pressure_drop{CompPressureDrop::HFA};
         // There are other three properties for segment related to thermal conduction,
         // while they are not supported by the keyword at the moment.
 
-        std::vector< Segment > m_segments;
+        std::vector< Segment > m_segments{};
         // the mapping from the segment number to the
         // storage index in the vector
-        std::map<int, int> segment_number_to_index;
+        std::map<int, int> segment_number_to_index{};
     };
 }
 

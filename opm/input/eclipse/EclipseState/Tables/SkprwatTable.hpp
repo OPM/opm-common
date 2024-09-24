@@ -21,11 +21,13 @@
 #define OPM_PARSER_SKPRWAT_TABLE_HPP
 
 #include <opm/input/eclipse/EclipseState/Tables/PolyInjTable.hpp>
+
 namespace Opm {
 
     class DeckKeyword;
 
-    class SkprwatTable : public PolyInjTable {
+    class SkprwatTable : public PolyInjTable
+    {
     public:
         SkprwatTable() = default;
         explicit SkprwatTable(const DeckKeyword& table);

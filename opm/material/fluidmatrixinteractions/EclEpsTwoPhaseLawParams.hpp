@@ -126,9 +126,9 @@ public:
     { return *effectiveLawParams_; }
 
 private:
-    EffLawParams* effectiveLawParams_;
+    EffLawParams* effectiveLawParams_{};
     EclEpsConfig config_;
-    ScalingPoints* unscaledPoints_;
+    ScalingPoints* unscaledPoints_{};
     ScalingPoints scaledPoints_;
 };
 

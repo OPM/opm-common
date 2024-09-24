@@ -256,7 +256,7 @@ inline std::ostream& operator<<(std::ostream& os, const quad& val)
 
 inline std::istream& operator>>(std::istream& is, quad& val)
 {
-    double tmp;
+    double tmp = 0.0;
     std::istream& ret = (is >> tmp);
     val = tmp;
     return ret;

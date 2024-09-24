@@ -41,7 +41,8 @@ namespace Opm {
         int pvtnum;
     };
 
-    class SingleNumericalAquifer {
+    class SingleNumericalAquifer
+    {
     public:
         explicit SingleNumericalAquifer(const size_t aqu_id);
         SingleNumericalAquifer() = default;
@@ -79,9 +80,9 @@ namespace Opm {
             // Because if it is a map, the id will be there
             // Then adding aquifer cells will be much easier with the
             // default constructor
-            size_t id_;
-            std::vector<NumericalAquiferCell> cells_;
-            std::vector<NumericalAquiferConnection> connections_;
+            size_t id_{};
+            std::vector<NumericalAquiferCell> cells_{};
+            std::vector<NumericalAquiferConnection> connections_{};
         };
 }
 
