@@ -33,31 +33,31 @@ namespace Opm {
 
 template<>
 const UniformTabulated2DFunction<double>&
-CO2<double, std::vector<double>>::tabulatedEnthalpy = CO2Tables::tabulatedEnthalpy;
+CO2<double>::tabulatedEnthalpy = CO2Tables::tabulatedEnthalpy;
 template<>
 const UniformTabulated2DFunction<double>&
-CO2<double, std::vector<double>>::tabulatedDensity = CO2Tables::tabulatedDensity;
+CO2<double>::tabulatedDensity = CO2Tables::tabulatedDensity;
 template<>
-const double CO2<double, std::vector<double>>::brineSalinity = CO2Tables::brineSalinity;
+const double CO2<double>::brineSalinity = CO2Tables::brineSalinity;
 
 template<>
 const UniformTabulated2DFunction<double>&
-CO2<float, std::vector<double>>::tabulatedEnthalpy = CO2Tables::tabulatedEnthalpy;
+CO2<float>::tabulatedEnthalpy = CO2Tables::tabulatedEnthalpy;
 template<>
 const UniformTabulated2DFunction<double>&
-CO2<float, std::vector<double>>::tabulatedDensity = CO2Tables::tabulatedDensity;
+CO2<float>::tabulatedDensity = CO2Tables::tabulatedDensity;
 template<>
-const float CO2<float, std::vector<double>>::brineSalinity = CO2Tables::brineSalinity;
+const float CO2<float>::brineSalinity = CO2Tables::brineSalinity;
 
 #if HAVE_QUAD
 template<>
 const UniformTabulated2DFunction<double>&
-CO2<quad, std::vector<double>>::tabulatedEnthalpy = CO2Tables::tabulatedEnthalpy;
+CO2<quad>::tabulatedEnthalpy = CO2Tables::tabulatedEnthalpy;
 template<>
 const UniformTabulated2DFunction<double>&
-CO2<quad, std::vector<double>>::tabulatedDensity = CO2Tables::tabulatedDensity;
+CO2<quad>::tabulatedDensity = CO2Tables::tabulatedDensity;
 template<>
-const quad CO2<quad, std::vector<double>>::brineSalinity = CO2Tables::brineSalinity;
+const quad CO2<quad>::brineSalinity = CO2Tables::brineSalinity;
 #endif
 
 } // namespace Opm
