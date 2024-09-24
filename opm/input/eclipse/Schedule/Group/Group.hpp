@@ -279,7 +279,7 @@ public:
     const std::string& name() const;
     bool is_field() const;
 
-    bool update_gefac(double gefac, bool transfer_gefac);
+    bool update_gefac(double gefac, bool use_efficiency_in_network);
 
     // [[deprecated("use Group::control_group() or Group::flow_group()")]]
     const std::string& parent() const;
@@ -293,8 +293,8 @@ public:
     bool isInjectionGroup() const;
     void setProductionGroup();
     void setInjectionGroup();
-    double getGroupEfficiencyFactor() const;
-    bool   getTransferGroupEfficiencyFactor() const;
+    double getGroupEfficiencyFactor(bool network = false) const;
+    bool useEfficiencyInNetwork() const;
 
     std::size_t numWells() const;
     bool addGroup(const std::string& group_name);
@@ -339,7 +339,7 @@ public:
         serializer(unit_system);
         serializer(group_type);
         serializer(gefac);
-        serializer(transfer_gefac);
+        serializer(use_efficiency_in_network);
         serializer(parent_group);
         serializer(m_wells);
         serializer(m_groups);
@@ -359,7 +359,7 @@ private:
     UnitSystem unit_system;
     GroupType group_type;
     double gefac;
-    bool transfer_gefac;
+    bool use_efficiency_in_network;
 
     std::string parent_group;
     IOrderSet<std::string> m_wells;
