@@ -28,6 +28,7 @@
 #ifndef OPM_CO2_HPP
 #define OPM_CO2_HPP
 #include <opm/common/TimingMacros.hpp>
+#include <opm/common/utility/gpuDecorators.hpp>
 #include <opm/material/Constants.hpp>
 #include <opm/material/IdealGas.hpp>
 #include <opm/material/components/Component.hpp>
@@ -48,13 +49,16 @@ namespace Opm {
  * fluidsystem \c BrineCO2FluidSystem. If thermodynamic precision
  * is not a top priority, the much simpler component \c Opm::SimpleCO2 can be
  * used instead
+ * 
+ * ContainerT is defaulted to be a regular vector, usually overriden to GPUBuffer/view
+ * to support instantiation and usage on GPU
  */
-template <class Scalar>
+template <class Scalar, class ContainerT = std::vector<double>>
 class CO2 : public Component<Scalar, CO2<Scalar>>
 {
     static constexpr Scalar R = Constants<Scalar>::R;
-    static const UniformTabulated2DFunction<double>& tabulatedEnthalpy;
-    static const UniformTabulated2DFunction<double>& tabulatedDensity;
+    static const UniformTabulated2DFunction<double, ContainerT>& tabulatedEnthalpy;
+    static const UniformTabulated2DFunction<double, ContainerT>& tabulatedDensity;
 
 public:
     static const Scalar brineSalinity;
@@ -68,31 +72,31 @@ public:
     /*!
      * \brief The mass in [kg] of one mole of CO2.
      */
-    static Scalar molarMass()
+    OPM_HOST_DEVICE static Scalar molarMass()
     { return 44e-3; }
 
     /*!
      * \brief Returns the critical temperature [K] of CO2
      */
-    static Scalar criticalTemperature()
+    OPM_HOST_DEVICE static Scalar criticalTemperature()
     { return 273.15 + 30.95; /* [K] */ }
 
     /*!
      * \brief Returns the critical pressure [Pa] of CO2
      */
-    static Scalar criticalPressure()
+    OPM_HOST_DEVICE static Scalar criticalPressure()
     { return 73.8e5; /* [N/m^2] */ }
 
     /*!
      * \brief Returns the temperature [K]at CO2's triple point.
      */
-    static Scalar tripleTemperature()
+    OPM_HOST_DEVICE static Scalar tripleTemperature()
     { return 273.15 - 56.35; /* [K] */ }
 
     /*!
      * \brief Returns the pressure [Pa] at CO2's triple point.
      */
-    static Scalar triplePressure()
+    OPM_HOST_DEVICE static Scalar triplePressure()
     { return 5.11e5; /* [N/m^2] */ }
 
     /*!
@@ -132,7 +136,7 @@ public:
      * 1996
      */
     template <class Evaluation>
-    static Evaluation vaporPressure(const Evaluation& T)
+    OPM_HOST_DEVICE static Evaluation vaporPressure(const Evaluation& T)
     {
         static constexpr Scalar a[4] =
             { -7.0602087, 1.9391218, -1.6463597, -3.2995634 };
@@ -153,20 +157,20 @@ public:
     /*!
      * \brief Returns true iff the gas phase is assumed to be compressible
      */
-    static bool gasIsCompressible()
+    OPM_HOST_DEVICE static bool gasIsCompressible()
     { return true; }
 
     /*!
      * \brief Returns true iff the gas phase is assumed to be ideal
      */
-    static bool gasIsIdeal()
+    OPM_HOST_DEVICE static bool gasIsIdeal()
     { return false; }
 
     /*!
      * \brief Specific enthalpy of gaseous CO2 [J/kg].
      */
     template <class Evaluation>
-    static Evaluation gasEnthalpy(const Evaluation& temperature,
+    OPM_HOST_DEVICE static Evaluation gasEnthalpy(const Evaluation& temperature,
                                   const Evaluation& pressure,
                                   bool extrapolate = false)
     {
@@ -177,7 +181,7 @@ public:
      * \brief Specific internal energy of CO2 [J/kg].
      */
     template <class Evaluation>
-    static Evaluation gasInternalEnergy(const Evaluation& temperature,
+    OPM_HOST_DEVICE static Evaluation gasInternalEnergy(const Evaluation& temperature,
                                         const Evaluation& pressure,
                                         bool extrapolate = false)
     {
@@ -191,7 +195,7 @@ public:
      * \brief The density of CO2 at a given pressure and temperature [kg/m^3].
      */
     template <class Evaluation>
-    static Evaluation gasDensity(const Evaluation& temperature,
+    OPM_HOST_DEVICE static Evaluation gasDensity(const Evaluation& temperature,
                                  const Evaluation& pressure,
                                  bool extrapolate = false)
     {
@@ -205,7 +209,7 @@ public:
      *                        - Fenhour etl al., 1998
      */
     template <class Evaluation>
-    static Evaluation gasViscosity(Evaluation temperature,
+    OPM_HOST_DEVICE static Evaluation gasViscosity(Evaluation temperature,
                                    const Evaluation& pressure,
                                    bool extrapolate = false)
     {
@@ -258,7 +262,7 @@ public:
      * \param pressure Pressure of component \f$\mathrm{[Pa]}\f$
      */
     template <class Evaluation>
-    static Evaluation gasHeatCapacity(const Evaluation& temperature, const Evaluation& pressure)
+    OPM_HOST_DEVICE static Evaluation gasHeatCapacity(const Evaluation& temperature, const Evaluation& pressure)
     {
         OPM_TIMEFUNCTION_LOCAL();
         constexpr Scalar eps = 1e-6;
