@@ -33,7 +33,7 @@ namespace {
             const auto int_value { std::stoi(mnemonic.substr(pivot + 1)) } ;
 
             if (!(int_value >= 0)) {
-                OPM_THROW(std::invalid_argument, "RPTSCHED - " + mnemonic + " - mnemonic value must be an integer greater than 1");
+                OPM_THROW(std::invalid_argument, "RPTSCHED - " + mnemonic + " - mnemonic value must be an integer >= 0");
             }
 
             return { mnemonic.substr(0, pivot), int_value } ;
@@ -51,13 +51,18 @@ RPTConfig RPTConfig::serializationTestObject() {
 }
 
 
-RPTConfig::RPTConfig(const DeckKeyword& keyword) {
+RPTConfig::RPTConfig(const DeckKeyword& keyword, const RPTConfig* prev) {
+    if (prev)
+        this->m_mnemonics = prev->m_mnemonics;
+
     const auto& mnemonics { keyword.getStringData() } ;
     for (const auto& mnemonic : mnemonics) {
         if (mnemonic == "NOTHING")
             this->m_mnemonics.clear();
-        else
-            this->m_mnemonics.emplace(parse_mnemonic(mnemonic));
+        else {
+            const auto key_value = parse_mnemonic(mnemonic);
+            this->m_mnemonics.insert_or_assign(key_value.first, key_value.second);
+        }
     }
 }
 
