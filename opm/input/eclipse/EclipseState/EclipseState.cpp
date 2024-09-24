@@ -300,8 +300,17 @@ namespace Opm {
         return m_inputNnc;
     }
 
+    const std::vector<NNCdata>& EclipseState::getPinchNNC() const {
+        return m_pinchNnc;
+    }
+
     void EclipseState::setInputNNC(const NNC& nnc) {
         m_inputNnc = nnc;
+    }
+
+    void EclipseState::setPinchNNC(std::vector<NNCdata>&& nnc) {
+        m_pinchNnc = nnc;
+        std::sort(m_pinchNnc.begin(), m_pinchNnc.end());
     }
 
     void EclipseState::appendInputNNC(const std::vector<NNCdata>& nnc) {
@@ -312,6 +321,10 @@ namespace Opm {
 
     bool EclipseState::hasInputNNC() const {
         return !m_inputNnc.input().empty();
+    }
+
+    bool EclipseState::hasPinchNNC() const {
+        return !m_pinchNnc.empty();
     }
 
     bool EclipseState::hasInputLGR() const {
