@@ -215,7 +215,7 @@ public:
     }
 
 private:
-    OPM_HOST_DEVICE void swapOrderIfPossibleThrowOtherwise_(ValueVector& swValues, ValueVector& values) const
+    void swapOrderIfPossibleThrowOtherwise_(ValueVector& swValues, ValueVector& values) const
     {
         // TODO: comparing saturation values to the actual values we sample from looks strange
         // TODO: yet changing to swValues.back() breaks tests
@@ -231,11 +231,7 @@ private:
                 }
             }
             else{
-#if OPM_IS_INSIDE_DEVICE_FUNCTION
-                assert(false && "Saturation values in interpolation table provided in wrong order, but table is immutable");
-#else
                 OPM_THROW(std::logic_error, "Saturation values in interpolation table provided in wrong order, but table is immutable");
-#endif
             }
         }
     }
