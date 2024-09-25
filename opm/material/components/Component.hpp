@@ -45,7 +45,7 @@ class Component
 public:
     typedef ScalarT Scalar;
 
-    static const bool isTabulated = false;
+    static constexpr bool isTabulated = false;
 
     /*!
      * \brief A default routine for initialization, not needed for components and must not be called.

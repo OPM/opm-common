@@ -50,6 +50,8 @@ class Air : public Component<Scalar, Air<Scalar> >
     typedef ::Opm::IdealGas<Scalar> IdealGas;
 
 public:
+    using Component<Scalar, Air<Scalar>>::isTabulated;
+
     /*!
      * \brief Returns true iff the liquid phase is assumed to be compressible
      */
