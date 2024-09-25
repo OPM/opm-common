@@ -1643,14 +1643,15 @@ quantity region_rate( const fn_args& args ) {
 
         double eff_fac = efac( args.eff_factors, pair.first );
 
-        double rate = args.wells.get( pair.first , pair.second , phase ) * eff_fac;
+        double Rate = args.wells.get( pair.first , pair.second , phase ) * eff_fac;
 
         // We are asking for the production rate in an injector - or
         // opposite. We just clamp to zero.
-        if ((rate > 0) != injection)
-            rate = 0;
+        if ((Rate > 0) != injection) {
+            Rate = 0;
+        }
 
-        sum += rate;
+        sum += Rate;
     }
 
     if( injection )
@@ -3253,8 +3254,8 @@ namespace Evaluator {
                              static_cast<int>(sim_step), input.reg)
                 : std::vector<const Opm::Well*>{};
 
-            EfficiencyFactor efac{};
-            efac.setFactors(this->node_, input.sched, wells, sim_step);
+            EfficiencyFactor eFac{};
+            eFac.setFactors(this->node_, input.sched, wells, sim_step);
 
             const fn_args args {
                 wells, this->group_name(), this->node_.keyword,
@@ -3263,7 +3264,7 @@ namespace Evaluator {
                 st,
                 simRes.wellSol, simRes.wbp, simRes.grpNwrkSol,
                 input.reg, input.grid, input.sched,
-                std::move(efac.factors),
+                std::move(eFac.factors),
                 input.initial_inplace, simRes.inplace,
                 input.sched.getUnits()
             };
@@ -3535,10 +3536,10 @@ namespace Evaluator {
                 ? iregFlow.flow(this->component_, this->direction_)
                 : iregFlow.flow(this->component_);
 
-            const auto sub = (this->subtract_ == Component::NumComponents)
+            const auto Sub = (this->subtract_ == Component::NumComponents)
                 ? 0.0 : iregFlow.flow(this->subtract_);
 
-            const auto val = sign * (prim - sub);
+            const auto val = sign * (prim - Sub);
 
             return this->isCumulative_
                 ? stepSize * val

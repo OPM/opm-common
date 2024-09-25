@@ -82,9 +82,9 @@ initFromState(const EclipseState& eclState, const Schedule&)
     }
     setEzrokhiDenCoeff(eclState.getCo2StoreConfig().getDenaqaTables());
 
-    std::size_t numRegions = eclState.runspec().tabdims().getNumPVTTables();
-    setNumRegions(numRegions);
-    for (std::size_t regionIdx = 0; regionIdx < numRegions; ++regionIdx) {
+    std::size_t regions = eclState.runspec().tabdims().getNumPVTTables();
+    setNumRegions(regions);
+    for (std::size_t regionIdx = 0; regionIdx < regions; ++regionIdx) {
         // Currently we only support constant salinity converted to mass fraction
         salinity_[regionIdx] = eclState.getCo2StoreConfig().salinity();
         // For consistency we compute the reference density the same way as in BrineCo2Pvt.cpp

@@ -57,8 +57,8 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
     enableThermalViscosity_ = tables.hasTables("OILVISCT");
     enableInternalEnergy_ = tables.hasTables("SPECHEAT");
 
-    unsigned numRegions = isothermalPvt_->numRegions();
-    setNumRegions(numRegions);
+    unsigned regions = isothermalPvt_->numRegions();
+    setNumRegions(regions);
 
     // viscosity
     if (enableThermalViscosity_) {
@@ -68,18 +68,18 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
         const auto& oilvisctTables = tables.getOilvisctTables();
         const auto& viscrefTable = tables.getViscrefTable();
 
-        if (oilvisctTables.size() != numRegions) {
+        if (oilvisctTables.size() != regions) {
             OPM_THROW(std::runtime_error,
                       fmt::format("Tables sizes mismatch. OILVISCT: {}, NumRegions: {}\n",
-                                  oilvisctTables.size(), numRegions));
+                                  oilvisctTables.size(), regions));
         }
-        if (viscrefTable.size() != numRegions) {
+        if (viscrefTable.size() != regions) {
             OPM_THROW(std::runtime_error,
                       fmt::format("Tables sizes mismatch. VISCREF: {}, NumRegions: {}\n",
-                                  viscrefTable.size(), numRegions));
+                                  viscrefTable.size(), regions));
         }
 
-        for (unsigned regionIdx = 0; regionIdx < numRegions; ++regionIdx) {
+        for (unsigned regionIdx = 0; regionIdx < regions; ++regionIdx) {
             const auto& TCol = oilvisctTables[regionIdx].getColumn("Temperature").vectorCopy();
             const auto& muCol = oilvisctTables[regionIdx].getColumn("Viscosity").vectorCopy();
             oilvisctCurves_[regionIdx].setXYContainers(TCol, muCol);
@@ -104,12 +104,12 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
     // temperature dependence of oil density
     const auto& oilDenT = tables.OilDenT();
     if (oilDenT.size() > 0) {
-        if (oilDenT.size() != numRegions) {
+        if (oilDenT.size() != regions) {
             OPM_THROW(std::runtime_error,
                       fmt::format("Tables sizes mismatch. OILDENT: {}, NumRegions: {}\n",
-                                  oilDenT.size(), numRegions));
+                                  oilDenT.size(), regions));
         }
-        for (unsigned regionIdx = 0; regionIdx < numRegions; ++regionIdx) {
+        for (unsigned regionIdx = 0; regionIdx < regions; ++regionIdx) {
             const auto& record = oilDenT[regionIdx];
 
             oildentRefTemp_[regionIdx] = record.T0;
@@ -121,12 +121,12 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
     // Joule Thomson
     if (enableJouleThomson_) {
         const auto& oilJT = tables.OilJT();
-        if (oilJT.size() != numRegions) {
+        if (oilJT.size() != regions) {
             OPM_THROW(std::runtime_error,
                       fmt::format("Tables sizes mismatch. OILJT: {}, NumRegions: {}\n",
-                                  oilJT.size(), numRegions));
+                                  oilJT.size(), regions));
         }
-        for (unsigned regionIdx = 0; regionIdx < numRegions; ++regionIdx) {
+        for (unsigned regionIdx = 0; regionIdx < regions; ++regionIdx) {
             const auto& record = oilJT[regionIdx];
 
             oilJTRefPres_[regionIdx] =  record.P0;
@@ -135,12 +135,12 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
 
         const auto& densityTable = eclState.getTableManager().getDensityTable();
 
-        if (densityTable.size() != numRegions) {
+        if (densityTable.size() != regions) {
             OPM_THROW(std::runtime_error,
                       fmt::format("Tables sizes mismatch. DensityTable: {}, NumRegions: {}\n",
-                                  densityTable.size(), numRegions));
+                                  densityTable.size(), regions));
         }
-        for (unsigned regionIdx = 0; regionIdx < numRegions; ++ regionIdx) {
+        for (unsigned regionIdx = 0; regionIdx < regions; ++ regionIdx) {
              rhoRefG_[regionIdx] = densityTable[regionIdx].gas;
         }
     }
@@ -149,7 +149,7 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
         // the specific internal energy of liquid oil. be aware that ecl only specifies the
         // heat capacity (via the SPECHEAT keyword) and we need to integrate it
         // ourselfs to get the internal energy
-        for (unsigned regionIdx = 0; regionIdx < numRegions; ++regionIdx) {
+        for (unsigned regionIdx = 0; regionIdx < regions; ++regionIdx) {
             const auto& specheatTable = tables.getSpecheatTables()[regionIdx];
             const auto& temperatureColumn = specheatTable.getColumn("TEMPERATURE");
             const auto& cvOilColumn = specheatTable.getColumn("CV_OIL");

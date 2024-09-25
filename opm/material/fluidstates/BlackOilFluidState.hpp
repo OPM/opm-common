@@ -680,22 +680,22 @@ private:
             return FluidSystem::canonicalToActivePhaseIdx(canonicalPhaseIdx);
     }
 
-    ConditionalStorage<enableTemperature || enableEnergy, Scalar> temperature_;
-    ConditionalStorage<enableEnergy, std::array<Scalar, numStoragePhases> > enthalpy_;
-    Scalar totalSaturation_;
-    std::array<Scalar, numStoragePhases> pressure_;
-    std::array<Scalar, numStoragePhases> pc_;
-    std::array<Scalar, numStoragePhases> saturation_;
-    std::array<Scalar, numStoragePhases> invB_;
-    std::array<Scalar, numStoragePhases> density_;
-    ConditionalStorage<enableDissolution,Scalar> Rs_;
-    ConditionalStorage<enableDissolution, Scalar> Rv_;
-    ConditionalStorage<enableVapwat,Scalar> Rvw_;
-    ConditionalStorage<enableDissolutionInWater,Scalar> Rsw_;
-    ConditionalStorage<enableBrine, Scalar> saltConcentration_;
-    ConditionalStorage<enableSaltPrecipitation, Scalar> saltSaturation_;
+    ConditionalStorage<enableTemperature || enableEnergy, Scalar> temperature_{};
+    ConditionalStorage<enableEnergy, std::array<Scalar, numStoragePhases> > enthalpy_{};
+    Scalar totalSaturation_{};
+    std::array<Scalar, numStoragePhases> pressure_{};
+    std::array<Scalar, numStoragePhases> pc_{};
+    std::array<Scalar, numStoragePhases> saturation_{};
+    std::array<Scalar, numStoragePhases> invB_{};
+    std::array<Scalar, numStoragePhases> density_{};
+    ConditionalStorage<enableDissolution,Scalar> Rs_{};
+    ConditionalStorage<enableDissolution, Scalar> Rv_{};
+    ConditionalStorage<enableVapwat,Scalar> Rvw_{};
+    ConditionalStorage<enableDissolutionInWater,Scalar> Rsw_{};
+    ConditionalStorage<enableBrine, Scalar> saltConcentration_{};
+    ConditionalStorage<enableSaltPrecipitation, Scalar> saltSaturation_{};
 
-    unsigned short pvtRegionIdx_;
+    unsigned short pvtRegionIdx_{};
 };
 
 } // namespace Opm

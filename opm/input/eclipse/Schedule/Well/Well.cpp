@@ -442,9 +442,9 @@ Well::Well(const RestartIO::RstWell& rst_well,
         if (!rst_well.tracer_concentration_injection.empty()) {
             auto tracer = std::make_shared<WellTracerProperties>(this->getTracerProperties());
             for (std::size_t tracer_index = 0; tracer_index < tracer_config.size(); tracer_index++) {
-                const auto& name = tracer_config[tracer_index].name;
+                const auto& tname = tracer_config[tracer_index].name;
                 const auto concentration = rst_well.tracer_concentration_injection[tracer_index];
-                tracer->setConcentration(name, concentration);
+                tracer->setConcentration(tname, concentration);
             }
             this->updateTracer(tracer);
         }

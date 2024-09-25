@@ -267,14 +267,14 @@ namespace Opm { namespace UDQ {
 UDQVarType targetType(const std::string&              keyword,
                       const std::vector<std::string>& selector)
 {
-    const auto varType = targetType(keyword);
+    const auto var_type = targetType(keyword);
 
-    if ((varType == UDQVarType::NONE) || (varType == UDQVarType::FIELD_VAR)) {
+    if (var_type == UDQVarType::NONE || var_type == UDQVarType::FIELD_VAR) {
         // Field variables and "none" (e.g., TIME) are treated as scalar.
         return UDQVarType::SCALAR;
     }
 
-    if (((varType == UDQVarType::WELL_VAR) || (varType == UDQVarType::GROUP_VAR))
+    if ((var_type == UDQVarType::WELL_VAR || var_type == UDQVarType::GROUP_VAR)
         && !is_wgname_set(selector))
     {
         // Well/group variables that apply to a single well/group are
@@ -282,20 +282,20 @@ UDQVarType targetType(const std::string&              keyword,
         return UDQVarType::SCALAR;
     }
 
-    if ((varType == UDQVarType::SEGMENT_VAR) && !is_segment_set(selector)) {
+    if (var_type == UDQVarType::SEGMENT_VAR && !is_segment_set(selector)) {
         // Segment variables that apply to a single segment in a single MS
         // well are treated as scalar.
         return UDQVarType::SCALAR;
     }
 
-    if ((varType == UDQVarType::REGION_VAR) && is_single_region(selector)) {
+    if (var_type == UDQVarType::REGION_VAR && is_single_region(selector)) {
         // Region variables which apply to a single region are treated as
         // scalars.
         return UDQVarType::SCALAR;
     }
 
     // All other targets keep the type inferred from the keyword.
-    return varType;
+    return var_type;
 }
 
 UDQVarType targetType(const std::string& keyword)

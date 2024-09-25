@@ -76,8 +76,10 @@ std::vector<std::reference_wrapper<const Node>> ExtNetwork::roots() const {
     std::vector<std::reference_wrapper<const Node>> root_vector;
     // Roots are defined as uptree nodes of a branch with a fixed pressure
     for (const auto& branch : this->m_branches) {
-        const auto& node = this->node( branch.uptree_node() );
-        if (node.terminal_pressure().has_value()) root_vector.push_back(node);
+        const auto& Node = this->node( branch.uptree_node() );
+        if (Node.terminal_pressure().has_value()) {
+            root_vector.push_back(Node);
+        }
     }
 
     return root_vector;
@@ -138,13 +140,18 @@ std::optional<Branch> ExtNetwork::uptree_branch(const std::string& node) const {
         throw std::out_of_range(msg);
     }
 
-    std::vector<Branch> branches;
-    std::copy_if(this->m_branches.begin(), this->m_branches.end(), std::back_inserter(branches), [&node](const Branch& b) { return b.downtree_node() == node; });
-    if (branches.empty())
-        return {};
+    std::vector<Branch> branch;
+    std::copy_if(this->m_branches.begin(), this->m_branches.end(),
+                 std::back_inserter(branch),
+                 [&node](const Branch& b) { return b.downtree_node() == node; });
 
-    if (branches.size() == 1)
-        return std::move(branches[0]);
+    if (branch.empty()) {
+        return {};
+    }
+
+    if (branch.size() == 1) {
+        return std::move(branch[0]);
+    }
 
     throw std::logic_error("Bug - more than one uptree branch for node: " + node);
 }
@@ -156,9 +163,11 @@ std::vector<Branch> ExtNetwork::downtree_branches(const std::string& node) const
         throw std::out_of_range(msg);
     }
 
-    std::vector<Branch> branches;
-    std::copy_if(this->m_branches.begin(), this->m_branches.end(), std::back_inserter(branches), [&node](const Branch& b) { return b.uptree_node() == node; });
-    return branches;
+    std::vector<Branch> branch;
+    std::copy_if(this->m_branches.begin(), this->m_branches.end(),
+                 std::back_inserter(branch),
+                 [&node](const Branch& b) { return b.uptree_node() == node; });
+    return branch;
 }
 
 std::vector<const Branch*> ExtNetwork::branches() const {

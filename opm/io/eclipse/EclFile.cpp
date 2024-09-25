@@ -20,17 +20,15 @@
 #include <opm/io/eclipse/EclUtil.hpp>
 #include <opm/common/ErrorMacros.hpp>
 
-#include <fmt/format.h>
 #include <algorithm>
-#include <array>
 #include <cstring>
-#include <functional>
+#include <cstddef>
 #include <fstream>
-#include <iomanip>
-#include <iterator>
 #include <string>
 #include <numeric>
 #include <cmath>
+
+#include <fmt/format.h>
 
 namespace Opm { namespace EclIO {
 
@@ -203,7 +201,7 @@ void EclFile::loadData()
             OPM_THROW(std::runtime_error, message);
         }
 
-        for (size_t i = 0; i < array_name.size(); i++) {
+        for (std::size_t i = 0; i < array_name.size(); i++) {
             loadBinaryArray(fileH, i);
         }
 
@@ -225,11 +223,13 @@ void EclFile::loadData(const std::string& name)
 
                 inFile.seekg(ifStreamPos[arrIndex]);
 
-                size_t size = sizeOnDiskFormatted(array_size[arrIndex], array_type[arrIndex], array_element_size[arrIndex])+1;
-                std::vector<char> buffer(size);
-                inFile.read (buffer.data(), size);
+                std::size_t disk_size = sizeOnDiskFormatted(array_size[arrIndex],
+                                                            array_type[arrIndex],
+                                                            array_element_size[arrIndex]) + 1;
+                std::vector<char> buffer(disk_size);
+                inFile.read (buffer.data(), disk_size);
 
-                std::string fileStr = std::string(buffer.data(), size);
+                std::string fileStr = std::string(buffer.data(), disk_size);
 
                 loadFormattedArray(fileStr, arrIndex, 0);
             }
@@ -267,11 +267,13 @@ void EclFile::loadData(const std::vector<int>& arrIndex)
 
             inFile.seekg(ifStreamPos[ind]);
 
-            size_t size = sizeOnDiskFormatted(array_size[ind], array_type[ind], array_element_size[ind])+1;
-            std::vector<char> buffer(size);
-            inFile.read (buffer.data(), size);
+            std::size_t disk_size = sizeOnDiskFormatted(array_size[ind],
+                                                        array_type[ind],
+                                                        array_element_size[ind]) + 1;
+            std::vector<char> buffer(disk_size);
+            inFile.read (buffer.data(), disk_size);
 
-            std::string fileStr = std::string(buffer.data(), size);
+            std::string fileStr = std::string(buffer.data(), disk_size);
 
             loadFormattedArray(fileStr, ind, 0);
         }
@@ -302,11 +304,13 @@ void EclFile::loadData(int arrIndex)
 
             inFile.seekg(ifStreamPos[arrIndex]);
 
-            size_t size = sizeOnDiskFormatted(array_size[arrIndex], array_type[arrIndex], array_element_size[arrIndex])+1;
-            std::vector<char> buffer(size);
-            inFile.read (buffer.data(), size);
+            std::size_t disk_size = sizeOnDiskFormatted(array_size[arrIndex],
+                                                        array_type[arrIndex],
+                                                        array_element_size[arrIndex]) + 1;
+            std::vector<char> buffer(disk_size);
+            inFile.read (buffer.data(), disk_size);
 
-            std::string fileStr = std::string(buffer.data(), size);
+            std::string fileStr = std::string(buffer.data(), disk_size);
 
             loadFormattedArray(fileStr, arrIndex, 0);
 
@@ -412,12 +416,14 @@ std::vector<std::string> EclFile::get_fmt_real_raw_str_values(int arrIndex) cons
 
     inFile.seekg(ifStreamPos[arrIndex]);
 
-    size_t size = sizeOnDiskFormatted(array_size[arrIndex], array_type[arrIndex], array_element_size[arrIndex])+1;
+    std::size_t disk_size = sizeOnDiskFormatted(array_size[arrIndex],
+                                                array_type[arrIndex],
+                                                array_element_size[arrIndex]) + 1;
 
-    std::vector<char> buffer(size);
-    inFile.read (buffer.data(), size);
+    std::vector<char> buffer(disk_size);
+    inFile.read (buffer.data(), disk_size);
 
-    std::string fileStr = std::string(buffer.data(), size);
+    std::string fileStr = std::string(buffer.data(), disk_size);
 
     std::vector<std::string> real_vect_str;
     real_vect_str = readFormattedRealRawStrings(fileStr, array_size[arrIndex], 0);

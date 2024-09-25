@@ -17,13 +17,13 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <unordered_set>
-#include <algorithm>
+#include <opm/input/eclipse/Schedule/Well/WListManager.hpp>
 
 #include <opm/common/utility/shmatch.hpp>
-#include <opm/io/eclipse/rst/state.hpp>
 #include <opm/input/eclipse/Schedule/Well/WList.hpp>
-#include <opm/input/eclipse/Schedule/Well/WListManager.hpp>
+#include <opm/io/eclipse/rst/state.hpp>
+
+#include <algorithm>
 
 namespace Opm {
 
@@ -36,8 +36,8 @@ namespace Opm {
     }
 
     WListManager::WListManager(const RestartIO::RstState& rst_state) {
-        for (const auto& [wlist, wells] : rst_state.wlists)
-            this->newList(wlist, wells);
+        for (const auto& [wlist, well] : rst_state.wlists)
+            this->newList(wlist, well);
     }
 
     std::size_t WListManager::WListSize() const {

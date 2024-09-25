@@ -320,9 +320,9 @@ bool Group::updateInjection(const GroupInjectionProperties& injection) {
     if (detail::has_control(injection.injection_controls, Group::InjectionCMode::RESV) ||
         detail::has_control(injection.injection_controls, Group::InjectionCMode::REIN) ||
         detail::has_control(injection.injection_controls, Group::InjectionCMode::VREP)) {
-        auto topup_phase = injection.phase;
-        if (topup_phase != this->m_topup_phase) {
-            this->m_topup_phase = topup_phase;
+        auto topUp_phase = injection.phase;
+        if (topUp_phase != this->m_topup_phase) {
+            this->m_topup_phase = topUp_phase;
             update = true;
         }
     } else {

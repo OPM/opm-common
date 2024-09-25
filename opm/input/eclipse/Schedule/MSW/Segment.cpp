@@ -96,15 +96,15 @@ namespace Opm {
         , m_x                (0.0)
         , m_y                (0.0)
     {
-        const auto segmentType = segmentTypeFromInt(rst_segment.segment_type);
+        const auto segment_type = segmentTypeFromInt(rst_segment.segment_type);
 
-        if (segmentType == SegmentType::SICD) {
+        if (segment_type == SegmentType::SICD) {
             this->m_icd.emplace<SICD>(rst_segment);
         }
-        else if (segmentType == SegmentType::AICD) {
+        else if (segment_type == SegmentType::AICD) {
             this->m_icd.emplace<AutoICD>(rst_segment);
         }
-        else if (segmentType == SegmentType::VALVE) {
+        else if (segment_type == SegmentType::VALVE) {
             this->m_icd.emplace<Valve>(rst_segment);
         }
 
@@ -350,34 +350,35 @@ namespace Opm {
 
     void Segment::updateValve(const Valve& input_valve)
     {
-        // we need to update some values for the vale
-        auto valve = input_valve;
-        if (valve.pipeAdditionalLength() < 0)
+        // we need to update some values for the valve
+        auto Valve = input_valve;
+        if (Valve.pipeAdditionalLength() < 0) {
             throw std::logic_error("Bug in handling of pipe length for valves");
+        }
 
-        if (valve.pipeDiameter() < 0.) {
-            valve.setPipeDiameter(m_internal_diameter);
+        if (Valve.pipeDiameter() < 0.) {
+            Valve.setPipeDiameter(m_internal_diameter);
         } else {
-            this->m_internal_diameter = valve.pipeDiameter();
+            this->m_internal_diameter = Valve.pipeDiameter();
         }
 
-        if (valve.pipeRoughness() < 0.) {
-            valve.setPipeRoughness(m_roughness);
+        if (Valve.pipeRoughness() < 0.) {
+            Valve.setPipeRoughness(m_roughness);
         } else {
-            this->m_roughness = valve.pipeRoughness();
+            this->m_roughness = Valve.pipeRoughness();
         }
 
-        if (valve.pipeCrossArea() < 0.) {
-            valve.setPipeCrossArea(m_cross_area);
+        if (Valve.pipeCrossArea() < 0.) {
+            Valve.setPipeCrossArea(m_cross_area);
         } else {
-            this->m_cross_area = valve.pipeCrossArea();
+            this->m_cross_area = Valve.pipeCrossArea();
         }
 
-        if (valve.conMaxCrossArea() < 0.) {
-            valve.setConMaxCrossArea(valve.pipeCrossArea());
+        if (Valve.conMaxCrossArea() < 0.) {
+            Valve.setConMaxCrossArea(Valve.pipeCrossArea());
         }
 
-        this->m_icd= valve;
+        this->m_icd= Valve;
     }
 
     void Segment::updateValve__(Valve& valve, const double segment_length)

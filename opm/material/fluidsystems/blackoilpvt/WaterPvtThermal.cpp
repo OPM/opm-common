@@ -57,19 +57,19 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
     enableThermalViscosity_ = tables.hasTables("WATVISCT");
     enableInternalEnergy_ = tables.hasTables("SPECHEAT");
 
-    unsigned numRegions = isothermalPvt_->numRegions();
-    setNumRegions(numRegions);
+    unsigned regions = isothermalPvt_->numRegions();
+    setNumRegions(regions);
 
     if (enableThermalDensity_) {
         const auto& watDenT = tables.WatDenT();
 
-        if (watDenT.size() != numRegions) {
+        if (watDenT.size() != regions) {
             OPM_THROW(std::runtime_error,
                       fmt::format("Table sizes mismatch. WATDENT: {}, numRegions: {}\n",
-                                  watDenT.size(), numRegions));
+                                  watDenT.size(), regions));
         }
 
-        for (unsigned regionIdx = 0; regionIdx < numRegions; ++regionIdx) {
+        for (unsigned regionIdx = 0; regionIdx < regions; ++regionIdx) {
             const auto& record = watDenT[regionIdx];
 
             watdentRefTemp_[regionIdx] = record.T0;
@@ -79,13 +79,13 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
 
         const auto& pvtwTables = tables.getPvtwTable();
 
-        if (pvtwTables.size() != numRegions) {
+        if (pvtwTables.size() != regions) {
             OPM_THROW(std::runtime_error,
                       fmt::format("Table sizes mismatch. PVTW: {}, numRegions: {}\n",
-                                  pvtwTables.size(), numRegions));
+                                  pvtwTables.size(), regions));
         }
 
-        for (unsigned regionIdx = 0; regionIdx < numRegions; ++ regionIdx) {
+        for (unsigned regionIdx = 0; regionIdx < regions; ++ regionIdx) {
             pvtwRefPress_[regionIdx] = pvtwTables[regionIdx].reference_pressure;
             pvtwRefB_[regionIdx] = pvtwTables[regionIdx].volume_factor;
         }
@@ -95,12 +95,12 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
     if (enableJouleThomson_) {
          const auto& watJT = tables.WatJT();
 
-        if (watJT.size() != numRegions) {
+        if (watJT.size() != regions) {
             OPM_THROW(std::runtime_error,
                       fmt::format("Table sizes mismatch. WATJT: {}, numRegions: {}\n",
-                                  watJT.size(), numRegions));
+                                  watJT.size(), regions));
         }
-        for (unsigned regionIdx = 0; regionIdx < numRegions; ++regionIdx) {
+        for (unsigned regionIdx = 0; regionIdx < regions; ++regionIdx) {
             const auto& record = watJT[regionIdx];
 
             watJTRefPres_[regionIdx] =  record.P0;
@@ -117,23 +117,23 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
 
         const auto& pvtwTables = tables.getPvtwTable();
 
-        if (pvtwTables.size() != numRegions) {
+        if (pvtwTables.size() != regions) {
             OPM_THROW(std::runtime_error,
                       fmt::format("Table sizes mismatch. PVTW: {}, numRegions: {}\n",
-                                  pvtwTables.size(), numRegions));
+                                  pvtwTables.size(), regions));
         }
-        if (watvisctTables.size() != numRegions) {
+        if (watvisctTables.size() != regions) {
             OPM_THROW(std::runtime_error,
                       fmt::format("Table sizes mismatch. WATVISCT: {}, numRegions: {}\n",
-                                  watvisctTables.size(), numRegions));
+                                  watvisctTables.size(), regions));
         }
-        if (viscrefTables.size() != numRegions) {
+        if (viscrefTables.size() != regions) {
             OPM_THROW(std::runtime_error,
                       fmt::format("Table sizes mismatch. VISCREF: {}, numRegions: {}\n",
-                                  viscrefTables.size(), numRegions));
+                                  viscrefTables.size(), regions));
         }
 
-        for (unsigned regionIdx = 0; regionIdx < numRegions; ++ regionIdx) {
+        for (unsigned regionIdx = 0; regionIdx < regions; ++ regionIdx) {
             const auto& T = watvisctTables[regionIdx].getColumn("Temperature").vectorCopy();
             const auto& mu = watvisctTables[regionIdx].getColumn("Viscosity").vectorCopy();
             watvisctCurves_[regionIdx].setXYContainers(T, mu);
@@ -141,7 +141,7 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
             viscrefPress_[regionIdx] = viscrefTables[regionIdx].reference_pressure;
         }
 
-        for (unsigned regionIdx = 0; regionIdx < numRegions; ++ regionIdx) {
+        for (unsigned regionIdx = 0; regionIdx < regions; ++ regionIdx) {
             pvtwViscosity_[regionIdx] = pvtwTables[regionIdx].viscosity;
             pvtwViscosibility_[regionIdx] = pvtwTables[regionIdx].viscosibility;
         }
@@ -151,7 +151,7 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
         // the specific internal energy of liquid water. be aware that ecl only specifies the heat capacity
         // (via the SPECHEAT keyword) and we need to integrate it ourselfs to get the
         // internal energy
-        for (unsigned regionIdx = 0; regionIdx < numRegions; ++regionIdx) {
+        for (unsigned regionIdx = 0; regionIdx < regions; ++regionIdx) {
             const auto& specHeatTable = tables.getSpecheatTables()[regionIdx];
             const auto& temperatureColumn = specHeatTable.getColumn("TEMPERATURE");
             const auto& cvWaterColumn = specHeatTable.getColumn("CV_WATER");

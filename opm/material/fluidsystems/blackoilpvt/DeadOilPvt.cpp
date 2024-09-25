@@ -50,10 +50,10 @@ initFromState(const EclipseState& eclState, const Schedule&)
                               pvdoTables.size(), densityTable.size()));
     }
 
-    std::size_t numRegions = pvdoTables.size();
-    setNumRegions(numRegions);
+    std::size_t regions = pvdoTables.size();
+    setNumRegions(regions);
 
-    for (unsigned regionIdx = 0; regionIdx < numRegions; ++regionIdx) {
+    for (unsigned regionIdx = 0; regionIdx < regions; ++regionIdx) {
         Scalar rhoRefO = densityTable[regionIdx].oil;
         Scalar rhoRefG = densityTable[regionIdx].gas;
         Scalar rhoRefW = densityTable[regionIdx].water;
@@ -92,22 +92,22 @@ template<class Scalar>
 void DeadOilPvt<Scalar>::initEnd()
 {
     // calculate the final 2D functions which are used for interpolation.
-    std::size_t numRegions = oilMu_.size();
-    for (unsigned regionIdx = 0; regionIdx < numRegions; ++ regionIdx) {
+    std::size_t regions = oilMu_.size();
+    for (unsigned regionIdx = 0; regionIdx < regions; ++ regionIdx) {
         // calculate the table which stores the inverse of the product of the oil
         // formation volume factor and the oil viscosity
-        const auto& oilMu = oilMu_[regionIdx];
+        const auto& oilmu = oilMu_[regionIdx];
         const auto& invOilB = inverseOilB_[regionIdx];
-        assert(oilMu.numSamples() == invOilB.numSamples());
+        assert(oilmu.numSamples() == invOilB.numSamples());
 
         std::vector<Scalar> invBMuColumn;
         std::vector<Scalar> pressureColumn;
-        invBMuColumn.resize(oilMu.numSamples());
-        pressureColumn.resize(oilMu.numSamples());
+        invBMuColumn.resize(oilmu.numSamples());
+        pressureColumn.resize(oilmu.numSamples());
 
-        for (unsigned pIdx = 0; pIdx < oilMu.numSamples(); ++pIdx) {
+        for (unsigned pIdx = 0; pIdx < oilmu.numSamples(); ++pIdx) {
             pressureColumn[pIdx] = invOilB.xAt(pIdx);
-            invBMuColumn[pIdx] = invOilB.valueAt(pIdx) / oilMu.valueAt(pIdx);
+            invBMuColumn[pIdx] = invOilB.valueAt(pIdx) / oilmu.valueAt(pIdx);
         }
 
         inverseOilBMu_[regionIdx].setXYArrays(pressureColumn.size(),

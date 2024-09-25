@@ -120,9 +120,9 @@ initFromState(const EclipseState& eclState, const Schedule&)
                        + " " + std::to_string(ezrokhiViscNaClCoeff_[1]);
     }
     
-    std::size_t numRegions = eclState.runspec().tabdims().getNumPVTTables();
-    setNumRegions(numRegions);
-    for (std::size_t regionIdx = 0; regionIdx < numRegions; ++regionIdx) {
+    std::size_t regions = eclState.runspec().tabdims().getNumPVTTables();
+    setNumRegions(regions);
+    for (std::size_t regionIdx = 0; regionIdx < regions; ++regionIdx) {
         // Currently we only support constant salinity converted to mass fraction
         salinity_[regionIdx] = eclState.getCo2StoreConfig().salinity();
         if (enableEzrokhiDensity_) {

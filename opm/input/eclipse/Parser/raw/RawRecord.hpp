@@ -58,9 +58,9 @@ class KeywordLocation;
      * inlining the calls gives a decent low-effort performance benefit.
      */
     std::string_view RawRecord::pop_front() {
-        auto front = m_recordItems.front();
+        auto result = m_recordItems.front();
         this->m_recordItems.pop_front();
-        return front;
+        return result;
     }
 
     std::string_view RawRecord::front() const {

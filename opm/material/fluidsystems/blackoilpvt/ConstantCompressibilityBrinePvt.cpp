@@ -39,23 +39,23 @@ void ConstantCompressibilityBrinePvt<Scalar>::
 initFromState(const EclipseState& eclState, const Schedule&)
 {
     const auto& tableManager = eclState.getTableManager();
-    std::size_t numRegions = tableManager.getTabdims().getNumPVTTables();
+    std::size_t regions = tableManager.getTabdims().getNumPVTTables();
     const auto& densityTable = tableManager.getDensityTable();
 
-    formationVolumeTables_.resize(numRegions);
-    compressibilityTables_.resize(numRegions);
-    viscosityTables_.resize(numRegions);
-    viscosibilityTables_.resize(numRegions);
-    referencePressure_.resize(numRegions);
+    formationVolumeTables_.resize(regions);
+    compressibilityTables_.resize(regions);
+    viscosityTables_.resize(regions);
+    viscosibilityTables_.resize(regions);
+    referencePressure_.resize(regions);
 
     const auto& pvtwsaltTables = tableManager.getPvtwSaltTables();
     if (!pvtwsaltTables.empty()) {
-        if (pvtwsaltTables.size() != numRegions) {
+        if (pvtwsaltTables.size() != regions) {
             OPM_THROW(std::runtime_error,
                       fmt::format("Table sizes mismatch. PVTWSALT: {}, NumRegions: {}\n",
-                                  pvtwsaltTables.size(), numRegions));
+                                  pvtwsaltTables.size(), regions));
         }
-        for (unsigned regionIdx = 0; regionIdx < numRegions; ++regionIdx) {
+        for (unsigned regionIdx = 0; regionIdx < regions; ++regionIdx) {
             const auto& pvtwsaltTable = pvtwsaltTables[regionIdx];
             const auto& c = pvtwsaltTable.getSaltConcentrationColumn();
 
@@ -78,7 +78,7 @@ initFromState(const EclipseState& eclState, const Schedule&)
     }
 
 
-    std::size_t numPvtwRegions = numRegions;
+    std::size_t numPvtwRegions = regions;
     setNumRegions(numPvtwRegions);
 
     for (unsigned regionIdx = 0; regionIdx < numPvtwRegions; ++regionIdx) {

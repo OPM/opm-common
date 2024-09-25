@@ -1449,19 +1449,19 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
     }
 
     double Schedule::stepLength(std::size_t timeStep) const {
-        const auto start = this->snapshots[timeStep].start_time();
-        const auto end = this->snapshots[timeStep].end_time();
-        if (start > end) {
+        const auto start_time = this->snapshots[timeStep].start_time();
+        const auto end_time = this->snapshots[timeStep].end_time();
+        if (start_time > end_time) {
             throw std::invalid_argument {
                     fmt::format(" Report step {} has start time after end time,\n"
                                 "   * Start time = {:%d-%b-%Y %H:%M:%S}\n"
                                 "   * End time   = {:%d-%b-%Y %H:%M:%S}.\n"
                                 " Possibly due to inconsistent RESTART/SKIPREST settings.",
                                 timeStep + 1,
-                                fmt::gmtime(TimeService::to_time_t(start)),
-                                fmt::gmtime(TimeService::to_time_t(end))) };
+                                fmt::gmtime(TimeService::to_time_t(start_time)),
+                                fmt::gmtime(TimeService::to_time_t(end_time))) };
         }
-        return std::chrono::duration_cast<std::chrono::seconds>(end - start).count();
+        return std::chrono::duration_cast<std::chrono::seconds>(end_time - start_time).count();
     }
 
     void Schedule::applyKeywords(std::vector<std::unique_ptr<DeckKeyword>>& keywords) {
@@ -1875,11 +1875,11 @@ namespace {
             OpmLog::info(fmt::format("Adding group {} from restart file", rst_group.name));
         }
 
-        auto glo = this->snapshots.back().glo();
-        glo.all_newton(rst_state.header.glift_all_nupcol);
-        glo.min_wait(rst_state.header.glift_min_wait);
-        glo.min_eco_gradient(rst_state.header.glift_min_eco_grad);
-        glo.gaslift_increment(rst_state.header.glift_rate_delta);
+        auto Glo = this->snapshots.back().glo();
+        Glo.all_newton(rst_state.header.glift_all_nupcol);
+        Glo.min_wait(rst_state.header.glift_min_wait);
+        Glo.min_eco_gradient(rst_state.header.glift_min_eco_grad);
+        Glo.gaslift_increment(rst_state.header.glift_rate_delta);
 
         for (std::size_t group_index = 0; group_index < rst_state.groups.size(); group_index++) {
             const auto& rst_group = rst_state.groups[group_index];
@@ -1894,7 +1894,7 @@ namespace {
             this->addGroupToGroup(parent_group.name, rst_group.name);
 
             if (GasLiftGroup::active(rst_group))
-                glo.add_group(GasLiftGroup(rst_group));
+                Glo.add_group(GasLiftGroup(rst_group));
         }
 
         for (const auto& rst_well : rst_state.wells) {
@@ -1941,11 +1941,11 @@ namespace {
             OpmLog::info(fmt::format("Adding well {} from restart file", rst_well.name));
 
             if (GasLiftWell::active(rst_well)) {
-                glo.add_well(GasLiftWell(rst_well));
+                Glo.add_well(GasLiftWell(rst_well));
             }
         }
 
-        this->snapshots.back().glo.update( std::move(glo) );
+        this->snapshots.back().glo.update( std::move(Glo) );
         this->snapshots.back().update_tuning(rst_state.tuning);
         this->snapshots.back().events().addEvent( ScheduleEvents::TUNING_CHANGE );
 
@@ -2383,13 +2383,13 @@ void Schedule::create_first(const time_point& start_time, const std::optional<ti
     else
         this->snapshots.emplace_back(start_time);
 
-    const auto& runspec = this->m_static.m_runspec;
+    const auto& run_spec = this->m_static.m_runspec;
     auto& sched_state = snapshots.back();
-    sched_state.init_nupcol( runspec.nupcol() );
+    sched_state.init_nupcol(run_spec.nupcol());
     if (this->m_static.oilVap.has_value()) {
         sched_state.update_oilvap(*this->m_static.oilVap);
     } else {
-        sched_state.update_oilvap( OilVaporizationProperties( runspec.tabdims().getNumPVTTables() ));
+        sched_state.update_oilvap( OilVaporizationProperties(run_spec.tabdims().getNumPVTTables()));
     }
     sched_state.update_message_limits( this->m_static.m_deck_message_limits );
     sched_state.pavg.update( PAvg() );
@@ -2404,13 +2404,13 @@ void Schedule::create_first(const time_point& start_time, const std::optional<ti
     sched_state.actions.update( Action::Actions() );
     sched_state.udq_active.update( UDQActive() );
     sched_state.well_order.update( NameOrder() );
-    sched_state.group_order.update( GroupOrder( runspec.wellDimensions().maxGroupsInField()) );
-    sched_state.udq.update( UDQConfig( runspec.udqParams() ));
+    sched_state.group_order.update( GroupOrder(run_spec.wellDimensions().maxGroupsInField()));
+    sched_state.udq.update( UDQConfig(run_spec.udqParams()));
     sched_state.glo.update( GasLiftOpt() );
     sched_state.guide_rate.update( GuideRateConfig() );
     sched_state.rft_config.update( RFTConfig() );
     sched_state.rst_config.update( RSTConfig::first( this->m_static.rst_config ) );
-    sched_state.network_balance.update(Network::Balance{ runspec.networkDimensions().active() });
+    sched_state.network_balance.update(Network::Balance{run_spec.networkDimensions().active()});
     sched_state.update_sumthin(this->m_static.sumthin);
     sched_state.rptonly(this->m_static.rptonly);
     sched_state.bhp_defaults.update( ScheduleState::BHPDefaults() );

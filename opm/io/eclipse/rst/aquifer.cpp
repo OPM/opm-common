@@ -593,11 +593,11 @@ loadAnalyticAquiferConnections(const AquiferVectors&                   aquifers,
                                const EclipseGrid&                      grid,
                                const UnitSystem&                       usys)
 {
-    const auto occurence   = ConnectionOccurrence { aquifers.maxAquiferID(), *rstView };
-    const auto connections = ConnectionVectors { rstView->intehead(), rstView };
+    const auto occurence = ConnectionOccurrence { aquifers.maxAquiferID(), *rstView };
+    const auto conns     = ConnectionVectors { rstView->intehead(), rstView };
 
     this->connections_ =
-        load_aquifer_connections(occurence, aquifers, connections,
+        load_aquifer_connections(occurence, aquifers, conns,
                                  grid, usys, aquifers.maxAquiferID());
 }
 

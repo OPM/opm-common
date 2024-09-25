@@ -149,10 +149,10 @@ double GuideRateModel::eval(double oil_pot, double gas_pot, double wat_pot) cons
     if (this->m_target == Target::COMB)
         throw std::logic_error("Sorry the COMB target model is not supported");
 
-    double pot = this->pot(oil_pot, gas_pot, wat_pot);
-    if (pot == 0)
+    double val = this->pot(oil_pot, gas_pot, wat_pot);
+    if (val == 0) {
         return 0;
-
+    }
 
     double R1;
     double R2;
@@ -191,10 +191,11 @@ double GuideRateModel::eval(double oil_pot, double gas_pot, double wat_pot) cons
       basically anything could happen. Quite dangerous to have hard error
       handling here?
     */
-    if (denom <= 0)
+    if (denom <= 0) {
         throw std::range_error("Invalid denominator: " + std::to_string(denom));
+    }
 
-    return std::pow(pot, this->A) / denom;
+    return std::pow(val, this->A) / denom;
 }
 
 bool GuideRateModel::operator==(const GuideRateModel& other) const {

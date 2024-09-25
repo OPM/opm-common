@@ -227,10 +227,10 @@ public:
     template <class FluidState, class Evaluation = typename FluidState::Scalar>
     static Evaluation krw(const Params& params, const FluidState& fs)
     {
-        const auto& Sw =
+        const auto& sw =
             decay<Evaluation>(fs.saturation(Traits::wettingPhaseIdx));
 
-        return twoPhaseSatKrw(params, Sw);
+        return twoPhaseSatKrw(params, sw);
     }
 
     template <class Evaluation>
@@ -258,10 +258,10 @@ public:
     template <class FluidState, class Evaluation = typename FluidState::Scalar>
     static Evaluation krn(const Params& params, const FluidState& fs)
     {
-        const Evaluation& Sw =
+        const Evaluation& sw =
             1.0 - decay<Evaluation>(fs.saturation(Traits::nonWettingPhaseIdx));
 
-        return twoPhaseSatKrn(params, Sw);
+        return twoPhaseSatKrn(params, sw);
     }
 
     template <class Evaluation>
@@ -270,8 +270,8 @@ public:
         assert(0.0 <= Sw && Sw <= 1.0);
 
         Scalar exponent = 2.0/params.lambda() + 1.0;
-        const Evaluation Sn = 1.0 - Sw;
-        return Sn*Sn*(1. - pow(Sw, exponent));
+        const Evaluation sn = 1.0 - Sw;
+        return sn*sn*(1. - pow(Sw, exponent));
     }
 
     template <class Evaluation>
@@ -279,19 +279,21 @@ public:
     {
         // since inverting the formula for krn is hard to do analytically, we use the
         // Newton-Raphson method
-        Evaluation Sw = 0.5;
+        Evaluation sw = 0.5;
         Scalar eps = 1e-10;
         for (int i = 0; i < 20; ++i) {
-            Evaluation f = krn - twoPhaseSatKrn(params, Sw);
-            Evaluation fStar = krn - twoPhaseSatKrn(params, Sw + eps);
-            Evaluation fPrime = (fStar - f)/eps;
+            Evaluation f = krn - twoPhaseSatKrn(params, sw);
+            Evaluation fStar = krn - twoPhaseSatKrn(params, sw + eps);
+            Evaluation fPrime = (fStar - f) / eps;
 
-            Evaluation delta = f/fPrime;
-            Sw -= delta;
-            if (Sw < 0)
-                Sw = 0.0;
-            if (abs(delta) < 1e-10)
-                return Sw;
+            Evaluation delta = f / fPrime;
+            sw -= delta;
+            if (sw < 0) {
+                sw = 0.0;
+            }
+            if (abs(delta) < 1e-10) {
+                return sw;
+            }
         }
 
         throw NumericalProblem("Couldn't invert the Brooks-Corey non-wetting phase"
