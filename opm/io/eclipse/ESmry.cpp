@@ -1066,11 +1066,10 @@ bool ESmry::make_esmry_file()
     if (mini_steps.size() == 0)
         this->read_ministeps_from_disk();
 
-    std::filesystem::path path = inputFileName.parent_path();
-    std::filesystem::path rootName = inputFileName.stem();
-    std::filesystem::path smryDataFile;
-
-    smryDataFile = path / rootName += ".ESMRY";
+    const std::filesystem::path path = inputFileName.parent_path();
+    const std::filesystem::path rootName = inputFileName.stem();
+    std::filesystem::path smryDataFile = path / rootName;
+    smryDataFile.replace_extension(".ESMRY");
 
     if (Opm::EclIO::fileExists(smryDataFile))
     {

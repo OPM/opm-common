@@ -106,7 +106,7 @@ BOOST_AUTO_TEST_CASE(AddFaceToFaults) {
         auto iter = fault.begin();
         BOOST_CHECK_EQUAL( *iter , face1 ); ++iter;
         BOOST_CHECK_EQUAL( *iter , face2 ); ++iter;
-        BOOST_CHECK_EQUAL( *iter , face3 ); ++iter;
+        BOOST_CHECK_EQUAL( *iter , face3 );
     }
 
 }

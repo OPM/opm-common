@@ -212,8 +212,6 @@ void makeSmryFile(const std::string &fileName,
 
     std::vector<int> seqhdr = {0,4,5,6,7,8,9};
 
-    std::vector<int> seqhdrValue = {-957426774};
-
     dimens[0] = params[0].size();
 
     EclOutput eclSmspecTest(fileName, false);
@@ -324,7 +322,6 @@ BOOST_AUTO_TEST_CASE(gridCompare) {
     // base:  identical grids
 
     std::vector<std::string> gridunits= {"METRES", ""};
-    std::vector<std::string> gdorient= {"INC", "INC", "INC", "DOWN", "RIGHT"};
 
     makeEgridFile("TMP1.EGRID",coord, zcorn, gridhead, filehead, gridunits, actnum, nnc1, nnc2);
     makeEgridFile("TMP2.EGRID",coord, zcorn, gridhead, filehead, gridunits, actnum, nnc1, nnc2);
@@ -446,7 +443,6 @@ BOOST_AUTO_TEST_CASE(results_init_1) {
 
     std::vector<float> permx1(12,1000.0);
     std::vector<float> porv1(12,1000.0);
-    std::vector<float> poro1(12,0.25);
     std::vector<int> fipnum1(12,1);
 
     std::vector<float> permx2(12,1000.0);
@@ -526,12 +522,10 @@ BOOST_AUTO_TEST_CASE(results_init_2) {
 
     std::vector<float> permx1(12,1000.0);
     std::vector<float> porv1(12,1000.0);
-    std::vector<float> poro1(12,0.25);
     std::vector<int> fipnum1(12,1);
 
     std::vector<float> permx2(12,1000.0);
     std::vector<float> porv2(12,1000.0);
-    std::vector<float> poro2(12,0.25);
     std::vector<int> fipnum2(12,1);
 
     WorkArea work;

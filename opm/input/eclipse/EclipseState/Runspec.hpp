@@ -445,7 +445,6 @@ private:
 
 class Tracers {
 public:
-
     Tracers() = default;
 
     explicit Tracers(const Deck& );
@@ -466,13 +465,13 @@ public:
     bool operator==(const Tracers& data) const;
 
 private:
-    int m_oil_tracers;
-    int m_water_tracers;
-    int m_gas_tracers;
-    int m_env_tracers;
-    bool diffusion_control;
-    int max_iter;
-    int min_iter;
+    int m_oil_tracers{};
+    int m_water_tracers{};
+    int m_gas_tracers{};
+    int m_env_tracers{};
+    bool diffusion_control{false};
+    int max_iter{};
+    int min_iter{};
     // The TRACERS keyword has some additional options which seem quite arcane,
     // for now not included here.
 };

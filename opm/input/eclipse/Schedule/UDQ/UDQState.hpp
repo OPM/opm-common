@@ -26,7 +26,6 @@
 #include <string>
 #include <unordered_map>
 #include <utility>
-#include <vector>
 
 namespace Opm { namespace RestartIO {
     struct RstState;
@@ -73,7 +72,7 @@ public:
     }
 
 private:
-    double undef_value;
+    double undef_value{};
     std::unordered_map<std::string, double> scalar_values{};
 
     // [var][well] -> double
@@ -85,7 +84,7 @@ private:
     // [var][well][segment] -> double
     std::unordered_map<std::string, std::unordered_map<std::string, std::unordered_map<std::size_t, double>>> segment_values{};
 
-    std::unordered_map<std::string, std::size_t> defines;
+    std::unordered_map<std::string, std::size_t> defines{};
 
     void add(const std::string& udq_key, const UDQSet& result);
     double get_wg_var(const std::string& well, const std::string& key, UDQVarType var_type) const;

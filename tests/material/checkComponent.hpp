@@ -30,7 +30,7 @@
 #include <opm/common/utility/DemangledType.hpp>
 
 #include <iostream>
-#include <string>
+#include <tuple>
 
 /*!
  * \brief Ensures that a class which represents a chemical components adheres to the
@@ -46,38 +46,39 @@ void checkComponent()
               << Opm::getDemangledType<Evaluation>() << "'\n";
 
     // make sure the necessary typedefs exist
-    typedef typename Component::Scalar Scalar;
+    using Scalar = typename Component::Scalar;
+    [[maybe_unused]] Scalar a;
 
     // make sure the necessary constants are exported
-    [[maybe_unused]] bool isTabulated = Component::isTabulated;
+    std::ignore = Component::isTabulated;
 
     // test for the gas-phase functions
-    Evaluation T=0, p=0;
+    const Evaluation T = 0, p = 0;
     while (0) {
-        { [[maybe_unused]] bool b = Component::gasIsCompressible(); }
-        { [[maybe_unused]] bool b = Component::gasIsIdeal(); }
-        { [[maybe_unused]] bool b = Component::liquidIsCompressible(); }
-        { [[maybe_unused]] std::string s {Component::name()}; }
-        { [[maybe_unused]] Scalar M = Component::molarMass(); }
-        { [[maybe_unused]] Scalar Tc = Component::criticalTemperature(); }
-        { [[maybe_unused]] Scalar pc = Component::criticalPressure(); }
-        { [[maybe_unused]] Scalar Vc = Component::criticalVolume(); }
-        { [[maybe_unused]] Scalar Tt = Component::tripleTemperature(); }
-        { [[maybe_unused]] Scalar pt = Component::triplePressure(); }
-        { [[maybe_unused]] Evaluation omega  = Component::acentricFactor(); }
-        { [[maybe_unused]] Evaluation pv = Component::vaporPressure(T); }
-        { [[maybe_unused]] Evaluation rho = Component::gasDensity(T, p); }
-        { [[maybe_unused]] Evaluation rho = Component::liquidDensity(T, p); }
-        { [[maybe_unused]] Evaluation h = Component::gasEnthalpy(T, p); }
-        { [[maybe_unused]] Evaluation h = Component::liquidEnthalpy(T, p); }
-        { [[maybe_unused]] Evaluation u = Component::gasInternalEnergy(T, p); }
-        { [[maybe_unused]] Evaluation u = Component::liquidInternalEnergy(T, p); }
-        { [[maybe_unused]] Evaluation mu = Component::gasViscosity(T, p); }
-        { [[maybe_unused]] Evaluation mu = Component::liquidViscosity(T, p); }
-        { [[maybe_unused]] Evaluation lambda = Component::gasThermalConductivity(T, p); }
-        { [[maybe_unused]] Evaluation lambda = Component::liquidThermalConductivity(T, p); }
-        { [[maybe_unused]] Evaluation cp = Component::gasHeatCapacity(T, p); }
-        { [[maybe_unused]] Evaluation cp = Component::liquidHeatCapacity(T, p); }
+        { std::ignore = Component::gasIsCompressible(); }
+        { std::ignore = Component::gasIsIdeal(); }
+        { std::ignore = Component::liquidIsCompressible(); }
+        { std::ignore = Component::name(); }
+        { std::ignore = Component::molarMass(); }
+        { std::ignore = Component::criticalTemperature(); }
+        { std::ignore = Component::criticalPressure(); }
+        { std::ignore = Component::criticalVolume(); }
+        { std::ignore = Component::tripleTemperature(); }
+        { std::ignore = Component::triplePressure(); }
+        { std::ignore = Component::acentricFactor(); }
+        { std::ignore = Component::vaporPressure(T); }
+        { std::ignore = Component::gasDensity(T, p); }
+        { std::ignore = Component::liquidDensity(T, p); }
+        { std::ignore = Component::gasEnthalpy(T, p); }
+        { std::ignore = Component::liquidEnthalpy(T, p); }
+        { std::ignore = Component::gasInternalEnergy(T, p); }
+        { std::ignore = Component::liquidInternalEnergy(T, p); }
+        { std::ignore = Component::gasViscosity(T, p); }
+        { std::ignore = Component::liquidViscosity(T, p); }
+        { std::ignore = Component::gasThermalConductivity(T, p); }
+        { std::ignore = Component::liquidThermalConductivity(T, p); }
+        { std::ignore = Component::gasHeatCapacity(T, p); }
+        { std::ignore = Component::liquidHeatCapacity(T, p); }
     }
     std::cout << "----------------------------------\n";
 }

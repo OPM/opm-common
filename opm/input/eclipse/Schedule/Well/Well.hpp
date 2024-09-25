@@ -377,7 +377,6 @@ public:
     static int eclipseControlMode(const Well&         well,
                                   const SummaryState& st);
 
-
     Well() = default;
     Well(const std::string& wname,
          const std::string& gname,
@@ -622,50 +621,50 @@ private:
 
     GuideRateTarget preferredPhaseAsGuideRatePhase() const;
 
-    std::string wname;
-    std::string group_name;
-    std::size_t init_step;
-    std::size_t insert_index;
-    int headI;
-    int headJ;
-    std::optional<double> ref_depth;
-    std::optional<double> wpave_ref_depth;
-    double drainage_radius;
-    bool allow_cross_flow;
-    bool automatic_shutin;
-    int pvt_table;
+    std::string wname{};
+    std::string group_name{};
+    std::size_t init_step{};
+    std::size_t insert_index{};
+    int headI{};
+    int headJ{};
+    std::optional<double> ref_depth{};
+    std::optional<double> wpave_ref_depth{};
+    double drainage_radius{};
+    bool allow_cross_flow{false};
+    bool automatic_shutin{false};
+    int pvt_table{};
     GasInflowEquation gas_inflow = GasInflowEquation::STD;  // Will NOT be loaded/assigned from restart file
     UnitSystem unit_system;
-    double udq_undefined;
-    WellType wtype;
-    WellGuideRate guide_rate;
-    double efficiency_factor;
-    double solvent_fraction;
+    double udq_undefined{};
+    WellType wtype{};
+    WellGuideRate guide_rate{};
+    double efficiency_factor{};
+    double solvent_fraction{};
     bool has_produced = false;
     bool has_injected = false;
     bool prediction_mode = true;
     bool derive_refdepth_from_conns_ { true };
 
-    std::shared_ptr<WellEconProductionLimits> econ_limits;
-    std::shared_ptr<WellFoamProperties> foam_properties;
-    std::shared_ptr<WellPolymerProperties> polymer_properties;
-    std::shared_ptr<WellMICPProperties> micp_properties;
-    std::shared_ptr<WellBrineProperties> brine_properties;
-    std::shared_ptr<WellTracerProperties> tracer_properties;
-    std::shared_ptr<WellConnections> connections; // The WellConnections object cannot be const because of WELPI and the filterConnections method
-    std::shared_ptr<WellProductionProperties> production;
-    std::shared_ptr<WellInjectionProperties> injection;
-    std::shared_ptr<WellSegments> segments;
-    std::shared_ptr<WVFPDP> wvfpdp;
-    std::shared_ptr<WVFPEXP> wvfpexp;
-    std::shared_ptr<WDFAC> wdfac;
+    std::shared_ptr<WellEconProductionLimits> econ_limits{};
+    std::shared_ptr<WellFoamProperties> foam_properties{};
+    std::shared_ptr<WellPolymerProperties> polymer_properties{};
+    std::shared_ptr<WellMICPProperties> micp_properties{};
+    std::shared_ptr<WellBrineProperties> brine_properties{};
+    std::shared_ptr<WellTracerProperties> tracer_properties{};
+    std::shared_ptr<WellConnections> connections{}; // The WellConnections object cannot be const because of WELPI and the filterConnections method
+    std::shared_ptr<WellProductionProperties> production{};
+    std::shared_ptr<WellInjectionProperties> injection{};
+    std::shared_ptr<WellSegments> segments{};
+    std::shared_ptr<WVFPDP> wvfpdp{};
+    std::shared_ptr<WVFPEXP> wvfpexp{};
+    std::shared_ptr<WDFAC> wdfac{};
 
-    Status status;
-    PAvg m_pavg;
-    std::optional<double> well_inj_temperature;
+    Status status{Status::AUTO};
+    PAvg m_pavg{};
+    std::optional<double> well_inj_temperature{};
     InjMultMode inj_mult_mode = InjMultMode::NONE;
-    std::optional<InjMult> well_inj_mult;
-    UDAValue m_filter_concentration;
+    std::optional<InjMult> well_inj_mult{};
+    UDAValue m_filter_concentration{};
 };
 
 std::ostream& operator<<( std::ostream&, const Well::WellInjectionProperties& );

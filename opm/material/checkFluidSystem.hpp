@@ -221,12 +221,12 @@ public:
     }
 
 private:
-    bool allowSaturation_;
-    bool allowTemperature_;
-    bool allowPressure_;
-    bool allowComposition_;
-    bool allowDensity_;
-    int restrictPhaseIdx_;
+    bool allowSaturation_{false};
+    bool allowTemperature_{false};
+    bool allowPressure_{false};
+    bool allowComposition_{false};
+    bool allowDensity_{false};
+    int restrictPhaseIdx_{};
 };
 
 template <class Scalar, class BaseFluidState>
@@ -376,7 +376,7 @@ void checkFluidSystem()
 
     // test for molarMass() and componentName()
     for (unsigned compIdx = 0; compIdx < numComponents; ++ compIdx) {
-        val = FluidSystem::molarMass(compIdx);
+        std::ignore = FluidSystem::molarMass(compIdx);
         std::string{FluidSystem::componentName(compIdx)};
     }
 }

@@ -82,16 +82,12 @@ public:
     static void solve(FluidState& fluid_state,
                       const Dune::FieldVector<typename FluidState::Scalar, numComponents>& z,
                       const std::string& twoPhaseMethod,
-                      Scalar tolerance = -1.,
+                      Scalar /*tolerance = -1.*/,
                       int verbosity = 0)
     {
 
         using InputEval = typename FluidState::Scalar;
         using ComponentVector = Dune::FieldVector<typename FluidState::Scalar, numComponents>;
-
-        if (tolerance <= 0) {
-            tolerance = std::min<Scalar>(1e-3, 1e8 * std::numeric_limits<Scalar>::epsilon());
-        }
 
         // K and L from previous timestep (wilson and -1 initially)
         ComponentVector K;
@@ -1046,10 +1042,8 @@ protected:
 
         const auto p_l = fluid_state.pressure(FluidSystem::oilPhaseIdx);
         const auto p_v = fluid_state.pressure(FluidSystem::gasPhaseIdx);
-        std::vector<double> K(numComponents);
 
         for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
-            K[compIdx] = fluid_state_scalar.K(compIdx);
             x[compIdx] = fluid_state_scalar.moleFraction(FluidSystem::oilPhaseIdx,compIdx);//;z[compIdx] * 1. / (L + (1 - L) * K[compIdx]);
             y[compIdx] = fluid_state_scalar.moleFraction(FluidSystem::gasPhaseIdx,compIdx);//;x[compIdx] * K[compIdx];
         }

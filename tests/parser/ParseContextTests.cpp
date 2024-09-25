@@ -17,10 +17,6 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdexcept>
-#include <memory>
-#include <stdlib.h>
-
 #define BOOST_TEST_MODULE ParseContextTests
 #include <boost/test/unit_test.hpp>
 
@@ -46,11 +42,12 @@
 #include <opm/input/eclipse/EclipseState/Runspec.hpp>
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 
+#include <cstdlib>
+#include <memory>
+#include <stdexcept>
+#include <tuple>
+
 using namespace Opm;
-
-
-
-
 
 BOOST_AUTO_TEST_CASE(TestUnkownKeyword) {
     const char * deck1 =
@@ -174,23 +171,6 @@ BOOST_AUTO_TEST_CASE(Handle_extra_records_2) {
 
 
 BOOST_AUTO_TEST_CASE(TestUnkownKeyword_DATA) {
-    const char * deck_string1 =
-        "RUNSPEC\n"
-        "\n"
-        "UNKNOWN1\n"
-        "\n"
-        "UNKNOWN2\n"
-        "  10 10 10 /n"
-        "\n"
-        "UNKNOWN3\n"
-        "  11 11 11 /n"
-        "/\n"
-        "\n"
-        "DIMENS\n"
-        "  12 12 12 /n"
-        "\n";
-
-
     const char * deck_string2 =
         "RUNSPEC\n"
         "\n"
@@ -221,6 +201,22 @@ BOOST_AUTO_TEST_CASE(TestUnkownKeyword_DATA) {
     parseContext.update(ParseContext::PARSE_UNKNOWN_KEYWORD , InputErrorAction::IGNORE );
     parseContext.update(ParseContext::PARSE_RANDOM_TEXT , InputErrorAction::THROW_EXCEPTION );
     {
+        const char * deck_string1 =
+            "RUNSPEC\n"
+            "\n"
+            "UNKNOWN1\n"
+            "\n"
+            "UNKNOWN2\n"
+            "  10 10 10 /n"
+            "\n"
+            "UNKNOWN3\n"
+            "  11 11 11 /n"
+            "/\n"
+            "\n"
+            "DIMENS\n"
+            "  12 12 12 /n"
+            "\n";
+
         Deck deck = parser.parseString( deck_string1 , parseContext, errors );
         BOOST_CHECK( deck.hasKeyword( "RUNSPEC") );
         BOOST_CHECK( deck.hasKeyword( "DIMENS") );
@@ -398,7 +394,7 @@ BOOST_AUTO_TEST_CASE( test_too_much_data ) {
     BOOST_CHECK_THROW( parser.parseString( deckString , parseContext, errors ) , OpmInputError);
 
     parseContext.update(ParseContext::PARSE_EXTRA_DATA , InputErrorAction::IGNORE );
-    auto deck = parser.parseString( deckString , parseContext, errors );
+    std::ignore = parser.parseString( deckString , parseContext, errors );
 }
 
 

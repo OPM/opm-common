@@ -47,11 +47,11 @@ namespace Opm {
         public:
 
         struct AquancCell {
-            int aquiferID;
-            std::size_t global_index;
-            double influx_coeff;
-            double effective_facearea; // Needed for restart output only.
-            FaceDir::DirEnum face_dir;
+            int aquiferID{};
+            std::size_t global_index{};
+            double influx_coeff{};
+            double effective_facearea{}; // Needed for restart output only.
+            FaceDir::DirEnum face_dir{FaceDir::Unknown};
 
             AquancCell(const int aquiferID_arg,
                        const std::size_t gi,

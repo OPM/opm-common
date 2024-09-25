@@ -22,26 +22,25 @@
 
 #include <vector>
 #include <cstddef>
-#include <optional>
 
 #include <opm/input/eclipse/EclipseState/Grid/FaceDir.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/GridDims.hpp>
-
 
 namespace Opm {
 
 class Deck;
 class DeckRecord;
 
-class BCConfig {
+class BCConfig
+{
 public:
-
-    struct BCRegion {
-        int index;
-        int i1,i2;
-        int j1,j2;
-        int k1,k2;
-        FaceDir::DirEnum dir;
+    struct BCRegion
+    {
+        int index{};
+        int i1{}, i2{};
+        int j1{}, j2{};
+        int k1 {}, k2{};
+        FaceDir::DirEnum dir{FaceDir::Unknown};
 
         BCRegion() = default;
         explicit BCRegion(const DeckRecord& record, const GridDims& grid);
@@ -64,7 +63,6 @@ public:
         }
     };
 
-
     BCConfig() = default;
     explicit BCConfig(const Deck& deck);
 
@@ -86,7 +84,5 @@ private:
 };
 
 } //namespace Opm
-
-
 
 #endif

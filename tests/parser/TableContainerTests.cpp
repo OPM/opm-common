@@ -52,7 +52,6 @@ END
 }
 
 BOOST_AUTO_TEST_CASE( CreateContainer ) {
-    std::vector<std::string> columnNames{"A", "B", "C", "D"};
     auto deck = createSWOFDeck();
     Opm::TableContainer container(10);
     BOOST_CHECK( container.empty() );

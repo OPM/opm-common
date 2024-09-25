@@ -21,11 +21,12 @@
 #define OPM_PARSER_SKPRPOLY_TABLE_HPP
 
 #include <opm/input/eclipse/EclipseState/Tables/PolyInjTable.hpp>
-namespace Opm {
 
+namespace Opm {
     class DeckKeyword;
 
-    class SkprpolyTable : public PolyInjTable {
+    class SkprpolyTable : public PolyInjTable
+    {
     public:
         SkprpolyTable() = default;
         explicit SkprpolyTable(const DeckKeyword& table);
@@ -46,10 +47,8 @@ namespace Opm {
         }
 
     private:
-        double m_ref_polymer_concentration;
-
+        double m_ref_polymer_concentration{};
     };
-
 }
 
-#endif //OPM_PARSER_SKPRPOLY_TABLE_HPP
+#endif // OPM_PARSER_SKPRPOLY_TABLE_HPP

@@ -31,8 +31,8 @@ namespace Opm {
     public:
 
         struct entry {
-            double P0;
-            double C1;
+            double P0{};
+            double C1{};
 
             entry() = default;
             entry(double P0_, double C1_);

@@ -27,9 +27,9 @@ namespace Opm {
 class DeckRecord;
 
 struct EzrokhiRecord {
-    double c0;
-    double c1;
-    double c2;
+    double c0{};
+    double c1{};
+    double c2{};
 
     EzrokhiRecord() = default;
     EzrokhiRecord(double c0_in, double c1_in, double c2_in) :

@@ -27,13 +27,14 @@ namespace Opm {
     class DeckKeyword;
     class DeckRecord;
 
-    class DenT {
+    class DenT
+    {
     public:
-
-        struct entry {
-            double T0;
-            double C1;
-            double C2;
+        struct entry
+        {
+            double T0{};
+            double C1{};
+            double C2{};
 
             entry() = default;
             entry(double T0_, double C1_, double C2_);

@@ -72,19 +72,19 @@ public:
         return false;
     }
 
-    double bhp_limit;
-    double thp_limit;
+    double bhp_limit{};
+    double thp_limit{};
 
-    InjectorType injector_type;
+    InjectorType injector_type{InjectorType::GAS};
     WellInjectorCMode cmode = WellInjectorCMode::CMODE_UNDEFINED;
-    double surface_rate;
-    double reservoir_rate;
-    int    vfp_table_number;
-    bool   prediction_mode;
-    double rs_rv_inj;
+    double surface_rate{};
+    double reservoir_rate{};
+    int    vfp_table_number{};
+    bool   prediction_mode{false};
+    double rs_rv_inj{};
 
 private:
-    int controls;
+    int controls{};
 };
 
 }

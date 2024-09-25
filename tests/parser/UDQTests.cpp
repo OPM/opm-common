@@ -335,7 +335,6 @@ BOOST_AUTO_TEST_CASE(MIX_SCALAR) {
 }
 
 BOOST_AUTO_TEST_CASE(UDQFieldSetTest) {
-    std::vector<std::string> wells = {"P1", "P2", "P3", "P4"};
     KeywordLocation location;
     UDQParams udqp;
     UDQFunctionTable udqft(udqp);

@@ -21,6 +21,7 @@
 #ifndef OPM_SOURCE_PROP_HPP
 #define OPM_SOURCE_PROP_HPP
 
+#include <array>
 #include <vector>
 #include <cstddef>
 #include <optional>
@@ -39,15 +40,16 @@ enum class SourceComponent {
      NONE
 };
 
-class Source {
+class Source
+{
 public:
-
-    struct SourceCell {
-        std::array<int, 3> ijk;
-        SourceComponent component;
-        double rate;
-        std::optional<double> hrate;
-        std::optional<double> temperature;  
+    struct SourceCell
+    {
+        std::array<int, 3> ijk{};
+        SourceComponent component{SourceComponent::NONE};
+        double rate{};
+        std::optional<double> hrate{};
+        std::optional<double> temperature{};
 
         SourceCell() = default;
         explicit SourceCell(const DeckRecord& record);
@@ -68,7 +70,6 @@ public:
             serializer(temperature);
         }
     };
-
 
     Source() = default;
 
@@ -98,6 +99,6 @@ private:
     std::vector<SourceCell> m_cells;
 };
 
-} //namespace Opm
+} // namespace Opm
 
 #endif

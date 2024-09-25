@@ -41,8 +41,8 @@ namespace Opm {
         }
 
     private:
-        double next_tstep;
-        bool persist;
+        double next_tstep{};
+        bool persist{false};
     };
 
     struct Tuning {

@@ -241,8 +241,8 @@ std::optional<Opm::Group> controlGroup(const Opm::Schedule& sched,
                                        const std::size_t simStep) {
     auto current = group;
     bool isField = false;
-    double cur_prod_ctrl= 0.;
     while (!isField) {
+        double cur_prod_ctrl;
         if (current.name() != "FIELD") {
             cur_prod_ctrl = sumState.get_group_var(current.name(), "GMCTP", 0);
         } else {
@@ -274,8 +274,8 @@ std::optional<Opm::Group>  injectionControlGroup(const Opm::Schedule& sched,
 {
     auto current = group;
     bool isField = false;
-    double  cur_inj_ctrl = 0.;
     while (!isField) {
+        double cur_inj_ctrl;
         if (current.name() != "FIELD") {
             cur_inj_ctrl = sumState.get_group_var(current.name(), curGroupInjCtrlKey, 0.);
         } else {
@@ -298,23 +298,6 @@ std::optional<Opm::Group>  injectionControlGroup(const Opm::Schedule& sched,
     }
     return {};
 } // namespace
-
-
-std::vector<std::size_t> groupParentSeqIndex(const Opm::Schedule& sched,
-        const Opm::Group& group,
-        const size_t simStep)
-//
-// returns a vector with the group sequence index of all parent groups from current parent group to Field level
-//
-{
-    std::vector<std::size_t> seq_numbers;
-    auto current = group;
-    while (current.name() != "FIELD") {
-        current = sched.getGroup(current.parent(), simStep);
-        seq_numbers.push_back(current.insert_index());
-    }
-    return seq_numbers;
-}
 
 namespace IGrp {
 std::size_t entriesPerGroup(const std::vector<int>& inteHead)
@@ -499,7 +482,6 @@ std::tuple<int, int, int, int> injectionGroup(const Opm::Schedule&     sched,
                                               const Opm::Phase         phase)
 {
     const bool is_field = group.name() == "FIELD";
-    auto group_parent_list = groupParentSeqIndex(sched, group, simStep);
     int high_level_ctrl = 0;
     int current_cmode = 0;
     int gconinje_cmode = 0;
@@ -591,7 +573,6 @@ void injectionGroup(const Opm::Schedule&     sched,
 {
     using IGroup = ::Opm::RestartIO::Helpers::VectorItems::IGroup::index;
     const bool is_field = group.name() == "FIELD";
-    auto group_parent_list = groupParentSeqIndex(sched, group, simStep);
     using IGroup = ::Opm::RestartIO::Helpers::VectorItems::IGroup::index;
 
 

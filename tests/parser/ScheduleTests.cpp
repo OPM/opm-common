@@ -4501,7 +4501,7 @@ BOOST_AUTO_TEST_CASE(SKIPREST_VFP) {
 
 
 BOOST_AUTO_TEST_CASE(GASLIFT_OPT) {
-    GasLiftOpt glo;
+    GasLiftOpt glo{};
     BOOST_CHECK(!glo.active());
     BOOST_CHECK_THROW(glo.group("NO_SUCH_GROUP"), std::out_of_range);
     BOOST_CHECK_THROW(glo.well("NO_SUCH_WELL"), std::out_of_range);

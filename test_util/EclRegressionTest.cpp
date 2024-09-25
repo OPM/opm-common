@@ -860,9 +860,6 @@ void ECLRegressionTest::results_rst()
                     checkSpecificKeyword(keywords1, keywords2, arrayType1, arrayType2, reference);
                 }
 
-                std::unordered_set<std::string> keywords = {"IGRP"};
-
-
                 for (size_t i = 0; i < keywords1.size(); i++) {
                     //if (keywords.count(keywords1[i]) == 0)
                     //    continue;

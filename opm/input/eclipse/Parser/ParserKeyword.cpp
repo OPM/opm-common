@@ -597,7 +597,6 @@ void set_dimensions( ParserItem& item,
         if (!dataConfig.has_item("value_type") )
             throw std::invalid_argument("The 'value_type' JSON item of keyword "+getName()+" is missing");
 
-        const std::string value_type = dataConfig.get_string("value_type");
         const std::string itemName("data");
         bool hasDefault = dataConfig.has_item("default");
         auto input_type = ParserItem::from_string(dataConfig.get_string("value_type"));
@@ -972,7 +971,6 @@ void set_dimensions( ParserItem& item,
 
     std::string ParserKeyword::createCode() const {
         std::stringstream ss;
-        const std::string lhs = "keyword";
         const std::string indent = "  ";
 
         ss << fmt::format("{0}::{0}() : ParserKeyword(\"{1}\", {2}) {{\n",

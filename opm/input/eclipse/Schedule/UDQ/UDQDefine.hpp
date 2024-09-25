@@ -104,13 +104,13 @@ public:
     }
 
 private:
-    std::string m_keyword;
-    std::vector<Opm::UDQToken> m_tokens;
-    std::shared_ptr<UDQASTNode> ast;
-    UDQVarType m_var_type;
-    KeywordLocation m_location;
-    std::size_t m_report_step;
-    UDQUpdate m_update_status;
+    std::string m_keyword{};
+    std::vector<Opm::UDQToken> m_tokens{};
+    std::shared_ptr<UDQASTNode> ast{};
+    UDQVarType m_var_type{UDQVarType::NONE};
+    KeywordLocation m_location{};
+    std::size_t m_report_step{};
+    UDQUpdate m_update_status{UDQUpdate::NEXT};
     mutable std::optional<std::string> string_data;
 
     UDQSet scatter_scalar_value(UDQSet&& res, const UDQContext& context) const;

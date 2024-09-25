@@ -19,20 +19,23 @@
 #ifndef OPM_PARSER_PVTWSALT_TABLE_HPP
 #define	OPM_PARSER_PVTWSALT_TABLE_HPP
 
+#include <cstddef>
 #include <vector>
 
 namespace Opm {
 
     class DeckKeyword;
+    class DeckRecord;
 
-    class PvtwsaltTable {
+    class PvtwsaltTable
+    {
     public:
         PvtwsaltTable();
 
         static PvtwsaltTable serializationTestObject();
 
         void init(const Opm::DeckRecord& record0, const Opm::DeckRecord& record1);
-        size_t size() const;
+        std::size_t size() const;
         std::vector<double> getSaltConcentrationColumn() const;
         std::vector<double> getFormationVolumeFactorColumn() const;
         std::vector<double> getCompressibilityColumn() const;
@@ -53,13 +56,10 @@ namespace Opm {
         }
 
     protected:
-
-        double m_pRefValues;
-        double m_saltConsRefValues;
+        double m_pRefValues{};
+        double m_saltConsRefValues{};
         std::vector <double> m_tableValues;
-
     };
-
 }
 
 #endif

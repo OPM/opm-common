@@ -668,7 +668,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(BlackOil, Evaluation, Types)
     BOOST_CHECK_SMALL(std::abs(FluidSystem::referenceDensity(gasPhaseIdx, /*regionIdx=*/1) - 0.853), 1e-10);
     BOOST_CHECK_SMALL(std::abs(FluidSystem::referenceDensity(waterPhaseIdx, /*regionIdx=*/1) - 1033), 1e-10);
 
-    Opm::BlackOilFluidState<Scalar, FluidSystem> fluidState;
+    Opm::BlackOilFluidState<Scalar, FluidSystem> fluidState{};
     Opm::Valgrind::SetUndefined(fluidState);
 
     static const Scalar eps = std::sqrt(std::numeric_limits<Scalar>::epsilon());

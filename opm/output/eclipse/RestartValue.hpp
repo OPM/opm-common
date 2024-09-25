@@ -25,7 +25,6 @@
 
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
 
-#include <map>
 #include <string>
 #include <utility>
 #include <vector>
@@ -34,9 +33,8 @@ namespace Opm {
 
     class RestartKey {
     public:
-
-        std::string key;
-        UnitSystem::measure dim;
+        std::string key{};
+        UnitSystem::measure dim{UnitSystem::measure::_count};
         bool required = false;
 
         RestartKey() = default;

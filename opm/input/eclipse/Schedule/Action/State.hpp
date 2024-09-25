@@ -39,7 +39,8 @@ class PyAction;
 
 class State {
 
-struct RunState {
+struct RunState
+{
     RunState() = default;
 
     explicit RunState(std::time_t sim_time)
@@ -47,7 +48,8 @@ struct RunState {
         , last_run(sim_time)
     {}
 
-    void add_run(std::time_t sim_time) {
+    void add_run(std::time_t sim_time)
+    {
         this->last_run = sim_time;
         this->run_count += 1;
     }
@@ -60,8 +62,8 @@ struct RunState {
         return rs;
     }
 
-
-    bool operator==(const RunState& other) const {
+    bool operator==(const RunState& other) const
+    {
         return this->run_count == other.run_count &&
                this->last_run == other.last_run;
     }
@@ -73,11 +75,9 @@ struct RunState {
         serializer(this->last_run);
     }
 
-    std::size_t run_count;
-    std::time_t last_run;
+    std::size_t run_count{};
+    std::time_t last_run{};
 };
-
-
 
 public:
     void add_run(const ActionX& action, std::time_t sim_time, Result result);
@@ -108,7 +108,7 @@ private:
     std::map<std::string, bool> m_python_result;
 };
 
+}
+}
 
-}
-}
 #endif

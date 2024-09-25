@@ -123,7 +123,7 @@ int UDQActive::update(const UDQConfig& udq_config, const UDAValue& uda, const st
         if ((record.wgname == wgname) && (record.control == control)) {
             if (uda.is<double>()) {
                 // Alternative 2
-                iter = this->input_data.erase(iter);
+                this->input_data.erase(iter);
                 this->output_data.clear();
                 return 1;
             } else {
@@ -133,7 +133,7 @@ int UDQActive::update(const UDQConfig& udq_config, const UDAValue& uda, const st
                     return 0;
                 else {
                     // Alternative 4
-                    iter = this->input_data.erase(iter);
+                    this->input_data.erase(iter);
                     this->output_data.clear();
                     break;
                 }

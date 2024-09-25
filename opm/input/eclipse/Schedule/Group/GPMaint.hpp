@@ -28,7 +28,8 @@ namespace Opm {
 
 class DeckRecord;
 
-class GPMaint {
+class GPMaint
+{
 public:
     enum class FlowTarget {
         RESV_PROD = 0,
@@ -40,10 +41,11 @@ public:
         SURF_GINJ = 6,
     };
 
-    struct State {
-        std::optional<std::size_t> report_step;
-        double error_integral;
-        double initial_rate;
+    struct State
+    {
+        std::optional<std::size_t> report_step{};
+        double error_integral{};
+        double initial_rate{};
 
         static State serializationTestObject();
 
@@ -84,14 +86,16 @@ public:
 
 private:
     static FlowTarget FlowTargetFromString(const std::string& stringvalue);
-    FlowTarget m_flow_target;
-    int m_region_number;
-    std::string m_region_name;
-    double m_pressure_target;
-    double m_prop_constant;
-    double m_time_constant;
-    std::size_t m_report_step;
+
+    FlowTarget m_flow_target{FlowTarget::RESV_GINJ};
+    int m_region_number{};
+    std::string m_region_name{};
+    double m_pressure_target{};
+    double m_prop_constant{};
+    double m_time_constant{};
+    std::size_t m_report_step{};
 };
+
 }
 
 #endif

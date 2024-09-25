@@ -219,7 +219,7 @@ namespace fun {
 
                 private:
                     explicit const_iterator( int );
-                    int value;
+                    int value{};
 
                     friend class iota;
             };

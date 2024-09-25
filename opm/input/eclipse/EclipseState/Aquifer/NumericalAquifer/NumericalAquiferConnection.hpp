@@ -31,19 +31,20 @@ namespace Opm {
     class Deck;
     class DeckRecord;
 
-    struct NumericalAquiferConnection {
+    struct NumericalAquiferConnection
+    {
         // TODO: I do not think we need all the values here
-        size_t aquifer_id;
-        size_t I, J, K;
-        size_t global_index;
-        FaceDir::DirEnum face_dir;
-        double trans_multipler;
-        int trans_option;
-        bool connect_active_cell;
+        size_t aquifer_id{};
+        size_t I{}, J{}, K{};
+        size_t global_index{};
+        FaceDir::DirEnum face_dir{FaceDir::Unknown};
+        double trans_multipler{};
+        int trans_option{};
+        bool connect_active_cell{false};
 
         // The following are options related to VE simulation
-        double ve_frac_relperm;
-        double ve_frac_cappress;
+        double ve_frac_relperm{};
+        double ve_frac_cappress{};
 
         NumericalAquiferConnection(size_t i, size_t j, size_t k, size_t global_index, bool allow_connect_active, const DeckRecord& record);
         NumericalAquiferConnection() = default;
@@ -67,6 +68,7 @@ namespace Opm {
 
         static std::map<size_t, std::map<size_t, NumericalAquiferConnection>>
                 generateConnections(const Deck& deck, const EclipseGrid& grid);
+
     private:
         static std::vector<NumericalAquiferConnection>
                 connectionsFromSingleRecord(const EclipseGrid& grid, const DeckRecord& record);

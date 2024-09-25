@@ -93,9 +93,9 @@ namespace Opm {
         }
 
     private:
-        std::string keyword_;
-        Category    category_;
-        KeywordLocation loc;
+        std::string keyword_{};
+        Category    category_{};
+        KeywordLocation loc{};
         Type        type_{ Type::Undefined };
         std::string name_{};
         int         number_{std::numeric_limits<int>::min()};
