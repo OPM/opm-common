@@ -5475,6 +5475,147 @@ WCONPROD
     BOOST_CHECK(!sched[0].has_gpmaint());
 }
 
+BOOST_AUTO_TEST_CASE(WCONHIST_WCONINJH_VFP) {
+    const std::string deck_string = R"(
+START
+7 OCT 2020 /
+
+DIMENS
+  10 10 3 /
+
+GRID
+DXV
+  10*100.0 /
+DYV
+  10*100.0 /
+DZV
+  3*10.0 /
+
+DEPTHZ
+  121*2000.0 /
+
+PORO
+  300*0.3 /
+PERMX
+    300*1 /
+PERMY
+    300*0.1 /
+PERMZ
+    300*0.01 /
+
+SCHEDULE
+
+VFPPROD
+-- table_num, datum_depth, flo, wfr, gfr, pressure, alq, unit, table_vals
+42 7.0E+03 LIQ WCT GOR THP ' ' METRIC BHP /
+1.0 / flo axis
+0.0 1.0 / THP axis
+0.0 / WFR axis
+0.0 / GFR axis
+0.0 / ALQ axis
+-- Table itself: thp_idx wfr_idx gfr_idx alq_idx <vals>
+1 1 1 1 0.0 /
+2 1 1 1 1.0 /
+
+VFPPROD
+-- table_num, datum_depth, flo, wfr, gfr, pressure, alq, unit, table_vals
+43 7.0E+03 LIQ WCT GOR THP 'GRAT' METRIC BHP /
+1.0 / flo axis
+0.0 1.0 / THP axis
+0.0 / WFR axis
+0.0 / GFR axis
+0.0 / ALQ axis
+-- Table itself: thp_idx wfr_idx gfr_idx alq_idx <vals>
+1 1 1 1 0.0 /
+2 1 1 1 1.0 /
+
+VFPINJ
+-- Table Depth  Rate   TAB  UNITS  BODY
+-- ----- ----- ----- ----- ------ -----
+       5  32.9   WAT   THP METRIC   BHP /
+-- Rate axis
+1 3 5 /
+-- THP axis
+7 11 /
+-- Table data with THP# <values 1-num_rates>
+1 1.5 2.5 3.5 /
+2 4.5 5.5 6.5 /
+
+WELSPECS -- 0
+  'P1' 'G' 10 10 2005 'LIQ' /
+  'P2' 'G' 10 10 2005 'LIQ' /
+/
+
+COMPDAT
+  'P1'  9  9   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
+  'P2'  9  9   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
+/
+
+WCONHIST
+  'P1' 'OPEN' 'RESV'  0.0 0.0  0.0  42 10/
+  'P2' 'OPEN' 'RESV'  0.0 0.0  0.0  43 100/
+/
+
+TSTEP
+ 1/
+
+WCONHIST
+  'P1' 'OPEN' 'RESV'  0.0 0.0  0.0  1* 20/
+  'P2' 'OPEN' 'RESV'  0.0 0.0  0.0  0 200/
+/
+
+TSTEP
+ 1/
+
+WCONINJH
+  'P1' 'WAT' 'OPEN'  0.0 2* 1*/
+  'P2' 'WAT' 'OPEN'  0.0 2* 5 /
+/
+
+TSTEP
+ 1/
+
+WCONINJH
+  'P1' 'WAT' 'OPEN'  0.0 2* 0 /
+  'P2' 'WAT' 'OPEN'  0.0 2* 1* /
+/
+)";
+    const auto deck = Parser{}.parseString(deck_string);
+    const auto es    = EclipseState{ deck };
+    auto       sched = Schedule{ deck, es };
+
+    // step 0
+    {
+        const auto& well1 = sched.getWell("P1", 0);
+        const auto& well2 = sched.getWell("P2", 0);
+        BOOST_CHECK_EQUAL(well1.vfp_table_number(), 42);
+        BOOST_CHECK_EQUAL(well2.vfp_table_number(), 43);
+    }
+
+    // step 1
+    {
+        const auto& well1 = sched.getWell("P1", 1);
+        const auto& well2 = sched.getWell("P2", 1);
+        BOOST_CHECK_EQUAL(well1.vfp_table_number(), 42);
+        BOOST_CHECK_EQUAL(well2.vfp_table_number(), 0);
+    }
+
+    // step 2
+    {
+        const auto& well1 = sched.getWell("P1", 2);
+        const auto& well2 = sched.getWell("P2", 2);
+        BOOST_CHECK_EQUAL(well1.vfp_table_number(), 0);
+        BOOST_CHECK_EQUAL(well2.vfp_table_number(), 5);
+    }
+
+    // step 3
+    {
+        const auto& well1 = sched.getWell("P1", 3);
+        const auto& well2 = sched.getWell("P2", 3);
+        BOOST_CHECK_EQUAL(well1.vfp_table_number(), 0);
+        BOOST_CHECK_EQUAL(well2.vfp_table_number(), 5);
+    }
+}
 
 BOOST_AUTO_TEST_CASE(SUMTHIN_IN_SUMMARY) {
     const auto deck = Parser{}.parseString(R"(RUNSPEC

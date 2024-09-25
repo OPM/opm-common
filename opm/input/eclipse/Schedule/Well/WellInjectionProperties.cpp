@@ -197,6 +197,7 @@ namespace Opm {
 
     void
     Well::WellInjectionProperties::handleWCONINJH(const DeckRecord& record,
+                                                  const int vfp_table_nr,
                                                   const double bhp_def,
                                                   const bool is_producer,
                                                   const std::string& well_name,
@@ -259,7 +260,7 @@ namespace Opm {
         this->controlMode = newControlMode;
         this->predictionMode = false;
 
-        this->VFPTableNumber = record.getItem("VFP_TABLE").get< int >(0);
+        this->VFPTableNumber = vfp_table_nr;
 
         this->rsRvInj = record.getItem("VAPOIL_C").getSIDouble(0);
         if (this->injectorType == InjectorType::OIL && this->rsRvInj > 0) {

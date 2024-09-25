@@ -983,7 +983,7 @@ BOOST_AUTO_TEST_CASE(Historic_Period)
         };
 
         auto prop = op1.getProductionProperties();
-        prop.handleWCONHIST(std::nullopt, 101325.0, Opm::UnitSystem::newMETRIC(),
+        prop.handleWCONHIST(std::nullopt, 0, 101325.0, Opm::UnitSystem::newMETRIC(),
                             deck.get<Opm::ParserKeywords::WCONHIST>().back().getRecord(0));
 
         const auto ctrl = prop.controls(Opm::SummaryState { Opm::TimeService::now(), state.header.udq_undefined }, state.header.udq_undefined);
@@ -1003,7 +1003,7 @@ BOOST_AUTO_TEST_CASE(Historic_Period)
         };
 
         auto prop = op1.getProductionProperties();
-        prop.handleWCONHIST(std::nullopt, 101325.0, Opm::UnitSystem::newMETRIC(),
+        prop.handleWCONHIST(std::nullopt, 0, 101325.0, Opm::UnitSystem::newMETRIC(),
                             deck.get<Opm::ParserKeywords::WCONHIST>().back().getRecord(0));
 
         const auto ctrl = prop.controls(Opm::SummaryState { Opm::TimeService::now(), state.header.udq_undefined }, state.header.udq_undefined);
@@ -1053,7 +1053,7 @@ BOOST_AUTO_TEST_CASE(Historic_Period_WHistCtl)
         };
 
         auto prop = op1.getProductionProperties();
-        prop.handleWCONHIST(std::nullopt, 101325.0, Opm::UnitSystem::newMETRIC(),
+        prop.handleWCONHIST(std::nullopt, 0, 101325.0, Opm::UnitSystem::newMETRIC(),
                             deck.get<Opm::ParserKeywords::WCONHIST>().back().getRecord(0));
 
         const auto ctrl = prop.controls(Opm::SummaryState { Opm::TimeService::now(), state.header.udq_undefined }, state.header.udq_undefined);
@@ -1073,7 +1073,7 @@ BOOST_AUTO_TEST_CASE(Historic_Period_WHistCtl)
         };
 
         auto prop = op1.getProductionProperties();
-        prop.handleWCONHIST(std::nullopt, 101325.0, Opm::UnitSystem::newMETRIC(),
+        prop.handleWCONHIST(std::nullopt, 0, 101325.0, Opm::UnitSystem::newMETRIC(),
                             deck.get<Opm::ParserKeywords::WCONHIST>().back().getRecord(0));
 
         const auto ctrl = prop.controls(Opm::SummaryState { Opm::TimeService::now(), state.header.udq_undefined }, state.header.udq_undefined);

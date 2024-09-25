@@ -93,8 +93,8 @@ namespace Opm {
     }
 
 
-    void Well::WellProductionProperties::init_vfp(const std::optional<VFPProdTable::ALQ_TYPE>& alq_type, const UnitSystem& unit_system_arg, const DeckRecord& record) {
-        this->VFPTableNumber = record.getItem("VFP_TABLE").defaultApplied(0) ? 0 : record.getItem("VFP_TABLE").get< int >(0);
+    void Well::WellProductionProperties::init_vfp(const std::optional<VFPProdTable::ALQ_TYPE>& alq_type, const int vfp_table_nr, const UnitSystem& unit_system_arg, const DeckRecord& record) {
+        this->VFPTableNumber = vfp_table_nr;
         if (alq_type) {
             const auto alq_dim = VFPProdTable::ALQDimension(*alq_type, unit_system_arg);
             const auto& alq_input = record.getItem("ALQ").get<UDAValue>(0);
@@ -164,6 +164,7 @@ namespace Opm {
 
 
     void Well::WellProductionProperties::handleWCONPROD(const std::optional<VFPProdTable::ALQ_TYPE>& alq_type,
+                                                        const int vfp_table_nr,
                                                         const double bhp_def,
                                                         const UnitSystem& unit_system_arg,
                                                         const std::string& well_name,
@@ -171,7 +172,7 @@ namespace Opm {
                                                         const KeywordLocation& location)
     {
         this->predictionMode = true;
-        this->init_vfp(alq_type, unit_system_arg, record);
+        this->init_vfp(alq_type, vfp_table_nr, unit_system_arg, record);
         this->init_rates(record);
 
         if (record.getItem("BHP").defaultApplied(0)) {
@@ -232,12 +233,13 @@ namespace Opm {
       default constructor and the handleWCONPROD() method.
     */
 void Well::WellProductionProperties::handleWCONHIST(const std::optional<VFPProdTable::ALQ_TYPE>& alq_type,
+                                                    const int vfp_table_nr,
                                                     const double bhp_def,
                                                     const UnitSystem& unit_system_arg,
                                                     const DeckRecord& record)
     {
         this->init_rates(record);
-        this->init_vfp(alq_type, unit_system_arg, record);
+        this->init_vfp(alq_type, vfp_table_nr, unit_system_arg, record);
         this->LiquidRate.update(0);
         this->ResVRate.update(0);
 
