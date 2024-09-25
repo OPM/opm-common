@@ -226,7 +226,7 @@ public:
     }
 
 protected:
-    PureParams pureParams_[numComponents];
+    PureParams pureParams_[numComponents]{};
 
 private:
     void updateACache_()
@@ -244,7 +244,7 @@ private:
         }
     }
 
-    Scalar aCache_[numComponents][numComponents];
+    Scalar aCache_[numComponents][numComponents]{};
 };
 
 

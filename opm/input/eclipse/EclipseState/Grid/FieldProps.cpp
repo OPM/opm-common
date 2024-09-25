@@ -1406,12 +1406,12 @@ void FieldProps::handle_operateR(const DeckKeyword& keyword)
 
         // For the OPERATER keyword we fetch the region name from the deck
         // record with no extra hoops.
-        const auto region_name = record.getItem("REGION_NAME").getTrimmedString(0);
+        const auto reg_name = record.getItem("REGION_NAME").getTrimmedString(0);
         const auto src_kw = record.getItem("ARRAY_PARAMETER").getTrimmedString(0);
 
-        const auto& index_list = this->region_index(region_name, region_value);
+        const auto& index_list = this->region_index(reg_name, region_value);
         if (index_list.empty()) {
-            log_empty_region(keyword, region_name, region_value, src_kw);
+            log_empty_region(keyword, reg_name, region_value, src_kw);
             continue;
         }
 
@@ -1475,10 +1475,10 @@ void FieldProps::handle_region_operation(const DeckKeyword& keyword)
                 };
             }
 
-            const auto region_name = this->region_name(record.getItem("REGION_NAME"));
-            const auto& index_list = this->region_index(region_name, region_value);
+            const auto reg_name = this->region_name(record.getItem("REGION_NAME"));
+            const auto& index_list = this->region_index(reg_name, region_value);
             if (index_list.empty()) {
-                log_empty_region(keyword, region_name, region_value, target_kw);
+                log_empty_region(keyword, reg_name, region_value, target_kw);
                 continue;
             }
 
@@ -1904,7 +1904,7 @@ void FieldProps::processMULTREGP(const Deck& deck)
                 continue;
             }
 
-            const auto region_name =
+            const auto reg_name =
                 make_region_name(record.getItem<Kw::REGION_TYPE>().getTrimmedString(0));
 
             // Can't use getSIDouble(0) here as there's no defined dimension
@@ -1918,11 +1918,11 @@ void FieldProps::processMULTREGP(const Deck& deck)
             // There is some weirdness if the same region value is entered
             // in several records, then only the last applies.
             if (iter != this->multregp.end()) {
-                iter->region_name = region_name;
+                iter->region_name = reg_name;
                 iter->multiplier = multiplier;
             }
             else {
-                this->multregp.emplace_back(region_value, multiplier, region_name);
+                this->multregp.emplace_back(region_value, multiplier, reg_name);
             }
         }
     }

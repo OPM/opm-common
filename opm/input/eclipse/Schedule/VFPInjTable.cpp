@@ -226,12 +226,12 @@ void VFPInjTable::check() {
     for (std::size_t t = 0; t < m_thp_data.size(); ++t) {
         for (std::size_t f = 0; f < m_flo_data.size(); ++f) {
             if (std::isnan((*this)(t,f))) {
-                const auto& location = this->m_location;
+                const auto& loc = this->m_location;
                 auto msg = fmt::format("VFPINJ table {}\n"
                                        "In {} line {}\n"
                                        "Element THP={}  FLO={} not initialized",
                                        this->m_table_num,
-                                       location.filename, location.lineno,
+                                       loc.filename, loc.lineno,
                                        t,f);
 
                 throw std::invalid_argument(msg);

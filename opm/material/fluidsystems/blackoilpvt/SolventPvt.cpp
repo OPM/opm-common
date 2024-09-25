@@ -50,10 +50,10 @@ initFromState(const EclipseState& eclState, const Schedule&)
                               pvdsTables.size(), sdensityTables.size()));
     }
 
-    std::size_t numRegions = pvdsTables.size();
-    setNumRegions(numRegions);
+    std::size_t regions = pvdsTables.size();
+    setNumRegions(regions);
 
-    for (unsigned regionIdx = 0; regionIdx < numRegions; ++regionIdx) {
+    for (unsigned regionIdx = 0; regionIdx < regions; ++regionIdx) {
         Scalar rhoRefS = sdensityTables[regionIdx].getSolventDensityColumn().front();
 
         setReferenceDensity(regionIdx, rhoRefS);
@@ -105,19 +105,19 @@ template<class Scalar>
 void SolventPvt<Scalar>::initEnd()
 {
     // calculate the final 2D functions which are used for interpolation.
-    std::size_t numRegions = solventMu_.size();
-    for (unsigned regionIdx = 0; regionIdx < numRegions; ++ regionIdx) {
+    std::size_t regions = solventMu_.size();
+    for (unsigned regionIdx = 0; regionIdx < regions; ++ regionIdx) {
         // calculate the table which stores the inverse of the product of the solvent
         // formation volume factor and its viscosity
-        const auto& solventMu = solventMu_[regionIdx];
+        const auto& solventmu = solventMu_[regionIdx];
         const auto& invSolventB = inverseSolventB_[regionIdx];
-        assert(solventMu.numSamples() == invSolventB.numSamples());
+        assert(solventmu.numSamples() == invSolventB.numSamples());
 
-        std::vector<Scalar> pressureValues(solventMu.numSamples());
-        std::vector<Scalar> invSolventBMuValues(solventMu.numSamples());
-        for (unsigned pIdx = 0; pIdx < solventMu.numSamples(); ++pIdx) {
+        std::vector<Scalar> pressureValues(solventmu.numSamples());
+        std::vector<Scalar> invSolventBMuValues(solventmu.numSamples());
+        for (unsigned pIdx = 0; pIdx < solventmu.numSamples(); ++pIdx) {
             pressureValues[pIdx] = invSolventB.xAt(pIdx);
-            invSolventBMuValues[pIdx] = invSolventB.valueAt(pIdx) * (1.0/solventMu.valueAt(pIdx));
+            invSolventBMuValues[pIdx] = invSolventB.valueAt(pIdx) * (1.0 / solventmu.valueAt(pIdx));
         }
 
         inverseSolventBMu_[regionIdx].setXYContainers(pressureValues, invSolventBMuValues);

@@ -140,24 +140,24 @@ ParseNode Parser::current() const
 
 ASTNode Parser::parse_left()
 {
-    auto current = this->current();
-    if (current.type != TokenType::ecl_expr) {
+    auto curr = this->current();
+    if (curr.type != TokenType::ecl_expr) {
         throw std::invalid_argument {
             fmt::format("Expected expression as left hand side "
                         "of comparison, but got {} instead.",
-                        current.value)
+                        curr.value)
         };
     }
 
-    std::string func = current.value;
-    FuncType func_type = get_func(current.value);
+    std::string func = curr.value;
+    FuncType func_type = get_func(curr.value);
     std::vector<std::string> arg_list;
-    current = this->next();
-    while ((current.type == TokenType::ecl_expr) ||
-           (current.type == TokenType::number))
+    curr = this->next();
+    while ((curr.type == TokenType::ecl_expr) ||
+           (curr.type == TokenType::number))
     {
-        arg_list.push_back(current.value);
-        current = this->next();
+        arg_list.push_back(curr.value);
+        curr = this->next();
     }
 
     return ASTNode { TokenType::ecl_expr, func_type, func, arg_list };
@@ -165,18 +165,18 @@ ASTNode Parser::parse_left()
 
 ASTNode Parser::parse_op()
 {
-    const auto current = this->current();
+    const auto curr = this->current();
 
-    if ((current.type == TokenType::op_gt) ||
-        (current.type == TokenType::op_ge) ||
-        (current.type == TokenType::op_lt) ||
-        (current.type == TokenType::op_le) ||
-        (current.type == TokenType::op_eq) ||
-        (current.type == TokenType::op_ne))
+    if ((curr.type == TokenType::op_gt) ||
+        (curr.type == TokenType::op_ge) ||
+        (curr.type == TokenType::op_lt) ||
+        (curr.type == TokenType::op_le) ||
+        (curr.type == TokenType::op_eq) ||
+        (curr.type == TokenType::op_ne))
     {
         this->next();
 
-        return ASTNode { current.type };
+        return ASTNode { curr.type };
     }
 
     return ASTNode { TokenType::error };
@@ -184,26 +184,26 @@ ASTNode Parser::parse_op()
 
 ASTNode Parser::parse_right()
 {
-    auto current = this->current();
-    if (current.type == TokenType::number) {
+    auto curr = this->current();
+    if (curr.type == TokenType::number) {
         this->next();
-        return ASTNode { strtod(current.value.c_str(), nullptr) };
+        return ASTNode { strtod(curr.value.c_str(), nullptr) };
     }
 
-    current = this->current();
-    if (current.type != TokenType::ecl_expr) {
+    curr = this->current();
+    if (curr.type != TokenType::ecl_expr) {
         return ASTNode { TokenType::error };
     }
 
-    std::string func = current.value;
+    std::string func = curr.value;
     FuncType func_type = FuncType::none;
     std::vector<std::string> arg_list;
-    current = this->next();
-    while ((current.type == TokenType::ecl_expr) ||
-           (current.type == TokenType::number))
+    curr = this->next();
+    while ((curr.type == TokenType::ecl_expr) ||
+           (curr.type == TokenType::number))
     {
-        arg_list.push_back(current.value);
-        current = this->next();
+        arg_list.push_back(curr.value);
+        curr = this->next();
     }
 
     return ASTNode { TokenType::ecl_expr, func_type, func, arg_list };
@@ -211,14 +211,14 @@ ASTNode Parser::parse_right()
 
 ASTNode Parser::parse_cmp()
 {
-    auto current = this->current();
+    auto curr = this->current();
 
-    if (current.type == TokenType::open_paren) {
+    if (curr.type == TokenType::open_paren) {
         this->next();
         auto inner_expr = this->parse_or();
 
-        current = this->current();
-        if (current.type != TokenType::close_paren) {
+        curr = this->current();
+        if (curr.type != TokenType::close_paren) {
             return ASTNode { TokenType::error };
         }
 
@@ -256,8 +256,8 @@ ASTNode Parser::parse_and()
         return ASTNode { TokenType::error };
     }
 
-    auto current = this->current();
-    if (current.type == TokenType::op_and) {
+    auto curr = this->current();
+    if (curr.type == TokenType::op_and) {
         ASTNode and_node(TokenType::op_and);
         and_node.add_child(left);
 
@@ -284,8 +284,8 @@ ASTNode Parser::parse_or()
         return ASTNode { TokenType::error };
     }
 
-    auto current = this->current();
-    if (current.type == TokenType::op_or) {
+    auto curr = this->current();
+    if (curr.type == TokenType::op_or) {
         ASTNode or_node(TokenType::op_or);
         or_node.add_child(left);
 
@@ -322,14 +322,14 @@ ASTNode Parser::parse(const std::vector<std::string>& tokens)
         };
     }
 
-    auto current = parser.current();
-    if (current.type != TokenType::end) {
+    auto curr = parser.current();
+    if (curr.type != TokenType::end) {
         const auto index = parser.current_pos;
 
         throw std::invalid_argument {
             fmt::format("Extra unhandled data starting with "
                         "token[{}] = {} in ACTIONX condition",
-                        index, current.value)
+                        index, curr.value)
         };
     }
 

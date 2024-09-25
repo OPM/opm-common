@@ -51,10 +51,10 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
                               pvtoTables.size(), densityTable.size()));
     }
 
-    std::size_t numRegions = pvtoTables.size();
-    setNumRegions(numRegions);
+    std::size_t regions = pvtoTables.size();
+    setNumRegions(regions);
 
-    for (unsigned regionIdx = 0; regionIdx < numRegions; ++regionIdx) {
+    for (unsigned regionIdx = 0; regionIdx < regions; ++regionIdx) {
         Scalar rhoRefO = densityTable[regionIdx].oil;
         Scalar rhoRefG = densityTable[regionIdx].gas;
         Scalar rhoRefW = densityTable[regionIdx].water;
@@ -63,7 +63,7 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
     }
 
     // initialize the internal table objects
-    for (unsigned regionIdx = 0; regionIdx < numRegions; ++regionIdx) {
+    for (unsigned regionIdx = 0; regionIdx < regions; ++regionIdx) {
         const auto& pvtoTable = pvtoTables[regionIdx];
 
         const auto& saturatedTable = pvtoTable.getSaturatedTable();
@@ -300,8 +300,8 @@ template<class Scalar>
 void LiveOilPvt<Scalar>::initEnd()
 {
     // calculate the final 2D functions which are used for interpolation.
-    std::size_t numRegions = oilMuTable_.size();
-    for (unsigned regionIdx = 0; regionIdx < numRegions; ++ regionIdx) {
+    std::size_t regions = oilMuTable_.size();
+    for (unsigned regionIdx = 0; regionIdx < regions; ++regionIdx) {
         // calculate the table which stores the inverse of the product of the oil
         // formation volume factor and the oil viscosity
         const auto& oilMu = oilMuTable_[regionIdx];

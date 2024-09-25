@@ -56,10 +56,10 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
                               pvtgTables.size(), densityTable.size()));
     }
 
-    std::size_t numRegions = pvtgwTables.size();
-    setNumRegions(numRegions);
+    std::size_t regions = pvtgwTables.size();
+    setNumRegions(regions);
 
-    for (unsigned regionIdx = 0; regionIdx < numRegions; ++regionIdx) {
+    for (unsigned regionIdx = 0; regionIdx < regions; ++regionIdx) {
         Scalar rhoRefO = densityTable[regionIdx].oil;
         Scalar rhoRefG = densityTable[regionIdx].gas;
         Scalar rhoRefW = densityTable[regionIdx].water;
@@ -72,7 +72,7 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
     {
          const auto& rwgsaltTables = eclState.getTableManager().getRwgSaltTables();
 
-         for (unsigned regionIdx = 0; regionIdx < numRegions; ++regionIdx) {
+         for (unsigned regionIdx = 0; regionIdx < regions; ++regionIdx) {
             const auto& rwgsaltTable = rwgsaltTables[regionIdx];
             const auto& saturatedTable = rwgsaltTable.getSaturatedTable();
             if (saturatedTable.numRows() < 2) {
@@ -98,7 +98,7 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
     }
 
     // Table PVTGW
-    for (unsigned regionIdx = 0; regionIdx < numRegions; ++regionIdx) {
+    for (unsigned regionIdx = 0; regionIdx < regions; ++regionIdx) {
         const auto& pvtgwTable = pvtgwTables[regionIdx];
 
         const auto& saturatedTable = pvtgwTable.getSaturatedTable();
@@ -191,7 +191,7 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
     }
 
     // Table PVTG
-    for (unsigned regionIdx = 0; regionIdx < numRegions; ++regionIdx) {
+    for (unsigned regionIdx = 0; regionIdx < regions; ++regionIdx) {
         const auto& pvtgTable = pvtgTables[regionIdx];
 
         const auto& saturatedTable = pvtgTable.getSaturatedTable();
@@ -435,8 +435,8 @@ void WetHumidGasPvt<Scalar>::initEnd()
 
     //PVTGW
     // calculate the final 2D functions which are used for interpolation.
-    std::size_t numRegions = gasMuRvSat_.size();
-    for (unsigned regionIdx = 0; regionIdx < numRegions; ++ regionIdx) {
+    std::size_t regions = gasMuRvSat_.size();
+    for (unsigned regionIdx = 0; regionIdx < regions; ++ regionIdx) {
         // calculate the table which stores the inverse of the product of the gas
         // formation volume factor and the gas viscosity
         const auto& gasMuRvSat = gasMuRvSat_[regionIdx];
@@ -477,7 +477,7 @@ void WetHumidGasPvt<Scalar>::initEnd()
     //PVTG
     // calculate the final 2D functions which are used for interpolation.
     //std::size_t numRegions = gasMuRvwSat_.size();
-    for (unsigned regionIdx = 0; regionIdx < numRegions; ++ regionIdx) {
+    for (unsigned regionIdx = 0; regionIdx < regions; ++ regionIdx) {
         // calculate the table which stores the inverse of the product of the gas
         // formation volume factor and the gas viscosity
         const auto& gasMuRvwSat = gasMuRvwSat_[regionIdx];

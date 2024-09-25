@@ -375,12 +375,12 @@ void VFPProdTable::check() {
                     for (std::size_t t = 0; t < nt; ++t) {
                         //Check that all elements have been set
                         if (std::isnan((*this)(t,w,g,a,f))) {
-                            const auto& location = this->m_location;
+                            const auto& loc = this->m_location;
                             auto msg = fmt::format("VFPPROD table {}\n"
                                                    "In {} line {}\n"
                                                    "Element THP={}  WFR={} GFR={} ALQ={} FLO={} not initialized",
                                                    this->m_table_num,
-                                                   location.filename, location.lineno,
+                                                   loc.filename, loc.lineno,
                                                    t,w,g,a,f);
 
                             throw std::invalid_argument(msg);

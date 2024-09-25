@@ -46,10 +46,10 @@ initFromState(const EclipseState& eclState, const Schedule&)
                               pvtwTable.size(), densityTable.size()));
     }
 
-    std::size_t numRegions = pvtwTable.size();
-    setNumRegions(numRegions);
+    std::size_t regions = pvtwTable.size();
+    setNumRegions(regions);
 
-    for (unsigned regionIdx = 0; regionIdx < numRegions; ++regionIdx) {
+    for (unsigned regionIdx = 0; regionIdx < regions; ++regionIdx) {
         waterReferenceDensity_[regionIdx] = densityTable[regionIdx].water;
 
         waterReferencePressure_[regionIdx] = pvtwTable[regionIdx].reference_pressure;

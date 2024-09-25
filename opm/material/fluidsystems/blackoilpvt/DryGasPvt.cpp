@@ -50,10 +50,10 @@ initFromState(const EclipseState& eclState, const Schedule&)
                               pvdgTables.size(), densityTable.size()));
     }
 
-    std::size_t numRegions = pvdgTables.size();
-    setNumRegions(numRegions);
+    std::size_t regions = pvdgTables.size();
+    setNumRegions(regions);
 
-    for (unsigned regionIdx = 0; regionIdx < numRegions; ++regionIdx) {
+    for (unsigned regionIdx = 0; regionIdx < regions; ++regionIdx) {
         Scalar rhoRefO = densityTable[regionIdx].oil;
         Scalar rhoRefG = densityTable[regionIdx].gas;
         Scalar rhoRefW = densityTable[regionIdx].water;
@@ -117,19 +117,19 @@ template<class Scalar>
 void DryGasPvt<Scalar>::initEnd()
 {
     // calculate the final 2D functions which are used for interpolation.
-    std::size_t numRegions = gasMu_.size();
-    for (unsigned regionIdx = 0; regionIdx < numRegions; ++ regionIdx) {
+    std::size_t regions = gasMu_.size();
+    for (unsigned regionIdx = 0; regionIdx < regions; ++ regionIdx) {
         // calculate the table which stores the inverse of the product of the gas
         // formation volume factor and the gas viscosity
-        const auto& gasMu = gasMu_[regionIdx];
+        const auto& gasmu = gasMu_[regionIdx];
         const auto& invGasB = inverseGasB_[regionIdx];
-        assert(gasMu.numSamples() == invGasB.numSamples());
+        assert(gasmu.numSamples() == invGasB.numSamples());
 
-        std::vector<Scalar> pressureValues(gasMu.numSamples());
-        std::vector<Scalar> invGasBMuValues(gasMu.numSamples());
-        for (unsigned pIdx = 0; pIdx < gasMu.numSamples(); ++pIdx) {
+        std::vector<Scalar> pressureValues(gasmu.numSamples());
+        std::vector<Scalar> invGasBMuValues(gasmu.numSamples());
+        for (unsigned pIdx = 0; pIdx < gasmu.numSamples(); ++pIdx) {
             pressureValues[pIdx] = invGasB.xAt(pIdx);
-            invGasBMuValues[pIdx] = invGasB.valueAt(pIdx) * (1.0/gasMu.valueAt(pIdx));
+            invGasBMuValues[pIdx] = invGasB.valueAt(pIdx) * (1.0 / gasmu.valueAt(pIdx));
         }
 
         inverseGasBMu_[regionIdx].setXYContainers(pressureValues, invGasBMuValues);

@@ -46,10 +46,10 @@ initFromState(const EclipseState& eclState, const Schedule&)
                               pvcdoTable.size(), densityTable.size()));
     }
 
-    std::size_t numRegions = pvcdoTable.size();
-    setNumRegions(numRegions);
+    std::size_t regions = pvcdoTable.size();
+    setNumRegions(regions);
 
-    for (unsigned regionIdx = 0; regionIdx < numRegions; ++regionIdx) {
+    for (unsigned regionIdx = 0; regionIdx < regions; ++regionIdx) {
         Scalar rhoRefO = densityTable[regionIdx].oil;
         Scalar rhoRefG = densityTable[regionIdx].gas;
         Scalar rhoRefW = densityTable[regionIdx].water;

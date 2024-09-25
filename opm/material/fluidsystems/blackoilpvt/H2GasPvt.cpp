@@ -38,9 +38,9 @@ H2GasPvt(const std::vector<Scalar>& salinity,
          Scalar P_ref)
     : salinity_(salinity)
 {
-    int numRegions = salinity_.size();
-    setNumRegions(numRegions);
-    for (int i = 0; i < numRegions; ++i) {
+    int regions = salinity_.size();
+    setNumRegions(regions);
+    for (int i = 0; i < regions; ++i) {
         gasReferenceDensity_[i] = H2::gasDensity(T_ref, P_ref, extrapolate);
         brineReferenceDensity_[i] = Brine::liquidDensity(T_ref, P_ref, salinity_[i], extrapolate);
     }
@@ -68,8 +68,8 @@ initFromState(const EclipseState& eclState, const Schedule&)
                                eclState.getSimulationConfig().hasVAPWAT());
 
     // We only supported single pvt region for the H2-brine module
-    std::size_t numRegions = 1;
-    setNumRegions(numRegions);
+    std::size_t regions = 1;
+    setNumRegions(regions);
     std::size_t regionIdx = 0;
     Scalar T_ref = eclState.getTableManager().stCond().temperature;
     Scalar P_ref = eclState.getTableManager().stCond().pressure;

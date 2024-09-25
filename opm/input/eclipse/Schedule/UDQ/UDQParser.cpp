@@ -233,25 +233,25 @@ Opm::UDQASTNode UDQParser::parse_factor()
 {
     double sign = 1.0;
 
-    auto current = this->current();
-    if ((current.type == Opm::UDQTokenType::binary_op_add) ||
-        (current.type == Opm::UDQTokenType::binary_op_sub))
+    auto curr = this->current();
+    if ((curr.type == Opm::UDQTokenType::binary_op_add) ||
+        (curr.type == Opm::UDQTokenType::binary_op_sub))
     {
-        if (current.type == Opm::UDQTokenType::binary_op_sub) {
+        if (curr.type == Opm::UDQTokenType::binary_op_sub) {
             sign = -1.0;
         }
 
         this->next();
-        current = this->current();
+        curr = this->current();
     }
 
 
-    if (current.type == Opm::UDQTokenType::open_paren) {
+    if (curr.type == Opm::UDQTokenType::open_paren) {
         this->next();
         auto inner_expr = this->parse_set();
 
-        current = this->current();
-        if (current.type != Opm::UDQTokenType::close_paren) {
+        curr = this->current();
+        if (curr.type != Opm::UDQTokenType::close_paren) {
             return Opm::UDQASTNode { Opm::UDQTokenType::error };
         }
 
@@ -259,19 +259,19 @@ Opm::UDQASTNode UDQParser::parse_factor()
         return sign * inner_expr;
     }
 
-    if (Opm::UDQ::scalarFunc(current.type) ||
-        Opm::UDQ::elementalUnaryFunc(current.type))
+    if (Opm::UDQ::scalarFunc(curr.type) ||
+        Opm::UDQ::elementalUnaryFunc(curr.type))
     {
-        auto func_node = current;
-        auto next = this->next();
+        auto func_node = curr;
+        auto Next = this->next();
 
-        if (next.type == Opm::UDQTokenType::open_paren) {
+        if (Next.type == Opm::UDQTokenType::open_paren) {
             this->next();
 
             auto arg_expr = this->parse_set();
 
-            current = this->current();
-            if (current.type != Opm::UDQTokenType::close_paren) {
+            curr = this->current();
+            if (curr.type != Opm::UDQTokenType::close_paren) {
                 return Opm::UDQASTNode { Opm::UDQTokenType::error };
             }
 
@@ -285,7 +285,7 @@ Opm::UDQASTNode UDQParser::parse_factor()
     }
 
     auto node = Opm::UDQASTNode {
-        current.type, current.value, current.selector
+        curr.type, curr.value, curr.selector
     };
 
     this->next();
@@ -300,8 +300,8 @@ Opm::UDQASTNode UDQParser::parse_pow()
         return left;
     }
 
-    auto current = this->current();
-    if (current.type == Opm::UDQTokenType::binary_op_pow) {
+    auto curr = this->current();
+    if (curr.type == Opm::UDQTokenType::binary_op_pow) {
         this->next();
 
         if (this->empty()) {
@@ -310,7 +310,7 @@ Opm::UDQASTNode UDQParser::parse_pow()
 
         auto right = this->parse_mul();
 
-        return { current.type, current.value, left, right };
+        return { curr.type, curr.value, left, right };
     }
 
     return left;
@@ -358,11 +358,11 @@ Opm::UDQASTNode UDQParser::parse_mul()
     auto top_node = nodes.back();
 
     if (nodes.size() > 1) {
-        auto* current = &top_node;
+        auto* curr = &top_node;
 
         for (std::size_t index = nodes.size() - 1; index > 0; --index) {
-            current->set_left(nodes[index - 1]);
-            current = current->get_left();
+            curr->set_left(nodes[index - 1]);
+            curr = curr->get_left();
         }
     }
 
@@ -416,11 +416,11 @@ Opm::UDQASTNode UDQParser::parse_add()
     auto top_node = nodes.back();
 
     if (nodes.size() > 1) {
-        auto* current = &top_node;
+        auto* curr = &top_node;
 
         for (std::size_t index = nodes.size() - 1; index > 0; --index) {
-            current->set_left(nodes[index - 1]);
-            current = current->get_left();
+            curr->set_left(nodes[index - 1]);
+            curr = curr->get_left();
         }
     }
 
@@ -446,9 +446,9 @@ Opm::UDQASTNode UDQParser::parse_cmp()
         return left;
     }
 
-    auto current = this->current();
+    auto curr = this->current();
 
-    if (Opm::UDQ::cmpFunc(current.type)) {
+    if (Opm::UDQ::cmpFunc(curr.type)) {
         this->next();
         if (this->empty()) {
             return Opm::UDQASTNode { Opm::UDQTokenType::error };
@@ -456,7 +456,7 @@ Opm::UDQASTNode UDQParser::parse_cmp()
 
         auto right = this->parse_cmp();
 
-        return { current.type, current.value, left, right };
+        return { curr.type, curr.value, left, right };
     }
 
     return left;
@@ -469,9 +469,9 @@ Opm::UDQASTNode UDQParser::parse_set()
         return left;
     }
 
-    auto current = this->current();
+    auto curr = this->current();
 
-    if (Opm::UDQ::setFunc(current.type)) {
+    if (Opm::UDQ::setFunc(curr.type)) {
         this->next();
         if (this->empty()) {
             return Opm::UDQASTNode { Opm::UDQTokenType::error };
@@ -479,7 +479,7 @@ Opm::UDQASTNode UDQParser::parse_set()
 
         auto right = this->parse_set();
 
-        return { current.type, current.value, left, right };
+        return { curr.type, curr.value, left, right };
     }
 
     return left;

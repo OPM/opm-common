@@ -277,30 +277,30 @@ public:
 
 private:
     // Points used for vertical scaling of capillary pressure
-    Scalar maxPcnwOrLeverettFactor_;
+    Scalar maxPcnwOrLeverettFactor_{};
 
     // Maximum wetting phase relative permability value.
-    Scalar maxKrw_;
+    Scalar maxKrw_{};
 
     // Scaled wetting phase relative permeability value at residual
     // saturation of non-wetting phase.
-    Scalar Krwr_;
+    Scalar Krwr_{};
 
     // Maximum non-wetting phase relative permability value
-    Scalar maxKrn_;
+    Scalar maxKrn_{};
 
     // Scaled non-wetting phase relative permeability value at residual
     // saturation of wetting phase.
-    Scalar Krnr_;
+    Scalar Krnr_{};
 
     // The the points used for saturation ("x-axis") scaling of capillary pressure
-    std::array<Scalar, 3> saturationPcPoints_;
+    std::array<Scalar, 3> saturationPcPoints_{};
 
     // The the points used for saturation ("x-axis") scaling of wetting phase relative permeability
-    std::array<Scalar, 3> saturationKrwPoints_;
+    std::array<Scalar, 3> saturationKrwPoints_{};
 
     // The the points used for saturation ("x-axis") scaling of non-wetting phase relative permeability
-    std::array<Scalar, 3> saturationKrnPoints_;
+    std::array<Scalar, 3> saturationKrnPoints_{};
 };
 
 } // namespace Opm

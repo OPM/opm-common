@@ -82,8 +82,8 @@ initFromState(const EclipseState& eclState, const Schedule&)
     setEnableSaltConcentration(eclState.runspec().phases().active(Phase::BRINE));
 
     // We only supported single pvt region for the H2-brine module
-    std::size_t numRegions = 1;
-    setNumRegions(numRegions);
+    std::size_t regions = 1;
+    setNumRegions(regions);
     std::size_t regionIdx = 0;
 
     // Currently we only support constant salinity

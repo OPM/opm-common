@@ -988,8 +988,8 @@ CF and Kh items for well {} must both be specified or both defaulted/negative)",
         double perf_length = 0;
         for (const auto& conn : this->m_connections) {
             if (conn.segment() == segment) {
-                const auto& [start, end] = *conn.perf_range();
-                perf_length += end - start;
+                const auto& [start_seg, end_seg] = *conn.perf_range();
+                perf_length += end_seg - start_seg;
             }
         }
 

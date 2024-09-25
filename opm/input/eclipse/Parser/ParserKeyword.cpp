@@ -331,8 +331,8 @@ std::string KeywordSize::construct() const
 
         initSize(jsonConfig);
         if (jsonConfig.has_item("min_size")) {
-            auto min_size = jsonConfig.get_int("min_size");
-            this->keyword_size.min_size(min_size);
+            auto minsize = jsonConfig.get_int("min_size");
+            this->keyword_size.min_size(minsize);
         }
 
         initDeckNames(jsonConfig);

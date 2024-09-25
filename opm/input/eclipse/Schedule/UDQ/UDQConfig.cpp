@@ -275,17 +275,17 @@ namespace Opm {
 
     void UDQConfig::add_unit(const std::string& keyword, const std::string& quoted_unit)
     {
-        const auto unit = strip_quotes(quoted_unit);
+        const auto Unit = strip_quotes(quoted_unit);
         const auto pair_ptr = this->units.find(keyword);
         if (pair_ptr != this->units.end()) {
-            if (pair_ptr->second != unit) {
+            if (pair_ptr->second != Unit) {
                 throw std::invalid_argument("Illegal to change unit of UDQ keyword runtime");
             }
 
             return;
         }
 
-        this->units[keyword] = unit;
+        this->units[keyword] = Unit;
     }
 
     void UDQConfig::add_update(const std::string&              keyword,
@@ -314,8 +314,8 @@ namespace Opm {
 
         const auto update_status = UDQ::updateType(data[0]);
 
-        auto& define = this->m_definitions[keyword];
-        define.update_status(update_status, report_step);
+        auto& def = this->m_definitions[keyword];
+        def.update_status(update_status, report_step);
     }
 
     void UDQConfig::add_record(SegmentMatcherFactory  create_segment_matcher,
@@ -446,8 +446,8 @@ namespace Opm {
     {
         std::vector<UDQAssign> ret;
 
-        for (const auto& [key, input] : this->input_index) {
-            if (input.action == UDQAction::ASSIGN) {
+        for (const auto& [key, Input] : this->input_index) {
+            if (Input.action == UDQAction::ASSIGN) {
                 ret.push_back(this->m_assignments.at(key));
             }
         }
