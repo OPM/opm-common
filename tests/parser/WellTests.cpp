@@ -590,8 +590,9 @@ namespace {
             Opm::UnitSystem unit_system(Opm::UnitSystem::UnitType::UNIT_TYPE_METRIC);
             auto deck = parser.parseString(input);
             const auto& record = deck["WCONHIST"].back().getRecord(0);
+            auto table_nr = record.getItem("VFP_TABLE").get< int >(0);
             Opm::Well::WellProductionProperties hist(unit_system, "W");
-            hist.handleWCONHIST(alq_type,
+            hist.handleWCONHIST(alq_type, table_nr, 
                                 Opm::ParserKeywords::FBHPDEF::TARGET_BHP::defaultValue * unit::barsa,
                                 unit_system, record);
 
@@ -645,8 +646,9 @@ namespace {
             auto deck = parser.parseString(input);
             const auto& kwd     = deck["WCONPROD"].back();
             const auto&  record = kwd.getRecord(0);
+            auto table_nr = record.getItem("VFP_TABLE").get< int >(0);
             Opm::Well::WellProductionProperties pred(unit_system, "W");
-            pred.handleWCONPROD(alq_type,
+            pred.handleWCONPROD(alq_type, table_nr,
                                 Opm::ParserKeywords::FBHPDEF::TARGET_BHP::defaultValue * unit::barsa,
                                 unit_system, "WELL", record, {});
 

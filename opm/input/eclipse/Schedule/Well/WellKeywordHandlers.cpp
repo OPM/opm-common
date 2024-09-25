@@ -103,6 +103,9 @@ void handleWCONHIST(HandlerContext& handlerContext)
             bool update_well = false;
 
             auto table_nr = record.getItem("VFP_TABLE").get< int >(0);
+            if (record.getItem("VFP_TABLE").defaultApplied(0)) { // Default 1* use the privious set vfp table
+                table_nr = properties->VFPTableNumber;
+            }
 
             if (table_nr != 0) {
                 const auto& vfpprod = handlerContext.state().vfpprod;
@@ -128,6 +131,7 @@ void handleWCONHIST(HandlerContext& handlerContext)
             }
 
             properties->handleWCONHIST(alq_type,
+                                       table_nr,
                                        default_bhp,
                                        handlerContext.static_schedule().m_unit_system, record);
 
@@ -277,7 +281,9 @@ void handleWCONINJH(HandlerContext& handlerContext)
             }
 
             auto table_nr = record.getItem("VFP_TABLE").get< int >(0);
-
+            if (record.getItem("VFP_TABLE").defaultApplied(0)) { // Default 1* use the privious set vfp table
+                table_nr = injection->VFPTableNumber;
+            }
             if (table_nr != 0) {
                 const auto& vfpinj = handlerContext.state().vfpinj;
                 if (!vfpinj.has(table_nr)) {
@@ -286,7 +292,7 @@ void handleWCONINJH(HandlerContext& handlerContext)
                 }
             }
 
-            injection->handleWCONINJH(record, default_bhp_limit,
+            injection->handleWCONINJH(record, table_nr, default_bhp_limit,
                                       well2.isProducer(), well_name,
                                       handlerContext.keyword.location());
 
@@ -346,7 +352,6 @@ void handleWCONPROD(HandlerContext& handlerContext)
             }
 
             auto table_nr = record.getItem("VFP_TABLE").get< int >(0);
-
             if (table_nr != 0) {
                 const auto& vfpprod = handlerContext.state().vfpprod;
                 if (vfpprod.has(table_nr)) {
@@ -365,7 +370,7 @@ void handleWCONPROD(HandlerContext& handlerContext)
                                                                    ParserKeywords::WCONPROD::BHP::defaultValue.get<double>());
             }
 
-            properties->handleWCONPROD(alq_type, default_bhp_target,
+            properties->handleWCONPROD(alq_type, table_nr, default_bhp_target,
                                        handlerContext.static_schedule().m_unit_system,
                                        well_name, record, handlerContext.keyword.location());
 

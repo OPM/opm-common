@@ -184,11 +184,13 @@ public:
 
         //! \brief Handle a WCONINJH keyword.
         //! \param record The deck record to use
+        //! \param vfp_table_nr The vfp table number
         //! \param bhp_def The default BHP limit in SI units
         //! \param is_producer True if well is a producer
         //! \param well_name Name of well
         //! \param loc Location of keyword for logging purpose
         void handleWCONINJH(const DeckRecord& record,
+                            const int vfp_table_nr,
                             const double bhp_def,
                             const bool is_producer,
                             const std::string& well_name,
@@ -301,12 +303,14 @@ public:
 
         //! \brief Handle WCONPROD keyword.
         //! \param alq_type ALQ type
+        //! \param vfp_table_nr The vfp table number
         //! \param bhp_def Default BHP target in SI units
         //! \param unit_system Unit system to use
         //! \param well Well name
         //! \param record Deck record to use
         //! \param location Location of keyword for logging purpose
         void handleWCONPROD(const std::optional<VFPProdTable::ALQ_TYPE>& alq_type,
+                            const int vfp_table_nr,
                             const double bhp_def,
                             const UnitSystem& unit_system,
                             const std::string& well,
@@ -315,10 +319,12 @@ public:
 
         //! \brief Handle WCONHIST keyword.
         //! \param alq_type ALQ type
+        //! \param vfp_table_nr The vfp table number
         //! \param bhp_def Default BHP limit in SI units
         //! \param unit_system Unit system to use
         //! \param record Deck record to use
         void handleWCONHIST(const std::optional<VFPProdTable::ALQ_TYPE>& alq_type,
+                            const int vfp_table_nr,
                             const double bhp_def,
                             const UnitSystem& unit_system,
                             const DeckRecord& record);
@@ -362,7 +368,7 @@ public:
         void init_rates( const DeckRecord& record );
 
         void init_history(const DeckRecord& record);
-        void init_vfp(const std::optional<VFPProdTable::ALQ_TYPE>& alq_type, const UnitSystem& unit_system, const DeckRecord& record);
+        void init_vfp(const std::optional<VFPProdTable::ALQ_TYPE>& alq_type, const int vfp_table_nr, const UnitSystem& unit_system, const DeckRecord& record);
 
         WellProductionProperties(const DeckRecord& record);
 
