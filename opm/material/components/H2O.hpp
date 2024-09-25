@@ -71,6 +71,8 @@ class H2O : public Component<Scalar, H2O<Scalar> >
     static const Scalar Rs; // specific gas constant of water
 
 public:
+    using Component<Scalar, H2O<Scalar>>::isTabulated;
+
     /*!
      * \brief A human readable name for the water.
      */

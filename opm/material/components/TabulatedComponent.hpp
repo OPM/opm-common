@@ -57,7 +57,7 @@ class TabulatedComponent
 public:
     typedef ScalarT Scalar;
 
-    static const bool isTabulated = true;
+    static constexpr bool isTabulated = true;
 
     /*!
      * \brief Initialize the tables.
