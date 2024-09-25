@@ -34,6 +34,7 @@
 #include <opm/material/components/Component.hpp>
 #include <opm/material/common/MathToolbox.hpp>
 #include <opm/material/common/UniformTabulated2DFunction.hpp>
+#include "co2tables.inc"
 
 #include <cmath>
 #include <string_view>
@@ -61,7 +62,7 @@ class CO2 : public Component<Scalar, CO2<Scalar>>
     static const UniformTabulated2DFunction<double, ContainerT>& tabulatedDensity;
 
 public:
-    static const Scalar brineSalinity;
+    static constexpr Scalar brineSalinity = CO2Tables::brineSalinity;
 
     /*!
      * \brief A human readable name for the CO2.
@@ -274,6 +275,14 @@ public:
         const Evaluation h2 = gasEnthalpy(temperature + eps, pressure);
 
         return (h2 - h1) / (2*eps) ;
+    }
+
+    static const UniformTabulated2DFunction<double, ContainerT>& getEnthalpy(){
+        return tabulatedEnthalpy;
+    }
+
+    static const UniformTabulated2DFunction<double, ContainerT>& getDensity(){
+        return tabulatedDensity;
     }
 };
 
