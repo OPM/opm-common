@@ -88,8 +88,22 @@ namespace Opm
     class Schedule {
     public:
         Schedule() = default;
-        ~Schedule() = default;
+
         explicit Schedule(std::shared_ptr<const Python> python_handle);
+
+        /*! \brief Construct a Schedule object from a deck.
+         *  \param deck Deck to construct Schedule from
+         *  \param fp Field property manager
+         *  \param runspec Run specification parameters to use
+         *  \param parseContext Parsing context
+         *  \param errors Error configuration
+         *  \param python Python interpreter to use
+         *  \param lowActionParsingStrictness Reduce parsing strictness for actions
+         *  \param keepKeywords Keep the schdule keywords even if there are no actions
+         *  \param output_interval Output interval to use
+         *  \param rst Restart state to use
+         *  \param tracer_config Tracer configuration to use
+         */
         Schedule(const Deck& deck,
                  const EclipseGrid& grid,
                  const FieldPropsManager& fp,
@@ -98,6 +112,7 @@ namespace Opm
                  ErrorGuard& errors,
                  std::shared_ptr<const Python> python,
                  const bool lowActionParsingStrictness = false,
+                 const bool keepKeywords = true,
                  const std::optional<int>& output_interval = {},
                  const RestartIO::RstState* rst = nullptr,
                  const TracerConfig* tracer_config = nullptr);
@@ -111,6 +126,7 @@ namespace Opm
                  T&& errors,
                  std::shared_ptr<const Python> python,
                  const bool lowActionParsingStrictness = false,
+                 const bool keepKeywords = true,
                  const std::optional<int>& output_interval = {},
                  const RestartIO::RstState* rst = nullptr,
                  const TracerConfig* tracer_config = nullptr);
@@ -121,6 +137,7 @@ namespace Opm
                  const Runspec &runspec,
                  std::shared_ptr<const Python> python,
                  const bool lowActionParsingStrictness = false,
+                 const bool keepKeywords = true,
                  const std::optional<int>& output_interval = {},
                  const RestartIO::RstState* rst = nullptr,
                  const TracerConfig* tracer_config = nullptr);
@@ -131,6 +148,7 @@ namespace Opm
                  ErrorGuard& errors,
                  std::shared_ptr<const Python> python,
                  const bool lowActionParsingStrictness = false,
+                 const bool keepKeywords = true,
                  const std::optional<int>& output_interval = {},
                  const RestartIO::RstState* rst = nullptr);
 
@@ -141,6 +159,7 @@ namespace Opm
                  T&& errors,
                  std::shared_ptr<const Python> python,
                  const bool lowActionParsingStrictness = false,
+                 const bool keepKeywords = true,
                  const std::optional<int>& output_interval = {},
                  const RestartIO::RstState* rst = nullptr);
 
@@ -148,6 +167,7 @@ namespace Opm
                  const EclipseState& es,
                  std::shared_ptr<const Python> python,
                  const bool lowActionParsingStrictness = false,
+                 const bool keepKeywords = true,
                  const std::optional<int>& output_interval = {},
                  const RestartIO::RstState* rst = nullptr);
 
@@ -156,6 +176,8 @@ namespace Opm
                  const EclipseState& es,
                  const std::optional<int>& output_interval = {},
                  const RestartIO::RstState* rst = nullptr);
+
+        ~Schedule() = default;
 
         static Schedule serializationTestObject();
 
@@ -541,6 +563,7 @@ namespace Opm
                                     const ScheduleGrid& grid,
                                     const std::unordered_map<std::string, double> * target_wellpi,
                                     const std::string& prefix,
+                                    const bool keepKeywords,
                                     const bool log_to_debug = false);
         void addACTIONX(const Action::ActionX& action);
         void addGroupToGroup( const std::string& parent_group, const std::string& child_group);

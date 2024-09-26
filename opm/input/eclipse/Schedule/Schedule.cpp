@@ -129,14 +129,16 @@ namespace Opm {
                         ErrorGuard& errors,
                         std::shared_ptr<const Python> python,
                         const bool lowActionParsingStrictness,
+                        bool keepKeywords,
                         const std::optional<int>& output_interval,
                         const RestartIO::RstState * rst,
                         const TracerConfig * tracer_config)
     try :
-        m_static( python, ScheduleRestartInfo(rst, deck), deck, runspec, output_interval, parseContext, errors ),
-        m_sched_deck(TimeService::from_time_t(runspec.start_time()), deck, m_static.rst_info ),
-        completed_cells(ecl_grid.getNX(), ecl_grid.getNY(), ecl_grid.getNZ()),
-        m_lowActionParsingStrictness(lowActionParsingStrictness)
+        m_static(python, ScheduleRestartInfo(rst, deck), deck, runspec,
+                 output_interval, parseContext, errors)
+        , m_sched_deck(TimeService::from_time_t(runspec.start_time()), deck, m_static.rst_info)
+        , completed_cells(ecl_grid.getNX(), ecl_grid.getNY(), ecl_grid.getNZ())
+        , m_lowActionParsingStrictness(lowActionParsingStrictness)
     {
         this->restart_output.resize(this->m_sched_deck.size());
         this->restart_output.clearRemainingEvents(0);
@@ -146,23 +148,37 @@ namespace Opm {
         //const ScheduleGridWrapper gridWrapper { grid } ;
         ScheduleGrid grid(ecl_grid, fp, this->completed_cells);
 
+        if (!keepKeywords) {
+            const auto& section = SCHEDULESection(deck);
+            keepKeywords = section.has_keyword("ACTIONX") ||
+                           section.has_keyword("PYACTION");
+        }
+
         if (rst) {
-            if (!tracer_config)
+            if (!tracer_config) {
                 throw std::logic_error("Bug: when loading from restart a valid TracerConfig object must be supplied");
+            }
+
+            if (!keepKeywords) {
+                keepKeywords = !rst->actions.empty();
+            }
 
             auto restart_step = this->m_static.rst_info.report_step;
-            this->iterateScheduleSection( 0, restart_step, parseContext, errors, grid, nullptr, "");
+            this->iterateScheduleSection(0, restart_step, parseContext, errors,
+                                         grid, nullptr, "", keepKeywords);
             this->load_rst(*rst, *tracer_config, grid, fp);
             if (! this->restart_output.writeRestartFile(restart_step))
                 this->restart_output.addRestartOutput(restart_step);
-            this->iterateScheduleSection( restart_step, this->m_sched_deck.size(), parseContext, errors, grid, nullptr, "");
+            this->iterateScheduleSection(restart_step, this->m_sched_deck.size(),
+                                         parseContext, errors, grid, nullptr, "", keepKeywords);
             // Events added during restart reading well be added to previous step, but need to be active at the
             // restart step to ensure well potentials and guide rates are available at the first step.
             const auto prev_step = std::max(static_cast<int>(restart_step-1), 0);
             this->snapshots[restart_step].update_wellgroup_events(this->snapshots[prev_step].wellgroup_events());
             this->snapshots[restart_step].update_events(this->snapshots[prev_step].events());
         } else {
-            this->iterateScheduleSection( 0, this->m_sched_deck.size(), parseContext, errors, grid, nullptr, "");
+            this->iterateScheduleSection(0, this->m_sched_deck.size(),
+                                         parseContext, errors, grid, nullptr, "", keepKeywords);
         }
     }
     catch (const OpmInputError& opm_error) {
@@ -175,9 +191,6 @@ namespace Opm {
         throw;
     }
 
-
-
-
     template <typename T>
     Schedule::Schedule( const Deck& deck,
                         const EclipseGrid& grid,
@@ -187,12 +200,23 @@ namespace Opm {
                         T&& errors,
                         std::shared_ptr<const Python> python,
                         const bool lowActionParsingStrictness,
+                        const bool keepKeywords,
                         const std::optional<int>& output_interval,
                         const RestartIO::RstState * rst,
-                        const TracerConfig* tracer_config) :
-        Schedule(deck, grid, fp, runspec, parseContext, errors, python, lowActionParsingStrictness, output_interval, rst, tracer_config)
+                        const TracerConfig* tracer_config)
+        : Schedule(deck,
+                   grid,
+                   fp,
+                   runspec,
+                   parseContext,
+                   errors,
+                   python,
+                   lowActionParsingStrictness,
+                   keepKeywords,
+                   output_interval,
+                   rst,
+                   tracer_config)
     {}
-
 
     Schedule::Schedule( const Deck& deck,
                         const EclipseGrid& grid,
@@ -200,52 +224,104 @@ namespace Opm {
                         const Runspec &runspec,
                         std::shared_ptr<const Python> python,
                         const bool lowActionParsingStrictness,
+                        const bool keepKeywords,
                         const std::optional<int>& output_interval,
                         const RestartIO::RstState * rst,
-                        const TracerConfig* tracer_config) :
-        Schedule(deck, grid, fp, runspec, ParseContext(), ErrorGuard(), python, lowActionParsingStrictness, output_interval, rst, tracer_config)
+                        const TracerConfig* tracer_config)
+        : Schedule(deck,
+                   grid,
+                   fp,
+                   runspec,
+                   ParseContext(),
+                   ErrorGuard(),
+                   python,
+                   lowActionParsingStrictness,
+                   keepKeywords,
+                   output_interval,
+                   rst,
+                   tracer_config)
     {}
 
-
-    Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext& parse_context, ErrorGuard& errors, std::shared_ptr<const Python> python, bool lowActionParsingStrictness, const std::optional<int>& output_interval, const RestartIO::RstState * rst) :
-        Schedule(deck,
-                 es.getInputGrid(),
-                 es.fieldProps(),
-                 es.runspec(),
-                 parse_context,
-                 errors,
-                 python,
-                 lowActionParsingStrictness,
-                 output_interval,
-                 rst,
-                 &es.tracer())
+    Schedule::Schedule(const Deck& deck,
+                       const EclipseState& es,
+                       const ParseContext& parse_context,
+                       ErrorGuard& errors,
+                       std::shared_ptr<const Python> python,
+                       bool lowActionParsingStrictness,
+                       const bool keepKeywords,
+                       const std::optional<int>& output_interval,
+                       const RestartIO::RstState * rst)
+        : Schedule(deck,
+                   es.getInputGrid(),
+                   es.fieldProps(),
+                   es.runspec(),
+                   parse_context,
+                   errors,
+                   python,
+                   lowActionParsingStrictness,
+                   keepKeywords,
+                   output_interval,
+                   rst,
+                   &es.tracer())
     {}
-
 
     template <typename T>
-    Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext& parse_context, T&& errors, std::shared_ptr<const Python> python, bool lowActionParsingStrictness, const std::optional<int>& output_interval, const RestartIO::RstState * rst) :
-        Schedule(deck,
-                 es.getInputGrid(),
-                 es.fieldProps(),
-                 es.runspec(),
-                 parse_context,
-                 errors,
-                 python,
-                 lowActionParsingStrictness,
-                 output_interval,
-                 rst,
-                 &es.tracer())
+    Schedule::Schedule(const Deck& deck,
+                       const EclipseState& es,
+                       const ParseContext& parse_context,
+                       T&& errors,
+                       std::shared_ptr<const Python> python,
+                       bool lowActionParsingStrictness,
+                       const bool keepKeywords,
+                       const std::optional<int>& output_interval,
+                       const RestartIO::RstState * rst)
+        : Schedule(deck,
+                   es.getInputGrid(),
+                   es.fieldProps(),
+                   es.runspec(),
+                   parse_context,
+                   errors,
+                   python,
+                   lowActionParsingStrictness,
+                   keepKeywords,
+                   output_interval,
+                   rst,
+                   &es.tracer())
     {}
 
 
-Schedule::Schedule(const Deck& deck, const EclipseState& es, std::shared_ptr<const Python> python, bool lowActionParsingStrictness, const std::optional<int>& output_interval, const RestartIO::RstState * rst) :
-    Schedule(deck, es, ParseContext(), ErrorGuard(), python, lowActionParsingStrictness, output_interval, rst)
-{}
-
-
-Schedule::Schedule(const Deck& deck, const EclipseState& es, const std::optional<int>& output_interval, const RestartIO::RstState * rst) :
-    Schedule(deck, es, ParseContext(), ErrorGuard(), std::make_shared<const Python>(), false, output_interval, rst)
+    Schedule::Schedule(const Deck& deck,
+                       const EclipseState& es,
+                       std::shared_ptr<const Python> python,
+                       bool lowActionParsingStrictness,
+                       const bool keepKeywords,
+                       const std::optional<int>& output_interval,
+                       const RestartIO::RstState * rst)
+        : Schedule(deck,
+                   es,
+                   ParseContext(),
+                   ErrorGuard(),
+                   python,
+                   lowActionParsingStrictness,
+                   keepKeywords,
+                   output_interval,
+                   rst)
     {}
+
+    Schedule::Schedule(const Deck& deck,
+                       const EclipseState& es,
+                       const std::optional<int>& output_interval,
+                       const RestartIO::RstState * rst)
+        : Schedule(deck,
+                   es,
+                   ParseContext(),
+                   ErrorGuard(),
+                   std::make_shared<const Python>(),
+                   false,
+                   true,
+                   output_interval,
+                   rst)
+        {}
 
     Schedule::Schedule(std::shared_ptr<const Python> python_handle) :
         m_static( python_handle )
@@ -486,8 +562,9 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                                       const ScheduleGrid& grid,
                                       const std::unordered_map<std::string, double> * target_wellpi,
                                       const std::string& prefix,
-                                      const bool log_to_debug) {
-
+                                      const bool keepKeywords,
+                                      const bool log_to_debug)
+{
         std::vector<std::pair< const DeckKeyword* , std::size_t> > rftProperties;
         std::string time_unit = this->m_static.m_unit_system.name(UnitSystem::measure::time);
         auto deck_time = [this](double seconds) { return this->m_static.m_unit_system.from_si(UnitSystem::measure::time, seconds); };
@@ -638,6 +715,10 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
 
             if (this->must_write_rst_file(report_step)) {
                 this->restart_output.addRestartOutput(report_step);
+            }
+
+            if (!keepKeywords) {
+                this->m_sched_deck.clearKeywords(report_step);
             }
         } // for (auto report_step = load_start
     }
@@ -1521,7 +1602,7 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
                 errors,
                 grid,
                 &target_wellpi,
-                prefix);
+                prefix, true);
         }
         this->simUpdateFromPython->append(sim_update);
     }

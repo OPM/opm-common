@@ -70,6 +70,8 @@ public:
     bool operator==(const ScheduleBlock& other) const;
     static ScheduleBlock serializationTestObject();
 
+    void clearKeywords();
+
     template<class Serializer>
     void serializeOp(Serializer& serializer)
     {
