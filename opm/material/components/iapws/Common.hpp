@@ -29,6 +29,7 @@
 
 #include <opm/material/Constants.hpp>
 #include <opm/material/common/MathToolbox.hpp>
+#include <opm/common/utility/gpuDecorators.hpp>
 
 #include <cmath>
 
@@ -99,7 +100,7 @@ public:
      * of Ordinary Water Substance", http://www.iapws.org/relguide/visc.pdf
      */
     template <class Evaluation>
-    static Evaluation viscosity(const Evaluation& temperature, const Evaluation& rho)
+    OPM_HOST_DEVICE static Evaluation viscosity(const Evaluation& temperature, const Evaluation& rho)
     {
         Evaluation rhoBar = rho/322.0;
         Evaluation TBar = temperature/criticalTemperature;
@@ -159,7 +160,7 @@ public:
     * \param rho density of water in kg/m^3
     */
     template <class Evaluation>
-    static Evaluation thermalConductivityIAPWS(const Evaluation& T, const Evaluation& rho)
+    OPM_HOST_DEVICE static Evaluation thermalConductivityIAPWS(const Evaluation& T, const Evaluation& rho)
     {
         static const Scalar thcond_tstar = 647.26 ;
         static const Scalar thcond_rhostar = 317.7 ;

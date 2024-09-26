@@ -27,6 +27,7 @@
 #ifndef OPM_IDEAL_GAS_HPP
 #define OPM_IDEAL_GAS_HPP
 
+#include <opm/common/utility/gpuDecorators.hpp>
 #include <opm/material/Constants.hpp>
 
 namespace Opm {
@@ -45,7 +46,7 @@ public:
      *        pressure, temperature and average molar mass of the gas.
      */
     template <class Evaluation>
-    static Evaluation density(const Evaluation& avgMolarMass,
+    OPM_HOST_DEVICE static Evaluation density(const Evaluation& avgMolarMass,
                               const Evaluation& temperature,
                               const Evaluation& pressure)
     { return pressure*avgMolarMass/(R*temperature); }
@@ -55,7 +56,7 @@ public:
      *        the molar density and temperature.
      */
     template <class Evaluation>
-    static Evaluation pressure(const Evaluation& temperature,
+    OPM_HOST_DEVICE static Evaluation pressure(const Evaluation& temperature,
                                const Evaluation& rhoMolar)
     { return R*temperature*rhoMolar; }
 
@@ -64,7 +65,7 @@ public:
      *        depending on pressure and temperature.
      */
     template <class Evaluation>
-    static Evaluation molarDensity(const Evaluation& temperature,
+    OPM_HOST_DEVICE static Evaluation molarDensity(const Evaluation& temperature,
                                    const Evaluation& pressure)
     { return pressure/(R*temperature); }
 };
