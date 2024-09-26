@@ -40,6 +40,7 @@
 #include <opm/input/eclipse/Schedule/ScheduleState.hpp>
 #include <opm/input/eclipse/Schedule/ScheduleStatic.hpp>
 #include <opm/input/eclipse/Schedule/Well/PAvg.hpp>
+#include <opm/input/eclipse/Schedule/Well/Well.hpp>
 #include <opm/input/eclipse/Schedule/WriteRestartFileEvents.hpp>
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
 
@@ -335,6 +336,20 @@ namespace Opm
             this->template pack_unpack_map<int, VFPInjTable>(serializer);
             this->template pack_unpack_map<std::string, Group>(serializer);
             this->template pack_unpack_map<std::string, Well>(serializer);
+
+            // If we are deserializing we need to setup the pointer to the
+            // unit system since this is process specific. This is safe
+            // because we set the same value in all well instances.
+            // We do some redundant assignments as these are shared_ptr's
+            // with multiple pointers to any given instance, but it is not
+            // significant so let's keep it simple.
+            if (!serializer.isSerializing()) {
+                for (auto& snapshot : snapshots) {
+                    for (auto& well : snapshot.wells) {
+                        well.second->updateUnitSystem(&m_static.m_unit_system);
+                    }
+                }
+            }
         }
 
         template <typename T, class Serializer>
