@@ -21,6 +21,8 @@
 
 #include "../eval_uda.hpp"
 
+#include <stdexcept>
+
 namespace Opm {
 
 GConSump GConSump::serializationTestObject()

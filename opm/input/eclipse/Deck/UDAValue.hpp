@@ -20,8 +20,6 @@
 #ifndef UDA_VALUE_HPP
 #define UDA_VALUE_HPP
 
-#include <stdexcept>
-#include <vector>
 #include <string>
 #include <iosfwd>
 #include <optional>

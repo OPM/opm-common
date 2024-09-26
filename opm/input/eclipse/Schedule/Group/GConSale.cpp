@@ -22,6 +22,8 @@
 #include <opm/input/eclipse/Schedule/Group/GConSale.hpp>
 #include "../eval_uda.hpp"
 
+#include <stdexcept>
+
 namespace Opm {
 
 GConSale GConSale::serializationTestObject()

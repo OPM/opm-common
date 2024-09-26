@@ -1,9 +1,11 @@
 #ifndef OPM_TYPETOOLS_HPP
 #define OPM_TYPETOOLS_HPP
-#include <string>
-#include <algorithm>
 
 #include <opm/input/eclipse/Deck/UDAValue.hpp>
+
+#include <algorithm>
+#include <string>
+#include <vector>
 
 namespace Opm {
 

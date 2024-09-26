@@ -21,7 +21,7 @@ along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 #define OPM_WINJMULT_HPP
 
 #include <limits>
-
+#include <string>
 
 namespace Opm {
 
@@ -39,7 +39,8 @@ struct InjMult {
     double fracture_pressure {std::numeric_limits<double>::max()};
     double multiplier_gradient {0.};
 
-    static InjMultMode injMultModeFromString(const std::string& str, const KeywordLocation& location);
+    static InjMultMode injMultModeFromString(const std::string& str,
+                                             const KeywordLocation& location);
 
     template <class Serializer>
     void serializeOp(Serializer& serializer)
