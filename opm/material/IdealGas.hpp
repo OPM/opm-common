@@ -41,6 +41,9 @@ public:
     //! The ideal gas constant \f$\mathrm{[J/mol/K]}\f$
     static const Scalar R;
 
+    OPM_HOST_DEVICE static Scalar R_()
+    { return R; }
+
     /*!
      * \brief The density of the gas in \f$\mathrm{[kg/m^3]}\f$, depending on
      *        pressure, temperature and average molar mass of the gas.

@@ -69,6 +69,9 @@ class SimpleHuDuanH2O : public Component<Scalar, SimpleHuDuanH2O<Scalar>>
     static constexpr Scalar R = Constants<Scalar>::R / 18e-3;  // specific gas constant of water
 
 public:
+    OPM_HOST_DEVICE static Scalar R_()
+    { return Scalar(R); }
+
     /*!
      * \brief A human readable name for the water.
      */
@@ -227,7 +230,7 @@ public:
         return
             gasEnthalpy(temperature, pressure) -
             1/molarMass()* // conversion from [J/(mol K)] to [J/(kg K)]
-            IdealGas::R*temperature; // = pressure *spec. volume for an ideal gas
+            IdealGas::R_()*temperature; // = pressure *spec. volume for an ideal gas
     }
 
     /*!
