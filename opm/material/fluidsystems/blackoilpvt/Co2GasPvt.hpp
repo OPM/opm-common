@@ -63,7 +63,7 @@ public:
     //! The binary coefficients for brine and CO2 used by this fluid system
     using BinaryCoeffBrineCO2 = BinaryCoeff::Brine_CO2<Scalar, H2O, CO2>;
 
-    OPM_HOST_DEVICE explicit Co2GasPvt() = default;
+    explicit Co2GasPvt() = default;
 
     explicit Co2GasPvt(const ContainerT& salinity,
                        int activityModel = 3,
@@ -71,7 +71,7 @@ public:
                        Scalar T_ref = 288.71, //(273.15 + 15.56)
                        Scalar P_ref = 101325);
 
-    OPM_HOST_DEVICE explicit Co2GasPvt(ContainerT brineReferenceDensity,
+    explicit Co2GasPvt(ContainerT brineReferenceDensity,
                                        ContainerT gasReferenceDensity,
                                        ContainerT salinity,
                                        bool enableEzrokhiDensity,

@@ -39,10 +39,10 @@ class IdealGas
 {
 public:
     //! The ideal gas constant \f$\mathrm{[J/mol/K]}\f$
-    static const Scalar R;
+    static constexpr Scalar R = Constants<Scalar>::R;
 
-    OPM_HOST_DEVICE static Scalar R_()
-    { return R; }
+    // OPM_HOST_DEVICE static Scalar R_()
+    // { return R; }
 
     /*!
      * \brief The density of the gas in \f$\mathrm{[kg/m^3]}\f$, depending on
@@ -73,8 +73,8 @@ public:
     { return pressure/(R*temperature); }
 };
 
-template <class Scalar>
-const Scalar IdealGas<Scalar>::R = Constants<Scalar>::R;
+// template <class Scalar>
+// const Scalar IdealGas<Scalar>::R = Constants<Scalar>::R;
 
 } // namespace Opm
 
