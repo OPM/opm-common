@@ -822,6 +822,9 @@ PERMX
 PERMY
    6*1000/
 
+MULTZ
+   6*1.0/
+
 OPERATE
     PERMX   1  3   1  1   1   1  'MINLIM'   PERMX 2 /
     PERMX   1  3   2  2   1   1  'MINLIM'   PERMX 4 /
@@ -829,6 +832,8 @@ OPERATE
     PERMY   1  3   2  2   1   1  'MAXLIM'   PERMY 200 /
     PERMZ   1  3   1  1   1   1  'MULTA'    PERMY 2 1000 /
     PERMZ   1  3   2  2   1   1  'MULTA'    PERMX 3  300 /
+    MULTZ 1  3   1  1   1   1  'MAXLIM'   MULTZ 0.50 /
+    MULTZ 1  3   2  2   1   1  'MAXLIM'   MULTZ 0.75 /
 /
 
 
@@ -858,6 +863,10 @@ OPERATE
         BOOST_CHECK_CLOSE(permz[i]  , 2*permy[i]   + to_si(1000), 1e-13);
         BOOST_CHECK_CLOSE(permz[i+3], 3*permx[i+3] + to_si(300), 1e-13);
     }
+
+    const auto& multz = fpm.get_double("MULTZ");
+    BOOST_CHECK_EQUAL(multz[0], 0.5);
+    BOOST_CHECK_EQUAL(multz[3], 0.75);
 }
 
 BOOST_AUTO_TEST_CASE(EPS_Props_Inconsistent) {
