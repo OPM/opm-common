@@ -201,3 +201,8 @@ template class Co2GasPvt<double>;
 template class Co2GasPvt<float>;
 
 } // namespace Opm
+
+
+// template class Opm::Co2GasPvt<double, Opm::gpuistl::GpuBuffer<double> const>;
+
+// template class Opm::Co2GasPvt<double, Opm::gpuistl::GpuView<double const>>;
