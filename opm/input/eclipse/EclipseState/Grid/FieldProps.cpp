@@ -1632,10 +1632,15 @@ void FieldProps::handle_operation(const Section      section,
                     unique_name = tran_field_iter->second;
                 }
             }
-            else if (mustExist &&
+            else if (mustExist && !kw_info.multiplier &&
                      !(editSect && (unique_name == ParserKeywords::PORV::keywordName)) &&
                      (this->double_data.find(unique_name) == this->double_data.end()))
             {
+                // Note exceptions for the MULT* arrays (i.e., MULT[XYZ] and
+                // MULT[XYZ]-).  We always support operating on defaulted
+                // array values (i.e, all elements equal to one) in the case
+                // of those arrays, even if the operation is not assignment.
+
                 throw OpmInputError {
                     fmt::format("Target array {} must already "
                                 "exist when operated upon in {}.",
