@@ -2238,7 +2238,7 @@ MULTX
  27*1.0 /
 
 COPY
-   MULTX MULTZ
+   MULTX MULTZ /
 /
 
 )" };
@@ -2281,9 +2281,43 @@ OPERATE
 
 )" };
 
-    BOOST_CHECK_THROW(make_fp(invalid_copy), OpmInputError);
+    BOOST_CHECK_THROW(make_fp(invalid_copy), std::logic_error);
     BOOST_CHECK_THROW(make_fp(invalid_region), OpmInputError);
     BOOST_CHECK_THROW(make_fp(invalid_operate), std::logic_error);
+}
+BOOST_AUTO_TEST_CASE(GLOBAL_SUPPORTED) {
+    // Operations involving two keywords cannot update a global keyword.
+    const std::string valid_copy { R"(
+GRID
+
+PORO
+   27*0.10 /
+
+ACTNUM
+   9*1 9*0 9*1 /
+
+MULTZ
+ 27*1.0 /
+
+COPY
+   MULTZ MULTX /
+/
+
+)" };
+
+    const auto& fp = make_fp(valid_copy);
+
+    const auto& multz_fp = fp.get_double_field_data("MULTZ");
+    const auto& multz_status = multz_fp.global_value_status;
+    const auto& multz_data = multz_fp.global_data;
+    const auto& multx_data = fp.get_global_double("MULTX");
+
+    BOOST_CHECK(multz_data);
+    BOOST_CHECK_EQUAL(multz_data->size(), multx_data.size());
+    
+    for(auto i = std::size_t(0); i < multz_data->size(); ++i)
+        if ((*multz_status)[i] != value::status::uninitialized)
+            BOOST_CHECK_EQUAL((*multz_data)[i], multx_data[i]);
 }
 
 
