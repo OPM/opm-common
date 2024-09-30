@@ -21,8 +21,8 @@
 #include <opm/input/eclipse/Deck/UDAValue.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellPolymerProperties.hpp>
 
+#include <stdexcept>
 #include <string>
-#include <vector>
 
 namespace Opm {
 

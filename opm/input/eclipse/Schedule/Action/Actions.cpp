@@ -20,6 +20,7 @@
 #include <opm/input/eclipse/Schedule/Action/ActionX.hpp>
 
 #include <algorithm>
+#include <stdexcept>
 
 namespace Opm {
 namespace Action {
