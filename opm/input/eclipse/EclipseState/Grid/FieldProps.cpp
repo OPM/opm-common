@@ -507,6 +507,25 @@ void max_value(const KeywordLocation&              loc,
     }
 }
 
+
+template<typename T>
+void update_global_from_local(Fieldprops::FieldData<T>& data,
+                              const std::vector<Box::cell_index>& index_list)
+{
+    if(data.global_data)
+    {
+        auto& to = *data.global_data;
+        auto to_st = *data.global_value_status;
+        const auto& from = data.data;
+        const auto& from_st = data.value_status;
+
+        for (const auto& cell_index : index_list) {
+            to[cell_index.global_index] = from[cell_index.active_index];
+            to_st[cell_index.global_index] = from_st[cell_index.active_index];
+        }
+    }
+}
+
 template <typename T>
 void apply(const Fieldprops::ScalarOperation   op,
            const KeywordLocation&              loc,
@@ -893,24 +912,6 @@ void FieldProps::distribute_toplayer(Fieldprops::FieldData<double>& field_data,
                     active_index += 1;
                 }
             }
-        }
-    }
-}
-
-template<typename T>
-void FieldProps::update_global_from_local(Fieldprops::FieldData<T>& data,
-                                          const std::vector<Box::cell_index>& index_list)
-{
-    if(data.global_data)
-    {
-        auto& to = *data.global_data;
-        auto to_st = *data.global_value_status;
-        const auto& from = data.data;
-        const auto& from_st = data.value_status;
-
-        for (const auto& cell_index : index_list) {
-            to[cell_index.global_index] = from[cell_index.active_index];
-            to_st[cell_index.global_index] = from_st[cell_index.active_index];
         }
     }
 }
@@ -1438,7 +1439,7 @@ void FieldProps::handle_operateR(const DeckKeyword& keyword)
 
         // For now regions do not 100% support global storage.
         // Make sure that the global storage at least reflects the local one.
-        FieldProps::update_global_from_local(field_data, index_list);
+        update_global_from_local(field_data, index_list);
     }
 }
 
