@@ -2276,7 +2276,7 @@ OPERATE
 }
 
 BOOST_AUTO_TEST_CASE(GLOBAL_SUPPORTED) {
-    // Operations involving two keywords cannot update a global keyword.
+    // Test COPY with global MULTZ
     const std::string valid_copy { R"(
 GRID
 
