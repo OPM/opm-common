@@ -507,6 +507,25 @@ void max_value(const KeywordLocation&              loc,
     }
 }
 
+
+template<typename T>
+void update_global_from_local(Fieldprops::FieldData<T>& data,
+                              const std::vector<Box::cell_index>& index_list)
+{
+    if(data.global_data)
+    {
+        auto& to = *data.global_data;
+        auto to_st = *data.global_value_status;
+        const auto& from = data.data;
+        const auto& from_st = data.value_status;
+
+        for (const auto& cell_index : index_list) {
+            to[cell_index.global_index] = from[cell_index.active_index];
+            to_st[cell_index.global_index] = from_st[cell_index.active_index];
+        }
+    }
+}
+
 template <typename T>
 void apply(const Fieldprops::ScalarOperation   op,
            const KeywordLocation&              loc,
@@ -1322,15 +1341,9 @@ template <typename T>
 void FieldProps::operate(const DeckRecord&                   record,
                          Fieldprops::FieldData<T>&           target_data,
                          const Fieldprops::FieldData<T>&     src_data,
-                         const std::vector<Box::cell_index>& index_list)
+                         const std::vector<Box::cell_index>& index_list,
+                         const bool                          global)
 {
-    if (target_data.global_data) {
-        throw std::logic_error {
-            "The OPERATE and OPERATER keywords are not "
-            "supported for keywords with global storage"
-        };
-    }
-
     const auto target_array = record.getItem("TARGET_ARRAY").getTrimmedString(0);
     if (this->tran.find(target_array) != this->tran.end()) {
         throw std::logic_error {
@@ -1346,13 +1359,19 @@ void FieldProps::operate(const DeckRecord&                   record,
     const auto beta  = this->get_beta(func_name, target_array, record.getItem("PARAM2").get<double>(0));
     const auto func  = Operate::get(func_name, alpha, beta);
 
+    auto& to_data = global? *target_data.global_data : target_data.data;
+    auto& to_status = global? *target_data.global_value_status : target_data.value_status;
+    const auto& from_data = global? *src_data.global_data : src_data.data;
+    auto& from_status = global? *src_data.global_value_status : src_data.value_status;
+
     for (const auto& cell_index : index_list) {
+        // This is the global index if global is true and global storage is used.
         const auto ix = cell_index.active_index;
 
-        if (value::has_value(src_data.value_status[ix])) {
-            if (!check_target || value::has_value(target_data.value_status[ix])) {
-                target_data.data[ix] = func(target_data.data[ix], src_data.data[ix]);
-                target_data.value_status[ix] =src_data.value_status[ix];
+        if (value::has_value(from_status[ix])) {
+            if (!check_target || value::has_value(to_status[ix])) {
+                to_data[ix] = func(to_data[ix], from_data[ix]);
+                to_status[ix] = from_status[ix];
             }
             else {
                 throw std::invalid_argument {
@@ -1417,6 +1436,10 @@ void FieldProps::handle_operateR(const DeckKeyword& keyword)
 
         const auto& src_data = this->init_get<double>(src_kw);
         FieldProps::operate(record, field_data, src_data, index_list);
+
+        // For now regions do not 100% support global storage.
+        // Make sure that the global storage at least reflects the local one.
+        update_global_from_local(field_data, index_list);
     }
 }
 
@@ -1524,6 +1547,18 @@ void FieldProps::handle_OPERATE(const DeckKeyword& keyword, Box box)
         const auto& src_data = this->init_get<double>(src_kw);
 
         FieldProps::operate(record, field_data, src_data, box.index_list());
+
+        if (field_data.global_data)
+        {
+            if (!src_data.global_data) {
+                throw std::logic_error {
+                    "The OPERATE and OPERATER keywords are only "
+                    "supported between keywords with same storage"
+                };
+            }
+
+            FieldProps::operate(record, field_data, src_data, box.global_index_list(), true);
+        }
     }
 }
 

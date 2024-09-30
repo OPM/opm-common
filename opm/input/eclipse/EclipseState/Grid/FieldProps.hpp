@@ -740,7 +740,8 @@ private:
     void operate(const DeckRecord& record,
                  Fieldprops::FieldData<T>& target_data,
                  const Fieldprops::FieldData<T>& src_data,
-                 const std::vector<Box::cell_index>& index_list);
+                 const std::vector<Box::cell_index>& index_list,
+                 const bool global = false);
 
     template <typename T>
     Fieldprops::FieldData<T>&
