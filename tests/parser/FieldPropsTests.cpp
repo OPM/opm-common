@@ -2297,25 +2297,6 @@ COPY
 
 )" };
 
-    // Cannot update a global keyword with xxxxREG operations
-    const std::string invalid_region { R"(
-GRID
-
-PORO
-   27*0.10 /
-
-ACTNUM
-   9*1 9*0 9*1 /
-
-MULTZ
- 27*1.0 /
-
-EQUALREG
-   MULTZ  2.0 1 /
-/
-
-)" };
-
     // Cannot update a global keyword with the OPERATE keyword
     const std::string invalid_operate { R"(
 GRID
@@ -2336,11 +2317,11 @@ OPERATE
 )" };
 
     BOOST_CHECK_THROW(make_fp(invalid_copy), std::logic_error);
-    BOOST_CHECK_THROW(make_fp(invalid_region), OpmInputError);
     BOOST_CHECK_THROW(make_fp(invalid_operate), std::logic_error);
 }
+
 BOOST_AUTO_TEST_CASE(GLOBAL_SUPPORTED) {
-    // Operations involving two keywords cannot update a global keyword.
+    // Test COPY with global MULTZ
     const std::string valid_copy { R"(
 GRID
 
@@ -2359,19 +2340,124 @@ COPY
 
 )" };
 
-    const auto& fp = make_fp(valid_copy);
+    // Test COPY with global MULTZ with inactive cells
+    const std::string valid_copy_inactive { R"(
+GRID
 
-    const auto& multz_fp = fp.get_double_field_data("MULTZ");
-    const auto& multz_status = multz_fp.global_value_status;
-    const auto& multz_data = multz_fp.global_data;
-    const auto& multx_data = fp.get_global_double("MULTX");
+PORO
+   3*0 21*0.10 3*0/
 
-    BOOST_CHECK(multz_data);
-    BOOST_CHECK_EQUAL(multz_data->size(), multx_data.size());
-    
-    for(auto i = std::size_t(0); i < multz_data->size(); ++i)
-        if ((*multz_status)[i] != value::status::uninitialized)
-            BOOST_CHECK_EQUAL((*multz_data)[i], multx_data[i]);
+ACTNUM
+   9*1 9*0 9*1 /
+
+MULTZ
+ 27*1.0 /
+
+COPY
+   MULTZ MULTX /
+/
+
+)" };
+
+    // Test EQUALREG on global MULTZ
+    const std::string valid_region { R"(
+GRID
+
+PORO
+   27*0.10 /
+
+ACTNUM
+   9*1 9*0 9*1 /
+
+MULTZ
+ 27*1.0 /
+
+FLUXNUM
+   27*1 /
+
+EQUALREG
+   MULTZ 2.0 1 F/
+/
+
+)" };
+
+    // Test EQUALREG on global MULTZ with inactive cells
+    const std::string valid_region_inactive { R"(
+GRID
+
+PORO
+   3*0.0 21*0.10 3*0.0/
+
+ACTNUM
+   9*1 9*0 9*1 /
+
+MULTZ
+ 27*1.0 /
+
+FLUXNUM
+   27*1 /
+
+EQUALREG
+   MULTZ 2.0 1 F/
+/
+
+)" };
+    {
+        const auto& fp = make_fp(valid_copy);
+
+        const auto& multz_fp = fp.get_double_field_data("MULTZ");
+        const auto& multz_status = multz_fp.global_value_status;
+        const auto& multz_data = multz_fp.global_data;
+        const auto& multx_data = fp.get_global_double("MULTX");
+
+        BOOST_CHECK(multz_data);
+        BOOST_CHECK_EQUAL(multz_data->size(), multx_data.size());
+
+        for(auto i = std::size_t(0); i < multz_data->size(); ++i)
+            if ((*multz_status)[i] != value::status::uninitialized)
+                BOOST_CHECK_EQUAL((*multz_data)[i], multx_data[i]);
+    }
+    {
+        const auto& fp = make_fp(valid_copy_inactive);
+
+        const auto& multz_fp = fp.get_double_field_data("MULTZ");
+        const auto& multz_status = multz_fp.global_value_status;
+        const auto& multz_data = multz_fp.global_data;
+        const auto& multx_data = fp.get_global_double("MULTX");
+
+        BOOST_CHECK(multz_data);
+        BOOST_CHECK_EQUAL(multz_data->size(), multx_data.size());
+
+        for(auto i = std::size_t(0); i < multz_data->size(); ++i)
+            if ((*multz_status)[i] != value::status::uninitialized)
+                BOOST_CHECK_EQUAL((*multz_data)[i], multx_data[i]);
+    }
+    {
+        const auto& fp = make_fp(valid_region);
+
+        const auto& multz_data = fp.get_global_double("MULTZ");
+        std::vector<double> multz_expected = {
+            2, 2, 2, 2, 2, 2, 2, 2, 2,
+            1, 1, 1, 1, 1, 1, 1, 1, 1,
+            2, 2, 2, 2, 2, 2, 2, 2, 2};
+
+        for(auto i = std::size_t(0); i < multz_data.size(); ++i)
+            BOOST_CHECK_EQUAL(multz_data[i], multz_expected[i]);
+    }
+
+    {
+        const auto& fp = make_fp(valid_region_inactive);
+
+        const auto& multz_data = fp.get_global_double("MULTZ");
+        std::vector<double> multz_expected = {
+            0, 0, 0, 2, 2, 2, 2, 2, 2,
+            1, 1, 1, 1, 1, 1, 1, 1, 1,
+            2, 2, 2, 2, 2, 2, 0, 0, 0};
+
+        for(auto i = std::size_t(0); i < multz_data.size(); ++i)
+            if (i > 2 && i < 24)
+                BOOST_CHECK_EQUAL(multz_data[i], multz_expected[i]);
+    }
 }
 
 

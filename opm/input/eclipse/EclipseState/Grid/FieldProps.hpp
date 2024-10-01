@@ -755,7 +755,7 @@ private:
 
     std::string region_name(const DeckItem& region_item) const;
 
-    std::vector<Box::cell_index>
+    std::pair<std::vector<Box::cell_index>,bool>
     region_index(const std::string& region_name, int region_value);
 
     void handle_OPERATE(const DeckKeyword& keyword, Box box);
