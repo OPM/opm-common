@@ -40,7 +40,7 @@ struct keyword_info {
     bool global = false;
     /// \brief Supply global storage but remove it once the SCHEDULE is executed
     ///
-    /// Needed to get rid off global storage for keywords needed for PINCH
+    /// Needed to get rid of global storage for keywords needed for PINCH
     bool local_in_schedule = true;
 
     // For FieldProps-related keywords, each grid cell can have multiple values.
@@ -87,7 +87,8 @@ struct keyword_info {
     }
 
     keyword_info<T>& global_kw_until_edit() {
-        this->global = this->local_in_schedule = true;
+        this->global = true;
+        this->local_in_schedule = true;
         return *this;
     }
     const keyword_info<T>& num_value_per_cell(const std::size_t n) const {
