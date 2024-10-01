@@ -295,7 +295,7 @@ Well::Well(const RestartIO::RstWell& rst_well,
     allow_cross_flow(rst_well.allow_xflow == 1),
     automatic_shutin(def_automatic_shutin),
     pvt_table(rst_well.pvt_table),
-    unit_system(unit_system_arg),
+    unit_system(&unit_system_arg),
     udq_undefined(udq_undefined_arg),
     wtype(rst_well.wtype),
     guide_rate(guideRate(rst_well)),
@@ -319,7 +319,7 @@ Well::Well(const RestartIO::RstWell& rst_well,
     well_inj_mult(std::nullopt)
 {
     if (this->wtype.producer()) {
-        auto p = std::make_shared<WellProductionProperties>(this->unit_system, wname);
+        auto p = std::make_shared<WellProductionProperties>(*this->unit_system, wname);
 
         p->whistctl_cmode = (rst_whistctl_cmode > 0)
             ? producer_cmode_from_int(rst_whistctl_cmode)
@@ -364,7 +364,7 @@ Well::Well(const RestartIO::RstWell& rst_well,
         p->addProductionControl(Well::ProducerCMode::BHP);
         if (! p->predictionMode) {
             p->BHPTarget.update(0.0);
-            p->setBHPLimit(unit_system.to_si(UnitSystem::measure::pressure, rst_well.bhp_target_float));
+            p->setBHPLimit(unit_system->to_si(UnitSystem::measure::pressure, rst_well.bhp_target_float));
             p->controlMode = producer_cmode_from_int(rst_well.hist_requested_control);
         }
         else if (this->isAvailableForGroupControl())
@@ -373,7 +373,7 @@ Well::Well(const RestartIO::RstWell& rst_well,
         this->updateProduction(std::move(p));
     }
     else {
-        auto i = std::make_shared<WellInjectionProperties>(this->unit_system, wname);
+        auto i = std::make_shared<WellInjectionProperties>(*this->unit_system, wname);
         i->VFPTableNumber = rst_well.vfp_table;
         i->predictionMode = this->prediction_mode;
 
@@ -482,7 +482,7 @@ Well::Well(const std::string& wname_arg,
     automatic_shutin(auto_shutin),
     pvt_table(pvt_table_),
     gas_inflow(inflow_eq),
-    unit_system(unit_system_arg),
+    unit_system(&unit_system_arg),
     udq_undefined(udq_undefined_arg),
     wtype(wtype_arg),
     guide_rate({true, -1, Well::GuideRateTarget::UNDEFINED,ParserKeywords::WGRUPCON::SCALING_FACTOR::defaultValue}),
@@ -496,8 +496,8 @@ Well::Well(const std::string& wname_arg,
     brine_properties(std::make_shared<WellBrineProperties>()),
     tracer_properties(std::make_shared<WellTracerProperties>()),
     connections(std::make_shared<WellConnections>(ordering_arg, headI, headJ)),
-    production(std::make_shared<WellProductionProperties>(unit_system, wname)),
-    injection(std::make_shared<WellInjectionProperties>(unit_system, wname)),
+    production(std::make_shared<WellProductionProperties>(*unit_system, wname)),
+    injection(std::make_shared<WellInjectionProperties>(*unit_system, wname)),
     wvfpdp(std::make_shared<WVFPDP>()),
     wvfpexp(std::make_shared<WVFPEXP>()),
     wdfac(std::make_shared<WDFAC>()),
@@ -505,7 +505,7 @@ Well::Well(const std::string& wname_arg,
     well_inj_temperature(std::nullopt),
     well_inj_mult(std::nullopt)
 {
-    auto p = std::make_shared<WellProductionProperties>(this->unit_system, this->wname);
+    auto p = std::make_shared<WellProductionProperties>(*this->unit_system, this->wname);
     p->whistctl_cmode = whistctl_cmode;
     this->updateProduction(p);
 }
@@ -520,7 +520,6 @@ Well Well::serializationTestObject()
     result.headI = 3;
     result.headJ = 4;
     result.ref_depth = 5;
-    result.unit_system = UnitSystem::serializationTestObject();
     result.udq_undefined = 6.0;
     result.status = Status::AUTO;
     result.drainage_radius = 7.0;
@@ -1131,11 +1130,11 @@ double Well::convertDeckPI(double deckPI) const {
     //      not provide that enumerator.
     switch (this->getPreferredPhase()) {
     case Phase::GAS:
-        return this->unit_system.to_si(M::gas_productivity_index, deckPI);
+        return this->unit_system->to_si(M::gas_productivity_index, deckPI);
 
     case Phase::OIL:
     case Phase::WATER:
-        return this->unit_system.to_si(M::liquid_productivity_index, deckPI);
+        return this->unit_system->to_si(M::liquid_productivity_index, deckPI);
 
     default:
         throw std::invalid_argument {
@@ -1703,7 +1702,7 @@ Well::ProductionControls Well::productionControls(const SummaryState& st) const 
 
 Well::InjectionControls Well::injectionControls(const SummaryState& st) const {
     if (!this->isProducer()) {
-        auto controls = this->injection->controls(this->unit_system, st, this->udq_undefined);
+        auto controls = this->injection->controls(*this->unit_system, st, this->udq_undefined);
         return controls;
     } else
         throw std::logic_error("Trying to get injection data from a producer");
@@ -1750,12 +1749,18 @@ void Well::setWellInjTemperature(const double temp) {
 
 bool Well::cmp_structure(const Well& other) const {
     if ((this->segments && !other.segments) ||
-        (!this->segments && other.segments))
+        (!this->segments && other.segments) ||
+        (this->unit_system && !other.unit_system) ||
+        (!this->unit_system && other.unit_system))
     {
         return false;
     }
 
     if (this->segments && (this->getSegments() != other.getSegments())) {
+        return false;
+    }
+
+    if (this->unit_system && *this->unit_system != *other.unit_system) {
         return false;
     }
 
@@ -1768,7 +1773,6 @@ bool Well::cmp_structure(const Well& other) const {
         && (this->hasRefDepth() == other.hasRefDepth())
         && (!this->hasRefDepth() || (this->getRefDepth() == other.getRefDepth()))
         && (this->getPreferredPhase() == other.getPreferredPhase())
-        && (this->unit_system == other.unit_system)
         && (this->udq_undefined == other.udq_undefined)
         && (this->getConnections() == other.getConnections())
         && (this->getDrainageRadius() == other.getDrainageRadius())

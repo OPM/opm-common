@@ -574,6 +574,9 @@ public:
                                    std::vector<bool>& scalingApplicable);
     const PAvg& pavg() const;
 
+    //! \brief Used by schedule deserialization.
+    void updateUnitSystem(const UnitSystem* usys) { unit_system = usys; }
+
     template<class Serializer>
     void serializeOp(Serializer& serializer)
     {
@@ -585,7 +588,6 @@ public:
         serializer(headJ);
         serializer(ref_depth);
         serializer(wpave_ref_depth);
-        serializer(unit_system);
         serializer(udq_undefined);
         serializer(status);
         serializer(drainage_radius);
@@ -640,7 +642,7 @@ private:
     bool automatic_shutin{false};
     int pvt_table{};
     GasInflowEquation gas_inflow = GasInflowEquation::STD;  // Will NOT be loaded/assigned from restart file
-    UnitSystem unit_system;
+    const UnitSystem* unit_system{nullptr};
     double udq_undefined{};
     WellType wtype{};
     WellGuideRate guide_rate{};
