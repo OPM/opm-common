@@ -89,6 +89,12 @@ public:
 
     void updateSource(const DeckRecord& record);
 
+    //! \brief Add a source term for a grid cell.
+    void addSourceCell(const SourceCell& cell)
+    {
+        m_cells.push_back(cell);
+    }
+
     template<class Serializer>
     void serializeOp(Serializer& serializer)
     {
