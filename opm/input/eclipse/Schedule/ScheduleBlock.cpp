@@ -190,4 +190,9 @@ TSTEP
     output.write_string(tstep_string);
 }
 
+void ScheduleBlock::clearKeywords()
+{
+    m_keywords.clear();
+}
+
 } // namespace Opm

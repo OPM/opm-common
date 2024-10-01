@@ -79,6 +79,8 @@ namespace Opm {
 
         void dump_deck(std::ostream& os, const UnitSystem& usys) const;
 
+        void clearKeywords(const std::size_t idx);
+
     private:
         time_point m_restart_time;
         std::size_t m_restart_offset;

@@ -128,8 +128,9 @@ ScheduleDeck::ScheduleDeck(time_point start_time, const Deck& deck, const Schedu
         if (context.rst_skip) {
             if (skiprest_include.count(keyword.name()) != 0)
                 this->m_blocks[0].push_back(keyword);
-        } else
+        } else {
             this->m_blocks.back().push_back(keyword);
+        }
     }
 }
 
@@ -178,7 +179,11 @@ namespace {
     }
 }
 
-void ScheduleDeck::add_block(ScheduleTimeType time_type, const time_point& t, ScheduleDeckContext& context, const KeywordLocation& location) {
+void ScheduleDeck::add_block(ScheduleTimeType time_type,
+                             const time_point& t,
+                             ScheduleDeckContext& context,
+                             const KeywordLocation& location)
+{
     context.last_time = t;
     if (context.rst_skip) {
         if (t < this->m_restart_time)
@@ -285,6 +290,11 @@ void ScheduleDeck::dump_deck(std::ostream&     os,
     for (const auto& block : this->m_blocks) {
         block.dump_deck(usys, output, current_time);
     }
+}
+
+void ScheduleDeck::clearKeywords(const std::size_t idx)
+{
+    m_blocks[idx].clearKeywords();
 }
 
 
