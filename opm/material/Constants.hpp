@@ -28,9 +28,16 @@
 #define OPM_CONSTANTS_HPP
 
 #include <cmath>
+#if HAVE_QUAD
+#include <opm/material/common/quad.hpp>
+#endif
 
 namespace Opm
 {
+/*
+    TODO: figure out a less verbose way to make this file support actual scalars being constexpr
+*/
+
 
 /*!
  * \brief A central place for various physical constants occuring in
@@ -150,6 +157,47 @@ class Constants<double>
      */
     static constexpr double hRed = h / (2 * M_PI);
 };
+
+#if HAVE_QUAD
+template<>
+class Constants<quad>
+{ public:
+    /*!
+     * \brief The ideal gas constant [J/(mol K)]
+     */
+    static constexpr quad R = 8.314472;
+
+    /*!
+     * \brief The Avogadro constant [1/mol]
+     */
+    static constexpr quad Na = 6.02214179e23;
+
+    /*!
+     * \brief The Boltzmann constant [J/K]
+     */
+    static constexpr quad kb = R/Na;
+
+    /*!
+     * \brief Speed of light in vacuum [m/s]
+     */
+    static constexpr quad c = 299792458.0;
+
+    /*!
+     * \brief Newtonian constant of gravitation [m^3/(kg s^2)]
+     */
+    static constexpr quad G = 6.67428e-11;
+
+    /*!
+     * \brief Planck constant [J s]
+     */
+    static constexpr quad h = 6.62606896e-34;
+
+    /*!
+     * \brief Reduced Planck constant [J s]
+     */
+    static constexpr quad hRed = h / (2 * M_PI);
+};
+#endif
 
 template<class Scalar>
 const Scalar Constants<Scalar>::R = 8.314472;

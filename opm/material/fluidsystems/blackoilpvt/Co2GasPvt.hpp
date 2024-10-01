@@ -29,6 +29,7 @@
 
 #include <opm/material/Constants.hpp>
 #include <opm/common/TimingMacros.hpp>
+#include <opm/common/ErrorMacros.hpp>
 #include <opm/common/utility/gpuDecorators.hpp>
 
 #include <opm/material/components/CO2.hpp>
@@ -37,6 +38,8 @@
 #include <opm/material/common/UniformTabulated2DFunction.hpp>
 #include <opm/material/binarycoefficients/Brine_CO2.hpp>
 #include <opm/input/eclipse/EclipseState/Co2StoreConfig.hpp>
+#include <opm/input/eclipse/EclipseState/EclipseState.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
 
 #include <cstddef>
 #include <vector>
@@ -69,24 +72,96 @@ public:
                        int activityModel = 3,
                        int thermalMixingModel = 1,
                        Scalar T_ref = 288.71, //(273.15 + 15.56)
-                       Scalar P_ref = 101325);
+                       Scalar P_ref = 101325){
+                            // Throw an error if reference state is not (T, p) = (15.56 C, 1 atm) = (288.71 K, 1.01325e5 Pa)
+    if (T_ref != Scalar(288.71) || P_ref != Scalar(1.01325e5)) {
+#if OPM_IS_INSIDE_DEVICE_FUNCTION
+        assert(false && "BrineCo2Pvt class can only be used with default reference state (T, P) = (288.71 K, 1.01325e5 Pa)!");
+#else
+        OPM_THROW(std::runtime_error,
+            "BrineCo2Pvt class can only be used with default reference state "
+            "(T, P) = (288.71 K, 1.01325e5 Pa)!");
+#endif
+    }
+    setActivityModelSalt(activityModel);
+    setThermalMixingModel(thermalMixingModel);
+
+    int num_regions = salinity_.size();
+    setNumRegions(num_regions);
+    for (int i = 0; i < num_regions; ++i) {
+        gasReferenceDensity_[i] = CO2::gasDensity(T_ref, P_ref, extrapolate);
+        brineReferenceDensity_[i] = Brine::liquidDensity(T_ref, P_ref, salinity_[i], extrapolate);
+    }
+                       }
 
     explicit Co2GasPvt(ContainerT brineReferenceDensity,
-                                       ContainerT gasReferenceDensity,
-                                       ContainerT salinity,
-                                       bool enableEzrokhiDensity,
-                                       bool enableVaporization,
-                                       int activityModel,
-                                       Co2StoreConfig::GasMixingType gastype);
+                                    ContainerT gasReferenceDensity,
+                                    ContainerT salinity,
+                                    bool enableEzrokhiDensity,
+                                    bool enableVaporization,
+                                    int activityModel,
+                                    Co2StoreConfig::GasMixingType gastype) :
+                                    brineReferenceDensity_(brineReferenceDensity),
+                                    gasReferenceDensity_(gasReferenceDensity),
+                                    salinity_(salinity),
+                                    enableEzrokhiDensity_(enableEzrokhiDensity),
+                                    enableVaporization_(enableVaporization),
+                                    activityModel_(activityModel),
+                                    gastype_(gastype)
+{
+    assert(enableEzrokhiDensity == false && "Ezrokhi density not supported by GPUs");
+}
 
 #if HAVE_ECL_INPUT
-    /*!
-     * \brief Initialize the parameters for CO2 gas using an ECL deck.
-     */
-    void initFromState(const EclipseState& eclState, const Schedule&);
+// template<class Scalar, class ContainerT>
+// void Co2GasPvt<Scalar, ContainerT>::
+void initFromState(const EclipseState& eclState, const Schedule&)
+{
+    setEnableVaporizationWater(eclState.getSimulationConfig().hasVAPOIL() || eclState.getSimulationConfig().hasVAPWAT());
+    setActivityModelSalt(eclState.getCo2StoreConfig().actco2s());
+    gastype_ = eclState.getCo2StoreConfig().gas_type;
+    bool co2sol = eclState.runspec().co2Sol();
+    if (!co2sol && (eclState.getTableManager().hasTables("PVDG") ||
+        !eclState.getTableManager().getPvtgTables().empty())) {
+        OpmLog::warning("CO2STORE is enabled but PVDG or PVTG is in the deck. \n"
+                        "CO2 PVT properties are computed based on the Span-Wagner "
+                        "pvt model and PVDG/PVTG input is ignored.");
+    }
+    Scalar T_ref = eclState.getTableManager().stCond().temperature;
+    Scalar P_ref = eclState.getTableManager().stCond().pressure;
+
+    // Throw an error if STCOND is not (T, p) = (15.56 C, 1 atm) = (288.71 K, 1.01325e5 Pa)
+    if (T_ref != Scalar(288.71) || P_ref != Scalar(1.01325e5)) {
+        OPM_THROW(std::runtime_error, "CO2STORE/CO2SOL can only be used with default values for STCOND!");
+    }
+    setEzrokhiDenCoeff(eclState.getCo2StoreConfig().getDenaqaTables());
+
+    std::size_t regions = eclState.runspec().tabdims().getNumPVTTables();
+    setNumRegions(regions);
+    for (std::size_t regionIdx = 0; regionIdx < regions; ++regionIdx) {
+        // Currently we only support constant salinity converted to mass fraction
+        salinity_[regionIdx] = eclState.getCo2StoreConfig().salinity();
+        // For consistency we compute the reference density the same way as in BrineCo2Pvt.cpp
+        if (enableEzrokhiDensity_) { 
+            const Scalar& rho_pure = H2O::liquidDensity(T_ref, P_ref, extrapolate);
+            const Scalar& nacl_exponent = ezrokhiExponent_(T_ref, ezrokhiDenNaClCoeff_);
+            brineReferenceDensity_[regionIdx] = rho_pure * pow(10.0, nacl_exponent * salinity_[regionIdx]);
+        }
+        else {
+            brineReferenceDensity_[regionIdx] = Brine::liquidDensity(T_ref, P_ref, salinity_[regionIdx], extrapolate);
+        }
+        gasReferenceDensity_[regionIdx] = CO2::gasDensity(T_ref, P_ref, extrapolate);
+    }
+
+    initEnd();
+}
 #endif
 
-    OPM_HOST_DEVICE void setNumRegions(std::size_t numRegions);
+    OPM_HOST_DEVICE void setNumRegions(std::size_t numRegions){
+    gasReferenceDensity_.resize(numRegions);
+    brineReferenceDensity_.resize(numRegions);
+    salinity_.resize(numRegions);
+}
 
     OPM_HOST_DEVICE void setVapPars(const Scalar, const Scalar)
     {
@@ -98,7 +173,10 @@ public:
     OPM_HOST_DEVICE void setReferenceDensities(unsigned regionIdx,
                                Scalar rhoRefBrine,
                                Scalar rhoRefGas,
-                               Scalar /*rhoRefWater*/);
+                               Scalar /*rhoRefWater*/){
+    gasReferenceDensity_[regionIdx] = rhoRefGas;
+    brineReferenceDensity_[regionIdx] = rhoRefBrine;;
+}
 
     /*!
      * \brief Specify whether the PVT model should consider that the water component can
@@ -112,12 +190,37 @@ public:
     /*!
     * \brief Set activity coefficient model for salt in solubility model
     */
-    OPM_HOST_DEVICE void setActivityModelSalt(int activityModel);
+    OPM_HOST_DEVICE void setActivityModelSalt(int activityModel){
+    switch (activityModel) {
+    case 1:
+    case 2:
+    case 3: activityModel_ = activityModel; break;
+    default:
+#if OPM_IS_INSIDE_DEVICE_FUNCTION
+        assert(false && "The salt activity model options are 1, 2 or 3");
+#else
+        OPM_THROW(std::runtime_error, "The salt activity model options are 1, 2 or 3");
+#endif
+    }
+}
 
    /*!
     * \brief Set thermal mixing model for co2 in brine
     */
-    OPM_HOST_DEVICE void setThermalMixingModel(int thermalMixingModel);
+    OPM_HOST_DEVICE void setThermalMixingModel(int thermalMixingModel){
+    switch (thermalMixingModel) {
+    // 0 = Use pure CO2 entalpy
+    case 0:  gastype_ = Co2StoreConfig::GasMixingType::NONE; break;
+    // 1 = Account for vapporized water in gas phase (Mass fraction)
+    case 1:  gastype_ = Co2StoreConfig::GasMixingType::IDEAL; break;
+    default:
+#if OPM_IS_INSIDE_DEVICE_FUNCTION
+        assert(false && "The thermal mixing model options are 0 and 1");
+#else
+        OPM_THROW(std::runtime_error, "The thermal mixing model options are 0 and 1");
+#endif
+    }
+}
 
     /*!
      * \brief Finish initializing the co2 phase PVT properties.
@@ -380,7 +483,16 @@ public:
     OPM_HOST_DEVICE Scalar salinity(unsigned regionIdx) const
     { return salinity_[regionIdx]; }
 
-    void setEzrokhiDenCoeff(const std::vector<EzrokhiTable>& denaqa);
+    void setEzrokhiDenCoeff(const std::vector<EzrokhiTable>& denaqa){
+    if (denaqa.empty()) {
+        return;
+    }
+
+    enableEzrokhiDensity_ = true;
+    ezrokhiDenNaClCoeff_ = {static_cast<Scalar>(denaqa[0].getC0("NACL")),
+                            static_cast<Scalar>(denaqa[0].getC1("NACL")),
+                            static_cast<Scalar>(denaqa[0].getC2("NACL"))};
+}
 
     // new get functions that will be needed to move a cpu based Co2GasPvt object to the GPU
     OPM_HOST_DEVICE const ContainerT getBrineReferenceDensity() const
