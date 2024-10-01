@@ -1866,7 +1866,7 @@ void FieldProps::init_porv(Fieldprops::FieldData<double>& porv)
     }
 
     for (const auto& mregp: this->multregp) {
-        const auto& index_list = this->region_index(mregp.region_name, mregp.region_value).first;
+        const auto index_list = this->region_index(mregp.region_name, mregp.region_value).first;
         for (const auto& cell_index : index_list)
             porv_data[cell_index.active_index] *= mregp.multiplier;
     }
