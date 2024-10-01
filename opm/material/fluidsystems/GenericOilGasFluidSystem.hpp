@@ -59,12 +59,12 @@ namespace Opm {
     class GenericOilGasFluidSystem : public BaseFluidSystem<Scalar, GenericOilGasFluidSystem<Scalar, NumComp> > {
     public:
         // TODO: I do not think these should be constant in fluidsystem, will try to make it non-constant later
-        static const int numPhases=2;
-        static const int numComponents = NumComp;
-        static const int numMisciblePhases=2;
+        static constexpr int numPhases = 2;
+        static constexpr int numComponents = NumComp;
+        static constexpr int numMisciblePhases = 2;
         // \Note: not totally sure when we should distinguish numMiscibleComponents and numComponents.
         // Possibly when with a dummy phase like water?
-        static const int numMiscibleComponents = NumComp;
+        static constexpr int numMiscibleComponents = NumComp;
         // TODO: phase location should be more general
         static constexpr int waterPhaseIdx = -1;
         static constexpr int oilPhaseIdx = 0;
