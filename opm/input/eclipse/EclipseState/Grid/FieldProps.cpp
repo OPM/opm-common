@@ -1453,7 +1453,7 @@ void FieldProps::handle_operateR(const DeckKeyword& keyword)
             if (!all_active) {
                 const auto message =
                     fmt::format(R"(Region operation on 3D field {} with global storage will not update inactive cells.
-Note that this might cause problems for PINCH option 4 or 5 beging ALL.)", target_kw);
+Note that this might cause problems for PINCH option 4 or 5 being ALL.)", target_kw);
 
                 OpmLog::warning(Log::fileMessage(keyword.location(), message));
             }
@@ -1528,7 +1528,7 @@ void FieldProps::handle_region_operation(const DeckKeyword& keyword)
                 if (!all_active) {
                     const auto message =
                         fmt::format(R"(Region operation on 3D field {} with global storage will not update inactive cells.
-Note that this might cause problems for PINCH option 4 or 5 beging ALL.)", target_kw);
+Note that this might cause problems for PINCH option 4 or 5 being ALL.)", target_kw);
 
                     OpmLog::warning(Log::fileMessage(keyword.location(), message));
                 }
