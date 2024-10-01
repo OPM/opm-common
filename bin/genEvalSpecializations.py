@@ -181,7 +181,6 @@ protected:
     OPM_HOST_DEVICE void checkDefined_() const
     {
 #ifndef NDEBUG
-#if !OPM_IS_INSIDE_DEVICE_FUNCTION // Valgrind not currently supported on GPUs
 {% if numDerivs < 0 %}\
         for (int i = dstart_(); i < dend_(); ++i)
             Valgrind::CheckDefined(data_[i]);
@@ -189,7 +188,6 @@ protected:
        for (const auto& v: data_)
            Valgrind::CheckDefined(v);
 {% endif %}\
-#endif
 #endif
     }
 

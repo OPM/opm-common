@@ -105,7 +105,8 @@ inline bool CheckDefined([[maybe_unused]] const T& value)
 template <class T>
 inline bool CheckAddressable([[maybe_unused]] const T& value)
 {
-#if !defined NDEBUG && HAVE_VALGRIND
+// if we run in debug mode AND we have valgrind AND we are NOT in a gpu function
+#if !defined NDEBUG && HAVE_VALGRIND && !OPM_IS_INSIDE_DEVICE_FUNCTION
     auto tmp = VALGRIND_CHECK_MEM_IS_ADDRESSABLE(&value, sizeof(T));
     return tmp == 0;
 #else
