@@ -41,6 +41,7 @@
 #include <iostream>
 #include <set>
 #include <typeinfo>
+#include <unordered_set>
 #include <vector>
 
 // helper macro to handle error throws or not

@@ -112,59 +112,14 @@ namespace {
     {
         return std::get<1>(vec);
     }
-} // Anonymous namespace
 
-namespace Opm {
-namespace data {
-
-// Some test specific equivalence definitions and pretty-printing. Not fit
-// as a general purpose implementation, but does its job for testing and
-// pretty-pringing for debugging purposes.
-
-std::ostream& operator<<( std::ostream& stream, const Rates& r ) {
-    return stream << "{ "
-                  << "wat: " << r.get( Rates::opt::wat, 0.0 ) << ", "
-                  << "oil: " << r.get( Rates::opt::oil, 0.0 ) << ", "
-                  << "gas: " << r.get( Rates::opt::gas, 0.0 ) << " "
-                  << "}";
-}
-
-std::ostream& operator<<( std::ostream& stream, const Connection& c ) {
-    return stream << "{ index: "
-                  << c.index << ", "
-                  << c.rates << ", "
-                  << c.pressure << " }";
-}
-
-std::ostream& operator<<( std::ostream& stream,
-                          const std::map< std::string, Well >& m ) {
-    stream << "\n";
-
-    for( const auto& p : m ) {
-        stream << p.first << ": \n"
-               << "\t" << "bhp: " << p.second.bhp << "\n"
-               << "\t" << "temp: " << p.second.temperature << "\n"
-               << "\t" << "rates: " << p.second.rates << "\n"
-               << "\t" << "connections: [\n";
-
-        for( const auto& c : p.second.connections )
-            stream << c << " ";
-
-        stream << "]\n";
-    }
-
-    return stream;
-}
-
-} // namespace data
-
-namespace {
-
-data::GroupAndNetworkValues mkGroups() {
+data::GroupAndNetworkValues mkGroups()
+{
     return {};
 }
 
-data::Wells mkWells() {
+data::Wells mkWells()
+{
     data::Rates r1, r2, rc1, rc2, rc3;
     r1.set( data::Rates::opt::wat, 5.67 );
     r1.set( data::Rates::opt::oil, 6.78 );
@@ -248,7 +203,8 @@ data::Solution mkSolution(int numCells)
 }
 
 data::Solution mkSolutionFIP(const int numCells)
-{    using measure = UnitSystem::measure;
+{
+    using measure = UnitSystem::measure;
 
     auto sol = data::Solution {
         { "PRESSURE", data::CellData { measure::pressure, {}, data::TargetType::RESTART_SOLUTION } },
@@ -457,7 +413,7 @@ first_sim(const Setup&   setup,
           bool           write_double)
 {
     WellTestState wtest_state;
-    EclipseIO eclWriter( setup.es, setup.grid, setup.schedule, setup.summary_config);
+    EclipseIO eclWriter(setup.es, setup.grid, setup.schedule, setup.summary_config);
 
     const auto num_cells = setup.grid.getNumActive( );
     const int report_step = 1;
@@ -479,15 +435,15 @@ first_sim(const Setup&   setup,
              st, udq_state);
 
     RestartValue restart_value(sol, wells, groups, {});
-    eclWriter.writeTimeStep( action_state,
-                             wtest_state,
-                             st,
-                             udq_state,
-                             report_step,
-                             false,
-                             std::difftime(first_step, start_time),
-                             restart_value,
-                             write_double);
+    eclWriter.writeTimeStep(action_state,
+                            wtest_state,
+                            st,
+                            udq_state,
+                            report_step,
+                            false,
+                            std::difftime(first_step, start_time),
+                            restart_value,
+                            write_double);
 
     return restart_value;
 }
@@ -499,9 +455,8 @@ second_sim(const Setup&                   setup,
            const std::vector<RestartKey>& solution_keys)
 {
     EclipseIO writer(setup.es, setup.grid, setup.schedule, setup.summary_config);
-    return writer.loadRestart( action_state, summary_state, solution_keys );
+    return writer.loadRestart(action_state, summary_state, solution_keys);
 }
-
 
 void compare(const RestartValue&            fst,
              const RestartValue&            snd,
@@ -526,11 +481,15 @@ void compare(const RestartValue&            fst,
 
 } // Anonymous namespace
 
-BOOST_AUTO_TEST_CASE(EclipseReadWriteWellStateData) {
-    std::vector<RestartKey> keys {{"PRESSURE" , UnitSystem::measure::pressure},
-                                  {"SWAT" , UnitSystem::measure::identity},
-                                  {"SGAS" , UnitSystem::measure::identity},
-                                  {"TEMP" , UnitSystem::measure::temperature}};
+BOOST_AUTO_TEST_CASE(EclipseReadWriteWellStateData)
+{
+    const std::vector<RestartKey> keys {
+        {"PRESSURE" , UnitSystem::measure::pressure},
+        {"SWAT" , UnitSystem::measure::identity},
+        {"SGAS" , UnitSystem::measure::identity},
+        {"TEMP" , UnitSystem::measure::temperature},
+    };
+
     WorkArea test_area("test_restart");
     test_area.copyIn("BASE_SIM.DATA");
     test_area.copyIn("RESTART_SIM.DATA");
@@ -539,17 +498,18 @@ BOOST_AUTO_TEST_CASE(EclipseReadWriteWellStateData) {
     auto st = sim_state(base_setup.schedule);
     Action::State action_state;
     UDQState udq_state(19);
-    auto state1 = first_sim( base_setup , action_state, st, udq_state, false );
+    const auto state1 = first_sim( base_setup , action_state, st, udq_state, false );
 
     Setup restart_setup("RESTART_SIM.DATA");
-    auto state2 = second_sim( restart_setup , action_state, st , keys );
+    const auto state2 = second_sim( restart_setup , action_state, st , keys );
     compare(state1, state2 , keys);
 
     BOOST_CHECK_THROW( second_sim( restart_setup, action_state, st, {{"SOIL", UnitSystem::measure::pressure}} ) , std::runtime_error );
     BOOST_CHECK_THROW( second_sim( restart_setup, action_state, st, {{"SOIL", UnitSystem::measure::pressure, true}}) , std::runtime_error );
 }
 
-BOOST_AUTO_TEST_CASE(ECL_FORMATTED) {
+BOOST_AUTO_TEST_CASE(ECL_FORMATTED)
+{
     namespace OS = ::Opm::EclIO::OutputStream;
 
     WorkArea test_area("test_Restart");
@@ -662,7 +622,8 @@ void compare_equal(const RestartValue&            fst,
 
 } // Anonymous namespace
 
-BOOST_AUTO_TEST_CASE(EclipseReadWriteWellStateData_double) {
+BOOST_AUTO_TEST_CASE(EclipseReadWriteWellStateData_double)
+{
     /*
       Observe that the purpose of this test is to verify that with
       write_double == true we can load solution fields which are
@@ -689,7 +650,8 @@ BOOST_AUTO_TEST_CASE(EclipseReadWriteWellStateData_double) {
     compare_equal( state1 , state2 , solution_keys);
 }
 
-BOOST_AUTO_TEST_CASE(WriteWrongSOlutionSize) {
+BOOST_AUTO_TEST_CASE(WriteWrongSolutionSize)
+{
     namespace OS = ::Opm::EclIO::OutputStream;
 
     WorkArea test_area("test_Restart");
@@ -728,7 +690,8 @@ BOOST_AUTO_TEST_CASE(WriteWrongSOlutionSize) {
     }
 }
 
-BOOST_AUTO_TEST_CASE(ExtraData_KEYS) {
+BOOST_AUTO_TEST_CASE(ExtraData_KEYS)
+{
     Setup setup("BASE_SIM.DATA");
     auto num_cells = setup.grid.getNumActive( );
     auto cells = mkSolution( num_cells );
@@ -749,7 +712,8 @@ BOOST_AUTO_TEST_CASE(ExtraData_KEYS) {
     BOOST_CHECK_THROW( restart_value.addExtra("LOGIHEAD", std::vector{0.0,1.0}), std::runtime_error);
 }
 
-BOOST_AUTO_TEST_CASE(ExtraData_content) {
+BOOST_AUTO_TEST_CASE(ExtraData_content)
+{
     namespace OS = ::Opm::EclIO::OutputStream;
 
     WorkArea test_area("test_Restart");
@@ -835,7 +799,8 @@ BOOST_AUTO_TEST_CASE(ExtraData_content) {
     }
 }
 
-BOOST_AUTO_TEST_CASE(STORE_THPRES) {
+BOOST_AUTO_TEST_CASE(STORE_THPRES)
+{
     namespace OS = ::Opm::EclIO::OutputStream;
 
     WorkArea test_area("test_Restart_THPRES");
@@ -1123,10 +1088,14 @@ void init_st(SummaryState& st)
 
 } // Anonymous namespace
 
-BOOST_AUTO_TEST_CASE(UDQ_RESTART) {
-    std::vector<RestartKey> keys {{"PRESSURE" , UnitSystem::measure::pressure},
+BOOST_AUTO_TEST_CASE(UDQ_RESTART)
+{
+    const std::vector<RestartKey> keys {
+        {"PRESSURE" , UnitSystem::measure::pressure},
         {"SWAT" , UnitSystem::measure::identity},
-        {"SGAS" , UnitSystem::measure::identity}};
+        {"SGAS" , UnitSystem::measure::identity},
+    };
+
     WorkArea test_area("test_udq_restart");
     test_area.copyIn("UDQ_BASE.DATA");
     test_area.copyIn("UDQ_RESTART.DATA");
@@ -1137,10 +1106,11 @@ BOOST_AUTO_TEST_CASE(UDQ_RESTART) {
     Action::State action_state;
     UDQState udq_state(1);
     init_st(st1);
-    auto state1 = first_sim( base_setup , action_state, st1, udq_state, false );
+    const auto state1 = first_sim(base_setup, action_state, st1, udq_state, false);
 
     Setup restart_setup("UDQ_RESTART.DATA");
-    auto state2 = second_sim( restart_setup , action_state, st2 , keys );
+    const auto state2 = second_sim(restart_setup, action_state, st2, keys);
+
     BOOST_CHECK(st1.wells() == st2.wells());
     BOOST_CHECK(st1.groups() == st2.groups());
 
@@ -1148,55 +1118,71 @@ BOOST_AUTO_TEST_CASE(UDQ_RESTART) {
     for (const auto& well : st1.wells()) {
         for (const auto& def : udq.definitions(UDQVarType::WELL_VAR)) {
             const auto& kw = def.keyword();
-            BOOST_CHECK_EQUAL( st1.has_well_var(well, kw), st2.has_well_var(well, kw));
-            if (st1.has_well_var(well, def.keyword()))
+
+            BOOST_CHECK_EQUAL(st1.has_well_var(well, kw), st2.has_well_var(well, kw));
+
+            if (st1.has_well_var(well, def.keyword())) {
                 BOOST_CHECK_EQUAL(st1.get_well_var(well, kw), st2.get_well_var(well, kw));
+            }
         }
     }
 
     for (const auto& group : st1.groups()) {
         for (const auto& def : udq.definitions(UDQVarType::GROUP_VAR)) {
             const auto& kw = def.keyword();
+
             BOOST_CHECK_EQUAL( st1.has_group_var(group, kw), st2.has_group_var(group, kw));
-            if (st1.has_group_var(group, def.keyword()))
+
+            if (st1.has_group_var(group, def.keyword())) {
                 BOOST_CHECK_EQUAL(st1.get_group_var(group, kw), st2.get_group_var(group, kw));
+            }
         }
     }
 
     for (const auto& well : st1.wells()) {
         for (const auto& def : udq.assignments(UDQVarType::WELL_VAR)) {
             const auto& kw = def.keyword();
+
             BOOST_CHECK_EQUAL( st1.has_well_var(well, kw), st2.has_well_var(well, kw));
-            if (st1.has_well_var(well, def.keyword()))
+
+            if (st1.has_well_var(well, def.keyword())) {
                 BOOST_CHECK_EQUAL(st1.get_well_var(well, kw), st2.get_well_var(well, kw));
+            }
         }
     }
 
     for (const auto& group : st1.groups()) {
         for (const auto& def : udq.assignments(UDQVarType::GROUP_VAR)) {
             const auto& kw = def.keyword();
-            BOOST_CHECK_EQUAL( st1.has_group_var(group, kw), st2.has_group_var(group, kw));
-            if (st1.has_group_var(group, def.keyword()))
+
+            BOOST_CHECK_EQUAL(st1.has_group_var(group, kw), st2.has_group_var(group, kw));
+
+            if (st1.has_group_var(group, def.keyword())) {
                 BOOST_CHECK_EQUAL(st1.get_group_var(group, kw), st2.get_group_var(group, kw));
+            }
         }
     }
 
     for (const auto& def : udq.assignments(UDQVarType::FIELD_VAR)) {
         const auto& kw = def.keyword();
-        BOOST_CHECK_EQUAL( st1.has(kw), st2.has(kw));
-            if (st1.has(kw))
-                BOOST_CHECK_EQUAL(st1.get(kw), st2.get(kw));
+
+        BOOST_CHECK_EQUAL(st1.has(kw), st2.has(kw));
+
+        if (st1.has(kw)) {
+            BOOST_CHECK_EQUAL(st1.get(kw), st2.get(kw));
+        }
     }
 
     for (const auto& def : udq.definitions(UDQVarType::FIELD_VAR)) {
         const auto& kw = def.keyword();
-        BOOST_CHECK_EQUAL( st1.has(kw), st2.has(kw));
-        if (st1.has(kw))
+
+        BOOST_CHECK_EQUAL(st1.has(kw), st2.has(kw));
+
+        if (st1.has(kw)) {
             BOOST_CHECK_EQUAL(st1.get(kw), st2.get(kw));
+        }
     }
 }
-
-} // namespace Opm
 
 namespace {
 
@@ -1284,7 +1270,8 @@ Opm::data::AquiferData getNumericalAquifer(const int aquiferID = 2)
 
     return aquifer;
 }
-} // Anonymous
+
+} // Anonymous namespace
 
 BOOST_AUTO_TEST_CASE(ReadWrite_CarterTracy_Data)
 {
@@ -1346,7 +1333,7 @@ namespace {
             BOOST_CHECK_CLOSE(vi, x, tol);
         }
     }
-}
+} // Anonymous namespace
 
 BOOST_AUTO_TEST_CASE(Fluid_In_Place)
 {
