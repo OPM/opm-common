@@ -73,31 +73,31 @@ public:
     /*!
      * \brief The mass in [kg] of one mole of CO2.
      */
-    OPM_HOST_DEVICE static Scalar molarMass()
+    static Scalar molarMass()
     { return 44e-3; }
 
     /*!
      * \brief Returns the critical temperature [K] of CO2
      */
-    OPM_HOST_DEVICE static Scalar criticalTemperature()
+    static Scalar criticalTemperature()
     { return 273.15 + 30.95; /* [K] */ }
 
     /*!
      * \brief Returns the critical pressure [Pa] of CO2
      */
-    OPM_HOST_DEVICE static Scalar criticalPressure()
+    static Scalar criticalPressure()
     { return 73.8e5; /* [N/m^2] */ }
 
     /*!
      * \brief Returns the temperature [K]at CO2's triple point.
      */
-    OPM_HOST_DEVICE static Scalar tripleTemperature()
+    static Scalar tripleTemperature()
     { return 273.15 - 56.35; /* [K] */ }
 
     /*!
      * \brief Returns the pressure [Pa] at CO2's triple point.
      */
-    OPM_HOST_DEVICE static Scalar triplePressure()
+    static Scalar triplePressure()
     { return 5.11e5; /* [N/m^2] */ }
 
     /*!
@@ -137,7 +137,7 @@ public:
      * 1996
      */
     template <class Evaluation>
-    OPM_HOST_DEVICE static Evaluation vaporPressure(const Evaluation& T)
+    static Evaluation vaporPressure(const Evaluation& T)
     {
         static constexpr Scalar a[4] =
             { -7.0602087, 1.9391218, -1.6463597, -3.2995634 };
@@ -158,20 +158,20 @@ public:
     /*!
      * \brief Returns true iff the gas phase is assumed to be compressible
      */
-    OPM_HOST_DEVICE static bool gasIsCompressible()
+    static bool gasIsCompressible()
     { return true; }
 
     /*!
      * \brief Returns true iff the gas phase is assumed to be ideal
      */
-    OPM_HOST_DEVICE static bool gasIsIdeal()
+    static bool gasIsIdeal()
     { return false; }
 
     /*!
      * \brief Specific enthalpy of gaseous CO2 [J/kg].
      */
     template <class Evaluation>
-    OPM_HOST_DEVICE static Evaluation gasEnthalpy(const Evaluation& temperature,
+    static Evaluation gasEnthalpy(const Evaluation& temperature,
                                   const Evaluation& pressure,
                                   bool extrapolate = false)
     {
@@ -182,7 +182,7 @@ public:
      * \brief Specific internal energy of CO2 [J/kg].
      */
     template <class Evaluation>
-    OPM_HOST_DEVICE static Evaluation gasInternalEnergy(const Evaluation& temperature,
+    static Evaluation gasInternalEnergy(const Evaluation& temperature,
                                         const Evaluation& pressure,
                                         bool extrapolate = false)
     {
@@ -196,7 +196,7 @@ public:
      * \brief The density of CO2 at a given pressure and temperature [kg/m^3].
      */
     template <class Evaluation>
-    OPM_HOST_DEVICE static Evaluation gasDensity(const Evaluation& temperature,
+    static Evaluation gasDensity(const Evaluation& temperature,
                                  const Evaluation& pressure,
                                  bool extrapolate = false)
     {
@@ -210,7 +210,7 @@ public:
      *                        - Fenhour etl al., 1998
      */
     template <class Evaluation>
-    OPM_HOST_DEVICE static Evaluation gasViscosity(Evaluation temperature,
+    static Evaluation gasViscosity(Evaluation temperature,
                                    const Evaluation& pressure,
                                    bool extrapolate = false)
     {
@@ -263,7 +263,7 @@ public:
      * \param pressure Pressure of component \f$\mathrm{[Pa]}\f$
      */
     template <class Evaluation>
-    OPM_HOST_DEVICE static Evaluation gasHeatCapacity(const Evaluation& temperature, const Evaluation& pressure)
+    static Evaluation gasHeatCapacity(const Evaluation& temperature, const Evaluation& pressure)
     {
         OPM_TIMEFUNCTION_LOCAL();
         constexpr Scalar eps = 1e-6;

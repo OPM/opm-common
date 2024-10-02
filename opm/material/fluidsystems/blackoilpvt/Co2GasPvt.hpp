@@ -72,27 +72,24 @@ public:
                        int activityModel = 3,
                        int thermalMixingModel = 1,
                        Scalar T_ref = 288.71, //(273.15 + 15.56)
-                       Scalar P_ref = 101325){
+                       Scalar P_ref = 101325)
+        : salinity_(salinity){
                             // Throw an error if reference state is not (T, p) = (15.56 C, 1 atm) = (288.71 K, 1.01325e5 Pa)
-    if (T_ref != Scalar(288.71) || P_ref != Scalar(1.01325e5)) {
-#if OPM_IS_INSIDE_DEVICE_FUNCTION
-        assert(false && "BrineCo2Pvt class can only be used with default reference state (T, P) = (288.71 K, 1.01325e5 Pa)!");
-#else
-        OPM_THROW(std::runtime_error,
-            "BrineCo2Pvt class can only be used with default reference state "
-            "(T, P) = (288.71 K, 1.01325e5 Pa)!");
-#endif
-    }
-    setActivityModelSalt(activityModel);
-    setThermalMixingModel(thermalMixingModel);
+        if (T_ref != Scalar(288.71) || P_ref != Scalar(1.01325e5)) {
+            OPM_THROW(std::runtime_error,
+                "BrineCo2Pvt class can only be used with default reference state "
+                "(T, P) = (288.71 K, 1.01325e5 Pa)!");
+        }
+        setActivityModelSalt(activityModel);
+        setThermalMixingModel(thermalMixingModel);
 
-    int num_regions = salinity_.size();
-    setNumRegions(num_regions);
-    for (int i = 0; i < num_regions; ++i) {
-        gasReferenceDensity_[i] = CO2::gasDensity(T_ref, P_ref, extrapolate);
-        brineReferenceDensity_[i] = Brine::liquidDensity(T_ref, P_ref, salinity_[i], extrapolate);
+        int num_regions = salinity_.size();
+        setNumRegions(num_regions);
+        for (int i = 0; i < num_regions; ++i) {
+            gasReferenceDensity_[i] = CO2::gasDensity(T_ref, P_ref, extrapolate);
+            brineReferenceDensity_[i] = Brine::liquidDensity(T_ref, P_ref, salinity_[i], extrapolate);
+        }
     }
-                       }
 
     explicit Co2GasPvt(ContainerT brineReferenceDensity,
                                     ContainerT gasReferenceDensity,
@@ -157,7 +154,7 @@ void initFromState(const EclipseState& eclState, const Schedule&)
 }
 #endif
 
-    OPM_HOST_DEVICE void setNumRegions(std::size_t numRegions){
+    void setNumRegions(std::size_t numRegions){
     gasReferenceDensity_.resize(numRegions);
     brineReferenceDensity_.resize(numRegions);
     salinity_.resize(numRegions);
@@ -279,6 +276,7 @@ void initFromState(const EclipseState& eclState, const Schedule&)
     {
         OPM_TIMEBLOCK_LOCAL(internalEnergy);
         if (gastype_ == Co2StoreConfig::GasMixingType::NONE) {
+            printf("\nNONE\n");
             // use the gasInternalEnergy of CO2
             return co2.gasInternalEnergy(temperature, pressure, extrapolate);
         }
