@@ -17,12 +17,21 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <regex>
+#include <config.h>
 
 #include <opm/common/utility/shmatch.hpp>
 
+#if HAVE_FNMATCH_H
+#include <fnmatch.h>
+#else
+#include <regex>
+#endif
 
-bool Opm::shmatch(const std::string& pattern, const std::string& symbol) {
+bool Opm::shmatch(const std::string& pattern, const std::string& symbol)
+{
+#if HAVE_FNMATCH_H
+    return fnmatch(pattern.c_str(), symbol.c_str(), 0) == 0;
+#else
     // Shell patterns should implicitly be interpreted as anchored at beginning
     // and end.
     std::string re_pattern = "^" + pattern + "$";
@@ -43,5 +52,6 @@ bool Opm::shmatch(const std::string& pattern, const std::string& symbol) {
 
     std::regex regexp(re_pattern);
     return std::regex_search(symbol, regexp);
+#endif
 }
 

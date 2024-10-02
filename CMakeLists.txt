@@ -119,6 +119,12 @@ macro (config_hook)
     endif()
   endif()
 
+  include(CheckIncludeFile)
+  check_include_file(fnmatch.h FNMATCH_H_FOUND)
+  if (FNMATCH_H_FOUND)
+    set(HAVE_FNMATCH_H 1)
+  endif()
+
 endmacro (config_hook)
 
 macro (prereqs_hook)
