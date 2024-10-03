@@ -111,14 +111,6 @@
 #include <fmt/chrono.h>
 #include <fmt/format.h>
 
-namespace {
-
-    bool name_match(const std::string& pattern, const std::string& name) {
-        return Opm::shmatch(pattern, name);
-    }
-
-}
-
 namespace Opm {
 
     Schedule::Schedule( const Deck& deck,
@@ -1318,7 +1310,7 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
                          std::back_inserter(names),
                          [&pattern](const auto& gname)
                          {
-                             return name_match(pattern, gname);
+                             return shmatch(pattern, gname);
                          });
             return names;
         }
