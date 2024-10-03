@@ -204,7 +204,6 @@ GRUPMAST
 }
 
 BOOST_AUTO_TEST_CASE(GRUPMAST_FAIL_MISSING_MASTER_GROUP) {
-    try {
         std::string deck_string = R"(
 SCHEDULE
 
@@ -221,11 +220,10 @@ GRUPMAST
 /
 )";
 
-    assertRaisesInputErrorException(deck_string, /*slave_mode=*/false, /*exception_string=*/"Problem with keyword GRUPMAST\nIn <memory string> line 10\nGroup 'D1_M': Not defined. Master groups should be defined in advance by using GRUPTREE before referenced in GRUPMAST.");
+    assertRaisesInputErrorException(deck_string, /*slave_mode=*/false, /*exception_string=*/"Problem with keyword GRUPMAST\nIn <memory string> line 9\nGroup 'D1_M': Not defined. Master groups should be defined in advance by using GRUPTREE before referenced in GRUPMAST.");
 }
 
 BOOST_AUTO_TEST_CASE(GRUPMAST_FAIL_SUBORDINATE_GROUPS) {
-    try {
         std::string deck_string = R"(
 SCHEDULE
 
@@ -254,11 +252,10 @@ GRUPMAST
 /
 )";
 
-    assertRaisesInputErrorException(deck_string, /*slave_mode=*/false, /*exception_string=*/"Problem with keyword GRUPMAST\nIn <memory string> line 22\nGroup 'FIELD' has subgroups: A master group cannot contain any wells or subordinate groups.");
+    assertRaisesInputErrorException(deck_string, /*slave_mode=*/false, /*exception_string=*/"Problem with keyword GRUPMAST\nIn <memory string> line 21\nGroup 'FIELD' has subgroups: A master group cannot contain any wells or subordinate groups.");
 }
 
 BOOST_AUTO_TEST_CASE(GRUPMAST_FAIL_SUBORDINATE_WELLS) {
-    try {
         std::string deck_string = R"(
 
 SCHEDULE
@@ -296,7 +293,6 @@ GRUPMAST
 }
 
 BOOST_AUTO_TEST_CASE(GRUPMAST_FAIL_MISSING_SLAVE) {
-    try {
         std::string deck_string = R"(
 
 SCHEDULE
