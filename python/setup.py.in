@@ -29,6 +29,7 @@ setup(
                 'opm.io.ecl_state',
                 'opm.io.parser',
                 'opm.io.schedule',
+                'opm.io.summary',
                 'opm.io.ecl',
                 'opm.tools',
                 'opm.util'
