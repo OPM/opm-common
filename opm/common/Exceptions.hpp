@@ -44,6 +44,14 @@ public:
     {}
 };
 
+class ConvergenceMonitorFailure : public NumericalProblem
+{
+public:
+    explicit ConvergenceMonitorFailure(const std::string &message)
+        : NumericalProblem(message)
+    {}
+};
+
 class MaterialLawProblem : public NumericalProblem
 {
 public:
