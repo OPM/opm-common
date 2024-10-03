@@ -1114,6 +1114,7 @@ set( keywords
      001_Eclipse300/Z/ZFACT1S
      001_Eclipse300/Z/ZFACTOR
      001_Eclipse300/Z/ZFACTORS
+     001_Eclipse300/Z/ZMF
      001_Eclipse300/Z/ZMFVD
      002_Frontsim/N/NOGRAV
 

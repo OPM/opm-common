@@ -287,7 +287,8 @@ static const std::unordered_map<std::string, keyword_info<double>> double_keywor
                                                                                       };
 
 static const std::unordered_map<std::string, keyword_info<double>> composition_keywords = {{"XMF", keyword_info<double>{}},
-                                                                                           {"YMF", keyword_info<double>{}}
+                                                                                           {"YMF", keyword_info<double>{}},
+                                                                                           {"ZMF", keyword_info<double>{}},
                                                                                           };
 }
 

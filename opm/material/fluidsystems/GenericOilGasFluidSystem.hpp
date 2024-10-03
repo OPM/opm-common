@@ -101,7 +101,6 @@ namespace Opm {
 
         static bool phaseIsActive(unsigned phaseIdx)
         {
-            assert(phaseIdx < numPhases);
             return phaseIdx == oilPhaseIdx || phaseIdx == gasPhaseIdx;
         }
 
