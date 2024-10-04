@@ -108,6 +108,9 @@ public:
     static NNC serializationTestObject();
 
     bool addNNC(const size_t cell1, const size_t cell2, const double trans);
+
+    /// \brief Merge additional NNCs into sorted NNCs
+    void merge(const std::vector<NNCdata>& nncs);
     /// \brief Get the combined information from NNC
     const std::vector<NNCdata>& input() const { return m_input; }
     /// \brief Get the information from EDITNNC keyword

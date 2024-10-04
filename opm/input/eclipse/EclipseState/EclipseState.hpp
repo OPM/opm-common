@@ -89,9 +89,14 @@ namespace Opm {
         /// non-neighboring connections
         /// the non-standard adjacencies as specified in input deck
         const NNC& getInputNNC() const;
+        /// \brief Get sorted vector of NNCs created by PINCH
+        const std::vector<NNCdata>& getPinchNNC() const;
         void appendInputNNC(const std::vector<NNCdata>& nnc);
         void setInputNNC(const NNC& nnc);
+        /// \brief Set NNCs created by PINCH
+        void setPinchNNC(std::vector<NNCdata>&& nnc);
         bool hasInputNNC() const;
+        bool hasPinchNNC() const;
 
         // The potentially parallelized field properties
         virtual const FieldPropsManager& fieldProps() const;
@@ -127,6 +132,7 @@ namespace Opm {
         const WagHysteresisConfig& getWagHysteresis() const;
         const Co2StoreConfig& getCo2StoreConfig() const;
 
+        void prune_global_for_schedule_run();
         void reset_actnum(const std::vector<int>& new_actnum);
         void pruneDeactivatedAquiferConnections(const std::vector<std::size_t>& deactivated_cells);
         void loadRestartAquifers(const RestartIO::RstAquifer& aquifers);
@@ -149,6 +155,7 @@ namespace Opm {
             serializer(m_eclipseConfig);
             serializer(m_deckUnitSystem);
             serializer(m_inputNnc);
+            serializer(m_pinchNnc);
             serializer(m_gridDims);
             serializer(m_lgrs);
             serializer(m_simulationConfig);
@@ -188,6 +195,7 @@ namespace Opm {
         UnitSystem m_deckUnitSystem;
         EclipseGrid m_inputGrid;
         NNC m_inputNnc;
+        std::vector<NNCdata> m_pinchNnc;
         GridDims m_gridDims;
         FieldPropsManager field_props;
         LgrCollection m_lgrs;

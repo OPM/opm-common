@@ -883,6 +883,22 @@ void FieldProps::reset_actnum(const std::vector<int>& new_actnum)
     this->active_size = new_active_size;
 }
 
+void FieldProps::prune_global_for_schedule_run()
+{
+    for (auto& data : this->double_data) {
+        if(data.second.kw_info.local_in_schedule) {
+            data.second.global_data.reset();
+            data.second.global_value_status.reset();
+        }
+    }
+
+    for (auto&  data : this->int_data) {
+        if(data.second.kw_info.local_in_schedule) {
+            data.second.global_data.reset();
+            data.second.global_value_status.reset();
+        }
+    }
+}
 void FieldProps::distribute_toplayer(Fieldprops::FieldData<double>& field_data,
                                      const std::vector<double>& deck_data,
                                      const Box& box)
@@ -1648,7 +1664,7 @@ void FieldProps::handle_operation(const Section      section,
                     tran_fields.emplace(target_kw, unique_name);
                     tran_iter->second.add_action(operation, unique_name);
 
-                    kw_info = tran_iter->second.make_kw_info(operation);
+                    kw_info = tran_iter->second.make_kw_info(operation, target_kw);
                 }
                 else {
                     unique_name = tran_field_iter->second;
@@ -2234,6 +2250,12 @@ const std::string& FieldProps::default_region() const
 void FieldProps::apply_tran(const std::string& keyword, std::vector<double>& data)
 {
     ::Opm::apply_tran(this->tran, this->double_data, this->active_size, keyword, data);
+}
+
+
+void FieldProps::apply_tranz_global(const std::vector<size_t>& indices, std::vector<double>& data) const
+{
+    ::Opm::apply_tran(this->tran.at("TRANZ"), this->double_data, indices, data);
 }
 
 bool FieldProps::tran_active(const std::string& keyword) const

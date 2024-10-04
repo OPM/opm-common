@@ -160,6 +160,9 @@ namespace Opm {
         /// Will return a vector a length num_active; where the value
         /// of each element is the corresponding global index.
         const std::vector<int>& getActiveMap() const;
+        /// \brief get cell center, and center and normal of bottom face
+        std::tuple<std::array<double, 3>,std::array<double, 3>,std::array<double, 3>>
+        getCellAndBottomCenterNormal(size_t globalIndex) const;
         std::array<double, 3> getCellCenter(size_t i,size_t j, size_t k) const;
         std::array<double, 3> getCellCenter(size_t globalIndex) const;
         std::array<double, 3> getCornerPos(size_t i,size_t j, size_t k, size_t corner_index) const;
@@ -236,8 +239,11 @@ namespace Opm {
         std::vector<double> m_minpvVector;
         MinpvMode m_minpvMode;
         std::optional<double> m_pinch;
+        // Option 4 of PINCH (TOPBOT/ALL), how to calculate TRANS
         PinchMode m_pinchoutMode;
+        // Option 5 of PINCH (TOP/ALL), how to apply MULTZ
         PinchMode m_multzMode;
+        // Option 2 of PINCH (GAP/NOGAP)
         PinchMode m_pinchGapMode;
         double    m_pinchMaxEmptyGap;
 

@@ -33,7 +33,15 @@ struct keyword_info {
     std::optional<T> scalar_init = std::nullopt;
     bool multiplier = false;
     bool top = false;
+    /// \brief Whether a keyword is global.
+    ///
+    /// This might hold throughout the simulation or only during the setup phase until the CpGrid
+    /// is prepared
     bool global = false;
+    /// \brief Supply global storage but remove it once the SCHEDULE is executed
+    ///
+    /// Needed to get rid of global storage for keywords needed for PINCH
+    bool local_in_schedule = true;
 
     // For FieldProps-related keywords, each grid cell can have multiple values.
     // This occurs specifically during compositional simulations, where the number
@@ -73,9 +81,16 @@ struct keyword_info {
 
     keyword_info<T>& global_kw(bool g) {
         this->global = g;
+        if(g)
+            this->local_in_schedule = false;
         return *this;
     }
 
+    keyword_info<T>& global_kw_until_edit() {
+        this->global = true;
+        this->local_in_schedule = true;
+        return *this;
+    }
     const keyword_info<T>& num_value_per_cell(const std::size_t n) const {
         if (n > 0) {
             this->num_value = n;

@@ -139,11 +139,11 @@ static const std::unordered_map<std::string, keyword_info<double>> double_keywor
                                                                                       {"MULTPV",  keyword_info<double>{}.init(1.0).mult(true)},
                                                                                       {"NTG",     keyword_info<double>{}.init(1.0)},
                                                                                       {"PORO",    keyword_info<double>{}.distribute_top(true)},
-                                                                                      {"PERMX",   keyword_info<double>{}.unit_string("Permeability").distribute_top(true)},
-                                                                                      {"PERMY",   keyword_info<double>{}.unit_string("Permeability").distribute_top(true)},
-                                                                                      {"PERMZ",   keyword_info<double>{}.unit_string("Permeability").distribute_top(true)},
-                                                                                      {"PERMR",   keyword_info<double>{}.unit_string("Permeability").distribute_top(true)},
-                                                                                      {"PERMTHT",   keyword_info<double>{}.unit_string("Permeability").distribute_top(true)},
+                                                                                      {"PERMX",   keyword_info<double>{}.unit_string("Permeability").distribute_top(true).global_kw_until_edit()},
+                                                                                      {"PERMY",   keyword_info<double>{}.unit_string("Permeability").distribute_top(true).global_kw_until_edit()},
+                                                                                      {"PERMZ",   keyword_info<double>{}.unit_string("Permeability").distribute_top(true).global_kw_until_edit()},
+                                                                                      {"PERMR",   keyword_info<double>{}.unit_string("Permeability").distribute_top(true).global_kw_until_edit()},
+                                                                                      {"PERMTHT",   keyword_info<double>{}.unit_string("Permeability").distribute_top(true).global_kw_until_edit()},
                                                                                       {"TEMPI",   keyword_info<double>{}.unit_string("Temperature")},
                                                                                       {"THCONR",  keyword_info<double>{}.unit_string("Energy/AbsoluteTemperature*Length*Time")},
                                                                                       {"THCONSF", keyword_info<double>{}},
@@ -530,6 +530,8 @@ public:
 
     void reset_actnum(const std::vector<int>& actnum);
 
+    void prune_global_for_schedule_run();
+
     void apply_numerical_aquifers(const NumericalAquifers& numerical_aquifers);
 
     const std::string& default_region() const;
@@ -692,6 +694,7 @@ public:
     void handle_schedule_keywords(const std::vector<DeckKeyword>& keywords);
     bool tran_active(const std::string& keyword) const;
     void apply_tran(const std::string& keyword, std::vector<double>& data);
+    void apply_tranz_global(const std::vector<size_t>& indices, std::vector<double>& data) const;
     bool operator==(const FieldProps& other) const;
     static bool rst_cmp(const FieldProps& full_arg, const FieldProps& rst_arg);
 

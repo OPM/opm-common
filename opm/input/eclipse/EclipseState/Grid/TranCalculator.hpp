@@ -91,7 +91,7 @@ public:
         return this->m_name;
     }
 
-    keywords::keyword_info<double> make_kw_info(ScalarOperation op);
+    keywords::keyword_info<double> make_kw_info(ScalarOperation op, std::string target_kw);
 
     bool operator==(const TranCalculator& other) const {
         return this->m_name == other.m_name &&
