@@ -232,6 +232,7 @@ int main(int argc, char **argv)
         {".UNRST" , ".FUNRST" },
         {".RFT"   , ".FRFT"   },
         {".ESMRY" , ".FESMRY" },
+        {".LGR"  , ".FLGR"},
     };
 
     const std::map<std::string, std::string> to_binary {
@@ -243,6 +244,7 @@ int main(int argc, char **argv)
         {".FUNRST" , ".UNRST" },
         {".FRFT"   , ".RFT"   },
         {".FESMRY" , ".ESMRY" },
+        {".FLGR"  , ".LGR"},
     };
 
     std::string output_fname{};
