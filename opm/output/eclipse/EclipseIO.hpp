@@ -139,10 +139,10 @@ public:
     /// can load and restart from files with double precision keywords, but
     /// this is non-standard, and other third party applications might choke
     /// on those.
-    void writeTimeStep(const Action::State& action_state,
+    void writeTimeStep(/* const Action::State& action_state,
                        const WellTestState& wtest_state,
                        const SummaryState&  st,
-                       const UDQState&      udq_state,
+                       const UDQState&      udq_state, */
                        int                  report_step,
                        bool                 isSubstep,
                        double               seconds_elapsed,

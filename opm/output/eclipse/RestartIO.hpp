@@ -85,10 +85,10 @@ namespace Opm { namespace RestartIO {
               const EclipseState&                           es,
               const EclipseGrid&                            grid,
               const Schedule&                               schedule,
-              const Action::State&                          action_state,
+              /* const Action::State&                          action_state,
               const WellTestState&                          wtest_state,
               const SummaryState&                           sumState,
-              const UDQState&                               udqState,
+              const UDQState&                               udqState, */
               std::optional<Helpers::AggregateAquiferData>& aquiferData,
               bool                                          write_double = false);
 
