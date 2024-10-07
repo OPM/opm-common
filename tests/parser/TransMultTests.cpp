@@ -29,8 +29,7 @@
 #include <opm/input/eclipse/EclipseState/Grid/FaceDir.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/GridDims.hpp>
-#include <opm/input/eclipse/EclipseState/Grid/TransMult.hpp>
-
+#include <opm/input/eclipse/EclipseState/Runspec.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
 
 #include <opm/input/eclipse/Deck/Deck.hpp>
@@ -173,6 +172,20 @@ EQUALREG
     BOOST_CHECK_CLOSE(tmult, 0.123 * 0.15, 1.0e-8);
 }
 
+#if 0
+BOOST_AUTO_TEST_CASE(EqualReg_MultY_Default_RegSet)
+{
+    const auto tmult = getMultiplier(R"(
+EQUALREG
+-- Region set (item 4) defaulted => MULTNUM
+  'MULTY' 0.175 1 /
+/
+)");
+
+    BOOST_CHECK_CLOSE(tmult, 0.123 * 0.175, 1.0e-8);
+}
+#endif
+
 BOOST_AUTO_TEST_CASE(EqualReg_MultY_Reordered)
 {
     // Same as EqualReg_MultY, except EQUALREG happens before MULTFLT (tail
@@ -251,3 +264,84 @@ MULTY
 }
 
 BOOST_AUTO_TEST_SUITE_END() // EqualReg_MultX
+
+// ---------------------------------------------------------------------------
+
+BOOST_AUTO_TEST_SUITE(EqualReg_MultZ)
+
+namespace {
+    double getMultiplier(std::string_view multSpec)
+    {
+        return Opm::EclipseState {
+            Opm::Parser{}.parseString(fmt::format(R"(RUNSPEC
+DIMENS
+  1 1 5 /
+GRID
+DXV
+  100.0 /
+DYV
+  100.0 /
+DZV
+  5*1.0 /
+DEPTHZ
+  4*2000.0 /
+ACTNUM
+  1 0 1 1 1 /
+PERMX
+  5*100.0 /
+COPY
+  PERMX PERMY /
+  PERMX PERMZ /
+/
+MULTIPLY
+  PERMZ 0.1 /
+/
+PORO
+  5*0.3 /
+MULTNUM
+  1 1 2 2 3 /
+FLUXNUM
+  1 2 3 4 5 /
+{}
+END
+)", multSpec))
+        }
+            .getTransMult()
+            .getMultiplier(0, 0, 3, Opm::FaceDir::ZPlus);
+    }
+} // Anonymous namespace
+
+BOOST_AUTO_TEST_CASE(EqualReg_Explicit_RegSet)
+{
+    const auto tmult = getMultiplier(R"(
+EQUALREG
+  'MULTZ' 0.25 4 'F' /
+/
+MULTIPLY
+  'MULTZ' 5.2 /
+/
+)");
+
+    BOOST_CHECK_CLOSE(tmult, 0.25 * 5.2, 1.0e-8);
+}
+
+BOOST_AUTO_TEST_CASE(EqualReg_Twice)
+{
+    const auto tmult = getMultiplier(R"(
+EQUALREG
+  'MULTZ' 0.25 4 'F' /
+/
+MULTIPLY
+  'MULTZ' 5.2 /
+/
+EQUALREG
+  'MULTZ' 1.25 1 'M' /
+  'MULTZ' 0.42 2 'M' /
+  'MULTZ' 0.01 3 'M' /
+/
+)");
+
+    BOOST_CHECK_CLOSE(tmult, 0.42, 1.0e-8);
+}
+
+BOOST_AUTO_TEST_SUITE_END() // EqualReg_MultZ
