@@ -182,7 +182,7 @@ public:
      * \brief Henry coefficent \f$\mathrm{[N/m^2]}\f$ for CO2 in brine.
      */
     template <class Evaluation>
-    OPM_HOST_DEVICE static Evaluation henry(const Evaluation& temperature, bool extrapolate = false)
+    static Evaluation henry(const Evaluation& temperature, bool extrapolate = false)
     { return fugacityCoefficientCO2(temperature, /*pressure=*/1e5, extrapolate)*1e5; }
 
     /*!
@@ -240,62 +240,6 @@ public:
         return exp(lnPhiCO2); // fugacity coefficient of CO2
     }
 
-    /*
-        Current solution is a bit hacky, to avoid affecting the current CPU functionality using
-        the static CO2 class we duplicate the methods using it and provide an equivalent method
-        that takes in a CO2 object instead, and only these version have GPU support.
-
-        This extent of code duplication looks dubious.
-    */
-
-    template <class Evaluation>
-    OPM_HOST_DEVICE static Evaluation fugacityCoefficientCO2(CO2& co2,
-                                             const Evaluation& temperature, 
-                                             const Evaluation& pg,
-                                             const Evaluation& yH2O, 
-                                             const bool highTemp, 
-                                             bool extrapolate = false,
-                                             bool spycherPruess2005 = false)
-    {
-        OPM_TIMEFUNCTION_LOCAL();
-        Valgrind::CheckDefined(temperature);
-        Valgrind::CheckDefined(pg);
-
-        Evaluation V = 1 / (co2.gasDensity(temperature, pg, extrapolate) / co2.molarMass()) * 1.e6; // molar volume in cm^3/mol
-        Evaluation pg_bar = pg / 1.e5; // gas phase pressure in bar
-        Scalar R = IdealGas::R * 10.; // ideal gas constant with unit bar cm^3 /(K mol)
-
-        // Parameters in Redlich-Kwong equation
-        Evaluation a_CO2 = aCO2_(temperature, highTemp);
-        Evaluation a_CO2_H2O = aCO2_H2O_(temperature, yH2O, highTemp);
-        Evaluation a_mix = aMix_(temperature, yH2O, highTemp);
-        Scalar b_CO2 = bCO2_(highTemp); 
-        Evaluation b_mix = bMix_(yH2O, highTemp);
-
-        Evaluation lnPhiCO2;
-        if (spycherPruess2005) {
-            lnPhiCO2 = log(V / (V - b_CO2));
-            lnPhiCO2 += b_CO2 / (V - b_CO2);
-            lnPhiCO2 -= 2 * a_CO2 / (R * pow(temperature, 1.5) * b_CO2) * log((V + b_CO2) / V);
-            lnPhiCO2 +=
-                a_CO2 * b_CO2
-                / (R
-                   * pow(temperature, 1.5)
-                   * b_CO2
-                   * b_CO2)
-                * (log((V + b_CO2) / V)
-                   - b_CO2 / (V + b_CO2));
-            lnPhiCO2 -= log(pg_bar * V / (R * temperature));
-        }
-        else {
-            lnPhiCO2 = (b_CO2 / b_mix) * (pg_bar * V / (R * temperature) - 1);
-            lnPhiCO2 -= log(pg_bar * (V - b_mix) / (R * temperature));
-            lnPhiCO2 += (2 * (yH2O * a_CO2_H2O + (1 - yH2O) * a_CO2) / a_mix - (b_CO2 / b_mix)) *
-                        a_mix / (b_mix * R * pow(temperature, 1.5)) * log(V / (V + b_mix));
-        }
-        return exp(lnPhiCO2); // fugacity coefficient of CO2
-    }
-
     /*!
      * \brief Returns the fugacity coefficient of the H2O component in a water-CO2 mixture
      *
@@ -317,49 +261,6 @@ public:
         Valgrind::CheckDefined(pg);
 
         const Evaluation& V = 1 / (CO2::gasDensity(temperature, pg, extrapolate) / CO2::molarMass()) * 1.e6; // molar volume in cm^3/mol
-        const Evaluation& pg_bar = pg / 1.e5; // gas phase pressure in bar
-        Scalar R = IdealGas::R * 10.; // ideal gas constant with unit bar cm^3 /(K mol)
-
-        // Mixture parameter of  Redlich-Kwong equation
-        Evaluation a_H2O = aH2O_(temperature, highTemp);
-        Evaluation a_CO2_H2O = aCO2_H2O_(temperature, yH2O, highTemp);
-        Evaluation a_mix = aMix_(temperature, yH2O, highTemp);
-        Scalar b_H2O = bH2O_(highTemp); 
-        Evaluation b_mix = bMix_(yH2O, highTemp);
-
-        Evaluation lnPhiH2O;
-        if (spycherPruess2005) {
-            lnPhiH2O =
-                log(V/(V - b_mix))
-                + b_H2O/(V - b_mix) - 2*a_CO2_H2O
-                / (R*pow(temperature, 1.5)*b_mix)*log((V + b_mix)/V)
-                + a_mix*b_H2O/(R*pow(temperature, 1.5)*b_mix*b_mix)
-                *(log((V + b_mix)/V) - b_mix/(V + b_mix))
-                - log(pg_bar*V/(R*temperature));
-        }
-        else {
-            lnPhiH2O = (b_H2O / b_mix) * (pg_bar * V / (R * temperature) - 1);
-            lnPhiH2O -= log(pg_bar * (V - b_mix) / (R * temperature));
-            lnPhiH2O += (2 * (yH2O * a_H2O + (1 - yH2O) * a_CO2_H2O) / a_mix - (b_H2O / b_mix)) *
-                        a_mix / (b_mix * R * pow(temperature, 1.5)) * log(V / (V + b_mix));
-        }
-        return exp(lnPhiH2O); // fugacity coefficient of H2O
-    }
-
-    template <class Evaluation>
-    OPM_HOST_DEVICE static Evaluation fugacityCoefficientH2O(CO2& co2,
-                                             const Evaluation& temperature, 
-                                             const Evaluation& pg,
-                                             const Evaluation& yH2O, 
-                                             const bool highTemp, 
-                                             bool extrapolate = false,
-                                             bool spycherPruess2005 = false)
-    {
-        OPM_TIMEFUNCTION_LOCAL();
-        Valgrind::CheckDefined(temperature);
-        Valgrind::CheckDefined(pg);
-
-        const Evaluation& V = 1 / (co2.gasDensity(temperature, pg, extrapolate) / co2.molarMass()) * 1.e6; // molar volume in cm^3/mol
         const Evaluation& pg_bar = pg / 1.e5; // gas phase pressure in bar
         Scalar R = IdealGas::R * 10.; // ideal gas constant with unit bar cm^3 /(K mol)
 
@@ -855,7 +756,7 @@ private:
      * \param pg the gas phase pressure [Pa]
      */
     template <class Evaluation>
-    OPM_HOST_DEVICE static Evaluation computeB_(const Evaluation& temperature, 
+    static Evaluation computeB_(const Evaluation& temperature, 
                                 const Evaluation& pg, 
                                 const Evaluation& yH2O,
                                 const Evaluation& xCO2,
