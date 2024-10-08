@@ -359,6 +359,8 @@ public:
                                       bool extrapolate)
     {
         if (temperature > 570) {
+// This preprocessing statement loses this warning message
+// But printing it possibly thousands of times inside a gpu function also seems problematic
 #if !OPM_IS_INSIDE_DEVICE_FUNCTION
             const std::string msg =
                 "Viscosity of water based on Hu et al is too "
