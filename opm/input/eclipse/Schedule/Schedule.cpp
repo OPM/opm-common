@@ -1676,10 +1676,11 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
         }
 
         if (reportStep < this->m_sched_deck.size() - 1) {
+            const auto keepKeywords = true;
             const auto log_to_debug = true;
             this->iterateScheduleSection(reportStep + 1, this->m_sched_deck.size(),
                                          parseContext, errors, grid, &target_wellpi,
-                                         prefix, log_to_debug);
+                                         prefix, keepKeywords, log_to_debug);
         }
 
         OpmLog::debug("\\----------------------------------------------------------------------");
