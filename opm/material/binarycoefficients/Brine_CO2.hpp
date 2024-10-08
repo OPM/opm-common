@@ -940,35 +940,6 @@ private:
         return k0_CO2;
     }
 
-    template <class Evaluation>
-    OPM_HOST_DEVICE static Evaluation equilibriumConstantCO2_(CO2& co2,
-                                              const Evaluation& temperature, 
-                                              const Evaluation& pg, 
-                                              const bool& highTemp,
-                                              bool spycherPruess2005 = false)
-    {
-        OPM_TIMEFUNCTION_LOCAL();
-        Evaluation temperatureCelcius = temperature - 273.15;
-        std::array<Scalar, 4> c;
-        if (highTemp) {
-            c = { 1.668, 3.992e-3, -1.156e-5, 1.593e-9 };
-        }
-        else {
-            // For temperature below 31 C and pressures above saturation pressure, separate parameters are needed
-            Evaluation psat = co2.vaporPressure(temperature);
-            if (temperatureCelcius < 31 && pg > psat && !spycherPruess2005) {
-                c = { 1.169, 1.368e-2, -5.38e-5, 0.0 };
-            }
-            else {
-                c = { 1.189, 1.304e-2, -5.446e-5, 0.0 };
-            }
-        }
-        Evaluation logk0_CO2 = c[0] + temperatureCelcius * (c[1] + temperatureCelcius * 
-                              (c[2] + temperatureCelcius * c[3]));
-        Evaluation k0_CO2 = pow(10.0, logk0_CO2);
-        return k0_CO2;
-    }
-
     /*!
      * \brief Returns the equilibrium constant for H2O, which is needed for the
      * calculation of the mutual solubility in the water-CO2 system

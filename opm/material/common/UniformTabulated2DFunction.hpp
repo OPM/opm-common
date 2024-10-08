@@ -140,7 +140,7 @@ public:
     /*!
      * \brief Returns the sampling points.
      */
-    OPM_HOST_DEVICE ContainerT samples() const
+    OPM_HOST_DEVICE const ContainerT& samples() const
     { return samples_; }
 
 
