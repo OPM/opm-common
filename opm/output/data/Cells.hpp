@@ -25,6 +25,7 @@
 #include <utility>
 #include <variant>
 #include <vector>
+#include <iostream>
 
 namespace Opm { namespace data {
 
@@ -127,6 +128,13 @@ namespace Opm { namespace data {
         template<class Visitor>
         void visit(Visitor&& visit) const
         {
+            if (std::holds_alternative<std::vector<double>>(data_)) {
+                std::cout << "\nVariant holds std::vector<double>\n";
+            } else if (std::holds_alternative<std::vector<int>>(data_)) {
+                std::cout << "\nVariant holds std::vector<int>\n";
+            } else {
+                std::cout << "\nVariant holds a different type\n";
+            }
             std::visit(std::forward<Visitor>(visit), data_);
         }
 

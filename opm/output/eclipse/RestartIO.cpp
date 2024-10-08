@@ -72,6 +72,8 @@
 #include <utility>
 #include <vector>
 
+#include <iostream>
+
 #include <fmt/format.h>
 #include <fmt/chrono.h>
 
@@ -534,7 +536,33 @@ namespace {
                               OutputVectorInt                 writeVectorI)
     {
         for (const auto& vector : vectors) {
-            value.solution.at(vector).visit(VisitorOverloadSet{
+            if (vector == "SGAS") {
+                std::cout << "SGAS here" << std::endl;
+            }
+            if (vector == "XMF") {
+                std::cout << "XMF here" << std::endl;
+            }
+            const auto handler = MonoThrowHandler<std::logic_error>(fmt::format("{} does not have an associate value", vector));
+
+            const auto handleDoubleVector = [&vector, &writeVectorF](const std::vector<double>& v)
+            {
+                writeVectorF(vector, v);
+            };
+
+            const auto handleIntVector = [&vector, &writeVectorI](const std::vector<int>& v)
+            {
+                writeVectorI(vector, v);
+            };
+
+            const auto& temp = VisitorOverloadSet{
+                    handler,
+                    handleDoubleVector,
+                    handleIntVector
+            };
+
+            const auto& val = value.solution.at(vector);
+            val.visit(temp);
+            /* value.solution.at(vector).visit(VisitorOverloadSet{
                 MonoThrowHandler<std::logic_error>(fmt::format("{} does not have an associate value", vector)),
                 [&vector,&writeVectorF](const std::vector<double>& v)
                 {
@@ -544,7 +572,7 @@ namespace {
                 {
                     writeVectorI(vector, v);
                 }
-            });
+            }); */
         }
     }
 
