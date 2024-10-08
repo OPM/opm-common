@@ -186,9 +186,10 @@ bool is_RPTRST_mnemonic(const std::string& kw)
         "PERMREDN", "POIS",     "PORO",     "PORV",     "POT",     "PRES",
         "RESIDUAL", "RFIP",     "RK",       "ROCKC",    "RPORV",   "RSSAT",
         "RSWSAT",   "RVSAT",    "RVWSAT",   "SAVE",     "SDENO",   "SFIP",
-        "SFREQ",    "SGTRAP",   "SIGM_MOD", "STREAM",   "SURFBLK", "TEMP",
+        "SFREQ",    "SGAS",  "SGTRAP",   "SIGM_MOD", "SOIL", "STREAM",   "SURFBLK", "TEMP",
         "TRAS",     "VELGAS",   "VELOCITY", "VELOIL",   "VELWAT",  "VGAS",
         "VISC",     "VOIL",     "VWAT",
+        "XMF",      "YMF",     "ZMF",
     };
 
     return std::binary_search(std::begin(valid), std::end(valid), kw);
