@@ -50,16 +50,13 @@ namespace Opm {
  * fluidsystem \c BrineCO2FluidSystem. If thermodynamic precision
  * is not a top priority, the much simpler component \c Opm::SimpleCO2 can be
  * used instead
- * 
- * ContainerT is defaulted to be a regular vector, usually overriden to GPUBuffer/view
- * to support instantiation and usage on GPU
  */
-template <class Scalar, class ContainerT = std::vector<double>>
+template <class Scalar>
 class CO2 : public Component<Scalar, CO2<Scalar>>
 {
     static constexpr Scalar R = Constants<Scalar>::R;
-    static const UniformTabulated2DFunction<double, ContainerT>& tabulatedEnthalpy;
-    static const UniformTabulated2DFunction<double, ContainerT>& tabulatedDensity;
+    static const UniformTabulated2DFunction<double, std::vector<double>>& tabulatedEnthalpy;
+    static const UniformTabulated2DFunction<double, std::vector<double>>& tabulatedDensity;
 
 public:
     static constexpr Scalar brineSalinity = CO2Tables::brineSalinity;
@@ -277,11 +274,11 @@ public:
         return (h2 - h1) / (2*eps) ;
     }
 
-    static const UniformTabulated2DFunction<double, ContainerT>& getEnthalpy(){
+    static const UniformTabulated2DFunction<double, std::vector<double>>& getEnthalpy(){
         return tabulatedEnthalpy;
     }
 
-    static const UniformTabulated2DFunction<double, ContainerT>& getDensity(){
+    static const UniformTabulated2DFunction<double, std::vector<double>>& getDensity(){
         return tabulatedDensity;
     }
 };
