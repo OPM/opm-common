@@ -19,14 +19,21 @@
 
 #define BOOST_TEST_MODULE UnitTests
 
+#include <boost/test/unit_test.hpp>
+
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
+
+#include <opm/input/eclipse/Schedule/UDQ/UDQEnums.hpp>
+
 #include <opm/input/eclipse/Units/Dimension.hpp>
 #include <opm/input/eclipse/Units/Units.hpp>
 
-#include <boost/test/unit_test.hpp>
-
+#include <array>
 #include <memory>
 #include <ostream>
+#include <stdexcept>
+#include <utility>
+#include <vector>
 
 using namespace Opm;
 
@@ -98,9 +105,9 @@ BOOST_AUTO_TEST_CASE(UnitSystemParseInvalidThrows) {
     BOOST_CHECK_EQUAL(3.0 , volumePerTime.getSIScaling());
 }
 
+namespace {
 
-
-static void checkSystemHasRequiredDimensions( const UnitSystem& system) {
+void checkSystemHasRequiredDimensions( const UnitSystem& system) {
     BOOST_CHECK( system.hasDimension("1"));
     BOOST_CHECK( system.hasDimension("Length"));
     BOOST_CHECK( system.hasDimension("Mass"));
@@ -111,7 +118,7 @@ static void checkSystemHasRequiredDimensions( const UnitSystem& system) {
     BOOST_CHECK( system.hasDimension("Temperature"));
 }
 
-
+} // Anonymous namespace
 
 BOOST_AUTO_TEST_CASE(CreateMetricSystem) {
     auto system = UnitSystem::newMETRIC();
@@ -697,3 +704,103 @@ BOOST_AUTO_TEST_CASE(DECK_NAMES) {
     UnitSystem us("METRIC");
     BOOST_CHECK_EQUAL( us.deck_name(), "METRIC");
 }
+
+// ---------------------------------------------------------------------------
+
+BOOST_AUTO_TEST_SUITE(UDA_Dimensions)
+
+namespace {
+    decltype(auto) expectedDimensions()
+    {
+        using M = UnitSystem::measure;
+
+        return std::array {
+            std::pair { UDAControl::WCONPROD_ORAT, M::liquid_surface_rate   },
+            std::pair { UDAControl::WCONPROD_WRAT, M::liquid_surface_rate   },
+            std::pair { UDAControl::WCONPROD_GRAT, M::gas_surface_rate      },
+            std::pair { UDAControl::WCONPROD_LRAT, M::liquid_surface_rate   },
+            std::pair { UDAControl::WCONPROD_RESV, M::geometric_volume_rate },
+            std::pair { UDAControl::WCONPROD_BHP , M::pressure              },
+            std::pair { UDAControl::WCONPROD_THP , M::pressure              },
+            std::pair { UDAControl::WCONPROD_LIFT, M::gas_surface_rate      },
+
+            // ---------------------------------------------------------------
+
+            std::pair { UDAControl::WCONINJE_RATE, M::identity              },
+            std::pair { UDAControl::WCONINJE_RESV, M::geometric_volume_rate },
+            std::pair { UDAControl::WCONINJE_BHP , M::pressure              },
+            std::pair { UDAControl::WCONINJE_THP , M::pressure              },
+
+            // ---------------------------------------------------------------
+
+            std::pair { UDAControl::GCONPROD_OIL_TARGET   , M::liquid_surface_rate },
+            std::pair { UDAControl::GCONPROD_WATER_TARGET , M::liquid_surface_rate },
+            std::pair { UDAControl::GCONPROD_GAS_TARGET   , M::gas_surface_rate    },
+            std::pair { UDAControl::GCONPROD_LIQUID_TARGET, M::liquid_surface_rate },
+
+            // ---------------------------------------------------------------
+
+            std::pair { UDAControl::GCONINJE_SURFACE_MAX_RATE     , M::identity              },
+            std::pair { UDAControl::GCONINJE_RESV_MAX_RATE        , M::geometric_volume_rate },
+            std::pair { UDAControl::GCONINJE_TARGET_REINJ_FRACTION, M::identity              },
+            std::pair { UDAControl::GCONINJE_TARGET_VOID_FRACTION , M::identity              },
+
+            // ---------------------------------------------------------------
+
+            std::pair { UDAControl::WELTARG_ORAT, M::liquid_surface_rate   },
+            std::pair { UDAControl::WELTARG_WRAT, M::liquid_surface_rate   },
+            std::pair { UDAControl::WELTARG_GRAT, M::gas_surface_rate      },
+            std::pair { UDAControl::WELTARG_LRAT, M::liquid_surface_rate   },
+            std::pair { UDAControl::WELTARG_RESV, M::geometric_volume_rate },
+            std::pair { UDAControl::WELTARG_BHP , M::pressure              },
+            std::pair { UDAControl::WELTARG_THP , M::pressure              },
+            std::pair { UDAControl::WELTARG_LIFT, M::gas_surface_rate      },
+        };
+    }
+} // Anonymous namespace
+
+BOOST_AUTO_TEST_CASE(Metric)
+{
+    const auto usys = UnitSystem::newMETRIC();
+
+    for (const auto& [ctrl, unit] : expectedDimensions()) {
+        BOOST_CHECK_MESSAGE(usys.uda_dim(ctrl) == usys.getDimension(unit),
+                            "UDA Dimension for " << UDQ::controlName(ctrl) <<
+                            " must be " << usys.name(unit) << " in the METRIC unit system");
+    }
+}
+
+BOOST_AUTO_TEST_CASE(Field)
+{
+    const auto usys = UnitSystem::newFIELD();
+
+    for (const auto& [ctrl, unit] : expectedDimensions()) {
+        BOOST_CHECK_MESSAGE(usys.uda_dim(ctrl) == usys.getDimension(unit),
+                            "UDA Dimension for " << UDQ::controlName(ctrl) <<
+                            " must be " << usys.name(unit) << " in the FIELD unit system");
+    }
+}
+
+BOOST_AUTO_TEST_CASE(Lab)
+{
+    const auto usys = UnitSystem::newLAB();
+
+    for (const auto& [ctrl, unit] : expectedDimensions()) {
+        BOOST_CHECK_MESSAGE(usys.uda_dim(ctrl) == usys.getDimension(unit),
+                            "UDA Dimension for " << UDQ::controlName(ctrl) <<
+                            " must be " << usys.name(unit) << " in the LAB unit system");
+    }
+}
+
+BOOST_AUTO_TEST_CASE(Pvt_M)
+{
+    const auto usys = UnitSystem::newPVT_M();
+
+    for (const auto& [ctrl, unit] : expectedDimensions()) {
+        BOOST_CHECK_MESSAGE(usys.uda_dim(ctrl) == usys.getDimension(unit),
+                            "UDA Dimension for " << UDQ::controlName(ctrl) <<
+                            " must be " << usys.name(unit) << " in the PVT-M unit system");
+    }
+}
+
+BOOST_AUTO_TEST_SUITE_END() // UDA_Dimensions
