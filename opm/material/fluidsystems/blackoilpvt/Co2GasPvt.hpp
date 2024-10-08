@@ -276,7 +276,6 @@ void initFromState(const EclipseState& eclState, const Schedule&)
     {
         OPM_TIMEBLOCK_LOCAL(internalEnergy);
         if (gastype_ == Co2StoreConfig::GasMixingType::NONE) {
-            printf("\nNONE\n");
             // use the gasInternalEnergy of CO2
             return co2.gasInternalEnergy(temperature, pressure, extrapolate);
         }
@@ -493,13 +492,13 @@ void initFromState(const EclipseState& eclState, const Schedule&)
 }
 
     // new get functions that will be needed to move a cpu based Co2GasPvt object to the GPU
-    OPM_HOST_DEVICE const ContainerT getBrineReferenceDensity() const
+    OPM_HOST_DEVICE const ContainerT& getBrineReferenceDensity() const
     { return brineReferenceDensity_; }
 
-    OPM_HOST_DEVICE const ContainerT getGasReferenceDensity() const
+    OPM_HOST_DEVICE const ContainerT& getGasReferenceDensity() const
     { return gasReferenceDensity_; }
 
-    OPM_HOST_DEVICE const ContainerT getSalinity() const
+    OPM_HOST_DEVICE const ContainerT& getSalinity() const
     { return salinity_; }
 
     OPM_HOST_DEVICE bool getEnableEzrokhiDensity() const
