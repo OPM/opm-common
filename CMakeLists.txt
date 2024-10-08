@@ -423,7 +423,8 @@ if (OPM_ENABLE_PYTHON)
   add_custom_target(copy_python ALL
     COMMAND ${Python3_EXECUTABLE} ${PROJECT_SOURCE_DIR}/python/install.py ${PROJECT_SOURCE_DIR}/python ${PROJECT_BINARY_DIR} 0)
 
-  file(COPY ${PROJECT_SOURCE_DIR}/python/README.md DESTINATION ${PROJECT_BINARY_DIR}/python)
+  file(COPY ${PROJECT_SOURCE_DIR}/python/README.md ${PROJECT_SOURCE_DIR}/python/MANIFEST.in
+       DESTINATION ${PROJECT_BINARY_DIR}/python)
 
   pybind11_add_module(opmcommon_python
                       ${PYTHON_CXX_SOURCE_FILES}
