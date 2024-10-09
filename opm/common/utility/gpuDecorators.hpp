@@ -35,7 +35,7 @@
 
   // On CUDA we get some warnings that will yield compilation regardless, so we can ignore them
   #ifdef __CUDACC__
-  #pragma diag_suppress 20011,20014
+  #pragma nv_diag_suppress 20011,20014
   #endif
 
   //TODO Should probably include config.h if config.h becomes installable
