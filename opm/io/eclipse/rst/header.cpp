@@ -3,36 +3,47 @@
 
   This file is part of the Open Porous Media project (OPM).
 
-  OPM is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by
-  the Free Software Foundation, either version 3 of the License, or
-  (at your option) any later version.
+  OPM is free software: you can redistribute it and/or modify it under the
+  terms of the GNU General Public License as published by the Free Software
+  Foundation, either version 3 of the License, or (at your option) any later
+  version.
 
-  OPM is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-  GNU General Public License for more details.
+  OPM is distributed in the hope that it will be useful, but WITHOUT ANY
+  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+  FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+  details.
 
-  You should have received a copy of the GNU General Public License
-  along with OPM.  If not, see <http://www.gnu.org/licenses/>.
+  You should have received a copy of the GNU General Public License along
+  with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <utility>
-
 #include <opm/io/eclipse/rst/header.hpp>
+
+#include <opm/output/eclipse/VectorItems/doubhead.hpp>
 #include <opm/output/eclipse/VectorItems/intehead.hpp>
 #include <opm/output/eclipse/VectorItems/logihead.hpp>
-#include <opm/output/eclipse/VectorItems/doubhead.hpp>
+
 #include <opm/common/utility/TimeService.hpp>
-#include <opm/input/eclipse/Units/UnitSystem.hpp>
+
 #include <opm/input/eclipse/EclipseState/Runspec.hpp>
+
+#include <opm/input/eclipse/Units/UnitSystem.hpp>
+
+#include <cstddef>
+#include <ctime>
+#include <utility>
+#include <vector>
 
 namespace VI = ::Opm::RestartIO::Helpers::VectorItems;
 using M = ::Opm::UnitSystem::measure;
 
-namespace Opm {
-namespace RestartIO {
+namespace Opm::RestartIO {
 
-RstHeader::RstHeader(const Runspec& runspec_, const Opm::UnitSystem& unit_system, const std::vector<int>& intehead, const std::vector<bool>& logihead, const std::vector<double>& doubhead) :
+RstHeader::RstHeader(const Runspec&             runspec_,
+                     const Opm::UnitSystem&     unit_system,
+                     const std::vector<int>&    intehead,
+                     const std::vector<bool>&   logihead,
+                     const std::vector<double>& doubhead) :
     runspec(runspec_),
     nx(intehead[VI::intehead::NX]),
     ny(intehead[VI::intehead::NY]),
@@ -90,9 +101,10 @@ RstHeader::RstHeader(const Runspec& runspec_, const Opm::UnitSystem& unit_system
     nmfipr(intehead[VI::intehead::NMFIPR]),
     ngroup(intehead[VI::intehead::NGRP]),
     nwgmax(intehead[VI::intehead::NWGMAX]),
-    nwell_udq(intehead[VI::intehead::NO_WELL_UDQS]),
-    ngroup_udq(intehead[VI::intehead::NO_GROUP_UDQS]),
     nfield_udq(intehead[VI::intehead::NO_FIELD_UDQS]),
+    ngroup_udq(intehead[VI::intehead::NO_GROUP_UDQS]),
+    nsegment_udq(intehead[VI::intehead::NO_SEG_UDQS]),
+    nwell_udq(intehead[VI::intehead::NO_WELL_UDQS]),
     num_action(intehead[VI::intehead::NOOFACTIONS]),
     guide_rate_nominated_phase(intehead[VI::intehead::NGRNPH]),
     max_wlist(intehead[VI::intehead::MXWLSTPRWELL]),
@@ -130,28 +142,30 @@ RstHeader::RstHeader(const Runspec& runspec_, const Opm::UnitSystem& unit_system
     glift_min_wait(unit_system.to_si(M::time, doubhead[VI::doubhead::LOminInt])),
     glift_rate_delta(unit_system.to_si(M::gas_surface_rate, doubhead[VI::doubhead::LOincrsz])),
     glift_min_eco_grad(unit_system.to_si(M::identity, doubhead[VI::doubhead::LOminEcGrad]))
+{}
+
+std::time_t RstHeader::sim_time() const
 {
-}
-
-
-std::time_t RstHeader::sim_time() const {
     TimeStampUTC ts(this->year, this->month, this->mday);
-    ts.hour(this->hour);
-    ts.minutes(this->minute);
-    ts.microseconds(this->microsecond);
+
+    ts.hour(this->hour).minutes(this->minute).microseconds(this->microsecond);
+
     return asTimeT(ts);
 }
 
-std::pair<std::time_t, std::size_t> RstHeader::restart_info() const {
+std::pair<std::time_t, std::size_t>
+RstHeader::restart_info() const
+{
     return std::make_pair(asTimeT(TimeStampUTC(this->year, this->month, this->mday)),
                           std::size_t(this->report_step));
 }
 
-int RstHeader::num_udq() const {
-    return this->nwell_udq + nfield_udq + ngroup_udq;
+int RstHeader::num_udq() const
+{
+    return this->nfield_udq
+        +  this->ngroup_udq
+        +  this->nsegment_udq
+        +  this->nwell_udq;
 }
 
-
-
-}
-}
+} // namespace Opm::RestartIO

@@ -41,6 +41,9 @@ std::size_t Opm::UDQDims::totalNumUDQs() const
     return this->totalNumUDQs_;
 }
 
+// ---------------------------------------------------------------------------
+// Dimensions for UDA restart arrays (IUAD, IUAP, and IGPH)
+
 std::size_t Opm::UDQDims::numIUAD() const
 {
     return this->intehead(VI::intehead::NO_IUADS);
@@ -58,10 +61,16 @@ std::size_t Opm::UDQDims::numIUAP() const
     return this->intehead(VI::intehead::NO_IUAPS);
 }
 
+// ---------------------------------------------------------------------------
+// Dimensions for field level UDQ value restart array (DUDF)
+
 std::size_t Opm::UDQDims::numFieldUDQs() const
 {
     return this->intehead(VI::intehead::NO_FIELD_UDQS);
 }
+
+// ---------------------------------------------------------------------------
+// Dimensions for group level UDQ value restart array (DUDG)
 
 std::size_t Opm::UDQDims::maxNumGroups() const
 {
@@ -73,6 +82,27 @@ std::size_t Opm::UDQDims::numGroupUDQs() const
     return this->intehead(VI::intehead::NO_GROUP_UDQS);
 }
 
+// ---------------------------------------------------------------------------
+// Dimensions for segment level UDQ value restart array (DUDS)
+
+std::size_t Opm::UDQDims::maxNumMsWells() const
+{
+    return this->intehead(VI::intehead::NSWLMX);
+}
+
+std::size_t Opm::UDQDims::maxNumSegments() const
+{
+    return this->intehead(VI::intehead::NSEGMX);
+}
+
+std::size_t Opm::UDQDims::numSegmentUDQs() const
+{
+    return this->intehead(VI::intehead::NO_SEG_UDQS);
+}
+
+// ---------------------------------------------------------------------------
+// Dimensions for well level UDQ value restart array (DUDW)
+
 std::size_t Opm::UDQDims::maxNumWells() const
 {
     return this->intehead(VI::intehead::NWMAXZ);
@@ -82,6 +112,10 @@ std::size_t Opm::UDQDims::numWellUDQs() const
 {
     return this->intehead(VI::intehead::NO_WELL_UDQS);
 }
+
+// ===========================================================================
+// Private member functions
+// ===========================================================================
 
 void Opm::UDQDims::collectDimensions() const
 {
