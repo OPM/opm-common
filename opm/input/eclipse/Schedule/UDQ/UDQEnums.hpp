@@ -71,6 +71,10 @@ enum class UDQVarType
     WELL_VAR = 8,
     GROUP_VAR = 9,
     TABLE_LOOKUP = 10,
+
+    // -------------------------------------------------------------------------
+    // Implementation helper.  Must be last enumerator.
+    NumTypes,
 };
 
 enum class UDQTokenType

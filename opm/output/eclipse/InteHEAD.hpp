@@ -21,7 +21,10 @@
 #ifndef OPM_INTEHEAD_HEADER_INCLUDED
 #define OPM_INTEHEAD_HEADER_INCLUDED
 
+#include <opm/input/eclipse/Schedule/UDQ/UDQEnums.hpp>
+
 #include <array>
+#include <cstddef>
 #include <ctime>
 #include <memory>
 #include <vector>
@@ -33,6 +36,7 @@ class EclipseState;
 class Phases;
 class Schedule;
 class ScheduleState;
+class UDQInput;
 class UnitSystem;
 
 } // namespace Opm
@@ -108,33 +112,10 @@ namespace Opm { namespace RestartIO {
 
         struct UdqParam {
             int udqParam_1{};
-
-            /// Number of field-level UDQ parameters (FU*)
-            int num_field_udqs{};
-
-            /// Number of group-level UDQ parameters (GU*)
-            int num_group_udqs{};
-
-            /// Number of region-level UDQ parameters (RU*)
-            int num_reg_udqs{};
-
-            /// Number of well-level UDQ parameters (WU*)
-            int num_well_udqs{};
-
-            /// Number of segment-level UDQ parameters (SU*)
-            int num_seg_udqs{};
-
-            /// Number of connection-level UDQ parameters (CU*)
-            int num_conn_udqs{};
-
-            /// Number of aquifer-level UDQ parameters (AU*)
-            int num_aqu_udqs{};
-
-            /// Number of block-level UDQ parameters (BU*)
-            int num_blk_udqs{};
-
             int num_iuads{};
             int num_iuaps{};
+
+            std::array<int, static_cast<std::size_t>(UDQVarType::NumTypes)> numUDQs{};
         };
 
         struct ActionParam {
