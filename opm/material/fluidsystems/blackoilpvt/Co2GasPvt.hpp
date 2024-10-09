@@ -93,8 +93,6 @@ public:
 }
 
 #if HAVE_ECL_INPUT
-template<class Scalar, class ContainerT>
-void Co2GasPvt<Scalar, ContainerT>::
 void initFromState(const EclipseState& eclState, const Schedule&);
 #endif
 
