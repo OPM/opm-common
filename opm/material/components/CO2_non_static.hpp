@@ -23,10 +23,17 @@
 /*!
  * \file
  *
- * \copydoc Opm::CO2
+ * \copydoc Opm::CO2NonStatic
  */
-#ifndef OPM_CO2_HPP
-#define OPM_CO2_HPP
+
+/*
+    TODO: This class should have a better name and code duplication should be reduced!
+
+    TODO: This class also causes duplication of the CO2 table data...
+    because that data exists both here and in the static class
+*/
+#ifndef OPM_CO2_NON_STATIC_HPP
+#define OPM_CO2_NON_STATIC_HPP
 #include <opm/common/TimingMacros.hpp>
 #include <opm/common/utility/gpuDecorators.hpp>
 #include <opm/material/Constants.hpp>
@@ -50,16 +57,26 @@ namespace Opm {
  * fluidsystem \c BrineCO2FluidSystem. If thermodynamic precision
  * is not a top priority, the much simpler component \c Opm::SimpleCO2 can be
  * used instead
+ * 
+ * ContainerT is defaulted to be a regular vector, usually overriden to GPUBuffer/view
+ * to support instantiation and usage on GPU
  */
-template <class Scalar>
-class CO2 : public Component<Scalar, CO2<Scalar>>
+template <class Scalar, class ContainerT = std::vector<double>>
+class CO2NonStatic : public Component<Scalar, CO2NonStatic<Scalar>>
 {
     static constexpr Scalar R = Constants<Scalar>::R;
-    static const UniformTabulated2DFunction<double, std::vector<double>>& tabulatedEnthalpy;
-    static const UniformTabulated2DFunction<double, std::vector<double>>& tabulatedDensity;
+    const UniformTabulated2DFunction<double, ContainerT> tabulatedEnthalpy;
+    const UniformTabulated2DFunction<double, ContainerT> tabulatedDensity;
 
 public:
     static constexpr Scalar brineSalinity = CO2Tables::brineSalinity;
+
+    CO2NonStatic(const UniformTabulated2DFunction<double, ContainerT> tabulatedEnthalpy_,
+        const UniformTabulated2DFunction<double, ContainerT> tabulatedDensity_) :
+        tabulatedEnthalpy(tabulatedEnthalpy_),
+        tabulatedDensity(tabulatedDensity_)
+    {
+    }
 
     /*!
      * \brief A human readable name for the CO2.
@@ -70,31 +87,31 @@ public:
     /*!
      * \brief The mass in [kg] of one mole of CO2.
      */
-    static Scalar molarMass()
+    OPM_HOST_DEVICE static Scalar molarMass()
     { return 44e-3; }
 
     /*!
      * \brief Returns the critical temperature [K] of CO2
      */
-    static Scalar criticalTemperature()
+    OPM_HOST_DEVICE static Scalar criticalTemperature()
     { return 273.15 + 30.95; /* [K] */ }
 
     /*!
      * \brief Returns the critical pressure [Pa] of CO2
      */
-    static Scalar criticalPressure()
+    OPM_HOST_DEVICE static Scalar criticalPressure()
     { return 73.8e5; /* [N/m^2] */ }
 
     /*!
      * \brief Returns the temperature [K]at CO2's triple point.
      */
-    static Scalar tripleTemperature()
+    OPM_HOST_DEVICE static Scalar tripleTemperature()
     { return 273.15 - 56.35; /* [K] */ }
 
     /*!
      * \brief Returns the pressure [Pa] at CO2's triple point.
      */
-    static Scalar triplePressure()
+    OPM_HOST_DEVICE static Scalar triplePressure()
     { return 5.11e5; /* [N/m^2] */ }
 
     /*!
@@ -134,7 +151,7 @@ public:
      * 1996
      */
     template <class Evaluation>
-    static Evaluation vaporPressure(const Evaluation& T)
+    OPM_HOST_DEVICE static Evaluation vaporPressure(const Evaluation& T)
     {
         static constexpr Scalar a[4] =
             { -7.0602087, 1.9391218, -1.6463597, -3.2995634 };
@@ -155,20 +172,20 @@ public:
     /*!
      * \brief Returns true iff the gas phase is assumed to be compressible
      */
-    static bool gasIsCompressible()
+    OPM_HOST_DEVICE static bool gasIsCompressible()
     { return true; }
 
     /*!
      * \brief Returns true iff the gas phase is assumed to be ideal
      */
-    static bool gasIsIdeal()
+    OPM_HOST_DEVICE static bool gasIsIdeal()
     { return false; }
 
     /*!
      * \brief Specific enthalpy of gaseous CO2 [J/kg].
      */
     template <class Evaluation>
-    static Evaluation gasEnthalpy(const Evaluation& temperature,
+    OPM_HOST_DEVICE Evaluation gasEnthalpy(const Evaluation& temperature,
                                   const Evaluation& pressure,
                                   bool extrapolate = false)
     {
@@ -179,7 +196,7 @@ public:
      * \brief Specific internal energy of CO2 [J/kg].
      */
     template <class Evaluation>
-    static Evaluation gasInternalEnergy(const Evaluation& temperature,
+    OPM_HOST_DEVICE Evaluation gasInternalEnergy(const Evaluation& temperature,
                                         const Evaluation& pressure,
                                         bool extrapolate = false)
     {
@@ -193,7 +210,7 @@ public:
      * \brief The density of CO2 at a given pressure and temperature [kg/m^3].
      */
     template <class Evaluation>
-    static Evaluation gasDensity(const Evaluation& temperature,
+    OPM_HOST_DEVICE Evaluation gasDensity(const Evaluation& temperature,
                                  const Evaluation& pressure,
                                  bool extrapolate = false)
     {
@@ -207,7 +224,7 @@ public:
      *                        - Fenhour etl al., 1998
      */
     template <class Evaluation>
-    static Evaluation gasViscosity(Evaluation temperature,
+    OPM_HOST_DEVICE Evaluation gasViscosity(Evaluation temperature,
                                    const Evaluation& pressure,
                                    bool extrapolate = false)
     {
@@ -260,7 +277,7 @@ public:
      * \param pressure Pressure of component \f$\mathrm{[Pa]}\f$
      */
     template <class Evaluation>
-    static Evaluation gasHeatCapacity(const Evaluation& temperature, const Evaluation& pressure)
+    OPM_HOST_DEVICE Evaluation gasHeatCapacity(const Evaluation& temperature, const Evaluation& pressure)
     {
         OPM_TIMEFUNCTION_LOCAL();
         constexpr Scalar eps = 1e-6;
@@ -274,15 +291,81 @@ public:
         return (h2 - h1) / (2*eps) ;
     }
 
-    static const UniformTabulated2DFunction<double, std::vector<double>>& getEnthalpy(){
+    const UniformTabulated2DFunction<double, ContainerT>& getEnthalpy(){
         return tabulatedEnthalpy;
     }
 
-    static const UniformTabulated2DFunction<double, std::vector<double>>& getDensity(){
+    const UniformTabulated2DFunction<double, ContainerT>& getDensity(){
         return tabulatedDensity;
     }
 };
 
 } // namespace Opm
+
+namespace Opm::gpuistl {
+    // using GpuBufD = const gpuistl::GpuBuffer<double>;
+// using GpuViewD = gpuistl::GpuView<const double>;
+
+// // instantiate double-precision GpuBuffer CO2
+// template<>
+// const UniformTabulated2DFunction<double, GpuBufD>&
+// CO2<double, GpuBufD>::tabulatedEnthalpy = gpuistl::move_to_gpu<double, GpuBufD>(CO2Tables::tabulatedEnthalpy);
+
+// template<>
+// const UniformTabulated2DFunction<double, GpuBufD>&
+// CO2<double, GpuBufD>::tabulatedDensity = gpuistl::move_to_gpu<double, GpuBufD>(CO2Tables::tabulatedDensity);
+
+// template const double CO2<double, GpuBufD>::brineSalinity;
+
+// // instantiate double-precision GpuView CO2
+// template<>
+// const UniformTabulated2DFunction<double, GpuViewD>&
+// CO2<double, GpuViewD>::tabulatedEnthalpy = gpuistl::make_view<double, GpuBufD, GpuViewD>(CO2<double, GpuBufD>::getEnthalpy());
+
+// template<>
+// const UniformTabulated2DFunction<double, GpuViewD>&
+// CO2<double, GpuViewD>::tabulatedDensity = gpuistl::make_view<double, GpuBufD, GpuViewD>(CO2<double, GpuBufD>::getDensity());
+
+// template const double CO2<double, GpuViewD>::brineSalinity;
+
+
+// // instantiate single precision CO2
+// template<>
+// const UniformTabulated2DFunction<double, GpuBufD>&
+// CO2<float, GpuBufD>::tabulatedEnthalpy = gpuistl::move_to_gpu<double, GpuBufD>(CO2Tables::tabulatedEnthalpy);
+
+// template<>
+// const UniformTabulated2DFunction<double, GpuBufD>&
+// CO2<float, GpuBufD>::tabulatedDensity = gpuistl::move_to_gpu<double, GpuBufD>(CO2Tables::tabulatedDensity);
+
+// template const float CO2<float, GpuBufD>::brineSalinity;
+
+// // instantiate single-precision GpuView CO2
+// template<>
+// const UniformTabulated2DFunction<double, GpuViewD>&
+// CO2<float, GpuViewD>::tabulatedEnthalpy = gpuistl::make_view<double, GpuBufD, GpuViewD>(CO2<float, GpuBufD>::getEnthalpy());
+
+// template<>
+// const UniformTabulated2DFunction<double, GpuViewD>&
+// CO2<float, GpuViewD>::tabulatedDensity = gpuistl::make_view<double, GpuBufD, GpuViewD>(CO2<float, GpuBufD>::getDensity());
+
+// template const float CO2<float, GpuViewD>::brineSalinity;
+
+
+    template <class Scalar, class ContainerType, class ViewType>
+    CO2NonStatic<Scalar, ViewType>
+    make_view(const CO2NonStatic<Scalar, ContainerType>& oldCO2NonStatic) {
+
+        using containedType = typename ContainerType::value_type;
+        using viewedTypeNoConst = typename std::remove_const_t<typename ViewType::value_type>;
+
+        static_assert(std::is_same_v<containedType, viewedTypeNoConst>);
+
+        ViewType newEnthalpy = make_view<viewedTypeNoConst>(oldCO2NonStatic.getEnthalpy());
+        ViewType newDensity = make_view<viewedTypeNoConst>(oldCO2NonStatic.getDensity());
+
+        return CO2NonStatic<Scalar, ViewType>(newEnthalpy, newDensity);
+    }
+}
 
 #endif
