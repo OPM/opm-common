@@ -1144,9 +1144,15 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
 
     std::vector<Well> Schedule::getWells(std::size_t timeStep) const
     {
-        std::vector<Well> wells;
-        if (timeStep >= this->snapshots.size())
-            throw std::invalid_argument("timeStep argument beyond the length of the simulation");
+        auto wells = std::vector<Well>{};
+
+        if (timeStep >= this->snapshots.size()) {
+            throw std::invalid_argument {
+                fmt::format("timeStep {} exceeds simulation run's "
+                            "number of report steps ({})",
+                            timeStep, this->snapshots.size())
+            };
+        }
 
         const auto& well_order = this->snapshots[timeStep].well_order();
         std::transform(well_order.begin(), well_order.end(),
