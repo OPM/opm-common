@@ -1102,7 +1102,7 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
         } else {
             std::transform(group.wells().begin(), group.wells().end(),
                            std::back_inserter(wells),
-                           [this, timeStep](const auto& well_name)
+                           [this, timeStep](const auto& well_name) -> decltype(auto)
                            {
                                return this->getWell(well_name, timeStep);
                            });
@@ -1144,17 +1144,22 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
 
     std::vector<Well> Schedule::getWells(std::size_t timeStep) const
     {
-        std::vector<Well> wells;
-        if (timeStep >= this->snapshots.size())
-            throw std::invalid_argument("timeStep argument beyond the length of the simulation");
+        auto wells = std::vector<Well>{};
+
+        if (timeStep >= this->snapshots.size()) {
+            throw std::invalid_argument {
+                fmt::format("timeStep {} exceeds simulation run's "
+                            "number of report steps ({})",
+                            timeStep, this->snapshots.size())
+            };
+        }
 
         const auto& well_order = this->snapshots[timeStep].well_order();
         std::transform(well_order.begin(), well_order.end(),
                        std::back_inserter(wells),
-                       [this, timeStep](const auto& wname)
-                       {
-                           return this->snapshots[timeStep].wells.get(wname);
-                       });
+                       [&wells = this->snapshots[timeStep].wells]
+                       (const auto& wname) -> decltype(auto)
+                       { return wells.get(wname); });
 
         return wells;
     }
