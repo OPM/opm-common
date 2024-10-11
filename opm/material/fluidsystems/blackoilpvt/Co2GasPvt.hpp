@@ -36,6 +36,7 @@
 #include <opm/material/common/UniformTabulated2DFunction.hpp>
 #include <opm/material/binarycoefficients/Brine_CO2.hpp>
 #include <opm/input/eclipse/EclipseState/Co2StoreConfig.hpp>
+#include <opm/material/fluidsystems/blackoilpvt/Co2GasPvtParameters.hpp>
 
 #include <cstddef>
 #include <vector>
@@ -50,12 +51,13 @@ class Co2StoreConfig;
  * \brief This class represents the Pressure-Volume-Temperature relations of the gas phase
  *        for CO2.
  */
-template <class Scalar>
+template <class Scalar, class ParamsT = Opm::CO2GasPvtParameters>
 class Co2GasPvt
 {
     using CO2 = ::Opm::CO2<Scalar>;
     using H2O = SimpleHuDuanH2O<Scalar>;
     using Brine = ::Opm::BrineDynamic<Scalar, H2O>;
+    using Params = ParamsT;
     static constexpr bool extrapolate = true;
 
 public:
@@ -130,7 +132,8 @@ public:
      * \brief Returns the specific enthalpy [J/kg] of gas given a set of parameters.
      */
     template <class Evaluation>
-    Evaluation internalEnergy(unsigned regionIdx,
+    Evaluation internalEnergy(const Params& params,
+                        unsigned regionIdx,
                         const Evaluation& temperature,
                         const Evaluation& pressure,
                         const Evaluation& rv,
@@ -139,7 +142,7 @@ public:
         OPM_TIMEBLOCK_LOCAL(internalEnergy);
         if (gastype_ == Co2StoreConfig::GasMixingType::NONE) {
             // use the gasInternalEnergy of CO2
-            return CO2::gasInternalEnergy(temperature, pressure, extrapolate);
+            return CO2::gasInternalEnergy(params.co2Parameters, temperature, pressure, extrapolate);
         }
 
         assert(gastype_ == Co2StoreConfig::GasMixingType::IDEAL);
@@ -150,7 +153,7 @@ public:
         assert(rv == 0.0 || rvw == 0.0);
         const Evaluation xBrine = convertRvwToXgW_(max(rvw,rv),regionIdx);
         result += xBrine * H2O::gasInternalEnergy(temperature, pressure);
-        result += (1 - xBrine) * CO2::gasInternalEnergy(temperature, pressure, extrapolate);
+        result += (1 - xBrine) * CO2::gasInternalEnergy(params.co2Parameters, temperature, pressure, extrapolate);
         return result;
     }
 
@@ -170,20 +173,22 @@ public:
      * \brief Returns the dynamic viscosity [Pa s] of fluid phase at saturated conditions.
      */
     template <class Evaluation>
-    Evaluation saturatedViscosity(unsigned /*regionIdx*/,
+    Evaluation saturatedViscosity(const Params& params,
+                                  unsigned /*regionIdx*/,
                                   const Evaluation& temperature,
                                   const Evaluation& pressure) const
     {
         OPM_TIMEBLOCK_LOCAL(saturatedViscosity);
         // Neglects impact of vaporized water on the visosity
-        return CO2::gasViscosity(temperature, pressure, extrapolate);
+        return CO2::gasViscosity(params.co2Parameters, temperature, pressure, extrapolate);
     }
 
     /*!
      * \brief Returns the formation volume factor [-] of the fluid phase.
      */
     template <class Evaluation>
-    Evaluation inverseFormationVolumeFactor(unsigned regionIdx,
+    Evaluation inverseFormationVolumeFactor(const Params& params,
+                                            unsigned regionIdx,
                                             const Evaluation& temperature,
                                             const Evaluation& pressure,
                                             const Evaluation& rv,
@@ -191,12 +196,12 @@ public:
     {
         OPM_TIMEFUNCTION_LOCAL();
         if (!enableVaporization_) {
-            return CO2::gasDensity(temperature, pressure, extrapolate) /
+            return CO2::gasDensity(params.co2Parameters, temperature, pressure, extrapolate) /
                    gasReferenceDensity_[regionIdx];
         }
 
         // Use CO2 density for the gas phase.
-        const auto& rhoCo2 = CO2::gasDensity(temperature, pressure, extrapolate);
+        const auto& rhoCo2 = CO2::gasDensity(params.co2Parameters, temperature, pressure, extrapolate);
         //const auto& rhoH2O = H2O::gasDensity(temperature, pressure);
         //The CO2STORE option both works for GAS/WATER and GAS/OIL systems
         //Either rv og rvw should be zero

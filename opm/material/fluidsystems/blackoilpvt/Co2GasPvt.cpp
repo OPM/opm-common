@@ -32,8 +32,8 @@
 
 namespace Opm {
 
-template<class Scalar>
-Co2GasPvt<Scalar>::
+template<class Scalar, class Params>
+Co2GasPvt<Scalar, Params>::
 Co2GasPvt(const std::vector<Scalar>& salinity,
           int activityModel,
           int thermalMixingModel,
@@ -59,8 +59,8 @@ Co2GasPvt(const std::vector<Scalar>& salinity,
 }
 
 #if HAVE_ECL_INPUT
-template<class Scalar>
-void Co2GasPvt<Scalar>::
+template<class Scalar, class Params>
+void Co2GasPvt<Scalar, Params>::
 initFromState(const EclipseState& eclState, const Schedule&)
 {
     setEnableVaporizationWater(eclState.getSimulationConfig().hasVAPOIL() || eclState.getSimulationConfig().hasVAPWAT());
@@ -103,8 +103,8 @@ initFromState(const EclipseState& eclState, const Schedule&)
 }
 #endif
 
-template<class Scalar>
-void Co2GasPvt<Scalar>::
+template<class Scalar, class Params>
+void Co2GasPvt<Scalar, Params>::
 setNumRegions(std::size_t numRegions)
 {
     gasReferenceDensity_.resize(numRegions);
@@ -112,8 +112,8 @@ setNumRegions(std::size_t numRegions)
     salinity_.resize(numRegions);
 }
 
-template<class Scalar>
-void Co2GasPvt<Scalar>::
+template<class Scalar, class Params>
+void Co2GasPvt<Scalar, Params>::
 setReferenceDensities(unsigned regionIdx,
                       Scalar rhoRefBrine,
                       Scalar rhoRefGas,
@@ -123,8 +123,8 @@ setReferenceDensities(unsigned regionIdx,
     brineReferenceDensity_[regionIdx] = rhoRefBrine;;
 }
 
-template<class Scalar>
-void Co2GasPvt<Scalar>::
+template<class Scalar, class Params>
+void Co2GasPvt<Scalar, Params>::
 setActivityModelSalt(int activityModel)
 {
     switch (activityModel) {
@@ -136,8 +136,8 @@ setActivityModelSalt(int activityModel)
     }
 }
 
-template<class Scalar>
-void Co2GasPvt<Scalar>::
+template<class Scalar, class Params>
+void Co2GasPvt<Scalar, Params>::
 setThermalMixingModel(int thermalMixingModel)
 {
     switch (thermalMixingModel) {
@@ -149,8 +149,8 @@ setThermalMixingModel(int thermalMixingModel)
     }
 }
 
-template<class Scalar>
-void Co2GasPvt<Scalar>::
+template<class Scalar, class Params>
+void Co2GasPvt<Scalar, Params>::
 setEzrokhiDenCoeff(const std::vector<EzrokhiTable>& denaqa)
 {
     if (denaqa.empty()) {

@@ -33,6 +33,7 @@
 #include <opm/material/components/Component.hpp>
 #include <opm/material/common/MathToolbox.hpp>
 #include <opm/material/common/UniformTabulated2DFunction.hpp>
+#include <opm/material/components/CO2Parameters.hpp>
 
 #include <cmath>
 #include <string_view>
@@ -49,14 +50,14 @@ namespace Opm {
  * is not a top priority, the much simpler component \c Opm::SimpleCO2 can be
  * used instead
  */
-template <class Scalar>
+template <class Scalar, class ParamsT = Opm::CO2Parameters>
 class CO2 : public Component<Scalar, CO2<Scalar>>
 {
     static constexpr Scalar R = Constants<Scalar>::R;
-    static const UniformTabulated2DFunction<double>& tabulatedEnthalpy;
-    static const UniformTabulated2DFunction<double>& tabulatedDensity;
 
 public:
+    using Params = ParamsT;
+
     static const Scalar brineSalinity;
 
     /*!
@@ -166,23 +167,25 @@ public:
      * \brief Specific enthalpy of gaseous CO2 [J/kg].
      */
     template <class Evaluation>
-    static Evaluation gasEnthalpy(const Evaluation& temperature,
+    static Evaluation gasEnthalpy(const Params& params,
+                                  const Evaluation& temperature,
                                   const Evaluation& pressure,
                                   bool extrapolate = false)
     {
-        return tabulatedEnthalpy.eval(temperature, pressure, extrapolate);
+        return params.co2Tables.tabulatedEnthalpy.eval(temperature, pressure, extrapolate);
     }
 
     /*!
      * \brief Specific internal energy of CO2 [J/kg].
      */
     template <class Evaluation>
-    static Evaluation gasInternalEnergy(const Evaluation& temperature,
+    static Evaluation gasInternalEnergy(const Params& params,
+                                        const Evaluation& temperature,
                                         const Evaluation& pressure,
                                         bool extrapolate = false)
     {
-        const Evaluation h = gasEnthalpy(temperature, pressure, extrapolate);
-        const Evaluation rho = gasDensity(temperature, pressure, extrapolate);
+        const Evaluation h = gasEnthalpy(params, temperature, pressure, extrapolate);
+        const Evaluation rho = gasDensity(params, temperature, pressure, extrapolate);
 
         return h - (pressure / rho);
     }
@@ -191,11 +194,12 @@ public:
      * \brief The density of CO2 at a given pressure and temperature [kg/m^3].
      */
     template <class Evaluation>
-    static Evaluation gasDensity(const Evaluation& temperature,
+    static Evaluation gasDensity(const Params& params,
+                                 const Evaluation& temperature,
                                  const Evaluation& pressure,
                                  bool extrapolate = false)
     {
-        return tabulatedDensity.eval(temperature, pressure, extrapolate);
+        return params.co2Tables.tabulatedDensity.eval(temperature, pressure, extrapolate);
     }
 
     /*!
@@ -205,7 +209,8 @@ public:
      *                        - Fenhour etl al., 1998
      */
     template <class Evaluation>
-    static Evaluation gasViscosity(Evaluation temperature,
+    static Evaluation gasViscosity(const Params& params,
+                                   Evaluation temperature,
                                    const Evaluation& pressure,
                                    bool extrapolate = false)
     {
@@ -234,7 +239,7 @@ public:
 
         Evaluation mu0 = 1.00697*sqrt(temperature) / SigmaStar;
 
-        const Evaluation rho = gasDensity(temperature, pressure, extrapolate); // CO2 mass density [kg/m^3]
+        const Evaluation rho = gasDensity(params, temperature, pressure, extrapolate); // CO2 mass density [kg/m^3]
 
         // dmu : excess viscosity at elevated density
         Evaluation dmu =
@@ -258,7 +263,7 @@ public:
      * \param pressure Pressure of component \f$\mathrm{[Pa]}\f$
      */
     template <class Evaluation>
-    static Evaluation gasHeatCapacity(const Evaluation& temperature, const Evaluation& pressure)
+    static Evaluation gasHeatCapacity(const Params& params, const Evaluation& temperature, const Evaluation& pressure)
     {
         OPM_TIMEFUNCTION_LOCAL();
         constexpr Scalar eps = 1e-6;
@@ -266,8 +271,8 @@ public:
         // use central differences here because one-sided methods do
         // not come with a performance improvement. (central ones are
         // more accurate, though...)
-        const Evaluation h1 = gasEnthalpy(temperature - eps, pressure);
-        const Evaluation h2 = gasEnthalpy(temperature + eps, pressure);
+        const Evaluation h1 = gasEnthalpy(params, temperature - eps, pressure);
+        const Evaluation h2 = gasEnthalpy(params, temperature + eps, pressure);
 
         return (h2 - h1) / (2*eps) ;
     }
