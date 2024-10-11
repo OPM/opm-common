@@ -42,8 +42,8 @@ public:
     std::array<int, 3> ijk_from_active_index(int actInd) const;
     std::array<int, 3> ijk_from_global_index(int globInd) const;
 
-    void getCellCorners(int globindex, std::array<double,8>& X, std::array<double,8>& Y, std::array<double,8>& Z);
-    void getCellCorners(const std::array<int, 3>& ijk, std::array<double,8>& X, std::array<double,8>& Y, std::array<double,8>& Z);
+    void getCellCorners(int globindex, std::array<double, 8>& X, std::array<double, 8>& Y, std::array<double, 8>& Z);
+    void getCellCorners(const std::array<int, 3>& ijk, std::array<double, 8>& X, std::array<double, 8>& Y, std::array<double, 8>& Z);
 
     std::vector<std::array<float, 3>> getXYZ_layer(int layer, bool bottom=false);
     std::vector<std::array<float, 3>> getXYZ_layer(int layer, const std::array<int, 4>& box, bool bottom=false);
@@ -53,18 +53,20 @@ public:
 
     void load_grid_data();
     void load_nnc_data();
+    bool with_mapaxes() const { return m_mapaxes_loaded; }
+    void mapaxes_transform(double& x, double& y) const;
     bool is_radial() const { return m_radial; }
 
     const std::vector<int>& hostCellsGlobalIndex() const { return host_cells; }
     std::vector<std::array<int, 3>> hostCellsIJK();
 
-    // zero based: i1, j1,k1, i2,j2,k2, transmisibility
+    // zero based: i1,j1,k1, i2,j2,k2, transmisibility
     using NNCentry = std::tuple<int, int, int, int, int, int, float>;
     std::vector<NNCentry> get_nnc_ijk();
 
     const std::vector<std::string>& list_of_lgrs() const { return lgr_names; }
 
-    const std::vector<float>& get_mapaxes() const { return m_mapaxes; }
+    const std::array<double, 6>& get_mapaxes() const { return m_mapaxes; }
     const std::string& get_mapunits() const { return m_mapunits; }
     const std::vector<float>& get_coord() const { return coord_array; }
     const std::vector<float>& get_zcorn() const { return zcorn_array; }
@@ -77,8 +79,12 @@ private:
     std::string m_grid_name;
     bool m_radial;
 
-    std::vector<float> m_mapaxes;
+    std::array<double, 6> m_mapaxes;
     std::string m_mapunits;
+    bool m_mapaxes_loaded;
+    std::array<double, 4> origin;
+    std::array<double, 2> unit_x;
+    std::array<double, 2> unit_y;
 
     std::array<int, 3> nijk;
     std::array<int, 3> host_nijk;
@@ -112,8 +118,10 @@ private:
     std::vector<float> get_zcorn_from_disk(int layer, bool bottom);
 
     void getCellCorners(const std::array<int, 3>& ijk, const std::vector<float>& zcorn_layer,
-                           std::array<double,4>& X, std::array<double,4>& Y, std::array<double,4>& Z);
+                        std::array<double, 4>& X, std::array<double, 4>& Y, std::array<double, 4>& Z);
 
+    void mapaxes_init();
+    
 };
 
 }} // namespace Opm::EclIO

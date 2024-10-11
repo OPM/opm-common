@@ -156,7 +156,7 @@ class EclOutputBind {
 
 public:
 
-    EclOutputBind(const std::string& filename,const bool formatted, const bool append)
+    EclOutputBind(const std::string& filename, const bool formatted, const bool append)
     {
         if (append == true)
             m_output = std::make_unique<Opm::EclIO::EclOutput>(filename, formatted, std::ios::app);
@@ -292,26 +292,51 @@ npArray get_erst_vector(Opm::EclIO::ERst * file_ptr, const std::string& key, siz
     return get_erst_by_index(file_ptr, array_index, rstep);
 }
 
-
 std::tuple<std::array<double,8>, std::array<double,8>, std::array<double,8>>
-get_xyz_from_ijk(Opm::EclIO::EGrid * file_ptr,int i, int j, int k)
+get_xyz_from_ijk(Opm::EclIO::EGrid * file_ptr, int i, int j, int k)
 {
     std::array<double,8> X = {0.0};
     std::array<double,8> Y = {0.0};
     std::array<double,8> Z = {0.0};
 
-    std::array<int, 3> ijk = {i, j, k };
+    std::array<int, 3> ijk = {i, j, k};
 
     file_ptr->getCellCorners(ijk, X, Y, Z);
 
-    return std::make_tuple( X, Y, Z);
+    return std::make_tuple(X, Y, Z);
+}
+
+std::tuple<std::array<double,8>, std::array<double,8>, std::array<double,8>>
+get_xyz_from_ijk_mapaxes(Opm::EclIO::EGrid * file_ptr, int i, int j, int k, bool mapaxes)
+{
+    auto xyz = get_xyz_from_ijk(file_ptr, i, j, k);
+
+    if (file_ptr->with_mapaxes() && mapaxes){
+        for (int n = 0; n < 8; n++)
+            file_ptr->mapaxes_transform(std::get<0>(xyz)[n], std::get<1>(xyz)[n]);
+    }
+
+    return xyz;
 }
 
 std::tuple<std::array<double,8>, std::array<double,8>, std::array<double,8>>
 get_xyz_from_active_index(Opm::EclIO::EGrid * file_ptr, int actIndex)
 {
     std::array<int, 3> ijk = file_ptr->ijk_from_active_index(actIndex);
-    return get_xyz_from_ijk(file_ptr,ijk[0], ijk[1], ijk[2]);
+    return get_xyz_from_ijk(file_ptr, ijk[0], ijk[1], ijk[2]);
+}
+
+std::tuple<std::array<double,8>, std::array<double,8>, std::array<double,8>>
+get_xyz_from_active_index_mapaxes(Opm::EclIO::EGrid * file_ptr, int actIndex, bool mapaxes)
+{
+    auto xyz = get_xyz_from_active_index(file_ptr, actIndex);
+
+    if (file_ptr->with_mapaxes() && mapaxes){
+        for (int n = 0; n < 8; n++)
+            file_ptr->mapaxes_transform(std::get<0>(xyz)[n], std::get<1>(xyz)[n]);
+    }
+
+    return xyz;
 }
 
 py::array get_cellvolumes_mask(Opm::EclIO::EGrid * file_ptr, std::vector<int> mask)
@@ -463,15 +488,19 @@ void python::common::export_IO(py::module& m) {
         .def("units", &ESmryBind::units);
 
    py::class_<Opm::EclIO::EGrid>(m, "EGrid")
-        .def(py::init<const std::string &>())
+        .def(py::init<const std::string &, const std::string &>(), py::arg("filename"),
+             py::arg("grid_name") = "global")
         .def_property_readonly("active_cells", &Opm::EclIO::EGrid::activeCells)
         .def_property_readonly("dimension", &Opm::EclIO::EGrid::dimension)
         .def("ijk_from_global_index", &Opm::EclIO::EGrid::ijk_from_global_index)
         .def("ijk_from_active_index", &Opm::EclIO::EGrid::ijk_from_active_index)
         .def("active_index", &Opm::EclIO::EGrid::active_index)
         .def("global_index", &Opm::EclIO::EGrid::global_index)
+        .def("export_mapaxes", &Opm::EclIO::EGrid::get_mapaxes)
         .def("xyz_from_ijk", &get_xyz_from_ijk)
+        .def("xyz_from_ijk", &get_xyz_from_ijk_mapaxes)
         .def("xyz_from_active_index", &get_xyz_from_active_index)
+        .def("xyz_from_active_index", &get_xyz_from_active_index_mapaxes)
         .def("cellvolumes", &get_cellvolumes)
         .def("cellvolumes", &get_cellvolumes_mask);
 
