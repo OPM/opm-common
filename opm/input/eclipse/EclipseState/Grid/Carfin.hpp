@@ -95,9 +95,12 @@ namespace Opm
         int NX() const;
         int NY() const;
         int NZ() const;
-        size_t num_parent_cells() const;
-        std::tuple<std::vector<std::size_t>, std::vector<std::size_t>, std::vector<std::size_t>>
-                                                                                  parent_cellsIJK() const;
+        std::size_t num_parent_cells() const;
+        std::tuple <std::vector<std::size_t>,
+                    std::vector<std::size_t>, 
+                    std::vector<std::size_t>> 
+        parent_cellsIJK() const;
+        
         template<class Serializer>
         void serializeOp(Serializer& serializer)
         {
@@ -125,7 +128,7 @@ namespace Opm
                   int i1, int i2,
                   int j1, int j2,
                   int k1, int k2,
-                  int nx, int ny, int nz, std::string parent_name = "GLOBAL");
+                  int nx, int ny, int nz, const std::string& parent_name = "GLOBAL");
         void initIndexList();
         int lower(int dim) const;
         int upper(int dim) const;

@@ -110,7 +110,7 @@ namespace Opm
         std::string name = "LGR";
         default_count += update_default_name(deckRecord.getItem<ParserKeywords::CARFIN::NAME>(), name);      
 
-        std::string parent_name = "";
+        std::string parent_name = "GLOBAL";
         default_count += update_default_name(deckRecord.getItem<ParserKeywords::CARFIN::PARENT>(), parent_name);      
 
         int i1 = 0;
@@ -153,7 +153,7 @@ namespace Opm
                       const int j1, const int j2,
                       const int k1, const int k2,
                       const int nx, const int ny,
-                      const int nz, std::string parent_name)
+                      const int nz, const std::string& parent_name)
     {
         assert_dims(name, i1 , i2, nx, this->m_globalGridDims_.getNX());
         assert_dims(name, j1 , j2, ny, this->m_globalGridDims_.getNY());
@@ -188,23 +188,25 @@ namespace Opm
                (upper(2) - lower(2) + 1);
     }
 
-    std::tuple<std::vector<std::size_t>, std::vector<std::size_t>, std::vector<std::size_t>>
-                                                                 Carfin::parent_cellsIJK() const
+    std::tuple<std::vector<std::size_t>, 
+               std::vector<std::size_t>, 
+               std::vector<std::size_t>>
+    Carfin::parent_cellsIJK() const
     {
         std::vector<std::size_t> i_list;
         std::vector<std::size_t> j_list;  
         std::vector<std::size_t> k_list;
-        auto list_size =  num_parent_cells();
+        std::size_t list_size =  num_parent_cells();
         
         i_list.resize(list_size);
         j_list.resize(list_size);
         k_list.resize(list_size);
-        auto index = 0;
-        for (size_t i_index = lower(0); i_index <= upper(0); i_index++)
+        std::size_t index = 0;
+        for (std::size_t i_index = lower(0); i_index <= upper(0); i_index++)
         {
-            for (size_t j_index = lower(1); j_index <= upper(1); j_index++)
+            for (std::size_t j_index = lower(1); j_index <= upper(1); j_index++)
             {
-                for (size_t k_index = lower(2); k_index <= upper(2); k_index++)
+                for (std::size_t k_index = lower(2); k_index <= upper(2); k_index++)
                 {
                     i_list[index] = i_index;
                     j_list[index] = j_index;
