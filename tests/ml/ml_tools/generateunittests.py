@@ -1,11 +1,13 @@
-#  Copyright (c) 2024 NORCE
+#   Copyright (c) 2016 Robert W. Rose
+#   Copyright (c) 2018 Paul Maevskikh
+#   MIT License, see LICENSE.MIT file.
+#   
+#   Copyright (c) 2024 NORCE
 #   This file is part of the Open Porous Media project (OPM).
-
 #   OPM is free software: you can redistribute it and/or modify
 #   it under the terms of the GNU General Public License as published by
 #   the Free Software Foundation, either version 3 of the License, or
 #   (at your option) any later version.
-
 #   OPM is distributed in the hope that it will be useful,
 #   but WITHOUT ANY WARRANTY; without even the implied warranty of
 #   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -15,17 +17,17 @@
 #   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 
 import numpy as np
-import pprint
 import os, sys
 from tensorflow import keras
 
 from keras.models import Sequential
-from keras.layers import Conv2D, Dense, Flatten, Activation, MaxPooling2D, Dropout, BatchNormalization, ELU, Embedding, LSTM
+from keras.layers import Conv2D, Dense, Activation, ELU, Embedding
 
-sys.path.append('../../../opm/ml/ml_tools')
+sys.path.insert(0, '../../../python/opm/ml')
 
-from kerasify import export_model
-from scaler_layers import MinMaxScalerLayer, MinMaxUnScalerLayer
+from ml_tools import export_model
+from ml_tools import  MinMaxScalerLayer, MinMaxUnScalerLayer
+
 
 np.set_printoptions(precision=25, threshold=10000000)
 
@@ -43,15 +45,9 @@ def c_array(a):
 
 TEST_CASE = '''
 /*
-
- * Copyright (c) 2016 Robert W. Rose
- * Copyright (c) 2018 Paul Maevskikh
- *
- * MIT License, see LICENSE.MIT file.
- */ 
-
-/*
- * Copyright (c) 2024 NORCE
+  Copyright (c) 2016 Robert W. Rose
+  Copyright (c) 2018 Paul Maevskikh
+  Copyright (c) 2024 NORCE
   This file is part of the Open Porous Media project (OPM).
 
   OPM is free software: you can redistribute it and/or modify
@@ -70,6 +66,9 @@ TEST_CASE = '''
 
 #include <filesystem>
 #include <iostream>
+#include <opm/common/ErrorMacros.hpp>
+#include <fmt/format.h>
+
 namespace fs = std::filesystem;
 
 using namespace Opm;
@@ -78,8 +77,8 @@ bool test_%s(Evaluation* load_time, Evaluation* apply_time)
 {
     printf("TEST %s\\n");
 
-    KASSERT(load_time, "Invalid Evaluation");
-    KASSERT(apply_time, "Invalid Evaluation");
+    OPM_ERROR_IF(!load_time, "Invalid Evaluation");
+    OPM_ERROR_IF(!apply_time, "Invalid Evaluation");
 
     Opm::Tensor<Evaluation> in%s;
     in.data_ = %s;
@@ -87,25 +86,31 @@ bool test_%s(Evaluation* load_time, Evaluation* apply_time)
     Opm::Tensor<Evaluation> out%s;
     out.data_ = %s;
 
-    KerasTimer load_timer;
-    load_timer.Start();
+    NNTimer load_timer;
+    load_timer.start();
 
-    KerasModel<Evaluation> model;
-    KASSERT(model.LoadModel("%s"), "Failed to load model");
+    const fs::path sub_dir = "%s" ;
 
-    *load_time = load_timer.Stop();
+    fs::path p = fs::current_path();
 
-    KerasTimer apply_timer;
-    apply_timer.Start();
+    fs::path curr_path = fs::absolute(p)+=sub_dir;
+
+    NNModel<Evaluation> model;
+    OPM_ERROR_IF(!model.loadModel(curr_path), "Failed to load model");
+
+    *load_time = load_timer.stop();
+
+    NNTimer apply_timer;
+    apply_timer.start();
 
     Opm::Tensor<Evaluation> predict = out;
-    KASSERT(model.Apply(&in, &out), "Failed to apply");
+    OPM_ERROR_IF(!model.apply(in, out), "Failed to apply");
 
-    *apply_time = apply_timer.Stop();
+    *apply_time = apply_timer.stop();
 
     for (int i = 0; i < out.dims_[0]; i++)
     {
-        KASSERT_EQ(out(i), predict(i), %s);
+        OPM_ERROR_IF ((fabs(out(i).value() - predict(i).value()) > %s), fmt::format(" Expected " "{}" " got " "{}",predict(i).value(),out(i).value()));
     }
 
     return true;
@@ -138,7 +143,8 @@ def output_testcase(model, test_x, test_y, name, eps):
     print(model.summary())
 
     export_model(model, 'models/test_%s.model' % name)
-    path = f'./ml/ml_tools/models/test_{name}.model'
+
+    path = f'/tests/ml/ml_tools/models/test_{name}.model'
     with open('include/test_%s.hpp' % name, 'w') as f:
         x_shape, x_data = c_array(test_x[0])
         y_shape, y_data = c_array(predict_y[0])

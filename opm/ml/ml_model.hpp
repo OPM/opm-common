@@ -1,12 +1,6 @@
 /*
-
- * Copyright (c) 2016 Robert W. Rose
- * Copyright (c) 2018 Paul Maevskikh
- *
- * MIT License, see LICENSE.MIT file.
- */ 
-
-/*
+  Copyright (c) 2016 Robert W. Rose
+  Copyright (c) 2018 Paul Maevskikh
   Copyright (c) 2024 NORCE
   This file is part of the Open Porous Media project (OPM).
 
@@ -34,75 +28,49 @@
 #include <numeric>
 #include <string>
 #include <vector>
-#include <iostream>
 
 #include <opm/material/densead/Math.hpp>
 #include <opm/common/ErrorMacros.hpp>
-#include <sstream>
+#include <fmt/format.h>
+
 
 namespace Opm {
 
-#define KASSERT(x, ...)                                                        \
-    if (!(x)) {                                                                \
-        std::printf("KASSERT: %s(%d): ", __FILE__, __LINE__);                       \
-        std::printf(__VA_ARGS__);                                                   \
-        std::printf("\n");                                                          \
-        return false;                                                          \
-    }
-
-#define KASSERT_EQ(x, y, eps)                                                  \
-    if (fabs(x.value() - y.value()) > eps) {                                   \
-        std::printf("KASSERT: Expected %f, got %f\n", y.value(), x.value());        \
-        return false;                                                          \
-    }
-
-#ifdef DEBUG
-#define KDEBUG(x, ...)                                                         \
-    if (!(x)) {                                                                \
-        std::printf("%s(%d): ", __FILE__, __LINE__);                                \
-        std::printf(__VA_ARGS__);                                                   \
-        std::printf("\n");                                                          \
-        exit(-1);                                                              \
-    }
-#else
-#define KDEBUG(x, ...) ;
-#endif
-
+// NN layer
+// ---------------------
+/** \class Tensor class
+ * Implements mathematical tensor (Max 4d)
+ */
 template<class T>
 class Tensor {
   public:
     Tensor() {}
 
-     explicit Tensor(int i) { resize(i); }
+     explicit Tensor(int i) { resizeI<int>({i}); }
      
-    Tensor(int i, int j) { resize(i, j); }
+    Tensor(int i, int j) { resizeI<int>({i, j}); }
 
-    Tensor(int i, int j, int k) { resize(i, j, k); }
+    Tensor(int i, int j, int k) { resizeI<int>({i, j, k}); }
 
-    Tensor(int i, int j, int k, int l) { resize(i, j, k, l); }
+    Tensor(int i, int j, int k, int l) { resizeI<int>({i, j, k, l}); }
 
-    void resize(int i) {
-        dims_ = {i};
-        data_.resize(i);
-    }
 
-    void resize(int i, int j) {
-        dims_ = {i, j};
-        data_.resize(i * j);
-    }
+  template <typename Type>
+    void resizeI(std::vector<Type> c) {
+      if (c.size()==1)
+        dims_ = {(int)c[0]};
+      if (c.size()==2)
+        dims_ = {(int)c[0],(int)c[1]};
+      if (c.size()==3)
+        dims_ = {(int)c[0],(int)c[1],(int)c[2]};
+      if (c.size()==4)
+        dims_ = {(int)c[0],(int)c[1],(int)c[2],(int)c[3]};
 
-    void resize(int i, int j, int k) {
-        dims_ = {i, j, k};
-        data_.resize(i * j * k);
-    }
-
-    void resize(int i, int j, int k, int l) {
-        dims_ = {i, j, k, l};
-        data_.resize(i * j * k * l);
+      data_.resize(std::accumulate(begin(c), end(c), 1.0, std::multiplies<Type>()));
     }
 
     inline void flatten() {
-        KDEBUG(dims_.size() > 0, "Invalid tensor");
+        OPM_ERROR_IF(dims_.size() <= 0, "Invalid tensor");
 
         int elements = dims_[0];
         for (unsigned int i = 1; i < dims_.size(); i++) {
@@ -112,61 +80,61 @@ class Tensor {
     }
 
     inline T& operator()(int i) {
-        KDEBUG(dims_.size() == 1, "Invalid indexing for tensor");
-        KDEBUG(i < dims_[0] && i >= 0, "Invalid i: %d (max %d)", i, dims_[0]);
+        OPM_ERROR_IF(dims_.size() != 1, "Invalid indexing for tensor");
+
+        OPM_ERROR_IF (!(i < dims_[0] && i >= 0), fmt::format(" Invalid i:  " "{}" "  max: " "{}",i, dims_[0]));
 
         return data_[i];
     }
 
     inline T& operator()(int i, int j) {
-        KDEBUG(dims_.size() == 2, "Invalid indexing for tensor");
-        KDEBUG(i < dims_[0] && i >= 0, "Invalid i: %d (max %d)", i, dims_[0]);
-        KDEBUG(j < dims_[1] && j >= 0, "Invalid j: %d (max %d)", j, dims_[1]);
+        OPM_ERROR_IF(dims_.size() != 2, "Invalid indexing for tensor");
+        OPM_ERROR_IF (!(i < dims_[0] && i >= 0), fmt::format(" Invalid i:  " "{}" "  max: " "{}",i, dims_[0]));
+        OPM_ERROR_IF (!(j < dims_[1] && j >= 0), fmt::format(" Invalid j:  " "{}" "  max: " "{}",j, dims_[1]));
 
         return data_[dims_[1] * i + j];
     }
 
     const T& operator()(int i, int j) const {
-        KDEBUG(dims_.size() == 2, "Invalid indexing for tensor");
-        KDEBUG(i < dims_[0] && i >= 0, "Invalid i: %d (max %d)", i, dims_[0]);
-        KDEBUG(j < dims_[1] && j >= 0, "Invalid j: %d (max %d)", j, dims_[1]);
-
+        OPM_ERROR_IF(dims_.size() != 2, "Invalid indexing for tensor");
+        OPM_ERROR_IF (!(i < dims_[0] && i >= 0), fmt::format(" Invalid i:  " "{}" "  max: " "{}",i, dims_[0]));
+        OPM_ERROR_IF (!(j < dims_[1] && j >= 0), fmt::format(" Invalid j:  " "{}" "  max: " "{}",j, dims_[1]));
         return data_[dims_[1] * i + j];
     }
 
     inline T& operator()(int i, int j, int k) {
-        KDEBUG(dims_.size() == 3, "Invalid indexing for tensor");
-        KDEBUG(i < dims_[0] && i >= 0, "Invalid i: %d (max %d)", i, dims_[0]);
-        KDEBUG(j < dims_[1] && j >= 0, "Invalid j: %d (max %d)", j, dims_[1]);
-        KDEBUG(k < dims_[2] && k >= 0, "Invalid k: %d (max %d)", k, dims_[2]);
+        OPM_ERROR_IF(dims_.size() != 3, "Invalid indexing for tensor");
+        OPM_ERROR_IF (!(i < dims_[0] && i >= 0), fmt::format(" Invalid i:  " "{}" "  max: " "{}",i, dims_[0]));
+        OPM_ERROR_IF (!(j < dims_[1] && j >= 0), fmt::format(" Invalid j:  " "{}" "  max: " "{}",j, dims_[1]));
+        OPM_ERROR_IF (!(k < dims_[2] && k >= 0), fmt::format(" Invalid k:  " "{}" "  max: " "{}",k, dims_[2]));
 
         return data_[dims_[2] * (dims_[1] * i + j) + k];
     }
         const T& operator()(int i, int j, int k) const {
-        KDEBUG(dims_.size() == 3, "Invalid indexing for tensor");
-        KDEBUG(i < dims_[0] && i >= 0, "Invalid i: %d (max %d)", i, dims_[0]);
-        KDEBUG(j < dims_[1] && j >= 0, "Invalid j: %d (max %d)", j, dims_[1]);
-        KDEBUG(k < dims_[2] && k >= 0, "Invalid k: %d (max %d)", k, dims_[2]);
+        OPM_ERROR_IF(dims_.size() != 3, "Invalid indexing for tensor");
+        OPM_ERROR_IF (!(i < dims_[0] && i >= 0), fmt::format(" Invalid i:  " "{}" "  max: " "{}",i, dims_[0]));
+        OPM_ERROR_IF (!(j < dims_[1] && j >= 0), fmt::format(" Invalid j:  " "{}" "  max: " "{}",j, dims_[1]));
+        OPM_ERROR_IF (!(k < dims_[2] && k >= 0), fmt::format(" Invalid k:  " "{}" "  max: " "{}",k, dims_[2]));
 
         return data_[dims_[2] * (dims_[1] * i + j) + k];
     }
 
     inline T& operator()(int i, int j, int k, int l) {
-        KDEBUG(dims_.size() == 4, "Invalid indexing for tensor");
-        KDEBUG(i < dims_[0] && i >= 0, "Invalid i: %d (max %d)", i, dims_[0]);
-        KDEBUG(j < dims_[1] && j >= 0, "Invalid j: %d (max %d)", j, dims_[1]);
-        KDEBUG(k < dims_[2] && k >= 0, "Invalid k: %d (max %d)", k, dims_[2]);
-        KDEBUG(l < dims_[3] && l >= 0, "Invalid l: %d (max %d)", l, dims_[3]);
+        OPM_ERROR_IF(dims_.size() != 4, "Invalid indexing for tensor");
+        OPM_ERROR_IF (!(i < dims_[0] && i >= 0), fmt::format(" Invalid i:  " "{}" "  max: " "{}",i, dims_[0]));
+        OPM_ERROR_IF (!(j < dims_[1] && j >= 0), fmt::format(" Invalid j:  " "{}" "  max: " "{}",j, dims_[1]));
+        OPM_ERROR_IF (!(k < dims_[2] && k >= 0), fmt::format(" Invalid k:  " "{}" "  max: " "{}",k, dims_[2]));
+        OPM_ERROR_IF (!(l < dims_[3] && l >= 0), fmt::format(" Invalid l:  " "{}" "  max: " "{}",l, dims_[3]));
 
         return data_[dims_[3] * (dims_[2] * (dims_[1] * i + j) + k) + l];
     }
 
     const T& operator()(int i, int j, int k, int l) const{
-        KDEBUG(dims_.size() == 4, "Invalid indexing for tensor");
-        KDEBUG(i < dims_[0] && i >= 0, "Invalid i: %d (max %d)", i, dims_[0]);
-        KDEBUG(j < dims_[1] && j >= 0, "Invalid j: %d (max %d)", j, dims_[1]);
-        KDEBUG(k < dims_[2] && k >= 0, "Invalid k: %d (max %d)", k, dims_[2]);
-        KDEBUG(l < dims_[3] && l >= 0, "Invalid l: %d (max %d)", l, dims_[3]);
+        OPM_ERROR_IF(dims_.size() != 4, "Invalid indexing for tensor");
+        OPM_ERROR_IF (!(i < dims_[0] && i >= 0), fmt::format(" Invalid i:  " "{}" "  max: " "{}",i, dims_[0]));
+        OPM_ERROR_IF (!(j < dims_[1] && j >= 0), fmt::format(" Invalid j:  " "{}" "  max: " "{}",j, dims_[1]));
+        OPM_ERROR_IF (!(k < dims_[2] && k >= 0), fmt::format(" Invalid k:  " "{}" "  max: " "{}",k, dims_[2]));
+        OPM_ERROR_IF (!(l < dims_[3] && l >= 0), fmt::format(" Invalid l:  " "{}" "  max: " "{}",l, dims_[3]));
 
         return data_[dims_[3] * (dims_[2] * (dims_[1] * i + j) + k) + l];
     }
@@ -174,39 +142,10 @@ class Tensor {
         std::fill(data_.begin(), data_.end(), value);
     }
 
-    // Tensor Unpack(int row) const {
-    //     KASSERT(dims_.size() >= 2, "Invalid tensor");
-    //     std::vector<int> pack_dims =
-    //         std::vector<int>(dims_.begin() + 1, dims_.end());
-    //     int pack_size = std::accumulate(pack_dims.begin(), pack_dims.end(), 0);
-
-    //     typename std::vector<T>::const_iterator first =
-    //         data_.begin() + (row * pack_size);
-    //     typename std::vector<T>::const_iterator last =
-    //         data_.begin() + (row + 1) * pack_size;
-
-    //     Tensor x = Tensor();
-    //     x.dims_ = pack_dims;
-    //     x.data_ = std::vector<T>(first, last);
-
-    //     return x;
-    // }
-
-    // Tensor Select(int row) const {
-    //     Tensor x = Unpack(row);
-    //     x.dims_.insert(x.dims_.begin(), 1);
-
-    //     return x;
-    // }
-
+   // Tensor addition
     Tensor operator+(const Tensor& other) {
-        // KASSERT(dims_ == other.dims_,
-                // "Cannot add tensors with different dimensions");
 	    OPM_ERROR_IF(dims_.size()  != other.dims_.size() ,
                 "Cannot add tensors with different dimensions");
-// std::cout<<"dims_ "<<dims_.size()<<std::endl;
-// std::cout<<"other.dims_ "<<other.dims_.size()<<std::endl;
-
         Tensor result;
         result.dims_ = dims_;
         result.data_.reserve(data_.size());
@@ -218,9 +157,8 @@ class Tensor {
         return result;
     }
 
+    // Tensor multiplication
     Tensor multiply(const Tensor& other) {
-        // KASSERT(dims_ == other.dims_,
-        //         "Cannot multiply elements with different dimensions");
 	    OPM_ERROR_IF(dims_.size()  != other.dims_.size() ,
                       "Cannot multiply elements with different dimensions");
 
@@ -235,11 +173,11 @@ class Tensor {
         return result;
     }
 
+    // Tensor dot for 2d tensor
     Tensor dot(const Tensor& other) {
-        KDEBUG(dims_.size() == 2, "Invalid tensor dimensions");
-        KDEBUG(other.dims_.size() == 2, "Invalid tensor dimensions");
-        // KASSERT(dims_[1] == other.dims_[0],
-        //         "Cannot multiply with different inner dimensions");
+      OPM_ERROR_IF(dims_.size() != 2, "Invalid tensor dimensions");
+      OPM_ERROR_IF(other.dims_.size() != 2, "Invalid tensor dimensions");
+
 	    OPM_ERROR_IF(dims_[1] != other.dims_[0],
                 "Cannot multiply with different inner dimensions");
 
@@ -260,20 +198,29 @@ class Tensor {
     std::vector<T> data_;
 };
 
-template<class Evaluation>
-class KerasLayer {
-  public:
-    KerasLayer() {}
 
-    virtual ~KerasLayer() {}
+
+// NN layer
+// ---------------------
+/** \class Neural Network  Layer base class
+ */
+template<class Evaluation>
+class NNLayer {
+  public:
+    NNLayer() {}
+
+    virtual ~NNLayer() {}
 
     virtual bool loadLayer(std::ifstream& file) = 0;
 
-    virtual bool apply(Tensor<Evaluation>& in, Tensor<Evaluation>& out) = 0;
+    virtual bool apply(const Tensor<Evaluation>& in, Tensor<Evaluation>& out) = 0;
 };
 
+/** \class Activation  Layer class
+ * Applies an activation function
+ */
 template<class Evaluation>
-class KerasLayerActivation : public KerasLayer<Evaluation> {
+class NNLayerActivation : public NNLayer<Evaluation> {
   public:
     enum ActivationType {
         kLinear = 1,
@@ -284,28 +231,31 @@ class KerasLayerActivation : public KerasLayer<Evaluation> {
         kHardSigmoid = 6
     };
 
-    KerasLayerActivation() : activation_type_(ActivationType::kLinear) {}
+    NNLayerActivation() : activation_type_(ActivationType::kLinear) {}
 
-    virtual ~KerasLayerActivation() {}
+    virtual ~NNLayerActivation() {}
 
     virtual bool loadLayer(std::ifstream& file);
 
-    virtual bool apply(Tensor<Evaluation>& in, Tensor<Evaluation>& out);
+    virtual bool apply(const Tensor<Evaluation>& in, Tensor<Evaluation>& out);
 
   private:
     ActivationType activation_type_;
 };
 
+/** \class Scaling Layer class
+ * A preprocessing layer which rescales input values to a new range.
+ */
 template<class Evaluation>
-class KerasLayerScaling : public KerasLayer<Evaluation> {
+class NNLayerScaling : public NNLayer<Evaluation> {
   public:
-    KerasLayerScaling(): data_min(1.0f), data_max(1.0f), feat_inf(1.0f), feat_sup(1.0f) {}
+    NNLayerScaling(): data_min(1.0f), data_max(1.0f), feat_inf(1.0f), feat_sup(1.0f) {}
 
-    virtual ~KerasLayerScaling() {}
+    virtual ~NNLayerScaling() {}
 
     virtual bool loadLayer(std::ifstream& file);
 
-    virtual bool apply(Tensor<Evaluation>& in, Tensor<Evaluation>& out);
+    virtual bool apply(const Tensor<Evaluation>& in, Tensor<Evaluation>& out);
 
   private:
     Tensor<float> weights_;
@@ -316,16 +266,19 @@ class KerasLayerScaling : public KerasLayer<Evaluation> {
     float feat_sup;
 };
 
+/** \class Unscaling Layer class
+ * A postprocessing layer to undo the scaling according to feature_range.
+ */
 template<class Evaluation>
-class KerasLayerUnScaling : public KerasLayer<Evaluation> {
+class NNLayerUnScaling : public NNLayer<Evaluation> {
   public:
-    KerasLayerUnScaling(): data_min(1.0f), data_max(1.0f), feat_inf(1.0f), feat_sup(1.0f) {}
+    NNLayerUnScaling(): data_min(1.0f), data_max(1.0f), feat_inf(1.0f), feat_sup(1.0f) {}
 
-    virtual ~KerasLayerUnScaling() {}
+    virtual ~NNLayerUnScaling() {}
 
     virtual bool loadLayer(std::ifstream& file);
 
-    virtual bool apply(Tensor<Evaluation>& in, Tensor<Evaluation>& out);
+    virtual bool apply(const Tensor<Evaluation>& in, Tensor<Evaluation>& out);
 
   private:
     Tensor<float> weights_;
@@ -336,86 +289,76 @@ class KerasLayerUnScaling : public KerasLayer<Evaluation> {
     float feat_sup;
 };
 
-
+/** \class Dense Layer class
+ * Densely-connected NN layer.
+ */
 template<class Evaluation>
-class KerasLayerDense : public KerasLayer<Evaluation> {
+class NNLayerDense : public NNLayer<Evaluation> {
   public:
-    KerasLayerDense() {}
+    NNLayerDense() {}
 
-    virtual ~KerasLayerDense() {}
+    virtual ~NNLayerDense() {}
 
     virtual bool loadLayer(std::ifstream& file);
 
-    virtual bool apply(Tensor<Evaluation>& in, Tensor<Evaluation>& out);
+    virtual bool apply(const Tensor<Evaluation>& in, Tensor<Evaluation>& out);
 
   private:
     Tensor<float> weights_;
     Tensor<float> biases_;
 
-    KerasLayerActivation<Evaluation> activation_;
+    NNLayerActivation<Evaluation> activation_;
 };
 
+/** \class Embedding Layer class
+ * Turns nonnegative integers (indexes) into dense vectors of fixed size.
+ */
 template<class Evaluation>
-class KerasLayerFlatten : public KerasLayer<Evaluation> {
+class NNLayerEmbedding : public NNLayer<Evaluation> {
   public:
-    KerasLayerFlatten() {}
+    NNLayerEmbedding() {}
 
-    virtual ~KerasLayerFlatten() {}
+    virtual ~NNLayerEmbedding() {}
 
     virtual bool loadLayer(std::ifstream& file);
 
-    virtual bool apply(Tensor<Evaluation>& in, Tensor<Evaluation>& out);
-
-  // private:
-};
-
-
-template<class Evaluation>
-class KerasLayerEmbedding : public KerasLayer<Evaluation> {
-  public:
-    KerasLayerEmbedding() {}
-
-    virtual ~KerasLayerEmbedding() {}
-
-    virtual bool loadLayer(std::ifstream& file);
-
-    virtual bool apply(Tensor<Evaluation>& in, Tensor<Evaluation>& out);
+    virtual bool apply(const Tensor<Evaluation>& in, Tensor<Evaluation>& out);
 
   private:
     Tensor<float> weights_;
 };
 
+/** \class Neural Network Model class
+ * A model grouping layers into an object
+ */
 template<class Evaluation>
-class KerasModel {
+class NNModel {
   public:
     enum LayerType {
-        kFlatten = 1,
-        kScaling = 2,
-        kUnScaling = 3,
-        kDense = 4,
-        kActivation = 5
+        // kFlatten = 1,
+        kScaling = 1,
+        kUnScaling = 2,
+        kDense = 3,
+        kActivation = 4
     };
 
-    KerasModel() {}
+    NNModel() {}
 
-    virtual ~KerasModel() {
-        // for (unsigned int i = 0; i < layers_.size(); i++) {
-        //     delete layers_[i];
-        // }
-    }
-
+    virtual ~NNModel() {}
+  //loads models generated by Kerasify 
     virtual bool loadModel(const std::string& filename);
 
-    virtual bool apply(Tensor<Evaluation>& in, Tensor<Evaluation>& out);
+    virtual bool apply(const Tensor<Evaluation>& in, Tensor<Evaluation>& out);
 
   private:
-    // std::vector<KerasLayer<Evaluation>*> layers_;
-    std::vector<std::unique_ptr<KerasLayer<Evaluation>>> layers_;
+    std::vector<std::unique_ptr<NNLayer<Evaluation>>> layers_;
 };
 
-class KerasTimer {
+/** \class Neural Network Timer class
+ */
+class NNTimer {
   public:
-    KerasTimer() {}
+    NNTimer() {}
 
     void start() { start_ = std::chrono::high_resolution_clock::now(); }
 

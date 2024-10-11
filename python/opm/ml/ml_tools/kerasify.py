@@ -1,8 +1,6 @@
 
 #   Copyright (c) 2016 Robert W. Rose
-#   Copyright (c) 2018 Paul Maevskikh
-#   MIT License, see LICENSE.MIT file.
-#   
+#   Copyright (c) 2018 Paul Maevskikh 
 #   Copyright (c) 2024 NORCE
 #   This file is part of the Open Porous Media project (OPM).
 #   OPM is free software: you can redistribute it and/or modify

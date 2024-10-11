@@ -1,12 +1,6 @@
 /*
-
- * Copyright (c) 2016 Robert W. Rose
- * Copyright (c) 2018 Paul Maevskikh
- *
- * MIT License, see LICENSE.MIT file.
- */ 
-
-/*
+  Copyright (c) 2016 Robert W. Rose
+  Copyright (c) 2018 Paul Maevskikh
   Copyright (c) 2024 NORCE
   This file is part of the Open Porous Media project (OPM).
 
@@ -25,8 +19,10 @@
 */
 
 #include <opm/ml/ml_model.hpp>
-#include <iostream>
-#include <stdio.h>
+#include <opm/common/ErrorMacros.hpp>
+#include <fmt/format.h>
+
+#include <cstdio>
 #include <tests/ml/ml_tools/include/test_dense_10x1.hpp>
 #include <tests/ml/ml_tools/include/test_dense_10x10.hpp>
 #include <tests/ml/ml_tools/include/test_dense_10x10x10.hpp>
@@ -42,7 +38,7 @@ namespace Opm {
 
 template<class Evaluation>
 bool tensor_test() {
-  printf("TEST tensor_test\n");
+  std::printf("TEST tensor_test\n");
 
     {
         const int i = 3;
@@ -65,8 +61,9 @@ bool tensor_test() {
         for (int ii = 0; ii < i; ii++) {
             for (int jj = 0; jj < j; jj++) {
                 for (int kk = 0; kk < k; kk++) {
-                    KASSERT_EQ(t(ii, jj, kk), c, 1e-9);
-                    KASSERT_EQ(t.data_[cc], c, 1e-9);
+                    OPM_ERROR_IF (fabs(t(ii, jj, kk).value() - c.value()) > 1e-9,fmt::format("\n Expected " "{}" "got " "{}", c.value(), t(ii, jj, kk).value()));   
+                    OPM_ERROR_IF (fabs(t.data_[cc].value() - c.value()) > 1e-9,fmt::format("\n Expected " "{}" "got " "{}", c.value(), t.data_[cc].value()));
+
                     c += 1.f;
                     cc++;
                 }
@@ -99,8 +96,8 @@ bool tensor_test() {
             for (int jj = 0; jj < j; jj++) {
                 for (int kk = 0; kk < k; kk++) {
                     for (int ll = 0; ll < l; ll++) {
-                        KASSERT_EQ(t(ii, jj, kk, ll), c, 1e-9);
-                        KASSERT_EQ(t.data_[cc], c, 1e-9);
+                        OPM_ERROR_IF (fabs(t(ii, jj, kk, ll).value() - c.value()) > 1e-9,fmt::format("\n Expected " "{}" "got " "{}", c.value(), t(ii, jj, kk, ll).value()));
+                        OPM_ERROR_IF (fabs(t.data_[cc].value() - c.value()) > 1e-9,fmt::format("\n Expected " "{}" "got " "{}", c.value(), t.data_[cc].value()));
                         c += 1.f;
                         cc++;
                     }
@@ -117,7 +114,7 @@ bool tensor_test() {
         b.data_ = {2.0, 5.0, 4.0, 1.0};
 
         Tensor<Evaluation> result = a + b;
-        KASSERT(result.data_ == std::vector<Evaluation>({3.0, 7.0, 7.0, 6.0}),
+        OPM_ERROR_IF(result.data_ != std::vector<Evaluation>({3.0, 7.0, 7.0, 6.0}),
                 "Vector add failed");
     }
 
@@ -129,7 +126,7 @@ bool tensor_test() {
         b.data_ = {2.0, 5.0, 4.0, 1.0};
 
         Tensor<Evaluation> result = a.multiply(b);
-        KASSERT(result.data_ == std::vector<Evaluation>({2.0, 10.0, 12.0, 5.0}),
+        OPM_ERROR_IF(result.data_ != std::vector<Evaluation>({2.0, 10.0, 12.0, 5.0}),
                 "Vector multiply failed");
     }
 
@@ -141,8 +138,8 @@ bool tensor_test() {
         b.data_ = {2.0, 5.0};
 
         Tensor<Evaluation> result = a.dot(b);
-        KASSERT(result.data_ == std::vector<Evaluation>({2.0, 5.0, 4.0, 10.0}),
-                "Vector dot failed");
+        OPM_ERROR_IF(result.data_ != std::vector<Evaluation>({2.0, 5.0, 4.0, 10.0}),
+        "Vector dot failed");
     }
 
     return true;

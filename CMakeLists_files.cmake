@@ -62,7 +62,7 @@ list (APPEND MAIN_SOURCE_FILES
       opm/material/fluidsystems/blackoilpvt/SolventPvt.cpp
       opm/material/fluidsystems/blackoilpvt/WetGasPvt.cpp
       opm/material/fluidsystems/blackoilpvt/WetHumidGasPvt.cpp
-      opm/ml/keras_model.cpp
+      opm/ml/ml_model.cpp
 )
 if(ENABLE_ECL_INPUT)
   list(APPEND MAIN_SOURCE_FILES
@@ -475,7 +475,7 @@ list (APPEND TEST_SOURCE_FILES
       tests/material/test_spline.cpp
       tests/material/test_tabulation.cpp
       tests/test_Visitor.cpp
-      tests/ml/keras_model_test.cpp
+      tests/ml/ml_model_test.cpp
 )
 
 # tests that need to be linked to dune-common
@@ -1063,7 +1063,7 @@ list( APPEND PUBLIC_HEADER_FILES
       opm/material/thermal/SomertonThermalConductionLaw.hpp
       opm/material/thermal/EclSpecrockLaw.hpp
       opm/material/thermal/NullSolidEnergyLaw.hpp
-      opm/ml/keras_model.hpp
+      opm/ml/ml_model.hpp
 )
 
 if(ENABLE_ECL_INPUT)

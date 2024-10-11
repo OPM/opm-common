@@ -1,14 +1,8 @@
 
 /*
-
- * Copyright (c) 2016 Robert W. Rose
- * Copyright (c) 2018 Paul Maevskikh
- *
- * MIT License, see LICENSE.MIT file.
- */ 
-
-/*
- * Copyright (c) 2024 NORCE
+  Copyright (c) 2016 Robert W. Rose
+  Copyright (c) 2018 Paul Maevskikh
+  Copyright (c) 2024 NORCE
   This file is part of the Open Porous Media project (OPM).
 
   OPM is free software: you can redistribute it and/or modify
@@ -27,6 +21,9 @@
 
 #include <filesystem>
 #include <iostream>
+#include <opm/common/ErrorMacros.hpp>
+#include <fmt/format.h>
+
 namespace fs = std::filesystem;
 
 using namespace Opm;
@@ -35,36 +32,42 @@ bool test_dense_tanh_10(Evaluation* load_time, Evaluation* apply_time)
 {
     printf("TEST dense_tanh_10\n");
 
-    KASSERT(load_time, "Invalid Evaluation");
-    KASSERT(apply_time, "Invalid Evaluation");
+    OPM_ERROR_IF(!load_time, "Invalid Evaluation");
+    OPM_ERROR_IF(!apply_time, "Invalid Evaluation");
 
     Opm::Tensor<Evaluation> in{10};
-    in.data_ = {0.8417535,0.01666395,0.40597403,0.72943276,0.55192524,
-0.8613093,0.8216251,0.0077196797,0.9292973,0.050378576};
+    in.data_ = {0.57784367,0.25253502,0.56445366,0.7543359,0.5095673,0.14378926,
+0.58591866,0.02342105,0.028024895,0.905349};
 
     Opm::Tensor<Evaluation> out{10};
-    out.data_ = {0.005546283,-0.32751718,-0.54984826,0.12813118,0.034228113,
--0.15042743,-0.12779453,-0.43155488,-0.18912314,0.07741854};
+    out.data_ = {-0.029181654,0.3627418,-0.052402735,0.50181013,-0.5348898,
+-0.061557874,-0.29160437,0.055488374,0.054263014,0.20701094};
 
-    KerasTimer load_timer;
-    load_timer.Start();
+    NNTimer load_timer;
+    load_timer.start();
 
-    KerasModel<Evaluation> model;
-    KASSERT(model.LoadModel("./ml/ml_tools/models/test_dense_tanh_10.model"), "Failed to load model");
+    const fs::path sub_dir = "/tests/ml/ml_tools/models/test_dense_tanh_10.model" ;
 
-    *load_time = load_timer.Stop();
+    fs::path p = fs::current_path();
 
-    KerasTimer apply_timer;
-    apply_timer.Start();
+    fs::path curr_path = fs::absolute(p)+=sub_dir;
+
+    NNModel<Evaluation> model;
+    OPM_ERROR_IF(!model.loadModel(curr_path), "Failed to load model");
+
+    *load_time = load_timer.stop();
+
+    NNTimer apply_timer;
+    apply_timer.start();
 
     Opm::Tensor<Evaluation> predict = out;
-    KASSERT(model.Apply(&in, &out), "Failed to apply");
+    OPM_ERROR_IF(!model.apply(in, out), "Failed to apply");
 
-    *apply_time = apply_timer.Stop();
+    *apply_time = apply_timer.stop();
 
     for (int i = 0; i < out.dims_[0]; i++)
     {
-        KASSERT_EQ(out(i), predict(i), 1e-6);
+        OPM_ERROR_IF ((fabs(out(i).value() - predict(i).value()) > 1e-6), fmt::format(" Expected " "{}" " got " "{}",predict(i).value(),out(i).value()));
     }
 
     return true;
