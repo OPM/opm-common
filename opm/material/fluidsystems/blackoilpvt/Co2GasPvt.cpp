@@ -32,8 +32,8 @@
 
 namespace Opm {
 
-template<class Scalar>
-Co2GasPvt<Scalar>::
+template<class Scalar, class Params>
+Co2GasPvt<Scalar, Params>::
 Co2GasPvt(const std::vector<Scalar>& salinity,
           int activityModel,
           int thermalMixingModel,
@@ -50,17 +50,19 @@ Co2GasPvt(const std::vector<Scalar>& salinity,
     setActivityModelSalt(activityModel);
     setThermalMixingModel(thermalMixingModel);
 
+    co2Tables = Params();
+
     int num_regions = salinity_.size();
     setNumRegions(num_regions);
     for (int i = 0; i < num_regions; ++i) {
-        gasReferenceDensity_[i] = CO2::gasDensity(T_ref, P_ref, extrapolate);
+        gasReferenceDensity_[i] = CO2::gasDensity(co2Tables, T_ref, P_ref, extrapolate);
         brineReferenceDensity_[i] = Brine::liquidDensity(T_ref, P_ref, salinity_[i], extrapolate);
     }
 }
 
 #if HAVE_ECL_INPUT
-template<class Scalar>
-void Co2GasPvt<Scalar>::
+template<class Scalar, class Params>
+void Co2GasPvt<Scalar, Params>::
 initFromState(const EclipseState& eclState, const Schedule&)
 {
     setEnableVaporizationWater(eclState.getSimulationConfig().hasVAPOIL() || eclState.getSimulationConfig().hasVAPWAT());
@@ -82,6 +84,8 @@ initFromState(const EclipseState& eclState, const Schedule&)
     }
     setEzrokhiDenCoeff(eclState.getCo2StoreConfig().getDenaqaTables());
 
+    co2Tables = Params();
+
     std::size_t regions = eclState.runspec().tabdims().getNumPVTTables();
     setNumRegions(regions);
     for (std::size_t regionIdx = 0; regionIdx < regions; ++regionIdx) {
@@ -96,15 +100,15 @@ initFromState(const EclipseState& eclState, const Schedule&)
         else {
             brineReferenceDensity_[regionIdx] = Brine::liquidDensity(T_ref, P_ref, salinity_[regionIdx], extrapolate);
         }
-        gasReferenceDensity_[regionIdx] = CO2::gasDensity(T_ref, P_ref, extrapolate);
+        gasReferenceDensity_[regionIdx] = CO2::gasDensity(co2Tables, T_ref, P_ref, extrapolate);
     }
 
     initEnd();
 }
 #endif
 
-template<class Scalar>
-void Co2GasPvt<Scalar>::
+template<class Scalar, class Params>
+void Co2GasPvt<Scalar, Params>::
 setNumRegions(std::size_t numRegions)
 {
     gasReferenceDensity_.resize(numRegions);
@@ -112,8 +116,8 @@ setNumRegions(std::size_t numRegions)
     salinity_.resize(numRegions);
 }
 
-template<class Scalar>
-void Co2GasPvt<Scalar>::
+template<class Scalar, class Params>
+void Co2GasPvt<Scalar, Params>::
 setReferenceDensities(unsigned regionIdx,
                       Scalar rhoRefBrine,
                       Scalar rhoRefGas,
@@ -123,8 +127,8 @@ setReferenceDensities(unsigned regionIdx,
     brineReferenceDensity_[regionIdx] = rhoRefBrine;;
 }
 
-template<class Scalar>
-void Co2GasPvt<Scalar>::
+template<class Scalar, class Params>
+void Co2GasPvt<Scalar, Params>::
 setActivityModelSalt(int activityModel)
 {
     switch (activityModel) {
@@ -136,8 +140,8 @@ setActivityModelSalt(int activityModel)
     }
 }
 
-template<class Scalar>
-void Co2GasPvt<Scalar>::
+template<class Scalar, class Params>
+void Co2GasPvt<Scalar, Params>::
 setThermalMixingModel(int thermalMixingModel)
 {
     switch (thermalMixingModel) {
@@ -149,8 +153,8 @@ setThermalMixingModel(int thermalMixingModel)
     }
 }
 
-template<class Scalar>
-void Co2GasPvt<Scalar>::
+template<class Scalar, class Params>
+void Co2GasPvt<Scalar, Params>::
 setEzrokhiDenCoeff(const std::vector<EzrokhiTable>& denaqa)
 {
     if (denaqa.empty()) {

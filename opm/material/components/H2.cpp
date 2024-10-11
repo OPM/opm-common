@@ -29,6 +29,25 @@
 #include "h2tables.inc"
 
 namespace Opm {
+typedef Opm::UniformTabulated2DFunction< double > TabulatedFunction;
+
+inline const TabulatedFunction H2Tables::tabulatedEnthalpy
+    {H2TabulatedEnthalpyTraits::xMin,
+     H2TabulatedEnthalpyTraits::xMax,
+     H2TabulatedEnthalpyTraits::numX,
+     H2TabulatedEnthalpyTraits::yMin,
+     H2TabulatedEnthalpyTraits::yMax,
+     H2TabulatedEnthalpyTraits::numY,
+     H2TabulatedEnthalpyTraits::vals};
+
+inline const TabulatedFunction H2Tables::tabulatedDensity
+    {H2TabulatedDensityTraits::xMin,
+     H2TabulatedDensityTraits::xMax,
+     H2TabulatedDensityTraits::numX,
+     H2TabulatedDensityTraits::yMin,
+     H2TabulatedDensityTraits::yMax,
+     H2TabulatedDensityTraits::numY,
+     H2TabulatedDensityTraits::vals};
 
 template<>
 const UniformTabulated2DFunction<double>&
