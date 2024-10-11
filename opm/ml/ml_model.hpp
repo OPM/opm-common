@@ -335,7 +335,6 @@ template<class Evaluation>
 class NNModel {
   public:
     enum LayerType {
-        // kFlatten = 1,
         kScaling = 1,
         kUnScaling = 2,
         kDense = 3,
