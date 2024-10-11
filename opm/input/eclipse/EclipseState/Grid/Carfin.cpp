@@ -110,6 +110,8 @@ namespace Opm
         std::string name = "LGR";
         default_count += update_default_name(deckRecord.getItem<ParserKeywords::CARFIN::NAME>(), name);      
 
+        std::string parent_name = "";
+        default_count += update_default_name(deckRecord.getItem<ParserKeywords::CARFIN::PARENT>(), parent_name);      
 
         int i1 = 0;
         int i2 = this->m_globalGridDims_.getNX() - 1;
@@ -133,8 +135,8 @@ namespace Opm
         default_count += update_default(deckRecord.getItem<ParserKeywords::CARFIN::NY>(), ny);
         default_count += update_default(deckRecord.getItem<ParserKeywords::CARFIN::NZ>(), nz);
 
-        if (default_count != 10) {
-            this->init(name, i1, i2, j1, j2, k1, k2, nx, ny, nz);
+        if (default_count != 11) {
+            this->init(name, i1, i2, j1, j2, k1, k2, nx, ny, nz, parent_name);
         }
     }
 
@@ -151,14 +153,14 @@ namespace Opm
                       const int j1, const int j2,
                       const int k1, const int k2,
                       const int nx, const int ny,
-                      const int nz)
+                      const int nz, std::string parent_name)
     {
         assert_dims(name, i1 , i2, nx, this->m_globalGridDims_.getNX());
         assert_dims(name, j1 , j2, ny, this->m_globalGridDims_.getNY());
         assert_dims(name, k1 , k2, nz, this->m_globalGridDims_.getNZ());
 
         this->name_grid = name;
-
+        this->parent_name_grid = parent_name;
         this->m_dims[0] = nx;  
         this->m_dims[1] = ny;
         this->m_dims[2] = nz;
@@ -178,6 +180,42 @@ namespace Opm
     {
         return m_dims[0] * m_dims[1] * m_dims[2];
     }
+
+    std::size_t Carfin::num_parent_cells() const
+    {
+        return (upper(0) - lower(0) + 1) * 
+               (upper(1) - lower(1) + 1) *
+               (upper(2) - lower(2) + 1);
+    }
+
+    std::tuple<std::vector<std::size_t>, std::vector<std::size_t>, std::vector<std::size_t>>
+                                                                 Carfin::parent_cellsIJK() const
+    {
+        std::vector<std::size_t> i_list;
+        std::vector<std::size_t> j_list;  
+        std::vector<std::size_t> k_list;
+        auto list_size =  num_parent_cells();
+        
+        i_list.resize(list_size);
+        j_list.resize(list_size);
+        k_list.resize(list_size);
+        auto index = 0;
+        for (size_t i_index = lower(0); i_index <= upper(0); i_index++)
+        {
+            for (size_t j_index = lower(1); j_index <= upper(1); j_index++)
+            {
+                for (size_t k_index = lower(2); k_index <= upper(2); k_index++)
+                {
+                    i_list[index] = i_index;
+                    j_list[index] = j_index;
+                    k_list[index] = k_index;                                        
+                    index++;
+                }
+            }   
+        }
+        return std::make_tuple(i_list, j_list, k_list);
+    }
+
 
     bool Carfin::isGlobal() const
     {
@@ -257,6 +295,10 @@ namespace Opm
     const std::string& Carfin::NAME() const
     {
         return name_grid;
+    }
+    const std::string& Carfin::PARENT_NAME() const
+    {
+        return parent_name_grid;
     }
 
     int Carfin::I1() const {
