@@ -89,14 +89,8 @@ bool test_%s(Evaluation* load_time, Evaluation* apply_time)
     NNTimer load_timer;
     load_timer.start();
 
-    const fs::path sub_dir = "%s" ;
-
-    fs::path p = fs::current_path();
-
-    fs::path curr_path = fs::absolute(p)+=sub_dir;
-
     NNModel<Evaluation> model;
-    OPM_ERROR_IF(!model.loadModel(curr_path), "Failed to load model");
+    OPM_ERROR_IF(!model.loadModel("%s"), "Failed to load model");
 
     *load_time = load_timer.stop();
 
@@ -144,7 +138,8 @@ def output_testcase(model, test_x, test_y, name, eps):
 
     export_model(model, 'models/test_%s.model' % name)
 
-    path = f'/tests/ml/ml_tools/models/test_{name}.model'
+    # path = f'/tests/ml/ml_tools/models/test_{name}.model'
+    path = f'./ml/ml_tools/models/test_{name}.model'
     with open('include/test_%s.hpp' % name, 'w') as f:
         x_shape, x_data = c_array(test_x[0])
         y_shape, y_data = c_array(predict_y[0])
