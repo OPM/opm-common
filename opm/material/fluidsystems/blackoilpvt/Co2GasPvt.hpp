@@ -36,7 +36,7 @@
 #include <opm/material/common/UniformTabulated2DFunction.hpp>
 #include <opm/material/binarycoefficients/Brine_CO2.hpp>
 #include <opm/input/eclipse/EclipseState/Co2StoreConfig.hpp>
-#include <opm/material/fluidsystems/blackoilpvt/Co2GasPvtParameters.hpp>
+#include <opm/material/components/CO2Parameters.hpp>
 
 #include <cstddef>
 #include <vector>
@@ -51,7 +51,7 @@ class Co2StoreConfig;
  * \brief This class represents the Pressure-Volume-Temperature relations of the gas phase
  *        for CO2.
  */
-template <class Scalar, class ParamsT = Opm::CO2GasPvtParameters>
+template <class Scalar, class ParamsT = Opm::CO2Parameters>
 class Co2GasPvt
 {
     using CO2 = ::Opm::CO2<Scalar>;
@@ -66,7 +66,8 @@ public:
 
     explicit Co2GasPvt() = default;
 
-    explicit Co2GasPvt(const std::vector<Scalar>& salinity,
+    explicit Co2GasPvt(const Params& params,
+                       const std::vector<Scalar>& salinity,
                        int activityModel = 3,
                        int thermalMixingModel = 1,
                        Scalar T_ref = 288.71, //(273.15 + 15.56)
@@ -76,7 +77,7 @@ public:
     /*!
      * \brief Initialize the parameters for CO2 gas using an ECL deck.
      */
-    void initFromState(const EclipseState& eclState, const Schedule&);
+    void initFromState(const Params& params, const EclipseState& eclState, const Schedule&);
 #endif
 
     void setNumRegions(std::size_t numRegions);
@@ -142,7 +143,7 @@ public:
         OPM_TIMEBLOCK_LOCAL(internalEnergy);
         if (gastype_ == Co2StoreConfig::GasMixingType::NONE) {
             // use the gasInternalEnergy of CO2
-            return CO2::gasInternalEnergy(params.co2Parameters, temperature, pressure, extrapolate);
+            return CO2::gasInternalEnergy(params, temperature, pressure, extrapolate);
         }
 
         assert(gastype_ == Co2StoreConfig::GasMixingType::IDEAL);
@@ -153,7 +154,7 @@ public:
         assert(rv == 0.0 || rvw == 0.0);
         const Evaluation xBrine = convertRvwToXgW_(max(rvw,rv),regionIdx);
         result += xBrine * H2O::gasInternalEnergy(temperature, pressure);
-        result += (1 - xBrine) * CO2::gasInternalEnergy(params.co2Parameters, temperature, pressure, extrapolate);
+        result += (1 - xBrine) * CO2::gasInternalEnergy(params, temperature, pressure, extrapolate);
         return result;
     }
 
@@ -162,12 +163,13 @@ public:
      *        given a set of parameters.
      */
     template <class Evaluation>
-    Evaluation viscosity(unsigned regionIdx,
+    Evaluation viscosity(const Params& params,
+                         unsigned regionIdx,
                          const Evaluation& temperature,
                          const Evaluation& pressure,
                          const Evaluation& /*Rv*/,
                          const Evaluation& /*Rvw*/) const
-    { return saturatedViscosity(regionIdx, temperature, pressure); }
+    { return saturatedViscosity(params, regionIdx, temperature, pressure); }
 
     /*!
      * \brief Returns the dynamic viscosity [Pa s] of fluid phase at saturated conditions.
@@ -180,7 +182,7 @@ public:
     {
         OPM_TIMEBLOCK_LOCAL(saturatedViscosity);
         // Neglects impact of vaporized water on the visosity
-        return CO2::gasViscosity(params.co2Parameters, temperature, pressure, extrapolate);
+        return CO2::gasViscosity(params, temperature, pressure, extrapolate);
     }
 
     /*!
@@ -196,12 +198,12 @@ public:
     {
         OPM_TIMEFUNCTION_LOCAL();
         if (!enableVaporization_) {
-            return CO2::gasDensity(params.co2Parameters, temperature, pressure, extrapolate) /
+            return CO2::gasDensity(params, temperature, pressure, extrapolate) /
                    gasReferenceDensity_[regionIdx];
         }
 
         // Use CO2 density for the gas phase.
-        const auto& rhoCo2 = CO2::gasDensity(params.co2Parameters, temperature, pressure, extrapolate);
+        const auto& rhoCo2 = CO2::gasDensity(params, temperature, pressure, extrapolate);
         //const auto& rhoH2O = H2O::gasDensity(temperature, pressure);
         //The CO2STORE option both works for GAS/WATER and GAS/OIL systems
         //Either rv og rvw should be zero

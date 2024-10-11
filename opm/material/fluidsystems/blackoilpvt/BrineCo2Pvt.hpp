@@ -38,6 +38,7 @@
 #include <opm/material/components/CO2.hpp>
 #include <opm/material/common/UniformTabulated2DFunction.hpp>
 #include <opm/material/components/TabulatedComponent.hpp>
+#include <opm/material/components/CO2Parameters.hpp>
 #include <opm/material/binarycoefficients/H2O_CO2.hpp>
 #include <opm/material/binarycoefficients/Brine_CO2.hpp>
 
@@ -57,7 +58,7 @@ class EzrokhiTable;
  * \brief This class represents the Pressure-Volume-Temperature relations of the liquid phase
  * for a CO2-Brine system
  */
-template <class Scalar>
+template <class Scalar, class Params = Opm::CO2Parameters>
 class BrineCo2Pvt
 {
     static constexpr bool extrapolate = true;
@@ -80,7 +81,8 @@ public:
 
     explicit BrineCo2Pvt() = default;
 
-    explicit BrineCo2Pvt(const std::vector<Scalar>& salinity,
+    explicit BrineCo2Pvt(const Params& params,
+                         const std::vector<Scalar>& salinity,
                          int activityModel = 3,
                          int thermalMixingModelSalt = 1,
                          int thermalMixingModelLiquid = 2,
@@ -92,7 +94,7 @@ public:
      * \brief Initialize the parameters for Brine-CO2 system using an ECL deck.
      *
      */
-    void initFromState(const EclipseState& eclState, const Schedule&);
+    void initFromState(const Params& params, const EclipseState& eclState, const Schedule&);
 #endif
 
     void setNumRegions(std::size_t numRegions);
@@ -617,7 +619,8 @@ private:
     }
 
     template <class LhsEval>
-    LhsEval liquidEnthalpyBrineCO2_(const LhsEval& T,
+    LhsEval liquidEnthalpyBrineCO2_(const Params& params,
+                                    const LhsEval& T,
                                     const LhsEval& p,
                                     const LhsEval& salinity, 
                                     const LhsEval& X_CO2_w) const
@@ -699,7 +702,7 @@ private:
         }
             
         /* enthalpy contribution of CO2 (kJ/kg) */
-        hg = CO2::gasEnthalpy(T, p, extrapolate)/1E3 + delta_hCO2;
+        hg = CO2::gasEnthalpy(params, T, p, extrapolate)/1E3 + delta_hCO2;
 
         /* Enthalpy of brine with dissolved CO2 */
         return (h_ls1 - X_CO2_w*hw + hg*X_CO2_w)*1E3; /*J/kg*/

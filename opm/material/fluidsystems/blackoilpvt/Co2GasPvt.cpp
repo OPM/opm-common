@@ -34,7 +34,8 @@ namespace Opm {
 
 template<class Scalar, class Params>
 Co2GasPvt<Scalar, Params>::
-Co2GasPvt(const std::vector<Scalar>& salinity,
+Co2GasPvt(const Params& params,
+          const std::vector<Scalar>& salinity,
           int activityModel,
           int thermalMixingModel,
           Scalar T_ref,
@@ -53,7 +54,7 @@ Co2GasPvt(const std::vector<Scalar>& salinity,
     int num_regions = salinity_.size();
     setNumRegions(num_regions);
     for (int i = 0; i < num_regions; ++i) {
-        gasReferenceDensity_[i] = CO2::gasDensity(T_ref, P_ref, extrapolate);
+        gasReferenceDensity_[i] = CO2::gasDensity(params, T_ref, P_ref, extrapolate);
         brineReferenceDensity_[i] = Brine::liquidDensity(T_ref, P_ref, salinity_[i], extrapolate);
     }
 }
@@ -61,7 +62,7 @@ Co2GasPvt(const std::vector<Scalar>& salinity,
 #if HAVE_ECL_INPUT
 template<class Scalar, class Params>
 void Co2GasPvt<Scalar, Params>::
-initFromState(const EclipseState& eclState, const Schedule&)
+initFromState(const Params& params, const EclipseState& eclState, const Schedule&)
 {
     setEnableVaporizationWater(eclState.getSimulationConfig().hasVAPOIL() || eclState.getSimulationConfig().hasVAPWAT());
     setActivityModelSalt(eclState.getCo2StoreConfig().actco2s());
@@ -96,7 +97,7 @@ initFromState(const EclipseState& eclState, const Schedule&)
         else {
             brineReferenceDensity_[regionIdx] = Brine::liquidDensity(T_ref, P_ref, salinity_[regionIdx], extrapolate);
         }
-        gasReferenceDensity_[regionIdx] = CO2::gasDensity(T_ref, P_ref, extrapolate);
+        gasReferenceDensity_[regionIdx] = CO2::gasDensity(params, T_ref, P_ref, extrapolate);
     }
 
     initEnd();

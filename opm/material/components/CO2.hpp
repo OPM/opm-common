@@ -172,7 +172,7 @@ public:
                                   const Evaluation& pressure,
                                   bool extrapolate = false)
     {
-        return params.co2Tables.tabulatedEnthalpy.eval(temperature, pressure, extrapolate);
+        return params.co2Tables_.tabulatedEnthalpy.eval(temperature, pressure, extrapolate);
     }
 
     /*!
@@ -199,7 +199,7 @@ public:
                                  const Evaluation& pressure,
                                  bool extrapolate = false)
     {
-        return params.co2Tables.tabulatedDensity.eval(temperature, pressure, extrapolate);
+        return params.co2Tables_.tabulatedDensity.eval(temperature, pressure, extrapolate);
     }
 
     /*!

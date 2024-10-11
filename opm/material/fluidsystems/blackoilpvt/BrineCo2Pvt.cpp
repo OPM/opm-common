@@ -32,9 +32,10 @@
 
 namespace Opm {
 
-template<class Scalar>
-BrineCo2Pvt<Scalar>::
-BrineCo2Pvt(const std::vector<Scalar>& salinity,
+template<class Scalar, class Params>
+BrineCo2Pvt<Scalar, Params>::
+BrineCo2Pvt(const Params& params,
+            const std::vector<Scalar>& salinity,
             int activityModel,
             int thermalMixingModelSalt,
             int thermalMixingModelLiquid,
@@ -53,15 +54,15 @@ BrineCo2Pvt(const std::vector<Scalar>& salinity,
     co2ReferenceDensity_.resize(num_regions);
     brineReferenceDensity_.resize(num_regions);
     for (int i = 0; i < num_regions; ++i) {
-        co2ReferenceDensity_[i] = CO2::gasDensity(T_ref, P_ref, true);
+        co2ReferenceDensity_[i] = CO2::gasDensity(params, T_ref, P_ref, true);
         brineReferenceDensity_[i] = Brine::liquidDensity(T_ref, P_ref, salinity_[i], true);
     }
 }
 
 #if HAVE_ECL_INPUT
-template<class Scalar>
-void BrineCo2Pvt<Scalar>::
-initFromState(const EclipseState& eclState, const Schedule&)
+template<class Scalar, class Params>
+void BrineCo2Pvt<Scalar, Params>::
+initFromState(const Params& params, const EclipseState& eclState, const Schedule&)
 {
     bool co2sol = eclState.runspec().co2Sol();
     if (!co2sol && !eclState.getTableManager().getDensityTable().empty()) {
@@ -133,7 +134,7 @@ initFromState(const EclipseState& eclState, const Schedule&)
         else {
             brineReferenceDensity_[regionIdx] = Brine::liquidDensity(T_ref, P_ref, salinity_[regionIdx], extrapolate);
         }
-        co2ReferenceDensity_[regionIdx] = CO2::gasDensity(T_ref, P_ref, extrapolate);
+        co2ReferenceDensity_[regionIdx] = CO2::gasDensity(params, T_ref, P_ref, extrapolate);
     }
 
     // The reference densities are the same across regions. Only output info for region 0
@@ -147,8 +148,8 @@ initFromState(const EclipseState& eclState, const Schedule&)
 }
 #endif
 
-template<class Scalar>
-void BrineCo2Pvt<Scalar>::
+template<class Scalar, class Params>
+void BrineCo2Pvt<Scalar, Params>::
 setNumRegions(std::size_t numRegions)
 {
     brineReferenceDensity_.resize(numRegions);
@@ -156,8 +157,8 @@ setNumRegions(std::size_t numRegions)
     salinity_.resize(numRegions);
 }
 
-template<class Scalar>
-void BrineCo2Pvt<Scalar>::
+template<class Scalar, class Params>
+void BrineCo2Pvt<Scalar, Params>::
 setReferenceDensities(unsigned regionIdx,
                       Scalar rhoRefBrine,
                       Scalar rhoRefCO2,
@@ -167,8 +168,8 @@ setReferenceDensities(unsigned regionIdx,
     co2ReferenceDensity_[regionIdx] = rhoRefCO2;
 }
 
-template<class Scalar>
-void BrineCo2Pvt<Scalar>::
+template<class Scalar, class Params>
+void BrineCo2Pvt<Scalar, Params>::
 setActivityModelSalt(int activityModel)
 {
     switch (activityModel) {
@@ -179,8 +180,8 @@ setActivityModelSalt(int activityModel)
     }
 }
 
-template<class Scalar>
-void BrineCo2Pvt<Scalar>::
+template<class Scalar, class Params>
+void BrineCo2Pvt<Scalar, Params>::
 setThermalMixingModel(int thermalMixingModelSalt, int thermalMixingModelLiquid)
 {
     switch (thermalMixingModelSalt) {
@@ -197,8 +198,8 @@ setThermalMixingModel(int thermalMixingModelSalt, int thermalMixingModelLiquid)
     }
 }
 
-template<class Scalar>
-void BrineCo2Pvt<Scalar>::
+template<class Scalar, class Params>
+void BrineCo2Pvt<Scalar, Params>::
 setEzrokhiDenCoeff(const std::vector<EzrokhiTable>& denaqa)
 {
     if (denaqa.empty())
@@ -213,8 +214,8 @@ setEzrokhiDenCoeff(const std::vector<EzrokhiTable>& denaqa)
                            static_cast<Scalar>(denaqa[0].getC2("CO2"))};
 }
 
-template<class Scalar>
-void BrineCo2Pvt<Scalar>::
+template<class Scalar, class Params>
+void BrineCo2Pvt<Scalar, Params>::
 setEzrokhiViscCoeff(const std::vector<EzrokhiTable>& viscaqa)
 {
     if (viscaqa.empty())
