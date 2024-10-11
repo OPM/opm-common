@@ -85,6 +85,7 @@ namespace Opm
         bool equal(const Carfin& other) const;
 
         const std::string& NAME() const;
+        const std::string& PARENT_NAME() const;
         int I1() const;
         int I2() const;
         int J1() const;
@@ -94,7 +95,9 @@ namespace Opm
         int NX() const;
         int NY() const;
         int NZ() const;
-
+        size_t num_parent_cells() const;
+        std::tuple<std::vector<std::size_t>, std::vector<std::size_t>, std::vector<std::size_t>>
+                                                                                  parent_cellsIJK() const;
         template<class Serializer>
         void serializeOp(Serializer& serializer)
         {
@@ -113,6 +116,7 @@ namespace Opm
         std::array<std::size_t, 3> m_offset{};
         std::array<std::size_t, 3> m_end_offset{};
         std::string name_grid;
+        std::string parent_name_grid;
 
         std::vector<cell_index> m_active_index_list;
         std::vector<cell_index> m_global_index_list;
@@ -121,7 +125,7 @@ namespace Opm
                   int i1, int i2,
                   int j1, int j2,
                   int k1, int k2,
-                  int nx, int ny, int nz);
+                  int nx, int ny, int nz, std::string parent_name = "GLOBAL");
         void initIndexList();
         int lower(int dim) const;
         int upper(int dim) const;
