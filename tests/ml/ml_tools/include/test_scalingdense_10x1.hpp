@@ -36,24 +36,18 @@ bool test_scalingdense_10x1(Evaluation* load_time, Evaluation* apply_time)
     OPM_ERROR_IF(!apply_time, "Invalid Evaluation");
 
     Opm::Tensor<Evaluation> in{10};
-    in.data_ = {0.696915,0.07427129,0.70194745,0.8012347,0.35779506,0.06662053,
-0.05146523,0.6114587,0.40359908,0.53088933};
+    in.data_ = {0.4462127,0.8282716,0.19106287,0.46530953,0.8019146,0.6105967,
+0.69855976,0.7211706,0.116201125,0.49067858};
 
     Opm::Tensor<Evaluation> out{10};
-    out.data_ = {747.41144,724.1453,772.69525,680.4142,689.91376,677.3659,582.6327,
-817.43665,651.73566,755.77905};
+    out.data_ = {519.3525,665.1217,690.99927,413.76526,739.2478,407.98572,631.28186,
+505.1883,526.25494,696.9934};
 
     NNTimer load_timer;
     load_timer.start();
 
-    const fs::path sub_dir = "/tests/ml/ml_tools/models/test_scalingdense_10x1.model" ;
-
-    fs::path p = fs::current_path();
-
-    fs::path curr_path = fs::absolute(p)+=sub_dir;
-
     NNModel<Evaluation> model;
-    OPM_ERROR_IF(!model.loadModel(curr_path), "Failed to load model");
+    OPM_ERROR_IF(!model.loadModel("./tests/ml/ml_tools/models/test_scalingdense_10x1.model"), "Failed to load model");
 
     *load_time = load_timer.stop();
 

@@ -36,23 +36,17 @@ bool test_dense_10x1(Evaluation* load_time, Evaluation* apply_time)
     OPM_ERROR_IF(!apply_time, "Invalid Evaluation");
 
     Opm::Tensor<Evaluation> in{10};
-    in.data_ = {0.2956252,0.3948974,0.2736113,0.147597,0.33848935,0.48078042,
-0.46976265,0.93288493,0.9137014,0.25778493};
+    in.data_ = {0.33128357,0.5507012,0.089097455,0.9930643,0.3021132,0.44296286,
+0.77584934,0.5803623,0.6916559,0.48866668};
 
     Opm::Tensor<Evaluation> out{1};
-    out.data_ = {0.68196857};
+    out.data_ = {-0.59224933};
 
     NNTimer load_timer;
     load_timer.start();
 
-    const fs::path sub_dir = "/tests/ml/ml_tools/models/test_dense_10x1.model" ;
-
-    fs::path p = fs::current_path();
-
-    fs::path curr_path = fs::absolute(p)+=sub_dir;
-
     NNModel<Evaluation> model;
-    OPM_ERROR_IF(!model.loadModel(curr_path), "Failed to load model");
+    OPM_ERROR_IF(!model.loadModel("./tests/ml/ml_tools/models/test_dense_10x1.model"), "Failed to load model");
 
     *load_time = load_timer.stop();
 

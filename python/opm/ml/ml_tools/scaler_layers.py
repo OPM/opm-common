@@ -1,5 +1,5 @@
-#  Copyright (c) 2024 NORCE
-#  Copyright (c) 2024 UiB
+#   Copyright (c) 2024 NORCE
+#   Copyright (c) 2024 UiB
 #   This file is part of the Open Porous Media project (OPM).
 #   OPM is free software: you can redistribute it and/or modify
 #   it under the terms of the GNU General Public License as published by
@@ -22,7 +22,7 @@ import numpy as np
 import tensorflow as tf
 from numpy.typing import ArrayLike
 from tensorflow import keras
-from tensorflow.python.keras.engine.base_preprocessing_layer import (  # pylint: disable=E0611
+from tensorflow.python.keras.engine.base_preprocessing_layer import (
     PreprocessingLayer,
 )
 
@@ -40,7 +40,7 @@ class ScalerLayer(keras.layers.Layer):
         data_min: Optional[float | ArrayLike] = None,
         data_max: Optional[float | ArrayLike] = None,
         feature_range: Sequence[float] | np.ndarray | tf.Tensor = (0, 1),
-        **kwargs,  # pylint: disable=W0613
+        **kwargs, 
     ) -> None:
         super().__init__(**kwargs)
         if feature_range[0] >= feature_range[1]:
@@ -131,7 +131,7 @@ class ScalerLayer(keras.layers.Layer):
         self._is_adapted = True
 
 
-class MinMaxScalerLayer(ScalerLayer, PreprocessingLayer):  # pylint: disable=W0223,R0901
+class MinMaxScalerLayer(ScalerLayer, PreprocessingLayer): 
     """Scales the input according to MinMaxScaling.
 
     See
@@ -145,14 +145,12 @@ class MinMaxScalerLayer(ScalerLayer, PreprocessingLayer):  # pylint: disable=W02
         data_min: Optional[float | ArrayLike] = None,
         data_max: Optional[float | ArrayLike] = None,
         feature_range: Sequence[float] | np.ndarray | tf.Tensor = (0, 1),
-        **kwargs,  # pylint: disable=W0613
+        **kwargs,
     ) -> None:
         super().__init__(data_min, data_max, feature_range, **kwargs)
         self._name: str = "MinMaxScalerLayer"
 
-    # Ignore pylint complaining about a missing docstring. Also ignore
-    # "variadics removed ...".
-    def call(self, inputs: tf.Tensor) -> tf.Tensor:  # pylint: disable=C0116, W0221
+    def call(self, inputs: tf.Tensor) -> tf.Tensor: 
         if not self.is_adapted:
             print(np.greater_equal(self.data_min, self.data_max))
             raise RuntimeError(
@@ -184,13 +182,12 @@ class MinMaxUnScalerLayer(ScalerLayer, tf.keras.layers.Layer):
         data_min: Optional[float | ArrayLike] = None,
         data_max: Optional[float | ArrayLike] = None,
         feature_range: Sequence[float] | np.ndarray | tf.Tensor = (0, 1),
-        **kwargs,  # pylint: disable=W0613
+        **kwargs, 
     ) -> None:
         super().__init__(data_min, data_max, feature_range, **kwargs)
         self._name: str = "MinMaxUnScalerLayer"
 
-    # Ignore pylint complaining about a missing docstring and something else.
-    def call(self, inputs: tf.Tensor) -> tf.Tensor:  # pylint: disable=W0221
+    def call(self, inputs: tf.Tensor) -> tf.Tensor: 
         if not self._is_adapted:
             raise RuntimeError(
                 """The layer has not been adapted correctly. Call ``adapt`` before using
