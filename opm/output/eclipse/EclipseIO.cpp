@@ -295,16 +295,16 @@ void Opm::EclipseIO::writeInitial(data::Solution                          simPro
 }
 
 // implementation of the writeTimeStep method
-void Opm::EclipseIO::writeTimeStep(/* const Action::State& action_state,
-                                   const WellTestState& wtest_state,
-                                   const SummaryState&  st,
-                                   const UDQState&      udq_state,*/
-                                   const int            report_step,
+void Opm::EclipseIO::writeTimeStep(const int            report_step,
                                    const bool           isSubstep,
                                    const double         secs_elapsed,
                                    RestartValue         value,
                                    const bool           write_double,
-                                   std::optional<int>   time_step)
+                                   std::optional<int>   time_step,
+                                   std::optional<Opm::Action::State> action_state,
+                                   std::optional<Opm::WellTestState> wtest_state,
+                                   std::optional<Opm::SummaryState> summary_state,
+                                   std::optional<Opm::UDQState> udq_state)
 {
     if (! this->impl->output_enabled) {
         return;
@@ -320,6 +320,7 @@ void Opm::EclipseIO::writeTimeStep(/* const Action::State& action_state,
 
     // If --enable-write-all-solutions=true we will output every timestep
     int report_index = time_step ? (*time_step+1) : report_step;
+    // TODO: fixes these later
 //    if (((report_step > 0) &&
 //        this->impl->wantSummaryOutput(report_step, isSubstep, secs_elapsed)) || time_step)
 //    {
