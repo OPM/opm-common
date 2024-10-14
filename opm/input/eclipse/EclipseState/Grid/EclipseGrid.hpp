@@ -16,11 +16,15 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
+#ifndef OPM_INPUT_ECLIPSE_ECLIPSESTATE_GRID_LGRCOLLECTION_HPP
+#define OPM_INPUT_ECLIPSE_ECLIPSESTATE_GRID_LGRCOLLECTION_HPP
+#include <opm/input/eclipse/EclipseState/Grid/LgrCollection.hpp>
+#endif // OPM_INPUT_ECLIPSE_ECLIPSESTATE_GRID_LGRCOLLECTION_HPP
 
 #ifndef OPM_PARSER_ECLIPSE_GRID_HPP
 #define OPM_PARSER_ECLIPSE_GRID_HPP
-
 #include <opm/input/eclipse/EclipseState/Grid/GridDims.hpp>
+//#include <opm/input/eclipse/EclipseState/Grid/LgrCollection.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/MapAxes.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/MinpvMode.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/PinchMode.hpp>
@@ -40,7 +44,8 @@ namespace Opm {
     struct NNCdata;
     class UnitSystem;
     class ZcornMapper;
-
+    class EclipseGridLGR;
+    class LgrCollection;
     /**
        About cell information and dimension: The actual grid
        information is held in a pointer to an ERT ecl_grid_type
@@ -111,7 +116,7 @@ namespace Opm {
           applied in the 'THETA' direction; this will only apply if
           the theta keywords entered sum up to exactly 360 degrees!
         */
-
+        int lgr_level = 0;
         bool circle() const;
         bool isPinchActive() const;
         double getPinchThresholdThickness() const;
@@ -119,7 +124,7 @@ namespace Opm {
         PinchMode getMultzOption() const;
         PinchMode getPinchGapMode() const;
         double getPinchMaxEmptyGap() const;
-
+        std::string lgr_label = "GLOBAL";
         MinpvMode getMinpvMode() const;
         const std::vector<double>& getMinpvVector( ) const;
 
@@ -160,6 +165,10 @@ namespace Opm {
         /// Will return a vector a length num_active; where the value
         /// of each element is the corresponding global index.
         const std::vector<int>& getActiveMap() const;
+
+        void init_lgr_cells(const LgrCollection& lgr_input); 
+        void create_lgr_cells_tree(const LgrCollection& lgr_input);
+        void init_lgr_cells_index();
         /// \brief get cell center, and center and normal of bottom face
         std::tuple<std::array<double, 3>,std::array<double, 3>,std::array<double, 3>>
         getCellAndBottomCenterNormal(size_t globalIndex) const;
@@ -235,11 +244,16 @@ namespace Opm {
 
         static bool hasEqualDVDEPTHZ(const Deck&);
         static bool allEqual(const std::vector<double> &v);
+        std::vector<EclipseGridLGR> lgr_children_cells;
+        std::vector<std::string> lgr_children_labels;
+        std::map<std::size_t, std::size_t> num_lgr_children_cells;
 
     private:
         std::vector<double> m_minpvVector;
         MinpvMode m_minpvMode;
         std::optional<double> m_pinch;
+
+
         // Option 4 of PINCH (TOPBOT/ALL), how to calculate TRANS
         PinchMode m_pinchoutMode;
         // Option 5 of PINCH (TOP/ALL), how to apply MULTZ
@@ -247,7 +261,7 @@ namespace Opm {
         // Option 2 of PINCH (GAP/NOGAP)
         PinchMode m_pinchGapMode;
         double    m_pinchMaxEmptyGap;
-
+        bool lgr_grid = false;
         mutable std::optional<std::vector<double>> active_volume;
 
         bool m_circle = false;
@@ -325,6 +339,32 @@ namespace Opm {
                             std::array<double,8>& Z) const;
 
    };
+
+    class EclipseGridLGR: public EclipseGrid
+    // Specialized Class to describe LGR refined cells. 
+    {
+    public:
+      using vec_size_t = std::vector<std::size_t>; 
+      EclipseGridLGR() = default;
+      EclipseGridLGR(std::string self_label, std::string father_label_, 
+                     int father_lgr_level, size_t nx, size_t ny, size_t nz, 
+                     vec_size_t father_i_list, vec_size_t father_j_list,
+                     vec_size_t father_k_list, vec_size_t global_list);
+      ~EclipseGridLGR() = default;
+      size_t getTotalActiveLGR();
+      vec_size_t getFatherGlobalID() const;
+      // void set_fatherIJK(std::vector<std::size_t> father_i_list,
+      //                    std::vector<std::size_t> father_j_list,
+      //                    std::vector<std::size_t> father_k_list);
+    private:
+        std::string father_label;
+        // references IJK on the father label
+        vec_size_t father_i_list;
+        vec_size_t father_j_list;
+        vec_size_t father_k_list;
+        vec_size_t father_global;
+    };
+
 
     class CoordMapper {
     public:
