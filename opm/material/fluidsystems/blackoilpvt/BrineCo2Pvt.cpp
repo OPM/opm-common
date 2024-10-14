@@ -34,8 +34,7 @@ namespace Opm {
 
 template<class Scalar, class Params>
 BrineCo2Pvt<Scalar, Params>::
-BrineCo2Pvt(const Params& params,
-            const std::vector<Scalar>& salinity,
+BrineCo2Pvt(const std::vector<Scalar>& salinity,
             int activityModel,
             int thermalMixingModelSalt,
             int thermalMixingModelLiquid,
@@ -53,8 +52,11 @@ BrineCo2Pvt(const Params& params,
     int num_regions =  salinity_.size();
     co2ReferenceDensity_.resize(num_regions);
     brineReferenceDensity_.resize(num_regions);
+
+    co2Params_ = Params();
+
     for (int i = 0; i < num_regions; ++i) {
-        co2ReferenceDensity_[i] = CO2::gasDensity(params, T_ref, P_ref, true);
+        co2ReferenceDensity_[i] = CO2::gasDensity(co2Params_, T_ref, P_ref, true);
         brineReferenceDensity_[i] = Brine::liquidDensity(T_ref, P_ref, salinity_[i], true);
     }
 }
@@ -62,7 +64,7 @@ BrineCo2Pvt(const Params& params,
 #if HAVE_ECL_INPUT
 template<class Scalar, class Params>
 void BrineCo2Pvt<Scalar, Params>::
-initFromState(const Params& params, const EclipseState& eclState, const Schedule&)
+initFromState(const EclipseState& eclState, const Schedule&)
 {
     bool co2sol = eclState.runspec().co2Sol();
     if (!co2sol && !eclState.getTableManager().getDensityTable().empty()) {
@@ -95,7 +97,9 @@ initFromState(const Params& params, const EclipseState& eclState, const Schedule
     // set the surface conditions using the STCOND keyword
     Scalar T_ref = eclState.getTableManager().stCond().temperature;
     Scalar P_ref = eclState.getTableManager().stCond().pressure;
-    
+
+    co2Params_ = Params();
+
     // Throw an error if STCOND is not (T, p) = (15.56 C, 1 atm) = (288.71 K, 1.01325e5 Pa)
     if (T_ref != Scalar(288.71) || P_ref != Scalar(1.01325e5)) {
         OPM_THROW(std::runtime_error, "CO2STORE can only be used with default values for STCOND!");
@@ -134,7 +138,7 @@ initFromState(const Params& params, const EclipseState& eclState, const Schedule
         else {
             brineReferenceDensity_[regionIdx] = Brine::liquidDensity(T_ref, P_ref, salinity_[regionIdx], extrapolate);
         }
-        co2ReferenceDensity_[regionIdx] = CO2::gasDensity(params, T_ref, P_ref, extrapolate);
+        co2ReferenceDensity_[regionIdx] = CO2::gasDensity(co2Params_, T_ref, P_ref, extrapolate);
     }
 
     // The reference densities are the same across regions. Only output info for region 0

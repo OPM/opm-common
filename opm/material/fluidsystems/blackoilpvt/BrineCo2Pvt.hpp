@@ -81,8 +81,7 @@ public:
 
     explicit BrineCo2Pvt() = default;
 
-    explicit BrineCo2Pvt(const Params& params,
-                         const std::vector<Scalar>& salinity,
+    explicit BrineCo2Pvt(const std::vector<Scalar>& salinity,
                          int activityModel = 3,
                          int thermalMixingModelSalt = 1,
                          int thermalMixingModelLiquid = 2,
@@ -94,7 +93,7 @@ public:
      * \brief Initialize the parameters for Brine-CO2 system using an ECL deck.
      *
      */
-    void initFromState(const Params& params, const EclipseState& eclState, const Schedule&);
+    void initFromState(const EclipseState& eclState, const Schedule&);
 #endif
 
     void setNumRegions(std::size_t numRegions);
@@ -476,7 +475,8 @@ public:
         // temperature and pressure.
         Evaluation xgH2O;
         Evaluation xlCO2;
-        BinaryCoeffBrineCO2::calculateMoleFractions(temperature,
+        BinaryCoeffBrineCO2::calculateMoleFractions(co2Params_,
+                                                    temperature,
                                                     pressure,
                                                     salinity,
                                                     /*knownPhaseIdx=*/-1,
@@ -489,6 +489,16 @@ public:
         xlCO2 = max(0.0, min(1.0, xlCO2));
 
         return convertXoGToRs(convertxoGToXoG(xlCO2, salinity), regionIdx);
+    }
+
+    /*!
+     * \brief Get the CO2 parameters.
+     *
+     * \return A const reference to the CO2 parameters.
+     */
+    const Params& getCo2Params() const
+    {
+        return co2Params_;
     }
 
 private:
@@ -619,8 +629,7 @@ private:
     }
 
     template <class LhsEval>
-    LhsEval liquidEnthalpyBrineCO2_(const Params& params,
-                                    const LhsEval& T,
+    LhsEval liquidEnthalpyBrineCO2_(const LhsEval& T,
                                     const LhsEval& p,
                                     const LhsEval& salinity, 
                                     const LhsEval& X_CO2_w) const
@@ -702,7 +711,7 @@ private:
         }
             
         /* enthalpy contribution of CO2 (kJ/kg) */
-        hg = CO2::gasEnthalpy(params, T, p, extrapolate)/1E3 + delta_hCO2;
+        hg = CO2::gasEnthalpy(co2Params_, T, p, extrapolate)/1E3 + delta_hCO2;
 
         /* Enthalpy of brine with dissolved CO2 */
         return (h_ls1 - X_CO2_w*hw + hg*X_CO2_w)*1E3; /*J/kg*/
@@ -734,7 +743,7 @@ private:
     int activityModel_{};
     Co2StoreConfig::LiquidMixingType liquidMixType_{};
     Co2StoreConfig::SaltMixingType saltMixType_{};
-
+    Params co2Params_;
 };
 
 } // namespace Opm

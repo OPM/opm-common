@@ -66,8 +66,7 @@ public:
 
     explicit Co2GasPvt() = default;
 
-    explicit Co2GasPvt(const Params& params,
-                       const std::vector<Scalar>& salinity,
+    explicit Co2GasPvt(const std::vector<Scalar>& salinity,
                        int activityModel = 3,
                        int thermalMixingModel = 1,
                        Scalar T_ref = 288.71, //(273.15 + 15.56)
@@ -77,7 +76,7 @@ public:
     /*!
      * \brief Initialize the parameters for CO2 gas using an ECL deck.
      */
-    void initFromState(const Params& params, const EclipseState& eclState, const Schedule&);
+    void initFromState(const EclipseState& eclState, const Schedule&);
 #endif
 
     void setNumRegions(std::size_t numRegions);
@@ -133,8 +132,7 @@ public:
      * \brief Returns the specific enthalpy [J/kg] of gas given a set of parameters.
      */
     template <class Evaluation>
-    Evaluation internalEnergy(const Params& params,
-                        unsigned regionIdx,
+    Evaluation internalEnergy(unsigned regionIdx,
                         const Evaluation& temperature,
                         const Evaluation& pressure,
                         const Evaluation& rv,
@@ -143,7 +141,7 @@ public:
         OPM_TIMEBLOCK_LOCAL(internalEnergy);
         if (gastype_ == Co2StoreConfig::GasMixingType::NONE) {
             // use the gasInternalEnergy of CO2
-            return CO2::gasInternalEnergy(params, temperature, pressure, extrapolate);
+            return CO2::gasInternalEnergy(co2Params, temperature, pressure, extrapolate);
         }
 
         assert(gastype_ == Co2StoreConfig::GasMixingType::IDEAL);
@@ -154,7 +152,7 @@ public:
         assert(rv == 0.0 || rvw == 0.0);
         const Evaluation xBrine = convertRvwToXgW_(max(rvw,rv),regionIdx);
         result += xBrine * H2O::gasInternalEnergy(temperature, pressure);
-        result += (1 - xBrine) * CO2::gasInternalEnergy(params, temperature, pressure, extrapolate);
+        result += (1 - xBrine) * CO2::gasInternalEnergy(co2Params, temperature, pressure, extrapolate);
         return result;
     }
 
@@ -163,34 +161,31 @@ public:
      *        given a set of parameters.
      */
     template <class Evaluation>
-    Evaluation viscosity(const Params& params,
-                         unsigned regionIdx,
+    Evaluation viscosity(unsigned regionIdx,
                          const Evaluation& temperature,
                          const Evaluation& pressure,
                          const Evaluation& /*Rv*/,
                          const Evaluation& /*Rvw*/) const
-    { return saturatedViscosity(params, regionIdx, temperature, pressure); }
+    { return saturatedViscosity(regionIdx, temperature, pressure); }
 
     /*!
      * \brief Returns the dynamic viscosity [Pa s] of fluid phase at saturated conditions.
      */
     template <class Evaluation>
-    Evaluation saturatedViscosity(const Params& params,
-                                  unsigned /*regionIdx*/,
+    Evaluation saturatedViscosity(unsigned /*regionIdx*/,
                                   const Evaluation& temperature,
                                   const Evaluation& pressure) const
     {
         OPM_TIMEBLOCK_LOCAL(saturatedViscosity);
         // Neglects impact of vaporized water on the visosity
-        return CO2::gasViscosity(params, temperature, pressure, extrapolate);
+        return CO2::gasViscosity(co2Params, temperature, pressure, extrapolate);
     }
 
     /*!
      * \brief Returns the formation volume factor [-] of the fluid phase.
      */
     template <class Evaluation>
-    Evaluation inverseFormationVolumeFactor(const Params& params,
-                                            unsigned regionIdx,
+    Evaluation inverseFormationVolumeFactor(unsigned regionIdx,
                                             const Evaluation& temperature,
                                             const Evaluation& pressure,
                                             const Evaluation& rv,
@@ -198,12 +193,12 @@ public:
     {
         OPM_TIMEFUNCTION_LOCAL();
         if (!enableVaporization_) {
-            return CO2::gasDensity(params, temperature, pressure, extrapolate) /
+            return CO2::gasDensity(co2Params, temperature, pressure, extrapolate) /
                    gasReferenceDensity_[regionIdx];
         }
 
         // Use CO2 density for the gas phase.
-        const auto& rhoCo2 = CO2::gasDensity(params, temperature, pressure, extrapolate);
+        const auto& rhoCo2 = CO2::gasDensity(co2Params, temperature, pressure, extrapolate);
         //const auto& rhoH2O = H2O::gasDensity(temperature, pressure);
         //The CO2STORE option both works for GAS/WATER and GAS/OIL systems
         //Either rv og rvw should be zero
@@ -291,7 +286,7 @@ public:
                                     const Evaluation& pressure,
                                     unsigned /*compIdx*/) const
     {
-        return BinaryCoeffBrineCO2::gasDiffCoeff(temperature, pressure, extrapolate);
+        return BinaryCoeffBrineCO2::gasDiffCoeff(co2Params, temperature, pressure, extrapolate);
     }
 
     Scalar gasReferenceDensity(unsigned regionIdx) const
@@ -332,7 +327,8 @@ private:
         // temperature and pressure.
         LhsEval xgH2O;
         LhsEval xlCO2;
-        BinaryCoeffBrineCO2::calculateMoleFractions(temperature,
+        BinaryCoeffBrineCO2::calculateMoleFractions(co2Params,
+                                                    temperature,
                                                     pressure,
                                                     salinity,
                                                     /*knownPhaseIdx=*/-1,
@@ -401,6 +397,7 @@ private:
     bool enableVaporization_ = true;
     int activityModel_{};
     Co2StoreConfig::GasMixingType gastype_{};
+    Params co2Params;
 };
 
 } // namespace Opm

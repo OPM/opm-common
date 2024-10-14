@@ -28,6 +28,7 @@
 #ifndef OPM_CO2_HPP
 #define OPM_CO2_HPP
 #include <opm/common/TimingMacros.hpp>
+#include <opm/common/ErrorMacros.hpp>
 #include <opm/material/Constants.hpp>
 #include <opm/material/IdealGas.hpp>
 #include <opm/material/components/Component.hpp>
@@ -58,7 +59,7 @@ class CO2 : public Component<Scalar, CO2<Scalar>>
 public:
     using Params = ParamsT;
 
-    static const Scalar brineSalinity;
+    static constexpr const Scalar brineSalinity = 1.000000000000000e-01;
 
     /*!
      * \brief A human readable name for the CO2.
@@ -176,6 +177,18 @@ public:
     }
 
     /*!
+     * \brief Specific enthalpy of gaseous CO2 [J/kg].
+     * this is only here so that the API is valid
+     */
+    template <class Evaluation>
+    static Evaluation gasEnthalpy([[maybe_unused]] const Evaluation& temperature,
+                                  [[maybe_unused]] const Evaluation& pressure,
+                                  [[maybe_unused]] bool extrapolate = false)
+    {
+        OPM_THROW(std::runtime_error, "This function should not be called");
+    }
+
+    /*!
      * \brief Specific internal energy of CO2 [J/kg].
      */
     template <class Evaluation>
@@ -191,6 +204,18 @@ public:
     }
 
     /*!
+     * \brief Specific internal energy of CO2 [J/kg].
+     * this is only here so that the API is valid
+     */
+    template <class Evaluation>
+    static Evaluation gasInternalEnergy([[maybe_unused]] const Evaluation& temperature,
+                                        [[maybe_unused]] const Evaluation& pressure,
+                                        [[maybe_unused]] bool extrapolate = false)
+    {
+        OPM_THROW(std::runtime_error, "This function should not be called");
+    }
+
+    /*!
      * \brief The density of CO2 at a given pressure and temperature [kg/m^3].
      */
     template <class Evaluation>
@@ -200,6 +225,18 @@ public:
                                  bool extrapolate = false)
     {
         return params.co2Tables_.tabulatedDensity.eval(temperature, pressure, extrapolate);
+    }
+
+    /*!
+     * \brief The density of CO2 at a given pressure and temperature [kg/m^3].
+     * this is only here so that the API is valid
+     */
+    template <class Evaluation>
+    static Evaluation gasDensity([[maybe_unused]] const Evaluation& temperature,
+                                 [[maybe_unused]] const Evaluation& pressure,
+                                 [[maybe_unused]] bool extrapolate = false)
+    {
+        OPM_THROW(std::runtime_error, "This function should not be called");
     }
 
     /*!
@@ -253,6 +290,19 @@ public:
     }
 
     /*!
+     * \brief The dynamic viscosity [Pa s] of CO2.
+     *
+     * This is only here so that the API is valid
+     */
+    template <class Evaluation>
+    static Evaluation gasViscosity([[maybe_unused]] Evaluation temperature,
+                                   [[maybe_unused]] const Evaluation& pressure,
+                                   [[maybe_unused]] bool extrapolate = false)
+    {
+        OPM_THROW(std::runtime_error, "This function should not be called");
+    }
+
+    /*!
      * \brief Specific isobaric heat capacity of the component [J/kg]
      *        as a liquid.
      *
@@ -275,6 +325,17 @@ public:
         const Evaluation h2 = gasEnthalpy(params, temperature + eps, pressure);
 
         return (h2 - h1) / (2*eps) ;
+    }
+
+    /*!
+     * \brief Specific isobaric heat capacity of the component [J/kg]
+     *        as a liquid.
+     * This is only here so that the API is valid
+     */
+    template <class Evaluation>
+    static Evaluation gasHeatCapacity([[maybe_unused]] const Evaluation& temperature, [[maybe_unused]] const Evaluation& pressure)
+    {
+        OPM_THROW(std::runtime_error, "This function should not be called");
     }
 };
 
