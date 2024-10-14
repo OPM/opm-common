@@ -283,7 +283,6 @@ static const std::unordered_map<std::string, keyword_info<double>> double_keywor
                                                                                       {"TEMPI",    keyword_info<double>{}.unit_string("Temperature")},
                                                                                       {"RS",       keyword_info<double>{}.unit_string("GasDissolutionFactor")},
                                                                                       {"RV",       keyword_info<double>{}.unit_string("OilDissolutionFactor")},
-                                                                                      {"RVW",      keyword_info<double>{}.unit_string("OilDissolutionFactor")}
                                                                                       };
 
 static const std::unordered_map<std::string, keyword_info<double>> composition_keywords = {{"XMF", keyword_info<double>{}},
