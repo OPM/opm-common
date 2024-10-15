@@ -55,6 +55,7 @@ public:
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
             for (int compIdx = 0; compIdx < numComponents; ++compIdx)
                 moleFraction_[phaseIdx][compIdx] = 0.0;
+        // TODO: possilby we should begin with totalMoleFractions_ here
 
         Valgrind::SetDefined(moleFraction_);
         Valgrind::SetUndefined(averageMolarMass_);
@@ -66,6 +67,12 @@ public:
      */
     const Scalar& moleFraction(unsigned phaseIdx, unsigned compIdx) const
     { return moleFraction_[phaseIdx][compIdx]; }
+
+    /*!
+     * \brief The total mole fraction of a component []
+     */
+    const Scalar& moleFraction(unsigned compIdx) const
+    { return totalModelFractions_[compIdx]; }
 
     /*!
      * \brief The mass fraction of a component in a phase []
@@ -123,6 +130,15 @@ public:
             sumMoleFractions_[phaseIdx] += moleFraction_[phaseIdx][compJIdx];
             averageMolarMass_[phaseIdx] += moleFraction_[phaseIdx][compJIdx]*FluidSystem::molarMass(compJIdx);
         }
+    }
+
+    /*!
+     * \brief Set the total mole fraction of a component
+     */
+    void setMoleFraction(unsigned compIdx, const Scalar& value)
+    {
+        Valgrind::CheckDefined(value);
+        totalModelFractions_[compIdx] = value;
     }
 
     void setCompressFactor(unsigned phaseIdx, const Scalar& value) {
@@ -224,7 +240,8 @@ protected:
 
     std::array<std::array<Scalar,numComponents>,numPhases> moleFraction_{};
     std::array<Scalar,numPhases> averageMolarMass_{};
-    std::array<Scalar,numPhases> sumMoleFractions_{};
+    std::array<Scalar,numPhases> sumMoleFractions_{}; // per phase
+    std::array<Scalar, numComponents> totalModelFractions_{}; // total mole fractions for each component
     std::array<Scalar,numPhases> Z_{};
     std::array<Scalar,numComponents> K_{};
     Scalar L_{};
