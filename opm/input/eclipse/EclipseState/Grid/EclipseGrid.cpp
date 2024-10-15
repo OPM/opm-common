@@ -18,6 +18,7 @@
 */
 
 //#include <opm/input/eclipse/ /Grid/LgrCollection.hpp>
+#include <cstddef>
 #include <vector>
 #define _USE_MATH_DEFINES
 
@@ -1967,51 +1968,78 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
 
     void EclipseGrid::init_lgr_cells(const LgrCollection& lgr_input) {
         create_lgr_cells_tree(lgr_input);
+        init_lgr_cells_index();
     }
 
-    void EclipseGrid::create_lgr_cells_tree(const LgrCollection& lgr_input) {   
-         auto IJK_global = [](const auto& lgr_cell, const auto& i_list, const auto& j_list, const auto& k_list){
-            if ((i_list.size() != j_list.size()) || (j_list.size() != k_list.size()) || (k_list.size() != i_list.size()) ){
-                 throw std::invalid_argument("Sizes are not compatible.");
-            }
-            std::vector<std::size_t> global_ind(i_list.size());
-            for (std::size_t index = 0; index < i_list.size(); index++) {              
-                global_ind[index] = 1;
-            }
-            return global_ind;
-        };               
+    void EclipseGrid::create_lgr_cells_tree(const LgrCollection& lgr_input) {                
         for (std::size_t index = 0; index < lgr_input.size(); index++) {
             auto lgr_cell = lgr_input.getLgr(index);
             if (this->lgr_label.compare(lgr_cell.PARENT_NAME()) == 0)            {
                 lgr_grid = true;
                 auto [i_list, j_list, k_list] = lgr_cell.parent_cellsIJK();
-                auto global_list = IJK_global(lgr_cell, i_list, j_list, k_list);
-                lgr_children_labels.emplace_back(lgr_cell.NAME());
+                
                 lgr_children_cells.emplace_back(lgr_cell.NAME(), this->lgr_label, this->lgr_level, 
                                                 lgr_cell.NX(), lgr_cell.NY(), lgr_cell.NZ(),
-                                                i_list, j_list, k_list, global_list);
+                                                i_list, j_list, k_list);
                 
                 lgr_children_cells.back().create_lgr_cells_tree(lgr_input);              
             }
+        }
+        std::sort(lgr_children_cells.begin(), lgr_children_cells.end(),[](const EclipseGridLGR& a, const EclipseGridLGR& b) {
+                return a.father_global[0] < b.father_global[0]; // Sort by another property
+        });
+        lgr_children_labels.reserve(lgr_children_cells.size());
+        for (auto lgr_cell : lgr_children_cells) {
+            lgr_children_labels.emplace_back(lgr_cell.lgr_label);
         }
     }
 
     void EclipseGrid::init_lgr_cells_index(){
         auto set_map_scalar = [&](const auto& vec, const auto& value){
-            for (auto& entry: vec) {              
-                num_lgr_children_cells[entry] = value;
+             num_lgr_children_cells[vec] = value;
+            // }
+            // for (auto& entry: vec) {              
+            //     num_lgr_children_cells[entry] = value;
+            // }
+        };
+        auto set_vec_value = [](const auto& vec, const auto& num_ref, const auto& data){
+            auto new_vec = vec;
+            for (std::size_t index = 0; index < num_ref.size(); index++) {              
+                new_vec[num_ref[index]] = data[index];
             }
-        };                   
+            return new_vec;
+        };
+        auto get_vec_ref = [](const auto& vec, const auto& input_ref){
+            std::vector<std::size_t> sliced_vec(input_ref.size());
+            for (std::size_t index = 0; index < input_ref.size(); index++) {              
+                sliced_vec.push_back(input_ref[index]);
+            }
+            return sliced_vec;
+        };          
+        auto vec_find_entry = [](const auto& vec, const auto& compare_value, const auto& p_function){
+            std::vector<std::size_t> true_entries;
+                std::copy_if(vec.begin(), vec.end(), std::back_inserter(true_entries),
+                 [compare_value](int num) { return num > compare_value; });
+             return true_entries;
+        };  
+        
         std::size_t num_coarse_cells = this->getNumActive();
         std::vector<int> lgr_level_numbering = getActiveMap();
-        std::vector<bool> lgr_level_numbering(lgr_level_numbering.size(),0);
         std::vector<std::size_t> lgr_cells_tag(num_coarse_cells, 0);
-
-        std::size_t index = 1;
+        std::size_t X_value = 3;
+        //std::vector<std::size_t> test = vec_find_entry(lgr_level_numbering, X_value, std::greater<std::size_t>());
+        std::vector<std::size_t> num_ref = vec_find_entry(lgr_level_numbering, X_value, std::greater<std::size_t>());
+        //X_value++;
+        // storing the number if elements of children lgr cells
         for (auto cell:lgr_children_cells) {
             set_map_scalar(cell.getFatherGlobalID(), cell.getTotalActiveLGR());
-            index = index * index + 1; 
-        }           
+        }          
+        auto tet = 1;
+        for (const auto& [key, value] : num_lgr_children_cells) {
+            tet ++ ;
+            auto index = 10 + tet;
+            // vec_find_entry(lgr_level_numbering, X_value, std::greater<std::size_t>());
+        }        
     }
 
     void EclipseGrid::resetACTNUM() {
@@ -2237,14 +2265,29 @@ namespace Opm {
     EclipseGridLGR::EclipseGridLGR(std::string self_label, std::string father_label_, 
                                    int father_lgr_level, std::size_t nx, std::size_t ny, 
                                    std::size_t nz, vec_size_t i_list, vec_size_t j_list,
-                                   vec_size_t k_list, vec_size_t global_list)
+                                   vec_size_t k_list)
     : EclipseGrid(nx,ny,nz), father_label(father_label_), father_i_list(i_list), 
-      father_j_list(j_list), father_k_list(k_list), father_global(global_list)
+      father_j_list(j_list), father_k_list(k_list)
     {
-        std::sort(father_global.begin(),father_global.end(), std::greater<std::size_t>());
+        init_father_global();
         lgr_label= self_label;
         lgr_level = father_lgr_level + 1 ;   
     }
+    void EclipseGridLGR::init_father_global()
+    {
+        auto IJK_global = [this](const auto& i_list, const auto& j_list, const auto& k_list){
+            if ((i_list.size() != j_list.size()) || (j_list.size() != k_list.size()) || (k_list.size() != i_list.size()) ){
+                 throw std::invalid_argument("Sizes are not compatible.");
+            }
+            std::vector<std::size_t> global_ind(i_list.size());
+            for (std::size_t index = 0; index < i_list.size(); index++) {              
+                global_ind[index] = this->getActiveIndex(i_list[index],j_list[index],k_list[index]);
+            }
+            return global_ind;
+        };
+        father_global = IJK_global(father_i_list, father_j_list, father_k_list);
+        std::sort(father_global.begin(),father_global.end(), std::less<std::size_t>());
+    }    
     std::size_t EclipseGridLGR::getTotalActiveLGR()
     {
         std::size_t num_coarse_level =  getNumActive();

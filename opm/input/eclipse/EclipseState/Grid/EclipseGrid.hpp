@@ -246,7 +246,7 @@ namespace Opm {
         static bool allEqual(const std::vector<double> &v);
         std::vector<EclipseGridLGR> lgr_children_cells;
         std::vector<std::string> lgr_children_labels;
-        std::map<std::size_t, std::size_t> num_lgr_children_cells;
+        std::map<std::vector<std::size_t>, std::size_t> num_lgr_children_cells;
 
     private:
         std::vector<double> m_minpvVector;
@@ -344,19 +344,18 @@ namespace Opm {
     // Specialized Class to describe LGR refined cells. 
     {
     public:
-      using vec_size_t = std::vector<std::size_t>; 
+      using vec_size_t = std::vector<std::size_t>;
+      friend class EclipseGrid; 
       EclipseGridLGR() = default;
       EclipseGridLGR(std::string self_label, std::string father_label_, 
                      int father_lgr_level, size_t nx, size_t ny, size_t nz, 
                      vec_size_t father_i_list, vec_size_t father_j_list,
-                     vec_size_t father_k_list, vec_size_t global_list);
+                     vec_size_t father_k_list);
       ~EclipseGridLGR() = default;
       size_t getTotalActiveLGR();
       vec_size_t getFatherGlobalID() const;
-      // void set_fatherIJK(std::vector<std::size_t> father_i_list,
-      //                    std::vector<std::size_t> father_j_list,
-      //                    std::vector<std::size_t> father_k_list);
     private:
+        void init_father_global();
         std::string father_label;
         // references IJK on the father label
         vec_size_t father_i_list;
@@ -415,5 +414,4 @@ namespace Opm {
         std::array<size_t,8> cell_shift;
     };
 }
-
 #endif // OPM_PARSER_ECLIPSE_GRID_HPP
