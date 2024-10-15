@@ -1604,7 +1604,7 @@ namespace Opm { namespace RestartIO  {
 
         xr.convertToSI(es.getUnits());
 
-        auto xw = rst_view->hasKeyword<double>("OPM_XWEL")
+        auto xw = false
             ? restore_wells_opm(es, grid, schedule, *rst_view)
             : restore_wells_ecl(es, grid, schedule, summary_state, rst_view);
 
