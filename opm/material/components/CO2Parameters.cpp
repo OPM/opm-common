@@ -30,7 +30,7 @@
 namespace Opm {
 
 CO2Tables::CO2Tables(){
-    TabulatedEnthalpyTraits tabulatedEnthalpyStruct;
+    Opm::TabulatedEnthalpyTraits tabulatedEnthalpyStruct;
     tabulatedEnthalpy = Opm::UniformTabulated2DFunction< double >{
                                 tabulatedEnthalpyStruct.xMin,
                                 tabulatedEnthalpyStruct.xMax,
@@ -39,7 +39,7 @@ CO2Tables::CO2Tables(){
                                 tabulatedEnthalpyStruct.yMax,
                                 (unsigned int)tabulatedEnthalpyStruct.numY,
                                 tabulatedEnthalpyStruct.vals};
-    TabulatedDensityTraits tabulatedDensityStruct;
+    Opm::TabulatedDensityTraits tabulatedDensityStruct;
     tabulatedDensity = Opm::UniformTabulated2DFunction< double >{
                                 tabulatedDensityStruct.xMin,
                                 tabulatedDensityStruct.xMax,

@@ -25,6 +25,9 @@
 #define OPM_CO2_TABLES_STRUCTS_HPP
 
 #include <vector>
+
+namespace Opm {
+
 struct TabulatedDensityTraits {
 	typedef double Scalar;
 	const char  *name;
@@ -50,4 +53,7 @@ struct TabulatedEnthalpyTraits {
 	const std::vector<std::vector<Scalar>> vals;
     TabulatedEnthalpyTraits();
 };
+
+} // namespace Opm
+
 #endif // OPM_CO2_TABLES_STRUCTS_HPP
