@@ -51,6 +51,7 @@ list (APPEND MAIN_SOURCE_FILES
       opm/material/common/TridiagonalMatrix.cpp
       opm/material/common/UniformXTabulated2DFunction.cpp
       opm/material/components/CO2.cpp
+      opm/material/components/CO2Parameters.cpp
       opm/material/components/H2.cpp
       opm/material/densead/Evaluation.cpp
       opm/material/fluidmatrixinteractions/EclEpsScalingPoints.cpp
