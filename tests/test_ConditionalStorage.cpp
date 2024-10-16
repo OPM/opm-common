@@ -33,6 +33,7 @@
 #include <stdexcept>
 #include <string>
 #include <cstdlib>
+#include <tuple>
 #include <type_traits>
 
 template <bool foo>
@@ -111,7 +112,7 @@ int main()
         catch (std::logic_error &) {}
 
         try {
-            foo->size();
+            std::ignore = foo->size();
 
             // this is supposed to throw an std::logic_error
             std::abort();
