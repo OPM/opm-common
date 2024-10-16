@@ -49,6 +49,5 @@ CO2Tables::CO2Tables(){
                                 (unsigned int)tabulatedDensityStruct.numY,
                                 tabulatedDensityStruct.vals};
 }
-// Other method implementations
 
 } // namespace Opm

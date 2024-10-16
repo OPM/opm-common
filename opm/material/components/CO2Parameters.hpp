@@ -26,7 +26,7 @@
 #include <config.h>
 #include <opm/material/common/MathToolbox.hpp>
 #include <opm/material/common/UniformTabulated2DFunction.hpp>
-#include <opm/material/components/helperStructs.hpp>
+#include <opm/material/components/co2tablesStructs.hpp>
 #include <vector>
 
 
@@ -39,34 +39,7 @@ public:
 	static constexpr double brineSalinity = 1.000000000000000e-01;
 
 	CO2Tables();
-	// 	 : tabulatedEnthalpy{tabulatedEnthalpyStruct.xMin,
-	// 								tabulatedEnthalpyStruct.xMax,
-	// 								tabulatedEnthalpyStruct.numX,
-	// 								tabulatedEnthalpyStruct.yMin,
-	// 								tabulatedEnthalpyStruct.yMax,
-	// 								tabulatedEnthalpyStruct.numY,
-	// 								tabulatedEnthalpyStruct.vals},
-	// 		tabulatedDensity{tabulatedDensityStruct.xMin,
-	// 							  tabulatedDensityStruct.xMax,
-	// 							  tabulatedDensityStruct.numX,
-	// 							  tabulatedDensityStruct.yMin,
-	// 							  tabulatedDensityStruct.yMax,
-	// 							  tabulatedDensityStruct.numY,
-	// 							  tabulatedDensityStruct.vals}
-	// {}
 };
-
-
-// class CO2Parameters::CO2Tables {
-// public:
-//     // Define the members and methods as needed
-//     CO2Tables() {
-//         // Initialize the members
-//         // Example:
-//         // numX = static_cast<unsigned int>(tabulatedEnthalpyStruct.TabulatedEnthalpyTraits::numX);
-//         // numY = static_cast<unsigned int>(tabulatedEnthalpyStruct.TabulatedEnthalpyTraits::numY);
-//     }
-// }
 
 class CO2Parameters
 {
