@@ -839,6 +839,7 @@ void save(EclIO::OutputStream::Restart&                 rstFile,
     // writeActionx(report_step, sim_step, schedule, action_state, sumState, rstFile);
 
     writeSolution(value, es, schedule, /* udqState, */ report_step, sim_step,
+                  ecl_compatible_rst, write_double, inteHD, rstFile);
 
     if (! ecl_compatible_rst) {
         writeExtraData(value.extra, rstFile);
