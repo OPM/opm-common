@@ -30,22 +30,25 @@
 #include <vector>
 
 
-namespace Opm {
+namespace Opm
+{
 
-class CO2Tables {
+class CO2Tables
+{
 public:
-	Opm::UniformTabulated2DFunction< double >   tabulatedEnthalpy;
-	Opm::UniformTabulated2DFunction< double >   tabulatedDensity;
-	static constexpr double brineSalinity = 1.000000000000000e-01;
+    Opm::UniformTabulated2DFunction<double> tabulatedEnthalpy;
+    Opm::UniformTabulated2DFunction<double> tabulatedDensity;
+    static constexpr double brineSalinity = 1.000000000000000e-01;
 
-	CO2Tables();
+    CO2Tables();
 };
 
 class CO2Parameters
 {
 public:
-    CO2Parameters(){
-      co2Tables_ = CO2Tables();
+    CO2Parameters()
+    {
+        co2Tables_ = CO2Tables();
     }
     CO2Tables co2Tables_;
 };
