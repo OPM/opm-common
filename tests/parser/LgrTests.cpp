@@ -278,3 +278,162 @@ SCHEDULE
     const auto& lgr3 = state.getLgrs().getLgr(0);
     BOOST_CHECK_EQUAL( lgr1.NAME() , lgr3.NAME());
 }
+BOOST_AUTO_TEST_CASE(TestGLOBALinactivecells) { 
+    const std::string deck_string = R"(
+RUNSPEC
+
+DIMENS
+  3 3 1 /
+
+GRID
+
+ACTNUM
+1 0 1 
+1 0 1 
+1 1 1 
+/
+
+CARFIN
+-- NAME I1-I2 J1-J2 K1-K2 NX NY NZ
+'LGR1'  2  2  2  2  1  1  3  3   1/
+ENDFIN
+
+
+DX 
+  9*1000 /
+DY
+	9*1000 /
+DZ
+	9*20 /
+
+TOPS
+	9*8325 /
+
+PORO
+  9*0.15 /
+
+PERMX
+  9*1 /
+
+COPY
+  PERMX PERMZ /
+  PERMX PERMY /
+/
+
+EDIT
+
+OIL
+GAS
+
+TITLE
+The title
+
+START
+16 JUN 1988 /
+
+PROPS
+
+REGIONS
+
+SOLUTION
+
+SCHEDULE
+)";
+\
+    Opm::Parser parser;
+    Opm::Deck deck = parser.parseString(deck_string);
+    Opm::EclipseState state(deck);
+    Opm::LgrCollection lgrs = state.getLgrs();
+    //state.init_lgr_cells(lgrs);
+    BOOST_CHECK_MESSAGE(state.hasInputLGR(), "EclipseState should have LGRs");
+    BOOST_CHECK_EQUAL( lgrs.size() , 2U );
+    BOOST_CHECK(lgrs.hasLgr("LGR1"));
+    BOOST_CHECK(lgrs.hasLgr("LGR2"));
+
+    const auto& lgr1 = state.getLgrs().getLgr("LGR1");
+    BOOST_CHECK_EQUAL(lgr1.NAME(), "LGR1");
+    const auto& lgr2 = lgrs.getLgr("LGR2");
+    BOOST_CHECK_EQUAL( lgr2.NAME() , "LGR2");
+
+    const auto& lgr3 = state.getLgrs().getLgr(0);
+    BOOST_CHECK_EQUAL( lgr1.NAME() , lgr3.NAME());
+}
+
+BOOST_AUTO_TEST_CASE(TestLGRinactivecells) { 
+    const std::string deck_string = R"(
+RUNSPEC
+
+DIMENS
+  3 3 1 /
+
+GRID
+
+CARFIN
+-- NAME I1-I2 J1-J2 K1-K2 NX NY NZ
+'LGR1'  2  2  2  2  1  1  3  3   1/
+ACTNUM
+1 0 1 
+1 1 1 
+1 1 1 
+/
+ENDFIN
+
+DX 
+  9*1000 /
+DY
+	9*1000 /
+DZ
+	9*20 /
+
+TOPS
+	9*8325 /
+
+PORO
+  9*0.15 /
+
+PERMX
+  9*1 /
+
+COPY
+  PERMX PERMZ /
+  PERMX PERMY /
+/
+
+EDIT
+
+OIL
+GAS
+
+TITLE
+The title
+
+START
+16 JUN 1988 /
+
+PROPS
+
+REGIONS
+
+SOLUTION
+
+SCHEDULE
+)";
+\
+    Opm::Parser parser;
+    Opm::Deck deck = parser.parseString(deck_string);
+    Opm::EclipseState state(deck);
+    Opm::LgrCollection lgrs = state.getLgrs();
+    //state.init_lgr_cells(lgrs);
+    BOOST_CHECK_MESSAGE(state.hasInputLGR(), "EclipseState should have LGRs");
+    BOOST_CHECK_EQUAL( lgrs.size() , 2U );
+    BOOST_CHECK(lgrs.hasLgr("LGR1"));
+    BOOST_CHECK(lgrs.hasLgr("LGR2"));
+
+    const auto& lgr1 = state.getLgrs().getLgr("LGR1");
+    BOOST_CHECK_EQUAL(lgr1.NAME(), "LGR1");
+    const auto& lgr2 = lgrs.getLgr("LGR2");
+    BOOST_CHECK_EQUAL( lgr2.NAME() , "LGR2");
+
+    const auto& lgr3 = state.getLgrs().getLgr(0);
+    BOOST_CHECK_EQUAL( lgr1.NAME() , lgr3.NAME());
+}
