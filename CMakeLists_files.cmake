@@ -50,7 +50,6 @@ list (APPEND MAIN_SOURCE_FILES
       opm/material/common/Tabulated1DFunction.cpp
       opm/material/common/TridiagonalMatrix.cpp
       opm/material/common/UniformXTabulated2DFunction.cpp
-      opm/material/components/CO2.cpp
       opm/material/components/CO2Parameters.cpp
       opm/material/components/H2.cpp
       opm/material/densead/Evaluation.cpp
