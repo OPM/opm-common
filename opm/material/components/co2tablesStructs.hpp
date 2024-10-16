@@ -1,6 +1,6 @@
 
-#ifndef OPM_CO2HELPER_STRUCTS_HPP
-#define OPM_CO2HELPER_STRUCTS_HPP
+#ifndef OPM_CO2_TABLES_STRUCTS_HPP
+#define OPM_CO2_TABLES_STRUCTS_HPP
 
 #include <vector>
 struct TabulatedDensityTraits {
@@ -28,4 +28,4 @@ struct TabulatedEnthalpyTraits {
 	const std::vector<std::vector<Scalar>> vals;
     TabulatedEnthalpyTraits();
 };
-#endif // OPM_CO2HELPER_STRUCTS_HPP
+#endif // OPM_CO2_TABLES_STRUCTS_HPP
