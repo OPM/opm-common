@@ -1992,54 +1992,39 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
         for (auto lgr_cell : lgr_children_cells) {
             lgr_children_labels.emplace_back(lgr_cell.lgr_label);
         }
+        lgr_active_index.resize(lgr_children_cells.size(),0);
     }
 
     void EclipseGrid::init_lgr_cells_index(){
         auto set_map_scalar = [&](const auto& vec, const auto& value){
              num_lgr_children_cells[vec] = value;
-            // }
-            // for (auto& entry: vec) {              
-            //     num_lgr_children_cells[entry] = value;
-            // }
         };
-        auto set_vec_value = [](const auto& vec, const auto& num_ref, const auto& data){
-            auto new_vec = vec;
+        auto set_vec_value = []( auto& vec, const auto& num_ref, const auto& data){
             for (std::size_t index = 0; index < num_ref.size(); index++) {              
-                new_vec[num_ref[index]] = data[index];
+                vec[num_ref[index]] = data;
             }
-            return new_vec;
-        };
-        auto get_vec_ref = [](const auto& vec, const auto& input_ref){
-            std::vector<std::size_t> sliced_vec(input_ref.size());
-            for (std::size_t index = 0; index < input_ref.size(); index++) {              
-                sliced_vec.push_back(input_ref[index]);
-            }
-            return sliced_vec;
-        };          
-        auto vec_find_entry = [](const auto& vec, const auto& compare_value, const auto& p_function){
-            std::vector<std::size_t> true_entries;
-                std::copy_if(vec.begin(), vec.end(), std::back_inserter(true_entries),
-                 [compare_value](int num) { return num > compare_value; });
-             return true_entries;
-        };  
-        
-        std::size_t num_coarse_cells = this->getNumActive();
-        std::vector<int> lgr_level_numbering = getActiveMap();
-        std::vector<std::size_t> lgr_cells_tag(num_coarse_cells, 0);
-        std::size_t X_value = 3;
-        //std::vector<std::size_t> test = vec_find_entry(lgr_level_numbering, X_value, std::greater<std::size_t>());
-        std::vector<std::size_t> num_ref = vec_find_entry(lgr_level_numbering, X_value, std::greater<std::size_t>());
-        //X_value++;
-        // storing the number if elements of children lgr cells
+        };        
+        std::vector<std::size_t> lgr_level_numbering_counting(getNumActive(),1);
+        lgr_level_active_map.resize(getNumActive(),0);
         for (auto cell:lgr_children_cells) {
             set_map_scalar(cell.getFatherGlobalID(), cell.getTotalActiveLGR());
-        }          
-        auto tet = 1;
+        }                  
+        std::size_t head_lgr_cell;
+        std::vector<std::size_t> bottom_lgr_cells;
+        std::size_t index = 0;
         for (const auto& [key, value] : num_lgr_children_cells) {
-            tet ++ ;
-            auto index = 10 + tet;
-            // vec_find_entry(lgr_level_numbering, X_value, std::greater<std::size_t>());
+            head_lgr_cell = key[0];
+            lgr_level_numbering_counting[head_lgr_cell] = value;
+            lgr_active_index[index] = head_lgr_cell;
+            std::copy(key.begin() + 1 ,key.end(), std::back_inserter(bottom_lgr_cells));
+            set_vec_value(lgr_level_numbering_counting, bottom_lgr_cells, 0);
+            index++;
         }        
+        std::partial_sum(lgr_level_numbering_counting.begin(), lgr_level_numbering_counting.end(),lgr_level_active_map.begin());
+        std::transform(lgr_level_active_map.begin(), lgr_level_active_map.end(), lgr_level_active_map.begin() ,
+                       [](std::size_t x){return x-1;});
+        
+
     }
 
     void EclipseGrid::resetACTNUM() {

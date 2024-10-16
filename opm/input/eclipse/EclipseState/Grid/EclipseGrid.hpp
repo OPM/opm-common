@@ -246,6 +246,11 @@ namespace Opm {
         static bool allEqual(const std::vector<double> &v);
         std::vector<EclipseGridLGR> lgr_children_cells;
         std::vector<std::string> lgr_children_labels;
+        std::vector<std::size_t> lgr_active_index;
+        std::vector<std::size_t> lgr_level_active_map;
+
+
+
         std::map<std::vector<std::size_t>, std::size_t> num_lgr_children_cells;
 
     private:
