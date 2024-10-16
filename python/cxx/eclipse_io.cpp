@@ -294,24 +294,27 @@ npArray get_erst_vector(Opm::EclIO::ERst * file_ptr, const std::string& key, siz
 
 
 std::tuple<std::array<double,8>, std::array<double,8>, std::array<double,8>>
-get_xyz_from_ijk(Opm::EclIO::EGrid * file_ptr,int i, int j, int k)
+get_xyz_from_ijk(Opm::EclIO::EGrid * file_ptr, int i, int j, int k)
 {
     std::array<double,8> X = {0.0};
     std::array<double,8> Y = {0.0};
     std::array<double,8> Z = {0.0};
 
-    std::array<int, 3> ijk = {i, j, k };
+    std::array<int, 3> ijk = {i, j, k};
+    
+    if (file_ptr->with_mapaxes())
+        file_ptr->getCellCornersWithMapAxes(ijk, X, Y, Z);
+    else
+        file_ptr->getCellCorners(ijk, X, Y, Z);
 
-    file_ptr->getCellCorners(ijk, X, Y, Z);
-
-    return std::make_tuple( X, Y, Z);
+    return std::make_tuple(X, Y, Z);
 }
 
 std::tuple<std::array<double,8>, std::array<double,8>, std::array<double,8>>
 get_xyz_from_active_index(Opm::EclIO::EGrid * file_ptr, int actIndex)
 {
     std::array<int, 3> ijk = file_ptr->ijk_from_active_index(actIndex);
-    return get_xyz_from_ijk(file_ptr,ijk[0], ijk[1], ijk[2]);
+    return get_xyz_from_ijk(file_ptr, ijk[0], ijk[1], ijk[2]);
 }
 
 py::array get_cellvolumes_mask(Opm::EclIO::EGrid * file_ptr, std::vector<int> mask)
@@ -463,13 +466,15 @@ void python::common::export_IO(py::module& m) {
         .def("units", &ESmryBind::units);
 
    py::class_<Opm::EclIO::EGrid>(m, "EGrid")
-        .def(py::init<const std::string &>())
+        .def(py::init<const std::string &, const std::string &, const bool>(), py::arg("filename"),
+             py::arg("grid_name") = "global", py::arg("apply_mapaxes") = true)
         .def_property_readonly("active_cells", &Opm::EclIO::EGrid::activeCells)
         .def_property_readonly("dimension", &Opm::EclIO::EGrid::dimension)
         .def("ijk_from_global_index", &Opm::EclIO::EGrid::ijk_from_global_index)
         .def("ijk_from_active_index", &Opm::EclIO::EGrid::ijk_from_active_index)
         .def("active_index", &Opm::EclIO::EGrid::active_index)
         .def("global_index", &Opm::EclIO::EGrid::global_index)
+        .def("export_mapaxes", &Opm::EclIO::EGrid::get_mapaxes)
         .def("xyz_from_ijk", &get_xyz_from_ijk)
         .def("xyz_from_active_index", &get_xyz_from_active_index)
         .def("cellvolumes", &get_cellvolumes)
