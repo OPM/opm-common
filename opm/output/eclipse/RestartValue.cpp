@@ -17,16 +17,24 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <set>
-#include <utility>
-
 #include <opm/output/eclipse/RestartValue.hpp>
+
+#include <algorithm>
+#include <set>
+#include <stdexcept>
+#include <string>
+#include <utility>
+#include <vector>
 
 namespace Opm {
 
     namespace {
 
-        const std::set<std::string> reserved_keys = {"LOGIHEAD", "INTEHEAD" ,"DOUBHEAD", "IWEL", "XWEL","ICON", "XCON" , "OPM_IWEL" , "OPM_XWEL", "ZWEL"};
+        const std::set<std::string> reserved_keys {
+            "LOGIHEAD", "INTEHEAD", "DOUBHEAD",
+            "IWEL", "XWEL", "ZWEL",
+            "ICON", "XCON",
+        };
 
     }
 

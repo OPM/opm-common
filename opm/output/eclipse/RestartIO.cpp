@@ -116,108 +116,6 @@ namespace {
             : 0.0;
     }
 
-    std::vector<int>
-    serialize_OPM_IWEL(const data::Wells&              wells,
-                       const std::vector<std::string>& well_names)
-    {
-      const auto getctrl = [&]( const std::string& wname ) {
-            const auto itr = wells.find( wname );
-            return itr == wells.end() ? 0 : itr->second.control;
-        };
-
-        std::vector<int> iwel(well_names.size(), 0.0);
-        std::transform(well_names.begin(), well_names.end(), iwel.begin(), getctrl);
-
-        return iwel;
-    }
-
-    std::vector<double>
-    serialize_OPM_XWEL(const data::Wells&              wells,
-                       const Schedule&                 schedule,
-                       const std::vector<std::string>& well_names,
-                       const int                       sim_step,
-                       const Phases&                   phase_spec,
-                       const EclipseGrid&              grid)
-    {
-        using rt = data::Rates::opt;
-
-        std::vector<rt> phases;
-        if (phase_spec.active(Phase::WATER)) phases.push_back(rt::wat);
-        if (phase_spec.active(Phase::OIL))   phases.push_back(rt::oil);
-        if (phase_spec.active(Phase::GAS))   phases.push_back(rt::gas);
-
-        std::vector< double > xwel;
-        for (const auto& wellname : well_names) {
-            const auto& sched_well = schedule.getWell(wellname, sim_step);
-            if (wells.count(wellname) == 0 ||
-                sched_well.getStatus() == Opm::Well::Status::SHUT)
-            {
-                const auto elems = (sched_well.getConnections().size()
-                                    * (phases.size() + data::Connection::restart_size))
-                    + 3 /* bhp, thp, temperature */
-                    + phases.size();
-
-                // write zeros if no well data is provided
-                xwel.insert( xwel.end(), elems, 0.0 );
-                continue;
-            }
-
-            const auto& well = wells.at( wellname );
-
-            xwel.push_back( well.bhp );
-            xwel.push_back( well.thp );
-            xwel.push_back( well.temperature );
-
-            std::transform(phases.begin(), phases.end(),
-                           std::back_inserter(xwel),
-                           [&well](const auto& phase)
-                           {
-                               return well.rates.get(phase);
-                           });
-
-            for (const auto& sc : sched_well.getConnections()) {
-                const auto i = sc.getI(), j = sc.getJ(), k = sc.getK();
-
-                const auto rs_size = phases.size() + data::Connection::restart_size;
-                if (!grid.cellActive(i, j, k) || sc.state() == Connection::State::SHUT) {
-                    xwel.insert(xwel.end(), rs_size, 0.0);
-                    continue;
-                }
-
-                const auto global_index = grid.getGlobalIndex(i, j, k);
-
-                const auto& connection =
-                    std::find_if(well.connections.begin(),
-                                 well.connections.end(),
-                        [global_index](const data::Connection& c)
-                    {
-                        return c.index == global_index;
-                    });
-
-                if (connection == well.connections.end()) {
-                    xwel.insert( xwel.end(), rs_size, 0.0 );
-                    continue;
-                }
-
-                xwel.push_back(connection->pressure);
-                xwel.push_back(connection->reservoir_rate);
-                xwel.push_back(connection->cell_pressure);
-                xwel.push_back(connection->cell_saturation_water);
-                xwel.push_back(connection->cell_saturation_gas);
-                xwel.push_back(connection->effective_Kh);
-
-                std::transform(phases.begin(), phases.end(),
-                               std::back_inserter(xwel),
-                               [&connection](const auto& phase)
-                               {
-                                   return connection->rates.get(phase);
-                               });
-            }
-        }
-
-        return xwel;
-    }
-
     void checkSaveArguments(const EclipseState& es,
                             const RestartValue& restart_value,
                             const EclipseGrid&  grid)
@@ -428,19 +326,16 @@ namespace {
         rstFile.write("SACN", actionxData.getSACN());
     }
 
-    void writeWell(int                             sim_step,
-                   const bool                      ecl_compatible_rst,
-                   const Phases&                   phases,
-                   const EclipseGrid&              grid,
-                   const Schedule&                 schedule,
-                   const TracerConfig&             tracers,
-                   const std::vector<std::string>& well_names,
-                   const data::Wells&              wells,
-                   const Opm::Action::State&       action_state,
-                   const Opm::WellTestState&       wtest_state,
-                   const Opm::SummaryState&        sumState,
-                   const std::vector<int>&         ih,
-                   EclIO::OutputStream::Restart&   rstFile)
+    void writeWell(int                           sim_step,
+                   const EclipseGrid&            grid,
+                   const Schedule&               schedule,
+                   const TracerConfig&           tracers,
+                   const data::Wells&            wells,
+                   const Opm::Action::State&     action_state,
+                   const Opm::WellTestState&     wtest_state,
+                   const Opm::SummaryState&      sumState,
+                   const std::vector<int>&       ih,
+                   EclIO::OutputStream::Restart& rstFile)
     {
         auto wellData = Helpers::AggregateWellData(ih);
         wellData.captureDeclaredWellData(schedule, tracers, sim_step, action_state, wtest_state, sumState, ih);
@@ -456,18 +351,6 @@ namespace {
 
         rstFile.write("ZWLS", wListData.getZWls());
         rstFile.write("IWLS", wListData.getIWls());
-
-        // Extended set of OPM well vectors
-        if (!ecl_compatible_rst) {
-            const auto opm_xwel =
-                serialize_OPM_XWEL(wells, schedule, well_names,
-                                   sim_step, phases, grid);
-
-            const auto opm_iwel = serialize_OPM_IWEL(wells, well_names);
-
-            rstFile.write("OPM_IWEL", opm_iwel);
-            rstFile.write("OPM_XWEL", opm_xwel);
-        }
 
         auto connectionData = Helpers::AggregateConnectionData(ih);
         connectionData.captureDeclaredConnData(schedule, grid, schedule.getUnits(),
@@ -535,7 +418,6 @@ namespace {
     }
 
     void writeDynamicData(const int                                     sim_step,
-                          const bool                                    ecl_compatible_rst,
                           const EclipseGrid&                            grid,
                           const EclipseState&                           es,
                           const Schedule&                               schedule,
@@ -573,10 +455,8 @@ namespace {
                              sumState, wellSol, inteHD, rstFile);
             }
 
-            const auto& phases = es.runspec().phases();
-
-            writeWell(sim_step, ecl_compatible_rst, phases, grid, schedule, es.tracer(),
-                      wells, wellSol, action_state, wtest_state, sumState, inteHD, rstFile);
+            writeWell(sim_step, grid, schedule, es.tracer(), wellSol,
+                      action_state, wtest_state, sumState, inteHD, rstFile);
         }
 
         if (const auto& aqCfg = es.aquifer();
@@ -919,9 +799,9 @@ void save(EclIO::OutputStream::Restart&                 rstFile,
                     seconds_elapsed, schedule, grid, es, rstFile);
 
     if (report_step > 0) {
-        writeDynamicData(sim_step, ecl_compatible_rst, grid, es, schedule,
-                         value.wells, action_state, wtest_state,
-                         sumState, inteHD, value.aquifer, aquiferData, rstFile);
+        writeDynamicData(sim_step, grid, es, schedule, value.wells,
+                         action_state, wtest_state, sumState, inteHD,
+                         value.aquifer, aquiferData, rstFile);
     }
 
     writeActionx(report_step, sim_step, schedule, action_state, sumState, rstFile);
