@@ -20,34 +20,34 @@
   module for the precise wording of the license and the list of
   copyright holders.
 */
+#include "co2tables.inc"
 #include <config.h>
-#include <opm/material/components/CO2Parameters.hpp>
 #include <opm/material/common/MathToolbox.hpp>
 #include <opm/material/common/UniformTabulated2DFunction.hpp>
+#include <opm/material/components/CO2Parameters.hpp>
 #include <vector>
-#include "co2tables.inc"
 
-namespace Opm {
+namespace Opm
+{
 
-CO2Tables::CO2Tables(){
+CO2Tables::CO2Tables()
+{
     Opm::TabulatedEnthalpyTraits tabulatedEnthalpyStruct;
-    tabulatedEnthalpy = Opm::UniformTabulated2DFunction< double >{
-                                tabulatedEnthalpyStruct.xMin,
-                                tabulatedEnthalpyStruct.xMax,
-                                (unsigned int)tabulatedEnthalpyStruct.numX,
-                                tabulatedEnthalpyStruct.yMin,
-                                tabulatedEnthalpyStruct.yMax,
-                                (unsigned int)tabulatedEnthalpyStruct.numY,
-                                tabulatedEnthalpyStruct.vals};
+    tabulatedEnthalpy = Opm::UniformTabulated2DFunction<double> {tabulatedEnthalpyStruct.xMin,
+                                                                 tabulatedEnthalpyStruct.xMax,
+                                                                 (unsigned int)tabulatedEnthalpyStruct.numX,
+                                                                 tabulatedEnthalpyStruct.yMin,
+                                                                 tabulatedEnthalpyStruct.yMax,
+                                                                 (unsigned int)tabulatedEnthalpyStruct.numY,
+                                                                 tabulatedEnthalpyStruct.vals};
     Opm::TabulatedDensityTraits tabulatedDensityStruct;
-    tabulatedDensity = Opm::UniformTabulated2DFunction< double >{
-                                tabulatedDensityStruct.xMin,
-                                tabulatedDensityStruct.xMax,
-                                (unsigned int)tabulatedDensityStruct.numX,
-                                tabulatedDensityStruct.yMin,
-                                tabulatedDensityStruct.yMax,
-                                (unsigned int)tabulatedDensityStruct.numY,
-                                tabulatedDensityStruct.vals};
+    tabulatedDensity = Opm::UniformTabulated2DFunction<double> {tabulatedDensityStruct.xMin,
+                                                                tabulatedDensityStruct.xMax,
+                                                                (unsigned int)tabulatedDensityStruct.numX,
+                                                                tabulatedDensityStruct.yMin,
+                                                                tabulatedDensityStruct.yMax,
+                                                                (unsigned int)tabulatedDensityStruct.numY,
+                                                                tabulatedDensityStruct.vals};
 }
 
 } // namespace Opm
