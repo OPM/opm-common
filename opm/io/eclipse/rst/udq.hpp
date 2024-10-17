@@ -263,7 +263,7 @@ public:
 
     /// UDQ's category, i.e., which level this UDQ applies to.
     ///
-    /// Exmples include, the FIELD (FU*), group (GU*), well (WU*), or well
+    /// Examples include, the FIELD (FU*), group (GU*), well (WU*), or well
     /// segments (SU*).
     UDQVarType category{UDQVarType::NONE};
 

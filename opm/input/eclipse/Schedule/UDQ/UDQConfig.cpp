@@ -588,12 +588,6 @@ namespace Opm {
         }
     }
 
-    UDQAction UDQConfig::action_type(const std::string& udq_key) const
-    {
-        auto action_iter = this->input_index.find(udq_key);
-        return action_iter->second.action;
-    }
-
     void UDQConfig::add_assign(const RestartIO::RstUDQ& udq,
                                const std::size_t        report_step)
     {

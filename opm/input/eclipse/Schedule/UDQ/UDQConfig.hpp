@@ -246,7 +246,7 @@ namespace Opm {
         /// \param[in] create_segment_matcher Factory function for
         /// constructing segment set matchers.
         ///
-        /// \param[in,out] st Summary vectors.  For output and evaulating
+        /// \param[in,out] st Summary vectors.  For output and evaluating
         /// ACTION condition purposes.  Values pertaining to UDQs being
         /// assigned here will be updated.
         ///
@@ -277,7 +277,7 @@ namespace Opm {
         /// \param[in] create_region_matcher Factory function for
         /// constructing region set matchers.
         ///
-        /// \param[in,out] st Summary vectors.  For output and evaulating
+        /// \param[in,out] st Summary vectors.  For output and evaluating
         /// ACTION condition purposes.  Values pertaining to UDQs being
         /// assigned here will be updated.
         ///
@@ -307,7 +307,7 @@ namespace Opm {
         /// \param[in] key Unqualified UDQ name such as FUNNY, GUITAR,
         /// WURST, or SUSHI.
         ///
-        /// \return Pending assingment object for \p key.  Throws an
+        /// \return Pending assignment object for \p key.  Throws an
         /// exception of type \code std::out_of_range \endcode if no such
         /// object exists for the UDQ \p key.
         const UDQAssign& assign(const std::string& key) const;
@@ -433,7 +433,7 @@ namespace Opm {
         UDQFunctionTable udqft;
 
         // The following data structures are constrained by compatibility
-        // requirements in our simulation restart files.  In particuar we
+        // requirements in our simulation restart files.  In particular we
         // need to control the keyword ordering.  In this class the ordering
         // is maintained mainly by the input_index map which tracks the
         // insertion order of each keyword and whether the keyword (UDQ
@@ -465,7 +465,7 @@ namespace Opm {
 
         /// Ordered set of DEFINE statements.
         ///
-        /// Mostly unused and should probably be removed.
+        /// TODO: Mostly unused and should probably be removed.
         IOrderSet<std::string> define_order;
 
         /// Ordered set of UDQ inputs.
@@ -490,16 +490,6 @@ namespace Opm {
         ///
         /// \param[in] action Kind of operation.
         void add_node(const std::string& quantity, UDQAction action);
-
-        /// Retrieve operation currently associated a UDQ
-        ///
-        /// \param[in] udq_key Unqualified UDQ name such as FUNNY, GUITAR,
-        /// WURST, or SUSHI.  Shall be the name of an existing UDQ since
-        /// this function otherwise will dereference \code input_index.end()
-        /// \endcode.
-        ///
-        /// \return Operation currently associated to \p udq_key.
-        UDQAction action_type(const std::string& udq_key) const;
 
         /// Reconstitute an assignment statement from restart file information.
         ///

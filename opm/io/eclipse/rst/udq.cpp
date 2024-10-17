@@ -19,6 +19,8 @@
 
 #include <opm/io/eclipse/rst/udq.hpp>
 
+#include <opm/common/utility/Visitor.hpp>
+
 #include <opm/output/eclipse/UDQDims.hpp>
 
 #include <algorithm>
@@ -35,20 +37,12 @@
 
 #include <fmt/format.h>
 
-namespace detail {
-    template <typename... Ts>
-    struct Overloaded : public Ts... { using Ts::operator()...; };
-
-    template <typename... Ts>
-    Overloaded(Ts...) -> Overloaded<Ts...>;
-}
-
 void Opm::RestartIO::RstUDQ::ValueRange::Iterator::setValue()
 {
     this->deref_value_.first = this->i_[this->ix_];
 
     this->deref_value_.second =
-        std::visit(detail::Overloaded {
+        std::visit(VisitorOverloadSet {
             []              (const double  v) { return v; },
             [ix = this->ix_](const double* v) { return v[ix]; }
         }, this->value_);
