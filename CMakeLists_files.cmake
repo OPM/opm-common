@@ -50,7 +50,7 @@ list (APPEND MAIN_SOURCE_FILES
       opm/material/common/Tabulated1DFunction.cpp
       opm/material/common/TridiagonalMatrix.cpp
       opm/material/common/UniformXTabulated2DFunction.cpp
-      opm/material/components/CO2.cpp
+      opm/material/components/CO2Tables.cpp
       opm/material/components/H2.cpp
       opm/material/densead/Evaluation.cpp
       opm/material/fluidmatrixinteractions/EclEpsScalingPoints.cpp
@@ -859,6 +859,7 @@ list( APPEND PUBLIC_HEADER_FILES
       opm/material/components/Xylene.hpp
       opm/material/components/SimpleH2O.hpp
       opm/material/components/CO2.hpp
+      opm/material/components/CO2Tables.hpp
       opm/material/components/Mesitylene.hpp
       opm/material/components/SimpleCO2.hpp
       opm/material/components/C10.hpp
