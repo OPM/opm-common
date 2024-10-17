@@ -75,6 +75,9 @@ double eval_group_uda(const UDAValue& value, const std::string& group, const Sum
 
 
 double eval_group_uda_rate(const UDAValue& value, const std::string& name, const SummaryState& st, double udq_undefined, Phase phase, const UnitSystem& unitSystem) {
+    if (value.is<double>())
+        return injection::rateToSI(value.get<double>(), phase, unitSystem);
+
     double raw_rate = eval_group_uda(value, name, st, udq_undefined);
     return injection::rateToSI(raw_rate, phase, unitSystem);
 }
