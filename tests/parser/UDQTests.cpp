@@ -24,6 +24,8 @@
 #include <opm/common/utility/OpmInputError.hpp>
 #include <opm/common/utility/TimeService.hpp>
 
+#include <opm/io/eclipse/rst/udq.hpp>
+
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
 #include <opm/input/eclipse/EclipseState/Runspec.hpp>
@@ -50,13 +52,13 @@
 
 #include <opm/input/eclipse/Utility/Typetools.hpp>
 
+#include <opm/input/eclipse/Deck/Deck.hpp>
+#include <opm/input/eclipse/Deck/UDAValue.hpp>
+
 #include <opm/input/eclipse/Parser/ErrorGuard.hpp>
 #include <opm/input/eclipse/Parser/InputErrorAction.hpp>
 #include <opm/input/eclipse/Parser/ParseContext.hpp>
 #include <opm/input/eclipse/Parser/Parser.hpp>
-
-#include <opm/input/eclipse/Deck/Deck.hpp>
-#include <opm/input/eclipse/Deck/UDAValue.hpp>
 
 #include <algorithm>
 #include <cmath>
@@ -2857,14 +2859,32 @@ UDQ
     BOOST_CHECK_NO_THROW( make_schedule(valid) );
 }
 
-BOOST_AUTO_TEST_CASE(UDQ_ASSIGN_RST) {
-    std::unordered_set<std::string> selector{"W1", "W2"};
-    UDQAssign assign("WUBHP", selector, 100, 2);
-    auto res = assign.eval( {"W1", "W2", "W3"});
-    BOOST_CHECK_EQUAL(res.size(), 3);
-    BOOST_CHECK_EQUAL(res["W1"].get(), 100);
-    BOOST_CHECK_EQUAL(res["W2"].get(), 100);
-    BOOST_CHECK_EQUAL(res["W3"].defined(), false);
+BOOST_AUTO_TEST_CASE(UDQ_ASSIGN_RST)
+{
+    using namespace std::string_literals;
+
+    auto assignRst = RestartIO::RstUDQ { "WUBHP", "BARSA" };
+
+    assignRst.prepareValues();
+    assignRst.addValue(0, 0, 100.0);
+    assignRst.addEntityName("W1");
+
+    assignRst.addValue(1, 0, 123.4);
+    assignRst.addEntityName("W2");
+    assignRst.commitValues();
+
+    const auto report_step = std::size_t{2};
+
+    const auto assign = UDQAssign { "WUBHP", assignRst, report_step };
+    const auto res    = assign.eval(std::vector { "W1"s, "W2"s, "W3"s, });
+
+    BOOST_REQUIRE_EQUAL(res.size(), 3);
+
+    BOOST_CHECK_CLOSE(res["W1"].get(), 100.0, 1.0e-8);
+    BOOST_CHECK_CLOSE(res["W2"].get(), 123.4, 1.0e-8);
+
+    BOOST_CHECK_MESSAGE(! res["W3"].defined(),
+                        R"(Assignment UDQ set must NOT have a defined value for well "W3")");
 }
 
 BOOST_AUTO_TEST_CASE(UDQ_ASSIGN_SEGMENT)

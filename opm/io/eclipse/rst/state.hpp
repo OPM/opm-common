@@ -34,6 +34,7 @@
 
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
 
+#include <ctime>
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -108,12 +109,7 @@ private:
                  const std::vector<int>& iseg,
                  const std::vector<double>& rseg);
 
-    void add_udqs(const std::vector<int>& iudq,
-                  const std::vector<std::string>& zudn,
-                  const std::vector<std::string>& zudl,
-                  const std::vector<double>& dudw,
-                  const std::vector<double>& dudg,
-                  const std::vector<double>& dudf);
+    void add_udqs(std::shared_ptr<EclIO::RestartFileView> rstView);
 
     void add_actions(const Parser& parser,
                      const Runspec& runspec,

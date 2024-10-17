@@ -20,6 +20,7 @@
 #include <opm/input/eclipse/Schedule/UDQ/UDQConfig.hpp>
 
 #include <opm/io/eclipse/rst/state.hpp>
+#include <opm/io/eclipse/rst/udq.hpp>
 
 #include <opm/common/OpmLog/KeywordLocation.hpp>
 #include <opm/common/OpmLog/OpmLog.hpp>
@@ -142,35 +143,23 @@ namespace {
 namespace Opm {
 
     UDQConfig::UDQConfig(const UDQParams& params)
-        : udq_params(params)
-        , udqft(this->udq_params)
+        : udq_params { params }
+        , udqft      { udq_params }
     {}
 
-    UDQConfig::UDQConfig(const UDQParams& params, const RestartIO::RstState& rst_state)
-        : UDQConfig(params)
+    UDQConfig::UDQConfig(const UDQParams&           params,
+                         const RestartIO::RstState& rst_state)
+        : UDQConfig { params }
     {
-        for (const auto& rst_udq : rst_state.udqs) {
-            if (rst_udq.is_define()) {
-                KeywordLocation location("UDQ", "Restart file", 0);
-                this->add_define(rst_udq.name,
-                                 location,
-                                 { rst_udq.expression() },
-                                 rst_state.header.report_step);
-
-                auto pos = this->m_definitions.find(rst_udq.name);
-                assert (pos != this->m_definitions.end());
-
-                pos->second.update_status(rst_udq.updateStatus(),
-                                          rst_state.header.report_step);
+        for (const auto& udq : rst_state.udqs) {
+            if (udq.isDefine()) {
+                this->add_define(udq, rst_state.header.report_step);
             }
             else {
-                this->add_assign(rst_udq.name,
-                                 rst_udq.assign_selector(),
-                                 rst_udq.assign_value(),
-                                 rst_state.header.report_step);
+                this->add_assign(udq, rst_state.header.report_step);
             }
 
-            this->add_unit(rst_udq.name, rst_udq.unit);
+            this->add_unit(udq.name, udq.unit);
         }
     }
 
@@ -190,87 +179,60 @@ namespace Opm {
         return result;
     }
 
-    const UDQParams& UDQConfig::params() const
+    const std::string& UDQConfig::unit(const std::string& key) const
     {
-        return this->udq_params;
+        const auto pair_ptr = this->units.find(key);
+        if (pair_ptr == this->units.end()) {
+            throw std::invalid_argument("No such UDQ quantity: " + key);
+        }
+
+        return pair_ptr->second;
     }
 
-    void UDQConfig::add_node(const std::string& quantity, const UDQAction action)
+    bool UDQConfig::has_unit(const std::string& keyword) const
     {
-        auto index_iter = this->input_index.find(quantity);
-        if (this->input_index.find(quantity) == this->input_index.end()) {
-            auto var_type = UDQ::varType(quantity);
-            auto insert_index = this->input_index.size();
+        return this->units.find(keyword) != this->units.end();
+    }
 
-            this->type_count[var_type] += 1;
-            this->input_index[quantity] = UDQIndex(insert_index, this->type_count[var_type], action, var_type);
+    bool UDQConfig::has_keyword(const std::string& keyword) const
+    {
+        return (this->m_assignments.find(keyword) != this->m_assignments.end())
+            || (this->m_definitions.find(keyword) != this->m_definitions.end());
+    }
+
+    void UDQConfig::add_record(SegmentMatcherFactory  create_segment_matcher,
+                               const DeckRecord&      record,
+                               const KeywordLocation& location,
+                               const std::size_t      report_step)
+    {
+        using KW = ParserKeywords::UDQ;
+
+        const auto action = UDQ::actionType(record.getItem<KW::ACTION>().get<RawString>(0));
+        const auto& quantity = record.getItem<KW::QUANTITY>().get<std::string>(0);
+        const auto data = RawString::strings(record.getItem<KW::DATA>().getData<RawString>());
+
+        if (action == UDQAction::UPDATE) {
+            this->add_update(quantity, report_step, location, data);
+        }
+        else if (action == UDQAction::UNITS) {
+            this->add_unit(quantity, data.front());
+        }
+        else if (action == UDQAction::ASSIGN) {
+            auto selector = std::vector<std::string>(data.begin(), data.end() - 1);
+            std::transform(selector.cbegin(), selector.cend(), selector.begin(), strip_quotes);
+            const auto value = std::stod(data.back());
+            this->add_assign(quantity,
+                             std::move(create_segment_matcher),
+                             selector, value, report_step);
+        }
+        else if (action == UDQAction::DEFINE) {
+            this->add_define(quantity, location, data, report_step);
         }
         else {
-            index_iter->second.action = action;
+            throw std::runtime_error {
+                "Unknown UDQ Operation " + std::to_string(static_cast<int>(action))
+            };
         }
-    }
-
-    void UDQConfig::add_assign(const std::string&              quantity,
-                               SegmentMatcherFactory           create_segment_matcher,
-                               const std::vector<std::string>& selector,
-                               const double                    value,
-                               const std::size_t               report_step)
-    {
-        this->add_node(quantity, UDQAction::ASSIGN);
-
-        switch (UDQ::varType(quantity)) {
-        case UDQVarType::SEGMENT_VAR:
-            this->add_enumerated_assign(quantity,
-                                        std::move(create_segment_matcher),
-                                        selector, value, report_step);
-            break;
-
-        default:
-            this->add_named_assign(quantity, selector, value, report_step);
-            break;
-        }
-
-        if (this->m_assignments.find(quantity) != this->m_assignments.end()) {
-            this->pending_assignments_.push_back(quantity);
-        }
-    }
-
-    void UDQConfig::add_assign(const std::string&                     quantity,
-                               const std::unordered_set<std::string>& selector,
-                               const double                           value,
-                               const std::size_t                      report_step)
-    {
-        this->add_node(quantity, UDQAction::ASSIGN);
-
-        auto assignment = this->m_assignments.find(quantity);
-        if (assignment == this->m_assignments.end()) {
-            this->m_assignments.emplace(std::piecewise_construct,
-                                        std::forward_as_tuple(quantity),
-                                        std::forward_as_tuple(quantity, selector,
-                                                              value, report_step));
-        }
-        else {
-            assignment->second.add_record(selector, value, report_step);
-        }
-    }
-
-    void UDQConfig::add_define(const std::string&              quantity,
-                               const KeywordLocation&          location,
-                               const std::vector<std::string>& expression,
-                               const std::size_t               report_step)
-    {
-        this->add_node(quantity, UDQAction::DEFINE);
-
-        this->m_definitions.insert_or_assign(quantity,
-                                             UDQDefine {
-                                                 this->udq_params,
-                                                 quantity,
-                                                 report_step,
-                                                 location,
-                                                 expression
-                                             });
-
-        this->define_order.insert(quantity);
     }
 
     void UDQConfig::add_unit(const std::string& keyword, const std::string& quoted_unit)
@@ -318,39 +280,48 @@ namespace Opm {
         def.update_status(update_status, report_step);
     }
 
-    void UDQConfig::add_record(SegmentMatcherFactory  create_segment_matcher,
-                               const DeckRecord&      record,
-                               const KeywordLocation& location,
-                               const std::size_t      report_step)
+    void UDQConfig::add_assign(const std::string&              quantity,
+                               SegmentMatcherFactory           create_segment_matcher,
+                               const std::vector<std::string>& selector,
+                               const double                    value,
+                               const std::size_t               report_step)
     {
-        using KW = ParserKeywords::UDQ;
+        this->add_node(quantity, UDQAction::ASSIGN);
 
-        const auto action = UDQ::actionType(record.getItem<KW::ACTION>().get<RawString>(0));
-        const auto& quantity = record.getItem<KW::QUANTITY>().get<std::string>(0);
-        const auto data = RawString::strings(record.getItem<KW::DATA>().getData<RawString>());
+        switch (UDQ::varType(quantity)) {
+        case UDQVarType::SEGMENT_VAR:
+            this->add_enumerated_assign(quantity,
+                                        std::move(create_segment_matcher),
+                                        selector, value, report_step);
+            break;
 
-        if (action == UDQAction::UPDATE) {
-            this->add_update(quantity, report_step, location, data);
+        default:
+            this->add_assign_impl(quantity, selector, value, report_step);
+            break;
         }
-        else if (action == UDQAction::UNITS) {
-            this->add_unit(quantity, data.front());
+
+        if (this->m_assignments.find(quantity) != this->m_assignments.end()) {
+            this->pending_assignments_.push_back(quantity);
         }
-        else if (action == UDQAction::ASSIGN) {
-            auto selector = std::vector<std::string>(data.begin(), data.end() - 1);
-            std::transform(selector.cbegin(), selector.cend(), selector.begin(), strip_quotes);
-            const auto value = std::stod(data.back());
-            this->add_assign(quantity,
-                             std::move(create_segment_matcher),
-                             selector, value, report_step);
-        }
-        else if (action == UDQAction::DEFINE) {
-            this->add_define(quantity, location, data, report_step);
-        }
-        else {
-            throw std::runtime_error {
-                "Unknown UDQ Operation " + std::to_string(static_cast<int>(action))
-            };
-        }
+    }
+
+    void UDQConfig::add_define(const std::string&              quantity,
+                               const KeywordLocation&          location,
+                               const std::vector<std::string>& expression,
+                               const std::size_t               report_step)
+    {
+        this->add_node(quantity, UDQAction::DEFINE);
+
+        this->m_definitions.insert_or_assign(quantity,
+                                             UDQDefine {
+                                                 this->udq_params,
+                                                 quantity,
+                                                 report_step,
+                                                 location,
+                                                 expression
+                                             });
+
+        this->define_order.insert(quantity);
     }
 
     void UDQConfig::add_table(const std::string& name, UDT udt)
@@ -366,9 +337,43 @@ namespace Opm {
         return update;
     }
 
-    const UDQAssign& UDQConfig::assign(const std::string& key) const
+    void UDQConfig::eval_assign(const std::size_t     report_step,
+                                const Schedule&       sched,
+                                const WellMatcher&    wm,
+                                SegmentMatcherFactory create_segment_matcher,
+                                SummaryState&         st,
+                                UDQState&             udq_state) const
     {
-        return this->m_assignments.at(key);
+        auto factories = UDQContext::MatcherFactories{};
+        factories.segments = std::move(create_segment_matcher);
+
+        auto context = UDQContext {
+            this->function_table(), wm, this->m_tables,
+            std::move(factories), st, udq_state
+        };
+
+        this->eval_assign(report_step, sched, context);
+    }
+
+    void UDQConfig::eval(const std::size_t       report_step,
+                         const Schedule&         sched,
+                         const WellMatcher&      wm,
+                         SegmentMatcherFactory   create_segment_matcher,
+                         RegionSetMatcherFactory create_region_matcher,
+                         SummaryState&           st,
+                         UDQState&               udq_state) const
+    {
+        auto factories = UDQContext::MatcherFactories {};
+        factories.segments = std::move(create_segment_matcher);
+        factories.regions  = std::move(create_region_matcher);
+
+        auto context = UDQContext {
+            this->function_table(), wm, this->m_tables,
+            std::move(factories), st, udq_state
+        };
+
+        this->eval_assign(report_step, sched, context);
+        this->eval_define(report_step, udq_state, context);
     }
 
     const UDQDefine& UDQConfig::define(const std::string& key) const
@@ -376,10 +381,9 @@ namespace Opm {
         return this->m_definitions.at(key);
     }
 
-    UDQAction UDQConfig::action_type(const std::string& udq_key) const
+    const UDQAssign& UDQConfig::assign(const std::string& key) const
     {
-        auto action_iter = this->input_index.find(udq_key);
-        return action_iter->second.action;
+        return this->m_assignments.at(key);
     }
 
     std::vector<UDQDefine> UDQConfig::definitions() const
@@ -430,6 +434,15 @@ namespace Opm {
         return res;
     }
 
+    void UDQConfig::exportTypeCount(std::array<int, static_cast<std::size_t>(UDQVarType::NumTypes)>& count) const
+    {
+        count.fill(0);
+
+        for (const auto& [type, cnt] : this->type_count) {
+            count[static_cast<std::size_t>(type)] = cnt;
+        }
+    }
+
     std::size_t UDQConfig::size() const
     {
         return std::count_if(this->input_index.begin(), this->input_index.end(),
@@ -440,56 +453,6 @@ namespace Opm {
                                  return (action == UDQAction::DEFINE)
                                      || (action == UDQAction::ASSIGN);
                              });
-    }
-
-    std::vector<UDQAssign> UDQConfig::assignments() const
-    {
-        std::vector<UDQAssign> ret;
-
-        for (const auto& [key, Input] : this->input_index) {
-            if (Input.action == UDQAction::ASSIGN) {
-                ret.push_back(this->m_assignments.at(key));
-            }
-        }
-
-        return ret;
-    }
-
-    std::vector<UDQAssign> UDQConfig::assignments(const UDQVarType var_type) const
-    {
-        std::vector<UDQAssign> filtered_assigns;
-
-        for (const auto& index_pair : this->input_index) {
-            auto assign_iter = this->m_assignments.find(index_pair.first);
-            if ((assign_iter != this->m_assignments.end()) &&
-                (assign_iter->second.var_type() == var_type))
-            {
-                filtered_assigns.push_back(assign_iter->second);
-            }
-        }
-
-        return filtered_assigns;
-    }
-
-    const std::string& UDQConfig::unit(const std::string& key) const
-    {
-        const auto pair_ptr = this->units.find(key);
-        if (pair_ptr == this->units.end()) {
-            throw std::invalid_argument("No such UDQ quantity: " + key);
-        }
-
-        return pair_ptr->second;
-    }
-
-    bool UDQConfig::has_unit(const std::string& keyword) const
-    {
-        return this->units.find(keyword) != this->units.end();
-    }
-
-    bool UDQConfig::has_keyword(const std::string& keyword) const
-    {
-        return (this->m_assignments.find(keyword) != this->m_assignments.end())
-            || (this->m_definitions.find(keyword) != this->m_definitions.end());
     }
 
     UDQInput UDQConfig::operator[](const std::string& keyword) const
@@ -541,6 +504,40 @@ namespace Opm {
         throw std::logic_error("Internal error - should not be here");
     }
 
+    std::vector<UDQAssign> UDQConfig::assignments() const
+    {
+        std::vector<UDQAssign> ret;
+
+        for (const auto& [key, Input] : this->input_index) {
+            if (Input.action == UDQAction::ASSIGN) {
+                ret.push_back(this->m_assignments.at(key));
+            }
+        }
+
+        return ret;
+    }
+
+    std::vector<UDQAssign> UDQConfig::assignments(const UDQVarType var_type) const
+    {
+        std::vector<UDQAssign> filtered_assigns;
+
+        for (const auto& index_pair : this->input_index) {
+            auto assign_iter = this->m_assignments.find(index_pair.first);
+            if ((assign_iter != this->m_assignments.end()) &&
+                (assign_iter->second.var_type() == var_type))
+            {
+                filtered_assigns.push_back(assign_iter->second);
+            }
+        }
+
+        return filtered_assigns;
+    }
+
+    const UDQParams& UDQConfig::params() const
+    {
+        return this->udq_params;
+    }
+
     const UDQFunctionTable& UDQConfig::function_table() const
     {
         return this->udqft;
@@ -563,6 +560,53 @@ namespace Opm {
             && (this->type_count == data.type_count)
             && (this->pending_assignments_ == data.pending_assignments_)
             ;
+    }
+
+    void UDQConfig::required_summary(std::unordered_set<std::string>& summary_keys) const
+    {
+        for (const auto& def_pair : this->m_definitions) {
+            def_pair.second.required_summary(summary_keys);
+        }
+    }
+
+    // ===========================================================================
+    // Private member functions below separator
+    // ===========================================================================
+
+    void UDQConfig::add_node(const std::string& quantity, const UDQAction action)
+    {
+        auto index_iter = this->input_index.find(quantity);
+        if (this->input_index.find(quantity) == this->input_index.end()) {
+            auto var_type = UDQ::varType(quantity);
+            auto insert_index = this->input_index.size();
+
+            this->type_count[var_type] += 1;
+            this->input_index[quantity] = UDQIndex(insert_index, this->type_count[var_type], action, var_type);
+        }
+        else {
+            index_iter->second.action = action;
+        }
+    }
+
+    void UDQConfig::add_assign(const RestartIO::RstUDQ& udq,
+                               const std::size_t        report_step)
+    {
+        this->add_node(udq.name, UDQAction::ASSIGN);
+
+        this->add_assign_impl(udq.name, udq, report_step);
+    }
+
+    void UDQConfig::add_define(const RestartIO::RstUDQ& udq,
+                               const std::size_t        report_step)
+    {
+        this->add_define(udq.name, KeywordLocation { "UDQ", "Restart file", 0 },
+                         std::vector { std::string { udq.definingExpression() } },
+                         report_step);
+
+        auto pos = this->m_definitions.find(udq.name);
+        assert (pos != this->m_definitions.end());
+
+        pos->second.update_status(udq.currentUpdateStatus(), report_step);
     }
 
     void UDQConfig::eval_assign(const std::size_t report_step,
@@ -646,67 +690,6 @@ namespace Opm {
         }
     }
 
-    void UDQConfig::eval(const std::size_t       report_step,
-                         const Schedule&         sched,
-                         const WellMatcher&      wm,
-                         SegmentMatcherFactory   create_segment_matcher,
-                         RegionSetMatcherFactory create_region_matcher,
-                         SummaryState&           st,
-                         UDQState&               udq_state) const
-    {
-        auto factories = UDQContext::MatcherFactories {};
-        factories.segments = std::move(create_segment_matcher);
-        factories.regions  = std::move(create_region_matcher);
-
-        auto context = UDQContext {
-            this->function_table(), wm, this->m_tables,
-            std::move(factories), st, udq_state
-        };
-
-        this->eval_assign(report_step, sched, context);
-        this->eval_define(report_step, udq_state, context);
-    }
-
-    void UDQConfig::eval_assign(const std::size_t     report_step,
-                                const Schedule&       sched,
-                                const WellMatcher&    wm,
-                                SegmentMatcherFactory create_segment_matcher,
-                                SummaryState&         st,
-                                UDQState&             udq_state) const
-    {
-        auto factories = UDQContext::MatcherFactories{};
-        factories.segments = std::move(create_segment_matcher);
-
-        auto context = UDQContext {
-            this->function_table(), wm, this->m_tables,
-            std::move(factories), st, udq_state
-        };
-
-        this->eval_assign(report_step, sched, context);
-    }
-
-    void UDQConfig::required_summary(std::unordered_set<std::string>& summary_keys) const
-    {
-        for (const auto& def_pair : this->m_definitions) {
-            def_pair.second.required_summary(summary_keys);
-        }
-    }
-
-    void UDQConfig::add_named_assign(const std::string&              quantity,
-                                     const std::vector<std::string>& selector,
-                                     const double                    value,
-                                     const std::size_t               report_step)
-    {
-        auto [asgnPos, inserted] = this->m_assignments
-            .emplace(std::piecewise_construct,
-                     std::forward_as_tuple(quantity),
-                     std::forward_as_tuple(quantity, selector, value, report_step));
-
-        if (! inserted) {
-            asgnPos->second.add_record(selector, value, report_step);
-        }
-    }
-
     void UDQConfig::add_enumerated_assign(const std::string&              quantity,
                                           SegmentMatcherFactory           create_segment_matcher,
                                           const std::vector<std::string>& selector,
@@ -726,14 +709,7 @@ namespace Opm {
         auto items = UDQSet::
             enumerateItems(segmentMatcher->findSegments(setDescriptor));
 
-        auto [asgnPos, inserted] = this->m_assignments
-            .emplace(std::piecewise_construct,
-                     std::forward_as_tuple(quantity),
-                     std::forward_as_tuple(quantity, items, value, report_step));
-
-        if (! inserted) {
-            asgnPos->second.add_record(std::move(items), value, report_step);
-        }
+        this->add_assign_impl(quantity, std::move(items), value, report_step);
     }
 
 } // namespace Opm
