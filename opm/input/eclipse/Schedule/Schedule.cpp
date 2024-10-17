@@ -1202,7 +1202,7 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
         const auto& well_order = this->snapshots[lastStep].well_order();
 
         for (const auto& wname : well_order) {
-            const auto well = this->snapshots[lastStep].wells.get(wname);
+            const auto& well = this->snapshots[lastStep].wells.get(wname);
             if (well.hasProduced() || well.hasInjected() || name_match_any(this->potential_wellopen_patterns, wname))
                 wells.push_back(well);
         }
@@ -1216,7 +1216,7 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
         const auto& well_order = this->snapshots[lastStep].well_order();
 
         for (const auto& wname : well_order) {
-            const auto well = this->snapshots[lastStep].wells.get(wname);
+            const auto& well = this->snapshots[lastStep].wells.get(wname);
             if (well.hasProduced() || well.hasInjected() || name_match_any(this->potential_wellopen_patterns, wname))
                 continue;
             well_names.push_back(wname);
