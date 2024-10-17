@@ -263,6 +263,9 @@ SCHEDULE
     Opm::Parser parser;
     Opm::Deck deck = parser.parseString(deck_string);
     Opm::EclipseState state(deck);
+    Opm::EclipseGrid eclipse_grid = state.getInputGrid();
+    std::size_t test =  eclipse_grid.getActiveIndexLGR("GLOBAL",1,2,0);
+    test =  eclipse_grid.getActiveIndexLGR("LGR1",1,1,0);
     Opm::LgrCollection lgrs = state.getLgrs();
     //state.init_lgr_cells(lgrs);
     BOOST_CHECK_MESSAGE(state.hasInputLGR(), "EclipseState should have LGRs");
