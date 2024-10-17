@@ -232,6 +232,8 @@ namespace Opm
         std::unordered_set<int> getAquiferFluxSchedule() const;
         std::vector<Well> getWells(std::size_t timeStep) const;
         std::vector<Well> getWellsatEnd() const;
+        std::vector<Well> getActiveWellsAtEnd() const; // Get wells that have been active any time during simulation
+        std::vector<std::string> getInactiveWellNamesAtEnd() const; // Get well names of wells that have never been active
 
         const std::unordered_map<std::string, std::set<int>>& getPossibleFutureConnections() const;
 
@@ -324,6 +326,7 @@ namespace Opm
             serializer(this->m_static);
             serializer(this->m_sched_deck);
             serializer(this->action_wgnames);
+            serializer(this->potential_wellopen_patterns);
             serializer(this->exit_status);
             serializer(this->snapshots);
             serializer(this->restart_output);
@@ -520,6 +523,7 @@ namespace Opm
         ScheduleStatic m_static{};
         ScheduleDeck m_sched_deck{};
         Action::WGNames action_wgnames{};
+        std::unordered_set<std::string> potential_wellopen_patterns{}; // Set of well name patterns that potentially can open
         std::optional<int> exit_status{};
         std::vector<ScheduleState> snapshots{};
         WriteRestartFileEvents restart_output{};
