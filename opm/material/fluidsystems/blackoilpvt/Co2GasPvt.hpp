@@ -141,7 +141,7 @@ public:
         OPM_TIMEBLOCK_LOCAL(internalEnergy);
         if (gastype_ == Co2StoreConfig::GasMixingType::NONE) {
             // use the gasInternalEnergy of CO2
-            return CO2::gasInternalEnergy(co2Params, temperature, pressure, extrapolate);
+            return CO2::gasInternalEnergy(co2Tables, temperature, pressure, extrapolate);
         }
 
         assert(gastype_ == Co2StoreConfig::GasMixingType::IDEAL);
@@ -152,7 +152,7 @@ public:
         assert(rv == 0.0 || rvw == 0.0);
         const Evaluation xBrine = convertRvwToXgW_(max(rvw,rv),regionIdx);
         result += xBrine * H2O::gasInternalEnergy(temperature, pressure);
-        result += (1 - xBrine) * CO2::gasInternalEnergy(co2Params, temperature, pressure, extrapolate);
+        result += (1 - xBrine) * CO2::gasInternalEnergy(co2Tables, temperature, pressure, extrapolate);
         return result;
     }
 
@@ -178,7 +178,7 @@ public:
     {
         OPM_TIMEBLOCK_LOCAL(saturatedViscosity);
         // Neglects impact of vaporized water on the visosity
-        return CO2::gasViscosity(co2Params, temperature, pressure, extrapolate);
+        return CO2::gasViscosity(co2Tables, temperature, pressure, extrapolate);
     }
 
     /*!
@@ -193,12 +193,12 @@ public:
     {
         OPM_TIMEFUNCTION_LOCAL();
         if (!enableVaporization_) {
-            return CO2::gasDensity(co2Params, temperature, pressure, extrapolate) /
+            return CO2::gasDensity(co2Tables, temperature, pressure, extrapolate) /
                    gasReferenceDensity_[regionIdx];
         }
 
         // Use CO2 density for the gas phase.
-        const auto& rhoCo2 = CO2::gasDensity(co2Params, temperature, pressure, extrapolate);
+        const auto& rhoCo2 = CO2::gasDensity(co2Tables, temperature, pressure, extrapolate);
         //const auto& rhoH2O = H2O::gasDensity(temperature, pressure);
         //The CO2STORE option both works for GAS/WATER and GAS/OIL systems
         //Either rv og rvw should be zero
@@ -286,7 +286,7 @@ public:
                                     const Evaluation& pressure,
                                     unsigned /*compIdx*/) const
     {
-        return BinaryCoeffBrineCO2::gasDiffCoeff(co2Params, temperature, pressure, extrapolate);
+        return BinaryCoeffBrineCO2::gasDiffCoeff(co2Tables, temperature, pressure, extrapolate);
     }
 
     Scalar gasReferenceDensity(unsigned regionIdx) const
@@ -327,7 +327,7 @@ private:
         // temperature and pressure.
         LhsEval xgH2O;
         LhsEval xlCO2;
-        BinaryCoeffBrineCO2::calculateMoleFractions(co2Params,
+        BinaryCoeffBrineCO2::calculateMoleFractions(co2Tables,
                                                     temperature,
                                                     pressure,
                                                     salinity,
@@ -397,7 +397,7 @@ private:
     bool enableVaporization_ = true;
     int activityModel_{};
     Co2StoreConfig::GasMixingType gastype_{};
-    Params co2Params;
+    Params co2Tables;
 };
 
 } // namespace Opm

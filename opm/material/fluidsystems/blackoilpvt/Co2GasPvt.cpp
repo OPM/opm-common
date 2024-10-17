@@ -50,12 +50,12 @@ Co2GasPvt(const std::vector<Scalar>& salinity,
     setActivityModelSalt(activityModel);
     setThermalMixingModel(thermalMixingModel);
 
-    co2Params = Params();
+    co2Tables = Params();
 
     int num_regions = salinity_.size();
     setNumRegions(num_regions);
     for (int i = 0; i < num_regions; ++i) {
-        gasReferenceDensity_[i] = CO2::gasDensity(co2Params, T_ref, P_ref, extrapolate);
+        gasReferenceDensity_[i] = CO2::gasDensity(co2Tables, T_ref, P_ref, extrapolate);
         brineReferenceDensity_[i] = Brine::liquidDensity(T_ref, P_ref, salinity_[i], extrapolate);
     }
 }
@@ -84,7 +84,7 @@ initFromState(const EclipseState& eclState, const Schedule&)
     }
     setEzrokhiDenCoeff(eclState.getCo2StoreConfig().getDenaqaTables());
 
-    co2Params = Params();
+    co2Tables = Params();
 
     std::size_t regions = eclState.runspec().tabdims().getNumPVTTables();
     setNumRegions(regions);
@@ -100,7 +100,7 @@ initFromState(const EclipseState& eclState, const Schedule&)
         else {
             brineReferenceDensity_[regionIdx] = Brine::liquidDensity(T_ref, P_ref, salinity_[regionIdx], extrapolate);
         }
-        gasReferenceDensity_[regionIdx] = CO2::gasDensity(co2Params, T_ref, P_ref, extrapolate);
+        gasReferenceDensity_[regionIdx] = CO2::gasDensity(co2Tables, T_ref, P_ref, extrapolate);
     }
 
     initEnd();

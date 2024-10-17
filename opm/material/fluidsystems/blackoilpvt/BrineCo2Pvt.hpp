@@ -475,7 +475,7 @@ public:
         // temperature and pressure.
         Evaluation xgH2O;
         Evaluation xlCO2;
-        BinaryCoeffBrineCO2::calculateMoleFractions(co2Params_,
+        BinaryCoeffBrineCO2::calculateMoleFractions(co2Tables_,
                                                     temperature,
                                                     pressure,
                                                     salinity,
@@ -496,9 +496,9 @@ public:
      *
      * \return A const reference to the CO2 parameters.
      */
-    const Params& getCo2Params() const
+    const Params& getCo2Tables() const
     {
-        return co2Params_;
+        return co2Tables_;
     }
 
 private:
@@ -711,7 +711,7 @@ private:
         }
             
         /* enthalpy contribution of CO2 (kJ/kg) */
-        hg = CO2::gasEnthalpy(co2Params_, T, p, extrapolate)/1E3 + delta_hCO2;
+        hg = CO2::gasEnthalpy(co2Tables_, T, p, extrapolate)/1E3 + delta_hCO2;
 
         /* Enthalpy of brine with dissolved CO2 */
         return (h_ls1 - X_CO2_w*hw + hg*X_CO2_w)*1E3; /*J/kg*/
@@ -743,7 +743,7 @@ private:
     int activityModel_{};
     Co2StoreConfig::LiquidMixingType liquidMixType_{};
     Co2StoreConfig::SaltMixingType saltMixType_{};
-    Params co2Params_;
+    Params co2Tables_;
 };
 
 } // namespace Opm
