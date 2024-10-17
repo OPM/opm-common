@@ -2021,9 +2021,12 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
             index++;
         }        
         std::partial_sum(lgr_level_numbering_counting.begin(), lgr_level_numbering_counting.end(),lgr_level_active_map.begin());
-        std::transform(lgr_level_active_map.begin(), lgr_level_active_map.end(), lgr_level_active_map.begin() ,
-                       [](std::size_t x){return x-1;});
+        lgr_level_active_map.reserve(lgr_level_active_map.size()+1);
+        lgr_level_active_map.insert(lgr_level_active_map.begin(),0);
         
+        for (auto lgr_cell : lgr_children_cells) {
+            lgr_cell.init_lgr_cells_index();
+        }
 
     }
 
