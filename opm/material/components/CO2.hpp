@@ -34,7 +34,7 @@
 #include <opm/material/components/Component.hpp>
 #include <opm/material/common/MathToolbox.hpp>
 #include <opm/material/common/UniformTabulated2DFunction.hpp>
-#include <opm/material/components/CO2Parameters.hpp>
+#include <opm/material/components/CO2Tables.hpp>
 
 #include <cmath>
 #include <string_view>
@@ -51,7 +51,7 @@ namespace Opm {
  * is not a top priority, the much simpler component \c Opm::SimpleCO2 can be
  * used instead
  */
-template <class Scalar, class ParamsT = Opm::CO2Parameters>
+template <class Scalar, class ParamsT = Opm::CO2Tables>
 class CO2 : public Component<Scalar, CO2<Scalar>>
 {
     static constexpr Scalar R = Constants<Scalar>::R;
@@ -173,7 +173,7 @@ public:
                                   const Evaluation& pressure,
                                   bool extrapolate = false)
     {
-        return params.co2Tables_.tabulatedEnthalpy.eval(temperature, pressure, extrapolate);
+        return params.tabulatedEnthalpy.eval(temperature, pressure, extrapolate);
     }
 
     /*!
@@ -224,7 +224,7 @@ public:
                                  const Evaluation& pressure,
                                  bool extrapolate = false)
     {
-        return params.co2Tables_.tabulatedDensity.eval(temperature, pressure, extrapolate);
+        return params.tabulatedDensity.eval(temperature, pressure, extrapolate);
     }
 
     /*!

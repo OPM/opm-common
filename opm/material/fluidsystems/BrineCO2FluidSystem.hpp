@@ -37,7 +37,7 @@
 
 #include <opm/material/components/Brine.hpp>
 #include <opm/material/components/CO2.hpp>
-#include <opm/material/components/CO2Parameters.hpp>
+#include <opm/material/components/CO2Tables.hpp>
 #include <opm/material/components/SimpleCO2.hpp>
 #include <opm/material/components/SimpleH2O.hpp>
 #include <opm/material/components/TabulatedComponent.hpp>
@@ -306,7 +306,7 @@ public:
         }
 
         assert(phaseIdx == gasPhaseIdx);
-        CO2Parameters params; // TODO: avoid this initialization
+        CO2Tables params; // TODO: avoid this initialization
         LhsEval result = CO2::gasViscosity(params, temperature, pressure);
         Valgrind::CheckDefined(result);
         return result;
@@ -344,7 +344,7 @@ public:
         // could use some cleanup.
         LhsEval xlH2O, xgH2O;
         LhsEval xlCO2, xgCO2;
-        CO2Parameters params; // TODO: avoid this initialization
+        CO2Tables params; // TODO: avoid this initialization
         BinaryCoeffBrineCO2::calculateMoleFractions(params,
                                                     temperature,
                                                     pressure,
@@ -382,7 +382,7 @@ public:
                                         unsigned phaseIdx,
                                         unsigned /*compIdx*/)
     {
-        CO2Parameters params; // TODO: avoid this initialization
+        CO2Tables params; // TODO: avoid this initialization
         const LhsEval& temperature = decay<LhsEval>(fluidState.temperature(phaseIdx));
         const LhsEval& pressure = decay<LhsEval>(fluidState.pressure(phaseIdx));
         if (phaseIdx == liquidPhaseIdx)
@@ -419,7 +419,7 @@ public:
             const LhsEval& XBrine = decay<LhsEval>(fluidState.massFraction(gasPhaseIdx, BrineIdx));
 
             LhsEval result = 0;
-            CO2Parameters params; // TODO: avoid this initialization
+            CO2Tables params; // TODO: avoid this initialization
             result += XBrine * Brine::gasEnthalpy(temperature, pressure);
             result += XCO2 * CO2::gasEnthalpy(params, temperature, pressure);
             Valgrind::CheckDefined(result);
@@ -469,7 +469,7 @@ public:
             return H2O::liquidHeatCapacity(temperature, pressure);
         }
         else{
-            CO2Parameters params; // TODO: avoid this initialization
+            CO2Tables params; // TODO: avoid this initialization
             return CO2::gasHeatCapacity(temperature, pressure);
         }
     }
@@ -486,7 +486,7 @@ private:
         Valgrind::CheckDefined(xgH2O);
         Valgrind::CheckDefined(xgCO2);
 
-        CO2Parameters params; // TODO: avoid this initialization
+        CO2Tables params; // TODO: avoid this initialization
         return CO2::gasDensity(params, T, pg);
     }
 
@@ -635,7 +635,7 @@ private:
         delta_hCO2 = (-57.4375 + T * 0.1325) * 1000/44;
 
         /* enthalpy contribution of CO2 (kJ/kg) */
-        CO2Parameters params; // TODO: avoid this initialization
+        CO2Tables params; // TODO: avoid this initialization
         hg = CO2::gasEnthalpy(params, T, p)/1E3 + delta_hCO2;
 
         /* Enthalpy of brine with dissolved CO2 */

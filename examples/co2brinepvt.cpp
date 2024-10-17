@@ -32,7 +32,7 @@
 #include <opm/material/binarycoefficients/Brine_CO2.hpp>
 #include <opm/material/components/SimpleHuDuanH2O.hpp>
 #include <opm/material/components/CO2.hpp>
-#include <opm/material/components/CO2Parameters.hpp>
+#include <opm/material/components/CO2Tables.hpp>
 
 #include <iostream>
 #include <iomanip>
@@ -70,7 +70,7 @@ std::pair<double, double> moleFractionMutualSolubility(const double p,
     using H2O = Opm::SimpleHuDuanH2O<double>;
     using CO2 = Opm::CO2<double>;
     using BinaryCoeffBrineCO2 = Opm::BinaryCoeff::Brine_CO2<double, H2O, CO2>;
-    Opm::CO2Parameters co2Params;
+    Opm::CO2Tables co2Params;
     BinaryCoeffBrineCO2::calculateMoleFractions(co2Params, T, p, s, -1, xCO2, yH2O, activityModel, true);
 
     return {xCO2, yH2O};

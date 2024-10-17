@@ -58,7 +58,7 @@
 #include <opm/material/components/H2O.hpp>
 #include <opm/material/components/SimpleHuDuanH2O.hpp>
 #include <opm/material/components/CO2.hpp>
-#include <opm/material/components/CO2Parameters.hpp>
+#include <opm/material/components/CO2Tables.hpp>
 #include <opm/material/components/Mesitylene.hpp>
 #include <opm/material/components/TabulatedComponent.hpp>
 #include <opm/material/components/Brine.hpp>
@@ -233,7 +233,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(CO2Class, Scalar, Types)
 
     // Extrapolate table
     bool extrapolate = true;
-    Opm::CO2Parameters params;
+    Opm::CO2Tables params;
     
     // Loop over temperature and pressure, and compare to reference values
     for (int iT = 0; iT < numT; ++iT) {

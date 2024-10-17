@@ -36,7 +36,7 @@
 #include <opm/material/common/UniformTabulated2DFunction.hpp>
 #include <opm/material/binarycoefficients/Brine_CO2.hpp>
 #include <opm/input/eclipse/EclipseState/Co2StoreConfig.hpp>
-#include <opm/material/components/CO2Parameters.hpp>
+#include <opm/material/components/CO2Tables.hpp>
 
 #include <cstddef>
 #include <vector>
@@ -51,7 +51,7 @@ class Co2StoreConfig;
  * \brief This class represents the Pressure-Volume-Temperature relations of the gas phase
  *        for CO2.
  */
-template <class Scalar, class ParamsT = Opm::CO2Parameters>
+template <class Scalar, class ParamsT = Opm::CO2Tables>
 class Co2GasPvt
 {
     using CO2 = ::Opm::CO2<Scalar>;

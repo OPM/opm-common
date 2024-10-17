@@ -38,7 +38,7 @@
 #include <opm/material/components/CO2.hpp>
 #include <opm/material/common/UniformTabulated2DFunction.hpp>
 #include <opm/material/components/TabulatedComponent.hpp>
-#include <opm/material/components/CO2Parameters.hpp>
+#include <opm/material/components/CO2Tables.hpp>
 #include <opm/material/binarycoefficients/H2O_CO2.hpp>
 #include <opm/material/binarycoefficients/Brine_CO2.hpp>
 
@@ -58,7 +58,7 @@ class EzrokhiTable;
  * \brief This class represents the Pressure-Volume-Temperature relations of the liquid phase
  * for a CO2-Brine system
  */
-template <class Scalar, class Params = Opm::CO2Parameters>
+template <class Scalar, class Params = Opm::CO2Tables>
 class BrineCo2Pvt
 {
     static constexpr bool extrapolate = true;
