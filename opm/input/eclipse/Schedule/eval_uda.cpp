@@ -49,7 +49,7 @@ namespace UDA {
 
 
 double eval_well_uda_rate(const UDAValue& value, const std::string& well, const SummaryState& st, double udq_default, InjectorType wellType, const UnitSystem& unitSystem) {
-    double raw_rate = eval_well_uda(value, well, st, udq_default);
+    const auto raw_rate = value.is<double>() ? value.get<double>() : eval_well_uda(value, well, st, udq_default);
     return injection::rateToSI(raw_rate, wellType, unitSystem);
 }
 
@@ -75,7 +75,7 @@ double eval_group_uda(const UDAValue& value, const std::string& group, const Sum
 
 
 double eval_group_uda_rate(const UDAValue& value, const std::string& name, const SummaryState& st, double udq_undefined, Phase phase, const UnitSystem& unitSystem) {
-    double raw_rate = eval_group_uda(value, name, st, udq_undefined);
+    const auto raw_rate = value.is<double>() ? value.get<double>() : eval_group_uda(value, name, st, udq_undefined);
     return injection::rateToSI(raw_rate, phase, unitSystem);
 }
 
