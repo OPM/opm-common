@@ -21,9 +21,12 @@
 
 #include <opm/input/eclipse/Schedule/UDQ/UDQEnums.hpp>
 
+#include <opm/output/eclipse/WindowedArray.hpp>
+
 #include <opm/io/eclipse/rst/state.hpp>
 
 #include <cstddef>
+#include <functional>
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
@@ -147,6 +150,24 @@ void load_restart_values(const Opm::RestartIO::RstUDQ& udq,
     }
 }
 
+// Load restart values for UDQs defined at the segment level.
+void load_segment_restart_values(const Opm::RestartIO::RstUDQ& udq,
+                                 SKMap<std::size_t, double>&   values)
+{
+    const auto& wgnames = udq.entityNames();
+    const auto& nameIdx = udq.nameIndex();
+    const auto n = udq.numEntities();
+
+    for (auto i = 0*n; i < n; ++i) {
+        auto& segment_values = values[wgnames[nameIdx[i]]];
+
+        for (const auto& [segIx, value] : udq[i]) {
+            // Note: +1 since segIx is a zero-based segment number.
+            segment_values.insert_or_assign(segIx + 1, value);
+        }
+    }
+}
+
 double get_scalar(const SMap<double>& values,
                   const std::string&  udq_key,
                   const double        undef_value)
@@ -196,6 +217,9 @@ void UDQState::load_rst(const RestartIO::RstState& rst_state)
             }
             break;
 
+        case UDQVarType::SEGMENT_VAR:
+            load_segment_restart_values(udq, this->segment_values[udq.name]);
+            break;
 
         case UDQVarType::WELL_VAR:
             load_restart_values(udq, this->well_values[udq.name]);
@@ -355,6 +379,37 @@ double UDQState::get_segment_var(const std::string& well,
     }
 
     return valPos->second;
+}
+
+void UDQState::exportSegmentUDQ(const std::string& var,
+                                const std::string& well,
+                                ExportRange&       output) const
+{
+    if (! is_udq(var)) {
+        throw std::logic_error {
+            fmt::format("Cannot evaluate non-UDQ variable '{}'", var)
+        };
+    }
+
+    auto varPos = this->segment_values.find(var);
+    if (varPos == this->segment_values.end()) { return; }
+
+    auto wellPos = varPos->second.find(well);
+    if (wellPos == varPos->second.end()) { return; }
+
+    for (const auto& [segment, value] : wellPos->second) {
+        if ((segment < 1) || (segment > output.size())) {
+            throw std::invalid_argument {
+                fmt::format("Segment number {} for well {} in "
+                            "UDQ {} is outside valid range "
+                            "1..{} for DUDS restart array",
+                            segment, well, var, output.size())
+            };
+        }
+
+        // Subtract 1 to convert 1-based segment number to an index.
+        output[segment - 1] = value;
+    }
 }
 
 bool UDQState::operator==(const UDQState& other) const

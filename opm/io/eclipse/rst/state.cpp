@@ -118,9 +118,10 @@ namespace {
         {
             const auto& intehead = this->rstView_->getKeyword<int>("INTEHEAD");
 
-            this->maxNumMsWells_ = intehead[VI::intehead::NSWLMX];
-            this->numGroups_     = intehead[VI::intehead::NGMAXZ]; // Including FIELD
-            this->numWells_      = intehead[VI::intehead::NWMAXZ];
+            this->maxNumMsWells_  = intehead[VI::intehead::NSWLMX];
+            this->maxNumSegments_ = intehead[VI::intehead::NSEGMX];
+            this->numGroups_      = intehead[VI::intehead::NGMAXZ]; // Including FIELD
+            this->numWells_       = intehead[VI::intehead::NWMAXZ];
         }
 
         enum Type : std::size_t {
@@ -136,8 +137,9 @@ namespace {
             return this->rstView_->getKeyword<std::string>("ZUDN");
         }
 
-        bool hasGroup() const { return this->rstView_->hasKeyword<double>("DUDG"); }
-        bool hasWell()  const { return this->rstView_->hasKeyword<double>("DUDW"); }
+        bool hasGroup()   const { return this->rstView_->hasKeyword<double>("DUDG"); }
+        bool hasSegment() const { return this->rstView_->hasKeyword<double>("DUDS"); }
+        bool hasWell()    const { return this->rstView_->hasKeyword<double>("DUDW"); }
 
         double currentFieldUDQValue() const
         {
@@ -150,6 +152,13 @@ namespace {
                                  this->numGroups_, this->varIx_[Type::Group]);
         }
 
+        auto currentSegmentUDQValue(const std::size_t msWellIx) const
+        {
+            return getDataWindow(this->rstView_->getKeyword<double>("DUDS"),
+                                 this->maxNumSegments_, this->varIx_[Type::Segment],
+                                 msWellIx, this->maxNumMsWells_);
+        }
+
         auto currentWellUDQValue() const
         {
             return getDataWindow(this->rstView_->getKeyword<double>("DUDW"),
@@ -160,6 +169,7 @@ namespace {
         std::shared_ptr<Opm::EclIO::RestartFileView> rstView_;
 
         std::size_t maxNumMsWells_{0};
+        std::size_t maxNumSegments_{0};
         std::size_t numGroups_{0};
         std::size_t numWells_{0};
 
@@ -200,6 +210,51 @@ namespace {
         }
     }
 
+    void restoreSegmentUDQValue(const UDQVectors&                           udqs,
+                                const std::vector<Opm::RestartIO::RstWell>& wells,
+                                Opm::RestartIO::RstUDQ&                     udq)
+    {
+        // Counter for MS wells with a non-defaulted UDQ value for at least
+        // one segment.
+        auto activeMsWellID = 0;
+
+        for (const auto& well : wells) {
+            if (well.msw_index == 0) {
+                // Not a multi-segmented well.
+                continue;
+            }
+
+            // Subtract one for zero-based indexing.
+            const auto duds = udqs.currentSegmentUDQValue(well.msw_index - 1);
+            const auto nSeg = duds.size();
+
+            auto isActiveMsWell = false;
+            for (auto iSeg = 0*nSeg; iSeg < nSeg; ++iSeg) {
+                if (isDefaultedUDQ(duds[iSeg])) {
+                    continue;
+                }
+
+                // If we get here, there is at least one non-defaulted SU*
+                // value for this well.  Record the well as such, in order
+                // to properly associate the entity to a well name.
+                isActiveMsWell = true;
+
+                // Note: Use 'iSeg' directly as the sub-entity, as this
+                // simplifies ordering.  Trust clients to make this into a
+                // one-based segment number when needed.
+                udq.addValue(activeMsWellID, iSeg, duds[iSeg]);
+            }
+
+            if (isActiveMsWell) {
+                // The current well has a non-default UDQ value for at least
+                // one segment.  Associate the current entity to the well's
+                // name and prepare for handling the next MS well.
+                udq.addEntityName(well.name);
+                ++activeMsWellID;
+            }
+        }
+    }
+
     void restoreWellUDQValue(const UDQVectors&                           udqs,
                              const std::vector<Opm::RestartIO::RstWell>& wells,
                              Opm::RestartIO::RstUDQ&                     udq)
@@ -230,6 +285,11 @@ namespace {
         case Opm::UDQVarType::FIELD_VAR:
             restoreFieldUDQValue(udqValues, udq);
             udqValues.prepareNext(UDQVectors::Type::Field);
+            break;
+
+        case Opm::UDQVarType::SEGMENT_VAR:
+            restoreSegmentUDQValue(udqValues, rst.wells, udq);
+            udqValues.prepareNext(UDQVectors::Type::Segment);
             break;
 
         case Opm::UDQVarType::WELL_VAR:
