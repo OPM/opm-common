@@ -96,9 +96,13 @@ namespace Opm {
         size_t activeIndex(size_t i, size_t j, size_t k) const;
         size_t activeIndex(size_t globalIndex) const;
 
+        size_t getActiveIndexLGR(std::string label, size_t i, size_t j, size_t k) const;
+        size_t getActiveIndexLGR(std::string label, size_t localIndex) const;
+
         size_t getActiveIndex(size_t i, size_t j, size_t k) const {
             return activeIndex(i, j, k);
         }
+        void assertLGR(size_t localIndex) const;
 
         void save(const std::string& filename, bool formatted, const std::vector<Opm::NNCdata>& nnc, const Opm::UnitSystem& units) const;
         /*
@@ -168,6 +172,7 @@ namespace Opm {
 
         void init_lgr_cells(const LgrCollection& lgr_input); 
         void create_lgr_cells_tree(const LgrCollection& lgr_input);
+        void init_lgr_global_cells_index();
         void init_lgr_cells_index();
         /// \brief get cell center, and center and normal of bottom face
         std::tuple<std::array<double, 3>,std::array<double, 3>,std::array<double, 3>>
@@ -254,10 +259,11 @@ namespace Opm {
         std::map<std::vector<std::size_t>, std::size_t> num_lgr_children_cells;
 
     private:
+        friend class EclipseGridLGR; 
         std::vector<double> m_minpvVector;
         MinpvMode m_minpvMode;
         std::optional<double> m_pinch;
-
+        std::size_t lgr_global_counter = 0;
 
         // Option 4 of PINCH (TOPBOT/ALL), how to calculate TRANS
         PinchMode m_pinchoutMode;
@@ -270,7 +276,6 @@ namespace Opm {
         mutable std::optional<std::vector<double>> active_volume;
 
         bool m_circle = false;
-
         size_t zcorn_fixed = 0;
         bool m_useActnumFromGdfile = false;
 
@@ -359,14 +364,17 @@ namespace Opm {
       ~EclipseGridLGR() = default;
       size_t getTotalActiveLGR();
       vec_size_t getFatherGlobalID() const;
+      void set_lgr_global_counter(std::size_t counter){
+        lgr_global_counter = counter;
+      }      
     private:
-        void init_father_global();
-        std::string father_label;
-        // references IJK on the father label
-        vec_size_t father_i_list;
-        vec_size_t father_j_list;
-        vec_size_t father_k_list;
-        vec_size_t father_global;
+      void init_father_global();
+      std::string father_label;
+      // references IJK on the father label
+      vec_size_t father_i_list;
+      vec_size_t father_j_list;
+      vec_size_t father_k_list;
+      vec_size_t father_global;
     };
 
 
