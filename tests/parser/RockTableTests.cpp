@@ -40,8 +40,9 @@
 #include <opm/input/eclipse/Schedule/VFPProdTable.hpp>
 #include <opm/input/eclipse/Schedule/VFPInjTable.hpp>
 
-#include <stdexcept>
 #include <iostream>
+#include <stdexcept>
+#include <tuple>
 
 using namespace Opm;
 
@@ -122,7 +123,7 @@ BOOST_AUTO_TEST_CASE( Rock2d ) {
     const RockwnodTable& rockwnodTable2 = rockwnod.getTable<RockwnodTable>(1);
 
     const OverburdTable& overburdTable = overburd.getTable<OverburdTable>(0);
-    BOOST_CHECK_THROW( rock2d.at(2), std::out_of_range );
+    BOOST_CHECK_THROW( std::ignore = rock2d.at(2), std::out_of_range );
     BOOST_REQUIRE_EQUAL(3U, rec1.size());
     BOOST_REQUIRE_EQUAL(3U, rec2.size());
     BOOST_REQUIRE_EQUAL(0.0, rec1.getPressureValue(0));
