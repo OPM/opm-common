@@ -53,6 +53,7 @@
 
 #include <opm/input/eclipse/Schedule/Group/GConSale.hpp>
 #include <opm/input/eclipse/Schedule/Group/GConSump.hpp>
+#include <opm/input/eclipse/Schedule/Group/GSatProd.hpp>
 #include <opm/input/eclipse/Schedule/Group/GroupEconProductionLimits.hpp>
 #include <opm/input/eclipse/Schedule/Group/GuideRateConfig.hpp>
 #include <opm/input/eclipse/Schedule/Group/GuideRate.hpp>
@@ -222,6 +223,8 @@ SCHEDULE
 GRUPTREE
    'G1'  'FIELD' /
    'G2'  'FIELD' /
+   'G4'  'FIELD' /
+   'G5'  'FIELD' /
 /
 
 GCONSALE
@@ -238,6 +241,10 @@ GCONSUMP
 'G2' 30 60 /
 /
 
+GSATPROD
+'G4' 20 /
+'G5' 30 /
+/
 DATES             -- 1
  10  JUN 2007 /
 /
@@ -261,6 +268,11 @@ GCONSALE
 GCONSUMP
 'G1' 10 77 'b_node' /
 'G2' 10 77 /
+/
+
+GSATPROD
+'G4' 40 /
+'G5' 60 /
 /
 
 DATES             -- 4
@@ -454,6 +466,28 @@ BOOST_AUTO_TEST_CASE(SerializeGCONSUMP) {
     BOOST_CHECK( gconsump2 == sched0[5].gconsump());
 }
 
+BOOST_AUTO_TEST_CASE(SerializeGSatProd) {
+    auto sched  = make_schedule(GCONSALE_deck);
+    auto sched0 = make_schedule(deck0);
+    auto gsatprod1 = sched[0].gsatprod.get();
+    auto gsatprod2 = sched[3].gsatprod.get();
+
+    {
+        std::vector<Opm::GSatProd> value_list;
+        std::vector<std::size_t> index_list;
+        sched.pack_state<Opm::GSatProd>( value_list, index_list );
+        BOOST_CHECK_EQUAL( value_list.size(), 2 );
+        sched0.unpack_state<Opm::GSatProd>( value_list, index_list );
+    }
+
+    BOOST_CHECK( gsatprod1 == sched0[0].gsatprod());
+    BOOST_CHECK( gsatprod1 == sched0[1].gsatprod());
+    BOOST_CHECK( gsatprod1 == sched0[2].gsatprod());
+
+    BOOST_CHECK( gsatprod2 == sched0[3].gsatprod());
+    BOOST_CHECK( gsatprod2 == sched0[4].gsatprod());
+    BOOST_CHECK( gsatprod2 == sched0[5].gsatprod());
+}
 
 BOOST_AUTO_TEST_CASE(SerializeVFP) {
     auto sched = make_schedule(VFP_deck1);
@@ -488,7 +522,7 @@ BOOST_AUTO_TEST_CASE(SerializeGROUPS) {
         std::vector<Opm::Group> value_list;
         std::vector<std::size_t> index_list;
         sched.pack_map<std::string, Opm::Group>( value_list, index_list );
-        BOOST_CHECK_EQUAL( value_list.size(), 5 );
+        BOOST_CHECK_EQUAL( value_list.size(), 7 );
         sched0.unpack_map<std::string, Opm::Group>( value_list, index_list );
     }
 

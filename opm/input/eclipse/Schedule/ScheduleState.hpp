@@ -65,6 +65,7 @@ namespace Opm {
     class GasLiftOpt;
     class GConSale;
     class GConSump;
+    class GSatProd;
     class GroupEconProductionLimits;
     class GroupOrder;
     class GuideRateConfig;
@@ -385,6 +386,7 @@ namespace Opm {
 
         ptr_member<GConSale> gconsale;
         ptr_member<GConSump> gconsump;
+        ptr_member<GSatProd> gsatprod;
         ptr_member<GroupEconProductionLimits> gecon;
         ptr_member<GuideRateConfig> guide_rate;
 
@@ -428,6 +430,8 @@ namespace Opm {
                                   return this->gconsale;
             else if constexpr ( std::is_same_v<T, GConSump> )
                                   return this->gconsump;
+            else if constexpr ( std::is_same_v<T, GSatProd> )
+                                  return this->gsatprod;
             else if constexpr ( std::is_same_v<T, GroupEconProductionLimits> )
                                   return this->gecon;
             else if constexpr ( std::is_same_v<T, WListManager> )
