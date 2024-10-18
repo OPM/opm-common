@@ -24,12 +24,6 @@
 
 #include <opm/output/data/Solution.hpp>
 
-// TODO: how to avoid these including?
-#include <opm/input/eclipse/Schedule/Action/State.hpp>
-#include <opm/input/eclipse/Schedule/SummaryState.hpp>
-#include <opm/input/eclipse/Schedule/UDQ/UDQState.hpp>
-#include <opm/input/eclipse/Schedule/Well/WellTestState.hpp>
-
 #include <map>
 #include <memory>
 #include <optional>
@@ -45,15 +39,15 @@ class RestartKey;
 class RestartValue;
 class Schedule;
 class SummaryConfig;
-// class SummaryState;
-// class UDQState;
-// class WellTestState;
+class SummaryState;
+class UDQState;
+class WellTestState;
 
 } // namespace Opm
 
-//namespace Opm { namespace Action {
-//    class State;
-//}} // namespace Opm::Action
+namespace Opm { namespace Action {
+    class State;
+}} // namespace Opm::Action
 
 namespace Opm { namespace out {
     class Summary;
@@ -145,16 +139,16 @@ public:
     /// can load and restart from files with double precision keywords, but
     /// this is non-standard, and other third party applications might choke
     /// on those.
-    void writeTimeStep(int                  report_step,
+    void writeTimeStep(const Action::State& action_state,
+                       const WellTestState& wtest_state,
+                       const SummaryState&  st,
+                       const UDQState&      udq_state,
+                       int                  report_step,
                        bool                 isSubstep,
                        double               seconds_elapsed,
                        RestartValue         value,
                        const bool write_double = false,
-                       std::optional<int>   time_step = std::nullopt,
-                       std::optional<Opm::Action::State> action_state = std::nullopt,
-                       std::optional<Opm::WellTestState> wtest_state = std::nullopt,
-                       std::optional<Opm::SummaryState> summary_state = std::nullopt,
-                       std::optional<Opm::UDQState> udq_state = std::nullopt);
+                       std::optional<int>   time_step = std::nullopt);
 
     /// Will load solution data and wellstate from the restart file.  This
     /// method will consult the IOConfig object to get filename and report
