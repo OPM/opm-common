@@ -30,6 +30,7 @@
 
 #include <opm/material/components/Component.hpp>
 #include <opm/material/common/MathToolbox.hpp>
+#include <opm/common/utility/gpuDecorators.hpp>
 
 #include <string_view>
 
@@ -57,19 +58,19 @@ public:
     /*!
      * \copydoc H2O::gasIsIdeal
      */
-    static bool gasIsIdeal()
+    OPM_HOST_DEVICE static bool gasIsIdeal()
     { return H2O::gasIsIdeal(); }
 
     /*!
      * \copydoc H2O::gasIsCompressible
      */
-    static bool gasIsCompressible()
+    OPM_HOST_DEVICE static bool gasIsCompressible()
     { return H2O::gasIsCompressible(); }
 
     /*!
      * \copydoc H2O::liquidIsCompressible
      */
-    static bool liquidIsCompressible()
+    OPM_HOST_DEVICE static bool liquidIsCompressible()
     { return H2O::liquidIsCompressible(); }
 
     /*!
@@ -78,7 +79,7 @@ public:
      * This assumes that the salt is pure NaCl.
      */
     template <class Evaluation>
-    static Evaluation molarMass(const Evaluation& salinity)
+    OPM_HOST_DEVICE static Evaluation molarMass(const Evaluation& salinity)
     {
         const Scalar M1 = H2O::molarMass();
         const Evaluation X2 = salinity; // mass fraction of salt in brine
@@ -88,51 +89,51 @@ public:
     /*!
      * \copydoc H2O::criticalTemperature
      */
-    static Scalar criticalTemperature()
+    OPM_HOST_DEVICE static Scalar criticalTemperature()
     { return H2O::criticalTemperature(); /* [K] */ }
 
     /*!
      * \copydoc H2O::criticalPressure
      */
-    static Scalar criticalPressure()
+    OPM_HOST_DEVICE static Scalar criticalPressure()
     { return H2O::criticalPressure(); /* [N/m^2] */ }
 
     /*!
      * \copydoc H2O::criticalVolume
      */
-    static Scalar criticalVolume()
+    OPM_HOST_DEVICE static Scalar criticalVolume()
     { return H2O::criticalVolume(); /* [m3/kmol] */ }
 
     /*!
      * \copydoc H20::acentricFactor
      */
-    static Scalar acentricFactor()
+    OPM_HOST_DEVICE static Scalar acentricFactor()
     { return H2O::acentricFactor(); }
 
     /*!
      * \copydoc H2O::tripleTemperature
      */
-    static Scalar tripleTemperature()
+    OPM_HOST_DEVICE static Scalar tripleTemperature()
     { return H2O::tripleTemperature(); /* [K] */ }
 
     /*!
      * \copydoc H2O::triplePressure
      */
-    static Scalar triplePressure()
+    OPM_HOST_DEVICE static Scalar triplePressure()
     { return H2O::triplePressure(); /* [N/m^2] */ }
 
     /*!
      * \copydoc H2O::vaporPressure
      */
     template <class Evaluation>
-    static Evaluation vaporPressure(const Evaluation& T)
+    OPM_HOST_DEVICE static Evaluation vaporPressure(const Evaluation& T)
     { return H2O::vaporPressure(T); /* [N/m^2] */ }
 
     /*!
      * \copydoc Component::gasEnthalpy
      */
     template <class Evaluation>
-    static Evaluation gasEnthalpy(const Evaluation& temperature,
+    OPM_HOST_DEVICE static Evaluation gasEnthalpy(const Evaluation& temperature,
                                   const Evaluation& pressure)
     { return H2O::gasEnthalpy(temperature, pressure); /* [J/kg] */ }
 
@@ -145,7 +146,7 @@ public:
      * - Daubert & Danner 1989
      */
     template <class Evaluation>
-    static Evaluation liquidEnthalpy(const Evaluation& temperature,
+    OPM_HOST_DEVICE static Evaluation liquidEnthalpy(const Evaluation& temperature,
                                      const Evaluation& pressure,
                                      const Evaluation& salinity)
     {
@@ -206,7 +207,7 @@ public:
      * \copydoc H2O::liquidHeatCapacity
      */
     template <class Evaluation>
-    static Evaluation liquidHeatCapacity(const Evaluation& temperature,
+    OPM_HOST_DEVICE static Evaluation liquidHeatCapacity(const Evaluation& temperature,
                                          const Evaluation& pressure)
     {
         Scalar eps = scalarValue(temperature)*1e-8;
@@ -217,7 +218,7 @@ public:
      * \copydoc H2O::gasHeatCapacity
      */
     template <class Evaluation>
-    static Evaluation gasHeatCapacity(const Evaluation& temperature,
+    OPM_HOST_DEVICE static Evaluation gasHeatCapacity(const Evaluation& temperature,
                                       const Evaluation& pressure)
     { return H2O::gasHeatCapacity(temperature, pressure); }
 
@@ -225,7 +226,7 @@ public:
      * \copydoc H2O::gasInternalEnergy
      */
     template <class Evaluation>
-    static Evaluation gasInternalEnergy(const Evaluation& temperature,
+    OPM_HOST_DEVICE static Evaluation gasInternalEnergy(const Evaluation& temperature,
                                         const Evaluation& pressure)
     {
         return
@@ -237,7 +238,7 @@ public:
      * \copydoc H2O::liquidInternalEnergy
      */
     template <class Evaluation>
-    static Evaluation liquidInternalEnergy(const Evaluation& temperature,
+    OPM_HOST_DEVICE static Evaluation liquidInternalEnergy(const Evaluation& temperature,
                                            const Evaluation& pressure)
     {
         return
@@ -249,7 +250,7 @@ public:
      * \copydoc H2O::gasDensity
      */
     template <class Evaluation>
-    static Evaluation gasDensity(const Evaluation& temperature, const Evaluation& pressure)
+    OPM_HOST_DEVICE static Evaluation gasDensity(const Evaluation& temperature, const Evaluation& pressure)
     { return H2O::gasDensity(temperature, pressure); }
 
     /*!
@@ -260,7 +261,7 @@ public:
      * - cited by: Adams & Bachu in Geofluids (2002) 2, 257-271
      */
     template <class Evaluation>
-    static Evaluation liquidDensity(const Evaluation& temperature, const Evaluation& pressure, const Evaluation& salinity, bool extrapolate = false)
+    OPM_HOST_DEVICE static Evaluation liquidDensity(const Evaluation& temperature, const Evaluation& pressure, const Evaluation& salinity, bool extrapolate = false)
     {
         Evaluation tempC = temperature - 273.15;
         Evaluation pMPa = pressure/1.0E6;
@@ -286,14 +287,14 @@ public:
      * \copydoc H2O::gasPressure
      */
     template <class Evaluation>
-    static Evaluation gasPressure(const Evaluation& temperature, const Evaluation& density)
+    OPM_HOST_DEVICE static Evaluation gasPressure(const Evaluation& temperature, const Evaluation& density)
     { return H2O::gasPressure(temperature, density); }
 
     /*!
      * \copydoc H2O::liquidPressure
      */
     template <class Evaluation>
-    static Evaluation liquidPressure(const Evaluation& temperature, const Evaluation& density)
+    OPM_HOST_DEVICE static Evaluation liquidPressure(const Evaluation& temperature, const Evaluation& density)
     {
         // We use the newton method for this. For the initial value we
         // assume the pressure to be 10% higher than the vapor
@@ -325,7 +326,7 @@ public:
      * \copydoc H2O::gasViscosity
      */
     template <class Evaluation>
-    static Evaluation gasViscosity(const Evaluation& temperature, const Evaluation& pressure)
+    OPM_HOST_DEVICE static Evaluation gasViscosity(const Evaluation& temperature, const Evaluation& pressure)
     { return H2O::gasViscosity(temperature, pressure); }
 
     /*!
@@ -337,7 +338,7 @@ public:
      *   "Equations of State for basin geofluids"
      */
     template <class Evaluation>
-    static Evaluation liquidViscosity(const Evaluation& temperature, const Evaluation& /*pressure*/, const Evaluation& salinity)
+    OPM_HOST_DEVICE static Evaluation liquidViscosity(const Evaluation& temperature, const Evaluation& /*pressure*/, const Evaluation& salinity)
     {
         Evaluation T_C = temperature - 273.15;
         if(temperature <= 275.) // regularization
