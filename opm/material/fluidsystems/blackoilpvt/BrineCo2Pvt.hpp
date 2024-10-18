@@ -38,6 +38,7 @@
 #include <opm/material/components/CO2.hpp>
 #include <opm/material/common/UniformTabulated2DFunction.hpp>
 #include <opm/material/components/TabulatedComponent.hpp>
+#include <opm/material/components/CO2Tables.hpp>
 #include <opm/material/binarycoefficients/H2O_CO2.hpp>
 #include <opm/material/binarycoefficients/Brine_CO2.hpp>
 
@@ -57,7 +58,7 @@ class EzrokhiTable;
  * \brief This class represents the Pressure-Volume-Temperature relations of the liquid phase
  * for a CO2-Brine system
  */
-template <class Scalar>
+template <class Scalar, class Params = Opm::CO2Tables>
 class BrineCo2Pvt
 {
     static constexpr bool extrapolate = true;
@@ -474,7 +475,8 @@ public:
         // temperature and pressure.
         Evaluation xgH2O;
         Evaluation xlCO2;
-        BinaryCoeffBrineCO2::calculateMoleFractions(temperature,
+        BinaryCoeffBrineCO2::calculateMoleFractions(co2Tables_,
+                                                    temperature,
                                                     pressure,
                                                     salinity,
                                                     /*knownPhaseIdx=*/-1,
@@ -487,6 +489,16 @@ public:
         xlCO2 = max(0.0, min(1.0, xlCO2));
 
         return convertXoGToRs(convertxoGToXoG(xlCO2, salinity), regionIdx);
+    }
+
+    /*!
+     * \brief Get the CO2 parameters.
+     *
+     * \return A const reference to the CO2 parameters.
+     */
+    const Params& getCo2Tables() const
+    {
+        return co2Tables_;
     }
 
 private:
@@ -699,7 +711,7 @@ private:
         }
             
         /* enthalpy contribution of CO2 (kJ/kg) */
-        hg = CO2::gasEnthalpy(T, p, extrapolate)/1E3 + delta_hCO2;
+        hg = CO2::gasEnthalpy(co2Tables_, T, p, extrapolate)/1E3 + delta_hCO2;
 
         /* Enthalpy of brine with dissolved CO2 */
         return (h_ls1 - X_CO2_w*hw + hg*X_CO2_w)*1E3; /*J/kg*/
@@ -731,7 +743,7 @@ private:
     int activityModel_{};
     Co2StoreConfig::LiquidMixingType liquidMixType_{};
     Co2StoreConfig::SaltMixingType saltMixType_{};
-
+    Params co2Tables_;
 };
 
 } // namespace Opm

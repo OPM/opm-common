@@ -55,14 +55,14 @@ public:
      * \param temperature the temperature [K]
      * \param pressure the phase pressure [Pa]
      */
-    template <class Evaluation>
-    static Evaluation gasDiffCoeff(const Evaluation& temperature, const Evaluation& pressure, bool extrapolate = false)
+    template <class Evaluation, class CO2Params>
+    static Evaluation gasDiffCoeff(const CO2Params& params, const Evaluation& temperature, const Evaluation& pressure, bool extrapolate = false)
     {
         //Diffusion coefficient of water in the CO2 phase
         Scalar k = 1.3806504e-23; // Boltzmann constant
         Scalar c = 4; // slip parameter, can vary between 4 (slip condition) and 6 (stick condition)
         Scalar R_h = 1.72e-10; // hydrodynamic radius of the solute
-        const Evaluation& mu = CO2::gasViscosity(temperature, pressure, extrapolate); // CO2 viscosity
+        const Evaluation& mu = CO2::gasViscosity(params, temperature, pressure, extrapolate); // CO2 viscosity
         return k / (c * M_PI * R_h) * (temperature / mu);
     }
 
@@ -96,8 +96,9 @@ public:
      * \param xlCO2 mole fraction of CO2 in brine [mol/mol]
      * \param ygH2O mole fraction of water in the gas phase [mol/mol]
      */
-    template <class Evaluation>
-    static void calculateMoleFractions(const Evaluation& temperature,
+    template <class Evaluation, class CO2Params>
+    static void calculateMoleFractions(const CO2Params& params,
+                                       const Evaluation& temperature,
                                        const Evaluation& pg,
                                        const Evaluation& salinity,
                                        const int knownPhaseIdx,
@@ -124,7 +125,7 @@ public:
             // Technically only valid below T = 100 C, but we use low-temp. parameters and formulas even above 100 C as
             // an approximation.
             if (activityModel == 3) {
-                auto [xCO2, yH2O] = mutualSolubilitySpycherPruess2005_(temperature, pg, molalityNaCl, extrapolate);
+                auto [xCO2, yH2O] = mutualSolubilitySpycherPruess2005_(params, temperature, pg, molalityNaCl, extrapolate);
                 xlCO2 = xCO2;
                 ygH2O = yH2O;
 
@@ -132,14 +133,14 @@ public:
             else {
                 // Fixed-point iterations to calculate solubility
                 if (iterate) {
-                    auto [xCO2, yH2O] = fixPointIterSolubility_(temperature, pg, molalityNaCl, activityModel, extrapolate);
+                    auto [xCO2, yH2O] = fixPointIterSolubility_(params, temperature, pg, molalityNaCl, activityModel, extrapolate);
                     xlCO2 = xCO2;
                     ygH2O = yH2O;
                 }
 
                 // Solve mutual solubility equation with back substitution (no need for iterations)
                 else {
-                    auto [xCO2, yH2O] = nonIterSolubility_(temperature, pg, molalityNaCl, activityModel, extrapolate);
+                    auto [xCO2, yH2O] = nonIterSolubility_(params, temperature, pg, molalityNaCl, activityModel, extrapolate);
                     xlCO2 = xCO2;
                     ygH2O = yH2O;
                 }
@@ -151,7 +152,7 @@ public:
         // with the mutual solubility function
         else if (knownPhaseIdx == liquidPhaseIdx && activityModel == 3) {
             Evaluation x_NaCl = salinityToMolFrac_(salinity);
-            const Evaluation& A = computeA_(temperature, pg, Evaluation(0.0), Evaluation(0.0), false, extrapolate, true);
+            const Evaluation& A = computeA_(params, temperature, pg, Evaluation(0.0), Evaluation(0.0), false, extrapolate, true);
             ygH2O = A * (1 - xlCO2 - x_NaCl);
         }
 
@@ -161,7 +162,7 @@ public:
         else if (knownPhaseIdx == gasPhaseIdx && activityModel == 3) {
             //y_H2o = fluidstate.
             Evaluation x_NaCl = salinityToMolFrac_(salinity);
-            const Evaluation& A = computeA_(temperature, pg, Evaluation(0.0), Evaluation(0.0), false, extrapolate, true);
+            const Evaluation& A = computeA_(params, temperature, pg, Evaluation(0.0), Evaluation(0.0), false, extrapolate, true);
             xlCO2 = 1 - x_NaCl - ygH2O / A;
         }
     }
@@ -181,8 +182,9 @@ public:
      * \param T the temperature [K]
      * \param pg the gas phase pressure [Pa]
      */
-    template <class Evaluation>
-    static Evaluation fugacityCoefficientCO2(const Evaluation& temperature, 
+    template <class Evaluation, class CO2Params>
+    static Evaluation fugacityCoefficientCO2(const CO2Params& params,
+                                             const Evaluation& temperature, 
                                              const Evaluation& pg,
                                              const Evaluation& yH2O, 
                                              const bool highTemp, 
@@ -193,7 +195,7 @@ public:
         Valgrind::CheckDefined(temperature);
         Valgrind::CheckDefined(pg);
 
-        Evaluation V = 1 / (CO2::gasDensity(temperature, pg, extrapolate) / CO2::molarMass()) * 1.e6; // molar volume in cm^3/mol
+        Evaluation V = 1 / (CO2::gasDensity(params, temperature, pg, extrapolate) / CO2::molarMass()) * 1.e6; // molar volume in cm^3/mol
         Evaluation pg_bar = pg / 1.e5; // gas phase pressure in bar
         Scalar R = IdealGas::R * 10.; // ideal gas constant with unit bar cm^3 /(K mol)
 
@@ -236,8 +238,9 @@ public:
      * \param temperature the temperature [K]
      * \param pg the gas phase pressure [Pa]
      */
-    template <class Evaluation>
-    static Evaluation fugacityCoefficientH2O(const Evaluation& temperature, 
+    template <class Evaluation, class CO2Params>
+    static Evaluation fugacityCoefficientH2O(const CO2Params& params,
+                                             const Evaluation& temperature, 
                                              const Evaluation& pg,
                                              const Evaluation& yH2O, 
                                              const bool highTemp, 
@@ -248,7 +251,7 @@ public:
         Valgrind::CheckDefined(temperature);
         Valgrind::CheckDefined(pg);
 
-        const Evaluation& V = 1 / (CO2::gasDensity(temperature, pg, extrapolate) / CO2::molarMass()) * 1.e6; // molar volume in cm^3/mol
+        const Evaluation& V = 1 / (CO2::gasDensity(params, temperature, pg, extrapolate) / CO2::molarMass()) * 1.e6; // molar volume in cm^3/mol
         const Evaluation& pg_bar = pg / 1.e5; // gas phase pressure in bar
         Scalar R = IdealGas::R * 10.; // ideal gas constant with unit bar cm^3 /(K mol)
 
@@ -545,8 +548,9 @@ private:
     /*!
     * \brief Fixed-point iterations for high-temperature cases
     */
-    template <class Evaluation>
-    static std::pair<Evaluation, Evaluation> fixPointIterSolubility_(const Evaluation& temperature, 
+    template <class Evaluation, class CO2Parameters>
+    static std::pair<Evaluation, Evaluation> fixPointIterSolubility_(const CO2Parameters& params,
+                                                                     const Evaluation& temperature, 
                                                                      const Evaluation& pg,
                                                                      const Evaluation& m_NaCl,
                                                                      const int& activityModel,
@@ -580,7 +584,7 @@ private:
             }
 
             // F(x_i) is the mutual solubilities
-            auto [xCO2_new, yH2O_new] = mutualSolubility_(temperature, pg, xCO2, yH2O, m_NaCl, gammaNaCl, highTemp, 
+            auto [xCO2_new, yH2O_new] = mutualSolubility_(params, temperature, pg, xCO2, yH2O, m_NaCl, gammaNaCl, highTemp, 
                                                           iterate, extrapolate);
             
             // Check for convergence
@@ -603,8 +607,9 @@ private:
     /*!
     * \brief Fixed-point iterations for high-temperature cases
     */
-    template <class Evaluation>
-    static std::pair<Evaluation, Evaluation> nonIterSolubility_(const Evaluation& temperature, 
+    template <class Evaluation, class CO2Parameters>
+    static std::pair<Evaluation, Evaluation> nonIterSolubility_(const CO2Parameters& params,
+                                                                const Evaluation& temperature, 
                                                                 const Evaluation& pg,
                                                                 const Evaluation& m_NaCl,
                                                                 const int& activityModel,
@@ -620,7 +625,7 @@ private:
         // Note that we don't use xCO2 and yH2O input in low-temperature case, so we set them to 0.0
         const bool highTemp = false;
         const bool iterate = false;
-        auto [xCO2, yH2O] = mutualSolubility_(temperature, pg, Evaluation(0.0), Evaluation(0.0), m_NaCl, gammaNaCl, 
+        auto [xCO2, yH2O] = mutualSolubility_(params, temperature, pg, Evaluation(0.0), Evaluation(0.0), m_NaCl, gammaNaCl, 
                                               highTemp, iterate, extrapolate);
 
         return {xCO2, yH2O};
@@ -629,8 +634,9 @@ private:
     /*!
     * \brief Mutual solubility according to Spycher & Pruess (2009)
     */
-    template <class Evaluation>
-    static std::pair<Evaluation, Evaluation> mutualSolubility_(const Evaluation& temperature, 
+    template <class Evaluation, class CO2Parameters>
+    static std::pair<Evaluation, Evaluation> mutualSolubility_(const CO2Parameters& params,
+                                                               const Evaluation& temperature,
                                                                const Evaluation& pg,
                                                                const Evaluation& xCO2,
                                                                const Evaluation& yH2O,
@@ -641,8 +647,8 @@ private:
                                                                bool extrapolate = false)
     {
         // Calculate A and B (without salt effect); Eqs. (8) and (9)
-        const Evaluation& A = computeA_(temperature, pg, yH2O, xCO2, highTemp, extrapolate);
-        Evaluation B = computeB_(temperature, pg, yH2O, xCO2, highTemp, extrapolate);
+        const Evaluation& A = computeA_(params, temperature, pg, yH2O, xCO2, highTemp, extrapolate);
+        Evaluation B = computeB_(params, temperature, pg, yH2O, xCO2, highTemp, extrapolate);
 
         // Add salt effect to B, Eq. (17)
         B /= gammaNaCl;
@@ -663,15 +669,16 @@ private:
     /*!
     * \brief Mutual solubility according to Spycher & Pruess (2009)
     */
-    template <class Evaluation>
-    static std::pair<Evaluation, Evaluation> mutualSolubilitySpycherPruess2005_(const Evaluation& temperature, 
+    template <class Evaluation, class CO2Parameters>
+    static std::pair<Evaluation, Evaluation> mutualSolubilitySpycherPruess2005_(const CO2Parameters& params,
+                                                                                const Evaluation& temperature,
                                                                                 const Evaluation& pg,
                                                                                 const Evaluation& m_NaCl,
                                                                                 bool extrapolate = false)
     {
         // Calculate A and B (without salt effect); Eqs. (8) and (9)
-        const Evaluation& A = computeA_(temperature, pg, Evaluation(0.0), Evaluation(0.0), false, extrapolate, true);
-        const Evaluation& B = computeB_(temperature, pg, Evaluation(0.0), Evaluation(0.0), false, extrapolate, true);
+        const Evaluation& A = computeA_(params, temperature, pg, Evaluation(0.0), Evaluation(0.0), false, extrapolate, true);
+        const Evaluation& B = computeB_(params, temperature, pg, Evaluation(0.0), Evaluation(0.0), false, extrapolate, true);
 
         // Mole fractions and molality in pure water
         Evaluation yH2O = (1 - B) / (1. / A - B);
@@ -702,8 +709,9 @@ private:
      * \param T the temperature [K]
      * \param pg the gas phase pressure [Pa]
      */
-    template <class Evaluation>
-    static Evaluation computeA_(const Evaluation& temperature, 
+    template <class Evaluation, class CO2Params>
+    static Evaluation computeA_(const CO2Params& params,
+                                const Evaluation& temperature, 
                                 const Evaluation& pg, 
                                 const Evaluation& yH2O,
                                 const Evaluation& xCO2,
@@ -716,7 +724,7 @@ private:
         const Evaluation& deltaP = pg / 1e5 - Pref_(temperature, highTemp); // pressure range [bar] from pref to pg[bar]
         Evaluation v_av_H2O = V_avg_H2O_(temperature, highTemp); // average partial molar volume of H2O [cm^3/mol]
         Evaluation k0_H2O = equilibriumConstantH2O_(temperature, highTemp); // equilibrium constant for H2O at 1 bar
-        Evaluation phi_H2O = fugacityCoefficientH2O(temperature, pg, yH2O, highTemp, extrapolate, spycherPruess2005); // fugacity coefficient of H2O for the water-CO2 system
+        Evaluation phi_H2O = fugacityCoefficientH2O(params, temperature, pg, yH2O, highTemp, extrapolate, spycherPruess2005); // fugacity coefficient of H2O for the water-CO2 system
         Evaluation gammaH2O = activityCoefficientH2O_(temperature, xCO2, highTemp);
 
         // In the intermediate temperature range 99-109 C, equilibrium constants and fugacity coeff. are linearly
@@ -724,7 +732,7 @@ private:
         if ( temperature > 372.15 && temperature < 382.15 && !spycherPruess2005) {
             const Evaluation weight = (382.15 - temperature) / 10.;
             const Evaluation& k0_H2O_low = equilibriumConstantH2O_(temperature, false);
-            const Evaluation& phi_H2O_low = fugacityCoefficientH2O(temperature, pg, Evaluation(0.0), false, extrapolate);
+            const Evaluation& phi_H2O_low = fugacityCoefficientH2O(params, temperature, pg, Evaluation(0.0), false, extrapolate);
             k0_H2O = k0_H2O * (1 - weight) + k0_H2O_low * weight;
             phi_H2O = phi_H2O * (1 - weight) + phi_H2O_low * weight;
         }
@@ -743,8 +751,9 @@ private:
      * \param temperature the temperature [K]
      * \param pg the gas phase pressure [Pa]
      */
-    template <class Evaluation>
-    static Evaluation computeB_(const Evaluation& temperature, 
+    template <class Evaluation, class CO2Parameters>
+    static Evaluation computeB_(const CO2Parameters& params,
+                                const Evaluation& temperature, 
                                 const Evaluation& pg, 
                                 const Evaluation& yH2O,
                                 const Evaluation& xCO2,
@@ -757,7 +766,7 @@ private:
         const Evaluation& deltaP = pg / 1e5 - Pref_(temperature, highTemp); // pressure range [bar] from pref to pg[bar]
         Evaluation v_av_CO2 = V_avg_CO2_(temperature, highTemp); // average partial molar volume of CO2 [cm^3/mol]
         Evaluation k0_CO2 = equilibriumConstantCO2_(temperature, pg, highTemp, spycherPruess2005); // equilibrium constant for CO2 at 1 bar
-        Evaluation phi_CO2 = fugacityCoefficientCO2(temperature, pg, yH2O, highTemp, extrapolate, spycherPruess2005); // fugacity coefficient of CO2 for the water-CO2 system
+        Evaluation phi_CO2 = fugacityCoefficientCO2(params, temperature, pg, yH2O, highTemp, extrapolate, spycherPruess2005); // fugacity coefficient of CO2 for the water-CO2 system
         Evaluation gammaCO2 = activityCoefficientCO2_(temperature, xCO2, highTemp);
 
         // In the intermediate temperature range 99-109 C, equilibrium constants and fugacity coeff. are linearly
@@ -765,7 +774,7 @@ private:
         if ( temperature > 372.15 && temperature < 382.15 && !spycherPruess2005) {
             const Evaluation weight = (382.15 - temperature) / 10.;
             const Evaluation& k0_CO2_low = equilibriumConstantCO2_(temperature, pg, false, spycherPruess2005);
-            const Evaluation& phi_CO2_low = fugacityCoefficientCO2(temperature, pg, Evaluation(0.0), false, extrapolate);
+            const Evaluation& phi_CO2_low = fugacityCoefficientCO2(params, temperature, pg, Evaluation(0.0), false, extrapolate);
             k0_CO2 = k0_CO2 * (1 - weight) + k0_CO2_low * weight;
             phi_CO2 = phi_CO2 * (1 - weight) + phi_CO2_low * weight;
         }

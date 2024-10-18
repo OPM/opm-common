@@ -41,6 +41,7 @@
 #include <opm/material/binarycoefficients/Brine_CO2.hpp>
 #include <opm/material/components/SimpleHuDuanH2O.hpp>
 #include <opm/material/components/CO2.hpp>
+#include <opm/material/components/CO2Tables.hpp>
 #include <opm/material/fluidsystems/blackoilpvt/BrineCo2Pvt.hpp>
 
 template<class Scalar>
@@ -133,6 +134,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(Brine_CO2, Scalar, Types)
 
     // Tolerance per activity model
     std::vector<Scalar> tol = {2.5e-1, 1.75e-1, 2e-1};
+    Opm::CO2Tables params;
 
     // Test against Duan&Sun (2005) data
     Evaluation xgH2O;
@@ -157,7 +159,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(Brine_CO2, Scalar, Types)
                     }
 
                     // Calculate solubility as mole fraction
-                    BinaryCoeffBrineCO2::calculateMoleFractions(T[iT], p[iP], salinity, -1, xlCO2, xgH2O,
+                    BinaryCoeffBrineCO2::calculateMoleFractions(params, T[iT], p[iP], salinity, -1, xlCO2, xgH2O,
                                                                 activityModel[iA], extrapolate);
 
                     // Convert to molality
