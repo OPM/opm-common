@@ -72,8 +72,6 @@
 #include <utility>
 #include <vector>
 
-#include <iostream>
-
 #include <fmt/format.h>
 #include <fmt/chrono.h>
 
@@ -536,33 +534,7 @@ namespace {
                               OutputVectorInt                 writeVectorI)
     {
         for (const auto& vector : vectors) {
-            if (vector == "SGAS") {
-                std::cout << "SGAS here" << std::endl;
-            }
-            if (vector == "XMF") {
-                std::cout << "XMF here" << std::endl;
-            }
-            const auto handler = MonoThrowHandler<std::logic_error>(fmt::format("{} does not have an associate value", vector));
-
-            const auto handleDoubleVector = [&vector, &writeVectorF](const std::vector<double>& v)
-            {
-                writeVectorF(vector, v);
-            };
-
-            const auto handleIntVector = [&vector, &writeVectorI](const std::vector<int>& v)
-            {
-                writeVectorI(vector, v);
-            };
-
-            const auto& temp = VisitorOverloadSet{
-                    handler,
-                    handleDoubleVector,
-                    handleIntVector
-            };
-
-            const auto& val = value.solution.at(vector);
-            val.visit(temp);
-            /* value.solution.at(vector).visit(VisitorOverloadSet{
+            value.solution.at(vector).visit(VisitorOverloadSet{
                 MonoThrowHandler<std::logic_error>(fmt::format("{} does not have an associate value", vector)),
                 [&vector,&writeVectorF](const std::vector<double>& v)
                 {
@@ -572,7 +544,7 @@ namespace {
                 {
                     writeVectorI(vector, v);
                 }
-            }); */
+            });
         }
     }
 
@@ -705,7 +677,7 @@ namespace {
     void writeSolution(const RestartValue&           value,
                        const EclipseState&           es,
                        const Schedule&               schedule,
-                       // const UDQState&               udq_state,
+                       const UDQState&               udq_state,
                        int                           report_step,
                        int                           sim_step,
                        const bool                    ecl_compatible_rst,
@@ -744,7 +716,7 @@ namespace {
         writeFluidInPlace(value, es, write_double_arg, rstFile);
         writeTracerVectors(schedule.getUnits(), es.tracer(), value,
                            write_double_arg, rstFile);
-        // writeUDQ(report_step, sim_step, schedule, udq_state, inteHD, rstFile);
+        writeUDQ(report_step, sim_step, schedule, udq_state, inteHD, rstFile);
 
         writeExtraVectors(value, writeDouble);
 
@@ -804,10 +776,10 @@ void save(EclIO::OutputStream::Restart&                 rstFile,
           const EclipseState&                           es,
           const EclipseGrid&                            grid,
           const Schedule&                               schedule,
-        /*  const Action::State&                          action_state,
+          const Action::State&                          action_state,
           const WellTestState&                          wtest_state,
           const SummaryState&                           sumState,
-          const UDQState&                               udqState,*/
+          const UDQState&                               udqState,
           std::optional<Helpers::AggregateAquiferData>& aquiferData,
           bool                                          write_double)
 {
@@ -830,15 +802,15 @@ void save(EclIO::OutputStream::Restart&                 rstFile,
         writeHeader(report_step, sim_step, nextStepSize(value),
                     seconds_elapsed, schedule, grid, es, rstFile);
 
-    // if (report_step > 0) {
-    //     writeDynamicData(sim_step, grid, es, schedule, value.wells,
-    //                      action_state, wtest_state, sumState, inteHD,
-    //                      value.aquifer, aquiferData, rstFile);
-    // }
+    if (report_step > 0) {
+        writeDynamicData(sim_step, grid, es, schedule, value.wells,
+                         action_state, wtest_state, sumState, inteHD,
+                         value.aquifer, aquiferData, rstFile);
+    }
 
-    // writeActionx(report_step, sim_step, schedule, action_state, sumState, rstFile);
+    writeActionx(report_step, sim_step, schedule, action_state, sumState, rstFile);
 
-    writeSolution(value, es, schedule, /* udqState, */ report_step, sim_step,
+    writeSolution(value, es, schedule, udqState, report_step, sim_step,
                   ecl_compatible_rst, write_double, inteHD, rstFile);
 
     if (! ecl_compatible_rst) {
