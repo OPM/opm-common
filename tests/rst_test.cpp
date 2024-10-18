@@ -83,7 +83,7 @@ std::pair<Opm::EclipseState, Opm::Schedule> load_schedule(std::shared_ptr<const 
         return {
             std::piecewise_construct,
             std::forward_as_tuple(state),
-            std::forward_as_tuple(deck, state, python, false, true, std::nullopt, &rst)
+            std::forward_as_tuple(deck, state, python, false, /*slave_mode=*/false, true, std::nullopt, &rst)
         };
     } else
         return {
