@@ -364,8 +364,7 @@ namespace Opm {
       EclipseGridLGR() = default;
       EclipseGridLGR(std::string self_label, std::string father_label_, 
                      int father_lgr_level, size_t nx, size_t ny, size_t nz, 
-                     vec_size_t father_i_list, vec_size_t father_j_list,
-                     vec_size_t father_k_list);
+                     vec_size_t father_lgr_infex);
       ~EclipseGridLGR() = default;
       vec_size_t getFatherGlobalID() const;
       void set_lgr_global_counter(std::size_t counter){

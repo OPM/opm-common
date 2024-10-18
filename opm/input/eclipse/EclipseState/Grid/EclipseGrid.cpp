@@ -2037,15 +2037,25 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
     }
 
     void EclipseGrid::create_lgr_cells_tree(const LgrCollection& lgr_input) {                
+          auto IJK_global = [this](const auto& i_list, const auto& j_list, const auto& k_list){
+            if ((i_list.size() != j_list.size()) || (j_list.size() != k_list.size()) || (k_list.size() != i_list.size()) ){
+                 throw std::invalid_argument("Sizes are not compatible.");
+            }
+            std::vector<std::size_t> global_ind(i_list.size());
+            // error here,
+            for (std::size_t index = 0; index < i_list.size(); index++) {              
+                global_ind[index] = this->getActiveIndex(i_list[index],j_list[index],k_list[index]);
+            }
+            return global_ind;
+        };
         for (std::size_t index = 0; index < lgr_input.size(); index++) {
             auto lgr_cell = lgr_input.getLgr(index);
             if (this->lgr_label.compare(lgr_cell.PARENT_NAME()) == 0)            {
                 lgr_grid = true;
-                auto [i_list, j_list, k_list] = lgr_cell.parent_cellsIJK();
-                
+                auto [i_list, j_list, k_list] = lgr_cell.parent_cellsIJK();                
+                auto father_lgr_index = IJK_global(i_list, j_list, k_list);
                 lgr_children_cells.emplace_back(lgr_cell.NAME(), this->lgr_label, this->lgr_level, 
-                                                lgr_cell.NX(), lgr_cell.NY(), lgr_cell.NZ(),
-                                                i_list, j_list, k_list);
+                                                lgr_cell.NX(), lgr_cell.NY(), lgr_cell.NZ(), father_lgr_index);
                 
                 lgr_children_cells.back().create_lgr_cells_tree(lgr_input);              
             }
@@ -2324,10 +2334,8 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
 namespace Opm {
     EclipseGridLGR::EclipseGridLGR(std::string self_label, std::string father_label_, 
                                    int father_lgr_level, std::size_t nx, std::size_t ny, 
-                                   std::size_t nz, vec_size_t i_list, vec_size_t j_list,
-                                   vec_size_t k_list)
-    : EclipseGrid(nx,ny,nz), father_label(father_label_), father_i_list(i_list), 
-      father_j_list(j_list), father_k_list(k_list)
+                                   std::size_t nz, vec_size_t father_lgr_index)
+    : EclipseGrid(nx,ny,nz), father_label(father_label_), father_global(father_lgr_index)
     {
         init_father_global();
         lgr_label= self_label;
@@ -2335,17 +2343,6 @@ namespace Opm {
     }
     void EclipseGridLGR::init_father_global()
     {
-        auto IJK_global = [this](const auto& i_list, const auto& j_list, const auto& k_list){
-            if ((i_list.size() != j_list.size()) || (j_list.size() != k_list.size()) || (k_list.size() != i_list.size()) ){
-                 throw std::invalid_argument("Sizes are not compatible.");
-            }
-            std::vector<std::size_t> global_ind(i_list.size());
-            for (std::size_t index = 0; index < i_list.size(); index++) {              
-                global_ind[index] = this->getActiveIndex(i_list[index],j_list[index],k_list[index]);
-            }
-            return global_ind;
-        };
-        father_global = IJK_global(father_i_list, father_j_list, father_k_list);
         std::sort(father_global.begin(),father_global.end(), std::less<std::size_t>());
     }    
   
