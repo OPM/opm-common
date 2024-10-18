@@ -165,7 +165,6 @@ class MinMaxScalerLayer(ScalerLayer, PreprocessingLayer):
         return (
             scaled_data * (self.feature_range[1] - self.feature_range[0])
         ) + self.feature_range[0]
-        # return inputs
 
 
 class MinMaxUnScalerLayer(ScalerLayer, tf.keras.layers.Layer):
@@ -200,4 +199,3 @@ class MinMaxUnScalerLayer(ScalerLayer, tf.keras.layers.Layer):
             self.feature_range[1] - self.feature_range[0]
         )
         return unscaled_data * self.scalar + self.min
-        # return inputs

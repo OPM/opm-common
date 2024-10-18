@@ -18,9 +18,9 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <opm/ml/ml_model.hpp>
-#include <opm/common/ErrorMacros.hpp>
 #include <fmt/format.h>
+#include <opm/common/ErrorMacros.hpp>
+#include <opm/ml/ml_model.hpp>
 
 #include <cstdio>
 #include <tests/ml/ml_tools/include/test_dense_10x1.hpp>
@@ -28,17 +28,20 @@
 #include <tests/ml/ml_tools/include/test_dense_10x10x10.hpp>
 #include <tests/ml/ml_tools/include/test_dense_1x1.hpp>
 #include <tests/ml/ml_tools/include/test_dense_2x2.hpp>
-#include <tests/ml/ml_tools/include/test_relu_10.hpp>
 #include <tests/ml/ml_tools/include/test_dense_relu_10.hpp>
 #include <tests/ml/ml_tools/include/test_dense_tanh_10.hpp>
+#include <tests/ml/ml_tools/include/test_relu_10.hpp>
 #include <tests/ml/ml_tools/include/test_scalingdense_10x1.hpp>
 
 
-namespace Opm {
+namespace Opm
+{
 
-template<class Evaluation>
-bool tensor_test() {
-  std::printf("TEST tensor_test\n");
+template <class Evaluation>
+bool
+tensor_test()
+{
+    std::printf("TEST tensor_test\n");
 
     {
         const int i = 3;
@@ -61,8 +64,20 @@ bool tensor_test() {
         for (int ii = 0; ii < i; ii++) {
             for (int jj = 0; jj < j; jj++) {
                 for (int kk = 0; kk < k; kk++) {
-                    OPM_ERROR_IF (fabs(t(ii, jj, kk).value() - c.value()) > 1e-9,fmt::format("\n Expected " "{}" "got " "{}", c.value(), t(ii, jj, kk).value()));   
-                    OPM_ERROR_IF (fabs(t.data_[cc].value() - c.value()) > 1e-9,fmt::format("\n Expected " "{}" "got " "{}", c.value(), t.data_[cc].value()));
+                    OPM_ERROR_IF(fabs(t(ii, jj, kk).value() - c.value()) > 1e-9,
+                                 fmt::format("\n Expected "
+                                             "{}"
+                                             "got "
+                                             "{}",
+                                             c.value(),
+                                             t(ii, jj, kk).value()));
+                    OPM_ERROR_IF(fabs(t.data_[cc].value() - c.value()) > 1e-9,
+                                 fmt::format("\n Expected "
+                                             "{}"
+                                             "got "
+                                             "{}",
+                                             c.value(),
+                                             t.data_[cc].value()));
 
                     c += 1.f;
                     cc++;
@@ -96,8 +111,20 @@ bool tensor_test() {
             for (int jj = 0; jj < j; jj++) {
                 for (int kk = 0; kk < k; kk++) {
                     for (int ll = 0; ll < l; ll++) {
-                        OPM_ERROR_IF (fabs(t(ii, jj, kk, ll).value() - c.value()) > 1e-9,fmt::format("\n Expected " "{}" "got " "{}", c.value(), t(ii, jj, kk, ll).value()));
-                        OPM_ERROR_IF (fabs(t.data_[cc].value() - c.value()) > 1e-9,fmt::format("\n Expected " "{}" "got " "{}", c.value(), t.data_[cc].value()));
+                        OPM_ERROR_IF(fabs(t(ii, jj, kk, ll).value() - c.value()) > 1e-9,
+                                     fmt::format("\n Expected "
+                                                 "{}"
+                                                 "got "
+                                                 "{}",
+                                                 c.value(),
+                                                 t(ii, jj, kk, ll).value()));
+                        OPM_ERROR_IF(fabs(t.data_[cc].value() - c.value()) > 1e-9,
+                                     fmt::format("\n Expected "
+                                                 "{}"
+                                                 "got "
+                                                 "{}",
+                                                 c.value(),
+                                                 t.data_[cc].value()));
                         c += 1.f;
                         cc++;
                     }
@@ -114,8 +141,7 @@ bool tensor_test() {
         b.data_ = {2.0, 5.0, 4.0, 1.0};
 
         Tensor<Evaluation> result = a + b;
-        OPM_ERROR_IF(result.data_ != std::vector<Evaluation>({3.0, 7.0, 7.0, 6.0}),
-                "Vector add failed");
+        OPM_ERROR_IF(result.data_ != std::vector<Evaluation>({3.0, 7.0, 7.0, 6.0}), "Vector add failed");
     }
 
     {
@@ -126,8 +152,7 @@ bool tensor_test() {
         b.data_ = {2.0, 5.0, 4.0, 1.0};
 
         Tensor<Evaluation> result = a.multiply(b);
-        OPM_ERROR_IF(result.data_ != std::vector<Evaluation>({2.0, 10.0, 12.0, 5.0}),
-                "Vector multiply failed");
+        OPM_ERROR_IF(result.data_ != std::vector<Evaluation>({2.0, 10.0, 12.0, 5.0}), "Vector multiply failed");
     }
 
     {
@@ -138,42 +163,43 @@ bool tensor_test() {
         b.data_ = {2.0, 5.0};
 
         Tensor<Evaluation> result = a.dot(b);
-        OPM_ERROR_IF(result.data_ != std::vector<Evaluation>({2.0, 5.0, 4.0, 10.0}),
-        "Vector dot failed");
+        OPM_ERROR_IF(result.data_ != std::vector<Evaluation>({2.0, 5.0, 4.0, 10.0}), "Vector dot failed");
     }
 
     return true;
 }
 
-}
+} // namespace Opm
 
 
-int main() {
+int
+main()
+{
     typedef Opm::DenseAd::Evaluation<double, 1> Evaluation;
- 
+
     Evaluation load_time = 0.0;
     Evaluation apply_time = 0.0;
 
     if (!tensor_test<Evaluation>()) {
         return 1;
     }
-    
+
     if (!test_dense_1x1<Evaluation>(&load_time, &apply_time)) {
         return 1;
     }
-    
+
     if (!test_dense_10x1<Evaluation>(&load_time, &apply_time)) {
         return 1;
     }
-    
+
     if (!test_dense_2x2<Evaluation>(&load_time, &apply_time)) {
         return 1;
     }
-    
+
     if (!test_dense_10x10<Evaluation>(&load_time, &apply_time)) {
         return 1;
     }
-    
+
     if (!test_dense_10x10x10<Evaluation>(&load_time, &apply_time)) {
         return 1;
     }
@@ -181,11 +207,11 @@ int main() {
     if (!test_relu_10<Evaluation>(&load_time, &apply_time)) {
         return 1;
     }
-    
+
     if (!test_dense_relu_10<Evaluation>(&load_time, &apply_time)) {
         return 1;
     }
-    
+
     if (!test_dense_tanh_10<Evaluation>(&load_time, &apply_time)) {
         return 1;
     }
