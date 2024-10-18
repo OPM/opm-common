@@ -96,6 +96,12 @@ public:
         return this->dUDG_;
     }
 
+    /// Retrieve values of segment level UDQs.  Nullopt if no such UDQs exist.
+    const std::optional<WindowedMatrix<double>>& getDUDS() const
+    {
+        return this->dUDS_;
+    }
+
     /// Retrieve values of well level UDQs.  Nullopt if no such UDQs exist.
     const std::optional<WindowedArray<double>>& getDUDW() const
     {
@@ -146,6 +152,13 @@ private:
     /// for each group level UDQ otherwise.
     std::optional<WindowedArray<double>> dUDG_{};
 
+    /// Numeric values of segment level UDQs.
+    ///
+    /// Nullopt if no such UDQs exist, (declared maximum number of
+    /// segments)-by-(declared maximum number of multi-segmented wells) for
+    /// each segment level UDQ otherwise.
+    std::optional<WindowedMatrix<double>> dUDS_{};
+
     /// Numeric values of well level UDQs.
     ///
     /// Nullopt if no such UDQs exist, declared maximum #wells elements for
@@ -168,6 +181,10 @@ private:
                                const std::size_t                ngmax,
                                const std::vector<const Group*>& groups,
                                const int                        expectedNumGroupUDQs);
+
+    void collectSegmentUDQValues(const std::vector<UDQInput>&    udqInput,
+                                 const UDQState&                 udqState,
+                                 const std::vector<std::string>& msWells);
 
     void collectWellUDQValues(const std::vector<UDQInput>&    udqInput,
                               const UDQState&                 udqState,

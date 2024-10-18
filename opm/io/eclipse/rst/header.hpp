@@ -3,35 +3,45 @@
 
   This file is part of the Open Porous Media project (OPM).
 
-  OPM is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by
-  the Free Software Foundation, either version 3 of the License, or
-  (at your option) any later version.
+  OPM is free software: you can redistribute it and/or modify it under the
+  terms of the GNU General Public License as published by the Free Software
+  Foundation, either version 3 of the License, or (at your option) any later
+  version.
 
-  OPM is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-  GNU General Public License for more details.
+  OPM is distributed in the hope that it will be useful, but WITHOUT ANY
+  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+  FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+  details.
 
-  You should have received a copy of the GNU General Public License
-  along with OPM.  If not, see <http://www.gnu.org/licenses/>.
+  You should have received a copy of the GNU General Public License along
+  with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #ifndef RST_HEADER
 #define RST_HEADER
 
-#include <vector>
-#include <ctime>
-#include <cstddef>
-
 #include <opm/input/eclipse/EclipseState/Runspec.hpp>
 
+#include <cstddef>
+#include <ctime>
+#include <utility>
+#include <vector>
+
 namespace Opm {
+
 class UnitSystem;
 
-namespace RestartIO {
+} // namespace Opm
 
-struct RstHeader {
-    RstHeader(const Runspec& runspec, const UnitSystem& unit_system, const std::vector<int>& intehead, const std::vector<bool>& logihead, const std::vector<double>& doubhead);
+namespace Opm::RestartIO {
+
+struct RstHeader
+{
+    RstHeader(const Runspec& runspec,
+              const UnitSystem& unit_system,
+              const std::vector<int>& intehead,
+              const std::vector<bool>& logihead,
+              const std::vector<double>& doubhead);
 
     Runspec runspec;
     int nx;
@@ -90,9 +100,10 @@ struct RstHeader {
     int nmfipr;
     int ngroup;
     int nwgmax;
-    int nwell_udq;
-    int ngroup_udq;
     int nfield_udq;
+    int ngroup_udq;
+    int nsegment_udq;
+    int nwell_udq;
     int num_action;
     int guide_rate_nominated_phase;
     int max_wlist;
@@ -131,17 +142,11 @@ struct RstHeader {
     double glift_rate_delta;
     double glift_min_eco_grad;
 
-
     std::time_t sim_time() const;
     std::pair<std::time_t, std::size_t> restart_info() const;
     int num_udq() const;
 };
 
+} // namespace Opm::RestartIO
 
-}
-}
-
-
-
-
-#endif
+#endif  // RST_HEADER

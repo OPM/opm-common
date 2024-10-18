@@ -71,12 +71,17 @@ namespace Opm { namespace RestartIO { namespace Helpers {
         ///
         /// \param[in] n Number of windows.
         /// \param[in] sz Number of data items per window.
-        explicit WindowedArray(const NumWindows n, const WindowSize sz)
-            : x_         (n.value * sz.value)
+        explicit WindowedArray(const NumWindows n,
+                               const WindowSize sz,
+                               const T          initial = T{})
+            : x_         (n.value * sz.value, initial)
             , windowSize_(sz.value)
         {
-            if (sz.value == 0)
-                throw std::invalid_argument("Window array with windowsize==0 is not permitted");
+            if (sz.value == 0) {
+                throw std::invalid_argument {
+                    "Zero-sized windows are not permitted"
+                };
+            }
         }
 
         WindowedArray(const WindowedArray& rhs) = default;
@@ -184,14 +189,18 @@ namespace Opm { namespace RestartIO { namespace Helpers {
         /// \param[in] nRows Number of rows.
         /// \param[in] nCols Number of columns.
         /// \param[in] sz Number of data items per (row,column) window.
-        explicit WindowedMatrix(const NumRows& nRows,
-                                const NumCols& nCols,
-                                const WindowSize& sz)
-            : data_   (NumWindows{ nRows.value * nCols.value }, sz)
+        explicit WindowedMatrix(const NumRows&    nRows,
+                                const NumCols&    nCols,
+                                const WindowSize& sz,
+                                const T           initial = T{})
+            : data_   (NumWindows{ nRows.value * nCols.value }, sz, initial)
             , numCols_(nCols.value)
         {
-            if (nCols.value == 0)
-                throw std::invalid_argument("Window matrix with columns==0 is not permitted");
+            if (nCols.value == 0) {
+                throw std::invalid_argument {
+                    "Zero-columned windowed matrices are not permitted"
+                };
+            }
         }
 
         /// Retrieve number of columns allocated for this matrix.
