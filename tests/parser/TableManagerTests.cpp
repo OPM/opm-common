@@ -58,8 +58,9 @@
 
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
 
-#include <stdexcept>
 #include <iostream>
+#include <stdexcept>
+#include <tuple>
 
 using namespace Opm;
 
@@ -2533,7 +2534,7 @@ BOOST_AUTO_TEST_CASE( TestParsePVCDO ) {
     BOOST_CHECK_CLOSE( 0.88,    pvcdo[ 0 ].viscosity * 1e3, 1e-5 );
     BOOST_CHECK_CLOSE( 0.0,     pvcdo[ 0 ].viscosibility * 1e5, 1e-5 );
 
-    BOOST_CHECK_THROW( pvcdo.at( 1 ), std::out_of_range );
+    BOOST_CHECK_THROW( std::ignore = pvcdo.at( 1 ), std::out_of_range );
     BOOST_CHECK_EQUAL( 25U , tables.numFIPRegions( ));
 
     const std::string malformed = R"(
