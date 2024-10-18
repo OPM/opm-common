@@ -43,7 +43,6 @@ EclOutput::EclOutput(const std::string&            filename,
     const auto binmode = mode | std::ios_base::binary;
     ix_standard = false;
 
-    std::cout << " file name for EclOutput is " << filename << std::endl;
     this->ofileH.open(filename, this->isFormatted ? mode : binmode);
 }
 

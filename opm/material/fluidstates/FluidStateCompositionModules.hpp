@@ -56,6 +56,8 @@ public:
             for (int compIdx = 0; compIdx < numComponents; ++compIdx)
                 moleFraction_[phaseIdx][compIdx] = 0.0;
         // TODO: possilby we should begin with totalMoleFractions_ here
+        // the current implementation assuming we have the moleFractions_ for each
+        // individual phases first.
 
         Valgrind::SetDefined(moleFraction_);
         Valgrind::SetUndefined(averageMolarMass_);
