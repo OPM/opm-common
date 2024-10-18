@@ -1965,31 +1965,55 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
         return m_active_to_global;
     }
 
-    void EclipseGrid::assertLGR(size_t localIndex) const {
+    void EclipseGrid::assertLabelLGR(std::string label) const{
+        if (std::find(all_lgr_labels.begin(), all_lgr_labels.end(), label) == all_lgr_labels.end()){
+            throw std::invalid_argument("LGR label not found");
+        }            
+    }
+
+
+    void EclipseGrid::assertIndexLGR(size_t localIndex) const {
      if (std::find(lgr_active_index.begin(), lgr_active_index.end(), localIndex) != lgr_active_index.end()) {
         throw std::invalid_argument("input provided is an LGR refined cell");
       } 
     }
 
     size_t EclipseGrid::getActiveIndexLGR(std::string label, size_t i, size_t j, size_t k) const{
+        assertLabelLGR(label);
+        return ActiveIndexLGR(label,i,j,k);
+    }
+
+    size_t EclipseGrid::ActiveIndexLGR(std::string label, size_t i, size_t j, size_t k) const{
         if (lgr_label.compare(label) == 0 ){
             this->assertIJK(i,j,k);
             std::size_t local_global_ind = getActiveIndex(i,j,k);
-            this->assertLGR(local_global_ind);
-            return local_global_ind + lgr_global_counter;
+            this->assertIndexLGR(local_global_ind);
+            return lgr_level_active_map[local_global_ind] + lgr_global_counter;
         }
         else if(lgr_children_cells.size() == 0){
             return 0;
         }
         else{
-            std::size_t base = 0;
-            for (auto lgr_cell : lgr_children_cells) {
+            std::size_t local_global_ind = 0;
+            for (const auto& lgr_cell : lgr_children_cells) {
                 // better add the bases a priori
-                base += lgr_cell.getActiveIndexLGR(label, i,j,k);
+                local_global_ind += lgr_cell.ActiveIndexLGR(label, i,j,k);
             }
-            return base;
-        }
+            return local_global_ind;
+        }   
     }
+    
+    std::size_t EclipseGrid::getTotalActiveLGR()
+    {
+        std::size_t num_coarse_level =  getNumActive();
+        std::size_t num_fine_cells = 0;
+        for(auto fine_cells : lgr_children_cells)
+        {
+            num_fine_cells += fine_cells.getTotalActiveLGR();
+        }
+        return num_coarse_level + num_fine_cells - lgr_children_labels.size();
+    }  
+
 
     size_t EclipseGrid::getActiveIndexLGR(std::string label, size_t localIndex) const{
         std::size_t var = 0;
@@ -1998,9 +2022,18 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
 
 
     void EclipseGrid::init_lgr_cells(const LgrCollection& lgr_input) {
+        save_all_lgr_labels(lgr_input);
         create_lgr_cells_tree(lgr_input);
         init_lgr_cells_index();
         init_lgr_global_cells_index();
+    }
+    
+    void EclipseGrid::save_all_lgr_labels(const LgrCollection& lgr_input) {
+        all_lgr_labels.reserve(lgr_input.size()+1);
+        all_lgr_labels.push_back("GLOBAL");
+        for (std::size_t index = 0; index < lgr_input.size(); index++) {
+            all_lgr_labels.push_back(lgr_input.getLgr(index).NAME());
+        }    
     }
 
     void EclipseGrid::create_lgr_cells_tree(const LgrCollection& lgr_input) {                
@@ -2315,16 +2348,7 @@ namespace Opm {
         father_global = IJK_global(father_i_list, father_j_list, father_k_list);
         std::sort(father_global.begin(),father_global.end(), std::less<std::size_t>());
     }    
-    std::size_t EclipseGridLGR::getTotalActiveLGR()
-    {
-        std::size_t num_coarse_level =  getNumActive();
-        std::size_t num_fine_cells = 0;
-        for(auto fine_cells : lgr_children_cells)
-        {
-            num_fine_cells += fine_cells.getTotalActiveLGR();
-        }
-        return num_coarse_level + num_fine_cells - lgr_children_labels.size();
-    }    
+  
     EclipseGridLGR::vec_size_t EclipseGridLGR::getFatherGlobalID() const
     {
         return father_global;

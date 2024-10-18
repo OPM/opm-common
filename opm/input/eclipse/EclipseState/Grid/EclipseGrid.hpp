@@ -96,13 +96,17 @@ namespace Opm {
         size_t activeIndex(size_t i, size_t j, size_t k) const;
         size_t activeIndex(size_t globalIndex) const;
 
+        size_t getTotalActiveLGR();
         size_t getActiveIndexLGR(std::string label, size_t i, size_t j, size_t k) const;
+        size_t ActiveIndexLGR(std::string label, size_t i, size_t j, size_t k) const;
         size_t getActiveIndexLGR(std::string label, size_t localIndex) const;
 
         size_t getActiveIndex(size_t i, size_t j, size_t k) const {
             return activeIndex(i, j, k);
         }
-        void assertLGR(size_t localIndex) const;
+        void assertIndexLGR(size_t localIndex) const;
+
+        void assertLabelLGR(std::string label) const;
 
         void save(const std::string& filename, bool formatted, const std::vector<Opm::NNCdata>& nnc, const Opm::UnitSystem& units) const;
         /*
@@ -171,7 +175,7 @@ namespace Opm {
         const std::vector<int>& getActiveMap() const;
 
         void init_lgr_cells(const LgrCollection& lgr_input); 
-        void create_lgr_cells_tree(const LgrCollection& lgr_input);
+        void create_lgr_cells_tree(const LgrCollection& );
         void init_lgr_global_cells_index();
         void init_lgr_cells_index();
         /// \brief get cell center, and center and normal of bottom face
@@ -253,6 +257,7 @@ namespace Opm {
         std::vector<std::string> lgr_children_labels;
         std::vector<std::size_t> lgr_active_index;
         std::vector<std::size_t> lgr_level_active_map;
+        std::vector<std::string> all_lgr_labels;
 
 
 
@@ -328,7 +333,7 @@ namespace Opm {
         void initGrid(const Deck&, const int* actnum);
         void initCornerPointGrid(const Deck&);
         void assertCornerPointKeywords(const Deck&);
-
+        void save_all_lgr_labels(const LgrCollection& );
         static bool hasDTOPSKeywords(const Deck&);
         static void assertVectorSize(const std::vector<double>& vector, size_t expectedSize, const std::string& msg);
 
@@ -362,7 +367,6 @@ namespace Opm {
                      vec_size_t father_i_list, vec_size_t father_j_list,
                      vec_size_t father_k_list);
       ~EclipseGridLGR() = default;
-      size_t getTotalActiveLGR();
       vec_size_t getFatherGlobalID() const;
       void set_lgr_global_counter(std::size_t counter){
         lgr_global_counter = counter;
