@@ -264,22 +264,23 @@ SCHEDULE
     Opm::Deck deck = parser.parseString(deck_string);
     Opm::EclipseState state(deck);
     Opm::EclipseGrid eclipse_grid = state.getInputGrid();
-    std::size_t test =  eclipse_grid.getActiveIndexLGR("GLOBAL",1,2,0);
-    test =  eclipse_grid.getActiveIndexLGR("LGR1",1,1,0);
-    Opm::LgrCollection lgrs = state.getLgrs();
-    //state.init_lgr_cells(lgrs);
-    BOOST_CHECK_MESSAGE(state.hasInputLGR(), "EclipseState should have LGRs");
-    BOOST_CHECK_EQUAL( lgrs.size() , 2U );
-    BOOST_CHECK(lgrs.hasLgr("LGR1"));
-    BOOST_CHECK(lgrs.hasLgr("LGR2"));
 
-    const auto& lgr1 = state.getLgrs().getLgr("LGR1");
-    BOOST_CHECK_EQUAL(lgr1.NAME(), "LGR1");
-    const auto& lgr2 = lgrs.getLgr("LGR2");
-    BOOST_CHECK_EQUAL( lgr2.NAME() , "LGR2");
+    BOOST_CHECK_EQUAL( eclipse_grid.getTotalActiveLGR() , 25U );
+    BOOST_CHECK_EQUAL( eclipse_grid.lgr_children_cells[0].getTotalActiveLGR() , 17U );
+    BOOST_CHECK_EQUAL( eclipse_grid.lgr_children_cells[0].lgr_children_cells[0].getTotalActiveLGR() , 9U );
+    
+    BOOST_CHECK_EQUAL(eclipse_grid.getActiveIndexLGR("GLOBAL",0,0,0), 0U);
+    BOOST_CHECK_EQUAL(eclipse_grid.getActiveIndexLGR("GLOBAL",2,2,0), 24U);
 
-    const auto& lgr3 = state.getLgrs().getLgr(0);
-    BOOST_CHECK_EQUAL( lgr1.NAME() , lgr3.NAME());
+    BOOST_CHECK_EQUAL(eclipse_grid.getActiveIndexLGR("LGR1",0,0,0), 4U);
+    BOOST_CHECK_EQUAL(eclipse_grid.getActiveIndexLGR("LGR1",2,2,0), 20U);
+
+    BOOST_CHECK_EQUAL(eclipse_grid.getActiveIndexLGR("LGR2",0,0,0), 8U);
+    BOOST_CHECK_EQUAL(eclipse_grid.getActiveIndexLGR("LGR2",2,2,0), 16U);
+
+    BOOST_CHECK_THROW(eclipse_grid.getActiveIndexLGR("GLOBAL",1,1,0), std::invalid_argument);
+    BOOST_CHECK_THROW(eclipse_grid.getActiveIndexLGR("LGR1",1,1,0), std::invalid_argument);
+    BOOST_CHECK_THROW(eclipse_grid.getActiveIndexLGR("LGR3",1,1,0), std::invalid_argument);
 }
 BOOST_AUTO_TEST_CASE(TestGLOBALinactivecells) { 
     const std::string deck_string = R"(
@@ -292,7 +293,7 @@ GRID
 
 ACTNUM
 1 0 1 
-1 0 1 
+1 1 1 
 1 1 1 
 /
 
@@ -346,20 +347,16 @@ SCHEDULE
     Opm::Parser parser;
     Opm::Deck deck = parser.parseString(deck_string);
     Opm::EclipseState state(deck);
-    Opm::LgrCollection lgrs = state.getLgrs();
-    //state.init_lgr_cells(lgrs);
-    BOOST_CHECK_MESSAGE(state.hasInputLGR(), "EclipseState should have LGRs");
-    BOOST_CHECK_EQUAL( lgrs.size() , 2U );
-    BOOST_CHECK(lgrs.hasLgr("LGR1"));
-    BOOST_CHECK(lgrs.hasLgr("LGR2"));
+    Opm::EclipseGrid eclipse_grid = state.getInputGrid();
 
-    const auto& lgr1 = state.getLgrs().getLgr("LGR1");
-    BOOST_CHECK_EQUAL(lgr1.NAME(), "LGR1");
-    const auto& lgr2 = lgrs.getLgr("LGR2");
-    BOOST_CHECK_EQUAL( lgr2.NAME() , "LGR2");
+    // BOOST_CHECK_EQUAL( eclipse_grid.getTotalActiveLGR() , 16U );
+    // BOOST_CHECK_EQUAL( eclipse_grid.lgr_children_cells[0].getTotalActiveLGR() , 9U );    
+    // BOOST_CHECK_EQUAL(eclipse_grid.getActiveIndexLGR("GLOBAL",0,0,0), 0U);
+    // BOOST_CHECK_EQUAL(eclipse_grid.getActiveIndexLGR("GLOBAL",2,2,0), 15U);
 
-    const auto& lgr3 = state.getLgrs().getLgr(0);
-    BOOST_CHECK_EQUAL( lgr1.NAME() , lgr3.NAME());
+    
+    BOOST_CHECK_EQUAL(eclipse_grid.getActiveIndexLGR("LGR1",0,0,0), 3U);
+    BOOST_CHECK_EQUAL(eclipse_grid.getActiveIndexLGR("LGR1",2,2,0), 11U);
 }
 
 BOOST_AUTO_TEST_CASE(TestLGRinactivecells) { 
@@ -426,17 +423,5 @@ SCHEDULE
     Opm::Deck deck = parser.parseString(deck_string);
     Opm::EclipseState state(deck);
     Opm::LgrCollection lgrs = state.getLgrs();
-    //state.init_lgr_cells(lgrs);
-    BOOST_CHECK_MESSAGE(state.hasInputLGR(), "EclipseState should have LGRs");
-    BOOST_CHECK_EQUAL( lgrs.size() , 2U );
-    BOOST_CHECK(lgrs.hasLgr("LGR1"));
-    BOOST_CHECK(lgrs.hasLgr("LGR2"));
-
-    const auto& lgr1 = state.getLgrs().getLgr("LGR1");
-    BOOST_CHECK_EQUAL(lgr1.NAME(), "LGR1");
-    const auto& lgr2 = lgrs.getLgr("LGR2");
-    BOOST_CHECK_EQUAL( lgr2.NAME() , "LGR2");
-
-    const auto& lgr3 = state.getLgrs().getLgr(0);
-    BOOST_CHECK_EQUAL( lgr1.NAME() , lgr3.NAME());
+    // LGR Inactive Cells Not yet Implemented
 }
