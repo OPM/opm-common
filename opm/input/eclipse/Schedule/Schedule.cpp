@@ -2035,14 +2035,19 @@ namespace {
                 Glo.add_group(GasLiftGroup(rst_group));
         }
 
+        const auto& vfpprod = this->snapshots.back().vfpprod;
         for (const auto& rst_well : rst_state.wells) {
+            std::optional<VFPProdTable::ALQ_TYPE> alq_type = vfpprod.has(rst_well.vfp_table)
+                                                             ? std::optional(vfpprod.get(rst_well.vfp_table).getALQType())
+                                                             : std::nullopt;
             auto well = Well {
                 rst_well,
                 report_step,
                 rst_state.header.histctl_override,
                 tracer_config,
                 this->m_static.m_unit_system,
-                rst_state.header.udq_undefined
+                rst_state.header.udq_undefined,
+                alq_type
             };
 
             auto rst_connections = std::vector<Connection> {};

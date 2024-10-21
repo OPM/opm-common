@@ -75,6 +75,7 @@ public:
     void assert_numeric() const;
     void assert_numeric(const std::string& error_msg) const;
     const Dimension& get_dim() const;
+    void set_dim(const Dimension& new_dim);
 
     bool operator==(const UDAValue& other) const;
     bool operator!=(const UDAValue& other) const;

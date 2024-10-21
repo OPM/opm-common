@@ -407,7 +407,8 @@ public:
          int rst_whistctl_cmode,
          const TracerConfig& tracer_config,
          const UnitSystem& unit_system,
-         double udq_undefined);
+         double udq_undefined,
+         const std::optional<VFPProdTable::ALQ_TYPE>& alq_type);
 
     static Well serializationTestObject();
 
