@@ -369,7 +369,6 @@ public:
 
         void init_history(const DeckRecord& record);
         void init_vfp(const std::optional<VFPProdTable::ALQ_TYPE>& alq_type, const int vfp_table_nr, const UnitSystem& unit_system, const DeckRecord& record);
-        void updateALQDimension(const VFPProdTable& vfptable, const UnitSystem& usys);
 
         WellProductionProperties(const DeckRecord& record);
 
