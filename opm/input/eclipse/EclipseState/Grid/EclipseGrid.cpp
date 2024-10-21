@@ -1979,10 +1979,36 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
       } 
     }
 
+    std::size_t EclipseGrid::getActiveIndexLGR(std::string label, std::size_t localIndex) const{
+        assertLabelLGR(label);
+        return ActiveIndexLGR(label, localIndex);
+    };
+
     size_t EclipseGrid::getActiveIndexLGR(std::string label, size_t i, size_t j, size_t k) const{
         assertLabelLGR(label);
         return ActiveIndexLGR(label,i,j,k);
     }
+
+    size_t EclipseGrid::ActiveIndexLGR(std::string label, std::size_t localIndex) const{
+        if (lgr_label.compare(label) == 0 ){
+        //  this->assertIJK(localIndex);
+            std::size_t local_global_ind = getActiveIndex(localIndex);
+            this->assertIndexLGR(local_global_ind);
+            return lgr_level_active_map[local_global_ind] + lgr_global_counter;
+        }
+        else if(lgr_children_cells.size() == 0){
+            return 0;
+        }
+        else{
+            std::size_t local_global_ind = 0;
+            for (const auto& lgr_cell : lgr_children_cells) {
+                // better add the bases a priori
+                local_global_ind += lgr_cell.ActiveIndexLGR(label, localIndex);
+            }
+            return local_global_ind;
+        }   
+    }
+
 
     size_t EclipseGrid::ActiveIndexLGR(std::string label, size_t i, size_t j, size_t k) const{
         if (lgr_label.compare(label) == 0 ){
@@ -2019,10 +2045,7 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
     }  
 
 
-    std::size_t EclipseGrid::getActiveIndexLGR(std::string label, std::size_t localIndex) const{
-        throw std::runtime_error("Not yet implemented.");
-        return 0;
-    };
+
 
 
     void EclipseGrid::init_lgr_cells(const LgrCollection& lgr_input) {
