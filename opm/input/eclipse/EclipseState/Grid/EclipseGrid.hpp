@@ -96,7 +96,7 @@ namespace Opm {
         size_t activeIndex(size_t i, size_t j, size_t k) const;
         size_t activeIndex(size_t globalIndex) const;
 
-        size_t getTotalActiveLGR();
+        size_t getTotalActiveLGR() const;
         size_t getActiveIndexLGR(std::string label, size_t i, size_t j, size_t k) const;
         size_t ActiveIndexLGR(std::string label, size_t i, size_t j, size_t k) const;
         size_t getActiveIndexLGR(std::string label, size_t localIndex) const;
