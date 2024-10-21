@@ -19,6 +19,7 @@
 
 //#include <opm/input/eclipse/ /Grid/LgrCollection.hpp>
 #include <cstddef>
+#include <stdexcept>
 #include <vector>
 #define _USE_MATH_DEFINES
 
@@ -2003,21 +2004,24 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
         }   
     }
     
-    std::size_t EclipseGrid::getTotalActiveLGR()
+    std::size_t EclipseGrid::getTotalActiveLGR() const
     {
         std::size_t num_coarse_level =  getNumActive();
         std::size_t num_fine_cells = 0;
-        for(auto fine_cells : lgr_children_cells)
+        std::size_t num_spanned_cells = 0;
+        for(const auto&  fine_cells : lgr_children_cells)
         {
             num_fine_cells += fine_cells.getTotalActiveLGR();
+            num_spanned_cells += fine_cells.father_global.size();
+
         }
-        return num_coarse_level + num_fine_cells - lgr_children_labels.size();
+        return num_coarse_level + num_fine_cells - num_spanned_cells;
     }  
 
 
-    size_t EclipseGrid::getActiveIndexLGR(std::string label, size_t localIndex) const{
-        std::size_t var = 0;
-        return var;
+    std::size_t EclipseGrid::getActiveIndexLGR(std::string label, std::size_t localIndex) const{
+        throw std::runtime_error("Not yet implemented.");
+        return 0;
     };
 
 
