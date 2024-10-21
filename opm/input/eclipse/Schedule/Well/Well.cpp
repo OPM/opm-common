@@ -19,6 +19,8 @@
 
 #include <opm/input/eclipse/Schedule/Well/Well.hpp>
 
+#include <opm/common/OpmLog/OpmLog.hpp>
+
 #include <opm/io/eclipse/rst/well.hpp>
 #include <opm/output/eclipse/VectorItems/well.hpp>
 
@@ -284,7 +286,8 @@ Well::Well(const RestartIO::RstWell& rst_well,
            const int rst_whistctl_cmode,
            const TracerConfig& tracer_config,
            const UnitSystem& unit_system_arg,
-           const double udq_undefined_arg) :
+           const double udq_undefined_arg,
+           const std::optional<VFPProdTable::ALQ_TYPE>& alq_type) :
     wname(rst_well.name),
     group_name(rst_well.group),
     init_step(report_step),
@@ -332,7 +335,16 @@ Well::Well(const RestartIO::RstWell& rst_well,
         p->LiquidRate.update(rst_well.lrat_target) ;
         p->ResVRate.update(rst_well.resv_target);
         p->VFPTableNumber = rst_well.vfp_table;
-        p->ALQValue.update(rst_well.alq_value); // Uncertain of whether the dimension comes through correct here.
+        p->ALQValue.update(rst_well.alq_value);
+        if (alq_type) {
+            p->ALQValue.set_dim(VFPProdTable::ALQDimension(*alq_type, unit_system_arg));
+        } else {
+            if (rst_well.vfp_table != 0) {
+                // This may be OK for restart wells that never re-open, so warning only.
+                OpmLog::warning(fmt::format("Well {}: Trying to restore the ALQ dimension for VFP table {}, which has not been loaded.", wname, rst_well.vfp_table));
+            }
+        }
+
         p->predictionMode = this->prediction_mode;
 
         if (rst_well.orat_target != 0)

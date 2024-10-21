@@ -171,6 +171,9 @@ const Dimension& UDAValue::get_dim() const {
     return this->dim;
 }
 
+void UDAValue::set_dim(const Dimension& new_dim) {
+    this->dim = new_dim;
+}
 
 bool UDAValue::operator==(const UDAValue& other) const {
     if (this->double_value != other.double_value)
