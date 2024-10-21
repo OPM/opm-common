@@ -440,7 +440,7 @@ SCHEDULE
    
    
     BOOST_CHECK_EQUAL(eclipse_grid.getActiveIndexLGR("GLOBAL",0U), 0U);
-    BOOST_CHECK_EQUAL(eclipse_grid.getActiveIndexLGR("GLOBAL",7U), 15U);
+    BOOST_CHECK_EQUAL(eclipse_grid.getActiveIndexLGR("GLOBAL",8U), 15U);
 
     
     BOOST_CHECK_EQUAL(eclipse_grid.getActiveIndexLGR("LGR1",0,0,0), 3U);
