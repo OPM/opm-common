@@ -596,8 +596,6 @@ BOOST_AUTO_TEST_CASE(ECL_FORMATTED)
 
                 BOOST_CHECK_MESSAGE(rst.hasKey("SWAT"), "Restart file must have SWAT vector");
                 BOOST_CHECK_MESSAGE(!rst.hasKey("EXTRA"), "Restart file must NOT have EXTRA vector");
-                BOOST_CHECK_MESSAGE(!rst.hasKey("OPM_IWEL"), "Restart file must NOT have OPM_IWEL vector");
-                BOOST_CHECK_MESSAGE(!rst.hasKey("OPM_XWEL"), "Restart file must NOT have OPM_XWEL vector");
             }
         }
     }

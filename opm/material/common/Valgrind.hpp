@@ -31,15 +31,17 @@
 #include <valgrind/memcheck.h>
 #endif
 
+#include <opm/common/utility/gpuDecorators.hpp>
+
 namespace Opm {
 namespace Valgrind {
 /*!
  * \ingroup Valgrind
  * \brief Returns whether the program is running under Valgrind or not.
  */
-inline bool IsRunning()
+OPM_HOST_DEVICE inline bool IsRunning()
 {
-#if !defined NDEBUG && HAVE_VALGRIND
+#if !defined NDEBUG && HAVE_VALGRIND && !OPM_IS_INSIDE_DEVICE_FUNCTION
     return RUNNING_ON_VALGRIND;
 #else
     return false;
@@ -71,9 +73,9 @@ inline bool IsRunning()
  *         occupied by the object.
  */
 template <class T>
-inline bool CheckDefined([[maybe_unused]] const T& value)
+OPM_HOST_DEVICE inline bool CheckDefined([[maybe_unused]] const T& value)
 {
-#if !defined NDEBUG && HAVE_VALGRIND
+#if !defined NDEBUG && HAVE_VALGRIND && !OPM_IS_INSIDE_DEVICE_FUNCTION
     auto tmp = VALGRIND_CHECK_MEM_IS_DEFINED(&value, sizeof(T));
     return tmp == 0;
 #else
@@ -103,9 +105,10 @@ inline bool CheckDefined([[maybe_unused]] const T& value)
  *         occupied by the object.
  */
 template <class T>
-inline bool CheckAddressable([[maybe_unused]] const T& value)
+OPM_HOST_DEVICE inline bool CheckAddressable([[maybe_unused]] const T& value)
 {
-#if !defined NDEBUG && HAVE_VALGRIND
+// if we run in debug mode AND we have valgrind AND we are NOT in a gpu function
+#if !defined NDEBUG && HAVE_VALGRIND && !OPM_IS_INSIDE_DEVICE_FUNCTION
     auto tmp = VALGRIND_CHECK_MEM_IS_ADDRESSABLE(&value, sizeof(T));
     return tmp == 0;
 #else
@@ -139,10 +142,10 @@ inline bool CheckAddressable([[maybe_unused]] const T& value)
  *         occupied by the array.
  */
 template <class T>
-inline bool CheckDefined([[maybe_unused]] const T* value,
+OPM_HOST_DEVICE inline bool CheckDefined([[maybe_unused]] const T* value,
                          [[maybe_unused]] int size)
 {
-#if !defined NDEBUG && HAVE_VALGRIND
+#if !defined NDEBUG && HAVE_VALGRIND && !OPM_IS_INSIDE_DEVICE_FUNCTION
     auto tmp = VALGRIND_CHECK_MEM_IS_DEFINED(value, size*sizeof(T));
     return tmp == 0;
 #else
@@ -168,9 +171,9 @@ inline bool CheckDefined([[maybe_unused]] const T* value,
  * \param value The object which's memory valgrind should be told is undefined
  */
 template <class T>
-inline void SetUndefined([[maybe_unused]] const T& value)
+OPM_HOST_DEVICE inline void SetUndefined([[maybe_unused]] const T& value)
 {
-#if !defined NDEBUG && HAVE_VALGRIND
+#if !defined NDEBUG && HAVE_VALGRIND && !OPM_IS_INSIDE_DEVICE_FUNCTION
     VALGRIND_MAKE_MEM_UNDEFINED(&value, sizeof(T));
 #endif
 }
@@ -194,10 +197,10 @@ inline void SetUndefined([[maybe_unused]] const T& value)
  * \param size The size of the array in number of objects
  */
 template <class T>
-inline void SetUndefined([[maybe_unused]] const T* value,
+OPM_HOST_DEVICE inline void SetUndefined([[maybe_unused]] const T* value,
                          [[maybe_unused]] int size)
 {
-#if !defined NDEBUG && HAVE_VALGRIND
+#if !defined NDEBUG && HAVE_VALGRIND && !OPM_IS_INSIDE_DEVICE_FUNCTION
     VALGRIND_MAKE_MEM_UNDEFINED(value, size*sizeof(T));
 #endif
 }
@@ -219,9 +222,9 @@ inline void SetUndefined([[maybe_unused]] const T* value,
  * \param value The object which's memory valgrind should consider as defined
  */
 template <class T>
-inline void SetDefined([[maybe_unused]] const T& value)
+OPM_HOST_DEVICE inline void SetDefined([[maybe_unused]] const T& value)
 {
-#if !defined NDEBUG && HAVE_VALGRIND
+#if !defined NDEBUG && HAVE_VALGRIND && !OPM_IS_INSIDE_DEVICE_FUNCTION
     VALGRIND_MAKE_MEM_DEFINED(&value, sizeof(T));
 #endif
 }
@@ -245,10 +248,10 @@ inline void SetDefined([[maybe_unused]] const T& value)
  * \param n The size of the array in number of objects
  */
 template <class T>
-inline void SetDefined([[maybe_unused]] const T* value,
+OPM_HOST_DEVICE inline void SetDefined([[maybe_unused]] const T* value,
                        [[maybe_unused]] int n)
 {
-#if !defined NDEBUG && HAVE_VALGRIND
+#if !defined NDEBUG && HAVE_VALGRIND && !OPM_IS_INSIDE_DEVICE_FUNCTION
     VALGRIND_MAKE_MEM_DEFINED(value, n*sizeof(T));
 #endif
 }
@@ -270,9 +273,9 @@ inline void SetDefined([[maybe_unused]] const T* value,
  * \param value The object which's memory valgrind should complain if accessed
  */
 template <class T>
-inline void SetNoAccess([[maybe_unused]] const T& value)
+OPM_HOST_DEVICE inline void SetNoAccess([[maybe_unused]] const T& value)
 {
-#if !defined NDEBUG && HAVE_VALGRIND
+#if !defined NDEBUG && HAVE_VALGRIND && !OPM_IS_INSIDE_DEVICE_FUNCTION
     VALGRIND_MAKE_MEM_NOACCESS(&value, sizeof(T));
 #endif
 }
@@ -294,10 +297,10 @@ inline void SetNoAccess([[maybe_unused]] const T& value)
  * \param size The size of the array in number of objects
  */
 template <class T>
-inline void SetNoAccess([[maybe_unused]] const T* value,
+OPM_HOST_DEVICE inline void SetNoAccess([[maybe_unused]] const T* value,
                         [[maybe_unused]] int size)
 {
-#if !defined NDEBUG && HAVE_VALGRIND
+#if !defined NDEBUG && HAVE_VALGRIND && !OPM_IS_INSIDE_DEVICE_FUNCTION
     VALGRIND_MAKE_MEM_NOACCESS(value, size*sizeof(T));
 #endif
 }

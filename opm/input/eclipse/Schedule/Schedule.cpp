@@ -111,6 +111,20 @@
 #include <fmt/chrono.h>
 #include <fmt/format.h>
 
+namespace {
+
+    bool name_match(const std::string& pattern, const std::string& name) {
+        return Opm::shmatch(pattern, name);
+    }
+
+    bool name_match_any(const std::unordered_set<std::string>& patterns, const std::string& name) {
+        for (const auto& pattern : patterns)
+            if (name_match(pattern, name)) return true;
+
+        return false;
+    }
+}
+
 namespace Opm {
 
     Schedule::Schedule( const Deck& deck,
@@ -334,6 +348,7 @@ namespace Opm {
         result.m_static = ScheduleStatic::serializationTestObject();
         result.m_sched_deck = ScheduleDeck::serializationTestObject();
         result.action_wgnames = Action::WGNames::serializationTestObject();
+        result.potential_wellopen_patterns = std::unordered_set<std::string> {"W1"};
         result.exit_status = EXIT_FAILURE;
         result.snapshots = { ScheduleState::serializationTestObject() };
         result.restart_output = WriteRestartFileEvents::serializationTestObject();
@@ -739,6 +754,16 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                 this->action_wgnames.add_well(wname);
                 this->action_wgnames.add_group(gname);
             }
+        } else if (keyword.is<ParserKeywords::WELOPEN>()  ||
+                   keyword.is<ParserKeywords::WCONHIST>() ||
+                   keyword.is<ParserKeywords::WCONPROD>() ||
+                   keyword.is<ParserKeywords::WCONINJH>() ||
+                   keyword.is<ParserKeywords::WCONINJE>()) {      // Add any other keywords that can open a well..
+
+            for (const auto& record : keyword) {
+                const std::string& wname_pattern = record.getItem("WELL").getTrimmedString(0);
+                this->potential_wellopen_patterns.insert(wname_pattern);
+            }
         }
     }
 
@@ -845,6 +870,9 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
       Well pointer that will go stale and needs to be refreshed.
     */
     bool Schedule::updateWellStatus( const std::string& well_name, std::size_t reportStep , Well::Status status, std::optional<KeywordLocation> location) {
+        if (status != Well::Status::SHUT) {
+            this->potential_wellopen_patterns.insert(well_name);
+        }
         auto well2 = this->snapshots[reportStep].wells.get(well_name);
         if (well2.getConnections().empty() && status == Well::Status::OPEN) {
             if (location) {
@@ -1102,7 +1130,7 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
         } else {
             std::transform(group.wells().begin(), group.wells().end(),
                            std::back_inserter(wells),
-                           [this, timeStep](const auto& well_name)
+                           [this, timeStep](const auto& well_name) -> decltype(auto)
                            {
                                return this->getWell(well_name, timeStep);
                            });
@@ -1144,17 +1172,22 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
 
     std::vector<Well> Schedule::getWells(std::size_t timeStep) const
     {
-        std::vector<Well> wells;
-        if (timeStep >= this->snapshots.size())
-            throw std::invalid_argument("timeStep argument beyond the length of the simulation");
+        auto wells = std::vector<Well>{};
+
+        if (timeStep >= this->snapshots.size()) {
+            throw std::invalid_argument {
+                fmt::format("timeStep {} exceeds simulation run's "
+                            "number of report steps ({})",
+                            timeStep, this->snapshots.size())
+            };
+        }
 
         const auto& well_order = this->snapshots[timeStep].well_order();
         std::transform(well_order.begin(), well_order.end(),
                        std::back_inserter(wells),
-                       [this, timeStep](const auto& wname)
-                       {
-                           return this->snapshots[timeStep].wells.get(wname);
-                       });
+                       [&wells = this->snapshots[timeStep].wells]
+                       (const auto& wname) -> decltype(auto)
+                       { return wells.get(wname); });
 
         return wells;
     }
@@ -1162,6 +1195,36 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
     std::vector<Well> Schedule::getWellsatEnd() const {
         return this->getWells(this->snapshots.size() - 1);
     }
+
+    std::vector<Well> Schedule::getActiveWellsAtEnd() const {
+        std::vector<Well> wells;
+        const auto lastStep = this->snapshots.size() - 1;
+        const auto& well_order = this->snapshots[lastStep].well_order();
+
+        for (const auto& wname : well_order) {
+            const auto& well = this->snapshots[lastStep].wells.get(wname);
+            if (well.hasProduced() || well.hasInjected() || name_match_any(this->potential_wellopen_patterns, wname))
+                wells.push_back(well);
+        }
+
+        return wells;
+    }
+
+    std::vector<std::string> Schedule::getInactiveWellNamesAtEnd() const {
+        std::vector<std::string> well_names;
+        const auto lastStep = this->snapshots.size() - 1;
+        const auto& well_order = this->snapshots[lastStep].well_order();
+
+        for (const auto& wname : well_order) {
+            const auto& well = this->snapshots[lastStep].wells.get(wname);
+            if (well.hasProduced() || well.hasInjected() || name_match_any(this->potential_wellopen_patterns, wname))
+                continue;
+            well_names.push_back(wname);
+        }
+
+        return well_names;
+    }
+
 
     const Well& Schedule::getWellatEnd(const std::string& well_name) const {
         return this->getWell(well_name, this->snapshots.size() - 1);
@@ -1676,10 +1739,11 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
         }
 
         if (reportStep < this->m_sched_deck.size() - 1) {
+            const auto keepKeywords = true;
             const auto log_to_debug = true;
             this->iterateScheduleSection(reportStep + 1, this->m_sched_deck.size(),
                                          parseContext, errors, grid, &target_wellpi,
-                                         prefix, log_to_debug);
+                                         prefix, keepKeywords, log_to_debug);
         }
 
         OpmLog::debug("\\----------------------------------------------------------------------");
@@ -1884,6 +1948,7 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
                this->m_treat_critical_as_non_critical == data.m_treat_critical_as_non_critical &&
                this->m_sched_deck == data.m_sched_deck &&
                this->action_wgnames == data.action_wgnames &&
+               this->potential_wellopen_patterns == data.potential_wellopen_patterns &&
                this->exit_status == data.exit_status &&
                this->snapshots == data.snapshots &&
                this->restart_output == data.restart_output &&

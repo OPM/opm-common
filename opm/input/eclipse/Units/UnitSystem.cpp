@@ -1485,6 +1485,7 @@ namespace {
 
         case UDAControl::WCONPROD_GRAT:
         case UDAControl::WELTARG_GRAT:
+        case UDAControl::GCONPROD_GAS_TARGET:
         case UDAControl::WCONPROD_LIFT:   // @TODO@ Get this working also for ALQ types other than GRAT
         case UDAControl::WELTARG_LIFT:
             return this->getDimension(UnitSystem::measure::gas_surface_rate);

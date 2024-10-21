@@ -123,17 +123,12 @@ namespace Opm {
         2. You can optionally ask the RestartIO::save() function to save the
            solution in double precision.
 
-        3. The RestartIO::save() function will save opm specific vector OPM_IWEL
-           and OPM_XWEL.
-
       ecl_compatible_restart = true:
 
         1. The 'extra' fields in the RestartValue are silently ignored.
 
         2. If request double precision solution data that is silently ignored,
            it will be float.
-
-        3. The OPM_IWEL and OPM_XWEL vectors will not be written.
 
       Observe that the solution data in the RestartValue is passed
       unconditionally to the solution section in the restart file, so if you
@@ -144,10 +139,9 @@ namespace Opm {
 
 
 
-    class IOConfig {
-
+    class IOConfig
+    {
     public:
-
         IOConfig() = default;
         explicit IOConfig(const Deck&);
         explicit IOConfig(const std::string& input_path);

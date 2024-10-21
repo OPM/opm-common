@@ -495,28 +495,27 @@ class MonotCubicInterpolator {
 private:
 
    // Data structure to store x- and f-values
-   std::map<double, double> data;
+   std::map<double, double> data{};
 
    // Data structure to store x- and d-values
-   mutable std::map<double, double> ddata;
-
+   mutable std::map<double, double> ddata{};
 
    // Storage containers for precomputed interpolation data
    //   std::vector<double> dvalues; // derivatives in Hermite interpolation.
 
    // Flag to determine whether the boolean strictlyMonotone can be
    // trusted.
-   mutable bool strictlyMonotoneCached;
-   mutable bool monotoneCached; /* only monotone, not stricly montone */
+   mutable bool strictlyMonotoneCached{false};
+   mutable bool monotoneCached{false}; /* only monotone, not stricly montone */
 
-   mutable bool strictlyMonotone;
-   mutable bool monotone;
+   mutable bool strictlyMonotone{false};
+   mutable bool monotone{false};
 
    // if strictlyMonotone is true (and can be trusted), the two next are meaningful
-   mutable bool strictlyDecreasing;
-   mutable bool strictlyIncreasing;
-   mutable bool decreasing;
-   mutable bool increasing;
+   mutable bool strictlyDecreasing{false};
+   mutable bool strictlyIncreasing{false};
+   mutable bool decreasing{false};
+   mutable bool increasing{false};
 
 
    /* Hermite basis functions, t \in [0,1] ,

@@ -19,6 +19,7 @@
 #ifndef OPM_IO_ESMRY_HPP
 #define OPM_IO_ESMRY_HPP
 
+#include <algorithm>
 #include <chrono>
 #include <filesystem>
 #include <iosfwd>

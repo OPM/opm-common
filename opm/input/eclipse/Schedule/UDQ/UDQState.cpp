@@ -19,13 +19,18 @@
 
 #include <opm/input/eclipse/Schedule/UDQ/UDQState.hpp>
 
+#include <opm/input/eclipse/Schedule/UDQ/UDQEnums.hpp>
+
+#include <opm/output/eclipse/WindowedArray.hpp>
+
 #include <opm/io/eclipse/rst/state.hpp>
 
 #include <cstddef>
+#include <functional>
 #include <stdexcept>
 #include <string>
-#include <utility>
 #include <unordered_map>
+#include <utility>
 
 #include <fmt/format.h>
 
@@ -129,6 +134,40 @@ void add_results(const std::string&           udq_key,
     }
 }
 
+// Load restart values for UDQs defined at the group or well levels.
+void load_restart_values(const Opm::RestartIO::RstUDQ& udq,
+                         SMap<double>&                 values)
+{
+    const auto& wgnames = udq.entityNames();
+    const auto& nameIdx = udq.nameIndex();
+    const auto n = udq.numEntities();
+
+    for (auto i = 0*n; i < n; ++i) {
+        for (const auto& subValuePair : udq[i]) {
+            values.insert_or_assign(wgnames[nameIdx[i]],
+                                    subValuePair.second);
+        }
+    }
+}
+
+// Load restart values for UDQs defined at the segment level.
+void load_segment_restart_values(const Opm::RestartIO::RstUDQ& udq,
+                                 SKMap<std::size_t, double>&   values)
+{
+    const auto& wgnames = udq.entityNames();
+    const auto& nameIdx = udq.nameIndex();
+    const auto n = udq.numEntities();
+
+    for (auto i = 0*n; i < n; ++i) {
+        auto& segment_values = values[wgnames[nameIdx[i]]];
+
+        for (const auto& [segIx, value] : udq[i]) {
+            // Note: +1 since segIx is a zero-based segment number.
+            segment_values.insert_or_assign(segIx + 1, value);
+        }
+    }
+}
+
 double get_scalar(const SMap<double>& values,
                   const std::string&  udq_key,
                   const double        undef_value)
@@ -166,47 +205,33 @@ namespace Opm {
 void UDQState::load_rst(const RestartIO::RstState& rst_state)
 {
     for (const auto& udq : rst_state.udqs) {
-        if (udq.is_define()) {
-            if (udq.var_type == UDQVarType::WELL_VAR) {
-                auto& values = this->well_values[udq.name];
-                for (const auto& [wname, value] : udq.values()) {
-                    values.insert_or_assign(wname, value);
-                }
+        // Note: Cases listed in order of increasing enumerator values from
+        // the UDQEnums.hpp header file (Opm::UDQVarType).
+        switch (udq.category) {
+        case UDQVarType::SCALAR:
+        case UDQVarType::FIELD_VAR:
+            if (udq.isScalar()) {
+                // There is a well defined scalar value in the 'udq' object
+                // for this scalar or field-level UDQ.
+                this->scalar_values.insert_or_assign(udq.name, udq.scalarValue());
             }
+            break;
 
-            if (udq.var_type == UDQVarType::GROUP_VAR) {
-                auto& values = this->group_values[udq.name];
-                for (const auto& [gname, value] : udq.values()) {
-                    values.insert_or_assign(gname, value);
-                }
-            }
+        case UDQVarType::SEGMENT_VAR:
+            load_segment_restart_values(udq, this->segment_values[udq.name]);
+            break;
 
-            if (const auto& field_value = udq.field_value(); field_value.has_value()) {
-                this->scalar_values[udq.name] = field_value.value();
-            }
-        }
-        else {
-            const auto value = udq.assign_value();
+        case UDQVarType::WELL_VAR:
+            load_restart_values(udq, this->well_values[udq.name]);
+            break;
 
-            if ((udq.var_type == UDQVarType::WELL_VAR) &&
-                ! udq.assign_selector().empty())
-            {
-                auto& values = this->well_values[udq.name];
-                for (const auto& wname : udq.assign_selector()) {
-                    values.insert_or_assign(wname, value);
-                }
-            }
+        case UDQVarType::GROUP_VAR:
+            load_restart_values(udq, this->group_values[udq.name]);
+            break;
 
-            if (udq.var_type == UDQVarType::GROUP_VAR) {
-                auto& values = this->group_values[udq.name];
-                for (const auto& gname : udq.assign_selector()) {
-                    values.insert_or_assign(gname, value);
-                }
-            }
-
-            if (udq.var_type == UDQVarType::FIELD_VAR) {
-                this->scalar_values[udq.name] = value;
-            }
+        default:
+            // Not currently supported
+            break;
         }
     }
 }
@@ -354,6 +379,37 @@ double UDQState::get_segment_var(const std::string& well,
     }
 
     return valPos->second;
+}
+
+void UDQState::exportSegmentUDQ(const std::string& var,
+                                const std::string& well,
+                                ExportRange&       output) const
+{
+    if (! is_udq(var)) {
+        throw std::logic_error {
+            fmt::format("Cannot evaluate non-UDQ variable '{}'", var)
+        };
+    }
+
+    auto varPos = this->segment_values.find(var);
+    if (varPos == this->segment_values.end()) { return; }
+
+    auto wellPos = varPos->second.find(well);
+    if (wellPos == varPos->second.end()) { return; }
+
+    for (const auto& [segment, value] : wellPos->second) {
+        if ((segment < 1) || (segment > output.size())) {
+            throw std::invalid_argument {
+                fmt::format("Segment number {} for well {} in "
+                            "UDQ {} is outside valid range "
+                            "1..{} for DUDS restart array",
+                            segment, well, var, output.size())
+            };
+        }
+
+        // Subtract 1 to convert 1-based segment number to an index.
+        output[segment - 1] = value;
+    }
 }
 
 bool UDQState::operator==(const UDQState& other) const

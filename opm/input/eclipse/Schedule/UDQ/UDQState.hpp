@@ -22,20 +22,25 @@
 
 #include <opm/input/eclipse/Schedule/UDQ/UDQSet.hpp>
 
+#include <opm/output/eclipse/WindowedArray.hpp>
+
 #include <cstddef>
 #include <string>
 #include <unordered_map>
 #include <utility>
 
-namespace Opm { namespace RestartIO {
+namespace Opm::RestartIO {
     struct RstState;
-}} // namespace Opm::RestartIO
+    class RstUDQ;
+} // namespace Opm::RestartIO
 
 namespace Opm {
 
 class UDQState
 {
 public:
+    using ExportRange = RestartIO::Helpers::WindowedArray<double>::WriteWindow;
+
     UDQState() = default;
     explicit UDQState(double undefined);
 
@@ -50,6 +55,10 @@ public:
     double get_group_var(const std::string& well, const std::string& var) const;
     double get_well_var(const std::string& well, const std::string& var) const;
     double get_segment_var(const std::string& well, const std::string& var, const std::size_t segment) const;
+
+    void exportSegmentUDQ(const std::string& var,
+                          const std::string& well,
+                          ExportRange&       output) const;
 
     void add_define(std::size_t report_step, const std::string& udq_key, const UDQSet& result);
     void add_assign(const std::string& udq_key, const UDQSet& result);

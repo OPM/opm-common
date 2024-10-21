@@ -65,8 +65,13 @@ protected:
     OPM_HOST_DEVICE void check() const
     {
 #if USE_OPM_CHECK_PARAM_FINALIZED
-        if (!finalized_)
+        if (!finalized_){
+#if OPM_IS_INSIDE_DEVICE_FUNCTION
+            assert(false && "Parameter class has not been finalized before usage!");
+#else
             throw std::runtime_error("Parameter class has not been finalized before usage!");
+#endif
+        }
 #endif
     }
 
