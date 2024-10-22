@@ -747,8 +747,14 @@ CF and Kh items for well {} must both be specified or both defaulted/negative)",
                                       [[maybe_unused]] const std::string&     wname,
                                       [[maybe_unused]] const KeywordLocation& location)
     {
-        this->coord[0].push_back(record.getItem("X").getSIDouble(0));
-        this->coord[1].push_back(record.getItem("Y").getSIDouble(0));
+        double x = record.getItem("X").getSIDouble(0);
+        double y = record.getItem("Y").getSIDouble(0);
+        const auto& mapaxes = grid.get_grid()->getMapAxes();
+        if (mapaxes.has_value())
+            mapaxes.value().inv_transform(x, y);
+
+        this->coord[0].push_back(x);
+        this->coord[1].push_back(y);
         this->coord[2].push_back(record.getItem("TVD").getSIDouble(0));
 
         this->md.push_back(record.getItem("MD").getSIDouble(0));
