@@ -75,6 +75,19 @@ public:
                 this->setSamplePoint(i, j, vals[i][j]);
     }
 
+    // Both CO2Tables and H2Tables have values of dimes [200][500]
+    // suboptimal hardcoding for now but easier than templating this function etc
+    UniformTabulated2DFunction(Scalar minX, Scalar maxX, unsigned m,
+                               Scalar minY, Scalar maxY, unsigned n,
+                               const double vals[200][500])
+    {
+        resize(minX, maxX, m, minY, maxY, n);
+
+        for (unsigned i = 0; i < m; ++i)
+            for (unsigned j = 0; j < n; ++j)
+                this->setSamplePoint(i, j, vals[i][j]);
+    }
+
     /*!
      * \brief Resize the tabulation to a new range.
      */
