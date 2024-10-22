@@ -94,11 +94,11 @@ namespace Opm {
         size_t activeIndex(size_t globalIndex) const;
 
         size_t getTotalActiveLGR() const;
-        size_t getActiveIndexLGR(std::string label, size_t i, size_t j, size_t k) const;
-        size_t getActiveIndexLGR(std::string label, size_t localIndex) const;
+        size_t getActiveIndexLGR(const std::string& label, size_t i, size_t j, size_t k) const;
+        size_t getActiveIndexLGR(const std::string& label, size_t localIndex) const;
 
-        size_t ActiveIndexLGR(std::string label, size_t i, size_t j, size_t k) const;
-        size_t ActiveIndexLGR(std::string label, std::size_t localIndex) const;
+        size_t activeIndexLGR(const std::string& label, size_t i, size_t j, size_t k) const;
+        size_t activeIndexLGR(const std::string& label, size_t localIndex) const;
 
         size_t getActiveIndex(size_t i, size_t j, size_t k) const {
             return activeIndex(i, j, k);
@@ -362,9 +362,9 @@ namespace Opm {
     public:
       using vec_size_t = std::vector<std::size_t>;
       EclipseGridLGR() = default;
-      EclipseGridLGR(std::string self_label, std::string father_label_, 
+      EclipseGridLGR(const std::string& self_label, const std::string& father_label_, 
                      int father_lgr_level, size_t nx, size_t ny, size_t nz, 
-                     vec_size_t father_lgr_infex);
+                     vec_size_t father_lgr_index);
       ~EclipseGridLGR() = default;
       vec_size_t getFatherGlobalID() const;
       void set_lgr_global_counter(std::size_t counter){
