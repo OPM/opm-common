@@ -293,7 +293,8 @@ int main(int argc, char **argv)
 
     std::string rootN = filename.substr(0,p);
     std::string extension = filename.substr(p,l-p);
-    std::transform(extension.begin(), extension.end(), extension.begin(), ::toupper);  
+    std::transform(extension.begin(), extension.end(), extension.begin(),
+                 [](unsigned char ckey){ return ::toupper(ckey);});  
     std::string resFile;
 
 
