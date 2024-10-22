@@ -859,6 +859,7 @@ list( APPEND PUBLIC_HEADER_FILES
       opm/material/components/Xylene.hpp
       opm/material/components/SimpleH2O.hpp
       opm/material/components/CO2.hpp
+      opm/material/components/CO2_non_static.hpp
       opm/material/components/Mesitylene.hpp
       opm/material/components/SimpleCO2.hpp
       opm/material/components/C10.hpp

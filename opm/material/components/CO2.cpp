@@ -37,8 +37,7 @@ CO2<double>::tabulatedEnthalpy = CO2Tables::tabulatedEnthalpy;
 template<>
 const UniformTabulated2DFunction<double>&
 CO2<double>::tabulatedDensity = CO2Tables::tabulatedDensity;
-template<>
-const double CO2<double>::brineSalinity = CO2Tables::brineSalinity;
+template const double CO2<double>::brineSalinity;
 
 template<>
 const UniformTabulated2DFunction<double>&
@@ -46,8 +45,7 @@ CO2<float>::tabulatedEnthalpy = CO2Tables::tabulatedEnthalpy;
 template<>
 const UniformTabulated2DFunction<double>&
 CO2<float>::tabulatedDensity = CO2Tables::tabulatedDensity;
-template<>
-const float CO2<float>::brineSalinity = CO2Tables::brineSalinity;
+template const float CO2<float>::brineSalinity;
 
 #if HAVE_QUAD
 template<>
@@ -56,8 +54,7 @@ CO2<quad>::tabulatedEnthalpy = CO2Tables::tabulatedEnthalpy;
 template<>
 const UniformTabulated2DFunction<double>&
 CO2<quad>::tabulatedDensity = CO2Tables::tabulatedDensity;
-template<>
-const quad CO2<quad>::brineSalinity = CO2Tables::brineSalinity;
+template const quad CO2<quad>::brineSalinity;
 #endif
 
 } // namespace Opm
