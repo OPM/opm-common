@@ -18,7 +18,6 @@
  */
 
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
-//#include <iostream>
 #include <opm/common/ErrorMacros.hpp>
 #include <opm/common/OpmLog/OpmLog.hpp>
 #include <opm/common/OpmLog/InfoLogger.hpp>
@@ -340,7 +339,6 @@ namespace Opm {
 
         m_lgrs = LgrCollection(gridSection, m_inputGrid);
         m_inputGrid.init_lgr_cells(m_lgrs);
-        //m_inputGrid.init_lgr_cells_index();
     }
 
 

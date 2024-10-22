@@ -16,15 +16,12 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
-#ifndef OPM_INPUT_ECLIPSE_ECLIPSESTATE_GRID_LGRCOLLECTION_HPP
-#define OPM_INPUT_ECLIPSE_ECLIPSESTATE_GRID_LGRCOLLECTION_HPP
+
 #include <opm/input/eclipse/EclipseState/Grid/LgrCollection.hpp>
-#endif // OPM_INPUT_ECLIPSE_ECLIPSESTATE_GRID_LGRCOLLECTION_HPP
 
 #ifndef OPM_PARSER_ECLIPSE_GRID_HPP
 #define OPM_PARSER_ECLIPSE_GRID_HPP
 #include <opm/input/eclipse/EclipseState/Grid/GridDims.hpp>
-//#include <opm/input/eclipse/EclipseState/Grid/LgrCollection.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/MapAxes.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/MinpvMode.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/PinchMode.hpp>
@@ -113,7 +110,7 @@ namespace Opm {
 
         void assertIndexLGR(size_t localIndex) const;
 
-        void assertLabelLGR(std::string label) const;
+        void assertLabelLGR(const std::string& label) const;
 
         void save(const std::string& filename, bool formatted, const std::vector<Opm::NNCdata>& nnc, const Opm::UnitSystem& units) const;
         /*
@@ -131,7 +128,6 @@ namespace Opm {
           applied in the 'THETA' direction; this will only apply if
           the theta keywords entered sum up to exactly 360 degrees!
         */
-        int lgr_level = 0;
         bool circle() const;
         bool isPinchActive() const;
         double getPinchThresholdThickness() const;
@@ -139,7 +135,6 @@ namespace Opm {
         PinchMode getMultzOption() const;
         PinchMode getPinchGapMode() const;
         double getPinchMaxEmptyGap() const;
-        std::string lgr_label = "GLOBAL";
         MinpvMode getMinpvMode() const;
         const std::vector<double>& getMinpvVector( ) const;
 
@@ -261,21 +256,21 @@ namespace Opm {
         static bool hasEqualDVDEPTHZ(const Deck&);
         static bool allEqual(const std::vector<double> &v);
         std::vector<EclipseGridLGR> lgr_children_cells;
+
+    protected:
+        std::size_t lgr_global_counter = 0;
+        std::string lgr_label = "GLOBAL";
+        int lgr_level = 0;
         std::vector<std::string> lgr_children_labels;
         std::vector<std::size_t> lgr_active_index;
         std::vector<std::size_t> lgr_level_active_map;
         std::vector<std::string> all_lgr_labels;
-
-
-
-        std::map<std::vector<std::size_t>, std::size_t> num_lgr_children_cells;
+        std::map<std::vector<std::size_t>, std::size_t> num_lgr_children_cells;        
 
     private:
-        friend class EclipseGridLGR; 
         std::vector<double> m_minpvVector;
         MinpvMode m_minpvMode;
         std::optional<double> m_pinch;
-        std::size_t lgr_global_counter = 0;
 
         // Option 4 of PINCH (TOPBOT/ALL), how to calculate TRANS
         PinchMode m_pinchoutMode;
@@ -367,7 +362,6 @@ namespace Opm {
     {
     public:
       using vec_size_t = std::vector<std::size_t>;
-      friend class EclipseGrid; 
       EclipseGridLGR() = default;
       EclipseGridLGR(std::string self_label, std::string father_label_, 
                      int father_lgr_level, size_t nx, size_t ny, size_t nz, 
@@ -376,14 +370,14 @@ namespace Opm {
       vec_size_t getFatherGlobalID() const;
       void set_lgr_global_counter(std::size_t counter){
         lgr_global_counter = counter;
-      }      
+      }
+      vec_size_t get_father_global() const{
+        return father_global;
+      }                 
     private:
       void init_father_global();
       std::string father_label;
-      // references IJK on the father label
-      vec_size_t father_i_list;
-      vec_size_t father_j_list;
-      vec_size_t father_k_list;
+      // references global on the father label
       vec_size_t father_global;
     };
 
