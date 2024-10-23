@@ -542,6 +542,7 @@ if(ENABLE_ECL_INPUT)
     tests/parser/InitConfigTest.cpp
     tests/parser/IOConfigTests.cpp
     tests/parser/LgrTests.cpp
+    tests/parser/LgrOutputTests.cpp
     tests/parser/MICPTests.cpp
     tests/parser/MessageLimitTests.cpp
     tests/parser/MultiRegTests.cpp
