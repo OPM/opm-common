@@ -1800,6 +1800,9 @@ bool Well::cmp_structure(const Well& other) const {
 bool Well::operator==(const Well& data) const {
     return this->cmp_structure(data)
         && (this->getSolventFraction() == data.getSolventFraction())
+        && (this->getPolymerProperties() == data.getPolymerProperties())
+        && (this->getMICPProperties() == data.getMICPProperties())
+        && (this->getBrineProperties() == data.getBrineProperties())
         && (this->getEconLimits() == data.getEconLimits())
         && (this->isProducer() == data.isProducer())
         && (this->getFoamProperties() == data.getFoamProperties())
@@ -1820,6 +1823,8 @@ bool Well::operator==(const Well& data) const {
         && (this->inj_mult_mode == data.inj_mult_mode)
         && (this->well_inj_mult == data.well_inj_mult)
         && (this->m_filter_concentration == data.m_filter_concentration)
+        && (this->pvt_table == data.pvt_table)
+        && (this->wpave_ref_depth == data.wpave_ref_depth)
         ;
 }
 
