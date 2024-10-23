@@ -24,14 +24,14 @@
 #include <opm/common/OpmLog/LogUtil.hpp>
 #include <opm/common/OpmLog/OpmLog.hpp>
 #include <opm/common/utility/OpmInputError.hpp>
-#include <opm/input/eclipse/Parser/InputErrorAction.hpp>
+#include <opm/common/utility/ActiveGridCells.hpp>
 #include <opm/common/utility/String.hpp>
 #include <opm/common/utility/numeric/cmp.hpp>
 #include <opm/common/utility/shmatch.hpp>
 
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/EclipseState/TracerConfig.hpp>
-
+#include <opm/input/eclipse/Parser/InputErrorAction.hpp>
 #include <opm/input/eclipse/Python/Python.hpp>
 
 #include <opm/input/eclipse/Schedule/Action/ActionResult.hpp>
@@ -1548,6 +1548,13 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
 
 
     void Schedule::filterConnections(const ActiveGridCells& grid) {
+        // Due MINPV/PINCH processing more of the completed_cells might now
+        // inactive. Hence we update them here.
+        for ([[maybe_unused]] auto& [index, cell] : this->completed_cells) {
+            if (!grid.cellActive(cell.i, cell.j, cell.k) && cell.is_active()) {
+                cell.props.value().active_index = -1;
+            }
+        }
         for (auto& sched_state : this->snapshots) {
             for (auto& well : sched_state.wells()) {
                 well.get().filterConnections(grid);
