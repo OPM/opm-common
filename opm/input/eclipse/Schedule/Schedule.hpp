@@ -340,6 +340,7 @@ namespace Opm
             this->template pack_unpack<WellTestConfig>(serializer);
             this->template pack_unpack<GConSale>(serializer);
             this->template pack_unpack<GConSump>(serializer);
+            this->template pack_unpack<GSatProd>(serializer);
             this->template pack_unpack<GroupEconProductionLimits>(serializer);
             this->template pack_unpack<WListManager>(serializer);
             this->template pack_unpack<Network::ExtNetwork>(serializer);
