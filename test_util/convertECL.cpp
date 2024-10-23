@@ -4,7 +4,7 @@
 #include <iomanip>
 #include <iostream>
 #include <type_traits>
-
+#include <cctype>
 #include <opm/io/eclipse/EclFile.hpp>
 #include <opm/io/eclipse/ERst.hpp>
 #include <opm/io/eclipse/EclOutput.hpp>
@@ -293,6 +293,8 @@ int main(int argc, char **argv)
 
     std::string rootN = filename.substr(0,p);
     std::string extension = filename.substr(p,l-p);
+    std::transform(extension.begin(), extension.end(), extension.begin(),
+                 [](unsigned char ckey){ return std::toupper(ckey);});  
     std::string resFile;
 
 
