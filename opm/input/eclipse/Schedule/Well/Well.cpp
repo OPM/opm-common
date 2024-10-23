@@ -543,6 +543,7 @@ Well Well::serializationTestObject()
     result.production = std::make_shared<Well::WellProductionProperties>(Well::WellProductionProperties::serializationTestObject());
     result.injection = std::make_shared<Well::WellInjectionProperties>(Well::WellInjectionProperties::serializationTestObject());
     result.segments = std::make_shared<WellSegments>(WellSegments::serializationTestObject());
+    result.wvfpdp = std::make_shared<WVFPDP>(WVFPDP::serializationTestObject());
     result.wvfpexp = std::make_shared<WVFPEXP>(WVFPEXP::serializationTestObject());
     result.wdfac = std::make_shared<WDFAC>(WDFAC::serializationTestObject());
     result.m_pavg = PAvg();
@@ -1772,36 +1773,42 @@ bool Well::cmp_structure(const Well& other) const {
         && (this->getHeadJ() == other.getHeadJ())
         && (this->hasRefDepth() == other.hasRefDepth())
         && (!this->hasRefDepth() || (this->getRefDepth() == other.getRefDepth()))
-        && (this->getPreferredPhase() == other.getPreferredPhase())
-        && (this->udq_undefined == other.udq_undefined)
-        && (this->getConnections() == other.getConnections())
         && (this->getDrainageRadius() == other.getDrainageRadius())
         && (this->getAllowCrossFlow() == other.getAllowCrossFlow())
         && (this->getAutomaticShutIn() == other.getAutomaticShutIn())
+        && (this->udq_undefined == other.udq_undefined)
+        && (this->getPreferredPhase() == other.getPreferredPhase()) // wellType()
         && (this->getEfficiencyFactor() == other.getEfficiencyFactor())
+        && (this->getConnections() == other.getConnections())
         ;
 }
 
 
 bool Well::operator==(const Well& data) const {
     return this->cmp_structure(data)
-        && (this->getSolventFraction() == data.getSolventFraction())
-        && (this->getEconLimits() == data.getEconLimits())
-        && (this->isProducer() == data.isProducer())
-        && (this->getFoamProperties() == data.getFoamProperties())
-        && (this->getStatus() == data.getStatus())
+        && (this->wpave_ref_depth == data.wpave_ref_depth)
+        && (this->gas_inflow == data.gas_inflow)
+        && (this->pvt_table == data.pvt_table)
+        && (this->isProducer() == data.isProducer()) // wellType()
         && (this->guide_rate == data.guide_rate)
-        && (this->solvent_fraction == data.solvent_fraction)
         && (this->hasProduced() == data.hasProduced())
         && (this->hasInjected() == data.hasInjected())
         && (this->predictionMode() == data.predictionMode())
+        && (this->getSolventFraction() == data.getSolventFraction())
         && (this->derive_refdepth_from_conns_ == data.derive_refdepth_from_conns_)
+        && (this->getEconLimits() == data.getEconLimits())
+        && (this->getFoamProperties() == data.getFoamProperties())
+        && (this->getPolymerProperties() == data.getPolymerProperties())
+        && (this->getMICPProperties() == data.getMICPProperties())
+        && (this->getBrineProperties() == data.getBrineProperties())
         && (this->getTracerProperties() == data.getTracerProperties())
+        && (this->getProductionProperties() == data.getProductionProperties())
+        && (this->getInjectionProperties() == data.getInjectionProperties())
+        && (this->getWVFPDP() == data.getWVFPDP())
         && (this->getWVFPEXP() == data.getWVFPEXP())
         && (this->getWDFAC() == data.getWDFAC())
-        && (this->getProductionProperties() == data.getProductionProperties())
+        && (this->getStatus() == data.getStatus())
         && (this->m_pavg == data.m_pavg)
-        && (this->getInjectionProperties() == data.getInjectionProperties())
         && (this->well_inj_temperature == data.well_inj_temperature)
         && (this->inj_mult_mode == data.inj_mult_mode)
         && (this->well_inj_mult == data.well_inj_mult)
