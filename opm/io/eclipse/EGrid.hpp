@@ -69,6 +69,13 @@ public:
     const std::array<double, 6>& get_mapaxes() const { return m_mapaxes; }
     const std::string& get_mapunits() const { return m_mapunits; }
 
+
+    const std::vector<float>& get_coord() const { return coord_array; }
+    const std::vector<float>& get_zcorn() const { return zcorn_array; }
+
+
+
+
 private:
     std::filesystem::path inputFileName, initFileName;
     std::string m_grid_name;
