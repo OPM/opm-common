@@ -2423,6 +2423,11 @@ namespace Opm {
         lgr_label= self_label;
         lgr_level = father_lgr_level + 1 ;   
     }
+    void EclipseGridLGR::set_lgr_refinement(std::vector<double> coord, std::vector<double> zcorn)
+    {
+        m_coord = coord;
+        m_zcorn = zcorn;
+    }        
     void EclipseGridLGR::init_father_global()
     {
         std::sort(father_global.begin(),father_global.end());

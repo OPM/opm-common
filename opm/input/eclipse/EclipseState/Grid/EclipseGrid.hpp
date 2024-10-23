@@ -266,6 +266,9 @@ namespace Opm {
         std::vector<std::size_t> lgr_level_active_map;
         std::vector<std::string> all_lgr_labels;
         std::map<std::vector<std::size_t>, std::size_t> num_lgr_children_cells;        
+        std::vector<double> m_zcorn;
+        std::vector<double> m_coord;
+
 
     private:
         std::vector<double> m_minpvVector;
@@ -290,8 +293,6 @@ namespace Opm {
         mutable std::optional<std::vector<double>> m_input_zcorn;
         mutable std::optional<std::vector<double>> m_input_coord;
 
-        std::vector<double> m_zcorn;
-        std::vector<double> m_coord;
 
 
         std::vector<int> m_actnum;
@@ -373,7 +374,8 @@ namespace Opm {
       }
       const vec_size_t& get_father_global() const{
         return father_global;
-      }                 
+      }
+     void set_lgr_refinement(std::vector<double>,std::vector<double>);                 
     private:
       void init_father_global();
       std::string father_label;
