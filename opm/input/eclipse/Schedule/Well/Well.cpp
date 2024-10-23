@@ -543,6 +543,7 @@ Well Well::serializationTestObject()
     result.production = std::make_shared<Well::WellProductionProperties>(Well::WellProductionProperties::serializationTestObject());
     result.injection = std::make_shared<Well::WellInjectionProperties>(Well::WellInjectionProperties::serializationTestObject());
     result.segments = std::make_shared<WellSegments>(WellSegments::serializationTestObject());
+    result.wvfpdp = std::make_shared<WVFPDP>(WVFPDP::serializationTestObject());
     result.wvfpexp = std::make_shared<WVFPEXP>(WVFPEXP::serializationTestObject());
     result.wdfac = std::make_shared<WDFAC>(WDFAC::serializationTestObject());
     result.m_pavg = PAvg();
