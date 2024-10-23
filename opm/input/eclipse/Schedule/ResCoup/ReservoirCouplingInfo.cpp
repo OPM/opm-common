@@ -29,7 +29,8 @@ bool CouplingInfo::operator==(const CouplingInfo& rhs) const {
            this->m_master_groups == rhs.m_master_groups &&
            this->m_grup_slavs == rhs.m_grup_slavs &&
            this->m_master_mode == rhs.m_master_mode &&
-           this->m_master_min_time_step == rhs.m_master_min_time_step;
+           this->m_master_min_time_step == rhs.m_master_min_time_step &&
+           this->m_coupling_file_flag == rhs.m_coupling_file_flag;
 }
 
 CouplingInfo CouplingInfo::serializationTestObject()

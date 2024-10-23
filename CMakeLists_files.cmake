@@ -285,6 +285,7 @@ if(ENABLE_ECL_INPUT)
     opm/input/eclipse/Schedule/ResCoup/MasterGroup.cpp
     opm/input/eclipse/Schedule/ResCoup/Slaves.cpp
     opm/input/eclipse/Schedule/ResCoup/MasterMinimumTimeStep.cpp
+    opm/input/eclipse/Schedule/ResCoup/CouplingFile.cpp
     opm/input/eclipse/Schedule/UDQ/UDQKeywordHandlers.cpp
     opm/input/eclipse/Schedule/UDQ/UDQActive.cpp
     opm/input/eclipse/Schedule/UDQ/UDQAssign.cpp
@@ -1309,6 +1310,7 @@ if(ENABLE_ECL_INPUT)
        opm/input/eclipse/Schedule/ResCoup/MasterGroup.hpp
        opm/input/eclipse/Schedule/ResCoup/Slaves.hpp
        opm/input/eclipse/Schedule/ResCoup/MasterMinimumTimeStep.hpp
+       opm/input/eclipse/Schedule/ResCoup/CouplingFile.hpp
        opm/input/eclipse/Schedule/VFPInjTable.hpp
        opm/input/eclipse/Schedule/VFPProdTable.hpp
        opm/input/eclipse/Schedule/Well/Connection.hpp

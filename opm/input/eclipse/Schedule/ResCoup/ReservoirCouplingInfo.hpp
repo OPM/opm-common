@@ -32,9 +32,23 @@ namespace Opm::ReservoirCoupling {
 
 class CouplingInfo {
 public:
+    enum class CouplingFileFlag {
+        NONE,
+        FORMATTED,
+        UNFORMATTED
+    };
+
     CouplingInfo() = default;
 
     // Inline methods (alphabetically)
+
+    void couplingFileFlag(CouplingFileFlag flag) {
+        m_coupling_file_flag = flag;
+    }
+
+    CouplingFileFlag couplingFileFlag() const {
+        return m_coupling_file_flag;
+    }
 
     const std::map<std::string, GrupSlav>& grupSlavs() const {
         return this->m_grup_slavs;
@@ -116,6 +130,7 @@ public:
         serializer(m_grup_slavs);
         serializer(m_master_mode);
         serializer(m_master_min_time_step);
+        serializer(m_coupling_file_flag);
     }
 
     // Non-inline methods (defined in CouplingInfo.cpp)
@@ -130,6 +145,7 @@ private:
     bool m_master_mode{false};
     // Default value: No limit, however a positive value can be set by using keyword RCMASTS
     double m_master_min_time_step{0.0};
+    CouplingFileFlag m_coupling_file_flag{CouplingFileFlag::NONE};
 };
 
 } // namespace Opm::ReservoirCoupling
