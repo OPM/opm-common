@@ -648,6 +648,10 @@ The cell ({},{},{}) in well {} is not active and the connection will be ignored)
             ctf_props.skin_factor = skin_factor;
             ctf_props.d_factor = d_factor;
 
+            if (defaultSatTable) {
+                satTableId = props->satnum;
+            }
+
             ctf_props.r0 = -1.0;
             ctf_props.Kh = -1.0;
             if (KhItem.hasValue(0) && (KhItem.getSIDouble(0) > 0.0)) {
