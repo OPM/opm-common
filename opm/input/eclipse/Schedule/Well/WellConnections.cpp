@@ -582,20 +582,34 @@ The cell ({},{},{}) in well {} is not active and the connection will be ignored)
         // Get the grid
         const auto& ecl_grid = grid.get_grid();
 
-        // Calulate the x,y,z coordinates of the begin and end of a perforation
-        external::cvf::Vec3d p_top;
-        external::cvf::Vec3d p_bot;
-        for (size_t i = 0; i < 3 ; ++i) {
-            p_top[i] = linearInterpolation(this->md, this->coord[i], perf_top.getSIDouble(0));
-            p_bot[i] = linearInterpolation(this->md, this->coord[i], perf_bot.getSIDouble(0));
-        }
+        std::vector<external::cvf::Vec3d> points;
+        std::vector<double> measured_depths;
 
-        std::vector<external::cvf::Vec3d> points{p_top, p_bot};
-        std::vector<double> md_interval{perf_top.getSIDouble(0), perf_bot.getSIDouble(0)};
+        // Calulate the x,y,z coordinates of the begin and end of a perforation
+        external::cvf::Vec3d p_top, p_bot;
+        double m_top = perf_top.getSIDouble(0), m_bot = perf_bot.getSIDouble(0);
+        for (size_t i = 0; i < 3 ; ++i) {
+            p_top[i] = linearInterpolation(this->md, this->coord[i], m_top);
+            p_bot[i] = linearInterpolation(this->md, this->coord[i], m_bot);
+        }
+        points.push_back(p_top);
+        measured_depths.push_back(m_top);
 
         external::cvf::ref<external::RigWellPath> wellPathGeometry { new external::RigWellPath };
+        points.reserve(this->coord[0].size());
+        measured_depths.reserve(this->coord[0].size());
+        for (size_t i = 0; i < coord[0].size(); ++i) {
+            if (this->md[i] > m_top and this->md[i] < m_bot) {
+                points.push_back(external::cvf::Vec3d(coord[0][i], coord[1][i], coord[2][i]));
+                measured_depths.push_back(this->md[i]);
+            }
+        }
+
+        points.push_back(p_bot);
+        measured_depths.push_back(m_bot);
+
         wellPathGeometry->setWellPathPoints(points);
-        wellPathGeometry->setMeasuredDepths(md_interval);
+        wellPathGeometry->setMeasuredDepths(measured_depths);
 
         external::cvf::ref<external::RigEclipseWellLogExtractor> e {
             new external::RigEclipseWellLogExtractor {
