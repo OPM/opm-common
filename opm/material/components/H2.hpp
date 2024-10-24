@@ -40,6 +40,38 @@
 
 namespace Opm {
 
+// this class collects all the H2tabulated quantities in one convenient place
+struct H2Tables {
+	static const Opm::UniformTabulated2DFunction<double>   tabulatedEnthalpy;
+	static const Opm::UniformTabulated2DFunction<double>   tabulatedDensity;
+	static constexpr double brineSalinity = 1.000000000000000e-01;
+};
+
+struct H2TabulatedDensityTraits {
+    typedef double Scalar;
+    static const char  *name;
+    static const int    numX = 200;
+    static const Scalar xMin;
+    static const Scalar xMax;
+    static const int    numY = 500;
+    static const Scalar yMin;
+    static const Scalar yMax;
+
+    static const Scalar vals[200][500];
+};
+
+struct H2TabulatedEnthalpyTraits {
+    typedef double Scalar;
+    static const char  *name;
+    static const int    numX = 200;
+    static const Scalar xMin;
+    static const Scalar xMax;
+    static const int    numY = 500;
+    static const Scalar yMin;
+    static const Scalar yMax;
+    static const Scalar vals[200][500];
+};
+
 /*!
  * \ingroup Components
  * \brief Properties of pure molecular hydrogen \f$H_2\f$. Most of the properties are calculated based on Leachman JW,
