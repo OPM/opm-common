@@ -33,17 +33,17 @@
       "default": "MAST"
     },
     {
-      "name": "OIL_INJ_PROD_CONSTRAINTS",
+      "name": "OIL_INJ_CONSTRAINTS",
       "value_type": "STRING",
       "default": "MAST"
     },
     {
-      "name": "WAT_INJ_PROD_CONSTRAINTS",
+      "name": "WAT_INJ_CONSTRAINTS",
       "value_type": "STRING",
       "default": "MAST"
     },
     {
-      "name": "GAS_INJ_PROD_CONSTRAINTS",
+      "name": "GAS_INJ_CONSTRAINTS",
       "value_type": "STRING",
       "default": "MAST"
     }
