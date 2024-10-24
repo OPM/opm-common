@@ -16,8 +16,8 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
-#ifndef RESERVOIR_COUPLING_FILE_HPP
-#define RESERVOIR_COUPLING_FILE_HPP
+#ifndef OPM_RESERVOIR_COUPLING_FILE_HPP
+#define OPM_RESERVOIR_COUPLING_FILE_HPP
 namespace Opm {
 
 class HandlerContext;
@@ -25,4 +25,4 @@ class HandlerContext;
 extern void handleDUMPCUPL(HandlerContext& handlerContext);
 
 } // namespace Opm
-#endif // RESERVOIR_COUPLING_FILE_HPP
+#endif // OPM_RESERVOIR_COUPLING_FILE_HPP

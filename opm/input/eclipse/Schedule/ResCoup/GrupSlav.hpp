@@ -16,8 +16,8 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
-#ifndef RESERVOIR_COUPLING_GRUPSLAV_HPP
-#define RESERVOIR_COUPLING_GRUPSLAV_HPP
+#ifndef OPM_RESERVOIR_COUPLING_GRUPSLAV_HPP
+#define OPM_RESERVOIR_COUPLING_GRUPSLAV_HPP
 
 #include <iostream>
 #include <map>
@@ -155,4 +155,4 @@ extern void handleGRUPSLAV(HandlerContext& handlerContext);
 
 } // namespace Opm
 
-#endif // RESERVOIR_COUPLING_GRUPSLAV_HPP
+#endif // OPM_RESERVOIR_COUPLING_GRUPSLAV_HPP
