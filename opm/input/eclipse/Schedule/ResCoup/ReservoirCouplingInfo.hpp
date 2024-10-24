@@ -16,8 +16,8 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
-#ifndef RESERVOIR_COUPLING_INFO_HPP
-#define RESERVOIR_COUPLING_INFO_HPP
+#ifndef OPM_RESERVOIR_COUPLING_INFO_HPP
+#define OPM_RESERVOIR_COUPLING_INFO_HPP
 
 #include <opm/input/eclipse/Schedule/ResCoup/Slaves.hpp>
 #include <opm/input/eclipse/Schedule/ResCoup/GrupSlav.hpp>
@@ -129,4 +129,4 @@ private:
 
 } // namespace Opm::ReservoirCoupling
 
-#endif
+#endif // OPM_RESERVOIR_COUPLING_INFO_HPP

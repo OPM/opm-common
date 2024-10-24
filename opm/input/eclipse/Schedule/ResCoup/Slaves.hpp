@@ -16,8 +16,8 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
-#ifndef RESERVOIR_COUPLING_SLAVES_HPP
-#define RESERVOIR_COUPLING_SLAVES_HPP
+#ifndef OPM_RESERVOIR_COUPLING_SLAVES_HPP
+#define OPM_RESERVOIR_COUPLING_SLAVES_HPP
 
 #include <string>
 #include <map>
@@ -91,4 +91,4 @@ private:
 extern void handleSLAVES(HandlerContext& handlerContext);
 
 } // namespace Opm
-#endif // RESERVOIR_COUPLING_SLAVES_HPP
+#endif // OPM_RESERVOIR_COUPLING_SLAVES_HPP
