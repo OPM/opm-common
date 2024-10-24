@@ -19,6 +19,7 @@
 #ifndef OPM_RESERVOIR_COUPLING_INFO_HPP
 #define OPM_RESERVOIR_COUPLING_INFO_HPP
 
+#include <opm/input/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/input/eclipse/Schedule/ResCoup/Slaves.hpp>
 #include <opm/input/eclipse/Schedule/ResCoup/GrupSlav.hpp>
 #include <opm/input/eclipse/Schedule/ResCoup/MasterGroup.hpp>
@@ -41,14 +42,6 @@ public:
     CouplingInfo() = default;
 
     // Inline methods (alphabetically)
-
-    void couplingFileFlag(CouplingFileFlag flag) {
-        m_coupling_file_flag = flag;
-    }
-
-    CouplingFileFlag couplingFileFlag() const {
-        return m_coupling_file_flag;
-    }
 
     const std::map<std::string, GrupSlav>& grupSlavs() const {
         return this->m_grup_slavs;
@@ -106,6 +99,22 @@ public:
         m_master_min_time_step = tstep;
     }
 
+    void readCouplingFileFlag(CouplingFileFlag flag) {
+        m_read_coupling_file_flag = flag;
+    }
+
+    CouplingFileFlag readCouplingFileFlag() const {
+        return m_read_coupling_file_flag;
+    }
+
+    void readCouplingFileName(const std::string& name) {
+        m_read_coupling_file_name = name;
+    }
+
+    const std::string& readCouplingFileName() const {
+        return m_read_coupling_file_name;
+    }
+
     const Slave& slave(const std::string& name) const {
         return m_slaves.at(name);
     }
@@ -130,10 +139,24 @@ public:
         serializer(m_grup_slavs);
         serializer(m_master_mode);
         serializer(m_master_min_time_step);
-        serializer(m_coupling_file_flag);
+        serializer(m_write_coupling_file_flag);
+        serializer(m_read_coupling_file_flag);
+        serializer(m_read_coupling_file_name);
     }
 
+    void writeCouplingFileFlag(CouplingFileFlag flag) {
+        m_write_coupling_file_flag = flag;
+    }
+
+    CouplingFileFlag writeCouplingFileFlag() const {
+        return m_write_coupling_file_flag;
+    }
+
+
     // Non-inline methods (defined in CouplingInfo.cpp)
+
+    static CouplingFileFlag couplingFileFlagFromString(
+        const std::string& flag_str, const DeckKeyword& keyword);
 
     bool operator==(const CouplingInfo& other) const;
     static CouplingInfo serializationTestObject();
@@ -145,7 +168,9 @@ private:
     bool m_master_mode{false};
     // Default value: No limit, however a positive value can be set by using keyword RCMASTS
     double m_master_min_time_step{0.0};
-    CouplingFileFlag m_coupling_file_flag{CouplingFileFlag::NONE};
+    CouplingFileFlag m_write_coupling_file_flag{CouplingFileFlag::NONE};
+    CouplingFileFlag m_read_coupling_file_flag{CouplingFileFlag::NONE};
+    std::string m_read_coupling_file_name{};
 };
 
 } // namespace Opm::ReservoirCoupling

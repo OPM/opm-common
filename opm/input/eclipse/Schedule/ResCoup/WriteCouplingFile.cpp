@@ -18,7 +18,7 @@
 */
 
 
-#include <opm/input/eclipse/Schedule/ResCoup/CouplingFile.hpp>
+#include <opm/input/eclipse/Schedule/ResCoup/WriteCouplingFile.hpp>
 #include <opm/input/eclipse/Schedule/ResCoup/ReservoirCouplingInfo.hpp>
 #include <opm/input/eclipse/Schedule/ScheduleState.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/D.hpp>
@@ -28,19 +28,6 @@
 
 
 namespace Opm {
-
-ReservoirCoupling::CouplingInfo::CouplingFileFlag couplingFileFlagFromString(
-        const std::string& flag_str, const DeckKeyword& keyword
-)
-{
-    if (flag_str == "F") {
-        return ReservoirCoupling::CouplingInfo::CouplingFileFlag::FORMATTED;
-    } else if (flag_str == "U") {
-        return ReservoirCoupling::CouplingInfo::CouplingFileFlag::UNFORMATTED;
-    } else {
-        throw OpmInputError("Invalid DUMPCUPL value: " + flag_str, keyword.location());
-    }
-}
 
 void handleDUMPCUPL(HandlerContext& handlerContext)
 {
@@ -55,8 +42,9 @@ void handleDUMPCUPL(HandlerContext& handlerContext)
         throw OpmInputError("DUMPCUPL keyword cannot be defaulted.", keyword.location());
     }
     auto flag_str = deck_item.getTrimmedString(0);
-    auto coupling_file_flag = couplingFileFlagFromString(flag_str, keyword);
-    rescoup.couplingFileFlag(coupling_file_flag);
+    auto coupling_file_flag = ReservoirCoupling::CouplingInfo::couplingFileFlagFromString(
+            flag_str, keyword);
+    rescoup.writeCouplingFileFlag(coupling_file_flag);
     schedule_state.rescoup.update( std::move( rescoup ));
 }
 
