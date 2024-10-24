@@ -2048,6 +2048,12 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
         }
     }
 
+    const std::optional<MapAxes>& EclipseGrid::getMapAxes() const
+    {
+        return this->m_mapaxes;
+    }
+
+
     ZcornMapper::ZcornMapper(size_t nx , size_t ny, size_t nz)
         : dims( {{nx,ny,nz}} ),
           stride( {{2 , 4*nx, 8*nx*ny}} ),

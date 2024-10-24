@@ -201,6 +201,7 @@ namespace Opm {
         const std::vector<double>& getZCORN() const;
         const std::vector<int>& getACTNUM( ) const;
 
+        const std::optional<MapAxes>& getMapAxes() const;
 
         const std::map<size_t, std::array<int,2>>& getAquiferCellTabnums() const;
 
