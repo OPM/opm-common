@@ -66,6 +66,72 @@ Opm::WellMatcher::WellMatcher(const NameOrder*    well_order,
     , m_wlm        { std::in_place, wlm }
 {}
 
+Opm::WellMatcher::WellMatcher(const WellMatcher& rhs)
+    : m_wo         {}
+    , m_well_order { rhs.m_well_order }
+{
+    if (rhs.m_wo != nullptr) {
+        this->m_wo = std::make_unique<NameOrder>(*rhs.m_wo);
+        this->m_well_order = this->m_wo.get();
+    }
+
+    if (rhs.m_wlm.has_value()) {
+        this->m_wlm.emplace(rhs.m_wlm->get());
+    }
+}
+
+Opm::WellMatcher::WellMatcher(WellMatcher&& rhs)
+    : m_wo         { std::move(rhs.m_wo) }
+    , m_well_order { rhs.m_well_order }
+{
+    if (this->m_wo != nullptr) {
+        this->m_well_order = this->m_wo.get();
+    }
+
+    if (rhs.m_wlm.has_value()) {
+        this->m_wlm.emplace(rhs.m_wlm->get());
+    }
+}
+
+Opm::WellMatcher::~WellMatcher() = default;
+
+Opm::WellMatcher& Opm::WellMatcher::operator=(const WellMatcher& rhs)
+{
+    if (this == &rhs) {
+        return *this;
+    }
+
+    if (rhs.m_wo != nullptr) {
+        this->m_wo = std::make_unique<NameOrder>(*rhs.m_wo);
+    }
+
+    this->m_well_order = (this->m_wo != nullptr)
+        ? this->m_wo.get() : rhs.m_well_order;
+
+    if (rhs.m_wlm.has_value()) {
+        this->m_wlm.emplace(rhs.m_wlm->get());
+    }
+
+    return *this;
+}
+
+Opm::WellMatcher& Opm::WellMatcher::operator=(WellMatcher&& rhs)
+{
+    if (this == &rhs) {
+        return *this;
+    }
+
+    this->m_wo = std::move(rhs.m_wo);
+    this->m_well_order = (this->m_wo != nullptr)
+        ? this->m_wo.get() : rhs.m_well_order;
+
+    if (rhs.m_wlm.has_value()) {
+        this->m_wlm.emplace(rhs.m_wlm->get());
+    }
+
+    return *this;
+}
+
 std::vector<std::string>
 Opm::WellMatcher::sort(std::vector<std::string> wells) const
 {
