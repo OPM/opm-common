@@ -186,10 +186,53 @@ bool is_RPTRST_mnemonic(const std::string& kw)
         "PERMREDN", "POIS",     "PORO",     "PORV",     "POT",     "PRES",
         "RESIDUAL", "RFIP",     "RK",       "ROCKC",    "RPORV",   "RSSAT",
         "RSWSAT",   "RVSAT",    "RVWSAT",   "SAVE",     "SDENO",   "SFIP",
-        "SFREQ",    "SGAS",  "SGTRAP",   "SIGM_MOD", "SOIL", "STREAM",   "SURFBLK", "TEMP",
+        "SFREQ",    "SGTRAP",   "SIGM_MOD", "STREAM",   "SURFBLK", "TEMP",
         "TRAS",     "VELGAS",   "VELOCITY", "VELOIL",   "VELWAT",  "VGAS",
         "VISC",     "VOIL",     "VWAT",
-        "XMF",      "YMF",     "ZMF",
+    };
+
+    return std::binary_search(std::begin(valid), std::end(valid), kw);
+}
+
+bool is_RPTRST_mnemonic_compositional(const std::string& kw)
+{
+    // Every compositional keyword we want to not simply ignore when handling
+    // RPTRST.  The list is sorted, so we can use binary_search for log(n)
+    // lookup.  It is important that the list is sorted, but these are all
+    // the keywords listed in the manual and unlikely to change at all
+    static constexpr const char* valid[] = {
+        "AIM",      "ALSURF",   "ALSTML",   "AMF",      "AQSP",    "AQPH",
+        "AREAC",    "ASPADS",   "ASPDOT",   "ASPENT",   "ASPFLO",  "ASPFLT",
+        "ASPFRD",   "ASPKDM",   "ASPLIM",   "ASPLUG",   "ASPRET",  "ASPREW",
+        "ASPVEL",   "ASPVOM",   "BASIC",    "BFORO",    "BG",      "BGAS",
+        "BO",       "BOIL",     "BSOL",     "BTFORG",   "BTFORO",  "BW",
+        "BWAT",     "CELLINDX", "CFL",      "CGAS",     "COLR",    "COILR",
+        "CONV",     "DENG",     "DENO",     "DENS",     "DENW",    "DYNREG",
+        "ENERGY",   "ESALTS",   "ESALTP",   "FFACTG",   "FFACTO",  "FFORO",
+        "FIP",      "FLOC-",    "FLOE",     "FLOGAS",   "FLOOIL",  "FLOWAT",
+        "FLORES",   "FLORES-",  "FMISC",    "FOAM",     "FOAMST",  "FOAMCNM",
+        "FOAMMOB",  "FPC",      "FREQ",     "FUGG",     "FUGO",    "GASPOT",
+        "HGAS",     "HOIL",     "HSOL",     "HWAT",     "JV",      "KRG",
+        "KRO",      "KRW",      "KRGDM",    "KRODM",    "KRWDM",   "LGLC-",
+        "LGLCWAT",  "LGLCHC",   "MLSC",     "MWAT",     "NCNG",    "NCNO",
+        "NPMREB",   "OILPOT",   "PART",     "PCGW",     "PCOG",    "PCOW",
+        "PERM_MDX", "PERM_MDY", "PERM_MDZ", "PERM_MOD", "PGAS",    "PKRG",
+        "PKRGR",    "PKRO",     "PKRORG",   "PKRORW",   "PKRW",    "PKRWR",
+        "POIL",     "POLY",     "POLYVM",   "PORV",     "PORV_MOD","PPCG",
+        "PPCW",     "PRES_EFF", "PRES",     "PRESMIN",  "PRESSURE","PSAT",
+        "PSGCR",    "PSGL",     "PSGU",     "PSOGCR",   "PSOWCR",  "PSWCR",
+        "PSWL",     "PSWU",     "PVDPH",    "PWAT",     "RATP",    "RATS",
+        "RATT",     "REAC",     "RESTART",  "RFIP",     "ROCKC",   "ROMLS",
+        "RPORV",    "RS",       "RSSAT",    "RSW",      "RV",      "RVSAT",
+        "SFIP",     "SFIPGAS",  "SFIPOIL",  "SFIPWAT",  "SFOIL",   "SFSOL",
+        "SGAS",     "SGASMAX",  "SGCRH",    "SGTRH",    "SGTRAP",  "SIGM_MOD",
+        "SMF",      "SMMULT",   "SOIL",     "SOILM",    "SOILMAX", "SOILR",
+        "SOLADS",   "SOLADW",   "SOLWET",   "SSFRAC",   "SSOLID",  "STATE",
+        "STEN",     "SUBG",     "SURF",     "SURFCNM",  "SURFKR",  "SURFCP",
+        "SURFST",   "SWAT",     "SWATMIN",  "TCBULK",   "TCMULT",  "TEMP",
+        "TOTCOMP",  "TREACM",   "TRMF-",    "TSUB",     "VGAS",    "VOIL",
+        "VMF",      "VWAT",     "WATPOT",   "XFW",      "XGAS",    "XMF",
+        "XWAT",     "YFW",      "YMF",      "ZMF",
     };
 
     return std::binary_search(std::begin(valid), std::end(valid), kw);
@@ -421,10 +464,12 @@ std::pair<
     >
 RPTRST(const Opm::DeckKeyword&  keyword,
        const Opm::ParseContext& parseContext,
-       Opm::ErrorGuard&         errors)
+       Opm::ErrorGuard&         errors,
+       const bool               compositional = false)
 {
+    const auto F = compositional ? is_RPTRST_mnemonic_compositional : is_RPTRST_mnemonic;
     auto mnemonics = RPT(keyword, parseContext, errors,
-                         is_RPTRST_mnemonic, RPTRST_integer);
+                         F, RPTRST_integer);
 
     const auto basic = extract(mnemonics, "BASIC");
     const auto freq  = extract(mnemonics, "FREQ");
@@ -451,13 +496,14 @@ namespace Opm {
 
 RSTConfig::RSTConfig(const SOLUTIONSection& solution_section,
                      const ParseContext&    parseContext,
+                     const bool compositional,
                      ErrorGuard&            errors)
     : write_rst_file(false)
 {
     for (const auto& keyword : solution_section) {
         if (keyword.name() == ParserKeywords::RPTRST::keywordName) {
             const auto in_solution = true;
-            this->handleRPTRST(keyword, parseContext, errors, in_solution);
+            this->handleRPTRST(keyword, parseContext, errors,  compositional, in_solution);
 
             // Generating restart file output at time zero is normally
             // governed by setting the 'RESTART' mnemonic to a value greater
@@ -474,10 +520,11 @@ RSTConfig::RSTConfig(const SOLUTIONSection& solution_section,
 
 void RSTConfig::update(const DeckKeyword&  keyword,
                        const ParseContext& parseContext,
+                       const bool compositional,
                        ErrorGuard&         errors)
 {
     if (keyword.name() == ParserKeywords::RPTRST::keywordName) {
-        this->handleRPTRST(keyword, parseContext, errors);
+        this->handleRPTRST(keyword, parseContext, errors, compositional);
     }
     else if (keyword.name() == ParserKeywords::RPTSCHED::keywordName) {
         this->handleRPTSCHED(keyword, parseContext, errors);
@@ -590,9 +637,10 @@ void RSTConfig::handleRPTSOL(const DeckKeyword&  keyword,
 void RSTConfig::handleRPTRST(const DeckKeyword&  keyword,
                              const ParseContext& parseContext,
                              ErrorGuard&         errors,
+                             const bool          compositional,
                              const bool          in_solution)
 {
-    const auto& [mnemonics, basic_freq] = RPTRST(keyword, parseContext, errors);
+    const auto& [mnemonics, basic_freq] = RPTRST(keyword, parseContext, errors, compositional);
 
     this->update_schedule(basic_freq);
 

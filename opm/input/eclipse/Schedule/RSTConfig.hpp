@@ -204,10 +204,12 @@ public:
     RSTConfig() = default;
     RSTConfig(const SOLUTIONSection& solution_section,
               const ParseContext& parseContext,
+              const bool compositional,
               ErrorGuard& errors);
 
     void update(const DeckKeyword& keyword,
                 const ParseContext& parseContext,
+                bool compositional,
                 ErrorGuard& errors);
 
     static RSTConfig first(const RSTConfig& src);
@@ -242,6 +244,7 @@ private:
     void handleRPTRST(const DeckKeyword& keyword,
                       const ParseContext& parse_context,
                       ErrorGuard& errors,
+                      bool compositional = false,
                       bool in_solution = false);
 
     void handleRPTSCHED(const DeckKeyword& keyword,

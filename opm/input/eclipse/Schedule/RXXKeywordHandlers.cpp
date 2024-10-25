@@ -48,6 +48,7 @@ void handleRPTSCHED(HandlerContext& handlerContext)
     auto rst_config = handlerContext.state().rst_config();
     rst_config.update(handlerContext.keyword,
                       handlerContext.parseContext,
+                      handlerContext.compositional(),
                       handlerContext.errors);
     handlerContext.state().rst_config.update(std::move(rst_config));
 }
@@ -57,6 +58,7 @@ void handleRPTRST(HandlerContext& handlerContext)
     auto rst_config = handlerContext.state().rst_config();
     rst_config.update(handlerContext.keyword,
                       handlerContext.parseContext,
+                      handlerContext.compositional(),
                       handlerContext.errors);
     handlerContext.state().rst_config.update(std::move(rst_config));
 }
