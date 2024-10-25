@@ -410,13 +410,23 @@ namespace {
         }
 
         Opm::Action::Result
-        act_res(const Opm::Schedule& sched, const Opm::Action::State& action_state, const Opm::SummaryState&  smry, const std::size_t sim_step, const Opm::Action::ActionX& action) {
-            auto sim_time = sched.simTime(sim_step);
-            if (action.ready(action_state, sim_time)) {
-                Opm::Action::Context context(smry, sched[sim_step].wlist_manager.get());
-                return action.eval(context);
-            } else
-                return Opm::Action::Result(false);
+        act_res(const Opm::Schedule&        sched,
+                const Opm::Action::State&   action_state,
+                const Opm::SummaryState&    smry,
+                const std::size_t           sim_step,
+                const Opm::Action::ActionX& action)
+        {
+            const auto sim_time = sched.simTime(sim_step);
+
+            if (! action.ready(action_state, sim_time)) {
+                return Opm::Action::Result { false };
+            }
+
+            const auto context = Opm::Action::Context {
+                smry, sched[sim_step].wlist_manager.get()
+            };
+
+            return action.eval(context);
         }
 
         void staticContrib(const Opm::Action::ActionX& action,
@@ -430,7 +440,7 @@ namespace {
 
             const auto undef_high_val = 1.0E+20;
             const auto wells = sched.wellNames(simStep);
-            const auto ar = sACN::act_res(sched, action_state, st, simStep, action);
+            const auto ar = act_res(sched, action_state, st, simStep, action);
 
             // Write out the schedule ACTIONX conditions
             auto condIx = std::size_t{0};
