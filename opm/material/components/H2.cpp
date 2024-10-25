@@ -26,7 +26,7 @@
 #if HAVE_QUAD
 #include <opm/material/common/quad.hpp>
 #endif
-#include "h2tables.inc"
+#include <opm/material/components/h2tables.inc>
 
 namespace Opm {
 typedef Opm::UniformTabulated2DFunction< double > TabulatedFunction;

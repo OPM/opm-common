@@ -23,6 +23,7 @@
 
 #ifndef OPM_CO2TABLES_HPP
 #define OPM_CO2TABLES_HPP
+
 #include <config.h>
 #include <opm/material/common/MathToolbox.hpp>
 #include <opm/material/common/UniformTabulated2DFunction.hpp>
@@ -41,7 +42,6 @@ struct co2TabulatedDensityTraits {
     static const int    numY = 500;
     static const Scalar yMin;
     static const Scalar yMax;
-
     static const Scalar vals[200][500];
 };
 
