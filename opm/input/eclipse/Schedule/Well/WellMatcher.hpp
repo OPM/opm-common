@@ -19,31 +19,40 @@
 #ifndef WELL_MATCHER_HPP
 #define WELL_MATCHER_HPP
 
+#include <opm/input/eclipse/Schedule/Well/NameOrder.hpp>
+#include <opm/input/eclipse/Schedule/Well/WListManager.hpp>
+
+#include <functional>
 #include <initializer_list>
+#include <memory>
+#include <optional>
 #include <string>
 #include <unordered_map>
 #include <vector>
 
-#include <opm/input/eclipse/Schedule/Well/WListManager.hpp>
-#include <opm/input/eclipse/Schedule/Well/NameOrder.hpp>
-
 namespace Opm {
 
-class WellMatcher {
+class WellMatcher
+{
 public:
     WellMatcher() = default;
-    explicit WellMatcher(const NameOrder& well_order);
+    explicit WellMatcher(NameOrder&& well_order);
+    explicit WellMatcher(const NameOrder* well_order);
     explicit WellMatcher(std::initializer_list<std::string> wells);
     explicit WellMatcher(const std::vector<std::string>& wells);
-    WellMatcher(const NameOrder& well_order, const WListManager& wlm);
+    WellMatcher(const NameOrder* well_order, const WListManager& wlm);
+
     std::vector<std::string> sort(std::vector<std::string> wells) const;
     std::vector<std::string> wells(const std::string& pattern) const;
+
     const std::vector<std::string>& wells() const;
 
 private:
-    NameOrder m_well_order;
-    WListManager m_wlm;
+    std::unique_ptr<NameOrder> m_wo{};
+    const NameOrder* m_well_order{nullptr};
+    std::optional<std::reference_wrapper<const WListManager>> m_wlm{};
 };
 
-}
-#endif
+} // namespace Opm
+
+#endif // WELL_MATCHER_HPP
