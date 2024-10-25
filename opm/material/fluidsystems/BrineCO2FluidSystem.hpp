@@ -50,13 +50,6 @@
 
 namespace Opm {
 
-// Silence compiler warnings about use of variables
-// that are instantiated in a different compilation unit.
-// template<>
-// const float CO2<float>::brineSalinity;
-// template<>
-// const double CO2<double>::brineSalinity;
-
 /*!
  * \brief A two-phase fluid system with water and CO2.
  *
@@ -306,8 +299,7 @@ public:
         }
 
         assert(phaseIdx == gasPhaseIdx);
-        CO2Tables params; // TODO: avoid this initialization
-        LhsEval result = CO2::gasViscosity(params, temperature, pressure);
+        LhsEval result = CO2::gasViscosity(getTableInstance(), temperature, pressure);
         Valgrind::CheckDefined(result);
         return result;
     }
@@ -344,8 +336,7 @@ public:
         // could use some cleanup.
         LhsEval xlH2O, xgH2O;
         LhsEval xlCO2, xgCO2;
-        CO2Tables params; // TODO: avoid this initialization
-        BinaryCoeffBrineCO2::calculateMoleFractions(params,
+        BinaryCoeffBrineCO2::calculateMoleFractions(getTableInstance(),
                                                     temperature,
                                                     pressure,
                                                     LhsEval(Brine_IAPWS::salinity),
@@ -382,14 +373,13 @@ public:
                                         unsigned phaseIdx,
                                         unsigned /*compIdx*/)
     {
-        CO2Tables params; // TODO: avoid this initialization
         const LhsEval& temperature = decay<LhsEval>(fluidState.temperature(phaseIdx));
         const LhsEval& pressure = decay<LhsEval>(fluidState.pressure(phaseIdx));
         if (phaseIdx == liquidPhaseIdx)
             return BinaryCoeffBrineCO2::liquidDiffCoeff(temperature, pressure);
 
         assert(phaseIdx == gasPhaseIdx);
-        return BinaryCoeffBrineCO2::gasDiffCoeff(params, temperature, pressure);
+        return BinaryCoeffBrineCO2::gasDiffCoeff(getTableInstance(), temperature, pressure);
     }
 
     /*!
@@ -419,9 +409,8 @@ public:
             const LhsEval& XBrine = decay<LhsEval>(fluidState.massFraction(gasPhaseIdx, BrineIdx));
 
             LhsEval result = 0;
-            CO2Tables params; // TODO: avoid this initialization
             result += XBrine * Brine::gasEnthalpy(temperature, pressure);
-            result += XCO2 * CO2::gasEnthalpy(params, temperature, pressure);
+            result += XCO2 * CO2::gasEnthalpy(getTableInstance(), temperature, pressure);
             Valgrind::CheckDefined(result);
             return result;
         }
@@ -469,12 +458,16 @@ public:
             return H2O::liquidHeatCapacity(temperature, pressure);
         }
         else{
-            CO2Tables params; // TODO: avoid this initialization
             return CO2::gasHeatCapacity(temperature, pressure);
         }
     }
 
 private:
+    static const CO2Tables& getTableInstance() {
+        static CO2Tables instance;
+        return instance;
+    }
+
     template <class LhsEval>
     static LhsEval gasDensity_(const LhsEval& T,
                                const LhsEval& pg,
@@ -486,8 +479,7 @@ private:
         Valgrind::CheckDefined(xgH2O);
         Valgrind::CheckDefined(xgCO2);
 
-        CO2Tables params; // TODO: avoid this initialization
-        return CO2::gasDensity(params, T, pg);
+        return CO2::gasDensity(getTableInstance(), T, pg);
     }
 
     /***********************************************************************/
@@ -635,8 +627,7 @@ private:
         delta_hCO2 = (-57.4375 + T * 0.1325) * 1000/44;
 
         /* enthalpy contribution of CO2 (kJ/kg) */
-        CO2Tables params; // TODO: avoid this initialization
-        hg = CO2::gasEnthalpy(params, T, p)/1E3 + delta_hCO2;
+        hg = CO2::gasEnthalpy(getTableInstance(), T, p)/1E3 + delta_hCO2;
 
         /* Enthalpy of brine with dissolved CO2 */
         return (h_ls1 - X_CO2_w*hw + hg*X_CO2_w)*1E3; /*J/kg*/

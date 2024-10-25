@@ -491,16 +491,6 @@ public:
         return convertXoGToRs(convertxoGToXoG(xlCO2, salinity), regionIdx);
     }
 
-    /*!
-     * \brief Get the CO2 parameters.
-     *
-     * \return A const reference to the CO2 parameters.
-     */
-    const Params& getCo2Tables() const
-    {
-        return co2Tables_;
-    }
-
 private:
     template <class LhsEval>
     LhsEval ezrokhiExponent_(const LhsEval& temperature,
