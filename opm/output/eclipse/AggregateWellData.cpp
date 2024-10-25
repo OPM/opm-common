@@ -837,10 +837,10 @@ namespace {
             const auto pc = well.productionControls(smry);
             const auto predMode = well.predictionMode();
 
-            assignOWGRateTargetsProd(pc, predMode, std::forward<SWProp>(swprop), sWell);
-            assignLiqRateTargetsProd(pc, predMode, std::forward<SWProp>(swprop), sWell);
-            assignResVRateTargetsProd(well.name(), smry, pc, predMode,
-                                      std::forward<SWProp>(swprop), sWell);
+            assignOWGRateTargetsProd(pc, predMode, swprop, sWell);
+            assignLiqRateTargetsProd(pc, predMode, swprop, sWell);
+            assignResVRateTargetsProd(well.name(), smry, pc,
+                                      predMode, swprop, sWell);
 
             sWell[Ix::THPTarget] = (pc.thp_limit != 0.0)
                 ? swprop(M::pressure, pc.thp_limit)
@@ -855,7 +855,7 @@ namespace {
             const auto& vfpprod = sched[sim_step].vfpprod;
             if (pc.alq_value != 0.0 && vfpprod.has(pc.vfp_table_number)) {
                 const auto alqType = vfpprod(pc.vfp_table_number).getALQType();
-                assignALQProd(alqType, pc.alq_value, std::forward<SWProp>(swprop), sWell);
+                assignALQProd(alqType, pc.alq_value, swprop, sWell);
             }
 
             if (predMode) {
@@ -1455,16 +1455,20 @@ namespace {
         }
 
         template <class ZWellArray>
-        void staticContrib(const Opm::Well& well, const Opm::Action::Actions& actions, const Opm::Action::State& action_state, ZWellArray& zWell)
+        void staticContrib(const Opm::Well&            well,
+                           const Opm::Action::Actions& actions,
+                           const Opm::Action::State&   action_state,
+                           ZWellArray&                 zWell)
         {
-            using Ix = ::Opm::RestartIO::Helpers::VectorItems::ZWell::index;
+            using Ix = VI::ZWell::index;
+
             zWell[Ix::WellName] = well.name();
-            //loop over actions to assign action name for relevant wells
+
+            // Loop over actions to assign action name for relevant wells
             for (const auto& action : actions) {
                 const auto& result = action_state.result(action.name());
-                if (result.has_value()) {
-                    if (result->has_well(well.name()))
-                        zWell[Ix::ActionX] = action.name();
+                if (result.has_value() && result->has_well(well.name())) {
+                    zWell[Ix::ActionX] = action.name();
                 }
             }
         }
@@ -1500,28 +1504,36 @@ captureDeclaredWellData(const Schedule&             sched,
 
     // Static contributions to IWEL array.
     {
-        //const auto grpNames = groupNames(sched.getGroups());
-        const auto groupMapNameIndex = IWell::currentGroupMapNameIndex(sched, sim_step, inteHead);
+        const auto groupMapNameIndex =
+            IWell::currentGroupMapNameIndex(sched, sim_step, inteHead);
+
         auto msWellID = std::size_t{0};
 
-        wellLoop(wells, sched, sim_step, [&groupMapNameIndex, &msWellID, &step_glo, &wtest_state, &smry, &sched, &sim_step, this]
-            (const Well& well, const std::size_t wellID) -> void
+        wellLoop(wells, sched, sim_step,
+                 [&groupMapNameIndex, &msWellID,
+                  &step_glo, &wtest_state, &smry,
+                  &sched, &sim_step, this]
+                 (const Well& well, const std::size_t wellID) -> void
         {
-            msWellID += well.isMultiSegment();  // 1-based index.
-            auto iw   = this->iWell_[wellID];
             const auto& wtest_config = sched[sim_step].wtest_config();
 
-            IWell::staticContrib(well, step_glo, wtest_config, wtest_state, smry, msWellID, groupMapNameIndex, iw);
+            msWellID += well.isMultiSegment();  // 1-based index.
+            auto iw   = this->iWell_[wellID];
+
+            IWell::staticContrib(well, step_glo, wtest_config, wtest_state,
+                                 smry, msWellID, groupMapNameIndex, iw);
         });
     }
 
     // Static contributions to SWEL array.
-    wellLoop(wells, sched, sim_step, [&step_glo, &sim_step, &sched, &tracers, &wtest_state, &smry, this]
-        (const Well& well, const std::size_t wellID) -> void
+    wellLoop(wells, sched, sim_step, [&step_glo, &sim_step, &sched,
+                                      &tracers, &wtest_state, &smry, this]
+             (const Well& well, const std::size_t wellID) -> void
     {
         auto sw = this->sWell_[wellID];
 
-        SWell::staticContrib(well, step_glo, sim_step, sched, tracers, wtest_state, smry, sw);
+        SWell::staticContrib(well, step_glo, sim_step, sched,
+                             tracers, wtest_state, smry, sw);
     });
 
     // Static contributions to XWEL array.
@@ -1533,26 +1545,25 @@ captureDeclaredWellData(const Schedule&             sched,
         XWell::staticContrib(well, smry,sched.getUnits(), xw);
     });
 
+    // Static contributions to ZWEL array.
+    wellLoop(wells, sched, sim_step, [&sim_step, &action_state, &sched, this]
+             (const Well& well, const std::size_t wellID) -> void
     {
-        // Static contributions to ZWEL array.
-        wellLoop(wells, sched, sim_step, [&sim_step, &action_state, &sched, this]
-            (const Well& well, const std::size_t wellID) -> void
-        {
-            auto zw = this->zWell_[wellID];
-            ZWell::staticContrib(well, sched[sim_step].actions(), action_state, zw);
-        });
-    }
+        auto zw = this->zWell_[wellID];
+
+        ZWell::staticContrib(well, sched[sim_step].actions(), action_state, zw);
+    });
 }
 
 // ---------------------------------------------------------------------
 
 void
 Opm::RestartIO::Helpers::AggregateWellData::
-captureDynamicWellData(const Opm::Schedule&        sched,
-                       const TracerConfig&         tracers,
-                       const std::size_t           sim_step,
-                       const Opm::data::Wells&     xw,
-                       const ::Opm::SummaryState&  smry)
+captureDynamicWellData(const Opm::Schedule&       sched,
+                       const TracerConfig&        tracers,
+                       const std::size_t          sim_step,
+                       const Opm::data::Wells&    xw,
+                       const ::Opm::SummaryState& smry)
 {
     const auto& wells = sched.wellNames(sim_step);
 

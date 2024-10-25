@@ -910,15 +910,15 @@ void assignGroupInjectionTargets(const Opm::Group&        group,
                                  SGrpArray&               sGrp)
 {
     if (group.hasInjectionControl(Opm::Phase::GAS)) {
-        assignGroupGasInjectionTargets(group, sumState, std::forward<SGProp>(sgprop), sGrp);
+        assignGroupGasInjectionTargets(group, sumState, sgprop, sGrp);
     }
 
     if (group.hasInjectionControl(Opm::Phase::WATER)) {
-        assignGroupWaterInjectionTargets(group, sumState, std::forward<SGProp>(sgprop), sGrp);
+        assignGroupWaterInjectionTargets(group, sumState, sgprop, sGrp);
     }
 
     if (group.hasInjectionControl(Opm::Phase::OIL)) {
-        assignGroupOilInjectionTargets(group, sumState, std::forward<SGProp>(sgprop), sGrp);
+        assignGroupOilInjectionTargets(group, sumState, sgprop, sGrp);
     }
 }
 
