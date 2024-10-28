@@ -114,13 +114,13 @@ SCHEDULE
     LgrCollection lgr_col = read_lgr(deck_string,global_grid_dim[0],global_grid_dim[1],global_grid_dim[2]);
     auto [coord_g, zcorn_g] = read_cpg_from_egrid("CARFIN5.EGRID", "global");
     Opm::EclipseGrid eclipse_grid_file(global_grid_dim, coord_g, zcorn_g);    
-    
 
     eclipse_grid_file.init_lgr_cells(lgr_col);
-    eclipse_grid_file.init_children_host_cells();
 
     auto [coord_l, zcorn_l] = read_cpg_from_egrid("CARFIN5.EGRID", "LGR1");
     eclipse_grid_file.lgr_children_cells[0].set_lgr_refinement(coord_l,zcorn_l);
+    eclipse_grid_file.init_children_host_cells();
+
     //eclipse_grid_file.save("output.FEGRID",true,std::nullopt);
 
     eclipse_grid_file.save("output.FEGRID",true,vecNNC,units);
