@@ -1977,12 +1977,17 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
 
     void EclipseGrid::init_children_host_cells(){
         auto get_all_cell_centers = [](const auto& cell, const auto& global_list){
-            std::vector<std::array<double, 3>> cell_centers(global_list.size()); 
+            std::vector<double> cell_centersX(global_list.size());
+            std::vector<double> cell_centersY(global_list.size()); 
+            std::vector<double> cell_centersZ(global_list.size()); 
+           // std::vector<double,3> value;
             for (std::size_t index = 0; index < global_list.size(); index++) {              
-                cell_centers[index] =  cell.getCellCenter(global_list[index]);
-                //cell_centers[index] = this->getActiveIndex(i_list[index],j_list[index],k_list[index]);
+                auto value = cell.getCellCenter(global_list[index]);
+                cell_centersX[index] = value[0];
+                cell_centersY[index] = value[1];                
+                cell_centersZ[index] = value[2];                
             }
-            return cell_centers;
+            return std::make_tuple(cell_centersX,cell_centersY,cell_centersZ);
         }; 
         auto tetra_vol = [](const auto& x, const auto& y, const auto& z){
             auto det = 	x[0]*y[2]*z[1] - x[0]*y[1]*z[2] + x[1]*y[0]*z[2]
@@ -1995,13 +2000,97 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
                       + x[2]*y[3]*z[1] + x[3]*y[1]*z[2] - x[3]*y[2]*z[1];
             return std::abs(det)/6;
         };
-        auto get_nodes = [](std::array<double, 8> X, std::array<int,4> ind){
-            std::array<double, 4> filtered_vector; 
-            for (std::size_t index = 0; index < ind.size(); index++) {
-                filtered_vector[index] = X[ind[index]];
-            }
-            return filtered_vector;
+
+        auto append_node = [](const std::array<double,3>& X, const std::array<double,3>& Y, const std::array<double,3>& Z, 
+                                               const double& xc, const double& yc, const double& zc ){
+            std::array<double,4> tX;
+            std::array<double,4> tY;
+            std::array<double,4> tZ;
+            std::copy(X.begin(), X.end(), tX.begin());
+            tX[3]= xc;
+            std::copy(Y.begin(), Y.end(), tY.begin());
+            tY[3]= yc;            
+            std::copy(Z.begin(), Z.end(), tZ.begin());
+            tZ[3]= zc; 
+            return std::make_tuple(tX,tY,tZ);
         };
+        auto get_nodes = [](const std::array<double, 8>& X, const std::array<double, 8>& Y, const std::array<double, 8>& Z,
+                                      const std::array<int,3>&  ind){
+            std::array<double, 3> filtered_vectorX;
+            std::array<double, 3> filtered_vectorY;
+            std::array<double, 3> filtered_vectorZ;
+            for (std::size_t index = 0; index < ind.size(); index++) {
+                filtered_vectorX[index] = X[ind[index]];
+                filtered_vectorY[index] = Y[ind[index]];
+                filtered_vectorZ[index] = Z[ind[index]];
+            }
+            return std::make_tuple(filtered_vectorX,filtered_vectorY,filtered_vectorZ);
+        };
+        auto calc_vol = [get_nodes,append_node, tetra_vol]
+                                  (const auto& x, const auto& y, const auto& z, 
+                                   const auto& pcX, const auto& pcY, const auto& pcZ ){
+            // node order of each face
+            // Face 0 = {0,1,5,6}
+            std::array<int,3> fc0_0 = {0,1,5};
+            std::array<int,3> fc0_1 = {1,5,6};
+            // Face 1 = {0,4,6,2}
+            std::array<int,3> fc1_0 = {0,4,6};             
+            std::array<int,3> fc1_1 = {4,6,2};            
+            // Face 2 = {2,3,7,6}
+            std::array<int,3> fc2_0 = {2,3,7};            
+            std::array<int,3> fc2_1 = {3,7,6};      
+            // Face 3 = {1,3,7,5}
+            std::array<int,3> fc3_0 = {1,3,7};            
+            std::array<int,3> fc3_1 = {3,7,5};    
+            // Face 4 = {0,1,3,2}
+            std::array<int,3> fc4_0 = {0,1,3};            
+            std::array<int,3> fc4_1 = {1,3,2};
+            // Face 5 = {4,5,7,6}
+            std::array<int,3> fc5_0 = {4,5,7};            
+            std::array<int,3> fc5_1 = {5,7,6};       
+
+            std::array<double,3> f0,f1,f2;
+            // note: some CPG grids may have collapsed faces that are not planar, therefore
+            // the volume of the tetrhadron was used.
+            // calculating the volume of the pyramid with F0 as base and pc as center             
+            std::tie(f0,f1,f2) = get_nodes(x,y,z,fc0_0);           
+            auto tetraFO = std::apply(tetra_vol, append_node(f0,f1,f2,pcX,pcY,pcZ));
+            std::tie(f0,f1,f2) = get_nodes(x,y,z,fc0_1);           
+            tetraFO = tetraFO + std::apply(tetra_vol, append_node(f0,f1,f2,pcX,pcY,pcZ)); 
+
+            // calculating the volume of the pyramid with F1 as base and pc as center             
+            std::tie(f0,f1,f2) = get_nodes(x,y,z,fc1_0);           
+            auto tetraF1 = std::apply(tetra_vol, append_node(f0,f1,f2,pcX,pcY,pcZ));
+            std::tie(f0,f1,f2) = get_nodes(x,y,z,fc1_1);           
+            tetraF1 = tetraF1 + std::apply(tetra_vol, append_node(f0,f1,f2,pcX,pcY,pcZ));
+
+
+            // calculating the volume of the pyramid with F2 as base and pc as center             
+            std::tie(f0,f1,f2) = get_nodes(x,y,z,fc2_0);           
+            auto tetraF2 = std::apply(tetra_vol, append_node(f0,f1,f2,pcX,pcY,pcZ));
+            std::tie(f0,f1,f2) = get_nodes(x,y,z,fc2_1);           
+            tetraF2 = tetraF2 + std::apply(tetra_vol, append_node(f0,f1,f2,pcX,pcY,pcZ));   
+
+            // calculating the volume of the pyramid with F3 as base and pc as center             
+            std::tie(f0,f1,f2) = get_nodes(x,y,z,fc3_0);           
+            auto tetraF3 = std::apply(tetra_vol, append_node(f0,f1,f2,pcX,pcY,pcZ));
+            std::tie(f0,f1,f2) = get_nodes(x,y,z,fc3_1);           
+            tetraF3 = tetraF3 + std::apply(tetra_vol, append_node(f0,f1,f2,pcX,pcY,pcZ));   
+
+            // calculating the volume of the pyramid with F4 as base and pc as center             
+            std::tie(f0,f1,f2) = get_nodes(x,y,z,fc4_0);           
+            auto tetraF4 = std::apply(tetra_vol, append_node(f0,f1,f2,pcX,pcY,pcZ));
+            std::tie(f0,f1,f2) = get_nodes(x,y,z,fc4_1);           
+            tetraF4 = tetraF4 + std::apply(tetra_vol, append_node(f0,f1,f2,pcX,pcY,pcZ));   
+
+            // calculating the volume of the pyramid with F5 as base and pc as center             
+            std::tie(f0,f1,f2) = get_nodes(x,y,z,fc5_0);           
+            auto tetraF5 = std::apply(tetra_vol, append_node(f0,f1,f2,pcX,pcY,pcZ));
+            std::tie(f0,f1,f2) = get_nodes(x,y,z,fc5_1);           
+            tetraF5 = tetraF5 + std::apply(tetra_vol, append_node(f0,f1,f2,pcX,pcY,pcZ));   
+            return tetraFO + tetraF1 + tetraF2 + tetraF3 + tetraF4 + tetraF5; 
+        };
+
         auto get_all_cell_corners = [this](const auto& father_list){
             std::vector<std::array<double, 8>> X(father_list.size());
             std::vector<std::array<double, 8>> Y(father_list.size());
@@ -2011,31 +2100,46 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
             }
             return std::make_tuple(X, Y,Z);
         };
-        auto is_inside = [get_nodes,tetra_vol](std::vector<std::array<double, 3>> centers, std::vector<std::array<double, 8>>& X, 
-                                               std::vector<std::array<double, 8>>& Y,std::vector<std::array<double, 8>>& Z){
-            std::array<int> tet_1 = {1,2,3,4};
-            
-            
-            for (std::size_t index = 0; index < X.size(); index) {
-               double cX = std::accumulate(X[index].begin(), X[index].end(), 0.0)/8;
-               double cY = std::accumulate(Y[index].begin(), Y[index].end(), 0.0)/8;            
-               double cZ = std::accumulate(Z[index].begin(), Z[index].end(), 0.0)/8;
-               auto test = get_nodes(X[index],{1,2,3,4});  
-               auto vol12= tetra_vol(test,test,test);              
-              
-               auto in33dex = 10;
-
+        auto is_inside = [calc_vol](const std::vector<double>& tpX, const std::vector<double>& tpY, const std::vector<double>& tpZ,  
+                                              const std::vector<std::array<double, 8>>& X, const std::vector<std::array<double, 8>>& Y,
+                                              const std::vector<std::array<double, 8>>& Z){
+            std::vector<int> in_elements(tpX.size(),0);
+            // check if it is insde or outside boundary box
+            double minX, minY, minZ, maxX, maxY, maxZ;
+            double pcX, pcY, pcZ, element_volume, test_element_volume;
+            bool flag;
+            for (std::size_t outerIndex = 0; outerIndex < X.size(); outerIndex++) {
+                minX = *std::min_element(X[outerIndex].begin(), X[outerIndex].end());
+                minY = *std::min_element(Y[outerIndex].begin(), Y[outerIndex].end());
+                minZ = *std::min_element(Z[outerIndex].begin(), Z[outerIndex].end());
+                maxX = *std::max_element(X[outerIndex].begin(), X[outerIndex].end());
+                maxY = *std::max_element(Y[outerIndex].begin(), Y[outerIndex].end());
+                maxZ = *std::max_element(Z[outerIndex].begin(), Z[outerIndex].end());
+                pcX = std::accumulate(X[outerIndex].begin(), X[outerIndex].end(), 0.0)/8;
+                pcY = std::accumulate(Y[outerIndex].begin(), Y[outerIndex].end(), 0.0)/8;            
+                pcZ = std::accumulate(Z[outerIndex].begin(), Z[outerIndex].end(), 0.0)/8;
+                element_volume = calc_vol(X[outerIndex],Y[outerIndex],Z[outerIndex], pcX, pcY,pcZ);                         
+                for (size_t innerIndex  = 0; innerIndex < tpX.size(); innerIndex++)
+                {
+                    flag  = (minX < tpX[outerIndex]) && (maxX > tpX[innerIndex]) &&
+                            (minY < tpY[outerIndex]) && (maxY > tpY[innerIndex]) &&
+                            (minZ < tpZ[outerIndex]) && (maxZ > tpZ[innerIndex]);
+                    if (flag) {
+                        test_element_volume = calc_vol(X[outerIndex],Y[outerIndex],Z[outerIndex], 
+                                                     tpX[innerIndex], tpY[innerIndex],tpZ[innerIndex]);                         
+                        if (test_element_volume <= element_volume) {in_elements[innerIndex] = outerIndex;}                             
+                    }
+                }
             }
-            //auto test = get_nodes(X,{1,2,3,4});
-            return 0;
+            return in_elements;
         };
-        for (EclipseGridLGR& lgr_cell : lgr_children_cells) {
-             //EclipseGridLGR::vec_size_t father_host = lgr_cell.get_father_global();
-             auto center_lgr_cells = get_all_cell_centers(lgr_cell, lgr_cell.getActiveMap());
-             auto [host_cellX, host_cellY, host_cellZ]  =  get_all_cell_corners(lgr_cell.get_father_global());
-             auto test = is_inside(center_lgr_cells, host_cellX,host_cellY,host_cellZ);
-            //  getCellCorners(father_host[0],X,Y,Z);
-            //  auto index = 1;
+        for (const EclipseGridLGR& lgr_cell : lgr_children_cells) {
+            //EclipseGridLGR::vec_size_t father_host = lgr_cell.get_father_global();
+            auto test = lgr_cell.getActiveMap();
+            auto indexx =  1;
+            // auto [cell_centerX, cell_centerY,cell_centerZ] = get_all_cell_centers(lgr_cell, lgr_cell.getActiveMap());
+            // auto [host_cellX, host_cellY, host_cellZ]  =  get_all_cell_corners(lgr_cell.get_father_global());            
+            // lgr_cell.set_hostnum(is_inside(cell_centerX,cell_centerY, cell_centerZ, host_cellX, host_cellY, host_cellZ));
         }
 
     }
@@ -2474,6 +2578,10 @@ namespace Opm {
         lgr_label= self_label;
         lgr_level = father_lgr_level + 1 ;   
     }
+    void EclipseGridLGR::set_hostnum(const std::vector<int> hostnum)
+    {
+        m_hostnum = hostnum;
+    }        
     void EclipseGridLGR::set_lgr_refinement(std::vector<double> coord, std::vector<double> zcorn)
     {
         m_coord = coord;
@@ -2543,7 +2651,7 @@ namespace Opm {
         gridhead[3] = dims[2];              // nK
         gridhead[4] = lgr_level;            // LGR index
         
-        // LGR Exclusive Gridhead
+        // LGR Exclusive Gridhead Flags
         gridhead[24] = 1;                   // number of reservoirs
         gridhead[25] = 1;                   // number of coordinate line seg
         gridhead[26] = 0;                   // NTHETA =0 non-radial
@@ -2575,7 +2683,7 @@ namespace Opm {
         egridfile.write("ZCORN", zcorn_f);
 
         egridfile.write("ACTNUM", m_actnum);
-        egridfile.write("HOSTNUM", m_actnum);        
+        egridfile.write("HOSTNUM", m_hostnum);        
         egridfile.write("ENDGRID", endgrid);
         egridfile.write("ENDLGR", endgrid);
         for (const EclipseGridLGR& lgr_cell : lgr_children_cells) {

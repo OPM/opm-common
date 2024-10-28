@@ -376,6 +376,7 @@ namespace Opm {
       const vec_size_t& get_father_global() const{
         return father_global;
       }
+     void set_hostnum(const std::vector<int>);
      void set_lgr_refinement(std::vector<double>,std::vector<double>);                 
     private:
       void init_father_global();
@@ -384,6 +385,7 @@ namespace Opm {
       vec_size_t father_global;
       std::array<int,3> low_fahterIJK;
       std::array<int,3> up_fahterIJK;
+      std::vector<int> m_hostnum;
     };
 
 
