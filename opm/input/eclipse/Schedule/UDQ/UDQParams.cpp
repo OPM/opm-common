@@ -131,6 +131,7 @@ namespace Opm {
         return this->reseed_rng == data.reseed_rng &&
                this->random_seed == data.random_seed &&
                this->value_range == data.value_range &&
+               this->undefined_value == data.undefined_value &&
                this->cmp_eps == data.cmp_eps;
     }
 
