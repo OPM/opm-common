@@ -22,6 +22,7 @@
 #define SERIALIZER_HPP
 
 #include <algorithm>
+#include <cstdint>
 #include <functional>
 #include <map>
 #include <memory>
@@ -101,9 +102,9 @@ public:
     {
         if constexpr (is_ptr<T>::value) {
             if constexpr (detail::is_unique_ptr<T>::value) {
-                uniqueptr(data);
+                unique_ptr(data);
             } else {
-                ptr(data);
+                shared_ptr(data);
             }
         } else if constexpr (is_pair_or_tuple<T>::value) {
             tuple(data);
@@ -146,6 +147,7 @@ public:
         m_ptrmap.clear();
         m_op = Operation::PACK;
         (*this)(data);
+        m_ptrmap.clear();
     }
 
     //! \brief Call this to serialize data.
@@ -163,6 +165,7 @@ public:
         m_ptrmap.clear();
         m_op = Operation::PACK;
         variadic_call(data...);
+        m_ptrmap.clear();
     }
 
     //! \brief Call this to de-serialize data.
@@ -175,6 +178,7 @@ public:
         m_ptrmap.clear();
         m_op = Operation::UNPACK;
         (*this)(data);
+        m_ptrmap.clear();
     }
 
     //! \brief Call this to de-serialize data.
@@ -187,6 +191,7 @@ public:
         m_ptrmap.clear();
         m_op = Operation::UNPACK;
         variadic_call(data...);
+        m_ptrmap.clear();
     }
 
     //! \brief Returns current position in buffer.
@@ -545,53 +550,47 @@ protected:
         T, std::void_t<decltype(std::declval<T>().serializeOp(std::declval<Serializer<Packer>&>()))>
     > : public std::true_type {};
 
-    //! \brief Handler for smart pointers.
+    //! \brief Handler for shared pointers.
     template<class PtrType>
-    void ptr(const PtrType& data)
+    void shared_ptr(const PtrType& data)
     {
         using T1 = typename PtrType::element_type;
-        void* data_ptr = reinterpret_cast<void*>(data.get());
+        std::uintptr_t data_ptr = reinterpret_cast<std::uintptr_t>(data.get());
         (*this)(data_ptr);
         if (!data_ptr)
             return;
-
         if (m_op == Operation::PACK || m_op == Operation::PACKSIZE) {
             if (m_ptrmap.count(data_ptr) == 0) {
                 (*this)(*data);
-                m_ptrmap[data_ptr] = nullptr;
+                m_ptrmap[data_ptr].reset();
             }
         } else {  // m_op == Operation::UNPACK
             if (m_ptrmap.count(data_ptr) == 0) {
-                const_cast<PtrType&>(data).reset(new T1);
-                m_ptrmap[data_ptr] = reinterpret_cast<void*>(& const_cast<PtrType&>(data));
+                const_cast<PtrType&>(data) = std::make_shared<T1>();
+                m_ptrmap[data_ptr] = std::static_pointer_cast<void>(data);
                 (*this)(*data);
             } else {
-                const_cast<PtrType&>(data) = *(reinterpret_cast<PtrType*>(m_ptrmap[data_ptr]));
+                const_cast<PtrType&>(data) = std::static_pointer_cast<T1>(m_ptrmap[data_ptr]);
             }
         }
     }
 
     template<class PtrType>
-    void uniqueptr(const PtrType& data)
+    void unique_ptr(const PtrType& data)
     {
         using T1 = typename PtrType::element_type;
-        void* data_ptr = reinterpret_cast<void*>(&(*data));
-        (*this)(data_ptr);
-        if (!data_ptr)
-            return;
 
-        if (m_op == Operation::PACK || m_op == Operation::PACKSIZE) {
-            if (m_ptrmap.count(data_ptr) == 0) {
+        if (m_op != Operation::UNPACK) {
+            (*this)(data ? 1 : 0);
+            if (data) {
                 (*this)(*data);
-                m_ptrmap[data_ptr] = nullptr;
             }
-        } else {  // m_op == Operation::UNPACK
-            if (m_ptrmap.count(data_ptr) == 0) {
-                const_cast<PtrType&>(data).reset(new T1);
-                m_ptrmap[data_ptr] = reinterpret_cast<void*>(& const_cast<PtrType&>(data));
+        } else {
+            int ptr = 0;
+            (*this)(ptr);
+            if (ptr == 1) {
+                const_cast<PtrType&>(data) = std::make_unique<T1>();
                 (*this)(*data);
-            } else {
-                throw std::runtime_error("Should never have to reconstruct more than one unique_ptr!");
             }
         }
     }
@@ -601,7 +600,7 @@ protected:
     size_t m_packSize = 0; //!< Required buffer size after PACKSIZE has been done
     size_t m_position = 0; //!< Current position in buffer
     std::vector<char> m_buffer; //!< Buffer for serialized data
-    std::map<void*, void*> m_ptrmap; //!< Map to keep track of which pointer data has been serialized and actual pointers during unpacking
+    std::map<std::uintptr_t, std::shared_ptr<void>> m_ptrmap; //!< Map to keep track of which pointer data has been serialized and actual pointers during unpacking
 };
 
 }
