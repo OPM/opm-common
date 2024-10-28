@@ -56,6 +56,7 @@ public:
             template<class Serializer>
             void serializeOp(Serializer& serializer)
             {
+                serializer(this->active_index);
                 serializer(this->permx);
                 serializer(this->permy);
                 serializer(this->permz);
@@ -84,8 +85,8 @@ public:
             serializer(this->i);
             serializer(this->j);
             serializer(this->k);
-            serializer(this->depth);
             serializer(this->props);
+            serializer(this->depth);
             serializer(this->dimensions);
         }
 
