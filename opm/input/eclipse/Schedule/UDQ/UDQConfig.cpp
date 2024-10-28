@@ -556,6 +556,7 @@ namespace Opm {
             && (this->m_assignments == data.m_assignments)
             && (this->m_tables == data.m_tables)
             && (this->units == data.units)
+            && (this->define_order == data.define_order)
             && (this->input_index == data.input_index)
             && (this->type_count == data.type_count)
             && (this->pending_assignments_ == data.pending_assignments_)
