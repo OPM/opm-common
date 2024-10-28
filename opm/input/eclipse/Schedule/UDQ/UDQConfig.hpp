@@ -412,6 +412,7 @@ namespace Opm {
             serializer(m_assignments);
             serializer(m_tables);
             serializer(units);
+            serializer(define_order);
             serializer(input_index);
             serializer(type_count);
             serializer(pending_assignments_);
