@@ -147,6 +147,7 @@ public:
         m_ptrmap.clear();
         m_op = Operation::PACK;
         (*this)(data);
+        m_ptrmap.clear();
     }
 
     //! \brief Call this to serialize data.
@@ -164,6 +165,7 @@ public:
         m_ptrmap.clear();
         m_op = Operation::PACK;
         variadic_call(data...);
+        m_ptrmap.clear();
     }
 
     //! \brief Call this to de-serialize data.
@@ -176,6 +178,7 @@ public:
         m_ptrmap.clear();
         m_op = Operation::UNPACK;
         (*this)(data);
+        m_ptrmap.clear();
     }
 
     //! \brief Call this to de-serialize data.
@@ -188,6 +191,7 @@ public:
         m_ptrmap.clear();
         m_op = Operation::UNPACK;
         variadic_call(data...);
+        m_ptrmap.clear();
     }
 
     //! \brief Returns current position in buffer.
