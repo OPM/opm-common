@@ -283,47 +283,48 @@ void ScheduleState::rptonly(const bool only)
 
 bool ScheduleState::operator==(const ScheduleState& other) const {
 
-    return this->m_start_time == other.m_start_time &&
-           this->m_oilvap == other.m_oilvap &&
-           this->m_sim_step == other.m_sim_step &&
-           this->m_month_num == other.m_month_num &&
-           this->m_save_step == other.m_save_step &&
-           this->m_first_in_month == other.m_first_in_month &&
-           this->m_first_in_year == other.m_first_in_year &&
-           this->m_year_num == other.m_year_num &&
-           this->target_wellpi == other.target_wellpi &&
-           this->m_tuning == other.m_tuning &&
-           this->m_end_time == other.m_end_time &&
-           this->m_events == other.m_events &&
-           this->m_wellgroup_events == other.m_wellgroup_events &&
-           this->m_geo_keywords == other.m_geo_keywords &&
-           this->m_message_limits == other.m_message_limits &&
-           this->m_whistctl_mode == other.m_whistctl_mode &&
-           this->m_nupcol == other.m_nupcol &&
-           this->network.get() == other.network.get() &&
-           this->network_balance.get() == other.network_balance.get() &&
-           this->wtest_config.get() == other.wtest_config.get() &&
-           this->well_order.get() == other.well_order.get() &&
-           this->group_order.get() == other.group_order.get() &&
-           this->gconsale.get() == other.gconsale.get() &&
-           this->gconsump.get() == other.gconsump.get() &&
-           this->wlist_manager.get() == other.wlist_manager.get() &&
-           this->rpt_config.get() == other.rpt_config.get() &&
-           this->actions.get() == other.actions.get() &&
-           this->udq_active.get() == other.udq_active.get() &&
-           this->glo.get() == other.glo.get() &&
-           this->guide_rate.get() == other.guide_rate.get() &&
-           this->rft_config.get() == other.rft_config.get() &&
-           this->udq.get() == other.udq.get() &&
-           this->bhp_defaults.get() == other.bhp_defaults.get() &&
-           this->source.get() == other.source.get() &&
-           this->wells == other.wells &&
-           this->groups == other.groups &&
-           this->vfpprod == other.vfpprod &&
-           this->vfpinj == other.vfpinj &&
-           this->m_sumthin == other.m_sumthin &&
-           this->next_tstep == other.next_tstep &&
-           this->m_rptonly == other.m_rptonly;
+    return this->m_start_time == other.m_start_time
+        && this->m_oilvap == other.m_oilvap
+        && this->m_sim_step == other.m_sim_step
+        && this->m_month_num == other.m_month_num
+        && this->m_save_step == other.m_save_step
+        && this->m_first_in_month == other.m_first_in_month
+        && this->m_first_in_year == other.m_first_in_year
+        && this->m_year_num == other.m_year_num
+        && this->target_wellpi == other.target_wellpi
+        && this->m_tuning == other.m_tuning
+        && this->m_end_time == other.m_end_time
+        && this->m_events == other.m_events
+        && this->m_wellgroup_events == other.m_wellgroup_events
+        && this->m_geo_keywords == other.m_geo_keywords
+        && this->m_message_limits == other.m_message_limits
+        && this->m_whistctl_mode == other.m_whistctl_mode
+        && this->m_nupcol == other.m_nupcol
+        && this->network.get() == other.network.get()
+        && this->network_balance.get() == other.network_balance.get()
+        && this->wtest_config.get() == other.wtest_config.get()
+        && this->well_order.get() == other.well_order.get()
+        && this->group_order.get() == other.group_order.get()
+        && this->gconsale.get() == other.gconsale.get()
+        && this->gconsump.get() == other.gconsump.get()
+        && this->wlist_manager.get() == other.wlist_manager.get()
+        && this->rpt_config.get() == other.rpt_config.get()
+        && this->actions.get() == other.actions.get()
+        && this->udq_active.get() == other.udq_active.get()
+        && this->glo.get() == other.glo.get()
+        && this->guide_rate.get() == other.guide_rate.get()
+        && this->rft_config.get() == other.rft_config.get()
+        && this->udq.get() == other.udq.get()
+        && this->bhp_defaults.get() == other.bhp_defaults.get()
+        && this->source.get() == other.source.get()
+        && this->wells == other.wells
+        && this->groups == other.groups
+        && this->vfpprod == other.vfpprod
+        && this->vfpinj == other.vfpinj
+        && this->m_sumthin == other.m_sumthin
+        && this->next_tstep == other.next_tstep
+        && this->m_rptonly == other.m_rptonly
+        ;
 }
 
 

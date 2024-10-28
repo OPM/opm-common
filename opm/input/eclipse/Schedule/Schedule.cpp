@@ -1944,18 +1944,19 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
         bool simUpdateFromPythonIsEqual = !this->simUpdateFromPython ||
              (*(this->simUpdateFromPython) == *(data.simUpdateFromPython));
 
-        return this->m_static == data.m_static &&
-               this->m_treat_critical_as_non_critical == data.m_treat_critical_as_non_critical &&
-               this->m_sched_deck == data.m_sched_deck &&
-               this->action_wgnames == data.action_wgnames &&
-               this->potential_wellopen_patterns == data.potential_wellopen_patterns &&
-               this->exit_status == data.exit_status &&
-               this->snapshots == data.snapshots &&
-               this->restart_output == data.restart_output &&
-               this->completed_cells == data.completed_cells &&
-               this->current_report_step == data.current_report_step &&
-               this->m_lowActionParsingStrictness == data.m_lowActionParsingStrictness &&
-               simUpdateFromPythonIsEqual;
+        return this->m_static == data.m_static
+            && this->m_treat_critical_as_non_critical == data.m_treat_critical_as_non_critical
+            && this->m_sched_deck == data.m_sched_deck
+            && this->action_wgnames == data.action_wgnames
+            && this->potential_wellopen_patterns == data.potential_wellopen_patterns
+            && this->exit_status == data.exit_status
+            && this->snapshots == data.snapshots
+            && this->restart_output == data.restart_output
+            && this->completed_cells == data.completed_cells
+            && this->current_report_step == data.current_report_step
+            && this->m_lowActionParsingStrictness == data.m_lowActionParsingStrictness
+            && simUpdateFromPythonIsEqual
+            ;
      }
 
 
