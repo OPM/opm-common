@@ -21,91 +21,67 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include <opm/input/eclipse/Schedule/Schedule.hpp>
+#include <opm/common/utility/MemPacker.hpp>
+#include <opm/common/utility/Serializer.hpp>
 #include <opm/common/utility/TimeService.hpp>
 #include <opm/common/utility/OpmInputError.hpp>
-
-#include <opm/input/eclipse/Python/Python.hpp>
-#include <opm/input/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
-#include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
-#include <opm/input/eclipse/EclipseState/Runspec.hpp>
-#include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
-#include <opm/input/eclipse/Schedule/Schedule.hpp>
-#include <opm/input/eclipse/Schedule/ScheduleState.hpp>
-#include <opm/input/eclipse/Schedule/OilVaporizationProperties.hpp>
-#include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
-#include <opm/input/eclipse/Schedule/Well/Well.hpp>
-#include <opm/input/eclipse/Schedule/GasLiftOpt.hpp>
-#include <opm/input/eclipse/Schedule/SummaryState.hpp>
-#include <opm/input/eclipse/Schedule/Well/PAvg.hpp>
-#include <opm/input/eclipse/Schedule/Well/WellMatcher.hpp>
-#include <opm/input/eclipse/Schedule/Well/WellTestConfig.hpp>
 
 #include <opm/input/eclipse/Deck/Deck.hpp>
 #include <opm/input/eclipse/Deck/DeckItem.hpp>
 #include <opm/input/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/input/eclipse/Deck/DeckRecord.hpp>
-#include <opm/input/eclipse/Parser/Parser.hpp>
-#include <opm/input/eclipse/Parser/ParseContext.hpp>
-#include <opm/input/eclipse/Parser/ErrorGuard.hpp>
-#include <opm/input/eclipse/Units/Dimension.hpp>
-#include <opm/input/eclipse/Units/UnitSystem.hpp>
 
+#include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
+#include <opm/input/eclipse/EclipseState/Runspec.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
+
+#include <opm/input/eclipse/Parser/ErrorGuard.hpp>
+#include <opm/input/eclipse/Parser/ParseContext.hpp>
+#include <opm/input/eclipse/Parser/Parser.hpp>
+
+#include <opm/input/eclipse/Python/Python.hpp>
+
+#include <opm/input/eclipse/Schedule/Action/Actions.hpp>
+#include <opm/input/eclipse/Schedule/Action/ASTNode.hpp>
+#include <opm/input/eclipse/Schedule/GasLiftOpt.hpp>
 #include <opm/input/eclipse/Schedule/Group/GConSale.hpp>
 #include <opm/input/eclipse/Schedule/Group/GConSump.hpp>
 #include <opm/input/eclipse/Schedule/Group/GroupEconProductionLimits.hpp>
-#include <opm/input/eclipse/Schedule/Group/GuideRateConfig.hpp>
 #include <opm/input/eclipse/Schedule/Group/GuideRate.hpp>
+#include <opm/input/eclipse/Schedule/Group/GuideRateConfig.hpp>
+#include <opm/input/eclipse/Schedule/MSW/WellSegments.hpp>
+#include <opm/input/eclipse/Schedule/Network/Balance.hpp>
+#include <opm/input/eclipse/Schedule/Network/ExtNetwork.hpp>
+#include <opm/input/eclipse/Schedule/OilVaporizationProperties.hpp>
+#include <opm/input/eclipse/Schedule/ResCoup/ReservoirCouplingInfo.hpp>
+#include <opm/input/eclipse/Schedule/RFTConfig.hpp>
+#include <opm/input/eclipse/Schedule/RPTConfig.hpp>
+#include <opm/input/eclipse/Schedule/Schedule.hpp>
+#include <opm/input/eclipse/Schedule/ScheduleState.hpp>
+#include <opm/input/eclipse/Schedule/SummaryState.hpp>
+#include <opm/input/eclipse/Schedule/UDQ/UDQActive.hpp>
+#include <opm/input/eclipse/Schedule/UDQ/UDQASTNode.hpp>
+#include <opm/input/eclipse/Schedule/UDQ/UDQConfig.hpp>
+#include <opm/input/eclipse/Schedule/Well/WDFAC.hpp>
+#include <opm/input/eclipse/Schedule/Well/PAvg.hpp>
+#include <opm/input/eclipse/Schedule/Well/Well.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellBrineProperties.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellEconProductionLimits.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellFoamProperties.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellMatcher.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellMICPProperties.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellPolymerProperties.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellTestConfig.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellTracerProperties.hpp>
+#include <opm/input/eclipse/Schedule/Well/WVFPDP.hpp>
+#include <opm/input/eclipse/Schedule/Well/WVFPEXP.hpp>
+
+#include <opm/input/eclipse/Units/Dimension.hpp>
+#include <opm/input/eclipse/Units/UnitSystem.hpp>
 
 using namespace Opm;
-
-std::string deck0 = R"(
-START             -- 0
-10 MAI 2007 /
-GRID
-PORO
-    1000*0.1 /
-PERMX
-    1000*1 /
-PERMY
-    1000*0.1 /
-PERMZ
-    1000*0.01 /
-SCHEDULE
-
-DATES             -- 1
- 10  JUN 2007 /
-/
-
-DATES             -- 2
- 15  JUN 2007 /
-/
-
-DATES             -- 3
- 20  JUN 2007 /
-/
-
-DATES             -- 4
- 10  JUL 2007 /
-/
-
-
-DATES             -- 5
- 10  AUG 2007 /
-/
-
-
-DATES             -- 6
- 10  SEP 2007 /
-/
-
-DATES             -- 7
- 10  NOV 2007 /
-/
-
-)";
-
-
 
 std::string WTEST_deck = R"(
 START             -- 0
@@ -278,9 +254,6 @@ DATES             -- 6
 DATES             -- 7
  10  NOV 2007 /
 /
-
-
-
 )";
 
 std::string VFP_deck1 = R"(
@@ -331,10 +304,8 @@ DATES             -- 7
 /
 )";
 
-
-
-
-static Schedule make_schedule(const std::string& deck_string) {
+static Schedule make_schedule(const std::string& deck_string)
+{
     const auto& deck = Parser{}.parseString(deck_string);
     auto python = std::make_shared<Python>();
     EclipseGrid grid(10,10,10);
@@ -344,22 +315,21 @@ static Schedule make_schedule(const std::string& deck_string) {
     return Schedule(deck, grid , fp, runspec, python);
 }
 
-
-
-BOOST_AUTO_TEST_CASE(SerializeWTest) {
+BOOST_AUTO_TEST_CASE(SerializeWTest)
+{
     auto sched = make_schedule(WTEST_deck);
-    auto sched0 = make_schedule(deck0);
+    Opm::Schedule sched0;
+
     auto wtest1 = sched[0].wtest_config();
     auto wtest2 = sched[3].wtest_config();
 
     {
-        std::vector<Opm::WellTestConfig> value_list;
-        std::vector<std::size_t> index_list;
-        sched.pack_state<Opm::WellTestConfig>( value_list, index_list );
-        BOOST_CHECK_EQUAL( value_list.size(), 2 );
-
-        sched0.unpack_state<Opm::WellTestConfig>( value_list, index_list );
+        Opm::Serialization::MemPacker packer;
+        Opm::Serializer ser(packer);
+        ser.pack(sched);
+        ser.unpack(sched0);
     }
+
     BOOST_CHECK( wtest1 == sched0[0].wtest_config());
     BOOST_CHECK( wtest1 == sched0[1].wtest_config());
     BOOST_CHECK( wtest1 == sched0[2].wtest_config());
@@ -369,19 +339,21 @@ BOOST_AUTO_TEST_CASE(SerializeWTest) {
     BOOST_CHECK( wtest2 == sched0[5].wtest_config());
 }
 
-BOOST_AUTO_TEST_CASE(SerializeWList) {
+BOOST_AUTO_TEST_CASE(SerializeWList)
+{
     auto sched = make_schedule(WTEST_deck);
-    auto sched0 = make_schedule(deck0);
+    Opm::Schedule sched0;
+
     auto wlm1 = sched[0].wlist_manager();
     auto wlm2 = sched[3].wlist_manager();
 
     {
-        std::vector<Opm::WListManager> value_list;
-        std::vector<std::size_t> index_list;
-        sched.pack_state<Opm::WListManager>( value_list, index_list);
-        BOOST_CHECK_EQUAL( value_list.size(), 2 );
-        sched0.unpack_state<Opm::WListManager>( value_list, index_list );
+        Opm::Serialization::MemPacker packer;
+        Opm::Serializer ser(packer);
+        ser.pack(sched);
+        ser.unpack(sched0);
     }
+
     BOOST_CHECK( wlm1 == sched0[0].wlist_manager());
     BOOST_CHECK( wlm1 == sched0[1].wlist_manager());
     BOOST_CHECK( wlm1 == sched0[2].wlist_manager());
@@ -391,35 +363,34 @@ BOOST_AUTO_TEST_CASE(SerializeWList) {
     BOOST_CHECK( wlm2 == sched0[5].wlist_manager());
 }
 
-BOOST_AUTO_TEST_CASE(SerializeGECON) {
+BOOST_AUTO_TEST_CASE(SerializeGECON)
+{
     auto sched  = make_schedule(GCONSALE_deck);
-    auto sched0 = make_schedule(deck0);
+    Opm::Schedule sched0;
     auto gecon1 = sched[0].gecon.get();
 
     {
-        std::vector<Opm::GroupEconProductionLimits> value_list;
-        std::vector<std::size_t> index_list;
-        sched.pack_state<Opm::GroupEconProductionLimits>( value_list, index_list );
-        BOOST_CHECK_EQUAL( value_list.size(), 1 );
-        sched0.unpack_state<Opm::GroupEconProductionLimits>( value_list, index_list );
+        Opm::Serialization::MemPacker packer;
+        Opm::Serializer ser(packer);
+        ser.pack(sched);
+        ser.unpack(sched0);
     }
     BOOST_CHECK( gecon1 == sched0[0].gecon());
     BOOST_CHECK( gecon1 == sched0[1].gecon());
 }
 
-
-BOOST_AUTO_TEST_CASE(SerializeGCONSALE) {
+BOOST_AUTO_TEST_CASE(SerializeGCONSALE)
+{
     auto sched  = make_schedule(GCONSALE_deck);
-    auto sched0 = make_schedule(deck0);
+    Opm::Schedule sched0;
     auto gconsale1 = sched[0].gconsale.get();
     auto gconsale2 = sched[3].gconsale.get();
 
     {
-        std::vector<Opm::GConSale> value_list;
-        std::vector<std::size_t> index_list;
-        sched.pack_state<Opm::GConSale>( value_list, index_list );
-        BOOST_CHECK_EQUAL( value_list.size(), 2 );
-        sched0.unpack_state<Opm::GConSale>( value_list, index_list );
+        Opm::Serialization::MemPacker packer;
+        Opm::Serializer ser(packer);
+        ser.pack(sched);
+        ser.unpack(sched0);
     }
 
     BOOST_CHECK( gconsale1 == sched0[0].gconsale());
@@ -431,18 +402,18 @@ BOOST_AUTO_TEST_CASE(SerializeGCONSALE) {
     BOOST_CHECK( gconsale2 == sched0[5].gconsale());
 }
 
-BOOST_AUTO_TEST_CASE(SerializeGCONSUMP) {
+BOOST_AUTO_TEST_CASE(SerializeGCONSUMP)
+{
     auto sched  = make_schedule(GCONSALE_deck);
-    auto sched0 = make_schedule(deck0);
+    Opm::Schedule sched0;
     auto gconsump1 = sched[0].gconsump.get();
     auto gconsump2 = sched[3].gconsump.get();
 
     {
-        std::vector<Opm::GConSump> value_list;
-        std::vector<std::size_t> index_list;
-        sched.pack_state<Opm::GConSump>( value_list, index_list );
-        BOOST_CHECK_EQUAL( value_list.size(), 2 );
-        sched0.unpack_state<Opm::GConSump>( value_list, index_list );
+        Opm::Serialization::MemPacker packer;
+        Opm::Serializer ser(packer);
+        ser.pack(sched);
+        ser.unpack(sched0);
     }
 
     BOOST_CHECK( gconsump1 == sched0[0].gconsump());
@@ -454,19 +425,18 @@ BOOST_AUTO_TEST_CASE(SerializeGCONSUMP) {
     BOOST_CHECK( gconsump2 == sched0[5].gconsump());
 }
 
-
-BOOST_AUTO_TEST_CASE(SerializeVFP) {
+BOOST_AUTO_TEST_CASE(SerializeVFP)
+{
     auto sched = make_schedule(VFP_deck1);
-    auto sched0 = make_schedule(deck0);
+    Opm::Schedule sched0;
     auto vfpinj1 = sched[0].vfpinj;
     auto vfpinj2 = sched[3].vfpinj;
 
     {
-        std::vector<Opm::VFPInjTable> value_list;
-        std::vector<std::size_t> index_list;
-        sched.pack_map<int, Opm::VFPInjTable>( value_list, index_list );
-        BOOST_CHECK_EQUAL( value_list.size(), 2 );
-        sched0.unpack_map<int, Opm::VFPInjTable>( value_list, index_list );
+        Opm::Serialization::MemPacker packer;
+        Opm::Serializer ser(packer);
+        ser.pack(sched);
+        ser.unpack(sched0);
     }
 
     BOOST_CHECK( vfpinj1 == sched0[0].vfpinj);
@@ -478,18 +448,18 @@ BOOST_AUTO_TEST_CASE(SerializeVFP) {
     BOOST_CHECK( vfpinj2 == sched0[5].vfpinj);
 }
 
-BOOST_AUTO_TEST_CASE(SerializeGROUPS) {
+BOOST_AUTO_TEST_CASE(SerializeGROUPS)
+{
     auto sched = make_schedule(GCONSALE_deck);
-    auto sched0 = make_schedule(deck0);
+    Opm::Schedule sched0;
     auto groups1 = sched[0].groups;
     auto groups2 = sched[3].groups;
 
     {
-        std::vector<Opm::Group> value_list;
-        std::vector<std::size_t> index_list;
-        sched.pack_map<std::string, Opm::Group>( value_list, index_list );
-        BOOST_CHECK_EQUAL( value_list.size(), 5 );
-        sched0.unpack_map<std::string, Opm::Group>( value_list, index_list );
+        Opm::Serialization::MemPacker packer;
+        Opm::Serializer ser(packer);
+        ser.pack(sched);
+        ser.unpack(sched0);
     }
 
     BOOST_CHECK( groups1 == sched0[0].groups);
@@ -500,11 +470,3 @@ BOOST_AUTO_TEST_CASE(SerializeGROUPS) {
     BOOST_CHECK( groups2 == sched0[4].groups);
     BOOST_CHECK( groups2 == sched0[5].groups);
 }
-
-
-
-
-
-
-
-
