@@ -4488,7 +4488,7 @@ BOOST_AUTO_TEST_CASE(SKIPREST_VFP) {
     auto rst_file = std::make_shared<Opm::EclIO::ERst>(rst_filename);
     auto rst_view = std::make_shared<Opm::EclIO::RestartFileView>(std::move(rst_file), report_step);
     const auto rst = Opm::RestartIO::RstState::load(std::move(rst_view), es.runspec(), parser);
-    const auto sched = Schedule{ deck, es, python, false, true, {}, &rst };
+    const auto sched = Schedule{ deck, es, python, false, /*slave_mode=*/false, true, {}, &rst };
     BOOST_CHECK_NO_THROW( sched[3].vfpprod(5) );
 
     for (std::size_t index = 0; index < sched.size(); index++) {

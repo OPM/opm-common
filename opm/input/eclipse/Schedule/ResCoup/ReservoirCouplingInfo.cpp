@@ -19,38 +19,34 @@
 
 #include <stdexcept>
 #include <limits>
+#include <opm/common/utility/OpmInputError.hpp>
 #include <opm/input/eclipse/Schedule/ResCoup/ReservoirCouplingInfo.hpp>
 
 namespace Opm {
 namespace ReservoirCoupling {
-// Class Slave
-// ----------------
-Slave Slave::serializationTestObject()
+
+CouplingInfo::CouplingFileFlag CouplingInfo::couplingFileFlagFromString(
+        const std::string& flag_str, const DeckKeyword& keyword
+)
 {
-    return Slave{"RES-1", "RC-01_MOD1_PRED", "../mod1", 1};
+    if (flag_str == "F") {
+        return CouplingInfo::CouplingFileFlag::FORMATTED;
+    } else if (flag_str == "U") {
+        return CouplingInfo::CouplingFileFlag::UNFORMATTED;
+    } else {
+        throw Opm::OpmInputError("Invalid DUMPCUPL value: " + flag_str, keyword.location());
+    }
 }
-
-bool Slave::operator==(const Slave& rhs) const {
-    return this->m_name == rhs.m_name;
-}
-
-
-// Class MasterGroup
-// -----------------
-MasterGroup MasterGroup::serializationTestObject()
-{
-    return MasterGroup{"D1-M", "RES-1", "MANI-D", 1e+20};
-}
-
-bool MasterGroup::operator==(const MasterGroup& rhs) const {
-    return this->m_name == rhs.m_name;
-}
-
-// Class CouplingInfo
-// -------------------
 
 bool CouplingInfo::operator==(const CouplingInfo& rhs) const {
-    return this->m_slaves == rhs.m_slaves;
+    return this->m_slaves == rhs.m_slaves &&
+           this->m_master_groups == rhs.m_master_groups &&
+           this->m_grup_slavs == rhs.m_grup_slavs &&
+           this->m_master_mode == rhs.m_master_mode &&
+           this->m_master_min_time_step == rhs.m_master_min_time_step &&
+           this->m_write_coupling_file_flag == rhs.m_write_coupling_file_flag &&
+           this->m_read_coupling_file_name == rhs.m_read_coupling_file_name &&
+           this->m_read_coupling_file_flag == rhs.m_read_coupling_file_flag;
 }
 
 CouplingInfo CouplingInfo::serializationTestObject()
