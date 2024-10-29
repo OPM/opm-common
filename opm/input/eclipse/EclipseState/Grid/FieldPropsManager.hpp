@@ -251,6 +251,8 @@ public:
 
     void prune_global_for_schedule_run();
 
+    void set_active_indices(const std::vector<int>& indices);
+
 private:
     /*
       Return the keyword values as a std::vector<>. All elements in the return
