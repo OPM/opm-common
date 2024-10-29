@@ -1986,15 +1986,26 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
             std::vector<double> cell_centersX(global_list.size());
             std::vector<double> cell_centersY(global_list.size()); 
             std::vector<double> cell_centersZ(global_list.size()); 
-           // std::vector<double,3> value;
+            std::array<double,3> value = {0,0,0};
             for (std::size_t index = 0; index < global_list.size(); index++) {              
-                auto value = cell.getCellCenter(global_list[index]);
+                value = cell.getCellCenter(global_list[index]);
                 cell_centersX[index] = value[0];
                 cell_centersY[index] = value[1];                
                 cell_centersZ[index] = value[2];                
             }
             return std::make_tuple(cell_centersX,cell_centersY,cell_centersZ);
         }; 
+
+        auto get_all_cell_corners = [this](const auto& father_list){
+            std::vector<std::array<double, 8>> X(father_list.size());
+            std::vector<std::array<double, 8>> Y(father_list.size());
+            std::vector<std::array<double, 8>> Z(father_list.size()); 
+            for (std::size_t index = 0; index < father_list.size(); index++) {              
+                getCellCorners(father_list[index],X[index],Y[index],Z[index]);
+            }
+            return std::make_tuple(X, Y,Z);
+        };
+
         auto tetra_vol = [](const auto& x, const auto& y, const auto& z){
             auto det = 	x[0]*y[2]*z[1] - x[0]*y[1]*z[2] + x[1]*y[0]*z[2]
                       - x[1]*y[2]*z[0] - x[2]*y[0]*z[1] + x[2]*y[1]*z[0]
@@ -2020,6 +2031,7 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
             tZ[3]= zc; 
             return std::make_tuple(tX,tY,tZ);
         };
+
         auto get_nodes = [](const std::array<double, 8>& X, const std::array<double, 8>& Y, const std::array<double, 8>& Z,
                                       const std::array<int,3>&  ind){
             std::array<double, 3> filtered_vectorX;
@@ -2032,6 +2044,15 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
             }
             return std::make_tuple(filtered_vectorX,filtered_vectorY,filtered_vectorZ);
         };
+
+        auto filter_array = [](const std::vector<std::size_t>& X, const std::vector<int>&  ind){
+            std::vector<int> filtered_vectorX(ind.size(),0);
+            for (std::size_t index = 0; index < ind.size(); index++) {
+                filtered_vectorX[index] = X[ind[index]];
+            }
+            return filtered_vectorX;
+        };        
+
         auto calc_vol = [get_nodes,append_node, tetra_vol]
                                   (const auto& x, const auto& y, const auto& z, 
                                    const auto& pcX, const auto& pcY, const auto& pcZ ){
@@ -2097,15 +2118,7 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
             return tetraFO + tetraF1 + tetraF2 + tetraF3 + tetraF4 + tetraF5; 
         };
 
-        auto get_all_cell_corners = [this](const auto& father_list){
-            std::vector<std::array<double, 8>> X(father_list.size());
-            std::vector<std::array<double, 8>> Y(father_list.size());
-            std::vector<std::array<double, 8>> Z(father_list.size()); 
-            for (std::size_t index = 0; index < father_list.size(); index++) {              
-                getCellCorners(father_list[index],X[index],Y[index],Z[index]);
-            }
-            return std::make_tuple(X, Y,Z);
-        };
+
         auto is_inside = [calc_vol](const std::vector<double>& tpX, const std::vector<double>& tpY, const std::vector<double>& tpZ,  
                                               const std::vector<std::array<double, 8>>& X, const std::vector<std::array<double, 8>>& Y,
                                               const std::vector<std::array<double, 8>>& Z){
@@ -2125,28 +2138,47 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
                 pcY = std::accumulate(Y[outerIndex].begin(), Y[outerIndex].end(), 0.0)/8;            
                 pcZ = std::accumulate(Z[outerIndex].begin(), Z[outerIndex].end(), 0.0)/8;
                 element_volume = calc_vol(X[outerIndex],Y[outerIndex],Z[outerIndex], pcX, pcY,pcZ);                         
-                for (size_t innerIndex  = 0; innerIndex < tpX.size(); innerIndex++)
-                {
-                    flag  = (minX < tpX[outerIndex]) && (maxX > tpX[innerIndex]) &&
-                            (minY < tpY[outerIndex]) && (maxY > tpY[innerIndex]) &&
-                            (minZ < tpZ[outerIndex]) && (maxZ > tpZ[innerIndex]);
-                    if (flag) {
+                for (size_t innerIndex  = 0; innerIndex < tpX.size(); innerIndex++){
+                    // check if center of refined volume is outside the boundary box of a coarse volume.
+                    // Only computes volumed base test is this condition is met.
+                    flag  = (minX < tpX[innerIndex]) && (maxX > tpX[innerIndex]) &&
+                            (minY < tpY[innerIndex]) && (maxY > tpY[innerIndex]) &&
+                            (minZ < tpZ[innerIndex]) && (maxZ > tpZ[innerIndex]);                            
+                    if (flag && (in_elements[innerIndex] == 0)) {
                         test_element_volume = calc_vol(X[outerIndex],Y[outerIndex],Z[outerIndex], 
                                                      tpX[innerIndex], tpY[innerIndex],tpZ[innerIndex]);                         
-                        if (test_element_volume <= element_volume) {in_elements[innerIndex] = outerIndex;}                             
+                        if (test_element_volume <= element_volume){
+                             in_elements[innerIndex] = static_cast<int>(outerIndex);
+                        }                             
                     }
                 }
             }
             return in_elements;
         };
-        for (const EclipseGridLGR& lgr_cell : lgr_children_cells) {
-            //EclipseGridLGR::vec_size_t father_host = lgr_cell.get_father_global();
-            auto test = lgr_cell.getActiveMap();
-            auto indexx =  1;
-            // auto [cell_centerX, cell_centerY,cell_centerZ] = get_all_cell_centers(lgr_cell, lgr_cell.getActiveMap());
-            // auto [host_cellX, host_cellY, host_cellZ]  =  get_all_cell_corners(lgr_cell.get_father_global());            
-            // lgr_cell.set_hostnum(is_inside(cell_centerX,cell_centerY, cell_centerZ, host_cellX, host_cellY, host_cellZ));
+
+        std::vector<double> element_centerX, element_centerY, element_centerZ;
+        for (EclipseGridLGR& lgr_cell : lgr_children_cells) {
+            std::tie(element_centerX, element_centerY,element_centerZ) = get_all_cell_centers(lgr_cell, lgr_cell.getActiveMap());
+            auto [host_cellX, host_cellY, host_cellZ]  =  get_all_cell_corners(lgr_cell.get_father_global());  
+            auto inside_el = is_inside(element_centerX, element_centerY, element_centerZ, host_cellX, host_cellY, host_cellZ);
+            auto host_cells_global_ref = filter_array(lgr_cell.get_father_global(), inside_el);
+            lgr_cell.set_hostnum(host_cells_global_ref);
+            std::cout<<host_cells_global_ref[0]<<std::endl;
         }
+        // for (auto& lgr_cell : lgr_children_cells) {
+        //     index++;
+        //     index = index + 10;
+        // }
+
+        
+        // for (EclipseGridLGR& lgr_cell : lgr_children_cells) {
+        //     //EclipseGridLGR::vec_size_t father_host = lgr_cell.get_father_global();
+        //     auto test = lgr_cell.getActiveMap();
+        //     auto indexx =  1;
+        //     // auto [cell_centerX, cell_centerY,cell_centerZ] = get_all_cell_centers(lgr_cell, lgr_cell.getActiveMap());
+        //     // auto [host_cellX, host_cellY, host_cellZ]  =  get_all_cell_corners(lgr_cell.get_father_global());            
+        //     //);
+        // }
 
     }
 
@@ -2584,8 +2616,9 @@ namespace Opm {
         lgr_label= self_label;
         lgr_level = father_lgr_level + 1 ;   
     }
-    void EclipseGridLGR::set_hostnum(const std::vector<int> hostnum)
-    {
+    void EclipseGridLGR::set_hostnum(std::vector<int>& hostnum)
+    {   
+        std::transform(hostnum.begin(),hostnum.end(), hostnum.begin(), [](int a){return a+1;});
         m_hostnum = hostnum;
     }        
     void EclipseGridLGR::set_lgr_refinement(std::vector<double> coord, std::vector<double> zcorn)
