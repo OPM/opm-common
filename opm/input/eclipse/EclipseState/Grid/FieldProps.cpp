@@ -353,19 +353,21 @@ void multiply_deck(const Fieldprops::keywords::keyword_info<T>& kw_info,
                    const Box& box)
 {
     verify_deck_data(kw_info, keyword, deck_data, box);
+    auto& value_status = box.isGlobal() ? field_data.global_value_status.value() : field_data.value_status;
+    auto& data = box.isGlobal() ? field_data.global_data.value() : field_data.data;
     for (const auto& cell_index : box.index_list()) {
         auto active_index = cell_index.active_index;
         auto data_index = cell_index.data_index;
 
         if (value::has_value(deck_status[data_index]) &&
-            value::has_value(field_data.value_status[active_index]))
+            value::has_value(value_status[active_index]))
         {
-            field_data.data[active_index] *= deck_data[data_index];
-            field_data.value_status[active_index] = deck_status[data_index];
+            data[active_index] *= deck_data[data_index];
+            value_status[active_index] = deck_status[data_index];
         }
     }
 
-    if (kw_info.global) {
+    if (kw_info.global && !box.isGlobal()) {
         auto& global_data = field_data.global_data.value();
         auto& global_status = field_data.global_value_status.value();
         const auto& index_list = box.global_index_list();
