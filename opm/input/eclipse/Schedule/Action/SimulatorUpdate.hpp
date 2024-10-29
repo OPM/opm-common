@@ -37,6 +37,7 @@ struct SimulatorUpdate
         simulatorUpdate.tran_update = true;
         simulatorUpdate.well_structure_changed = true;
         simulatorUpdate.affected_wells = {"test"};
+        simulatorUpdate.welpi_wells.insert("I-45");
         return simulatorUpdate;
     }
 
@@ -44,6 +45,7 @@ struct SimulatorUpdate
     void serializeOp(Serializer& serializer)
     {
         serializer(affected_wells);
+        serializer(welpi_wells);
         serializer(tran_update);
         serializer(well_structure_changed);
     }
@@ -51,6 +53,10 @@ struct SimulatorUpdate
     /// Wells affected by ACTIONX and for which the simulator needs to
     /// reapply rates and state from the newly updated Schedule object.
     std::unordered_set<std::string> affected_wells{};
+
+    /// Wells affected only by WELPI for which the simulator needs to update
+    /// its internal notion of the connection transmissibility factors.
+    std::unordered_set<std::string> welpi_wells{};
 
     /// Whether or not a transmissibility multiplier keyword was invoked in
     /// an ACTIONX block.
@@ -74,6 +80,9 @@ struct SimulatorUpdate
 
         this->affected_wells.insert(otherSimUpdate.affected_wells.begin(),
                                     otherSimUpdate.affected_wells.end());
+
+        this->welpi_wells.insert(otherSimUpdate.welpi_wells.begin(),
+                                 otherSimUpdate.welpi_wells.end());
     }
 
     void reset()
@@ -81,6 +90,7 @@ struct SimulatorUpdate
         this->tran_update = false;
         this->well_structure_changed = false;
         this->affected_wells.clear();
+        this->welpi_wells.clear();
     }
 
     bool operator==(const SimulatorUpdate& that) const
@@ -88,6 +98,7 @@ struct SimulatorUpdate
         return (this->tran_update == that.tran_update)
             && (this->well_structure_changed == that.well_structure_changed)
             && (this->affected_wells == that.affected_wells)
+            && (this->welpi_wells == that.welpi_wells)
             ;
     }
 };

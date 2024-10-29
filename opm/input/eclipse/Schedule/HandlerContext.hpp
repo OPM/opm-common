@@ -82,6 +82,9 @@ public:
     //! \brief Mark that a well has changed.
     void affected_well(const std::string& well_name);
 
+    //! \brief Mark that a well is affected by WELPI.
+    void welpi_well(const std::string& well_name);
+
     //! \brief Mark that transmissibilities must be recalculated.
     void record_tran_change();
 
