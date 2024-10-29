@@ -2057,9 +2057,9 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
                                   (const auto& x, const auto& y, const auto& z, 
                                    const auto& pcX, const auto& pcY, const auto& pcZ ){
             // node order of each face
-            // Face 0 = {0,1,5,6}
+            // Face 0 = {0,1,5,4}
             std::array<int,3> fc0_0 = {0,1,5};
-            std::array<int,3> fc0_1 = {1,5,6};
+            std::array<int,3> fc0_1 = {1,5,4};
             // Face 1 = {0,4,6,2}
             std::array<int,3> fc1_0 = {0,4,6};             
             std::array<int,3> fc1_1 = {4,6,2};            
@@ -2078,12 +2078,12 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
 
             std::array<double,3> f0,f1,f2;
             // note: some CPG grids may have collapsed faces that are not planar, therefore
-            // the volume of the tetrhadron was used.
+            // the hexadron is subdivided in terahedrons.
             // calculating the volume of the pyramid with F0 as base and pc as center             
             std::tie(f0,f1,f2) = get_nodes(x,y,z,fc0_0);           
-            auto tetraFO = std::apply(tetra_vol, append_node(f0,f1,f2,pcX,pcY,pcZ));
+            auto tetraF0 = std::apply(tetra_vol, append_node(f0,f1,f2,pcX,pcY,pcZ));
             std::tie(f0,f1,f2) = get_nodes(x,y,z,fc0_1);           
-            tetraFO = tetraFO + std::apply(tetra_vol, append_node(f0,f1,f2,pcX,pcY,pcZ)); 
+            tetraF0 = tetraF0 + std::apply(tetra_vol, append_node(f0,f1,f2,pcX,pcY,pcZ)); 
 
             // calculating the volume of the pyramid with F1 as base and pc as center             
             std::tie(f0,f1,f2) = get_nodes(x,y,z,fc1_0);           
@@ -2115,7 +2115,7 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
             auto tetraF5 = std::apply(tetra_vol, append_node(f0,f1,f2,pcX,pcY,pcZ));
             std::tie(f0,f1,f2) = get_nodes(x,y,z,fc5_1);           
             tetraF5 = tetraF5 + std::apply(tetra_vol, append_node(f0,f1,f2,pcX,pcY,pcZ));   
-            return tetraFO + tetraF1 + tetraF2 + tetraF3 + tetraF4 + tetraF5; 
+            return tetraF0 + tetraF1 + tetraF2 + tetraF3 + tetraF4 + tetraF5; 
         };
 
 
@@ -2163,23 +2163,7 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
             auto inside_el = is_inside(element_centerX, element_centerY, element_centerZ, host_cellX, host_cellY, host_cellZ);
             auto host_cells_global_ref = filter_array(lgr_cell.get_father_global(), inside_el);
             lgr_cell.set_hostnum(host_cells_global_ref);
-            std::cout<<host_cells_global_ref[0]<<std::endl;
         }
-        // for (auto& lgr_cell : lgr_children_cells) {
-        //     index++;
-        //     index = index + 10;
-        // }
-
-        
-        // for (EclipseGridLGR& lgr_cell : lgr_children_cells) {
-        //     //EclipseGridLGR::vec_size_t father_host = lgr_cell.get_father_global();
-        //     auto test = lgr_cell.getActiveMap();
-        //     auto indexx =  1;
-        //     // auto [cell_centerX, cell_centerY,cell_centerZ] = get_all_cell_centers(lgr_cell, lgr_cell.getActiveMap());
-        //     // auto [host_cellX, host_cellY, host_cellZ]  =  get_all_cell_corners(lgr_cell.get_father_global());            
-        //     //);
-        // }
-
     }
 
 
