@@ -1982,7 +1982,34 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
     }
 
     void EclipseGrid::init_children_host_cells(){
-        auto get_all_cell_centers = [](const auto& cell, const auto& global_list){
+        constexpr std::array<std::array<int, 3>, 12> faceConfigurations{
+            std::array<int, 3>{0, 1, 5}, 
+                              {1, 5, 4},     // Face 0
+                              {0, 4, 6},
+                              {4, 6, 2},     // Face 1
+                              {2, 3, 7}, 
+                              {3, 7, 6},     // Face 2
+                              {1, 3, 7}, 
+                              {3, 7, 5},     // Face 3
+                              {0, 1, 3}, 
+                              {1, 3, 2},     // Face 4
+                              {4, 5, 7}, 
+                              {5, 7, 6}     // Face 5
+        };
+        constexpr double epslon = 1e-6; 
+        auto calcTetraVol = [](const auto& x, const auto& y, const auto& z){
+            auto det = 	x[0]*y[2]*z[1] - x[0]*y[1]*z[2] + x[1]*y[0]*z[2]
+                      - x[1]*y[2]*z[0] - x[2]*y[0]*z[1] + x[2]*y[1]*z[0]
+                      + x[0]*y[1]*z[3] - x[0]*y[3]*z[1] - x[1]*y[0]*z[3]
+                      + x[1]*y[3]*z[0] + x[3]*y[0]*z[1] - x[3]*y[1]*z[0]
+                      - x[0]*y[2]*z[3] + x[0]*y[3]*z[2] + x[2]*y[0]*z[3]
+                      - x[2]*y[3]*z[0] - x[3]*y[0]*z[2] + x[3]*y[2]*z[0]
+                      + x[1]*y[2]*z[3] - x[1]*y[3]*z[2] - x[2]*y[1]*z[3]
+                      + x[2]*y[3]*z[1] + x[3]*y[1]*z[2] - x[3]*y[2]*z[1];
+            return std::abs(det)/6;
+        };
+
+        auto getAllCellCenters = [](const auto& cell, const auto& global_list){
             std::vector<double> cell_centersX(global_list.size());
             std::vector<double> cell_centersY(global_list.size()); 
             std::vector<double> cell_centersZ(global_list.size()); 
@@ -1996,7 +2023,7 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
             return std::make_tuple(cell_centersX,cell_centersY,cell_centersZ);
         }; 
 
-        auto get_all_cell_corners = [this](const auto& father_list){
+        auto getAllCellCorners = [this](const auto& father_list){
             std::vector<std::array<double, 8>> X(father_list.size());
             std::vector<std::array<double, 8>> Y(father_list.size());
             std::vector<std::array<double, 8>> Z(father_list.size()); 
@@ -2006,19 +2033,7 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
             return std::make_tuple(X, Y,Z);
         };
 
-        auto tetra_vol = [](const auto& x, const auto& y, const auto& z){
-            auto det = 	x[0]*y[2]*z[1] - x[0]*y[1]*z[2] + x[1]*y[0]*z[2]
-                      - x[1]*y[2]*z[0] - x[2]*y[0]*z[1] + x[2]*y[1]*z[0]
-                      + x[0]*y[1]*z[3] - x[0]*y[3]*z[1] - x[1]*y[0]*z[3]
-                      + x[1]*y[3]*z[0] + x[3]*y[0]*z[1] - x[3]*y[1]*z[0]
-                      - x[0]*y[2]*z[3] + x[0]*y[3]*z[2] + x[2]*y[0]*z[3]
-                      - x[2]*y[3]*z[0] - x[3]*y[0]*z[2] + x[3]*y[2]*z[0]
-                      + x[1]*y[2]*z[3] - x[1]*y[3]*z[2] - x[2]*y[1]*z[3]
-                      + x[2]*y[3]*z[1] + x[3]*y[1]*z[2] - x[3]*y[2]*z[1];
-            return std::abs(det)/6;
-        };
-
-        auto append_node = [](const std::array<double,3>& X, const std::array<double,3>& Y, const std::array<double,3>& Z, 
+        auto appendNode = [](const std::array<double,3>& X, const std::array<double,3>& Y, const std::array<double,3>& Z, 
                                                const double& xc, const double& yc, const double& zc ){
             std::array<double,4> tX;
             std::array<double,4> tY;
@@ -2032,7 +2047,7 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
             return std::make_tuple(tX,tY,tZ);
         };
 
-        auto get_nodes = [](const std::array<double, 8>& X, const std::array<double, 8>& Y, const std::array<double, 8>& Z,
+        auto getNodes = [](const std::array<double, 8>& X, const std::array<double, 8>& Y, const std::array<double, 8>& Z,
                                       const std::array<int,3>&  ind){
             std::array<double, 3> filtered_vectorX;
             std::array<double, 3> filtered_vectorY;
@@ -2045,7 +2060,7 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
             return std::make_tuple(filtered_vectorX,filtered_vectorY,filtered_vectorZ);
         };
 
-        auto filter_array = [](const std::vector<std::size_t>& X, const std::vector<int>&  ind){
+        auto filterArray = [](const std::vector<std::size_t>& X, const std::vector<int>&  ind){
             std::vector<int> filtered_vectorX(ind.size(),0);
             for (std::size_t index = 0; index < ind.size(); index++) {
                 filtered_vectorX[index] = X[ind[index]];
@@ -2053,75 +2068,27 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
             return filtered_vectorX;
         };        
 
-        auto calc_vol = [get_nodes,append_node, tetra_vol]
+        auto calcHexaVol = [getNodes, appendNode, calcTetraVol, faceConfigurations]
                                   (const auto& x, const auto& y, const auto& z, 
-                                   const auto& pcX, const auto& pcY, const auto& pcZ ){
-            // node order of each face
-            // Face 0 = {0,1,5,4}
-            std::array<int,3> fc0_0 = {0,1,5};
-            std::array<int,3> fc0_1 = {1,5,4};
-            // Face 1 = {0,4,6,2}
-            std::array<int,3> fc1_0 = {0,4,6};             
-            std::array<int,3> fc1_1 = {4,6,2};            
-            // Face 2 = {2,3,7,6}
-            std::array<int,3> fc2_0 = {2,3,7};            
-            std::array<int,3> fc2_1 = {3,7,6};      
-            // Face 3 = {1,3,7,5}
-            std::array<int,3> fc3_0 = {1,3,7};            
-            std::array<int,3> fc3_1 = {3,7,5};    
-            // Face 4 = {0,1,3,2}
-            std::array<int,3> fc4_0 = {0,1,3};            
-            std::array<int,3> fc4_1 = {1,3,2};
-            // Face 5 = {4,5,7,6}
-            std::array<int,3> fc5_0 = {4,5,7};            
-            std::array<int,3> fc5_1 = {5,7,6};       
-
-            std::array<double,3> f0,f1,f2;
+                                   const auto& cx, const auto& cy, const auto& cz ){
             // note: some CPG grids may have collapsed faces that are not planar, therefore
             // the hexadron is subdivided in terahedrons.
-            // calculating the volume of the pyramid with F0 as base and pc as center             
-            std::tie(f0,f1,f2) = get_nodes(x,y,z,fc0_0);           
-            auto tetraF0 = std::apply(tetra_vol, append_node(f0,f1,f2,pcX,pcY,pcZ));
-            std::tie(f0,f1,f2) = get_nodes(x,y,z,fc0_1);           
-            tetraF0 = tetraF0 + std::apply(tetra_vol, append_node(f0,f1,f2,pcX,pcY,pcZ)); 
+            // calculating the volume of the pyramid with F0 as base and pc as center                         
+            double totalVolume = 0.0;
+            for (size_t i = 0; i < faceConfigurations.size(); i += 2) {
+                auto [fX0, fY0, fZ0] = getNodes(x, y, z, faceConfigurations[i]);
+                totalVolume += std::apply(calcTetraVol, appendNode(fX0, fY0, fZ0, cx, cy, cz));
 
-            // calculating the volume of the pyramid with F1 as base and pc as center             
-            std::tie(f0,f1,f2) = get_nodes(x,y,z,fc1_0);           
-            auto tetraF1 = std::apply(tetra_vol, append_node(f0,f1,f2,pcX,pcY,pcZ));
-            std::tie(f0,f1,f2) = get_nodes(x,y,z,fc1_1);           
-            tetraF1 = tetraF1 + std::apply(tetra_vol, append_node(f0,f1,f2,pcX,pcY,pcZ));
-
-
-            // calculating the volume of the pyramid with F2 as base and pc as center             
-            std::tie(f0,f1,f2) = get_nodes(x,y,z,fc2_0);           
-            auto tetraF2 = std::apply(tetra_vol, append_node(f0,f1,f2,pcX,pcY,pcZ));
-            std::tie(f0,f1,f2) = get_nodes(x,y,z,fc2_1);           
-            tetraF2 = tetraF2 + std::apply(tetra_vol, append_node(f0,f1,f2,pcX,pcY,pcZ));   
-
-            // calculating the volume of the pyramid with F3 as base and pc as center             
-            std::tie(f0,f1,f2) = get_nodes(x,y,z,fc3_0);           
-            auto tetraF3 = std::apply(tetra_vol, append_node(f0,f1,f2,pcX,pcY,pcZ));
-            std::tie(f0,f1,f2) = get_nodes(x,y,z,fc3_1);           
-            tetraF3 = tetraF3 + std::apply(tetra_vol, append_node(f0,f1,f2,pcX,pcY,pcZ));   
-
-            // calculating the volume of the pyramid with F4 as base and pc as center             
-            std::tie(f0,f1,f2) = get_nodes(x,y,z,fc4_0);           
-            auto tetraF4 = std::apply(tetra_vol, append_node(f0,f1,f2,pcX,pcY,pcZ));
-            std::tie(f0,f1,f2) = get_nodes(x,y,z,fc4_1);           
-            tetraF4 = tetraF4 + std::apply(tetra_vol, append_node(f0,f1,f2,pcX,pcY,pcZ));   
-
-            // calculating the volume of the pyramid with F5 as base and pc as center             
-            std::tie(f0,f1,f2) = get_nodes(x,y,z,fc5_0);           
-            auto tetraF5 = std::apply(tetra_vol, append_node(f0,f1,f2,pcX,pcY,pcZ));
-            std::tie(f0,f1,f2) = get_nodes(x,y,z,fc5_1);           
-            tetraF5 = tetraF5 + std::apply(tetra_vol, append_node(f0,f1,f2,pcX,pcY,pcZ));   
-            return tetraF0 + tetraF1 + tetraF2 + tetraF3 + tetraF4 + tetraF5; 
+                auto [fX1, fY1, fZ1] = getNodes(x, y, z, faceConfigurations[i + 1]);
+                totalVolume += std::apply(calcTetraVol, appendNode(fX1, fY1, fZ1, cx, cy, cz));
+            }
+            return totalVolume;
         };
 
 
-        auto is_inside = [calc_vol](const std::vector<double>& tpX, const std::vector<double>& tpY, const std::vector<double>& tpZ,  
-                                              const std::vector<std::array<double, 8>>& X, const std::vector<std::array<double, 8>>& Y,
-                                              const std::vector<std::array<double, 8>>& Z){
+        auto isInsideElement = [calcHexaVol](const std::vector<double>& tpX, const std::vector<double>& tpY, const std::vector<double>& tpZ,  
+                                                       const std::vector<std::array<double, 8>>& X, const std::vector<std::array<double, 8>>& Y,
+                                                       const std::vector<std::array<double, 8>>& Z){
             std::vector<int> in_elements(tpX.size(),0);
             // check if it is insde or outside boundary box
             double minX, minY, minZ, maxX, maxY, maxZ;
@@ -2137,7 +2104,7 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
                 pcX = std::accumulate(X[outerIndex].begin(), X[outerIndex].end(), 0.0)/8;
                 pcY = std::accumulate(Y[outerIndex].begin(), Y[outerIndex].end(), 0.0)/8;            
                 pcZ = std::accumulate(Z[outerIndex].begin(), Z[outerIndex].end(), 0.0)/8;
-                element_volume = calc_vol(X[outerIndex],Y[outerIndex],Z[outerIndex], pcX, pcY,pcZ);                         
+                element_volume = calcHexaVol(X[outerIndex],Y[outerIndex],Z[outerIndex], pcX, pcY,pcZ);                         
                 for (size_t innerIndex  = 0; innerIndex < tpX.size(); innerIndex++){
                     // check if center of refined volume is outside the boundary box of a coarse volume.
                     // Only computes volumed base test is this condition is met.
@@ -2145,9 +2112,9 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
                             (minY < tpY[innerIndex]) && (maxY > tpY[innerIndex]) &&
                             (minZ < tpZ[innerIndex]) && (maxZ > tpZ[innerIndex]);                            
                     if (flag && (in_elements[innerIndex] == 0)) {
-                        test_element_volume = calc_vol(X[outerIndex],Y[outerIndex],Z[outerIndex], 
+                        test_element_volume = calcHexaVol(X[outerIndex],Y[outerIndex],Z[outerIndex], 
                                                      tpX[innerIndex], tpY[innerIndex],tpZ[innerIndex]);                         
-                        if (test_element_volume <= element_volume){
+                        if (std::abs(test_element_volume - element_volume) < epslon){
                              in_elements[innerIndex] = static_cast<int>(outerIndex);
                         }                             
                     }
@@ -2158,10 +2125,10 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
 
         std::vector<double> element_centerX, element_centerY, element_centerZ;
         for (EclipseGridLGR& lgr_cell : lgr_children_cells) {
-            std::tie(element_centerX, element_centerY,element_centerZ) = get_all_cell_centers(lgr_cell, lgr_cell.getActiveMap());
-            auto [host_cellX, host_cellY, host_cellZ]  =  get_all_cell_corners(lgr_cell.get_father_global());  
-            auto inside_el = is_inside(element_centerX, element_centerY, element_centerZ, host_cellX, host_cellY, host_cellZ);
-            auto host_cells_global_ref = filter_array(lgr_cell.get_father_global(), inside_el);
+            std::tie(element_centerX, element_centerY,element_centerZ) = getAllCellCenters(lgr_cell, lgr_cell.getActiveMap());
+            auto [host_cellX, host_cellY, host_cellZ]  =  getAllCellCorners(lgr_cell.get_father_global());  
+            auto inside_el = isInsideElement(element_centerX, element_centerY, element_centerZ, host_cellX, host_cellY, host_cellZ);
+            auto host_cells_global_ref = filterArray(lgr_cell.get_father_global(), inside_el);
             lgr_cell.set_hostnum(host_cells_global_ref);
         }
     }
