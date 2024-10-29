@@ -496,14 +496,15 @@ namespace Opm {
 
 RSTConfig::RSTConfig(const SOLUTIONSection& solution_section,
                      const ParseContext&    parseContext,
-                     const bool compositional,
+                     const bool compositional_arg,
                      ErrorGuard&            errors)
     : write_rst_file(false)
+    , compositional(compositional_arg)
 {
     for (const auto& keyword : solution_section) {
         if (keyword.name() == ParserKeywords::RPTRST::keywordName) {
             const auto in_solution = true;
-            this->handleRPTRST(keyword, parseContext, errors,  compositional, in_solution);
+            this->handleRPTRST(keyword, parseContext, errors, in_solution);
 
             // Generating restart file output at time zero is normally
             // governed by setting the 'RESTART' mnemonic to a value greater
@@ -520,11 +521,10 @@ RSTConfig::RSTConfig(const SOLUTIONSection& solution_section,
 
 void RSTConfig::update(const DeckKeyword&  keyword,
                        const ParseContext& parseContext,
-                       const bool compositional,
                        ErrorGuard&         errors)
 {
     if (keyword.name() == ParserKeywords::RPTRST::keywordName) {
-        this->handleRPTRST(keyword, parseContext, errors, compositional);
+        this->handleRPTRST(keyword, parseContext, errors);
     }
     else if (keyword.name() == ParserKeywords::RPTSCHED::keywordName) {
         this->handleRPTSCHED(keyword, parseContext, errors);
@@ -575,6 +575,7 @@ RSTConfig RSTConfig::serializationTestObject()
     rst_config.freq = {};
     rst_config.write_rst_file = true;
     rst_config.save = true;
+    rst_config.compositional = false;
     rst_config.keywords = {{"S1", 1}, {"S2", 2}};
     rst_config.solution_only_keywords = { "FIP" };
 
@@ -588,6 +589,7 @@ bool RSTConfig::operator==(const RSTConfig& other) const
         && (this->basic == other.basic)
         && (this->freq == other.freq)
         && (this->save == other.save)
+        && (this->compositional == other.compositional)
         && (this->solution_only_keywords == other.solution_only_keywords)
         ;
 }
@@ -637,7 +639,6 @@ void RSTConfig::handleRPTSOL(const DeckKeyword&  keyword,
 void RSTConfig::handleRPTRST(const DeckKeyword&  keyword,
                              const ParseContext& parseContext,
                              ErrorGuard&         errors,
-                             const bool          compositional,
                              const bool          in_solution)
 {
     const auto& [mnemonics, basic_freq] = RPTRST(keyword, parseContext, errors, compositional);

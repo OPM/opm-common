@@ -392,11 +392,10 @@ namespace Opm {
                                  WelSegsSet* welsegs_wells,
                                  std::set<std::string>* compsegs_wells)
     {
-        const bool compostioanl = m_static.m_runspec.numComps() > 0;
         HandlerContext handlerContext { *this, block, keyword, grid, currentStep,
                                         matching_wells, actionx_mode,
                                         parseContext, errors, sim_update, target_wellpi,
-                                        wpimult_global_factor, welsegs_wells, compsegs_wells, compostioanl};
+                                        wpimult_global_factor, welsegs_wells, compsegs_wells};
 
         if (!KeywordHandlers::getInstance().handleKeyword(handlerContext)) {
             OpmLog::warning(fmt::format("No handler registered for keyword {} "

@@ -204,12 +204,11 @@ public:
     RSTConfig() = default;
     RSTConfig(const SOLUTIONSection& solution_section,
               const ParseContext& parseContext,
-              const bool compositional,
+              bool compositional_arg,
               ErrorGuard& errors);
 
     void update(const DeckKeyword& keyword,
                 const ParseContext& parseContext,
-                bool compositional,
                 ErrorGuard& errors);
 
     static RSTConfig first(const RSTConfig& src);
@@ -223,6 +222,7 @@ public:
         serializer(basic);
         serializer(freq);
         serializer(save);
+        serializer(compositional);
         serializer(this->solution_only_keywords);
     }
 
@@ -233,6 +233,7 @@ public:
     std::optional<int> basic{};
     std::optional<int> freq{};
     bool save { false };
+    bool compositional { false };
 
 private:
     std::unordered_set<std::string> solution_only_keywords{};
@@ -244,7 +245,6 @@ private:
     void handleRPTRST(const DeckKeyword& keyword,
                       const ParseContext& parse_context,
                       ErrorGuard& errors,
-                      bool compositional = false,
                       bool in_solution = false);
 
     void handleRPTSCHED(const DeckKeyword& keyword,

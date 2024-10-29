@@ -163,12 +163,6 @@ HandlerContext::wellNames(const std::string& pattern, bool allowEmpty) const
     return schedule_.wellNames(pattern, *this, allowEmpty);
 }
 
-bool
-HandlerContext::compositional() const
-{
-    return this->compositional_;
-}
-
 std::vector<std::string>
 HandlerContext::wellNames(const std::string& pattern) const
 {

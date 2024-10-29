@@ -62,8 +62,7 @@ public:
                    const std::unordered_map<std::string, double>* target_wellpi_,
                    std::unordered_map<std::string, double>& wpimult_global_factor_,
                    WelSegsSet* welsegs_wells_,
-                   std::set<std::string>* compsegs_wells_,
-                   const bool compos_arg = false)
+                   std::set<std::string>* compsegs_wells_)
         : block(block_)
         , keyword(keyword_)
         , currentStep(currentStep_)
@@ -78,7 +77,6 @@ public:
         , compsegs_wells(compsegs_wells_)
         , sim_update(sim_update_)
         , schedule_(schedule)
-        , compositional_(compos_arg)
     {}
 
     //! \brief Mark that a well has changed.
@@ -158,9 +156,6 @@ public:
     std::vector<std::string>
     wellNames(const std::string& pattern, bool allowEmpty) const;
 
-    //! \brief Obtain whether the simulation is compositional
-    bool compositional() const;
-
     const ScheduleBlock& block;
     const DeckKeyword& keyword;
     const std::size_t currentStep;
@@ -177,7 +172,6 @@ private:
     std::set<std::string>* compsegs_wells{nullptr};
     SimulatorUpdate* sim_update{nullptr};
     Schedule& schedule_;
-    bool compositional_{false};
 };
 
 } // end namespace Opm
