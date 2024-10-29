@@ -368,6 +368,11 @@ namespace Opm {
         this->field_props.reset_actnum(new_actnum);
     }
 
+    void EclipseState::set_active_indices(const std::vector<int>& indices)
+    {
+        this->field_props.set_active_indices(indices);
+    }
+
     void EclipseState::pruneDeactivatedAquiferConnections(const std::vector<std::size_t>& deactivated_cells) {
         if (this->aquifer_config.hasAnalyticalAquifer())
             this->aquifer_config.pruneDeactivatedAquiferConnections(deactivated_cells);

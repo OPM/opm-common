@@ -68,17 +68,34 @@
 #include <fmt/format.h>
 
 namespace {
-    Opm::Box makeGlobalGridBox(const Opm::EclipseGrid* gridPtr)
+    Opm::Box makeGlobalGridBox(const Opm::EclipseGrid* gridPtr,
+                               const std::vector<int>* actnum = nullptr,
+                               const std::unordered_map<int, int>* index = nullptr)
     {
         return Opm::Box {
             *gridPtr,
-            [gridPtr](const std::size_t global_index)
+            [gridPtr, actnum](const std::size_t global_index)
             {
-                return gridPtr->cellActive(global_index);
+                if (!actnum || actnum->empty()) {
+                    return gridPtr->cellActive(global_index);
+                }
+                if (actnum->empty()) {
+                    return true;
+                } else if (global_index >= actnum->size()) {
+                    return false;
+                } else {
+                    return (*actnum)[global_index] > 0;
+                }
             },
-            [gridPtr](const std::size_t global_index)
+            [gridPtr, index](const std::size_t global_index) -> std::size_t
             {
-                return gridPtr->activeIndex(global_index);
+                if (!index || index->empty()) {
+                    return gridPtr->activeIndex(global_index);
+                }
+
+                const auto it = index->find(global_index);
+                assert(it != index->end());
+                return it->second;
             }
         };
     }
@@ -2213,7 +2230,7 @@ void FieldProps::scanSOLUTIONSection(const SOLUTIONSection& solution_section,
 
 void FieldProps::handle_schedule_keywords(const std::vector<DeckKeyword>& keywords)
 {
-    auto box = makeGlobalGridBox(this->grid_ptr);
+    auto box = makeGlobalGridBox(this->grid_ptr, &this->m_actnum, &this->m_active_index);
 
     // When called in the SCHEDULE section the context is that the scaling factors
     // have already been applied. We set them to zero for reuse here.
@@ -2305,6 +2322,15 @@ std::vector<std::string> FieldProps::fip_regions() const
     }
 
     return result;
+}
+
+void FieldProps::set_active_indices(const std::vector<int>& indices)
+{
+    m_active_index.clear();
+    std::size_t idx = 0;
+    for (int index : indices) {
+        m_active_index.emplace(index, idx++);
+    }
 }
 
 template std::vector<bool> FieldProps::defaulted<int>(const std::string& keyword);
