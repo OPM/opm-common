@@ -336,32 +336,6 @@ namespace Opm
             serializer(this->m_lowActionParsingStrictness);
             serializer(this->simUpdateFromPython);
 
-            this->template pack_unpack<PAvg>(serializer);
-            this->template pack_unpack<WellTestConfig>(serializer);
-            this->template pack_unpack<GConSale>(serializer);
-            this->template pack_unpack<GConSump>(serializer);
-            this->template pack_unpack<GroupEconProductionLimits>(serializer);
-            this->template pack_unpack<WListManager>(serializer);
-            this->template pack_unpack<Network::ExtNetwork>(serializer);
-            this->template pack_unpack<Network::Balance>(serializer);
-            this->template pack_unpack<RPTConfig>(serializer);
-            this->template pack_unpack<Action::Actions>(serializer);
-            this->template pack_unpack<UDQActive>(serializer);
-            this->template pack_unpack<UDQConfig>(serializer);
-            this->template pack_unpack<NameOrder>(serializer);
-            this->template pack_unpack<GroupOrder>(serializer);
-            this->template pack_unpack<GuideRateConfig>(serializer);
-            this->template pack_unpack<GasLiftOpt>(serializer);
-            this->template pack_unpack<RFTConfig>(serializer);
-            this->template pack_unpack<RSTConfig>(serializer);
-            this->template pack_unpack<ScheduleState::BHPDefaults>(serializer);
-            this->template pack_unpack<Source>(serializer);
-
-            this->template pack_unpack_map<int, VFPProdTable>(serializer);
-            this->template pack_unpack_map<int, VFPInjTable>(serializer);
-            this->template pack_unpack_map<std::string, Group>(serializer);
-            this->template pack_unpack_map<std::string, Well>(serializer);
-
             // If we are deserializing we need to setup the pointer to the
             // unit system since this is process specific. This is safe
             // because we set the same value in all well instances.
@@ -377,23 +351,9 @@ namespace Opm
             }
         }
 
-        template <typename T, class Serializer>
-        void pack_unpack(Serializer& serializer) {
-            std::vector<T> value_list;
-            std::vector<std::size_t> index_list;
-
-            if (serializer.isSerializing())
-                this->template pack_state<T>(value_list, index_list);
-
-            serializer(value_list);
-            serializer(index_list);
-
-            if (!serializer.isSerializing())
-                this->template unpack_state<T>(value_list, index_list);
-        }
-
         template <typename T>
-        std::vector<std::pair<std::size_t,  T>> unique() const {
+        std::vector<std::pair<std::size_t,  T>> unique() const
+        {
             std::vector<std::pair<std::size_t, T>> values;
             for (std::size_t index = 0; index < this->snapshots.size(); index++) {
                 const auto& member = this->snapshots[index].get<T>();
@@ -402,110 +362,6 @@ namespace Opm
                     values.push_back( std::make_pair(index, value));
             }
             return values;
-        }
-
-
-        template <typename T>
-        void pack_state(std::vector<T>& value_list, std::vector<std::size_t>& index_list) const {
-            auto unique_values = this->template unique<T>();
-            for (auto& [index, value] : unique_values) {
-                value_list.push_back( std::move(value) );
-                index_list.push_back( index );
-            }
-        }
-
-
-        template <typename T>
-        void unpack_state(const std::vector<T>& value_list, const std::vector<std::size_t>& index_list) {
-            std::size_t unique_index = 0;
-            while (unique_index < value_list.size()) {
-                const auto& value = value_list[unique_index];
-                const auto& first_index = index_list[unique_index];
-                auto last_index = this->snapshots.size();
-                if (unique_index < (value_list.size() - 1))
-                    last_index = index_list[unique_index + 1];
-
-                auto& target_state = this->snapshots[first_index];
-                target_state.get<T>().update( std::move(value) );
-                for (std::size_t index=first_index + 1; index < last_index; index++)
-                    this->snapshots[index].get<T>().update( target_state.get<T>() );
-
-                unique_index++;
-            }
-        }
-
-
-        template <typename K, typename T, class Serializer>
-        void pack_unpack_map(Serializer& serializer) {
-            std::vector<T> value_list;
-            std::vector<std::size_t> index_list;
-
-            if (serializer.isSerializing())
-                pack_map<K,T>(value_list, index_list);
-
-            serializer(value_list);
-            serializer(index_list);
-
-            if (!serializer.isSerializing())
-                unpack_map<K,T>(value_list, index_list);
-        }
-
-
-        template <typename K, typename T>
-        void pack_map(std::vector<T>& value_list,
-                      std::vector<std::size_t>& index_list) {
-
-            const auto& last_map = this->snapshots.back().get_map<K,T>();
-            std::vector<K> key_list{ last_map.keys() };
-            std::unordered_map<K,T> current_value;
-
-            for (std::size_t index = 0; index < this->snapshots.size(); index++) {
-                auto& state = this->snapshots[index];
-                const auto& current_map = state.template get_map<K,T>();
-                for (const auto& key : key_list) {
-                    auto& value = current_map.get_ptr(key);
-                    if (value) {
-                        auto it = current_value.find(key);
-                        if (it == current_value.end() || !(*value == it->second)) {
-                            value_list.push_back( *value );
-                            index_list.push_back( index );
-
-                            current_value[key] = *value;
-                        }
-                    }
-                }
-            }
-        }
-
-
-        template <typename K, typename T>
-        void unpack_map(const std::vector<T>& value_list,
-                        const std::vector<std::size_t>& index_list) {
-
-            std::unordered_map<K, std::vector<std::pair<std::size_t, T>>> storage;
-            for (std::size_t storage_index = 0; storage_index < value_list.size(); storage_index++) {
-                const auto& value = value_list[storage_index];
-                const auto& time_index = index_list[storage_index];
-
-                storage[ value.name() ].emplace_back( time_index, value );
-            }
-
-            for (const auto& [key, values] : storage) {
-                for (std::size_t unique_index = 0; unique_index < values.size(); unique_index++) {
-                    const auto& [time_index, value] = values[unique_index];
-                    auto last_index = this->snapshots.size();
-                    if (unique_index < (values.size() - 1))
-                        last_index = values[unique_index + 1].first;
-
-                    auto& map_value = this->snapshots[time_index].template get_map<K,T>();
-                    map_value.update(std::move(value));
-
-                    for (std::size_t index=time_index + 1; index < last_index; index++) {
-                        auto& forward_map = this->snapshots[index].template get_map<K,T>();
-                        forward_map.update( key, map_value );
-                    }
-                }
-            }
         }
 
         friend std::ostream& operator<<(std::ostream& os, const Schedule& sched);

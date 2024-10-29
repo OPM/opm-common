@@ -143,6 +143,12 @@ namespace Opm {
                 return *this->m_data;
             }
 
+            template<class Serializer>
+            void serializeOp(Serializer& serializer)
+            {
+                serializer(m_data);
+            }
+
         private:
             std::shared_ptr<T> m_data;
         };
@@ -277,6 +283,11 @@ namespace Opm {
                 return map_object;
             }
 
+            template<class Serializer>
+            void serializeOp(Serializer& serializer)
+            {
+                serializer(m_data);
+            }
 
         private:
             std::unordered_map<K, std::shared_ptr<T>> m_data;
@@ -495,7 +506,37 @@ namespace Opm {
 
         using WellPIMapType = std::unordered_map<std::string, double>;
         template<class Serializer>
-        void serializeOp(Serializer& serializer) {
+        void serializeOp(Serializer& serializer)
+        {
+            serializer(gconsale);
+            serializer(gconsump);
+            serializer(gecon);
+            serializer(guide_rate);
+            serializer(wlist_manager);
+            serializer(well_order);
+            serializer(group_order);
+            serializer(actions);
+            serializer(udq);
+            serializer(udq_active);
+            serializer(pavg);
+            serializer(wtest_config);
+            serializer(glo);
+            serializer(network);
+            serializer(network_balance);
+            serializer(rescoup);
+            serializer(rpt_config);
+            serializer(rft_config);
+            serializer(rst_config);
+            serializer(bhp_defaults);
+            serializer(source);
+            serializer(vfpprod);
+            serializer(vfpinj);
+            serializer(groups);
+            serializer(wells);
+            serializer(aqufluxs);
+            serializer(bcprop);
+            serializer(target_wellpi);
+            serializer(this->next_tstep);
             serializer(m_start_time);
             serializer(m_end_time);
             serializer(m_sim_step);
@@ -504,9 +545,6 @@ namespace Opm {
             serializer(m_first_in_year);
             serializer(m_first_in_month);
             serializer(m_save_step);
-            serializer(m_sumthin);
-            serializer(this->m_rptonly);
-            serializer(this->next_tstep);
             serializer(m_tuning);
             serializer(m_nupcol);
             serializer(m_oilvap);
@@ -515,11 +553,9 @@ namespace Opm {
             serializer(m_geo_keywords);
             serializer(m_message_limits);
             serializer(m_whistctl_mode);
-            serializer(target_wellpi);
-            serializer(aqufluxs);
-            serializer(bcprop);
+            serializer(m_sumthin);
+            serializer(this->m_rptonly);
         }
-
 
     private:
         time_point m_start_time;

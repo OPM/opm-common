@@ -1363,6 +1363,7 @@ if(ENABLE_ECL_INPUT)
        opm/input/eclipse/Schedule/MSW/WellSegments.hpp
        opm/input/eclipse/Schedule/MSW/AICD.hpp
        opm/input/eclipse/Schedule/MSW/SICD.hpp
+       opm/input/eclipse/Schedule/ResCoup/ReservoirCouplingInfo.hpp
        opm/input/eclipse/EclipseState/SimulationConfig/BCConfig.hpp
        opm/input/eclipse/EclipseState/SimulationConfig/DatumDepth.hpp
        opm/input/eclipse/EclipseState/SimulationConfig/RockConfig.hpp
