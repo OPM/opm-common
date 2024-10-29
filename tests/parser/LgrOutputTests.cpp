@@ -13,7 +13,9 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <array>
 #include <optional>
+#include <tuple>
 #include <utility>
 #define BOOST_TEST_MODULE LgrOutputTests
 
@@ -53,7 +55,7 @@ std::pair<std::vector<double>, std::vector<double>> read_cpg_from_egrid(const st
 }
 
 
-BOOST_AUTO_TEST_CASE(TestLgrOutput) { 
+BOOST_AUTO_TEST_CASE(TestLgrOutputBasicLGR) { 
     const std::string deck_string = R"(
 RUNSPEC
 
@@ -111,63 +113,50 @@ SCHEDULE
     Opm::UnitSystem units(1);
     std::vector<Opm::NNCdata> vecNNC;
     std::array<int,3> global_grid_dim = {3,3,1};
+    std::vector<double> coord_g, zcorn_g, coord_l, zcorn_l, coord_g_opm, zcorn_g_opm, coord_l_opm, zcorn_l_opm;
+    // Intialize LgrCollection from string.
     LgrCollection lgr_col = read_lgr(deck_string,global_grid_dim[0],global_grid_dim[1],global_grid_dim[2]);
-    auto [coord_g, zcorn_g] = read_cpg_from_egrid("CARFIN5.EGRID", "global");
+    //  Read global COORD and ZCORN from reference simulator output.
+    std::tie(coord_g, zcorn_g) = read_cpg_from_egrid("CARFIN5.EGRID", "global");
+    //  Read LGR CELL COORD and ZCORN from reference simulator output.
+    std::tie(coord_l, zcorn_l) = read_cpg_from_egrid("CARFIN5.EGRID", "LGR1");
+    //  Eclipse Grid is intialzied with COORD and ZCORN.
     Opm::EclipseGrid eclipse_grid_file(global_grid_dim, coord_g, zcorn_g);    
-
+    //  LgrCollection is used to initalize LGR Cells in the Eclipse Grid.
     eclipse_grid_file.init_lgr_cells(lgr_col);
-
-    auto [coord_l, zcorn_l] = read_cpg_from_egrid("CARFIN5.EGRID", "LGR1");
+    // LGR COORD and ZCORN is parsed to EclipseGridLGR children cell. (Simulates the process of recieving the LGR refinement.)   
     eclipse_grid_file.lgr_children_cells[0].set_lgr_refinement(coord_l,zcorn_l);
+    // Intialize host_cell numbering.
     eclipse_grid_file.init_children_host_cells();
-
-    //eclipse_grid_file.save("output.FEGRID",true,std::nullopt);
-
-    eclipse_grid_file.save("output.FEGRID",true,vecNNC,units);
-    auto index = 1;
-
-    
-  //   Opm::EclipseGrid eclipse_grid = state.getInputGrid();
-
-
-
-  //   Opm::EclIO::EGrid egrid_global("CARFIN5.EGRID");
-  //   egrid_global.load_grid_data();
-  //   auto global_coord = egrid_global.get_coord();
-  //   auto global_zcorn = egrid_global.get_zcorn();
-
-  //   std::vector<double> coord_g(global_coord.begin(), global_coord.end());
-  //   std::vector<double> zcorn_g(global_zcorn.begin(), global_zcorn.end());
-  //   std::array<int,3> dims = {3,3, 1};
-
-  //   Opm::EclipseGrid eclipse_grid_file(dims, coord_g, zcorn_g);
-
-
-
-
-  //   Opm::EclIO::EGrid egrid_lgr1("CARFIN5.EGRID","LGR1");
-  //   egrid_lgr1.load_grid_data();
-  //   BOOST_CHECK_EQUAL( eclipse_grid.getTotalActiveLGR() , 21U );
-  //   BOOST_CHECK_EQUAL( eclipse_grid.lgr_children_cells[0].getTotalActiveLGR() , 8U );
-  //   BOOST_CHECK_EQUAL( eclipse_grid.lgr_children_cells[1].getTotalActiveLGR() , 8U );
-    
-  //   BOOST_CHECK_EQUAL(eclipse_grid.getActiveIndexLGR("LGR1",0,0,0), 0U);
-  //   BOOST_CHECK_EQUAL(eclipse_grid.getActiveIndexLGR("LGR1",1,3,0), 7U);
-
-  //   BOOST_CHECK_EQUAL(eclipse_grid.getActiveIndexLGR("GLOBAL",1,0,0), 8U);
-  //   BOOST_CHECK_EQUAL(eclipse_grid.getActiveIndexLGR("GLOBAL",1,1,0), 17U);
-  //   BOOST_CHECK_EQUAL(eclipse_grid.getActiveIndexLGR("GLOBAL",2,2,0), 20U);
-
-
-  //   BOOST_CHECK_EQUAL(eclipse_grid.getActiveIndexLGR("LGR2",0,0,0), 9U);
-  //   BOOST_CHECK_EQUAL(eclipse_grid.getActiveIndexLGR("LGR2",1,3,0), 16U);
+    // Save EclipseGrid.
+    eclipse_grid_file.save("OPMCARFIN5.EGRID",false,vecNNC,units);
+    // Once the new EGRID is saved, another EclipseGrid Object is created for the sake of comparison.
+    std::tie(coord_g_opm, zcorn_g_opm)  = read_cpg_from_egrid("OPMCARFIN5.EGRID", "global");
+    //  Read LGR CELL COORD and ZCORN from reference simulator output.
+    std::tie(coord_l_opm, zcorn_l_opm) = read_cpg_from_egrid("OPMCARFIN5.EGRID", "LGR1");
+    //  Eclipse Grid is intialzied with COORD and ZCORN. 
+    Opm::EclipseGrid eclipse_grid_OPM(global_grid_dim, coord_g_opm, zcorn_g_opm);    
+//  LgrCollection is used to initalize LGR Cells in the Eclipse Grid.
+    eclipse_grid_OPM.init_lgr_cells(lgr_col);
+    // LGR COORD and ZCORN is parsed to EclipseGridLGR children cell. (Simulates the process of recieving the LGR refinement.)   
+    eclipse_grid_OPM.lgr_children_cells[0].set_lgr_refinement(coord_l_opm,zcorn_l_opm);
+    // Intialize host_cell numbering.
+    eclipse_grid_OPM.init_children_host_cells();
+    BOOST_CHECK_EQUAL( coord_g_opm.size() , coord_g.size());
+    BOOST_CHECK_EQUAL( zcorn_g_opm.size() , zcorn_g.size());
+    BOOST_CHECK_EQUAL( coord_l_opm.size() , coord_l.size());
+    BOOST_CHECK_EQUAL( zcorn_l_opm.size() , zcorn_l.size());
+    std::size_t index ;
+    for (index = 0; index < coord_g.size(); index++) {
+      BOOST_CHECK_EQUAL( coord_g_opm[index] , coord_g[index]);
+    }
+    for (index = 0; index < zcorn_g.size(); index++) {
+      BOOST_CHECK_EQUAL( zcorn_g_opm[index] , zcorn_g[index]);
+    }
   }
 
 
-
-
-
-BOOST_AUTO_TEST_CASE(TestLgrNested) { 
+BOOST_AUTO_TEST_CASE(TestLgrOutputColumnLGR) { 
     const std::string deck_string = R"(
 RUNSPEC
 
@@ -178,181 +167,7 @@ GRID
 
 CARFIN
 -- NAME I1-I2 J1-J2 K1-K2 NX NY NZ
-LGR1  2  2  2  2  1  1  3  3   1 1*  GLOBAL/
-ENDFIN
-
-CARFIN
--- NAME I1-I2 J1-J2 K1-K2 NX NY NZ
-LGR2  2  2  2  2  1  1  3  3   1 1*  LGR1/
-ENDFIN
-
-
-DX 
-  9*1000 /
-DY
-	9*1000 /
-DZ
-	9*20 /
-
-TOPS
-	9*8325 /
-
-PORO
-  9*0.15 /
-
-PERMX
-  9*1 /
-
-COPY
-  PERMX PERMZ /
-  PERMX PERMY /
-/
-
-EDIT
-
-OIL
-GAS
-
-TITLE
-The title
-
-START
-16 JUN 1988 /
-
-PROPS
-
-REGIONS
-
-SOLUTION
-
-SCHEDULE
-)";
-\
-    Opm::Parser parser;
-    Opm::Deck deck = parser.parseString(deck_string);
-    Opm::EclipseState state(deck);
-    Opm::EclipseGrid eclipse_grid = state.getInputGrid();
-
-    BOOST_CHECK_EQUAL( eclipse_grid.getTotalActiveLGR() , 25U );
-    BOOST_CHECK_EQUAL( eclipse_grid.lgr_children_cells[0].getTotalActiveLGR() , 17U );
-    BOOST_CHECK_EQUAL( eclipse_grid.lgr_children_cells[0].lgr_children_cells[0].getTotalActiveLGR() , 9U );
-    
-    BOOST_CHECK_EQUAL(eclipse_grid.getActiveIndexLGR("GLOBAL",0,0,0), 0U);
-    BOOST_CHECK_EQUAL(eclipse_grid.getActiveIndexLGR("GLOBAL",2,2,0), 24U);
-
-    BOOST_CHECK_EQUAL(eclipse_grid.getActiveIndexLGR("LGR1",0,0,0), 4U);
-    BOOST_CHECK_EQUAL(eclipse_grid.getActiveIndexLGR("LGR1",2,2,0), 20U);
-
-    BOOST_CHECK_EQUAL(eclipse_grid.getActiveIndexLGR("LGR2",0,0,0), 8U);
-    BOOST_CHECK_EQUAL(eclipse_grid.getActiveIndexLGR("LGR2",2,2,0), 16U);
-
-    BOOST_CHECK_THROW(eclipse_grid.getActiveIndexLGR("GLOBAL",1,1,0), std::invalid_argument);
-    BOOST_CHECK_THROW(eclipse_grid.getActiveIndexLGR("LGR1",1,1,0), std::invalid_argument);
-    BOOST_CHECK_THROW(eclipse_grid.getActiveIndexLGR("LGR3",1,1,0), std::invalid_argument);
-}
-BOOST_AUTO_TEST_CASE(TestGLOBALinactivecells) { 
-    const std::string deck_string = R"(
-RUNSPEC
-
-DIMENS
-  3 3 1 /
-
-GRID
-
-ACTNUM
-1 0 1 
-1 1 1 
-1 1 1 
-/
-
-CARFIN
--- NAME I1-I2 J1-J2 K1-K2 NX NY NZ
-'LGR1'  2  2  2  2  1  1  3  3   1/
-ENDFIN
-
-
-DX 
-  9*1000 /
-DY
-	9*1000 /
-DZ
-	9*20 /
-
-TOPS
-	9*8325 /
-
-PORO
-  9*0.15 /
-
-PERMX
-  9*1 /
-
-COPY
-  PERMX PERMZ /
-  PERMX PERMY /
-/
-
-EDIT
-
-OIL
-GAS
-
-TITLE
-The title
-
-START
-16 JUN 1988 /
-
-PROPS
-
-REGIONS
-
-SOLUTION
-
-SCHEDULE
-)";
-\
-    Opm::Parser parser;
-    Opm::Deck deck = parser.parseString(deck_string);
-    Opm::EclipseState state(deck);
-    Opm::EclipseGrid eclipse_grid = state.getInputGrid();
-
-    BOOST_CHECK_EQUAL( eclipse_grid.getTotalActiveLGR() , 16U );
-    BOOST_CHECK_EQUAL( eclipse_grid.lgr_children_cells[0].getTotalActiveLGR() , 9U );    
-    BOOST_CHECK_EQUAL(eclipse_grid.getActiveIndexLGR("GLOBAL",0,0,0), 0U);
-    BOOST_CHECK_EQUAL(eclipse_grid.getActiveIndexLGR("GLOBAL",2,2,0), 15U);
-   
-   
-    BOOST_CHECK_EQUAL(eclipse_grid.getActiveIndexLGR("GLOBAL",0U), 0U);
-    BOOST_CHECK_EQUAL(eclipse_grid.getActiveIndexLGR("GLOBAL",8U), 15U);
-
-    
-    BOOST_CHECK_EQUAL(eclipse_grid.getActiveIndexLGR("LGR1",0,0,0), 3U);
-    BOOST_CHECK_EQUAL(eclipse_grid.getActiveIndexLGR("LGR1",2,2,0), 11U);
-   
-   
-    BOOST_CHECK_EQUAL(eclipse_grid.getActiveIndexLGR("LGR1",0), 3U);
-    BOOST_CHECK_EQUAL(eclipse_grid.getActiveIndexLGR("LGR1",8), 11U);
-
-}
-
-BOOST_AUTO_TEST_CASE(TestLGRinactivecells) { 
-    const std::string deck_string = R"(
-RUNSPEC
-
-DIMENS
-  3 3 1 /
-
-GRID
-
-CARFIN
--- NAME I1-I2 J1-J2 K1-K2 NX NY NZ
-'LGR1'  2  2  2  2  1  1  3  3   1/
-ACTNUM
-1 0 1 
-1 1 1 
-1 1 1 
-/
+'LGR1'  1  1  1  2  1  1  2  4   1/
 ENDFIN
 
 DX 
@@ -396,9 +211,47 @@ SOLUTION
 SCHEDULE
 )";
 \
-    Opm::Parser parser;
-    Opm::Deck deck = parser.parseString(deck_string);
-    Opm::EclipseState state(deck);
-    Opm::LgrCollection lgrs = state.getLgrs();
-    // LGR Inactive Cells Not yet Implemented
-}
+    Opm::UnitSystem units(1);
+    std::vector<Opm::NNCdata> vecNNC;
+    std::array<int,3> global_grid_dim = {3,3,1};
+    std::vector<double> coord_g, zcorn_g, coord_l, zcorn_l, coord_g_opm, zcorn_g_opm, coord_l_opm, zcorn_l_opm;
+    // Intialize LgrCollection from string.
+    LgrCollection lgr_col = read_lgr(deck_string,global_grid_dim[0],global_grid_dim[1],global_grid_dim[2]);
+    //  Read global COORD and ZCORN from reference simulator output.
+    std::tie(coord_g, zcorn_g) = read_cpg_from_egrid("CARFIN-COLUMN.EGRID", "global");
+    //  Read LGR CELL COORD and ZCORN from reference simulator output.
+    std::tie(coord_l, zcorn_l) = read_cpg_from_egrid("CARFIN-COLUMN.EGRID", "LGR1");
+    //  Eclipse Grid is intialzied with COORD and ZCORN.
+    Opm::EclipseGrid eclipse_grid_file(global_grid_dim, coord_g, zcorn_g);    
+    //  LgrCollection is used to initalize LGR Cells in the Eclipse Grid.
+    eclipse_grid_file.init_lgr_cells(lgr_col);
+    // LGR COORD and ZCORN is parsed to EclipseGridLGR children cell. (Simulates the process of recieving the LGR refinement.)   
+    eclipse_grid_file.lgr_children_cells[0].set_lgr_refinement(coord_l,zcorn_l);
+    // Intialize host_cell numbering.
+    eclipse_grid_file.init_children_host_cells();
+    // Save EclipseGrid.
+    eclipse_grid_file.save("OPMCARFIN-COLUMN.EGRID",false,vecNNC,units);
+    // Once the new EGRID is saved, another EclipseGrid Object is created for the sake of comparison.
+    std::tie(coord_g_opm, zcorn_g_opm)  = read_cpg_from_egrid("OPMCARFIN-COLUMN.EGRID", "global");
+    //  Read LGR CELL COORD and ZCORN from reference simulator output.
+    std::tie(coord_l_opm, zcorn_l_opm) = read_cpg_from_egrid("OPMCARFIN-COLUMN.EGRID", "LGR1");
+    //  Eclipse Grid is intialzied with COORD and ZCORN. 
+    Opm::EclipseGrid eclipse_grid_OPM(global_grid_dim, coord_g_opm, zcorn_g_opm);    
+//  LgrCollection is used to initalize LGR Cells in the Eclipse Grid.
+    eclipse_grid_OPM.init_lgr_cells(lgr_col);
+    // LGR COORD and ZCORN is parsed to EclipseGridLGR children cell. (Simulates the process of recieving the LGR refinement.)   
+    eclipse_grid_OPM.lgr_children_cells[0].set_lgr_refinement(coord_l_opm,zcorn_l_opm);
+    // Intialize host_cell numbering.
+    eclipse_grid_OPM.init_children_host_cells();
+    BOOST_CHECK_EQUAL( coord_g_opm.size() , coord_g.size());
+    BOOST_CHECK_EQUAL( zcorn_g_opm.size() , zcorn_g.size());
+    BOOST_CHECK_EQUAL( coord_l_opm.size() , coord_l.size());
+    BOOST_CHECK_EQUAL( zcorn_l_opm.size() , zcorn_l.size());
+    std::size_t index ;
+    for (index = 0; index < coord_g.size(); index++) {
+      BOOST_CHECK_EQUAL( coord_g_opm[index] , coord_g[index]);
+    }
+    for (index = 0; index < zcorn_g.size(); index++) {
+      BOOST_CHECK_EQUAL( zcorn_g_opm[index] , zcorn_g[index]);
+    }
+  }
