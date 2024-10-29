@@ -386,7 +386,11 @@ namespace Opm {
         return father_global;
       }
      void set_hostnum(std::vector<int>&);
+<<<<<<< HEAD
      void set_lgr_refinement(const std::vector<double>&, const std::vector<double> &);                 
+=======
+     void set_lgr_refinement(std::vector<double>,std::vector<double>);                 
+>>>>>>> 9d788474a (EclipseGrid is capable of initializing EclipseGridLGR hostcells.)
     private:
       void init_father_global();
       std::string father_label;
