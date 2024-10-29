@@ -30,6 +30,7 @@
 #include <opm/common/Exceptions.hpp>
 #include <opm/common/TimingMacros.hpp>
 #include <opm/common/ErrorMacros.hpp>
+#include <opm/common/utility/gpuDecorators.hpp>
 
 #include <opm/material/Constants.hpp>
 
@@ -58,7 +59,7 @@ class EzrokhiTable;
  * \brief This class represents the Pressure-Volume-Temperature relations of the liquid phase
  * for a CO2-Brine system
  */
-template <class Scalar, class Params = Opm::CO2Tables<double, std::vector<double>>>
+template <class Scalar, class Params = Opm::CO2Tables<double, std::vector<double>>, class ContainerT = std::vector<Scalar>>
 class BrineCo2Pvt
 {
     static constexpr bool extrapolate = true;
@@ -81,12 +82,28 @@ public:
 
     explicit BrineCo2Pvt() = default;
 
-    explicit BrineCo2Pvt(const std::vector<Scalar>& salinity,
+    explicit BrineCo2Pvt(const ContainerT& salinity,
                          int activityModel = 3,
                          int thermalMixingModelSalt = 1,
                          int thermalMixingModelLiquid = 2,
                          Scalar T_ref = 288.71, //(273.15 + 15.56)
                          Scalar P_ref = 101325);
+
+    explicit BrineCo2Pvt(ContainerT brineReferenceDensity,
+                        ContainerT co2ReferenceDensity,
+                        ContainerT salinity,
+                        int activityModel,
+                        int thermalMixingModelSalt,
+                        int thermalMixingModelLiquid,
+                        Params params) :
+                        brineReferenceDensity_(brineReferenceDensity),
+                        co2ReferenceDensity_(co2ReferenceDensity),
+                        salinity_(salinity),
+                        activityModel_(activityModel),
+                        co2Tables_(params)
+{
+    setThermalMixingModel(thermalMixingModelSalt, thermalMixingModelLiquid);
+}
 
 #if HAVE_ECL_INPUT
     /*!
@@ -155,7 +172,7 @@ public:
     unsigned numRegions() const
     { return brineReferenceDensity_.size(); }
 
-    Scalar hVap(unsigned ) const{
+    OPM_HOST_DEVICE Scalar hVap(unsigned ) const{
         return 0;
     }
 
@@ -163,7 +180,7 @@ public:
      * \brief Returns the specific enthalpy [J/kg] of gas given a set of parameters.
      */
     template <class Evaluation>
-    Evaluation internalEnergy(unsigned regionIdx,
+    OPM_HOST_DEVICE Evaluation internalEnergy(unsigned regionIdx,
                               const Evaluation& temperature,
                               const Evaluation& pressure,
                               const Evaluation& Rs,
@@ -182,7 +199,7 @@ public:
      * \brief Returns the specific enthalpy [J/kg] of gas given a set of parameters.
      */
     template <class Evaluation>
-    Evaluation internalEnergy(unsigned regionIdx,
+    OPM_HOST_DEVICE Evaluation internalEnergy(unsigned regionIdx,
                         const Evaluation& temperature,
                         const Evaluation& pressure,
                         const Evaluation& Rs) const
@@ -200,7 +217,7 @@ public:
      * \brief Returns the dynamic viscosity [Pa s] of the fluid phase given a set of parameters.
      */
     template <class Evaluation>
-    Evaluation viscosity(unsigned regionIdx,
+    OPM_HOST_DEVICE Evaluation viscosity(unsigned regionIdx,
                          const Evaluation& temperature,
                          const Evaluation& pressure,
                          const Evaluation& /*Rs*/) const
@@ -213,7 +230,7 @@ public:
      * \brief Returns the dynamic viscosity [Pa s] of the fluid phase given a set of parameters.
      */
     template <class Evaluation>
-    Evaluation saturatedViscosity(unsigned regionIdx,
+    OPM_HOST_DEVICE Evaluation saturatedViscosity(unsigned regionIdx,
                                  const Evaluation& temperature,
                                  const Evaluation& pressure,
                                  const Evaluation& saltConcentration) const
@@ -234,7 +251,7 @@ public:
      * \brief Returns the dynamic viscosity [Pa s] of the fluid phase given a set of parameters.
      */
     template <class Evaluation>
-    Evaluation viscosity(unsigned regionIdx,
+    OPM_HOST_DEVICE Evaluation viscosity(unsigned regionIdx,
                          const Evaluation& temperature,
                          const Evaluation& pressure,
                          const Evaluation& /*Rsw*/,
@@ -249,7 +266,7 @@ public:
      * \brief Returns the dynamic viscosity [Pa s] of oil saturated gas at given pressure.
      */
     template <class Evaluation>
-    Evaluation saturatedViscosity(unsigned regionIdx,
+    OPM_HOST_DEVICE Evaluation saturatedViscosity(unsigned regionIdx,
                                   const Evaluation& temperature,
                                   const Evaluation& pressure) const
     {
@@ -270,7 +287,7 @@ public:
      * \brief Returns the formation volume factor [-] of the fluid phase.
      */
     template <class Evaluation>
-    Evaluation saturatedInverseFormationVolumeFactor(unsigned regionIdx,
+    OPM_HOST_DEVICE Evaluation saturatedInverseFormationVolumeFactor(unsigned regionIdx,
                                                      const Evaluation& temperature,
                                                      const Evaluation& pressure,
                                                      const Evaluation& saltconcentration) const
@@ -287,7 +304,7 @@ public:
      * \brief Returns the formation volume factor [-] of the fluid phase.
      */
     template <class Evaluation>
-    Evaluation inverseFormationVolumeFactor(unsigned regionIdx,
+    OPM_HOST_DEVICE Evaluation inverseFormationVolumeFactor(unsigned regionIdx,
                                             const Evaluation& temperature,
                                             const Evaluation& pressure,
                                             const Evaluation& Rs,
@@ -304,7 +321,7 @@ public:
      * \brief Returns the formation volume factor [-] of the fluid phase.
      */
     template <class Evaluation>
-    Evaluation inverseFormationVolumeFactor(unsigned regionIdx,
+    OPM_HOST_DEVICE Evaluation inverseFormationVolumeFactor(unsigned regionIdx,
                                             const Evaluation& temperature,
                                             const Evaluation& pressure,
                                             const Evaluation& Rs) const
@@ -318,7 +335,7 @@ public:
      * \brief Returns the formation volume factor [-] of brine saturated with CO2 at a given pressure.
      */
     template <class Evaluation>
-    Evaluation saturatedInverseFormationVolumeFactor(unsigned regionIdx,
+    OPM_HOST_DEVICE Evaluation saturatedInverseFormationVolumeFactor(unsigned regionIdx,
                                                      const Evaluation& temperature,
                                                      const Evaluation& pressure) const
     {
@@ -336,12 +353,16 @@ public:
      * \param Rs
      */
     template <class Evaluation>
-    Evaluation saturationPressure(unsigned /*regionIdx*/,
+    OPM_HOST_DEVICE Evaluation saturationPressure(unsigned /*regionIdx*/,
                                   const Evaluation& /*temperature*/,
                                   const Evaluation& /*Rs*/) const
     {
+#if OPM_IS_INSIDE_DEVICE_FUNCTION
+        assert(false && "Requested the saturation pressure for the brine-co2 pvt module. Not yet implemented.");
+#else
         throw std::runtime_error("Requested the saturation pressure for the brine-co2 pvt module. "
                                  "Not yet implemented.");
+#endif
     }
 
     /*!
@@ -351,20 +372,24 @@ public:
      * \param Rs
      */
     template <class Evaluation>
-    Evaluation saturationPressure(unsigned /*regionIdx*/,
+    OPM_HOST_DEVICE Evaluation saturationPressure(unsigned /*regionIdx*/,
                                   const Evaluation& /*temperature*/,
                                   const Evaluation& /*Rs*/,
                                   const Evaluation& /*saltConcentration*/) const
     {
+#if OPM_IS_INSIDE_DEVICE_FUNCTION
+        assert(false && "Requested the saturation pressure for the brine-co2 pvt module. Not yet implemented.");
+#else
         throw std::runtime_error("Requested the saturation pressure for the brine-co2 pvt module. "
                                  "Not yet implemented.");
+#endif
     }
 
     /*!
      * \brief Returns the gas dissoluiton factor \f$R_s\f$ [m^3/m^3] of the liquid phase.
      */
     template <class Evaluation>
-    Evaluation saturatedGasDissolutionFactor(unsigned regionIdx,
+    OPM_HOST_DEVICE Evaluation saturatedGasDissolutionFactor(unsigned regionIdx,
                                              const Evaluation& temperature,
                                              const Evaluation& pressure,
                                              const Evaluation& /*oilSaturation*/,
@@ -378,7 +403,7 @@ public:
      * \brief Returns the gas dissoluiton factor \f$R_s\f$ [m^3/m^3] of the liquid phase.
      */
     template <class Evaluation>
-    Evaluation saturatedGasDissolutionFactor(unsigned regionIdx,
+    OPM_HOST_DEVICE Evaluation saturatedGasDissolutionFactor(unsigned regionIdx,
                                              const Evaluation& temperature,
                                              const Evaluation& pressure,
                                              const Evaluation& saltConcentration) const
@@ -392,27 +417,51 @@ public:
      * \brief Returns thegas dissoluiton factor  \f$R_s\f$ [m^3/m^3] of the liquid phase.
      */
     template <class Evaluation>
-    Evaluation saturatedGasDissolutionFactor(unsigned regionIdx,
+    OPM_HOST_DEVICE Evaluation saturatedGasDissolutionFactor(unsigned regionIdx,
                                              const Evaluation& temperature,
                                              const Evaluation& pressure) const
     {
         return rsSat(regionIdx, temperature, pressure, Evaluation(salinity_[regionIdx]));
     }
 
-    Scalar oilReferenceDensity(unsigned regionIdx) const
+    OPM_HOST_DEVICE Scalar oilReferenceDensity(unsigned regionIdx) const
     { return brineReferenceDensity_[regionIdx]; }
 
-    Scalar waterReferenceDensity(unsigned regionIdx) const
+    OPM_HOST_DEVICE Scalar waterReferenceDensity(unsigned regionIdx) const
     { return brineReferenceDensity_[regionIdx]; }
 
-    Scalar gasReferenceDensity(unsigned regionIdx) const
+    OPM_HOST_DEVICE Scalar gasReferenceDensity(unsigned regionIdx) const
     { return co2ReferenceDensity_[regionIdx]; }
 
-    Scalar salinity(unsigned regionIdx) const
+    OPM_HOST_DEVICE Scalar salinity(unsigned regionIdx) const
     { return salinity_[regionIdx]; }
 
+    OPM_HOST_DEVICE const ContainerT& getBrineReferenceDensity() const {
+        return brineReferenceDensity_;
+    }
+
+    OPM_HOST_DEVICE const ContainerT& getCo2ReferenceDensity() const {
+        return co2ReferenceDensity_;
+    }
+
+    OPM_HOST_DEVICE const ContainerT& getSalinity() const {
+        return salinity_;
+    }
+
+    OPM_HOST_DEVICE const Params& getParams() const {
+        return co2Tables_;
+    }
+
+    OPM_HOST_DEVICE Co2StoreConfig::SaltMixingType getThermalMixingModelSalt() const {
+        return saltMixType_;
+    }
+
+    OPM_HOST_DEVICE Co2StoreConfig::LiquidMixingType getThermalMixingModelLiquid() const {
+        return liquidMixType_;
+    }
+
     template <class Evaluation>
-    Evaluation diffusionCoefficient(const Evaluation& temperature,
+    OPM_HOST_DEVICE Evaluation diffusionCoefficient(const Evaluation& temperature,
                                     const Evaluation& pressure,
                                     unsigned /*compIdx*/) const
     {
@@ -443,7 +492,7 @@ public:
     }
 
     template <class Evaluation>
-    Evaluation density(unsigned regionIdx,
+    OPM_HOST_DEVICE Evaluation density(unsigned regionIdx,
                        const Evaluation& temperature,
                        const Evaluation& pressure,
                        const Evaluation& Rs,
@@ -461,7 +510,7 @@ public:
     }
 
     template <class Evaluation>
-    Evaluation rsSat(unsigned regionIdx,
+    OPM_HOST_DEVICE Evaluation rsSat(unsigned regionIdx,
                      const Evaluation& temperature,
                      const Evaluation& pressure,
                      const Evaluation& salinity) const
@@ -493,15 +542,15 @@ public:
 
 private:
     template <class LhsEval>
-    LhsEval ezrokhiExponent_(const LhsEval& temperature,
-                             const std::vector<Scalar>& ezrokhiCoeff) const
+    OPM_HOST_DEVICE LhsEval ezrokhiExponent_(const LhsEval& temperature,
+                             const ContainerT& ezrokhiCoeff) const
     {
         const LhsEval& tempC = temperature - 273.15;
         return ezrokhiCoeff[0] + tempC * (ezrokhiCoeff[1] + ezrokhiCoeff[2] * tempC);
     }
     
     template <class LhsEval>
-    LhsEval liquidDensity_(const LhsEval& T,
+    OPM_HOST_DEVICE LhsEval liquidDensity_(const LhsEval& T,
                            const LhsEval& pl,
                            const LhsEval& xlCO2,
                            const LhsEval& salinity) const
@@ -512,18 +561,26 @@ private:
         Valgrind::CheckDefined(xlCO2);
 
         if (!extrapolate && T < 273.15) {
+#if OPM_IS_INSIDE_DEVICE_FUNCTION
+            assert(false && "Liquid density for Brine and CO2 is only defined above 273.15K");
+#else
             const std::string msg =
                 "Liquid density for Brine and CO2 is only "
                 "defined above 273.15K (is " +
                 std::to_string(getValue(T)) + "K)";
             throw NumericalProblem(msg);
+#endif
         }
         if (!extrapolate && pl >= 2.5e8) {
+#if OPM_IS_INSIDE_DEVICE_FUNCTION
+            assert(false && "Liquid density for Brine and CO2 is only defined below 250MPa");
+#else
             const std::string msg  =
                 "Liquid density for Brine and CO2 is only "
                 "defined below 250MPa (is " +
                 std::to_string(getValue(pl)) + "Pa)";
             throw NumericalProblem(msg);
+#endif
         }
 
         const LhsEval& rho_pure = H2O::liquidDensity(T, pl, extrapolate);
@@ -542,7 +599,7 @@ private:
     }
 
     template <class LhsEval>
-    LhsEval liquidDensityWaterCO2_(const LhsEval& temperature,
+    OPM_HOST_DEVICE LhsEval liquidDensityWaterCO2_(const LhsEval& temperature,
                                           const LhsEval& pl,
                                           const LhsEval& xlCO2) const
     {
@@ -570,7 +627,7 @@ private:
      *        of the gas component in the oil phase.
      */
     template <class LhsEval>
-    LhsEval convertRsToXoG_(const LhsEval& Rs, unsigned regionIdx) const
+    OPM_HOST_DEVICE LhsEval convertRsToXoG_(const LhsEval& Rs, unsigned regionIdx) const
     {
         OPM_TIMEFUNCTION_LOCAL();
         Scalar rho_oRef = brineReferenceDensity_[regionIdx];
@@ -584,7 +641,7 @@ private:
      * \brief Convert a gas mass fraction in the oil phase the corresponding mole fraction.
      */
     template <class LhsEval>
-    LhsEval convertXoGToxoG_(const LhsEval& XoG, const LhsEval& salinity) const
+    OPM_HOST_DEVICE LhsEval convertXoGToxoG_(const LhsEval& XoG, const LhsEval& salinity) const
     {
         OPM_TIMEFUNCTION_LOCAL();
         Scalar M_CO2 = CO2::molarMass();
@@ -596,7 +653,7 @@ private:
      * \brief Convert a gas mole fraction in the oil phase the corresponding mass fraction.
      */
     template <class LhsEval>
-    LhsEval convertxoGToXoG(const LhsEval& xoG, const LhsEval& salinity) const
+    OPM_HOST_DEVICE LhsEval convertxoGToXoG(const LhsEval& xoG, const LhsEval& salinity) const
     {
         OPM_TIMEBLOCK_LOCAL(convertxoGToXoG);
         Scalar M_CO2 = CO2::molarMass();
@@ -610,7 +667,7 @@ private:
      *        corresponding gas dissolution factor.
      */
     template <class LhsEval>
-    LhsEval convertXoGToRs(const LhsEval& XoG, unsigned regionIdx) const
+    OPM_HOST_DEVICE LhsEval convertXoGToRs(const LhsEval& XoG, unsigned regionIdx) const
     {
         Scalar rho_oRef = brineReferenceDensity_[regionIdx];
         Scalar rho_gRef = co2ReferenceDensity_[regionIdx];
@@ -619,7 +676,7 @@ private:
     }
 
     template <class LhsEval>
-    LhsEval liquidEnthalpyBrineCO2_(const LhsEval& T,
+    OPM_HOST_DEVICE LhsEval liquidEnthalpyBrineCO2_(const LhsEval& T,
                                     const LhsEval& p,
                                     const LhsEval& salinity, 
                                     const LhsEval& X_CO2_w) const
@@ -708,7 +765,7 @@ private:
     }
 
     template <class LhsEval>
-    const LhsEval salinityFromConcentration(unsigned regionIdx,
+    OPM_HOST_DEVICE const LhsEval salinityFromConcentration(unsigned regionIdx,
                                             const LhsEval&T,
                                             const LhsEval& P,
                                             const LhsEval& saltConcentration) const
@@ -720,12 +777,12 @@ private:
         return salinity(regionIdx);
     }
 
-    std::vector<Scalar> brineReferenceDensity_{};
-    std::vector<Scalar> co2ReferenceDensity_{};
-    std::vector<Scalar> salinity_{};
-    std::vector<Scalar> ezrokhiDenNaClCoeff_{};
-    std::vector<Scalar> ezrokhiDenCo2Coeff_{};
-    std::vector<Scalar> ezrokhiViscNaClCoeff_{};
+    ContainerT brineReferenceDensity_{};
+    ContainerT co2ReferenceDensity_{};
+    ContainerT salinity_{};
+    ContainerT ezrokhiDenNaClCoeff_{};
+    ContainerT ezrokhiDenCo2Coeff_{};
+    ContainerT ezrokhiViscNaClCoeff_{};
     bool enableEzrokhiDensity_ = false;
     bool enableEzrokhiViscosity_ = false;
     bool enableDissolution_ = true;
@@ -737,5 +794,45 @@ private:
 };
 
 } // namespace Opm
+
+namespace Opm::gpuistl {
+    template<class Scalar, class Params, class GPUContainer>
+    BrineCo2Pvt<Scalar, Params, GPUContainer>
+    move_to_gpu(BrineCo2Pvt<Scalar> cpuBrineCo2) {
+        return BrineCo2Pvt<Scalar, Params, GPUContainer>(
+            GPUContainer(cpuBrineCo2.getBrineReferenceDensity()),
+            GPUContainer(cpuBrineCo2.getCo2ReferenceDensity()),
+            GPUContainer(cpuBrineCo2.getSalinity()),
+            cpuBrineCo2.getActivityModel(),
+            cpuBrineCo2.getThermalMixingModelSalt(),
+            cpuBrineCo2.getThermalMixingModelLiquid(),
+            move_to_gpu<Scalar, std::vector<Scalar>, GPUContainer>(cpuBrineCo2.getParams())
+        );
+    }
+
+    template <class Scalar, class InputParams, class OutputParams, class ContainerType, class ViewType>
+    BrineCo2Pvt<Scalar, OutputParams, ViewType>
+    make_view(const BrineCo2Pvt<Scalar, InputParams, ContainerType>& brineCo2Pvt) {
+
+        using containedType = typename ContainerType::value_type;
+        using viewedTypeNoConst = typename std::remove_const_t<typename ViewType::value_type>;
+
+        static_assert(std::is_same_v<containedType, viewedTypeNoConst>);
+
+        ViewType newBrineReferenceDensity = make_view<viewedTypeNoConst>(brineCo2Pvt.getBrineReferenceDensity());
+        ViewType newGasReferenceDensity = make_view<viewedTypeNoConst>(brineCo2Pvt.getGasReferenceDensity());
+        ViewType newSalinity = make_view<viewedTypeNoConst>(brineCo2Pvt.getSalinity());
+
+        return BrineCo2Pvt<Scalar, OutputParams, ViewType>(
+            newBrineReferenceDensity,
+            newGasReferenceDensity,
+            newSalinity,
+            brineCo2Pvt.getActivityModel(),
+            brineCo2Pvt.getThermalMixingModelSalt(),
+            brineCo2Pvt.getThermalMixingModelLiquid(),
+            make_view<double, ContainerType, ViewType>(brineCo2Pvt.getParams())
+        );
+    }
+}
 
 #endif
