@@ -181,8 +181,6 @@ namespace Opm {
 
         void init_lgr_cells(const LgrCollection& lgr_input); 
         void create_lgr_cells_tree(const LgrCollection& );
-        void init_lgr_global_cells_index();
-        void init_lgr_cells_index();
         /// \brief get cell center, and center and normal of bottom face
         std::tuple<std::array<double, 3>,std::array<double, 3>,std::array<double, 3>>
         getCellAndBottomCenterNormal(size_t globalIndex) const;
@@ -264,6 +262,7 @@ namespace Opm {
         std::size_t lgr_global_counter = 0;
         std::string lgr_label = "GLOBAL";
         int lgr_level = 0;
+        int lgr_level_father = 0;
         std::vector<std::string> lgr_children_labels;
         std::vector<std::size_t> lgr_active_index;
         std::vector<std::size_t> lgr_level_active_map;
@@ -272,7 +271,7 @@ namespace Opm {
         std::vector<double> m_zcorn;
         std::vector<double> m_coord;
         std::vector<int> m_actnum;
-
+        std::vector<std::size_t> m_print_order_lgr_cells;
        // Input grid data.
         mutable std::optional<std::vector<double>> m_input_zcorn;
         mutable std::optional<std::vector<double>> m_input_coord;
@@ -312,7 +311,10 @@ namespace Opm {
         // Radial grids need this for volume calculations.
         std::optional<std::vector<double>> m_thetav;
         std::optional<std::vector<double>> m_rv;
-
+        void parseGlobalReferenceToChildren(void);
+        int initializeLGRObjectIndices(int);
+        void initializeLGRTreeIndices(void);
+        void propagateParentIndicesToLGRChildren(int);
         void updateNumericalAquiferCells(const Deck&);
         double computeCellGeometricDepth(size_t globalIndex) const;
 
@@ -366,8 +368,14 @@ namespace Opm {
       using vec_size_t = std::vector<std::size_t>;
       EclipseGridLGR() = default;
       EclipseGridLGR(const std::string& self_label, const std::string& father_label_, 
+<<<<<<< HEAD
                      int father_lgr_level, size_t nx, size_t ny, size_t nz,
                      const vec_size_t& father_lgr_index);
+=======
+                     size_t nx, size_t ny, size_t nz, 
+                     vec_size_t father_lgr_index, std::array<int,3> low_fahterIJK_, 
+                     std::array<int,3> up_fahterIJK_);
+>>>>>>> 91119edcd (EGRID of two LGR cells working)
       ~EclipseGridLGR() = default;
       const vec_size_t& getFatherGlobalID() const;
       void set_lgr_global_counter(std::size_t counter){
