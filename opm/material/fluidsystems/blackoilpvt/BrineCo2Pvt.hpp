@@ -75,7 +75,7 @@ class BrineCo2Pvt
 public:
     using H2O = SimpleHuDuanH2O<Scalar>;
     using Brine = ::Opm::BrineDynamic<Scalar, H2O>;
-    using CO2 = ::Opm::CO2<Scalar>;
+    using CO2 = ::Opm::CO2<Scalar, Params>;
 
     //! The binary coefficients for brine and CO2 used by this fluid system
     using BinaryCoeffBrineCO2 = BinaryCoeff::Brine_CO2<Scalar, H2O, CO2>;
@@ -93,16 +93,17 @@ public:
                         ContainerT co2ReferenceDensity,
                         ContainerT salinity,
                         int activityModel,
-                        int thermalMixingModelSalt,
-                        int thermalMixingModelLiquid,
+                        Co2StoreConfig::SaltMixingType thermalMixingModelSalt,
+                        Co2StoreConfig::LiquidMixingType thermalMixingModelLiquid,
                         Params params) :
                         brineReferenceDensity_(brineReferenceDensity),
                         co2ReferenceDensity_(co2ReferenceDensity),
                         salinity_(salinity),
                         activityModel_(activityModel),
+                        liquidMixType_(thermalMixingModelLiquid),
+                        saltMixType_(thermalMixingModelSalt),
                         co2Tables_(params)
 {
-    setThermalMixingModel(thermalMixingModelSalt, thermalMixingModelLiquid);
 }
 
 #if HAVE_ECL_INPUT
@@ -436,29 +437,26 @@ public:
     OPM_HOST_DEVICE Scalar salinity(unsigned regionIdx) const
     { return salinity_[regionIdx]; }
 
-    OPM_HOST_DEVICE const ContainerT& getBrineReferenceDensity() const {
-        return brineReferenceDensity_;
-    }
+    OPM_HOST_DEVICE const ContainerT& getBrineReferenceDensity() const
+    { return brineReferenceDensity_; }
 
-    OPM_HOST_DEVICE const ContainerT& getCo2ReferenceDensity() const {
-        return co2ReferenceDensity_;
-    }
+    OPM_HOST_DEVICE const ContainerT& getCo2ReferenceDensity() const
+    { return co2ReferenceDensity_; }
 
-    OPM_HOST_DEVICE const ContainerT& getSalinity() const {
-        return salinity_;
-    }
+    OPM_HOST_DEVICE const ContainerT& getSalinity() const
+    { return salinity_; }
 
-    OPM_HOST_DEVICE const Params& getParams() const {
-        return co2Tables_;
-    }
+    OPM_HOST_DEVICE const Params& getParams() const
+    { return co2Tables_; }
 
-    OPM_HOST_DEVICE Co2StoreConfig::SaltMixingType getThermalMixingModelSalt() const {
-        return saltMixType_;
-    }
+    OPM_HOST_DEVICE Co2StoreConfig::SaltMixingType getThermalMixingModelSalt() const
+    { return saltMixType_; }
 
-    OPM_HOST_DEVICE Co2StoreConfig::LiquidMixingType getThermalMixingModelLiquid() const {
-        return liquidMixType_;
-    }
+    OPM_HOST_DEVICE Co2StoreConfig::LiquidMixingType getThermalMixingModelLiquid() const
+    { return liquidMixType_; }
+
+    OPM_HOST_DEVICE int getActivityModel() const
+    { return activityModel_; }
 
     template <class Evaluation>
     OPM_HOST_DEVICE Evaluation diffusionCoefficient(const Evaluation& temperature,
@@ -820,7 +818,7 @@ namespace Opm::gpuistl {
         static_assert(std::is_same_v<containedType, viewedTypeNoConst>);
 
         ViewType newBrineReferenceDensity = make_view<viewedTypeNoConst>(brineCo2Pvt.getBrineReferenceDensity());
-        ViewType newGasReferenceDensity = make_view<viewedTypeNoConst>(brineCo2Pvt.getGasReferenceDensity());
+        ViewType newGasReferenceDensity = make_view<viewedTypeNoConst>(brineCo2Pvt.getCo2ReferenceDensity());
         ViewType newSalinity = make_view<viewedTypeNoConst>(brineCo2Pvt.getSalinity());
 
         return BrineCo2Pvt<Scalar, OutputParams, ViewType>(
