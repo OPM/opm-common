@@ -47,6 +47,13 @@ void HandlerContext::affected_well(const std::string& well_name)
     }
 }
 
+void HandlerContext::welpi_well(const std::string& well_name)
+{
+    if (sim_update != nullptr) {
+        sim_update->welpi_wells.insert(well_name);
+    }
+}
+
 void HandlerContext::record_tran_change()
 {
     if (sim_update) {

@@ -185,7 +185,7 @@ void handleWELPIRuntime(HandlerContext& handlerContext)
             handlerContext.state().target_wellpi
                 .insert_or_assign(well_name, targetPI);
 
-            handlerContext.affected_well(well_name);
+            handlerContext.welpi_well(well_name);
         }
     }
 }
