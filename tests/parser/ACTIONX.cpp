@@ -1448,8 +1448,8 @@ TSTEP
         const auto& well = sched.getWell("PROD1", 0);
         const auto& sim_update = sched.applyAction(0, action1, action_result.wells(),
                                                    std::unordered_map<std::string,double>{{"PROD1", well.convertDeckPI(500)}});
-        BOOST_CHECK_EQUAL( sim_update.affected_wells.count("PROD1"), 1);
-        BOOST_CHECK_EQUAL( sim_update.affected_wells.size(), 1);
+        BOOST_CHECK_EQUAL( sim_update.welpi_wells.count("PROD1"), 1);
+        BOOST_CHECK_EQUAL( sim_update.welpi_wells.size(), 1);
     }
     {
         const auto& target_wellpi = sched[0].target_wellpi;

@@ -31,52 +31,75 @@ namespace Opm {
 
 struct SimulatorUpdate
 {
-    static SimulatorUpdate serializationTestObject() {
-      SimulatorUpdate simulatorUpdate;
-      simulatorUpdate.tran_update = false;
-      simulatorUpdate.well_structure_changed = false;
-      simulatorUpdate.affected_wells = {"test"};
-      return simulatorUpdate;
+    static SimulatorUpdate serializationTestObject()
+    {
+        SimulatorUpdate simulatorUpdate;
+        simulatorUpdate.tran_update = true;
+        simulatorUpdate.well_structure_changed = true;
+        simulatorUpdate.affected_wells = {"test"};
+        simulatorUpdate.welpi_wells.insert("I-45");
+        return simulatorUpdate;
     }
 
     template<class Serializer>
     void serializeOp(Serializer& serializer)
     {
         serializer(affected_wells);
+        serializer(welpi_wells);
         serializer(tran_update);
         serializer(well_structure_changed);
     }
 
-    // Wells affected by ACTIONX and for which the simulator needs to
-    // reapply rates and state from the newly updated Schedule object.
-    std::unordered_set<std::string> affected_wells;
+    /// Wells affected by ACTIONX and for which the simulator needs to
+    /// reapply rates and state from the newly updated Schedule object.
+    std::unordered_set<std::string> affected_wells{};
 
-    // If one of the transmissibility multiplier keywords has been invoked
-    // as an ACTIONX keyword the simulator needs to recalculate the
-    // transmissibility.
+    /// Wells affected only by WELPI for which the simulator needs to update
+    /// its internal notion of the connection transmissibility factors.
+    std::unordered_set<std::string> welpi_wells{};
+
+    /// Whether or not a transmissibility multiplier keyword was invoked in
+    /// an ACTIONX block.
+    ///
+    /// If so, the simulator needs to recalculate the transmissibilities.
     bool tran_update{false};
 
     /// Whether or not well structure changed in processing an ACTIONX
-    /// block.  Typically because of a keyword like WELSPECS, COMPDAT,
-    /// and/or WELOPEN.
+    /// block.
+    ///
+    /// Typically because of a keyword like WELSPECS, COMPDAT, and/or
+    /// WELOPEN.
     bool well_structure_changed{false};
 
-    void append(SimulatorUpdate& otherSimUpdate) {
-      this->tran_update = otherSimUpdate.tran_update or this->tran_update;
-      this->well_structure_changed = otherSimUpdate.well_structure_changed or this->well_structure_changed;
-      affected_wells.insert(otherSimUpdate.affected_wells.begin(), otherSimUpdate.affected_wells.end());
+    void append(const SimulatorUpdate& otherSimUpdate)
+    {
+        this->tran_update = this->tran_update || otherSimUpdate.tran_update;
+
+        this->well_structure_changed = this->well_structure_changed
+            || otherSimUpdate.well_structure_changed;
+
+        this->affected_wells.insert(otherSimUpdate.affected_wells.begin(),
+                                    otherSimUpdate.affected_wells.end());
+
+        this->welpi_wells.insert(otherSimUpdate.welpi_wells.begin(),
+                                 otherSimUpdate.welpi_wells.end());
     }
 
-    void reset() {
-      tran_update = false;
-      well_structure_changed = false;
-      affected_wells.clear();
+    void reset()
+    {
+        this->tran_update = false;
+        this->well_structure_changed = false;
+        this->affected_wells.clear();
+        this->welpi_wells.clear();
     }
 
-    bool operator==(const SimulatorUpdate& data) const {
-    return tran_update == data.tran_update &&
-           well_structure_changed == data.well_structure_changed &&
-           affected_wells == data.affected_wells;
+    bool operator==(const SimulatorUpdate& that) const
+    {
+        return (this->tran_update == that.tran_update)
+            && (this->well_structure_changed == that.well_structure_changed)
+            && (this->affected_wells == that.affected_wells)
+            && (this->welpi_wells == that.welpi_wells)
+            ;
     }
 };
 
