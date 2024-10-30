@@ -113,15 +113,12 @@
 
 namespace {
 
-    bool name_match(const std::string& pattern, const std::string& name) {
-        return Opm::shmatch(pattern, name);
-    }
-
-    bool name_match_any(const std::unordered_set<std::string>& patterns, const std::string& name) {
-        for (const auto& pattern : patterns)
-            if (name_match(pattern, name)) return true;
-
-        return false;
+    bool name_match_any(const std::unordered_set<std::string>& patterns,
+                        const std::string& name)
+    {
+        return std::any_of(patterns.begin(), patterns.end(),
+                           [&name](const auto& pattern)
+                           { return Opm::shmatch(pattern, name); });
     }
 }
 
