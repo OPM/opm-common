@@ -893,6 +893,12 @@ bool Runspec::mech() const noexcept
     return this->m_mech;
 }
 
+bool Runspec::compositional() const noexcept
+{
+    // Note: co2store and h2store are only in blackoil setting for now
+    return (this->m_comps > 0) && !this->m_co2storage && !this->m_h2storage;
+}
+
 std::time_t Runspec::start_time() const noexcept
 {
     return this->m_start_time;

@@ -327,6 +327,75 @@ namespace Opm {
 
             return (phaseIdx == 1);
         }
+        // the following funcitons are needed to compile the GenericOutputBlackoilModule
+        // not implemented for this FluidSystem yet
+        template <class LhsEval>
+        static LhsEval convertXwGToxwG(const LhsEval&, unsigned)
+        {
+            assert(false && "convertXwGToxwG not implemented for GenericOilGasFluidSystem!");
+            return 0.;
+        }
+        template <class LhsEval>
+        static LhsEval convertXoGToxoG(const LhsEval&, unsigned)
+        {
+            assert(false && "convertXoGToxoG not implemented for GenericOilGasFluidSystem!");
+            return 0.;
+        }
+
+        template <class LhsEval>
+        static LhsEval convertxoGToXoG(const LhsEval&, unsigned)
+        {
+            assert(false && "convertxoGToXoG not implemented for GenericOilGasFluidSystem!");
+            return 0.;
+        }
+
+        template <class LhsEval>
+        static LhsEval convertXgOToxgO(const LhsEval&, unsigned)
+        {
+            assert(false && "convertXgOToxgO not implemented for GenericOilGasFluidSystem!");
+            return 0.;
+        }
+
+        template <class LhsEval>
+        static LhsEval convertRswToXwG(const LhsEval&, unsigned)
+        {
+            assert(false && "convertRswToXwG not implemented for GenericOilGasFluidSystem!");
+            return 0.;
+        }
+
+        template <class LhsEval>
+        static LhsEval convertRvwToXgW(const LhsEval&, unsigned)
+        {
+            assert(false && "convertRvwToXgW not implemented for GenericOilGasFluidSystem!");
+            return 0.;
+        }
+
+        template <class LhsEval>
+        static LhsEval convertXgWToxgW(const LhsEval&, unsigned)
+        {
+            assert(false && "convertXgWToxgW not implemented for GenericOilGasFluidSystem!");
+            return 0.;
+        }
+
+        static bool enableDissolvedGas()
+        {
+            return false;
+        }
+
+        static bool enableDissolvedGasInWater()
+        {
+            return false;
+        }
+
+        static bool enableVaporizedWater()
+        {
+            return false;
+        }
+
+        static bool enableVaporizedOil()
+        {
+            return false;
+        }
 
     private:
         static bool isConsistent() {

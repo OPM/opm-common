@@ -204,6 +204,7 @@ public:
     RSTConfig() = default;
     RSTConfig(const SOLUTIONSection& solution_section,
               const ParseContext& parseContext,
+              bool compositional_arg,
               ErrorGuard& errors);
 
     void update(const DeckKeyword& keyword,
@@ -221,6 +222,7 @@ public:
         serializer(basic);
         serializer(freq);
         serializer(save);
+        serializer(compositional);
         serializer(this->solution_only_keywords);
     }
 
@@ -231,6 +233,7 @@ public:
     std::optional<int> basic{};
     std::optional<int> freq{};
     bool save { false };
+    bool compositional { false };
 
 private:
     std::unordered_set<std::string> solution_only_keywords{};

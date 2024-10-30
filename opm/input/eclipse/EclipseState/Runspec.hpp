@@ -508,6 +508,7 @@ public:
     bool h2Storage() const noexcept;
     bool micp() const noexcept;
     bool mech() const noexcept;
+    bool compositional() const noexcept;
 
     bool operator==(const Runspec& data) const;
     static bool rst_cmp(const Runspec& full_state, const Runspec& rst_state);
