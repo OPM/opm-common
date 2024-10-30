@@ -112,7 +112,7 @@ candidateWells(const std::string& wellNamePattern) const
 {
     // Consider all MS wells matching 'wellNamePattern'.
     return this->candidateWells(WellMatcher {
-            this->mswInputData_.get().well_order()
+            &this->mswInputData_.get().well_order()
         }.wells(wellNamePattern));
 }
 

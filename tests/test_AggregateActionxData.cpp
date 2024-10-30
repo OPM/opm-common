@@ -1051,14 +1051,14 @@ BOOST_AUTO_TEST_CASE(Declared_Actionx_data)
                 BOOST_CHECK(compare_tokens(action.conditions[6].tokens(), {"MNTH", ">", "OCT"}));
             }
 
-
             std::vector<Opm::Action::ActionX> actions;
-            for (const auto& rst_action : rst_state.actions)
+            for (const auto& rst_action : rst_state.actions) {
                 actions.emplace_back(rst_action);
+            }
 
             std::unordered_set<std::string> input_keys;
             std::unordered_set<std::string> rst_keys;
-            for (std::size_t iact = 0; iact < input_actions.ecl_size(); iact++) {
+            for (std::size_t iact = 0; iact < input_actions.ecl_size(); ++iact) {
                 const auto& input_action = input_actions[iact];
                 const auto& rst_action = actions[iact];
 
@@ -1069,15 +1069,18 @@ BOOST_AUTO_TEST_CASE(Declared_Actionx_data)
                 input_action.required_summary(input_keys);
                 rst_action.required_summary(rst_keys);
             }
+
             BOOST_CHECK(input_keys == rst_keys);
 
             {
                 std::mt19937 rng;
                 std::uniform_real_distribution<> random_uniform(-100, 100);
-                Opm::WListManager wlm;
-                auto year = 2020;
-                auto day = 1;
-                for (std::size_t month = 1; month <= 12; month++) {
+
+                const Opm::WListManager wlm;
+                const auto year = 2020;
+                const auto day = 1;
+
+                for (std::size_t month = 1; month <= 12; ++month) {
                     auto state = Opm::SummaryState {
                         Opm::asTimePoint(Opm::TimeStampUTC(year, month, day)),
                         es.runspec().udqParams().undefinedValue()
@@ -1087,21 +1090,23 @@ BOOST_AUTO_TEST_CASE(Declared_Actionx_data)
                     for (const auto& key : rst_keys) {
                         const auto& first_char = key[0];
                         if (first_char == 'W') {
-                            for (const auto& well : {"OPU01", "OPU02", "OPL01", "OPL02"})
+                            for (const auto& well : {"OPU01", "OPU02", "OPL01", "OPL02"}) {
                                 state.update_well_var(well, key, random_uniform(rng));
-                        } else if (first_char == 'G') {
-                            for (const auto& group : {"UPPER", "LOWER", "TEST"})
+                            }
+                        }
+                        else if (first_char == 'G') {
+                            for (const auto& group : {"UPPER", "LOWER", "TEST"}) {
                                 state.update_group_var(group, key, random_uniform(rng));
-                        } else
+                            }
+                        }
+                        else {
                             state.update(key, random_uniform(rng));
+                        }
                     }
 
-                    for (std::size_t iact = 0; iact < input_actions.ecl_size(); iact++) {
-                        const auto& input_action = input_actions[iact];
-                        const auto& rst_action = actions[iact];
-
-                        const auto& input_res = input_action.eval(context);
-                        const auto& rst_res = rst_action.eval(context);
+                    for (std::size_t iact = 0; iact < input_actions.ecl_size(); ++iact) {
+                        const auto input_res = input_actions[iact].eval(context);
+                        const auto rst_res   = actions      [iact].eval(context);
 
                         BOOST_CHECK(input_res == rst_res);
                     }

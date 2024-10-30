@@ -1162,8 +1162,8 @@ BOOST_AUTO_TEST_CASE(UDQ_POW_TEST) {
     UDQDefine def_pow2(udqp, "WU",0, location, {"(", "WOPR", "+", "WWPR", ")", "^", "(", "WOPR", "+" , "WGOR", "*", "WWIR", "-", "WBHP", ")"});
     SummaryState st(TimeService::now(), udqp.undefinedValue());
     UDQState udq_state(udqp.undefinedValue());
-    NameOrder wo; wo.add("P1");
-    WellMatcher wm(wo);
+    NameOrder wo{}; wo.add("P1");
+    WellMatcher wm(std::move(wo));
     UDQContext context(udqft, wm, {}, UDQContext::MatcherFactories{}, st, udq_state);
 
     st.update_well_var("P1", "WOPR", 1);
@@ -2229,7 +2229,7 @@ DEFINE WUGASRA  750000 - WGLIR '*' /
     st.update_well_var("W3", "WGLIR", 3);
 
     NameOrder wo({"W1", "W2", "W3"});
-    WellMatcher wm(wo);
+    WellMatcher wm(std::move(wo));
     auto segmentMatcherFactory = []() { return std::make_unique<SegmentMatcher>(ScheduleState {}); };
     auto regionSetMatcherFactory = []() { return std::make_unique<RegionSetMatcher>(FIPRegionStatistics {}); };
     udq.eval(0, schedule, wm, segmentMatcherFactory, regionSetMatcherFactory, st, udq_state);

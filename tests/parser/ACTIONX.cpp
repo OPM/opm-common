@@ -17,15 +17,12 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdexcept>
-#include <algorithm>
-
 #define BOOST_TEST_MODULE ACTIONX
 
 #include <boost/test/unit_test.hpp>
 
 #include <boost/version.hpp>
-#if BOOST_VERSION / 100000 == 1 && BOOST_VERSION / 100 % 1000 < 71
+#if (BOOST_VERSION / 100000 == 1) && ((BOOST_VERSION / 100) % 1000 < 71)
 #include <boost/test/floating_point_comparison.hpp>
 #else
 #include <boost/test/tools/floating_point_comparison.hpp>
@@ -97,7 +94,8 @@ Schedule make_schedule(const std::string& deck_string,
 
 } // Anonymous namespace
 
-BOOST_AUTO_TEST_CASE(Create) {
+BOOST_AUTO_TEST_CASE(Create)
+{
     auto check_operator = [](const std::string& comp_op)
     {
         BOOST_TEST_MESSAGE("Checking operator "+comp_op);
@@ -149,7 +147,8 @@ ACTIONX
     BOOST_CHECK_EQUAL(condition_errors3.size(), 1U);
 }
 
-BOOST_AUTO_TEST_CASE(SCAN) {
+BOOST_AUTO_TEST_CASE(SCAN)
+{
     const auto MISSING_END= std::string{ R"(
 SCHEDULE
 
@@ -251,7 +250,8 @@ TSTEP
     BOOST_CHECK_THROW( make_schedule(WITH_GRID, parseContext), OpmInputError );
 }
 
-BOOST_AUTO_TEST_CASE(COMPDAT) {
+BOOST_AUTO_TEST_CASE(COMPDAT)
+{
 
     const auto TRAILING_COMPDAT = std::string{ R"(
 GRID
@@ -294,7 +294,8 @@ COMPDAT
                                             std::unordered_map<std::string,double>{}));
 }
 
-BOOST_AUTO_TEST_CASE(EMPTY) {
+BOOST_AUTO_TEST_CASE(EMPTY)
+{
 
     const auto EMPTY_ACTION = std::string{ R"(
 GRID
@@ -326,12 +327,14 @@ ENDACTIO
     BOOST_CHECK( !action1.eval(context) );
 }
 
-BOOST_AUTO_TEST_CASE(TestActions) {
+BOOST_AUTO_TEST_CASE(TestActions)
+{
     Opm::SummaryState st(TimeService::now(), 0.0);
     Opm::WListManager wlm;
     Opm::Action::Context context(st, wlm);
     Opm::Action::Actions config;
     auto python = std::make_shared<Opm::Python>();
+
     BOOST_CHECK_EQUAL(config.ecl_size(), 0U);
     BOOST_CHECK(config.empty());
 
@@ -357,6 +360,7 @@ BOOST_AUTO_TEST_CASE(TestActions) {
         Opm::Action::PyAction py_action2(python, "PYTHON2", Opm::Action::PyAction::RunCount::single, "act1.py");
         config.add(py_action2);
     }
+
     const Opm::Action::ActionX& action2 = config["NAME"];
     Opm::Action::State action_state;
     // The action2 instance has an empty condition, so it will never evaluate to true.
@@ -377,7 +381,8 @@ BOOST_AUTO_TEST_CASE(TestActions) {
     BOOST_CHECK_EQUAL(python_actions.size(), 2U);
 }
 
-BOOST_AUTO_TEST_CASE(TestContext) {
+BOOST_AUTO_TEST_CASE(TestContext)
+{
     Opm::SummaryState st(TimeService::now(), 0.0);
     st.update_well_var("OP1", "WOPR", 100);
     Opm::WListManager wlm;
@@ -396,7 +401,8 @@ BOOST_AUTO_TEST_CASE(TestContext) {
     BOOST_CHECK_EQUAL(wwct_wells.size(), 0U);
 }
 
-BOOST_AUTO_TEST_CASE(TestAction_AST_BASIC) {
+BOOST_AUTO_TEST_CASE(TestAction_AST_BASIC)
+{
     // Missing comparator
     BOOST_REQUIRE_THROW( Action::AST( std::vector<std::string>{"WWCT", "OPX", "0.75"} ), std::invalid_argument);
 
@@ -423,7 +429,8 @@ BOOST_AUTO_TEST_CASE(TestAction_AST_BASIC) {
     BOOST_REQUIRE_THROW(ast3.eval(context), std::out_of_range);
 }
 
-BOOST_AUTO_TEST_CASE(TestAction_AST_OR_AND) {
+BOOST_AUTO_TEST_CASE(TestAction_AST_OR_AND)
+{
     Action::AST ast_or({"WWCT", "OPX", ">", "0.75", "OR", "WWCT", "OPY", ">", "0.75"});
     Action::AST ast_and({"WWCT", "OPX", ">", "0.75", "AND", "WWCT", "OPY", ">", "0.75"});
     Action::AST par({"WWCT", "OPX", ">", "0.75", "AND", "(", "WWCT", "OPY", ">", "0.75", "OR", "WWCT", "OPZ", ">", "0.75", ")"});
@@ -462,7 +469,8 @@ BOOST_AUTO_TEST_CASE(TestAction_AST_OR_AND) {
     BOOST_CHECK( !par.eval(context));
 }
 
-BOOST_AUTO_TEST_CASE(DATE) {
+BOOST_AUTO_TEST_CASE(DATE)
+{
     Action::AST ast(std::vector<std::string>{"MNTH", ">=", "JUN"});
     SummaryState st(TimeService::now(), 0.0);
     WListManager wlm;
@@ -478,7 +486,8 @@ BOOST_AUTO_TEST_CASE(DATE) {
     BOOST_CHECK( !ast.eval(context));
 }
 
-BOOST_AUTO_TEST_CASE(MNTH_NUMERIC) {
+BOOST_AUTO_TEST_CASE(MNTH_NUMERIC)
+{
     Action::AST ast(std::vector<std::string>{"MNTH", ">=", "6.3"});
     SummaryState st(TimeService::now(), 0.0);
     WListManager wlm;
@@ -492,7 +501,8 @@ BOOST_AUTO_TEST_CASE(MNTH_NUMERIC) {
 }
 
 
-BOOST_AUTO_TEST_CASE(MANUAL1) {
+BOOST_AUTO_TEST_CASE(MANUAL1)
+{
     Action::AST ast({"GGPR", "FIELD", ">", "50000", "AND", "WGOR", "PR", ">" ,"GGOR", "FIELD"});
     SummaryState st(TimeService::now(), 0.0);
     WListManager wlm;
@@ -514,7 +524,8 @@ BOOST_AUTO_TEST_CASE(MANUAL1) {
     BOOST_CHECK( !ast.eval(context) );
 }
 
-BOOST_AUTO_TEST_CASE(MANUAL2) {
+BOOST_AUTO_TEST_CASE(MANUAL2)
+{
     Action::AST ast({"GWCT", "LIST1", ">", "0.70", "AND", "(", "GWPR", "LIST1", ">", "GWPR", "LIST2", "OR", "GWPR", "LIST1", ">", "GWPR", "LIST3", ")"});
     SummaryState st(TimeService::now(), 0.0);
     WListManager wlm;
@@ -551,7 +562,8 @@ BOOST_AUTO_TEST_CASE(MANUAL2) {
     BOOST_CHECK( !ast.eval(context));
 }
 
-BOOST_AUTO_TEST_CASE(MANUAL3) {
+BOOST_AUTO_TEST_CASE(MANUAL3)
+{
     Action::AST ast({"MNTH", ".GE.", "MAR", "AND", "MNTH", ".LE.", "OCT", "AND", "GMWL", "HIGH", ".GE.", "4"});
     SummaryState st(TimeService::now(), 0.0);
     WListManager wlm;
@@ -574,7 +586,8 @@ BOOST_AUTO_TEST_CASE(MANUAL3) {
     BOOST_CHECK( !ast.eval(context));
 }
 
-BOOST_AUTO_TEST_CASE(MANUAL4) {
+BOOST_AUTO_TEST_CASE(MANUAL4)
+{
     Action::AST ast({"GWCT", "FIELD", ">", "0.8", "AND", "DAY", ">", "1", "AND", "MNTH", ">", "JUN", "AND", "YEAR", ">=", "2021"});
     SummaryState st(TimeService::now(), 0.0);
     WListManager wlm;
@@ -593,7 +606,8 @@ BOOST_AUTO_TEST_CASE(MANUAL4) {
     BOOST_CHECK( !ast.eval(context) );
 }
 
-BOOST_AUTO_TEST_CASE(MANUAL5) {
+BOOST_AUTO_TEST_CASE(MANUAL5)
+{
     Action::AST ast({"WCG2", "PROD1", ">", "WCG5", "PROD2", "AND", "GCG3", "G1", ">", "GCG7", "G2", "OR", "FCG1", ">", "FCG7"});
     SummaryState st(TimeService::now(), 0.0);
     WListManager wlm;
@@ -632,7 +646,8 @@ BOOST_AUTO_TEST_CASE(MANUAL5) {
     BOOST_CHECK(ast.eval(context));
 }
 
-BOOST_AUTO_TEST_CASE(LGR) {
+BOOST_AUTO_TEST_CASE(LGR)
+{
     Action::AST ast({"LWCC" , "OPX", "LOCAL", "1", "2", "3", ">", "100"});
     SummaryState st(TimeService::now(), 0.0);
     WListManager wlm;
@@ -645,7 +660,8 @@ BOOST_AUTO_TEST_CASE(LGR) {
     BOOST_CHECK(!ast.eval(context));
 }
 
-BOOST_AUTO_TEST_CASE(Action_ContextTest) {
+BOOST_AUTO_TEST_CASE(Action_ContextTest)
+{
     SummaryState st(TimeService::now(), 0.0);
     st.update("WWCT:OP1", 100);
     WListManager wlm;
@@ -660,17 +676,19 @@ BOOST_AUTO_TEST_CASE(Action_ContextTest) {
     BOOST_REQUIRE_THROW(context.get("WGOR", "B37"), std::out_of_range);
 }
 
-//Note: that this is only temporary test.
-//Groupnames w/ astirisks wil eventually work with ACTIONX
-BOOST_AUTO_TEST_CASE(TestGroupList) {
+// Note: that this is only temporary test.
+// Groupnames w/ astirisks wil eventually work with ACTIONX
+BOOST_AUTO_TEST_CASE(TestGroupList)
+{
     Action::AST ast({"GWPR", "*", ">", "1.0"});
     SummaryState st(TimeService::now(), 0.0);
     WListManager wlm;
     Action::Context context(st, wlm);
-    BOOST_CHECK_THROW( ast.eval(context), std::logic_error );
+    BOOST_CHECK_THROW(ast.eval(context), std::logic_error);
 }
 
-BOOST_AUTO_TEST_CASE(TestMatchingWells) {
+BOOST_AUTO_TEST_CASE(TestMatchingWells)
+{
     Action::AST ast({"WOPR", "*", ">", "1.0"});
     SummaryState st(TimeService::now(), 0.0);
 
@@ -684,8 +702,8 @@ BOOST_AUTO_TEST_CASE(TestMatchingWells) {
     auto wells = res.wells();
     BOOST_CHECK( res);
 
-    BOOST_CHECK_EQUAL( wells.size(), 1U);
-    BOOST_CHECK_EQUAL( wells[0], "OPZ" );
+    BOOST_CHECK_EQUAL(wells.size(), 1U);
+    BOOST_CHECK_EQUAL(wells[0], "OPZ");
 }
 
 BOOST_AUTO_TEST_CASE(TestMatchingWells2) {
@@ -717,7 +735,8 @@ BOOST_AUTO_TEST_CASE(TestMatchingWells2) {
   BOOST_CHECK_EQUAL( std::count(wells2.begin(), wells2.end(), "IZ") , 1);
 }
 
-BOOST_AUTO_TEST_CASE(TestMatchingWells_AND) {
+BOOST_AUTO_TEST_CASE(TestMatchingWells_AND)
+{
     Action::AST ast({"WOPR", "*", ">", "1.0", "AND", "WWCT", "*", "<", "0.50"});
     SummaryState st(TimeService::now(), 0.0);
 
@@ -740,7 +759,8 @@ BOOST_AUTO_TEST_CASE(TestMatchingWells_AND) {
     BOOST_CHECK( res.wells().empty() );
 }
 
-BOOST_AUTO_TEST_CASE(TestMatchingWells_OR) {
+BOOST_AUTO_TEST_CASE(TestMatchingWells_OR)
+{
     Action::AST ast({"WOPR", "*", ">", "1.0", "OR", "WWCT", "*", "<", "0.50"});
     SummaryState st(TimeService::now(), 0.0);
 
@@ -766,7 +786,8 @@ BOOST_AUTO_TEST_CASE(TestMatchingWells_OR) {
     BOOST_CHECK( std::find(wells.begin(), wells.end(), "OPY") != wells.end());
 }
 
-BOOST_AUTO_TEST_CASE(TestWLIST) {
+BOOST_AUTO_TEST_CASE(TestWLIST)
+{
     WListManager wlm;
     Action::AST ast({"WOPR", "*LIST1", ">", "1.0"});
     SummaryState st(TimeService::now(), 0.0);
@@ -790,7 +811,8 @@ BOOST_AUTO_TEST_CASE(TestWLIST) {
     }
 }
 
-BOOST_AUTO_TEST_CASE(TestFieldAND) {
+BOOST_AUTO_TEST_CASE(TestFieldAND)
+{
     Action::AST ast({"FMWPR", ">=", "4", "AND", "WUPR3", "OP*", "=", "1"});
     SummaryState st(TimeService::now(), 0.0);
     WListManager wlm;
@@ -992,7 +1014,8 @@ BOOST_AUTO_TEST_CASE(ACTIONRESULT_COPY_WELLS) {
     }
 }
 
-BOOST_AUTO_TEST_CASE(ActionState) {
+BOOST_AUTO_TEST_CASE(ActionState)
+{
     Action::State st;
     Action::ActionX action1("NAME", 100, 100, 100); action1.update_id(100);
     Action::ActionX action2("NAME", 100, 100, 100); action1.update_id(200);
@@ -1034,7 +1057,8 @@ BOOST_AUTO_TEST_CASE(ActionState) {
 
 }
 
-BOOST_AUTO_TEST_CASE(MANUAL4_QUOTE) {
+BOOST_AUTO_TEST_CASE(MANUAL4_QUOTE)
+{
     const auto deck_string = std::string{ R"(
 RUNSPEC
 ACTDIMS
@@ -1080,7 +1104,8 @@ ENDACTIO
     BOOST_CHECK( !action1.eval(context) );
 }
 
-BOOST_AUTO_TEST_CASE(ActionID) {
+BOOST_AUTO_TEST_CASE(ActionID)
+{
     const auto deck_string = std::string{ R"(
 SCHEDULE
 
@@ -1109,18 +1134,15 @@ WOPR 'OPX'  = 1000 /
 /
 
 ENDACTIO
-
         )"};
 
-    Opm::Parser parser;
-    auto deck = parser.parseString(deck_string);
+    const auto deck = Parser{}.parseString(deck_string);
     EclipseGrid grid1(10,10,10);
-    TableManager table ( deck );
-    FieldPropsManager fp( deck, Phases{true, true, true}, grid1, table);
-    auto python = std::make_shared<Python>();
+    const TableManager table (deck);
+    const FieldPropsManager fp(deck, Phases{true, true, true}, grid1, table);
 
-    Runspec runspec (deck);
-    Schedule sched(deck, grid1, fp, runspec, python);
+    const Runspec runspec (deck);
+    const Schedule sched(deck, grid1, fp, runspec, std::make_shared<Python>());
     const auto& action1 = sched[1].actions.get()["A"];
     const auto& action2 = sched[2].actions.get()["A"];
 
@@ -1128,14 +1150,14 @@ ENDACTIO
 
     Action::State st;
     st.add_run(action1, 1000, Action::Result{true});
-    BOOST_CHECK_EQUAL( st.run_count(action1), 1U);
-    BOOST_CHECK_EQUAL( st.run_count(action2), 0U);
+    BOOST_CHECK_EQUAL(st.run_count(action1), 1U);
+    BOOST_CHECK_EQUAL(st.run_count(action2), 0U);
 }
 
-BOOST_AUTO_TEST_CASE(Action_GCON) {
+BOOST_AUTO_TEST_CASE(Action_GCON)
+{
     const auto deck_string = std::string{ R"(
 SCHEDULE
-
 
 WELSPECS
     'PROD1' 'G1'  1 1 10 'OIL' /
@@ -1168,20 +1190,21 @@ ENDACTIO
 
 TSTEP
 10 /
+END
+)"};
 
-        )"};
-
-    auto unit_system =  UnitSystem::newMETRIC();
+    const auto unit_system =  UnitSystem::newMETRIC();
     const auto st = SummaryState{ TimeService::now(), 0.0 };
+
     Schedule sched = make_schedule(deck_string);
     const auto& action1 = sched[0].actions.get()["A"];
     {
         const auto& group = sched.getGroup("G1", 0);
         const auto& prod = group.productionControls(st);
-        BOOST_CHECK_CLOSE( prod.oil_target , unit_system.to_si(UnitSystem::measure::liquid_surface_rate, 100), 1e-5 );
+        BOOST_CHECK_CLOSE(prod.oil_target, unit_system.to_si(UnitSystem::measure::liquid_surface_rate, 100), 1e-5);
 
         const auto& inj = group.injectionControls(Phase::WATER, st);
-        BOOST_CHECK_CLOSE( inj.surface_max_rate, unit_system.to_si(UnitSystem::measure::liquid_surface_rate, 1000), 1e-5 );
+        BOOST_CHECK_CLOSE(inj.surface_max_rate, unit_system.to_si(UnitSystem::measure::liquid_surface_rate, 1000), 1e-5);
     }
 
 
@@ -1192,15 +1215,15 @@ TSTEP
     {
         const auto& group = sched.getGroup("G1", 1);
         const auto& prod = group.productionControls(st);
-        BOOST_CHECK_CLOSE( prod.oil_target , unit_system.to_si(UnitSystem::measure::liquid_surface_rate, 200), 1e-5 );
+        BOOST_CHECK_CLOSE(prod.oil_target, unit_system.to_si(UnitSystem::measure::liquid_surface_rate, 200), 1e-5);
 
         const auto& inj = group.injectionControls(Phase::WATER, st);
-        BOOST_CHECK_CLOSE( inj.surface_max_rate, unit_system.to_si(UnitSystem::measure::liquid_surface_rate, 5000), 1e-5 );
+        BOOST_CHECK_CLOSE(inj.surface_max_rate, unit_system.to_si(UnitSystem::measure::liquid_surface_rate, 5000), 1e-5);
     }
 
-
-    auto wellpi = action1.wellpi_wells(WellMatcher(sched[0].well_order()), {});
-    BOOST_CHECK( wellpi.empty() );
+    const auto wellpi = action1
+        .wellpi_wells(WellMatcher { &sched[0].well_order() }, {});
+    BOOST_CHECK(wellpi.empty());
 }
 
 namespace {
@@ -1214,7 +1237,8 @@ bool has_well(const std::vector<std::string>& wells,
 
 } // Anonymous namespace
 
-BOOST_AUTO_TEST_CASE(WELPI_TEST1) {
+BOOST_AUTO_TEST_CASE(WELPI_TEST1)
+{
     std::string deck_string = R"(
 WELPI
    'W1'  10 /
@@ -1226,11 +1250,12 @@ WELPI
 /
 
 )";
-    Parser parser;
-    auto deck = parser.parseString(deck_string);
+
+    const auto deck = Parser{}.parseString(deck_string);
     Action::ActionX action("NAME", 1, 1, 0);
-    NameOrder well_order({"W1", "W2", "P1", "P2", "P3"});
-    WellMatcher well_matcher( well_order );
+    const NameOrder well_order({"W1", "W2", "P1", "P2", "P3"});
+    const WellMatcher well_matcher(&well_order);
+
     action.addKeyword(deck["WELPI"][0]);
     {
         auto wells = action.wellpi_wells(well_matcher, {});
@@ -1238,6 +1263,7 @@ WELPI
         has_well(wells, "W1");
         has_well(wells, "W2");
     }
+
     action.addKeyword(deck["WELPI"][1]);
     {
         auto wells = action.wellpi_wells(well_matcher, {});
@@ -1250,7 +1276,8 @@ WELPI
     }
 }
 
-BOOST_AUTO_TEST_CASE(GASLIFT_OPT_DECK) {
+BOOST_AUTO_TEST_CASE(GASLIFT_OPT_DECK)
+{
     const auto input = R"(-- Turns on gas lift optimization
 RUNSPEC
 LIFTOPT
@@ -1288,38 +1315,44 @@ ENDACTIO
 
 TSTEP
 10 /
-
-
+END
 )";
 
-    Opm::UnitSystem unitSystem = UnitSystem( UnitSystem::UnitType::UNIT_TYPE_METRIC );
     auto sched = make_schedule(input);
+
     const auto& action1 = sched[0].actions.get()["A"];
     {
         const auto& glo = sched.glo(0);
         BOOST_CHECK(!glo.has_group("PLAT-A"));
     }
-    std::unordered_set<std::string> required_summary;
-    action1.required_summary(required_summary);
-    BOOST_CHECK_EQUAL( required_summary.count("WWCT"), 1);
-    BOOST_CHECK_EQUAL( required_summary.count("FPR"), 1);
 
+    {
+        std::unordered_set<std::string> required_summary;
+        action1.required_summary(required_summary);
+
+        BOOST_CHECK_EQUAL(required_summary.count("WWCT"), 1);
+        BOOST_CHECK_EQUAL(required_summary.count("FPR"), 1);
+    }
 
     Action::Result action_result(true);
     const auto& sim_update = sched.applyAction(0, action1, action_result.wells(),
                                                std::unordered_map<std::string,double>{});
     BOOST_CHECK( sim_update.affected_wells.empty() );
     {
+        const auto unitSystem = Opm::UnitSystem {
+            UnitSystem::UnitType::UNIT_TYPE_METRIC
+        };
+
         const auto& glo = sched.glo(0);
         BOOST_CHECK(glo.has_group("PLAT-A"));
         const auto& plat_group = glo.group("PLAT-A");
         BOOST_CHECK_CLOSE( *plat_group.max_lift_gas(), unitSystem.to_si( UnitSystem::measure::gas_surface_rate, 200000), 1e-13);
         BOOST_CHECK(!plat_group.max_total_gas().has_value());
     }
-
 }
 
-BOOST_AUTO_TEST_CASE(ACTIONX_WGNAME) {
+BOOST_AUTO_TEST_CASE(ACTIONX_WGNAME)
+{
     Action::WGNames wgnames;
 
     wgnames.add_well("W1");
@@ -1331,7 +1364,8 @@ BOOST_AUTO_TEST_CASE(ACTIONX_WGNAME) {
     BOOST_CHECK(!wgnames.has_group("G2"));
 }
 
-BOOST_AUTO_TEST_CASE(Action_COMPDAT_ACTION) {
+BOOST_AUTO_TEST_CASE(Action_COMPDAT_ACTION)
+{
     const auto deck_string = std::string{ R"(
 GRID
 PORO
@@ -1370,11 +1404,11 @@ WELOPEN
 
 TSTEP
 10/
-
-
-        )"};
+END
+)"};
 
     const auto st = SummaryState{ TimeService::now(), 0.0 };
+
     Schedule sched = make_schedule(deck_string);
     const auto& action1 = sched[0].actions.get()["A"];
 
@@ -1389,7 +1423,8 @@ TSTEP
     BOOST_CHECK_EQUAL(connections.size(), 3);
 }
 
-BOOST_AUTO_TEST_CASE(Action_WELPI) {
+BOOST_AUTO_TEST_CASE(Action_WELPI)
+{
     const auto deck_string = std::string{ R"(
 GRID
 PORO
@@ -1425,25 +1460,25 @@ ENDACTIO
 
 TSTEP
 10 /
-
-        )"};
+END
+)"};
 
     const auto st = SummaryState{ TimeService::now(), 0.0 };
+
     Schedule sched = make_schedule(deck_string);
     const auto& action1 = sched[0].actions.get()["A"];
-    double CF0;
+
     {
         const auto& target_wellpi = sched[0].target_wellpi;
-        BOOST_CHECK_EQUAL( target_wellpi.count("PROD1"), 0);
-
-        const auto& well = sched.getWell("PROD1", 0);
-        CF0 = well.getConnections()[0].CF();
+        BOOST_CHECK_EQUAL(target_wellpi.count("PROD1"), 0);
     }
 
+    const auto CF0 = sched.getWell("PROD1", 0).getConnections()[0].CF();
 
     Action::Result action_result(true);
     BOOST_CHECK_THROW( sched.applyAction(0, action1, action_result.wells(),
                                         std::unordered_map<std::string,double>{}), std::exception);
+
     {
         const auto& well = sched.getWell("PROD1", 0);
         const auto& sim_update = sched.applyAction(0, action1, action_result.wells(),
@@ -1451,23 +1486,25 @@ TSTEP
         BOOST_CHECK_EQUAL( sim_update.welpi_wells.count("PROD1"), 1);
         BOOST_CHECK_EQUAL( sim_update.welpi_wells.size(), 1);
     }
+
     {
         const auto& target_wellpi = sched[0].target_wellpi;
-        BOOST_CHECK_EQUAL( target_wellpi.at("PROD1"), 1000);
+        BOOST_CHECK_EQUAL(target_wellpi.at("PROD1"), 1000);
 
-        const auto& well = sched.getWell("PROD1", 0);
-        auto CF1 = well.getConnections()[0].CF();
-        BOOST_CHECK_CLOSE(CF1 / CF0, 2.0, 1e-4 );
+        const auto CF1 = sched.getWell("PROD1", 0).getConnections()[0].CF();
+        BOOST_CHECK_CLOSE(CF1 / CF0, 2.0, 1e-4);
     }
 
     {
-        std::unordered_set<std::string> required_summary;
+        auto required_summary = std::unordered_set<std::string>{};
         action1.required_summary(required_summary);
-        BOOST_CHECK_EQUAL( required_summary.count("WWCT"), 1);
+
+        BOOST_CHECK_EQUAL(required_summary.count("WWCT"), 1);
     }
 }
 
-BOOST_AUTO_TEST_CASE(Action_MULTZ) {
+BOOST_AUTO_TEST_CASE(Action_MULTZ)
+{
     const auto deck_string = std::string{ R"(
 GRID
 PORO
@@ -1507,23 +1544,25 @@ ENDACTIO
 
 TSTEP
 10 /
-
-        )"};
+END
+)"};
 
     const auto st = SummaryState{ TimeService::now(), 0.0 };
-    Schedule sched = make_schedule(deck_string);
-    const auto& action1 = sched[0].actions.get()["A"];
 
+    Schedule sched = make_schedule(deck_string);
     BOOST_CHECK(sched[0].geo_keywords().empty());
 
-    Action::Result action_result(true);
+    const auto& action1 = sched[0].actions.get()["A"];
+    const Action::Result action_result(true);
     auto sim_update = sched.applyAction(0, action1, action_result.wells(),
                                         std::unordered_map<std::string,double>{});
-    BOOST_CHECK( sim_update.tran_update );
+
+    BOOST_CHECK(sim_update.tran_update);
     BOOST_CHECK_EQUAL(sched[0].geo_keywords().size(), 3);
 }
 
-BOOST_AUTO_TEST_CASE(COMBINED_OR) {
+BOOST_AUTO_TEST_CASE(COMBINED_OR)
+{
     const auto deck_string = std::string{ R"(
 RUNSPEC
 
@@ -1541,8 +1580,8 @@ FU1 < 10 AND   /
 /
 
 ENDACTIO
-
-        )"};
+END
+)"};
 
     const auto sched = make_schedule(deck_string);
     auto st = SummaryState{ TimeService::now(), sched.back().udq().params().undefinedValue() };
@@ -1633,10 +1672,10 @@ ENDACTIO
 
         BOOST_CHECK(cond3.rhs.args.empty());
     }
-
 }
 
-BOOST_AUTO_TEST_CASE(MatchingWellsSpecified1) {
+BOOST_AUTO_TEST_CASE(MatchingWellsSpecified1)
+{
     Action::AST ast({"WBHP", "P1", "<", "200"});
     auto st = SummaryState{ TimeService::now(), 0.0 };
     Opm::WListManager wlm;
@@ -1648,8 +1687,8 @@ BOOST_AUTO_TEST_CASE(MatchingWellsSpecified1) {
     BOOST_CHECK(result.wells() == std::vector<std::string>{"P1"});
 }
 
-BOOST_AUTO_TEST_CASE(MatchingWellsSpecified2) {
-
+BOOST_AUTO_TEST_CASE(MatchingWellsSpecified2)
+{
     const auto deck_string = std::string{ R"(
 SCHEDULE
 
@@ -1667,11 +1706,11 @@ WELOPEN
 /
 
 ENDACTIO
-
-        )"};
+END
+)"};
 
     auto st = SummaryState{ TimeService::now(), 0.0 };
-    Schedule sched = make_schedule(deck_string);
+    const Schedule sched = make_schedule(deck_string);
     Opm::WListManager wlm;
 
     st.update_well_var("P1", "WBHP", 150);

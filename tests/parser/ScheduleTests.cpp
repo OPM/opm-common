@@ -4031,115 +4031,165 @@ BOOST_AUTO_TEST_CASE(WELL_STATIC) {
 }
 
 
-BOOST_AUTO_TEST_CASE(WellNames) {
+BOOST_AUTO_TEST_CASE(WellNames)
+{
     const auto& schedule = make_schedule(createDeckWTEST());
-    auto names = schedule.wellNames("NO_SUCH_WELL", 0);
-    BOOST_CHECK_EQUAL(names.size(), 0U);
 
-    auto w1names = schedule.wellNames("W1", 0);
-    BOOST_CHECK_EQUAL(w1names.size(), 1U);
-    BOOST_CHECK_EQUAL(w1names[0], "W1");
+    {
+        const auto names = schedule.wellNames("NO_SUCH_WELL", 0);
+        BOOST_CHECK_EQUAL(names.size(), 0U);
+    }
 
-    auto i1names = schedule.wellNames("11", 0);
-    BOOST_CHECK_EQUAL(i1names.size(), 0U);
+    {
+        const auto w1names = schedule.wellNames("W1", 0);
+        BOOST_CHECK_EQUAL(w1names.size(), 1U);
+        BOOST_CHECK_EQUAL(w1names[0], "W1");
+    }
 
-    auto listnamese = schedule.wellNames("*NO_LIST", 0);
-    BOOST_CHECK_EQUAL( listnamese.size(), 0U);
+    {
+        const auto i1names = schedule.wellNames("11", 0);
+        BOOST_CHECK_EQUAL(i1names.size(), 0U);
+    }
 
-    auto listnames0 = schedule.wellNames("*ILIST", 0);
-    BOOST_CHECK_EQUAL( listnames0.size(), 0U);
+    {
+        const auto listnamese = schedule.wellNames("*NO_LIST", 0);
+        BOOST_CHECK_EQUAL( listnamese.size(), 0U);
+    }
 
-    auto listnames1 = schedule.wellNames("*ILIST", 2);
-    BOOST_CHECK_EQUAL( listnames1.size(), 2U);
-    BOOST_CHECK( has(listnames1, "I1"));
-    BOOST_CHECK( has(listnames1, "I2"));
+    {
+        const auto listnames0 = schedule.wellNames("*ILIST", 0);
+        BOOST_CHECK_EQUAL( listnames0.size(), 0U);
+    }
 
-    auto pnames1 = schedule.wellNames("I*", 0);
-    BOOST_CHECK_EQUAL(pnames1.size(), 0U);
+    {
+        const auto listnames1 = schedule.wellNames("*ILIST", 2);
 
-    auto pnames2 = schedule.wellNames("W*", 0);
-    BOOST_CHECK_EQUAL(pnames2.size(), 3U);
-    BOOST_CHECK( has(pnames2, "W1"));
-    BOOST_CHECK( has(pnames2, "W2"));
-    BOOST_CHECK( has(pnames2, "W3"));
+        BOOST_CHECK_EQUAL( listnames1.size(), 2U);
+        BOOST_CHECK( has(listnames1, "I1"));
+        BOOST_CHECK( has(listnames1, "I2"));
+    }
 
-    auto anames = schedule.wellNames("?", 0, {"W1", "W2"});
-    BOOST_CHECK_EQUAL(anames.size(), 2U);
-    BOOST_CHECK(has(anames, "W1"));
-    BOOST_CHECK(has(anames, "W2"));
+    {
+        const auto pnames1 = schedule.wellNames("I*", 0);
+        BOOST_CHECK_EQUAL(pnames1.size(), 0U);
+    }
 
-    auto all_names0 = schedule.wellNames("*", 0);
-    BOOST_CHECK_EQUAL( all_names0.size(), 6U);
-    BOOST_CHECK( has(all_names0, "W1"));
-    BOOST_CHECK( has(all_names0, "W2"));
-    BOOST_CHECK( has(all_names0, "W3"));
-    BOOST_CHECK( has(all_names0, "DEFAULT"));
-    BOOST_CHECK( has(all_names0, "ALLOW"));
+    {
+        const auto pnames2 = schedule.wellNames("W*", 0);
 
-    auto all_names = schedule.wellNames("*", 2);
-    BOOST_CHECK_EQUAL( all_names.size(), 9U);
-    BOOST_CHECK( has(all_names, "I1"));
-    BOOST_CHECK( has(all_names, "I2"));
-    BOOST_CHECK( has(all_names, "I3"));
-    BOOST_CHECK( has(all_names, "W1"));
-    BOOST_CHECK( has(all_names, "W2"));
-    BOOST_CHECK( has(all_names, "W3"));
-    BOOST_CHECK( has(all_names, "DEFAULT"));
-    BOOST_CHECK( has(all_names, "ALLOW"));
-    BOOST_CHECK( has(all_names, "BAN"));
+        BOOST_CHECK_EQUAL(pnames2.size(), 3U);
+        BOOST_CHECK( has(pnames2, "W1"));
+        BOOST_CHECK( has(pnames2, "W2"));
+        BOOST_CHECK( has(pnames2, "W3"));
+    }
 
-    auto abs_all = schedule.wellNames();
-    BOOST_CHECK_EQUAL(abs_all.size(), 9U);
+    {
+        const auto anames = schedule.wellNames("?", 0, {"W1", "W2"});
 
+        BOOST_CHECK_EQUAL(anames.size(), 2U);
+        BOOST_CHECK(has(anames, "W1"));
+        BOOST_CHECK(has(anames, "W2"));
+    }
 
-    WellMatcher wm0( {}, WListManager{});
-    const auto& wml0 = wm0.wells();
-    BOOST_CHECK(wml0.empty());
-    NameOrder wo({"P3", "P2", "P1"});
+    {
+        const auto all_names0 = schedule.wellNames("*", 0);
 
-    wo.add("W3");
-    wo.add("W2");
-    wo.add("W1");
-    BOOST_CHECK_EQUAL( wo.size(), 6 );
-    BOOST_CHECK_THROW( wo[6], std::exception );
-    BOOST_CHECK_EQUAL( wo[2], "P1" );
+        BOOST_CHECK_EQUAL( all_names0.size(), 6U);
+        BOOST_CHECK( has(all_names0, "W1"));
+        BOOST_CHECK( has(all_names0, "W2"));
+        BOOST_CHECK( has(all_names0, "W3"));
+        BOOST_CHECK( has(all_names0, "DEFAULT"));
+        BOOST_CHECK( has(all_names0, "ALLOW"));
+    }
 
-    WellMatcher wm1( wo, WListManager{});
-    const std::vector<std::string> pwells = {"P3", "P2", "P1"};
-    BOOST_CHECK( pwells == wm1.wells("P*"));
+    {
+        const auto all_names = schedule.wellNames("*", 2);
 
-    auto wm2 = schedule.wellMatcher(4);
-    const auto& all_wells = wm2.wells();
-    BOOST_CHECK_EQUAL(all_wells.size(), 9);
-    for (const auto& w : std::vector<std::string>{"W1", "W2", "W3", "I1", "I2", "I3", "DEFAULT", "ALLOW", "BAN"})
-        BOOST_CHECK(has(all_wells, w));
+        BOOST_CHECK_EQUAL( all_names.size(), 9U);
+        BOOST_CHECK( has(all_names, "I1"));
+        BOOST_CHECK( has(all_names, "I2"));
+        BOOST_CHECK( has(all_names, "I3"));
+        BOOST_CHECK( has(all_names, "W1"));
+        BOOST_CHECK( has(all_names, "W2"));
+        BOOST_CHECK( has(all_names, "W3"));
+        BOOST_CHECK( has(all_names, "DEFAULT"));
+        BOOST_CHECK( has(all_names, "ALLOW"));
+        BOOST_CHECK( has(all_names, "BAN"));
+    }
 
-    const std::vector<std::string> wwells = {"W1", "W2", "W3"};
-    BOOST_CHECK( wm2.wells("W*") == wwells );
-    BOOST_CHECK( wm2.wells("XYZ*").empty() );
-    BOOST_CHECK( wm2.wells("XYZ").empty() );
+    {
+        auto abs_all = schedule.wellNames();
+        BOOST_CHECK_EQUAL(abs_all.size(), 9U);
+    }
 
-    auto def = wm2.wells("DEFAULT");
-    BOOST_CHECK_EQUAL(def.size() , 1);
-    BOOST_CHECK_EQUAL(def[0], "DEFAULT");
+    {
+        WellMatcher wm0{};
+        const auto& wml0 = wm0.wells();
+        BOOST_CHECK(wml0.empty());
+    }
 
+    {
+        NameOrder wo({"P3", "P2", "P1"});
+        wo.add("W3");
+        wo.add("W2");
+        wo.add("W1");
 
-    auto l2 = wm2.wells("*ILIST");
-    BOOST_CHECK_EQUAL( l2.size(), 2U);
-    BOOST_CHECK( has(l2, "I1"));
-    BOOST_CHECK( has(l2, "I2"));
+        BOOST_CHECK_EQUAL( wo.size(), 6 );
+        BOOST_CHECK_THROW( wo[6], std::exception );
+        BOOST_CHECK_EQUAL( wo[2], "P1" );
+
+        const WellMatcher wm1{std::move(wo)};
+        const auto pwells = std::vector<std::string> {"P3", "P2", "P1"};
+        BOOST_CHECK(pwells == wm1.wells("P*"));
+    }
+
+    const auto wm2 = schedule.wellMatcher(4);
+    {
+        const auto& all_wells = wm2.wells();
+        BOOST_CHECK_EQUAL(all_wells.size(), 9);
+
+        for (const auto& w : std::vector<std::string> {
+                "W1", "W2", "W3", "I1", "I2", "I3",
+                "DEFAULT", "ALLOW", "BAN",
+            })
+        {
+            BOOST_CHECK(has(all_wells, w));
+        }
+    }
+
+    {
+        const std::vector<std::string> wwells = {"W1", "W2", "W3"};
+        BOOST_CHECK( wm2.wells("W*") == wwells );
+        BOOST_CHECK( wm2.wells("XYZ*").empty() );
+        BOOST_CHECK( wm2.wells("XYZ").empty() );
+    }
+
+    {
+        const auto def = wm2.wells("DEFAULT");
+
+        BOOST_CHECK_EQUAL(def.size() , 1);
+        BOOST_CHECK_EQUAL(def[0], "DEFAULT");
+    }
+
+    {
+        const auto l2 = wm2.wells("*ILIST");
+
+        BOOST_CHECK_EQUAL( l2.size(), 2U);
+        BOOST_CHECK( has(l2, "I1"));
+        BOOST_CHECK( has(l2, "I2"));
+    }
 }
 
-
-BOOST_AUTO_TEST_CASE(WellOrderTest) {
-    NameOrder wo;
+BOOST_AUTO_TEST_CASE(WellOrderTest)
+{
+    NameOrder wo{};
     wo.add("W1");
     wo.add("W2");
     wo.add("W3");
     wo.add("W4");
 
-    std::vector<std::string> sorted_wells = {"W1", "W2", "W3", "W4"};
-    std::vector<std::string> unsorted_wells = {"W4", "W3", "W2", "W1"};
+    const std::vector<std::string> sorted_wells = {"W1", "W2", "W3", "W4"};
+    const std::vector<std::string> unsorted_wells = {"W4", "W3", "W2", "W1"};
 
     BOOST_CHECK( wo.sort(unsorted_wells) == sorted_wells );
     BOOST_CHECK( wo.names() == sorted_wells );
@@ -4147,18 +4197,20 @@ BOOST_AUTO_TEST_CASE(WellOrderTest) {
     BOOST_CHECK( !wo.has("G1"));
 }
 
-BOOST_AUTO_TEST_CASE(GroupOrderTest) {
+BOOST_AUTO_TEST_CASE(GroupOrderTest)
+{
     const std::size_t max_groups = 9;
     GroupOrder go(max_groups);
 
-    std::vector<std::string> groups1 = {"FIELD"};
-    std::vector<std::string> groups2 = {"FIELD", "G1", "G2", "G3"};
+    const std::vector<std::string> groups1 = {"FIELD"};
+    const std::vector<std::string> groups2 = {"FIELD", "G1", "G2", "G3"};
 
-    BOOST_CHECK( go.names() == groups1 );
+    BOOST_CHECK(go.names() == groups1);
     go.add("G1");
     go.add("G2");
     go.add("G3");
-    BOOST_CHECK( go.names() == groups2 );
+    BOOST_CHECK(go.names() == groups2);
+
     const auto& restart_groups = go.restart_groups();
     BOOST_CHECK_EQUAL(restart_groups.size(), max_groups + 1);
     BOOST_CHECK_EQUAL( *restart_groups[0], "G1");
@@ -4166,8 +4218,9 @@ BOOST_AUTO_TEST_CASE(GroupOrderTest) {
     BOOST_CHECK_EQUAL( *restart_groups[2], "G3");
     BOOST_CHECK_EQUAL( *restart_groups[max_groups], "FIELD");
 
-    for (std::size_t g=3; g < max_groups; g++)
+    for (std::size_t g = 3; g < max_groups; ++g) {
         BOOST_CHECK( !restart_groups[g].has_value() );
+    }
 }
 
 

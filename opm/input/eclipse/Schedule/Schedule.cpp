@@ -1323,15 +1323,13 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
         return names;
     }
 
-    WellMatcher Schedule::wellMatcher(std::size_t report_step) const {
-        const ScheduleState * sched_state;
+    WellMatcher Schedule::wellMatcher(const std::size_t report_step) const
+    {
+        const auto& schedState = (report_step < this->snapshots.size())
+            ? this->snapshots[report_step]
+            : this->snapshots.back();
 
-        if (report_step < this->snapshots.size())
-            sched_state = &this->snapshots[report_step];
-        else
-            sched_state = &this->snapshots.back();
-
-        return WellMatcher(sched_state->well_order.get(), sched_state->wlist_manager.get());
+        return { &schedState.well_order(), schedState.wlist_manager() };
     }
 
     std::function<std::unique_ptr<SegmentMatcher>()>
