@@ -31,29 +31,32 @@ namespace Opm {
 
 void NameOrder::add(const std::string& name)
 {
-    auto iter = this->m_index_map.find( name );
-    if (iter == this->m_index_map.end()) {
-        std::size_t insert_index = this->m_name_list.size();
-        this->m_index_map.emplace( name, insert_index );
-        this->m_name_list.push_back( name );
+    const auto emplaceResult = this->m_index_map
+        .emplace(name, this->m_name_list.size());
+
+    if (emplaceResult.second) {
+        // New element inserted.  Update name list.
+        this->m_name_list.push_back(name);
     }
 }
 
 NameOrder::NameOrder(const std::vector<std::string>& names)
 {
-    for (const auto& w : names)
+    for (const auto& w : names) {
         this->add(w);
+    }
 }
 
 NameOrder::NameOrder(std::initializer_list<std::string> names)
 {
-    for (const auto& w : names)
+    for (const auto& w : names) {
         this->add(w);
+    }
 }
 
 bool NameOrder::has(const std::string& wname) const
 {
-    return (this->m_index_map.count(wname) != 0);
+    return this->m_index_map.find(wname) != this->m_index_map.end();
 }
 
 const std::vector<std::string>& NameOrder::names() const
@@ -82,25 +85,10 @@ NameOrder NameOrder::serializationTestObject()
     return wo;
 }
 
-std::vector<std::string>::const_iterator NameOrder::begin() const
-{
-    return this->m_name_list.begin();
-}
-
-std::vector<std::string>::const_iterator NameOrder::end() const
-{
-    return this->m_name_list.end();
-}
-
 bool NameOrder::operator==(const NameOrder& other) const
 {
     return (this->m_index_map == other.m_index_map)
         && (this->m_name_list == other.m_name_list);
-}
-
-std::size_t NameOrder::size() const
-{
-    return this->m_name_list.size();
 }
 
 const std::string& NameOrder::operator[](std::size_t index) const
@@ -110,10 +98,20 @@ const std::string& NameOrder::operator[](std::size_t index) const
 
 // --------------------------------------------------------------------------------
 
-GroupOrder::GroupOrder(std::size_t max_groups)
+GroupOrder::GroupOrder(const std::size_t max_groups)
+    : m_max_groups { max_groups }
 {
-    this->m_max_groups = max_groups;
     this->add("FIELD");
+}
+
+GroupOrder GroupOrder::serializationTestObject()
+{
+    GroupOrder go(123);
+
+    go.add("G1");
+    go.add("G2");
+
+    return go;
 }
 
 void GroupOrder::add(const std::string& gname)
@@ -137,14 +135,6 @@ const std::vector<std::string>& GroupOrder::names() const
     return this->m_name_list;
 }
 
-GroupOrder GroupOrder::serializationTestObject()
-{
-    GroupOrder go(123);
-    go.add("G1");
-    go.add("G2");
-    return go;
-}
-
 std::vector<std::optional<std::string>> GroupOrder::restart_groups() const
 {
     std::vector<std::optional<std::string>> groups(this->m_max_groups + 1);
@@ -152,19 +142,9 @@ std::vector<std::optional<std::string>> GroupOrder::restart_groups() const
     const auto& input_groups = this->names();
 
     std::copy(input_groups.begin() + 1, input_groups.end(), groups.begin());
-    groups.back() = input_groups[0];
+    groups.back() = input_groups.front();
 
     return groups;
-}
-
-std::vector<std::string>::const_iterator GroupOrder::begin() const
-{
-    return this->m_name_list.begin();
-}
-
-std::vector<std::string>::const_iterator GroupOrder::end() const
-{
-    return this->m_name_list.end();
 }
 
 bool GroupOrder::operator==(const GroupOrder& other) const
