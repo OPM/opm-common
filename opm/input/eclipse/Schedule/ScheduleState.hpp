@@ -558,25 +558,25 @@ namespace Opm {
         }
 
     private:
-        time_point m_start_time;
-        std::optional<time_point> m_end_time;
+        time_point m_start_time{};
+        std::optional<time_point> m_end_time{};
 
         std::size_t m_sim_step = 0;
         std::size_t m_month_num = 0;
         std::size_t m_year_num = 0;
-        bool m_first_in_month;
-        bool m_first_in_year;
+        bool m_first_in_month{false};
+        bool m_first_in_year{false};
         bool m_save_step{false};
 
-        Tuning m_tuning;
-        Nupcol m_nupcol;
-        OilVaporizationProperties m_oilvap;
-        Events m_events;
-        WellGroupEvents m_wellgroup_events;
-        std::vector<DeckKeyword> m_geo_keywords;
-        MessageLimits m_message_limits;
+        Tuning m_tuning{};
+        Nupcol m_nupcol{};
+        OilVaporizationProperties m_oilvap{};
+        Events m_events{};
+        WellGroupEvents m_wellgroup_events{};
+        std::vector<DeckKeyword> m_geo_keywords{};
+        MessageLimits m_message_limits{};
         WellProducerCMode m_whistctl_mode = WellProducerCMode::CMODE_UNDEFINED;
-        std::optional<double> m_sumthin;
+        std::optional<double> m_sumthin{};
         bool m_rptonly{false};
     };
 }
