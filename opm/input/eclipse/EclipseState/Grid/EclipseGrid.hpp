@@ -315,9 +315,9 @@ namespace Opm {
         // Radial grids need this for volume calculations.
         std::optional<std::vector<double>> m_thetav;
         std::optional<std::vector<double>> m_rv;
-        void parseGlobalReferenceToChildren(void);
+        void init_lgr_global_cells_index(void);
         int initializeLGRObjectIndices(int);
-        void initializeLGRTreeIndices(void);
+        void init_lgr_cells_index(void);
         void propagateParentIndicesToLGRChildren(int);
         void updateNumericalAquiferCells(const Deck&);
         double computeCellGeometricDepth(size_t globalIndex) const;
@@ -372,9 +372,10 @@ namespace Opm {
       using vec_size_t = std::vector<std::size_t>;
       EclipseGridLGR() = default;
       EclipseGridLGR(const std::string& self_label, const std::string& father_label_, 
-                     size_t nx, size_t ny, size_t nz, 
-                     const vec_size_t& father_lgr_index, const std::array<int,3>& low_fahterIJK_, 
-                     const std::array<int,3>& up_fahterIJK_);
+                                   std::size_t nx, std::size_t ny, std::size_t nz, 
+                                   const vec_size_t& father_lgr_index, [[maybe_unused]] const std::array<int,3>& low_fahterIJK_, 
+                                   [[maybe_unused]] const std::array<int,3>& up_fahterIJK_);
+                     
       ~EclipseGridLGR() = default;
       const vec_size_t& getFatherGlobalID() const;
       void save(Opm::EclIO::EclOutput&, const std::vector<Opm::NNCdata>&, const Opm::UnitSystem&) const;
@@ -386,11 +387,7 @@ namespace Opm {
         return father_global;
       }
      void set_hostnum(std::vector<int>&);
-<<<<<<< HEAD
      void set_lgr_refinement(const std::vector<double>&, const std::vector<double> &);                 
-=======
-     void set_lgr_refinement(std::vector<double>,std::vector<double>);                 
->>>>>>> 9d788474a (EclipseGrid is capable of initializing EclipseGridLGR hostcells.)
     private:
       void init_father_global();
       std::string father_label;

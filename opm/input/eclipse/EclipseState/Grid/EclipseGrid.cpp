@@ -1901,7 +1901,7 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
         std::vector<int> filehead(100,0);
         filehead[0] = 3;                     // version number
         filehead[1] = 2007;                  // release year
-        filehead[6] = 1;                     // corner point grid
+        filehead[6] = 2;                     // corner point grid
 
         std::vector<int> gridhead(100,0);
         gridhead[0] = 1;                    // corner point grid
@@ -2090,9 +2090,9 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
         //parse fatherLGRObjbect Indices to children
         propagateParentIndicesToLGRChildren(0);
         // initialize the LGR tree indices for each refined cell.
-        initializeLGRTreeIndices();
+        init_lgr_cells_index();
         // parse the reference indices to object in the global level.        
-        parseGlobalReferenceToChildren();
+        init_lgr_global_cells_index();
     }
     
     void EclipseGrid::propagateParentIndicesToLGRChildren(int index){
@@ -2195,7 +2195,7 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
         lgr_active_index.resize(lgr_children_cells.size(),0);
     }
 
-    void EclipseGrid::initializeLGRTreeIndices(){
+    void EclipseGrid::init_lgr_cells_index(){
         // initialize the LGR tree indices for each refined cell.
         auto set_map_scalar = [&](const auto& vec, const auto& value){
              num_lgr_children_cells[vec] = value;
@@ -2225,19 +2225,18 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
         lgr_level_active_map.reserve(lgr_level_active_map.size()+1);
         lgr_level_active_map.insert(lgr_level_active_map.begin(),0);        
         for (auto& lgr_cell : lgr_children_cells) {
-            lgr_cell.initializeLGRTreeIndices();
+            lgr_cell.init_lgr_cells_index();
         }
     }
 
-    void EclipseGrid::parseGlobalReferenceToChildren(){
+    void EclipseGrid::init_lgr_global_cells_index(){
        for (std::size_t index = 0; index < lgr_children_cells.size(); index++)
         {
             lgr_children_cells[index].set_lgr_global_counter(lgr_level_active_map[lgr_active_index[index]] +
                                                              this->lgr_global_counter);
-            lgr_children_cells[index].parseGlobalReferenceToChildren();
+            lgr_children_cells[index].init_lgr_global_cells_index();
         }
     }
-
 
     void EclipseGrid::resetACTNUM() {
         std::size_t global_size = this->getCartesianSize();
