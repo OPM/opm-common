@@ -46,6 +46,7 @@
 #include <cstddef>
 #include <memory>
 #include <stdexcept>
+#include <string>
 #include <string_view>
 #include <vector>
 
@@ -1093,53 +1094,47 @@ public:
 
     template <class FluidState, class LhsEval = typename FluidState::Scalar>
     static LhsEval internalEnergy(const FluidState& fluidState,
-                                  unsigned phaseIdx,
-                                  unsigned regionIdx){
-        bool is_mixing = false;
-        const LhsEval& p = decay<LhsEval>(fluidState.pressure(phaseIdx));
-        const LhsEval& T = decay<LhsEval>(fluidState.temperature(phaseIdx));
+                                  const unsigned phaseIdx,
+                                  const unsigned regionIdx)
+    {
+        const auto p = decay<LhsEval>(fluidState.pressure(phaseIdx));
+        const auto T = decay<LhsEval>(fluidState.temperature(phaseIdx));
 
         switch (phaseIdx) {
-        case oilPhaseIdx: {
-            if(!oilPvt_->mixingEnergy()){
-                const auto& oilEnergy =
-                    oilPvt_->internalEnergy(regionIdx, T, p,
-                                            BlackOil::template getRs_<ThisType, FluidState, LhsEval>(fluidState, regionIdx));
-
-                return oilEnergy;
+        case oilPhaseIdx:
+            if (!oilPvt_->mixingEnergy()) {
+                return oilPvt_->internalEnergy
+                    (regionIdx, T, p,
+                     BlackOil::template getRs_<ThisType, FluidState, LhsEval>(fluidState, regionIdx));
             }
-            is_mixing = true;
             break;
-        }
-        case waterPhaseIdx: {
-            if(!waterPvt_->mixingEnergy()){
-                const auto waterEnergy =
-                    waterPvt_->internalEnergy(regionIdx, T, p,
-                                              BlackOil::template getRsw_<ThisType, FluidState, LhsEval>(fluidState, regionIdx),
-                                              BlackOil::template getSaltConcentration_<ThisType, FluidState, LhsEval>(fluidState, regionIdx));
 
-                return waterEnergy;
+        case waterPhaseIdx:
+            if (!waterPvt_->mixingEnergy()) {
+                return waterPvt_->internalEnergy
+                    (regionIdx, T, p,
+                     BlackOil::template getRsw_<ThisType, FluidState, LhsEval>(fluidState, regionIdx),
+                     BlackOil::template getSaltConcentration_<ThisType, FluidState, LhsEval>(fluidState, regionIdx));
             }
-            is_mixing = true;
             break;
-        }
-        case gasPhaseIdx: {
-            if(!gasPvt_->mixingEnergy()){
-                const auto gasEnergy =
-                    gasPvt_->internalEnergy(regionIdx, T, p,
-                                            BlackOil::template getRv_<ThisType, FluidState, LhsEval>(fluidState, regionIdx),
-                                            BlackOil::template getRvw_<ThisType, FluidState, LhsEval>(fluidState, regionIdx));
 
-                return gasEnergy;
+        case gasPhaseIdx:
+            if (!gasPvt_->mixingEnergy()) {
+                return gasPvt_->internalEnergy
+                    (regionIdx, T, p,
+                     BlackOil::template getRv_<ThisType, FluidState, LhsEval>(fluidState, regionIdx),
+                     BlackOil::template getRvw_<ThisType, FluidState, LhsEval>(fluidState, regionIdx));
             }
-            is_mixing = true;
             break;
+
+        default:
+            throw std::logic_error {
+                "Phase index " + std::to_string(phaseIdx) + " does not support internal energy"
+            };
         }
-        }
-        assert(is_mixing==true);
-        const auto& energy = internalMixingTotalEnergy<FluidState,LhsEval>(fluidState, phaseIdx, regionIdx);
-        const auto& phase_density = density<FluidState,LhsEval>(fluidState, phaseIdx, regionIdx);
-        return energy/phase_density;
+
+        return internalMixingTotalEnergy<FluidState,LhsEval>(fluidState, phaseIdx, regionIdx)
+            /  density<FluidState,LhsEval>(fluidState, phaseIdx, regionIdx);
     }
 
 
