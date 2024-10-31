@@ -1,33 +1,69 @@
-.TH CO2BRINEPVT "1" "October 2023" "co2brinepvt" "User Commands"
+.TH CO2BRINEPVT "1" "October 2024" "co2brinepvt" "User Commands"
 .SH NAME
 co2brinepvt \- compute and print pvt properties for co2 with brine
 .SH SYNOPSIS
 .B co2brinepvt
 [\fI\,OPTIONS\/\fR] \fI\,PROPERTY\/\fR \fI\,PHASE\/\fR
-\fI\,PRESSURE\/\fR \fI\,TEMPERATURE\/\fR [\fI\,SALINITY\/\fR]  [\fI\,RS\/\fR]
+\fI\,PRESSURE\/\fR \fI\,TEMPERATURE\/\fR [\fI\,SALINITY\/\fR]
+[\fI\,RS\/\fR] [\fI\,RV\/\fR] [\fI\,SALTMODEL\/\fR]
+[\fI\,THERMAL_MIXING_MODEL_GAS\/\fR]
+[\fI\,THERMAL_MIXING_MODEL_LIQUID\/\fR] [\fI\,THERMAL_MIXING_MODEL_SALT\/\fR]
 .SH DESCRIPTION
-co2brinepvt computes PVT properties of a brine/co2 system
-for a given phase (oil or brine), pressure, temperature, salinity and rs.
-The properties support are: density, the inverse phase formation volume factor (invB), viscosity,
-saturated dissolution factor (rsSat)
+co2brinepvt computes PVT PROPERTY of a brine/co2 system. The
+computation is performed for a given PHASE (oil or brine), PRESSURE
+(in bar), TEMPERATURE (in Celsius),  SALINITY (salt molality in
+mol/kg) and RS (amount of dissolved CO2 in Brine in SM3/SM3), RV
+(amount of vapporized water in Gas in SM3/SM3), salt model
+(SALTMODEL), model of thermal mixing of gas, liquid, amd salt
+(THERMAL_MIXING_MODEL_GAS ans THERMAL_MIXING_MODEL_LIQUID, 
+respectively).
+.PP
 See CO2STORE in the OPM manual for more details.
 .PP
-.SH Synopsis
-co2brinepvt <prop> <phase> <p> <T> <salinity> <rs>
-.br
-where
-.br
-prop = {density, invB, B, viscosity, rsSat, diffusionCoefficient}
-.br
-phase = {CO2, brine}
-.br
-p: pressure in pascal
-.br
-T: temperature in kelvin
-.br
-salinity(optional): salt molality in mol/kg
-.nr
-rs(optional): amount of dissolved CO2 in Brine in SM3/SM3
+PROPERTY, the property computed, may be one of
+.RS
+.nf
+- density (the density)
+- invB (the inverse phase formation volume factor
+- viscosity
+- rSat (saturated dissolution factor)
+- internalEnergy (internal Energy)
+- enthalpy
+- diffusionCoefficient (the diffusion coefficient)
+.RE
+.PP
+SALTMODEL, the model to use for salt, may be one of
+.RS
+.nf
+- 0 = no salt activity
+- 1 = Rumpf et al (1996) [default]
+- 2 = Duan-Sun in Spycher & Pruess (2009)
+- 3 = Duan-Sun in Sycher & Pruess (2005)
+.RE
+.PP
+THERMAL_MIXING_MODEL_GAS, the model of thermal mixing for gas, may be
+one of
+.RS
+.nf
+- 0 = pure component [default]
+- 1 = ideal mixing
+.RE
+.PP
+THERMAL_MIXING_MODEL_LIQUID, the model of thermal mixing for liquid, may be
+one of
+.RS
+.nf
+- 0 = pure component
+- 1 = ideal mixing
+- 2 = heat of dissolution according to duan sun [default]
+.RE
+.PP
+THERMAL_MIXING_MODEL_SALT, the model of thermal mixing for salt, may be
+one of
+.RS
+.nf
+- 0 = pure water
+- 1 = model in MICHAELIDES [default]
 .PP
 .SH OPTIONS
 \fB\-\-h\fR/\-\-help Print help and exit.
