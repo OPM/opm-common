@@ -522,7 +522,10 @@ public:
     };
 
     /// Normal constructor for FieldProps.
-    FieldProps(const Deck& deck, const Phases& phases, EclipseGrid& grid, const TableManager& table_arg,
+    FieldProps(const Deck& deck,
+               const Phases& phases,
+               EclipseGrid& grid,
+               const TableManager& table_arg,
                const std::size_t ncomps);
 
     /// Special case constructor used to process ACTNUM only.
@@ -707,6 +710,8 @@ public:
 
     void deleteMINPVV();
 
+    void set_active_indices(const std::vector<int>& indices);
+
 private:
     void processMULTREGP(const Deck& deck);
     void scanGRIDSection(const GRIDSection& grid_section);
@@ -815,6 +820,7 @@ private:
     Phases m_phases;
     SatFuncControls m_satfuncctrl;
     std::vector<int> m_actnum;
+    std::unordered_map<int,int> m_active_index;
     std::vector<double> cell_volume;
     std::vector<double> cell_depth;
     const std::string m_default_region;

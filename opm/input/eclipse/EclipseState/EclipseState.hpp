@@ -134,6 +134,7 @@ namespace Opm {
 
         void prune_global_for_schedule_run();
         void reset_actnum(const std::vector<int>& new_actnum);
+        void set_active_indices(const std::vector<int>& indices);
         void pruneDeactivatedAquiferConnections(const std::vector<std::size_t>& deactivated_cells);
         void loadRestartAquifers(const RestartIO::RstAquifer& aquifers);
         // TODO: it is possible that the aquifer are opened through SCHEDULE and not specified in the SOLUTION section

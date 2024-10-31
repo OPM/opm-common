@@ -184,6 +184,12 @@ void FieldPropsManager::prune_global_for_schedule_run()
     this->fp->prune_global_for_schedule_run();
 }
 
+
+void FieldPropsManager::set_active_indices(const std::vector<int>& indices)
+{
+    fp->set_active_indices(indices);
+}
+
 void apply_action(const Fieldprops::ScalarOperation& op,
                   const std::vector<double>& action_data,
                   std::vector<double>& data,
