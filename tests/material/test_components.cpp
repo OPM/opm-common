@@ -58,6 +58,7 @@
 #include <opm/material/components/H2O.hpp>
 #include <opm/material/components/SimpleHuDuanH2O.hpp>
 #include <opm/material/components/CO2.hpp>
+#include <opm/material/components/CO2Tables.hpp>
 #include <opm/material/components/Mesitylene.hpp>
 #include <opm/material/components/TabulatedComponent.hpp>
 #include <opm/material/components/Brine.hpp>
@@ -232,6 +233,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(CO2Class, Scalar, Types)
 
     // Extrapolate table
     bool extrapolate = true;
+    Opm::CO2Tables params;
     
     // Loop over temperature and pressure, and compare to reference values
     for (int iT = 0; iT < numT; ++iT) {
@@ -243,7 +245,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(CO2Class, Scalar, Types)
             p = Evaluation(pres_ref.get_array_item(iP).as_double());
 
             // Density
-            Scalar dens = CO2::gasDensity(T, p, extrapolate).value();
+            Scalar dens = CO2::gasDensity(params, T, p, extrapolate).value();
             Json::JsonObject dens_ref_row = density_ref.get_array_item(iT);
             Scalar dens_ref = Scalar(dens_ref_row.get_array_item(iP).as_double());
             
@@ -252,7 +254,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(CO2Class, Scalar, Types)
                 "} exceeds tolerance {"<<tol<<"} at (T, p) = ("<<T.value()<<", "<<p.value()<<")");
 
             // Viscosity
-            Scalar visc = CO2::gasViscosity(T, p, extrapolate).value();
+            Scalar visc = CO2::gasViscosity(params, T, p, extrapolate).value();
             Json::JsonObject visc_ref_row = viscosity_ref.get_array_item(iT);
             Scalar visc_ref = Scalar(visc_ref_row.get_array_item(iP).as_double());
 
@@ -268,7 +270,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(CO2Class, Scalar, Types)
             if ((T == 364.0 && p == 9100000.0))
                 continue;
 
-            Scalar enthalpy = CO2::gasEnthalpy(T, p, extrapolate).value();
+            Scalar enthalpy = CO2::gasEnthalpy(params, T, p, extrapolate).value();
             Json::JsonObject enth_ref_row = enthalpy_ref.get_array_item(iT);
             Scalar enth_ref = Scalar(enth_ref_row.get_array_item(iP).as_double());
 
@@ -304,7 +306,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(CO2Class, Scalar, Types)
             p = Evaluation(pres_ref2.get_array_item(iP).as_double());
 
             // Density
-            Scalar dens = CO2::gasDensity(T, p, extrapolate).value();
+            Scalar dens = CO2::gasDensity(params, T, p, extrapolate).value();
             Json::JsonObject dens_ref_row = density_ref2.get_array_item(iT);
             Scalar dens_ref = Scalar(dens_ref_row.get_array_item(iP).as_double());
             
@@ -313,7 +315,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(CO2Class, Scalar, Types)
                 "} exceeds tolerance {"<<tol<<"} at (T, p) = ("<<T.value()<<", "<<p.value()<<")");
 
             // Viscosity
-            Scalar visc = CO2::gasViscosity(T, p, extrapolate).value();
+            Scalar visc = CO2::gasViscosity(params, T, p, extrapolate).value();
             Json::JsonObject visc_ref_row = viscosity_ref2.get_array_item(iT);
             Scalar visc_ref = Scalar(visc_ref_row.get_array_item(iP).as_double());
 
@@ -330,7 +332,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(CO2Class, Scalar, Types)
             if (T == 348.0 && p == 6600000.0)
                 continue;
 
-            Scalar enthalpy = CO2::gasEnthalpy(T, p, extrapolate).value();
+            Scalar enthalpy = CO2::gasEnthalpy(params, T, p, extrapolate).value();
             Json::JsonObject enth_ref_row = enthalpy_ref2.get_array_item(iT);
             Scalar enth_ref = Scalar(enth_ref_row.get_array_item(iP).as_double());
 
