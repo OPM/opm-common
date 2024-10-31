@@ -53,8 +53,6 @@ BrineCo2Pvt(const std::vector<Scalar>& salinity,
     co2ReferenceDensity_.resize(num_regions);
     brineReferenceDensity_.resize(num_regions);
 
-    co2Tables_ = Params();
-
     for (int i = 0; i < num_regions; ++i) {
         co2ReferenceDensity_[i] = CO2::gasDensity(co2Tables_, T_ref, P_ref, true);
         brineReferenceDensity_[i] = Brine::liquidDensity(T_ref, P_ref, salinity_[i], true);

@@ -50,8 +50,6 @@ Co2GasPvt(const std::vector<Scalar>& salinity,
     setActivityModelSalt(activityModel);
     setThermalMixingModel(thermalMixingModel);
 
-    co2Tables = Params();
-
     int num_regions = salinity_.size();
     setNumRegions(num_regions);
     for (int i = 0; i < num_regions; ++i) {
