@@ -331,25 +331,42 @@ void ActionX::required_summary(std::unordered_set<std::string>& required_summary
     this->condition.required_summary(required_summary);
 }
 
-std::vector<std::string> ActionX::wellpi_wells(const WellMatcher& well_matcher, const std::vector<std::string>& matching_wells) const {
-    std::unordered_set<std::string> wells;
+std::vector<std::string>
+ActionX::wellpi_wells(const WellMatcher& well_matcher,
+                      const std::vector<std::string>& matching_wells) const
+{
+    auto wells = std::vector<std::string>{};
+
     for (const auto& kw : this->keywords) {
-        if (kw.name() == "WELPI") {
-            for (const auto& record : kw) {
-                std::vector<std::string> record_wells;
-                const auto& wname_arg = record.getItem<ParserKeywords::WELPI::WELL_NAME>().get<std::string>(0);
+        if (kw.name() != ParserKeywords::WELPI::keywordName) {
+            continue;
+        }
 
-                if (wname_arg == "?")
-                    record_wells = matching_wells;
-                else
-                    record_wells = well_matcher.wells( wname_arg );
+        for (const auto& record : kw) {
+            const auto wname_arg = record
+                .getItem<ParserKeywords::WELPI::WELL_NAME>()
+                .getTrimmedString(0);
 
-                for (const auto& well : record_wells)
-                    wells.insert( well );
+            if (wname_arg == "?") {
+                wells.insert(wells.end(), matching_wells.begin(), matching_wells.end());
+            }
+            else {
+                const auto& well_range = well_matcher.wells(wname_arg);
+                wells.insert(wells.end(), well_range.begin(), well_range.end());
             }
         }
     }
-    return std::vector<std::string>{ std::move_iterator(wells.begin()), std::move_iterator(wells.end()) };
+
+    if (! wells.empty()) {
+        wells = well_matcher.sort(wells);
+
+        // Note: std::unique() is sufficient here.  We don't need to care
+        // about the particular sort order to identify duplicate strings,
+        // only that any duplicates appear consecutively in the sequence.
+        wells.erase(std::unique(wells.begin(), wells.end()), wells.end());
+    }
+
+    return wells;
 }
 
 }
