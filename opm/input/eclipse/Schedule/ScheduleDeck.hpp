@@ -82,11 +82,11 @@ namespace Opm {
         void clearKeywords(const std::size_t idx);
 
     private:
-        time_point m_restart_time;
-        std::size_t m_restart_offset;
-        bool skiprest;
-        KeywordLocation m_location;
-        std::vector<ScheduleBlock> m_blocks;
+        time_point m_restart_time{};
+        std::size_t m_restart_offset{};
+        bool skiprest{false};
+        KeywordLocation m_location{};
+        std::vector<ScheduleBlock> m_blocks{};
     };
 }
 

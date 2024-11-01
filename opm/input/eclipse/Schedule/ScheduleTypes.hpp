@@ -70,7 +70,7 @@ public:
     }
 
 private:
-    bool  m_producer;
+    bool  m_producer{false};
     /*
       The injection_phase member is updated during the course of the simulation;
       following each WCONINJE keyword the injection phase is updated. If a
@@ -84,8 +84,8 @@ private:
       used when initializing the well equations for a producer.
     */
 
-    Phase m_injection_phase;
-    Phase m_welspecs_phase;
+    Phase m_injection_phase{Phase::WATER};
+    Phase m_welspecs_phase{Phase::WATER};
 };
 
 }
