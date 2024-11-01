@@ -43,7 +43,6 @@ public:
     explicit TimerLog(std::ostream& os);
 
     void clear();
-    ~TimerLog() {};
 
 protected:
     void addMessageUnconditionally(int64_t messageFlag,

@@ -145,7 +145,7 @@ namespace cvf {
     {
     public:
         AABBTree();
-        virtual ~AABBTree();
+        ~AABBTree() override;
 
 
         virtual void free();

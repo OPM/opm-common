@@ -54,7 +54,7 @@ class Timer : public Object
 {
 public:
     Timer();
-    ~Timer();
+    ~Timer() override;
 
     void	restart();
 

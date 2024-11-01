@@ -59,7 +59,7 @@ class Ray : public Object
 public:
     Ray();
     Ray(const Ray& other);
-    ~Ray();
+    ~Ray() override;
 
     void            setOrigin(const Vec3d& orig);
     const Vec3d&    origin() const;
