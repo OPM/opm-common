@@ -70,11 +70,6 @@ bool static_type_check(const Opm::UDQVarType lhs,
         return true;
     }
 
-    // This does not check if the rhs evaluates to a scalar.
-    if (rhs == Opm::UDQVarType::WELL_VAR) {
-        return lhs == Opm::UDQVarType::WELL_VAR;
-    }
-
     if (rhs == Opm::UDQVarType::TABLE_LOOKUP) {
         return (lhs == Opm::UDQVarType::WELL_VAR)
             || (lhs == Opm::UDQVarType::FIELD_VAR)

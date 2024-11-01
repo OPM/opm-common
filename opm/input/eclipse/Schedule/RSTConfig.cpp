@@ -355,7 +355,7 @@ RPT(const Opm::DeckKeyword&  keyword,
         return integer_mnemonic(Opm::fun::map(stoi, deck_items));
     }
 
-    if (ints && strs) {
+    if (ints) {
         const auto msg = std::string {
             "Error in keyword {keyword}--mixing "
             "mnemonics and integers is not permitted\n"
