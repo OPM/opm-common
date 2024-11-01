@@ -27,6 +27,7 @@
  */
 #ifndef OPM_CO2_HPP
 #define OPM_CO2_HPP
+
 #include <opm/common/TimingMacros.hpp>
 #include <opm/common/ErrorMacros.hpp>
 #include <opm/material/Constants.hpp>
