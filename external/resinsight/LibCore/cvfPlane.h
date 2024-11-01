@@ -59,7 +59,7 @@ public:
     Plane();
     Plane(double A, double B, double C, double D);
     Plane(const Plane& other);
-    ~Plane();
+    ~Plane() override;
 
     const Plane&    operator=(const Plane& other);
     bool            operator==(const Plane& other) const;
