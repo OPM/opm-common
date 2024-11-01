@@ -56,7 +56,7 @@ public:
         : data_(v)
     {}
 
-    ConditionalStorage(T&& v)
+    explicit ConditionalStorage(T&& v)
         : data_(std::move(v))
     {}
 
@@ -111,7 +111,7 @@ public:
         static_assert(std::is_default_constructible_v<T>);
     }
 
-    ConditionalStorage(const T&)
+    explicit ConditionalStorage(const T&)
     {
         static_assert(std::is_copy_constructible_v<T>);
     }

@@ -399,7 +399,7 @@ struct Setup
     Schedule schedule;
     SummaryConfig summary_config;
 
-    Setup(const char* path)
+    explicit Setup(const char* path)
         : deck          ( Parser().parseFile( path) )
         , es            ( deck)
         , grid          ( es.getInputGrid( ) )
