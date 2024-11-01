@@ -29,7 +29,8 @@ namespace Fieldprops
 {
 
 keywords::keyword_info<double> TranCalculator::make_kw_info(ScalarOperation op,
-                                                            std::string target_kw) {
+                                                            const std::string& target_kw)
+{
     keywords::keyword_info<double> kw_info;
     // We need global TRANZ for PINCH processing.
     if(target_kw == "TRANZ")

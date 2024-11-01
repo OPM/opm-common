@@ -51,7 +51,7 @@ void SignalEmitter::addEmittedSignal( AbstractSignal* signalToAdd ) const
 //--------------------------------------------------------------------------------------------------
 ///
 //--------------------------------------------------------------------------------------------------
-std::list<AbstractSignal*> SignalEmitter::emittedSignals() const
+const std::list<AbstractSignal*>& SignalEmitter::emittedSignals() const
 {
     return m_signals;
 }
@@ -74,7 +74,7 @@ SignalObserver::~SignalObserver()
 //--------------------------------------------------------------------------------------------------
 ///
 //--------------------------------------------------------------------------------------------------
-std::list<AbstractSignal*> SignalObserver::observedSignals() const
+const std::list<AbstractSignal*>& SignalObserver::observedSignals() const
 {
     return m_signals;
 }
