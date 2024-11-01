@@ -24,17 +24,14 @@
 #ifndef OPM_CO2TABLES_HPP
 #define OPM_CO2TABLES_HPP
 
-#include <config.h>
 #include <opm/material/common/MathToolbox.hpp>
 #include <opm/material/common/UniformTabulated2DFunction.hpp>
-#include <vector>
 
+namespace Opm {
 
-namespace Opm
+struct co2TabulatedDensityTraits
 {
-
-struct co2TabulatedDensityTraits {
-    typedef double Scalar;
+    using Scalar = double;
     static const char  *name;
     static const int    numX = 200;
     static const Scalar xMin;
@@ -45,8 +42,9 @@ struct co2TabulatedDensityTraits {
     static const Scalar vals[200][500];
 };
 
-struct co2TabulatedEnthalpyTraits {
-    typedef double Scalar;
+struct co2TabulatedEnthalpyTraits
+{
+    using Scalar = double;
     static const char  *name;
     static const int    numX = 200;
     static const Scalar xMin;
