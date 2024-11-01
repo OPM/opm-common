@@ -717,23 +717,27 @@ private:
         // Scalar SwPcMdcImbibition = EffLawT::twoPhaseSatPcnwInv(imbibitionParams(), pcMdcDrainage);
         // deltaSwImbPc_ = SwPcMdcImbibition - pcSwMdc_;
 
-        if (config().krHysteresisModel() == 2 || config().krHysteresisModel() == 3 || config().krHysteresisModel() == 4 || config().pcHysteresisModel() == 0) {
-            Scalar Snhy = 1.0 - krnSwMdc_;
-            if (Snhy > Sncrd_) {
-                Sncrt_ = Sncrd_ + (Snhy - Sncrd_)/((1.0+config().modParamTrapped()*(Snmaxd_-Snhy)) + C_*(Snhy - Sncrd_));
+        if (config().krHysteresisModel() == 2 ||
+            config().krHysteresisModel() == 3 ||
+            config().krHysteresisModel() == 4 ||
+            config().pcHysteresisModel() == 0)
+        {
+            const Scalar snhy = 1.0 - krnSwMdc_;
+            if (snhy > Sncrd_) {
+                Sncrt_ = Sncrd_ + (snhy - Sncrd_) /
+                        ((1.0 + config().modParamTrapped()*(Snmaxd_ - snhy)) + C_ * (snhy - Sncrd_));
             }
-            else
-            {
+            else {
                 Sncrt_ = Sncrd_;
             }
         }
 
         if (config().krHysteresisModel() == 4) {
-            Scalar Swhy = krnSwMdc_;
-            if (Swhy >= Swcrd_) {
-                Swcrt_ = Swcrd_ + (Swhy - Swcrd_)/((1.0+config().modParamTrapped()*(Swmaxd_-Swhy)) + Cw_*(Swhy - Swcrd_));
-            } else
-            {
+            Scalar swhy = krnSwMdc_;
+            if (swhy >= Swcrd_) {
+                Swcrt_ = Swcrd_ + (swhy - Swcrd_) /
+                        ((1.0 + config().modParamTrapped() * (Swmaxd_ - swhy)) + Cw_ * (swhy - Swcrd_));
+            } else {
                 Swcrt_ = Swcrd_;
             }
             Krwd_sncrt_ = EffLawT::twoPhaseSatKrw(drainageParams(), 1 - Sncrt());
@@ -742,19 +746,21 @@ private:
 
         if (gasOilHysteresisWAG()) {
             if (isDrain_ && krnSwMdc_ == krnSwWAG_) {
-                Scalar Snhy = 1.0 - krnSwMdc_;
+                Scalar snhy = 1.0 - krnSwMdc_;
                 SncrtWAG_ = Sncrd_;
-                if (Snhy > Sncrd_) {
-                    SncrtWAG_ += (Snhy - Sncrd_)/(1.0+config().modParamTrapped()*(Snmaxd_-Snhy) + wagConfig().wagLandsParam()*(Snhy - Sncrd_));
+                if (snhy > Sncrd_) {
+                    SncrtWAG_ += (snhy - Sncrd_) /
+                        (1.0 + config().modParamTrapped() * (Snmaxd_ - snhy) +
+                         wagConfig().wagLandsParam() * (snhy - Sncrd_));
                 }
             }
 
-            if (isDrain_ && (1.0-krnSwDrainRevert_) > SncrtWAG_) { //Reversal from drain to imb
-                cTransf_ = 1.0/(SncrtWAG_-Sncrd_ + 1.0e-12) - 1.0/(1.0-krnSwDrainRevert_-Sncrd_);
+            if (isDrain_ && (1.0 - krnSwDrainRevert_) > SncrtWAG_) { // Reversal from drain to imb
+                cTransf_ = 1.0 / (SncrtWAG_ - Sncrd_ + 1.0e-12) - 1.0 / (1.0 - krnSwDrainRevert_ - Sncrd_);
             }
 
             if (!wasDrain_ && isDrain_) { // Start of new drainage cycle
-                if (threePhaseState() || nState_>1) { // Never return to primary (two-phase) state after leaving
+                if (threePhaseState() || nState_ > 1) { // Never return to primary (two-phase) state after leaving
                     nState_ += 1;
                     krnDrainStart_ = EffLawT::twoPhaseSatKrn(drainageParams(), krnSwDrainStart_);
                     krnImbStart_ = krnImbStartNxt_;

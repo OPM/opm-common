@@ -390,20 +390,20 @@ public:
         }
 
         case EclTwoPhaseApproach::OilWater: {
-            const Evaluation& Sw =
+            const Evaluation& sw =
                 decay<Evaluation>(fluidState.saturation(waterPhaseIdx));
 
-            values[waterPhaseIdx] = OilWaterMaterialLaw::twoPhaseSatKrw(params.oilWaterParams(), Sw);
-            values[oilPhaseIdx] = OilWaterMaterialLaw::twoPhaseSatKrn(params.oilWaterParams(), Sw);
+            values[waterPhaseIdx] = OilWaterMaterialLaw::twoPhaseSatKrw(params.oilWaterParams(), sw);
+            values[oilPhaseIdx] = OilWaterMaterialLaw::twoPhaseSatKrn(params.oilWaterParams(), sw);
             break;
         }
 
         case EclTwoPhaseApproach::GasWater: {
-            const Evaluation& Sw =
+            const Evaluation& sw =
                 decay<Evaluation>(fluidState.saturation(waterPhaseIdx));
 
-            values[waterPhaseIdx] = GasWaterMaterialLaw::twoPhaseSatKrw(params.gasWaterParams(), Sw);
-            values[gasPhaseIdx] = GasWaterMaterialLaw::twoPhaseSatKrn(params.gasWaterParams(), Sw);
+            values[waterPhaseIdx] = GasWaterMaterialLaw::twoPhaseSatKrw(params.gasWaterParams(), sw);
+            values[gasPhaseIdx] = GasWaterMaterialLaw::twoPhaseSatKrn(params.gasWaterParams(), sw);
 
             break;
         }
@@ -455,20 +455,17 @@ public:
         switch (params.approach()) {
         case EclTwoPhaseApproach::GasOil: {
             Scalar So = scalarValue(fluidState.saturation(oilPhaseIdx));
-
             return params.gasOilParams().update(/*pcSw=*/So, /*krwSw=*/So, /*krnSw=*/So);
         }
 
         case EclTwoPhaseApproach::OilWater: {
-            Scalar Sw = scalarValue(fluidState.saturation(waterPhaseIdx));
-
-            return params.oilWaterParams().update(/*pcSw=*/Sw, /*krwSw=*/Sw, /*krnSw=*/Sw);
+            Scalar sw = scalarValue(fluidState.saturation(waterPhaseIdx));
+            return params.oilWaterParams().update(/*pcSw=*/sw, /*krwSw=*/sw, /*krnSw=*/sw);
         }
 
         case EclTwoPhaseApproach::GasWater: {
-            Scalar Sw = scalarValue(fluidState.saturation(waterPhaseIdx));
-
-            return params.gasWaterParams().update(/*pcSw=*/Sw, /*krwSw=*/Sw, /*krnSw=*/Sw);
+            Scalar sw = scalarValue(fluidState.saturation(waterPhaseIdx));
+            return params.gasWaterParams().update(/*pcSw=*/sw, /*krwSw=*/sw, /*krnSw=*/sw);
         }
         }
 

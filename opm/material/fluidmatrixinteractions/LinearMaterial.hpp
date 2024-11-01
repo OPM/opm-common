@@ -225,9 +225,9 @@ public:
     template <class FluidState, class Evaluation = typename FluidState::Scalar>
     static Evaluation krw(const Params& /*params*/, const FluidState& fs)
     {
-        const Evaluation& Sw =
+        const Evaluation& sw =
             decay<Evaluation>(fs.saturation(Traits::wettingPhaseIdx));
-        return max(0.0, min(1.0, Sw));
+        return max(0.0, min(1.0, sw));
     }
 
     template <class Evaluation = Scalar>
@@ -241,9 +241,9 @@ public:
     template <class FluidState, class Evaluation = typename FluidState::Scalar>
     static Evaluation krn(const Params& /*params*/, const FluidState& fs)
     {
-        const Evaluation& Sn =
+        const Evaluation& sn =
             decay<Evaluation>(fs.saturation(Traits::nonWettingPhaseIdx));
-        return max(0.0, min(1.0, Sn));
+        return max(0.0, min(1.0, sn));
     }
 
     template <class Evaluation = Scalar>
@@ -262,9 +262,9 @@ public:
     static typename std::enable_if<Traits::numPhases == 3, Evaluation>::type
     krg(const Params& /*params*/, const FluidState& fs)
     {
-        const Evaluation& Sg =
+        const Evaluation& sg =
             decay<Evaluation>(fs.saturation(Traits::gasPhaseIdx));
-        return max(0.0, min(1.0, Sg));
+        return max(0.0, min(1.0, sg));
     }
 
     /*!
@@ -276,17 +276,17 @@ public:
     static typename std::enable_if<Traits::numPhases == 3, Evaluation>::type
     pcgn(const Params& params, const FluidState& fs)
     {
-        const Evaluation& Sn =
+        const Evaluation& sn =
             decay<Evaluation>(fs.saturation(Traits::nonWettingPhaseIdx));
-        Valgrind::CheckDefined(Sn);
+        Valgrind::CheckDefined(sn);
 
         const Evaluation& nPhasePressure =
             Sn*params.pcMaxSat(Traits::nonWettingPhaseIdx) +
             (1.0 - Sn)*params.pcMinSat(Traits::nonWettingPhaseIdx);
 
-        const Evaluation& Sg =
+        const Evaluation& sg =
             decay<Evaluation>(fs.saturation(Traits::gasPhaseIdx));
-        Valgrind::CheckDefined(Sg);
+        Valgrind::CheckDefined(sg);
 
         const Evaluation& gPhasePressure =
             Sg*params.pcMaxSat(Traits::gasPhaseIdx) +

@@ -178,10 +178,10 @@ public:
     static typename std::enable_if<(numPhases > 1), Evaluation>::type
     krw(const Params& /*params*/, const FluidState& fluidState)
     {
-        const Evaluation& Sw =
+        const Evaluation& sw =
             decay<Evaluation>(fluidState.saturation(Traits::wettingPhaseIdx));
 
-        return max(0.0, min(1.0, Sw));
+        return max(0.0, min(1.0, sw));
     }
 
     template <class Evaluation>
@@ -196,10 +196,10 @@ public:
     static typename std::enable_if<(numPhases > 1), Evaluation>::type
     krn(const Params& /*params*/, const FluidState& fluidState)
     {
-        const Evaluation& Sn =
+        const Evaluation& sn =
             decay<Evaluation>(fluidState.saturation(Traits::nonWettingPhaseIdx));
 
-        return max(0.0, min(1.0, Sn));
+        return max(0.0, min(1.0, sn));
     }
 
     template <class Evaluation>
@@ -218,10 +218,10 @@ public:
     static typename std::enable_if< (numPhases > 2), Evaluation>::type
     krg(const Params& /*params*/, const FluidState& fluidState)
     {
-        const Evaluation& Sg =
+        const Evaluation& sg =
             decay<Evaluation>(fluidState.saturation(Traits::gasPhaseIdx));
 
-        return max(0.0, min(1.0, Sg));
+        return max(0.0, min(1.0, sg));
     }
 
     /*!

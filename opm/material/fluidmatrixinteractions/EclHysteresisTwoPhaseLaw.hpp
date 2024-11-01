@@ -310,17 +310,15 @@ public:
         if (params.gasOilHysteresisWAG()) {
 
             // Primary drainage
-            if (Sw <= params.krnSwMdc()+params.tolWAG() && params.nState()==1) {
-                Evaluation krn =  EffectiveLaw::twoPhaseSatKrn(params.drainageParams(), Sw);
-                return krn;
+            if (Sw <= params.krnSwMdc() + params.tolWAG() && params.nState() == 1) {
+                return EffectiveLaw::twoPhaseSatKrn(params.drainageParams(), Sw);
             }
 
             // Imbibition or reversion to two-phase drainage retracing imb curve
             // (Shift along primary drainage curve.)
-            if (params.nState()==1) {
+            if (params.nState() == 1) {
                 Evaluation Swf = params.computeSwf(Sw);
-                Evaluation krn = EffectiveLaw::twoPhaseSatKrn(params.drainageParams(), Swf);
-                return krn;
+                return EffectiveLaw::twoPhaseSatKrn(params.drainageParams(), Swf);
             }
 
             // Three-phase drainage along current secondary drainage curve

@@ -100,8 +100,7 @@ void SignalObserver::removeObservedSignal( AbstractSignal* signalToRemove ) cons
 //--------------------------------------------------------------------------------------------------
 void SignalObserver::disconnectAllSignals()
 {
-    auto observedSignals = m_signals;
-    for ( auto observedSignal : observedSignals )
+    for (auto observedSignal : m_signals)
     {
         observedSignal->disconnect( const_cast<SignalObserver*>( this ) );
     }

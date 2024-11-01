@@ -43,13 +43,13 @@ template <class Scalar, class IndexTraits>
 void BlackOilFluidSystem<Scalar,IndexTraits>::
 initFromState(const EclipseState& eclState, const Schedule& schedule)
 {
-    if(eclState.getSimulationConfig().useEnthalpy()){
+    if (eclState.getSimulationConfig().useEnthalpy()) {
         enthalpy_eq_energy_ = false;
-    }else{
+    } else {
         enthalpy_eq_energy_ = true;
     }
-    std::size_t numRegions = eclState.runspec().tabdims().getNumPVTTables();
-    initBegin(numRegions);
+    std::size_t num_regions = eclState.runspec().tabdims().getNumPVTTables();
+    initBegin(num_regions);
 
     numActivePhases_ = 0;
     std::fill_n(&phaseIsActive_[0], numPhases, false);
@@ -118,7 +118,7 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
     }
 
     // set the reference densities of all PVT regions
-    for (unsigned regionIdx = 0; regionIdx < numRegions; ++regionIdx) {
+    for (unsigned regionIdx = 0; regionIdx < num_regions; ++regionIdx) {
         setReferenceDensities(oilPvt_ ? oilPvt_->oilReferenceDensity(regionIdx) : 700.0,
                               waterPvt_ ? waterPvt_->waterReferenceDensity(regionIdx) : 1000.0,
                               gasPvt_ ? gasPvt_->gasReferenceDensity(regionIdx) : 2.0,
@@ -132,7 +132,7 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
     // when we are using the the CO2STORE option
     if (eclState.runspec().co2Storage()) {
         const Scalar salinity = eclState.getCo2StoreConfig().salinity();  // mass fraction
-        for (unsigned regionIdx = 0; regionIdx < numRegions; ++regionIdx) {
+        for (unsigned regionIdx = 0; regionIdx < num_regions; ++regionIdx) {
             if (phaseIsActive(oilPhaseIdx)) // The oil component is used for the brine if OIL is active
                 molarMass_[regionIdx][oilCompIdx] = BrineCo2Pvt<Scalar>::Brine::molarMass(salinity);
             if (phaseIsActive(waterPhaseIdx))
@@ -151,7 +151,7 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
         const Scalar molality = eclState.getTableManager().salinity(); // mol/kg
         const Scalar MmNaCl = 58.44e-3; // molar mass of NaCl [kg/mol]
         const Scalar salinity = 1 / ( 1 + 1 / (molality*MmNaCl));
-        for (unsigned regionIdx = 0; regionIdx < numRegions; ++regionIdx) {
+        for (unsigned regionIdx = 0; regionIdx < num_regions; ++regionIdx) {
             if (phaseIsActive(oilPhaseIdx)) // The oil component is used for the brine if OIL is active
                 molarMass_[regionIdx][oilCompIdx] = BrineH2Pvt<Scalar>::Brine::molarMass(salinity);
             if (phaseIsActive(waterPhaseIdx))
@@ -174,13 +174,13 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
         if (!diffCoeffTables.empty()) {
             // if diffusion coefficient table is empty we relay on the PVT model to
             // to give us the coefficients.
-            diffusionCoefficients_.resize(numRegions,{0,0,0,0,0,0,0,0,0});
-            if (diffCoeffTables.size() != numRegions) {
+            diffusionCoefficients_.resize(num_regions,{0,0,0,0,0,0,0,0,0});
+            if (diffCoeffTables.size() != num_regions) {
                 OPM_THROW(std::runtime_error,
                           fmt::format("Table sizes mismatch. DiffCoeffs: {}, NumRegions: {}\n",
-                                      diffCoeffTables.size(), numRegions));
+                                      diffCoeffTables.size(), num_regions));
             }
-            for (unsigned regionIdx = 0; regionIdx < numRegions; ++regionIdx) {
+            for (unsigned regionIdx = 0; regionIdx < num_regions; ++regionIdx) {
                 const auto& diffCoeffTable = diffCoeffTables[regionIdx];
                 molarMass_[regionIdx][oilCompIdx] = diffCoeffTable.oil_mw;
                 molarMass_[regionIdx][gasCompIdx] = diffCoeffTable.gas_mw;
@@ -200,12 +200,12 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
                 && eclState.runspec().phases().active(Phase::GAS)
                 && eclState.runspec().phases().active(Phase::WATER))
         {
-            diffusionCoefficients_.resize(numRegions,{0,0,0,0,0,0,0,0,0});
+            diffusionCoefficients_.resize(num_regions, {0,0,0,0,0,0,0,0,0});
             // diffusion coefficients can be set using DIFFCGAS and DIFFCWAT
             // for CO2STORE and H2STORE cases with gas + water
             const auto& diffCoeffWatTables = eclState.getTableManager().getDiffusionCoefficientWaterTable();
             if (!diffCoeffWatTables.empty()) {
-                for (unsigned regionIdx = 0; regionIdx < numRegions; ++regionIdx) {
+                for (unsigned regionIdx = 0; regionIdx < num_regions; ++regionIdx) {
                     const auto& diffCoeffWatTable = diffCoeffWatTables[regionIdx];
                     setDiffusionCoefficient(diffCoeffWatTable.co2_in_water, gasCompIdx, waterPhaseIdx, regionIdx);
                     setDiffusionCoefficient(diffCoeffWatTable.h2o_in_water, waterCompIdx, waterPhaseIdx, regionIdx);
@@ -213,7 +213,7 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
             }
             const auto& diffCoeffGasTables = eclState.getTableManager().getDiffusionCoefficientGasTable();
             if (!diffCoeffGasTables.empty()) {
-                for (unsigned regionIdx = 0; regionIdx < numRegions; ++regionIdx) {
+                for (unsigned regionIdx = 0; regionIdx < num_regions; ++regionIdx) {
                     const auto& diffCoeffGasTable = diffCoeffGasTables[regionIdx];
                     setDiffusionCoefficient(diffCoeffGasTable.co2_in_gas, gasCompIdx, gasPhaseIdx, regionIdx);
                     setDiffusionCoefficient(diffCoeffGasTable.h2o_in_gas, waterCompIdx, gasPhaseIdx, regionIdx);
@@ -267,8 +267,8 @@ template <class Scalar, class IndexTraits>
 void BlackOilFluidSystem<Scalar,IndexTraits>::initEnd()
 {
     // calculate the final 2D functions which are used for interpolation.
-    std::size_t numRegions = molarMass_.size();
-    for (unsigned regionIdx = 0; regionIdx < numRegions; ++ regionIdx) {
+    const std::size_t num_regions = molarMass_.size();
+    for (unsigned regionIdx = 0; regionIdx < num_regions; ++regionIdx) {
         // calculate molar masses
 
         // water is simple: 18 g/mol
