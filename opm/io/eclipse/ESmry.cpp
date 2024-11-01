@@ -740,8 +740,7 @@ void ESmry::loadData(const std::vector<std::string>& vectList) const
     std::uint64_t blockSize_f;
 
     {
-        const int rest = MaxBlockSizeReal % numColumnsReal;
-        const int nLinesBlock = MaxBlockSizeReal / numColumnsReal + (rest > 0);
+        const int nLinesBlock = MaxBlockSizeReal / numColumnsReal;
 
         blockSize_f= static_cast<std::uint64_t>(MaxNumBlockReal * numColumnsReal * columnWidthReal + nLinesBlock);
     }

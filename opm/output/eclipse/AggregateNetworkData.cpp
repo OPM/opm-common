@@ -173,11 +173,8 @@ std::vector<int> inobrFunc( const Opm::Schedule&    sched,
         int ind_br = next_branch(n1, inlets, outlets);
         while (ind_br != 0) {
             newInobr.push_back(ind_br);
-            if (ind_br > 0) {
-                outlets[ind_br-1] = used_flag;
-            } else {
-                inlets[ind_br*(-1) - 1] = used_flag;
-            }
+            auto& xlet = ind_br > 0 ? outlets[ind_br - 1] : inlets[std::abs(ind_br) - 1];
+            xlet = used_flag;
             ind_br = next_branch(n1, inlets, outlets);
         }
         n1 += 1;

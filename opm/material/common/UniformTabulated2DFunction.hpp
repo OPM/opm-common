@@ -218,15 +218,7 @@ public:
                 +std::to_string(xMin())+" to "+std::to_string(xMax())+" times "
                 +std::to_string(yMin())+" to "+std::to_string(yMax());
 
-            if (!extrapolate)
-            {
-                throw NumericalProblem(msg);
-            }
-            else
-            {
-                OpmLog::warning("PVT Table evaluation:" + msg + ". Will use extrapolation");
-            }
-
+            throw NumericalProblem(msg);
         }
 #endif
 
