@@ -88,6 +88,15 @@ public:
     bool ready(const State& state, std::time_t sim_time) const;
     Action::Result eval(const Action::Context& context) const;
 
+    /// Retrive list of well names used in action block WELPI keywords
+    ///
+    /// \param[in] well_matcher Final arbiter for wells currently known to
+    /// simulator.
+    ///
+    /// \param[in] matching_wells List of wells triggering the current action.
+    ///
+    /// \return List of well names used in this action's WELPI keywords, if
+    /// any.  List returned in sorted order defined by \p well_matcher.
     std::vector<std::string> wellpi_wells(const WellMatcher& well_matcher, const std::vector<std::string>& matching_wells) const;
     void required_summary(std::unordered_set<std::string>& required_summary) const;
     std::string name() const { return this->m_name; }
