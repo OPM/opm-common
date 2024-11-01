@@ -64,10 +64,12 @@
 
 #include <opm/input/eclipse/Parser/Parser.hpp>
 
+#include <algorithm>
 #include <cstdlib>
 #include <ctime>
 #include <map>
 #include <memory>
+#include <numeric>
 #include <optional>
 #include <sstream>
 #include <stdexcept>
@@ -84,14 +86,15 @@ namespace {
     int ecl_file_get_num_named_kw(Opm::EclIO::ERst&  rst,
                                   const std::string& kw)
     {
-        int count = 0;
-        for (const auto& step : rst.listOfReportStepNumbers()) {
-            for (const auto& vec : rst.listOfRstArrays(step)) {
-                count += std::get<0>(vec) == kw;
-            }
-        }
-
-        return count;
+        return std::accumulate(rst.listOfReportStepNumbers().begin(),
+                               rst.listOfReportStepNumbers().end(), 0,
+                               [&kw, &rst](const auto count, const auto step)
+                               {
+                                   const auto list = rst.listOfRstArrays(step);
+                                   return count + std::count_if(list.begin(), list.end(),
+                                                                [&kw](const auto& vec)
+                                                                { return std::get<0>(vec) == kw; });
+                               });
     }
 
     EclIO::EclFile::EclEntry
@@ -99,10 +102,13 @@ namespace {
                            const std::string& kw,
                            const int          seqnum)
     {
-        for (const auto& vec : rst.listOfRstArrays(seqnum)) {
-            if (std::get<0>(vec) == kw) {
-                return vec;
-            }
+        const auto list = rst.listOfRstArrays(seqnum);
+        const auto it = std::find_if(list.begin(),
+                                     list.end(),
+                                     [&kw](const auto& vec)
+                                     { return std::get<0>(vec) == kw; });
+        if (it != list.end()) {
+            return *it;
         }
 
         return EclIO::EclFile::EclEntry{ "NoSuchKeyword", Opm::EclIO::eclArrType::MESS, 0 };
