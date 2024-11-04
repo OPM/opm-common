@@ -24,6 +24,8 @@
 #include <numeric>
 #include <regex>
 
+#include <fmt/format.h>
+
 namespace Opm {
 
     void ErrorGuard::addError(const std::string& errorKey, const std::string& msg) {
@@ -56,14 +58,14 @@ namespace Opm {
         }
 
         if (!this->error_list.empty()) {
-            std::regex file_regex("\n\\w*In file(.*)line (.*)");
+            const std::regex file_regex("\n\\w*In file(.*)line (.*)");
             std::cerr << std::endl << std::endl << "Errors:" << std::endl;
 
-            for (const auto& pair : this->error_list) {
-                error_msgs += std::string("       ") + pair.first + ": " +
-                    std::regex_replace(pair.second, file_regex, " at:$1line: $2") +
-                    std::string("\n");
-                std::cerr << std::left << "  " << std::setw(width) << pair.first << ": " << pair.second << std::endl;
+            for (const auto& [error_key, error_msg] : this->error_list) {
+                error_msgs += fmt::format("       {}; {}\n", error_key,
+                                          std::regex_replace(error_msg, file_regex,
+                                                             " at:$1line: $2")) ;
+                std::cerr << std::left << "  " << std::setw(width) << error_key << ": " << error_msg << std::endl;
             }
             std::cerr << std::endl;
         }
