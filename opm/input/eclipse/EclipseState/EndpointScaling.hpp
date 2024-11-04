@@ -47,13 +47,7 @@ class EndpointScaling {
         template<class Serializer>
         void serializeOp(Serializer& serializer)
         {
-            if (serializer.isSerializing())
-                serializer(options.to_ulong());
-            else {
-                unsigned long bits = 0;
-                serializer(bits);
-                options = std::bitset<4>(bits);
-            }
+            serializer(options);
         }
 
     private:
