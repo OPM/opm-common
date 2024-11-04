@@ -131,7 +131,7 @@ int main(int argc, char **argv)
         std::cout << "T: temperature in celcius" << std::endl;
         std::cout << "salinity(optional): salt molality in mol/kg" << std::endl;
         std::cout << "rs(optional): amount of dissolved CO2 in Brine in SM3/SM3" << std::endl;
-        std::cout << "rv(optional): amount of vapporized water in Gas in SM3/SM3" << std::endl;
+        std::cout << "rv(optional): amount of vaporized water in Gas in SM3/SM3" << std::endl;
         std::cout << "saltmodel(optional): 0 = no salt activity; 1 = Rumpf et al (1996) [default];"
                      " 2 = Duan-Sun in Spycher & Pruess (2009); 3 = Duan-Sun in Sycher & Pruess (2005)" << std::endl;
         std::cout << "thermalmixingmodelgas(optional): 0 = pure component [default]; 1 = ideal mixing;" << std::endl;
