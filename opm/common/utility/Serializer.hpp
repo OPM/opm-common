@@ -354,7 +354,7 @@ protected:
             for (size_t i = 0; i < size; ++i) {
                 typename Map::value_type entry;
                 (*this)(entry);
-                data_mut.insert(entry);
+                data_mut.insert(std::move(entry));
             }
         } else {
             (*this)(data.size());

@@ -150,23 +150,7 @@ public:
     template<class Serializer>
     void serializeOp(Serializer& serializer)
     {
-        if (serializer.isSerializing()) {
-            serializer(values.size());
-            for (const auto& [key, value] : values) {
-              serializer(key);
-              serializer(*value);
-            }
-        } else {
-            std::size_t size = 0;
-            serializer(size);
-            for (size_t i = 0; i < size; ++i) {
-                std::string key;
-                serializer(key);
-                auto val = values.emplace(key, std::make_unique<GRValState>());
-                if (val.first != values.end())
-                    serializer(*val.first->second);
-            }
-        }
+        serializer(values);
         serializer(injection_group_values);
         serializer(potentials);
         serializer(guide_rates_expired);
