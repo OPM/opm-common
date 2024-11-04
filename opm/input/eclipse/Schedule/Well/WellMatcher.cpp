@@ -136,7 +136,7 @@ std::vector<std::string>
 Opm::WellMatcher::sort(std::vector<std::string> wells) const
 {
     return (this->m_well_order != nullptr)
-        ? this->m_well_order->sort(move(wells))
+        ? this->m_well_order->sort(std::move(wells))
         : std::move(wells);
 }
 
