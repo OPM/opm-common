@@ -185,10 +185,10 @@ public:
     OPM_HOST_DEVICE static Evaluation krw(const Params& params, const FluidState& fs)
     {
         OPM_TIMEFUNCTION_LOCAL();
-        const auto& Sw =
+        const auto& sw =
             decay<Evaluation>(fs.saturation(Traits::wettingPhaseIdx));
 
-        return twoPhaseSatKrw(params, Sw);
+        return twoPhaseSatKrw(params, sw);
     }
 
     template <class Evaluation>
@@ -213,10 +213,10 @@ public:
     OPM_HOST_DEVICE static Evaluation krn(const Params& params, const FluidState& fs)
     {
         OPM_TIMEFUNCTION_LOCAL();
-        const auto& Sw =
+        const auto& sw =
             decay<Evaluation>(fs.saturation(Traits::wettingPhaseIdx));
 
-        return twoPhaseSatKrn(params, Sw);
+        return twoPhaseSatKrn(params, sw);
     }
 
     template <class Evaluation>

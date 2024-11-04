@@ -223,9 +223,10 @@ public:
         // Brooks-Corey law. If the input capillary pressure is
         // smaller than the entry pressure, make sure that we will
         // regularize.
-        Evaluation Sw = 1.5;
-        if (pcnw >= params.entryPressure())
-            Sw = BrooksCorey::twoPhaseSatSw(params, pcnw);
+        Evaluation sw = 1.5;
+        if (pcnw >= params.entryPressure()) {
+            sw = BrooksCorey::twoPhaseSatSw(params, pcnw);
+        }
 
         // make sure that the capilary pressure observes a
         // derivative != 0 for 'illegal' saturations. This is
@@ -233,13 +234,13 @@ public:
         // derivative calculated numerically) in order to get the
         // saturation moving to the right direction if it
         // temporarily is in an 'illegal' range.
-        if (Sw <= Sthres) {
+        if (sw <= Sthres) {
             // invert the low saturation regularization of pcnw()
             Scalar m = params.pcnwSlopeLow();
             Scalar pcnw_SwLow = params.pcnwLow();
             return Sthres + (pcnw - pcnw_SwLow)/m;
         }
-        else if (Sw > 1.0) {
+        else if (sw > 1.0) {
             Scalar m = params.pcnwSlopeHigh();
             Scalar pcnw_SwHigh = params.pcnwHigh();
             return 1.0 + (pcnw - pcnw_SwHigh)/m;;
@@ -277,8 +278,8 @@ public:
     template <class FluidState, class Evaluation = typename FluidState::Scalar>
     static Evaluation krw(const Params& params, const FluidState& fs)
     {
-        const auto& Sw = decay<Evaluation>(fs.saturation(Traits::wettingPhaseIdx));
-        return twoPhaseSatKrw(params, Sw);
+        const auto& sw = decay<Evaluation>(fs.saturation(Traits::wettingPhaseIdx));
+        return twoPhaseSatKrw(params, sw);
     }
 
     template <class Evaluation>
@@ -320,9 +321,9 @@ public:
     template <class FluidState, class Evaluation = typename FluidState::Scalar>
     static Evaluation krn(const Params& params, const FluidState& fs)
     {
-        const Evaluation& Sw =
+        const Evaluation& sw =
             1.0 - decay<Evaluation>(fs.saturation(Traits::nonWettingPhaseIdx));
-        return twoPhaseSatKrn(params, Sw);
+        return twoPhaseSatKrn(params, sw);
     }
 
     template <class Evaluation>

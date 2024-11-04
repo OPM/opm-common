@@ -237,7 +237,6 @@ bool operator<( const HexIntersectionInfo& hi1, const HexIntersectionInfo& hi2 )
     if ( hi1.m_face != hi2.m_face ) return hi1.m_face < hi2.m_face;
     if ( hi1.m_isIntersectionEntering != hi2.m_isIntersectionEntering )
         return hi1.m_isIntersectionEntering < hi2.m_isIntersectionEntering;
-    if ( hi1.m_face != hi2.m_face ) return hi1.m_face < hi2.m_face;
 
     if ( cvf::Math::abs( hi2.m_intersectionPoint.x() - hi1.m_intersectionPoint.x() ) > tolerance )
         return hi1.m_intersectionPoint.x() < hi2.m_intersectionPoint.x();

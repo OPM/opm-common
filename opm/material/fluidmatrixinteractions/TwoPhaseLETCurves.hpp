@@ -243,9 +243,8 @@ public:
     template <class Evaluation>
     static Evaluation twoPhaseSatKrn(const Params& params, const Evaluation& Sw)
     {
-        const Evaluation Sn = 1.0 - Sw;
-
-        return twoPhaseSatKrLET(Params::nwIdx, params, Sn);
+        const Evaluation sn = 1.0 - Sw;
+        return twoPhaseSatKrLET(Params::nwIdx, params, sn);
     }
 
     template <class Evaluation>
@@ -253,23 +252,26 @@ public:
     {
         // since inverting the formula for krn is hard to do analytically, we use the
         // Newton-Raphson method
-        Evaluation Sw = 0.5;
+        Evaluation sw = 0.5;
         //Scalar eps = 1e-10;
         for (int i = 0; i < 20; ++i) {
-            Evaluation f = krn - twoPhaseSatKrn(params, Sw);
-            if (Opm::abs(f) < 1e-10)
-                return Sw;
-            Evaluation fStar = krn - twoPhaseSatKrn(params, Sw + eps);
+            Evaluation f = krn - twoPhaseSatKrn(params, sw);
+            if (Opm::abs(f) < 1e-10) {
+                return sw;
+            }
+            Evaluation fStar = krn - twoPhaseSatKrn(params, sw + eps);
             Evaluation fPrime = (fStar - f)/eps;
             Evaluation delta = f/fPrime;
 
-            Sw -= delta;
-            if (Sw < 0)
-                Sw = 0.0;
-            if (Sw > 1.0)
-                Sw = 1.0;
+            sw -= delta;
+            if (sw < 0) {
+                sw = 0.0;
+            }
+            if (sw > 1.0) {
+                sw = 1.0;
+            }
             if (Opm::abs(delta) < 1e-10)
-                return Sw;
+                return sw;
         }
 
         // Fallback to simple bisection
@@ -283,17 +285,19 @@ public:
             return SR;
         if (fL*fR < 0.0) {
             for (int i = 0; i < 50; ++i) {
-                Sw = 0.5*(SL+SR);
-                if (abs(SR-SL) < eps)
-                    return Sw;
-                Evaluation fw = krn - twoPhaseSatKrn(params, Sw);
-                if (Opm::abs(fw) < eps)
-                    return Sw;
+                sw = 0.5*(SL+SR);
+                if (abs(SR-SL) < eps) {
+                    return sw;
+                }
+                Evaluation fw = krn - twoPhaseSatKrn(params, sw);
+                if (Opm::abs(fw) < eps) {
+                    return sw;
+                }
                 if (fw * fR > 0) {
-                    SR = Sw;
+                    SR = sw;
                     fR = fw;
                 } else if (fw * fL > 0) {
-                    SL = Sw;
+                    SL = sw;
                     fL = fw;
                 }
             }

@@ -68,7 +68,7 @@ public:
     virtual ~SignalEmitter();
 
     void                       addEmittedSignal( AbstractSignal* signalToAdd ) const;
-    std::list<AbstractSignal*> emittedSignals() const;
+    const std::list<AbstractSignal*>& emittedSignals() const;
 
 private:
     mutable std::list<AbstractSignal*> m_signals;
@@ -83,7 +83,7 @@ class SignalObserver
 public:
     SignalObserver();
     virtual ~SignalObserver();
-    std::list<AbstractSignal*> observedSignals() const;
+    const std::list<AbstractSignal*>& observedSignals() const;
     void                       addObservedSignal( AbstractSignal* signalToAdd ) const;
     void                       removeObservedSignal( AbstractSignal* signalToRemove ) const;
 

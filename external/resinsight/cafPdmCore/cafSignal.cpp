@@ -51,7 +51,7 @@ void SignalEmitter::addEmittedSignal( AbstractSignal* signalToAdd ) const
 //--------------------------------------------------------------------------------------------------
 ///
 //--------------------------------------------------------------------------------------------------
-std::list<AbstractSignal*> SignalEmitter::emittedSignals() const
+const std::list<AbstractSignal*>& SignalEmitter::emittedSignals() const
 {
     return m_signals;
 }
@@ -74,7 +74,7 @@ SignalObserver::~SignalObserver()
 //--------------------------------------------------------------------------------------------------
 ///
 //--------------------------------------------------------------------------------------------------
-std::list<AbstractSignal*> SignalObserver::observedSignals() const
+const std::list<AbstractSignal*>& SignalObserver::observedSignals() const
 {
     return m_signals;
 }
@@ -100,8 +100,7 @@ void SignalObserver::removeObservedSignal( AbstractSignal* signalToRemove ) cons
 //--------------------------------------------------------------------------------------------------
 void SignalObserver::disconnectAllSignals()
 {
-    auto observedSignals = m_signals;
-    for ( auto observedSignal : observedSignals )
+    for (auto observedSignal : m_signals)
     {
         observedSignal->disconnect( const_cast<SignalObserver*>( this ) );
     }
