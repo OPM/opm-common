@@ -83,11 +83,11 @@ public:
 } // namespace Opm
 
 namespace Opm::gpuistl {
-    template <class Scalar, class ContainerType, class ViewType>
+    template <class ViewType, class Scalar, class ContainerType>
     CO2Tables<Scalar, ViewType>
     make_view(const CO2Tables<Scalar, ContainerType>& oldCO2Tables) {
-        Opm::UniformTabulated2DFunction<double, ViewType> newEnthalpy = make_view<Scalar, ContainerType, ViewType>(oldCO2Tables.getTabulatedEnthalpy());
-        Opm::UniformTabulated2DFunction<double, ViewType> newDensity = make_view<Scalar, ContainerType, ViewType>(oldCO2Tables.getTabulatedDensity());
+        Opm::UniformTabulated2DFunction<double, ViewType> newEnthalpy = make_view<ViewType>(oldCO2Tables.getTabulatedEnthalpy());
+        Opm::UniformTabulated2DFunction<double, ViewType> newDensity = make_view<ViewType>(oldCO2Tables.getTabulatedDensity());
 
         return CO2Tables<Scalar, ViewType>(newEnthalpy, newDensity);
     }

@@ -68,30 +68,30 @@ public:
     //! The binary coefficients for brine and CO2 used by this fluid system
     using BinaryCoeffBrineCO2 = BinaryCoeff::Brine_CO2<Scalar, H2O, CO2>;
 
-    explicit Co2GasPvt() = default;
+    Co2GasPvt() = default;
 
-    explicit Co2GasPvt(const ContainerT& salinity,
-                       int activityModel = 3,
-                       int thermalMixingModel = 1,
-                       Scalar T_ref = 288.71, //(273.15 + 15.56)
-                       Scalar P_ref = 101325);
+    Co2GasPvt(const ContainerT& salinity,
+              int activityModel = 3,
+              int thermalMixingModel = 1,
+              Scalar T_ref = 288.71, //(273.15 + 15.56)
+              Scalar P_ref = 101325);
 
-    explicit Co2GasPvt(Params params,
-                        ContainerT brineReferenceDensity,
-                        ContainerT gasReferenceDensity,
-                        ContainerT salinity,
-                        bool enableEzrokhiDensity,
-                        bool enableVaporization,
-                        int activityModel,
-                        Co2StoreConfig::GasMixingType gastype) :
-                        brineReferenceDensity_(brineReferenceDensity),
-                        gasReferenceDensity_(gasReferenceDensity),
-                        salinity_(salinity),
-                        enableEzrokhiDensity_(enableEzrokhiDensity),
-                        enableVaporization_(enableVaporization),
-                        activityModel_(activityModel),
-                        gastype_(gastype),
-                        co2Tables(params)
+    Co2GasPvt(const Params& params,
+              ContainerT brineReferenceDensity,
+              ContainerT gasReferenceDensity,
+              ContainerT salinity,
+              bool enableEzrokhiDensity,
+              bool enableVaporization,
+              int activityModel,
+              Co2StoreConfig::GasMixingType gastype)
+              : brineReferenceDensity_(brineReferenceDensity)
+              , gasReferenceDensity_(gasReferenceDensity)
+              , salinity_(salinity)
+              , enableEzrokhiDensity_(enableEzrokhiDensity)
+              , enableVaporization_(enableVaporization)
+              , activityModel_(activityModel)
+              , gastype_(gastype)
+              , co2Tables(params)
 {
     assert(enableEzrokhiDensity == false && "Ezrokhi density not supported by GPUs");
 }
@@ -431,16 +431,6 @@ private:
     }
 
     template <class LhsEval>
-    OPM_HOST_DEVICE LhsEval convertxgWToXgW(CO2 co2, const LhsEval& xgW, const LhsEval& salinity) const
-    {
-        OPM_TIMEFUNCTION_LOCAL();
-        Scalar M_CO2 = co2.molarMass();
-        LhsEval M_Brine = Brine::molarMass(salinity);
-
-        return xgW * M_Brine / (xgW * (M_Brine - M_CO2) + M_CO2);
-    }
-
-    template <class LhsEval>
     OPM_HOST_DEVICE const LhsEval salinityFromConcentration(const LhsEval&T, const LhsEval& P,
                                             const LhsEval& saltConcentration) const
     { return saltConcentration/H2O::liquidDensity(T, P, true); }
@@ -461,21 +451,23 @@ private:
 namespace Opm::gpuistl{
     template<class Scalar, class Params, class GPUContainer>
     Co2GasPvt<Scalar, Params, GPUContainer>
-    move_to_gpu(Co2GasPvt<Scalar> cpuCo2){
-        return Co2GasPvt<Scalar, Params, GPUContainer>(move_to_gpu<Scalar, std::vector<Scalar>, GPUContainer>(cpuCo2.getParams()),
-                                               GPUContainer(cpuCo2.getBrineReferenceDensity()),
-                                               GPUContainer(cpuCo2.getGasReferenceDensity()),
-                                               GPUContainer(cpuCo2.getSalinity()),
-                                               cpuCo2.getEnableEzrokhiDensity(),
-                                               cpuCo2.getEnableVaporization(),
-                                               cpuCo2.getActivityModel(),
-                                               cpuCo2.getGasType());
+    move_to_gpu(Co2GasPvt<Scalar> cpuCo2)
+    {
+        return Co2GasPvt<Scalar, Params, GPUContainer>(
+            move_to_gpu<Scalar, std::vector<Scalar>, GPUContainer>(cpuCo2.getParams()),
+            GPUContainer(cpuCo2.getBrineReferenceDensity()),
+            GPUContainer(cpuCo2.getGasReferenceDensity()),
+            GPUContainer(cpuCo2.getSalinity()),
+            cpuCo2.getEnableEzrokhiDensity(),
+            cpuCo2.getEnableVaporization(),
+            cpuCo2.getActivityModel(),
+            cpuCo2.getGasType());
     }
 
-    template <class Scalar, class InputParams, class OutputParams, class ContainerType, class ViewType>
+    template <class ViewType, class OutputParams, class InputParams, class ContainerType, class Scalar>
     Co2GasPvt<Scalar, OutputParams, ViewType>
-    make_view(const Co2GasPvt<Scalar, InputParams, ContainerType>& co2GasPvt) {
-
+    make_view(const Co2GasPvt<Scalar, InputParams, ContainerType>& co2GasPvt)
+    {
         using containedType = typename ContainerType::value_type;
         using viewedTypeNoConst = typename std::remove_const_t<typename ViewType::value_type>;
 
@@ -485,14 +477,15 @@ namespace Opm::gpuistl{
         ViewType newGasReferenceDensity = make_view<viewedTypeNoConst>(co2GasPvt.getGasReferenceDensity());
         ViewType newSalinity = make_view<viewedTypeNoConst>(co2GasPvt.getSalinity());
 
-        return Co2GasPvt<Scalar, OutputParams, ViewType>(make_view<double, ContainerType, ViewType>(co2GasPvt.getParams()),
-                                           newBrineReferenceDensity,
-                                           newGasReferenceDensity,
-                                           newSalinity,
-                                           co2GasPvt.getEnableEzrokhiDensity(),
-                                           co2GasPvt.getEnableVaporization(),
-                                           co2GasPvt.getActivityModel(),
-                                           co2GasPvt.getGasType());
+        return Co2GasPvt<Scalar, OutputParams, ViewType>(
+            make_view<ViewType>(co2GasPvt.getParams()),
+            newBrineReferenceDensity,
+            newGasReferenceDensity,
+            newSalinity,
+            co2GasPvt.getEnableEzrokhiDensity(),
+            co2GasPvt.getEnableVaporization(),
+            co2GasPvt.getActivityModel(),
+            co2GasPvt.getGasType());
     }
 }
 

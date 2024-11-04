@@ -47,7 +47,8 @@ namespace Opm
  */
 template<class Scalar>
 class Constants
-{ public:
+{
+public:
     /*!
      * \brief The ideal gas constant [J/(mol K)]
      */
@@ -85,7 +86,8 @@ class Constants
 };
 template<>
 class Constants<float>
-{ public:
+{
+public:
     /*!
      * \brief The ideal gas constant [J/(mol K)]
      */
@@ -123,7 +125,8 @@ class Constants<float>
 };
 template<>
 class Constants<double>
-{ public:
+{
+public:
     /*!
      * \brief The ideal gas constant [J/(mol K)]
      */
@@ -163,7 +166,8 @@ class Constants<double>
 #if HAVE_QUAD
 template<>
 class Constants<quad>
-{ public:
+{
+public:
     /*!
      * \brief The ideal gas constant [J/(mol K)]
      */

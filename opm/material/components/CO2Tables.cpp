@@ -49,7 +49,6 @@ CO2Tables<Scalar, ContainerT>::CO2Tables()
 {
 }
 
-//TODO: avoid this having to be explicitly instantiated, we cannot instantiate with GPU types here
 template CO2Tables<double, std::vector<double>>::CO2Tables();
 
 } // namespace Opm

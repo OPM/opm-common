@@ -59,7 +59,8 @@ public:
     // Intended for construction of UniformTabulated2DFunction<double, GPUBuffer>
     UniformTabulated2DFunction(Scalar minX, Scalar maxX, unsigned m,
                                Scalar minY, Scalar maxY, unsigned n,
-                               const ContainerT samples) : samples_(samples), m_(m), n_(n), xMin_(minX), yMin_(minY), xMax_(maxX), yMax_(maxY){ // intentionally copy this here to that this object owns a copy of the buffer?
+                               const ContainerT& samples)
+        : samples_(samples), m_(m), n_(n), xMin_(minX), yMin_(minY), xMax_(maxX), yMax_(maxY){
     }
 
      /*!
@@ -325,11 +326,11 @@ private:
 namespace Opm::gpuistl{
     template<class Scalar, class GPUContainer>
     UniformTabulated2DFunction<Scalar, GPUContainer>
-    move_to_gpu(UniformTabulated2DFunction<Scalar> tab){
+    move_to_gpu(const UniformTabulated2DFunction<Scalar>& tab){
         return UniformTabulated2DFunction<Scalar, GPUContainer>(tab.xMin(), tab.xMax(), tab.numX(), tab.yMin(), tab.yMax(), tab.numY(), GPUContainer(tab.samples()));
     }
 
-    template <class Scalar, class ContainerType, class ViewType>
+    template <class ViewType, class Scalar, class ContainerType>
     UniformTabulated2DFunction<Scalar, ViewType>
     make_view(const UniformTabulated2DFunction<Scalar, ContainerType>& tab) {
 
