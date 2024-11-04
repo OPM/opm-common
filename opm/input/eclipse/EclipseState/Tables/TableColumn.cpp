@@ -253,6 +253,14 @@ namespace Opm {
         return m_values.end();
     }
 
+    std::vector<double>::const_reverse_iterator TableColumn::rbegin() const {
+        return m_values.rbegin();
+    }
+
+    std::vector<double>::const_reverse_iterator TableColumn::rend() const {
+        return m_values.rend();
+    }
+
 
     bool TableColumn::hasDefault( ) const {
         if (m_defaultCount > 0)
