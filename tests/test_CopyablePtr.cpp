@@ -47,7 +47,7 @@ struct B {
 };
 } // namespace
 
-BOOST_AUTO_TEST_SUITE ()
+BOOST_AUTO_TEST_SUITE (CopyablePtr)
 
 BOOST_AUTO_TEST_CASE (copyable)
 {
