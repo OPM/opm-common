@@ -21,33 +21,31 @@
   copyright holders.
 */
 #include <config.h>
+#include <opm/material/components/CO2Tables.hpp>
+
 #include <opm/material/common/MathToolbox.hpp>
 #include <opm/material/common/UniformTabulated2DFunction.hpp>
-#include <opm/material/components/CO2Tables.hpp>
 #include <opm/material/components/co2tables.inc>
-#include <vector>
 
 namespace Opm
 {
 
 CO2Tables::CO2Tables()
+    : tabulatedDensity {co2TabulatedDensityTraits::xMin,
+                        co2TabulatedDensityTraits::xMax,
+                        co2TabulatedDensityTraits::numX,
+                        co2TabulatedDensityTraits::yMin,
+                        co2TabulatedDensityTraits::yMax,
+                        co2TabulatedDensityTraits::numY,
+                        co2TabulatedDensityTraits::vals}
+    , tabulatedEnthalpy{co2TabulatedEnthalpyTraits::xMin,
+                        co2TabulatedEnthalpyTraits::xMax,
+                        co2TabulatedEnthalpyTraits::numX,
+                        co2TabulatedEnthalpyTraits::yMin,
+                        co2TabulatedEnthalpyTraits::yMax,
+                        co2TabulatedEnthalpyTraits::numY,
+                        co2TabulatedEnthalpyTraits::vals}
 {
-    // Opm::TabulatedEnthalpyTraits tabulatedEnthalpyStruct;
-    tabulatedEnthalpy = Opm::UniformTabulated2DFunction<double> {co2TabulatedEnthalpyTraits::xMin,
-                                                                 co2TabulatedEnthalpyTraits::xMax,
-                                                                 (unsigned int)co2TabulatedEnthalpyTraits::numX,
-                                                                 co2TabulatedEnthalpyTraits::yMin,
-                                                                 co2TabulatedEnthalpyTraits::yMax,
-                                                                 (unsigned int)co2TabulatedEnthalpyTraits::numY,
-                                                                 co2TabulatedEnthalpyTraits::vals};
-    // TabulatedDensityTraits tabulatedDensityStruct;
-    tabulatedDensity = UniformTabulated2DFunction<double> {co2TabulatedDensityTraits::xMin,
-                                                                co2TabulatedDensityTraits::xMax,
-                                                                (unsigned int)co2TabulatedDensityTraits::numX,
-                                                                co2TabulatedDensityTraits::yMin,
-                                                                co2TabulatedDensityTraits::yMax,
-                                                                (unsigned int)co2TabulatedDensityTraits::numY,
-                                                                co2TabulatedDensityTraits::vals};
 }
 
 } // namespace Opm
