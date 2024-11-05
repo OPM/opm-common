@@ -45,7 +45,7 @@
 #include <opm/common/utility/numeric/MonotCubicInterpolator.hpp>
 using namespace Opm;
 
-BOOST_AUTO_TEST_SUITE ()
+BOOST_AUTO_TEST_SUITE (Cubic)
 
 BOOST_AUTO_TEST_CASE (cubic)
 {

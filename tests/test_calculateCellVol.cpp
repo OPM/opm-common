@@ -30,7 +30,7 @@
 
 //using namespace Opm;
 
-BOOST_AUTO_TEST_SUITE ()
+BOOST_AUTO_TEST_SUITE (CalculateCellVolume)
 
 BOOST_AUTO_TEST_CASE (calc_cellvol)
 {
