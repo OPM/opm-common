@@ -200,6 +200,10 @@ namespace Opm {
                 return (ptr != nullptr);
             }
 
+            void update(const K& key, std::shared_ptr<T> value) {
+                this->m_data[key] = value;
+            }
+
 
             void update(T object) {
                 auto key = object.name();
@@ -505,6 +509,9 @@ namespace Opm {
         // constant flux aquifers
         std::unordered_map<int, SingleAquiferFlux> aqufluxs;
         BCProp bcprop;
+        // injection streams for compostional STREAM injection using WINJGAS 
+        map_member<std::string, std::vector<double>> inj_streams;
+
         std::unordered_map<std::string, double> target_wellpi;
         std::optional<NextStep> next_tstep;
 
@@ -541,6 +548,7 @@ namespace Opm {
             serializer(wells);
             serializer(aqufluxs);
             serializer(bcprop);
+            serializer(inj_streams);
             serializer(target_wellpi);
             serializer(this->next_tstep);
             serializer(m_start_time);
