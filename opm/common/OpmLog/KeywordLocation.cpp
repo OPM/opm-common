@@ -24,7 +24,7 @@
 namespace Opm {
 
 std::string KeywordLocation::format(const std::string& msg_fmt) const {
-    return fmt::format(msg_fmt,
+    return fmt::format(fmt::runtime(msg_fmt),
                        fmt::arg("keyword", this->keyword),
                        fmt::arg("file", this->filename),
                        fmt::arg("line", this->lineno));

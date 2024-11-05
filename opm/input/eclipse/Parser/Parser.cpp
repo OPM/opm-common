@@ -67,6 +67,7 @@
 #include <stack>
 #include <stdexcept>
 #include <string>
+#include <string_view>
 #include <regex>
 #include <utility>
 #include <vector>
@@ -1830,7 +1831,7 @@ std::vector<std::string> Parser::getAllDeckNames () const {
 
         bool validKwIdx = curKwIdx < deck.size();
         if( !validKwIdx || deck[curKwIdx].name() != "RUNSPEC" ) {
-            std::string msg = "The first keyword of a valid deck must be RUNSPEC (is {})\n";
+            constexpr std::string_view msg = "The first keyword of a valid deck must be RUNSPEC (is {})\n";
             auto curKeyword = deck[0];
             topLevelErrors.push_back(Log::fileMessage(curKeyword.location(),
                                                       fmt::format(msg,
@@ -1848,7 +1849,7 @@ std::vector<std::string> Parser::getAllDeckNames () const {
                     const auto& parserKeyword =
                         parser.getParserKeywordFromDeckName( curKeywordName );
                     if (ensureKeywordSectionAffiliation && !parserKeyword.isValidSection(curSectionName)) {
-                        std::string msg =
+                        constexpr std::string_view msg =
                             "The keyword '{}' is located in the '{}' section where it is invalid";
                         errorGuard.addError(errorKey,
                                             Log::fileMessage(location,

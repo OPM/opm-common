@@ -50,7 +50,7 @@ struct fmt::formatter<Opm::DenseAd::Evaluation<ValueT,numDerivs,staticSize>>
         std::vector<ValueT> tmp(e.size());
         for (int i = 0; i < e.size(); ++i)
             tmp[i] = e.derivative(i);
-        return fmt::format_to(ctx.out(), "v: "+ spec +" / d: [" + spec +"]",
+        return fmt::format_to(ctx.out(), fmt::runtime("v: "+ spec +" / d: [" + spec +"]"),
                               e.value(), fmt::join(tmp, ", "));
     }
 };

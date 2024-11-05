@@ -30,7 +30,7 @@ namespace {
 
 template<typename ... Args>
 std::string formatImpl(const std::string& msg_format, const KeywordLocation& loc, const Args& ...arguments) {
-    return fmt::format(msg_format,
+    return fmt::format(fmt::runtime(msg_format),
         arguments...,
         fmt::arg("keyword", loc.keyword),
         fmt::arg("file", loc.filename),
