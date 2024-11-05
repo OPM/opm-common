@@ -178,10 +178,9 @@ protected:
 
     //! instruct valgrind to check that the value and all derivatives of the
     //! Evaluation object are well-defined.
-    OPM_HOST_DEVICE void checkDefined_() const
+    OPM_HOST_DEVICE constexpr void checkDefined_() const
     {
 #ifndef NDEBUG
-#if !OPM_IS_INSIDE_DEVICE_FUNCTION
 {% if numDerivs < 0 %}\
         for (int i = dstart_(); i < dend_(); ++i)
             Valgrind::CheckDefined(data_[i]);
@@ -189,7 +188,6 @@ protected:
        for (const auto& v: data_)
            Valgrind::CheckDefined(v);
 {% endif %}\
-#endif
 #endif
     }
 
@@ -240,20 +238,13 @@ public:
     //
     // i.e., f(x) = c. this implies an evaluation with the given value and all
     // derivatives being zero.
-    //template <class RhsValueType>
-    //OPM_HOST_DEVICE Evaluation(const RhsValueType& c)
-    //{
-    //    setValue(c);
-    //    clearDerivatives();
-//
-    //    checkDefined_();
-    //}
-
     template <class RhsValueType>
-    constexpr Evaluation(const RhsValueType& c) : data_{}
+    OPM_HOST_DEVICE constexpr Evaluation(const RhsValueType& c): data_{}
     {
         setValue(c);
         clearDerivatives();
+
+        //checkDefined_();
     }
 {% endif %}\
 
@@ -292,20 +283,7 @@ public:
 {% endif %}\
 
     // set all derivatives to zero
-//    OPM_HOST_DEVICE void clearDerivatives()
-//    {
-//{% if numDerivs <= 0 %}\
-//        for (int i = dstart_(); i < dend_(); ++i)
-//            data_[i] = 0.0;
-//{% else %}\
-//{%   for i in range(1, numDerivs+1) %}\
-//        data_[{{i}}] = 0.0;
-//{%   endfor %}\
-//{% endif %}\
-//    }
-
-    // set all derivatives to zero
-    constexpr void clearDerivatives()
+    OPM_HOST_DEVICE constexpr void clearDerivatives()
     {
 {% if numDerivs <= 0 %}\
         for (int i = dstart_(); i < dend_(); ++i)
@@ -809,12 +787,8 @@ public:
     { return data_[valuepos_()]; }
 
     // set value of variable
-//    template <class RhsValueType>
-//    OPM_HOST_DEVICE void setValue(const RhsValueType& val)
-//    { data_[valuepos_()] = val; }
-
     template <class RhsValueType>
-    constexpr void setValue(const RhsValueType& val)
+    OPM_HOST_DEVICE constexpr void setValue(const RhsValueType& val)
     { data_[valuepos_()] = val; }
 
     // return varIdx'th derivative
