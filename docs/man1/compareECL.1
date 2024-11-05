@@ -1,17 +1,19 @@
-.TH COMPAREECL "1" "October 2023" "compareECL 2023.10" "User Commands"
+.TH COMPAREECL "1" "October 2024" "compareECL" "User Commands"
 .SH NAME
 compareECL \- Comparator for Eclipse files
 .SH SYNOPSIS
 .B convertECL
-[\fI\,OPTIONS\/\fR] \fI\,ECL_DECK_FILENAME_1\/\fR \fI\,ECL_DECK_FILENAME_2\/\fR
+[\fI\,OPTIONS\/\fR] \fI\,ECL_DECK_FILENAME_1\/\fR
+\fI\,ECL_DECK_FILENAME_2\/\fR \fI\,ABSOLUTE_TOLERANCE\/\fR  \fI\,RELATIVE_TOLERANCE\/\fR
 .SH DESCRIPTION
 compareECL compares ECLIPSE files (restart (.RST), unified restart (.UNRST), initial (.INIT), summary (.SMRY), unified summary (.UNSMRY) or .RFT) and gridsizes (from .EGRID or .GRID file) from two simulations.
 The program takes four arguments:
 .PP
-1. Case number 1, reference case (full path without extension)
-2. Case number 2, test case (full path without extension)
-3. Absolute tolerance
-4. Relative tolerance (between 0 and 1)
+.nf
+- ECL_DECK_FILENAME_1, path to first reference case, but without extension.
+- ECL_DECK_FILENAME_2, path to second reference case, but without extension.
+- ABSOLUTE_TOLERANCE, the absolute tolerance to use for coparison
+- RELATIVE_TOLERANCE, the relative tolerance (between 0 and 1) to use for comparison
 .PP
 .SH OPTIONS
 .HP
@@ -63,8 +65,12 @@ Compare RSM file against a summary file.
 .PP
 .SH Example usage of the program:
 .PP
-compareECL \fB\-k\fR PRESSURE <path to first casefile> <path to second casefile> 1e\-3 1e\-5
-compareECL \fB\-t\fR INIT \fB\-k\fR PORO <path to first casefile> <path to second casefile> 1e\-3 1e\-5
+compareECL \fB\-k\fR PRESSURE <path to first casefile> <path to second
+casefile> 1e\-3 1e\-5
+.PP
+compareECL \fB\-t\fR INIT \fB\-k\fR PORO <path to first casefile>
+<path to second casefile> 1e\-3 1e\-5
+.PP
 compareECL \fB\-i\fR <path to first casefile> <path to second casefile> 0.01 1e\-6
 .PP
 Exceptions are thrown (and hence program exits) when deviations are larger than the specified tolerances, or when the number of cells does not match \fB\-\-\fR either in the grid file or for a specific keyword. Information about the keyword, keyword occurrence (zero based) and cell coordinate is printed when an exception is thrown. For more information about how the cases are compared, see the documentation of the EclFilesComparator class.
