@@ -89,9 +89,9 @@ namespace Opm {
 
         const UDQFunctionTable& function_table() const;
 
-        std::vector<std::string> wells() const;
+        const std::vector<std::string>& wells() const;
         std::vector<std::string> wells(const std::string& pattern) const;
-        std::vector<std::string> groups() const;
+        const std::vector<std::string>& groups() const;
         SegmentSet segments() const;
         SegmentSet segments(const std::vector<std::string>& set_descriptor) const;
 
