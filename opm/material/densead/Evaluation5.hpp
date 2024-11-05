@@ -101,13 +101,20 @@ public:
     //
     // i.e., f(x) = c. this implies an evaluation with the given value and all
     // derivatives being zero.
+    //template <class RhsValueType>
+    //OPM_HOST_DEVICE Evaluation(const RhsValueType& c)
+    //{
+    //    setValue(c);
+    //    clearDerivatives();
+//
+    //    checkDefined_();
+    //}
+
     template <class RhsValueType>
-    OPM_HOST_DEVICE Evaluation(const RhsValueType& c)
+    constexpr Evaluation(const RhsValueType& c) : data_{}
     {
         setValue(c);
         clearDerivatives();
-
-        checkDefined_();
     }
 
     // create an evaluation which represents a constant function
@@ -129,7 +136,17 @@ public:
     }
 
     // set all derivatives to zero
-    OPM_HOST_DEVICE void clearDerivatives()
+//    OPM_HOST_DEVICE void clearDerivatives()
+//    {
+//////        data_[1] = 0.0;
+////        data_[2] = 0.0;
+////        data_[3] = 0.0;
+////        data_[4] = 0.0;
+////        data_[5] = 0.0;
+//////    }
+
+    // set all derivatives to zero
+    constexpr void clearDerivatives()
     {
         data_[1] = 0.0;
         data_[2] = 0.0;
@@ -537,8 +554,12 @@ public:
     { return data_[valuepos_()]; }
 
     // set value of variable
+//    template <class RhsValueType>
+//    OPM_HOST_DEVICE void setValue(const RhsValueType& val)
+//    { data_[valuepos_()] = val; }
+
     template <class RhsValueType>
-    OPM_HOST_DEVICE void setValue(const RhsValueType& val)
+    constexpr void setValue(const RhsValueType& val)
     { data_[valuepos_()] = val; }
 
     // return varIdx'th derivative

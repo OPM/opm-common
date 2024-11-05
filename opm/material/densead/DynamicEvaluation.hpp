@@ -152,7 +152,14 @@ public:
     }
 
     // set all derivatives to zero
-    OPM_HOST_DEVICE void clearDerivatives()
+//    OPM_HOST_DEVICE void clearDerivatives()
+//    {
+////        for (int i = dstart_(); i < dend_(); ++i)
+//            data_[i] = 0.0;
+////    }
+
+    // set all derivatives to zero
+    constexpr void clearDerivatives()
     {
         for (int i = dstart_(); i < dend_(); ++i)
             data_[i] = 0.0;
@@ -524,8 +531,12 @@ public:
     { return data_[valuepos_()]; }
 
     // set value of variable
+//    template <class RhsValueType>
+//    OPM_HOST_DEVICE void setValue(const RhsValueType& val)
+//    { data_[valuepos_()] = val; }
+
     template <class RhsValueType>
-    OPM_HOST_DEVICE void setValue(const RhsValueType& val)
+    constexpr void setValue(const RhsValueType& val)
     { data_[valuepos_()] = val; }
 
     // return varIdx'th derivative
