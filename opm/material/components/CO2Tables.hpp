@@ -58,8 +58,8 @@ struct co2TabulatedEnthalpyTraits
 class CO2Tables
 {
 public:
-    Opm::UniformTabulated2DFunction<double> tabulatedEnthalpy;
-    Opm::UniformTabulated2DFunction<double> tabulatedDensity;
+    UniformTabulated2DFunction<double> tabulatedDensity;
+    UniformTabulated2DFunction<double> tabulatedEnthalpy;
     static constexpr double brineSalinity = 1.000000000000000e-01;
 
     CO2Tables();
