@@ -68,7 +68,7 @@ double WarnAndContinueOnError::handleTooManyIterations(const double x0,
     OPM_REPORT;
     OpmLog::warning(fmt::format("Maximum number of iterations exceeded: {}, "
                                 "current interval is [{}, {}]  abs(x0-x1) {}",
-                                maxiter, std::abs(x0-x1)));
+                                maxiter, x0, x1, std::abs(x0-x1)));
     return 0.5*(x0 + x1);
 }
 
