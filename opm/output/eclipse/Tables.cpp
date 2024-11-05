@@ -1138,11 +1138,11 @@ namespace { namespace SatFunc {
             if (letTables.empty()) {
                 // Typical case: Not LET-based saturation functions.
                 const auto& sgof = tabMgr.getSgofTables();
-                if (sgof.size() > 0) {
+                if (!sgof.empty()) {
                     return fromSGOF(numRows, tolcrit, units, sgof);
                 }
                 const auto& slgof = tabMgr.getSlgofTables();
-                if (slgof.size() > 0) {
+                if (!slgof.empty()) {
                     return fromSLGOF(numRows, tolcrit, units, slgof);
                 }
                 // Warn here?
@@ -1503,20 +1503,6 @@ namespace { namespace SatFunc {
                             const auto& Sl = t.getSlColumn();
                             numActRows = Sl.size();
                             std::copy(Sl.begin(), Sl.end(), linTable.column(tableID, primID, 0));
-
-                            // auto So = std::vector<double>{};
-                            // So.reserve(numActRows);
-
-                            // // Two-phase system => So = 1-Sg
-                            // std::transform(std::begin(Sg), std::end(Sg),
-                            //                std::back_inserter(So),
-                            //                [](const double sg) -> double
-                            //                {
-                            //                    return 1.0 - sg;
-                            //                });
-
-                            // std::copy(So.rbegin(), So.rend(),
-                            //           linTable.column(tableID, primID, 0));
                         }
 
                         // Kro(So)
@@ -1566,11 +1552,11 @@ namespace { namespace SatFunc {
 
                 if (gasLET.empty()) {
                     const auto& sgof = tabMgr.getSgofTables();
-                    if (sgof.size() > 0) {
+                    if (!sgof.empty()) {
                         return fromSGOF(numRows, tolcrit, sgof);
                     }
                     const auto& slgof = tabMgr.getSlgofTables();
-                    if (sgof.size() > 0) {
+                    if (!slgof.empty()) {
                         return fromSLGOF(numRows, tolcrit, slgof);
                     }
                     // Warn here?
@@ -2248,13 +2234,13 @@ namespace { namespace SatFunc {
                     // Common case: Saturation functions for oil entered in
                     // S[L][GW]OF tables.
                     const auto& sgof = tabMgr.getSgofTables();
-                    if (sgof.size() > 0) {
+                    if (!sgof.empty()) {
                         return fromSGOFandSWOF(numRows, tolcrit,
                                             sgof,
                                             tabMgr.getSwofTables());
                     }
                     const auto& slgof = tabMgr.getSlgofTables();
-                    if (slgof.size() > 0) {
+                    if (!slgof.empty()) {
                         return fromSLGOFandSWOF(numRows, tolcrit,
                                             slgof,
                                             tabMgr.getSwofTables());
