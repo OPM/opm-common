@@ -24,6 +24,7 @@
 #include <opm/input/eclipse/Schedule/UDQ/UDQSet.hpp>
 
 #include <cstddef>
+#include <functional>
 #include <string>
 #include <unordered_set>
 #include <utility>
@@ -39,6 +40,21 @@ namespace Opm {
 class UDQAssign
 {
 public:
+    /// Type alias for a vector of strings.  Simplifies function signatures.
+    using VString = std::vector<std::string>;
+
+    /// Type alias for a vector of enumerated items.  Simplifies function
+    /// signatures.
+    using VEnumItems = std::vector<UDQSet::EnumeratedItems>;
+
+    /// Call-back function type for a well/group name matcher.  Takes a
+    /// selector and returns a vector of matching well/group names.
+    using WGNameMatcher = std::function<VString(const VString&)>;
+
+    /// Call-back function type for a matcher of enumerated items.  Takes a
+    /// selector and returns a vector of such items.
+    using ItemMatcher = std::function<VEnumItems(const VString&)>;
+
     /// Default constructor.
     UDQAssign() = default;
 
@@ -57,10 +73,10 @@ public:
     /// \param[in] report_step Time at which this assignment happens.
     /// Assignments should be performed exactly once and the time value
     /// ensures this behaviour.
-    UDQAssign(const std::string&              keyword,
-              const std::vector<std::string>& selector,
-              double                          value,
-              std::size_t                     report_step);
+    UDQAssign(const std::string& keyword,
+              const VString&     selector,
+              double             value,
+              std::size_t        report_step);
 
     /// Constructor.
     ///
@@ -76,10 +92,10 @@ public:
     /// \param[in] report_step Time at which this assignment happens.
     /// Assignments should be performed exactly once and the time value
     /// ensures this behaviour.
-    UDQAssign(const std::string&                          keyword,
-              const std::vector<UDQSet::EnumeratedItems>& selector,
-              double                                      value,
-              std::size_t                                 report_step);
+    UDQAssign(const std::string& keyword,
+              const VEnumItems&  selector,
+              double             value,
+              std::size_t        report_step);
 
     /// Constructor.
     ///
@@ -97,10 +113,10 @@ public:
     /// \param[in] report_step Time at which this assignment happens.
     /// Assignments should be performed exactly once and the time value
     /// ensures this behaviour.
-    UDQAssign(const std::string&                     keyword,
-              std::vector<UDQSet::EnumeratedItems>&& selector,
-              double                                 value,
-              std::size_t                            report_step);
+    UDQAssign(const std::string& keyword,
+              VEnumItems&&       selector,
+              double             value,
+              std::size_t        report_step);
 
     /// Constructor.
     ///
@@ -140,9 +156,9 @@ public:
     /// \param[in] report_step Time at which this assignment happens.
     /// Assignments should be performed exactly once and the time value
     /// ensures this behaviour.
-    void add_record(const std::vector<std::string>& selector,
-                    double                          value,
-                    std::size_t                     report_step);
+    void add_record(const VString& selector,
+                    double         value,
+                    std::size_t    report_step);
 
     /// Add new record to existing UDQ assignment.
     ///
@@ -156,9 +172,9 @@ public:
     /// \param[in] report_step Time at which this assignment happens.
     /// Assignments should be performed exactly once and the time value
     /// ensures this behaviour.
-    void add_record(const std::vector<UDQSet::EnumeratedItems>& selector,
-                    double                                      value,
-                    std::size_t                                 report_step);
+    void add_record(const VEnumItems& selector,
+                    double            value,
+                    std::size_t       report_step);
 
     /// Add new record to existing UDQ assignment.
     ///
@@ -174,9 +190,9 @@ public:
     /// \param[in] report_step Time at which this assignment happens.
     /// Assignments should be performed exactly once and the time value
     /// ensures this behaviour.
-    void add_record(std::vector<UDQSet::EnumeratedItems>&& selector,
-                    double                                 value,
-                    std::size_t                            report_step);
+    void add_record(VEnumItems&& selector,
+                    double       value,
+                    std::size_t  report_step);
 
     /// Add new record to existing UDQ assignment.
     ///
@@ -203,7 +219,7 @@ public:
     /// member function add_record(), will have a defined value in the
     /// resulting UDQ set while unrecognised items will have an undefined
     /// value.
-    UDQSet eval(const std::vector<UDQSet::EnumeratedItems>& items) const;
+    UDQSet eval(const VEnumItems& items) const;
 
     /// Apply current assignment to a selection of named items.
     ///
@@ -216,7 +232,7 @@ public:
     /// calls to member function add_record(), will have a defined value in
     /// the resulting UDQ set while unrecognised items will have an
     /// undefined value.
-    UDQSet eval(const std::vector<std::string>& wells) const;
+    UDQSet eval(const VString& wells) const;
 
     /// Construct scalar UDQ set for a scalar UDQ assignment
     ///
@@ -226,6 +242,38 @@ public:
     ///
     /// \return UDQ set of the current assignment of a scalar UDQ.
     UDQSet eval() const;
+
+    /// Apply current assignment to a selection of named items.
+    ///
+    /// \param[in] wgNames Backing sequence of wells/groups for which to
+    /// create a UDQ well/group set.  Return value will be sized according
+    /// to this sequence.
+    ///
+    /// \param[in] matcher Call-back for identifying wells/groups matching a
+    /// selector.  Might for instance be a wrapper around \code
+    /// WellMatcher::wells(pattern) \endcode.
+    ///
+    /// \return UDQ set of the current assignment applied to \p wgNames.
+    /// Wells/groups identified by the \p matcher, will have a defined value
+    /// in the resulting UDQ set while unrecognised wells/groups will have
+    /// an undefined value.
+    UDQSet eval(const VString& wgNames, WGNameMatcher matcher) const;
+
+    /// Apply current assignment to a selection of enumerated items.
+    ///
+    /// \param[in] items Collection of named and numbered entities to which
+    /// apply this assignment.  Might, for instance, be a selection of well
+    /// segments for a segment level UDQ.  Return value will be sized
+    /// according to this sequence.
+    ///
+    /// \param[in] matcher Call-back for identifying items matching a
+    /// selector.
+    ///
+    /// \return UDQ set of the current assignment applied to \p items.
+    /// Those items that are identified by the \p matcher, will have a
+    /// defined value in the resulting UDQ set while unrecognised items will
+    /// have an undefined value.
+    UDQSet eval(const VEnumItems& items, ItemMatcher matcher) const;
 
     /// Time at which this assignment happens.
     ///
@@ -270,7 +318,7 @@ private:
         /// level UDQ.
         ///
         /// Empty for an enumerated assignment record.
-        std::vector<std::string> input_selector{};
+        VString input_selector{};
 
         /// Collection of named and numbered entities to which this
         /// assignment applies.
@@ -279,7 +327,7 @@ private:
         /// segment level UDQ.
         ///
         /// Empty for a named assignment record.
-        std::vector<UDQSet::EnumeratedItems> numbered_selector{};
+        VEnumItems numbered_selector{};
 
         /// Numeric UDQ value for the entities identified in the selector.
         double value{};
@@ -306,9 +354,9 @@ private:
         /// \param[in] report_step_arg Time at which this assignment
         /// happens.  Assignments should be performed exactly once and the
         /// time value ensures this behaviour.
-        AssignRecord(const std::vector<std::string>& selector,
-                     const double                    value_arg,
-                     const std::size_t               report_step_arg)
+        AssignRecord(const VString&    selector,
+                     const double      value_arg,
+                     const std::size_t report_step_arg)
             : input_selector(selector)
             , value         (value_arg)
             , report_step   (report_step_arg)
@@ -326,9 +374,9 @@ private:
         /// \param[in] report_step_arg Time at which this assignment
         /// happens.  Assignments should be performed exactly once and the
         /// time value ensures this behaviour.
-        AssignRecord(const std::vector<UDQSet::EnumeratedItems>& selector,
-                     const double                                value_arg,
-                     const std::size_t                           report_step_arg)
+        AssignRecord(const VEnumItems& selector,
+                     const double      value_arg,
+                     const std::size_t report_step_arg)
             : numbered_selector(selector)
             , value            (value_arg)
             , report_step      (report_step_arg)
@@ -348,9 +396,9 @@ private:
         /// \param[in] report_step_arg Time at which this assignment happens.
         /// Assignments should be performed exactly once and the time value
         /// ensures this behaviour.
-        AssignRecord(std::vector<UDQSet::EnumeratedItems>&& selector,
-                     const double                           value_arg,
-                     const std::size_t                      report_step_arg)
+        AssignRecord(VEnumItems&&      selector,
+                     const double      value_arg,
+                     const std::size_t report_step_arg)
             : numbered_selector(std::move(selector))
             , value            (value_arg)
             , report_step      (report_step_arg)
@@ -363,6 +411,23 @@ private:
         ///
         /// \param[in,out] values UDQ set for which to assign elements.
         void eval(UDQSet& values) const;
+
+        /// Apply assignment record to existing UDQ set
+        ///
+        /// \param[in] matcher Call-back for identifying wells/groups
+        /// matching a selector.  Might for instance be a wrapper around
+        /// \code WellMatcher::wells(pattern) \endcode.
+        ///
+        /// \param[in,out] values UDQ set for which to assign elements.
+        void eval(WGNameMatcher matcher, UDQSet& values) const;
+
+        /// Apply assignment record to existing UDQ set
+        ///
+        /// \param[in] matcher Call-back for identifying items matching a
+        /// selector.
+        ///
+        /// \param[in,out] values UDQ set for which to assign elements.
+        void eval(ItemMatcher matcher, UDQSet& values) const;
 
         /// Equality predicate
         ///
@@ -385,6 +450,17 @@ private:
             serializer(this->value);
             serializer(this->report_step);
         }
+
+    private:
+        /// Apply assignment record to existing UDQ set
+        ///
+        /// \param[in] items Collection of named and numbered entities to
+        /// which this assignment applies.  Typically the \c
+        /// numbered_selector or a sequence defined by a matcher applied to
+        /// the \c input_selector.
+        ///
+        /// \param[in,out] values UDQ set for which to assign elements.
+        void assignEnumeration(const VEnumItems& items, UDQSet& values) const;
     };
 
     /// Name of UDQ to which this assignment applies.

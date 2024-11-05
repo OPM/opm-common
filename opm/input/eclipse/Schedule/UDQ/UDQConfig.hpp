@@ -237,10 +237,6 @@ namespace Opm {
         ///
         /// Assigns new UDQ values to both the summary and UDQ state objects.
         ///
-        /// \param[in] report_step Current report step.
-        ///
-        /// \param[in] sched Full dynamic input schedule.
-        ///
         /// \param[in] wm Well name pattern matcher.
         ///
         /// \param[in] create_segment_matcher Factory function for
@@ -252,9 +248,7 @@ namespace Opm {
         ///
         /// \param[in,out] udq_state Dynamic values for all known UDQs.
         /// Values pertaining to UDQs being assigned here will be updated.
-        void eval_assign(std::size_t           report_step,
-                         const Schedule&       sched,
-                         const WellMatcher&    wm,
+        void eval_assign(const WellMatcher&    wm,
                          SegmentMatcherFactory create_segment_matcher,
                          SummaryState&         st,
                          UDQState&             udq_state) const;
@@ -266,8 +260,6 @@ namespace Opm {
         /// objects.
         ///
         /// \param[in] report_step Current report step.
-        ///
-        /// \param[in] sched Full dynamic input schedule.
         ///
         /// \param[in] wm Well name pattern matcher.
         ///
@@ -284,7 +276,6 @@ namespace Opm {
         /// \param[in,out] udq_state Dynamic values for all known UDQs.
         /// Values pertaining to UDQs being assigned here will be updated.
         void eval(std::size_t             report_step,
-                  const Schedule&         sched,
                   const WellMatcher&      wm,
                   SegmentMatcherFactory   create_segment_matcher,
                   RegionSetMatcherFactory create_region_matcher,
@@ -513,15 +504,9 @@ namespace Opm {
         ///
         /// Assigns new UDQ values to both the summary and UDQ state objects.
         ///
-        /// \param[in] report_step Current report step.
-        ///
-        /// \param[in] schedule Full dynamic input schedule.
-        ///
         /// \param[in,out] context Pattern matchers and state objects.
         /// Values pertaining to UDQs being assigned here will be updated.
-        void eval_assign(std::size_t     report_step,
-                         const Schedule& sched,
-                         UDQContext&     context) const;
+        void eval_assign(UDQContext& context) const;
 
         /// Compute new values for all UDQs
         ///

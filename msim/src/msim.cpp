@@ -33,6 +33,7 @@
 #include <opm/input/eclipse/EclipseState/Runspec.hpp>
 
 #include <opm/input/eclipse/Schedule/Action/ActionContext.hpp>
+#include <opm/input/eclipse/Schedule/Action/ActionResult.hpp>
 #include <opm/input/eclipse/Schedule/Action/Actions.hpp>
 #include <opm/input/eclipse/Schedule/Action/SimulatorUpdate.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQConfig.hpp>
@@ -115,8 +116,9 @@ void msim::run(EclipseIO& io, bool report_only)
 }
 
 
-UDAValue msim::uda_val() {
- return UDAValue();
+UDAValue msim::uda_val()
+{
+    return UDAValue();
 }
 
 
@@ -131,7 +133,9 @@ void msim::post_step(data::Solution& /* sol */,
         return;
     }
 
-    Action::Context context(this->st, this->schedule[report_step].wlist_manager.get());
+    const auto context = Action::Context {
+        this->st, this->schedule[report_step].wlist_manager.get()
+    };
 
     for (const auto& action : actions.pending(this->action_state, std::chrono::system_clock::to_time_t(sim_time))) {
         auto result = action->eval(context);
@@ -195,7 +199,6 @@ void msim::run_step(const WellTestState& wtest_state,
 
         this->schedule.getUDQConfig(report_step - 1)
             .eval(report_step,
-                  this->schedule,
                   this->schedule.wellMatcher(report_step),
                   this->schedule.segmentMatcherFactory(report_step),
                   createRegionSetMatcherFactory(this->state),

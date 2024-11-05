@@ -2072,7 +2072,7 @@ UDQ
     UDQState udq_state(undefined_value);
     auto segmentMatcherFactory = []() { return std::make_unique<SegmentMatcher>(ScheduleState {}); };
     auto regionSetMatcherFactory = []() { return std::make_unique<RegionSetMatcher>(FIPRegionStatistics {}); };
-    udq.eval(0, schedule, {}, segmentMatcherFactory, regionSetMatcherFactory, st, udq_state);
+    udq.eval(0, {}, segmentMatcherFactory, regionSetMatcherFactory, st, udq_state);
 
     BOOST_CHECK_EQUAL( st.get("FU_UADD"), 12);   // 10 + 2
 
@@ -2100,7 +2100,7 @@ DEFINE FU_PAR2 FU_PAR3 /
     st.update("FMWPR", 100);
     auto segmentMatcherFactory = []() { return std::make_unique<SegmentMatcher>(ScheduleState {}); };
     auto regionSetMatcherFactory = []() { return std::make_unique<RegionSetMatcher>(FIPRegionStatistics {}); };
-    udq.eval(0, schedule, {}, segmentMatcherFactory, regionSetMatcherFactory, st, udq_state);
+    udq.eval(0, {}, segmentMatcherFactory, regionSetMatcherFactory, st, udq_state);
 
     BOOST_CHECK_EQUAL(st.get("FU_PAR2"), 100);
 }
@@ -2120,7 +2120,7 @@ DEFINE FU_PAR3 FU_PAR2 + 1/
     UDQState udq_state(undefined_value);
     auto segmentMatcherFactory = []() { return std::make_unique<SegmentMatcher>(ScheduleState {}); };
     auto regionSetMatcherFactory = []() { return std::make_unique<RegionSetMatcher>(FIPRegionStatistics {}); };
-    udq.eval(0, schedule, {}, segmentMatcherFactory, regionSetMatcherFactory, st, udq_state);
+    udq.eval(0, {}, segmentMatcherFactory, regionSetMatcherFactory, st, udq_state);
 
     BOOST_CHECK_EQUAL(st.get("FU_PAR2"), undefined_value);
     BOOST_CHECK_EQUAL(st.get("FU_PAR3"), undefined_value);
@@ -2232,7 +2232,7 @@ DEFINE WUGASRA  750000 - WGLIR '*' /
     WellMatcher wm(std::move(wo));
     auto segmentMatcherFactory = []() { return std::make_unique<SegmentMatcher>(ScheduleState {}); };
     auto regionSetMatcherFactory = []() { return std::make_unique<RegionSetMatcher>(FIPRegionStatistics {}); };
-    udq.eval(0, schedule, wm, segmentMatcherFactory, regionSetMatcherFactory, st, udq_state);
+    udq.eval(0, wm, segmentMatcherFactory, regionSetMatcherFactory, st, udq_state);
 
     const auto required_keys = [&udq]()
     {
@@ -2450,7 +2450,7 @@ DEFINE FU_VAR91 GOPR TEST  /
 
     auto segmentMatcherFactory = []() { return std::make_unique<SegmentMatcher>(ScheduleState {}); };
     auto regionSetMatcherFactory = []() { return std::make_unique<RegionSetMatcher>(FIPRegionStatistics {}); };
-    udq.eval(0, schedule, {}, segmentMatcherFactory, regionSetMatcherFactory, st, udq_state);
+    udq.eval(0, {}, segmentMatcherFactory, regionSetMatcherFactory, st, udq_state);
 }
 
 BOOST_AUTO_TEST_CASE(UDQ_KEY_ERROR) {
@@ -2471,7 +2471,7 @@ UDQ
 
     auto segmentMatcherFactory = []() { return std::make_unique<SegmentMatcher>(ScheduleState {}); };
     auto regionSetMatcherFactory = []() { return std::make_unique<RegionSetMatcher>(FIPRegionStatistics {}); };
-    BOOST_CHECK_THROW(udq.eval(0, schedule, {}, segmentMatcherFactory, regionSetMatcherFactory, st, udq_state), std::exception);
+    BOOST_CHECK_THROW(udq.eval(0, {}, segmentMatcherFactory, regionSetMatcherFactory, st, udq_state), std::exception);
 }
 
 BOOST_AUTO_TEST_CASE(UDQ_ASSIGN) {
@@ -2509,7 +2509,7 @@ UDQ
 
     auto segmentMatcherFactory = []() { return std::make_unique<SegmentMatcher>(ScheduleState {}); };
     auto regionSetMatcherFactory = []() { return std::make_unique<RegionSetMatcher>(FIPRegionStatistics {}); };
-    udq.eval(0, schedule, {}, segmentMatcherFactory, regionSetMatcherFactory, st, udq_state);
+    udq.eval(0, {}, segmentMatcherFactory, regionSetMatcherFactory, st, udq_state);
     BOOST_CHECK_EQUAL(st.get("FU_VAR1"), 10);
 }
 
@@ -2552,7 +2552,7 @@ TSTEP
         const auto& udq = schedule.getUDQConfig(report_step);
         auto segmentMatcherFactory = []() { return std::make_unique<SegmentMatcher>(ScheduleState {}); };
         auto regionSetMatcherFactory = []() { return std::make_unique<RegionSetMatcher>(FIPRegionStatistics {}); };
-        udq.eval(report_step, schedule, schedule.wellMatcher(report_step), segmentMatcherFactory, regionSetMatcherFactory, st, udq_state);
+        udq.eval(report_step, schedule.wellMatcher(report_step), segmentMatcherFactory, regionSetMatcherFactory, st, udq_state);
         auto fu_var1 = st.get("FU_VAR1");
         BOOST_CHECK_EQUAL(fu_var1, report_step + 1);
     }
@@ -2562,7 +2562,7 @@ TSTEP
         const auto& udq = schedule.getUDQConfig(report_step);
         auto segmentMatcherFactory = []() { return std::make_unique<SegmentMatcher>(ScheduleState {}); };
         auto regionSetMatcherFactory = []() { return std::make_unique<RegionSetMatcher>(FIPRegionStatistics {}); };
-        udq.eval(report_step, schedule, schedule.wellMatcher(report_step), segmentMatcherFactory, regionSetMatcherFactory, st, udq_state);
+        udq.eval(report_step, schedule.wellMatcher(report_step), segmentMatcherFactory, regionSetMatcherFactory, st, udq_state);
         auto fu_var1 = st.get("FU_VAR1");
         BOOST_CHECK_EQUAL(fu_var1, report_step - 4);
     }
@@ -2572,7 +2572,7 @@ TSTEP
         const auto& udq = schedule.getUDQConfig(report_step);
         auto segmentMatcherFactory = []() { return std::make_unique<SegmentMatcher>(ScheduleState {}); };
         auto regionSetMatcherFactory = []() { return std::make_unique<RegionSetMatcher>(FIPRegionStatistics {}); };
-        udq.eval(report_step, schedule, schedule.wellMatcher(report_step), segmentMatcherFactory, regionSetMatcherFactory, st, udq_state);
+        udq.eval(report_step, schedule.wellMatcher(report_step), segmentMatcherFactory, regionSetMatcherFactory, st, udq_state);
         auto fu_var1 = st.get("FU_VAR1");
         BOOST_CHECK_EQUAL(fu_var1, 0);
     }
@@ -2625,7 +2625,7 @@ UDQ
     const auto& udq = schedule.getUDQConfig(0);
     auto segmentMatcherFactory = []() { return std::make_unique<SegmentMatcher>(ScheduleState {}); };
     auto regionSetMatcherFactory = []() { return std::make_unique<RegionSetMatcher>(FIPRegionStatistics {}); };
-    udq.eval(0, schedule, {}, segmentMatcherFactory, regionSetMatcherFactory, st, udq_state);
+    udq.eval(0, {}, segmentMatcherFactory, regionSetMatcherFactory, st, udq_state);
     auto fu_var1 = st.get("FU_VAR1");
     auto fu_var2 = st.get("FU_VAR2");
     auto fu_var3 = st.get("FU_VAR3");
@@ -2672,7 +2672,7 @@ UDQ
 
     auto segmentMatcherFactory = []() { return std::make_unique<SegmentMatcher>(ScheduleState {}); };
     auto regionSetMatcherFactory = []() { return std::make_unique<RegionSetMatcher>(FIPRegionStatistics {}); };
-    udq.eval(0, schedule, schedule.wellMatcher(0), segmentMatcherFactory, regionSetMatcherFactory, st, udq_state);
+    udq.eval(0, schedule.wellMatcher(0), segmentMatcherFactory, regionSetMatcherFactory, st, udq_state);
     auto fu_var1 = st.get("FU_VAR1");
     auto fu_var2 = st.get("FU_VAR2");
     auto fu_var3 = st.get("FU_VAR3");
@@ -2700,7 +2700,7 @@ UDQ
     const auto& udq = schedule.getUDQConfig(0);
     auto segmentMatcherFactory = []() { return std::make_unique<SegmentMatcher>(ScheduleState {}); };
     auto regionSetMatcherFactory = []() { return std::make_unique<RegionSetMatcher>(FIPRegionStatistics {}); };
-    udq.eval(0, schedule, schedule.wellMatcher(0), segmentMatcherFactory, regionSetMatcherFactory, st, udq_state);
+    udq.eval(0, schedule.wellMatcher(0), segmentMatcherFactory, regionSetMatcherFactory, st, udq_state);
 
     auto fu_var1 = st.get("FU_VAR1");
     auto fu_var2 = st.get("FU_VAR2");
@@ -3014,7 +3014,7 @@ DEFINE WU_WBHP TU_FBHP[WOPR] UMIN WU_WBHP0 /
 
     auto segmentMatcherFactory = []() { return std::make_unique<SegmentMatcher>(ScheduleState {}); };
     auto regionSetMatcherFactory = []() { return std::make_unique<RegionSetMatcher>(FIPRegionStatistics {}); };
-    udq.eval(0, schedule, wm, segmentMatcherFactory, regionSetMatcherFactory, st, udq_state);
+    udq.eval(0, wm, segmentMatcherFactory, regionSetMatcherFactory, st, udq_state);
 
     const double wu_wbhp1 = st.get_well_var("PROD1", "WU_WBHP");
     const double wu_wbhp2 = st.get_well_var("PROD2", "WU_WBHP");

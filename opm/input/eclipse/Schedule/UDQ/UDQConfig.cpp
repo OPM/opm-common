@@ -26,6 +26,8 @@
 #include <opm/common/OpmLog/OpmLog.hpp>
 #include <opm/common/utility/OpmInputError.hpp>
 
+#include <opm/input/eclipse/Utility/Typetools.hpp>
+
 #include <opm/input/eclipse/Schedule/MSW/SegmentMatcher.hpp>
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 #include <opm/input/eclipse/Schedule/SummaryState.hpp>
@@ -54,12 +56,28 @@
 namespace {
     std::string strip_quotes(const std::string& s)
     {
-        if (s[0] == '\'') {
-            return s.substr(1, s.size() - 2);
-        }
-        else {
+        if (s.front() != '\'') {
             return s;
         }
+
+        return s.substr(1, s.size() - 2);
+    }
+
+    std::vector<std::string>
+    extractInputAssignmentSelector(const std::vector<std::string>& assignRhs)
+    {
+        auto selector = std::vector<std::string>{};
+
+        if (assignRhs.size() >= 2) {
+            selector.reserve(assignRhs.size() - 1);
+
+            std::transform(assignRhs.begin(),
+                           assignRhs.end() - 1,
+                           std::back_inserter(selector),
+                           strip_quotes);
+        }
+
+        return selector;
     }
 
     class EvalAssign
@@ -72,26 +90,26 @@ namespace {
             }};
         }
 
-        static EvalAssign group(const std::size_t    report_step,
-                                const Opm::Schedule& sched)
+        static EvalAssign group(const Opm::UDQContext& context)
         {
-            return { [report_step, &sched]() {
-                return [groups = sched.groupNames(report_step)]
-                    (const auto& assign)
-                {
-                    return assign.eval(groups);
+            return { [&context]() {
+                return [&context](const auto& assign) {
+                    return assign.eval(context.groups());
                 };
             }};
         }
 
-        static EvalAssign well(const std::size_t    report_step,
-                               const Opm::Schedule& sched)
+        static EvalAssign well(const Opm::UDQContext& context)
         {
-            return { [report_step, &sched]() {
-                return [wells = sched.wellNames(report_step)]
-                    (const auto& assign)
-                {
-                    return assign.eval(wells);
+            return { [&context]() {
+                return [&context](const auto& assign) {
+                    return assign.eval(context.wells(), [&context]
+                                       (const std::vector<std::string>& pattern)
+                    {
+                        return !pattern.empty()
+                            ? context.wells(pattern.front())
+                            : context.wells(); // No element selection => assign all wells.
+                    });
                 };
             }};
         }
@@ -218,12 +236,11 @@ namespace Opm {
             this->add_unit(quantity, data.front());
         }
         else if (action == UDQAction::ASSIGN) {
-            auto selector = std::vector<std::string>(data.begin(), data.end() - 1);
-            std::transform(selector.cbegin(), selector.cend(), selector.begin(), strip_quotes);
-            const auto value = std::stod(data.back());
             this->add_assign(quantity,
                              std::move(create_segment_matcher),
-                             selector, value, report_step);
+                             extractInputAssignmentSelector(data),
+                             std::stod(data.back()),
+                             report_step);
         }
         else if (action == UDQAction::DEFINE) {
             this->add_define(quantity, location, data, report_step);
@@ -332,14 +349,13 @@ namespace Opm {
     bool UDQConfig::clear_pending_assignments()
     {
         const auto update = ! this->pending_assignments_.empty();
+
         this->pending_assignments_.clear();
 
         return update;
     }
 
-    void UDQConfig::eval_assign(const std::size_t     report_step,
-                                const Schedule&       sched,
-                                const WellMatcher&    wm,
+    void UDQConfig::eval_assign(const WellMatcher&    wm,
                                 SegmentMatcherFactory create_segment_matcher,
                                 SummaryState&         st,
                                 UDQState&             udq_state) const
@@ -352,11 +368,10 @@ namespace Opm {
             std::move(factories), st, udq_state
         };
 
-        this->eval_assign(report_step, sched, context);
+        this->eval_assign(context);
     }
 
     void UDQConfig::eval(const std::size_t       report_step,
-                         const Schedule&         sched,
                          const WellMatcher&      wm,
                          SegmentMatcherFactory   create_segment_matcher,
                          RegionSetMatcherFactory create_region_matcher,
@@ -372,7 +387,7 @@ namespace Opm {
             std::move(factories), st, udq_state
         };
 
-        this->eval_assign(report_step, sched, context);
+        this->eval_assign(context);
         this->eval_define(report_step, udq_state, context);
     }
 
@@ -610,19 +625,17 @@ namespace Opm {
         pos->second.update_status(udq.currentUpdateStatus(), report_step);
     }
 
-    void UDQConfig::eval_assign(const std::size_t report_step,
-                                const Schedule&   sched,
-                                UDQContext&       context) const
+    void UDQConfig::eval_assign(UDQContext& context) const
     {
         if (this->pending_assignments_.empty()) {
             return;             // Nothing to do
         }
 
         const auto handlers = std::map<UDQVarType, EvalAssign> {
-            { UDQVarType::FIELD_VAR  , EvalAssign::field()                   },
-            { UDQVarType::GROUP_VAR  , EvalAssign::group(report_step, sched) },
-            { UDQVarType::WELL_VAR   , EvalAssign::well(report_step, sched)  },
-            { UDQVarType::SEGMENT_VAR, EvalAssign::segment(context)          },
+            { UDQVarType::FIELD_VAR  , EvalAssign::field() },
+            { UDQVarType::GROUP_VAR  , EvalAssign::group(context) },
+            { UDQVarType::WELL_VAR   , EvalAssign::well(context) },
+            { UDQVarType::SEGMENT_VAR, EvalAssign::segment(context) },
         };
 
         // Recall: pending_assignments_ is mutable.
