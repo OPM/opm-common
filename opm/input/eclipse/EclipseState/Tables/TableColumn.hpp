@@ -67,6 +67,8 @@ namespace Opm {
         std::vector<double> vectorCopy() const;
         std::vector<double>::const_iterator begin() const;
         std::vector<double>::const_iterator end() const;
+        std::vector<double>::const_reverse_iterator rbegin() const;
+        std::vector<double>::const_reverse_iterator rend() const;
 
         bool operator==(const TableColumn& data) const;
 

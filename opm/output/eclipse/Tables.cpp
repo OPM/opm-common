@@ -32,6 +32,7 @@
 #include <opm/input/eclipse/EclipseState/Tables/SgfnTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/SgofTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/SgwfnTable.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/SlgofTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/Sof2Table.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/Sof3Table.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/SwfnTable.hpp>
@@ -1016,9 +1017,98 @@ namespace { namespace SatFunc {
 
         /// Create linearised and padded 'TAB' vector entries of normalised
         /// SGFN tables for all saturation function regions from Family One
+        /// table data (SLGOF keyword).
+        ///
+        /// \param[in] numRows Number of rows to allocate in the output
+        ///    vector for each table.  Expected to be equal to the number of
+        ///    declared saturation nodes in the simulation run's TABDIMS
+        ///    keyword (Item 3).
+        ///
+        /// \param tolcrit Minimum relative permeability threshold value for
+        ///    phase to be considered mobile.  Values less than this threshold
+        ///    are output as zero.
+        ///
+        /// \param[in] units Active unit system.  Needed to convert SI
+        ///    convention capillary pressure values (Pascal) to declared
+        ///    conventions of the run specification.
+        ///
+        /// \param[in] slgof Collection of SLGOF tables for all saturation
+        ///    regions.
+        ///
+        /// \return Descriptor and linearised/normalised/padded 'TAB' vector
+        ///    values for output SGFN tables.  Corresponds to unit-converted
+        ///    copies of columns 1, 2, and 4--with added derivatives--of the
+        ///    input SLGOF tables.
+        std::tuple<int, int, std::vector<double>>
+        fromSLGOF(const std::size_t          numRows,
+                 const double               tolcrit,
+                 const Opm::UnitSystem&     units,
+                 const Opm::TableContainer& slgof)
+        {
+            using SLGOF = ::Opm::SlgofTable;
+
+            const auto tableSize = detail::allocatedRows(numRows, slgof);
+
+            const auto numTab = slgof.size();
+            const auto numDep = std::size_t{2}; // Krg, Pcgo
+
+            return {
+                static_cast<int>(tableSize),
+                static_cast<int>(numTab),
+                detail::createSatfuncTable(numTab, tableSize, numDep,
+                    [tolcrit, &units, &slgof](const std::size_t           tableID,
+                                                    const std::size_t           primID,
+                                                    Opm::LinearisedOutputTable& linTable)
+                {
+                    const auto& t = slgof.getTable<SLGOF>(tableID);
+
+                    auto numActRows = std::size_t{0};
+
+                    /// Reverse order in all columns, since Sl is increasing (Sg descreasing)
+                    // Sg = 1.0 - Sl
+                    {
+                        const auto& Sl = t.getSlColumn();
+
+                        numActRows = Sl.size();
+                        std::vector<double> Sg(std::rbegin(Sl), std::rend(Sl));
+                        std::transform(Sg.begin(), Sg.end(), Sg.begin(),
+                                       [](double x){ return (1.0 - x); });
+                        std::copy(std::begin(Sg), std::end(Sg),
+                                  linTable.column(tableID, primID, 0));
+                    }
+
+                    // Krg(Sg)
+                    const auto& Krg_rev = t.getKrgColumn();
+                    std::vector<double> Krg(Krg_rev.rbegin(), Krg_rev.rend());
+                    detail::outputRelperm(Krg, tolcrit,
+                                          linTable.column(tableID, primID, 1));
+
+                    // Pcgo(Sg)
+                    {
+                        constexpr auto uPress = ::Opm::UnitSystem::measure::pressure;
+
+                        const auto& pc = t.getPcogColumn();
+                        std::transform(std::rbegin(pc), std::rend(pc),
+                                       linTable.column(tableID, primID, 2),
+                                       [&units](const double Pc) -> double
+                                       {
+                                           return units.from_si(uPress, Pc);
+                                       });
+                    }
+
+                    // Inform createSatfuncTable() of number of active rows
+                    // in this table.  Needed to compute slopes of piecewise
+                    // linear interpolants.
+                    return numActRows;
+                })
+            };
+        }
+
+        /// Create linearised and padded 'TAB' vector entries of normalised
+        /// SGFN tables for all saturation function regions from Family One
         /// table data.
         ///
-        /// Distinguishes between keywords SGOF and SGOFLET.
+        /// Distinguishes between keywords SGOF, SLGOF and SGOFLET.
         ///
         /// \param[in] numRows Number of rows to allocate in the output
         ///    vector for each table.  Expected to be equal to the number of
@@ -1047,7 +1137,15 @@ namespace { namespace SatFunc {
 
             if (letTables.empty()) {
                 // Typical case: Not LET-based saturation functions.
-                return fromSGOF(numRows, tolcrit, units, tabMgr.getSgofTables());
+                const auto& sgof = tabMgr.getSgofTables();
+                if (!sgof.empty()) {
+                    return fromSGOF(numRows, tolcrit, units, sgof);
+                }
+                const auto& slgof = tabMgr.getSlgofTables();
+                if (!slgof.empty()) {
+                    return fromSLGOF(numRows, tolcrit, units, slgof);
+                }
+                // Warn here?
             }
 
             // LET-based saturation functions for gas.
@@ -1353,6 +1451,80 @@ namespace { namespace SatFunc {
                 };
             }
 
+
+            /// Create linearised and padded 'TAB' vector entries of
+            /// normalised two-phase SOFN tables for all saturation function
+            /// regions from Family One table data (SLGOF keyword--G/O System).
+            ///
+            /// \param[in] numRows Number of rows to allocate in the output
+            ///    vector for each table.  Expected to be equal to the
+            ///    number of declared saturation nodes in the simulation
+            ///    run's TABDIMS keyword (Item 3).
+            ///
+            /// \param tolcrit Minimum relative permeability threshold value
+            ///    for phase to be considered mobile.  Values less than this
+            ///    threshold are output as zero.
+            ///
+            /// \param[in] slgof Collection of SLGOF tables for all saturation
+            ///    regions.
+            ///
+            /// \return Descriptor and linearised/normalised/padded 'TAB'
+            ///    vector values for output SOFN tables.  Corresponds to
+            ///    translated (1-Sg), reverse saturation column (column 1)
+            ///    and reverse column of relative permeability for oil
+            ///    (column 3) from the input SLGOF table--with added
+            ///    derivatives.
+            std::tuple<int, int, std::vector<double>>
+            fromSLGOF(const std::size_t          numRows,
+                     const double               tolcrit,
+                     const Opm::TableContainer& slgof)
+            {
+                using SLGOF = ::Opm::SlgofTable;
+
+                const auto tableSize = detail::allocatedRows(numRows, slgof);
+
+                const auto numTab = slgof.size();
+                const auto numDep = std::size_t{1}; // Kro
+
+                return {
+                    static_cast<int>(tableSize),
+                    static_cast<int>(numTab),
+                    detail::createSatfuncTable(numTab, tableSize, numDep,
+                        [tolcrit, &slgof](const std::size_t           tableID,
+                                         const std::size_t           primID,
+                                         Opm::LinearisedOutputTable& linTable)
+                    {
+                        const auto& t = slgof.getTable<SLGOF>(tableID);
+
+                        auto numActRows = std::size_t{0};
+
+                        // So = Sl (two-phase)
+                        {
+                            const auto& Sl = t.getSlColumn();
+                            numActRows = Sl.size();
+                            std::copy(Sl.begin(), Sl.end(), linTable.column(tableID, primID, 0));
+                        }
+
+                        // Kro(So)
+                        {
+                            const auto& kr = t.getKrogColumn();
+
+                            const auto krog = std::vector<double> {
+                                std::begin(kr), std::end(kr)
+                            };
+
+                            detail::outputRelperm(krog.begin(), krog.end(), tolcrit,
+                                                  linTable.column(tableID, primID, 1));
+                        }
+
+                        // Inform createSatfuncTable() of number of active
+                        // rows in this table.  Needed to compute slopes of
+                        // piecewise linear interpolants.
+                        return numActRows;
+                    })
+                };
+            }
+
             /// Create linearised and padded 'TAB' vector entries of
             /// normalised SOFN tables for all saturation function regions
             /// from Family One table data in the case of an oil/gas
@@ -1379,7 +1551,15 @@ namespace { namespace SatFunc {
                 const auto& gasLET = tabMgr.getSgofletTable();
 
                 if (gasLET.empty()) {
-                    return fromSGOF(numRows, tolcrit, tabMgr.getSgofTables());
+                    const auto& sgof = tabMgr.getSgofTables();
+                    if (!sgof.empty()) {
+                        return fromSGOF(numRows, tolcrit, sgof);
+                    }
+                    const auto& slgof = tabMgr.getSlgofTables();
+                    if (!slgof.empty()) {
+                        return fromSLGOF(numRows, tolcrit, slgof);
+                    }
+                    // Warn here?
                 }
 
                 return {
@@ -1697,7 +1877,7 @@ namespace { namespace SatFunc {
             // tables having sorted phase saturation values (required by ECL
             // format).
             std::vector<TableElement>
-            mergeTables(const std::vector<DerivedKroFunction>& t)
+            mergeTables(const std::vector<DerivedKroFunction>& t, const double tolerance = 0.0)
             {
                 auto ret = std::vector<TableElement>{};
 
@@ -1709,10 +1889,11 @@ namespace { namespace SatFunc {
                 std::set_union(std::begin(t0), std::end(t0),
                                std::begin(t1), std::end(t1),
                                std::back_inserter(ret),
-                    [&t](const TableElement& e1, const TableElement& e2)
+                    [&t,tolerance](const TableElement& e1, const TableElement& e2)
                 {
-                    return t[e1.function].So(e1.index)
-                        <  t[e2.function].So(e2.index);
+                    const double val1 = t[e1.function].So(e1.index);
+                    const double val2 = t[e2.function].So(e2.index);
+                    return ( (val1 + tolerance) < val2);
                 });
 
                 return ret;
@@ -1758,6 +1939,74 @@ namespace { namespace SatFunc {
                 }
 
                 const auto mrg = mergeTables(tbl);
+
+                for (auto& col : ret) { col.reserve(mrg.size()); }
+
+                for (const auto& row : mrg) {
+                    const auto self  =     row.function;
+                    const auto other = 1 - row.function;
+
+                    // 1) Assign So
+                    ret[0].push_back(tbl[self].So(row.index));
+
+                    // 2) Assign Kro for "self" column (the one that got
+                    //    picked for this row).
+                    ret[1 + self].push_back(tbl[self].Kro(row.index));
+
+                    // 3) Assign Kro for "other" column (the one that
+                    //    did not get picked for this row).
+                    ret[1 + other].push_back(tbl[other].Kro(ret[0].back()));
+                }
+
+                return ret;
+            }
+
+            // Create collection of individual columns of single SOF3 table
+            // through joining input SLGOF and SWOF tables on increasing oil
+            // saturation and appropriate KrOX columns.
+            std::array<std::vector<double>, 3>
+            makeSOF3Table(const Opm::SlgofTable& slgof,
+                          const Opm::SwofTable& swof)
+            {
+                auto ret = std::array<std::vector<double>, 3>{};
+
+                auto tbl = std::vector<DerivedKroFunction>{};
+                tbl.reserve(2);
+
+                // Note: Order between Krow(So) and Krog(So) matters
+                // here.  This order must match the expected column
+                // order in SOF3--i.e. [ So, Krow, Krog ].
+
+                // 1) Krow(So)
+                {
+                    // So = 1.0 - Sw
+                    const auto& Sw     = swof.getSwColumn();
+                    const auto& Krow   = swof.getKrowColumn();
+                    const auto& So_off = 1.0;
+
+                    tbl.emplace_back(Sw  .vectorCopy(),
+                                     Krow.vectorCopy(), So_off);
+                }
+
+                // 2) Krog(So)
+                {
+                    // Map Krog(Sl) [decreasing Sg] to Krog(Sg) [increasing Sg]
+                    const auto swco = swof.getSwColumn()[0];
+                    const auto& Sl     = slgof.getSlColumn();
+                    const auto& Krog   = slgof.getKrogColumn();
+                    const auto  So_off =
+                        1.0 - swco;
+
+                    // Sg = 1.0 - Sl;
+                    std::vector<double> sg( Sl.rbegin(), Sl.rend() );
+                    std::transform(sg.begin(), sg.end(), sg.begin(),
+                                   [](double x){ return (1.0 - x); });
+
+                    std::vector<double> krog ( Krog.rbegin(), Krog.rend() );
+                    tbl.emplace_back(sg, krog, So_off);
+                }
+
+                const auto mrg = mergeTables(tbl, 1.0e-14);
 
                 for (auto& col : ret) { col.reserve(mrg.size()); }
 
@@ -1865,12 +2114,99 @@ namespace { namespace SatFunc {
                 };
             }
 
+
+            /// Create linearised and padded 'TAB' vector entries of
+            /// normalised three-phase SOFN tables for all saturation
+            /// function regions from Family One table data.
+            ///
+            /// \param[in] numRows Number of rows to allocate in the output
+            ///    vector for each table.  Expected to be twice the number
+            ///    of declared saturation nodes in the simulation run's
+            ///    TABDIMS keyword (Item 3).
+            ///
+            /// \param tolcrit Minimum relative permeability threshold value
+            ///    for phase to be considered mobile.  Values less than this
+            ///    threshold are output as zero.
+            ///
+            /// \param[in] slgof Collection of SLGOF tables for all saturation
+            ///    regions.
+            ///
+            /// \param[in] swof Collection of SWOF tables for all saturation
+            ///    regions.
+            ///
+            /// \return Linearised and padded 'TAB' vector values for
+            ///    three-phase SOFN tables.  Corresponds to column 1 from
+            ///    both of the input SLGOF and SWOF tables, as well as column
+            ///    3 from the input SWOF table and column 3 from the input
+            ///    SGOF table--expanded so as to have values for all oil
+            ///    saturation nodes.  Derivatives added in columns 4 and 5.
+            std::tuple<int, int, std::vector<double>>
+            fromSLGOFandSWOF(const std::size_t          numRows,
+                             const double               tolcrit,
+                             const Opm::TableContainer& slgof,
+                             const Opm::TableContainer& swof)
+            {
+                using SLGOF = ::Opm::SlgofTable;
+                using SWOF = ::Opm::SwofTable;
+
+                const auto tableSizeGas = detail::allocatedRows(numRows, slgof);
+                const auto tableSizeWat = detail::allocatedRows(numRows, swof);
+
+                // Merged table has 2*NSSFUN rows to accommodate both the
+                // gas and the water table.
+                const auto tableSize =
+                    2 * std::max(tableSizeGas, tableSizeWat);
+
+                const auto numTab = slgof.size();
+                const auto numDep = std::size_t{2}; // Krow, Krog
+
+                return {
+                    static_cast<int>(tableSize),
+                    static_cast<int>(numTab),
+                    detail::createSatfuncTable(numTab, tableSize, numDep,
+                        [tolcrit, &slgof, &swof]
+                        (const std::size_t           tableID,
+                         const std::size_t           primID,
+                         Opm::LinearisedOutputTable& linTable)
+                    {
+                        const auto sof3 =
+                            makeSOF3Table(slgof.getTable<SLGOF>(tableID),
+                                          swof.getTable<SWOF>(tableID));
+
+                        auto numActRows = std::size_t{0};
+
+                        // So
+                        {
+                            const auto& So = sof3[0];
+
+                            numActRows = So.size();
+                            std::copy(std::begin(So), std::end(So),
+                                      linTable.column(tableID, primID, 0));
+                        }
+
+                        // Krow(So)
+                        detail::outputRelperm(sof3[1], tolcrit,
+                                              linTable.column(tableID, primID, 1));
+
+                        // Krog(So)
+                        detail::outputRelperm(sof3[2], tolcrit,
+                                              linTable.column(tableID, primID, 2));
+
+                        // Inform createSatfuncTable() of number of active
+                        // rows in this table.  Needed to compute slopes of
+                        // piecewise linear interpolants.
+                        return numActRows;
+                    })
+                };
+            }
+
+
             /// Create linearised and padded 'TAB' vector entries of
             /// normalised SOFN tables for all saturation function regions
             /// from Family One table data for a three-phase oil/gas/water
             /// system.
             ///
-            /// Distinguishes between the SGOF/SWOF and SGOFLET/SWOFLET
+            /// Distinguishes between the SGOF/SWOF, SLGOF/SWOF and SGOFLET/SWOFLET
             /// family of keywords.
             ///
             /// \param[in] numRows Number of rows to allocate in the output
@@ -1896,10 +2232,20 @@ namespace { namespace SatFunc {
 
                 if (gasLET.empty() || watLET.empty()) {
                     // Common case: Saturation functions for oil entered in
-                    // S[GW]OF tables.
-                    return fromSGOFandSWOF(numRows, tolcrit,
-                                           tabMgr.getSgofTables(),
-                                           tabMgr.getSwofTables());
+                    // S[L][GW]OF tables.
+                    const auto& sgof = tabMgr.getSgofTables();
+                    if (!sgof.empty()) {
+                        return fromSGOFandSWOF(numRows, tolcrit,
+                                            sgof,
+                                            tabMgr.getSwofTables());
+                    }
+                    const auto& slgof = tabMgr.getSlgofTables();
+                    if (!slgof.empty()) {
+                        return fromSLGOFandSWOF(numRows, tolcrit,
+                                            slgof,
+                                            tabMgr.getSwofTables());
+                    }
+                    // Warn here?
                 }
 
                 // Saturation functions for oil entered in S[GW]OFLET tables.
