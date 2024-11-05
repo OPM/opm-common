@@ -1877,7 +1877,7 @@ namespace { namespace SatFunc {
             // tables having sorted phase saturation values (required by ECL
             // format).
             std::vector<TableElement>
-            mergeTables(const std::vector<DerivedKroFunction>& t, const double tolerance = 1.0e-6)
+            mergeTables(const std::vector<DerivedKroFunction>& t, const double tolerance = 1.0e-7)
             {
                 auto ret = std::vector<TableElement>{};
 
