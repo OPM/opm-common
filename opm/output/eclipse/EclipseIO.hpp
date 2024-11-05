@@ -22,7 +22,10 @@
 #ifndef OPM_ECLIPSE_WRITER_HPP
 #define OPM_ECLIPSE_WRITER_HPP
 
+#include <opm/input/eclipse/EclipseState/Grid/NNC.hpp>
+
 #include <opm/output/data/Solution.hpp>
+#include <opm/output/eclipse/RestartValue.hpp>
 
 #include <map>
 #include <memory>
@@ -34,9 +37,7 @@ namespace Opm {
 
 class EclipseGrid;
 class EclipseState;
-struct NNCdata;
 class RestartKey;
-class RestartValue;
 class Schedule;
 class SummaryConfig;
 class SummaryState;
