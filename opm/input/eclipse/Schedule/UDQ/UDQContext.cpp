@@ -207,7 +207,7 @@ namespace Opm {
         return it->second;
     }
 
-    std::vector<std::string> UDQContext::wells() const
+    const std::vector<std::string>& UDQContext::wells() const
     {
         return this->well_matcher.wells();
     }
@@ -217,7 +217,7 @@ namespace Opm {
         return this->well_matcher.wells(pattern);
     }
 
-    std::vector<std::string> UDQContext::groups() const
+    const std::vector<std::string>& UDQContext::groups() const
     {
         return this->summary_state.groups();
     }
