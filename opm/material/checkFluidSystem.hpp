@@ -62,8 +62,8 @@ class HairSplittingFluidState
     : protected BaseFluidState
 {
 public:
-    enum { numPhases = FluidSystem::numPhases };
-    enum { numComponents = FluidSystem::numComponents };
+    static constexpr int numPhases = FluidSystem::numPhases;
+    static constexpr int numComponents = FluidSystem::numComponents;
 
     typedef ScalarT Scalar;
 
@@ -277,8 +277,8 @@ void checkFluidSystem()
 
     // make sure the fluid system provides the number of phases and
     // the number of components
-    enum { numPhases = FluidSystem::numPhases };
-    enum { numComponents = FluidSystem::numComponents };
+    static constexpr int numPhases = FluidSystem::numPhases;
+    static constexpr int numComponents = FluidSystem::numComponents;
 
     typedef HairSplittingFluidState<RhsEval, FluidSystem> FluidState;
     FluidState fs;

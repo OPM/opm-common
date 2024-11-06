@@ -61,17 +61,13 @@ namespace Opm {
 template <class Scalar, class FluidSystem>
 class PTFlash
 {
-    enum { numPhases = FluidSystem::numPhases };
-    enum { numComponents = FluidSystem::numComponents };
+    static constexpr int numPhases = FluidSystem::numPhases;
+    static constexpr int numComponents = FluidSystem::numComponents;
     enum { oilPhaseIdx = FluidSystem::oilPhaseIdx};
     enum { gasPhaseIdx = FluidSystem::gasPhaseIdx};
-    enum { numMiscibleComponents = FluidSystem::numMiscibleComponents};
-    enum { numMisciblePhases = FluidSystem::numMisciblePhases}; //oil, gas
-    enum {
-        numEq =
-        numMisciblePhases+
-        numMisciblePhases*numMiscibleComponents
-    };
+    static constexpr int numMiscibleComponents = FluidSystem::numMiscibleComponents;
+    static constexpr int numMisciblePhases = FluidSystem::numMisciblePhases; //oil, gas
+    static constexpr int numEq = numMisciblePhases + numMisciblePhases * numMiscibleComponents;
 
 public:
     /*!
