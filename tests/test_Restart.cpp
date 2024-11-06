@@ -434,7 +434,6 @@ first_sim(const Setup&   setup,
     auto regionSetMatcherFactory = []() { return std::make_unique<RegionSetMatcher>(FIPRegionStatistics {}); };
 
     udq.eval(report_step,
-             setup.schedule,
              setup.schedule.wellMatcher(report_step),
              segmentMatcherFactory,
              regionSetMatcherFactory,
