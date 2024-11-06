@@ -5,6 +5,7 @@
 #include <opm/input/eclipse/Schedule/Action/State.hpp>
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 #include <opm/input/eclipse/Schedule/SummaryState.hpp>
+#include <opm/input/eclipse/Python/Python.hpp>
 
 #include <opm/output/data/Solution.hpp>
 #include <opm/output/data/Wells.hpp>
@@ -16,6 +17,7 @@
 #include <functional>
 #include <map>
 #include <string>
+#include <memory>
 
 namespace Opm {
 
@@ -73,6 +75,7 @@ public:
     Schedule schedule;
     Action::State action_state;
     SummaryState st;
+    static std::shared_ptr<Python> python;
 };
 
 } // namespace Opm

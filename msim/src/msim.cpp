@@ -71,6 +71,8 @@ namespace {
 
 namespace Opm {
 
+std::shared_ptr<Python> msim::python = std::make_shared<Python>();
+
 msim::msim(const EclipseState& state_arg, const Schedule& schedule_arg)
     : state   (state_arg)
     , schedule(schedule_arg)
@@ -86,7 +88,6 @@ void msim::run(EclipseIO& io, bool report_only)
     data::Solution sol;
     UDQState udq_state(this->schedule.getUDQConfig(0).params().undefinedValue());
     WellTestState wtest_state;
-    Python python;
 
     io.writeInitial();
     for (size_t report_step = 1; report_step < schedule.size(); report_step++) {
