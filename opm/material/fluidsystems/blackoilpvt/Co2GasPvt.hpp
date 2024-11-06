@@ -84,14 +84,14 @@ public:
               bool enableVaporization,
               int activityModel,
               Co2StoreConfig::GasMixingType gastype)
-              : brineReferenceDensity_(brineReferenceDensity)
-              , gasReferenceDensity_(gasReferenceDensity)
-              , salinity_(salinity)
-              , enableEzrokhiDensity_(enableEzrokhiDensity)
-              , enableVaporization_(enableVaporization)
-              , activityModel_(activityModel)
-              , gastype_(gastype)
-              , co2Tables(params)
+                : brineReferenceDensity_(brineReferenceDensity)
+                , gasReferenceDensity_(gasReferenceDensity)
+                , salinity_(salinity)
+                , enableEzrokhiDensity_(enableEzrokhiDensity)
+                , enableVaporization_(enableVaporization)
+                , activityModel_(activityModel)
+                , gastype_(gastype)
+                , co2Tables(params)
 {
     assert(enableEzrokhiDensity == false && "Ezrokhi density not supported by GPUs");
 }
