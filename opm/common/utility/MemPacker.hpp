@@ -31,6 +31,9 @@ namespace Opm {
 namespace Serialization {
 namespace detail {
 
+template <typename T>
+constexpr bool is_pod_v = std::is_standard_layout_v<T> && std::is_trivial_v<T>;
+
 //! \brief Abstract struct for packing which is (partially) specialized for specific types.
 template <bool pod, class T>
 struct Packing
@@ -176,7 +179,7 @@ struct MemPacker {
     template<class T>
     std::size_t packSize(const T& data) const
     {
-        return detail::Packing<std::is_pod_v<T>,T>::packSize(data);
+        return detail::Packing<detail::is_pod_v<T>,T>::packSize(data);
     }
 
     //! \brief Calculates the pack size for an array.
@@ -186,7 +189,7 @@ struct MemPacker {
     template<class T>
     std::size_t packSize(const T* data, std::size_t n) const
     {
-        static_assert(std::is_pod_v<T>, "Array packing not supported for non-pod data");
+        static_assert(detail::is_pod_v<T>, "Array packing not supported for non-pod data");
         return detail::Packing<true,T>::packSize(data, n);
     }
 
@@ -200,7 +203,7 @@ struct MemPacker {
               std::vector<char>& buffer,
               std::size_t& position) const
     {
-        detail::Packing<std::is_pod_v<T>,T>::pack(data, buffer, position);
+        detail::Packing<detail::is_pod_v<T>,T>::pack(data, buffer, position);
     }
 
     //! \brief Pack an array.
@@ -215,7 +218,7 @@ struct MemPacker {
               std::vector<char>& buffer,
               std::size_t& position) const
     {
-        static_assert(std::is_pod_v<T>, "Array packing not supported for non-pod data");
+        static_assert(detail::is_pod_v<T>, "Array packing not supported for non-pod data");
         detail::Packing<true,T>::pack(data, n, buffer, position);
     }
 
@@ -229,7 +232,7 @@ struct MemPacker {
                 const std::vector<char>& buffer,
                 std::size_t& position) const
     {
-        detail::Packing<std::is_pod_v<T>,T>::unpack(data, buffer, position);
+        detail::Packing<detail::is_pod_v<T>,T>::unpack(data, buffer, position);
     }
 
     //! \brief Unpack an array.
@@ -244,7 +247,7 @@ struct MemPacker {
                 const std::vector<char>& buffer,
                 std::size_t& position) const
     {
-        static_assert(std::is_pod_v<T>, "Array packing not supported for non-pod data");
+        static_assert(detail::is_pod_v<T>, "Array packing not supported for non-pod data");
         detail::Packing<true,T>::unpack(data, n, buffer, position);
     }
 };
