@@ -828,7 +828,7 @@ namespace Opm::gpuistl {
             brineCo2Pvt.getActivityModel(),
             brineCo2Pvt.getThermalMixingModelSalt(),
             brineCo2Pvt.getThermalMixingModelLiquid(),
-            make_view<double, ContainerType, ViewType>(brineCo2Pvt.getParams())
+            make_view<ViewType>(brineCo2Pvt.getParams())
         );
     }
 }
