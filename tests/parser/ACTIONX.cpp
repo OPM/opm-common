@@ -1024,37 +1024,38 @@ BOOST_AUTO_TEST_CASE(ActionState)
     Action::Result res3(true, {"W3"});
 
     BOOST_CHECK_EQUAL(0U, st.run_count(action1));
-    BOOST_CHECK_THROW( st.run_time(action1), std::out_of_range);
+    BOOST_CHECK_THROW( st.run_time(action1), std::invalid_argument);
 
     st.add_run(action1, 100, res1);
     BOOST_CHECK_EQUAL(1U, st.run_count(action1));
     BOOST_CHECK_EQUAL(100, st.run_time(action1));
-    auto r1 = st.result("NAME");
-    BOOST_CHECK(r1.value() == res1);
+    const auto* r1 = st.result("NAME");
+    BOOST_REQUIRE(r1 != nullptr);
+    BOOST_CHECK(r1->hasWell("W1"));
 
     st.add_run(action1, 1000, res2);
     BOOST_CHECK_EQUAL(2U, st.run_count(action1));
     BOOST_CHECK_EQUAL(1000, st.run_time(action1));
-    auto r2 = st.result("NAME");
-    BOOST_CHECK(r2.value() == res2);
+    const auto* r2 = st.result("NAME");
+    BOOST_REQUIRE(r2 != nullptr);
+    BOOST_CHECK(r2->hasWell("W2"));
 
     BOOST_CHECK_EQUAL(0U, st.run_count(action2));
-    BOOST_CHECK_THROW( st.run_time(action2), std::out_of_range);
+    BOOST_CHECK_THROW(st.run_time(action2), std::invalid_argument);
 
     st.add_run(action2, 100, res3);
     BOOST_CHECK_EQUAL(1U, st.run_count(action2));
     BOOST_CHECK_EQUAL(100, st.run_time(action2));
-    auto r3 = st.result("NAME");
-    BOOST_CHECK(r3.value() == res3);
+    const auto* r3 = st.result("NAME");
+    BOOST_REQUIRE(r3 != nullptr);
+    BOOST_CHECK(r3->hasWell("W3"));
 
     st.add_run(action2, 1000, res1);
     BOOST_CHECK_EQUAL(2U, st.run_count(action2));
     BOOST_CHECK_EQUAL(1000, st.run_time(action2));
 
-
-    auto res = st.result("NAME-HIDDEN");
-    BOOST_CHECK(!res.has_value());
-
+    const auto* res = st.result("NAME-HIDDEN");
+    BOOST_CHECK(res == nullptr);
 }
 
 BOOST_AUTO_TEST_CASE(MANUAL4_QUOTE)
