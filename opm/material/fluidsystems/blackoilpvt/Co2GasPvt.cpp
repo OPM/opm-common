@@ -26,15 +26,16 @@
 
 #include <opm/common/OpmLog/OpmLog.hpp>
 #include <opm/common/ErrorMacros.hpp>
+#include <opm/common/utility/gpuDecorators.hpp>
 
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
 
 namespace Opm {
 
-template<class Scalar, class Params>
-Co2GasPvt<Scalar, Params>::
-Co2GasPvt(const std::vector<Scalar>& salinity,
+template<class Scalar, class Params, class ContainerT>
+Co2GasPvt<Scalar, Params, ContainerT>::
+Co2GasPvt(const ContainerT& salinity,
           int activityModel,
           int thermalMixingModel,
           Scalar T_ref,
@@ -43,9 +44,13 @@ Co2GasPvt(const std::vector<Scalar>& salinity,
 {
     // Throw an error if reference state is not (T, p) = (15.56 C, 1 atm) = (288.71 K, 1.01325e5 Pa)
     if (T_ref != Scalar(288.71) || P_ref != Scalar(1.01325e5)) {
+#if OPM_IS_INSIDE_DEVICE_FUNCTION
+        assert(false && "BrineCo2Pvt class can only be used with default reference state (T, P) = (288.71 K, 1.01325e5 Pa)!");
+#else
         OPM_THROW(std::runtime_error,
             "BrineCo2Pvt class can only be used with default reference state "
             "(T, P) = (288.71 K, 1.01325e5 Pa)!");
+#endif
     }
     setActivityModelSalt(activityModel);
     setThermalMixingModel(thermalMixingModel);
@@ -59,8 +64,8 @@ Co2GasPvt(const std::vector<Scalar>& salinity,
 }
 
 #if HAVE_ECL_INPUT
-template<class Scalar, class Params>
-void Co2GasPvt<Scalar, Params>::
+template<class Scalar, class Params, class ContainerT>
+void Co2GasPvt<Scalar, Params, ContainerT>::
 initFromState(const EclipseState& eclState, const Schedule&)
 {
     setEnableVaporizationWater(eclState.getSimulationConfig().hasVAPOIL() || eclState.getSimulationConfig().hasVAPWAT());
@@ -105,8 +110,8 @@ initFromState(const EclipseState& eclState, const Schedule&)
 }
 #endif
 
-template<class Scalar, class Params>
-void Co2GasPvt<Scalar, Params>::
+template<class Scalar, class Params, class ContainerT>
+OPM_HOST_DEVICE void Co2GasPvt<Scalar, Params, ContainerT>::
 setNumRegions(std::size_t numRegions)
 {
     gasReferenceDensity_.resize(numRegions);
@@ -114,8 +119,8 @@ setNumRegions(std::size_t numRegions)
     salinity_.resize(numRegions);
 }
 
-template<class Scalar, class Params>
-void Co2GasPvt<Scalar, Params>::
+template<class Scalar, class Params, class ContainerT>
+OPM_HOST_DEVICE void Co2GasPvt<Scalar, Params, ContainerT>::
 setReferenceDensities(unsigned regionIdx,
                       Scalar rhoRefBrine,
                       Scalar rhoRefGas,
@@ -125,8 +130,8 @@ setReferenceDensities(unsigned regionIdx,
     brineReferenceDensity_[regionIdx] = rhoRefBrine;;
 }
 
-template<class Scalar, class Params>
-void Co2GasPvt<Scalar, Params>::
+template<class Scalar, class Params, class ContainerT>
+OPM_HOST_DEVICE void Co2GasPvt<Scalar, Params, ContainerT>::
 setActivityModelSalt(int activityModel)
 {
     switch (activityModel) {
@@ -134,12 +139,16 @@ setActivityModelSalt(int activityModel)
     case 2:
     case 3: activityModel_ = activityModel; break;
     default:
+#if OPM_IS_INSIDE_DEVICE_FUNCTION
+        assert(false && "The salt activity model options are 1, 2 or 3");
+#else
         OPM_THROW(std::runtime_error, "The salt activity model options are 1, 2 or 3");
+#endif
     }
 }
 
-template<class Scalar, class Params>
-void Co2GasPvt<Scalar, Params>::
+template<class Scalar, class Params, class ContainerT>
+OPM_HOST_DEVICE void Co2GasPvt<Scalar, Params, ContainerT>::
 setThermalMixingModel(int thermalMixingModel)
 {
     switch (thermalMixingModel) {
@@ -147,12 +156,17 @@ setThermalMixingModel(int thermalMixingModel)
     case 0:  gastype_ = Co2StoreConfig::GasMixingType::NONE; break;
     // 1 = Account for vapporized water in gas phase (Mass fraction)
     case 1:  gastype_ = Co2StoreConfig::GasMixingType::IDEAL; break;
-    default: OPM_THROW(std::runtime_error, "The thermal mixing model options are 0 and 1");
+    default:
+#if OPM_IS_INSIDE_DEVICE_FUNCTION
+        assert(false && "The thermal mixing model options are 0 and 1");
+#else
+        OPM_THROW(std::runtime_error, "The thermal mixing model options are 0 and 1");
+#endif
     }
 }
 
-template<class Scalar, class Params>
-void Co2GasPvt<Scalar, Params>::
+template<class Scalar, class Params, class ContainerT>
+void Co2GasPvt<Scalar, Params, ContainerT>::
 setEzrokhiDenCoeff(const std::vector<EzrokhiTable>& denaqa)
 {
     if (denaqa.empty()) {

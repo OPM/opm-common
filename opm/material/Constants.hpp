@@ -28,67 +28,53 @@
 #define OPM_CONSTANTS_HPP
 
 #include <cmath>
+#if HAVE_QUAD
+#include <opm/material/common/quad.hpp>
+#endif
 
 namespace Opm
 {
 
-/*!
- * \brief A central place for various physical constants occuring in
- *        some equations.
- */
 template<class Scalar>
 class Constants
-{ public:
+{
+public:
     /*!
      * \brief The ideal gas constant [J/(mol K)]
      */
-    static const Scalar R;
+    static constexpr Scalar R = static_cast<Scalar>(8.314472);
 
     /*!
      * \brief The Avogadro constant [1/mol]
      */
-    static const Scalar Na;
+    static constexpr Scalar Na = static_cast<Scalar>(6.02214179e23);
 
     /*!
      * \brief The Boltzmann constant [J/K]
      */
-    static const Scalar kb;
+    static constexpr Scalar kb = R/Na;
 
     /*!
      * \brief Speed of light in vacuum [m/s]
      */
-    static const Scalar c;
+    static constexpr Scalar c = static_cast<Scalar>(299792458.0);
 
     /*!
      * \brief Newtonian constant of gravitation [m^3/(kg s^2)]
      */
-    static const Scalar G;
+    static constexpr Scalar G = static_cast<Scalar>(6.67428e-11);
 
     /*!
      * \brief Planck constant [J s]
      */
-    static const Scalar h;
+    static constexpr Scalar h = static_cast<Scalar>(6.62606896e-34);
 
     /*!
      * \brief Reduced Planck constant [J s]
      */
-    static const Scalar hRed;
+    static constexpr Scalar hRed = h / (2 * M_PI);
 };
 
-template<class Scalar>
-const Scalar Constants<Scalar>::R = 8.314472;
-template <class Scalar>
-const Scalar Constants<Scalar>::Na = 6.02214179e23;
-template <class Scalar>
-const Scalar Constants<Scalar>::kb = R/Na;
-template <class Scalar>
-const Scalar Constants<Scalar>::c = 299792458.0;
-template <class Scalar>
-const Scalar Constants<Scalar>::G = 6.67428e-11;
-template <class Scalar>
-const Scalar Constants<Scalar>::h = 6.62606896e-34;
-template <class Scalar>
-const Scalar Constants<Scalar>::hRed = h / (2 * M_PI);
 } // namespace Opm
 
 #endif

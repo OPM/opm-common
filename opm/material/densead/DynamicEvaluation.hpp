@@ -83,7 +83,7 @@ protected:
 
     //! instruct valgrind to check that the value and all derivatives of the
     //! Evaluation object are well-defined.
-    OPM_HOST_DEVICE void checkDefined_() const
+    OPM_HOST_DEVICE constexpr void checkDefined_() const
     {
 #ifndef NDEBUG
         for (int i = dstart_(); i < dend_(); ++i)
@@ -150,7 +150,7 @@ public:
     }
 
     // set all derivatives to zero
-    OPM_HOST_DEVICE void clearDerivatives()
+    OPM_HOST_DEVICE constexpr void clearDerivatives()
     {
         for (int i = dstart_(); i < dend_(); ++i)
             data_[i] = 0.0;
@@ -523,7 +523,7 @@ public:
 
     // set value of variable
     template <class RhsValueType>
-    OPM_HOST_DEVICE void setValue(const RhsValueType& val)
+    OPM_HOST_DEVICE constexpr void setValue(const RhsValueType& val)
     { data_[valuepos_()] = val; }
 
     // return varIdx'th derivative

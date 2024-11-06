@@ -55,16 +55,51 @@ struct co2TabulatedEnthalpyTraits
     static const Scalar vals[200][500];
 };
 
+template<class Scalar = double, class ContainerT = std::vector<double>>
 class CO2Tables
 {
 public:
-    UniformTabulated2DFunction<double> tabulatedDensity;
-    UniformTabulated2DFunction<double> tabulatedEnthalpy;
+    UniformTabulated2DFunction<Scalar, ContainerT> tabulatedDensity;
+    UniformTabulated2DFunction<Scalar, ContainerT> tabulatedEnthalpy;
     static constexpr double brineSalinity = 1.000000000000000e-01;
 
     CO2Tables();
+
+    CO2Tables(const Opm::UniformTabulated2DFunction<Scalar, ContainerT>& enthalpy,
+              const Opm::UniformTabulated2DFunction<Scalar, ContainerT>& density)
+        : tabulatedEnthalpy(enthalpy), tabulatedDensity(density)
+    {
+    }
+
+    const Opm::UniformTabulated2DFunction<Scalar, ContainerT>& getTabulatedEnthalpy() const {
+        return tabulatedEnthalpy;
+    }
+
+    const Opm::UniformTabulated2DFunction<Scalar, ContainerT>& getTabulatedDensity() const {
+        return tabulatedDensity;
+    }
 };
 
 } // namespace Opm
+
+namespace Opm::gpuistl {
+    template <class ViewType, class Scalar, class ContainerType>
+    CO2Tables<Scalar, ViewType>
+    make_view(const CO2Tables<Scalar, ContainerType>& oldCO2Tables) {
+        Opm::UniformTabulated2DFunction<double, ViewType> newEnthalpy = make_view<ViewType>(oldCO2Tables.getTabulatedEnthalpy());
+        Opm::UniformTabulated2DFunction<double, ViewType> newDensity = make_view<ViewType>(oldCO2Tables.getTabulatedDensity());
+
+        return CO2Tables<Scalar, ViewType>(newEnthalpy, newDensity);
+    }
+
+    template <class Scalar, class OldContainerType, class NewContainerType>
+    CO2Tables<Scalar, NewContainerType>
+    move_to_gpu(const CO2Tables<Scalar, OldContainerType>& oldCO2Tables) {
+        return CO2Tables<Scalar, NewContainerType>(
+            move_to_gpu<Scalar, NewContainerType>(oldCO2Tables.getTabulatedEnthalpy()),
+            move_to_gpu<Scalar, NewContainerType>(oldCO2Tables.getTabulatedDensity())
+        );
+    }
+}
 
 #endif // OPM_CO2TABLES_HPP

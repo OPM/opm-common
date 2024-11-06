@@ -69,58 +69,61 @@ class SimpleHuDuanH2O : public Component<Scalar, SimpleHuDuanH2O<Scalar>>
     static constexpr Scalar R = Constants<Scalar>::R / 18e-3;  // specific gas constant of water
 
 public:
+    // OPM_HOST_DEVICE static Scalar R_()
+    // { return Scalar(R); }
+
     /*!
      * \brief A human readable name for the water.
      */
-    static std::string_view name()
+    OPM_HOST_DEVICE static std::string_view name()
     { return "H2O"; }
 
     /*!
      * \brief Returns true iff the gas phase is assumed to be compressible
      */
-    static bool gasIsCompressible()
+    OPM_HOST_DEVICE static bool gasIsCompressible()
     { return true; }
 
     /*!
      * \brief Returns true iff the liquid phase is assumed to be compressible
      */
-    static bool liquidIsCompressible()
+    OPM_HOST_DEVICE static bool liquidIsCompressible()
     { return false; }
 
     /*!
      * \brief Returns true iff the gas phase is assumed to be ideal
      */
-    static bool gasIsIdeal()
+    OPM_HOST_DEVICE static bool gasIsIdeal()
     { return true; }
 
     /*!
      * \brief The molar mass in \f$\mathrm{[kg/mol]}\f$ of water.
      */
-    static Scalar molarMass()
+    OPM_HOST_DEVICE static Scalar molarMass()
     { return 18e-3; }
 
     /*!
      * \brief Returns the critical temperature \f$\mathrm{[K]}\f$ of water.
      */
-    static Scalar criticalTemperature()
+    OPM_HOST_DEVICE static Scalar criticalTemperature()
     { return 647.096; /* [K] */ }
 
     /*!
      * \brief Returns the critical pressure \f$\mathrm{[Pa]}\f$ of water.
      */
-    static Scalar criticalPressure()
+    OPM_HOST_DEVICE static Scalar criticalPressure()
     { return 22.064e6; /* [N/m^2] */ }
 
     /*!
      * \brief Returns the temperature \f$\mathrm{[K]}\f$ at water's triple point.
      */
-    static Scalar tripleTemperature()
+    OPM_HOST_DEVICE static Scalar tripleTemperature()
     { return 273.16; /* [K] */ }
 
     /*!
      * \brief Returns the pressure \f$\mathrm{[Pa]}\f$ at water's triple point.
      */
-    static Scalar triplePressure()
+    OPM_HOST_DEVICE static Scalar triplePressure()
     { return 611.657; /* [N/m^2] */ }
 
     /*!
@@ -136,7 +139,7 @@ public:
      * http://www.iapws.org/relguide/IF97-Rev.pdf
      */
     template <class Evaluation>
-    static Evaluation vaporPressure(const Evaluation& T)
+    OPM_HOST_DEVICE static Evaluation vaporPressure(const Evaluation& T)
     {
 
         OPM_TIMEFUNCTION_LOCAL();
@@ -172,7 +175,7 @@ public:
      * \param pressure pressure of component in \f$\mathrm{[Pa]}\f$
      */
     template <class Evaluation>
-    static Evaluation gasEnthalpy(const Evaluation& temperature,
+    OPM_HOST_DEVICE static Evaluation gasEnthalpy(const Evaluation& temperature,
                                   const Evaluation& /*pressure*/)
     { return 1.976e3*temperature + 40.65e3/molarMass(); }
 
@@ -181,7 +184,7 @@ public:
      * \copydoc Component::gasHeatCapacity
      */
     template <class Evaluation>
-    static Evaluation gasHeatCapacity(const Evaluation&,
+    OPM_HOST_DEVICE static Evaluation gasHeatCapacity(const Evaluation&,
                                       const Evaluation&)
     { return 1.976e3; }
 
@@ -195,7 +198,7 @@ public:
      * \param pressure pressure of component in \f$\mathrm{[Pa]}\f$
      */
     template <class Evaluation>
-    static Evaluation liquidEnthalpy(const Evaluation& temperature,
+    OPM_HOST_DEVICE static Evaluation liquidEnthalpy(const Evaluation& temperature,
                                      const Evaluation& /*pressure*/)
     { return (temperature - 288.71) * (4.18060737e+03 + 8.64644981e-02 * (temperature - 288.71)); }
 
@@ -203,7 +206,7 @@ public:
      * \copydoc Component::liquidHeatCapacity
      */
     template <class Evaluation>
-    static Evaluation liquidHeatCapacity(const Evaluation&,
+    OPM_HOST_DEVICE static Evaluation liquidHeatCapacity(const Evaluation&,
                                          const Evaluation&)
     { return 4.184e3; }
 
@@ -221,7 +224,7 @@ public:
      * \param pressure pressure of component in \f$\mathrm{[Pa]}\f$
      */
     template <class Evaluation>
-    static Evaluation gasInternalEnergy(const Evaluation& temperature,
+    OPM_HOST_DEVICE static Evaluation gasInternalEnergy(const Evaluation& temperature,
                                         const Evaluation& pressure)
     {
         return
@@ -237,7 +240,7 @@ public:
      * \param pressure pressure of component in \f$\mathrm{[Pa]}\f$
      */
     template <class Evaluation>
-    static Evaluation liquidInternalEnergy(const Evaluation& temperature,
+    OPM_HOST_DEVICE static Evaluation liquidInternalEnergy(const Evaluation& temperature,
                                            const Evaluation& pressure,
                                            bool extrapolate)
     {
@@ -253,7 +256,7 @@ public:
      * \param pressure pressure of component in \f$\mathrm{[Pa]}\f$
      */
     template <class Evaluation>
-    static Evaluation liquidThermalConductivity(const Evaluation& /*temperature*/,
+    OPM_HOST_DEVICE static Evaluation liquidThermalConductivity(const Evaluation& /*temperature*/,
                                                 const Evaluation& /*pressure*/)
     {
         return 0.578078; // conductivity of liquid water [W / (m K ) ] IAPWS evaluated at p=.1 MPa, T=8°C
@@ -266,7 +269,7 @@ public:
      * \param pressure pressure of component in \f$\mathrm{[Pa]}\f$
      */
     template <class Evaluation>
-    static Evaluation gasThermalConductivity(const Evaluation& /*temperature*/,
+    OPM_HOST_DEVICE static Evaluation gasThermalConductivity(const Evaluation& /*temperature*/,
                                              const Evaluation& /*pressure*/)
     {
         return 0.028224; // conductivity of steam [W / (m K ) ] IAPWS evaluated at p=.1 MPa, T=8°C
@@ -279,7 +282,7 @@ public:
      * \param pressure pressure of component in \f$\mathrm{[Pa]}\f$
      */
     template <class Evaluation>
-    static Evaluation gasDensity(const Evaluation& temperature, const Evaluation& pressure)
+    OPM_HOST_DEVICE static Evaluation gasDensity(const Evaluation& temperature, const Evaluation& pressure)
     {
         // Assume an ideal gas
         return molarMass()*IdealGas::molarDensity(temperature, pressure);
@@ -292,7 +295,7 @@ public:
      * \param density density of component in \f$\mathrm{[kg/m^3]}\f$
      */
     template <class Evaluation>
-    static Evaluation gasPressure(const Evaluation& temperature, const Evaluation& density)
+    OPM_HOST_DEVICE static Evaluation gasPressure(const Evaluation& temperature, const Evaluation& density)
     {
         // Assume an ideal gas
         return IdealGas::pressure(temperature, density/molarMass());
@@ -307,7 +310,7 @@ public:
      *                    values. If false an exception might be thrown.
      */
     template <class Evaluation>
-    static Evaluation liquidDensity(const Evaluation& temperature, const Evaluation& pressure,
+    OPM_HOST_DEVICE static Evaluation liquidDensity(const Evaluation& temperature, const Evaluation& pressure,
                                     bool extrapolate)
     {
         return liquidDensity_(temperature, pressure, extrapolate);
@@ -320,9 +323,13 @@ public:
      * \param density density of component in \f$\mathrm{[kg/m^3]}\f$
      */
     template <class Evaluation>
-    static Evaluation liquidPressure(const Evaluation& /*temperature*/, const Evaluation& /*density*/)
+    OPM_HOST_DEVICE static Evaluation liquidPressure(const Evaluation& /*temperature*/, const Evaluation& /*density*/)
     {
+#if OPM_IS_INSIDE_DEVICE_FUNCTION
+        assert(false && "The liquid pressure is undefined for incompressible fluids");
+#else
         throw std::logic_error("The liquid pressure is undefined for incompressible fluids");
+#endif
     }
 
     /*!
@@ -333,7 +340,7 @@ public:
      * \param regularize defines, if the functions is regularized or not, set to true by default
      */
     template <class Evaluation>
-    static Evaluation gasViscosity(const Evaluation& /*temperature*/,
+    OPM_HOST_DEVICE static Evaluation gasViscosity(const Evaluation& /*temperature*/,
                                    const Evaluation& /*pressure*/)
     {
         return 1e-05;
@@ -348,10 +355,13 @@ public:
      *                    values. If false an exception might be thrown.
      */
     template <class Evaluation>
-    static Evaluation liquidViscosity(const Evaluation& temperature, const Evaluation& pressure,
+    OPM_HOST_DEVICE static Evaluation liquidViscosity(const Evaluation& temperature, const Evaluation& pressure,
                                       bool extrapolate)
     {
         if (temperature > 570) {
+// This preprocessing statement loses this warning message
+// But printing it possibly thousands of times inside a gpu function also seems problematic
+#if !OPM_IS_INSIDE_DEVICE_FUNCTION
             const std::string msg =
                 "Viscosity of water based on Hu et al is too "
                 "different from IAPWS for T above 570K and (T = " +
@@ -362,6 +372,13 @@ public:
             }
             else
                 throw NumericalProblem(msg);
+#else
+            // no warning on the GPU when using extrapolate is somewhat bad,
+            // but how does one tame warning output when encountered by thousands of threads?
+            if (!extrapolate) {
+                assert(false && "Viscosity of water based on Hu et al is too different from IAPWS for T above 570K");
+            }
+#endif
         }
 
         const Evaluation rho = liquidDensity(temperature, pressure, extrapolate);
@@ -379,12 +396,13 @@ private:
      *                    values. If false an exception might be thrown.
      */
     template <class Evaluation>
-    static Evaluation liquidDensity_(const Evaluation& T, const Evaluation& pressure, bool extrapolate) {
+    OPM_HOST_DEVICE static Evaluation liquidDensity_(const Evaluation& T, const Evaluation& pressure, bool extrapolate) {
         // Hu, Duan, Zhu and Chou: PVTx properties of the CO2-H2O and CO2-H2O-NaCl
         // systems below 647 K: Assessment of experimental data and
         // thermodynamics models, Chemical Geology, 2007.
         OPM_TIMEBLOCK_LOCAL(liquidDensity_);
         if (T > 647 || pressure > 100e6) {
+#if !OPM_IS_INSIDE_DEVICE_FUNCTION
             const std::string msg =
                 "Density of water is only implemented for temperatures "
                 "below 647K and pressures below 100MPa. (T = " +
@@ -396,6 +414,13 @@ private:
             }
             else
                 throw NumericalProblem(msg);
+#else
+            // no warning on the GPU when using extrapolate is somewhat bad,
+            // but how does one tame warning output when encountered by thousands of threads?
+            if (!extrapolate) {
+                assert(false && "Density of water is only implemented for temperatures below 647K and pressures below 100MPa");
+            }
+#endif
         }
 
         Evaluation p = pressure / 1e6; // to MPa
