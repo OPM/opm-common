@@ -73,7 +73,7 @@ OPM_HOST_DEVICE inline bool IsRunning()
  *         occupied by the object.
  */
 template <class T>
-OPM_HOST_DEVICE constexpr inline bool CheckDefined([[maybe_unused]] const T& value)
+OPM_HOST_DEVICE inline bool CheckDefined([[maybe_unused]] const T& value)
 {
 #if !defined NDEBUG && HAVE_VALGRIND && !OPM_IS_INSIDE_DEVICE_FUNCTION
     auto tmp = VALGRIND_CHECK_MEM_IS_DEFINED(&value, sizeof(T));
