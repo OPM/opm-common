@@ -121,10 +121,12 @@ struct is_scalar<quad>
     : public integral_constant<bool, true>
 {};
 
+#if __cplusplus < 202002L
 template <>
 struct is_pod<quad>
     : public integral_constant<bool, true>
 {};
+#endif
 
 template <>
 struct is_signed<quad>
