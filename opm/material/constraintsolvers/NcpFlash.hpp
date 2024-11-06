@@ -86,8 +86,8 @@ namespace Opm {
 template <class Scalar, class FluidSystem>
 class NcpFlash
 {
-    enum { numPhases = FluidSystem::numPhases };
-    enum { numComponents = FluidSystem::numComponents };
+    static constexpr int numPhases = FluidSystem::numPhases;
+    static constexpr int numComponents = FluidSystem::numComponents;
 
     enum {
         p0PvIdx = 0,
@@ -559,9 +559,9 @@ protected:
         }
         // mole fractions
         else {
-            assert(pvIdx < numPhases + numPhases*numComponents);
-            unsigned phaseIdx = (pvIdx - numPhases)/numComponents;
-            unsigned compIdx = (pvIdx - numPhases)%numComponents;
+            assert(pvIdx < numPhases + numPhases * numComponents);
+            unsigned phaseIdx = (pvIdx - numPhases) / numComponents;
+            unsigned compIdx = (pvIdx - numPhases) % numComponents;
             fluidState.setMoleFraction(phaseIdx, compIdx, value);
         }
     }

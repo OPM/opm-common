@@ -80,6 +80,9 @@ struct is_unique_ptr : std::false_type {};
 template <typename T>
 struct is_unique_ptr<std::unique_ptr<T>> : std::true_type {};
 
+template <typename T>
+constexpr bool is_pod_v = std::is_standard_layout_v<T> && std::is_trivial_v<T>;
+
 } // namespace detail
 
 /*! \brief Class for (de-)serializing.
@@ -213,7 +216,7 @@ protected:
     template <typename Vector>
     void vector(const Vector& data)
     {
-        if constexpr (std::is_pod_v<typename Vector::value_type>) {
+        if constexpr (detail::is_pod_v<typename Vector::value_type>) {
           if (m_op == Operation::PACKSIZE) {
               (*this)(data.size());
               if (data.size() > 0) {
@@ -278,7 +281,7 @@ protected:
     {
         using T = typename Array::value_type;
 
-        if constexpr (std::is_pod_v<T>) {
+        if constexpr (detail::is_pod_v<T>) {
             if (m_op == Operation::PACKSIZE)
                 m_packSize += m_packer.packSize(data.data(), data.size());
             else if (m_op == Operation::PACK)

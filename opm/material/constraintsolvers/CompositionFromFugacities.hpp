@@ -48,7 +48,7 @@ namespace Opm {
 template <class Scalar, class FluidSystem, class Evaluation = Scalar>
 class CompositionFromFugacities
 {
-    enum { numComponents = FluidSystem::numComponents };
+    static constexpr int numComponents = FluidSystem::numComponents;
 
 public:
     typedef Dune::FieldVector<Evaluation, numComponents> ComponentVector;
