@@ -808,7 +808,7 @@ namespace Opm::gpuistl {
         );
     }
 
-    template <class Scalar, class InputParams, class OutputParams, class ContainerType, class ViewType>
+    template <class ViewType, class OutputParams, class InputParams, class ContainerType, class Scalar>
     BrineCo2Pvt<Scalar, OutputParams, ViewType>
     make_view(const BrineCo2Pvt<Scalar, InputParams, ContainerType>& brineCo2Pvt) {
 
