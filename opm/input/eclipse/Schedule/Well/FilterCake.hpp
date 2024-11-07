@@ -33,6 +33,7 @@ namespace Opm {
         enum class FilterCakeGeometry {
             LINEAR,
             RADIAL,
+            LINRAD,
             NONE,
         };
 

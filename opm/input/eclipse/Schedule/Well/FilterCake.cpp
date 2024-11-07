@@ -33,6 +33,8 @@ namespace Opm {
             return FilterCakeGeometry::LINEAR;
         else if (str == "RADIAL")
             return FilterCakeGeometry::RADIAL;
+        else if (str == "LINRAD")
+            return FilterCakeGeometry::LINRAD;
         else
             throw OpmInputError(fmt::format("Unknown geometry type {} is specified in WINJDAM keyword", str), location);
     }
@@ -43,6 +45,8 @@ namespace Opm {
                 return "LINEAR";
             case FilterCakeGeometry::RADIAL:
                 return "RADIAL";
+            case FilterCakeGeometry::LINRAD:
+                return "LINRAD";
             case FilterCakeGeometry::NONE:
                 return "NONE";
             default:
