@@ -1466,8 +1466,8 @@ namespace {
 
             // Loop over actions to assign action name for relevant wells
             for (const auto& action : actions) {
-                const auto& result = action_state.result(action.name());
-                if (result.has_value() && result->has_well(well.name())) {
+                const auto* result = action_state.result(action.name());
+                if ((result != nullptr) && result->hasWell(well.name())) {
                     zWell[Ix::ActionX] = action.name();
                 }
             }
