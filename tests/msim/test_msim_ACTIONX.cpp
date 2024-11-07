@@ -63,7 +63,7 @@ struct test_data {
     explicit test_data(const Deck& deck_arg) :
         deck(deck_arg),
         state( this->deck ),
-        python( std::make_shared<Python>() ),
+        python( msim::python ),
         schedule( this->deck, this->state, this->python),
         summary_config( this->deck, this->schedule, this->state.fieldProps(), this->state.aquifer() )
     {
@@ -483,11 +483,10 @@ BOOST_AUTO_TEST_CASE(COMPDAT) {
 
 BOOST_AUTO_TEST_CASE(MSIM_EXIT_TEST_PYACTION) {
     Opm::Parser parser;
-    auto python = std::make_shared<Opm::Python>();
 
     Opm::Deck deck = parser.parseFile("msim/MSIM_PYACTION_EXIT.DATA");
     Opm::EclipseState state(deck);
-    Opm::Schedule schedule(deck, state, python);
+    Opm::Schedule schedule(deck, state, msim::python);
     Opm::SummaryConfig summary_config(deck, schedule, state.fieldProps(), state.aquifer());
 
     {
