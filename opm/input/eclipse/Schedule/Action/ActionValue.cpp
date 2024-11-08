@@ -23,153 +23,147 @@
 
 #include <stdexcept>
 #include <string>
+#include <string_view>
+#include <type_traits>
 #include <vector>
+
+#include <fmt/format.h>
 
 namespace {
 
-#if 0
-inline std::string tokenString(TokenType op) {
-    switch (op) {
-
-    case TokenType::op_eq:
-        return "=";
-
-    case TokenType::op_ge:
-        return ">=";
-
-    case TokenType::op_le:
-        return "<=";
-
-    case TokenType::op_ne:
-        return "!=";
-
-    case TokenType::op_gt:
-        return ">";
-
-    case TokenType::op_lt:
-        return "<";
-
-    case TokenType::op_or:
-        return "OR";
-
-    case TokenType::op_and:
-        return "AND";
-
-    case TokenType::open_paren:
-        return "(";
-
-    case TokenType::close_paren:
-        return ")";
-
-    default:
-        return "????";
-    }
-}
-#endif
-
-bool eval_cmp_scalar(const double lhs, const Opm::Action::TokenType op, const double rhs)
+std::string tokenString(const Opm::Action::TokenType op)
 {
     switch (op) {
-    case Opm::Action::TokenType::op_eq:
-        return lhs == rhs;
+    case Opm::Action::TokenType::op_eq:       return "=";
+    case Opm::Action::TokenType::op_ge:       return ">=";
+    case Opm::Action::TokenType::op_le:       return "<=";
+    case Opm::Action::TokenType::op_ne:       return "!=";
+    case Opm::Action::TokenType::op_gt:       return ">";
+    case Opm::Action::TokenType::op_lt:       return "<";
+    case Opm::Action::TokenType::op_or:       return "OR";
+    case Opm::Action::TokenType::op_and:      return "AND";
+    case Opm::Action::TokenType::open_paren:  return "(";
+    case Opm::Action::TokenType::close_paren: return ")";
 
-    case Opm::Action::TokenType::op_ge:
-        return lhs >= rhs;
+    default:
+        return fmt::format("Unknown Operator '{}'",
+                           static_cast<std::underlying_type_t<Opm::Action::TokenType>>(op));
+    }
+}
 
-    case Opm::Action::TokenType::op_le:
-        return lhs <= rhs;
-
-    case Opm::Action::TokenType::op_ne:
-        return lhs != rhs;
-
-    case Opm::Action::TokenType::op_gt:
-        return lhs > rhs;
-
-    case Opm::Action::TokenType::op_lt:
-        return lhs < rhs;
+bool scalarComparisonHolds(const double                 lhs,
+                           const Opm::Action::TokenType op,
+                           const double                 rhs)
+{
+    // Alternatives listed in order of increasing enumerator values in
+    // TokenType.
+    switch (op) {
+    case Opm::Action::TokenType::op_gt: return lhs >  rhs;
+    case Opm::Action::TokenType::op_ge: return lhs >= rhs;
+    case Opm::Action::TokenType::op_lt: return lhs <  rhs;
+    case Opm::Action::TokenType::op_le: return lhs <= rhs;
+    case Opm::Action::TokenType::op_eq: return lhs == rhs;
+    case Opm::Action::TokenType::op_ne: return lhs != rhs;
 
     default:
         throw std::invalid_argument {
-            "Incorrect operator type - expected comparison"
+            fmt::format("Unexpected operator '{}' -- expected comparison",
+                        tokenString(op))
         };
     }
+}
+
+bool isComparisonOperator(const Opm::Action::TokenType op)
+{
+    // Alternatives listed in order of increasing enumerator values in
+    // TokenType.
+    return (op == Opm::Action::TokenType::op_gt)
+        || (op == Opm::Action::TokenType::op_ge)
+        || (op == Opm::Action::TokenType::op_lt)
+        || (op == Opm::Action::TokenType::op_le)
+        || (op == Opm::Action::TokenType::op_eq)
+        || (op == Opm::Action::TokenType::op_ne)
+        ;
 }
 
 } // Anonymous namespace
 
-Opm::Action::Value::Value(double value)
-    : scalar_value(value)
-    , is_scalar(true)
+Opm::Action::Value::Value(const double value)
+    : scalar_value_ { value }
+    , is_scalar_    { true }
 {}
 
-Opm::Action::Value::Value(const std::string& wname, double value)
-    : scalar_value(0.0)
+Opm::Action::Value::Value(std::string_view wname,
+                          const double     value)
+    : scalar_value_ { 0.0 }
 {
     this->add_well(wname, value);
 }
 
-double Opm::Action::Value::scalar() const
+Opm::Action::Result
+Opm::Action::Value::eval_cmp(const TokenType op, const Value& rhs) const
 {
-    if (!this->is_scalar) {
+    if (! isComparisonOperator(op)) {
         throw std::invalid_argument {
-            "This value node represents a well list and "
-            "cannot be evaluated in scalar context"
+            fmt::format("Invalid comparison operator '{}'", tokenString(op))
         };
     }
 
-    return this->scalar_value;
+    if (! rhs.is_scalar_) {
+        throw std::invalid_argument {
+            fmt::format("The right hand side of {} must be a scalar value",
+                        tokenString(op))
+        };
+    }
+
+    if (this->is_scalar_) {
+        return Result {
+            scalarComparisonHolds(this->scalar(), op, rhs.scalar())
+        };
+    }
+
+    return this->evalWellComparisons(op, rhs.scalar());
 }
 
-void Opm::Action::Value::add_well(const std::string& well, const double value)
+void Opm::Action::Value::add_well(std::string_view well, const double value)
 {
-    if (this->is_scalar) {
+    if (this->is_scalar_) {
         throw std::invalid_argument {
             "This value node has been created as a "
             "scalar node - cannot add well variables"
         };
     }
 
-    this->well_values.emplace_back(well, value);
+    this->well_values_.emplace_back(well, value);
 }
 
-Opm::Action::Result
-Opm::Action::Value::eval_cmp_wells(const TokenType op, const double rhs) const
+double Opm::Action::Value::scalar() const
 {
-    std::vector<std::string> wells;
-    bool result = false;
+    if (! this->is_scalar_) {
+        throw std::invalid_argument {
+            "This value node represents a well list and "
+            "cannot be evaluated in scalar context"
+        };
+    }
 
-    for (const auto& [well, value] : this->well_values) {
-        if (eval_cmp_scalar(value, op, rhs)) {
-            wells.push_back(well);
-            result = true;
+    return this->scalar_value_;
+}
+
+// ===========================================================================
+// Private member functions
+// ===========================================================================
+
+Opm::Action::Result
+Opm::Action::Value::evalWellComparisons(const TokenType op,
+                                        const double    rhs) const
+{
+    auto matching_wells = std::vector<std::string> {};
+
+    for (const auto& [well, value] : this->well_values_) {
+        if (scalarComparisonHolds(value, op, rhs)) {
+            matching_wells.push_back(well);
         }
     }
 
-    return Result(result, wells);
-}
-
-Opm::Action::Result
-Opm::Action::Value::eval_cmp(const TokenType op, const Value& rhs) const
-{
-    if ((op == TokenType::number) ||
-        (op == TokenType::ecl_expr) ||
-        (op == TokenType::open_paren) ||
-        (op == TokenType::close_paren) ||
-        (op == TokenType::op_and) ||
-        (op == TokenType::op_or) ||
-        (op == TokenType::end) ||
-        (op == TokenType::error))
-    {
-        throw std::invalid_argument("Invalid operator");
-    }
-
-    if (!rhs.is_scalar) {
-        throw std::invalid_argument("The right hand side must be a scalar value");
-    }
-
-    if (this->is_scalar) {
-        return Result(eval_cmp_scalar(this->scalar(), op, rhs.scalar()));
-    }
-
-    return this->eval_cmp_wells(op, rhs.scalar());
+    return Result {!matching_wells.empty(), matching_wells};
 }
