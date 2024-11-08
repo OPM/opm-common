@@ -32,6 +32,7 @@
 #include <opm/input/eclipse/Schedule/SummaryState.hpp>
 #include <opm/input/eclipse/Schedule/VFPProdTable.hpp>
 #include <opm/input/eclipse/Schedule/Well/Well.hpp>
+#include <opm/input/eclipse/Units/Dimension.hpp>
 
 #include "../eval_uda.hpp"
 
@@ -95,8 +96,9 @@ namespace Opm {
 
     void Well::WellProductionProperties::init_vfp(const std::optional<VFPProdTable::ALQ_TYPE>& alq_type, const int vfp_table_nr, const UnitSystem& unit_system_arg, const DeckRecord& record) {
         this->VFPTableNumber = vfp_table_nr;
-        if (alq_type) {
-            const auto alq_dim = VFPProdTable::ALQDimension(*alq_type, unit_system_arg);
+        // May have ALQ values used in UDQ calculations event without any table - use identity dimension in this case
+        if (alq_type || vfp_table_nr==0) {
+            Dimension alq_dim = alq_type ? VFPProdTable::ALQDimension(*alq_type, unit_system_arg) : Dimension(1.0);
             const auto& alq_input = record.getItem("ALQ").get<UDAValue>(0);
             if (alq_input.is<double>())
                 this->ALQValue = UDAValue(alq_input.get<double>(), alq_dim);
