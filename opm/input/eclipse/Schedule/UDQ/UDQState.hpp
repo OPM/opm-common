@@ -62,7 +62,7 @@ public:
 
     void add_define(std::size_t report_step, const std::string& udq_key, const UDQSet& result);
     void add_assign(const std::string& udq_key, const UDQSet& result);
-    bool define(const std::string& udq_key, const std::pair<UDQUpdate, std::size_t>& update_status) const;
+    bool define(const std::pair<UDQUpdate, std::size_t>& update_status) const;
     double undefined_value() const;
 
     bool operator==(const UDQState& other) const;
