@@ -695,12 +695,13 @@ namespace Opm {
 
             const auto& def = def_pos->second;
             if (((select_var_type & var_type_bit(def.var_type())) == 0) || // Unwanted Var Type
-                ! udq_state.define(keyword, def.status())) // UDQ def not applicable now
+                ! udq_state.define(def.status())) // UDQ def not applicable now
             {
                 continue;
             }
 
             context.update_define(report_step, keyword, def.eval(context));
+            def.clear_next();
         }
     }
 

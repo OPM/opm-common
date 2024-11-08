@@ -87,6 +87,7 @@ public:
     void update_status(UDQUpdate update_status, std::size_t report_step);
     std::pair<UDQUpdate, std::size_t> status() const;
     const std::vector<Opm::UDQToken> tokens() const;
+    void clear_next() const { if (this->m_update_status == UDQUpdate::NEXT) this->m_update_status = UDQUpdate::OFF; }
 
     bool operator==(const UDQDefine& data) const;
 
@@ -110,7 +111,7 @@ private:
     UDQVarType m_var_type{UDQVarType::NONE};
     KeywordLocation m_location{};
     std::size_t m_report_step{};
-    UDQUpdate m_update_status{UDQUpdate::NEXT};
+    mutable UDQUpdate m_update_status{UDQUpdate::NEXT};
     mutable std::optional<std::string> string_data;
 
     UDQSet scatter_scalar_value(UDQSet&& res, const UDQContext& context) const;

@@ -463,20 +463,14 @@ UDQState UDQState::serializationTestObject()
     return st;
 }
 
-bool UDQState::define(const std::string&                       udq_key,
-                      const std::pair<UDQUpdate, std::size_t>& update_status) const
+bool UDQState::define(const std::pair<UDQUpdate, std::size_t>& update_status) const
 {
-    if (update_status.first == UDQUpdate::ON) {
+    if (update_status.first == UDQUpdate::ON || update_status.first == UDQUpdate::NEXT) {
         return true;
     }
 
-    if (update_status.first == UDQUpdate::OFF) {
-        return false;
-    }
-
-    auto define_iter = this->defines.find(udq_key);
-    return (define_iter == this->defines.end())
-        || (define_iter->second < update_status.second);
+    assert (update_status.first == UDQUpdate::OFF);
+    return false;
 }
 
 } // namespace Opm
