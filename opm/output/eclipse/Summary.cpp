@@ -748,6 +748,8 @@ inline quantity glir( const fn_args& args ) {
 
         const auto& production = well->productionControls(args.st);
         if (! has_vfp_table(sched_state, production.vfp_table_number)) {
+            const double eff_fac = efac(args.eff_factors, well->name());
+            alq_rate += args.unit_system.to_si( measure::gas_surface_rate, eff_fac * xwPos->second.rates.get(rt::alq, production.alq_value ));
             continue;
         }
 
