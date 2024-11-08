@@ -2769,34 +2769,34 @@ TSTEP
     {
         const auto& udq = schedule.getUDQConfig(0);
         const auto& def = udq.define("FU_TIME");
-        BOOST_CHECK( udq_state.define(def.keyword(), def.status()));
+        BOOST_CHECK( udq_state.define(def.status()));
         udq_state.add_define(0, def.keyword(), result);
     }
     {
         const auto& udq = schedule.getUDQConfig(1);
         const auto& def = udq.define("FU_TIME");
-        BOOST_CHECK( !udq_state.define(def.keyword(), def.status()));
+        BOOST_CHECK( !udq_state.define(def.status()));
     }
     {
         const auto& udq = schedule.getUDQConfig(2);
         const auto& def = udq.define("FU_TIME");
-        BOOST_CHECK( !udq_state.define(def.keyword(), def.status()));
+        BOOST_CHECK( !udq_state.define(def.status()));
     }
     {
         const auto& udq = schedule.getUDQConfig(3);
         const auto& def = udq.define("FU_TIME");
-        BOOST_CHECK( udq_state.define(def.keyword(), def.status()));
+        BOOST_CHECK( udq_state.define(def.status()));
         udq_state.add_define(3, def.keyword(), result);
     }
     {
         const auto& udq = schedule.getUDQConfig(4);
         const auto& def = udq.define("FU_TIME");
-        BOOST_CHECK( !udq_state.define(def.keyword(), def.status()));
+        BOOST_CHECK( udq_state.define(def.status()));
     }
     {
         const auto& udq = schedule.getUDQConfig(5);
         const auto& def = udq.define("FU_TIME");
-        BOOST_CHECK( !udq_state.define(def.keyword(), def.status()));
+        BOOST_CHECK( !udq_state.define(def.status()));
     }
 }
 
