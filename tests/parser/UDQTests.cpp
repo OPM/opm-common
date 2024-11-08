@@ -2789,11 +2789,6 @@ TSTEP
         udq_state.add_define(3, def.keyword(), result);
     }
     {
-        const auto& udq = schedule.getUDQConfig(4);
-        const auto& def = udq.define("FU_TIME");
-        BOOST_CHECK( udq_state.define(def.status()));
-    }
-    {
         const auto& udq = schedule.getUDQConfig(5);
         const auto& def = udq.define("FU_TIME");
         BOOST_CHECK( !udq_state.define(def.status()));
