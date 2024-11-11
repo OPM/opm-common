@@ -28,7 +28,7 @@ list(APPEND opm-common_DEPS
       # Still it produces compile errors complaining that it
       # cannot format UDQVarType. Hence we use the same version
       # as the embedded one.
-      "fmt 7.0.3"
+      "fmt 8.0"
       "QuadMath"
 )
 find_package_deps(opm-common)
