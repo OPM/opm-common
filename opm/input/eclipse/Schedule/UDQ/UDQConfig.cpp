@@ -177,7 +177,9 @@ namespace Opm {
                 this->add_assign(udq, rst_state.header.report_step);
             }
 
-            this->add_unit(udq.name, udq.unit);
+            if (!udq.unit.empty()) {
+                this->add_unit(udq.name, udq.unit);
+            }
         }
     }
 
