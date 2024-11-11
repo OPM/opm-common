@@ -191,12 +191,19 @@ Opm::Action::ASTNode::evalComparison(const Context& context) const
 
     // Special casing of MONTH comparisons where in addition to symbolic
     // month names we can compare with numeric month indices.  When
-    // conducting such comparisons, the numeric value should be rounded
-    // before comparison.  This means that for example
+    // conducting such comparisons, the numeric value month value should be
+    // compared to the *nearest integer* value of the right-hand side--in
+    // other words the numeric month value should be rounded to the nearest
+    // integer before comparison.  This means that for example
     //
     //   MNTH = 4.3
     //
-    // should evaluate to true for the month of April (month index = 4).
+    // should evaluate to true for the month of April (month index = 4) and
+    // that
+    //
+    //   MNTH = 10.8
+    //
+    // should evaluate to true for the month of November (month index = 11).
     if (this->children.front().func_type == FuncType::time_month) {
         const auto& rhs = this->children[1];
 
