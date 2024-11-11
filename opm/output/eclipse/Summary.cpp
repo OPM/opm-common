@@ -95,7 +95,7 @@ struct fmt::formatter<Opm::EclIO::SummaryNode::Category> : fmt::formatter<string
 {
     // parse is inherited from formatter<string_view>.
     template <typename FormatContext>
-    auto format(Opm::EclIO::SummaryNode::Category c, FormatContext& ctx)
+    auto format(Opm::EclIO::SummaryNode::Category c, FormatContext& ctx) const
     {
         using Category = Opm::EclIO::SummaryNode::Category;
 
@@ -124,7 +124,7 @@ struct fmt::formatter<Opm::EclIO::SummaryNode::Type> : fmt::formatter<string_vie
 {
     // parse is inherited from formatter<string_view>.
     template <typename FormatContext>
-    auto format(Opm::EclIO::SummaryNode::Type t, FormatContext& ctx)
+    auto format(Opm::EclIO::SummaryNode::Type t, FormatContext& ctx) const
     {
         using Type = Opm::EclIO::SummaryNode::Type;
 
