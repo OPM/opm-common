@@ -22,6 +22,7 @@
 
 #include <opm/input/eclipse/EclipseState/Grid/FaceDir.hpp>
 #include <fmt/format.h>
+#include <fmt/ranges.h>
 
 namespace Opm {
 

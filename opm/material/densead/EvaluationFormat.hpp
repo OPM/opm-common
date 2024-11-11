@@ -45,7 +45,7 @@ struct fmt::formatter<Opm::DenseAd::Evaluation<ValueT,numDerivs,staticSize>>
 
     template<class FormatContext>
     auto format(const Opm::DenseAd::Evaluation<ValueT,numDerivs,staticSize>& e,
-                FormatContext& ctx)
+                FormatContext& ctx) const
     {
         std::vector<ValueT> tmp(e.size());
         for (int i = 0; i < e.size(); ++i)
