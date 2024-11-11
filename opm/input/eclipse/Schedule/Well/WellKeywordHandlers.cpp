@@ -48,6 +48,7 @@
 #include "../HandlerContext.hpp"
 
 #include <fmt/format.h>
+#include <fmt/ranges.h>
 
 #include <algorithm>
 #include <memory>
