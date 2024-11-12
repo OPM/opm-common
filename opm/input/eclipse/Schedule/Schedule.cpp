@@ -683,7 +683,7 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                                 logger(fmt::format("The keyword {} is not supported in the ACTIONX block, but you have set --action-parsing-strictness = low, so flow will try to apply the keyword still.", action_keyword.name()));
                             }
                             action.addKeyword(action_keyword);
-                            this->prefetchPossibleFutureConnections(grid, action_keyword);
+                            this->prefetchPossibleFutureConnections(grid, action_keyword, parseContext, errors);
                             this->store_wgnames(action_keyword);
                         }
                         else {
@@ -765,7 +765,8 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
     }
 
 
-    void Schedule::prefetchPossibleFutureConnections(const ScheduleGrid& grid, const DeckKeyword& keyword){
+    void Schedule::prefetchPossibleFutureConnections(const ScheduleGrid& grid, const DeckKeyword& keyword,
+                                                     const ParseContext& parseContext, ErrorGuard& errors){
         if(keyword.is<ParserKeywords::COMPDAT>()){
             for (auto record : keyword){
                 const auto& itemI = record.getItem("I");
@@ -773,9 +774,11 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                 bool defaulted_I = itemI.defaultApplied(0) || itemI.get<int>(0) == 0;
                 bool defaulted_J = itemJ.defaultApplied(0) || itemJ.get<int>(0) == 0;
 
-                if (defaulted_I || defaulted_J)
-                    throw std::logic_error(fmt::format("Defaulted grid coordinates is not allowed for COMPDAT as part of ACTIONX"));
-
+                if (defaulted_I || defaulted_J) {
+                    const std::string msg = std::string("Problem with COMPDAT in ACTIONX\nIn {{file}} line {{line}}\n") +
+                        std::string("Defaulted grid coordinates is not allowed for COMPDAT as part of ACTIONX");
+                    parseContext.handleError(ParseContext::SCHEDULE_COMPDAT_INVALID, msg, keyword.location(), errors);
+                }
                 const int I = itemI.get<int>(0) - 1;
                 const int J = itemJ.get<int>(0) - 1;
                 int K1 = record.getItem("K1").get<int>(0) - 1;
@@ -786,10 +789,18 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                 // Retrieve or create the set of future connections for the well
                 auto& currentSet = this->possibleFutureConnections[wellName];
                 for (int k = K1; k <= K2; k++){
-                    // Adds this cell to the "active cells" of the schedule grid by calling grid.get_cell(I, J, k) 
-                    auto cell = grid.get_cell(I, J, k);
-                    // Insert the global id of the cell into the possible future connections of the well
-                    currentSet.insert(cell.global_index);
+                    try {
+                        // Adds this cell to the "active cells" of the schedule grid by calling grid.get_cell(I, J, k)
+                        auto cell = grid.get_cell(I, J, k);
+                        // Insert the global id of the cell into the possible future connections of the well
+                        currentSet.insert(cell.global_index);
+                    }catch(const std::invalid_argument& e) {
+                        const std::string msg = fmt::format("Problem with COMPDAT in ACTIONX\n"
+                                                                "In {{file}} line {{line}}\n"
+                                                                "Cell ({}, {}, {}) of well {} is not part of the grid ({}).",
+                                                                I+1, J+1, k+1, wellName, e.what());
+                        parseContext.handleError(ParseContext::SCHEDULE_COMPDAT_INVALID, msg, keyword.location(), errors);
+                    }
                 }
             }
             return;
@@ -810,8 +821,16 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                 const int J = itemJ.get<int>(0) - 1;
                 const int K = itemK.get<int>(0) - 1;
 
-                auto cell = grid.get_cell(I, J, K);
-                (void) cell;
+                try {
+                    auto cell = grid.get_cell(I, J, K);
+                    (void) cell;
+                }catch(const std::invalid_argument& e) {
+                    const std::string msg = fmt::format("Problem with COMPSEGs in ACTIONX\n"
+                                                        "In {{file}} line {{line}}\n"
+                                                        "Cell ({}, {}, {}) is not part of the grid ({}).",
+                                                        I+1, J+1, K+1, e.what());
+                    parseContext.handleError(ParseContext::SCHEDULE_COMPSEGS_INVALID, msg, keyword.location(), errors);
+                }
             }
         }
     }

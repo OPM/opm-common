@@ -365,6 +365,7 @@ class KeywordLocation;
         const static std::string SCHEDULE_COMPSEGS_INVALID;
         const static std::string SCHEDULE_COMPSEGS_NOT_SUPPORTED;
 
+        const static std::string SCHEDULE_COMPDAT_INVALID;
         /*
           The SIMULATOR_KEYWORD_ errormodes are for the situation where the
           parser recognizes, and correctly parses a keyword, but we know that
