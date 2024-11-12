@@ -582,20 +582,34 @@ The cell ({},{},{}) in well {} is not active and the connection will be ignored)
         // Get the grid
         const auto& ecl_grid = grid.get_grid();
 
-        // Calulate the x,y,z coordinates of the begin and end of a perforation
-        external::cvf::Vec3d p_top;
-        external::cvf::Vec3d p_bot;
-        for (size_t i = 0; i < 3 ; ++i) {
-            p_top[i] = linearInterpolation(this->md, this->coord[i], perf_top.getSIDouble(0));
-            p_bot[i] = linearInterpolation(this->md, this->coord[i], perf_bot.getSIDouble(0));
-        }
+        std::vector<external::cvf::Vec3d> points;
+        std::vector<double> measured_depths;
 
-        std::vector<external::cvf::Vec3d> points{p_top, p_bot};
-        std::vector<double> md_interval{perf_top.getSIDouble(0), perf_bot.getSIDouble(0)};
+        // Calulate the x,y,z coordinates of the begin and end of a perforation
+        external::cvf::Vec3d p_top, p_bot;
+        double m_top = perf_top.getSIDouble(0), m_bot = perf_bot.getSIDouble(0);
+        for (size_t i = 0; i < 3 ; ++i) {
+            p_top[i] = linearInterpolation(this->md, this->coord[i], m_top);
+            p_bot[i] = linearInterpolation(this->md, this->coord[i], m_bot);
+        }
+        points.push_back(p_top);
+        measured_depths.push_back(m_top);
 
         external::cvf::ref<external::RigWellPath> wellPathGeometry { new external::RigWellPath };
+        points.reserve(this->coord[0].size());
+        measured_depths.reserve(this->coord[0].size());
+        for (size_t i = 0; i < coord[0].size(); ++i) {
+            if (this->md[i] > m_top and this->md[i] < m_bot) {
+                points.push_back(external::cvf::Vec3d(coord[0][i], coord[1][i], coord[2][i]));
+                measured_depths.push_back(this->md[i]);
+            }
+        }
+
+        points.push_back(p_bot);
+        measured_depths.push_back(m_bot);
+
         wellPathGeometry->setWellPathPoints(points);
-        wellPathGeometry->setMeasuredDepths(md_interval);
+        wellPathGeometry->setMeasuredDepths(measured_depths);
 
         external::cvf::ref<external::RigEclipseWellLogExtractor> e {
             new external::RigEclipseWellLogExtractor {
@@ -647,6 +661,10 @@ The cell ({},{},{}) in well {} is not active and the connection will be ignored)
             ctf_props.rw = rw;
             ctf_props.skin_factor = skin_factor;
             ctf_props.d_factor = d_factor;
+
+            if (defaultSatTable) {
+                satTableId = props->satnum;
+            }
 
             ctf_props.r0 = -1.0;
             ctf_props.Kh = -1.0;
@@ -747,8 +765,14 @@ CF and Kh items for well {} must both be specified or both defaulted/negative)",
                                       [[maybe_unused]] const std::string&     wname,
                                       [[maybe_unused]] const KeywordLocation& location)
     {
-        this->coord[0].push_back(record.getItem("X").getSIDouble(0));
-        this->coord[1].push_back(record.getItem("Y").getSIDouble(0));
+        double x = record.getItem("X").getSIDouble(0);
+        double y = record.getItem("Y").getSIDouble(0);
+        const auto& mapaxes = grid.get_grid()->getMapAxes();
+        if (mapaxes.has_value())
+            mapaxes.value().inv_transform(x, y);
+
+        this->coord[0].push_back(x);
+        this->coord[1].push_back(y);
         this->coord[2].push_back(record.getItem("TVD").getSIDouble(0));
 
         this->md.push_back(record.getItem("MD").getSIDouble(0));
