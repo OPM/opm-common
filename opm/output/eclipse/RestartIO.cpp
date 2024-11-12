@@ -437,8 +437,8 @@ namespace {
         writeGroup(sim_step, schedule.getUnits(), schedule, sumState, inteHD, rstFile);
 
         // Write network data if the network option is used and network defined
-        if ((es.runspec().networkDimensions().maxNONodes() >= 1) &&
-            schedule[sim_step].network().active())
+        const auto& network = schedule[sim_step].network();
+        if (network.NoOfNodes() >= 1 && network.active())
         {
             writeNetwork(es, sim_step, schedule.getUnits(), schedule, sumState, inteHD, rstFile);
         }
