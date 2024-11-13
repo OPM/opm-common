@@ -438,7 +438,7 @@ namespace {
 
         // Write network data if the network option is used and network defined
         const auto& network = schedule[sim_step].network();
-        if (network.NoOfNodes() >= 1 && network.active())
+        if (network.active())
         {
             writeNetwork(es, sim_step, schedule.getUnits(), schedule, sumState, inteHD, rstFile);
         }
