@@ -1405,6 +1405,9 @@ namespace {
         update("GPTH", xgrp[VI::XGroup::index::HistGasPrTotal]);
         update("WITH", xgrp[VI::XGroup::index::HistWatInjTotal]);
         update("GITH", xgrp[VI::XGroup::index::HistGasInjTotal]);
+
+        update("GCT",  xgrp[VI::XGroup::index::GasConsumptionTotal]);
+        update("GIMT", xgrp[VI::XGroup::index::GasImportTotal]);
     }
 
     bool isDefaultedUDQ(const double x)

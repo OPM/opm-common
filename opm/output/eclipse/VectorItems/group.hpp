@@ -26,7 +26,11 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
 
     namespace SGroup {
         enum index : std::vector<float>::size_type {
-            EfficiencyFactor = 92, // Group's efficiency factor (Item 2 of GEFAC)
+
+            GasConsumptionRate =  25, // Group's gas consumption rate (NOT including sub-group rates)
+            GasImportRate      =  36, // Group's gas import rate (NOT including sub-group rates)
+
+            EfficiencyFactor   = 92, // Group's efficiency factor (Item 2 of GEFAC)
         };
 
         enum prod_index : std::vector<float>::size_type {
@@ -158,8 +162,14 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
             GasInjTotal  = 16, // Group's total cumulative gas injection
             VoidInjTotal = 17, // Group's total cumulative reservoir volume injection
 
+            GasConsumptionRate =  19, // Group's gas consumption rate (including sub-group rates)
+            GasConsumptionTotal = 21, // Group's total cumulative gas consumption
+
             OilPrPot = 22, // Group's oil production potential
             WatPrPot = 23, // Group's water production potential
+
+            GasImportRate      = 51, // Group's gas import rate (including sub-group rates)
+            GasImportTotal     = 52, // Group's total cumulative gas import
 
             OilPrTotalSolution = 73, // Group's total cumulative oil production in solution
             GasPrTotalSolution = 74, // Group's total cumulative gas production in solution
