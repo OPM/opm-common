@@ -78,12 +78,13 @@ void handleGRUPNET(HandlerContext& handlerContext)
         throw OpmInputError(msg, handlerContext.keyword.location());
     }
     network.set_standard_network(true);
-    const char* info_msg =
-        " \n"
-        " PLEASE NOTE: \n"
-        "   Flow writes restart data for standard network in extended network format. \n"
-        "   Restarting other simulators from Flow output requires conversion to extended network. \n"
-        ;
+
+    const std::string info_msg = {
+        "\n"
+        " PLEASE NOTE:\n"
+        "   Flow writes restart data for standard network in extended network format.\n"
+        "   Restarting other simulators from Flow output requires conversion to extended network.\n"
+    };
     OpmLog::info(info_msg);
 
     std::vector<Network::Node> nodes;
