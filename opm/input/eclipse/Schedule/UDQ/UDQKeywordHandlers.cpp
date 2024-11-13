@@ -25,6 +25,7 @@
 
 #include <opm/input/eclipse/Parser/ParserKeywords/U.hpp>
 
+#include <opm/input/eclipse/Schedule/Action/ActionResult.hpp>
 #include <opm/input/eclipse/Schedule/MSW/SegmentMatcher.hpp>
 #include <opm/input/eclipse/Schedule/ScheduleState.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQConfig.hpp>
@@ -32,6 +33,29 @@
 #include <fmt/format.h>
 
 #include <memory>
+#include <optional>
+
+namespace {
+
+    std::optional<Opm::UDQConfig::DynamicSelector>
+    makeDynamicSelector(const Opm::HandlerContext& handlerContext)
+    {
+        auto dynSelector = std::optional<Opm::UDQConfig::DynamicSelector>{};
+
+        if (handlerContext.actionx_mode) {
+            dynSelector = Opm::UDQConfig::DynamicSelector{};
+
+            if (const auto dynWells = handlerContext.matches.wells();
+                ! dynWells.empty())
+            {
+                dynSelector->wells(dynWells.begin(), dynWells.end());
+            }
+        }
+
+        return dynSelector;
+    }
+
+} // Anonymous namespace
 
 namespace Opm {
 
@@ -46,10 +70,13 @@ void handleUDQ(HandlerContext& handlerContext)
         return std::make_unique<SegmentMatcher>(handlerContext.state());
     };
 
+    const auto dynSelector = makeDynamicSelector(handlerContext);
+
     for (const auto& record : handlerContext.keyword) {
         new_udq.add_record(segment_matcher_factory, record,
                            handlerContext.keyword.location(),
-                           handlerContext.currentStep);
+                           handlerContext.currentStep,
+                           dynSelector);
     }
 
     handlerContext.state().udq.update(std::move(new_udq));

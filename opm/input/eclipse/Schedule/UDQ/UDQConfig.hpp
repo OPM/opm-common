@@ -36,6 +36,7 @@
 #include <functional>
 #include <map>
 #include <memory>
+#include <optional>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
@@ -66,6 +67,111 @@ namespace Opm {
     class UDQConfig
     {
     public:
+        /// Container of entities from a dynamic context.
+        ///
+        /// Typically a collection of wells and/or groups that match an
+        /// ACTIONX condtion.
+        class DynamicSelector
+        {
+        public:
+            /// Random access range of string values
+            ///
+            /// Poor-man's substitute for C++20's std::span<std::string>.
+            class StringRange
+            {
+            public:
+                /// Random access iterator.
+                ///
+                /// Class StringRange assumes that the underlying sequence
+                /// is a std::vector<std::string> of sufficient lifetime.
+                using Iter = std::vector<std::string>::const_iterator;
+
+                /// Default constructor.
+                ///
+                /// Creates an empty range.
+                StringRange() = default;
+
+                /// Constructor
+                ///
+                /// Forms a StringRange object from an iterator range.
+                ///
+                /// \param[in] first First element in range.
+                ///
+                /// \param[in] last One past the end of the elements in the
+                /// range.
+                StringRange(Iter first, Iter last)
+                    : first_ { first }
+                    , last_  { last }
+                {}
+
+                /// Beginning of range's elements.
+                auto begin() const { return this->first_; }
+
+                /// End of range's elements.
+                auto end() const { return this->last_; }
+
+                /// Convert value range to a std::vector.
+                ///
+                /// Copies elements.
+                std::vector<std::string> asVector() const
+                {
+                    return { this->begin(), this->end() };
+                }
+
+            private:
+                /// First element in value range.
+                Iter first_{};
+
+                /// One past the end of the value range's elements.
+                Iter last_{};
+            };
+
+            /// Default constructor.
+            ///
+            /// Contains no wells.
+            DynamicSelector() = default;
+
+            /// Include a range of well names into the dynamic selector.
+            ///
+            /// \param[in] first First element in range.
+            ///
+            /// \param[in] last One past the end of the elements in the
+            /// range.
+            ///
+            /// \return *this.
+            DynamicSelector& wells(std::vector<std::string>::const_iterator first,
+                                   std::vector<std::string>::const_iterator last)
+            {
+                this->wells_.emplace(first, last);
+                return *this;
+            }
+
+            /// Include a range of well names into the dynamic selector.
+            ///
+            /// \param[in] srange Existing string range.
+            ///
+            /// \return *this.
+            DynamicSelector& wells(const StringRange& srange)
+            {
+                this->wells_.emplace(srange);
+                return *this;
+            }
+
+            /// Retrieve current dynamic well set.
+            ///
+            /// Nullopt if there are no dynamic wells.
+            const std::optional<StringRange> wells() const
+            {
+                return this->wells_;
+            }
+
+        private:
+            /// Current dynamic well set.
+            ///
+            /// Nullopt if there are no dynamic wells.
+            std::optional<StringRange> wells_{};
+        };
+
         /// Factory function for constructing region set matchers.
         using RegionSetMatcherFactory = std::function<std::unique_ptr<RegionSetMatcher>()>;
 
@@ -134,10 +240,15 @@ namespace Opm {
         /// record.  Mostly for diagnostic purposes.
         ///
         /// \param[in] report_step Time at which this record is encountered.
-        void add_record(SegmentMatcherFactory  create_segment_matcher,
-                        const DeckRecord&      record,
-                        const KeywordLocation& location,
-                        std::size_t            report_step);
+        ///
+        /// \param[in] dynamic_selector Named entities in a dynamic context,
+        /// such as the wells matching an ACTIONX condition.  Nullopt if no
+        /// such dynamic entities apply to this UDQ record.
+        void add_record(SegmentMatcherFactory                 create_segment_matcher,
+                        const DeckRecord&                     record,
+                        const KeywordLocation&                location,
+                        std::size_t                           report_step,
+                        const std::optional<DynamicSelector>& dynamic_selector = std::nullopt);
 
         /// Incorporate a unit string for a UDQ
         ///
@@ -183,13 +294,20 @@ namespace Opm {
         /// assignment applies.  Might be a well name pattern if \p quantity
         /// is a well level UDQ.
         ///
+        /// \param[in] value Numeric value from ASSIGN record.
+        ///
         /// \param[in] report_step Time at which this assignment statement
         /// is encountered.
-        void add_assign(const std::string&              quantity,
-                        SegmentMatcherFactory           create_segment_matcher,
-                        const std::vector<std::string>& selector,
-                        double                          value,
-                        std::size_t                     report_step);
+        ///
+        /// \param[in] dynamic_selector Named entities in a dynamic context,
+        /// such as the wells matching an ACTIONX condition.  Nullopt if no
+        /// such dynamic entities apply to this UDQ record.
+        void add_assign(const std::string&                    quantity,
+                        SegmentMatcherFactory                 create_segment_matcher,
+                        const std::vector<std::string>&       selector,
+                        double                                value,
+                        std::size_t                           report_step,
+                        const std::optional<DynamicSelector>& dynamic_selector = std::nullopt);
 
         /// Incorporate a UDQ defining expressions.
         ///
@@ -545,6 +663,30 @@ namespace Opm {
                                    const std::vector<std::string>& selector,
                                    double                          value,
                                    std::size_t                     report_step);
+
+        /// Special case handling of well level UDQ assignments
+        ///
+        /// Knows how to forward any applicable dynamically selected wells
+        /// to the underlying UDQAssign object.
+        ///
+        /// \param[in] quantity Unqualified well UDQ name such as WURST.
+        ///
+        /// \param[in] selector UDQ set element selection to which this
+        /// assignment applies.  Might for instance be a well name pattern.
+        ///
+        /// \param[in] value Numeric value from ASSIGN record.
+        ///
+        /// \param[in] report_step Time at which this assignment statement
+        /// is encountered.
+        ///
+        /// \param[in] dynamic_selector Named entities in a dynamic context,
+        /// such as the wells matching an ACTIONX condition.  Nullopt if no
+        /// such dynamic entities apply to this UDQ assignment record.
+        void add_assign_wellvar(const std::string&                    quantity,
+                                const std::vector<std::string>&       selector,
+                                double                                value,
+                                std::size_t                           report_step,
+                                const std::optional<DynamicSelector>& dynamic_selector);
 
         /// Common implementation of all add*assign() member functions.
         ///
