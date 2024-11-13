@@ -34,43 +34,64 @@
 #include <opm/input/eclipse/Deck/DeckOutput.hpp>
 
 #include <opm/input/eclipse/Parser/ParseContext.hpp>
+
+#include <opm/input/eclipse/Parser/ParserKeywords/A.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/W.hpp>
 
+#include <algorithm>
+#include <cstddef>
 #include <ctime>
+#include <iterator>
 #include <optional>
 #include <sstream>
 #include <stdexcept>
 #include <string>
-#include <tuple>
 #include <unordered_set>
 #include <utility>
 #include <vector>
 
 #include <fmt/format.h>
 
-#include "ActionParser.hpp"
-
-namespace Opm {
-namespace Action {
 namespace {
 
-std::string dequote(const std::string& token, const std::optional<KeywordLocation>& location) {
-    if (token[0] == '\'') {
-        if (token.back() == '\'')
-            return token.substr(1, token.size() - 2);
-        else {
-            auto msg = fmt::format("Unbalanced quote for token: {}", token);
-            if (location.has_value())
-                throw OpmInputError(msg, location.value());
-            else
-                throw std::logic_error(msg);
-        }
-    } else
+std::string dequote(const std::string&                         token,
+                    const std::optional<Opm::KeywordLocation>& location)
+{
+    if (token.front() != '\'') {
         return token;
+    }
+
+    if (token.back() == '\'') {
+        return token.substr(1, token.size() - 2);
+    }
+
+    const auto msg = fmt::format("Unbalanced quote for token: {}", token);
+    if (location.has_value()) {
+        throw Opm::OpmInputError(msg, location.value());
+    }
+
+    throw std::logic_error(msg);
 }
 
+std::vector<std::string>
+normaliseRestartConditionTokens(const Opm::RestartIO::RstAction& rst_action)
+{
+    auto tokens = std::vector<std::string>{};
+
+    for (const auto& rst_condition : rst_action.conditions) {
+        const auto rst_tokens = rst_condition.tokens();
+
+        std::transform(rst_tokens.begin(), rst_tokens.end(),
+                       std::back_inserter(tokens),
+                       [](const auto& token) { return dequote(token, {}); });
+    }
+
+    return tokens;
 }
 
+} // Anonymous namespace
+
+namespace Opm::Action {
 
 bool ActionX::valid_keyword(const std::string& keyword)
 {
@@ -106,107 +127,57 @@ bool ActionX::valid_keyword(const std::string& keyword)
     return actionx_allowed_list.find(keyword) != actionx_allowed_list.end();
 }
 
-std::tuple<ActionX, std::vector<std::pair<std::string, std::string>>>
-parseActionX(const DeckKeyword& kw, const Actdims& actdims,
-             std::time_t start_time)
-{
-    std::vector<std::pair<std::string, std::string>> condition_errors;
-    std::vector<std::string> tokens;
-    std::vector<Condition> conditions;
-    auto record = kw.getRecord(0);
-    const std::string name = record.getItem("NAME").getTrimmedString(0);
+ActionX::ActionX()
+    : m_start_time(0)
+{}
 
-    for (size_t record_index = 1; record_index < kw.size(); record_index++) {
-        const auto& cond_tokens = RawString::strings( kw.getRecord(record_index)
-                                                      .getItem("CONDITION").getData<RawString>() );
+ActionX::ActionX(const std::string& name,
+                 const std::size_t  max_run,
+                 const double       min_wait,
+                 const std::time_t  start_time)
+    : m_name       { name }
+    , m_max_run    { max_run }
+    , m_min_wait   { min_wait }
+    , m_start_time { start_time }
+{}
 
-        std::transform(cond_tokens.begin(), cond_tokens.end(),
-                       std::back_inserter(tokens),
-                       [&kw](const auto& token) { return dequote(token, kw.location()); });
-
-        conditions.emplace_back(cond_tokens, kw.location());
-    }
-    if (conditions.empty())
-        condition_errors.push_back({ParseContext::ACTIONX_NO_CONDITION,
-                fmt::format("Action {} is missing a condition.", name)});
-
-    if (conditions.size() > actdims.max_conditions())
-        condition_errors.push_back({ ParseContext::ACTIONX_CONDITION_ERROR,
-                fmt::format("Action {} has too many conditions - adjust item "
-                            "4 of ACTDIMS to at least {}",
-                            name, conditions.size())});
-
-    try
-    {
-        return { ActionX(name,
-                         record.getItem("NUM").get<int>(0),
-                         record.getItem("MIN_WAIT").getSIDouble(0),
-                         start_time, std::move(conditions), std::move(tokens)),
-            condition_errors};
-    }
-    catch(const std::invalid_argument& e)
-    {
-        condition_errors.push_back({ ParseContext::ACTIONX_CONDITION_ERROR,
-                fmt::format("condition of action {} has the following error: {}", name, e.what())});
-        return {ActionX(kw.getRecord(0), start_time), condition_errors};
-    }
-}
-
-ActionX::ActionX() :
-    m_start_time(0)
-{
-}
-
-
-ActionX::ActionX(const std::string& name, size_t max_run, double min_wait, std::time_t start_time) :
-    m_name(name),
-    m_max_run(max_run),
-    m_min_wait(min_wait),
-    m_start_time(start_time)
+ActionX::ActionX(const DeckRecord& record, const std::time_t start_time)
+    : ActionX(record.getItem<ParserKeywords::ACTIONX::NAME>().getTrimmedString(0),
+              record.getItem<ParserKeywords::ACTIONX::NUM>().get<int>(0),
+              record.getItem<ParserKeywords::ACTIONX::MIN_WAIT>().getSIDouble(0),
+              start_time)
 {}
 
 ActionX::ActionX(const RestartIO::RstAction& rst_action)
-    : m_name(rst_action.name)
-    , m_max_run(rst_action.max_run)
-    , m_min_wait(rst_action.min_wait),
-      m_start_time(rst_action.start_time)
+    : m_name       { rst_action.name }
+    , m_max_run    { static_cast<std::size_t>(rst_action.max_run) }
+    , m_min_wait   { rst_action.min_wait }
+    , m_start_time { rst_action.start_time }
+    , condition    { normaliseRestartConditionTokens(rst_action) }
 {
-    std::vector<std::string> tokens;
+    this->m_conditions.reserve(rst_action.conditions.size());
     for (const auto& rst_condition : rst_action.conditions) {
         this->m_conditions.emplace_back(rst_condition);
-
-        const auto rst_tokens = rst_condition.tokens();
-        std::transform(rst_tokens.begin(), rst_tokens.end(),
-                       std::back_inserter(tokens),
-                       [](const auto& token) { return dequote(token, {}); });
     }
-    this->condition = Action::AST(tokens);
-    for (const auto& keyword : rst_action.keywords)
+
+    for (const auto& keyword : rst_action.keywords) {
         this->addKeyword(keyword);
+    }
 }
 
-
-
-ActionX::ActionX(const DeckRecord& record, std::time_t start_time) :
-    ActionX( record.getItem("NAME").getTrimmedString(0),
-             record.getItem("NUM").get<int>(0),
-             record.getItem("MIN_WAIT").getSIDouble(0),
-             start_time )
-
+ActionX::ActionX(const std::string&              name,
+                 const std::size_t               max_run,
+                 const double                    min_wait,
+                 const std::time_t               start_time,
+                 std::vector<Condition>&&        conditions,
+                 const std::vector<std::string>& tokens)
+    : m_name       { name }
+    , m_max_run    { max_run }
+    , m_min_wait   { min_wait }
+    , m_start_time { start_time }
+    , condition    { tokens }
+    , m_conditions { std::move(conditions) }
 {}
-
-
-
-
-
-ActionX::ActionX(const std::string& name, size_t max_run, double min_wait,
-                 std::time_t start_time,
-                 const std::vector<Condition>&& conditions,
-                 const std::vector<std::string>&& tokens)
-    : m_name(name), m_max_run(max_run), m_min_wait(min_wait),
-      m_start_time(start_time), condition(tokens), m_conditions(conditions)
-{}
-
 
 ActionX ActionX::serializationTestObject()
 {
@@ -231,104 +202,32 @@ ActionX ActionX::serializationTestObject()
     return result;
 }
 
-
-void ActionX::addKeyword(const DeckKeyword& kw) {
+void ActionX::addKeyword(const DeckKeyword& kw)
+{
     this->keywords.push_back(kw);
 }
 
+bool ActionX::ready(const State& state, const std::time_t sim_time) const
+{
+    const auto run_count = state.run_count(*this);
 
-
-Action::Result ActionX::eval(const Action::Context& context) const {
-    return this->condition.eval(context);
-}
-
-
-bool ActionX::ready(const State& state, std::time_t sim_time) const {
-    auto run_count = state.run_count(*this);
-    if (run_count >= this->max_run())
-        return false;
-
-    if (sim_time < this->start_time())
-        return false;
-
-    if (run_count == 0)
-        return true;
-
-    if (this->min_wait() <= 0)
-        return true;
-
-    auto last_run = state.run_time(*this);
-    return std::difftime(sim_time, last_run) >= this->min_wait();
-}
-
-
-std::vector<DeckKeyword>::const_iterator ActionX::begin() const {
-    return this->keywords.begin();
-}
-
-std::vector<DeckKeyword>::const_iterator ActionX::end() const {
-    return this->keywords.end();
-}
-
-
-std::vector<std::string> ActionX::keyword_strings() const {
-    std::vector<std::string> keyword_strings;
-    std::string keyword_string;
+    if ((run_count >= this->max_run()) ||
+        (sim_time  <  this->start_time()))
     {
-        std::stringstream ss;
-        DeckOutput::format fmt;
-        for (const auto& kw : this->keywords) {
-            ss << kw;
-            ss << fmt.keyword_sep;
-        }
-
-        keyword_string = ss.str();
+        return false;
     }
 
-    std::size_t offset = 0;
-    while (true) {
-        auto eol_pos = keyword_string.find('\n', offset);
-        if (eol_pos == std::string::npos)
-            break;
-
-        if (eol_pos > offset)
-            keyword_strings.push_back(keyword_string.substr(offset, eol_pos - offset));
-
-        offset = eol_pos + 1;
+    if ((run_count == 0) || (this->min_wait() <= 0.0)) {
+        return true;
     }
-    keyword_strings.push_back("ENDACTIO");
 
-    return keyword_strings;
+    return std::difftime(sim_time, state.run_time(*this))
+        >= this->min_wait();
 }
 
-
-const std::vector<Condition>& ActionX::conditions() const {
-    return this->m_conditions;
-}
-
-std::size_t ActionX::id() const {
-    return this->m_id;
-}
-
-void ActionX::update_id(std::size_t id) {
-    this->m_id = id;
-}
-
-
-bool ActionX::operator==(const ActionX& data) const {
-    return this->name() == data.name() &&
-           this->max_run() == data.max_run() &&
-           this->min_wait() == data.min_wait() &&
-           this->start_time() == data.start_time() &&
-           this->id() == data.id() &&
-           this->keywords == data.keywords &&
-           this->condition == data.condition &&
-           this->conditions() == data.conditions();
-}
-
-
-void ActionX::required_summary(std::unordered_set<std::string>& required_summary) const {
-    this->condition.required_summary(required_summary);
+Result ActionX::eval(const Action::Context& context) const
+{
+    return this->condition.eval(context);
 }
 
 std::vector<std::string>
@@ -369,5 +268,121 @@ ActionX::wellpi_wells(const WellMatcher& well_matcher,
     return wells;
 }
 
+void ActionX::required_summary(std::unordered_set<std::string>& required_summary) const
+{
+    this->condition.required_summary(required_summary);
 }
+
+void ActionX::update_id(const std::size_t id)
+{
+    this->m_id = id;
 }
+
+std::vector<std::string> ActionX::keyword_strings() const
+{
+    std::vector<std::string> keyword_strings;
+    std::string keyword_string;
+    {
+        std::stringstream ss;
+        DeckOutput::format fmt;
+        for (const auto& kw : this->keywords) {
+            ss << kw;
+            ss << fmt.keyword_sep;
+        }
+
+        keyword_string = ss.str();
+    }
+
+    std::size_t offset = 0;
+    while (true) {
+        auto eol_pos = keyword_string.find('\n', offset);
+        if (eol_pos == std::string::npos)
+            break;
+
+        if (eol_pos > offset)
+            keyword_strings.push_back(keyword_string.substr(offset, eol_pos - offset));
+
+        offset = eol_pos + 1;
+    }
+    keyword_strings.push_back("ENDACTIO");
+
+    return keyword_strings;
+}
+
+bool ActionX::operator==(const ActionX& data) const
+{
+    return (this->name() == data.name())
+        && (this->max_run() == data.max_run())
+        && (this->min_wait() == data.min_wait())
+        && (this->start_time() == data.start_time())
+        && (this->id() == data.id())
+        && (this->keywords == data.keywords)
+        && (this->condition == data.condition)
+        && (this->conditions() == data.conditions())
+        ;
+}
+
+std::pair<ActionX, std::vector<std::pair<std::string, std::string>>>
+parseActionX(const DeckKeyword& kw,
+             const Actdims&     actdims,
+             const std::time_t  start_time)
+{
+    const auto record = kw.getRecord(0);
+    const auto name = record.getItem<ParserKeywords::ACTIONX::NAME>().getTrimmedString(0);
+
+    auto tokens = std::vector<std::string>{};
+    auto conditions = std::vector<Condition>{};
+    for (std::size_t record_index = 1; record_index < kw.size(); ++record_index) {
+        const auto cond_tokens = RawString::strings
+            (kw.getRecord(record_index)
+             .getItem<ParserKeywords::ACTIONX::CONDITION>()
+             .getData<RawString>());
+
+        std::transform(cond_tokens.begin(), cond_tokens.end(),
+                       std::back_inserter(tokens),
+                       [&loc = kw.location()](const auto& token)
+                       { return dequote(token, loc); });
+
+        conditions.emplace_back(cond_tokens, kw.location());
+    }
+
+    auto condition_errors = std::vector<std::pair<std::string, std::string>>{};
+    if (conditions.empty()) {
+        condition_errors.emplace_back
+            (ParseContext::ACTIONX_NO_CONDITION,
+             fmt::format("Action {} does not have a condition.", name));
+    }
+
+    if (conditions.size() > actdims.max_conditions()) {
+        condition_errors.emplace_back
+            (ParseContext::ACTIONX_CONDITION_ERROR,
+             fmt::format("Action {} has too many conditions "
+                         "- adjust item 4 of ACTDIMS to at "
+                         "least {}.", name, conditions.size()));
+    }
+
+    try {
+        return {
+            ActionX {
+                name,
+                static_cast<std::size_t>(record.getItem<ParserKeywords::ACTIONX::NUM>().get<int>(0)),
+                record.getItem<ParserKeywords::ACTIONX::MIN_WAIT>().getSIDouble(0),
+                start_time,
+                std::move(conditions),
+                tokens
+            },
+            condition_errors
+        };
+    }
+    catch (const std::invalid_argument& e) {
+        condition_errors.emplace_back
+            (ParseContext::ACTIONX_CONDITION_ERROR,
+             fmt::format("condition of action {} has "
+                         "the following error: {}",
+                         name, e.what()));
+
+        return { ActionX(record, start_time), std::move(condition_errors) };
+    }
+}
+
+} // namespace Opm::Action
