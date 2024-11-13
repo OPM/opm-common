@@ -15,30 +15,26 @@
 
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
- */
-
-#include <vector>
-#include <string>
-#include <algorithm>
-#include <cstring>
-#include <cstdlib>
+*/
 
 #include <opm/input/eclipse/Schedule/Action/ActionAST.hpp>
+
+#include <opm/input/eclipse/Schedule/Action/ASTNode.hpp>
 #include <opm/input/eclipse/Schedule/Action/ActionContext.hpp>
 #include <opm/input/eclipse/Schedule/Action/ActionValue.hpp>
-#include <opm/input/eclipse/Schedule/Action/ASTNode.hpp>
 
 #include "ActionParser.hpp"
 
-namespace Opm {
-namespace Action {
+#include <memory>
+#include <string>
+#include <unordered_set>
+#include <vector>
 
-AST::AST(const std::vector<std::string>& tokens) {
-    auto condition_node = Action::Parser::parse(tokens);
-    this->condition.reset( new Action::ASTNode(condition_node) );
-}
+Opm::Action::AST::AST(const std::vector<std::string>& tokens)
+    : condition { std::make_shared<ASTNode>(::Opm::Action::Parser::parse(tokens)) }
+{}
 
-AST AST::serializationTestObject()
+Opm::Action::AST Opm::Action::AST::serializationTestObject()
 {
     AST result;
     result.condition = std::make_shared<ASTNode>(ASTNode::serializationTestObject());
@@ -46,26 +42,33 @@ AST AST::serializationTestObject()
     return result;
 }
 
-Action::Result AST::eval(const Action::Context& context) const {
-    if (!this->condition || this->condition->empty())
-        return Action::Result(false);
-    else
-        return this->condition->eval(context);
+Opm::Action::Result
+Opm::Action::AST::eval(const Action::Context& context) const
+{
+    if ((this->condition == nullptr) || this->condition->empty()) {
+        return Result { false };
+    }
+
+    return this->condition->eval(context);
 }
 
-
-bool AST::operator==(const AST& data) const {
-    if ((condition && !data.condition) ||
-        (!condition && data.condition))
+bool Opm::Action::AST::operator==(const AST& data) const
+{
+    if ((this->condition == nullptr) !=
+        (data.condition  == nullptr))
+    {
         return false;
+    }
 
-    return !condition || (*condition == *data.condition);
+    return (this->condition == nullptr)
+        || (*this->condition == *data.condition);
 }
 
-void AST::required_summary(std::unordered_set<std::string>& required_summary) const {
+void Opm::Action::AST::required_summary(std::unordered_set<std::string>& required_summary) const
+{
+    if ((this->condition == nullptr) || this->condition->empty()) {
+        return;
+    }
+
     this->condition->required_summary(required_summary);
-}
-
-
-}
 }
