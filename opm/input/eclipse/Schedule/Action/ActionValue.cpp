@@ -165,5 +165,5 @@ Opm::Action::Value::evalWellComparisons(const TokenType op,
         }
     }
 
-    return Result {!matching_wells.empty(), matching_wells};
+    return Result {!matching_wells.empty()}.wells(matching_wells);
 }

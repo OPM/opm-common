@@ -105,15 +105,14 @@ void Opm::Action::State::add_run(const ActionX&    action,
         }
     }
 
-    if (! result) { return; }
-
-    if (auto wellRange = result.wells(); ! wellRange.empty()) {
+    if (const auto wellRange = result.matches().wells(); ! wellRange.empty()) {
         const auto resultInsert = this->last_result
             .emplace(std::piecewise_construct,
                      std::forward_as_tuple(action.name()),
                      std::forward_as_tuple());
 
-        resultInsert.first->second.wells_ = std::move(wellRange);
+        resultInsert.first->second.wells_
+            .assign(wellRange.begin(), wellRange.end());
     }
 }
 

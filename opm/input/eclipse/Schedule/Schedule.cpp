@@ -381,8 +381,8 @@ namespace Opm {
                                  const ParseContext& parseContext,
                                  ErrorGuard& errors,
                                  const ScheduleGrid& grid,
-                                 const std::vector<std::string>& matching_wells,
-                                 bool actionx_mode,
+                                 const Action::Result::MatchingEntities& matches,
+                                 const bool actionx_mode,
                                  SimulatorUpdate* sim_update,
                                  const std::unordered_map<std::string, double>* target_wellpi,
                                  std::unordered_map<std::string, double>& wpimult_global_factor,
@@ -390,7 +390,7 @@ namespace Opm {
                                  std::set<std::string>* compsegs_wells)
     {
         HandlerContext handlerContext { *this, block, keyword, grid, currentStep,
-                                        matching_wells, actionx_mode,
+                                        matches, actionx_mode,
                                         parseContext, errors, sim_update, target_wellpi,
                                         wpimult_global_factor, welsegs_wells, compsegs_wells};
 
@@ -620,6 +620,8 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
         std::set<std::string> compsegs_wells;
         WelSegsSet welsegs_wells;
 
+        const auto matches = Action::Result { false }.matches();
+
         for (auto report_step = load_start; report_step < load_end; report_step++) {
             std::size_t keyword_index = 0;
             auto& block = this->m_sched_deck[report_step];
@@ -703,9 +705,9 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                                     parseContext,
                                     errors,
                                     grid,
-                                    {},
-                                    false,
-                                    nullptr,
+                                    matches,
+                                    /* actionx_mode = */ false,
+                                    /* sim_update = */ nullptr,
                                     target_wellpi,
                                     wpimult_global_factor,
                                     &welsegs_wells,
@@ -876,7 +878,8 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
         DeckKeyword action_keyword(parserKeyword);
         action_keyword.addRecord(std::move(deckRecord));
         action.addKeyword(action_keyword);
-        SimulatorUpdate delta = this->applyAction(report_step, action, {} /*matching_wells*/,
+        SimulatorUpdate delta = this->applyAction(report_step, action,
+                                                  /* matches = */ Action::Result{false}.matches(),
                                                   std::unordered_map<std::string,double>{}/*target_wellpi*/);
         this->simUpdateFromPython->append(delta);
     }
@@ -1319,7 +1322,8 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                         const HandlerContext& context,
                         const bool            allowEmpty)
     {
-        auto names = this->wellNames(pattern, context.currentStep, context.matching_wells);
+        auto names = this->wellNames(pattern, context.currentStep,
+                                     context.matches.wells().asVector());
 
         if (names.empty() && !allowEmpty) {
             if (this->action_wgnames.has_well(pattern)) {
@@ -1614,73 +1618,101 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
         return std::chrono::duration_cast<std::chrono::seconds>(end_time - start_time).count();
     }
 
-    void Schedule::applyKeywords(std::vector<std::unique_ptr<DeckKeyword>>& keywords) {
+    void Schedule::applyKeywords(std::vector<std::unique_ptr<DeckKeyword>>& keywords)
+    {
         Schedule::applyKeywords(keywords, this->current_report_step);
     }
 
-    void Schedule::applyKeywords(
-             std::vector<std::unique_ptr<DeckKeyword>>& keywords, std::size_t reportStep) {
+    void Schedule::applyKeywords(std::vector<std::unique_ptr<DeckKeyword>>& keywords,
+                                 const std::size_t reportStep)
+    {
         if (reportStep < this->current_report_step) {
-            throw std::invalid_argument("Insert keyword for past report step " + std::to_string(reportStep) + " requested, current report step is " + std::to_string(this->current_report_step) + ".");
-        } else if (reportStep >= this->m_sched_deck.size()) {
-            throw std::invalid_argument("Insert keyword for report step " + std::to_string(reportStep) + " requested, this exceeds the total number of report steps, being " + std::to_string(this->m_sched_deck.size() -1) + ".");
+            throw std::invalid_argument {
+                fmt::format("Insert keyword for past report step {} "
+                            "requested, current report step is {}.",
+                            reportStep, this->current_report_step)
+            };
         }
+        else if (reportStep >= this->m_sched_deck.size()) {
+            throw std::invalid_argument {
+                fmt::format("Insert keyword for report step {} requested "
+                            "which exceeds the total number of report steps {}.",
+                            reportStep, this->m_sched_deck.size() - 1)
+            };
+        }
+
         ParseContext parseContext;
         ErrorGuard errors;
         ScheduleGrid grid(this->completed_cells);
         SimulatorUpdate sim_update;
         std::unordered_map<std::string, double> target_wellpi;
-        std::vector<std::string> matching_wells;
-        const std::string prefix = "| "; /* logger prefix string */
-        this->snapshots.resize(reportStep + 1);
-        auto& input_block = this->m_sched_deck[reportStep];
         std::unordered_map<std::string, double> wpimult_global_factor;
+        const auto matches = Action::Result{false}.matches();
+        const std::string prefix = "| "; // logger prefix string
+
+        this->snapshots.resize(reportStep + 1);
+
+        auto& input_block = this->m_sched_deck[reportStep];
         ScheduleLogger logger(ScheduleLogger::select_stream(false, false), // will log to OpmLog::info
                               prefix, this->m_sched_deck.location());
         
-        for (auto& keyword : keywords) {
-            bool valid = Action::PyAction::valid_keyword(keyword->name());
-            if (this->m_lowActionParsingStrictness or valid) {
-                if (this->m_lowActionParsingStrictness and !valid) {
-                    logger(fmt::format("The keyword {} is not supported for inserting it from Python into a simulation, but you have set --action-parsing-strictness = low, so flow will try to apply the keyword still.", keyword->name()));
+        for (const auto& keyword : keywords) {
+            const auto valid = Action::PyAction::valid_keyword(keyword->name());
+
+            if (valid || this->m_lowActionParsingStrictness) {
+                if (!valid) {
+                    logger(fmt::format("The keyword {} is not supported for insertion "
+                                       "from Python into a simulation, but you have set "
+                                       "--action-parsing-strictness = low, so flow will "
+                                       "try to apply the keyword still.", keyword->name()));
                 }
+
                 input_block.push_back(*keyword);
+
                 this->handleKeyword(reportStep,
                                     input_block,
                                     *keyword,
                                     parseContext,
                                     errors,
                                     grid,
-                                    matching_wells,
-                                    /*actionx_mode=*/false,
+                                    matches,
+                                    /* actionx_mode= */ false,
                                     &sim_update,
                                     &target_wellpi,
                                     wpimult_global_factor);    
-            } else {
-                const std::string msg_fmt = fmt::format("The keyword {} is not supported for inserting it from Python into a simulation", keyword->name());
-                parseContext.handleError(ParseContext::PYACTION_ILLEGAL_KEYWORD, msg_fmt, keyword->location(), errors);
+            }
+            else {
+                const std::string msg_fmt =
+                    fmt::format("The keyword {} is not supported for insertion "
+                                "from Python into a simulation", keyword->name());
+
+                parseContext.handleError(ParseContext::PYACTION_ILLEGAL_KEYWORD,
+                                         msg_fmt, keyword->location(), errors);
             }
         }
+
         this->applyGlobalWPIMULT(wpimult_global_factor);
         this->end_report(reportStep);
+
         if (reportStep < this->m_sched_deck.size() - 1) {
-            iterateScheduleSection(
-                reportStep + 1,
-                this->m_sched_deck.size(),
-                parseContext,
-                errors,
-                grid,
-                &target_wellpi,
-                prefix, true);
+            this->iterateScheduleSection(reportStep + 1,
+                                         this->m_sched_deck.size(),
+                                         parseContext,
+                                         errors,
+                                         grid,
+                                         &target_wellpi,
+                                         prefix,
+                                         /* keepKeywords = */ true);
         }
+
         this->simUpdateFromPython->append(sim_update);
     }
 
 
     SimulatorUpdate
-    Schedule::applyAction(std::size_t reportStep,
+    Schedule::applyAction(const std::size_t reportStep,
                           const Action::ActionX& action,
-                          const std::vector<std::string>& matching_wells,
+                          const Action::Result::MatchingEntities& matches,
                           const std::unordered_map<std::string, float>& target_wellpi)
     {
         std::unordered_map<std::string, double> dtarget_wellpi;
@@ -1688,14 +1720,14 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
             dtarget_wellpi.emplace(w.first, w.second);
         }
 
-        return this->applyAction(reportStep, action, matching_wells, dtarget_wellpi);
+        return this->applyAction(reportStep, action, matches, dtarget_wellpi);
     }
 
 
     SimulatorUpdate
     Schedule::applyAction(std::size_t reportStep,
                           const Action::ActionX& action,
-                          const std::vector<std::string>& matching_wells,
+                          const Action::Result::MatchingEntities& matches,
                           const std::unordered_map<std::string, double>& target_wellpi)
     {
         const std::string prefix = "| ";
@@ -1730,8 +1762,8 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
                                 parseContext,
                                 errors,
                                 grid,
-                                matching_wells,
-                                true,
+                                matches,
+                                /* actionx_mode = */ true,
                                 &sim_update,
                                 &target_wellpi,
                                 wpimult_global_factor);
@@ -1766,28 +1798,32 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
     }
 
 
-    /*
-      This function will typically be called from the apply_action_callback()
-      which is invoked in a PYACTION plugin, i.e. the arguments here are
-      supplied by the user in a script - can very well be wrong.
-    */
-    SimulatorUpdate Schedule::applyAction(std::size_t reportStep, const std::string& action_name, const std::vector<std::string>& matching_wells) {
+    // This function will typically be called from the apply_action_callback()
+    // which is invoked in a PYACTION plugin, i.e. the arguments here are
+    // supplied by the user in a script - can very well be wrong.
+    SimulatorUpdate Schedule::applyAction(const std::size_t reportStep,
+                                          const std::string& action_name,
+                                          const std::vector<std::string>& matching_wells)
+    {
         const auto& actions = this->snapshots[reportStep].actions();
         if (actions.has(action_name)) {
-            const auto& action = this->snapshots[reportStep].actions()[action_name];
-
             std::vector<std::string> well_names;
             for (const auto& wname : matching_wells) {
-                if (this->hasWell(wname, reportStep))
+                if (this->hasWell(wname, reportStep)) {
                     well_names.push_back(wname);
-                else
-                    OpmLog::error(fmt::format("Tried to apply action: {} on non existing well: {}", action_name, wname));
+                }
+                else {
+                    OpmLog::error(fmt::format("Tried to apply action {} on non-"
+                                              "existing well '{}'", action_name, wname));
+                }
             }
 
-            return this->applyAction(reportStep, action, well_names,
+            return this->applyAction(reportStep, actions[action_name],
+                                     Action::Result{true}.wells(well_names).matches(),
                                      std::unordered_map<std::string,double>{});
-        } else {
-            OpmLog::error(fmt::format("Tried to apply action unknown action: {}", action_name));
+        }
+        else {
+            OpmLog::error(fmt::format("Tried to apply unknown action: '{}'", action_name));
             return {};
         }
     }
