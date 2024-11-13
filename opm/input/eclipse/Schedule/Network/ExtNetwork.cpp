@@ -182,6 +182,10 @@ int ExtNetwork::NoOfBranches() const {
     return this->m_branches.size();
 }
 
+int ExtNetwork::NoOfNodes() const {
+    return this->m_nodes.size();
+}
+
 /*
   The validation of the network structure is very weak. The current validation
   goes as follows:

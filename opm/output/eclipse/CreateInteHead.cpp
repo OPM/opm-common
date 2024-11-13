@@ -504,8 +504,8 @@ namespace {
     {
         const int noactnod = sched[lookup_step].network().node_names().size();
         const int noactbr  = sched[lookup_step].network().NoOfBranches();
-        const int nodmax = rspec.networkDimensions().maxNONodes();
-        const int nbrmax = rspec.networkDimensions().maxNoBranches();
+        const int nodmax = std::max(rspec.networkDimensions().maxNONodes(), sched[lookup_step].network().NoOfNodes());
+        const int nbrmax = std::max(rspec.networkDimensions().maxNoBranches(), sched[lookup_step].network().NoOfBranches());
 
         //the following dimensions are fixed
         const int nibran = 14;
