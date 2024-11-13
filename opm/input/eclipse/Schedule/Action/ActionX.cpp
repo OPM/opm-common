@@ -231,8 +231,8 @@ Result ActionX::eval(const Action::Context& context) const
 }
 
 std::vector<std::string>
-ActionX::wellpi_wells(const WellMatcher& well_matcher,
-                      const std::vector<std::string>& matching_wells) const
+ActionX::wellpi_wells(const WellMatcher&              well_matcher,
+                      const Result::MatchingEntities& matches) const
 {
     auto wells = std::vector<std::string>{};
 
@@ -247,7 +247,8 @@ ActionX::wellpi_wells(const WellMatcher& well_matcher,
                 .getTrimmedString(0);
 
             if (wname_arg == "?") {
-                wells.insert(wells.end(), matching_wells.begin(), matching_wells.end());
+                const auto& well_range = matches.wells();
+                wells.insert(wells.end(), well_range.begin(), well_range.end());
             }
             else {
                 const auto& well_range = well_matcher.wells(wname_arg);

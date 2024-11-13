@@ -499,11 +499,12 @@ namespace {
                     // Treat well, group and field left hand side conditions
                     //
                     // Well variable
-                    if ((lhsQtype == 'W') && ar) {
+                    if ((lhsQtype == 'W') && ar.conditionSatisfied()) {
                         // Find the well that violates action if relevant
                         auto well_iter = std::find_if(wells.begin(), wells.end(),
-                                                      [&ar](const std::string& well)
-                                                      { return ar.has_well(well); });
+                                                      [&matchSet = ar.matches()]
+                                                      (const std::string& well)
+                                                      { return matchSet.hasWell(well); });
 
                         if (well_iter != wells.end()) {
                             const auto& wn = *well_iter;

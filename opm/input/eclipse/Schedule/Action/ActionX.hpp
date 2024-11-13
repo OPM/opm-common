@@ -202,11 +202,16 @@ public:
     /// \param[in] well_matcher Final arbiter for wells currently known to
     /// simulator.
     ///
-    /// \param[in] matching_wells List of wells triggering the current action.
+    /// \param[in] matches List of entities for which the current action
+    /// triggered.  Function wellpi_wells() will only inspect the set of
+    /// matching/triggering wells, and only if a WELPI keyword in the
+    /// current action's keyword block uses the well name pattern "?".
     ///
     /// \return List of well names used in this action's WELPI keywords, if
     /// any.  List returned in sorted order defined by \p well_matcher.
-    std::vector<std::string> wellpi_wells(const WellMatcher& well_matcher, const std::vector<std::string>& matching_wells) const;
+    std::vector<std::string>
+    wellpi_wells(const WellMatcher&              well_matcher,
+                 const Result::MatchingEntities& matches) const;
 
     /// Export all summary vectors needed to evaluate the conditions of the
     /// current ActionX object.

@@ -220,14 +220,19 @@ TSTEP
     BOOST_CHECK( !sched.hasWell("W1") );
     BOOST_CHECK( sched.hasWell("W2"));
 
-    Action::Result action_result(true);
-    const auto& action1 = sched[0].actions.get()["ACTION"];
-    auto sim_update = sched.applyAction(0, action1, action_result.wells(),
-                                        std::unordered_map<std::string,double>{});
-    const auto& affected_wells = sim_update.affected_wells;
-    std::vector<std::string> expected_wells{"W0", "W1", "W3"};
-    BOOST_CHECK( std::is_permutation(affected_wells.begin(), affected_wells.end(),
-                                     expected_wells.begin(), expected_wells.end() ));
+    {
+        const auto action_result = Action::Result { true };
+
+        const auto& action1 = sched[0].actions.get()["ACTION"];
+        auto sim_update = sched.applyAction(0, action1, action_result.matches(),
+                                            std::unordered_map<std::string,double>{});
+
+        const auto& affected_wells = sim_update.affected_wells;
+        const std::vector<std::string> expected_wells{"W0", "W1", "W3"};
+
+        BOOST_CHECK(std::is_permutation(affected_wells.begin(), affected_wells.end(),
+                                        expected_wells.begin(), expected_wells.end()));
+    }
 
     {
         const auto& wg_events = sched[0].wellgroup_events();
@@ -288,10 +293,10 @@ COMPDAT
 )"};
 
     Schedule sched = make_schedule(TRAILING_COMPDAT);
-    Action::Result action_result(true);
     const auto& action1 = sched[0].actions.get()["ACTION"];
-    BOOST_CHECK_NO_THROW( sched.applyAction(0, action1, {},
-                                            std::unordered_map<std::string,double>{}));
+
+    BOOST_CHECK_NO_THROW(sched.applyAction(0, action1, Action::Result{false}.matches(),
+                                           std::unordered_map<std::string,double>{}));
 }
 
 BOOST_AUTO_TEST_CASE(EMPTY)
@@ -318,13 +323,14 @@ ACTIONX
 ENDACTIO
 )"};
 
-    Schedule sched = make_schedule(EMPTY_ACTION);
-    Action::Result action_result(true);
+    const auto sched = make_schedule(EMPTY_ACTION);
     const auto& action1 = sched[0].actions.get()["ACTION"];
-    Opm::SummaryState st(TimeService::now(), sched.back().udq().params().undefinedValue());
-    Opm::WListManager wlm;
-    Opm::Action::Context context(st, wlm);
-    BOOST_CHECK( !action1.eval(context) );
+
+    const Opm::SummaryState st(TimeService::now(), sched.back().udq().params().undefinedValue());
+    const Opm::WListManager wlm;
+    const Opm::Action::Context context(st, wlm);
+
+    BOOST_CHECK(! action1.eval(context).conditionSatisfied());
 }
 
 BOOST_AUTO_TEST_CASE(TestActions)
@@ -364,18 +370,18 @@ BOOST_AUTO_TEST_CASE(TestActions)
     const Opm::Action::ActionX& action2 = config["NAME"];
     Opm::Action::State action_state;
     // The action2 instance has an empty condition, so it will never evaluate to true.
-    BOOST_CHECK(action2.ready(  action_state, asTimeT(TimeStampUTC(TimeStampUTC::YMD{ 2000, 7, 1 }))  ));
-    BOOST_CHECK(!action2.ready(  action_state, asTimeT(TimeStampUTC(TimeStampUTC::YMD{ 2000, 6, 1 }))   ));
-    BOOST_CHECK(!action2.eval(context));
+    BOOST_CHECK(action2.ready(action_state, asTimeT(TimeStampUTC(TimeStampUTC::YMD{ 2000, 7, 1 }))  ));
+    BOOST_CHECK(!action2.ready(action_state, asTimeT(TimeStampUTC(TimeStampUTC::YMD{ 2000, 6, 1 }))   ));
+    BOOST_CHECK(!action2.eval(context).conditionSatisfied());
 
     auto pending = config.pending( action_state, asTimeT(TimeStampUTC(TimeStampUTC::YMD{ 2000, 8, 7 }))  );
     BOOST_CHECK_EQUAL( pending.size(), 2U);
     for (auto& ptr : pending) {
-        BOOST_CHECK( ptr->ready( action_state, asTimeT(TimeStampUTC(TimeStampUTC::YMD{ 2000, 8, 7 }))  ));
-        BOOST_CHECK( !ptr->eval( context));
+        BOOST_CHECK(ptr->ready(action_state, asTimeT(TimeStampUTC(TimeStampUTC::YMD{ 2000, 8, 7 }))  ));
+        BOOST_CHECK(!ptr->eval(context).conditionSatisfied());
     }
-    BOOST_CHECK(!action2.eval(context));
 
+    BOOST_CHECK(!action2.eval(context).conditionSatisfied());
 
     const auto& python_actions = config.pending_python(action_state);
     BOOST_CHECK_EQUAL(python_actions.size(), 2U);
@@ -420,12 +426,12 @@ BOOST_AUTO_TEST_CASE(TestAction_AST_BASIC)
     Action::Context context(st, wlm);
 
     context.add("WWCT", "OPX", 100);
-    BOOST_CHECK(ast1.eval(context));
+    BOOST_CHECK(ast1.eval(context).conditionSatisfied());
 
     context.add("WWCT", "OPX", -100);
-    BOOST_CHECK(!ast1.eval(context));
+    BOOST_CHECK(!ast1.eval(context).conditionSatisfied());
 
-    BOOST_CHECK(ast2.eval(context));
+    BOOST_CHECK(ast2.eval(context).conditionSatisfied());
     BOOST_REQUIRE_THROW(ast3.eval(context), std::out_of_range);
 }
 
@@ -441,32 +447,32 @@ BOOST_AUTO_TEST_CASE(TestAction_AST_OR_AND)
     context.add("WWCT", "OPX", 100);
     context.add("WWCT", "OPY", -100);
     context.add("WWCT", "OPZ", 100);
-    BOOST_CHECK( ast_or.eval(context) );
-    BOOST_CHECK( !ast_and.eval(context) );
-    BOOST_CHECK( par.eval(context));
+    BOOST_CHECK(ast_or.eval(context).conditionSatisfied());
+    BOOST_CHECK(!ast_and.eval(context).conditionSatisfied());
+    BOOST_CHECK(par.eval(context).conditionSatisfied());
 
 
     context.add("WWCT", "OPX", -100);
     context.add("WWCT", "OPY", 100);
     context.add("WWCT", "OPZ", 100);
-    BOOST_CHECK( ast_or.eval(context));
-    BOOST_CHECK( !ast_and.eval(context) );
-    BOOST_CHECK( !par.eval(context));
+    BOOST_CHECK(ast_or.eval(context).conditionSatisfied());
+    BOOST_CHECK(!ast_and.eval(context).conditionSatisfied());
+    BOOST_CHECK(!par.eval(context).conditionSatisfied());
 
 
     context.add("WWCT", "OPX", 100);
     context.add("WWCT", "OPY", 100);
     context.add("WWCT", "OPZ", -100);
-    BOOST_CHECK( ast_or.eval(context));
-    BOOST_CHECK( ast_and.eval(context) );
-    BOOST_CHECK( par.eval(context));
+    BOOST_CHECK(ast_or.eval(context).conditionSatisfied());
+    BOOST_CHECK(ast_and.eval(context).conditionSatisfied());
+    BOOST_CHECK(par.eval(context).conditionSatisfied());
 
     context.add("WWCT", "OPX", -100);
     context.add("WWCT", "OPY", -100);
     context.add("WWCT", "OPZ", -100);
-    BOOST_CHECK( !ast_or.eval(context) );
-    BOOST_CHECK( !ast_and.eval(context) );
-    BOOST_CHECK( !par.eval(context));
+    BOOST_CHECK(!ast_or.eval(context).conditionSatisfied());
+    BOOST_CHECK(!ast_and.eval(context).conditionSatisfied());
+    BOOST_CHECK(!par.eval(context).conditionSatisfied());
 }
 
 BOOST_AUTO_TEST_CASE(DATE)
@@ -477,13 +483,13 @@ BOOST_AUTO_TEST_CASE(DATE)
     Action::Context context(st, wlm);
 
     context.add("MNTH", 6);
-    BOOST_CHECK( ast.eval(context));
+    BOOST_CHECK(ast.eval(context).conditionSatisfied());
 
     context.add("MNTH", 8);
-    BOOST_CHECK( ast.eval(context) );
+    BOOST_CHECK(ast.eval(context).conditionSatisfied());
 
     context.add("MNTH", 5);
-    BOOST_CHECK( !ast.eval(context));
+    BOOST_CHECK(!ast.eval(context).conditionSatisfied());
 }
 
 BOOST_AUTO_TEST_CASE(MNTH_NUMERIC)
@@ -494,10 +500,10 @@ BOOST_AUTO_TEST_CASE(MNTH_NUMERIC)
     Action::Context context(st, wlm);
 
     context.add("MNTH", 5);
-    BOOST_CHECK( !ast.eval(context));
+    BOOST_CHECK(!ast.eval(context).conditionSatisfied());
 
     context.add("MNTH", 6);
-    BOOST_CHECK( ast.eval(context) );
+    BOOST_CHECK(ast.eval(context).conditionSatisfied());
 }
 
 
@@ -511,17 +517,17 @@ BOOST_AUTO_TEST_CASE(MANUAL1)
     context.add("GGPR", "FIELD", 60000 );
     context.add("WGOR", "PR" , 300 );
     context.add("GGOR", "FIELD", 200);
-    BOOST_CHECK( ast.eval(context));
+    BOOST_CHECK(ast.eval(context).conditionSatisfied());
 
     context.add("GGPR", "FIELD", 0 );
     context.add("WGOR", "PR" , 300 );
     context.add("GGOR", "FIELD", 200);
-    BOOST_CHECK( !ast.eval(context) );
+    BOOST_CHECK(!ast.eval(context).conditionSatisfied());
 
     context.add("GGPR", "FIELD", 60000 );
     context.add("WGOR", "PR" , 100 );
     context.add("GGOR", "FIELD", 200);
-    BOOST_CHECK( !ast.eval(context) );
+    BOOST_CHECK(!ast.eval(context).conditionSatisfied());
 }
 
 BOOST_AUTO_TEST_CASE(MANUAL2)
@@ -535,31 +541,31 @@ BOOST_AUTO_TEST_CASE(MANUAL2)
     context.add("GWPR", "LIST1", 1 );
     context.add("GWPR", "LIST2", 2 );
     context.add("GWPR", "LIST3", 3 );
-    BOOST_CHECK( !ast.eval(context));
+    BOOST_CHECK(!ast.eval(context).conditionSatisfied());
 
     context.add("GWCT", "LIST1", 1.0);
     context.add("GWPR", "LIST1", 1 );
     context.add("GWPR", "LIST2", 2 );
     context.add("GWPR", "LIST3", 0 );
-    BOOST_CHECK( ast.eval(context));
+    BOOST_CHECK(ast.eval(context).conditionSatisfied());
 
     context.add("GWCT", "LIST1", 1.0);
     context.add("GWPR", "LIST1", 1 );
     context.add("GWPR", "LIST2", 0 );
     context.add("GWPR", "LIST3", 3 );
-    BOOST_CHECK( ast.eval(context));
+    BOOST_CHECK(ast.eval(context).conditionSatisfied());
 
     context.add("GWCT", "LIST1", 1.0);
     context.add("GWPR", "LIST1", 1 );
     context.add("GWPR", "LIST2", 0 );
     context.add("GWPR", "LIST3", 0 );
-    BOOST_CHECK( ast.eval(context));
+    BOOST_CHECK(ast.eval(context).conditionSatisfied());
 
     context.add("GWCT", "LIST1", 0.0);
     context.add("GWPR", "LIST1", 1 );
     context.add("GWPR", "LIST2", 0 );
     context.add("GWPR", "LIST3", 3 );
-    BOOST_CHECK( !ast.eval(context));
+    BOOST_CHECK(!ast.eval(context).conditionSatisfied());
 }
 
 BOOST_AUTO_TEST_CASE(MANUAL3)
@@ -571,19 +577,19 @@ BOOST_AUTO_TEST_CASE(MANUAL3)
 
     context.add("MNTH", 4);
     context.add("GMWL", "HIGH", 4);
-    BOOST_CHECK( ast.eval(context));
+    BOOST_CHECK(ast.eval(context).conditionSatisfied());
 
     context.add("MNTH", 3);
     context.add("GMWL", "HIGH", 4);
-    BOOST_CHECK( ast.eval(context));
+    BOOST_CHECK(ast.eval(context).conditionSatisfied());
 
     context.add("MNTH", 11);
     context.add("GMWL", "HIGH", 4);
-    BOOST_CHECK( !ast.eval(context));
+    BOOST_CHECK(!ast.eval(context).conditionSatisfied());
 
     context.add("MNTH", 3);
     context.add("GMWL", "HIGH", 3);
-    BOOST_CHECK( !ast.eval(context));
+    BOOST_CHECK(!ast.eval(context).conditionSatisfied());
 }
 
 BOOST_AUTO_TEST_CASE(MANUAL4)
@@ -597,13 +603,13 @@ BOOST_AUTO_TEST_CASE(MANUAL4)
     context.add("DAY", 2);
     context.add("YEAR", 2030);
     context.add("GWCT", "FIELD", 1.0);
-    BOOST_CHECK( ast.eval(context) );
+    BOOST_CHECK(ast.eval(context).conditionSatisfied());
 
     context.add("MNTH", 7);
     context.add("DAY", 2);
     context.add("YEAR", 2019);
     context.add("GWCT", "FIELD", 1.0);
-    BOOST_CHECK( !ast.eval(context) );
+    BOOST_CHECK(!ast.eval(context).conditionSatisfied());
 }
 
 BOOST_AUTO_TEST_CASE(MANUAL5)
@@ -619,7 +625,7 @@ BOOST_AUTO_TEST_CASE(MANUAL5)
     context.add("GCG7", "G2", 100);
     context.add("FCG1", 100);
     context.add("FCG7",  50);
-    BOOST_CHECK(ast.eval(context));
+    BOOST_CHECK(ast.eval(context).conditionSatisfied());
 
     context.add("WCG2", "PROD1", 100);
     context.add("WCG5", "PROD2",  50);
@@ -627,7 +633,7 @@ BOOST_AUTO_TEST_CASE(MANUAL5)
     context.add("GCG7", "G2", 100);
     context.add("FCG1", 100);
     context.add("FCG7", 150);
-    BOOST_CHECK(ast.eval(context));
+    BOOST_CHECK(ast.eval(context).conditionSatisfied());
 
     context.add("WCG2", "PROD1", 100);
     context.add("WCG5", "PROD2",  50);
@@ -635,7 +641,7 @@ BOOST_AUTO_TEST_CASE(MANUAL5)
     context.add("GCG7", "G2", 100);
     context.add("FCG1", 100);
     context.add("FCG7", 150);
-    BOOST_CHECK(!ast.eval(context));
+    BOOST_CHECK(!ast.eval(context).conditionSatisfied());
 
     context.add("WCG2", "PROD1", 100);
     context.add("WCG5", "PROD2",  50);
@@ -643,7 +649,7 @@ BOOST_AUTO_TEST_CASE(MANUAL5)
     context.add("GCG7", "G2", 100);
     context.add("FCG1", 200);
     context.add("FCG7", 150);
-    BOOST_CHECK(ast.eval(context));
+    BOOST_CHECK(ast.eval(context).conditionSatisfied());
 }
 
 BOOST_AUTO_TEST_CASE(LGR)
@@ -654,10 +660,10 @@ BOOST_AUTO_TEST_CASE(LGR)
     Action::Context context(st, wlm);
 
     context.add("LWCC", "OPX:LOCAL:1:2:3", 200);
-    BOOST_CHECK(ast.eval(context));
+    BOOST_CHECK(ast.eval(context).conditionSatisfied());
 
     context.add("LWCC", "OPX:LOCAL:1:2:3", 20);
-    BOOST_CHECK(!ast.eval(context));
+    BOOST_CHECK(!ast.eval(context).conditionSatisfied());
 }
 
 BOOST_AUTO_TEST_CASE(Action_ContextTest)
@@ -698,41 +704,42 @@ BOOST_AUTO_TEST_CASE(TestMatchingWells)
 
     WListManager wlm;
     Action::Context context(st, wlm);
-    auto res = ast.eval(context);
-    auto wells = res.wells();
-    BOOST_CHECK( res);
+    const auto res = ast.eval(context);
+    const auto wells = res.matches().wells().asVector();
+    BOOST_CHECK(res.conditionSatisfied());
 
     BOOST_CHECK_EQUAL(wells.size(), 1U);
     BOOST_CHECK_EQUAL(wells[0], "OPZ");
 }
 
-BOOST_AUTO_TEST_CASE(TestMatchingWells2) {
-  Action::AST ast1({"WOPR", "P*", ">", "1.0"});
-  Action::AST ast2({"WOPR", "*", ">", "1.0"});
-  SummaryState st(TimeService::now(), 0.0);
+BOOST_AUTO_TEST_CASE(TestMatchingWells2)
+{
+    Action::AST ast1({"WOPR", "P*", ">", "1.0"});
+    Action::AST ast2({"WOPR", "*", ">", "1.0"});
+    SummaryState st(TimeService::now(), 0.0);
 
-  st.update_well_var("PX", "WOPR", 0);
-  st.update_well_var("PY", "WOPR", 0.50);
-  st.update_well_var("PZ", "WOPR", 2.0);
+    st.update_well_var("PX", "WOPR", 0);
+    st.update_well_var("PY", "WOPR", 0.50);
+    st.update_well_var("PZ", "WOPR", 2.0);
 
-  st.update_well_var("IX", "WOPR", 0);
-  st.update_well_var("IY", "WOPR", 0.50);
-  st.update_well_var("IZ", "WOPR", 2.0);
+    st.update_well_var("IX", "WOPR", 0);
+    st.update_well_var("IY", "WOPR", 0.50);
+    st.update_well_var("IZ", "WOPR", 2.0);
 
-  WListManager wlm;
-  Action::Context context(st, wlm);
-  auto res1 = ast1.eval(context);
-  auto res2 = ast2.eval(context);
-  auto wells1 = res1.wells();
-  auto wells2 = res2.wells();
-  BOOST_CHECK(res1);
-  BOOST_CHECK_EQUAL( wells1.size(), 1U);
-  BOOST_CHECK_EQUAL( wells1[0], "PZ" );
+    WListManager wlm;
+    Action::Context context(st, wlm);
+    const auto res1 = ast1.eval(context);
+    const auto res2 = ast2.eval(context);
+    const auto wells1 = res1.matches().wells().asVector();
+    const auto wells2 = res2.matches().wells().asVector();
+    BOOST_CHECK(res1.conditionSatisfied());
+    BOOST_CHECK_EQUAL(wells1.size(), 1U);
+    BOOST_CHECK_EQUAL(wells1[0], "PZ" );
 
-  BOOST_CHECK(res2);
-  BOOST_CHECK_EQUAL( wells2.size(), 2U);
-  BOOST_CHECK_EQUAL( std::count(wells2.begin(), wells2.end(), "PZ") , 1);
-  BOOST_CHECK_EQUAL( std::count(wells2.begin(), wells2.end(), "IZ") , 1);
+    BOOST_CHECK(res2.conditionSatisfied());
+    BOOST_CHECK_EQUAL(wells2.size(), 2U);
+    BOOST_CHECK_EQUAL(std::count(wells2.begin(), wells2.end(), "PZ"), 1);
+    BOOST_CHECK_EQUAL(std::count(wells2.begin(), wells2.end(), "IZ"), 1);
 }
 
 BOOST_AUTO_TEST_CASE(TestMatchingWells_AND)
@@ -750,13 +757,13 @@ BOOST_AUTO_TEST_CASE(TestMatchingWells_AND)
 
     WListManager wlm;
     Action::Context context(st, wlm);
-    auto res = ast.eval(context);
-    BOOST_CHECK(res);
+    const auto res = ast.eval(context);
+    BOOST_CHECK(res.conditionSatisfied());
 
-    // Even though condition as a whole matches, there is no finite set of wells
-    // which mathes both conditions when combined with AND - i.e. the matching_wells
-    // variable should be empty.
-    BOOST_CHECK( res.wells().empty() );
+    // Even though condition as a whole matches, there is no finite set of
+    // wells which mathes both conditions when combined with AND - i.e. the
+    // matching_wells variable should be empty.
+    BOOST_CHECK(res.matches().wells().empty());
 }
 
 BOOST_AUTO_TEST_CASE(TestMatchingWells_OR)
@@ -774,16 +781,16 @@ BOOST_AUTO_TEST_CASE(TestMatchingWells_OR)
 
     WListManager wlm;
     Action::Context context(st, wlm);
-    auto res = ast.eval(context);
-    auto wells = res.wells();
-    BOOST_CHECK(res);
+    const auto res = ast.eval(context);
+    const auto wells = res.matches().wells();
+    BOOST_CHECK(res.conditionSatisfied());
 
     // The well 'OPZ' matches the first condition and the well 'OPY' matches the
     // second condition, since the two conditions are combined with || the
     // resulting mathcing_wells variable should contain both these wells.
-    BOOST_CHECK_EQUAL( wells.size(), 2U);
-    BOOST_CHECK( std::find(wells.begin(), wells.end(), "OPZ") != wells.end());
-    BOOST_CHECK( std::find(wells.begin(), wells.end(), "OPY") != wells.end());
+    BOOST_CHECK_EQUAL(wells.size(), 2U);
+    BOOST_CHECK(std::find(wells.begin(), wells.end(), "OPZ") != wells.end());
+    BOOST_CHECK(std::find(wells.begin(), wells.end(), "OPY") != wells.end());
 }
 
 BOOST_AUTO_TEST_CASE(TestWLIST)
@@ -801,13 +808,13 @@ BOOST_AUTO_TEST_CASE(TestWLIST)
 
     Action::Context context(st, wlm);
     wlm.newList("*LIST1", {"W1", "W3", "W5"});
-    auto res = ast.eval(context);
-    auto wells = res.wells();
-    BOOST_CHECK(res);
-    BOOST_CHECK_EQUAL( wells.size(), 3U);
+    const auto res = ast.eval(context);
+    const auto wells = res.matches().wells();
+    BOOST_CHECK(res.conditionSatisfied());
+    BOOST_CHECK_EQUAL(wells.size(), 3U);
     for (const auto& w : {"W1", "W3", "W5"}) {
         auto find_iter = std::find(wells.begin(), wells.end(), w);
-        BOOST_CHECK( find_iter != wells.end() );
+        BOOST_CHECK(find_iter != wells.end());
     }
 }
 
@@ -825,23 +832,22 @@ BOOST_AUTO_TEST_CASE(TestFieldAND)
 
     st.update("FMWPR", 1);
     {
-        auto res = ast.eval(context);
-        BOOST_CHECK(!res);
-        BOOST_CHECK_THROW(res.wells(), std::logic_error);
-        BOOST_CHECK_THROW(res.has_well("ABC"), std::logic_error);
+        const auto res = ast.eval(context);
+        BOOST_CHECK(!res.conditionSatisfied());
     }
 
     st.update("FMWPR", 4);
     {
-        auto res = ast.eval(context);
-        auto wells = res.wells();
-        BOOST_CHECK(res);
+        const auto res = ast.eval(context);
+        const auto wells = res.matches().wells().asVector();
+        BOOST_CHECK(res.conditionSatisfied());
         BOOST_CHECK_EQUAL(wells.size(), 1U);
         BOOST_CHECK_EQUAL(wells[0], "OP3");
     }
 }
 
-BOOST_AUTO_TEST_CASE(Conditions) {
+BOOST_AUTO_TEST_CASE(Conditions)
+{
     auto location = KeywordLocation("Keyword", "File", 100);
 
     // Missing comparator
@@ -877,7 +883,8 @@ BOOST_AUTO_TEST_CASE(Conditions) {
     BOOST_CHECK(cond2.logic == Action::Logical::END);
 }
 
-BOOST_AUTO_TEST_CASE(SCAN2) {
+BOOST_AUTO_TEST_CASE(SCAN2)
+{
     const auto deck_string = std::string{ R"(
 SCHEDULE
 
@@ -991,26 +998,32 @@ TSTEP
 
     std::size_t index = 0;
     for (const auto& act : actions2) {
-        if (index == 0)
+        if (index == 0) {
             BOOST_CHECK_EQUAL("B", act.name());
+        }
 
-        if (index == 1)
+        if (index == 1) {
             BOOST_CHECK_EQUAL("A", act.name());
-        index++;
+        }
+
+        ++index;
     }
 }
 
-BOOST_AUTO_TEST_CASE(ACTIONRESULT_COPY_WELLS) {
-    Action::Result res1(true, {"W1", "W2", "W3"});
-    auto res2 = res1;
+BOOST_AUTO_TEST_CASE(ACTIONRESULT_COPY_WELLS)
+{
+    const auto res1 = Action::Result{true}.wells({"W1", "W2", "W3"});
+    const auto res2 = res1;
 
-    BOOST_CHECK(res1);
-    BOOST_CHECK(res2);
-    BOOST_CHECK(!res1.has_well("NO"));
-    BOOST_CHECK(!res2.has_well("NO"));
+    BOOST_CHECK(res1.conditionSatisfied());
+    BOOST_CHECK(res2.conditionSatisfied());
+
+    BOOST_CHECK(!res1.matches().wells().hasElement("NO"));
+    BOOST_CHECK(!res2.matches().wells().hasElement("NO"));
+
     for (const auto& w : {"W1", "W2", "W3"}) {
-        BOOST_CHECK(res1.has_well(w));
-        BOOST_CHECK(res2.has_well(w));
+        BOOST_CHECK(res1.matches().wells().hasElement(w));
+        BOOST_CHECK(res2.matches().wells().hasElement(w));
     }
 }
 
@@ -1019,12 +1032,12 @@ BOOST_AUTO_TEST_CASE(ActionState)
     Action::State st;
     Action::ActionX action1("NAME", 100, 100, 100); action1.update_id(100);
     Action::ActionX action2("NAME", 100, 100, 100); action1.update_id(200);
-    Action::Result res1(true, {"W1"});
-    Action::Result res2(true, {"W2"});
-    Action::Result res3(true, {"W3"});
+    const auto res1 = Action::Result{true}.wells({"W1"});
+    const auto res2 = Action::Result{true}.wells({"W2"});
+    const auto res3 = Action::Result{true}.wells({"W3"});
 
     BOOST_CHECK_EQUAL(0U, st.run_count(action1));
-    BOOST_CHECK_THROW( st.run_time(action1), std::invalid_argument);
+    BOOST_CHECK_THROW(st.run_time(action1), std::invalid_argument);
 
     st.add_run(action1, 100, res1);
     BOOST_CHECK_EQUAL(1U, st.run_count(action1));
@@ -1096,13 +1109,13 @@ ENDACTIO
     context.add("DAY", 2);
     context.add("YEAR", 2030);
     context.add("GWCT", "FIELD", 1.0);
-    BOOST_CHECK( action1.eval(context) );
+    BOOST_CHECK(action1.eval(context).conditionSatisfied());
 
     context.add("MNTH", 7);
     context.add("DAY", 2);
     context.add("YEAR", 2019);
     context.add("GWCT", "FIELD", 1.0);
-    BOOST_CHECK( !action1.eval(context) );
+    BOOST_CHECK(!action1.eval(context).conditionSatisfied());
 }
 
 BOOST_AUTO_TEST_CASE(ActionID)
@@ -1208,9 +1221,8 @@ END
         BOOST_CHECK_CLOSE(inj.surface_max_rate, unit_system.to_si(UnitSystem::measure::liquid_surface_rate, 1000), 1e-5);
     }
 
-
-    Action::Result action_result(true);
-    sched.applyAction(0, action1, action_result.wells(),
+    const Action::Result action_result{true};
+    sched.applyAction(0, action1, action_result.matches(),
                       std::unordered_map<std::string,double>{});
 
     {
@@ -1335,10 +1347,14 @@ END
         BOOST_CHECK_EQUAL(required_summary.count("FPR"), 1);
     }
 
-    Action::Result action_result(true);
-    const auto& sim_update = sched.applyAction(0, action1, action_result.wells(),
-                                               std::unordered_map<std::string,double>{});
-    BOOST_CHECK( sim_update.affected_wells.empty() );
+    {
+        const Action::Result action_result(true);
+        const auto& sim_update = sched.applyAction(0, action1, action_result.matches(),
+                                                   std::unordered_map<std::string,double>{});
+
+        BOOST_CHECK(sim_update.affected_wells.empty());
+    }
+
     {
         const auto unitSystem = Opm::UnitSystem {
             UnitSystem::UnitType::UNIT_TYPE_METRIC
@@ -1416,7 +1432,7 @@ END
     BOOST_CHECK(!sched.hasWell("PROD1"));
 
     Action::Result action_result(true);
-    sched.applyAction(0, action1, action_result.wells(),
+    sched.applyAction(0, action1, action_result.matches(),
                       std::unordered_map<std::string,double>{});
 
     const auto& well = sched.getWell("PROD1", 1);
@@ -1476,16 +1492,19 @@ END
 
     const auto CF0 = sched.getWell("PROD1", 0).getConnections()[0].CF();
 
-    Action::Result action_result(true);
-    BOOST_CHECK_THROW( sched.applyAction(0, action1, action_result.wells(),
+    const Action::Result action_result(true);
+    BOOST_CHECK_THROW(sched.applyAction(0, action1, action_result.matches(),
                                         std::unordered_map<std::string,double>{}), std::exception);
 
     {
         const auto& well = sched.getWell("PROD1", 0);
-        const auto& sim_update = sched.applyAction(0, action1, action_result.wells(),
-                                                   std::unordered_map<std::string,double>{{"PROD1", well.convertDeckPI(500)}});
-        BOOST_CHECK_EQUAL( sim_update.welpi_wells.count("PROD1"), 1);
-        BOOST_CHECK_EQUAL( sim_update.welpi_wells.size(), 1);
+        const auto& sim_update = sched.applyAction(0, action1, action_result.matches(),
+                                                   std::unordered_map<std::string,double> {
+                                                       { "PROD1", well.convertDeckPI(500) },
+                                                   });
+
+        BOOST_CHECK_EQUAL(sim_update.welpi_wells.count("PROD1"), 1);
+        BOOST_CHECK_EQUAL(sim_update.welpi_wells.size(), 1);
     }
 
     {
@@ -1555,7 +1574,7 @@ END
 
     const auto& action1 = sched[0].actions.get()["A"];
     const Action::Result action_result(true);
-    auto sim_update = sched.applyAction(0, action1, action_result.wells(),
+    auto sim_update = sched.applyAction(0, action1, action_result.matches(),
                                         std::unordered_map<std::string,double>{});
 
     BOOST_CHECK(sim_update.tran_update);
@@ -1614,29 +1633,36 @@ END
     // F        |  F         || T         | T          | F
     // F        |  F         || T         | T          | F
 
-    std::vector<double> FU1_values = {1, 100};
-    std::vector<double> FU2_values = {-5,0,5};
+    {
+        const auto FU1_values = std::array { 1.0, 100.0};
+        const auto FU2_values = std::array {-5.0, 0.0, 5.0};
 
+        for (const auto& FU1 : FU1_values) {
+            for (const auto& FU2 : FU2_values) {
+                const auto FU3_values = std::array { FU2 + 1, FU2 - 1 };
 
-    for (const auto& FU1 : FU1_values) {
-        for (const auto& FU2 : FU2_values) {
-            std::vector FU3_values = { FU2 + 1, FU2 - 1 };
-            for (const auto& FU3 : FU3_values) {
-                bool expected = ((FU1 < 10) && (FU2 < FU3) && ((FU2 > 1) || (FU2 < -1)));
+                for (const auto& FU3 : FU3_values) {
+                    st.update("FU1", FU1);
+                    st.update("FU2", FU2);
+                    st.update("FU3", FU3);
 
-                st.update("FU1", FU1);
-                st.update("FU2", FU2);
-                st.update("FU3", FU3);
+                    const auto expected = (FU1 < 10.0)
+                        && (FU2 < FU3)
+                        && ((FU2 > 1.0) || (FU2 < -1.0));
 
-                auto result = action.eval(context);
-                BOOST_CHECK_EQUAL(bool(result), expected);
+                    BOOST_CHECK_EQUAL(action.eval(context).conditionSatisfied(), expected);
+                }
             }
         }
     }
+
     const auto& conditions = action.conditions();
-    BOOST_CHECK_EQUAL( conditions.size(), 4);
+
+    BOOST_REQUIRE_EQUAL(conditions.size(), 4);
+
     {
-        auto cond0 = conditions[0];
+        const auto cond0 = conditions[0];
+
         BOOST_CHECK_EQUAL(cond0.lhs.quantity, "FU1");
         BOOST_CHECK(cond0.lhs.args.empty());
         BOOST_CHECK(!cond0.left_paren);
@@ -1644,8 +1670,10 @@ END
         BOOST_CHECK(!cond0.open_paren());
         BOOST_CHECK(!cond0.close_paren());
     }
+
     {
-        auto cond1 = conditions[1];
+        const auto cond1 = conditions[1];
+
         BOOST_CHECK_EQUAL(cond1.lhs.quantity, "FU2");
         BOOST_CHECK(cond1.lhs.args.empty());
         BOOST_CHECK(cond1.left_paren);
@@ -1653,8 +1681,10 @@ END
         BOOST_CHECK(!cond1.open_paren());
         BOOST_CHECK(!cond1.close_paren());
     }
+
     {
-        auto cond2 = conditions[2];
+        const auto cond2 = conditions[2];
+
         BOOST_CHECK_EQUAL(cond2.lhs.quantity, "FU2");
         BOOST_CHECK(cond2.lhs.args.empty());
         BOOST_CHECK(cond2.left_paren);
@@ -1662,8 +1692,10 @@ END
         BOOST_CHECK(cond2.open_paren());
         BOOST_CHECK(!cond2.close_paren());
     }
+
     {
-        auto cond3 = conditions[3];
+        const auto cond3 = conditions[3];
+
         BOOST_CHECK_EQUAL(cond3.lhs.quantity, "FU2");
         BOOST_CHECK(cond3.lhs.args.empty());
         BOOST_CHECK(!cond3.left_paren);
@@ -1684,8 +1716,8 @@ BOOST_AUTO_TEST_CASE(MatchingWellsSpecified1)
     st.update_well_var("P1", "WBHP", 150);
     Opm::Action::Context context(st, wlm);
     auto result = ast.eval(context);
-    BOOST_CHECK(result);
-    BOOST_CHECK(result.wells() == std::vector<std::string>{"P1"});
+    BOOST_CHECK(result.conditionSatisfied());
+    BOOST_CHECK(result.matches().wells().asVector() == std::vector<std::string>{"P1"});
 }
 
 BOOST_AUTO_TEST_CASE(MatchingWellsSpecified2)
@@ -1718,8 +1750,8 @@ END
     Opm::Action::Context context(st, wlm);
     const auto& action = sched[0].actions.get()["INJECTION"];
     auto result = action.eval(context);
-    BOOST_CHECK(result);
-    BOOST_CHECK(result.wells() == std::vector<std::string>{"P1"});
+    BOOST_CHECK(result.conditionSatisfied());
+    BOOST_CHECK(result.matches().wells().asVector() == std::vector<std::string>{"P1"});
 }
 
 BOOST_AUTO_TEST_CASE(MaxConditions)

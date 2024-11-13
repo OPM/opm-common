@@ -172,13 +172,13 @@ Opm::Action::ASTNode::evalLogicalOperation(const Context& context) const
 {
     auto result = Result { this->type == TokenType::op_and };
 
+    auto setOp = (this->type == TokenType::op_or)
+        ? &Result::makeSetUnion          // or  => union
+        : &Result::makeSetIntersection;  // and => intersection
+
+    // Recursive evaluation down tree.
     for (const auto& child : this->children) {
-        if (this->type == TokenType::op_or) {
-            result |= child.eval(context);
-        }
-        else {
-            result &= child.eval(context);
-        }
+        (result.*setOp)(child.eval(context));
     }
 
     return result;

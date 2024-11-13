@@ -21,6 +21,8 @@
 
 #include <opm/common/OpmLog/KeywordLocation.hpp>
 
+#include <opm/input/eclipse/Schedule/Action/ActionResult.hpp>
+
 #include <cstddef>
 #include <optional>
 #include <set>
@@ -28,9 +30,11 @@
 #include <unordered_map>
 #include <vector>
 
-namespace Opm {
+namespace Opm::Action {
+    class WGNames;
+}
 
-namespace Action { class WGNames; }
+namespace Opm {
 class DeckKeyword;
 class DeckRecord;
 class ErrorGuard;
@@ -43,7 +47,9 @@ struct ScheduleStatic;
 struct SimulatorUpdate;
 enum class WellStatus;
 class WelSegsSet;
+}
 
+namespace Opm {
 class HandlerContext
 {
 public:
@@ -54,7 +60,7 @@ public:
                    const DeckKeyword& keyword_,
                    const ScheduleGrid& grid_,
                    const std::size_t currentStep_,
-                   const std::vector<std::string>& matching_wells_,
+                   const Action::Result::MatchingEntities& matches_,
                    bool actionx_mode_,
                    const ParseContext& parseContext_,
                    ErrorGuard& errors_,
@@ -66,7 +72,7 @@ public:
         : block(block_)
         , keyword(keyword_)
         , currentStep(currentStep_)
-        , matching_wells(matching_wells_)
+        , matches(matches_)
         , actionx_mode(actionx_mode_)
         , parseContext(parseContext_)
         , errors(errors_)
@@ -159,7 +165,7 @@ public:
     const ScheduleBlock& block;
     const DeckKeyword& keyword;
     const std::size_t currentStep;
-    const std::vector<std::string>& matching_wells;
+    const Action::Result::MatchingEntities& matches;
     const bool actionx_mode;
     const ParseContext& parseContext;
     ErrorGuard& errors;

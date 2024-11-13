@@ -32,6 +32,7 @@
 #include <utility>
 #include <vector>
 
+#include <opm/input/eclipse/Schedule/Action/ActionResult.hpp>
 #include <opm/input/eclipse/Schedule/Action/SimulatorUpdate.hpp>
 #include <opm/input/eclipse/Schedule/Action/WGNames.hpp>
 #include <opm/input/eclipse/Schedule/CompletedCells.hpp>
@@ -44,13 +45,7 @@
 #include <opm/input/eclipse/Schedule/WriteRestartFileEvents.hpp>
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
 
-namespace Opm
-{
-    namespace Action {
-        class ActionX;
-        class PyAction;
-        class State;
-    }
+namespace Opm {
     class ActiveGridCells;
     class Deck;
     class DeckKeyword;
@@ -83,10 +78,21 @@ namespace Opm
     enum class WellStatus;
     class WelSegsSet;
     class WellTestConfig;
+} // namespace Opm
 
-    namespace RestartIO { struct RstState; }
+namespace Opm::Action {
+    class ActionX;
+    class PyAction;
+    class State;
+} // namespace Opm::Action
 
-    class Schedule {
+namespace Opm::RestartIO {
+    struct RstState;
+} // namespace Opm::RestartIO
+
+namespace Opm {
+    class Schedule
+    {
     public:
         Schedule() = default;
 
@@ -268,21 +274,19 @@ namespace Opm
         bool write_rst_file(std::size_t report_step) const;
         const std::map< std::string, int >& rst_keywords( size_t timestep ) const;
 
-        /*
-          The applyAction() is invoked from the simulator *after* an ACTIONX has
-          evaluated to true. The return value is a small structure with
-          'information' which the simulator should take into account when
-          updating internal datastructures after the ACTIONX keywords have been
-          applied.
-        */
+        // The applyAction() member function is invoked from the simulator
+        // *after* an ACTIONX has triggered.  Its return value is a small
+        // structure with 'information' which the simulator should take into
+        // account when updating internal datastructures after the ACTIONX
+        // keywords have been applied.
         SimulatorUpdate applyAction(std::size_t reportStep,
                                     const Action::ActionX& action,
-                                    const std::vector<std::string>& matching_wells,
+                                    const Action::Result::MatchingEntities& matches,
                                     const std::unordered_map<std::string, double>& wellpi);
 
         SimulatorUpdate applyAction(std::size_t reportStep,
                                     const Action::ActionX& action,
-                                    const std::vector<std::string>& matching_wells,
+                                    const Action::Result::MatchingEntities& matches,
                                     const std::unordered_map<std::string, float>& wellpi);
         /*
           The runPyAction() will run the Python script in a PYACTION keyword. In
@@ -457,7 +461,7 @@ namespace Opm
                            const ParseContext& parseContext,
                            ErrorGuard& errors,
                            const ScheduleGrid& grid,
-                           const std::vector<std::string>& matching_wells,
+                           const Action::Result::MatchingEntities& matches,
                            bool actionx_mode,
                            SimulatorUpdate* sim_update,
                            const std::unordered_map<std::string, double>* target_wellpi,
