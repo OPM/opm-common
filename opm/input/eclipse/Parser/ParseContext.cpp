@@ -133,6 +133,7 @@ namespace Opm {
         this->addKey(SCHEDULE_WELL_IN_FIELD_GROUP, InputErrorAction::WARN);
         this->addKey(SCHEDULE_COMPSEGS_INVALID, InputErrorAction::THROW_EXCEPTION);
         this->addKey(SCHEDULE_COMPSEGS_NOT_SUPPORTED, InputErrorAction::THROW_EXCEPTION);
+        this->addKey(SCHEDULE_COMPDAT_INVALID, InputErrorAction::THROW_EXCEPTION);
         addKey(SCHEDULE_INVALID_NAME, InputErrorAction::THROW_EXCEPTION);
     }
 
@@ -408,4 +409,6 @@ namespace Opm {
 
     const std::string ParseContext::SCHEDULE_COMPSEGS_INVALID = "SCHEDULE_COMPSEG_INVALID";
     const std::string ParseContext::SCHEDULE_COMPSEGS_NOT_SUPPORTED = "SCHEDULE_COMPSEGS_NOT_SUPPORTED";
+
+    const std::string ParseContext::SCHEDULE_COMPDAT_INVALID = "SCHEDULE_COMPDAT_INVALID";
 }

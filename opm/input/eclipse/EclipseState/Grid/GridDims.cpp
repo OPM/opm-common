@@ -29,6 +29,8 @@
 #include <opm/input/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/input/eclipse/Deck/DeckRecord.hpp>
 
+#include <fmt/format.h>
+
 #include <array>
 #include <stdexcept>
 #include <vector>
@@ -126,7 +128,8 @@ namespace Opm {
     void GridDims::assertGlobalIndex(std::size_t globalIndex) const
     {
         if (globalIndex >= getCartesianSize())
-            throw std::invalid_argument("input global index above valid range");
+            throw std::invalid_argument(fmt::format("Input global index {} above valid range (1, ..., {}).",
+                                                    globalIndex, getCartesianSize()));
     }
 
     void GridDims::assertIJK(const std::size_t i,
@@ -134,7 +137,8 @@ namespace Opm {
                              const std::size_t k) const
     {
         if (i >= getNX() || j >= getNY() || k >= getNZ())
-            throw std::invalid_argument("input IJK index above valid range");
+            throw std::invalid_argument(fmt::format("Input IJK index ({}, {}, {}) not part of grid with dimensions {} x {} x {}.",
+                                                    i + 1, j + 1, k + 1, getNX(), getNY(),getNZ()));
     }
 
     // keyword must be DIMENS or SPECGRID

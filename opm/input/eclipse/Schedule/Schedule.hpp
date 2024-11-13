@@ -466,7 +466,8 @@ namespace Opm
                            std::set<std::string>* compsegs_wells = nullptr);
 
         void internalWELLSTATUSACTIONXFromPYACTION(const std::string& well_name, std::size_t report_step, const std::string& wellStatus);
-        void prefetchPossibleFutureConnections(const ScheduleGrid& grid, const DeckKeyword& keyword);
+        void prefetchPossibleFutureConnections(const ScheduleGrid& grid, const DeckKeyword& keyword,
+                                               const ParseContext& parseContext, ErrorGuard& errors);
         void store_wgnames(const DeckKeyword& keyword);
         std::vector<std::string> wellNames(const std::string& pattern,
                                            const HandlerContext& context,
