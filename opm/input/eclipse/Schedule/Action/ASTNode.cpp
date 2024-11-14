@@ -107,9 +107,9 @@ Opm::Action::ASTNode::serializationTestObject()
     return result;
 }
 
-void Opm::Action::ASTNode::add_child(const ASTNode& child)
+void Opm::Action::ASTNode::add_child(ASTNode&& child)
 {
-    this->children.push_back(child);
+    this->children.push_back(std::move(child));
 }
 
 Opm::Action::Result
