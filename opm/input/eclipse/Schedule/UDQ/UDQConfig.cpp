@@ -80,9 +80,11 @@ namespace {
         return selector;
     }
 
+    /// Callback for affecting a UDQ assignment
     class EvalAssign
     {
     public:
+        /// Construct callback for FIELD level UDQs
         static EvalAssign field()
         {
             return { []() {
@@ -90,6 +92,11 @@ namespace {
             }};
         }
 
+        /// Construct callback for group level UDQs
+        ///
+        /// \param[in] context Summary vectors and model's entities
+        ///
+        /// \return UDQ assignment callback
         static EvalAssign group(const Opm::UDQContext& context)
         {
             return { [&context]() {
@@ -99,13 +106,29 @@ namespace {
             }};
         }
 
+        /// Construct callback for well level UDQs
+        ///
+        /// \param[in] context Summary vectors and model's entities
+        ///
+        /// \return UDQ assignment callback
         static EvalAssign well(const Opm::UDQContext& context)
         {
+            // Return value is an EvalAssign object, created from
+            //    -> a lambda (convertible to EvalAssign::Create), that when called returns
+            //    -> a lambda (convertible to EvalAssign::Eval), that when called returns
+            //    -> a UDQSet made from UDQAssign::eval(vector, wgNameMatcher), with the
+            //    -> wgNameMatcher defined by the innermost lambda.
             return { [&context]() {
-                return [&context](const auto& assign) {
+                return [&context](const Opm::UDQAssign& assign) {
                     return assign.eval(context.wells(), [&context]
                                        (const std::vector<std::string>& pattern)
                     {
+                        if (pattern.size() > 1) {
+                            // Dynamic selection from "?" in an ACTIONX
+                            // block.  Selection is pattern itself.
+                            return pattern;
+                        }
+
                         return !pattern.empty()
                             ? context.wells(pattern.front())
                             : context.wells(); // No element selection => assign all wells.
@@ -114,6 +137,11 @@ namespace {
             }};
         }
 
+        /// Construct callback for segment level UDQs
+        ///
+        /// \param[in] context Summary vectors and model's entities
+        ///
+        /// \return UDQ assignment callback
         static EvalAssign segment(const Opm::UDQContext& context)
         {
             return { [&context]() {
@@ -128,6 +156,11 @@ namespace {
             }};
         }
 
+        /// Affect UDQ assignment
+        ///
+        /// \param[in] assign UDQ assignment statement.
+        ///
+        /// \return UDQ Set populated by assignment.
         Opm::UDQSet operator()(const Opm::UDQAssign& assign) const
         {
             if (! this->eval_.has_value()) {
@@ -148,12 +181,27 @@ namespace {
         }
 
     private:
+        /// Evaluation function type.
+        ///
+        /// Populates a UDQ set from an assignment statement
         using Eval = std::function<Opm::UDQSet(const Opm::UDQAssign&)>;
+
+        /// Evaluation function factory type.
+        ///
+        /// Enables deferred initialisation.
         using Create = std::function<Eval()>;
 
+        /// Evaluation function factory.
         Create create_;
+
+        /// Assignment callback for populating UDQ sets.
         mutable std::optional<Eval> eval_;
 
+        /// Constructor.
+        ///
+        /// Used by static object creation functions only.
+        ///
+        /// \param[in] create Evaluation function factory.
         EvalAssign(Create create) : create_{ std::move(create) } {}
     };
 } // Anonymous namespace
@@ -220,10 +268,11 @@ namespace Opm {
             || (this->m_definitions.find(keyword) != this->m_definitions.end());
     }
 
-    void UDQConfig::add_record(SegmentMatcherFactory  create_segment_matcher,
-                               const DeckRecord&      record,
-                               const KeywordLocation& location,
-                               const std::size_t      report_step)
+    void UDQConfig::add_record(SegmentMatcherFactory                 create_segment_matcher,
+                               const DeckRecord&                     record,
+                               const KeywordLocation&                location,
+                               const std::size_t                     report_step,
+                               const std::optional<DynamicSelector>& dynamic_selector)
     {
         using KW = ParserKeywords::UDQ;
 
@@ -242,7 +291,8 @@ namespace Opm {
                              std::move(create_segment_matcher),
                              extractInputAssignmentSelector(data),
                              std::stod(data.back()),
-                             report_step);
+                             report_step,
+                             dynamic_selector);
         }
         else if (action == UDQAction::DEFINE) {
             this->add_define(quantity, location, data, report_step);
@@ -299,11 +349,12 @@ namespace Opm {
         def.update_status(update_status, report_step);
     }
 
-    void UDQConfig::add_assign(const std::string&              quantity,
-                               SegmentMatcherFactory           create_segment_matcher,
-                               const std::vector<std::string>& selector,
-                               const double                    value,
-                               const std::size_t               report_step)
+    void UDQConfig::add_assign(const std::string&                    quantity,
+                               SegmentMatcherFactory                 create_segment_matcher,
+                               const std::vector<std::string>&       selector,
+                               const double                          value,
+                               const std::size_t                     report_step,
+                               const std::optional<DynamicSelector>& dynamic_selector)
     {
         this->add_node(quantity, UDQAction::ASSIGN);
 
@@ -312,6 +363,12 @@ namespace Opm {
             this->add_enumerated_assign(quantity,
                                         std::move(create_segment_matcher),
                                         selector, value, report_step);
+            break;
+
+        case UDQVarType::WELL_VAR:
+            this->add_assign_wellvar(quantity, selector,
+                                     value, report_step,
+                                     dynamic_selector);
             break;
 
         default:
@@ -727,6 +784,48 @@ namespace Opm {
             enumerateItems(segmentMatcher->findSegments(setDescriptor));
 
         this->add_assign_impl(quantity, std::move(items), value, report_step);
+    }
+
+    void UDQConfig::add_assign_wellvar(const std::string&                    quantity,
+                                       const std::vector<std::string>&       selector,
+                                       const double                          value,
+                                       const std::size_t                     report_step,
+                                       const std::optional<DynamicSelector>& dynamic_selector)
+    {
+        if ((selector.size() != 1) || (selector.front() != "?")) {
+            // Normal well UDQ assignment.  Common case.  Selector is either
+            // empty (representing all wells), a well name, a well template,
+            // a well list, or a well list template.
+            this->add_assign_impl(quantity, selector, value, report_step);
+            return;
+        }
+
+        // If we get here, then 'selector' is the one-element string vector
+        // { "?" } and we must define an assignment based on the set of
+        // triggering/matching dynamic wells from an ACTIONX condition.
+
+        if (! dynamic_selector.has_value()) {
+            throw std::logic_error {
+                fmt::format("UDQ assignment for {} does not "
+                            "have an associate match set", quantity)
+            };
+        }
+
+        const auto dynWells = dynamic_selector->wells();
+        if (! dynWells.has_value()) {
+            // No matching wells.  Nothing to do.
+            return;
+        }
+
+        const auto wellSet = dynWells->asVector();
+        if (wellSet.empty()) {
+            // No matching wells.  Nothing to do.
+            return;
+        }
+
+        // If we get here, then 'wellSet' is a non-empty set of dynamic well
+        // names.  Generate an assignment record for these wells.
+        this->add_assign_impl(quantity, wellSet, value, report_step);
     }
 
 } // namespace Opm
