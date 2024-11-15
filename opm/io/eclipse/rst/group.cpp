@@ -77,8 +77,8 @@ RstGroup::RstGroup(const ::Opm::UnitSystem& unit_system,
     efficiency_factor(             unit_system.to_si(M::identity,              sgrp[VI::SGroup::EfficiencyFactor])),
     inj_water_guide_rate(          sgrp_value(sgrp[VI::SGroup::waterGuideRate])),
     inj_gas_guide_rate(            sgrp_value(sgrp[VI::SGroup::gasGuideRate])),
-    gas_consumption_rate(          unit_system.to_si(M::gas_surface_rate,      sgrp[VI::SGroup::GasConsumptionRate])),
-    gas_import_rate(               unit_system.to_si(M::gas_surface_rate,      sgrp[VI::SGroup::GasImportRate])),
+    gas_consumption_rate(          sgrp_value(sgrp[VI::SGroup::GasConsumptionRate])),  // UDA, stored in output units
+    gas_import_rate(               sgrp_value(sgrp[VI::SGroup::GasImportRate])),       // UDA, stored in output units
     oil_production_rate(           unit_system.to_si(M::liquid_surface_rate,   xgrp[VI::XGroup::OilPrRate])),
     water_production_rate(         unit_system.to_si(M::liquid_surface_rate,   xgrp[VI::XGroup::WatPrRate])),
     gas_production_rate(           unit_system.to_si(M::gas_surface_rate,      xgrp[VI::XGroup::GasPrRate])),

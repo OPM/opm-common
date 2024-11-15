@@ -2025,58 +2025,49 @@ quantity group_efficiency_factor(const fn_args& args)
     }
 
     const auto sched = args.schedule[args.sim_step];
-    const auto gefac = sched.groups.has(args.group_name)
-                        ? sched.groups(args.group_name).getGroupEfficiencyFactor()
-                        : 1.0;
+    const auto gefac = sched.groups(args.group_name).getGroupEfficiencyFactor();
 
     return { gefac, measure::identity };
 }
 
+double gconsump_rate(const std::string& gname,
+                     const Opm::ScheduleState& schedule,
+                     const Opm::SummaryState& st,
+                     double Opm::GConSump::GCONSUMPGroupProp::* rate)
+{
+    double tot_rate = 0.0;
+    if (schedule.groups.has(gname)) {
+        for (const auto& child : schedule.groups(gname).groups()) {
+            const auto efac = schedule.groups(child).getGroupEfficiencyFactor();
+            tot_rate += efac * gconsump_rate(child, schedule, st, rate);
+        }
+    }
+
+    if (const auto& gconsump = schedule.gconsump(); gconsump.has(gname)) {
+        tot_rate += gconsump.get(gname, st).*rate;
+    }
+
+    return tot_rate;
+}
+
 quantity gas_consumption_rate(const fn_args& args)
 {
-    auto gcr_recursive =
-        [&args](auto self, const std::string& gname) -> double
-        {
-            double consumption_rate = 0.0;
-            const auto& schedule = args.schedule[args.sim_step];
-            const auto& gconsump = schedule.gconsump();
-            if (schedule.groups.has(gname)) {
-                for (const auto& child_gname : schedule.groups(gname).groups()) {
-                    const double gefac = schedule.groups(child_gname).getGroupEfficiencyFactor();
-                    consumption_rate += (gefac * self(self, child_gname));
-                }
-            }
-            if (gconsump.has(gname)) {
-                consumption_rate += gconsump.get(gname, args.st).consumption_rate;
-            }
-            return consumption_rate;
-        };
-
-    return { gcr_recursive(gcr_recursive, args.group_name), measure::gas_surface_rate };
+    return {
+        gconsump_rate(args.group_name,
+                      args.schedule[args.sim_step], args.st,
+                      &Opm::GConSump::GCONSUMPGroupProp::consumption_rate),
+        measure::gas_surface_rate
+    };
 }
 
 quantity gas_import_rate(const fn_args& args)
 {
-    auto gir_recursive =
-        [&args](auto self, const std::string& gname) -> double
-        {
-            double import_rate = 0.0;
-            const auto& schedule = args.schedule[args.sim_step];
-            const auto& gconsump = schedule.gconsump();
-
-            if (schedule.groups.has(gname)) {
-                for (const auto& child_gname : schedule.groups(gname).groups()) {
-                    const double gefac = schedule.groups(child_gname).getGroupEfficiencyFactor();
-                    import_rate += (gefac * self(self, child_gname));
-                }
-            }
-            if (gconsump.has(gname)) {
-                import_rate += gconsump.get(gname, args.st).import_rate;
-            }
-            return import_rate;
-        };
-
-    return { gir_recursive(gir_recursive, args.group_name), measure::gas_surface_rate };
+    return {
+        gconsump_rate(args.group_name,
+                      args.schedule[args.sim_step], args.st,
+                      &Opm::GConSump::GCONSUMPGroupProp::import_rate),
+        measure::gas_surface_rate
+    };
 }
 
 /*

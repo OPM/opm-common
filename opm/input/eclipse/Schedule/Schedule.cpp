@@ -2072,8 +2072,9 @@ namespace {
             const auto crate = rst_group.gas_consumption_rate;
             const auto irate = rst_group.gas_import_rate;
             if (crate != 0 || irate != 0) {
-                // rates already in SI units, so UDAValue with default (unit) Dimension is fine.
-                new_gconsump.add(rst_group.name, UDAValue(crate), UDAValue(irate), "", udq_undefined, this->m_static.m_unit_system);
+                // UDAs stored in output unit by convention
+                const auto dim = this->m_static.m_unit_system.getDimension(UnitSystem::measure::gas_surface_rate);
+                new_gconsump.add(rst_group.name, UDAValue(crate, dim), UDAValue(irate, dim), "", udq_undefined, this->m_static.m_unit_system);
             }
         }
         this->snapshots.back().gconsump.update( std::move(new_gconsump) );
