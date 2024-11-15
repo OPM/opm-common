@@ -2127,6 +2127,7 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
             auto inside_el = isInsideElement(element_centerX, element_centerY, element_centerZ, host_cellX, host_cellY, host_cellZ);
             auto host_cells_global_ref = filterArray(lgr_cell.get_father_global(), inside_el);
             lgr_cell.set_hostnum(host_cells_global_ref);
+            lgr_cell.init_children_host_cells();
         }
     }
 
