@@ -188,36 +188,7 @@ namespace Opm
                (upper(2) - lower(2) + 1);
     }
 
-    std::tuple<std::vector<std::size_t>, 
-               std::vector<std::size_t>, 
-               std::vector<std::size_t>>
-    Carfin::parent_cellsIJK() const
-    {
-        std::vector<std::size_t> i_list;
-        std::vector<std::size_t> j_list;  
-        std::vector<std::size_t> k_list;
-        std::size_t list_size =  num_parent_cells();
-        
-        i_list.resize(list_size);
-        j_list.resize(list_size);
-        k_list.resize(list_size);
-        std::size_t index = 0;
-        for (std::size_t i_index = lower(0); i_index <= upper(0); i_index++)
-        {
-            for (std::size_t j_index = lower(1); j_index <= upper(1); j_index++)
-            {
-                for (std::size_t k_index = lower(2); k_index <= upper(2); k_index++)
-                {
-                    i_list[index] = i_index;
-                    j_list[index] = j_index;
-                    k_list[index] = k_index;                                        
-                    index++;
-                }
-            }   
-        }
-        return std::make_tuple(i_list, j_list, k_list);
-    }
-
+    
 
     bool Carfin::isGlobal() const
     {

@@ -96,11 +96,7 @@ namespace Opm
         int NY() const;
         int NZ() const;
         std::size_t num_parent_cells() const;
-        std::tuple <std::vector<std::size_t>,
-                    std::vector<std::size_t>, 
-                    std::vector<std::size_t>> 
-        parent_cellsIJK() const;
-        
+         
         template<class Serializer>
         void serializeOp(Serializer& serializer)
         {

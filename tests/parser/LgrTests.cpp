@@ -41,36 +41,35 @@ BOOST_AUTO_TEST_CASE(ReadLgrCollection) {
 RUNSPEC
 
 DIMENS
-  3 3 1 /
+  10 10 10 /
 
 GRID
 
 CARFIN
 -- NAME I1-I2 J1-J2 K1-K2 NX NY NZ
-'LGR1'  2  2  2  2  1  1  2  2   /
+'LGR1'  5  6  5  6  1  3  6  6  9 /
 ENDFIN
-
 CARFIN
 -- NAME I1-I2 J1-J2 K1-K2 NX NY NZ
-'LGR2'  2  2  1  1  1  1  2  2   /
+'LGR2'  7  8  7  8  1  3  8  8  9 /
 ENDFIN
 
 
-DX 
-  9*1000 /
+DX
+1000*1 /
 DY
-	9*1000 /
+1000*1 /
 DZ
-	9*20 /
+1000*1 /
 
 TOPS
-	9*8325 /
+	100*1 /
 
 PORO
-  9*0.15 /
+  1000*0.15 /
 
 PERMX
-  9*1 /
+  1000*1 /
 
 COPY
   PERMX PERMZ /
@@ -96,14 +95,14 @@ SOLUTION
 
 SCHEDULE
 )";
-\
     Opm::Parser parser;
     Opm::Deck deck = parser.parseString(deck_string);
     Opm::EclipseState state(deck);
     Opm::LgrCollection lgrs = state.getLgrs();
 
     BOOST_CHECK_MESSAGE(state.hasInputLGR(), "EclipseState should have LGRs");
-    BOOST_CHECK_EQUAL( lgrs.size() , 2U );
+    BOOST_CHECK_EQUAL( 
+      lgrs.size() , 2U );
     BOOST_CHECK(lgrs.hasLgr("LGR1"));
     BOOST_CHECK(lgrs.hasLgr("LGR2"));
 
@@ -177,7 +176,7 @@ SOLUTION
 
 SCHEDULE
 )";
-\
+
     Opm::Parser parser;
     Opm::Deck deck = parser.parseString(deck_string);
     Opm::EclipseState state(deck);
@@ -257,7 +256,7 @@ SOLUTION
 
 SCHEDULE
 )";
-\
+
     Opm::Parser parser;
     Opm::Deck deck = parser.parseString(deck_string);
     Opm::EclipseState state(deck);
@@ -343,7 +342,7 @@ SOLUTION
 
 SCHEDULE
 )";
-\
+
     Opm::Parser parser;
     Opm::Deck deck = parser.parseString(deck_string);
     Opm::EclipseState state(deck);
@@ -427,7 +426,7 @@ SOLUTION
 
 SCHEDULE
 )";
-\
+
     Opm::Parser parser;
     Opm::Deck deck = parser.parseString(deck_string);
     Opm::EclipseState state(deck);
@@ -511,7 +510,7 @@ SOLUTION
 
 SCHEDULE
 )";
-\
+
     Opm::Parser parser;
     Opm::Deck deck = parser.parseString(deck_string);
     Opm::EclipseState state(deck);
