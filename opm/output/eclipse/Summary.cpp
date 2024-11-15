@@ -2023,8 +2023,7 @@ quantity group_efficiency_factor(const fn_args& args)
     if (args.schedule_wells.empty()) {
         return zero;
     }
-
-    const auto sched = args.schedule[args.sim_step];
+    const auto& sched = args.schedule[args.sim_step];
     const auto gefac = sched.groups(args.group_name).getGroupEfficiencyFactor();
 
     return { gefac, measure::identity };
