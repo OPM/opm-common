@@ -2064,6 +2064,21 @@ namespace {
             OpmLog::info(fmt::format("Adding group {} from restart file", rst_group.name));
         }
 
+        //! \todo{ Restart GCONSUMP when consumption/import is defined via UDQs. }
+        //! \todo{ Restart GCONSUMP with network node name defined. }
+        auto udq_undefined = this->getUDQConfig(report_step).params().undefinedValue();
+        auto new_gconsump = this->snapshots.back().gconsump.get();
+        for (const auto& rst_group : rst_state.groups) {
+            const auto crate = rst_group.gas_consumption_rate;
+            const auto irate = rst_group.gas_import_rate;
+            if (crate != 0 || irate != 0) {
+                // UDAs stored in output unit by convention
+                const auto dim = this->m_static.m_unit_system.getDimension(UnitSystem::measure::gas_surface_rate);
+                new_gconsump.add(rst_group.name, UDAValue(crate, dim), UDAValue(irate, dim), "", udq_undefined, this->m_static.m_unit_system);
+            }
+        }
+        this->snapshots.back().gconsump.update( std::move(new_gconsump) );
+
         auto Glo = this->snapshots.back().glo();
         Glo.all_newton(rst_state.header.glift_all_nupcol);
         Glo.min_wait(rst_state.header.glift_min_wait);

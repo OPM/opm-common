@@ -37,6 +37,7 @@
 
 #include <opm/input/eclipse/Schedule/Action/Actions.hpp>
 #include <opm/input/eclipse/Schedule/GasLiftOpt.hpp>
+#include <opm/input/eclipse/Schedule/Group/GConSump.hpp>
 #include <opm/input/eclipse/Schedule/Group/Group.hpp>
 #include <opm/input/eclipse/Schedule/MSW/Segment.hpp>
 #include <opm/input/eclipse/Schedule/MSW/WellSegments.hpp>
@@ -227,6 +228,8 @@ namespace {
             { "GMWPR", Opm::EclIO::SummaryNode::Type::Mode },
             { "GMWIN", Opm::EclIO::SummaryNode::Type::Mode },
             { "GPR",   Opm::EclIO::SummaryNode::Type::Pressure },
+            { "GGCR",   Opm::EclIO::SummaryNode::Type::Rate },
+            { "GGIMR",   Opm::EclIO::SummaryNode::Type::Rate },
         };
 
         const auto extra_field_vectors = std::vector<ParamCTorArgs> {
@@ -2020,12 +2023,50 @@ quantity group_efficiency_factor(const fn_args& args)
     if (args.schedule_wells.empty()) {
         return zero;
     }
-
-    const auto gefac =
-        args.schedule[args.sim_step].groups(args.group_name)
-        .getGroupEfficiencyFactor();
+    const auto& sched = args.schedule[args.sim_step];
+    const auto gefac = sched.groups(args.group_name).getGroupEfficiencyFactor();
 
     return { gefac, measure::identity };
+}
+
+double gconsump_rate(const std::string& gname,
+                     const Opm::ScheduleState& schedule,
+                     const Opm::SummaryState& st,
+                     double Opm::GConSump::GCONSUMPGroupProp::* rate)
+{
+    double tot_rate = 0.0;
+    if (schedule.groups.has(gname)) {
+        for (const auto& child : schedule.groups(gname).groups()) {
+            const auto efac = schedule.groups(child).getGroupEfficiencyFactor();
+            tot_rate += efac * gconsump_rate(child, schedule, st, rate);
+        }
+    }
+
+    if (const auto& gconsump = schedule.gconsump(); gconsump.has(gname)) {
+        tot_rate += gconsump.get(gname, st).*rate;
+    }
+
+    return tot_rate;
+}
+
+quantity gas_consumption_rate(const fn_args& args)
+{
+    return {
+        gconsump_rate(args.group_name,
+                      args.schedule[args.sim_step], args.st,
+                      &Opm::GConSump::GCONSUMPGroupProp::consumption_rate),
+        measure::gas_surface_rate
+    };
+}
+
+quantity gas_import_rate(const fn_args& args)
+{
+    return {
+        gconsump_rate(args.group_name,
+                      args.schedule[args.sim_step], args.st,
+                      &Opm::GConSump::GCONSUMPGroupProp::import_rate),
+        measure::gas_surface_rate
+    };
 }
 
 /*
@@ -2295,6 +2336,11 @@ static const auto funs = std::unordered_map<std::string, ofun> {
     { "GGPGR", group_guiderate<producer, Opm::data::GuideRateValue::Item::Gas> },
     { "GWPGR", group_guiderate<producer, Opm::data::GuideRateValue::Item::Water> },
     { "GVPGR", group_guiderate<producer, Opm::data::GuideRateValue::Item::ResV> },
+
+    { "GGCR", gas_consumption_rate },
+    { "GGCT", mul( mul( gas_consumption_rate, group_efficiency_factor ), duration ) },
+    { "GGIMR", gas_import_rate },
+    { "GGIMT", mul( mul( gas_import_rate, group_efficiency_factor ), duration ) },
 
     { "GPR", node_pressure },
     { "NPR", converged_node_pressure },
@@ -2588,6 +2634,12 @@ static const auto funs = std::unordered_map<std::string, ofun> {
                    duration ) },
     { "FVIT", mul( sum( sum( rate< rt::reservoir_water, injector>, rate< rt::reservoir_oil, injector >),
                    rate< rt::reservoir_gas, injector>), duration)},
+
+    { "FGCR", gas_consumption_rate },
+    { "FGCT", mul( gas_consumption_rate, duration ) },
+    { "FGIMR", gas_import_rate },
+    { "FGIMT", mul( gas_import_rate, duration ) },
+
     // Field potential
     { "FWPP", potential_rate< rt::well_potential_water , true, false>},
     { "FOPP", potential_rate< rt::well_potential_oil , true, false>},
@@ -3285,6 +3337,8 @@ namespace Evaluator {
         std::string group_name() const
         {
             using Cat = ::Opm::EclIO::SummaryNode::Category;
+
+            if (this->node_.category == Cat::Field) return std::string{"FIELD"};
 
             const auto need_grp_name =
                 (this->node_.category == Cat::Group) ||

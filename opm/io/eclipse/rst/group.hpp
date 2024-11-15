@@ -67,6 +67,8 @@ struct RstGroup {
     float efficiency_factor;
     float inj_water_guide_rate;
     float inj_gas_guide_rate;
+    float gas_consumption_rate;
+    float gas_import_rate;
 
     double oil_production_rate;
     double water_production_rate;
@@ -90,6 +92,8 @@ struct RstGroup {
     double history_total_water_injection;
     double history_total_gas_production;
     double history_total_gas_injection;
+    double gas_consumption_total;
+    double gas_import_total;
 };
 
 

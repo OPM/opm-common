@@ -28,6 +28,7 @@
 #include <opm/input/eclipse/Schedule/Network/ExtNetwork.hpp>
 #include <opm/input/eclipse/Schedule/SummaryState.hpp>
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
+#include <opm/input/eclipse/Schedule/Group/GConSump.hpp>
 #include <opm/input/eclipse/Schedule/Group/Group.hpp>
 #include <opm/input/eclipse/Schedule/Well/Well.hpp>
 
@@ -1004,6 +1005,7 @@ void assignGasLiftOptimisation(const Opm::GasLiftGroup& group,
 template <class SGrpArray>
 void staticContrib(const Opm::Group&        group,
                    const Opm::GasLiftOpt&   glo,
+                   const Opm::GConSump&     gconsump,
                    const Opm::SummaryState& sumState,
                    const Opm::UnitSystem&   units,
                    SGrpArray&               sGrp)
@@ -1059,6 +1061,12 @@ void staticContrib(const Opm::Group&        group,
 
     sGrp[Ix::EfficiencyFactor] =
         sgprop(M::identity, group.getGroupEfficiencyFactor());
+    const auto& gname = group.name();
+    if (gconsump.has(gname)) {
+        const auto& gc = gconsump.get(gname, sumState);
+        sGrp[Ix::GasConsumptionRate] = sgprop(M::gas_surface_rate, gc.consumption_rate);
+        sGrp[Ix::GasImportRate] = sgprop(M::gas_surface_rate, gc.import_rate);
+    }
 
     if (group.isProductionGroup()) {
         assignGroupProductionTargets(group, sumState, sgprop, sGrp);
@@ -1207,7 +1215,7 @@ captureDeclaredGroupData(const Opm::Schedule&                 sched,
               [&sumState, &units, &sched_state, this](const Group& group , const std::size_t groupID) -> void
     {
         auto sw = this->sGroup_[groupID];
-        SGrp::staticContrib(group, sched_state.glo(), sumState, units, sw);
+        SGrp::staticContrib(group, sched_state.glo(), sched_state.gconsump(), sumState, units, sw);
     });
 
     // Define Dynamic Contributions to XGrp Array.
