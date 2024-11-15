@@ -510,7 +510,7 @@ std::vector<std::array<float, 3>> EGrid::getXYZ_layer(int layer, bool bottom)
 }
 
 
-std::vector<float> EGrid::get_zcorn_from_disk(int layer, bool bottom)
+std::vector<float> EGrid::  get_zcorn_from_disk(int layer, bool bottom)
 {
     if (formatted)
         throw std::invalid_argument("partial loading of zcorn arrays not possible when using formatted input");
