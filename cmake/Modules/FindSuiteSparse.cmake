@@ -4,12 +4,12 @@
 #   find_package (SuiteSparse COMPONENTS <list-of-components>)
 #
 # Components are:
-#   amd              Approximate Minimum Degree ordering
-#   camd             Constrained Approximate Minimum Degree ordering
-#   colamd           COLumn Approximate Minimum Degree ordering
-#   ccolamd          Constrained COLumn Approximate Minimum Degree ordering
-#   cholmod          Supernodal sparse Cholesky factorization and update
-#   umfpack          Unsymmetric MultiFrontal sparse LU factorization
+#   AMD              Approximate Minimum Degree ordering
+#   CAMD             Constrained Approximate Minimum Degree ordering
+#   COLAMD           COLumn Approximate Minimum Degree ordering
+#   CCOLAMD          Constrained COLumn Approximate Minimum Degree ordering
+#   CHOLMOD          Supernodal sparse Cholesky factorization and update
+#   UMFPACK          Unsymmetric MultiFrontal sparse LU factorization
 #
 # The following variables will be set:
 #
@@ -117,12 +117,14 @@ endif (SuiteSparse_SEARCH_PATH)
 # full list of modules that must be found to satisfy the user's link demands
 set (SuiteSparse_MODULES ${SuiteSparse_FIND_COMPONENTS})
 list (FIND SuiteSparse_MODULES "umfpack" UMFPACK_DESIRED)
+list (FIND SuiteSparse_MODULES "UMFPACK" UMFPACK_DESIRED)
 if (NOT UMFPACK_DESIRED EQUAL -1)
-  list (APPEND SuiteSparse_MODULES amd cholmod)
+  list (APPEND SuiteSparse_MODULES AMD CHOLMOD)
 endif (NOT UMFPACK_DESIRED EQUAL -1)
 list (FIND SuiteSparse_MODULES "cholmod" CHOLMOD_DESIRED)
+list (FIND SuiteSparse_MODULES "CHOLMOD" CHOLMOD_DESIRED)
 if (NOT CHOLMOD_DESIRED EQUAL -1)
-  list (APPEND SuiteSparse_MODULES amd camd colamd)
+  list (APPEND SuiteSparse_MODULES AMD CAMD COLAMD)
 endif (NOT CHOLMOD_DESIRED EQUAL -1)
 if (SuiteSparse_MODULES)
   list (REMOVE_DUPLICATES SuiteSparse_MODULES)
@@ -179,16 +181,17 @@ endif (config_LIBRARY)
 # search filesystem for each of the module individually
 foreach (module IN LISTS SuiteSparse_MODULES)
   string (TOUPPER ${module} MODULE)
+  string (TOLOWER ${module} _module_lower)
   # search for files which implements this module
   find_path (${MODULE}_INCLUDE_DIR
-	NAMES ${module}.h
+	NAMES ${_module_lower}.h
 	PATHS ${SuiteSparse_SEARCH_PATH}
 	PATH_SUFFIXES "include" "include/suitesparse" "include/ufsparse" "${MODULE}/Include"
 	${_no_default_path}
 	)
 
   find_library (${MODULE}_LIBRARY
-	NAMES "${_pref_}${module}${_suff_}"
+	NAMES "${_pref_}${_module_lower}${_suff_}"
 	PATHS ${SuiteSparse_SEARCH_PATH}
 	PATH_SUFFIXES "lib/.libs" "lib" "lib${_BITS}" "lib/${CMAKE_LIBRARY_ARCHITECTURE}" "lib/ufsparse" "${MODULE}/Lib"
 	${_no_default_path}
@@ -294,14 +297,14 @@ if(SuiteSparse_FOUND)
     string (TOUPPER ${_module} _MODULE)
     if(SuiteSparse_${_MODULE}_FOUND)
       if(NOT TARGET SuiteSparse::${_module})
-	message(STATUS "Creating target SuiteSparse::${_module}")
-	add_library(SuiteSparse::${_module} UNKNOWN IMPORTED GLOBAL)
-	set_target_properties(SuiteSparse::${_module} PROPERTIES
+	message(STATUS "Creating target SuiteSparse::${_MODULE}")
+	add_library(SuiteSparse::${_MODULE} UNKNOWN IMPORTED GLOBAL)
+	set_target_properties(SuiteSparse::${_MODULE} PROPERTIES
 	  IMPORTED_LOCATION ${${_MODULE}_LIBRARY}
 	  INCLUDE_DIRECTORIES ${${_MODULE}_INCLUDE_DIRS}
 	  INTERFACE_LINK_LIBRARIES "${config_LIBRARY}")
 	target_link_libraries(SuiteSparse::SuiteSparse
-          INTERFACE SuiteSparse::${_module})
+          INTERFACE SuiteSparse::${_MODULE})
       endif()
     endif()
   endforeach(_module)
