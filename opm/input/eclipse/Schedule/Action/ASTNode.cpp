@@ -280,6 +280,26 @@ Opm::Action::ASTNode::evalWellExpression(const Context& context) const
     return well_values;
 }
 
+namespace {
+    std::string normalisePattern(const std::string& patt)
+    {
+        if (patt.front() == '\\') {
+            // Trim leading '\' character since the 'patt' might be
+            // something like
+            //
+            //    '\*P*'
+            //
+            // which denotes all wells (typically) whose names contain at
+            // least one 'P' anywhere in the name.  Without the leading
+            // backslash, the pattern would match all well lists whose names
+            // begin with 'P'.
+            return patt.substr(1);
+        }
+
+        return patt;
+    }
+} // Anonymous namespace
+
 std::vector<std::string>
 Opm::Action::ASTNode::getWellList(const Context& context) const
 {
@@ -293,7 +313,7 @@ Opm::Action::ASTNode::getWellList(const Context& context) const
     wnames.reserve(wells.size());
 
     std::copy_if(wells.begin(), wells.end(), std::back_inserter(wnames),
-                 [&wpatt = this->arg_list.front()]
+                 [wpatt = normalisePattern(this->arg_list.front())]
                  (const auto& well) { return shmatch(wpatt, well); });
 
     return wnames;

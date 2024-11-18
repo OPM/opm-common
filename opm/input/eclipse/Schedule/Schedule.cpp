@@ -1293,16 +1293,24 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
 
     // There are many SCHEDULE keywords which operate on well names.  In
     // addition to fully qualified names like 'W1', there are shell-style
-    // wildcard patterns like 'W*'.  Similarly, you can request all wells in
-    // a well list '*WL'[1] and the well name '?', when used in an ACTIONX
-    // keyword block, matches all wells which trigger the condition in the
-    // same ACTIONX keyword.  This function is intended to be the final
-    // arbiter for well names matching these kinds of patterns.  The time
-    // step argument filters out wells which do not exist at that time level
-    // (i.e., zero-based report step index).
+    // wildcard patterns like 'W*' or 'PROD?'.  Similarly, you can request
+    // all wells in a well list '*WL'[1] and the well name '?', when used in
+    // an ACTIONX keyword block, matches all wells which trigger the
+    // condition in the same ACTIONX keyword[2].  This function is intended
+    // to be the final arbiter for well names matching these kinds of
+    // patterns.  The time step argument filters out wells which do not
+    // exist at that time level (i.e., zero-based report step index).
     //
     // [1]: The leading '*' in a WLIST name should not be treated as a
-    //      pattern matching wildcard.
+    //      pattern matching wildcard.  On the other hand, the pattern
+    //      '\*WL' matches all wells whose names end in 'WL'.  In this case,
+    //      the leading backslash "escapes" the initial asterisk, thus
+    //      disambiguating it as a normal wildcard.
+    //
+    // [2]: A leading '?' character can be escaped as '\?' in order to not
+    //      be misconstrued as the '?' pattern.  Thus, the pattern '\?????'
+    //      matches all wells whose names consist of exactly five
+    //      characters.
     std::vector<std::string>
     Schedule::wellNames(const std::string&              pattern,
                         const std::size_t               timeStep,

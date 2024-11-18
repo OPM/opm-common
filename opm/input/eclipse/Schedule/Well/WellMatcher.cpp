@@ -37,6 +37,27 @@ namespace {
         static const auto wlist = std::vector<std::string>{};
         return wlist;
     }
+
+    std::string normalisePattern(const std::string& patt)
+    {
+        if (patt.front() == '\\') {
+            // Trim leading '\' character since the 'patt' might be
+            // something like
+            //
+            //    '\*P*' or '\?????'
+            //
+            // which denote, respectively, all wells (typically) whose names
+            // contain at least one 'P' anywhere in the name or all wells or
+            // groups whose names have exactly five characters.  Without the
+            // leading backslash, the first pattern would match all well
+            // lists whose names begin with 'P' and the second might be
+            // misconstrued as the '?' pattern matching all wells for which
+            // an ACTIONX condition is true.
+            return patt.substr(1);
+        }
+
+        return patt;
+    }
 } // Anonymous namespace
 
 Opm::WellMatcher::WellMatcher(NameOrder&& well_order)
@@ -161,23 +182,25 @@ Opm::WellMatcher::wells(const std::string& pattern) const
             : std::vector<std::string> {};
     }
 
+    const auto patt = normalisePattern(pattern);
+
     // Normal pattern matching
-    if (pattern.find('*') != std::string::npos) {
+    if (patt.find('*') != std::string::npos) {
         auto names = std::vector<std::string> {};
         names.reserve(this->m_well_order->size());
 
         std::copy_if(this->m_well_order->begin(),
                      this->m_well_order->end(),
                      std::back_inserter(names),
-                     [&pattern](const auto& wname)
-                     { return shmatch(pattern, wname); });
+                     [&patt](const auto& wname)
+                     { return shmatch(patt, wname); });
 
         names.shrink_to_fit();
         return names;
     }
 
-    if (this->m_well_order->has(pattern)) {
-        return { pattern };
+    if (this->m_well_order->has(patt)) {
+        return { patt };
     }
 
     return {};
