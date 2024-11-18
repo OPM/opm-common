@@ -115,7 +115,7 @@ public:
     ///
     /// \param[in] child Expression node which will be parented to the
     /// current AST node object.
-    void add_child(const ASTNode& child);
+    void add_child(ASTNode&& child);
 
     /// Evaluate logical expression
     ///

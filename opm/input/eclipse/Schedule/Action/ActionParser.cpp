@@ -26,11 +26,12 @@
 #include <cstring>
 #include <stdexcept>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include <fmt/format.h>
 
-namespace Opm { namespace Action {
+namespace Opm::Action {
 
 Parser::Parser(const std::vector<std::string>& tokens_arg)
     : tokens(tokens_arg)
@@ -242,8 +243,8 @@ ASTNode Parser::parse_cmp()
             return ASTNode { TokenType::error };
         }
 
-        op_node.add_child(left_node);
-        op_node.add_child(right_node);
+        op_node.add_child(std::move(left_node));
+        op_node.add_child(std::move(right_node));
 
         return op_node;
     }
@@ -259,7 +260,7 @@ ASTNode Parser::parse_and()
     auto curr = this->current();
     if (curr.type == TokenType::op_and) {
         ASTNode and_node(TokenType::op_and);
-        and_node.add_child(left);
+        and_node.add_child(std::move(left));
 
         while (this->current().type == TokenType::op_and) {
             this->next();
@@ -268,7 +269,7 @@ ASTNode Parser::parse_and()
                 return ASTNode { TokenType::error };
             }
 
-            and_node.add_child(next_cmp);
+            and_node.add_child(std::move(next_cmp));
         }
 
         return and_node;
@@ -287,7 +288,7 @@ ASTNode Parser::parse_or()
     auto curr = this->current();
     if (curr.type == TokenType::op_or) {
         ASTNode or_node(TokenType::op_or);
-        or_node.add_child(left);
+        or_node.add_child(std::move(left));
 
         while (this->current().type == TokenType::op_or) {
             this->next();
@@ -296,7 +297,7 @@ ASTNode Parser::parse_or()
                 return ASTNode { TokenType::error };
             }
 
-            or_node.add_child(next_cmp);
+            or_node.add_child(std::move(next_cmp));
         }
 
         return or_node;
@@ -336,4 +337,4 @@ ASTNode Parser::parse(const std::vector<std::string>& tokens)
     return tree;
 }
 
-}} // namespace Opm::Action
+} // namespace Opm::Action
