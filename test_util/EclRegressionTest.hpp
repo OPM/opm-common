@@ -170,6 +170,7 @@ private:
                                                        };
     // keywords that should not be compared
     const std::vector<std::string> keywordsBlackList = {"TCPU", "ELAPSED", "TCPUDAY", "TCPUTS", "TELAPLIN", "TCPUH", "TCPUHT", "TCPUSCH", "TCPUTSH", "TCPUTSHT", "TELAPDAY", "TELAPTS"};
+    const std::vector<std::string> keywordsBlackListExtraRestart = {"MLINEARS", "MSUMLINS", "MSUMNEWT", "NEWTON", "NLINEARS", "NLINSMAX", "NLINSMIN"};
 
     bool reportStepOnly = false;
 
