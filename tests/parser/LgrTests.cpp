@@ -41,7 +41,7 @@ BOOST_AUTO_TEST_CASE(ReadLgrCollection) {
 RUNSPEC
 
 DIMENS
-  10 10 10 /
+ 10 10 10 /
 
 GRID
 
@@ -49,6 +49,7 @@ CARFIN
 -- NAME I1-I2 J1-J2 K1-K2 NX NY NZ
 'LGR1'  5  6  5  6  1  3  6  6  9 /
 ENDFIN
+
 CARFIN
 -- NAME I1-I2 J1-J2 K1-K2 NX NY NZ
 'LGR2'  7  8  7  8  1  3  8  8  9 /
@@ -61,9 +62,8 @@ DY
 1000*1 /
 DZ
 1000*1 /
-
 TOPS
-	100*1 /
+100*1 /
 
 PORO
   1000*0.15 /

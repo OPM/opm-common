@@ -2060,7 +2060,7 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
 
     void EclipseGrid::create_lgr_cells_tree(const LgrCollection& lgr_input) {                
           auto IJK_global = [this](const auto& i_list, const auto& j_list, const auto& k_list){
-            if ((i_list.size() == j_list.size()) && (j_list.size() == k_list.size()) ){
+            if (!(i_list.size() == j_list.size()) && (j_list.size() == k_list.size()) ){
                  throw std::invalid_argument("Sizes are not compatible.");
             }
             std::vector<std::size_t> global_ind(i_list.size());
