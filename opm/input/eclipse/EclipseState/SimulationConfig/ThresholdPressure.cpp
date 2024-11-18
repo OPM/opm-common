@@ -87,6 +87,9 @@ namespace Opm {
                                          "section nor the THPRESFT keyword in the GRID section." );
         }
 
+        if (m_restart && thpresKeyword) {
+            OpmLog::warning("THPRES keyword is present, but ignored in a restart run (values loaded from the restart).");
+        }
 
         //Option is set and keyword is found
         if( m_active && thpresKeyword ) {
