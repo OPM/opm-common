@@ -160,7 +160,11 @@ EclipseGrid::EclipseGrid(const GridDims& gd)
 }
 
 
+<<<<<<< HEAD
 EclipseGrid::EclipseGrid(std::size_t nx, std::size_t ny , std::size_t nz,
+=======
+EclipseGrid::EclipseGrid(size_t nx, std::size_t ny , std::size_t nz,
+>>>>>>> 91fad0554 (all types size_t in clipseGrid.cpp were change to std::size_t, ActiveIndexLGR renamed activeIndexLGR)
                          double dx, double dy, double dz, double top)
     : GridDims(nx, ny, nz),
       m_minpvMode(MinpvMode::Inactive),
@@ -556,12 +560,20 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
     }
 
 
+<<<<<<< HEAD
     std::size_t EclipseGrid::activeIndex(std::size_t i, std::size_t j, std::size_t k) const {
+=======
+    std::size_t EclipseGrid::activeIndex(size_t i, std::size_t j, std::size_t k) const {
+>>>>>>> 91fad0554 (all types size_t in clipseGrid.cpp were change to std::size_t, ActiveIndexLGR renamed activeIndexLGR)
 
         return activeIndex( getGlobalIndex( i,j,k ));
     }
 
+<<<<<<< HEAD
     std::size_t EclipseGrid::activeIndex(std::size_t globalIndex) const {
+=======
+    std::size_t EclipseGrid::activeIndex(size_t globalIndex) const {
+>>>>>>> 91fad0554 (all types size_t in clipseGrid.cpp were change to std::size_t, ActiveIndexLGR renamed activeIndexLGR)
         if (m_global_to_active.empty()) {
             return globalIndex;
         }
@@ -578,7 +590,11 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
        [0,num_active).
     */
 
+<<<<<<< HEAD
     std::size_t EclipseGrid::getGlobalIndex(std::size_t active_index) const {
+=======
+    std::size_t EclipseGrid::getGlobalIndex(size_t active_index) const {
+>>>>>>> 91fad0554 (all types size_t in clipseGrid.cpp were change to std::size_t, ActiveIndexLGR renamed activeIndexLGR)
         return m_active_to_global.at(active_index);
     }
 
@@ -1405,7 +1421,11 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
             std::size_t initialTOPSize = TOPS.size();
             TOPS.resize( volume );
 
+<<<<<<< HEAD
             for (std::size_t targetIndex = area; targetIndex < volume; targetIndex++) {
+=======
+            for (size_t targetIndex = area; targetIndex < volume; targetIndex++) {
+>>>>>>> 91fad0554 (all types size_t in clipseGrid.cpp were change to std::size_t, ActiveIndexLGR renamed activeIndexLGR)
                 std::size_t sourceIndex = targetIndex - area;
                 double nextValue = TOPS[sourceIndex] + DZ[sourceIndex];
 
@@ -1442,7 +1462,11 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
                 */
                 std::size_t initialDSize = D.size();
                 D.resize( volume );
+<<<<<<< HEAD
                 for (std::size_t targetIndex = initialDSize; targetIndex < volume; targetIndex++) {
+=======
+                for (size_t targetIndex = initialDSize; targetIndex < volume; targetIndex++) {
+>>>>>>> 91fad0554 (all types size_t in clipseGrid.cpp were change to std::size_t, ActiveIndexLGR renamed activeIndexLGR)
                     std::size_t sourceIndex = targetIndex - area;
                     D[targetIndex] = D[sourceIndex];
                 }
@@ -2093,7 +2117,11 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
 
         for (std::size_t index = 0; index < lgr_input.size(); index++) {
             const auto lgr_cell = lgr_input.getLgr(index);
+<<<<<<< HEAD
             if (this->lgr_label == lgr_cell.PARENT_NAME())            {
+=======
+            if (this->lgr_label.compare(lgr_cell.PARENT_NAME()) == 0)            {
+>>>>>>> 91fad0554 (all types size_t in clipseGrid.cpp were change to std::size_t, ActiveIndexLGR renamed activeIndexLGR)
                 lgr_grid = true;
                 // auto [i_list, j_list, k_list] = lgr_cell.parent_cellsIJK();                
                 auto [i_list, j_list, k_list] = parent_cellsIJK(lgr_cell);
@@ -2244,12 +2272,15 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
         }
     }
 
+<<<<<<< HEAD
     const std::optional<MapAxes>& EclipseGrid::getMapAxes() const
     {
         return this->m_mapaxes;
     }
 
 
+=======
+>>>>>>> 91fad0554 (all types size_t in clipseGrid.cpp were change to std::size_t, ActiveIndexLGR renamed activeIndexLGR)
     ZcornMapper::ZcornMapper(std::size_t nx , std::size_t ny, std::size_t nz)
         : dims( {{nx,ny,nz}} ),
           stride( {{2 , 4*nx, 8*nx*ny}} ),
@@ -2276,7 +2307,11 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
         return dims[0] * dims[1] * dims[2] * 8;
     }
 
+<<<<<<< HEAD
     std::size_t ZcornMapper::index(std::size_t g, int c) const {
+=======
+    std::size_t ZcornMapper::index(size_t g, int c) const {
+>>>>>>> 91fad0554 (all types size_t in clipseGrid.cpp were change to std::size_t, ActiveIndexLGR renamed activeIndexLGR)
         int k = g / (dims[0] * dims[1]);
         g -= k * dims[0] * dims[1];
 
