@@ -565,9 +565,7 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
         return indKeyw < indGdfile;
     }
 
-
     std::size_t EclipseGrid::activeIndex(std::size_t i, std::size_t j, std::size_t k) const {
-
         return activeIndex( getGlobalIndex( i,j,k ));
     }
 
@@ -1414,7 +1412,6 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
         if (TOPS.size() >= area) {
             std::size_t initialTOPSize = TOPS.size();
             TOPS.resize( volume );
-
             for (std::size_t targetIndex = area; targetIndex < volume; targetIndex++) {
                 std::size_t sourceIndex = targetIndex - area;
                 double nextValue = TOPS[sourceIndex] + DZ[sourceIndex];
@@ -2331,7 +2328,6 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
     {
         return this->m_mapaxes;
     }
-
 
     ZcornMapper::ZcornMapper(std::size_t nx , std::size_t ny, std::size_t nz)
         : dims( {{nx,ny,nz}} ),
