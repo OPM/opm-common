@@ -66,8 +66,6 @@ public:
 
     const std::vector<float>& get_mapaxes() const { return m_mapaxes; }
     const std::string& get_mapunits() const { return m_mapunits; }
-
-
     const std::vector<float>& get_coord() const { return coord_array; }
     const std::vector<float>& get_zcorn() const { return zcorn_array; }
 
