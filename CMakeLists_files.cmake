@@ -57,6 +57,7 @@ list (APPEND MAIN_SOURCE_FILES
       opm/material/densead/Evaluation.cpp
       opm/material/fluidmatrixinteractions/EclEpsScalingPoints.cpp
       opm/material/fluidsystems/BlackOilFluidSystem.cpp
+      opm/material/fluidsystems/BlackOilFluidSystemNonStatic.cpp
       opm/material/fluidsystems/blackoilpvt/BrineCo2Pvt.cpp
       opm/material/fluidsystems/blackoilpvt/BrineH2Pvt.cpp
       opm/material/fluidsystems/blackoilpvt/Co2GasPvt.cpp
@@ -926,6 +927,7 @@ list( APPEND PUBLIC_HEADER_FILES
       opm/material/fluidsystems/GasPhase.hpp
       opm/material/fluidsystems/TwoPhaseImmiscibleFluidSystem.hpp
       opm/material/fluidsystems/BlackOilFluidSystem.hpp
+      opm/material/fluidsystems/BlackOilFluidSystemNonStatic.hpp
       opm/material/fluidsystems/LiquidPhase.hpp
       opm/material/fluidsystems/PTFlashParameterCache.hpp
       opm/material/fluidsystems/Spe5ParameterCache.hpp
