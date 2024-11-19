@@ -25,6 +25,7 @@
 #include <iterator>
 #include <memory>
 #include <numeric>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <unordered_set>
@@ -312,15 +313,16 @@ void SortedVectorSet<T>::makeUnion(const SortedVectorSet& rhs, Compare&& cmp)
 ///
 /// \param[in,out] curr Current result set.  \p other will be incorporated
 /// into 'curr' while paying attention to which, if any, of \p other or \p
-/// curr may be empty.
+/// curr may be nullopt.
 template <typename T>
-void intersectWithEmptyHandling(const SortedVectorSet<T>& other,
-                                SortedVectorSet<T>&       curr)
+void intersectWithEmptyHandling(const std::optional<SortedVectorSet<T>>& other,
+                                std::optional<SortedVectorSet<T>>&       curr)
 {
-    // If 'other' is empty, then the result set (curr) should remain
-    // unchanged.  Otherwise, if 'curr' is empty, then the result set should
-    // be 'other'.  Otherwise, when both 'curr' and 'other' are non-empty,
-    // the result set should be the set intersection of 'curr' and 'other'.
+    // If 'other' does not have a value (i.e., is nullopt), then the result
+    // set (curr) should remain unchanged.  Otherwise, if 'curr' does not
+    // have a value, then the result set should be 'other'.  Otherwise, when
+    // both 'curr' and 'other' have values, the result set should be the set
+    // intersection of 'curr' and 'other'.
     //
     // These rules permit intersecting the match set of a scalar condition,
     // e.g., a condition that compares a field-level quantity to a scalar,
@@ -331,15 +333,15 @@ void intersectWithEmptyHandling(const SortedVectorSet<T>& other,
     //
     // and having the result set match that of the WOPR condition.
 
-    if (other.empty()) {
+    if (! other.has_value()) {
         return;
     }
 
-    if (curr.empty()) {
+    if (! curr.has_value()) {
         curr = other;
     }
     else {
-        curr.makeIntersection(other);
+        curr->makeIntersection(*other);
     }
 }
 
@@ -406,20 +408,30 @@ public:
 
 private:
     /// Set of matching wells.
-    SortedVectorSet<std::string> wells_{};
+    std::optional<SortedVectorSet<std::string>> wells_{};
+    std::vector<std::string> empty_{};
+
+    void ensureWellSetExists();
 };
 
 bool Opm::Action::Result::MatchingEntities::Impl::
 hasWell(const std::string& well) const
 {
-    return this->wells_.hasElement(well);
+    return this->wells_.has_value()
+        && this->wells_->hasElement(well);
 }
 
 Opm::Action::Result::ValueRange<std::string>
 Opm::Action::Result::MatchingEntities::Impl::wells() const
 {
+    if (! this->wells_.has_value()) {
+        return ValueRange<std::string> {
+            this->empty_.begin(), this->empty_.end()
+        };
+    }
+
     return ValueRange<std::string> {
-        this->wells_.begin(), this->wells_.end(),
+        this->wells_->begin(), this->wells_->end(),
         /* isSorted = */ true
     };
 }
@@ -427,20 +439,28 @@ Opm::Action::Result::MatchingEntities::Impl::wells() const
 void Opm::Action::Result::MatchingEntities::Impl::
 addWell(const std::string& wname)
 {
-    this->wells_.insert(wname);
-    this->wells_.commit();
+    this->ensureWellSetExists();
+
+    this->wells_->insert(wname);
+    this->wells_->commit();
 }
 
 void Opm::Action::Result::MatchingEntities::Impl::
 addWells(const std::vector<std::string>& wnames)
 {
-    this->wells_.insert(wnames.begin(), wnames.end());
-    this->wells_.commit();
+    this->ensureWellSetExists();
+
+    this->wells_->insert(wnames.begin(), wnames.end());
+    this->wells_->commit();
 }
 
 void Opm::Action::Result::MatchingEntities::Impl::clear()
 {
-    this->wells_.clear();
+    if (! this->wells_.has_value()) {
+        return;
+    }
+
+    this->wells_->clear();
 }
 
 void Opm::Action::Result::MatchingEntities::Impl::makeIntersection(const Impl& rhs)
@@ -450,12 +470,25 @@ void Opm::Action::Result::MatchingEntities::Impl::makeIntersection(const Impl& r
 
 void Opm::Action::Result::MatchingEntities::Impl::makeUnion(const Impl& rhs)
 {
-    this->wells_.makeUnion(rhs.wells_);
+    if (! rhs.wells_.has_value()) {
+        return;
+    }
+
+    this->ensureWellSetExists();
+
+    this->wells_->makeUnion(*rhs.wells_);
 }
 
 bool Opm::Action::Result::MatchingEntities::Impl::operator==(const Impl& that) const
 {
     return this->wells_ == that.wells_;
+}
+
+void Opm::Action::Result::MatchingEntities::Impl::ensureWellSetExists()
+{
+    if (! this->wells_.has_value()) {
+        this->wells_ = SortedVectorSet<std::string>{};
+    }
 }
 
 // ---------------------------------------------------------------------------

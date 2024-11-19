@@ -1780,3 +1780,120 @@ ENDACTIO
 
     BOOST_CHECK_THROW(make_schedule(deck_string), std::exception);
 }
+
+BOOST_AUTO_TEST_CASE(Multiple_AND_Clauses_Empty_WellSet)
+{
+    using namespace std::string_literals;
+
+    // WWCT '*' >   0.75 AND
+    // WGLR '*' < 123.4  AND
+    // WGOR '*' > 212.1
+    const auto actCond = Action::AST { std::vector {
+        "WWCT"s, "*"s, ">"s,   "0.75"s, "AND"s,
+        "WGLR"s, "*"s, "<"s, "123.4"s , "AND"s,
+        "WGOR"s, "*"s, ">"s, "212.1"s ,
+    }};
+
+    auto st = SummaryState { TimeService::now(), 0.0 };
+
+    st.update_well_var("P-1", "WWCT", 0.5);
+    st.update_well_var("P-2", "WWCT", 0.6);
+    st.update_well_var("P-3", "WWCT", 0.7);
+    st.update_well_var("P-4", "WWCT", 0.8); // > 0.75
+
+    st.update_well_var("P-1", "WGLR", 150.0);
+    st.update_well_var("P-2", "WGLR", 140.0);
+    st.update_well_var("P-3", "WGLR", 130.0);
+    st.update_well_var("P-4", "WGLR", 120.0); // < 123.4
+
+    st.update_well_var("P-1", "WGOR", 215.0); // > 212.1
+    st.update_well_var("P-2", "WGOR", 205.0);
+    st.update_well_var("P-3", "WGOR", 195.0);
+    st.update_well_var("P-4", "WGOR", 185.0);
+
+    auto wlm = WListManager{};
+
+    {
+        auto context = Action::Context {st, wlm};
+
+        // P-4 satisfies WWCT and WGLR, but P-1 satisfies WGOR.  Overall
+        // condtition should be 'true', but match set should be empty.
+        const auto r1 = actCond.eval(context);
+        BOOST_CHECK_MESSAGE(r1.conditionSatisfied(),
+                            "Condition must be satisfied");
+
+        const auto w1 = r1.matches().wells();
+        BOOST_CHECK_MESSAGE(w1.empty(), "Matching well set must be empty");
+    }
+
+    // P-1 satisfies WWCT and WGOR, P-2 satisfies WGLR.
+    st.update_well_var("P-1", "WWCT", 0.8);
+    st.update_well_var("P-4", "WWCT", 0.5);
+
+    st.update_well_var("P-2", "WGLR", 110.0);
+    st.update_well_var("P-4", "WGLR", 140.0);
+
+    {
+        auto context = Action::Context {st, wlm};
+
+        const auto r2 = actCond.eval(context);
+        BOOST_CHECK_MESSAGE(r2.conditionSatisfied(),
+                            "Condition must be satisfied");
+
+        const auto w2 = r2.matches().wells();
+        BOOST_CHECK_MESSAGE(w2.empty(), "Matching well set must be empty");
+    }
+}
+
+BOOST_AUTO_TEST_CASE(Multiple_AND_Clauses_Single_WellMatch)
+{
+    using namespace std::string_literals;
+
+    // WWCT '*' >   0.75 AND
+    // WGLR '*' < 123.4  AND
+    // WGOR '*' > 212.1
+    const auto actCond = Action::AST { std::vector {
+        "WWCT"s, "*"s, ">"s,   "0.75"s, "AND"s,
+        "WGLR"s, "*"s, "<"s, "123.4"s , "AND"s,
+        "WGOR"s, "*"s, ">"s, "212.1"s ,
+    }};
+
+    auto st = SummaryState { TimeService::now(), 0.0 };
+
+    st.update_well_var("P-1", "WWCT", 0.8); // > 0.75
+    st.update_well_var("P-2", "WWCT", 0.6);
+    st.update_well_var("P-3", "WWCT", 0.7);
+    st.update_well_var("P-4", "WWCT", 0.8); // > 0.75
+
+    st.update_well_var("P-1", "WGLR", 120.0); // < 123.4
+    st.update_well_var("P-2", "WGLR", 120.0); // < 123.4
+    st.update_well_var("P-3", "WGLR", 130.0);
+    st.update_well_var("P-4", "WGLR", 140.0);
+
+    st.update_well_var("P-1", "WGOR", 215.0); // > 212.1
+    st.update_well_var("P-2", "WGOR", 205.0);
+    st.update_well_var("P-3", "WGOR", 195.0);
+    st.update_well_var("P-4", "WGOR", 220.0); // > 212.1
+
+    auto wlm = WListManager{};
+
+    auto context = Action::Context {st, wlm};
+
+    // P-1 satisfies all conditions.  P-2 satisfies WGLR.  P-4 satisfies
+    // WWCT and WGOR.  Overall condtition should be 'true', and match set
+    // should consist of exactly P-1.
+    const auto r1 = actCond.eval(context);
+    BOOST_CHECK_MESSAGE(r1.conditionSatisfied(),
+                        "Condition must be satisfied");
+
+    const auto w1 = r1.matches().wells();
+    BOOST_CHECK_MESSAGE(! w1.empty(), "Matching well set must NOT be empty");
+
+    BOOST_CHECK_EQUAL(w1.size(), std::size_t{1});
+
+    BOOST_CHECK_MESSAGE(w1.hasElement("P-1"s), "Well P-1 must be in the match set");
+
+    const auto w1V = w1.asVector();
+    const auto expect = std::vector { "P-1"s };
+    BOOST_CHECK_EQUAL_COLLECTIONS(w1V.begin(), w1V.end(), expect.begin(), expect.end());
+}
