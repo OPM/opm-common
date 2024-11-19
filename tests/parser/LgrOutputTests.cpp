@@ -109,7 +109,6 @@ SOLUTION
 
 SCHEDULE
 )";
-
     Opm::UnitSystem units(1);
     std::vector<Opm::NNCdata> vecNNC;
     std::array<int,3> global_grid_dim = {3,3,1};

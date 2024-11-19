@@ -73,14 +73,6 @@ public:
 
 
 
-
-
-    const std::vector<float>& get_coord() const { return coord_array; }
-    const std::vector<float>& get_zcorn() const { return zcorn_array; }
-
-
-
-
 private:
     std::filesystem::path inputFileName, initFileName;
     std::string m_grid_name;

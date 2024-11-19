@@ -37,7 +37,7 @@
 #include <opm/common/utility/String.hpp>
 
 #include <opm/io/eclipse/EclFile.hpp>
-#include <opm/io/eclipse/EclOutput.hpp>
+
 
 #include <opm/input/eclipse/Units/Units.hpp>
 #include <opm/input/eclipse/Deck/DeckSection.hpp>
