@@ -120,12 +120,12 @@ namespace Opm {
         this->predictionMode = false;
         // update LiquidRate. The funny construction with explicitly making a new
         // UDAValue is to ensure that the UDAValue has the correct dimension.
-        this->LiquidRate = UDAValue(this->WaterRate.get<double>() + this->OilRate.get<double>(), this->OilRate.get_dim());
+        this->LiquidRate = UDAValue(this->WaterRate.raw_value_or(0.0) + this->OilRate.raw_value_or(0.0), this->OilRate.get_dim());
 
-        if ( record.getItem( "BHP" ).hasValue(0) )
+        if ( const auto& item = record.getItem( "BHP" ); item.hasValue(0) && !item.defaultApplied(0) )
             this->BHPH = record.getItem("BHP").get<UDAValue>(0).getSI();
 
-        if ( record.getItem( "THP" ).hasValue(0) )
+        if ( const auto& item = record.getItem( "THP" ); item.hasValue(0) && !item.defaultApplied(0) )
             this->THPH = record.getItem("THP").get<UDAValue>(0).getSI();
 
         const auto& cmodeItem = record.getItem("CMODE");

@@ -62,12 +62,11 @@ UDAValue::UDAValue(double value, const Dimension& dim_):
 }
 
 UDAValue::UDAValue(const Dimension& dim_):
-    UDAValue(0, dim_)
+    dim(dim_)
 {
 }
 
-UDAValue::UDAValue() :
-    UDAValue(0)
+UDAValue::UDAValue()
 {}
 
 UDAValue::UDAValue(const std::string& value):
@@ -114,6 +113,13 @@ void UDAValue::assert_numeric(const std::string& error_msg) const {
 
     throw std::invalid_argument(error_msg);
 }
+
+void UDAValue::assert_maybe_numeric() const {
+    if (this->string_value.empty())
+        return;
+
+    throw std::invalid_argument("UDAValue is not numeric.");
+}
 double UDAValue::epsilonLimit() const {
         return 1.E-20;
 }
@@ -126,9 +132,26 @@ bool UDAValue::is<double>() const {
 
 template<>
 bool UDAValue::is<std::string>() const {
-  return !this->is_numeric();
+    return !this->string_value.empty();
 }
 
+
+double UDAValue::raw_value_or(const double raw_default_value) const {
+    assert_maybe_numeric();
+    return this->double_value.value_or(raw_default_value);
+}
+
+double UDAValue::SI_value_or(const double SI_default_value) const {
+    assert_maybe_numeric();
+    if (this->double_value.has_value())
+        return this->dim.convertRawToSi(*this->double_value);
+
+    return SI_default_value;
+}
+
+bool UDAValue::is_defined() const {
+    return this->double_value.has_value() || !this->string_value.empty();
+}
 
 template<>
 double UDAValue::get() const {
@@ -156,7 +179,7 @@ void UDAValue::update(const std::string& value) {
 
 template<>
 std::string UDAValue::get() const {
-    if (!this->is_numeric())
+    if (!this->string_value.empty())
         return this->string_value;
 
     throw std::invalid_argument("UDAValue does not hold a string value");

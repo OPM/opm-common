@@ -339,8 +339,8 @@ BOOST_AUTO_TEST_CASE(isProducerCorrectlySet) {
 
         BOOST_CHECK_EQUAL( false , well.isInjector());
         BOOST_CHECK_EQUAL( true , well.isProducer());
-        BOOST_CHECK_EQUAL( 0 , well.getInjectionProperties().surfaceInjectionRate.get<double>());
-        BOOST_CHECK_EQUAL( 0 , well.getInjectionProperties().reservoirInjectionRate.get<double>());
+        BOOST_CHECK_THROW( well.getInjectionProperties().surfaceInjectionRate.get<double>(), std::invalid_argument);
+        BOOST_CHECK_THROW( well.getInjectionProperties().reservoirInjectionRate.get<double>(), std::invalid_argument);
         BOOST_CHECK_EQUAL( 100 , well.getProductionProperties().OilRate.get<double>());
         BOOST_CHECK_EQUAL( 200 , well.getProductionProperties().GasRate.get<double>());
         BOOST_CHECK_EQUAL( 300 , well.getProductionProperties().WaterRate.get<double>());

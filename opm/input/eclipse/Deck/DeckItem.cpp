@@ -179,12 +179,14 @@ UDAValue DeckItem::get( size_t index ) const {
         if (value.is<std::string>())
             return UDAValue(value.get<std::string>(), this->default_dimensions[dim_index]);
         else
-            return UDAValue(value.get<double>(), this->default_dimensions[dim_index]);
+            return UDAValue(this->default_dimensions[dim_index]);
     } else {
         if (value.is<std::string>())
             return UDAValue(value.get<std::string>(), this->active_dimensions[dim_index]);
-        else
+        else if (value.is<double>())
             return UDAValue(value.get<double>(), this->active_dimensions[dim_index]);
+        else
+            return UDAValue(this->active_dimensions[dim_index]);
     }
 }
 

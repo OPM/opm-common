@@ -458,37 +458,46 @@ namespace Opm {
     }
 
     void Well::WellInjectionProperties::handleWTMULT(Well::WELTARGCMode cmode, double factor) {
-        if (cmode == Well::WELTARGCMode::BHP)
-            this->BHPTarget *= factor;
 
-        else if (cmode == WELTARGCMode::ORAT) {
-            if (this->injectorType == InjectorType::OIL)
-                this->surfaceInjectionRate *= factor;
-            else
-                throw std::invalid_argument("Well type must be OIL to scale the oil rate");
+        auto update_target = [cmode, factor](UDAValue& target) {
+            if (target.is_defined()) {
+                target *= factor;
+                return;
+            }
+            throw std::invalid_argument(fmt::format("Cannot apply WTMULT to undefined {} target", WellWELTARGCMode2String(cmode)));
+        };
+
+        switch (cmode) {
+            case Well::WELTARGCMode::BHP:
+                update_target(this->BHPTarget);
+                break;
+            case Well::WELTARGCMode::ORAT:
+                if (this->injectorType == InjectorType::OIL)
+                    update_target(this->surfaceInjectionRate);
+                else
+                    throw std::invalid_argument("Well type must be OIL to scale the oil rate");
+                break;
+            case Well::WELTARGCMode::WRAT:
+                if (this->injectorType == InjectorType::WATER)
+                    update_target(this->surfaceInjectionRate);
+                else
+                    throw std::invalid_argument("Well type must be WATER to scale the oil rate");
+                break;
+            case Well::WELTARGCMode::GRAT:
+                if (this->injectorType == InjectorType::GAS)
+                    update_target(this->surfaceInjectionRate);
+                else
+                    throw std::invalid_argument("Well type must be GAS to scale the oil rate");
+                break;
+            case Well::WELTARGCMode::THP:
+                update_target(this->THPTarget);
+                break;
+            case Well::WELTARGCMode::RESV:
+                update_target(this->reservoirInjectionRate);
+                break;
+            default:
+                std::invalid_argument(fmt::format("Invalid target {} supplied to WTMULT", WellWELTARGCMode2String(cmode)));
         }
-
-        else if (cmode == WELTARGCMode::WRAT) {
-            if (this->injectorType == InjectorType::WATER)
-                this->surfaceInjectionRate *= factor;
-            else
-                throw std::invalid_argument("Well type must be WATER to scale the water rate");
-        }
-
-        else if (cmode == WELTARGCMode::GRAT) {
-            if(this->injectorType == InjectorType::GAS)
-                this->surfaceInjectionRate *= factor;
-            else
-                throw std::invalid_argument("Well type must be GAS to scale the gas rate");
-        }
-
-        else if (cmode == WELTARGCMode::THP)
-            this->THPTarget *= factor;
-
-        else if (cmode == WELTARGCMode::RESV)
-            this->reservoirInjectionRate*= factor;
-
-        else throw std::invalid_argument("Invalid keyword (MODE) supplied");
     }
 
 

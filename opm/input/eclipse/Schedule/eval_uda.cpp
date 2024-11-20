@@ -32,6 +32,9 @@ namespace UDA {
     if (value.is<double>())
         return value.getSI();
 
+    if (!value.is<std::string>())
+        return udq_default;
+
     const std::string& string_var = value.get<std::string>();
     double output_value = udq_default;
 
@@ -57,6 +60,9 @@ double eval_well_uda_rate(const UDAValue& value, const std::string& well, const 
 double eval_group_uda(const UDAValue& value, const std::string& group, const SummaryState& st, double udq_undefined) {
     if (value.is<double>())
         return value.getSI();
+
+    if (!value.is<std::string>())
+        return udq_undefined;
 
     const std::string& string_var = value.get<std::string>();
     double output_value = udq_undefined;

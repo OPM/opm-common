@@ -1422,9 +1422,9 @@ BOOST_AUTO_TEST_CASE( WCONPROD ) {
     {
         const auto& well0 = sched.getWell("PROD3", 0 );
         const auto& well1 = sched.getWell("PROD3", 1 );
-        BOOST_CHECK_CLOSE(0   , well0.getProductionProperties().OilRate.get<double>(), 0.001);
+        BOOST_CHECK_THROW(well0.getProductionProperties().OilRate.get<double>(), std::invalid_argument);
         BOOST_CHECK_CLOSE(1500, well1.getProductionProperties().OilRate.get<double>(), 0.001);
-        BOOST_CHECK_CLOSE(0/Metric::Time   , well0.getProductionProperties().OilRate.getSI(), 0.001);
+        BOOST_CHECK_THROW(well0.getProductionProperties().OilRate.getSI(), std::invalid_argument);
         BOOST_CHECK_CLOSE(1500/Metric::Time, well1.getProductionProperties().OilRate.getSI(), 0.001);
     }
 
