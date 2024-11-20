@@ -60,6 +60,10 @@ namespace {
         throw py::key_error( name );
     }
 
+    double zero_if_undefined(const UDAValue& val) {
+        return val.is_numeric() ? val.get<double>() : 0.0;
+    };
+
     std::map<std::string, double> get_production_properties(
         const Schedule& sch, const std::string& well_name, const size_t& report_step)
     {
@@ -72,14 +76,14 @@ namespace {
         if (well->isProducer()) {
             auto& prod_prop = well->getProductionProperties();
             return {
-                { "oil_rate", prod_prop.OilRate.get<double>() },
-                { "gas_rate", prod_prop.GasRate.get<double>() },
-                { "water_rate", prod_prop.WaterRate.get<double>() },
-                { "liquid_rate", prod_prop.LiquidRate.get<double>() },
-                { "resv_rate", prod_prop.ResVRate.get<double>() },
-                { "bhp_target", prod_prop.BHPTarget.get<double>() },
-                { "thp_target", prod_prop.THPTarget.get<double>() },
-                { "alq_value", prod_prop.ALQValue.get<double>() },
+                { "oil_rate", zero_if_undefined(prod_prop.OilRate) },
+                { "gas_rate", zero_if_undefined(prod_prop.GasRate) },
+                { "water_rate", zero_if_undefined(prod_prop.WaterRate) },
+                { "liquid_rate", zero_if_undefined(prod_prop.LiquidRate) },
+                { "resv_rate", zero_if_undefined(prod_prop.ResVRate) },
+                { "bhp_target", zero_if_undefined(prod_prop.BHPTarget) },
+                { "thp_target", zero_if_undefined(prod_prop.THPTarget) },
+                { "alq_value", zero_if_undefined(prod_prop.ALQValue) },
             };
         }
         else {
@@ -100,10 +104,10 @@ namespace {
         if (well->isInjector()) {
             auto& inj_prop = well->getInjectionProperties();
             return {
-                { "surf_inj_rate", inj_prop.surfaceInjectionRate.get<double>() },
-                { "resv_inj_rate", inj_prop.reservoirInjectionRate.get<double>() },
-                { "bhp_target", inj_prop.BHPTarget.get<double>() },
-                { "thp_target", inj_prop.THPTarget.get<double>() },
+                { "surf_inj_rate", zero_if_undefined(inj_prop.surfaceInjectionRate) },
+                { "resv_inj_rate", zero_if_undefined(inj_prop.reservoirInjectionRate) },
+                { "bhp_target", zero_if_undefined(inj_prop.BHPTarget) },
+                { "thp_target", zero_if_undefined(inj_prop.THPTarget) },
             };
         }
         else {
