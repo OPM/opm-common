@@ -125,6 +125,8 @@ public:
     double get_segment_var(const std::string& well, const std::string& var, std::size_t segment, double) const;
     double get_region_var(const std::string& regSet, const std::string& var, std::size_t region, double) const;
 
+    bool is_undefined_value(const double val) const { return val == udq_undefined; }
+
     const std::vector<std::string>& wells() const;
     std::vector<std::string> wells(const std::string& var) const;
     const std::vector<std::string>& groups() const;
