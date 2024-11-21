@@ -323,6 +323,16 @@ Well::Well(const RestartIO::RstWell& rst_well,
     well_inj_temperature(std::nullopt),
     well_inj_mult(std::nullopt)
 {
+
+    auto is_defined = [](const double value) {
+        return value != Opm::RestartIO::RstWell::UNDEFINED_VALUE;
+    };
+
+    auto update_if_defined = [&](Opm::UDAValue& target, const double value) {
+        if (is_defined(value))
+            target.update(value);
+    };
+
     if (this->wtype.producer()) {
         auto p = std::make_shared<WellProductionProperties>(*this->unit_system, wname);
 
@@ -330,14 +340,16 @@ Well::Well(const RestartIO::RstWell& rst_well,
             ? producer_cmode_from_int(rst_whistctl_cmode)
             : Well::ProducerCMode::CMODE_UNDEFINED;
 
-        p->BHPTarget.update(rst_well.bhp_target_float);
-        p->OilRate.update(rst_well.orat_target);
-        p->WaterRate.update(rst_well.wrat_target);
-        p->GasRate.update(rst_well.grat_target);
-        p->LiquidRate.update(rst_well.lrat_target) ;
-        p->ResVRate.update(rst_well.resv_target);
+        update_if_defined(p->BHPTarget, rst_well.bhp_target_float);
+        update_if_defined(p->OilRate, rst_well.orat_target);
+        update_if_defined(p->WaterRate, rst_well.wrat_target);
+        update_if_defined(p->GasRate, rst_well.grat_target);
+        update_if_defined(p->LiquidRate, rst_well.lrat_target);
+        update_if_defined(p->ResVRate, rst_well.resv_target);
+        update_if_defined(p->ALQValue, rst_well.alq_value);
+
         p->VFPTableNumber = rst_well.vfp_table;
-        p->ALQValue.update(rst_well.alq_value);
+
         if (alq_type) {
             p->ALQValue.set_dim(VFPProdTable::ALQDimension(*alq_type, unit_system_arg));
         } else {
@@ -349,22 +361,22 @@ Well::Well(const RestartIO::RstWell& rst_well,
 
         p->predictionMode = this->prediction_mode;
 
-        if (rst_well.orat_target != 0)
+        if (is_defined(rst_well.orat_target))
             p->addProductionControl( Well::ProducerCMode::ORAT );
 
-        if (rst_well.wrat_target != 0)
+        if (is_defined(rst_well.wrat_target))
             p->addProductionControl( Well::ProducerCMode::WRAT );
 
-        if (rst_well.grat_target != 0)
+        if (is_defined(rst_well.grat_target))
             p->addProductionControl( Well::ProducerCMode::GRAT );
 
-        if (rst_well.lrat_target != 0)
+        if (is_defined(rst_well.lrat_target))
             p->addProductionControl( Well::ProducerCMode::LRAT );
 
-        if (rst_well.resv_target != 0)
+        if (is_defined(rst_well.resv_target))
             p->addProductionControl( Well::ProducerCMode::RESV );
 
-        if (rst_well.thp_target != 0) {
+        if (is_defined(rst_well.thp_target)) {
             p->THPTarget.update(rst_well.thp_target);
             p->addProductionControl( Well::ProducerCMode::THP );
         }
@@ -391,11 +403,11 @@ Well::Well(const RestartIO::RstWell& rst_well,
         i->VFPTableNumber = rst_well.vfp_table;
         i->predictionMode = this->prediction_mode;
 
-        if ((std::abs(rst_well.wrat_target) > 0.0f) ||
-            (std::abs(rst_well.grat_target) > 0.0f))
+        if (is_defined(rst_well.wrat_target) ||
+            is_defined(rst_well.grat_target) )
             i->addInjectionControl(Well::InjectorCMode::RATE);
 
-        if (std::abs(rst_well.resv_target) > 0.0f) {
+        if (is_defined(rst_well.resv_target)) {
             i->reservoirInjectionRate.update(rst_well.resv_target);
             i->addInjectionControl(Well::InjectorCMode::RESV);
         }
@@ -403,16 +415,16 @@ Well::Well(const RestartIO::RstWell& rst_well,
         i->injectorType = rst_well.wtype.injector_type();
         switch (i->injectorType) {
         case InjectorType::WATER:
-            i->surfaceInjectionRate.update(rst_well.wrat_target);
+            update_if_defined(i->surfaceInjectionRate, rst_well.wrat_target);
             break;
         case InjectorType::GAS:
-            i->surfaceInjectionRate.update(rst_well.grat_target);
+            update_if_defined(i->surfaceInjectionRate, rst_well.grat_target);
             break;
         default:
             throw std::invalid_argument("What ...");
         }
 
-        if (rst_well.thp_target != 0.0f) {
+        if (is_defined(rst_well.thp_target)) {
             i->THPTarget.update(rst_well.thp_target);
             i->addInjectionControl(Well::InjectorCMode::THP);
         }
@@ -438,7 +450,7 @@ Well::Well(const RestartIO::RstWell& rst_well,
         i->addInjectionControl(active_control);
 
         i->addInjectionControl(Well::InjectorCMode::BHP);
-        i->BHPTarget.update(rst_well.bhp_target_float);
+        i->BHPTarget.update(is_defined(rst_well.bhp_target_float) ? rst_well.bhp_target_float : 0.0);
         if (! i->predictionMode) {
             if (i->controlMode == Well::InjectorCMode::BHP)
                 i->bhp_hist_limit = rst_well.hist_bhp_target;

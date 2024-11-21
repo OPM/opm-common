@@ -47,8 +47,7 @@
 namespace {
     bool is_sentinel(const float raw_value)
     {
-        const auto infty = 1.0e+20f;
-        return ! (std::abs(raw_value) < infty);
+        return ! (std::abs(raw_value) < Opm::RestartIO::RstWell::UNDEFINED_VALUE);
     }
 
     double swel_value(const float raw_value)
@@ -121,12 +120,12 @@ Opm::RestartIO::RstWell::RstWell(const UnitSystem&  unit_system,
     // The values orat_target -> bhp_target_float will be used in UDA values. The
     // UDA values are responsible for unit conversion and raw values are
     // internalized here.
-    orat_target(                                                     swel_value(swel[VI::SWell::OilRateTarget])),
-    wrat_target(                                                     swel_value(swel[VI::SWell::WatRateTarget])),
-    grat_target(                                                     swel_value(swel[VI::SWell::GasRateTarget])),
-    lrat_target(                                                     swel_value(swel[VI::SWell::LiqRateTarget])),
-    resv_target(                                                     swel_value(swel[VI::SWell::ResVRateTarget])),
-    thp_target(                                                      swel_value(swel[VI::SWell::THPTarget])),
+    orat_target(                                                     swel[VI::SWell::OilRateTarget]),
+    wrat_target(                                                     swel[VI::SWell::WatRateTarget]),
+    grat_target(                                                     swel[VI::SWell::GasRateTarget]),
+    lrat_target(                                                     swel[VI::SWell::LiqRateTarget]),
+    resv_target(                                                     swel[VI::SWell::ResVRateTarget]),
+    thp_target(                                                      swel[VI::SWell::THPTarget]),
     bhp_target_float(                                                swel[VI::SWell::BHPTarget]),
     vfp_bhp_adjustment(  unit_system.to_si(M::pressure,              swel[VI::SWell::VfpBhpAdjustment])),
     vfp_bhp_scaling_factor(                                          swel[VI::SWell::VfpBhpScalingFact]),
