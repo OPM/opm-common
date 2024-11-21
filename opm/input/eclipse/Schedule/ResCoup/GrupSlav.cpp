@@ -108,14 +108,6 @@ void handleGRUPSLAV(HandlerContext& handlerContext)
         std::string msg = fmt::format("GRUPSLAV is only allowed in slave mode.");
         throw OpmInputError(msg, handlerContext.keyword.location());
     }
-    if (schedule_state.sim_step() != 0) {
-        // Currently, I cannot see any reason why GRUPSLAV should be allowed at
-        // any other report step than the first one. So to keep it simple, we throw
-        // an error if it is used in any other step. This will also simplify the
-        // implementation details of MPI communication between master and slave for now..
-        std::string msg = fmt::format("GRUPSLAV is only allowed in the first simulation step.");
-        throw OpmInputError(msg, handlerContext.keyword.location());
-    }
     for (const auto& record : keyword) {
         const std::string& group_name =
             record.getItem<ParserKeywords::GRUPSLAV::SLAVE_GROUP>().getTrimmedString(0);

@@ -35,17 +35,10 @@ public:
     CouplingInfo() = default;
 
     static CouplingInfo serializationTestObject();
-    const std::map<std::string, Slave>& slaves() const {
-        return this->m_slaves;
-    }
-    std::map<std::string, Slave>& slaves() {
-        return this->m_slaves;
-    }
-    const std::map<std::string, MasterGroup>& masterGroups() const {
-        return this->m_master_groups;
-    }
-    std::map<std::string, MasterGroup>& masterGroups() {
-        return this->m_master_groups;
+    bool operator==(const CouplingInfo& other) const;
+
+    const GrupSlav& grupSlav(const std::string& name) const {
+        return m_grup_slavs.at(name);
     }
     const std::map<std::string, GrupSlav>& grupSlavs() const {
         return this->m_grup_slavs;
@@ -53,24 +46,25 @@ public:
     std::map<std::string, GrupSlav>& grupSlavs() {
         return this->m_grup_slavs;
     }
-    bool operator==(const CouplingInfo& other) const;
-    bool hasSlave(const std::string& name) const {
-        return m_slaves.find(name) != m_slaves.end();
+    int grupSlavCount() const {
+        return this->m_grup_slavs.size();
     }
-    const Slave& slave(const std::string& name) const {
-        return m_slaves.at(name);
-    }
-    int slaveCount() const {
-        return m_slaves.size();
-    }
+
     bool hasGrupSlav(const std::string& name) const {
         return m_grup_slavs.find(name) != m_grup_slavs.end();
     }
-    const GrupSlav& grupSlav(const std::string& name) const {
-        return m_grup_slavs.at(name);
-    }
     bool hasMasterGroup(const std::string& name) const {
         return m_master_groups.find(name) != m_master_groups.end();
+    }
+    bool hasSlave(const std::string& name) const {
+        return m_slaves.find(name) != m_slaves.end();
+    }
+
+    const std::map<std::string, MasterGroup>& masterGroups() const {
+        return this->m_master_groups;
+    }
+    std::map<std::string, MasterGroup>& masterGroups() {
+        return this->m_master_groups;
     }
     const MasterGroup& masterGroup(const std::string& name) const {
         return m_master_groups.at(name);
@@ -78,25 +72,32 @@ public:
     int masterGroupCount() const {
         return m_master_groups.size();
     }
-    bool masterMode() const {
-        return m_master_mode;
+
+    const std::map<std::string, Slave>& slaves() const {
+        return this->m_slaves;
     }
-    void masterMode(bool master_mode) {
-        m_master_mode = master_mode;
+    std::map<std::string, Slave>& slaves() {
+        return this->m_slaves;
     }
+    const Slave& slave(const std::string& name) const {
+        return m_slaves.at(name);
+    }
+    int slaveCount() const {
+        return m_slaves.size();
+    }
+
+
     template<class Serializer>
     void serializeOp(Serializer& serializer)
     {
         serializer(m_slaves);
         serializer(m_master_groups);
         serializer(m_grup_slavs);
-        serializer(m_master_mode);
     }
 private:
     std::map<std::string, Slave> m_slaves;
     std::map<std::string, MasterGroup> m_master_groups;
     std::map<std::string, GrupSlav> m_grup_slavs;
-    bool m_master_mode{false};
 };
 
 } // namespace Opm::ReservoirCoupling

@@ -60,17 +60,12 @@ void handleSLAVES(HandlerContext& handlerContext)
         std::string msg = fmt::format("SLAVES keyword is not allowed in slave mode.");
         throw OpmInputError(msg, handlerContext.keyword.location());
     }
-    if (schedule_state.sim_step() != 0) {
-        // Currently, I cannot see any reason why SLAVES should be allowed at
-        // any other report step than the first one. So to keep it simple, we throw
-        // an error if it is used in any other step. This will also simplify the
-        // implementation details of MPI communication between master and slave for now..
-        std::string msg = fmt::format("SLAVES is only allowed in the first simulation step.");
+    if (rescoup.slaveCount() > 0) {
+        std::string msg = fmt::format(
+            "SLAVES keyword already defined. The SLAVES keyword can only be given "
+            "once in the schedule."
+        );
         throw OpmInputError(msg, handlerContext.keyword.location());
-    }
-    if (rescoup.masterGroupCount() > 0) {
-        // Since GRUPMAST has been defined, we are now certain that we are in master mode
-        rescoup.masterMode(true);
     }
     for (const auto& record : keyword) {
         const std::string& slave_name =
