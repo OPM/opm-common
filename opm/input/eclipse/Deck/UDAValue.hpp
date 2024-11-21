@@ -53,6 +53,12 @@ public:
     static UDAValue serializationTestObject();
 
     /*
+     * The *_value_or functions will throw an exception in case of non-zero string value
+     */
+    double raw_value_or(const double raw_default_value) const;
+    double SI_value_or(const double SI_default_value) const;
+
+    /*
       The get<double>() and get<std::string>() methods will throw an
       exception if the internal type and the template parameter disagree.
     */
@@ -69,11 +75,13 @@ public:
     //epsilon limit  = 1.E-20  (~= 0.)
     double epsilonLimit() const;
 
+    bool is_defined() const;
     template<typename T>
     bool is() const;
 
     void assert_numeric() const;
     void assert_numeric(const std::string& error_msg) const;
+    void assert_maybe_numeric() const;
     const Dimension& get_dim() const;
     void set_dim(const Dimension& new_dim);
 

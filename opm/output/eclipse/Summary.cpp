@@ -1603,7 +1603,7 @@ inline quantity res_vol_production_target( const fn_args& args )
                                        {
                                            return
                                                 sched_well->getProductionProperties().predictionMode
-                                                ? acc + sched_well->getProductionProperties().ResVRate.getSI()
+                                                ? acc + sched_well->getProductionProperties().ResVRate.SI_value_or(0.0)
                                                 : acc;
                                        });
 

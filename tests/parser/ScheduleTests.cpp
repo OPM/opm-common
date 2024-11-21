@@ -1318,6 +1318,10 @@ DATES
  1 FEB 2010 /
 /
 
+WELTARG
+I1  THP 100.0 /
+/
+
 WTMULT
 OP_1 ORAT 2 /
 OP_1 GRAT 3 /
@@ -1375,7 +1379,7 @@ I1 THP 4 /
 
     BOOST_CHECK_EQUAL(inj_controls2.surface_rate * 2, inj_controls3.surface_rate);
     BOOST_CHECK_EQUAL(inj_controls2.bhp_limit * 3, inj_controls3.bhp_limit);
-    BOOST_CHECK_EQUAL(inj_controls2.thp_limit * 4, inj_controls3.thp_limit);
+    BOOST_CHECK_EQUAL(inj_controls3.thp_limit, 4 * 100 * siFactorP);
 }
 
 

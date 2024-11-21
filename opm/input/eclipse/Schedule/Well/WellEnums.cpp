@@ -190,6 +190,21 @@ std::ostream& operator<<(std::ostream& os, const WellProducerCMode& cm)
     return os;
 }
 
+std::string WellWELTARGCMode2String(WellWELTARGCMode cmode)
+{
+    if (cmode == WellWELTARGCMode::ORAT) return "ORAT";
+    if (cmode == WellWELTARGCMode::WRAT) return "WRAT";
+    if (cmode == WellWELTARGCMode::GRAT) return "GRAT";
+    if (cmode == WellWELTARGCMode::RESV) return "RESV";
+    if (cmode == WellWELTARGCMode::BHP) return "BHP";
+    if (cmode == WellWELTARGCMode::THP) return "THP";
+    if (cmode == WellWELTARGCMode::VFP) return "VFP";
+    if (cmode == WellWELTARGCMode::LIFT) return "LIFT";
+    if (cmode == WellWELTARGCMode::GUID) return "GUID";
+
+    throw std::invalid_argument(fmt::format("WELTARG control mode value {} not recognized.", cmode));
+}
+
 WellWELTARGCMode WellWELTARGCModeFromString(const std::string& string_value)
 {
     if (string_value == "ORAT")

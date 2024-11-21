@@ -1660,10 +1660,12 @@ double Well::production_rate(const SummaryState& st, Phase prod_phase) const {
 
     const auto controls = this->productionControls(st);
 
+    auto zero_if_undefined = [&st](double value) { return st.is_undefined_value(value) ? 0.0 : value; };
+
     switch( prod_phase ) {
-        case Phase::WATER: return controls.water_rate;
-        case Phase::OIL:   return controls.oil_rate;
-        case Phase::GAS:   return controls.gas_rate;
+        case Phase::WATER: return zero_if_undefined(controls.water_rate);
+        case Phase::OIL:   return zero_if_undefined(controls.oil_rate);
+        case Phase::GAS:   return zero_if_undefined(controls.gas_rate);
         case Phase::SOLVENT:
             throw std::invalid_argument( "Production of 'SOLVENT' requested." );
         case Phase::POLYMER:
@@ -1693,6 +1695,8 @@ double Well::injection_rate(const SummaryState& st, Phase phase_arg) const {
     if( phase_arg == Phase::WATER && type != InjectorType::WATER ) return 0.0;
     if( phase_arg == Phase::OIL   && type != InjectorType::OIL   ) return 0.0;
     if( phase_arg == Phase::GAS   && type != InjectorType::GAS   ) return 0.0;
+
+    if (st.is_undefined_value(controls.surface_rate)) return 0.0;
 
     return controls.surface_rate;
 }

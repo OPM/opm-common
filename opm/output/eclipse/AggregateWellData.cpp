@@ -688,9 +688,13 @@ namespace {
 
         float getRateLimit(const Opm::UnitSystem&         units,
                            const Opm::UnitSystem::measure u,
-                           const double                   rate)
+                           const double                   rate,
+                           const Opm::SummaryState&       st)
         {
             float rLimit = 1.0e+20f;
+
+            if (st.is_undefined_value(rate))
+                return rLimit;
 
             if (rate > 0.0) {
                 rLimit = static_cast<float>(units.from_si(u, rate));
@@ -704,6 +708,7 @@ namespace {
 
         template <class SWProp, class SWellArray>
         void assignOWGRateTargetsProd(const Opm::Well::ProductionControls& pc,
+                                      const Opm::SummaryState&             st,
                                       const bool                           predMode,
                                       SWProp&&                             swprop,
                                       SWellArray&                          sWell)
@@ -712,15 +717,15 @@ namespace {
             using M = ::Opm::UnitSystem::measure;
 
             if (predMode) {
-                if (pc.oil_rate != 0.0) {
+                if (! st.is_undefined_value(pc.oil_rate) ) {
                     sWell[Ix::OilRateTarget] = swprop(M::liquid_surface_rate, pc.oil_rate);
                 }
 
-                if (pc.water_rate != 0.0) {
+                if (! st.is_undefined_value(pc.water_rate) ) {
                     sWell[Ix::WatRateTarget] = swprop(M::liquid_surface_rate, pc.water_rate);
                 }
 
-                if (pc.gas_rate != 0.0) {
+                if (! st.is_undefined_value(pc.gas_rate) ) {
                     sWell[Ix::GasRateTarget] = swprop(M::gas_surface_rate, pc.gas_rate);
 
                     sWell[Ix::HistGasRateTarget] = sWell[Ix::GasRateTarget];
@@ -742,6 +747,7 @@ namespace {
 
         template <class SWProp, class SWellArray>
         void assignLiqRateTargetsProd(const Opm::Well::ProductionControls& pc,
+                                      const Opm::SummaryState&             st,
                                       const bool                           predMode,
                                       SWProp&&                             swprop,
                                       SWellArray&                          sWell)
@@ -749,7 +755,7 @@ namespace {
             using Ix = ::Opm::RestartIO::Helpers::VectorItems::SWell::index;
             using M = ::Opm::UnitSystem::measure;
 
-            if (pc.liquid_rate != 0.0) {    // check if this works - may need to be rewritten
+            if (! st.is_undefined_value(pc.liquid_rate) ) {    // check if this works - may need to be rewritten
                 sWell[Ix::LiqRateTarget] = swprop(M::liquid_surface_rate, pc.liquid_rate);
 
                 sWell[Ix::HistLiqRateTarget] = sWell[Ix::LiqRateTarget];
@@ -771,7 +777,7 @@ namespace {
             using Ix = VI::SWell::index;
             using M = ::Opm::UnitSystem::measure;
 
-            if (pc.resv_rate != 0.0)  {
+            if (! smry.is_undefined_value(pc.resv_rate) )  {
                 sWell[Ix::ResVRateTarget] = swprop(M::rate, pc.resv_rate);
             }
             else if (!predMode) {
@@ -811,16 +817,17 @@ namespace {
         template <class SWellArray>
         void assignPredictionTargetsProd(const Opm::UnitSystem&               units,
                                          const Opm::Well::ProductionControls& pc,
+                                         const Opm::SummaryState&             st,
                                          SWellArray&                          sWell)
         {
             using Ix = VI::SWell::index;
             using M = ::Opm::UnitSystem::measure;
 
-            sWell[Ix::OilRateTarget]   = getRateLimit(units, M::liquid_surface_rate, pc.oil_rate);
-            sWell[Ix::WatRateTarget]   = getRateLimit(units, M::liquid_surface_rate, pc.water_rate);
-            sWell[Ix::GasRateTarget]   = getRateLimit(units, M::gas_surface_rate,    pc.gas_rate);
-            sWell[Ix::LiqRateTarget]   = getRateLimit(units, M::liquid_surface_rate, pc.liquid_rate);
-            sWell[Ix::ResVRateTarget]  = getRateLimit(units, M::rate,                pc.resv_rate);
+            sWell[Ix::OilRateTarget]   = getRateLimit(units, M::liquid_surface_rate, pc.oil_rate, st);
+            sWell[Ix::WatRateTarget]   = getRateLimit(units, M::liquid_surface_rate, pc.water_rate, st);
+            sWell[Ix::GasRateTarget]   = getRateLimit(units, M::gas_surface_rate,    pc.gas_rate, st);
+            sWell[Ix::LiqRateTarget]   = getRateLimit(units, M::liquid_surface_rate, pc.liquid_rate, st);
+            sWell[Ix::ResVRateTarget]  = getRateLimit(units, M::rate,                pc.resv_rate, st);
         }
 
         template <class SWProp, class SWellArray>
@@ -837,29 +844,29 @@ namespace {
             const auto pc = well.productionControls(smry);
             const auto predMode = well.predictionMode();
 
-            assignOWGRateTargetsProd(pc, predMode, swprop, sWell);
-            assignLiqRateTargetsProd(pc, predMode, swprop, sWell);
+            assignOWGRateTargetsProd(pc, smry, predMode, swprop, sWell);
+            assignLiqRateTargetsProd(pc, smry, predMode, swprop, sWell);
             assignResVRateTargetsProd(well.name(), smry, pc,
                                       predMode, swprop, sWell);
 
-            sWell[Ix::THPTarget] = (pc.thp_limit != 0.0)
+            sWell[Ix::THPTarget] = ( !smry.is_undefined_value(pc.thp_limit) )
                 ? swprop(M::pressure, pc.thp_limit)
                 : 0.0;
 
-            sWell[Ix::BHPTarget] = (pc.bhp_limit != 0.0)
+            sWell[Ix::BHPTarget] = ( !smry.is_undefined_value(pc.bhp_limit) )
                 ? swprop(M::pressure, pc.bhp_limit)
                 : swprop(M::pressure, 1.0*::Opm::unit::atm);
 
             sWell[Ix::HistBHPTarget] = sWell[Ix::BHPTarget];
 
             const auto& vfpprod = sched[sim_step].vfpprod;
-            if (pc.alq_value != 0.0 && vfpprod.has(pc.vfp_table_number)) {
+            if (!smry.is_undefined_value(pc.alq_value) && vfpprod.has(pc.vfp_table_number)) {
                 const auto alqType = vfpprod(pc.vfp_table_number).getALQType();
                 assignALQProd(alqType, pc.alq_value, swprop, sWell);
             }
 
             if (predMode) {
-                assignPredictionTargetsProd(sched.getUnits(), pc, sWell);
+                assignPredictionTargetsProd(sched.getUnits(), pc, smry, sWell);
             }
         }
 

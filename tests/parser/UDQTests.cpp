@@ -1528,9 +1528,9 @@ BOOST_AUTO_TEST_CASE(UDQ_TYPE_ERROR) {
 
 BOOST_AUTO_TEST_CASE(UDA_VALUE) {
     UDAValue value0;
-    BOOST_CHECK(value0.is<double>());
+    BOOST_CHECK(!value0.is<double>());
     BOOST_CHECK(!value0.is<std::string>());
-    BOOST_CHECK_EQUAL( value0.get<double>(), 0);
+    BOOST_CHECK_THROW( value0.get<double>(), std::invalid_argument);
     BOOST_CHECK_THROW( value0.get<std::string>(), std::invalid_argument);
     value0.update(10);
     BOOST_CHECK_EQUAL( value0.get<double>(), 10);
