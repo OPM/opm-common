@@ -22,7 +22,6 @@
 
 #include <iosfwd>
 #include <string>
-#include <fmt/format.h>
 
 namespace Opm {
 
@@ -126,14 +125,5 @@ std::string WellGasInflowEquation2String(WellGasInflowEquation enumValue);
 WellGasInflowEquation WellGasInflowEquationFromString(const std::string& stringValue);
 
 } // Namespace Opm
-
-template<>
-struct fmt::formatter<Opm::WellWELTARGCMode> : fmt::formatter<int>
-{
-  auto format(const Opm::WellWELTARGCMode& cmode, format_context& context) const {
-    return fmt::formatter<int>::format(static_cast<int>(cmode), context);
-  }
-};
-
 
 #endif

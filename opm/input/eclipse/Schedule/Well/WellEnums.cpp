@@ -27,6 +27,15 @@
 
 #include <fmt/format.h>
 
+template<>
+struct fmt::formatter<Opm::WellWELTARGCMode> : fmt::formatter<int>
+{
+    auto format(const Opm::WellWELTARGCMode& cmode, format_context& context) const
+    {
+        return fmt::formatter<int>::format(static_cast<int>(cmode), context);
+    }
+};
+
 namespace Opm {
 
 std::string WellStatus2String(WellStatus enumValue)
