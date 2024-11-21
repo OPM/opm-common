@@ -125,7 +125,7 @@ WellGuideRateTarget WellGuideRateTargetFromString(const std::string& stringValue
 std::string WellGasInflowEquation2String(WellGasInflowEquation enumValue);
 WellGasInflowEquation WellGasInflowEquationFromString(const std::string& stringValue);
 
-} // Namespace fmt
+} // Namespace Opm
 
 template<>
 struct fmt::formatter<Opm::WellWELTARGCMode> : fmt::formatter<int>

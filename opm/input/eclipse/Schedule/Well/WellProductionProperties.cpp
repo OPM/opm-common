@@ -302,30 +302,38 @@ void Well::WellProductionProperties::handleWCONHIST(const std::optional<VFPProdT
 
 
     void Well::WellProductionProperties::handleWTMULT(Well::WELTARGCMode cmode, double factor) {
+        auto update_target = [cmode, factor](UDAValue& target) {
+            if (target.is_defined()) {
+                target *= factor;
+                return;
+            }
+            throw std::invalid_argument(fmt::format("Cannot apply WTMULT to undefined {} target", WellWELTARGCMode2String(cmode)));
+        };
+
         switch (cmode) {
         case Well::WELTARGCMode::ORAT:
-            this->OilRate *= factor;
+            update_target(this->OilRate);
             break;
         case Well::WELTARGCMode::GRAT:
-            this->GasRate *= factor;
+            update_target(this->GasRate);
             break;
         case Well::WELTARGCMode::WRAT:
-            this->WaterRate *= factor;
+            update_target(this->WaterRate);
             break;
         case Well::WELTARGCMode::LRAT:
-            this->LiquidRate *= factor;
+            update_target(this->LiquidRate);
             break;
         case Well::WELTARGCMode::RESV:
-            this->ResVRate *= factor;
+            update_target(this->ResVRate);
             break;
         case Well::WELTARGCMode::BHP:
-            this->BHPTarget *= factor;
+            update_target(this->BHPTarget);
             break;
         case Well::WELTARGCMode::THP:
-            this->THPTarget *= factor;
+            update_target(this->THPTarget);
             break;
         case Well::WELTARGCMode::LIFT:
-            this->ALQValue *= factor;
+            update_target(this->ALQValue);
             break;
         default:
             throw std::logic_error("Unhandled WTMULT control");
