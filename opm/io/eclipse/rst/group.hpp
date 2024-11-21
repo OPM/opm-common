@@ -94,6 +94,8 @@ struct RstGroup {
     double history_total_gas_injection;
     double gas_consumption_total;
     double gas_import_total;
+
+    static constexpr auto UNDEFINED_VALUE = 1.0e20f;
 };
 
 
