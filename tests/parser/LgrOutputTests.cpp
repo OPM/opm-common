@@ -109,7 +109,7 @@ SOLUTION
 
 SCHEDULE
 )";
-\
+
     Opm::UnitSystem units(1);
     std::vector<Opm::NNCdata> vecNNC;
     std::array<int,3> global_grid_dim = {3,3,1};
@@ -210,7 +210,7 @@ SOLUTION
 
 SCHEDULE
 )";
-\
+
     Opm::UnitSystem units(1);
     std::vector<Opm::NNCdata> vecNNC;
     std::array<int,3> global_grid_dim = {3,3,1};
@@ -316,7 +316,6 @@ SOLUTION
 
 SCHEDULE
 )";
-\
     Opm::UnitSystem units(1);
     std::vector<Opm::NNCdata> vecNNC;
     std::array<int,3> global_grid_dim = {3,3,1};
@@ -432,7 +431,6 @@ SOLUTION
 
 SCHEDULE
 )";
-\
     Opm::UnitSystem units(1);
     std::vector<Opm::NNCdata> vecNNC;
     std::array<int,3> global_grid_dim = {3,3,1};
@@ -457,32 +455,4 @@ SCHEDULE
     eclipse_grid_file.init_children_host_cells();
     // Save EclipseGrid.
     eclipse_grid_file.save("OPMCARFIN-NESTED.EGRID",false,vecNNC,units);
-//     // Once the new EGRID is saved, another EclipseGrid Object is created for the sake of comparison.
-//     std::tie(coord_g_opm, zcorn_g_opm)  = read_cpg_from_egrid("OPMCARFIN-DOUBLE.EGRID", "global");
-//     //  Read LGR CELL COORD and ZCORN from reference simulator output.
-//     std::tie(coord_l1_opm, zcorn_l1_opm) = read_cpg_from_egrid("OPMCARFIN-DOUBLE.EGRID", "LGR1");
-//     std::tie(coord_l2_opm, zcorn_l2_opm) = read_cpg_from_egrid("OPMCARFIN-DOUBLE.EGRID", "LGR2");
-//     //  Eclipse Grid is intialzied with COORD and ZCORN. 
-//     Opm::EclipseGrid eclipse_grid_OPM(global_grid_dim, coord_g_opm, zcorn_g_opm);    
-// //  LgrCollection is used to initalize LGR Cells in the Eclipse Grid.
-//     eclipse_grid_OPM.init_lgr_cells(lgr_col);
-//     // LGR COORD and ZCORN is parsed to EclipseGridLGR children cell. (Simulates the process of recieving the LGR refinement.)   
-//     eclipse_grid_OPM.lgr_children_cells[1].set_lgr_refinement(coord_l1_opm,zcorn_l1_opm);
-//     eclipse_grid_OPM.lgr_children_cells[0].set_lgr_refinement(coord_l2_opm,zcorn_l2_opm);
-
-//     // Intialize host_cell numbering.
-//     eclipse_grid_OPM.init_children_host_cells();
-//     BOOST_CHECK_EQUAL( coord_g_opm.size() , coord_g.size());
-//     BOOST_CHECK_EQUAL( zcorn_g_opm.size() , zcorn_g.size());
-//     BOOST_CHECK_EQUAL( coord_l1_opm.size() , coord_l1.size());
-//     BOOST_CHECK_EQUAL( zcorn_l1_opm.size() , zcorn_l1.size());
-//     BOOST_CHECK_EQUAL( coord_l2_opm.size() , coord_l2.size());
-//     BOOST_CHECK_EQUAL( zcorn_l2_opm.size() , zcorn_l2.size());    
-//     std::size_t index ;
-//     for (index = 0; index < coord_g.size(); index++) {
-//       BOOST_CHECK_EQUAL( coord_g_opm[index] , coord_g[index]);
-//     }
-//     for (index = 0; index < zcorn_g.size(); index++) {
-//       BOOST_CHECK_EQUAL( zcorn_g_opm[index] , zcorn_g[index]);
-//     }
   }
