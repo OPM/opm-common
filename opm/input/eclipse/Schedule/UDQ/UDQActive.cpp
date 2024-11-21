@@ -85,7 +85,9 @@ std::string UDQActive::wg_hash(const std::string& wgname, UDAControl control) {
 
 /*
   We go through the current list of input records and compare with the supplied
-  arguments (uda, wgnamem, control). There are six possible outcomes:
+  arguments (uda, wgnamem, control). There are seven possible outcomes:
+
+    0. The uda variable is not defined (defaulted target/limit): fast return.
 
     1. The uda variable is a double and no uda usage has been registered so far:
        fast return.
@@ -109,6 +111,10 @@ std::string UDQActive::wg_hash(const std::string& wgname, UDAControl control) {
 
 */
 int UDQActive::update(const UDQConfig& udq_config, const UDAValue& uda, const std::string& wgname, UDAControl control) {
+    // Alternative 0
+    if (!uda.is_defined())
+        return 0;
+
     // Alternative 1
     if (uda.is<double>() && this->input_data.empty())
         return 0;
