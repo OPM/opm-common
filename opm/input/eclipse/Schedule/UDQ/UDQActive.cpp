@@ -61,6 +61,11 @@ namespace {
 
         const auto* localWgIndex = &wgIndex[record.wg_offset + 0];
 
+        if (record.isFieldUDA) {
+            wgIndexOp(localWgIndex[0], "FIELD"s);
+            return;
+        }
+
         for (auto i = 0*record.use_count; i < record.use_count; ++i) {
             wgIndexOp(localWgIndex[i], groupNames[localWgIndex[i] + 1]);
         }
@@ -95,7 +100,11 @@ namespace {
                         (const std::size_t  phaseIdx,
                          const std::string& group)
         {
-            udaRecords.emplace_back(control, uda, group, igPhase[phaseIdx]);
+            const auto phase = (group == "FIELD")
+                ? igPhase.back()
+                : igPhase[phaseIdx];
+
+            udaRecords.emplace_back(control, uda, group, phase);
         });
     }
 } // Anonymous namespace
@@ -385,3 +394,15 @@ void Opm::UDQActive::constructOutputRecords() const
     }
 }
 
+// ===========================================================================
+// Additional free functions
+// ===========================================================================
+
+bool Opm::isFieldUDA(const UDQActive::OutputRecord& record)
+{
+    const auto kw = UDQ::keyword(record.control);
+
+    return ((kw == UDAKeyword::GCONPROD) ||
+            (kw == UDAKeyword::GCONINJE))
+        && (record.wg_name() == "FIELD");
+}

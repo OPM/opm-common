@@ -1457,11 +1457,12 @@ if(ENABLE_ECL_OUTPUT)
         opm/output/eclipse/VectorItems/aquifer.hpp
         opm/output/eclipse/VectorItems/connection.hpp
         opm/output/eclipse/VectorItems/group.hpp
-        opm/output/eclipse/VectorItems/network.hpp
         opm/output/eclipse/VectorItems/intehead.hpp
         opm/output/eclipse/VectorItems/logihead.hpp
         opm/output/eclipse/VectorItems/msw.hpp
+        opm/output/eclipse/VectorItems/network.hpp
         opm/output/eclipse/VectorItems/tabdims.hpp
+        opm/output/eclipse/VectorItems/udq.hpp
         opm/output/eclipse/VectorItems/well.hpp
         opm/output/eclipse/ActiveIndexByColumns.hpp
         opm/output/eclipse/AggregateActionxData.hpp

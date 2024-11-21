@@ -402,6 +402,17 @@ private:
     void constructOutputRecords() const;
 };
 
+// ===========================================================================
+
+/// Predicate for field level UDAs
+///
+/// \param[in] record IUAD restart file UDA record
+///
+/// \return Whether or not \p record applies at the field level.  In other
+/// words, whether or not the \p record is a UDA in GCONPROD or GCONINJE
+/// that applies to the FIELD group.
+bool isFieldUDA(const UDQActive::OutputRecord& record);
+
 } // namespace Opm
 
 #endif // UDQ_USAGE_HPP

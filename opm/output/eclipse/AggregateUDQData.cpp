@@ -25,6 +25,7 @@
 #include <opm/output/eclipse/InteHEAD.hpp>
 #include <opm/output/eclipse/UDQDims.hpp>
 #include <opm/output/eclipse/VectorItems/intehead.hpp>
+#include <opm/output/eclipse/VectorItems/udq.hpp>
 #include <opm/output/eclipse/WriteRestartHelpers.hpp>
 
 #include <opm/input/eclipse/Schedule/Group/Group.hpp>
@@ -52,6 +53,7 @@
 #include <map>
 #include <optional>
 #include <string>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -409,93 +411,6 @@ namespace {
         return def_type;
     }
 
-    std::vector<int>
-    ig_phase(const Opm::Schedule&    sched,
-             const std::size_t       simStep,
-             const std::vector<int>& inteHead)
-    {
-        std::vector<int> inj_phase(ngmaxz(inteHead), 0);
-
-        auto update_phase = [](const int phase, const int new_phase) {
-            if (phase == 0) {
-                return new_phase;
-            }
-
-            throw std::logic_error {
-                "Cannot write restart files with UDA "
-                "control on multiple phases in same group"
-            };
-        };
-
-        for (const auto* group : sched.restart_groups(simStep)) {
-            if ((group == nullptr) || !group->isInjectionGroup()) {
-                continue;
-            }
-
-            auto& int_phase = (group->name() == "FIELD")
-                ? inj_phase.back()
-                : inj_phase[group->insert_index() - 1];
-
-            int_phase = 0;
-            for (const auto& [phase, int_value] : std::array {
-                    std::pair {Opm::Phase::OIL,   1},
-                    std::pair {Opm::Phase::WATER, 2},
-                    std::pair {Opm::Phase::GAS,   3},
-                })
-            {
-                if (! group->hasInjectionControl(phase)) {
-                    continue;
-                }
-
-                if (group->injectionProperties(phase).uda_phase()) {
-                    int_phase = update_phase(int_phase, int_value);
-                }
-            }
-        }
-
-        return inj_phase;
-    }
-
-    std::vector<int>
-    iuap_data(const Opm::Schedule&                            sched,
-              const std::size_t                               simStep,
-              const std::vector<Opm::UDQActive::InputRecord>& iuap)
-    {
-        // Construct the current list of well or group sequence numbers to
-        // output the IUAP array.
-        std::vector<int> wg_no{};
-
-        for (std::size_t ind = 0; ind < iuap.size(); ++ind) {
-            const auto ctrl   = iuap[ind].control;
-            const auto wg_key = Opm::UDQ::keyword(ctrl);
-
-            if ((wg_key == Opm::UDAKeyword::WCONPROD) ||
-                (wg_key == Opm::UDAKeyword::WCONINJE) ||
-                (wg_key == Opm::UDAKeyword::WELTARG))
-            {
-                wg_no.push_back(sched.getWell(iuap[ind].wgname, simStep).seqIndex());
-            }
-            else if ((wg_key == Opm::UDAKeyword::GCONPROD) ||
-                     (wg_key == Opm::UDAKeyword::GCONINJE))
-            {
-                if (iuap[ind].wgname != "FIELD") {
-                    const auto& group = sched.getGroup(iuap[ind].wgname, simStep);
-                    wg_no.push_back(group.insert_index() - 1);
-                }
-            }
-            else {
-                const auto msg = fmt::format("Invalid control keyword {} for UDQ {}",
-                                             static_cast<int>(ctrl), iuap[ind].udq);
-
-                Opm::OpmLog::error(msg);
-
-                throw std::invalid_argument { msg };
-            }
-        }
-
-        return wg_no;
-    }
-
     template <typename T>
     std::pair<bool, int>
     findInVector(const std::vector<T>& vecOfElements, const T& element)
@@ -554,34 +469,28 @@ namespace {
 
     namespace iUad {
 
-        std::optional<Opm::RestartIO::Helpers::WindowedArray<int>>
-        allocate(const Opm::UDQDims& udqDims)
-        {
-            using WV = Opm::RestartIO::Helpers::WindowedArray<int>;
-
-            auto iuad = std::optional<WV>{};
-
-            if (udqDims.numIUAD() > 0) {
-                iuad.emplace(WV::NumWindows{ udqDims.numIUAD() },
-                             WV::WindowSize{ Opm::UDQDims::entriesPerIUAD() });
-            }
-
-            return iuad;
-        }
-
         template <class IUADArray>
         void staticContrib(const Opm::UDQActive::OutputRecord& udq_record,
-                           const int                           use_cnt_diff,
+                           const bool                          is_field_uda,
                            IUADArray&                          iUad)
         {
-            iUad[0] = udq_record.uda_code;
-            iUad[1] = udq_record.input_index + 1;
+            namespace VI = Opm::RestartIO::Helpers::VectorItems::IUad;
 
-            // entry 3  - unknown meaning - value = 1
-            iUad[2] = 1;
+            using Ix   = VI::index;;
+            using Kind = VI::Value::UDAKind;
 
-            iUad[3] = udq_record.use_count;
-            iUad[4] = udq_record.use_index + 1 - use_cnt_diff;
+            iUad[Ix::UDACode] = udq_record.uda_code;
+
+            // +1 for one-based indices.
+            iUad[Ix::UDQIndex] = udq_record.input_index + 1;
+
+            iUad[Ix::Kind] = is_field_uda
+                ? Kind::Field : Kind::Regular;
+
+            iUad[Ix::UseCount] = udq_record.use_count;
+
+            // +1 for one-based indices.
+            iUad[Ix::Offset] = udq_record.use_index + 1;
         }
 
     } // iUad
@@ -608,9 +517,10 @@ namespace {
         template <class zUdnArray>
         void staticContrib(const Opm::UDQInput& udq_input, zUdnArray& zUdn)
         {
-            // entry 1 is udq keyword
-            zUdn[0] = udq_input.keyword();
-            zUdn[1] = udq_input.unit();
+            using Ix = Opm::RestartIO::Helpers::VectorItems::ZUdn::index;;
+
+            zUdn[Ix::Keyword] = udq_input.keyword();
+            zUdn[Ix::Unit] = udq_input.unit();
         }
 
     } // zUdn
@@ -687,52 +597,110 @@ namespace {
 
     namespace iGph {
 
-        std::optional<Opm::RestartIO::Helpers::WindowedArray<int>>
-        allocate(const Opm::UDQDims& udqDims)
+        std::vector<int>
+        phaseVector(const Opm::Schedule&    sched,
+                    const std::size_t       simStep,
+                    const std::vector<int>& inteHead)
         {
-            using WV = Opm::RestartIO::Helpers::WindowedArray<int>;
+            auto inj_phase = std::vector<int>(ngmaxz(inteHead), 0);
 
-            auto igph = std::optional<WV>{};
+            auto update_phase = [](const int phase, const int new_phase) {
+                if (phase == 0) {
+                    return new_phase;
+                }
 
-            if (udqDims.numIGPH() > 0) {
-                igph.emplace(WV::NumWindows{ udqDims.numIGPH() },
-                             WV::WindowSize{ std::size_t{1} });
+                throw std::logic_error {
+                    "Cannot write restart files with UDA "
+                    "control on multiple phases in same group"
+                };
+            };
+
+            for (const auto* group : sched.restart_groups(simStep)) {
+                if ((group == nullptr) || !group->isInjectionGroup()) {
+                    continue;
+                }
+
+                auto& int_phase = (group->name() == "FIELD")
+                    ? inj_phase.back()
+                    : inj_phase[group->insert_index() - 1];
+
+                int_phase = 0;
+                for (const auto& [phase, int_value] : std::array {
+                        std::pair {Opm::Phase::OIL,   1},
+                        std::pair {Opm::Phase::WATER, 2},
+                        std::pair {Opm::Phase::GAS,   3},
+                    })
+                {
+                    if (! group->hasInjectionControl(phase)) {
+                        continue;
+                    }
+
+                    if (group->injectionProperties(phase).uda_phase()) {
+                        int_phase = update_phase(int_phase, int_value);
+                    }
+                }
             }
 
-            return igph;
-        }
-
-        template <class IGPHArray>
-        void staticContrib(const int  inj_phase,
-                           IGPHArray& iGph)
-        {
-            iGph[0] = inj_phase;
+            return inj_phase;
         }
 
     } // iGph
 
     namespace iUap {
 
-        std::optional<Opm::RestartIO::Helpers::WindowedArray<int>>
-        allocate(const Opm::UDQDims& udqDims)
+        std::vector<int>
+        data(const Opm::ScheduleState&                       sched,
+             const std::vector<Opm::UDQActive::InputRecord>& iuap)
         {
-            using WV = Opm::RestartIO::Helpers::WindowedArray<int>;
+            // Construct the current list of well or group sequence numbers
+            // to output the IUAP array.
+            auto wg_no = std::vector<int>{};
 
-            auto iuap = std::optional<WV>{};
+            for (const auto& udaRecord : iuap) {
+                switch (Opm::UDQ::keyword(udaRecord.control)) {
+                case Opm::UDAKeyword::WCONPROD:
+                case Opm::UDAKeyword::WCONINJE:
+                case Opm::UDAKeyword::WELTARG:
+                    // Well level control.  Use well's insertion index as
+                    // the IUAP entry (+1 for one-based indices).
+                    wg_no.push_back(sched.wells(udaRecord.wgname).seqIndex() + 1);
+                    break;
 
-            if (udqDims.numIUAP() > 0) {
-                iuap.emplace(WV::NumWindows{ udqDims.numIUAP() },
-                             WV::WindowSize{ std::size_t{1} });
+                case Opm::UDAKeyword::GCONPROD:
+                case Opm::UDAKeyword::GCONINJE: {
+                    // Group level control.  Need to distinguish between the
+                    // FIELD and the non-FIELD cases.
+
+                    if (const auto& gname = udaRecord.wgname; gname != "FIELD") {
+                        // The Schedule object inserts 'FIELD' at index
+                        // zero.  The group's insert_index() is therefore,
+                        // serendipitously, already suitably adjusted to
+                        // one-based indices for output purposes.
+                        wg_no.push_back(sched.groups(gname).insert_index());
+                    }
+                    else {
+                        // IUAP for field level UDAs is represented by two
+                        // copies of the numeric ID '1'.
+                        wg_no.insert(wg_no.end(), 2, 1);
+                    }
+                }
+                    break;
+
+                default: {
+                    const auto msg =
+                        fmt::format("Invalid control keyword {} for UDQ {}",
+                                    static_cast<std::underlying_type_t<Opm::UDAControl>>(udaRecord.control),
+                                    udaRecord.udq);
+
+                    Opm::OpmLog::error(msg);
+
+                    throw std::invalid_argument { msg };
+                }
+                    break;
+                }
             }
 
-            return iuap;
-        }
-
-        template <class IUAPArray>
-        void staticContrib(const int  wg_no,
-                           IUAPArray& iUap)
-        {
-            iUap[0] = wg_no + 1;
+            return wg_no;
         }
 
     } // iUap
@@ -895,11 +863,8 @@ namespace {
 Opm::RestartIO::Helpers::AggregateUDQData::
 AggregateUDQData(const UDQDims& udqDims)
     : iUDQ_ { iUdq::allocate(udqDims) }
-    , iUAD_ { iUad::allocate(udqDims) }
     , zUDN_ { zUdn::allocate(udqDims) }
     , zUDL_ { zUdl::allocate(udqDims) }
-    , iGPH_ { iGph::allocate(udqDims) }
-    , iUAP_ { iUap::allocate(udqDims) }
       // ------------------------------------------------------------
     , dUDF_ { dUdf::allocate(udqDims) }
     , dUDG_ { dUdg::allocate(udqDims) }
@@ -995,70 +960,25 @@ collectUserDefinedArguments(const Schedule&         sched,
                             const std::size_t       simStep,
                             const std::vector<int>& inteHead)
 {
-    const auto& udq_active = sched[simStep].udq_active.get();
+    const auto& udq_active = sched[simStep].udq_active();
     if (! udq_active) {
+        // No UDAs at this report step.  Nothing to do.
         return;
     }
 
-    {
-        const auto& udq_records = udq_active.iuad();
+    // Collect UDAs into the IUAD, IUAP, and IGPH restart vectors.
 
-        int cnt = 0;
-        for (std::size_t index = 0; index < udq_records.size(); ++index) {
-            const auto& record = udq_records[index];
+    assert (inteHead[VI::intehead::NO_IUADS] > 0);
 
-            const auto wg_key = Opm::UDQ::keyword(record.control);
-            if (((wg_key == Opm::UDAKeyword::GCONPROD) ||
-                 (wg_key == Opm::UDAKeyword::GCONINJE)) &&
-                (record.wg_name() == "FIELD"))
-            {
-                continue;
-            }
+    this->collectIUAD(udq_active, inteHead[VI::intehead::NO_IUADS]);
 
-            auto iuad = (*this->iUAD_)[cnt];
+    // 2. Form IUAP.
+    this->collectIUAP(iUap::data(sched[simStep], udq_active.iuap()),
+                      inteHead[VI::intehead::NO_IUAPS]);
 
-            const auto use_count_diff = static_cast<int>(index) - cnt;
-            iUad::staticContrib(record, use_count_diff, iuad);
-
-            ++cnt;
-        }
-
-        if (cnt != inteHead[VI::intehead::NO_IUADS]) {
-            OpmLog::error(fmt::format("Inconsistent number of iuad's: {}, "
-                                      "number of iuads from intehead {}.",
-                                      cnt, inteHead[VI::intehead::NO_IUADS]));
-        }
-    }
-
-    {
-        const auto iuap_vect = iuap_data(sched, simStep, udq_active.iuap());
-
-        if (iuap_vect.size() != static_cast<std::size_t>(inteHead[VI::intehead::NO_IUAPS])) {
-            OpmLog::error(fmt::format("Inconsistent number of iuap's: {}, "
-                                      "number of iuap's from intehead {}.",
-                                      iuap_vect.size(), inteHead[VI::intehead::NO_IUAPS]));
-        }
-
-        for (std::size_t index = 0; index < iuap_vect.size(); ++index) {
-            auto iuap = (*this->iUAP_)[index];
-            iUap::staticContrib(iuap_vect[index], iuap);
-        }
-    }
-
-    if (inteHead[VI::intehead::NO_IUADS] > 0) {
-        const auto phs = ig_phase(sched, simStep, inteHead);
-
-        for (std::size_t index = 0; index < phs.size(); ++index) {
-            auto igph = (*this->iGPH_)[index];
-            iGph::staticContrib(phs[index], igph);
-        }
-
-        if (phs.size() != static_cast<std::size_t>(inteHead[VI::intehead::NGMAXZ])) {
-            OpmLog::error(fmt::format("Inconsistent number of igph's: {}, "
-                                      "number of igph's from intehead {}",
-                                      phs.size(), inteHead[VI::intehead::NGMAXZ]));
-        }
-    }
+    // 3. Form IGPH.
+    this->collectIGPH(iGph::phaseVector(sched, simStep, inteHead),
+                      inteHead[VI::intehead::NGMAXZ]);
 }
 
 // ---------------------------------------------------------------------------
@@ -1187,4 +1107,74 @@ collectWellUDQValues(const std::vector<UDQInput>&    udqInput,
                                   "expected number of DUDW elements {}.",
                                   cnt, expectedNumWellUDQs));
     }
+}
+
+// ---------------------------------------------------------------------------
+
+void
+Opm::RestartIO::Helpers::AggregateUDQData::
+collectIUAD(const UDQActive& udqActive, const std::size_t expectNumIUAD)
+{
+    const auto& iuad_records = udqActive.iuad();
+    if (iuad_records.size() != expectNumIUAD) {
+        OpmLog::error(fmt::format("Number of actual IUADs ({}) incommensurate "
+                                  "with expected number of IUADs from INTEHEAD ({}).",
+                                  iuad_records.size(), expectNumIUAD));
+
+        return;
+    }
+
+    using WV = Opm::RestartIO::Helpers::WindowedArray<int>;
+
+    this->iUAD_.emplace(WV::NumWindows{ expectNumIUAD },
+                        WV::WindowSize{ Opm::UDQDims::entriesPerIUAD() });
+
+    auto index = std::size_t{0};
+    for (const auto& iuad_record : iuad_records) {
+        auto iuad = (*this->iUAD_)[index];
+
+        iUad::staticContrib(iuad_record, isFieldUDA(iuad_record), iuad);
+
+        ++index;
+    }
+}
+
+void
+Opm::RestartIO::Helpers::AggregateUDQData::
+collectIUAP(const std::vector<int>& wgIndex,
+            const std::size_t       expectNumIUAP)
+{
+    if (wgIndex.size() != expectNumIUAP) {
+        OpmLog::error(fmt::format("Number of actual IUAPs ({}) incommensurate "
+                                  "with expected number of IUAPs from INTEHEAD ({}).",
+                                  wgIndex.size(), expectNumIUAP));
+
+        return;
+    }
+
+    using WV = Opm::RestartIO::Helpers::WindowedArray<int>;
+
+    this->iUAP_.emplace(WV::NumWindows{ 1 }, WV::WindowSize{ expectNumIUAP });
+
+    std::copy(wgIndex.begin(), wgIndex.end(), (*this->iUAP_)[0].begin());
+}
+
+void
+Opm::RestartIO::Helpers::AggregateUDQData::
+collectIGPH(const std::vector<int>& phase_vector,
+            const std::size_t       expectNumIGPH)
+{
+    if (phase_vector.size() != expectNumIGPH) {
+        OpmLog::error(fmt::format("Number of actual IGPHs ({}) incommensurate "
+                                  "with expected number of IGPHs from INTEHEAD ({}).",
+                                  phase_vector.size(), expectNumIGPH));
+
+        return;
+    }
+
+    using WV = Opm::RestartIO::Helpers::WindowedArray<int>;
+
+    this->iGPH_.emplace(WV::NumWindows{ 1 }, WV::WindowSize{ expectNumIGPH });
+
+    std::copy(phase_vector.begin(), phase_vector.end(), (*this->iGPH_)[0].begin());
 }
