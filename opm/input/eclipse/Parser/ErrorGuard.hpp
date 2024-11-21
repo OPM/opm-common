@@ -41,7 +41,7 @@ public:
     */
     ~ErrorGuard();
     void terminate() const;
-    void dump() const;
+    std::string dump() const;
 
 private:
 

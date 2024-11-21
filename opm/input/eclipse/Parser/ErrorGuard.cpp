@@ -22,6 +22,9 @@
 #include <iostream>
 #include <iomanip>
 #include <numeric>
+#include <regex>
+
+#include <fmt/format.h>
 
 namespace Opm {
 
@@ -35,7 +38,9 @@ namespace Opm {
     }
 
 
-    void ErrorGuard::dump() const {
+    std::string ErrorGuard::dump() const {
+        // error messages to log before exiting
+        std::string error_msgs;
         auto maxit = [](const auto acc, const auto& pair)
                      {
                          return std::max(acc, pair.first.size());
@@ -53,11 +58,19 @@ namespace Opm {
         }
 
         if (!this->error_list.empty()) {
+            const std::regex file_regex("\n\\w*In file(.*)line (.*)");
             std::cerr << std::endl << std::endl << "Errors:" << std::endl;
-            for (const auto& pair : this->error_list)
-                std::cerr << std::left << "  " << std::setw(width) << pair.first << ": " << pair.second << std::endl;
+
+            for (const auto& [error_key, error_msg] : this->error_list) {
+                error_msgs += fmt::format("       {}; {}\n", error_key,
+                                          std::regex_replace(error_msg, file_regex,
+                                                             " at:$1line: $2")) ;
+                std::cerr << std::left << "  " << std::setw(width) << error_key << ": " << error_msg << std::endl;
+            }
             std::cerr << std::endl;
         }
+
+        return error_msgs;
     }
 
 
