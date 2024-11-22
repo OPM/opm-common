@@ -36,7 +36,7 @@
 namespace {
     bool is_defined(const double x)
     {
-        return  x != Opm::RestartIO::RstGroup::UNDEFINED_VALUE;
+        return  x < (Opm::RestartIO::RstGroup::UNDEFINED_VALUE / 2);
     }
 
     struct ProductionLimits

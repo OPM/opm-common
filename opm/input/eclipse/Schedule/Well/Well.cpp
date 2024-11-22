@@ -325,7 +325,7 @@ Well::Well(const RestartIO::RstWell& rst_well,
 {
 
     auto is_defined = [](const double value) {
-        return value != Opm::RestartIO::RstWell::UNDEFINED_VALUE;
+        return value < (Opm::RestartIO::RstWell::UNDEFINED_VALUE / 2);
     };
 
     auto update_if_defined = [&](Opm::UDAValue& target, const double value) {
