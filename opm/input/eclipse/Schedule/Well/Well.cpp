@@ -376,7 +376,7 @@ Well::Well(const RestartIO::RstWell& rst_well,
         if (is_defined(rst_well.resv_target))
             p->addProductionControl( Well::ProducerCMode::RESV );
 
-        if (is_defined(rst_well.thp_target)) {
+        if (rst_well.thp_target != 0.0f) {  // THP has defined default of 0.0
             p->THPTarget.update(rst_well.thp_target);
             p->addProductionControl( Well::ProducerCMode::THP );
         }
