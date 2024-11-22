@@ -34,18 +34,18 @@
 #include <utility>
 
 namespace {
-    bool has_limit(const double x)
+    bool is_defined(const double x)
     {
-        return std::abs(x) > 0.0;
+        return  x < (Opm::RestartIO::RstGroup::UNDEFINED_VALUE / 2);
     }
 
     struct ProductionLimits
     {
         explicit ProductionLimits(const Opm::RestartIO::RstGroup& rst_group)
-            : oil { has_limit(rst_group.oil_rate_limit)    }
-            , gas { has_limit(rst_group.gas_rate_limit)    }
-            , wat { has_limit(rst_group.water_rate_limit)  }
-            , liq { has_limit(rst_group.liquid_rate_limit) }
+            : oil { is_defined(rst_group.oil_rate_limit)    }
+            , gas { is_defined(rst_group.gas_rate_limit)    }
+            , wat { is_defined(rst_group.water_rate_limit)  }
+            , liq { is_defined(rst_group.liquid_rate_limit) }
         {}
 
         bool oil { false };
@@ -57,10 +57,10 @@ namespace {
     struct GasInjectionLimits
     {
         explicit GasInjectionLimits(const Opm::RestartIO::RstGroup& rst_group)
-            : rate { has_limit(rst_group.gas_surface_limit)   }
-            , resv { has_limit(rst_group.gas_reservoir_limit) }
-            , rein { has_limit(rst_group.gas_reinject_limit)  }
-            , vrep { has_limit(rst_group.gas_voidage_limit)   }
+            : rate { is_defined(rst_group.gas_surface_limit)   }
+            , resv { is_defined(rst_group.gas_reservoir_limit) }
+            , rein { is_defined(rst_group.gas_reinject_limit)  }
+            , vrep { is_defined(rst_group.gas_voidage_limit)   }
         {}
 
         bool rate { false };
@@ -72,10 +72,10 @@ namespace {
     struct WaterInjectionLimits
     {
         explicit WaterInjectionLimits(const Opm::RestartIO::RstGroup& rst_group)
-            : rate { has_limit(rst_group.water_surface_limit)   }
-            , resv { has_limit(rst_group.water_reservoir_limit) }
-            , rein { has_limit(rst_group.water_reinject_limit)  }
-            , vrep { has_limit(rst_group.water_voidage_limit)   }
+            : rate { is_defined(rst_group.water_surface_limit)   }
+            , resv { is_defined(rst_group.water_reservoir_limit) }
+            , rein { is_defined(rst_group.water_reinject_limit)  }
+            , vrep { is_defined(rst_group.water_voidage_limit)   }
         {}
 
         bool rate { false };
@@ -125,10 +125,16 @@ namespace {
     {
         auto production = Opm::Group::GroupProductionProperties { unit_system, rst_group.name };
 
-        production.oil_target.update(rst_group.oil_rate_limit);
-        production.gas_target.update(rst_group.gas_rate_limit);
-        production.water_target.update(rst_group.water_rate_limit);
-        production.liquid_target.update(rst_group.liquid_rate_limit);
+        auto update_if_defined = [](Opm::UDAValue& target, const double value) {
+                if (is_defined(value))
+                    target.update(value);
+            };
+
+        update_if_defined(production.oil_target, rst_group.oil_rate_limit);
+        update_if_defined(production.gas_target, rst_group.gas_rate_limit);
+        update_if_defined(production.water_target, rst_group.water_rate_limit);
+        update_if_defined(production.liquid_target, rst_group.liquid_rate_limit);
+
         production.cmode = Opm::Group::ProductionCModeFromInt(rst_group.prod_cmode);
         production.group_limit_action.allRates = Opm::Group::ExceedActionFromInt(rst_group.exceed_action);
         production.guide_rate_def = Opm::Group::GuideRateProdTargetFromInt(rst_group.prod_guide_rate_def);
@@ -156,14 +162,20 @@ namespace {
     {
         auto injection = Opm::Group::GroupInjectionProperties { rst_group.name };
 
-        injection.surface_max_rate.update(rst_group.gas_surface_limit);
-        injection.resv_max_rate.update(rst_group.gas_reservoir_limit);
-        injection.target_reinj_fraction.update(rst_group.gas_reinject_limit);
-        injection.target_void_fraction.update(rst_group.gas_voidage_limit);
+        auto update_if_defined = [](Opm::UDAValue& target, const double value) {
+                if (is_defined(value))
+                    target.update(value);
+            };
+
+        update_if_defined(injection.surface_max_rate, rst_group.gas_surface_limit);
+        update_if_defined(injection.resv_max_rate, rst_group.gas_reservoir_limit);
+        update_if_defined(injection.target_reinj_fraction, rst_group.gas_reinject_limit);
+        update_if_defined(injection.target_void_fraction, rst_group.gas_voidage_limit);
+
         injection.phase = Opm::Phase::GAS;
         injection.cmode = Opm::Group::InjectionCModeFromInt(rst_group.ginj_cmode);
         injection.guide_rate_def = Opm::Group::GuideRateInjTargetFromInt(rst_group.inj_gas_guide_rate_def);
-        injection.guide_rate = rst_group.inj_gas_guide_rate;
+        injection.guide_rate = is_defined(rst_group.inj_gas_guide_rate) ? rst_group.inj_gas_guide_rate : 0.0;
 
         assign_injection_controls(active, injection);
 
@@ -176,14 +188,20 @@ namespace {
     {
         auto injection = Opm::Group::GroupInjectionProperties { rst_group.name };
 
-        injection.surface_max_rate.update(rst_group.water_surface_limit);
-        injection.resv_max_rate.update(rst_group.water_reservoir_limit);
-        injection.target_reinj_fraction.update(rst_group.water_reinject_limit);
-        injection.target_void_fraction.update(rst_group.water_voidage_limit);
+        auto update_if_defined = [](Opm::UDAValue& target, const double value) {
+                if (is_defined(value))
+                    target.update(value);
+            };
+
+        update_if_defined(injection.surface_max_rate, rst_group.water_surface_limit);
+        update_if_defined(injection.resv_max_rate, rst_group.water_reservoir_limit);
+        update_if_defined(injection.target_reinj_fraction, rst_group.water_reinject_limit);
+        update_if_defined(injection.target_void_fraction, rst_group.water_voidage_limit);
+
         injection.phase = Opm::Phase::WATER;
         injection.cmode = Opm::Group::InjectionCModeFromInt(rst_group.winj_cmode);
         injection.guide_rate_def = Opm::Group::GuideRateInjTargetFromInt(rst_group.inj_water_guide_rate_def);
-        injection.guide_rate = rst_group.inj_water_guide_rate;
+        injection.guide_rate = is_defined(rst_group.inj_water_guide_rate) ? rst_group.inj_water_guide_rate : 0;
 
         assign_injection_controls(active, injection);
 
@@ -905,7 +923,7 @@ Group::ExceedAction Group::ExceedActionFromString( const std::string& stringValu
 
 Group::ExceedAction Group::ExceedActionFromInt( const int value ) {
 
-    if (value < 0) return ExceedAction::NONE;
+    if (value <= 0) return ExceedAction::NONE;
     if (value == 4) return ExceedAction::RATE;
 
     throw std::invalid_argument(fmt::format("Unknown ExceedAction state integer: {}", value));

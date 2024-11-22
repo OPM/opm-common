@@ -36,7 +36,7 @@ public:
     {}
 
     static bool active(const RestartIO::RstGroup& rst_group) {
-        if ((rst_group.glift_max_rate + rst_group.glift_max_supply) != 0)
+        if ((rst_group.glift_max_rate + rst_group.glift_max_supply) == 0)
             return false;
 
         return true;

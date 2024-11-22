@@ -157,6 +157,8 @@ struct RstWell
     double water_void_rate;
     double gas_void_rate;
 
+    static constexpr auto UNDEFINED_VALUE = 1.0e20f;
+
     const RstSegment& segment(int segment_number) const;
     std::vector<RstConnection> connections;
     std::vector<RstSegment> segments;
