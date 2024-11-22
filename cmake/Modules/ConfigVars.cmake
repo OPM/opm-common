@@ -83,8 +83,8 @@ function (configure_vars obj syntax filename verb)
 		# of these count as "true", so put in a check that also accepts
 		# both of these values.
 		if (("${_var}" MATCHES "^HAVE_.*") AND
-			 (("${${_var}}" STREQUAL "") OR ("${${_var}}" STREQUAL "1")))
-		  set (_cond "(\"${_db}${_var}}\" STREQUAL \"\") OR (\"${_db}${_var}}\" STREQUAL \"1\")")
+			 (("${${_var}}" STREQUAL "") OR ("${${_var}}" STREQUAL "1") OR ("${${_var}}" STREQUAL "TRUE") OR ("${${_var}}" STREQUAL "ON")))
+		  set (_cond "(\"${_db}${_var}}\" STREQUAL \"\") OR (\"${_db}${_var}}\" STREQUAL \"1\") OR (\"${_db}${_var}}\" STREQUAL \"TRUE\") OR (\"${_db}${_var}}\" STREQUAL \"ON\")")
 		else ()
 		  set (_cond "\"${_db}${_var}}\" STREQUAL \"${${_var}}\"")
 		endif ()
@@ -95,7 +95,7 @@ function (configure_vars obj syntax filename verb)
 	  
 	  # check for empty variable; variables that are explicitly set to false
 	  # is not included in this clause
-	  if ((NOT DEFINED ${_var}) OR ("${${_var}}" STREQUAL ""))
+	  if ((NOT DEFINED ${_var}) OR ("${${_var}}" STREQUAL "") OR NOT _var)
 		if ("${syntax}" STREQUAL "CMAKE")
 		  file (APPEND "${filename}" "set (${_var})\n")
 		else ("${syntax}" STREQUAL "CMAKE")
@@ -110,10 +110,14 @@ function (configure_vars obj syntax filename verb)
 
 		  file (APPEND "${filename}" "set (${_var} \"${_quoted}\")\n")
 		else ("${syntax}" STREQUAL "CMAKE")
-		  file (APPEND "${filename}" "#define ${_var} ${${_var}}\n")
+		  if ("${_var}" MATCHES "^HAVE_.*")
+		    file (APPEND "${filename}" "#define ${_var} 1\n")
+		  else ()
+		    file (APPEND "${filename}" "#define ${_var} ${${_var}}\n")
+		  endif()
 		endif ("${syntax}" STREQUAL "CMAKE")
 		
-	  endif ((NOT DEFINED ${_var}) OR ("${${_var}}" STREQUAL ""))
+	  endif ((NOT DEFINED ${_var}) OR ("${${_var}}" STREQUAL "") OR NOT _var)
 	  set (_prev_verbatim FALSE)
 	endif ()
   endforeach(_var)
