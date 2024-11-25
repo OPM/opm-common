@@ -123,6 +123,12 @@ namespace Opm {
         }
     }
 
+    void NumericalAquifers::applyMinPV(const EclipseGrid& grid) {
+        for (auto& [id, aq] : this->m_aquifers) {
+            aq.applyMinPV(grid);
+        }
+    }
+
     bool NumericalAquifers::operator==(const NumericalAquifers& other) const {
         return (this->m_aquifers == other.m_aquifers)
             && (this->m_num_records == other.m_num_records);

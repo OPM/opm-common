@@ -26,6 +26,11 @@
 #include <opm/input/eclipse/EclipseState/Aquifer/NumericalAquifer/SingleNumericalAquifer.hpp>
 #include "../AquiferHelpers.hpp"
 
+#include <opm/common/OpmLog/OpmLog.hpp>
+
+#include <fmt/format.h>
+#include <algorithm>
+#include <limits>
 #include <unordered_set>
 
 namespace Opm {
@@ -62,6 +67,33 @@ namespace Opm {
 
     size_t SingleNumericalAquifer::id() const {
         return this->id_;
+    }
+
+    void SingleNumericalAquifer::applyMinPV(const EclipseGrid& grid) {
+        constexpr auto DEFAULT_MINPV = 1.0e-6;
+        constexpr auto EPSILON = std::numeric_limits<double>::epsilon();
+        const auto& minpv_vector = grid.getMinpvVector();
+        const bool minpv_active = (grid.getMinpvMode() != MinpvMode::Inactive);
+        std::vector<std::size_t> invalid_cell_indices;
+        for (auto& cell : this->cells_) {
+            const double minpv = minpv_active ? minpv_vector[cell.global_index] : DEFAULT_MINPV;
+            if (cell.poreVolume() < minpv) {
+                if (const auto bulk_vol = cell.cellVolume(); bulk_vol > EPSILON) { // Scale porosity to reach MINPV, if possible
+                    cell.porosity = minpv/bulk_vol;
+                    const auto[I, J, K] = grid.getIJK(cell.global_index);
+                    OpmLog::warning(fmt::format("Pore volume in numerical aquifer {} cell ({}, {}, {}) below threshold - reset to MINPV = {} by adjusting PORO to {})",
+                                        this->id_, I + 1, J + 1, K + 1, minpv, cell.porosity));
+                } else { // Otherwise remove cell (done below)
+                    invalid_cell_indices.push_back(cell.global_index);
+                }
+            }
+        }
+        for (const auto cell_global_index : invalid_cell_indices) { // Inefficient, but also infrequent, so no issue in practice (?)
+            const auto[I, J, K] = grid.getIJK(cell_global_index);
+            OpmLog::warning(fmt::format("Bulk volume in numerical aquifer {} cell ({}, {}, {}) below threshold (= {}). Cell is removed from the simulation",
+                                        this->id_, I + 1, J + 1, K + 1, EPSILON));
+            this->cells_.erase(std::remove_if(this->cells_.begin(), this->cells_.end(), [&](const NumericalAquiferCell& aqcell) { return aqcell.global_index == cell_global_index; }), this->cells_.end());
+        }
     }
 
     std::unordered_map<size_t, AquiferCellProps> SingleNumericalAquifer::aquiferCellProps() const {

@@ -57,6 +57,8 @@ namespace Opm {
 
         std::unordered_map<size_t, AquiferCellProps> aquiferCellProps() const;
 
+        void applyMinPV(const EclipseGrid& grid);
+
         void initConnections(const Deck& deck, const EclipseGrid& grid);
         void postProcessConnections(const EclipseGrid& grid, const std::vector<int>& actnum);
 
