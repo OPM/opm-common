@@ -71,28 +71,17 @@ namespace Opm {
 
     void SingleNumericalAquifer::applyMinPV(const EclipseGrid& grid) {
         constexpr auto DEFAULT_MINPV = 1.0e-6;
-        constexpr auto EPSILON = std::numeric_limits<double>::epsilon();
         const auto& minpv_vector = grid.getMinpvVector();
         const bool minpv_active = (grid.getMinpvMode() != MinpvMode::Inactive);
         std::vector<std::size_t> invalid_cell_indices;
         for (auto& cell : this->cells_) {
             const double minpv = minpv_active ? minpv_vector[cell.global_index] : DEFAULT_MINPV;
             if (cell.poreVolume() < minpv) {
-                if (const auto bulk_vol = cell.cellVolume(); bulk_vol > EPSILON) { // Scale porosity to reach MINPV, if possible
-                    cell.porosity = minpv/bulk_vol;
-                    const auto[I, J, K] = grid.getIJK(cell.global_index);
-                    OpmLog::warning(fmt::format("Pore volume in numerical aquifer {} cell ({}, {}, {}) below threshold - reset to MINPV = {} by adjusting PORO to {})",
-                                        this->id_, I + 1, J + 1, K + 1, minpv, cell.porosity));
-                } else { // Otherwise remove cell (done below)
-                    invalid_cell_indices.push_back(cell.global_index);
-                }
+                cell.porosity = minpv/cell.cellVolume(); // Cells with bulk volume < epsilon are not added, so division is OK.
+                const auto[I, J, K] = grid.getIJK(cell.global_index);
+                OpmLog::warning(fmt::format("Pore volume in numerical aquifer {} cell ({}, {}, {}) below threshold - reset to MINPV (~ {:.5e} by adjusting PORO to {:.5e})",
+                                    this->id_, I + 1, J + 1, K + 1, minpv, cell.porosity));
             }
-        }
-        for (const auto cell_global_index : invalid_cell_indices) { // Inefficient, but also infrequent, so no issue in practice (?)
-            const auto[I, J, K] = grid.getIJK(cell_global_index);
-            OpmLog::warning(fmt::format("Bulk volume in numerical aquifer {} cell ({}, {}, {}) below threshold (= {}). Cell is removed from the simulation",
-                                        this->id_, I + 1, J + 1, K + 1, EPSILON));
-            this->cells_.erase(std::remove_if(this->cells_.begin(), this->cells_.end(), [&](const NumericalAquiferCell& aqcell) { return aqcell.global_index == cell_global_index; }), this->cells_.end());
         }
     }
 
@@ -109,7 +98,7 @@ namespace Opm {
     std::vector<NNCdata> SingleNumericalAquifer::aquiferCellNNCs() const {
         std::vector<NNCdata> nncs;
         // aquifer cells are connected to each other through NNCs to form the aquifer
-        for (size_t i = 0; i < this->cells_.size() - 1; ++i) {
+        for (int i = 0; i < static_cast<int>(this->cells_.size()) - 1; ++i) { // int needed if this->cells_ is empty..
             const double trans1 = this->cells_[i].transmissiblity();
             const double trans2 = this->cells_[i + 1].transmissiblity();
             const double tran = 1. / (1. / trans1 + 1. / trans2);
@@ -127,6 +116,8 @@ namespace Opm {
     std::vector<NNCdata>
     SingleNumericalAquifer::aquiferConnectionNNCs(const EclipseGrid& grid, const FieldPropsManager& fp) const {
        std::vector<NNCdata> nncs;
+        if (this->cells_.size() == 0)
+            return nncs;
         // aquifer connections are connected to aquifer cells through NNCs
         const std::vector<double>& ntg = fp.get_double("NTG");
         const auto& cell1 = this->cells_[0];
