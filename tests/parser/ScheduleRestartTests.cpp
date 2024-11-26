@@ -142,7 +142,7 @@ load_schedule_pair(const std::string& base_deck,
     auto rst_view = std::make_shared<EclIO::RestartFileView>(std::move(rst_file), restart_step);
     auto rst_state = RestartIO::RstState::load(std::move(rst_view), ecl_state.runspec(), parser);
     EclipseState ecl_state_restart(restart_deck);
-    Schedule restart_sched(restart_deck, ecl_state_restart, python, false, true, {}, &rst_state);
+    Schedule restart_sched(restart_deck, ecl_state_restart, python, false, /*slave_mode=*/false, true, {}, &rst_state);
 
     return {sched, restart_sched, std::move(rst_state)};
 }

@@ -132,20 +132,20 @@ namespace Opm {
                         ErrorGuard& errors,
                         std::shared_ptr<const Python> python,
                         const bool lowActionParsingStrictness,
+                        const bool slave_mode,
                         bool keepKeywords,
                         const std::optional<int>& output_interval,
                         const RestartIO::RstState * rst,
                         const TracerConfig * tracer_config)
     try :
         m_static(python, ScheduleRestartInfo(rst, deck), deck, runspec,
-                 output_interval, parseContext, errors)
+                 output_interval, parseContext, errors, slave_mode)
         , m_sched_deck(TimeService::from_time_t(runspec.start_time()), deck, m_static.rst_info)
         , completed_cells(ecl_grid.getNX(), ecl_grid.getNY(), ecl_grid.getNZ())
         , m_lowActionParsingStrictness(lowActionParsingStrictness)
     {
         this->restart_output.resize(this->m_sched_deck.size());
         this->restart_output.clearRemainingEvents(0);
-
         this->simUpdateFromPython = std::make_shared<SimulatorUpdate>();
 
         //const ScheduleGridWrapper gridWrapper { grid } ;
@@ -203,6 +203,7 @@ namespace Opm {
                         T&& errors,
                         std::shared_ptr<const Python> python,
                         const bool lowActionParsingStrictness,
+                        const bool slave_mode,
                         const bool keepKeywords,
                         const std::optional<int>& output_interval,
                         const RestartIO::RstState * rst,
@@ -215,6 +216,7 @@ namespace Opm {
                    errors,
                    python,
                    lowActionParsingStrictness,
+                   slave_mode,
                    keepKeywords,
                    output_interval,
                    rst,
@@ -227,6 +229,7 @@ namespace Opm {
                         const Runspec &runspec,
                         std::shared_ptr<const Python> python,
                         const bool lowActionParsingStrictness,
+                        const bool slave_mode,
                         const bool keepKeywords,
                         const std::optional<int>& output_interval,
                         const RestartIO::RstState * rst,
@@ -239,6 +242,7 @@ namespace Opm {
                    ErrorGuard(),
                    python,
                    lowActionParsingStrictness,
+                   slave_mode,
                    keepKeywords,
                    output_interval,
                    rst,
@@ -251,6 +255,7 @@ namespace Opm {
                        ErrorGuard& errors,
                        std::shared_ptr<const Python> python,
                        bool lowActionParsingStrictness,
+                       const bool slave_mode,
                        const bool keepKeywords,
                        const std::optional<int>& output_interval,
                        const RestartIO::RstState * rst)
@@ -262,6 +267,7 @@ namespace Opm {
                    errors,
                    python,
                    lowActionParsingStrictness,
+                   slave_mode,
                    keepKeywords,
                    output_interval,
                    rst,
@@ -275,6 +281,7 @@ namespace Opm {
                        T&& errors,
                        std::shared_ptr<const Python> python,
                        bool lowActionParsingStrictness,
+                       const bool slave_mode,
                        const bool keepKeywords,
                        const std::optional<int>& output_interval,
                        const RestartIO::RstState * rst)
@@ -286,6 +293,7 @@ namespace Opm {
                    errors,
                    python,
                    lowActionParsingStrictness,
+                   slave_mode,
                    keepKeywords,
                    output_interval,
                    rst,
@@ -297,6 +305,7 @@ namespace Opm {
                        const EclipseState& es,
                        std::shared_ptr<const Python> python,
                        bool lowActionParsingStrictness,
+                       const bool slave_mode,
                        const bool keepKeywords,
                        const std::optional<int>& output_interval,
                        const RestartIO::RstState * rst)
@@ -306,6 +315,7 @@ namespace Opm {
                    ErrorGuard(),
                    python,
                    lowActionParsingStrictness,
+                   slave_mode,
                    keepKeywords,
                    output_interval,
                    rst)
@@ -321,6 +331,7 @@ namespace Opm {
                    ErrorGuard(),
                    std::make_shared<const Python>(),
                    false,
+                   /*slave_mode=*/false,
                    true,
                    output_interval,
                    rst)

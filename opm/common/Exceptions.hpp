@@ -81,6 +81,13 @@ public:
         : NumericalProblem(message)
     {}
 };
-}
+class ReservoirCouplingError : public std::runtime_error
+{
+public:
+    explicit ReservoirCouplingError(const std::string &message)
+        : std::runtime_error(message)
+    {}
+};
 
+}
 #endif // OPM_EXCEPTIONS_HPP

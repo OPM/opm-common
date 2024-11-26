@@ -63,6 +63,9 @@ namespace Opm {
     enum class InputErrorAction;
     class ParseContext;
     class Python;
+    namespace ReservoirCoupling {
+        class CouplingInfo;
+    }
     class Runspec;
     class RPTConfig;
     class ScheduleGrid;
@@ -106,6 +109,7 @@ namespace Opm {
          *  \param errors Error configuration
          *  \param python Python interpreter to use
          *  \param lowActionParsingStrictness Reduce parsing strictness for actions
+         *  \param slave_mode Slave mode flag
          *  \param keepKeywords Keep the schdule keywords even if there are no actions
          *  \param output_interval Output interval to use
          *  \param rst Restart state to use
@@ -119,6 +123,7 @@ namespace Opm {
                  ErrorGuard& errors,
                  std::shared_ptr<const Python> python,
                  const bool lowActionParsingStrictness = false,
+                 const bool slave_mode = false,
                  const bool keepKeywords = true,
                  const std::optional<int>& output_interval = {},
                  const RestartIO::RstState* rst = nullptr,
@@ -133,6 +138,7 @@ namespace Opm {
                  T&& errors,
                  std::shared_ptr<const Python> python,
                  const bool lowActionParsingStrictness = false,
+                 const bool slave_mode = false,
                  const bool keepKeywords = true,
                  const std::optional<int>& output_interval = {},
                  const RestartIO::RstState* rst = nullptr,
@@ -144,6 +150,7 @@ namespace Opm {
                  const Runspec &runspec,
                  std::shared_ptr<const Python> python,
                  const bool lowActionParsingStrictness = false,
+                 const bool slave_mode = false,
                  const bool keepKeywords = true,
                  const std::optional<int>& output_interval = {},
                  const RestartIO::RstState* rst = nullptr,
@@ -155,6 +162,7 @@ namespace Opm {
                  ErrorGuard& errors,
                  std::shared_ptr<const Python> python,
                  const bool lowActionParsingStrictness = false,
+                 const bool slave_mode = false,
                  const bool keepKeywords = true,
                  const std::optional<int>& output_interval = {},
                  const RestartIO::RstState* rst = nullptr);
@@ -166,6 +174,7 @@ namespace Opm {
                  T&& errors,
                  std::shared_ptr<const Python> python,
                  const bool lowActionParsingStrictness = false,
+                 const bool slave_mode = false,
                  const bool keepKeywords = true,
                  const std::optional<int>& output_interval = {},
                  const RestartIO::RstState* rst = nullptr);
@@ -174,6 +183,7 @@ namespace Opm {
                  const EclipseState& es,
                  std::shared_ptr<const Python> python,
                  const bool lowActionParsingStrictness = false,
+                 const bool slave_mode = false,
                  const bool keepKeywords = true,
                  const std::optional<int>& output_interval = {},
                  const RestartIO::RstState* rst = nullptr);
