@@ -866,6 +866,14 @@ FieldProps::FieldProps(const Deck& deck,
     }
 
     if (DeckSection::hasGRID(deck)) {
+        if (grid.getMinpvMode() == MinpvMode::EclSTD) {
+            // Intial values were set via MINPV/MINPORV in the grid
+            // Set them here, too.
+            auto kw_info = Fieldprops::keywords::global_kw_info<double>("MINPVV");
+            auto& data = this->init_get<double>("MINPVV", kw_info);
+            data.default_assign_global(grid.getMinpvVector());
+            data.update_local_from_global([&grid](std::size_t i){ return grid.getGlobalIndex(i);});
+        }
         this->scanGRIDSection(GRIDSection(deck));
     }
 
