@@ -195,7 +195,7 @@ namespace Opm::Fieldprops {
         {
             if (!global_data) {
                 throw std::invalid_argument {
-                    "Cannot call default_assign_global on keyword with local storag"
+                    "Cannot call default_assign_global on keyword with local storage"
                 };
             }
 
