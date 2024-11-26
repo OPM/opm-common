@@ -956,6 +956,46 @@ static Opm::Deck createMinpvvEqualsCPDeck() {
     return parser.parseString( deckData) ;
 }
 
+static Opm::Deck createMinpvEqualsMinpvvCPDeck() {
+    const char* deckData =
+        "RUNSPEC\n"
+        "\n"
+        "DIMENS\n"
+        " 3 2 1 /\n"
+        "GRID\n"
+        "COORD\n"
+        " 2000.0000  2000.0000  2000.0000   1999.9476  2000.0000  2002.9995\n"
+        " 2049.9924  2000.0000  2000.8726   2049.9400  2000.0000  2003.8722 \n"
+        " 2099.9848  2000.0000  2001.7452   2099.9324  2000.0000  2004.7448 \n"
+        " 2149.9772  2000.0000  2002.6179   2149.9248  2000.0000  2005.6174 \n"
+        " 2000.0000  2050.0000  2000.0000   1999.9476  2050.0000  2002.9995 \n"
+        " 2049.9924  2050.0000  2000.8726   2049.9400  2050.0000  2003.8722 \n"
+        " 2099.9848  2050.0000  2001.7452   2099.9324  2050.0000  2004.7448 \n"
+        " 2149.9772  2050.0000  2002.6179   2149.9248  2050.0000  2005.6174 \n"
+        " 2000.0000  2100.0000  2000.0000   1999.9476  2100.0000  2002.9995 \n"
+        " 2049.9924  2100.0000  2000.8726   2049.9400  2100.0000  2003.8722 \n"
+        " 2099.9848  2100.0000  2001.7452   2099.9324  2100.0000  2004.7448 \n"
+        " 2149.9772  2100.0000  2002.6179   2149.9248  2100.0000  2005.6174 / \n"
+        "ZCORN\n"
+        " 2000.0000  2000.8726  2000.8726  2001.7452  2001.7452  2002.6179 \n"
+        " 2000.0000  2000.8726  2000.8726  2001.7452  2001.7452  2002.6179 \n"
+        " 2000.0000  2000.8726  2000.8726  2001.7452  2001.7452  2002.6179 \n"
+        " 2000.0000  2000.8726  2000.8726  2001.7452  2001.7452  2002.6179 \n"
+        " 2002.9995  2003.8722  2003.8722  2004.7448  2004.7448  2005.6174 \n"
+        " 2002.9995  2003.8722  2003.8722  2004.7448  2004.7448  2005.6174 \n"
+        " 2002.9995  2003.8722  2003.8722  2004.7448  2004.7448  2005.6174 \n"
+        " 2002.9995  2003.8722  2003.8722  2004.7448  2004.7448  2005.6174 / \n"
+        "MINPV\n"
+        " 200 /\n"
+        "EQUALS \n"
+        "  MINPVV 100.0 1* 1* 2 2 1 1 /\n"
+        "/ \n"
+        "EDIT\n"
+        "\n";
+
+    Opm::Parser parser;
+    return parser.parseString( deckData) ;
+}
 BOOST_AUTO_TEST_CASE(MinPVV) {
     auto deck = createMinpvvAddCPDeck();
     Opm::EclipseState es( deck);
@@ -988,6 +1028,20 @@ BOOST_AUTO_TEST_CASE(MinPVV) {
     BOOST_CHECK(grid1.getMinpvVector()[0]==0.0);
     BOOST_CHECK(grid1.getMinpvVector()[4]==100.0);
 
+    auto deck2 = createMinpvEqualsMinpvvCPDeck();
+    Opm::EclipseState es2( deck2);
+    const auto& grid2 = es2.getInputGrid();
+    std::vector<double> fp_minpvv2 = {200, 200, 200, 100, 100, 100};
+
+    BOOST_CHECK(grid2.getMinpvMode() != Opm::MinpvMode::Inactive);
+
+    BOOST_CHECK_EQUAL_COLLECTIONS(grid2.getMinpvVector().begin(),
+                                  grid2.getMinpvVector().end(),
+                                  fp_minpvv2.begin(),
+                                  fp_minpvv2.end());
+
+    BOOST_CHECK(grid2.getMinpvVector()[0]==200.0);
+    BOOST_CHECK(grid2.getMinpvVector()[4]==100.0);
 }
 
 static Opm::Deck createActnumDeck() {
