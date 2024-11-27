@@ -28,6 +28,7 @@
 #include <algorithm>
 #include <array>
 #include <cstddef>
+#include <functional>
 #include <optional>
 #include <stdexcept>
 #include <string>
@@ -188,6 +189,43 @@ namespace Opm::Fieldprops {
             std::copy(src.begin(), src.end(), this->data.begin());
             std::fill(this->value_status.begin(), this->value_status.end(),
                       value::status::valid_default);
+        }
+
+        void default_assign_global(const std::vector<T>& src)
+        {
+            if (!global_data) {
+                throw std::invalid_argument {
+                    "Cannot call default_assign_global on keyword with local storage"
+                };
+            }
+
+            if (src.size() != this->global_data->size()) {
+                throw std::invalid_argument {
+                    "Size mismatch got: " + std::to_string(src.size()) +
+                    ", expected: " + std::to_string(this->dataSize())
+                };
+            }
+
+            std::copy(src.begin(), src.end(), this->global_data->begin());
+            std::fill(this->global_value_status->begin(), this->global_value_status->end(),
+                      value::status::valid_default);
+        }
+
+        void update_local_from_global(std::function<std::size_t(std::size_t)> local_to_global)
+        {
+            if (!global_data) {
+                throw std::invalid_argument {
+                    "Cannot call update_local_from_gloabl on keyword with local storage"
+                };
+            }
+            std::size_t i{};
+            auto current_status = this->value_status.begin();
+            for(auto current = this->data.begin(); current != this->data.end(); ++current, ++current_status, ++i)
+            {
+                const auto& global = local_to_global(i);
+                *current = (*global_data)[global];
+                *current_status = (*global_value_status)[global];
+            }
         }
 
         void default_update(const std::vector<T>& src)

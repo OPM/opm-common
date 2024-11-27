@@ -2201,7 +2201,7 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
     }
 
     void EclipseGrid::setMINPVV(const std::vector<double>& minpvv) {
-        if (m_minpvMode == MinpvMode::Inactive) {
+        if (m_minpvMode == MinpvMode::Inactive || m_minpvMode == MinpvMode::EclSTD) {
             if (minpvv.size() != this->getCartesianSize()) {
                 throw std::runtime_error("EclipseGrid::setMINPVV(): MINPVV vector size differs from logical cartesian size of grid.");
             }

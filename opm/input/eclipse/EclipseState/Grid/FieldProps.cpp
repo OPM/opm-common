@@ -747,6 +747,96 @@ bool FieldProps::rst_cmp(const FieldProps& full_arg, const FieldProps& rst_arg)
         ;
 }
 
+// init_get methods have to be specialized before their instantiation in the
+// constructor below. Otherwise we get a compilation error.
+template <>
+Fieldprops::FieldData<double>&
+FieldProps::init_get(const std::string& keyword_name,
+                     const Fieldprops::keywords::keyword_info<double>& kw_info,
+                     const bool multiplier_in_edit)
+{
+    if (multiplier_in_edit && !kw_info.scalar_init.has_value()) {
+        OPM_THROW(std::logic_error, "Keyword " +  keyword_name +
+                  " is a multiplier and should have a default initial value.");
+    }
+
+    const auto keyword = Fieldprops::keywords::get_keyword_from_alias(keyword_name);
+    const auto mult_keyword = std::string(multiplier_in_edit ? getMultiplierPrefix() : "") + keyword;
+
+    auto iter = this->double_data.find(mult_keyword);
+    if (iter != this->double_data.end()) {
+        return iter->second;
+    }
+    else if (multiplier_in_edit) {
+        assert(keyword != ParserKeywords::PORV::keywordName);
+        assert(keyword != ParserKeywords::TEMPI::keywordName);
+        assert(Fieldprops::keywords::PROPS::satfunc.count(keyword) != 1);
+        assert(!is_capillary_pressure(keyword));
+
+        this->multiplier_kw_infos_.insert_or_assign(mult_keyword, kw_info);
+    }
+
+    auto elmDescr = this->double_data
+        .try_emplace(mult_keyword, kw_info, this->active_size,
+                     kw_info.global ? this->global_size : std::size_t{0});
+
+    auto& propData = elmDescr.first->second;
+
+    if (keyword == ParserKeywords::PORV::keywordName) {
+        this->init_porv(propData);
+    }
+
+    if (keyword == ParserKeywords::TEMPI::keywordName) {
+        this->init_tempi(propData);
+    }
+
+    if ((Fieldprops::keywords::PROPS::satfunc.count(keyword) == 1) ||
+        is_capillary_pressure(keyword))
+    {
+        this->init_satfunc(keyword, propData);
+    }
+
+    return propData;
+}
+
+template <>
+Fieldprops::FieldData<double>&
+FieldProps::init_get(const std::string& keyword, const bool allow_unsupported)
+{
+    return this->init_get(keyword, Fieldprops::keywords::global_kw_info<double>(keyword, allow_unsupported));
+}
+
+template <>
+Fieldprops::FieldData<int>&
+FieldProps::init_get(const std::string&                             keyword,
+                     const Fieldprops::keywords::keyword_info<int>& kw_info,
+                     const bool)
+{
+    auto iter = this->int_data.find(keyword);
+    if (iter != this->int_data.end()) {
+        return iter->second;
+    }
+
+    return this->int_data
+        .try_emplace(keyword, kw_info, this->active_size,
+                     kw_info.global ? this->global_size : 0).first->second;
+}
+
+template <>
+Fieldprops::FieldData<int>&
+FieldProps::init_get(const std::string& keyword, bool)
+{
+    if (Fieldprops::keywords::isFipxxx(keyword)) {
+        auto kw_info = Fieldprops::keywords::keyword_info<int>{};
+        kw_info.init(1);
+
+        return this->init_get(this->canonical_fipreg_name(keyword), kw_info);
+    }
+
+    return this->init_get(keyword, Fieldprops::keywords::global_kw_info<int>(keyword));
+}
+
+
 FieldProps::FieldProps(const Deck& deck,
                        const Phases& phases,
                        EclipseGrid& grid,
@@ -776,6 +866,14 @@ FieldProps::FieldProps(const Deck& deck,
     }
 
     if (DeckSection::hasGRID(deck)) {
+        if (grid.getMinpvMode() == MinpvMode::EclSTD) {
+            // Intial values were set via MINPV/MINPORV in the grid
+            // Set them here, too.
+            auto kw_info = Fieldprops::keywords::global_kw_info<double>("MINPVV");
+            auto& data = this->init_get<double>("MINPVV", kw_info);
+            data.default_assign_global(grid.getMinpvVector());
+            data.update_local_from_global([&grid](std::size_t i){ return grid.getGlobalIndex(i);});
+        }
         this->scanGRIDSection(GRIDSection(deck));
     }
 
@@ -992,93 +1090,6 @@ bool FieldProps::supported<int>(const std::string& keyword)
     }
 
     return Fieldprops::keywords::isFipxxx(keyword);
-}
-
-template <>
-Fieldprops::FieldData<double>&
-FieldProps::init_get(const std::string& keyword_name,
-                     const Fieldprops::keywords::keyword_info<double>& kw_info,
-                     const bool multiplier_in_edit)
-{
-    if (multiplier_in_edit && !kw_info.scalar_init.has_value()) {
-        OPM_THROW(std::logic_error, "Keyword " +  keyword_name +
-                  " is a multiplier and should have a default initial value.");
-    }
-
-    const auto keyword = Fieldprops::keywords::get_keyword_from_alias(keyword_name);
-    const auto mult_keyword = std::string(multiplier_in_edit ? getMultiplierPrefix() : "") + keyword;
-
-    auto iter = this->double_data.find(mult_keyword);
-    if (iter != this->double_data.end()) {
-        return iter->second;
-    }
-    else if (multiplier_in_edit) {
-        assert(keyword != ParserKeywords::PORV::keywordName);
-        assert(keyword != ParserKeywords::TEMPI::keywordName);
-        assert(Fieldprops::keywords::PROPS::satfunc.count(keyword) != 1);
-        assert(!is_capillary_pressure(keyword));
-
-        this->multiplier_kw_infos_.insert_or_assign(mult_keyword, kw_info);
-    }
-
-    auto elmDescr = this->double_data
-        .try_emplace(mult_keyword, kw_info, this->active_size,
-                     kw_info.global ? this->global_size : std::size_t{0});
-
-    auto& propData = elmDescr.first->second;
-
-    if (keyword == ParserKeywords::PORV::keywordName) {
-        this->init_porv(propData);
-    }
-
-    if (keyword == ParserKeywords::TEMPI::keywordName) {
-        this->init_tempi(propData);
-    }
-
-    if ((Fieldprops::keywords::PROPS::satfunc.count(keyword) == 1) ||
-        is_capillary_pressure(keyword))
-    {
-        this->init_satfunc(keyword, propData);
-    }
-
-    return propData;
-}
-
-template <>
-Fieldprops::FieldData<double>&
-FieldProps::init_get(const std::string& keyword, const bool allow_unsupported)
-{
-    return this->init_get(keyword, Fieldprops::keywords::global_kw_info<double>(keyword, allow_unsupported));
-}
-
-template <>
-Fieldprops::FieldData<int>&
-FieldProps::init_get(const std::string&                             keyword,
-                     const Fieldprops::keywords::keyword_info<int>& kw_info,
-                     const bool)
-{
-    auto iter = this->int_data.find(keyword);
-    if (iter != this->int_data.end()) {
-        return iter->second;
-    }
-
-    return this->int_data
-        .try_emplace(keyword, kw_info, this->active_size,
-                     kw_info.global ? this->global_size : 0).first->second;
-}
-
-template <>
-Fieldprops::FieldData<int>&
-FieldProps::init_get(const std::string& keyword, bool)
-{
-    if (Fieldprops::keywords::isFipxxx(keyword)) {
-        auto kw_info = Fieldprops::keywords::keyword_info<int>{};
-        kw_info.init(1);
-
-        return this->init_get(this->canonical_fipreg_name(keyword), kw_info);
-    }
-
-    return this->init_get(keyword, Fieldprops::keywords::global_kw_info<int>(keyword));
 }
 
 std::pair<std::vector<Box::cell_index>,bool>
