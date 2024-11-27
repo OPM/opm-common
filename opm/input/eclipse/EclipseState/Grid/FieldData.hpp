@@ -219,10 +219,12 @@ namespace Opm::Fieldprops {
                 };
             }
             std::size_t i{};
-            for(auto current = this->data.begin(); current != this->data.end(); ++current, ++i)
+            auto current_status = this->value_status.begin();
+            for(auto current = this->data.begin(); current != this->data.end(); ++current, ++current_status, ++i)
             {
-                this->data[i] = (*global_data)[local_to_global(i)];
-                this->value_status[i] = (*global_value_status)[local_to_global(i)];
+                const auto& global = local_to_global(i);
+                *current = (*global_data)[global];
+                *current_status = (*global_value_status)[global];
             }
         }
 
