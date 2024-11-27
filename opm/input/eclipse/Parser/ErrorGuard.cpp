@@ -22,7 +22,6 @@
 #include <iostream>
 #include <iomanip>
 #include <numeric>
-#include <regex>
 
 #include <fmt/format.h>
 
@@ -38,17 +37,8 @@ namespace Opm {
     }
 
 
-    std::string ErrorGuard::dump() const {
-        // error messages to log before exiting
-        std::string error_msgs;
-        auto maxit = [](const auto acc, const auto& pair)
-                     {
-                         return std::max(acc, pair.first.size());
-                     };
-        std::size_t width = std::accumulate(this->warning_list.begin(),
-                                            this->warning_list.end(), 0UL, maxit);
-        width = std::accumulate(this->error_list.begin(),
-                                this->error_list.end(), width, maxit);
+    void ErrorGuard::dump() const {
+        const auto width = maxMessageWidth();
 
         if (!this->warning_list.empty()) {
             std::cerr << "Warnings:" << std::endl;
@@ -58,21 +48,39 @@ namespace Opm {
         }
 
         if (!this->error_list.empty()) {
-            const std::regex file_regex("\n\\w*In file(.*)line (.*)");
             std::cerr << std::endl << std::endl << "Errors:" << std::endl;
 
             for (const auto& [error_key, error_msg] : this->error_list) {
-                error_msgs += fmt::format("       {}; {}\n", error_key,
-                                          std::regex_replace(error_msg, file_regex,
-                                                             " at:$1line: $2")) ;
                 std::cerr << std::left << "  " << std::setw(width) << error_key << ": " << error_msg << std::endl;
             }
             std::cerr << std::endl;
         }
+    }
 
+
+    std::string ErrorGuard::formattedErrors() const {
+        // format error messages to be logged before exiting
+        std::string error_msgs;
+        if (!this->error_list.empty()) {
+            for (const auto& [error_key, error_msg] : this->error_list) {
+                error_msgs += fmt::format("\n{}", error_msg);
+            }
+        }
         return error_msgs;
     }
 
+
+    std::size_t ErrorGuard::maxMessageWidth() const {
+        auto maxit = [](const auto acc, const auto& pair)
+                     {
+                         return std::max(acc, pair.first.size());
+                     };
+        std::size_t width = std::accumulate(this->warning_list.begin(),
+                                            this->warning_list.end(), 0UL, maxit);
+        width = std::accumulate(this->error_list.begin(),
+                                this->error_list.end(), width, maxit);
+        return width;
+    }
 
     void ErrorGuard::clear() {
         this->warning_list.clear();
