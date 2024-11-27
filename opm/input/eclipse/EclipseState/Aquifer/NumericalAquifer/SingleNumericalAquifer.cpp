@@ -29,8 +29,6 @@
 #include <opm/common/OpmLog/OpmLog.hpp>
 
 #include <fmt/format.h>
-#include <algorithm>
-#include <limits>
 #include <unordered_set>
 
 namespace Opm {
@@ -97,8 +95,11 @@ namespace Opm {
 
     std::vector<NNCdata> SingleNumericalAquifer::aquiferCellNNCs() const {
         std::vector<NNCdata> nncs;
+        if (this->cells_.empty())
+            return nncs;
+
         // aquifer cells are connected to each other through NNCs to form the aquifer
-        for (int i = 0; i < static_cast<int>(this->cells_.size()) - 1; ++i) { // int needed if this->cells_ is empty..
+        for (size_t i = 0; i < this->cells_.size() - 1; ++i) {
             const double trans1 = this->cells_[i].transmissiblity();
             const double trans2 = this->cells_[i + 1].transmissiblity();
             const double tran = 1. / (1. / trans1 + 1. / trans2);
@@ -116,7 +117,7 @@ namespace Opm {
     std::vector<NNCdata>
     SingleNumericalAquifer::aquiferConnectionNNCs(const EclipseGrid& grid, const FieldPropsManager& fp) const {
        std::vector<NNCdata> nncs;
-        if (this->cells_.size() == 0)
+        if (this->cells_.empty())
             return nncs;
         // aquifer connections are connected to aquifer cells through NNCs
         const std::vector<double>& ntg = fp.get_double("NTG");

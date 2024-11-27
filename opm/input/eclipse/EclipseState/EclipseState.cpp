@@ -427,7 +427,6 @@ namespace Opm {
             return;
         }
 
-        //const auto& numerical_aquifer = this->aquifer_config.numericalAquifers();
         auto& numerical_aquifer = this->aquifer_config.mutableNumericalAquifers();
 
         numerical_aquifer.applyMinPV(this->m_inputGrid);

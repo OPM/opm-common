@@ -37,6 +37,7 @@
 
 #include <algorithm>
 #include <cstddef>
+#include <limits>
 #include <unordered_set>
 #include <utility>
 #include <stdexcept>
