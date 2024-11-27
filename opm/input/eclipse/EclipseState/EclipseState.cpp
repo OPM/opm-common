@@ -151,9 +151,11 @@ namespace Opm {
         this->assignRunTitle(deck);
         this->reportNumberOfActivePhases();
 
-        this->conveyNumericalAquiferEffects();
         if (field_props.has_double("MINPVV")) {
             this->m_inputGrid.setMINPVV(field_props.get_global_double("MINPVV"));
+        }
+        this->conveyNumericalAquiferEffects();
+        if (field_props.has_double("MINPVV")) {
             field_props.deleteMINPVV();
         }
         this->initLgrs(deck);
@@ -425,7 +427,9 @@ namespace Opm {
             return;
         }
 
-        const auto& numerical_aquifer = this->aquifer_config.numericalAquifers();
+        auto& numerical_aquifer = this->aquifer_config.mutableNumericalAquifers();
+
+        numerical_aquifer.applyMinPV(this->m_inputGrid);
 
         // Update field_props for numerical aquifer cells and set the
         // transmissiblity related to aquifer cells to zero.

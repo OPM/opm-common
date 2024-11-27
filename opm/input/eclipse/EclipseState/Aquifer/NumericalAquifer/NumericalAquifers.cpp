@@ -37,6 +37,7 @@
 
 #include <algorithm>
 #include <cstddef>
+#include <limits>
 #include <unordered_set>
 #include <utility>
 #include <stdexcept>
@@ -50,6 +51,7 @@ namespace Opm {
         using AQUNUM=ParserKeywords::AQUNUM;
         if ( !deck.hasKeyword<AQUNUM>() ) return;
 
+        constexpr auto EPSILON = std::numeric_limits<double>::epsilon();
         std::unordered_set<std::size_t> cells;
         // there might be multiple keywords of keyword AQUNUM, it is not totally
         // clear about the rules here. For now, we take care of all the keywords
@@ -62,6 +64,15 @@ namespace Opm {
                                              aqu_cell.I + 1, aqu_cell.J + 1, aqu_cell.K + 1);
                     throw OpmInputError(error, keyword->location());
                 } else {
+                    if (const auto id = aqu_cell.aquifer_id; !this->hasAquifer(id)) {
+                        this->m_aquifers.insert(std::make_pair(id, SingleNumericalAquifer{id}));
+                    }
+                    if (aqu_cell.cellVolume() < EPSILON) {
+                        const auto[I, J, K] = grid.getIJK(aqu_cell.global_index);
+                        OpmLog::warning(fmt::format("Bulk volume in numerical aquifer {} cell ({}, {}, {}) below threshold (~ {:.5e}). Cell is removed from the simulation.",
+                                        aqu_cell.aquifer_id, I + 1, J + 1, K + 1, EPSILON));
+                        continue;
+                    }
                     this->addAquiferCell(aqu_cell);
                     cells.insert(aqu_cell.global_index);
                 }
@@ -74,10 +85,6 @@ namespace Opm {
 
     void NumericalAquifers::addAquiferCell(const NumericalAquiferCell& aqu_cell) {
         const size_t id = aqu_cell.aquifer_id;
-        if (!this->hasAquifer(id)) {
-            this->m_aquifers.insert(std::make_pair(id, SingleNumericalAquifer{id}));
-        }
-
         auto& aquifer = this->m_aquifers.at(id);
         aquifer.addAquiferCell(aqu_cell);
     }
@@ -120,6 +127,12 @@ namespace Opm {
 
                 aquifer.addAquiferConnection(con.second);
             }
+        }
+    }
+
+    void NumericalAquifers::applyMinPV(const EclipseGrid& grid) {
+        for (auto& [id, aq] : this->m_aquifers) {
+            aq.applyMinPV(grid);
         }
     }
 

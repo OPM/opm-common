@@ -26,6 +26,9 @@
 #include <opm/input/eclipse/EclipseState/Aquifer/NumericalAquifer/SingleNumericalAquifer.hpp>
 #include "../AquiferHelpers.hpp"
 
+#include <opm/common/OpmLog/OpmLog.hpp>
+
+#include <fmt/format.h>
 #include <unordered_set>
 
 namespace Opm {
@@ -64,6 +67,22 @@ namespace Opm {
         return this->id_;
     }
 
+    void SingleNumericalAquifer::applyMinPV(const EclipseGrid& grid) {
+        constexpr auto DEFAULT_MINPV = 1.0e-6;
+        const auto& minpv_vector = grid.getMinpvVector();
+        const bool minpv_active = (grid.getMinpvMode() != MinpvMode::Inactive);
+        std::vector<std::size_t> invalid_cell_indices;
+        for (auto& cell : this->cells_) {
+            const double minpv = minpv_active ? minpv_vector[cell.global_index] : DEFAULT_MINPV;
+            if (cell.poreVolume() < minpv) {
+                cell.porosity = minpv/cell.cellVolume(); // Cells with bulk volume < epsilon are not added, so division is OK.
+                const auto[I, J, K] = grid.getIJK(cell.global_index);
+                OpmLog::warning(fmt::format("Pore volume in numerical aquifer {} cell ({}, {}, {}) below threshold - reset to MINPV (~ {:.5e} by adjusting PORO to {:.5e})",
+                                    this->id_, I + 1, J + 1, K + 1, minpv, cell.porosity));
+            }
+        }
+    }
+
     std::unordered_map<size_t, AquiferCellProps> SingleNumericalAquifer::aquiferCellProps() const {
         std::unordered_map<size_t, AquiferCellProps> aqucellprops;
         for (const auto& cell : this->cells_) {
@@ -76,6 +95,9 @@ namespace Opm {
 
     std::vector<NNCdata> SingleNumericalAquifer::aquiferCellNNCs() const {
         std::vector<NNCdata> nncs;
+        if (this->cells_.empty())
+            return nncs;
+
         // aquifer cells are connected to each other through NNCs to form the aquifer
         for (size_t i = 0; i < this->cells_.size() - 1; ++i) {
             const double trans1 = this->cells_[i].transmissiblity();
@@ -95,6 +117,8 @@ namespace Opm {
     std::vector<NNCdata>
     SingleNumericalAquifer::aquiferConnectionNNCs(const EclipseGrid& grid, const FieldPropsManager& fp) const {
        std::vector<NNCdata> nncs;
+        if (this->cells_.empty())
+            return nncs;
         // aquifer connections are connected to aquifer cells through NNCs
         const std::vector<double>& ntg = fp.get_double("NTG");
         const auto& cell1 = this->cells_[0];

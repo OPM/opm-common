@@ -59,6 +59,8 @@ namespace Opm {
         size_t numConnections() const;
         const NumericalAquiferCell* getCellPrt(size_t index) const;
 
+        void applyMinPV(const EclipseGrid& grid);
+
         std::unordered_map<size_t, AquiferCellProps> aquiferCellProps() const;
 
         std::vector<NNCdata> aquiferCellNNCs() const;
