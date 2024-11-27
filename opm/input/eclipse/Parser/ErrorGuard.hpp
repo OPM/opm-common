@@ -21,6 +21,7 @@
 #ifndef ERROR_GUARD_HPP
 #define ERROR_GUARD_HPP
 
+#include <cstddef>
 #include <string>
 #include <vector>
 
@@ -35,15 +36,17 @@ public:
     explicit operator bool() const { return !this->error_list.empty(); }
 
     /*
-      Observe that this desctructor has a somewhat special semantics. If there
+      Observe that this destructor has somewhat special semantics. If there
       are errors in the error list it will print all warnings and errors on
-      stderr and throw std::runtime_error.
+      stderr with the dump() method, and then call std::exit(1).
     */
     ~ErrorGuard();
     void terminate() const;
-    std::string dump() const;
+    void dump() const;
+    std::string formattedErrors() const;
 
 private:
+    std::size_t maxMessageWidth() const;
 
     std::vector<std::pair<std::string, std::string>> error_list;
     std::vector<std::pair<std::string, std::string>> warning_list;
