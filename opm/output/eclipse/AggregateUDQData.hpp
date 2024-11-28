@@ -32,6 +32,7 @@
 namespace Opm {
     class Group;
     class Schedule;
+    class UDQActive;
     class UDQConfig;
     class UDQDims;
     class UDQInput;
@@ -118,7 +119,7 @@ private:
     ///
     /// 5 integers pr UDQ that is used for various well and group controls.
     /// Nullopt if no UDAs.
-    std::optional<WindowedArray<int>> iUAD_;
+    std::optional<WindowedArray<int>> iUAD_{};
 
     /// Aggregate 'ZUDN' array (Character) for all UDQ data.
     ///
@@ -134,12 +135,12 @@ private:
     ///
     /// 3 - zeroes - as of current understanding.  Nullopt if no injection
     /// phase is determined by a UDA for any group.
-    std::optional<WindowedArray<int>> iGPH_;
+    std::optional<WindowedArray<int>> iGPH_{};
 
     /// Aggregate 'IUAP' array for all UDQ data
     ///
     /// 1 integer pr UDQ constraint used.  Nullopt if no UDAs.
-    std::optional<WindowedArray<int>> iUAP_;
+    std::optional<WindowedArray<int>> iUAP_{};
 
     /// Numeric values of field level UDQs.
     ///
@@ -191,6 +192,34 @@ private:
                               const std::size_t               nwmax,
                               const std::vector<std::string>& wells,
                               const int                       expectedNumWellUDQs);
+
+    /// Form IUAD array for runs featuring UDAs
+    ///
+    /// \param[in] udqActive Run's current UDA collection.
+    ///
+    /// \param[in] expectNumIUAD Expected number of UDAs.  For consistency
+    /// checking.
+    void collectIUAD(const UDQActive&  udqActive,
+                     const std::size_t expectNumIUAD);
+
+    /// Form IUAP array for runs featuring UDAs.
+    ///
+    /// \param[in] wgIndex Precalculated IUAP array.  Copied into iUAP_.
+    ///
+    /// \param[in] expectNumIUAP Expected IUAP size.  For consistency
+    /// checking.
+    void collectIUAP(const std::vector<int>& wgIndex,
+                     const std::size_t       expectNumIUAP);
+
+    /// Form IGPH group level injection phase array for runs featuring UDAs.
+    ///
+    /// \param[in] phase_vector Precalculated injection phase array.  Copied
+    /// into iGPH_.
+    ///
+    /// \param[in] expectNumIGPH Expected IGPH size.  For consistency
+    /// checking.
+    void collectIGPH(const std::vector<int>& phase_vector,
+                     const std::size_t       expectNumIGPH);
 };
 
 } // Opm::RestartIO::Helpers

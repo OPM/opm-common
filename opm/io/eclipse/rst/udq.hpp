@@ -500,25 +500,88 @@ private:
     void ensureValidNameIndex() const;
 };
 
+/// Collection of UDAs loaded from restart file
 struct RstUDQActive
 {
+    /// One single UDA
     struct RstRecord
     {
-        RstRecord(UDAControl c, std::size_t i, std::size_t u1, std::size_t u2);
+        enum class UDAKind : int {
+            /// UDA is of a regular kind that applies either to a well or a
+            /// non-field group.
+            Regular,
 
-        UDAControl  control;
+            /// UDA applies to the field level.
+            Field,
+        };
+
+        /// Constructor.
+        ///
+        /// Convenience only as this enables using vector<>::emplace_back().
+        ///
+        /// \param[in] c Control keyword and item
+        ///
+        /// \param[in] i Input index.  Zero-based order in which the UDQ was
+        /// entered.
+        ///
+        /// \param[in] k Type of this UDA.
+        ///
+        /// \param[in] u1 Use count.  Number of times this UDA is used in
+        /// this particular way (same keyword and control item, e.g., for
+        /// different wells or groups).
+        ///
+        /// \param[in] u2 IUAP start offset.
+        RstRecord(UDAControl  c,
+                  std::size_t i,
+                  UDAKind     k,
+                  std::size_t u1,
+                  std::size_t u2);
+
+        /// Control keyword and associate item for this UDA.
+        UDAControl control;
+
+        /// Input index.  Zero-based order in which the UDQ was entered.
         std::size_t input_index;
+
+        /// Use count.  Number of times this UDA is used in this particular
+        /// way (same keyword and control item, e.g., for different wells or
+        /// groups).
         std::size_t use_count;
+
+        /// IUAP start offset.
         std::size_t wg_offset;
+
+        /// Flag for whether or not this UDA applies at the field level.
+        bool isFieldUDA;
     };
 
+    /// Default constructor.
+    ///
+    /// Represents an empty collection.
     RstUDQActive() = default;
+
+    /// Constructor.
+    ///
+    /// Forms UDA collection from restart file information.
+    ///
+    /// \param[in] iuad.  Restart file IUAD array.
+    ///
+    /// \param[in] iuap.  Restart file IUAP array.  Wells/groups affected by
+    /// each UDA.
+    ///
+    /// \param[in] igph.  Restart file IGPH array.  Injection phases for
+    /// groups.
     RstUDQActive(const std::vector<int>& iuad,
                  const std::vector<int>& iuap,
                  const std::vector<int>& igph);
 
-    std::vector<RstRecord> iuad{};
+    /// Wells/groups affected by each UDA.
     std::vector<int> wg_index{};
+
+    /// Exploded items of each UDA.
+    std::vector<RstRecord> iuad{};
+
+    /// Injection phases for groups.
     std::vector<Phase> ig_phase{};
 };
 

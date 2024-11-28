@@ -148,18 +148,8 @@ namespace {
             return 0;
         }
 
-        const auto& udqAct = sched[simStep].udq_active.get();
-        const auto& iuad = udqAct.iuad();
-
-        return std::count_if(iuad.begin(), iuad.end(),
-            [](const Opm::UDQActive::OutputRecord& rec)
-        {
-            const auto kw = Opm::UDQ::keyword(rec.control);
-
-            return ! (((kw == Opm::UDAKeyword::GCONPROD) ||
-                       (kw == Opm::UDAKeyword::GCONINJE)) &&
-                      (rec.wg_name() == "FIELD"));
-        });
+        return static_cast<int>
+            (sched[simStep].udq_active().iuad().size());
     }
 
     int noIuaps(const Opm::Schedule& sched,
@@ -170,17 +160,22 @@ namespace {
             return 0;
         }
 
-        const auto& udqAct = sched[simStep].udq_active.get();
-        const auto& iuap = udqAct.iuap();
+        // UDQActive::iuap() returns a vector<> by value.
+        const auto iuap = sched[simStep].udq_active().iuap();
 
-        return std::count_if(iuap.begin(), iuap.end(),
-            [](const Opm::UDQActive::InputRecord& rec)
+        return std::accumulate(iuap.begin(), iuap.end(), 0,
+            [](const int n, const auto& rec)
         {
             const auto kw = Opm::UDQ::keyword(rec.control);
 
-            return ! (((kw == Opm::UDAKeyword::GCONPROD) ||
-                       (kw == Opm::UDAKeyword::GCONINJE)) &&
-                      (rec.wgname == "FIELD"));
+            const auto is_field_uda =
+                ((kw == Opm::UDAKeyword::GCONPROD) ||
+                 (kw == Opm::UDAKeyword::GCONINJE))
+                && (rec.wgname == "FIELD");
+
+            // One IUAP entry for each "regular" UDA in WCON* or GCON*.  Two
+            // IUAP entries for each field level UDA in GCON*.
+            return n + 1 + static_cast<int>(is_field_uda);
         });
     }
 
