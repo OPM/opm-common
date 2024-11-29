@@ -206,19 +206,20 @@ public:
         Evaluation a_mix = aMix_(temperature, yH2O, highTemp);
         Scalar b_CO2 = bCO2_(highTemp); 
         Evaluation b_mix = bMix_(yH2O, highTemp);
+        Evaluation Rt15 = R * pow(temperature, 1.5);
 
         Evaluation lnPhiCO2;
         if (spycherPruess2005) {
+            Evaluation logVpb_V = log((V + b_CO2) / V);
             lnPhiCO2 = log(V / (V - b_CO2));
             lnPhiCO2 += b_CO2 / (V - b_CO2);
-            lnPhiCO2 -= 2 * a_CO2 / (R * pow(temperature, 1.5) * b_CO2) * log((V + b_CO2) / V);
+            lnPhiCO2 -= 2 * a_CO2 / (Rt15 * b_CO2) * logVpb_V;
             lnPhiCO2 +=
                 a_CO2 * b_CO2
-                / (R
-                   * pow(temperature, 1.5)
+                / (Rt15
                    * b_CO2
                    * b_CO2)
-                * (log((V + b_CO2) / V)
+                * (logVpb_V
                    - b_CO2 / (V + b_CO2));
             lnPhiCO2 -= log(pg_bar * V / (R * temperature));
         }
@@ -226,7 +227,7 @@ public:
             lnPhiCO2 = (b_CO2 / b_mix) * (pg_bar * V / (R * temperature) - 1);
             lnPhiCO2 -= log(pg_bar * (V - b_mix) / (R * temperature));
             lnPhiCO2 += (2 * (yH2O * a_CO2_H2O + (1 - yH2O) * a_CO2) / a_mix - (b_CO2 / b_mix)) *
-                        a_mix / (b_mix * R * pow(temperature, 1.5)) * log(V / (V + b_mix));
+                        a_mix / (b_mix * Rt15) * log(V / (V + b_mix));
         }
         return exp(lnPhiCO2); // fugacity coefficient of CO2
     }
@@ -262,22 +263,24 @@ public:
         Evaluation a_mix = aMix_(temperature, yH2O, highTemp);
         Scalar b_H2O = bH2O_(highTemp); 
         Evaluation b_mix = bMix_(yH2O, highTemp);
+        Evaluation Rt15 = R * pow(temperature, 1.5);
+        Evaluation logVpb_V = log((V + b_mix) / V);
 
         Evaluation lnPhiH2O;
         if (spycherPruess2005) {
             lnPhiH2O =
                 log(V/(V - b_mix))
                 + b_H2O/(V - b_mix) - 2*a_CO2_H2O
-                / (R*pow(temperature, 1.5)*b_mix)*log((V + b_mix)/V)
-                + a_mix*b_H2O/(R*pow(temperature, 1.5)*b_mix*b_mix)
-                *(log((V + b_mix)/V) - b_mix/(V + b_mix))
+                / (Rt15*b_mix)*logVpb_V
+                + a_mix*b_H2O/(Rt15*b_mix*b_mix)
+                *(logVpb_V - b_mix/(V + b_mix))
                 - log(pg_bar*V/(R*temperature));
         }
         else {
             lnPhiH2O = (b_H2O / b_mix) * (pg_bar * V / (R * temperature) - 1);
             lnPhiH2O -= log(pg_bar * (V - b_mix) / (R * temperature));
             lnPhiH2O += (2 * (yH2O * a_H2O + (1 - yH2O) * a_CO2_H2O) / a_mix - (b_H2O / b_mix)) *
-                        a_mix / (b_mix * R * pow(temperature, 1.5)) * log(V / (V + b_mix));
+                        a_mix / (b_mix * Rt15) * log(V / (V + b_mix));
         }
         return exp(lnPhiH2O); // fugacity coefficient of H2O
     }
