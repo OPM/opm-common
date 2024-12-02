@@ -71,7 +71,6 @@ namespace Opm {
         constexpr auto DEFAULT_MINPV = 1.0e-6;
         const auto& minpv_vector = grid.getMinpvVector();
         const bool minpv_active = (grid.getMinpvMode() != MinpvMode::Inactive);
-        std::vector<std::size_t> invalid_cell_indices;
         for (auto& cell : this->cells_) {
             const double minpv = minpv_active ? minpv_vector[cell.global_index] : DEFAULT_MINPV;
             if (cell.poreVolume() < minpv) {
