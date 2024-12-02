@@ -2000,11 +2000,10 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
             return 0;
         }
         else {
-            std::size_t local_global_ind = 0;
-            for (const auto& lgr_cell : lgr_children_cells) {
-                local_global_ind += lgr_cell.activeIndexLGR(label, localIndex);
-            }
-            return local_global_ind;
+            return std::accumulate(lgr_children_cells.begin(), lgr_children_cells.end(), std::size_t{0},
+                                   [&label,localIndex](std::size_t val, const auto& lgr_cell) {
+                                       return val + lgr_cell.activeIndexLGR(label, localIndex);
+                                   });
         }   
     }
 
@@ -2020,12 +2019,10 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
             return 0;
         }
         else {
-            std::size_t local_global_ind = 0;
-            for (const auto& lgr_cell : lgr_children_cells) {
-                // better add the bases a priori
-                local_global_ind += lgr_cell.activeIndexLGR(label, i,j,k);
-            }
-            return local_global_ind;
+            return std::accumulate(lgr_children_cells.begin(), lgr_children_cells.end(), std::size_t{0},
+                                   [&label,i,j,k](std::size_t val, const auto& lgr_cell) {
+                                       return val + lgr_cell.activeIndexLGR(label, i, j, k);
+                                   });
         }   
     }
     
