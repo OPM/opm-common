@@ -126,9 +126,9 @@ namespace Opm
                   int k1, int k2,
                   int nx, int ny, int nz, const std::string& parent_name = "GLOBAL");
         void initIndexList();
-        int lower(int dim) const;
-        int upper(int dim) const;
-        int dimension(int dim) const;
+        std::size_t lower(int dim) const;
+        std::size_t upper(int dim) const;
+        std::size_t dimension(int dim) const;
     };
 }
 

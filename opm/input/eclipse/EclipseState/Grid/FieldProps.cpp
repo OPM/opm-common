@@ -79,9 +79,7 @@ namespace {
                 if (!actnum || actnum->empty()) {
                     return gridPtr->cellActive(global_index);
                 }
-                if (actnum->empty()) {
-                    return true;
-                } else if (global_index >= actnum->size()) {
+                if (global_index >= actnum->size()) {
                     return false;
                 } else {
                     return (*actnum)[global_index] > 0;

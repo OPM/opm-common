@@ -364,10 +364,10 @@ namespace Opm {
       using vec_size_t = std::vector<std::size_t>;
       EclipseGridLGR() = default;
       EclipseGridLGR(const std::string& self_label, const std::string& father_label_, 
-                     int father_lgr_level, size_t nx, size_t ny, size_t nz, 
-                     vec_size_t father_lgr_index);
+                     int father_lgr_level, size_t nx, size_t ny, size_t nz,
+                     const vec_size_t& father_lgr_index);
       ~EclipseGridLGR() = default;
-      vec_size_t getFatherGlobalID() const;
+      const vec_size_t& getFatherGlobalID() const;
       void set_lgr_global_counter(std::size_t counter){
         lgr_global_counter = counter;
       }

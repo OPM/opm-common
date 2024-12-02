@@ -71,13 +71,14 @@ namespace Opm {
         constexpr auto DEFAULT_MINPV = 1.0e-6;
         const auto& minpv_vector = grid.getMinpvVector();
         const bool minpv_active = (grid.getMinpvMode() != MinpvMode::Inactive);
-        std::vector<std::size_t> invalid_cell_indices;
         for (auto& cell : this->cells_) {
             const double minpv = minpv_active ? minpv_vector[cell.global_index] : DEFAULT_MINPV;
             if (cell.poreVolume() < minpv) {
                 cell.porosity = minpv/cell.cellVolume(); // Cells with bulk volume < epsilon are not added, so division is OK.
                 const auto[I, J, K] = grid.getIJK(cell.global_index);
-                OpmLog::warning(fmt::format("Pore volume in numerical aquifer {} cell ({}, {}, {}) below threshold - reset to MINPV (~ {:.5e} by adjusting PORO to {:.5e})",
+                OpmLog::warning(fmt::format("Pore volume in numerical aquifer {} cell ({}, {}, {}) "
+                                            "below threshold - reset to MINPV (~ {:.5e} by adjusting "
+                                            "PORO to {:.5e})",
                                     this->id_, I + 1, J + 1, K + 1, minpv, cell.porosity));
             }
         }
