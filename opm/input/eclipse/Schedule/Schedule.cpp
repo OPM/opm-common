@@ -1821,9 +1821,10 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
                             
                         }    
                     }
+
                     if(!perf_exist){
                      sim_update.well_structure_changed = true; 
-                     sim_update.affected_wells.insert(wname);
+                     //sim_update.affected_wells.insert(wname);
                      //sim_update.trans_update ..
                      size_t sort_value = conns.size();
                      conns.addConnection(eperf.getI(), 
