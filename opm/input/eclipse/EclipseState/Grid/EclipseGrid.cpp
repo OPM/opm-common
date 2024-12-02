@@ -2379,7 +2379,7 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
 namespace Opm {
     EclipseGridLGR::EclipseGridLGR(const std::string& self_label, const std::string& father_label_, 
                                    int father_lgr_level, std::size_t nx, std::size_t ny, 
-                                   std::size_t nz, vec_size_t father_lgr_index)
+                                   std::size_t nz, const vec_size_t& father_lgr_index)
     : EclipseGrid(nx,ny,nz), father_label(father_label_), father_global(father_lgr_index)
     {
         init_father_global();
@@ -2391,7 +2391,7 @@ namespace Opm {
         std::sort(father_global.begin(),father_global.end());
     }    
   
-    EclipseGridLGR::vec_size_t EclipseGridLGR::getFatherGlobalID() const
+    const EclipseGridLGR::vec_size_t& EclipseGridLGR::getFatherGlobalID() const
     {
         return father_global;
     }
