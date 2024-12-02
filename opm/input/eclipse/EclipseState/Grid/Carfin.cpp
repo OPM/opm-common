@@ -253,15 +253,15 @@ namespace Opm
         return *this == other;
     }
 
-    int Carfin::lower(int dim) const {
+    std::size_t Carfin::lower(int dim) const {
         return m_offset[dim];
     }
 
-    int Carfin::upper(int dim) const {
+    std::size_t Carfin::upper(int dim) const {
         return m_end_offset[dim];
     }
 
-    int Carfin::dimension(int dim) const {
+    std::size_t Carfin::dimension(int dim) const {
         return m_dims[dim];
     }
 
