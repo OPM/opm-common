@@ -76,7 +76,9 @@ namespace Opm {
             if (cell.poreVolume() < minpv) {
                 cell.porosity = minpv/cell.cellVolume(); // Cells with bulk volume < epsilon are not added, so division is OK.
                 const auto[I, J, K] = grid.getIJK(cell.global_index);
-                OpmLog::warning(fmt::format("Pore volume in numerical aquifer {} cell ({}, {}, {}) below threshold - reset to MINPV (~ {:.5e} by adjusting PORO to {:.5e})",
+                OpmLog::warning(fmt::format("Pore volume in numerical aquifer {} cell ({}, {}, {}) "
+                                            "below threshold - reset to MINPV (~ {:.5e} by adjusting "
+                                            "PORO to {:.5e})",
                                     this->id_, I + 1, J + 1, K + 1, minpv, cell.porosity));
             }
         }
