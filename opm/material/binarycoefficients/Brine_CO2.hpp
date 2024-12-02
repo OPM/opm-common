@@ -196,21 +196,21 @@ public:
         Valgrind::CheckDefined(temperature);
         Valgrind::CheckDefined(pg);
 
-        Evaluation V = 1 / (CO2::gasDensity(params, temperature, pg, extrapolate) / CO2::molarMass()) * 1.e6; // molar volume in cm^3/mol
-        Evaluation pg_bar = pg / 1.e5; // gas phase pressure in bar
-        Scalar R = IdealGas::R * 10.; // ideal gas constant with unit bar cm^3 /(K mol)
+        const Evaluation V = 1 / (CO2::gasDensity(params, temperature, pg, extrapolate) / CO2::molarMass()) * 1.e6; // molar volume in cm^3/mol
+        const Evaluation pg_bar = pg / 1.e5; // gas phase pressure in bar
+        const Scalar R = IdealGas::R * 10.; // ideal gas constant with unit bar cm^3 /(K mol)
 
         // Parameters in Redlich-Kwong equation
-        Evaluation a_CO2 = aCO2_(temperature, highTemp);
-        Evaluation a_CO2_H2O = aCO2_H2O_(temperature, yH2O, highTemp);
-        Evaluation a_mix = aMix_(temperature, yH2O, highTemp);
-        Scalar b_CO2 = bCO2_(highTemp); 
-        Evaluation b_mix = bMix_(yH2O, highTemp);
-        Evaluation Rt15 = R * pow(temperature, 1.5);
+        const Evaluation a_CO2 = aCO2_(temperature, highTemp);
+        const Evaluation a_CO2_H2O = aCO2_H2O_(temperature, yH2O, highTemp);
+        const Evaluation a_mix = aMix_(temperature, yH2O, highTemp);
+        const Scalar b_CO2 = bCO2_(highTemp);
+        const Evaluation b_mix = bMix_(yH2O, highTemp);
+        const Evaluation Rt15 = R * pow(temperature, 1.5);
 
         Evaluation lnPhiCO2;
         if (spycherPruess2005) {
-            Evaluation logVpb_V = log((V + b_CO2) / V);
+            const Evaluation logVpb_V = log((V + b_CO2) / V);
             lnPhiCO2 = log(V / (V - b_CO2));
             lnPhiCO2 += b_CO2 / (V - b_CO2);
             lnPhiCO2 -= 2 * a_CO2 / (Rt15 * b_CO2) * logVpb_V;
@@ -255,19 +255,19 @@ public:
 
         const Evaluation& V = 1 / (CO2::gasDensity(params, temperature, pg, extrapolate) / CO2::molarMass()) * 1.e6; // molar volume in cm^3/mol
         const Evaluation& pg_bar = pg / 1.e5; // gas phase pressure in bar
-        Scalar R = IdealGas::R * 10.; // ideal gas constant with unit bar cm^3 /(K mol)
+        const Scalar R = IdealGas::R * 10.; // ideal gas constant with unit bar cm^3 /(K mol)
 
         // Mixture parameter of  Redlich-Kwong equation
-        Evaluation a_H2O = aH2O_(temperature, highTemp);
-        Evaluation a_CO2_H2O = aCO2_H2O_(temperature, yH2O, highTemp);
-        Evaluation a_mix = aMix_(temperature, yH2O, highTemp);
-        Scalar b_H2O = bH2O_(highTemp); 
-        Evaluation b_mix = bMix_(yH2O, highTemp);
-        Evaluation Rt15 = R * pow(temperature, 1.5);
-        Evaluation logVpb_V = log((V + b_mix) / V);
+        const Evaluation a_H2O = aH2O_(temperature, highTemp);
+        const Evaluation a_CO2_H2O = aCO2_H2O_(temperature, yH2O, highTemp);
+        const Evaluation a_mix = aMix_(temperature, yH2O, highTemp);
+        const Scalar b_H2O = bH2O_(highTemp);
+        const Evaluation b_mix = bMix_(yH2O, highTemp);
+        const Evaluation Rt15 = R * pow(temperature, 1.5);
 
         Evaluation lnPhiH2O;
         if (spycherPruess2005) {
+            const Evaluation logVpb_V = log((V + b_mix) / V);
             lnPhiH2O =
                 log(V/(V - b_mix))
                 + b_H2O/(V - b_mix) - 2*a_CO2_H2O
