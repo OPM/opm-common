@@ -2351,14 +2351,9 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
     void EclipseGrid::parseGlobalReferenceToChildren(){
        for (std::size_t index = 0; index < lgr_children_cells.size(); index++)
         {
-<<<<<<< HEAD
             lgr_children_cells[index].set_lgr_global_counter(lgr_level_active_map[lgr_active_index[index]] +
                                                              this->lgr_global_counter);
-            lgr_children_cells[index].init_lgr_global_cells_index();
-=======
-            lgr_children_cells[index].set_lgr_global_counter(lgr_level_active_map[lgr_active_index[index]] + this->lgr_global_counter);
             lgr_children_cells[index].parseGlobalReferenceToChildren();
->>>>>>> 91119edcd (EGRID of two LGR cells working)
         }
     }
 
@@ -2584,8 +2579,9 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
 
 namespace Opm {
     EclipseGridLGR::EclipseGridLGR(const std::string& self_label, const std::string& father_label_, 
-                                   int father_lgr_level, std::size_t nx, std::size_t ny, 
-                                   std::size_t nz, const vec_size_t& father_lgr_index)
+                                   std::size_t nx, std::size_t ny, std::size_t nz, 
+                                   vec_size_t father_lgr_index, std::array<int,3> low_fahterIJK_, 
+                                   std::array<int,3> up_fahterIJK_)
     : EclipseGrid(nx,ny,nz), father_label(father_label_), father_global(father_lgr_index)
     {
         init_father_global();
