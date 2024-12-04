@@ -326,6 +326,8 @@ public:
     void set_gpmaint();
     bool has_gpmaint_control(Phase phase, InjectionCMode cmode) const;
     bool has_gpmaint_control(ProductionCMode cmode) const;
+    bool as_choke() const;
+    void as_choke(const std::string& group);
 
     bool operator==(const Group& data) const;
     const std::optional<Phase>& topup_phase() const;
@@ -369,6 +371,7 @@ private:
     GroupProductionProperties production_properties;
     std::optional<Phase> m_topup_phase;
     std::optional<GPMaint> m_gpmaint;
+    std::optional<std::string> m_choke_group;
 };
 
 Group::GroupType operator |(Group::GroupType lhs, Group::GroupType rhs);
