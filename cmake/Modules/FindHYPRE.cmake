@@ -43,11 +43,21 @@ find_package(BLAS QUIET REQUIRED)
 
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(HYPRE
-  REQUIRED_VARS
-    HYPRE_LIBRARY
-    HYPRE_INCLUDE_DIRS)
+                                  REQUIRED_VARS
+                                  HYPRE_LIBRARY
+                                  HYPRE_INCLUDE_DIRS)
 
 if(HYPRE_FOUND AND NOT TARGET HYPRE::HYPRE)
+  file(STRINGS ${HYPRE_INCLUDE_DIRS}/HYPRE_config.h HYPRE_CONFIG)
+  string(FIND "${HYPRE_CONFIG}" "#define HYPRE_USING_CUDA" CUDA_POS)
+  if(NOT CUDA_POS EQUAL -1)
+    set(HYPRE_USING_CUDA ON)
+  endif()
+  string(FIND "${HYPRE_CONFIG}" "#define HYPRE_USING_HIP" HIP_POS)
+  if(NOT HIP_POS EQUAL -1)
+    set(HYPRE_USING_HIP ON)
+  endif()
+
   add_library(HYPRE::HYPRE UNKNOWN IMPORTED GLOBAL)
   set_target_properties(HYPRE::HYPRE PROPERTIES
     IMPORTED_LOCATION "${HYPRE_LIBRARY}"
