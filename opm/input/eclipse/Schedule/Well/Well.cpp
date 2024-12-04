@@ -495,7 +495,8 @@ Well::Well(const std::string& wname_arg,
            bool allow_xflow,
            bool auto_shutin,
            int pvt_table_,
-           GasInflowEquation inflow_eq):
+           GasInflowEquation inflow_eq,
+           bool temp_option):
     wname(wname_arg),
     group_name(gname),
     init_step(init_step_arg),
@@ -531,6 +532,10 @@ Well::Well(const std::string& wname_arg,
     well_inj_temperature(std::nullopt),
     well_inj_mult(std::nullopt)
 {
+    if (temp_option) {
+        well_inj_temperature = Metric::TemperatureOffset + 0.0;
+    }
+
     auto p = std::make_shared<WellProductionProperties>(*this->unit_system, this->wname);
     p->whistctl_cmode = whistctl_cmode;
     this->updateProduction(p);
