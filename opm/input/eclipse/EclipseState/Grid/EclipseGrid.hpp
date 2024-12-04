@@ -368,16 +368,13 @@ namespace Opm {
       using vec_size_t = std::vector<std::size_t>;
       EclipseGridLGR() = default;
       EclipseGridLGR(const std::string& self_label, const std::string& father_label_, 
-<<<<<<< HEAD
-                     int father_lgr_level, size_t nx, size_t ny, size_t nz,
-                     const vec_size_t& father_lgr_index);
-=======
                      size_t nx, size_t ny, size_t nz, 
                      vec_size_t father_lgr_index, std::array<int,3> low_fahterIJK_, 
                      std::array<int,3> up_fahterIJK_);
->>>>>>> 91119edcd (EGRID of two LGR cells working)
       ~EclipseGridLGR() = default;
       const vec_size_t& getFatherGlobalID() const;
+      void save(Opm::EclIO::EclOutput&, const std::vector<Opm::NNCdata>&, const Opm::UnitSystem&) const;
+      void save_nnc(Opm::EclIO::EclOutput&) const;      
       void set_lgr_global_counter(std::size_t counter){
         lgr_global_counter = counter;
       }
