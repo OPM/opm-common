@@ -2306,14 +2306,24 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
                 lgr_children_cells.back().create_lgr_cells_tree(lgr_input);              
             }
         }
-        std::sort(lgr_children_cells.begin(), lgr_children_cells.end(),
-                  [](const EclipseGridLGR& a, const EclipseGridLGR& b) {
-                      return a.get_father_global()[0] < b.get_father_global()[0]; // Sort by another property
-                  });
+        EclipseGridLGR::vec_size_t father_label_sorting(lgr_children_cells.size(),0);
+        m_print_order_lgr_cells.resize(lgr_children_cells.size());
+        std::iota(m_print_order_lgr_cells.begin(), m_print_order_lgr_cells.end(), 0); //
+        std::transform(lgr_children_cells.begin(), lgr_children_cells.end(), father_label_sorting.begin(),
+                       [](const auto& cell){return cell.get_father_global()[0];});
+
+        std::sort(m_print_order_lgr_cells.begin(), m_print_order_lgr_cells.end(), [&](std::size_t i1, std::size_t i2) {
+            return father_label_sorting[i1] < father_label_sorting[i2]; // 
+        });
+
+        std::sort(lgr_children_cells.begin(), lgr_children_cells.end(),[](const EclipseGridLGR& a, const EclipseGridLGR& b) {
+                return a.get_father_global()[0] < b.get_father_global()[0]; //
+        });
+
         lgr_children_labels.reserve(lgr_children_cells.size());
-        std::transform(lgr_children_cells.begin(), lgr_children_cells.end(),
-               std::back_inserter(lgr_children_labels),
-               [](const auto& lgr_cell) { return lgr_cell.lgr_label; });
+        for (auto lgr_cell : lgr_children_cells) {
+            lgr_children_labels.emplace_back(lgr_cell.lgr_label);
+        }
         lgr_active_index.resize(lgr_children_cells.size(),0);
     }
 
