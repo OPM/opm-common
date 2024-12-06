@@ -129,6 +129,11 @@ GRUPMAST
     return prefix + end_of_deck_string;
 }
 
+std::string getCouplingFileDeckString(const std::string &end_of_deck_string)
+{
+    return getMinimumMasterTimeStepDeckString(end_of_deck_string);
+}
+
 void removeStringLogger() {
     OpmLog::removeBackend("MYLOGGER");
 }
@@ -518,6 +523,54 @@ RCMASTS
         /*exception_string=*/"Problem with keyword RCMASTS\nIn <memory string> line 34\nNegative value for RCMASTS is not allowed."
     );
 
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
+
+// ------------------------------------------------
+// Testing DUMPCUPL keyword (sorted alphabetically)
+// ------------------------------------------------
+
+BOOST_AUTO_TEST_SUITE(DumpCouplingFile)
+
+BOOST_AUTO_TEST_CASE(FORMATTED_FILE) {
+    std::string end_of_deck_string = R"(
+DUMPCUPL
+  F /
+)";
+    std::string deck_string = getCouplingFileDeckString(end_of_deck_string);
+    const auto& schedule = makeSchedule(deck_string, /*slave_mode=*/false);
+    const auto& rescoup = schedule[0].rescoup();
+    BOOST_CHECK(rescoup.couplingFileFlag() ==
+                Opm::ReservoirCoupling::CouplingInfo::CouplingFileFlag::FORMATTED);
+
+}
+
+BOOST_AUTO_TEST_CASE(BAD_VALUE) {
+    std::string end_of_deck_string = R"(
+DUMPCUPL
+  S /
+)";
+    std::string deck_string = getCouplingFileDeckString(end_of_deck_string);
+    assertRaisesInputErrorException(
+        deck_string,
+        /*slave_mode=*/false,
+        /*exception_string=*/"Problem with keyword DUMPCUPL\nIn <memory string> line 28\nInvalid DUMPCUPL value: S"
+    );
+}
+
+BOOST_AUTO_TEST_CASE(DEFAULT_NOT_ALLOWED) {
+    std::string end_of_deck_string = R"(
+DUMPCUPL
+  * /
+)";
+    std::string deck_string = getCouplingFileDeckString(end_of_deck_string);
+    assertRaisesInputErrorException(
+        deck_string,
+        /*slave_mode=*/false,
+        /*exception_string=*/"Problem with keyword DUMPCUPL\nIn <memory string> line 28\nDUMPCUPL keyword cannot be defaulted."
+    );
 }
 
 BOOST_AUTO_TEST_SUITE_END()
