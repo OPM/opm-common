@@ -32,10 +32,23 @@ namespace Opm::ReservoirCoupling {
 
 class CouplingInfo {
 public:
+    enum class CouplingFileFlag {
+        NONE,
+        FORMATTED,
+        UNFORMATTED
+    };
+
     CouplingInfo() = default;
 
     static CouplingInfo serializationTestObject();
     bool operator==(const CouplingInfo& other) const;
+
+    void couplingFileFlag(CouplingFileFlag flag) {
+        m_coupling_file_flag = flag;
+    }
+    CouplingFileFlag couplingFileFlag() const {
+        return m_coupling_file_flag;
+    }
 
     const GrupSlav& grupSlav(const std::string& name) const {
         return m_grup_slavs.at(name);
@@ -103,6 +116,7 @@ public:
         serializer(m_master_groups);
         serializer(m_grup_slavs);
         serializer(m_master_min_time_step);
+        serializer(m_coupling_file_flag);
     }
 
 private:
@@ -110,6 +124,7 @@ private:
     std::map<std::string, MasterGroup> m_master_groups;
     std::map<std::string, GrupSlav> m_grup_slavs;
     double m_master_min_time_step{0.0};
+    CouplingFileFlag m_coupling_file_flag{CouplingFileFlag::NONE};
 };
 
 } // namespace Opm::ReservoirCoupling

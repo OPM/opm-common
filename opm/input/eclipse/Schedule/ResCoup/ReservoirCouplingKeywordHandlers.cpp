@@ -24,6 +24,7 @@
 #include "Slaves.hpp"
 #include "MasterGroup.hpp"
 #include "MasterMinimumTimeStep.hpp"
+#include "CouplingFile.hpp"
 
 #include <fmt/format.h>
 
@@ -37,6 +38,7 @@ getReservoirCouplingHandlers()
         { "GRUPMAST", &handleGRUPMAST},
         { "GRUPSLAV", &handleGRUPSLAV},
         { "RCMASTS", &handleRCMASTS},
+        { "DUMPCUPL", &handleDUMPCUPL},
     };
 }
 
