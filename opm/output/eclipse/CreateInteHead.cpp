@@ -573,7 +573,10 @@ createInteHead(const EclipseState& es,
     const auto& tdim  = es.getTableManager();
     const auto& rdim  = tdim.getRegdims();
     const auto& rckcfg = es.getSimulationConfig().rock_config();
-    auto num_water_tracer = es.runspec().tracers().water_tracers();
+    const auto& tracers = es.runspec().tracers();
+    // TEMP is a tracer, oil&gas tracers have both free and solution parts.
+    const auto num_tracer_items = 2 * (tracers.water_tracers() + 2*(tracers.oil_tracers() + tracers.gas_tracers()) + (es.runspec().temp() ? 1 : 0));
+    const auto num_water_tracer = tracers.water_tracers();
     int nxwelz_tracer_shift = num_water_tracer*5 + 2 * (num_water_tracer > 0);
 
     const auto ih = InteHEAD{}
@@ -588,7 +591,7 @@ createInteHead(const EclipseState& es,
              // across a range of reference cases, but are not guaranteed to be
              // universally valid.
         .drsdt(sched, lookup_step)
-        .params_NWELZ       (155 + num_water_tracer, 122 + 2*num_water_tracer, 130 + nxwelz_tracer_shift, 3) // n{isxz}welz: number of data elements per well in {ISXZ}WELL
+        .params_NWELZ       (155 + num_water_tracer, 122 + num_tracer_items, 130 + nxwelz_tracer_shift, 3) // n{isxz}welz: number of data elements per well in {ISXZ}WELL
         .params_NCON        (25, 41, 58 + 5*num_water_tracer)       // n{isx}conz: number of data elements per completion in ICON
         .params_GRPZ        (getNGRPZ(nwgmax, ngmax, num_water_tracer, rspec))
         .aquiferDimensions  (inferAquiferDimensions(es, sched[lookup_step]))
