@@ -20,12 +20,15 @@
 #ifndef OPM_WCYCLE_HPP
 #define OPM_WCYCLE_HPP
 
+#include <map>
 #include <unordered_map>
 #include <string>
+#include <vector>
 
 namespace Opm {
 
 class DeckRecord;
+class WellMatcher;
 
 class WCYCLE
 {
@@ -68,6 +71,28 @@ public:
     auto begin() const { return entries_.begin(); }
     auto end() const { return entries_.end(); }
     bool empty() const { return entries_.empty(); }
+
+    double nextTimeStep(const double current_time,
+                        const double dt,
+                        const WellMatcher& wmatch,
+                        const std::map<std::string, double>& open_times) const;
+
+    double nextTimeStep2(const double current_time,
+                         const double dt,
+                         const WellMatcher& wmatch,
+                         const std::map<std::string, double>& close_times) const;
+
+    std::vector<std::string>
+    closeWells(const double current_time,
+               const double dt,
+               const WellMatcher& wmatch,
+               const std::map<std::string, double>& open_times) const;
+
+    std::vector<std::string>
+    openWells(const double current_time,
+              const double dt,
+              const WellMatcher& wmatch,
+              const std::map<std::string, double>& open_times) const;
 
 private:
     std::unordered_map<std::string, Entry> entries_;

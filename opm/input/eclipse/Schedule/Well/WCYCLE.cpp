@@ -19,10 +19,28 @@
 
 #include <opm/input/eclipse/Schedule/Well/WCYCLE.hpp>
 
+#include <opm/common/OpmLog/OpmLog.hpp>
+
 #include <opm/input/eclipse/Deck/DeckRecord.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/W.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellMatcher.hpp>
+#include <opm/input/eclipse/Units/Units.hpp>
+
+#include <iostream>
+
+#include <fmt/format.h>
 
 namespace Opm {
+
+WCYCLE WCYCLE::serializationTestObject()
+{
+    WCYCLE result;
+
+    result.entries_.emplace("W1", Entry{1.0, 2.0, 3.0, 4.0, false});
+    result.entries_.emplace("W2", Entry{5.0, 6.0, 7.0, 8.0, true});
+
+    return result;
+}
 
 bool WCYCLE::Entry::operator==(const Entry& that) const
 {
@@ -35,16 +53,14 @@ bool WCYCLE::Entry::operator==(const Entry& that) const
 
 void WCYCLE::addRecord(const DeckRecord& record)
 {
-    Entry entry{};
     const std::string name = record.getItem<ParserKeywords::WCYCLE::WELL>().getTrimmedString(0);
-    entry.on_time = record.getItem<ParserKeywords::WCYCLE::ON_TIME>().getSIDouble(0);
-    entry.off_time = record.getItem<ParserKeywords::WCYCLE::OFF_TIME>().getSIDouble(0);
-    entry.startup_time = record.getItem<ParserKeywords::WCYCLE::START_TIME>().getSIDouble(0);
-    entry.max_time_step = record.getItem<ParserKeywords::WCYCLE::MAX_TIMESTEP>().getSIDouble(0);
-    const std::string cont_string =
-        record.getItem<ParserKeywords::WCYCLE::CONTROLLED_TIMESTEP>().getTrimmedString(0);
-    entry.controlled_time_step = cont_string == "YES";
-    entries_.emplace(name, entry);
+    entries_.emplace(name, Entry {
+        record.getItem<ParserKeywords::WCYCLE::ON_TIME>().getSIDouble(0),
+        record.getItem<ParserKeywords::WCYCLE::OFF_TIME>().getSIDouble(0),
+        record.getItem<ParserKeywords::WCYCLE::START_TIME>().getSIDouble(0),
+        record.getItem<ParserKeywords::WCYCLE::MAX_TIMESTEP>().getSIDouble(0),
+        record.getItem<ParserKeywords::WCYCLE::CONTROLLED_TIMESTEP>().getTrimmedString(0) == "YES"
+    });
 }
 
 bool WCYCLE::operator==(const WCYCLE& other) const
@@ -52,5 +68,114 @@ bool WCYCLE::operator==(const WCYCLE& other) const
     return this->entries_ == other.entries_;
 }
 
-} // end of Opm namespace
+double WCYCLE::nextTimeStep(const double current_time,
+                            const double dt,
+                            const WellMatcher& wmatch,
+                            const std::map<std::string, double>& open_times) const
+{
+    double next_dt = dt;
+    for (const auto& [name, wce]: entries_) {
+        if (wce.on_time > 0 && wce.controlled_time_step) {
+            for (const auto& w : wmatch.wells(name)) {
+                const auto otime_it = open_times.find(w);
+                if (otime_it == open_times.end()) {
+                    continue;
+                }
+                const double otime = otime_it->second;
+                const double target_time = otime + wce.on_time;
+                if (target_time > current_time && target_time < current_time + next_dt) {
+                    next_dt = target_time - current_time;
+                    OpmLog::info(fmt::format("Adjusting time step to {} to match cycling period for well {}",
+                                             unit::convert::to(next_dt, unit::day), w));
+                }
+            }
+        }
+    }
 
+    return next_dt;
+}
+
+double WCYCLE::nextTimeStep2(const double current_time,
+                             const double dt,
+                             const WellMatcher& wmatch,
+                             const std::map<std::string, double>& close_times) const
+{
+    double next_dt = dt;
+    for (const auto& [name, wce]: entries_) {
+        if (wce.off_time > 0 && wce.controlled_time_step) {
+            for (const auto& w : wmatch.wells(name)) {
+                const auto ctime_it = close_times.find(w);
+                if (ctime_it == close_times.end()) {
+                    continue;
+                }
+                const double ctime = ctime_it->second;
+                const double target_time = ctime + wce.off_time;
+                if (target_time > current_time && target_time < current_time + next_dt) {
+                    next_dt = target_time - current_time;
+                    OpmLog::info(fmt::format("Adjusting time step to {} to match cycling period for well {}",
+                                             unit::convert::to(next_dt, unit::day), w));
+                }
+            }
+        }
+    }
+
+    return next_dt;
+}
+
+std::vector<std::string>
+WCYCLE::closeWells(const double current_time,
+                   const double dt,
+                   const WellMatcher& wmatch,
+                   const std::map<std::string, double>& open_times) const
+{
+    std::vector<std::string> result;
+    for (const auto& [name, wce] : entries_) {
+        if (wce.on_time > 0) {
+            for (const auto& w : wmatch.wells(name)) {
+                const auto otime_it = open_times.find(w);
+                if (otime_it == open_times.end()) {
+                    continue;
+                }
+                const double otime = otime_it->second;
+                const double target_time = otime + wce.on_time;
+                if (target_time >= current_time && target_time < current_time + dt) {
+                    OpmLog::info(fmt::format("Cycling well {} shut at {}",
+                                             w, unit::convert::to(current_time, unit::day)));
+                    result.push_back(w);
+                }
+            }
+        }
+    }
+
+    return result;
+}
+
+std::vector<std::string>
+WCYCLE::openWells(const double current_time,
+                  const double dt,
+                  const WellMatcher& wmatch,
+                  const std::map<std::string, double>& close_times) const
+{
+    std::vector<std::string> result;
+    for (const auto& [name, wce] : entries_) {
+        if (wce.on_time > 0) {
+            for (const auto& w : wmatch.wells(name)) {
+                const auto ctime_it = close_times.find(w);
+                if (ctime_it == close_times.end()) {
+                    continue;
+                }
+                const double ctime = ctime_it->second;
+                const double target_time = ctime + wce.off_time;
+                if (target_time >= current_time && target_time < current_time + dt) {
+                    OpmLog::info(fmt::format("Cycling well {} opened at {}",
+                                             w, unit::convert::to(current_time, unit::day)));
+                    result.push_back(w);
+                }
+            }
+        }
+    }
+
+    return result;
+}
+
+} // end of Opm namespace
