@@ -32,10 +32,23 @@ namespace Opm::ReservoirCoupling {
 
 class CouplingInfo {
 public:
+    enum class CouplingFileFlag {
+        NONE,
+        FORMATTED,
+        UNFORMATTED
+    };
+
     CouplingInfo() = default;
 
     static CouplingInfo serializationTestObject();
     bool operator==(const CouplingInfo& other) const;
+
+    void couplingFileFlag(CouplingFileFlag flag) {
+        m_coupling_file_flag = flag;
+    }
+    CouplingFileFlag couplingFileFlag() const {
+        return m_coupling_file_flag;
+    }
 
     const GrupSlav& grupSlav(const std::string& name) const {
         return m_grup_slavs.at(name);
@@ -53,6 +66,7 @@ public:
     bool hasGrupSlav(const std::string& name) const {
         return m_grup_slavs.find(name) != m_grup_slavs.end();
     }
+
     bool hasMasterGroup(const std::string& name) const {
         return m_master_groups.find(name) != m_master_groups.end();
     }
@@ -69,8 +83,16 @@ public:
     const MasterGroup& masterGroup(const std::string& name) const {
         return m_master_groups.at(name);
     }
+
     int masterGroupCount() const {
         return m_master_groups.size();
+    }
+
+    double masterMinTimeStep() const {
+        return m_master_min_time_step;
+    }
+    void masterMinTimeStep(double tstep) {
+        m_master_min_time_step = tstep;
     }
 
     const std::map<std::string, Slave>& slaves() const {
@@ -93,11 +115,16 @@ public:
         serializer(m_slaves);
         serializer(m_master_groups);
         serializer(m_grup_slavs);
+        serializer(m_master_min_time_step);
+        serializer(m_coupling_file_flag);
     }
+
 private:
     std::map<std::string, Slave> m_slaves;
     std::map<std::string, MasterGroup> m_master_groups;
     std::map<std::string, GrupSlav> m_grup_slavs;
+    double m_master_min_time_step{0.0};
+    CouplingFileFlag m_coupling_file_flag{CouplingFileFlag::NONE};
 };
 
 } // namespace Opm::ReservoirCoupling
