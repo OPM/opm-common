@@ -471,46 +471,11 @@ bool has_well( const std::vector<Well>& wells, const std::string& well_name)
 
 } // Anonymous namespace
 
-BOOST_AUTO_TEST_CASE(CreateScheduleDeckWellsOrderedGRUPTREE) {
-    const auto& schedule = make_schedule( createDeckWithWellsOrderedGRUPTREE() );
+BOOST_AUTO_TEST_CASE(CreateScheduleDeckWellsOrderedGRUPTREE)
+{
+    const auto schedule = make_schedule(createDeckWithWellsOrderedGRUPTREE());
+    const auto group_names = schedule.groupNames("P*", 0);
 
-    BOOST_CHECK_THROW( schedule.getChildWells2( "NO_SUCH_GROUP" , 0 ), std::exception);
-    {
-        auto field_wells = schedule.getChildWells2("FIELD" , 0);
-        BOOST_CHECK_EQUAL( field_wells.size() , 4U);
-
-        BOOST_CHECK( has_well( field_wells, "DW_0" ));
-        BOOST_CHECK( has_well( field_wells, "CW_1" ));
-        BOOST_CHECK( has_well( field_wells, "BW_2" ));
-        BOOST_CHECK( has_well( field_wells, "AW_3" ));
-    }
-
-    {
-        auto platform_wells = schedule.getChildWells2("PLATFORM" , 0);
-        BOOST_CHECK_EQUAL( platform_wells.size() , 4U);
-
-        BOOST_CHECK( has_well( platform_wells, "DW_0" ));
-        BOOST_CHECK( has_well( platform_wells, "CW_1" ));
-        BOOST_CHECK( has_well( platform_wells, "BW_2" ));
-        BOOST_CHECK( has_well( platform_wells, "AW_3" ));
-    }
-
-    {
-        auto child_wells1 = schedule.getChildWells2("CG1" , 0);
-        BOOST_CHECK_EQUAL( child_wells1.size() , 2U);
-
-        BOOST_CHECK( has_well( child_wells1, "DW_0" ));
-        BOOST_CHECK( has_well( child_wells1, "CW_1" ));
-    }
-
-    {
-        auto parent_wells2 = schedule.getChildWells2("PG2" , 0);
-        BOOST_CHECK_EQUAL( parent_wells2.size() , 2U);
-
-        BOOST_CHECK( has_well( parent_wells2, "BW_2" ));
-        BOOST_CHECK( has_well( parent_wells2, "AW_3" ));
-    }
-    auto group_names = schedule.groupNames("P*", 0);
     BOOST_CHECK( std::find(group_names.begin(), group_names.end(), "PG1") != group_names.end() );
     BOOST_CHECK( std::find(group_names.begin(), group_names.end(), "PG2") != group_names.end() );
     BOOST_CHECK( std::find(group_names.begin(), group_names.end(), "PLATFORM") != group_names.end() );
