@@ -1191,17 +1191,36 @@ namespace {
         void assignTracerData(const Opm::TracerConfig& tracers,
                               const Opm::SummaryState& smry,
                               const std::string&       wname,
-                              SWellArray&              sWell)
+                              SWellArray&              sWell,
+                              const bool               isTemp = false)
         {
-            auto output_index = static_cast<std::size_t>(VI::SWell::index::TracerOffset);
+            // Temperature tracer is first, if present
+            const std::size_t tempOffset = isTemp ? 1 : 0;
+            auto output_index = tempOffset + static_cast<std::size_t>(VI::SWell::index::TracerOffset);
 
             for (const auto& tracer : tracers) {
                 if (tracer.phase == Opm::Phase::WATER) {
                     sWell[output_index++] =
                         smry.get_well_var(wname, fmt::format("WTIC{}", tracer.name), 0.0);
+                } else {
+                    sWell[output_index++] =
+                        smry.get_well_var(wname, fmt::format("WTICF{}", tracer.name), 0.0);
+                    sWell[output_index++] =
+                        smry.get_well_var(wname, fmt::format("WTICS{}", tracer.name), 0.0);
                 }
             }
         }
+
+        template <class SWellArray>
+        void assignTempData(const std::string&       wname,
+                            const Opm::SummaryState& smry,
+                            SWellArray&              sWell)
+        {
+            // TEMP is the first tracer
+            auto output_index = static_cast<std::size_t>(VI::SWell::index::TracerOffset);
+            sWell[output_index] = smry.get_well_var(wname, "WTICHEA", 0.0);
+        }
+
 
         template <class SWellArray>
         void staticContrib(const Opm::Well&           well,
@@ -1244,7 +1263,10 @@ namespace {
             assignDFactorCorrelation(well, units, sWell);
             assignEconomicLimits(well, swprop, sWell);
             assignWellTest(well.name(), sched, wtest_state, sim_step, swprop, sWell);
-            assignTracerData(tracers, smry, well.name(), sWell);
+
+            const auto isTemp = sched.runspec().temp();
+            if (isTemp) assignTempData(well.name(), smry, sWell);
+            assignTracerData(tracers, smry, well.name(), sWell, isTemp);
             assignBhpVfpAdjustment(well, swprop, sWell);
         }
     } // SWell

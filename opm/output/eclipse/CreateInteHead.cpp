@@ -638,7 +638,10 @@ createInteHead(const EclipseState& es,
     const auto& tdim  = es.getTableManager();
     const auto& rdim  = tdim.getRegdims();
     const auto& rckcfg = es.getSimulationConfig().rock_config();
-    auto num_water_tracer = es.runspec().tracers().water_tracers();
+    const auto& tracers = es.runspec().tracers();
+    // TEMP is a tracer, oil&gas tracers have both free and solution parts.
+    const auto num_tracer_items = 2 * (tracers.water_tracers() + 2*(tracers.oil_tracers() + tracers.gas_tracers()) + (es.runspec().temp() ? 1 : 0));
+    const auto num_water_tracer = tracers.water_tracers();
     int nxwelz_tracer_shift = num_water_tracer*5 + 2 * (num_water_tracer > 0);
 
     const auto ih = InteHEAD{}
@@ -649,11 +652,12 @@ createInteHead(const EclipseState& es,
                                               report_step, lookup_step, grid.get_lgr_tag()))
         .calendarDate       (getSimulationTimePoint(sched.posixStartTime(), simTime))
         .activePhases       (getActivePhases(rspec))
+
         .drsdt              (sched, lookup_step)
              // -----------------------------------------------------------------------------------
              //              NIWELZ                | NSWELZ                  | NXWELZ                   | NZWELZ
              //              #IWEL elems per well  | #SWEL elems per well    | #XWEL elems per well     | #ZWEL elems per well
-        .params_NWELZ       (155 + num_water_tracer, 122 + 2*num_water_tracer, 131 + nxwelz_tracer_shift, 3)
+        .params_NWELZ       (155 + num_water_tracer, 122 + num_tracer_items, 131 + nxwelz_tracer_shift, 3)
              // -----------------------------------------------------------------------------------
              //              NICONZ               | NSCONZ               | NXCONZ
              //              #ICON elems per conn | #SCON elems per conn | #XCON elems per conn

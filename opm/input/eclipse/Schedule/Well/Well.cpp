@@ -155,6 +155,7 @@ Opm::Well::ProducerCMode producer_cmode_from_int(const int pmode)
     case CModeVal::BHP:      return Opm::Well::ProducerCMode::BHP;
     }
 
+    // Return BHP as default instead, since -10 might be written for some unused wells..??
     throw std::invalid_argument {
         fmt::format("Cannot convert integer value {} to producer control mode", pmode)
     };
@@ -467,13 +468,31 @@ Well::Well(const RestartIO::RstWell& rst_well,
         this->updateInjection(std::move(i));
 
         if (!rst_well.tracer_concentration_injection.empty()) {
+            const auto isTemp = (rst_well.inj_temperature > (0.5 * RestartIO::RstWell::UNDEFINED_VALUE));
+            std::size_t tracer_conc_index = 0;
+            if (isTemp) {
+                this->well_inj_temperature = rst_well.inj_temperature;
+                ++tracer_conc_index;
+            }
             auto tracer = std::make_shared<WellTracerProperties>(this->getTracerProperties());
-            for (std::size_t tracer_index = 0; tracer_index < tracer_config.size(); tracer_index++) {
+            for (std::size_t tracer_index = 0; tracer_index < tracer_config.size(); ++tracer_index) {
                 const auto& trName = tracer_config[tracer_index].name;
-                const auto trConcentration = rst_well.tracer_concentration_injection[tracer_index];
-                // currently there is no support to UDA tracer concentrations from restart files
-                tracer->setConcentration(WellTracerProperties::Tracer { trName },
-                                         UDAValue { trConcentration });
+                const auto phase = tracer_config[tracer_index].phase;
+                if (phase == Phase::WATER) {
+                    const auto concentration = rst_well.tracer_concentration_injection[tracer_conc_index];
+                    tracer->setConcentration(WellTracerProperties::Tracer { trName },
+                                                UDAValue { concentration } );
+                } else {
+                    const auto free_conc = rst_well.tracer_concentration_injection[tracer_conc_index];
+                    const auto sol_conc = rst_well.tracer_concentration_injection[++tracer_conc_index];
+                    if (WellType::gas_injector(this->wtype.ecl_wtype()) || WellType::oil_injector(this->wtype.ecl_wtype())) {
+                        tracer->setConcentration( WellTracerProperties::Tracer { trName },
+                                                    UDAValue { free_conc } );
+                        if (sol_conc > 0.0) {
+                            OpmLog::warning(fmt::format("Well {}: Restoring a non-zero solution concentration of tracer {} is not yet supported.", rst_well.name, trName));
+                        }
+                    }
+                }
             }
             this->updateTracer(tracer);
         }

@@ -185,8 +185,15 @@ Opm::RestartIO::RstWell::RstWell(const UnitSystem&  unit_system,
         active_control = VI::IWell::Value::WellCtrlMode::Group;
     }
 
-    for (std::size_t tracer_index = 0;
-         tracer_index < static_cast<std::size_t>(header.runspec.tracers().water_tracers());
+    // If the TEMP option is active, this is the first tracer
+    std::size_t tracer_index = 0;
+    const bool isTemp = header.runspec.temp();
+    if (isTemp) {
+        this->inj_temperature = swel[VI::SWell::TracerOffset + tracer_index++];
+    }
+    const auto& tracers = header.runspec.tracers();
+    for (const auto num_tracer_injconcs = tracers.water_tracers() + 2*(tracers.gas_tracers() + tracers.oil_tracers()) + tracer_index;
+         tracer_index < static_cast<std::size_t>(num_tracer_injconcs);
          ++tracer_index)
     {
         this->tracer_concentration_injection.push_back(swel[VI::SWell::TracerOffset + tracer_index]);
