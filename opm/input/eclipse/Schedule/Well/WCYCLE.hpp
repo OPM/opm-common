@@ -68,36 +68,31 @@ public:
 
     bool operator==(const WCYCLE& other) const;
 
-    auto begin() const { return entries_.begin(); }
-    auto end() const { return entries_.end(); }
     bool empty() const { return entries_.empty(); }
+
+    void setOpenTime(const std::string& name, double current_time) const
+    { open_times_[name] = current_time; }
 
     double nextTimeStep(const double current_time,
                         const double dt,
-                        const WellMatcher& wmatch,
-                        const std::map<std::string, double>& open_times,
-                        const std::map<std::string, double>& close_times) const;
+                        const WellMatcher& wmatch) const;
 
     std::vector<std::string>
     closeWells(const double current_time,
-               const double dt,
-               const WellMatcher& wmatch,
-               const std::map<std::string, double>& open_times) const;
+               const WellMatcher& wmatch) const;
 
     std::vector<std::string>
     openWells(const double current_time,
-              const double dt,
-              const WellMatcher& wmatch,
-              const std::map<std::string, double>& open_times) const;
+              const WellMatcher& wmatch) const;
 
     std::vector<std::pair<std::string, double>>
     efficiencyScale(const double current_time,
-                    const double dt,
-                    const WellMatcher& wmatch,
-                    const std::map<std::string, double>& open_times) const;
+                    const WellMatcher& wmatch) const;
 
 private:
     std::unordered_map<std::string, Entry> entries_;
+    static std::map<std::string, double> open_times_;
+    static std::map<std::string, double> close_times_;
 };
 
 } // namespace Opm

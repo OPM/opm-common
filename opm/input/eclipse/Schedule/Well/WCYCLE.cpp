@@ -32,6 +32,9 @@
 
 namespace Opm {
 
+std::map<std::string, double> WCYCLE::close_times_;
+std::map<std::string, double> WCYCLE::open_times_;
+
 WCYCLE WCYCLE::serializationTestObject()
 {
     WCYCLE result;
@@ -70,16 +73,14 @@ bool WCYCLE::operator==(const WCYCLE& other) const
 
 double WCYCLE::nextTimeStep(const double current_time,
                             const double dt,
-                            const WellMatcher& wmatch,
-                            const std::map<std::string, double>& open_times,
-                            const std::map<std::string, double>& close_times) const
+                            const WellMatcher& wmatch) const
 {
     double next_dt = dt;
     for (const auto& [name, wce]: entries_) {
         if (wce.on_time > 0 && wce.controlled_time_step) {
             for (const auto& w : wmatch.wells(name)) {
-                const auto otime_it = open_times.find(w);
-                if (otime_it == open_times.end()) {
+                const auto otime_it = open_times_.find(w);
+                if (otime_it == open_times_.end()) {
                     continue;
                 }
                 const double otime = otime_it->second;
@@ -94,8 +95,8 @@ double WCYCLE::nextTimeStep(const double current_time,
 
         if (wce.off_time > 0) {
             for (const auto& w : wmatch.wells(name)) {
-                const auto ctime_it = close_times.find(w);
-                if (ctime_it == close_times.end()) {
+                const auto ctime_it = close_times_.find(w);
+                if (ctime_it == close_times_.end()) {
                     continue;
                 }
                 const double ctime = ctime_it->second;
@@ -110,7 +111,7 @@ double WCYCLE::nextTimeStep(const double current_time,
                                              unit::convert::to(next_dt, unit::day), w));
                     adjusted = true;
                 }
-                if (!adjusted && target_time >= current_time && target_time < current_time + dt) {
+                if (!adjusted && current_time >= target_time) {
                     OpmLog::info(fmt::format("Cycling well {} will be opened, setting max timestep {}",
                                              w, wce.max_time_step));
                     next_dt = std::min(next_dt, wce.max_time_step);
@@ -124,23 +125,24 @@ double WCYCLE::nextTimeStep(const double current_time,
 
 std::vector<std::string>
 WCYCLE::closeWells(const double current_time,
-                   const double dt,
-                   const WellMatcher& wmatch,
-                   const std::map<std::string, double>& open_times) const
+                   const WellMatcher& wmatch) const
 {
     std::vector<std::string> result;
     for (const auto& [name, wce] : entries_) {
         if (wce.on_time > 0) {
             for (const auto& w : wmatch.wells(name)) {
-                const auto otime_it = open_times.find(w);
-                if (otime_it == open_times.end()) {
+                const auto otime_it = open_times_.find(w);
+                if (otime_it == open_times_.end()) {
                     continue;
                 }
                 const double otime = otime_it->second;
                 const double target_time = otime + wce.on_time;
-                if (target_time >= current_time && target_time < current_time + dt) {
+                if (current_time >= target_time) {
                     OpmLog::info(fmt::format("Cycling well {} shut at {}",
                                              w, unit::convert::to(current_time, unit::day)));
+
+                    open_times_.erase(otime_it);
+                    close_times_[w] = current_time;
                     result.push_back(w);
                 }
             }
@@ -152,24 +154,24 @@ WCYCLE::closeWells(const double current_time,
 
 std::vector<std::string>
 WCYCLE::openWells(const double current_time,
-                  const double dt,
-                  const WellMatcher& wmatch,
-                  const std::map<std::string, double>& close_times) const
+                  const WellMatcher& wmatch) const
 {
     std::vector<std::string> result;
     for (const auto& [name, wce] : entries_) {
-        if (wce.on_time > 0) {
+        if (wce.off_time > 0) {
             for (const auto& w : wmatch.wells(name)) {
-                const auto ctime_it = close_times.find(w);
-                if (ctime_it == close_times.end()) {
+                const auto ctime_it = close_times_.find(w);
+                if (ctime_it == close_times_.end()) {
                     continue;
                 }
                 const double ctime = ctime_it->second;
                 const double target_time = ctime + wce.off_time;
-                if (target_time >= current_time && target_time < current_time + dt) {
+                if (current_time >= target_time) {
                     OpmLog::info(fmt::format("Cycling well {} opened at {}",
                                              w, unit::convert::to(current_time, unit::day)));
                     result.push_back(w);
+                    close_times_.erase(ctime_it);
+                    open_times_[w] = current_time;
                 }
             }
         }
@@ -179,21 +181,19 @@ WCYCLE::openWells(const double current_time,
 }
 
 std::vector<std::pair<std::string, double>>
-WCYCLE::efficiencyScale(const double current_time,
-                         const double dt,
-                         const WellMatcher& wmatch,
-                         const std::map<std::string, double>& open_times) const
+WCYCLE::efficiencyScale(const double end_time,
+                         const WellMatcher& wmatch) const
 {
     std::vector<std::pair<std::string, double>> result;
     for (const auto& [name, wce] : entries_) {
         if (wce.on_time > 0 && wce.startup_time > 0.0) {
             for (const auto& w : wmatch.wells(name)) {
-                const auto otime_it = open_times.find(w);
-                if (otime_it == open_times.end()) {
+                const auto otime_it = open_times_.find(w);
+                if (otime_it == open_times_.end()) {
                     continue;
                 }
                 const double otime = otime_it->second;
-                const double target_time = current_time + dt - otime;
+                const double target_time = end_time - otime;
                 if (target_time < wce.startup_time) {
                     OpmLog::info(fmt::format("Scaling well {} efficiency factor by {}",
                                              w, target_time / wce.startup_time));
