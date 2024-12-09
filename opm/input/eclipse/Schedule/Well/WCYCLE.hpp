@@ -75,12 +75,8 @@ public:
     double nextTimeStep(const double current_time,
                         const double dt,
                         const WellMatcher& wmatch,
-                        const std::map<std::string, double>& open_times) const;
-
-    double nextTimeStep2(const double current_time,
-                         const double dt,
-                         const WellMatcher& wmatch,
-                         const std::map<std::string, double>& close_times) const;
+                        const std::map<std::string, double>& open_times,
+                        const std::map<std::string, double>& close_times) const;
 
     std::vector<std::string>
     closeWells(const double current_time,
@@ -93,6 +89,12 @@ public:
               const double dt,
               const WellMatcher& wmatch,
               const std::map<std::string, double>& open_times) const;
+
+    std::vector<std::pair<std::string, double>>
+    efficiencyScale(const double current_time,
+                    const double dt,
+                    const WellMatcher& wmatch,
+                    const std::map<std::string, double>& open_times) const;
 
 private:
     std::unordered_map<std::string, Entry> entries_;
