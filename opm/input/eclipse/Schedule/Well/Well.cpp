@@ -466,13 +466,14 @@ Well::Well(const RestartIO::RstWell& rst_well,
 
         this->updateInjection(std::move(i));
 
+        const auto isTemp = (rst_well.inj_temperature < RestartIO::RstWell::UNDEFINED_VALUE);
+        std::size_t tracer_conc_index = 0;
+        if (isTemp) {
+            this->well_inj_temperature = rst_well.inj_temperature;
+            ++tracer_conc_index;
+        }
+
         if (!rst_well.tracer_concentration_injection.empty()) {
-            const auto isTemp = (rst_well.inj_temperature > (0.5 * RestartIO::RstWell::UNDEFINED_VALUE));
-            std::size_t tracer_conc_index = 0;
-            if (isTemp) {
-                this->well_inj_temperature = rst_well.inj_temperature;
-                ++tracer_conc_index;
-            }
             auto tracer = std::make_shared<WellTracerProperties>(this->getTracerProperties());
             for (std::size_t tracer_index = 0; tracer_index < tracer_config.size(); ++tracer_index) {
                 const auto& tname = tracer_config[tracer_index].name;

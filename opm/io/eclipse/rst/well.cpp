@@ -191,7 +191,7 @@ Opm::RestartIO::RstWell::RstWell(const UnitSystem&  unit_system,
     std::size_t tracer_index = 0;
     const bool isTemp = header.runspec.temp();
     if (isTemp) {
-        this->inj_temperature = swel[VI::SWell::TracerOffset + tracer_index++];
+        this->inj_temperature = unit_system.to_si(M::temperature, swel[VI::SWell::TracerOffset + tracer_index++]);
     }
     const auto& tracers = header.runspec.tracers();
     for (const auto num_tracer_injconcs = tracers.water_tracers() + 2*(tracers.gas_tracers() + tracers.oil_tracers()) + tracer_index;
