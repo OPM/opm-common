@@ -200,7 +200,7 @@ public:
     /// \return \code *this \endcode
     WeightedRunningAverage& add(const T& x, const W& w = W{1})
     {
-        this->sum_    += w * x;
+        this->sum_    += (T)(w * x);
         this->weight_ += w;
 
         return *this;
