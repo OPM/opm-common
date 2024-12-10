@@ -23,6 +23,7 @@
 #include <functional>
 #include <optional>
 #include <sstream>
+#include <numeric>
 
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/input/eclipse/Schedule/Group/GTNode.hpp>
