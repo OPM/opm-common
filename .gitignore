@@ -36,6 +36,7 @@ Documentation/html
 dune.module
 *.pc
 install_manifest.txt
+CMakeUserPresets.json
 
 # testing framework
 CTestTestfile.cmake
