@@ -215,7 +215,7 @@ inline Itr find_terminator( Itr begin, Itr end, Term terminator ) {
 static inline std::string_view strip_comments( std::string_view str ) {
     auto terminator = find_terminator( str.begin(), str.end(), find_comment() );
     std::size_t size = std::distance(str.begin(), terminator);
-    return { str.begin(), size };
+    return { str.data(), size };
 }
 
 template< typename Itr >
@@ -236,7 +236,7 @@ inline std::string_view trim( std::string_view str ) {
     auto fst = trim_left( str.begin(), str.end() );
     auto lst = trim_right( fst, str.end() );
     std::size_t size = std::distance(fst, lst);
-    return { fst, size };
+    return { &*fst, size };
 }
 
 inline std::string_view del_after_first_slash( std::string_view view ) {
@@ -252,7 +252,7 @@ inline std::string_view del_after_first_slash( std::string_view view ) {
     /* we want to preserve terminating slashes */
     if( slash != end ) ++slash;
     std::size_t size = std::distance(begin, slash);
-    return { begin, size };
+    return { &*begin, size };
 }
 
 inline std::string_view del_after_last_slash( std::string_view view ) {
@@ -275,7 +275,7 @@ inline std::string_view del_after_last_slash( std::string_view view ) {
   /* we want to preserve terminating slashes */
   if( slash != end ) ++slash;
   std::size_t size = std::distance(begin, slash);
-  return { begin, size };
+  return { &*begin, size};
 }
 
 inline std::string_view del_after_slash(std::string_view view, bool raw_strings) {
@@ -291,8 +291,8 @@ inline bool getline( std::string_view& input, std::string_view& line ) {
 
     auto end = std::find( input.begin(), input.end(), '\n' );
 
-    line = std::string_view( input.begin(), end - input.begin() );
-    input = std::string_view( end + 1, input.end() - (end + 1));
+    line = std::string_view( &*input.begin(), end - input.begin() );
+    input = std::string_view( &*(end + 1), input.end() - (end + 1));
     return true;
 
     /* we know that we always append a newline onto the input string, so we can
@@ -374,14 +374,15 @@ inline std::string clean( const std::vector<std::pair<std::string, std::string>>
                     if (end_pos == std::string::npos) {
                         std::copy(input.begin(), input.end(), dsti);
                         dsti += std::distance( input.begin(), input.end() );
-                        input = std::string_view(input.end(), 0);
+                        input = std::string_view(&*input.end(), 0);
                         break;
                     } else {
                         end_pos += end_string.size();
                         std::copy(input.begin(), input.begin() + end_pos, dsti);
                         dsti += end_pos;
                         *dsti++ = '\n';
-                        input = std::string_view(input.begin() + end_pos + 1, input.end() - (input.begin() + end_pos + 1));
+                        input = std::string_view(&*(input.begin() + end_pos + 1),
+                                                 input.end() - (input.begin() + end_pos + 1));
                         break;
                     }
                 }
@@ -416,7 +417,7 @@ inline std::string_view update_record_buffer(const std::string_view& record_buff
         return line;
     else {
         std::size_t size = std::distance(record_buffer.begin(), line.end());
-        return { record_buffer.begin(), size };
+        return { &*record_buffer.begin(), size};
     }
 }
 
@@ -537,7 +538,7 @@ void ParserState::ungetline(const std::string_view& line) {
     if (line.end() + 1 != file_view.begin())
         throw std::invalid_argument("line view does not immediately proceed file_view");
 
-    file_view = std::string_view(line.begin(), file_view.end() - line.begin());
+    file_view = std::string_view(&*line.begin(), file_view.end() - line.begin());
     this->input_stack.top().lineNR--;
 }
 
@@ -623,7 +624,7 @@ void ParserState::loadFile(const std::filesystem::path& inputFile) {
 
     const auto closer = []( std::FILE* f ) { std::fclose( f ); };
     std::unique_ptr< std::FILE, decltype( closer ) > ufp(
-            std::fopen( inputFile.c_str(), "rb" ),
+            std::fopen( inputFile.string().c_str(), "rb" ),
             closer
             );
 
@@ -1021,14 +1022,14 @@ std::unique_ptr<RawKeyword> tryParseKeyword( ParserState& parserState, const Par
             if (rawKeyword->getSizeType() == Raw::CODE) {
                 auto end_pos = line.find(parserKeyword->codeEnd());
                 if (end_pos != std::string::npos) {
-                    std::string_view line_content = { line.begin(), end_pos};
+                    std::string_view line_content = { &*line.begin(), end_pos};
                     record_buffer = str::update_record_buffer( record_buffer, line_content );
 
                     RawRecord record(record_buffer, rawKeyword->location(), true);
                     rawKeyword->addRecord(record);
                     return rawKeyword;
                 } else
-                    record_buffer = str::update_record_buffer( record_buffer.begin(), line );
+                    record_buffer = str::update_record_buffer( &*record_buffer.begin(), line);
 
                 continue;
             }
@@ -1063,7 +1064,7 @@ std::unique_ptr<RawKeyword> tryParseKeyword( ParserState& parserState, const Par
                     rawKeyword->addRecord(record);
                 } else {
                     std::size_t size = std::distance(record_buffer.begin(),record_buffer.end());
-                    RawRecord record( std::string_view{ record_buffer.begin(), size }, rawKeyword->location());
+                    RawRecord record(std::string_view { &*record_buffer.begin(), size}, rawKeyword->location());
                     rawKeyword->addRecord(record);
                 }
                 return rawKeyword;
@@ -1078,7 +1079,7 @@ std::unique_ptr<RawKeyword> tryParseKeyword( ParserState& parserState, const Par
 
             if (str::isTerminatedRecordString(record_buffer)) {
                 std::size_t size = std::distance(record_buffer.begin(), record_buffer.end()) - 1;
-                RawRecord record( std::string_view{ record_buffer.begin(), size }, rawKeyword->location());
+                RawRecord record(std::string_view {&*record_buffer.begin(), size}, rawKeyword->location());
                 if (rawKeyword->addRecord(record))
                     return rawKeyword;
 
