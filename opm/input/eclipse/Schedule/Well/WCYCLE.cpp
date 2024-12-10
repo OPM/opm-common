@@ -117,57 +117,63 @@ double WCYCLE::nextTimeStep(const double current_time,
     return next_dt;
 }
 
-std::vector<std::string>
-WCYCLE::closeWells(const double current_time,
+void WCYCLE::start(const double current_time,
+                   const WellMatcher& wmatch,
+                   WellTimeMap& open_times) const
+{
+    for (const auto& [name, wce] : entries_) {
+        for (const auto& w : wmatch.wells(name)) {
+            if (open_times.count(w)) {
+                open_times[w].cycling = true;
+            }
+            else {
+                open_times.insert_or_assign(w, WellTimeInfo{current_time, true});
+            }
+        }
+    }
+}
+
+std::vector<WCYCLE::WellStatusInfo>
+WCYCLE::wellStatus(const double current_time,
                    const WellMatcher& wmatch,
                    WellTimeMap& open_times,
                    WellTimeMap& close_times) const
 {
-    std::vector<std::string> result;
+    std::vector<WellStatusInfo> result;
     for (const auto& [name, wce] : entries_) {
-        if (wce.off_time > 0) {
-            for (const auto& w : wmatch.wells(name)) {
-                const auto otime_it = open_times.find(w);
-                if (otime_it == open_times.end()) {
-                    continue;
-                }
-                const double target_time = otime_it->second.time + wce.on_time;
-                if (current_time >= target_time) {
-                    OpmLog::info(fmt::format("Cycling well {} shut at {}",
-                                              w, unit::convert::to(current_time, unit::day)));
-
-                    open_times.erase(otime_it);
-                    close_times.insert_or_assign(w, WellTimeInfo{current_time, true});
-                    result.push_back(w);
+        for (const auto& w : wmatch.wells(name)) {
+            if (wce.off_time > 0) {
+                const auto ctime_it = close_times.find(w);
+                if (ctime_it != close_times.end()) {
+                    const double target_time = ctime_it->second.time + wce.on_time;
+                    if (current_time < target_time) {
+                        OpmLog::info(fmt::format("Cycling well {} shut at {}",
+                                                  w, unit::convert::to(current_time, unit::day)));
+                        result.push_back(WellStatusInfo{w, false});
+                    } else if (ctime_it->second.cycling) {
+                        close_times.erase(ctime_it);
+                        result.push_back(WellStatusInfo{w, true});
+                        if (wce.on_time > 0) {
+                            open_times.insert_or_assign(w, WellTimeInfo{current_time, true});
+                        }
+                    }
                 }
             }
-        }
-    }
-
-    return result;
-}
-
-std::vector<std::string>
-WCYCLE::openWells(const double current_time,
-                  const WellMatcher& wmatch,
-                  WellTimeMap& open_times,
-                  WellTimeMap& close_times) const
-{
-    std::vector<std::string> result;
-    for (const auto& [name, wce] : entries_) {
-        if (wce.on_time > 0) {
-            for (const auto& w : wmatch.wells(name)) {
-                const auto ctime_it = close_times.find(w);
-                if (ctime_it == close_times.end()) {
-                    continue;
-                }
-                const double target_time = ctime_it->second.time + wce.off_time;
-                if (current_time >= target_time) {
-                    OpmLog::info(fmt::format("Cycling well {} opened at {}",
-                                             w, unit::convert::to(current_time, unit::day)));
-                    result.push_back(w);
-                    close_times.erase(ctime_it);
-                    open_times.insert_or_assign(w, WellTimeInfo{current_time, true});
+            if (wce.on_time > 0) {
+                const auto otime_it = open_times.find(w);
+                if (otime_it != open_times.end()) {
+                    const double target_time = otime_it->second.time + wce.off_time;
+                    if (current_time < target_time) {
+                        OpmLog::info(fmt::format("Cycling well {} opened at {}",
+                                                 w, unit::convert::to(current_time, unit::day)));
+                        result.push_back(WellStatusInfo{w, true});
+                    } else if (otime_it->second.cycling) {
+                        open_times.erase(otime_it);
+                        result.push_back(WellStatusInfo{w, false});
+                        if (wce.off_time > 0) {
+                            close_times.insert_or_assign(w, WellTimeInfo{current_time, true});
+                        }
+                    }
                 }
             }
         }
@@ -177,9 +183,10 @@ WCYCLE::openWells(const double current_time,
 }
 
 std::vector<std::pair<std::string, double>>
-WCYCLE::efficiencyScale(const double end_time,
-                         const WellMatcher& wmatch,
-                         const WellTimeMap& open_times) const
+WCYCLE::efficiencyScale(const double curr_time,
+                        const double dt,
+                        const WellMatcher& wmatch,
+                        const WellTimeMap& open_times) const
 {
     std::vector<std::pair<std::string, double>> result;
     for (const auto& [name, wce] : entries_) {
@@ -189,11 +196,12 @@ WCYCLE::efficiencyScale(const double end_time,
                 if (otime_it == open_times.end() || !otime_it->second.cycling) {
                     continue;
                 }
-                const double target_time = end_time - otime_it->second.time;
+                const double target_time = curr_time - otime_it->second.time;
                 if (target_time < wce.startup_time) {
+                    const double scale = target_time + dt > wce.startup_time ? 1.0 : (target_time + dt) / wce.startup_time;
                     OpmLog::info(fmt::format("Scaling well {} efficiency factor by {}",
-                                              w, target_time / wce.startup_time));
-                    result.emplace_back(w, target_time / wce.startup_time);
+                                             w, scale));
+                    result.emplace_back(w, scale);
                 }
             }
         }

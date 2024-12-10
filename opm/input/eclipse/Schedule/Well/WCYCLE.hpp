@@ -34,6 +34,12 @@ class WellMatcher;
 class WCYCLE
 {
 public:
+    struct WellStatusInfo
+    {
+        std::string name{};
+        bool open{false};
+    };
+
     struct WellTimeInfo
     {
         double time{0.0};
@@ -78,6 +84,10 @@ public:
 
     bool empty() const { return entries_.empty(); }
 
+    void start(const double current_time,
+               const WellMatcher& wmatch,
+               WellTimeMap& open_times) const;
+
     double nextTimeStep(const double current_time,
                         const double dt,
                         const WellMatcher& wmatch,
@@ -85,20 +95,15 @@ public:
                         const WellTimeMap& close_times,
                         std::function<bool(const std::string&)> opens_this_step) const;
 
-    std::vector<std::string>
-    closeWells(const double current_time,
+    std::vector<WellStatusInfo>
+    wellStatus(const double current_time,
                const WellMatcher& wmatch,
                WellTimeMap& open_times,
                WellTimeMap& close_times) const;
 
-    std::vector<std::string>
-    openWells(const double current_time,
-              const WellMatcher& wmatch,
-              WellTimeMap& open_times,
-              WellTimeMap& close_times) const;
-
     std::vector<std::pair<std::string, double>>
     efficiencyScale(const double current_time,
+                    const double dt,
                     const WellMatcher& wmatch,
                     const WellTimeMap& open_times) const;
 

@@ -1982,7 +1982,8 @@ quantity well_efficiency_factor(const fn_args& args)
         return zero;
     }
 
-    return { well->getEfficiencyFactor(), measure::identity };
+    return { well->getEfficiencyFactor() *
+             xwPos->second.efficiency_scaling_factor, measure::identity };
 }
 
 quantity well_efficiency_factor_grouptree(const fn_args& args)
@@ -2003,7 +2004,7 @@ quantity well_efficiency_factor_grouptree(const fn_args& args)
         return zero;
     }
 
-    auto factor = well->getEfficiencyFactor();
+    auto factor = well->getEfficiencyFactor() * xwPos->second.efficiency_scaling_factor;
     auto parent = well->groupName();
     while (parent != "FIELD") {
         const auto& grp = args.schedule[args.sim_step].groups(parent);
@@ -3207,13 +3208,15 @@ struct EfficiencyFactor
     void setFactors(const Opm::EclIO::SummaryNode&       node,
                     const Opm::Schedule&                 schedule,
                     const std::vector<const Opm::Well*>& schedule_wells,
-                    const int                            sim_step);
+                    const int                            sim_step,
+                    const Opm::data::Wells&              sim_res);
 };
 
 void EfficiencyFactor::setFactors(const Opm::EclIO::SummaryNode&       node,
                                   const Opm::Schedule&                 schedule,
                                   const std::vector<const Opm::Well*>& schedule_wells,
-                                  const int                            sim_step)
+                                  const int                            sim_step,
+                                  const Opm::data::Wells&              sim_res)
 {
     this->factors.clear();
 
@@ -3229,7 +3232,13 @@ void EfficiencyFactor::setFactors(const Opm::EclIO::SummaryNode&       node,
         if (!well->hasBeenDefined(sim_step))
             continue;
 
-        double eff_factor = well->getEfficiencyFactor();
+        const auto res_it = sim_res.find(well->name());
+        double efficiency_scaling_factor = 1.0;
+        if (res_it != sim_res.end()) {
+            efficiency_scaling_factor = res_it->second.efficiency_scaling_factor;
+        }
+
+        double eff_factor = well->getEfficiencyFactor() * efficiency_scaling_factor;
         const auto* group_ptr = std::addressof(schedule.getGroup(well->groupName(), sim_step));
 
         while (group_ptr) {
@@ -3309,7 +3318,7 @@ namespace Evaluator {
                 : std::vector<const Opm::Well*>{};
 
             EfficiencyFactor eFac{};
-            eFac.setFactors(this->node_, input.sched, wells, sim_step);
+            eFac.setFactors(this->node_, input.sched, wells, sim_step, simRes.wellSol);
 
             const fn_args args {
                 wells, this->group_name(), this->node_.keyword,
