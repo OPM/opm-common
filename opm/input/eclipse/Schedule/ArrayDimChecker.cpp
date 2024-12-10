@@ -39,6 +39,7 @@
 #include <iterator>
 #include <string>
 #include <string_view>
+#include <numeric>
 
 #include <fmt/format.h>
 
