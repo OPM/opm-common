@@ -508,6 +508,7 @@ public:
     bool h2Storage() const noexcept;
     bool micp() const noexcept;
     bool mech() const noexcept;
+    bool temp() const noexcept;
     bool compositional() const noexcept;
 
     bool operator==(const Runspec& data) const;
@@ -538,6 +539,7 @@ public:
         serializer(m_h2storage);
         serializer(m_micp);
         serializer(m_mech);
+        serializer(m_temp);
     }
 
 private:
@@ -563,6 +565,7 @@ private:
     bool m_h2storage{false};
     bool m_micp{false};
     bool m_mech{false};
+    bool m_temp{false};
 };
 
 std::size_t declaredMaxRegionID(const Runspec& rspec);

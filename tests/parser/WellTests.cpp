@@ -912,7 +912,7 @@ BOOST_AUTO_TEST_CASE(ExtraAccessors) {
     prod_props->VFPTableNumber = 200;
     prod.updateProduction(prod_props);
 
-    BOOST_CHECK_THROW(prod.inj_temperature(), std::runtime_error);
+    BOOST_CHECK_THROW(prod.inj_temperature(), std::logic_error);
     BOOST_CHECK_EQUAL(inj.vfp_table_number(), 100);
     BOOST_CHECK_EQUAL(prod.vfp_table_number(), 200);
 }
