@@ -771,8 +771,8 @@ Runspec::Runspec(const Deck& deck)
         if (runspecSection.hasKeyword<ParserKeywords::TEMP>()) {
             m_temp = true;
 
-            const std::string msg = "TEMP is used to start a thermal simulation. " +
-                                    "Conservation equation for internal energy is used instead of enthalpy " +
+            const std::string msg = "TEMP is used to start a thermal simulation. "
+                                    "Conservation equation for internal energy is used instead of enthalpy "
                                     "(i.e., no work terms are included).";
 
             OpmLog::note(msg);
