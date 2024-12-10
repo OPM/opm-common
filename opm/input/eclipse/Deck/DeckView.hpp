@@ -53,7 +53,7 @@ public:
         Iterator& operator--()    { --this->inner; return *this; }
         Iterator  operator--(int) { auto tmp = *this; --this->inner; return tmp; }
 
-        Iterator::difference_type operator-(const Iterator &other) { return this->inner - other.inner; }
+        Iterator::difference_type operator-(const Iterator &other) const { return this->inner - other.inner; }
         Iterator operator+(Iterator::difference_type shift) { Iterator tmp = *this; tmp.inner += shift; return tmp;}
 
         friend bool operator== (const Iterator& a, const Iterator& b) { return a.inner == b.inner; };

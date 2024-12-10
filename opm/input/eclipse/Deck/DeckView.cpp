@@ -17,6 +17,7 @@
 */
 
 #include <functional>
+#include <stdexcept>
 
 #include <opm/input/eclipse/Deck/DeckView.hpp>
 

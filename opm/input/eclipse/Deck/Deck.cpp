@@ -18,6 +18,8 @@
 
 #include <algorithm>
 #include <vector>
+#include <stdexcept>
+#include <iterator>
 
 #include <opm/input/eclipse/Deck/Deck.hpp>
 #include <opm/input/eclipse/Deck/DeckOutput.hpp>
