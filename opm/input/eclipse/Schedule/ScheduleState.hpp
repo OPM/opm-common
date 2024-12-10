@@ -32,6 +32,7 @@
 #include <opm/input/eclipse/Schedule/BCProp.hpp>
 #include <opm/input/eclipse/Schedule/Source.hpp>
 #include <opm/input/eclipse/Schedule/Group/Group.hpp>
+#include <opm/input/eclipse/Schedule/Well/WCYCLE.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellEnums.hpp>
 #include <opm/input/eclipse/Schedule/MessageLimits.hpp>
 #include <opm/input/eclipse/Schedule/VFPProdTable.hpp>
@@ -420,6 +421,7 @@ namespace Opm {
 
         ptr_member<BHPDefaults> bhp_defaults;
         ptr_member<Source> source;
+        ptr_member<WCYCLE> wcycle;
 
         template <typename T>
         ptr_member<T>& get() {
@@ -473,7 +475,8 @@ namespace Opm {
                                   return this->bhp_defaults;
             else if constexpr ( std::is_same_v<T, Source> )
                                   return this->source;
-
+            else if constexpr ( std::is_same_v<T, WCYCLE> )
+                                  return this->wcycle;
             else
                 static_assert(always_false1::value, "Template type <T> not supported in get()");
         }
@@ -531,6 +534,7 @@ namespace Opm {
             serializer(rst_config);
             serializer(bhp_defaults);
             serializer(source);
+            serializer(wcycle);
             serializer(vfpprod);
             serializer(vfpinj);
             serializer(groups);

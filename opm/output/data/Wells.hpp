@@ -815,6 +815,7 @@ namespace Opm { namespace data {
         double thp{0.0};
         double temperature{0.0};
         int control{0};
+        double efficiency_scaling_factor{1.0};
 
         WellFiltrate filtrate;
 
@@ -891,6 +892,7 @@ namespace Opm { namespace data {
             serializer(thp);
             serializer(temperature);
             serializer(control);
+            serializer(efficiency_scaling_factor);
             serializer(filtrate);
             serializer(dynamicStatus);
             serializer(connections);
@@ -908,6 +910,7 @@ namespace Opm { namespace data {
                 2.0,
                 3.0,
                 4,
+                5.0,
                 WellFiltrate::serializationTestObject(),
                 ::Opm::WellStatus::SHUT,
                 {Connection::serializationTestObject()},
@@ -1332,6 +1335,7 @@ namespace Opm { namespace data {
         buffer.write(this->thp);
         buffer.write(this->temperature);
         buffer.write(this->control);
+        buffer.write(this->efficiency_scaling_factor);
 
         this->filtrate.write(buffer);
 
@@ -1491,6 +1495,7 @@ namespace Opm { namespace data {
         buffer.read(this->thp);
         buffer.read(this->temperature);
         buffer.read(this->control);
+        buffer.read(this->efficiency_scaling_factor);
 
         this->filtrate.read(buffer);
 

@@ -131,6 +131,7 @@
 #include <opm/input/eclipse/Schedule/Well/FilterCake.hpp>
 #include <opm/input/eclipse/Schedule/Well/NameOrder.hpp>
 #include <opm/input/eclipse/Schedule/Well/PAvg.hpp>
+#include <opm/input/eclipse/Schedule/Well/WCYCLE.hpp>
 #include <opm/input/eclipse/Schedule/Well/WDFAC.hpp>
 #include <opm/input/eclipse/Schedule/Well/WList.hpp>
 #include <opm/input/eclipse/Schedule/Well/WListManager.hpp>
@@ -350,6 +351,7 @@ TEST_FOR_TYPE(WellTestState)
 TEST_FOR_TYPE(WellType)
 TEST_FOR_TYPE(WListManager)
 TEST_FOR_TYPE(WriteRestartFileEvents)
+TEST_FOR_TYPE(WCYCLE)
 TEST_FOR_TYPE(EzrokhiTable)
 
 namespace {
