@@ -1549,7 +1549,7 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
             std::vector<double> volume(this->m_nactive);
 
             #pragma omp parallel for schedule(static)
-            for (std::size_t active_index = 0; active_index < this->m_active_to_global.size(); active_index++) {
+            for (long long active_index = 0; active_index < this->m_active_to_global.size(); active_index++) {
                 std::array<double,8> X;
                 std::array<double,8> Y;
                 std::array<double,8> Z;
