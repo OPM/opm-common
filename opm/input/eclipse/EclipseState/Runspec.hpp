@@ -559,13 +559,13 @@ private:
     Nupcol m_nupcol{};
     Tracers m_tracers{};
     size_t m_comps = 0;
-    bool m_co2storage;
-    bool m_co2sol;
-    bool m_h2sol;
-    bool m_h2storage;
-    bool m_micp;
-    bool m_mech;
-    bool m_temp;
+    bool m_co2storage{false};
+    bool m_co2sol{false};
+    bool m_h2sol{false};
+    bool m_h2storage{false};
+    bool m_micp{false};
+    bool m_mech{false};
+    bool m_temp{false};
 };
 
 std::size_t declaredMaxRegionID(const Runspec& rspec);
