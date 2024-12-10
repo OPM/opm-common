@@ -620,6 +620,7 @@ public:
         serializer(wvfpexp);
         serializer(m_pavg);
         serializer(well_inj_temperature);
+        serializer(default_well_inj_temperature);
         serializer(inj_mult_mode);
         serializer(well_inj_mult);
         serializer(m_filter_concentration);
@@ -672,6 +673,7 @@ private:
     Status status{Status::AUTO};
     PAvg m_pavg{};
     std::optional<double> well_inj_temperature{};
+    std::optional<double> default_well_inj_temperature{std::nullopt};
     InjMultMode inj_mult_mode = InjMultMode::NONE;
     std::optional<InjMult> well_inj_mult{};
     UDAValue m_filter_concentration{};
