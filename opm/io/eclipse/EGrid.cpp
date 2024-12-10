@@ -35,7 +35,7 @@
 
 namespace Opm { namespace EclIO {
 
-using NNCentry = std::tuple<int, int, int, int, int,int, float>;
+using NNCentry = std::tuple<int, int, int, int, int, int, float>;
 
 EGrid::EGrid(const std::string& filename, const std::string& grid_name)
     : EclFile(filename), inputFileName { filename }, m_grid_name {grid_name}
@@ -55,6 +55,8 @@ EGrid::EGrid(const std::string& filename, const std::string& grid_name)
     nnc2_array_index = -1;
     coordsys_array_index = -1;
     m_radial = false;
+    m_mapaxes_loaded = false;
+    double length_factor = 1.0;
 
     int hostnum_index = -1;
 
@@ -81,10 +83,25 @@ EGrid::EGrid(const std::string& filename, const std::string& grid_name)
         if (array_name[n] == "MAPUNITS"){
             auto mapunits = this->get<std::string>(n);
             m_mapunits = mapunits[0];
+            if (m_mapunits == "METRES")
+                length_factor = 1.0;
+            else if (m_mapunits == "FEET")
+                length_factor = 0.3048;
+            else if (m_mapunits == "CM")
+                length_factor = 0.01;
+            else{
+                std::string message = "Unit system " + m_mapunits + " not supported for MAPUNITS";
+                OPM_THROW(std::invalid_argument, message);
+            }
         }
 
-        if (array_name[n] == "MAPAXES")
-            m_mapaxes = this->get<float>(n);
+        if (array_name[n] == "MAPAXES"){
+            const auto& mapAx = this->get<float>(n);
+            std::transform(mapAx.begin(), mapAx.end(), this->m_mapaxes.begin(),
+                           [length_factor](const float elm) { return elm * length_factor; });
+            mapaxes_init();
+            m_mapaxes_loaded = true;
+        }
 
         if (lgrname == grid_name) {
             if (array_name[n] == "GRIDHEAD") {
@@ -322,11 +339,31 @@ std::array<int, 3> EGrid::ijk_from_global_index(int globInd) const
     return result;
 }
 
+void EGrid::mapaxes_transform(double& x, double& y) const {
+    double tmpx = x;
+    x = origin[0] + tmpx * unit_x[0] + y * unit_y[0];
+    y = origin[1] + tmpx * unit_x[1] + y * unit_y[1];
+}
+
+void EGrid::mapaxes_init()
+{
+    origin = {m_mapaxes[2], m_mapaxes[3]};
+    unit_x = {m_mapaxes[4] - m_mapaxes[2], m_mapaxes[5] - m_mapaxes[3]};
+    unit_y = {m_mapaxes[0] - m_mapaxes[2], m_mapaxes[1] - m_mapaxes[3]};
+
+    auto norm_x = 1.0 / std::hypot(unit_x[0], unit_x[1]);
+    auto norm_y = 1.0 / std::hypot(unit_y[0], unit_y[1]);
+
+    unit_x[0] *= norm_x;
+    unit_x[1] *= norm_x;
+    unit_y[0] *= norm_y;
+    unit_y[1] *= norm_y;
+}
 
 void EGrid::getCellCorners(const std::array<int, 3>& ijk,
-                           std::array<double,8>& X,
-                           std::array<double,8>& Y,
-                           std::array<double,8>& Z)
+                           std::array<double, 8>& X,
+                           std::array<double, 8>& Y,
+                           std::array<double, 8>& Z)
 {
     if (coord_array.empty())
         load_grid_data();
@@ -351,7 +388,7 @@ void EGrid::getCellCorners(const std::array<int, 3>& ijk,
     for (int n = 0; n < 4; n++)
         zind.push_back(zind[n] + nijk[0]*nijk[1]*4);
 
-    for (int n = 0; n< 8; n++)
+    for (int n = 0; n < 8; n++)
         Z[n] = zcorn_array[zind[n]];
 
     for (int  n = 0; n < 4; n++) {
@@ -366,8 +403,8 @@ void EGrid::getCellCorners(const std::array<int, 3>& ijk,
         if (m_radial) {
             xt = coord_array[pind[n]] * cos(coord_array[pind[n] + 1] / 180.0 * M_PI);
             yt = coord_array[pind[n]] * sin(coord_array[pind[n] + 1] / 180.0 * M_PI);
-            xb = coord_array[pind[n]+3] * cos(coord_array[pind[n] + 4] / 180.0 * M_PI);
-            yb = coord_array[pind[n]+3] * sin(coord_array[pind[n] + 4] / 180.0 * M_PI);
+            xb = coord_array[pind[n] + 3] * cos(coord_array[pind[n] + 4] / 180.0 * M_PI);
+            yb = coord_array[pind[n] + 3] * sin(coord_array[pind[n] + 4] / 180.0 * M_PI);
         } else {
             xt = coord_array[pind[n]];
             yt = coord_array[pind[n] + 1];
@@ -390,11 +427,10 @@ void EGrid::getCellCorners(const std::array<int, 3>& ijk,
 }
 
 
-
-void EGrid::getCellCorners(int globindex, std::array<double,8>& X,
-                           std::array<double,8>& Y, std::array<double,8>& Z)
+void EGrid::getCellCorners(int globindex, std::array<double, 8>& X,
+                           std::array<double, 8>& Y, std::array<double, 8>& Z)
 {
-    return getCellCorners(ijk_from_global_index(globindex),X,Y,Z);
+    return getCellCorners(ijk_from_global_index(globindex), X, Y, Z);
 }
 
 
