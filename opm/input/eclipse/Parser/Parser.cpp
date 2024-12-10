@@ -665,7 +665,7 @@ void ParserState::handleRandomText(const std::string_view& keywordString ) const
     std::string errorKey;
     std::string trimmedCopy = std::string( keywordString );
     std::string msg;
-    KeywordLocation location{lastKeyWord, this->current_path(), this->line()};
+    KeywordLocation location{lastKeyWord, this->current_path().generic_string(), this->line()};
 
     if (trimmedCopy == "/") {
         errorKey = ParseContext::PARSE_RANDOM_SLASH;
@@ -753,7 +753,7 @@ newRawKeyword(const ParserKeyword& parserKeyword,
                 .handleError(
                     ParseContext::PARSE_INVALID_KEYWORD_COMBINATION,
                     fmt::format("Incompatible keyword combination: {} declared when {} is already present.", keywordString, keyword),
-                    KeywordLocation { keywordString, parserState.current_path(), parserState.line() } ,
+                    KeywordLocation { keywordString, parserState.current_path().generic_string(), parserState.line() } ,
                     parserState.errors
                 );
         }
@@ -766,7 +766,7 @@ newRawKeyword(const ParserKeyword& parserKeyword,
                 .handleError(
                     ParseContext::PARSE_INVALID_KEYWORD_COMBINATION,
                     fmt::format("Incompatible keyword combination: {} declared, but {} is missing.", keywordString, keyword),
-                    KeywordLocation { keywordString, parserState.current_path(), parserState.line() } ,
+                    KeywordLocation { keywordString, parserState.current_path().generic_string(), parserState.line() } ,
                     parserState.errors
                 );
         }
@@ -1390,7 +1390,7 @@ bool parseState( ParserState& parserState, const Parser& parser ) {
 
             if (includeFile.has_value()) {
                 auto& deck_tree = parserState.deck.tree();
-                deck_tree.add_include(std::filesystem::absolute(parserState.current_path()), includeFile.value() );
+                deck_tree.add_include(std::filesystem::absolute(parserState.current_path()).generic_string(), includeFile.value().generic_string() );
                 parserState.loadFile( includeFile.value() );
             }
             continue;
@@ -1568,7 +1568,7 @@ bool parseState( ParserState& parserState, const Parser& parser ) {
         if (dataFileName[0] == '/')
             data_file = std::filesystem::canonical(dataFileName).string();
         else
-            data_file = std::filesystem::proximate( std::filesystem::canonical(dataFileName) );
+            data_file = std::filesystem::proximate( std::filesystem::canonical(dataFileName) ).generic_string();
 
         ParserState parserState( this->codeKeywords(), parseContext, errors, data_file, ignore_sections);
         parseState( parserState, *this );

@@ -219,7 +219,7 @@ void FileDeck::Block::dump(DeckOutput& out) const {
 
 
 FileDeck::FileDeck::Block::Block(const std::string& filename)
-    : fname(fs::canonical(filename))
+    : fname(fs::canonical(filename).generic_string())
 {}
 
 std::optional<FileDeck::Index> FileDeck::find(const std::string& keyword, const Index& offset) const {
@@ -325,7 +325,7 @@ void FileDeck::include_block(const std::string& input_file, const std::string& o
         auto stream = context.get_stream(parent);
         if (stream.has_value()) {
             // Should ideally use fs::relative()
-            std::string include_file = fs::proximate(output_file, output_dir);
+            std::string include_file = fs::proximate(output_file, output_dir).generic_string();
             INCLUDE(*stream.value(), include_file);
             break;
         }
@@ -374,7 +374,7 @@ void FileDeck::dump_shared(std::ostream& stream, const std::string& output_dir) 
             block.dump( out );
         } else {
             // Should ideally use fs::relative()
-            std::string include_file = fs::proximate(block.fname, output_dir);
+            std::string include_file = fs::proximate(block.fname, output_dir).generic_string();
             if (include_file.find(block.fname) == std::string::npos)
                 INCLUDE(stream, include_file);
             else

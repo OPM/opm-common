@@ -177,7 +177,7 @@ void Builtin::emplace{}() const {{
         {
             auto sourceFile = std::filesystem::path(sourcePath) / fmt::format("Builtin{}.cpp",
                                                                               first_char);
-            write_file(source, sourceFile, m_verbose, fmt::format("builtin source for {}", first_char));
+            write_file(source, sourceFile.generic_string(), m_verbose, fmt::format("builtin source for {}", first_char));
         }
     }
 
@@ -208,7 +208,7 @@ void addDefaultKeywords{0}(Parser& p);
             auto charHeaderFile = parserInitSource;
             charHeaderFile.replace_filename(
                 fmt::format("include/opm/input/eclipse/Parser/ParserKeywords/ParserInit{}.hpp", first_char));
-            write_file(header, charHeaderFile, m_verbose, fmt::format("init header for {}", first_char));
+            write_file(header, charHeaderFile.generic_string(), m_verbose, fmt::format("init header for {}", first_char));
             std::stringstream sourceStr;
             sourceStr << fmt::format(R"(
 #include <opm/input/eclipse/Parser/Parser.hpp>
@@ -231,7 +231,7 @@ void addDefaultKeywords{0}([[maybe_unused]] Parser& p){{
 }
 )";
             auto charSourceFile = std::filesystem::path(sourcePath) / fmt::format("ParserInit{}.cpp", first_char);
-            write_file(sourceStr, charSourceFile, m_verbose, fmt::format("init source for {}", first_char));
+            write_file(sourceStr, charSourceFile.generic_string(), m_verbose, fmt::format("init source for {}", first_char));
 
             newSource << fmt::format("#include <opm/input/eclipse/Parser/ParserKeywords/ParserInit{}.hpp>\n",
                                      first_char);
