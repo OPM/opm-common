@@ -551,7 +551,7 @@ void scan_item( DeckItem& deck_item, const ParserItem& parser_item, RawRecord& r
     static const char* one_star = "1*";
     std::string_view rep = !st.hasValue()
                     ? std::string_view{ one_star }
-                    : std::string_view{ token.begin() + value_start, size };
+                    : std::string_view{ token.data() + value_start, size };
     record.push_front(rep, st.count() - 1);
 
     return;

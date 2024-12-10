@@ -49,7 +49,7 @@ namespace {
             };
         }
 
-        return { s.begin() + b + 1, e - b - 1 };
+        return { s.data() + b + 1, e - b - 1 };
     }
 
     bool is_asterisk(std::string_view s)
