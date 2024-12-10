@@ -330,7 +330,7 @@ namespace Opm {
                 ! ignoreMultiplierRecord(record.nnc_behaviour);
             };
 
-            multiplier = this->template applyMultiplierDifferentRegion(regMaps,
+            multiplier = this->applyMultiplierDifferentRegion(regMaps,
                                                                        multiplier,
                                                                        regionId1,
                                                                        regionId2,
@@ -340,7 +340,7 @@ namespace Opm {
             // For connections between it and all other regions the multipliers
             // will not override otherwise explicitly specified (as pairs with
             // different ids) multipliers, but accumulated to these.
-            multiplier = this->template applyMultiplierSameRegion(regMaps,
+            multiplier = this->applyMultiplierSameRegion(regMaps,
                                                                   multiplier,
                                                                   regionId1,
                                                                   regionId2,
@@ -392,7 +392,7 @@ namespace Opm {
                 return (regPairPos != regMap.end());
             };
 
-            multiplier = this->template applyMultiplierSameRegion(regMaps,
+            multiplier = this->applyMultiplierSameRegion(regMaps,
                                                                   multiplier,
                                                                   regionId1,
                                                                   regionId2,
@@ -402,7 +402,7 @@ namespace Opm {
             // For connections between it and all other regions the multipliers
             // will not override otherwise explicitly specified (as pairs with
             // different ids) multipliers, but accumulated to these.
-            multiplier = this->template applyMultiplierDifferentRegion(regMaps,
+            multiplier = this->applyMultiplierDifferentRegion(regMaps,
                                                                        multiplier,
                                                                        regionId1,
                                                                        regionId2,
