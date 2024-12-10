@@ -11,6 +11,7 @@ option(ENABLE_MOCKSIM "Build the mock simulator for io testing" ON)
 option(OPM_ENABLE_PYTHON "Enable python bindings?" OFF)
 option(OPM_INSTALL_PYTHON "Install python bindings?" ON)
 option(OPM_ENABLE_EMBEDDED_PYTHON "Enable embedded python?" OFF)
+option(OPM_ENABLE_DUNE "Enable Dune" ON)
 
 # Output implies input
 if(ENABLE_ECL_OUTPUT)
@@ -379,26 +380,29 @@ if(ENABLE_ECL_INPUT)
 
 endif()
 
-# Explicitly link tests needing dune-common.
-# To avoid pulling dune-common into the opm-common interface
-find_package(dune-common REQUIRED)
-opm_need_version_of ("dune-common")
-target_include_directories(dunecommon INTERFACE ${dune-common_INCLUDE_DIRS})
-string(REPLACE " " ";" dflags "${dune-common_CXX_FLAGS}")
-target_compile_options(dunecommon INTERFACE ${dflags})
-target_compile_definitions(dunecommon INTERFACE DUNE_COMMON_VERSION_MAJOR=${DUNE_COMMON_VERSION_MAJOR})
-target_compile_definitions(dunecommon INTERFACE DUNE_COMMON_VERSION_MINOR=${DUNE_COMMON_VERSION_MINOR})
-target_compile_definitions(dunecommon INTERFACE DUNE_COMMON_VERSION_REVISION=${DUNE_COMMON_VERSION_REVISION})
-if(Boost_UNIT_TEST_FRAMEWORK_FOUND)
-  foreach(src ${DUNE_TEST_SOURCE_FILES})
-    get_filename_component(tgt ${src} NAME_WE)
-    target_link_libraries(${tgt} dunecommon)
-  endforeach()
-  foreach(test ACTIONX EmbeddedPython PYACTION)
-    set_tests_properties(${test} PROPERTIES
-                        ENVIRONMENT "PYTHONPATH=${PROJECT_BINARY_DIR}/python:$ENV{PYTHONPATH}")
-  endforeach()
-endif()
+if (OPM_ENABLE_DUNE)
+  # Explicitly link tests needing dune-common.
+  # To avoid pulling dune-common into the opm-common interface
+  find_package(dune-common REQUIRED)
+  opm_need_version_of ("dune-common")
+  target_include_directories(dunecommon INTERFACE ${dune-common_INCLUDE_DIRS})
+  string(REPLACE " " ";" dflags "${dune-common_CXX_FLAGS}")
+  target_compile_options(dunecommon INTERFACE ${dflags})
+  target_compile_definitions(dunecommon INTERFACE DUNE_COMMON_VERSION_MAJOR=${DUNE_COMMON_VERSION_MAJOR})
+  target_compile_definitions(dunecommon INTERFACE DUNE_COMMON_VERSION_MINOR=${DUNE_COMMON_VERSION_MINOR})
+  target_compile_definitions(dunecommon INTERFACE DUNE_COMMON_VERSION_REVISION=${DUNE_COMMON_VERSION_REVISION})
+  if(Boost_UNIT_TEST_FRAMEWORK_FOUND)
+    foreach(src ${DUNE_TEST_SOURCE_FILES})
+      get_filename_component(tgt ${src} NAME_WE)
+      target_link_libraries(${tgt} dunecommon)
+    endforeach()
+    foreach(test ACTIONX EmbeddedPython PYACTION)
+      set_tests_properties(${test} PROPERTIES
+                          ENVIRONMENT "PYTHONPATH=${PROJECT_BINARY_DIR}/python:$ENV{PYTHONPATH}")
+    endforeach()
+  endif()
+endif(OPM_ENABLE_DUNE)
+
 if(BUILD_EXAMPLES)
   target_link_libraries(co2brinepvt dunecommon)
   install(TARGETS co2brinepvt DESTINATION bin)
