@@ -665,6 +665,13 @@ void PAvgCalculator<Scalar>::pruneInactiveWBPCells(const std::vector<bool>& isAc
         this->contributingCells_.swap(newWBPCells);
     }
 
+    // Identify the well cells.  These must be excluded from the neighbour
+    // lists when accumulating per-cell/per-connection contributions.
+    auto isWellCell = std::vector<bool>(allIx.size(), false);
+    for (const auto& conn : this->connections_) {
+        isWellCell[conn.cell] = true;
+    }
+
     // Filter connections_ down to active cells only.
     this->pruneInactiveConnections(isActive);
 
@@ -691,8 +698,9 @@ void PAvgCalculator<Scalar>::pruneInactiveWBPCells(const std::vector<bool>& isAc
             auto newNeigbour = std::vector<ContrIndexType>{};
             newNeigbour.reserve((conn.*neighbours).size());
 
+            // Final neighbourship includes active, non-well cells only.
             for (const auto& neighbour : conn.*neighbours) {
-                if (isActive[neighbour]) {
+                if (isActive[neighbour] && !isWellCell[neighbour]) {
                     newNeigbour.push_back(newIndex[neighbour]);
                 }
             }
