@@ -179,7 +179,7 @@ void ScheduleBlock::writeTStep(const UnitSystem& usys,
                                time_point        current_time,
                                DeckOutput&       output) const
 {
-    const auto seconds = std::chrono::duration_cast<std::chrono::seconds>
+    const auto seconds = std::chrono::duration<double>
         (this->start_time() - current_time);
 
     const auto tstep_string = fmt::format(R"(

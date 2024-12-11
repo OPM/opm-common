@@ -596,7 +596,7 @@ std::vector<Opm::time_point> ExtESmry::dates()
                   [this, time_unit](const auto& t)
                   {
                       using Seconds = std::chrono::duration<double, std::chrono::seconds::period>;
-                      return this->m_startdat + std::chrono::duration_cast<std::chrono::seconds>(Seconds{t * time_unit});
+                      return this->m_startdat + std::chrono::duration_cast<time_point::duration>(Seconds{t * time_unit});
                   });
 
     return d;

@@ -1426,7 +1426,7 @@ std::vector<Opm::time_point> ESmry::dates() const
                    {
                        using Seconds = std::chrono::duration<double, std::chrono::seconds::period>;
                        return this->tp_startdat +
-                              std::chrono::duration_cast<std::chrono::seconds>(Seconds{t * time_unit});
+                           std::chrono::duration_cast<time_point::duration>(Seconds{t * time_unit});
                    });
 
     return d;

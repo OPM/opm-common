@@ -162,7 +162,7 @@ BOOST_AUTO_TEST_CASE(TestESmry_1) {
     const auto dates = smry1.dates();
     for (std::size_t index = 0; index < dates.size(); index++) {
         auto diff = dates[index]- smry1.startdate();
-        auto diff_seconds = std::chrono::duration_cast<std::chrono::seconds>(diff).count();
+        auto diff_seconds = std::chrono::duration<double>(diff).count();
         BOOST_CHECK_CLOSE(diff_seconds, 24*3600 * smryVect[index], 1e-6);
     }
 
