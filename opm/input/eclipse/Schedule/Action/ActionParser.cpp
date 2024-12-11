@@ -120,7 +120,11 @@ FuncType Parser::get_func(const std::string& arg)
 
 ParseNode Parser::next()
 {
-    this->current_pos++;
+    if (this->current_pos == std::numeric_limits<size_t>::max())
+        this->current_pos = 0;
+    else
+        this->current_pos++;
+
     if (static_cast<size_t>(this->current_pos) == this->tokens.size()) {
         return ParseNode(TokenType::end);
     }

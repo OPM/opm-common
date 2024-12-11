@@ -26,12 +26,6 @@
 #include <string>
 #include <vector>
 
-#ifdef _MSC_VER
-#include <BaseTsd.h>
-typedef SSIZE_T ssize_t;
-#endif
-
-
 namespace Opm { namespace Action {
 
 struct ParseNode
@@ -73,7 +67,7 @@ private:
     Action::ASTNode parse_or();
 
     const std::vector<std::string>& tokens;
-    ssize_t current_pos = -1;
+    size_t current_pos = std::numeric_limits<size_t>::max();
 };
 
 }} // namespace Opm::Action
