@@ -54,16 +54,6 @@
 
 namespace {
 
-    // This is to ensure that only time_points which can be represented with
-    // std::time_t are used. The reason for clamping to std::time_t
-    // resolution is that the serialization code in
-    // opm-simulators:opm/simulators/utils/ParallelRestart.cpp goes via
-    // std::time_t.
-    Opm::time_point clamp_time(Opm::time_point t)
-    {
-        return Opm::TimeService::from_time_t(Opm::TimeService::to_time_t(t));
-    }
-
     std::pair<std::size_t, std::size_t>
     date_diff(const Opm::time_point& t2, const Opm::time_point& t1)
     {
@@ -89,7 +79,7 @@ bool ScheduleState::save() const {
 }
 
 ScheduleState::ScheduleState(const time_point& t1)
-    : m_start_time(clamp_time(t1))
+    : m_start_time(t1)
     , m_first_in_month(true)
     , m_first_in_year(true)
 {
@@ -100,7 +90,7 @@ ScheduleState::ScheduleState(const time_point& t1)
 ScheduleState::ScheduleState(const time_point& start_time, const time_point& end_time)
     : ScheduleState(start_time)
 {
-    this->m_end_time = clamp_time(end_time);
+    this->m_end_time = end_time;
 }
 
 void ScheduleState::update_date(const time_point& prev_time)
@@ -117,7 +107,7 @@ void ScheduleState::update_date(const time_point& prev_time)
 ScheduleState::ScheduleState(const ScheduleState& src, const time_point& start_time)
     : ScheduleState { src }     // Copy constructor
 {
-    this->m_start_time = clamp_time(start_time);
+    this->m_start_time = start_time;
     this->m_end_time = std::nullopt;
     this->m_sim_step = src.sim_step() + 1;
     this->m_events.reset();
