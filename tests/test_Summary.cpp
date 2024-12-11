@@ -328,7 +328,7 @@ data::Wells result_wells(const bool w3_injector = true)
     data::WellFiltrate zero_well_filtrate {}; // only injectors are considered for filtration related
     data::WellFiltrate well_filtrate {0.1 * sm3_pr_day(), 1 * sm3(), 0.3 * unit::ppm};
     data::Well well1 {
-        rates1, 0.1 * ps, 0.2 * ps, 0.3 * ps, 1,
+        rates1, 0.1 * ps, 0.2 * ps, 0.3 * ps, 1, 1.0,
         zero_well_filtrate,
         ::Opm::Well::Status::OPEN,
 
@@ -355,7 +355,7 @@ data::Wells result_wells(const bool w3_injector = true)
     using GRValue = data::GuideRateValue;
 
     data::Well well2 {
-        rates2, 1.1 * ps, 1.2 * ps, 1.3 * ps, 2,
+        rates2, 1.1 * ps, 1.2 * ps, 1.3 * ps, 2, 1.0,
         well_filtrate, /* well2 is a producer, it should output zero values for filtrate rated summary output */
 
         ::Opm::Well::Status::OPEN,
@@ -375,7 +375,7 @@ data::Wells result_wells(const bool w3_injector = true)
         .set(data::WellControlLimits::Item::WaterRate, 212.121*sm3_pr_day());
 
     data::Well well3 {
-        rates3, 2.1 * ps, 2.2 * ps, 2.3 * ps, 3,
+        rates3, 2.1 * ps, 2.2 * ps, 2.3 * ps, 3, 1.0,
         well_filtrate,
 
         ::Opm::Well::Status::OPEN,
@@ -416,7 +416,7 @@ data::Wells result_wells(const bool w3_injector = true)
     well3.guide_rates.set(GRValue::Item::ResV, 355.113*sm3_pr_day());
 
     data::Well well6 {
-        rates6, 2.1 * ps, 2.2 * ps, 2.3 * ps, 3,
+        rates6, 2.1 * ps, 2.2 * ps, 2.3 * ps, 3, 1.0,
         well_filtrate,
 
         ::Opm::Well::Status::OPEN,

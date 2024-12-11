@@ -750,12 +750,12 @@ BOOST_AUTO_TEST_CASE(test_RFT)
 
         Opm::data::WellFiltrate well_filtrate {0.1, 500., 0.3}; // values are not used in this test
         wells["OP_1"] = {
-            std::move(r1), 1.0, 1.1, 3.1, 1, well_filtrate,
+            std::move(r1), 1.0, 1.1, 3.1, 1, 1.0, well_filtrate,
             ::Opm::Well::Status::OPEN,
             std::move(well1_comps), SegRes{}, Ctrl{},
         };
         wells["OP_2"] = {
-            std::move(r2), 1.0, 1.1, 3.2, 1, well_filtrate,
+            std::move(r2), 1.0, 1.1, 3.2, 1, 1.0, well_filtrate,
             ::Opm::Well::Status::OPEN,
             std::move(well2_comps), SegRes{}, Ctrl{}
         };
@@ -888,12 +888,12 @@ BOOST_AUTO_TEST_CASE(test_RFT2)
 
                 Opm::data::WellFiltrate well_filtrate {0.1, 500., 0.3}; // values are not used in this test
                 wells["OP_1"] = {
-                    std::move(r1), 1.0, 1.1, 3.1, 1, well_filtrate,
+                    std::move(r1), 1.0, 1.1, 3.1, 1, 1.0, well_filtrate,
                     ::Opm::Well::Status::OPEN,
                     std::move(well1_comps), SegRes{}, Ctrl{}
                 };
                 wells["OP_2"] = {
-                    std::move(r2), 1.0, 1.1, 3.2, 1, well_filtrate,
+                    std::move(r2), 1.0, 1.1, 3.2, 1, 1.0, well_filtrate,
                     ::Opm::Well::Status::OPEN,
                     std::move(well2_comps), SegRes{}, Ctrl{}
                 };
