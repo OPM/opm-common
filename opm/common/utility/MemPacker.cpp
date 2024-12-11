@@ -80,23 +80,22 @@ unpack(std::string& data, const std::vector<char>& buffer, std::size_t& position
 std::size_t Packing<false,time_point>::
 packSize(const time_point&)
 {
-    return Packing<true,std::time_t>::packSize(std::time_t());
+    return Packing<true, time_point::duration::rep>::packSize(time_point::duration::rep());
 }
 
 void Packing<false,time_point>::
 pack(const time_point& data,
      std::vector<char>& buffer, std::size_t& position)
 {
-    Packing<true,std::time_t>::pack(TimeService::to_time_t(data),
-                                    buffer, position);
+    Packing<true, time_point::duration::rep>::pack(data.time_since_epoch().count(), buffer, position);
 }
 
 void Packing<false,time_point>::
 unpack(time_point& data, const std::vector<char>& buffer, std::size_t& position)
 {
-    std::time_t res;
-    Packing<true,std::time_t>::unpack(res, buffer, position);
-    data = TimeService::from_time_t(res);
+    time_point::duration::rep res;
+    Packing<true, time_point::duration::rep>::unpack(res, buffer, position);
+    data = time_point(time_point::duration(res));
 }
 
 template struct Packing<false,std::bitset<3>>;
