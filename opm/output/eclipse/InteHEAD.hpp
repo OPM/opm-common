@@ -227,7 +227,7 @@ namespace Opm { namespace RestartIO {
 
         InteHEAD& stepParam(const int tstep, const int report_step);
         InteHEAD& tuningParam(const TuningPar& tunpar);
-        InteHEAD& variousParam(const int version, const int iprog);
+        InteHEAD& variousParam(const int version, const int iprog, const int num_tracers);
         InteHEAD& wellSegDimensions(const WellSegDims& wsdim);
         InteHEAD& activeNetwork(const ActiveNetwork& actntwrk);
         InteHEAD& networkDimensions(const NetworkDims& nwdim);
