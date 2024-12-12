@@ -42,7 +42,8 @@ class WellConnections;
 
 namespace Opm {
 
-template<class Scalar> class PAvgCalculator;
+template <typename Scalar>
+class PAvgCalculatorResult;
 
 /// Form linear combination of WBP result objects.
 ///
@@ -61,10 +62,73 @@ template<class Scalar> class PAvgCalculator;
 /// \param[in] y Second WBP result.  Typically the PV-weighted WBP result.
 ///
 /// \return \code alpha*x + beta*y \endcode.
-template<class Scalar>
-typename PAvgCalculator<Scalar>::Result
-linearCombination(const Scalar alpha, typename PAvgCalculator<Scalar>::Result        x,
-                  const Scalar beta , const typename PAvgCalculator<Scalar>::Result& y);
+template <typename Scalar>
+PAvgCalculatorResult<Scalar>
+linearCombination(const Scalar alpha, PAvgCalculatorResult<Scalar>        x,
+                  const Scalar beta , const PAvgCalculatorResult<Scalar>& y);
+
+/// Result of block-averaging well pressure procedure
+template <typename Scalar>
+class PAvgCalculatorResult
+{
+private:
+    /// Grant internal data member access to combination function.
+    template <typename T>
+    friend PAvgCalculatorResult<T>
+    linearCombination(const T alpha, PAvgCalculatorResult<T> x,
+                      const T beta , const PAvgCalculatorResult<T>& y);
+
+public:
+    /// Kind of block-averaged well pressure
+    enum class WBPMode
+    {
+        WBP,  //< Connecting cells
+        WBP4, //< Immediate neighbours
+        WBP5, //< Connecting cells and immediate neighbours
+        WBP9, //< Connecting cells, immediate, and diagonal neighbours
+    };
+
+    /// Assign single block-averaged pressure result.
+    ///
+    /// \param[in] type Block-averaged pressure kind.
+    /// \param[in] wbp Block-averaged pressure value.
+    /// \return \code *this \endcode.
+    PAvgCalculatorResult& set(const WBPMode type, const Scalar wbp)
+    {
+        this->wbp_[this->index(type)] = wbp;
+
+        return *this;
+    }
+
+    /// Retrieve numerical value of specific block-averaged well pressure.
+    ///
+    /// \param[in] type Block-averaged pressure kind.
+    /// \return Block-averaged pressure.
+    Scalar value(const WBPMode type) const
+    {
+        return this->wbp_[this->index(type)];
+    }
+
+private:
+    /// Number of block-averaged pressure kinds/modes.
+    static constexpr auto NumModes =
+        static_cast<std::size_t>(WBPMode::WBP9) + 1;
+
+    /// Storage type for block-averaged well pressure results.
+    using WBPStore = std::array<Scalar, NumModes>;
+
+    /// Block-averaged well pressure results.
+    WBPStore wbp_{};
+
+    /// Convert block-averaged pressure kind to linear index
+    ///
+    /// \param[in] mode Block-averaged pressure kind.
+    /// \return Linear index corresponding to \p mode.
+    constexpr typename WBPStore::size_type index(const WBPMode mode) const
+    {
+        return static_cast<typename WBPStore::size_type>(mode);
+    }
+};
 
 /// Facility for deriving well-level pressure values from selected
 /// block-averaging procedures.  Applicable to stopped wells which don't
@@ -76,71 +140,6 @@ protected:
     class Accumulator;
 
 public:
-    /// Result of block-averaging well pressure procedure
-    class Result
-    {
-    private:
-        /// Enclosing type's accumulator object can access internal data
-        /// members.
-        friend class Accumulator;
-
-        /// Grant internal data member access to combination function.
-        friend Result
-        linearCombination<Scalar>(const Scalar alpha, Result x,
-                                  const Scalar beta , const Result& y);
-
-    public:
-        /// Kind of block-averaged well pressure
-        enum class WBPMode
-        {
-            WBP,  //< Connecting cells
-            WBP4, //< Immediate neighbours
-            WBP5, //< Connecting cells and immediate neighbours
-            WBP9, //< Connecting cells, immediate, and diagonal neighbours
-        };
-
-        /// Retrieve numerical value of specific block-averaged well pressure.
-        ///
-        /// \param[in] type Block-averaged pressure kind.
-        /// \return Block-averaged pressure.
-        Scalar value(const WBPMode type) const
-        {
-            return this->wbp_[this->index(type)];
-        }
-
-    private:
-        /// Number of block-averaged pressure kinds/modes.
-        static constexpr auto NumModes =
-            static_cast<std::size_t>(WBPMode::WBP9) + 1;
-
-        /// Storage type for block-averaged well pressure results.
-        using WBPStore = std::array<Scalar, NumModes>;
-
-        /// Block-averaged well pressure results.
-        WBPStore wbp_{};
-
-        /// Assign single block-averaged pressure result.
-        ///
-        /// \param[in] type Block-averaged pressure kind.
-        /// \param[in] wbp Block-averaged pressure value.
-        /// \return \code *this \endcode.
-        Result& set(const WBPMode type, const Scalar wbp)
-        {
-            this->wbp_[this->index(type)] = wbp;
-
-            return *this;
-        }
-
-        /// Convert block-averaged pressure kind to linear index
-        ///
-        /// \param[in] mode Block-averaged pressure kind.
-        /// \return Linear index corresponding to \p mode.
-        constexpr typename WBPStore::size_type index(const WBPMode mode) const
-        {
-            return static_cast<typename WBPStore::size_type>(mode);
-        }
-    };
-
     /// References to source contributions owned by other party
     class Sources
     {
@@ -252,7 +251,7 @@ public:
     /// \param[in] mode Source cell selection.
     ///
     /// \return Block-average pressure
-    const Result& averagePressures() const
+    const PAvgCalculatorResult<Scalar>& averagePressures() const
     {
         return this->averagePressures_;
     }
@@ -376,7 +375,7 @@ protected:
         /// Calculate final WBP results from individual contributions
         ///
         /// \return New result object.
-        Result getFinalResult() const;
+        PAvgCalculatorResult<Scalar> getFinalResult() const;
 
     private:
         /// Implementation class
@@ -482,7 +481,7 @@ private:
     /// Well level pressure values derived from block-averaging procedures.
     ///
     /// Cached end result from \code inferBlockAveragePressures() \endcode.
-    Result averagePressures_{};
+    PAvgCalculatorResult<Scalar> averagePressures_{};
 
     /// Include reservoir connection and all direction-dependent level 1 and
     /// level 2 neighbours of connection's connecting cell into known cell

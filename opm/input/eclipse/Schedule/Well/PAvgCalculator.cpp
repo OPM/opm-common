@@ -426,7 +426,7 @@ public:
     /// \param[in] type Kind of block-average pressure
     ///
     /// \return Value of specified block-average pressure quantity
-    Scalar getAverageValue(const typename Result::WBPMode type) const
+    Scalar getAverageValue(const typename PAvgCalculatorResult<Scalar>::WBPMode type) const
     {
         return value(this->avg_[static_cast<std::size_t>(type)]);
     }
@@ -593,17 +593,17 @@ assignRunningAverages(const LocalRunningAverages& avg)
     this->pImpl_->assignRunningAverages(avg);
 }
 
-template<class Scalar>
-typename PAvgCalculator<Scalar>::Result
+template <class Scalar>
+PAvgCalculatorResult<Scalar>
 PAvgCalculator<Scalar>::Accumulator::getFinalResult() const
 {
-    auto result = Result{};
+    auto result = PAvgCalculatorResult<Scalar>{};
 
     for (const auto& type : {
-            Result::WBPMode::WBP,
-            Result::WBPMode::WBP4,
-            Result::WBPMode::WBP5,
-            Result::WBPMode::WBP9,
+            PAvgCalculatorResult<Scalar>::WBPMode::WBP,
+            PAvgCalculatorResult<Scalar>::WBPMode::WBP4,
+            PAvgCalculatorResult<Scalar>::WBPMode::WBP5,
+            PAvgCalculatorResult<Scalar>::WBPMode::WBP9,
         })
     {
         result.set(type, this->pImpl_->getAverageValue(type));
@@ -753,11 +753,11 @@ void PAvgCalculator<Scalar>::collectGlobalContributions()
 template<class Scalar>
 void PAvgCalculator<Scalar>::assignResults(const PAvg& controls)
 {
-    const Scalar F2 = static_cast<Scalar>(controls.conn_weight());
+    const auto F2 = static_cast<Scalar>(controls.conn_weight());
 
     this->averagePressures_ =
-        linearCombination(F2      , this->accumCTF_.getFinalResult(),
-                          Scalar{1.0} - F2, this->accumPV_ .getFinalResult());
+        linearCombination(F2    , this->accumCTF_.getFinalResult(),
+                          1 - F2, this->accumPV_ .getFinalResult());
 }
 
 template<class Scalar>
@@ -1199,10 +1199,10 @@ connectionPressureOffset(const Sources& sources,
 
 // ---------------------------------------------------------------------------
 
-template<class Scalar>
-typename PAvgCalculator<Scalar>::Result
-linearCombination(const Scalar alpha, typename PAvgCalculator<Scalar>::Result        x,
-                  const Scalar beta , const typename PAvgCalculator<Scalar>::Result& y)
+template <typename Scalar>
+PAvgCalculatorResult<Scalar>
+linearCombination(const Scalar alpha, PAvgCalculatorResult<Scalar>        x,
+                  const Scalar beta , const PAvgCalculatorResult<Scalar>& y)
 {
     std::transform(x.wbp_.begin(), x.wbp_.end(),
                    y.wbp_.begin(),
@@ -1215,15 +1215,20 @@ linearCombination(const Scalar alpha, typename PAvgCalculator<Scalar>::Result   
     return x;
 }
 
-#define INSTANTIATE_TYPE(T) \
-    template class PAvgCalculator<T>;            \
-    template PAvgCalculator<T>::Result           \
-    linearCombination(const T,                   \
-                      PAvgCalculator<T>::Result, \
-                      const T,                   \
-                      const PAvgCalculator<T>::Result&);
+// ===========================================================================
+// Explicit template specialisations.  No other code below this separator.
+// ===========================================================================
 
-INSTANTIATE_TYPE(double)
-INSTANTIATE_TYPE(float)
+#define INSTANTIATE_TYPE(T)                                     \
+    template class PAvgCalculatorResult<T>;                     \
+    template class PAvgCalculator<T>;                           \
+    template PAvgCalculatorResult<T>                            \
+    linearCombination(const T, PAvgCalculatorResult<T>,         \
+                      const T, const PAvgCalculatorResult<T>&)
+
+INSTANTIATE_TYPE(double);
+INSTANTIATE_TYPE(float);
+
+#undef INSTANTIATE_TYPE
 
 } // namespace Opm
