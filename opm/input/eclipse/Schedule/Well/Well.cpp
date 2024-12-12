@@ -1855,6 +1855,7 @@ bool Well::operator==(const Well& data) const {
         && (this->m_pavg == data.m_pavg)
         && (this->well_inj_temperature == data.well_inj_temperature)
         && (this->inj_mult_mode == data.inj_mult_mode)
+        && (this->default_well_inj_temperature == data.default_well_inj_temperature)
         && (this->well_inj_mult == data.well_inj_mult)
         && (this->m_filter_concentration == data.m_filter_concentration)
         ;
