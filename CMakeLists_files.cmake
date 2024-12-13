@@ -639,8 +639,6 @@ if(ENABLE_ECL_OUTPUT)
       )
 endif()
 
-list(APPEND TEST_SOURCE_FILES ${DUNE_TEST_SOURCE_FILES})
-
 list (APPEND TEST_DATA_FILES
       tests/testdata.param
       tests/material/brine_unittest.json
