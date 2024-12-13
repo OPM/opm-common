@@ -1531,8 +1531,7 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
             const auto& well = this->getWell(wname, timeStep);
             const auto& connections = well.getConnections();
             if (connections.allConnectionsShut() && well.getStatus() != Well::Status::SHUT) {
-                auto elapsed = this->snapshots[timeStep].start_time() - this->snapshots[0].start_time();
-                auto days = std::chrono::duration_cast<std::chrono::hours>(elapsed).count() / 24.0;
+                auto days = unit::convert::to(seconds(timeStep), unit::day);
                 auto msg = fmt::format("All completions in well {} is shut at {} days\n"
                                        "The well is therefore also shut", well.name(), days);
                 OpmLog::note(msg);
@@ -1576,7 +1575,8 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
             throw std::logic_error(fmt::format("seconds({}) - invalid timeStep. Valid range [0,{}>", timeStep, this->snapshots.size()));
 
         auto elapsed = this->snapshots[timeStep].start_time() - this->snapshots[0].start_time();
-        return std::chrono::duration_cast<std::chrono::seconds>(elapsed).count();
+        using DurationInSeconds = std::chrono::duration<double>; // Tick is 1 second, stored in double.
+        return DurationInSeconds(elapsed).count();
     }
 
     std::time_t Schedule::simTime(std::size_t timeStep) const {
@@ -1596,7 +1596,8 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
                                 fmt::gmtime(TimeService::to_time_t(start_time)),
                                 fmt::gmtime(TimeService::to_time_t(end_time))) };
         }
-        return std::chrono::duration_cast<std::chrono::seconds>(end_time - start_time).count();
+        using DurationInSeconds = std::chrono::duration<double>; // Tick is 1 second, stored in double.
+        return DurationInSeconds(end_time - start_time).count();
     }
 
     void Schedule::applyKeywords(std::vector<std::unique_ptr<DeckKeyword>>& keywords)
