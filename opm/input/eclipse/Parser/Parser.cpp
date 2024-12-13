@@ -256,26 +256,18 @@ inline std::string_view del_after_first_slash( std::string_view view ) {
 }
 
 inline std::string_view del_after_last_slash( std::string_view view ) {
-  auto begin = view.begin();
-  auto end = view.end();
-  auto slash = end;
+    if (view.empty()) {
+        return view;
+    }
+    auto slash = view.find_last_of('/');
+    if (slash == std::string_view::npos) {
+        slash = view.size();
+    }
+    else {
+        ++slash;
+    }
 
-  while (true) {
-      if (slash == begin)
-          break;
-
-      if (*slash == '/')
-          break;
-
-      slash--;
-  }
-  if (slash == begin && *slash != '/')
-      slash = end;
-
-  /* we want to preserve terminating slashes */
-  if( slash != end ) ++slash;
-  std::size_t size = std::distance(begin, slash);
-  return { begin, size };
+    return view.substr(0, slash);
 }
 
 inline std::string_view del_after_slash(std::string_view view, bool raw_strings) {
