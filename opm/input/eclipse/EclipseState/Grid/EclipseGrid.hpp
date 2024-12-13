@@ -33,7 +33,7 @@
 #include <unordered_set>
 #include <vector>
 #include <map>
-#include <opm/io/eclipse/EclOutput.hpp>
+
 
 
 namespace Opm {

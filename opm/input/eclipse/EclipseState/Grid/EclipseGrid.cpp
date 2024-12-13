@@ -37,7 +37,7 @@
 #include <opm/common/utility/String.hpp>
 
 #include <opm/io/eclipse/EclFile.hpp>
-
+#include <opm/io/eclipse/EclOutput.hpp>
 
 #include <opm/input/eclipse/Units/Units.hpp>
 #include <opm/input/eclipse/Deck/DeckSection.hpp>
@@ -1901,7 +1901,7 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
         std::vector<int> filehead(100,0);
         filehead[0] = 3;                     // version number
         filehead[1] = 2007;                  // release year
-        filehead[6] = 2;                     // corner point grid
+        filehead[6] = 1;                     // corner point grid
 
         std::vector<int> gridhead(100,0);
         gridhead[0] = 1;                    // corner point grid
@@ -2459,8 +2459,13 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
 namespace Opm {
     EclipseGridLGR::EclipseGridLGR(const std::string& self_label, const std::string& father_label_, 
                                    std::size_t nx, std::size_t ny, std::size_t nz, 
+<<<<<<< HEAD
                                    const vec_size_t& father_lgr_index, [[maybe_unused]] const std::array<int,3>& low_fahterIJK_, 
                                    [[maybe_unused]] const std::array<int,3>& up_fahterIJK_)
+=======
+                                   vec_size_t father_lgr_index, const std::array<int,3>& low_fahterIJK_, 
+                                   const std::array<int,3>& up_fahterIJK_)
+>>>>>>> bbe293839 (fixed minor performance bugs)
     : EclipseGrid(nx,ny,nz), father_label(father_label_), father_global(father_lgr_index)
     {
         init_father_global();
