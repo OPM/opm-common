@@ -408,12 +408,14 @@ inline std::string make_deck_name(const std::string_view& str) {
 }
 
 
-inline std::string_view update_record_buffer(const std::string_view& record_buffer, const std::string_view& line) {
+inline std::string_view update_record_buffer(const std::string_view& record_buffer,
+                                             const std::string_view& line) {
     if (record_buffer.empty())
         return line;
     else {
-        std::size_t size = std::distance(record_buffer.begin(), line.end());
-        return { record_buffer.begin(), size };
+        const std::size_t size = line.data() + line.size() - record_buffer.data();
+        // intentionally not using substr since that will clamp the size
+        return {record_buffer.data(), size};
     }
 }
 
