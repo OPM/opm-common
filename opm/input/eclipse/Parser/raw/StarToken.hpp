@@ -20,12 +20,12 @@
 #ifndef STAR_TOKEN_HPP
 #define STAR_TOKEN_HPP
 
-#include <cctype>
+#include <cstddef>
 #include <string>
-
-#include <opm/input/eclipse/Utility/Typetools.hpp>
+#include <string_view>
 
 namespace Opm {
+
     bool isStarToken(const std::string_view& token,
                            std::string& countString,
                            std::string& valueString);
@@ -35,12 +35,7 @@ namespace Opm {
 
 class StarToken {
 public:
-    explicit StarToken(const std::string_view& token)
-    {
-        if (!isStarToken(token, m_countString, m_valueString))
-            throw std::invalid_argument("Token \""+ std::string(token) +"\" is not a repetition specifier");
-        init_(token);
-    }
+    explicit StarToken(const std::string_view& token);
 
     StarToken(const std::string_view& token, const std::string& countStr, const std::string& valueStr)
         : m_countString(countStr)
@@ -82,7 +77,7 @@ private:
     std::string m_countString;
     std::string m_valueString;
 };
-}
 
+}
 
 #endif
