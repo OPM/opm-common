@@ -378,7 +378,7 @@ inline std::string clean( const std::vector<std::pair<std::string, std::string>>
                         std::copy(input.begin(), input.begin() + end_pos, dsti);
                         dsti += end_pos;
                         *dsti++ = '\n';
-                        input = std::string_view(input.begin() + end_pos + 1, input.end() - (input.begin() + end_pos + 1));
+                        input.remove_prefix(end_pos + 1);
                         break;
                     }
                 }
