@@ -109,10 +109,6 @@ SOLUTION
 
 SCHEDULE
 )";
-<<<<<<< HEAD
-=======
-
->>>>>>> bff9047a8 (Development of the routines for exporting EGRID compartible with LGR)
     Opm::UnitSystem units(1);
     std::vector<Opm::NNCdata> vecNNC;
     std::array<int,3> global_grid_dim = {3,3,1};
