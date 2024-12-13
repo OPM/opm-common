@@ -533,10 +533,13 @@ std::string_view ParserState::getline() {
 
 void ParserState::ungetline(const std::string_view& line) {
     auto& file_view = this->input_stack.top().input;
-    if (line.end() + 1 != file_view.begin())
+    if (line.data() + line.size() + 1 != file_view.data())
         throw std::invalid_argument("line view does not immediately proceed file_view");
 
-    file_view = std::string_view(line.begin(), file_view.end() - line.begin());
+    const auto* end = file_view.data() + file_view.size();
+    const std::size_t size = std::distance(line.data(), end);
+    // intentionally not using substr since that will clamp the size
+    file_view = {line.data(), size};
     this->input_stack.top().lineNR--;
 }
 
