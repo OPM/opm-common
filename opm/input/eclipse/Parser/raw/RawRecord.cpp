@@ -17,18 +17,16 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <algorithm>
-#include <stdexcept>
-#include <vector>
-#include <deque>
-
-#include <fmt/format.h>
 #include <opm/common/OpmLog/KeywordLocation.hpp>
 #include <opm/common/utility/OpmInputError.hpp>
 
 #include "RawRecord.hpp"
 #include "RawConsts.hpp"
 
+#include <algorithm>
+#include <deque>
+
+#include <fmt/format.h>
 
 using namespace Opm;
 using namespace std;

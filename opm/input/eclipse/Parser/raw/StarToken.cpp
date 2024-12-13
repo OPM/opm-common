@@ -17,22 +17,28 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <array>
-#include <algorithm>
-#include <cctype>
-#include <string>
-#include <stdexcept>
-#include <cstdlib>
+#include <opm/input/eclipse/Parser/raw/StarToken.hpp>
+
+#include <opm/input/eclipse/Deck/UDAValue.hpp>
+#include <opm/input/eclipse/Utility/Typetools.hpp>
 
 #include <boost/spirit/include/qi.hpp>
 
-#include <opm/input/eclipse/Deck/UDAValue.hpp>
-
-#include "StarToken.hpp"
+#include <cctype>
+#include <cstdlib>
+#include <stdexcept>
+#include <string>
 
 namespace qi = boost::spirit::qi;
 
 namespace Opm {
+
+    StarToken::StarToken(const std::string_view& token)
+    {
+        if (!isStarToken(token, m_countString, m_valueString))
+            throw std::invalid_argument("Token \""+ std::string(token) +"\" is not a repetition specifier");
+        init_(token);
+    }
 
     bool isStarToken(const std::string_view& token,
                            std::string& countString,

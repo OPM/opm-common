@@ -51,6 +51,7 @@
 #include <array>
 #include <cstddef>
 #include <iterator>
+#include <numeric>
 #include <stdexcept>
 #include <string>
 #include <vector>

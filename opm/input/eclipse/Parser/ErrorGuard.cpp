@@ -19,8 +19,10 @@
 
 #include <opm/input/eclipse/Parser/ErrorGuard.hpp>
 
-#include <iostream>
+#include <algorithm>
+#include <cstdlib>
 #include <iomanip>
+#include <iostream>
 #include <numeric>
 
 #include <fmt/format.h>

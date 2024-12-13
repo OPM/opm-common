@@ -20,19 +20,16 @@
 #ifndef DECK_HPP
 #define DECK_HPP
 
-#include <functional>
-#include <iosfwd>
-#include <map>
-#include <memory>
-#include <optional>
-#include <vector>
-#include <string>
-
 #include <opm/input/eclipse/Deck/DeckView.hpp>
 #include <opm/input/eclipse/Deck/DeckTree.hpp>
 #include <opm/input/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
 
+#include <iosfwd>
+#include <memory>
+#include <optional>
+#include <string>
+#include <vector>
 
 namespace Opm {
 
