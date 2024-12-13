@@ -251,9 +251,11 @@ inline std::string_view del_after_first_slash( std::string_view view ) {
     auto slash = find_terminator( begin, end, term );
 
     /* we want to preserve terminating slashes */
-    if( slash != end ) ++slash;
-    std::size_t size = std::distance(begin, slash);
-    return { begin, size };
+    if (slash != end) {
+        ++slash;
+    }
+    const std::size_t size = std::distance(begin, slash);
+    return view.substr(0, size);
 }
 
 inline std::string_view del_after_last_slash( std::string_view view ) {
