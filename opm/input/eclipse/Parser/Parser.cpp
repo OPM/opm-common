@@ -235,8 +235,9 @@ inline Itr trim_right( Itr begin, Itr end ) {
 inline std::string_view trim( std::string_view str ) {
     auto fst = trim_left( str.begin(), str.end() );
     auto lst = trim_right( fst, str.end() );
-    std::size_t size = std::distance(fst, lst);
-    return { fst, size };
+    const std::size_t start = std::distance(str.begin(), fst);
+    const std::size_t size = std::distance(fst, lst);
+    return str.substr(start, size);
 }
 
 inline std::string_view del_after_first_slash( std::string_view view ) {
