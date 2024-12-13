@@ -215,7 +215,7 @@ inline Itr find_terminator( Itr begin, Itr end, Term terminator ) {
 static inline std::string_view strip_comments( std::string_view str ) {
     auto terminator = find_terminator( str.begin(), str.end(), find_comment() );
     std::size_t size = std::distance(str.begin(), terminator);
-    return { str.begin(), size };
+    return str.substr(0, size);
 }
 
 template< typename Itr >
