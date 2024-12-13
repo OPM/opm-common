@@ -1130,45 +1130,6 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
         return this->snapshots[timeStep].groups.has(groupName);
     }
 
-    std::vector< const Group* > Schedule::getChildGroups2(const std::string& group_name,
-                                                          std::size_t timeStep) const
-    {
-        const auto& sched_state = this->snapshots[timeStep];
-        const auto& group = sched_state.groups.get(group_name);
-
-        std::vector<const Group*> child_groups;
-        std::transform(group.groups().begin(), group.groups().end(),
-                       std::back_inserter(child_groups),
-                       [this, timeStep](const auto& child_name)
-                       {
-                           return std::addressof(this->getGroup(child_name, timeStep));
-                       });
-
-        return child_groups;
-    }
-
-    std::vector< Well > Schedule::getChildWells2(const std::string& group_name, std::size_t timeStep) const {
-        const auto& sched_state = this->snapshots[timeStep];
-        const auto& group = sched_state.groups.get(group_name);
-
-        std::vector<Well> wells;
-
-        if (group.groups().size()) {
-            for (const auto& child_name : group.groups()) {
-                const auto& child_wells = this->getChildWells2(child_name, timeStep);
-                wells.insert(wells.end(), child_wells.begin(), child_wells.end());
-            }
-        } else {
-            std::transform(group.wells().begin(), group.wells().end(),
-                           std::back_inserter(wells),
-                           [this, timeStep](const auto& well_name) -> decltype(auto)
-                           {
-                               return this->getWell(well_name, timeStep);
-                           });
-        }
-        return wells;
-    }
-
     /*
       This function will return a list of wells which have changed
       *structurally* in the last report_step; wells where only production
