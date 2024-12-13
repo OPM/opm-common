@@ -1024,13 +1024,13 @@ std::unique_ptr<RawKeyword> tryParseKeyword( ParserState& parserState, const Par
                 auto end_pos = line.find(parserKeyword->codeEnd());
                 if (end_pos != std::string::npos) {
                     std::string_view line_content = line.substr(0, end_pos);
-                    record_buffer = str::update_record_buffer( record_buffer, line_content );
+                    record_buffer = str::update_record_buffer(record_buffer, line_content);
 
                     RawRecord record(record_buffer, rawKeyword->location(), true);
                     rawKeyword->addRecord(record);
                     return rawKeyword;
                 } else
-                    record_buffer = str::update_record_buffer( record_buffer.begin(), line );
+                    record_buffer = str::update_record_buffer(record_buffer, line);
 
                 continue;
             }
