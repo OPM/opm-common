@@ -44,8 +44,8 @@ public:
         using reference = const DeckKeyword&;
         using value_type = DeckKeyword;
 
-        const DeckKeyword& operator*()  { return this->inner->get(); }
-        const DeckKeyword* operator->() { return &this->inner->get(); }
+        const DeckKeyword& operator*() const { return this->inner->get(); }
+        const DeckKeyword* operator->() const { return &this->inner->get(); }
 
         Iterator& operator++()    { ++this->inner; return *this; }
         Iterator  operator++(int) { auto tmp = *this; ++this->inner; return tmp; }
@@ -53,8 +53,8 @@ public:
         Iterator& operator--()    { --this->inner; return *this; }
         Iterator  operator--(int) { auto tmp = *this; --this->inner; return tmp; }
 
-        Iterator::difference_type operator-(const Iterator &other) { return this->inner - other.inner; }
-        Iterator operator+(Iterator::difference_type shift) { Iterator tmp = *this; tmp.inner += shift; return tmp;}
+        Iterator::difference_type operator-(const Iterator &other) const { return this->inner - other.inner; }
+        Iterator operator+(Iterator::difference_type shift) const { Iterator tmp = *this; tmp.inner += shift; return tmp;}
 
         friend bool operator== (const Iterator& a, const Iterator& b) { return a.inner == b.inner; };
         friend bool operator<= (const Iterator& a, const Iterator& b) { return a.inner <= b.inner; };
