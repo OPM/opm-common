@@ -215,7 +215,7 @@ inline Itr find_terminator( Itr begin, Itr end, Term terminator ) {
 static inline std::string_view strip_comments( std::string_view str ) {
     auto terminator = find_terminator( str.begin(), str.end(), find_comment() );
     std::size_t size = std::distance(str.begin(), terminator);
-    return { str.begin(), size };
+    return str.substr(0, size);
 }
 
 template< typename Itr >
@@ -235,8 +235,9 @@ inline Itr trim_right( Itr begin, Itr end ) {
 inline std::string_view trim( std::string_view str ) {
     auto fst = trim_left( str.begin(), str.end() );
     auto lst = trim_right( fst, str.end() );
-    std::size_t size = std::distance(fst, lst);
-    return { fst, size };
+    const std::size_t start = std::distance(str.begin(), fst);
+    const std::size_t size = std::distance(fst, lst);
+    return str.substr(start, size);
 }
 
 inline std::string_view del_after_first_slash( std::string_view view ) {
@@ -250,32 +251,26 @@ inline std::string_view del_after_first_slash( std::string_view view ) {
     auto slash = find_terminator( begin, end, term );
 
     /* we want to preserve terminating slashes */
-    if( slash != end ) ++slash;
-    std::size_t size = std::distance(begin, slash);
-    return { begin, size };
+    if (slash != end) {
+        ++slash;
+    }
+    const std::size_t size = std::distance(begin, slash);
+    return view.substr(0, size);
 }
 
 inline std::string_view del_after_last_slash( std::string_view view ) {
-  auto begin = view.begin();
-  auto end = view.end();
-  auto slash = end;
+    if (view.empty()) {
+        return view;
+    }
+    auto slash = view.find_last_of('/');
+    if (slash == std::string_view::npos) {
+        slash = view.size();
+    }
+    else {
+        ++slash;
+    }
 
-  while (true) {
-      if (slash == begin)
-          break;
-
-      if (*slash == '/')
-          break;
-
-      slash--;
-  }
-  if (slash == begin && *slash != '/')
-      slash = end;
-
-  /* we want to preserve terminating slashes */
-  if( slash != end ) ++slash;
-  std::size_t size = std::distance(begin, slash);
-  return { begin, size };
+    return view.substr(0, slash);
 }
 
 inline std::string_view del_after_slash(std::string_view view, bool raw_strings) {
@@ -287,18 +282,20 @@ inline std::string_view del_after_slash(std::string_view view, bool raw_strings)
 
 
 inline bool getline( std::string_view& input, std::string_view& line ) {
-    if( input.empty() ) return false;
-
-    auto end = std::find( input.begin(), input.end(), '\n' );
-
-    line = std::string_view( input.begin(), end - input.begin() );
-    input = std::string_view( end + 1, input.end() - (end + 1));
-    return true;
+    if (input.empty()) {
+        return false;
+    }
 
     /* we know that we always append a newline onto the input string, so we can
-     * safely assume that end+1 will either be end-of-input (i.e. empty range)
+     * safely assume that pos+1 will either be end-of-input (i.e. empty range)
      * or the start of the next line
      */
+
+    const auto pos = input.find_first_of('\n');
+    line = input.substr(0, pos);
+    input = input.substr(pos+1);
+
+    return true;
 }
 
 /*
@@ -381,7 +378,7 @@ inline std::string clean( const std::vector<std::pair<std::string, std::string>>
                         std::copy(input.begin(), input.begin() + end_pos, dsti);
                         dsti += end_pos;
                         *dsti++ = '\n';
-                        input = std::string_view(input.begin() + end_pos + 1, input.end() - (input.begin() + end_pos + 1));
+                        input.remove_prefix(end_pos + 1);
                         break;
                     }
                 }
@@ -411,12 +408,14 @@ inline std::string make_deck_name(const std::string_view& str) {
 }
 
 
-inline std::string_view update_record_buffer(const std::string_view& record_buffer, const std::string_view& line) {
+inline std::string_view update_record_buffer(const std::string_view& record_buffer,
+                                             const std::string_view& line) {
     if (record_buffer.empty())
         return line;
     else {
-        std::size_t size = std::distance(record_buffer.begin(), line.end());
-        return { record_buffer.begin(), size };
+        const std::size_t size = line.data() + line.size() - record_buffer.data();
+        // intentionally not using substr since that will clamp the size
+        return {record_buffer.data(), size};
     }
 }
 
@@ -526,7 +525,7 @@ std::string_view ParserState::getline() {
 
     str::getline( this->input_stack.top().input, ln );
     this->input_stack.top().lineNR++;
-    
+
     return ln;
 }
 
@@ -534,10 +533,13 @@ std::string_view ParserState::getline() {
 
 void ParserState::ungetline(const std::string_view& line) {
     auto& file_view = this->input_stack.top().input;
-    if (line.end() + 1 != file_view.begin())
+    if (line.data() + line.size() + 1 != file_view.data())
         throw std::invalid_argument("line view does not immediately proceed file_view");
 
-    file_view = std::string_view(line.begin(), file_view.end() - line.begin());
+    const auto* end = file_view.data() + file_view.size();
+    const std::size_t size = std::distance(line.data(), end);
+    // intentionally not using substr since that will clamp the size
+    file_view = {line.data(), size};
     this->input_stack.top().lineNR--;
 }
 
@@ -1021,14 +1023,14 @@ std::unique_ptr<RawKeyword> tryParseKeyword( ParserState& parserState, const Par
             if (rawKeyword->getSizeType() == Raw::CODE) {
                 auto end_pos = line.find(parserKeyword->codeEnd());
                 if (end_pos != std::string::npos) {
-                    std::string_view line_content = { line.begin(), end_pos};
-                    record_buffer = str::update_record_buffer( record_buffer, line_content );
+                    std::string_view line_content = line.substr(0, end_pos);
+                    record_buffer = str::update_record_buffer(record_buffer, line_content);
 
                     RawRecord record(record_buffer, rawKeyword->location(), true);
                     rawKeyword->addRecord(record);
                     return rawKeyword;
                 } else
-                    record_buffer = str::update_record_buffer( record_buffer.begin(), line );
+                    record_buffer = str::update_record_buffer(record_buffer, line);
 
                 continue;
             }
@@ -1062,8 +1064,7 @@ std::unique_ptr<RawKeyword> tryParseKeyword( ParserState& parserState, const Par
                     RawRecord record("opm/flow simulation", rawKeyword->location());
                     rawKeyword->addRecord(record);
                 } else {
-                    std::size_t size = std::distance(record_buffer.begin(),record_buffer.end());
-                    RawRecord record( std::string_view{ record_buffer.begin(), size }, rawKeyword->location());
+                    RawRecord record(record_buffer, rawKeyword->location());
                     rawKeyword->addRecord(record);
                 }
                 return rawKeyword;
@@ -1077,8 +1078,8 @@ std::unique_ptr<RawKeyword> tryParseKeyword( ParserState& parserState, const Par
 
 
             if (str::isTerminatedRecordString(record_buffer)) {
-                std::size_t size = std::distance(record_buffer.begin(), record_buffer.end()) - 1;
-                RawRecord record( std::string_view{ record_buffer.begin(), size }, rawKeyword->location());
+                const std::size_t size = record_buffer.size() - 1;
+                RawRecord record(record_buffer.substr(0, size), rawKeyword->location());
                 if (rawKeyword->addRecord(record))
                     return rawKeyword;
 
@@ -1104,7 +1105,7 @@ std::unique_ptr<RawKeyword> tryParseKeyword( ParserState& parserState, const Par
 
 std::string_view advance_parser_state( ParserState& parserState, const std::string& to_keyw )
 {
-    
+
     auto line = parserState.getline();
 
     while (line != to_keyw) {
@@ -1121,7 +1122,7 @@ void addSectionKeyword(ParserState& parserState, const std::string& keyw)
 
         Opm::ParserKeyword section_keyw(keyw);
         Opm::DeckKeyword dk_keyw(section_keyw);
-                
+
         parserState.deck.addKeyword(dk_keyw);
     }
 }
@@ -1136,37 +1137,37 @@ void cleanup_deck_keyword_list(ParserState& parserState, const std::set<Opm::Ecl
     bool ignore_solution = ignore.find(Opm::Ecl::SOLUTION) !=ignore.end()  ? true : false;
     bool ignore_summary = ignore.find(Opm::Ecl::SUMMARY) !=ignore.end()  ? true : false;
     bool ignore_schedule = ignore.find(Opm::Ecl::SCHEDULE) !=ignore.end()  ? true : false;
-    
+
     std::vector<std::string> keyw_names;
     keyw_names.reserve(parserState.deck.size());
 
     std::transform(parserState.deck.begin(), parserState.deck.end(),
                    std::back_inserter(keyw_names),
                    [](const auto& dk_keyw) { return dk_keyw.name(); });
-    
+
     if (ignore_runspec){
 
-        auto iter_from = std::find(keyw_names.begin(), keyw_names.end(), "RUNSPEC");            
-        auto iter_to = std::find(keyw_names.begin(), keyw_names.end(), "GRID");            
-        
+        auto iter_from = std::find(keyw_names.begin(), keyw_names.end(), "RUNSPEC");
+        auto iter_to = std::find(keyw_names.begin(), keyw_names.end(), "GRID");
+
         auto n1 = std::distance(keyw_names.begin(), iter_from);
         auto n2 = std::distance(keyw_names.begin(), iter_to);
-        
+
         parserState.deck.remove_keywords(n1, n2);
         keyw_names.erase(keyw_names.begin() + n1, keyw_names.begin() + n2);
     }
 
     if (ignore_grid){
 
-        auto iter_from = std::find(keyw_names.begin(), keyw_names.end(), "GRID");            
+        auto iter_from = std::find(keyw_names.begin(), keyw_names.end(), "GRID");
         auto iter_to = std::find(keyw_names.begin(), keyw_names.end(), "EDIT");
-        
+
         if (iter_to == keyw_names.end())
             iter_to = std::find(keyw_names.begin(), keyw_names.end(), "PROPS");
-        
+
         auto n1 = std::distance(keyw_names.begin(), iter_from);
         auto n2 = std::distance(keyw_names.begin(), iter_to);
-        
+
         parserState.deck.remove_keywords(n1, n2);
         keyw_names.erase(keyw_names.begin() + n1, keyw_names.begin() + n2);
     }
@@ -1174,43 +1175,43 @@ void cleanup_deck_keyword_list(ParserState& parserState, const std::set<Opm::Ecl
     if (ignore_edit){
 
         auto iter_from = std::find(keyw_names.begin(), keyw_names.end(), "EDIT");
-        
+
         if (iter_from != keyw_names.end()){
             auto iter_to = std::find(keyw_names.begin(), keyw_names.end(), "PROPS");
             auto n1 = std::distance(keyw_names.begin(), iter_from);
             auto n2 = std::distance(keyw_names.begin(), iter_to);
-        
+
             parserState.deck.remove_keywords(n1, n2);
             keyw_names.erase(keyw_names.begin() + n1, keyw_names.begin() + n2);
-            
+
         }
     }
 
     if (ignore_props){
 
-        auto iter_from = std::find(keyw_names.begin(), keyw_names.end(), "PROPS");            
+        auto iter_from = std::find(keyw_names.begin(), keyw_names.end(), "PROPS");
         auto iter_to = std::find(keyw_names.begin(), keyw_names.end(), "REGIONS");
-        
+
         if (iter_to == keyw_names.end())
             iter_to = std::find(keyw_names.begin(), keyw_names.end(), "SOLUTION");
-        
+
         auto n1 = std::distance(keyw_names.begin(), iter_from);
         auto n2 = std::distance(keyw_names.begin(), iter_to);
-        
+
         parserState.deck.remove_keywords(n1, n2);
         keyw_names.erase(keyw_names.begin() + n1, keyw_names.begin() + n2);
     }
 
     if (ignore_regions){
 
-        auto iter_from = std::find(keyw_names.begin(), keyw_names.end(), "REGIONS");            
+        auto iter_from = std::find(keyw_names.begin(), keyw_names.end(), "REGIONS");
 
         if (iter_from != keyw_names.end()){
             auto iter_to = std::find(keyw_names.begin(), keyw_names.end(), "SOLUTION");
-        
+
             auto n1 = std::distance(keyw_names.begin(), iter_from);
             auto n2 = std::distance(keyw_names.begin(), iter_to);
-        
+
             parserState.deck.remove_keywords(n1, n2);
             keyw_names.erase(keyw_names.begin() + n1, keyw_names.begin() + n2);
         }
@@ -1218,15 +1219,15 @@ void cleanup_deck_keyword_list(ParserState& parserState, const std::set<Opm::Ecl
 
     if (ignore_solution){
 
-        auto iter_from = std::find(keyw_names.begin(), keyw_names.end(), "SOLUTION");            
+        auto iter_from = std::find(keyw_names.begin(), keyw_names.end(), "SOLUTION");
         auto iter_to = std::find(keyw_names.begin(), keyw_names.end(), "SUMMARY");
-        
+
         if (iter_to == keyw_names.end())
             iter_to = std::find(keyw_names.begin(), keyw_names.end(), "SCHEDULE");
-        
+
         auto n1 = std::distance(keyw_names.begin(), iter_from);
         auto n2 = std::distance(keyw_names.begin(), iter_to);
-        
+
         parserState.deck.remove_keywords(n1, n2);
         keyw_names.erase(keyw_names.begin() + n1, keyw_names.begin() + n2);
     }
@@ -1234,12 +1235,12 @@ void cleanup_deck_keyword_list(ParserState& parserState, const std::set<Opm::Ecl
     if (ignore_summary){
 
         auto iter_from = std::find(keyw_names.begin(), keyw_names.end(), "SUMMARY");
-        
+
         if (iter_from != keyw_names.end()){
             auto iter_to = std::find(keyw_names.begin(), keyw_names.end(), "SCHEDULE");
             auto n1 = std::distance(keyw_names.begin(), iter_from);
             auto n2 = std::distance(keyw_names.begin(), iter_to);
-        
+
             parserState.deck.remove_keywords(n1, n2);
             keyw_names.erase(keyw_names.begin() + n1, keyw_names.begin() + n2);
         }
@@ -1247,11 +1248,11 @@ void cleanup_deck_keyword_list(ParserState& parserState, const std::set<Opm::Ecl
 
     if (ignore_schedule){
 
-        auto iter_from = std::find(keyw_names.begin(), keyw_names.end(), "SCHEDULE");            
-        
+        auto iter_from = std::find(keyw_names.begin(), keyw_names.end(), "SCHEDULE");
+
         auto n1 = std::distance(keyw_names.begin(), iter_from);
         auto n2 = std::distance(keyw_names.begin(), keyw_names.end());
-        
+
         parserState.deck.remove_keywords(n1, n2);
         keyw_names.erase(keyw_names.begin() + n1, keyw_names.begin() + n2);
     }
@@ -1262,11 +1263,11 @@ bool parseState( ParserState& parserState, const Parser& parser ) {
     std::string filename = parserState.current_path().string();
 
     auto ignore = parserState.get_ignore();
-    
+
     bool has_edit = true;
     bool has_regions = true;
     bool has_summary = true;
-     
+
     if (ignore.size() > 0)
         if (!parserState.check_section_keywords(has_edit, has_regions, has_summary))
             throw std::runtime_error("Parsing individual sections not possible when section keywords in root input file");
@@ -1278,7 +1279,7 @@ bool parseState( ParserState& parserState, const Parser& parser ) {
     bool ignore_solution = ignore.find(Opm::Ecl::SOLUTION) !=ignore.end()  ? true : false;
     bool ignore_summary = ignore.find(Opm::Ecl::SUMMARY) !=ignore.end()  ? true : false;
     bool ignore_schedule = ignore.find(Opm::Ecl::SCHEDULE) !=ignore.end()  ? true : false;
-    
+
     if ((ignore_grid) && (!has_edit) && (!ignore_edit))
         ignore_grid = false;
 
@@ -1287,21 +1288,21 @@ bool parseState( ParserState& parserState, const Parser& parser ) {
 
     if ((ignore_solution) && (!has_summary) && (!ignore_summary))
         ignore_solution = false;
-    
+
     while( !parserState.done() ) {
-        
+
         auto rawKeyword = tryParseKeyword( parserState, parser);
         bool do_not_add = false;
-         
+
         if( !rawKeyword )
             continue;
 
         std::string_view keyw = rawKeyword->getKeywordName();
         if ((ignore_grid) && (keyw == "GRID")){
-            
+
             do_not_add = true;
             addSectionKeyword(parserState, "GRID");
-            
+
             if (has_edit){
                 keyw = advance_parser_state( parserState, "EDIT" );
                 addSectionKeyword(parserState, "EDIT");
@@ -1310,14 +1311,14 @@ bool parseState( ParserState& parserState, const Parser& parser ) {
                 addSectionKeyword(parserState, "PROPS");
             }
         }
-          
+
         if ((ignore_edit) && (keyw=="EDIT")){
             do_not_add = true;
             addSectionKeyword(parserState, "EDIT");
             keyw = advance_parser_state( parserState, "PROPS" );
             addSectionKeyword(parserState, "PROPS");
         }
-          
+
         if ((ignore_props) && (keyw=="PROPS")){
             do_not_add = true;
             addSectionKeyword(parserState, "PROPS");
@@ -1329,16 +1330,16 @@ bool parseState( ParserState& parserState, const Parser& parser ) {
                 keyw = advance_parser_state( parserState, "SOLUTION" );
                 addSectionKeyword(parserState, "SOLUTION");
             }
-            
+
         }
-        
+
         if ((ignore_regions) && (keyw=="REGIONS")){
             do_not_add = true;
             addSectionKeyword(parserState, "REGIONS");
             keyw = advance_parser_state( parserState, "SOLUTION" );
             addSectionKeyword(parserState, "SOLUTION");
         }
-        
+
         if ((ignore_solution) && (keyw=="SOLUTION")){
             do_not_add = true;
             addSectionKeyword(parserState, "SOLUTION");
@@ -1351,19 +1352,19 @@ bool parseState( ParserState& parserState, const Parser& parser ) {
                 addSectionKeyword(parserState, "SCHEDULE");
             }
         }
-        
+
         if ((ignore_summary) && (keyw=="SUMMARY")){
             do_not_add = true;
             addSectionKeyword(parserState, "SUMMARY");
             keyw = advance_parser_state( parserState, "SCHEDULE" );
             addSectionKeyword(parserState, "SCHEDULE");
         }
-            
+
         if ((ignore_schedule) && (keyw=="SCHEDULE")){
             addSectionKeyword(parserState, "SCHEDULE");
             return true;
         }
-        
+
         if (rawKeyword->getKeywordName() == Opm::RawConsts::end)
             return true;
 
@@ -1535,13 +1536,13 @@ bool parseState( ParserState& parserState, const Parser& parser ) {
     Deck Parser::parseFile(const std::string &dataFileName, const ParseContext& parseContext,
                            ErrorGuard& errors, const std::vector<Opm::Ecl::SectionType>& sections) const {
 
-        
+
         std::set<Opm::Ecl::SectionType> ignore_sections;
 
         if (sections.size() > 0) {
 
             std::set<Opm::Ecl::SectionType> all_sections;
-            all_sections = {Opm::Ecl::RUNSPEC, Opm::Ecl::GRID, Opm::Ecl::EDIT, Opm::Ecl::PROPS, Opm::Ecl::REGIONS, 
+            all_sections = {Opm::Ecl::RUNSPEC, Opm::Ecl::GRID, Opm::Ecl::EDIT, Opm::Ecl::PROPS, Opm::Ecl::REGIONS,
                             Opm::Ecl::SOLUTION, Opm::Ecl::SUMMARY, Opm::Ecl::SCHEDULE};
 
             std::set<Opm::Ecl::SectionType> read_sections;
@@ -1562,7 +1563,7 @@ bool parseState( ParserState& parserState, const Parser& parser ) {
 
            2. The relative/abolute status of the path is retained.
         */
-        
+
         std::string data_file;
         if (dataFileName[0] == '/')
             data_file = std::filesystem::canonical(dataFileName).string();
@@ -1571,9 +1572,9 @@ bool parseState( ParserState& parserState, const Parser& parser ) {
 
         ParserState parserState( this->codeKeywords(), parseContext, errors, data_file, ignore_sections);
         parseState( parserState, *this );
-        
+
         auto ignore = parserState.get_ignore();
-        
+
         if (ignore.size() > 0)
             cleanup_deck_keyword_list(parserState, ignore);
 
