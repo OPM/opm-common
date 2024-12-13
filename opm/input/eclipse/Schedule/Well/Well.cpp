@@ -495,7 +495,8 @@ Well::Well(const std::string& wname_arg,
            bool allow_xflow,
            bool auto_shutin,
            int pvt_table_,
-           GasInflowEquation inflow_eq):
+           GasInflowEquation inflow_eq,
+           bool temp_option):
     wname(wname_arg),
     group_name(gname),
     init_step(init_step_arg),
@@ -531,6 +532,10 @@ Well::Well(const std::string& wname_arg,
     well_inj_temperature(std::nullopt),
     well_inj_mult(std::nullopt)
 {
+    if (temp_option) {
+        default_well_inj_temperature = Metric::TemperatureOffset + 0.0;
+    }
+
     auto p = std::make_shared<WellProductionProperties>(*this->unit_system, this->wname);
     p->whistctl_cmode = whistctl_cmode;
     this->updateProduction(p);
@@ -574,6 +579,7 @@ Well Well::serializationTestObject()
     result.wdfac = std::make_shared<WDFAC>(WDFAC::serializationTestObject());
     result.m_pavg = PAvg();
     result.well_inj_temperature = 10.0;
+    result.default_well_inj_temperature = 0.0;
     result.well_inj_mult = InjMult::serializationTestObject();
     result.m_filter_concentration = UDAValue::serializationTestObject();
 
@@ -1765,14 +1771,22 @@ int Well::vfp_table_number() const {
 }
 
 double Well::inj_temperature() const {
-    if (this->wtype.injector() && this->well_inj_temperature)
-        return *this->well_inj_temperature;
+    if (!this->wtype.injector())
+        throw std::logic_error(fmt::format("Well {}: Cannot ask for injection temperature for a non-injector", this->name()));
 
-    throw std::runtime_error("Can only ask for well temperature for" 
-                    "injectors with non-default temperature.");
+    if (!this->well_inj_temperature) {
+        if (this->default_well_inj_temperature) {
+            OpmLog::warning(fmt::format("Well {}: Injection temperature not specified, using default value of {}", this->name(), *this->default_well_inj_temperature));
+            return *this->default_well_inj_temperature;
+        } else {
+            throw std::logic_error(fmt::format("Well {}: Unable to obtain injection temperature - not specified in deck and no default defined.", this->name()));
+        }
+    }
+
+    return *this->well_inj_temperature;
 }
 bool Well::hasInjTemperature() const {
-    return this->well_inj_temperature.has_value(); 
+    return this->well_inj_temperature.has_value();
 }
 void Well::setWellInjTemperature(const double temp) {
     this->well_inj_temperature = temp;
@@ -1841,6 +1855,7 @@ bool Well::operator==(const Well& data) const {
         && (this->m_pavg == data.m_pavg)
         && (this->well_inj_temperature == data.well_inj_temperature)
         && (this->inj_mult_mode == data.inj_mult_mode)
+        && (this->default_well_inj_temperature == data.default_well_inj_temperature)
         && (this->well_inj_mult == data.well_inj_mult)
         && (this->m_filter_concentration == data.m_filter_concentration)
         ;
