@@ -736,7 +736,10 @@ if(ENABLE_ECL_OUTPUT)
           tests/msim/action_count_no_run_function.py
           tests/msim/open_well_past.py
           tests/msim/open_well_too_late.py
-          tests/VFP_CASE.DATA)
+          tests/CARFIN-COLUMN.EGRID
+          tests/CARFIN-DOUBLE.EGRID
+          tests/CARFIN-NESTED.EGRID
+          tests/CARFIN5.EGRID)
 endif()
 
 list (APPEND EXAMPLE_SOURCE_FILES
