@@ -279,18 +279,20 @@ inline std::string_view del_after_slash(std::string_view view, bool raw_strings)
 
 
 inline bool getline( std::string_view& input, std::string_view& line ) {
-    if( input.empty() ) return false;
-
-    auto end = std::find( input.begin(), input.end(), '\n' );
-
-    line = std::string_view( input.begin(), end - input.begin() );
-    input = std::string_view( end + 1, input.end() - (end + 1));
-    return true;
+    if (input.empty()) {
+        return false;
+    }
 
     /* we know that we always append a newline onto the input string, so we can
-     * safely assume that end+1 will either be end-of-input (i.e. empty range)
+     * safely assume that pos+1 will either be end-of-input (i.e. empty range)
      * or the start of the next line
      */
+
+    const auto pos = input.find_first_of('\n');
+    line = input.substr(0, pos);
+    input = input.substr(pos+1);
+
+    return true;
 }
 
 /*
