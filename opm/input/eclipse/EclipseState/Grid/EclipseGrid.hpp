@@ -33,12 +33,15 @@
 #include <unordered_set>
 #include <vector>
 #include <map>
-#include <opm/io/eclipse/EclOutput.hpp>
+
 
 namespace Opm {
 
     class Deck;
-    namespace EclIO { class EclFile; }
+    namespace EclIO {
+        class EclFile;
+        class EclOutput;
+    }
     struct NNCdata;
     class UnitSystem;
     class ZcornMapper;
@@ -369,8 +372,8 @@ namespace Opm {
       EclipseGridLGR() = default;
       EclipseGridLGR(const std::string& self_label, const std::string& father_label_, 
                      size_t nx, size_t ny, size_t nz, 
-                     vec_size_t father_lgr_index, std::array<int,3> low_fahterIJK_, 
-                     std::array<int,3> up_fahterIJK_);
+                     vec_size_t father_lgr_index, const std::array<int,3>& low_fahterIJK_, 
+                     const std::array<int,3>& up_fahterIJK_);
       ~EclipseGridLGR() = default;
       const vec_size_t& getFatherGlobalID() const;
       void save(Opm::EclIO::EclOutput&, const std::vector<Opm::NNCdata>&, const Opm::UnitSystem&) const;
@@ -382,7 +385,7 @@ namespace Opm {
         return father_global;
       }
      void set_hostnum(std::vector<int>&);
-     void set_lgr_refinement(std::vector<double>,std::vector<double>);                 
+     void set_lgr_refinement(const std::vector<double>&, const std::vector<double> &);                 
     private:
       void init_father_global();
       std::string father_label;

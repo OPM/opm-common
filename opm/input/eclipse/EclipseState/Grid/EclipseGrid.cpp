@@ -17,12 +17,11 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "opm/io/eclipse/PaddedOutputString.hpp"
+#include <opm/io/eclipse/PaddedOutputString.hpp>
 #include <cstddef>
 #include <cstdlib>
 #include <optional>
 #include <stdexcept>
-#include <strings.h>
 #include <vector>
 #define _USE_MATH_DEFINES
 
@@ -38,7 +37,7 @@
 #include <opm/common/utility/String.hpp>
 
 #include <opm/io/eclipse/EclFile.hpp>
-
+#include <opm/io/eclipse/EclOutput.hpp>
 
 #include <opm/input/eclipse/Units/Units.hpp>
 #include <opm/input/eclipse/Deck/DeckSection.hpp>
@@ -1898,14 +1897,14 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
         std::vector<int> filehead(100,0);
         filehead[0] = 3;                     // version number
         filehead[1] = 2007;                  // release year
-        filehead[6] = 2;                     // corner point grid
+        filehead[6] = 1;                     // corner point grid
 
         std::vector<int> gridhead(100,0);
         gridhead[0] = 1;                    // corner point grid
         gridhead[1] = dims[0];              // nI
         gridhead[2] = dims[1];              // nJ
         gridhead[3] = dims[2];              // nK
-        gridhead[24] = 1;                   // NUMRES
+        gridhead[24] = 1;                   // NUMRES (number of reservoirs)
         gridhead[25] = 1; 
         std::vector<int> nnchead(10, 0);
         std::vector<int> nnc1;
@@ -1959,7 +1958,7 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
 
         egridfile.write("ACTNUM", m_actnum);
         egridfile.write("ENDGRID", endgrid);
-        
+        // nnc for LGR is not currently supported.
         for (std::size_t index : m_print_order_lgr_cells) {
             lgr_children_cells[index].save(egridfile, nnc, units);
         }
@@ -1967,7 +1966,9 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
         if (nnc1.size() > 0){
             egridfile.write("NNCHEAD", nnchead);
             egridfile.write("NNC1", nnc1);
-            egridfile.write("NNC2", nnc2);        
+            egridfile.write("NNC2", nnc2);
+            // Placeholder the method that handles  LGR nnc
+            // nnc in LGR is currently not supportd 
             // for (const EclipseGridLGR& lgr_cell : lgr_children_cells) {
             //     lgr_cell.save_nnc(egridfile);
             // }
@@ -2587,8 +2588,8 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
 namespace Opm {
     EclipseGridLGR::EclipseGridLGR(const std::string& self_label, const std::string& father_label_, 
                                    std::size_t nx, std::size_t ny, std::size_t nz, 
-                                   vec_size_t father_lgr_index, std::array<int,3> low_fahterIJK_, 
-                                   std::array<int,3> up_fahterIJK_)
+                                   vec_size_t father_lgr_index, const std::array<int,3>& low_fahterIJK_, 
+                                   const std::array<int,3>& up_fahterIJK_)
     : EclipseGrid(nx,ny,nz), father_label(father_label_), father_global(father_lgr_index)
     {
         init_father_global();
@@ -2599,7 +2600,7 @@ namespace Opm {
         std::transform(hostnum.begin(),hostnum.end(), hostnum.begin(), [](int a){return a+1;});
         m_hostnum = hostnum;
     }        
-    void EclipseGridLGR::set_lgr_refinement(std::vector<double> coord, std::vector<double> zcorn)
+    void EclipseGridLGR::set_lgr_refinement(const std::vector<double>& coord, const std::vector<double>& zcorn)
     {
         m_coord = coord;
         m_zcorn = zcorn;
@@ -2680,9 +2681,9 @@ namespace Opm {
         gridhead[31] = up_fahterIJK[1] + 1; // Upper J-index-host
         gridhead[32] = up_fahterIJK[2] + 1; // Upper K-index-host
         
-        std::vector<int> nnchead(10, 0);
-        std::vector<int> nnc1;
-        std::vector<int> nnc2;
+        [[maybe_unused]] std::vector<int> nnchead(10, 0);
+        [[maybe_unused]] std::vector<int> nnc1;
+        [[maybe_unused]] std::vector<int> nnc2;
 
         for (const NNCdata& n : nnc ) {
             nnc1.push_back(n.cell1 + 1);
