@@ -330,22 +330,22 @@ namespace Opm {
                 ! ignoreMultiplierRecord(record.nnc_behaviour);
             };
 
-            multiplier = this->template applyMultiplierDifferentRegion(regMaps,
-                                                                       multiplier,
-                                                                       regionId1,
-                                                                       regionId2,
-                                                                       applyMultiplier,
-                                                                       regPairFoundDifferent);
+            multiplier = this->applyMultiplierDifferentRegion(regMaps,
+                                                              multiplier,
+                                                              regionId1,
+                                                              regionId2,
+                                                              applyMultiplier,
+                                                              regPairFoundDifferent);
             // same region. Note that a pair where both region indices are the same is special.
             // For connections between it and all other regions the multipliers
             // will not override otherwise explicitly specified (as pairs with
             // different ids) multipliers, but accumulated to these.
-            multiplier = this->template applyMultiplierSameRegion(regMaps,
-                                                                  multiplier,
-                                                                  regionId1,
-                                                                  regionId2,
-                                                                  applyMultiplier,
-                                                                  regPairFoundSame);
+            multiplier = this->applyMultiplierSameRegion(regMaps,
+                                                         multiplier,
+                                                         regionId1,
+                                                         regionId2,
+                                                         applyMultiplier,
+                                                         regPairFoundSame);
         }
 
         return multiplier;
@@ -392,22 +392,22 @@ namespace Opm {
                 return (regPairPos != regMap.end());
             };
 
-            multiplier = this->template applyMultiplierSameRegion(regMaps,
-                                                                  multiplier,
-                                                                  regionId1,
-                                                                  regionId2,
-                                                                  applyMultiplier,
-                                                                  regPairFound);
+            multiplier = this->applyMultiplierSameRegion(regMaps,
+                                                         multiplier,
+                                                         regionId1,
+                                                         regionId2,
+                                                         applyMultiplier,
+                                                         regPairFound);
             // same region. Note that a pair where both region indices are the same is special.
             // For connections between it and all other regions the multipliers
             // will not override otherwise explicitly specified (as pairs with
             // different ids) multipliers, but accumulated to these.
-            multiplier = this->template applyMultiplierDifferentRegion(regMaps,
-                                                                       multiplier,
-                                                                       regionId1,
-                                                                       regionId2,
-                                                                       applyMultiplier,
-                                                                       regPairFound);
+            multiplier = this->applyMultiplierDifferentRegion(regMaps,
+                                                              multiplier,
+                                                              regionId1,
+                                                              regionId2,
+                                                              applyMultiplier,
+                                                              regPairFound);
         }
 
         return multiplier;
