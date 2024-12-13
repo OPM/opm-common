@@ -16,10 +16,10 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <functional>
-
 #include <opm/input/eclipse/Deck/DeckView.hpp>
 
+#include <functional>
+#include <stdexcept>
 
 void Opm::DeckView::add_keyword(const Opm::DeckKeyword& kw) {
     this->keyword_index[kw.name()].push_back(this->keywords.size());

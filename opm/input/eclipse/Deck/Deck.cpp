@@ -16,14 +16,17 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <algorithm>
-#include <vector>
-
 #include <opm/input/eclipse/Deck/Deck.hpp>
 #include <opm/input/eclipse/Deck/DeckOutput.hpp>
 #include <opm/input/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/input/eclipse/Deck/DeckSection.hpp>
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
+
+#include <algorithm>
+#include <iterator>
+#include <stdexcept>
+#include <utility>
+#include <vector>
 
 namespace Opm {
 
