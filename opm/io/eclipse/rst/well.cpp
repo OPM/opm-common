@@ -180,7 +180,7 @@ Opm::RestartIO::RstWell::RstWell(const UnitSystem&  unit_system,
     gas_void_rate(       unit_system.to_si(M::gas_surface_volume,    xwel[VI::XWell::GasVoidPrRate]))
 {
     // For E100 it appears that +1 instead of -1 is written for group_controllable_flag when the
-    // group control is aactive, so using this to correct active_control (where ind.ctrl. is written)
+    // group control is active, so using this to correct active_control (where ind.ctrl. is written)
     if (group_controllable_flag > 0) {
         active_control = VI::IWell::Value::WellCtrlMode::Group;
     }
