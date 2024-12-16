@@ -155,7 +155,6 @@ Opm::Well::ProducerCMode producer_cmode_from_int(const int pmode)
     case CModeVal::BHP:      return Opm::Well::ProducerCMode::BHP;
     }
 
-    // Return BHP as default instead, since -10 might be written for some unused wells..??
     throw std::invalid_argument {
         fmt::format("Cannot convert integer value {} to producer control mode", pmode)
     };
