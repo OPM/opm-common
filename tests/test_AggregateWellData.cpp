@@ -70,7 +70,7 @@ namespace {
     struct MockIH
     {
         explicit MockIH(const int numWells,
-                        const int iwelPerWell = 154,  // E100
+                        const int iwelPerWell = 155,  // E100
                         const int swelPerWell = 122,  // E100
                         const int xwelPerWell = 130,  // E100
                         const int zwelPerWell =   3); // E100

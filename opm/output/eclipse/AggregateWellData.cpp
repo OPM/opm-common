@@ -1470,7 +1470,7 @@ namespace {
             // For each vector in rate, prod_total, inj_total, inj_conc, prod_conc:
             //    TEMP (if present), then each tracer in definition order (TRACER) [free then solution conc for HC tracers]
 
-            auto output_index = static_cast<std::size_t>(Ix::TracerOffset) + 1; // +1 since late 2022
+            auto output_index = static_cast<std::size_t>(Ix::TracerOffset);
             // Rates
             if (well.isInjector()) {
                 if (isTemp) xWell[output_index++] = -smry.get_well_var(well.name(), "WTIRHEA", 0);
@@ -1949,6 +1949,6 @@ captureDynamicWellDataLGR(const Opm::Schedule&       sched,
     {
         auto xwell = this->xWell_[wellID];
 
-        XWell::dynamicContrib(well, tracers, sched.runspec().tracers(), smry, xwell);
+        XWell::dynamicContrib(well, tracers, sched.runspec().tracers(), smry, sched.runspec().temp(), xwell);
     });
 }
