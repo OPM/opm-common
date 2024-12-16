@@ -947,6 +947,13 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
         this->snapshots[report_step].update_events(events);
     }
 
+    void Schedule::add_event(ScheduleEvents::Events event, std::size_t report_step)
+    {
+        auto events = this->snapshots[report_step].events();
+        events.addEvent(event);
+        this->snapshots[report_step].update_events(events);
+    }
+
 
     bool Schedule::updateWPAVE(const std::string& wname, std::size_t report_step, const PAvg& pavg) {
         const auto& well = this->getWell(wname, report_step);
@@ -2606,6 +2613,7 @@ void Schedule::create_first(const time_point& start_time, const std::optional<ti
     sched_state.rptonly(this->m_static.rptonly);
     sched_state.bhp_defaults.update( ScheduleState::BHPDefaults() );
     sched_state.source.update( Source() );
+    sched_state.wcycle.update( WCYCLE() );
     //sched_state.update_date( start_time );
     this->addGroup("FIELD", 0);
 }

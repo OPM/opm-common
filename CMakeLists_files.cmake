@@ -309,6 +309,7 @@ if(ENABLE_ECL_INPUT)
     opm/input/eclipse/Schedule/Well/PAvgCalculator.cpp
     opm/input/eclipse/Schedule/Well/PAvgCalculatorCollection.cpp
     opm/input/eclipse/Schedule/Well/PAvgDynamicSourceData.cpp
+    opm/input/eclipse/Schedule/Well/WCYCLE.cpp
     opm/input/eclipse/Schedule/Well/Well.cpp
     opm/input/eclipse/Schedule/Well/WellBrineProperties.cpp
     opm/input/eclipse/Schedule/Well/WellCompletionKeywordHandlers.cpp
@@ -1318,6 +1319,7 @@ if(ENABLE_ECL_INPUT)
        opm/input/eclipse/Schedule/Well/PAvgCalculator.hpp
        opm/input/eclipse/Schedule/Well/PAvgCalculatorCollection.hpp
        opm/input/eclipse/Schedule/Well/PAvgDynamicSourceData.hpp
+       opm/input/eclipse/Schedule/Well/WCYCLE.hpp
        opm/input/eclipse/Schedule/Well/Well.hpp
        opm/input/eclipse/Schedule/Well/WellEnums.hpp
        opm/input/eclipse/Schedule/Well/WellInjectionControls.hpp

@@ -1966,3 +1966,104 @@ END
     const auto& wellI3 = sched.getWell("I3", 0);
     BOOST_CHECK_CLOSE(wellI3.getInjectionProperties().bhp_hist_limit, 6891.2 * unit::barsa, 1e-12);
 }
+
+BOOST_AUTO_TEST_CASE(WCYCLE_Basic)
+{
+    const auto deck = Parser{}.parseString(R"(RUNSPEC
+DIMENS
+10 10 3 /
+GRID
+DXV
+10*100.0 /
+DYV
+10*100.0 /
+DZV
+3*5.0 /
+DEPTHZ
+121*2000 /
+PERMX
+300*100.0 /
+COPY
+PERMX PERMY /
+PERMX PERMZ /
+/
+MULTIPLY
+PERMZ 0.1 /
+/
+PORO
+300*0.3 /
+SCHEDULE
+
+WELSPECS
+ 'P' 'G' 10 10 1* 'OIL' /
+ 'I' 'G'  1  1 1* 'GAS' /
+ 'I2' 'W'  1  1 1* 'WATER' /
+ 'I3' 'W'  1  1 1* 'WATER' /
+/
+COMPDAT
+ 'P' 10 10 1 3 'OPEN' /
+ 'I'  1  1 1 1 'OPEN' /
+ 'I2'  1  1 1 1 'OPEN' /
+ 'I3'  1  1 1 1 'OPEN' /
+/
+
+WCONINJH
+  I3 WATER OPEN 116281 1* 0 /
+/
+
+WCONPROD
+ 'P' 'OPEN' 'LRAT' 1* 1* 1* 1234.567 1* 1* /
+/
+
+WCONINJH
+  I2 WATER OPEN 116281 1* 0 /
+/
+
+WCONINJE
+ 'I' 'GAS' 'OPEN' 'RATE' 20.0E3 /
+/
+
+WCYCLE
+-- Name   OnTime OffTime RampUpTime MaxDtOn DtRespectOnOff
+  'I1'    5       10        3        1        'NO'  /
+  'I2'    7       30        1        10       'YES'  /
+/
+
+TSTEP
+30.0 /
+WELSPECS
+ 'P' 'G1' /
+/
+TSTEP
+ 30.0 /
+END
+)");
+
+    const auto es    = EclipseState { deck };
+    const auto sched = Schedule { deck, es };
+
+    const auto& wcycle1 = sched[0].get<WCYCLE>().get();
+
+    BOOST_CHECK(!wcycle1.empty());
+    BOOST_CHECK_EQUAL(std::distance(wcycle1.begin(), wcycle1.end()), 2);
+
+    for (const auto& entry : wcycle1) {
+        if (entry.first == "I1") {
+            BOOST_CHECK_EQUAL(entry.second.on_time, 5 * unit::day);
+            BOOST_CHECK_EQUAL(entry.second.off_time, 10 * unit::day);
+            BOOST_CHECK_EQUAL(entry.second.startup_time , 3 * unit::day);
+            BOOST_CHECK_EQUAL(entry.second.max_time_step, 1 * unit::day);
+            BOOST_CHECK_EQUAL(entry.second.controlled_time_step, false);
+        }
+        else if (entry.first == "I2") {
+            BOOST_CHECK_EQUAL(entry.second.on_time, 7 * unit::day);
+            BOOST_CHECK_EQUAL(entry.second.off_time, 30 * unit::day);
+            BOOST_CHECK_EQUAL(entry.second.startup_time , 1 * unit::day);
+            BOOST_CHECK_EQUAL(entry.second.max_time_step, 10 * unit::day);
+            BOOST_CHECK_EQUAL(entry.second.controlled_time_step, true);
+        }
+        else {
+            BOOST_FAIL("Unexpected WCYCLE entry with name " + entry.first);
+        }
+    }
+}

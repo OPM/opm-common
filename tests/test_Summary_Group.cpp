@@ -184,7 +184,7 @@ data::Wells result_wells()
     */
     data::WellFiltrate well_filtrate {0.1, 1., 0.3}; // values are not tested in this test
     data::Well well1 {
-        rates1, 0.1 * ps, 0.2 * ps, 0.3 * ps, 1,
+        rates1, 0.1 * ps, 0.2 * ps, 0.3 * ps, 1, 1.0,
         well_filtrate,
         ::Opm::Well::Status::OPEN,
         { {well1_comp1} },
