@@ -307,8 +307,8 @@ namespace Opm {
         */
         SimulatorUpdate runPyAction(std::size_t reportStep, const Action::PyAction& pyaction, Action::State& action_state, EclipseState& ecl_state, SummaryState& summary_state);
 
-        SimulatorUpdate modifyCompletions(const std::size_t reportStep, 
-                                        const std::map<std::string,std::vector<Opm::Connection>>& extraConns);  
+        SimulatorUpdate modifyCompletions(const std::size_t reportStep,
+                                          const std::map<std::string, std::vector<Connection>>& extraConns);
 
         const GasLiftOpt& glo(std::size_t report_step) const;
 

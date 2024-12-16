@@ -882,6 +882,20 @@ CF and Kh items for well {} must both be specified or both defaulted/negative)",
         throw std::runtime_error(" the connection is not found! \n ");
     }
 
+    Connection* WellConnections::maybeGetFromGlobalIndex(const std::size_t global_index)
+    {
+        auto conn_iter =
+            std::find_if(this->begin(), this->end(),
+                         [global_index] (const Connection& conn)
+                         { return conn.global_index() == global_index; });
+
+        if (conn_iter == this->end()) {
+            return nullptr;
+        }
+
+        return &*conn_iter;
+    }
+
     bool WellConnections::allConnectionsShut() const
     {
         if (this->empty()) {
