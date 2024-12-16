@@ -1470,7 +1470,7 @@ namespace {
             // For each vector in rate, prod_total, inj_total, inj_conc, prod_conc:
             //    TEMP (if present), then each tracer in definition order (TRACER) [free then solution conc for HC tracers]
 
-            auto output_index = static_cast<std::size_t>(Ix::TracerOffset);
+            auto output_index = static_cast<std::size_t>(Ix::TracerOffset) + 1; // +1 since late 2022
             // Rates
             if (well.isInjector()) {
                 if (isTemp) xWell[output_index++] = -smry.get_well_var(well.name(), "WTIRHEA", 0);

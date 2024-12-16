@@ -651,16 +651,13 @@ createInteHead(const EclipseState& es,
                                               report_step, lookup_step, grid.get_lgr_tag()))
         .calendarDate       (getSimulationTimePoint(sched.posixStartTime(), simTime))
         .activePhases       (getActivePhases(rspec))
-        .drsdt              (sched, lookup_step)
-             // -----------------------------------------------------------------------------------
-             //              NIWELZ                | NSWELZ                  | NXWELZ                   | NZWELZ
-             //              #IWEL elems per well  | #SWEL elems per well    | #XWEL elems per well     | #ZWEL elems per well
-        .params_NWELZ       (155 + num_tracers, 122 + 2*num_tracer_comps,     131 + nxwelz_tracer_shift, 3)
-             // -----------------------------------------------------------------------------------
-             //              NICONZ               | NSCONZ               | NXCONZ
-             //              #ICON elems per conn | #SCON elems per conn | #XCON elems per conn
-        .params_NCON        (26,                    42,                    58 + 5*num_tracer_comps)
-        .params_GRPZ        (getNGRPZ(nwgmax, ngmax, num_tracer_comps, rspec))
+             // The numbers below have been determined experimentally to work
+             // across a range of reference cases, but are not guaranteed to be
+             // universally valid.
+        .drsdt(sched, lookup_step)
+        .params_NWELZ       (154 + num_tracers, 122 + 2 * num_tracers, 130 + nxwelz_tracer_shift, 3) // n{isxz}welz: number of data elements per well in {ISXZ}WELL
+        .params_NCON        (25, 41, 58 + 5*num_tracers)       // n{isx}conz: number of data elements per completion in ICON
+        .params_GRPZ        (getNGRPZ(nwgmax, ngmax, num_tracers, rspec))
         .aquiferDimensions  (inferAquiferDimensions(es, sched[lookup_step]))
         .stepParam          (num_solver_steps, report_step)
         .tuningParam        (getTuningPars(sched[lookup_step].tuning()))
