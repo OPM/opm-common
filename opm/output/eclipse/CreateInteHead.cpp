@@ -590,7 +590,7 @@ createInteHead(const EclipseState& es,
              // across a range of reference cases, but are not guaranteed to be
              // universally valid.
         .drsdt(sched, lookup_step)
-        .params_NWELZ       (155 + num_tracers, 122 + 2 * num_tracers, 130 + nxwelz_tracer_shift, 3) // n{isxz}welz: number of data elements per well in {ISXZ}WELL
+        .params_NWELZ       (154 + num_tracers, 122 + 2 * num_tracers, 130 + nxwelz_tracer_shift, 3) // n{isxz}welz: number of data elements per well in {ISXZ}WELL
         .params_NCON        (25, 41, 58 + 5*num_tracers)       // n{isx}conz: number of data elements per completion in ICON
         .params_GRPZ        (getNGRPZ(nwgmax, ngmax, num_tracers, rspec))
         .aquiferDimensions  (inferAquiferDimensions(es, sched[lookup_step]))
