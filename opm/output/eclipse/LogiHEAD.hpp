@@ -84,7 +84,7 @@ namespace Opm { namespace RestartIO {
                                 const bool e100_radial,
                                 const int  nswlmx,
 			                    const bool enableHyster,
-                                const bool hasTemp
+                                const bool hasTemp = false
 			                );
 
         /// Assign PVT model characteristics.
