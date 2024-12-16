@@ -450,7 +450,7 @@ public:
     bool aciveWellInjMult() const;
 
     bool hasConnections() const;
-    const std::vector<const Connection *> getConnections(int completion) const;
+    std::vector<const Connection *> getConnections(int completion) const;
     const WellConnections& getConnections() const;
     const WellSegments& getSegments() const;
     int maxSegmentID() const;
@@ -644,7 +644,10 @@ private:
     bool allow_cross_flow{false};
     bool automatic_shutin{false};
     int pvt_table{};
-    GasInflowEquation gas_inflow = GasInflowEquation::STD;  // Will NOT be loaded/assigned from restart file
+
+    // Will NOT be loaded/assigned from restart file
+    GasInflowEquation gas_inflow = GasInflowEquation::STD;
+
     const UnitSystem* unit_system{nullptr};
     double udq_undefined{};
     WellType wtype{};
@@ -662,7 +665,11 @@ private:
     std::shared_ptr<WellMICPProperties> micp_properties{};
     std::shared_ptr<WellBrineProperties> brine_properties{};
     std::shared_ptr<WellTracerProperties> tracer_properties{};
-    std::shared_ptr<WellConnections> connections{}; // The WellConnections object cannot be const because of WELPI and the filterConnections method
+
+    // The WellConnections object cannot be const because of WELPI and the
+    // filterConnections method
+    std::shared_ptr<WellConnections> connections{};
+
     std::shared_ptr<WellProductionProperties> production{};
     std::shared_ptr<WellInjectionProperties> injection{};
     std::shared_ptr<WellSegments> segments{};
