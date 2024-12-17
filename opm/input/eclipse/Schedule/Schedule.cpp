@@ -355,6 +355,7 @@ namespace Opm {
         result.m_treat_critical_as_non_critical = false;
         result.m_static = ScheduleStatic::serializationTestObject();
         result.m_sched_deck = ScheduleDeck::serializationTestObject();
+        result.m_wellPIMap = {{"WELL1", 1000}, {"WELL2", 2000}};
         result.action_wgnames = Action::WGNames::serializationTestObject();
         result.potential_wellopen_patterns = std::unordered_set<std::string> {"W1"};
         result.exit_status = EXIT_FAILURE;
@@ -1653,7 +1654,6 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
         ErrorGuard errors;
         ScheduleGrid grid(this->completed_cells);
         SimulatorUpdate sim_update;
-        std::unordered_map<std::string, double> target_wellpi;
         std::unordered_map<std::string, double> wpimult_global_factor;
         const auto matches = Action::Result{false}.matches();
         const std::string prefix = "| "; // logger prefix string
@@ -1685,7 +1685,7 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
                                     grid,
                                     matches,
                                     &sim_update,
-                                    &target_wellpi,
+                                    &(this->m_wellPIMap),
                                     wpimult_global_factor);    
             }
             else {
@@ -2006,6 +2006,17 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
         return *(this->simUpdateFromPython);
     }
 
+    template void Schedule::setWellPIMap<double>(std::unordered_map<std::string, double>);
+    template void Schedule::setWellPIMap<float>(std::unordered_map<std::string, float>);
+
+    template<typename Scalar>
+    void Schedule::setWellPIMap(std::unordered_map<std::string, Scalar> wellPIMap)  {
+        this->m_wellPIMap.clear();
+        for (const auto& [key, value] : wellPIMap) {
+            this->m_wellPIMap[key] = static_cast<double>(value);
+        }
+    }
+
     void Schedule::applyWellProdIndexScaling(const std::string& well_name, const std::size_t reportStep, const double newWellPI) {
         if (reportStep >= this->snapshots.size())
             return;
@@ -2109,6 +2120,7 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
             && this->current_report_step == data.current_report_step
             && this->m_lowActionParsingStrictness == data.m_lowActionParsingStrictness
             && this->welpi_action_mode == data.welpi_action_mode
+            && this->m_wellPIMap == data.m_wellPIMap
             && simUpdateFromPythonIsEqual
             ;
      }
