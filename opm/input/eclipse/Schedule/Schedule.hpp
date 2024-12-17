@@ -306,6 +306,8 @@ namespace Opm {
         */
         SimulatorUpdate runPyAction(std::size_t reportStep, const Action::PyAction& pyaction, Action::State& action_state, EclipseState& ecl_state, SummaryState& summary_state);
 
+        template<typename Scalar>
+        void setWellPIMap(std::unordered_map<std::string, Scalar>);
 
         const GasLiftOpt& glo(std::size_t report_step) const;
 
@@ -349,6 +351,7 @@ namespace Opm {
             serializer(this->m_lowActionParsingStrictness);
             serializer(this->welpi_action_mode);
             serializer(this->simUpdateFromPython);
+            serializer(this->m_wellPIMap);
 
             // If we are deserializing we need to setup the pointer to the
             // unit system since this is process specific. This is safe
@@ -422,6 +425,10 @@ namespace Opm {
         // It is a shared_ptr, so a Schedule can be constructed using the copy constructor sharing the simUpdateFromPython.
         // The copy constructor is needed for creating a mocked simulator (msim).
         std::shared_ptr<SimulatorUpdate> simUpdateFromPython{};
+        // The wellPIMap is used when a PYACTION is executed for handling the keyword WELPI.
+        // It is a map containing wells and their production index.
+        // This map is set in the ActionHandler with the setWellPIMap function of the Schedule.
+        std::unordered_map<std::string, double> m_wellPIMap;
 
         void load_rst(const RestartIO::RstState& rst,
                       const TracerConfig& tracer_config,
