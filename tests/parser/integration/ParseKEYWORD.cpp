@@ -50,6 +50,12 @@
 #include <opm/input/eclipse/Parser/ParseContext.hpp>
 #include <opm/input/eclipse/Parser/Parser.hpp>
 
+#include <cstddef>
+#include <memory>
+#include <stdexcept>
+#include <string>
+#include <vector>
+
 using namespace Opm;
 
 namespace {
@@ -236,14 +242,13 @@ SGCWMIS
 
 BOOST_AUTO_TEST_CASE( SORWMIS ) {
 
-    Parser parser;
-    // missing miscible keyword
-    BOOST_CHECK_THROW (parser.parseString(sorwmisData), OpmInputError );
+    // Missing miscible keyword
+    BOOST_CHECK_THROW(Parser{}.parseString(sorwmisData), OpmInputError);
 
-    //too many tables
-    BOOST_CHECK_THROW( parser.parseString(miscibleTightData + sorwmisData), OpmInputError);
+    // Too many tables
+    BOOST_CHECK_THROW(Parser{}.parseString(miscibleTightData + sorwmisData), OpmInputError);
 
-    auto deck1 =  parser.parseString(miscibleData + sorwmisData);
+    const auto deck1 = Parser{}.parseString(miscibleData + sorwmisData);
 
     const auto& sorwmis = deck1["SORWMIS"].back();
     const auto& miscible = deck1["MISCIBLE"].back();
@@ -253,9 +258,9 @@ BOOST_AUTO_TEST_CASE( SORWMIS ) {
     const auto& sorwmis1 = sorwmis.getRecord(1);
 
     // test number of columns
-    size_t ntmisc = miscible0.getItem(0).get< int >(0);
-    Opm::SorwmisTable sorwmisTable0(sorwmis0.getItem(0), 0);
-    BOOST_CHECK_EQUAL(sorwmisTable0.numColumns(),ntmisc);
+    const std::size_t ntmisc = miscible0.getItem(0).get<int>(0);
+    const Opm::SorwmisTable sorwmisTable0(sorwmis0.getItem(0), 0);
+    BOOST_CHECK_EQUAL(sorwmisTable0.numColumns(), ntmisc);
 
     // test table input 1
     BOOST_CHECK_EQUAL(3U, sorwmisTable0.getWaterSaturationColumn().size());
@@ -263,7 +268,7 @@ BOOST_AUTO_TEST_CASE( SORWMIS ) {
     BOOST_CHECK_EQUAL(0.0, sorwmisTable0.getMiscibleResidualOilColumn()[2]);
 
     // test table input 2
-    Opm::SorwmisTable sorwmisTable1(sorwmis1.getItem(0), 1);
+    const Opm::SorwmisTable sorwmisTable1(sorwmis1.getItem(0), 1);
     BOOST_CHECK_EQUAL(sorwmisTable1.numColumns(),ntmisc);
 
     BOOST_CHECK_EQUAL(3U, sorwmisTable1.getWaterSaturationColumn().size());

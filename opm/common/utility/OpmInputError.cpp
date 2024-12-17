@@ -17,71 +17,85 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <algorithm>
-#include <numeric>
-#include <utility>
-
-#include <fmt/format.h>
 #include <opm/common/utility/OpmInputError.hpp>
 
-namespace Opm {
+#include <algorithm>
+#include <numeric>
+#include <stdexcept>
+#include <string>
+#include <string_view>
+#include <utility>
+#include <vector>
+
+#include <fmt/format.h>
 
 namespace {
 
-template<typename ... Args>
-std::string formatImpl(const std::string& msg_format, const KeywordLocation& loc, const Args& ...arguments) {
+template <typename... Args>
+std::string formatImpl(std::string_view            msg_format,
+                       const Opm::KeywordLocation& loc,
+                       Args&&...                   arguments)
+{
     return fmt::format(fmt::runtime(msg_format),
-        arguments...,
-        fmt::arg("keyword", loc.keyword),
-        fmt::arg("file", loc.filename),
-        fmt::arg("line", loc.lineno)
-    );
+                       std::forward<Args>(arguments)...,
+                       fmt::arg("keyword", loc.keyword),
+                       fmt::arg("file", loc.filename),
+                       fmt::arg("line", loc.lineno));
 }
 
-}
+} // Anonymous namespace
 
-std::string OpmInputError::formatException(const std::exception& e, const KeywordLocation& loc) {
-    const std::string defaultMessage { R"(Problem with keyword {keyword}
+std::string
+Opm::OpmInputError::formatException(const std::exception&  e,
+                                    const KeywordLocation& loc)
+{
+    return formatImpl(R"(Problem with keyword {keyword}
 In {file} line {line}.
-{})" } ;
-
-    return formatImpl(defaultMessage, loc, e.what());
+{0})",
+                      loc, e.what());
 }
 
-/*
-  For the format() function it is possible to have an alternative function with
-  a variaditic template which can be forwarded directly to the fmt::format()
-  function, that is an elegant way to pass arbitrary additional arguments. That
-  will require the OpmInputError::format() to become a templated function and
-  the fmtlib dependendcy will be imposed on downstream modules.
-*/
-std::string OpmInputError::format(const std::string& msg_format, const KeywordLocation& loc) {
+// Note: fmt::format() is a variadic template whence it is possible to
+// forward arbitrary arguments directly to this function.  On the other
+// hand, using that ability will make OpmInputError::format() a function
+// template in a header too and, moreover, confer the fmtlib prerequiste
+// onto downstream modules.
+std::string
+Opm::OpmInputError::format(const std::string&     msg_format,
+                           const KeywordLocation& loc)
+{
     return formatImpl(msg_format, loc);
 }
 
-std::string OpmInputError::formatSingle(const std::string& reason, const KeywordLocation& location) {
-    const std::string defaultMessage { R"(Problem with keyword {keyword}
+std::string
+Opm::OpmInputError::formatSingle(const std::string&     reason,
+                                 const KeywordLocation& location)
+{
+    return formatImpl(R"(Problem with keyword {keyword}
 In {file} line {line}
-{})" } ;
-
-    return formatImpl(defaultMessage, location, reason);
+{0})",
+                      location, reason);
 }
 
 namespace {
 
-std::string locationStringLine(const KeywordLocation& loc) {
-    return OpmInputError::format("\n  {keyword} in {file}, line {line}", loc);
+std::string locationStringLine(const Opm::KeywordLocation& loc)
+{
+    return Opm::OpmInputError::format("\n  {keyword} in {file}, line {line}", loc);
 }
 
-}
+} // Anonymous namespace
 
-std::string OpmInputError::formatMultiple(const std::string& reason, const std::vector<KeywordLocation>& locations) {
-    std::vector<std::string> locationStrings;
-    std::transform(locations.begin(), locations.end(), std::back_inserter(locationStrings), &locationStringLine);
-    const std::string messages { std::accumulate(locationStrings.begin(), locationStrings.end(), std::string {}) } ;
+std::string
+Opm::OpmInputError::formatMultiple(const std::string&                  reason,
+                                   const std::vector<KeywordLocation>& locations)
+{
+    const auto messages =
+        std::accumulate(locations.begin(), locations.end(), std::string{},
+                        [](const std::string& s, const KeywordLocation& loc)
+                        { return s + locationStringLine(loc); });
 
     return fmt::format(R"(Problem with keywords {}
-{})", messages, reason);
-}
-
+{})",
+                       messages, reason);
 }

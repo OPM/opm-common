@@ -662,27 +662,31 @@ void ParserState::loadFile(const std::filesystem::path& inputFile) {
  * of the data section of any keyword.
  */
 
-void ParserState::handleRandomText(const std::string_view& keywordString ) const {
-    std::string errorKey;
-    std::string trimmedCopy = std::string( keywordString );
-    std::string msg;
-    KeywordLocation location{lastKeyWord, this->current_path(), this->line()};
+void ParserState::handleRandomText(const std::string_view& keywordString) const
+{
+    const std::string trimmedCopy { keywordString };
+    const KeywordLocation location {
+        lastKeyWord, this->current_path(), this->line()
+    };
 
+    std::string errorKey{};
+    std::string msg{};
     if (trimmedCopy == "/") {
         errorKey = ParseContext::PARSE_RANDOM_SLASH;
         msg = "Extra '/' detected in {file} line {line}";
     }
     else if (lastSizeType == OTHER_KEYWORD_IN_DECK) {
-      errorKey = ParseContext::PARSE_EXTRA_RECORDS;
-      msg = "Too many records in keyword {keyword}\n"
-            "In {} line {}";
+        errorKey = ParseContext::PARSE_EXTRA_RECORDS;
+        msg = "Too many records in keyword {keyword}\n"
+            "In {file} line {line}";
     }
     else {
         errorKey = ParseContext::PARSE_RANDOM_TEXT;
         msg = fmt::format("String {} not formatted as valid keyword\n"
                           "In {{file}} line {{line}}.", keywordString);
     }
-    parseContext.handleError( errorKey , msg, location, errors );
+
+    parseContext.handleError(errorKey, msg, location, errors);
 }
 
 
