@@ -622,8 +622,8 @@ bool Well::updateFoamProperties(std::shared_ptr<WellFoamProperties> foam_propert
 {
     if (this->wtype.producer()) {
         throw std::runtime_error {
-            fmt::format("Not allowed to set foam injection properties for well {}, "
-                        "since it is a production well.", this->name())
+            fmt::format("Assigning foam injection properties is "
+                        "disallowed for production well {}.", this->name())
         };
     }
 
@@ -639,8 +639,8 @@ bool Well::updatePolymerProperties(std::shared_ptr<WellPolymerProperties> polyme
 {
     if (this->wtype.producer()) {
         throw std::runtime_error {
-            fmt::format("Not allowed to set polymer injection properties for well {}, "
-                        "since it is a production well.", this->name())
+            fmt::format("Assigning polymer injection properties is "
+                        "disallowed for production well {}.", this->name())
         };
     }
 
@@ -656,8 +656,8 @@ bool Well::updateMICPProperties(std::shared_ptr<WellMICPProperties> micp_propert
 {
     if (this->wtype.producer()) {
         throw std::runtime_error {
-            fmt::format("Not allowed to set micp injection properties for well {}, "
-                        "since it is a production well", this->name())
+            fmt::format("Assigning MICP injection properties is "
+                        "disallowed for production well {}.", this->name())
         };
     }
 
@@ -673,8 +673,8 @@ bool Well::updateBrineProperties(std::shared_ptr<WellBrineProperties> brine_prop
 {
     if (this->wtype.producer()) {
         throw std::runtime_error {
-            fmt::format("Not allowed to set brine injection properties for well {}, "
-                        "since it is a production well", this->name())
+            fmt::format("Assigning brine injection properties is "
+                        "disallowed for production well {}.", this->name())
         };
     }
 
@@ -992,7 +992,6 @@ bool Well::updateSolventFraction(const double solvent_fraction_arg)
     return false;
 }
 
-
 bool Well::handleCOMPSEGS(const DeckKeyword& keyword,
                           const ScheduleGrid& grid,
                           const ParseContext& parseContext,
@@ -1000,8 +999,9 @@ bool Well::handleCOMPSEGS(const DeckKeyword& keyword,
 {
     if (this->segments == nullptr) {
         throw OpmInputError{
-            fmt::format("WELSEGS must be specified for well {} "
-                        "before COMPSEGS being input.",
+            fmt::format("The well segment structure for well '{}' must be "
+                        "specified in the WELSEGS keyword before assigning "
+                        "connections to segments in the COMPSEGS keyword.",
                         this->name()),
             keyword.location()
         };
@@ -1012,7 +1012,7 @@ bool Well::handleCOMPSEGS(const DeckKeyword& keyword,
          grid, parseContext, errors);
 
     this->updateConnections(std::make_shared<WellConnections>(std::move(new_connections)), false);
-    this->updateSegments(std::make_shared<WellSegments>( std::move(new_segments)));
+    this->updateSegments(std::make_shared<WellSegments>(std::move(new_segments)));
 
     return true;
 }
@@ -1336,8 +1336,8 @@ const WellSegments& Well::getSegments() const
     }
 
     throw std::logic_error {
-        fmt::format("Requested multi-segment information "
-                    "from regular well '{}'", this->name())
+        fmt::format("Multi-segment information requested "
+                    "for regular well '{}'", this->name())
     };
 }
 
@@ -1662,7 +1662,7 @@ bool Well::handleWINJMULT(const Opm::DeckRecord& record, const KeywordLocation& 
 {
     // For this keyword, the default for I, J, K will be negative
     //
-    // It is not totally clear how specifying 0 or a negative values will
+    // It is not totally clear how specifying 0 or a negative value will
     // work current match_eq function only treats 0 and default values for
     // all connections, we might need to revisit this part later when
     // complication regarding this occurs.  it is possible that changing
@@ -2124,17 +2124,17 @@ int Opm::Well::eclipseControlMode(const Opm::Well::ProducerCMode pmode)
     return Val::WMCtlUnk;
 }
 
-// The purpose of this function is to convert OPM well status to an integer
-// value suitable for output in the eclipse restart file. In OPM we have
-// different variables for the wells status and the active control, when
-// this is written to a restart file they are combined to one integer. In
-// OPM a well can have an active control while still being shut, when this
-// is converted to an integer value suitable for the eclipse formatted
-// restart file the value 0 will be used to signal a SHUT well and the
-// active control will be lost.
+// This function converts OPM well status values to an integer value
+// suitable for output to the restart file.  OPM tracks the status and the
+// active control of a well separately, but when this is written to a
+// restart file they are combined to a single integer.  Moreover, OPM
+// permits a well to have an active control while still being shut, but when
+// this is converted to an integer value suitable for the restart file, the
+// value 0 will be used to signal a SHUT well and the active control will be
+// lost.
 //
 // In the case of a well which is in state 'STOP' or 'AUTO' an integer
-// corresponding to the currently active control is writte to the restart
+// corresponding to the currently active control is written to the restart
 // file.
 
 int Opm::Well::eclipseControlMode(const Well&         well,
