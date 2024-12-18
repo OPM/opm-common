@@ -39,12 +39,13 @@ public:
     /// contiguous range of elements.
     ///
     /// \tparam T Element type.  Const or non-const as needed.  Typically \c
-    ///   double or \code const double \endcode.
-    template<typename T>
+    ///   Scalar or \code const Scalar \endcode.
+    template <typename T>
     class SourceDataSpan
     {
     private:
         friend class PAvgDynamicSourceData<Scalar>;
+
     public:
         /// Supported items of dynamic data per source location
         enum class Item
@@ -52,6 +53,7 @@ public:
             Pressure,           //< Dynamic pressure value
             MixtureDensity,     //< Dynamic mixture density
             PoreVol,            //< Dynamic pore volume
+            Depth,              //< Constant depth location
 
             // ----------------------------------------
 

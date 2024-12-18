@@ -417,25 +417,20 @@ private:
     {
         /// Constructor.
         ///
-        /// \param[in] ctf_arg Connection's transmissiblity factor
+        /// Mostly for convenience to enable using vector<>::emplace_back().
         ///
-        /// \param[in] depth_arg Connection's depth
+        /// \param[in] ctf_arg Connection's transmissiblity factor
         ///
         /// \param[in] cell_arg Connection's connecting cell.  Enumerated
         ///   local contributing cell.
         PAvgConnection(const Scalar         ctf_arg,
-                       const Scalar         depth_arg,
                        const ContrIndexType cell_arg)
-            : ctf  (ctf_arg)
-            , depth(depth_arg)
-            , cell (cell_arg)
+            : ctf  { ctf_arg }
+            , cell { cell_arg }
         {}
 
         /// Connection transmissiblity factor.
         Scalar ctf{};
-
-        /// Connection's depth.
-        Scalar depth{};
 
         /// Index into \c contributingCells_ of connection's cell.
         ContrIndexType cell{};
@@ -470,8 +465,7 @@ private:
     /// connection \code inputConn_[i] \endcode.
     ///
     /// Needed to handle connections to inactive cells.  See
-    /// pruneInactiveConnections() and connectionPressureOffsetWell() for
-    /// details.
+    /// pruneInactiveConnections() and connectionDensityWell() for details.
     std::vector<typename std::vector<PAvgConnection>::size_type> inputConn_{};
 
     /// Collection of all (global) cell indices that potentially contribute
@@ -645,8 +639,14 @@ private:
     ///
     /// \param[in] controls Averaging procedure controls.
     ///
-    /// \param[in] connDP Pressure correction term for each reservoir
-    ///   connection.
+    /// \param[in] gravity Strength of gravity in SI units [m/s^2].
+    ///
+    /// \param[in] refDepth Well's reference depth for block-average
+    ///   pressure calculation.  Often, but not always, equal to the well's
+    ///   bottom-hole pressure reference depth.
+    ///
+    /// \param[in] connDensity Mixture density for pressure correction term
+    ///   for each reservoir connection.
     ///
     /// \param[in] connIndex Translation method from active connection index
     ///   to index into all known reservoir connections.
@@ -656,7 +656,9 @@ private:
     template <typename ConnIndexMap, typename CTFPressureWeightFunction>
     void accumulateLocalContributions(const Sources&             sources,
                                       const PAvg&                controls,
-                                      const std::vector<Scalar>& connDP,
+                                      const Scalar               gravity,
+                                      const Scalar               refDepth,
+                                      const std::vector<Scalar>& connDensity,
                                       ConnIndexMap               connIndex,
                                       CTFPressureWeightFunction  ctfPressWeight);
 
@@ -686,15 +688,23 @@ private:
     ///
     /// \param[in] controls Averaging procedure controls.
     ///
-    /// \param[in] connDP Pressure correction term for each reservoir
-    ///   connection.
+    /// \param[in] gravity Strength of gravity in SI units [m/s^2].
+    ///
+    /// \param[in] refDepth Well's reference depth for block-average
+    ///   pressure calculation.  Often, but not always, equal to the well's
+    ///   bottom-hole pressure reference depth.
+    ///
+    /// \param[in] connDensity Mixture density for pressure correction term
+    ///   for each reservoir connection.
     ///
     /// \param[in] connIndex Translation method from active connection index
     ///   to index into all known reservoir connections.
     template <typename ConnIndexMap>
     void accumulateLocalContributions(const Sources&             sources,
                                       const PAvg&                controls,
-                                      const std::vector<Scalar>& connDP,
+                                      const Scalar               gravity,
+                                      const Scalar               refDepth,
+                                      const std::vector<Scalar>& connDensity,
                                       ConnIndexMap&&             connIndex);
 
     /// First dispatch level before going to calculation routine which
@@ -706,10 +716,18 @@ private:
     ///
     /// \param[in] controls Averaging procedure controls.
     ///
-    /// \param[in] connDP Pressure correction term for each reservoir
-    ///   connection.
+    /// \param[in] gravity Strength of gravity in SI units [m/s^2].
+    ///
+    /// \param[in] refDepth Well's reference depth for block-average
+    ///   pressure calculation.  Often, but not always, equal to the well's
+    ///   bottom-hole pressure reference depth.
+    ///
+    /// \param[in] connDensity Mixture density for pressure correction term
+    ///   for each reservoir connection.
     void accumulateLocalContribOpen(const Sources&             sources,
                                     const PAvg&                controls,
+                                    const Scalar               gravity,
+                                    const Scalar               refDepth,
                                     const std::vector<Scalar>& connDP);
 
     /// First dispatch level before going to calculation routine which
@@ -721,13 +739,21 @@ private:
     ///
     /// \param[in] controls Averaging procedure controls.
     ///
-    /// \param[in] connDP Pressure correction term for each reservoir
-    ///   connection.
+    /// \param[in] gravity Strength of gravity in SI units [m/s^2].
+    ///
+    /// \param[in] refDepth Well's reference depth for block-average
+    ///   pressure calculation.  Often, but not always, equal to the well's
+    ///   bottom-hole pressure reference depth.
+    ///
+    /// \param[in] connDensity Mixture density for pressure correction term
+    ///   for each reservoir connection.
     void accumulateLocalContribAll(const Sources&             sources,
                                    const PAvg&                controls,
-                                   const std::vector<Scalar>& connDP);
+                                   const Scalar               gravity,
+                                   const Scalar               refDepth,
+                                   const std::vector<Scalar>& connDensity);
 
-    /// Compute pressure correction term/offset using Well method
+    /// Compute connection level mixture density using Well method
     ///
     /// Uses mixture density from well bore.
     ///
@@ -747,25 +773,18 @@ private:
     ///
     /// \param[in] sources Connection and cell-level raw data.
     ///
-    /// \param[in] gravity Strength of gravity in SI units [m/s^2].
-    ///
-    /// \param[in] refDepth Well's reference depth for block-average
-    ///   pressure calculation.  Often, but not always, equal to the well's
-    ///   bottom-hole pressure reference depth.
-    ///
     /// \param[in] connIndex Translation method from active connection index
     ///   to index into all known reservoir connections.
     ///
-    /// \return Pressure correction term for each active connection.
+    /// \return Mixture density for pressure correction term for each
+    ///   reservoir connection.
     template <typename ConnIndexMap>
     std::vector<Scalar>
-    connectionPressureOffsetWell(const std::size_t nconn,
-                                 const Sources&    sources,
-                                 const Scalar      gravity,
-                                 const Scalar      refDepth,
-                                 ConnIndexMap      connIndex) const;
+    connectionDensityWell(const std::size_t nconn,
+                          const Sources&    sources,
+                          ConnIndexMap      connIndex) const;
 
-    /// Compute pressure correction term/offset using Reservoir method
+    /// Compute connection level mixture density using Reservoir method
     ///
     /// Uses pore-volume weighted mixture density from connecting cell and
     /// its level 1 and level 2 neighbours.
@@ -786,47 +805,35 @@ private:
     ///
     /// \param[in] sources Connection and cell-level raw data.
     ///
-    /// \param[in] gravity Strength of gravity in SI units [m/s^2].
-    ///
-    /// \param[in] refDepth Well's reference depth for block-average
-    ///   pressure calculation.  Often, but not always, equal to the well's
-    ///   bottom-hole pressure reference depth.
-    ///
     /// \param[in] connIndex Translation method from active connection index
     ///   to index into all known reservoir connections.
     ///
-    /// \return Pressure correction term for each active connection.
+    /// \return Mixture density for pressure correction term for each
+    ///   reservoir connection.
     template <typename ConnIndexMap>
     std::vector<Scalar>
-    connectionPressureOffsetRes(const std::size_t nconn,
-                                const Sources&    sources,
-                                const Scalar      gravity,
-                                const Scalar      refDepth,
-                                ConnIndexMap      connIndex) const;
+    connectionDensityRes(const std::size_t nconn,
+                         const Sources&    sources,
+                         ConnIndexMap      connIndex) const;
 
-    /// Top-level entry point for computing the pressure correction
-    /// term/offset of each active reservoir connection
+    /// Top-level entry point for computing connection level mixture
+    /// densities for the pressure correction term/offset of each active
+    /// reservoir connection
     ///
     /// Will dispatch to lower level calculation routines based on algorithm
     /// selection parameter in procedure controls.
     ///
     /// \param[in] sources Connection and cell-level raw data.
     ///
-    /// \param[in] controls Averaging procedure controls.  This function uses
-    ///   the depth correction and open connections flags.
+    /// \param[in] controls Averaging procedure controls.  This function
+    ///   uses the depth correction and open connections flags.
     ///
-    /// \param[in] gravity Strength of gravity in SI units [m/s^2].
-    ///
-    /// \param[in] refDepth Well's reference depth for block-average
-    ///   pressure calculation.  Often, but not always, equal to the well's
-    ///   bottom-hole pressure reference depth.
-    ///
-    /// \return Pressure correction term for each active connection.
+    /// \return Mixture density for pressure correction term for each
+    ///   reservoir connection.
     std::vector<Scalar>
-    connectionPressureOffset(const Sources& sources,
-                             const PAvg&    controls,
-                             const Scalar   gravity,
-                             const Scalar   refDepth) const;
+    connectionDensity(const Sources& sources,
+                      const PAvg&    controls,
+                      const Scalar   gravity) const;
 };
 
 } // namespace Opm
