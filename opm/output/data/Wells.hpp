@@ -246,6 +246,163 @@ namespace Opm { namespace data {
         void read(MessageBufferType& buffer);
     };
 
+    /// Connection Level Fracturing Statistics
+    struct ConnectionFracturing
+    {
+        /// Statistics collection for a single quantity
+        struct Statistics
+        {
+            /// Arithmetic average.
+            double avg{};
+
+            /// Maximum value.
+            double max{};
+
+            /// Minimum value.
+            double min{};
+
+            /// Unbiased sample standard deviation.
+            ///
+            /// Usable only if sample size is at least two.
+            double stdev{};
+
+            /// Create a serialization test object.
+            static Statistics serializationTestObject()
+            {
+                return {
+                    12.34, 56.78, 9.10, 11.12
+                };
+            }
+
+            /// Convert between byte array and object representation.
+            ///
+            /// \tparam Serializer Byte array conversion protocol.
+            ///
+            /// \param[in,out] serializer Byte array conversion object.
+            template <class Serializer>
+            void serializeOp(Serializer& serializer)
+            {
+                serializer(this->avg);
+                serializer(this->max);
+                serializer(this->min);
+                serializer(this->stdev);
+            }
+
+            /// Equality predicate.
+            ///
+            /// \param[in] that Object against which \code *this \endcode
+            /// will be tested for equality.
+            ///
+            /// \return Whether or not \code *this \endcode is the same as
+            /// \p that.
+            bool operator==(const Statistics& that) const
+            {
+                return (this->avg == that.avg)
+                    && (this->max == that.max)
+                    && (this->min == that.min)
+                    && (this->stdev == that.stdev)
+                    ;
+            }
+
+            /// MPI communication protocol--serialisation operation
+            template <class MessageBufferType>
+            void write(MessageBufferType& buffer) const
+            {
+                buffer.write(this->avg);
+                buffer.write(this->max);
+                buffer.write(this->min);
+                buffer.write(this->stdev);
+            }
+
+            /// MPI communication protocol--deserialisation operation
+            template <class MessageBufferType>
+            void read(MessageBufferType& buffer)
+            {
+                buffer.read(this->avg);
+                buffer.read(this->max);
+                buffer.read(this->min);
+                buffer.read(this->stdev);
+            }
+        };
+
+        /// Sample size.
+        ///
+        /// Expected to be the same for each quantiy.
+        std::size_t numCells{};
+
+        /// Statistical measures for connection's fracture pressures.
+        Statistics press{};
+
+        /// Statistical measures for connection's fracture fracture flow rate.
+        Statistics rate{};
+
+        /// Statistical measures for connection's fracture fracture width.
+        Statistics width{};
+
+        /// Create a serialisation test object.
+        static ConnectionFracturing serializationTestObject()
+        {
+            auto fract = ConnectionFracturing{};
+
+            fract.numCells = 123;
+            fract.press = Statistics::serializationTestObject();
+            fract.rate = Statistics::serializationTestObject();
+            fract.width = Statistics::serializationTestObject();
+
+            return fract;
+        }
+
+        /// Convert between byte array and object representation.
+        ///
+        /// \tparam Serializer Byte array conversion protocol.
+        ///
+        /// \param[in,out] serializer Byte array conversion object.
+        template <class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer(this->numCells);
+            serializer(this->press);
+            serializer(this->rate);
+            serializer(this->width);
+        }
+
+        /// Equality predicate.
+        ///
+        /// \param[in] that Object against which \code *this \endcode will
+        /// be tested for equality.
+        ///
+        /// \return Whether or not \code *this \endcode is the same as \p
+        /// that.
+        bool operator==(const ConnectionFracturing& that) const
+        {
+            return (this->numCells == that.numCells)
+                && (this->press == that.press)
+                && (this->rate == that.rate)
+                && (this->width == that.width)
+                ;
+        }
+
+        /// MPI communication protocol--serialisation operation
+        template <class MessageBufferType>
+        void write(MessageBufferType& buffer) const
+        {
+            buffer.write(this->numCells);
+            buffer.write(this->press);
+            buffer.write(this->rate);
+            buffer.write(this->width);
+        }
+
+        /// MPI communication protocol--deserialisation operation
+        template <class MessageBufferType>
+        void read(MessageBufferType& buffer)
+        {
+            buffer.read(this->numCells);
+            buffer.read(this->press);
+            buffer.read(this->rate);
+            buffer.read(this->width);
+        }
+    };
+
     struct Connection
     {
         using global_index = std::size_t;
@@ -263,7 +420,10 @@ namespace Opm { namespace data {
         double d_factor{};
         double compact_mult{1.0}; // Rock compaction transmissibility multiplier (ROCKTAB)
 
-        ConnectionFiltrate filtrate;
+        ConnectionFiltrate filtrate{};
+
+        /// Connection level fracturing statistics.
+        ConnectionFracturing fract{};
 
         bool operator==(const Connection& conn2) const
         {
@@ -279,6 +439,7 @@ namespace Opm { namespace data {
                 && (d_factor == conn2.d_factor)
                 && (compact_mult == conn2.compact_mult)
                 && (filtrate == conn2.filtrate)
+                && (this->fract == conn2.fract)
                 ;
         }
 
@@ -304,6 +465,7 @@ namespace Opm { namespace data {
             serializer(d_factor);
             serializer(compact_mult);
             serializer(filtrate);
+            serializer(this->fract);
         }
 
         static Connection serializationTestObject()
@@ -312,7 +474,8 @@ namespace Opm { namespace data {
                 1, Rates::serializationTestObject(),
                 2.0, 3.0, 4.0, 5.0,
                 6.0, 7.0, 8.0, 9.0, 0.987,
-                ConnectionFiltrate::serializationTestObject()
+                ConnectionFiltrate::serializationTestObject(),
+                ConnectionFracturing::serializationTestObject()
             };
         }
     };
@@ -1268,6 +1431,7 @@ namespace Opm { namespace data {
             buffer.write(this->d_factor);
             buffer.write(this->compact_mult);
             this->filtrate.write(buffer);
+            this->fract.write(buffer);
     }
 
     void Connection::init_json(Json::JsonObject& json_data) const {
@@ -1444,6 +1608,7 @@ namespace Opm { namespace data {
             buffer.read(this->d_factor);
             buffer.read(this->compact_mult);
             this->filtrate.read(buffer);
+            this->fract.read(buffer);
    }
 
     template <class MessageBufferType>
