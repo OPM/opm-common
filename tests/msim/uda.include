@@ -1,4 +1,4 @@
-std::string uda_deck = R"(
+const std::string uda_deck { R"(
 -- This reservoir simulation deck is made available under the Open Database
 -- License: http://opendatacommons.org/licenses/odbl/1.0/. Any rights in
 -- individual contents of the database are licensed under the Database Contents
@@ -35,6 +35,7 @@ OIL
 GAS
 WATER
 DISGAS
+FIELD
 
 START
    1 'DEC' 2014 /
@@ -380,6 +381,5 @@ DATES
    1 'DEC'  2016 /
 /
 
-
 END
-)";  
+)" };

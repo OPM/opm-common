@@ -364,8 +364,9 @@ std::optional<JFunc> make_jfunc(const Deck& deck) {
     }
 
 
-    void TableManager::addTables( const std::string& tableName , size_t numTables) {
-        m_simpleTables.emplace(std::make_pair(tableName , TableContainer( numTables )));
+    void TableManager::addTables(const std::string& tableName, size_t numTables)
+    {
+        this->m_simpleTables.try_emplace(tableName, numTables);
     }
 
 
@@ -1585,29 +1586,33 @@ std::optional<JFunc> make_jfunc(const Deck& deck) {
     void TableManager::initSimpleTableContainer(const Deck& deck,
                                                 const std::string& keywordName,
                                                 const std::string& tableName,
-                                                size_t numTables) {
-        if (!deck.hasKeyword(keywordName))
+                                                size_t numTables)
+    {
+        if (!deck.hasKeyword(keywordName)) {
             return; // the table is not featured by the deck...
-
-        auto& container = forceGetTables(tableName , numTables);
+        }
 
         if (deck.count(keywordName) > 1) {
             complainAboutAmbiguousKeyword(deck, keywordName);
             return;
         }
 
+        auto& container = forceGetTables(tableName, numTables);
+
         auto lastComplete = 0 * numTables;
         const auto& tableKeyword = deck[keywordName].back();
         for (size_t tableIdx = 0; tableIdx < tableKeyword.size(); ++tableIdx) {
-            const auto& dataItem = tableKeyword.getRecord( tableIdx ).getItem("DATA");
+            const auto& dataItem = tableKeyword.getRecord(tableIdx).getItem("DATA");
+
             if (dataItem.data_size() > 0) {
                 try {
-                    std::shared_ptr<TableType> table = std::make_shared<TableType>( dataItem, tableIdx );
-                    container.addTable( tableIdx , table );
+                    container.addTable(tableIdx, std::make_shared<TableType>(dataItem, tableIdx));
                     lastComplete = tableIdx;
-                } catch (const std::runtime_error& err) {
+                }
+                catch (const std::runtime_error& err) {
                     throw OpmInputError(err, tableKeyword.location());
-                } catch (const std::invalid_argument& err) {
+                }
+                catch (const std::invalid_argument& err) {
                     throw OpmInputError(err, tableKeyword.location());
                 }
             }
