@@ -11,7 +11,6 @@
 
 namespace VectorUtil {
 
-
 template <typename T = double>
 std::tuple<std::array<T,4>, std::array<T,4>, std::array<T,4>> 
 appendNode(const std::array<T,3>& X, const std::array<T,3>& Y, const std::array<T,3>& Z, 
@@ -60,14 +59,14 @@ std::vector<T> filterArray(const std::vector<std::size_t>& X, const std::vector<
 // T type of the object
 // Rout type of the object output 
 // Method type of method
-template <typename T,  typename Rout, typename Rin = std::size_t, typename Method, typename... Args>
+template <typename Rout, typename T, typename Rin, typename Method, typename... Args>
 std::vector<Rout> callMethodForEachInputOnObject(const T& obj, Method mtd, const std::vector<Rin>& input_vector, Args&&... args) {
     std::vector<Rout> result;
     // Reserve space for each vector in the tuple
     result.reserve(input_vector.size());
     // Iterate over the input_vector and fill the tuple's vectors
     for (const auto& element : input_vector) {
-        Rout value = (obj.*mtd)(element, std::forward<Args>(args)...);
+        Rout value = (obj.*mtd)(element, args...);
         result.push_back(std::move(value));
     }
     return result;
@@ -90,24 +89,11 @@ std::vector<T> X, Y, Z;
 }
 
 
-template <typename T,  typename Rout, typename Rin = std::size_t, typename Method, typename... Args>
+template <typename Rout, typename T, typename Rin, typename Method, typename... Args>
 auto callMethodForEachInputOnObjectXYZ(const T& obj, Method mtd, const std::vector<Rin>& input_vector, Args&&... args) {
-    using X = typename Rout::value_type;
-    auto result = callMethodForEachInputOnObject<T, Rout, Rin, Method, Args...>(obj, mtd, input_vector, std::forward<Args>(args)...);
-    return splitXYZ<X>(result);
+    auto result = callMethodForEachInputOnObject< Rout,T, Rin, Method, Args...>(obj, mtd, input_vector, std::forward<Args>(args)...);
+    return splitXYZ(result);
 }
-
-template <typename T>
-    void test(std::vector<T> vec){
-    std::size_t index = 1;
-    for (T el : vec){
-        index++;
-    }
-}
-
-
-
-// Example for other utilities...
 
 } // namespace VectorUtil
 
