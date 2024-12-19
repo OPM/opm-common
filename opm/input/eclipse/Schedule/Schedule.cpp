@@ -778,71 +778,89 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
     }
 
 
-    void Schedule::prefetchPossibleFutureConnections(const ScheduleGrid& grid, const DeckKeyword& keyword,
-                                                     const ParseContext& parseContext, ErrorGuard& errors){
-        if(keyword.is<ParserKeywords::COMPDAT>()){
-            for (auto record : keyword){
+    void Schedule::prefetchPossibleFutureConnections(const ScheduleGrid& grid,
+                                                     const DeckKeyword&  keyword,
+                                                     const ParseContext& parseContext,
+                                                     ErrorGuard&         errors)
+    {
+        if (keyword.is<ParserKeywords::COMPDAT>()) {
+            for (const auto& record : keyword) {
                 const auto& itemI = record.getItem("I");
                 const auto& itemJ = record.getItem("J");
-                bool defaulted_I = itemI.defaultApplied(0) || itemI.get<int>(0) == 0;
-                bool defaulted_J = itemJ.defaultApplied(0) || itemJ.get<int>(0) == 0;
+
+                const auto defaulted_I = itemI.defaultApplied(0) || (itemI.get<int>(0) == 0);
+                const auto defaulted_J = itemJ.defaultApplied(0) || (itemJ.get<int>(0) == 0);
 
                 if (defaulted_I || defaulted_J) {
-                    const std::string msg = std::string("Problem with COMPDAT in ACTIONX\nIn {{file}} line {{line}}\n") +
-                        std::string("Defaulted grid coordinates is not allowed for COMPDAT as part of ACTIONX");
-                    parseContext.handleError(ParseContext::SCHEDULE_COMPDAT_INVALID, msg, keyword.location(), errors);
+                    const auto msg_fmt = std::string { R"(Problem with COMPDAT in ACTIONX
+In {{file}} line {{line}}
+Defaulted grid coordinates is not allowed for COMPDAT as part of ACTIONX)"
+                    };
+
+                    parseContext.handleError(ParseContext::SCHEDULE_COMPDAT_INVALID,
+                                             msg_fmt, keyword.location(), errors);
                 }
-                const int I = itemI.get<int>(0) - 1;
-                const int J = itemJ.get<int>(0) - 1;
-                int K1 = record.getItem("K1").get<int>(0) - 1;
-                int K2 = record.getItem("K2").get<int>(0) - 1;
+
+                const auto I = itemI.get<int>(0) - 1;
+                const auto J = itemJ.get<int>(0) - 1;
+
+                const auto K1 = record.getItem("K1").get<int>(0) - 1;
+                const auto K2 = record.getItem("K2").get<int>(0) - 1;
 
                 const auto wellName = record.getItem("WELL").getTrimmedString(0);
 
                 // Retrieve or create the set of future connections for the well
                 auto& currentSet = this->possibleFutureConnections[wellName];
-                for (int k = K1; k <= K2; k++){
+                for (int k = K1; k <= K2; k++) {
                     try {
-                        // Adds this cell to the "active cells" of the schedule grid by calling grid.get_cell(I, J, k)
-                        auto cell = grid.get_cell(I, J, k);
-                        // Insert the global id of the cell into the possible future connections of the well
+                        // Adds this cell to the "active cells" of the
+                        // schedule grid by calling grid.get_cell(I, J, k)
+                        const auto& cell = grid.get_cell(I, J, k);
+
+                        // Insert the global id of the cell into the
+                        // possible future connections of the well
                         currentSet.insert(cell.global_index);
-                    }catch(const std::invalid_argument& e) {
-                        const std::string msg = fmt::format("Problem with COMPDAT in ACTIONX\n"
-                                                                "In {{file}} line {{line}}\n"
-                                                                "Cell ({}, {}, {}) of well {} is not part of the grid ({}).",
-                                                                I+1, J+1, k+1, wellName, e.what());
-                        parseContext.handleError(ParseContext::SCHEDULE_COMPDAT_INVALID, msg, keyword.location(), errors);
+                    }
+                    catch (const std::invalid_argument& e) {
+                        const std::string msg_fmt =
+                            fmt::format("Problem with COMPDAT in ACTIONX\n"
+                                        "In {{file}} line {{line}}\n"
+                                        "Cell ({}, {}, {}) of well {} is not part of the grid ({}).",
+                                        I + 1, J + 1, k + 1, wellName, e.what());
+
+                        parseContext.handleError(ParseContext::SCHEDULE_COMPDAT_INVALID,
+                                                 msg_fmt, keyword.location(), errors);
                     }
                 }
             }
-            return;
         }
 
         if (keyword.is<ParserKeywords::COMPSEGS>()) {
             bool first_record = true;
-            for (auto record : keyword){
+
+            for (const auto& record : keyword) {
                 if (first_record) {
                     first_record = false;
                     continue;
                 }
-                const auto& itemI = record.getItem("I");
-                const auto& itemJ = record.getItem("J");
-                const auto& itemK = record.getItem("K");
 
-                const int I = itemI.get<int>(0) - 1;
-                const int J = itemJ.get<int>(0) - 1;
-                const int K = itemK.get<int>(0) - 1;
+                const int I = record.getItem("I").get<int>(0) - 1;
+                const int J = record.getItem("J").get<int>(0) - 1;
+                const int K = record.getItem("K").get<int>(0) - 1;
 
                 try {
-                    auto cell = grid.get_cell(I, J, K);
-                    (void) cell;
-                }catch(const std::invalid_argument& e) {
-                    const std::string msg = fmt::format("Problem with COMPSEGs in ACTIONX\n"
-                                                        "In {{file}} line {{line}}\n"
-                                                        "Cell ({}, {}, {}) is not part of the grid ({}).",
-                                                        I+1, J+1, K+1, e.what());
-                    parseContext.handleError(ParseContext::SCHEDULE_COMPSEGS_INVALID, msg, keyword.location(), errors);
+                    const auto& cell = grid.get_cell(I, J, K);
+                    static_cast<void>(cell);
+                }
+                catch (const std::invalid_argument& e) {
+                    const auto msg_fmt =
+                        fmt::format("Problem with COMPSEGs in ACTIONX\n"
+                                    "In {{file}} line {{line}}\n"
+                                    "Cell ({}, {}, {}) is not part of the grid ({}).",
+                                    I + 1, J + 1, K + 1, e.what());
+
+                    parseContext.handleError(ParseContext::SCHEDULE_COMPSEGS_INVALID,
+                                             msg_fmt, keyword.location(), errors);
                 }
             }
         }
@@ -1229,7 +1247,9 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
         return this->getWell(well_name, this->snapshots.size() - 1);
     }
 
-    const std::unordered_map<std::string, std::set<int>>& Schedule::getPossibleFutureConnections() const {
+    const std::unordered_map<std::string, std::set<int>>&
+    Schedule::getPossibleFutureConnections() const
+    {
         return this->possibleFutureConnections;
     }
 
@@ -1782,6 +1802,88 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
         }
 
         OpmLog::debug("\\----------------------------------------------------------------------");
+
+        return sim_update;
+    }
+
+    SimulatorUpdate
+    Schedule::modifyCompletions(const std::size_t reportStep,
+                                const std::map<std::string, std::vector<Connection>>& extraConns)
+    {
+        SimulatorUpdate sim_update{};
+
+        this->snapshots.resize(reportStep + 1);
+        for (const auto& [well, newConns] : extraConns) {
+            if (newConns.empty()) { continue; }
+
+            // Note: We go through map_member::get() here rather than
+            // map_member::operator() because the latter returns a reference
+            // to const whereas we need a reference to mutable.
+            auto& conns = this->snapshots[reportStep]
+                .wells.get(well).getConnections();
+
+            auto allConnsExist = true;
+            for (const auto& newConn : newConns) {
+                auto* existingConn = conns
+                    .maybeGetFromGlobalIndex(newConn.global_index());
+
+                if (existingConn != nullptr) {
+                    // Connection 'newConn' already exists in 'conns'.
+                    // Change existing CTF if needed.
+                    if (newConn.CF() > existingConn->CF()) {
+                        existingConn->setCF(newConn.CF());
+                    }
+                }
+                else {
+                    // 'newConn' does not already exist in 'conns'.  Add to
+                    // collection.
+                    allConnsExist = false;
+
+                    const auto seqIndex = conns.size();
+                    conns.addConnection(newConn.getI(),
+                                        newConn.getJ(),
+                                        newConn.getK(),
+                                        newConn.global_index(),
+                                        newConn.state(),
+                                        newConn.depth(),
+                                        newConn.ctfProperties(),
+                                        /* satTableID = */ 1,
+                                        newConn.dir(),
+                                        newConn.kind(),
+                                        seqIndex,
+                                        /* defaultSatTableID = */ false);
+                }
+            }
+
+            if (allConnsExist) {
+                sim_update.welpi_wells.insert(well);
+            }
+            else {
+                sim_update.well_structure_changed = true;
+            }
+        }
+
+        if (reportStep < this->m_sched_deck.size() - 1) {
+            ParseContext parseContext{};
+            if (this->m_treat_critical_as_non_critical) {
+                // Continue with invalid names if parsing strictness is set
+                // to low.
+                parseContext.update(ParseContext::SCHEDULE_INVALID_NAME,
+                                    InputErrorAction::WARN);
+            }
+
+            ErrorGuard errors{};
+            ScheduleGrid grid(this->completed_cells);
+
+            const std::string prefix = "| "; /* logger prefix string */
+
+            const auto keepKeywords = true;
+            const auto log_to_debug = true;
+            this->iterateScheduleSection(reportStep + 1, this->m_sched_deck.size(),
+                                         parseContext, errors, grid,
+                                         /* target_wellpi = */ nullptr,
+                                         prefix, keepKeywords, log_to_debug);
+        }
 
         return sim_update;
     }

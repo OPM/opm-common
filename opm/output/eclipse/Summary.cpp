@@ -2956,6 +2956,14 @@ static const auto block_units = UnitTable {
     // Temperature/energy
     {"BTCNFHEA" , Opm::UnitSystem::measure::temperature},
     {"BTEMP"    , Opm::UnitSystem::measure::temperature},
+
+    // mechanics
+    {"BSTRSSXX" , Opm::UnitSystem::measure::pressure},
+    {"BSTRSSYY" , Opm::UnitSystem::measure::pressure},
+    {"BSTRSSZZ" , Opm::UnitSystem::measure::pressure},
+    {"BSTRSSXY" , Opm::UnitSystem::measure::pressure},
+    {"BSTRSSXZ" , Opm::UnitSystem::measure::pressure},
+    {"BSTRSSYZ" , Opm::UnitSystem::measure::pressure},
 };
 
 static const auto aquifer_units = UnitTable {

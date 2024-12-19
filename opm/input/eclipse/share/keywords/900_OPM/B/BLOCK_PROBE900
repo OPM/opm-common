@@ -1,0 +1,29 @@
+{
+  "name": "BLOCK_PROBE900",
+  "sections": [
+    "SUMMARY"
+  ],
+  "comment": "E300 only",
+  "deck_names": [
+    "BSTRSSXX",
+    "BSTRSSYY",
+    "BSTRSSZZ",
+    "BSTRSSXY",
+    "BSTRSSXZ",
+    "BSTRSSYZ"
+  ],
+  "items": [
+    {
+      "name": "I",
+      "value_type": "INT"
+    },
+    {
+      "name": "J",
+      "value_type": "INT"
+    },
+    {
+      "name": "K",
+      "value_type": "INT"
+    }
+  ]
+}
