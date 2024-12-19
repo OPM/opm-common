@@ -372,7 +372,7 @@ namespace Opm {
       EclipseGridLGR() = default;
       EclipseGridLGR(const std::string& self_label, const std::string& father_label_, 
                      size_t nx, size_t ny, size_t nz, 
-                     vec_size_t father_lgr_index, const std::array<int,3>& low_fahterIJK_, 
+                     const vec_size_t& father_lgr_index, const std::array<int,3>& low_fahterIJK_, 
                      const std::array<int,3>& up_fahterIJK_);
       ~EclipseGridLGR() = default;
       const vec_size_t& getFatherGlobalID() const;
