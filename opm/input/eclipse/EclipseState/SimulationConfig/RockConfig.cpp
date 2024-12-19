@@ -43,6 +43,17 @@ std::string num_prop(const std::string& prop_name)
     throw std::invalid_argument("The rocknum propertype: " + prop_name + " is not valid");
 }
 
+bool refpres_prop(const std::string& prop_name)
+{
+    static const std::unordered_set<std::string> prop_names = {"NOSTORE", "STORE"};
+    if (prop_names.count(prop_name) == 1) {
+        bool store = prop_name == "STORE";
+        return store;
+    }
+
+    throw std::invalid_argument("ROCKOPTS item 2 = " + prop_name + " is not valid");
+}
+
 Opm::RockConfig::Hysteresis hysteresis(const std::string& s)
 {
     if (s == "REVERS")
@@ -111,6 +122,7 @@ RockConfig::RockConfig(const Deck& deck, const FieldPropsManager& fp)
     if (deck.hasKeyword<rockopts>()) {
         const auto& record = deck.get<rockopts>().back().getRecord(0);
         this->num_property = num_prop( record.getItem<rockopts::TABLE_TYPE>().getTrimmedString(0) );
+        this->m_store = refpres_prop( record.getItem<rockopts::REF_PRESSURE>().getTrimmedString(0) );
     }
 
     if (deck.hasKeyword<rockcomp>()) {
@@ -141,6 +153,7 @@ RockConfig RockConfig::serializationTestObject()
     result.m_comp = {{100, 0.25}, {200, 0.30}};
     result.num_property = "ROCKNUM";
     result.num_tables = 10;
+    result.m_store = false;
     result.m_water_compaction = false;
     result.hyst_mode = Hysteresis::HYSTER;
     result.m_dispersion = false;
@@ -173,6 +186,11 @@ RockConfig::Hysteresis RockConfig::hysteresis_mode() const
     return this->hyst_mode;
 }
 
+bool RockConfig::store() const
+{
+    return this->m_store;
+}
+
 bool RockConfig::water_compaction() const
 {
     return this->m_water_compaction;
@@ -189,6 +207,7 @@ bool RockConfig::operator==(const RockConfig& other) const
         && (this->m_comp == other.m_comp)
         && (this->num_tables == other.num_tables)
         && (this->m_active == other.m_active)
+        && (this->m_store == other.m_store)
         && (this->m_water_compaction == other.m_water_compaction)
         && (this->hyst_mode == other.hyst_mode)
         && (this->m_dispersion == other.m_dispersion);

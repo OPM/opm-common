@@ -364,7 +364,7 @@ ROCK
    3  0.3 /
 
 ROCKOPTS
-   2* SATNUM  /
+   1* STORE SATNUM  /
 
 )";
     Opm::Parser parser;
@@ -373,6 +373,7 @@ ROCKOPTS
     FieldPropsManager fp(deck, Phases{true, true, true}, grid, TableManager());
     RockConfig rc(deck, fp);
     BOOST_CHECK_EQUAL(rc.rocknum_property(), "SATNUM");
+    BOOST_CHECK_EQUAL(rc.store(), true);
     const auto& comp = rc.comp();
     BOOST_CHECK_EQUAL(comp.size(), 3U);
 }
@@ -388,7 +389,7 @@ TABDIMS
 PROPS
 
 ROCKOPTS
-  1* 1* SATNUM /
+  1* NOSTORE SATNUM /
 
 ROCK
 123.4 0.40E-05 /
@@ -405,6 +406,7 @@ ROCK
     const auto rc = RockConfig { deck, fp };
 
     BOOST_CHECK_EQUAL(rc.rocknum_property(), "SATNUM");
+    BOOST_CHECK_EQUAL(rc.store(), false);
 
     const auto& comp = rc.comp();
     BOOST_REQUIRE_EQUAL(comp.size(), std::size_t{3});
