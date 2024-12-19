@@ -5,9 +5,29 @@
 #include <vector>
 #include <functional>
 #include <stdexcept> 
-#include <type_traits>
+#include <array>
+#include <tuple>
+
 
 namespace VectorUtil {
+
+
+template <typename T = double>
+std::tuple<std::array<T,4>, std::array<T,4>, std::array<T,4>> 
+appendNode(const std::array<T,3>& X, const std::array<T,3>& Y, const std::array<T,3>& Z, 
+           const T& xc, const T& yc,  const T& zc) 
+{
+    std::array<T,4> tX;
+    std::array<T,4> tY;
+    std::array<T,4> tZ;
+    std::copy(X.begin(), X.end(), tX.begin());
+    tX[3]= xc;
+    std::copy(Y.begin(), Y.end(), tY.begin());
+    tY[3]= yc;            
+    std::copy(Z.begin(), Z.end(), tZ.begin());
+    tZ[3]= zc; 
+    return std::make_tuple(tX,tY,tZ);
+}
 
 // Implementation of generation General Operation between two vectors of the same type
 template <typename T, typename Operation>
