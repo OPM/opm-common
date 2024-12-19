@@ -44,6 +44,8 @@ list (APPEND MAIN_SOURCE_FILES
       opm/common/utility/parameters/ParameterRequirement.cpp
       opm/common/utility/parameters/ParameterTools.cpp
       opm/common/utility/numeric/calculateCellVol.cpp
+      opm/common/utility/numeric/GeometryUtil.cpp
+      opm/common/utility/numeric/VectorUtil.cpp
       opm/common/utility/numeric/MonotCubicInterpolator.cpp
       opm/common/utility/numeric/RootFinders.cpp
       opm/material/common/Spline.cpp
@@ -738,7 +740,11 @@ if(ENABLE_ECL_OUTPUT)
           tests/msim/action_count_no_run_function.py
           tests/msim/open_well_past.py
           tests/msim/open_well_too_late.py
-          tests/VFP_CASE.DATA)
+          tests/VFP_CASE.DATA
+          tests/CARFIN-COLUMN.EGRID
+          tests/CARFIN-DOUBLE.EGRID
+          tests/CARFIN-NESTED.EGRID
+          tests/CARFIN5.EGRID)
 endif()
 
 list (APPEND EXAMPLE_SOURCE_FILES
@@ -827,6 +833,8 @@ list( APPEND PUBLIC_HEADER_FILES
       opm/common/utility/numeric/cmp.hpp
       opm/common/utility/numeric/blas_lapack.h
       opm/common/utility/numeric/calculateCellVol.hpp
+      opm/common/utility/numeric/GeometryUtil.hpp
+      opm/common/utility/numeric/VectorUtil.hpp
       opm/common/utility/numeric/buildUniformMonotoneTable.hpp
       opm/common/utility/numeric/linearInterpolation.hpp
       opm/common/utility/numeric/MonotCubicInterpolator.hpp

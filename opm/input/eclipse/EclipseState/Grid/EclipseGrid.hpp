@@ -34,10 +34,14 @@
 #include <vector>
 #include <map>
 
+
 namespace Opm {
 
     class Deck;
-    namespace EclIO { class EclFile; }
+    namespace EclIO {
+        class EclFile;
+        class EclOutput;
+    }
     struct NNCdata;
     class UnitSystem;
     class ZcornMapper;
@@ -119,6 +123,8 @@ namespace Opm {
           from an active index to a global index must be implemented
           in the current class.
         */
+        void init_children_host_cells(void);
+
         using GridDims::getGlobalIndex;
         size_t getGlobalIndex(size_t active_index) const;
 
@@ -178,8 +184,6 @@ namespace Opm {
 
         void init_lgr_cells(const LgrCollection& lgr_input); 
         void create_lgr_cells_tree(const LgrCollection& );
-        void init_lgr_global_cells_index();
-        void init_lgr_cells_index();
         /// \brief get cell center, and center and normal of bottom face
         std::tuple<std::array<double, 3>,std::array<double, 3>,std::array<double, 3>>
         getCellAndBottomCenterNormal(size_t globalIndex) const;
@@ -261,11 +265,19 @@ namespace Opm {
         std::size_t lgr_global_counter = 0;
         std::string lgr_label = "GLOBAL";
         int lgr_level = 0;
+        int lgr_level_father = 0;
         std::vector<std::string> lgr_children_labels;
         std::vector<std::size_t> lgr_active_index;
         std::vector<std::size_t> lgr_level_active_map;
         std::vector<std::string> all_lgr_labels;
         std::map<std::vector<std::size_t>, std::size_t> num_lgr_children_cells;        
+        std::vector<double> m_zcorn;
+        std::vector<double> m_coord;
+        std::vector<int> m_actnum;
+        std::vector<std::size_t> m_print_order_lgr_cells;
+       // Input grid data.
+        mutable std::optional<std::vector<double>> m_input_zcorn;
+        mutable std::optional<std::vector<double>> m_input_coord;
 
     private:
         std::vector<double> m_minpvVector;
@@ -286,15 +298,7 @@ namespace Opm {
         size_t zcorn_fixed = 0;
         bool m_useActnumFromGdfile = false;
 
-        // Input grid data.
-        mutable std::optional<std::vector<double>> m_input_zcorn;
-        mutable std::optional<std::vector<double>> m_input_coord;
 
-        std::vector<double> m_zcorn;
-        std::vector<double> m_coord;
-
-
-        std::vector<int> m_actnum;
         std::optional<MapAxes> m_mapaxes;
 
         // Mapping to/from active cells.
@@ -310,7 +314,10 @@ namespace Opm {
         // Radial grids need this for volume calculations.
         std::optional<std::vector<double>> m_thetav;
         std::optional<std::vector<double>> m_rv;
-
+        void parseGlobalReferenceToChildren(void);
+        int initializeLGRObjectIndices(int);
+        void initializeLGRTreeIndices(void);
+        void propagateParentIndicesToLGRChildren(int);
         void updateNumericalAquiferCells(const Deck&);
         double computeCellGeometricDepth(size_t globalIndex) const;
 
@@ -364,21 +371,29 @@ namespace Opm {
       using vec_size_t = std::vector<std::size_t>;
       EclipseGridLGR() = default;
       EclipseGridLGR(const std::string& self_label, const std::string& father_label_, 
-                     int father_lgr_level, size_t nx, size_t ny, size_t nz,
-                     const vec_size_t& father_lgr_index);
+                     size_t nx, size_t ny, size_t nz, 
+                     const vec_size_t& father_lgr_index, const std::array<int,3>& low_fahterIJK_, 
+                     const std::array<int,3>& up_fahterIJK_);
       ~EclipseGridLGR() = default;
       const vec_size_t& getFatherGlobalID() const;
+      void save(Opm::EclIO::EclOutput&, const std::vector<Opm::NNCdata>&, const Opm::UnitSystem&) const;
+      void save_nnc(Opm::EclIO::EclOutput&) const;      
       void set_lgr_global_counter(std::size_t counter){
         lgr_global_counter = counter;
       }
       const vec_size_t& get_father_global() const{
         return father_global;
-      }                 
+      }
+     void set_hostnum(std::vector<int>&);
+     void set_lgr_refinement(const std::vector<double>&, const std::vector<double> &);                 
     private:
       void init_father_global();
       std::string father_label;
       // references global on the father label
       vec_size_t father_global;
+      std::array<int,3> low_fahterIJK;
+      std::array<int,3> up_fahterIJK;
+      std::vector<int> m_hostnum;
     };
 
 
