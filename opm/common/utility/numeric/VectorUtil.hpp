@@ -11,10 +11,7 @@
 
 namespace VectorUtil {
 
-<<<<<<< HEAD
-=======
 
->>>>>>> 68c80d186 (fixed missing header bug)
 template <typename T = double>
 std::tuple<std::array<T,4>, std::array<T,4>, std::array<T,4>> 
 appendNode(const std::array<T,3>& X, const std::array<T,3>& Y, const std::array<T,3>& Z, 
