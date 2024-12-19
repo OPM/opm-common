@@ -181,7 +181,8 @@ void handleNODEPROP(HandlerContext& handlerContext)
         }
 
         if (as_choke) {
-            const auto& group = handlerContext.state().groups.get(name);
+            auto& group = handlerContext.state().groups.get(name);
+            group.as_choke(name);
             if (group.wellgroup()) {
                 // Wells belong to a group with autochoke enabled are to be run on a common THP and should not have guide rates
                 for (const std::string& wellName : group.wells()) {

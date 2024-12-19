@@ -883,6 +883,14 @@ bool Group::has_gpmaint_control(ProductionCMode control) const {
 
 }
 
+bool Group::as_choke() const {
+    return this->m_choke_group.has_value();
+}
+
+void Group::as_choke(const std::string& group) {
+    this->m_choke_group = group;
+}
+
 const std::string Group::ExceedAction2String( ExceedAction enumValue ) {
     switch(enumValue) {
     case ExceedAction::NONE:
