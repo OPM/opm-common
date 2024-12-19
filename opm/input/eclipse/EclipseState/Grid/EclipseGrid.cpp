@@ -2465,8 +2465,8 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
 namespace Opm {
     EclipseGridLGR::EclipseGridLGR(const std::string& self_label, const std::string& father_label_, 
                                    std::size_t nx, std::size_t ny, std::size_t nz, 
-                                   vec_size_t father_lgr_index, const std::array<int,3>& low_fahterIJK_, 
-                                   const std::array<int,3>& up_fahterIJK_)
+                                   const vec_size_t& father_lgr_index, [[maybe_unused]] const std::array<int,3>& low_fahterIJK_, 
+                                   [[maybe_unused]] const std::array<int,3>& up_fahterIJK_)
     : EclipseGrid(nx,ny,nz), father_label(father_label_), father_global(father_lgr_index)
     {
         init_father_global();
