@@ -41,11 +41,7 @@ T calcHexaVol(const std::array<T,8>& x, const std::array<T,8>& y, const std::arr
                           {0, 1, 3}, 
                           {1, 3, 2},     // Face 4
                           {4, 5, 7}, 
-<<<<<<< HEAD
-                          {5, 7, 6}     // Face 5
-=======
                           {5, 7, 6}      // Face 5
->>>>>>> ee66191b4 (added template functions to utility libraries)
     };
     auto getNodes = [](const std::array<T, 8>& X, const std::array<T, 8>& Y, const std::array<T, 8>& Z,
                                     const std::array<int,3>&  ind){
@@ -65,17 +61,9 @@ T calcHexaVol(const std::array<T,8>& x, const std::array<T,8>& y, const std::arr
     T totalVolume = 0.0;
     for (size_t i = 0; i < faceConfigurations.size(); i += 2) {
         auto [fX0, fY0, fZ0] = getNodes(x, y, z, faceConfigurations[i]);
-<<<<<<< HEAD
         totalVolume += std::apply(calcTetraVol<T>, VectorUtil::appendNode<double>(fX0, fY0, fZ0, cx, cy, cz));
-
         auto [fX1, fY1, fZ1] = getNodes(x, y, z, faceConfigurations[i + 1]);
         totalVolume += std::apply(calcTetraVol<T>, VectorUtil::appendNode<double>(fX1, fY1, fZ1, cx, cy, cz));
-=======
-        totalVolume += std::apply(calcTetraVol<T>, VectorUtil::appendNode(fX0, fY0, fZ0, cx, cy, cz));
-
-        auto [fX1, fY1, fZ1] = getNodes(x, y, z, faceConfigurations[i + 1]);
-        totalVolume += std::apply(calcTetraVol<T>, VectorUtil::appendNode(fX1, fY1, fZ1, cx, cy, cz));
->>>>>>> ee66191b4 (added template functions to utility libraries)
     }
     return totalVolume;
 };
