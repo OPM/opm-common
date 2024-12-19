@@ -81,11 +81,11 @@ std::vector<T> X, Y, Z;
     Y.reserve(input_vector.size());
     Z.reserve(input_vector.size());
     for (auto& element : input_vector) {
-            X.push_back(std::move(element[0]));  // Add to first vector
-            Y.push_back(std::move(element[1]));    // Add to second vector
-            Z.push_back(std::move(element[2]));   // Add to third vector
+            X.push_back(element[0]);  // Add to first vector
+            Y.push_back(element[1]);    // Add to second vector
+            Z.push_back(element[2]);   // Add to third vector
     }
-    return std::make_tuple(X,Y,Z);
+    return std::make_tuple(std::move(X),std::move(Y),std::move(Z));
 }
 
 
