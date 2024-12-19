@@ -31,16 +31,30 @@
 #include <string>
 #include <vector>
 
+#ifdef _MSC_VER
+#include <intrin.h>
+#endif
+
 int Opm::EclIO::flipEndianInt(int num)
 {
+#ifdef _MSC_VER
+    unsigned int tmp = _byteswap_ulong(num);
+    return static_cast<int>(tmp);
+#else
     unsigned int tmp = __builtin_bswap32(num);
     return static_cast<int>(tmp);
+#endif
 }
 
 std::int64_t Opm::EclIO::flipEndianLongInt(int64_t num)
 {
+#ifdef _MSC_VER
+    std::uint64_t tmp = _byteswap_uint64(num);
+    return static_cast<int64_t>(tmp);
+#else
     std::uint64_t tmp = __builtin_bswap64(num);
     return static_cast<int64_t>(tmp);
+#endif
 }
 
 float Opm::EclIO::flipEndianFloat(float num)

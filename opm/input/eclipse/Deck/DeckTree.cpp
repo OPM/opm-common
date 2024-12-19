@@ -43,7 +43,7 @@ bool DeckTree::TreeNode::includes(const std::string& include_file) const {
 
 
 std::string DeckTree::add_node(const std::string& fname) {
-    auto abs_path = fs::canonical(fname);
+    auto abs_path = fs::canonical(fname).generic_string();
     this->nodes.emplace( abs_path, TreeNode(abs_path) );
     return abs_path;
 }
@@ -68,12 +68,12 @@ bool DeckTree::includes(const std::string& parent_file, const std::string& inclu
     if (!this->root_file.has_value())
         return false;
 
-    const auto& parent_node = this->nodes.at(fs::canonical(parent_file));
-    return parent_node.includes(fs::canonical(include_file));
+    const auto& parent_node = this->nodes.at(fs::canonical(parent_file).generic_string());
+    return parent_node.includes(fs::canonical(include_file).generic_string());
 }
 
 const std::string& DeckTree::parent(const std::string& fname) const {
-    const auto& node = this->nodes.at(fs::canonical(fname));
+    const auto& node = this->nodes.at(fs::canonical(fname).generic_string());
     const auto& parent_node = this->nodes.at( node.parent.value() );
     return parent_node.fname;
 }
@@ -86,8 +86,8 @@ void DeckTree::add_include(std::string parent_file, std::string include_file) {
     if (!this->root_file.has_value())
         return;
 
-    parent_file = fs::canonical(parent_file);
-    include_file = fs::canonical(include_file);
+    parent_file = fs::canonical(parent_file).generic_string();
+    include_file = fs::canonical(include_file).generic_string();
     this->nodes.emplace(include_file, TreeNode(parent_file, include_file));
     auto& parent_node = this->nodes.at(parent_file);
     parent_node.add_include( include_file );

@@ -311,8 +311,8 @@ namespace Opm {
         const auto path = std::filesystem::path {this->m_deck_filename};
 
         return path.has_parent_path()
-            ? path.parent_path()
-            : std::filesystem::current_path();
+            ? path.parent_path().generic_string()
+            : std::filesystem::current_path().generic_string();
     }
 
     void IOConfig::setOutputDir(const std::string& outputDir)

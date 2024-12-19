@@ -245,7 +245,7 @@ void EGrid::load_nnc_data()
         nnc2_array = getImpl(nnc2_array_index, Opm::EclIO::INTE, inte_array, "inte");
 
         if ((std::filesystem::exists(initFileName)) && (nnc1_array.size() > 0)){
-            Opm::EclIO::EInit init(initFileName);
+            Opm::EclIO::EInit init(initFileName.generic_string());
 
             auto init_dims = init.grid_dimension(m_grid_name);
             int init_nactive = init.activeCells(m_grid_name);

@@ -80,7 +80,7 @@ public:
     void write_rsm_file(std::optional<std::filesystem::path> = std::nullopt) const;
 
     bool all_steps_available();
-    std::string rootname() { return inputFileName.stem(); }
+    std::string rootname() { return inputFileName.stem().generic_string(); }
     std::tuple<double, double> get_io_elapsed() const;
 
 private:
