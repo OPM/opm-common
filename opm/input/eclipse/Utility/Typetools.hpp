@@ -4,7 +4,6 @@
 #include <opm/input/eclipse/Deck/UDAValue.hpp>
 
 #include <algorithm>
-#include <iterator>
 #include <string>
 #include <vector>
 

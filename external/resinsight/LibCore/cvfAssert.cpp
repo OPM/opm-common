@@ -45,9 +45,13 @@ namespace cvf {
 
 
 // User actions (interactive responses)
-#ifdef WIN32
+#if 0
 static const int USERACTION_CONTINUE    = 0;
+#endif
+#ifdef WIN32
 static const int USERACTION_DEBUGBREAK  = 1;
+#endif
+#if 0
 static const int USERACTION_ABORT       = 2;
 #endif
 
@@ -107,7 +111,7 @@ Assert::FailAction AssertHandlerConsole::handleAssert(const char* fileName, int 
 
 #ifdef _MSC_VER
 #if (_MSC_VER >= 1600)
-    //if (::IsDebuggerPresent())
+    if (::IsDebuggerPresent()) 
 #endif
 	{
         __debugbreak();

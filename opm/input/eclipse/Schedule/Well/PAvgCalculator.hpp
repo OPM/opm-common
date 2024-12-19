@@ -42,8 +42,7 @@ class WellConnections;
 
 namespace Opm {
 
-template <typename Scalar>
-class PAvgCalculatorResult;
+template<class Scalar> class PAvgCalculator;
 
 /// Form linear combination of WBP result objects.
 ///
@@ -62,73 +61,10 @@ class PAvgCalculatorResult;
 /// \param[in] y Second WBP result.  Typically the PV-weighted WBP result.
 ///
 /// \return \code alpha*x + beta*y \endcode.
-template <typename Scalar>
-PAvgCalculatorResult<Scalar>
-linearCombination(const Scalar alpha, PAvgCalculatorResult<Scalar>        x,
-                  const Scalar beta , const PAvgCalculatorResult<Scalar>& y);
-
-/// Result of block-averaging well pressure procedure
-template <typename Scalar>
-class PAvgCalculatorResult
-{
-private:
-    /// Grant internal data member access to combination function.
-    template <typename T>
-    friend PAvgCalculatorResult<T>
-    linearCombination(const T alpha, PAvgCalculatorResult<T> x,
-                      const T beta , const PAvgCalculatorResult<T>& y);
-
-public:
-    /// Kind of block-averaged well pressure
-    enum class WBPMode
-    {
-        WBP,  //< Connecting cells
-        WBP4, //< Immediate neighbours
-        WBP5, //< Connecting cells and immediate neighbours
-        WBP9, //< Connecting cells, immediate, and diagonal neighbours
-    };
-
-    /// Assign single block-averaged pressure result.
-    ///
-    /// \param[in] type Block-averaged pressure kind.
-    /// \param[in] wbp Block-averaged pressure value.
-    /// \return \code *this \endcode.
-    PAvgCalculatorResult& set(const WBPMode type, const Scalar wbp)
-    {
-        this->wbp_[this->index(type)] = wbp;
-
-        return *this;
-    }
-
-    /// Retrieve numerical value of specific block-averaged well pressure.
-    ///
-    /// \param[in] type Block-averaged pressure kind.
-    /// \return Block-averaged pressure.
-    Scalar value(const WBPMode type) const
-    {
-        return this->wbp_[this->index(type)];
-    }
-
-private:
-    /// Number of block-averaged pressure kinds/modes.
-    static constexpr auto NumModes =
-        static_cast<std::size_t>(WBPMode::WBP9) + 1;
-
-    /// Storage type for block-averaged well pressure results.
-    using WBPStore = std::array<Scalar, NumModes>;
-
-    /// Block-averaged well pressure results.
-    WBPStore wbp_{};
-
-    /// Convert block-averaged pressure kind to linear index
-    ///
-    /// \param[in] mode Block-averaged pressure kind.
-    /// \return Linear index corresponding to \p mode.
-    constexpr typename WBPStore::size_type index(const WBPMode mode) const
-    {
-        return static_cast<typename WBPStore::size_type>(mode);
-    }
-};
+template<class Scalar>
+typename PAvgCalculator<Scalar>::Result
+linearCombination(const Scalar alpha, typename PAvgCalculator<Scalar>::Result        x,
+                  const Scalar beta , const typename PAvgCalculator<Scalar>::Result& y);
 
 /// Facility for deriving well-level pressure values from selected
 /// block-averaging procedures.  Applicable to stopped wells which don't
@@ -140,6 +76,71 @@ protected:
     class Accumulator;
 
 public:
+    /// Result of block-averaging well pressure procedure
+    class Result
+    {
+    private:
+        /// Enclosing type's accumulator object can access internal data
+        /// members.
+        friend class Accumulator;
+
+        /// Grant internal data member access to combination function.
+        friend Result
+        linearCombination<Scalar>(const Scalar alpha, Result x,
+                                  const Scalar beta , const Result& y);
+
+    public:
+        /// Kind of block-averaged well pressure
+        enum class WBPMode
+        {
+            WBP,  //< Connecting cells
+            WBP4, //< Immediate neighbours
+            WBP5, //< Connecting cells and immediate neighbours
+            WBP9, //< Connecting cells, immediate, and diagonal neighbours
+        };
+
+        /// Retrieve numerical value of specific block-averaged well pressure.
+        ///
+        /// \param[in] type Block-averaged pressure kind.
+        /// \return Block-averaged pressure.
+        Scalar value(const WBPMode type) const
+        {
+            return this->wbp_[this->index(type)];
+        }
+
+    private:
+        /// Number of block-averaged pressure kinds/modes.
+        static constexpr auto NumModes =
+            static_cast<std::size_t>(WBPMode::WBP9) + 1;
+
+        /// Storage type for block-averaged well pressure results.
+        using WBPStore = std::array<Scalar, NumModes>;
+
+        /// Block-averaged well pressure results.
+        WBPStore wbp_{};
+
+        /// Assign single block-averaged pressure result.
+        ///
+        /// \param[in] type Block-averaged pressure kind.
+        /// \param[in] wbp Block-averaged pressure value.
+        /// \return \code *this \endcode.
+        Result& set(const WBPMode type, const Scalar wbp)
+        {
+            this->wbp_[this->index(type)] = wbp;
+
+            return *this;
+        }
+
+        /// Convert block-averaged pressure kind to linear index
+        ///
+        /// \param[in] mode Block-averaged pressure kind.
+        /// \return Linear index corresponding to \p mode.
+        constexpr typename WBPStore::size_type index(const WBPMode mode) const
+        {
+            return static_cast<typename WBPStore::size_type>(mode);
+        }
+    };
+
     /// References to source contributions owned by other party
     class Sources
     {
@@ -251,7 +252,7 @@ public:
     /// \param[in] mode Source cell selection.
     ///
     /// \return Block-average pressure
-    const PAvgCalculatorResult<Scalar>& averagePressures() const
+    const Result& averagePressures() const
     {
         return this->averagePressures_;
     }
@@ -375,7 +376,7 @@ protected:
         /// Calculate final WBP results from individual contributions
         ///
         /// \return New result object.
-        PAvgCalculatorResult<Scalar> getFinalResult() const;
+        Result getFinalResult() const;
 
     private:
         /// Implementation class
@@ -417,20 +418,25 @@ private:
     {
         /// Constructor.
         ///
-        /// Mostly for convenience to enable using vector<>::emplace_back().
-        ///
         /// \param[in] ctf_arg Connection's transmissiblity factor
+        ///
+        /// \param[in] depth_arg Connection's depth
         ///
         /// \param[in] cell_arg Connection's connecting cell.  Enumerated
         ///   local contributing cell.
         PAvgConnection(const Scalar         ctf_arg,
+                       const Scalar         depth_arg,
                        const ContrIndexType cell_arg)
-            : ctf  { ctf_arg }
-            , cell { cell_arg }
+            : ctf  (ctf_arg)
+            , depth(depth_arg)
+            , cell (cell_arg)
         {}
 
         /// Connection transmissiblity factor.
         Scalar ctf{};
+
+        /// Connection's depth.
+        Scalar depth{};
 
         /// Index into \c contributingCells_ of connection's cell.
         ContrIndexType cell{};
@@ -465,7 +471,8 @@ private:
     /// connection \code inputConn_[i] \endcode.
     ///
     /// Needed to handle connections to inactive cells.  See
-    /// pruneInactiveConnections() and connectionDensityWell() for details.
+    /// pruneInactiveConnections() and connectionPressureOffsetWell() for
+    /// details.
     std::vector<typename std::vector<PAvgConnection>::size_type> inputConn_{};
 
     /// Collection of all (global) cell indices that potentially contribute
@@ -475,7 +482,7 @@ private:
     /// Well level pressure values derived from block-averaging procedures.
     ///
     /// Cached end result from \code inferBlockAveragePressures() \endcode.
-    PAvgCalculatorResult<Scalar> averagePressures_{};
+    Result averagePressures_{};
 
     /// Include reservoir connection and all direction-dependent level 1 and
     /// level 2 neighbours of connection's connecting cell into known cell
@@ -639,14 +646,8 @@ private:
     ///
     /// \param[in] controls Averaging procedure controls.
     ///
-    /// \param[in] gravity Strength of gravity in SI units [m/s^2].
-    ///
-    /// \param[in] refDepth Well's reference depth for block-average
-    ///   pressure calculation.  Often, but not always, equal to the well's
-    ///   bottom-hole pressure reference depth.
-    ///
-    /// \param[in] connDensity Mixture density for pressure correction term
-    ///   for each reservoir connection.
+    /// \param[in] connDP Pressure correction term for each reservoir
+    ///   connection.
     ///
     /// \param[in] connIndex Translation method from active connection index
     ///   to index into all known reservoir connections.
@@ -656,9 +657,7 @@ private:
     template <typename ConnIndexMap, typename CTFPressureWeightFunction>
     void accumulateLocalContributions(const Sources&             sources,
                                       const PAvg&                controls,
-                                      const Scalar               gravity,
-                                      const Scalar               refDepth,
-                                      const std::vector<Scalar>& connDensity,
+                                      const std::vector<Scalar>& connDP,
                                       ConnIndexMap               connIndex,
                                       CTFPressureWeightFunction  ctfPressWeight);
 
@@ -688,23 +687,15 @@ private:
     ///
     /// \param[in] controls Averaging procedure controls.
     ///
-    /// \param[in] gravity Strength of gravity in SI units [m/s^2].
-    ///
-    /// \param[in] refDepth Well's reference depth for block-average
-    ///   pressure calculation.  Often, but not always, equal to the well's
-    ///   bottom-hole pressure reference depth.
-    ///
-    /// \param[in] connDensity Mixture density for pressure correction term
-    ///   for each reservoir connection.
+    /// \param[in] connDP Pressure correction term for each reservoir
+    ///   connection.
     ///
     /// \param[in] connIndex Translation method from active connection index
     ///   to index into all known reservoir connections.
     template <typename ConnIndexMap>
     void accumulateLocalContributions(const Sources&             sources,
                                       const PAvg&                controls,
-                                      const Scalar               gravity,
-                                      const Scalar               refDepth,
-                                      const std::vector<Scalar>& connDensity,
+                                      const std::vector<Scalar>& connDP,
                                       ConnIndexMap&&             connIndex);
 
     /// First dispatch level before going to calculation routine which
@@ -716,18 +707,10 @@ private:
     ///
     /// \param[in] controls Averaging procedure controls.
     ///
-    /// \param[in] gravity Strength of gravity in SI units [m/s^2].
-    ///
-    /// \param[in] refDepth Well's reference depth for block-average
-    ///   pressure calculation.  Often, but not always, equal to the well's
-    ///   bottom-hole pressure reference depth.
-    ///
-    /// \param[in] connDensity Mixture density for pressure correction term
-    ///   for each reservoir connection.
+    /// \param[in] connDP Pressure correction term for each reservoir
+    ///   connection.
     void accumulateLocalContribOpen(const Sources&             sources,
                                     const PAvg&                controls,
-                                    const Scalar               gravity,
-                                    const Scalar               refDepth,
                                     const std::vector<Scalar>& connDP);
 
     /// First dispatch level before going to calculation routine which
@@ -739,21 +722,13 @@ private:
     ///
     /// \param[in] controls Averaging procedure controls.
     ///
-    /// \param[in] gravity Strength of gravity in SI units [m/s^2].
-    ///
-    /// \param[in] refDepth Well's reference depth for block-average
-    ///   pressure calculation.  Often, but not always, equal to the well's
-    ///   bottom-hole pressure reference depth.
-    ///
-    /// \param[in] connDensity Mixture density for pressure correction term
-    ///   for each reservoir connection.
+    /// \param[in] connDP Pressure correction term for each reservoir
+    ///   connection.
     void accumulateLocalContribAll(const Sources&             sources,
                                    const PAvg&                controls,
-                                   const Scalar               gravity,
-                                   const Scalar               refDepth,
-                                   const std::vector<Scalar>& connDensity);
+                                   const std::vector<Scalar>& connDP);
 
-    /// Compute connection level mixture density using Well method
+    /// Compute pressure correction term/offset using Well method
     ///
     /// Uses mixture density from well bore.
     ///
@@ -773,18 +748,25 @@ private:
     ///
     /// \param[in] sources Connection and cell-level raw data.
     ///
+    /// \param[in] gravity Strength of gravity in SI units [m/s^2].
+    ///
+    /// \param[in] refDepth Well's reference depth for block-average
+    ///   pressure calculation.  Often, but not always, equal to the well's
+    ///   bottom-hole pressure reference depth.
+    ///
     /// \param[in] connIndex Translation method from active connection index
     ///   to index into all known reservoir connections.
     ///
-    /// \return Mixture density for pressure correction term for each
-    ///   reservoir connection.
+    /// \return Pressure correction term for each active connection.
     template <typename ConnIndexMap>
     std::vector<Scalar>
-    connectionDensityWell(const std::size_t nconn,
-                          const Sources&    sources,
-                          ConnIndexMap      connIndex) const;
+    connectionPressureOffsetWell(const std::size_t nconn,
+                                 const Sources&    sources,
+                                 const Scalar      gravity,
+                                 const Scalar      refDepth,
+                                 ConnIndexMap      connIndex) const;
 
-    /// Compute connection level mixture density using Reservoir method
+    /// Compute pressure correction term/offset using Reservoir method
     ///
     /// Uses pore-volume weighted mixture density from connecting cell and
     /// its level 1 and level 2 neighbours.
@@ -805,35 +787,47 @@ private:
     ///
     /// \param[in] sources Connection and cell-level raw data.
     ///
+    /// \param[in] gravity Strength of gravity in SI units [m/s^2].
+    ///
+    /// \param[in] refDepth Well's reference depth for block-average
+    ///   pressure calculation.  Often, but not always, equal to the well's
+    ///   bottom-hole pressure reference depth.
+    ///
     /// \param[in] connIndex Translation method from active connection index
     ///   to index into all known reservoir connections.
     ///
-    /// \return Mixture density for pressure correction term for each
-    ///   reservoir connection.
+    /// \return Pressure correction term for each active connection.
     template <typename ConnIndexMap>
     std::vector<Scalar>
-    connectionDensityRes(const std::size_t nconn,
-                         const Sources&    sources,
-                         ConnIndexMap      connIndex) const;
+    connectionPressureOffsetRes(const std::size_t nconn,
+                                const Sources&    sources,
+                                const Scalar      gravity,
+                                const Scalar      refDepth,
+                                ConnIndexMap      connIndex) const;
 
-    /// Top-level entry point for computing connection level mixture
-    /// densities for the pressure correction term/offset of each active
-    /// reservoir connection
+    /// Top-level entry point for computing the pressure correction
+    /// term/offset of each active reservoir connection
     ///
     /// Will dispatch to lower level calculation routines based on algorithm
     /// selection parameter in procedure controls.
     ///
     /// \param[in] sources Connection and cell-level raw data.
     ///
-    /// \param[in] controls Averaging procedure controls.  This function
-    ///   uses the depth correction and open connections flags.
+    /// \param[in] controls Averaging procedure controls.  This function uses
+    ///   the depth correction and open connections flags.
     ///
-    /// \return Mixture density for pressure correction term for each
-    ///   reservoir connection.
+    /// \param[in] gravity Strength of gravity in SI units [m/s^2].
+    ///
+    /// \param[in] refDepth Well's reference depth for block-average
+    ///   pressure calculation.  Often, but not always, equal to the well's
+    ///   bottom-hole pressure reference depth.
+    ///
+    /// \return Pressure correction term for each active connection.
     std::vector<Scalar>
-    connectionDensity(const Sources& sources,
-                      const PAvg&    controls,
-                      const Scalar   gravity) const;
+    connectionPressureOffset(const Sources& sources,
+                             const PAvg&    controls,
+                             const Scalar   gravity,
+                             const Scalar   refDepth) const;
 };
 
 } // namespace Opm

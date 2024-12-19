@@ -23,7 +23,6 @@
 #include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
 
 #include <algorithm>
-#include <iterator>
 
 namespace Opm {
 

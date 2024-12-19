@@ -19,10 +19,8 @@
 
 #include <opm/input/eclipse/Parser/ErrorGuard.hpp>
 
-#include <algorithm>
-#include <cstdlib>
-#include <iomanip>
 #include <iostream>
+#include <iomanip>
 #include <numeric>
 
 #include <fmt/format.h>
@@ -73,7 +71,7 @@ namespace Opm {
 
 
     std::size_t ErrorGuard::maxMessageWidth() const {
-        auto maxit = [](const std::size_t acc, const auto& pair)
+        auto maxit = [](const auto acc, const auto& pair)
                      {
                          return std::max(acc, pair.first.size());
                      };

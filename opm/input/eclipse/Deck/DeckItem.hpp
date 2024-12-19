@@ -22,6 +22,7 @@
 
 #include <string>
 #include <vector>
+#include <memory>
 #include <iosfwd>
 
 #include <opm/input/eclipse/Units/Dimension.hpp>

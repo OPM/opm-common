@@ -22,7 +22,6 @@
 
 #include <cstddef>
 #include <iosfwd>
-#include <string>
 
 namespace Opm {
 

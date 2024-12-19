@@ -42,7 +42,6 @@
 #include <opm/input/eclipse/Schedule/ScheduleStatic.hpp>
 #include <opm/input/eclipse/Schedule/Well/PAvg.hpp>
 #include <opm/input/eclipse/Schedule/Well/Well.hpp>
-#include <opm/input/eclipse/Schedule/Well/Connection.hpp>
 #include <opm/input/eclipse/Schedule/WriteRestartFileEvents.hpp>
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
 
@@ -261,9 +260,10 @@ namespace Opm {
         void open_well(const std::string& well_name, std::size_t report_step);
         void open_well(const std::string& well_name);
         void clear_event(ScheduleEvents::Events, std::size_t report_step);
-        void add_event(ScheduleEvents::Events, std::size_t report_step);
         void applyWellProdIndexScaling(const std::string& well_name, const std::size_t reportStep, const double scalingFactor);
 
+        std::vector<const Group*> getChildGroups2(const std::string& group_name, std::size_t timeStep) const;
+        std::vector<Well> getChildWells2(const std::string& group_name, std::size_t timeStep) const;
         WellProducerCMode getGlobalWhistctlMmode(std::size_t timestep) const;
 
         const UDQConfig& getUDQConfig(std::size_t timeStep) const;
@@ -307,8 +307,6 @@ namespace Opm {
         */
         SimulatorUpdate runPyAction(std::size_t reportStep, const Action::PyAction& pyaction, Action::State& action_state, EclipseState& ecl_state, SummaryState& summary_state);
 
-        SimulatorUpdate modifyCompletions(const std::size_t reportStep,
-                                          const std::map<std::string, std::vector<Connection>>& extraConns);
 
         const GasLiftOpt& glo(std::size_t report_step) const;
 

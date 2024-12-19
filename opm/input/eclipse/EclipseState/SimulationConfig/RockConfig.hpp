@@ -68,7 +68,6 @@ public:
     bool active() const;
     const std::vector<RockConfig::RockComp>& comp() const;
     const std::string& rocknum_property() const;
-    bool store() const;
     std::size_t num_rock_tables() const;
     Hysteresis hysteresis_mode() const;
     bool water_compaction() const;
@@ -83,7 +82,6 @@ public:
         serializer(m_comp);
         serializer(num_property);
         serializer(num_tables);
-        serializer(m_store);
         serializer(m_water_compaction);
         serializer(hyst_mode);
         serializer(m_dispersion);
@@ -94,7 +92,6 @@ private:
     std::vector<RockComp> m_comp;
     std::string num_property;
     std::size_t num_tables = 0;
-    bool m_store = false;
     bool m_water_compaction = false;
     Hysteresis hyst_mode = Hysteresis::REVERS;
     bool m_dispersion = false;

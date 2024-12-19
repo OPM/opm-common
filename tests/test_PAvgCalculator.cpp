@@ -715,18 +715,6 @@ namespace {
         }
     }
 
-    void assignCellDepth(const std::vector<double>& depth,
-                         Setup&                     cse)
-    {
-        using Span = std::remove_cv_t<
-            std::remove_reference_t<decltype(cse.blockSource[0])>>;
-        using Item = typename Span::Item;
-
-        for (auto block = 0*depth.size(); block < depth.size(); ++block) {
-            cse.blockSource[cse.wbpCells[block]].set(Item::Depth, depth[block]);
-        }
-    }
-
     void assignConnPress(const std::vector<double>& connPress,
                          Setup&                     cse)
     {
@@ -738,9 +726,7 @@ namespace {
             cse.connSource[conn]
                 .set(Item::Pressure, connPress[conn])
                 .set(Item::PoreVol, 0.5)
-                .set(Item::MixtureDensity, 0.1)
-                .set(Item::Depth, 0.0) // Unused
-                ;
+                .set(Item::MixtureDensity, 0.1);
         }
     }
 
@@ -750,12 +736,6 @@ namespace {
             85.0,  90.0,  95.0,
             90.0, 100.0, 110.0,
             90.0, 100.0, 120.0,
-        }, cse);
-
-        assignCellDepth({
-            2002.5, 2002.5, 2002.5,
-            2002.5, 2002.5, 2002.5,
-            2002.5, 2002.5, 2002.5,
         }, cse);
 
         assignConnPress({80.0}, cse);
@@ -780,23 +760,6 @@ namespace {
             24.5, 34.5, 44.5,
             34.5, 44.5, 54.5,
             44.5, 54.5, 64.5,
-        }, cse);
-
-        assignCellDepth({
-            // K=0
-            2000.5, 2000.5, 2000.5,
-            2000.5, 2000.5, 2000.5,
-            2000.5, 2000.5, 2000.5,
-
-            // K=1
-            2001.5, 2001.5, 2001.5,
-            2001.5, 2001.5, 2001.5,
-            2001.5, 2001.5, 2001.5,
-
-            // K=2
-            2002.5, 2002.5, 2002.5,
-            2002.5, 2002.5, 2002.5,
-            2002.5, 2002.5, 2002.5,
         }, cse);
 
         assignConnPress({35.0, 37.0, 39.0}, cse);
@@ -824,23 +787,6 @@ namespace {
             1295.0,  1281.0,  1269.0,
         }, cse);
 
-        assignCellDepth({
-            // K=0
-            2000.5, 2000.5, 2000.5,
-            2000.5, 2000.5, 2000.5,
-            2000.5, 2000.5, 2000.5,
-
-            // K=1
-            2001.5, 2001.5, 2001.5,
-            2001.5, 2001.5, 2001.5,
-            2001.5, 2001.5, 2001.5,
-
-            // K=2
-            2002.5, 2002.5, 2002.5,
-            2002.5, 2002.5, 2002.5,
-            2002.5, 2002.5, 2002.5,
-        }, cse);
-
         assignConnPress({1222.0, 1232.0, 1242.0}, cse);
     }
 } // Anonymous namespace
@@ -863,7 +809,7 @@ BOOST_AUTO_TEST_CASE(Default_Control_No_Depth_Difference)
     cse.calc.inferBlockAveragePressures(cse.sources, controls, gravity, refDepth);
 
     const auto avgPress = cse.calc.averagePressures();
-    using WBPMode = Opm::PAvgCalculatorResult<double>::WBPMode;
+    using WBPMode = Opm::PAvgCalculator<double>::Result::WBPMode;
 
     BOOST_CHECK_CLOSE(avgPress.value(WBPMode::WBP) , 100.00, 1.0e-8);
     BOOST_CHECK_CLOSE(avgPress.value(WBPMode::WBP4),  97.50, 1.0e-8);
@@ -887,7 +833,7 @@ BOOST_AUTO_TEST_CASE(Default_Control_Elevate_Two_Cell_Thicknesses)
     cse.calc.inferBlockAveragePressures(cse.sources, controls, gravity, refDepth);
 
     const auto avgPress = cse.calc.averagePressures();
-    using WBPMode = Opm::PAvgCalculatorResult<double>::WBPMode;
+    using WBPMode = Opm::PAvgCalculator<double>::Result::WBPMode;
 
     BOOST_CHECK_CLOSE(avgPress.value(WBPMode::WBP) , 100.00 - 2.0, 1.0e-8);
     BOOST_CHECK_CLOSE(avgPress.value(WBPMode::WBP4),  97.50 - 2.0, 1.0e-8);
@@ -918,7 +864,7 @@ BOOST_AUTO_TEST_CASE(Default_Control_WBPn_42)
     cse.calc.inferBlockAveragePressures(cse.sources, controls, gravity, refDepth);
 
     const auto avgPress = cse.calc.averagePressures();
-    using WBPMode = Opm::PAvgCalculatorResult<double>::WBPMode;
+    using WBPMode = Opm::PAvgCalculator<double>::Result::WBPMode;
 
     BOOST_CHECK_CLOSE(avgPress.value(WBPMode::WBP) , 42.0, 1.0e-8);
     BOOST_CHECK_CLOSE(avgPress.value(WBPMode::WBP4), 42.0, 1.0e-8);
@@ -943,7 +889,7 @@ BOOST_AUTO_TEST_CASE(Default_Control_Rand_1234)
     cse.calc.inferBlockAveragePressures(cse.sources, controls, gravity, refDepth);
 
     const auto avgPress = cse.calc.averagePressures();
-    using WBPMode = Opm::PAvgCalculatorResult<double>::WBPMode;
+    using WBPMode = Opm::PAvgCalculator<double>::Result::WBPMode;
 
     BOOST_CHECK_CLOSE(avgPress.value(WBPMode::WBP) , 1249.3333333333335, 1.0e-8);
     BOOST_CHECK_CLOSE(avgPress.value(WBPMode::WBP4), 1274.0833333333333, 1.0e-8);
@@ -968,7 +914,7 @@ BOOST_AUTO_TEST_CASE(Default_Control_Rand_1234_Depth_Bottom_of_Centre)
     cse.calc.inferBlockAveragePressures(cse.sources, controls, gravity, refDepth);
 
     const auto avgPress = cse.calc.averagePressures();
-    using WBPMode = Opm::PAvgCalculatorResult<double>::WBPMode;
+    using WBPMode = Opm::PAvgCalculator<double>::Result::WBPMode;
 
     BOOST_CHECK_CLOSE(avgPress.value(WBPMode::WBP) , 1250.833333333333, 1.0e-8);
     BOOST_CHECK_CLOSE(avgPress.value(WBPMode::WBP4), 1275.583333333333, 1.0e-8);
@@ -993,7 +939,7 @@ BOOST_AUTO_TEST_CASE(Rand_1234_Centre_F1_Zero)
     cse.calc.inferBlockAveragePressures(cse.sources, controls, gravity, refDepth);
 
     const auto avgPress = cse.calc.averagePressures();
-    using WBPMode = Opm::PAvgCalculatorResult<double>::WBPMode;
+    using WBPMode = Opm::PAvgCalculator<double>::Result::WBPMode;
 
     BOOST_CHECK_CLOSE(avgPress.value(WBPMode::WBP) , 1250.333333333333, 1.0e-8);
     BOOST_CHECK_CLOSE(avgPress.value(WBPMode::WBP4), 1275.083333333333, 1.0e-8);
@@ -1018,7 +964,7 @@ BOOST_AUTO_TEST_CASE(Rand_1234_Centre_F1_Negative)
     cse.calc.inferBlockAveragePressures(cse.sources, controls, gravity, refDepth);
 
     const auto avgPress = cse.calc.averagePressures();
-    using WBPMode = Opm::PAvgCalculatorResult<double>::WBPMode;
+    using WBPMode = Opm::PAvgCalculator<double>::Result::WBPMode;
 
     BOOST_CHECK_CLOSE(avgPress.value(WBPMode::WBP) , 1250.333333333333, 1.0e-8);
     BOOST_CHECK_CLOSE(avgPress.value(WBPMode::WBP4), 1275.083333333333, 1.0e-8);
@@ -1043,7 +989,7 @@ BOOST_AUTO_TEST_CASE(Rand_1234_Centre_F1_Small)
     cse.calc.inferBlockAveragePressures(cse.sources, controls, gravity, refDepth);
 
     const auto avgPress = cse.calc.averagePressures();
-    using WBPMode = Opm::PAvgCalculatorResult<double>::WBPMode;
+    using WBPMode = Opm::PAvgCalculator<double>::Result::WBPMode;
 
     BOOST_CHECK_CLOSE(avgPress.value(WBPMode::WBP) , 1250.333333333333, 1.0e-8);
     BOOST_CHECK_CLOSE(avgPress.value(WBPMode::WBP4), 1275.083333333333, 1.0e-8);
@@ -1068,7 +1014,7 @@ BOOST_AUTO_TEST_CASE(Rand_1234_Centre_F1_High)
     cse.calc.inferBlockAveragePressures(cse.sources, controls, gravity, refDepth);
 
     const auto avgPress = cse.calc.averagePressures();
-    using WBPMode = Opm::PAvgCalculatorResult<double>::WBPMode;
+    using WBPMode = Opm::PAvgCalculator<double>::Result::WBPMode;
 
     BOOST_CHECK_CLOSE(avgPress.value(WBPMode::WBP) , 1250.333333333333, 1.0e-8);
     BOOST_CHECK_CLOSE(avgPress.value(WBPMode::WBP4), 1275.083333333333, 1.0e-8);
@@ -1093,7 +1039,7 @@ BOOST_AUTO_TEST_CASE(Rand_1234_Centre_F1_Max)
     cse.calc.inferBlockAveragePressures(cse.sources, controls, gravity, refDepth);
 
     const auto avgPress = cse.calc.averagePressures();
-    using WBPMode = Opm::PAvgCalculatorResult<double>::WBPMode;
+    using WBPMode = Opm::PAvgCalculator<double>::Result::WBPMode;
 
     BOOST_CHECK_CLOSE(avgPress.value(WBPMode::WBP) , 1250.333333333333, 1.0e-8);
     BOOST_CHECK_CLOSE(avgPress.value(WBPMode::WBP4), 1275.083333333333, 1.0e-8);
@@ -1118,7 +1064,7 @@ BOOST_AUTO_TEST_CASE(Rand_1234_Top_F2_Zero)
     cse.calc.inferBlockAveragePressures(cse.sources, controls, gravity, refDepth);
 
     const auto avgPress = cse.calc.averagePressures();
-    using WBPMode = Opm::PAvgCalculatorResult<double>::WBPMode;
+    using WBPMode = Opm::PAvgCalculator<double>::Result::WBPMode;
 
     BOOST_CHECK_CLOSE(avgPress.value(WBPMode::WBP) , 1262.500000000000, 1.0e-8);
     BOOST_CHECK_CLOSE(avgPress.value(WBPMode::WBP4), 1274.250000000000, 1.0e-8);
@@ -1143,7 +1089,7 @@ BOOST_AUTO_TEST_CASE(Rand_1234_Top_F2_Small)
     cse.calc.inferBlockAveragePressures(cse.sources, controls, gravity, refDepth);
 
     const auto avgPress = cse.calc.averagePressures();
-    using WBPMode = Opm::PAvgCalculatorResult<double>::WBPMode;
+    using WBPMode = Opm::PAvgCalculator<double>::Result::WBPMode;
 
     BOOST_CHECK_CLOSE(avgPress.value(WBPMode::WBP) , 1262.363333333333, 1.0e-8);
     BOOST_CHECK_CLOSE(avgPress.value(WBPMode::WBP4), 1274.243333333333, 1.0e-8);
@@ -1168,7 +1114,7 @@ BOOST_AUTO_TEST_CASE(Rand_1234_Top_F2_Quarter)
     cse.calc.inferBlockAveragePressures(cse.sources, controls, gravity, refDepth);
 
     const auto avgPress = cse.calc.averagePressures();
-    using WBPMode = Opm::PAvgCalculatorResult<double>::WBPMode;
+    using WBPMode = Opm::PAvgCalculator<double>::Result::WBPMode;
 
     BOOST_CHECK_CLOSE(avgPress.value(WBPMode::WBP) , 1259.083333333333, 1.0e-8);
     BOOST_CHECK_CLOSE(avgPress.value(WBPMode::WBP4), 1274.083333333333, 1.0e-8);
@@ -1193,7 +1139,7 @@ BOOST_AUTO_TEST_CASE(Rand_1234_Top_F2_Mid)
     cse.calc.inferBlockAveragePressures(cse.sources, controls, gravity, refDepth);
 
     const auto avgPress = cse.calc.averagePressures();
-    using WBPMode = Opm::PAvgCalculatorResult<double>::WBPMode;
+    using WBPMode = Opm::PAvgCalculator<double>::Result::WBPMode;
 
     BOOST_CHECK_CLOSE(avgPress.value(WBPMode::WBP) , 1255.666666666667, 1.0e-8);
     BOOST_CHECK_CLOSE(avgPress.value(WBPMode::WBP4), 1273.916666666667, 1.0e-8);
@@ -1218,7 +1164,7 @@ BOOST_AUTO_TEST_CASE(Rand_1234_Top_F2_Three_Quarters)
     cse.calc.inferBlockAveragePressures(cse.sources, controls, gravity, refDepth);
 
     const auto avgPress = cse.calc.averagePressures();
-    using WBPMode = Opm::PAvgCalculatorResult<double>::WBPMode;
+    using WBPMode = Opm::PAvgCalculator<double>::Result::WBPMode;
 
     BOOST_CHECK_CLOSE(avgPress.value(WBPMode::WBP) , 1252.250000000000, 1.0e-8);
     BOOST_CHECK_CLOSE(avgPress.value(WBPMode::WBP4), 1273.750000000000, 1.0e-8);
@@ -1243,7 +1189,7 @@ BOOST_AUTO_TEST_CASE(Rand_1234_Top_F2_High)
     cse.calc.inferBlockAveragePressures(cse.sources, controls, gravity, refDepth);
 
     const auto avgPress = cse.calc.averagePressures();
-    using WBPMode = Opm::PAvgCalculatorResult<double>::WBPMode;
+    using WBPMode = Opm::PAvgCalculator<double>::Result::WBPMode;
 
     BOOST_CHECK_CLOSE(avgPress.value(WBPMode::WBP) , 1248.970000000000, 1.0e-8);
     BOOST_CHECK_CLOSE(avgPress.value(WBPMode::WBP4), 1273.590000000000, 1.0e-8);
@@ -1365,41 +1311,6 @@ namespace {
             0.170, 0.110, 0.170,
         };
     }
-
-    std::vector<double> cellDepth()
-    {
-        return {
-            // K=2
-            2002.5, 2002.5, 2002.5,
-            2002.5, 2002.5, 2002.5,
-            2002.5, 2002.5, 2002.5,
-
-            // K=3
-            2003.5, 2003.5, 2003.5,
-            2003.5, 2003.5, 2003.5,
-            2003.5, 2003.5, 2003.5,
-
-            // K=4
-            2004.5, 2004.5, 2004.5,
-            2004.5, 2004.5, 2004.5,
-            2004.5, 2004.5, 2004.5,
-
-            // K=5
-            2005.5, 2005.5, 2005.5,
-            2005.5, 2005.5, 2005.5,
-            2005.5, 2005.5, 2005.5,
-
-            // K=6
-            2006.5, 2006.5, 2006.5,
-            2006.5, 2006.5, 2006.5,
-            2006.5, 2006.5, 2006.5,
-
-            // K=7
-            2007.5, 2007.5, 2007.5,
-            2007.5, 2007.5, 2007.5,
-            2007.5, 2007.5, 2007.5,
-        };
-    }
 } // Anonymous namespace
 
 BOOST_AUTO_TEST_SUITE(Open_Shut)
@@ -1417,24 +1328,19 @@ namespace {
             using Item = typename Span::Item;
 
             const auto cellPress = pressureField();
-            const auto depth = cellDepth();
 
             for (auto block = 0*cellPress.size(); block < cellPress.size(); ++block) {
                 this->blockSource[this->wbpCells[block]]
                     .set(Item::Pressure, cellPress[block])
                     .set(Item::PoreVol, 1.25)
-                    .set(Item::MixtureDensity, 0.1)
-                    .set(Item::Depth, depth[block])
-                    ;
+                    .set(Item::MixtureDensity, 0.1);
             }
 
             for (auto conn = 0*this->wbpConns.size(); conn < this->wbpConns.size(); ++conn) {
                 this->connSource[conn]
                     .set(Item::Pressure, 1222.0)
                     .set(Item::PoreVol, 1.25)
-                    .set(Item::MixtureDensity, 0.1)
-                    .set(Item::Depth, 0.0) // Unused
-                    ;
+                    .set(Item::MixtureDensity, 0.1);
             }
         }
     };
@@ -1454,7 +1360,7 @@ BOOST_AUTO_TEST_CASE(TopOfFormation_OpenConns)
     cse.calc.inferBlockAveragePressures(cse.sources, controls, gravity, refDepth);
 
     const auto avgPress = cse.calc.averagePressures();
-    using WBPMode = Opm::PAvgCalculatorResult<double>::WBPMode;
+    using WBPMode = Opm::PAvgCalculator<double>::Result::WBPMode;
 
     BOOST_CHECK_CLOSE(avgPress.value(WBPMode::WBP) , 1253.000000000000, 1.0e-8);
     BOOST_CHECK_CLOSE(avgPress.value(WBPMode::WBP4), 1293.541666666667, 1.0e-8);
@@ -1475,7 +1381,7 @@ BOOST_AUTO_TEST_CASE(TopOfFormation_AllConns_StandardGravity)
     cse.calc.inferBlockAveragePressures(cse.sources, controls, gravity, refDepth);
 
     const auto avgPress = cse.calc.averagePressures();
-    using WBPMode = Opm::PAvgCalculatorResult<double>::WBPMode;
+    using WBPMode = Opm::PAvgCalculator<double>::Result::WBPMode;
 
     BOOST_CHECK_CLOSE(avgPress.value(WBPMode::WBP) , 1250.591304166667, 1.0e-8);
     BOOST_CHECK_CLOSE(avgPress.value(WBPMode::WBP4), 1275.452415277778, 1.0e-8);
@@ -1501,24 +1407,19 @@ namespace {
 
             const auto cellPress = pressureField();
             const auto poreVol = poreVolume();
-            const auto depth = cellDepth();
 
             for (auto block = 0*cellPress.size(); block < cellPress.size(); ++block) {
                 this->blockSource[this->wbpCells[block]]
                     .set(Item::Pressure, cellPress[block])
                     .set(Item::PoreVol, poreVol[block])
-                    .set(Item::MixtureDensity, 0.1)
-                    .set(Item::Depth, depth[block])
-                    ;
+                    .set(Item::MixtureDensity, 0.1);
             }
 
             for (auto conn = 0*this->wbpConns.size(); conn < this->wbpConns.size(); ++conn) {
                 this->connSource[conn]
                     .set(Item::Pressure, 1222.0)
                     .set(Item::PoreVol, 1.25)
-                    .set(Item::MixtureDensity, 0.1)
-                    .set(Item::Depth, 0.0) // Unused
-                    ;
+                    .set(Item::MixtureDensity, 0.1);
             }
         }
     };
@@ -1538,7 +1439,7 @@ BOOST_AUTO_TEST_CASE(CentreOfFormation_OpenConns)
     cse.calc.inferBlockAveragePressures(cse.sources, controls, gravity, refDepth);
 
     const auto avgPress = cse.calc.averagePressures();
-    using WBPMode = Opm::PAvgCalculatorResult<double>::WBPMode;
+    using WBPMode = Opm::PAvgCalculator<double>::Result::WBPMode;
 
     BOOST_CHECK_CLOSE(avgPress.value(WBPMode::WBP) , 1257.977442500000, 1.0e-8);
     BOOST_CHECK_CLOSE(avgPress.value(WBPMode::WBP4), 1298.519109166667, 1.0e-8);
@@ -1560,7 +1461,7 @@ BOOST_AUTO_TEST_CASE(BottomOfFormation_AllConns)
     cse.calc.inferBlockAveragePressures(cse.sources, controls, gravity, refDepth);
 
     const auto avgPress = cse.calc.averagePressures();
-    using WBPMode = Opm::PAvgCalculatorResult<double>::WBPMode;
+    using WBPMode = Opm::PAvgCalculator<double>::Result::WBPMode;
 
     BOOST_CHECK_CLOSE(avgPress.value(WBPMode::WBP) , 1.260397954166667e+03, 1.0e-8);
     BOOST_CHECK_CLOSE(avgPress.value(WBPMode::WBP4), 1.285259065277778e+03, 1.0e-8);
@@ -1589,15 +1490,12 @@ namespace {
             const auto cellPress = pressureField();
             const auto poreVol = poreVolume();
             const auto mixDens = mixtureDensity();
-            const auto depth = cellDepth();
 
             for (auto block = 0*cellPress.size(); block < cellPress.size(); ++block) {
                 this->blockSource[this->wbpCells[block]]
                     .set(Item::Pressure, cellPress[block])
                     .set(Item::PoreVol, poreVol[block])
-                    .set(Item::MixtureDensity, mixDens[block])
-                    .set(Item::Depth, depth[block])
-                    ;
+                    .set(Item::MixtureDensity, mixDens[block]);
             }
 
             const auto wellBoreDens = std::vector {
@@ -1608,9 +1506,7 @@ namespace {
                 this->connSource[conn]
                     .set(Item::Pressure, 1222.0)
                     .set(Item::PoreVol, 1.25)
-                    .set(Item::MixtureDensity, wellBoreDens[conn])
-                    .set(Item::Depth, 0.0) // Unused
-                    ;
+                    .set(Item::MixtureDensity, wellBoreDens[conn]);
             }
         }
     };
@@ -1630,7 +1526,7 @@ BOOST_AUTO_TEST_CASE(TopOfFormation_Well_OpenConns)
     cse.calc.inferBlockAveragePressures(cse.sources, controls, gravity, refDepth);
 
     const auto avgPress = cse.calc.averagePressures();
-    using WBPMode = Opm::PAvgCalculatorResult<double>::WBPMode;
+    using WBPMode = Opm::PAvgCalculator<double>::Result::WBPMode;
 
     BOOST_CHECK_CLOSE(avgPress.value(WBPMode::WBP) , 1254.806625666667, 1.0e-8);
     BOOST_CHECK_CLOSE(avgPress.value(WBPMode::WBP4), 1295.348292333333, 1.0e-8);
@@ -1651,7 +1547,7 @@ BOOST_AUTO_TEST_CASE(TopOfFormation_Well_AllConns)
     cse.calc.inferBlockAveragePressures(cse.sources, controls, gravity, refDepth);
 
     const auto avgPress = cse.calc.averagePressures();
-    using WBPMode = Opm::PAvgCalculatorResult<double>::WBPMode;
+    using WBPMode = Opm::PAvgCalculator<double>::Result::WBPMode;
 
     BOOST_CHECK_CLOSE(avgPress.value(WBPMode::WBP) , 1247.976197500000, 1.0e-8);
     BOOST_CHECK_CLOSE(avgPress.value(WBPMode::WBP4), 1272.837308611111, 1.0e-8);
@@ -1673,7 +1569,7 @@ BOOST_AUTO_TEST_CASE(TopOfFormation_Reservoir_OpenConns)
     cse.calc.inferBlockAveragePressures(cse.sources, controls, gravity, refDepth);
 
     const auto avgPress = cse.calc.averagePressures();
-    using WBPMode = Opm::PAvgCalculatorResult<double>::WBPMode;
+    using WBPMode = Opm::PAvgCalculator<double>::Result::WBPMode;
 
     BOOST_CHECK_CLOSE(avgPress.value(WBPMode::WBP) , 1251.379769151233, 1.0e-8);
     BOOST_CHECK_CLOSE(avgPress.value(WBPMode::WBP4), 1291.921435817900, 1.0e-8);
@@ -1694,7 +1590,7 @@ BOOST_AUTO_TEST_CASE(BHPRefDepth_Reservoir_AllConns)
     cse.calc.inferBlockAveragePressures(cse.sources, controls, gravity, refDepth);
 
     const auto avgPress = cse.calc.averagePressures();
-    using WBPMode = Opm::PAvgCalculatorResult<double>::WBPMode;
+    using WBPMode = Opm::PAvgCalculator<double>::Result::WBPMode;
 
     BOOST_CHECK_CLOSE(avgPress.value(WBPMode::WBP) , 1251.972089001828, 1.0e-8);
     BOOST_CHECK_CLOSE(avgPress.value(WBPMode::WBP4), 1276.833200112939, 1.0e-8);
@@ -1716,7 +1612,7 @@ BOOST_AUTO_TEST_CASE(TopOfFormation_None_OpenConns)
     cse.calc.inferBlockAveragePressures(cse.sources, controls, gravity, refDepth);
 
     const auto avgPress = cse.calc.averagePressures();
-    using WBPMode = Opm::PAvgCalculatorResult<double>::WBPMode;
+    using WBPMode = Opm::PAvgCalculator<double>::Result::WBPMode;
 
     BOOST_CHECK_CLOSE(avgPress.value(WBPMode::WBP) , 1256.833333333333, 1.0e-8);
     BOOST_CHECK_CLOSE(avgPress.value(WBPMode::WBP4), 1297.375000000000, 1.0e-8);
@@ -1738,7 +1634,7 @@ BOOST_AUTO_TEST_CASE(SeaLevel_None_OpenConns)
     cse.calc.inferBlockAveragePressures(cse.sources, controls, gravity, refDepth);
 
     const auto avgPress = cse.calc.averagePressures();
-    using WBPMode = Opm::PAvgCalculatorResult<double>::WBPMode;
+    using WBPMode = Opm::PAvgCalculator<double>::Result::WBPMode;
 
     BOOST_CHECK_CLOSE(avgPress.value(WBPMode::WBP) , 1256.833333333333, 1.0e-8);
     BOOST_CHECK_CLOSE(avgPress.value(WBPMode::WBP4), 1297.375000000000, 1.0e-8);
@@ -1759,7 +1655,7 @@ BOOST_AUTO_TEST_CASE(TopOfFormation_None_AllConns)
     cse.calc.inferBlockAveragePressures(cse.sources, controls, gravity, refDepth);
 
     const auto avgPress = cse.calc.averagePressures();
-    using WBPMode = Opm::PAvgCalculatorResult<double>::WBPMode;
+    using WBPMode = Opm::PAvgCalculator<double>::Result::WBPMode;
 
     BOOST_CHECK_CLOSE(avgPress.value(WBPMode::WBP) , 1255.222222222222, 1.0e-8);
     BOOST_CHECK_CLOSE(avgPress.value(WBPMode::WBP4), 1280.083333333333, 1.0e-8);
@@ -1786,15 +1682,12 @@ namespace {
             const auto cellPress = pressureField();
             const auto poreVol = poreVolume();
             const auto mixDens = mixtureDensity();
-            const auto depth = cellDepth();
 
             for (auto block = 0*cellPress.size(); block < cellPress.size(); ++block) {
                 this->blockSource[this->wbpCells[block]]
                     .set(Item::Pressure, cellPress[block])
                     .set(Item::PoreVol, poreVol[block])
-                    .set(Item::MixtureDensity, mixDens[block])
-                    .set(Item::Depth, depth[block])
-                    ;
+                    .set(Item::MixtureDensity, mixDens[block]);
             }
 
             const auto wellBoreDens = std::vector {
@@ -1805,9 +1698,7 @@ namespace {
                 this->connSource[conn]
                     .set(Item::Pressure, 1222.0)
                     .set(Item::PoreVol, 1.25)
-                    .set(Item::MixtureDensity, wellBoreDens[conn])
-                    .set(Item::Depth, 0.0) // Unused
-                    ;
+                    .set(Item::MixtureDensity, wellBoreDens[conn]);
             }
         }
     };
@@ -1832,7 +1723,7 @@ BOOST_AUTO_TEST_CASE(All_Specified)
     cse.calc.inferBlockAveragePressures(cse.sources, controls, gravity, refDepth);
 
     const auto avgPress = cse.calc.averagePressures();
-    using WBPMode = Opm::PAvgCalculatorResult<double>::WBPMode;
+    using WBPMode = Opm::PAvgCalculator<double>::Result::WBPMode;
 
     BOOST_CHECK_CLOSE(avgPress.value(WBPMode::WBP) , 1270.833785766429, 1.0e-8);
     BOOST_CHECK_CLOSE(avgPress.value(WBPMode::WBP4), 1273.997383589501, 1.0e-8);
@@ -1841,188 +1732,3 @@ BOOST_AUTO_TEST_CASE(All_Specified)
 }
 
 BOOST_AUTO_TEST_SUITE_END() // Integration
-
-// ===========================================================================
-
-BOOST_AUTO_TEST_SUITE(DepthCorrection_Horizontal_Well)
-
-namespace {
-    namespace Horizontal {
-
-        // Octave: 1234 + fix(100 * rand([5, 3, 2]))
-        std::vector<double> pressureField()
-        {
-            return {
-                // K=2
-                // I=3        I=4           I=5           I=6           I=7
-                1.28300e+03,  1.27900e+03,  1.27800e+03,  1.31800e+03,  1.33200e+03, // J= 8
-                1.24100e+03,  1.32000e+03,  1.26800e+03,  1.29100e+03,  1.28600e+03, // J= 9
-                1.25800e+03,  1.26000e+03,  1.28300e+03,  1.25100e+03,  1.26600e+03, // J=10
-
-                // K=3
-                // I=3        I=4           I=5           I=6           I=7
-                1.32400e+03,  1.32700e+03,  1.24800e+03,  1.27600e+03,  1.25100e+03, // J= 8
-                1.31500e+03,  1.26100e+03,  1.28900e+03,  1.29400e+03,  1.29100e+03, // J= 9
-                1.25200e+03,  1.27600e+03,  1.31300e+03,  1.25600e+03,  1.27500e+03, // J=10
-            };
-        }
-
-        // Octave: fix(1e6 * (123.4 + 56.7*rand([5, 3, 2]))) / 1e6
-        std::vector<double> poreVolume()
-        {
-            return {
-                // K=2
-                // I=3        I=4           I=5           I=6           I=7
-                1.79996e+02,  1.29890e+02,  1.37383e+02,  1.24440e+02,  1.26011e+02, // J= 8
-                1.76635e+02,  1.78395e+02,  1.50687e+02,  1.53171e+02,  1.66701e+02, // J= 9
-                1.65692e+02,  1.33692e+02,  1.27440e+02,  1.25164e+02,  1.72015e+02, // J=10
-
-                // K=3
-                // I=3        I=4           I=5           I=6           I=7
-                1.62943e+02,  1.53786e+02,  1.63148e+02,  1.39431e+02,  1.32052e+02, // J= 8
-                1.74940e+02,  1.62589e+02,  1.57609e+02,  1.63935e+02,  1.78005e+02, // J= 9
-                1.73528e+02,  1.78178e+02,  1.38307e+02,  1.62020e+02,  1.37216e+02, // J=10
-            };
-        }
-
-        // Octave: 0.1 + fix(10 * rand([5, 3, 2])) / 100
-        std::vector<double> mixtureDensity()
-        {
-            return {
-                // K=2
-                // I=3        I=4           I=5           I=6           I=7
-                1.60000e-01,  1.70000e-01,  1.60000e-01,  1.20000e-01,  1.80000e-01, // J= 8
-                1.20000e-01,  1.50000e-01,  1.40000e-01,  1.10000e-01,  1.30000e-01, // J= 9
-                2.00000e-01,  1.20000e-01,  1.00000e-01,  1.10000e-01,  1.30000e-01, // J=10
-
-                // K=3
-                // I=3        I=4           I=5           I=6           I=7
-                1.50000e-01,  1.80000e-01,  1.60000e-01,  1.80000e-01,  1.10000e-01, // J= 8
-                1.40000e-01,  1.00000e-01,  1.10000e-01,  1.10000e-01,  1.20000e-01, // J= 9
-                1.30000e-01,  1.30000e-01,  1.80000e-01,  1.90000e-01,  1.20000e-01, // J=10
-            };
-        }
-
-        std::vector<double> cellDepth()
-        {
-            return {
-                // K=2
-                // I=3        I=4           I=5           I=6           I=7
-                2.00150e+03,  2.00150e+03,  2.00150e+03,  2.00150e+03,  2.00150e+03, // J= 8
-                2.00150e+03,  2.00150e+03,  2.00150e+03,  2.00150e+03,  2.00150e+03, // J= 9
-                2.00150e+03,  2.00150e+03,  2.00150e+03,  2.00150e+03,  2.00150e+03, // J=10
-
-                // K=3
-                // I=3        I=4           I=5           I=6           I=7
-                2.00250e+03,  2.00250e+03,  2.00250e+03,  2.00250e+03,  2.00250e+03, // J= 8
-                2.00250e+03,  2.00250e+03,  2.00250e+03,  2.00250e+03,  2.00250e+03, // J= 9
-                2.00250e+03,  2.00250e+03,  2.00250e+03,  2.00250e+03,  2.00250e+03, // J=10
-            };
-        }
-
-    } // namespace Horizontal
-
-    struct Setup : public CalculatorSetup
-    {
-        Setup()
-            : CalculatorSetup { shoeBox({10, 10, 3}), horizontalProducer_X({10, 10, 3}, 2, 5) }
-        {
-            using Span = std::remove_cv_t<
-                std::remove_reference_t<decltype(this->blockSource[0])>>;
-
-            using Item = typename Span::Item;
-
-            const auto cellPress = Horizontal::pressureField();
-            const auto poreVol = Horizontal::poreVolume();
-            const auto mixDens = Horizontal::mixtureDensity();
-            const auto depth = Horizontal::cellDepth();
-
-            for (auto block = 0*cellPress.size(); block < cellPress.size(); ++block) {
-                this->blockSource[this->wbpCells[block]]
-                    .set(Item::Pressure, cellPress[block])
-                    .set(Item::PoreVol, poreVol[block])
-                    .set(Item::MixtureDensity, mixDens[block])
-                    .set(Item::Depth, depth[block])
-                    ;
-            }
-
-            const auto wellBoreDens = std::vector {
-                0.1, 0.125, 0.15, 0.175, 0.2,
-            };
-
-            for (auto conn = 0*this->wbpConns.size(); conn < this->wbpConns.size(); ++conn) {
-                this->connSource[conn]
-                    .set(Item::Pressure, 1222.0)
-                    .set(Item::PoreVol, 1.25)
-                    .set(Item::MixtureDensity, wellBoreDens[conn])
-                    .set(Item::Depth, 0.0) // Unused
-                    ;
-            }
-        }
-    };
-} // Anonymous namespace
-
-BOOST_AUTO_TEST_CASE(TopOfFormation)
-{
-    // Producer connected in X direction in columns 3:7 of row (:,9,3)
-    // meaning cells (3,9,3), (4,9,3), (5,9,3), (6,9,3), and (7,9,3).
-    Setup cse{};
-
-    const auto controls = AveragingControls::DepthCorrection::well_open();
-    const auto gravity  = standardGravity();
-    const auto refDepth = 2000.0; // BHP reference depth.  Depth correction in layers 2..3.
-
-    cse.calc.inferBlockAveragePressures(cse.sources, controls, gravity, refDepth);
-
-    const auto avgPress = cse.calc.averagePressures();
-    using WBPMode = Opm::PAvgCalculatorResult<double>::WBPMode;
-
-    BOOST_CHECK_CLOSE(avgPress.value(WBPMode::WBP) , 1285.266048437499, 1.0e-8);
-    BOOST_CHECK_CLOSE(avgPress.value(WBPMode::WBP4), 1274.980575312500, 1.0e-8);
-    BOOST_CHECK_CLOSE(avgPress.value(WBPMode::WBP5), 1280.123311874999, 1.0e-8);
-    BOOST_CHECK_CLOSE(avgPress.value(WBPMode::WBP9), 1281.529122624999, 1.0e-8);
-}
-
-BOOST_AUTO_TEST_CASE(MiddleOfFormation)
-{
-    // Producer connected in X direction in columns 3:7 of row (:,9,3)
-    // meaning cells (3,9,3), (4,9,3), (5,9,3), (6,9,3), and (7,9,3).
-    Setup cse{};
-
-    const auto controls = AveragingControls::DepthCorrection::well_open();
-    const auto gravity  = standardGravity();
-    const auto refDepth = 2001.5; // BHP reference depth.  Depth correction in layer 3.
-
-    cse.calc.inferBlockAveragePressures(cse.sources, controls, gravity, refDepth);
-
-    const auto avgPress = cse.calc.averagePressures();
-    using WBPMode = Opm::PAvgCalculatorResult<double>::WBPMode;
-
-    BOOST_CHECK_CLOSE(avgPress.value(WBPMode::WBP) , 1287.656419374999, 1.0e-8);
-    BOOST_CHECK_CLOSE(avgPress.value(WBPMode::WBP4), 1277.370946249999, 1.0e-8);
-    BOOST_CHECK_CLOSE(avgPress.value(WBPMode::WBP5), 1282.513682812499, 1.0e-8);
-    BOOST_CHECK_CLOSE(avgPress.value(WBPMode::WBP9), 1283.919493562499, 1.0e-8);
-}
-
-BOOST_AUTO_TEST_CASE(BottomOfFormation)
-{
-    // Producer connected in X direction in columns 3:7 of row (:,9,3)
-    // meaning cells (3,9,3), (4,9,3), (5,9,3), (6,9,3), and (7,9,3).
-    Setup cse{};
-
-    const auto controls = AveragingControls::DepthCorrection::well_open();
-    const auto gravity  = standardGravity();
-    const auto refDepth = 2003.0; // BHP reference depth.  Depth correction in layers 2..3.
-
-    cse.calc.inferBlockAveragePressures(cse.sources, controls, gravity, refDepth);
-
-    const auto avgPress = cse.calc.averagePressures();
-    using WBPMode = Opm::PAvgCalculatorResult<double>::WBPMode;
-
-    BOOST_CHECK_CLOSE(avgPress.value(WBPMode::WBP) , 1290.046790312499, 1.0e-8);
-    BOOST_CHECK_CLOSE(avgPress.value(WBPMode::WBP4), 1279.761317187499, 1.0e-8);
-    BOOST_CHECK_CLOSE(avgPress.value(WBPMode::WBP5), 1284.904053749999, 1.0e-8);
-    BOOST_CHECK_CLOSE(avgPress.value(WBPMode::WBP9), 1286.309864499999, 1.0e-8);
-}
-
-BOOST_AUTO_TEST_SUITE_END() // DepthCorrection_Horizontal_Well

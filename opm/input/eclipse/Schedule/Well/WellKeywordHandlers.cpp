@@ -415,15 +415,6 @@ void handleWCONPROD(HandlerContext& handlerContext)
     }
 }
 
-void handleWCYCLE(HandlerContext& handlerContext)
-{
-    auto new_config = WCYCLE{};
-    for (const auto& record : handlerContext.keyword) {
-        new_config.addRecord(record);
-    }
-    handlerContext.state().wcycle.update(std::move(new_config));
-}
-
 void handleWELOPEN(HandlerContext& handlerContext)
 {
     const auto& keyword = handlerContext.keyword;
@@ -901,7 +892,6 @@ getWellHandlers()
         { "WCONINJE", &handleWCONINJE },
         { "WCONINJH", &handleWCONINJH },
         { "WCONPROD", &handleWCONPROD },
-        { "WCYCLE",   &handleWCYCLE   },
         { "WELOPEN" , &handleWELOPEN  },
         { "WELSPECS", &handleWELSPECS },
         { "WELTARG" , &handleWELTARG  },

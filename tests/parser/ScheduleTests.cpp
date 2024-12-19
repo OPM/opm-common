@@ -461,11 +461,56 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWellsOrdered) {
     BOOST_CHECK_EQUAL(field_ptr->name(), "FIELD");
 }
 
-BOOST_AUTO_TEST_CASE(CreateScheduleDeckWellsOrderedGRUPTREE)
-{
-    const auto schedule = make_schedule(createDeckWithWellsOrderedGRUPTREE());
-    const auto group_names = schedule.groupNames("P*", 0);
+namespace {
 
+bool has_well( const std::vector<Well>& wells, const std::string& well_name)
+{
+    return std::any_of(wells.begin(), wells.end(),
+                       [&well_name](const auto& well) { return well.name() == well_name; });
+}
+
+} // Anonymous namespace
+
+BOOST_AUTO_TEST_CASE(CreateScheduleDeckWellsOrderedGRUPTREE) {
+    const auto& schedule = make_schedule( createDeckWithWellsOrderedGRUPTREE() );
+
+    BOOST_CHECK_THROW( schedule.getChildWells2( "NO_SUCH_GROUP" , 0 ), std::exception);
+    {
+        auto field_wells = schedule.getChildWells2("FIELD" , 0);
+        BOOST_CHECK_EQUAL( field_wells.size() , 4U);
+
+        BOOST_CHECK( has_well( field_wells, "DW_0" ));
+        BOOST_CHECK( has_well( field_wells, "CW_1" ));
+        BOOST_CHECK( has_well( field_wells, "BW_2" ));
+        BOOST_CHECK( has_well( field_wells, "AW_3" ));
+    }
+
+    {
+        auto platform_wells = schedule.getChildWells2("PLATFORM" , 0);
+        BOOST_CHECK_EQUAL( platform_wells.size() , 4U);
+
+        BOOST_CHECK( has_well( platform_wells, "DW_0" ));
+        BOOST_CHECK( has_well( platform_wells, "CW_1" ));
+        BOOST_CHECK( has_well( platform_wells, "BW_2" ));
+        BOOST_CHECK( has_well( platform_wells, "AW_3" ));
+    }
+
+    {
+        auto child_wells1 = schedule.getChildWells2("CG1" , 0);
+        BOOST_CHECK_EQUAL( child_wells1.size() , 2U);
+
+        BOOST_CHECK( has_well( child_wells1, "DW_0" ));
+        BOOST_CHECK( has_well( child_wells1, "CW_1" ));
+    }
+
+    {
+        auto parent_wells2 = schedule.getChildWells2("PG2" , 0);
+        BOOST_CHECK_EQUAL( parent_wells2.size() , 2U);
+
+        BOOST_CHECK( has_well( parent_wells2, "BW_2" ));
+        BOOST_CHECK( has_well( parent_wells2, "AW_3" ));
+    }
+    auto group_names = schedule.groupNames("P*", 0);
     BOOST_CHECK( std::find(group_names.begin(), group_names.end(), "PG1") != group_names.end() );
     BOOST_CHECK( std::find(group_names.begin(), group_names.end(), "PG2") != group_names.end() );
     BOOST_CHECK( std::find(group_names.begin(), group_names.end(), "PLATFORM") != group_names.end() );
@@ -2643,13 +2688,13 @@ BOOST_AUTO_TEST_CASE(WTEMP_well_template) {
     Runspec runspec (deck);
     Schedule schedule( deck, grid, fp, runspec, python);
 
-    BOOST_CHECK_THROW(schedule.getWell("W1", 1).inj_temperature(), std::logic_error);
-    BOOST_CHECK_THROW(schedule.getWell("W1", 2).inj_temperature(), std::logic_error);
+    BOOST_CHECK_THROW(schedule.getWell("W1", 1).inj_temperature(), std::runtime_error);
+    BOOST_CHECK_THROW(schedule.getWell("W1", 2).inj_temperature(), std::runtime_error);
 
-    BOOST_CHECK_THROW(schedule.getWell("W2", 1).inj_temperature(), std::logic_error);
+    BOOST_CHECK_THROW(schedule.getWell("W2", 1).inj_temperature(), std::runtime_error);
     BOOST_CHECK_CLOSE(313.15, schedule.getWell("W2", 2).inj_temperature(), 1e-5);
 
-    BOOST_CHECK_THROW(schedule.getWell("W3", 1).inj_temperature(), std::logic_error);
+    BOOST_CHECK_THROW(schedule.getWell("W3", 1).inj_temperature(), std::runtime_error);
     BOOST_CHECK_CLOSE(313.15, schedule.getWell("W3", 2).inj_temperature(), 1e-5);
 }
 
@@ -2690,12 +2735,12 @@ BOOST_AUTO_TEST_CASE(WTEMPINJ_well_template) {
         Runspec runspec (deck);
         Schedule schedule( deck, grid, fp, runspec, python);
 
-        BOOST_CHECK_THROW(schedule.getWell("W1", 1).inj_temperature(), std::logic_error);
-        BOOST_CHECK_THROW(schedule.getWell("W2", 1).inj_temperature(), std::logic_error);
-        BOOST_CHECK_THROW(schedule.getWell("W3", 1).inj_temperature(), std::logic_error);
+        BOOST_CHECK_THROW(schedule.getWell("W1", 1).inj_temperature(), std::runtime_error);
+        BOOST_CHECK_THROW(schedule.getWell("W2", 1).inj_temperature(), std::runtime_error);
+        BOOST_CHECK_THROW(schedule.getWell("W3", 1).inj_temperature(), std::runtime_error);
 
         BOOST_CHECK(schedule.getWell("W1", 2).hasInjTemperature());
-        BOOST_CHECK_THROW(schedule.getWell("W1", 2).inj_temperature(), std::logic_error);
+        BOOST_CHECK_THROW(schedule.getWell("W1", 2).inj_temperature(), std::runtime_error);
         BOOST_CHECK(schedule.getWell("W2", 2).hasInjTemperature());
         BOOST_CHECK_CLOSE(313.15, schedule.getWell("W2", 2).inj_temperature(), 1e-5);
         BOOST_CHECK(schedule.getWell("W3", 2).hasInjTemperature());

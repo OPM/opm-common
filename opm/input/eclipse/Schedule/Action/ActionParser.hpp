@@ -23,11 +23,10 @@
 #include <opm/input/eclipse/Schedule/Action/ASTNode.hpp>
 #include <opm/input/eclipse/Schedule/Action/ActionValue.hpp>
 
-#include <cstdint>
 #include <string>
 #include <vector>
 
-namespace Opm::Action {
+namespace Opm { namespace Action {
 
 struct ParseNode
 {
@@ -44,6 +43,8 @@ struct ParseNode
     TokenType type;
     std::string value;
 };
+
+
 
 class Parser
 {
@@ -66,9 +67,9 @@ private:
     Action::ASTNode parse_or();
 
     const std::vector<std::string>& tokens;
-    std::int64_t current_pos = -1;
+    ssize_t current_pos = -1;
 };
 
-} // namespace Opm::Action
+}} // namespace Opm::Action
 
 #endif // ACTION_PARSER_HPP

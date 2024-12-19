@@ -400,8 +400,7 @@ public:
          bool allow_xflow,
          bool auto_shutin,
          int pvt_table,
-         GasInflowEquation inflow_eq,
-         bool temp_option = false);
+         GasInflowEquation inflow_eq);
 
     Well(const RestartIO::RstWell& rst_well,
          int report_step,
@@ -450,9 +449,8 @@ public:
     bool aciveWellInjMult() const;
 
     bool hasConnections() const;
-    std::vector<const Connection *> getConnections(int completion) const;
+    const std::vector<const Connection *> getConnections(int completion) const;
     const WellConnections& getConnections() const;
-    WellConnections& getConnections();
     const WellSegments& getSegments() const;
     int maxSegmentID() const;
     int maxBranchID() const;
@@ -621,7 +619,6 @@ public:
         serializer(wvfpexp);
         serializer(m_pavg);
         serializer(well_inj_temperature);
-        serializer(default_well_inj_temperature);
         serializer(inj_mult_mode);
         serializer(well_inj_mult);
         serializer(m_filter_concentration);
@@ -645,10 +642,7 @@ private:
     bool allow_cross_flow{false};
     bool automatic_shutin{false};
     int pvt_table{};
-
-    // Will NOT be loaded/assigned from restart file
-    GasInflowEquation gas_inflow = GasInflowEquation::STD;
-
+    GasInflowEquation gas_inflow = GasInflowEquation::STD;  // Will NOT be loaded/assigned from restart file
     const UnitSystem* unit_system{nullptr};
     double udq_undefined{};
     WellType wtype{};
@@ -666,11 +660,7 @@ private:
     std::shared_ptr<WellMICPProperties> micp_properties{};
     std::shared_ptr<WellBrineProperties> brine_properties{};
     std::shared_ptr<WellTracerProperties> tracer_properties{};
-
-    // The WellConnections object cannot be const because of WELPI and the
-    // filterConnections method
-    std::shared_ptr<WellConnections> connections{};
-
+    std::shared_ptr<WellConnections> connections{}; // The WellConnections object cannot be const because of WELPI and the filterConnections method
     std::shared_ptr<WellProductionProperties> production{};
     std::shared_ptr<WellInjectionProperties> injection{};
     std::shared_ptr<WellSegments> segments{};
@@ -681,7 +671,6 @@ private:
     Status status{Status::AUTO};
     PAvg m_pavg{};
     std::optional<double> well_inj_temperature{};
-    std::optional<double> default_well_inj_temperature{std::nullopt};
     InjMultMode inj_mult_mode = InjMultMode::NONE;
     std::optional<InjMult> well_inj_mult{};
     UDAValue m_filter_concentration{};

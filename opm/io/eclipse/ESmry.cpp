@@ -1070,7 +1070,7 @@ bool ESmry::make_esmry_file()
     std::filesystem::path smryDataFile = path / rootName;
     smryDataFile.replace_extension(".ESMRY");
 
-    if (Opm::EclIO::fileExists(smryDataFile.generic_string()))
+    if (Opm::EclIO::fileExists(smryDataFile))
     {
         return false;
 
@@ -1105,7 +1105,7 @@ bool ESmry::make_esmry_file()
             std::transform(keyword.begin(), keyword.end(), std::back_inserter(units),
                            [this](const auto& key) { return kwunits.at(key); });
 
-            Opm::EclIO::EclOutput outFile(smryDataFile.generic_string(), false, std::ios::out);
+            Opm::EclIO::EclOutput outFile(smryDataFile, false, std::ios::out);
 
             outFile.write<int>("START", start_date_vect);
 
@@ -1426,7 +1426,7 @@ std::vector<Opm::time_point> ESmry::dates() const
                    {
                        using Seconds = std::chrono::duration<double, std::chrono::seconds::period>;
                        return this->tp_startdat +
-                           std::chrono::duration_cast<time_point::duration>(Seconds{t * time_unit});
+                              std::chrono::duration_cast<std::chrono::seconds>(Seconds{t * time_unit});
                    });
 
     return d;

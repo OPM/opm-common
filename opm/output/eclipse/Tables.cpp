@@ -698,7 +698,7 @@ namespace { namespace SatFunc {
         {
             const std::size_t maxActiveRows =
                 std::accumulate(tables.tables().begin(), tables.tables().end(), 0UL,
-                                [](const std::size_t acc, const auto& table)
+                                [](const auto acc, const auto& table)
                                 {
                                     return std::max(acc, table.second->numRows());
                                 });

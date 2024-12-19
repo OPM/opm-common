@@ -652,7 +652,6 @@ Runspec::Runspec(const Deck& deck)
     , m_h2storage  (false)
     , m_micp       (false)
     , m_mech       (false)
-    , m_temp       (false)
 {
     if (DeckSection::hasRUNSPEC(deck)) {
         const RUNSPECSection runspecSection{deck};
@@ -767,17 +766,6 @@ Runspec::Runspec(const Deck& deck)
 
             OpmLog::note(msg);
         }
-
-        if (runspecSection.hasKeyword<ParserKeywords::TEMP>()) {
-            m_temp = true;
-
-            const std::string msg = "TEMP is used to start a thermal simulation. "
-                                    "Conservation equation for internal energy is used instead of enthalpy "
-                                    "(i.e., no work terms are included).";
-
-            OpmLog::note(msg);
-
-        }
     }
 }
 
@@ -806,7 +794,6 @@ Runspec Runspec::serializationTestObject()
     result.m_h2storage = true;
     result.m_micp = true;
     result.m_mech = true;
-    result.m_temp = true;
 
     return result;
 }
@@ -906,11 +893,6 @@ bool Runspec::mech() const noexcept
     return this->m_mech;
 }
 
-bool Runspec::temp() const noexcept
-{
-    return this->m_temp;
-}
-
 bool Runspec::compositional() const noexcept
 {
     // Note: co2store and h2store are only in blackoil setting for now
@@ -964,8 +946,7 @@ bool Runspec::rst_cmp(const Runspec& full_spec, const Runspec& rst_spec)
         full_spec.m_h2storage == rst_spec.m_h2storage &&
         full_spec.m_micp == rst_spec.m_micp &&
         full_spec.m_mech == rst_spec.m_mech &&
-        full_spec.m_temp == rst_spec.m_temp &&
-        Welldims::rst_cmp(full_spec.wellDimensions(), rst_spec.wellDimensions());
+        Welldims::rst_cmp(full_spec.wellDimensions(), rst_spec.wellDimensions()); // Can be partially different between base and restart.
 }
 
 bool Runspec::operator==(const Runspec& data) const
@@ -992,7 +973,6 @@ bool Runspec::operator==(const Runspec& data) const
         && (this->m_h2storage == data.m_h2storage)
         && (this->m_micp == data.m_micp)
         && (this->m_mech == data.m_mech)
-        && (this->m_temp == data.m_temp)
         ;
 }
 

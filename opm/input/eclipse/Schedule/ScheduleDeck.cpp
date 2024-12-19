@@ -217,12 +217,6 @@ void ScheduleDeck::add_TSTEP(const DeckKeyword& TSTEPKeyword, ScheduleDeckContex
                 throw OpmInputError(msg, TSTEPKeyword.location());
             }
         }
-        // The duration_cast on the next line is converting to
-        // millisecond accuracy, which is what is used for storing
-        // times internally.  This should be sufficient also for lab
-        // scale simulations, so the duration_cast is left in the code
-        // (converting from float to integer representation generally
-        // required such a cast).
         auto next_time = context.last_time + std::chrono::duration_cast<time_point::duration>(std::chrono::duration<double>(item.getSIDouble(itemIndex)));
         this->add_block(ScheduleTimeType::TSTEP, next_time, context, TSTEPKeyword.location());
     }
@@ -237,7 +231,7 @@ double ScheduleDeck::seconds(std::size_t timeStep) const {
         throw std::logic_error(fmt::format("seconds({}) - invalid timeStep. Valid range [0,{}>", timeStep, this->m_blocks.size()));
 
     std::chrono::duration<double> elapsed = this->m_blocks[timeStep].start_time() - this->m_blocks[0].start_time();
-    return elapsed.count();
+    return std::chrono::duration_cast<std::chrono::seconds>(elapsed).count();
 }
 
 

@@ -778,89 +778,71 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
     }
 
 
-    void Schedule::prefetchPossibleFutureConnections(const ScheduleGrid& grid,
-                                                     const DeckKeyword&  keyword,
-                                                     const ParseContext& parseContext,
-                                                     ErrorGuard&         errors)
-    {
-        if (keyword.is<ParserKeywords::COMPDAT>()) {
-            for (const auto& record : keyword) {
+    void Schedule::prefetchPossibleFutureConnections(const ScheduleGrid& grid, const DeckKeyword& keyword,
+                                                     const ParseContext& parseContext, ErrorGuard& errors){
+        if(keyword.is<ParserKeywords::COMPDAT>()){
+            for (auto record : keyword){
                 const auto& itemI = record.getItem("I");
                 const auto& itemJ = record.getItem("J");
-
-                const auto defaulted_I = itemI.defaultApplied(0) || (itemI.get<int>(0) == 0);
-                const auto defaulted_J = itemJ.defaultApplied(0) || (itemJ.get<int>(0) == 0);
+                bool defaulted_I = itemI.defaultApplied(0) || itemI.get<int>(0) == 0;
+                bool defaulted_J = itemJ.defaultApplied(0) || itemJ.get<int>(0) == 0;
 
                 if (defaulted_I || defaulted_J) {
-                    const auto msg_fmt = std::string { R"(Problem with COMPDAT in ACTIONX
-In {{file}} line {{line}}
-Defaulted grid coordinates is not allowed for COMPDAT as part of ACTIONX)"
-                    };
-
-                    parseContext.handleError(ParseContext::SCHEDULE_COMPDAT_INVALID,
-                                             msg_fmt, keyword.location(), errors);
+                    const std::string msg = std::string("Problem with COMPDAT in ACTIONX\nIn {{file}} line {{line}}\n") +
+                        std::string("Defaulted grid coordinates is not allowed for COMPDAT as part of ACTIONX");
+                    parseContext.handleError(ParseContext::SCHEDULE_COMPDAT_INVALID, msg, keyword.location(), errors);
                 }
-
-                const auto I = itemI.get<int>(0) - 1;
-                const auto J = itemJ.get<int>(0) - 1;
-
-                const auto K1 = record.getItem("K1").get<int>(0) - 1;
-                const auto K2 = record.getItem("K2").get<int>(0) - 1;
+                const int I = itemI.get<int>(0) - 1;
+                const int J = itemJ.get<int>(0) - 1;
+                int K1 = record.getItem("K1").get<int>(0) - 1;
+                int K2 = record.getItem("K2").get<int>(0) - 1;
 
                 const auto wellName = record.getItem("WELL").getTrimmedString(0);
 
                 // Retrieve or create the set of future connections for the well
                 auto& currentSet = this->possibleFutureConnections[wellName];
-                for (int k = K1; k <= K2; k++) {
+                for (int k = K1; k <= K2; k++){
                     try {
-                        // Adds this cell to the "active cells" of the
-                        // schedule grid by calling grid.get_cell(I, J, k)
-                        const auto& cell = grid.get_cell(I, J, k);
-
-                        // Insert the global id of the cell into the
-                        // possible future connections of the well
+                        // Adds this cell to the "active cells" of the schedule grid by calling grid.get_cell(I, J, k)
+                        auto cell = grid.get_cell(I, J, k);
+                        // Insert the global id of the cell into the possible future connections of the well
                         currentSet.insert(cell.global_index);
-                    }
-                    catch (const std::invalid_argument& e) {
-                        const std::string msg_fmt =
-                            fmt::format("Problem with COMPDAT in ACTIONX\n"
-                                        "In {{file}} line {{line}}\n"
-                                        "Cell ({}, {}, {}) of well {} is not part of the grid ({}).",
-                                        I + 1, J + 1, k + 1, wellName, e.what());
-
-                        parseContext.handleError(ParseContext::SCHEDULE_COMPDAT_INVALID,
-                                                 msg_fmt, keyword.location(), errors);
+                    }catch(const std::invalid_argument& e) {
+                        const std::string msg = fmt::format("Problem with COMPDAT in ACTIONX\n"
+                                                                "In {{file}} line {{line}}\n"
+                                                                "Cell ({}, {}, {}) of well {} is not part of the grid ({}).",
+                                                                I+1, J+1, k+1, wellName, e.what());
+                        parseContext.handleError(ParseContext::SCHEDULE_COMPDAT_INVALID, msg, keyword.location(), errors);
                     }
                 }
             }
+            return;
         }
 
         if (keyword.is<ParserKeywords::COMPSEGS>()) {
             bool first_record = true;
-
-            for (const auto& record : keyword) {
+            for (auto record : keyword){
                 if (first_record) {
                     first_record = false;
                     continue;
                 }
+                const auto& itemI = record.getItem("I");
+                const auto& itemJ = record.getItem("J");
+                const auto& itemK = record.getItem("K");
 
-                const int I = record.getItem("I").get<int>(0) - 1;
-                const int J = record.getItem("J").get<int>(0) - 1;
-                const int K = record.getItem("K").get<int>(0) - 1;
+                const int I = itemI.get<int>(0) - 1;
+                const int J = itemJ.get<int>(0) - 1;
+                const int K = itemK.get<int>(0) - 1;
 
                 try {
-                    const auto& cell = grid.get_cell(I, J, K);
-                    static_cast<void>(cell);
-                }
-                catch (const std::invalid_argument& e) {
-                    const auto msg_fmt =
-                        fmt::format("Problem with COMPSEGs in ACTIONX\n"
-                                    "In {{file}} line {{line}}\n"
-                                    "Cell ({}, {}, {}) is not part of the grid ({}).",
-                                    I + 1, J + 1, K + 1, e.what());
-
-                    parseContext.handleError(ParseContext::SCHEDULE_COMPSEGS_INVALID,
-                                             msg_fmt, keyword.location(), errors);
+                    auto cell = grid.get_cell(I, J, K);
+                    (void) cell;
+                }catch(const std::invalid_argument& e) {
+                    const std::string msg = fmt::format("Problem with COMPSEGs in ACTIONX\n"
+                                                        "In {{file}} line {{line}}\n"
+                                                        "Cell ({}, {}, {}) is not part of the grid ({}).",
+                                                        I+1, J+1, K+1, e.what());
+                    parseContext.handleError(ParseContext::SCHEDULE_COMPSEGS_INVALID, msg, keyword.location(), errors);
                 }
             }
         }
@@ -962,13 +944,6 @@ Defaulted grid coordinates is not allowed for COMPDAT as part of ACTIONX)"
     void Schedule::clear_event(ScheduleEvents::Events event, std::size_t report_step) {
         auto events = this->snapshots[report_step].events();
         events.clearEvent(event);
-        this->snapshots[report_step].update_events(events);
-    }
-
-    void Schedule::add_event(ScheduleEvents::Events event, std::size_t report_step)
-    {
-        auto events = this->snapshots[report_step].events();
-        events.addEvent(event);
         this->snapshots[report_step].update_events(events);
     }
 
@@ -1124,8 +1099,7 @@ Defaulted grid coordinates is not allowed for COMPDAT as part of ACTIONX)"
                   allowCrossFlow,
                   automaticShutIn,
                   pvt_table,
-                  gas_inflow,
-                  this->m_static.m_runspec.temp());
+                  gas_inflow);
 
         this->addWell( std::move(well) );
 
@@ -1153,6 +1127,45 @@ Defaulted grid coordinates is not allowed for COMPDAT as part of ACTIONX)"
 
     bool Schedule::hasGroup(const std::string& groupName, std::size_t timeStep) const {
         return this->snapshots[timeStep].groups.has(groupName);
+    }
+
+    std::vector< const Group* > Schedule::getChildGroups2(const std::string& group_name,
+                                                          std::size_t timeStep) const
+    {
+        const auto& sched_state = this->snapshots[timeStep];
+        const auto& group = sched_state.groups.get(group_name);
+
+        std::vector<const Group*> child_groups;
+        std::transform(group.groups().begin(), group.groups().end(),
+                       std::back_inserter(child_groups),
+                       [this, timeStep](const auto& child_name)
+                       {
+                           return std::addressof(this->getGroup(child_name, timeStep));
+                       });
+
+        return child_groups;
+    }
+
+    std::vector< Well > Schedule::getChildWells2(const std::string& group_name, std::size_t timeStep) const {
+        const auto& sched_state = this->snapshots[timeStep];
+        const auto& group = sched_state.groups.get(group_name);
+
+        std::vector<Well> wells;
+
+        if (group.groups().size()) {
+            for (const auto& child_name : group.groups()) {
+                const auto& child_wells = this->getChildWells2(child_name, timeStep);
+                wells.insert(wells.end(), child_wells.begin(), child_wells.end());
+            }
+        } else {
+            std::transform(group.wells().begin(), group.wells().end(),
+                           std::back_inserter(wells),
+                           [this, timeStep](const auto& well_name) -> decltype(auto)
+                           {
+                               return this->getWell(well_name, timeStep);
+                           });
+        }
+        return wells;
     }
 
     /*
@@ -1247,9 +1260,7 @@ Defaulted grid coordinates is not allowed for COMPDAT as part of ACTIONX)"
         return this->getWell(well_name, this->snapshots.size() - 1);
     }
 
-    const std::unordered_map<std::string, std::set<int>>&
-    Schedule::getPossibleFutureConnections() const
-    {
+    const std::unordered_map<std::string, std::set<int>>& Schedule::getPossibleFutureConnections() const {
         return this->possibleFutureConnections;
     }
 
@@ -1558,7 +1569,8 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
             const auto& well = this->getWell(wname, timeStep);
             const auto& connections = well.getConnections();
             if (connections.allConnectionsShut() && well.getStatus() != Well::Status::SHUT) {
-                auto days = unit::convert::to(seconds(timeStep), unit::day);
+                auto elapsed = this->snapshots[timeStep].start_time() - this->snapshots[0].start_time();
+                auto days = std::chrono::duration_cast<std::chrono::hours>(elapsed).count() / 24.0;
                 auto msg = fmt::format("All completions in well {} is shut at {} days\n"
                                        "The well is therefore also shut", well.name(), days);
                 OpmLog::note(msg);
@@ -1602,8 +1614,7 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
             throw std::logic_error(fmt::format("seconds({}) - invalid timeStep. Valid range [0,{}>", timeStep, this->snapshots.size()));
 
         auto elapsed = this->snapshots[timeStep].start_time() - this->snapshots[0].start_time();
-        using DurationInSeconds = std::chrono::duration<double>; // Tick is 1 second, stored in double.
-        return DurationInSeconds(elapsed).count();
+        return std::chrono::duration_cast<std::chrono::seconds>(elapsed).count();
     }
 
     std::time_t Schedule::simTime(std::size_t timeStep) const {
@@ -1623,8 +1634,7 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
                                 fmt::gmtime(TimeService::to_time_t(start_time)),
                                 fmt::gmtime(TimeService::to_time_t(end_time))) };
         }
-        using DurationInSeconds = std::chrono::duration<double>; // Tick is 1 second, stored in double.
-        return DurationInSeconds(end_time - start_time).count();
+        return std::chrono::duration_cast<std::chrono::seconds>(end_time - start_time).count();
     }
 
     void Schedule::applyKeywords(std::vector<std::unique_ptr<DeckKeyword>>& keywords)
@@ -1802,88 +1812,6 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
         }
 
         OpmLog::debug("\\----------------------------------------------------------------------");
-
-        return sim_update;
-    }
-
-    SimulatorUpdate
-    Schedule::modifyCompletions(const std::size_t reportStep,
-                                const std::map<std::string, std::vector<Connection>>& extraConns)
-    {
-        SimulatorUpdate sim_update{};
-
-        this->snapshots.resize(reportStep + 1);
-        for (const auto& [well, newConns] : extraConns) {
-            if (newConns.empty()) { continue; }
-
-            // Note: We go through map_member::get() here rather than
-            // map_member::operator() because the latter returns a reference
-            // to const whereas we need a reference to mutable.
-            auto& conns = this->snapshots[reportStep]
-                .wells.get(well).getConnections();
-
-            auto allConnsExist = true;
-            for (const auto& newConn : newConns) {
-                auto* existingConn = conns
-                    .maybeGetFromGlobalIndex(newConn.global_index());
-
-                if (existingConn != nullptr) {
-                    // Connection 'newConn' already exists in 'conns'.
-                    // Change existing CTF if needed.
-                    if (newConn.CF() > existingConn->CF()) {
-                        existingConn->setCF(newConn.CF());
-                    }
-                }
-                else {
-                    // 'newConn' does not already exist in 'conns'.  Add to
-                    // collection.
-                    allConnsExist = false;
-
-                    const auto seqIndex = conns.size();
-                    conns.addConnection(newConn.getI(),
-                                        newConn.getJ(),
-                                        newConn.getK(),
-                                        newConn.global_index(),
-                                        newConn.state(),
-                                        newConn.depth(),
-                                        newConn.ctfProperties(),
-                                        /* satTableID = */ 1,
-                                        newConn.dir(),
-                                        newConn.kind(),
-                                        seqIndex,
-                                        /* defaultSatTableID = */ false);
-                }
-            }
-
-            if (allConnsExist) {
-                sim_update.welpi_wells.insert(well);
-            }
-            else {
-                sim_update.well_structure_changed = true;
-            }
-        }
-
-        if (reportStep < this->m_sched_deck.size() - 1) {
-            ParseContext parseContext{};
-            if (this->m_treat_critical_as_non_critical) {
-                // Continue with invalid names if parsing strictness is set
-                // to low.
-                parseContext.update(ParseContext::SCHEDULE_INVALID_NAME,
-                                    InputErrorAction::WARN);
-            }
-
-            ErrorGuard errors{};
-            ScheduleGrid grid(this->completed_cells);
-
-            const std::string prefix = "| "; /* logger prefix string */
-
-            const auto keepKeywords = true;
-            const auto log_to_debug = true;
-            this->iterateScheduleSection(reportStep + 1, this->m_sched_deck.size(),
-                                         parseContext, errors, grid,
-                                         /* target_wellpi = */ nullptr,
-                                         prefix, keepKeywords, log_to_debug);
-        }
 
         return sim_update;
     }
@@ -2715,7 +2643,6 @@ void Schedule::create_first(const time_point& start_time, const std::optional<ti
     sched_state.rptonly(this->m_static.rptonly);
     sched_state.bhp_defaults.update( ScheduleState::BHPDefaults() );
     sched_state.source.update( Source() );
-    sched_state.wcycle.update( WCYCLE() );
     //sched_state.update_date( start_time );
     this->addGroup("FIELD", 0);
 }
