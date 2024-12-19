@@ -1995,10 +1995,10 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
         };
 
         std::vector<double> element_centerX, element_centerY, element_centerZ;
-        for (EclipseGridLGR& lgr_cell : lgr_children_cells) {
+        for (EclipseGridLGR& lgr_cell : lgr_children_cells) {       
             std::tie(element_centerX, element_centerY,element_centerZ) = 
-                VectorUtil::callMethodForEachInputOnObjectXYZ<std::array<double,3>,EclipseGridLGR, int,std::array<double, 3> (EclipseGridLGR::*)(size_t) const>
-                (lgr_cell, &EclipseGridLGR::getCellCenter, lgr_cell.getActiveMap());          
+                VectorUtil::callMethodForEachInputOnObjectXYZ<std::array<double,3>, std::array<double, 3> (EclipseGridLGR::*)(size_t) const>
+                (lgr_cell, &EclipseGridLGR::getCellCenter, lgr_cell.getActiveMap());                  
             auto [host_cellX, host_cellY, host_cellZ]  =  getAllCellCorners(lgr_cell.get_father_global());  
             auto inside_el = GeometryUtil::isInsideElement(element_centerX, element_centerY, element_centerZ, host_cellX, host_cellY, host_cellZ);
             std::vector<int> host_cells_global_ref = VectorUtil::filterArray<int>(lgr_cell.get_father_global(), inside_el);

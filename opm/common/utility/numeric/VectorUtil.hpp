@@ -59,7 +59,7 @@ std::vector<T> filterArray(const std::vector<std::size_t>& X, const std::vector<
 // T type of the object
 // Rout type of the object output 
 // Method type of method
-template <typename Rout, typename T, typename Rin, typename Method, typename... Args>
+template <typename Rout, typename Method, typename T, typename Rin, typename... Args>
 std::vector<Rout> callMethodForEachInputOnObject(const T& obj, Method mtd, const std::vector<Rin>& input_vector, Args&&... args) {
     std::vector<Rout> result;
     // Reserve space for each vector in the tuple
@@ -89,9 +89,9 @@ std::vector<T> X, Y, Z;
 }
 
 
-template <typename Rout, typename T, typename Rin, typename Method, typename... Args>
+template <typename Rout,  typename Method, typename T, typename Rin, typename... Args>
 auto callMethodForEachInputOnObjectXYZ(const T& obj, Method mtd, const std::vector<Rin>& input_vector, Args&&... args) {
-    auto result = callMethodForEachInputOnObject< Rout,T, Rin, Method, Args...>(obj, mtd, input_vector, std::forward<Args>(args)...);
+    auto result = callMethodForEachInputOnObject< Rout, Method, T, Rin,Args...>(obj, mtd, input_vector, std::forward<Args>(args)...);
     return splitXYZ(result);
 }
 
