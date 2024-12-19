@@ -371,7 +371,7 @@ inline std::string clean( const std::vector<std::pair<std::string, std::string>>
                     if (end_pos == std::string::npos) {
                         std::copy(input.begin(), input.end(), dsti);
                         dsti += std::distance( input.begin(), input.end() );
-                        input = std::string_view(input.end(), 0);
+                        input = {};
                         break;
                     } else {
                         end_pos += end_string.size();
