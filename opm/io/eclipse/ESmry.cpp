@@ -1070,7 +1070,7 @@ bool ESmry::make_esmry_file()
     std::filesystem::path smryDataFile = path / rootName;
     smryDataFile.replace_extension(".ESMRY");
 
-    if (Opm::EclIO::fileExists(smryDataFile))
+    if (Opm::EclIO::fileExists(smryDataFile.generic_string()))
     {
         return false;
 
@@ -1105,7 +1105,7 @@ bool ESmry::make_esmry_file()
             std::transform(keyword.begin(), keyword.end(), std::back_inserter(units),
                            [this](const auto& key) { return kwunits.at(key); });
 
-            Opm::EclIO::EclOutput outFile(smryDataFile, false, std::ios::out);
+            Opm::EclIO::EclOutput outFile(smryDataFile.generic_string(), false, std::ios::out);
 
             outFile.write<int>("START", start_date_vect);
 

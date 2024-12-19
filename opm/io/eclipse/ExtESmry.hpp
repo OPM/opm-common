@@ -67,7 +67,7 @@ public:
     std::vector<time_point> dates();
 
     bool all_steps_available();
-    std::string rootname() { return m_inputFileName.stem(); }
+    std::string rootname() { return m_inputFileName.stem().generic_string(); }
     std::tuple<double, double> get_io_elapsed() const;
 
 private:

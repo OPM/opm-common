@@ -331,7 +331,7 @@ void Opm::EclipseIO::writeTimeStep(const Action::State& action_state,
     if (final_step && !isSubstep && this->impl->summaryConfig.createRunSummary()) {
         std::filesystem::path outputDir { this->impl->outputDir } ;
         std::filesystem::path outputFile { outputDir / this->impl->baseName } ;
-        EclIO::ESmry(outputFile).write_rsm_file();
+        EclIO::ESmry(outputFile.generic_string()).write_rsm_file();
     }
 
     if ( (time_step && *time_step > 0 ) || (!isSubstep && schedule.write_rst_file(report_step))) {

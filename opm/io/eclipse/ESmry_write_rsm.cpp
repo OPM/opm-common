@@ -179,7 +179,7 @@ void ESmry::write_block(std::ostream& os,
 {
     write_line(os, block_separator_line, '1');
     write_line(os, divider_line);
-    write_line(os, block_header_line(inputFileName.stem()));
+    write_line(os, block_header_line(inputFileName.stem().generic_string()));
     write_line(os, divider_line);
 
     std::vector<std::pair<std::vector<float>, int>> data;
