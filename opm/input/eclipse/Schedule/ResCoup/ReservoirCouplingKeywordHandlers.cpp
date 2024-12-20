@@ -23,14 +23,12 @@
 #include "GrupSlav.hpp"
 #include "Slaves.hpp"
 #include "MasterGroup.hpp"
+#include "MasterMinimumTimeStep.hpp"
+#include "CouplingFile.hpp"
 
 #include <fmt/format.h>
 
 namespace Opm {
-
-namespace {
-
-} // anonymous namespace
 
 std::vector<std::pair<std::string,KeywordHandlers::handler_function>>
 getReservoirCouplingHandlers()
@@ -38,7 +36,9 @@ getReservoirCouplingHandlers()
     return {
         { "SLAVES", &handleSLAVES },
         { "GRUPMAST", &handleGRUPMAST},
-        { "GRUPSLAV", &handleGRUPSLAV}
+        { "GRUPSLAV", &handleGRUPSLAV},
+        { "RCMASTS", &handleRCMASTS},
+        { "DUMPCUPL", &handleDUMPCUPL},
     };
 }
 
