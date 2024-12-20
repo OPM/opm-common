@@ -2044,7 +2044,8 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
         }
 
         if (report_step == 0) {
-            return this->m_static.rst_config.write_rst_file.value();
+            return this->m_static.rst_config.write_rst_file.has_value()
+                && *this->m_static.rst_config.write_rst_file;
         }
 
         const auto previous_restart_output_step =
