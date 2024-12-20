@@ -2036,11 +2036,17 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
 
     bool Schedule::must_write_rst_file(const std::size_t report_step) const
     {
-        if (this->m_static.output_interval.has_value())
-            return this->m_static.output_interval.value() % report_step;
+        if (this->m_static.output_interval.has_value() &&
+            (*this->m_static.output_interval > 0) &&
+            (report_step > 0))
+        {
+            return (report_step % *this->m_static.output_interval) == 0;
+        }
 
-        if (report_step == 0)
-            return this->m_static.rst_config.write_rst_file.value();
+        if (report_step == 0) {
+            return this->m_static.rst_config.write_rst_file.has_value()
+                && *this->m_static.rst_config.write_rst_file;
+        }
 
         const auto previous_restart_output_step =
             this->restart_output.lastRestartEventBefore(report_step);
