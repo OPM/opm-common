@@ -13,6 +13,7 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <optional>
 #include <utility>
 #define BOOST_TEST_MODULE LgrOutputTests
 
@@ -40,9 +41,12 @@ LgrCollection read_lgr(const std::string& deck_string, std::size_t nx, std::size
 
 std::pair<std::vector<double>, std::vector<double>> read_cpg_from_egrid(const std::string& file_path, const std::string& lgr_label){
     Opm::EclIO::EGrid egrid_global(file_path, lgr_label);
+    // Opm::EclIO::EGrid egrid_global(file_path);
     egrid_global.load_grid_data();
+    // auto global_coord = egrid_global.get<float>("COORD");
+    // auto global_zcorn = egrid_global.get<float>("ZCORN");
     auto global_coord = egrid_global.get_coord();
-    auto global_zcorn = egrid_global.get_zcorn();
+    auto global_zcorn  = egrid_global.get_zcorn();
     std::vector<double> coord_g(global_coord.begin(), global_coord.end());
     std::vector<double> zcorn_g(global_zcorn.begin(), global_zcorn.end());
     return std::make_pair(coord_g, zcorn_g);
@@ -104,14 +108,22 @@ SOLUTION
 SCHEDULE
 )";
 \
+    Opm::UnitSystem units(1);
+    std::vector<Opm::NNCdata> vecNNC;
     std::array<int,3> global_grid_dim = {3,3,1};
     LgrCollection lgr_col = read_lgr(deck_string,global_grid_dim[0],global_grid_dim[1],global_grid_dim[2]);
     auto [coord_g, zcorn_g] = read_cpg_from_egrid("CARFIN5.EGRID", "global");
     Opm::EclipseGrid eclipse_grid_file(global_grid_dim, coord_g, zcorn_g);    
+    
+
     eclipse_grid_file.init_lgr_cells(lgr_col);
+    eclipse_grid_file.init_children_host_cells();
+
     auto [coord_l, zcorn_l] = read_cpg_from_egrid("CARFIN5.EGRID", "LGR1");
     eclipse_grid_file.lgr_children_cells[0].set_lgr_refinement(coord_l,zcorn_l);
+    //eclipse_grid_file.save("output.FEGRID",true,std::nullopt);
 
+    eclipse_grid_file.save("output.FEGRID",true,vecNNC,units);
     auto index = 1;
 
     
