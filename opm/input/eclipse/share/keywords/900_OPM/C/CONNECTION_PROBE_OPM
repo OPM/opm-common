@@ -12,7 +12,19 @@
     "CINJFVR",
     "CINJFVT",
     "CFCRAD",
-    "CFCAOF"
+    "CFCAOF",
+    "CFRPMAX",
+    "CFRPMIN",
+    "CFRPAVG",
+    "CFRPSTD",
+    "CFRIRMAX",
+    "CFRIRMIN",
+    "CFRIRAVG",
+    "CFRIRSTD",
+    "CFRWDMAX",
+    "CFRWDMIN",
+    "CFRWDAVG",
+    "CFRWDSTD"
   ],
   "items": [
     {
