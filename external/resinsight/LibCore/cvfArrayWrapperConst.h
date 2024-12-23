@@ -36,6 +36,8 @@
 
 #pragma once
 
+#include <cstddef>
+
 namespace external {
 namespace cvf {
 

@@ -1,13 +1,11 @@
 #ifndef VECTORUTIL_H
 #define VECTORUTIL_H
 
+#include <algorithm>
+#include <array>
+#include <stdexcept>
 #include <tuple>
 #include <vector>
-#include <functional>
-#include <stdexcept> 
-#include <array>
-#include <tuple>
-
 
 namespace VectorUtil {
 
