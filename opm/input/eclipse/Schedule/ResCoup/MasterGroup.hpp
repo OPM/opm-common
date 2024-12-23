@@ -82,10 +82,10 @@ public:
     }
 
 private:
-    std::string m_name;
-    std::string m_slave_name;
-    std::string m_slave_group_name;
-    double m_flow_limit_fraction;
+    std::string m_name{};
+    std::string m_slave_name{};
+    std::string m_slave_group_name{};
+    double m_flow_limit_fraction{};
 };
 
 

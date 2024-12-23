@@ -391,8 +391,8 @@ namespace Opm {
       std::string father_label;
       // references global on the father label
       vec_size_t father_global;
-      std::array<int,3> low_fahterIJK;
-      std::array<int,3> up_fahterIJK;
+      std::array<int,3> low_fahterIJK{};
+      std::array<int,3> up_fahterIJK{};
       std::vector<int> m_hostnum;
     };
 

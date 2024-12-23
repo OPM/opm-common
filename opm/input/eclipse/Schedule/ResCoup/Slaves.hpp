@@ -80,10 +80,10 @@ public:
         serializer(m_numprocs);
     }
 private:
-    std::string m_name;
-    std::string m_data_filename;
-    std::string m_directory_path;
-    unsigned int m_numprocs;
+    std::string m_name{};
+    std::string m_data_filename{};
+    std::string m_directory_path{};
+    unsigned int m_numprocs{};
 };
 
 } // namespace ReservoirCoupling

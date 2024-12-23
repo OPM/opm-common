@@ -135,15 +135,15 @@ public:
         }
     }
 private:
-    std::string m_name;
-    std::string m_master_group_name;
-    FilterFlag m_oil_prod_flag;
-    FilterFlag m_liquid_prod_flag;
-    FilterFlag m_gas_prod_flag;
-    FilterFlag m_fluid_volume_prod_flag;
-    FilterFlag m_oil_inj_flag;
-    FilterFlag m_water_inj_flag;
-    FilterFlag m_gas_inj_flag;
+    std::string m_name{};
+    std::string m_master_group_name{};
+    FilterFlag m_oil_prod_flag{FilterFlag::BOTH};
+    FilterFlag m_liquid_prod_flag{FilterFlag::BOTH};
+    FilterFlag m_gas_prod_flag{FilterFlag::BOTH};
+    FilterFlag m_fluid_volume_prod_flag{FilterFlag::BOTH};
+    FilterFlag m_oil_inj_flag{FilterFlag::BOTH};
+    FilterFlag m_water_inj_flag{FilterFlag::BOTH};
+    FilterFlag m_gas_inj_flag{FilterFlag::BOTH};
 };
 
 // NOTE: This operator is needed by Boost.Test, See tests/parser/ReservoirCouplingTests.cpp
