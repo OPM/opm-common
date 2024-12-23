@@ -95,16 +95,6 @@ auto callMethodForEachInputOnObjectXYZ(const T& obj, Method mtd, const std::vect
     return splitXYZ<X>(result);
 }
 
-template <typename T>
-    void test(std::vector<T> vec){
-    std::size_t index = 1;
-    for (T el : vec){
-        index++;
-    }
-}
-
-
-
 // Example for other utilities...
 
 } // namespace VectorUtil
