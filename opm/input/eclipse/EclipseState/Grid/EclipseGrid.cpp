@@ -2107,9 +2107,12 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
     int EclipseGrid::initializeLGRObjectIndices(int num){
         lgr_level = num;
         num++;
-        for (std::size_t index :m_print_order_lgr_cells) {
-            num = lgr_children_cells[index].initializeLGRObjectIndices(num);
-        }
+        std::accumulate(m_print_order_lgr_cells.begin(),
+                        m_print_order_lgr_cells.end(), num,
+                        [this](int n, const auto& it)
+                        {
+                            return lgr_children_cells[it].initializeLGRObjectIndices(n);
+                        });
         return num;
     }
 
@@ -2191,9 +2194,10 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
         });
 
         lgr_children_labels.reserve(lgr_children_cells.size());
-        for (auto lgr_cell : lgr_children_cells) {
-            lgr_children_labels.emplace_back(lgr_cell.lgr_label);
-        }
+        std::transform(lgr_children_cells.begin(),
+                       lgr_children_cells.end(),
+                       std::back_inserter(lgr_children_labels),
+                       [](const auto& it) { return it.lgr_label; });
         lgr_active_index.resize(lgr_children_cells.size(),0);
     }
 

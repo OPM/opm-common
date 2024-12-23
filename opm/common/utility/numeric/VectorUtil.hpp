@@ -1,13 +1,11 @@
 #ifndef VECTORUTIL_H
 #define VECTORUTIL_H
 
+#include <algorithm>
+#include <array>
+#include <stdexcept>
 #include <tuple>
 #include <vector>
-#include <functional>
-#include <stdexcept> 
-#include <array>
-#include <tuple>
-
 
 namespace VectorUtil {
 
@@ -96,16 +94,6 @@ auto callMethodForEachInputOnObjectXYZ(const T& obj, Method mtd, const std::vect
     auto result = callMethodForEachInputOnObject<T, Rout, Rin, Method, Args...>(obj, mtd, input_vector, std::forward<Args>(args)...);
     return splitXYZ<X>(result);
 }
-
-template <typename T>
-    void test(std::vector<T> vec){
-    std::size_t index = 1;
-    for (T el : vec){
-        index++;
-    }
-}
-
-
 
 // Example for other utilities...
 

@@ -88,7 +88,8 @@ void checkValidSlaveGroupName(const std::string& name, HandlerContext& handlerCo
     }
 }
 
-ReservoirCoupling::GrupSlav::FilterFlag getFilterFlag(const DeckItem& keyword, HandlerContext& handlerContext)
+ReservoirCoupling::GrupSlav::FilterFlag
+getFilterFlag(const DeckItem& keyword, const HandlerContext& handlerContext)
 {
     try {
         return ReservoirCoupling::GrupSlav::filterFlagFromString(keyword.getTrimmedString(0));
