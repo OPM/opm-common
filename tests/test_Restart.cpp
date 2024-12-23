@@ -412,11 +412,11 @@ struct Setup
 };
 
 RestartValue
-first_sim(const Setup&   setup,
-          Action::State& action_state,
-          SummaryState&  st,
-          UDQState&      udq_state,
-          bool           write_double)
+first_sim(const Setup&         setup,
+          const Action::State& action_state,
+          SummaryState&        st,
+          UDQState&            udq_state,
+          bool                 write_double)
 {
     WellTestState wtest_state;
     EclipseIO eclWriter(setup.es, setup.grid, setup.schedule, setup.summary_config);

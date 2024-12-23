@@ -73,7 +73,7 @@ void assertRaisesInputErrorException(const std::string& schedule_string, bool sl
 }
 
 void checkLastLineStringBuffer(
-    std::ostringstream& stream_buffer,
+    const std::ostringstream& stream_buffer,
     const std::string& expected,
     size_t offset  // Line offset from the end of the string
 ) {
