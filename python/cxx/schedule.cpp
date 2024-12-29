@@ -2,6 +2,9 @@
 #include <chrono>
 #include <map>
 
+#include <opm/common/OpmLog/OpmLog.hpp>
+#include <opm/input/eclipse/Parser/InputErrorAction.hpp>
+#include <opm/input/eclipse/Parser/ParseContext.hpp>
 #include <opm/input/eclipse/Parser/Parser.hpp>
 #include <opm/input/eclipse/Deck/Deck.hpp>
 #include <opm/input/eclipse/Deck/DeckKeyword.hpp>
@@ -151,10 +154,23 @@ namespace {
     std::vector<std::unique_ptr<DeckKeyword>> parseKeywords(const std::string& deck_string, const UnitSystem& unit_system)
     {
         Parser parser;
+        ParseContext parseContext;
+        // The next line will suppress PARSE_INVALID_KEYWORD_COMBINATION errors. This is needed when a keyword requires other keywords, since the
+        // required keywords might be in the original .DATA file, to which we do not have access here.
+        // When inserting keywords that can cause a PARSE_INVALID_KEYWORD_COMBINATION error, i.e. keywords with required or prohibited keywords,
+        // a warning will be added to the OpmLog.
+        parseContext.update(ParseContext::PARSE_INVALID_KEYWORD_COMBINATION , InputErrorAction::IGNORE );
         std::string str {unit_system.deck_name() + "\n\n" + deck_string};
-        auto deck = parser.parseString(str);
+        auto deck = parser.parseString(str, parseContext);
         std::vector<std::unique_ptr<DeckKeyword>> keywords;
         for (auto &keyword : deck) {
+            auto parserKeyword = parser.getKeyword(keyword.name());
+            std::for_each(parserKeyword.requiredKeywords().begin(), parserKeyword.requiredKeywords().end(), [&keyword](const auto& requiredKeyword) {
+                Opm::OpmLog::warning("Attention, the keyword " + keyword.name() + " needs the keywords " + requiredKeyword + " before.");
+            });
+            std::for_each(parserKeyword.prohibitedKeywords().begin(), parserKeyword.prohibitedKeywords().end(), [&keyword](const auto& prohibitedKeyword) {
+                Opm::OpmLog::warning("Attention, the keyword " + keyword.name() + " is incompatible with the keyword " + prohibitedKeyword + ".");
+            });
             keywords.push_back(std::make_unique<DeckKeyword>(keyword));
         }
         return keywords;
