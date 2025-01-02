@@ -119,8 +119,7 @@ public:
         VOID = 2,
         NETV = 3,
         RESV = 4,
-        POTN = 5,
-        NO_GUIDE_RATE = 6
+        NO_GUIDE_RATE = 5
     };
     static GuideRateInjTarget GuideRateInjTargetFromString( const std::string& stringValue );
     static GuideRateInjTarget GuideRateInjTargetFromInt(int ecl_id);

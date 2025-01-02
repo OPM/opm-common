@@ -122,10 +122,10 @@ public:
                  const double       gas_pot,
                  const double       wat_pot);
 
-    void compute(const std::string& wgname,
-                 const Phase&       phase,
-                 const std::size_t  report_step,
-                 const double       guide_rate);
+    void compute(const std::string&          wgname,
+                 const Phase&                phase,
+                 const std::size_t           report_step,
+                 const std::optional<double> guide_rate);
 
     bool has(const std::string& name) const;
     bool hasPotentials(const std::string& name) const;
