@@ -103,6 +103,7 @@ bool ActionX::valid_keyword(const std::string& keyword)
         "ENDBOX", "EXIT",
 
         "GCONINJE", "GCONPROD", "GCONSUMP",
+        "GEFAC",
         "GLIFTOPT",
         "GRUPNET", "GRUPTARG", "GRUPTREE",
         "GSATINJE", "GSATPROD",
