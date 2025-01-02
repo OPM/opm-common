@@ -17,6 +17,10 @@
 .project
 .settings/*
 
+# VSCode
+.vs
+.vscode
+
 # QtCreator project settings
 CMakeLists.txt.user*
 
