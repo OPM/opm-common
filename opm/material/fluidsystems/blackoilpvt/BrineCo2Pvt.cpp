@@ -120,7 +120,7 @@ initFromState(const EclipseState& eclState, const Schedule&)
     if (enableEzrokhiViscosity_) {
         ezrokhi_msg += "\nEzrokhi viscosity coefficients : \n\tNaCl = " 
                        + std::to_string(ezrokhiViscNaClCoeff_[0]) + " " + std::to_string(ezrokhiViscNaClCoeff_[1]) 
-                       + " " + std::to_string(ezrokhiViscNaClCoeff_[1]);
+                       + " " + std::to_string(ezrokhiViscNaClCoeff_[2]);
     }
     
     std::size_t regions = eclState.runspec().tabdims().getNumPVTTables();
