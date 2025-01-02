@@ -1,7 +1,11 @@
 #include <ctime>
 #include <chrono>
 #include <map>
+#include <iostream>
 
+#include <opm/common/OpmLog/OpmLog.hpp>
+#include <opm/input/eclipse/Parser/InputErrorAction.hpp>
+#include <opm/input/eclipse/Parser/ParseContext.hpp>
 #include <opm/input/eclipse/Parser/Parser.hpp>
 #include <opm/input/eclipse/Deck/Deck.hpp>
 #include <opm/input/eclipse/Deck/DeckKeyword.hpp>
@@ -151,10 +155,16 @@ namespace {
     std::vector<std::unique_ptr<DeckKeyword>> parseKeywords(const std::string& deck_string, const UnitSystem& unit_system)
     {
         Parser parser;
+        ParseContext parseContext;
+        parseContext.update(ParseContext::PARSE_INVALID_KEYWORD_COMBINATION , InputErrorAction::IGNORE );
         std::string str {unit_system.deck_name() + "\n\n" + deck_string};
-        auto deck = parser.parseString(str);
+        auto deck = parser.parseString(str, parseContext);
         std::vector<std::unique_ptr<DeckKeyword>> keywords;
         for (auto &keyword : deck) {
+            auto parserKeyword = parser.getKeyword(keyword.name());
+            std::for_each(parserKeyword.requiredKeywords().begin(), parserKeyword.requiredKeywords().end(), [&keyword](const auto& requiredKeyword) {
+                Opm::OpmLog::warning("Attention, the keyword " + keyword.name() + " needs the keyword " + requiredKeyword + " before.");
+            });
             keywords.push_back(std::make_unique<DeckKeyword>(keyword));
         }
         return keywords;
