@@ -80,7 +80,7 @@ public:
     //! The binary coefficients for brine and CO2 used by this fluid system
     using BinaryCoeffBrineCO2 = BinaryCoeff::Brine_CO2<Scalar, H2O, CO2>;
 
-    explicit BrineCo2Pvt() = default;
+    BrineCo2Pvt() = default;
 
     explicit BrineCo2Pvt(const ContainerT& salinity,
                          int activityModel = 3,
@@ -90,19 +90,19 @@ public:
                          Scalar P_ref = 101325);
 
     explicit BrineCo2Pvt(ContainerT brineReferenceDensity,
-                        ContainerT co2ReferenceDensity,
-                        ContainerT salinity,
-                        int activityModel,
-                        Co2StoreConfig::SaltMixingType thermalMixingModelSalt,
-                        Co2StoreConfig::LiquidMixingType thermalMixingModelLiquid,
-                        Params params) :
-                        brineReferenceDensity_(brineReferenceDensity),
-                        co2ReferenceDensity_(co2ReferenceDensity),
-                        salinity_(salinity),
-                        activityModel_(activityModel),
-                        liquidMixType_(thermalMixingModelLiquid),
-                        saltMixType_(thermalMixingModelSalt),
-                        co2Tables_(params)
+                         ContainerT co2ReferenceDensity,
+                         ContainerT salinity,
+                         int activityModel,
+                         Co2StoreConfig::SaltMixingType thermalMixingModelSalt,
+                         Co2StoreConfig::LiquidMixingType thermalMixingModelLiquid,
+                         Params params)
+                         : brineReferenceDensity_(brineReferenceDensity)
+                         , co2ReferenceDensity_(co2ReferenceDensity)
+                         , salinity_(salinity)
+                         , activityModel_(activityModel)
+                         , liquidMixType_(thermalMixingModelLiquid)
+                         , saltMixType_(thermalMixingModelSalt)
+                         , co2Tables_(params)
 {
 }
 
@@ -793,10 +793,13 @@ private:
 
 } // namespace Opm
 
-namespace Opm::gpuistl {
+namespace Opm::gpuistl
+{
+
     template<class Scalar, class Params, class GPUContainer>
     BrineCo2Pvt<Scalar, Params, GPUContainer>
-    move_to_gpu(BrineCo2Pvt<Scalar> cpuBrineCo2) {
+    move_to_gpu(const BrineCo2Pvt<Scalar>& cpuBrineCo2)
+    {
         return BrineCo2Pvt<Scalar, Params, GPUContainer>(
             GPUContainer(cpuBrineCo2.getBrineReferenceDensity()),
             GPUContainer(cpuBrineCo2.getCo2ReferenceDensity()),
@@ -810,8 +813,8 @@ namespace Opm::gpuistl {
 
     template <class ViewType, class OutputParams, class InputParams, class ContainerType, class Scalar>
     BrineCo2Pvt<Scalar, OutputParams, ViewType>
-    make_view(const BrineCo2Pvt<Scalar, InputParams, ContainerType>& brineCo2Pvt) {
-
+    make_view(const BrineCo2Pvt<Scalar, InputParams, ContainerType>& brineCo2Pvt)
+    {
         using containedType = typename ContainerType::value_type;
         using viewedTypeNoConst = typename std::remove_const_t<typename ViewType::value_type>;
 
