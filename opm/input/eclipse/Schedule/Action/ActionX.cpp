@@ -104,8 +104,7 @@ bool ActionX::valid_keyword(const std::string& keyword)
 
         "GCONINJE", "GCONPROD", "GCONSUMP",
         "GLIFTOPT",
-        "GRUPNET", "GRUPTARG", "GRUPTREE",
-        "GSATINJE", "GSATPROD",
+        "GRUPNET", "GRUPTREE",
 
         "MULTX", "MULTX-", "MULTY", "MULTY-", "MULTZ", "MULTZ-",
         "NEXT", "NEXTSTEP",
