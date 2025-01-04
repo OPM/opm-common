@@ -27,6 +27,7 @@
 namespace fs = std::filesystem;
 
 using namespace Opm;
+
 template<class Evaluation>
 bool test_relu_10(Evaluation* load_time, Evaluation* apply_time)
 {
@@ -35,26 +36,26 @@ bool test_relu_10(Evaluation* load_time, Evaluation* apply_time)
     OPM_ERROR_IF(!load_time, "Invalid Evaluation");
     OPM_ERROR_IF(!apply_time, "Invalid Evaluation");
 
-    Opm::Tensor<Evaluation> in{10};
-    in.data_ = {0.11478948,0.9410835,0.28376904,0.25726688,0.9882219,0.21069573,
-0.98714674,0.018556545,0.13675344,0.28590667};
+    Opm::ML::Tensor<Evaluation> in{10};
+    in.data_ = {0.7408773,0.8196166,0.70756483,0.8771463,0.32595816,0.1978039,
+0.8665494,0.63605165,0.93737507,0.3270001};
 
-    Opm::Tensor<Evaluation> out{10};
-    out.data_ = {0.,0.,0.,0.,0.066772744,0.,
-0.,0.,0.28074092,0.6897066};
+    Opm::ML::Tensor<Evaluation> out{10};
+    out.data_ = {0.,0.4997612,1.0531071,0.14333436,0.014796354,0.35146952,
+0.,0.,0.85194767,0.};
 
-    NNTimer load_timer;
+    Opm::ML::NNTimer load_timer;
     load_timer.start();
 
-    NNModel<Evaluation> model;
+    Opm::ML::NNModel<Evaluation> model;
     OPM_ERROR_IF(!model.loadModel("./tests/ml/ml_tools/models/test_relu_10.model"), "Failed to load model");
 
     *load_time = load_timer.stop();
 
-    NNTimer apply_timer;
+    Opm::ML::NNTimer apply_timer;
     apply_timer.start();
 
-    Opm::Tensor<Evaluation> predict = out;
+    Opm::ML::Tensor<Evaluation> predict = out;
     OPM_ERROR_IF(!model.apply(in, out), "Failed to apply");
 
     *apply_time = apply_timer.stop();

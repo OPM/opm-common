@@ -35,6 +35,8 @@
 
 namespace Opm {
 
+namespace ML {
+
 // NN layer
 // ---------------------
 /** \class Tensor class
@@ -52,17 +54,17 @@ template <class T> class Tensor {
 
   Tensor(int i, int j, int k, int l) { resizeI<int>({i, j, k, l}); }
 
-  template <typename Type> void resizeI(std::vector<Type> c) {
+  template <typename Type> void resizeI(const std::vector<Type>& c) {
     if (c.size() == 1) dims_ = {(int)c[0]};
     if (c.size() == 2) dims_ = {(int)c[0], (int)c[1]};
     if (c.size() == 3) dims_ = {(int)c[0], (int)c[1], (int)c[2]};
     if (c.size() == 4) dims_ = {(int)c[0], (int)c[1], (int)c[2], (int)c[3]};
 
     data_.resize(
-        std::accumulate(begin(c), end(c), 1.0, std::multiplies<Type>()));
+        std::accumulate(begin(dims_), end(dims_), 1.0, std::multiplies<Type>()));
   }
 
-  inline void flatten() {
+  void flatten() {
     OPM_ERROR_IF(dims_.size() <= 0, "Invalid tensor");
 
     int elements = dims_[0];
@@ -72,7 +74,7 @@ template <class T> class Tensor {
     dims_ = {elements};
   }
 
-  inline T& operator()(int i) {
+  T& operator()(int i) {
     OPM_ERROR_IF(dims_.size() != 1, "Invalid indexing for tensor");
 
     OPM_ERROR_IF(!(i < dims_[0] && i >= 0), fmt::format(" Invalid i:  "
@@ -84,7 +86,7 @@ template <class T> class Tensor {
     return data_[i];
   }
 
-  inline T& operator()(int i, int j) {
+  T& operator()(int i, int j) {
     OPM_ERROR_IF(dims_.size() != 2, "Invalid indexing for tensor");
     OPM_ERROR_IF(!(i < dims_[0] && i >= 0), fmt::format(" Invalid i:  "
                                                         "{}"
@@ -115,7 +117,7 @@ template <class T> class Tensor {
     return data_[dims_[1] * i + j];
   }
 
-  inline T& operator()(int i, int j, int k) {
+  T& operator()(int i, int j, int k) {
     OPM_ERROR_IF(dims_.size() != 3, "Invalid indexing for tensor");
     OPM_ERROR_IF(!(i < dims_[0] && i >= 0), fmt::format(" Invalid i:  "
                                                         "{}"
@@ -135,6 +137,7 @@ template <class T> class Tensor {
 
     return data_[dims_[2] * (dims_[1] * i + j) + k];
   }
+
   const T& operator()(int i, int j, int k) const {
     OPM_ERROR_IF(dims_.size() != 3, "Invalid indexing for tensor");
     OPM_ERROR_IF(!(i < dims_[0] && i >= 0), fmt::format(" Invalid i:  "
@@ -156,7 +159,7 @@ template <class T> class Tensor {
     return data_[dims_[2] * (dims_[1] * i + j) + k];
   }
 
-  inline T& operator()(int i, int j, int k, int l) {
+  T& operator()(int i, int j, int k, int l) {
     OPM_ERROR_IF(dims_.size() != 4, "Invalid indexing for tensor");
     OPM_ERROR_IF(!(i < dims_[0] && i >= 0), fmt::format(" Invalid i:  "
                                                         "{}"
@@ -207,6 +210,7 @@ template <class T> class Tensor {
 
     return data_[dims_[3] * (dims_[2] * (dims_[1] * i + j) + k) + l];
   }
+
   void fill(const T& value) { std::fill(data_.begin(), data_.end(), value); }
 
   // Tensor addition
@@ -215,11 +219,11 @@ template <class T> class Tensor {
                  "Cannot add tensors with different dimensions");
     Tensor result;
     result.dims_ = dims_;
-    result.data_.reserve(data_.size());
+    result.data_.resize(data_.size());
 
     std::transform(data_.begin(), data_.end(), other.data_.begin(),
-                   std::back_inserter(result.data_),
-                   [](T x, T y) { return x + y; });
+                   result.data_.begin(),
+                   [](const T& x, const T& y) { return x + y; });
 
     return result;
   }
@@ -231,11 +235,11 @@ template <class T> class Tensor {
 
     Tensor result;
     result.dims_ = dims_;
-    result.data_.reserve(data_.size());
+    result.data_.resize(data_.size());
 
     std::transform(data_.begin(), data_.end(), other.data_.begin(),
-                   std::back_inserter(result.data_),
-                   [](T x, T y) { return x * y; });
+                   result.data_.begin(),
+                   [](const T& x, const T& y) { return x * y; });
 
     return result;
   }
@@ -268,6 +272,8 @@ template <class T> class Tensor {
 // NN layer
 // ---------------------
 /** \class Neural Network  Layer base class
+ * objects of type Evaluation can be AD object Opm::DenseAd::Evaluation, 
+double or float types.
  */
 template <class Evaluation> class NNLayer {
  public:
@@ -275,8 +281,9 @@ template <class Evaluation> class NNLayer {
 
   virtual ~NNLayer() {}
 
+// Loads the ML trained file, returns true if the file exists
   virtual bool loadLayer(std::ifstream& file) = 0;
-
+// Apply the NN layers
   virtual bool apply(const Tensor<Evaluation>& in, Tensor<Evaluation>& out) = 0;
 };
 
@@ -286,7 +293,7 @@ template <class Evaluation> class NNLayer {
 template <class Evaluation>
 class NNLayerActivation : public NNLayer<Evaluation> {
  public:
-  enum ActivationType {
+  enum class ActivationType {
     kLinear = 1,
     kRelu = 2,
     kSoftPlus = 3,
@@ -397,11 +404,12 @@ class NNLayerEmbedding : public NNLayer<Evaluation> {
  */
 template <class Evaluation> class NNModel {
  public:
-  enum LayerType { kScaling = 1, kUnScaling = 2, kDense = 3, kActivation = 4 };
+  enum class LayerType { kScaling = 1, kUnScaling = 2, kDense = 3, kActivation = 4 };
 
   NNModel() {}
 
   virtual ~NNModel() {}
+
   // loads models generated by Kerasify
   virtual bool loadModel(const std::string& filename);
 
@@ -431,6 +439,8 @@ class NNTimer {
  private:
   std::chrono::time_point<std::chrono::high_resolution_clock> start_;
 };
+
+}  // namespace ML
 
 }  // namespace Opm
 

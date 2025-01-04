@@ -30,6 +30,8 @@
 
 namespace Opm {
 
+namespace ML {
+
 template <typename T>
 bool readFile(std::ifstream& file, T& data, size_t n = 1) {
   file.read(reinterpret_cast<char*>(&data), sizeof(T) * n);
@@ -42,24 +44,24 @@ bool NNLayerActivation<Evaluation>::loadLayer(std::ifstream& file) {
   OPM_ERROR_IF(!readFile<unsigned int>(file, activation),
                "Failed to read activation type");
 
-  switch (activation) {
-  case kLinear:
-    activation_type_ = kLinear;
+  switch (static_cast<ActivationType>(activation)) {
+  case ActivationType::kLinear:
+    activation_type_ = ActivationType::kLinear;
     break;
-  case kRelu:
-    activation_type_ = kRelu;
+  case ActivationType::kRelu:
+    activation_type_ = ActivationType::kRelu;
     break;
-  case kSoftPlus:
-    activation_type_ = kSoftPlus;
+  case ActivationType::kSoftPlus:
+    activation_type_ = ActivationType::kSoftPlus;
     break;
-  case kHardSigmoid:
-    activation_type_ = kHardSigmoid;
+  case ActivationType::kHardSigmoid:
+    activation_type_ = ActivationType::kHardSigmoid;
     break;
-  case kSigmoid:
-    activation_type_ = kSigmoid;
+  case ActivationType::kSigmoid:
+    activation_type_ = ActivationType::kSigmoid;
     break;
-  case kTanh:
-    activation_type_ = kTanh;
+  case ActivationType::kTanh:
+    activation_type_ = ActivationType::kTanh;
     break;
   default:
     OPM_ERROR_IF(true, fmt::format("\n Unsupported activation type "
@@ -73,26 +75,26 @@ bool NNLayerActivation<Evaluation>::loadLayer(std::ifstream& file) {
 template <class Evaluation>
 bool NNLayerActivation<Evaluation>::apply(const Tensor<Evaluation>& in,
                                           Tensor<Evaluation>& out) {
-  constexpr double sigmoid_scale = 0.2;
   out = in;
 
   switch (activation_type_) {
-  case kLinear:
+  case ActivationType::kLinear:
     break;
-  case kRelu:
+  case ActivationType::kRelu:
     for (size_t i = 0; i < out.data_.size(); i++) {
       if (out.data_[i] < 0.0) {
         out.data_[i] = 0.0;
       }
     }
     break;
-  case kSoftPlus:
+  case ActivationType::kSoftPlus:
     for (size_t i = 0; i < out.data_.size(); i++) {
       out.data_[i] = log(1.0 + exp(out.data_[i]));
     }
     break;
-  case kHardSigmoid:
+  case ActivationType::kHardSigmoid:
     for (size_t i = 0; i < out.data_.size(); i++) {
+      constexpr double sigmoid_scale = 0.2;
       Evaluation x = (out.data_[i] * sigmoid_scale) + 0.5;
 
       if (x <= 0) {
@@ -104,7 +106,7 @@ bool NNLayerActivation<Evaluation>::apply(const Tensor<Evaluation>& in,
       }
     }
     break;
-  case kSigmoid:
+  case ActivationType::kSigmoid:
     for (size_t i = 0; i < out.data_.size(); i++) {
       Evaluation& x = out.data_[i];
 
@@ -116,7 +118,7 @@ bool NNLayerActivation<Evaluation>::apply(const Tensor<Evaluation>& in,
       }
     }
     break;
-  case kTanh:
+  case ActivationType::kTanh:
     for (size_t i = 0; i < out.data_.size(); i++) {
       out.data_[i] = sinh(out.data_[i]) / cosh(out.data_[i]);
     }
@@ -279,17 +281,17 @@ bool NNModel<Evaluation>::loadModel(const std::string& filename) {
 
     std::unique_ptr<NNLayer<Evaluation>> layer = nullptr;
 
-    switch (layer_type) {
-    case kScaling:
+    switch (static_cast<LayerType>(layer_type)) {
+    case LayerType::kScaling:
       layer = std::make_unique<NNLayerScaling<Evaluation>>();
       break;
-    case kUnScaling:
+    case LayerType::kUnScaling:
       layer = std::make_unique<NNLayerUnScaling<Evaluation>>();
       break;
-    case kDense:
+    case LayerType::kDense:
       layer = std::make_unique<NNLayerDense<Evaluation>>();
       break;
-    case kActivation:
+    case LayerType::kActivation:
       layer = std::make_unique<NNLayerActivation<Evaluation>>();
       break;
     default:
@@ -333,5 +335,7 @@ template class NNModel<Opm::DenseAd::Evaluation<double, 4>>;
 template class NNModel<Opm::DenseAd::Evaluation<double, 3>>;
 template class NNModel<Opm::DenseAd::Evaluation<double, 2>>;
 template class NNModel<Opm::DenseAd::Evaluation<double, 1>>;
+
+}  // namespace Opm
 
 }  // namespace Opm

@@ -27,6 +27,7 @@
 namespace fs = std::filesystem;
 
 using namespace Opm;
+
 template<class Evaluation>
 bool test_scalingdense_10x1(Evaluation* load_time, Evaluation* apply_time)
 {
@@ -35,26 +36,26 @@ bool test_scalingdense_10x1(Evaluation* load_time, Evaluation* apply_time)
     OPM_ERROR_IF(!load_time, "Invalid Evaluation");
     OPM_ERROR_IF(!apply_time, "Invalid Evaluation");
 
-    Opm::Tensor<Evaluation> in{10};
-    in.data_ = {0.63939136,0.22313766,0.63712895,0.42027617,0.71234393,0.7912657,
-0.045848373,0.17004263,0.8268512,0.9074378};
+    Opm::ML::Tensor<Evaluation> in{10};
+    in.data_ = {0.04161745,0.18822303,0.6689346,0.9455557,0.6201371,0.7960544,
+0.6331782,0.5252165,0.4759353,0.092687376};
 
-    Opm::Tensor<Evaluation> out{10};
-    out.data_ = {724.7656,671.29944,675.7462,612.603,769.7373,857.1875,772.3861,
-638.7655,600.45886,658.24365};
+    Opm::ML::Tensor<Evaluation> out{10};
+    out.data_ = {557.6001,565.5885,567.4763,582.53674,548.9995,556.48706,578.477,
+559.40295,536.3733,546.257};
 
-    NNTimer load_timer;
+    Opm::ML::NNTimer load_timer;
     load_timer.start();
 
-    NNModel<Evaluation> model;
+    Opm::ML::NNModel<Evaluation> model;
     OPM_ERROR_IF(!model.loadModel("./tests/ml/ml_tools/models/test_scalingdense_10x1.model"), "Failed to load model");
 
     *load_time = load_timer.stop();
 
-    NNTimer apply_timer;
+    Opm::ML::NNTimer apply_timer;
     apply_timer.start();
 
-    Opm::Tensor<Evaluation> predict = out;
+    Opm::ML::Tensor<Evaluation> predict = out;
     OPM_ERROR_IF(!model.apply(in, out), "Failed to apply");
 
     *apply_time = apply_timer.stop();

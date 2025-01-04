@@ -27,6 +27,7 @@
 namespace fs = std::filesystem;
 
 using namespace Opm;
+
 template<class Evaluation>
 bool test_dense_2x2(Evaluation* load_time, Evaluation* apply_time)
 {
@@ -35,24 +36,24 @@ bool test_dense_2x2(Evaluation* load_time, Evaluation* apply_time)
     OPM_ERROR_IF(!load_time, "Invalid Evaluation");
     OPM_ERROR_IF(!apply_time, "Invalid Evaluation");
 
-    Opm::Tensor<Evaluation> in{2};
-    in.data_ = {0.44628727,0.7374128};
+    Opm::ML::Tensor<Evaluation> in{2};
+    in.data_ = {0.3679729,0.33387908};
 
-    Opm::Tensor<Evaluation> out{1};
-    out.data_ = {-0.652056};
+    Opm::ML::Tensor<Evaluation> out{1};
+    out.data_ = {0.12116705};
 
-    NNTimer load_timer;
+    Opm::ML::NNTimer load_timer;
     load_timer.start();
 
-    NNModel<Evaluation> model;
+    Opm::ML::NNModel<Evaluation> model;
     OPM_ERROR_IF(!model.loadModel("./tests/ml/ml_tools/models/test_dense_2x2.model"), "Failed to load model");
 
     *load_time = load_timer.stop();
 
-    NNTimer apply_timer;
+    Opm::ML::NNTimer apply_timer;
     apply_timer.start();
 
-    Opm::Tensor<Evaluation> predict = out;
+    Opm::ML::Tensor<Evaluation> predict = out;
     OPM_ERROR_IF(!model.apply(in, out), "Failed to apply");
 
     *apply_time = apply_timer.stop();

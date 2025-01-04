@@ -27,6 +27,7 @@
 namespace fs = std::filesystem;
 
 using namespace Opm;
+
 template<class Evaluation>
 bool test_dense_10x10x10(Evaluation* load_time, Evaluation* apply_time)
 {
@@ -35,26 +36,26 @@ bool test_dense_10x10x10(Evaluation* load_time, Evaluation* apply_time)
     OPM_ERROR_IF(!load_time, "Invalid Evaluation");
     OPM_ERROR_IF(!apply_time, "Invalid Evaluation");
 
-    Opm::Tensor<Evaluation> in{10};
-    in.data_ = {0.3968442,0.90487117,0.40734062,0.5499472,0.78145903,0.28273746,
-0.85433227,0.40486962,0.14386918,0.40355825};
+    Opm::ML::Tensor<Evaluation> in{10};
+    in.data_ = {0.9988619,0.52911437,0.6084093,0.47165447,0.7787644,0.69041485,
+0.12341814,0.9115511,0.84258,0.019870246};
 
-    Opm::Tensor<Evaluation> out{10};
-    out.data_ = {-0.16558985,-0.45187443,-0.12641914,-1.0978366,-0.7226945,
--0.6645357,0.039123267,0.80385983,0.34996432,-0.8906912};
+    Opm::ML::Tensor<Evaluation> out{10};
+    out.data_ = {0.4251011,-0.5030583,0.5705907,0.07170611,0.023810638,
+1.0996461,-0.855719,-0.013938251,0.040848758,0.066765524};
 
-    NNTimer load_timer;
+    Opm::ML::NNTimer load_timer;
     load_timer.start();
 
-    NNModel<Evaluation> model;
+    Opm::ML::NNModel<Evaluation> model;
     OPM_ERROR_IF(!model.loadModel("./tests/ml/ml_tools/models/test_dense_10x10x10.model"), "Failed to load model");
 
     *load_time = load_timer.stop();
 
-    NNTimer apply_timer;
+    Opm::ML::NNTimer apply_timer;
     apply_timer.start();
 
-    Opm::Tensor<Evaluation> predict = out;
+    Opm::ML::Tensor<Evaluation> predict = out;
     OPM_ERROR_IF(!model.apply(in, out), "Failed to apply");
 
     *apply_time = apply_timer.stop();
