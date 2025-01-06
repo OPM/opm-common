@@ -59,7 +59,6 @@ RstHeader::RstHeader(const Runspec&             runspec_,
     mday(intehead[VI::intehead::DAY]),
     hour(intehead[VI::intehead::IHOURZ]),
     minute(intehead[VI::intehead::IMINTS]),
-    microsecond(intehead[VI::intehead::ISECND]),
     phase_sum(intehead[VI::intehead::PHASE]),
     niwelz(intehead[VI::intehead::NIWELZ]),
     nswelz(intehead[VI::intehead::NSWELZ]),
@@ -142,7 +141,13 @@ RstHeader::RstHeader(const Runspec&             runspec_,
     glift_min_wait(unit_system.to_si(M::time, doubhead[VI::doubhead::LOminInt])),
     glift_rate_delta(unit_system.to_si(M::gas_surface_rate, doubhead[VI::doubhead::LOincrsz])),
     glift_min_eco_grad(unit_system.to_si(M::identity, doubhead[VI::doubhead::LOminEcGrad]))
-{}
+ {
+    if (intehead.size() > VI::intehead::ISECND) {
+        microsecond = intehead[VI::intehead::ISECND];
+    } else {
+        microsecond = 0;
+    }
+}
 
 std::time_t RstHeader::sim_time() const
 {
