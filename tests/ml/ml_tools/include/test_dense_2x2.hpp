@@ -37,10 +37,10 @@ bool test_dense_2x2(Evaluation* load_time, Evaluation* apply_time)
     OPM_ERROR_IF(!apply_time, "Invalid Evaluation");
 
     Opm::ML::Tensor<Evaluation> in{2};
-    in.data_ = {0.3679729,0.33387908};
+    in.data_ = {0.855337,0.8807345};
 
     Opm::ML::Tensor<Evaluation> out{1};
-    out.data_ = {0.12116705};
+    out.data_ = {2.300956};
 
     Opm::ML::NNTimer load_timer;
     load_timer.start();

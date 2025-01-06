@@ -95,7 +95,7 @@ bool NNLayerActivation<Evaluation>::apply(const Tensor<Evaluation>& in,
   case ActivationType::kHardSigmoid:
     for (size_t i = 0; i < out.data_.size(); i++) {
       constexpr double sigmoid_scale = 0.2;
-      Evaluation x = (out.data_[i] * sigmoid_scale) + 0.5;
+      const Evaluation& x = (out.data_[i] * sigmoid_scale) + 0.5;
 
       if (x <= 0) {
         out.data_[i] = 0.0;
@@ -108,12 +108,12 @@ bool NNLayerActivation<Evaluation>::apply(const Tensor<Evaluation>& in,
     break;
   case ActivationType::kSigmoid:
     for (size_t i = 0; i < out.data_.size(); i++) {
-      Evaluation& x = out.data_[i];
+      const Evaluation& x = out.data_[i];
 
       if (x >= 0) {
         out.data_[i] = 1.0 / (1.0 + exp(-x));
       } else {
-        Evaluation z = exp(x);
+        const Evaluation& z = exp(x);
         out.data_[i] = z / (1.0 + z);
       }
     }
@@ -132,10 +132,10 @@ bool NNLayerActivation<Evaluation>::apply(const Tensor<Evaluation>& in,
 
 template <class Evaluation>
 bool NNLayerScaling<Evaluation>::loadLayer(std::ifstream& file) {
-  OPM_ERROR_IF(!readFile<float>(file, data_min), "Failed to read min");
-  OPM_ERROR_IF(!readFile<float>(file, data_max), "Failed to read min");
-  OPM_ERROR_IF(!readFile<float>(file, feat_inf), "Failed to read min");
-  OPM_ERROR_IF(!readFile<float>(file, feat_sup), "Failed to read min");
+  OPM_ERROR_IF(!readFile<float>(file, data_min), "Failed to read data min");
+  OPM_ERROR_IF(!readFile<float>(file, data_max), "Failed to read data max");
+  OPM_ERROR_IF(!readFile<float>(file, feat_inf), "Failed to read feat inf");
+  OPM_ERROR_IF(!readFile<float>(file, feat_sup), "Failed to read feat sup");
   return true;
 }
 
@@ -152,10 +152,10 @@ bool NNLayerScaling<Evaluation>::apply(const Tensor<Evaluation>& in,
 
 template <class Evaluation>
 bool NNLayerUnScaling<Evaluation>::loadLayer(std::ifstream& file) {
-  OPM_ERROR_IF(!readFile<float>(file, data_min), "Failed to read min");
-  OPM_ERROR_IF(!readFile<float>(file, data_max), "Failed to read max");
-  OPM_ERROR_IF(!readFile<float>(file, feat_inf), "Failed to read inf");
-  OPM_ERROR_IF(!readFile<float>(file, feat_sup), "Failed to read sup");
+  OPM_ERROR_IF(!readFile<float>(file, data_min), "Failed to read data min");
+  OPM_ERROR_IF(!readFile<float>(file, data_max), "Failed to read data max");
+  OPM_ERROR_IF(!readFile<float>(file, feat_inf), "Failed to read feat inf");
+  OPM_ERROR_IF(!readFile<float>(file, feat_sup), "Failed to read feat sup");
 
   return true;
 }
@@ -336,6 +336,6 @@ template class NNModel<Opm::DenseAd::Evaluation<double, 3>>;
 template class NNModel<Opm::DenseAd::Evaluation<double, 2>>;
 template class NNModel<Opm::DenseAd::Evaluation<double, 1>>;
 
-}  // namespace Opm
+}  // namespace ML
 
 }  // namespace Opm
