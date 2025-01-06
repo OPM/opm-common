@@ -90,19 +90,19 @@ public:
                          Scalar P_ref = 101325);
 
     BrineCo2Pvt(const ContainerT& brineReferenceDensity,
-                         const ContainerT& co2ReferenceDensity,
-                         const ContainerT& salinity,
-                         int activityModel,
-                         Co2StoreConfig::SaltMixingType thermalMixingModelSalt,
-                         Co2StoreConfig::LiquidMixingType thermalMixingModelLiquid,
-                         Params params)
-                         : brineReferenceDensity_(brineReferenceDensity)
-                         , co2ReferenceDensity_(co2ReferenceDensity)
-                         , salinity_(salinity)
-                         , activityModel_(activityModel)
-                         , liquidMixType_(thermalMixingModelLiquid)
-                         , saltMixType_(thermalMixingModelSalt)
-                         , co2Tables_(params)
+                const ContainerT& co2ReferenceDensity,
+                const ContainerT& salinity,
+                int activityModel,
+                Co2StoreConfig::SaltMixingType thermalMixingModelSalt,
+                Co2StoreConfig::LiquidMixingType thermalMixingModelLiquid,
+                Params params)
+                : brineReferenceDensity_(brineReferenceDensity)
+                , co2ReferenceDensity_(co2ReferenceDensity)
+                , salinity_(salinity)
+                , activityModel_(activityModel)
+                , liquidMixType_(thermalMixingModelLiquid)
+                , saltMixType_(thermalMixingModelSalt)
+                , co2Tables_(params)
 {
 }
 
