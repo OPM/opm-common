@@ -77,21 +77,21 @@ public:
               Scalar P_ref = 101325);
 
     Co2GasPvt(const Params& params,
-              ContainerT brineReferenceDensity,
-              ContainerT gasReferenceDensity,
-              ContainerT salinity,
+              const ContainerT& brineReferenceDensity,
+              const ContainerT& gasReferenceDensity,
+              const ContainerT& salinity,
               bool enableEzrokhiDensity,
               bool enableVaporization,
               int activityModel,
               Co2StoreConfig::GasMixingType gastype)
-                : brineReferenceDensity_(brineReferenceDensity)
-                , gasReferenceDensity_(gasReferenceDensity)
-                , salinity_(salinity)
-                , enableEzrokhiDensity_(enableEzrokhiDensity)
-                , enableVaporization_(enableVaporization)
-                , activityModel_(activityModel)
-                , gastype_(gastype)
-                , co2Tables(params)
+        : brineReferenceDensity_(brineReferenceDensity)
+        , gasReferenceDensity_(gasReferenceDensity)
+        , salinity_(salinity)
+        , enableEzrokhiDensity_(enableEzrokhiDensity)
+        , enableVaporization_(enableVaporization)
+        , activityModel_(activityModel)
+        , gastype_(gastype)
+        , co2Tables(params)
 {
     assert(enableEzrokhiDensity == false && "Ezrokhi density not supported by GPUs");
 }
@@ -451,7 +451,7 @@ private:
 namespace Opm::gpuistl{
     template<class Scalar, class Params, class GPUContainer>
     Co2GasPvt<Scalar, Params, GPUContainer>
-    move_to_gpu(Co2GasPvt<Scalar> cpuCo2)
+    move_to_gpu(const Co2GasPvt<Scalar>& cpuCo2)
     {
         return Co2GasPvt<Scalar, Params, GPUContainer>(
             move_to_gpu<Scalar, std::vector<Scalar>, GPUContainer>(cpuCo2.getParams()),

@@ -83,7 +83,7 @@ public:
     {
         const Scalar M1 = H2O::molarMass();
         const Evaluation X2 = salinity; // mass fraction of salt in brine
-        return M1*mM_salt/(mM_salt + X2*(M1 - mM_salt));
+        return M1*mM_salt()/(mM_salt() + X2*(M1 - mM_salt()));
     }
 
     /*!
@@ -349,9 +349,12 @@ public:
 
         return mu_brine/1000.0; // convert to [Pa s] (todo: check if correct cP->Pa s is times 10...)
     }
-
+private:
     //Molar mass salt (assumes pure NaCl) [kg/mol]
-    static constexpr Scalar mM_salt = 58.44e-3;
+    static constexpr Scalar mM_salt()
+    {
+        return 58.44e-3;
+    }
 
 };
 
