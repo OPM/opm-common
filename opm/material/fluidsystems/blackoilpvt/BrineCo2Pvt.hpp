@@ -89,9 +89,9 @@ public:
                          Scalar T_ref = 288.71, //(273.15 + 15.56)
                          Scalar P_ref = 101325);
 
-    explicit BrineCo2Pvt(ContainerT brineReferenceDensity,
-                         ContainerT co2ReferenceDensity,
-                         ContainerT salinity,
+    BrineCo2Pvt(const ContainerT& brineReferenceDensity,
+                         const ContainerT& co2ReferenceDensity,
+                         const ContainerT& salinity,
                          int activityModel,
                          Co2StoreConfig::SaltMixingType thermalMixingModelSalt,
                          Co2StoreConfig::LiquidMixingType thermalMixingModelLiquid,
