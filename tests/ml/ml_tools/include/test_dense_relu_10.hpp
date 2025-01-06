@@ -20,29 +20,37 @@
 */
 
 #include <filesystem>
+#include <fmt/format.h>
 #include <iostream>
 #include <opm/common/ErrorMacros.hpp>
-#include <fmt/format.h>
 
 namespace fs = std::filesystem;
 
 using namespace Opm;
 
-template<class Evaluation>
-bool test_dense_relu_10(Evaluation* load_time, Evaluation* apply_time)
+template <class Evaluation>
+bool
+test_dense_relu_10(Evaluation* load_time, Evaluation* apply_time)
 {
     printf("TEST dense_relu_10\n");
 
     OPM_ERROR_IF(!load_time, "Invalid Evaluation");
     OPM_ERROR_IF(!apply_time, "Invalid Evaluation");
 
-    Opm::ML::Tensor<Evaluation> in{10};
-    in.data_ = {0.72216797,0.82057196,0.06473997,0.3274655,0.5711919,0.22498111,
-0.43644628,0.647617,0.46432266,0.22566444};
+    Opm::ML::Tensor<Evaluation> in {10};
+    in.data_ = {0.72216797,
+                0.82057196,
+                0.06473997,
+                0.3274655,
+                0.5711919,
+                0.22498111,
+                0.43644628,
+                0.647617,
+                0.46432266,
+                0.22566444};
 
-    Opm::ML::Tensor<Evaluation> out{10};
-    out.data_ = {0.,0.36713234,0.07846588,0.,0.,0.,
-0.33408287,0.,0.,0.023781916};
+    Opm::ML::Tensor<Evaluation> out {10};
+    out.data_ = {0., 0.36713234, 0.07846588, 0., 0., 0., 0.33408287, 0., 0., 0.023781916};
 
     Opm::ML::NNTimer load_timer;
     load_timer.start();
@@ -60,9 +68,14 @@ bool test_dense_relu_10(Evaluation* load_time, Evaluation* apply_time)
 
     *apply_time = apply_timer.stop();
 
-    for (int i = 0; i < out.dims_[0]; i++)
-    {
-        OPM_ERROR_IF ((fabs(out(i).value() - predict(i).value()) > 1e-6), fmt::format(" Expected " "{}" " got " "{}",predict(i).value(),out(i).value()));
+    for (int i = 0; i < out.dims_[0]; i++) {
+        OPM_ERROR_IF((fabs(out(i).value() - predict(i).value()) > 1e-6),
+                     fmt::format(" Expected "
+                                 "{}"
+                                 " got "
+                                 "{}",
+                                 predict(i).value(),
+                                 out(i).value()));
     }
 
     return true;

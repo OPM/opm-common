@@ -34,13 +34,15 @@
 #include <tests/ml/ml_tools/include/test_scalingdense_10x1.hpp>
 
 
-namespace Opm{
-    
-using namespace ML; 
+namespace Opm
+{
+
+using namespace ML;
 
 
 template <class Evaluation>
 bool
+
 tensor_test()
 {
     std::printf("TEST tensor_test\n");

@@ -20,29 +20,37 @@
 */
 
 #include <filesystem>
+#include <fmt/format.h>
 #include <iostream>
 #include <opm/common/ErrorMacros.hpp>
-#include <fmt/format.h>
 
 namespace fs = std::filesystem;
 
 using namespace Opm;
 
-template<class Evaluation>
-bool test_relu_10(Evaluation* load_time, Evaluation* apply_time)
+template <class Evaluation>
+bool
+test_relu_10(Evaluation* load_time, Evaluation* apply_time)
 {
     printf("TEST relu_10\n");
 
     OPM_ERROR_IF(!load_time, "Invalid Evaluation");
     OPM_ERROR_IF(!apply_time, "Invalid Evaluation");
 
-    Opm::ML::Tensor<Evaluation> in{10};
-    in.data_ = {0.64687246,0.353562,0.13661446,0.039557125,0.23235509,0.68329763,
-0.2106365,0.9206454,0.6846231,0.91939193};
+    Opm::ML::Tensor<Evaluation> in {10};
+    in.data_ = {0.64687246,
+                0.353562,
+                0.13661446,
+                0.039557125,
+                0.23235509,
+                0.68329763,
+                0.2106365,
+                0.9206454,
+                0.6846231,
+                0.91939193};
 
-    Opm::ML::Tensor<Evaluation> out{10};
-    out.data_ = {0.,0.,0.,0.2258815,0.64765996,0.40131113,
-0.020368848,0.,0.,0.2528621};
+    Opm::ML::Tensor<Evaluation> out {10};
+    out.data_ = {0., 0., 0., 0.2258815, 0.64765996, 0.40131113, 0.020368848, 0., 0., 0.2528621};
 
     Opm::ML::NNTimer load_timer;
     load_timer.start();
@@ -60,9 +68,14 @@ bool test_relu_10(Evaluation* load_time, Evaluation* apply_time)
 
     *apply_time = apply_timer.stop();
 
-    for (int i = 0; i < out.dims_[0]; i++)
-    {
-        OPM_ERROR_IF ((fabs(out(i).value() - predict(i).value()) > 1e-6), fmt::format(" Expected " "{}" " got " "{}",predict(i).value(),out(i).value()));
+    for (int i = 0; i < out.dims_[0]; i++) {
+        OPM_ERROR_IF((fabs(out(i).value() - predict(i).value()) > 1e-6),
+                     fmt::format(" Expected "
+                                 "{}"
+                                 " got "
+                                 "{}",
+                                 predict(i).value(),
+                                 out(i).value()));
     }
 
     return true;

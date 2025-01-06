@@ -20,27 +20,28 @@
 */
 
 #include <filesystem>
+#include <fmt/format.h>
 #include <iostream>
 #include <opm/common/ErrorMacros.hpp>
-#include <fmt/format.h>
 
 namespace fs = std::filesystem;
 
 using namespace Opm;
 
-template<class Evaluation>
-bool test_dense_10x10(Evaluation* load_time, Evaluation* apply_time)
+template <class Evaluation>
+bool
+test_dense_10x10(Evaluation* load_time, Evaluation* apply_time)
 {
     printf("TEST dense_10x10\n");
 
     OPM_ERROR_IF(!load_time, "Invalid Evaluation");
     OPM_ERROR_IF(!apply_time, "Invalid Evaluation");
 
-    Opm::ML::Tensor<Evaluation> in{10};
-    in.data_ = {0.71632093,0.5381261,0.30732742,0.8299436,0.4622948,0.5228916,
-0.37391856,0.825228,0.2711807,0.8293046};
+    Opm::ML::Tensor<Evaluation> in {10};
+    in.data_ = {
+        0.71632093, 0.5381261, 0.30732742, 0.8299436, 0.4622948, 0.5228916, 0.37391856, 0.825228, 0.2711807, 0.8293046};
 
-    Opm::ML::Tensor<Evaluation> out{1};
+    Opm::ML::Tensor<Evaluation> out {1};
     out.data_ = {-0.16240276};
 
     Opm::ML::NNTimer load_timer;
@@ -59,9 +60,14 @@ bool test_dense_10x10(Evaluation* load_time, Evaluation* apply_time)
 
     *apply_time = apply_timer.stop();
 
-    for (int i = 0; i < out.dims_[0]; i++)
-    {
-        OPM_ERROR_IF ((fabs(out(i).value() - predict(i).value()) > 1e-6), fmt::format(" Expected " "{}" " got " "{}",predict(i).value(),out(i).value()));
+    for (int i = 0; i < out.dims_[0]; i++) {
+        OPM_ERROR_IF((fabs(out(i).value() - predict(i).value()) > 1e-6),
+                     fmt::format(" Expected "
+                                 "{}"
+                                 " got "
+                                 "{}",
+                                 predict(i).value(),
+                                 out(i).value()));
     }
 
     return true;

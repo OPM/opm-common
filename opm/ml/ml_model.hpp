@@ -33,415 +33,534 @@
 #include <string>
 #include <vector>
 
-namespace Opm {
+namespace Opm
+{
 
-namespace ML {
+namespace ML
+{
 
-// NN layer
-// ---------------------
-/** \class Tensor class
- * Implements mathematical tensor (Max 4d)
- */
-template <class T> class Tensor {
- public:
-  Tensor() {}
-
-  explicit Tensor(int i) { resizeI<int>({i}); }
-
-  Tensor(int i, int j) { resizeI<int>({i, j}); }
-
-  Tensor(int i, int j, int k) { resizeI<int>({i, j, k}); }
-
-  Tensor(int i, int j, int k, int l) { resizeI<int>({i, j, k, l}); }
-
-  template <typename Type> void resizeI(const std::vector<Type>& c) {
-    if (c.size() == 1) dims_ = {(int)c[0]};
-    if (c.size() == 2) dims_ = {(int)c[0], (int)c[1]};
-    if (c.size() == 3) dims_ = {(int)c[0], (int)c[1], (int)c[2]};
-    if (c.size() == 4) dims_ = {(int)c[0], (int)c[1], (int)c[2], (int)c[3]};
-
-    data_.resize(
-        std::accumulate(begin(dims_), end(dims_), 1.0, std::multiplies<Type>()));
-  }
-
-  void flatten() {
-    OPM_ERROR_IF(dims_.size() <= 0, "Invalid tensor");
-
-    int elements = dims_[0];
-    for (unsigned int i = 1; i < dims_.size(); i++) {
-      elements *= dims_[i];
-    }
-    dims_ = {elements};
-  }
-
-  T& operator()(int i) {
-    OPM_ERROR_IF(dims_.size() != 1, "Invalid indexing for tensor");
-
-    OPM_ERROR_IF(!(i < dims_[0] && i >= 0), fmt::format(" Invalid i:  "
-                                                        "{}"
-                                                        "  max: "
-                                                        "{}",
-                                                        i, dims_[0]));
-
-    return data_[i];
-  }
-
-  T& operator()(int i, int j) {
-    OPM_ERROR_IF(dims_.size() != 2, "Invalid indexing for tensor");
-    OPM_ERROR_IF(!(i < dims_[0] && i >= 0), fmt::format(" Invalid i:  "
-                                                        "{}"
-                                                        "  max: "
-                                                        "{}",
-                                                        i, dims_[0]));
-    OPM_ERROR_IF(!(j < dims_[1] && j >= 0), fmt::format(" Invalid j:  "
-                                                        "{}"
-                                                        "  max: "
-                                                        "{}",
-                                                        j, dims_[1]));
-
-    return data_[dims_[1] * i + j];
-  }
-
-  const T& operator()(int i, int j) const {
-    OPM_ERROR_IF(dims_.size() != 2, "Invalid indexing for tensor");
-    OPM_ERROR_IF(!(i < dims_[0] && i >= 0), fmt::format(" Invalid i:  "
-                                                        "{}"
-                                                        "  max: "
-                                                        "{}",
-                                                        i, dims_[0]));
-    OPM_ERROR_IF(!(j < dims_[1] && j >= 0), fmt::format(" Invalid j:  "
-                                                        "{}"
-                                                        "  max: "
-                                                        "{}",
-                                                        j, dims_[1]));
-    return data_[dims_[1] * i + j];
-  }
-
-  T& operator()(int i, int j, int k) {
-    OPM_ERROR_IF(dims_.size() != 3, "Invalid indexing for tensor");
-    OPM_ERROR_IF(!(i < dims_[0] && i >= 0), fmt::format(" Invalid i:  "
-                                                        "{}"
-                                                        "  max: "
-                                                        "{}",
-                                                        i, dims_[0]));
-    OPM_ERROR_IF(!(j < dims_[1] && j >= 0), fmt::format(" Invalid j:  "
-                                                        "{}"
-                                                        "  max: "
-                                                        "{}",
-                                                        j, dims_[1]));
-    OPM_ERROR_IF(!(k < dims_[2] && k >= 0), fmt::format(" Invalid k:  "
-                                                        "{}"
-                                                        "  max: "
-                                                        "{}",
-                                                        k, dims_[2]));
-
-    return data_[dims_[2] * (dims_[1] * i + j) + k];
-  }
-
-  const T& operator()(int i, int j, int k) const {
-    OPM_ERROR_IF(dims_.size() != 3, "Invalid indexing for tensor");
-    OPM_ERROR_IF(!(i < dims_[0] && i >= 0), fmt::format(" Invalid i:  "
-                                                        "{}"
-                                                        "  max: "
-                                                        "{}",
-                                                        i, dims_[0]));
-    OPM_ERROR_IF(!(j < dims_[1] && j >= 0), fmt::format(" Invalid j:  "
-                                                        "{}"
-                                                        "  max: "
-                                                        "{}",
-                                                        j, dims_[1]));
-    OPM_ERROR_IF(!(k < dims_[2] && k >= 0), fmt::format(" Invalid k:  "
-                                                        "{}"
-                                                        "  max: "
-                                                        "{}",
-                                                        k, dims_[2]));
-
-    return data_[dims_[2] * (dims_[1] * i + j) + k];
-  }
-
-  T& operator()(int i, int j, int k, int l) {
-    OPM_ERROR_IF(dims_.size() != 4, "Invalid indexing for tensor");
-    OPM_ERROR_IF(!(i < dims_[0] && i >= 0), fmt::format(" Invalid i:  "
-                                                        "{}"
-                                                        "  max: "
-                                                        "{}",
-                                                        i, dims_[0]));
-    OPM_ERROR_IF(!(j < dims_[1] && j >= 0), fmt::format(" Invalid j:  "
-                                                        "{}"
-                                                        "  max: "
-                                                        "{}",
-                                                        j, dims_[1]));
-    OPM_ERROR_IF(!(k < dims_[2] && k >= 0), fmt::format(" Invalid k:  "
-                                                        "{}"
-                                                        "  max: "
-                                                        "{}",
-                                                        k, dims_[2]));
-    OPM_ERROR_IF(!(l < dims_[3] && l >= 0), fmt::format(" Invalid l:  "
-                                                        "{}"
-                                                        "  max: "
-                                                        "{}",
-                                                        l, dims_[3]));
-
-    return data_[dims_[3] * (dims_[2] * (dims_[1] * i + j) + k) + l];
-  }
-
-  const T& operator()(int i, int j, int k, int l) const {
-    OPM_ERROR_IF(dims_.size() != 4, "Invalid indexing for tensor");
-    OPM_ERROR_IF(!(i < dims_[0] && i >= 0), fmt::format(" Invalid i:  "
-                                                        "{}"
-                                                        "  max: "
-                                                        "{}",
-                                                        i, dims_[0]));
-    OPM_ERROR_IF(!(j < dims_[1] && j >= 0), fmt::format(" Invalid j:  "
-                                                        "{}"
-                                                        "  max: "
-                                                        "{}",
-                                                        j, dims_[1]));
-    OPM_ERROR_IF(!(k < dims_[2] && k >= 0), fmt::format(" Invalid k:  "
-                                                        "{}"
-                                                        "  max: "
-                                                        "{}",
-                                                        k, dims_[2]));
-    OPM_ERROR_IF(!(l < dims_[3] && l >= 0), fmt::format(" Invalid l:  "
-                                                        "{}"
-                                                        "  max: "
-                                                        "{}",
-                                                        l, dims_[3]));
-
-    return data_[dims_[3] * (dims_[2] * (dims_[1] * i + j) + k) + l];
-  }
-
-  void fill(const T& value) { std::fill(data_.begin(), data_.end(), value); }
-
-  // Tensor addition
-  Tensor operator+(const Tensor& other) {
-    OPM_ERROR_IF(dims_.size() != other.dims_.size(),
-                 "Cannot add tensors with different dimensions");
-    Tensor result;
-    result.dims_ = dims_;
-    result.data_.resize(data_.size());
-
-    std::transform(data_.begin(), data_.end(), other.data_.begin(),
-                   result.data_.begin(),
-                   [](const T& x, const T& y) { return x + y; });
-
-    return result;
-  }
-
-  // Tensor multiplication
-  Tensor multiply(const Tensor& other) {
-    OPM_ERROR_IF(dims_.size() != other.dims_.size(),
-                 "Cannot multiply elements with different dimensions");
-
-    Tensor result;
-    result.dims_ = dims_;
-    result.data_.resize(data_.size());
-
-    std::transform(data_.begin(), data_.end(), other.data_.begin(),
-                   result.data_.begin(),
-                   [](const T& x, const T& y) { return x * y; });
-
-    return result;
-  }
-
-  // Tensor dot for 2d tensor
-  Tensor dot(const Tensor& other) {
-    OPM_ERROR_IF(dims_.size() != 2, "Invalid tensor dimensions");
-    OPM_ERROR_IF(other.dims_.size() != 2, "Invalid tensor dimensions");
-
-    OPM_ERROR_IF(dims_[1] != other.dims_[0],
-                 "Cannot multiply with different inner dimensions");
-
-    Tensor tmp(dims_[0], other.dims_[1]);
-
-    for (int i = 0; i < dims_[0]; i++) {
-      for (int j = 0; j < other.dims_[1]; j++) {
-        for (int k = 0; k < dims_[1]; k++) {
-          tmp(i, j) += (*this)(i, k) * other(k, j);
+    // NN layer
+    // ---------------------
+    /** \class Tensor class
+     * Implements mathematical tensor (Max 4d)
+     */
+    template <class T>
+    class Tensor
+    {
+    public:
+        Tensor()
+        {
         }
-      }
-    }
 
-    return tmp;
-  }
+        explicit Tensor(int i)
+        {
+            resizeI<int>({i});
+        }
 
-  std::vector<int> dims_;
-  std::vector<T> data_;
-};
+        Tensor(int i, int j)
+        {
+            resizeI<int>({i, j});
+        }
 
-// NN layer
-// ---------------------
-/** \class Neural Network  Layer base class.
- * Objects of type Evaluation can be AD object Opm::DenseAd::Evaluation, 
-double or float types.
- */
-template <class Evaluation> class NNLayer {
- public:
-  NNLayer() {}
+        Tensor(int i, int j, int k)
+        {
+            resizeI<int>({i, j, k});
+        }
 
-  virtual ~NNLayer() {}
+        Tensor(int i, int j, int k, int l)
+        {
+            resizeI<int>({i, j, k, l});
+        }
 
-// Loads the ML trained file, returns true if the file exists
-  virtual bool loadLayer(std::ifstream& file) = 0;
-// Apply the NN layers
-  virtual bool apply(const Tensor<Evaluation>& in, Tensor<Evaluation>& out) = 0;
-};
+        template <typename Type>
+        void resizeI(const std::vector<Type>& c)
+        {
+            if (c.size() == 1)
+                dims_ = {(int)c[0]};
+            if (c.size() == 2)
+                dims_ = {(int)c[0], (int)c[1]};
+            if (c.size() == 3)
+                dims_ = {(int)c[0], (int)c[1], (int)c[2]};
+            if (c.size() == 4)
+                dims_ = {(int)c[0], (int)c[1], (int)c[2], (int)c[3]};
 
-/** \class Activation  Layer class
- * Applies an activation function
- */
-template <class Evaluation>
-class NNLayerActivation : public NNLayer<Evaluation> {
- public:
-  enum class ActivationType {
-    kLinear = 1,
-    kRelu = 2,
-    kSoftPlus = 3,
-    kSigmoid = 4,
-    kTanh = 5,
-    kHardSigmoid = 6
-  };
+            data_.resize(std::accumulate(begin(dims_), end(dims_), 1.0, std::multiplies<Type>()));
+        }
 
-  NNLayerActivation() : activation_type_(ActivationType::kLinear) {}
+        void flatten()
+        {
+            OPM_ERROR_IF(dims_.size() <= 0, "Invalid tensor");
 
-  virtual ~NNLayerActivation() {}
+            int elements = dims_[0];
+            for (unsigned int i = 1; i < dims_.size(); i++) {
+                elements *= dims_[i];
+            }
+            dims_ = {elements};
+        }
 
-  virtual bool loadLayer(std::ifstream& file);
+        T& operator()(int i)
+        {
+            OPM_ERROR_IF(dims_.size() != 1, "Invalid indexing for tensor");
 
-  virtual bool apply(const Tensor<Evaluation>& in, Tensor<Evaluation>& out);
+            OPM_ERROR_IF(!(i < dims_[0] && i >= 0),
+                         fmt::format(" Invalid i:  "
+                                     "{}"
+                                     "  max: "
+                                     "{}",
+                                     i,
+                                     dims_[0]));
 
- private:
-  ActivationType activation_type_;
-};
+            return data_[i];
+        }
 
-/** \class Scaling Layer class
- * A preprocessing layer which rescales input values to a new range.
- */
-template <class Evaluation> class NNLayerScaling : public NNLayer<Evaluation> {
- public:
-  NNLayerScaling()
-      : data_min(1.0f), data_max(1.0f), feat_inf(1.0f), feat_sup(1.0f) {}
+        T& operator()(int i, int j)
+        {
+            OPM_ERROR_IF(dims_.size() != 2, "Invalid indexing for tensor");
+            OPM_ERROR_IF(!(i < dims_[0] && i >= 0),
+                         fmt::format(" Invalid i:  "
+                                     "{}"
+                                     "  max: "
+                                     "{}",
+                                     i,
+                                     dims_[0]));
+            OPM_ERROR_IF(!(j < dims_[1] && j >= 0),
+                         fmt::format(" Invalid j:  "
+                                     "{}"
+                                     "  max: "
+                                     "{}",
+                                     j,
+                                     dims_[1]));
 
-  virtual ~NNLayerScaling() {}
+            return data_[dims_[1] * i + j];
+        }
 
-  virtual bool loadLayer(std::ifstream& file);
+        const T& operator()(int i, int j) const
+        {
+            OPM_ERROR_IF(dims_.size() != 2, "Invalid indexing for tensor");
+            OPM_ERROR_IF(!(i < dims_[0] && i >= 0),
+                         fmt::format(" Invalid i:  "
+                                     "{}"
+                                     "  max: "
+                                     "{}",
+                                     i,
+                                     dims_[0]));
+            OPM_ERROR_IF(!(j < dims_[1] && j >= 0),
+                         fmt::format(" Invalid j:  "
+                                     "{}"
+                                     "  max: "
+                                     "{}",
+                                     j,
+                                     dims_[1]));
+            return data_[dims_[1] * i + j];
+        }
 
-  virtual bool apply(const Tensor<Evaluation>& in, Tensor<Evaluation>& out);
+        T& operator()(int i, int j, int k)
+        {
+            OPM_ERROR_IF(dims_.size() != 3, "Invalid indexing for tensor");
+            OPM_ERROR_IF(!(i < dims_[0] && i >= 0),
+                         fmt::format(" Invalid i:  "
+                                     "{}"
+                                     "  max: "
+                                     "{}",
+                                     i,
+                                     dims_[0]));
+            OPM_ERROR_IF(!(j < dims_[1] && j >= 0),
+                         fmt::format(" Invalid j:  "
+                                     "{}"
+                                     "  max: "
+                                     "{}",
+                                     j,
+                                     dims_[1]));
+            OPM_ERROR_IF(!(k < dims_[2] && k >= 0),
+                         fmt::format(" Invalid k:  "
+                                     "{}"
+                                     "  max: "
+                                     "{}",
+                                     k,
+                                     dims_[2]));
 
- private:
-  Tensor<float> weights_;
-  Tensor<float> biases_;
-  float data_min;
-  float data_max;
-  float feat_inf;
-  float feat_sup;
-};
+            return data_[dims_[2] * (dims_[1] * i + j) + k];
+        }
 
-/** \class Unscaling Layer class
- * A postprocessing layer to undo the scaling according to feature_range.
- */
-template <class Evaluation>
-class NNLayerUnScaling : public NNLayer<Evaluation> {
- public:
-  NNLayerUnScaling()
-      : data_min(1.0f), data_max(1.0f), feat_inf(1.0f), feat_sup(1.0f) {}
+        const T& operator()(int i, int j, int k) const
+        {
+            OPM_ERROR_IF(dims_.size() != 3, "Invalid indexing for tensor");
+            OPM_ERROR_IF(!(i < dims_[0] && i >= 0),
+                         fmt::format(" Invalid i:  "
+                                     "{}"
+                                     "  max: "
+                                     "{}",
+                                     i,
+                                     dims_[0]));
+            OPM_ERROR_IF(!(j < dims_[1] && j >= 0),
+                         fmt::format(" Invalid j:  "
+                                     "{}"
+                                     "  max: "
+                                     "{}",
+                                     j,
+                                     dims_[1]));
+            OPM_ERROR_IF(!(k < dims_[2] && k >= 0),
+                         fmt::format(" Invalid k:  "
+                                     "{}"
+                                     "  max: "
+                                     "{}",
+                                     k,
+                                     dims_[2]));
 
-  virtual ~NNLayerUnScaling() {}
+            return data_[dims_[2] * (dims_[1] * i + j) + k];
+        }
 
-  virtual bool loadLayer(std::ifstream& file);
+        T& operator()(int i, int j, int k, int l)
+        {
+            OPM_ERROR_IF(dims_.size() != 4, "Invalid indexing for tensor");
+            OPM_ERROR_IF(!(i < dims_[0] && i >= 0),
+                         fmt::format(" Invalid i:  "
+                                     "{}"
+                                     "  max: "
+                                     "{}",
+                                     i,
+                                     dims_[0]));
+            OPM_ERROR_IF(!(j < dims_[1] && j >= 0),
+                         fmt::format(" Invalid j:  "
+                                     "{}"
+                                     "  max: "
+                                     "{}",
+                                     j,
+                                     dims_[1]));
+            OPM_ERROR_IF(!(k < dims_[2] && k >= 0),
+                         fmt::format(" Invalid k:  "
+                                     "{}"
+                                     "  max: "
+                                     "{}",
+                                     k,
+                                     dims_[2]));
+            OPM_ERROR_IF(!(l < dims_[3] && l >= 0),
+                         fmt::format(" Invalid l:  "
+                                     "{}"
+                                     "  max: "
+                                     "{}",
+                                     l,
+                                     dims_[3]));
 
-  virtual bool apply(const Tensor<Evaluation>& in, Tensor<Evaluation>& out);
+            return data_[dims_[3] * (dims_[2] * (dims_[1] * i + j) + k) + l];
+        }
 
- private:
-  Tensor<float> weights_;
-  Tensor<float> biases_;
-  float data_min;
-  float data_max;
-  float feat_inf;
-  float feat_sup;
-};
+        const T& operator()(int i, int j, int k, int l) const
+        {
+            OPM_ERROR_IF(dims_.size() != 4, "Invalid indexing for tensor");
+            OPM_ERROR_IF(!(i < dims_[0] && i >= 0),
+                         fmt::format(" Invalid i:  "
+                                     "{}"
+                                     "  max: "
+                                     "{}",
+                                     i,
+                                     dims_[0]));
+            OPM_ERROR_IF(!(j < dims_[1] && j >= 0),
+                         fmt::format(" Invalid j:  "
+                                     "{}"
+                                     "  max: "
+                                     "{}",
+                                     j,
+                                     dims_[1]));
+            OPM_ERROR_IF(!(k < dims_[2] && k >= 0),
+                         fmt::format(" Invalid k:  "
+                                     "{}"
+                                     "  max: "
+                                     "{}",
+                                     k,
+                                     dims_[2]));
+            OPM_ERROR_IF(!(l < dims_[3] && l >= 0),
+                         fmt::format(" Invalid l:  "
+                                     "{}"
+                                     "  max: "
+                                     "{}",
+                                     l,
+                                     dims_[3]));
 
-/** \class Dense Layer class
- * Densely-connected NN layer.
- */
-template <class Evaluation> class NNLayerDense : public NNLayer<Evaluation> {
- public:
-  NNLayerDense() {}
+            return data_[dims_[3] * (dims_[2] * (dims_[1] * i + j) + k) + l];
+        }
 
-  virtual ~NNLayerDense() {}
+        void fill(const T& value)
+        {
+            std::fill(data_.begin(), data_.end(), value);
+        }
 
-  virtual bool loadLayer(std::ifstream& file);
+        // Tensor addition
+        Tensor operator+(const Tensor& other)
+        {
+            OPM_ERROR_IF(dims_.size() != other.dims_.size(), "Cannot add tensors with different dimensions");
+            Tensor result;
+            result.dims_ = dims_;
+            result.data_.resize(data_.size());
 
-  virtual bool apply(const Tensor<Evaluation>& in, Tensor<Evaluation>& out);
+            std::transform(
+                data_.begin(), data_.end(), other.data_.begin(), result.data_.begin(), [](const T& x, const T& y) {
+                    return x + y;
+                });
 
- private:
-  Tensor<float> weights_;
-  Tensor<float> biases_;
+            return result;
+        }
 
-  NNLayerActivation<Evaluation> activation_;
-};
+        // Tensor multiplication
+        Tensor multiply(const Tensor& other)
+        {
+            OPM_ERROR_IF(dims_.size() != other.dims_.size(), "Cannot multiply elements with different dimensions");
 
-/** \class Embedding Layer class
- * Turns nonnegative integers (indexes) into dense vectors of fixed size.
- */
-template <class Evaluation>
-class NNLayerEmbedding : public NNLayer<Evaluation> {
- public:
-  NNLayerEmbedding() {}
+            Tensor result;
+            result.dims_ = dims_;
+            result.data_.resize(data_.size());
 
-  virtual ~NNLayerEmbedding() {}
+            std::transform(
+                data_.begin(), data_.end(), other.data_.begin(), result.data_.begin(), [](const T& x, const T& y) {
+                    return x * y;
+                });
 
-  virtual bool loadLayer(std::ifstream& file);
+            return result;
+        }
 
-  virtual bool apply(const Tensor<Evaluation>& in, Tensor<Evaluation>& out);
+        // Tensor dot for 2d tensor
+        Tensor dot(const Tensor& other)
+        {
+            OPM_ERROR_IF(dims_.size() != 2, "Invalid tensor dimensions");
+            OPM_ERROR_IF(other.dims_.size() != 2, "Invalid tensor dimensions");
 
- private:
-  Tensor<float> weights_;
-};
+            OPM_ERROR_IF(dims_[1] != other.dims_[0], "Cannot multiply with different inner dimensions");
 
-/** \class Neural Network Model class
- * A model grouping layers into an object
- */
-template <class Evaluation> class NNModel {
- public:
-  enum class LayerType { kScaling = 1, kUnScaling = 2, kDense = 3, kActivation = 4 };
+            Tensor tmp(dims_[0], other.dims_[1]);
 
-  NNModel() {}
+            for (int i = 0; i < dims_[0]; i++) {
+                for (int j = 0; j < other.dims_[1]; j++) {
+                    for (int k = 0; k < dims_[1]; k++) {
+                        tmp(i, j) += (*this)(i, k) * other(k, j);
+                    }
+                }
+            }
 
-  virtual ~NNModel() {}
+            return tmp;
+        }
 
-  // loads models (.model files) generated by Kerasify 
-  virtual bool loadModel(const std::string& filename);
+        std::vector<int> dims_;
+        std::vector<T> data_;
+    };
 
-  virtual bool apply(const Tensor<Evaluation>& in, Tensor<Evaluation>& out);
+    // NN layer
+    // ---------------------
+    /** \class Neural Network  Layer base class.
+     * Objects of type Evaluation can be AD object Opm::DenseAd::Evaluation,
+    double or float types.
+     */
+    template <class Evaluation>
+    class NNLayer
+    {
+    public:
+        NNLayer()
+        {
+        }
 
- private:
-  std::vector<std::unique_ptr<NNLayer<Evaluation>>> layers_;
-};
+        virtual ~NNLayer()
+        {
+        }
 
-/** \class Neural Network Timer class
- */
-class NNTimer {
- public:
-  NNTimer() {}
+        // Loads the ML trained file, returns true if the file exists
+        virtual bool loadLayer(std::ifstream& file) = 0;
+        // Apply the NN layers
+        virtual bool apply(const Tensor<Evaluation>& in, Tensor<Evaluation>& out) = 0;
+    };
 
-  void start() { start_ = std::chrono::high_resolution_clock::now(); }
+    /** \class Activation  Layer class
+     * Applies an activation function
+     */
+    template <class Evaluation>
+    class NNLayerActivation : public NNLayer<Evaluation>
+    {
+    public:
+        enum class ActivationType { kLinear = 1, kRelu = 2, kSoftPlus = 3, kSigmoid = 4, kTanh = 5, kHardSigmoid = 6 };
 
-  float stop() {
-    std::chrono::time_point<std::chrono::high_resolution_clock> now =
-        std::chrono::high_resolution_clock::now();
+        NNLayerActivation()
+            : activation_type_(ActivationType::kLinear)
+        {
+        }
 
-    std::chrono::duration<double> diff = now - start_;
+        virtual ~NNLayerActivation()
+        {
+        }
 
-    return diff.count();
-  }
+        virtual bool loadLayer(std::ifstream& file);
 
- private:
-  std::chrono::time_point<std::chrono::high_resolution_clock> start_;
-};
+        virtual bool apply(const Tensor<Evaluation>& in, Tensor<Evaluation>& out);
 
-}  // namespace ML
+    private:
+        ActivationType activation_type_;
+    };
 
-}  // namespace Opm
+    /** \class Scaling Layer class
+     * A preprocessing layer which rescales input values to a new range.
+     */
+    template <class Evaluation>
+    class NNLayerScaling : public NNLayer<Evaluation>
+    {
+    public:
+        NNLayerScaling()
+            : data_min(1.0f)
+            , data_max(1.0f)
+            , feat_inf(1.0f)
+            , feat_sup(1.0f)
+        {
+        }
 
-#endif  // ML_MODEL_H_
+        virtual ~NNLayerScaling()
+        {
+        }
+
+        virtual bool loadLayer(std::ifstream& file);
+
+        virtual bool apply(const Tensor<Evaluation>& in, Tensor<Evaluation>& out);
+
+    private:
+        Tensor<float> weights_;
+        Tensor<float> biases_;
+        float data_min;
+        float data_max;
+        float feat_inf;
+        float feat_sup;
+    };
+
+    /** \class Unscaling Layer class
+     * A postprocessing layer to undo the scaling according to feature_range.
+     */
+    template <class Evaluation>
+    class NNLayerUnScaling : public NNLayer<Evaluation>
+    {
+    public:
+        NNLayerUnScaling()
+            : data_min(1.0f)
+            , data_max(1.0f)
+            , feat_inf(1.0f)
+            , feat_sup(1.0f)
+        {
+        }
+
+        virtual ~NNLayerUnScaling()
+        {
+        }
+
+        virtual bool loadLayer(std::ifstream& file);
+
+        virtual bool apply(const Tensor<Evaluation>& in, Tensor<Evaluation>& out);
+
+    private:
+        Tensor<float> weights_;
+        Tensor<float> biases_;
+        float data_min;
+        float data_max;
+        float feat_inf;
+        float feat_sup;
+    };
+
+    /** \class Dense Layer class
+     * Densely-connected NN layer.
+     */
+    template <class Evaluation>
+    class NNLayerDense : public NNLayer<Evaluation>
+    {
+    public:
+        NNLayerDense()
+        {
+        }
+
+        virtual ~NNLayerDense()
+        {
+        }
+
+        virtual bool loadLayer(std::ifstream& file);
+
+        virtual bool apply(const Tensor<Evaluation>& in, Tensor<Evaluation>& out);
+
+    private:
+        Tensor<float> weights_;
+        Tensor<float> biases_;
+
+        NNLayerActivation<Evaluation> activation_;
+    };
+
+    /** \class Embedding Layer class
+     * Turns nonnegative integers (indexes) into dense vectors of fixed size.
+     */
+    template <class Evaluation>
+    class NNLayerEmbedding : public NNLayer<Evaluation>
+    {
+    public:
+        NNLayerEmbedding()
+        {
+        }
+
+        virtual ~NNLayerEmbedding()
+        {
+        }
+
+        virtual bool loadLayer(std::ifstream& file);
+
+        virtual bool apply(const Tensor<Evaluation>& in, Tensor<Evaluation>& out);
+
+    private:
+        Tensor<float> weights_;
+    };
+
+    /** \class Neural Network Model class
+     * A model grouping layers into an object
+     */
+    template <class Evaluation>
+    class NNModel
+    {
+    public:
+        enum class LayerType { kScaling = 1, kUnScaling = 2, kDense = 3, kActivation = 4 };
+
+        NNModel()
+        {
+        }
+
+        virtual ~NNModel()
+        {
+        }
+
+        // loads models (.model files) generated by Kerasify
+        virtual bool loadModel(const std::string& filename);
+
+        virtual bool apply(const Tensor<Evaluation>& in, Tensor<Evaluation>& out);
+
+    private:
+        std::vector<std::unique_ptr<NNLayer<Evaluation>>> layers_;
+    };
+
+    /** \class Neural Network Timer class
+     */
+    class NNTimer
+    {
+    public:
+        NNTimer()
+        {
+        }
+
+        void start()
+        {
+            start_ = std::chrono::high_resolution_clock::now();
+        }
+
+        float stop()
+        {
+            std::chrono::time_point<std::chrono::high_resolution_clock> now = std::chrono::high_resolution_clock::now();
+
+            std::chrono::duration<double> diff = now - start_;
+
+            return diff.count();
+        }
+
+    private:
+        std::chrono::time_point<std::chrono::high_resolution_clock> start_;
+    };
+
+} // namespace ML
+
+} // namespace Opm
+
+#endif // ML_MODEL_H_
