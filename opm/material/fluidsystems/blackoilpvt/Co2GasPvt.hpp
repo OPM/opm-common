@@ -77,9 +77,9 @@ public:
               Scalar P_ref = 101325);
 
     Co2GasPvt(const Params& params,
-              ContainerT brineReferenceDensity,
-              ContainerT gasReferenceDensity,
-              ContainerT salinity,
+              const ContainerT& brineReferenceDensity,
+              const ContainerT& gasReferenceDensity,
+              const ContainerT& salinity,
               bool enableEzrokhiDensity,
               bool enableVaporization,
               int activityModel,
