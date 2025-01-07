@@ -43,6 +43,7 @@ namespace EclIO
         : EclFile(filename)
         , inputFileName {filename}
         , m_grid_name {grid_name}
+        , m_porosity_mode(-1)
     {
         initFileName = inputFileName.parent_path() / inputFileName.stem();
 
@@ -57,22 +58,35 @@ namespace EclIO
         actnum_array_index = -1;
         nnc1_array_index = -1;
         nnc2_array_index = -1;
+        nncg_array_index = -1;
+        nncl_array_index = -1;
         coordsys_array_index = -1;
+
         m_radial = false;
         m_mapaxes_loaded = false;
         double length_factor = 1.0;
+
 
         int hostnum_index = -1;
 
         for (size_t n = 0; n < array_name.size(); n++) {
 
-            if (array_name[n] == "ENDLGR")
+            if (array_name[n] == "ENDLGR") {
                 lgrname = "global";
+                while (lgr_names.size() > lgr_parents.size()) {
+                    lgr_parents.push_back("");
+                }
+            }
 
             if (array_name[n] == "LGR") {
                 auto lgr = this->get<std::string>(n);
                 lgrname = lgr[0];
                 lgr_names.push_back(lgr[0]);
+            }
+
+            if (array_name[n] == "LGRPARNT") {
+                auto lgr_parent = this->get<std::string>(n);
+                lgr_parents.push_back(lgr_parent[0]);
             }
 
             if (array_name[n] == "NNCHEAD") {
@@ -82,6 +96,11 @@ namespace EclIO
                     lgrname = "global";
                 else
                     lgrname = lgr_names[nnchead[1] - 1];
+            }
+
+            if (array_name[n] == "GRIDUNIT") {
+                auto gridunit = this->get<std::string>(n);
+                m_grid_unit = gridunit[0];
             }
 
             if (array_name[n] == "MAPUNITS") {
@@ -116,8 +135,7 @@ namespace EclIO
                     nijk[2] = gridhead[3];
 
                     numres = (gridhead.size() > 24) ? gridhead[24] : 1;
-
-                    m_radial = (gridhead.size() > 26) && (gridhead[26] > 0);
+                    m_radial = (gridhead.size() > 26) ? gridhead[26] : 1;
                 }
 
                 if (array_name[n] == "COORD")
@@ -134,13 +152,24 @@ namespace EclIO
                     nnc2_array_index = n;
                 else if (array_name[n] == "HOSTNUM")
                     hostnum_index = n;
+                else if (array_name[n] == "NNCL")
+                    nncl_array_index = n;
+                else if (array_name[n] == "NNCG")
+                    nncg_array_index = n;
             }
 
-            if ((lgrname == "global") && (array_name[n] == "GRIDHEAD")) {
-                auto gridhead = get<int>(n);
-                host_nijk[0] = gridhead[1];
-                host_nijk[1] = gridhead[2];
-                host_nijk[2] = gridhead[3];
+            if ((lgrname == "global")) {
+
+                if (array_name[n] == "GRIDHEAD") {
+                    const auto& gridhead = get<int>(n);
+                    host_nijk[0] = gridhead[1];
+                    host_nijk[1] = gridhead[2];
+                    host_nijk[2] = gridhead[3];
+
+                } else if (array_name[n] == "FILEHEAD") {
+                    const auto& filehead = get<int>(n);
+                    m_porosity_mode = filehead[5];
+                }
             }
         }
 
@@ -161,21 +190,14 @@ namespace EclIO
 
         if (actnum_array_index != -1) {
             auto actnum = this->get<int>(actnum_array_index);
-            nactive = 0;
-            for (size_t i = 0; i < actnum.size(); i++) {
-                if (actnum[i] > 0) {
-                    act_index.push_back(nactive);
-                    glob_index.push_back(i);
-                    nactive++;
-                } else {
-                    act_index.push_back(-1);
-                }
-            }
+            set_active_cells(actnum);
         } else {
             int nCells = nijk[0] * nijk[1] * nijk[2];
             act_index.resize(nCells);
+            act_frac_index.resize(nCells);
             glob_index.resize(nCells);
             std::iota(act_index.begin(), act_index.end(), 0);
+            std::iota(act_frac_index.begin(), act_frac_index.end(), 0);
             std::iota(glob_index.begin(), glob_index.end(), 0);
         }
 
@@ -188,6 +210,41 @@ namespace EclIO
             });
         }
     }
+
+    void EGrid::set_active_cells(const std::vector<int>& active_cell_info)
+    {
+        act_index.clear();
+        act_frac_index.clear();
+        glob_index.clear();
+        nactive = 0;
+        nactive_frac = 0;
+        int nglobsize = 0;
+        for (size_t i = 0; i < active_cell_info.size(); i++) {
+            const int an = active_cell_info[i];
+            if (an > 0) {
+                if (an == 1) {
+                    act_index.push_back(nglobsize);
+                    act_frac_index.push_back(-1);
+                    nactive++;
+                } else if (an == 2) {
+                    act_index.push_back(-1);
+                    act_frac_index.push_back(nglobsize);
+                    nactive_frac++;
+                } else if (an == 3) {
+                    act_index.push_back(nglobsize);
+                    nactive++;
+                    act_frac_index.push_back(nglobsize);
+                    nactive_frac++;
+                }
+                glob_index.push_back(i);
+                nglobsize++;
+            } else {
+                act_index.push_back(-1);
+                act_frac_index.push_back(-1);
+            }
+        }
+    }
+
 
     std::vector<std::array<int, 3>> EGrid::hostCellsIJK()
     {
@@ -238,16 +295,19 @@ namespace EclIO
 
     void EGrid::load_nnc_data()
     {
+        if (!std::filesystem::exists(initFileName))
+            return;
+
+        Opm::EclIO::EInit init(initFileName.string());
+
         if ((nnc1_array_index > -1) && (nnc2_array_index > -1)) {
 
             nnc1_array = getImpl(nnc1_array_index, Opm::EclIO::INTE, inte_array, "inte");
             nnc2_array = getImpl(nnc2_array_index, Opm::EclIO::INTE, inte_array, "inte");
 
-            if ((std::filesystem::exists(initFileName)) && (nnc1_array.size() > 0)) {
-                Opm::EclIO::EInit init(initFileName.generic_string());
+            if (nnc1_array.size() > 0) {
 
                 auto init_dims = init.grid_dimension(m_grid_name);
-                int init_nactive = init.activeCells(m_grid_name);
 
                 if (init_dims != nijk) {
                     std::string message = "Dimensions of Egrid differ from dimensions found in init file. ";
@@ -259,6 +319,7 @@ namespace EclIO
                     OPM_THROW(std::invalid_argument, message);
                 }
 
+                int init_nactive = init.activeCells(m_grid_name);
                 if (init_nactive != nactive) {
                     std::string message = "Number of active cells are different in Egrid and Init file.";
                     message = message + " Egrid: " + std::to_string(nactive)
@@ -269,10 +330,18 @@ namespace EclIO
                 auto trans_data = init.getInitData<float>("TRANNNC", m_grid_name);
 
                 if (trans_data.size() != nnc1_array.size()) {
-                    std::string message = "inconsistent size of array TRANNNC in init file. ";
-                    message = message + " Size of NNC1 and NNC2: " + std::to_string(nnc1_array.size());
-                    message = message + " Size of TRANNNC: " + std::to_string(trans_data.size());
-                    OPM_THROW(std::invalid_argument, message);
+
+                    auto number_nnc_header = init.number_of_nnc_in_header();
+                    if (number_nnc_header != (int)trans_data.size()) {
+                        std::string message = "inconsistent size of array TRANNNC in init file. ";
+                        message = message + " Size of NNC1 and NNC2 in grid: " + std::to_string(nnc1_array.size());
+                        message = message + " Size of TRANNNC in init: " + std::to_string(trans_data.size());
+                        message = message + " Size in init header: " + std::to_string(number_nnc_header);
+                        OPM_THROW(std::invalid_argument, message);
+                    } else {
+                        nnc1_array = init.getInitData<int>("NNC1");
+                        nnc2_array = init.getInitData<int>("NNC2");
+                    }
                 }
 
                 transnnc_array = trans_data;
@@ -280,7 +349,44 @@ namespace EclIO
 
             m_nncs_loaded = true;
         }
+        if ((nncg_array_index > -1) && (nncl_array_index > -1)) {
+
+            nncg_array = getImpl(nncg_array_index, Opm::EclIO::INTE, inte_array, "inte");
+            nncl_array = getImpl(nncl_array_index, Opm::EclIO::INTE, inte_array, "inte");
+
+            if (nncg_array.size() > 0) {
+                auto trangl_data = init.getInitData<float>("TRANGL", m_grid_name);
+                if (trangl_data.size() != nncg_array.size()) {
+                    std::string message = "inconsistent size of array TRANGL in init file. ";
+                    message = message + " Size of NNCG and NNCL: " + std::to_string(nncl_array.size());
+                    message = message + " Size of TRANGL: " + std::to_string(trangl_data.size());
+                    OPM_THROW(std::invalid_argument, message);
+                }
+
+                transgl_array = trangl_data;
+            }
+            m_nncs_loaded = true;
+        }
     }
+
+    std::vector<ENNCConnection> EGrid::nnc_connections(int this_grid_id)
+    {
+        std::vector<ENNCConnection> connections;
+
+        if (!m_nncs_loaded)
+            load_nnc_data();
+
+        for (int n = 0; n < (int)nnc1_array.size(); n++) {
+            connections.emplace_back(this_grid_id, nnc1_array[n], this_grid_id, nnc2_array[n], transnnc_array[n]);
+        }
+
+        for (int n = 0; n < (int)nncg_array.size(); n++) {
+            connections.emplace_back(0, nncg_array[n], this_grid_id, nncl_array[n], transgl_array[n]);
+        }
+
+        return connections;
+    }
+
 
     int EGrid::global_index(int i, int j, int k) const
     {
@@ -303,6 +409,16 @@ namespace EclIO
         return act_index[n];
     }
 
+    int EGrid::active_frac_index(int i, int j, int k) const
+    {
+        int n = i + j * nijk[0] + k * nijk[0] * nijk[1];
+
+        if (i < 0 || i >= nijk[0] || j < 0 || j >= nijk[1] || k < 0 || k >= nijk[2]) {
+            OPM_THROW(std::invalid_argument, "i, j or/and k out of range");
+        }
+
+        return act_frac_index[n];
+    }
 
     std::array<int, 3> EGrid::ijk_from_active_index(int actInd) const
     {
@@ -323,6 +439,24 @@ namespace EclIO
         return result;
     }
 
+    std::array<int, 3> EGrid::ijk_from_active_frac_index(int actFracInd) const
+    {
+        if (actFracInd < 0 || actFracInd >= nactive_frac) {
+            OPM_THROW(std::invalid_argument, "active fracture index out of range");
+        }
+
+        int _glob = glob_index[actFracInd];
+
+        std::array<int, 3> result;
+        result[2] = _glob / (nijk[0] * nijk[1]);
+
+        int rest = _glob % (nijk[0] * nijk[1]);
+
+        result[1] = rest / nijk[0];
+        result[0] = rest % nijk[0];
+
+        return result;
+    }
 
     std::array<int, 3> EGrid::ijk_from_global_index(int globInd) const
     {
@@ -368,6 +502,15 @@ namespace EclIO
                                std::array<double, 8>& Y,
                                std::array<double, 8>& Z)
     {
+        getCellCorners(ijk, X, Y, Z, m_radial);
+    }
+
+    void EGrid::getCellCorners(const std::array<int, 3>& ijk,
+                               std::array<double, 8>& X,
+                               std::array<double, 8>& Y,
+                               std::array<double, 8>& Z,
+                               bool convert_to_radial_coords)
+    {
         if (coord_array.empty())
             load_grid_data();
 
@@ -395,15 +538,12 @@ namespace EclIO
             Z[n] = zcorn_array[zind[n]];
 
         for (int n = 0; n < 4; n++) {
-            double xt;
-            double yt;
-            double xb;
-            double yb;
+            double xt, yt, xb, yb;
 
             double zt = coord_array[pind[n] + 2];
             double zb = coord_array[pind[n] + 5];
 
-            if (m_radial) {
+            if (convert_to_radial_coords) {
                 xt = coord_array[pind[n]] * cos(coord_array[pind[n] + 1] / 180.0 * M_PI);
                 yt = coord_array[pind[n]] * sin(coord_array[pind[n] + 1] / 180.0 * M_PI);
                 xb = coord_array[pind[n] + 3] * cos(coord_array[pind[n] + 4] / 180.0 * M_PI);
@@ -415,16 +555,20 @@ namespace EclIO
                 yb = coord_array[pind[n] + 4];
             }
 
-            if (zt == zb) {
+            const auto diffZ = zt - zb;
+
+            if (diffZ == 0.0) {
                 X[n] = xt;
                 X[n + 4] = xt;
                 Y[n] = yt;
                 Y[n + 4] = yt;
+
             } else {
-                X[n] = xt + (xb - xt) / (zt - zb) * (zt - Z[n]);
-                X[n + 4] = xt + (xb - xt) / (zt - zb) * (zt - Z[n + 4]);
-                Y[n] = yt + (yb - yt) / (zt - zb) * (zt - Z[n]);
-                Y[n + 4] = yt + (yb - yt) / (zt - zb) * (zt - Z[n + 4]);
+                X[n] = xt + (xb - xt) / diffZ * (zt - Z[n]);
+                X[n + 4] = xt + (xb - xt) / diffZ * (zt - Z[n + 4]);
+
+                Y[n] = yt + (yb - yt) / diffZ * (zt - Z[n]);
+                Y[n + 4] = yt + (yb - yt) / diffZ * (zt - Z[n + 4]);
             }
         }
     }
@@ -648,8 +792,5 @@ namespace EclIO
             }
         }
     }
-
-
-
 } // namespace EclIO
 } // namespace Opm
