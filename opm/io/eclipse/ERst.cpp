@@ -114,7 +114,7 @@ namespace EclIO
         int start_ind_lgr;
         std::string last_array_name;
 
-        if ((lgr_name == "") or (lgr_name_upper == "GLOBAL")) {
+        if (lgr_name.empty() || lgr_name_upper == "GLOBAL") {
             auto rng = this->arrIndexRange.at(reportStepNumber);
             start_ind_lgr = std::get<0>(rng);
 
@@ -166,6 +166,30 @@ namespace EclIO
         }
 
         return count;
+    }
+
+    int ERst::dataSize(const std::string& name, int reportStepNumber) const
+    {
+        if (!hasReportStepNumber(reportStepNumber)) {
+            std::string message = "Trying to get size of vectors of name " + name + " from non existing sequence "
+                + std::to_string(reportStepNumber);
+            OPM_THROW(std::invalid_argument, message);
+        }
+
+        int dataSize = 0;
+
+        auto range_it = arrIndexRange.find(reportStepNumber);
+        if (range_it != arrIndexRange.end()) {
+            std::pair<int, int> indexRange = range_it->second;
+
+            for (int i = std::get<0>(indexRange); i < std::get<1>(indexRange); i++) {
+                if (array_name[i] == name) {
+                    dataSize += array_size[i];
+                }
+            }
+        }
+
+        return dataSize;
     }
 
     void ERst::initUnified()
