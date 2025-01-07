@@ -28,10 +28,10 @@ namespace EclIO
 
     EInit::EInit(const std::string& filename)
         : EclFile(filename)
+        , dual_porosity(false)
+        , no_of_nnc(0)
     {
-        std::string lgrname;
-
-        lgrname = "global";
+        std::string lgrname = "global";
 
         for (size_t n = 0; n < array_name.size(); n++) {
             if (array_name[n] == "LGR") {
@@ -70,6 +70,23 @@ namespace EclIO
                     lgr_nijk[lgr_ind] = {inteh[8], inteh[9], inteh[10]};
                     lgr_nactive[lgr_ind] = inteh[11];
                 }
+            } else if (array_name[n] == "LOGIHEAD") {
+                if (lgrname == "global") {
+                    auto logi = getImpl(n, LOGI, logi_array, "bool");
+
+                    if (logi_array.size() > 14) {
+                        dual_porosity = logi[14];
+                        if (dual_porosity) {
+                            global_nijk[2] /= 2;
+                        }
+                    }
+                }
+            } else if (array_name[n] == "NNCHEAD") {
+                if (lgrname == "global") {
+                    auto head = getImpl(n, INTE, inte_array, "integer");
+                    if (!head.empty())
+                        no_of_nnc = head[0];
+                }
             }
         }
     }
@@ -92,22 +109,28 @@ namespace EclIO
 
             return lgr_array_index[lgr_index].at(name);
         }
-    }
+    };
 
     int EInit::activeCells(const std::string& grid_name) const
     {
-        if (grid_name == "global")
+        if (grid_name == "global") {
+            if (dual_porosity)
+                return global_nactive / 2;
             return global_nactive;
-        else
+        } else {
+            if (dual_porosity)
+                return lgr_nactive[get_lgr_index(grid_name)] / 2;
             return lgr_nactive[get_lgr_index(grid_name)];
+        }
     }
 
     const std::array<int, 3>& EInit::grid_dimension(const std::string& grid_name) const
     {
-        if (grid_name == "global")
+        if (grid_name == "global") {
             return global_nijk;
-        else
+        } else {
             return lgr_nijk[get_lgr_index(grid_name)];
+        }
     }
 
     bool EInit::hasLGR(const std::string& name) const

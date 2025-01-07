@@ -53,6 +53,11 @@ namespace EclIO
             return this->ImplgetInitData<T>(name, grid_name);
         }
 
+        int number_of_nnc_in_header() const
+        {
+            return no_of_nnc;
+        }
+
     protected:
         template <typename T>
         const std::vector<T>& ImplgetInitData(const std::string& name, const std::string& grid_name = "global");
@@ -63,6 +68,9 @@ namespace EclIO
 
         int global_nactive;
         std::vector<int> lgr_nactive;
+        bool dual_porosity;
+
+        int no_of_nnc;
 
         std::vector<std::string> lgr_names;
 
