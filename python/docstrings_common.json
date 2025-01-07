@@ -2,7 +2,11 @@
     "SummaryStateClass":{
         "type": "class",
         "signature": "opm.io.sim.SummaryState",
-        "doc": "The SummaryState class - this is where the current summary results of the simulator are stored.\nThe SummaryState class has methods to get hold of well, group and general variables."
+        "doc": "The `SummaryState <#opm.io.sim.SummaryState>`_ class - this is where the current summary results of the simulator are stored.\nThe `SummaryState <#opm.io.sim.SummaryState>`_ class has methods to get hold of well, group and general variables."
+    },
+    "SummaryState_update": {
+        "signature": "opm.io.sim.SummaryState.update(variable_name: str, value: double) -> None",
+        "doc": "Updates or increments the given variable of the `SummaryState <#opm.io.sim.SummaryState>`_, depending on whether the variable is cumulative or not. The variable must already exist in the `SummaryState <#opm.io.sim.SummaryState>`_ for this. \n\n:param variable_name: The name of the variable to update or increment.\n:type variable_name: str\n:param value: The value to set or increment the variable by.\n:type value: double"
     },
     "SummaryState_update_well_var": {
         "signature": "opm.io.sim.SummaryState.update_well_var(well_name: str, variable_name: str, new_value: double) -> None",
@@ -32,6 +36,10 @@
         "signature": "opm.io.sim.SummaryState.wells -> list",
         "doc": "Returns a list of strings containing all well names.\n\n:return: A list of strings representing all well names. \n:type return: list"
     },
+    "SummaryState_contains": {
+        "signature": "opm.io.sim.SummaryState.__contains__(variable_name: str) -> bool",
+        "doc": "Checks if a variable exists in the `SummaryState <#opm.io.sim.SummaryState>`_.\n\n:param variable_name: The name of the variable to check.\n:type variable_name: str\n\n:return: True if the variable exists, False otherwise. \n:type return: bool"
+    },
     "SummaryState_has_well_var": {
         "signature": "opm.io.sim.SummaryState.has_well_var(well_name: str, variable_name: str) -> bool",
         "doc": "Checks if a well variable exists.\n\n:param well_name: The name of the well.\n:type well_name: str\n:param variable_name: The name of the variable to check.\n:type variable_name: str\n\n:return: True if the variable exists for the well, False otherwise. \n:type return: bool"
@@ -39,6 +47,14 @@
     "SummaryState_has_group_var": {
         "signature": "opm.io.sim.SummaryState.has_group_var(group_name: str, variable_name: str) -> bool",
         "doc": "Checks if a group variable exists.\n\n:param group_name: The name of the group.\n:type group_name: str\n:param variable_name: The name of the variable to check.\n:type variable_name: str\n\n:return: True if the variable exists for the group, False otherwise. \n:type return: bool"
+    },
+    "SummaryState_setitem": {
+        "signature": "opm.io.sim.SummaryState.__setitem__(variable_name: str, new_value: double) -> None",
+        "doc": "Updates or insert the variable of the `SummaryState <#opm.io.sim.SummaryState>`_.\n\n:param variable_name: The name of the variable to update or insert.\n:type variable_name: str\n:param new_value: The new value of the variable.\n:type new_value: double"
+    },
+    "SummaryState_getitem": {
+        "signature": "opm.io.sim.SummaryState.__getitem__(variable_name: str) -> double",
+        "doc": "Gets the value of a variable of the `SummaryState <#opm.io.sim.SummaryState>`_.\n\n:param variable_name: The name of the variable to retrieve.\n:type variable_name: str\n\n:return: The value of the specified variable for the well. \n:type return: double"
     },
     "EclipseStateClass": {
         "type": "class",
