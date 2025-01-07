@@ -23,8 +23,8 @@
   copyright holders.
 */
 
-#ifndef OPM_GENERICOILGASFLUIDSYSTEM_HPP
-#define OPM_GENERICOILGASFLUIDSYSTEM_HPP
+#ifndef OPM_GENERIC_OIL_GAS_WATER_FLUIDSYSTEM_HPP
+#define OPM_GENERIC_OIL_GAS_WATER_FLUIDSYSTEM_HPP
 
 #include <opm/common/OpmLog/OpmLog.hpp>
 
@@ -57,7 +57,7 @@ namespace Opm {
  * \tparam NumComp The number of the components in the fluid system.
  */
     template<class Scalar, int NumComp>
-    class GenericOilGasFluidSystem : public BaseFluidSystem<Scalar, GenericOilGasFluidSystem<Scalar, NumComp> > {
+    class GenericOilGasWaterFluidSystem : public BaseFluidSystem<Scalar, GenericOilGasWaterFluidSystem<Scalar, NumComp> > {
     public:
         // TODO: I do not think these should be constant in fluidsystem, will try to make it non-constant later
         static constexpr int numPhases = 3;
@@ -77,10 +77,10 @@ namespace Opm {
         static constexpr int compositionSwitchIdx = -1; // equil initializer
 
         template <class ValueType>
-        using ParameterCache = Opm::PTFlashParameterCache<ValueType, GenericOilGasFluidSystem<Scalar, NumComp>>;
-        using ViscosityModel = Opm::ViscosityModels<Scalar, GenericOilGasFluidSystem<Scalar, NumComp>>;
-        using CubicEOS = Opm::CubicEOS<Scalar, GenericOilGasFluidSystem<Scalar, NumComp>>;
-       	using WaterPvt = WaterPvtMultiplexer<Scalar>;
+        using ParameterCache = Opm::PTFlashParameterCache<ValueType, GenericOilGasWaterFluidSystem<Scalar, NumComp>>;
+        using ViscosityModel = Opm::ViscosityModels<Scalar, GenericOilGasWaterFluidSystem<Scalar, NumComp>>;
+        using CubicEOS = Opm::CubicEOS<Scalar, GenericOilGasWaterFluidSystem<Scalar, NumComp>>;
+        using WaterPvt = WaterPvtMultiplexer<Scalar>;
 
         struct ComponentParam {
             std::string name;
@@ -130,7 +130,7 @@ namespace Opm {
             // TODO: we are not considering the EOS region for now
             const auto& comp_config = eclState.compositionalConfig();
             // how should we utilize the numComps from the CompositionalConfig?
-            using FluidSystem = GenericOilGasFluidSystem<Scalar, NumComp>;
+            using FluidSystem = GenericOilGasWaterFluidSystem<Scalar, NumComp>;
             const std::size_t num_comps = comp_config.numComps();
             // const std::size_t num_eos_region = comp_config.
             assert(num_comps == NumComp);
@@ -358,48 +358,48 @@ namespace Opm {
         template <class LhsEval>
         static LhsEval convertXwGToxwG(const LhsEval&, unsigned)
         {
-            assert(false && "convertXwGToxwG not implemented for GenericOilGasFluidSystem!");
+            assert(false && "convertXwGToxwG not implemented for GenericOilGasWaterFluidSystem!");
             return 0.;
         }
         template <class LhsEval>
         static LhsEval convertXoGToxoG(const LhsEval&, unsigned)
         {
-            assert(false && "convertXoGToxoG not implemented for GenericOilGasFluidSystem!");
+            assert(false && "convertXoGToxoG not implemented for GenericOilGasWaterFluidSystem!");
             return 0.;
         }
 
         template <class LhsEval>
         static LhsEval convertxoGToXoG(const LhsEval&, unsigned)
         {
-            assert(false && "convertxoGToXoG not implemented for GenericOilGasFluidSystem!");
+            assert(false && "convertxoGToXoG not implemented for GenericOilGasWaterFluidSystem!");
             return 0.;
         }
 
         template <class LhsEval>
         static LhsEval convertXgOToxgO(const LhsEval&, unsigned)
         {
-            assert(false && "convertXgOToxgO not implemented for GenericOilGasFluidSystem!");
+            assert(false && "convertXgOToxgO not implemented for GenericOilGasWaterFluidSystem!");
             return 0.;
         }
 
         template <class LhsEval>
         static LhsEval convertRswToXwG(const LhsEval&, unsigned)
         {
-            assert(false && "convertRswToXwG not implemented for GenericOilGasFluidSystem!");
+            assert(false && "convertRswToXwG not implemented for GenericOilGasWaterFluidSystem!");
             return 0.;
         }
 
         template <class LhsEval>
         static LhsEval convertRvwToXgW(const LhsEval&, unsigned)
         {
-            assert(false && "convertRvwToXgW not implemented for GenericOilGasFluidSystem!");
+            assert(false && "convertRvwToXgW not implemented for GenericOilGasWaterFluidSystem!");
             return 0.;
         }
 
         template <class LhsEval>
         static LhsEval convertXgWToxgW(const LhsEval&, unsigned)
         {
-            assert(false && "convertXgWToxgW not implemented for GenericOilGasFluidSystem!");
+            assert(false && "convertXgWToxgW not implemented for GenericOilGasWaterFluidSystem!");
             return 0.;
         }
 
@@ -449,16 +449,16 @@ namespace Opm {
     };
 
     template <class Scalar, int NumComp>
-    std::vector<typename GenericOilGasFluidSystem<Scalar, NumComp>::ComponentParam>
-    GenericOilGasFluidSystem<Scalar, NumComp>::component_param_;
+    std::vector<typename GenericOilGasWaterFluidSystem<Scalar, NumComp>::ComponentParam>
+    GenericOilGasWaterFluidSystem<Scalar, NumComp>::component_param_;
 
     template <class Scalar, int NumComp>
     std::vector<Scalar>
-    GenericOilGasFluidSystem<Scalar, NumComp>::interaction_coefficients_;
+    GenericOilGasWaterFluidSystem<Scalar, NumComp>::interaction_coefficients_;
     
     template <class Scalar, int NumComp>
     std::unique_ptr<WaterPvtMultiplexer<Scalar> > 
-    GenericOilGasFluidSystem<Scalar, NumComp>::waterPvt_;
+    GenericOilGasWaterFluidSystem<Scalar, NumComp>::waterPvt_;
 
 }
-#endif // OPM_GENERICOILGASFLUIDSYSTEM_HPP
+#endif // OPM_GENERIC_OIL_GAS_WATER_FLUIDSYSTEM_HPP
