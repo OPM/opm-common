@@ -1405,7 +1405,7 @@ bool parseState( ParserState& parserState, const Parser& parser ) {
             if (includeFile.has_value()) {
                 auto& deck_tree = parserState.deck.tree();
                 deck_tree.add_include(std::filesystem::absolute(parserState.current_path()).generic_string(),
-                                      includeFile.value());
+                                      includeFile.value().generic_string());
                 parserState.loadFile(includeFile.value());
             }
             continue;

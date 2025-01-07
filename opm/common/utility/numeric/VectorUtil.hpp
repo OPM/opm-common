@@ -6,6 +6,7 @@
 #include <stdexcept>
 #include <tuple>
 #include <vector>
+#include <iterator>
 
 namespace VectorUtil {
 
