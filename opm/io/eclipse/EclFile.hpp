@@ -55,6 +55,8 @@ public:
       doub_array.clear();
       logi_array.clear();
       char_array.clear();
+
+      std::fill(arrayLoaded.begin(), arrayLoaded.end(), false);
     }
 
     using EclEntry = std::tuple<std::string, eclArrType, std::int64_t>;
