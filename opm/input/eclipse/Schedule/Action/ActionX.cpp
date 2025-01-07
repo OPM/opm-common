@@ -104,8 +104,7 @@ bool ActionX::valid_keyword(const std::string& keyword)
 
         "GCONINJE", "GCONPROD", "GCONSUMP",
         "GLIFTOPT",
-        "GRUPNET", "GRUPTARG", "GRUPTREE",
-        "GSATINJE", "GSATPROD",
+        "GRUPNET", "GRUPTREE",
 
         "MULTX", "MULTX-", "MULTY", "MULTY-", "MULTZ", "MULTZ-",
         "NEXT", "NEXTSTEP",
@@ -120,8 +119,6 @@ bool ActionX::valid_keyword(const std::string& keyword)
         "WPIMULT",
         "WSEGVALV",
         "WTEST", "WTMULT",
-
-        "TEST",
     };
 
     return actionx_allowed_list.find(keyword) != actionx_allowed_list.end();
