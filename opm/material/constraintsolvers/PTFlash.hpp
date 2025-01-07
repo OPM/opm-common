@@ -67,6 +67,7 @@ class PTFlash
     static constexpr int numComponents = FluidSystem::numComponents;
     enum { oilPhaseIdx = FluidSystem::oilPhaseIdx};
     enum { gasPhaseIdx = FluidSystem::gasPhaseIdx};
+    enum { waterPhaseIdx = FluidSystem::waterPhaseIdx};
     static constexpr int numMiscibleComponents = FluidSystem::numMiscibleComponents;
     static constexpr int numMisciblePhases = FluidSystem::numMisciblePhases; //oil, gas
     static constexpr int numEq = numMisciblePhases + numMisciblePhases * numMiscibleComponents;
@@ -707,6 +708,9 @@ protected:
         ParamCache paramCache(eos_type);
 
         for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
+            if (phaseIdx == static_cast<unsigned int>(waterPhaseIdx)) {
+                continue;
+            }
             paramCache.updatePhase(flash_fluid_state, phaseIdx);
             for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
                 // TODO: will phi here carry the correct derivatives?
@@ -746,6 +750,9 @@ protected:
             flash_fluid_state.setLvalue(l);
 
             for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
+                if (phaseIdx == static_cast<unsigned int>(waterPhaseIdx)) {
+                    continue;
+                }
                 paramCache.updatePhase(flash_fluid_state, phaseIdx);
                 for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
                     Eval phi = FluidSystem::fugacityCoefficient(flash_fluid_state, paramCache, phaseIdx, compIdx);
@@ -861,7 +868,7 @@ protected:
 
         // getting the secondary Jocobian matrix
         constexpr size_t num_equations = numMisciblePhases * numMiscibleComponents + 1;
-        constexpr size_t secondary_num_pv = numComponents + 1; // pressure, z for all the components
+        constexpr size_t secondary_num_pv = numComponents + 2; // pressure, z for all the components
         using SecondaryEval = Opm::DenseAd::Evaluation<double, secondary_num_pv>; // three z and one pressure
         using SecondaryComponentVector = Dune::FieldVector<SecondaryEval, numComponents>;
         using SecondaryFlashFluidState = Opm::CompositionalFluidState<SecondaryEval, FluidSystem>;
@@ -899,6 +906,9 @@ protected:
         using SecondaryParamCache = typename FluidSystem::template ParameterCache<typename SecondaryFlashFluidState::Scalar>;
         SecondaryParamCache secondary_param_cache(eos_type);
         for (unsigned phase_idx = 0; phase_idx < numPhases; ++phase_idx) {
+            if (phase_idx == static_cast<unsigned int>(waterPhaseIdx)) {
+                continue;
+            }
             secondary_param_cache.updatePhase(secondary_fluid_state, phase_idx);
             for (unsigned comp_idx = 0; comp_idx < numComponents; ++comp_idx) {
                 SecondaryEval phi = FluidSystem::fugacityCoefficient(secondary_fluid_state, secondary_param_cache, phase_idx, comp_idx);
@@ -949,6 +959,9 @@ protected:
         using PrimaryParamCache = typename FluidSystem::template ParameterCache<typename PrimaryFlashFluidState::Scalar>;
         PrimaryParamCache primary_param_cache(eos_type);
         for (unsigned phase_idx = 0; phase_idx < numPhases; ++phase_idx) {
+            if (phase_idx == static_cast<unsigned int>(waterPhaseIdx)) {
+                continue;
+            }
             primary_param_cache.updatePhase(primary_fluid_state, phase_idx);
             for (unsigned comp_idx = 0; comp_idx < numComponents; ++comp_idx) {
                 PrimaryEval phi = FluidSystem::fugacityCoefficient(primary_fluid_state, primary_param_cache, phase_idx, comp_idx);
@@ -1106,6 +1119,9 @@ protected:
             using ParamCache = typename FluidSystem::template ParameterCache<typename FlashFluidState::Scalar>;
             ParamCache paramCache(eos_type);
             for (int phaseIdx=0; phaseIdx<numPhases; ++phaseIdx){
+                if (phaseIdx == waterPhaseIdx) {
+                    continue;
+                }
                 paramCache.updatePhase(fluid_state, phaseIdx);
                 for (int compIdx=0; compIdx<numComponents; ++compIdx){
                     auto phi = FluidSystem::fugacityCoefficient(fluid_state, paramCache, phaseIdx, compIdx);
