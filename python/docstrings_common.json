@@ -88,7 +88,7 @@
     },
     "Schedule_getitem": {
         "signature": "opm.io.schedule.Schedule.__getitem__(report_step: int) -> ScheduleState",
-        "doc": "Returns the ScheduleState at the given report step.\n\n:param report_step: The report step.\n:type report_step: int\n\n:return: The ScheduleState at the given report step.\n:type return: ScheduleState"
+        "doc": "Returns the `ScheduleState <#ScheduleState>`_ at the given report step.\n\n:param report_step: The report step.\n:type report_step: int\n\n:return: The `ScheduleState <#ScheduleState>`_ at the given report step.\n:type return: ScheduleState"
     },
     "Schedule_shut_well_well_name_step": {
         "signature": "opm.io.schedule.Schedule.shut_well(well_name: str, step: int) -> None",
@@ -126,13 +126,53 @@
         "signature": "opm.io.schedule.Schedule._groups(report_step: int) -> list",
         "doc": "Gets a list of all groups at a specified report step.\n\n:param report_step: The report step to retrieve groups for.\n:type report_step: int\n\n:return: A list containing all groups at the specified report step. \n:type return: list"
     },
+    "Schedule_start": {
+        "signature": "opm.io.schedule.Schedule.start -> datetime.datetime",
+        "doc": "Retrieves the start time of the schedule as a `datetime.datetime <https://docs.python.org/3/library/datetime.html#datetime.datetime>`_.\n\n:return: The start time of the schedule.\n:type return: datetime.datetime"
+    },
+    "Schedule_end": {
+        "signature": "opm.io.schedule.Schedule.end -> datetime.datetime",
+        "doc": "Retrieves the end time of the schedule as a `datetime.datetime <https://docs.python.org/3/library/datetime.html#datetime.datetime>`_.\n\n:return: The end time of the schedule.\n:type return: datetime.datetime"
+    },
+    "Schedule_reportsteps": {
+        "signature": "opm.io.schedule.Schedule.reportsteps -> list[datetime.datetime]",
+        "doc": "Retrieves a list of all report steps in the schedule as a Python list of `datetime.datetime <https://docs.python.org/3/library/datetime.html#datetime.datetime>`_ objects.\n\n:return: A list containing the report steps of the schedule.\n:type return: list"
+    },
+    "Schedule_len": {
+        "signature": "opm.io.schedule.Schedule.__len__() -> int",
+        "doc": "Returns the number of report steps, i.e., the length of the Schedule.\n\n:return: The number of report steps.\n:type return: int"
+    },
     "Schedule_get_well": {
         "signature": "opm.io.schedule.Schedule.get_well(well_name: str, report_step: int) -> Well",
         "doc": "Retrieves a well at a given report step.\n\n:param well_name: The name of the well.\n:type well_name: str\n:param report_step: The report step.\n:type report_step: int\n\n:return: Well object at the given report step. \n:type return: well"
     },
     "Schedule_get_wells": {
-        "signature": "opm.io.schedule.Schedule.get_wells(well_name_pattern: str) -> list",
+        "signature": "opm.io.schedule.Schedule.get_wells(report_step: int) -> list",
+        "doc": "Gets the names of wells at the given report step.\n\n:param report_step: The report step.\n:type report_step: int\n\n:return: A list containing the names of wells at the given report step. \n:type return: list"
+    },
+    "Schedule_well_names": {
+        "signature": "opm.io.schedule.Schedule.well_names(well_name_pattern: str) -> list",
         "doc": "Gets the names of wells matching a specified pattern.\n\n:param well_name_pattern: The pattern for well names, where '*' acts as a wildcard.\n:type well_name_pattern: str\n\n:return: A list containing the names of wells that match the specified pattern. \n:type return: list"
+    },
+    "Schedule_insert_keywords_list": {
+        "signature": "opm.io.schedule.Schedule.insert_keywords(keywords: list, step: int) -> None",
+        "doc": "Inserts the given keywords into the Schedule at the given report step.\n\n:param keywords: A Python list of strings, contianing the keywords.\n:type keyword_list: list\n:param step: The report step.\n:type step: int"
+    },
+    "Schedule_insert_keywords_data_step_unit_system": {
+        "signature": "opm.io.schedule.Schedule.insert_keywords(data: str, step: int, unit_system: UnitSystem) -> None",
+        "doc": "Inserts the given keywords into the Schedule at the given report step using the given unit system.\n\n:param data: The deck string to be inserted into the Schedule.\n:type data: str\n:param step: The report step.\n:type step: int\n:param unit_system: The unit system.\n:type unit_system: UnitSystem"
+    },
+    "Schedule_insert_keywords_data_step": {
+        "signature": "opm.io.schedule.Schedule.insert_keywords(data: str, step: int) -> None",
+        "doc": "Inserts the given keywords into the Schedule at the given report step using the unit system of the Schedule.\n\n:param data: The deck string to be inserted into the Schedule.\n:type data: str\n:param step: The report step.\n:type step: int"
+    },
+    "Schedule_insert_keywords_data": {
+        "signature": "opm.io.schedule.Schedule.insert_keywords(data: str) -> None",
+        "doc": "Inserts the given keywords into the Schedule at the current report step using the unit system of the Schedule.\n\n:param data: The deck string to be inserted into the Schedule.\n:type data: str"
+    },
+    "Schedule_contains": {
+        "signature": "opm.io.schedule.Schedule.__contains__(well_name: str) -> bool",
+        "doc": "Checks if a well exists in the Schedule at the current report step.\n\n:param well_name: The name of the well to check.\n:type well_name: str\n\n:return: True if the well exists, False otherwise. \n:type return: bool"
     },
     "GroupClass": {
         "signature": "Group",
