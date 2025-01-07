@@ -119,8 +119,6 @@ bool ActionX::valid_keyword(const std::string& keyword)
         "WPIMULT",
         "WSEGVALV",
         "WTEST", "WTMULT",
-
-        "TEST",
     };
 
     return actionx_allowed_list.find(keyword) != actionx_allowed_list.end();
