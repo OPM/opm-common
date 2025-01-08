@@ -411,7 +411,9 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(GenericFluidSystem, Scalar, ScalarTypes)
                                        N2::criticalPressure(), N2::criticalVolume(), N2::acentricFactor()});
 
     // initialize water pvt
-    FluidSystem::init();
+    using WaterPvt = typename FluidSystem::WaterPvt;
+    std::shared_ptr<WaterPvt> waterPvt;
+    FluidSystem::setWaterPvt(std::move(waterPvt));
 
     checkFluidSystem<Scalar, FluidSystem, Scalar, Scalar>();
     checkFluidSystem<Scalar, FluidSystem, Evaluation, Scalar>();
