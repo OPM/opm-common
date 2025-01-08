@@ -289,5 +289,54 @@
     "Connection_Kh": {
         "signature": "Connection.kh -> double",
         "doc": "Returns the static 'Kh' product for the connection.\n\n:return: The static 'Kh' product for the connection.\n:type return: double"
+    },
+    "Deck": {
+        "type": "class",
+        "signature": "Deck",
+        "doc": "The Deck class represents a collection of keywords and their associated data used in reservoir simulations."
+    },
+    "Deck_len": {
+        "signature": "Deck.__len__() -> int",
+        "doc": "Returns the number of keywords in the deck.\n\n:return: The number of keywords.\n:type return: int"
+    },
+    "Deck_contains": {
+        "signature": "Deck.__contains__(keyword: str) -> bool",
+        "doc": "Checks if the specified keyword exists in the deck.\n\n:param keyword: The keyword to check.\n:type keyword: str\n:return: True if the keyword exists, otherwise False.\n:type return: bool"
+    },
+    "Deck_iter": {
+        "signature": "Deck.__iter__() -> Iterator[DeckKeyword]",
+        "doc": "Returns an iterator over the keywords in the deck.\n\n:return: An iterator over the keywords.\n:type return: Iterator[DeckKeyword]"
+    },
+    "Deck_getitem_int": {
+        "signature": "Deck.__getitem__(index: int) -> DeckKeyword",
+        "doc": "Returns the keyword at the specified index.\n\n:param index: The index of the keyword.\n:type index: int\n:return: The keyword at the specified index.\n:type return: DeckKeyword"
+    },
+    "Deck_getitem_string": {
+        "signature": "Deck.__getitem__(keyword_name: str) -> DeckKeyword",
+        "doc": "Returns the last entry of the DeckView of the specified keyword name.\n\n:param keyword: The name of the keyword.\n:type keyword: str\n:return: The last entry of the DeckView of the specified keyword name.\n:type return: DeckKeyword"
+    },
+    "Deck_getitem_tuple": {
+        "signature": "Deck.__getitem__(key: tuple(keyword_name: str, index: int)) -> DeckKeyword",
+        "doc": "Returns the entry at the index of the DeckView of the specified keyword name.\n\n:param key: The tuple key to access the entry.\n:type key: tuple (str, int)\n:return: The the entry at the index of the DeckView of the specified keyword name.\n:type return: DeckKeyword"
+    },
+    "Deck_str": {
+        "signature": "Deck.__str__() -> str",
+        "doc": "Returns a string representation of the deck.\n\n:return: A string representation of the deck.\n:type return: str"
+    },
+    "Deck_active_unit_system": {
+        "signature": "Deck.active_unit_system() -> UnitSystem",
+        "doc": "Returns the active unit system of the deck.\n\n:return: The active unit system.\n:type return: UnitSystem"
+    },
+    "Deck_default_unit_system": {
+        "signature": "Deck.default_unit_system() -> UnitSystem",
+        "doc": "Returns the default unit system of the deck.\n\n:return: The default unit system.\n:type return: UnitSystem"
+    },
+    "Deck_count": {
+        "signature": "Deck.count(keyword: str) -> int",
+        "doc": "Returns the number of occurrences of the specified keyword in the deck.\n\n:param keyword: The keyword to count.\n:type keyword: str\n:return: The number of occurrences of the keyword.\n:type return: int"
+    },
+    "Deck_add": {
+        "signature": "Deck.add(keyword: DeckKeyword) -> None",
+        "doc": "Adds a new keyword to the deck.\n\n:param keyword: The keyword to add.\n:type keyword: DeckKeyword"
     }
 }

@@ -5,6 +5,7 @@
 #include "converters.hpp"
 #include "export.hpp"
 
+#include <python/cxx/OpmCommonPythonDoc.hpp>
 
 namespace {
 
@@ -45,6 +46,8 @@ namespace {
 
 void python::common::export_Deck(py::module &module) {
 
+    using namespace Opm::Common::DocStrings;
+
     // Note: In the below class we use std::shared_ptr as the holder type, see:
     //
     //  https://pybind11.readthedocs.io/en/stable/advanced/smart_ptrs.html
@@ -52,27 +55,25 @@ void python::common::export_Deck(py::module &module) {
     // this makes it possible to share the returned object with e.g. and
     //   opm.simulators.BlackOilSimulator Python object
     //
-    py::class_< Deck, std::shared_ptr<Deck> >(module, "Deck")
-        .def( "__len__", &size )
-        .def( "__contains__", &hasKeyword )
+    py::class_<Deck, std::shared_ptr<Deck>>(module, "Deck", Deck_docstring)
+        .def("__len__", &size, Deck_len_docstring)
+        .def("__contains__", &hasKeyword, py::arg("keyword"), Deck_contains_docstring)
         .def("__iter__",
-             [] (const Deck &deck) { return py::make_iterator(deck.begin(), deck.end()); }, py::keep_alive<0, 1>())
-        .def( "__getitem__", &getKeyword_int, ref_internal)
-        .def( "__getitem__", &getKeyword_string, ref_internal)
-        .def( "__getitem__", &getKeyword_tuple, ref_internal)
-        .def( "__str__", &str<Deck>)
+             [](const Deck &deck) { return py::make_iterator(deck.begin(), deck.end()); },
+             py::keep_alive<0, 1>(), Deck_iter_docstring)
+        .def("__getitem__", &getKeyword_int, py::arg("index"), ref_internal, Deck_getitem_int_docstring)
+        .def("__getitem__", &getKeyword_string, py::arg("keyword"), ref_internal, Deck_getitem_string_docstring)
+        .def("__getitem__", &getKeyword_tuple, py::arg("keyword_index"), ref_internal, Deck_getitem_tuple_docstring)
+        .def("__str__", &str<Deck>, Deck_str_docstring)
+        .def("active_unit_system",
+             [](const Deck& deck) -> const UnitSystem& { return deck.getActiveUnitSystem(); },
+             Deck_active_unit_system_docstring)
+        .def("default_unit_system",
+             [](const Deck& deck) -> const UnitSystem& { return deck.getDefaultUnitSystem(); },
+             Deck_default_unit_system_docstring)
+        .def("count", &count, py::arg("keyword"), Deck_count_docstring)
+        .def("add", &addKeyword, py::arg("keyword"), Deck_add_docstring);
 
-        .def("active_unit_system", [](const Deck& deck) -> const UnitSystem& {
-               return deck.getActiveUnitSystem();
-           } )
-
-        .def("default_unit_system", [](const Deck& deck) -> const UnitSystem& {
-               return deck.getDefaultUnitSystem();
-           } )
-
-        .def( "count", &count )
-        .def( "add", &addKeyword)
-      ;
 }
 
 
