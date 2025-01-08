@@ -222,7 +222,72 @@
         "doc": "Checks if the well is available for group control.\n\n:return: True if the well is available for group control, False otherwise. \n:type return: bool"
     },
     "Well_connections": {
-        "signature": "Well.connections() -> list",
-        "doc": "Gets a list of all connections associated with the well.\n\n:return: A list containing all connections of the well. \n:type return: list"
+        "signature": "Well.connections() -> list[Connection]",
+        "doc": "Gets a list of all connections associated with the well.\n\n:return: A list containing all connections of the well. \n:type return: list[Connection]"
+    },
+    "Connection": {
+        "type": "class",
+        "signature": "Connection",
+        "doc": "The Connection class represents a connection point in a reservoir simulation. It includes properties for spatial indices, state, and various physical attributes of the connection."
+    },
+    "Connection_direction": {
+        "signature": "Connection.direction -> str",
+        "doc": "Returns the direction of the connection.\n\n:return: The direction of the connection.\n:type return: str"
+    },
+    "Connection_state": {
+        "signature": "Connection.state -> str",
+        "doc": "Returns the current state of the connection.\n\n:return: The current state of the connection.\n:type return: str"
+    },
+    "Connection_getI": {
+        "signature": "Connection.getI() -> int",
+        "doc": "Returns the 'i' index of the connection.\n\n:return: The 'i' index of the connection.\n:type return: int"
+    },
+    "Connection_getJ": {
+        "signature": "Connection.getJ() -> int",
+        "doc": "Returns the 'j' index of the connection.\n\n:return: The 'j' index of the connection.\n:type return: int"
+    },
+    "Connection_getK": {
+        "signature": "Connection.getK() -> int",
+        "doc": "Returns the 'k' index of the connection.\n\n:return: The 'k' index of the connection.\n:type return: int"
+    },
+    "Connection_pos": {
+        "signature": "Connection.pos -> tuple",
+        "doc": "Returns the position of the connection as a tuple.\n\n:return: The position of the connection.\n:type return: tuple"
+    },
+    "Connection_attachedToSegment": {
+        "signature": "Connection.attached_to_segment -> bool",
+        "doc": "Checks if the connection is attached to a segment.\n\n:return: True if attached to a segment, otherwise False.\n:type return: bool"
+    },
+    "Connection_depth": {
+        "signature": "Connection.center_depth -> double",
+        "doc": "Returns the center depth of the connection.\n\n:return: The center depth of the connection.\n:type return: double"
+    },
+    "Connection_rw": {
+        "signature": "Connection.rw -> double",
+        "doc": "Returns the radius of the well (rw) at the connection.\n\n:return: The radius of the well (rw).\n:type return: double"
+    },
+    "Connection_complnum": {
+        "signature": "Connection.complnum -> int",
+        "doc": "Returns the completion number of the connection.\n\n:return: The completion number.\n:type return: int"
+    },
+    "Connection_number": {
+        "signature": "Connection.number -> int",
+        "doc": "DEPRECATED: Use 'complnum' instead. Returns the completion number of the connection.\n\n:return: The completion number.\n:type return: int"
+    },
+    "Connection_satTableId": {
+        "signature": "Connection.sat_table_id -> int",
+        "doc": "Returns the saturation table ID for the connection.\n\n:return: The saturation table ID.\n:type return: int"
+    },
+    "Connection_segment": {
+        "signature": "Connection.segment_number -> bool",
+        "doc": "Returns the segment number associated with the connection.\n\n:return: The segment number.\n:type return: int"
+    },
+    "Connection_CF": {
+        "signature": "Connection.cf -> double",
+        "doc": "Returns the static connection transmissibility factor of the connection. This quantity is calculated from the connection input quantities.\n\n:return: The static connection transmissibility factor.\n:type return: double"
+    },
+    "Connection_Kh": {
+        "signature": "Connection.kh -> double",
+        "doc": "Returns the static 'Kh' product for the connection.\n\n:return: The static 'Kh' product for the connection.\n:type return: double"
     }
 }
