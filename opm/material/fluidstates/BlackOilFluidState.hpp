@@ -208,8 +208,7 @@ public:
             Valgrind::CheckDefined(*saltSaturation_);
         }
 
-        if constexpr (enableTemperature || enableEnergy)
-            Valgrind::CheckDefined(*temperature_);
+        Valgrind::CheckDefined(temperature_);
 #endif // NDEBUG
     }
 
@@ -220,8 +219,7 @@ public:
     template <class FluidState>
     OPM_HOST_DEVICE void assign(const FluidState& fs)
     {
-        if constexpr (enableTemperature || enableEnergy)
-            setTemperature(fs.temperature(/*phaseIdx=*/0));
+        setTemperature(fs.temperature(/*phaseIdx=*/0));
 
         unsigned pvtRegionIdx = getPvtRegionIndex_<FluidState>(fs);
         setPvtRegionIndex(pvtRegionIdx);
@@ -287,14 +285,10 @@ public:
     /*!
      * \brief Set the temperature [K]
      *
-     * If neither the enableTemperature nor the enableEnergy template arguments are set
-     * to true, this method will throw an exception!
      */
     OPM_HOST_DEVICE void setTemperature(const Scalar& value)
     {
-        assert(enableTemperature || enableEnergy);
-
-        (*temperature_) = value;
+        temperature_ = value;
     }
 
     /*!
@@ -391,11 +385,7 @@ public:
      */
     OPM_HOST_DEVICE Scalar temperature(unsigned) const
     {
-        if constexpr (enableTemperature || enableEnergy) {
-            return *temperature_;
-        } else {
-            return fluidSystem().reservoirTemperature(pvtRegionIdx_);
-        }
+        return temperature_;
     }
 
     /*!
@@ -723,7 +713,7 @@ private:
             return fluidSystem.canonicalToActivePhaseIdx(canonicalPhaseIdx);
     }
 
-    ConditionalStorage<enableTemperature || enableEnergy, Scalar> temperature_{};
+    Scalar temperature_{};
     ConditionalStorage<enableTemperature || enableEnergy, std::array<Scalar, numStoragePhases> > enthalpy_{};
     Scalar totalSaturation_{};
     std::array<Scalar, numStoragePhases> pressure_{};
