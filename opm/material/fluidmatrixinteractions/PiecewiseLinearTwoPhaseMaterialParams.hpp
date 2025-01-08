@@ -267,7 +267,7 @@ namespace Opm::gpuistl{
 /// @tparam GPUContainerType typically const gpuBuffer<scalarType>
 /// @param params the parameters object living on the CPU
 /// @return the GPU PiecewiseLinearTwoPhaseMaterialParams object
-template <class TraitsT, class GPUContainerType>
+template <class GPUContainerType, class TraitsT>
 PiecewiseLinearTwoPhaseMaterialParams<TraitsT, GPUContainerType> move_to_gpu(const PiecewiseLinearTwoPhaseMaterialParams<TraitsT>& params) {
 
     // only create the GPU object if the CPU object is finalized
@@ -294,7 +294,7 @@ PiecewiseLinearTwoPhaseMaterialParams<TraitsT, GPUContainerType> move_to_gpu(con
 /// @tparam ViewType  typically gpuView<const scalarType>
 /// @param params the parameters object instansiated with gpuBuffers or similar
 /// @return the GPU view of the GPU PiecewiseLinearTwoPhaseMaterialParams object
-template <class TraitsT, class ContainerType, class ViewType>
+template <class ViewType, class TraitsT, class ContainerType>
 PiecewiseLinearTwoPhaseMaterialParams<TraitsT, ViewType> make_view(const PiecewiseLinearTwoPhaseMaterialParams<TraitsT, ContainerType>& params) {
 
     // only create the GPU object if the CPU object is finalized
