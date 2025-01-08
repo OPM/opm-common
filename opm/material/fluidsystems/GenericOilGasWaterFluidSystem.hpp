@@ -159,9 +159,15 @@ namespace Opm {
 
         static void init()
         {
-            waterPvt_ = std::make_unique<WaterPvt>();
+            waterPvt_ = std::make_shared<WaterPvt>();
             component_param_.reserve(numComponents);
         }
+
+        /*!
+        * \brief Set the pressure-volume-saturation (PVT) relations for the water phase.
+        */
+        static void setWaterPvt(std::shared_ptr<WaterPvt> pvtObj)
+        { waterPvt_ = pvtObj; }
 
         /*!
          * \brief The acentric factor of a component [].
@@ -430,7 +436,7 @@ namespace Opm {
 
         static std::vector<ComponentParam> component_param_;
         static std::vector<Scalar> interaction_coefficients_;
-        static std::unique_ptr<WaterPvt> waterPvt_;
+        static std::shared_ptr<WaterPvt> waterPvt_;
 
     public:
         static std::string printComponentParams() {
@@ -457,7 +463,7 @@ namespace Opm {
     GenericOilGasWaterFluidSystem<Scalar, NumComp>::interaction_coefficients_;
     
     template <class Scalar, int NumComp>
-    std::unique_ptr<WaterPvtMultiplexer<Scalar> > 
+    std::shared_ptr<WaterPvtMultiplexer<Scalar> > 
     GenericOilGasWaterFluidSystem<Scalar, NumComp>::waterPvt_;
 
 }
