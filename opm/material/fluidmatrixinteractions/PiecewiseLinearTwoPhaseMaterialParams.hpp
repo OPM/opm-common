@@ -73,10 +73,13 @@ public:
         , krwSamples_(krwSamples)
         , krnSamples_(krnSamples)
     {
-        // This should only be called when the vectors are extracted from
-        // an object that is already finalized.
-        // Not sure how to enforce this here.
-        EnsureFinalized::finalize();
+        if constexpr (std::is_same_v<ValueVector, std::vector<Scalar>>){
+            finalize();
+        }
+        else{
+            // safe if we have a GPU type instantiated by move_to_gpu or make_view
+            EnsureFinalized::finalize();
+        }
     }
 
     /*!
