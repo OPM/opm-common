@@ -1047,6 +1047,9 @@ list( APPEND PUBLIC_HEADER_FILES
       opm/material/eos/PengRobinsonParams.hpp
       opm/material/eos/PengRobinsonParamsMixture.hpp
       opm/material/eos/PengRobinsonMixture.hpp
+      opm/material/eos/CubicEOS.hpp
+      opm/material/eos/CubicEOSParams.hpp
+      opm/material/eos/PRParams.hpp
       opm/material/thermal/ConstantSolidHeatCapLawParams.hpp
       opm/material/thermal/ConstantSolidHeatCapLaw.hpp
       opm/material/thermal/EclHeatcrLaw.hpp
