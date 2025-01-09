@@ -338,5 +338,143 @@
     "Deck_add": {
         "signature": "Deck.add(keyword: DeckKeyword) -> None",
         "doc": "Adds a new keyword to the deck.\n\n:param keyword: The keyword to add.\n:type keyword: DeckKeyword"
+    },
+    "DeckKeyword": {
+        "type": "class",
+        "signature": "opm.io.deck.DeckKeyword",
+        "doc": "Represents a keyword in the Deck."
+    },
+    "DeckKeyword_init_parser_keyword": {
+        "signature": "opm.io.deck.DeckKeyword.__init__(parser_keyword: ParserKeyword) -> None",
+        "doc": "Initializes a DeckKeyword with a specified ParserKeyword.\n\n:param parser_keyword: The ParserKeyword to initialize the DeckKeyword with.\n:type parser_keyword: ParserKeyword"
+    },
+    "DeckKeyword_init_parser_keyword_record_list": {
+        "signature": "opm.io.deck.DeckKeyword.__init__(parser_keyword: ParserKeyword, record_list: list, active_system: UnitSystem, default_system: UnitSystem) -> None",
+        "doc": "Initializes a DeckKeyword with a specified ParserKeyword, a list of records, and two UnitSystem objects for active and default systems.\n\n:param parser_keyword: The ParserKeyword to initialize the DeckKeyword with.\n:type parser_keyword: ParserKeyword\n:param record_list: A list of records containing the keyword data as also specified in the parser_keyword.\n:type record_list: list\n:param active_system: The active UnitSystem.\n:type active_system: UnitSystem\n:param default_system: The default UnitSystem.\n:type default_system: UnitSystem"
+    },
+    "DeckKeyword_repr": {
+        "signature": "opm.io.deck.DeckKeyword.__repr__() -> str",
+        "doc": "Returns the name of the DeckKeyword as a string.\n\n:return: The name of the DeckKeyword.\n:type: str"
+    },
+    "DeckKeyword_str": {
+        "signature": "opm.io.deck.DeckKeyword.__str__() -> str",
+        "doc": "Returns a string representation of the DeckKeyword.\n\n:return: The string representation of the DeckKeyword.\n:type: str"
+    },
+    "DeckKeyword_iter": {
+        "signature": "opm.io.deck.DeckKeyword.__iter__() -> iterator",
+        "doc": "Returns an iterator over the records of the DeckKeyword.\n\n:return: An iterator for the records.\n:type: iterator"
+    },
+    "DeckKeyword_getitem": {
+        "signature": "opm.io.deck.DeckKeyword.__getitem__(index: int) -> DeckValue",
+        "doc": "Returns the record at the specified index.\n\n:param index: The index of the record to retrieve.\n:type index: int\n\n:return: The record at the specified index.\n:type: DeckValue"
+    },
+    "DeckKeyword_len": {
+        "signature": "opm.io.deck.DeckKeyword.__len__() -> int",
+        "doc": "Returns the number of records in the DeckKeyword.\n\n:return: The number of records in the DeckKeyword.\n:type: int"
+    },
+    "DeckKeyword_name": {
+        "signature": "opm.io.deck.DeckKeyword.name() -> str",
+        "doc": "Returns the name of the DeckKeyword.\n\n:return: The name of the DeckKeyword.\n:type: str"
+    },
+    "DeckKeyword_init_parser_keyword_pydata_int": {
+        "signature": "opm.io.deck.DeckKeyword.__init__(parser_keyword: ParserKeyword, py_data: array_t[int]) -> None",
+        "doc": "Initializes a DeckKeyword with a specified ParserKeyword and integer data. For this, the keyword must be a data keyword!\n\n:param parser_keyword: The ParserKeyword to initialize the DeckKeyword with.\n:type parser_keyword: ParserKeyword\n:param py_data: The integer data array.\n:type py_data: array_t[int]"
+    },
+    "DeckKeyword_init_parser_keyword_pydata_double": {
+        "signature": "opm.io.deck.DeckKeyword.__init__(parser_keyword: ParserKeyword, py_data: array_t[double], active_system: UnitSystem, default_system: UnitSystem) -> None",
+        "doc": "Initializes a DeckKeyword with a specified ParserKeyword, double data, and two UnitSystem objects for active and default systems. For this, the keyword must be a data keyword!\n\n:param parser_keyword: The ParserKeyword to initialize the DeckKeyword with.\n:type parser_keyword: ParserKeyword\n:param py_data: The double data array.\n:type py_data: array_t[double]\n:param active_system: The active UnitSystem to interpret the data.\n:type active_system: UnitSystem\n:param default_system: The default UnitSystem to interpret the data.\n:type default_system: UnitSystem"
+    },
+    "DeckKeyword_get_int_array": {
+        "signature": "opm.io.deck.DeckKeyword.get_int_array() -> list",
+        "doc": "Returns the integer data of the DeckKeyword.\n\n:return: The integer data.\n:type: list"
+    },
+    "DeckKeyword_get_raw_array": {
+        "signature": "opm.io.deck.DeckKeyword.get_raw_array() -> list",
+        "doc": "Returns the raw doule data of the DeckKeyword.\n\n:return: The raw double data.\n:type: list"
+    },
+    "DeckKeyword_get_SI_array": {
+        "signature": "opm.io.deck.DeckKeyword.get_SI_array() -> list",
+        "doc": "Returns the SI double data of the DeckKeyword.\n\n:return: The SI double data.\n:type: list"
+    },
+    "DeckItem": {
+        "type": "class",
+        "signature": "opm.io.deck.DeckItem",
+        "doc": "Represents an item in the deck."
+    },
+    "DeckItem_len": {
+        "signature": "opm.io.deck.DeckItem.__len__() -> int",
+        "doc": "Returns the number of data elements in the DeckItem. If if the number returned by this method is less than what is semantically expected (e.g. size() is less than the number of cells in the grid for keywords like e.g. SGL), then the remaining values are defaulted. The deck creates the defaulted items if all their sizes are fully specified by the keyword, though.\n\n:return: The number of elements.\n:type: int"
+    },
+    "DeckItem_is_uda": {
+        "signature": "opm.io.deck.DeckItem.is_uda() -> bool",
+        "doc": "Returns whether the DeckItem holds UDA data.\n\n:return: True if the DeckItem is UDA, False otherwise.\n:type: bool"
+    },
+    "DeckItem_is_double": {
+        "signature": "opm.io.deck.DeckItem.is_double() -> bool",
+        "doc": "Returns whether the DeckItem holds double data.\n\n:return: True if the DeckItem is of type double, False otherwise.\n:type: bool"
+    },
+    "DeckItem_is_int": {
+        "signature": "opm.io.deck.DeckItem.is_int() -> bool",
+        "doc": "Returns whether the DeckItem holds integer data.\n\n:return: True if the DeckItem is of type int, False otherwise.\n:type: bool"
+    },
+    "DeckItem_is_string": {
+        "signature": "opm.io.deck.DeckItem.is_string() -> bool",
+        "doc": "Returns whether the DeckItem holds string data.\n\n:return: True if the DeckItem is of type string, False otherwise.\n:type: bool"
+    },
+    "DeckItem_get_str": {
+        "signature": "opm.io.deck.DeckItem.get_str(index: int) -> str",
+        "doc": "Returns the string data of the DeckItem at the given index, if the DeckItem is of type string.\n\n:param index: The index used to retrieve the string data from the DeckItem.\n:type index: int\n:return: The string representation of the DeckItem at the given index's data.\n:type: str"
+    },
+    "DeckItem_get_int": {
+        "signature": "opm.io.deck.DeckItem.get_int(index: int) -> int",
+        "doc": "Returns the integer data of the DeckItem at the given index.\n\n:param index: The index used to retrieve the integer data from the DeckItem.\n:type index: int\n:return: The integer data of the DeckItem at the given index.\n:type: int"
+    },
+    "DeckItem_get_raw": {
+        "signature": "opm.io.deck.DeckItem.get_raw(index: int) -> double",
+        "doc": "Returns the raw double data of the DeckItem at the given index.\n\n:param index: The index used to retrieve the raw double data from the DeckItem.\n:type index: int\n:return: The raw double data of the DeckItem at the given index.\n:type: double"
+    },
+    "DeckItem_get_uda": {
+        "signature": "opm.io.deck.DeckItem.get_uda(index: int) -> UDAValue",
+        "doc": "Returns the UDA data of the DeckItem at the given index.\n\n:param index: The index used to retrieve the UDA data from the DeckItem.\n:type index: int\n:return: The UDA data of the DeckItem at the given index.\n:type: UDAValue"
+    },
+    "DeckItem_get_SI": {
+        "signature": "opm.io.deck.DeckItem.get_SI(index: int) -> double",
+        "doc": "Returns the SI double data of the DeckItem at the given index.\n\n:param index: The index used to retrieve the SI double data from the DeckItem.\n:type index: int\n:return: The SI double data of the DeckItem at the given index.\n:type: double"
+    },
+    "DeckItem_get_data_list": {
+        "signature": "opm.io.deck.DeckItem.get_data_list() -> list",
+        "doc": "Returns the list of data elements contained in the DeckItem for int or string data elements.\n\n:return: A list of data elements in the DeckItem.\n:type: list"
+    },
+    "DeckItem_get_raw_data_list": {
+        "signature": "opm.io.deck.DeckItem.get_raw_data_list() -> list[double]",
+        "doc": "Returns the list of raw data elements (as doubles) contained in the DeckItem.\n\n:return: A list of raw data elements in the DeckItem.\n:type: list"
+    },
+    "DeckItem_get_SI_data_list": {
+        "signature": "opm.io.deck.DeckItem.get_SI_data_list() -> list[double]",
+        "doc": "Returns the list of SI double data elements contained in the DeckItem.\n\n:return: A list of SI double data elements in the DeckItem.\n:type: list"
+    },
+    "DeckItem_has_value": {
+        "signature": "opm.io.deck.DeckItem.__has_value(index: int) -> bool",
+        "doc": "Returns whether the DeckItem has a value at index.\n\n:param index: The index used to check if the DeckItem has a value.\n:type index: int\n:return: True if the DeckItem has a value at index, False otherwise.\n:type: bool"
+    },
+    "DeckItem_defaulted": {
+        "signature": "opm.io.deck.DeckItem.__defaulted(index: int) -> bool",
+        "doc": "Returns whether the DeckItem's value at index is the default.\n\n:param index: The index used to check if the DeckItem's value is the default.\n:type index: int\n:return: True if the value at index is defaulted, False otherwise.\n:type: bool"
+    },
+    "DeckItem_is_numeric": {
+        "signature": "opm.io.deck.DeckItem.__is_numeric() -> bool",
+        "doc": "Returns whether the UDA data of the DeckItem is numeric.\n\n:return: True if the value is numeric, False otherwise.\n:type: bool"
+    },
+    "DeckItem_uda_double": {
+        "signature": "opm.io.deck.DeckItem.__uda_double() -> double",
+        "doc": "Returns the double value of the UDA data of the DeckItem.\n\n:return: The double value of the UDA data.\n:type: double"
+    },
+    "DeckItem_uda_str": {
+        "signature": "opm.io.deck.DeckItem.__uda_str() -> str",
+        "doc": "Returns the string value of the UDA data of the DeckItem.\n\n:return: The string value of the UDA data.\n:type: str"
+    },
+    "DeckItem_name": {
+        "signature": "opm.io.deck.DeckItem.name() -> str",
+        "doc": "Returns the name of the DeckItem.\n\n:return: The name of the DeckItem.\n:type: str"
     }
 }
