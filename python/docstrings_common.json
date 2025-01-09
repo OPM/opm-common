@@ -476,5 +476,64 @@
     "DeckItem_name": {
         "signature": "opm.io.deck.DeckItem.name() -> str",
         "doc": "Returns the name of the DeckItem.\n\n:return: The name of the DeckItem.\n:type: str"
+    },
+    "DeckRecord": {
+        "type": "class",
+        "signature": "DeckRecord",
+        "doc": "Represents a record of data in the deck. A DeckRecord holds a collection of `DeckItem <#opm.io.deck.DeckItem>`_s and provides access to them in various ways."
+    },
+    "DeckRecord_repr": {
+        "signature": "DeckRecord.__repr__() -> str",
+        "doc": "Returns a string representation of the DeckRecord.\n\n:return: A string representation of the DeckRecord.\n:type: str"
+    },
+    "DeckRecord_iter": {
+        "signature": "DeckRecord.__iter__() -> iterator",
+        "doc": "Returns an iterator for the DeckRecord, allowing iteration over the contained DeckItems.\n\n:return: An iterator for iterating through the DeckItems.\n:type: iterator"
+    },
+    "DeckRecord_getitem": {
+        "signature": "DeckRecord.__getitem__(index: int) -> DeckItem",
+        "doc": "Returns the `DeckItem <#opm.io.deck.DeckItem>`_ at the specified index.\n\n:param index: The index used to retrieve the DeckItem.\n:type index: int\n:return: The DeckItem at the specified index.\n:type: DeckItem"
+    },
+    "DeckRecord_len": {
+        "signature": "DeckRecord.__len__() -> int",
+        "doc": "Returns the number of `DeckItems <#opm.io.deck.DeckItem>`_ in the DeckRecord.\n\n:return: The number of DeckItems.\n:type: int"
+    },
+    "UDAValue": {
+        "type": "class",
+        "signature": "opm.io.deck.UDAValue",
+        "doc": "Represents a UDA (User-Defined Arguments) in the deck."
+    },
+    "UDAValue_init_double": {
+        "signature": "opm.io.deck.UDAValue.__init__(value: double, dimension: Dimension) -> UDAValue",
+        "doc": "Initializes a UDA with a double value and a dimension.\n\n:param value: The double value to store.\n:type value: double\n:param dimension: The dimension associated with this UDA.\n:type dimension: Dimension"
+    },
+    "UDAValue_init_string": {
+        "signature": "opm.io.deck.UDAValue.__init__(value: str, dimension: Dimension) -> UDAValue",
+        "doc": "Initializes a UDA with a string value and a dimension.\n\n:param value: The string value to store.\n:type value: str\n:param dimension: The dimension associated with this UDA.\n:type dimension: Dimension"
+    },
+    "UDAValue_dimension": {
+        "signature": "opm.io.deck.UDAValue.dimension() -> Dimension",
+        "doc": "Returns the dimension associated with this UDA.\n\n:return: The dimension of the UDA.\n:type: Dimension"
+    },
+    "UDAValue_is_double": {
+        "signature": "opm.io.deck.UDAValue.is_double() -> bool",
+        "doc": "Returns whether the UDA is of type double.\n\n:return: True if the UDA is a double, False otherwise.\n:type: bool"
+    },
+    "UDAValue_is_string": {
+        "signature": "opm.io.deck.UDAValue.is_string() -> bool",
+        "doc": "Returns whether the UDA is of type string.\n\n:return: True if the UDA is a string, False otherwise.\n:type: bool"
+    },
+    "UDAValue_get_string": {
+        "signature": "opm.io.deck.UDAValue.get_string() -> str",
+        "doc": "Returns the string value of the UDA.\n\n:return: The string value of the UDA.\n:type: str"
+    },
+    "UDAValue_get_double": {
+        "signature": "opm.io.deck.UDAValue.get_double() -> double",
+        "doc": "Returns the double value of the UDA.\n\n:return: The double value of the UDA.\n:type: double"
+    },
+    "UDAValue_repr": {
+        "signature": "opm.io.deck.UDAValue.__repr__() -> str",
+        "doc": "Returns a string representation of the UDA. This works for both string and double UDAs.\n\n:return: A string representation of the UDA.\n:type: str"
     }
+
 }
