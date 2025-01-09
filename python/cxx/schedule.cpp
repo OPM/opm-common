@@ -54,8 +54,8 @@ namespace {
         return system_clock::from_time_t(local_time);
     }
 
-    const Well& get_well( const Schedule& sch, const std::string& name, const size_t& timestep ) try {
-        return sch.getWell( name, timestep );
+    const Well& get_well( const Schedule& sch, const std::string& name, const size_t& report_step ) try {
+        return sch.getWell( name, report_step );
     } catch( const std::invalid_argument& e ) {
         throw py::key_error( name );
     }
@@ -123,7 +123,7 @@ namespace {
         return datetime(s.posixEndTime());
     }
 
-    std::vector<system_clock::time_point> get_timesteps( const Schedule& s ) {
+    std::vector<system_clock::time_point> get_reportsteps( const Schedule& s ) {
         std::vector< system_clock::time_point > v;
 
         for( size_t i = 0; i < s.size(); ++i )
@@ -132,10 +132,10 @@ namespace {
         return v;
     }
 
-    std::vector<Group> get_groups( const Schedule& sch, size_t timestep ) {
+    std::vector<Group> get_groups( const Schedule& sch, size_t report_step ) {
         std::vector< Group > groups;
         for( const auto& group_name : sch.groupNames())
-            groups.push_back( sch.getGroup(group_name, timestep) );
+            groups.push_back( sch.getGroup(group_name, report_step) );
 
         return groups;
     }
@@ -211,7 +211,11 @@ void python::common::export_Schedule(py::module& module) {
     .def("_groups", &get_groups, py::arg("report_step"), Schedule_groups_docstring)
     .def_property_readonly( "start",  &get_start_time )
     .def_property_readonly( "end",    &get_end_time )
-    .def_property_readonly( "timesteps", &get_timesteps )
+    .def_property_readonly("timesteps", [](const Schedule& self) {
+        py::print("The property 'timesteps' is deprecated, since the name is misleading. This actually returns the report steps, so use 'reportsteps' instead!");
+        return get_reportsteps(self);
+    }) // Deprecated since the name is misleading, this function actually returns the report steps
+    .def_property_readonly( "reportsteps", &get_reportsteps )
     .def("__len__", &Schedule::size)
     .def("__getitem__", &getitem, py::arg("report_step"), Schedule_getitem_docstring)
     .def("shut_well", py::overload_cast<const std::string&, std::size_t>(&Schedule::shut_well), py::arg("well_name"), py::arg("step"), Schedule_shut_well_well_name_step_docstring)
