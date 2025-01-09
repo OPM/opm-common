@@ -242,11 +242,11 @@ void python::common::export_DeckKeyword(py::module& module) {
         .def("get_SI_array", &get_SI_array, DeckKeyword_get_SI_array_docstring);
 
 
-    py::class_< DeckRecord >( module, "DeckRecord")
-        .def( "__repr__", &str<DeckRecord> )
-        .def( "__iter__", +[] (const DeckRecord& record) { return py::make_iterator(record.begin(), record.end()); }, py::keep_alive<0,1>())
-        .def( "__getitem__", &getItem, ref_internal)
-        .def( "__len__", &DeckRecord::size )
+    py::class_<DeckRecord>(module, "DeckRecord", DeckRecord_docstring)
+        .def("__repr__", &str<DeckRecord>, DeckRecord_repr_docstring)
+        .def( "__iter__", +[] (const DeckRecord& record) { return py::make_iterator(record.begin(), record.end()); }, py::keep_alive<0,1>(), DeckRecord_iter_docstring)
+        .def("__getitem__", &getItem, ref_internal,  py::arg("index"), DeckRecord_getitem_docstring)
+        .def("__len__", &DeckRecord::size, DeckRecord_len_docstring)
         ;
 
 
@@ -273,20 +273,20 @@ void python::common::export_DeckKeyword(py::module& module) {
         ;
 
 
-    py::class_< UDAValue >(module, "UDAValue")
-        .def(py::init<double, const Dimension& >())
-        .def(py::init<const std::string&, const Dimension&>())
-        .def("dimension", &UDAValue::get_dim)
-        .def("is_double", &UDAValue::is<double>)
-        .def("is_string", &UDAValue::is<std::string>)
-        .def("get_string", &UDAValue::get<std::string>)
-        .def("get_double", &UDAValue::get<double>)
+    py::class_<UDAValue>(module, "UDAValue", UDAValue_docstring)
+        .def(py::init<double, const Dimension&>(), UDAValue_init_double_docstring)
+        .def(py::init<const std::string&, const Dimension&>(), UDAValue_init_string_docstring)
+        .def("dimension", &UDAValue::get_dim, UDAValue_dimension_docstring)
+        .def("is_double", &UDAValue::is<double>, UDAValue_is_double_docstring)
+        .def("is_string", &UDAValue::is<std::string>, UDAValue_is_string_docstring)
+        .def("get_string", &UDAValue::get<std::string>, UDAValue_get_string_docstring)
+        .def("get_double", &UDAValue::get<double>, UDAValue_get_double_docstring)
         .def("__repr__", [](const UDAValue& value) {
             if (value.is<double>())
                 return fmt::format("UDAValue(value = {})", value.get<double>());
             else
                 return fmt::format("UDAValue(value = {})", value.get<std::string>());
-        })
+        }, UDAValue_repr_docstring)
         ;
 
 
