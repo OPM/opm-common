@@ -37,7 +37,7 @@
 #include <opm/material/common/MathToolbox.hpp>
 #include <opm/material/common/Valgrind.hpp>
 #include <opm/material/Constants.hpp>
-#include <opm/material/eos/PengRobinsonMixture.hpp>
+#include <opm/material/eos/CubicEOS.hpp>
 
 #include <dune/common/fvector.hh>
 #include <dune/common/fmatrix.hh>
@@ -445,7 +445,7 @@ protected:
                                 typename FlashFluidState::Scalar& S_loc, const ComponentVector& z, bool isGas, int verbosity)
     {
         using FlashEval = typename FlashFluidState::Scalar;
-        using PengRobinsonMixture = typename Opm::PengRobinsonMixture<Scalar, FluidSystem>;
+        using CubicEOS = typename Opm::CubicEOS<Scalar, FluidSystem>;
 
         // Declarations
         FlashFluidState fluid_state_fake = fluid_state;
@@ -496,8 +496,8 @@ protected:
 
             //fugacity for fake phases each component
             for (int compIdx=0; compIdx<numComponents; ++compIdx){
-                auto phiFake = PengRobinsonMixture::computeFugacityCoefficient(fluid_state_fake, paramCache_fake, phaseIdx, compIdx);
-                auto phiGlobal = PengRobinsonMixture::computeFugacityCoefficient(fluid_state_global, paramCache_global, phaseIdx2, compIdx);
+                auto phiFake = CubicEOS::computeFugacityCoefficient(fluid_state_fake, paramCache_fake, phaseIdx, compIdx);
+                auto phiGlobal = CubicEOS::computeFugacityCoefficient(fluid_state_global, paramCache_global, phaseIdx2, compIdx);
 
                 fluid_state_fake.setFugacityCoefficient(phaseIdx, compIdx, phiFake);
                 fluid_state_global.setFugacityCoefficient(phaseIdx2, compIdx, phiGlobal);

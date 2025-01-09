@@ -31,8 +31,8 @@
 #define OPM_PTFlash_PARAMETER_CACHE_HPP
 
 #include <opm/material/fluidsystems/ParameterCacheBase.hpp>
-#include <opm/material/eos/PengRobinson.hpp>
-#include <opm/material/eos/PengRobinsonParamsMixture.hpp>
+#include <opm/material/eos/CubicEOS.hpp>
+#include <opm/material/eos/PRParams.hpp>
 
 #include <cassert>
 
@@ -48,7 +48,7 @@ class PTFlashParameterCache
 {
     using ThisType = PTFlashParameterCache<Scalar, FluidSystem>;
     using ParentType = Opm::ParameterCacheBase<ThisType>;
-    using PengRobinson = Opm::PengRobinson<Scalar, false>; // false refer to discard some old code
+    using CubicEOS = Opm::CubicEOS<Scalar, FluidSystem>;
 
     enum { numPhases = FluidSystem::numPhases };
     enum { oilPhaseIdx = FluidSystem::oilPhaseIdx };
@@ -64,9 +64,9 @@ class PTFlashParameterCache
 
 public:
     //! The cached parameters for the oil phase
-    using OilPhaseParams = Opm::PengRobinsonParamsMixture<Scalar, FluidSystem, oilPhaseIdx, /*useChi=*/false>;
+    using OilPhaseParams = Opm::PRParams<Scalar, FluidSystem, oilPhaseIdx>;
     //! The cached parameters for the gas phase
-    using GasPhaseParams = Opm::PengRobinsonParamsMixture<Scalar, FluidSystem, gasPhaseIdx, /*useChi=*/false>;
+    using GasPhaseParams = Opm::PRParams<Scalar, FluidSystem, gasPhaseIdx>;
 
     PTFlashParameterCache()
     {
@@ -106,6 +106,66 @@ public:
 
         // update the phase's molar volume
         updateMolarVolume_(fluidState, phaseIdx);
+    }
+
+    Scalar A(unsigned phaseIdx) const
+    {
+        switch (phaseIdx)
+        {
+        case oilPhaseIdx: return oilPhaseParams_.A();
+        case gasPhaseIdx: return gasPhaseParams_.A();
+        default:
+            throw std::logic_error("The A parameter is only defined for "
+                                   "oil and gas phases");
+        };
+    }
+    
+    Scalar B(unsigned phaseIdx) const
+    {
+        switch (phaseIdx)
+        {
+        case oilPhaseIdx: return oilPhaseParams_.B();
+        case gasPhaseIdx: return gasPhaseParams_.B();
+        default:
+            throw std::logic_error("The B parameter is only defined for "
+                                   "oil and gas phases");
+        };
+    }
+    
+    Scalar Bi(unsigned phaseIdx, unsigned compIdx) const
+    {
+        switch (phaseIdx)
+        {
+        case oilPhaseIdx: return oilPhaseParams_.Bi(compIdx);
+        case gasPhaseIdx: return gasPhaseParams_.Bi(compIdx);
+        default:
+            throw std::logic_error("The Bi parameter is only defined for "
+                                   "oil and gas phases");
+        };
+    }
+
+    Scalar m1(unsigned phaseIdx) const
+    {
+        switch (phaseIdx)
+        {
+        case oilPhaseIdx: return oilPhaseParams_.m1();
+        case gasPhaseIdx: return gasPhaseParams_.m1();
+        default:
+            throw std::logic_error("The m1 parameter is only defined for "
+                                   "oil and gas phases");
+        };
+    }
+
+    Scalar m2(unsigned phaseIdx) const
+    {
+        switch (phaseIdx)
+        {
+        case oilPhaseIdx: return oilPhaseParams_.m2();
+        case gasPhaseIdx: return gasPhaseParams_.m2();
+        default:
+            throw std::logic_error("The m2 parameter is only defined for "
+                                   "oil and gas phases");
+        };
     }
 
     /*!
@@ -181,8 +241,6 @@ public:
         };
     }
 
-
-
     /*!
      * \brief TODO
      *
@@ -194,10 +252,10 @@ public:
     {
         switch (phaseIdx)
         {
-        case oilPhaseIdx: return oilPhaseParams_.getaCache(compIdx,compJIdx);
-        case gasPhaseIdx: return gasPhaseParams_.getaCache(compIdx,compJIdx);
+        case oilPhaseIdx: return oilPhaseParams_.aCache(compIdx, compJIdx);
+        case gasPhaseIdx: return gasPhaseParams_.aCache(compIdx, compJIdx);
         default:
-            throw std::logic_error("The aCache() parameter is only defined for "
+            throw std::logic_error("The aCache parameter is only defined for "
                                    "oil and gas phase");
         };
     }
@@ -208,7 +266,10 @@ public:
      * \param phaseIdx The fluid phase of interest
      */
     Scalar molarVolume(unsigned phaseIdx) const
-    { assert(VmUpToDate_[phaseIdx]); return Vm_[phaseIdx]; }
+    { 
+        assert(VmUpToDate_[phaseIdx]); 
+        return Vm_[phaseIdx]; 
+    }
 
 
     /*!
@@ -316,7 +377,7 @@ protected:
             // system can get queried, so it is okay to calculate it
             // here...
             Vm_[gasPhaseIdx] = decay<Scalar> (
-                PengRobinson::computeMolarVolume(fluidState,
+                CubicEOS::computeMolarVolume(fluidState,
                                                  *this,
                                                  phaseIdx,
                                                  /*isGasPhase=*/true) );
@@ -329,7 +390,7 @@ protected:
             // system can get queried, so it is okay to calculate it
             // here...
             Vm_[oilPhaseIdx] = decay<Scalar> (
-                PengRobinson::computeMolarVolume(fluidState,
+                CubicEOS::computeMolarVolume(fluidState,
                                                  *this,
                                                  phaseIdx,
                                                  /*isGasPhase=*/false) );
