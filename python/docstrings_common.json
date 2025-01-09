@@ -2,7 +2,11 @@
     "SummaryStateClass":{
         "type": "class",
         "signature": "opm.io.sim.SummaryState",
-        "doc": "The SummaryState class - this is where the current summary results of the simulator are stored.\nThe SummaryState class has methods to get hold of well, group and general variables."
+        "doc": "The `SummaryState <#opm.io.sim.SummaryState>`_ class - this is where the current summary results of the simulator are stored.\nThe `SummaryState <#opm.io.sim.SummaryState>`_ class has methods to get hold of well, group and general variables."
+    },
+    "SummaryState_update": {
+        "signature": "opm.io.sim.SummaryState.update(variable_name: str, value: double) -> None",
+        "doc": "Updates or increments the given variable of the `SummaryState <#opm.io.sim.SummaryState>`_, depending on whether the variable is cumulative or not. The variable must already exist in the `SummaryState <#opm.io.sim.SummaryState>`_ for this. \n\n:param variable_name: The name of the variable to update or increment.\n:type variable_name: str\n:param value: The value to set or increment the variable by.\n:type value: double"
     },
     "SummaryState_update_well_var": {
         "signature": "opm.io.sim.SummaryState.update_well_var(well_name: str, variable_name: str, new_value: double) -> None",
@@ -32,6 +36,10 @@
         "signature": "opm.io.sim.SummaryState.wells -> list",
         "doc": "Returns a list of strings containing all well names.\n\n:return: A list of strings representing all well names. \n:type return: list"
     },
+    "SummaryState_contains": {
+        "signature": "opm.io.sim.SummaryState.__contains__(variable_name: str) -> bool",
+        "doc": "Checks if a variable exists in the `SummaryState <#opm.io.sim.SummaryState>`_.\n\n:param variable_name: The name of the variable to check.\n:type variable_name: str\n\n:return: True if the variable exists, False otherwise. \n:type return: bool"
+    },
     "SummaryState_has_well_var": {
         "signature": "opm.io.sim.SummaryState.has_well_var(well_name: str, variable_name: str) -> bool",
         "doc": "Checks if a well variable exists.\n\n:param well_name: The name of the well.\n:type well_name: str\n:param variable_name: The name of the variable to check.\n:type variable_name: str\n\n:return: True if the variable exists for the well, False otherwise. \n:type return: bool"
@@ -40,14 +48,22 @@
         "signature": "opm.io.sim.SummaryState.has_group_var(group_name: str, variable_name: str) -> bool",
         "doc": "Checks if a group variable exists.\n\n:param group_name: The name of the group.\n:type group_name: str\n:param variable_name: The name of the variable to check.\n:type variable_name: str\n\n:return: True if the variable exists for the group, False otherwise. \n:type return: bool"
     },
+    "SummaryState_setitem": {
+        "signature": "opm.io.sim.SummaryState.__setitem__(variable_name: str, new_value: double) -> None",
+        "doc": "Updates or insert the variable of the `SummaryState <#opm.io.sim.SummaryState>`_.\n\n:param variable_name: The name of the variable to update or insert.\n:type variable_name: str\n:param new_value: The new value of the variable.\n:type new_value: double"
+    },
+    "SummaryState_getitem": {
+        "signature": "opm.io.sim.SummaryState.__getitem__(variable_name: str) -> double",
+        "doc": "Gets the value of a variable of the `SummaryState <#opm.io.sim.SummaryState>`_.\n\n:param variable_name: The name of the variable to retrieve.\n:type variable_name: str\n\n:return: The value of the specified variable for the well. \n:type return: double"
+    },
     "EclipseStateClass": {
         "type": "class",
         "signature": "opm.io.ecl_state.EclipseState",
-        "doc": "The EclipseState class - this is a representation of all static properties in the model,ranging from porosity to relperm tables.\nThe content of the EclipseState is immutable and may not be changed at runtime."
+        "doc": "The EclipseState class - this is a representation of all static properties in the model, ranging from porosity to relperm tables.\nThe content of the EclipseState is immutable and may not be changed at runtime."
     },
     "EclipseState_input_nnc": {
         "signature": "opm.io.ecl_state.EclipseState.input_nnc() -> list",
-        "doc": "Returns a list of non-neighboring connections.\n\nOne non-neighboring connection is a tuple containing the following elements:\n- index1 (int): Index of the first cell.\n- index2 (int): Index of the second cell.\n- transmissibility (double): Transmissibility between the two cells.\n\n:return: A list of non-neighboring connections. \n:type return: list"
+        "doc": "Returns a list of non-neighboring connections.\n\nOne non-neighboring connection is a tuple containing the following elements:\n\n- index1 (int): Index of the first cell.\n\n- index2 (int): Index of the second cell.\n\n- transmissibility (double): Transmissibility between the two cells.\n\n:return: A list of non-neighboring connections. \n:type return: list"
     },
     "EclipseState_faultNames": {
         "signature": "opm.io.ecl_state.EclipseState.faultNames() -> list",
@@ -59,7 +75,7 @@
     },
     "EclipseState_jfunc": {
         "signature": "opm.io.ecl_state.EclipseState.jfunc() -> dict",
-        "doc": "Function returning a dictionary with the following entries: ['FLAG', 'DIRECTION', 'ALPHA_FACTOR', 'BETA_FACTOR', 'OIL_WATER', 'GAS_OIL']\n\n:return: A dictionary containing the specified entries. \n:type return: dict"
+        "doc": "Function returning a dictionary with the following entries:\n\n['FLAG', 'DIRECTION', 'ALPHA_FACTOR', 'BETA_FACTOR', 'OIL_WATER', 'GAS_OIL']\n\n:return: A dictionary containing the specified entries. \n:type return: dict"
     },
     "EclipseState_simulation": {
         "signature": "opm.io.ecl_state.EclipseState.simulation() -> SimulationConfiguration",
@@ -72,7 +88,7 @@
     },
     "Schedule_getitem": {
         "signature": "opm.io.schedule.Schedule.__getitem__(report_step: int) -> ScheduleState",
-        "doc": "Returns the ScheduleState at the given report step.\n\n:param report_step: The report step.\n:type report_step: int\n\n:return: The ScheduleState at the given report step.\n:type return: ScheduleState"
+        "doc": "Returns the `ScheduleState <#ScheduleState>`_ at the given report step.\n\n:param report_step: The report step.\n:type report_step: int\n\n:return: The `ScheduleState <#ScheduleState>`_ at the given report step.\n:type return: ScheduleState"
     },
     "Schedule_shut_well_well_name_step": {
         "signature": "opm.io.schedule.Schedule.shut_well(well_name: str, step: int) -> None",
@@ -110,13 +126,53 @@
         "signature": "opm.io.schedule.Schedule._groups(report_step: int) -> list",
         "doc": "Gets a list of all groups at a specified report step.\n\n:param report_step: The report step to retrieve groups for.\n:type report_step: int\n\n:return: A list containing all groups at the specified report step. \n:type return: list"
     },
+    "Schedule_start": {
+        "signature": "opm.io.schedule.Schedule.start -> datetime.datetime",
+        "doc": "Retrieves the start time of the schedule as a `datetime.datetime <https://docs.python.org/3/library/datetime.html#datetime.datetime>`_.\n\n:return: The start time of the schedule.\n:type return: datetime.datetime"
+    },
+    "Schedule_end": {
+        "signature": "opm.io.schedule.Schedule.end -> datetime.datetime",
+        "doc": "Retrieves the end time of the schedule as a `datetime.datetime <https://docs.python.org/3/library/datetime.html#datetime.datetime>`_.\n\n:return: The end time of the schedule.\n:type return: datetime.datetime"
+    },
+    "Schedule_reportsteps": {
+        "signature": "opm.io.schedule.Schedule.reportsteps -> list[datetime.datetime]",
+        "doc": "Retrieves a list of all report steps in the schedule as a Python list of `datetime.datetime <https://docs.python.org/3/library/datetime.html#datetime.datetime>`_ objects.\n\n:return: A list containing the report steps of the schedule.\n:type return: list"
+    },
+    "Schedule_len": {
+        "signature": "opm.io.schedule.Schedule.__len__() -> int",
+        "doc": "Returns the number of report steps, i.e., the length of the Schedule.\n\n:return: The number of report steps.\n:type return: int"
+    },
     "Schedule_get_well": {
         "signature": "opm.io.schedule.Schedule.get_well(well_name: str, report_step: int) -> Well",
         "doc": "Retrieves a well at a given report step.\n\n:param well_name: The name of the well.\n:type well_name: str\n:param report_step: The report step.\n:type report_step: int\n\n:return: Well object at the given report step. \n:type return: well"
     },
     "Schedule_get_wells": {
-        "signature": "opm.io.schedule.Schedule.get_wells(well_name_pattern: str) -> list",
+        "signature": "opm.io.schedule.Schedule.get_wells(report_step: int) -> list",
+        "doc": "Gets the names of wells at the given report step.\n\n:param report_step: The report step.\n:type report_step: int\n\n:return: A list containing the names of wells at the given report step. \n:type return: list"
+    },
+    "Schedule_well_names": {
+        "signature": "opm.io.schedule.Schedule.well_names(well_name_pattern: str) -> list",
         "doc": "Gets the names of wells matching a specified pattern.\n\n:param well_name_pattern: The pattern for well names, where '*' acts as a wildcard.\n:type well_name_pattern: str\n\n:return: A list containing the names of wells that match the specified pattern. \n:type return: list"
+    },
+    "Schedule_insert_keywords_list": {
+        "signature": "opm.io.schedule.Schedule.insert_keywords(keywords: list, step: int) -> None",
+        "doc": "Inserts the given keywords into the Schedule at the given report step.\n\n:param keywords: A Python list of strings, contianing the keywords.\n:type keyword_list: list\n:param step: The report step.\n:type step: int"
+    },
+    "Schedule_insert_keywords_data_step_unit_system": {
+        "signature": "opm.io.schedule.Schedule.insert_keywords(data: str, step: int, unit_system: UnitSystem) -> None",
+        "doc": "Inserts the given keywords into the Schedule at the given report step using the given unit system.\n\n:param data: The deck string to be inserted into the Schedule.\n:type data: str\n:param step: The report step.\n:type step: int\n:param unit_system: The unit system.\n:type unit_system: UnitSystem"
+    },
+    "Schedule_insert_keywords_data_step": {
+        "signature": "opm.io.schedule.Schedule.insert_keywords(data: str, step: int) -> None",
+        "doc": "Inserts the given keywords into the Schedule at the given report step using the unit system of the Schedule.\n\n:param data: The deck string to be inserted into the Schedule.\n:type data: str\n:param step: The report step.\n:type step: int"
+    },
+    "Schedule_insert_keywords_data": {
+        "signature": "opm.io.schedule.Schedule.insert_keywords(data: str) -> None",
+        "doc": "Inserts the given keywords into the Schedule at the current report step using the unit system of the Schedule.\n\n:param data: The deck string to be inserted into the Schedule.\n:type data: str"
+    },
+    "Schedule_contains": {
+        "signature": "opm.io.schedule.Schedule.__contains__(well_name: str) -> bool",
+        "doc": "Checks if a well exists in the Schedule at the current report step.\n\n:param well_name: The name of the well to check.\n:type well_name: str\n\n:return: True if the well exists, False otherwise. \n:type return: bool"
     },
     "GroupClass": {
         "signature": "Group",
@@ -166,7 +222,259 @@
         "doc": "Checks if the well is available for group control.\n\n:return: True if the well is available for group control, False otherwise. \n:type return: bool"
     },
     "Well_connections": {
-        "signature": "Well.connections() -> list",
-        "doc": "Gets a list of all connections associated with the well.\n\n:return: A list containing all connections of the well. \n:type return: list"
+        "signature": "Well.connections() -> list[Connection]",
+        "doc": "Gets a list of all connections associated with the well.\n\n:return: A list containing all connections of the well. \n:type return: list[Connection]"
+    },
+    "Connection": {
+        "type": "class",
+        "signature": "Connection",
+        "doc": "The Connection class represents a connection point in a reservoir simulation. It includes properties for spatial indices, state, and various physical attributes of the connection."
+    },
+    "Connection_direction": {
+        "signature": "Connection.direction -> str",
+        "doc": "Returns the direction of the connection.\n\n:return: The direction of the connection.\n:type return: str"
+    },
+    "Connection_state": {
+        "signature": "Connection.state -> str",
+        "doc": "Returns the current state of the connection.\n\n:return: The current state of the connection.\n:type return: str"
+    },
+    "Connection_getI": {
+        "signature": "Connection.getI() -> int",
+        "doc": "Returns the 'i' index of the connection.\n\n:return: The 'i' index of the connection.\n:type return: int"
+    },
+    "Connection_getJ": {
+        "signature": "Connection.getJ() -> int",
+        "doc": "Returns the 'j' index of the connection.\n\n:return: The 'j' index of the connection.\n:type return: int"
+    },
+    "Connection_getK": {
+        "signature": "Connection.getK() -> int",
+        "doc": "Returns the 'k' index of the connection.\n\n:return: The 'k' index of the connection.\n:type return: int"
+    },
+    "Connection_pos": {
+        "signature": "Connection.pos -> tuple",
+        "doc": "Returns the position of the connection as a tuple.\n\n:return: The position of the connection.\n:type return: tuple"
+    },
+    "Connection_attachedToSegment": {
+        "signature": "Connection.attached_to_segment -> bool",
+        "doc": "Checks if the connection is attached to a segment.\n\n:return: True if attached to a segment, otherwise False.\n:type return: bool"
+    },
+    "Connection_depth": {
+        "signature": "Connection.center_depth -> double",
+        "doc": "Returns the center depth of the connection.\n\n:return: The center depth of the connection.\n:type return: double"
+    },
+    "Connection_rw": {
+        "signature": "Connection.rw -> double",
+        "doc": "Returns the radius of the well (rw) at the connection.\n\n:return: The radius of the well (rw).\n:type return: double"
+    },
+    "Connection_complnum": {
+        "signature": "Connection.complnum -> int",
+        "doc": "Returns the completion number of the connection.\n\n:return: The completion number.\n:type return: int"
+    },
+    "Connection_number": {
+        "signature": "Connection.number -> int",
+        "doc": "DEPRECATED: Use 'complnum' instead. Returns the completion number of the connection.\n\n:return: The completion number.\n:type return: int"
+    },
+    "Connection_satTableId": {
+        "signature": "Connection.sat_table_id -> int",
+        "doc": "Returns the saturation table ID for the connection.\n\n:return: The saturation table ID.\n:type return: int"
+    },
+    "Connection_segment": {
+        "signature": "Connection.segment_number -> bool",
+        "doc": "Returns the segment number associated with the connection.\n\n:return: The segment number.\n:type return: int"
+    },
+    "Connection_CF": {
+        "signature": "Connection.cf -> double",
+        "doc": "Returns the static connection transmissibility factor of the connection. This quantity is calculated from the connection input quantities.\n\n:return: The static connection transmissibility factor.\n:type return: double"
+    },
+    "Connection_Kh": {
+        "signature": "Connection.kh -> double",
+        "doc": "Returns the static 'Kh' product for the connection.\n\n:return: The static 'Kh' product for the connection.\n:type return: double"
+    },
+    "Deck": {
+        "type": "class",
+        "signature": "Deck",
+        "doc": "The Deck class represents a collection of keywords and their associated data used in reservoir simulations."
+    },
+    "Deck_len": {
+        "signature": "Deck.__len__() -> int",
+        "doc": "Returns the number of keywords in the deck.\n\n:return: The number of keywords.\n:type return: int"
+    },
+    "Deck_contains": {
+        "signature": "Deck.__contains__(keyword: str) -> bool",
+        "doc": "Checks if the specified keyword exists in the deck.\n\n:param keyword: The keyword to check.\n:type keyword: str\n:return: True if the keyword exists, otherwise False.\n:type return: bool"
+    },
+    "Deck_iter": {
+        "signature": "Deck.__iter__() -> Iterator[DeckKeyword]",
+        "doc": "Returns an iterator over the keywords in the deck.\n\n:return: An iterator over the keywords.\n:type return: Iterator[DeckKeyword]"
+    },
+    "Deck_getitem_int": {
+        "signature": "Deck.__getitem__(index: int) -> DeckKeyword",
+        "doc": "Returns the keyword at the specified index.\n\n:param index: The index of the keyword.\n:type index: int\n:return: The keyword at the specified index.\n:type return: DeckKeyword"
+    },
+    "Deck_getitem_string": {
+        "signature": "Deck.__getitem__(keyword_name: str) -> DeckKeyword",
+        "doc": "Returns the last entry of the DeckView of the specified keyword name.\n\n:param keyword: The name of the keyword.\n:type keyword: str\n:return: The last entry of the DeckView of the specified keyword name.\n:type return: DeckKeyword"
+    },
+    "Deck_getitem_tuple": {
+        "signature": "Deck.__getitem__(key: tuple(keyword_name: str, index: int)) -> DeckKeyword",
+        "doc": "Returns the entry at the index of the DeckView of the specified keyword name.\n\n:param key: The tuple key to access the entry.\n:type key: tuple (str, int)\n:return: The the entry at the index of the DeckView of the specified keyword name.\n:type return: DeckKeyword"
+    },
+    "Deck_str": {
+        "signature": "Deck.__str__() -> str",
+        "doc": "Returns a string representation of the deck.\n\n:return: A string representation of the deck.\n:type return: str"
+    },
+    "Deck_active_unit_system": {
+        "signature": "Deck.active_unit_system() -> UnitSystem",
+        "doc": "Returns the active unit system of the deck.\n\n:return: The active unit system.\n:type return: UnitSystem"
+    },
+    "Deck_default_unit_system": {
+        "signature": "Deck.default_unit_system() -> UnitSystem",
+        "doc": "Returns the default unit system of the deck.\n\n:return: The default unit system.\n:type return: UnitSystem"
+    },
+    "Deck_count": {
+        "signature": "Deck.count(keyword: str) -> int",
+        "doc": "Returns the number of occurrences of the specified keyword in the deck.\n\n:param keyword: The keyword to count.\n:type keyword: str\n:return: The number of occurrences of the keyword.\n:type return: int"
+    },
+    "Deck_add": {
+        "signature": "Deck.add(keyword: DeckKeyword) -> None",
+        "doc": "Adds a new keyword to the deck.\n\n:param keyword: The keyword to add.\n:type keyword: DeckKeyword"
+    },
+    "DeckKeyword": {
+        "type": "class",
+        "signature": "opm.io.deck.DeckKeyword",
+        "doc": "Represents a keyword in the Deck."
+    },
+    "DeckKeyword_init_parser_keyword": {
+        "signature": "opm.io.deck.DeckKeyword.__init__(parser_keyword: ParserKeyword) -> None",
+        "doc": "Initializes a DeckKeyword with a specified ParserKeyword.\n\n:param parser_keyword: The ParserKeyword to initialize the DeckKeyword with.\n:type parser_keyword: ParserKeyword"
+    },
+    "DeckKeyword_init_parser_keyword_record_list": {
+        "signature": "opm.io.deck.DeckKeyword.__init__(parser_keyword: ParserKeyword, record_list: list, active_system: UnitSystem, default_system: UnitSystem) -> None",
+        "doc": "Initializes a DeckKeyword with a specified ParserKeyword, a list of records, and two UnitSystem objects for active and default systems.\n\n:param parser_keyword: The ParserKeyword to initialize the DeckKeyword with.\n:type parser_keyword: ParserKeyword\n:param record_list: A list of records containing the keyword data as also specified in the parser_keyword.\n:type record_list: list\n:param active_system: The active UnitSystem.\n:type active_system: UnitSystem\n:param default_system: The default UnitSystem.\n:type default_system: UnitSystem"
+    },
+    "DeckKeyword_repr": {
+        "signature": "opm.io.deck.DeckKeyword.__repr__() -> str",
+        "doc": "Returns the name of the DeckKeyword as a string.\n\n:return: The name of the DeckKeyword.\n:type: str"
+    },
+    "DeckKeyword_str": {
+        "signature": "opm.io.deck.DeckKeyword.__str__() -> str",
+        "doc": "Returns a string representation of the DeckKeyword.\n\n:return: The string representation of the DeckKeyword.\n:type: str"
+    },
+    "DeckKeyword_iter": {
+        "signature": "opm.io.deck.DeckKeyword.__iter__() -> iterator",
+        "doc": "Returns an iterator over the records of the DeckKeyword.\n\n:return: An iterator for the records.\n:type: iterator"
+    },
+    "DeckKeyword_getitem": {
+        "signature": "opm.io.deck.DeckKeyword.__getitem__(index: int) -> DeckValue",
+        "doc": "Returns the record at the specified index.\n\n:param index: The index of the record to retrieve.\n:type index: int\n\n:return: The record at the specified index.\n:type: DeckValue"
+    },
+    "DeckKeyword_len": {
+        "signature": "opm.io.deck.DeckKeyword.__len__() -> int",
+        "doc": "Returns the number of records in the DeckKeyword.\n\n:return: The number of records in the DeckKeyword.\n:type: int"
+    },
+    "DeckKeyword_name": {
+        "signature": "opm.io.deck.DeckKeyword.name() -> str",
+        "doc": "Returns the name of the DeckKeyword.\n\n:return: The name of the DeckKeyword.\n:type: str"
+    },
+    "DeckKeyword_init_parser_keyword_pydata_int": {
+        "signature": "opm.io.deck.DeckKeyword.__init__(parser_keyword: ParserKeyword, py_data: array_t[int]) -> None",
+        "doc": "Initializes a DeckKeyword with a specified ParserKeyword and integer data. For this, the keyword must be a data keyword!\n\n:param parser_keyword: The ParserKeyword to initialize the DeckKeyword with.\n:type parser_keyword: ParserKeyword\n:param py_data: The integer data array.\n:type py_data: array_t[int]"
+    },
+    "DeckKeyword_init_parser_keyword_pydata_double": {
+        "signature": "opm.io.deck.DeckKeyword.__init__(parser_keyword: ParserKeyword, py_data: array_t[double], active_system: UnitSystem, default_system: UnitSystem) -> None",
+        "doc": "Initializes a DeckKeyword with a specified ParserKeyword, double data, and two UnitSystem objects for active and default systems. For this, the keyword must be a data keyword!\n\n:param parser_keyword: The ParserKeyword to initialize the DeckKeyword with.\n:type parser_keyword: ParserKeyword\n:param py_data: The double data array.\n:type py_data: array_t[double]\n:param active_system: The active UnitSystem to interpret the data.\n:type active_system: UnitSystem\n:param default_system: The default UnitSystem to interpret the data.\n:type default_system: UnitSystem"
+    },
+    "DeckKeyword_get_int_array": {
+        "signature": "opm.io.deck.DeckKeyword.get_int_array() -> list",
+        "doc": "Returns the integer data of the DeckKeyword.\n\n:return: The integer data.\n:type: list"
+    },
+    "DeckKeyword_get_raw_array": {
+        "signature": "opm.io.deck.DeckKeyword.get_raw_array() -> list",
+        "doc": "Returns the raw doule data of the DeckKeyword.\n\n:return: The raw double data.\n:type: list"
+    },
+    "DeckKeyword_get_SI_array": {
+        "signature": "opm.io.deck.DeckKeyword.get_SI_array() -> list",
+        "doc": "Returns the SI double data of the DeckKeyword.\n\n:return: The SI double data.\n:type: list"
+    },
+    "DeckItem": {
+        "type": "class",
+        "signature": "opm.io.deck.DeckItem",
+        "doc": "Represents an item in the deck."
+    },
+    "DeckItem_len": {
+        "signature": "opm.io.deck.DeckItem.__len__() -> int",
+        "doc": "Returns the number of data elements in the DeckItem. If if the number returned by this method is less than what is semantically expected (e.g. size() is less than the number of cells in the grid for keywords like e.g. SGL), then the remaining values are defaulted. The deck creates the defaulted items if all their sizes are fully specified by the keyword, though.\n\n:return: The number of elements.\n:type: int"
+    },
+    "DeckItem_is_uda": {
+        "signature": "opm.io.deck.DeckItem.is_uda() -> bool",
+        "doc": "Returns whether the DeckItem holds UDA data.\n\n:return: True if the DeckItem is UDA, False otherwise.\n:type: bool"
+    },
+    "DeckItem_is_double": {
+        "signature": "opm.io.deck.DeckItem.is_double() -> bool",
+        "doc": "Returns whether the DeckItem holds double data.\n\n:return: True if the DeckItem is of type double, False otherwise.\n:type: bool"
+    },
+    "DeckItem_is_int": {
+        "signature": "opm.io.deck.DeckItem.is_int() -> bool",
+        "doc": "Returns whether the DeckItem holds integer data.\n\n:return: True if the DeckItem is of type int, False otherwise.\n:type: bool"
+    },
+    "DeckItem_is_string": {
+        "signature": "opm.io.deck.DeckItem.is_string() -> bool",
+        "doc": "Returns whether the DeckItem holds string data.\n\n:return: True if the DeckItem is of type string, False otherwise.\n:type: bool"
+    },
+    "DeckItem_get_str": {
+        "signature": "opm.io.deck.DeckItem.get_str(index: int) -> str",
+        "doc": "Returns the string data of the DeckItem at the given index, if the DeckItem is of type string.\n\n:param index: The index used to retrieve the string data from the DeckItem.\n:type index: int\n:return: The string representation of the DeckItem at the given index's data.\n:type: str"
+    },
+    "DeckItem_get_int": {
+        "signature": "opm.io.deck.DeckItem.get_int(index: int) -> int",
+        "doc": "Returns the integer data of the DeckItem at the given index.\n\n:param index: The index used to retrieve the integer data from the DeckItem.\n:type index: int\n:return: The integer data of the DeckItem at the given index.\n:type: int"
+    },
+    "DeckItem_get_raw": {
+        "signature": "opm.io.deck.DeckItem.get_raw(index: int) -> double",
+        "doc": "Returns the raw double data of the DeckItem at the given index.\n\n:param index: The index used to retrieve the raw double data from the DeckItem.\n:type index: int\n:return: The raw double data of the DeckItem at the given index.\n:type: double"
+    },
+    "DeckItem_get_uda": {
+        "signature": "opm.io.deck.DeckItem.get_uda(index: int) -> UDAValue",
+        "doc": "Returns the UDA data of the DeckItem at the given index.\n\n:param index: The index used to retrieve the UDA data from the DeckItem.\n:type index: int\n:return: The UDA data of the DeckItem at the given index.\n:type: UDAValue"
+    },
+    "DeckItem_get_SI": {
+        "signature": "opm.io.deck.DeckItem.get_SI(index: int) -> double",
+        "doc": "Returns the SI double data of the DeckItem at the given index.\n\n:param index: The index used to retrieve the SI double data from the DeckItem.\n:type index: int\n:return: The SI double data of the DeckItem at the given index.\n:type: double"
+    },
+    "DeckItem_get_data_list": {
+        "signature": "opm.io.deck.DeckItem.get_data_list() -> list",
+        "doc": "Returns the list of data elements contained in the DeckItem for int or string data elements.\n\n:return: A list of data elements in the DeckItem.\n:type: list"
+    },
+    "DeckItem_get_raw_data_list": {
+        "signature": "opm.io.deck.DeckItem.get_raw_data_list() -> list[double]",
+        "doc": "Returns the list of raw data elements (as doubles) contained in the DeckItem.\n\n:return: A list of raw data elements in the DeckItem.\n:type: list"
+    },
+    "DeckItem_get_SI_data_list": {
+        "signature": "opm.io.deck.DeckItem.get_SI_data_list() -> list[double]",
+        "doc": "Returns the list of SI double data elements contained in the DeckItem.\n\n:return: A list of SI double data elements in the DeckItem.\n:type: list"
+    },
+    "DeckItem_has_value": {
+        "signature": "opm.io.deck.DeckItem.__has_value(index: int) -> bool",
+        "doc": "Returns whether the DeckItem has a value at index.\n\n:param index: The index used to check if the DeckItem has a value.\n:type index: int\n:return: True if the DeckItem has a value at index, False otherwise.\n:type: bool"
+    },
+    "DeckItem_defaulted": {
+        "signature": "opm.io.deck.DeckItem.__defaulted(index: int) -> bool",
+        "doc": "Returns whether the DeckItem's value at index is the default.\n\n:param index: The index used to check if the DeckItem's value is the default.\n:type index: int\n:return: True if the value at index is defaulted, False otherwise.\n:type: bool"
+    },
+    "DeckItem_is_numeric": {
+        "signature": "opm.io.deck.DeckItem.__is_numeric() -> bool",
+        "doc": "Returns whether the UDA data of the DeckItem is numeric.\n\n:return: True if the value is numeric, False otherwise.\n:type: bool"
+    },
+    "DeckItem_uda_double": {
+        "signature": "opm.io.deck.DeckItem.__uda_double() -> double",
+        "doc": "Returns the double value of the UDA data of the DeckItem.\n\n:return: The double value of the UDA data.\n:type: double"
+    },
+    "DeckItem_uda_str": {
+        "signature": "opm.io.deck.DeckItem.__uda_str() -> str",
+        "doc": "Returns the string value of the UDA data of the DeckItem.\n\n:return: The string value of the UDA data.\n:type: str"
+    },
+    "DeckItem_name": {
+        "signature": "opm.io.deck.DeckItem.name() -> str",
+        "doc": "Returns the name of the DeckItem.\n\n:return: The name of the DeckItem.\n:type: str"
     }
 }

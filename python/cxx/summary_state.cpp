@@ -48,7 +48,7 @@ void python::common::export_SummaryState(py::module& module) {
 
     py::class_<SummaryState, std::shared_ptr<SummaryState>>(module, "SummaryState", SummaryStateClass_docstring)
         .def(py::init<std::time_t>())
-        .def("update", &SummaryState::update)
+        .def("update", &SummaryState::update, py::arg("variable_name"), py::arg("value"), SummaryState_update_docstring)
         .def("update_well_var", &SummaryState::update_well_var, py::arg("well_name"), py::arg("variable_name"), py::arg("new_value"), SummaryState_update_well_var_docstring)
         .def("update_group_var", &SummaryState::update_group_var, py::arg("group_name"), py::arg("variable_name"), py::arg("new_value"), SummaryState_update_group_var_docstring)
         .def("well_var", py::overload_cast<const std::string&, const std::string&>(&SummaryState::get_well_var, py::const_), py::arg("well_name"), py::arg("variable_name"), SummaryState_well_var_docstring)
@@ -56,10 +56,10 @@ void python::common::export_SummaryState(py::module& module) {
         .def("elapsed", &SummaryState::get_elapsed, SummaryState_elapsed_docstring)
         .def_property_readonly("groups", groups, SummaryState_groups_docstring)
         .def_property_readonly("wells", wells, SummaryState_wells_docstring)
-        .def("__contains__", &SummaryState::has)
+        .def("__contains__", &SummaryState::has, py::arg("variable_name"), SummaryState_contains_docstring)
         .def("has_well_var", py::overload_cast<const std::string&, const std::string&>(&SummaryState::has_well_var, py::const_), py::arg("well_name"), py::arg("variable_name"), SummaryState_has_well_var_docstring)
         .def("has_group_var", py::overload_cast<const std::string&, const std::string&>(&SummaryState::has_group_var, py::const_), py::arg("group_name"), py::arg("variable_name"), SummaryState_has_group_var_docstring)
-        .def("__setitem__", &SummaryState::set)
-        .def("__getitem__", py::overload_cast<const std::string&>(&SummaryState::get, py::const_))
+        .def("__setitem__", &SummaryState::set, py::arg("variable_name"), py::arg("new_value"), SummaryState_setitem_docstring)
+        .def("__getitem__", py::overload_cast<const std::string&>(&SummaryState::get, py::const_), py::arg("variable_name"), SummaryState_getitem_docstring)
         ;
 }

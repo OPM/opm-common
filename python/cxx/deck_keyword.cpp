@@ -14,8 +14,9 @@
 #include "export.hpp"
 #include "converters.hpp"
 
-#include <iostream>
+#include <python/cxx/OpmCommonPythonDoc.hpp>
 
+#include <iostream>
 
 namespace {
 
@@ -164,11 +165,12 @@ std::string get_string(DeckItem * item, std::size_t index) {
 
 }
 void python::common::export_DeckKeyword(py::module& module) {
-    py::class_< DeckKeyword >( module, "DeckKeyword")
-        .def(py::init<const ParserKeyword& >())
 
+    using namespace Opm::Common::DocStrings;
+
+    py::class_<DeckKeyword>(module, "DeckKeyword", DeckKeyword_docstring)
+        .def(py::init<const ParserKeyword&>(), py::arg("parser_keyword"), DeckKeyword_init_parser_keyword_docstring)
         .def(py::init([](const ParserKeyword& parser_keyword, py::list record_list, UnitSystem& active_system, UnitSystem& default_system) {
-
             std::vector< std::vector<DeckValue> > value_record_list;
             int i = 0;
             for (py::handle record_obj : record_list) {
@@ -218,27 +220,26 @@ void python::common::export_DeckKeyword(py::module& module) {
                  value_record_list.push_back( value_record );
              }
              return DeckKeyword(parser_keyword, value_record_list, active_system, default_system);
-         }  )  )
+         }  ), py::arg("parser_keyword"), py::arg("record_list"), py::arg("active_system"), py::arg("default_system"), DeckKeyword_init_parser_keyword_record_list_docstring)
+        .def("__repr__", &DeckKeyword::name, DeckKeyword_repr_docstring)
+        .def("__str__", &str<DeckKeyword>, DeckKeyword_str_docstring)
+        .def("__iter__", [](const DeckKeyword &keyword) { return py::make_iterator(keyword.begin(), keyword.end()); },
+             py::keep_alive<0,1>(), DeckKeyword_iter_docstring)
+        .def("__getitem__", getRecord, ref_internal, py::arg("index"), DeckKeyword_getitem_docstring)
+        .def("__len__", &DeckKeyword::size, DeckKeyword_len_docstring)
+        .def_property_readonly("name", &DeckKeyword::name, DeckKeyword_name_docstring)
 
-        .def( "__repr__", &DeckKeyword::name )
-        .def( "__str__", &str<DeckKeyword> )
-        .def("__iter__",  [] (const DeckKeyword &keyword) { return py::make_iterator(keyword.begin(), keyword.end()); }, py::keep_alive<0,1>())
-        .def( "__getitem__", getRecord, ref_internal)
-        .def( "__len__", &DeckKeyword::size )
-        .def_property_readonly("name", &DeckKeyword::name )
-
-    .def(py::init([](const ParserKeyword& parser_keyword, py::array_t<int> py_data) {
+        .def(py::init([](const ParserKeyword& parser_keyword, py::array_t<int> py_data) {
             return DeckKeyword(parser_keyword, convert::vector(py_data));
-        } ) )
+        }), py::arg("parser_keyword"), py::arg("py_data"), DeckKeyword_init_parser_keyword_pydata_int_docstring)
 
-    .def(py::init([](const ParserKeyword& parser_keyword, py::array_t<double> py_data, UnitSystem& active_system, UnitSystem& default_system) {
+        .def(py::init([](const ParserKeyword& parser_keyword, py::array_t<double> py_data, UnitSystem& active_system, UnitSystem& default_system) {
             return DeckKeyword(parser_keyword, convert::vector(py_data), active_system, default_system);
-        } ) )
+        }), py::arg("parser_keyword"), py::arg("py_data"), py::arg("active_system"), py::arg("default_system"), DeckKeyword_init_parser_keyword_pydata_double_docstring)
 
-    .def("get_int_array", &get_int_array)
-    .def("get_raw_array", &get_raw_array)
-    .def("get_SI_array", &get_SI_array)
-         ;
+        .def("get_int_array", &get_int_array, DeckKeyword_get_int_array_docstring)
+        .def("get_raw_array", &get_raw_array, DeckKeyword_get_raw_array_docstring)
+        .def("get_SI_array", &get_SI_array, DeckKeyword_get_SI_array_docstring);
 
 
     py::class_< DeckRecord >( module, "DeckRecord")
@@ -249,26 +250,26 @@ void python::common::export_DeckKeyword(py::module& module) {
         ;
 
 
-    py::class_< DeckItem >(module, "DeckItem")
-        .def( "__len__", &DeckItem::data_size )
-        .def("is_uda", &DeckItem::is_uda)
-        .def("is_double", &DeckItem::is_double)
-        .def("is_int", &DeckItem::is_int)
-        .def("is_string", &DeckItem::is_string)
-        .def("get_str", &get_string)
-        .def("get_int", &DeckItem::get<int>)
-        .def("get_raw", &DeckItem::get<double>)
-        .def("get_uda", &DeckItem::get<UDAValue>)
-        .def("get_SI", &DeckItem::getSIDouble)
-        .def("get_data_list", &item_to_pylist)
-        .def("get_raw_data_list", &raw_data_to_pylist)
-        .def("get_SI_data_list", &SI_data_to_pylist)
-        .def("__has_value", &DeckItem::hasValue)
-        .def("__defaulted", &DeckItem::defaultApplied)
-        .def("__is_numeric", &uda_item_is_numeric)
-        .def("__uda_double", &get_uda_double)
-        .def("__uda_str", &get_uda_str)
-        .def("name", &DeckItem::name)
+    py::class_<DeckItem>(module, "DeckItem", DeckItem_docstring)
+        .def("__len__", &DeckItem::data_size, DeckItem_len_docstring)
+        .def("is_uda", &DeckItem::is_uda, DeckItem_is_uda_docstring)
+        .def("is_double", &DeckItem::is_double, DeckItem_is_double_docstring)
+        .def("is_int", &DeckItem::is_int, DeckItem_is_int_docstring)
+        .def("is_string", &DeckItem::is_string, DeckItem_is_string_docstring)
+        .def("get_str", &get_string, py::arg("index"), DeckItem_get_str_docstring)
+        .def("get_int", &DeckItem::get<int>, py::arg("index"), DeckItem_get_int_docstring)
+        .def("get_raw", &DeckItem::get<double>, py::arg("index"), DeckItem_get_raw_docstring)
+        .def("get_uda", &DeckItem::get<UDAValue>, py::arg("index"), DeckItem_get_uda_docstring)
+        .def("get_SI", &DeckItem::getSIDouble, py::arg("index"), DeckItem_get_SI_docstring)
+        .def("get_data_list", &item_to_pylist, DeckItem_get_data_list_docstring)
+        .def("get_raw_data_list", &raw_data_to_pylist, DeckItem_get_raw_data_list_docstring)
+        .def("get_SI_data_list", &SI_data_to_pylist, DeckItem_get_SI_data_list_docstring)
+        .def("__has_value", &DeckItem::hasValue, py::arg("index"), DeckItem_has_value_docstring)
+        .def("__defaulted", &DeckItem::defaultApplied, py::arg("index"), DeckItem_defaulted_docstring)
+        .def("__is_numeric", &uda_item_is_numeric, DeckItem_is_numeric_docstring)
+        .def("__uda_double", &get_uda_double, DeckItem_uda_double_docstring)
+        .def("__uda_str", &get_uda_str, DeckItem_uda_str_docstring)
+        .def("name", &DeckItem::name, DeckItem_name_docstring)
         ;
 
 
