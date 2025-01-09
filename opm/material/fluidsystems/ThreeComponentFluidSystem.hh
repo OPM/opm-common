@@ -26,7 +26,7 @@
 #ifndef OPM_THREECOMPONENTFLUIDSYSTEM_HH
 #define OPM_THREECOMPONENTFLUIDSYSTEM_HH
 
-#include <opm/material/eos/PengRobinsonMixture.hpp>
+#include <opm/material/eos/CubicEOS.hpp>
 #include <opm/material/fluidsystems/BaseFluidSystem.hpp>
 #include <opm/material/components/SimpleCO2.hpp>
 #include <opm/material/components/C10.hpp>
@@ -72,7 +72,7 @@ namespace Opm {
         template <class ValueType>
         using ParameterCache = PTFlashParameterCache<ValueType, ThreeComponentFluidSystem<Scalar>>;
         using ViscosityModel = ViscosityModels<Scalar, ThreeComponentFluidSystem<Scalar>>;
-        using PengRobinsonMixture = ::Opm::PengRobinsonMixture<Scalar, ThreeComponentFluidSystem<Scalar>>;
+        using CubicEOS = ::Opm::CubicEOS<Scalar, ThreeComponentFluidSystem<Scalar>>;
 
         /*!
          * \brief The acentric factor of a component [].
@@ -205,7 +205,7 @@ namespace Opm {
             assert(phaseIdx < numPhases);
             assert(compIdx < numComponents);
 
-            return decay<LhsEval>(PengRobinsonMixture::computeFugacityCoefficient(fluidState, paramCache, phaseIdx, compIdx));
+            return decay<LhsEval>(CubicEOS::computeFugacityCoefficient(fluidState, paramCache, phaseIdx, compIdx));
         }
 
         //! \copydoc BaseFluidSystem::isCompressible
