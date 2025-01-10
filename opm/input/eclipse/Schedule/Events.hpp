@@ -102,34 +102,69 @@ namespace Opm
             /// considered with this event.
             REQUEST_OPEN_WELL = (UINT64_C(1) << 21),
         };
-    }
+    } // namespace ScheduleEvents
 
-    /*
-      This class implements a simple system for recording when various
-      events happen in the Schedule file. The purpose of the class is
-      that downstream code can query this system whether a certain a
-      event has taken place, and then perform potentially expensive
-      calculations conditionally:
-
-        auto events = schedule->getEvents();
-        if (events.hasEvent(SchedulEvents::NEW_WELL , reportStep))
-           // Perform expensive calculation which must be performed
-           // when a new well is introduced.
-           ...
-
-    */
-
-    class Events {
+    /// Events tied to a time and applicable to the simulation or an
+    /// individual well or group.
+    ///
+    /// The event time typically coincides with the start of a report step,
+    /// although could be different if the event is triggered in an ACTION
+    /// block.
+    ///
+    /// This class implements a simple system for recording when various
+    /// events happen in the Schedule file.  The purpose of the class is
+    /// that downstream code can query this system whether a certain a event
+    /// has taken place, and then perform potentially expensive calculations
+    /// conditionally:
+    ///
+    ///   auto events = schedule->getEvents();
+    ///   if (events.hasEvent(SchedulEvents::NEW_WELL, reportStep))
+    ///      // Perform expensive calculation which must be performed
+    ///      // when a new well is introduced.
+    ///      ...
+    class Events
+    {
     public:
+        /// Create a serialisation test object.
         static Events serializationTestObject();
 
+        /// Incorporate a new event into collection.
+        ///
+        /// \param[in] event Single event, such as a new well being introduced.
         void addEvent(ScheduleEvents::Events event);
-        bool hasEvent(uint64_t eventMask) const;
-        void clearEvent(uint64_t eventMask);
+
+        /// Remove one or more events from collection.
+        ///
+        /// \param[in] eventMask Bit mask of events to clear from current
+        /// collection.
+        void clearEvent(std::uint64_t eventMask);
+
+        /// Remove all events from collection.
         void reset();
 
+        /// Event existence predicate.
+        ///
+        /// \param[in] eventMask Bit mask of events for which to check
+        /// existence.
+        ///
+        /// \return Whether not at least one of the events represented in \p
+        /// eventMask is active in the current collection.
+        bool hasEvent(std::uint64_t eventMask) const;
+
+        /// Equality predicate.
+        ///
+        /// \param[in] data Object against which \code *this \endcode will
+        /// be tested for equality.
+        ///
+        /// \return Whether or not \code *this \endcode is the same as \p
+        /// data.
         bool operator==(const Events& data) const;
 
+        /// Convert between byte array and object representation.
+        ///
+        /// \tparam Serializer Byte array conversion protocol.
+        ///
+        /// \param[in,out] serializer Byte array conversion object.
         template<class Serializer>
         void serializeOp(Serializer& serializer)
         {
@@ -137,34 +172,110 @@ namespace Opm
         }
 
     private:
-        uint64_t m_events = 0;
+        /// Event collection.
+        std::uint64_t m_events = 0;
     };
 
-
-    class WellGroupEvents {
+    /// Collection of events tied to a time and associated to specific,
+    /// named wells or groups.
+    class WellGroupEvents
+    {
     public:
+        /// Create a serialisation test object.
         static WellGroupEvents serializationTestObject();
 
+        /// Include a named well into the events collection.
+        ///
+        /// Typically used in the handler for the 'WELSPECS' keyword.
         void addWell(const std::string& wname);
+
+        /// Include a named group in the events collection.
+        ///
+        /// Typically used in the handlers for the 'WELSPECS' and GRUPTREE
+        /// keywords
         void addGroup(const std::string& gname);
+
+        /// Add a single event for a named well or group.
+        ///
+        /// \param[in] wgname Well or group name.
+        ///
+        /// \param[in] event Single named event.  If \p event already exists
+        /// for \p wgname, then this function does nothing.
         void addEvent(const std::string& wgname, ScheduleEvents::Events event);
-        bool hasEvent(const std::string& wgname, uint64_t eventMask) const;
-        bool has(const std::string& wgname) const;
-        void clearEvent(const std::string& wgname, uint64_t eventMask);
+
+        /// Remove one or more individual events from the collection tied to
+        /// a single named well or group.
+        ///
+        /// \param[in] wgname Well or group name.
+        ///
+        /// \param[in] eventMask One or more events combined using bitwise
+        /// 'or' ('|').  All events for \p wgname that are set in \p
+        /// eventMask will be cleared.
+        void clearEvent(const std::string& wgname, std::uint64_t eventMask);
+
+        /// Remove all events for all known wells and groups
+        ///
+        /// Typically used only when preparing the events system for a new
+        /// report step as part of Schedule object initialisation.
         void reset();
+
+        /// Check if any events have ever been registered for a named well
+        /// or group.
+        ///
+        /// \param[in] wgname Well or group name.
+        ///
+        /// \return Whether or not the well or group \wgname has been
+        /// registered in this collection.
+        bool has(const std::string& wgname) const;
+
+        /// Query current collection for one or more specific events
+        /// associated to a specific well or group.
+        ///
+        /// \param[in] wgname Well or group name.
+        ///
+        /// \param[in] eventMask Bit mask of events for which to check
+        /// existence.
+        ///
+        /// \return Whether not at least one of the events represented in \p
+        /// eventMask is active in the current collection.
+        bool hasEvent(const std::string& wgname, std::uint64_t eventMask) const;
+
+        /// Look up collection of events for named well or group.
+        ///
+        /// Throws an exception of type \code std::invalid_argument \endcode
+        /// if the named well or group has not been previously registered
+        /// through addWell() or addGroup().
+        ///
+        /// \param[in] wgname Well or group name.
+        ///
+        /// \return Event collection for \p wgname.
         const Events& at(const std::string& wgname) const;
+
+        /// Equality predicate.
+        ///
+        /// \param[in] data Object against which \code *this \endcode will
+        /// be tested for equality.
+        ///
+        /// \return Whether or not \code *this \endcode is the same as \p
+        /// data.
         bool operator==(const WellGroupEvents& data) const;
 
+        /// Convert between byte array and object representation.
+        ///
+        /// \tparam Serializer Byte array conversion protocol.
+        ///
+        /// \param[in,out] serializer Byte array conversion object.
         template<class Serializer>
         void serializeOp(Serializer& serializer)
         {
             serializer(m_wellgroup_events);
         }
+
     private:
-        std::unordered_map<std::string, Events> m_wellgroup_events;
+        /// Event collection for all registered wells and groups.
+        std::unordered_map<std::string, Events> m_wellgroup_events{};
     };
 
+} // namespace Opm
 
-}
-
-#endif
+#endif // SCHEDULE_EVENTS_HPP
