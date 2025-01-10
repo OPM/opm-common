@@ -55,6 +55,7 @@ using ComponentVector = Dune::FieldVector<Evaluation, numComponents>;
 using FluidState = Opm::CompositionalFluidState<Evaluation, FluidSystem>;
 
 std::vector<std::string> test_methods {"newton", "ssi", "ssi+newton"};
+// std::vector<std::string> test_methods {"ssi"};
 
 #if BOOST_VERSION / 100000 == 1 && BOOST_VERSION / 100 % 1000 > 66
 BOOST_DATA_TEST_CASE(PtFlash, test_methods)
@@ -72,59 +73,18 @@ for (const auto& sample : test_methods) {
     comp[1] = Evaluation::createVariable(0.3, 2);
     comp[2] = 1. - comp[0] - comp[1];
 
-    // TODO: not sure whether the saturation matter here.
-    ComponentVector sat;
-    // We assume that currently everything is in the oil phase
-    sat[0] = 1.0; sat[1] = 1.0-sat[0];
-    Scalar temp = 300.0;
+    const Scalar temp = 300.0;
 
     // FluidState will be the input for the flash calculation
     FluidState fluid_state;
     fluid_state.setPressure(FluidSystem::oilPhaseIdx, p_init);
     fluid_state.setPressure(FluidSystem::gasPhaseIdx, p_init);
 
-    fluid_state.setMoleFraction(FluidSystem::oilPhaseIdx, FluidSystem::Comp0Idx, comp[0]);
-    fluid_state.setMoleFraction(FluidSystem::oilPhaseIdx, FluidSystem::Comp1Idx, comp[1]);
-    fluid_state.setMoleFraction(FluidSystem::oilPhaseIdx, FluidSystem::Comp2Idx, comp[2]);
-
-    fluid_state.setMoleFraction(FluidSystem::gasPhaseIdx, FluidSystem::Comp0Idx, comp[0]);
-    fluid_state.setMoleFraction(FluidSystem::gasPhaseIdx, FluidSystem::Comp1Idx, comp[1]);
-    fluid_state.setMoleFraction(FluidSystem::gasPhaseIdx, FluidSystem::Comp2Idx, comp[2]);
-
-    // It is used here only for calculate the z
-    fluid_state.setSaturation(FluidSystem::oilPhaseIdx, sat[0]);
-    fluid_state.setSaturation(FluidSystem::gasPhaseIdx, sat[1]);
+    fluid_state.setMoleFraction(FluidSystem::Comp0Idx, comp[0]);
+    fluid_state.setMoleFraction(FluidSystem::Comp1Idx, comp[1]);
+    fluid_state.setMoleFraction(FluidSystem::Comp2Idx, comp[2]);
 
     fluid_state.setTemperature(temp);
-
-    // ParameterCache paramCache;
-    {
-        typename FluidSystem::template ParameterCache<Evaluation> paramCache;
-        paramCache.updatePhase(fluid_state, FluidSystem::oilPhaseIdx);
-        paramCache.updatePhase(fluid_state, FluidSystem::gasPhaseIdx);
-        fluid_state.setDensity(FluidSystem::oilPhaseIdx, FluidSystem::density(fluid_state, paramCache, FluidSystem::oilPhaseIdx));
-        fluid_state.setDensity(FluidSystem::gasPhaseIdx, FluidSystem::density(fluid_state, paramCache, FluidSystem::gasPhaseIdx));
-    }
-
-    ComponentVector z(0.); // TODO; z needs to be normalized.
-    {
-        Scalar sumMoles = 0.0;
-        for (unsigned phaseIdx = 0; phaseIdx < FluidSystem::numPhases; ++phaseIdx) {
-            for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
-                Scalar tmp = Opm::getValue(fluid_state.molarity(phaseIdx, compIdx) * fluid_state.saturation(phaseIdx));
-                z[compIdx] += Opm::max(tmp, 1e-8);
-                sumMoles += tmp;
-            }
-        }
-        z /= sumMoles;
-        // p And z is the primary variables
-        Evaluation z_last = 1.;
-        for (unsigned compIdx = 0; compIdx < numComponents - 1; ++compIdx) {
-            z[compIdx] = Evaluation::createVariable(Opm::getValue(z[compIdx]), int(compIdx) + 1);
-            z_last -= z[compIdx];
-        }
-        z[numComponents - 1] = z_last;
-    }
 
     const double flash_tolerance = 1.e-12; // just to test the setup in co2-compositional
     const int flash_verbosity = 0;
@@ -139,7 +99,7 @@ for (const auto& sample : test_methods) {
     fluid_state.setLvalue(Ltmp);
 
     using Flash = Opm::PTFlash<double, FluidSystem>;
-    Flash::solve(fluid_state, z, sample, flash_tolerance, flash_verbosity);
+    Flash::solve(fluid_state,  sample, flash_tolerance, flash_verbosity);
 
     ComponentVector x, y;
     const Evaluation L = fluid_state.L();

@@ -76,7 +76,6 @@ public:
      */
     template <class FluidState>
     static void solve(FluidState& fluid_state,
-                      const Dune::FieldVector<typename FluidState::Scalar, numComponents>& z,
                       const std::string& twoPhaseMethod,
                       Scalar /*tolerance = -1.*/,
                       int verbosity = 0)
@@ -97,7 +96,12 @@ public:
         // Print header
         if (verbosity >= 1) {
             std::cout << "********" << std::endl;
-            std::cout << "Inputs are K = [" << K << "], L = [" << L << "], z = [" << z << "], P = " << fluid_state.pressure(0) << ", and T = " << fluid_state.temperature(0) << std::endl;
+            std::cout << "Inputs are K = [" << K << "], L = [" << L << "] " << fluid_state.pressure(0) << ", and T = " << fluid_state.temperature(0) << std::endl;
+        }
+
+        Dune::FieldVector<typename FluidState::Scalar, numComponents> z;
+        for (unsigned i = 0; i < numComponents; ++i) {
+            z[i] = fluid_state.moleFraction(i);
         }
 
         using ScalarVector = Dune::FieldVector<Scalar, numComponents>;
@@ -105,15 +109,13 @@ public:
         ScalarVector z_scalar;
         ScalarVector K_scalar;
         for (unsigned i = 0; i < numComponents; ++i) {
-            z_scalar[i] = Opm::getValue(z[i]);
+            z_scalar[i] = Opm::getValue(z[i]); // z[i]);
             K_scalar[i] = Opm::getValue(K[i]);
         }
         using ScalarFluidState = CompositionalFluidState<Scalar, FluidSystem>;
         ScalarFluidState fluid_state_scalar;
 
         for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
-            fluid_state_scalar.setMoleFraction(oilPhaseIdx, compIdx, Opm::getValue(fluid_state.moleFraction(oilPhaseIdx, compIdx)));
-            fluid_state_scalar.setMoleFraction(gasPhaseIdx, compIdx, Opm::getValue(fluid_state.moleFraction(gasPhaseIdx, compIdx)));
             fluid_state_scalar.setKvalue(compIdx, Opm::getValue(fluid_state.K(compIdx)));
         }
 
@@ -173,7 +175,7 @@ public:
         fluid_state.setLvalue(L_scalar);
         // we update the derivatives in fluid_state
         updateDerivatives_(fluid_state_scalar, z, fluid_state, is_single_phase);
-    }//end solve
+    } // end solve
 
     /*!
      * \brief Calculates the chemical equilibrium from the component
