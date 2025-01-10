@@ -17,16 +17,15 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdexcept>
-
 #define BOOST_TEST_MODULE EventTests
 #include <boost/test/unit_test.hpp>
 
 #include <opm/input/eclipse/Schedule/Events.hpp>
 
+#include <stdexcept>
 
-
-BOOST_AUTO_TEST_CASE(CreateEmpty) {
+BOOST_AUTO_TEST_CASE(CreateEmpty)
+{
     Opm::Events events;
 
     BOOST_CHECK_EQUAL( false , events.hasEvent(Opm::ScheduleEvents::NEW_WELL));
@@ -55,9 +54,11 @@ BOOST_AUTO_TEST_CASE(CreateEmpty) {
     Opm::WellGroupEvents wg_events;
     wg_events.addWell("W1");
     wg_events.addEvent("W1", Opm::ScheduleEvents::WELL_STATUS_CHANGE );
-    auto ev = wg_events.at("W1");
+
+    const auto& ev = wg_events.at("W1");
     BOOST_CHECK_EQUAL( false , ev.hasEvent(Opm::ScheduleEvents::NEW_GROUP));
     BOOST_CHECK_EQUAL( true , ev.hasEvent(Opm::ScheduleEvents::WELL_STATUS_CHANGE));
-    BOOST_CHECK_THROW(wg_events.at("NO_SUCH_WELL"), std::exception);
+
+    BOOST_CHECK_THROW(wg_events.at("NO_SUCH_WELL"), std::invalid_argument);
 }
 
