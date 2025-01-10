@@ -27,112 +27,80 @@ namespace Opm
 {
     namespace ScheduleEvents {
         // These values are used as bitmask - 2^n structure is essential.
-        enum Events {
-            /*
-               The NEW_WELL event is triggered by the WELSPECS
-               keyword. For wells the event is triggered the first
-               time the well is mentioned in the WELSPECS keyword, for
-               the Schedule object the NEW_WELL event is triggered
-               every time a WELSPECS keyword is encountered.
-            */
-            NEW_WELL = (1 << 0),
+        enum Events : std::uint64_t {
+            /// The NEW_WELL event is triggered by the WELSPECS keyword.
+            /// For wells the event is triggered the first time the well is
+            /// mentioned in the WELSPECS keyword, for the Schedule object
+            /// the NEW_WELL event is triggered every time a WELSPECS
+            /// keyword is encountered.
+            NEW_WELL = (UINT64_C(1) << 0),
 
-            /*
-              WHen the well data is updated with the WELSPECS keyword
-              this event is triggered. Only applies to individual
-              wells, and not the global Schedule object.
-            */
-            WELL_WELSPECS_UPDATE = (1 << 1),
+            /// When the well data is updated with the WELSPECS keyword this
+            /// event is triggered. Only applies to individual wells, and
+            /// not the global Schedule object.
+            WELL_WELSPECS_UPDATE = (UINT64_C(1) << 1),
 
+            // WELL_POLYMER_UPDATE = (UINT64_C(1) << 2),
 
-            //WELL_POLYMER_UPDATE = (1 << 2),
-            /*
-               The NEW_GROUP event is triggered by the WELSPECS and
-               GRUPTREE keywords.
-            */
-            NEW_GROUP = (1 << 3),
+            /// The NEW_GROUP event is triggered by the WELSPECS and
+            /// GRUPTREE keywords.
+            NEW_GROUP = (UINT64_C(1) << 3),
 
-            /*
-               The PRODUCTION_UPDATE event is triggered by the
-               WCONPROD, WCONHIST, WELTARG, WEFAC keywords. The event will be
-               triggered if *any* of the elements in one of keywords
-               is changed. Quite simlar for INJECTION_UPDATE and
-               POLYMER_UPDATE.
-            */
-            PRODUCTION_UPDATE = (1 << 4),
-            INJECTION_UPDATE = (1 << 5),
-            //POLYMER_UPDATES = (1 << 6),
+            /// The PRODUCTION_UPDATE event is triggered by the WCONPROD,
+            /// WCONHIST, WELTARG, WEFAC keywords.  The event will be
+            /// triggered if *any* of the elements in one of keywords is
+            /// changed. Quite simlar for INJECTION_UPDATE and
+            /// POLYMER_UPDATE.
+            PRODUCTION_UPDATE = (UINT64_C(1) << 4),
+            INJECTION_UPDATE = (UINT64_C(1) << 5),
+            //POLYMER_UPDATES = (UINT64_C(1) << 6),
 
-            /*
-              This event is triggered if the well status is changed
-              between {OPEN,SHUT,STOP,AUTO}. There are many keywords
-              which can trigger a well status change.
-            */
-            WELL_STATUS_CHANGE = (1 << 7),
+            /// This event is triggered if the well status is changed
+            /// between {OPEN,SHUT,STOP,AUTO}.  There are many keywords
+            /// which can trigger a well status change.
+            WELL_STATUS_CHANGE = (UINT64_C(1) << 7),
 
-            /*
-              COMPDAT and WELOPEN
-            */
-            COMPLETION_CHANGE = (1 << 8),
+            /// COMPDAT and WELOPEN
+            COMPLETION_CHANGE = (UINT64_C(1) << 8),
 
-            /*
-              The well group topolyg has changed.
-            */
-            GROUP_CHANGE = (1 << 9),
+            /// The well group topology has changed.
+            GROUP_CHANGE = (UINT64_C(1) << 9),
 
+            /// Geology modifier.
+            GEO_MODIFIER = (UINT64_C(1) << 10),
 
-            /*
-              Geology modifier.
-            */
-            GEO_MODIFIER = (1 << 10),
+            /// TUNING has changed
+            TUNING_CHANGE = (UINT64_C(1) << 11),
 
-            /*
-              TUNING has changed
-            */
-            TUNING_CHANGE = (1 << 11),
+            /// The VFP tables have changed
+            VFPINJ_UPDATE = (UINT64_C(1) << 12),
+            VFPPROD_UPDATE = (UINT64_C(1) << 13),
 
-            /* The VFP tables have changed */
-            VFPINJ_UPDATE = (1 << 12),
-            VFPPROD_UPDATE = (1 << 13),
+            /// GROUP production or injection targets has changed
+            GROUP_PRODUCTION_UPDATE = (UINT64_C(1) << 14),
+            GROUP_INJECTION_UPDATE = (UINT64_C(1) << 15),
 
+            /// New explicit well productivity/injectivity assignment.
+            WELL_PRODUCTIVITY_INDEX = (UINT64_C(1) << 16),
 
-            /*
-              GROUP production or injection targets has changed
-            */
-            GROUP_PRODUCTION_UPDATE = (1 << 14),
-            GROUP_INJECTION_UPDATE = (1 << 15),
+            /// Well/group efficiency factor has changed
+            WELLGROUP_EFFICIENCY_UPDATE = (UINT64_C(1) << 17),
 
-            /*
-             * New explicit well productivity/injectivity assignment.
-             */
-            WELL_PRODUCTIVITY_INDEX = (1 << 16),
+            /// Injection type changed
+            INJECTION_TYPE_CHANGED = (UINT64_C(1) << 18),
 
-            /*
-             * Well/group efficiency factor has changed
-             */
-            WELLGROUP_EFFICIENCY_UPDATE = (1 << 17),
+            /// Well switched between injector and producer
+            WELL_SWITCHED_INJECTOR_PRODUCER = (UINT64_C(1) << 19),
 
-            /*
-             * Injection type changed
-             */
-            INJECTION_TYPE_CHANGED = (1 << 18),
+            /// The well has been affected in an ACTIONX keyword.
+            ACTIONX_WELL_EVENT = (UINT64_C(1) << 20),
 
-            /*
-             * Well switched between injector and producer
-             */
-            WELL_SWITCHED_INJECTOR_PRODUCER = (1 << 19),
-
-            /*
-             * The well has been affected in an ACTIONX keyword.
-             */
-            ACTIONX_WELL_EVENT = (1 << 20),
-
-            /*
-             * Some SCHEDULE keywords can set a well to be OPEN to open a previously STOPped or SHUT well.
-             * The well is SHUT/STOP due to various causes (SCHEDULE, economical, physical, etc.)
-             * For now, the WELOPEN, WCONPROD and WCONINJE keywords are considered with this event
-             */
-            REQUEST_OPEN_WELL = (1 << 21),
+            /// Some SCHEDULE keywords can set a well to be OPEN to open a
+            /// previously STOPped or SHUT well.  The well is SHUT/STOP due
+            /// to various causes (SCHEDULE, economical, physical, etc.).
+            /// For now, the WELOPEN, WCONPROD and WCONINJE keywords are
+            /// considered with this event.
+            REQUEST_OPEN_WELL = (UINT64_C(1) << 21),
         };
     }
 
