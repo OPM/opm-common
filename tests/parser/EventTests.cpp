@@ -62,3 +62,129 @@ BOOST_AUTO_TEST_CASE(CreateEmpty)
     BOOST_CHECK_THROW(wg_events.at("NO_SUCH_WELL"), std::invalid_argument);
 }
 
+BOOST_AUTO_TEST_CASE(MergeEvents)
+{
+    using SchEvt = Opm::ScheduleEvents::Events;
+
+    auto ev1 = Opm::Events{};
+    ev1.addEvent(SchEvt::NEW_WELL);
+    ev1.addEvent(SchEvt::GROUP_CHANGE);
+    ev1.addEvent(SchEvt::COMPLETION_CHANGE);
+
+    {
+        auto ev2 = Opm::Events{};
+        ev2.addEvent(SchEvt::NEW_GROUP);
+        ev2.addEvent(SchEvt::GROUP_PRODUCTION_UPDATE);
+
+        ev1.merge(ev2);
+    }
+
+    // -----------------------------------------------------------------------
+
+    BOOST_CHECK_MESSAGE(ev1.hasEvent(SchEvt::NEW_WELL),
+                        R"(Merged collection must have NEW_WELL)");
+    BOOST_CHECK_MESSAGE(ev1.hasEvent(SchEvt::GROUP_CHANGE),
+                        R"(Merged collection must have GROUP_CHANGE)");
+    BOOST_CHECK_MESSAGE(ev1.hasEvent(SchEvt::COMPLETION_CHANGE),
+                        R"(Merged collection must have COMPLETION_CHANGE)");
+
+    // -----------------------------------------------------------------------
+
+    BOOST_CHECK_MESSAGE(ev1.hasEvent(SchEvt::NEW_GROUP),
+                        R"(Merged collection must have NEW_GROUP)");
+    BOOST_CHECK_MESSAGE(ev1.hasEvent(SchEvt::GROUP_PRODUCTION_UPDATE),
+                        R"(Merged collection must have GROUP_PRODUCTION_UPDATE)");
+
+    // -----------------------------------------------------------------------
+
+    BOOST_CHECK_MESSAGE(! ev1.hasEvent(SchEvt::WELL_WELSPECS_UPDATE),
+                        R"(Merged collection must NOT have WELL_WELSPECS_UPDATE)");
+
+    BOOST_CHECK_MESSAGE(! ev1.hasEvent(SchEvt::PRODUCTION_UPDATE),
+                        R"(Merged collection must NOT have PRODUCTION_UPDATE)");
+
+    BOOST_CHECK_MESSAGE(! ev1.hasEvent(SchEvt::INJECTION_UPDATE),
+                        R"(Merged collection must NOT have INJECTION_UPDATE)");
+
+    BOOST_CHECK_MESSAGE(! ev1.hasEvent(SchEvt::WELL_STATUS_CHANGE),
+                        R"(Merged collection must NOT have WELL_STATUS_CHANGE)");
+
+    BOOST_CHECK_MESSAGE(! ev1.hasEvent(SchEvt::GEO_MODIFIER),
+                        R"(Merged collection must NOT have GEO_MODIFIER)");
+
+    BOOST_CHECK_MESSAGE(! ev1.hasEvent(SchEvt::TUNING_CHANGE),
+                        R"(Merged collection must NOT have TUNING_CHANGE)");
+
+    BOOST_CHECK_MESSAGE(! ev1.hasEvent(SchEvt::VFPINJ_UPDATE),
+                        R"(Merged collection must NOT have VFPINJ_UPDATE)");
+
+    BOOST_CHECK_MESSAGE(! ev1.hasEvent(SchEvt::VFPPROD_UPDATE),
+                        R"(Merged collection must NOT have VFPROD_UPDATE)");
+
+    BOOST_CHECK_MESSAGE(! ev1.hasEvent(SchEvt::GROUP_INJECTION_UPDATE),
+                        R"(Merged collection must NOT have GROUP_INJECTION_UPDATE)");
+
+    BOOST_CHECK_MESSAGE(! ev1.hasEvent(SchEvt::WELL_PRODUCTIVITY_INDEX),
+                        R"(Merged collection must NOT have WELL_PRODUCTIVITY_INDEX)");
+
+    BOOST_CHECK_MESSAGE(! ev1.hasEvent(SchEvt::WELLGROUP_EFFICIENCY_UPDATE),
+                        R"(Merged collection must NOT have WELLGROUP_EFFICIENCY_UPDATE)");
+
+    BOOST_CHECK_MESSAGE(! ev1.hasEvent(SchEvt::INJECTION_TYPE_CHANGED),
+                        R"(Merged collection must NOT have INJECTION_TYPE_CHANGED)");
+
+    BOOST_CHECK_MESSAGE(! ev1.hasEvent(SchEvt::WELL_SWITCHED_INJECTOR_PRODUCER),
+                        R"(Merged collection must NOT have WELL_SWITCHED_INJECTOR_PRODUCER)");
+
+    BOOST_CHECK_MESSAGE(! ev1.hasEvent(SchEvt::ACTIONX_WELL_EVENT),
+                        R"(Merged collection must NOT have ACTIONX_WELL_EVENT)");
+
+    BOOST_CHECK_MESSAGE(! ev1.hasEvent(SchEvt::REQUEST_OPEN_WELL),
+                        R"(Merged collection must NOT have REQUEST_OPEN_WELL)");
+}
+
+BOOST_AUTO_TEST_CASE(MergeEventCollections)
+{
+    using SchEvt = Opm::ScheduleEvents::Events;
+
+    auto c1 = Opm::WellGroupEvents{};
+    c1.addWell("P1");
+    c1.addEvent("P1", SchEvt::GROUP_CHANGE);
+    c1.addEvent("P1", SchEvt::COMPLETION_CHANGE);
+    c1.addGroup("G1");
+
+    {
+        auto c2 = Opm::WellGroupEvents{};
+        c2.addGroup("G1");
+        c2.addEvent("G1", SchEvt::GROUP_PRODUCTION_UPDATE);
+
+        c2.addGroup("G2");
+
+        c1.merge(c2);
+    }
+
+    BOOST_CHECK_MESSAGE(c1.has("P1"), R"(Well "P1" must exist in merged collection)");
+    BOOST_CHECK_MESSAGE(c1.has("G1"), R"(Group "G1" must exist in merged collection)");
+    BOOST_CHECK_MESSAGE(c1.has("G2"), R"(Group "G2" must exist in merged collection)");
+
+    // -----------------------------------------------------------------------
+
+    BOOST_CHECK_MESSAGE(c1.hasEvent("P1", SchEvt::NEW_WELL),
+                        R"(Merged collection must have NEW_WELL for "P1")");
+    BOOST_CHECK_MESSAGE(c1.hasEvent("P1", SchEvt::GROUP_CHANGE),
+                        R"(Merged collection must have GROUP_CHANGE for "P1")");
+    BOOST_CHECK_MESSAGE(c1.hasEvent("P1", SchEvt::COMPLETION_CHANGE),
+                        R"(Merged collection must have COMPLETION_CHANGE for "P1")");
+
+    // -----------------------------------------------------------------------
+
+    BOOST_CHECK_MESSAGE(c1.hasEvent("G1", SchEvt::NEW_GROUP),
+                        R"(Merged collection must have NEW_GROUP for "G1")");
+    BOOST_CHECK_MESSAGE(c1.hasEvent("G1", SchEvt::GROUP_PRODUCTION_UPDATE),
+                        R"(Merged collection must have GROUP_PRODUCTION_UPDATE for "G1")");
+
+    // -----------------------------------------------------------------------
+
+    BOOST_CHECK_MESSAGE(c1.hasEvent("G2", SchEvt::NEW_GROUP),
+                        R"(Merged collection must have NEW_GROUP for "G2")");
+}
