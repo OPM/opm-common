@@ -534,6 +534,50 @@
     "UDAValue_repr": {
         "signature": "opm.io.deck.UDAValue.__repr__() -> str",
         "doc": "Returns a string representation of the UDA. This works for both string and double UDAs.\n\n:return: A string representation of the UDA.\n:type: str"
+    },
+    "EclipseConfig": {
+        "type": "class",
+        "signature": "EclipseConfig",
+        "doc": "Represents the configuration for an Eclipse simulation."
+    },
+    "EclipseConfig_init": {
+        "signature": "EclipseConfig.init() -> InitConfig",
+        "doc": "Returns the initialization configuration.\n\n:return: The initialization configuration.\n:type: InitConfig"
+    },
+    "SummaryConfig": {
+        "type": "class",
+        "signature": "SummaryConfig",
+        "doc": "Represents the configuration for the summary."
+    },
+    "SummaryConfig_init": {
+        "signature": "SummaryConfig.__init__(deck: Deck, state: EclipseState, schedule: Schedule) -> SummaryConfig",
+        "doc": "Initializes the SummaryConfig with the provided deck, state, and schedule.\n\n:param deck: The deck containing simulation data.\n:type deck: Deck\n:param state: The EclipseState containing simulation state.\n:type state: EclipseState\n:param schedule: The schedule for the simulation.\n:type schedule: Schedule\n:return: A new instance of SummaryConfig.\n:type: SummaryConfig"
+    },
+    "SummaryConfig_contains": {
+        "signature": "SummaryConfig.__contains__(keyword: str) -> bool",
+        "doc": "Checks whether a keyword exists in the SummaryConfig.\n\n:param keyword: The keyword to check.\n:type keyword: str\n:return: True if the keyword exists, False otherwise.\n:type: bool"
+    },
+    "InitConfig": {
+        "type": "class",
+        "signature": "InitConfig",
+        "doc": "Represents the initialization configuration."
+    },
+    "InitConfig_hasEquil": {
+        "signature": "InitConfig.hasEquil() -> bool",
+        "doc": "Returns whether the initialization configuration includes the keword 'EQUIL', which defines the equilibration initialization data.\n\n:return: True if 'EQUIL' is present, False otherwise.\n:type: bool"
+    },
+    "InitConfig_restartRequested": {
+        "signature": "InitConfig.restartRequested() -> bool",
+        "doc": "Returns whether a restart is requested for the simulation.\n\n:return: True if a restart is requested, False otherwise.\n:type: bool"
+    },
+    "InitConfig_getRestartStep": {
+        "signature": "InitConfig.getRestartStep() -> int",
+        "doc": "Returns the step number to restart at.\n\n:return: The restart step number.\n:type: int"
+    },
+    "IOConfig": {
+        "type": "class",
+        "signature": "IOConfig",
+        "doc": "Represents the configuration for the input/output settings."
     }
 
 }
