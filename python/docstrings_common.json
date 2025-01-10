@@ -578,6 +578,75 @@
         "type": "class",
         "signature": "IOConfig",
         "doc": "Represents the configuration for the input/output settings."
+    },
+    "EclipseGrid": {
+        "type": "class",
+        "signature": "EclipseGrid",
+        "doc": "Represents the grid configuration for an Eclipse simulation."
+    },
+    "EclipseGrid_getXYZ": {
+        "signature": "EclipseGrid._getXYZ() -> tuple(int,int,int)",
+        "doc": "Returns the number of cells in XYZ direction for the grid as a tuple.\n\n:return: A tuple containing the number of cells in XYZ direction.\n:type: tuple(int,int,int)"
+    },
+    "EclipseGrid_nx": {
+        "signature": "EclipseGrid.nx() -> int",
+        "doc": "Returns the number of cells along the X-axis in the Eclipse grid.\n\n:return: The number of cells along the X-axis.\n:type: int"
+    },
+    "EclipseGrid_ny": {
+        "signature": "EclipseGrid.ny() -> int",
+        "doc": "Returns the number of cells along the Y-axis in the Eclipse grid.\n\n:return: The number of cells along the Y-axis.\n:type: int"
+    },
+    "EclipseGrid_nz": {
+        "signature": "EclipseGrid.nz() -> int",
+        "doc": "Returns the number of cells along the Z-axis in the Eclipse grid.\n\n:return: The number of cells along the Z-axis.\n:type: int"
+    },
+    "EclipseGrid_nactive": {
+        "signature": "EclipseGrid.nactive() -> int",
+        "doc": "Returns the number of active cells in the Eclipse grid.\n\n:return: The number of active cells.\n:type: int"
+    },
+    "EclipseGrid_cartesianSize": {
+        "signature": "EclipseGrid.cartesianSize() -> int",
+        "doc": "Returns the Cartesian size of the grid, i.e., the number of all cells.\n\n:return: The Cartesian size of the grid.\n:type: int"
+    },
+    "EclipseGrid_globalIndex": {
+        "signature": "EclipseGrid.globalIndex(i: int, j: int, k: int) -> int",
+        "doc": "Returns the global index of the grid cell at the specified (i, j, k) coordinates.\n\n:param i: The I index of the grid cell.\n:type i: int\n:param j: The J index of the grid cell.\n:type j: int\n:param k: The K index of the grid cell.\n:type k: int\n:return: The global index of the grid cell at the specified coordinates.\n:type: int"
+    },
+    "EclipseGrid_getIJK": {
+        "signature": "EclipseGrid.getIJK(g: int) -> tuple(int,int,int)",
+        "doc": "Returns a tuple containing the IJK indices of the grid cell with global index g.\n\n:return: A a tuple containing the IJK indices of the grid cell with global index g.\n:type: tuple(int,int,int)"
+    },
+    "EclipseGrid_getCellVolume1G": {
+        "signature": "EclipseGrid.getCellVolume1G(g: int) -> double",
+        "doc": "Returns the cell volume for the grid cell at the global index g.\n\n:param g: The global index of the grid cell.\n:type g: int\n:return: The volume of the grid cell.\n:type: double"
+    },
+    "EclipseGrid_getCellVolume3": {
+        "signature": "EclipseGrid.getCellVolume3(i: int, j: int, k: int) -> double",
+        "doc": "Returns the cell volume for a grid cell identified by its (i, j, k) indices.\n\n:param i: The I index of the grid cell.\n:type i: int\n:param j: The J index of the grid cell.\n:type j: int\n:param k: The K index of the grid cell.\n:type k: int\n:return: The volume of the grid cell identified by the (i, j, k) indices.\n:type: double"
+    },
+    "EclipseGrid_getCellVolumeAll": {
+        "signature": "EclipseGrid.getCellVolumeAll() -> numpy.ndarray[double]",
+        "doc": "Returns a `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_ containing the volumes of all grid cells. Each entry in the array corresponds to the volume of a grid cell, with the array index matching the global index of that cell.\n\n:return: A numpy.ndarray each entry represents the volume of a grid cell, the index being to the global index.\n:type: numpy.ndarray[double]"
+    },
+    "EclipseGrid_getCellVolumeMask": {
+        "signature": "EclipseGrid.getCellVolumeMask(mask: list[int]) -> numpy.ndarray[double]",
+        "doc": "Returns the cell volumes for the cells with the global ids given in the input list.\n\n:return: The cell volumes for the given cells.\n:type: numpy.ndarray[double]"
+    },
+   "EclipseGrid_getCellDepth1G": {
+        "signature": "EclipseGrid.getCellDepth1G(g: int) -> double",
+        "doc": "Returns the depth of the grid cell corresponding to the given global index.\n\n:param g: The global index of the grid cell.\n:type g: int\n:return: The depth of the grid cell with the specified global index.\n:type: double"
+    },
+    "EclipseGrid_getCellDepth3": {
+        "signature": "EclipseGrid.getCellDepth3(i: int, j: int, k: int) -> double",
+        "doc": "Returns the depth of the grid cell specified by the given IJK indices.\n\n:param i: The I index of the grid cell.\n:type i: int\n:param j: The J index of the grid cell.\n:type j: int\n:param k: The K index of the grid cell.\n:type k: int\n:return: The depth of the grid cell with the specified IJK indices.\n:type: double"
+    },
+    "EclipseGrid_getCellDepthAll": {
+        "signature": "EclipseGrid.getCellDepthAll() -> numpy.ndarray[double]",
+        "doc": "Returns a `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_ containing the depths of all grid cells. Each entry in the array corresponds to the depth of a grid cell, with the array index matching the global index of that cell.\n\n:return: A numpy.ndarray each entry represents the depth of a grid cell, and the index being the global index.\n:type: numpy.ndarray[double]"
+    },
+    "EclipseGrid_getCellDepthMask": {
+        "signature": "EclipseGrid.getCellDepthMask(mask: list[int]) -> numpy.ndarray[double]",
+        "doc": "Returns the depths for the cell with the global ids given in the input list.\n\n:return: The depths for the given cells.\n:type: numpy.ndarray[double]"
     }
 
 }

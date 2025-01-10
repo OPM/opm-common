@@ -8,6 +8,7 @@
 #include "converters.hpp"
 #include "export.hpp"
 
+#include <python/cxx/OpmCommonPythonDoc.hpp>
 
 namespace {
     py::tuple getXYZ( const EclipseGrid& grid ) {
@@ -112,23 +113,25 @@ namespace {
 
 void python::common::export_EclipseGrid(py::module& module) {
 
-    py::class_< EclipseGrid >( module, "EclipseGrid")
-        .def( "_getXYZ",        &getXYZ )
-        .def_property_readonly("nx", &EclipseGrid::getNX)
-        .def_property_readonly("ny", &EclipseGrid::getNY)
-        .def_property_readonly("nz", &EclipseGrid::getNZ)
-        .def_property_readonly( "nactive",        &getNumActive )
-        .def_property_readonly( "cartesianSize",  &getCartesianSize )
-        .def( "globalIndex",    &getGlobalIndex )
-        .def( "getIJK",         &getIJK )
-        .def( "getCellVolume",  &cellVolume1G)
-        .def( "getCellVolume",   &cellVolume3)
-        .def( "getCellVolume",   &cellVolumeAll)
-        .def( "getCellVolume",   &cellVolumeMask)
-        .def( "getCellDepth",  &cellDepth1G)
-        .def( "getCellDepth",  &cellDepth3)
-        .def( "getCellDepth",  &cellDepthAll)
-        .def( "getCellDepth",  &cellDepthMask)
-      ;
+    using namespace Opm::Common::DocStrings;
+
+    py::class_< EclipseGrid >( module, "EclipseGrid", EclipseGrid_docstring )
+        .def( "_getXYZ", &getXYZ, EclipseGrid_getXYZ_docstring )
+        .def_property_readonly("nx", &EclipseGrid::getNX, EclipseGrid_nx_docstring )
+        .def_property_readonly("ny", &EclipseGrid::getNY, EclipseGrid_ny_docstring )
+        .def_property_readonly("nz", &EclipseGrid::getNZ, EclipseGrid_nz_docstring )
+        .def_property_readonly( "nactive", &getNumActive, EclipseGrid_nactive_docstring )
+        .def_property_readonly( "cartesianSize", &getCartesianSize, EclipseGrid_cartesianSize_docstring )
+        .def("globalIndex", &getGlobalIndex, py::arg("i"), py::arg("j"), py::arg("k"), EclipseGrid_globalIndex_docstring)
+        .def( "getIJK", &getIJK, py::arg("g"), EclipseGrid_getIJK_docstring )
+        .def( "getCellVolume", &cellVolume1G, py::arg("g"), EclipseGrid_getCellVolume1G_docstring )
+        .def( "getCellVolume", &cellVolume3, py::arg("i"), py::arg("j"), py::arg("k"), EclipseGrid_getCellVolume3_docstring )
+        .def( "getCellVolume", &cellVolumeAll, EclipseGrid_getCellVolumeAll_docstring )
+        .def( "getCellVolume", &cellVolumeMask, py::arg("mask"), EclipseGrid_getCellVolumeMask_docstring )
+        .def( "getCellDepth", &cellDepth1G, py::arg("g"), EclipseGrid_getCellDepth1G_docstring )
+        .def( "getCellDepth", &cellDepth3, py::arg("i"), py::arg("j"), py::arg("k"), EclipseGrid_getCellDepth3_docstring )
+        .def( "getCellDepth", &cellDepthAll, EclipseGrid_getCellDepthAll_docstring )
+        .def( "getCellDepth", &cellDepthMask, py::arg("mask"), EclipseGrid_getCellDepthMask_docstring )
+        ;
 
 }
