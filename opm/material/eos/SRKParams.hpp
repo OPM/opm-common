@@ -23,8 +23,8 @@
   module for the precise wording of the license and the list of
   copyright holders.
 */
-#ifndef PR_PARAMS_HPP
-#define PR_PARAMS_HPP
+#ifndef SRK_PARAMS_HPP
+#define SRK_PARAMS_HPP
 
 #include <opm/material/eos/CubicEOSParams.hpp>
 
@@ -33,7 +33,7 @@
 namespace Opm {
 
 template <class Scalar, class FluidSystem, unsigned phaseIdx>
-class PRParams : public CubicEOSParams<Scalar, FluidSystem, phaseIdx>
+class SRKParams : public CubicEOSParams<Scalar, FluidSystem, phaseIdx>
 {
     static constexpr Scalar R = Constants<Scalar>::R;
 
@@ -42,30 +42,26 @@ public:
     {
         Scalar Tr = temperature / FluidSystem::criticalTemperature(compIdx);
         Scalar omega = FluidSystem::acentricFactor(compIdx);
-        Scalar f_omega;
-        if (omega < 0.49) 
-            f_omega = 0.37464 + omega * (1.54226 + omega * (-0.26992));
-        else              
-            f_omega = 0.379642 + omega * (1.48503 + omega * (-0.164423 + omega * 0.016666));
+        Scalar f_omega = 0.48 + omega * (1.574 + omega * (-0.176));
         Valgrind::CheckDefined(f_omega);
         
         Scalar tmp = 1 + f_omega*(1 - sqrt(Tr));
-        return 0.457235529 * tmp * tmp;
+        return 0.4274802 * tmp * tmp;
     }
 
     Scalar calcOmegaB([[maybe_unused]] Scalar temperature, [[maybe_unused]] unsigned compIdx) override
     {
-        return Scalar(0.077796074);
+        return Scalar(0.08664035);
     }
 
     Scalar m1() const
     {
-        return Scalar(1 + std::sqrt(2));
+        return Scalar(0.0);
     }
 
     Scalar m2() const
     {
-        return Scalar(1 - std::sqrt(2));
+        return Scalar(1.0);
     }
 };  // class PRParams
 

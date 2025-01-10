@@ -1050,6 +1050,8 @@ list( APPEND PUBLIC_HEADER_FILES
       opm/material/eos/CubicEOS.hpp
       opm/material/eos/CubicEOSParams.hpp
       opm/material/eos/PRParams.hpp
+      opm/material/eos/RKParams.hpp
+      opm/material/eos/SRKParams.hpp
       opm/material/thermal/ConstantSolidHeatCapLawParams.hpp
       opm/material/thermal/ConstantSolidHeatCapLaw.hpp
       opm/material/thermal/EclHeatcrLaw.hpp

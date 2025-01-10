@@ -24,7 +24,6 @@
 #define CUBIC_EOS_PARAMS_HPP
 
 #include <opm/material/Constants.hpp>
-// #include <opm/material/common/MathToolbox.hpp>
 
 namespace Opm
 {
@@ -35,8 +34,6 @@ class CubicEOSParams
     enum { numComponents = FluidSystem::numComponents };
     
     static constexpr Scalar R = Constants<Scalar>::R;
-
-    // using Toolbox = MathToolbox<Scalar>;
 
 public:
 
@@ -147,12 +144,12 @@ public:
         return B_;
     }
 
-    virtual Scalar calcOmegaA(Scalar temperature, unsigned compIdx)
+    virtual Scalar calcOmegaA([[maybe_unused]] Scalar temperature, [[maybe_unused]] unsigned compIdx)
     {
         throw std::logic_error("Not implemented");
     }
 
-    virtual Scalar calcOmegaB(Scalar temperature, unsigned compIdx)
+    virtual Scalar calcOmegaB([[maybe_unused]] Scalar temperature, [[maybe_unused]] unsigned compIdx)
     {
         throw std::logic_error("Not implemented");
     }
