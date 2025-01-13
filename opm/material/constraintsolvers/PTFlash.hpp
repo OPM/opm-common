@@ -109,7 +109,7 @@ public:
         ScalarVector z_scalar;
         ScalarVector K_scalar;
         for (unsigned i = 0; i < numComponents; ++i) {
-            z_scalar[i] = Opm::getValue(z[i]); // z[i]);
+            z_scalar[i] = Opm::getValue(z[i]);
             K_scalar[i] = Opm::getValue(K[i]);
         }
         using ScalarFluidState = CompositionalFluidState<Scalar, FluidSystem>;
@@ -173,6 +173,7 @@ public:
             fluid_state_scalar.setKvalue(compIdx, K_scalar[compIdx]);
         }
         fluid_state.setLvalue(L_scalar);
+
         // we update the derivatives in fluid_state
         updateDerivatives_(fluid_state_scalar, z, fluid_state, is_single_phase);
     } // end solve
@@ -844,60 +845,7 @@ protected:
         }
     }
 
-     // TODO: the interface will need to refactor for later usage
-    template<typename FlashFluidState, typename ComponentVector, size_t num_primary, size_t num_equation >
-    static void assembleNewtonSingle_(const FlashFluidState& fluid_state,
-                                const ComponentVector& global_composition,
-                                Dune::FieldMatrix<double, num_equation, num_primary>& jac,
-                                Dune::FieldVector<double, num_equation>& res)
-    {
-        using Eval = DenseAd::Evaluation<double, num_primary>;
-        std::vector<Eval> x(numComponents), y(numComponents);
-        for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
-            x[compIdx] = fluid_state.moleFraction(oilPhaseIdx, compIdx);
-            y[compIdx] = fluid_state.moleFraction(gasPhaseIdx, compIdx);
-        }
-        const Eval& l = fluid_state.L();
-
-        // TODO: clearing zero whether necessary?
-        jac = 0.;
-        res = 0.;
-        for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
-            {
-                // z - L*x - (1-L) * y  ---> z - x;
-                auto local_res = -global_composition[compIdx] + x[compIdx];
-                res[compIdx] = Opm::getValue(local_res);
-                for (unsigned i = 0; i < num_primary; ++i) {
-                    jac[compIdx][i] = local_res.derivative(i);
-                }
-            }
-
-            {
-                // f_liquid - f_vapor = 0  -->z - y;
-                auto local_res = -global_composition[compIdx] + y[compIdx];
-                res[compIdx + numComponents] = Opm::getValue(local_res);
-                for (unsigned i = 0; i < num_primary; ++i) {
-                    jac[compIdx + numComponents][i] = local_res.derivative(i);
-                }
-            }
-        }
-
-        // TODO: better we have isGas or isLiquid here
-        const bool isGas = Opm::abs(l - 1.0) > std::numeric_limits<double>::epsilon();
-
-        // sum(x) - sum(y) = 0
-        auto local_res = l;
-        if(isGas) {
-            local_res = l-1;
-        }
-
-        res[num_equation - 1] = Opm::getValue(local_res);
-        for (unsigned i = 0; i < num_primary; ++i) {
-            jac[num_equation - 1][i] = local_res.derivative(i);
-        }
-    }
-
-        template <typename FlashFluidStateScalar, typename FluidState, typename ComponentVector>
+    template <typename FlashFluidStateScalar, typename FluidState, typename ComponentVector>
     static void updateDerivatives_(const FlashFluidStateScalar& fluid_state_scalar,
                                    const ComponentVector& z,
                                    FluidState& fluid_state,
@@ -912,8 +860,8 @@ protected:
 
     template <typename FlashFluidStateScalar, typename FluidState, typename ComponentVector>
     static void updateDerivativesTwoPhase_(const FlashFluidStateScalar& fluid_state_scalar,
-                                   const ComponentVector& z,
-                                   FluidState& fluid_state)
+                                           const ComponentVector& z,
+                                           FluidState& fluid_state)
     {
         // getting the secondary Jocobian matrix
         constexpr size_t num_equations = numMisciblePhases * numMiscibleComponents + 1;
