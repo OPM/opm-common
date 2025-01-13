@@ -798,7 +798,7 @@ namespace Opm::gpuistl
 
     template<class Scalar, class Params, class GPUContainer>
     BrineCo2Pvt<Scalar, Params, GPUContainer>
-    move_to_gpu(const BrineCo2Pvt<Scalar>& cpuBrineCo2)
+    copy_to_gpu(const BrineCo2Pvt<Scalar>& cpuBrineCo2)
     {
         return BrineCo2Pvt<Scalar, Params, GPUContainer>(
             GPUContainer(cpuBrineCo2.getBrineReferenceDensity()),
@@ -807,7 +807,7 @@ namespace Opm::gpuistl
             cpuBrineCo2.getActivityModel(),
             cpuBrineCo2.getThermalMixingModelSalt(),
             cpuBrineCo2.getThermalMixingModelLiquid(),
-            move_to_gpu<Scalar, std::vector<Scalar>, GPUContainer>(cpuBrineCo2.getParams())
+            copy_to_gpu<Scalar, std::vector<Scalar>, GPUContainer>(cpuBrineCo2.getParams())
         );
     }
 
