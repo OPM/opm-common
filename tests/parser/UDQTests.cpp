@@ -1437,17 +1437,20 @@ BOOST_AUTO_TEST_CASE(DECK_TEST) {
         BOOST_CHECK( res[index].get() == (300 - 150)*0.90);
 }
 
-BOOST_AUTO_TEST_CASE(UDQPARSE_TEST1) {
-    KeywordLocation location;
-    UDQParams udqp;
-    UDQDefine def1(udqp, "WUBHP",0, location, {"1/(WWCT", "'W1*')"});
-    BOOST_CHECK_EQUAL( def1.input_string() , "1 / (WWCT 'W1*')");
+BOOST_AUTO_TEST_CASE(UDQPARSE_TEST1)
+{
+    const KeywordLocation location{};
+    const UDQParams udqp;
 
-    UDQDefine def2(udqp, "WUBHP",0, location, {"2 * (1",  "+" , "WBHP)"});
-    BOOST_CHECK_EQUAL( def2.input_string() , "2 * (1 + WBHP)");
+    const UDQDefine def1(udqp, "WUBHP",0, location, {"1/(WWCT", "'W1*')"});
+    BOOST_CHECK_EQUAL(def1.input_string(), "1/(WWCT 'W1*')");
+
+    const UDQDefine def2(udqp, "WUBHP",0, location, {"2 * (1",  "+" , "WBHP)"});
+    BOOST_CHECK_EQUAL( def2.input_string(), "2 * (1 + WBHP)");
 }
 
-BOOST_AUTO_TEST_CASE(INPUT_STRING_SCIENTIFIC_NOTATION) {
+BOOST_AUTO_TEST_CASE(INPUT_STRING_SCIENTIFIC_NOTATION)
+{
     const auto schedule = make_schedule(R"(
 SCHEDULE
 UDQ
@@ -1461,7 +1464,7 @@ DEFINE FU_THREE (3000000 + FU_ONE*1500000 + 1000000*FU_TWO)/365 /
     BOOST_CHECK_EQUAL(def.size(), 1ULL);
 
     const auto expect_input_string = std::string {
-        "(3E+06 + FU_ONE * 1.5E+06 + 1E+06 * FU_TWO) / 365"
+        "(3000000 + FU_ONE*1500000 + 1000000*FU_TWO)/365"
     };
 
     BOOST_CHECK_EQUAL(def[0].input_string(), expect_input_string);

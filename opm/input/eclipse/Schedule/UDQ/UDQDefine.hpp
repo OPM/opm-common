@@ -79,7 +79,7 @@ public:
 
     UDQSet eval(const UDQContext& context) const;
     const std::string& keyword() const;
-    const std::string& input_string() const;
+    const std::string& input_string() const { return this->input_string_; }
     const KeywordLocation& location() const;
     UDQVarType var_type() const;
     std::set<UDQTokenType> func_tokens() const;
@@ -100,24 +100,24 @@ public:
     void serializeOp(Serializer& serializer)
     {
         serializer(m_keyword);
+        serializer(input_string_);
         serializer(m_tokens);
         serializer(ast);
         serializer(m_var_type);
         serializer(m_location);
-        serializer(string_data);
         serializer(m_update_status);
         serializer(m_report_step);
     }
 
 private:
     std::string m_keyword{};
+    std::string input_string_{};
     std::vector<Opm::UDQToken> m_tokens{};
     std::shared_ptr<UDQASTNode> ast{};
     UDQVarType m_var_type{UDQVarType::NONE};
     KeywordLocation m_location{};
     std::size_t m_report_step{};
     mutable UDQUpdate m_update_status{UDQUpdate::NEXT};
-    mutable std::optional<std::string> string_data;
 
     UDQSet scatter_scalar_value(UDQSet&& res, const UDQContext& context) const;
     UDQSet scatter_scalar_well_value(const UDQContext& context, const std::optional<double>& value) const;

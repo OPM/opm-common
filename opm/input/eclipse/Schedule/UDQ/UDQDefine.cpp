@@ -47,6 +47,11 @@
 
 namespace {
 
+std::string join_input_tokens(const std::vector<std::string>& input_tokens)
+{
+    return fmt::format("{}", fmt::join(input_tokens, " "));
+}
+
 std::vector<std::string> quote_split(const std::string& item)
 {
     char quote_char = '\'';
@@ -271,6 +276,7 @@ UDQDefine::UDQDefine(const UDQParams&                udq_params,
                      const ParseContext&             parseContext,
                      ErrorGuard&                     errors)
     : m_keyword      (keyword)
+    , input_string_  (join_input_tokens(deck_data))
     , m_tokens       (make_udq_tokens(normalize_string_tokens(deck_data)))
     , m_var_type     (UDQ::varType(keyword))
     , m_location     (location)
@@ -297,10 +303,10 @@ UDQDefine UDQDefine::serializationTestObject()
 {
     UDQDefine result;
     result.m_keyword = "test1";
+    result.input_string_ = "FPR / 123.4";
     result.m_tokens = {UDQToken::serializationTestObject()};
     result.ast = std::make_shared<UDQASTNode>(UDQASTNode::serializationTestObject());
     result.m_var_type = UDQVarType::SEGMENT_VAR;
-    result.string_data = "test2";
     result.m_location = KeywordLocation{"KEYWOR", "file", 100};
     result.m_update_status = UDQUpdate::NEXT;
     result.m_report_step = 99;
@@ -362,39 +368,6 @@ UDQVarType UDQDefine::var_type() const
 const std::string& UDQDefine::keyword() const
 {
     return this->m_keyword;
-}
-
-const std::string& UDQDefine::input_string() const
-{
-    if (!this->string_data.has_value()) {
-        std::string s;
-
-        // A string representation equivalent to the input string is
-        // assembled by joining tokens and sprinkle with ' ' at semi random
-        // locations.  The main use of this function is to output the
-        // definition string in form usable for the restart file.
-
-        for (std::size_t token_index = 0; token_index < this->m_tokens.size(); token_index++) {
-            const auto& token = this->m_tokens[token_index];
-            if (UDQ::leadingSpace(token.type())) {
-                s += " ";
-            }
-
-            s += token.str();
-            if (token_index == (this->m_tokens.size() - 1)) {
-                continue;
-            }
-
-            if (UDQ::trailingSpace(token.type())) {
-                s += " ";
-                continue;
-            }
-        }
-
-        this->string_data = s;
-    }
-
-    return this->string_data.value();
 }
 
 std::set<UDQTokenType> UDQDefine::func_tokens() const

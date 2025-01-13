@@ -21,6 +21,7 @@
 #include <opm/io/eclipse/rst/state.hpp>
 
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/RegionSetMatcher.hpp>
 
 #include <opm/input/eclipse/Python/Python.hpp>
 
@@ -142,12 +143,16 @@ namespace {
                                                    {360, 361, 362}));
 
         state.add_define(0, "FULPR", Opm::UDQSet::scalar("FULPR", 460));
+
+        state.add_define(0, "FU_TEST", Opm::UDQSet::scalar("FU_TEST", 1234.5));
+
         return state;
     }
 
     Opm::SummaryState sum_state(const double udqUndef)
     {
         auto state = Opm::SummaryState{Opm::TimeService::now(), udqUndef};
+
         state.update_well_var("PROD1", "WUOPRL", 210.);
         state.update_well_var("PROD2", "WUOPRL", 211.);
         state.update_well_var("WINJ1", "WUOPRL", 212.);
@@ -171,7 +176,9 @@ namespace {
         state.update_well_var("PROD2", "WULPRU", 161.);
         state.update_well_var("WINJ1", "WULPRU", 162.);
         state.update_well_var("WINJ2", "WULPRU", 163.);
+
         state.update("FULPR", 460.);
+        state.update("FU_TEST", 1234.5);
 
         state.update_well_var("PROD1", "WOPR", 1.0);
         state.update_well_var("PROD2", "WOPR", 1.0);
@@ -179,21 +186,39 @@ namespace {
         state.update_well_var("WINJ2", "WOPR", 0.0);
         state.update_well_var("PROD1", "WLPR", 1.0);
         state.update_well_var("PROD2", "WLPR", 1.0);
+
         state.update_group_var("GRP1", "GOPR", 1.0);
+
         state.update("FOPR", 145);
         state.update("FLPR", 45);
         state.update("FWPR", 450);
+
+        state.update_region_var("RE2", "ROIP", 1, 100.0);
+        state.update_region_var("RE2", "ROIP", 2, 200.0);
+        state.update_region_var("RE2", "ROIP", 3, 300.0);
+
+        state.update_region_var("RE2", "RGPR", 1, 123.4);
+        state.update_region_var("RE2", "RGPR", 2, 246.8);
+        state.update_region_var("RE2", "RGPR", 3, 369.12);
+
+        state.update_group_var("TEST", "GEFF", 0.987);
+        state.update("FUGASX", -0.15);
 
         return state;
     }
 
     struct SimulationCase
     {
-        explicit SimulationCase(const Opm::Deck& deck)
+        explicit SimulationCase(const Opm::Deck& deck,
+                                const bool needFipRegStat = false)
             : es   { deck }
             , grid { deck }
             , sched{ deck, es, std::make_shared<Opm::Python>() }
-        {}
+        {
+            if (needFipRegStat) {
+                this->es.computeFipRegionStatistics();
+            }
+        }
 
         // Order requirement: 'es' must be declared/initialised before 'sched'.
         Opm::EclipseState es;
@@ -227,8 +252,10 @@ BOOST_AUTO_TEST_SUITE(Aggregate_UDQ)
 // test constructed UDQ restart data
 BOOST_AUTO_TEST_CASE (Declared_UDQ_data)
 {
+    const auto needFipRegStatistics = true;
     const auto simCase = SimulationCase {
-        first_sim("UDQ_TEST_WCONPROD_IUAD-2.DATA")
+        first_sim("UDQ_TEST_WCONPROD_IUAD-2.DATA"),
+        needFipRegStatistics
     };
 
     const auto& es = simCase.es;
@@ -236,6 +263,9 @@ BOOST_AUTO_TEST_CASE (Declared_UDQ_data)
     const auto& grid = simCase.grid;
 
     auto st = sum_state(es.runspec().udqParams().undefinedValue());
+
+    st.update("TIME", 3.1415 * 86400.0);
+
     auto udq_state = make_udq_state();
 
     const auto& ioConfig = es.getIOConfig();
@@ -375,310 +405,227 @@ BOOST_AUTO_TEST_CASE (Declared_UDQ_data)
             auto start = 0 * Opm::UDQDims::entriesPerIUDQ();
             BOOST_CHECK_EQUAL(iUdq[start + 0], 2); // udq NO. 1 - ( 0 - ASSIGN, 2 - DEFINE)
             BOOST_CHECK_EQUAL(iUdq[start + 1], -4); // udq NO. 1
-            BOOST_CHECK_EQUAL(
-                iUdq[start + 2],
-                1); // udq NO. 1 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
+            BOOST_CHECK_EQUAL(iUdq[start + 2], 1); // udq NO. 1 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
 
             start = 1 * Opm::UDQDims::entriesPerIUDQ();
             BOOST_CHECK_EQUAL(iUdq[start + 0], 0); // udq NO. 2 - ( 0 - ASSIGN, 2 - DEFINE)
             BOOST_CHECK_EQUAL(iUdq[start + 1], 0); // udq NO. 2
-            BOOST_CHECK_EQUAL(
-                iUdq[start + 2],
-                2); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
+            BOOST_CHECK_EQUAL(iUdq[start + 2], 2); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
 
             start = 2 * Opm::UDQDims::entriesPerIUDQ();
             BOOST_CHECK_EQUAL(iUdq[start + 0], 2); // udq NO. 2 - ( 0 - ASSIGN, 2 - DEFINE)
             BOOST_CHECK_EQUAL(iUdq[start + 1], -4); // udq NO. 2
-            BOOST_CHECK_EQUAL(
-                iUdq[start + 2],
-                3); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
+            BOOST_CHECK_EQUAL(iUdq[start + 2], 3); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
 
             start = 3 * Opm::UDQDims::entriesPerIUDQ();
             BOOST_CHECK_EQUAL(iUdq[start + 0], 2); // udq NO. 2 - ( 0 - ASSIGN, 2 - DEFINE)
             BOOST_CHECK_EQUAL(iUdq[start + 1], -4); // udq NO. 2
-            BOOST_CHECK_EQUAL(
-                iUdq[start + 2],
-                1); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
+            BOOST_CHECK_EQUAL(iUdq[start + 2], 1); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
 
             start = 4 * Opm::UDQDims::entriesPerIUDQ();
             BOOST_CHECK_EQUAL(iUdq[start + 0], 2); // udq NO. 2 - ( 0 - ASSIGN, 2 - DEFINE)
             BOOST_CHECK_EQUAL(iUdq[start + 1], -4); // udq NO. 2
-            BOOST_CHECK_EQUAL(
-                iUdq[start + 2],
-                4); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
+            BOOST_CHECK_EQUAL(iUdq[start + 2], 4); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
 
             start = 5 * Opm::UDQDims::entriesPerIUDQ();
             BOOST_CHECK_EQUAL(iUdq[start + 0], 2); // udq NO. 2 - ( 0 - ASSIGN, 2 - DEFINE)
             BOOST_CHECK_EQUAL(iUdq[start + 1], -4); // udq NO. 2
-            BOOST_CHECK_EQUAL(
-                iUdq[start + 2],
-                1); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
+            BOOST_CHECK_EQUAL(iUdq[start + 2], 1); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
 
             start = 6 * Opm::UDQDims::entriesPerIUDQ();
             BOOST_CHECK_EQUAL(iUdq[start + 0], 2); // udq NO. 2 - ( 0 - ASSIGN, 2 - DEFINE)
-            BOOST_CHECK_EQUAL(iUdq[start + 1], -1); // udq NO. 2
-            BOOST_CHECK_EQUAL(
-                iUdq[start + 2],
-                2); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
+            BOOST_CHECK_EQUAL(iUdq[start + 1], -25); // udq NO. 2
+            BOOST_CHECK_EQUAL(iUdq[start + 2], 2); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
 
             start = 7 * Opm::UDQDims::entriesPerIUDQ();
             BOOST_CHECK_EQUAL(iUdq[start + 0], 2); // udq NO. 2 - ( 0 - ASSIGN, 2 - DEFINE)
-            BOOST_CHECK_EQUAL(iUdq[start + 1], -4); // udq NO. 2
-            BOOST_CHECK_EQUAL(
-                iUdq[start + 2],
-                3); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
+            BOOST_CHECK_EQUAL(iUdq[start + 1], -1); // udq NO. 2
+            BOOST_CHECK_EQUAL(iUdq[start + 2], 3); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
 
             start = 8 * Opm::UDQDims::entriesPerIUDQ();
             BOOST_CHECK_EQUAL(iUdq[start + 0], 2); // udq NO. 2 - ( 0 - ASSIGN, 2 - DEFINE)
-            BOOST_CHECK_EQUAL(iUdq[start + 1], -5); // udq NO. 2
-            BOOST_CHECK_EQUAL(
-                iUdq[start + 2],
-                4); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
+            BOOST_CHECK_EQUAL(iUdq[start + 1], -4); // udq NO. 2
+            BOOST_CHECK_EQUAL(iUdq[start + 2], 4); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
 
             start = 9 * Opm::UDQDims::entriesPerIUDQ();
             BOOST_CHECK_EQUAL(iUdq[start + 0], 2); // udq NO. 2 - ( 0 - ASSIGN, 2 - DEFINE)
-            BOOST_CHECK_EQUAL(iUdq[start + 1], -8); // udq NO. 2
-            BOOST_CHECK_EQUAL(
-                iUdq[start + 2],
-                5); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
+            BOOST_CHECK_EQUAL(iUdq[start + 1], -5); // udq NO. 2
+            BOOST_CHECK_EQUAL(iUdq[start + 2], 5); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
 
             start = 10 * Opm::UDQDims::entriesPerIUDQ();
             BOOST_CHECK_EQUAL(iUdq[start + 0], 2); // udq NO. 2 - ( 0 - ASSIGN, 2 - DEFINE)
-            BOOST_CHECK_EQUAL(iUdq[start + 1], -1); // udq NO. 2
-            BOOST_CHECK_EQUAL(
-                iUdq[start + 2],
-                6); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
+            BOOST_CHECK_EQUAL(iUdq[start + 1], -8); // udq NO. 2
+            BOOST_CHECK_EQUAL(iUdq[start + 2], 6); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
 
             start = 11 * Opm::UDQDims::entriesPerIUDQ();
             BOOST_CHECK_EQUAL(iUdq[start + 0], 2); // udq NO. 2 - ( 0 - ASSIGN, 2 - DEFINE)
-            BOOST_CHECK_EQUAL(iUdq[start + 1], -5); // udq NO. 2
-            BOOST_CHECK_EQUAL(
-                iUdq[start + 2],
-                7); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
+            BOOST_CHECK_EQUAL(iUdq[start + 1], -1); // udq NO. 2
+            BOOST_CHECK_EQUAL(iUdq[start + 2], 7); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
 
             start = 12 * Opm::UDQDims::entriesPerIUDQ();
             BOOST_CHECK_EQUAL(iUdq[start + 0], 2); // udq NO. 2 - ( 0 - ASSIGN, 2 - DEFINE)
-            BOOST_CHECK_EQUAL(iUdq[start + 1], -3); // udq NO. 2
-            BOOST_CHECK_EQUAL(
-                iUdq[start + 2],
-                8); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
+            BOOST_CHECK_EQUAL(iUdq[start + 1], -5); // udq NO. 2
+            BOOST_CHECK_EQUAL(iUdq[start + 2], 8); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
 
             start = 13 * Opm::UDQDims::entriesPerIUDQ();
             BOOST_CHECK_EQUAL(iUdq[start + 0], 2); // udq NO. 2 - ( 0 - ASSIGN, 2 - DEFINE)
-            BOOST_CHECK_EQUAL(iUdq[start + 1], -1); // udq NO. 2
-            BOOST_CHECK_EQUAL(
-                iUdq[start + 2],
-                9); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
+            BOOST_CHECK_EQUAL(iUdq[start + 1], -3); // udq NO. 2
+            BOOST_CHECK_EQUAL(iUdq[start + 2], 9); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
 
             start = 14 * Opm::UDQDims::entriesPerIUDQ();
             BOOST_CHECK_EQUAL(iUdq[start + 0], 2); // udq NO. 2 - ( 0 - ASSIGN, 2 - DEFINE)
-            BOOST_CHECK_EQUAL(iUdq[start + 1], -2); // udq NO. 2
-            BOOST_CHECK_EQUAL(
-                iUdq[start + 2],
-                10); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
+            BOOST_CHECK_EQUAL(iUdq[start + 1], -1); // udq NO. 2
+            BOOST_CHECK_EQUAL(iUdq[start + 2], 10); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
 
             start = 15 * Opm::UDQDims::entriesPerIUDQ();
             BOOST_CHECK_EQUAL(iUdq[start + 0], 2); // udq NO. 2 - ( 0 - ASSIGN, 2 - DEFINE)
-            BOOST_CHECK_EQUAL(iUdq[start + 1], -3); // udq NO. 2
-            BOOST_CHECK_EQUAL(
-                iUdq[start + 2],
-                11); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
+            BOOST_CHECK_EQUAL(iUdq[start + 1], -2); // udq NO. 2
+            BOOST_CHECK_EQUAL(iUdq[start + 2], 11); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
 
             start = 16 * Opm::UDQDims::entriesPerIUDQ();
             BOOST_CHECK_EQUAL(iUdq[start + 0], 2); // udq NO. 2 - ( 0 - ASSIGN, 2 - DEFINE)
-            BOOST_CHECK_EQUAL(iUdq[start + 1], -1); // udq NO. 2
-            BOOST_CHECK_EQUAL(
-                iUdq[start + 2],
-                12); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
+            BOOST_CHECK_EQUAL(iUdq[start + 1], -3); // udq NO. 2
+            BOOST_CHECK_EQUAL(iUdq[start + 2], 12); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
 
             start = 17 * Opm::UDQDims::entriesPerIUDQ();
             BOOST_CHECK_EQUAL(iUdq[start + 0], 2); // udq NO. 2 - ( 0 - ASSIGN, 2 - DEFINE)
             BOOST_CHECK_EQUAL(iUdq[start + 1], -1); // udq NO. 2
-            BOOST_CHECK_EQUAL(
-                iUdq[start + 2],
-                13); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
+            BOOST_CHECK_EQUAL(iUdq[start + 2], 13); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
 
             start = 18 * Opm::UDQDims::entriesPerIUDQ();
             BOOST_CHECK_EQUAL(iUdq[start + 0], 2); // udq NO. 2 - ( 0 - ASSIGN, 2 - DEFINE)
-            BOOST_CHECK_EQUAL(iUdq[start + 1], -3); // udq NO. 2
-            BOOST_CHECK_EQUAL(
-                iUdq[start + 2],
-                14); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
+            BOOST_CHECK_EQUAL(iUdq[start + 1], -1); // udq NO. 2
+            BOOST_CHECK_EQUAL(iUdq[start + 2], 14); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
 
             start = 19 * Opm::UDQDims::entriesPerIUDQ();
             BOOST_CHECK_EQUAL(iUdq[start + 0], 2); // udq NO. 2 - ( 0 - ASSIGN, 2 - DEFINE)
-            BOOST_CHECK_EQUAL(iUdq[start + 1], -5); // udq NO. 2
-            BOOST_CHECK_EQUAL(
-                iUdq[start + 2],
-                15); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
+            BOOST_CHECK_EQUAL(iUdq[start + 1], -3); // udq NO. 2
+            BOOST_CHECK_EQUAL(iUdq[start + 2], 15); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
 
             start = 20 * Opm::UDQDims::entriesPerIUDQ();
             BOOST_CHECK_EQUAL(iUdq[start + 0], 2); // udq NO. 2 - ( 0 - ASSIGN, 2 - DEFINE)
             BOOST_CHECK_EQUAL(iUdq[start + 1], -5); // udq NO. 2
-            BOOST_CHECK_EQUAL(
-                iUdq[start + 2],
-                16); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
+            BOOST_CHECK_EQUAL(iUdq[start + 2], 16); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
 
             start = 21 * Opm::UDQDims::entriesPerIUDQ();
             BOOST_CHECK_EQUAL(iUdq[start + 0], 2); // udq NO. 2 - ( 0 - ASSIGN, 2 - DEFINE)
-            BOOST_CHECK_EQUAL(iUdq[start + 1], 1); // udq NO. 2
-            BOOST_CHECK_EQUAL(
-                iUdq[start + 2],
-                17); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
+            BOOST_CHECK_EQUAL(iUdq[start + 1], -5); // udq NO. 2
+            BOOST_CHECK_EQUAL(iUdq[start + 2], 17); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
 
             start = 22 * Opm::UDQDims::entriesPerIUDQ();
             BOOST_CHECK_EQUAL(iUdq[start + 0], 2); // udq NO. 2 - ( 0 - ASSIGN, 2 - DEFINE)
             BOOST_CHECK_EQUAL(iUdq[start + 1], 1); // udq NO. 2
-            BOOST_CHECK_EQUAL(
-                iUdq[start + 2],
-                18); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
+            BOOST_CHECK_EQUAL(iUdq[start + 2], 18); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
 
             start = 23 * Opm::UDQDims::entriesPerIUDQ();
             BOOST_CHECK_EQUAL(iUdq[start + 0], 2); // udq NO. 2 - ( 0 - ASSIGN, 2 - DEFINE)
-            BOOST_CHECK_EQUAL(iUdq[start + 1], -1); // udq NO. 2
-            BOOST_CHECK_EQUAL(
-                iUdq[start + 2],
-                19); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
+            BOOST_CHECK_EQUAL(iUdq[start + 1], 1); // udq NO. 2
+            BOOST_CHECK_EQUAL(iUdq[start + 2], 19); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
 
             start = 24 * Opm::UDQDims::entriesPerIUDQ();
             BOOST_CHECK_EQUAL(iUdq[start + 0], 2); // udq NO. 2 - ( 0 - ASSIGN, 2 - DEFINE)
-            BOOST_CHECK_EQUAL(iUdq[start + 1], -4); // udq NO. 2
-            BOOST_CHECK_EQUAL(
-                iUdq[start + 2],
-                20); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
+            BOOST_CHECK_EQUAL(iUdq[start + 1], -1); // udq NO. 2
+            BOOST_CHECK_EQUAL(iUdq[start + 2], 20); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
 
             start = 25 * Opm::UDQDims::entriesPerIUDQ();
             BOOST_CHECK_EQUAL(iUdq[start + 0], 2); // udq NO. 2 - ( 0 - ASSIGN, 2 - DEFINE)
-            BOOST_CHECK_EQUAL(iUdq[start + 1], -2); // udq NO. 2
-            BOOST_CHECK_EQUAL(
-                iUdq[start + 2],
-                21); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
+            BOOST_CHECK_EQUAL(iUdq[start + 1], -4); // udq NO. 2
+            BOOST_CHECK_EQUAL(iUdq[start + 2], 21); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
 
             start = 26 * Opm::UDQDims::entriesPerIUDQ();
             BOOST_CHECK_EQUAL(iUdq[start + 0], 2); // udq NO. 2 - ( 0 - ASSIGN, 2 - DEFINE)
-            BOOST_CHECK_EQUAL(iUdq[start + 1], -1); // udq NO. 2
-            BOOST_CHECK_EQUAL(
-                iUdq[start + 2],
-                22); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
+            BOOST_CHECK_EQUAL(iUdq[start + 1], -2); // udq NO. 2
+            BOOST_CHECK_EQUAL(iUdq[start + 2], 22); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
 
             start = 27 * Opm::UDQDims::entriesPerIUDQ();
             BOOST_CHECK_EQUAL(iUdq[start + 0], 2); // udq NO. 2 - ( 0 - ASSIGN, 2 - DEFINE)
-            BOOST_CHECK_EQUAL(iUdq[start + 1], -2); // udq NO. 2
-            BOOST_CHECK_EQUAL(
-                iUdq[start + 2],
-                23); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
+            BOOST_CHECK_EQUAL(iUdq[start + 1], -1); // udq NO. 2
+            BOOST_CHECK_EQUAL(iUdq[start + 2], 23); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
 
             start = 28 * Opm::UDQDims::entriesPerIUDQ();
             BOOST_CHECK_EQUAL(iUdq[start + 0], 2); // udq NO. 2 - ( 0 - ASSIGN, 2 - DEFINE)
             BOOST_CHECK_EQUAL(iUdq[start + 1], -2); // udq NO. 2
-            BOOST_CHECK_EQUAL(
-                iUdq[start + 2],
-                24); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
+            BOOST_CHECK_EQUAL(iUdq[start + 2], 24); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
 
             start = 29 * Opm::UDQDims::entriesPerIUDQ();
             BOOST_CHECK_EQUAL(iUdq[start + 0], 2); // udq NO. 2 - ( 0 - ASSIGN, 2 - DEFINE)
-            BOOST_CHECK_EQUAL(iUdq[start + 1], -8); // udq NO. 2
-            BOOST_CHECK_EQUAL(
-                iUdq[start + 2],
-                25); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
+            BOOST_CHECK_EQUAL(iUdq[start + 1], -2); // udq NO. 2
+            BOOST_CHECK_EQUAL(iUdq[start + 2], 25); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
 
             start = 30 * Opm::UDQDims::entriesPerIUDQ();
             BOOST_CHECK_EQUAL(iUdq[start + 0], 2); // udq NO. 2 - ( 0 - ASSIGN, 2 - DEFINE)
-            BOOST_CHECK_EQUAL(iUdq[start + 1], -6); // udq NO. 2
-            BOOST_CHECK_EQUAL(
-                iUdq[start + 2],
-                26); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
+            BOOST_CHECK_EQUAL(iUdq[start + 1], -8); // udq NO. 2
+            BOOST_CHECK_EQUAL(iUdq[start + 2], 26); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
 
             start = 31 * Opm::UDQDims::entriesPerIUDQ();
             BOOST_CHECK_EQUAL(iUdq[start + 0], 2); // udq NO. 2 - ( 0 - ASSIGN, 2 - DEFINE)
-            BOOST_CHECK_EQUAL(iUdq[start + 1], -4); // udq NO. 2
-            BOOST_CHECK_EQUAL(
-                iUdq[start + 2],
-                27); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
+            BOOST_CHECK_EQUAL(iUdq[start + 1], -6); // udq NO. 2
+            BOOST_CHECK_EQUAL(iUdq[start + 2], 27); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
 
             start = 32 * Opm::UDQDims::entriesPerIUDQ();
             BOOST_CHECK_EQUAL(iUdq[start + 0], 2); // udq NO. 2 - ( 0 - ASSIGN, 2 - DEFINE)
-            BOOST_CHECK_EQUAL(iUdq[start + 1], -5); // udq NO. 2
-            BOOST_CHECK_EQUAL(
-                iUdq[start + 2],
-                28); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
+            BOOST_CHECK_EQUAL(iUdq[start + 1], -4); // udq NO. 2
+            BOOST_CHECK_EQUAL(iUdq[start + 2], 28); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
 
             start = 33 * Opm::UDQDims::entriesPerIUDQ();
             BOOST_CHECK_EQUAL(iUdq[start + 0], 2); // udq NO. 2 - ( 0 - ASSIGN, 2 - DEFINE)
-            BOOST_CHECK_EQUAL(iUdq[start + 1], -4); // udq NO. 2
-            BOOST_CHECK_EQUAL(
-                iUdq[start + 2],
-                29); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
+            BOOST_CHECK_EQUAL(iUdq[start + 1], -5); // udq NO. 2
+            BOOST_CHECK_EQUAL(iUdq[start + 2], 29); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
 
             start = 34 * Opm::UDQDims::entriesPerIUDQ();
             BOOST_CHECK_EQUAL(iUdq[start + 0], 2); // udq NO. 2 - ( 0 - ASSIGN, 2 - DEFINE)
-            BOOST_CHECK_EQUAL(iUdq[start + 1], -8); // udq NO. 2
-            BOOST_CHECK_EQUAL(
-                iUdq[start + 2],
-                30); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
+            BOOST_CHECK_EQUAL(iUdq[start + 1], -4); // udq NO. 2
+            BOOST_CHECK_EQUAL(iUdq[start + 2], 30); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
 
             start = 35 * Opm::UDQDims::entriesPerIUDQ();
             BOOST_CHECK_EQUAL(iUdq[start + 0], 2); // udq NO. 2 - ( 0 - ASSIGN, 2 - DEFINE)
-            BOOST_CHECK_EQUAL(iUdq[start + 1], -4); // udq NO. 2
-            BOOST_CHECK_EQUAL(
-                iUdq[start + 2],
-                31); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
+            BOOST_CHECK_EQUAL(iUdq[start + 1], -8); // udq NO. 2
+            BOOST_CHECK_EQUAL(iUdq[start + 2], 31); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
 
             start = 36 * Opm::UDQDims::entriesPerIUDQ();
             BOOST_CHECK_EQUAL(iUdq[start + 0], 2); // udq NO. 2 - ( 0 - ASSIGN, 2 - DEFINE)
-            BOOST_CHECK_EQUAL(iUdq[start + 1], -5); // udq NO. 2
-            BOOST_CHECK_EQUAL(
-                iUdq[start + 2],
-                32); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
+            BOOST_CHECK_EQUAL(iUdq[start + 1], -4); // udq NO. 2
+            BOOST_CHECK_EQUAL(iUdq[start + 2], 32); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
 
             start = 37 * Opm::UDQDims::entriesPerIUDQ();
             BOOST_CHECK_EQUAL(iUdq[start + 0], 2); // udq NO. 2 - ( 0 - ASSIGN, 2 - DEFINE)
-            BOOST_CHECK_EQUAL(iUdq[start + 1], -6); // udq NO. 2
-            BOOST_CHECK_EQUAL(
-                iUdq[start + 2],
-                33); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
+            BOOST_CHECK_EQUAL(iUdq[start + 1], -5); // udq NO. 2
+            BOOST_CHECK_EQUAL(iUdq[start + 2], 33); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
 
             start = 38 * Opm::UDQDims::entriesPerIUDQ();
             BOOST_CHECK_EQUAL(iUdq[start + 0], 2); // udq NO. 2 - ( 0 - ASSIGN, 2 - DEFINE)
-            BOOST_CHECK_EQUAL(iUdq[start + 1], -1); // udq NO. 2
-            BOOST_CHECK_EQUAL(
-                iUdq[start + 2],
-                34); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
+            BOOST_CHECK_EQUAL(iUdq[start + 1], -6); // udq NO. 2
+            BOOST_CHECK_EQUAL(iUdq[start + 2], 34); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
 
             start = 39 * Opm::UDQDims::entriesPerIUDQ();
             BOOST_CHECK_EQUAL(iUdq[start + 0], 2); // udq NO. 2 - ( 0 - ASSIGN, 2 - DEFINE)
             BOOST_CHECK_EQUAL(iUdq[start + 1], -1); // udq NO. 2
-            BOOST_CHECK_EQUAL(
-                iUdq[start + 2],
-                35); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
+            BOOST_CHECK_EQUAL(iUdq[start + 2], 35); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
 
             start = 40 * Opm::UDQDims::entriesPerIUDQ();
             BOOST_CHECK_EQUAL(iUdq[start + 0], 2); // udq NO. 2 - ( 0 - ASSIGN, 2 - DEFINE)
-            BOOST_CHECK_EQUAL(iUdq[start + 1], -6); // udq NO. 2
-            BOOST_CHECK_EQUAL(
-                iUdq[start + 2],
-                36); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
+            BOOST_CHECK_EQUAL(iUdq[start + 1], -1); // udq NO. 2
+            BOOST_CHECK_EQUAL(iUdq[start + 2], 36); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
 
             start = 41 * Opm::UDQDims::entriesPerIUDQ();
             BOOST_CHECK_EQUAL(iUdq[start + 0], 2); // udq NO. 2 - ( 0 - ASSIGN, 2 - DEFINE)
-            BOOST_CHECK_EQUAL(iUdq[start + 1], -2); // udq NO. 2
-            BOOST_CHECK_EQUAL(
-                iUdq[start + 2],
-                37); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
+            BOOST_CHECK_EQUAL(iUdq[start + 1], -6); // udq NO. 2
+            BOOST_CHECK_EQUAL(iUdq[start + 2], 37); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
 
             start = 42 * Opm::UDQDims::entriesPerIUDQ();
             BOOST_CHECK_EQUAL(iUdq[start + 0], 2); // udq NO. 2 - ( 0 - ASSIGN, 2 - DEFINE)
-            BOOST_CHECK_EQUAL(iUdq[start + 1], -4); // udq NO. 2
-            BOOST_CHECK_EQUAL(
-                iUdq[start + 2],
-                38); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
+            BOOST_CHECK_EQUAL(iUdq[start + 1], -2); // udq NO. 2
+            BOOST_CHECK_EQUAL(iUdq[start + 2], 38); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
 
             start = 43 * Opm::UDQDims::entriesPerIUDQ();
             BOOST_CHECK_EQUAL(iUdq[start + 0], 2); // udq NO. 2 - ( 0 - ASSIGN, 2 - DEFINE)
+            BOOST_CHECK_EQUAL(iUdq[start + 1], -4); // udq NO. 2
+            BOOST_CHECK_EQUAL(iUdq[start + 2], 39); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
+
+            start = 44 * Opm::UDQDims::entriesPerIUDQ();
+            BOOST_CHECK_EQUAL(iUdq[start + 0], 2); // udq NO. 2 - ( 0 - ASSIGN, 2 - DEFINE)
             BOOST_CHECK_EQUAL(iUdq[start + 1], -1); // udq NO. 2
-            BOOST_CHECK_EQUAL(
-                iUdq[start + 2],
-                39); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
+            BOOST_CHECK_EQUAL(iUdq[start + 2], 40); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
         }
 
         {
@@ -777,29 +724,60 @@ BOOST_AUTO_TEST_CASE (Declared_UDQ_data)
 
             const auto& zUdl = udqData.getZUDL();
 
+            // UDQ 1
+            // DEFINE WUOPRL (WOPR PROD1 - 170) * 0.60 /
             auto start = 0 * Opm::UDQDims::entriesPerZUDL();
-            BOOST_CHECK_EQUAL(zUdl[start + 0].c_str(), "(WOPR 'P"); // udq NO. 1
-            BOOST_CHECK_EQUAL(zUdl[start + 1].c_str(), "ROD1' - "); // udq NO. 1
-            BOOST_CHECK_EQUAL(zUdl[start + 2].c_str(), "170) * 0"); // udq NO. 1
-            BOOST_CHECK_EQUAL(zUdl[start + 3].c_str(), ".6      "); // udq NO. 1
+            BOOST_CHECK_EQUAL(zUdl[start + 0].c_str(), "(WOPR PR");
+            BOOST_CHECK_EQUAL(zUdl[start + 1].c_str(), "OD1 - 17");
+            BOOST_CHECK_EQUAL(zUdl[start + 2].c_str(), "0) * 0.6");
+            BOOST_CHECK_EQUAL(zUdl[start + 3].c_str(), "0       ");
 
+            // UDQ 4
+            // DEFINE GUOPRU (GOPR GRP1 - 449) * 0.77 /
             start = 3 * Opm::UDQDims::entriesPerZUDL();
-            BOOST_CHECK_EQUAL(zUdl[start + 0].c_str(), "(GOPR 'G"); // udq NO. 1
-            BOOST_CHECK_EQUAL(zUdl[start + 1].c_str(), "RP1' - 4"); // udq NO. 1
-            BOOST_CHECK_EQUAL(zUdl[start + 2].c_str(), "49) * 0."); // udq NO. 1
-            BOOST_CHECK_EQUAL(zUdl[start + 3].c_str(), "77      "); // udq NO. 1
+            BOOST_CHECK_EQUAL(zUdl[start + 0].c_str(), "(GOPR GR");
+            BOOST_CHECK_EQUAL(zUdl[start + 1].c_str(), "P1 - 449");
+            BOOST_CHECK_EQUAL(zUdl[start + 2].c_str(), ") * 0.77");
+            BOOST_CHECK_EQUAL(zUdl[start + 3].c_str(), "        ");
 
+            // UDQ 5
+            // DEFINE WULPRU (WLPR PROD2 - 300) * 0.80 /
             start = 4 * Opm::UDQDims::entriesPerZUDL();
-            BOOST_CHECK_EQUAL(zUdl[start + 0].c_str(), "(WLPR 'P"); // udq NO. 1
-            BOOST_CHECK_EQUAL(zUdl[start + 1].c_str(), "ROD2' - "); // udq NO. 1
-            BOOST_CHECK_EQUAL(zUdl[start + 2].c_str(), "300) * 0"); // udq NO. 1
-            BOOST_CHECK_EQUAL(zUdl[start + 3].c_str(), ".8      "); // udq NO. 1
+            BOOST_CHECK_EQUAL(zUdl[start + 0].c_str(), "(WLPR PR");
+            BOOST_CHECK_EQUAL(zUdl[start + 1].c_str(), "OD2 - 30");
+            BOOST_CHECK_EQUAL(zUdl[start + 2].c_str(), "0) * 0.8");
+            BOOST_CHECK_EQUAL(zUdl[start + 3].c_str(), "0       ");
 
+            // UDQ 6
+            // DEFINE FULPR (FLPR - 543) * 0.65 /
             start = 5 * Opm::UDQDims::entriesPerZUDL();
-            BOOST_CHECK_EQUAL(zUdl[start + 0].c_str(), "(FLPR - "); // udq NO. 1
-            BOOST_CHECK_EQUAL(zUdl[start + 1].c_str(), "543) * 0"); // udq NO. 1
-            BOOST_CHECK_EQUAL(zUdl[start + 2].c_str(), ".65     "); // udq NO. 1
-            BOOST_CHECK_EQUAL(zUdl[start + 3].c_str(), "        "); // udq NO. 1
+            BOOST_CHECK_EQUAL(zUdl[start + 0].c_str(), "(FLPR - ");
+            BOOST_CHECK_EQUAL(zUdl[start + 1].c_str(), "543) * 0");
+            BOOST_CHECK_EQUAL(zUdl[start + 2].c_str(), ".65     ");
+            BOOST_CHECK_EQUAL(zUdl[start + 3].c_str(), "        ");
+
+            // UDQ 7 (from opm-tests/udq_actionx/UDQ_REG-02.DATA)
+            //
+            // Exactly 128 characters long (16 slots of 8 characters each).
+            //
+            // DEFINE FU_TEST (ROIP_RE2 2)/(FURE2)*(0.3*(RGPR_RE2 1)+(RGPR_RE2 2)+(RGPR_RE2 3))/(GEFF TEST)*(1+FUGASX)+((1.0*TIME*TIME-75.0*TIME+1250)*50.123)  /
+            start = 6 * Opm::UDQDims::entriesPerZUDL();
+            BOOST_CHECK_EQUAL(zUdl[start +  0].c_str(), "(ROIP_RE");
+            BOOST_CHECK_EQUAL(zUdl[start +  1].c_str(), "2 2)/(FU");
+            BOOST_CHECK_EQUAL(zUdl[start +  2].c_str(), "RE2)*(0.");
+            BOOST_CHECK_EQUAL(zUdl[start +  3].c_str(), "3*(RGPR_");
+            BOOST_CHECK_EQUAL(zUdl[start +  4].c_str(), "RE2 1)+(");
+            BOOST_CHECK_EQUAL(zUdl[start +  5].c_str(), "RGPR_RE2");
+            BOOST_CHECK_EQUAL(zUdl[start +  6].c_str(), " 2)+(RGP"); // <- Leading blank here!
+            BOOST_CHECK_EQUAL(zUdl[start +  7].c_str(), "R_RE2 3)");
+            BOOST_CHECK_EQUAL(zUdl[start +  8].c_str(), ")/(GEFF "); // <- Trailing blank here!
+            BOOST_CHECK_EQUAL(zUdl[start +  9].c_str(), "TEST)*(1");
+            BOOST_CHECK_EQUAL(zUdl[start + 10].c_str(), "+FUGASX)");
+            BOOST_CHECK_EQUAL(zUdl[start + 11].c_str(), "+((1.0*T");
+            BOOST_CHECK_EQUAL(zUdl[start + 12].c_str(), "IME*TIME");
+            BOOST_CHECK_EQUAL(zUdl[start + 13].c_str(), "-75.0*TI");
+            BOOST_CHECK_EQUAL(zUdl[start + 14].c_str(), "ME+1250)");
+            BOOST_CHECK_EQUAL(zUdl[start + 15].c_str(), "*50.123)");
         }
 
         {
@@ -868,9 +846,9 @@ BOOST_AUTO_TEST_CASE (Declared_UDQ_data)
 
             BOOST_CHECK_EQUAL(rst_state.header.nwell_udq, 4);
             BOOST_CHECK_EQUAL(rst_state.header.ngroup_udq, 1);
-            BOOST_CHECK_EQUAL(rst_state.header.nfield_udq, 39);
-            BOOST_CHECK_EQUAL(rst_state.header.num_udq(), 44);
-            BOOST_CHECK_EQUAL(rst_state.udqs.size(), 44);
+            BOOST_CHECK_EQUAL(rst_state.header.nfield_udq, 40);
+            BOOST_CHECK_EQUAL(rst_state.header.num_udq(), 45);
+            BOOST_CHECK_EQUAL(rst_state.udqs.size(), 45);
 
             const auto expected = std::vector<std::pair<std::string, std::string>> {
                 {"WUOPRL", "SM3/DAY"},
@@ -903,6 +881,11 @@ BOOST_AUTO_TEST_CASE (Declared_UDQ_data)
             auto wm = Opm::WellMatcher(wells);
 
             auto factories = Opm::UDQContext::MatcherFactories {};
+            factories.regions = [&es]()
+            {
+                return std::make_unique<Opm::RegionSetMatcher>
+                    (es.fipRegionStatistics());
+            };
 
             Opm::UDQContext input_context(udqft, wm, {}, factories, st, udq_state);
             Opm::UDQContext rst_context(udqft, wm, {}, factories, st, rst_udq_state);
