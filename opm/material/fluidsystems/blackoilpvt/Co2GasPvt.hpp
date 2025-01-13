@@ -451,10 +451,10 @@ private:
 namespace Opm::gpuistl{
     template<class Scalar, class Params, class GPUContainer>
     Co2GasPvt<Scalar, Params, GPUContainer>
-    move_to_gpu(const Co2GasPvt<Scalar>& cpuCo2)
+    copy_to_gpu(const Co2GasPvt<Scalar>& cpuCo2)
     {
         return Co2GasPvt<Scalar, Params, GPUContainer>(
-            move_to_gpu<Scalar, std::vector<Scalar>, GPUContainer>(cpuCo2.getParams()),
+            copy_to_gpu<Scalar, std::vector<Scalar>, GPUContainer>(cpuCo2.getParams()),
             GPUContainer(cpuCo2.getBrineReferenceDensity()),
             GPUContainer(cpuCo2.getGasReferenceDensity()),
             GPUContainer(cpuCo2.getSalinity()),

@@ -77,7 +77,7 @@ public:
             finalize();
         }
         else{
-            // safe if we have a GPU type instantiated by move_to_gpu or make_view
+            // safe if we have a GPU type instantiated by copy_to_gpu or make_view
             EnsureFinalized::finalize();
         }
     }
@@ -268,7 +268,7 @@ namespace Opm::gpuistl{
 /// @param params the parameters object living on the CPU
 /// @return the GPU PiecewiseLinearTwoPhaseMaterialParams object
 template <class GPUContainerType, class TraitsT>
-PiecewiseLinearTwoPhaseMaterialParams<TraitsT, GPUContainerType> move_to_gpu(const PiecewiseLinearTwoPhaseMaterialParams<TraitsT>& params) {
+PiecewiseLinearTwoPhaseMaterialParams<TraitsT, GPUContainerType> copy_to_gpu(const PiecewiseLinearTwoPhaseMaterialParams<TraitsT>& params) {
 
     // only create the GPU object if the CPU object is finalized
     params.checkFinalized();

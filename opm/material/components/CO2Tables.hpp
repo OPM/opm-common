@@ -94,10 +94,10 @@ namespace Opm::gpuistl {
 
     template <class Scalar, class OldContainerType, class NewContainerType>
     CO2Tables<Scalar, NewContainerType>
-    move_to_gpu(const CO2Tables<Scalar, OldContainerType>& oldCO2Tables) {
+    copy_to_gpu(const CO2Tables<Scalar, OldContainerType>& oldCO2Tables) {
         return CO2Tables<Scalar, NewContainerType>(
-            move_to_gpu<Scalar, NewContainerType>(oldCO2Tables.getTabulatedEnthalpy()),
-            move_to_gpu<Scalar, NewContainerType>(oldCO2Tables.getTabulatedDensity())
+            copy_to_gpu<Scalar, NewContainerType>(oldCO2Tables.getTabulatedEnthalpy()),
+            copy_to_gpu<Scalar, NewContainerType>(oldCO2Tables.getTabulatedDensity())
         );
     }
 }
