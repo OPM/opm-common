@@ -73,7 +73,13 @@ public:
         , krwSamples_(krwSamples)
         , krnSamples_(krnSamples)
     {
-        finalize();
+        if constexpr (std::is_same_v<ValueVector, std::vector<Scalar>>){
+            finalize();
+        }
+        else{
+            // safe if we have a GPU type instantiated by move_to_gpu or make_view
+            EnsureFinalized::finalize();
+        }
     }
 
     /*!
@@ -82,7 +88,7 @@ public:
      */
     void finalize()
     {
-        EnsureFinalized ::finalize();
+        EnsureFinalized::finalize();
 
         // revert the order of the sampling points if they were given
         // in reverse direction.
@@ -94,6 +100,14 @@ public:
 
         if (SwKrnSamples_.front() > SwKrnSamples_.back())
             swapOrderIfPossibleThrowOtherwise_(SwKrnSamples_, krnSamples_);
+    }
+
+    /*!
+     * \brief Check if the parameter object has been finalized.
+     */
+    void checkFinalized() const
+    {
+        EnsureFinalized::check();
     }
 
     /*!
@@ -247,14 +261,44 @@ private:
 
 namespace Opm::gpuistl{
 
+/// @brief Move a PiecewiseLinearTwoPhaseMaterialParams-object to the GPU
+/// @tparam TraitsT the same traits as in PiecewiseLinearTwoPhaseMaterialParams
+/// @tparam ViewType  typically gpuView<const scalarType>
+/// @tparam GPUContainerType typically const gpuBuffer<scalarType>
+/// @param params the parameters object living on the CPU
+/// @return the GPU PiecewiseLinearTwoPhaseMaterialParams object
+template <class GPUContainerType, class TraitsT>
+PiecewiseLinearTwoPhaseMaterialParams<TraitsT, GPUContainerType> move_to_gpu(const PiecewiseLinearTwoPhaseMaterialParams<TraitsT>& params) {
+
+    // only create the GPU object if the CPU object is finalized
+    params.checkFinalized();
+
+    auto SwPcwnSamples = GPUContainerType(params.SwPcwnSamples());
+    auto pcwnSamples = GPUContainerType(params.pcwnSamples());
+    auto SwKrwSamples = GPUContainerType(params.SwKrwSamples());
+    auto krwSamples = GPUContainerType(params.krwSamples());
+    auto SwKrnSamples = GPUContainerType(params.SwKrnSamples());
+    auto krnSamples = GPUContainerType(params.krnSamples());
+
+    return PiecewiseLinearTwoPhaseMaterialParams<TraitsT, GPUContainerType> (SwPcwnSamples,
+                                                                        pcwnSamples,
+                                                                        SwKrwSamples,
+                                                                        krwSamples,
+                                                                        SwKrnSamples,
+                                                                        krnSamples);
+}
+
 /// @brief this function is intented to make a GPU friendly view of the PiecewiseLinearTwoPhaseMaterialParams
 /// @tparam TraitsT the same traits as in PiecewiseLinearTwoPhaseMaterialParams
 /// @tparam ContainerType typically const gpuBuffer<scalarType>
 /// @tparam ViewType  typically gpuView<const scalarType>
 /// @param params the parameters object instansiated with gpuBuffers or similar
 /// @return the GPU view of the GPU PiecewiseLinearTwoPhaseMaterialParams object
-template <class TraitsT, class ContainerType, class ViewType>
+template <class ViewType, class TraitsT, class ContainerType>
 PiecewiseLinearTwoPhaseMaterialParams<TraitsT, ViewType> make_view(const PiecewiseLinearTwoPhaseMaterialParams<TraitsT, ContainerType>& params) {
+
+    // only create the GPU object if the CPU object is finalized
+    params.checkFinalized();
 
     using containedType = typename ContainerType::value_type;
     using viewedTypeNoConst = typename std::remove_const_t<typename ViewType::value_type>;
@@ -275,6 +319,7 @@ PiecewiseLinearTwoPhaseMaterialParams<TraitsT, ViewType> make_view(const Piecewi
                                                                         SwKrnSamples,
                                                                         krnSamples);
 }
+
 }
 
 #endif
