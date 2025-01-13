@@ -80,46 +80,15 @@ public:
                       Scalar /*tolerance = -1.*/,
                       int verbosity = 0)
     {
-
-        using InputEval = typename FluidState::Scalar;
-        using ComponentVector = Dune::FieldVector<typename FluidState::Scalar, numComponents>;
-
-        // K and L from previous timestep (wilson and -1 initially)
-        ComponentVector K;
-        for(int compIdx = 0; compIdx < numComponents; ++compIdx) {
-            K[compIdx] = fluid_state.K(compIdx);
-        }
-        InputEval L;
-        // TODO: L has all the derivatives to be all ZEROs here.
-        L = fluid_state.L();
-
-        // Print header
-        if (verbosity >= 1) {
-            std::cout << "********" << std::endl;
-            std::cout << "Inputs are K = [" << K << "], L = [" << L << "] " << fluid_state.pressure(0) << ", and T = " << fluid_state.temperature(0) << std::endl;
-        }
-
-        Dune::FieldVector<typename FluidState::Scalar, numComponents> z;
-        for (unsigned i = 0; i < numComponents; ++i) {
-            z[i] = fluid_state.moleFraction(i);
-        }
-
-        using ScalarVector = Dune::FieldVector<Scalar, numComponents>;
-        Scalar L_scalar = Opm::getValue(L);
-        ScalarVector z_scalar;
-        ScalarVector K_scalar;
-        for (unsigned i = 0; i < numComponents; ++i) {
-            z_scalar[i] = Opm::getValue(z[i]);
-            K_scalar[i] = Opm::getValue(K[i]);
-        }
         using ScalarFluidState = CompositionalFluidState<Scalar, FluidSystem>;
         ScalarFluidState fluid_state_scalar;
 
         for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
-            fluid_state_scalar.setKvalue(compIdx, Opm::getValue(fluid_state.K(compIdx)));
+            fluid_state_scalar.setKvalue(compIdx, Opm::getValue(fluid_state.K(compIdx) ) );
+            fluid_state_scalar.setMoleFraction(compIdx, Opm::getValue(fluid_state.moleFraction(compIdx) ) );
         }
 
-        fluid_state_scalar.setLvalue(L_scalar);
+        fluid_state_scalar.setLvalue(Opm::getValue(fluid_state.L()));
         // other values need to be Scalar, but I guess the fluidstate does not support it yet.
         fluid_state_scalar.setPressure(FluidSystem::oilPhaseIdx,
                                        Opm::getValue(fluid_state.pressure(FluidSystem::oilPhaseIdx)));
@@ -128,36 +97,7 @@ public:
 
         fluid_state_scalar.setTemperature(Opm::getValue(fluid_state.temperature(0)));
 
-        // Do a stability test to check if cell is is_single_phase-phase (do for all cells the first time).
-        bool is_stable = false;
-        if ( L <= 0 || L == 1 ) {
-             if (verbosity >= 1) {
-                 std::cout << "Perform stability test (L <= 0 or L == 1)!" << std::endl;
-             }
-            phaseStabilityTest_(is_stable, K_scalar, fluid_state_scalar, z_scalar, verbosity);
-        }
-        if (verbosity >= 1) {
-            std::cout << "Inputs after stability test are K = [" << K_scalar << "], L = [" << L_scalar << "], z = [" << z_scalar << "], P = " << fluid_state.pressure(0) << ", and T = " << fluid_state.temperature(0) << std::endl;
-        }
-        // TODO: we do not need two variables is_stable and is_single_hase, while lacking a good name
-        // TODO: from the later code, is good if we knows whether single_phase_gas or single_phase_oil here
-        const bool is_single_phase = is_stable;
-
-        // Update the composition if cell is two-phase
-        if ( !is_single_phase ) {
-            // Rachford Rice equation to get initial L for composition solver
-            L_scalar = solveRachfordRice_g_(K_scalar, z_scalar, verbosity);
-            flash_2ph(z_scalar, twoPhaseMethod, K_scalar, L_scalar, fluid_state_scalar, verbosity);
-        } else {
-            // Cell is one-phase. Use Li's phase labeling method to see if it's liquid or vapor
-            L_scalar = li_single_phase_label_(fluid_state_scalar, z_scalar, verbosity);
-        }
-        fluid_state_scalar.setLvalue(L_scalar);
-
-        // Print footer
-        if (verbosity >= 1) {
-            std::cout << "********" << std::endl;
-        }
+        const auto is_single_phase = flash_solve_scalar_(fluid_state_scalar, twoPhaseMethod, verbosity);
 
         // the flash solution process were performed in scalar form, after the flash calculation finishes,
         // ensure that things in fluid_state_scalar is transformed to fluid_state
@@ -168,14 +108,8 @@ public:
                 fluid_state.setMoleFraction(gasPhaseIdx, compIdx, y_i);
         }
 
-        for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
-            fluid_state.setKvalue(compIdx, K_scalar[compIdx]);
-            fluid_state_scalar.setKvalue(compIdx, K_scalar[compIdx]);
-        }
-        fluid_state.setLvalue(L_scalar);
-
         // we update the derivatives in fluid_state
-        updateDerivatives_(fluid_state_scalar, z, fluid_state, is_single_phase);
+        updateDerivatives_(fluid_state_scalar, fluid_state, is_single_phase);
     } // end solve
 
     /*!
@@ -282,6 +216,48 @@ public:
 
         // Throw error if Rachford-Rice fails
         throw std::runtime_error(" Rachford-Rice did not converge within maximum number of iterations" );
+    }
+
+    // performing the flash calculation, which is done with Scalar without touching derivatives
+    template <typename FluidState>
+    static bool flash_solve_scalar_(FluidState& fluid_state,
+                                    const std::string& twoPhaseMethod,
+                                    const int verbosity = 0)
+    {
+        // Do a stability test to check if cell is is_single_phase-phase (do for all cells the first time).
+        bool is_stable = false;
+        auto L_scalar = fluid_state.L();
+        using ScalarVector = Dune::FieldVector<Scalar, numComponents>;
+        ScalarVector K_scalar, z_scalar;
+        for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
+            K_scalar[compIdx] = fluid_state.K(compIdx);
+            z_scalar[compIdx] = fluid_state.moleFraction(compIdx);
+        }
+
+        if ( L_scalar <= 0 || L_scalar == 1 ) {
+            if (verbosity >= 1) {
+                std::cout << "Perform stability test (L <= 0 or L == 1)!" << std::endl;
+            }
+            phaseStabilityTest_(is_stable, K_scalar, fluid_state, z_scalar, verbosity);
+        }
+        if (verbosity >= 1) {
+            std::cout << "Inputs after stability test are K = [" << K_scalar << "], L = [" << L_scalar << "], z = [" << z_scalar << "], P = " << fluid_state.pressure(0) << ", and T = " << fluid_state.temperature(0) << std::endl;
+        }
+        // TODO: we do not need two variables is_stable and is_single_hase, while lacking a good name
+        // TODO: from the later code, is good if we knows whether single_phase_gas or single_phase_oil here
+        const bool is_single_phase = is_stable;
+
+        // Update the composition if cell is two-phase
+        if ( !is_single_phase ) {
+            // Rachford Rice equation to get initial L for composition solver
+            L_scalar = solveRachfordRice_g_(K_scalar, z_scalar, verbosity);
+            flash_2ph(z_scalar, twoPhaseMethod, K_scalar, L_scalar, fluid_state, verbosity);
+        } else {
+            // Cell is one-phase. Use Li's phase labeling method to see if it's liquid or vapor
+            L_scalar = li_single_phase_label_(fluid_state, z_scalar, verbosity);
+        }
+        fluid_state.setLvalue(L_scalar);
+        return is_single_phase;
     }
 
     template <class Vector>
@@ -845,24 +821,29 @@ protected:
         }
     }
 
-    template <typename FlashFluidStateScalar, typename FluidState, typename ComponentVector>
+    template <typename FlashFluidStateScalar, typename FluidState>
     static void updateDerivatives_(const FlashFluidStateScalar& fluid_state_scalar,
-                                   const ComponentVector& z,
                                    FluidState& fluid_state,
                                    bool is_single_phase)
     {
         if(!is_single_phase)
-            updateDerivativesTwoPhase_(fluid_state_scalar, z, fluid_state);
+            updateDerivativesTwoPhase_(fluid_state_scalar, fluid_state);
         else
-            updateDerivativesSinglePhase_(fluid_state_scalar, z, fluid_state);
+            updateDerivativesSinglePhase_(fluid_state_scalar, fluid_state);
 
     }
 
-    template <typename FlashFluidStateScalar, typename FluidState, typename ComponentVector>
+    template <typename FlashFluidStateScalar, typename FluidState>
     static void updateDerivativesTwoPhase_(const FlashFluidStateScalar& fluid_state_scalar,
-                                           const ComponentVector& z,
                                            FluidState& fluid_state)
     {
+        using InputEval = typename FluidState::Scalar;
+        using ComponentVector = Dune::FieldVector<InputEval, numComponents>;
+        ComponentVector z;
+        for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
+            z[compIdx] = fluid_state.moleFraction(compIdx);
+        }
+
         // getting the secondary Jocobian matrix
         constexpr size_t num_equations = numMisciblePhases * numMiscibleComponents + 1;
         constexpr size_t secondary_num_pv = numComponents + 1; // pressure, z for all the components
@@ -975,10 +956,7 @@ protected:
         pri_jac.invert();
         sec_jac.template leftmultiply(pri_jac);
 
-        using InputEval = typename FluidState::Scalar;
-        using ComponentVectorMoleFraction = Dune::FieldVector<InputEval, numComponents>;
-
-        ComponentVectorMoleFraction x(numComponents), y(numComponents);
+        ComponentVector x(numComponents), y(numComponents);
         InputEval L_eval = L;
 
         // use the chainrule (and using partial instead of total
@@ -1057,9 +1035,8 @@ protected:
         fluid_state.setLvalue(L_eval);
     } //end updateDerivativesTwoPhase
 
-    template <typename FlashFluidStateScalar, typename FluidState, typename ComponentVector>
+    template <typename FlashFluidStateScalar, typename FluidState>
     static void updateDerivativesSinglePhase_(const FlashFluidStateScalar& fluid_state_scalar,
-                                              const ComponentVector& z,
                                               FluidState& fluid_state)
     {
         using InputEval = typename FluidState::Scalar;
@@ -1069,8 +1046,8 @@ protected:
         // for single phase situation, x = y = z;
         // and L_eval have all zero derivatives
         for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
-            fluid_state.setMoleFraction(FluidSystem::oilPhaseIdx, compIdx, z[compIdx]);
-            fluid_state.setMoleFraction(FluidSystem::gasPhaseIdx, compIdx, z[compIdx]);
+            fluid_state.setMoleFraction(FluidSystem::oilPhaseIdx, compIdx, fluid_state.moleFraction(compIdx) );
+            fluid_state.setMoleFraction(FluidSystem::gasPhaseIdx, compIdx, fluid_state.moleFraction(compIdx) );
         }
         fluid_state.setLvalue(L_eval);
     } //end updateDerivativesSinglePhase
