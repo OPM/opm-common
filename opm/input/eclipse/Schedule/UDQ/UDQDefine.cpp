@@ -407,7 +407,7 @@ std::pair<UDQUpdate, std::size_t> UDQDefine::status() const
     return std::make_pair(this->m_update_status, this->m_report_step);
 }
 
-const std::vector<UDQToken> UDQDefine::tokens() const
+const std::vector<UDQToken>& UDQDefine::tokens() const
 {
     return this->m_tokens;
 }

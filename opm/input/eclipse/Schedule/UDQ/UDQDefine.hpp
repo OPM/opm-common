@@ -86,8 +86,13 @@ public:
     void required_summary(std::unordered_set<std::string>& summary_keys) const;
     void update_status(UDQUpdate update_status, std::size_t report_step);
     std::pair<UDQUpdate, std::size_t> status() const;
-    const std::vector<Opm::UDQToken> tokens() const;
-    void clear_next() const { if (this->m_update_status == UDQUpdate::NEXT) this->m_update_status = UDQUpdate::OFF; }
+    const std::vector<Opm::UDQToken>& tokens() const;
+    void clear_next() const
+    {
+        if (this->m_update_status == UDQUpdate::NEXT) {
+            this->m_update_status = UDQUpdate::OFF;
+        }
+    }
 
     bool operator==(const UDQDefine& data) const;
 
