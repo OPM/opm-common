@@ -77,7 +77,7 @@ public:
     template <class FluidState>
     static void solve(FluidState& fluid_state,
                       const std::string& twoPhaseMethod,
-                      Scalar /*tolerance = -1.*/,
+                      Scalar flash_tolerance,
                       int verbosity = 0)
     {
         using ScalarFluidState = CompositionalFluidState<Scalar, FluidSystem>;
@@ -97,7 +97,7 @@ public:
 
         fluid_state_scalar.setTemperature(Opm::getValue(fluid_state.temperature(0)));
 
-        const auto is_single_phase = flash_solve_scalar_(fluid_state_scalar, twoPhaseMethod, verbosity);
+        const auto is_single_phase = flash_solve_scalar_(fluid_state_scalar, twoPhaseMethod, flash_tolerance, verbosity);
 
         // the flash solution process were performed in scalar form, after the flash calculation finishes,
         // ensure that things in fluid_state_scalar is transformed to fluid_state
@@ -222,6 +222,7 @@ public:
     template <typename FluidState>
     static bool flash_solve_scalar_(FluidState& fluid_state,
                                     const std::string& twoPhaseMethod,
+                                    const Scalar flash_tolerance,
                                     const int verbosity = 0)
     {
         // Do a stability test to check if cell is is_single_phase-phase (do for all cells the first time).
@@ -251,7 +252,7 @@ public:
         if ( !is_single_phase ) {
             // Rachford Rice equation to get initial L for composition solver
             L_scalar = solveRachfordRice_g_(K_scalar, z_scalar, verbosity);
-            flash_2ph(z_scalar, twoPhaseMethod, K_scalar, L_scalar, fluid_state, verbosity);
+            flash_2ph(z_scalar, twoPhaseMethod, K_scalar, L_scalar, fluid_state, flash_tolerance, verbosity);
         } else {
             // Cell is one-phase. Use Li's phase labeling method to see if it's liquid or vapor
             L_scalar = li_single_phase_label_(fluid_state, z_scalar, verbosity);
@@ -576,6 +577,7 @@ protected:
                           ComponentVector& K_scalar,
                           typename FluidState::Scalar& L_scalar,
                           FluidState& fluid_state_scalar,
+                          const Scalar flash_tolerance,
                           int verbosity = 0) {
         if (verbosity >= 1) {
             std::cout << "Cell is two-phase! Solve Rachford-Rice with initial K = [" << K_scalar << "]" << std::endl;
@@ -588,17 +590,17 @@ protected:
             if (verbosity >= 1) {
                 std::cout << "Calculate composition using Newton." << std::endl;
             }
-            converged = newtonComposition_(K_scalar, L_scalar, fluid_state_scalar, z_scalar, verbosity);
+            converged = newtonComposition_(K_scalar, L_scalar, fluid_state_scalar, z_scalar, flash_tolerance, verbosity);
         } else if (flash_2p_method == "ssi") {
             // Successive substitution
             if (verbosity >= 1) {
                 std::cout << "Calculate composition using Succcessive Substitution." << std::endl;
             }
-            converged = successiveSubstitutionComposition_(K_scalar, L_scalar, fluid_state_scalar, z_scalar, false, verbosity);
+            converged = successiveSubstitutionComposition_(K_scalar, L_scalar, fluid_state_scalar, z_scalar, false, flash_tolerance, verbosity);
         } else if (flash_2p_method == "ssi+newton") {
-            converged = successiveSubstitutionComposition_(K_scalar, L_scalar, fluid_state_scalar, z_scalar, true, verbosity);
+            converged = successiveSubstitutionComposition_(K_scalar, L_scalar, fluid_state_scalar, z_scalar, true, flash_tolerance, verbosity);
             if (!converged) {
-                converged = newtonComposition_(K_scalar, L_scalar, fluid_state_scalar, z_scalar, verbosity);
+                converged = newtonComposition_(K_scalar, L_scalar, fluid_state_scalar, z_scalar, flash_tolerance, verbosity);
             }
         } else {
             throw std::logic_error("unknown two phase flash method " + flash_2p_method + " is specified");
@@ -610,8 +612,11 @@ protected:
     }
 
     template <class FlashFluidState, class ComponentVector>
-    static bool newtonComposition_(ComponentVector& K, typename FlashFluidState::Scalar& L,
-                                   FlashFluidState& fluid_state, const ComponentVector& z,
+    static bool newtonComposition_(ComponentVector& K,
+                                   typename FlashFluidState::Scalar& L,
+                                   FlashFluidState& fluid_state,
+                                   const ComponentVector& z,
+                                   const Scalar tolerance,
                                    int verbosity)
     {
         // Note: due to the need for inverse flash update for derivatives, the following two can be different
@@ -620,7 +625,6 @@ protected:
         constexpr size_t num_primary_variables = numMisciblePhases * numMiscibleComponents + 1;
         using NewtonVector = Dune::FieldVector<Scalar, num_equations>;
         using NewtonMatrix = Dune::FieldMatrix<Scalar, num_equations, num_primary_variables>;
-        constexpr Scalar tolerance = 1.e-8;
 
         NewtonVector soln(0.);
         NewtonVector res(0.);
@@ -1055,8 +1059,13 @@ protected:
 
     // TODO: or use typename FlashFluidState::Scalar
     template <class FlashFluidState, class ComponentVector>
-    static bool successiveSubstitutionComposition_(ComponentVector& K, typename ComponentVector::field_type& L, FlashFluidState& fluid_state, const ComponentVector& z,
-                                                   const bool newton_afterwards, const int verbosity)
+    static bool successiveSubstitutionComposition_(ComponentVector& K,
+                                                   typename ComponentVector::field_type& L,
+                                                   FlashFluidState& fluid_state,
+                                                   const ComponentVector& z,
+                                                   const bool newton_afterwards,
+                                                   const Scalar flash_tolerance,
+                                                   const int verbosity)
     {
         // Determine max. iterations based on if it will be used as a standalone flash or as a pre-process to Newton (or other) method.
         const int maxIterations = newton_afterwards ? 5 : 100;
@@ -1116,7 +1125,7 @@ protected:
             }
 
             // Check convergence
-            if (convFugRatio.two_norm() < 1.e-6) {
+            if (convFugRatio.two_norm() < flash_tolerance) {
                 // Restore cout format
                 std::cout.flags(f);
 

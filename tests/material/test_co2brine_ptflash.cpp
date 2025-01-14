@@ -89,7 +89,7 @@ for (const auto& sample : test_methods) {
         fluid_state.setMoleFraction(compIdx, comp[compIdx]);
     }
 
-    const double flash_tolerance = 1.e-12; // just to test the setup in co2-compositional
+    const double flash_tolerance = 1.e-8; // just to test the setup in co2-compositional
     const int flash_verbosity = 0;
 
     // TODO: should we set these?
