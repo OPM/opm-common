@@ -349,7 +349,7 @@
         "doc": "Initializes a DeckKeyword with a specified ParserKeyword.\n\n:param parser_keyword: The ParserKeyword to initialize the DeckKeyword with.\n:type parser_keyword: ParserKeyword"
     },
     "DeckKeyword_init_parser_keyword_record_list": {
-        "signature": "opm.io.deck.DeckKeyword.__init__(parser_keyword: ParserKeyword, record_list: list, active_system: UnitSystem, default_system: UnitSystem) -> None",
+        "signature": "opm.io.deck.DeckKeyword.__init__(parser_keyword: ParserKeyword, record_list: list, active_system: UnitSystem, default_system: UnitSystem) -> DeckKeyword",
         "doc": "Initializes a DeckKeyword with a specified ParserKeyword, a list of records, and two UnitSystem objects for active and default systems.\n\n:param parser_keyword: The ParserKeyword to initialize the DeckKeyword with.\n:type parser_keyword: ParserKeyword\n:param record_list: A list of records containing the keyword data as also specified in the parser_keyword.\n:type record_list: list\n:param active_system: The active UnitSystem.\n:type active_system: UnitSystem\n:param default_system: The default UnitSystem.\n:type default_system: UnitSystem"
     },
     "DeckKeyword_repr": {
@@ -377,11 +377,11 @@
         "doc": "Returns the name of the DeckKeyword.\n\n:return: The name of the DeckKeyword.\n:type: str"
     },
     "DeckKeyword_init_parser_keyword_pydata_int": {
-        "signature": "opm.io.deck.DeckKeyword.__init__(parser_keyword: ParserKeyword, py_data: array_t[int]) -> None",
+        "signature": "opm.io.deck.DeckKeyword.__init__(parser_keyword: ParserKeyword, py_data: array_t[int]) -> DeckKeyword",
         "doc": "Initializes a DeckKeyword with a specified ParserKeyword and integer data. For this, the keyword must be a data keyword!\n\n:param parser_keyword: The ParserKeyword to initialize the DeckKeyword with.\n:type parser_keyword: ParserKeyword\n:param py_data: The integer data array.\n:type py_data: array_t[int]"
     },
     "DeckKeyword_init_parser_keyword_pydata_double": {
-        "signature": "opm.io.deck.DeckKeyword.__init__(parser_keyword: ParserKeyword, py_data: array_t[double], active_system: UnitSystem, default_system: UnitSystem) -> None",
+        "signature": "opm.io.deck.DeckKeyword.__init__(parser_keyword: ParserKeyword, py_data: array_t[double], active_system: UnitSystem, default_system: UnitSystem) -> DeckKeyword",
         "doc": "Initializes a DeckKeyword with a specified ParserKeyword, double data, and two UnitSystem objects for active and default systems. For this, the keyword must be a data keyword!\n\n:param parser_keyword: The ParserKeyword to initialize the DeckKeyword with.\n:type parser_keyword: ParserKeyword\n:param py_data: The double data array.\n:type py_data: array_t[double]\n:param active_system: The active UnitSystem to interpret the data.\n:type active_system: UnitSystem\n:param default_system: The default UnitSystem to interpret the data.\n:type default_system: UnitSystem"
     },
     "DeckKeyword_get_int_array": {
