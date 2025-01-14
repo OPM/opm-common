@@ -32,14 +32,16 @@ namespace Opm {
 void handleRCMASTS(HandlerContext& handlerContext)
 {
     auto& schedule_state = handlerContext.state();
+    // NOTE: accessing ScheduleState ptr_members always returns a const reference, but we need to
+    // modify the state here so we make a copy and call update() later.
     auto rescoup = schedule_state.rescoup();
-    auto tuning = schedule_state.tuning();
+    const auto& tuning = schedule_state.tuning();
     const auto& keyword = handlerContext.keyword;
     if (keyword.size() != 1) {
         throw OpmInputError("RCMASTS keyword requires exactly one record.", keyword.location());
     }
-    auto record = keyword[0];
-    auto deck_item = record.getItem<ParserKeywords::RCMASTS::MIN_TSTEP>();
+    const auto& record = keyword[0];
+    const auto& deck_item = record.getItem<ParserKeywords::RCMASTS::MIN_TSTEP>();
     if (deck_item.defaultApplied(0)) {
         // The default value is the current value TSMINZ
         rescoup.masterMinTimeStep(tuning.TSMINZ);
