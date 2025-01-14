@@ -647,6 +647,76 @@
     "EclipseGrid_getCellDepthMask": {
         "signature": "EclipseGrid.getCellDepthMask(mask: list[int]) -> numpy.ndarray[double]",
         "doc": "Returns the depths for the cell with the global ids given in the input list.\n\n:return: The depths for the given cells.\n:type: numpy.ndarray[double]"
+    },
+    "eclArrType": {
+        "type": "class",
+        "signature": "opm.io.ecl.eclArrType",
+        "doc": "`Python enum <https://docs.python.org/3/library/enum.html>`_ with the types of arrays used in the Eclipese file format."
+    },
+    "eclArrType_INTE": {
+        "signature": "opm.io.ecl.eclArrType.INTE",
+        "doc": "Represents an integer array type."
+    },
+    "eclArrType_REAL": {
+        "signature": "opm.io.ecl.eclArrType.REAL",
+        "doc": "Represents a single-precision float array type."
+    },
+    "eclArrType_DOUB": {
+        "signature": "opm.io.ecl.eclArrType.DOUB",
+        "doc": "Represents a double-precision real array type."
+    },
+    "eclArrType_CHAR": {
+        "signature": "opm.io.ecl.eclArrType.CHAR",
+        "doc": "Represents a character array type."
+    },
+    "eclArrType_C0nn": {
+        "signature": "opm.io.ecl.eclArrType.C0nn",
+        "doc": "Represents an array type used for strings with a length > 8 characters."
+    },
+    "eclArrType_LOGI": {
+        "signature": "opm.io.ecl.eclArrType.LOGI",
+        "doc": "Represents a boolean array type."
+    },
+    "eclArrType_MESS": {
+        "signature": "opm.io.ecl.eclArrType.MESS",
+        "doc": "Represents a data array type."
+    },
+    "EclFile": {
+        "type": "class",
+        "signature": "opm.io.ecl.EclFile",
+        "doc": "Represents a file in the ECL format."
+    },
+    "EclFile_init": {
+        "signature": "opm.io.ecl.EclFile.__init__(filename: str, preload: bool = False) -> EclFile",
+        "doc": "Creates an EclFile instance.\n\n:param filename: The path to the EclFile.\n:type filename: str\n:param preload: Whether to already load the contents of the file.\n:type preload: bool\n:return: The EclFile.\n:type: EclFile"
+    },
+    "EclFile_arrays": {
+        "signature": "opm.io.ecl.EclFile.arrays -> list[tuple(str, eclArrType, int)]",
+        "doc": "Returns a list of all arrays in the EclFile, where one entry of the list is a tuple containing the array name, the array type and the array size.\n\n:return: A list the arrays in the EclFile.\n:type: list[tuple(str, eclArrType, int)]"
+    },
+    "EclFile_contains": {
+        "signature": "opm.io.ecl.EclFile.__contains__(name: str) -> bool",
+        "doc": "Checks if the array with the given name exists in the EclFile.\n\n:param name: The name to check for.\n:type name: str\n:return: True if the array exists, False otherwise.\n:type: bool"
+    },
+    "EclFile_len": {
+        "signature": "opm.io.ecl.EclFile.__len__() -> int",
+        "doc": "Returns the number of arrays in the EclFile.\n\n:return: The number of arrays.\n:type: int"
+    },
+    "EclFile_count": {
+        "signature": "opm.io.ecl.EclFile.count(name: str) -> int",
+        "doc": "Returns the total number of arrays with the given name in the EclFile.\n\n:param name: The name to check for.\n:type name: str\n:return: The number of records.\n:type: int"
+    },
+    "EclFile_get_data_index": {
+        "signature": "opm.io.ecl.EclFile.__get_data(index: int) -> tuple(numpy.ndarray, Opm::EclIO::eclArrType)",
+        "doc": "Retrieves an array of the EclFile by index.\n\n:param index: The index.\n:type index: int\n:return: A tupe of the array and its type.\n:tuple(numpy.ndarray, Opm::EclIO::eclArrType)"
+    },
+    "EclFile_get_data_name": {
+        "signature": "opm.io.ecl.EclFile.__get_data(name: str) -> tuple(numpy.ndarray, Opm::EclIO::eclArrType)",
+        "doc": "Retrieves the first occurence of the array with the given name from the EclFile.\n\n:param name: The name.\n:type name: str\n:return: A tupe of the array and its type.\n:tuple(numpy.ndarray, Opm::EclIO::eclArrType)"
+    },
+    "EclFile_get_data_occurrence": {
+        "signature": "opm.io.ecl.EclFile.__get_data(name: str, occurrence: int) -> tuple(numpy.ndarray, Opm::EclIO::eclArrType)",
+        "doc": "Retrieves the given occurence of the array with the given name from the EclFile.\n\n:param name: The name.\n:type name: str\n:param occurrence: The occurrence.\n:type occurrence: int\n:return: A tupe of the array and its type.\n:tuple(numpy.ndarray, Opm::EclIO::eclArrType)"
     }
 
 }
