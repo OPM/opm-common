@@ -345,7 +345,7 @@
         "doc": "Represents a keyword in the Deck."
     },
     "DeckKeyword_init_parser_keyword": {
-        "signature": "opm.io.deck.DeckKeyword.__init__(parser_keyword: ParserKeyword) -> None",
+        "signature": "opm.io.deck.DeckKeyword.__init__(parser_keyword: ParserKeyword) -> DeckKeyword",
         "doc": "Initializes a DeckKeyword with a specified ParserKeyword.\n\n:param parser_keyword: The ParserKeyword to initialize the DeckKeyword with.\n:type parser_keyword: ParserKeyword"
     },
     "DeckKeyword_init_parser_keyword_record_list": {
