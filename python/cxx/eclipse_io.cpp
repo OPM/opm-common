@@ -20,6 +20,8 @@
 #include "export.hpp"
 #include "converters.hpp"
 
+#include <python/cxx/OpmCommonPythonDoc.hpp>
+
 namespace py = pybind11;
 
 
@@ -437,25 +439,27 @@ npArray get_rft_vector_Index(Opm::EclIO::ERft * file_ptr,const std::string& name
 
 void python::common::export_IO(py::module& m) {
 
-    py::enum_<Opm::EclIO::eclArrType>(m, "eclArrType", py::arithmetic())
-        .value("INTE", Opm::EclIO::INTE)
-        .value("REAL", Opm::EclIO::REAL)
-        .value("DOUB", Opm::EclIO::DOUB)
-        .value("CHAR", Opm::EclIO::CHAR)
-        .value("C0nn", Opm::EclIO::C0NN)
-        .value("LOGI", Opm::EclIO::LOGI)
-        .value("MESS", Opm::EclIO::MESS)
+    using namespace Opm::Common::DocStrings;
+
+    py::enum_<Opm::EclIO::eclArrType>(m, "eclArrType", py::arithmetic(), eclArrType_docstring)
+        .value("INTE", Opm::EclIO::INTE, eclArrType_INTE_docstring)
+        .value("REAL", Opm::EclIO::REAL, eclArrType_REAL_docstring)
+        .value("DOUB", Opm::EclIO::DOUB, eclArrType_DOUB_docstring)
+        .value("CHAR", Opm::EclIO::CHAR, eclArrType_CHAR_docstring)
+        .value("C0nn", Opm::EclIO::C0NN, eclArrType_C0nn_docstring)
+        .value("LOGI", Opm::EclIO::LOGI, eclArrType_LOGI_docstring)
+        .value("MESS", Opm::EclIO::MESS, eclArrType_MESS_docstring)
         .export_values();
 
-    py::class_<Opm::EclIO::EclFile>(m, "EclFile")
-        .def(py::init<const std::string &, bool>(), py::arg("filename"), py::arg("preload") = false)
-        .def_property_readonly("arrays", &Opm::EclIO::EclFile::getList)
-        .def("__contains__", &Opm::EclIO::EclFile::hasKey)
-        .def("__len__", &Opm::EclIO::EclFile::size)
-        .def("count", &Opm::EclIO::EclFile::count)
-        .def("__get_data", &get_vector_index)
-        .def("__get_data", &get_vector_name)
-        .def("__get_data", &get_vector_occurrence);
+    py::class_<Opm::EclIO::EclFile>(m, "EclFile", EclFile_docstring)
+        .def(py::init<const std::string &, bool>(), py::arg("filename"), py::arg("preload") = false, EclFile_init_docstring)
+        .def_property_readonly("arrays", &Opm::EclIO::EclFile::getList, EclFile_arrays_docstring)
+        .def("__contains__", &Opm::EclIO::EclFile::hasKey, py::arg("name"), EclFile_contains_docstring)
+        .def("__len__", &Opm::EclIO::EclFile::size, EclFile_len_docstring)
+        .def("count", &Opm::EclIO::EclFile::count, py::arg("name"), EclFile_count_docstring)
+        .def("__get_data", &get_vector_index, py::arg("index"), EclFile_get_data_index_docstring)
+        .def("__get_data", &get_vector_name, py::arg("name"), EclFile_get_data_name_docstring)
+        .def("__get_data", &get_vector_occurrence, py::arg("name"), py::arg("occurrence"), EclFile_get_data_occurrence_docstring);
 
     py::class_<Opm::EclIO::ERst>(m, "ERst")
         .def(py::init<const std::string &>())

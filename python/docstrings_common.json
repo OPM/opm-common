@@ -346,11 +346,11 @@
     },
     "DeckKeyword_init_parser_keyword": {
         "signature": "opm.io.deck.DeckKeyword.__init__(parser_keyword: ParserKeyword) -> DeckKeyword",
-        "doc": "Initializes a DeckKeyword with a specified ParserKeyword.\n\n:param parser_keyword: The ParserKeyword to initialize the DeckKeyword with.\n:type parser_keyword: ParserKeyword"
+        "doc": "Creates a DeckKeyword with a specified ParserKeyword.\n\n:param parser_keyword: The ParserKeyword to initialize the DeckKeyword with.\n:type parser_keyword: ParserKeyword"
     },
     "DeckKeyword_init_parser_keyword_record_list": {
         "signature": "opm.io.deck.DeckKeyword.__init__(parser_keyword: ParserKeyword, record_list: list, active_system: UnitSystem, default_system: UnitSystem) -> DeckKeyword",
-        "doc": "Initializes a DeckKeyword with a specified ParserKeyword, a list of records, and two UnitSystem objects for active and default systems.\n\n:param parser_keyword: The ParserKeyword to initialize the DeckKeyword with.\n:type parser_keyword: ParserKeyword\n:param record_list: A list of records containing the keyword data as also specified in the parser_keyword.\n:type record_list: list\n:param active_system: The active UnitSystem.\n:type active_system: UnitSystem\n:param default_system: The default UnitSystem.\n:type default_system: UnitSystem"
+        "doc": "Creates a DeckKeyword with a specified ParserKeyword, a list of records, and two UnitSystem objects for active and default systems.\n\n:param parser_keyword: The ParserKeyword to initialize the DeckKeyword with.\n:type parser_keyword: ParserKeyword\n:param record_list: A list of records containing the keyword data as also specified in the parser_keyword.\n:type record_list: list\n:param active_system: The active UnitSystem.\n:type active_system: UnitSystem\n:param default_system: The default UnitSystem.\n:type default_system: UnitSystem"
     },
     "DeckKeyword_repr": {
         "signature": "opm.io.deck.DeckKeyword.__repr__() -> str",
@@ -377,24 +377,24 @@
         "doc": "Returns the name of the DeckKeyword.\n\n:return: The name of the DeckKeyword.\n:type: str"
     },
     "DeckKeyword_init_parser_keyword_pydata_int": {
-        "signature": "opm.io.deck.DeckKeyword.__init__(parser_keyword: ParserKeyword, py_data: array_t[int]) -> DeckKeyword",
-        "doc": "Initializes a DeckKeyword with a specified ParserKeyword and integer data. For this, the keyword must be a data keyword!\n\n:param parser_keyword: The ParserKeyword to initialize the DeckKeyword with.\n:type parser_keyword: ParserKeyword\n:param py_data: The integer data array.\n:type py_data: array_t[int]"
+        "signature": "opm.io.deck.DeckKeyword.__init__(parser_keyword: ParserKeyword, py_data: numpy.ndarray[int]) -> DeckKeyword",
+        "doc": "Creates a DeckKeyword with a specified ParserKeyword and integer data (as a `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_). For this, the keyword must be a data keyword!\n\n:param parser_keyword: The ParserKeyword to initialize the DeckKeyword with.\n:type parser_keyword: ParserKeyword\n:param py_data: The integer data array.\n:type py_data: numpy.ndarray[int]"
     },
     "DeckKeyword_init_parser_keyword_pydata_double": {
-        "signature": "opm.io.deck.DeckKeyword.__init__(parser_keyword: ParserKeyword, py_data: array_t[double], active_system: UnitSystem, default_system: UnitSystem) -> DeckKeyword",
-        "doc": "Initializes a DeckKeyword with a specified ParserKeyword, double data, and two UnitSystem objects for active and default systems. For this, the keyword must be a data keyword!\n\n:param parser_keyword: The ParserKeyword to initialize the DeckKeyword with.\n:type parser_keyword: ParserKeyword\n:param py_data: The double data array.\n:type py_data: array_t[double]\n:param active_system: The active UnitSystem to interpret the data.\n:type active_system: UnitSystem\n:param default_system: The default UnitSystem to interpret the data.\n:type default_system: UnitSystem"
+        "signature": "opm.io.deck.DeckKeyword.__init__(parser_keyword: ParserKeyword, py_data: numpy.ndarray[double], active_system: UnitSystem, default_system: UnitSystem) -> DeckKeyword",
+        "doc": "Creates a DeckKeyword with a specified ParserKeyword, double data (as a `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_, and two UnitSystem objects for active and default systems. For this, the keyword must be a data keyword!\n\n:param parser_keyword: The ParserKeyword to initialize the DeckKeyword with.\n:type parser_keyword: ParserKeyword\n:param py_data: The double data array.\n:type py_data: numpy.ndarray[double]\n:param active_system: The active UnitSystem to interpret the data.\n:type active_system: UnitSystem\n:param default_system: The default UnitSystem to interpret the data.\n:type default_system: UnitSystem"
     },
     "DeckKeyword_get_int_array": {
-        "signature": "opm.io.deck.DeckKeyword.get_int_array() -> list",
-        "doc": "Returns the integer data of the DeckKeyword.\n\n:return: The integer data.\n:type: list"
+        "signature": "opm.io.deck.DeckKeyword.get_int_array() -> numpy.ndarray[int]",
+        "doc": "Returns the integer data of the DeckKeyword in a `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_.\n\n:return: The integer data.\n:type: numpy.ndarray[int]"
     },
     "DeckKeyword_get_raw_array": {
-        "signature": "opm.io.deck.DeckKeyword.get_raw_array() -> list",
-        "doc": "Returns the raw doule data of the DeckKeyword.\n\n:return: The raw double data.\n:type: list"
+        "signature": "opm.io.deck.DeckKeyword.get_raw_array() -> numpy.ndarray[double]",
+        "doc": "Returns the raw doule data of the DeckKeyword in a `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_.\n\n:return: The raw double data.\n:type: numpy.ndarray[double]"
     },
     "DeckKeyword_get_SI_array": {
-        "signature": "opm.io.deck.DeckKeyword.get_SI_array() -> list",
-        "doc": "Returns the SI double data of the DeckKeyword.\n\n:return: The SI double data.\n:type: list"
+        "signature": "opm.io.deck.DeckKeyword.get_SI_array() -> numpy.ndarray[double]",
+        "doc": "Returns the SI double data of the DeckKeyword in a `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_.\n\n:return: The SI double data.\n:type: numpy.ndarray[double]"
     },
     "DeckItem": {
         "type": "class",
@@ -480,7 +480,7 @@
     "DeckRecord": {
         "type": "class",
         "signature": "DeckRecord",
-        "doc": "Represents a record of data in the deck. A DeckRecord holds a collection of `DeckItem <#opm.io.deck.DeckItem>`_s and provides access to them in various ways."
+        "doc": "Represents a record of data in the deck. A DeckRecord holds a collection of `DeckItems <#opm.io.deck.DeckItem>`_ and provides access to them in various ways."
     },
     "DeckRecord_repr": {
         "signature": "DeckRecord.__repr__() -> str",
@@ -505,11 +505,11 @@
     },
     "UDAValue_init_double": {
         "signature": "opm.io.deck.UDAValue.__init__(value: double, dimension: Dimension) -> UDAValue",
-        "doc": "Initializes a UDA with a double value and a dimension.\n\n:param value: The double value to store.\n:type value: double\n:param dimension: The dimension associated with this UDA.\n:type dimension: Dimension"
+        "doc": "Creates a UDA with a double value and a dimension.\n\n:param value: The double value to store.\n:type value: double\n:param dimension: The dimension associated with this UDA.\n:type dimension: Dimension\n:return: The UDAValue.\n:type: UDAValue"
     },
     "UDAValue_init_string": {
         "signature": "opm.io.deck.UDAValue.__init__(value: str, dimension: Dimension) -> UDAValue",
-        "doc": "Initializes a UDA with a string value and a dimension.\n\n:param value: The string value to store.\n:type value: str\n:param dimension: The dimension associated with this UDA.\n:type dimension: Dimension"
+        "doc": "Creates a UDA with a string value and a dimension.\n\n:param value: The string value to store.\n:type value: str\n:param dimension: The dimension associated with this UDA.\n:type dimension: Dimension\n:return: The UDAValue.\n:type: UDAValue"
     },
     "UDAValue_dimension": {
         "signature": "opm.io.deck.UDAValue.dimension() -> Dimension",
@@ -534,6 +534,189 @@
     "UDAValue_repr": {
         "signature": "opm.io.deck.UDAValue.__repr__() -> str",
         "doc": "Returns a string representation of the UDA. This works for both string and double UDAs.\n\n:return: A string representation of the UDA.\n:type: str"
+    },
+    "EclipseConfig": {
+        "type": "class",
+        "signature": "EclipseConfig",
+        "doc": "Represents the configuration for an Eclipse simulation."
+    },
+    "EclipseConfig_init": {
+        "signature": "EclipseConfig.init() -> InitConfig",
+        "doc": "Returns the initialization configuration.\n\n:return: The initialization configuration.\n:type: InitConfig"
+    },
+    "SummaryConfig": {
+        "type": "class",
+        "signature": "opm.io.summary.SummaryConfig",
+        "doc": "Represents the configuration for the summary."
+    },
+    "SummaryConfig_init": {
+        "signature": "opm.io.summary.SummaryConfig.__init__(deck: Deck, state: EclipseState, schedule: Schedule) -> SummaryConfig",
+        "doc": "Creates a SummaryConfig with the provided deck, state, and schedule.\n\n:param deck: The deck containing simulation data.\n:type deck: Deck\n:param state: The EclipseState containing simulation state.\n:type state: EclipseState\n:param schedule: The schedule for the simulation.\n:type schedule: Schedule\n:return: A new instance of SummaryConfig.\n:type: SummaryConfig"
+    },
+    "SummaryConfig_contains": {
+        "signature": "opm.io.summary.SummaryConfig.__contains__(keyword: str) -> bool",
+        "doc": "Checks whether a keyword exists in the SummaryConfig.\n\n:param keyword: The keyword to check.\n:type keyword: str\n:return: True if the keyword exists, False otherwise.\n:type: bool"
+    },
+    "InitConfig": {
+        "type": "class",
+        "signature": "InitConfig",
+        "doc": "Represents the initialization configuration."
+    },
+    "InitConfig_hasEquil": {
+        "signature": "InitConfig.hasEquil() -> bool",
+        "doc": "Returns whether the initialization configuration includes the keword 'EQUIL', which defines the equilibration initialization data.\n\n:return: True if 'EQUIL' is present, False otherwise.\n:type: bool"
+    },
+    "InitConfig_restartRequested": {
+        "signature": "InitConfig.restartRequested() -> bool",
+        "doc": "Returns whether a restart is requested for the simulation.\n\n:return: True if a restart is requested, False otherwise.\n:type: bool"
+    },
+    "InitConfig_getRestartStep": {
+        "signature": "InitConfig.getRestartStep() -> int",
+        "doc": "Returns the step number to restart at.\n\n:return: The restart step number.\n:type: int"
+    },
+    "IOConfig": {
+        "type": "class",
+        "signature": "IOConfig",
+        "doc": "Represents the configuration for the input/output settings."
+    },
+    "EclipseGrid": {
+        "type": "class",
+        "signature": "EclipseGrid",
+        "doc": "Represents the grid configuration for an Eclipse simulation."
+    },
+    "EclipseGrid_getXYZ": {
+        "signature": "EclipseGrid._getXYZ() -> tuple(int,int,int)",
+        "doc": "Returns the number of cells in XYZ direction for the grid as a tuple.\n\n:return: A tuple containing the number of cells in XYZ direction.\n:type: tuple(int,int,int)"
+    },
+    "EclipseGrid_nx": {
+        "signature": "EclipseGrid.nx() -> int",
+        "doc": "Returns the number of cells along the X-axis in the Eclipse grid.\n\n:return: The number of cells along the X-axis.\n:type: int"
+    },
+    "EclipseGrid_ny": {
+        "signature": "EclipseGrid.ny() -> int",
+        "doc": "Returns the number of cells along the Y-axis in the Eclipse grid.\n\n:return: The number of cells along the Y-axis.\n:type: int"
+    },
+    "EclipseGrid_nz": {
+        "signature": "EclipseGrid.nz() -> int",
+        "doc": "Returns the number of cells along the Z-axis in the Eclipse grid.\n\n:return: The number of cells along the Z-axis.\n:type: int"
+    },
+    "EclipseGrid_nactive": {
+        "signature": "EclipseGrid.nactive() -> int",
+        "doc": "Returns the number of active cells in the Eclipse grid.\n\n:return: The number of active cells.\n:type: int"
+    },
+    "EclipseGrid_cartesianSize": {
+        "signature": "EclipseGrid.cartesianSize() -> int",
+        "doc": "Returns the Cartesian size of the grid, i.e., the number of all cells.\n\n:return: The Cartesian size of the grid.\n:type: int"
+    },
+    "EclipseGrid_globalIndex": {
+        "signature": "EclipseGrid.globalIndex(i: int, j: int, k: int) -> int",
+        "doc": "Returns the global index of the grid cell at the specified (i, j, k) coordinates.\n\n:param i: The I index of the grid cell.\n:type i: int\n:param j: The J index of the grid cell.\n:type j: int\n:param k: The K index of the grid cell.\n:type k: int\n:return: The global index of the grid cell at the specified coordinates.\n:type: int"
+    },
+    "EclipseGrid_getIJK": {
+        "signature": "EclipseGrid.getIJK(g: int) -> tuple(int,int,int)",
+        "doc": "Returns a tuple containing the IJK indices of the grid cell with global index g.\n\n:return: A a tuple containing the IJK indices of the grid cell with global index g.\n:type: tuple(int,int,int)"
+    },
+    "EclipseGrid_getCellVolume1G": {
+        "signature": "EclipseGrid.getCellVolume1G(g: int) -> double",
+        "doc": "Returns the cell volume for the grid cell at the global index g.\n\n:param g: The global index of the grid cell.\n:type g: int\n:return: The volume of the grid cell.\n:type: double"
+    },
+    "EclipseGrid_getCellVolume3": {
+        "signature": "EclipseGrid.getCellVolume3(i: int, j: int, k: int) -> double",
+        "doc": "Returns the cell volume for a grid cell identified by its (i, j, k) indices.\n\n:param i: The I index of the grid cell.\n:type i: int\n:param j: The J index of the grid cell.\n:type j: int\n:param k: The K index of the grid cell.\n:type k: int\n:return: The volume of the grid cell identified by the (i, j, k) indices.\n:type: double"
+    },
+    "EclipseGrid_getCellVolumeAll": {
+        "signature": "EclipseGrid.getCellVolumeAll() -> numpy.ndarray[double]",
+        "doc": "Returns a `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_ containing the volumes of all grid cells. Each entry in the array corresponds to the volume of a grid cell, with the array index matching the global index of that cell.\n\n:return: A numpy.ndarray each entry represents the volume of a grid cell, the index being to the global index.\n:type: numpy.ndarray[double]"
+    },
+    "EclipseGrid_getCellVolumeMask": {
+        "signature": "EclipseGrid.getCellVolumeMask(mask: list[int]) -> numpy.ndarray[double]",
+        "doc": "Returns the cell volumes for the cells with the global ids given in the input list.\n\n:return: The cell volumes for the given cells.\n:type: numpy.ndarray[double]"
+    },
+   "EclipseGrid_getCellDepth1G": {
+        "signature": "EclipseGrid.getCellDepth1G(g: int) -> double",
+        "doc": "Returns the depth of the grid cell corresponding to the given global index.\n\n:param g: The global index of the grid cell.\n:type g: int\n:return: The depth of the grid cell with the specified global index.\n:type: double"
+    },
+    "EclipseGrid_getCellDepth3": {
+        "signature": "EclipseGrid.getCellDepth3(i: int, j: int, k: int) -> double",
+        "doc": "Returns the depth of the grid cell specified by the given IJK indices.\n\n:param i: The I index of the grid cell.\n:type i: int\n:param j: The J index of the grid cell.\n:type j: int\n:param k: The K index of the grid cell.\n:type k: int\n:return: The depth of the grid cell with the specified IJK indices.\n:type: double"
+    },
+    "EclipseGrid_getCellDepthAll": {
+        "signature": "EclipseGrid.getCellDepthAll() -> numpy.ndarray[double]",
+        "doc": "Returns a `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_ containing the depths of all grid cells. Each entry in the array corresponds to the depth of a grid cell, with the array index matching the global index of that cell.\n\n:return: A numpy.ndarray each entry represents the depth of a grid cell, and the index being the global index.\n:type: numpy.ndarray[double]"
+    },
+    "EclipseGrid_getCellDepthMask": {
+        "signature": "EclipseGrid.getCellDepthMask(mask: list[int]) -> numpy.ndarray[double]",
+        "doc": "Returns the depths for the cell with the global ids given in the input list.\n\n:return: The depths for the given cells.\n:type: numpy.ndarray[double]"
+    },
+    "eclArrType": {
+        "type": "class",
+        "signature": "opm.io.ecl.eclArrType",
+        "doc": "`Python enum <https://docs.python.org/3/library/enum.html>`_ with the types of arrays used in the Eclipese file format."
+    },
+    "eclArrType_INTE": {
+        "signature": "opm.io.ecl.eclArrType.INTE",
+        "doc": "Represents an integer array type."
+    },
+    "eclArrType_REAL": {
+        "signature": "opm.io.ecl.eclArrType.REAL",
+        "doc": "Represents a single-precision float array type."
+    },
+    "eclArrType_DOUB": {
+        "signature": "opm.io.ecl.eclArrType.DOUB",
+        "doc": "Represents a double-precision real array type."
+    },
+    "eclArrType_CHAR": {
+        "signature": "opm.io.ecl.eclArrType.CHAR",
+        "doc": "Represents a character array type."
+    },
+    "eclArrType_C0nn": {
+        "signature": "opm.io.ecl.eclArrType.C0nn",
+        "doc": "Represents an array type used for strings with a length > 8 characters."
+    },
+    "eclArrType_LOGI": {
+        "signature": "opm.io.ecl.eclArrType.LOGI",
+        "doc": "Represents a boolean array type."
+    },
+    "eclArrType_MESS": {
+        "signature": "opm.io.ecl.eclArrType.MESS",
+        "doc": "Represents a data array type."
+    },
+    "EclFile": {
+        "type": "class",
+        "signature": "opm.io.ecl.EclFile",
+        "doc": "Represents a file in the ECL format."
+    },
+    "EclFile_init": {
+        "signature": "opm.io.ecl.EclFile.__init__(filename: str, preload: bool = False) -> EclFile",
+        "doc": "Creates an EclFile instance.\n\n:param filename: The path to the EclFile.\n:type filename: str\n:param preload: Whether to already load the contents of the file.\n:type preload: bool\n:return: The EclFile.\n:type: EclFile"
+    },
+    "EclFile_arrays": {
+        "signature": "opm.io.ecl.EclFile.arrays -> list[tuple(str, eclArrType, int)]",
+        "doc": "Returns a list of all arrays in the EclFile, where one entry of the list is a tuple containing the array name, the array type and the array size.\n\n:return: A list the arrays in the EclFile.\n:type: list[tuple(str, eclArrType, int)]"
+    },
+    "EclFile_contains": {
+        "signature": "opm.io.ecl.EclFile.__contains__(name: str) -> bool",
+        "doc": "Checks if the array with the given name exists in the EclFile.\n\n:param name: The name to check for.\n:type name: str\n:return: True if the array exists, False otherwise.\n:type: bool"
+    },
+    "EclFile_len": {
+        "signature": "opm.io.ecl.EclFile.__len__() -> int",
+        "doc": "Returns the number of arrays in the EclFile.\n\n:return: The number of arrays.\n:type: int"
+    },
+    "EclFile_count": {
+        "signature": "opm.io.ecl.EclFile.count(name: str) -> int",
+        "doc": "Returns the total number of arrays with the given name in the EclFile.\n\n:param name: The name to check for.\n:type name: str\n:return: The number of records.\n:type: int"
+    },
+    "EclFile_get_data_index": {
+        "signature": "opm.io.ecl.EclFile.__get_data(index: int) -> tuple(numpy.ndarray, Opm::EclIO::eclArrType)",
+        "doc": "Retrieves an array of the EclFile by index.\n\n:param index: The index.\n:type index: int\n:return: A tupe of the array and its type.\n:tuple(numpy.ndarray, Opm::EclIO::eclArrType)"
+    },
+    "EclFile_get_data_name": {
+        "signature": "opm.io.ecl.EclFile.__get_data(name: str) -> tuple(numpy.ndarray, Opm::EclIO::eclArrType)",
+        "doc": "Retrieves the first occurence of the array with the given name from the EclFile.\n\n:param name: The name.\n:type name: str\n:return: A tupe of the array and its type.\n:tuple(numpy.ndarray, Opm::EclIO::eclArrType)"
+    },
+    "EclFile_get_data_occurrence": {
+        "signature": "opm.io.ecl.EclFile.__get_data(name: str, occurrence: int) -> tuple(numpy.ndarray, Opm::EclIO::eclArrType)",
+        "doc": "Retrieves the given occurence of the array with the given name from the EclFile.\n\n:param name: The name.\n:type name: str\n:param occurrence: The occurrence.\n:type occurrence: int\n:return: A tupe of the array and its type.\n:tuple(numpy.ndarray, Opm::EclIO::eclArrType)"
     }
 
 }
