@@ -193,10 +193,10 @@ namespace ML
         OPM_ERROR_IF(!readFile<unsigned int>(file, biases_shape), "Expected biases shape");
         OPM_ERROR_IF(!(biases_shape > 0), "Invalid biases shape");
 
-        weights_.resizeI<unsigned int>({weights_rows, weights_cols});
+        weights_.resizeI<std::vector<unsigned int>>({weights_rows, weights_cols});
         OPM_ERROR_IF(!readFile<float>(file, *weights_.data_.data(), weights_rows * weights_cols), "Expected weights");
 
-        biases_.resizeI<unsigned int>({biases_shape});
+        biases_.resizeI<std::vector<unsigned int>>({biases_shape});
         OPM_ERROR_IF(!readFile<float>(file, *biases_.data_.data(), biases_shape), "Expected biases");
 
         OPM_ERROR_IF(!activation_.loadLayer(file), "Failed to load activation");
@@ -235,7 +235,7 @@ namespace ML
         OPM_ERROR_IF(!readFile<unsigned int>(file, weights_cols), "Expected weight cols");
         OPM_ERROR_IF(!(weights_cols > 0), "Invalid weights shape");
 
-        weights_.resizeI<unsigned int>({weights_rows, weights_cols});
+        weights_.resizeI<std::vector<unsigned int>>({weights_rows, weights_cols});
         OPM_ERROR_IF(!readFile<float>(file, *weights_.data_.data(), weights_rows * weights_cols), "Expected weights");
 
         return true;

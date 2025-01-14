@@ -54,37 +54,37 @@ namespace ML
 
         explicit Tensor(int i)
         {
-            resizeI<int>({i});
+            resizeI<std::vector<int>>({i});
         }
 
         Tensor(int i, int j)
         {
-            resizeI<int>({i, j});
+            resizeI<std::vector<int>>({i, j});
         }
 
         Tensor(int i, int j, int k)
         {
-            resizeI<int>({i, j, k});
+            resizeI<std::vector<int>>({i, j, k});
         }
 
         Tensor(int i, int j, int k, int l)
         {
-            resizeI<int>({i, j, k, l});
+            resizeI<std::vector<int>>({i, j, k, l});
         }
-
-        template <typename Type>
-        void resizeI(const std::vector<Type>& c)
+        
+        template <typename Sizes>
+        void resizeI(const Sizes& sizes)
         {
-            if (c.size() == 1)
-                dims_ = {(int)c[0]};
-            if (c.size() == 2)
-                dims_ = {(int)c[0], (int)c[1]};
-            if (c.size() == 3)
-                dims_ = {(int)c[0], (int)c[1], (int)c[2]};
-            if (c.size() == 4)
-                dims_ = {(int)c[0], (int)c[1], (int)c[2], (int)c[3]};
+            if (sizes.size() == 1)
+                dims_ = {(int)sizes[0]};
+            if (sizes.size() == 2)
+                dims_ = {(int)sizes[0], (int)sizes[1]};
+            if (sizes.size() == 3)
+                dims_ = {(int)sizes[0], (int)sizes[1], (int)sizes[2]};
+            if (sizes.size() == 4)
+                dims_ = {(int)sizes[0], (int)sizes[1], (int)sizes[2], (int)sizes[3]};
 
-            data_.resize(std::accumulate(begin(dims_), end(dims_), 1.0, std::multiplies<Type>()));
+            data_.resize(std::accumulate(begin(dims_), end(dims_), 1.0, std::multiplies<>()));
         }
 
         void flatten()
