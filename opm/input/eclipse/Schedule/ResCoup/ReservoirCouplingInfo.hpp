@@ -43,7 +43,7 @@ public:
     static CouplingInfo serializationTestObject();
     bool operator==(const CouplingInfo& other) const;
 
-    void couplingFileFlag(CouplingFileFlag flag) {
+    void setCouplingFileFlag(CouplingFileFlag flag) {
         m_coupling_file_flag = flag;
     }
     CouplingFileFlag couplingFileFlag() const {

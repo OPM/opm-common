@@ -56,7 +56,7 @@ void handleDUMPCUPL(HandlerContext& handlerContext)
     }
     auto flag_str = deck_item.getTrimmedString(0);
     auto coupling_file_flag = couplingFileFlagFromString(flag_str, keyword);
-    rescoup.couplingFileFlag(coupling_file_flag);
+    rescoup.setCouplingFileFlag(coupling_file_flag);
     schedule_state.rescoup.update( std::move( rescoup ));
 }
 
