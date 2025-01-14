@@ -480,7 +480,7 @@
     "DeckRecord": {
         "type": "class",
         "signature": "DeckRecord",
-        "doc": "Represents a record of data in the deck. A DeckRecord holds a collection of `DeckItem <#opm.io.deck.DeckItem>`_s and provides access to them in various ways."
+        "doc": "Represents a record of data in the deck. A DeckRecord holds a collection of `DeckItems <#opm.io.deck.DeckItem>`_ and provides access to them in various ways."
     },
     "DeckRecord_repr": {
         "signature": "DeckRecord.__repr__() -> str",
@@ -546,15 +546,15 @@
     },
     "SummaryConfig": {
         "type": "class",
-        "signature": "SummaryConfig",
+        "signature": "opm.io.summary.SummaryConfig",
         "doc": "Represents the configuration for the summary."
     },
     "SummaryConfig_init": {
-        "signature": "SummaryConfig.__init__(deck: Deck, state: EclipseState, schedule: Schedule) -> SummaryConfig",
+        "signature": "opm.io.summary.SummaryConfig.__init__(deck: Deck, state: EclipseState, schedule: Schedule) -> SummaryConfig",
         "doc": "Initializes the SummaryConfig with the provided deck, state, and schedule.\n\n:param deck: The deck containing simulation data.\n:type deck: Deck\n:param state: The EclipseState containing simulation state.\n:type state: EclipseState\n:param schedule: The schedule for the simulation.\n:type schedule: Schedule\n:return: A new instance of SummaryConfig.\n:type: SummaryConfig"
     },
     "SummaryConfig_contains": {
-        "signature": "SummaryConfig.__contains__(keyword: str) -> bool",
+        "signature": "opm.io.summary.SummaryConfig.__contains__(keyword: str) -> bool",
         "doc": "Checks whether a keyword exists in the SummaryConfig.\n\n:param keyword: The keyword to check.\n:type keyword: str\n:return: True if the keyword exists, False otherwise.\n:type: bool"
     },
     "InitConfig": {
