@@ -1911,7 +1911,8 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
         gridhead[2] = dims[1];              // nJ
         gridhead[3] = dims[2];              // nK
         gridhead[24] = 1;                   // NUMRES (number of reservoirs)
-        gridhead[25] = 1; 
+        //gridhead[25] = 1;                 // TODO: This value depends on LGRs?
+
         std::vector<int> nnchead(10, 0);
         std::vector<int> nnc1;
         std::vector<int> nnc2;
