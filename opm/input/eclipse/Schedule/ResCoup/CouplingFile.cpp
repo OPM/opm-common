@@ -49,8 +49,8 @@ void handleDUMPCUPL(HandlerContext& handlerContext)
     const auto& keyword = handlerContext.keyword;
     // Opm::Parser::parseFile() (see readDeck.cpp in opm-simulators) will throw an exception if there
     //   is more than one record for this keyword, so we can assume that there is exactly one record here.
-    auto record = keyword[0];
-    auto deck_item = record.getItem<ParserKeywords::DUMPCUPL::VALUE>();
+    const auto& record = keyword[0];
+    const auto& deck_item = record.getItem<ParserKeywords::DUMPCUPL::VALUE>();
     if (deck_item.defaultApplied(0)) {
         throw OpmInputError("DUMPCUPL keyword cannot be defaulted.", keyword.location());
     }
