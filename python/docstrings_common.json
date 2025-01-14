@@ -346,11 +346,11 @@
     },
     "DeckKeyword_init_parser_keyword": {
         "signature": "opm.io.deck.DeckKeyword.__init__(parser_keyword: ParserKeyword) -> DeckKeyword",
-        "doc": "Initializes a DeckKeyword with a specified ParserKeyword.\n\n:param parser_keyword: The ParserKeyword to initialize the DeckKeyword with.\n:type parser_keyword: ParserKeyword"
+        "doc": "Creates a DeckKeyword with a specified ParserKeyword.\n\n:param parser_keyword: The ParserKeyword to initialize the DeckKeyword with.\n:type parser_keyword: ParserKeyword"
     },
     "DeckKeyword_init_parser_keyword_record_list": {
         "signature": "opm.io.deck.DeckKeyword.__init__(parser_keyword: ParserKeyword, record_list: list, active_system: UnitSystem, default_system: UnitSystem) -> DeckKeyword",
-        "doc": "Initializes a DeckKeyword with a specified ParserKeyword, a list of records, and two UnitSystem objects for active and default systems.\n\n:param parser_keyword: The ParserKeyword to initialize the DeckKeyword with.\n:type parser_keyword: ParserKeyword\n:param record_list: A list of records containing the keyword data as also specified in the parser_keyword.\n:type record_list: list\n:param active_system: The active UnitSystem.\n:type active_system: UnitSystem\n:param default_system: The default UnitSystem.\n:type default_system: UnitSystem"
+        "doc": "Creates a DeckKeyword with a specified ParserKeyword, a list of records, and two UnitSystem objects for active and default systems.\n\n:param parser_keyword: The ParserKeyword to initialize the DeckKeyword with.\n:type parser_keyword: ParserKeyword\n:param record_list: A list of records containing the keyword data as also specified in the parser_keyword.\n:type record_list: list\n:param active_system: The active UnitSystem.\n:type active_system: UnitSystem\n:param default_system: The default UnitSystem.\n:type default_system: UnitSystem"
     },
     "DeckKeyword_repr": {
         "signature": "opm.io.deck.DeckKeyword.__repr__() -> str",
@@ -378,11 +378,11 @@
     },
     "DeckKeyword_init_parser_keyword_pydata_int": {
         "signature": "opm.io.deck.DeckKeyword.__init__(parser_keyword: ParserKeyword, py_data: numpy.ndarray[int]) -> DeckKeyword",
-        "doc": "Initializes a DeckKeyword with a specified ParserKeyword and integer data (as a `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_). For this, the keyword must be a data keyword!\n\n:param parser_keyword: The ParserKeyword to initialize the DeckKeyword with.\n:type parser_keyword: ParserKeyword\n:param py_data: The integer data array.\n:type py_data: numpy.ndarray[int]"
+        "doc": "Creates a DeckKeyword with a specified ParserKeyword and integer data (as a `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_). For this, the keyword must be a data keyword!\n\n:param parser_keyword: The ParserKeyword to initialize the DeckKeyword with.\n:type parser_keyword: ParserKeyword\n:param py_data: The integer data array.\n:type py_data: numpy.ndarray[int]"
     },
     "DeckKeyword_init_parser_keyword_pydata_double": {
         "signature": "opm.io.deck.DeckKeyword.__init__(parser_keyword: ParserKeyword, py_data: numpy.ndarray[double], active_system: UnitSystem, default_system: UnitSystem) -> DeckKeyword",
-        "doc": "Initializes a DeckKeyword with a specified ParserKeyword, double data (as a `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_, and two UnitSystem objects for active and default systems. For this, the keyword must be a data keyword!\n\n:param parser_keyword: The ParserKeyword to initialize the DeckKeyword with.\n:type parser_keyword: ParserKeyword\n:param py_data: The double data array.\n:type py_data: numpy.ndarray[double]\n:param active_system: The active UnitSystem to interpret the data.\n:type active_system: UnitSystem\n:param default_system: The default UnitSystem to interpret the data.\n:type default_system: UnitSystem"
+        "doc": "Creates a DeckKeyword with a specified ParserKeyword, double data (as a `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_, and two UnitSystem objects for active and default systems. For this, the keyword must be a data keyword!\n\n:param parser_keyword: The ParserKeyword to initialize the DeckKeyword with.\n:type parser_keyword: ParserKeyword\n:param py_data: The double data array.\n:type py_data: numpy.ndarray[double]\n:param active_system: The active UnitSystem to interpret the data.\n:type active_system: UnitSystem\n:param default_system: The default UnitSystem to interpret the data.\n:type default_system: UnitSystem"
     },
     "DeckKeyword_get_int_array": {
         "signature": "opm.io.deck.DeckKeyword.get_int_array() -> numpy.ndarray[int]",
@@ -505,11 +505,11 @@
     },
     "UDAValue_init_double": {
         "signature": "opm.io.deck.UDAValue.__init__(value: double, dimension: Dimension) -> UDAValue",
-        "doc": "Initializes a UDA with a double value and a dimension.\n\n:param value: The double value to store.\n:type value: double\n:param dimension: The dimension associated with this UDA.\n:type dimension: Dimension"
+        "doc": "Creates a UDA with a double value and a dimension.\n\n:param value: The double value to store.\n:type value: double\n:param dimension: The dimension associated with this UDA.\n:type dimension: Dimension\n:return: The UDAValue.\n:type: UDAValue"
     },
     "UDAValue_init_string": {
         "signature": "opm.io.deck.UDAValue.__init__(value: str, dimension: Dimension) -> UDAValue",
-        "doc": "Initializes a UDA with a string value and a dimension.\n\n:param value: The string value to store.\n:type value: str\n:param dimension: The dimension associated with this UDA.\n:type dimension: Dimension"
+        "doc": "Creates a UDA with a string value and a dimension.\n\n:param value: The string value to store.\n:type value: str\n:param dimension: The dimension associated with this UDA.\n:type dimension: Dimension\n:return: The UDAValue.\n:type: UDAValue"
     },
     "UDAValue_dimension": {
         "signature": "opm.io.deck.UDAValue.dimension() -> Dimension",
@@ -551,7 +551,7 @@
     },
     "SummaryConfig_init": {
         "signature": "opm.io.summary.SummaryConfig.__init__(deck: Deck, state: EclipseState, schedule: Schedule) -> SummaryConfig",
-        "doc": "Initializes the SummaryConfig with the provided deck, state, and schedule.\n\n:param deck: The deck containing simulation data.\n:type deck: Deck\n:param state: The EclipseState containing simulation state.\n:type state: EclipseState\n:param schedule: The schedule for the simulation.\n:type schedule: Schedule\n:return: A new instance of SummaryConfig.\n:type: SummaryConfig"
+        "doc": "Creates a SummaryConfig with the provided deck, state, and schedule.\n\n:param deck: The deck containing simulation data.\n:type deck: Deck\n:param state: The EclipseState containing simulation state.\n:type state: EclipseState\n:param schedule: The schedule for the simulation.\n:type schedule: Schedule\n:return: A new instance of SummaryConfig.\n:type: SummaryConfig"
     },
     "SummaryConfig_contains": {
         "signature": "opm.io.summary.SummaryConfig.__contains__(keyword: str) -> bool",
