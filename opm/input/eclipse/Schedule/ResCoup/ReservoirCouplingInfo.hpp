@@ -78,7 +78,7 @@ public:
     double masterMinTimeStep() const {
         return m_master_min_time_step;
     }
-    void masterMinTimeStep(double tstep) {
+    void setMasterMinTimeStep(double tstep) {
         m_master_min_time_step = tstep;
     }
 

@@ -44,14 +44,14 @@ void handleRCMASTS(HandlerContext& handlerContext)
     const auto& deck_item = record.getItem<ParserKeywords::RCMASTS::MIN_TSTEP>();
     if (deck_item.defaultApplied(0)) {
         // The default value is the current value TSMINZ
-        rescoup.masterMinTimeStep(tuning.TSMINZ);
+        rescoup.setMasterMinTimeStep(tuning.TSMINZ);
     }
     else {
         auto tstep = deck_item.getSIDouble(0);
         if (tstep < 0.0) {
             throw OpmInputError("Negative value for RCMASTS is not allowed.", keyword.location());
         }
-        rescoup.masterMinTimeStep(tstep);
+        rescoup.setMasterMinTimeStep(tstep);
     }
     schedule_state.rescoup.update( std::move( rescoup ));
 }
