@@ -61,6 +61,34 @@
         "signature": "opm.io.ecl_state.EclipseState",
         "doc": "The EclipseState class - this is a representation of all static properties in the model, ranging from porosity to relperm tables.\nThe content of the EclipseState is immutable and may not be changed at runtime."
     },
+    "EclipseState_init": {
+        "signature": "opm.io.ecl_state.EclipseState.__init__(deck: Deck) -> EclipseState",
+        "doc": "Creates an EclipseState from the given Deck.\n\n:param deck: The deck.\n:type deck: Deck\n:return: The EclipseState.\n:type return: EclipseState"
+    },
+    "EclipseState_title": {
+        "signature": "opm.io.ecl_state.EclipseState.title -> str",
+        "doc": "Returns the title of the EclipseState.\n\n:return: The title.\n:type return: str"
+    },
+    "EclipseState_field_props": {
+        "signature": "EclipseState.field_props() -> FieldPropsManager",
+        "doc": "Returns the field properties for the Eclipse simulation. \n\n:return: The field properties for the simulation.\n:type: FieldPropsManager"
+    },
+    "EclipseState_grid": {
+        "signature": "EclipseState.grid() -> EclipseGrid",
+        "doc": "Returns the EclipseGrid used for the Eclipse simulation.\n\n:return: The grid used in the simulation.\n:type: EclipseGrid"
+    },
+    "EclipseState_config": {
+        "signature": "EclipseState.config() -> EclipseConfig",
+        "doc": "Returns the configuration for the Eclipse simulation.\n\n:return: The simulation configuration.\n:type: EclipseConfig"
+    },
+    "EclipseState_tables": {
+        "signature": "EclipseState.tables() -> TableManager",
+        "doc": "Returns the table manager associated with the Eclipse simulation.\n\n:return: The table manager for the simulation.\n:type: TableManager"
+    },
+    "EclipseState_has_input_nnc": {
+        "signature": "EclipseState.has_input_nnc() -> bool",
+        "doc": "Checks whether the Eclipse simulation contains input for non-neighboring connections.\n\n:return: True if the simulation has NNC input, otherwise False.\n:type: bool"
+    },
     "EclipseState_input_nnc": {
         "signature": "opm.io.ecl_state.EclipseState.input_nnc() -> list",
         "doc": "Returns a list of non-neighboring connections.\n\nOne non-neighboring connection is a tuple containing the following elements:\n\n- index1 (int): Index of the first cell.\n\n- index2 (int): Index of the second cell.\n\n- transmissibility (double): Transmissibility between the two cells.\n\n:return: A list of non-neighboring connections. \n:type return: list"
