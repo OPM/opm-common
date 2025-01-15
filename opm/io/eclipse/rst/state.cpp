@@ -80,7 +80,30 @@ namespace {
         std::advance(zudl_begin, (udq_index + 0) * Opm::UDQDims::entriesPerZUDL());
         std::advance(zudl_end  , (udq_index + 1) * Opm::UDQDims::entriesPerZUDL());
 
-        auto define = fmt::format("{}", fmt::join(zudl_begin, zudl_end, ""));
+        // Note: We inject each ZUDL substring into a field of exactly 8
+        // characters ({:<8}) in order to preserve any requisite trailing
+        // whitespace.  In particular, we don't want to risk consecutive
+        // slots of the form
+        //
+        //   ")/(GEFF "
+        //   "TEST)*(1"
+        //
+        // being fused into a string fragment of the form
+        //
+        //   )/(GEFFTEST)*(1
+        //
+        // This would change the meaning of the summary vector (scalar value
+        // 'GEFF TEST' -> group level UDQ set 'GEFFTEST').
+        //
+        // We do nevertheless use rtrim_copy() on the final string in order
+        // to ensure that a UDQ without a defining expression--i.e., an
+        // assignment--comes back as an empty string.  The 8 character
+        // explicit field width in fmt::format() generates a result string
+        // which is always of size 128 regardless of the actual character
+        // data (e.g., 128 space characters).  If we were to return that
+        // string value unchanged, we would break some of the higher-level
+        // logic.
+        auto define = Opm::rtrim_copy(fmt::format("{:<8}", fmt::join(zudl_begin, zudl_end, "")));
         if (!define.empty() && (define.front() == '~')) {
             define.front() = '-';
         }
