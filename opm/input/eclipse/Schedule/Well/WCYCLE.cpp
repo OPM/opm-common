@@ -54,7 +54,7 @@ bool WCYCLE::Entry::operator==(const Entry& that) const
 void WCYCLE::addRecord(const DeckRecord& record)
 {
     const std::string name = record.getItem<ParserKeywords::WCYCLE::WELL>().getTrimmedString(0);
-    entries_.emplace(name, Entry {
+    entries_.insert_or_assign(name, Entry {
         record.getItem<ParserKeywords::WCYCLE::ON_TIME>().getSIDouble(0),
         record.getItem<ParserKeywords::WCYCLE::OFF_TIME>().getSIDouble(0),
         record.getItem<ParserKeywords::WCYCLE::START_TIME>().getSIDouble(0),

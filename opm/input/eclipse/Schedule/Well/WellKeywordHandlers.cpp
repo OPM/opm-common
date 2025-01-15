@@ -417,7 +417,7 @@ void handleWCONPROD(HandlerContext& handlerContext)
 
 void handleWCYCLE(HandlerContext& handlerContext)
 {
-    auto new_config = WCYCLE{};
+    auto new_config = handlerContext.state().wcycle();
     for (const auto& record : handlerContext.keyword) {
         new_config.addRecord(record);
     }
