@@ -283,22 +283,22 @@ void Opm::GuideRate::group_compute(const std::string& wgname,
     }
 }
 
-void Opm::GuideRate::compute(const std::string& wgname,
-                             const Phase&       phase,
-                             const std::size_t  report_step,
-                             const double       guide_rate)
+void Opm::GuideRate::compute(const std::string&          wgname,
+                             const Phase&                phase,
+                             const std::size_t           report_step,
+                             const std::optional<double> guide_rate)
 {
     const auto& config = this->schedule[report_step].guide_rate();
     if (!config.has_injection_group(phase, wgname))
         return;
 
-    if (guide_rate > 0) {
-        this->injection_group_values[std::make_pair(phase, wgname)] = guide_rate;
+    if (guide_rate) {
+        this->injection_group_values[std::make_pair(phase, wgname)] = *guide_rate;
         return;
     }
 
     const auto& group = config.injection_group(phase, wgname);
-    if (group.target == Group::GuideRateInjTarget::POTN) {
+    if (group.target == Group::GuideRateInjTarget::NO_GUIDE_RATE) {
         return;
     }
     this->injection_group_values[std::make_pair(phase, wgname)] = group.guide_rate;

@@ -604,10 +604,10 @@ GCONINJE
         GuideRate gr = GuideRate(schedule);
         const auto& g1 = schedule.getGroup("G1", 1);
         const auto& g2 = schedule.getGroup("G2", 1);
-        gr.compute(g1.name(), Phase::WATER, 1, 0.0);
-        gr.compute(g1.name(), Phase::GAS, 1, 0.0);
-        gr.compute(g2.name(), Phase::WATER, 1, 0.0);
-        gr.compute(g2.name(), Phase::GAS, 1, 0.0);
+        gr.compute(g1.name(), Phase::WATER, 1, std::nullopt);
+        gr.compute(g1.name(), Phase::GAS, 1, std::nullopt);
+        gr.compute(g2.name(), Phase::WATER, 1, std::nullopt);
+        gr.compute(g2.name(), Phase::GAS, 1, std::nullopt);
 
         BOOST_CHECK( gr.has(g1.name(), Phase::WATER));
         BOOST_CHECK( gr.has(g1.name(), Phase::GAS));
