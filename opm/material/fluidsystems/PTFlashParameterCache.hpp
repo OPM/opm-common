@@ -32,7 +32,9 @@
 
 #include <opm/material/fluidsystems/ParameterCacheBase.hpp>
 #include <opm/material/eos/CubicEOS.hpp>
-#include <opm/material/eos/PRParams.hpp>
+#include <opm/material/eos/CubicEOSParams.hpp>
+
+#include <opm/input/eclipse/EclipseState/Compositional/CompositionalConfig.hpp>
 
 #include <cassert>
 
@@ -49,6 +51,7 @@ class PTFlashParameterCache
     using ThisType = PTFlashParameterCache<Scalar, FluidSystem>;
     using ParentType = Opm::ParameterCacheBase<ThisType>;
     using CubicEOS = Opm::CubicEOS<Scalar, FluidSystem>;
+    using EOSType = CompositionalConfig::EOSType;
 
     enum { numPhases = FluidSystem::numPhases };
     enum { oilPhaseIdx = FluidSystem::oilPhaseIdx };
@@ -64,16 +67,33 @@ class PTFlashParameterCache
 
 public:
     //! The cached parameters for the oil phase
-    using OilPhaseParams = Opm::PRParams<Scalar, FluidSystem, oilPhaseIdx>;
-    //! The cached parameters for the gas phase
-    using GasPhaseParams = Opm::PRParams<Scalar, FluidSystem, gasPhaseIdx>;
+    using OilPhaseParams = Opm::CubicEOSParams<Scalar, FluidSystem, oilPhaseIdx>;
 
+    //! The cached parameters for the gas phase
+    using GasPhaseParams = Opm::CubicEOSParams<Scalar, FluidSystem, gasPhaseIdx>;
+    
     PTFlashParameterCache()
-    {
+    {            
             VmUpToDate_[oilPhaseIdx] = false;
             Valgrind::SetUndefined(Vm_[oilPhaseIdx]);
             VmUpToDate_[gasPhaseIdx] = false;
             Valgrind::SetUndefined(Vm_[gasPhaseIdx]);
+
+            auto pr = EOSType::PR;
+            oilPhaseParams_.setEOSType(pr);
+            gasPhaseParams_.setEOSType(pr);
+    }
+
+    template<typename EOSType>
+    PTFlashParameterCache(EOSType& eos_type)
+    {
+        VmUpToDate_[oilPhaseIdx] = false;
+        Valgrind::SetUndefined(Vm_[oilPhaseIdx]);
+        VmUpToDate_[gasPhaseIdx] = false;
+        Valgrind::SetUndefined(Vm_[gasPhaseIdx]);
+    
+        oilPhaseParams_.setEOSType(eos_type);
+        gasPhaseParams_.setEOSType(eos_type);
     }
 
     //! \copydoc ParameterCacheBase::updatePhase
