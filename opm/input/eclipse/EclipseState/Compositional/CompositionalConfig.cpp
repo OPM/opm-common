@@ -317,6 +317,7 @@ CompositionalConfig CompositionalConfig::serializationTestObject() {
 
 CompositionalConfig::EOSType CompositionalConfig::eosTypeFromString(const std::string& str) {
     if (str == "PR") return EOSType::PR;
+    if (str == "PRCORR") return EOSType::PRCORR;
     if (str == "RK") return EOSType::RK;
     if (str == "SRK") return EOSType::SRK;
     if (str == "ZJ") return EOSType::ZJ;
@@ -326,6 +327,7 @@ CompositionalConfig::EOSType CompositionalConfig::eosTypeFromString(const std::s
 std::string CompositionalConfig::eosTypeToString(Opm::CompositionalConfig::EOSType eos) {
     switch (eos) {
         case EOSType::PR: return "PR";
+        case EOSType::PRCORR: return "PRCORR";
         case EOSType::RK: return "RK";
         case EOSType::SRK: return "SRK";
         case EOSType::ZJ: return "ZJ";

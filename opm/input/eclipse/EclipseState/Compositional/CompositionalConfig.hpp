@@ -34,10 +34,11 @@ class Runspec;
 class CompositionalConfig {
 public:
     enum class EOSType {
-        PR,   // Peng-Robinson
-        RK,   // Redlich-Kwong
-        SRK,  // Soave-Redlich-Kwong
-        ZJ    // Zudkevitch-Joffe-Redlich-Kwong
+        PR,         // Peng-Robinson
+        PRCORR,     // Peng-Robinson modified
+        RK,         // Redlich-Kwong
+        SRK,        // Soave-Redlich-Kwong
+        ZJ          // Zudkevitch-Joffe-Redlich-Kwong
     };
 
     static EOSType eosTypeFromString(const std::string& str);

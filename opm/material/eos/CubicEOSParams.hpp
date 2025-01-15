@@ -25,6 +25,12 @@
 
 #include <opm/material/Constants.hpp>
 
+#include <opm/input/eclipse/EclipseState/Compositional/CompositionalConfig.hpp>
+
+#include <opm/material/eos/PRParams.hpp>
+#include <opm/material/eos/RKParams.hpp>
+#include <opm/material/eos/SRKParams.hpp>
+
 namespace Opm
 {
 
@@ -35,7 +41,18 @@ class CubicEOSParams
     
     static constexpr Scalar R = Constants<Scalar>::R;
 
+    using EOSType = CompositionalConfig::EOSType;
+    using PR = Opm::PRParams<Scalar, FluidSystem>;
+    using RK = Opm::RKParams<Scalar, FluidSystem>;
+    using SRK = Opm::SRKParams<Scalar, FluidSystem>;
+
 public:
+
+    template<typename EOSType>
+    void setEOSType(EOSType& eos_type)
+    {
+        EosType_= eos_type;
+    }
 
     void updatePure(Scalar temperature, Scalar pressure)
     {
@@ -46,8 +63,8 @@ public:
         for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
             Scalar pr = pressure / FluidSystem::criticalPressure(compIdx);
             Scalar Tr = temperature / FluidSystem::criticalTemperature(compIdx);
-            Scalar OmegaA = this->calcOmegaA(temperature, compIdx);
-            Scalar OmegaB = this->calcOmegaB(temperature, compIdx);
+            Scalar OmegaA = OmegaA_(temperature, compIdx);
+            Scalar OmegaB = OmegaB_();
 
             Scalar newA = OmegaA * pr / (Tr * Tr);
             Scalar newB = OmegaB * pr / Tr;
@@ -99,6 +116,13 @@ public:
         Valgrind::CheckDefined(B());
     }
 
+    template <class FluidState>
+    void updateSingleMoleFraction(const FluidState& fs,
+                                  unsigned /*compIdx*/)
+    {
+        updateMix(fs);
+    }
+
     Scalar aCache(unsigned compIIdx, unsigned compJIdx ) const
     {
         return aCache_[compIIdx][compJIdx];
@@ -144,24 +168,34 @@ public:
         return B_;
     }
 
-    virtual Scalar calcOmegaA([[maybe_unused]] Scalar temperature, [[maybe_unused]] unsigned compIdx)
-    {
-        throw std::logic_error("Not implemented");
-    }
-
-    virtual Scalar calcOmegaB([[maybe_unused]] Scalar temperature, [[maybe_unused]] unsigned compIdx)
-    {
-        throw std::logic_error("Not implemented");
-    }
-
     Scalar m1() const
     {
-        throw std::logic_error("Not implemented");
+        switch (EosType_) {
+            case EOSType::PRCORR:
+            case EOSType::PR: 
+                return PR::calcm1();
+            case EOSType::RK: 
+                return RK::calcm1();
+            case EOSType::SRK: 
+                return SRK::calcm1();
+            default: 
+                throw std::runtime_error("EOS type not implemented!");
+        }
     }   
     
     Scalar m2() const
     {
-        throw std::logic_error("Not implemented");
+        switch (EosType_) {
+            case EOSType::PRCORR:
+            case EOSType::PR:
+                return PR::calcm2();
+            case EOSType::RK:
+                return RK::calcm2();
+            case EOSType::SRK:
+                return SRK::calcm2();
+            default: 
+                throw std::runtime_error("EOS type not implemented!");
+        }
     }
 
 protected:
@@ -170,6 +204,8 @@ protected:
     Scalar A_;
     Scalar B_;
     std::array<std::array<Scalar, numComponents>, numComponents> aCache_;
+
+    EOSType EosType_;
 
 private:
     void updateACache_()
@@ -181,6 +217,37 @@ private:
 
                 aCache_[compIIdx][compJIdx] = sqrt(Ai(compIIdx) * Ai(compJIdx)) * (1 - Psi);
             }
+        }
+    }
+
+    Scalar OmegaA_(Scalar temperature, unsigned compIdx)
+    {
+        switch (EosType_) {
+            case EOSType::PRCORR:
+                return PR::calcOmegaA(temperature, compIdx, /*modified=*/true);
+            case EOSType::PR:
+                return PR::calcOmegaA(temperature, compIdx, /*modified=*/false);
+            case EOSType::RK:
+                return RK::calcOmegaA(temperature, compIdx);
+            case EOSType::SRK:
+                return SRK::calcOmegaA(temperature, compIdx);
+            default: 
+                throw std::runtime_error("EOS type not implemented!");
+        }
+    }
+
+    Scalar OmegaB_()
+    {
+        switch (EosType_) {
+            case EOSType::PRCORR:
+            case EOSType::PR:
+                return PR::calcOmegaB();
+            case EOSType::RK:
+                return RK::calcOmegaB();
+            case EOSType::SRK:
+                return SRK::calcOmegaB();
+            default: 
+                throw std::runtime_error("EOS type not implemented!");
         }
     }
 

@@ -26,19 +26,16 @@
 #ifndef SRK_PARAMS_HPP
 #define SRK_PARAMS_HPP
 
-#include <opm/material/eos/CubicEOSParams.hpp>
-
-#include <cmath>
-
 namespace Opm {
 
-template <class Scalar, class FluidSystem, unsigned phaseIdx>
-class SRKParams : public CubicEOSParams<Scalar, FluidSystem, phaseIdx>
+template <class Scalar, class FluidSystem>
+class SRKParams
 {
     static constexpr Scalar R = Constants<Scalar>::R;
 
 public:
-    Scalar calcOmegaA(Scalar temperature, unsigned compIdx) override
+
+    static Scalar calcOmegaA(Scalar temperature, unsigned compIdx)
     {
         Scalar Tr = temperature / FluidSystem::criticalTemperature(compIdx);
         Scalar omega = FluidSystem::acentricFactor(compIdx);
@@ -49,21 +46,22 @@ public:
         return 0.4274802 * tmp * tmp;
     }
 
-    Scalar calcOmegaB([[maybe_unused]] Scalar temperature, [[maybe_unused]] unsigned compIdx) override
+    static Scalar calcOmegaB()
     {
         return Scalar(0.08664035);
     }
 
-    Scalar m1() const
+    static Scalar calcm1()
     {
         return Scalar(0.0);
     }
 
-    Scalar m2() const
+    static Scalar calcm2()
     {
         return Scalar(1.0);
     }
-};  // class PRParams
+
+};  // class SRKParams
 
 }  // namespace Opm
 

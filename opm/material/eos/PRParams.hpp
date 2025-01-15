@@ -26,26 +26,24 @@
 #ifndef PR_PARAMS_HPP
 #define PR_PARAMS_HPP
 
-#include <opm/material/eos/CubicEOSParams.hpp>
-
 #include <cmath>
 
 namespace Opm {
 
-template <class Scalar, class FluidSystem, unsigned phaseIdx>
-class PRParams : public CubicEOSParams<Scalar, FluidSystem, phaseIdx>
+template <class Scalar, class FluidSystem>
+class PRParams 
 {
     static constexpr Scalar R = Constants<Scalar>::R;
 
 public:
-    Scalar calcOmegaA(Scalar temperature, unsigned compIdx) override
+    static Scalar calcOmegaA(Scalar temperature, unsigned compIdx, bool modified)
     {
         Scalar Tr = temperature / FluidSystem::criticalTemperature(compIdx);
         Scalar omega = FluidSystem::acentricFactor(compIdx);
         Scalar f_omega;
-        if (omega < 0.49) 
+        if (!modified || (modified && omega <= 0.49)) 
             f_omega = 0.37464 + omega * (1.54226 + omega * (-0.26992));
-        else              
+        else
             f_omega = 0.379642 + omega * (1.48503 + omega * (-0.164423 + omega * 0.016666));
         Valgrind::CheckDefined(f_omega);
         
@@ -53,20 +51,21 @@ public:
         return 0.457235529 * tmp * tmp;
     }
 
-    Scalar calcOmegaB([[maybe_unused]] Scalar temperature, [[maybe_unused]] unsigned compIdx) override
+    static Scalar calcOmegaB() 
     {
         return Scalar(0.077796074);
     }
 
-    Scalar m1() const
+    static Scalar calcm1()
     {
         return Scalar(1 + std::sqrt(2));
     }
 
-    Scalar m2() const
+    static Scalar calcm2()
     {
         return Scalar(1 - std::sqrt(2));
     }
+
 };  // class PRParams
 
 }  // namespace Opm
