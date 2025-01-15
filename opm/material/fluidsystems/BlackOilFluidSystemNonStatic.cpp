@@ -36,12 +36,13 @@
 
 #include <fmt/format.h>
 
-namespace Opm {
+namespace Opm
+{
 
 #if HAVE_ECL_INPUT
 template <class Scalar, class IndexTraits>
-void BlackOilFluidSystemNonStatic<Scalar,IndexTraits>::
-initFromState(const EclipseState& eclState, const Schedule& schedule)
+void
+BlackOilFluidSystemNonStatic<Scalar, IndexTraits>::initFromState(const EclipseState& eclState, const Schedule& schedule)
 {
     if (eclState.getSimulationConfig().useEnthalpy()) {
         enthalpy_eq_energy_ = false;
@@ -72,8 +73,7 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
     // this fluidsystem only supports one, two or three phases
     if (numActivePhases_ < 1 || numActivePhases_ > 3) {
         OPM_THROW(std::runtime_error,
-                  fmt::format("Fluidsystem supports 1-3 phases, but {} is active\n",
-                              numActivePhases_));
+                  fmt::format("Fluidsystem supports 1-3 phases, but {} is active\n", numActivePhases_));
     }
 
     // set the surface conditions using the STCOND keyword
@@ -131,15 +131,14 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
     // use molarMass of CO2 and Brine as default
     // when we are using the the CO2STORE option
     if (eclState.runspec().co2Storage()) {
-        const Scalar salinity = eclState.getCo2StoreConfig().salinity();  // mass fraction
+        const Scalar salinity = eclState.getCo2StoreConfig().salinity(); // mass fraction
         for (unsigned regionIdx = 0; regionIdx < num_regions; ++regionIdx) {
             if (phaseIsActive(oilPhaseIdx)) // The oil component is used for the brine if OIL is active
                 molarMass_[regionIdx][oilCompIdx] = BrineCo2Pvt<Scalar>::Brine::molarMass(salinity);
             if (phaseIsActive(waterPhaseIdx))
                 molarMass_[regionIdx][waterCompIdx] = BrineCo2Pvt<Scalar>::Brine::molarMass(salinity);
             if (!phaseIsActive(gasPhaseIdx)) {
-                OPM_THROW(std::runtime_error,
-                          "CO2STORE requires gas phase\n");
+                OPM_THROW(std::runtime_error, "CO2STORE requires gas phase\n");
             }
             molarMass_[regionIdx][gasCompIdx] = BrineCo2Pvt<Scalar>::CO2::molarMass();
         }
@@ -150,15 +149,14 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
         // Salinity in mass fraction
         const Scalar molality = eclState.getTableManager().salinity(); // mol/kg
         const Scalar MmNaCl = 58.44e-3; // molar mass of NaCl [kg/mol]
-        const Scalar salinity = 1 / ( 1 + 1 / (molality*MmNaCl));
+        const Scalar salinity = 1 / (1 + 1 / (molality * MmNaCl));
         for (unsigned regionIdx = 0; regionIdx < num_regions; ++regionIdx) {
             if (phaseIsActive(oilPhaseIdx)) // The oil component is used for the brine if OIL is active
                 molarMass_[regionIdx][oilCompIdx] = BrineH2Pvt<Scalar>::Brine::molarMass(salinity);
             if (phaseIsActive(waterPhaseIdx))
                 molarMass_[regionIdx][waterCompIdx] = BrineH2Pvt<Scalar>::Brine::molarMass(salinity);
             if (!phaseIsActive(gasPhaseIdx)) {
-                OPM_THROW(std::runtime_error,
-                          "H2STORE requires gas phase\n");
+                OPM_THROW(std::runtime_error, "H2STORE requires gas phase\n");
             }
             molarMass_[regionIdx][gasCompIdx] = BrineH2Pvt<Scalar>::H2::molarMass();
         }
@@ -174,11 +172,12 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
         if (!diffCoeffTables.empty()) {
             // if diffusion coefficient table is empty we relay on the PVT model to
             // to give us the coefficients.
-            diffusionCoefficients_.resize(num_regions,{0,0,0,0,0,0,0,0,0});
+            diffusionCoefficients_.resize(num_regions, {0, 0, 0, 0, 0, 0, 0, 0, 0});
             if (diffCoeffTables.size() != num_regions) {
                 OPM_THROW(std::runtime_error,
                           fmt::format("Table sizes mismatch. DiffCoeffs: {}, NumRegions: {}\n",
-                                      diffCoeffTables.size(), num_regions));
+                                      diffCoeffTables.size(),
+                                      num_regions));
             }
             for (unsigned regionIdx = 0; regionIdx < num_regions; ++regionIdx) {
                 const auto& diffCoeffTable = diffCoeffTables[regionIdx];
@@ -196,11 +195,10 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
                               "or set it to zero.");
                 }
             }
-        } else if ( (eclState.runspec().co2Storage() || eclState.runspec().h2Storage())
-                && eclState.runspec().phases().active(Phase::GAS)
-                && eclState.runspec().phases().active(Phase::WATER))
-        {
-            diffusionCoefficients_.resize(num_regions, {0,0,0,0,0,0,0,0,0});
+        } else if ((eclState.runspec().co2Storage() || eclState.runspec().h2Storage())
+                   && eclState.runspec().phases().active(Phase::GAS)
+                   && eclState.runspec().phases().active(Phase::WATER)) {
+            diffusionCoefficients_.resize(num_regions, {0, 0, 0, 0, 0, 0, 0, 0, 0});
             // diffusion coefficients can be set using DIFFCGAS and DIFFCWAT
             // for CO2STORE and H2STORE cases with gas + water
             const auto& diffCoeffWatTables = eclState.getTableManager().getDiffusionCoefficientWaterTable();
@@ -225,8 +223,8 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
 #endif
 
 template <class Scalar, class IndexTraits>
-void BlackOilFluidSystemNonStatic<Scalar,IndexTraits>::
-initBegin(std::size_t numPvtRegions)
+void
+BlackOilFluidSystemNonStatic<Scalar, IndexTraits>::initBegin(std::size_t numPvtRegions)
 {
     isInitialized_ = false;
     useSaturatedTables_ = true;
@@ -252,11 +250,11 @@ initBegin(std::size_t numPvtRegions)
 }
 
 template <class Scalar, class IndexTraits>
-void BlackOilFluidSystemNonStatic<Scalar,IndexTraits>::
-setReferenceDensities(Scalar rhoOil,
-                      Scalar rhoWater,
-                      Scalar rhoGas,
-                      unsigned regionIdx)
+void
+BlackOilFluidSystemNonStatic<Scalar, IndexTraits>::setReferenceDensities(Scalar rhoOil,
+                                                                         Scalar rhoWater,
+                                                                         Scalar rhoGas,
+                                                                         unsigned regionIdx)
 {
     referenceDensity_[regionIdx][oilPhaseIdx] = rhoOil;
     referenceDensity_[regionIdx][waterPhaseIdx] = rhoWater;
@@ -264,7 +262,8 @@ setReferenceDensities(Scalar rhoOil,
 }
 
 template <class Scalar, class IndexTraits>
-void BlackOilFluidSystemNonStatic<Scalar,IndexTraits>::initEnd()
+void
+BlackOilFluidSystemNonStatic<Scalar, IndexTraits>::initEnd()
 {
     // calculate the final 2D functions which are used for interpolation.
     const std::size_t num_regions = molarMass_.size();
@@ -279,9 +278,8 @@ void BlackOilFluidSystemNonStatic<Scalar,IndexTraits>::initEnd()
             Scalar p = surfacePressure;
             Scalar T = surfaceTemperature;
             Scalar rho_g = referenceDensity_[/*regionIdx=*/0][gasPhaseIdx];
-            molarMass_[regionIdx][gasCompIdx] = Constants<Scalar>::R*T*rho_g / p;
-        }
-        else
+            molarMass_[regionIdx][gasCompIdx] = Constants<Scalar>::R * T * rho_g / p;
+        } else
             // hydrogen gas. we just set this do avoid NaNs later
             molarMass_[regionIdx][gasCompIdx] = 2e-3;
 
@@ -292,7 +290,7 @@ void BlackOilFluidSystemNonStatic<Scalar,IndexTraits>::initEnd()
 
     int activePhaseIdx = 0;
     for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-        if(phaseIsActive(phaseIdx)){
+        if (phaseIsActive(phaseIdx)) {
             canonicalToActivePhaseIdx_[phaseIdx] = activePhaseIdx;
             activeToCanonicalPhaseIdx_[activePhaseIdx] = phaseIdx;
             activePhaseIdx++;
@@ -302,8 +300,8 @@ void BlackOilFluidSystemNonStatic<Scalar,IndexTraits>::initEnd()
 }
 
 template <class Scalar, class IndexTraits>
-std::string_view BlackOilFluidSystemNonStatic<Scalar,IndexTraits>::
-phaseName(unsigned phaseIdx)
+std::string_view
+BlackOilFluidSystemNonStatic<Scalar, IndexTraits>::phaseName(unsigned phaseIdx)
 {
     switch (phaseIdx) {
     case waterPhaseIdx:
@@ -319,8 +317,8 @@ phaseName(unsigned phaseIdx)
 }
 
 template <class Scalar, class IndexTraits>
-unsigned BlackOilFluidSystemNonStatic<Scalar,IndexTraits>::
-solventComponentIndex(unsigned phaseIdx)
+unsigned
+BlackOilFluidSystemNonStatic<Scalar, IndexTraits>::solventComponentIndex(unsigned phaseIdx)
 {
     switch (phaseIdx) {
     case waterPhaseIdx:
@@ -336,8 +334,8 @@ solventComponentIndex(unsigned phaseIdx)
 }
 
 template <class Scalar, class IndexTraits>
-unsigned BlackOilFluidSystemNonStatic<Scalar,IndexTraits>::
-soluteComponentIndex(unsigned phaseIdx)
+unsigned
+BlackOilFluidSystemNonStatic<Scalar, IndexTraits>::soluteComponentIndex(unsigned phaseIdx)
 {
     switch (phaseIdx) {
     case waterPhaseIdx:
@@ -358,8 +356,8 @@ soluteComponentIndex(unsigned phaseIdx)
 }
 
 template <class Scalar, class IndexTraits>
-std::string_view BlackOilFluidSystemNonStatic<Scalar,IndexTraits>::
-componentName(unsigned compIdx)
+std::string_view
+BlackOilFluidSystemNonStatic<Scalar, IndexTraits>::componentName(unsigned compIdx)
 {
     switch (compIdx) {
     case waterCompIdx:
@@ -375,97 +373,33 @@ componentName(unsigned compIdx)
 }
 
 template <class Scalar, class IndexTraits>
-short BlackOilFluidSystemNonStatic<Scalar,IndexTraits>::
-activeToCanonicalPhaseIdx(unsigned activePhaseIdx)
+short
+BlackOilFluidSystemNonStatic<Scalar, IndexTraits>::activeToCanonicalPhaseIdx(unsigned activePhaseIdx)
 {
-    assert(activePhaseIdx<numActivePhases());
+    assert(activePhaseIdx < numActivePhases());
     return activeToCanonicalPhaseIdx_[activePhaseIdx];
 }
 
 template <class Scalar, class IndexTraits>
-short BlackOilFluidSystemNonStatic<Scalar,IndexTraits>::
-canonicalToActivePhaseIdx(unsigned phaseIdx)
+short
+BlackOilFluidSystemNonStatic<Scalar, IndexTraits>::canonicalToActivePhaseIdx(unsigned phaseIdx)
 {
-    assert(phaseIdx<numPhases);
+    assert(phaseIdx < numPhases);
     assert(phaseIsActive(phaseIdx));
     return canonicalToActivePhaseIdx_[phaseIdx];
 }
 
 template <class Scalar, class IndexTraits>
-void BlackOilFluidSystemNonStatic<Scalar,IndexTraits>::
-resizeArrays_(std::size_t numRegions)
+void
+BlackOilFluidSystemNonStatic<Scalar, IndexTraits>::resizeArrays_(std::size_t numRegions)
 {
     molarMass_.resize(numRegions);
     referenceDensity_.resize(numRegions);
 }
 
-// template<> unsigned char BlackOilFluidSystemNonStatic<double, BlackOilDefaultIndexTraits>::numActivePhases_ = 0;
-// template<> std::array<bool, BlackOilFluidSystemNonStatic<double, BlackOilDefaultIndexTraits>::numPhases>
-// BlackOilFluidSystemNonStatic<double, BlackOilDefaultIndexTraits>::phaseIsActive_ = {false, false, false};
-
-// template<> unsigned char BlackOilFluidSystemNonStatic<float, BlackOilDefaultIndexTraits>::numActivePhases_ = 0;
-// template<> std::array<bool, BlackOilFluidSystemNonStatic<float, BlackOilDefaultIndexTraits>::numPhases>
-// BlackOilFluidSystemNonStatic<float, BlackOilDefaultIndexTraits>::phaseIsActive_ = {false, false, false};
-
-// template<> std::array<short, BlackOilFluidSystemNonStatic<double, BlackOilDefaultIndexTraits>::numPhases> BlackOilFluidSystemNonStatic<double, BlackOilDefaultIndexTraits>::activeToCanonicalPhaseIdx_ = {0, 1, 2};
-
-// template<> std::array<short, BlackOilFluidSystemNonStatic<float, BlackOilDefaultIndexTraits>::numPhases> BlackOilFluidSystemNonStatic<float, BlackOilDefaultIndexTraits>::activeToCanonicalPhaseIdx_ = {0, 1, 2};
-
-// template<> std::array<short, BlackOilFluidSystemNonStatic<double, BlackOilDefaultIndexTraits>::numPhases> BlackOilFluidSystemNonStatic<double, BlackOilDefaultIndexTraits>::canonicalToActivePhaseIdx_ = {0, 1, 2};
-
-// template<> std::array<short, BlackOilFluidSystemNonStatic<float, BlackOilDefaultIndexTraits>::numPhases> BlackOilFluidSystemNonStatic<float, BlackOilDefaultIndexTraits>::canonicalToActivePhaseIdx_ = {0, 1, 2};
-
-// template<> double BlackOilFluidSystemNonStatic<double, BlackOilDefaultIndexTraits>::surfaceTemperature = 0.0;
-// template<> float BlackOilFluidSystemNonStatic<float, BlackOilDefaultIndexTraits>::surfaceTemperature = 0.0;
-
-// template<> double BlackOilFluidSystemNonStatic<double, BlackOilDefaultIndexTraits>::surfacePressure = 0.0;
-// template<> float BlackOilFluidSystemNonStatic<float, BlackOilDefaultIndexTraits>::surfacePressure = 0.0;
-
-// template<> double BlackOilFluidSystemNonStatic<double, BlackOilDefaultIndexTraits>::reservoirTemperature_ = 0.0;
-// template<> float BlackOilFluidSystemNonStatic<float, BlackOilDefaultIndexTraits>::reservoirTemperature_ = 0.0;
-
-// template<> bool BlackOilFluidSystemNonStatic<double, BlackOilDefaultIndexTraits>::enableDissolvedGas_ = true;
-// template<> bool BlackOilFluidSystemNonStatic<float, BlackOilDefaultIndexTraits>::enableDissolvedGas_ = true;
-
-// template <> bool BlackOilFluidSystemNonStatic<double, BlackOilDefaultIndexTraits>::enableDissolvedGasInWater_ = false;
-// template <> bool BlackOilFluidSystemNonStatic<float, BlackOilDefaultIndexTraits>::enableDissolvedGasInWater_ = false;
-
-// template <> bool BlackOilFluidSystemNonStatic<double, BlackOilDefaultIndexTraits>::enableVaporizedOil_ = false;
-// template <> bool BlackOilFluidSystemNonStatic<float, BlackOilDefaultIndexTraits>::enableVaporizedOil_ = false;
-
-// template <> bool BlackOilFluidSystemNonStatic<double, BlackOilDefaultIndexTraits>::enableVaporizedWater_ = false;
-// template <> bool BlackOilFluidSystemNonStatic<float, BlackOilDefaultIndexTraits>::enableVaporizedWater_ = false;
-
-// template <> bool BlackOilFluidSystemNonStatic<double, BlackOilDefaultIndexTraits>::enableDiffusion_ = false;
-// template <> bool BlackOilFluidSystemNonStatic<float, BlackOilDefaultIndexTraits>::enableDiffusion_ = false;
-
-// template <> std::shared_ptr<OilPvtMultiplexer<double>> BlackOilFluidSystemNonStatic<double, BlackOilDefaultIndexTraits>::oilPvt_ = nullptr;
-// template <> std::shared_ptr<OilPvtMultiplexer<float>> BlackOilFluidSystemNonStatic<float, BlackOilDefaultIndexTraits>::oilPvt_ = nullptr;
-
-// template <> std::shared_ptr<GasPvtMultiplexer<double>> BlackOilFluidSystemNonStatic<double, BlackOilDefaultIndexTraits>::gasPvt_ = nullptr;
-// template <> std::shared_ptr<GasPvtMultiplexer<float>> BlackOilFluidSystemNonStatic<float, BlackOilDefaultIndexTraits>::gasPvt_ = nullptr;
-
-// template <> std::shared_ptr<WaterPvtMultiplexer<double>> BlackOilFluidSystemNonStatic<double, BlackOilDefaultIndexTraits>::waterPvt_ = nullptr;
-// template <> std::shared_ptr<WaterPvtMultiplexer<float>> BlackOilFluidSystemNonStatic<float, BlackOilDefaultIndexTraits>::waterPvt_ = nullptr;
-
-// template <> std::vector<std::array<double, 3>> BlackOilFluidSystemNonStatic<double, BlackOilDefaultIndexTraits>::referenceDensity_ = {};
-// template <> std::vector<std::array<float, 3>> BlackOilFluidSystemNonStatic<float, BlackOilDefaultIndexTraits>::referenceDensity_ = {};
-
-// template <> std::vector<std::array<double, 3>> BlackOilFluidSystemNonStatic<double, BlackOilDefaultIndexTraits>::molarMass_ = {};
-// template <> std::vector<std::array<float, 3>> BlackOilFluidSystemNonStatic<float, BlackOilDefaultIndexTraits>::molarMass_ = {};
-
-// template <> std::vector<std::array<double, 9>> BlackOilFluidSystemNonStatic<double, BlackOilDefaultIndexTraits>::diffusionCoefficients_ = {};
-// template <> std::vector<std::array<float, 9>> BlackOilFluidSystemNonStatic<float, BlackOilDefaultIndexTraits>::diffusionCoefficients_ = {};
-
-// template <> bool BlackOilFluidSystemNonStatic<double, BlackOilDefaultIndexTraits>::isInitialized_ = false;
-// template <> bool BlackOilFluidSystemNonStatic<float, BlackOilDefaultIndexTraits>::isInitialized_ = false;
-
-// template <> bool BlackOilFluidSystemNonStatic<double, BlackOilDefaultIndexTraits>::useSaturatedTables_ = false;
-// template <> bool BlackOilFluidSystemNonStatic<float, BlackOilDefaultIndexTraits>::useSaturatedTables_ = false;
-
 // IMPORTANT: The following two lines must come after the template specializations above
 //    or else the static variable above will appear as undefined in the generated object file.
-template class BlackOilFluidSystemNonStatic<double,BlackOilDefaultIndexTraits>;
-template class BlackOilFluidSystemNonStatic<float,BlackOilDefaultIndexTraits>;
+template class BlackOilFluidSystemNonStatic<double, BlackOilDefaultIndexTraits>;
+template class BlackOilFluidSystemNonStatic<float, BlackOilDefaultIndexTraits>;
 
 } // namespace Opm
