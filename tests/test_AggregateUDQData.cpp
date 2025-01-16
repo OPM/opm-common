@@ -887,8 +887,8 @@ BOOST_AUTO_TEST_CASE (Declared_UDQ_data)
                     (es.fipRegionStatistics());
             };
 
-            Opm::UDQContext input_context(udqft, wm, {}, factories, st, udq_state);
-            Opm::UDQContext rst_context(udqft, wm, {}, factories, st, rst_udq_state);
+            Opm::UDQContext input_context(udqft, wm, sched[report_step].group_order(), {}, factories, st, udq_state);
+            Opm::UDQContext rst_context(udqft, wm, sched[report_step].group_order(), {}, factories, st, rst_udq_state);
 
             rst_udq_state.load_rst(rst_state);
             for (const auto& input_def : input_config.definitions()) {

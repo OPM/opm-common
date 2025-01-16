@@ -452,10 +452,10 @@ UDQSet UDQDefine::scatter_scalar_group_value(const UDQContext&            contex
                                              const std::optional<double>& value) const
 {
     if (! value.has_value()) {
-        return UDQSet::groups(this->m_keyword, context.groups());
+        return UDQSet::groups(this->m_keyword, context.nonFieldGroups());
     }
 
-    return UDQSet::groups(this->m_keyword, context.groups(), *value);
+    return UDQSet::groups(this->m_keyword, context.nonFieldGroups(), *value);
 }
 
 UDQSet UDQDefine::scatter_scalar_segment_value(const UDQContext&            context,

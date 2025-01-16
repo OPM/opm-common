@@ -35,6 +35,8 @@
 #include <opm/input/eclipse/Schedule/UDQ/UDQInput.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQSet.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQState.hpp>
+#include <opm/input/eclipse/Schedule/Well/NameOrder.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellMatcher.hpp>
 
 #include <opm/input/eclipse/Parser/ParserKeywords/U.hpp> // UDQ
 
@@ -99,9 +101,20 @@ namespace {
         /// \return UDQ assignment callback
         static EvalAssign group(const Opm::UDQContext& context)
         {
+            // Return value is an EvalAssign object, created from
+            //    -> a lambda (convertible to EvalAssign::Create), that when called returns
+            //    -> a lambda (convertible to EvalAssign::Eval), that when called returns
+            //    -> a UDQSet made from UDQAssign::eval(vector, wgNameMatcher), with the
+            //    -> wgNameMatcher defined by the innermost lambda.
             return { [&context]() {
-                return [&context](const auto& assign) {
-                    return assign.eval(context.groups());
+                return [&context](const Opm::UDQAssign& assign) {
+                    return assign.eval(context.nonFieldGroups(), [&context]
+                                       (const std::vector<std::string>& pattern)
+                    {
+                        return pattern.empty()
+                            ? context.nonFieldGroups() // No element selection => all non-FIELD groups.
+                            : context.groups(pattern.front());
+                    });
                 };
             }};
         }
@@ -415,6 +428,7 @@ namespace Opm {
     }
 
     void UDQConfig::eval_assign(const WellMatcher&    wm,
+                                const GroupOrder&     go,
                                 SegmentMatcherFactory create_segment_matcher,
                                 SummaryState&         st,
                                 UDQState&             udq_state) const
@@ -423,7 +437,7 @@ namespace Opm {
         factories.segments = std::move(create_segment_matcher);
 
         auto context = UDQContext {
-            this->function_table(), wm, this->m_tables,
+            this->function_table(), wm, go, this->m_tables,
             std::move(factories), st, udq_state
         };
 
@@ -432,6 +446,7 @@ namespace Opm {
 
     void UDQConfig::eval(const std::size_t       report_step,
                          const WellMatcher&      wm,
+                         const GroupOrder&       go,
                          SegmentMatcherFactory   create_segment_matcher,
                          RegionSetMatcherFactory create_region_matcher,
                          SummaryState&           st,
@@ -442,7 +457,7 @@ namespace Opm {
         factories.regions  = std::move(create_region_matcher);
 
         auto context = UDQContext {
-            this->function_table(), wm, this->m_tables,
+            this->function_table(), wm, go, this->m_tables,
             std::move(factories), st, udq_state
         };
 

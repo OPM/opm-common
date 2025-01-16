@@ -201,6 +201,7 @@ void msim::run_step(const WellTestState& wtest_state,
         this->schedule.getUDQConfig(report_step - 1)
             .eval(report_step,
                   this->schedule.wellMatcher(report_step),
+                  this->schedule[report_step].group_order(),
                   this->schedule.segmentMatcherFactory(report_step),
                   createRegionSetMatcherFactory(this->state),
                   this->st,

@@ -33,6 +33,7 @@
 
 namespace Opm {
 
+    class GroupOrder;
     class SegmentSet;
     class SummaryState;
     class UDQFunctionTable;
@@ -56,6 +57,7 @@ namespace Opm {
 
         UDQContext(const UDQFunctionTable& udqft,
                    const WellMatcher&      wm,
+                   const GroupOrder&       go,
                    const std::unordered_map<std::string, UDT>& tables,
                    MatcherFactories        create_matchers,
                    SummaryState&           summary_state,
@@ -91,7 +93,8 @@ namespace Opm {
 
         const std::vector<std::string>& wells() const;
         std::vector<std::string> wells(const std::string& pattern) const;
-        const std::vector<std::string>& groups() const;
+        std::vector<std::string> nonFieldGroups() const;
+        std::vector<std::string> groups(const std::string& pattern) const;
         SegmentSet segments() const;
         SegmentSet segments(const std::vector<std::string>& set_descriptor) const;
 
@@ -108,6 +111,7 @@ namespace Opm {
 
         const UDQFunctionTable& udqft;
         const WellMatcher& well_matcher;
+        const GroupOrder& group_order_;
         const std::unordered_map<std::string, UDT>& udt;
 
         SummaryState& summary_state;

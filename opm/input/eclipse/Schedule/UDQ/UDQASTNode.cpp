@@ -395,7 +395,7 @@ UDQASTNode::eval_group_expression(const std::string& string_value,
         throw std::logic_error("Group names with wildcards is not yet supported");
     }
 
-    const auto& groups = context.groups();
+    const auto groups = context.nonFieldGroups();
 
     auto res = UDQSet::groups(string_value, groups);
     for (const auto& group : groups) {
@@ -542,7 +542,7 @@ UDQASTNode::eval_number(const UDQVarType  target_type,
         return UDQSet::wells(dummy_name, context.wells(), numeric_value);
 
     case UDQVarType::GROUP_VAR:
-        return UDQSet::groups(dummy_name, context.groups(), numeric_value);
+        return UDQSet::groups(dummy_name, context.nonFieldGroups(), numeric_value);
 
     case UDQVarType::SEGMENT_VAR:
         return UDQSet::segments(dummy_name,
@@ -602,8 +602,11 @@ UDQASTNode::eval_table_lookup_group(const std::string& string_value,
                                     const UDQContext& context) const
 {
     const UDT& udt = context.get_udt(string_value);
-    UDQSet result = UDQSet::groups("dummy", context.groups());
-    for (const auto& group : context.groups()) {
+
+    const auto groups = context.nonFieldGroups();
+
+    UDQSet result = UDQSet::groups("dummy", groups);
+    for (const auto& group : groups) {
         const auto xvar = context.get_group_var(group, this->selector[0]);
         if (xvar.has_value()) {
             result.assign(group, udt(*xvar));

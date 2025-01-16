@@ -25,6 +25,7 @@
 #include <opm/input/eclipse/Schedule/SummaryState.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQState.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDT.hpp>
+#include <opm/input/eclipse/Schedule/Well/NameOrder.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellMatcher.hpp>
 
 #include <opm/common/utility/TimeService.hpp>
@@ -55,12 +56,14 @@ namespace Opm {
 
     UDQContext::UDQContext(const UDQFunctionTable& udqft_arg,
                            const WellMatcher&      wm,
+                           const GroupOrder&       go,
                            const std::unordered_map<std::string, UDT>& tables,
                            MatcherFactories        create_matchers,
                            SummaryState&           summary_state_arg,
                            UDQState&               udq_state_arg)
         : udqft           (udqft_arg)
         , well_matcher    (wm)
+        , group_order_    (go)
         , udt             (tables)
         , summary_state   (summary_state_arg)
         , udq_state       (udq_state_arg)
@@ -217,9 +220,24 @@ namespace Opm {
         return this->well_matcher.wells(pattern);
     }
 
-    const std::vector<std::string>& UDQContext::groups() const
+    std::vector<std::string> UDQContext::nonFieldGroups() const
     {
-        return this->summary_state.groups();
+        auto groups = std::vector<std::string>{};
+
+        const auto& allGroups = this->group_order_.names();
+
+        groups.reserve(allGroups.size());
+        std::copy_if(allGroups.begin(), allGroups.end(),
+                     std::back_inserter(groups),
+                     [](const std::string& gname)
+                     { return gname != "FIELD"; });
+
+        return groups;
+    }
+
+    std::vector<std::string> UDQContext::groups(const std::string& pattern) const
+    {
+        return this->group_order_.names(pattern);
     }
 
     SegmentSet UDQContext::segments() const
