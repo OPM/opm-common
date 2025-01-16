@@ -27,6 +27,7 @@
 #include <type_traits>
 #include <utility>
 #include <vector>
+#include <map>
 
 /// \file
 ///
@@ -160,6 +161,13 @@ namespace Opm { namespace utility {
                      other.columnIndices());
         }
 
+        /// Merge a group of vertices into a single vertex.
+        /// Must be called before compress().
+        ///
+        /// \param[in] vertices Vector of vertex IDs to merge
+        /// \param[in] target_vertex The vertex ID that will represent the merged group
+        void mergeVertices(const std::vector<VertexID>& vertices, VertexID target_vertex);
+
     private:
         /// Coordinate format representation of individual contributions to
         /// inter-region flows.
@@ -217,6 +225,12 @@ namespace Opm { namespace utility {
 
             /// Read-only access to uncompressed column indices.
             const Neighbours& columnIndices() const;
+
+            /// Helper function to get the final vertex ID after all merges
+            VertexID getFinalVertexID(VertexID v, const std::map<VertexID, VertexID>& vertex_merges) const;
+
+            /// Apply vertex merges to the stored connections and create compact numbering
+            void applyVertexMerges(const std::map<VertexID, VertexID>& vertex_merges);
 
         private:
             /// Zero-based row/source region indices.
@@ -514,6 +528,7 @@ namespace Opm { namespace utility {
             ///   compress() when TrackCompressedIdx is true.
             void remapCompressedIndex(Start&&                                  compressedIdx,
                                       std::optional<typename Start::size_type> numOrigNNZ = std::nullopt);
+
         };
 
         /// Accumulated coordinate format contributions that have not yet
@@ -522,6 +537,10 @@ namespace Opm { namespace utility {
 
         /// Canonical representation of unique inter-region flow rates.
         CSR csr_;
+
+        /// Map of vertices to be merged during compression
+        std::map<VertexID, VertexID> vertex_merges_{};
+
     };
 
 }} // namespace Opm::utility

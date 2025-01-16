@@ -28,6 +28,8 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <set>
+#include <map>
 
 // ---------------------------------------------------------------------
 // Class Opm::utility::CSRGraphFromCoordinates::Connections
@@ -133,6 +135,74 @@ Opm::utility::CSRGraphFromCoordinates<VertexID, TrackCompressedIdx, PermitSelfCo
 Connections::columnIndices() const
 {
     return this->j_;
+}
+
+template <typename VertexID, bool TrackCompressedIdx, bool PermitSelfConnections>
+VertexID
+Opm::utility::CSRGraphFromCoordinates<VertexID, TrackCompressedIdx, PermitSelfConnections>::
+Connections::getFinalVertexID(VertexID v, const std::map<VertexID, VertexID>& vertex_merges) const
+{
+    auto it = vertex_merges.find(v);
+    while (it != vertex_merges.end()) {
+        v = it->second;
+        it = vertex_merges.find(v);
+    }
+    return v;
+}
+
+template <typename VertexID, bool TrackCompressedIdx, bool PermitSelfConnections>
+void
+Opm::utility::CSRGraphFromCoordinates<VertexID, TrackCompressedIdx, PermitSelfConnections>::
+Connections::applyVertexMerges(const std::map<VertexID, VertexID>& vertex_merges)
+{
+    // Apply vertex merges to both i_ and j_ in place
+    for (auto& row : i_) {
+        row = getFinalVertexID(row, vertex_merges);
+    }
+    for (auto& col : j_) {
+        col = getFinalVertexID(col, vertex_merges);
+    }
+
+    // When self-connections are not permitted, remove them
+    if constexpr (!PermitSelfConnections) {
+        Neighbours new_i, new_j;
+        for (size_t idx = 0; idx < i_.size(); ++idx) {
+            if (i_[idx] != j_[idx]) {
+                new_i.push_back(i_[idx]);
+                new_j.push_back(j_[idx]);
+            }
+        }
+        i_ = std::move(new_i);
+        j_ = std::move(new_j);
+    }
+
+    // Create a compact numbering for vertices
+    std::set<VertexID> uniqueVertices;
+    for (const auto& row : i_) {
+        uniqueVertices.insert(row);
+    }
+    for (const auto& col : j_) {
+        uniqueVertices.insert(col);
+    }
+
+    // Create mapping from old to new vertex IDs
+    std::map<VertexID, VertexID> vertexMap;
+    VertexID newID = 0;
+    for (const auto& vertex : uniqueVertices) {
+        vertexMap[vertex] = newID++;
+    }
+
+    // Update the max indices
+    this->max_i_ = 0;
+    for (auto& row : i_) {
+        row = vertexMap[row];
+        this->max_i_ = std::max(this->max_i_.value_or(BaseVertexID{}), row);
+    }
+    this->max_j_ = 0;
+    for (auto& col : j_) {
+        col = vertexMap[col];
+        this->max_j_ = std::max(this->max_j_.value_or(BaseVertexID{}), col);
+    }
 }
 
 // =====================================================================
@@ -269,6 +339,7 @@ CSR::assemble(const Neighbours&  rows,
     auto j = this->ja_;
     j.insert(j.end(), cols.begin(), cols.end());
 
+    // Use the number of unique vertices as the size
     const auto thisNumRows = std::max(this->numRows_, maxRowIdx + 1);
     const auto thisNumCols = std::max(this->numCols_, maxColIdx + 1);
 
@@ -585,6 +656,11 @@ void
 Opm::utility::CSRGraphFromCoordinates<VertexID, TrackCompressedIdx, PermitSelfConnections>::
 compress(const Offset maxNumVertices, const bool expandExistingIdxMap)
 {
+    // Apply vertex merges to uncompressed data if any exist
+    if (!vertex_merges_.empty()) {
+        this->uncompressed_.applyVertexMerges(vertex_merges_);
+    }
+
     if (! this->uncompressed_.isValid()) {
         throw std::logic_error {
             "Cannot compress invalid connection list"
@@ -594,6 +670,18 @@ compress(const Offset maxNumVertices, const bool expandExistingIdxMap)
     this->csr_.merge(this->uncompressed_, maxNumVertices, expandExistingIdxMap);
 
     this->uncompressed_.clear();
+}
+
+template <typename VertexID, bool TrackCompressedIdx, bool PermitSelfConnections>
+void
+Opm::utility::CSRGraphFromCoordinates<VertexID, TrackCompressedIdx, PermitSelfConnections>::
+mergeVertices(const std::vector<VertexID>& vertices, VertexID target_vertex)
+{
+    for (const auto& v : vertices) {
+        if (v != target_vertex) {
+            vertex_merges_[v] = target_vertex;
+        }
+    }
 }
 
 template <typename VertexID, bool TrackCompressedIdx, bool PermitSelfConnections>
