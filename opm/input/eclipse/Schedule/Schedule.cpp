@@ -1717,6 +1717,13 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
         this->simUpdateFromPython->append(sim_update);
     }
 
+    std::unordered_map<std::string, double> convertToDoubleMap(const std::unordered_map<std::string, float>& target_wellpi) {
+        std::unordered_map<std::string, double> dtarget_wellpi;
+        for (const auto& w : target_wellpi) {
+            dtarget_wellpi.emplace(w.first, w.second);
+        }
+        return dtarget_wellpi;
+    }
 
     SimulatorUpdate
     Schedule::applyAction(const std::size_t reportStep,
@@ -1724,12 +1731,7 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
                           const Action::Result::MatchingEntities& matches,
                           const std::unordered_map<std::string, float>& target_wellpi)
     {
-        std::unordered_map<std::string, double> dtarget_wellpi;
-        for (const auto& w : target_wellpi) {
-            dtarget_wellpi.emplace(w.first, w.second);
-        }
-
-        return this->applyAction(reportStep, action, matches, dtarget_wellpi);
+        return this->applyAction(reportStep, action, matches, convertToDoubleMap(target_wellpi));
     }
 
 
