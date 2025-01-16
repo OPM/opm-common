@@ -1387,30 +1387,10 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
         return this->snapshots.back().well_order().names();
     }
 
-    std::vector<std::string> Schedule::groupNames(const std::string& pattern, std::size_t timeStep) const {
-        if (pattern.size() == 0)
-            return {};
-
-        const auto& group_order = this->snapshots[timeStep].group_order();
-
-        // Normal pattern matching
-        auto star_pos = pattern.find('*');
-        if (star_pos != std::string::npos) {
-            std::vector<std::string> names;
-            std::copy_if(group_order.begin(), group_order.end(),
-                         std::back_inserter(names),
-                         [&pattern](const auto& gname)
-                         {
-                             return shmatch(pattern, gname);
-                         });
-            return names;
-        }
-
-        // Normal group name without any special characters
-        if (group_order.has(pattern))
-            return { pattern };
-
-        return {};
+    std::vector<std::string> Schedule::groupNames(const std::string& pattern,
+                                                  const std::size_t timeStep) const
+    {
+        return this->snapshots[timeStep].group_order().names(pattern);
     }
 
     const std::vector<std::string>& Schedule::groupNames(std::size_t timeStep) const
