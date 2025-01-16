@@ -514,6 +514,7 @@ if(ENABLE_ECL_INPUT)
     tests/test_ActiveGridCells.cpp
     tests/test_CopyablePtr.cpp
     tests/test_CSRGraphFromCoordinates.cpp
+    tests/test_CSRGraphFromCoordinates_Merge.cpp
     tests/test_DatumDepth.cpp
     tests/test_ERsm.cpp
     tests/test_GuideRate.cpp
