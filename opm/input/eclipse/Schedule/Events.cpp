@@ -52,6 +52,11 @@ namespace Opm {
         this->m_events = 0;
     }
 
+    void Events::merge(const Events& events)
+    {
+        this->m_events |= events.m_events;
+    }
+
     bool Events::hasEvent(const std::uint64_t eventMask) const
     {
         return (this->m_events & eventMask) != 0;
@@ -118,6 +123,15 @@ namespace Opm {
 
         for (auto& eventPair : this->m_wellgroup_events) {
             eventPair.second.reset();
+        }
+    }
+
+    void WellGroupEvents::merge(const WellGroupEvents& events)
+    {
+        for (const auto& [wgName, wgEvents] : events.m_wellgroup_events) {
+            // We use operator[]() here to transparently handle 'wgName' not
+            // already being present in 'this->m_wellgroup_events'.
+            this->m_wellgroup_events[wgName].merge(wgEvents);
         }
     }
 

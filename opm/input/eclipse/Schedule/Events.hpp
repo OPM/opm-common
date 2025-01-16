@@ -142,6 +142,12 @@ namespace Opm
         /// Remove all events from collection.
         void reset();
 
+        /// Merge current event collection with other.
+        ///
+        /// Resulting collection (\c *this) has the union of the events in
+        /// both collections.
+        void merge(const Events& events);
+
         /// Event existence predicate.
         ///
         /// \param[in] eventMask Bit mask of events for which to check
@@ -218,6 +224,12 @@ namespace Opm
         /// Typically used only when preparing the events system for a new
         /// report step as part of Schedule object initialisation.
         void reset();
+
+        /// Merge current event collection with other.
+        ///
+        /// Resulting collection (\c *this) has the union of the events for
+        /// all wells and groups in both collections.
+        void merge(const WellGroupEvents& events);
 
         /// Check if any events have ever been registered for a named well
         /// or group.
