@@ -48,7 +48,6 @@ class CubicEOSParams
 
 public:
 
-    template<typename EOSType>
     void setEOSType(EOSType& eos_type)
     {
         EosType_= eos_type;
