@@ -19,6 +19,8 @@
 
 #include <opm/input/eclipse/Schedule/Well/NameOrder.hpp>
 
+#include <opm/common/utility/shmatch.hpp>
+
 #include <algorithm>
 #include <cstddef>
 #include <initializer_list>
@@ -127,6 +129,34 @@ bool GroupOrder::has(const std::string& gname) const
 {
     return std::find(this->name_list_.begin(), this->name_list_.end(), gname)
         != this->name_list_.end();
+}
+
+std::vector<std::string> GroupOrder::names(const std::string& pattern) const
+{
+    auto gnames = std::vector<std::string>{};
+
+    if (pattern.empty()) {
+        return gnames;
+    }
+
+    // Normal pattern matching
+    if (const auto star_pos = pattern.find('*');
+        star_pos != std::string::npos)
+    {
+        gnames.reserve(this->name_list_.size());
+
+        std::copy_if(this->name_list_.begin(),
+                     this->name_list_.end(),
+                     std::back_inserter(gnames),
+                     [&pattern](const auto& gname)
+                     { return shmatch(pattern, gname); });
+    }
+    else if (this->has(pattern)) {
+        // Normal group name without any special characters.
+        gnames.push_back(pattern);
+    }
+
+    return gnames;
 }
 
 std::vector<std::optional<std::string>> GroupOrder::restart_groups() const

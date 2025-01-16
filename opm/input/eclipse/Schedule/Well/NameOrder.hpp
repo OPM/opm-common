@@ -96,6 +96,15 @@ public:
         return this->name_list_;
     }
 
+    /// Retrieve list of group names matching a pattern
+    ///
+    /// Regular wild-card matching only.
+    ///
+    /// \param[in] pattern Group name or group name template.
+    ///
+    /// \return List of unique group names matching \p pattern.
+    std::vector<std::string> names(const std::string& pattern) const;
+
     /// Group name existence predicate.
     ///
     /// \param[in] gname Group name
