@@ -227,18 +227,17 @@ namespace Opm {
 
         bool hasGroup(const std::string& groupName, std::size_t timeStep) const;
         std::vector<std::string> groupNames(const std::string& pattern, std::size_t timeStep) const;
-        std::vector<std::string> groupNames(std::size_t timeStep) const;
+        const std::vector<std::string>& groupNames(std::size_t timeStep) const;
         std::vector<std::string> groupNames(const std::string& pattern) const;
-        std::vector<std::string> groupNames() const;
-        /*
-          The restart_groups function returns a vector of groups pointers which
-          is organized as follows:
+        const std::vector<std::string>& groupNames() const;
 
-            1. The number of elements is WELLDIMS::MAXGROUPS + 1
-            2. The elements are sorted according to group.insert_index().
-            3. If there are less than WELLDIMS::MAXGROUPS nullptr is used.
-            4. The very last element corresponds to the FIELD group.
-        */
+        // The restart_groups function returns a vector of groups pointers which
+        // is organized as follows:
+        //
+        //   1. The number of elements is WELLDIMS::MAXGROUPS + 1
+        //   2. The elements are sorted according to group.insert_index().
+        //   3. If there are less than WELLDIMS::MAXGROUPS nullptr is used.
+        //   4. The very last element corresponds to the FIELD group.
         std::vector<const Group*> restart_groups(std::size_t timeStep) const;
 
         std::vector<std::string> changed_wells(std::size_t reportStep) const;
@@ -249,10 +248,15 @@ namespace Opm {
         std::unordered_set<int> getAquiferFluxSchedule() const;
         std::vector<Well> getWells(std::size_t timeStep) const;
         std::vector<Well> getWellsatEnd() const;
-        std::vector<Well> getActiveWellsAtEnd() const; // Get wells that have been active any time during simulation
-        std::vector<std::string> getInactiveWellNamesAtEnd() const; // Get well names of wells that have never been active
 
-        const std::unordered_map<std::string, std::set<int>>& getPossibleFutureConnections() const;
+        // Get wells that have been active any time during simulation
+        std::vector<Well> getActiveWellsAtEnd() const;
+
+        // Get well names of wells that have never been active
+        std::vector<std::string> getInactiveWellNamesAtEnd() const;
+
+        const std::unordered_map<std::string, std::set<int>>&
+        getPossibleFutureConnections() const;
 
         void shut_well(const std::string& well_name, std::size_t report_step);
         void shut_well(const std::string& well_name);
