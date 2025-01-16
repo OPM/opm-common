@@ -86,16 +86,6 @@ for (const auto& sample : test_methods) {
     fluid_state.setPressure(FluidSystem::oilPhaseIdx, p_init);
     fluid_state.setPressure(FluidSystem::gasPhaseIdx, p_init);
 
-    fluid_state.setMoleFraction(FluidSystem::oilPhaseIdx, FluidSystem::Comp0Idx, comp[0]);
-    fluid_state.setMoleFraction(FluidSystem::oilPhaseIdx, FluidSystem::Comp1Idx, comp[1]);
-
-    fluid_state.setMoleFraction(FluidSystem::gasPhaseIdx, FluidSystem::Comp0Idx, comp[0]);
-    fluid_state.setMoleFraction(FluidSystem::gasPhaseIdx, FluidSystem::Comp1Idx, comp[1]);
-
-    // It is used here only for calculate the z
-    fluid_state.setSaturation(FluidSystem::oilPhaseIdx, sat[0]);
-    fluid_state.setSaturation(FluidSystem::gasPhaseIdx, sat[1]);
-
     fluid_state.setTemperature(temp);
 
     for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {

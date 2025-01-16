@@ -228,7 +228,7 @@ public:
     static bool flash_solve_scalar_(FluidState& fluid_state,
                                     const std::string& twoPhaseMethod,
                                     const Scalar flash_tolerance,
-				    const EOSType& eos_type,
+				                    const EOSType& eos_type,
                                     const int verbosity = 0)
     {
         // Do a stability test to check if cell is is_single_phase-phase (do for all cells the first time).
@@ -449,7 +449,7 @@ protected:
     template <class FlashFluidState, class ComponentVector>
     static void checkStability_(const FlashFluidState& fluid_state, bool& isTrivial, ComponentVector& K, ComponentVector& xy_loc,
                                 typename FlashFluidState::Scalar& S_loc, const ComponentVector& z, bool isGas, const EOSType& eos_type, 
-			 	int verbosity)
+			 	                int verbosity)
     {
         using FlashEval = typename FlashFluidState::Scalar;
         using CubicEOS = typename Opm::CubicEOS<Scalar, FluidSystem>;
@@ -625,7 +625,7 @@ protected:
                                    FlashFluidState& fluid_state,
                                    const ComponentVector& z,
                                    const Scalar tolerance,
-				   const EOSType& eos_type,
+				                   const EOSType& eos_type,
                                    int verbosity)
     {
         // Note: due to the need for inverse flash update for derivatives, the following two can be different
@@ -850,7 +850,7 @@ protected:
     template <typename FlashFluidStateScalar, typename FluidState>
     static void updateDerivativesTwoPhase_(const FlashFluidStateScalar& fluid_state_scalar,
                                            FluidState& fluid_state,
-					   const EOSType& eos_type)
+					                       const EOSType& eos_type)
     {
         using InputEval = typename FluidState::Scalar;
         using ComponentVector = Dune::FieldVector<InputEval, numComponents>;
@@ -1076,7 +1076,7 @@ protected:
                                                    const ComponentVector& z,
                                                    const bool newton_afterwards,
                                                    const Scalar flash_tolerance,
-						   const EOSType& eos_type,
+						                           const EOSType& eos_type,
                                                    const int verbosity)
     {
         // Determine max. iterations based on if it will be used as a standalone flash or as a pre-process to Newton (or other) method.
