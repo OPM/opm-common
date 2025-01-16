@@ -16,8 +16,8 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
-#ifndef WELL_ORDER_HPP
-#define WELL_ORDER_HPP
+#ifndef NAME_ORDER_HPP
+#define NAME_ORDER_HPP
 
 #include <cstddef>
 #include <initializer_list>
@@ -64,37 +64,88 @@ private:
     std::vector<std::string> m_name_list;
 };
 
+/// Collection of group names with built-in ordering
 class GroupOrder
 {
 public:
+    /// Default constructor
+    ///
+    /// Mainly useful as a target for object deserialisation.
     GroupOrder() = default;
+
+    /// Constructor
+    ///
+    /// \param[in] max_groups Maximum number of non-FIELD groups in model.
+    /// Typically taken from item 3 of the WELLDIMS keyword.
     explicit GroupOrder(std::size_t max_groups);
 
+    /// Create a serialisation test object.
     static GroupOrder serializationTestObject();
 
+    /// Add a group name to ordered collection.
+    ///
+    /// \param[in] name Group name.
     void add(const std::string& name);
 
-    const std::vector<std::string>& names() const;
-    bool has(const std::string& wname) const;
+    /// Retrieve current list of group names
+    ///
+    /// Includes the FIELD group, as the first element in the sequence (at
+    /// index zero).
+    const std::vector<std::string>& names() const
+    {
+        return this->name_list_;
+    }
+
+    /// Group name existence predicate.
+    ///
+    /// \param[in] gname Group name
+    ///
+    /// \return Whether or not \p gname exists in the current collection.
+    bool has(const std::string& gname) const;
+
+    /// Retrieve sequence of group names ordered appropriately for restart
+    /// file output.
+    ///
+    /// Sized according to the naximum number of groups in the model, and
+    /// the FIELD group placed last.  Nullopt in "unused" group name slots.
     std::vector<std::optional<std::string>> restart_groups() const;
 
+    /// Equality predicate.
+    ///
+    /// \param[in] other Object against which \code *this \endcode will be
+    /// tested for equality.
+    ///
+    /// \return Whether or not \code *this \endcode is the same as \p other.
     bool operator==(const GroupOrder& other) const;
 
-    auto begin() const { return this->m_name_list.begin(); }
-    auto end()   const { return this->m_name_list.end(); }
+    /// Start of group name sequence.
+    ///
+    /// Includes FIELD group.
+    auto begin() const { return this->name_list_.begin(); }
 
+    /// End of group name sequence.
+    auto end() const { return this->name_list_.end(); }
+
+    /// Convert between byte array and object representation.
+    ///
+    /// \tparam Serializer Byte array conversion protocol.
+    ///
+    /// \param[in,out] serializer Byte array conversion object.
     template <class Serializer>
     void serializeOp(Serializer& serializer)
     {
-        serializer(m_name_list);
-        serializer(m_max_groups);
+        serializer(this->name_list_);
+        serializer(this->max_groups_);
     }
 
 private:
-    std::size_t m_max_groups{};
-    std::vector<std::string> m_name_list{};
+    /// Maximum number of non-FIELD groups in model.
+    std::size_t max_groups_{};
+
+    /// Current list of group names, in order of add() function call sequence.
+    std::vector<std::string> name_list_{};
 };
 
 } // namespace Opm
 
-#endif  // WELL_ORDER_HPP
+#endif // NAME_ORDER_HPP

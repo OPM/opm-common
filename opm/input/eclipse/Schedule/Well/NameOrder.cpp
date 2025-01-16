@@ -99,7 +99,7 @@ const std::string& NameOrder::operator[](std::size_t index) const
 // --------------------------------------------------------------------------------
 
 GroupOrder::GroupOrder(const std::size_t max_groups)
-    : m_max_groups { max_groups }
+    : max_groups_ { max_groups }
 {
     this->add("FIELD");
 }
@@ -116,28 +116,22 @@ GroupOrder GroupOrder::serializationTestObject()
 
 void GroupOrder::add(const std::string& gname)
 {
-    auto iter = std::find(this->m_name_list.begin(),
-                          this->m_name_list.end(), gname);
-    if (iter == this->m_name_list.end()) {
-        this->m_name_list.push_back(gname);
+    auto iter = std::find(this->name_list_.begin(),
+                          this->name_list_.end(), gname);
+    if (iter == this->name_list_.end()) {
+        this->name_list_.push_back(gname);
     }
 }
 
 bool GroupOrder::has(const std::string& gname) const
 {
-    auto iter = std::find(this->m_name_list.begin(),
-                          this->m_name_list.end(), gname);
-    return iter != this->m_name_list.end();
-}
-
-const std::vector<std::string>& GroupOrder::names() const
-{
-    return this->m_name_list;
+    return std::find(this->name_list_.begin(), this->name_list_.end(), gname)
+        != this->name_list_.end();
 }
 
 std::vector<std::optional<std::string>> GroupOrder::restart_groups() const
 {
-    std::vector<std::optional<std::string>> groups(this->m_max_groups + 1);
+    auto groups = std::vector<std::optional<std::string>>(this->max_groups_ + 1);
 
     const auto& input_groups = this->names();
 
@@ -149,8 +143,8 @@ std::vector<std::optional<std::string>> GroupOrder::restart_groups() const
 
 bool GroupOrder::operator==(const GroupOrder& other) const
 {
-    return (this->m_max_groups == other.m_max_groups)
-        && (this->m_name_list == other.m_name_list);
+    return (this->max_groups_ == other.max_groups_)
+        && (this->name_list_ == other.name_list_);
 }
 
 } // namespace Opm
