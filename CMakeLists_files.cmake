@@ -472,6 +472,7 @@ list (APPEND TEST_SOURCE_FILES
       tests/test_RootFinders.cpp
       tests/test_SegmentMatcher.cpp
       tests/test_sparsevector.cpp
+      tests/test_ThreadSafeMapBuilder.cpp
       tests/test_uniformtablelinear.cpp
       tests/material/test_2dtables.cpp
       tests/material/test_blackoilfluidstate.cpp
@@ -830,6 +831,7 @@ list( APPEND PUBLIC_HEADER_FILES
       opm/common/utility/FileSystem.hpp
       opm/common/utility/gpuDecorators.hpp
       opm/common/utility/MemPacker.hpp
+      opm/common/utility/ThreadSafeMapBuilder.hpp
       opm/common/utility/numeric/cmp.hpp
       opm/common/utility/numeric/blas_lapack.h
       opm/common/utility/numeric/calculateCellVol.hpp
