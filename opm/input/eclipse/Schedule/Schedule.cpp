@@ -1627,13 +1627,13 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
         return DurationInSeconds(end_time - start_time).count();
     }
 
-    void Schedule::applyKeywords(std::vector<std::unique_ptr<DeckKeyword>>& keywords, std::unordered_map<std::string, double>& target_wellpi)
+    void Schedule::applyKeywords(std::vector<std::unique_ptr<DeckKeyword>>& keywords, std::unordered_map<std::string, double>& target_wellpi, bool action_mode)
     {
-        Schedule::applyKeywords(keywords, target_wellpi, this->current_report_step);
+        Schedule::applyKeywords(keywords, target_wellpi, action_mode, this->current_report_step);
     }
 
-    void Schedule::applyKeywords(std::vector<std::unique_ptr<DeckKeyword>>& keywords,
-                                 std::unordered_map<std::string, double>& target_wellpi, const std::size_t reportStep)
+    void Schedule::applyKeywords(std::vector<std::unique_ptr<DeckKeyword>>& keywords, std::unordered_map<std::string, double>& target_wellpi,
+                                 bool action_mode, const std::size_t reportStep)
     {
         if (reportStep < this->current_report_step) {
             throw std::invalid_argument {
@@ -1684,7 +1684,7 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
                                     errors,
                                     grid,
                                     matches,
-                                    /*welpi_action_mode=*/false,
+                                    action_mode,
                                     &sim_update,
                                     &target_wellpi,
                                     wpimult_global_factor);    
