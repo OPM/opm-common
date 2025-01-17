@@ -145,10 +145,11 @@ void handleWEFAC(HandlerContext& handlerContext)
         const auto well_names = handlerContext.wellNames(wellNamePattern);
 
         const double& efficiencyFactor = record.getItem("EFFICIENCY_FACTOR").get<double>(0);
+        const bool useEfficiencyInNetwork = DeckItem::to_bool(record.getItem("USE_WEFAC_IN_NETWORK").getTrimmedString(0));
 
         for (const auto& well_name : well_names) {
             auto well2 = handlerContext.state().wells.get( well_name );
-            if (well2.updateEfficiencyFactor(efficiencyFactor)){
+            if (well2.updateEfficiencyFactor(efficiencyFactor, useEfficiencyInNetwork)){
                 handlerContext.state().wellgroup_events().addEvent( well_name, ScheduleEvents::WELLGROUP_EFFICIENCY_UPDATE);
                 handlerContext.state().events().addEvent(ScheduleEvents::WELLGROUP_EFFICIENCY_UPDATE);
                 handlerContext.state().wells.update( std::move(well2) );

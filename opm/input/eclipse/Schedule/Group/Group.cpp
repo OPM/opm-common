@@ -227,7 +227,7 @@ Group::Group(const std::string& name, std::size_t insert_index_arg, double udq_u
     unit_system(unit_system_arg),
     group_type(GroupType::NONE),
     gefac(1),
-    transfer_gefac(true),
+    use_efficiency_in_network(true),
     production_properties(unit_system, name)
 {
     // All groups are initially created as children of the "FIELD" group.
@@ -267,7 +267,7 @@ Group Group::serializationTestObject()
     result.unit_system = UnitSystem::serializationTestObject();
     result.group_type = GroupType::PRODUCTION;
     result.gefac = 4.0;
-    result.transfer_gefac = true;
+    result.use_efficiency_in_network = true;
     result.parent_group = "test2";
     result.m_wells = {{"test3", "test4"}, {"test5", "test6"}};
     result.m_groups = {{"test7", "test8"}, {"test9", "test10"}};
@@ -698,27 +698,31 @@ void Group::delGroup(const std::string& group_name) {
         };
 }
 
-bool Group::update_gefac(double gf, bool transfer_gf) {
+bool Group::update_gefac(double gf, bool use_efficiency_in_network_arg) {
     bool update = false;
     if (this->gefac != gf) {
         this->gefac = gf;
         update = true;
     }
 
-    if (this->transfer_gefac != transfer_gf) {
-        this->transfer_gefac = transfer_gf;
+    if (this->use_efficiency_in_network != use_efficiency_in_network_arg) {
+        this->use_efficiency_in_network = use_efficiency_in_network_arg;
         update = true;
     }
 
     return update;
 }
 
-double Group::getGroupEfficiencyFactor() const {
+double Group::getGroupEfficiencyFactor(bool network) const {
+    if (network && !(this->use_efficiency_in_network)) {
+        return 1.0;
+    }
+
     return this->gefac;
 }
 
-bool Group::getTransferGroupEfficiencyFactor() const {
-    return this->transfer_gefac;
+bool Group::useEfficiencyInNetwork() const {
+    return this->use_efficiency_in_network;
 }
 
 const std::string& Group::parent() const {
@@ -1223,7 +1227,7 @@ bool Group::operator==(const Group& data) const
            this->unit_system == data.unit_system &&
            this->group_type == data.group_type &&
            this->getGroupEfficiencyFactor() == data.getGroupEfficiencyFactor() &&
-           this->getTransferGroupEfficiencyFactor() == data.getTransferGroupEfficiencyFactor() &&
+           this->useEfficiencyInNetwork() == data.useEfficiencyInNetwork() &&
            this->parent() == data.parent() &&
            this->m_wells == data.m_wells &&
            this->m_groups == data.m_groups &&

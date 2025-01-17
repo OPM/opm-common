@@ -303,6 +303,7 @@ Well::Well(const RestartIO::RstWell& rst_well,
     wtype(rst_well.wtype),
     guide_rate(guideRate(rst_well)),
     efficiency_factor(rst_well.efficiency_factor),
+    use_efficiency_in_network(true),   // @TODO@ Find and read the actual value from restart
     solvent_fraction(def_solvent_fraction),
     has_produced(rst_well.void_total != 0),
     has_injected(rst_well.void_inj_total != 0),    
@@ -514,6 +515,7 @@ Well::Well(const std::string& wname_arg,
     wtype(wtype_arg),
     guide_rate({true, -1, Well::GuideRateTarget::UNDEFINED,ParserKeywords::WGRUPCON::SCALING_FACTOR::defaultValue}),
     efficiency_factor(1.0),
+    use_efficiency_in_network(true),
     solvent_fraction(0.0),
     derive_refdepth_from_conns_{ ! ref_depth_arg.has_value() || (*ref_depth_arg < 0.0) },
     econ_limits(std::make_shared<WellEconProductionLimits>()),
@@ -561,6 +563,7 @@ Well Well::serializationTestObject()
     result.wtype = WellType(Phase::WATER);
     result.guide_rate = WellGuideRate::serializationTestObject();
     result.efficiency_factor = 8.0;
+    result.use_efficiency_in_network = true;
     result.solvent_fraction = 9.0;
     result.prediction_mode = false;
     result.derive_refdepth_from_conns_ = false;
@@ -597,14 +600,20 @@ bool Well::updateWPAVE(const PAvg& pavg)
     return true;
 }
 
-bool Well::updateEfficiencyFactor(double efficiency_factor_arg)
-{
+
+bool Well::updateEfficiencyFactor(double efficiency_factor_arg, bool use_efficiency_in_network_arg) {
+    bool update = false;
     if (this->efficiency_factor != efficiency_factor_arg) {
         this->efficiency_factor = efficiency_factor_arg;
-        return true;
+        update = true;
     }
 
-    return false;
+    if (this->use_efficiency_in_network != use_efficiency_in_network_arg) {
+        this->use_efficiency_in_network = use_efficiency_in_network_arg;
+        update = true;
+    }
+
+    return update;
 }
 
 bool Well::updateWellGuideRate(double guide_rate_arg)
@@ -1120,13 +1129,18 @@ double Well::getGuideRateScalingFactor() const
     return this->guide_rate.scale_factor;
 }
 
-double Well::getEfficiencyFactor() const
-{
+double Well::getEfficiencyFactor(bool network) const {
+    if (network && (!this->use_efficiency_in_network)) {
+        return 1.0;
+    }
     return this->efficiency_factor;
 }
 
-double Well::getSolventFraction() const
-{
+bool Well::useEfficiencyInNetwork() const {
+    return this->use_efficiency_in_network;
+}
+
+double Well::getSolventFraction() const {
     return this->solvent_fraction;
 }
 
@@ -2038,6 +2052,7 @@ bool Well::cmp_structure(const Well& other) const
         && (this->udq_undefined == other.udq_undefined)
         && (this->getPreferredPhase() == other.getPreferredPhase()) // wellType()
         && (this->getEfficiencyFactor() == other.getEfficiencyFactor())
+        && (this->use_efficiency_in_network == other.use_efficiency_in_network)
         && (this->getConnections() == other.getConnections())
         ;
 }
