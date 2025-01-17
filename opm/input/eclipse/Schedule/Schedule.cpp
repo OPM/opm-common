@@ -1627,13 +1627,13 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
         return DurationInSeconds(end_time - start_time).count();
     }
 
-    void Schedule::applyKeywords(std::vector<std::unique_ptr<DeckKeyword>>& keywords)
+    void Schedule::applyKeywords(std::vector<std::unique_ptr<DeckKeyword>>& keywords, std::unordered_map<std::string, double>& target_wellpi)
     {
-        Schedule::applyKeywords(keywords, this->current_report_step);
+        Schedule::applyKeywords(keywords, target_wellpi, this->current_report_step);
     }
 
     void Schedule::applyKeywords(std::vector<std::unique_ptr<DeckKeyword>>& keywords,
-                                 const std::size_t reportStep)
+                                 std::unordered_map<std::string, double>& target_wellpi, const std::size_t reportStep)
     {
         if (reportStep < this->current_report_step) {
             throw std::invalid_argument {
@@ -1654,7 +1654,6 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
         ErrorGuard errors;
         ScheduleGrid grid(this->completed_cells);
         SimulatorUpdate sim_update;
-        std::unordered_map<std::string, double> target_wellpi;
         std::unordered_map<std::string, double> wpimult_global_factor;
         const auto matches = Action::Result{false}.matches();
         const std::string prefix = "| "; // logger prefix string
@@ -1982,7 +1981,30 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
             recorded in a Action::SimulatorUpdate instance.
     */
 
-    SimulatorUpdate Schedule::runPyAction(std::size_t reportStep, const Action::PyAction& pyaction, Action::State& action_state, EclipseState& ecl_state, SummaryState& summary_state) {
+    SimulatorUpdate Schedule::runPyAction(std::size_t reportStep,
+                                          const Action::PyAction& pyaction,
+                                          Action::State& action_state,
+                                          EclipseState& ecl_state,
+                                          SummaryState& summary_state) {
+        return this->runPyAction(reportStep, pyaction, action_state, ecl_state, summary_state, std::unordered_map<std::string, double>{});
+    }
+
+    SimulatorUpdate Schedule::runPyAction(std::size_t reportStep,
+                                          const Action::PyAction& pyaction,
+                                          Action::State& action_state,
+                                          EclipseState& ecl_state,
+                                          SummaryState& summary_state,
+                                          const std::unordered_map<std::string, float>& target_wellpi) {
+        return this->runPyAction(reportStep, pyaction, action_state, ecl_state, summary_state, convertToDoubleMap(target_wellpi));
+    }
+
+    SimulatorUpdate Schedule::runPyAction(std::size_t reportStep,
+                                          const Action::PyAction& pyaction,
+                                          Action::State& action_state,
+                                          EclipseState& ecl_state,
+                                          SummaryState& summary_state,
+                                          const std::unordered_map<std::string, double>& target_wellpi)
+    {
         // Reset simUpdateFromPython, pyaction.run(...) will run through the PyAction script, the calls that trigger a simulator update will append this to simUpdateFromPython.
         this->simUpdateFromPython->reset();
         // Set the current_report_step to the report step in which this PyAction was triggered.
@@ -1994,7 +2016,7 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
             this->simUpdateFromPython->append(simUpdateFromActionXCallback);
         };
 
-        auto result = pyaction.run(ecl_state, *this, reportStep, summary_state, apply_action_callback);
+        auto result = pyaction.run(ecl_state, *this, reportStep, summary_state, apply_action_callback, target_wellpi);
         action_state.add_run(pyaction, result);
 
         // The whole pyaction script was executed, now the simUpdateFromPython is returned.

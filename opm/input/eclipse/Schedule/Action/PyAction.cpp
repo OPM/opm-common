@@ -133,8 +133,12 @@ PyAction::PyAction(std::shared_ptr<const Python> python, const std::string& name
 }
 
 
-bool PyAction::run(EclipseState& ecl_state, Schedule& schedule, std::size_t report_step, SummaryState& st,
-                   const std::function<void(const std::string&, const std::vector<std::string>&)>& actionx_callback) const
+bool PyAction::run(EclipseState& ecl_state,
+                   Schedule& schedule,
+                   std::size_t report_step,
+                   SummaryState& st,
+                   const std::function<void(const std::string&, const std::vector<std::string>&)>& actionx_callback,
+                   const std::unordered_map<std::string, double>& target_wellpi) const
 {
     /*
       For PyAction instances which have been constructed the 'normal' way
@@ -147,7 +151,7 @@ bool PyAction::run(EclipseState& ecl_state, Schedule& schedule, std::size_t repo
     if (!this->run_module)
         this->run_module = std::make_shared<Opm::PyRunModule>(schedule.python(), this->module_file);
 
-    return this->run_module->run(ecl_state, schedule, report_step, st, actionx_callback);
+    return this->run_module->run(ecl_state, schedule, report_step, st, actionx_callback, target_wellpi);
 }
 
 

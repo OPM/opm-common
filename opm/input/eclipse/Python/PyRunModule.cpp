@@ -82,9 +82,16 @@ bool PyRunModule::executeInnerRunFunction(const std::function<void(const std::st
     }
 }
 
-bool PyRunModule::run(EclipseState& ecl_state, Schedule& sched, std::size_t report_step, SummaryState& st, const std::function<void(const std::string&, const std::vector<std::string>&)>& actionx_callback) {
+bool PyRunModule::run(EclipseState& ecl_state,
+                      Schedule& sched,
+                      std::size_t report_step,
+                      SummaryState& st,
+                      const std::function<void(const std::string&, const std::vector<std::string>&)>& actionx_callback,
+                      const std::unordered_map<std::string, double>& target_wellpi)
+{
     // The attributes need to be set before the user defined module is loaded; it needs to be set in every call.
     this->opm_embedded.attr("current_report_step") = report_step;
+    this->opm_embedded.attr("_target_wellpi") = target_wellpi;
 
     if (!this->module) {
         // The attributes need to be set before the user defined module is loaded; they need to be set only once since they are shared pointers.

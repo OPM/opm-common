@@ -50,8 +50,12 @@ public:
     static PyAction serializationTestObject();
     PyAction() = default;
     PyAction(std::shared_ptr<const Python> python, const std::string& name, RunCount run_count, const std::string& module_file);
-    bool run(EclipseState& ecl_state, Schedule& schedule, std::size_t report_step, SummaryState& st,
-             const std::function<void(const std::string&, const std::vector<std::string>&)>& actionx_callback) const;
+    bool run(EclipseState& ecl_state,
+             Schedule& schedule,
+             std::size_t report_step,
+             SummaryState& st,
+             const std::function<void(const std::string&, const std::vector<std::string>&)>& actionx_callback,
+             const std::unordered_map<std::string, double>& target_wellpi = {}) const;
     const std::string& name() const;
     bool ready(const State& state) const;
     bool operator==(const PyAction& other) const;
