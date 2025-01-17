@@ -24,6 +24,8 @@
 #include <functional>
 
 #include <opm/input/eclipse/Schedule/Network/ExtNetwork.hpp>
+#include <opm/input/eclipse/Schedule/Well/Well.hpp>
+#include <opm/input/eclipse/Schedule/Schedule.hpp>
 
 namespace Opm {
 namespace Network {
@@ -34,6 +36,8 @@ ExtNetwork ExtNetwork::serializationTestObject() {
     object.insert_indexed_node_names = {"test1", "test2"};
     object.m_nodes = {{"test3", Node::serializationTestObject()}};
     object.m_is_standard_network = false;
+    object.m_needs_instantaneous_rates = false;
+    object.m_previous_update_report_step = -1;
     return object;
 }
 
@@ -52,7 +56,9 @@ void ExtNetwork::set_standard_network(bool is_standard_network) {
 bool ExtNetwork::operator==(const ExtNetwork& rhs) const {
     return this->m_branches == rhs.m_branches
         && this->insert_indexed_node_names == rhs.insert_indexed_node_names
-        && this->m_nodes == rhs.m_nodes;
+        && this->m_nodes == rhs.m_nodes
+        && this->m_needs_instantaneous_rates == rhs.m_needs_instantaneous_rates
+        && this->m_previous_update_report_step == rhs.m_previous_update_report_step;
 }
 
 
@@ -216,6 +222,37 @@ void ExtNetwork::update_node(Node node)
 
 
     this->m_nodes.insert_or_assign(name, std::move(node) );
+}
+
+// @TODO@ : Make this ACTION safe
+bool ExtNetwork::needs_instantaneous_rates(const Opm::Schedule& schedule, const int report_step) const {
+    // Just return value if we already checked this report step
+    if (report_step == this->m_previous_update_report_step) {
+        return this->m_needs_instantaneous_rates;
+    }
+    // Otherwise, check and update
+    for (const auto& it : this->m_nodes) {
+        const auto& node_name = it.second.name();
+        if (!schedule.hasGroup(node_name, report_step))
+            continue;
+        const auto& group = schedule.getGroup(node_name, report_step);
+        if (!group.useEfficiencyInNetwork()) {
+            this->m_needs_instantaneous_rates = true;
+            this->m_previous_update_report_step = report_step;
+            return true;
+        }
+        for (const std::string& well_name : group.wells()) {
+            const auto& well = schedule.getWell(well_name, report_step);
+            if(!well.useEfficiencyInNetwork()) {
+                this->m_needs_instantaneous_rates = true;
+                this->m_previous_update_report_step = report_step;
+                return true;
+            }
+        }
+    }
+    this->m_previous_update_report_step = report_step;
+    this->m_needs_instantaneous_rates = false;
+    return false;
 }
 
 void ExtNetwork::add_indexed_node_name(std::string name)
