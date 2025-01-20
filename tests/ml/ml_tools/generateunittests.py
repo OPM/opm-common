@@ -137,7 +137,7 @@ def output_testcase(model, test_x, test_y, name, eps):
 
     export_model(model, 'models/test_%s.model' % name)
 
-    path = f'./tests/ml/ml_tools/models/test_{name}.model'
+    path = f'ml/ml_tools/models/test_{name}.model'
     with open('include/test_%s.hpp' % name, 'w') as f:
         x_shape, x_data = c_array(test_x[0])
         y_shape, y_data = c_array(predict_y[0])
