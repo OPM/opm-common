@@ -111,7 +111,8 @@ bool PyAction::operator==(const PyAction& other) const {
 #ifndef EMBEDDED_PYTHON
 
 bool PyAction::run(EclipseState&, Schedule&, std::size_t, SummaryState&,
-                   const std::function<void(const std::string&, const std::vector<std::string>&)>&) const
+                   const std::function<void(const std::string&, const std::vector<std::string>&)>&,
+                   const std::unordered_map<std::string, double>&) const
 {
     return false;
 }
