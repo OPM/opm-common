@@ -850,7 +850,7 @@ protected:
     template <typename FlashFluidStateScalar, typename FluidState>
     static void updateDerivativesTwoPhase_(const FlashFluidStateScalar& fluid_state_scalar,
                                            FluidState& fluid_state,
-					                       const EOSType& eos_type)
+                                           const EOSType& eos_type)
     {
         using InputEval = typename FluidState::Scalar;
         using ComponentVector = Dune::FieldVector<InputEval, numComponents>;
