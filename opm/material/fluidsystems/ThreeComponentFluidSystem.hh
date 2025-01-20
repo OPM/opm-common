@@ -56,6 +56,7 @@ namespace Opm {
         static constexpr int numComponents = 3;
         static constexpr int numMisciblePhases=2;
         static constexpr int numMiscibleComponents = 3;
+        static constexpr bool waterEnabled = false;
         // TODO: phase location should be more general
         static constexpr int oilPhaseIdx = 0;
         static constexpr int gasPhaseIdx = 1;

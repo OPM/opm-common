@@ -56,20 +56,22 @@ namespace Opm {
  * \tparam Scalar  The floating-point type that specifies the precision of the numerical operations.
  * \tparam NumComp The number of the components in the fluid system.
  */
-    template<class Scalar, int NumComp>
-    class GenericOilGasWaterFluidSystem : public BaseFluidSystem<Scalar, GenericOilGasWaterFluidSystem<Scalar, NumComp> > {
+    template<class Scalar, int NumComp, bool enableWater>
+    class GenericOilGasWaterFluidSystem 
+        : public BaseFluidSystem<Scalar, GenericOilGasWaterFluidSystem<Scalar, NumComp, enableWater> > {
     public:
         // TODO: I do not think these should be constant in fluidsystem, will try to make it non-constant later
-        static constexpr int numPhases = 3;
+        static constexpr bool waterEnabled = enableWater;
+        static constexpr int numPhases = enableWater ? 3 : 2;
         static constexpr int numComponents = NumComp;
         static constexpr int numMisciblePhases = 2;
         // \Note: not totally sure when we should distinguish numMiscibleComponents and numComponents.
         // Possibly when with a dummy phase like water?
         static constexpr int numMiscibleComponents = NumComp;
         // TODO: phase location should be more general
-        static constexpr int waterPhaseIdx = 0;
-        static constexpr int oilPhaseIdx = 1;
-        static constexpr int gasPhaseIdx = 2;
+        static constexpr int oilPhaseIdx = 0;
+        static constexpr int gasPhaseIdx = 1;
+        static constexpr int waterPhaseIdx = 2;
 
         static constexpr int waterCompIdx = -1;
         static constexpr int oilCompIdx = 0;
@@ -77,9 +79,9 @@ namespace Opm {
         static constexpr int compositionSwitchIdx = -1; // equil initializer
 
         template <class ValueType>
-        using ParameterCache = Opm::PTFlashParameterCache<ValueType, GenericOilGasWaterFluidSystem<Scalar, NumComp>>;
-        using ViscosityModel = Opm::ViscosityModels<Scalar, GenericOilGasWaterFluidSystem<Scalar, NumComp>>;
-        using CubicEOS = Opm::CubicEOS<Scalar, GenericOilGasWaterFluidSystem<Scalar, NumComp>>;
+        using ParameterCache = Opm::PTFlashParameterCache<ValueType, GenericOilGasWaterFluidSystem<Scalar, NumComp, enableWater>>;
+        using ViscosityModel = Opm::ViscosityModels<Scalar, GenericOilGasWaterFluidSystem<Scalar, NumComp, enableWater>>;
+        using CubicEOS = Opm::CubicEOS<Scalar, GenericOilGasWaterFluidSystem<Scalar, NumComp, enableWater>>;
         using WaterPvt = WaterPvtMultiplexer<Scalar>;
 
         struct ComponentParam {
@@ -103,7 +105,16 @@ namespace Opm {
 
         static bool phaseIsActive(unsigned phaseIdx)
         {
-            return phaseIdx == oilPhaseIdx || phaseIdx == gasPhaseIdx || phaseIdx == waterPhaseIdx;
+            if constexpr (enableWater) {
+                assert(phaseIdx < numPhases);
+                return true;
+            }
+            else {
+                if (phaseIdx == waterPhaseIdx)
+                    return false;
+                assert(phaseIdx < numPhases);
+                return true;
+            }
         }
 
         template<typename Param>
@@ -130,7 +141,7 @@ namespace Opm {
             // TODO: we are not considering the EOS region for now
             const auto& comp_config = eclState.compositionalConfig();
             // how should we utilize the numComps from the CompositionalConfig?
-            using FluidSystem = GenericOilGasWaterFluidSystem<Scalar, NumComp>;
+            using FluidSystem = GenericOilGasWaterFluidSystem<Scalar, NumComp, enableWater>;
             const std::size_t num_comps = comp_config.numComps();
             // const std::size_t num_eos_region = comp_config.
             assert(num_comps == NumComp);
@@ -317,7 +328,7 @@ namespace Opm {
                                            unsigned phaseIdx,
                                            unsigned compIdx)
         {
-            if (phaseIdx == waterPhaseIdx)
+            if (waterEnabled && phaseIdx == static_cast<unsigned int>(waterPhaseIdx))
                 return LhsEval(0.0);
 
             assert(isConsistent());
@@ -454,17 +465,17 @@ namespace Opm {
         }
     };
 
-    template <class Scalar, int NumComp>
-    std::vector<typename GenericOilGasWaterFluidSystem<Scalar, NumComp>::ComponentParam>
-    GenericOilGasWaterFluidSystem<Scalar, NumComp>::component_param_;
+    template <class Scalar, int NumComp, bool enableWater>
+    std::vector<typename GenericOilGasWaterFluidSystem<Scalar, NumComp, enableWater>::ComponentParam>
+    GenericOilGasWaterFluidSystem<Scalar, NumComp, enableWater>::component_param_;
 
-    template <class Scalar, int NumComp>
+    template <class Scalar, int NumComp, bool enableWater>
     std::vector<Scalar>
-    GenericOilGasWaterFluidSystem<Scalar, NumComp>::interaction_coefficients_;
+    GenericOilGasWaterFluidSystem<Scalar, NumComp, enableWater>::interaction_coefficients_;
     
-    template <class Scalar, int NumComp>
+    template <class Scalar, int NumComp, bool enableWater>
     std::shared_ptr<WaterPvtMultiplexer<Scalar> > 
-    GenericOilGasWaterFluidSystem<Scalar, NumComp>::waterPvt_;
+    GenericOilGasWaterFluidSystem<Scalar, NumComp, enableWater>::waterPvt_;
 
 }
 #endif // OPM_GENERIC_OIL_GAS_WATER_FLUIDSYSTEM_HPP
