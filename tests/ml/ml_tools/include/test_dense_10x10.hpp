@@ -20,35 +20,34 @@
 */
 
 #include <filesystem>
-#include <fmt/format.h>
 #include <iostream>
 #include <opm/common/ErrorMacros.hpp>
+#include <fmt/format.h>
 
 namespace fs = std::filesystem;
 
 using namespace Opm;
 
-template <class Evaluation>
-bool
-test_dense_10x10(Evaluation* load_time, Evaluation* apply_time)
+template<class Evaluation>
+bool test_dense_10x10(Evaluation* load_time, Evaluation* apply_time)
 {
     printf("TEST dense_10x10\n");
 
     OPM_ERROR_IF(!load_time, "Invalid Evaluation");
     OPM_ERROR_IF(!apply_time, "Invalid Evaluation");
 
-    Opm::ML::Tensor<Evaluation> in {10};
-    in.data_ = {
-        0.71632093, 0.5381261, 0.30732742, 0.8299436, 0.4622948, 0.5228916, 0.37391856, 0.825228, 0.2711807, 0.8293046};
+    Opm::ML::Tensor<Evaluation> in{10};
+    in.data_ = {0.70113975,0.43434936,0.110627495,0.27274477,0.14443758,0.3920028,
+0.7452263,0.25239912,0.6042332,0.18160118};
 
-    Opm::ML::Tensor<Evaluation> out {1};
-    out.data_ = {-0.16240276};
+    Opm::ML::Tensor<Evaluation> out{1};
+    out.data_ = {0.7366353};
 
     Opm::ML::NNTimer load_timer;
     load_timer.start();
 
     Opm::ML::NNModel<Evaluation> model;
-    OPM_ERROR_IF(!model.loadModel("./tests/ml/ml_tools/models/test_dense_10x10.model"), "Failed to load model");
+    OPM_ERROR_IF(!model.loadModel(std::filesystem::current_path() / "./tests/ml/ml_tools/models/test_dense_10x10.model"), "Failed to load model");
 
     *load_time = load_timer.stop();
 
@@ -60,14 +59,9 @@ test_dense_10x10(Evaluation* load_time, Evaluation* apply_time)
 
     *apply_time = apply_timer.stop();
 
-    for (int i = 0; i < out.dims_[0]; i++) {
-        OPM_ERROR_IF((fabs(out(i).value() - predict(i).value()) > 1e-6),
-                     fmt::format(" Expected "
-                                 "{}"
-                                 " got "
-                                 "{}",
-                                 predict(i).value(),
-                                 out(i).value()));
+    for (int i = 0; i < out.dims_[0]; i++)
+    {
+        OPM_ERROR_IF ((fabs(out(i).value() - predict(i).value()) > 1e-6), fmt::format(" Expected " "{}" " got " "{}",predict(i).value(),out(i).value()));
     }
 
     return true;

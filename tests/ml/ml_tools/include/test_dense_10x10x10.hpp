@@ -20,52 +20,35 @@
 */
 
 #include <filesystem>
-#include <fmt/format.h>
 #include <iostream>
 #include <opm/common/ErrorMacros.hpp>
+#include <fmt/format.h>
 
 namespace fs = std::filesystem;
 
 using namespace Opm;
 
-template <class Evaluation>
-bool
-test_dense_10x10x10(Evaluation* load_time, Evaluation* apply_time)
+template<class Evaluation>
+bool test_dense_10x10x10(Evaluation* load_time, Evaluation* apply_time)
 {
     printf("TEST dense_10x10x10\n");
 
     OPM_ERROR_IF(!load_time, "Invalid Evaluation");
     OPM_ERROR_IF(!apply_time, "Invalid Evaluation");
 
-    Opm::ML::Tensor<Evaluation> in {10};
-    in.data_ = {0.8218585,
-                0.2038061,
-                0.60114473,
-                0.91319925,
-                0.6311588,
-                0.755427,
-                0.022193486,
-                0.58931535,
-                0.500539,
-                0.8522324};
+    Opm::ML::Tensor<Evaluation> in{10};
+    in.data_ = {0.5228799,0.57523704,0.84685576,0.14829047,0.7960157,0.039479025,
+0.97797215,0.6100903,0.12546267,0.74002624};
 
-    Opm::ML::Tensor<Evaluation> out {10};
-    out.data_ = {0.89424205,
-                 -0.0032651974,
-                 -0.25183868,
-                 0.2716509,
-                 -0.48769096,
-                 -0.5164977,
-                 0.0872943,
-                 -0.47359845,
-                 -0.6769342,
-                 0.5622284};
+    Opm::ML::Tensor<Evaluation> out{10};
+    out.data_ = {-0.12170901,-0.048709977,-0.5745884,-0.30567792,0.60515285,
+0.28995872,-1.0005777,0.01769743,-0.9789832,0.22675285};
 
     Opm::ML::NNTimer load_timer;
     load_timer.start();
 
     Opm::ML::NNModel<Evaluation> model;
-    OPM_ERROR_IF(!model.loadModel("./tests/ml/ml_tools/models/test_dense_10x10x10.model"), "Failed to load model");
+    OPM_ERROR_IF(!model.loadModel(std::filesystem::current_path() / "./tests/ml/ml_tools/models/test_dense_10x10x10.model"), "Failed to load model");
 
     *load_time = load_timer.stop();
 
@@ -77,14 +60,9 @@ test_dense_10x10x10(Evaluation* load_time, Evaluation* apply_time)
 
     *apply_time = apply_timer.stop();
 
-    for (int i = 0; i < out.dims_[0]; i++) {
-        OPM_ERROR_IF((fabs(out(i).value() - predict(i).value()) > 1e-6),
-                     fmt::format(" Expected "
-                                 "{}"
-                                 " got "
-                                 "{}",
-                                 predict(i).value(),
-                                 out(i).value()));
+    for (int i = 0; i < out.dims_[0]; i++)
+    {
+        OPM_ERROR_IF ((fabs(out(i).value() - predict(i).value()) > 1e-6), fmt::format(" Expected " "{}" " got " "{}",predict(i).value(),out(i).value()));
     }
 
     return true;
