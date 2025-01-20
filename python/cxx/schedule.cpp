@@ -159,22 +159,41 @@ namespace {
         }
         return keywords;
     }
+
+    std::pair<std::unordered_map<std::string, double>, bool> getTargetWellPIAndActionMode() {
+        py::module opm_embedded = py::module::import("opm_embedded");
+        py::object target_wellpi_obj = opm_embedded.attr("_target_wellpi");
+        py::object action_mode_obj = opm_embedded.attr("_action_mode");
+        return std::make_pair(target_wellpi_obj.cast<std::unordered_map<std::string, double>>(), action_mode_obj.cast<bool>());
+    }
+
+    std::pair<std::unordered_map<std::string, double>,bool> possiblyGetTargetWellPIAndActionMode(const std::string& deck_string) {
+        if (deck_string.find("WELPI", 0) != std::string::npos) {
+            return getTargetWellPIAndActionMode();
+        }
+        // Return an empty map and false if the keyword WELPI, which needs the target_wellpi map, is not in the deck_string
+        return std::make_pair(std::unordered_map<std::string, double>{}, false);
+    }
+
     void insert_keywords(Schedule& sch, const std::string& deck_string, std::size_t report_step, const UnitSystem& unit_system)
     {
         auto kws = parseKeywords(deck_string, unit_system);
-        sch.applyKeywords(kws, report_step);
+        auto twpiaam = possiblyGetTargetWellPIAndActionMode(deck_string);
+        sch.applyKeywords(kws, twpiaam.first, twpiaam.second , report_step);
     }
 
     void insert_keywords(Schedule& sch, const std::string& deck_string, std::size_t report_step)
     {
         auto kws = parseKeywords(deck_string,sch.getUnits());
-        sch.applyKeywords(kws, report_step);
+        auto twpiaam = possiblyGetTargetWellPIAndActionMode(deck_string);
+        sch.applyKeywords(kws, twpiaam.first, twpiaam.second , report_step);
     }
 
     void insert_keywords(Schedule& sch, const std::string& deck_string)
     {
         auto kws = parseKeywords(deck_string,sch.getUnits());
-        sch.applyKeywords(kws);
+        auto twpiaam = possiblyGetTargetWellPIAndActionMode(deck_string);
+        sch.applyKeywords(kws, twpiaam.first, twpiaam.second );
     }
 
     // NOTE: this overload does currently not work, see PR #2833. The plan
@@ -185,11 +204,19 @@ namespace {
         Schedule& sch, py::list& deck_keywords, std::size_t report_step)
     {
         std::vector<std::unique_ptr<DeckKeyword>> keywords;
+        bool contains_wellpi_keywords = false;
+
         for (py::handle item : deck_keywords) {
             DeckKeyword &keyword = item.cast<DeckKeyword&>();
             keywords.push_back(std::make_unique<DeckKeyword>(keyword));
+            const std::string& keyword_name = keyword.name();
+            if (keyword_name == "WELPI") {
+                contains_wellpi_keywords = true;
+            }
         }
-        sch.applyKeywords(keywords, report_step);
+        // Return an empty map and false if the keyword WELPI, which needs the target_wellpi map, is not in the deck_keywords
+        auto twpiaam = contains_wellpi_keywords ? getTargetWellPIAndActionMode() : std::make_pair(std::unordered_map<std::string, double>{}, false);
+        sch.applyKeywords(keywords, twpiaam.first, twpiaam.second , report_step);
     }
 }
 

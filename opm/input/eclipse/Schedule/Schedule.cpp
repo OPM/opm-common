@@ -393,7 +393,7 @@ namespace Opm {
                                  ErrorGuard& errors,
                                  const ScheduleGrid& grid,
                                  const Action::Result::MatchingEntities& matches,
-                                 const bool actionx_mode,
+                                 const bool action_mode,
                                  SimulatorUpdate* sim_update,
                                  const std::unordered_map<std::string, double>* target_wellpi,
                                  std::unordered_map<std::string, double>& wpimult_global_factor,
@@ -401,7 +401,7 @@ namespace Opm {
                                  std::set<std::string>* compsegs_wells)
     {
         HandlerContext handlerContext { *this, block, keyword, grid, currentStep,
-                                        matches, actionx_mode,
+                                        matches, action_mode,
                                         parseContext, errors, sim_update, target_wellpi,
                                         wpimult_global_factor, welsegs_wells, compsegs_wells};
 
@@ -1627,13 +1627,13 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
         return DurationInSeconds(end_time - start_time).count();
     }
 
-    void Schedule::applyKeywords(std::vector<std::unique_ptr<DeckKeyword>>& keywords)
+    void Schedule::applyKeywords(std::vector<std::unique_ptr<DeckKeyword>>& keywords, std::unordered_map<std::string, double>& target_wellpi, bool action_mode)
     {
-        Schedule::applyKeywords(keywords, this->current_report_step);
+        Schedule::applyKeywords(keywords, target_wellpi, action_mode, this->current_report_step);
     }
 
-    void Schedule::applyKeywords(std::vector<std::unique_ptr<DeckKeyword>>& keywords,
-                                 const std::size_t reportStep)
+    void Schedule::applyKeywords(std::vector<std::unique_ptr<DeckKeyword>>& keywords, std::unordered_map<std::string, double>& target_wellpi,
+                                 bool action_mode, const std::size_t reportStep)
     {
         if (reportStep < this->current_report_step) {
             throw std::invalid_argument {
@@ -1654,7 +1654,6 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
         ErrorGuard errors;
         ScheduleGrid grid(this->completed_cells);
         SimulatorUpdate sim_update;
-        std::unordered_map<std::string, double> target_wellpi;
         std::unordered_map<std::string, double> wpimult_global_factor;
         const auto matches = Action::Result{false}.matches();
         const std::string prefix = "| "; // logger prefix string
@@ -1664,7 +1663,7 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
         auto& input_block = this->m_sched_deck[reportStep];
         ScheduleLogger logger(ScheduleLogger::select_stream(false, false), // will log to OpmLog::info
                               prefix, this->m_sched_deck.location());
-        
+
         for (const auto& keyword : keywords) {
             const auto valid = Action::PyAction::valid_keyword(keyword->name());
 
@@ -1685,7 +1684,7 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
                                     errors,
                                     grid,
                                     matches,
-                                    /* actionx_mode= */ false,
+                                    action_mode,
                                     &sim_update,
                                     &target_wellpi,
                                     wpimult_global_factor);    
@@ -1717,6 +1716,13 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
         this->simUpdateFromPython->append(sim_update);
     }
 
+    std::unordered_map<std::string, double> convertToDoubleMap(const std::unordered_map<std::string, float>& target_wellpi) {
+        std::unordered_map<std::string, double> dtarget_wellpi;
+        for (const auto& w : target_wellpi) {
+            dtarget_wellpi.emplace(w.first, w.second);
+        }
+        return dtarget_wellpi;
+    }
 
     SimulatorUpdate
     Schedule::applyAction(const std::size_t reportStep,
@@ -1724,12 +1730,7 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
                           const Action::Result::MatchingEntities& matches,
                           const std::unordered_map<std::string, float>& target_wellpi)
     {
-        std::unordered_map<std::string, double> dtarget_wellpi;
-        for (const auto& w : target_wellpi) {
-            dtarget_wellpi.emplace(w.first, w.second);
-        }
-
-        return this->applyAction(reportStep, action, matches, dtarget_wellpi);
+        return this->applyAction(reportStep, action, matches, convertToDoubleMap(target_wellpi));
     }
 
 
@@ -1980,7 +1981,30 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
             recorded in a Action::SimulatorUpdate instance.
     */
 
-    SimulatorUpdate Schedule::runPyAction(std::size_t reportStep, const Action::PyAction& pyaction, Action::State& action_state, EclipseState& ecl_state, SummaryState& summary_state) {
+    SimulatorUpdate Schedule::runPyAction(std::size_t reportStep,
+                                          const Action::PyAction& pyaction,
+                                          Action::State& action_state,
+                                          EclipseState& ecl_state,
+                                          SummaryState& summary_state) {
+        return this->runPyAction(reportStep, pyaction, action_state, ecl_state, summary_state, std::unordered_map<std::string, double>{});
+    }
+
+    SimulatorUpdate Schedule::runPyAction(std::size_t reportStep,
+                                          const Action::PyAction& pyaction,
+                                          Action::State& action_state,
+                                          EclipseState& ecl_state,
+                                          SummaryState& summary_state,
+                                          const std::unordered_map<std::string, float>& target_wellpi) {
+        return this->runPyAction(reportStep, pyaction, action_state, ecl_state, summary_state, convertToDoubleMap(target_wellpi));
+    }
+
+    SimulatorUpdate Schedule::runPyAction(std::size_t reportStep,
+                                          const Action::PyAction& pyaction,
+                                          Action::State& action_state,
+                                          EclipseState& ecl_state,
+                                          SummaryState& summary_state,
+                                          const std::unordered_map<std::string, double>& target_wellpi)
+    {
         // Reset simUpdateFromPython, pyaction.run(...) will run through the PyAction script, the calls that trigger a simulator update will append this to simUpdateFromPython.
         this->simUpdateFromPython->reset();
         // Set the current_report_step to the report step in which this PyAction was triggered.
@@ -1992,7 +2016,7 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
             this->simUpdateFromPython->append(simUpdateFromActionXCallback);
         };
 
-        auto result = pyaction.run(ecl_state, *this, reportStep, summary_state, apply_action_callback);
+        auto result = pyaction.run(ecl_state, *this, reportStep, summary_state, apply_action_callback, target_wellpi);
         action_state.add_run(pyaction, result);
 
         // The whole pyaction script was executed, now the simUpdateFromPython is returned.

@@ -305,7 +305,25 @@ namespace Opm {
           Python code. he return value from runPyAction() comes from such a
           internal ACTIONX.
         */
-        SimulatorUpdate runPyAction(std::size_t reportStep, const Action::PyAction& pyaction, Action::State& action_state, EclipseState& ecl_state, SummaryState& summary_state);
+        SimulatorUpdate runPyAction(std::size_t reportStep,
+                                    const Action::PyAction& pyaction,
+                                    Action::State& action_state,
+                                    EclipseState& ecl_state,
+                                    SummaryState& summary_state);
+
+        SimulatorUpdate runPyAction(std::size_t reportStep,
+                                    const Action::PyAction& pyaction,
+                                    Action::State& action_state,
+                                    EclipseState& ecl_state,
+                                    SummaryState& summary_state,
+                                    const std::unordered_map<std::string, double>& target_wellpi);
+
+        SimulatorUpdate runPyAction(std::size_t reportStep,
+                                    const Action::PyAction& pyaction,
+                                    Action::State& action_state,
+                                    EclipseState& ecl_state,
+                                    SummaryState& summary_state,
+                                    const std::unordered_map<std::string, float>& target_wellpi);
 
         SimulatorUpdate modifyCompletions(const std::size_t reportStep,
                                           const std::map<std::string, std::vector<Connection>>& extraConns);
@@ -333,8 +351,8 @@ namespace Opm {
           for the schedule instances created by loading a restart file.
         */
         static bool cmp(const Schedule& sched1, const Schedule& sched2, std::size_t report_step);
-        void applyKeywords(std::vector<std::unique_ptr<DeckKeyword>>& keywords, std::size_t report_step);
-        void applyKeywords(std::vector<std::unique_ptr<DeckKeyword>>& keywords);
+        void applyKeywords(std::vector<std::unique_ptr<DeckKeyword>>& keywords, std::unordered_map<std::string, double>& target_wellpi, bool action_mode, std::size_t report_step);
+        void applyKeywords(std::vector<std::unique_ptr<DeckKeyword>>& keywords, std::unordered_map<std::string, double>& target_wellpi, bool action_mode);
 
         template<class Serializer>
         void serializeOp(Serializer& serializer)
@@ -474,7 +492,7 @@ namespace Opm {
                            ErrorGuard& errors,
                            const ScheduleGrid& grid,
                            const Action::Result::MatchingEntities& matches,
-                           bool actionx_mode,
+                           bool action_mode,
                            SimulatorUpdate* sim_update,
                            const std::unordered_map<std::string, double>* target_wellpi,
                            std::unordered_map<std::string, double>& wpimult_global_factor,

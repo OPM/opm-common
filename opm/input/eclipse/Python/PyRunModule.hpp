@@ -42,7 +42,12 @@ class __attribute__((visibility("default"))) PyRunModule {
 public:
     PyRunModule(std::shared_ptr<const Python> python, const std::string& fname);
 
-    bool run(EclipseState& ecl_state, Schedule& sched, std::size_t report_step, SummaryState& st, const std::function<void(const std::string&, const std::vector<std::string>&)>& actionx_callback);
+    bool run(EclipseState& ecl_state,
+             Schedule& sched,
+             std::size_t report_step,
+             SummaryState& st,
+             const std::function<void(const std::string&, const std::vector<std::string>&)>& actionx_callback,
+             const std::unordered_map<std::string, double>& target_wellpi = {});
 
 private:
     py::object run_function = py::none();
