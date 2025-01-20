@@ -25,6 +25,7 @@
 #include <optional>
 #include <string>
 #include <vector>
+#include <set>
 #include <functional>
 
 #include <opm/input/eclipse/Schedule/Network/Branch.hpp>
@@ -47,13 +48,13 @@ public:
     void drop_branch(const std::string& uptree_node, const std::string& downtree_node);
     bool has_node(const std::string& name) const;
     void update_node(Node node);
-    bool needs_instantaneous_rates(const Opm::Schedule& schedule, const int report_step) const;
     const Node& node(const std::string& name) const;
     std::vector<std::reference_wrapper<const Node>> roots() const;
     std::vector<Branch> downtree_branches(const std::string& node) const;
     std::vector<const Branch*> branches() const;
     std::optional<Branch> uptree_branch(const std::string& node) const;
     std::vector<std::string> node_names() const;
+    std::set<std::string> leaf_nodes() const;
     int NoOfBranches() const;
     int NoOfNodes() const;
 
@@ -67,8 +68,6 @@ public:
         serializer(insert_indexed_node_names);
         serializer(m_nodes);
         serializer(m_is_standard_network);
-        serializer(m_needs_instantaneous_rates);
-        serializer(m_previous_update_report_step);
     }
 
 private:
@@ -76,8 +75,6 @@ private:
     std::vector<std::string> insert_indexed_node_names;
     std::map<std::string, Node> m_nodes;
     bool m_is_standard_network{false};
-    mutable bool m_needs_instantaneous_rates{false};
-    mutable int  m_previous_update_report_step{-1};
     bool has_indexed_node_name(const std::string& name) const;
     void add_indexed_node_name(std::string name);
 };
