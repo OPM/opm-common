@@ -394,7 +394,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(ThreeComponentFluidSystem, Scalar, ScalarTypes)
 BOOST_AUTO_TEST_CASE_TEMPLATE(GenericFluidSystem, Scalar, ScalarTypes)
 {
     using Evaluation = Opm::DenseAd::Evaluation<Scalar, 4>;
-    using FluidSystem = Opm::GenericOilGasWaterFluidSystem<Scalar, 4>;
+    using FluidSystem = Opm::GenericOilGasWaterFluidSystem<Scalar, 4, true>;
 
     using CompParm = typename FluidSystem::ComponentParam;
     using CO2 = Opm::SimpleCO2<Scalar>;

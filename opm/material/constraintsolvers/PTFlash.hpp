@@ -71,6 +71,7 @@ class PTFlash
     static constexpr int numMiscibleComponents = FluidSystem::numMiscibleComponents;
     static constexpr int numMisciblePhases = FluidSystem::numMisciblePhases; //oil, gas
     static constexpr int numEq = numMisciblePhases + numMisciblePhases * numMiscibleComponents;
+    static constexpr bool waterEnabled = FluidSystem::waterEnabled;
 
     using EOSType = CompositionalConfig::EOSType;
 
@@ -868,7 +869,7 @@ protected:
 
         // getting the secondary Jocobian matrix
         constexpr size_t num_equations = numMisciblePhases * numMiscibleComponents + 1;
-        constexpr size_t secondary_num_pv = numComponents + 2; // pressure, z for all the components
+        constexpr size_t secondary_num_pv = numComponents + (waterEnabled ? 2 : 1); // pressure, z for all the components
         using SecondaryEval = Opm::DenseAd::Evaluation<double, secondary_num_pv>; // three z and one pressure
         using SecondaryComponentVector = Dune::FieldVector<SecondaryEval, numComponents>;
         using SecondaryFlashFluidState = Opm::CompositionalFluidState<SecondaryEval, FluidSystem>;
