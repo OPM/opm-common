@@ -18,6 +18,7 @@
 */
 #include "config.h"
 #include <memory>
+#include <sstream>
 
 #define BOOST_TEST_MODULE PY_ACTION_TESTER
 #include <boost/test/unit_test.hpp>
@@ -29,6 +30,9 @@
 #include <opm/input/eclipse/Schedule/Action/PyAction.hpp>
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 #include <opm/input/eclipse/Schedule/SummaryState.hpp>
+
+#include <opm/common/OpmLog/OpmLog.hpp>
+#include <opm/common/OpmLog/StreamLog.hpp>
 
 using namespace Opm;
 
@@ -84,6 +88,37 @@ BOOST_AUTO_TEST_CASE(ParsePYACTION_ModuleMissing) {
 
     const std::string& missing_module = deck.makeDeckPath("no_such_module.py");
     BOOST_CHECK_THROW(Action::PyAction(python , "ACT2", run_count, missing_module), std::invalid_argument);
+}
+
+BOOST_AUTO_TEST_CASE(PYACTION_Log) {
+    std::ostringstream log_stream; // Custom stream for capturing log messages
+    std::shared_ptr<Opm::StreamLog> stream_log = std::make_shared<Opm::StreamLog>(log_stream, Opm::Log::DefaultMessageTypes);
+
+    OpmLog::addBackend( "STREAM" , stream_log);
+
+    Parser parser;
+    auto deck = parser.parseFile("PYACTION.DATA");
+    const std::string& logger_module = deck.makeDeckPath("logger.py");
+
+    auto python = std::make_shared<Python>();
+    Action::PyAction pyaction(python , "ACT3", Action::PyAction::RunCount::unlimited, logger_module);
+
+    const std::function<void(const std::string&, const std::vector<std::string>&)> actionx_callback;
+    EclipseState state;
+    Schedule schedule;
+    SummaryState summary_state;
+
+    pyaction.run(state, schedule, 0, summary_state, actionx_callback);
+    std::string log_output = log_stream.str();
+
+    BOOST_CHECK(log_output.find("Info from logger.py!") != std::string::npos);
+    BOOST_CHECK(log_output.find("Warning from logger.py!") != std::string::npos);
+    BOOST_CHECK(log_output.find("Error from logger.py!") != std::string::npos);
+    BOOST_CHECK(log_output.find("Problem from logger.py!") != std::string::npos);
+    BOOST_CHECK(log_output.find("Bug from logger.py!") != std::string::npos);
+    BOOST_CHECK(log_output.find("Debug from logger.py!") != std::string::npos);
+    BOOST_CHECK(log_output.find("Note from logger.py!") != std::string::npos);
+
 }
 
 #endif
