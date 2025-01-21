@@ -168,6 +168,13 @@ namespace Opm { namespace utility {
         /// \param[in] target_vertex The vertex ID that will represent the merged group
         void mergeVertices(const std::vector<VertexID>& vertices, VertexID target_vertex);
 
+        /// Get the final vertex ID after all merges and renumbering for a given original vertex ID.
+        /// Returns the original ID if no merging or renumbering has been done.
+        ///
+        /// \param[in] originalVertexID The original vertex ID to look up
+        /// \return The final vertex ID after merges and renumbering
+        VertexID getFinalVertexID(VertexID originalVertexID) const;
+
     private:
         /// Coordinate format representation of individual contributions to
         /// inter-region flows.
@@ -227,10 +234,10 @@ namespace Opm { namespace utility {
             const Neighbours& columnIndices() const;
 
             /// Helper function to get the final vertex ID after all merges
-            VertexID getFinalVertexID(VertexID v, const std::map<VertexID, VertexID>& vertex_merges) const;
+            VertexID findMergedVertexID(VertexID v, const std::map<VertexID, VertexID>& vertex_merges) const;
 
             /// Apply vertex merges to the stored connections and create compact numbering
-            void applyVertexMerges(const std::map<VertexID, VertexID>& vertex_merges);
+            std::map<VertexID, VertexID> applyVertexMerges(const std::map<VertexID, VertexID>& vertex_merges);
 
         private:
             /// Zero-based row/source region indices.
@@ -541,6 +548,8 @@ namespace Opm { namespace utility {
         /// Map of vertices to be merged during compression
         std::map<VertexID, VertexID> vertex_merges_{};
 
+        /// Mapping from original vertex IDs to final vertex IDs after merging and renumbering
+        std::map<VertexID, VertexID> vertex_mapping_{};
     };
 
 }} // namespace Opm::utility

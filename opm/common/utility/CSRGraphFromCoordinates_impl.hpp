@@ -140,7 +140,7 @@ Connections::columnIndices() const
 template <typename VertexID, bool TrackCompressedIdx, bool PermitSelfConnections>
 VertexID
 Opm::utility::CSRGraphFromCoordinates<VertexID, TrackCompressedIdx, PermitSelfConnections>::
-Connections::getFinalVertexID(VertexID v, const std::map<VertexID, VertexID>& vertex_merges) const
+Connections::findMergedVertexID(VertexID v, const std::map<VertexID, VertexID>& vertex_merges) const
 {
     auto it = vertex_merges.find(v);
     while (it != vertex_merges.end()) {
@@ -151,16 +151,19 @@ Connections::getFinalVertexID(VertexID v, const std::map<VertexID, VertexID>& ve
 }
 
 template <typename VertexID, bool TrackCompressedIdx, bool PermitSelfConnections>
-void
+std::map<VertexID, VertexID>
 Opm::utility::CSRGraphFromCoordinates<VertexID, TrackCompressedIdx, PermitSelfConnections>::
 Connections::applyVertexMerges(const std::map<VertexID, VertexID>& vertex_merges)
 {
+    std::map<VertexID, VertexID> vertex_mapping;
+    VertexID max_original_vertex_id = std::max(max_i_.value_or(BaseVertexID{}), max_j_.value_or(BaseVertexID{}));
+
     // Apply vertex merges to both i_ and j_ in place
     for (auto& row : i_) {
-        row = getFinalVertexID(row, vertex_merges);
+        row = findMergedVertexID(row, vertex_merges);
     }
     for (auto& col : j_) {
-        col = getFinalVertexID(col, vertex_merges);
+        col = findMergedVertexID(col, vertex_merges);
     }
 
     // When self-connections are not permitted, remove them
@@ -203,6 +206,13 @@ Connections::applyVertexMerges(const std::map<VertexID, VertexID>& vertex_merges
         col = vertexMap[col];
         this->max_j_ = std::max(this->max_j_.value_or(BaseVertexID{}), col);
     }
+
+    for (auto vertex = 0; vertex < max_original_vertex_id + 1; ++vertex) {
+        auto merged_id = findMergedVertexID(vertex, vertex_merges);
+        vertex_mapping[vertex] = vertexMap[merged_id];
+    }
+
+    return vertex_mapping;
 }
 
 // =====================================================================
@@ -658,7 +668,7 @@ compress(const Offset maxNumVertices, const bool expandExistingIdxMap)
 {
     // Apply vertex merges to uncompressed data if any exist
     if (!vertex_merges_.empty()) {
-        this->uncompressed_.applyVertexMerges(vertex_merges_);
+        vertex_mapping_ = this->uncompressed_.applyVertexMerges(vertex_merges_);
     }
 
     if (! this->uncompressed_.isValid()) {
@@ -670,6 +680,19 @@ compress(const Offset maxNumVertices, const bool expandExistingIdxMap)
     this->csr_.merge(this->uncompressed_, maxNumVertices, expandExistingIdxMap);
 
     this->uncompressed_.clear();
+}
+
+template <typename VertexID, bool TrackCompressedIdx, bool PermitSelfConnections>
+VertexID
+Opm::utility::CSRGraphFromCoordinates<VertexID, TrackCompressedIdx, PermitSelfConnections>::
+getFinalVertexID(VertexID v) const
+{
+    if (vertex_mapping_.empty()) {
+        return v;
+    }
+    else {
+        return vertex_mapping_.at(v);
+    }
 }
 
 template <typename VertexID, bool TrackCompressedIdx, bool PermitSelfConnections>
