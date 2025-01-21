@@ -259,9 +259,9 @@ namespace Opm {
         //! \copydoc BaseFluidSystem::phaseName
         static std::string_view phaseName(unsigned phaseIdx)
         {
-                static const std::string_view name[] = {"w",  // aqueous phase
-                                                        "o",  // oleic phase
-                                                        "g"};  // gas phase
+                static const std::string_view name[] = {"o",  // oleic phase
+                                                        "g",  // gas phase
+                                                        "w"}  // aqueous phase
 
                 assert(phaseIdx < numPhases);
                 return name[phaseIdx];
