@@ -372,12 +372,21 @@ void RstState::load_tuning(const std::vector<int>& intehead,
     this->tuning.MXWSIT  = intehead[ VI::intehead::MXWSIT ];
     this->tuning.MXWPIT  = intehead[ VI::intehead::MXWPIT ];
 
-    double tsinit = this->unit_system.to_si(M::time, doubhead[VI::doubhead::TsInit]);
-    //tuning.TSINIT = tsinit > 0 ? std::optional<double>{ tsinit } : std::nullopt;
-    tuning.TSINIT = VI::DoubHeadValue::TSINITHasNoValue(tsinit) ? std::nullopt : std::optional<double>{ tsinit };
+    this->tuning.WSEG_MAX_RESTART = intehead[ VI::intehead::WSEGITR_IT2 ];
+
+    {
+        const auto tsinit = this->unit_system
+            .to_si(M::time, doubhead[VI::doubhead::TsInit]);
+
+        tuning.TSINIT = VI::DoubHeadValue::TSINITHasNoValue(tsinit)
+            ? std::nullopt
+            : std::optional<double>{ tsinit };
+    }
+
     tuning.TSMAXZ = this->unit_system.to_si(M::time, doubhead[VI::doubhead::TsMaxz]);
     tuning.TSMINZ = this->unit_system.to_si(M::time, doubhead[VI::doubhead::TsMinz]);
     tuning.TSMCHP = this->unit_system.to_si(M::time, doubhead[VI::doubhead::TsMchp]);
+
     tuning.TSFMAX = doubhead[VI::doubhead::TsFMax];
     tuning.TSFMIN = doubhead[VI::doubhead::TsFMin];
     tuning.TSFCNV = doubhead[VI::doubhead::TsFcnv];
@@ -398,6 +407,9 @@ void RstState::load_tuning(const std::vector<int>& intehead,
     tuning.XXXDPR = doubhead[VI::doubhead::XxxDPR];
     tuning.DDPLIM = doubhead[VI::doubhead::DdpLim];
     tuning.DDSLIM = doubhead[VI::doubhead::DdsLim];
+
+    this->tuning.WSEG_REDUCTION_FACTOR = doubhead[VI::doubhead::WsegRedFac];
+    this->tuning.WSEG_INCREASE_FACTOR = doubhead[VI::doubhead::WsegIncFac];
 }
 
 void RstState::add_groups(const std::vector<std::string>& zgrp,
