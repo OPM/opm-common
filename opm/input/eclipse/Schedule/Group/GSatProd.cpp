@@ -1,5 +1,5 @@
 /*
-  Copyright 2019 Equinor ASA.
+  Copyright 2024 Equinor ASA.
 
   This file is part of the Open Porous Media project (OPM).
 
@@ -25,45 +25,48 @@ namespace Opm {
 GSatProd GSatProd::serializationTestObject()
 {
     GSatProd result;
-    result.groups = { {"test1", {1.0,2.0,3.0,4.0,5.0} } };
+    result.groups_ = { {"test1", {1.0,2.0,3.0,4.0,5.0} } };
 
     return result;
 }
 
-bool GSatProd::has(const std::string& name) const {
-    return (groups.find(name) != groups.end());
+bool GSatProd::has(const std::string& name) const
+{
+    return (groups_.find(name) != groups_.end());
 }
 
 
-const GSatProd::GSatProdGroup& GSatProd::get(const std::string& name) const {
-
-    auto it = groups.find(name);
-    if (it == groups.end())
+const GSatProd::GSatProdGroup& GSatProd::get(const std::string& name) const
+{
+    auto it = groups_.find(name);
+    if (it == groups_.end())
         throw std::invalid_argument("Current GSatPRod obj. does not contain '" + name + "'.");
     else
         return it->second;
 }
 
-void GSatProd::add(const std::string& name, const double& oil_rate,
-                   const double& gas_rate, const double& water_rate,
-                   const double& resv_rate, const double& glift_rate) {
-
-    GSatProd::GSatProdGroup& group = groups[name];
-
-    group.oil_rate = oil_rate;
-    group.gas_rate = gas_rate;
-    group.water_rate = water_rate;
-    group.resv_rate = resv_rate;
-    group.glift_rate = glift_rate;
+void GSatProd::assign(const std::string& name, const double oil_rate,
+                      const double gas_rate, const double water_rate,
+                      const double resv_rate, const double glift_rate)
+{
+    GSatProd::GSatProdGroup& group = groups_[name];
+    using Rate = GSatProd::GSatProdGroup::Rate;
+    group.rate[Rate::Oil] = oil_rate;
+    group.rate[Rate::Gas] = gas_rate;
+    group.rate[Rate::Water] = water_rate;
+    group.rate[Rate::Resv] = resv_rate;
+    group.rate[Rate::GLift] = glift_rate;
 }
 
 
-size_t GSatProd::size() const {
-    return groups.size();
+std::size_t GSatProd::size() const
+{
+    return groups_.size();
 }
 
-bool GSatProd::operator==(const GSatProd& data) const {
-    return this->groups == data.groups;
+bool GSatProd::operator==(const GSatProd& data) const
+{
+    return this->groups_ == data.groups_;
 }
 
 }

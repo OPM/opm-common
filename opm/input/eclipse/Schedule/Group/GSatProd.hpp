@@ -22,6 +22,7 @@
 
 #include <map>
 #include <string>
+#include <array>
 
 namespace Opm {
 
@@ -30,28 +31,16 @@ namespace Opm {
     class GSatProd {
     public:
         struct GSatProdGroup {
-            double oil_rate;
-            double gas_rate;
-            double water_rate;
-            double resv_rate;
-            double glift_rate;
-
+            enum Rate { Oil, Gas, Water, Resv, GLift };
+            std::array<double, 5> rate{};
             bool operator==(const GSatProdGroup& data) const {
-                return oil_rate == data.oil_rate &&
-                       gas_rate == data.gas_rate &&
-                       water_rate == data.water_rate &&
-                       resv_rate == data.resv_rate &&
-                       glift_rate == data.glift_rate;
+                return rate == data.rate;
             }
 
             template<class Serializer>
             void serializeOp(Serializer& serializer)
             {
-                serializer(oil_rate);
-                serializer(gas_rate);
-                serializer(water_rate);
-                serializer(resv_rate);
-                serializer(glift_rate);
+                serializer(rate);
             }
         };
 
@@ -59,21 +48,21 @@ namespace Opm {
 
         bool has(const std::string& name) const;
         const GSatProdGroup& get(const std::string& name) const;
-        void add(const std::string& name, const double& oil_rate,
-                 const double& gas_rate, const double& water_rate,
-                 const double& resv_rate, const double& glift_rate);
-        size_t size() const;
+        void assign(const std::string& name, const double oil_rate,
+                   const double gas_rate, const double water_rate,
+                   const double resv_rate, const double glift_rate);
+        std::size_t size() const;
 
         bool operator==(const GSatProd& data) const;
 
         template<class Serializer>
         void serializeOp(Serializer& serializer)
         {
-            serializer(groups);
+            serializer(groups_);
         }
 
     private:
-        std::map<std::string, GSatProdGroup> groups;
+        std::map<std::string, GSatProdGroup> groups_;
     };
 
 }

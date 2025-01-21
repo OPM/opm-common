@@ -410,8 +410,9 @@ TSTEP
     BOOST_CHECK(!gsatprod.has("G1"));
     BOOST_CHECK(gsatprod.has("G2"));
     const GSatProd::GSatProdGroup& group = gsatprod.get("G2");
-    BOOST_CHECK_EQUAL(group.oil_rate, 1000*metric_to_si);
-    BOOST_CHECK_EQUAL(group.water_rate, 0.0);
+    using Rate = GSatProd::GSatProdGroup::Rate;
+    BOOST_CHECK_EQUAL(group.rate[Rate::Oil], 1000*metric_to_si);
+    BOOST_CHECK_EQUAL(group.rate[Rate::Water], 0.0);
 }
 
 BOOST_AUTO_TEST_CASE(TESTGCONSALE) {

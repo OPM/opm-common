@@ -681,7 +681,7 @@ alq_type(const Opm::ScheduleState&            sched_state,
     return sched_state.vfpprod(vfp_table_number).getALQType();
 }
 
-inline double accum_groups(const rt phase, const Opm::Schedule& schedule, const size_t sim_step, const std::string& gr_name)
+inline double accum_groups(const rt phase, const Opm::Schedule& schedule, const std::size_t sim_step, const std::string& gr_name)
 {
         double sum = 0.0;
         if (!schedule.hasGroup(gr_name, sim_step)) {
@@ -694,12 +694,13 @@ inline double accum_groups(const rt phase, const Opm::Schedule& schedule, const 
         const auto& gsatprod = schedule[sim_step].gsatprod.get();
         if (gsatprod.has(gr_name)) {
             const auto& gs = gsatprod.get(gr_name);
+            using Rate = Opm::GSatProd::GSatProdGroup::Rate;
             if (phase == rt::oil)
-                sum += gs.oil_rate;
+                sum += gs.rate[Rate::Oil];
             if (phase == rt::gas)
-                sum += gs.gas_rate;
+                sum += gs.rate[Rate::Gas];
             if (phase == rt::wat)
-                sum += gs.water_rate;
+                sum += gs.rate[Rate::Water];
         }
         return sum;
 }
@@ -825,6 +826,9 @@ inline quantity rate( const fn_args& args ) {
     }
 
     const auto& gsatprod = args.schedule[args.sim_step].gsatprod.get();
+    // If gsatprod is given for a group we need to add the satelite production
+    // This is only done for production groups i.e. !args.group_name.empty() and
+    // !injection
     if (!injection && gsatprod.size() > 0 && !args.group_name.empty()) {
         sum += accum_groups(phase, args.schedule, args.sim_step, args.group_name);
     }

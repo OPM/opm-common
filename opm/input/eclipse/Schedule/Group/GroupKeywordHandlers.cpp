@@ -336,7 +336,7 @@ void handleGSATPROD(HandlerContext& handlerContext)
                 auto& errors = handlerContext.errors;
                 parseContext.handleError(ParseContext::SCHEDULE_GROUP_ERROR, msg_fmt, keyword.location(), errors);
             }
-            new_gsatprod.add(group_name, oil_rate, gas_rate, water_rate, resv_rate, glift_rate);
+            new_gsatprod.assign(group_name, oil_rate, gas_rate, water_rate, resv_rate, glift_rate);
         }
     }
     handlerContext.state().gsatprod.update( std::move(new_gsatprod) );
