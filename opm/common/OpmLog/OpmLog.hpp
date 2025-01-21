@@ -29,6 +29,9 @@
 namespace Opm {
 
     class LogBackend;
+#ifdef EMBEDDED_PYTHON
+    class PyRunModule;
+#endif
 
 /*
   The OpmLog class is a fully static class which manages a proper
@@ -107,6 +110,9 @@ public:
     static bool setLogger(std::shared_ptr<Logger> logger);
 
 private:
+#ifdef EMBEDDED_PYTHON
+    friend class PyRunModule;
+#endif
     static std::shared_ptr<Logger> getLogger();
     static std::shared_ptr<Logger> m_logger;
 };

@@ -53,6 +53,11 @@ PyRunModule::PyRunModule(std::shared_ptr<const Python> python, const std::string
     // opm_embedded needs to be loaded before user defined module.
     try {
         this->opm_embedded = py::module::import("opm_embedded");
+        //Set the inner Logger of OpmLog, if we don't set this manually, any log messages from the Python script will not reach OpmLog
+        py::object loggerSetForPython = this->opm_embedded.attr("OpmLog").attr("_setLogger")(py::cast(OpmLog::getLogger()));
+        if (!loggerSetForPython.cast<bool>()) {
+            OpmLog::warning("The opm_embedded.OpmLog could not be set up correctly. Running embedded Pyhton code will still work, without any logging functionality though.");
+        }
     } catch (const std::exception& e) {
         OpmLog::error(fmt::format("Exception thrown when loading Python module opm_embedded: {}. Possibly the PYTHONPATH of the system is not set correctly.", e.what()));
         throw e;
