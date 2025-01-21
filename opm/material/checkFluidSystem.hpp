@@ -38,6 +38,8 @@
 #include <opm/material/fluidsystems/H2OAirMesityleneFluidSystem.hpp>
 #include <opm/material/fluidsystems/H2OAirXyleneFluidSystem.hpp>
 #include <opm/material/fluidsystems/Spe5FluidSystem.hpp>
+#include <opm/material/fluidsystems/PTFlashParameterCache.hpp>
+#include <opm/input/eclipse/EclipseState/Compositional/CompositionalConfig.hpp>
 
 // include all fluid states
 #include <opm/material/fluidstates/PressureOverlayFluidState.hpp>
@@ -264,6 +266,21 @@ void checkFluidState(const BaseFluidState& fs)
     };
 }
 
+template<typename ParameterCache, class Scalar, class FluidSystem>
+ParameterCache initParamCache()
+{
+    constexpr bool is_same = std::is_same<ParameterCache, Opm::PTFlashParameterCache<Scalar, FluidSystem>>::value;
+    if constexpr (is_same) {
+        using EOSType = Opm::CompositionalConfig::EOSType;
+        ParameterCache paramCache(EOSType::PR);
+        return paramCache;
+    }
+    else {
+        ParameterCache paramCache;
+        return paramCache;
+    }
+}
+
 /*!
  * \brief Checks whether a fluid system adheres to the specification.
  */
@@ -304,7 +321,7 @@ void checkFluidSystem()
     // check whether the parameter cache adheres to the API
     typedef typename FluidSystem::template ParameterCache<LhsEval> ParameterCache;
 
-    ParameterCache paramCache;
+    ParameterCache paramCache = initParamCache<ParameterCache, LhsEval, FluidSystem>();
     try { paramCache.updateAll(fs); } catch (...) {};
     try { paramCache.updateAll(fs, /*except=*/ParameterCache::None); } catch (...) {};
     try { paramCache.updateAll(fs, /*except=*/ParameterCache::Temperature | ParameterCache::Pressure | ParameterCache::Composition); } catch (...) {};

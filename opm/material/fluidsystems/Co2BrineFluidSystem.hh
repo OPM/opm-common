@@ -66,7 +66,7 @@ namespace Opm {
         using ParameterCache = Opm::PTFlashParameterCache<ValueType, Co2BrineFluidSystem<Scalar>>;
         using ViscosityModel = typename Opm::ViscosityModels<Scalar, Co2BrineFluidSystem<Scalar>>;
 
-        using PengRobinsonMixture = typename Opm::PengRobinsonMixture<Scalar, Co2BrineFluidSystem<Scalar>>;
+        using CubicEOS = typename Opm::CubicEOS<Scalar, Co2BrineFluidSystem<Scalar>>;
 
 
         /*!
@@ -206,7 +206,7 @@ namespace Opm {
             assert(phaseIdx < numPhases);
             assert(compIdx < numComponents);
 
-            LhsEval phi = PengRobinsonMixture::computeFugacityCoefficient(fluidState, paramCache, phaseIdx, compIdx);
+            LhsEval phi = CubicEOS::computeFugacityCoefficient(fluidState, paramCache, phaseIdx, compIdx);
 
             return phi;
         }

@@ -47,10 +47,13 @@
 #include <opm/material/fluidstates/CompositionalFluidState.hpp>
 #include <opm/material/fluidmatrixinteractions/LinearMaterial.hpp>
 
+#include <opm/input/eclipse/EclipseState/Compositional/CompositionalConfig.hpp>
+
 #include <stdexcept>
 
 // It is a two component system
 using Scalar = double;
+using EOSType = Opm::CompositionalConfig::EOSType;
 using FluidSystem = Opm::Co2BrineFluidSystem<Scalar>;
 using ThreeComponentSystem = Opm::ThreeComponentFluidSystem<Scalar>;
 
@@ -102,7 +105,8 @@ for (const auto& sample : test_methods) {
     fluid_state.setLvalue(Ltmp);
 
     using Flash = Opm::PTFlash<double, FluidSystem>;
-    Flash::solve(fluid_state, sample, flash_tolerance, flash_verbosity);
+    auto eos_type = EOSType::PRCORR;
+    Flash::solve(fluid_state, sample, flash_tolerance, eos_type, flash_verbosity);
 
     ComponentVector x, y;
     const Evaluation L = fluid_state.L();
@@ -188,7 +192,8 @@ for (const auto& sample : test_methods) {
     fluid_state.setLvalue(Ltmp);
 
     using Flash = Opm::PTFlash<double, FluidSystem>;
-    Flash::solve(fluid_state, sample, flash_tolerance, flash_verbosity);
+    auto eos_type = EOSType::PRCORR;
+    Flash::solve(fluid_state, sample, flash_tolerance, eos_type, flash_verbosity);
 
     ComponentVector x, y;
     const Evaluation L = fluid_state.L();

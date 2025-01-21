@@ -33,7 +33,7 @@
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 #endif
 
-#include <opm/material/eos/PengRobinsonMixture.hpp>
+#include <opm/material/eos/CubicEOS.hpp>
 #include <opm/material/fluidsystems/BaseFluidSystem.hpp>
 #include <opm/material/fluidsystems/PTFlashParameterCache.hpp> // TODO: this is something else need to check
 #include <opm/material/viscositymodels/LBC.hpp>
@@ -78,7 +78,7 @@ namespace Opm {
         template <class ValueType>
         using ParameterCache = Opm::PTFlashParameterCache<ValueType, GenericOilGasFluidSystem<Scalar, NumComp>>;
         using ViscosityModel = Opm::ViscosityModels<Scalar, GenericOilGasFluidSystem<Scalar, NumComp>>;
-        using PengRobinsonMixture = Opm::PengRobinsonMixture<Scalar, GenericOilGasFluidSystem<Scalar, NumComp>>;
+        using CubicEOS = Opm::CubicEOS<Scalar, GenericOilGasFluidSystem<Scalar, NumComp>>;
 
         struct ComponentParam {
             std::string name;
@@ -292,7 +292,7 @@ namespace Opm {
             assert(phaseIdx < numPhases);
             assert(compIdx < numComponents);
 
-            return decay<LhsEval>(PengRobinsonMixture::computeFugacityCoefficient(fluidState, paramCache, phaseIdx, compIdx));
+            return decay<LhsEval>(CubicEOS::computeFugacityCoefficient(fluidState, paramCache, phaseIdx, compIdx));
         }
 
         // TODO: the following interfaces are needed by function checkFluidSystem()
