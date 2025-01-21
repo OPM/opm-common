@@ -53,6 +53,16 @@ namespace Opm {
         }
     }
 
+    bool OpmLog::setLogger(std::shared_ptr<Logger> logger) {
+        if (!m_logger) {
+            m_logger = std::move(logger);
+            return true;
+        } else if (m_logger.get() == logger.get()) { // We want to compare the addresses of the underlying Logger objects
+            return true;
+        } else {
+            return false; // Logger was set to something else
+        }
+    }
 
     std::shared_ptr<Logger> OpmLog::getLogger() {
         if (!m_logger)

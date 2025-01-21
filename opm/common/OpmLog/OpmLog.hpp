@@ -90,6 +90,22 @@ public:
 
     static bool stdoutIsTerminal();
 
+    /**
+     * @brief Sets the global logger instance for the `OpmLog` class.
+     *
+     * This static function allows setting a shared pointer to a `Logger` instance
+     * as the global logger. It ensures that the logger is set only if it has not
+     * been previously set or if the provided logger is the same as the existing one.
+     * This function prevents changing the logger once it has been set to a different instance.
+     * If the logger is already set to a different instance, the function will return `false`.
+     *
+     * @param logger A `std::shared_ptr` to a `Logger` instance that will be set as the global logger.
+     *
+     * @return `true` if the logger was successfully set or if the same logger was already set.
+     *         `false` if a different logger had already been set and the new logger could not be set.
+     */
+    static bool setLogger(std::shared_ptr<Logger> logger);
+
 private:
     static std::shared_ptr<Logger> getLogger();
     static std::shared_ptr<Logger> m_logger;
