@@ -30,14 +30,54 @@
 #include <unordered_set>
 #include <vector>
 
+Opm::Action::AST::AST() = default;
+
 Opm::Action::AST::AST(const std::vector<std::string>& tokens)
-    : condition { std::make_shared<ASTNode>(::Opm::Action::Parser::parse(tokens)) }
+    : condition { std::make_unique<ASTNode>(::Opm::Action::Parser::parse(tokens)) }
 {}
+
+Opm::Action::AST::~AST() = default;
+
+Opm::Action::AST::AST(const AST& rhs)
+{
+    if (rhs.condition != nullptr) {
+        this->condition = std::make_unique<ASTNode>(*rhs.condition);
+    }
+}
+
+Opm::Action::AST::AST(AST&& rhs)
+    : condition { std::move(rhs.condition) }
+{}
+
+Opm::Action::AST&
+Opm::Action::AST::operator=(const AST& rhs)
+{
+    if (this != &rhs) {
+        if (rhs.condition == nullptr) {
+            this->condition.reset();
+        }
+        else {
+            this->condition = std::make_unique<ASTNode>(*rhs.condition);
+        }
+    }
+
+    return *this;
+}
+
+Opm::Action::AST&
+Opm::Action::AST::operator=(AST&& rhs)
+{
+    if (this != &rhs) {
+        this->condition = std::move(rhs.condition);
+    }
+
+    return *this;
+}
 
 Opm::Action::AST Opm::Action::AST::serializationTestObject()
 {
     AST result;
-    result.condition = std::make_shared<ASTNode>(ASTNode::serializationTestObject());
+    result.condition = std::make_unique<ASTNode>(ASTNode::serializationTestObject());
 
     return result;
 }
@@ -54,14 +94,10 @@ Opm::Action::AST::eval(const Action::Context& context) const
 
 bool Opm::Action::AST::operator==(const AST& data) const
 {
-    if ((this->condition == nullptr) !=
-        (data.condition  == nullptr))
-    {
-        return false;
-    }
+    const auto isNull = this->condition == nullptr;
 
-    return (this->condition == nullptr)
-        || (*this->condition == *data.condition);
+    return (isNull == (data.condition == nullptr))
+        && (isNull || (*this->condition == *data.condition));
 }
 
 void Opm::Action::AST::required_summary(std::unordered_set<std::string>& required_summary) const

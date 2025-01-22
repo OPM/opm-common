@@ -49,7 +49,7 @@ public:
     ///
     /// Creates an empty object with no internal condition.  Mostly useful
     /// as a target for an object deserialisation process.
-    AST() = default;
+    AST();
 
     /// Constructor.
     ///
@@ -59,6 +59,35 @@ public:
     /// \param[in] tokens Tokenised textual representation of an ACTIONX
     /// condition block.
     explicit AST(const std::vector<std::string>& tokens);
+
+    /// Destructor.
+    ~AST();
+
+    /// Copy constructor.
+    ///
+    /// \param[in] rhs Source object.
+    AST(const AST& rhs);
+
+    /// Move constructor.
+    ///
+    /// \param[in,out] rhs Source object.  In a valid but unspecified state
+    /// on exit.
+    AST(AST&& rhs);
+
+    /// Assignment operator.
+    ///
+    /// \param[in] rhs Source object.
+    ///
+    /// \return \code *this \endcode
+    AST& operator=(const AST& rhs);
+
+    /// Move assignment operator.
+    ///
+    /// \param[in,out] rhs Source object.  In a valid but unspecified state
+    /// on exit.
+    ///
+    /// \return \code *this \endcode
+    AST& operator=(AST&& rhs);
 
     /// Create a serialisation test object.
     static AST serializationTestObject();
@@ -101,13 +130,8 @@ public:
     void required_summary(std::unordered_set<std::string>& required_summary) const;
 
 private:
-    // The pointer type enables creating this class with only a forward
-    // declaration of the ASTNode class.  Would have prefered to use a
-    // unique_ptr<>, but that requires writing custom destructors.  Despite
-    // the shared_ptr<>, there is no shared ownership of the ASTNode.
-
     /// Internalised condition object in expression tree form.
-    std::shared_ptr<ASTNode> condition;
+    std::unique_ptr<ASTNode> condition{};
 };
 
 } // namespace Opm::Action
