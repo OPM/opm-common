@@ -31,6 +31,7 @@
 #include <opm/input/eclipse/EclipseState/Runspec.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
 #include <opm/input/eclipse/Schedule/Group/GConSump.hpp>
+#include <opm/input/eclipse/Schedule/Group/GSatProd.hpp>
 #include <opm/input/eclipse/Schedule/Group/GConSale.hpp>
 #include <opm/input/eclipse/Schedule/Group/GroupEconProductionLimits.hpp>
 #include <opm/input/eclipse/Schedule/Group/Group.hpp>
@@ -378,6 +379,40 @@ TSTEP
 
     auto schedule = create_schedule(input);
     GuideRate gr(schedule);
+}
+
+BOOST_AUTO_TEST_CASE(TESTGSatProd) {
+    const std::string input = R"(
+START             -- 0
+31 AUG 1993 /
+SCHEDULE
+
+GRUPTREE
+  'G1'  'FIELD' /
+  'G2'  'FIELD' /
+/
+
+GCONPROD
+  'G1' 'ORAT' 10000 /
+/
+
+GSATPROD
+   'G2' 1000 /
+/
+
+TSTEP
+  1 /)";
+
+    auto schedule = create_schedule(input);
+    double metric_to_si = 1.0 / (24.0 * 3600.0);  //cubic meters / day
+    const auto& gsatprod = schedule[0].gsatprod.get();
+    BOOST_CHECK_EQUAL(gsatprod.size(), 1U);
+    BOOST_CHECK(!gsatprod.has("G1"));
+    BOOST_CHECK(gsatprod.has("G2"));
+    const GSatProd::GSatProdGroup& group = gsatprod.get("G2");
+    using Rate = GSatProd::GSatProdGroup::Rate;
+    BOOST_CHECK_EQUAL(group.rate[Rate::Oil], 1000*metric_to_si);
+    BOOST_CHECK_EQUAL(group.rate[Rate::Water], 0.0);
 }
 
 BOOST_AUTO_TEST_CASE(TESTGCONSALE) {

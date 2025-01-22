@@ -38,6 +38,7 @@
 #include <opm/input/eclipse/Schedule/Action/Actions.hpp>
 #include <opm/input/eclipse/Schedule/GasLiftOpt.hpp>
 #include <opm/input/eclipse/Schedule/Group/GConSump.hpp>
+#include <opm/input/eclipse/Schedule/Group/GSatProd.hpp>
 #include <opm/input/eclipse/Schedule/Group/Group.hpp>
 #include <opm/input/eclipse/Schedule/MSW/Segment.hpp>
 #include <opm/input/eclipse/Schedule/MSW/WellSegments.hpp>
@@ -680,6 +681,30 @@ alq_type(const Opm::ScheduleState&            sched_state,
     return sched_state.vfpprod(vfp_table_number).getALQType();
 }
 
+inline double accum_groups(const rt phase, const Opm::Schedule& schedule, const std::size_t sim_step, const std::string& gr_name)
+{
+        double sum = 0.0;
+        if (!schedule.hasGroup(gr_name, sim_step)) {
+            return sum;
+        }
+        const auto& top_group = schedule.getGroup(gr_name, sim_step);
+        for (const auto& child : top_group.groups()) {
+            sum += accum_groups(phase, schedule, sim_step, child);
+        }
+        const auto& gsatprod = schedule[sim_step].gsatprod.get();
+        if (gsatprod.has(gr_name)) {
+            const auto& gs = gsatprod.get(gr_name);
+            using Rate = Opm::GSatProd::GSatProdGroup::Rate;
+            if (phase == rt::oil)
+                sum += gs.rate[Rate::Oil];
+            if (phase == rt::gas)
+                sum += gs.rate[Rate::Gas];
+            if (phase == rt::wat)
+                sum += gs.rate[Rate::Water];
+        }
+        return sum;
+}
+
 inline quantity artificial_lift_quantity( const fn_args& args ) {
     // Note: This function is intentionally supported only at the well level
     // (meaning there's no loop over args.schedule_wells by intention).  Its
@@ -800,12 +825,21 @@ inline quantity rate( const fn_args& args ) {
         sum *= -1.0;
     }
 
+    const auto& gsatprod = args.schedule[args.sim_step].gsatprod.get();
+    // If gsatprod is given for a group we need to add the satelite production
+    // This is only done for production groups i.e. !args.group_name.empty() and
+    // !injection
+    if (!injection && gsatprod.size() > 0 && !args.group_name.empty()) {
+        sum += accum_groups(phase, args.schedule, args.sim_step, args.group_name);
+    }
+
     if (phase == rt::polymer || phase == rt::brine) {
         return { sum, measure::mass_rate };
     }
 
     return { sum, rate_unit< phase >() };
 }
+
 
 template <bool injection = true>
 inline quantity filtrate_connection_quantities( const fn_args& args ) {
@@ -3361,8 +3395,9 @@ namespace Evaluator {
                 (this->node_.category == Cat::Group) ||
                 (this->node_.category == Cat::Node);
 
+            const auto def_gr_name = this->node_.category == Cat::Field ? std::string{"FIELD"} : std::string{""};
             return need_grp_name
-                ? this->node_.wgname : std::string{""};
+                ? this->node_.wgname : def_gr_name;
         }
 
         bool use_number() const
