@@ -368,9 +368,9 @@ void handleWCONPROD(HandlerContext& handlerContext)
             const bool switching_from_injector = !well2.isProducer();
             auto properties = std::make_shared<Well::WellProductionProperties>(well2.getProductionProperties());
             properties->clearControls();
-            if (well2.isAvailableForGroupControl() || belongsToAutoChokeGroup(well2, handlerContext.state())) {
+            // if (well2.isAvailableForGroupControl() || belongsToAutoChokeGroup(well2, handlerContext.state())) {
                 properties->addProductionControl(Well::ProducerCMode::GRUP);
-            }
+            // }
 
             auto table_nr = record.getItem("VFP_TABLE").get< int >(0);
             if (table_nr != 0) {
