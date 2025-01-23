@@ -47,6 +47,7 @@ namespace Opm {
 
     class DeckRecord;
     class KeywordLocation;
+    class GroupOrder;
     class RegionSetMatcher;
     class Schedule;
     class SegmentMatcher;
@@ -357,6 +358,8 @@ namespace Opm {
         ///
         /// \param[in] wm Well name pattern matcher.
         ///
+        /// \param[in] go Group name pattern matcher.
+        ///
         /// \param[in] create_segment_matcher Factory function for
         /// constructing segment set matchers.
         ///
@@ -367,6 +370,7 @@ namespace Opm {
         /// \param[in,out] udq_state Dynamic values for all known UDQs.
         /// Values pertaining to UDQs being assigned here will be updated.
         void eval_assign(const WellMatcher&    wm,
+                         const GroupOrder&     go,
                          SegmentMatcherFactory create_segment_matcher,
                          SummaryState&         st,
                          UDQState&             udq_state) const;
@@ -380,6 +384,8 @@ namespace Opm {
         /// \param[in] report_step Current report step.
         ///
         /// \param[in] wm Well name pattern matcher.
+        ///
+        /// \param[in] go Group name pattern matcher.
         ///
         /// \param[in] create_segment_matcher Factory function for
         /// constructing segment set matchers.
@@ -395,6 +401,7 @@ namespace Opm {
         /// Values pertaining to UDQs being assigned here will be updated.
         void eval(std::size_t             report_step,
                   const WellMatcher&      wm,
+                  const GroupOrder&       go,
                   SegmentMatcherFactory   create_segment_matcher,
                   RegionSetMatcherFactory create_region_matcher,
                   SummaryState&           st,

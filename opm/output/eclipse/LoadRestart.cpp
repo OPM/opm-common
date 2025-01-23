@@ -1358,19 +1358,20 @@ namespace {
             return;
         }
 
-        const auto isField = group == "FIELD";
-        const auto xgrp = groupData.xgrp(groupID);
-
-        auto update = [isField, &group, &smry]
+        auto update = [isField = group == "FIELD", &group, &smry]
             (const std::string& vector, const double value) -> void
         {
             if (isField) {
+                // Initialise the F* vectors for FIELD
                 smry.update('F' + vector, value);
             }
             else {
+                // Initialise the G* vectors for all non-FIELD groups
                 smry.update_group_var(group, 'G' + vector, value);
             }
         };
+
+        const auto xgrp = groupData.xgrp(groupID);
 
         // No unit conversion here.  Smry expects output units.
         update("OPT", xgrp[VI::XGroup::index::OilPrTotal]);

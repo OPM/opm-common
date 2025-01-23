@@ -393,21 +393,22 @@ Opm::SummaryState sim_state(const Opm::Schedule& sched)
 
 struct Setup
 {
-    Deck deck;
     EclipseState es;
     const EclipseGrid& grid;
     Schedule schedule;
     SummaryConfig summary_config;
 
     explicit Setup(const char* path)
-        : deck          ( Parser().parseFile( path) )
-        , es            ( deck)
-        , grid          ( es.getInputGrid( ) )
-        , schedule      ( deck, es, std::make_shared<Python>() )
-        , summary_config( deck, schedule, es.fieldProps(), es.aquifer() )
+        : Setup { Parser{}.parseFile(path) }
+    {}
+
+    explicit Setup(const Deck& deck)
+        : es             { deck }
+        , grid           { es.getInputGrid() }
+        , schedule       { deck, es, std::make_shared<Python>() }
+        , summary_config { deck, schedule, es.fieldProps(), es.aquifer() }
     {
-        auto& io_config = es.getIOConfig();
-        io_config.setEclCompatibleRST(false);
+        es.getIOConfig().setEclCompatibleRST(false);
     }
 };
 
@@ -435,6 +436,7 @@ first_sim(const Setup&         setup,
 
     udq.eval(report_step,
              setup.schedule.wellMatcher(report_step),
+             setup.schedule[report_step].group_order(),
              segmentMatcherFactory,
              regionSetMatcherFactory,
              st, udq_state);
@@ -1086,6 +1088,7 @@ void init_st(SummaryState& st)
     st.update_group_var("GRP1", "GOPR", 100);
     st.update_group_var("WGRP1", "GOPR", 100);
     st.update_group_var("WGRP2", "GOPR", 100);
+
     st.update("FLPR", 100);
 }
 
@@ -1134,10 +1137,13 @@ BOOST_AUTO_TEST_CASE(UDQ_RESTART)
         for (const auto& def : udq.definitions(UDQVarType::GROUP_VAR)) {
             const auto& kw = def.keyword();
 
-            BOOST_CHECK_EQUAL( st1.has_group_var(group, kw), st2.has_group_var(group, kw));
+            BOOST_CHECK_EQUAL(st1.has_group_var(group, kw),
+                              st2.has_group_var(group, kw));
 
             if (st1.has_group_var(group, def.keyword())) {
-                BOOST_CHECK_EQUAL(st1.get_group_var(group, kw), st2.get_group_var(group, kw));
+                BOOST_TEST_MESSAGE("Group Vector " << kw << " for Group " << group);
+                BOOST_CHECK_EQUAL(st1.get_group_var(group, kw),
+                                  st2.get_group_var(group, kw));
             }
         }
     }
