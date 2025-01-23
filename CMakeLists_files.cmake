@@ -465,6 +465,7 @@ list (APPEND TEST_SOURCE_FILES
       tests/test_cubic.cpp
       tests/test_EvaluationFormat.cpp
       tests/test_densead.cpp
+      tests/test_FastSmallVector.cpp
       tests/test_messagelimiter.cpp
       tests/test_nonuniformtablelinear.cpp
       tests/test_OpmInputError_format.cpp
