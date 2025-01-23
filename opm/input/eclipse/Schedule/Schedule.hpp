@@ -225,20 +225,63 @@ namespace Opm {
         std::vector<std::string> wellNames(std::size_t timeStep) const;
         std::vector<std::string> wellNames() const;
 
+        /// Query for group existence at particular time
+        ///
+        /// \param[in] groupName Fully specified group name.
+        ///
+        /// \param[in] timeStep Zero-based report step index.
+        ///
+        /// \return Whether or not group \p groupName exists at time \p
+        /// timeStep.
         bool hasGroup(const std::string& groupName, std::size_t timeStep) const;
-        std::vector<std::string> groupNames(const std::string& pattern, std::size_t timeStep) const;
-        std::vector<std::string> groupNames(std::size_t timeStep) const;
-        std::vector<std::string> groupNames(const std::string& pattern) const;
-        std::vector<std::string> groupNames() const;
-        /*
-          The restart_groups function returns a vector of groups pointers which
-          is organized as follows:
 
-            1. The number of elements is WELLDIMS::MAXGROUPS + 1
-            2. The elements are sorted according to group.insert_index().
-            3. If there are less than WELLDIMS::MAXGROUPS nullptr is used.
-            4. The very last element corresponds to the FIELD group.
-        */
+        /// Retrieve names of all groups at particular time whose names
+        /// match a pattern.
+        ///
+        /// \param[in] pattern Group name pattern.  Expected to be a group
+        /// name root such as 'PR*' or a fully specified group name such as
+        /// 'PROD'.
+        ///
+        /// \param[in] timeStep Zero-based report step index.
+        ///
+        /// \return Names of all groups at \p timeStep whose names match the
+        /// \p pattern.
+        std::vector<std::string>
+        groupNames(const std::string& pattern, std::size_t timeStep) const;
+
+        /// Retrieve names of all groups at a particular time.
+        ///
+        /// \param[in] timeStep Zero-based report step index.
+        ///
+        /// \return Names of all groups in simulation which are active at
+        /// time \p timeStep.
+        const std::vector<std::string>& groupNames(std::size_t timeStep) const;
+
+        /// Retrieve names of all groups matching a pattern
+        ///
+        /// \param[in] pattern Group name pattern.  Expected to be a group
+        /// name root such as 'PR*' or a fully specified group name such as
+        /// 'PROD'.
+        ///
+        /// \return Names of all groups in simulation run matching the \p
+        /// pattern.
+        std::vector<std::string> groupNames(const std::string& pattern) const;
+
+        /// Retrieve names of all groups in model
+        ///
+        /// Includes FIELD group.
+        const std::vector<std::string>& groupNames() const;
+
+        /// Retrieve collection of group objects suiteable for restart file output
+        ///
+        /// The collection is sized and ordered as follows
+        ///
+        ///  -# The number of elements is WELLDIMS::MAXGROUPS + 1
+        ///  -# The elements are sorted according to group.insert_index().
+        ///  -# Nullptr represents an unused slot.
+        ///  -# The very last element corresponds to the FIELD group.
+        ///
+        /// \param[in] timeStep Zero-based report step index.
         std::vector<const Group*> restart_groups(std::size_t timeStep) const;
 
         std::vector<std::string> changed_wells(std::size_t reportStep) const;
@@ -249,10 +292,15 @@ namespace Opm {
         std::unordered_set<int> getAquiferFluxSchedule() const;
         std::vector<Well> getWells(std::size_t timeStep) const;
         std::vector<Well> getWellsatEnd() const;
-        std::vector<Well> getActiveWellsAtEnd() const; // Get wells that have been active any time during simulation
-        std::vector<std::string> getInactiveWellNamesAtEnd() const; // Get well names of wells that have never been active
 
-        const std::unordered_map<std::string, std::set<int>>& getPossibleFutureConnections() const;
+        // Get wells that have been active any time during simulation
+        std::vector<Well> getActiveWellsAtEnd() const;
+
+        // Get well names of wells that have never been active
+        std::vector<std::string> getInactiveWellNamesAtEnd() const;
+
+        const std::unordered_map<std::string, std::set<int>>&
+        getPossibleFutureConnections() const;
 
         void shut_well(const std::string& well_name, std::size_t report_step);
         void shut_well(const std::string& well_name);

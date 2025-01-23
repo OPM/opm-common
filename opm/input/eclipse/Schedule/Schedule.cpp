@@ -1372,68 +1372,57 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
         };
     }
 
-    std::vector<std::string> Schedule::wellNames(const std::string& pattern) const {
+    std::vector<std::string> Schedule::wellNames(const std::string& pattern) const
+    {
         return this->wellNames(pattern, this->size() - 1);
     }
 
-    std::vector<std::string> Schedule::wellNames(std::size_t timeStep) const {
-        const auto& well_order = this->snapshots[timeStep].well_order();
-        return well_order.names();
+    std::vector<std::string> Schedule::wellNames(std::size_t timeStep) const
+    {
+        return this->snapshots[timeStep].well_order().names();
     }
 
-    std::vector<std::string> Schedule::wellNames() const {
-        const auto& well_order = this->snapshots.back().well_order();
-        return well_order.names();
+    std::vector<std::string> Schedule::wellNames() const
+    {
+        return this->snapshots.back().well_order().names();
     }
 
-    std::vector<std::string> Schedule::groupNames(const std::string& pattern, std::size_t timeStep) const {
-        if (pattern.size() == 0)
-            return {};
-
-        const auto& group_order = this->snapshots[timeStep].group_order();
-
-        // Normal pattern matching
-        auto star_pos = pattern.find('*');
-        if (star_pos != std::string::npos) {
-            std::vector<std::string> names;
-            std::copy_if(group_order.begin(), group_order.end(),
-                         std::back_inserter(names),
-                         [&pattern](const auto& gname)
-                         {
-                             return shmatch(pattern, gname);
-                         });
-            return names;
-        }
-
-        // Normal group name without any special characters
-        if (group_order.has(pattern))
-            return { pattern };
-
-        return {};
+    std::vector<std::string> Schedule::groupNames(const std::string& pattern,
+                                                  const std::size_t timeStep) const
+    {
+        return this->snapshots[timeStep].group_order().names(pattern);
     }
 
-    std::vector<std::string> Schedule::groupNames(std::size_t timeStep) const {
-        const auto& group_order = this->snapshots[timeStep].group_order();
-        return group_order.names();
+    const std::vector<std::string>& Schedule::groupNames(std::size_t timeStep) const
+    {
+        return this->snapshots[timeStep].group_order().names();
     }
 
-    std::vector<std::string> Schedule::groupNames(const std::string& pattern) const {
+    std::vector<std::string> Schedule::groupNames(const std::string& pattern) const
+    {
         return this->groupNames(pattern, this->snapshots.size() - 1);
     }
 
-    std::vector<std::string> Schedule::groupNames() const {
-        const auto& group_order = this->snapshots.back().group_order();
-        return group_order.names();
+    const std::vector<std::string>& Schedule::groupNames() const
+    {
+        return this->snapshots.back().group_order().names();
     }
 
-    std::vector<const Group*> Schedule::restart_groups(std::size_t timeStep) const {
-        const auto& restart_groups = this->snapshots[timeStep].group_order().restart_groups();
-        std::vector<const Group*> rst_groups(restart_groups.size() , nullptr );
-        for (std::size_t restart_index = 0; restart_index < restart_groups.size(); restart_index++) {
+    std::vector<const Group*> Schedule::restart_groups(std::size_t timeStep) const
+    {
+        const auto restart_groups = this->snapshots[timeStep].group_order().restart_groups();
+
+        std::vector<const Group*> rst_groups(restart_groups.size(), nullptr);
+        for (std::size_t restart_index = 0;
+             restart_index < restart_groups.size(); ++restart_index)
+        {
             const auto& group_name = restart_groups[restart_index];
-            if (group_name.has_value())
+
+            if (group_name.has_value()) {
                 rst_groups[restart_index] = &this->getGroup(group_name.value(), timeStep);
+            }
         }
+
         return rst_groups;
     }
 
