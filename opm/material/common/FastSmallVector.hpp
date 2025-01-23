@@ -1,6 +1,8 @@
 // -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
 // vi: set et ts=4 sw=4 sts=4:
 /*
+  Copyright 2019, 2025 Equinor ASA.
+
   This file is part of the Open Porous Media project (OPM).
 
   OPM is free software: you can redistribute it and/or modify
@@ -137,9 +139,64 @@ public:
     const ValueType& operator[](size_t idx) const
     { return dataPtr_[idx]; }
 
-    //! number of the element
-    size_t size() const
+    using size_type = typename std::vector<ValueType>::size_type;
+
+    //! number of elements
+    size_type size() const
     { return size_; }
+
+    //! Iterator type is a plain pointer, so be warned there is no validity checking.
+    using Iterator = ValueType*;
+
+    //! ConstIterator type is a plain pointer, so be warned there is no validity checking.
+    using ConstIterator = const ValueType*;
+
+    //! To support range-for etc.
+    ConstIterator begin() const
+    { return dataPtr_; }
+
+    //! To support range-for etc.
+    ConstIterator end() const
+    { return dataPtr_ + size_; }
+
+    //! To support range-for etc.
+    ConstIterator cbegin() const
+    { return dataPtr_; }
+
+    //! To support range-for etc.
+    ConstIterator cend() const
+    { return dataPtr_ + size_; }
+
+    //! To support range-for etc.
+    Iterator begin()
+    { return dataPtr_; }
+
+    //! To support range-for etc.
+    Iterator end()
+    { return dataPtr_ + size_; }
+
+    size_type capacity()
+    { return size_ <= N ? N : data_.capacity(); }
+
+    void push_back(const ValueType& value)
+    {
+        if (size_ < N) {
+            // Data is contained in smallBuf_
+            smallBuf_[size_++] = value;
+        } else if (size_ == N) {
+            // Must switch from using smallBuf_ to using data_
+            data_.reserve(N + 1);
+            data_.assign(smallBuf_.begin(), smallBuf_.end());
+            data_.push_back(value);
+            ++size_;
+            dataPtr_ = data_.data();
+        } else {
+            // Data is contained in data_
+            data_.push_back(value);
+            ++size_;
+            dataPtr_ = data_.data();
+        }
+    }
 
 private:
     void init_(size_t numElem)
@@ -155,7 +212,7 @@ private:
 
     std::array<ValueType, N> smallBuf_;
     std::vector<ValueType> data_;
-    std::size_t size_;
+    size_type size_;
     ValueType* dataPtr_;
 };
 
