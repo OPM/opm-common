@@ -23,8 +23,9 @@
 
 #include <opm/io/eclipse/rst/action.hpp>
 
-#include <opm/input/eclipse/Schedule/Action/ActionValue.hpp>
 #include <opm/input/eclipse/Schedule/Action/Actdims.hpp>
+#include <opm/input/eclipse/Schedule/Action/ActionParser.hpp>
+#include <opm/input/eclipse/Schedule/Action/ActionValue.hpp>
 #include <opm/input/eclipse/Schedule/Action/State.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellMatcher.hpp>
 

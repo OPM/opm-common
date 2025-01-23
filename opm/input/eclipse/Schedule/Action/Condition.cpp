@@ -157,7 +157,7 @@ Condition::Condition(const std::vector<std::string>& tokens, const KeywordLocati
         if (token_index >= tokens.size())
             break;
 
-        auto comp = comparator( Parser::get_type(tokens[token_index]) );
+        const auto comp = comparator(Parser::tokenType(tokens[token_index]));
         if (comp == Comparator::INVALID) {
             this->lhs.add_arg(tokens[token_index]);
             token_index += 1;
@@ -179,7 +179,7 @@ Condition::Condition(const std::vector<std::string>& tokens, const KeywordLocati
         if (token_index >= tokens.size())
             break;
 
-        auto token_type = Parser::get_type(tokens[token_index]);
+        const auto token_type = Parser::tokenType(tokens[token_index]);
         if (token_type == TokenType::op_and)
             this->logic = Logical::AND;
         else if (token_type == TokenType::op_or)

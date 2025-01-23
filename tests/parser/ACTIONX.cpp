@@ -43,6 +43,7 @@
 #include <opm/input/eclipse/Schedule/Action/Actdims.hpp>
 #include <opm/input/eclipse/Schedule/Action/ActionAST.hpp>
 #include <opm/input/eclipse/Schedule/Action/ActionContext.hpp>
+#include <opm/input/eclipse/Schedule/Action/ActionParser.hpp>
 #include <opm/input/eclipse/Schedule/Action/ActionResult.hpp>
 #include <opm/input/eclipse/Schedule/Action/ActionX.hpp>
 #include <opm/input/eclipse/Schedule/Action/Actions.hpp>
@@ -1896,4 +1897,33 @@ BOOST_AUTO_TEST_CASE(Multiple_AND_Clauses_Single_WellMatch)
     const auto w1V = w1.asVector();
     const auto expect = std::vector { "P-1"s };
     BOOST_CHECK_EQUAL_COLLECTIONS(w1V.begin(), w1V.end(), expect.begin(), expect.end());
+}
+
+BOOST_AUTO_TEST_CASE(ParseNestedExpression)
+{
+    using namespace std::string_literals;
+
+    /// FGOR > 432.1 AND /
+    /// (WMCTL 'PROD*' = 1 OR /
+    ///  GWIR < GUWIRMIN) /
+    const auto ast = Opm::Action::Parser::parseCondition(std::vector {
+        "FGOR"s, ">"s, "432.1"s, "AND"s,
+        "("s, "WMCTL"s, "PROD*"s, "="s, "1"s, "OR"s,
+        "GWIR"s, "<"s, "GUWIRMIN"s, ")"s,
+    });
+
+    auto requisiteVectors = std::unordered_set<std::string>{};
+    ast->required_summary(requisiteVectors);
+
+    auto sortedVectors = std::vector<std::string> {
+        requisiteVectors.begin(), requisiteVectors.end()
+    };
+    std::sort(sortedVectors.begin(), sortedVectors.end());
+
+    const auto expected = std::vector {
+        "FGOR"s, "GUWIRMIN"s, "GWIR"s, "WMCTL"s,
+    };
+
+    BOOST_CHECK_EQUAL_COLLECTIONS(sortedVectors.begin(), sortedVectors.end(),
+                                  expected     .begin(), expected     .end());
 }

@@ -21,9 +21,8 @@
 
 #include <opm/input/eclipse/Schedule/Action/ASTNode.hpp>
 #include <opm/input/eclipse/Schedule/Action/ActionContext.hpp>
+#include <opm/input/eclipse/Schedule/Action/ActionParser.hpp>
 #include <opm/input/eclipse/Schedule/Action/ActionValue.hpp>
-
-#include "ActionParser.hpp"
 
 #include <memory>
 #include <string>
@@ -33,7 +32,7 @@
 Opm::Action::AST::AST() = default;
 
 Opm::Action::AST::AST(const std::vector<std::string>& tokens)
-    : condition { std::make_unique<ASTNode>(::Opm::Action::Parser::parse(tokens)) }
+    : condition { Parser::parseCondition(tokens) }
 {}
 
 Opm::Action::AST::~AST() = default;

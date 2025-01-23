@@ -24,51 +24,27 @@
 #include <opm/input/eclipse/Schedule/Action/ActionValue.hpp>
 
 #include <cstdint>
+#include <memory>
 #include <string>
 #include <vector>
 
-namespace Opm::Action {
+namespace Opm::Action::Parser {
+    /// Form expression evaluation tree from sequence of condition tokens.
+    ///
+    /// \param[in] tokens Sequence of concatenated condition string tokens
+    /// of a single ACTIONX condition block from which to form an expression
+    /// evaluation tree.  Newline characters and other whitespace assumed to
+    /// be removed.
+    [[nodiscard]] std::unique_ptr<ASTNode>
+    parseCondition(const std::vector<std::string>& tokens);
 
-struct ParseNode
-{
-    ParseNode(TokenType type_arg, const std::string& value_arg)
-        : type (type_arg)
-        , value(value_arg)
-    {}
-
-    // Implicit converting constructor.
-    explicit ParseNode(TokenType type_arg)
-        : ParseNode(type_arg, "")
-    {}
-
-    TokenType type;
-    std::string value;
-};
-
-class Parser
-{
-public:
-    static Action::ASTNode parse(const std::vector<std::string>& tokens);
-    static TokenType get_type(const std::string& arg);
-    static FuncType get_func(const std::string& arg);
-
-private:
-    explicit Parser(const std::vector<std::string>& tokens);
-
-    ParseNode current() const;
-    ParseNode next();
-    size_t pos() const;
-    Action::ASTNode parse_cmp();
-    Action::ASTNode parse_op();
-    Action::ASTNode parse_left();
-    Action::ASTNode parse_right();
-    Action::ASTNode parse_and();
-    Action::ASTNode parse_or();
-
-    const std::vector<std::string>& tokens;
-    std::int64_t current_pos = -1;
-};
-
-} // namespace Opm::Action
+    /// Classify an Action condition string token.
+    ///
+    /// \param[in] arg Action condition string token.
+    ///
+    /// \return Kind of token contained in \p arg, e.g., an expression, an
+    /// operator or a parenthesis.
+    [[nodiscard]] TokenType tokenType(const std::string& arg);
+} // namespace Opm::Action::Parser
 
 #endif // ACTION_PARSER_HPP
