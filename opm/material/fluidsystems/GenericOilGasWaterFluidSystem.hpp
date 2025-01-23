@@ -261,7 +261,7 @@ namespace Opm {
         {
                 static const std::string_view name[] = {"o",  // oleic phase
                                                         "g",  // gas phase
-                                                        "w"}  // aqueous phase
+                                                        "w"};  // aqueous phase
 
                 assert(phaseIdx < numPhases);
                 return name[phaseIdx];
