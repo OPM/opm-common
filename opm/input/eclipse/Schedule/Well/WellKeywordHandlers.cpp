@@ -335,6 +335,8 @@ void handleWCONINJH(HandlerContext& handlerContext)
 
 bool belongsToAutoChokeGroup(const Well& well, const ScheduleState& state) {
     const auto& network = state.network.get();
+    if (!network.active())
+        return false;
     auto group_name = well.groupName();
     while (group_name != "FIELD") {
         if (network.has_node(group_name)) {
