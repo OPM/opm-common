@@ -71,7 +71,7 @@ namespace ML
         {
             resizeI<std::vector<int>>({i, j, k, l});
         }
-        
+
         template <typename Sizes>
         void resizeI(const Sizes& sizes)
         {
@@ -288,15 +288,17 @@ namespace ML
         // Tensor addition
         Tensor operator+(const Tensor& other)
         {
-            OPM_ERROR_IF(dims_.size() != other.dims_.size(), "Cannot add tensors with different dimensions");
+            OPM_ERROR_IF(dims_.size() != other.dims_.size(),
+                         "Cannot add tensors with different dimensions");
             Tensor result;
             result.dims_ = dims_;
             result.data_.resize(data_.size());
 
-            std::transform(
-                data_.begin(), data_.end(), other.data_.begin(), result.data_.begin(), [](const T& x, const T& y) {
-                    return x + y;
-                });
+            std::transform(data_.begin(),
+                           data_.end(),
+                           other.data_.begin(),
+                           result.data_.begin(),
+                           [](const T& x, const T& y) { return x + y; });
 
             return result;
         }
@@ -304,16 +306,18 @@ namespace ML
         // Tensor multiplication
         Tensor multiply(const Tensor& other)
         {
-            OPM_ERROR_IF(dims_.size() != other.dims_.size(), "Cannot multiply elements with different dimensions");
+            OPM_ERROR_IF(dims_.size() != other.dims_.size(),
+                         "Cannot multiply elements with different dimensions");
 
             Tensor result;
             result.dims_ = dims_;
             result.data_.resize(data_.size());
 
-            std::transform(
-                data_.begin(), data_.end(), other.data_.begin(), result.data_.begin(), [](const T& x, const T& y) {
-                    return x * y;
-                });
+            std::transform(data_.begin(),
+                           data_.end(),
+                           other.data_.begin(),
+                           result.data_.begin(),
+                           [](const T& x, const T& y) { return x * y; });
 
             return result;
         }
@@ -324,7 +328,8 @@ namespace ML
             OPM_ERROR_IF(dims_.size() != 2, "Invalid tensor dimensions");
             OPM_ERROR_IF(other.dims_.size() != 2, "Invalid tensor dimensions");
 
-            OPM_ERROR_IF(dims_[1] != other.dims_[0], "Cannot multiply with different inner dimensions");
+            OPM_ERROR_IF(dims_[1] != other.dims_[0],
+                         "Cannot multiply with different inner dimensions");
 
             Tensor tmp(dims_[0], other.dims_[1]);
 
@@ -337,6 +342,12 @@ namespace ML
             }
 
             return tmp;
+        }
+
+        void swap(Tensor& other)
+        {
+            dims_.swap(other.dims_);
+            data_.swap(other.data_);
         }
 
         std::vector<int> dims_;
@@ -374,7 +385,14 @@ namespace ML
     class NNLayerActivation : public NNLayer<Evaluation>
     {
     public:
-        enum class ActivationType { kLinear = 1, kRelu = 2, kSoftPlus = 3, kSigmoid = 4, kTanh = 5, kHardSigmoid = 6 };
+        enum class ActivationType {
+            kLinear = 1,
+            kRelu = 2,
+            kSoftPlus = 3,
+            kSigmoid = 4,
+            kTanh = 5,
+            kHardSigmoid = 6
+        };
 
         NNLayerActivation()
             : activation_type_(ActivationType::kLinear)
@@ -548,7 +566,8 @@ namespace ML
 
         float stop()
         {
-            std::chrono::time_point<std::chrono::high_resolution_clock> now = std::chrono::high_resolution_clock::now();
+            std::chrono::time_point<std::chrono::high_resolution_clock> now
+                = std::chrono::high_resolution_clock::now();
 
             std::chrono::duration<double> diff = now - start_;
 

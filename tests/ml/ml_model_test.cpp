@@ -145,7 +145,8 @@ tensor_test()
         b.data_ = {2.0, 5.0, 4.0, 1.0};
 
         Tensor<Evaluation> result = a + b;
-        OPM_ERROR_IF(result.data_ != std::vector<Evaluation>({3.0, 7.0, 7.0, 6.0}), "Vector add failed");
+        OPM_ERROR_IF(result.data_ != std::vector<Evaluation>({3.0, 7.0, 7.0, 6.0}),
+                     "Vector add failed");
     }
 
     {
@@ -156,7 +157,8 @@ tensor_test()
         b.data_ = {2.0, 5.0, 4.0, 1.0};
 
         Tensor<Evaluation> result = a.multiply(b);
-        OPM_ERROR_IF(result.data_ != std::vector<Evaluation>({2.0, 10.0, 12.0, 5.0}), "Vector multiply failed");
+        OPM_ERROR_IF(result.data_ != std::vector<Evaluation>({2.0, 10.0, 12.0, 5.0}),
+                     "Vector multiply failed");
     }
 
     {
@@ -167,7 +169,8 @@ tensor_test()
         b.data_ = {2.0, 5.0};
 
         Tensor<Evaluation> result = a.dot(b);
-        OPM_ERROR_IF(result.data_ != std::vector<Evaluation>({2.0, 5.0, 4.0, 10.0}), "Vector dot failed");
+        OPM_ERROR_IF(result.data_ != std::vector<Evaluation>({2.0, 5.0, 4.0, 10.0}),
+                     "Vector dot failed");
     }
 
     return true;

@@ -35,9 +35,16 @@ namespace ML
 {
 
     template <typename T>
-    bool readFile(std::ifstream& file, T& data, size_t n = 1)
+    bool readFile(std::ifstream& file, T& data)
     {
-        file.read(reinterpret_cast<char*>(&data), sizeof(T) * n);
+        file.read(reinterpret_cast<char*>(&data), sizeof(T));
+        return !file.fail();
+    }
+
+    template <typename T>
+    bool readFile(std::ifstream& file, T* data, size_t n)
+    {
+        file.read(reinterpret_cast<char*>(data), sizeof(T) * n);
         return !file.fail();
     }
 
@@ -194,10 +201,11 @@ namespace ML
         OPM_ERROR_IF(!(biases_shape > 0), "Invalid biases shape");
 
         weights_.resizeI<std::vector<unsigned int>>({weights_rows, weights_cols});
-        OPM_ERROR_IF(!readFile<float>(file, *weights_.data_.data(), weights_rows * weights_cols), "Expected weights");
+        OPM_ERROR_IF(!readFile<float>(file, weights_.data_.data(), weights_rows * weights_cols),
+                     "Expected weights");
 
         biases_.resizeI<std::vector<unsigned int>>({biases_shape});
-        OPM_ERROR_IF(!readFile<float>(file, *biases_.data_.data(), biases_shape), "Expected biases");
+        OPM_ERROR_IF(!readFile<float>(file, biases_.data_.data(), biases_shape), "Expected biases");
 
         OPM_ERROR_IF(!activation_.loadLayer(file), "Failed to load activation");
 
@@ -236,7 +244,8 @@ namespace ML
         OPM_ERROR_IF(!(weights_cols > 0), "Invalid weights shape");
 
         weights_.resizeI<std::vector<unsigned int>>({weights_rows, weights_cols});
-        OPM_ERROR_IF(!readFile<float>(file, *weights_.data_.data(), weights_rows * weights_cols), "Expected weights");
+        OPM_ERROR_IF(!readFile<float>(file, weights_.data_.data(), weights_rows * weights_cols),
+                     "Expected weights");
 
         return true;
     }
@@ -317,11 +326,15 @@ namespace ML
         Tensor<Evaluation> temp_in(in);
 
         for (unsigned int i = 0; i < layers_.size(); i++) {
+
+            if (i > 0) {
+                temp_in.swap(out);
+            }
+
             OPM_ERROR_IF(!(layers_[i]->apply(temp_in, out)),
                          fmt::format("\n Failed to apply layer "
                                      "{}",
                                      i));
-            temp_in = out;
         }
         return true;
     }
