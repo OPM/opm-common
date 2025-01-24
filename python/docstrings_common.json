@@ -745,6 +745,55 @@
     "EclFile_get_data_occurrence": {
         "signature": "opm.io.ecl.EclFile.__get_data(name: str, occurrence: int) -> tuple(numpy.ndarray, Opm::EclIO::eclArrType)",
         "doc": "Retrieves the given occurence of the array with the given name from the EclFile.\n\n:param name: The name.\n:type name: str\n:param occurrence: The occurrence.\n:type occurrence: int\n:return: A tupe of the array and its type.\n:tuple(numpy.ndarray, Opm::EclIO::eclArrType)"
+    },
+    "ERst": {
+        "type": "class",
+        "signature": "opm.io.ecl.ERst",
+        "doc": "Represents an Eclipse Restart file. This class inherits from the class EclFile."
+    },
+    "ERst_init": {
+        "signature": "opm.io.ecl.ERst.__init__(filename: str)",
+        "doc": "Initializes the ERst object by loading the Restart file (and the underlying EclFile) from the specified path.\n\n:param filename: The path to the Restart file.\n:type filename: str"
+    },
+    "ERst_has_report_step": {
+        "signature": "opm.io.ecl.ERst.__has_report_step(report_step: int) -> bool",
+        "doc": "Checks if the specified report step exists in the file.\n\n:param report_step: The report step number to check.\n:type report_step: int\n:return: True if the report step exists, otherwise False.\n:type: bool"
+    },
+    "ERst_load_report_step": {
+        "signature": "opm.io.ecl.ERst.load_report_step(report_step: int) -> None",
+        "doc": "Loads the specified report step from the file into memory.\n\n:param report_step: The report step number to load.\n:type report_step: int\n:return: None"
+    },
+    "ERst_report_steps": {
+        "signature": "opm.io.ecl.ERst.report_steps -> list[int]",
+        "doc": "Returns a list of all available report step numbers in the file.\n\n:return: A list of integers representing the available report steps.\n:type: list[int]"
+    },
+    "ERst_len": {
+        "signature": "opm.io.ecl.ERst.__len__() -> int",
+        "doc": "Returns the number of available report steps in the file.\n\n:return: The number of report steps.\n:type: int"
+    },
+    "ERst_count": {
+        "signature": "opm.io.ecl.ERst.count(name: str, report_step: int) -> int",
+        "doc": "Counts the occurrences of vectors with the specified name for the given report step.\n\n:param name: The name of the array to count.\n:type name: str\n:param report_step: The report step number to load.\n:type report_step: int\n:return: The number of occurrences of the array for the given report step.\n:type: int"
+    },
+    "ERst_contains": {
+        "signature": "opm.io.ecl.ERst.__contains__(tuple: [name: str, report_step: int]) -> bool",
+        "doc": "Checks if the Restart file contains a vector with the given name at the given report step.\n\n:param name: The name to check.\n:type name: str\n:param report_step: The report step to check.\n:type report_step: int\n:return: True if such a vector exists, otherwise False.\n:type: bool"
+    },
+    "ERst_arrays": {
+        "signature": "opm.io.ecl.ERst.arrays(report_step: int) -> list[tuple[str, eclArrType, int]]",
+        "doc": "Returns the list of arrays at the given report step.\n\n:param report_step: The report step number.\n:type report_step: int\n:return: A list of tuples containing the name, type, and size of each array.\n:type: list[tuple[str, eclArrType, int]]"
+    },
+    "ERst_arrays_with_string": {
+        "signature": "opm.io.ecl.ERst.arrays(report_step: int, lgr_name: str) -> list[tuple[str, eclArrType, int]]",
+        "doc": "Returns a list of arrays matching the given LGR at the given report_step.\n\n:param report_step: The report step number.\n:type report_step: int\n:param lgr_name: The name of the LGR.\n:type lgr_name: str\n:return: A list of tuples containing the name, type, and size of each array.\n:type: list[tuple[str, eclArrType, int]]"
+    },
+    "ERst_get_data_by_index": {
+        "signature": "opm.io.ecl.ERst.__get_data(index: int, report_step: int) -> tuple[numpy.ndarray, eclArrType]",
+        "doc": "Retrieves the given index of the data at the given report step.\n\n:param index: The index.\n:type index: int\n:return: A tuple containing the data array and its associated type.\n:rtype: tuple[numpy.ndarray, eclArrType]"
+    },
+    "ERst_get_data_vector": {
+        "signature": "opm.io.ecl.ERst.get_erst_vector(name: str, report_step: int, occurrence: int) -> tuple[numpy.ndarray, eclArrType]",
+        "doc": "Retrieves the data array of the given name a the given occurrence at the given report step.\n\n:param name: The name of the arrays.\n:type name: str\n:param report_step: The report step.\n:type report_step: int\n:param occurrence: The occurrence to retrieve.\n:type occurrence: int\n:return: A tuple containing the data array and its associated type.\n:rtype: tuple[numpy.ndarray, eclArrType]"
     }
 
 }
