@@ -61,7 +61,8 @@ BOOST_AUTO_TEST_CASE(Linear_4x1x1_Symmetric_Multiple_Add_Single_Merge)
         graph.addConnection(i, i + 1);
     }
 
-    graph.mergeVertices({1, 2}, 1);
+    // Group vertices 1,2 together - they will be merged into a single vertex
+    graph.addVertexGroup({1, 2});
 
     // +-----+-----+-----+-----+
     // |  0  |     1     |  2  |
@@ -131,10 +132,10 @@ BOOST_AUTO_TEST_CASE(Linear_7x1x1_Two_Disjoint_Merges)
         graph.addConnection(i, i);
     }
 
-    // Merge vertices 1 and 2 into vertex 0
-    graph.mergeVertices({1, 2}, 0);
-    // Merge vertices 5 and 6 into vertex 6
-    graph.mergeVertices({5, 6}, 6);
+    // Group vertices 1,2 together - they will be merged into a single vertex
+    graph.addVertexGroup({0, 1, 2});
+    // Group vertices 5,6 together - they will be merged into a single vertex
+    graph.addVertexGroup({5, 6});
 
     // +-----+-----+-----+-----+-----+-----+-----+
     // |        0        |  1  |  2  |     3     |
@@ -205,10 +206,12 @@ BOOST_AUTO_TEST_CASE(Linear_7x1x1_Two_Intersecting_Merges)
         graph.addConnection(i, i);
     }
 
-    // Merge vertices 1 2 3 into vertex 1
-    graph.mergeVertices({1, 2, 3}, 1);
-    // Merge vertices 3 4 into vertex 3
-    graph.mergeVertices({3, 4}, 3);
+    // Group vertices 1,2,3 together - they will be merged into a single vertex
+    graph.addVertexGroup({1, 2, 3});
+    
+    // Group vertices 3,4 together - they will be merged into a single vertex
+    // Note: Since vertex 3 appears in both groups, these groups will be merged
+    graph.addVertexGroup({3, 4});
 
     // +-----+-----+-----+-----+-----+-----+-----+
     // |  0  |        1              |  2  |  3  |
@@ -283,7 +286,7 @@ BOOST_AUTO_TEST_CASE(Directed_Graph_With_Merges)
     //
     // => CSR: IA = [ 0,   1,     3,  3,  4 ]
     //         JA = [ 1  | 2, 3 |   | 2 ]
-    graph.mergeVertices({3, 4}, 3);
+    graph.addVertexGroup({3, 4});
     graph.compress(4);
     BOOST_CHECK_EQUAL(graph.numVertices(), std::size_t{4});
     BOOST_CHECK_EQUAL(graph.numEdges(), std::size_t{4});
@@ -342,7 +345,8 @@ BOOST_AUTO_TEST_CASE(Linear_4x1x1_Symmetric_Multiple_Add_Single_Merge)
         graph.addConnection(i, i + 1);
     }
 
-    graph.mergeVertices({1, 2}, 1);
+    // Group vertices 1,2 together - they will be merged into a single vertex
+    graph.addVertexGroup({1, 2});
 
     // +-----+-----+-----+-----+
     // |  0  |     1     |  2  |
@@ -376,7 +380,7 @@ BOOST_AUTO_TEST_CASE(Linear_4x1x1_Symmetric_Multiple_Add_Single_Merge)
         const auto& nzMap = graph.compressedIndexMap();
         const auto expect = std::vector {
             0, 1, 1, 0, 0,      // i = 0
-        //  x, x, x, x, x,      // i = 1
+        //  x, x, x, x, x,      // i = 1: (1->1, 1->1, 1->1, 1->1, 1->1)
             2, 3, 3, 2, 2,      // i = 2
         };
         BOOST_CHECK_EQUAL_COLLECTIONS(nzMap .begin(), nzMap .end(),
@@ -443,10 +447,10 @@ BOOST_AUTO_TEST_CASE(Linear_7x1x1_Two_Disjoint_Merges)
         graph.addConnection(i, i);
     }
 
-    // Merge vertices 1 and 2 into vertex 0
-    graph.mergeVertices({1, 2}, 0);
-    // Merge vertices 5 and 6 into vertex 6
-    graph.mergeVertices({5, 6}, 6);
+    // Group vertices 0, 1,2 together - they will be merged into a single vertex
+    graph.addVertexGroup({0,1, 2});
+    // Group vertices 5,6 together - they will be merged into a single vertex
+    graph.addVertexGroup({5, 6});
 
     // +-----+-----+-----+-----+-----+-----+-----+
     // |        0        |  1  |  2  |     3     |
@@ -554,10 +558,12 @@ BOOST_AUTO_TEST_CASE(Linear_7x1x1_Two_Intersecting_Merges)
         graph.addConnection(i, i);
     }
 
-    // Merge vertices 1 2 3 into vertex 1
-    graph.mergeVertices({1, 2, 3}, 1);
-    // Merge vertices 3 4 into vertex 3
-    graph.mergeVertices({3, 4}, 3);
+    // Group vertices 1,2,3 together - they will be merged into a single vertex
+    graph.addVertexGroup({1, 2, 3});
+    
+    // Group vertices 3,4 together - they will be merged into a single vertex
+    // Note: Since vertex 3 appears in both groups, these groups will be merged
+    graph.addVertexGroup({3, 4});
 
     // +-----+-----+-----+-----+-----+-----+-----+
     // |  0  |        1              |  2  |  3  |
@@ -635,9 +641,9 @@ BOOST_AUTO_TEST_CASE(Directed_Graph_With_Merge)
     graph.addConnection(3, 4);  // 3 -> 4
     graph.addConnection(4, 2);  // 4 -> 2
 
-    graph.mergeVertices({3, 4}, 3);
+    // Group vertices 3,4 together - they will be merged into a single vertex
+    graph.addVertexGroup({3, 4});
 
-    // Merge vertices 3 and 4 into vertex 3
     // After merge:
     // 0 -----> 1 -----> 2
     //          |        ^
@@ -722,7 +728,8 @@ BOOST_AUTO_TEST_CASE(Linear_4x1x1_Symmetric_Multiple_Add_Single_Merge)
         graph.addConnection(i, i + 1);
     }
 
-    graph.mergeVertices({1, 2}, 1);
+    // Group vertices 1,2 together - they will be merged into a single vertex
+    graph.addVertexGroup({1, 2});
 
     // +-----+-----+-----+-----+
     // |  0  |     1     |  2  |
@@ -792,10 +799,10 @@ BOOST_AUTO_TEST_CASE(Linear_7x1x1_Two_Disjoint_Merges)
         graph.addConnection(i, i);
     }
 
-    // Merge vertices 1 and 2 into vertex 0
-    graph.mergeVertices({1, 2}, 0);
-    // Merge vertices 5 and 6 into vertex 6
-    graph.mergeVertices({5, 6}, 6);
+    // Group vertices 0,1,2 together - they will be merged into a single vertex
+    graph.addVertexGroup({0, 1, 2});
+    // Group vertices 5,6 together - they will be merged into a single vertex
+    graph.addVertexGroup({5, 6});
 
     // +-----+-----+-----+-----+-----+-----+-----+
     // |        0        |  1  |  2  |     3     |
@@ -867,10 +874,12 @@ BOOST_AUTO_TEST_CASE(Linear_7x1x1_Two_Intersecting_Merges)
         graph.addConnection(i, i);
     }
 
-    // Merge vertices 1 2 3 into vertex 1
-    graph.mergeVertices({1, 2, 3}, 1);
-    // Merge vertices 3 4 into vertex 3
-    graph.mergeVertices({3, 4}, 3);
+    // Group vertices 1,2,3 together - they will be merged into a single vertex
+    graph.addVertexGroup({1, 2, 3});
+    
+    // Group vertices 3,4 together - they will be merged into a single vertex
+    // Note: Since vertex 3 appears in both groups, these groups will be merged
+    graph.addVertexGroup({3, 4});
 
     // +-----+-----+-----+-----+-----+-----+-----+
     // |  0  |        1              |  2  |  3  |
@@ -930,9 +939,9 @@ BOOST_AUTO_TEST_CASE(Directed_Graph_With_Merges)
     graph.addConnection(3, 4);  // 3 -> 4
     graph.addConnection(4, 2);  // 4 -> 2
 
-    graph.mergeVertices({3, 4}, 3);
+    // Group vertices 3,4 together - they will be merged into a single vertex
+    graph.addVertexGroup({3, 4});
 
-    // Merge vertices 3 and 4 into vertex 3
     // After merge:
     // 0 -----> 1 -----> 2
     //          |        ^
@@ -1007,7 +1016,8 @@ BOOST_AUTO_TEST_CASE(Linear_4x1x1_Symmetric_Multiple_Add_Single_Merge)
         graph.addConnection(i, i + 1);
     }
 
-    graph.mergeVertices({1, 2}, 1);
+    // Group vertices 1,2 together - they will be merged into a single vertex
+    graph.addVertexGroup({1, 2});
 
     // +-----+-----+-----+-----+
     // |  0  |     1     |  2  |
@@ -1105,10 +1115,10 @@ BOOST_AUTO_TEST_CASE(Linear_7x1x1_Two_Disjoint_Merges)
         graph.addConnection(i, i);
     }
 
-    // Merge vertices 1 and 2 into vertex 0
-    graph.mergeVertices({1, 2}, 0);
-    // Merge vertices 5 and 6 into vertex 6
-    graph.mergeVertices({5, 6}, 6);
+    // Group vertices 1,2 together - they will be merged into a single vertex
+    graph.addVertexGroup({0,1, 2});
+    // Group vertices 5,6 together - they will be merged into a single vertex
+    graph.addVertexGroup({5, 6});
 
     // +-----+-----+-----+-----+-----+-----+-----+
     // |        0        |  1  |  2  |     3     |
@@ -1216,10 +1226,12 @@ BOOST_AUTO_TEST_CASE(Linear_7x1x1_Two_Intersecting_Merges)
         graph.addConnection(i, i);
     }
 
-    // Merge vertices 1 2 3 into vertex 1
-    graph.mergeVertices({1, 2, 3}, 1);
-    // Merge vertices 3 4 into vertex 3
-    graph.mergeVertices({3, 4}, 3);
+    // Group vertices 1,2,3 together - they will be merged into a single vertex
+    graph.addVertexGroup({1, 2, 3});
+    
+    // Group vertices 3,4 together - they will be merged into a single vertex
+    // Note: Since vertex 3 appears in both groups, these groups will be merged
+    graph.addVertexGroup({3, 4});
 
 
     // +-----+-----+-----+-----+-----+-----+-----+
@@ -1298,9 +1310,10 @@ BOOST_AUTO_TEST_CASE(Directed_Graph_With_Merge)
     graph.addConnection(3, 4);  // 3 -> 4
     graph.addConnection(4, 2);  // 4 -> 2
 
-    graph.mergeVertices({3, 4}, 3);
+    // Group vertices 3,4 together - they will be merged into a single vertex
+    graph.addVertexGroup({3, 4});
 
-    // Merge vertices 3 and 4 into vertex 3
+    // Merge vertices 3 and 4
     // After merge:
     // 0 -----> 1 -----> 2
     //          |        ^

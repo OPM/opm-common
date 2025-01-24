@@ -30,6 +30,8 @@
 #include <vector>
 #include <set>
 #include <map>
+#include <iostream>
+#include <functional>
 
 // ---------------------------------------------------------------------
 // Class Opm::utility::CSRGraphFromCoordinates::Connections
@@ -664,11 +666,116 @@ addConnection(const VertexID v1, const VertexID v2)
 template <typename VertexID, bool TrackCompressedIdx, bool PermitSelfConnections>
 void
 Opm::utility::CSRGraphFromCoordinates<VertexID, TrackCompressedIdx, PermitSelfConnections>::
-compress(const Offset maxNumVertices, const bool expandExistingIdxMap)
+addVertexGroup(const std::vector<VertexID>& vertices)
 {
-    // Apply vertex merges to uncompressed data if any exist
-    if (!vertex_merges_.empty()) {
-        vertex_mapping_ = this->uncompressed_.applyVertexMerges(vertex_merges_);
+    if (!vertices.empty()) {
+        vertex_groups_.push_back(vertices);
+    }
+}
+
+template <typename VertexID, bool TrackCompressedIdx, bool PermitSelfConnections>
+void
+Opm::utility::CSRGraphFromCoordinates<VertexID, TrackCompressedIdx, PermitSelfConnections>::
+findConnectedGroups()
+{
+    if (vertex_groups_.empty()) {
+        return;
+    }
+
+    // Build a map of vertex to group indices for quick lookup
+    std::map<VertexID, std::set<std::size_t>> vertexToGroups;
+    for (std::size_t i = 0; i < vertex_groups_.size(); ++i) {
+        for (const auto& vertex : vertex_groups_[i]) {
+            vertexToGroups[vertex].insert(i);
+        }
+    }
+
+    // Find connected components using DFS
+    std::vector<bool> visited(vertex_groups_.size(), false);
+    std::vector<std::vector<std::vector<VertexID>>> connectedGroups;
+
+    std::function<void(std::size_t, std::vector<std::vector<VertexID>>&)> dfs = 
+        [&](std::size_t groupIdx, std::vector<std::vector<VertexID>>& component) {
+            if (visited[groupIdx]) return;
+            visited[groupIdx] = true;
+            component.push_back(vertex_groups_[groupIdx]);
+
+            // Find all groups that share vertices with this group
+            std::set<std::size_t> connectedGroupIndices;
+            for (const auto& vertex : vertex_groups_[groupIdx]) {
+                const auto& groups = vertexToGroups[vertex];
+                connectedGroupIndices.insert(groups.begin(), groups.end());
+            }
+
+            // Recursively visit connected groups
+            for (const auto& connectedIdx : connectedGroupIndices) {
+                if (!visited[connectedIdx]) {
+                    dfs(connectedIdx, component);
+                }
+            }
+        };
+
+    // Find all connected components
+    for (std::size_t i = 0; i < vertex_groups_.size(); ++i) {
+        if (!visited[i]) {
+            connectedGroups.emplace_back();
+            dfs(i, connectedGroups.back());
+        }
+    }
+
+    // Merge each connected component into a single group
+    vertex_groups_.clear();
+    for (const auto& component : connectedGroups) {
+        std::set<VertexID> mergedGroup;
+        for (const auto& group : component) {
+            mergedGroup.insert(group.begin(), group.end());
+        }
+        vertex_groups_.push_back(std::vector<VertexID>(mergedGroup.begin(), mergedGroup.end()));
+    }
+}
+
+template <typename VertexID, bool TrackCompressedIdx, bool PermitSelfConnections>
+typename Opm::utility::CSRGraphFromCoordinates<VertexID, TrackCompressedIdx, PermitSelfConnections>::Offset
+Opm::utility::CSRGraphFromCoordinates<VertexID, TrackCompressedIdx, PermitSelfConnections>::
+applyVertexMerges()
+{
+    // First find connected groups (merges groups that share vertices)
+    findConnectedGroups();
+
+    // For each group, merge all vertices into the lowest numbered vertex
+    std::map<VertexID, VertexID> vertex_merges;
+    for (const auto& group : vertex_groups_) {
+        if (group.empty()) {
+            continue;
+        }
+
+        // Use the lowest numbered vertex as the target
+        VertexID targetVertex = *std::min_element(group.begin(), group.end());
+
+        // Map all other vertices to the target
+        for (const auto& vertex : group) {
+            if (vertex != targetVertex) {
+                vertex_merges[vertex] = targetVertex;
+            }
+        }
+    }
+
+    // Apply the merges to the uncompressed data
+    if (!vertex_merges.empty()) {
+        vertex_mapping_ = this->uncompressed_.applyVertexMerges(vertex_merges);
+    }
+
+    return this->uncompressed_.maxRow().value_or(0) + 1;
+}
+
+template <typename VertexID, bool TrackCompressedIdx, bool PermitSelfConnections>
+void
+Opm::utility::CSRGraphFromCoordinates<VertexID, TrackCompressedIdx, PermitSelfConnections>::
+compress(Offset maxNumVertices, bool expandExistingIdxMap)
+{
+    // Apply vertex merges if there are vertex groups but merges haven't been applied yet
+    if (!vertex_groups_.empty() && vertex_mapping_.empty()) {
+        applyVertexMerges();
     }
 
     if (! this->uncompressed_.isValid()) {
@@ -692,18 +799,6 @@ getFinalVertexID(VertexID v) const
     }
     else {
         return vertex_mapping_.at(v);
-    }
-}
-
-template <typename VertexID, bool TrackCompressedIdx, bool PermitSelfConnections>
-void
-Opm::utility::CSRGraphFromCoordinates<VertexID, TrackCompressedIdx, PermitSelfConnections>::
-mergeVertices(const std::vector<VertexID>& vertices, VertexID target_vertex)
-{
-    for (const auto& v : vertices) {
-        if (v != target_vertex) {
-            vertex_merges_[v] = target_vertex;
-        }
     }
 }
 

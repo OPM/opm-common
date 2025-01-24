@@ -85,6 +85,10 @@ namespace Opm { namespace utility {
         /// this function does nothing.
         void addConnection(VertexID v1, VertexID v2);
 
+        /// Apply vertex merges to all vertex groups
+        Offset applyVertexMerges();
+
+
         /// Form CSR adjacency matrix representation of input graph from
         /// connections established in previous calls to addConnection().
         ///
@@ -161,12 +165,11 @@ namespace Opm { namespace utility {
                      other.columnIndices());
         }
 
-        /// Merge a group of vertices into a single vertex.
+        /// Add a group of vertices that should be merged together.
         /// Must be called before compress().
         ///
         /// \param[in] vertices Vector of vertex IDs to merge
-        /// \param[in] target_vertex The vertex ID that will represent the merged group
-        void mergeVertices(const std::vector<VertexID>& vertices, VertexID target_vertex);
+        void addVertexGroup(const std::vector<VertexID>& vertices);
 
         /// Get the final vertex ID after all merges and renumbering for a given original vertex ID.
         /// Returns the original ID if no merging or renumbering has been done.
@@ -545,11 +548,14 @@ namespace Opm { namespace utility {
         /// Canonical representation of unique inter-region flow rates.
         CSR csr_;
 
-        /// Map of vertices to be merged during compression
-        std::map<VertexID, VertexID> vertex_merges_{};
+        /// Groups of vertices that should be merged together
+        std::vector<std::vector<VertexID>> vertex_groups_{};
 
         /// Mapping from original vertex IDs to final vertex IDs after merging and renumbering
         std::map<VertexID, VertexID> vertex_mapping_{};
+
+        /// Find connected components in vertex groups that share vertices
+        void findConnectedGroups();
     };
 
 }} // namespace Opm::utility
