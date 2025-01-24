@@ -29,6 +29,7 @@
 #include <opm/input/eclipse/Parser/ParserKeywords/F.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/W.hpp>
 
+#include <opm/input/eclipse/Schedule/Network/ExtNetwork.hpp>
 #include <opm/input/eclipse/Schedule/ScheduleState.hpp>
 #include <opm/input/eclipse/Schedule/ScheduleStatic.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQActive.hpp>
@@ -332,6 +333,27 @@ void handleWCONINJH(HandlerContext& handlerContext)
     }
 }
 
+bool belongsToAutoChokeGroup(const Well& well, const ScheduleState& state) {
+    const auto& network = state.network.get();
+    if (!network.active())
+        return false;
+    auto group_name = well.groupName();
+    while (group_name != "FIELD") {
+        if (network.has_node(group_name)) {
+            auto node_name = group_name;
+            if (network.node(node_name).as_choke())
+                return true;
+            while (network.uptree_branch(node_name)) {
+                node_name = network.uptree_branch(node_name)->uptree_node();
+                if (network.node(node_name).as_choke())
+                    return true;
+            }
+        }
+        group_name = state.groups.get(group_name).parent();
+    }
+    return false;
+}
+
 void handleWCONPROD(HandlerContext& handlerContext)
 {
     for (const auto& record : handlerContext.keyword) {
@@ -348,7 +370,7 @@ void handleWCONPROD(HandlerContext& handlerContext)
             const bool switching_from_injector = !well2.isProducer();
             auto properties = std::make_shared<Well::WellProductionProperties>(well2.getProductionProperties());
             properties->clearControls();
-            if (well2.isAvailableForGroupControl()) {
+            if (well2.isAvailableForGroupControl() || belongsToAutoChokeGroup(well2, handlerContext.state())) {
                 properties->addProductionControl(Well::ProducerCMode::GRUP);
             }
 
