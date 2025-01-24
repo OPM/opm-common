@@ -461,35 +461,36 @@ void python::common::export_IO(py::module& m) {
         .def("__get_data", &get_vector_name, py::arg("name"), EclFile_get_data_name_docstring)
         .def("__get_data", &get_vector_occurrence, py::arg("name"), py::arg("occurrence"), EclFile_get_data_occurrence_docstring);
 
-    py::class_<Opm::EclIO::ERst>(m, "ERst")
-        .def(py::init<const std::string &>())
-        .def("__has_report_step", &Opm::EclIO::ERst::hasReportStepNumber)
-        .def("load_report_step", &Opm::EclIO::ERst::loadReportStepNumber)
-        .def_property_readonly("report_steps", &Opm::EclIO::ERst::listOfReportStepNumbers)
-        .def("__len__", &Opm::EclIO::ERst::numberOfReportSteps)
-        .def("count", &Opm::EclIO::ERst::occurrence_count)
-        .def("__contains", &erst_contains)
+    py::class_<Opm::EclIO::ERst>(m, "ERst", ERst_docstring)
+        .def(py::init<const std::string &>(), py::arg("filename"), ERst_init_docstring)
+        .def("__has_report_step", &Opm::EclIO::ERst::hasReportStepNumber, py::arg("report_step"), ERst_has_report_step_docstring)
+        .def("load_report_step", &Opm::EclIO::ERst::loadReportStepNumber, py::arg("report_step"), ERst_load_report_step_docstring)
+        .def_property_readonly("report_steps", &Opm::EclIO::ERst::listOfReportStepNumbers, ERst_report_steps_docstring)
+        .def("__len__", &Opm::EclIO::ERst::numberOfReportSteps, ERst_len_docstring)
+        .def("count", &Opm::EclIO::ERst::occurrence_count, py::arg("name"), py::arg("report_step"), ERst_count_docstring)
+        .def("__contains", &erst_contains, py::arg("tuple"), ERst_contains_docstring)
         .def("arrays", (std::vector< std::tuple<std::string, Opm::EclIO::eclArrType, int64_t> >
-                        (Opm::EclIO::ERst::*)(int) ) &Opm::EclIO::ERst::listOfRstArrays)
+                        (Opm::EclIO::ERst::*)(int) ) &Opm::EclIO::ERst::listOfRstArrays, py::arg("report_step"), ERst_arrays_docstring)
         .def("arrays", (std::vector< std::tuple<std::string, Opm::EclIO::eclArrType, int64_t> >
-                        (Opm::EclIO::ERst::*)(int, const std::string&) ) &Opm::EclIO::ERst::listOfRstArrays)
-        .def("__get_data", &get_erst_by_index)
-        .def("__get_data", &get_erst_vector);
+                        (Opm::EclIO::ERst::*)(int, const std::string&) ) &Opm::EclIO::ERst::listOfRstArrays, py::arg("report_step"), py::arg("lgr_name"), ERst_arrays_with_string_docstring)
+        .def("__get_data", &get_erst_by_index, py::arg("index"), py::arg("report_step"), ERst_get_data_by_index_docstring)
+        .def("__get_data", &get_erst_vector, py::arg("name"), py::arg("report_step"), py::arg("occurrence"), ERst_get_data_vector_docstring);
+
 
    py::class_<ESmryBind>(m, "ESmry")
         .def(py::init<const std::string &, const bool>(), py::arg("filename"), py::arg("load_base_run") = false)
-        .def("__contains__", &ESmryBind::hasKey)
+        .def("__contains__", &ESmryBind::hasKey, py::arg("key"))
         .def("make_esmry_file", &ESmryBind::make_esmry_file)
         .def("__len__", &ESmryBind::numberOfTimeSteps)
-        .def("__get_all", &ESmryBind::get_smry_vector)
-        .def("__get_at_rstep", &ESmryBind::get_smry_vector_at_rsteps)
+        .def("__get_all", &ESmryBind::get_smry_vector, py::arg("key"))
+        .def("__get_at_rstep", &ESmryBind::get_smry_vector_at_rsteps, py::arg("key"))
         .def_property_readonly("start_date", &ESmryBind::smry_start_date)
         .def("keys", (const std::vector<std::string>& (ESmryBind::*) (void) const)
             &ESmryBind::keywordList)
         .def("keys", (std::vector<std::string> (ESmryBind::*) (const std::string&) const)
             &ESmryBind::keywordList)
         .def("dates", &ESmryBind::dates)
-        .def("units", &ESmryBind::units);
+        .def("units", &ESmryBind::units, py::arg("field"));
 
    py::class_<Opm::EclIO::EGrid>(m, "EGrid")
         .def(py::init<const std::string &, const std::string &>(), py::arg("filename"),
