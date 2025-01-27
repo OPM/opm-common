@@ -514,6 +514,7 @@ if(ENABLE_ECL_INPUT)
     tests/test_ERft.cpp
     tests/test_ERst.cpp
     tests/test_ESmry.cpp
+    tests/test_Uns2CPG.cpp
     tests/test_ExtESmry.cpp
     tests/test_FIPRegionStatistics.cpp
     tests/test_RegionSetMatcher.cpp
