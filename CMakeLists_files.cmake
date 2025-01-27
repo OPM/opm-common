@@ -77,6 +77,7 @@ list (APPEND MAIN_SOURCE_FILES
       opm/material/fluidsystems/blackoilpvt/WaterPvtThermal.cpp
       opm/material/fluidsystems/blackoilpvt/WetGasPvt.cpp
       opm/material/fluidsystems/blackoilpvt/WetHumidGasPvt.cpp
+      opm/ml/ml_model.cpp
 )
 if(ENABLE_ECL_INPUT)
   list(APPEND MAIN_SOURCE_FILES
@@ -485,6 +486,7 @@ list (APPEND TEST_SOURCE_FILES
       tests/material/test_spline.cpp
       tests/material/test_tabulation.cpp
       tests/test_Visitor.cpp
+      tests/ml/ml_model_test.cpp
 )
 
 # tests that need to be linked to dune-common
@@ -656,6 +658,15 @@ list (APPEND TEST_DATA_FILES
       tests/material/co2_unittest_below_sat.json
       tests/material/h2o_unittest.json
       tests/material/h2_unittest.json
+      tests/ml/ml_tools/models/test_dense_1x1.model
+      tests/ml/ml_tools/models/test_dense_2x2.model
+      tests/ml/ml_tools/models/test_dense_10x1.model
+      tests/ml/ml_tools/models/test_dense_10x10.model
+      tests/ml/ml_tools/models/test_dense_10x10x10.model
+      tests/ml/ml_tools/models/test_dense_relu_10.model
+      tests/ml/ml_tools/models/test_dense_tanh_10.model
+      tests/ml/ml_tools/models/test_relu_10.model
+      tests/ml/ml_tools/models/test_scalingdense_10x1.model
 )
 if(ENABLE_ECL_OUTPUT)
   list (APPEND TEST_DATA_FILES
@@ -1078,6 +1089,7 @@ list( APPEND PUBLIC_HEADER_FILES
       opm/material/thermal/SomertonThermalConductionLaw.hpp
       opm/material/thermal/EclSpecrockLaw.hpp
       opm/material/thermal/NullSolidEnergyLaw.hpp
+      opm/ml/ml_model.hpp
 )
 
 if(ENABLE_ECL_INPUT)
