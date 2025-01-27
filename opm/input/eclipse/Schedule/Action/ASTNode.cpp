@@ -25,6 +25,7 @@
 #include <opm/input/eclipse/Schedule/Well/WListManager.hpp>
 
 #include <opm/common/utility/shmatch.hpp>
+#include <opm/common/utility/String.hpp>
 
 #include <algorithm>
 #include <cmath>
@@ -65,6 +66,80 @@ namespace {
 
         return strings;
     }
+
+    bool isDefaultRegSet(const std::string& regSet)
+    {
+        const auto trimmedRegSet = Opm::trim_copy(strip_quotes(regSet));
+
+        return trimmedRegSet.empty()
+            || (trimmedRegSet == "1*");
+    }
+
+    std::string
+    normaliseFunction(const Opm::Action::FuncType     funcType,
+                      std::string_view                function,
+                      const std::vector<std::string>& argListIn)
+    {
+        if ((funcType != Opm::Action::FuncType::region) ||
+            (argListIn.size() < 2))
+        {
+            return std::string { function };
+        }
+
+        if (argListIn.size() > 2) {
+            throw std::invalid_argument {
+                fmt::format(R"(Selection "{}" is not supported for region vector '{}')",
+                            fmt::join(argListIn, " "), function)
+            };
+        }
+
+        if (isDefaultRegSet(argListIn.back())) {
+            // The input specification is something along the lines of
+            //
+            //   RPR 42 1*  or  RPR 42 ' '
+            //
+            // This corresponds to the default 'FIPNUM' region set, so
+            // return
+            //
+            //   RPR
+            return std::string { function };
+        }
+
+        // The input specification is something along the lines of
+        //
+        //   RPR 42 RE4
+        //
+        // Normalise vector name to the common
+        //
+        //   RPR__RE4
+        //
+        // as that's the expected region vector name format elsewhere.
+        return fmt::format("{:_<5}{}", function,
+                           strip_quotes(argListIn.back())
+                           .substr(0, 3));
+    }
+
+    std::vector<std::string>
+    normaliseArgList(const Opm::Action::FuncType funcType,
+                     std::vector<std::string>&&  argListIn)
+    {
+        if ((funcType != Opm::Action::FuncType::region) ||
+            (argListIn.size() < 2))
+        {
+            return std::move(argListIn);
+        }
+
+        // The input specification is something along the lines of
+        //
+        //   RPR 42 RE4
+        //
+        // NormaliseFunction() creates the vector name
+        //
+        //   RPR__RE4
+        //
+        // so we only need to return the "42" here (front of argument list).
+        return { std::move(argListIn.front()) };
+    }
 } // Anonymous namespace
 
 Opm::Action::ASTNode::ASTNode()
@@ -87,8 +162,8 @@ Opm::Action::ASTNode::ASTNode(const TokenType                 type_arg,
                               const std::vector<std::string>& arg_list_arg)
     : type     (type_arg)
     , func_type(func_type_arg)
-    , func     (func_arg)
-    , arg_list (strip_quotes(arg_list_arg))
+    , func     (normaliseFunction(func_type, func_arg, arg_list_arg))
+    , arg_list (normaliseArgList(func_type, strip_quotes(arg_list_arg)))
 {}
 
 Opm::Action::ASTNode
