@@ -526,5 +526,7 @@ readGlobalThreePhaseOptions_(const Runspec& runspec)
 
 template class EclMaterialLawManager<ThreePhaseMaterialTraits<double,0,1,2>>;
 template class EclMaterialLawManager<ThreePhaseMaterialTraits<float,0,1,2>>;
+template class EclMaterialLawManager<ThreePhaseMaterialTraits<double,2,0,1>>;
+template class EclMaterialLawManager<ThreePhaseMaterialTraits<float,2,0,1>>;
 
 } // namespace Opm
