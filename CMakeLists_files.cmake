@@ -46,6 +46,7 @@ list (APPEND MAIN_SOURCE_FILES
       opm/common/utility/numeric/calculateCellVol.cpp
       opm/common/utility/numeric/GeometryUtil.cpp
       opm/common/utility/numeric/VectorUtil.cpp
+      opm/common/utility/numeric/GridUtil.cpp
       opm/common/utility/numeric/MonotCubicInterpolator.cpp
       opm/common/utility/numeric/RootFinders.cpp
       opm/material/common/Spline.cpp
@@ -477,6 +478,7 @@ list (APPEND TEST_SOURCE_FILES
       tests/test_sparsevector.cpp
       tests/test_ThreadSafeMapBuilder.cpp
       tests/test_uniformtablelinear.cpp
+      tests/test_Uns2CPG.cpp
       tests/material/test_2dtables.cpp
       tests/material/test_blackoilfluidstate.cpp
       tests/material/test_components.cpp
@@ -514,7 +516,6 @@ if(ENABLE_ECL_INPUT)
     tests/test_ERft.cpp
     tests/test_ERst.cpp
     tests/test_ESmry.cpp
-    tests/test_Uns2CPG.cpp
     tests/test_ExtESmry.cpp
     tests/test_FIPRegionStatistics.cpp
     tests/test_RegionSetMatcher.cpp
@@ -852,6 +853,7 @@ list( APPEND PUBLIC_HEADER_FILES
       opm/common/utility/numeric/calculateCellVol.hpp
       opm/common/utility/numeric/GeometryUtil.hpp
       opm/common/utility/numeric/VectorUtil.hpp
+      opm/common/utility/numeric/GridUtil.hpp
       opm/common/utility/numeric/buildUniformMonotoneTable.hpp
       opm/common/utility/numeric/linearInterpolation.hpp
       opm/common/utility/numeric/MonotCubicInterpolator.hpp
