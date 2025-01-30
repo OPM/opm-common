@@ -50,17 +50,6 @@ macro (opm_defaults opm)
 
   # Use of OpenMP is considered experimental
   set (USE_OPENMP_DEFAULT ON)
-
-  # if we are on a system where CMake 2.6 is the default (Hi RHEL 6!),
-  # the configuration files for Boost will trip up the library paths
-  # (look for /usr/lib64/lib64/ in the log) when used with FindBoost
-  # module bundled with CMake 2.8. this can be circumvented by turning
-  # off config mode probing if we have not explicitly specified a
-  # directory to look for it. for more details, see
-  # <http://stackoverflow.com/questions/9948375/cmake-find-package-succeeds-but-returns-wrong-path>
-  if (NOT BOOST_ROOT)
-	set (Boost_NO_BOOST_CMAKE ON)
-  endif (NOT BOOST_ROOT)
 endmacro (opm_defaults opm)
 
 # overwrite a cache entry's value, but keep docstring and type
