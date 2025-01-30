@@ -95,6 +95,17 @@ std::string trim_wgname(const DeckKeyword& keyword,
     return wgname;
 }
 
+void updateOpenShutEvents(HandlerContext& handlerContext, const std::string& well_name){
+    if (handlerContext.getWellStatus(well_name) == WellStatus::OPEN) {
+        handlerContext.state().wellgroup_events().addEvent( well_name, ScheduleEvents::REQUEST_OPEN_WELL);
+        handlerContext.state().wellgroup_events().clearEvent( well_name, ScheduleEvents::REQUEST_SHUT_WELL);
+    }
+    if (handlerContext.getWellStatus(well_name) == WellStatus::SHUT) {
+        handlerContext.state().wellgroup_events().addEvent( well_name, ScheduleEvents::REQUEST_SHUT_WELL);
+        handlerContext.state().wellgroup_events().clearEvent( well_name, ScheduleEvents::REQUEST_OPEN_WELL);
+    }
+}
+
 void handleWCONHIST(HandlerContext& handlerContext)
 {
     for (const auto& record : handlerContext.keyword) {
@@ -177,11 +188,8 @@ void handleWCONHIST(HandlerContext& handlerContext)
                 handlerContext.affected_well(well_name);
             }
 
-            // Always check if well can be opened (it could have been closed for numerical reasons and possible to operate with new params)
-            if (handlerContext.getWellStatus(well_name) == WellStatus::OPEN) {
-                handlerContext.state().wellgroup_events().addEvent( well_name, ScheduleEvents::REQUEST_OPEN_WELL);
-            }
-
+            // Add Event if well open/shut is requested
+            updateOpenShutEvents(handlerContext, well_name);
         }
     }
 }
@@ -255,11 +263,8 @@ void handleWCONINJE(HandlerContext& handlerContext)
                 handlerContext.state().wells.update( std::move(well2) );
                 handlerContext.affected_well(well_name);
             }
-
-            if (handlerContext.state().wells.get( well_name ).getStatus() == Well::Status::OPEN) {
-                handlerContext.state().wellgroup_events().addEvent(well_name, ScheduleEvents::REQUEST_OPEN_WELL);
-            }
-
+             // Add Event if well open/shut is requested
+            updateOpenShutEvents(handlerContext, well_name);
             auto udq_active = handlerContext.state().udq_active.get();
             if (injection->updateUDQActive(handlerContext.state().udq.get(), udq_active)) {
                 handlerContext.state().udq_active.update( std::move(udq_active) );
@@ -334,10 +339,8 @@ void handleWCONINJH(HandlerContext& handlerContext)
                 handlerContext.affected_well(well_name);
             }
 
-            // Always check if well can be opened (it could have been closed for numerical reasons and possible to operate with new params)
-            if (handlerContext.getWellStatus(well_name) == WellStatus::OPEN) {
-                handlerContext.state().wellgroup_events().addEvent( well_name, ScheduleEvents::REQUEST_OPEN_WELL);
-            }
+            // Add Event if well open/shut is requested
+            updateOpenShutEvents(handlerContext, well_name);
         }
     }
 }
@@ -426,16 +429,15 @@ void handleWCONPROD(HandlerContext& handlerContext)
                 update_well = true;
             }
 
-            if (well2.getStatus() == WellStatus::OPEN) {
-                handlerContext.state().wellgroup_events().addEvent(well2.name(), ScheduleEvents::REQUEST_OPEN_WELL);
-            }
-
             if (update_well) {
                 handlerContext.state().events().addEvent( ScheduleEvents::PRODUCTION_UPDATE );
                 handlerContext.state().wellgroup_events().addEvent( well2.name(), ScheduleEvents::PRODUCTION_UPDATE);
                 handlerContext.state().wells.update( std::move(well2) );
                 handlerContext.affected_well(well_name);
             }
+
+            // Add Event if well open/shut is requested
+            updateOpenShutEvents(handlerContext, well_name);
 
             auto udq_active = handlerContext.state().udq_active.get();
             if (properties->updateUDQActive(handlerContext.state().udq.get(), udq_active)) {
@@ -524,10 +526,8 @@ void handleWELOPEN(HandlerContext& handlerContext)
                         handlerContext.state().wells.update(std::move(well2));
                     }
                 }
-
-                if (new_well_status == open) {
-                    handlerContext.state().wellgroup_events().addEvent( wname, ScheduleEvents::REQUEST_OPEN_WELL);
-                }
+                // Add Event if well open/shut is requested
+                updateOpenShutEvents(handlerContext, wname);
             }
             continue;
         }
