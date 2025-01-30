@@ -80,7 +80,7 @@ std::tuple<std::vector<double>,std::vector<double>> convertUnsToCPG(
        pillars[ij_pillars(ii+1,jj+1)][0] = coord_uns[element_nodes[3]];
     }
 
-    // // looping through the first layer of elements
+    // // looping through the last layer of elements
     for (std::size_t index = (element_size - nx*ny); index < element_size; index++) {
        auto [ii,jj,kk] = linear_to_ijk(index, nx, ny);
        std::array<std::size_t,8> element_nodes = element[index];
