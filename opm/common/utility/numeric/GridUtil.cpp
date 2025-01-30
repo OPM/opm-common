@@ -43,20 +43,14 @@ std::tuple<std::vector<double>,std::vector<double>> convertUnsToCPG(
     // converts unstructured mesh grid described by the coord_uns and element arrays
     // element contains a referece to the nodes described by coords_uns
     std::size_t element_size = element.size();
-
-   
+ 
     std::size_t num_pillars = (nx+1)*(ny+1);
-    std::size_t coord_cpg_size = num_pillars*2*3;
-
-
  
     auto ij_pillars = [ &nx , &ny](std::size_t i, std::size_t j) {
         return ijk_to_linear(i, j, 0 , nx+1, ny+1);
     };
-    auto linear_pillars = [&nx , &ny](std::size_t idx) {
-        return linear_to_ijk(idx, nx+1, ny+1); 
-    };
-    auto compute_zcornind = [&nx, &ny,&nz = nz]
+
+    auto compute_zcornind = [&nx, &ny]
             (std::size_t  i, std::size_t j, std::size_t  k) 
     {
         std::array<std::size_t, 8> zind;
