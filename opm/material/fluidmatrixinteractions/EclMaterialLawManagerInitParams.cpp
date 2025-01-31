@@ -339,5 +339,7 @@ satOrImbRegion_(std::vector<int>& array, std::vector<int>& default_vec, unsigned
 // Make some actual code, by realizing the previously defined templated class
 template class EclMaterialLawManager<ThreePhaseMaterialTraits<double,0,1,2>>::InitParams;
 template class EclMaterialLawManager<ThreePhaseMaterialTraits<float,0,1,2>>::InitParams;
+template class EclMaterialLawManager<ThreePhaseMaterialTraits<double,2,0,1>>::InitParams;
+template class EclMaterialLawManager<ThreePhaseMaterialTraits<float,2,0,1>>::InitParams;
 
 } // namespace Opm
