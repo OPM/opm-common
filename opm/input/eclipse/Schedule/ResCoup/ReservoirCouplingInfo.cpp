@@ -19,17 +19,33 @@
 
 #include <stdexcept>
 #include <limits>
+#include <opm/common/utility/OpmInputError.hpp>
 #include <opm/input/eclipse/Schedule/ResCoup/ReservoirCouplingInfo.hpp>
 
 namespace Opm {
 namespace ReservoirCoupling {
+
+CouplingInfo::CouplingFileFlag CouplingInfo::couplingFileFlagFromString(
+        const std::string& flag_str, const DeckKeyword& keyword
+)
+{
+    if (flag_str == "F") {
+        return CouplingInfo::CouplingFileFlag::FORMATTED;
+    } else if (flag_str == "U") {
+        return CouplingInfo::CouplingFileFlag::UNFORMATTED;
+    } else {
+        throw Opm::OpmInputError("Invalid DUMPCUPL value: " + flag_str, keyword.location());
+    }
+}
 
 bool CouplingInfo::operator==(const CouplingInfo& rhs) const {
     return this->m_slaves == rhs.m_slaves &&
            this->m_master_groups == rhs.m_master_groups &&
            this->m_grup_slavs == rhs.m_grup_slavs &&
            this->m_master_min_time_step == rhs.m_master_min_time_step &&
-           this->m_coupling_file_flag == rhs.m_coupling_file_flag;
+           this->m_write_coupling_file_flag == rhs.m_write_coupling_file_flag &&
+           this->m_read_coupling_file_name == rhs.m_read_coupling_file_name &&
+           this->m_read_coupling_file_flag == rhs.m_read_coupling_file_flag;
 }
 
 CouplingInfo CouplingInfo::serializationTestObject()
