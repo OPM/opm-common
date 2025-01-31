@@ -74,6 +74,55 @@ Inplace Inplace::serializationTestObject()
     return result;
 }
 
+std::string Inplace::EclString(const Phase phase)
+{
+    using namespace std::string_literals;
+    static const auto phaseToEcl = std::unordered_map<Phase, std::string>{
+        {Phase::WATER,                               "WIP"s},
+        {Phase::OIL,                                 "OIP"s},
+        {Phase::GAS,                                 "GIP"s},
+        {Phase::OilInLiquidPhase,                    "OIPL"s},
+        {Phase::OilInGasPhase,                       "OIPG"s},
+        {Phase::GasInLiquidPhase,                    "GIPL"s},
+        {Phase::GasInLiquidPhase,                    "GIPL"s},
+        {Phase::GasInGasPhase,                       "GIPG"s},
+        {Phase::PoreVolume,                          "RPV"s},
+        {Phase::WaterResVolume,                      "WIPR"s},
+        {Phase::OilResVolume,                        "OIPR"s},
+        {Phase::GasResVolume,                        "GIPR"s},
+        {Phase::SALT,                                "SIP"s},
+        {Phase::CO2InWaterPhase,                     "WCD"s},
+        {Phase::CO2InGasPhaseInMob,                  "GCDI"s},
+        {Phase::CO2InGasPhaseMob,                    "GCDM"s},
+        {Phase::CO2InGasPhaseInMobKrg,               "GKDI"s},
+        {Phase::CO2InGasPhaseMobKrg,                 "GKDM"s},
+        {Phase::WaterInGasPhase,                     "WIPG"s},
+        {Phase::WaterInWaterPhase,                   "WIPL"s},
+        {Phase::CO2Mass,                             "GMIP"s},
+        {Phase::CO2MassInWaterPhase,                 "GMDS"s},
+        {Phase::CO2MassInGasPhase,                   "GMGP"s},
+        {Phase::CO2MassInGasPhaseInMob,              "GCDI_KG"s}, // Not used
+        {Phase::CO2MassInGasPhaseMob,                "GKDM_KG"s}, // Not used
+        {Phase::CO2MassInGasPhaseInMobKrg,           "GKTR"s},
+        {Phase::CO2MassInGasPhaseMobKrg,             "GKMO"s},
+        {Phase::CO2MassInGasPhaseMaximumTrapped,     "GMTR"s},
+        {Phase::CO2MassInGasPhaseMaximumUnTrapped,   "GMMO"s},
+        {Phase::CO2MassInGasPhaseEffectiveTrapped,   "GMST"s},
+        {Phase::CO2MassInGasPhaseEffectiveUnTrapped, "GMUS"s},
+    };
+
+    const auto it = phaseToEcl.find(phase);
+
+    if (it == phaseToEcl.end()) {
+        throw std::logic_error {
+            fmt::format("Phase enum with integer value: "
+                        "{} not recognized", static_cast<int>(phase))
+        };
+    }
+
+    return it->second;
+}
+
 void Inplace::add(const std::string&   region,
                   const Inplace::Phase phase,
                   const std::size_t    region_id,
