@@ -45,6 +45,8 @@
 #include <type_traits>
 #include <unordered_map>
 #include <utility>
+template <typename>
+struct always_false1 : std::false_type {};
 
 namespace {
 
@@ -430,11 +432,10 @@ namespace Opm {
             return const_cast<ptr_member<T>&>(std::as_const(*this).template get<T>());
         }
 
+        
         template <typename T>
         const ptr_member<T>& get() const
         {
-            struct always_false1 : std::false_type {};
-
             if constexpr ( std::is_same_v<T, PAvg> )
                              return this->pavg;
             else if constexpr ( std::is_same_v<T, WellTestConfig> )
@@ -482,14 +483,13 @@ namespace Opm {
             else if constexpr ( std::is_same_v<T, WCYCLE> )
                                   return this->wcycle;
             else
-                static_assert(always_false1::value, "Template type <T> not supported in get()");
+                static_assert(always_false1<T>::value, "Template type <T> not supported in get()");
         }
 
 
         template <typename K, typename T>
         map_member<K,T>& get_map()
         {
-            struct always_false2 : std::false_type {};
             if constexpr ( std::is_same_v<T, VFPProdTable> )
                              return this->vfpprod;
             else if constexpr ( std::is_same_v<T, VFPInjTable> )
@@ -499,7 +499,7 @@ namespace Opm {
             else if constexpr ( std::is_same_v<T, Well> )
                                   return this->wells;
             else
-                static_assert(always_false2::value, "Template type <K,T> not supported in get_map()");
+                static_assert(always_false1<T>::value, "Template type <K,T> not supported in get_map()");
         }
 
         map_member<int, VFPProdTable> vfpprod;
