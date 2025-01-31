@@ -132,7 +132,7 @@ GEFAC
 
     const auto& group1 = schedule.getGroup("PRODUC", 0);
     BOOST_CHECK_EQUAL(group1.getGroupEfficiencyFactor(), 0.85);
-    BOOST_CHECK(group1.getTransferGroupEfficiencyFactor());
+    BOOST_CHECK(group1.useEfficiencyInNetwork());
 }
 
 

@@ -14,7 +14,7 @@
       "default": 1
     },
     {
-      "name": "EXTENDED_NETWORK_OPT",
+      "name": "USE_WEFAC_IN_NETWORK",
       "value_type": "STRING",
       "default": "YES"
     }
