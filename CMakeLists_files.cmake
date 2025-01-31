@@ -658,6 +658,7 @@ list (APPEND TEST_DATA_FILES
       tests/material/co2_unittest_below_sat.json
       tests/material/h2o_unittest.json
       tests/material/h2_unittest.json
+      tests/material/ref_values_threecomponents_ptflash.json
       tests/ml/ml_tools/models/test_dense_1x1.model
       tests/ml/ml_tools/models/test_dense_2x2.model
       tests/ml/ml_tools/models/test_dense_10x1.model
