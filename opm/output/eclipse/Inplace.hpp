@@ -81,6 +81,9 @@ public:
     /// operation.
     static Inplace serializationTestObject();
 
+    /// Converts phase enum to ECL textual representation.
+    static std::string EclString(const Phase phase);
+
     /// Assign value of particular quantity in specific region of named
     /// region set.
     ///
