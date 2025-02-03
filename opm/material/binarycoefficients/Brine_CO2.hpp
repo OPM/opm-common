@@ -823,7 +823,11 @@ private:
             convTerm = 1.0;
         }
         else {
+#if !OPM_IS_INSIDE_DEVICE_FUNCTION
             throw std::runtime_error("Activity model for salt-out effect has not been implemented!");
+#else
+            assert(false && "Activity model for salt-out effect has not been implemented!");
+#endif
         }
 
         // Eq. (18)

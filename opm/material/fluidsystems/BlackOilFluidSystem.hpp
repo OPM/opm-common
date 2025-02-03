@@ -41,6 +41,7 @@
 #include <opm/material/common/Valgrind.hpp>
 #include <opm/material/common/HasMemberGeneratorMacros.hpp>
 #include <opm/material/fluidsystems/NullParameterCache.hpp>
+#include <opm/material/fluidsystems/BlackOilFluidSystemNonStatic.hpp>
 
 #include <array>
 #include <cstddef>
@@ -151,21 +152,33 @@ auto getSaltSaturation_(typename std::enable_if<HasMember_saltSaturation<FluidSt
 
 }
 
+template <class Scalar, class IndexTraits>
+class BlackOilFluidSystemNonStatic;
+
 /*!
  * \brief A fluid system which uses the black-oil model assumptions to calculate
  *        termodynamically meaningful quantities.
  *
  * \tparam Scalar The type used for scalar floating point values
  */
-template <class Scalar, class IndexTraits = BlackOilDefaultIndexTraits>
-class BlackOilFluidSystem : public BaseFluidSystem<Scalar, BlackOilFluidSystem<Scalar, IndexTraits> >
+template <class Scalar, class IndexTraits_ = BlackOilDefaultIndexTraits>
+class BlackOilFluidSystem : public BaseFluidSystem<Scalar, BlackOilFluidSystem<Scalar, IndexTraits_> >
 {
     using ThisType = BlackOilFluidSystem;
 
 public:
+    using NonStaticBlackOilFluidSystem = BlackOilFluidSystemNonStatic<Scalar, IndexTraits_>;
     using GasPvt = GasPvtMultiplexer<Scalar>;
     using OilPvt = OilPvtMultiplexer<Scalar>;
     using WaterPvt = WaterPvtMultiplexer<Scalar>;
+    using IndexTraits = IndexTraits_;
+
+public:
+
+    static const NonStaticBlackOilFluidSystem& getNonStatic()
+    {
+        return NonStaticBlackOilFluidSystem::getInstance();
+    }
 
     //! \copydoc BaseFluidSystem::ParameterCache
     template <class EvaluationT>
@@ -407,6 +420,9 @@ public:
         return phaseIsActive_[phaseIdx];
     }
 
+    static std::array<bool,numPhases> phaseIsActiveArray()
+    { return phaseIsActive_; }
+
     //! \brief returns the index of "primary" component of a phase (solvent)
     static unsigned solventComponentIndex(unsigned phaseIdx);
 
@@ -419,6 +435,10 @@ public:
     //! \copydoc BaseFluidSystem::molarMass
     static Scalar molarMass(unsigned compIdx, unsigned regionIdx = 0)
     { return molarMass_[regionIdx][compIdx]; }
+
+    //! \copydoc BaseFluidSystem::molarMass
+    static std::vector<std::array<Scalar, 3>> molarMass()
+    { return molarMass_; }
 
     //! \copydoc BaseFluidSystem::isIdealMixture
     static bool isIdealMixture(unsigned /*phaseIdx*/)
@@ -508,6 +528,26 @@ public:
      */
     static Scalar referenceDensity(unsigned phaseIdx, unsigned regionIdx)
     { return referenceDensity_[regionIdx][phaseIdx]; }
+
+    /*!
+     * \brief Returns the density of a fluid phase at surface pressure [kg/m^3]
+     *
+     * \copydoc Doxygen::phaseIdxParam
+     */
+    static std::vector<std::array<Scalar, 3>> referenceDensity()
+    { return referenceDensity_; }
+
+    /*!
+     * \brief Returns the canonical to active phase idx mapping
+     */
+    static std::array<short, numPhases> canonicalToActivePhaseIdx()
+    { return canonicalToActivePhaseIdx_; }
+
+    /*!
+     * \brief Returns the active to canonical phase idx mapping
+     */
+    static std::array<short, numPhases> activeToCanonicalPhaseIdx()
+    { return activeToCanonicalPhaseIdx_; }
 
     /****************************************
      * thermodynamic quantities (generic version)
@@ -1609,6 +1649,9 @@ public:
     static const GasPvt& gasPvt()
     { return *gasPvt_; }
 
+    static const std::shared_ptr<GasPvt>& gasPvtSharedPtr()
+    { return gasPvt_; }
+
     /*!
      * \brief Return a reference to the low-level object which calculates the oil phase
      *        quantities.
@@ -1619,6 +1662,9 @@ public:
     static const OilPvt& oilPvt()
     { return *oilPvt_; }
 
+    static const std::shared_ptr<OilPvt>& oilPvtSharedPtr()
+    { return oilPvt_; }
+
     /*!
      * \brief Return a reference to the low-level object which calculates the water phase
      *        quantities.
@@ -1628,6 +1674,9 @@ public:
      */
     static const WaterPvt& waterPvt()
     { return *waterPvt_; }
+
+    static const std::shared_ptr<WaterPvt>& waterPvtSharedPtr()
+    { return waterPvt_; }
 
     /*!
      * \brief Set the temperature of the reservoir.
@@ -1652,6 +1701,10 @@ public:
     //! \copydoc BaseFluidSystem::diffusionCoefficient
     static Scalar diffusionCoefficient(unsigned compIdx, unsigned phaseIdx, unsigned regionIdx = 0)
     { return diffusionCoefficients_[regionIdx][numPhases*compIdx + phaseIdx]; }
+
+    //! \copydoc BaseFluidSystem::diffusionCoefficient
+    static std::vector<std::array<Scalar, 9>> diffusionCoefficient()
+    { return diffusionCoefficients_; }
 
     //! \copydoc BaseFluidSystem::setDiffusionCoefficient
     static void setDiffusionCoefficient(Scalar coefficient, unsigned compIdx, unsigned phaseIdx, unsigned regionIdx = 0)
@@ -1722,6 +1775,67 @@ private:
     static bool useSaturatedTables_;
     inline static bool enthalpy_eq_energy_ = false;
 };
+
+
+// Helper trait to check for the existence of member types Scalar and IndexTraits
+template<typename, typename = std::void_t<>>
+struct has_Scalar_and_IndexTraits : std::false_type {};
+
+template<typename FluidSystem>
+struct has_Scalar_and_IndexTraits<
+    FluidSystem,
+    std::void_t<typename FluidSystem::Scalar, typename FluidSystem::IndexTraits>
+> : std::true_type {};
+
+// Adjusted function
+template<class FluidSystem>
+constexpr bool is_a_blackoil_system() {
+    if constexpr (std::is_same_v<FluidSystem, void*>) {
+        return false;
+    } else if constexpr (std::is_same_v<FluidSystem, std::nullptr_t>) {
+        return false;
+    } else if constexpr (!std::is_class_v<FluidSystem>) {
+        return false;
+    } else if constexpr (!has_Scalar_and_IndexTraits<FluidSystem>::value) {
+        return false;
+    } else if constexpr (
+        // !std::is_class_v<typename FluidSystem::Scalar> ||
+        !std::is_class_v<typename FluidSystem::IndexTraits>
+    ) {
+        return false;
+    } else {
+        return \
+            std::is_same_v<BlackOilFluidSystem<typename FluidSystem::Scalar, typename FluidSystem::IndexTraits>, FluidSystem>
+            || std::is_same_v<const BlackOilFluidSystem<typename FluidSystem::Scalar, typename FluidSystem::IndexTraits>,FluidSystem>
+            || std::is_same_v<const BlackOilFluidSystem<typename FluidSystem::Scalar, typename FluidSystem::IndexTraits>&,FluidSystem>
+            || std::is_same_v<BlackOilFluidSystemNonStatic<typename FluidSystem::Scalar, typename FluidSystem::IndexTraits>, FluidSystem>
+            || std::is_same_v<const BlackOilFluidSystemNonStatic<typename FluidSystem::Scalar, typename FluidSystem::IndexTraits>,FluidSystem>
+            || std::is_same_v<const BlackOilFluidSystemNonStatic<typename FluidSystem::Scalar, typename FluidSystem::IndexTraits>&,FluidSystem>;
+    }
+}
+
+template<class FluidSystem>
+constexpr bool is_a_dynamic_blackoil_system() {
+    if constexpr (std::is_same_v<FluidSystem, void*>) {
+        return false;
+    } else if constexpr (std::is_same_v<FluidSystem, std::nullptr_t>) {
+        return false;
+    } else if constexpr (!std::is_class_v<FluidSystem>) {
+        return false;
+    } else if constexpr (!has_Scalar_and_IndexTraits<FluidSystem>::value) {
+        return false;
+    } else if constexpr (
+        // !std::is_class_v<typename FluidSystem::Scalar> ||
+        !std::is_class_v<typename FluidSystem::IndexTraits>
+    ) {
+        return false;
+    } else {
+        return \
+            std::is_same_v<BlackOilFluidSystemNonStatic<typename FluidSystem::Scalar, typename FluidSystem::IndexTraits>, FluidSystem>
+            || std::is_same_v<const BlackOilFluidSystemNonStatic<typename FluidSystem::Scalar, typename FluidSystem::IndexTraits>,FluidSystem>
+            || std::is_same_v<const BlackOilFluidSystemNonStatic<typename FluidSystem::Scalar, typename FluidSystem::IndexTraits>&,FluidSystem>;
+    }
+}
 
 template <typename T> using BOFS = BlackOilFluidSystem<T, BlackOilDefaultIndexTraits>;
 

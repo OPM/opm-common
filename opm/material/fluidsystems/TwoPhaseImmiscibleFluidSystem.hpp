@@ -57,14 +57,17 @@ template <class Scalar, class WettingPhase, class NonwettingPhase>
 class TwoPhaseImmiscibleFluidSystem
     : public BaseFluidSystem<Scalar, TwoPhaseImmiscibleFluidSystem<Scalar, WettingPhase, NonwettingPhase> >
 {
-    // do not try to instanciate this class, it has only static members!
-    TwoPhaseImmiscibleFluidSystem()
-    {}
+
 
     typedef TwoPhaseImmiscibleFluidSystem<Scalar, WettingPhase, NonwettingPhase> ThisType;
     typedef BaseFluidSystem<Scalar, ThisType> Base;
 
 public:
+
+    // only static members, usually unneeded to use this ctor
+    TwoPhaseImmiscibleFluidSystem()
+    {}
+
     template <class Evaluation>
     struct ParameterCache : public NullParameterCache<Evaluation>
     {};
