@@ -385,11 +385,11 @@ public:
     static constexpr unsigned numComponents = 3;
 
     //! Index of the oil component
-    static constexpr unsigned oilCompIdx = IndexTraits::oilCompIdx;
+    static constexpr int oilCompIdx = IndexTraits::oilCompIdx;
     //! Index of the water component
-    static constexpr unsigned waterCompIdx = IndexTraits::waterCompIdx;
+    static constexpr int waterCompIdx = IndexTraits::waterCompIdx;
     //! Index of the gas component
-    static constexpr unsigned gasCompIdx = IndexTraits::gasCompIdx;
+    static constexpr int gasCompIdx = IndexTraits::gasCompIdx;
 
 protected:
     static unsigned char numActivePhases_;
