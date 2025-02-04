@@ -46,6 +46,7 @@ namespace Opm {
         DeckItem( const std::string&, double, const std::vector<Dimension>& active_dim, const std::vector<Dimension>& default_dim);
 
         static DeckItem serializationTestObject();
+        DeckItem emptyStructuralCopy() const;
 
         const std::string& name() const;
 
@@ -75,6 +76,10 @@ namespace Opm {
         template< typename T > const std::vector< T >& getData() const;
         const std::vector< double >& getSIDoubleData() const;
         const std::vector<value::status>& getValueStatus() const;
+        const std::vector<Dimension>& getActiveDimensions() const
+        {
+            return this->active_dimensions;
+        }
 
         template< typename T>
         void shrink_to_fit();
@@ -150,6 +155,7 @@ namespace Opm {
         }
 
         void reserve_additionalRawString(std::size_t);
+
     private:
         mutable std::vector< double > dval;
         std::vector< int > ival;
