@@ -210,7 +210,7 @@ private:
             dataPtr_ = smallBuf_.data();
     }
 
-    std::array<ValueType, N> smallBuf_;
+    std::array<ValueType, N> smallBuf_{};
     std::vector<ValueType> data_;
     size_type size_;
     ValueType* dataPtr_;
