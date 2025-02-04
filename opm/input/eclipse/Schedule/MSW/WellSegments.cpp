@@ -19,6 +19,8 @@
 
 #include <opm/input/eclipse/Schedule/MSW/WellSegments.hpp>
 
+#include <opm/common/OpmLog/OpmLog.hpp>
+
 #include <opm/input/eclipse/Schedule/MSW/Segment.hpp>
 #include <opm/input/eclipse/Schedule/MSW/SICD.hpp>
 #include <opm/input/eclipse/Schedule/MSW/Valve.hpp>
@@ -196,6 +198,7 @@ namespace Opm {
         // Meaningless value to indicate unspecified values.
         const double invalid_value = Segment::invalidValue();
 
+        const auto& wname = record1.getItem("WELL").getTrimmedString(0);
         const double depth_top = record1.getItem("TOP_DEPTH").getSIDouble(0);
         const double length_top = record1.getItem("TOP_LENGTH").getSIDouble(0);
         const double volume_top = record1.getItem("WELLBORE_VOLUME").getSIDouble(0);
@@ -301,7 +304,12 @@ namespace Opm {
                 }
             }
 
-            const double roughness = record.getItem("ROUGHNESS").getSIDouble(0);
+            const double input_roughness = record.getItem("ROUGHNESS").getSIDouble(0);
+            const double roughness = diameter * std::min(Segment::MAX_REL_ROUGHNESS, input_roughness/diameter);
+            if (roughness != input_roughness) {
+                OpmLog::warning(fmt::format("Well {} WELSEGS segment {} to {}: Too high roughness {:.3e} limited to {:.3e} to avoid singularity in friction factor calculation.",
+                                            wname, segment1, segment2, input_roughness, roughness));
+            }
 
             const auto node_X = record.getItem("LENGTH_X").getSIDouble(0);
             const auto node_Y = record.getItem("LENGTH_Y").getSIDouble(0);
