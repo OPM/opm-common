@@ -1523,7 +1523,10 @@ namespace {
             ? multiSegmentWells(schedule[simStep], allWells)
             : std::vector<std::string>{};
 
+        std::size_t i = 0;
         for (const auto& udq : udqs.zudn()) {
+            if(i++ % 2) continue; // Odd elements are the UDQ unit strings
+
             switch (udq.front()) {
             case 'F':
                 restoreFieldUDQValue(udqs, udq, smry);
