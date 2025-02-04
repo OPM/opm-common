@@ -37,18 +37,18 @@ class BlackOilDefaultIndexTraits
 {
 public:
     //! Index of the water phase
-    static const unsigned waterPhaseIdx = 0;
+    static constexpr unsigned waterPhaseIdx = 0;
     //! Index of the oil phase
-    static const unsigned oilPhaseIdx = 1;
+    static constexpr unsigned oilPhaseIdx = 1;
     //! Index of the gas phase
-    static const unsigned gasPhaseIdx = 2;
+    static constexpr unsigned gasPhaseIdx = 2;
 
     //! Index of the oil component
-    static const unsigned oilCompIdx = 0;
+    static constexpr int oilCompIdx = 0;
     //! Index of the water component
-    static const unsigned waterCompIdx = 1;
+    static constexpr int waterCompIdx = 1;
     //! Index of the gas component
-    static const unsigned gasCompIdx = 2;
+    static constexpr int gasCompIdx = 2;
 };
 
 } // namespace Opm
