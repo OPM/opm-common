@@ -414,12 +414,12 @@ void handleGEFAC(HandlerContext& handlerContext)
             handlerContext.invalidNamePattern(groupNamePattern);
         }
 
-        const bool transfer = DeckItem::to_bool(record.getItem("TRANSFER_EXT_NET").getTrimmedString(0));
+        const bool use_efficiency_in_network = DeckItem::to_bool(record.getItem("USE_GEFAC_IN_NETWORK").getTrimmedString(0));
         const auto gefac = record.getItem("EFFICIENCY_FACTOR").get<double>(0);
 
         for (const auto& group_name : group_names) {
             auto new_group = handlerContext.state().groups.get(group_name);
-            if (new_group.update_gefac(gefac, transfer)) {
+            if (new_group.update_gefac(gefac, use_efficiency_in_network)) {
                 handlerContext.state().wellgroup_events().addEvent( group_name, ScheduleEvents::WELLGROUP_EFFICIENCY_UPDATE);
                 handlerContext.state().events().addEvent( ScheduleEvents::WELLGROUP_EFFICIENCY_UPDATE );
                 handlerContext.state().groups.update(std::move(new_group));

@@ -153,6 +153,36 @@ void handleGRUPNET(HandlerContext& handlerContext)
     handlerContext.state().network.update( std::move(network));
 }
 
+void handleNEFAC(HandlerContext& handlerContext)
+{
+    auto ext_network = handlerContext.state().network.get();
+    if (!ext_network.active())
+        return;
+    if (ext_network.is_standard_network()) {
+        const std::string& msg = "NEFAC has no effect for a standard network: file {filename} line {lineno}";
+        OpmLog::warning(handlerContext.keyword.location().format(msg));
+        return;
+    }
+
+    bool updated = false;
+    for (const auto& record : handlerContext.keyword) {
+        const auto& node_name = record.getItem<ParserKeywords::NEFAC::NODE>().get<std::string>(0);
+        const auto efficiency = record.getItem<ParserKeywords::NEFAC::EFF_FACTOR>().getSIDouble(0);
+
+        if (ext_network.has_node(node_name)) {
+            auto node = ext_network.node(node_name);
+            if (node.efficiency() != efficiency) {
+                node.set_efficiency(efficiency);
+                ext_network.update_node(node);
+                updated = true;
+            }
+        }
+    }
+
+    if (updated)
+        handlerContext.state().network.update( std::move(ext_network) );
+}
+
 void handleNETBALAN(HandlerContext& handlerContext)
 {
     handlerContext.state().network_balance
@@ -180,44 +210,48 @@ void handleNODEPROP(HandlerContext& handlerContext)
             node.terminal_pressure(pressure_item.getSIDouble(0));
         }
 
-        if (as_choke) {
+        if (handlerContext.state().groups.has(name)) {
             auto& group = handlerContext.state().groups.get(name);
-            group.as_choke(name);
-            if (group.wellgroup()) {
-                // Wells belong to a group with autochoke enabled are to be run on a common THP and should not have guide rates
-                for (const std::string& wellName : group.wells()) {
-                    auto well = handlerContext.state().wells.get(wellName);
+            node.set_efficiency(group.getGroupEfficiencyFactor(/*network*/ true));
 
-                    // Let the wells be operating on a THP Constraint
-                    auto properties = std::make_shared<Well::WellProductionProperties>(well.getProductionProperties());
-                    // The wells are not to be under GRUP control using guide rates but under THP control
-                    properties->addProductionControl(Well::ProducerCMode::THP);
-                    properties->controlMode = Well::ProducerCMode::THP;
-                    well.updateProduction(properties);
+            if (as_choke) {
+                group.as_choke(name);
+                if (group.wellgroup()) {
+                    // Wells belong to a group with autochoke enabled are to be run on a common THP and should not have guide rates
+                    for (const std::string& wellName : group.wells()) {
+                        auto well = handlerContext.state().wells.get(wellName);
 
-                    // Guide rate availability should be set to false
-                    well.updateAvailableForGroupControl(false);
-                    auto new_config = handlerContext.state().guide_rate();
-                    new_config.update_well(well);
-                    handlerContext.state().guide_rate.update( std::move(new_config) );
-                    handlerContext.state().wells.update( std::move(well) );
+                        // Let the wells be operating on a THP Constraint
+                        auto properties = std::make_shared<Well::WellProductionProperties>(well.getProductionProperties());
+                        // The wells are not to be under GRUP control using guide rates but under THP control
+                        properties->addProductionControl(Well::ProducerCMode::THP);
+                        properties->controlMode = Well::ProducerCMode::THP;
+                        well.updateProduction(properties);
+
+                        // Guide rate availability should be set to false
+                        well.updateAvailableForGroupControl(false);
+                        auto new_config = handlerContext.state().guide_rate();
+                        new_config.update_well(well);
+                        handlerContext.state().guide_rate.update( std::move(new_config) );
+                        handlerContext.state().wells.update( std::move(well) );
+                    }
+                    std::string target_group = name;
+                    const auto& target_item = record.getItem<ParserKeywords::NODEPROP::CHOKE_GROUP>();
+
+                    if (target_item.hasValue(0)) {
+                        target_group = target_item.get<std::string>(0);
+                    }
+                    if (target_group != name) {
+                        const std::string msg = "A manifold group must respond to its own target.";
+                        throw OpmInputError(msg, handlerContext.keyword.location());
+                    }
+                    node.as_choke(target_group);
                 }
-                std::string target_group = name;
-                const auto& target_item = record.getItem<ParserKeywords::NODEPROP::CHOKE_GROUP>();
-
-                if (target_item.hasValue(0)) {
-                    target_group = target_item.get<std::string>(0);
-                }
-                if (target_group != name) {
-                    const std::string msg = "A manifold group must respond to its own target.";
+                else {
+                    std::string msg = "The auto-choke option is implemented only for well groups.";
                     throw OpmInputError(msg, handlerContext.keyword.location());
                 }
-                node.as_choke(target_group);
             }
-            else {
-                std::string msg = "The auto-choke option is implemented only for well groups.";
-                throw OpmInputError(msg, handlerContext.keyword.location());
-            }  
         }
 
         node.add_gas_lift_gas(add_gas_lift_gas);
@@ -235,6 +269,7 @@ getNetworkHandlers()
     return {
         { "BRANPROP", &handleBRANPROP },
         { "GRUPNET",  &handleGRUPNET  },
+        { "NEFAC",    &handleNEFAC   },
         { "NETBALAN", &handleNETBALAN },
         { "NODEPROP", &handleNODEPROP },
     };
