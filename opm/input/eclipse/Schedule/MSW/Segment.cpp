@@ -19,6 +19,8 @@
 
 #include <opm/input/eclipse/Schedule/MSW/Segment.hpp>
 
+#include <opm/common/OpmLog/OpmLog.hpp>
+
 #include <opm/io/eclipse/rst/segment.hpp>
 
 #include <opm/output/eclipse/VectorItems/msw.hpp>
@@ -44,6 +46,11 @@ namespace {
         return (rst_value == 0.0)
             ? invalid_value
             : rst_value;
+    }
+
+    bool is_valid_value(const double value)
+    {
+        return value > invalid_value;
     }
 
     Opm::Segment::SegmentType segmentTypeFromInt(const int ecl_id)
@@ -82,7 +89,7 @@ namespace Opm {
         , m_y                (0.0)
     {}
 
-    Segment::Segment(const RestartIO::RstSegment& rst_segment)
+    Segment::Segment(const RestartIO::RstSegment& rst_segment, const std::string& wname)
         : m_segment_number   (rst_segment.segment)
         , m_branch           (rst_segment.branch)
         , m_outlet_segment   (rst_segment.outlet_segment)
@@ -96,6 +103,15 @@ namespace Opm {
         , m_x                (0.0)
         , m_y                (0.0)
     {
+        if (is_valid_value(m_roughness) && is_valid_value(m_internal_diameter)) {
+            const double safe_roughness = m_internal_diameter * std::min(MAX_REL_ROUGHNESS, m_roughness/m_internal_diameter);
+            if (m_roughness > safe_roughness) {
+                OpmLog::warning(fmt::format("Well {} segment {}: Too high roughness {:.3e} is limited to {:.3e} to avoid singularity in friction factor calculation.",
+                                            wname, m_segment_number, m_roughness, safe_roughness));
+            }
+            m_roughness = safe_roughness;
+        }
+
         const auto segment_type = segmentTypeFromInt(rst_segment.segment_type);
 
         if (segment_type == SegmentType::SICD) {
