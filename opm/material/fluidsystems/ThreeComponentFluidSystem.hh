@@ -56,9 +56,11 @@ namespace Opm {
         static constexpr int numComponents = 3;
         static constexpr int numMisciblePhases=2;
         static constexpr int numMiscibleComponents = 3;
+        static constexpr bool waterEnabled = false;
         // TODO: phase location should be more general
         static constexpr int oilPhaseIdx = 0;
         static constexpr int gasPhaseIdx = 1;
+        static constexpr int waterPhaseIdx = -1;
 
         static constexpr int Comp0Idx = 0;
         static constexpr int Comp1Idx = 1;
@@ -73,6 +75,11 @@ namespace Opm {
         using ParameterCache = PTFlashParameterCache<ValueType, ThreeComponentFluidSystem<Scalar>>;
         using ViscosityModel = ViscosityModels<Scalar, ThreeComponentFluidSystem<Scalar>>;
         using CubicEOS = ::Opm::CubicEOS<Scalar, ThreeComponentFluidSystem<Scalar>>;
+
+        static bool phaseIsActive(unsigned phaseIdx)
+        {
+            return phaseIdx == oilPhaseIdx || phaseIdx == gasPhaseIdx;
+        }
 
         /*!
          * \brief The acentric factor of a component [].
