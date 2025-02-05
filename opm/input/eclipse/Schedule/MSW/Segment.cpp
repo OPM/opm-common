@@ -48,6 +48,11 @@ namespace {
             : rst_value;
     }
 
+    bool is_valid_value(const double value)
+    {
+        return value > invalid_value;
+    }
+
     Opm::Segment::SegmentType segmentTypeFromInt(const int ecl_id)
     {
         using SType = Opm::Segment::SegmentType;
@@ -98,13 +103,13 @@ namespace Opm {
         , m_x                (0.0)
         , m_y                (0.0)
     {
-        if (m_roughness != invalid_value && m_internal_diameter != invalid_value) {
+        if (is_valid_value(m_roughness) && is_valid_value(m_internal_diameter)) {
             const double safe_roughness = m_internal_diameter * std::min(MAX_REL_ROUGHNESS, m_roughness/m_internal_diameter);
-            if (safe_roughness != m_roughness) {
-                OpmLog::warning(fmt::format("Well {} segment {}: Too high roughness {:.3e} limited to {:.3e} to avoid singularity in friction factor calculation.",
+            if (m_roughness > safe_roughness) {
+                OpmLog::warning(fmt::format("Well {} segment {}: Too high roughness {:.3e} is limited to {:.3e} to avoid singularity in friction factor calculation.",
                                             wname, m_segment_number, m_roughness, safe_roughness));
-                m_roughness = safe_roughness;
             }
+            m_roughness = safe_roughness;
         }
 
         const auto segment_type = segmentTypeFromInt(rst_segment.segment_type);

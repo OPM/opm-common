@@ -306,8 +306,8 @@ namespace Opm {
 
             const double input_roughness = record.getItem("ROUGHNESS").getSIDouble(0);
             const double roughness = diameter * std::min(Segment::MAX_REL_ROUGHNESS, input_roughness/diameter);
-            if (roughness != input_roughness) {
-                OpmLog::warning(fmt::format("Well {} WELSEGS segment {} to {}: Too high roughness {:.3e} limited to {:.3e} to avoid singularity in friction factor calculation.",
+            if (input_roughness > roughness) {
+                OpmLog::warning(fmt::format("Well {} WELSEGS segment {} to {}: Too high roughness {:.3e} is limited to {:.3e} to avoid singularity in friction factor calculation.",
                                             wname, segment1, segment2, input_roughness, roughness));
             }
 
