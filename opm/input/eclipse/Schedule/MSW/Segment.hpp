@@ -28,6 +28,8 @@
 #include <variant>
 #include <vector>
 
+#include <cmath>
+
 namespace Opm { namespace RestartIO {
     struct RstSegment;
 }} // namespace Opm::RestartIO
@@ -36,6 +38,10 @@ namespace Opm {
 
     class Segment {
     public:
+        // Maximum relative roughness to guarantee non-singularity for Re>=4000 in Haaland friction
+        // factor calculations (see MSWellHelpers in opm-simulators).
+        constexpr static double MAX_REL_ROUGHNESS = 3.7 * std::pow((1.0 - 1.0e-3) - 6.9/4000.0, 9. / 10.);
+
 
         enum class SegmentType {
             REGULAR,
@@ -64,7 +70,7 @@ namespace Opm {
                 const double x_in,
                 const double y_in);
 
-        explicit Segment(const RestartIO::RstSegment& rst_segment);
+        explicit Segment(const RestartIO::RstSegment& rst_segment, const std::string& wname);
 
         static Segment serializationTestObject();
 

@@ -2244,7 +2244,7 @@ namespace {
             else {
                 auto rst_segments = std::unordered_map<int, Segment>{};
                 for (const auto& rst_segment : rst_well.segments) {
-                    rst_segments.try_emplace(rst_segment.segment, rst_segment);
+                    rst_segments.try_emplace(rst_segment.segment, rst_segment, rst_well.name);
                 }
 
                 const auto& [connections, segments] =
