@@ -74,6 +74,8 @@ namespace {
 
 namespace Opm {
 
+    const double Segment::MAX_REL_ROUGHNESS = 3.7 * std::pow((1.0 - 1.0e-3) - 6.9/4000.0, 9. / 10.);
+
     Segment::Segment()
         : m_segment_number   (-1)
         , m_branch           (-1)

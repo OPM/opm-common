@@ -40,7 +40,8 @@ namespace Opm {
     public:
         // Maximum relative roughness to guarantee non-singularity for Re>=4000 in Haaland friction
         // factor calculations (see MSWellHelpers in opm-simulators).
-        constexpr static double MAX_REL_ROUGHNESS = 3.7 * std::pow((1.0 - 1.0e-3) - 6.9/4000.0, 9. / 10.);
+        // cannot be constexpr due to clang not having constexpr std::pow
+        static const double MAX_REL_ROUGHNESS; // = 3.7 * std::pow((1.0 - 1.0e-3) - 6.9/4000.0, 9. / 10.);
 
 
         enum class SegmentType {
