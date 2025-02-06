@@ -1,24 +1,10 @@
 #include <opm/common/utility/numeric/GridUtil.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/GridDims.hpp>
 #include <tuple>
-#include <iostream>
-namespace GridUtil {
+namespace Opm::GridUtil {
 
-std::size_t ijk_to_linear(std::size_t i, std::size_t j, std::size_t k, 
-                          std::size_t Nx, std::size_t Ny) 
-{
-    return i + j * Nx + k * (Nx * Ny);
-}
 
-std::tuple<std::size_t, std::size_t, std::size_t> linear_to_ijk(std::size_t idx, 
-                                                                std::size_t Nx, std::size_t Ny) 
-{
-    std::size_t k = idx / (Nx * Ny);
-    std::size_t j = (idx % (Nx * Ny)) / Nx;
-    std::size_t i = idx % Nx;
-    return std::make_tuple(i, j, k);
-}
-
-std::vector<double> pillar_to_flat_array(const std::vector<std::array<std::array<double, 3>, 2>>& pillar)
+static std::vector<double> pillar_to_flat_array(const std::vector<std::array<std::array<double, 3>, 2>>& pillar)
 {
     std::vector<double> flat_array;
     // Pre-allocate space for efficiency: 2 points per pillar entry, 3 components each
@@ -42,12 +28,15 @@ std::tuple<std::vector<double>,std::vector<double>> convertUnsToCPG(
     // nx, ny, nz are the number of cells in the x, y and z directions
     // converts unstructured mesh grid described by the coord_uns and element arrays
     // element contains a referece to the nodes described by coords_uns
-    std::size_t element_size = element.size();
- 
-    std::size_t num_pillars = (nx+1)*(ny+1);
- 
-    auto ij_pillars = [ &nx , &ny](std::size_t i, std::size_t j) {
-        return ijk_to_linear(i, j, 0 , nx+1, ny+1);
+    const std::size_t element_size = element.size();
+    const std::size_t num_pillars = (nx+1)*(ny+1);
+    GridDims cpg_grid = GridDims(nx, ny, nz);
+    GridDims pillar_grid = GridDims(nx+1, ny+1, 0);
+    
+
+
+    auto ij_pillars = [ &pillar_grid](std::size_t i, std::size_t j) {
+        return pillar_grid.getGlobalIndex(i, j, 0);
     };
 
     auto compute_zcornind = [&nx, &ny]
@@ -72,18 +61,17 @@ std::tuple<std::vector<double>,std::vector<double>> convertUnsToCPG(
 
     // looping through the first layer of elements
     for (std::size_t index = 0; index < nx*ny; index++) {
-       auto [ii,jj,kk] = linear_to_ijk(index, nx, ny);
-       std::array<std::size_t,8> element_nodes = element[index];
+       auto [ii,jj,kk] = cpg_grid.getIJK((index));
+       const std::array<std::size_t,8>& element_nodes = element[index];
        pillars[ij_pillars(ii,jj)][0] = coord_uns[element_nodes[0]];
        pillars[ij_pillars(ii+1,jj)][0] = coord_uns[element_nodes[1]];
        pillars[ij_pillars(ii,jj+1)][0] = coord_uns[element_nodes[2]];
        pillars[ij_pillars(ii+1,jj+1)][0] = coord_uns[element_nodes[3]];
     }
-
     // // looping through the last layer of elements
     for (std::size_t index = (element_size - nx*ny); index < element_size; index++) {
-       auto [ii,jj,kk] = linear_to_ijk(index, nx, ny);
-       std::array<std::size_t,8> element_nodes = element[index];
+       auto [ii,jj,kk] = cpg_grid.getIJK((index));
+       const std::array<std::size_t,8>& element_nodes = element[index];
        pillars[ij_pillars(ii,jj)][1] = coord_uns[element_nodes[4]];
        pillars[ij_pillars(ii+1,jj)][1] = coord_uns[element_nodes[5]];
        pillars[ij_pillars(ii,jj+1)][1] = coord_uns[element_nodes[6]];
@@ -92,9 +80,9 @@ std::tuple<std::vector<double>,std::vector<double>> convertUnsToCPG(
     std::vector<double> coord_cpg = pillar_to_flat_array(pillars);
     std::vector<double> zcorn_cpg(element_size*8);
     for (std::size_t index = 0; index < element_size; index++) {
-       auto [ii,jj,kk] = linear_to_ijk(index, nx, ny);
+       auto [ii,jj,kk] = cpg_grid.getIJK((index));
        std::array<std::size_t,8> z_ref = compute_zcornind(ii,jj,kk);       
-       std::array<std::size_t,8> element_nodes = element[index];
+       const std::array<std::size_t,8>& element_nodes = element[index];
        for (std::size_t index_el = 0; index_el < 8; index_el++) {
            std::size_t local_z = z_ref[index_el];
            std::size_t local_node = element_nodes[index_el];

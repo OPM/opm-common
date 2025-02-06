@@ -17,7 +17,6 @@
 
 #include <boost/test/unit_test.hpp>
 #include <boost/test/test_tools.hpp>
-#include <iostream>
 #include <opm/input/eclipse/Deck/Deck.hpp>
 #include <opm/input/eclipse/Parser/Parser.hpp>
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
@@ -92,7 +91,7 @@ std::vector<double> pZCORN = {
 };
 
 auto [COORDS, ZCORN] = 
-                        GridUtil::convertUnsToCPG(coord,element, nx, ny,nz);
+                        Opm::GridUtil::convertUnsToCPG(coord,element, nx, ny,nz);
 BOOST_CHECK(are_equal(pCOORDS, COORDS));
 BOOST_CHECK(are_equal(pZCORN, ZCORN));
 
