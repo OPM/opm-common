@@ -125,7 +125,7 @@
 /**
  * @brief assert(condition) is only used on the GPU, as throwing exceptions is not supported.
  */
-#define OPM_ERROR_IF(condition, message) \
-   assert(condition)
+#define OPM_ERROR_IF(condition, message)                                    \
+    do {if(condition){assert(false);}} while(false)
 #endif // GPU
 #endif // OPM_ERRORMACROS_HPP
