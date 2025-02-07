@@ -16,7 +16,6 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
-
 #include <opm/io/eclipse/PaddedOutputString.hpp>
 #include <cstddef>
 #include <cstdlib>
@@ -1990,7 +1989,14 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
     }
 
 
-    void EclipseGrid::init_children_host_cells(){
+    void EclipseGrid::init_children_host_cells(bool logical){
+        if (logical)
+            init_children_host_cells_logical();
+        else
+            init_children_host_cells_geometrical();
+    }
+
+    void EclipseGrid::init_children_host_cells_geometrical(){
         auto getAllCellCorners = [this](const auto& father_list){
             std::vector<std::array<double, 8>> X(father_list.size());
             std::vector<std::array<double, 8>> Y(father_list.size());
@@ -2014,6 +2020,45 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
         }
     }
 
+
+    void EclipseGrid::init_children_host_cells_logical(){       
+        auto  IJK_location = [](const std::size_t&  nx, const std::size_t& ny,const std::size_t& nz, 
+                                          const std::size_t& host_nx, const std::size_t& host_ny, const std::size_t& host_nz,
+                                          const std::size_t& base_host_nx, const std::size_t& base_host_ny, const std::size_t& base_host_nz){
+            auto [i_list, j_list, k_list] = VectorUtil::generate_permutation(0,nx-1,0, ny-1,0, nz-1);
+            auto floord_div =  [](std::size_t a, std::size_t n) { return static_cast<std::size_t>(a%n); };
+            auto sum =  [](std::size_t a, std::size_t n) { return static_cast<std::size_t>((a+n)); };
+            std::vector<std::size_t> resultI = VectorUtil::vectorScalarOperation(i_list, host_nx, floord_div);     
+            resultI = VectorUtil::vectorScalarOperation(resultI, base_host_nx, sum);     
+            std::vector<std::size_t> resultJ = VectorUtil::vectorScalarOperation(j_list, host_ny, floord_div);
+            resultJ = VectorUtil::vectorScalarOperation(resultJ, base_host_ny, sum);     
+            std::vector<std::size_t> resultK = VectorUtil::vectorScalarOperation(k_list, host_nz , floord_div);
+            resultK = VectorUtil::vectorScalarOperation(resultK, base_host_nz, sum);         
+            return std::make_tuple(resultI, resultJ, resultK);
+        }; 
+        auto getAllGlobalIndex  = [this](const std::vector<std::size_t>& i_list, 
+                                                   const std::vector<std::size_t>& j_list, 
+                                                   const std::vector<std::size_t>& k_list){
+            std::vector<int> global_index(i_list.size());
+            for (std::size_t idx = 0; idx < i_list.size(); ++idx) {
+                global_index[idx] = getGlobalIndex(i_list[idx], j_list[idx], k_list[idx]);
+            }
+            return global_index;
+        };
+        for (EclipseGridLGR& lgr_cell : lgr_children_cells) {
+            const std::array<int,3>& host_low_fatherIJK = lgr_cell.get_low_fahterIJK();            
+            const std::array<int,3>& host_up_fatherIJK = lgr_cell.get_up_fahterIJK();    
+            const std::array<int,3> host_IJK = {host_up_fatherIJK[0] - host_low_fatherIJK[0] + 1,
+                                                host_up_fatherIJK[1] - host_low_fatherIJK[1] + 1,
+                                                host_up_fatherIJK[2] - host_low_fatherIJK[2] + 1};
+            auto [i_list, j_list, k_list] = IJK_location(lgr_cell.getNX(), lgr_cell.getNY(), lgr_cell.getNZ(), 
+                          static_cast<std::size_t>(host_IJK[0]), static_cast<std::size_t>(host_IJK[1]), static_cast<std::size_t>(host_IJK[2]),
+                            host_low_fatherIJK[0], host_low_fatherIJK[1], host_low_fatherIJK[2]);
+            std::vector<int> host_cells_global_ref = getAllGlobalIndex(i_list, j_list, k_list);   
+            lgr_cell.set_hostnum(host_cells_global_ref);
+            lgr_cell.init_children_host_cells();
+        }
+    }
 
     const std::vector<int>& EclipseGrid::getActiveMap() const {
         return m_active_to_global;
@@ -2143,37 +2188,14 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
             }
             return global_ind_active;
         };
-        auto parent_cellsIJK = [](const auto& lgr_cell){
-            std::vector<std::size_t> i_list;
-            std::vector<std::size_t> j_list;
-            std::vector<std::size_t> k_list;
-            std::size_t list_size =  lgr_cell.num_parent_cells();
-            i_list.resize(list_size);
-            j_list.resize(list_size);
-            k_list.resize(list_size);
-            std::size_t index = 0;
-            for (int k_index = lgr_cell.K1(); k_index <= lgr_cell.K2(); k_index++)
-            {
-                for (int j_index = lgr_cell.J1(); j_index <= lgr_cell.J2(); j_index++)
-                {
-                    for (int i_index = lgr_cell.I1(); i_index <= lgr_cell.I2(); i_index++)
-                    {
-                        i_list[index] = i_index;
-                        j_list[index] = j_index;
-                        k_list[index] = k_index;
-                        index++;
-                    }
-                }
-            }
-            return std::make_tuple(i_list, j_list, k_list);
-        };
-
-        for (std::size_t index = 0; index < lgr_input.size(); index++) {
+         for (std::size_t index = 0; index < lgr_input.size(); index++) {
             const auto& lgr_cell = lgr_input.getLgr(index);
             if (this->lgr_label == lgr_cell.PARENT_NAME()){
                 lgr_grid = true;
                 // auto [i_list, j_list, k_list] = lgr_cell.parent_cellsIJK();
-                auto [i_list, j_list, k_list] = parent_cellsIJK(lgr_cell);
+                auto [i_list, j_list, k_list] = VectorUtil::generate_permutation(lgr_cell.I1(), lgr_cell.I2(),
+                                                                                                    lgr_cell.J1(), lgr_cell.J2(),
+                                                                                                    lgr_cell.K1(), lgr_cell.K2());
 
                 auto father_lgr_index = IJK_global(i_list, j_list, k_list);
 
@@ -2476,8 +2498,9 @@ namespace Opm {
     EclipseGridLGR::EclipseGridLGR(const std::string& self_label, const std::string& father_label_,
                                    std::size_t nx, std::size_t ny, std::size_t nz,
                                    const vec_size_t& father_lgr_index, [[maybe_unused]] const std::array<int,3>& low_fahterIJK_,
-                                   [[maybe_unused]] const std::array<int,3>& up_fahterIJK_)
-    : EclipseGrid(nx,ny,nz), father_label(father_label_), father_global(father_lgr_index)
+                                   const std::array<int,3>& up_fahterIJK_)
+    : EclipseGrid(nx,ny,nz), father_label(father_label_), father_global(father_lgr_index), 
+                             low_fahterIJK(low_fahterIJK_), up_fahterIJK(up_fahterIJK_)
     {
         init_father_global();
         lgr_label= self_label;

@@ -125,7 +125,9 @@ namespace Opm {
           from an active index to a global index must be implemented
           in the current class.
         */
-        void init_children_host_cells(void);
+        void init_children_host_cells(bool logical = true);
+        void init_children_host_cells_logical(void);
+        void init_children_host_cells_geometrical(void);
 
         using GridDims::getGlobalIndex;
         size_t getGlobalIndex(size_t active_index) const;
@@ -402,6 +404,12 @@ namespace Opm {
             return father_global;
         }
         void set_hostnum(std::vector<int>&);
+        const std::array<int,3>& get_low_fahterIJK() const{
+          return low_fahterIJK;
+        }
+        const std::array<int,3>& get_up_fahterIJK() const{
+          return up_fahterIJK;
+        }
 
         /**
          * @brief Sets Local Grid Refinement for the EclipseGridLGR.
