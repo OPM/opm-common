@@ -12,7 +12,7 @@ namespace external
 namespace cvf
 {
 class Plane;
-};
+}
 
 namespace caf
 {
@@ -107,5 +107,5 @@ public:
                                              std::vector<int>*         cellFaceForEachTriangleEdge );
 };
 
-}; // namespace caf
+} // namespace caf
 } //namespace external

@@ -2035,7 +2035,7 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
     std::size_t EclipseGrid::getActiveIndexLGR(const std::string& label, std::size_t localIndex) const {
         assertLabelLGR(label);
         return activeIndexLGR(label, localIndex);
-    };
+    }
 
     std::size_t EclipseGrid::getActiveIndexLGR(const std::string& label, std::size_t i, std::size_t j, std::size_t k) const {
         assertLabelLGR(label);
