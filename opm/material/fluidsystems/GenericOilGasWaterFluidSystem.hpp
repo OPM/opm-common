@@ -178,7 +178,7 @@ namespace Opm {
         * \brief Set the pressure-volume-saturation (PVT) relations for the water phase.
         */
         static void setWaterPvt(std::shared_ptr<WaterPvt> pvtObj)
-        { waterPvt_ = pvtObj; }
+        { waterPvt_ = std::move(pvtObj); }
 
         /*!
          * \brief The acentric factor of a component [].

@@ -413,7 +413,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(GenericFluidSystem, Scalar, ScalarTypes)
     // initialize water pvt
     using WaterPvt = typename FluidSystem::WaterPvt;
     std::shared_ptr<WaterPvt> waterPvt;
-    FluidSystem::setWaterPvt(std::move(waterPvt));
+    FluidSystem::setWaterPvt(waterPvt);
 
     checkFluidSystem<Scalar, FluidSystem, Scalar, Scalar>();
     checkFluidSystem<Scalar, FluidSystem, Evaluation, Scalar>();
