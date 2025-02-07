@@ -41,7 +41,7 @@
 # define OPM_MESSAGE_IF(cond, m) do {} while (false)
 #endif
 
-#if !OPM_IS_INSIDE_DEVICE_FUNCTION
+#if OPM_IS_INSIDE_HOST_FUNCTION
 // Macro to throw an exception that counts as an error in PRT file.
 // NOTE: For this macro to work, the
 // exception class must exhibit a constructor with the signature
