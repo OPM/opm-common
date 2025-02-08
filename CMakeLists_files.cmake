@@ -825,6 +825,7 @@ if(ENABLE_ECL_INPUT)
 endif()
 
 list( APPEND PUBLIC_HEADER_FILES
+      opm/common/CriticalError.hpp
       opm/common/ErrorMacros.hpp
       opm/common/Exceptions.hpp
       opm/common/TimingMacros.hpp
