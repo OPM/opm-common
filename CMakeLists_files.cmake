@@ -463,6 +463,7 @@ list (APPEND TEST_SOURCE_FILES
       tests/test_calculateCellVol.cpp
       tests/test_cmp.cpp
       tests/test_ConditionalStorage.cpp
+      tests/test_critical_error.cpp
       tests/test_cubic.cpp
       tests/test_EvaluationFormat.cpp
       tests/test_densead.cpp
