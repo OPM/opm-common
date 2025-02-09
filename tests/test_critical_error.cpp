@@ -25,8 +25,12 @@ BOOST_AUTO_TEST_CASE(TestCriticalError)
         OPM_TRY_THROW_AS_CRITICAL_ERROR(throw std::runtime_error("test"));
         BOOST_FAIL("Should have thrown");
     } catch (const Opm::CriticalError& e) {
-        BOOST_CHECK_EQUAL(e.what(), "test");
         BOOST_CHECK(e.getInnerException() != nullptr);
+        try {
+            std::rethrow_exception(e.getInnerException());
+        } catch (const std::runtime_error& e) {
+            BOOST_CHECK_EQUAL(e.what(), "test");
+        }
     }
 }
 
@@ -38,7 +42,11 @@ BOOST_AUTO_TEST_CASE(TestCriticalErrorBeginEnd)
         BOOST_FAIL("Should have thrown");
         OPM_END_TRY_CATCH_RETHROW_AS_CRITICAL_ERROR();
     } catch (const Opm::CriticalError& e) {
-        BOOST_CHECK_EQUAL(e.what(), "test");
         BOOST_CHECK(e.getInnerException() != nullptr);
+        try {
+            std::rethrow_exception(e.getInnerException());
+        } catch (const std::runtime_error& e) {
+            BOOST_CHECK_EQUAL(e.what(), "test");
+        }
     }
 }

@@ -23,6 +23,8 @@
 #include <stdexcept>
 #include <string>
 
+#include <fmt/format.h>
+
 namespace Opm
 {
 /**
@@ -36,23 +38,11 @@ class CriticalError : public std::exception
 {
 public:
     /**
-     * @brief Constructs a CriticalError with an optional inner exception.
-     *
-     * @param inner_exception An optional std::exception_ptr to an inner exception.
-     */
-    CriticalError(std::exception_ptr inner_exception = nullptr)
-        : m_message("Unknown error message.")
-        , m_innerException(inner_exception)
-    {
-    }
-
-    /**
      * @brief Constructs a CriticalError with a specified message and an optional inner exception.
      *
      * @param message A string_view containing the error message.
      * @param inner_exception An optional std::exception_ptr to an inner exception.
      */
-
     CriticalError(const std::string_view& message, std::exception_ptr inner_exception = nullptr)
         : m_message(message)
         , m_innerException(inner_exception)
@@ -97,11 +87,15 @@ private:
     }                                                                                                                  \
     catch (const std::exception& exp)                                                                                  \
     {                                                                                                                  \
-        throw Opm::CriticalError(exp.what(), std::current_exception());                                                \
+        const auto messageForCriticalError = fmt::format(                                                              \
+            "Error rethrown as CriticalError at [{}:{}].\n\nOriginal error: {}", __FILE__, __LINE__, exp.what());     \
+        throw Opm::CriticalError(messageForCriticalError, std::current_exception());                                   \
     }                                                                                                                  \
     catch (...)                                                                                                        \
     {                                                                                                                  \
-        throw Opm::CriticalError(std::current_exception());                                                            \
+        const auto messageForCriticalError                                                                             \
+            = fmt::format("Error rethrown as CriticalError at [{}:{}]. Unknown original error.", __FILE__, __LINE__);  \
+        throw Opm::CriticalError(messageForCriticalError, std::current_exception());                                   \
     }
 
 /**
@@ -113,9 +107,13 @@ private:
     try {                                                                                                              \
         expr;                                                                                                          \
     } catch (const std::exception& exp) {                                                                              \
-        throw Opm::CriticalError(exp.what(), std::current_exception());                                                \
+        const auto messageForCriticalError = fmt::format(                                                              \
+            "Error rethrown as CriticalError at [{}:{}]\n\n. Original error: {}", __FILE__, __LINE__, exp.what());     \
+        throw Opm::CriticalError(messageForCriticalError, std::current_exception());                                   \
     } catch (...) {                                                                                                    \
-        throw Opm::CriticalError(std::current_exception());                                                            \
+        const auto messageForCriticalError                                                                             \
+            = fmt::format("Error rethrown as CriticalError at [{}:{}]. Unknown original error.", __FILE__, __LINE__);  \
+        throw Opm::CriticalError(messageForCriticalError, std::current_exception());                                   \
     }
 
 } // namespace Opm
