@@ -16,109 +16,155 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <fmt/format.h>
+#include <opm/input/eclipse/Deck/FileDeck.hpp>
+
 #include <opm/common/utility/FileSystem.hpp>
+
 #include <opm/input/eclipse/Deck/Deck.hpp>
 #include <opm/input/eclipse/Deck/DeckValue.hpp>
 #include <opm/input/eclipse/Deck/DeckOutput.hpp>
-#include <opm/input/eclipse/Deck/FileDeck.hpp>
+
 #include <opm/input/eclipse/Parser/ParserKeywords/D.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/R.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/S.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/T.hpp>
 
+#include <algorithm>
+#include <cstddef>
+#include <filesystem>
+#include <fstream>
 #include <iostream>
+#include <optional>
+#include <stdexcept>
+#include <string>
+#include <unordered_map>
+#include <unordered_set>
+#include <vector>
+
+#include <fmt/format.h>
 
 namespace fs = std::filesystem;
 
-namespace Opm {
-
-
 namespace {
 
-void INCLUDE(std::ostream& stream , const std::string& fname)
-{
-    auto include_string = fmt::format(R"(
+    const auto rst_keep_in_solution = std::unordered_set<std::string> {
+        "RPTRST",
+    };
+
+    const auto rst_keep_in_schedule = std::unordered_set<std::string> {
+        "VFPPROD", "VFPINJ", "RPTSCHED", "RPTRST", "TUNING", "MESSAGES",
+    };
+
+    void INCLUDE(std::ostream& stream, const std::string& fname)
+    {
+        stream << fmt::format(R"(
 INCLUDE
    '{}' /
 )", fname);
-    stream << include_string;
-}
-
-void touch_file(const fs::path& file) {
-    if (!fs::exists(file)) {
-        const auto& parent_path = file.parent_path();
-        if (!fs::is_directory(parent_path))
-            fs::create_directories(parent_path);
-        std::ofstream{file};
     }
-}
-}
 
-FileDeck::Index& FileDeck::Index::operator--() {
-    if (this->keyword_index > 0)
-        this->keyword_index--;
+    void touch_file(const fs::path& file)
+    {
+        if (fs::exists(file)) {
+            return;
+        }
+
+        if (const auto& parent_path = file.parent_path();
+            !fs::is_directory(parent_path))
+        {
+            fs::create_directories(parent_path);
+        }
+
+        std::ofstream {file};
+    }
+
+} // Anonymous namespace
+
+namespace Opm {
+
+FileDeck::Index& FileDeck::Index::operator--()
+{
+    if (this->keyword_index > 0) {
+        --this->keyword_index;
+    }
     else {
-        if (this->file_index == 0)
+        if (this->file_index == 0) {
             throw std::logic_error("Going beyond start of container");
+        }
 
-        this->file_index--;
+        --this->file_index;
         this->keyword_index = this->deck->blocks[this->file_index].size() - 1;
     }
+
     return *this;
 }
 
-FileDeck::Index  FileDeck::Index::operator--(int) {
+FileDeck::Index FileDeck::Index::operator--(int)
+{
     auto current = *this;
+
     this->operator--();
+
     return current;
 }
 
-FileDeck::Index& FileDeck::Index::operator++() {
-    if (this->deck->blocks.empty())
+FileDeck::Index& FileDeck::Index::operator++()
+{
+    if (this->deck->blocks.empty()) {
         throw std::logic_error("Trying to iterate empty container");
+    }
 
     const auto& block = this->deck->blocks[this->file_index];
-    if (this->keyword_index < block.size() - 1)
-        this->keyword_index++;
+    if (this->keyword_index < block.size() - 1) {
+        ++this->keyword_index;
+    }
     else {
-        this->file_index++;
+        ++this->file_index;
         this->keyword_index = 0;
     }
+
     return *this;
 }
 
-FileDeck::Index  FileDeck::Index::operator++(int) {
+FileDeck::Index FileDeck::Index::operator++(int)
+{
     auto current = *this;
     this->operator++();
     return current;
 }
 
-FileDeck::Index  FileDeck::Index::operator+(std::size_t shift) const {
+FileDeck::Index FileDeck::Index::operator+(std::size_t shift) const
+{
     auto sum = *this;
 
-    for (std::size_t arg = 0; arg < shift; ++arg)
+    for (std::size_t arg = 0; arg < shift; ++arg) {
         ++sum;
+    }
 
     return sum;
 }
 
-
-bool FileDeck::Index::operator==(const Index& other) const {
-    return this->file_index == other.file_index &&
-           this->keyword_index == other.keyword_index;
+bool FileDeck::Index::operator==(const Index& other) const
+{
+    return (this->file_index == other.file_index)
+        && (this->keyword_index == other.keyword_index)
+        ;
 }
 
-bool FileDeck::Index::operator!=(const Index& other) const {
+bool FileDeck::Index::operator!=(const Index& other) const
+{
     return !(*this == other);
 }
 
-bool FileDeck::Index::operator<(const Index& other) const {
-    if (this->file_index < other.file_index)
+bool FileDeck::Index::operator<(const Index& other) const
+{
+    if (this->file_index < other.file_index) {
         return true;
+    }
 
-    if (this->file_index == other.file_index)
-        return (this->keyword_index < other.keyword_index);
+    if (this->file_index == other.file_index) {
+        return this->keyword_index < other.keyword_index;
+    }
 
     return false;
 }
@@ -127,8 +173,9 @@ FileDeck::FileDeck(const Deck& deck)
     : input_directory(deck.getInputPath())
     , deck_tree(deck.tree())
 {
-    if (deck.empty())
+    if (deck.empty()) {
         return;
+    }
 
     std::size_t deck_index = 0;
     while (true) {
@@ -139,55 +186,65 @@ FileDeck::FileDeck(const Deck& deck)
         deck_index += block.size();
         this->blocks.push_back(std::move(block));
 
-        if (deck_index >= deck.size())
+        if (deck_index >= deck.size()) {
             break;
+        }
     }
 
     this->modified_files.insert(this->blocks[0].fname);
 }
 
-const DeckKeyword& FileDeck::operator[](const Index& index) const {
+const DeckKeyword& FileDeck::operator[](const Index& index) const
+{
     const auto& file_block = this->blocks.at(index.file_index);
     return file_block.keywords.at(index.keyword_index);
 }
 
+void FileDeck::Block::load(const Deck& deck, std::size_t deck_index)
+{
+    const auto current_file = deck[deck_index].location().filename;
 
-
-void FileDeck::FileDeck::Block::load(const Deck& deck, std::size_t deck_index) {
-    const auto& current_file = deck[deck_index].location().filename;
     while (true) {
         this->keywords.push_back(deck[deck_index]);
-        deck_index += 1;
 
-        if (deck_index >= deck.size())
-            break;
+        ++deck_index;
 
-        if (deck[deck_index].location().filename != current_file)
+        if ((deck_index >= deck.size()) ||
+            (deck[deck_index].location().filename != current_file))
+        {
             break;
+        }
     }
 }
 
-std::size_t FileDeck::FileDeck::Block::size() const {
+std::size_t FileDeck::Block::size() const
+{
     return this->keywords.size();
 }
 
-std::optional<std::size_t> FileDeck::Block::find(const std::string& keyword, std::size_t keyword_index) const {
-    auto iter = std::find_if(this->keywords.begin() + keyword_index, this->keywords.end(), [&keyword](const DeckKeyword& kw) { return kw.name() == keyword;});
-    if (iter == this->keywords.end())
+std::optional<std::size_t>
+FileDeck::Block::find(const std::string& keyword,
+                      const std::size_t keyword_index) const
+{
+    auto iter = std::find_if(this->keywords.begin() + keyword_index, this->keywords.end(),
+                             [&keyword](const DeckKeyword& kw)
+                             { return kw.name() == keyword; });
+    if (iter == this->keywords.end()) {
         return {};
+    }
 
     return std::distance(this->keywords.begin(), iter);
 }
 
-
-
-void FileDeck::erase(const FileDeck::Index& index) {
+void FileDeck::erase(const FileDeck::Index& index)
+{
     auto& block = this->blocks.at(index.file_index);
     this->modified_files.insert(block.fname);
     block.erase(index);
 }
 
-void FileDeck::erase(const Index& begin, const Index& end) {
+void FileDeck::erase(const Index& begin, const Index& end)
+{
     auto current = end;
     while (current != begin) {
         --current;
@@ -195,70 +252,80 @@ void FileDeck::erase(const Index& begin, const Index& end) {
     }
 }
 
-bool FileDeck::Block::empty() const {
+bool FileDeck::Block::empty() const
+{
     return this->keywords.empty();
 }
 
-void FileDeck::Block::erase(const FileDeck::Index& index) {
-    if (index.keyword_index >= this->keywords.size())
+void FileDeck::Block::erase(const FileDeck::Index& index)
+{
+    if (index.keyword_index >= this->keywords.size()) {
         throw std::logic_error("Invalid keyword index in block");
+    }
 
     this->keywords.erase(this->keywords.begin() + index.keyword_index);
 }
 
-void FileDeck::Block::insert(std::size_t keyword_index, const DeckKeyword& keyword) {
+void FileDeck::Block::insert(const std::size_t keyword_index,
+                             const DeckKeyword& keyword)
+{
     this->keywords.insert(this->keywords.begin() + keyword_index, keyword);
 }
 
-void FileDeck::Block::dump(DeckOutput& out) const {
+void FileDeck::Block::dump(DeckOutput& out) const
+{
     for (const auto& kw : this->keywords) {
-        kw.write( out );
-        out.write_string( out.fmt.keyword_sep );
+        kw.write(out);
+        out.write_string(out.fmt.keyword_sep);
     }
 }
 
-
-FileDeck::FileDeck::Block::Block(const std::string& filename)
+FileDeck::Block::Block(const std::string& filename)
     : fname(fs::canonical(filename).generic_string())
 {}
 
-std::optional<FileDeck::Index> FileDeck::find(const std::string& keyword, const Index& offset) const {
+std::optional<FileDeck::Index>
+FileDeck::find(const std::string& keyword, const Index& offset) const
+{
     std::size_t file_index = offset.file_index;
     std::size_t keyword_index = offset.keyword_index;
 
     while (true) {
-        if (file_index >= this->blocks.size())
+        if (file_index >= this->blocks.size()) {
             break;
+        }
 
         const auto& file_block = this->blocks[file_index];
         const auto& block_index = file_block.find(keyword, keyword_index);
-        if (block_index.has_value())
+        if (block_index.has_value()) {
             return std::make_optional<FileDeck::Index>(file_index, block_index.value(), this);
+        }
 
-        file_index++;
+        ++file_index;
         keyword_index = 0;
     }
 
     return {};
 }
 
-std::optional<FileDeck::Index> FileDeck::find(const std::string& keyword) const {
+std::optional<FileDeck::Index>
+FileDeck::find(const std::string& keyword) const
+{
     return this->find(keyword, this->start());
 }
 
-std::size_t FileDeck::count(const std::string& keyword) const {
+std::size_t FileDeck::count(const std::string& keyword) const
+{
     std::size_t c = 0;
+
     auto index = this->start();
     while (index != this->stop()) {
-        const auto& deck_kw = this->operator[](index);
-        if (deck_kw.name() == keyword)
-            c += 1;
-
+        c += (*this)[index].name() == keyword;
         ++index;
     }
+
     return c;
 }
-
 
 void FileDeck::insert(const Index& index, const DeckKeyword& keyword)
 {
@@ -268,40 +335,101 @@ void FileDeck::insert(const Index& index, const DeckKeyword& keyword)
     this->modified_files.insert(block.fname);
 }
 
-
-const FileDeck::Index FileDeck::start() const {
-    return FileDeck::Index{0,0, this};
+FileDeck::Index FileDeck::start() const
+{
+    return FileDeck::Index {0, 0, this};
 }
 
-const FileDeck::Index FileDeck::stop() const {
+FileDeck::Index FileDeck::stop() const
+{
     return FileDeck::Index{this->blocks.size(), 0 , this};
 }
 
-void FileDeck::dump(std::ostream& os) const {
-    DeckOutput out( os , 10 );
-    for (const auto& block : this->blocks)
-        block.dump(out);
+// ---------------------------------------------------------------------------
+
+bool FileDeck::DumpContext::has_file(const std::string& fname) const
+{
+    return this->file_map_.find(fname) != this->file_map_.end();
 }
 
+std::ofstream* FileDeck::DumpContext::get_stream(const std::string& deck_name)
+{
+    auto name_iter = this->file_map_.find(deck_name);
+    if (name_iter == this->file_map_.end()) {
+        return nullptr;
+    }
 
-void FileDeck::dump_inline() const {
+    auto streamPos = this->stream_map_.find(name_iter->second);
+    if (streamPos == this->stream_map_.end()) {
+        return nullptr;
+    }
+
+    return &streamPos->second;
+}
+
+std::ofstream&
+FileDeck::DumpContext::open_file(const std::string& deck_name,
+                                 const fs::path& output_file)
+{
+    const auto& [filePos, fileInserted] = this->file_map_
+        .try_emplace(deck_name, output_file.generic_string());
+
+    if (fileInserted) {
+        if (! fs::is_directory(output_file.parent_path())) {
+            fs::create_directories(output_file.parent_path());
+        }
+
+        const auto& [streamPos, streamInserted] = this->stream_map_
+            .try_emplace(output_file.generic_string(), output_file);
+
+        if (! streamInserted) {
+            streamPos->second.open(output_file);
+        }
+    }
+
+    return this->stream_map_.at(output_file.generic_string());
+}
+
+// ---------------------------------------------------------------------------
+
+const std::unordered_set<std::string>& FileDeck::rst_keep_in_solution()
+{
+    return ::rst_keep_in_solution;
+}
+
+void FileDeck::dump(std::ostream& os) const
+{
+    DeckOutput out(os, 10);
+    for (const auto& block : this->blocks) {
+        block.dump(out);
+    }
+}
+
+void FileDeck::dump_inline() const
+{
     this->dump(std::cout);
 }
 
-
-std::string FileDeck::dump_block(const FileDeck::Block& block, const std::string& output_dir, const std::optional<std::string>& data_file , FileDeck::DumpContext& context) const {
+std::string
+FileDeck::dump_block(const FileDeck::Block& block,
+                     const std::string& output_dir,
+                     const std::optional<std::string>& data_file,
+                     FileDeck::DumpContext& context) const
+{
     const auto& deck_name = block.fname;
-    auto old_stream = context.get_stream(deck_name);
-    if (old_stream.has_value()) {
-        DeckOutput out(*old_stream.value(), 10);
-        block.dump( out );
+
+    if (auto old_stream = context.get_stream(deck_name);
+        old_stream != nullptr)
+    {
+        DeckOutput out(*old_stream, 10);
+        block.dump(out);
         return "";
     }
 
-
     fs::path output_file;
-    if (data_file.has_value())
+    if (data_file.has_value()) {
         output_file = fs::path(output_dir) / data_file.value();
+    }
     else {
         // Should ideally use fs::relative()
         auto rel_path = fs::proximate(block.fname, this->input_directory);
@@ -313,51 +441,62 @@ std::string FileDeck::dump_block(const FileDeck::Block& block, const std::string
 
     auto& stream = context.open_file(deck_name, output_file);
     DeckOutput out(stream, 10);
-    block.dump( out );
-    return output_file.string();
+    block.dump(out);
+
+    return output_file.generic_string();
 }
 
-
-void FileDeck::include_block(const std::string& input_file, const std::string& output_file, const std::string& output_dir, FileDeck::DumpContext& context) const {
+void FileDeck::include_block(const std::string& input_file,
+                             const std::string& output_file,
+                             const std::string& output_dir,
+                             FileDeck::DumpContext& context) const
+{
     auto current_file = input_file;
+
     while (true) {
         const auto& parent = this->deck_tree.parent(current_file);
-        auto stream = context.get_stream(parent);
-        if (stream.has_value()) {
+
+        auto* stream = context.get_stream(parent);
+        if (stream != nullptr) {
             // Should ideally use fs::relative()
-            std::string include_file = fs::proximate(output_file, output_dir).generic_string();
-            INCLUDE(*stream.value(), include_file);
+            INCLUDE(*stream, fs::proximate(output_file, output_dir).generic_string());
+
             break;
         }
+
         current_file = parent;
     }
 }
 
-
-void FileDeck::dump(const std::string& output_dir, const std::string& fname, OutputMode mode) const {
-    if (!fs::is_directory(output_dir))
+void FileDeck::dump(const std::string& output_dir,
+                    const std::string& fname,
+                    const OutputMode mode) const
+{
+    if (!fs::is_directory(output_dir)) {
         fs::create_directories(output_dir);
+    }
 
-    auto output_cwd = fs::path(output_dir);
+    const auto output_cwd = fs::path(output_dir);
+
     if (mode == OutputMode::INLINE) {
         std::ofstream os(output_cwd / fname);
         this->dump(os);
         return;
     }
 
-
     if (mode == OutputMode::COPY) {
         DumpContext context;
         this->dump_block(this->blocks[0], output_dir, fname, context);
 
-        for (std::size_t block_index = 1; block_index < this->blocks.size(); block_index++) {
+        for (std::size_t block_index = 1; block_index < this->blocks.size(); ++block_index) {
             const auto& block = this->blocks[block_index];
             const auto& include_file = this->dump_block(block, output_dir, {}, context);
-            if (block.fname != this->deck_tree.root())
+
+            if (block.fname != this->deck_tree.root()) {
                 this->include_block(block.fname, include_file, output_dir, context);
+            }
         }
     }
-
 
     if (mode == OutputMode::SHARE) {
        std::ofstream stream{output_cwd / fname};
@@ -365,136 +504,173 @@ void FileDeck::dump(const std::string& output_dir, const std::string& fname, Out
     }
 }
 
-
-void FileDeck::dump_shared(std::ostream& stream, const std::string& output_dir) const {
-    for (std::size_t block_index = 0; block_index < this->blocks.size(); block_index++) {
+void FileDeck::dump_shared(std::ostream& stream,
+                           const std::string& output_dir) const
+{
+    for (std::size_t block_index = 0; block_index < this->blocks.size(); ++block_index) {
         const auto& block = this->blocks[block_index];
-        if (block_index == 0 || this->modified_files.count(block.fname) > 0 || this->deck_tree.has_include(block.fname)) {
+
+        if ((block_index == 0) ||
+            (this->modified_files.count(block.fname) > 0) ||
+            this->deck_tree.has_include(block.fname))
+        {
             DeckOutput out(stream, 10);
             block.dump( out );
-        } else {
+        }
+        else {
             // Should ideally use fs::relative()
             std::string include_file = fs::proximate(block.fname, output_dir).generic_string();
-            if (include_file.find(block.fname) == std::string::npos)
+            if (include_file.find(block.fname) == std::string::npos) {
                 INCLUDE(stream, include_file);
-            else
+            }
+            else {
                 INCLUDE(stream, block.fname);
+            }
         }
     }
 }
 
-
-void FileDeck::dump_stdout(const std::string& output_dir, OutputMode mode) const {
-    if (mode == OutputMode::COPY)
+void FileDeck::dump_stdout(const std::string& output_dir,
+                           const OutputMode mode) const
+{
+    if (mode == OutputMode::COPY) {
         throw std::logic_error("dump to stdout can not be combined outputmode COPY");
+    }
 
-    if (mode == OutputMode::INLINE)
+    if (mode == OutputMode::INLINE) {
         this->dump_inline();
-    else if (mode == OutputMode::SHARE)
+    }
+    else if (mode == OutputMode::SHARE) {
         this->dump_shared(std::cout, output_dir);
+    }
 }
 
-
-void FileDeck::rst_solution(const std::string& rst_base, int report_step) {
+void FileDeck::rst_solution(const std::string& rst_base,
+                            const int report_step)
+{
     auto index = this->find("SOLUTION").value();
     auto summary_index = this->find("SUMMARY").value();
 
-    index++;
-    {
-        while (true) {
-            const auto& keyword = this->operator[](index);
-            if (FileDeck::rst_keep_in_solution.count(keyword.name()) == 0) {
-                this->erase(index);
-                summary_index--;
-            } else
-                index++;
+    ++index;
 
-            if (index == summary_index)
-                break;
+    while (true) {
+        if (::rst_keep_in_solution.count((*this)[index].name()) == 0) {
+            this->erase(index);
+            --summary_index;
+        }
+        else {
+            ++index;
+        }
+
+        if (index == summary_index) {
+            break;
         }
     }
 
     {
-        Opm::UnitSystem units;
+        Opm::UnitSystem units{};
         std::vector<DeckValue> values{ DeckValue{rst_base}, DeckValue{report_step} };
-        DeckKeyword restart(ParserKeywords::RESTART{}, std::vector<std::vector<DeckValue>>{ values }, units, units);
+        DeckKeyword restart {
+            ParserKeywords::RESTART{},
+            std::vector<std::vector<DeckValue>>{ values },
+            units,
+            units
+        };
 
         auto solution = this->find("SOLUTION").value();
         this->insert(++solution, restart);
     }
 }
 
-void FileDeck::insert_skiprest() {
+void FileDeck::insert_skiprest()
+{
     DeckKeyword skiprest( ParserKeywords::SKIPREST{} );
+
     const auto schedule = this->find("SCHEDULE");
     auto index = schedule.value();
+
     this->insert(++index, skiprest);
 }
 
-
-void FileDeck::skip(int report_step) {
+void FileDeck::skip(const int report_step)
+{
     int current_report = 0;
+
     const auto& schedule = this->find("SCHEDULE");
     auto deck_pos = schedule.value();
     while (true) {
-        const auto& deck_keyword = this->operator[](deck_pos);
+        const auto& deck_keyword = (*this)[deck_pos];
 
-        if (deck_keyword.name() == "DATES")
+        if (deck_keyword.name() == "DATES") {
             current_report += deck_keyword.size();
-        else if (deck_keyword.name() == "TSTEP")
-            current_report += deck_keyword[0].getItem<ParserKeywords::TSTEP::step_list>().data_size();
+        }
+        else if (deck_keyword.name() == "TSTEP") {
+            current_report += deck_keyword[0]
+                .getItem<ParserKeywords::TSTEP::step_list>()
+                .data_size();
+        }
 
-        if (current_report >= report_step)
+        if (current_report >= report_step) {
             break;
+        }
 
-        deck_pos++;
-        if (deck_pos == this->stop())
-            throw std::logic_error(fmt::format("Could not find DATES keyword corresponding to report_step {}", report_step));
+        ++deck_pos;
+        if (deck_pos == this->stop()) {
+            throw std::logic_error {
+                fmt::format("Could not find DATES keyword "
+                            "corresponding to report_step {}", report_step)
+            };
+        }
     }
 
     auto index = schedule.value() + 1;
     auto end_pos = deck_pos;
     while (index < end_pos) {
-        const auto& keyword = this->operator[](index);
-        if (FileDeck::rst_keep_in_schedule.count(keyword.name()) == 0) {
+        const auto& keyword = (*this)[index];
+
+        if (rst_keep_in_schedule.count(keyword.name()) == 0) {
             auto next_index = index + 1;
             this->erase(index);
+
             if (next_index.file_index != index.file_index) {
                 // Erased the last element on this block, move to the next.
                 index = next_index;
             }
+
             if (index.file_index == end_pos.file_index) {
                 // On the last block.
-                end_pos--;
+                --end_pos;
             }
-        } else
+        }
+        else {
             index++;
+        }
     }
 
-    if (current_report == report_step)
+    if (current_report == report_step) {
         this->erase(end_pos);
+    }
     else {
-        auto deck_keyword = this->operator[](end_pos);
-        this->erase(end_pos);
-        std::vector<std::vector<DeckValue>> records;
-
         using D = ParserKeywords::DATES;
+
+        auto deck_keyword = (*this)[end_pos];
+        this->erase(end_pos);
+        std::vector<std::vector<DeckValue>> records{};
+
         current_report -= deck_keyword.size();
-        for (size_t record_index = report_step - current_report; record_index < deck_keyword.size(); record_index++) {
+        for (std::size_t record_index = report_step - current_report;
+             record_index < deck_keyword.size(); ++record_index)
+        {
             const auto& record = deck_keyword[record_index];
-            records.push_back( {DeckValue{record.getItem<D::DAY>().get<int>(0)},
-                                DeckValue{record.getItem<D::MONTH>().get<std::string>(0)},
-                                DeckValue{record.getItem<D::YEAR>().get<int>(0)} });
+            records.push_back({DeckValue{record.getItem<D::DAY>().get<int>(0)},
+                               DeckValue{record.getItem<D::MONTH>().get<std::string>(0)},
+                               DeckValue{record.getItem<D::YEAR>().get<int>(0)}});
         }
 
-        UnitSystem unit_system;
-        this->insert(end_pos, DeckKeyword{ParserKeywords::DATES{}, records, unit_system, unit_system});
+        UnitSystem unit_system{};
+        this->insert(end_pos, DeckKeyword{ParserKeywords::DATES{},
+                    records, unit_system, unit_system});
     }
 }
 
-
-
-const std::unordered_set<std::string> FileDeck::rst_keep_in_solution = {"RPTRST"};
-const std::unordered_set<std::string> FileDeck::rst_keep_in_schedule = {"VFPPROD", "VFPINJ", "RPTSCHED", "RPTRST", "TUNING", "MESSAGES"};
-
-}
+} // namespace Opm
