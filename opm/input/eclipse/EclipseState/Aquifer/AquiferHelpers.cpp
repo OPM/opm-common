@@ -15,56 +15,75 @@
 
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
- */
+*/
+
+#include <opm/input/eclipse/EclipseState/Aquifer/AquiferHelpers.hpp>
 
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
-#include "AquiferHelpers.hpp"
+#include <opm/input/eclipse/EclipseState/Grid/FaceDir.hpp>
 
-namespace Opm::AquiferHelpers {
-    bool cellInsideReservoirAndActive(const EclipseGrid& grid, const int i, const int j, const int k,
+#include <cstddef>
+#include <optional>
+#include <unordered_set>
+#include <vector>
+
+namespace {
+    bool cellInsideReservoirAndActive(const Opm::EclipseGrid& grid,
+                                      const int i, const int j, const int k,
                                       const std::vector<int>& actnum,
-                                      const std::optional<const std::unordered_set<std::size_t>>& numerical_aquifer_cells = std::nullopt)
+                                      const std::optional<const std::unordered_set<std::size_t>>& numerical_aquifer_cells)
     {
-        if ( i < 0 || j < 0 || k < 0
-             || size_t(i) > grid.getNX() - 1
-             || size_t(j) > grid.getNY() - 1
-             || size_t(k) > grid.getNZ() - 1 )
+        if ((i < 0) || (j < 0) || (k < 0)
+            || (std::size_t(i) > grid.getNX() - 1)
+            || (std::size_t(j) > grid.getNY() - 1)
+            || (std::size_t(k) > grid.getNZ() - 1))
         {
             return false;
         }
 
-        const size_t globalIndex = grid.getGlobalIndex(i,j,k);
-        if (!actnum[globalIndex]) return false;
+        const std::size_t globalIndex = grid.getGlobalIndex(i, j, k);
+        if (! actnum[globalIndex]) {
+            return false;
+        }
 
-        // we consider a numerical aquifer cell is outside the reservoir, so we can create aquifer connection between a
-        // reservoir cell and a numerical aquifer cell
-        const bool is_numerical_aquifer_cells = numerical_aquifer_cells.has_value() &&
-                                                numerical_aquifer_cells->count(globalIndex) > 0;
+        // We consider a numerical aquifer cell is outside the reservoir, so
+        // we can create aquifer connection between a reservoir cell and a
+        // numerical aquifer cell.
+        const bool is_numerical_aquifer_cells = numerical_aquifer_cells.has_value()
+            && (numerical_aquifer_cells->count(globalIndex) > 0);
 
-        if (is_numerical_aquifer_cells) return false;
-
-        return true;
+        return ! is_numerical_aquifer_cells;
     }
+} // Anonymous namespace
+
+namespace Opm::AquiferHelpers {
 
     bool neighborCellInsideReservoirAndActive(const EclipseGrid& grid, const int i, const int j, const int k,
                                               const Opm::FaceDir::DirEnum faceDir, const std::vector<int>& actnum,
                                               const std::optional<const std::unordered_set<std::size_t>>& numerical_aquifer_cells)
     {
-        switch(faceDir) {
-            case FaceDir::XMinus:
-                return cellInsideReservoirAndActive(grid, i - 1, j, k, actnum, numerical_aquifer_cells);
-            case FaceDir::XPlus:
-                return cellInsideReservoirAndActive(grid, i + 1, j, k, actnum, numerical_aquifer_cells);
-            case FaceDir::YMinus:
-                return cellInsideReservoirAndActive(grid, i, j - 1, k, actnum, numerical_aquifer_cells);
-            case FaceDir::YPlus:
-                return cellInsideReservoirAndActive(grid, i, j + 1, k, actnum, numerical_aquifer_cells);
-            case FaceDir::ZMinus:
-                return cellInsideReservoirAndActive(grid, i, j, k - 1, actnum, numerical_aquifer_cells);
-            case FaceDir::ZPlus:
-                return cellInsideReservoirAndActive(grid, i, j, k + 1, actnum, numerical_aquifer_cells);
-            default:
-                throw std::runtime_error("Unknown FaceDir enum " + std::to_string(faceDir));
+        switch (faceDir) {
+        case FaceDir::XMinus:
+            return cellInsideReservoirAndActive(grid, i - 1, j, k, actnum, numerical_aquifer_cells);
+
+        case FaceDir::XPlus:
+            return cellInsideReservoirAndActive(grid, i + 1, j, k, actnum, numerical_aquifer_cells);
+
+        case FaceDir::YMinus:
+            return cellInsideReservoirAndActive(grid, i, j - 1, k, actnum, numerical_aquifer_cells);
+
+        case FaceDir::YPlus:
+            return cellInsideReservoirAndActive(grid, i, j + 1, k, actnum, numerical_aquifer_cells);
+
+        case FaceDir::ZMinus:
+            return cellInsideReservoirAndActive(grid, i, j, k - 1, actnum, numerical_aquifer_cells);
+
+        case FaceDir::ZPlus:
+            return cellInsideReservoirAndActive(grid, i, j, k + 1, actnum, numerical_aquifer_cells);
+
+        default:
+            throw std::runtime_error("Unknown FaceDir enum " + std::to_string(faceDir));
         }
     }
-}
+
+} // namespace Opm::AquiferHelpers

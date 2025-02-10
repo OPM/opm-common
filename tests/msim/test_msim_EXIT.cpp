@@ -21,8 +21,16 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include <stdexcept>
+#include <opm/msim/msim.hpp>
+
 #include <opm/output/eclipse/EclipseIO.hpp>
+
+#include <opm/input/eclipse/Python/Python.hpp>
+
+#include <opm/input/eclipse/EclipseState/EclipseState.hpp>
+#include <opm/input/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
+
+#include <opm/input/eclipse/Schedule/Schedule.hpp>
 
 #include <opm/input/eclipse/Deck/Deck.hpp>
 
@@ -30,77 +38,107 @@
 #include <opm/input/eclipse/Parser/ParseContext.hpp>
 #include <opm/input/eclipse/Parser/ErrorGuard.hpp>
 
-#include <opm/input/eclipse/Python/Python.hpp>
-#include <opm/input/eclipse/EclipseState/EclipseState.hpp>
-#include <opm/input/eclipse/Schedule/Schedule.hpp>
-#include <opm/input/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
-
 #include <tests/WorkArea.hpp>
-#include <opm/msim/msim.hpp>
 
-namespace Opm {
+#include <cstddef>
+#include <memory>
+#include <stdexcept>
+#include <string>
 
-double prod_opr(const EclipseState&  es, const Schedule& /* sched */, const SummaryState&, const data::Solution& /* sol */, size_t /* report_step */, double /* seconds_elapsed */) {
-    const auto& units = es.getUnits();
-    double oil_rate = 1.0;
-    return -units.to_si(UnitSystem::measure::rate, oil_rate);
-}
+namespace {
 
+    double prod_opr(const Opm::EclipseState& es,
+                    const Opm::Schedule& /* sched */,
+                    const Opm::SummaryState&,
+                    const Opm::data::Solution& /* sol */,
+                    const std::size_t /* report_step */,
+                    const double /* seconds_elapsed */)
+    {
+        const auto& units = es.getUnits();
+        const double oil_rate = 1.0;
+        return -units.to_si(Opm::UnitSystem::measure::rate, oil_rate);
+    }
 
-double prod_wpr_P1(const EclipseState&  es, const Schedule& /* sched */, const SummaryState&, const data::Solution& /* sol */, size_t /* report_step */, double /* seconds_elapsed */) {
-    const auto& units = es.getUnits();
-    double water_rate = 0.0;
-    return -units.to_si(UnitSystem::measure::rate, water_rate);
-}
+    double prod_wpr_P1(const Opm::EclipseState& es,
+                       const Opm::Schedule& /* sched */,
+                       const Opm::SummaryState&,
+                       const Opm::data::Solution& /* sol */,
+                       const std::size_t /* report_step */,
+                       const double /* seconds_elapsed */)
+    {
+        const auto& units = es.getUnits();
+        const double water_rate = 0.0;
+        return -units.to_si(Opm::UnitSystem::measure::rate, water_rate);
+    }
 
-double prod_wpr_P2(const EclipseState&  es, const Schedule& /* sched */, const SummaryState&, const data::Solution& /* sol */, size_t report_step, double /* seconds_elapsed */) {
-    const auto& units = es.getUnits();
-    double water_rate = 0.0;
-    if (report_step > 5)
-        water_rate = 2.0;  // => WWCT = WWPR / (WOPR + WWPR) = 2/3
+    double prod_wpr_P2(const Opm::EclipseState& es,
+                       const Opm::Schedule& /* sched */,
+                       const Opm::SummaryState&,
+                       const Opm::data::Solution& /* sol */,
+                       const std::size_t report_step,
+                       const double /* seconds_elapsed */)
+    {
+        const auto& units = es.getUnits();
+        double water_rate = 0.0;
+        if (report_step > 5) {
+            water_rate = 2.0;  // => WWCT = WWPR / (WOPR + WWPR) = 2/3
+        }
 
-    return -units.to_si(UnitSystem::measure::rate, water_rate);
-}
+        return -units.to_si(Opm::UnitSystem::measure::rate, water_rate);
+    }
 
-double prod_wpr_P3(const EclipseState&  es, const Schedule& /* sched */, const SummaryState&, const data::Solution& /* sol */, size_t /* report_step */, double /* seconds_elapsed */) {
-    const auto& units = es.getUnits();
-    double water_rate = 0.0;
-    return -units.to_si(UnitSystem::measure::rate, water_rate);
-}
+    double prod_wpr_P3(const Opm::EclipseState& es,
+                       const Opm::Schedule& /* sched */,
+                       const Opm::SummaryState&,
+                       const Opm::data::Solution& /* sol */,
+                       const std::size_t /* report_step */,
+                       const double /* seconds_elapsed */)
+    {
+        const auto& units = es.getUnits();
+        const double water_rate = 0.0;
+        return -units.to_si(Opm::UnitSystem::measure::rate, water_rate);
+    }
 
-double prod_wpr_P4(const EclipseState&  es, const Schedule& /* sched */, const SummaryState&, const data::Solution& /* sol */, size_t report_step, double /* seconds_elapsed */) {
-    const auto& units = es.getUnits();
-    double water_rate = 0.0;
-    if (report_step > 10)
-        water_rate = 2.0;
+    double prod_wpr_P4(const Opm::EclipseState& es,
+                       const Opm::Schedule& /* sched */,
+                       const Opm::SummaryState&,
+                       const Opm::data::Solution& /* sol */,
+                       const std::size_t report_step,
+                       const double /* seconds_elapsed */)
+    {
+        const auto& units = es.getUnits();
+        double water_rate = 0.0;
+        if (report_step > 10) {
+            water_rate = 2.0;
+        }
 
-    return -units.to_si(UnitSystem::measure::rate, water_rate);
-}
-}
+        return -units.to_si(Opm::UnitSystem::measure::rate, water_rate);
+    }
 
-BOOST_AUTO_TEST_CASE(MSIM_EXIT_TEST) {
+} // Anonymous namespace
+
+BOOST_AUTO_TEST_CASE(MSIM_EXIT_TEST)
+{
     std::string deck_file = "EXIT_TEST.DATA";
-    Opm::Parser parser;
-    auto python = std::make_shared<Opm::Python>();
 
-    Opm::Deck deck = parser.parseFile(deck_file);
-    Opm::EclipseState state(deck);
-    Opm::Schedule schedule(deck, state, python);
+    const Opm::Deck deck = Opm::Parser{}.parseFile(deck_file);
+    const Opm::EclipseState state(deck);
+    const Opm::Schedule schedule(deck, state, std::make_shared<Opm::Python>());
     Opm::SummaryConfig summary_config(deck, schedule, state.fieldProps(), state.aquifer());
 
     {
         WorkArea work_area("test_msim");
         Opm::msim msim(state, schedule);
         Opm::EclipseIO io(state, state.getInputGrid(), schedule, summary_config);
-        msim.well_rate("P1", Opm::data::Rates::opt::oil, Opm::prod_opr);
-        msim.well_rate("P2", Opm::data::Rates::opt::oil, Opm::prod_opr);
-        msim.well_rate("P3", Opm::data::Rates::opt::oil, Opm::prod_opr);
-        msim.well_rate("P4", Opm::data::Rates::opt::oil, Opm::prod_opr);
+        msim.well_rate("P1", Opm::data::Rates::opt::oil, &prod_opr);
+        msim.well_rate("P2", Opm::data::Rates::opt::oil, &prod_opr);
+        msim.well_rate("P3", Opm::data::Rates::opt::oil, &prod_opr);
+        msim.well_rate("P4", Opm::data::Rates::opt::oil, &prod_opr);
 
-        msim.well_rate("P1", Opm::data::Rates::opt::wat, Opm::prod_wpr_P1);
-        msim.well_rate("P2", Opm::data::Rates::opt::wat, Opm::prod_wpr_P2);
-        msim.well_rate("P3", Opm::data::Rates::opt::wat, Opm::prod_wpr_P3);
-        msim.well_rate("P4", Opm::data::Rates::opt::wat, Opm::prod_wpr_P4);
+        msim.well_rate("P1", Opm::data::Rates::opt::wat, &prod_wpr_P1);
+        msim.well_rate("P2", Opm::data::Rates::opt::wat, &prod_wpr_P2);
+        msim.well_rate("P3", Opm::data::Rates::opt::wat, &prod_wpr_P3);
+        msim.well_rate("P4", Opm::data::Rates::opt::wat, &prod_wpr_P4);
         msim.run(io, false);
 
         auto exit_status = msim.schedule.exitStatus();

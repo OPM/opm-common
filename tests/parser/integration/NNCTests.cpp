@@ -17,19 +17,23 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <opm/input/eclipse/EclipseState/Grid/NNC.hpp>
-#include <opm/input/eclipse/Parser/Parser.hpp>
-#include <opm/input/eclipse/Deck/Deck.hpp>
-#include <opm/input/eclipse/EclipseState/Grid/GridDims.hpp>
-#include <opm/input/eclipse/EclipseState/EclipseState.hpp>
-#include <opm/input/eclipse/Units/Units.hpp>
-
 #define BOOST_TEST_MODULE NNCTests
 
 #include <boost/test/unit_test.hpp>
 
+#include <opm/input/eclipse/EclipseState/Grid/NNC.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/GridDims.hpp>
+#include <opm/input/eclipse/EclipseState/EclipseState.hpp>
+
+#include <opm/input/eclipse/Units/Units.hpp>
+
+#include <opm/input/eclipse/Deck/Deck.hpp>
+
+#include <opm/input/eclipse/Parser/Parser.hpp>
+
 using namespace Opm;
 
+namespace {
 
 const std::string no_nnc_input = R"(
 RUNSPEC
@@ -332,7 +336,7 @@ void check_order(const NNC& nnc) {
     check_order(nnc.editr());
 }
 
-
+} // Anonymous namespace
 
 BOOST_AUTO_TEST_CASE(noNNC)
 {
@@ -365,8 +369,6 @@ BOOST_AUTO_TEST_CASE(readDeck)
     BOOST_CHECK_EQUAL(loc.keyword, "NNC");
 }
 
-
-
 BOOST_AUTO_TEST_CASE(noNNC_EDIT)
 {
     Parser parser;
@@ -376,7 +378,6 @@ BOOST_AUTO_TEST_CASE(noNNC_EDIT)
     BOOST_CHECK(editnnc.edit().empty());
     BOOST_CHECK(editnnc.editr().empty());
 }
-
 
 BOOST_AUTO_TEST_CASE(readDeck_EDIT)
 {
@@ -445,5 +446,3 @@ BOOST_AUTO_TEST_CASE(ACTNUM)
     check_edit_nnc(edit, grid.getGlobalIndex(3,3,0), grid.getGlobalIndex(4,4,0), 2.0);
     check_order(editnnc);
 }
-
-

@@ -16,37 +16,44 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include <getopt.h>
 
-#include <vector>
-#include <iostream>
-#include <sstream>
-#include <cstdlib>
-#include <fmt/format.h>
-
-#include <opm/input/eclipse/Parser/Parser.hpp>
-#include <opm/input/eclipse/Parser/ParseContext.hpp>
-#include <opm/input/eclipse/Parser/ErrorGuard.hpp>
-#include <opm/input/eclipse/Parser/InputErrorAction.hpp>
 #include <opm/input/eclipse/Deck/Deck.hpp>
 
+#include <opm/input/eclipse/Parser/ErrorGuard.hpp>
+#include <opm/input/eclipse/Parser/InputErrorAction.hpp>
+#include <opm/input/eclipse/Parser/ParseContext.hpp>
 
-struct keyword {
-    keyword(const std::string& name_arg, const std::string& filename_arg,
-            std::size_t line_number_arg, std::size_t content_hash_arg) :
-        name(name_arg),
-        filename(filename_arg),
-        line_number(line_number_arg),
-        content_hash(content_hash_arg)
+#include <opm/input/eclipse/Parser/Parser.hpp>
+
+#include <cstddef>
+#include <cstdlib>
+#include <iostream>
+#include <sstream>
+#include <vector>
+
+#include <fmt/format.h>
+
+#include <getopt.h>
+
+namespace {
+
+struct keyword
+{
+    keyword(const std::string& name_arg,
+            const std::string& filename_arg,
+            const std::size_t line_number_arg,
+            const std::size_t content_hash_arg)
+        : name(name_arg)
+        , filename(filename_arg)
+        , line_number(line_number_arg)
+        , content_hash(content_hash_arg)
     {}
-
 
     std::string name;
     std::string filename;
     std::size_t line_number;
     std::size_t content_hash;
 };
-
 
 std::vector<keyword> load_deck(const std::string& deck_file) {
     Opm::ParseContext parseContext;
@@ -71,7 +78,6 @@ std::vector<keyword> load_deck(const std::string& deck_file) {
     return keywords;
 }
 
-
 std::size_t make_deck_hash(const std::vector<keyword>& keywords) {
     std::stringstream ss;
     for (const auto& kw : keywords)
@@ -79,7 +85,6 @@ std::size_t make_deck_hash(const std::vector<keyword>& keywords) {
 
     return std::hash<std::string>{}(ss.str());
 }
-
 
 void print_keywords(const std::vector<keyword>& keywords, std::size_t deck_hash, bool location_info) {
     for (const auto& kw : keywords) {
@@ -90,7 +95,6 @@ void print_keywords(const std::vector<keyword>& keywords, std::size_t deck_hash,
     }
     fmt::print("\n{:8s} : {}\n", "Total", deck_hash);
 }
-
 
 void print_help_and_exit() {
     const char * help_text = R"(The purpose of the opmhash program is to load a deck and create a summary, by
@@ -129,6 +133,7 @@ differences.
     exit(1);
 }
 
+} // Anonymous namespace
 
 int main(int argc, char** argv) {
     int arg_offset = 1;
@@ -154,10 +159,11 @@ int main(int argc, char** argv) {
             break;
         }
     }
-    arg_offset = optind;
-    if (arg_offset >= argc)
-        print_help_and_exit();
 
+    arg_offset = optind;
+    if (arg_offset >= argc) {
+        print_help_and_exit();
+    }
 
     std::vector<std::pair<std::string, std::size_t>> deck_hash_table;
     for (int iarg = arg_offset; iarg < argc; iarg++) {
@@ -165,13 +171,16 @@ int main(int argc, char** argv) {
         auto keywords = load_deck(deck_file);
         auto deck_hash = make_deck_hash(keywords);
         deck_hash_table.emplace_back(deck_file, deck_hash);
-        if (silent)
+        if (silent) {
             continue;
+        }
 
-        if (short_form)
+        if (short_form) {
             std::cout << deck_hash << std::endl;
-        else
+        }
+        else {
             print_keywords(keywords, deck_hash, location_info);
+        }
     }
 
     if (deck_hash_table.size() > 1) {
@@ -179,11 +188,13 @@ int main(int argc, char** argv) {
         const auto& [first_deck, first_hash] = deck_hash_table[0];
         for (std::size_t index = 1; index < deck_hash_table.size(); index++) {
             const auto& [deck, hash] = deck_hash_table[index];
-            if (first_hash != hash)
+            if (first_hash != hash) {
                 equal = false;
+            }
 
-            if (silent)
+            if (silent) {
                 continue;
+            }
 
             fmt::print("{} {} {}\n",
                        first_deck,
@@ -191,11 +202,11 @@ int main(int argc, char** argv) {
                        deck);
         }
 
-        if (equal)
+        if (equal) {
             std::exit(EXIT_SUCCESS);
-        else
+        }
+        else {
             std::exit(EXIT_FAILURE);
+        }
     }
-
 }
-

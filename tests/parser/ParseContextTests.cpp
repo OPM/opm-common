@@ -759,6 +759,8 @@ RPTRUNSPEC
 }
 
 
+namespace {
+
 Deck parse(bool throw_opm, bool& opm_caught, bool& std_caught) {
     KeywordLocation location("kw", "file", 100);
     try {
@@ -777,7 +779,7 @@ Deck parse(bool throw_opm, bool& opm_caught, bool& std_caught) {
     }
 }
 
-
+} // Anonymous namespace
 
 BOOST_AUTO_TEST_CASE(OPM_ERROR) {
     KeywordLocation location("kw", "file", 100);

@@ -27,6 +27,7 @@
  *
  */
 #include "config.h"
+
 #include <opm/material/fluidsystems/blackoilpvt/Co2GasPvt.hpp>
 #include <opm/material/fluidsystems/blackoilpvt/BrineCo2Pvt.hpp>
 #include <opm/material/binarycoefficients/Brine_CO2.hpp>
@@ -34,8 +35,15 @@
 #include <opm/material/components/CO2.hpp>
 #include <opm/material/components/CO2Tables.hpp>
 
-#include <iostream>
+#include <cstdlib>
 #include <iomanip>
+#include <iostream>
+#include <stdexcept>
+#include <string>
+#include <vector>
+#include <utility>
+
+namespace {
 
 template <class Co2Pvt>
 double densityGas(const Co2Pvt& co2Pvt, const double p, const double T, const double Rv)
@@ -112,6 +120,8 @@ double molalityCO2inBrine(const double p,
     return xlCO2 * (2 * m_sal + 55.508) / (1 - xlCO2);
 
 }
+
+} // Anonymous namespace
 
 int main(int argc, char **argv)
 {

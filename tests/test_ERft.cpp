@@ -38,6 +38,8 @@
 
 using namespace Opm::EclIO;
 
+namespace {
+
 template<typename InputIterator1, typename InputIterator2>
 bool
 range_equal(InputIterator1 first1, InputIterator1 last1,
@@ -65,12 +67,13 @@ bool compare_files(const std::string& filename1, const std::string& filename2)
     return range_equal(begin1, end, begin2, end);
 }
 
-
 template <typename T>
 bool operator==(const std::vector<T> & t1, const std::vector<T> & t2)
 {
     return std::equal(t1.begin(), t1.end(), t2.begin(), t2.end());
 }
+
+} // Anonymous namespace
 
 // test is using SPE1CASE1, with minor modifications in order to test API for EGrid class
 //  -> 6 cells made inactive, box: 5 7  5 6  1 1

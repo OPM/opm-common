@@ -19,13 +19,13 @@
 
 #include "config.h"
 
-#include <opm/io/eclipse/EGrid.hpp>
-#include <opm/io/eclipse/EInit.hpp>
-#include <opm/common/utility/numeric/calculateCellVol.hpp>
-
-
 #define BOOST_TEST_MODULE Test EGrid
 #include <boost/test/unit_test.hpp>
+
+#include <opm/io/eclipse/EGrid.hpp>
+#include <opm/io/eclipse/EInit.hpp>
+
+#include <opm/common/utility/numeric/calculateCellVol.hpp>
 
 #include <algorithm>
 #include <array>
@@ -39,39 +39,15 @@
 
 using Opm::EclIO::EGrid;
 
-template<typename InputIterator1, typename InputIterator2>
-bool
-range_equal(InputIterator1 first1, InputIterator1 last1,
-            InputIterator2 first2, InputIterator2 last2)
-{
-    while(first1 != last1 && first2 != last2)
-    {
-        if(*first1 != *first2) return false;
-        ++first1;
-        ++first2;
-    }
-    return (first1 == last1) && (first2 == last2);
-}
-
-bool compare_files(const std::string& filename1, const std::string& filename2)
-{
-    std::ifstream file1(filename1);
-    std::ifstream file2(filename2);
-
-    std::istreambuf_iterator<char> begin1(file1);
-    std::istreambuf_iterator<char> begin2(file2);
-
-    std::istreambuf_iterator<char> end;
-
-    return range_equal(begin1, end, begin2, end);
-}
-
+namespace {
 
 template <typename T>
 bool operator==(const std::vector<T> & t1, const std::vector<T> & t2)
 {
     return std::equal(t1.begin(), t1.end(), t2.begin(), t2.end());
 }
+
+} // Anonymous namespace
 
 // test is using SPE1CASE1, with minor modifications in order to test API for EGrid class
 //  -> 6 cells made inactive, box: 5 7  5 6  1 1
@@ -80,9 +56,8 @@ bool operator==(const std::vector<T> & t1, const std::vector<T> & t2)
 // dx = 1000 ft, dy = 1000 ft. dz = 20 ft for layer 1, 30 ft for layer 2 and 50 ft for layer 3.
 // size of grid is 10x10x3
 
-
-BOOST_AUTO_TEST_CASE(DimensAndIndices) {
-
+BOOST_AUTO_TEST_CASE(DimensAndIndices)
+{
     std::string testFile="SPE1CASE1.EGRID";
 
     EGrid grid1(testFile);
@@ -154,9 +129,8 @@ BOOST_AUTO_TEST_CASE(DimensAndIndices) {
     BOOST_CHECK_THROW(grid1.ijk_from_global_index(nTot), std::invalid_argument);
 }
 
-
-BOOST_AUTO_TEST_CASE(getCellCorners) {
-
+BOOST_AUTO_TEST_CASE(getCellCorners)
+{
     std::string testFile="SPE1CASE1.EGRID";
 
     std::array<double,8> ref_X = {3000,4000,3000,4000,3000,4000,3000,4000};
@@ -189,9 +163,8 @@ BOOST_AUTO_TEST_CASE(getCellCorners) {
     BOOST_CHECK_EQUAL(Z == ref_Z, true);
 }
 
-
-BOOST_AUTO_TEST_CASE(lgr_1) {
-
+BOOST_AUTO_TEST_CASE(lgr_1)
+{
     std::string testEgridFile = "LGR_TESTMOD.EGRID";
     std::string testInitFile = "LGR_TESTMOD.INIT";
 
@@ -341,4 +314,3 @@ BOOST_AUTO_TEST_CASE(lgr_1) {
     for (size_t n = 0; n < hostcells_gind.size(); n++)
         BOOST_CHECK_EQUAL(grid1.ijk_from_global_index(hostcells_gind[n]) == hostcells_ijk[n], true);
 }
-

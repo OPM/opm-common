@@ -15,12 +15,17 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <opm/common/utility/numeric/calculateCellVol.hpp>
+
+#include <opm/common/ErrorMacros.hpp>
 
 #include <algorithm>
+#include <array>
 #include <cassert>
 #include <cmath>
-#include <opm/common/utility/numeric/calculateCellVol.hpp>
-#include <opm/common/ErrorMacros.hpp>
+#include <cstddef>
+
+namespace {
 
 /*
     Cell volume calculation based on following publication:
@@ -39,7 +44,8 @@
 
 */
 
-double C(const double* r, int i1, int i2, int i3){
+double C(const double* r, int i1, int i2, int i3)
+{
    int g = i1 + i2 * 2 + i3 * 4;
 
    if (g == 0)
@@ -66,7 +72,6 @@ double C(const double* r, int i1, int i2, int i3){
    return  r[7] + r[4] + r[2] + r[1] - r[6] - r[5] - r[3] - r[0];
 }
 
-
 struct pqr_t {
     int pb;
     int pg;
@@ -76,8 +81,12 @@ struct pqr_t {
     int rb;
 };
 
+} // Anonymous namespace
 
-double calculateCellVol(const std::array<double,8>& X, const std::array<double,8>& Y, const std::array<double,8>& Z){
+double calculateCellVol(const std::array<double,8>& X,
+                        const std::array<double,8>& Y,
+                        const std::array<double,8>& Z)
+{
     /*
       The permutation array should be ordered so that the sign:
 

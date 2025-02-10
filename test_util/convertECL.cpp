@@ -1,16 +1,21 @@
+#include <opm/io/eclipse/ERst.hpp>
+#include <opm/io/eclipse/EclFile.hpp>
+#include <opm/io/eclipse/EclOutput.hpp>
+
+#include <cctype>
 #include <chrono>
 #include <filesystem>
-#include <getopt.h>
 #include <iomanip>
 #include <iostream>
 #include <type_traits>
-#include <cctype>
-#include <opm/io/eclipse/EclFile.hpp>
-#include <opm/io/eclipse/ERst.hpp>
-#include <opm/io/eclipse/EclOutput.hpp>
+
+#include <getopt.h>
 
 using namespace Opm::EclIO;
+
 using EclEntry = EclFile::EclEntry;
+
+namespace {
 
 template <typename T>
 void write(EclOutput& outFile, EclFile& file1,
@@ -116,7 +121,7 @@ void writeArrayList(std::vector<EclEntry>& arrayList, ERst file1, int reportStep
     }
 }
 
-static void printHelp() {
+void printHelp() {
 
     std::cout << "\nconvertECL needs one argument which is the input file to be converted. If this is a binary file the output file will be formatted. If the input file is formatted the output will be binary. \n"
               << "\nIn addition, the program takes these options (which must be given before the arguments):\n\n"
@@ -127,7 +132,6 @@ static void printHelp() {
               << "-i Enforce IX standard on output file.\n"
               << "-r Extract and convert a specific report time step number from a unified restart file. \n\n";
 }
-
 
 struct GrdeclDataFormatParams
 {
@@ -213,6 +217,7 @@ void open_grdecl_output(const std::string& output_fname, const std::string& inpu
     }
 }
 
+} // Anonymous namespace
 
 int main(int argc, char **argv)
 {

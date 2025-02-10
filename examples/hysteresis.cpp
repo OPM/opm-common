@@ -20,10 +20,12 @@
   module for the precise wording of the license and the list of
   copyright holders.
 */
+
 /*!
  * \file
  *
- * \brief A small application to extract relative permeability hysteresis from a history of saturations
+ * \brief A small application to extract relative permeability hysteresis
+ * from a history of saturations
  *
  */
 #include "config.h"
@@ -32,14 +34,24 @@
 #include <opm/material/fluidmatrixinteractions/EclMaterialLawManager.hpp>
 #include <opm/material/fluidstates/SimpleModularFluidState.hpp>
 
-#include <opm/input/eclipse/Parser/Parser.hpp>
-#include <opm/input/eclipse/Deck/Deck.hpp>
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
 
-#include <iostream>
-#include <iomanip>
+#include <opm/input/eclipse/Deck/Deck.hpp>
+
+#include <opm/input/eclipse/Parser/Parser.hpp>
+
+#include <array>
+#include <cstdlib>
 #include <fstream>
+#include <functional>
+#include <iomanip>
+#include <iostream>
+#include <string>
+#include <vector>
+
+namespace {
 
 template<class Scalar>
 struct Fixture {
@@ -68,20 +80,15 @@ struct Fixture {
     using MaterialLaw = typename MaterialLawManager::MaterialLaw;
 };
 
-namespace Opm
-{
-class FieldPropsManager;
-}
-
 // To support Local Grid Refinement for CpGrid, additional arguments have been added
 // in some EclMaterialLawManager(InitParams) member functions. Therefore, we define
 // some lambda expressions that does not affect this test file.
 std::function<std::vector<int>(const Opm::FieldPropsManager&, const std::string&, bool)> doOldLookup =
     [](const Opm::FieldPropsManager& fieldPropManager, const std::string& propString, bool needsTranslation)
     {
-        std::vector<int> dest;
+        std::vector<int> dest{};
         const auto& intRawData = fieldPropManager.get_int(propString);
-        unsigned int numElems =  intRawData.size();
+        const unsigned int numElems = intRawData.size();
         dest.resize(numElems);
         for (unsigned elemIdx = 0; elemIdx < numElems; ++elemIdx) {
             dest[elemIdx] = intRawData[elemIdx] - needsTranslation;
@@ -89,10 +96,12 @@ std::function<std::vector<int>(const Opm::FieldPropsManager&, const std::string&
         return dest;
     };
 
-std::function<unsigned(unsigned)> doNothing = [](unsigned elemIdx){ return elemIdx;};
+std::function<unsigned(unsigned)> doNothing = [](unsigned elemIdx){ return elemIdx; };
 
 template<class Scalar, class MaterialLawParam, class FluidState>
-std::array<Scalar,Fixture<Scalar>::numPhases>  capillaryPressure(const MaterialLawParam& param, const FluidState& fs) {
+std::array<Scalar,Fixture<Scalar>::numPhases>
+capillaryPressure(const MaterialLawParam& param, const FluidState& fs)
+{
     using MaterialLaw = typename Fixture<double>::MaterialLaw;
     constexpr int numPhases = Fixture<Scalar>::numPhases;
     std::array<Scalar,numPhases> pc;
@@ -104,7 +113,9 @@ std::array<Scalar,Fixture<Scalar>::numPhases>  capillaryPressure(const MaterialL
 }
 
 template<class Scalar, class MaterialLawParam, class FluidState>
-std::array<Scalar,Fixture<Scalar>::numPhases> relativePermeabilities(const MaterialLawParam& param, const FluidState& fs) {
+std::array<Scalar,Fixture<Scalar>::numPhases>
+relativePermeabilities(const MaterialLawParam& param, const FluidState& fs)
+{
     using MaterialLaw = typename Fixture<double>::MaterialLaw;
     constexpr int numPhases = Fixture<Scalar>::numPhases;
     std::array<Scalar,numPhases> kr;
@@ -127,14 +138,16 @@ std::vector<double> readCSVToVector(const std::string& fname)
     return vector;
 }
 
+} // Anonymous namespace
+
 int main(int argc, char **argv)
 {
-
     bool help = false;
     for (int i = 1; i < argc; ++i) {
         std::string tmp = argv[i];
         help = help || (tmp  == "--h") || (tmp  == "--help");
-    } 
+    }
+
     if (argc < 5 || help) {
         std::cout << "USAGE:" << std::endl;
         std::cout << "hysteresis <fn_data> <fn_saturation> <fn_relperm> <wphase> <cellIdx>"<< std::endl;
@@ -143,7 +156,7 @@ int main(int argc, char **argv)
         std::cout << "fn_relperm: Data file name that contains [s, kr, kro, krnSwMdc(So at turning point), Sn(trapped s) ]." << std::endl;
         std::cout << "two-phase-system: = {WO, GO, GW}, WO=water-oil, GO=gas-oil, GW=gas-water" << std::endl;
         std::cout << "cellIdx: cell index (default = 0), used to map SATNUM/IMBNUM" << std::endl;
-        return EXIT_FAILURE;
+        return help ? EXIT_SUCCESS : EXIT_FAILURE;
     }
 
     std::string input = argv[1];
@@ -151,7 +164,7 @@ int main(int argc, char **argv)
     std::vector<double> saturations = readCSVToVector(input_csv);
     std::string output_csv = argv[3];
     std::string two_phase_system = argv[4];
-    double cellIdx = 0; 
+    double cellIdx = 0;
     if (argc > 5)
         cellIdx = std::stod(argv[5]);
 
@@ -166,8 +179,8 @@ int main(int argc, char **argv)
     materialLawManager.initFromState(eclState);
     const auto& satnum = eclState.fieldProps().get_int("SATNUM");
     size_t n = satnum.size();
-    materialLawManager.initParamsForElements(eclState, n, doOldLookup, doNothing); 
-    auto& param = materialLawManager.materialLawParams(cellIdx);   
+    materialLawManager.initParamsForElements(eclState, n, doOldLookup, doNothing);
+    auto& param = materialLawManager.materialLawParams(cellIdx);
 
     const auto& ph = eclState.runspec().phases();
     bool hasGas = ph.active(Opm::Phase::GAS);
@@ -228,11 +241,11 @@ int main(int argc, char **argv)
                                                 param);
         }
         if (two_phase_system == "GW") {
-            // The GW hysteresis params is not possible to get directly from the 3p MaterialLaw 
+            // The GW hysteresis params is not possible to get directly from the 3p MaterialLaw
             //MaterialLaw::gasWaterHysteresisParams(pcSwMdc_out,
             //                                    somax_out,
             //                                    param);
-        } 
+        }
 
         double trapped_out = MaterialLaw::trappedGasSaturation(param, /*maximumTrapping*/ false);
 

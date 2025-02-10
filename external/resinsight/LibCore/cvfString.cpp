@@ -1145,7 +1145,7 @@ void String::replace(const String& before, const String& after)
 //--------------------------------------------------------------------------------------------------
 /// Convert a wchar_t to a single digit. Return -1 if not between 0-9
 //--------------------------------------------------------------------------------------------------
-int digitValue(const wchar_t& character)
+static int digitValue(const wchar_t& character)
 {
     int val = character - '0';
     if (val < 0 || val > 9)

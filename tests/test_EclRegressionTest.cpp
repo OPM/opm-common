@@ -36,11 +36,16 @@ using Opm::EclIO::EGrid;
 using Opm::EclIO::ESmry;
 using Opm::EclIO::EclOutput;
 
-void makeEgridFile(const std::string& fileName, const std::vector<float>& coord,
-                   const std::vector<float>& zcorn, const std::vector<int>& gridhead,
+namespace {
+
+void makeEgridFile(const std::string& fileName,
+                   const std::vector<float>& coord,
+                   const std::vector<float>& zcorn,
+                   const std::vector<int>& gridhead,
                    const std::vector<int>& filehead,
                    const std::vector<std::string>& gridunits,
-                   const std::vector<int>& actnum, const std::vector<int>& nnc1,
+                   const std::vector<int>& actnum,
+                   const std::vector<int>& nnc1,
                    const std::vector<int>& nnc2)
 {
     EclOutput eclTest(fileName, false);
@@ -67,10 +72,14 @@ void makeEgridFile(const std::string& fileName, const std::vector<float>& coord,
 }
 
 
-void makeInitFile(const std::string &fileName, std::vector<std::string> floatKeys, std::vector<std::vector<float>> floatData, std::vector<std::string> intKeys, std::vector<std::vector<int>> intData){
-
-    std::vector<double> doubhead = {0.0,1,0,365,0.10000000149012E+00,0.15000000596046E+00,0.30000000000000E+01};
-    std::vector<int> intehead = {-957688424,201702,1,-2345,-2345,-2345,-2345,-2345,2,3,2,12,6,0,1,-2345,0,10,0,10,11,0,0,0,155,122,130,3,107,112,1,-2345,25,40,58,
+void makeInitFile(const std::string&fileName,
+                  const std::vector<std::string>& floatKeys,
+                  const std::vector<std::vector<float>>& floatData,
+                  const std::vector<std::string>& intKeys,
+                  const std::vector<std::vector<int>>& intData)
+{
+    const std::vector<double> doubhead = {0.0,1,0,365,0.10000000149012E+00,0.15000000596046E+00,0.30000000000000E+01};
+    const std::vector<int> intehead = {-957688424,201702,1,-2345,-2345,-2345,-2345,-2345,2,3,2,12,6,0,1,-2345,0,10,0,10,11,0,0,0,155,122,130,3,107,112,1,-2345,25,40,58,
                 -2345,107,112,180,5,0,1,18,24,10,7,2,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,2000,0,0,0,1,0,0,0,0,0,1,10,0,0,12,1,25,1,-2345,-2345,
 	              8,8,3,4,2,3,2,1,100,0,6,0,-17,1,0,1,0,1,0,2,3,2,12,1,1,1,1,2,3,2,25,1,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,14,11,10,17,2,1,1,1,1,11,1,1,1,
                 1,1,1,98,122,0,0,0,0,0,0,1,10,4,5,9,0,6,8,8,12,1,25,1,-1073741823,-1073741823,-1073741823,-1073741823,0,1,1,1,22,126,10,1,1,1,1,22,
@@ -83,7 +92,7 @@ void makeInitFile(const std::string &fileName, std::vector<std::string> floatKey
                 -2345,-2345,-2345,-2345,-2345,-2345,-2345,-2345,-2345,-2345,-2345,-2345,-2345,-2345,-2345,-2345,-2345,-2345,-2345,-2345,-2345,-2345,
                 -2345,0};
 
-    std::vector<bool> logihead = {false,false,false,true,false,false,false,false,true,false,false,false,false,false,false};
+    const std::vector<bool> logihead = {false,false,false,true,false,false,false,false,true,false,false,false,false,false,false};
 
     EclOutput eclTest(fileName, false);
 
@@ -91,36 +100,39 @@ void makeInitFile(const std::string &fileName, std::vector<std::string> floatKey
     eclTest.write("LOGIHEAD",logihead);
     eclTest.write("DOUBHEAD",doubhead);
 
-    for (size_t i = 0; i < floatKeys.size(); i++) {
+    for (std::size_t i = 0; i < floatKeys.size(); i++) {
         eclTest.write(floatKeys[i], floatData[i]);
     }
 
-    for (size_t i = 0; i < intKeys.size(); i++) {
+    for (std::size_t i = 0; i < intKeys.size(); i++) {
         eclTest.write(intKeys[i], intData[i]);
     }
 }
 
 namespace VI = Opm::RestartIO::Helpers::VectorItems;
 
-void makeUnrstFile(const std::string &fileName, std::vector<int> seqnum,
+void makeUnrstFile(const std::string &fileName,
+                   const std::vector<int>& seqnum,
                    const std::vector<std::tuple<int,int,int>>& dates,
                    const std::vector<double>& time,
-		               const std::vector<bool>& logihead,
+                   const std::vector<bool>& logihead,
                    std::vector<double>& doubhead,
                    const std::vector<std::string>& zgrp,
                    const std::vector<int>& iwel,
-		               const std::vector<std::string>& solutionNames,
+                   const std::vector<std::string>& solutionNames,
                    const std::vector<std::vector<std::vector<float>>>& solutions)
 {
-    std::vector<int> intehead= {-957688424,201702,1,-2345,-2345,-2345,-2345,-2345,2,3,2,12,6,0,1,-2345,0,10,0,10,11,0,0,0,155,122,130,3,107,112,1,-2345,25,40,58,
-                                -2345,107,112,180,5,0,1,18,24,10,7,2,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,2000,0,0,0,1,0,0,0,0,0,1,10,0,0,12,1,25,1,-2345,-2345,8,8,3,4,2,3,2,1,100};
+    std::vector<int> intehead {
+        -957688424,201702,1,-2345,-2345,-2345,-2345,-2345,2,3,2,12,6,0,1,-2345,0,10,0,10,11,0,0,0,155,122,130,3,107,112,1,-2345,25,40,58,
+        -2345,107,112,180,5,0,1,18,24,10,7,2,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,2000,0,0,0,1,0,0,0,0,0,1,10,0,0,12,1,25,1,-2345,-2345,8,8,3,4,2,3,2,1,100,
+    };
 
     intehead.resize(411, 0);
     intehead[VI::intehead::NWMAXZ] = intehead[VI::intehead::NWELLS];
 
     EclOutput eclTest(fileName, false);
 
-    for (size_t i = 0; i < seqnum.size(); i++) {
+    for (std::size_t i = 0; i < seqnum.size(); i++) {
         std::vector<int> seqnumVect;
         seqnumVect.push_back(seqnum[i]);
 
@@ -189,7 +201,7 @@ void makeUnrstFile(const std::string &fileName, std::vector<int> seqnum,
         }
         eclTest.write("STARTSOL", std::vector<char>());
 
-        for (size_t n = 0; n < solutionNames.size(); n++) {
+        for (std::size_t n = 0; n < solutionNames.size(); n++) {
             eclTest.write(solutionNames[n], solutions[n][i]);
         }
 
@@ -259,9 +271,12 @@ void makeRftFile(const std::string &fileName,
                  const std::vector<std::string>& solutionNames,
                  const std::vector<std::vector<std::vector<float>>>& solutions)
 {
-    std::vector<std::string> welletc = {"  DAYS", "A-1H", "", " METRES", "  BARSA", "R", "STANDARD", " SM3/DAY", " SM3/DAY", " RM3/DAY", " M/SEC", "", "   CP", " KG/SM3", " KG/DAY ", "  KG/KG"};
+    std::vector<std::string> welletc {
+        "  DAYS", "A-1H", "", " METRES", "  BARSA", "R", "STANDARD", " SM3/DAY",
+        " SM3/DAY", " RM3/DAY", " M/SEC", "", "   CP", " KG/SM3", " KG/DAY ", "  KG/KG",
+    };
 
-    int nRfts = time.size();
+    const int nRfts = time.size();
 
     EclOutput eclRftTest(fileName, false);
     for (int i = 0; i < nRfts; i++){
@@ -286,23 +301,23 @@ void makeRftFile(const std::string &fileName,
 
         eclRftTest.write("DEPTH", depth[i]);
 
-        for (size_t n = 0; n < solutionNames.size(); n++) {
+        for (std::size_t n = 0; n < solutionNames.size(); n++) {
            eclRftTest.write(solutionNames[n], solutions[n][i]);
         }
     }
 }
 
-
+} // Anonymous namespace
  
-BOOST_AUTO_TEST_CASE(gridCompare) {
-
-    std::vector<float> coord = {2000,2000,2000,1999.9127,1999.8691,2009.9951,2099.9849,2000,2001.7452,2099.8975,1999.8691,2011.7404,2199.9695,2000,2003.4905,2199.8823,
+BOOST_AUTO_TEST_CASE(gridCompare)
+{
+    const std::vector<float> coord = {2000,2000,2000,1999.9127,1999.8691,2009.9951,2099.9849,2000,2001.7452,2099.8975,1999.8691,2011.7404,2199.9695,2000,2003.4905,2199.8823,
            1999.8691,2013.4855,2000,2099.9658,2002.6177,1999.9127,2099.8347,2012.6127,2099.9849,2099.9658,2007.3629,2099.8975,2099.8347,2017.358,2199.9695,2099.9658,
 	   2009.1082,2199.8823,2099.8347,2019.1031,2000,2199.9314,2005.2354,1999.9127,2199.8005,2015.2303,2099.9849,2199.9314,2009.9806,2099.8975,2199.8005,2019.9757,
 	   2199.9695,2199.9314,2011.726,2199.8823,2199.8005,2021.7209,2000,2299.8972,2007.8531,1999.9127,2299.7664,2017.8481,2099.9849,2299.8972,2012.5983,2099.8975,
 	   2299.7664,2022.5934,2199.9695,2299.8972,2014.3436,2199.8823,2299.7664,2024.3386};
 
-    std::vector<float> zcorn = {2000,2001.7452,2001.7452,2003.4905,2002.6177,2004.3629,2004.3629,2006.1082,2002.6177,2004.3629,2007.3629,2009.1082,2005.2354,
+    const std::vector<float> zcorn = {2000,2001.7452,2001.7452,2003.4905,2002.6177,2004.3629,2004.3629,2006.1082,2002.6177,2004.3629,2007.3629,2009.1082,2005.2354,
            2006.9806,2009.9806,2011.726,2005.2354,2006.9806,2009.9806,2011.726,2007.8531,2009.5983,2012.5983,2014.3436,2004.9976,2006.7428,2006.7428,2008.488,
 	   2007.6152,2009.3605,2009.3605,2011.1057,2007.6152,2009.3605,2012.3605,2014.1057,2010.2329,2011.9781,2014.9781,2016.7234,2010.2329,2011.9781,2014.9781,
 	   2016.7234,2012.8506,2014.5959,2017.5959,2019.3411,2004.9976,2006.7428,2006.7428,2008.488,2007.6152,2009.3605,2009.3605,2011.1057,2007.6152,2009.3605,
@@ -310,7 +325,7 @@ BOOST_AUTO_TEST_CASE(gridCompare) {
 	   2011.7404,2011.7404,2013.4855,2012.6127,2014.358,2014.358,2016.1031,2012.6127,2014.358,2017.358,2019.1031,2015.2303,2016.9757,2019.9757,2021.7209,
 	   2015.2303,2016.9757,2019.9757,2021.7209,2017.8481,2019.5934,2022.5934,2024.3386};
 
-    std::vector<int> gridhead = {1,2,3,2,0,0};
+    const std::vector<int> gridhead = {1,2,3,2,0,0};
     std::vector<int> filehead = {3,0,0,0,0,0};
 
     std::vector<int> nnc1;
@@ -321,7 +336,7 @@ BOOST_AUTO_TEST_CASE(gridCompare) {
     //-------------------------------------------------------------
     // base:  identical grids
 
-    std::vector<std::string> gridunits= {"METRES", ""};
+    const std::vector<std::string> gridunits= {"METRES", ""};
 
     makeEgridFile("TMP1.EGRID",coord, zcorn, gridhead, filehead, gridunits, actnum, nnc1, nnc2);
     makeEgridFile("TMP2.EGRID",coord, zcorn, gridhead, filehead, gridunits, actnum, nnc1, nnc2);
@@ -432,7 +447,8 @@ BOOST_AUTO_TEST_CASE(gridCompare) {
     BOOST_CHECK_THROW(test6.gridCompare(),std::runtime_error);
 }
 
-BOOST_AUTO_TEST_CASE(results_init_1) {
+BOOST_AUTO_TEST_CASE(results_init_1)
+{
     WorkArea work;
 
     std::vector<std::vector<int>> intData1;
@@ -512,8 +528,8 @@ BOOST_AUTO_TEST_CASE(results_init_1) {
 
 }
 
-BOOST_AUTO_TEST_CASE(results_init_2) {
-
+BOOST_AUTO_TEST_CASE(results_init_2)
+{
     std::vector<std::vector<int>> intData1;
     std::vector<std::vector<float>> floatData1;
 
@@ -608,7 +624,8 @@ BOOST_AUTO_TEST_CASE(results_init_2) {
     BOOST_CHECK_THROW(test3.results_init(),std::runtime_error);
 }
 
-BOOST_AUTO_TEST_CASE(results_unrst_1) {
+BOOST_AUTO_TEST_CASE(results_unrst_1)
+{
     WorkArea work;
     using Date = std::tuple<int, int, int>;
 
@@ -736,7 +753,8 @@ BOOST_AUTO_TEST_CASE(results_unrst_1) {
     BOOST_CHECK_THROW(test2a.results_rst(),std::runtime_error);
 }
 
-BOOST_AUTO_TEST_CASE(results_unrst_2) {
+BOOST_AUTO_TEST_CASE(results_unrst_2)
+{
     WorkArea work;
     using Date = std::tuple<int, int, int>;
 
@@ -826,8 +844,8 @@ BOOST_AUTO_TEST_CASE(results_unrst_2) {
 
 }
 
-
-BOOST_AUTO_TEST_CASE(results_unrst_3) {
+BOOST_AUTO_TEST_CASE(results_unrst_3)
+{
     WorkArea work;
     using Date = std::tuple<int, int, int>;
 
@@ -1028,9 +1046,8 @@ BOOST_AUTO_TEST_CASE(results_unsmry_1) {
     BOOST_CHECK_THROW(test2a.results_smry(),std::runtime_error);
 }
 
-
-
-BOOST_AUTO_TEST_CASE(results_unsmry_2) {
+BOOST_AUTO_TEST_CASE(results_unsmry_2)
+{
     WorkArea work;
     std::vector<std::string> keywords1 = {"TIME", "YEARS", "FOPR", "FOPT", "WOPR", "WOPR", "WBHP", "WBHP", "ROIP"};
     std::vector<std::string> wgnames1 = {":+:+:+:+", ":+:+:+:+", "FIELD", "FIELD", "A-1H", "A-2H", "A-1H", "A-2H", ":+:+:+:+"};
@@ -1092,11 +1109,8 @@ BOOST_AUTO_TEST_CASE(results_unsmry_2) {
     BOOST_CHECK_EQUAL(test2.countDev(),2);
 }
 
-
-
-BOOST_AUTO_TEST_CASE(results_unsmry_3) {
-
-
+BOOST_AUTO_TEST_CASE(results_unsmry_3)
+{
     ECLRegressionTest test1("SPE1CASE1", "SPE1CASE1A", 1e-3, 1e-3);
 
     BOOST_CHECK_THROW(test1.results_smry(),std::runtime_error);
@@ -1104,11 +1118,10 @@ BOOST_AUTO_TEST_CASE(results_unsmry_3) {
     test1.setReportStepOnly(true);
 
     BOOST_CHECK_NO_THROW(test1.results_smry());
-
 }
 
-
-BOOST_AUTO_TEST_CASE(results_rft_1) {
+BOOST_AUTO_TEST_CASE(results_rft_1)
+{
     WorkArea work;
     using Date = std::tuple<int, int, int>;
 
@@ -1244,7 +1257,8 @@ BOOST_AUTO_TEST_CASE(results_rft_1) {
     BOOST_CHECK_THROW(test2.results_rft(),std::runtime_error);
 }
 
-BOOST_AUTO_TEST_CASE(results_rft_2) {
+BOOST_AUTO_TEST_CASE(results_rft_2)
+{
     WorkArea work;
     using Date = std::tuple<int, int, int>;
 
@@ -1346,4 +1360,3 @@ BOOST_AUTO_TEST_CASE(results_rft_2) {
     // should get deviations for two keywords
     BOOST_CHECK_EQUAL(test3.countDev(), 2);
 }
-

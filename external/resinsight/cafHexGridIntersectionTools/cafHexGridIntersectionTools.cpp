@@ -518,7 +518,7 @@ void HexGridIntersectionTools::clipTrianglesBetweenTwoParallelPlanes( const std:
 //--------------------------------------------------------------------------------------------------
 // Creates a plane with normal perpendicular to the edge, pointing in the direction of the pointInNormalDirection
 //--------------------------------------------------------------------------------------------------
-cvf::Plane createPlaneFromEdgeAndPointInNormalDirection( cvf::Vec3d ep1, cvf::Vec3d ep2, cvf::Vec3d pointInNormalDirection )
+static cvf::Plane createPlaneFromEdgeAndPointInNormalDirection( cvf::Vec3d ep1, cvf::Vec3d ep2, cvf::Vec3d pointInNormalDirection )
 {
     cvf::Vec3d ep1ep2          = ep2 - ep1;
     cvf::Vec3d ep1pointforNorm = pointInNormalDirection - ep1;

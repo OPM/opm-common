@@ -18,13 +18,18 @@
 */
 
 #include <opm/input/eclipse/Schedule/ResCoup/MasterGroup.hpp>
+
+#include <opm/common/OpmLog/OpmLog.hpp>
+#include <opm/common/utility/OpmInputError.hpp>
+
 #include <opm/input/eclipse/Schedule/ResCoup/ReservoirCouplingInfo.hpp>
+
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 #include <opm/input/eclipse/Schedule/ScheduleState.hpp>
 #include <opm/input/eclipse/Schedule/ScheduleStatic.hpp>
+
 #include <opm/input/eclipse/Parser/ParserKeywords/G.hpp>
-#include <opm/common/OpmLog/OpmLog.hpp>
-#include <opm/common/utility/OpmInputError.hpp>
+
 #include "../HandlerContext.hpp"
 
 #include <fmt/format.h>
@@ -32,49 +37,56 @@
 #include <limits>
 #include <stdexcept>
 
-namespace Opm {
-namespace ReservoirCoupling {
+namespace {
+
+void checkValidGroupName(const std::string& name, Opm::HandlerContext& handlerContext)
+{
+    const auto& groups = handlerContext.state().groups;
+    if (!groups.has(name)) {
+        std::string msg = fmt::format("Group '{}': Not defined. Master groups should be defined in advance by using GRUPTREE before referenced in GRUPMAST.", name);
+        throw Opm::OpmInputError(msg, handlerContext.keyword.location());
+    }
+    auto group = groups(name);
+    if (group.wells().size() > 0) {
+        std::string msg = fmt::format("Group '{}' has wells: A master group cannot contain any wells or subordinate groups.", name);
+        throw Opm::OpmInputError(msg, handlerContext.keyword.location());
+    }
+    if (group.groups().size() > 0) {
+        std::string msg = fmt::format("Group '{}' has subgroups: A master group cannot contain any wells or subordinate groups.", name);
+        throw Opm::OpmInputError(msg, handlerContext.keyword.location());
+    }
+}
+
+void checkValidSlaveName(const std::string& name, Opm::HandlerContext& handlerContext)
+{
+    const auto& rescoup = handlerContext.state().rescoup();
+    if (!rescoup.hasSlave(name)) {
+        std::string msg = fmt::format("Slave reservoir '{}': Not defined. Slave reservoirs should be defined in advance by using SLAVES before referenced in GRUPMAST.", name);
+        throw Opm::OpmInputError(msg, handlerContext.keyword.location());
+    }
+}
+
+} // Anonymous namespace
+
+namespace Opm::ReservoirCoupling {
+
 MasterGroup MasterGroup::serializationTestObject()
 {
     return MasterGroup{"D1-M", "RES-1", "MANI-D", 1e+20};
 }
 
-bool MasterGroup::operator==(const MasterGroup& rhs) const {
-    return
-        this->m_name == rhs.m_name &&
-        this->m_slave_name == rhs.m_slave_name &&
-        this->m_slave_group_name == rhs.m_slave_group_name &&
-        this->m_flow_limit_fraction == rhs.m_flow_limit_fraction;
-}
-
-} // namespace ReservoirCoupling
-
-void checkValidGroupName(const std::string& name, HandlerContext& handlerContext)
+bool MasterGroup::operator==(const MasterGroup& rhs) const
 {
-    const auto& groups = handlerContext.state().groups;
-    if (!groups.has(name)) {
-        std::string msg = fmt::format("Group '{}': Not defined. Master groups should be defined in advance by using GRUPTREE before referenced in GRUPMAST.", name);
-        throw OpmInputError(msg, handlerContext.keyword.location());
-    }
-    auto group = groups(name);
-    if (group.wells().size() > 0) {
-        std::string msg = fmt::format("Group '{}' has wells: A master group cannot contain any wells or subordinate groups.", name);
-        throw OpmInputError(msg, handlerContext.keyword.location());
-    }
-    if (group.groups().size() > 0) {
-        std::string msg = fmt::format("Group '{}' has subgroups: A master group cannot contain any wells or subordinate groups.", name);
-        throw OpmInputError(msg, handlerContext.keyword.location());
-    }
+    return (this->m_name == rhs.m_name)
+        && (this->m_slave_name == rhs.m_slave_name)
+        && (this->m_slave_group_name == rhs.m_slave_group_name)
+        && (this->m_flow_limit_fraction == rhs.m_flow_limit_fraction)
+        ;
 }
 
-void checkValidSlaveName(const std::string& name, HandlerContext& handlerContext)
-{
-    const auto& rescoup = handlerContext.state().rescoup();
-    if (!rescoup.hasSlave(name)) {
-        std::string msg = fmt::format("Slave reservoir '{}': Not defined. Slave reservoirs should be defined in advance by using SLAVES before referenced in GRUPMAST.", name);
-        throw OpmInputError(msg, handlerContext.keyword.location());
-    }
-}
+} // namespace Opm::ReservoirCoupling
+
+namespace Opm {
 
 void handleGRUPMAST(HandlerContext& handlerContext)
 {
@@ -115,6 +127,5 @@ void handleGRUPMAST(HandlerContext& handlerContext)
     }
     handlerContext.state().rescoup.update( std::move( rescoup ));
 }
-
 
 } // namespace Opm

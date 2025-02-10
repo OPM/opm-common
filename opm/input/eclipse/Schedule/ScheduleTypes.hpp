@@ -20,8 +20,9 @@
 #ifndef OPM_SCHEDULE_TYPES_HPP
 #define OPM_SCHEDULE_TYPES_HPP
 
-#include <string>
 #include <opm/input/eclipse/EclipseState/Phase.hpp>
+
+#include <string>
 
 namespace Opm {
 
@@ -29,13 +30,14 @@ enum class InjectorType {
     WATER = 1,
     GAS = 2,
     OIL = 3,
-    MULTI = 4
+    MULTI = 4,
 };
-const std::string InjectorType2String( InjectorType enumValue );
-InjectorType InjectorTypeFromString( const std::string& stringValue );
+std::string InjectorType2String(InjectorType enumValue);
+InjectorType InjectorTypeFromString(const std::string& stringValue);
 
 
-class WellType {
+class WellType
+{
 public:
     WellType(int ecl_wtype, int welspecs_phase);
     WellType(bool producer, Phase welspecs_phase);
@@ -88,8 +90,6 @@ private:
     Phase m_welspecs_phase{Phase::WATER};
 };
 
-}
+} // namespace Opm
 
-
-
-#endif
+#endif // OPM_SCHEDULE_TYPES_HPP

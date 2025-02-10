@@ -17,30 +17,35 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-
 #include <opm/input/eclipse/Schedule/ResCoup/CouplingFile.hpp>
-#include <opm/input/eclipse/Schedule/ResCoup/ReservoirCouplingInfo.hpp>
-#include <opm/input/eclipse/Schedule/ScheduleState.hpp>
-#include <opm/input/eclipse/Parser/ParserKeywords/D.hpp>
+
 #include <opm/common/OpmLog/OpmLog.hpp>
 #include <opm/common/utility/OpmInputError.hpp>
+
+#include <opm/input/eclipse/Schedule/ResCoup/ReservoirCouplingInfo.hpp>
+#include <opm/input/eclipse/Schedule/ScheduleState.hpp>
+
+#include <opm/input/eclipse/Parser/ParserKeywords/D.hpp>
+
 #include "../HandlerContext.hpp"
 
+namespace {
 
-namespace Opm {
-
-ReservoirCoupling::CouplingInfo::CouplingFileFlag couplingFileFlagFromString(
-        const std::string& flag_str, const DeckKeyword& keyword
-)
+Opm::ReservoirCoupling::CouplingInfo::CouplingFileFlag
+couplingFileFlagFromString(const std::string& flag_str, const Opm::DeckKeyword& keyword)
 {
     if (flag_str == "F") {
-        return ReservoirCoupling::CouplingInfo::CouplingFileFlag::FORMATTED;
+        return Opm::ReservoirCoupling::CouplingInfo::CouplingFileFlag::FORMATTED;
     } else if (flag_str == "U") {
-        return ReservoirCoupling::CouplingInfo::CouplingFileFlag::UNFORMATTED;
+        return Opm::ReservoirCoupling::CouplingInfo::CouplingFileFlag::UNFORMATTED;
     } else {
-        throw OpmInputError("Invalid DUMPCUPL value: " + flag_str, keyword.location());
+        throw Opm::OpmInputError("Invalid DUMPCUPL value: " + flag_str, keyword.location());
     }
 }
+
+} // Anonymous namespace
+
+namespace Opm {
 
 void handleDUMPCUPL(HandlerContext& handlerContext)
 {

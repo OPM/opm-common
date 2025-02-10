@@ -15,31 +15,41 @@
 
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
- */
-
-
-#include <stdexcept>
-#include <sstream>
+*/
 
 #define BOOST_TEST_MODULE DeckTests
 
 #include <boost/test/unit_test.hpp>
 
-#include <opm/input/eclipse/Units/UnitSystem.hpp>
-#include <opm/input/eclipse/Deck/DeckTree.hpp>
-#include <opm/input/eclipse/Deck/DeckOutput.hpp>
-#include <opm/input/eclipse/Deck/Deck.hpp>
-#include <opm/input/eclipse/Deck/DeckView.hpp>
-#include <opm/input/eclipse/Deck/DeckKeyword.hpp>
-#include <opm/input/eclipse/Parser/ErrorGuard.hpp>
-#include <opm/input/eclipse/Parser/ParseContext.hpp>
-#include <opm/input/eclipse/Parser/Parser.hpp>
-#include <opm/input/eclipse/Parser/ParserKeywords/D.hpp>
-#include <opm/input/eclipse/Parser/ParserItem.hpp>
-#include <opm/input/eclipse/Parser/ParserRecord.hpp>
 #include <opm/common/OpmLog/KeywordLocation.hpp>
 
+#include <opm/input/eclipse/Units/UnitSystem.hpp>
+
+#include <opm/input/eclipse/Deck/Deck.hpp>
+#include <opm/input/eclipse/Deck/DeckKeyword.hpp>
+#include <opm/input/eclipse/Deck/DeckOutput.hpp>
+#include <opm/input/eclipse/Deck/DeckTree.hpp>
+#include <opm/input/eclipse/Deck/DeckView.hpp>
+
+#include <opm/input/eclipse/Parser/ErrorGuard.hpp>
+#include <opm/input/eclipse/Parser/ParseContext.hpp>
+
+#include <opm/input/eclipse/Parser/Parser.hpp>
+#include <opm/input/eclipse/Parser/ParserItem.hpp>
+#include <opm/input/eclipse/Parser/ParserRecord.hpp>
+
+#include <opm/input/eclipse/Parser/ParserKeywords/D.hpp>
+
 #include "../../opm/input/eclipse/Parser/raw/RawRecord.hpp"
+
+#include <algorithm>
+#include <cstddef>
+#include <iterator>
+#include <sstream>
+#include <stdexcept>
+#include <string>
+#include <utility>
+#include <vector>
 
 using namespace Opm;
 
@@ -49,12 +59,14 @@ BOOST_AUTO_TEST_CASE(hasKeyword_empty_returnFalse) {
     BOOST_CHECK_THROW( deck["Bjarne"].back() , std::exception);
 }
 
+namespace {
+
 std::pair<std::vector<Dimension>, std::vector<Dimension>> make_dims() {
     UnitSystem metric(UnitSystem::UnitType::UNIT_TYPE_METRIC);
     return std::make_pair<std::vector<Dimension>, std::vector<Dimension>>({metric.getDimension("Length")}, {metric.getDimension("Length")});
 }
 
-
+} // Anonymous namespace
 
 BOOST_AUTO_TEST_CASE(getKeywordList_empty_list) {
     Deck deck;

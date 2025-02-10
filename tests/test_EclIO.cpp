@@ -17,8 +17,14 @@
    +   */
 
 #include "config.h"
-#include <math.h>
-#include <stdio.h>
+
+#define BOOST_TEST_MODULE Test EclIO
+#include <boost/test/unit_test.hpp>
+
+#include <opm/io/eclipse/EclFile.hpp>
+#include <opm/io/eclipse/EclUtil.hpp>
+
+#include <opm/io/eclipse/EclOutput.hpp>
 
 #include <algorithm>
 #include <fstream>
@@ -29,18 +35,14 @@
 #include <cmath>
 #include <numeric>
 
-#include <opm/io/eclipse/EclFile.hpp>
-#include <opm/io/eclipse/EclUtil.hpp>
+#include <math.h>
+#include <stdio.h>
+
 #include "WorkArea.hpp"
 
-#include <opm/io/eclipse/EclOutput.hpp>
-
-#define BOOST_TEST_MODULE Test EclIO
-#include <boost/test/unit_test.hpp>
-
-
-
 using namespace Opm::EclIO;
+
+namespace {
 
 template<typename InputIterator1, typename InputIterator2>
 bool
@@ -78,7 +80,6 @@ bool operator==(const std::vector<T> & t1, const std::vector<T> & t2)
 void write_header(std::ofstream& ofileH, const std::string& arrName,
                   int size, const std::string& arrtype)
 {
-
     int bhead = flipEndianInt(16);
     int fsize = flipEndianInt(size);
 
@@ -89,8 +90,10 @@ void write_header(std::ofstream& ofileH, const std::string& arrName,
     ofileH.write(reinterpret_cast<char*>(&bhead), sizeof(bhead));
 }
 
+} // Anonymous namespace
 
-BOOST_AUTO_TEST_CASE(TestEclFile_X231) {
+BOOST_AUTO_TEST_CASE(TestEclFile_X231)
+{
     WorkArea work;
 
     std::string filename = "TEST.DAT";
@@ -130,9 +133,8 @@ BOOST_AUTO_TEST_CASE(TestEclFile_X231) {
     }
 }
 
-
-BOOST_AUTO_TEST_CASE(TestEclFile_BINARY) {
-
+BOOST_AUTO_TEST_CASE(TestEclFile_BINARY)
+{
     std::string testFile="ECLFILE.INIT";
 
     // check that exception is thrown when input file doesn't exist
@@ -196,9 +198,8 @@ BOOST_AUTO_TEST_CASE(TestEclFile_BINARY) {
     BOOST_CHECK_EQUAL(vect5b.size(), 312U);
 }
 
-
-BOOST_AUTO_TEST_CASE(TestEclFile_FORMATTED) {
-
+BOOST_AUTO_TEST_CASE(TestEclFile_FORMATTED)
+{
     std::string testFile1="ECLFILE.INIT";
     std::string testFile2="ECLFILE.FINIT";
 
@@ -242,9 +243,8 @@ BOOST_AUTO_TEST_CASE(TestEclFile_FORMATTED) {
 
 }
 
-
-BOOST_AUTO_TEST_CASE(TestEclFile_IX) {
-
+BOOST_AUTO_TEST_CASE(TestEclFile_IX)
+{
     // file MODEL1_IX.INIT is output from comercial simulator ix with
     // BASE_MODEL_1.DATA in opm-tests
 
@@ -265,10 +265,8 @@ BOOST_AUTO_TEST_CASE(TestEclFile_IX) {
         BOOST_CHECK_EQUAL(refLogihead[n], logih[n]);
 }
 
-
-
-BOOST_AUTO_TEST_CASE(TestEcl_Write_binary) {
-
+BOOST_AUTO_TEST_CASE(TestEcl_Write_binary)
+{
     std::string inputFile="ECLFILE.INIT";
     std::string testFile="TEST.DAT";
 
@@ -302,8 +300,8 @@ BOOST_AUTO_TEST_CASE(TestEcl_Write_binary) {
     BOOST_CHECK_EQUAL(compare_files(inputFile, testFile), true);
 }
 
-BOOST_AUTO_TEST_CASE(TestEcl_Write_formatted) {
-
+BOOST_AUTO_TEST_CASE(TestEcl_Write_formatted)
+{
     const std::string inputFile = "ECLFILE.FINIT";
 
     // loading vectors from formatted input file and write data back to a formatted file1
@@ -336,7 +334,8 @@ BOOST_AUTO_TEST_CASE(TestEcl_Write_formatted) {
     }
 }
 
-BOOST_AUTO_TEST_CASE(TestEcl_Write_formatted_not_finite) {
+BOOST_AUTO_TEST_CASE(TestEcl_Write_formatted_not_finite)
+{
     WorkArea wa;
     std::vector<float>  float_vector{std::numeric_limits<float>::infinity()  , std::numeric_limits<float>::quiet_NaN()};
     std::vector<double> double_vector{std::numeric_limits<double>::infinity(), std::numeric_limits<double>::quiet_NaN()};
@@ -359,9 +358,8 @@ BOOST_AUTO_TEST_CASE(TestEcl_Write_formatted_not_finite) {
     BOOST_CHECK_EQUAL(file1.size(), 2U);
 }
 
-
-BOOST_AUTO_TEST_CASE(TestEcl_getList) {
-
+BOOST_AUTO_TEST_CASE(TestEcl_getList)
+{
     std::string inputFile="ECLFILE.INIT";
     std::string testFile="TEST.DAT";
 
@@ -413,8 +411,8 @@ BOOST_AUTO_TEST_CASE(TestEcl_getList) {
     BOOST_CHECK_EQUAL(compare_files(inputFile, testFile), true);
 }
 
-
-BOOST_AUTO_TEST_CASE(TestEcl_Write_CHAR) {
+BOOST_AUTO_TEST_CASE(TestEcl_Write_CHAR)
+{
     WorkArea work;
     std::string testFile1="TEST.FDAT";
     std::string testFile2="TEST2.DAT";
@@ -533,7 +531,8 @@ BOOST_AUTO_TEST_CASE(TestEcl_Write_CHAR) {
     }
 }
 
-BOOST_AUTO_TEST_CASE(CombinedVectorID) {
+BOOST_AUTO_TEST_CASE(CombinedVectorID)
+{
     BOOST_CHECK_EQUAL(combineSummaryNumbers(1, 2), 393'217);
     BOOST_CHECK_EQUAL(combineSummaryNumbers(10, 1), 360'458);
 

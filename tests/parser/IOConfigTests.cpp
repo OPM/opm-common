@@ -17,23 +17,27 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
-
 #define BOOST_TEST_MODULE IOConfigTests
 
 #include <boost/test/unit_test.hpp>
 
+#include <opm/input/eclipse/EclipseState/IOConfig/IOConfig.hpp>
+
+#include <opm/input/eclipse/Deck/Deck.hpp>
+#include <opm/input/eclipse/Parser/Parser.hpp>
+
+#include "tests/WorkArea.hpp"
+
 #include <filesystem>
 #include <fstream>
 #include <iostream>
-#include <opm/input/eclipse/Deck/Deck.hpp>
-#include <opm/input/eclipse/Parser/Parser.hpp>
-#include <opm/input/eclipse/EclipseState/IOConfig/IOConfig.hpp>
+#include <string>
 
-#include "tests/WorkArea.hpp"
 namespace fs = std::filesystem;
 
 using namespace Opm;
+
+namespace {
 
 const std::string& deckStr =  R"(
 RUNSPEC
@@ -159,10 +163,7 @@ DATES             -- 3
 /
 )";
 
-
-
-
-
+} // Anonymous namespace
 
 BOOST_AUTO_TEST_CASE(DefaultProperties) {
     const char* data =  R"(
@@ -263,6 +264,8 @@ GRIDFILE
     BOOST_CHECK( !ioConfig.getWriteEGRIDFile() );
 }
 
+namespace {
+
 void touch_file(const fs::path& file) {
     if (!fs::exists(file)) {
         if (file.has_parent_path()) {
@@ -273,6 +276,8 @@ void touch_file(const fs::path& file) {
         std::ofstream os{file};
     }
 }
+
+} // Anonymous namespace
 
 BOOST_AUTO_TEST_CASE(OutputPaths) {
     WorkArea wa;
