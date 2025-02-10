@@ -23,7 +23,6 @@ set (opm-common_DEPS
 list(APPEND opm-common_DEPS
       # various runtime library enhancements
       "Boost 1.44.0 COMPONENTS system unit_test_framework REQUIRED"
-      "OpenMP QUIET"
       "cjson"
       # Still it produces compile errors complaining that it
       # cannot format UDQVarType. Hence we use the same version
