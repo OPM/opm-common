@@ -55,7 +55,7 @@ public:
      * Further scanning curves can be added with
      * setNext.
      */
-    PLScanningCurve(Scalar Swr)
+    explicit PLScanningCurve(Scalar Swr)
     {
         loopNum_ = 0;
         prev_ = new PLScanningCurve(nullptr, // prev

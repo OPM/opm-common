@@ -70,11 +70,11 @@ public:
 
     Co2GasPvt() = default;
 
-    Co2GasPvt(const ContainerT& salinity,
-              int activityModel = 3,
-              int thermalMixingModel = 1,
-              Scalar T_ref = 288.71, //(273.15 + 15.56)
-              Scalar P_ref = 101325);
+    explicit Co2GasPvt(const ContainerT& salinity,
+                       int activityModel = 3,
+                       int thermalMixingModel = 1,
+                       Scalar T_ref = 288.71, //(273.15 + 15.56)
+                       Scalar P_ref = 101325);
 
     Co2GasPvt(const Params& params,
               const ContainerT& brineReferenceDensity,
