@@ -2243,7 +2243,7 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
         };
         std::vector<std::size_t> lgr_level_numbering_counting(getNumActive(),1);
         lgr_level_active_map.resize(getNumActive(),0);
-        for (const auto& cell:lgr_children_cells) {
+        for (auto& cell:lgr_children_cells) {
             set_map_scalar(cell.getFatherGlobalID(), cell.getTotalActiveLGR());
         }
         std::vector<std::size_t> bottom_lgr_cells;
@@ -2497,7 +2497,7 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
 namespace Opm {
     EclipseGridLGR::EclipseGridLGR(const std::string& self_label, const std::string& father_label_,
                                    std::size_t nx, std::size_t ny, std::size_t nz,
-                                   const vec_size_t& father_lgr_index, [[maybe_unused]] const std::array<int,3>& low_fahterIJK_,
+                                   const vec_size_t& father_lgr_index, const std::array<int,3>& low_fahterIJK_,
                                    const std::array<int,3>& up_fahterIJK_)
     : EclipseGrid(nx,ny,nz), father_label(father_label_), father_global(father_lgr_index), 
                              low_fahterIJK(low_fahterIJK_), up_fahterIJK(up_fahterIJK_)
