@@ -73,31 +73,40 @@ private:
     std::exception_ptr m_innerException;
 };
 
-/**
- * @brief Begins try-catch block and rethrows any caught exceptions as CriticalError.
- */
-#define OPM_BEGIN_TRY_CATCH_RETHROW_AS_CRITICAL_ERROR() try {
+namespace detail
+{
+    inline std::string makeCriticalErrorMessageErrorHint(const std::string& text)
+    {
+        return std::string("\nError hint: ") + text;
+    }
+
+    inline std::string makeCriticalErrorMessageErrorHint()
+    {
+        return std::string("");
+    }
+} // namespace detail
 
 /**
  * @brief Ends try-catch block and rethrows any caught exceptions as CriticalError.
  */
-#define OPM_END_TRY_CATCH_RETHROW_AS_CRITICAL_ERROR()                                                                   \
-    }                                                                                                                   \
-    catch (const Opm::CriticalError&)                                                                                   \
-    {                                                                                                                   \
-        throw;                                                                                                          \
-    }                                                                                                                   \
-    catch (const std::exception& exp)                                                                                   \
-    {                                                                                                                   \
-        const auto messageForCriticalError = std::string("Error rethrown as CriticalError at [") + __FILE__ + ":"       \
-            + std::to_string(__LINE__) + "].\n\nOriginal error: " + exp.what();                                         \
-        throw Opm::CriticalError(messageForCriticalError, std::current_exception());                                    \
-    }                                                                                                                   \
-    catch (...)                                                                                                         \
-    {                                                                                                                   \
-        const auto messageForCriticalError = std::string("Error rethrown as CriticalError at [") + __FILE__ + ":"       \
-            + std::to_string(__LINE__) + "]. Unknown original error.";                                                  \
-        throw Opm::CriticalError(messageForCriticalError, std::current_exception());                                    \
+#define OPM_CATCH_AND_RETHROW_AS_CRITICAL_ERROR(...)                                                                   \
+    catch (const ::Opm::CriticalError&)                                                                                \
+    {                                                                                                                  \
+        throw;                                                                                                         \
+    }                                                                                                                  \
+    catch (const std::exception& exp)                                                                                  \
+    {                                                                                                                  \
+        const auto messageForCriticalError = std::string("Error rethrown as CriticalError at [") + __FILE__ + ":"      \
+            + std::to_string(__LINE__) + "].\nOriginal error: " + exp.what()                                           \
+            + ::Opm::detail::makeCriticalErrorMessageErrorHint(__VA_ARGS__);                                           \
+        throw ::Opm::CriticalError(messageForCriticalError, std::current_exception());                                 \
+    }                                                                                                                  \
+    catch (...)                                                                                                        \
+    {                                                                                                                  \
+        const auto messageForCriticalError = std::string("Error rethrown as CriticalError at [") + __FILE__ + ":"      \
+            + std::to_string(__LINE__) + "]. Unknown original error."                                                  \
+            + ::Opm::detail::makeCriticalErrorMessageErrorHint(__VA_ARGS__);                                           \
+        throw ::Opm::CriticalError(messageForCriticalError, std::current_exception());                                 \
     }
 
 /**
@@ -105,19 +114,21 @@ private:
  *
  * @param expr The expression to execute.
  */
-#define OPM_TRY_THROW_AS_CRITICAL_ERROR(expr)                                                                          \
+#define OPM_TRY_THROW_AS_CRITICAL_ERROR(expr, ...)                                                                     \
     try {                                                                                                              \
         expr;                                                                                                          \
-    } catch (const Opm::CriticalError&) {                                                                              \
+    } catch (const ::Opm::CriticalError&) {                                                                            \
         throw;                                                                                                         \
     } catch (const std::exception& exp) {                                                                              \
         const auto messageForCriticalError = std::string("Error rethrown as CriticalError at [") + __FILE__ + ":"      \
-            + std::to_string(__LINE__) + "]\n\n. Original error: " + exp.what();                                       \
-        throw Opm::CriticalError(messageForCriticalError, std::current_exception());                                   \
+            + std::to_string(__LINE__) + "].\nOriginal error: " + exp.what()                                           \
+            + ::Opm::detail::makeCriticalErrorMessageErrorHint(__VA_ARGS__);                                           \
+        throw ::Opm::CriticalError(messageForCriticalError, std::current_exception());                                 \
     } catch (...) {                                                                                                    \
         const auto messageForCriticalError = std::string("Error rethrown as CriticalError at [") + __FILE__ + ":"      \
-            + std::to_string(__LINE__) + "]. Unknown original error.";                                                 \
-        throw Opm::CriticalError(messageForCriticalError, std::current_exception());                                   \
+            + std::to_string(__LINE__) + "]. Unknown original error."                                                  \
+            + ::Opm::detail::makeCriticalErrorMessageErrorHint(__VA_ARGS__);                                           \
+        throw ::Opm::CriticalError(messageForCriticalError, std::current_exception());                                 \
     }
 
 } // namespace Opm
