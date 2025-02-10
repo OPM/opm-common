@@ -384,7 +384,7 @@ public:
         if (hasDirectionalRelperms() || hasDirectionalImbnum()) {
             using Dir = FaceDir::DirEnum;
             constexpr int ndim = 3;
-            Dir facedirs[ndim] = {Dir::XPlus, Dir::YPlus, Dir::ZPlus};
+            const Dir facedirs[] = {Dir::XPlus, Dir::YPlus, Dir::ZPlus};
             for (int i = 0; i<ndim; i++) {
                 bool ischanged =  MaterialLaw::updateHysteresis(materialLawParams(elemIdx, facedirs[i]), fluidState);
                 changed = changed || ischanged;

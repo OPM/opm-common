@@ -576,12 +576,12 @@ private:
         /* same function as enthalpy_brine, only extended by CO2 content */
 
         /*Numerical coefficents from PALLISER*/
-        static Scalar f[] = {
+        static const Scalar f[] = {
             2.63500E-1, 7.48368E-6, 1.44611E-6, -3.80860E-10
         };
 
         /*Numerical coefficents from MICHAELIDES for the enthalpy of brine*/
-        static Scalar a[4][3] = {
+        static const Scalar a[4][3] = {
             { 9633.6, -4080.0, +286.49 },
             { +166.58, +68.577, -4.6856 },
             { -0.90963, -0.36524, +0.249667E-1 },
