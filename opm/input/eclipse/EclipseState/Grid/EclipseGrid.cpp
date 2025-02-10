@@ -1982,6 +1982,14 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
         }
     }
 
+    void EclipseGrid::set_lgr_refinement(const std::string& lgr_tag, const std::vector<double>& coords, 
+                                                                            const std::vector<double> & zcorn){              
+        for (auto& lgr_cell : lgr_children_cells) {
+            lgr_cell.set_lgr_refinement(lgr_tag, coords, zcorn);
+        }                                                                             
+    }
+
+
     void EclipseGrid::init_children_host_cells(){
         auto getAllCellCorners = [this](const auto& father_list){
             std::vector<std::array<double, 8>> X(father_list.size());
@@ -2478,6 +2486,18 @@ namespace Opm {
     {
         std::transform(hostnum.begin(),hostnum.end(), hostnum.begin(), [](int a){return a+1;});
         m_hostnum = hostnum;
+    }
+    void EclipseGridLGR::set_lgr_refinement(const std::string& lgr_tag, const std::vector<double>& coord, const std::vector<double>& zcorn)
+    {
+        if (lgr_tag == lgr_label)
+        {
+            this->set_lgr_refinement(coord, zcorn);
+        } else
+        {
+            for (auto& lgr_cell : lgr_children_cells) {
+                lgr_cell.set_lgr_refinement(lgr_tag, coord, zcorn);
+            }   
+        }
     }
     void EclipseGridLGR::set_lgr_refinement(const std::vector<double>& coord, const std::vector<double>& zcorn)
     {
