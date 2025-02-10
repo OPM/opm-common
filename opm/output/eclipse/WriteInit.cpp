@@ -465,6 +465,7 @@ namespace {
             {"THERMEXR" , ::Opm::UnitSystem::measure::identity}, // 1/(temperature difference)
             {"THELCOEF" , ::Opm::UnitSystem::measure::identity}, // Pressure/Temperature
             {"YMODULE"  , ::Opm::UnitSystem::measure::ymodule},
+            {"THCONR"   , ::Opm::UnitSystem::measure::thermalconductivity},
         };
 
         // The INIT file should always contain the NTG property.  Guarantee
