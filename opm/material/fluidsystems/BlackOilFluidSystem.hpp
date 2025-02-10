@@ -1720,7 +1720,7 @@ private:
 
     static bool isInitialized_;
     static bool useSaturatedTables_;
-    inline static bool enthalpy_eq_energy_ = false;
+    static bool enthalpy_eq_energy_;
 };
 
 template <typename T> using BOFS = BlackOilFluidSystem<T, BlackOilDefaultIndexTraits>;

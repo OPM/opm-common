@@ -463,6 +463,9 @@ template <> bool BlackOilFluidSystem<float, BlackOilDefaultIndexTraits>::isIniti
 template <> bool BlackOilFluidSystem<double, BlackOilDefaultIndexTraits>::useSaturatedTables_ = false;
 template <> bool BlackOilFluidSystem<float, BlackOilDefaultIndexTraits>::useSaturatedTables_ = false;
 
+template <> bool BlackOilFluidSystem<double, BlackOilDefaultIndexTraits>::enthalpy_eq_energy_ = false;
+template <> bool BlackOilFluidSystem<float, BlackOilDefaultIndexTraits>::enthalpy_eq_energy_ = false;
+
 // IMPORTANT: The following two lines must come after the template specializations above
 //    or else the static variable above will appear as undefined in the generated object file.
 template class BlackOilFluidSystem<double,BlackOilDefaultIndexTraits>;
