@@ -50,3 +50,26 @@ BOOST_AUTO_TEST_CASE(TestCriticalErrorBeginEnd)
         }
     }
 }
+
+BOOST_AUTO_TEST_CASE(TestCriticalErrorBeginEndPassCriticalError)
+{
+    // make sure we simply rethrow CriticalError without decorating it
+    try { 
+        OPM_BEGIN_TRY_CATCH_RETHROW_AS_CRITICAL_ERROR();
+        throw Opm::CriticalError("test");
+        BOOST_FAIL("Should have thrown");
+        OPM_END_TRY_CATCH_RETHROW_AS_CRITICAL_ERROR();
+    } catch (const Opm::CriticalError& e) {
+        BOOST_CHECK_EQUAL(e.what(), "test");
+    }
+}
+
+BOOST_AUTO_TEST_CASE(TestCriticalErrorMacroPassCriticalError) {
+    // make sure we simply rethrow CriticalError without decorating it
+    try {
+        OPM_TRY_THROW_AS_CRITICAL_ERROR(throw Opm::CriticalError("test"));
+        BOOST_FAIL("Should have thrown");
+    } catch (const Opm::CriticalError& e) {
+        BOOST_CHECK_EQUAL(e.what(), "test");
+    }
+}
