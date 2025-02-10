@@ -16,9 +16,10 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
-#ifndef RESERVOIR_COUPLING_INFO_HPP
-#define RESERVOIR_COUPLING_INFO_HPP
+#ifndef OPM_RESERVOIR_COUPLING_INFO_HPP
+#define OPM_RESERVOIR_COUPLING_INFO_HPP
 
+#include <opm/input/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/input/eclipse/Schedule/ResCoup/Slaves.hpp>
 #include <opm/input/eclipse/Schedule/ResCoup/GrupSlav.hpp>
 #include <opm/input/eclipse/Schedule/ResCoup/MasterGroup.hpp>
@@ -43,12 +44,6 @@ public:
     static CouplingInfo serializationTestObject();
     bool operator==(const CouplingInfo& other) const;
 
-    void setCouplingFileFlag(CouplingFileFlag flag) {
-        m_coupling_file_flag = flag;
-    }
-    CouplingFileFlag couplingFileFlag() const {
-        return m_coupling_file_flag;
-    }
 
     const GrupSlav& grupSlav(const std::string& name) const {
         return m_grup_slavs.at(name);
@@ -91,8 +86,29 @@ public:
     double masterMinTimeStep() const {
         return m_master_min_time_step;
     }
+
+    CouplingFileFlag readCouplingFileFlag() const {
+        return m_read_coupling_file_flag;
+    }
+
+    const std::string& readCouplingFileName() const {
+        return m_read_coupling_file_name;
+    }
+
     void setMasterMinTimeStep(double tstep) {
         m_master_min_time_step = tstep;
+    }
+
+    void setReadCouplingFileFlag(CouplingFileFlag flag) {
+        m_read_coupling_file_flag = flag;
+    }
+
+    void setReadCouplingFileName(const std::string file_name) {
+        m_read_coupling_file_name = file_name;
+    }
+
+    void setWriteCouplingFileFlag(CouplingFileFlag flag) {
+        m_write_coupling_file_flag = flag;
     }
 
     const std::map<std::string, Slave>& slaves() const {
@@ -109,6 +125,7 @@ public:
     }
 
 
+
     template<class Serializer>
     void serializeOp(Serializer& serializer)
     {
@@ -116,17 +133,31 @@ public:
         serializer(m_master_groups);
         serializer(m_grup_slavs);
         serializer(m_master_min_time_step);
-        serializer(m_coupling_file_flag);
+        serializer(m_write_coupling_file_flag);
+        serializer(m_read_coupling_file_flag);
+        serializer(m_read_coupling_file_name);
     }
+
+    CouplingFileFlag writeCouplingFileFlag() const {
+        return m_write_coupling_file_flag;
+    }
+
+
+    // Non-inline methods (defined in CouplingInfo.cpp)
+
+    static CouplingFileFlag couplingFileFlagFromString(
+        const std::string& flag_str, const DeckKeyword& keyword);
 
 private:
     std::map<std::string, Slave> m_slaves;
     std::map<std::string, MasterGroup> m_master_groups;
     std::map<std::string, GrupSlav> m_grup_slavs;
     double m_master_min_time_step{0.0};
-    CouplingFileFlag m_coupling_file_flag{CouplingFileFlag::NONE};
+    CouplingFileFlag m_write_coupling_file_flag{CouplingFileFlag::NONE};
+    CouplingFileFlag m_read_coupling_file_flag{CouplingFileFlag::NONE};
+    std::string m_read_coupling_file_name{};
 };
 
 } // namespace Opm::ReservoirCoupling
 
-#endif
+#endif // OPM_RESERVOIR_COUPLING_INFO_HPP
