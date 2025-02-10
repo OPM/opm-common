@@ -28,7 +28,7 @@ std::tuple<std::vector<T>, std::vector<T>, std::vector<T>> generate_permutation(
     {
         for (std::size_t j_index = low_ny; j_index <= up_ny; j_index++)
         {
-            for (std::size_t i_index = low_nz; i_index <= up_nx; i_index++)
+            for (std::size_t i_index = low_nx; i_index <= up_nx; i_index++)
             {
                 i_list[index] = i_index;
                 j_list[index] = j_index;
