@@ -51,8 +51,8 @@ class FastSmallVector
 public:
     //! default constructor
     FastSmallVector()
+        : size_(0)
     {
-        size_ = 0;
         dataPtr_ = smallBuf_.data();
     }
 
@@ -73,8 +73,8 @@ public:
 
     //! copy constructor
     FastSmallVector(const FastSmallVector& other)
+        : size_(0)
     {
-        size_ = 0;
         dataPtr_ = smallBuf_.data();
 
         (*this) = other;
@@ -82,8 +82,8 @@ public:
 
     //! move constructor
     FastSmallVector(FastSmallVector&& other)
+        : size_(0)
     {
-        size_ = 0;
         dataPtr_ = smallBuf_.data();
 
         (*this) = std::move(other);

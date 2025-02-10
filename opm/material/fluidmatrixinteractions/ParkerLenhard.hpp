@@ -81,14 +81,14 @@ protected:
                     Scalar pcnwReversal,
                     Scalar SwMiCurve,
                     Scalar SwMdCurve)
+        : prev_(prevSC)
+        , next_(nextSC)
+        , loopNum_(loopN)
+        , Sw_(SwReversal)
+        , pcnw_(pcnwReversal)
+        , SwMdc_(SwMdCurve)
+        , SwMic_(SwMiCurve)
     {
-        prev_ = prevSC;
-        next_ = nextSC;
-        loopNum_ = loopN;
-        Sw_ = SwReversal;
-        pcnw_ = pcnwReversal;
-        SwMic_ = SwMiCurve;
-        SwMdc_ = SwMdCurve;
     }
 
 public:

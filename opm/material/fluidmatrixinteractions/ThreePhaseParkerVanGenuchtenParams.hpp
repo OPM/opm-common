@@ -53,9 +53,9 @@ public:
     typedef typename Traits::Scalar Scalar;
 
     ThreePhaseParkerVanGenuchtenParams()
+        : betaNW_(1.0)
+        , betaGN_(1.0)
     {
-        betaNW_ = 1.0;
-        betaGN_ = 1.0;
     }
 
     /*!
