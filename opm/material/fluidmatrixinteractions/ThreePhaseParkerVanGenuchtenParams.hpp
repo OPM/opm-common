@@ -193,18 +193,18 @@ public:
     }
 
 private:
-    Scalar vgAlpha_;
-    Scalar vgM_;
-    Scalar vgN_;
-    Scalar Swr_;
-    Scalar Snr_;
-    Scalar Sgr_;
-    Scalar Swrx_; // Swr + Snr
+    Scalar vgAlpha_{};
+    Scalar vgM_{};
+    Scalar vgN_{};
+    Scalar Swr_{};
+    Scalar Snr_{};
+    Scalar Sgr_{};
+    Scalar Swrx_{}; // Swr + Snr
 
     Scalar betaNW_;
     Scalar betaGN_;
 
-    bool krRegardsSnr_ ;
+    bool krRegardsSnr_{false};
 };
 } // namespace Opm
 

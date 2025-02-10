@@ -184,15 +184,15 @@ public:
     { csc_ = val; }
 
 private:
-    const VanGenuchtenParams* micParams_;
-    const VanGenuchtenParams* mdcParams_;
-    Scalar SwrPc_;
-    Scalar SwrKr_;
-    Scalar Snr_;
-    Scalar currentSnr_;
-    mutable ScanningCurve* mdc_;
-    mutable ScanningCurve* pisc_;
-    mutable ScanningCurve* csc_;
+    const VanGenuchtenParams* micParams_{nullptr};
+    const VanGenuchtenParams* mdcParams_{nullptr};
+    Scalar SwrPc_{};
+    Scalar SwrKr_{};
+    Scalar Snr_{};
+    Scalar currentSnr_{};
+    mutable ScanningCurve* mdc_{nullptr};
+    mutable ScanningCurve* pisc_{nullptr};
+    mutable ScanningCurve* csc_{nullptr};
 };
 } // namespace Opm
 
