@@ -23,8 +23,6 @@
 #include <stdexcept>
 #include <string>
 
-#include <fmt/format.h>
-
 namespace Opm
 {
 /**
@@ -87,14 +85,14 @@ private:
     }                                                                                                                  \
     catch (const std::exception& exp)                                                                                  \
     {                                                                                                                  \
-        const auto messageForCriticalError = fmt::format(                                                              \
-            "Error rethrown as CriticalError at [{}:{}].\n\nOriginal error: {}", __FILE__, __LINE__, exp.what());     \
+        const auto messageForCriticalError = std::string("Error rethrown as CriticalError at [") + __FILE__ + ":"      \
+            + std::to_string(__LINE__) + "].\n\nOriginal error: " + exp.what();                                        \
         throw Opm::CriticalError(messageForCriticalError, std::current_exception());                                   \
     }                                                                                                                  \
     catch (...)                                                                                                        \
     {                                                                                                                  \
-        const auto messageForCriticalError                                                                             \
-            = fmt::format("Error rethrown as CriticalError at [{}:{}]. Unknown original error.", __FILE__, __LINE__);  \
+        const auto messageForCriticalError = std::string("Error rethrown as CriticalError at [") + __FILE__ + ":"      \
+            + std::to_string(__LINE__) + "]. Unknown original error.";                                                 \
         throw Opm::CriticalError(messageForCriticalError, std::current_exception());                                   \
     }
 
@@ -107,12 +105,12 @@ private:
     try {                                                                                                              \
         expr;                                                                                                          \
     } catch (const std::exception& exp) {                                                                              \
-        const auto messageForCriticalError = fmt::format(                                                              \
-            "Error rethrown as CriticalError at [{}:{}]\n\n. Original error: {}", __FILE__, __LINE__, exp.what());     \
+        const auto messageForCriticalError = std::string("Error rethrown as CriticalError at [") + __FILE__ + ":"      \
+            + std::to_string(__LINE__) + "]\n\n. Original error: " + exp.what();                                       \
         throw Opm::CriticalError(messageForCriticalError, std::current_exception());                                   \
     } catch (...) {                                                                                                    \
-        const auto messageForCriticalError                                                                             \
-            = fmt::format("Error rethrown as CriticalError at [{}:{}]. Unknown original error.", __FILE__, __LINE__);  \
+        const auto messageForCriticalError = std::string("Error rethrown as CriticalError at [") + __FILE__ + ":"      \
+            + std::to_string(__LINE__) + "]. Unknown original error.";                                                 \
         throw Opm::CriticalError(messageForCriticalError, std::current_exception());                                   \
     }
 
