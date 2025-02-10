@@ -54,20 +54,20 @@ public:
     typedef PLScanningCurve<Scalar> ScanningCurve;
 
     ParkerLenhardParams()
+        : currentSnr_(0)
+        , mdc_(new ScanningCurve(/*Swr=*/0))
     {
-        currentSnr_ = 0;
-        mdc_ = new ScanningCurve(/*Swr=*/0);
-        pisc_ = csc_ = nullptr;
     }
 
     ParkerLenhardParams(const ParkerLenhardParams& p)
         : EnsureFinalized( p )
+        , SwrPc_(p.SwrPc_)
+        , currentSnr_(0)
+        , mdc_(new ScanningCurve(SwrPc_))
     {
-        currentSnr_ = 0;
-        SwrPc_ = p.SwrPc_;
-        mdc_ = new ScanningCurve(SwrPc_);
-        pisc_ = csc_ = nullptr;
     }
+
+    ParkerLenhardParams& operator=(const ParkerLenhardParams&) = delete;
 
     ~ParkerLenhardParams()
     { delete mdc_; }
@@ -186,15 +186,15 @@ public:
     { csc_ = val; }
 
 private:
-    const VanGenuchtenParams* micParams_;
-    const VanGenuchtenParams* mdcParams_;
-    Scalar SwrPc_;
-    Scalar SwrKr_;
-    Scalar Snr_;
-    Scalar currentSnr_;
-    mutable ScanningCurve* mdc_;
-    mutable ScanningCurve* pisc_;
-    mutable ScanningCurve* csc_;
+    const VanGenuchtenParams* micParams_{nullptr};
+    const VanGenuchtenParams* mdcParams_{nullptr};
+    Scalar SwrPc_{};
+    Scalar SwrKr_{};
+    Scalar Snr_{};
+    Scalar currentSnr_{};
+    mutable ScanningCurve* mdc_{nullptr};
+    mutable ScanningCurve* pisc_{nullptr};
+    mutable ScanningCurve* csc_{nullptr};
 };
 } // namespace Opm
 

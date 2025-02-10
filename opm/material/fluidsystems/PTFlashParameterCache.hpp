@@ -30,6 +30,7 @@
 #ifndef OPM_PTFlash_PARAMETER_CACHE_HPP
 #define OPM_PTFlash_PARAMETER_CACHE_HPP
 
+#include <opm/material/common/Valgrind.hpp>
 #include <opm/material/fluidsystems/ParameterCacheBase.hpp>
 #include <opm/material/eos/CubicEOS.hpp>
 #include <opm/material/eos/CubicEOSParams.hpp>
@@ -72,7 +73,7 @@ public:
     //! The cached parameters for the gas phase
     using GasPhaseParams = Opm::CubicEOSParams<Scalar, FluidSystem, gasPhaseIdx>;
 
-    PTFlashParameterCache(EOSType eos_type)
+    explicit PTFlashParameterCache(EOSType eos_type)
     {
         VmUpToDate_[oilPhaseIdx] = false;
         Valgrind::SetUndefined(Vm_[oilPhaseIdx]);

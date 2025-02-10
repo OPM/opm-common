@@ -182,7 +182,7 @@ private:
         return *(static_cast<const ParamT *> (realParams_.operator->()));
     }
 
-    SatCurveMultiplexerApproach approach_;
+    SatCurveMultiplexerApproach approach_{SatCurveMultiplexerApproach::PiecewiseLinear};
     ParamPointerType realParams_;
 };
 

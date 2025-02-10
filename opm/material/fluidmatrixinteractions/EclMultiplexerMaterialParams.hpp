@@ -243,7 +243,7 @@ private:
         return *(static_cast<const ParamT *> (realParams_.operator->()));
     }
 
-    EclMultiplexerApproach approach_;
+    EclMultiplexerApproach approach_{EclMultiplexerApproach::Default};
     ParamPointerType realParams_;
 };
 } // namespace Opm

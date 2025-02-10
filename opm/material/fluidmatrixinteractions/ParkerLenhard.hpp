@@ -55,7 +55,7 @@ public:
      * Further scanning curves can be added with
      * setNext.
      */
-    PLScanningCurve(Scalar Swr)
+    explicit PLScanningCurve(Scalar Swr)
     {
         loopNum_ = 0;
         prev_ = new PLScanningCurve(nullptr, // prev
@@ -73,6 +73,8 @@ public:
         SwMdc_ = 1.0;
     }
 
+    PLScanningCurve& operator=(const PLScanningCurve&) = delete;
+
 protected:
     PLScanningCurve(PLScanningCurve* prevSC,
                     PLScanningCurve* nextSC,
@@ -81,14 +83,14 @@ protected:
                     Scalar pcnwReversal,
                     Scalar SwMiCurve,
                     Scalar SwMdCurve)
+        : prev_(prevSC)
+        , next_(nextSC)
+        , loopNum_(loopN)
+        , Sw_(SwReversal)
+        , pcnw_(pcnwReversal)
+        , SwMdc_(SwMdCurve)
+        , SwMic_(SwMiCurve)
     {
-        prev_ = prevSC;
-        next_ = nextSC;
-        loopNum_ = loopN;
-        Sw_ = SwReversal;
-        pcnw_ = pcnwReversal;
-        SwMic_ = SwMiCurve;
-        SwMdc_ = SwMdCurve;
     }
 
 public:

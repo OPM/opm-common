@@ -48,7 +48,7 @@ class CubicEOSParams
 
 public:
 
-    void setEOSType(EOSType& eos_type)
+    void setEOSType(const EOSType eos_type)
     {
         EosType_= eos_type;
     }
