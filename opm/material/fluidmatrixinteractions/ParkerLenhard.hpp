@@ -73,6 +73,8 @@ public:
         SwMdc_ = 1.0;
     }
 
+    PLScanningCurve& operator=(const PLScanningCurve&) = delete;
+
 protected:
     PLScanningCurve(PLScanningCurve* prevSC,
                     PLScanningCurve* nextSC,

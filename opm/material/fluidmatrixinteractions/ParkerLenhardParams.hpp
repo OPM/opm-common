@@ -67,6 +67,8 @@ public:
     {
     }
 
+    ParkerLenhardParams& operator=(const ParkerLenhardParams&) = delete;
+
     ~ParkerLenhardParams()
     { delete mdc_; }
 
