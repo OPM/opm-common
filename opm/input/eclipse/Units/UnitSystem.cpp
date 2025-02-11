@@ -96,6 +96,7 @@ namespace {
         0.0,
         0.0,
         0.0,
+        0.0,
     };
 
     static const double to_metric[] = {
@@ -144,6 +145,7 @@ namespace {
         1 / Metric::Moles,
         1 / Metric::PPM,
         1 / Metric::Ymodule,
+        1 / Metric::ThermalConductivity,
         1 / (Metric::Time / Metric::GasSurfaceVolume),
     };
 
@@ -193,6 +195,7 @@ namespace {
         Metric::Moles,
         Metric::PPM,
         Metric::Ymodule,
+        Metric::ThermalConductivity,
         Metric::Time / Metric::GasSurfaceVolume,
     };
 
@@ -242,6 +245,7 @@ namespace {
         "KG-M",
         "PPM", /*Parts per million */
         "GPa",
+        "KJ/M/DAY/K",
         "DAY/SM3",
     };
 
@@ -274,6 +278,7 @@ namespace {
         0.0,
         0.0,
         Field::TemperatureOffset,
+        0.0,
         0.0,
         0.0,
         0.0,
@@ -360,6 +365,7 @@ namespace {
         1 / Field::Moles,
         1 / Field::PPM,
         1 / Field::Ymodule,
+        1 / Field::ThermalConductivity,
         1 / (Field::Time / Field::GasSurfaceVolume)
     };
 
@@ -409,6 +415,7 @@ namespace {
          Field::Moles,
          Field::PPM,
          Field::Ymodule,
+         Field::ThermalConductivity,
          Field::Time / Field::GasSurfaceVolume,
     };
 
@@ -458,6 +465,7 @@ namespace {
         "LB-M",
         "PPM",
         "GPa",
+        "BTU/FT/DAY/R",
         "DAY/MSCF",
     };
 
@@ -490,6 +498,7 @@ namespace {
         0.0,
         0.0,
         Lab::TemperatureOffset,
+        0.0,
         0.0,
         0.0,
         0.0,
@@ -576,6 +585,7 @@ namespace {
         1 / Lab::Moles,
         1 / Lab::PPM,
         1 / Lab::Ymodule,
+        1 / Lab::ThermalConductivity,
         1 / (Lab::Time / Lab::GasSurfaceVolume)
     };
 
@@ -625,6 +635,7 @@ namespace {
         Lab::Moles,
         Lab::PPM,
         Lab::Ymodule,
+        Lab::ThermalConductivity,
         Lab::Time / Lab::GasSurfaceVolume
     };
 
@@ -674,6 +685,7 @@ namespace {
         "g-M",
         "PPM",
         "GPa",
+        "J/CM/HR/K",
         "HR/SCC",
     };
 
@@ -706,6 +718,7 @@ namespace {
         0.0,
         0.0,
         PVT_M::TemperatureOffset,
+        0.0,
         0.0,
         0.0,
         0.0,
@@ -792,6 +805,7 @@ namespace {
         1 / PVT_M::Moles,
         1 / PVT_M::PPM,
         1 / PVT_M::Ymodule,
+        1 / PVT_M::ThermalConductivity,
         1 / (PVT_M::Time / PVT_M::GasSurfaceVolume),
     };
 
@@ -841,6 +855,7 @@ namespace {
         PVT_M::Moles,
         PVT_M::PPM,
         PVT_M::Ymodule,
+        PVT_M::ThermalConductivity,
         PVT_M::Time / PVT_M::GasSurfaceVolume,
     };
 
@@ -890,6 +905,7 @@ namespace {
         "KG-M",
         "PPM",
         "GPa",
+        "KJ/M/SEC/K",
         "DAY/SM3",
     };
 
@@ -914,6 +930,7 @@ namespace {
     // INPUT Unit Conventions
 
     static const double from_input_offset[] = {
+        0.0,
         0.0,
         0.0,
         0.0,
@@ -1009,9 +1026,11 @@ namespace {
         1,
         1,
         1,
+        1,
     };
 
     static const double from_input[] = {
+        1,
         1,
         1,
         1,
@@ -1106,6 +1125,7 @@ namespace {
         "g-M",
         "PPM",
         "GPa",
+        "KJ/M/DAY/K",
         "DAY/SM3",
     };
 
@@ -1217,6 +1237,7 @@ namespace {
         this->addDimension("Moles", PVT_M::Moles);
         this->addDimension("ContextDependent", std::numeric_limits<double>::quiet_NaN());
         this->addDimension("Ymodule", PVT_M::Ymodule);
+        this->addDimension("ThermalConductivity", PVT_M::ThermalConductivity);
     }
 
 
@@ -1258,6 +1279,7 @@ namespace {
         this->addDimension("Moles", Lab::Moles);
         this->addDimension("ContextDependent", std::numeric_limits<double>::quiet_NaN());
         this->addDimension("Ymodule", Lab::Ymodule);
+        this->addDimension("ThermalConductivity", Lab::ThermalConductivity);
     }
 
 
@@ -1300,6 +1322,7 @@ namespace {
         this->addDimension("Moles", Metric::Moles);
         this->addDimension("ContextDependent", std::numeric_limits<double>::quiet_NaN());
         this->addDimension("Ymodule", Metric::Ymodule);
+        this->addDimension("ThermalConductivity", Metric::ThermalConductivity);
     }
 
     void UnitSystem::initFIELD() {
@@ -1340,6 +1363,7 @@ namespace {
         this->addDimension("Moles", Field::Moles);
         this->addDimension("ContextDependent", std::numeric_limits<double>::quiet_NaN());
         this->addDimension("Ymodule", Field::Ymodule);
+        this->addDimension("ThermalConductivity", Field::ThermalConductivity);
     }
 
 

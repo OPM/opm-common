@@ -87,6 +87,7 @@ namespace Opm {
             moles,
             ppm,
             ymodule,
+            thermalconductivity,
             dfactor,
             _count // New entries must be added *before* this
         };

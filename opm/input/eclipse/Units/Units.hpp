@@ -286,6 +286,7 @@ namespace Opm {
         constexpr const double Moles                = kilo*mol;
         constexpr const double PPM                  = ppm;
         constexpr const double Ymodule              = giga*Pascal;
+        constexpr const double ThermalConductivity  = kilo*joule/(meter*day*degCelsius);
     }
 
 
@@ -300,8 +301,8 @@ namespace Opm {
         constexpr const double Time                 = day;
         constexpr const double RunTime              = second;
         constexpr const double Mass                 = pound;
-        constexpr const double Permeability = milli*darcy;
-        constexpr const double Transmissibility = centi*Poise*stb/(day*psia);
+        constexpr const double Permeability         = milli*darcy;
+        constexpr const double Transmissibility     = centi*Poise*stb/(day*psia);
         constexpr const double LiquidSurfaceVolume  = stb;
         constexpr const double GasSurfaceVolume     = 1000*cubic(feet);
         constexpr const double ReservoirVolume      = stb;
@@ -321,6 +322,7 @@ namespace Opm {
         constexpr const double Moles                = kilo*pound*mol;
         constexpr const double PPM                  = ppm;
         constexpr const double Ymodule              = giga*Pascal;
+        constexpr const double ThermalConductivity  = btu/(feet*day*degFahrenheit);
     }
 
 
@@ -356,6 +358,7 @@ namespace Opm {
         constexpr const double Moles                = mol;
         constexpr const double PPM                  = ppm;
         constexpr const double Ymodule              = giga*Pascal;
+        constexpr const double ThermalConductivity  = joule/(centi*meter*hour*degCelsius);
     }
 
 
@@ -391,6 +394,7 @@ namespace Opm {
         constexpr const double Moles                = kilo*mol;
         constexpr const double PPM                  = ppm;
         constexpr const double Ymodule              = giga*Pascal;
+        constexpr const double ThermalConductivity  = kilo*joule/(meter*day*degCelsius);
     }
 }
 
