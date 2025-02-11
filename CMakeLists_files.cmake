@@ -475,7 +475,6 @@ list (APPEND TEST_SOURCE_FILES
       tests/test_RootFinders.cpp
       tests/test_SegmentMatcher.cpp
       tests/test_sparsevector.cpp
-      tests/test_ThreadSafeMapBuilder.cpp
       tests/test_uniformtablelinear.cpp
       tests/material/test_2dtables.cpp
       tests/material/test_blackoilfluidstate.cpp
@@ -488,6 +487,12 @@ list (APPEND TEST_SOURCE_FILES
       tests/test_Visitor.cpp
       tests/ml/ml_model_test.cpp
 )
+
+if(OpenMP_FOUND)
+list (APPEND TEST_SOURCE_FILES
+      tests/test_ThreadSafeMapBuilder.cpp
+)
+endif()
 
 # tests that need to be linked to dune-common
 list(APPEND DUNE_TEST_SOURCE_FILES
