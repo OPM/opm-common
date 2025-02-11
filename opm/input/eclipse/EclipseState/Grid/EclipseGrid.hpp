@@ -261,7 +261,15 @@ namespace Opm {
         static bool hasEqualDVDEPTHZ(const Deck&);
         static bool allEqual(const std::vector<double> &v);
         std::vector<EclipseGridLGR> lgr_children_cells;
-        virtual void set_lgr_refinement(const std::string&, const std::vector<double>&, const std::vector<double> &);                 
+        /**
+        * @brief Sets Local Grid Refinement for the EclipseGrid.
+        * 
+        * @param lgr_tag The tag of the LGR.
+        * @param coords The coordinates for the LGR in CPG format.
+        * @param zcorn The ZCORN values for the LGR in CPG format.
+        */
+        virtual void set_lgr_refinement(const std::string& lgr_tag, const std::vector<double>& coords, const std::vector<double>& zcorn);
+               
 
     protected:
         std::size_t lgr_global_counter = 0;
@@ -387,7 +395,15 @@ namespace Opm {
         return father_global;
       }
      void set_hostnum(std::vector<int>&);
-     void set_lgr_refinement(const std::string&, const std::vector<double>&, const std::vector<double> &) override;                 
+
+      /**
+      * @brief Sets Local Grid Refinement for the EclipseGrid.
+      * 
+      * @param lgr_tag The tag of the LGR.
+      * @param coords The coordinates for the LGR in CPG format.
+      * @param zcorn The ZCORN values for the LGR in CPG format.
+      */
+      void set_lgr_refinement(const std::string& lgr_tag, const std::vector<double>& coord, const std::vector<double>& zcorn) override;                 
 
      void set_lgr_refinement(const std::vector<double>&, const std::vector<double> &);                 
     private:
