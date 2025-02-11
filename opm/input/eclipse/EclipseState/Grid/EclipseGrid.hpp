@@ -264,9 +264,9 @@ namespace Opm {
         /**
         * @brief Sets Local Grid Refinement for the EclipseGrid.
         * 
-        * @param lgr_tag The tag of the LGR.
-        * @param coords The coordinates for the LGR in CPG format.
-        * @param zcorn The ZCORN values for the LGR in CPG format.
+        * @param lgr_tag The string that contains of a given LGR.
+        * @param coords The coordinates of the LGR in COORDS CPG format.
+        * @param zcorn The z-coordinatesvalues of the LGR in ZCORN CPG format.
         */
         virtual void set_lgr_refinement(const std::string& lgr_tag, const std::vector<double>& coords, const std::vector<double>& zcorn);
                
@@ -397,11 +397,11 @@ namespace Opm {
      void set_hostnum(std::vector<int>&);
 
       /**
-      * @brief Sets Local Grid Refinement for the EclipseGrid.
+      * @brief Sets Local Grid Refinement for the EclipseGridLGR.
       * 
-      * @param lgr_tag The tag of the LGR.
-      * @param coords The coordinates for the LGR in CPG format.
-      * @param zcorn The ZCORN values for the LGR in CPG format.
+      * @param lgr_tag The string that contains of a given LGR.
+      * @param coords The coordinates of the LGR in COORDS CPG format.
+      * @param zcorn The z-coordinatesvalues of the LGR in ZCORN CPG format.
       */
       void set_lgr_refinement(const std::string& lgr_tag, const std::vector<double>& coord, const std::vector<double>& zcorn) override;                 
 
