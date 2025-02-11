@@ -263,10 +263,10 @@ namespace Opm {
         std::vector<EclipseGridLGR> lgr_children_cells;
         /**
         * @brief Sets Local Grid Refinement for the EclipseGrid.
-        * 
-        * @param lgr_tag The string that contains of a given LGR.
-        * @param coords The coordinates of the LGR in COORDS CPG format.
-        * @param zcorn The z-coordinatesvalues of the LGR in ZCORN CPG format.
+          * 
+        * @param lgr_tag The string that contains the name of a given LGR cell. 
+        * @param coords The coordinates of a given LGR cell in  CPG COORDSformat.
+        * @param zcorn The z-coordinates values of a given LGR cell in CPG ZCORN format.
         */
         virtual void set_lgr_refinement(const std::string& lgr_tag, const std::vector<double>& coords, const std::vector<double>& zcorn);
                
@@ -399,9 +399,9 @@ namespace Opm {
       /**
       * @brief Sets Local Grid Refinement for the EclipseGridLGR.
       * 
-      * @param lgr_tag The string that contains of a given LGR.
-      * @param coords The coordinates of the LGR in COORDS CPG format.
-      * @param zcorn The z-coordinatesvalues of the LGR in ZCORN CPG format.
+      * @param lgr_tag The string that contains the name of a given LGR cell. 
+      * @param coords The coordinates of a given LGR cell in  CPG COORDSformat.
+      * @param zcorn The z-coordinates values of a given LGR cell in CPG ZCORN format.
       */
       void set_lgr_refinement(const std::string& lgr_tag, const std::vector<double>& coord, const std::vector<double>& zcorn) override;                 
 
