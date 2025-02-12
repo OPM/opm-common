@@ -1745,7 +1745,8 @@ template<> std::vector<std::array<T, 3>> BOFS<T>::referenceDensity_; \
 template<> std::vector<std::array<T, 3>> BOFS<T>::molarMass_; \
 template<> std::vector<std::array<T, 9>> BOFS<T>::diffusionCoefficients_; \
 template<> bool BOFS<T>::isInitialized_; \
-template<> bool BOFS<T>::useSaturatedTables_;
+template<> bool BOFS<T>::useSaturatedTables_; \
+template<> bool BOFS<T>::enthalpy_eq_energy_;
 
 DECLARE_INSTANCE(float)
 DECLARE_INSTANCE(double)
