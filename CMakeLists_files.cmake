@@ -463,6 +463,7 @@ list (APPEND TEST_SOURCE_FILES
       tests/test_calculateCellVol.cpp
       tests/test_cmp.cpp
       tests/test_ConditionalStorage.cpp
+      tests/test_critical_error.cpp
       tests/test_cubic.cpp
       tests/test_EvaluationFormat.cpp
       tests/test_densead.cpp
@@ -829,6 +830,7 @@ if(ENABLE_ECL_INPUT)
 endif()
 
 list( APPEND PUBLIC_HEADER_FILES
+      opm/common/CriticalError.hpp
       opm/common/ErrorMacros.hpp
       opm/common/Exceptions.hpp
       opm/common/TimingMacros.hpp
