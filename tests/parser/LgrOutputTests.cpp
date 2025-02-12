@@ -146,7 +146,7 @@ SCHEDULE
     //  LgrCollection is used to initalize LGR Cells in the Eclipse Grid.
     eclipse_grid_file.init_lgr_cells(lgr_col);
     // LGR COORD and ZCORN is parsed to EclipseGridLGR children cell. (Simulates the process of recieving the LGR refinement.)   
-    eclipse_grid_file.lgr_children_cells[0].set_lgr_refinement(coord_l,zcorn_l);
+    eclipse_grid_file.set_lgr_refinement("LGR1",coord_l,zcorn_l);
     // Intialize host_cell numbering.
     eclipse_grid_file.init_children_host_cells();
     // Save EclipseGrid.
@@ -160,7 +160,7 @@ SCHEDULE
 //  LgrCollection is used to initalize LGR Cells in the Eclipse Grid.
     eclipse_grid_OPM.init_lgr_cells(lgr_col);
     // LGR COORD and ZCORN is parsed to EclipseGridLGR children cell. (Simulates the process of recieving the LGR refinement.)   
-    eclipse_grid_OPM.lgr_children_cells[0].set_lgr_refinement(coord_l_opm,zcorn_l_opm);
+    eclipse_grid_OPM.set_lgr_refinement("LGR1",coord_l_opm,zcorn_l_opm);
     // Intialize host_cell numbering.
     eclipse_grid_OPM.init_children_host_cells();
     BOOST_CHECK_EQUAL( coord_g_opm.size() , coord_g.size());
@@ -246,7 +246,7 @@ SCHEDULE
     //  LgrCollection is used to initalize LGR Cells in the Eclipse Grid.
     eclipse_grid_file.init_lgr_cells(lgr_col);
     // LGR COORD and ZCORN is parsed to EclipseGridLGR children cell. (Simulates the process of recieving the LGR refinement.)   
-    eclipse_grid_file.lgr_children_cells[0].set_lgr_refinement(coord_l,zcorn_l);
+    eclipse_grid_file.set_lgr_refinement("LGR1",coord_l,zcorn_l);
     // Intialize host_cell numbering.
     eclipse_grid_file.init_children_host_cells();
     // Save EclipseGrid.
@@ -465,8 +465,8 @@ SCHEDULE
     //  LgrCollection is used to initalize LGR Cells in the Eclipse Grid.
     eclipse_grid_file.init_lgr_cells(lgr_col);
     // LGR COORD and ZCORN is parsed to EclipseGridLGR children cell. (Simulates the process of recieving the LGR refinement.)   
-    eclipse_grid_file.lgr_children_cells[0].set_lgr_refinement(coord_l1,zcorn_l1);
-    eclipse_grid_file.lgr_children_cells[0].lgr_children_cells[0].set_lgr_refinement(coord_l2,zcorn_l2);
+    eclipse_grid_file.set_lgr_refinement("LGR1",coord_l1,zcorn_l1);
+    eclipse_grid_file.set_lgr_refinement("LGR2",coord_l2,zcorn_l2);
     // Intialize host_cell numbering.
     eclipse_grid_file.init_children_host_cells();
     // Save EclipseGrid.
