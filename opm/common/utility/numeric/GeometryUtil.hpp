@@ -67,7 +67,7 @@ T calcHexaVol(const std::array<T,8>& x, const std::array<T,8>& y, const std::arr
         totalVolume += std::apply(calcTetraVol<T>, VectorUtil::appendNode<double>(fX1, fY1, fZ1, cx, cy, cz));
     }
     return totalVolume;
-};
+}
 
 template <typename T = double>
 std::vector<int> isInsideElement(const std::vector<T>& tpX, const std::vector<T>& tpY, const std::vector<T>& tpZ,  
@@ -106,7 +106,7 @@ std::vector<int> isInsideElement(const std::vector<T>& tpX, const std::vector<T>
         }
     }
     return in_elements;
-};
+}
 
 
 // Example for other utilities...

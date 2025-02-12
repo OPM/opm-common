@@ -12,9 +12,9 @@ namespace VectorUtil {
 
 
 template <typename T = double>
-std::tuple<std::array<T,4>, std::array<T,4>, std::array<T,4>> 
-appendNode(const std::array<T,3>& X, const std::array<T,3>& Y, const std::array<T,3>& Z, 
-           const T& xc, const T& yc,  const T& zc) 
+std::tuple<std::array<T,4>, std::array<T,4>, std::array<T,4>>
+appendNode(const std::array<T,3>& X, const std::array<T,3>& Y, const std::array<T,3>& Z,
+           const T& xc, const T& yc,  const T& zc)
 {
     std::array<T,4> tX;
     std::array<T,4> tY;
@@ -22,9 +22,9 @@ appendNode(const std::array<T,3>& X, const std::array<T,3>& Y, const std::array<
     std::copy(X.begin(), X.end(), tX.begin());
     tX[3]= xc;
     std::copy(Y.begin(), Y.end(), tY.begin());
-    tY[3]= yc;            
+    tY[3]= yc;
     std::copy(Z.begin(), Z.end(), tZ.begin());
-    tZ[3]= zc; 
+    tZ[3]= zc;
     return std::make_tuple(tX,tY,tZ);
 }
 
@@ -43,9 +43,9 @@ std::vector<T> vectorOperation(const std::vector<T>& vecA, const std::vector<T>&
 
 
 // A simple utility function to calculate area of a rectangle
-std::tuple<std::array<double,4>, std::array<double,4>, std::array<double,4>> 
-appendNode(const std::array<double,3>&, const std::array<double,3>&, 
-           const std::array<double,3>&, const double&, const double&, 
+std::tuple<std::array<double,4>, std::array<double,4>, std::array<double,4>>
+appendNode(const std::array<double,3>&, const std::array<double,3>&,
+           const std::array<double,3>&, const double&, const double&,
            const double&);
 template <typename T>
 std::vector<T> filterArray(const std::vector<std::size_t>& X, const std::vector<int>& ind){
@@ -54,10 +54,10 @@ std::vector<T> filterArray(const std::vector<std::size_t>& X, const std::vector<
         filtered_vectorX[index] = X[ind[index]];
     }
     return filtered_vectorX;
-};       
+}
 
 // T type of the object
-// Rout type of the object output 
+// Rout type of the object output
 // Method type of method
 template <typename T,  typename Rout, typename Rin = std::size_t, typename Method, typename... Args>
 std::vector<Rout> callMethodForEachInputOnObject(const T& obj, Method mtd, const std::vector<Rin>& input_vector, Args&&... args) {

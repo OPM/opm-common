@@ -1109,7 +1109,7 @@ bool EarClipTesselator::isPointInsideTriangle( const cvf::Vec3d& A,
     double tol      = -m_areaTolerance;
 
     return ( ( aCROSSbp >= tol ) && ( bCROSScp >= tol ) && ( cCROSSap >= tol ) );
-};
+}
 
 //--------------------------------------------------------------------------------------------------
 /// Computes area of the currently stored 2D polygon/contour
