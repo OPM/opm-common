@@ -956,6 +956,8 @@ list( APPEND PUBLIC_HEADER_FILES
       opm/material/fluidsystems/GasPhase.hpp
       opm/material/fluidsystems/TwoPhaseImmiscibleFluidSystem.hpp
       opm/material/fluidsystems/BlackOilFluidSystem.hpp
+      opm/material/fluidsystems/BlackOilFluidSystem_impl.hpp
+      opm/material/fluidsystems/BlackOilFluidSystemDynamic.hpp
       opm/material/fluidsystems/LiquidPhase.hpp
       opm/material/fluidsystems/PTFlashParameterCache.hpp
       opm/material/fluidsystems/Spe5ParameterCache.hpp
