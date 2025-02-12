@@ -24,27 +24,42 @@
 #include <string>
 
 namespace Opm {
-
     class KeywordLoader;
+}
 
-    class KeywordGenerator {
-
+namespace Opm {
+    class KeywordGenerator
+    {
     public:
         explicit KeywordGenerator(bool verbose);
 
-        static void ensurePath( const std::string& file_name);
+        static void ensurePath(const std::string& file_name);
         static std::string endTest();
         static std::string startTest(const std::string& test_name);
-        static std::string headerHeader( const std::string& );
-        static void updateFile(const std::stringstream& newContent, const std::string& filename);
+        static std::string headerHeader(const std::string&);
+        static void updateFile(const std::stringstream& newContent,
+                               const std::string& filename);
 
-        void updateBuiltInHeader(const KeywordLoader& loader, const std::string& headerBuildPath,
-                                 const std::string& headerPath, const std::string& sourcePath) const;
-        void updateInitSource(const KeywordLoader& loader, const std::string& sourceFile, const std::string& sourcePath) const;
-        void updateKeywordSource(const KeywordLoader& loader, const std::string& sourceFile ) const;
-        void updatePybindSource(const KeywordLoader& loader , const std::string& sourceFile ) const;
-        void updateHeader(const KeywordLoader& loader, const std::string& headerBuildPath, const std::string& headerPath) const;
-        void updateTest(const KeywordLoader& loader , const std::string& testFile) const;
+        void updateBuiltInHeader(const KeywordLoader& loader,
+                                 const std::string& headerBuildPath,
+                                 const std::string& headerPath,
+                                 const std::string& sourcePath) const;
+
+        void updateInitSource(const KeywordLoader& loader,
+                              const std::string& sourceFile,
+                              const std::string& sourcePath) const;
+
+        void updateKeywordSource(const KeywordLoader& loader,
+                                 const std::string& sourceFile) const;
+
+        void updatePybindSource(const KeywordLoader& loader,
+                                const std::string& sourceFile) const;
+        void updateHeader(const KeywordLoader& loader,
+                          const std::string& headerBuildPath,
+                          const std::string& headerPath) const;
+
+        void updateTest(const KeywordLoader& loader, const std::string& testFile) const;
+
     private:
         bool m_verbose;
     };
