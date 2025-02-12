@@ -44,10 +44,10 @@
 
 #include <opm/common/utility/FileSystem.hpp>
 
-namespace Opm { namespace EclIO {
+namespace Opm::EclIO {
 
     // Needed by BOOST_CHECK_EQUAL_COLLECTIONS.
-    std::ostream&
+    static std::ostream&
     operator<<(std::ostream& os, const EclFile::EclEntry& e)
     {
         os << "{ " << std::get<0>(e)
@@ -57,7 +57,8 @@ namespace Opm { namespace EclIO {
 
         return os;
     }
-}} // Namespace Opm::ecl
+
+} // Namespace Opm::EclIO
 
 namespace {
     template <class Coll>

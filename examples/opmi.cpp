@@ -17,32 +17,40 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <iostream>
-#include <iomanip>
-#include <chrono>
+#include <opm/input/eclipse/EclipseState/EclipseState.hpp>
+
+#include <opm/common/OpmLog/LogUtil.hpp>
+#include <opm/common/OpmLog/OpmLog.hpp>
+#include <opm/common/OpmLog/StreamLog.hpp>
+
+#include <opm/common/utility/TimeService.hpp>
+
+#include <opm/input/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
+
+#include <opm/input/eclipse/Python/Python.hpp>
+#include <opm/input/eclipse/Schedule/Schedule.hpp>
+
+#include <opm/input/eclipse/Deck/Deck.hpp>
 
 #include <opm/input/eclipse/Parser/Parser.hpp>
 #include <opm/input/eclipse/Parser/ParseContext.hpp>
 #include <opm/input/eclipse/Parser/ErrorGuard.hpp>
-#include <opm/input/eclipse/Deck/Deck.hpp>
-#include <opm/input/eclipse/EclipseState/EclipseState.hpp>
-#include <opm/input/eclipse/EclipseState/EclipseState.hpp>
-#include <opm/input/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
-#include <opm/input/eclipse/Schedule/Schedule.hpp>
-#include <opm/input/eclipse/Python/Python.hpp>
 
-#include <opm/common/OpmLog/OpmLog.hpp>
-#include <opm/common/OpmLog/StreamLog.hpp>
-#include <opm/common/OpmLog/LogUtil.hpp>
-#include <opm/common/utility/TimeService.hpp>
+#include <chrono>
+#include <iomanip>
+#include <iostream>
+#include <memory>
 
+namespace {
 
-void initLogging() {
+void initLogging()
+{
     std::shared_ptr<Opm::StreamLog> cout_log = std::make_shared<Opm::StreamLog>(std::cout, Opm::Log::DefaultMessageTypes);
-    Opm::OpmLog::addBackend( "COUT" , cout_log);
+    Opm::OpmLog::addBackend("COUT", cout_log);
 }
 
-inline void loadDeck( const char * deck_file) {
+inline void loadDeck(const char* deck_file)
+{
     Opm::ParseContext parseContext;
     Opm::ErrorGuard errors;
     Opm::Parser parser;
@@ -75,18 +83,22 @@ inline void loadDeck( const char * deck_file) {
                                 parseContext, errors );
     auto summary_time = Opm::TimeService::now() - start;
 
-    std::cout << "complete." << std::endl << std::endl;
-    std::cout << "Time: " << std::endl;
-    std::cout << "   deck.....: "  << std::chrono::duration<double>(deck_time).count()  << " seconds" << std::endl;
-    std::cout << "   state....: "  << std::chrono::duration<double>(state_time).count()  << " seconds" << std::endl;
-    std::cout << "   schedule.: "  << std::chrono::duration<double>(schedule_time).count()  << " seconds" << std::endl;
-    std::cout << "   summary..: "  << std::chrono::duration<double>(summary_time).count()  << " seconds" << std::endl;
+    std::cout << "complete.\n\n"
+              << "Time:\n"
+              << "   deck.....: " << std::chrono::duration<double>(deck_time).count()  << " seconds\n"
+              << "   state....: " << std::chrono::duration<double>(state_time).count()  << " seconds\n"
+              << "   schedule.: " << std::chrono::duration<double>(schedule_time).count()  << " seconds\n"
+              << "   summary..: " << std::chrono::duration<double>(summary_time).count()  << " seconds"
+              << std::endl;
 }
 
+} // Anonymous namespace
 
-int main(int argc, char** argv) {
+int main(int argc, char** argv)
+{
     initLogging();
-    for (int iarg = 1; iarg < argc; iarg++)
-        loadDeck( argv[iarg] );
-}
 
+    for (int iarg = 1; iarg < argc; ++iarg) {
+        loadDeck(argv[iarg]);
+    }
+}

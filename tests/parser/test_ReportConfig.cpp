@@ -34,7 +34,7 @@
 #include <opm/input/eclipse/Deck/Deck.hpp>
 #include <opm/input/eclipse/Parser/Parser.hpp>
 
-
+namespace {
 
 Opm::Schedule make_schedule(const std::string& sched_string) {
     std::string deck_string = R"(
@@ -81,7 +81,7 @@ SCHEDULE
     return Opm::Schedule(deck, ecl_state, python);
 }
 
-
+} // Anonymous namespace
 
 BOOST_AUTO_TEST_CASE(ReportConfig_INVALID) {
     const std::string sched_string1 = R"(

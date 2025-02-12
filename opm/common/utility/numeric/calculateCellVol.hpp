@@ -15,15 +15,18 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <vector>
 #include <array>
-#include <math.h>  
 
 #ifndef CALCULATE_CELLVOL
 #define CALCULATE_CELLVOL
 
-double calculateCellVol(const std::array<double,8>& X, const std::array<double,8>& Y, const std::array<double,8>& Z);
-double calculateCylindricalCellVol(const double R1, const double R2, const double dTheta, const double dZ);
+double calculateCellVol(const std::array<double,8>& X,
+                        const std::array<double,8>& Y,
+                        const std::array<double,8>& Z);
 
-#endif
+double calculateCylindricalCellVol(const double R1,
+                                   const double R2,
+                                   const double dTheta,
+                                   const double dZ);
 
+#endif  // CALCULATE_CELLVOL

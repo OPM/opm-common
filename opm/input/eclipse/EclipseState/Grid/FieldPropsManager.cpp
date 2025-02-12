@@ -25,19 +25,77 @@
 
 #include <opm/input/eclipse/Deck/DeckKeyword.hpp>
 
+#include <algorithm>
+#include <cstddef>
+#include <memory>
+#include <stdexcept>
+#include <unordered_map>
+#include <utility>
+#include <vector>
+
+#include <fmt/format.h>
+
+namespace {
+    void apply_action(const Opm::Fieldprops::ScalarOperation op,
+                      const std::vector<double>& action_data,
+                      std::vector<double>& data,
+                      const std::size_t action_index,
+                      const std::size_t data_index)
+    {
+        switch (op) {
+        case Opm::Fieldprops::ScalarOperation::EQUAL:
+            // EQUAL is assignment.
+            data[data_index] = action_data[action_index];
+            break;
+
+        case Opm::Fieldprops::ScalarOperation::MUL:
+            // MUL is scalar multiplication.
+            data[data_index] *= action_data[action_index];
+            break;
+
+        case Opm::Fieldprops::ScalarOperation::ADD:
+            // MUL is scalar addition.
+            data[data_index] += action_data[action_index];
+            break;
+
+        case Opm::Fieldprops::ScalarOperation::MAX:
+            // Recall: MAX is "MAXVALUE", which imposes an upper bound on the
+            // data value.  Thus, std::min() is the correct filter operation
+            // here despite the name.
+            data[data_index] = std::min(action_data[action_index], data[data_index]);
+            break;
+
+        case Opm::Fieldprops::ScalarOperation::MIN:
+            // Recall: MIN is "MINVALUE", which imposes a lower bound on the
+            // data value.  Thus, std::max() is the correct filter operation
+            // here despite the name.
+            data[data_index] = std::max(action_data[action_index], data[data_index]);
+            break;
+
+        default:
+            throw std::logic_error {
+                fmt::format("Unhandled operation '{}' in apply_action()",
+                            static_cast<std::underlying_type_t<Opm::Fieldprops::ScalarOperation>>(op))
+            };
+        }
+    }
+
+} // Anonymous namespace
+
 namespace Opm {
 
 bool FieldPropsManager::operator==(const FieldPropsManager& other) const {
     return *this->fp == *other.fp;
 }
 
-bool FieldPropsManager::rst_cmp(const FieldPropsManager& full_arg, const FieldPropsManager& rst_arg) {
+bool FieldPropsManager::rst_cmp(const FieldPropsManager& full_arg, const FieldPropsManager& rst_arg)
+{
     return FieldProps::rst_cmp(*full_arg.fp, *rst_arg.fp);
 }
 
 FieldPropsManager::FieldPropsManager(const Deck& deck, const Phases& phases, EclipseGrid& grid_arg,
-                                     const TableManager& tables, const std::size_t ncomps) :
-    fp(std::make_shared<FieldProps>(deck, phases, grid_arg, tables, ncomps))
+                                     const TableManager& tables, const std::size_t ncomps)
+    : fp { std::make_shared<FieldProps>(deck, phases, grid_arg, tables, ncomps) }
 {}
 
 void FieldPropsManager::deleteMINPVV() {
@@ -188,38 +246,6 @@ void FieldPropsManager::prune_global_for_schedule_run()
 void FieldPropsManager::set_active_indices(const std::vector<int>& indices)
 {
     fp->set_active_indices(indices);
-}
-
-void apply_action(const Fieldprops::ScalarOperation& op,
-                  const std::vector<double>& action_data,
-                  std::vector<double>& data,
-                  std::size_t action_index,
-                  std::size_t data_index)
-{
-    switch (op) {
-    case Fieldprops::ScalarOperation::EQUAL:
-        data[data_index] = action_data[action_index];
-        break;
-
-    case Fieldprops::ScalarOperation::MUL:
-        data[data_index] *= action_data[action_index];
-        break;
-
-    case Fieldprops::ScalarOperation::ADD:
-        data[data_index] += action_data[action_index];
-        break;
-
-    case Fieldprops::ScalarOperation::MAX:
-        data[data_index] = std::min(action_data[action_index], data[data_index]);
-        break;
-
-    case Fieldprops::ScalarOperation::MIN:
-        data[data_index] = std::max(action_data[action_index], data[data_index]);
-        break;
-
-    default:
-        throw std::logic_error("Unhandled value in switch");
-    }
 }
 
 template<class MapType>

@@ -218,6 +218,7 @@ double closestAxisSignedAreaPlanarPolygon( const cvf::Vec3d& planeNormal, const 
    Returns an intersection status telling what kind of intersection it is (if any)
    */
 
+static
 GeometryTools::IntersectionStatus inPlaneLineIntersect( double  x1,
                                                         double  y1,
                                                         double  x2,

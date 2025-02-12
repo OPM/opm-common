@@ -17,21 +17,27 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <opm/io/eclipse/ESmry.hpp>
+#include <opm/io/eclipse/ExtESmry.hpp>
+
 #include <algorithm>
 #include <cmath>
 #include <filesystem>
 #include <iomanip>
 #include <iostream>
-#include <getopt.h>
+#include <memory>
 #include <sstream>
+#include <stdexcept>
+#include <string>
+#include <vector>
 
-#include <opm/io/eclipse/ESmry.hpp>
-#include <opm/io/eclipse/ExtESmry.hpp>
+#include <getopt.h>
+
+namespace {
 
 enum smryFileType {
      SMSPEC, ESMRY
 };
-
 
 static void printHelp() {
 
@@ -72,6 +78,8 @@ std::string formatString(float data, int width){
 
     return stream.str();
 }
+
+} // Anonymous namespace
 
 int main(int argc, char **argv) {
 

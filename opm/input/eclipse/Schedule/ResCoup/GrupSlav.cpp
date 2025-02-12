@@ -17,15 +17,19 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-
 #include <opm/input/eclipse/Schedule/ResCoup/GrupSlav.hpp>
+
+#include <opm/common/OpmLog/OpmLog.hpp>
+#include <opm/common/utility/OpmInputError.hpp>
+
 #include <opm/input/eclipse/Schedule/ResCoup/ReservoirCouplingInfo.hpp>
+
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 #include <opm/input/eclipse/Schedule/ScheduleState.hpp>
 #include <opm/input/eclipse/Schedule/ScheduleStatic.hpp>
+
 #include <opm/input/eclipse/Parser/ParserKeywords/G.hpp>
-#include <opm/common/OpmLog/OpmLog.hpp>
-#include <opm/common/utility/OpmInputError.hpp>
+
 #include "../HandlerContext.hpp"
 
 #include <fmt/format.h>
@@ -33,8 +37,36 @@
 #include <limits>
 #include <stdexcept>
 
-namespace Opm {
-namespace ReservoirCoupling {
+namespace {
+
+void checkValidSlaveGroupName(const std::string& name, Opm::HandlerContext& handlerContext)
+{
+    const auto& rescoup = handlerContext.state().rescoup();
+    if (rescoup.hasGrupSlav(name)) {
+        std::string msg = fmt::format("GRUPSLAV group {} already defined. Redefining", name);
+        Opm::OpmLog::warning(Opm::OpmInputError::format(msg, handlerContext.keyword.location()));
+    }
+    const auto& groups = handlerContext.state().groups;
+    if (!groups.has(name)) {
+        std::string msg = fmt::format("Group '{}': Not defined. Slave groups should be defined in advance by using GRUPTREE or WELSPECS before referenced in GRUPSLAV.", name);
+        throw Opm::OpmInputError(msg, handlerContext.keyword.location());
+    }
+}
+
+Opm::ReservoirCoupling::GrupSlav::FilterFlag
+getFilterFlag(const Opm::DeckItem& keyword, const Opm::HandlerContext& handlerContext)
+{
+    try {
+        return Opm::ReservoirCoupling::GrupSlav::filterFlagFromString(keyword.getTrimmedString(0));
+    } catch (const std::invalid_argument& e) {
+        std::string msg = fmt::format("Invalid filter flag: {}", keyword.getTrimmedString(0));
+        throw Opm::OpmInputError(msg, handlerContext.keyword.location());
+    }
+}
+
+} // Anonymous namespace
+
+namespace Opm::ReservoirCoupling {
 GrupSlav GrupSlav::serializationTestObject()
 {
     return GrupSlav{"MANI-D", "D1-M", FilterFlag::MAST, FilterFlag::MAST, FilterFlag::MAST,
@@ -72,32 +104,9 @@ std::ostream& operator<<(std::ostream& os, const GrupSlav::FilterFlag& flag) {
     return os;
 }
 
-} // namespace ReservoirCoupling
+} // namespace Opm::ReservoirCoupling
 
-void checkValidSlaveGroupName(const std::string& name, HandlerContext& handlerContext)
-{
-    const auto& rescoup = handlerContext.state().rescoup();
-    if (rescoup.hasGrupSlav(name)) {
-        std::string msg = fmt::format("GRUPSLAV group {} already defined. Redefining", name);
-        OpmLog::warning(OpmInputError::format(msg, handlerContext.keyword.location()));
-    }
-    const auto& groups = handlerContext.state().groups;
-    if (!groups.has(name)) {
-        std::string msg = fmt::format("Group '{}': Not defined. Slave groups should be defined in advance by using GRUPTREE or WELSPECS before referenced in GRUPSLAV.", name);
-        throw OpmInputError(msg, handlerContext.keyword.location());
-    }
-}
-
-ReservoirCoupling::GrupSlav::FilterFlag
-getFilterFlag(const DeckItem& keyword, const HandlerContext& handlerContext)
-{
-    try {
-        return ReservoirCoupling::GrupSlav::filterFlagFromString(keyword.getTrimmedString(0));
-    } catch (const std::invalid_argument& e) {
-        std::string msg = fmt::format("Invalid filter flag: {}", keyword.getTrimmedString(0));
-        throw OpmInputError(msg, handlerContext.keyword.location());
-    }
-}
+namespace Opm {
 
 void handleGRUPSLAV(HandlerContext& handlerContext)
 {

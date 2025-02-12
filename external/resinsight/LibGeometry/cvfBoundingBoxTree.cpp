@@ -226,11 +226,7 @@ namespace cvf {
 
 using cvf::ref;
 
-
-
-
-
-int largestComponent(const cvf::Vec3d v)
+static int largestComponent(const cvf::Vec3d v)
 {
     double maxLength = v.x();
     int idx = 0;
@@ -248,31 +244,6 @@ int largestComponent(const cvf::Vec3d v)
 
     return idx;
 }
-
-
-double largestComponent(const cvf::Vec3d v, cvf::uint* largestIndex)
-{
-    double length = v.x();
-    cvf::uint idx = 0;
-
-    if (v.y() > length)
-    {
-        length = v.y();
-        idx = 1;
-    }
-
-    if (v.z() > length)
-    {
-        length = v.z();
-        idx = 2;
-    }
-
-    if (largestIndex) *largestIndex = idx;
-
-    return length;
-}
-
-
 
 //--------------------------------------------------------------------------------------------------
 /// 

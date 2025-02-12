@@ -17,38 +17,48 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <opm/input/eclipse/EclipseState/InitConfig/InitConfig.hpp>
+#include <opm/input/eclipse/EclipseState/IOConfig/IOConfig.hpp>
+
+#include <opm/input/eclipse/Deck/Deck.hpp>
+
+#include <opm/input/eclipse/Parser/ErrorGuard.hpp>
+#include <opm/input/eclipse/Parser/ParseContext.hpp>
+
+#include <opm/input/eclipse/Parser/InputErrorAction.hpp>
+
+#include <opm/input/eclipse/Parser/Parser.hpp>
+
+#include <opm/input/eclipse/Parser/ParserKeywords/G.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/I.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/P.hpp>
+
+#include <cstdlib>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
-#include <getopt.h>
+#include <string>
 
-#include <opm/input/eclipse/Deck/Deck.hpp>
-#include <opm/input/eclipse/EclipseState/InitConfig/InitConfig.hpp>
-#include <opm/input/eclipse/EclipseState/IOConfig/IOConfig.hpp>
-#include <opm/input/eclipse/Parser/ParserKeywords/I.hpp>
-#include <opm/input/eclipse/Parser/ParserKeywords/P.hpp>
-#include <opm/input/eclipse/Parser/ParserKeywords/G.hpp>
-#include <opm/input/eclipse/Parser/Parser.hpp>
-#include <opm/input/eclipse/Parser/ErrorGuard.hpp>
-#include <opm/input/eclipse/Parser/ParseContext.hpp>
-#include <opm/input/eclipse/Parser/InputErrorAction.hpp>
+#include <getopt.h>
 
 namespace fs = std::filesystem;
 
-Opm::Deck pack_deck( const char * deck_file, std::ostream& os) {
+namespace {
+
+Opm::Deck pack_deck(const char* deck_file, std::ostream& os)
+{
     Opm::ParseContext parseContext(Opm::InputErrorAction::WARN);
     Opm::ErrorGuard errors;
-    Opm::Parser parser;
 
-    auto deck = parser.parseFile(deck_file, parseContext, errors);
+    auto deck = Opm::Parser{}.parseFile(deck_file, parseContext, errors);
     os << deck;
 
     return deck;
 }
 
-
-void print_help_and_exit() {
-    const char * help_text = R"(
+void print_help_and_exit()
+{
+    std::cerr << R"(
 The opmpack program will load a deck, resolve all include
 files and then print it out again on stdout. All comments
 will be stripped and the value types will be validated.
@@ -72,40 +82,45 @@ Print NEW_CASE in cwd:
 
 As an alternative to the -o option you can use -c; that is equivalent to -o -
 but restart and import files referred to in the deck are also copied. The -o and
--c options are mutually exclusive. )";
-    std::cerr << help_text << std::endl;
-    exit(1);
+-c options are mutually exclusive.
+)";
+
+    std::exit(EXIT_FAILURE);
 }
 
-
-void copy_file(const fs::path& source_dir, fs::path fname, const fs::path& target_dir) {
+void copy_file(const fs::path& source_dir, fs::path fname, const fs::path& target_dir)
+{
     if (fname.is_absolute()) {
         // change when moving to gcc8+
         // fname = fs::relative(fname, source_dir);
-        auto prefix_len = fs::canonical(source_dir).string().size();
+        const auto prefix_len = fs::canonical(source_dir).string().size();
         fname = fs::canonical(fname);
-        fname = fs::path( fname.string().substr(prefix_len + 1) );
+        fname = fs::path(fname.string().substr(prefix_len + 1));
     }
 
-    auto source_file = source_dir / fname;
-    auto target_file = target_dir / fname;
+    const auto source_file = source_dir / fname;
+    const auto target_file = target_dir / fname;
     {
         const auto& parent_path = target_file.parent_path();
-        if (!parent_path.empty() && !fs::is_directory(parent_path))
+        if (!parent_path.empty() && !fs::is_directory(parent_path)) {
             fs::create_directories(parent_path);
+        }
     }
 
     fs::copy_file(source_file, target_file, fs::copy_options::overwrite_existing);
-    std::cerr << "Copying file " << source_file.string() << " -> " << target_file.string() << std::endl;
+
+    std::cerr << "Copying file " << source_file.string()
+              << " -> " << target_file.string() << std::endl;
 }
 
+} // Anonymous namespace
 
-
-int main(int argc, char** argv) {
+int main(int argc, char** argv)
+{
     int arg_offset = 1;
     bool stdout_output = true;
     bool copy_binary = false;
-    const char * coutput_arg;
+    const char* coutput_arg;
 
     while (true) {
         int c;
@@ -125,12 +140,15 @@ int main(int argc, char** argv) {
             break;
         }
     }
-    arg_offset = optind;
-    if (arg_offset >= argc)
-        print_help_and_exit();
 
-    if (stdout_output)
+    arg_offset = optind;
+    if (arg_offset >= argc) {
+        print_help_and_exit();
+    }
+
+    if (stdout_output) {
         pack_deck(argv[arg_offset], std::cout);
+    }
     else {
         std::ofstream os;
         fs::path input_arg(argv[arg_offset]);
@@ -140,11 +158,11 @@ int main(int argc, char** argv) {
         if (fs::is_directory(output_arg)) {
             fs::path output_path = output_arg / input_arg.filename();
             os.open(output_path.string());
-        } else {
+        }
+        else {
             os.open(output_arg.string());
             output_dir = output_arg.parent_path();
         }
-
 
         const auto& deck = pack_deck(argv[arg_offset], os);
         if (copy_binary) {

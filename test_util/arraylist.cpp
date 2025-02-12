@@ -17,21 +17,29 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <iomanip>
-#include <iostream>
-#include <tuple>
-#include <getopt.h>
-#include <filesystem>
-#include <sstream>
-
 #include <opm/io/eclipse/EclFile.hpp>
 #include <opm/io/eclipse/ERst.hpp>
 
+#include <cstdint>
+#include <cstddef>
+#include <cstdlib>
+#include <filesystem>
+#include <iomanip>
+#include <iostream>
+#include <sstream>
+#include <tuple>
+#include <vector>
+#include <string>
+
+#include <getopt.h>
+
 using EclEntry = Opm::EclIO::EclFile::EclEntry;
 
-static void printHelp() {
+namespace {
 
-    std::cout << "Usage: arraylist [OPTIONS] ECL_FILE_NAME"<<std::endl
+void printHelp()
+{
+    std::cout << "Usage: arraylist [OPTIONS] ECL_FILE_NAME\n"
               << "\nList all arrays found in an EclFile specified on the command line. \n\n"
               << "\nThe program has one option which will only work on unified restart files:\n\n"
               << "-h Print help and exit.\n"
@@ -40,14 +48,12 @@ static void printHelp() {
 
 void print_array_list(const std::vector<EclEntry>& array_list, const std::vector<int>& element_size)
 {
-
-    for (size_t n = 0; n < array_list.size(); n++ ){
-
+    for (std::size_t n = 0; n < array_list.size(); ++n) {
         auto array = array_list[n];
 
         std::string name = std::get<0> ( array );
         Opm::EclIO::eclArrType array_type = std::get<1> ( array );;
-        int64_t size = std::get<2> ( array );
+        const std::int64_t size = std::get<2> ( array );
 
         std::string type_str;
         switch ( array_type ) {
@@ -88,9 +94,10 @@ void print_array_list(const std::vector<EclEntry>& array_list, const std::vector
     }
 }
 
+} // Anonymous namespace
 
-int main(int argc, char **argv) {
-
+int main(int argc, char **argv)
+{
     int c                          = 0;
     int reportStepNumber           = -1;
     bool specificReportStepNumber  = false;
@@ -109,38 +116,37 @@ int main(int argc, char **argv) {
         }
     }
 
-    int argOffset = optind;
+    const int argOffset = optind;
+    if (argOffset >= argc) {
+        std::cerr << "Eclipse file name is missing. Please provide it "
+                     "as the last argument.\n\n";
 
-    if(argOffset >= argc)
-    {
-        std::cerr<<"Eclipse file name is missing. Please provide it "
-                 <<"as the last argument."<<std::endl<<std::endl;
         printHelp();
+
         return EXIT_FAILURE;
     }
 
-    std::filesystem::path filename(argv[argOffset]);
+    const std::filesystem::path filename(argv[argOffset]);
 
-    std::string ext = filename.extension().string();
+    const std::string ext = filename.extension().string();
 
     std::vector<EclEntry> array_list;
     std::vector<int> element_size;
 
-    if ((specificReportStepNumber) and (ext == ".UNRST")){
-
+    if (specificReportStepNumber && (ext == ".UNRST")) {
         Opm::EclIO::ERst rstfile(filename);
 
-        if (!rstfile.hasReportStepNumber(reportStepNumber)){
-            std::string message = "report step number " + std::to_string(reportStepNumber) + " not found ";
-            message = message + " in restart file " + filename.string();
-            std::cout << message << std::endl;
-            exit(1);
+        if (!rstfile.hasReportStepNumber(reportStepNumber)) {
+            std::cout << "report step number " << reportStepNumber
+                      << " not found in restart file "
+                      << filename.string() << std::endl;
+
+            return EXIT_FAILURE;
         }
 
         array_list = rstfile.listOfRstArrays(reportStepNumber);
-
-    } else {
-
+    }
+    else {
         Opm::EclIO::EclFile eclfile(filename);
         array_list = eclfile.getList();
 
@@ -148,6 +154,4 @@ int main(int argc, char **argv) {
     }
 
     print_array_list(array_list, element_size);
-
-    return 0;
 }

@@ -45,6 +45,8 @@
 
 using namespace Opm::EclIO;
 
+namespace {
+
 template<typename InputIterator1, typename InputIterator2>
 bool
 range_equal(InputIterator1 first1, InputIterator1 last1,
@@ -72,7 +74,6 @@ bool compare_files(const std::string& filename1, const std::string& filename2)
     return range_equal(begin1, end, begin2, end);
 }
 
-
 template <typename T>
 bool operator==(const std::vector<T> & t1, const std::vector<T> & t2)
 {
@@ -85,6 +86,7 @@ T calcSum(const std::vector<T>& x)
     return std::accumulate(x.begin(), x.end(), T(0));
 }
 
+} // Anonymous namespace
 
 BOOST_AUTO_TEST_CASE(TestERst_1) {
 
@@ -190,10 +192,11 @@ BOOST_AUTO_TEST_CASE(TestERst_1) {
 
 }
 
+namespace {
 
-static void readAndWrite(EclOutput& eclTest, ERst& rst1,
-                         const std::string& name, int seqnum,
-                         eclArrType arrType)
+void readAndWrite(EclOutput& eclTest, ERst& rst1,
+                  const std::string& name, int seqnum,
+                  eclArrType arrType)
 {
     if (arrType == INTE) {
         std::vector<int> vect = rst1.getRestartData<int>(name, seqnum, 0);
@@ -218,6 +221,7 @@ static void readAndWrite(EclOutput& eclTest, ERst& rst1,
     }
 }
 
+} // Anonymous namespace
 
 BOOST_AUTO_TEST_CASE(TestERst_2) {
 
@@ -526,8 +530,8 @@ BOOST_AUTO_TEST_CASE(TestERst_5b) {
     }
 }
 
-
 // ====================================================================
+
 class RSet
 {
 public:
@@ -577,7 +581,7 @@ namespace {
 namespace Opm { namespace EclIO {
 
     // Needed by BOOST_CHECK_EQUAL_COLLECTIONS.
-    std::ostream&
+    static std::ostream&
     operator<<(std::ostream& os, const EclFile::EclEntry& e)
     {
         os << "{ " << std::get<0>(e)
@@ -587,6 +591,7 @@ namespace Opm { namespace EclIO {
 
         return os;
     }
+
 }} // Namespace Opm::EclIO
 
 BOOST_AUTO_TEST_SUITE(Separate)
@@ -1181,6 +1186,4 @@ BOOST_AUTO_TEST_CASE(Formatted)
     }
 }
 
-
-BOOST_AUTO_TEST_SUITE_END()
-
+BOOST_AUTO_TEST_SUITE_END()     // Separate

@@ -1,4 +1,3 @@
-
 /*
   Copyright 2018 Statoil ASA.
 
@@ -26,9 +25,10 @@
 /* --- our own headers --- */
 #include <opm/common/utility/numeric/calculateCellVol.hpp>
 
-
-
 //using namespace Opm;
+
+#include <array>
+#include <cmath>
 
 BOOST_AUTO_TEST_SUITE (CalculateCellVolume)
 
