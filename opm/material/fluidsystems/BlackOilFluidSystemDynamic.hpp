@@ -19,6 +19,7 @@
 #define OPM_BLACK_OIL_FLUID_SYSTEM_DYNAMIC_HPP
 #include <opm/common/utility/gpuDecorators.hpp>
 #define STATIC_OR_DEVICE OPM_HOST_DEVICE
+#define STATIC_OR_NOTHING
 #include <opm/material/fluidsystems/BlackOilFluidSystem_impl.hpp>
 #undef STATIC_OR_DEVICE
 #endif // OPM_BLACK_OIL_FLUID_SYSTEM_HPP

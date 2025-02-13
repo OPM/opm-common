@@ -19,6 +19,7 @@
 #define OPM_BLACK_OIL_FLUID_SYSTEM_HPP
 #define COMPILING_STATIC_FLUID_SYSTEM
 #define STATIC_OR_DEVICE static
+#define STATIC_OR_NOTHING static
 #include <opm/material/fluidsystems/BlackOilFluidSystem_impl.hpp>
 #undef STATIC_OR_DEVICE
 #undef COMPILING_STATIC_FLUID_SYSTEM

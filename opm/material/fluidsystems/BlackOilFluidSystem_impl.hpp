@@ -366,10 +366,10 @@ public:
     static constexpr unsigned gasPhaseIdx = IndexTraits::gasPhaseIdx;
 
     //! The pressure at the surface
-    STATIC_OR_DEVICE Scalar surfacePressure;
+    STATIC_OR_NOTHING Scalar surfacePressure;
 
     //! The temperature at the surface
-    STATIC_OR_DEVICE Scalar surfaceTemperature;
+    STATIC_OR_NOTHING Scalar surfaceTemperature;
 
     //! \copydoc BaseFluidSystem::phaseName
     STATIC_OR_DEVICE std::string_view phaseName(unsigned phaseIdx);
@@ -396,8 +396,8 @@ public:
     static constexpr int gasCompIdx = IndexTraits::gasCompIdx;
 
 protected:
-    STATIC_OR_DEVICE unsigned char numActivePhases_;
-    STATIC_OR_DEVICE std::array<bool,numPhases> phaseIsActive_;
+    STATIC_OR_NOTHING unsigned char numActivePhases_;
+    STATIC_OR_NOTHING std::array<bool,numPhases> phaseIsActive_;
 
 public:
     //! \brief Returns the number of active fluid phases (i.e., usually three)
@@ -1698,33 +1698,33 @@ public:
     }
 
 private:
-    STATIC_OR_DEVICE void resizeArrays_(std::size_t numRegions);
+    STATIC_OR_NOTHING void resizeArrays_(std::size_t numRegions);
 
-    STATIC_OR_DEVICE Scalar reservoirTemperature_;
+    STATIC_OR_NOTHING Scalar reservoirTemperature_;
 
-    STATIC_OR_DEVICE std::shared_ptr<GasPvt> gasPvt_;
-    STATIC_OR_DEVICE std::shared_ptr<OilPvt> oilPvt_;
-    STATIC_OR_DEVICE std::shared_ptr<WaterPvt> waterPvt_;
+    STATIC_OR_NOTHING std::shared_ptr<GasPvt> gasPvt_;
+    STATIC_OR_NOTHING std::shared_ptr<OilPvt> oilPvt_;
+    STATIC_OR_NOTHING std::shared_ptr<WaterPvt> waterPvt_;
 
-    STATIC_OR_DEVICE bool enableDissolvedGas_;
-    STATIC_OR_DEVICE bool enableDissolvedGasInWater_;
-    STATIC_OR_DEVICE bool enableVaporizedOil_;
-    STATIC_OR_DEVICE bool enableVaporizedWater_;
-    STATIC_OR_DEVICE bool enableDiffusion_;
+    STATIC_OR_NOTHING bool enableDissolvedGas_;
+    STATIC_OR_NOTHING bool enableDissolvedGasInWater_;
+    STATIC_OR_NOTHING bool enableVaporizedOil_;
+    STATIC_OR_NOTHING bool enableVaporizedWater_;
+    STATIC_OR_NOTHING bool enableDiffusion_;
 
     // HACK for GCC 4.4: the array size has to be specified using the literal value '3'
     // here, because GCC 4.4 seems to be unable to determine the number of phases from
     // the BlackOil fluid system in the attribute declaration below...
-    STATIC_OR_DEVICE std::vector<std::array<Scalar, /*numPhases=*/3> > referenceDensity_;
-    STATIC_OR_DEVICE std::vector<std::array<Scalar, /*numComponents=*/3> > molarMass_;
-    STATIC_OR_DEVICE std::vector<std::array<Scalar, /*numComponents=*/3 * /*numPhases=*/3> > diffusionCoefficients_;
+    STATIC_OR_NOTHING std::vector<std::array<Scalar, /*numPhases=*/3> > referenceDensity_;
+    STATIC_OR_NOTHING std::vector<std::array<Scalar, /*numComponents=*/3> > molarMass_;
+    STATIC_OR_NOTHING std::vector<std::array<Scalar, /*numComponents=*/3 * /*numPhases=*/3> > diffusionCoefficients_;
 
-    STATIC_OR_DEVICE std::array<short, numPhases> activeToCanonicalPhaseIdx_;
-    STATIC_OR_DEVICE std::array<short, numPhases> canonicalToActivePhaseIdx_;
+    STATIC_OR_NOTHING std::array<short, numPhases> activeToCanonicalPhaseIdx_;
+    STATIC_OR_NOTHING std::array<short, numPhases> canonicalToActivePhaseIdx_;
 
-    STATIC_OR_DEVICE bool isInitialized_;
-    STATIC_OR_DEVICE bool useSaturatedTables_;
-    STATIC_OR_DEVICE bool enthalpy_eq_energy_;
+    STATIC_OR_NOTHING bool isInitialized_;
+    STATIC_OR_NOTHING bool useSaturatedTables_;
+    STATIC_OR_NOTHING bool enthalpy_eq_energy_;
 };
 
 #ifdef COMPILING_STATIC_FLUID_SYSTEM
