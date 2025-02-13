@@ -16,13 +16,10 @@ template<typename T = std::size_t>
 std::tuple<std::vector<T>, std::vector<T>, std::vector<T>> generate_cartesian_product(std::size_t low_nx, std::size_t up_nx,
                                                                                       std::size_t low_ny, std::size_t up_ny,
                                                                                       std::size_t low_nz, std::size_t up_nz){
-    std::vector<T> i_list;
-    std::vector<T> j_list;
-    std::vector<T> k_list;
     std::size_t list_size =  (up_nx - low_nx + 1) * (up_ny - low_ny + 1) * (up_nz - low_nz + 1);
-    i_list.resize(list_size);
-    j_list.resize(list_size);
-    k_list.resize(list_size);
+    std::vector<T> i_list(list_size);
+    std::vector<T> j_list(list_size);
+    std::vector<T> k_list(list_size);
     std::size_t index = 0;
     for (std::size_t k_index = low_nz; k_index <= up_nz; k_index++)
     {

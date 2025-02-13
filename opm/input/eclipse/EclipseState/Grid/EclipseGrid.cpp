@@ -2026,14 +2026,12 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
                                           const std::size_t& host_nx, const std::size_t& host_ny, const std::size_t& host_nz,
                                           const std::size_t& base_host_nx, const std::size_t& base_host_ny, const std::size_t& base_host_nz){
             auto [i_list, j_list, k_list] = VectorUtil::generate_cartesian_product(0,nx-1,0, ny-1,0, nz-1);
-            std::function<std::size_t(std::size_t, std::size_t)> div = std::divides<std::size_t>{};
-            std::function<std::size_t(std::size_t, std::size_t)> sum = std::plus<std::size_t>{};
-            std::vector<std::size_t> resultI = VectorUtil::vectorScalarOperation(i_list, host_nx, div);     
-            resultI = VectorUtil::vectorScalarOperation(resultI, base_host_nx, sum);     
-            std::vector<std::size_t> resultJ = VectorUtil::vectorScalarOperation(j_list, host_ny, div);
-            resultJ = VectorUtil::vectorScalarOperation(resultJ, base_host_ny, sum);     
-            std::vector<std::size_t> resultK = VectorUtil::vectorScalarOperation(k_list, host_nz , div);
-            resultK = VectorUtil::vectorScalarOperation(resultK, base_host_nz, sum);         
+            std::vector<std::size_t> resultI = VectorUtil::vectorScalarOperation(i_list, host_nx, std::modulus<std::size_t>{});
+            resultI = VectorUtil::vectorScalarOperation(resultI, base_host_nx, std::plus<std::size_t>{});
+            std::vector<std::size_t> resultJ = VectorUtil::vectorScalarOperation(j_list, host_ny,  std::modulus<std::size_t>{});
+            resultJ = VectorUtil::vectorScalarOperation(resultJ, base_host_ny, std::plus<std::size_t>{});
+            std::vector<std::size_t> resultK = VectorUtil::vectorScalarOperation( k_list, host_nz, std::modulus<std::size_t>{});
+            resultK = VectorUtil::vectorScalarOperation(resultK, base_host_nz, std::plus<std::size_t>{});
             return std::make_tuple(resultI, resultJ, resultK);
         }; 
         auto getAllGlobalIndex  = [this](const std::vector<std::size_t>& i_list, 
