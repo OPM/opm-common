@@ -51,6 +51,15 @@ class EclipseState;
 class Schedule;
 class Co2StoreConfig;
 
+template <class Scalar, class ParamsT, class ContainerT>
+class Co2GasPvt;
+
+namespace gpuistl {
+    template <class ViewType, class OutputParams, class InputParams, class ContainerType, class Scalar>
+    Co2GasPvt<Scalar, OutputParams, ViewType>
+    make_view(Co2GasPvt<Scalar, InputParams, ContainerType>&);
+}
+
 /*!
  * \brief This class represents the Pressure-Volume-Temperature relations of the gas phase
  *        for CO2.
@@ -430,6 +439,10 @@ private:
         return xgW * M_Brine / (xgW * (M_Brine - M_CO2) + M_CO2);
     }
 
+    template <class ViewType, class OutputParams, class InputParams, class ContainerType, class ScalarT>
+    friend Co2GasPvt<ScalarT, OutputParams, ViewType>
+    gpuistl::make_view(Co2GasPvt<ScalarT, InputParams, ContainerType>&);
+
     template <class LhsEval>
     OPM_HOST_DEVICE const LhsEval salinityFromConcentration(const LhsEval&T, const LhsEval& P,
                                             const LhsEval& saltConcentration) const
@@ -449,12 +462,12 @@ private:
 } // namespace Opm
 
 namespace Opm::gpuistl{
-    template<class Scalar, class Params, class GPUContainer>
-    Co2GasPvt<Scalar, Params, GPUContainer>
-    copy_to_gpu(const Co2GasPvt<Scalar>& cpuCo2)
+    template<class ScalarT, class Params, class GPUContainer>
+    Co2GasPvt<ScalarT, Params, GPUContainer>
+    copy_to_gpu(const Co2GasPvt<ScalarT>& cpuCo2)
     {
-        return Co2GasPvt<Scalar, Params, GPUContainer>(
-            copy_to_gpu<Scalar, std::vector<Scalar>, GPUContainer>(cpuCo2.getParams()),
+        return Co2GasPvt<ScalarT, Params, GPUContainer>(
+            copy_to_gpu<ScalarT, std::vector<ScalarT>, GPUContainer>(cpuCo2.getParams()),
             GPUContainer(cpuCo2.getBrineReferenceDensity()),
             GPUContainer(cpuCo2.getGasReferenceDensity()),
             GPUContainer(cpuCo2.getSalinity()),
@@ -464,21 +477,18 @@ namespace Opm::gpuistl{
             cpuCo2.getGasType());
     }
 
-    template <class ViewType, class OutputParams, class InputParams, class ContainerType, class Scalar>
-    Co2GasPvt<Scalar, OutputParams, ViewType>
-    make_view(const Co2GasPvt<Scalar, InputParams, ContainerType>& co2GasPvt)
+    template <class ViewType, class OutputParams, class InputParams, class ContainerType, class ScalarT>
+    Co2GasPvt<ScalarT, OutputParams, ViewType>
+    make_view(Co2GasPvt<ScalarT, InputParams, ContainerType>& co2GasPvt)
     {
-        using containedType = typename ContainerType::value_type;
-        using viewedTypeNoConst = typename std::remove_const_t<typename ViewType::value_type>;
+        using ContainedType = typename ContainerType::value_type;
 
-        static_assert(std::is_same_v<containedType, viewedTypeNoConst>);
+        ViewType newBrineReferenceDensity = make_view<ContainedType>(co2GasPvt.brineReferenceDensity_);
+        ViewType newGasReferenceDensity = make_view<ContainedType>(co2GasPvt.gasReferenceDensity_);
+        ViewType newSalinity = make_view<ContainedType>(co2GasPvt.salinity_);
 
-        ViewType newBrineReferenceDensity = make_view<viewedTypeNoConst>(co2GasPvt.getBrineReferenceDensity());
-        ViewType newGasReferenceDensity = make_view<viewedTypeNoConst>(co2GasPvt.getGasReferenceDensity());
-        ViewType newSalinity = make_view<viewedTypeNoConst>(co2GasPvt.getSalinity());
-
-        return Co2GasPvt<Scalar, OutputParams, ViewType>(
-            make_view<ViewType>(co2GasPvt.getParams()),
+        return Co2GasPvt<ScalarT, OutputParams, ViewType>(
+            make_view<ViewType>(co2GasPvt.co2Tables),
             newBrineReferenceDensity,
             newGasReferenceDensity,
             newSalinity,

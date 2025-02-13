@@ -314,12 +314,14 @@ PiecewiseLinearTwoPhaseMaterialParams<TraitsT, ViewType> make_view(PiecewiseLine
     // only create the GPU object if the CPU object is finalized
     params.checkFinalized();
 
-    ViewType SwPcwnSamples = make_view<typename ViewType::value_type>(params.SwPcwnSamples_);
-    ViewType pcwnSamples = make_view<typename ViewType::value_type>(params.pcwnSamples_);
-    ViewType SwKrwSamples = make_view<typename ViewType::value_type>(params.SwKrwSamples_);
-    ViewType krwSamples = make_view<typename ViewType::value_type>(params.krwSamples_);
-    ViewType SwKrnSamples = make_view<typename ViewType::value_type>(params.SwKrnSamples_);
-    ViewType krnSamples = make_view<typename ViewType::value_type>(params.krnSamples_);
+    using ContainedType = typename ViewType::value_type;
+
+    ViewType SwPcwnSamples = make_view<ContainedType>(params.SwPcwnSamples_);
+    ViewType pcwnSamples = make_view<ContainedType>(params.pcwnSamples_);
+    ViewType SwKrwSamples = make_view<ContainedType>(params.SwKrwSamples_);
+    ViewType krwSamples = make_view<ContainedType>(params.krwSamples_);
+    ViewType SwKrnSamples = make_view<ContainedType>(params.SwKrnSamples_);
+    ViewType krnSamples = make_view<ContainedType>(params.krnSamples_);
 
     return PiecewiseLinearTwoPhaseMaterialParams<TraitsT, ViewType> (SwPcwnSamples,
                                                                         pcwnSamples,
