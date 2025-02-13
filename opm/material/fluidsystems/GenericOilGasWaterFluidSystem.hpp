@@ -23,8 +23,8 @@
   copyright holders.
 */
 
-#ifndef OPM_GENERICOILGASFLUIDSYSTEM_HPP
-#define OPM_GENERICOILGASFLUIDSYSTEM_HPP
+#ifndef OPM_GENERIC_OIL_GAS_WATER_FLUIDSYSTEM_HPP
+#define OPM_GENERIC_OIL_GAS_WATER_FLUIDSYSTEM_HPP
 
 #include <opm/common/OpmLog/OpmLog.hpp>
 
@@ -34,6 +34,7 @@
 #endif
 
 #include <opm/material/eos/CubicEOS.hpp>
+#include <opm/material/fluidsystems/blackoilpvt/WaterPvtMultiplexer.hpp>
 #include <opm/material/fluidsystems/BaseFluidSystem.hpp>
 #include <opm/material/fluidsystems/PTFlashParameterCache.hpp> // TODO: this is something else need to check
 #include <opm/material/viscositymodels/LBC.hpp>
@@ -55,20 +56,22 @@ namespace Opm {
  * \tparam Scalar  The floating-point type that specifies the precision of the numerical operations.
  * \tparam NumComp The number of the components in the fluid system.
  */
-    template<class Scalar, int NumComp>
-    class GenericOilGasFluidSystem : public BaseFluidSystem<Scalar, GenericOilGasFluidSystem<Scalar, NumComp> > {
+    template<class Scalar, int NumComp, bool enableWater>
+    class GenericOilGasWaterFluidSystem 
+        : public BaseFluidSystem<Scalar, GenericOilGasWaterFluidSystem<Scalar, NumComp, enableWater> > {
     public:
         // TODO: I do not think these should be constant in fluidsystem, will try to make it non-constant later
-        static constexpr int numPhases = 2;
+        static constexpr bool waterEnabled = enableWater;
+        static constexpr int numPhases = enableWater ? 3 : 2;
         static constexpr int numComponents = NumComp;
         static constexpr int numMisciblePhases = 2;
         // \Note: not totally sure when we should distinguish numMiscibleComponents and numComponents.
         // Possibly when with a dummy phase like water?
         static constexpr int numMiscibleComponents = NumComp;
         // TODO: phase location should be more general
-        static constexpr int waterPhaseIdx = -1;
         static constexpr int oilPhaseIdx = 0;
         static constexpr int gasPhaseIdx = 1;
+        static constexpr int waterPhaseIdx = 2;
 
         static constexpr int waterCompIdx = -1;
         static constexpr int oilCompIdx = 0;
@@ -76,9 +79,10 @@ namespace Opm {
         static constexpr int compositionSwitchIdx = -1; // equil initializer
 
         template <class ValueType>
-        using ParameterCache = Opm::PTFlashParameterCache<ValueType, GenericOilGasFluidSystem<Scalar, NumComp>>;
-        using ViscosityModel = Opm::ViscosityModels<Scalar, GenericOilGasFluidSystem<Scalar, NumComp>>;
-        using CubicEOS = Opm::CubicEOS<Scalar, GenericOilGasFluidSystem<Scalar, NumComp>>;
+        using ParameterCache = Opm::PTFlashParameterCache<ValueType, GenericOilGasWaterFluidSystem<Scalar, NumComp, enableWater>>;
+        using ViscosityModel = Opm::ViscosityModels<Scalar, GenericOilGasWaterFluidSystem<Scalar, NumComp, enableWater>>;
+        using CubicEOS = Opm::CubicEOS<Scalar, GenericOilGasWaterFluidSystem<Scalar, NumComp, enableWater>>;
+        using WaterPvt = WaterPvtMultiplexer<Scalar>;
 
         struct ComponentParam {
             std::string name;
@@ -101,7 +105,16 @@ namespace Opm {
 
         static bool phaseIsActive(unsigned phaseIdx)
         {
-            return phaseIdx == oilPhaseIdx || phaseIdx == gasPhaseIdx;
+            if constexpr (enableWater) {
+                assert(phaseIdx < numPhases);
+                return true;
+            }
+            else {
+                if (phaseIdx == waterPhaseIdx)
+                    return false;
+                assert(phaseIdx < numPhases);
+                return true;
+            }
         }
 
         template<typename Param>
@@ -123,12 +136,12 @@ namespace Opm {
         /*!
          * \brief Initialize the fluid system using an ECL deck object
          */
-        static void initFromState(const EclipseState& eclState, const Schedule& /* schedule */)
+        static void initFromState(const EclipseState& eclState, const Schedule& schedule)
         {
             // TODO: we are not considering the EOS region for now
             const auto& comp_config = eclState.compositionalConfig();
             // how should we utilize the numComps from the CompositionalConfig?
-            using FluidSystem = GenericOilGasFluidSystem<Scalar, NumComp>;
+            using FluidSystem = GenericOilGasWaterFluidSystem<Scalar, NumComp, enableWater>;
             const std::size_t num_comps = comp_config.numComps();
             // const std::size_t num_eos_region = comp_config.
             assert(num_comps == NumComp);
@@ -148,13 +161,24 @@ namespace Opm {
             }
             FluidSystem::printComponentParams();
             interaction_coefficients_ = comp_config.binaryInteractionCoefficient(0);
+
+            // Init. water pvt from deck
+            waterPvt_->initFromState(eclState, schedule);
+
         }
 #endif // HAVE_ECL_INPUT
 
         static void init()
         {
+            waterPvt_ = std::make_shared<WaterPvt>();
             component_param_.reserve(numComponents);
         }
+
+        /*!
+        * \brief Set the pressure-volume-saturation (PVT) relations for the water phase.
+        */
+        static void setWaterPvt(std::shared_ptr<WaterPvt> pvtObj)
+        { waterPvt_ = std::move(pvtObj); }
 
         /*!
          * \brief The acentric factor of a component [].
@@ -236,7 +260,8 @@ namespace Opm {
         static std::string_view phaseName(unsigned phaseIdx)
         {
                 static const std::string_view name[] = {"o",  // oleic phase
-                                                        "g"};  // gas phase
+                                                        "g",  // gas phase
+                                                        "w"};  // aqueous phase
 
                 assert(phaseIdx < numPhases);
                 return name[phaseIdx];
@@ -265,6 +290,13 @@ namespace Opm {
             if (phaseIdx == oilPhaseIdx || phaseIdx == gasPhaseIdx) {
                 return decay<LhsEval>(fluidState.averageMolarMass(phaseIdx) / paramCache.molarVolume(phaseIdx));
             }
+            else {
+                const LhsEval& p = decay<LhsEval>(fluidState.pressure(phaseIdx));
+                const LhsEval& T = decay<LhsEval>(fluidState.temperature(phaseIdx));
+                const Scalar& rho_w_ref = waterPvt_->waterReferenceDensity(0);
+                const LhsEval& bw = waterPvt_->inverseFormationVolumeFactor(0, T, p, LhsEval(0.0), LhsEval(0.0));
+                return rho_w_ref * bw;
+            }
 
             return {};
         }
@@ -277,8 +309,16 @@ namespace Opm {
         {
             assert(isConsistent());
             assert(phaseIdx < numPhases);
-            // Use LBC method to calculate viscosity
-            return decay<LhsEval>(ViscosityModel::LBC(fluidState, paramCache, phaseIdx));
+
+            if (phaseIdx == oilPhaseIdx || phaseIdx == gasPhaseIdx) {
+                // Use LBC method to calculate viscosity
+                return decay<LhsEval>(ViscosityModel::LBC(fluidState, paramCache, phaseIdx));
+            }
+            else {
+                const LhsEval& p = decay<LhsEval>(fluidState.pressure(phaseIdx));
+                const LhsEval& T = decay<LhsEval>(fluidState.temperature(phaseIdx));
+                return waterPvt_->viscosity(0, T, p, LhsEval(0.0), LhsEval(0.0));
+            }
         }
 
         //! \copydoc BaseFluidSystem::fugacityCoefficient
@@ -288,6 +328,9 @@ namespace Opm {
                                            unsigned phaseIdx,
                                            unsigned compIdx)
         {
+            if (waterEnabled && phaseIdx == static_cast<unsigned int>(waterPhaseIdx))
+                return LhsEval(0.0);
+
             assert(isConsistent());
             assert(phaseIdx < numPhases);
             assert(compIdx < numComponents);
@@ -317,7 +360,7 @@ namespace Opm {
         {
             assert(phaseIdx < numPhases);
 
-            return (phaseIdx == 0);
+            return (phaseIdx == oilPhaseIdx);
         }
 
         //! \copydoc BaseFluidSystem::isIdealGas
@@ -325,55 +368,55 @@ namespace Opm {
         {
             assert(phaseIdx < numPhases);
 
-            return (phaseIdx == 1);
+            return (phaseIdx == gasPhaseIdx);
         }
         // the following funcitons are needed to compile the GenericOutputBlackoilModule
         // not implemented for this FluidSystem yet
         template <class LhsEval>
         static LhsEval convertXwGToxwG(const LhsEval&, unsigned)
         {
-            assert(false && "convertXwGToxwG not implemented for GenericOilGasFluidSystem!");
+            assert(false && "convertXwGToxwG not implemented for GenericOilGasWaterFluidSystem!");
             return 0.;
         }
         template <class LhsEval>
         static LhsEval convertXoGToxoG(const LhsEval&, unsigned)
         {
-            assert(false && "convertXoGToxoG not implemented for GenericOilGasFluidSystem!");
+            assert(false && "convertXoGToxoG not implemented for GenericOilGasWaterFluidSystem!");
             return 0.;
         }
 
         template <class LhsEval>
         static LhsEval convertxoGToXoG(const LhsEval&, unsigned)
         {
-            assert(false && "convertxoGToXoG not implemented for GenericOilGasFluidSystem!");
+            assert(false && "convertxoGToXoG not implemented for GenericOilGasWaterFluidSystem!");
             return 0.;
         }
 
         template <class LhsEval>
         static LhsEval convertXgOToxgO(const LhsEval&, unsigned)
         {
-            assert(false && "convertXgOToxgO not implemented for GenericOilGasFluidSystem!");
+            assert(false && "convertXgOToxgO not implemented for GenericOilGasWaterFluidSystem!");
             return 0.;
         }
 
         template <class LhsEval>
         static LhsEval convertRswToXwG(const LhsEval&, unsigned)
         {
-            assert(false && "convertRswToXwG not implemented for GenericOilGasFluidSystem!");
+            assert(false && "convertRswToXwG not implemented for GenericOilGasWaterFluidSystem!");
             return 0.;
         }
 
         template <class LhsEval>
         static LhsEval convertRvwToXgW(const LhsEval&, unsigned)
         {
-            assert(false && "convertRvwToXgW not implemented for GenericOilGasFluidSystem!");
+            assert(false && "convertRvwToXgW not implemented for GenericOilGasWaterFluidSystem!");
             return 0.;
         }
 
         template <class LhsEval>
         static LhsEval convertXgWToxgW(const LhsEval&, unsigned)
         {
-            assert(false && "convertXgWToxgW not implemented for GenericOilGasFluidSystem!");
+            assert(false && "convertXgWToxgW not implemented for GenericOilGasWaterFluidSystem!");
             return 0.;
         }
 
@@ -404,6 +447,7 @@ namespace Opm {
 
         static std::vector<ComponentParam> component_param_;
         static std::vector<Scalar> interaction_coefficients_;
+        static std::shared_ptr<WaterPvt> waterPvt_;
 
     public:
         static std::string printComponentParams() {
@@ -421,12 +465,17 @@ namespace Opm {
         }
     };
 
-    template <class Scalar, int NumComp>
-    std::vector<typename GenericOilGasFluidSystem<Scalar, NumComp>::ComponentParam>
-    GenericOilGasFluidSystem<Scalar, NumComp>::component_param_;
+    template <class Scalar, int NumComp, bool enableWater>
+    std::vector<typename GenericOilGasWaterFluidSystem<Scalar, NumComp, enableWater>::ComponentParam>
+    GenericOilGasWaterFluidSystem<Scalar, NumComp, enableWater>::component_param_;
 
-    template <class Scalar, int NumComp>
+    template <class Scalar, int NumComp, bool enableWater>
     std::vector<Scalar>
-    GenericOilGasFluidSystem<Scalar, NumComp>::interaction_coefficients_;
+    GenericOilGasWaterFluidSystem<Scalar, NumComp, enableWater>::interaction_coefficients_;
+    
+    template <class Scalar, int NumComp, bool enableWater>
+    std::shared_ptr<WaterPvtMultiplexer<Scalar> > 
+    GenericOilGasWaterFluidSystem<Scalar, NumComp, enableWater>::waterPvt_;
+
 }
-#endif // OPM_GENERICOILGASFLUIDSYSTEM_HPP
+#endif // OPM_GENERIC_OIL_GAS_WATER_FLUIDSYSTEM_HPP

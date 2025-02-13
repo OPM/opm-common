@@ -48,7 +48,7 @@
 #include <opm/material/fluidsystems/TwoPhaseImmiscibleFluidSystem.hpp>
 #include <opm/material/fluidsystems/BlackOilFluidSystem.hpp>
 #include <opm/material/fluidsystems/BrineCO2FluidSystem.hpp>
-#include <opm/material/fluidsystems/GenericOilGasFluidSystem.hpp>
+#include <opm/material/fluidsystems/GenericOilGasWaterFluidSystem.hpp>
 #include <opm/material/fluidsystems/H2ON2FluidSystem.hpp>
 #include <opm/material/fluidsystems/H2ON2LiquidPhaseFluidSystem.hpp>
 #include <opm/material/fluidsystems/H2OAirFluidSystem.hpp>
@@ -394,7 +394,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(ThreeComponentFluidSystem, Scalar, ScalarTypes)
 BOOST_AUTO_TEST_CASE_TEMPLATE(GenericFluidSystem, Scalar, ScalarTypes)
 {
     using Evaluation = Opm::DenseAd::Evaluation<Scalar, 4>;
-    using FluidSystem = Opm::GenericOilGasFluidSystem<Scalar, 4>;
+    using FluidSystem = Opm::GenericOilGasWaterFluidSystem<Scalar, 4, true>;
 
     using CompParm = typename FluidSystem::ComponentParam;
     using CO2 = Opm::SimpleCO2<Scalar>;
@@ -409,6 +409,11 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(GenericFluidSystem, Scalar, ScalarTypes)
                                        C10::criticalPressure(), C10::criticalVolume(), C10::acentricFactor()});
     FluidSystem::addComponent(CompParm{N2::name(), N2::molarMass(), N2::criticalTemperature(),
                                        N2::criticalPressure(), N2::criticalVolume(), N2::acentricFactor()});
+
+    // initialize water pvt
+    using WaterPvt = typename FluidSystem::WaterPvt;
+    std::shared_ptr<WaterPvt> waterPvt;
+    FluidSystem::setWaterPvt(waterPvt);
 
     checkFluidSystem<Scalar, FluidSystem, Scalar, Scalar>();
     checkFluidSystem<Scalar, FluidSystem, Evaluation, Scalar>();

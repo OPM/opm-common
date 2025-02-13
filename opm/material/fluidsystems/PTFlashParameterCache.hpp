@@ -57,6 +57,9 @@ class PTFlashParameterCache
     enum { numPhases = FluidSystem::numPhases };
     enum { oilPhaseIdx = FluidSystem::oilPhaseIdx };
     enum { gasPhaseIdx = FluidSystem::gasPhaseIdx };
+    enum { waterPhaseIdx = FluidSystem::waterPhaseIdx };
+
+    static constexpr bool waterEnabled = FluidSystem::waterEnabled;
 
     static_assert(static_cast<int>(oilPhaseIdx) >= 0, "Oil phase index must be non-negative");
     static_assert(static_cast<int>(oilPhaseIdx) < static_cast<int>(numPhases),
@@ -90,6 +93,10 @@ public:
                      unsigned phaseIdx,
                      int exceptQuantities = ParentType::None)
     {
+        if (waterEnabled && phaseIdx == static_cast<unsigned int>(waterPhaseIdx)) {
+            return;
+        }
+
         assert ((phaseIdx == static_cast<unsigned int>(oilPhaseIdx)) ||
                 (phaseIdx == static_cast<unsigned int>(gasPhaseIdx)));
 
