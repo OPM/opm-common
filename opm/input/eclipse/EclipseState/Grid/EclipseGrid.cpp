@@ -2026,13 +2026,13 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
                                           const std::size_t& host_nx, const std::size_t& host_ny, const std::size_t& host_nz,
                                           const std::size_t& base_host_nx, const std::size_t& base_host_ny, const std::size_t& base_host_nz){
             auto [i_list, j_list, k_list] = VectorUtil::generate_permutation(0,nx-1,0, ny-1,0, nz-1);
-            auto floord_div =  [](std::size_t a, std::size_t n) { return static_cast<std::size_t>(a%n); };
-            auto sum =  [](std::size_t a, std::size_t n) { return static_cast<std::size_t>((a+n)); };
-            std::vector<std::size_t> resultI = VectorUtil::vectorScalarOperation(i_list, host_nx, floord_div);     
+            std::function<std::size_t(std::size_t, std::size_t)> div = std::divides<std::size_t>{};
+            std::function<std::size_t(std::size_t, std::size_t)> sum = std::plus<std::size_t>{};
+            std::vector<std::size_t> resultI = VectorUtil::vectorScalarOperation(i_list, host_nx, div);     
             resultI = VectorUtil::vectorScalarOperation(resultI, base_host_nx, sum);     
-            std::vector<std::size_t> resultJ = VectorUtil::vectorScalarOperation(j_list, host_ny, floord_div);
+            std::vector<std::size_t> resultJ = VectorUtil::vectorScalarOperation(j_list, host_ny, div);
             resultJ = VectorUtil::vectorScalarOperation(resultJ, base_host_ny, sum);     
-            std::vector<std::size_t> resultK = VectorUtil::vectorScalarOperation(k_list, host_nz , floord_div);
+            std::vector<std::size_t> resultK = VectorUtil::vectorScalarOperation(k_list, host_nz , div);
             resultK = VectorUtil::vectorScalarOperation(resultK, base_host_nz, sum);         
             return std::make_tuple(resultI, resultJ, resultK);
         }; 
@@ -2243,7 +2243,7 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
         };
         std::vector<std::size_t> lgr_level_numbering_counting(getNumActive(),1);
         lgr_level_active_map.resize(getNumActive(),0);
-        for (auto& cell:lgr_children_cells) {
+        for (const auto& cell:lgr_children_cells) {
             set_map_scalar(cell.getFatherGlobalID(), cell.getTotalActiveLGR());
         }
         std::vector<std::size_t> bottom_lgr_cells;

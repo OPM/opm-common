@@ -13,9 +13,9 @@ namespace VectorUtil {
 
 
 template<typename T = std::size_t>
-std::tuple<std::vector<T>, std::vector<T>, std::vector<T>> generate_permutation(const std::size_t& low_nx, const std::size_t& up_nx,
-                                                                                const std::size_t& low_ny, const std::size_t& up_ny,
-                                                                                const std::size_t& low_nz, const std::size_t& up_nz ){
+std::tuple<std::vector<T>, std::vector<T>, std::vector<T>> generate_permutation(std::size_t low_nx, std::size_t up_nx,
+                                                                                std::size_t low_ny, std::size_t up_ny,
+                                                                                std::size_t low_nz, std::size_t up_nz){
     std::vector<T> i_list;
     std::vector<T> j_list;
     std::vector<T> k_list;
