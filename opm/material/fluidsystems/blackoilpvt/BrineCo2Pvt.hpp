@@ -811,7 +811,7 @@ private:
 namespace Opm::gpuistl
 {
 
-    template<class ScalarT, class Params, class GPUContainer>
+    template<class Params, class GPUContainer, class ScalarT>
     BrineCo2Pvt<ScalarT, Params, GPUContainer>
     copy_to_gpu(const BrineCo2Pvt<ScalarT>& cpuBrineCo2)
     {
