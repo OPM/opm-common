@@ -76,6 +76,17 @@ std::vector<T> vectorScalarOperation(const std::vector<T>& vecA, const T& scalar
     result.reserve(vecA.size());
     // Use std::transform with the passed operation
     std::transform(vecA.begin(), vecA.end(), std::back_inserter(result),
+        [&scalar, &op](const T& a) { return op(scalar, a); });
+    return result;
+}
+
+// Implementation of generation General Operation between a scalar and a vector of the same type
+template <typename T, typename Operation>
+std::vector<T> scalarVectorOperation(const T& scalar, const std::vector<T>& vecA,  Operation op) {
+    std::vector<T> result;
+    result.reserve(vecA.size());
+    // Use std::transform with the passed operation
+    std::transform(vecA.begin(), vecA.end(), std::back_inserter(result),
         [&scalar, &op](const T& a) { return op(a, scalar); });
     return result;
 }
