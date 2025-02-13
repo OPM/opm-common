@@ -55,9 +55,11 @@ class Schedule;
 class Co2StoreConfig;
 class EzrokhiTable;
 
+// forward declaration of the class so the function in the next namespace can be declared
 template <class Scalar, class Params, class ContainerT>
 class BrineCo2Pvt;
 
+// declaration of make_view in correct namespace so friend function can be declared in the class
 namespace gpuistl {
     template <class ViewType, class OutputParams, class InputParams, class ContainerType, class ScalarT>
     BrineCo2Pvt<ScalarT, OutputParams, ViewType>

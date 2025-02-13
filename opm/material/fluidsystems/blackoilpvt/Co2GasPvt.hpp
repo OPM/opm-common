@@ -51,9 +51,11 @@ class EclipseState;
 class Schedule;
 class Co2StoreConfig;
 
+// forward declaration of the class so the function in the next namespace can be declared
 template <class Scalar, class ParamsT, class ContainerT>
 class Co2GasPvt;
 
+// declaration of make_view in correct namespace so friend function can be declared in the class
 namespace gpuistl {
     template <class ViewType, class OutputParams, class InputParams, class ContainerType, class Scalar>
     Co2GasPvt<Scalar, OutputParams, ViewType>
