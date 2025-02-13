@@ -25,6 +25,7 @@
 
 #include <opm/material/Constants.hpp>
 #include <opm/material/common/PolynomialUtils.hpp>
+#include <opm/material/common/Valgrind.hpp>
 
 namespace Opm
 {
