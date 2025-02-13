@@ -469,7 +469,7 @@ namespace Opm::gpuistl{
     copy_to_gpu(const Co2GasPvt<ScalarT>& cpuCo2)
     {
         return Co2GasPvt<ScalarT, Params, GPUContainer>(
-            copy_to_gpu<ScalarT, std::vector<ScalarT>, GPUContainer>(cpuCo2.getParams()),
+            copy_to_gpu<GPUContainer>(cpuCo2.getParams()),
             GPUContainer(cpuCo2.getBrineReferenceDensity()),
             GPUContainer(cpuCo2.getGasReferenceDensity()),
             GPUContainer(cpuCo2.getSalinity()),

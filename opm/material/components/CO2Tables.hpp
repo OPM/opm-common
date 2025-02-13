@@ -92,7 +92,7 @@ namespace Opm::gpuistl {
         return CO2Tables<Scalar, ViewType>(newEnthalpy, newDensity);
     }
 
-    template <class Scalar, class OldContainerType, class NewContainerType>
+    template <class NewContainerType, class Scalar, class OldContainerType>
     CO2Tables<Scalar, NewContainerType>
     copy_to_gpu(const CO2Tables<Scalar, OldContainerType>& oldCO2Tables) {
         return CO2Tables<Scalar, NewContainerType>(

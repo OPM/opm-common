@@ -822,7 +822,7 @@ namespace Opm::gpuistl
             cpuBrineCo2.getActivityModel(),
             cpuBrineCo2.getThermalMixingModelSalt(),
             cpuBrineCo2.getThermalMixingModelLiquid(),
-            copy_to_gpu<ScalarT, std::vector<ScalarT>, GPUContainer>(cpuBrineCo2.getParams())
+            copy_to_gpu<GPUContainer>(cpuBrineCo2.getParams())
         );
     }
 
