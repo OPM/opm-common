@@ -241,7 +241,9 @@ Opm::RestartIO::RstWell::RstWell(const UnitSystem&          unit_system,
         const auto* const isegSeg = &isegWell[is * header.nisegz];
         const auto* const rsegSeg = &rsegWell[is * header.nrsegz];
 
-        if (isegSeg[VI::ISeg::SegNo] != 0) {
+        if (isegSeg[VI::ISeg::BranchNo] > 0) {
+            // Segment is on a branch and therefore active.  Create an
+            // RstSegment object to represent this segment.
             const auto segNum = is + 1;
             segNumToIx.emplace(segNum, this->segments.size());
 
