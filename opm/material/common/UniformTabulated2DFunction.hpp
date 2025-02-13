@@ -336,7 +336,7 @@ private:
 } // namespace Opm
 
 namespace Opm::gpuistl{
-    template<class ScalarT, class GPUContainer>
+    template<class GPUContainer, class ScalarT>
     UniformTabulated2DFunction<ScalarT, GPUContainer>
     copy_to_gpu(const UniformTabulated2DFunction<ScalarT>& tab){
         return UniformTabulated2DFunction<ScalarT, GPUContainer>(tab.xMin(), tab.xMax(), tab.numX(), tab.yMin(), tab.yMax(), tab.numY(), GPUContainer(tab.samples()));

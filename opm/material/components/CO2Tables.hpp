@@ -96,8 +96,8 @@ namespace Opm::gpuistl {
     CO2Tables<Scalar, NewContainerType>
     copy_to_gpu(const CO2Tables<Scalar, OldContainerType>& oldCO2Tables) {
         return CO2Tables<Scalar, NewContainerType>(
-            copy_to_gpu<Scalar, NewContainerType>(oldCO2Tables.tabulatedEnthalpy),
-            copy_to_gpu<Scalar, NewContainerType>(oldCO2Tables.tabulatedDensity)
+            copy_to_gpu<NewContainerType>(oldCO2Tables.tabulatedEnthalpy),
+            copy_to_gpu<NewContainerType>(oldCO2Tables.tabulatedDensity)
         );
     }
 }
