@@ -42,7 +42,7 @@ public:
     void terminal_pressure(double pressure);
     void add_gas_lift_gas(bool add_gas);
     void as_choke(const std::string& target_group);
-    void set_efficiency(const double& efficiency);
+    void set_efficiency(const double efficiency);
 
     static Node serializationTestObject();
     bool operator==(const Node& other) const;

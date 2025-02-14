@@ -63,7 +63,7 @@ void Node::as_choke(const std::string& target_group) {
     this->m_choke_target_group = target_group;
 }
 
-void Node::set_efficiency(const double& efficiency) {
+void Node::set_efficiency(const double efficiency) {
     this->m_efficiency = efficiency;
 }
 

@@ -248,17 +248,16 @@ std::set<std::string> ExtNetwork::leaf_nodes() const
         std::stack<std::string> children;
         children.push(root.get().name());
         while (!children.empty()) {
-            const auto node = children.top();
+            const auto& node = children.top();
             children.pop();
             auto branches = this->downtree_branches(node);
             if (branches.empty()) {
-                leaf_nodes.insert(node);
+                leaf_nodes.emplace(node);
             }
             for (const auto& branch : branches) {
                 children.push(branch.downtree_node());
             }
         }
-        assert(children.empty());
     }
     return leaf_nodes;
 }

@@ -508,7 +508,7 @@ BOOST_AUTO_TEST_CASE(WellEfficiencyFactorSet) {
     Opm::Well well("WELL1" , "GROUP", 0, 1, 0, 0, 0.0, Opm::WellType(Opm::Phase::OIL), Opm::Well::ProducerCMode::CMODE_UNDEFINED, Connection::Order::DEPTH, UnitSystem::newMETRIC(), 0, 1.0, false, false, 0, Opm::Well::GasInflowEquation::STD);
 
     BOOST_CHECK_EQUAL(1.0, well.getEfficiencyFactor());
-    BOOST_CHECK( well.updateEfficiencyFactor(0.9));
+    BOOST_CHECK( well.updateEfficiencyFactor(0.9, true));
     BOOST_CHECK_EQUAL(0.9, well.getEfficiencyFactor());
 }
 

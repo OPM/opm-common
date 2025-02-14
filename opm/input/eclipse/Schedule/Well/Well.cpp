@@ -1130,14 +1130,10 @@ double Well::getGuideRateScalingFactor() const
 }
 
 double Well::getEfficiencyFactor(bool network) const {
-    if (network && (!this->use_efficiency_in_network)) {
+    if (network && !this->use_efficiency_in_network) {
         return 1.0;
     }
     return this->efficiency_factor;
-}
-
-bool Well::useEfficiencyInNetwork() const {
-    return this->use_efficiency_in_network;
 }
 
 double Well::getSolventFraction() const {
@@ -2051,7 +2047,7 @@ bool Well::cmp_structure(const Well& other) const
         && (this->getAutomaticShutIn() == other.getAutomaticShutIn())
         && (this->udq_undefined == other.udq_undefined)
         && (this->getPreferredPhase() == other.getPreferredPhase()) // wellType()
-        && (this->getEfficiencyFactor() == other.getEfficiencyFactor())
+        && (this->efficiency_factor == other.efficiency_factor)
         && (this->use_efficiency_in_network == other.use_efficiency_in_network)
         && (this->getConnections() == other.getConnections())
         ;
