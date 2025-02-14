@@ -48,6 +48,12 @@
 #include <string_view>
 #include <vector>
 
+#include <fmt/format.h> // TODO: remove, can not be in public header
+
+// NVCC being weird about std::vector, so we need this workaround
+template<class T>
+using VectorWithDefaultAllocator = std::vector<T, std::allocator<T>>;
+
 #ifdef COMPILING_STATIC_FLUID_SYSTEM
 #define FLUIDSYSTEM_CLASSNAME BlackOilFluidSystem
 #else
@@ -161,8 +167,8 @@ auto getSaltSaturation_(typename std::enable_if<HasMember_saltSaturation<FluidSt
  *
  * \tparam Scalar The type used for scalar floating point values
  */
-template <class Scalar, class IndexTraits = BlackOilDefaultIndexTraits>
-class FLUIDSYSTEM_CLASSNAME : public BaseFluidSystem<Scalar, FLUIDSYSTEM_CLASSNAME<Scalar, IndexTraits> >
+template <class Scalar, class IndexTraits = BlackOilDefaultIndexTraits, template<typename> typename Storage = VectorWithDefaultAllocator>
+class FLUIDSYSTEM_CLASSNAME : public BaseFluidSystem<Scalar, FLUIDSYSTEM_CLASSNAME<Scalar, IndexTraits, Storage> >
 {
     using ThisType = FLUIDSYSTEM_CLASSNAME;
 
@@ -1727,8 +1733,183 @@ private:
     STATIC_OR_NOTHING bool enthalpy_eq_energy_;
 };
 
+template <class Scalar, class IndexTraits, template<typename> typename Storage>
+void FLUIDSYSTEM_CLASSNAME<Scalar,IndexTraits, Storage>::
+initBegin(std::size_t numPvtRegions)
+{
+    isInitialized_ = false;
+    useSaturatedTables_ = true;
+
+    enableDissolvedGas_ = true;
+    enableDissolvedGasInWater_ = false;
+    enableVaporizedOil_ = false;
+    enableVaporizedWater_ = false;
+    enableDiffusion_ = false;
+
+    oilPvt_ = nullptr;
+    gasPvt_ = nullptr;
+    waterPvt_ = nullptr;
+
+    surfaceTemperature = 273.15 + 15.56; // [K]
+    surfacePressure = 1.01325e5; // [Pa]
+    setReservoirTemperature(surfaceTemperature);
+
+    numActivePhases_ = numPhases;
+    std::fill_n(&phaseIsActive_[0], numPhases, true);
+
+    resizeArrays_(numPvtRegions);
+}
+
+template <class Scalar, class IndexTraits, template<typename> typename Storage>
+void FLUIDSYSTEM_CLASSNAME<Scalar,IndexTraits,Storage>::
+setReferenceDensities(Scalar rhoOil,
+                      Scalar rhoWater,
+                      Scalar rhoGas,
+                      unsigned regionIdx)
+{
+    referenceDensity_[regionIdx][oilPhaseIdx] = rhoOil;
+    referenceDensity_[regionIdx][waterPhaseIdx] = rhoWater;
+    referenceDensity_[regionIdx][gasPhaseIdx] = rhoGas;
+}
+
+template <class Scalar, class IndexTraits, template<typename> typename Storage>
+void FLUIDSYSTEM_CLASSNAME<Scalar,IndexTraits, Storage>::initEnd()
+{
+    // calculate the final 2D functions which are used for interpolation.
+    const std::size_t num_regions = molarMass_.size();
+    for (unsigned regionIdx = 0; regionIdx < num_regions; ++regionIdx) {
+        // calculate molar masses
+
+        // water is simple: 18 g/mol
+        molarMass_[regionIdx][waterCompIdx] = 18e-3;
+
+        if (phaseIsActive(gasPhaseIdx)) {
+            // for gas, we take the density at standard conditions and assume it to be ideal
+            Scalar p = surfacePressure;
+            Scalar T = surfaceTemperature;
+            Scalar rho_g = referenceDensity_[/*regionIdx=*/0][gasPhaseIdx];
+            molarMass_[regionIdx][gasCompIdx] = Constants<Scalar>::R*T*rho_g / p;
+        }
+        else
+            // hydrogen gas. we just set this do avoid NaNs later
+            molarMass_[regionIdx][gasCompIdx] = 2e-3;
+
+        // finally, for oil phase, we take the molar mass from the spe9 paper
+        molarMass_[regionIdx][oilCompIdx] = 175e-3; // kg/mol
+    }
+
+
+    int activePhaseIdx = 0;
+    for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
+        if(phaseIsActive(phaseIdx)){
+            canonicalToActivePhaseIdx_[phaseIdx] = activePhaseIdx;
+            activeToCanonicalPhaseIdx_[activePhaseIdx] = phaseIdx;
+            activePhaseIdx++;
+        }
+    }
+    isInitialized_ = true;
+}
+
+template <class Scalar, class IndexTraits, template<typename> typename Storage>
+std::string_view FLUIDSYSTEM_CLASSNAME<Scalar,IndexTraits, Storage>::
+phaseName(unsigned phaseIdx)
+{
+    switch (phaseIdx) {
+    case waterPhaseIdx:
+        return "water";
+    case oilPhaseIdx:
+        return "oil";
+    case gasPhaseIdx:
+        return "gas";
+
+    default:
+        throw std::logic_error(fmt::format("Phase index {} is unknown", phaseIdx));
+    }
+}
+
+template <class Scalar, class IndexTraits, template<typename> typename Storage>
+unsigned FLUIDSYSTEM_CLASSNAME<Scalar,IndexTraits,Storage>::
+solventComponentIndex(unsigned phaseIdx)
+{
+    switch (phaseIdx) {
+    case waterPhaseIdx:
+        return waterCompIdx;
+    case oilPhaseIdx:
+        return oilCompIdx;
+    case gasPhaseIdx:
+        return gasCompIdx;
+
+    default:
+        throw std::logic_error(fmt::format("Phase index {} is unknown", phaseIdx));
+    }
+}
+
+template <class Scalar, class IndexTraits, template<typename> typename Storage>
+unsigned FLUIDSYSTEM_CLASSNAME<Scalar,IndexTraits,Storage>::
+soluteComponentIndex(unsigned phaseIdx)
+{
+    switch (phaseIdx) {
+    case waterPhaseIdx:
+        if (enableDissolvedGasInWater())
+            return gasCompIdx;
+        throw std::logic_error("The water phase does not have any solutes in the black oil model!");
+    case oilPhaseIdx:
+        return gasCompIdx;
+    case gasPhaseIdx:
+        if (enableVaporizedWater()) {
+            return waterCompIdx;
+        }
+        return oilCompIdx;
+
+    default:
+        throw std::logic_error(fmt::format("Phase index {} is unknown", phaseIdx));
+    }
+}
+
+template <class Scalar, class IndexTraits, template<typename> typename Storage>
+std::string_view FLUIDSYSTEM_CLASSNAME<Scalar,IndexTraits,Storage>::
+componentName(unsigned compIdx)
+{
+    switch (compIdx) {
+    case waterCompIdx:
+        return "Water";
+    case oilCompIdx:
+        return "Oil";
+    case gasCompIdx:
+        return "Gas";
+
+    default:
+        throw std::logic_error(fmt::format("Component index {} is unknown", compIdx));
+    }
+}
+
+template <class Scalar, class IndexTraits, template<typename> typename Storage>
+short FLUIDSYSTEM_CLASSNAME<Scalar,IndexTraits, Storage>::
+activeToCanonicalPhaseIdx(unsigned activePhaseIdx)
+{
+    assert(activePhaseIdx<numActivePhases());
+    return activeToCanonicalPhaseIdx_[activePhaseIdx];
+}
+
+template <class Scalar, class IndexTraits, template<typename> typename Storage>
+short FLUIDSYSTEM_CLASSNAME<Scalar,IndexTraits, Storage>::
+canonicalToActivePhaseIdx(unsigned phaseIdx)
+{
+    assert(phaseIdx<numPhases);
+    assert(phaseIsActive(phaseIdx));
+    return canonicalToActivePhaseIdx_[phaseIdx];
+}
+
+template <class Scalar, class IndexTraits, template<typename> typename Storage>
+void FLUIDSYSTEM_CLASSNAME<Scalar,IndexTraits,Storage>::
+resizeArrays_(std::size_t numRegions)
+{
+    molarMass_.resize(numRegions);
+    referenceDensity_.resize(numRegions);
+}
+
 #ifdef COMPILING_STATIC_FLUID_SYSTEM
-template <typename T> using BOFS = BlackOilFluidSystem<T, BlackOilDefaultIndexTraits>;
+template <typename T> using BOFS = FLUIDSYSTEM_CLASSNAME<T, BlackOilDefaultIndexTraits, std::vector>;
 
 #define DECLARE_INSTANCE(T)                                                           \
 template<> unsigned char BOFS<T>::numActivePhases_;                                   \
