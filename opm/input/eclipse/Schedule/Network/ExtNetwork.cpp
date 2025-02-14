@@ -17,13 +17,17 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include <algorithm>
+#include <cassert>
 #include <iterator>
 #include <stdexcept>
 #include <fmt/format.h>
 #include <vector>
+#include <stack>
 #include <functional>
 
 #include <opm/input/eclipse/Schedule/Network/ExtNetwork.hpp>
+#include <opm/input/eclipse/Schedule/Well/Well.hpp>
+#include <opm/input/eclipse/Schedule/Schedule.hpp>
 
 namespace Opm {
 namespace Network {
@@ -235,5 +239,28 @@ std::vector<std::string> ExtNetwork::node_names() const
 {
     return this->insert_indexed_node_names;
 }
+
+std::set<std::string> ExtNetwork::leaf_nodes() const
+{
+    std::set<std::string> leaf_nodes;
+    auto roots = this->roots();
+    for (const auto& root : roots) {
+        std::stack<std::string> children;
+        children.push(root.get().name());
+        while (!children.empty()) {
+            const auto& node = children.top();
+            children.pop();
+            auto branches = this->downtree_branches(node);
+            if (branches.empty()) {
+                leaf_nodes.emplace(node);
+            }
+            for (const auto& branch : branches) {
+                children.push(branch.downtree_node());
+            }
+        }
+    }
+    return leaf_nodes;
+}
+
 }
 }

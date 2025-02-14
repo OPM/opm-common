@@ -47,6 +47,10 @@ bool Node::as_choke() const {
     return this->m_choke_target_group.has_value();
 }
 
+double Node::efficiency() const {
+    return this->m_efficiency;
+}
+
 void Node::terminal_pressure(double pressure) {
     this->m_terminal_pressure = pressure;
 }
@@ -59,23 +63,28 @@ void Node::as_choke(const std::string& target_group) {
     this->m_choke_target_group = target_group;
 }
 
+void Node::set_efficiency(const double efficiency) {
+    this->m_efficiency = efficiency;
+}
 
 bool Node::operator==(const Node& other) const {
     return this->m_name == other.m_name &&
            this->m_terminal_pressure == other.m_terminal_pressure &&
            this->m_add_gas_lift_gas == other.m_add_gas_lift_gas &&
-           this->m_choke_target_group == other.m_choke_target_group;
+           this->m_choke_target_group == other.m_choke_target_group &&
+           this->m_efficiency == other.m_efficiency;
 }
 
 
 Node Node::serializationTestObject()
 {
-  Node result;
-  result.m_name = "test";
-  result.m_terminal_pressure = 1.0;
-  result.m_add_gas_lift_gas = true;
+    Node result;
+    result.m_name = "test";
+    result.m_terminal_pressure = 1.0;
+    result.m_add_gas_lift_gas = true;
+    result.m_efficiency = 1.0;
 
-  return result;
+    return result;
 }
 
 

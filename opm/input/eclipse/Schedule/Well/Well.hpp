@@ -440,7 +440,7 @@ public:
     bool hasRefDepth() const;
     double getRefDepth() const;
     double getDrainageRadius() const;
-    double getEfficiencyFactor() const;
+    double getEfficiencyFactor(bool network = false) const;
     double getSolventFraction() const;
     Status getStatus() const;
     const std::string& groupName() const;
@@ -517,7 +517,7 @@ public:
     bool updateWellGuideRate(bool available, double guide_rate, GuideRateTarget guide_phase, double scale_factor);
     bool updateWellGuideRate(double guide_rate);
     bool updateAvailableForGroupControl(bool available);
-    bool updateEfficiencyFactor(double efficiency_factor);
+    bool updateEfficiencyFactor(double efficiency_factor, bool use_efficiency_in_network);
 
     bool updateSolventFraction(double solvent_fraction);
     bool updateTracer(std::shared_ptr<WellTracerProperties> tracer_properties);
@@ -601,6 +601,7 @@ public:
         serializer(wtype);
         serializer(guide_rate);
         serializer(efficiency_factor);
+        serializer(use_efficiency_in_network);
         serializer(solvent_fraction);
         serializer(has_produced);
         serializer(has_injected);
@@ -654,6 +655,7 @@ private:
     WellType wtype{};
     WellGuideRate guide_rate{};
     double efficiency_factor{};
+    bool use_efficiency_in_network{};
     double solvent_fraction{};
     bool has_produced = false;
     bool has_injected = false;

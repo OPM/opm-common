@@ -35,12 +35,14 @@ public:
     const std::string& name() const;
     const std::optional<double>& terminal_pressure() const;
     bool as_choke() const;
+    double efficiency() const;
     bool add_gas_lift_gas() const;
     const std::optional<std::string>& target_group() const;
 
     void terminal_pressure(double pressure);
     void add_gas_lift_gas(bool add_gas);
     void as_choke(const std::string& target_group);
+    void set_efficiency(const double efficiency);
 
     static Node serializationTestObject();
     bool operator==(const Node& other) const;
@@ -52,12 +54,14 @@ public:
         serializer(m_terminal_pressure);
         serializer(m_add_gas_lift_gas);
         serializer(m_choke_target_group);
+        serializer(m_efficiency);
     }
 private:
     std::string m_name;
     std::optional<double> m_terminal_pressure;
     std::optional<std::string> m_choke_target_group;
-    bool m_add_gas_lift_gas = false;
+    bool m_add_gas_lift_gas{false};
+    double m_efficiency{1.0};
 };
 }
 }

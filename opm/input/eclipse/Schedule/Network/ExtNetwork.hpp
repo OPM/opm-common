@@ -25,12 +25,15 @@
 #include <optional>
 #include <string>
 #include <vector>
+#include <set>
 #include <functional>
 
 #include <opm/input/eclipse/Schedule/Network/Branch.hpp>
 #include <opm/input/eclipse/Schedule/Network/Node.hpp>
 
 namespace Opm {
+    class Schedule;
+
 namespace Network {
 
 
@@ -51,6 +54,7 @@ public:
     std::vector<const Branch*> branches() const;
     std::optional<Branch> uptree_branch(const std::string& node) const;
     std::vector<std::string> node_names() const;
+    std::set<std::string> leaf_nodes() const;
     int NoOfBranches() const;
     int NoOfNodes() const;
 
