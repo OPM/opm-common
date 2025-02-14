@@ -224,28 +224,40 @@ Opm::RestartIO::RstWell::RstWell(const UnitSystem&          unit_system,
                 icon, scon, xcon }
 {
     if (this->msw_index == 0) {
+        // Not a multi-segmented well.  Don't create RstSegment objects.
         return;
     }
 
-    std::unordered_map<int, std::size_t> segment_map;
-    for (int is = 0; is < header.nsegmx; ++is) {
-        const std::size_t iseg_offset = header.nisegz * (is + (this->msw_index - 1)*header.nsegmx);
-        const std::size_t rseg_offset = header.nrsegz * (is + (this->msw_index - 1)*header.nsegmx);
-        const auto other_segment_number = iseg[iseg_offset + VI::ISeg::SegNo];
+    // Recall: There are 'nsegmx' segments per MS well in [ir]seg.
+    const auto skippedSegments = (this->msw_index - 1) * header.nsegmx;
+    const auto* const isegWell = &iseg[skippedSegments * header.nisegz];
+    const auto* const rsegWell = &rseg[skippedSegments * header.nrsegz];
 
-        if (other_segment_number != 0) {
-            const auto segment_number = is + 1;
-            segment_map.emplace(segment_number, this->segments.size());
-            this->segments.emplace_back(unit_system, segment_number,
-                                        iseg.data() + iseg_offset,
-                                        rseg.data() + rseg_offset);
+    // ------------------------------------------------------------------------
+
+    // 1: Create RstSegment objects for all active segments attatched to this well.
+    auto segNumToIx = std::unordered_map<int, std::vector<RstSegment>::size_type>{};
+    for (auto is = 0*header.nsegmx; is < header.nsegmx; ++is) {
+        const auto* const isegSeg = &isegWell[is * header.nisegz];
+        const auto* const rsegSeg = &rsegWell[is * header.nrsegz];
+
+        if (isegSeg[VI::ISeg::BranchNo] > 0) {
+            // Segment is on a branch and therefore active.  Create an
+            // RstSegment object to represent this segment.
+            const auto segNum = is + 1;
+            segNumToIx.emplace(segNum, this->segments.size());
+
+            this->segments.emplace_back(unit_system, segNum, isegSeg, rsegSeg);
         }
     }
 
+    // ------------------------------------------------------------------------
+
+    // 2: Compute inlet segments for each segment in this well.
     for (const auto& segment : this->segments) {
         if (const auto outlet = segment.outlet_segment; outlet != 0) {
-            auto segIxPos = segment_map.find(outlet);
-            if (segIxPos == segment_map.end()) {
+            auto segIxPos = segNumToIx.find(outlet);
+            if (segIxPos == segNumToIx.end()) {
                 continue;
             }
 
