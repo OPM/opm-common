@@ -81,6 +81,7 @@ namespace Opm {
                     const std::vector<double>& zcorn ,
                     const int * actnum = nullptr);
 
+        virtual ~EclipseGrid() = default;
 
         /// EclipseGrid ignores ACTNUM in Deck, and therefore needs ACTNUM
         /// explicitly.  If a null pointer is passed, every cell is active.
