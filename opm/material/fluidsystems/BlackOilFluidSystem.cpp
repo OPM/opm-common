@@ -39,8 +39,8 @@
 namespace Opm {
 
 #if HAVE_ECL_INPUT
-template <class Scalar, class IndexTraits, template<typename> typename Storage>
-void BlackOilFluidSystem<Scalar,IndexTraits, Storage>::
+template <class Scalar, class IndexTraits, template<typename> typename Storage, template<typename> typename SmartPointer>
+void BlackOilFluidSystem<Scalar,IndexTraits, Storage, SmartPointer>::
 initFromState(const EclipseState& eclState, const Schedule& schedule)
 {
     if (eclState.getSimulationConfig().useEnthalpy()) {
@@ -225,37 +225,37 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
 #endif
 
 #define INSTANTIATE_TYPE(T) \
-    template<> unsigned char BlackOilFluidSystem<T, BlackOilDefaultIndexTraits, VectorWithDefaultAllocator>::numActivePhases_ = 0; \
-    template<> std::array<bool, BlackOilFluidSystem<T, BlackOilDefaultIndexTraits, VectorWithDefaultAllocator>::numPhases> \
-        BlackOilFluidSystem<T, BlackOilDefaultIndexTraits, VectorWithDefaultAllocator>::phaseIsActive_ = {false, false, false}; \
-    template<> std::array<short, BlackOilFluidSystem<T, BlackOilDefaultIndexTraits, VectorWithDefaultAllocator>::numPhases> \
-        BlackOilFluidSystem<T, BlackOilDefaultIndexTraits, VectorWithDefaultAllocator>::activeToCanonicalPhaseIdx_ = {0, 1, 2}; \
-    template<> std::array<short, BlackOilFluidSystem<T, BlackOilDefaultIndexTraits, VectorWithDefaultAllocator>::numPhases> \
-        BlackOilFluidSystem<T , BlackOilDefaultIndexTraits, VectorWithDefaultAllocator>::canonicalToActivePhaseIdx_ = {0, 1, 2}; \
-    template<> T BlackOilFluidSystem<T, BlackOilDefaultIndexTraits, VectorWithDefaultAllocator>::surfaceTemperature = 0.0; \
-    template<> T BlackOilFluidSystem<T, BlackOilDefaultIndexTraits, VectorWithDefaultAllocator>::surfacePressure = 0.0; \
-    template<> T BlackOilFluidSystem<T, BlackOilDefaultIndexTraits, VectorWithDefaultAllocator>::reservoirTemperature_ = 0.0; \
-    template<> bool BlackOilFluidSystem<T, BlackOilDefaultIndexTraits, VectorWithDefaultAllocator>::enableDissolvedGas_ = true; \
-    template<> bool BlackOilFluidSystem<T, BlackOilDefaultIndexTraits, VectorWithDefaultAllocator>::enableDissolvedGasInWater_ = false; \
-    template<> bool BlackOilFluidSystem<T, BlackOilDefaultIndexTraits, VectorWithDefaultAllocator>::enableVaporizedOil_ = false; \
-    template<> bool BlackOilFluidSystem<T, BlackOilDefaultIndexTraits, VectorWithDefaultAllocator>::enableVaporizedWater_ = false; \
-    template<> bool BlackOilFluidSystem<T, BlackOilDefaultIndexTraits, VectorWithDefaultAllocator>::enableDiffusion_ = false; \
+    template<> unsigned char BlackOilFluidSystem<T, BlackOilDefaultIndexTraits, VectorWithDefaultAllocator, std::shared_ptr>::numActivePhases_ = 0; \
+    template<> std::array<bool, BlackOilFluidSystem<T, BlackOilDefaultIndexTraits, VectorWithDefaultAllocator, std::shared_ptr>::numPhases> \
+        BlackOilFluidSystem<T, BlackOilDefaultIndexTraits, VectorWithDefaultAllocator, std::shared_ptr>::phaseIsActive_ = {false, false, false}; \
+    template<> std::array<short, BlackOilFluidSystem<T, BlackOilDefaultIndexTraits, VectorWithDefaultAllocator, std::shared_ptr>::numPhases> \
+        BlackOilFluidSystem<T, BlackOilDefaultIndexTraits, VectorWithDefaultAllocator, std::shared_ptr>::activeToCanonicalPhaseIdx_ = {0, 1, 2}; \
+    template<> std::array<short, BlackOilFluidSystem<T, BlackOilDefaultIndexTraits, VectorWithDefaultAllocator, std::shared_ptr>::numPhases> \
+        BlackOilFluidSystem<T , BlackOilDefaultIndexTraits, VectorWithDefaultAllocator, std::shared_ptr>::canonicalToActivePhaseIdx_ = {0, 1, 2}; \
+    template<> T BlackOilFluidSystem<T, BlackOilDefaultIndexTraits, VectorWithDefaultAllocator, std::shared_ptr>::surfaceTemperature = 0.0; \
+    template<> T BlackOilFluidSystem<T, BlackOilDefaultIndexTraits, VectorWithDefaultAllocator, std::shared_ptr>::surfacePressure = 0.0; \
+    template<> T BlackOilFluidSystem<T, BlackOilDefaultIndexTraits, VectorWithDefaultAllocator, std::shared_ptr>::reservoirTemperature_ = 0.0; \
+    template<> bool BlackOilFluidSystem<T, BlackOilDefaultIndexTraits, VectorWithDefaultAllocator, std::shared_ptr>::enableDissolvedGas_ = true; \
+    template<> bool BlackOilFluidSystem<T, BlackOilDefaultIndexTraits, VectorWithDefaultAllocator, std::shared_ptr>::enableDissolvedGasInWater_ = false; \
+    template<> bool BlackOilFluidSystem<T, BlackOilDefaultIndexTraits, VectorWithDefaultAllocator, std::shared_ptr>::enableVaporizedOil_ = false; \
+    template<> bool BlackOilFluidSystem<T, BlackOilDefaultIndexTraits, VectorWithDefaultAllocator, std::shared_ptr>::enableVaporizedWater_ = false; \
+    template<> bool BlackOilFluidSystem<T, BlackOilDefaultIndexTraits, VectorWithDefaultAllocator, std::shared_ptr>::enableDiffusion_ = false; \
     template<> std::shared_ptr<OilPvtMultiplexer<T>> \
-        BlackOilFluidSystem<T, BlackOilDefaultIndexTraits, VectorWithDefaultAllocator>::oilPvt_ = {}; \
+        BlackOilFluidSystem<T, BlackOilDefaultIndexTraits, VectorWithDefaultAllocator, std::shared_ptr>::oilPvt_ = {}; \
     template<> std::shared_ptr<GasPvtMultiplexer<T>> \
-        BlackOilFluidSystem<T, BlackOilDefaultIndexTraits, VectorWithDefaultAllocator>::gasPvt_ = {}; \
+        BlackOilFluidSystem<T, BlackOilDefaultIndexTraits, VectorWithDefaultAllocator, std::shared_ptr>::gasPvt_ = {}; \
     template<> std::shared_ptr<WaterPvtMultiplexer<T>> \
-        BlackOilFluidSystem<T, BlackOilDefaultIndexTraits, VectorWithDefaultAllocator>::waterPvt_ = {}; \
+        BlackOilFluidSystem<T, BlackOilDefaultIndexTraits, VectorWithDefaultAllocator, std::shared_ptr>::waterPvt_ = {}; \
     template<> std::vector<std::array<T, 3>> \
-        BlackOilFluidSystem<T, BlackOilDefaultIndexTraits, VectorWithDefaultAllocator>::referenceDensity_ = {}; \
+        BlackOilFluidSystem<T, BlackOilDefaultIndexTraits, VectorWithDefaultAllocator, std::shared_ptr>::referenceDensity_ = {}; \
     template<> std::vector<std::array<T, 3>> \
-        BlackOilFluidSystem<T, BlackOilDefaultIndexTraits, VectorWithDefaultAllocator>::molarMass_ = {}; \
+        BlackOilFluidSystem<T, BlackOilDefaultIndexTraits, VectorWithDefaultAllocator, std::shared_ptr>::molarMass_ = {}; \
     template<> std::vector<std::array<T, 9>> \
-        BlackOilFluidSystem<T, BlackOilDefaultIndexTraits, VectorWithDefaultAllocator>::diffusionCoefficients_ = {}; \
-    template<> bool BlackOilFluidSystem<T, BlackOilDefaultIndexTraits, VectorWithDefaultAllocator>::isInitialized_ = false; \
-    template<> bool BlackOilFluidSystem<T, BlackOilDefaultIndexTraits, VectorWithDefaultAllocator>::useSaturatedTables_ = false; \
-    template<> bool BlackOilFluidSystem<T, BlackOilDefaultIndexTraits, VectorWithDefaultAllocator>::enthalpy_eq_energy_ = false; \
-    template class BlackOilFluidSystem<T,BlackOilDefaultIndexTraits, VectorWithDefaultAllocator>;
+        BlackOilFluidSystem<T, BlackOilDefaultIndexTraits, VectorWithDefaultAllocator, std::shared_ptr>::diffusionCoefficients_ = {}; \
+    template<> bool BlackOilFluidSystem<T, BlackOilDefaultIndexTraits, VectorWithDefaultAllocator, std::shared_ptr>::isInitialized_ = false; \
+    template<> bool BlackOilFluidSystem<T, BlackOilDefaultIndexTraits, VectorWithDefaultAllocator, std::shared_ptr>::useSaturatedTables_ = false; \
+    template<> bool BlackOilFluidSystem<T, BlackOilDefaultIndexTraits, VectorWithDefaultAllocator, std::shared_ptr>::enthalpy_eq_energy_ = false; \
+    template class BlackOilFluidSystem<T,BlackOilDefaultIndexTraits, VectorWithDefaultAllocator, std::shared_ptr>;
     // IMPORTANT: The class must be instantiated after the template template specializations
     //    or else the static variable above will appear as undefined in the generated object file.
 

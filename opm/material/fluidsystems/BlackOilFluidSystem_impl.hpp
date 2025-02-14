@@ -167,7 +167,7 @@ auto getSaltSaturation_(typename std::enable_if<HasMember_saltSaturation<FluidSt
  *
  * \tparam Scalar The type used for scalar floating point values
  */
-template <class Scalar, class IndexTraits = BlackOilDefaultIndexTraits, template<typename> typename Storage = VectorWithDefaultAllocator>
+template <class Scalar, class IndexTraits = BlackOilDefaultIndexTraits, template<typename> typename Storage = VectorWithDefaultAllocator, template<typename> typename SmartPointer = std::shared_ptr>
 class FLUIDSYSTEM_CLASSNAME : public BaseFluidSystem<Scalar, FLUIDSYSTEM_CLASSNAME<Scalar, IndexTraits, Storage> >
 {
     using ThisType = FLUIDSYSTEM_CLASSNAME;
@@ -309,19 +309,19 @@ public:
     /*!
      * \brief Set the pressure-volume-saturation (PVT) relations for the gas phase.
      */
-    STATIC_OR_DEVICE void setGasPvt(std::shared_ptr<GasPvt> pvtObj)
+    STATIC_OR_DEVICE void setGasPvt(SmartPointer<GasPvt> pvtObj)
     { gasPvt_ = pvtObj; }
 
     /*!
      * \brief Set the pressure-volume-saturation (PVT) relations for the oil phase.
      */
-    STATIC_OR_DEVICE void setOilPvt(std::shared_ptr<OilPvt> pvtObj)
+    STATIC_OR_DEVICE void setOilPvt(SmartPointer<OilPvt> pvtObj)
     { oilPvt_ = pvtObj; }
 
     /*!
      * \brief Set the pressure-volume-saturation (PVT) relations for the water phase.
      */
-    STATIC_OR_DEVICE void setWaterPvt(std::shared_ptr<WaterPvt> pvtObj)
+    STATIC_OR_DEVICE void setWaterPvt(SmartPointer<WaterPvt> pvtObj)
     { waterPvt_ = pvtObj; }
 
     STATIC_OR_DEVICE void setVapPars(const Scalar par1, const Scalar par2)
@@ -1708,9 +1708,9 @@ private:
 
     STATIC_OR_NOTHING Scalar reservoirTemperature_;
 
-    STATIC_OR_NOTHING std::shared_ptr<GasPvt> gasPvt_;
-    STATIC_OR_NOTHING std::shared_ptr<OilPvt> oilPvt_;
-    STATIC_OR_NOTHING std::shared_ptr<WaterPvt> waterPvt_;
+    STATIC_OR_NOTHING SmartPointer<GasPvt> gasPvt_;
+    STATIC_OR_NOTHING SmartPointer<OilPvt> oilPvt_;
+    STATIC_OR_NOTHING SmartPointer<WaterPvt> waterPvt_;
 
     STATIC_OR_NOTHING bool enableDissolvedGas_;
     STATIC_OR_NOTHING bool enableDissolvedGasInWater_;
@@ -1721,9 +1721,9 @@ private:
     // HACK for GCC 4.4: the array size has to be specified using the literal value '3'
     // here, because GCC 4.4 seems to be unable to determine the number of phases from
     // the BlackOil fluid system in the attribute declaration below...
-    STATIC_OR_NOTHING std::vector<std::array<Scalar, /*numPhases=*/3> > referenceDensity_;
-    STATIC_OR_NOTHING std::vector<std::array<Scalar, /*numComponents=*/3> > molarMass_;
-    STATIC_OR_NOTHING std::vector<std::array<Scalar, /*numComponents=*/3 * /*numPhases=*/3> > diffusionCoefficients_;
+    STATIC_OR_NOTHING Storage<std::array<Scalar, /*numPhases=*/3> > referenceDensity_;
+    STATIC_OR_NOTHING Storage<std::array<Scalar, /*numComponents=*/3> > molarMass_;
+    STATIC_OR_NOTHING Storage<std::array<Scalar, /*numComponents=*/3 * /*numPhases=*/3> > diffusionCoefficients_;
 
     STATIC_OR_NOTHING std::array<short, numPhases> activeToCanonicalPhaseIdx_;
     STATIC_OR_NOTHING std::array<short, numPhases> canonicalToActivePhaseIdx_;
@@ -1733,8 +1733,8 @@ private:
     STATIC_OR_NOTHING bool enthalpy_eq_energy_;
 };
 
-template <class Scalar, class IndexTraits, template<typename> typename Storage>
-void FLUIDSYSTEM_CLASSNAME<Scalar,IndexTraits, Storage>::
+template <class Scalar, class IndexTraits, template<typename> typename Storage, template<typename> typename SmartPointer>
+void FLUIDSYSTEM_CLASSNAME<Scalar,IndexTraits, Storage, SmartPointer>::
 initBegin(std::size_t numPvtRegions)
 {
     isInitialized_ = false;
@@ -1760,8 +1760,8 @@ initBegin(std::size_t numPvtRegions)
     resizeArrays_(numPvtRegions);
 }
 
-template <class Scalar, class IndexTraits, template<typename> typename Storage>
-void FLUIDSYSTEM_CLASSNAME<Scalar,IndexTraits,Storage>::
+template <class Scalar, class IndexTraits, template<typename> typename Storage, template<typename> typename SmartPointer>
+void FLUIDSYSTEM_CLASSNAME<Scalar,IndexTraits,Storage, SmartPointer>::
 setReferenceDensities(Scalar rhoOil,
                       Scalar rhoWater,
                       Scalar rhoGas,
@@ -1772,8 +1772,8 @@ setReferenceDensities(Scalar rhoOil,
     referenceDensity_[regionIdx][gasPhaseIdx] = rhoGas;
 }
 
-template <class Scalar, class IndexTraits, template<typename> typename Storage>
-void FLUIDSYSTEM_CLASSNAME<Scalar,IndexTraits, Storage>::initEnd()
+template <class Scalar, class IndexTraits, template<typename> typename Storage, template<typename> typename SmartPointer>
+void FLUIDSYSTEM_CLASSNAME<Scalar,IndexTraits, Storage, SmartPointer>::initEnd()
 {
     // calculate the final 2D functions which are used for interpolation.
     const std::size_t num_regions = molarMass_.size();
@@ -1810,8 +1810,8 @@ void FLUIDSYSTEM_CLASSNAME<Scalar,IndexTraits, Storage>::initEnd()
     isInitialized_ = true;
 }
 
-template <class Scalar, class IndexTraits, template<typename> typename Storage>
-std::string_view FLUIDSYSTEM_CLASSNAME<Scalar,IndexTraits, Storage>::
+template <class Scalar, class IndexTraits, template<typename> typename Storage, template<typename> typename SmartPointer>
+std::string_view FLUIDSYSTEM_CLASSNAME<Scalar,IndexTraits, Storage, SmartPointer>::
 phaseName(unsigned phaseIdx)
 {
     switch (phaseIdx) {
@@ -1827,8 +1827,8 @@ phaseName(unsigned phaseIdx)
     }
 }
 
-template <class Scalar, class IndexTraits, template<typename> typename Storage>
-unsigned FLUIDSYSTEM_CLASSNAME<Scalar,IndexTraits,Storage>::
+template <class Scalar, class IndexTraits, template<typename> typename Storage, template<typename> typename SmartPointer>
+unsigned FLUIDSYSTEM_CLASSNAME<Scalar,IndexTraits,Storage, SmartPointer>::
 solventComponentIndex(unsigned phaseIdx)
 {
     switch (phaseIdx) {
@@ -1844,8 +1844,8 @@ solventComponentIndex(unsigned phaseIdx)
     }
 }
 
-template <class Scalar, class IndexTraits, template<typename> typename Storage>
-unsigned FLUIDSYSTEM_CLASSNAME<Scalar,IndexTraits,Storage>::
+template <class Scalar, class IndexTraits, template<typename> typename Storage, template<typename> typename SmartPointer>
+unsigned FLUIDSYSTEM_CLASSNAME<Scalar,IndexTraits,Storage, SmartPointer>::
 soluteComponentIndex(unsigned phaseIdx)
 {
     switch (phaseIdx) {
@@ -1866,8 +1866,8 @@ soluteComponentIndex(unsigned phaseIdx)
     }
 }
 
-template <class Scalar, class IndexTraits, template<typename> typename Storage>
-std::string_view FLUIDSYSTEM_CLASSNAME<Scalar,IndexTraits,Storage>::
+template <class Scalar, class IndexTraits, template<typename> typename Storage, template<typename> typename SmartPointer>
+std::string_view FLUIDSYSTEM_CLASSNAME<Scalar,IndexTraits,Storage, SmartPointer>::
 componentName(unsigned compIdx)
 {
     switch (compIdx) {
@@ -1883,16 +1883,16 @@ componentName(unsigned compIdx)
     }
 }
 
-template <class Scalar, class IndexTraits, template<typename> typename Storage>
-short FLUIDSYSTEM_CLASSNAME<Scalar,IndexTraits, Storage>::
+template <class Scalar, class IndexTraits, template<typename> typename Storage, template<typename> typename SmartPointer>
+short FLUIDSYSTEM_CLASSNAME<Scalar,IndexTraits, Storage, SmartPointer>::
 activeToCanonicalPhaseIdx(unsigned activePhaseIdx)
 {
     assert(activePhaseIdx<numActivePhases());
     return activeToCanonicalPhaseIdx_[activePhaseIdx];
 }
 
-template <class Scalar, class IndexTraits, template<typename> typename Storage>
-short FLUIDSYSTEM_CLASSNAME<Scalar,IndexTraits, Storage>::
+template <class Scalar, class IndexTraits, template<typename> typename Storage, template<typename> typename SmartPointer>
+short FLUIDSYSTEM_CLASSNAME<Scalar,IndexTraits, Storage, SmartPointer>::
 canonicalToActivePhaseIdx(unsigned phaseIdx)
 {
     assert(phaseIdx<numPhases);
@@ -1900,8 +1900,8 @@ canonicalToActivePhaseIdx(unsigned phaseIdx)
     return canonicalToActivePhaseIdx_[phaseIdx];
 }
 
-template <class Scalar, class IndexTraits, template<typename> typename Storage>
-void FLUIDSYSTEM_CLASSNAME<Scalar,IndexTraits,Storage>::
+template <class Scalar, class IndexTraits, template<typename> typename Storage, template<typename> typename SmartPointer>
+void FLUIDSYSTEM_CLASSNAME<Scalar,IndexTraits,Storage, SmartPointer>::
 resizeArrays_(std::size_t numRegions)
 {
     molarMass_.resize(numRegions);
@@ -1909,7 +1909,7 @@ resizeArrays_(std::size_t numRegions)
 }
 
 #ifdef COMPILING_STATIC_FLUID_SYSTEM
-template <typename T> using BOFS = FLUIDSYSTEM_CLASSNAME<T, BlackOilDefaultIndexTraits, std::vector>;
+template <typename T> using BOFS = FLUIDSYSTEM_CLASSNAME<T, BlackOilDefaultIndexTraits, VectorWithDefaultAllocator, std::shared_ptr>;
 
 #define DECLARE_INSTANCE(T)                                                           \
 template<> unsigned char BOFS<T>::numActivePhases_;                                   \
