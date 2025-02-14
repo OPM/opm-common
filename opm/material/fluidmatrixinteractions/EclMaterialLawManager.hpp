@@ -310,17 +310,20 @@ public:
     bool enablePpcwmax() const
     { return enablePpcwmax_; }
 
+    const EclHysteresisConfig& hysteresisConfig() const
+    { return *hysteresisConfig_; }
+
     bool enableHysteresis() const
     { return hysteresisConfig_->enableHysteresis(); }
 
     bool enablePCHysteresis() const
-    { return (enableHysteresis() && hysteresisConfig_->pcHysteresisModel() >= 0); }
+    { return hysteresisConfig_->enablePCHysteresis(); }
 
     bool enableWettingHysteresis() const
-    { return (enableHysteresis() && hysteresisConfig_->krHysteresisModel() >= 4); }
+    { return hysteresisConfig_->enableWettingHysteresis(); }
 
     bool enableNonWettingHysteresis() const
-    { return (enableHysteresis() && hysteresisConfig_->krHysteresisModel() >= 0); }
+    { return hysteresisConfig_->enableNonWettingHysteresis(); }
 
     MaterialLawParams& materialLawParams(unsigned elemIdx)
     {

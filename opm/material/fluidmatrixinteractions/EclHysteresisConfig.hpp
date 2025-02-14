@@ -71,6 +71,9 @@ public:
     int pcHysteresisModel() const
     { return pcHysteresisModel_; }
 
+    bool enablePCHysteresis() const
+    { return enableHysteresis() && pcHysteresisModel_ >= 0; }
+
     /*!
      * \brief Set the type of the hysteresis model which is used for relative permeability.
      *
@@ -86,6 +89,12 @@ public:
      */
     void setKrHysteresisModel(int value)
     { krHysteresisModel_ = value; }
+
+    bool enableWettingHysteresis() const
+    { return enableHysteresis() && krHysteresisModel_ >= 4; }
+
+    bool enableNonWettingHysteresis() const
+    { return enableHysteresis() && krHysteresisModel_ >= 0; }
 
     /*!
      * \brief Return the type of the hysteresis model which is used for relative permeability.
