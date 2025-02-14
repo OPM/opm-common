@@ -81,6 +81,7 @@ namespace Opm {
                     const std::vector<double>& zcorn ,
                     const int * actnum = nullptr);
 
+        virtual ~EclipseGrid() = default;
 
         /// EclipseGrid ignores ACTNUM in Deck, and therefore needs ACTNUM
         /// explicitly.  If a null pointer is passed, every cell is active.
@@ -109,7 +110,7 @@ namespace Opm {
             return activeIndex(i, j, k);
         }
 
-       size_t getActiveIndex(size_t globalIndex) const {
+        size_t getActiveIndex(size_t globalIndex) const {
             return activeIndex(globalIndex);
         }
 
@@ -183,7 +184,7 @@ namespace Opm {
         /// of each element is the corresponding global index.
         const std::vector<int>& getActiveMap() const;
 
-        void init_lgr_cells(const LgrCollection& lgr_input); 
+        void init_lgr_cells(const LgrCollection& lgr_input);
         void create_lgr_cells_tree(const LgrCollection& );
         /// \brief get cell center, and center and normal of bottom face
         std::tuple<std::array<double, 3>,std::array<double, 3>,std::array<double, 3>>
@@ -260,16 +261,17 @@ namespace Opm {
 
         static bool hasEqualDVDEPTHZ(const Deck&);
         static bool allEqual(const std::vector<double> &v);
-        std::vector<EclipseGridLGR> lgr_children_cells;
+
         /**
         * @brief Sets Local Grid Refinement for the EclipseGrid.
-          * 
-        * @param lgr_tag The string that contains the name of a given LGR cell. 
+        *
+        * @param lgr_tag The string that contains the name of a given LGR cell.
         * @param coords The coordinates of a given LGR cell in  CPG COORDSformat.
         * @param zcorn The z-coordinates values of a given LGR cell in CPG ZCORN format.
         */
         virtual void set_lgr_refinement(const std::string& lgr_tag, const std::vector<double>& coords, const std::vector<double>& zcorn);
-               
+
+        std::vector<EclipseGridLGR> lgr_children_cells;
 
     protected:
         std::size_t lgr_global_counter = 0;
@@ -280,12 +282,12 @@ namespace Opm {
         std::vector<std::size_t> lgr_active_index;
         std::vector<std::size_t> lgr_level_active_map;
         std::vector<std::string> all_lgr_labels;
-        std::map<std::vector<std::size_t>, std::size_t> num_lgr_children_cells;        
+        std::map<std::vector<std::size_t>, std::size_t> num_lgr_children_cells;
         std::vector<double> m_zcorn;
         std::vector<double> m_coord;
         std::vector<int> m_actnum;
         std::vector<std::size_t> m_print_order_lgr_cells;
-       // Input grid data.
+        // Input grid data.
         mutable std::optional<std::vector<double>> m_input_zcorn;
         mutable std::optional<std::vector<double>> m_input_coord;
 
@@ -307,7 +309,6 @@ namespace Opm {
         bool m_circle = false;
         size_t zcorn_fixed = 0;
         bool m_useActnumFromGdfile = false;
-
 
         std::optional<MapAxes> m_mapaxes;
 
@@ -372,48 +373,57 @@ namespace Opm {
                             std::array<double,8>& Y,
                             std::array<double,8>& Z) const;
 
-   };
+    };
 
-    class EclipseGridLGR: public EclipseGrid
-    // Specialized Class to describe LGR refined cells. 
+    /// Specialized Class to describe LGR refined cells.
+    class EclipseGridLGR : public EclipseGrid
     {
     public:
-      using vec_size_t = std::vector<std::size_t>;
-      EclipseGridLGR() = default;
-      EclipseGridLGR(const std::string& self_label, const std::string& father_label_, 
-                     size_t nx, size_t ny, size_t nz, 
-                     const vec_size_t& father_lgr_index, const std::array<int,3>& low_fahterIJK_, 
-                     const std::array<int,3>& up_fahterIJK_);
-      ~EclipseGridLGR() = default;
-      const vec_size_t& getFatherGlobalID() const;
-      void save(Opm::EclIO::EclOutput&, const std::vector<Opm::NNCdata>&, const Opm::UnitSystem&) const;
-      void save_nnc(Opm::EclIO::EclOutput&) const;      
-      void set_lgr_global_counter(std::size_t counter){
-        lgr_global_counter = counter;
-      }
-      const vec_size_t& get_father_global() const{
-        return father_global;
-      }
-     void set_hostnum(std::vector<int>&);
+        using vec_size_t = std::vector<std::size_t>;
+        EclipseGridLGR() = default;
+        EclipseGridLGR(const std::string& self_label,
+                       const std::string& father_label_,
+                       size_t nx,
+                       size_t ny,
+                       size_t nz,
+                       const vec_size_t& father_lgr_index,
+                       const std::array<int, 3>& low_fahterIJK_,
+                       const std::array<int, 3>& up_fahterIJK_);
+        ~EclipseGridLGR() = default;
+        const vec_size_t& getFatherGlobalID() const;
+        void save(Opm::EclIO::EclOutput&, const std::vector<Opm::NNCdata>&, const Opm::UnitSystem&) const;
+        void save_nnc(Opm::EclIO::EclOutput&) const;
+        void set_lgr_global_counter(std::size_t counter)
+        {
+            lgr_global_counter = counter;
+        }
+        const vec_size_t& get_father_global() const
+        {
+            return father_global;
+        }
+        void set_hostnum(std::vector<int>&);
 
-      /**
-      * @brief Sets Local Grid Refinement for the EclipseGridLGR.
-      * 
-      * @param lgr_tag The string that contains the name of a given LGR cell. 
-      * @param coords The coordinates of a given LGR cell in  CPG COORDSformat.
-      * @param zcorn The z-coordinates values of a given LGR cell in CPG ZCORN format.
-      */
-      void set_lgr_refinement(const std::string& lgr_tag, const std::vector<double>& coord, const std::vector<double>& zcorn) override;                 
+        /**
+         * @brief Sets Local Grid Refinement for the EclipseGridLGR.
+         *
+         * @param lgr_tag The string that contains the name of a given LGR cell.
+         * @param coords The coordinates of a given LGR cell in  CPG COORDSformat.
+         * @param zcorn The z-coordinates values of a given LGR cell in CPG ZCORN format.
+         */
+        void set_lgr_refinement(const std::string& lgr_tag,
+                                const std::vector<double>& coord,
+                                const std::vector<double>& zcorn) override;
 
-     void set_lgr_refinement(const std::vector<double>&, const std::vector<double> &);                 
+        void set_lgr_refinement(const std::vector<double>&, const std::vector<double>&);
+
     private:
-      void init_father_global();
-      std::string father_label;
-      // references global on the father label
-      vec_size_t father_global;
-      std::array<int,3> low_fahterIJK{};
-      std::array<int,3> up_fahterIJK{};
-      std::vector<int> m_hostnum;
+        void init_father_global();
+        std::string father_label;
+        // references global on the father label
+        vec_size_t father_global;
+        std::array<int, 3> low_fahterIJK {};
+        std::array<int, 3> up_fahterIJK {};
+        std::vector<int> m_hostnum;
     };
 
 
