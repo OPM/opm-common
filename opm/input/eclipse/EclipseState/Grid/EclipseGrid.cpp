@@ -2025,12 +2025,12 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
         auto  IJK_location = [](const std::size_t&  nx, const std::size_t& ny,const std::size_t& nz, 
                                           const std::size_t& host_nx, const std::size_t& host_ny, const std::size_t& host_nz,
                                           const std::size_t& base_host_nx, const std::size_t& base_host_ny, const std::size_t& base_host_nz){
-            auto [i_list, j_list, k_list] = VectorUtil::generate_cartesian_product(0,nx-1, 0, ny-1, 0, nz-1);            
-            std::vector<std::size_t> resultI = VectorUtil::scalarVectorOperation(host_nx, i_list,  std::divides<std::size_t>{});
+            auto [i_list, j_list, k_list] = VectorUtil::generate_cartesian_product(0, nx-1, 0, ny-1, 0, nz-1);
+            std::vector<std::size_t> resultI = VectorUtil::scalarVectorOperation(nx/host_nx, i_list,  std::divides<std::size_t>{});
             resultI = VectorUtil::vectorScalarOperation(resultI, base_host_nx, std::plus<std::size_t>{});
-            std::vector<std::size_t> resultJ = VectorUtil::scalarVectorOperation(host_ny, j_list,  std::divides<std::size_t>{});
+            std::vector<std::size_t> resultJ = VectorUtil::scalarVectorOperation(ny/host_ny, j_list,  std::divides<std::size_t>{});
             resultJ = VectorUtil::vectorScalarOperation(resultJ, base_host_ny , std::plus<std::size_t>{});
-            std::vector<std::size_t> resultK = VectorUtil::scalarVectorOperation(host_nz, k_list,  std::divides<std::size_t>{});
+            std::vector<std::size_t> resultK = VectorUtil::scalarVectorOperation(nz/host_nz, k_list,  std::divides<std::size_t>{});
             resultK = VectorUtil::vectorScalarOperation(resultK, base_host_nz, std::plus<std::size_t>{});
             return std::make_tuple(resultI, resultJ, resultK);
         }; 
@@ -2503,6 +2503,12 @@ namespace Opm {
         init_father_global();
         lgr_label= self_label;
     }
+
+    const std::vector<int>& EclipseGridLGR::get_hostnum(void) const
+    {
+        return m_hostnum;
+    }
+
     void EclipseGridLGR::set_hostnum(std::vector<int>& hostnum)
     {
         std::transform(hostnum.begin(),hostnum.end(), hostnum.begin(), [](int a){return a+1;});
