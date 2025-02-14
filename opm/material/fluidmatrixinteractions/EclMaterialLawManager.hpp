@@ -310,6 +310,9 @@ public:
     bool enablePpcwmax() const
     { return enablePpcwmax_; }
 
+    const EclHysteresisConfig& hysteresisConfig() const
+    { return *hysteresisConfig_; }
+
     bool enableHysteresis() const
     { return hysteresisConfig_->enableHysteresis(); }
 
