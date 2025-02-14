@@ -23,11 +23,6 @@
 
 #include <boost/version.hpp>
 
-#include <opm/input/eclipse/Parser/ParserKeywords/P.hpp>
-#include <opm/input/eclipse/Parser/Parser.hpp>
-#include <opm/input/eclipse/Deck/Deck.hpp>
-#include <opm/input/eclipse/Units/UnitSystem.hpp>
-
 // generic table classes
 #include <opm/input/eclipse/EclipseState/Tables/SimpleTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/PvtxTable.hpp>
@@ -38,18 +33,32 @@
 #include <opm/input/eclipse/EclipseState/Tables/SwofTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/SgofTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/PlyadsTable.hpp>
+
 #include <opm/input/eclipse/Schedule/VFPProdTable.hpp>
 #include <opm/input/eclipse/Schedule/VFPInjTable.hpp>
+
+#include <opm/input/eclipse/Units/UnitSystem.hpp>
+#include <opm/input/eclipse/Units/Units.hpp>
+
+#include <opm/input/eclipse/Deck/Deck.hpp>
+
+#include <opm/input/eclipse/Parser/Parser.hpp>
+
+#include <opm/input/eclipse/Parser/ParserKeywords/P.hpp>
 
 #include <boost/date_time/posix_time/posix_time.hpp>
 
 #include <filesystem>
-#include <stdexcept>
 #include <iostream>
+#include <stdexcept>
+#include <string>
 
 using namespace Opm;
 
-inline std::string prefix() {
+namespace {
+
+std::string casePrefix()
+{
 #if BOOST_VERSION / 100000 == 1 && BOOST_VERSION / 100 % 1000 < 71
     return boost::unit_test::framework::master_test_suite().argv[2];
 #else
@@ -57,9 +66,13 @@ inline std::string prefix() {
 #endif
 }
 
+} // Anonymous namespace
+
+BOOST_AUTO_TEST_SUITE(PvtX)
+
 BOOST_AUTO_TEST_CASE( PvtxNumTables1 ) {
     Parser parser;
-    std::filesystem::path deckFile(prefix() + "TABLES/PVTX1.DATA");
+    std::filesystem::path deckFile(casePrefix() + "TABLES/PVTX1.DATA");
     auto deck =  parser.parseFile(deckFile.string());
     BOOST_CHECK_EQUAL( PvtxTable::numTables( deck.get<ParserKeywords::PVTO>().back()) , 1);
 
@@ -69,10 +82,9 @@ BOOST_AUTO_TEST_CASE( PvtxNumTables1 ) {
     BOOST_CHECK_EQUAL( range.second , 2 );
 }
 
-
 BOOST_AUTO_TEST_CASE( PvtxNumTables2 ) {
     Parser parser;
-    std::filesystem::path deckFile(prefix() + "TABLES/PVTO2.DATA");
+    std::filesystem::path deckFile(casePrefix() + "TABLES/PVTO2.DATA");
     auto deck =  parser.parseFile(deckFile.string());
     BOOST_CHECK_EQUAL( PvtxTable::numTables( deck.get<ParserKeywords::PVTO>().back()) , 3);
 
@@ -120,11 +132,9 @@ BOOST_AUTO_TEST_CASE( PvtxNumTables3 ) {
     BOOST_CHECK_EQUAL( range2.second , 5 );
 }
 
-
-
 BOOST_AUTO_TEST_CASE( PVTOSaturatedTable ) {
     Parser parser;
-    std::filesystem::path deckFile(prefix() + "TABLES/PVTX1.DATA");
+    std::filesystem::path deckFile(casePrefix() + "TABLES/PVTX1.DATA");
     auto deck =  parser.parseFile(deckFile.string());
     Opm::TableManager tables(deck);
     const auto& pvtoTables = tables.getPvtoTables( );
@@ -167,39 +177,75 @@ BOOST_AUTO_TEST_CASE( PVTOSaturatedTable ) {
     }
 }
 
+BOOST_AUTO_TEST_CASE( PVTGSaturatedTable )
+{
+    // Input PVTG Table
+    //
+    //     PVTG
+    // --
+    //      20.00    0.00002448   0.061895     0.01299
+    //               0.00001224   0.061810     0.01300
+    //               0.00000000   0.061725     0.01300 /
+    //      40.00    0.00000628   0.030252     0.01383
+    //               0.00000314   0.030249     0.01383
+    //               0.00000000   0.030245     0.01383 /
+    // /
+    //
+    // Gets padded to low pressure of 1 bar.  Two extra rows inserted, for
+    // p=1 bar and p=pLim=2.063 bar.
 
-BOOST_AUTO_TEST_CASE( PVTGSaturatedTable ) {
-    Parser parser;
-    std::filesystem::path deckFile(prefix() + "TABLES/PVTX1.DATA");
-    auto deck =  parser.parseFile(deckFile.string());
-    Opm::TableManager tables(deck);
-    const auto& pvtgTables = tables.getPvtgTables( );
+    const std::filesystem::path deckFile(casePrefix() + "TABLES/PVTX1.DATA");
+    const auto deck = Parser{}.parseFile(deckFile.string());
+    const Opm::TableManager tables(deck);
+    const auto& pvtgTables = tables.getPvtgTables();
     const auto& pvtgTable = pvtgTables[0];
 
-    const auto& saturatedTable = pvtgTable.getSaturatedTable( );
-    BOOST_CHECK_EQUAL( saturatedTable.numColumns( ) , 4 );
-    BOOST_CHECK_EQUAL( saturatedTable.numRows( ) , 2 );
+    const auto& saturatedTable = pvtgTable.getSaturatedTable();
+    BOOST_CHECK_EQUAL(saturatedTable.numColumns(), 4);
+    BOOST_CHECK_EQUAL(saturatedTable.numRows(), 4);
 
-    BOOST_CHECK_EQUAL( saturatedTable.get(1 , 0) , 0.00002448 );
-    BOOST_CHECK_EQUAL( saturatedTable.get(1 , 1) , 0.00000628 );
+    // Gas Pressure
+    BOOST_CHECK_CLOSE(saturatedTable.get(0, 0),  1.0       *unit::barsa, 1.0e-7);
+    BOOST_CHECK_CLOSE(saturatedTable.get(0, 1),  2.06266633*unit::barsa, 2.0e-7);
+    BOOST_CHECK_CLOSE(saturatedTable.get(0, 2), 20.0       *unit::barsa, 1.0e-7);
+    BOOST_CHECK_CLOSE(saturatedTable.get(0, 3), 40.0       *unit::barsa, 1.0e-7);
+
+    // Rv
+    BOOST_CHECK_CLOSE(saturatedTable.get(1, 0), 4.08029736e-05, 1.0e-7);
+    BOOST_CHECK_CLOSE(saturatedTable.get(1, 1), 4.08029736e-05, 1.0e-7);
+    BOOST_CHECK_CLOSE(saturatedTable.get(1, 2), 2.448e-5      , 1.0e-7);
+    BOOST_CHECK_CLOSE(saturatedTable.get(1, 3), 6.28e-6       , 1.0e-7);
+
+    // Gas FVF
+    BOOST_CHECK_CLOSE(saturatedTable.get(2, 0), 1.1     , 1.0e-7);
+    BOOST_CHECK_CLOSE(saturatedTable.get(2, 1), 1.0     , 1.0e-7);
+    BOOST_CHECK_CLOSE(saturatedTable.get(2, 2), 0.061895, 1.0e-7);
+    BOOST_CHECK_CLOSE(saturatedTable.get(2, 3), 0.030252, 1.0e-7);
+
+    // Gas Viscosity
+    constexpr auto cP = prefix::centi*unit::Poise;
+    BOOST_CHECK_CLOSE(saturatedTable.get(3, 0), 4.638198e-3*cP, 1.0e-7);
+    BOOST_CHECK_CLOSE(saturatedTable.get(3, 1), 4.638198e-3*cP, 1.0e-7);
+    BOOST_CHECK_CLOSE(saturatedTable.get(3, 2), 0.01299*cP    , 1.0e-7);
+    BOOST_CHECK_CLOSE(saturatedTable.get(3, 3), 0.01383*cP    , 1.0e-7);
 }
 
 BOOST_AUTO_TEST_CASE( PVTWTable ) {
     const std::string input = R"(
-        RUNSPEC
+RUNSPEC
 
-        DIMENS
-            10 10 10 /
+DIMENS
+    10 10 10 /
 
-        TABDIMS
-            1 2 /
+TABDIMS
+    1 2 /
 
-        PROPS
+PROPS
 
-        PVTW
-            3600.0000 1.00341 3.00E-06 0.52341 0.00E-01 /
-            3900 1 2.67E-06 0.56341 1.20E-07 /
-        )";
+PVTW
+    3600.0000 1.00341 3.00E-06 0.52341 0.00E-01 /
+    3900 1 2.67E-06 0.56341 1.20E-07 /
+)";
 
     auto deck = Parser().parseString( input );
     TableManager tables( deck );
@@ -223,3 +269,5 @@ BOOST_AUTO_TEST_CASE( PVTWTable ) {
     BOOST_CHECK_CLOSE( 0.56341,  rec2.viscosity * 1e3, 1e-5 );
     BOOST_CHECK_CLOSE( 1.20e-07, rec2.viscosibility * 1e5, 1e-5 );
 }
+
+BOOST_AUTO_TEST_SUITE_END() // PvtX

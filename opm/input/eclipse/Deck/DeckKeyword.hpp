@@ -51,7 +51,7 @@ namespace Opm {
         const std::string& name() const;
         void setFixedSize();
         const KeywordLocation& location() const;
-
+        DeckKeyword emptyStructuralCopy() const;
 
         size_t size() const;
         bool empty() const;

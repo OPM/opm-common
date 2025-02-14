@@ -15,23 +15,13 @@
 
    You should have received a copy of the GNU General Public License
    along with OPM.  If not, see <http://www.gnu.org/licenses/>.
-   */
+*/
 
-#include <opm/input/eclipse/Deck/Deck.hpp>
-#include <opm/input/eclipse/Deck/DeckItem.hpp>
-#include <opm/input/eclipse/Deck/DeckKeyword.hpp>
-#include <opm/input/eclipse/Deck/DeckRecord.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/SimpleTable.hpp>
+
 #include <opm/input/eclipse/EclipseState/Tables/ColumnSchema.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/TableColumn.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/TableSchema.hpp>
-#include <opm/input/eclipse/Parser/ParserKeywords/C.hpp>
-#include <opm/input/eclipse/Parser/ParserKeywords/D.hpp>
-#include <opm/input/eclipse/Parser/ParserKeywords/G.hpp>
-#include <opm/input/eclipse/Parser/ParserKeywords/P.hpp>
-#include <opm/input/eclipse/Parser/ParserKeywords/R.hpp>
-#include <opm/input/eclipse/Parser/ParserKeywords/V.hpp>
-#include <opm/input/eclipse/Units/Dimension.hpp>
-#include <opm/input/eclipse/Units/UnitSystem.hpp>
-#include <opm/input/eclipse/Units/Units.hpp>
 
 #include <opm/input/eclipse/EclipseState/Tables/AqutabTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/EnkrvdTable.hpp>
@@ -40,6 +30,7 @@
 #include <opm/input/eclipse/EclipseState/Tables/FoamadsTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/FoammobTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/GasvisctTable.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/GsfTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/ImkrvdTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/ImptvdTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/MiscTable.hpp>
@@ -92,22 +83,396 @@
 #include <opm/input/eclipse/EclipseState/Tables/TlpmixpaTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/TracerVdTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/WatvisctTable.hpp>
-#include <opm/input/eclipse/EclipseState/Tables/GsfTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/WsfTable.hpp>
+
+#include <opm/input/eclipse/Units/Dimension.hpp>
+#include <opm/input/eclipse/Units/UnitSystem.hpp>
+#include <opm/input/eclipse/Units/Units.hpp>
 
 #include <opm/common/utility/OpmInputError.hpp>
 
+#include <opm/input/eclipse/Deck/Deck.hpp>
+#include <opm/input/eclipse/Deck/DeckItem.hpp>
+#include <opm/input/eclipse/Deck/DeckKeyword.hpp>
+#include <opm/input/eclipse/Deck/DeckRecord.hpp>
+
+#include <opm/input/eclipse/Parser/ParserKeywords/C.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/D.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/G.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/P.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/R.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/V.hpp>
+
 #include <algorithm>
+#include <array>
 #include <cstddef>
+#include <functional>
+#include <initializer_list>
 #include <stdexcept>
 #include <string_view>
+#include <utility>
+#include <vector>
 
 #include <stddef.h>
 
 #include <fmt/format.h>
 
+namespace {
+
+    /// Simple query interface for extracting tabulated values of saturated
+    /// gas.
+    ///
+    /// In particular, supports querying the tabulated gas pressure and its
+    /// associated formation volume factor, viscosity and vaporised oil
+    /// concentration ("Rv") values.
+    struct GasPropertyTableInterface
+    {
+        /// Retrieve gas pressure at saturated conditions
+        ///
+        /// \param[in] row Row index in saturated gas property table.
+        ///   Typically 0 or 1 in the intended/primary use case.
+        virtual double pressure(const std::size_t row) const = 0;
+
+        /// Retrieve formation volume factor for gas at saturated
+        /// conditions.
+        ///
+        /// \param[in] row Row index in saturated gas property table.
+        ///   Typically 0 or 1 in the intended/primary use case.
+        virtual double fvf(const std::size_t row) const = 0;
+
+        /// Retrieve phase viscosity for gas at saturated conditions.
+        ///
+        /// \param[in] row Row index in saturated gas property table.
+        ///   Typically 0 or 1 in the intended/primary use case.
+        virtual double viscosity(const std::size_t row) const = 0;
+
+        /// Retrieve vaporised oil concentration ("Rv") for gas at saturated
+        /// conditions.
+        ///
+        /// \param[in] row Row index in saturated gas property table.
+        ///   Typically 0 or 1 in the intended/primary use case.
+        virtual double vaporisedOil(const std::size_t row) const = 0;
+    };
+
+    /// Padding for gas property tables at low pressure
+    class LowPressureTablePadding
+    {
+    public:
+        /// Constructor
+        ///
+        /// \param[in] Tabulated gas properties at saturated conditions
+        explicit LowPressureTablePadding(const GasPropertyTableInterface& prop);
+
+        /// Whether or not input table needs padding at low pressures
+        bool inputNeedsPadding() const { return this->needPadding_; }
+
+        /// Low pressure padding rows for input table.  Needed only if
+        /// inputNeedsPadding() returns \c true.
+        Opm::SimpleTable padding() const;
+
+    private:
+        /// Gas pressure values in rows zero and one of input table.
+        std::array<double, 2> p_{};
+
+        /// Interpolated gas property values at "limiting" pressure
+        struct {
+            /// Limiting pressure
+            double p {0.0};
+
+            /// Vaporised oil concentration at limiting pressure
+            double rv {0.0};
+
+            /// Formation volume factor at limiting pressure
+            double fvf {0.0};
+
+            /// Gas viscosity at limiting pressure
+            double mu {0.0};
+        } limit_{};
+
+        /// Whether or not input table needs padding at low pressure values.
+        bool needPadding_{false};
+    };
+
+    LowPressureTablePadding::LowPressureTablePadding(const GasPropertyTableInterface& prop)
+        : p_{ prop.pressure(0), prop.pressure(1) }
+    {
+        auto linInterp = [](const std::array<double, 2>& xi,
+                            const std::array<double, 2>& yi,
+                            const double                  x)
+        {
+            const auto t = (x - xi[0]) / (xi[1] - xi[0]);
+
+            return (1.0 - t)*yi[0] + t*yi[1];
+        };
+
+        const auto rv = std::array {
+            prop.vaporisedOil(0),
+            prop.vaporisedOil(1),
+        };
+
+        const auto b = std::array {
+            1.0 / prop.fvf(0),  // 1 / B(0)
+            1.0 / prop.fvf(1),  // 1 / B(1)
+        };
+
+        const auto recipBmu = std::array {
+            b[0] / prop.viscosity(0), // 1 / (B(0) * mu(0))
+            b[1] / prop.viscosity(1), // 1 / (B(1) * mu(1))
+        };
+
+        this->limit_.fvf = std::max(10.0 / b[0], 1.0);
+        this->limit_.p   = linInterp(b, this->p_, 1.0 / this->limit_.fvf);
+        this->limit_.rv  = linInterp(this->p_, rv, this->limit_.p);
+        this->limit_.mu  = 1.0 /
+            (this->limit_.fvf * linInterp(this->p_, recipBmu, this->limit_.p));
+
+        const auto p0 = 1.0*Opm::unit::barsa;
+
+        this->needPadding_ = (this->p_[0] > p0) &&
+            (linInterp(this->p_, b, p0) < 1.0 / this->limit_.fvf);
+    }
+
+    Opm::SimpleTable LowPressureTablePadding::padding() const
+    {
+        auto padSchema = Opm::TableSchema{};
+        padSchema.addColumn(Opm::ColumnSchema("PG" , Opm::Table::STRICTLY_INCREASING, Opm::Table::DEFAULT_NONE));
+        padSchema.addColumn(Opm::ColumnSchema("RV" , Opm::Table::RANDOM, Opm::Table::DEFAULT_NONE));
+        padSchema.addColumn(Opm::ColumnSchema("BG" , Opm::Table::RANDOM, Opm::Table::DEFAULT_LINEAR));
+        padSchema.addColumn(Opm::ColumnSchema("MUG", Opm::Table::RANDOM, Opm::Table::DEFAULT_LINEAR));
+
+        auto padTable = Opm::SimpleTable { std::move(padSchema) };
+
+        const auto p0 = 1.0*Opm::unit::barsa;
+
+        if (this->limit_.p < this->p_[0]) {
+            if (p0 < this->limit_.p) {
+                padTable.addRow({ p0, this->limit_.rv, 1.1*this->limit_.fvf, this->limit_.mu }, "PAD");
+            }
+
+            padTable.addRow({ this->limit_.p, this->limit_.rv, this->limit_.fvf, this->limit_.mu }, "PAD");
+        }
+
+        return padTable;
+    }
+
+    // -------------------------------------------------------------------------
+
+    /// Gas property query interface implementation for dry gas
+    class DryGasTable : public GasPropertyTableInterface
+    {
+    public:
+        /// Constructor
+        ///
+        /// \param[in] pvdg Tabulated gas property values for dry gas
+        explicit DryGasTable(const Opm::PvdgTable& pvdg)
+            : pvdg_ { pvdg }
+        {}
+
+        /// Retrieve gas pressure at saturated conditions
+        ///
+        /// \param[in] row Row index in saturated gas property table.
+        ///   Typically 0 or 1 in the intended/primary use case.
+        double pressure(const std::size_t row) const override;
+
+        /// Retrieve formation volume factor for gas at saturated
+        /// conditions.
+        ///
+        /// \param[in] row Row index in saturated gas property table.
+        ///   Typically 0 or 1 in the intended/primary use case.
+        double fvf(const std::size_t row) const override;
+
+        /// Retrieve phase viscosity for gas at saturated conditions.
+        ///
+        /// \param[in] row Row index in saturated gas property table.
+        ///   Typically 0 or 1 in the intended/primary use case.
+        double viscosity(const std::size_t row) const override;
+
+        /// Retrieve vaporised oil concentration ("Rv") for gas at saturated
+        /// conditions.
+        ///
+        /// \param[in] row Row index in saturated gas property table.
+        ///   Typically 0 or 1 in the intended/primary use case.  Ignored
+        ///   for dry gas, as the vaporised oil concentration is always zero
+        ///   in this case.
+        double vaporisedOil([[maybe_unused]] const std::size_t row) const override
+        {
+            return 0.0;
+        }
+
+    private:
+        /// Underlying property table.
+        std::reference_wrapper<const Opm::PvdgTable> pvdg_;
+    };
+
+    double DryGasTable::pressure(const std::size_t row) const
+    {
+        return this->pvdg_.get().getPressureColumn()[row];
+    }
+
+    double DryGasTable::fvf(const std::size_t row) const
+    {
+        return this->pvdg_.get().getFormationFactorColumn()[row];
+    }
+
+    double DryGasTable::viscosity(const std::size_t row) const
+    {
+        return this->pvdg_.get().getViscosityColumn()[row];
+    }
+
+    // -------------------------------------------------------------------------
+
+    /// Gas property query interface implementation for wet gas
+    class WetGasTable : public GasPropertyTableInterface
+    {
+    public:
+        /// Constructor
+        ///
+        /// \param[in] pvtg Tabulated gas property values for wet gas
+        explicit WetGasTable(const Opm::PvtgTable& pvtg)
+            : satTable_ { pvtg.getSaturatedTable() }
+        {}
+
+        /// Retrieve gas pressure at saturated conditions
+        ///
+        /// \param[in] row Row index in saturated gas property table.
+        ///   Typically 0 or 1 in the intended/primary use case.
+        double pressure(const std::size_t row) const override;
+
+        /// Retrieve formation volume factor for gas at saturated
+        /// conditions.
+        ///
+        /// \param[in] row Row index in saturated gas property table.
+        ///   Typically 0 or 1 in the intended/primary use case.
+        double fvf(const std::size_t row) const override;
+
+        /// Retrieve phase viscosity for gas at saturated conditions.
+        ///
+        /// \param[in] row Row index in saturated gas property table.
+        ///   Typically 0 or 1 in the intended/primary use case.
+        double viscosity(const std::size_t row) const override;
+
+        /// Retrieve vaporised oil concentration ("Rv") for gas at saturated
+        /// conditions.
+        ///
+        /// \param[in] row Row index in saturated gas property table.
+        ///   Typically 0 or 1 in the intended/primary use case.
+        double vaporisedOil(const std::size_t row) const override;
+
+    private:
+        /// Underlying property table for wet gas at saturated conditions.
+        std::reference_wrapper<const Opm::SimpleTable> satTable_;
+    };
+
+    double WetGasTable::pressure(const std::size_t row) const
+    {
+        return this->satTable_.get().getColumn(0)[row];
+    }
+
+    double WetGasTable::fvf(const std::size_t row) const
+    {
+        return this->satTable_.get().getColumn(2)[row];
+    }
+
+    double WetGasTable::viscosity(const std::size_t row) const
+    {
+        return this->satTable_.get().getColumn(3)[row];
+    }
+
+    double WetGasTable::vaporisedOil(const std::size_t row) const
+    {
+        return this->satTable_.get().getColumn(1)[row];
+    }
+
+} // Anonymous namespace
+
 namespace Opm
 {
+
+namespace {
+    DeckItem createPvtgItemZero(const DeckKeyword& pvtgTableInput)
+    {
+        return pvtgTableInput[0].getItem(0).emptyStructuralCopy();
+    }
+
+    DeckItem createPvtgItemOne(const DeckKeyword& pvtgTableInput)
+    {
+        return pvtgTableInput[0].getItem(1).emptyStructuralCopy();
+    }
+
+    DeckKeyword paddedPVTGTable(const SimpleTable& padding,
+                                const DeckKeyword& pvtgTableInput,
+                                const PvtgTable&   pvtgTable)
+    {
+        auto paddedTable = pvtgTableInput.emptyStructuralCopy();
+
+        // Padding
+        {
+            const auto nrow = padding.numRows();
+            const auto ncol = padding.numColumns();
+
+            for (auto row = 0*nrow; row < nrow; ++row) {
+                auto recordItems = std::vector {
+                    createPvtgItemZero(pvtgTableInput),
+                    createPvtgItemOne (pvtgTableInput)
+                };
+
+                {
+                    auto& pg = recordItems.front();
+                    const auto& dim = pg.getActiveDimensions();
+                    pg.push_back(dim.front().convertSiToRaw(padding.get(0, row)));
+                }
+
+                {
+                    auto& rest = recordItems.back();
+                    const auto& dim = rest.getActiveDimensions();
+                    auto n = 0*dim.size();
+
+                    for (auto col = 1 + 0*ncol; col < ncol; ++col, n = (n + 1) % dim.size()) {
+                        rest.push_back(dim[n].convertSiToRaw(padding.get(col, row)));
+                    }
+                }
+
+                paddedTable.addRecord(DeckRecord { std::move(recordItems) });
+            }
+        }
+
+        // Original input table
+        for (auto pgIx = 0*pvtgTable.size(); pgIx < pvtgTable.size(); ++pgIx) {
+            auto recordItems = std::vector {
+                createPvtgItemZero(pvtgTableInput),
+                createPvtgItemOne (pvtgTableInput)
+            };
+
+            {
+                auto& pg = recordItems.front();
+                const auto& dim = pg.getActiveDimensions();
+                pg.push_back(dim.front().convertSiToRaw(pvtgTable.getArgValue(pgIx)));
+            }
+
+            {
+                auto& rest = recordItems.back();
+                const auto& dim = rest.getActiveDimensions();
+
+                const auto& pgTable = pvtgTable.getUnderSaturatedTable(pgIx);
+                const auto nrow = pgTable.numRows();
+                const auto ncol = pgTable.numColumns();
+
+                for (auto row = 0*nrow; row < nrow; ++row) {
+                    for (auto col = 0*ncol; col < ncol; ++col) {
+                        rest.push_back(dim[col].convertSiToRaw(pgTable.get(col, row)));
+                    }
+                }
+            }
+
+            paddedTable.addRecord(DeckRecord { std::move(recordItems) });
+        }
+
+        // Resulting padded table holds values for just a single table/PVT
+        // region, even if pvtgTableInput holds tables for multiple PVT
+        // regions.
+        return paddedTable;
+    }
+} // Anonymous namespace
 
 PvtgTable::PvtgTable(const DeckKeyword& keyword, size_t tableIdx)
     : PvtxTable("P")
@@ -121,7 +486,44 @@ PvtgTable::PvtgTable(const DeckKeyword& keyword, size_t tableIdx)
     m_saturatedSchema.addColumn(ColumnSchema("BG", Table::RANDOM, Table::DEFAULT_LINEAR));
     m_saturatedSchema.addColumn(ColumnSchema("MUG", Table::RANDOM, Table::DEFAULT_LINEAR));
 
+    // Run full table initialisation first.  The downside to this is that we
+    // will end up throwing away and redoing that work if the table needs
+    // padding at low pressure values.  On the other hand, the full table
+    // initialisation procedure also checks consistency and replaces any
+    // defaulted values which means we don't have to have special logic in
+    // place to handle those complexities if the table does need padding.
+
     PvtxTable::init(keyword, tableIdx);
+
+    if (this->size() <= 1) {
+        // At most a single pressure node in the input PVTG data.  There is
+        // not enough information to perform table padding, even if it might
+        // be needed.  We might for instance be running in the context of a
+        // unit test with incomplete data or the input might just be very
+        // sparse.  In any case we can't perform table padding so just
+        // return here.
+        return;
+    }
+
+    if (const auto tablePadding = LowPressureTablePadding { WetGasTable { *this } };
+        tablePadding.inputNeedsPadding())
+    {
+        // Note: The padded PVTG table holds values for a single table/PVT
+        // region, even if 'keyword' holds tables for multiple PVT regions.
+        // We therefore unconditionally pass '0' as the 'tableIdx' in this
+        // case.  Moreover, PvtxTable::init() expects that both the outer
+        // column and the array of undersaturated tables are empty, so clear
+        // those here, once we've used their contents to form the padding
+        // table.
+
+        const auto paddedTable =
+            paddedPVTGTable(tablePadding.padding(), keyword, *this);
+
+        this->m_outerColumn = TableColumn { this->m_outerColumnSchema };
+        this->m_underSaturatedTables.clear();
+
+        PvtxTable::init(paddedTable, 0);
+    }
 }
 
 PvtgTable
@@ -602,15 +1004,88 @@ Sof3Table::getKrogColumn() const
     return SimpleTable::getColumn(2);
 }
 
+namespace {
+
+    DeckItem paddedPVDGTable(const SimpleTable& padding,
+                             const DeckItem&    pvdgTableInput,
+                             const PvdgTable&   pvdgTable)
+    {
+        auto paddedTable = pvdgTableInput.emptyStructuralCopy();
+
+        auto addTableValue = [&paddedTable,
+                              &dim = pvdgTableInput.getActiveDimensions(),
+                              n = std::size_t{0}]
+            (const double value) mutable
+        {
+            paddedTable.push_back(dim[n].convertSiToRaw(value));
+            n = (n + 1) % dim.size();
+        };
+
+        // Padding
+        {
+            const auto columns = std::array {
+                &padding.getColumn("PG"),
+                &padding.getColumn("BG"),
+                &padding.getColumn("MUG"),
+            };
+
+            const auto nrow = padding.numRows();
+            for (auto row = 0*nrow; row < nrow; ++row) {
+                for (auto* column : columns) {
+                    addTableValue((*column)[row]);
+                }
+            }
+        }
+
+        // Original table
+        {
+            const auto nrow = pvdgTable.numRows();
+            const auto ncol = pvdgTable.numColumns();
+            for (auto row = 0*nrow; row < nrow; ++row) {
+                for (auto col = 0*ncol; col < ncol; ++col) {
+                    // Yes, argument order is  (col, row)
+                    addTableValue(pvdgTable.get(col, row));
+                }
+            }
+        }
+
+        return paddedTable;
+    }
+
+} // Anonymous namespace
+
 PvdgTable::PvdgTable(const DeckItem& item, const int tableID)
 {
     m_schema.addColumn(ColumnSchema("P", Table::STRICTLY_INCREASING, Table::DEFAULT_NONE));
     m_schema.addColumn(ColumnSchema("BG", Table::STRICTLY_DECREASING, Table::DEFAULT_LINEAR));
     m_schema.addColumn(ColumnSchema("MUG", Table::INCREASING, Table::DEFAULT_LINEAR));
 
-    SimpleTable::init("PVDG", item, tableID);
-}
+    // Run full table initialisation first.  The downside to this is that we
+    // will end up throwing away and redoing that work if the table needs
+    // padding at low pressure values.  On the other hand, the full table
+    // initialisation procedure also checks consistency and replaces any
+    // defaulted values which means we don't have to have special logic in
+    // place to handle those complexities if the table does need padding.
+    const auto tableName = std::string { "PVDG" };
 
+    SimpleTable::init(tableName, item, tableID);
+
+    if (this->numRows() <= 1) {
+        // At most a single pressure node in the input PVDG data.  There is
+        // not enough information to perform table padding, even if it might
+        // be needed.  We might for instance be running in the context of a
+        // unit test with incomplete data or the input might just be very
+        // sparse.  In any case we can't perform table padding so just
+        // return here.
+        return;
+    }
+
+    if (const auto tablePadding = LowPressureTablePadding { DryGasTable { *this } };
+        tablePadding.inputNeedsPadding())
+    {
+        SimpleTable::init(tableName, paddedPVDGTable(tablePadding.padding(), item, *this), tableID);
+    }
+}
 
 const TableColumn&
 PvdgTable::getPressureColumn() const
