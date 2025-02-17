@@ -18,11 +18,9 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <fmt/format.h>
 #include <opm/common/ErrorMacros.hpp>
 #include <opm/ml/ml_model.hpp>
 
-#include <cstdio>
 #include <tests/ml/ml_tools/include/test_dense_10x1.hpp>
 #include <tests/ml/ml_tools/include/test_dense_10x10.hpp>
 #include <tests/ml/ml_tools/include/test_dense_10x10x10.hpp>
@@ -33,17 +31,16 @@
 #include <tests/ml/ml_tools/include/test_relu_10.hpp>
 #include <tests/ml/ml_tools/include/test_scalingdense_10x1.hpp>
 
+#include <cstdio>
 
-namespace Opm
-{
+#include <fmt/format.h>
+
+namespace Opm {
 
 using namespace ML;
 
-
 template <class Evaluation>
-bool
-
-tensor_test()
+bool tensor_test()
 {
     std::printf("TEST tensor_test\n");
 
@@ -176,55 +173,28 @@ tensor_test()
     return true;
 }
 
-
 } // namespace Opm
 
-
-int
-main()
+int main()
 {
-    typedef Opm::DenseAd::Evaluation<double, 1> Evaluation;
+    using Evaluation = Opm::DenseAd::Evaluation<double, 1>;
 
     Evaluation load_time = 0.0;
     Evaluation apply_time = 0.0;
 
-    if (!tensor_test<Evaluation>()) {
-        return 1;
+    try {
+        tensor_test<Evaluation>();
+        test_dense_1x1<Evaluation>(&load_time, &apply_time);
+        test_dense_10x1<Evaluation>(&load_time, &apply_time);
+        test_dense_2x2<Evaluation>(&load_time, &apply_time);
+        test_dense_10x10<Evaluation>(&load_time, &apply_time);
+        test_dense_10x10x10<Evaluation>(&load_time, &apply_time);
+        test_relu_10<Evaluation>(&load_time, &apply_time);
+        test_dense_relu_10<Evaluation>(&load_time, &apply_time);
+        test_dense_tanh_10<Evaluation>(&load_time, &apply_time);
+        test_scalingdense_10x1<Evaluation>(&load_time, &apply_time);
     }
-
-    if (!test_dense_1x1<Evaluation>(&load_time, &apply_time)) {
-        return 1;
-    }
-
-    if (!test_dense_10x1<Evaluation>(&load_time, &apply_time)) {
-        return 1;
-    }
-
-    if (!test_dense_2x2<Evaluation>(&load_time, &apply_time)) {
-        return 1;
-    }
-
-    if (!test_dense_10x10<Evaluation>(&load_time, &apply_time)) {
-        return 1;
-    }
-
-    if (!test_dense_10x10x10<Evaluation>(&load_time, &apply_time)) {
-        return 1;
-    }
-
-    if (!test_relu_10<Evaluation>(&load_time, &apply_time)) {
-        return 1;
-    }
-
-    if (!test_dense_relu_10<Evaluation>(&load_time, &apply_time)) {
-        return 1;
-    }
-
-    if (!test_dense_tanh_10<Evaluation>(&load_time, &apply_time)) {
-        return 1;
-    }
-
-    if (!test_scalingdense_10x1<Evaluation>(&load_time, &apply_time)) {
+    catch(...) {
         return 1;
     }
 
