@@ -686,14 +686,14 @@ inline double accum_groups(const rt phase,
                            const std::size_t sim_step,
                            const std::string& gr_name)
 {
-    double sum = 0.0;
     if (!schedule.hasGroup(gr_name, sim_step)) {
         return 0.0;
     }
     const auto& top_group = schedule.getGroup(gr_name, sim_step);
-    for (const auto& child : top_group.groups()) {
-        sum += accum_groups(phase, schedule, sim_step, child);
-    }
+    double sum = std::accumulate(top_group.groups().begin(),
+                                 top_group.groups().end(), 0.0,
+                                 [&schedule, phase, sim_step](const double acc, const auto& child)
+                                 { return acc + accum_groups(phase, schedule, sim_step, child); });
     const auto& gsatprod = schedule[sim_step].gsatprod.get();
     if (gsatprod.has(gr_name)) {
         const auto& gs = gsatprod.get(gr_name);
