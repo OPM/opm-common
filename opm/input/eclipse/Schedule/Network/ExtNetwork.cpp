@@ -243,18 +243,17 @@ std::vector<std::string> ExtNetwork::node_names() const
 std::set<std::string> ExtNetwork::leaf_nodes() const
 {
     std::set<std::string> leaf_nodes;
-    auto roots = this->roots();
-    for (const auto& root : roots) {
+    for (const auto& root : this->roots()) {
         std::stack<std::string> children;
         children.push(root.get().name());
         while (!children.empty()) {
-            const auto& node = children.top();
+            const auto& top_node = children.top();
             children.pop();
-            auto branches = this->downtree_branches(node);
-            if (branches.empty()) {
-                leaf_nodes.emplace(node);
+            auto dbranches = this->downtree_branches(top_node);
+            if (dbranches.empty()) {
+                leaf_nodes.emplace(top_node);
             }
-            for (const auto& branch : branches) {
+            for (const auto& branch : dbranches) {
                 children.push(branch.downtree_node());
             }
         }

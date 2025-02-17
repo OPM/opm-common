@@ -79,7 +79,8 @@ public:
      * @param message A string_view containing the error message.
      * @param inner_exception An optional std::exception_ptr to an inner exception.
      */
-    CriticalError(const std::string_view& message, std::exception_ptr inner_exception = nullptr)
+    explicit CriticalError(const std::string_view& message,
+                           std::exception_ptr inner_exception = nullptr)
         : m_message(message)
         , m_innerException(inner_exception)
     {

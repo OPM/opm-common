@@ -222,17 +222,17 @@ namespace Opm {
 
     std::vector<std::string> UDQContext::nonFieldGroups() const
     {
-        auto groups = std::vector<std::string>{};
+        auto rgroups = std::vector<std::string>{};
 
         const auto& allGroups = this->group_order_.names();
 
-        groups.reserve(allGroups.size());
+        rgroups.reserve(allGroups.size());
         std::copy_if(allGroups.begin(), allGroups.end(),
-                     std::back_inserter(groups),
+                     std::back_inserter(rgroups),
                      [](const std::string& gname)
                      { return gname != "FIELD"; });
 
-        return groups;
+        return rgroups;
     }
 
     std::vector<std::string> UDQContext::groups(const std::string& pattern) const

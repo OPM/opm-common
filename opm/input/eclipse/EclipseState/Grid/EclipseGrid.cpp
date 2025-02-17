@@ -2611,7 +2611,7 @@ namespace Opm {
 
       void EclipseGridLGR::save_nnc(Opm::EclIO::EclOutput& egridfile) const{
 
-        std::vector<int> nnchead(10, 0);
+        //std::vector<int> nnchead(10, 0);
         std::vector<int> nnc1;
         std::vector<int> nnc2;
 
@@ -2622,8 +2622,7 @@ namespace Opm {
         // }
         egridfile.write("NNCL", nnc1);
         egridfile.write("NNCG", nnc2);
-        nnchead[0] = nnc1.size();
-
+        //nnchead[0] = nnc1.size();
       }
 
 }

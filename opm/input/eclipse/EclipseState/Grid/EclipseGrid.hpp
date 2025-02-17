@@ -389,7 +389,6 @@ namespace Opm {
                        const vec_size_t& father_lgr_index,
                        const std::array<int, 3>& low_fahterIJK_,
                        const std::array<int, 3>& up_fahterIJK_);
-        ~EclipseGridLGR() = default;
         const vec_size_t& getFatherGlobalID() const;
         void save(Opm::EclIO::EclOutput&, const std::vector<Opm::NNCdata>&, const Opm::UnitSystem&) const;
         void save_nnc(Opm::EclIO::EclOutput&) const;
