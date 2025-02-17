@@ -260,7 +260,7 @@ SCHEDULE
 //  LgrCollection is used to initalize LGR Cells in the Eclipse Grid.
     eclipse_grid_OPM.init_lgr_cells(lgr_col);
     // LGR COORD and ZCORN is parsed to EclipseGridLGR children cell. (Simulates the process of recieving the LGR refinement.)   
-    eclipse_grid_OPM.lgr_children_cells[0].set_lgr_refinement(coord_l_opm,zcorn_l_opm);
+    eclipse_grid_OPM.getLGRCell(0).set_lgr_refinement(coord_l_opm,zcorn_l_opm);
     // Intialize host_cell numbering.
     eclipse_grid_OPM.init_children_host_cells();
     BOOST_CHECK_EQUAL( coord_g_opm.size() , coord_g.size());
@@ -353,8 +353,8 @@ SCHEDULE
     //  LgrCollection is used to initalize LGR Cells in the Eclipse Grid.
     eclipse_grid_file.init_lgr_cells(lgr_col);
     // LGR COORD and ZCORN is parsed to EclipseGridLGR children cell. (Simulates the process of recieving the LGR refinement.)   
-    eclipse_grid_file.lgr_children_cells[1].set_lgr_refinement(coord_l1,zcorn_l1);
-    eclipse_grid_file.lgr_children_cells[0].set_lgr_refinement(coord_l2,zcorn_l2);
+    eclipse_grid_file.getLGRCell(1).set_lgr_refinement(coord_l1,zcorn_l1);
+    eclipse_grid_file.getLGRCell(0).set_lgr_refinement(coord_l2,zcorn_l2);
     // Intialize host_cell numbering.
     eclipse_grid_file.init_children_host_cells();
     // Save EclipseGrid.
@@ -369,8 +369,8 @@ SCHEDULE
 //  LgrCollection is used to initalize LGR Cells in the Eclipse Grid.
     eclipse_grid_OPM.init_lgr_cells(lgr_col);
     // LGR COORD and ZCORN is parsed to EclipseGridLGR children cell. (Simulates the process of recieving the LGR refinement.)   
-    eclipse_grid_OPM.lgr_children_cells[1].set_lgr_refinement(coord_l1_opm,zcorn_l1_opm);
-    eclipse_grid_OPM.lgr_children_cells[0].set_lgr_refinement(coord_l2_opm,zcorn_l2_opm);
+    eclipse_grid_OPM.getLGRCell(1).set_lgr_refinement(coord_l1_opm,zcorn_l1_opm);
+    eclipse_grid_OPM.getLGRCell(0).set_lgr_refinement(coord_l2_opm,zcorn_l2_opm);
 
     // Intialize host_cell numbering.
     eclipse_grid_OPM.init_children_host_cells();
@@ -538,7 +538,6 @@ SCHEDULE
     eclipse_grid.init_children_host_cells();
     std::vector<int> host_vec_sol = { 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3};
     std::vector<int> host_vec = eclipse_grid.getLGRCell(0).get_hostnum();
-    for (std::size_t index = 0; index < host_vec.size(); index++) {
-      BOOST_CHECK_EQUAL( host_vec[index] , host_vec_sol[index]);
-    }   
+    BOOST_CHECK_EQUAL_COLLECTIONS(host_vec.begin(), host_vec.end(), host_vec_sol.begin(), host_vec_sol.end());  
+ 
   }

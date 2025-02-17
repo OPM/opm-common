@@ -183,8 +183,8 @@ SCHEDULE
     Opm::EclipseGrid eclipse_grid = state.getInputGrid();
 
     BOOST_CHECK_EQUAL( eclipse_grid.getTotalActiveLGR() , 25U );
-    BOOST_CHECK_EQUAL( eclipse_grid.lgr_children_cells[0].getTotalActiveLGR() , 9U );
-    BOOST_CHECK_EQUAL( eclipse_grid.lgr_children_cells[1].getTotalActiveLGR() , 9U );
+    BOOST_CHECK_EQUAL( eclipse_grid.getLGRCell(0).getTotalActiveLGR() , 9U );
+    BOOST_CHECK_EQUAL( eclipse_grid.getLGRCell(1).getTotalActiveLGR() , 9U );
     
     BOOST_CHECK_EQUAL(eclipse_grid.getActiveIndexLGR("GLOBAL",0,0,0), 0U);
     BOOST_CHECK_EQUAL(eclipse_grid.getActiveIndexLGR("GLOBAL",2,2,0), 24U);
@@ -263,8 +263,8 @@ SCHEDULE
     Opm::EclipseGrid eclipse_grid = state.getInputGrid();
 
     BOOST_CHECK_EQUAL( eclipse_grid.getTotalActiveLGR() , 21U );
-    BOOST_CHECK_EQUAL( eclipse_grid.lgr_children_cells[0].getTotalActiveLGR() , 8U );
-    BOOST_CHECK_EQUAL( eclipse_grid.lgr_children_cells[1].getTotalActiveLGR() , 8U );
+    BOOST_CHECK_EQUAL( eclipse_grid.getLGRCell(0).getTotalActiveLGR() , 8U );
+    BOOST_CHECK_EQUAL( eclipse_grid.getLGRCell(1).getTotalActiveLGR() , 8U );
     
     BOOST_CHECK_EQUAL(eclipse_grid.getActiveIndexLGR("LGR1",0,0,0), 0U);
     BOOST_CHECK_EQUAL(eclipse_grid.getActiveIndexLGR("LGR1",1,3,0), 7U);
@@ -349,8 +349,8 @@ SCHEDULE
     Opm::EclipseGrid eclipse_grid = state.getInputGrid();
 
     BOOST_CHECK_EQUAL( eclipse_grid.getTotalActiveLGR() , 25U );
-    BOOST_CHECK_EQUAL( eclipse_grid.lgr_children_cells[0].getTotalActiveLGR() , 17U );
-    BOOST_CHECK_EQUAL( eclipse_grid.lgr_children_cells[0].lgr_children_cells[0].getTotalActiveLGR() , 9U );
+    BOOST_CHECK_EQUAL( eclipse_grid.getLGRCell(0).getTotalActiveLGR() , 17U );
+    BOOST_CHECK_EQUAL( eclipse_grid.getLGRCell(0).getLGRCell(0).getTotalActiveLGR() , 9U );
     
     BOOST_CHECK_EQUAL(eclipse_grid.getActiveIndexLGR("GLOBAL",0,0,0), 0U);
     BOOST_CHECK_EQUAL(eclipse_grid.getActiveIndexLGR("GLOBAL",2,2,0), 24U);
@@ -433,7 +433,7 @@ SCHEDULE
     Opm::EclipseGrid eclipse_grid = state.getInputGrid();
 
     BOOST_CHECK_EQUAL( eclipse_grid.getTotalActiveLGR() , 16U );
-    BOOST_CHECK_EQUAL( eclipse_grid.lgr_children_cells[0].getTotalActiveLGR() , 9U );    
+    BOOST_CHECK_EQUAL( eclipse_grid.getLGRCell(0).getTotalActiveLGR() , 9U );    
     BOOST_CHECK_EQUAL(eclipse_grid.getActiveIndexLGR("GLOBAL",0,0,0), 0U);
     BOOST_CHECK_EQUAL(eclipse_grid.getActiveIndexLGR("GLOBAL",2,2,0), 15U);
    
