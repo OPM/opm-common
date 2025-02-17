@@ -700,9 +700,9 @@ inline double accum_groups(const rt phase,
         using Rate = Opm::GSatProd::GSatProdGroup::Rate;
         if (phase == rt::oil)
             sum += gs.rate[Rate::Oil];
-        if (phase == rt::gas)
+        else if (phase == rt::gas)
             sum += gs.rate[Rate::Gas];
-        if (phase == rt::wat)
+        else if (phase == rt::wat)
             sum += gs.rate[Rate::Water];
     }
     return sum;
