@@ -399,10 +399,9 @@ namespace ML
         {
         }
 
+        bool loadLayer(std::ifstream& file) override;
 
-        virtual bool loadLayer(std::ifstream& file);
-
-        virtual bool apply(const Tensor<Evaluation>& in, Tensor<Evaluation>& out);
+        bool apply(const Tensor<Evaluation>& in, Tensor<Evaluation>& out) override;
 
     private:
         ActivationType activation_type_;
@@ -423,9 +422,9 @@ namespace ML
         {
         }
 
-        virtual bool loadLayer(std::ifstream& file);
+        bool loadLayer(std::ifstream& file) override;
 
-        virtual bool apply(const Tensor<Evaluation>& in, Tensor<Evaluation>& out);
+        bool apply(const Tensor<Evaluation>& in, Tensor<Evaluation>& out) override;
 
     private:
         Tensor<float> weights_;
@@ -451,9 +450,9 @@ namespace ML
         {
         }
 
-        virtual bool loadLayer(std::ifstream& file);
+        bool loadLayer(std::ifstream& file) override;
 
-        virtual bool apply(const Tensor<Evaluation>& in, Tensor<Evaluation>& out);
+        bool apply(const Tensor<Evaluation>& in, Tensor<Evaluation>& out) override;
 
     private:
         Tensor<float> weights_;
@@ -471,10 +470,9 @@ namespace ML
     class NNLayerDense : public NNLayer<Evaluation>
     {
     public:
+        bool loadLayer(std::ifstream& file) override;
 
-        virtual bool loadLayer(std::ifstream& file);
-
-        virtual bool apply(const Tensor<Evaluation>& in, Tensor<Evaluation>& out);
+        bool apply(const Tensor<Evaluation>& in, Tensor<Evaluation>& out) override;
 
     private:
         Tensor<float> weights_;
@@ -490,10 +488,9 @@ namespace ML
     class NNLayerEmbedding : public NNLayer<Evaluation>
     {
     public:
+        bool loadLayer(std::ifstream& file) override;
 
-        virtual bool loadLayer(std::ifstream& file);
-
-        virtual bool apply(const Tensor<Evaluation>& in, Tensor<Evaluation>& out);
+        bool apply(const Tensor<Evaluation>& in, Tensor<Evaluation>& out) override;
 
     private:
         Tensor<float> weights_;
