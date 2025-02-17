@@ -514,6 +514,6 @@ SCHEDULE
     Opm::Parser parser;
     Opm::Deck deck = parser.parseString(deck_string);
     Opm::EclipseState state(deck);
-    Opm::LgrCollection lgrs = state.getLgrs();
+    [[maybe_unused]] Opm::LgrCollection lgrs = state.getLgrs();
     // LGR Inactive Cells Not yet Implemented
 }
