@@ -55,6 +55,17 @@ class Schedule;
 class Co2StoreConfig;
 class EzrokhiTable;
 
+// forward declaration of the class so the function in the next namespace can be declared
+template <class Scalar, class Params, class ContainerT>
+class BrineCo2Pvt;
+
+// declaration of make_view in correct namespace so friend function can be declared in the class
+namespace gpuistl {
+    template <class ViewType, class OutputParams, class InputParams, class ContainerType, class ScalarT>
+    BrineCo2Pvt<ScalarT, OutputParams, ViewType>
+    make_view(BrineCo2Pvt<ScalarT, InputParams, ContainerType>&);
+}
+
 /*!
  * \brief This class represents the Pressure-Volume-Temperature relations of the liquid phase
  * for a CO2-Brine system
@@ -775,6 +786,10 @@ private:
         return salinity(regionIdx);
     }
 
+    template <class ViewType, class OutputParams, class InputParams, class ContainerType, class ScalarT>
+    friend BrineCo2Pvt<ScalarT, OutputParams, ViewType>
+    gpuistl::make_view(BrineCo2Pvt<ScalarT, InputParams, ContainerType>&);
+
     ContainerT brineReferenceDensity_{};
     ContainerT co2ReferenceDensity_{};
     ContainerT salinity_{};
@@ -796,42 +811,40 @@ private:
 namespace Opm::gpuistl
 {
 
-    template<class Scalar, class Params, class GPUContainer>
-    BrineCo2Pvt<Scalar, Params, GPUContainer>
-    copy_to_gpu(const BrineCo2Pvt<Scalar>& cpuBrineCo2)
+    template<class Params, class GPUContainer, class ScalarT>
+    BrineCo2Pvt<ScalarT, Params, GPUContainer>
+    copy_to_gpu(const BrineCo2Pvt<ScalarT>& cpuBrineCo2)
     {
-        return BrineCo2Pvt<Scalar, Params, GPUContainer>(
+        return BrineCo2Pvt<ScalarT, Params, GPUContainer>(
             GPUContainer(cpuBrineCo2.getBrineReferenceDensity()),
             GPUContainer(cpuBrineCo2.getCo2ReferenceDensity()),
             GPUContainer(cpuBrineCo2.getSalinity()),
             cpuBrineCo2.getActivityModel(),
             cpuBrineCo2.getThermalMixingModelSalt(),
             cpuBrineCo2.getThermalMixingModelLiquid(),
-            copy_to_gpu<Scalar, std::vector<Scalar>, GPUContainer>(cpuBrineCo2.getParams())
+            copy_to_gpu<GPUContainer>(cpuBrineCo2.getParams())
         );
     }
 
-    template <class ViewType, class OutputParams, class InputParams, class ContainerType, class Scalar>
-    BrineCo2Pvt<Scalar, OutputParams, ViewType>
-    make_view(const BrineCo2Pvt<Scalar, InputParams, ContainerType>& brineCo2Pvt)
+    template <class ViewType, class OutputParams, class InputParams, class ContainerType, class ScalarT>
+    BrineCo2Pvt<ScalarT, OutputParams, ViewType>
+    make_view(BrineCo2Pvt<ScalarT, InputParams, ContainerType>& brineCo2Pvt)
     {
-        using containedType = typename ContainerType::value_type;
-        using viewedTypeNoConst = typename std::remove_const_t<typename ViewType::value_type>;
 
-        static_assert(std::is_same_v<containedType, viewedTypeNoConst>);
+        using ContainedType = typename ViewType::value_type;
 
-        ViewType newBrineReferenceDensity = make_view<viewedTypeNoConst>(brineCo2Pvt.getBrineReferenceDensity());
-        ViewType newGasReferenceDensity = make_view<viewedTypeNoConst>(brineCo2Pvt.getCo2ReferenceDensity());
-        ViewType newSalinity = make_view<viewedTypeNoConst>(brineCo2Pvt.getSalinity());
+        ViewType newBrineReferenceDensity = make_view<ContainedType>(brineCo2Pvt.brineReferenceDensity_);
+        ViewType newGasReferenceDensity = make_view<ContainedType>(brineCo2Pvt.co2ReferenceDensity_);
+        ViewType newSalinity = make_view<ContainedType>(brineCo2Pvt.salinity_);
 
-        return BrineCo2Pvt<Scalar, OutputParams, ViewType>(
+        return BrineCo2Pvt<ScalarT, OutputParams, ViewType>(
             newBrineReferenceDensity,
             newGasReferenceDensity,
             newSalinity,
             brineCo2Pvt.getActivityModel(),
             brineCo2Pvt.getThermalMixingModelSalt(),
             brineCo2Pvt.getThermalMixingModelLiquid(),
-            make_view<ViewType>(brineCo2Pvt.getParams())
+            make_view<ViewType>(brineCo2Pvt.co2Tables_)
         );
     }
 }

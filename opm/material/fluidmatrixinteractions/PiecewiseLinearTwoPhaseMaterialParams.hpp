@@ -39,6 +39,17 @@
 
 #include <opm/common/utility/gpuDecorators.hpp>
 
+// forward declaration of the class so the function in the next namespace can be declared
+template <class TraitsT, class VectorT = std::vector<typename TraitsT::Scalar>>
+class PiecewiseLinearTwoPhaseMaterialParams;
+
+// declaration of make_view in correct namespace so friend function can be declared in the class
+namespace Opm::gpuistl
+{
+    template <class ViewType, class TraitsT, class ContainerType>
+    PiecewiseLinearTwoPhaseMaterialParams<TraitsT, ViewType> make_view(PiecewiseLinearTwoPhaseMaterialParams<TraitsT, ContainerType>& params);
+}
+
 namespace Opm {
 /*!
  * \ingroup FluidMatrixInteractions
@@ -250,6 +261,9 @@ private:
         }
     }
 
+    template <class ViewType, class Traits, class Container>
+    friend PiecewiseLinearTwoPhaseMaterialParams<Traits, ViewType> Opm::gpuistl::make_view(PiecewiseLinearTwoPhaseMaterialParams<Traits, Container>& params);
+
     ValueVector SwPcwnSamples_;
     ValueVector SwKrwSamples_;
     ValueVector SwKrnSamples_;
@@ -295,22 +309,19 @@ PiecewiseLinearTwoPhaseMaterialParams<TraitsT, GPUContainerType> copy_to_gpu(con
 /// @param params the parameters object instansiated with gpuBuffers or similar
 /// @return the GPU view of the GPU PiecewiseLinearTwoPhaseMaterialParams object
 template <class ViewType, class TraitsT, class ContainerType>
-PiecewiseLinearTwoPhaseMaterialParams<TraitsT, ViewType> make_view(const PiecewiseLinearTwoPhaseMaterialParams<TraitsT, ContainerType>& params) {
+PiecewiseLinearTwoPhaseMaterialParams<TraitsT, ViewType> make_view(PiecewiseLinearTwoPhaseMaterialParams<TraitsT, ContainerType>& params) {
 
     // only create the GPU object if the CPU object is finalized
     params.checkFinalized();
 
-    using containedType = typename ContainerType::value_type;
-    using viewedTypeNoConst = typename std::remove_const_t<typename ViewType::value_type>;
+    using ContainedType = typename ViewType::value_type;
 
-    static_assert(std::is_same_v<containedType, viewedTypeNoConst>);
-
-    ViewType SwPcwnSamples = make_view<viewedTypeNoConst>(params.SwPcwnSamples());
-    ViewType pcwnSamples = make_view<viewedTypeNoConst>(params.pcwnSamples());
-    ViewType SwKrwSamples = make_view<viewedTypeNoConst>(params.SwKrwSamples());
-    ViewType krwSamples = make_view<viewedTypeNoConst>(params.krwSamples());
-    ViewType SwKrnSamples = make_view<viewedTypeNoConst>(params.SwKrnSamples());
-    ViewType krnSamples = make_view<viewedTypeNoConst>(params.krnSamples());
+    ViewType SwPcwnSamples = make_view<ContainedType>(params.SwPcwnSamples_);
+    ViewType pcwnSamples = make_view<ContainedType>(params.pcwnSamples_);
+    ViewType SwKrwSamples = make_view<ContainedType>(params.SwKrwSamples_);
+    ViewType krwSamples = make_view<ContainedType>(params.krwSamples_);
+    ViewType SwKrnSamples = make_view<ContainedType>(params.SwKrnSamples_);
+    ViewType krnSamples = make_view<ContainedType>(params.krnSamples_);
 
     return PiecewiseLinearTwoPhaseMaterialParams<TraitsT, ViewType> (SwPcwnSamples,
                                                                         pcwnSamples,
