@@ -681,28 +681,31 @@ alq_type(const Opm::ScheduleState&            sched_state,
     return sched_state.vfpprod(vfp_table_number).getALQType();
 }
 
-inline double accum_groups(const rt phase, const Opm::Schedule& schedule, const std::size_t sim_step, const std::string& gr_name)
+inline double accum_groups(const rt phase,
+                           const Opm::Schedule& schedule,
+                           const std::size_t sim_step,
+                           const std::string& gr_name)
 {
-        double sum = 0.0;
-        if (!schedule.hasGroup(gr_name, sim_step)) {
-            return sum;
-        }
-        const auto& top_group = schedule.getGroup(gr_name, sim_step);
-        for (const auto& child : top_group.groups()) {
-            sum += accum_groups(phase, schedule, sim_step, child);
-        }
-        const auto& gsatprod = schedule[sim_step].gsatprod.get();
-        if (gsatprod.has(gr_name)) {
-            const auto& gs = gsatprod.get(gr_name);
-            using Rate = Opm::GSatProd::GSatProdGroup::Rate;
-            if (phase == rt::oil)
-                sum += gs.rate[Rate::Oil];
-            if (phase == rt::gas)
-                sum += gs.rate[Rate::Gas];
-            if (phase == rt::wat)
-                sum += gs.rate[Rate::Water];
-        }
-        return sum;
+    double sum = 0.0;
+    if (!schedule.hasGroup(gr_name, sim_step)) {
+        return 0.0;
+    }
+    const auto& top_group = schedule.getGroup(gr_name, sim_step);
+    for (const auto& child : top_group.groups()) {
+        sum += accum_groups(phase, schedule, sim_step, child);
+    }
+    const auto& gsatprod = schedule[sim_step].gsatprod.get();
+    if (gsatprod.has(gr_name)) {
+        const auto& gs = gsatprod.get(gr_name);
+        using Rate = Opm::GSatProd::GSatProdGroup::Rate;
+        if (phase == rt::oil)
+            sum += gs.rate[Rate::Oil];
+        if (phase == rt::gas)
+            sum += gs.rate[Rate::Gas];
+        if (phase == rt::wat)
+            sum += gs.rate[Rate::Water];
+    }
+    return sum;
 }
 
 inline quantity artificial_lift_quantity( const fn_args& args ) {
