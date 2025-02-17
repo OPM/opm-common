@@ -89,7 +89,7 @@ namespace ML
 
         void flatten()
         {
-            OPM_ERROR_IF(dims_.size() <= 0, "Invalid tensor");
+            OPM_ERROR_IF(dims_.size() == 0, "Invalid tensor");
 
             int elements = dims_[0];
             for (unsigned int i = 1; i < dims_.size(); i++) {
