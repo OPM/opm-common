@@ -2075,8 +2075,8 @@ double gconsump_rate(const std::string& gname,
     double tot_rate = 0.0;
     if (schedule.groups.has(gname)) {
         for (const auto& child : schedule.groups(gname).groups()) {
-            const auto efac = schedule.groups(child).getGroupEfficiencyFactor();
-            tot_rate += efac * gconsump_rate(child, schedule, st, rate);
+            const auto fac = schedule.groups(child).getGroupEfficiencyFactor();
+            tot_rate += fac * gconsump_rate(child, schedule, st, rate);
         }
     }
 

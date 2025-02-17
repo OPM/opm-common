@@ -415,9 +415,9 @@ public:
     static Evaluation relpermOilInOilWaterSystem(const Params& params,
                                                  const FluidState& fluidState)
     {
-        const Evaluation Sw = decay<Evaluation>(fluidState.saturation(waterPhaseIdx));
+        const Evaluation sw = decay<Evaluation>(fluidState.saturation(waterPhaseIdx));
 
-        return OilWaterMaterialLaw::twoPhaseSatKrn(params.oilWaterParams(), Sw);
+        return OilWaterMaterialLaw::twoPhaseSatKrn(params.oilWaterParams(), sw);
     }
 
     /*!
