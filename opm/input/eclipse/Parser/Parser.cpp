@@ -671,9 +671,9 @@ void ParserState::handleRandomText(const std::string_view& keywordString) const
 
     std::string errorKey{};
     std::string msg{};
-    if (trimmedCopy == "/") {
+    if (trimmedCopy[0] == '/') {
         errorKey = ParseContext::PARSE_RANDOM_SLASH;
-        msg = "Extra '/' detected in {file} line {line}";
+        msg = "Extra line starting with '/' detected in {file} line {line}";
     }
     else if (lastSizeType == OTHER_KEYWORD_IN_DECK) {
         errorKey = ParseContext::PARSE_EXTRA_RECORDS;

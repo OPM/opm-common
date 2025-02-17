@@ -297,6 +297,12 @@ BOOST_AUTO_TEST_CASE(TestRandomSlash) {
         "  10 10 10 /\n"
         "   /\n";
 
+    const char * deck3 =
+        "SCHEDULE\n"
+        "TSTEP\n"
+        "  10 10 10 /\n"
+        "   //\n"
+        "/ any comment\n";
 
     ErrorGuard errors;
     ParseContext parseContext;
@@ -310,12 +316,14 @@ BOOST_AUTO_TEST_CASE(TestRandomSlash) {
     parseContext.update(ParseContext::PARSE_RANDOM_TEXT , InputErrorAction::IGNORE);
     BOOST_CHECK_THROW( parser.parseString( deck1 , parseContext, errors ) , OpmInputError);
     BOOST_CHECK_THROW( parser.parseString( deck2 , parseContext, errors ) , OpmInputError);
+    BOOST_CHECK_THROW( parser.parseString( deck3 , parseContext, errors ) , OpmInputError);
 
 
     parseContext.update(ParseContext::PARSE_RANDOM_SLASH , InputErrorAction::IGNORE);
     parseContext.update(ParseContext::PARSE_RANDOM_TEXT , InputErrorAction::THROW_EXCEPTION);
     BOOST_CHECK_NO_THROW( parser.parseString( deck1 , parseContext, errors ) );
     BOOST_CHECK_NO_THROW( parser.parseString( deck2 , parseContext, errors ) );
+    BOOST_CHECK_NO_THROW( parser.parseString( deck3 , parseContext, errors ) );
 }
 
 
