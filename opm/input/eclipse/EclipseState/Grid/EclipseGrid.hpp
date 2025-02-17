@@ -125,7 +125,9 @@ namespace Opm {
           from an active index to a global index must be implemented
           in the current class.
         */
-        void init_children_host_cells(void);
+        void init_children_host_cells(bool logical = true);
+        void init_children_host_cells_logical(void);
+        void init_children_host_cells_geometrical(void);
 
         using GridDims::getGlobalIndex;
         size_t getGlobalIndex(size_t active_index) const;
@@ -261,7 +263,11 @@ namespace Opm {
 
         static bool hasEqualDVDEPTHZ(const Deck&);
         static bool allEqual(const std::vector<double> &v);
-
+        EclipseGridLGR& getLGRCell(std::size_t index){
+          return lgr_children_cells[index];
+        };
+        
+        std::vector<EclipseGridLGR> lgr_children_cells;
         /**
         * @brief Sets Local Grid Refinement for the EclipseGrid.
         *
@@ -270,8 +276,6 @@ namespace Opm {
         * @param zcorn The z-coordinates values of a given LGR cell in CPG ZCORN format.
         */
         virtual void set_lgr_refinement(const std::string& lgr_tag, const std::vector<double>& coords, const std::vector<double>& zcorn);
-
-        std::vector<EclipseGridLGR> lgr_children_cells;
 
     protected:
         std::size_t lgr_global_counter = 0;
@@ -400,7 +404,14 @@ namespace Opm {
         {
             return father_global;
         }
+        const std::vector<int>& get_hostnum(void) const;
         void set_hostnum(std::vector<int>&);
+        const std::array<int,3>& get_low_fahterIJK() const{
+          return low_fahterIJK;
+        }
+        const std::array<int,3>& get_up_fahterIJK() const{
+          return up_fahterIJK;
+        }
 
         /**
          * @brief Sets Local Grid Refinement for the EclipseGridLGR.

@@ -260,7 +260,7 @@ SCHEDULE
 //  LgrCollection is used to initalize LGR Cells in the Eclipse Grid.
     eclipse_grid_OPM.init_lgr_cells(lgr_col);
     // LGR COORD and ZCORN is parsed to EclipseGridLGR children cell. (Simulates the process of recieving the LGR refinement.)   
-    eclipse_grid_OPM.lgr_children_cells[0].set_lgr_refinement(coord_l_opm,zcorn_l_opm);
+    eclipse_grid_OPM.getLGRCell(0).set_lgr_refinement(coord_l_opm,zcorn_l_opm);
     // Intialize host_cell numbering.
     eclipse_grid_OPM.init_children_host_cells();
     BOOST_CHECK_EQUAL( coord_g_opm.size() , coord_g.size());
@@ -353,8 +353,8 @@ SCHEDULE
     //  LgrCollection is used to initalize LGR Cells in the Eclipse Grid.
     eclipse_grid_file.init_lgr_cells(lgr_col);
     // LGR COORD and ZCORN is parsed to EclipseGridLGR children cell. (Simulates the process of recieving the LGR refinement.)   
-    eclipse_grid_file.lgr_children_cells[1].set_lgr_refinement(coord_l1,zcorn_l1);
-    eclipse_grid_file.lgr_children_cells[0].set_lgr_refinement(coord_l2,zcorn_l2);
+    eclipse_grid_file.getLGRCell(1).set_lgr_refinement(coord_l1,zcorn_l1);
+    eclipse_grid_file.getLGRCell(0).set_lgr_refinement(coord_l2,zcorn_l2);
     // Intialize host_cell numbering.
     eclipse_grid_file.init_children_host_cells();
     // Save EclipseGrid.
@@ -369,8 +369,8 @@ SCHEDULE
 //  LgrCollection is used to initalize LGR Cells in the Eclipse Grid.
     eclipse_grid_OPM.init_lgr_cells(lgr_col);
     // LGR COORD and ZCORN is parsed to EclipseGridLGR children cell. (Simulates the process of recieving the LGR refinement.)   
-    eclipse_grid_OPM.lgr_children_cells[1].set_lgr_refinement(coord_l1_opm,zcorn_l1_opm);
-    eclipse_grid_OPM.lgr_children_cells[0].set_lgr_refinement(coord_l2_opm,zcorn_l2_opm);
+    eclipse_grid_OPM.getLGRCell(1).set_lgr_refinement(coord_l1_opm,zcorn_l1_opm);
+    eclipse_grid_OPM.getLGRCell(0).set_lgr_refinement(coord_l2_opm,zcorn_l2_opm);
 
     // Intialize host_cell numbering.
     eclipse_grid_OPM.init_children_host_cells();
@@ -471,4 +471,73 @@ SCHEDULE
     eclipse_grid_file.init_children_host_cells();
     // Save EclipseGrid.
     eclipse_grid_file.save("OPMCARFIN-NESTED.EGRID",false,vecNNC,units);
+  }
+
+  BOOST_AUTO_TEST_CASE(Test_lgr_host_cells_logical) { 
+    const std::string deck_string = R"(
+RUNSPEC
+
+DIMENS
+  3 1 1 /
+
+GRID
+
+CARFIN
+-- NAME I1-I2 J1-J2 K1-K2 NX NY NZ
+LGR1  1  3  1  1  1  1  12  1   1 1*  GLOBAL/
+ENDFIN
+
+
+DX 
+  3*1000 /
+DY
+	3*1000 /
+DZ
+	3*20 /
+
+TOPS
+	3*8325 /
+
+PORO
+  3*0.15 /
+
+PERMX
+  3*1 /
+
+COPY
+  PERMX PERMZ /
+  PERMX PERMY /
+/
+
+EDIT
+
+OIL
+GAS
+
+TITLE
+The title
+
+START
+16 JUN 1988 /
+
+PROPS
+
+REGIONS
+
+SOLUTION
+
+SCHEDULE
+)";
+    
+    Opm::Parser parser;
+    Opm::Deck deck = parser.parseString(deck_string);
+    Opm::EclipseState state(deck);
+    Opm::EclipseGrid eclipse_grid = state.getInputGrid();
+    Opm::LgrCollection lgrs = state.getLgrs();
+    // Intialize host_cell numbering.
+    eclipse_grid.init_children_host_cells();
+    std::vector<int> host_vec_sol = { 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3};
+    std::vector<int> host_vec = eclipse_grid.getLGRCell(0).get_hostnum();
+    BOOST_CHECK_EQUAL_COLLECTIONS(host_vec.begin(), host_vec.end(), host_vec_sol.begin(), host_vec_sol.end());  
+ 
   }

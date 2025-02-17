@@ -3,12 +3,40 @@
 
 #include <algorithm>
 #include <array>
+#include <cstddef>
 #include <stdexcept>
 #include <tuple>
 #include <vector>
 #include <iterator>
 
 namespace VectorUtil {
+
+
+template<typename T = std::size_t>
+std::tuple<std::vector<T>, std::vector<T>, std::vector<T>> generate_cartesian_product(std::size_t low_nx, std::size_t up_nx,
+                                                                                      std::size_t low_ny, std::size_t up_ny,
+                                                                                      std::size_t low_nz, std::size_t up_nz){
+    std::size_t list_size =  (up_nx - low_nx + 1) * (up_ny - low_ny + 1) * (up_nz - low_nz + 1);
+    std::vector<T> i_list(list_size);
+    std::vector<T> j_list(list_size);
+    std::vector<T> k_list(list_size);
+    std::size_t index = 0;
+    for (std::size_t k_index = low_nz; k_index <= up_nz; k_index++)
+    {
+        for (std::size_t j_index = low_ny; j_index <= up_ny; j_index++)
+        {
+            for (std::size_t i_index = low_nx; i_index <= up_nx; i_index++)
+            {
+                i_list[index] = i_index;
+                j_list[index] = j_index;
+                k_list[index] = k_index;
+                index++;
+            }
+        }
+    }
+    return std::make_tuple(i_list, j_list, k_list);
+
+}
 
 
 template <typename T = double>
@@ -41,11 +69,31 @@ std::vector<T> vectorOperation(const std::vector<T>& vecA, const std::vector<T>&
     return result;
 }
 
+// Implementation of generation General Operation between a vector and a scalar of the same type
+template <typename T, typename Operation>
+std::vector<T> vectorScalarOperation(const std::vector<T>& vecA, const T& scalar, Operation op) {
+    std::vector<T> result;
+    result.reserve(vecA.size());
+    // Use std::transform with the passed operation
+    std::transform(vecA.begin(), vecA.end(), std::back_inserter(result),
+        [&scalar, &op](const T& a) { return op(scalar, a); });
+    return result;
+}
 
-// A simple utility function to calculate area of a rectangle
-std::tuple<std::array<double,4>, std::array<double,4>, std::array<double,4>>
-appendNode(const std::array<double,3>&, const std::array<double,3>&,
-           const std::array<double,3>&, const double&, const double&,
+// Implementation of generation General Operation between a scalar and a vector of the same type
+template <typename T, typename Operation>
+std::vector<T> scalarVectorOperation(const T& scalar, const std::vector<T>& vecA,  Operation op) {
+    std::vector<T> result;
+    result.reserve(vecA.size());
+    // Use std::transform with the passed operation
+    std::transform(vecA.begin(), vecA.end(), std::back_inserter(result),
+        [&scalar, &op](const T& a) { return op(a, scalar); });
+    return result;
+}
+
+std::tuple<std::array<double,4>, std::array<double,4>, std::array<double,4>> 
+appendNode(const std::array<double,3>&, const std::array<double,3>&, 
+           const std::array<double,3>&, const double&, const double&, 
            const double&);
 template <typename T>
 std::vector<T> filterArray(const std::vector<std::size_t>& X, const std::vector<int>& ind){
