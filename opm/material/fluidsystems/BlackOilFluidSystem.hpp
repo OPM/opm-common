@@ -20,7 +20,19 @@
 #define COMPILING_STATIC_FLUID_SYSTEM
 #define STATIC_OR_DEVICE static
 #define STATIC_OR_NOTHING static
+#define FLUIDSYSTEM_CLASSNAME_DYNAMIC BlackOilFluidSystemDynamic
+#define FLUIDSYSTEM_CLASSNAME_STATIC BlackOilFluidSystem
+#define FLUIDSYSTEM_CLASSNAME BlackOilFluidSystem
+namespace Opm {
+//template <class Scalar, class IndexTraits = ::Opm::BlackOilDefaultIndexTraits, template<typename> typename Storage = VectorWithDefaultAllocator, template<typename> typename SmartPointer = std::shared_ptr>
+template <class Scalar, class IndexTraits, template<typename> typename Storage, template<typename> typename SmartPointer>
+class FLUIDSYSTEM_CLASSNAME_DYNAMIC;
+}
 #include <opm/material/fluidsystems/BlackOilFluidSystem_impl.hpp>
 #undef STATIC_OR_DEVICE
 #undef COMPILING_STATIC_FLUID_SYSTEM
+#undef STATIC_OR_NOTHING
+#undef FLUIDSYSTEM_CLASSNAME_DYNAMIC
+#undef FLUIDSYSTEM_CLASSNAME_STATIC
+#undef FLUIDSYSTEM_CLASSNAME
 #endif // OPM_BLACK_OIL_FLUID_SYSTEM_HPP
