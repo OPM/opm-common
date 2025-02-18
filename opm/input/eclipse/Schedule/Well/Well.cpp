@@ -589,7 +589,6 @@ Well Well::serializationTestObject()
     return result;
 }
 
-
 bool Well::updateWPAVE(const PAvg& pavg)
 {
     if (this->m_pavg == pavg) {
@@ -598,6 +597,29 @@ bool Well::updateWPAVE(const PAvg& pavg)
 
     this->m_pavg = pavg;
     return true;
+}
+
+void Well::flag_lgr_well(void)
+{
+    ref_type = WellRefinementType::LGR;
+}
+
+void Well::set_lgr_well_tag(const std::string& lgr_tag_name)
+{
+    lgr_tag = lgr_tag_name;
+}
+
+const std::string& Well::get_lgr_well_tag(void) const
+{   
+    if (this->ref_type == WellRefinementType::STANDARD)
+        throw std::invalid_argument("Well is not an LGR well.");
+     return lgr_tag;
+}
+
+
+bool Well::is_lgr_well(void) const
+{
+    return this->ref_type == WellRefinementType::LGR;
 }
 
 

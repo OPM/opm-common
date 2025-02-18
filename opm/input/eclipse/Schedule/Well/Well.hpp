@@ -104,6 +104,15 @@ public:
 
     using GasInflowEquation = WellGasInflowEquation;
 
+    enum WellRefinementType {
+        STANDARD,
+        LGR,
+        MIXED,
+    };
+    void flag_lgr_well(void);
+    void set_lgr_well_tag(const std::string& lgr_tag_name);
+    bool is_lgr_well(void) const;
+    const std::string& get_lgr_well_tag(void) const;
     struct WellGuideRate {
         bool available;
         double guide_rate;
@@ -533,11 +542,12 @@ public:
     bool updateWSEGVALV(const std::vector<std::pair<int, Valve> >& valve_pairs);
     bool updateWSEGAICD(const std::vector<std::pair<int, AutoICD> >& aicd_pairs, const KeywordLocation& location);
     bool updateWPAVE(const PAvg& pavg);
+  
+
     void updateWPaveRefDepth(double ref_depth);
     bool updateWVFPDP(std::shared_ptr<WVFPDP> wvfpdp);
     bool updateWVFPEXP(std::shared_ptr<WVFPEXP> wvfpexp);
     bool updateWDFAC(std::shared_ptr<WDFAC> wdfac);
-
 
     bool handleWELSEGS(const DeckKeyword& keyword);
     bool handleCOMPSEGS(const DeckKeyword& keyword, const ScheduleGrid& grid, const ParseContext& parseContext, ErrorGuard& errors);
@@ -626,6 +636,8 @@ public:
         serializer(inj_mult_mode);
         serializer(well_inj_mult);
         serializer(m_filter_concentration);
+        serializer(ref_type);
+        serializer(lgr_tag);
     }
 
 private:
@@ -636,6 +648,7 @@ private:
 
     std::string wname{};
     std::string group_name{};
+    std::string lgr_tag{};
     std::size_t init_step{};
     std::size_t insert_index{};
     int headI{};
@@ -647,12 +660,14 @@ private:
     bool automatic_shutin{false};
     int pvt_table{};
 
+
     // Will NOT be loaded/assigned from restart file
     GasInflowEquation gas_inflow = GasInflowEquation::STD;
 
     const UnitSystem* unit_system{nullptr};
     double udq_undefined{};
     WellType wtype{};
+    WellRefinementType ref_type{WellRefinementType::STANDARD};
     WellGuideRate guide_rate{};
     double efficiency_factor{};
     bool use_efficiency_in_network{};
