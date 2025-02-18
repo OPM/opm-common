@@ -18,7 +18,6 @@
  */
 
 #include "WellKeywordHandlers.hpp"
-
 #include <opm/common/OpmLog/OpmLog.hpp>
 #include <opm/common/utility/OpmInputError.hpp>
 #include <opm/common/utility/String.hpp>
@@ -649,8 +648,9 @@ void handleWELSPECL(HandlerContext& handlerContext)
     handleWELSPECS(handlerContext);
     for (const auto& record : handlerContext.keyword) {
         const auto wellName = getTrimmedName(record.getItem<Kw::WELL>());
-        const auto groupName = getTrimmedName(record.getItem<Kw::GROUP>());
         const auto lgrTag = getTrimmedName(record.getItem<Kw::LGR>());
+        handlerContext.state().wells.get(wellName).flag_lgr_well();
+        handlerContext.state().wells.get(wellName).set_lgr_well_tag(lgrTag);
     }
 }
 

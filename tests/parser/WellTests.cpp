@@ -2121,7 +2121,8 @@ COMPDATL
 
     const auto es    = EclipseState { deck };
     const auto sched = Schedule { deck, es };
-
-
-
+    BOOST_CHECK_EQUAL(sched.getWell("PROD", 0).is_lgr_well(), true);
+    BOOST_CHECK_EQUAL(sched.getWell("INJ", 0).is_lgr_well(), true);
+    BOOST_CHECK_EQUAL(sched.getWell("PROD", 0).get_lgr_well_tag(), "LGR2");
+    BOOST_CHECK_EQUAL(sched.getWell("INJ", 0).get_lgr_well_tag(), "LGR1");
 }
