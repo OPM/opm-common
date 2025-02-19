@@ -104,15 +104,10 @@ public:
 
     using GasInflowEquation = WellGasInflowEquation;
 
-    enum WellRefinementType {
-        STANDARD,
-        LGR,
-        MIXED,
-    };
-    void flag_lgr_well(void);
+    void flag_lgr_well();
     void set_lgr_well_tag(const std::string& lgr_tag_name);
-    bool is_lgr_well(void) const;
-    const std::string& get_lgr_well_tag(void) const;
+    bool is_lgr_well() const;
+    const std::string& get_lgr_well_tag() const;
     struct WellGuideRate {
         bool available;
         double guide_rate;
@@ -609,6 +604,8 @@ public:
         serializer(pvt_table);
         serializer(gas_inflow);
         serializer(wtype);
+        serializer(ref_type);
+        serializer(lgr_tag);
         serializer(guide_rate);
         serializer(efficiency_factor);
         serializer(use_efficiency_in_network);
@@ -636,11 +633,14 @@ public:
         serializer(inj_mult_mode);
         serializer(well_inj_mult);
         serializer(m_filter_concentration);
-        serializer(ref_type);
-        serializer(lgr_tag);
     }
 
 private:
+    enum class WellRefinementType {
+        STANDARD,
+        LGR,
+        MIXED,
+    };
     void switchToInjector();
     void switchToProducer();
 
@@ -648,7 +648,7 @@ private:
 
     std::string wname{};
     std::string group_name{};
-    std::string lgr_tag{};
+
     std::size_t init_step{};
     std::size_t insert_index{};
     int headI{};
@@ -668,6 +668,7 @@ private:
     double udq_undefined{};
     WellType wtype{};
     WellRefinementType ref_type{WellRefinementType::STANDARD};
+    std::string lgr_tag{};
     WellGuideRate guide_rate{};
     double efficiency_factor{};
     bool use_efficiency_in_network{};
