@@ -17,6 +17,8 @@
 #define BOOST_TEST_MODULE TestBlackOilFluidSystemNonStatic
 #include <config.h>
 
+#include <cstddef>
+
 #include <boost/test/unit_test.hpp>
 
 #include <opm/material/fluidsystems/BlackOilFluidSystem.hpp>
@@ -43,7 +45,7 @@ BOOST_AUTO_TEST_CASE(TestNonStaticGetters)
 {
     auto& fluidSystem = Opm::BlackOilFluidSystem<double>::getNonStaticInstance();
     BOOST_CHECK_EQUAL(fluidSystem.numActivePhases(), Opm::BlackOilFluidSystem<double>::numActivePhases());
-    for (int phase = 0; phase < fluidSystem.numActivePhases(); ++phase) {
+    for (std::size_t phase = 0; phase < fluidSystem.numActivePhases(); ++phase) {
         BOOST_CHECK_EQUAL(fluidSystem.phaseIsActive(phase), Opm::BlackOilFluidSystem<double>::phaseIsActive(phase));
     }
     BOOST_CHECK_EQUAL(fluidSystem.enableDissolvedGas(), Opm::BlackOilFluidSystem<double>::enableDissolvedGas());
@@ -61,7 +63,7 @@ BOOST_AUTO_TEST_CASE(TestCopyAndSet)
     auto& fluidSystem = Opm::BlackOilFluidSystem<double>::getNonStaticInstance();
     auto fluidSystemCopy = fluidSystem;
     BOOST_CHECK_EQUAL(fluidSystem.numActivePhases(), fluidSystemCopy.numActivePhases());
-    for (int phase = 0; phase < fluidSystem.numActivePhases(); ++phase) {
+    for (std::size_t phase = 0; phase < fluidSystem.numActivePhases(); ++phase) {
         BOOST_CHECK_EQUAL(fluidSystem.phaseIsActive(phase), fluidSystemCopy.phaseIsActive(phase));
     }
     BOOST_CHECK_EQUAL(fluidSystem.enableDissolvedGas(), fluidSystemCopy.enableDissolvedGas());
