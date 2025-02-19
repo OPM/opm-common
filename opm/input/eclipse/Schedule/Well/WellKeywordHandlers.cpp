@@ -18,7 +18,6 @@
  */
 
 #include "WellKeywordHandlers.hpp"
-
 #include <opm/common/OpmLog/OpmLog.hpp>
 #include <opm/common/utility/OpmInputError.hpp>
 #include <opm/common/utility/String.hpp>
@@ -635,6 +634,26 @@ Well{0} entered with 'FIELD' parent group:
     }
 }
 
+
+void handleWELSPECL(HandlerContext& handlerContext)
+{
+    using Kw = ParserKeywords::WELSPECL;
+    auto getTrimmedName = [&handlerContext](const auto& item)
+    {
+        return trim_wgname(handlerContext.keyword,
+                           item.template get<std::string>(0),
+                           handlerContext.parseContext,
+                           handlerContext.errors);
+    };
+    handleWELSPECS(handlerContext);
+    for (const auto& record : handlerContext.keyword) {
+        const auto wellName = getTrimmedName(record.getItem<Kw::WELL>());
+        const auto lgrTag = getTrimmedName(record.getItem<Kw::LGR>());
+        handlerContext.state().wells.get(wellName).flag_lgr_well();
+        handlerContext.state().wells.get(wellName).set_lgr_well_tag(lgrTag);
+    }
+}
+
 /*
   The documentation for the WELTARG keyword says that the well
   must have been fully specified and initialized using one of the
@@ -651,6 +670,7 @@ Well{0} entered with 'FIELD' parent group:
   WCONPROD / WCONHIST before WELTARG is applied, if not the units for the
   rates will be wrong.
 */
+
 void handleWELTARG(HandlerContext& handlerContext)
 {
     const double SiFactorP = handlerContext.static_schedule().m_unit_system.parse("Pressure").getSIScaling();
@@ -926,6 +946,7 @@ getWellHandlers()
         { "WCYCLE",   &handleWCYCLE   },
         { "WELOPEN" , &handleWELOPEN  },
         { "WELSPECS", &handleWELSPECS },
+        { "WELSPECL", &handleWELSPECL },
         { "WELTARG" , &handleWELTARG  },
         { "WELTRAJ" , &handleWELTRAJ  },
         { "WHISTCTL", &handleWHISTCTL },

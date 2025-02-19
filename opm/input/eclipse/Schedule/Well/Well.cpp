@@ -585,10 +585,10 @@ Well Well::serializationTestObject()
     result.default_well_inj_temperature = 0.0;
     result.well_inj_mult = InjMult::serializationTestObject();
     result.m_filter_concentration = UDAValue::serializationTestObject();
-
+    result.lgr_tag = "LGR-test";
+    result.ref_type = WellRefinementType::LGR;
     return result;
 }
-
 
 bool Well::updateWPAVE(const PAvg& pavg)
 {
@@ -598,6 +598,29 @@ bool Well::updateWPAVE(const PAvg& pavg)
 
     this->m_pavg = pavg;
     return true;
+}
+
+void Well::flag_lgr_well(void)
+{
+    ref_type = WellRefinementType::LGR;
+}
+
+void Well::set_lgr_well_tag(const std::string& lgr_tag_name)
+{
+    lgr_tag = lgr_tag_name;
+}
+
+const std::string& Well::get_lgr_well_tag(void) const
+{   
+    if (this->ref_type == WellRefinementType::STANDARD)
+        throw std::invalid_argument("Well is not an LGR well.");
+     return lgr_tag;
+}
+
+
+bool Well::is_lgr_well(void) const
+{
+    return this->ref_type == WellRefinementType::LGR;
 }
 
 
@@ -2085,6 +2108,9 @@ bool Well::operator==(const Well& data) const
         && (this->default_well_inj_temperature == data.default_well_inj_temperature)
         && (this->well_inj_mult == data.well_inj_mult)
         && (this->m_filter_concentration == data.m_filter_concentration)
+        && (this->lgr_tag == data.lgr_tag)
+        && (this->ref_type == data.ref_type)
+
         ;
 }
 

@@ -104,6 +104,10 @@ public:
 
     using GasInflowEquation = WellGasInflowEquation;
 
+    void flag_lgr_well();
+    void set_lgr_well_tag(const std::string& lgr_tag_name);
+    bool is_lgr_well() const;
+    const std::string& get_lgr_well_tag() const;
     struct WellGuideRate {
         bool available;
         double guide_rate;
@@ -533,11 +537,12 @@ public:
     bool updateWSEGVALV(const std::vector<std::pair<int, Valve> >& valve_pairs);
     bool updateWSEGAICD(const std::vector<std::pair<int, AutoICD> >& aicd_pairs, const KeywordLocation& location);
     bool updateWPAVE(const PAvg& pavg);
+  
+
     void updateWPaveRefDepth(double ref_depth);
     bool updateWVFPDP(std::shared_ptr<WVFPDP> wvfpdp);
     bool updateWVFPEXP(std::shared_ptr<WVFPEXP> wvfpexp);
     bool updateWDFAC(std::shared_ptr<WDFAC> wdfac);
-
 
     bool handleWELSEGS(const DeckKeyword& keyword);
     bool handleCOMPSEGS(const DeckKeyword& keyword, const ScheduleGrid& grid, const ParseContext& parseContext, ErrorGuard& errors);
@@ -599,6 +604,8 @@ public:
         serializer(pvt_table);
         serializer(gas_inflow);
         serializer(wtype);
+        serializer(ref_type);
+        serializer(lgr_tag);
         serializer(guide_rate);
         serializer(efficiency_factor);
         serializer(use_efficiency_in_network);
@@ -629,6 +636,11 @@ public:
     }
 
 private:
+    enum class WellRefinementType {
+        STANDARD,
+        LGR,
+        MIXED,
+    };
     void switchToInjector();
     void switchToProducer();
 
@@ -636,6 +648,7 @@ private:
 
     std::string wname{};
     std::string group_name{};
+
     std::size_t init_step{};
     std::size_t insert_index{};
     int headI{};
@@ -647,12 +660,15 @@ private:
     bool automatic_shutin{false};
     int pvt_table{};
 
+
     // Will NOT be loaded/assigned from restart file
     GasInflowEquation gas_inflow = GasInflowEquation::STD;
 
     const UnitSystem* unit_system{nullptr};
     double udq_undefined{};
     WellType wtype{};
+    WellRefinementType ref_type{WellRefinementType::STANDARD};
+    std::string lgr_tag{};
     WellGuideRate guide_rate{};
     double efficiency_factor{};
     bool use_efficiency_in_network{};
