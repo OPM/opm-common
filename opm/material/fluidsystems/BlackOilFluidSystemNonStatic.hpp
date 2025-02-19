@@ -15,27 +15,27 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
-#ifndef OPM_BLACK_OIL_FLUID_SYSTEM_HPP
-#define OPM_BLACK_OIL_FLUID_SYSTEM_HPP
-#define COMPILING_STATIC_FLUID_SYSTEM
-#define STATIC_OR_DEVICE static
-#define STATIC_OR_NOTHING static
+#ifndef OPM_BLACK_OIL_FLUID_SYSTEM_DYNAMIC_HPP
+#define OPM_BLACK_OIL_FLUID_SYSTEM_DYNAMIC_HPP
+
 #define FLUIDSYSTEM_CLASSNAME_NONSTATIC BlackOilFluidSystemNonStatic
 #define FLUIDSYSTEM_CLASSNAME_STATIC BlackOilFluidSystem
-#define FLUIDSYSTEM_CLASSNAME BlackOilFluidSystem
+#define FLUIDSYSTEM_CLASSNAME BlackOilFluidSystemNonStatic
 namespace Opm
 {
 template <class Scalar,
           class IndexTraits,
           template <typename> typename Storage,
           template <typename> typename SmartPointer>
-class FLUIDSYSTEM_CLASSNAME_NONSTATIC;
+class FLUIDSYSTEM_CLASSNAME_STATIC;
 }
+#include <opm/common/utility/gpuDecorators.hpp>
+#define STATIC_OR_DEVICE OPM_HOST_DEVICE
+#define STATIC_OR_NOTHING
 #include <opm/material/fluidsystems/BlackOilFluidSystem_impl.hpp>
 #undef STATIC_OR_DEVICE
-#undef COMPILING_STATIC_FLUID_SYSTEM
 #undef STATIC_OR_NOTHING
-#undef FLUIDSYSTEM_CLASSNAME_STATIC
 #undef FLUIDSYSTEM_CLASSNAME_NONSTATIC
+#undef FLUIDSYSTEM_CLASSNAME_STATIC
 #undef FLUIDSYSTEM_CLASSNAME
 #endif // OPM_BLACK_OIL_FLUID_SYSTEM_HPP

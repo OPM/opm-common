@@ -461,6 +461,7 @@ if(ENABLE_ECL_OUTPUT)
 endif()
 
 list (APPEND TEST_SOURCE_FILES
+      tests/test_blackoilfluidsystem_nonstatic.cpp
       tests/test_calculateCellVol.cpp
       tests/test_cmp.cpp
       tests/test_ConditionalStorage.cpp
@@ -885,6 +886,7 @@ list( APPEND PUBLIC_HEADER_FILES
       opm/common/utility/Serializer.hpp
       opm/common/utility/String.hpp
       opm/common/utility/TimeService.hpp
+      opm/common/utility/VectorWithDefaultAllocator.hpp
       opm/common/utility/Visitor.hpp
       opm/material/components/Lnapl.hpp
       opm/material/components/N2.hpp
@@ -957,6 +959,7 @@ list( APPEND PUBLIC_HEADER_FILES
       opm/material/fluidsystems/TwoPhaseImmiscibleFluidSystem.hpp
       opm/material/fluidsystems/BlackOilFluidSystem.hpp
       opm/material/fluidsystems/BlackOilFluidSystem_impl.hpp
+      opm/material/fluidsystems/BlackOilFluidSystemNonStatic.hpp
       opm/material/fluidsystems/black_oil_functions.hpp
       opm/material/fluidsystems/LiquidPhase.hpp
       opm/material/fluidsystems/PTFlashParameterCache.hpp
