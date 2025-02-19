@@ -27,6 +27,7 @@
 #include <opm/common/OpmLog/KeywordLocation.hpp>
 
 #include <opm/output/data/Aquifer.hpp>
+#include <opm/output/data/Wells.hpp>
 #include <opm/output/eclipse/RestartValue.hpp>
 
 #include <opm/input/eclipse/Deck/Deck.hpp>
@@ -212,6 +213,9 @@ TEST_FOR_TYPE_NAMED_OBJ(data::AquiferData, AquiferData_Numeric, serializationTes
 TEST_FOR_TYPE_NAMED(data::CarterTracyData, CarterTracyData)
 TEST_FOR_TYPE_NAMED(data::CellData, CellData)
 TEST_FOR_TYPE_NAMED(data::Connection, dataConnection)
+TEST_FOR_TYPE_NAMED(data::ConnectionFiltrate, dataConnectionFiltrate)
+TEST_FOR_TYPE_NAMED(data::ConnectionFracturing::Statistics, dataConnectionFracturingStatistics)
+TEST_FOR_TYPE_NAMED(data::ConnectionFracturing, dataConnectionFracturing)
 TEST_FOR_TYPE_NAMED(data::CurrentControl, CurrentControl)
 TEST_FOR_TYPE_NAMED(data::FetkovichData, FetkovichData)
 TEST_FOR_TYPE_NAMED(data::GroupAndNetworkValues, GroupAndNetworkValues)

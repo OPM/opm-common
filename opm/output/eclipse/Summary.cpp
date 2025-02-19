@@ -1111,6 +1111,45 @@ inline quantity cratel( const fn_args& args ) {
     return { sum, unit };
 }
 
+template <Opm::data::ConnectionFracturing::Statistics Opm::data::ConnectionFracturing::* q,
+          double Opm::data::ConnectionFracturing::Statistics::* stat,
+          measure unit>
+quantity connFracStatistics(const fn_args& args)
+{
+    const auto zero = quantity { 0.0, unit };
+
+    if (args.schedule_wells.empty()) {
+        return zero;
+    }
+
+    const auto& name = args.schedule_wells.front()->name();
+    auto xwPos = args.wells.find(name);
+    if ((xwPos == args.wells.end()) ||
+        (xwPos->second.dynamicStatus == Opm::Well::Status::SHUT))
+    {
+        return zero;
+    }
+
+    const auto global_index = static_cast<std::size_t>(args.num - 1);
+
+    const auto& well_data = xwPos->second;
+    const auto connPos =
+        std::find_if(well_data.connections.begin(),
+                     well_data.connections.end(),
+            [global_index](const Opm::data::Connection& c)
+        {
+            return c.index == global_index;
+        });
+
+    if ((connPos == well_data.connections.end()) ||
+        (connPos->fract.numCells == 0))
+    {
+        return zero;
+    }
+
+    return { connPos->fract.*q.*stat, unit };
+}
+
 template< bool injection >
 inline quantity flowing( const fn_args& args ) {
     const auto& wells = args.wells;
@@ -2518,6 +2557,39 @@ static const auto funs = std::unordered_map<std::string, ofun> {
     { "CFCPORO",  filtrate_connection_quantities<injector> },
     { "CFCRAD",  filtrate_connection_quantities<injector> },
     { "CFCAOF",  filtrate_connection_quantities<injector> },
+
+    // Hydraulic fracturing (OPM extension)
+    //
+    // Fracture pressure
+    { "CFRPMAX", connFracStatistics<&Opm::data::ConnectionFracturing::press,
+      &Opm::data::ConnectionFracturing::Statistics::max, measure::pressure> },
+    { "CFRPMIN", connFracStatistics<&Opm::data::ConnectionFracturing::press,
+      &Opm::data::ConnectionFracturing::Statistics::min, measure::pressure> },
+    { "CFRPAVG", connFracStatistics<&Opm::data::ConnectionFracturing::press,
+      &Opm::data::ConnectionFracturing::Statistics::avg, measure::pressure> },
+    { "CFRPSTD", connFracStatistics<&Opm::data::ConnectionFracturing::press,
+      &Opm::data::ConnectionFracturing::Statistics::stdev, measure::pressure> },
+
+    // Fracture injection rate
+    { "CFRIRMAX", connFracStatistics<&Opm::data::ConnectionFracturing::rate,
+      &Opm::data::ConnectionFracturing::Statistics::max, measure::rate> },
+    { "CFRIRMIN", connFracStatistics<&Opm::data::ConnectionFracturing::rate,
+      &Opm::data::ConnectionFracturing::Statistics::min, measure::rate> },
+    { "CFRIRAVG", connFracStatistics<&Opm::data::ConnectionFracturing::rate,
+      &Opm::data::ConnectionFracturing::Statistics::avg, measure::rate> },
+    { "CFRIRSTD", connFracStatistics<&Opm::data::ConnectionFracturing::rate,
+      &Opm::data::ConnectionFracturing::Statistics::stdev, measure::rate> },
+
+    // Fracture width
+    { "CFRWDMAX", connFracStatistics<&Opm::data::ConnectionFracturing::width,
+      &Opm::data::ConnectionFracturing::Statistics::max, measure::length> },
+    { "CFRWDMIN", connFracStatistics<&Opm::data::ConnectionFracturing::width,
+      &Opm::data::ConnectionFracturing::Statistics::min, measure::length> },
+    { "CFRWDAVG", connFracStatistics<&Opm::data::ConnectionFracturing::width,
+      &Opm::data::ConnectionFracturing::Statistics::avg, measure::length> },
+    { "CFRWDSTD", connFracStatistics<&Opm::data::ConnectionFracturing::width,
+      &Opm::data::ConnectionFracturing::Statistics::stdev, measure::length> },
+
     { "COIT", mul( crate< rt::oil, injector >, duration ) },
     { "CWIT", mul( crate< rt::wat, injector >, duration ) },
     { "CGIT", mul( crate< rt::gas, injector >, duration ) },
