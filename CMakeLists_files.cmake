@@ -461,7 +461,6 @@ if(ENABLE_ECL_OUTPUT)
 endif()
 
 list (APPEND TEST_SOURCE_FILES
-      tests/test_blackoilfluidsystem_nonstatic.cpp
       tests/test_calculateCellVol.cpp
       tests/test_cmp.cpp
       tests/test_ConditionalStorage.cpp
@@ -482,6 +481,7 @@ list (APPEND TEST_SOURCE_FILES
       tests/test_Uns2CPG.cpp
       tests/material/test_2dtables.cpp
       tests/material/test_blackoilfluidstate.cpp
+      tests/material/test_blackoilfluidsystem_nonstatic.cpp
       tests/material/test_components.cpp
       tests/material/test_binarycoefficients.cpp
       tests/material/test_fluidmatrixinteractions.cpp
