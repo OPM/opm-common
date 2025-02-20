@@ -40,7 +40,7 @@
 #include <opm/material/common/Valgrind.hpp>
 #include <opm/material/common/HasMemberGeneratorMacros.hpp>
 #include <opm/material/fluidsystems/NullParameterCache.hpp>
-#include <opm/material/fluidsystems/black_oil_functions.hpp>
+#include <opm/material/fluidsystems/BlackOilFunctions.hpp>
 
 #include <array>
 #include <cstddef>

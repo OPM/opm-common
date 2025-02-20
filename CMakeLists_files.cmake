@@ -960,7 +960,7 @@ list( APPEND PUBLIC_HEADER_FILES
       opm/material/fluidsystems/BlackOilFluidSystem.hpp
       opm/material/fluidsystems/BlackOilFluidSystem_impl.hpp
       opm/material/fluidsystems/BlackOilFluidSystemNonStatic.hpp
-      opm/material/fluidsystems/black_oil_functions.hpp
+      opm/material/fluidsystems/BlackOilFunctions.hpp
       opm/material/fluidsystems/LiquidPhase.hpp
       opm/material/fluidsystems/PTFlashParameterCache.hpp
       opm/material/fluidsystems/Spe5ParameterCache.hpp
