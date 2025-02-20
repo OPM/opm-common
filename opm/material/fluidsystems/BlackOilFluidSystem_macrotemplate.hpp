@@ -78,6 +78,7 @@ public:
     using OilPvt = OilPvtMultiplexer<Scalar>;
     using WaterPvt = WaterPvtMultiplexer<Scalar>;
 
+    #ifdef COMPILING_STATIC_FLUID_SYSTEM
     //! \copydoc BaseFluidSystem::ParameterCache
     template <class EvaluationT>
     struct ParameterCache : public NullParameterCache<EvaluationT>
@@ -136,6 +137,16 @@ public:
         unsigned regionIdx_;
     };
 
+    #else
+
+    // We want to use the exact same ParameterCache class for both the static and nonstatic versions
+    template<class EvaluationT>
+    using ParameterCache =
+        typename FLUIDSYSTEM_CLASSNAME_STATIC<Scalar,
+             IndexTraits,
+             Storage,
+             SmartPointer>::template ParameterCache<EvaluationT>;
+    #endif
 
     #ifndef COMPILING_STATIC_FLUID_SYSTEM
     /**
