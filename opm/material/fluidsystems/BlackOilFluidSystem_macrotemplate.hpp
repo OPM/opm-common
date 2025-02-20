@@ -144,7 +144,7 @@ public:
      * This can be used to copy from one storage type (say std::vector) to another (say GPUBuffer).
      */
     template<template<typename> typename StorageT, template<typename> typename SmartPointerT>
-    FLUIDSYSTEM_CLASSNAME(const FLUIDSYSTEM_CLASSNAME<Scalar, IndexTraits, StorageT, SmartPointerT>&& other)
+    explicit FLUIDSYSTEM_CLASSNAME(const FLUIDSYSTEM_CLASSNAME<Scalar, IndexTraits, StorageT, SmartPointerT>& other)
         : surfacePressure(other.surfacePressure)
         , surfaceTemperature(other.surfaceTemperature)
         , numActivePhases_(other.numActivePhases_)
@@ -1686,7 +1686,7 @@ private:
 
     #ifndef COMPILING_STATIC_FLUID_SYSTEM
     template<template<typename> typename StorageT, template<typename> typename SmartPointerT>
-    FLUIDSYSTEM_CLASSNAME(const FLUIDSYSTEM_CLASSNAME_STATIC<Scalar, IndexTraits, StorageT, SmartPointerT>&& other)
+    explicit FLUIDSYSTEM_CLASSNAME(const FLUIDSYSTEM_CLASSNAME_STATIC<Scalar, IndexTraits, StorageT, SmartPointerT>& other)
         : surfacePressure(other.surfacePressure)
         , surfaceTemperature(other.surfaceTemperature)
         , numActivePhases_(other.numActivePhases_)
