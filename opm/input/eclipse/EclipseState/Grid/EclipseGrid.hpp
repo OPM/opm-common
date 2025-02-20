@@ -114,6 +114,18 @@ namespace Opm {
             return activeIndex(globalIndex);
         }
 
+        const std::vector<std::string> get_all_lgr_labels() const {
+            std::vector<std::string> sliced_labels(all_lgr_labels.begin() + 1, all_lgr_labels.end());
+            return sliced_labels;
+        }
+        
+        const std::string get_lgr_tag() const {
+            return this->lgr_label;
+        }
+
+        std::vector<GridDims> get_lgr_children_gridim() const;
+      
+        
         void assertIndexLGR(size_t localIndex) const;
 
         void assertLabelLGR(const std::string& label) const;
@@ -263,10 +275,9 @@ namespace Opm {
 
         static bool hasEqualDVDEPTHZ(const Deck&);
         static bool allEqual(const std::vector<double> &v);
-        EclipseGridLGR& getLGRCell(std::size_t index){
-          return lgr_children_cells[index];
-        };
-        
+        EclipseGridLGR& getLGRCell(std::size_t index);
+        EclipseGridLGR& getLGRCell(const std::string& lgr_tag) const;
+ 
         std::vector<EclipseGridLGR> lgr_children_cells;
         /**
         * @brief Sets Local Grid Refinement for the EclipseGrid.
@@ -404,6 +415,8 @@ namespace Opm {
         {
             return father_global;
         }
+        std::optional<std::reference_wrapper<EclipseGridLGR>>
+        get_child_LGR_cell(const std::string& lgr_tag) const;
         const std::vector<int>& get_hostnum(void) const;
         void set_hostnum(std::vector<int>&);
         const std::array<int,3>& get_low_fahterIJK() const{

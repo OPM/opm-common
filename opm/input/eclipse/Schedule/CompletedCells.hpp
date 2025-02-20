@@ -32,6 +32,8 @@
 
 namespace Opm {
 
+class EclipseGrid;
+
 class CompletedCells
 {
 public:

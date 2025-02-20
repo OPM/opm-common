@@ -16,12 +16,14 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
+#include <iostream>
 #include <opm/io/eclipse/PaddedOutputString.hpp>
 #include <cstddef>
 #include <cstdlib>
 #include <optional>
 #include <stdexcept>
 #include <vector>
+#include <string>
 #define _USE_MATH_DEFINES
 
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
@@ -1981,6 +1983,40 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
         }
     }
 
+    EclipseGridLGR& EclipseGrid::getLGRCell(std::size_t index){
+        return lgr_children_cells[index];
+      };
+
+    EclipseGridLGR& EclipseGrid::getLGRCell(const std::string& lgr_tag) const
+    {
+        std::optional<std::reference_wrapper<EclipseGridLGR>>lgr_found = std::nullopt;
+        for (auto& lgr_cell : lgr_children_cells) 
+        {
+            auto lgr_temp = lgr_cell.get_child_LGR_cell(lgr_tag);          
+            if (lgr_temp != std::nullopt)
+                lgr_found  = lgr_temp;
+        }
+        if (lgr_found == std::nullopt)
+        {
+            throw std::runtime_error("No EclipseGridLGR found with tag: " + lgr_tag);
+        }
+        else
+        {
+            return lgr_found.value().get();
+        }        
+    }
+
+    std::vector<GridDims> EclipseGrid::get_lgr_children_gridim() const
+    {
+        std::vector<GridDims> lgr_children_gridim;
+        for (std::string lgr_tag : get_all_lgr_labels()) 
+        {
+            EclipseGridLGR& lgr_cell =  getLGRCell(lgr_tag);
+            lgr_children_gridim.emplace_back(lgr_cell.getNX(), lgr_cell.getNY(), lgr_cell.getNZ());            
+        }
+        return lgr_children_gridim;
+    }
+
     void EclipseGrid::set_lgr_refinement(const std::string& lgr_tag, const std::vector<double>& coords, 
                                                                             const std::vector<double> & zcorn){              
         for (auto& lgr_cell : lgr_children_cells) {
@@ -2313,6 +2349,7 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
         }
     }
 
+
     void EclipseGrid::setMINPVV(const std::vector<double>& minpvv) {
         if (m_minpvMode == MinpvMode::Inactive || m_minpvMode == MinpvMode::EclSTD) {
             if (minpvv.size() != this->getCartesianSize()) {
@@ -2507,6 +2544,31 @@ namespace Opm {
     const std::vector<int>& EclipseGridLGR::get_hostnum(void) const
     {
         return m_hostnum;
+    }
+
+    std::optional<std::reference_wrapper<EclipseGridLGR>> 
+    EclipseGridLGR::get_child_LGR_cell(const std::string& lgr_tag) const
+    {
+        std::optional<std::reference_wrapper<EclipseGridLGR>> lgr_found = std::nullopt;
+        // Otherwise, search recursively within children.
+        if (lgr_tag == lgr_label) 
+        {
+            lgr_found = std::ref(const_cast<EclipseGridLGR&>(*this));
+        }
+        else
+        {
+            for (auto &child : this->lgr_children_cells) {
+                if ((child.get_lgr_tag() == lgr_tag) && (lgr_found == std::nullopt)) 
+                {
+                    lgr_found = std::ref(const_cast<EclipseGridLGR&>(child));
+                }
+                else
+                {
+                    return child.get_child_LGR_cell(lgr_tag);
+                }
+            }
+        }
+        return lgr_found;
     }
 
     void EclipseGridLGR::set_hostnum(std::vector<int>& hostnum)

@@ -18,6 +18,7 @@
 */
 
 #include <opm/input/eclipse/Schedule/CompletedCells.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 
 bool Opm::CompletedCells::Cell::Props::operator==(const Props& other) const
 {
