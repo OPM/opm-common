@@ -66,7 +66,9 @@ class Schedule;
  *
  * \tparam Scalar The type used for scalar floating point values
  */
-template <class Scalar, class IndexTraits = BlackOilDefaultIndexTraits, template<typename> typename Storage = VectorWithDefaultAllocator, template<typename> typename SmartPointer = std::shared_ptr>
+template <class Scalar, class IndexTraits = BlackOilDefaultIndexTraits, 
+    template<typename> typename Storage = VectorWithDefaultAllocator, 
+    template<typename> typename SmartPointer = std::shared_ptr>
 class FLUIDSYSTEM_CLASSNAME : public BaseFluidSystem<Scalar, FLUIDSYSTEM_CLASSNAME<Scalar, IndexTraits, Storage, SmartPointer> >
 {
     using ThisType = FLUIDSYSTEM_CLASSNAME;

@@ -18,9 +18,15 @@
 #ifndef OPM_BLACK_OIL_FLUID_SYSTEM_DYNAMIC_HPP
 #define OPM_BLACK_OIL_FLUID_SYSTEM_DYNAMIC_HPP
 
+#include <opm/common/utility/gpuDecorators.hpp>
+
+
 #define FLUIDSYSTEM_CLASSNAME_NONSTATIC BlackOilFluidSystemNonStatic
 #define FLUIDSYSTEM_CLASSNAME_STATIC BlackOilFluidSystem
 #define FLUIDSYSTEM_CLASSNAME BlackOilFluidSystemNonStatic
+#define STATIC_OR_DEVICE OPM_HOST_DEVICE
+#define STATIC_OR_NOTHING
+
 namespace Opm
 {
 template <class Scalar,
@@ -29,10 +35,9 @@ template <class Scalar,
           template <typename> typename SmartPointer>
 class FLUIDSYSTEM_CLASSNAME_STATIC;
 }
-#include <opm/common/utility/gpuDecorators.hpp>
-#define STATIC_OR_DEVICE OPM_HOST_DEVICE
-#define STATIC_OR_NOTHING
+
 #include <opm/material/fluidsystems/BlackOilFluidSystem_macrotemplate.hpp>
+
 #undef STATIC_OR_DEVICE
 #undef STATIC_OR_NOTHING
 #undef FLUIDSYSTEM_CLASSNAME_NONSTATIC
