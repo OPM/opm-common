@@ -27,6 +27,8 @@
 #include <optional>
 #include <unordered_map>
 #include <utility>
+#include <vector>
+#include <string>
 
 namespace Opm {
 
@@ -37,7 +39,8 @@ public:
     {
         std::size_t global_index{};
         std::size_t i{}, j{}, k{};
-
+        std::size_t lgr_index{};
+        bool is_lgr{false};
         struct Props
         {
             std::size_t active_index{};
@@ -85,6 +88,8 @@ public:
             serializer(this->i);
             serializer(this->j);
             serializer(this->k);
+            serializer(this->lgr_index);
+            serializer(this->is_lgr);
             serializer(this->props);
             serializer(this->depth);
             serializer(this->dimensions);
@@ -102,8 +107,28 @@ public:
 
     CompletedCells() = default;
     ~CompletedCells() = default;
+    /**
+    * @brief Constructs a CompletedCells object for the base case without LGR.
+    *
+    * This constructor initializes the completed cells container based on 
+    * the provided grid dimensions. It does not account for Local Grid Refinement (LGR). 
+    *
+    * @param dims_ The grid dimensions used for indexing the cells.
+    */
     explicit CompletedCells(const GridDims& dims);
+    /**
+     * @brief Retrieves a completed cell at the specified grid coordinates.
+     *
+     * Uses the global indexing system provided by GridDims to access the 
+     * corresponding cell in the container.
+     *
+     * @param i The x-index of the cell.
+     * @param j The y-index of the cell.
+     * @param k The z-index of the cell.
+     * @return A constant reference to the requested cell.
+     */
     CompletedCells(std::size_t nx, std::size_t ny, std::size_t nz);
+    void initialize_LGR(std::vector<GridDims>, std::vector<std::string>);
 
     const Cell& get(std::size_t i, std::size_t j, std::size_t k) const;
     std::pair<bool, Cell&> try_get(std::size_t i, std::size_t j, std::size_t k);
@@ -120,6 +145,9 @@ public:
 
 private:
     GridDims dims;
+    std::vector<GridDims> dims_lgr;
+    std::vector<std::string> lgr_labels;
+    bool is_lgr{false};
     std::unordered_map<std::size_t, Cell> cells;
 };
 }
