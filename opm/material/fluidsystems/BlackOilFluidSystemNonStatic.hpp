@@ -32,7 +32,7 @@ class FLUIDSYSTEM_CLASSNAME_STATIC;
 #include <opm/common/utility/gpuDecorators.hpp>
 #define STATIC_OR_DEVICE OPM_HOST_DEVICE
 #define STATIC_OR_NOTHING
-#include <opm/material/fluidsystems/BlackOilFluidSystem_impl.hpp>
+#include <opm/material/fluidsystems/BlackOilFluidSystem_macrotemplate.hpp>
 #undef STATIC_OR_DEVICE
 #undef STATIC_OR_NOTHING
 #undef FLUIDSYSTEM_CLASSNAME_NONSTATIC

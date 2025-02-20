@@ -31,7 +31,7 @@ template <class Scalar,
           template <typename> typename SmartPointer>
 class FLUIDSYSTEM_CLASSNAME_NONSTATIC;
 }
-#include <opm/material/fluidsystems/BlackOilFluidSystem_impl.hpp>
+#include <opm/material/fluidsystems/BlackOilFluidSystem_macrotemplate.hpp>
 #undef STATIC_OR_DEVICE
 #undef COMPILING_STATIC_FLUID_SYSTEM
 #undef STATIC_OR_NOTHING

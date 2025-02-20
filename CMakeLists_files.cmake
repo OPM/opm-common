@@ -958,7 +958,7 @@ list( APPEND PUBLIC_HEADER_FILES
       opm/material/fluidsystems/GasPhase.hpp
       opm/material/fluidsystems/TwoPhaseImmiscibleFluidSystem.hpp
       opm/material/fluidsystems/BlackOilFluidSystem.hpp
-      opm/material/fluidsystems/BlackOilFluidSystem_impl.hpp
+      opm/material/fluidsystems/BlackOilFluidSystem_macrotemplate.hpp
       opm/material/fluidsystems/BlackOilFluidSystemNonStatic.hpp
       opm/material/fluidsystems/BlackOilFunctions.hpp
       opm/material/fluidsystems/LiquidPhase.hpp
