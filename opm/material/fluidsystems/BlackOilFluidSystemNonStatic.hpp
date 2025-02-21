@@ -15,8 +15,8 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
-#ifndef OPM_BLACK_OIL_FLUID_SYSTEM_DYNAMIC_HPP
-#define OPM_BLACK_OIL_FLUID_SYSTEM_DYNAMIC_HPP
+#ifndef OPM_BLACK_OIL_FLUID_SYSTEM_NONSTATIC_HPP
+#define OPM_BLACK_OIL_FLUID_SYSTEM_NONSTATIC_HPP
 
 #include <opm/common/utility/gpuDecorators.hpp>
 
@@ -79,4 +79,4 @@ class FLUIDSYSTEM_CLASSNAME_STATIC;
 #undef FLUIDSYSTEM_CLASSNAME_NONSTATIC
 #undef FLUIDSYSTEM_CLASSNAME_STATIC
 #undef FLUIDSYSTEM_CLASSNAME
-#endif // OPM_BLACK_OIL_FLUID_SYSTEM_HPP
+#endif
