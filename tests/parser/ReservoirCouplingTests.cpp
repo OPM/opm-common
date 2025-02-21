@@ -21,6 +21,7 @@
 
 #include <boost/test/unit_test.hpp>
 #include <opm/input/eclipse/Schedule/ResCoup/ReservoirCouplingInfo.hpp>
+#include <opm/input/eclipse/Schedule/ResCoup/WriteCouplingFile.hpp>
 #include <opm/input/eclipse/Schedule/ResCoup/GrupSlav.hpp>
 #include <opm/input/eclipse/Schedule/ResCoup/MasterGroup.hpp>
 #include <opm/input/eclipse/Schedule/ResCoup/Slaves.hpp>
@@ -542,7 +543,7 @@ DUMPCUPL
     std::string deck_string = getCouplingFileDeckString(end_of_deck_string);
     const auto& schedule = makeSchedule(deck_string, /*slave_mode=*/false);
     const auto& rescoup = schedule[0].rescoup();
-    BOOST_CHECK(rescoup.couplingFileFlag() ==
+    BOOST_CHECK(rescoup.writeCouplingFileFlag() ==
                 Opm::ReservoirCoupling::CouplingInfo::CouplingFileFlag::FORMATTED);
 
 }
@@ -570,6 +571,37 @@ DUMPCUPL
         deck_string,
         /*slave_mode=*/false,
         /*exception_string=*/"Problem with keyword DUMPCUPL\nIn <memory string> line 28\nDUMPCUPL keyword cannot be defaulted."
+    );
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE(UseCouplingFile)
+
+BOOST_AUTO_TEST_CASE(FORMATTED_FILE) {
+    std::string end_of_deck_string = R"(
+USECUPL
+  'BASE' 'F' /
+)";
+    std::string deck_string = getCouplingFileDeckString(end_of_deck_string);
+    const auto& schedule = makeSchedule(deck_string, /*slave_mode=*/false);
+    const auto& rescoup = schedule[0].rescoup();
+    BOOST_CHECK(rescoup.readCouplingFileFlag() ==
+                Opm::ReservoirCoupling::CouplingInfo::CouplingFileFlag::FORMATTED);
+    BOOST_CHECK(rescoup.readCouplingFileName() == "BASE");
+
+}
+
+BOOST_AUTO_TEST_CASE(DEFAULT_NOT_ALLOWED1) {
+    std::string end_of_deck_string = R"(
+USECUPL
+  * 'U' /
+)";
+    std::string deck_string = getCouplingFileDeckString(end_of_deck_string);
+    assertRaisesInputErrorException(
+        deck_string,
+        /*slave_mode=*/false,
+        /*exception_string=*/"Problem with keyword USECUPL\nIn <memory string> line 28\nRoot name of coupling file (item 1) cannot be defaulted."
     );
 }
 

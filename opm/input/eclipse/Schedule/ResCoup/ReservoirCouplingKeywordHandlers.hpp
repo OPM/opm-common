@@ -16,8 +16,8 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef RESERVOIR_COUPLING_KEYWORD_HANDLERS_HPP
-#define RESERVOIR_COUPLING_KEYWORD_HANDLERS_HPP
+#ifndef OPM_RESERVOIR_COUPLING_KEYWORD_HANDLERS_HPP
+#define OPM_RESERVOIR_COUPLING_KEYWORD_HANDLERS_HPP
 
 #include "../KeywordHandlers.hpp"
 
@@ -32,4 +32,4 @@ std::vector<std::pair<std::string,KeywordHandlers::handler_function>> getReservo
 
 }
 
-#endif
+#endif // OPM_RESERVOIR_COUPLING_KEYWORD_HANDLERS_HPP

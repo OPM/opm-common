@@ -15,33 +15,14 @@
 
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
- */
-
-#include "ReservoirCouplingKeywordHandlers.hpp"
-#include "ReservoirCouplingInfo.hpp"
-#include "../HandlerContext.hpp"
-#include "GrupSlav.hpp"
-#include "Slaves.hpp"
-#include "MasterGroup.hpp"
-#include "MasterMinimumTimeStep.hpp"
-#include "WriteCouplingFile.hpp"
-#include "ReadCouplingFile.hpp"
-
-#include <fmt/format.h>
-
+*/
+#ifndef OPM_RESERVOIR_COUPLING_FILE_HPP
+#define OPM_RESERVOIR_COUPLING_FILE_HPP
 namespace Opm {
 
-std::vector<std::pair<std::string,KeywordHandlers::handler_function>>
-getReservoirCouplingHandlers()
-{
-    return {
-        { "SLAVES", &handleSLAVES },
-        { "GRUPMAST", &handleGRUPMAST},
-        { "GRUPSLAV", &handleGRUPSLAV},
-        { "RCMASTS", &handleRCMASTS},
-        { "DUMPCUPL", &handleDUMPCUPL},
-        { "USECUPL", &handleUSECUPL},
-    };
-}
+class HandlerContext;
+
+extern void handleDUMPCUPL(HandlerContext& handlerContext);
 
 } // namespace Opm
+#endif // OPM_RESERVOIR_COUPLING_FILE_HPP
