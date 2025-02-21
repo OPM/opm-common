@@ -16,7 +16,6 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include <iostream>
 #include <opm/io/eclipse/PaddedOutputString.hpp>
 #include <cstddef>
 #include <cstdlib>
@@ -2122,7 +2121,7 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
     }
 
     std::size_t EclipseGrid::activeIndexLGR(const std::string& label, std::size_t localIndex) const {
-        if (lgr_label.compare(label) == 0 ){
+        if (lgr_label == label){
             std::size_t local_global_ind = getActiveIndex(localIndex);
             this->assertIndexLGR(local_global_ind);
             return lgr_level_active_map[local_global_ind] + lgr_global_counter;
@@ -2140,7 +2139,7 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
 
 
     std::size_t EclipseGrid::activeIndexLGR(const std::string& label, std::size_t i, std::size_t j, std::size_t k) const {
-        if (lgr_label.compare(label) == 0) {
+        if (lgr_label == label) {
             this->assertIJK(i,j,k);
             std::size_t local_global_ind = getActiveIndex(i,j,k);
             this->assertIndexLGR(local_global_ind);
@@ -2156,6 +2155,7 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
                                    });
         }
     }
+
 
     std::size_t EclipseGrid::getTotalActiveLGR() const
     {

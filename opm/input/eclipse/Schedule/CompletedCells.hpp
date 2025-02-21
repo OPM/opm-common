@@ -41,8 +41,6 @@ public:
     {
         std::size_t global_index{};
         std::size_t i{}, j{}, k{};
-        std::size_t lgr_index{};
-        bool is_lgr{false};
         struct Props
         {
             std::size_t active_index{};
@@ -90,8 +88,6 @@ public:
             serializer(this->i);
             serializer(this->j);
             serializer(this->k);
-            serializer(this->lgr_index);
-            serializer(this->is_lgr);
             serializer(this->props);
             serializer(this->depth);
             serializer(this->dimensions);
@@ -147,9 +143,6 @@ public:
 
 private:
     GridDims dims;
-    std::vector<GridDims> dims_lgr;
-    std::vector<std::string> lgr_labels;
-    bool is_lgr{false};
     std::unordered_map<std::size_t, Cell> cells;
 };
 }

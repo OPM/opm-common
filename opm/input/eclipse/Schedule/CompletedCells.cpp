@@ -55,8 +55,6 @@ bool Opm::CompletedCells::Cell::operator==(const Cell& other) const
         && (this->i == other.i)
         && (this->j == other.j)
         && (this->k == other.k)
-        && (this->lgr_index == other.lgr_index)
-        && (this->is_lgr== other.is_lgr)
         && (this->depth == other.depth)
         && (this->dimensions == other.dimensions)
         && (this->props == other.props)
@@ -67,8 +65,6 @@ Opm::CompletedCells::Cell
 Opm::CompletedCells::Cell::serializationTestObject()
 {
     Cell cell { 0, 1, 1, 1 };
-    cell.lgr_index = 2;
-    cell.is_lgr = true;
     cell.props = Props::serializationTestObject();
     cell.depth = 12345;
     cell.dimensions = {1.0,2.0,3.0};
@@ -85,14 +81,6 @@ Opm::CompletedCells::CompletedCells(const Opm::GridDims& dims_)
     : dims(dims_)
 {}
 
-void Opm::CompletedCells::initialize_LGR(std::vector<GridDims> dims_lgr_, std::vector<std::string> lgr_labels_)
-{
-    this->dims_lgr = std::move(dims_lgr_);
-    this->lgr_labels = std::move(lgr_labels_);
-    this->is_lgr = true;
-}
-
-
 const Opm::CompletedCells::Cell&
 Opm::CompletedCells::get(std::size_t i, std::size_t j, std::size_t k) const
 {
@@ -103,7 +91,7 @@ std::pair<bool, Opm::CompletedCells::Cell&>
 Opm::CompletedCells::try_get(std::size_t i, std::size_t j, std::size_t k)
 {
     const auto g = this->dims.getGlobalIndex(i, j, k);
-
+    
     const auto& [pos, inserted] = this->cells.try_emplace(g, g, i, j, k);
 
     return { !inserted, pos->second };
@@ -112,9 +100,6 @@ Opm::CompletedCells::try_get(std::size_t i, std::size_t j, std::size_t k)
 bool Opm::CompletedCells::operator==(const Opm::CompletedCells& other) const
 {
     return (this->dims == other.dims)
-        && (this->dims_lgr == other.dims_lgr)
-        && (this->lgr_labels == other.lgr_labels)
-        && (this->is_lgr == other.is_lgr)
         && (this->cells == other.cells)
 
         ;
@@ -124,9 +109,6 @@ Opm::CompletedCells
 Opm::CompletedCells::serializationTestObject()
 {
     Opm::CompletedCells cells(2,3,4);
-    cells.dims_lgr = {GridDims::serializationTestObject(), GridDims::serializationTestObject()};
-    cells.lgr_labels = {"lgr1", "lgr2"};
-    cells.is_lgr = true;
     cells.cells.emplace(7, Opm::CompletedCells::Cell::serializationTestObject());
 
     return cells;
