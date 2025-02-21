@@ -22,6 +22,7 @@
 #define OPM_ERRORMACROS_HPP
 
 #include <opm/common/OpmLog/OpmLog.hpp>
+#include <opm/common/utility/gpuDecorators.hpp>
 
 #include <string>
 #include <exception>
@@ -40,6 +41,7 @@
 # define OPM_MESSAGE_IF(cond, m) do {} while (false)
 #endif
 
+#if OPM_IS_INSIDE_HOST_FUNCTION
 // Macro to throw an exception that counts as an error in PRT file.
 // NOTE: For this macro to work, the
 // exception class must exhibit a constructor with the signature
@@ -90,4 +92,40 @@
 // throw an exception if a condition is true
 #define OPM_ERROR_IF(condition, message) do {if(condition){ OPM_THROW(std::logic_error, message);}} while(false)
 
+#else // On GPU
+// On the GPU, we cannot throw exceptions, so we use assert(false) instead.
+// This will allow us to keep the same code for both CPU and GPU when using
+// the macros. The assert(false) will only cause the CUDA kernel to terminate, 
+// but it will not throw an exception. However, later calls to cudaGetLastError
+// or similar functions that check for errors will report the error, and if
+// they are wrapped in the OPM_GPU_SAFE_CALL macro, that will throw an exception.
+//
+// Notice however, that once we assert(false) in a CUDA kernel, the CUDA context
+// is broken for the rest of the process, see   
+// https://forums.developer.nvidia.com/t/how-to-clear-cuda-errors/296393/5
+
+/**
+ * @brief assert(false) is only used on the GPU, as throwing exceptions is not supported.
+ */
+#define OPM_THROW(Exception, message) \
+    assert(false)
+
+/**
+ * @brief assert(false) is only used on the GPU, as throwing exceptions is not supported.
+ */
+#define OPM_THROW_PROBLEM(Exception, message) \
+   assert(false)
+
+/**
+ * @brief assert(false) is only used on the GPU, as throwing exceptions is not supported.
+ */
+#define OPM_THROW_NOLOG(Exception, message) \
+   assert(false)
+
+/**
+ * @brief assert(condition) is only used on the GPU, as throwing exceptions is not supported.
+ */
+#define OPM_ERROR_IF(condition, message)                                    \
+    do {if(condition){assert(false);}} while(false)
+#endif // GPU
 #endif // OPM_ERRORMACROS_HPP

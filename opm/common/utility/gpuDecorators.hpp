@@ -50,8 +50,10 @@
   // true inside device version of functions marked __device__
   #if defined(__CUDA_ARCH__) || (defined(__HIP_DEVICE_COMPILE__) && __HIP_DEVICE_COMPILE__ > 0)
   #define OPM_IS_INSIDE_DEVICE_FUNCTION 1
+  #define OPM_IS_INSIDE_HOST_FUNCTION 0
   #else
   #define OPM_IS_INSIDE_DEVICE_FUNCTION 0
+  #define OPM_IS_INSIDE_HOST_FUNCTION 1
   #endif
 
   #if HAVE_CUDA // if we will compile with GPU support
