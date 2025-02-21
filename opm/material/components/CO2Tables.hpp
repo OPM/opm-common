@@ -85,19 +85,19 @@ public:
 namespace Opm::gpuistl {
     template <class ViewType, class Scalar, class ContainerType>
     CO2Tables<Scalar, ViewType>
-    make_view(const CO2Tables<Scalar, ContainerType>& oldCO2Tables) {
-        Opm::UniformTabulated2DFunction<double, ViewType> newEnthalpy = make_view<ViewType>(oldCO2Tables.getTabulatedEnthalpy());
-        Opm::UniformTabulated2DFunction<double, ViewType> newDensity = make_view<ViewType>(oldCO2Tables.getTabulatedDensity());
+    make_view(CO2Tables<Scalar, ContainerType>& oldCO2Tables) {
+        Opm::UniformTabulated2DFunction<double, ViewType> newEnthalpy = make_view<ViewType>(oldCO2Tables.tabulatedEnthalpy);
+        Opm::UniformTabulated2DFunction<double, ViewType> newDensity = make_view<ViewType>(oldCO2Tables.tabulatedDensity);
 
         return CO2Tables<Scalar, ViewType>(newEnthalpy, newDensity);
     }
 
-    template <class Scalar, class OldContainerType, class NewContainerType>
+    template <class NewContainerType, class Scalar, class OldContainerType>
     CO2Tables<Scalar, NewContainerType>
     copy_to_gpu(const CO2Tables<Scalar, OldContainerType>& oldCO2Tables) {
         return CO2Tables<Scalar, NewContainerType>(
-            copy_to_gpu<Scalar, NewContainerType>(oldCO2Tables.getTabulatedEnthalpy()),
-            copy_to_gpu<Scalar, NewContainerType>(oldCO2Tables.getTabulatedDensity())
+            copy_to_gpu<NewContainerType>(oldCO2Tables.tabulatedEnthalpy),
+            copy_to_gpu<NewContainerType>(oldCO2Tables.tabulatedDensity)
         );
     }
 }

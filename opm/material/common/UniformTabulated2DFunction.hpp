@@ -39,6 +39,17 @@
 #include <string>
 #include <vector>
 
+// forward declaration of the class so the function in the next namespace can be declared
+template <class Scalar, class ContainerT = std::vector<Scalar>>
+class UniformTabulated2DFunction;
+
+// declaration of make_view in correct namespace so friend function can be declared in the class
+namespace Opm::gpuistl
+{
+    template <class ViewType, class ScalarT, class ContainerType>
+    UniformTabulated2DFunction<ScalarT, ViewType> make_view(UniformTabulated2DFunction<ScalarT, ContainerType>& params);
+}
+
 namespace Opm {
 
 /*!
@@ -298,9 +309,10 @@ public:
                yMax_ == data.yMax_;
     }
 
-
-
 private:
+    template <class ViewType, class ScalarT, class Container>
+    friend UniformTabulated2DFunction<ScalarT, ViewType> gpuistl::make_view(UniformTabulated2DFunction<ScalarT, Container>&);
+
     // the vector which contains the values of the sample points
     // f(x_i, y_j). don't use this directly, use getSamplePoint(i,j)
     // instead!
@@ -324,24 +336,19 @@ private:
 } // namespace Opm
 
 namespace Opm::gpuistl{
-    template<class Scalar, class GPUContainer>
-    UniformTabulated2DFunction<Scalar, GPUContainer>
-    copy_to_gpu(const UniformTabulated2DFunction<Scalar>& tab){
-        return UniformTabulated2DFunction<Scalar, GPUContainer>(tab.xMin(), tab.xMax(), tab.numX(), tab.yMin(), tab.yMax(), tab.numY(), GPUContainer(tab.samples()));
+    template<class GPUContainer, class ScalarT>
+    UniformTabulated2DFunction<ScalarT, GPUContainer>
+    copy_to_gpu(const UniformTabulated2DFunction<ScalarT>& tab){
+        return UniformTabulated2DFunction<ScalarT, GPUContainer>(tab.xMin(), tab.xMax(), tab.numX(), tab.yMin(), tab.yMax(), tab.numY(), GPUContainer(tab.samples()));
     }
 
-    template <class ViewType, class Scalar, class ContainerType>
-    UniformTabulated2DFunction<Scalar, ViewType>
-    make_view(const UniformTabulated2DFunction<Scalar, ContainerType>& tab) {
+    template <class ViewType, class ScalarT, class ContainerType>
+    UniformTabulated2DFunction<ScalarT, ViewType>
+    make_view(UniformTabulated2DFunction<ScalarT, ContainerType>& tab) {
 
-        using containedType = typename ContainerType::value_type;
-        using viewedTypeNoConst = typename std::remove_const_t<typename ViewType::value_type>;
+        ViewType newTab = make_view<typename ViewType::value_type>(tab.samples_);
 
-        static_assert(std::is_same_v<containedType, viewedTypeNoConst>);
-
-        ViewType newTab = make_view<viewedTypeNoConst>(tab.samples());
-
-        return UniformTabulated2DFunction<Scalar, ViewType>(tab.xMin(), tab.xMax(), tab.numX(), tab.yMin(), tab.yMax(), tab.numY(), newTab);
+        return UniformTabulated2DFunction<ScalarT, ViewType>(tab.xMin(), tab.xMax(), tab.numX(), tab.yMin(), tab.yMax(), tab.numY(), newTab);
     }
 }
 
