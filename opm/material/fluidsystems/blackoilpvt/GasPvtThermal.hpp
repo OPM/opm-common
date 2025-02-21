@@ -38,7 +38,7 @@ class EclipseState;
 class Schedule;
 #endif
 
-template <class Scalar, bool enableThermal>
+template <class Scalar, bool enableThermal, class ParamsContainer, class ContainerT>
 class GasPvtMultiplexer;
 
 /*!
@@ -51,7 +51,7 @@ template <class Scalar>
 class GasPvtThermal
 {
 public:
-    using IsothermalPvt = GasPvtMultiplexer<Scalar, /*enableThermal=*/false>;
+    using IsothermalPvt = GasPvtMultiplexer<Scalar, /*enableThermal=*/false, std::vector<double>, std::vector<Scalar>>;
     using TabulatedOneDFunction = Tabulated1DFunction<Scalar>;
 
     GasPvtThermal() = default;
