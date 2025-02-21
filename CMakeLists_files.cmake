@@ -482,6 +482,7 @@ list (APPEND TEST_SOURCE_FILES
       tests/test_Uns2CPG.cpp
       tests/material/test_2dtables.cpp
       tests/material/test_blackoilfluidstate.cpp
+      tests/material/test_blackoilfluidsystem_nonstatic.cpp
       tests/material/test_components.cpp
       tests/material/test_binarycoefficients.cpp
       tests/material/test_fluidmatrixinteractions.cpp
@@ -533,6 +534,7 @@ if(ENABLE_ECL_INPUT)
     tests/material/test_h2brinepvt.cpp
     tests/material/test_hysteresis.cpp
     tests/material/test_eclblackoilfluidsystem.cpp
+    tests/material/test_eclblackoilfluidsystemnonstatic.cpp
     tests/material/test_eclblackoilpvt.cpp
     tests/material/test_eclmateriallawmanager.cpp
     tests/parser/ACTIONX.cpp
@@ -886,6 +888,7 @@ list( APPEND PUBLIC_HEADER_FILES
       opm/common/utility/Serializer.hpp
       opm/common/utility/String.hpp
       opm/common/utility/TimeService.hpp
+      opm/common/utility/VectorWithDefaultAllocator.hpp
       opm/common/utility/Visitor.hpp
       opm/material/components/Lnapl.hpp
       opm/material/components/N2.hpp
@@ -957,6 +960,9 @@ list( APPEND PUBLIC_HEADER_FILES
       opm/material/fluidsystems/GasPhase.hpp
       opm/material/fluidsystems/TwoPhaseImmiscibleFluidSystem.hpp
       opm/material/fluidsystems/BlackOilFluidSystem.hpp
+      opm/material/fluidsystems/BlackOilFluidSystem_macrotemplate.hpp
+      opm/material/fluidsystems/BlackOilFluidSystemNonStatic.hpp
+      opm/material/fluidsystems/BlackOilFunctions.hpp
       opm/material/fluidsystems/LiquidPhase.hpp
       opm/material/fluidsystems/PTFlashParameterCache.hpp
       opm/material/fluidsystems/Spe5ParameterCache.hpp

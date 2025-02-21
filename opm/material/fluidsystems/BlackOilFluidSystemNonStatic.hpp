@@ -15,8 +15,11 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
-#ifndef OPM_BLACK_OIL_FLUID_SYSTEM_HPP
-#define OPM_BLACK_OIL_FLUID_SYSTEM_HPP
+#ifndef OPM_BLACK_OIL_FLUID_SYSTEM_NONSTATIC_HPP
+#define OPM_BLACK_OIL_FLUID_SYSTEM_NONSTATIC_HPP
+
+#include <opm/common/utility/gpuDecorators.hpp>
+
 
 // Here we need to define certain macros before including the macrotemplate file.
 // 
@@ -40,32 +43,31 @@
 // the static version of the fluid system, since we will define certain constructors and singleton
 // functions only in the static or nonstatic case. 
 
-// Is defined for the static version of the fluid system.
-#define COMPILING_STATIC_FLUID_SYSTEM
-
-// The static version does not need any gpu decorators, simply static
-#define STATIC_OR_DEVICE static
-
-// Make sure member variables are declared as static
-#define STATIC_OR_NOTHING static
-
-// Define the class names for the static and nonstatic versions of the fluid system
+// Nonstatic class name
 #define FLUIDSYSTEM_CLASSNAME_NONSTATIC BlackOilFluidSystemNonStatic
+
+// Static class name
 #define FLUIDSYSTEM_CLASSNAME_STATIC BlackOilFluidSystem
 
-// Define the class name for the fluid system
-#define FLUIDSYSTEM_CLASSNAME BlackOilFluidSystem
+// Fluid system class name for the fluid system we are defining now, ie the nonstatic version
+#define FLUIDSYSTEM_CLASSNAME BlackOilFluidSystemNonStatic
+
+// We need to decorate the nonstatic member functions with the gpu decorators
+#define STATIC_OR_DEVICE OPM_HOST_DEVICE
+
+// Member variables need no decorators for the nonstatic version
+#define STATIC_OR_NOTHING
 
 
-// We need to forward-declare the nonstatic version of the fluid system, since we will 
-// make the nonstatic version a friend of the static version being defined here.
+// We need to forward-declare the static version of the fluid system, since we will
+// add it as a friend to the nonstatic version.
 namespace Opm
 {
 template <class Scalar,
           class IndexTraits,
           template <typename> typename Storage,
           template <typename> typename SmartPointer>
-class FLUIDSYSTEM_CLASSNAME_NONSTATIC;
+class FLUIDSYSTEM_CLASSNAME_STATIC;
 }
 
 // Include the macrotemplate file
@@ -73,10 +75,8 @@ class FLUIDSYSTEM_CLASSNAME_NONSTATIC;
 
 // Undefine the macros we defined above
 #undef STATIC_OR_DEVICE
-#undef COMPILING_STATIC_FLUID_SYSTEM
 #undef STATIC_OR_NOTHING
-#undef FLUIDSYSTEM_CLASSNAME_STATIC
 #undef FLUIDSYSTEM_CLASSNAME_NONSTATIC
+#undef FLUIDSYSTEM_CLASSNAME_STATIC
 #undef FLUIDSYSTEM_CLASSNAME
-
-#endif // OPM_BLACK_OIL_FLUID_SYSTEM_HPP
+#endif
