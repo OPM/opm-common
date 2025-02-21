@@ -151,7 +151,7 @@ namespace Opm {
 
         //const ScheduleGridWrapper gridWrapper { grid } ;
         ScheduleGrid grid(ecl_grid, fp, this->completed_cells);
-
+        
         if (!keepKeywords) {
             const auto& section = SCHEDULESection(deck);
             keepKeywords = section.has_keyword("ACTIONX") ||

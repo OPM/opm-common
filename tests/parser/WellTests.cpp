@@ -2119,7 +2119,11 @@ COMPDATL
 /
 )");
 
-    const auto es    = EclipseState { deck };
+    auto es    = EclipseState { deck };
+    auto& grid = es.getInputGrid();
+    auto test1 = grid.get_lgr_children_gridim();
+    auto test2 = grid.get_all_lgr_labels();
+
     const auto sched = Schedule { deck, es };
     BOOST_CHECK_EQUAL(sched.getWell("PROD", 0).is_lgr_well(), true);
     BOOST_CHECK_EQUAL(sched.getWell("INJ", 0).is_lgr_well(), true);

@@ -19,6 +19,7 @@
 #ifndef SCHEDULE_GRID
 #define SCHEDULE_GRID
 
+#include <memory>
 #include <opm/input/eclipse/Schedule/CompletedCells.hpp>
 
 #include <cstddef>
@@ -48,9 +49,11 @@ public:
     const Opm::EclipseGrid* get_grid() const;
 
 private:
+    void init_lgr_grid();
+    bool lgr_intialized{false};
     const EclipseGrid* grid{nullptr};
     const FieldPropsManager* fp{nullptr};
-    CompletedCells& cells;
+    std::vector<std::shared_ptr<Opm::CompletedCells>> cells; 
 };
 
 } // namespace Opm
