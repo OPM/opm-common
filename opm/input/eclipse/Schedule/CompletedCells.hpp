@@ -126,7 +126,6 @@ public:
      * @return A constant reference to the requested cell.
      */
     CompletedCells(std::size_t nx, std::size_t ny, std::size_t nz);
-    void initialize_LGR(std::vector<GridDims>, std::vector<std::string>);
 
     const Cell& get(std::size_t i, std::size_t j, std::size_t k) const;
     std::pair<bool, Cell&> try_get(std::size_t i, std::size_t j, std::size_t k);

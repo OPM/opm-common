@@ -112,6 +112,13 @@ Well {} is not connected to grid - will remain SHUT)",
     }
 }
 
+void handleCOMPDATL(HandlerContext&)
+{
+    auto msg = "COMPDATL keyword is not supported in OPM";
+    OpmLog::warning(msg);
+}
+
+
 void handleCOMPLUMP(HandlerContext& handlerContext)
 {
     for (const auto& record : handlerContext.keyword) {
@@ -197,6 +204,7 @@ Well {} is not connected to grid - will remain SHUT)",
     }
 }
 
+
 void handleCSKIN(HandlerContext& handlerContext)
 {
     using Kw = ParserKeywords::CSKIN;
@@ -227,6 +235,7 @@ getWellCompletionHandlers()
 {
     return {
         { "COMPDAT" , &handleCOMPDAT  },
+        { "COMPDATL", &handleCOMPDATL },
         { "COMPLUMP", &handleCOMPLUMP },
         { "COMPORD" , &handleCOMPORD  },
         { "COMPTRAJ", &handleCOMPTRAJ },

@@ -17,6 +17,7 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include "opm/input/eclipse/EclipseState/Grid/GridDims.hpp"
 #include <opm/input/eclipse/Schedule/ScheduleGrid.hpp>
 
 #include <opm/input/eclipse/Schedule/CompletedCells.hpp>
@@ -26,7 +27,7 @@
 
 #include <cstddef>
 #include <string>
-
+#include <memory>
 #include <fmt/format.h>
 
 Opm::ScheduleGrid::ScheduleGrid(const Opm::EclipseGrid& ecl_grid,
@@ -34,12 +35,17 @@ Opm::ScheduleGrid::ScheduleGrid(const Opm::EclipseGrid& ecl_grid,
                                 Opm::CompletedCells& completed_cells)
     : grid  { &ecl_grid }
     , fp    { &fpm }
-    , cells { completed_cells }
-{}
+{
+    cells.push_back(std::shared_ptr<Opm::CompletedCells>(std::addressof(completed_cells)));
+    if (grid->is_lgr())
+    {
+        init_lgr_grid();
+        lgr_intialized = true;
+    }    
+}
 
 Opm::ScheduleGrid::ScheduleGrid(Opm::CompletedCells& completed_cells)
-    : cells(completed_cells)
-{}
+{cells.push_back(std::shared_ptr<Opm::CompletedCells>(std::addressof(completed_cells)));}
 
 namespace {
     double try_get_value(const Opm::FieldPropsManager& fp,
@@ -67,10 +73,10 @@ const Opm::CompletedCells::Cell&
 Opm::ScheduleGrid::get_cell(std::size_t i, std::size_t j, std::size_t k) const
 {
     if (this->grid == nullptr) {
-        return this->cells.get(i, j, k);
+        return this->cells[0]->get(i, j, k);
     }
 
-    auto [valid, cellRef] = this->cells.try_get(i, j, k);
+    auto [valid, cellRef] = this->cells[0]->try_get(i, j, k);
 
     if (!valid) {
         cellRef.depth = this->grid->getCellDepth(i, j, k);
@@ -99,4 +105,16 @@ Opm::ScheduleGrid::get_cell(std::size_t i, std::size_t j, std::size_t k) const
 const Opm::EclipseGrid* Opm::ScheduleGrid::get_grid() const
 {
     return this->grid;
+}
+
+void Opm::ScheduleGrid::init_lgr_grid()
+{
+    
+     for (auto lgr_tag : this->grid->get_all_lgr_labels())
+     {
+        const auto lgr_grid = this->grid->getLGRCell(lgr_tag);    
+        cells.emplace_back(std::make_shared<Opm::CompletedCells>(lgr_grid.getNX(),
+                                                                 lgr_grid.getNY(), 
+                                                                 lgr_grid.getNZ()));
+     }
 }
