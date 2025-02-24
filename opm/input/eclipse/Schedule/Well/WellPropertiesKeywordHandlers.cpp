@@ -160,6 +160,9 @@ void handleWEFAC(HandlerContext& handlerContext)
             if (well2.updateEfficiencyFactor(efficiencyFactor, useEfficiencyInNetwork)) {
                 handlerContext.state().wells.update(std::move(well2));
 
+                handlerContext.affected_well(well_name);
+                handlerContext.record_well_structure_change();
+
                 handlerContext.state().events()
                     .addEvent(ScheduleEvents::WELLGROUP_EFFICIENCY_UPDATE);
 
