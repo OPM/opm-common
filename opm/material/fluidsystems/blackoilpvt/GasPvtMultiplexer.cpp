@@ -26,88 +26,51 @@
 
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 
-namespace Opm {
-
-template <class Scalar, bool enableThermal>
-GasPvtMultiplexer<Scalar,enableThermal>::
-~GasPvtMultiplexer()
+namespace Opm
 {
-    switch (gasPvtApproach_) {
-    case GasPvtApproach::DryGas: {
-        delete &getRealPvt<GasPvtApproach::DryGas>();
-        break;
-    }
-    case GasPvtApproach::DryHumidGas: {
-        delete &getRealPvt<GasPvtApproach::DryHumidGas>();
-        break;
-    }
-    case GasPvtApproach::WetHumidGas: {
-        delete &getRealPvt<GasPvtApproach::WetHumidGas>();
-        break;
-    }
-    case GasPvtApproach::WetGas: {
-        delete &getRealPvt<GasPvtApproach::WetGas>();
-        break;
-    }
-    case GasPvtApproach::ThermalGas: {
-        delete &getRealPvt<GasPvtApproach::ThermalGas>();
-        break;
-    }
-    case GasPvtApproach::Co2Gas: {
-        delete &getRealPvt<GasPvtApproach::Co2Gas>();
-        break;
-    }
-    case GasPvtApproach::H2Gas: {
-        delete &getRealPvt<GasPvtApproach::H2Gas>();
-        break;
-    }
-    case GasPvtApproach::NoGas:
-        break;
-    }
-}
 
 template <class Scalar, bool enableThermal>
-void GasPvtMultiplexer<Scalar,enableThermal>::
-initEnd()
+void
+GasPvtMultiplexer<Scalar, enableThermal>::initEnd()
 {
     OPM_GAS_PVT_MULTIPLEXER_CALL(pvtImpl.initEnd(), break);
 }
 
 template <class Scalar, bool enableThermal>
-unsigned GasPvtMultiplexer<Scalar,enableThermal>::
-numRegions() const
+unsigned
+GasPvtMultiplexer<Scalar, enableThermal>::numRegions() const
 {
     OPM_GAS_PVT_MULTIPLEXER_CALL(return pvtImpl.numRegions());
 }
 
 
 template <class Scalar, bool enableThermal>
-void GasPvtMultiplexer<Scalar,enableThermal>::
-setVapPars(const Scalar par1, const Scalar par2)
+void
+GasPvtMultiplexer<Scalar, enableThermal>::setVapPars(const Scalar par1, const Scalar par2)
 {
     OPM_GAS_PVT_MULTIPLEXER_CALL(pvtImpl.setVapPars(par1, par2), break);
 }
 
 
 template <class Scalar, bool enableThermal>
-Scalar GasPvtMultiplexer<Scalar,enableThermal>::
-gasReferenceDensity(unsigned regionIdx)
+Scalar
+GasPvtMultiplexer<Scalar, enableThermal>::gasReferenceDensity(unsigned regionIdx)
 {
     OPM_GAS_PVT_MULTIPLEXER_CALL(return pvtImpl.gasReferenceDensity(regionIdx));
 }
 
 
 template <class Scalar, bool enableThermal>
-Scalar GasPvtMultiplexer<Scalar,enableThermal>::
-hVap(unsigned regionIdx) const
+Scalar
+GasPvtMultiplexer<Scalar, enableThermal>::hVap(unsigned regionIdx) const
 {
     OPM_GAS_PVT_MULTIPLEXER_CALL(return pvtImpl.hVap(regionIdx));
 }
 
 #if HAVE_ECL_INPUT
 template <class Scalar, bool enableThermal>
-void GasPvtMultiplexer<Scalar,enableThermal>::
-initFromState(const EclipseState& eclState, const Schedule& schedule)
+void
+GasPvtMultiplexer<Scalar, enableThermal>::initFromState(const EclipseState& eclState, const Schedule& schedule)
 {
     if (!eclState.runspec().phases().active(Phase::GAS))
         return;
@@ -118,8 +81,8 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
         setApproach(GasPvtApproach::H2Gas);
     else if (enableThermal && eclState.getSimulationConfig().isThermal())
         setApproach(GasPvtApproach::ThermalGas);
-    else if (!eclState.getTableManager().getPvtgwTables().empty() &&
-            !eclState.getTableManager().getPvtgTables().empty())
+    else if (!eclState.getTableManager().getPvtgwTables().empty()
+             && !eclState.getTableManager().getPvtgTables().empty())
         setApproach(GasPvtApproach::WetHumidGas);
     else if (!eclState.getTableManager().getPvtgTables().empty())
         setApproach(GasPvtApproach::WetGas);
@@ -133,37 +96,49 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
 }
 #endif
 
+// Helper function to keep the switch case tidy when constructing different pvts
 template <class Scalar, bool enableThermal>
-void GasPvtMultiplexer<Scalar,enableThermal>::
+template <class ConcreteGasPvt>
+std::unique_ptr<void, std::function<void(void*)>>
+GasPvtMultiplexer<Scalar, enableThermal>::makeGasPvt()
+{
+    return UniqueVoidPtrWithDeleter(
+        new ConcreteGasPvt,
+        [this](void* ptr) { deleter(ptr); }
+    );
+}
+
+template <class Scalar, bool enableThermal>
+void GasPvtMultiplexer<Scalar, enableThermal>::
 setApproach(GasPvtApproach gasPvtAppr)
 {
     switch (gasPvtAppr) {
     case GasPvtApproach::DryGas:
-        realGasPvt_ = new DryGasPvt<Scalar>;
+        realGasPvt_ = makeGasPvt<DryGasPvt<Scalar>>();
         break;
 
     case GasPvtApproach::DryHumidGas:
-        realGasPvt_ = new DryHumidGasPvt<Scalar>;
+        realGasPvt_ = makeGasPvt<DryHumidGasPvt<Scalar>>();
         break;
 
     case GasPvtApproach::WetHumidGas:
-        realGasPvt_ = new WetHumidGasPvt<Scalar>;
+        realGasPvt_ = makeGasPvt<WetHumidGasPvt<Scalar>>();
         break;
 
     case GasPvtApproach::WetGas:
-        realGasPvt_ = new WetGasPvt<Scalar>;
+        realGasPvt_ = makeGasPvt<WetGasPvt<Scalar>>();
         break;
 
     case GasPvtApproach::ThermalGas:
-        realGasPvt_ = new GasPvtThermal<Scalar>;
+        realGasPvt_ = makeGasPvt<GasPvtThermal<Scalar>>();
         break;
 
     case GasPvtApproach::Co2Gas:
-        realGasPvt_ = new Co2GasPvt<Scalar>;
+        realGasPvt_ = makeGasPvt<Co2GasPvt<Scalar>>();
         break;
 
     case GasPvtApproach::H2Gas:
-        realGasPvt_ = new H2GasPvt<Scalar>;
+        realGasPvt_ = makeGasPvt<H2GasPvt<Scalar>>();
         break;
 
     case GasPvtApproach::NoGas:
@@ -173,33 +148,44 @@ setApproach(GasPvtApproach gasPvtAppr)
     gasPvtApproach_ = gasPvtAppr;
 }
 
+// Helper template to create copies of PVT objects
 template <class Scalar, bool enableThermal>
-GasPvtMultiplexer<Scalar,enableThermal>&
-GasPvtMultiplexer<Scalar,enableThermal>::
-operator=(const GasPvtMultiplexer<Scalar,enableThermal>& data)
+template <class ConcretePvt>
+std::unique_ptr<void, std::function<void(void*)>>
+GasPvtMultiplexer<Scalar, enableThermal>::
+copyPvt(const std::unique_ptr<void, std::function<void(void*)>>& sourcePvt) {
+    return UniqueVoidPtrWithDeleter(
+        new ConcretePvt(*static_cast<const ConcretePvt*>(sourcePvt.get())),
+        [this](void* ptr) { deleter(ptr); }
+    );
+}
+
+template <class Scalar, bool enableThermal>
+GasPvtMultiplexer<Scalar, enableThermal>&
+GasPvtMultiplexer<Scalar, enableThermal>::operator=(const GasPvtMultiplexer<Scalar, enableThermal>& data)
 {
     gasPvtApproach_ = data.gasPvtApproach_;
     switch (gasPvtApproach_) {
     case GasPvtApproach::DryGas:
-        realGasPvt_ = new DryGasPvt<Scalar>(*static_cast<const DryGasPvt<Scalar>*>(data.realGasPvt_));
+        realGasPvt_ = copyPvt<DryGasPvt<Scalar>>(data.realGasPvt_);
         break;
     case GasPvtApproach::DryHumidGas:
-        realGasPvt_ = new DryHumidGasPvt<Scalar>(*static_cast<const DryHumidGasPvt<Scalar>*>(data.realGasPvt_));
+        realGasPvt_ = copyPvt<DryHumidGasPvt<Scalar>>(data.realGasPvt_);
         break;
     case GasPvtApproach::WetHumidGas:
-        realGasPvt_ = new WetHumidGasPvt<Scalar>(*static_cast<const WetHumidGasPvt<Scalar>*>(data.realGasPvt_));
+        realGasPvt_ = copyPvt<WetHumidGasPvt<Scalar>>(data.realGasPvt_);
         break;
     case GasPvtApproach::WetGas:
-        realGasPvt_ = new WetGasPvt<Scalar>(*static_cast<const WetGasPvt<Scalar>*>(data.realGasPvt_));
+        realGasPvt_ = copyPvt<WetGasPvt<Scalar>>(data.realGasPvt_);
         break;
     case GasPvtApproach::ThermalGas:
-        realGasPvt_ = new GasPvtThermal<Scalar>(*static_cast<const GasPvtThermal<Scalar>*>(data.realGasPvt_));
+        realGasPvt_ = copyPvt<GasPvtThermal<Scalar>>(data.realGasPvt_);
         break;
     case GasPvtApproach::Co2Gas:
-        realGasPvt_ = new Co2GasPvt<Scalar>(*static_cast<const Co2GasPvt<Scalar>*>(data.realGasPvt_));
+        realGasPvt_ = copyPvt<Co2GasPvt<Scalar>>(data.realGasPvt_);
         break;
-case GasPvtApproach::H2Gas:
-        realGasPvt_ = new H2GasPvt<Scalar>(*static_cast<const H2GasPvt<Scalar>*>(data.realGasPvt_));
+    case GasPvtApproach::H2Gas:
+        realGasPvt_ = copyPvt<H2GasPvt<Scalar>>(data.realGasPvt_);
         break;
     default:
         break;
@@ -208,9 +194,46 @@ case GasPvtApproach::H2Gas:
     return *this;
 }
 
-template class GasPvtMultiplexer<double,false>;
-template class GasPvtMultiplexer<double,true>;
-template class GasPvtMultiplexer<float,false>;
-template class GasPvtMultiplexer<float,true>;
+template <class Scalar, bool enableThermal>
+void GasPvtMultiplexer<Scalar, enableThermal>::deleter(void* ptr)
+{
+    switch (gasPvtApproach_) {
+        case GasPvtApproach::DryGas: {
+            delete static_cast<DryGasPvt<Scalar>*>(ptr);
+            break;
+        }
+        case GasPvtApproach::DryHumidGas: {
+            delete static_cast<DryHumidGasPvt<Scalar>*>(ptr);
+            break;
+        }
+        case GasPvtApproach::WetHumidGas: {
+            delete static_cast<WetHumidGasPvt<Scalar>*>(ptr);
+            break;
+        }
+        case GasPvtApproach::WetGas: {
+            delete static_cast<WetGasPvt<Scalar>*>(ptr);
+            break;
+        }
+        case GasPvtApproach::ThermalGas: {
+            delete static_cast<GasPvtThermal<Scalar>*>(ptr);
+            break;
+        }
+        case GasPvtApproach::Co2Gas: {
+            delete static_cast<Co2GasPvt<Scalar>*>(ptr);
+            break;
+        }
+        case GasPvtApproach::H2Gas: {
+            delete static_cast<H2GasPvt<Scalar>*>(ptr);
+            break;
+        }
+        case GasPvtApproach::NoGas:
+            break;
+    }
+}
+
+template class GasPvtMultiplexer<double, false>;
+template class GasPvtMultiplexer<double, true>;
+template class GasPvtMultiplexer<float, false>;
+template class GasPvtMultiplexer<float, true>;
 
 } // namespace Opm
