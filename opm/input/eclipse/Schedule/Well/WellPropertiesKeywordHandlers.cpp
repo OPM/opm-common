@@ -140,19 +140,34 @@ void handleWECON(HandlerContext& handlerContext)
 
 void handleWEFAC(HandlerContext& handlerContext)
 {
+    using Kw = ParserKeywords::WEFAC;
+
     for (const auto& record : handlerContext.keyword) {
-        const std::string& wellNamePattern = record.getItem("WELLNAME").getTrimmedString(0);
+        const auto wellNamePattern = record.getItem<Kw::WELLNAME>().getTrimmedString(0);
         const auto well_names = handlerContext.wellNames(wellNamePattern);
 
-        const double& efficiencyFactor = record.getItem("EFFICIENCY_FACTOR").get<double>(0);
-        const bool useEfficiencyInNetwork = DeckItem::to_bool(record.getItem("USE_WEFAC_IN_NETWORK").getTrimmedString(0));
+        if (well_names.empty()) {
+            handlerContext.invalidNamePattern(wellNamePattern);
+        }
+
+        const auto efficiencyFactor = record.getItem<Kw::EFFICIENCY_FACTOR>().get<double>(0);
+        const bool useEfficiencyInNetwork =
+            DeckItem::to_bool(record.getItem<Kw::USE_WEFAC_IN_NETWORK>().getTrimmedString(0));
 
         for (const auto& well_name : well_names) {
-            auto well2 = handlerContext.state().wells.get( well_name );
-            if (well2.updateEfficiencyFactor(efficiencyFactor, useEfficiencyInNetwork)){
-                handlerContext.state().wellgroup_events().addEvent( well_name, ScheduleEvents::WELLGROUP_EFFICIENCY_UPDATE);
-                handlerContext.state().events().addEvent(ScheduleEvents::WELLGROUP_EFFICIENCY_UPDATE);
-                handlerContext.state().wells.update( std::move(well2) );
+            auto well2 = handlerContext.state().wells.get(well_name);
+
+            if (well2.updateEfficiencyFactor(efficiencyFactor, useEfficiencyInNetwork)) {
+                handlerContext.state().wells.update(std::move(well2));
+
+                handlerContext.affected_well(well_name);
+                handlerContext.record_well_structure_change();
+
+                handlerContext.state().events()
+                    .addEvent(ScheduleEvents::WELLGROUP_EFFICIENCY_UPDATE);
+
+                handlerContext.state().wellgroup_events()
+                    .addEvent(well_name, ScheduleEvents::WELLGROUP_EFFICIENCY_UPDATE);
             }
         }
     }
