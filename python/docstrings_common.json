@@ -843,6 +843,67 @@
     "ESmry_units": {
         "signature": "opm.io.ecl.ESmry.units(field: str) -> str",
         "doc": "Retrieves the unit for a given field.\n\n:param field: The field name.\n:type field: str\n:return: The unit corresponding to the specified field.\n:rtype: str"
+    },
+    "EGrid": {
+        "type": "class",
+        "signature": "opm.io.ecl.EGrid",
+        "doc": "Represents an Eclipse Grid file."
+    },
+    "EGrid_init": {
+        "signature": "opm.io.ecl.EGrid.__init__(filename: str, grid_name: str = 'global') -> EGrid",
+        "doc": "Initializes an EGrid object by loading the grid file.\n\n:param filename: Path to the grid file.\n:type filename: str\n:param grid_name: The name of the grid (default is 'global').\n:type grid_name: str\n:return: The EGrid object.\n:rtype: EGrid"
+    },
+    "EGrid_active_cells": {
+        "signature": "opm.io.ecl.EGrid.active_cells -> int",
+        "doc": "Returns the number of active cells in the grid.\n\n:return: Number of active cells.\n:type: int"
+    },
+    "EGrid_dimension": {
+        "signature": "opm.io.ecl.EGrid.dimension -> tuple[int, int, int]",
+        "doc": "Returns the dimensions of the grid.\n\n:return: The (x,y,z) dimensions.\n:type: tuple[int, int, int]"
+    },
+    "EGrid_ijk_from_global_index": {
+        "signature": "opm.io.ecl.EGrid.ijk_from_global_index(global_index: int) -> tuple[int, int, int]",
+        "doc": "Converts a global index to IJK indices.\n\n:param global_index: The global index of the cell.\n:type global_index: int\n:return: The (I, J, K) indices.\n:type: tuple[int, int, int]"
+    },
+    "EGrid_ijk_from_active_index": {
+        "signature": "opm.io.ecl.EGrid.ijk_from_active_index(active_index: int) -> tuple[int, int, int]",
+        "doc": "Converts an active cell index to IJK indices.\n\n:param active_index: The active cell index.\n:type active_index: int\n:return: The (I, J, K) indices.\n:type: tuple[int, int, int]"
+    },
+    "EGrid_active_index": {
+        "signature": "opm.io.ecl.EGrid.active_index(i: int, j: int, k: int) -> int",
+        "doc": "Returns the active index corresponding to the given IJK index.\n\n:param i: The i index.\n:type i: int\n:param j: The j index.\n:type j: int\n:param k: The k index.\n:type k: int\n:return: The active cell index.\n:type: int"
+    },
+    "EGrid_global_index": {
+        "signature": "opm.io.ecl.EGrid.global_index(i: int, j: int, k: int) -> int",
+        "doc": "Returns the global index corresponding to the given IJK index.\n\n:param i: The i index.\n:type i: int\n:param j: The j index.\n:type j: int\n:param k: The k index.\n:type k: int\n:return: The global index.\n:type: int"
+    },
+    "EGrid_export_mapaxes": {
+        "signature": "opm.io.ecl.EGrid.export_mapaxes() -> tuple[double, 8]",
+        "doc": "Exports the map axes transformation for visualization.\n\n:return: tuple[double, 8]"
+    },
+    "EGrid_xyz_from_ijk": {
+        "signature": "opm.io.ecl.EGrid.xyz_from_ijk(i: int, j: int, k: int) -> tuple[tuple[double, 8], tuple[double, 8], tuple[double, 8]]",
+        "doc": "Computes the XYZ coordinates of the 8 cell corners given its ijk indices.\n\n:param i: The i index of the cell.\n:type i: int\n:param j: The j index of the cell.\n:type j: int\n:param k: The k index of the cell.\n:type k: int\n:return: The XYZ coordinates, as three tuples.\n:type: tuple[tuple[double, 8], tuple[double, 8], tuple[double, 8]]"
+    },
+    "EGrid_xyz_from_ijk_mapaxes": {
+        "signature": "opm.io.ecl.EGrid.xyz_from_ijk(i: int, j: int, k: int, apply_mapaxes: bool) -> tuple[tuple[double, 8], tuple[double, 8], tuple[double, 8]]",
+        "doc": "Computes the XYZ coordinates of the 8 cell corners given its ijk indices.\n\n:param i: The i index of the cell.\n:type i: int\n:param j: The j index of the cell.\n:type j: int\n:param k: The k index of the cell.\n:type k: int\n:param apply_mapaxes: Boolean to indicate if a mapaxes tranformation (if available) should be carried out before.\n:type apply_mapaxes: bool\n:return: The XYZ coordinates, as three tuples.\n:type: tuple[tuple[double, 8], tuple[double, 8], tuple[double, 8]]"
+    },
+    "EGrid_xyz_from_active_index": {
+        "signature": "opm.io.ecl.EGrid.xyz_from_active_index(active_index: int) -> tuple[tuple[double, 8], tuple[double, 8], tuple[double, 8]]",
+        "doc": "Computes the XYZ coordinates of a cell given its active index.\n\n:param active_index: The active cell index.\n:type active_index: int\n:return: XYZ coordinates.\n:type: tuple[float, float, float]"
+    },
+    "EGrid_xyz_from_active_index_mapaxes": {
+        "signature": "opm.io.ecl.EGrid.xyz_from_active_index(active_index: int, apply_mapaxes: bool) -> tuple[tuple[double, 8], tuple[double, 8], tuple[double, 8]]",
+        "doc": "Computes the XYZ coordinates of a cell given its active index.\n\n:param active_index: The active cell index.\n:type active_index: int\n:param apply_mapaxes: Boolean to indicate if a mapaxes tranformation (if available) should be carried out before.\n:type apply_mapaxes: bool\n:return: XYZ coordinates.\n:type: tuple[float, float, float]"
+    },
+    "EGrid_cellvolumes": {
+        "signature": "opm.io.ecl.EGrid.cellvolumes() -> numpy.ndarray",
+        "doc": "Returns an array containing the volume of each cell in the grid.\n\n:return: A NumPy array containing cell volumes.\n:type: numpy.ndarray"
+    },
+    "EGrid_cellvolumes_mask": {
+        "signature": "opm.io.ecl.EGrid.cellvolumes(mask: list[int]) -> numpy.ndarray",
+        "doc": "Returns an array containing the volume of the selected cells.\n\n:param mask: List containing one entry per grid cell, if the entry in the list is '1', this cell is selected by the mask.\n:type mask: list[int]\n:return: A NumPy array containing cell volumes.\n:type: numpy.ndarray"
     }
 
 }

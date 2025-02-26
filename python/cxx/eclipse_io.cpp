@@ -492,22 +492,22 @@ void python::common::export_IO(py::module& m) {
         .def("dates", &ESmryBind::dates, ESmry_dates_docstring)
         .def("units", &ESmryBind::units, py::arg("field"), ESmry_units_docstring);
 
-   py::class_<Opm::EclIO::EGrid>(m, "EGrid")
-        .def(py::init<const std::string &, const std::string &>(), py::arg("filename"),
-             py::arg("grid_name") = "global")
-        .def_property_readonly("active_cells", &Opm::EclIO::EGrid::activeCells)
-        .def_property_readonly("dimension", &Opm::EclIO::EGrid::dimension)
-        .def("ijk_from_global_index", &Opm::EclIO::EGrid::ijk_from_global_index)
-        .def("ijk_from_active_index", &Opm::EclIO::EGrid::ijk_from_active_index)
-        .def("active_index", &Opm::EclIO::EGrid::active_index)
-        .def("global_index", &Opm::EclIO::EGrid::global_index)
-        .def("export_mapaxes", &Opm::EclIO::EGrid::get_mapaxes)
-        .def("xyz_from_ijk", &get_xyz_from_ijk)
-        .def("xyz_from_ijk", &get_xyz_from_ijk_mapaxes)
-        .def("xyz_from_active_index", &get_xyz_from_active_index)
-        .def("xyz_from_active_index", &get_xyz_from_active_index_mapaxes)
-        .def("cellvolumes", &get_cellvolumes)
-        .def("cellvolumes", &get_cellvolumes_mask);
+   py::class_<Opm::EclIO::EGrid>(m, "EGrid", EGrid_docstring)
+        .def(py::init<const std::string &, const std::string &>(), py::arg("filename"), py::arg("grid_name") = "global", EGrid_init_docstring)
+        .def_property_readonly("active_cells", &Opm::EclIO::EGrid::activeCells, EGrid_active_cells_docstring)
+        .def_property_readonly("dimension", &Opm::EclIO::EGrid::dimension, EGrid_dimension_docstring)
+        .def("ijk_from_global_index", &Opm::EclIO::EGrid::ijk_from_global_index, py::arg("global_index"), EGrid_ijk_from_global_index_docstring)
+        .def("ijk_from_active_index", &Opm::EclIO::EGrid::ijk_from_active_index, py::arg("active_index"), EGrid_ijk_from_active_index_docstring)
+        .def("active_index", &Opm::EclIO::EGrid::active_index, py::arg("i"), py::arg("j"), py::arg("k"), EGrid_active_index_docstring)
+        .def("global_index", &Opm::EclIO::EGrid::global_index, py::arg("i"), py::arg("j"), py::arg("k"), EGrid_global_index_docstring)
+        .def("export_mapaxes", &Opm::EclIO::EGrid::get_mapaxes, EGrid_export_mapaxes_docstring)
+        .def("xyz_from_ijk", &get_xyz_from_ijk, py::arg("i"), py::arg("j"), py::arg("k"), EGrid_xyz_from_ijk_docstring)
+        .def("xyz_from_ijk", &get_xyz_from_ijk_mapaxes, py::arg("i"), py::arg("j"), py::arg("k"), py::arg("apply_mapaxes"), EGrid_xyz_from_ijk_mapaxes_docstring)
+        .def("xyz_from_active_index", &get_xyz_from_active_index, py::arg("active_index"), EGrid_xyz_from_active_index_docstring)
+        .def("xyz_from_active_index", &get_xyz_from_active_index_mapaxes, py::arg("active_index"), py::arg("apply_mapaxes"), EGrid_xyz_from_active_index_mapaxes_docstring)
+        .def("cellvolumes", &get_cellvolumes, EGrid_cellvolumes_docstring)
+        .def("cellvolumes", &get_cellvolumes_mask, py::arg("mask"), EGrid_cellvolumes_mask_docstring);
+
 
    py::class_<Opm::EclIO::ERft>(m, "ERft")
         .def(py::init<const std::string &>())
