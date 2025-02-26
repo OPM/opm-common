@@ -17,27 +17,27 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-
 #ifndef EXT_NETWORK_HPP
 #define EXT_NETWORK_HPP
-
-#include <map>
-#include <optional>
-#include <string>
-#include <vector>
-#include <set>
-#include <functional>
 
 #include <opm/input/eclipse/Schedule/Network/Branch.hpp>
 #include <opm/input/eclipse/Schedule/Network/Node.hpp>
 
+#include <functional>
+#include <map>
+#include <optional>
+#include <set>
+#include <string>
+#include <vector>
+
 namespace Opm {
     class Schedule;
+} // namespace Opm
 
-namespace Network {
+namespace Opm::Network {
 
-
-class ExtNetwork {
+class ExtNetwork
+{
 public:
     ExtNetwork() = default;
     bool active() const;
@@ -75,10 +75,11 @@ private:
     std::vector<std::string> insert_indexed_node_names;
     std::map<std::string, Node> m_nodes;
     bool m_is_standard_network{false};
+
     bool has_indexed_node_name(const std::string& name) const;
     void add_indexed_node_name(std::string name);
 };
 
-}
-}
-#endif
+} // namespace Opm::Network
+
+#endif // EXT_NETWORK_HPP
