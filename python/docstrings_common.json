@@ -752,8 +752,8 @@
         "doc": "Represents an Eclipse Restart file. This class inherits from the class EclFile."
     },
     "ERst_init": {
-        "signature": "opm.io.ecl.ERst.__init__(filename: str)",
-        "doc": "Initializes the ERst object by loading the Restart file (and the underlying EclFile) from the specified path.\n\n:param filename: The path to the Restart file.\n:type filename: str"
+        "signature": "opm.io.ecl.ERst.__init__(filename: str) -> ERst",
+        "doc": "Initializes the ERst object by loading the Restart file (and the underlying EclFile) from the specified path.\n\n:param filename: The path to the Restart file.\n:type filename: str\n:return: The ERst object.\n:type: ERst"
     },
     "ERst_has_report_step": {
         "signature": "opm.io.ecl.ERst.__has_report_step(report_step: int) -> bool",
