@@ -794,6 +794,55 @@
     "ERst_get_data_vector": {
         "signature": "opm.io.ecl.ERst.get_erst_vector(name: str, report_step: int, occurrence: int) -> tuple[numpy.ndarray, eclArrType]",
         "doc": "Retrieves the data array of the given name a the given occurrence at the given report step.\n\n:param name: The name of the arrays.\n:type name: str\n:param report_step: The report step.\n:type report_step: int\n:param occurrence: The occurrence to retrieve.\n:type occurrence: int\n:return: A tuple containing the data array and its associated type.\n:rtype: tuple[numpy.ndarray, eclArrType]"
+    },
+    "ESmry": {
+        "type": "class",
+        "signature": "opm.io.ecl.ESmry",
+        "doc": "Handles summary data from Eclipse simulations."
+    },
+    "ESmry_init": {
+        "signature": "opm.io.ecl.ESmry.__init__(filename: str, load_base_run: bool = False) -> ESmry",
+        "doc": "Initializes the ESmry object by loading the summary file.\n\n:param filename: Path to the .SMSPEC or .ESMRY file.\n:type filename: str\n:param load_base_run: Whether to load base run data. Default is False.\n:type load_base_run: bool\n:return: The ESmry object.\n:rtype: ESmry"
+    },
+    "ESmry_contains": {
+        "signature": "opm.io.ecl.ESmry.__contains__(key: str) -> bool",
+        "doc": "Checks if the specified key exists in the summary data.\n\n:param key: The key to check.\n:type key: str\n:return: True if the key exists, otherwise False.\n:rtype: bool"
+    },
+    "ESmry_make_esmry_file": {
+        "signature": "opm.io.ecl.ESmry.make_esmry_file() -> None",
+        "doc": "Generates an ESMRY file from an SMSPEC input file."
+    },
+    "ESmry_len": {
+        "signature": "opm.io.ecl.ESmry.__len__() -> int",
+        "doc": "Returns the number of time steps in the summary data.\n\n:return: The number of available time steps.\n:rtype: int"
+    },
+    "ESmry_get_all": {
+        "signature": "opm.io.ecl.ESmry.__get_all(key: str) -> numpy.ndarray",
+        "doc": "Retrieves the summary vector for the given key.\n\n:param key: The key.\n:type key: str\n:return: The summary for the specified key.\n:rtype: numpy.ndarray"
+    },
+    "ESmry_get_at_rstep": {
+        "signature": "opm.io.ecl.ESmry.__get_at_rstep(key: str) -> numpy.ndarray",
+        "doc": "Retrieves the report step summary vector for the given key.\n\n:param key: The key.\n:type key: str\n:return: The report step summary for the specified key.\n:rtype: numpy.ndarray"
+    },
+    "ESmry_start_date": {
+        "signature": "opm.io.ecl.ESmry.start_date -> datetime.datetime",
+        "doc": "The start date of the summary data as a `datetime.datetime <https://docs.python.org/3/library/datetime.html#datetime.datetime>`_.\n\n:return: The start date.\n:rtype: datetime.datetime"
+    },
+    "ESmry_keys1": {
+        "signature": "opm.io.ecl.ESmry.keys() -> list[str]",
+        "doc": "Retrieves a list of summary keys.\n\n:return: A list of available summary keys.\n:rtype: list[str]"
+    },
+    "ESmry_keys2": {
+        "signature": "opm.io.ecl.ESmry.keys(pattern: str) -> list[str]",
+        "doc": "Retrieves a list of summary keys matching the given pattern.\n\n:param pattern: A pattern to filter the keys.\n:type pattern: str\n:return: A list of available summary keys.\n:rtype: list[str]"
+    },
+    "ESmry_dates": {
+        "signature": "opm.io.ecl.ESmry.dates() -> list[datetime.datetime]",
+        "doc": "Retrieves a list of dates corresponding to the time steps in the summary data.\n\n:return: A list of dates.\n:rtype: list[datetime.datetime]"
+    },
+    "ESmry_units": {
+        "signature": "opm.io.ecl.ESmry.units(field: str) -> str",
+        "doc": "Retrieves the unit for a given field.\n\n:param field: The field name.\n:type field: str\n:return: The unit corresponding to the specified field.\n:rtype: str"
     }
 
 }

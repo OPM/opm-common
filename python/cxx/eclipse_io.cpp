@@ -477,20 +477,20 @@ void python::common::export_IO(py::module& m) {
         .def("__get_data", &get_erst_vector, py::arg("name"), py::arg("report_step"), py::arg("occurrence"), ERst_get_data_vector_docstring);
 
 
-   py::class_<ESmryBind>(m, "ESmry")
-        .def(py::init<const std::string &, const bool>(), py::arg("filename"), py::arg("load_base_run") = false)
-        .def("__contains__", &ESmryBind::hasKey, py::arg("key"))
-        .def("make_esmry_file", &ESmryBind::make_esmry_file)
-        .def("__len__", &ESmryBind::numberOfTimeSteps)
-        .def("__get_all", &ESmryBind::get_smry_vector, py::arg("key"))
-        .def("__get_at_rstep", &ESmryBind::get_smry_vector_at_rsteps, py::arg("key"))
-        .def_property_readonly("start_date", &ESmryBind::smry_start_date)
+   py::class_<ESmryBind>(m, "ESmry", ESmry_docstring)
+        .def(py::init<const std::string &, const bool>(), py::arg("filename"), py::arg("load_base_run") = false, ESmry_init_docstring)
+        .def("__contains__", &ESmryBind::hasKey, py::arg("key"), ESmry_contains_docstring)
+        .def("make_esmry_file", &ESmryBind::make_esmry_file, ESmry_make_esmry_file_docstring)
+        .def("__len__", &ESmryBind::numberOfTimeSteps, ESmry_len_docstring)
+        .def("__get_all", &ESmryBind::get_smry_vector, py::arg("key"), ESmry_get_all_docstring)
+        .def("__get_at_rstep", &ESmryBind::get_smry_vector_at_rsteps, py::arg("key"), ESmry_get_at_rstep_docstring)
+        .def_property_readonly("start_date", &ESmryBind::smry_start_date, ESmry_start_date_docstring)
         .def("keys", (const std::vector<std::string>& (ESmryBind::*) (void) const)
-            &ESmryBind::keywordList)
+            &ESmryBind::keywordList, ESmry_keys1_docstring)
         .def("keys", (std::vector<std::string> (ESmryBind::*) (const std::string&) const)
-            &ESmryBind::keywordList)
-        .def("dates", &ESmryBind::dates)
-        .def("units", &ESmryBind::units, py::arg("field"));
+            &ESmryBind::keywordList, py::arg("pattern"), ESmry_keys2_docstring)
+        .def("dates", &ESmryBind::dates, ESmry_dates_docstring)
+        .def("units", &ESmryBind::units, py::arg("field"), ESmry_units_docstring);
 
    py::class_<Opm::EclIO::EGrid>(m, "EGrid")
         .def(py::init<const std::string &, const std::string &>(), py::arg("filename"),
