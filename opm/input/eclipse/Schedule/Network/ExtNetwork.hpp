@@ -53,7 +53,7 @@ public:
     std::vector<Branch> downtree_branches(const std::string& node) const;
     std::vector<const Branch*> branches() const;
     std::optional<Branch> uptree_branch(const std::string& node) const;
-    std::vector<std::string> node_names() const;
+    const std::vector<std::string>& node_names() const;
     std::set<std::string> leaf_nodes() const;
     int NoOfBranches() const;
     int NoOfNodes() const;
@@ -77,7 +77,7 @@ private:
     bool m_is_standard_network{false};
 
     bool has_indexed_node_name(const std::string& name) const;
-    void add_indexed_node_name(std::string name);
+    void add_indexed_node_name(const std::string& name);
 };
 
 } // namespace Opm::Network

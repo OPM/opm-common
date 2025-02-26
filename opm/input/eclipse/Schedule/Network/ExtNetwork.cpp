@@ -236,7 +236,7 @@ void ExtNetwork::update_node(Node node)
     this->m_nodes.insert_or_assign(name, std::move(node) );
 }
 
-void ExtNetwork::add_indexed_node_name(std::string name)
+void ExtNetwork::add_indexed_node_name(const std::string& name)
 {
     this->insert_indexed_node_names.emplace_back(name);
 }
@@ -249,7 +249,7 @@ bool ExtNetwork::has_indexed_node_name(const std::string& name) const
     return (it != this->insert_indexed_node_names.end());
 }
 
-std::vector<std::string> ExtNetwork::node_names() const
+const std::vector<std::string>& ExtNetwork::node_names() const
 {
     return this->insert_indexed_node_names;
 }
