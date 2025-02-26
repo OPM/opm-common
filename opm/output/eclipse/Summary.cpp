@@ -1686,6 +1686,39 @@ inline quantity res_vol_production_target( const fn_args& args )
     return { sum, measure::rate };
 }
 
+inline quantity oil_production_target( const fn_args& args )
+{
+    const auto& groups = args.schedule[args.sim_step].groups;
+    const double value = groups.has(args.group_name) ? groups.get(args.group_name).productionProperties().oil_target.SI_value_or(0.0) : 0.0;
+
+    return { value, measure::rate };
+}
+
+inline quantity gas_production_target( const fn_args& args )
+{
+    const auto& groups = args.schedule[args.sim_step].groups;
+    const double value = groups.has(args.group_name) ? groups.get(args.group_name).productionProperties().gas_target.SI_value_or(0.0) : 0.0;
+
+    return { value, measure::rate };
+}
+
+inline quantity water_production_target( const fn_args& args )
+{
+    const auto& groups = args.schedule[args.sim_step].groups;
+    const double value = groups.has(args.group_name) ? groups.get(args.group_name).productionProperties().water_target.SI_value_or(0.0) : 0.0;
+
+    return { value, measure::rate };
+}
+
+inline quantity liquid_production_target( const fn_args& args )
+{
+    const auto& groups = args.schedule[args.sim_step].groups;
+    const double value = groups.has(args.group_name) ? groups.get(args.group_name).productionProperties().liquid_target.SI_value_or(0.0) : 0.0;
+
+    return { value, measure::rate };
+}
+
+
 template <bool injection, Opm::data::WellControlLimits::Item i>
 quantity well_control_limit(const fn_args& args)
 {
@@ -2526,6 +2559,10 @@ static const auto funs = std::unordered_map<std::string, ofun> {
     { "GMWIN", flowing< injector > },
     { "GMWPR", flowing< producer > },
 
+    { "GWPRT", water_production_target },
+    { "GOPRT", oil_production_target },
+    { "GGPRT", gas_production_target },
+    { "GLPRT", liquid_production_target },
     { "GVPRT", res_vol_production_target },
 
     { "CPR", cpr  },
@@ -2793,7 +2830,13 @@ static const auto funs = std::unordered_map<std::string, ofun> {
                          production_history< Opm::Phase::OIL > ) ) },
     { "FMWIN", flowing< injector > },
     { "FMWPR", flowing< producer > },
+
+    { "FWPRT", water_production_target },
+    { "FOPRT", oil_production_target },
+    { "FGPRT", gas_production_target },
+    { "FLPRT", liquid_production_target },
     { "FVPRT", res_vol_production_target },
+
     { "FMWPA", abandoned_well< producer > },
     { "FMWIA", abandoned_well< injector >},
 
