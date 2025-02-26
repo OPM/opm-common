@@ -317,6 +317,10 @@ public:
     bool enablePpcwmax() const
     { return enablePpcwmax_; }
 
+    // No hysteresis, but we still must return a valid config object.
+    EclHysteresisConfig hysteresisConfig() const
+    { return EclHysteresisConfig(); }
+
     bool enableHysteresis() const
     //{ return hysteresisConfig_->enableHysteresis(); }
     { return false; }
