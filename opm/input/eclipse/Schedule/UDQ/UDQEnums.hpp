@@ -228,8 +228,20 @@ namespace UDQ {
     std::string controlName(UDAControl control);
 
     UDAKeyword keyword(UDAControl control);
+
+    enum class RstFileUDAVersion {
+        vUnsupp, v0, vCurr,
+    };
+
     int udaCode(UDAControl control);
-    UDAControl udaControl(int uda_code);
+
+    RstFileUDAVersion rstFileUDAVersion(const int rstFileVersion);
+
+    UDAControl udaControl(int uda_code, RstFileUDAVersion udaVersion = RstFileUDAVersion::vCurr);
+    inline UDAControl udaControl(int uda_code, int rstFileVersion)
+    {
+        return udaControl(uda_code, rstFileUDAVersion(rstFileVersion));
+    }
 
     constexpr double restart_default = -0.3E+21;
 
