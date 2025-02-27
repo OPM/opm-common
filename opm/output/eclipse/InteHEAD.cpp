@@ -39,14 +39,14 @@
 
 #include <algorithm>
 #include <array>
-#include <chrono>
 #include <cmath>
 #include <ctime>
 #include <initializer_list>
 #include <numeric>
-#include <ratio>
 #include <utility>
 #include <vector>
+
+#include <fmt/format.h>
 
 // Public INTEHEAD items are recorded in the common header file
 //
@@ -879,9 +879,7 @@ int Opm::RestartIO::InteHEAD::numRsegElem(const ::Opm::Phases& phase)
     }
 
     throw std::invalid_argument {
-        "NRSEGZ is not supported for " +
-        std::to_string(nact) +
-        " active phases"
+        fmt::format("NRSEGZ is not supported for {} active phases", nact)
     };
 }
 
