@@ -645,36 +645,36 @@
         "doc": "Returns a tuple containing the IJK indices of the grid cell with global index g.\n\n:return: A a tuple containing the IJK indices of the grid cell with global index g.\n:type: tuple(int,int,int)"
     },
     "EclipseGrid_getCellVolume1G": {
-        "signature": "EclipseGrid.getCellVolume1G(g: int) -> double",
+        "signature": "EclipseGrid.getCellVolume(g: int) -> double",
         "doc": "Returns the cell volume for the grid cell at the global index g.\n\n:param g: The global index of the grid cell.\n:type g: int\n:return: The volume of the grid cell.\n:type: double"
     },
     "EclipseGrid_getCellVolume3": {
-        "signature": "EclipseGrid.getCellVolume3(i: int, j: int, k: int) -> double",
+        "signature": "EclipseGrid.getCellVolume(i: int, j: int, k: int) -> double",
         "doc": "Returns the cell volume for a grid cell identified by its (i, j, k) indices.\n\n:param i: The I index of the grid cell.\n:type i: int\n:param j: The J index of the grid cell.\n:type j: int\n:param k: The K index of the grid cell.\n:type k: int\n:return: The volume of the grid cell identified by the (i, j, k) indices.\n:type: double"
     },
     "EclipseGrid_getCellVolumeAll": {
-        "signature": "EclipseGrid.getCellVolumeAll() -> numpy.ndarray[double]",
+        "signature": "EclipseGrid.getCellVolume() -> numpy.ndarray[double]",
         "doc": "Returns a `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_ containing the volumes of all grid cells. Each entry in the array corresponds to the volume of a grid cell, with the array index matching the global index of that cell.\n\n:return: A numpy.ndarray each entry represents the volume of a grid cell, the index being to the global index.\n:type: numpy.ndarray[double]"
     },
     "EclipseGrid_getCellVolumeMask": {
-        "signature": "EclipseGrid.getCellVolumeMask(mask: list[int]) -> numpy.ndarray[double]",
-        "doc": "Returns the cell volumes for the cells with the global ids given in the input list.\n\n:return: The cell volumes for the given cells.\n:type: numpy.ndarray[double]"
+        "signature": "EclipseGrid.getCellVolume(mask: list[int]) -> numpy.ndarray[double]",
+        "doc": "Returns the cell volumes for the selected cells.\n\n:param mask: List containing one entry per grid cell, if the entry in the list is '1', this cell is selected by the mask.\n:type mask: list[int]\n:return: The cell volumes for the given cells.\n:type: numpy.ndarray[double]"
     },
    "EclipseGrid_getCellDepth1G": {
-        "signature": "EclipseGrid.getCellDepth1G(g: int) -> double",
+        "signature": "EclipseGrid.getCellDepth(g: int) -> double",
         "doc": "Returns the depth of the grid cell corresponding to the given global index.\n\n:param g: The global index of the grid cell.\n:type g: int\n:return: The depth of the grid cell with the specified global index.\n:type: double"
     },
     "EclipseGrid_getCellDepth3": {
-        "signature": "EclipseGrid.getCellDepth3(i: int, j: int, k: int) -> double",
+        "signature": "EclipseGrid.getCellDepth(i: int, j: int, k: int) -> double",
         "doc": "Returns the depth of the grid cell specified by the given IJK indices.\n\n:param i: The I index of the grid cell.\n:type i: int\n:param j: The J index of the grid cell.\n:type j: int\n:param k: The K index of the grid cell.\n:type k: int\n:return: The depth of the grid cell with the specified IJK indices.\n:type: double"
     },
     "EclipseGrid_getCellDepthAll": {
-        "signature": "EclipseGrid.getCellDepthAll() -> numpy.ndarray[double]",
+        "signature": "EclipseGrid.getCellDepth() -> numpy.ndarray[double]",
         "doc": "Returns a `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_ containing the depths of all grid cells. Each entry in the array corresponds to the depth of a grid cell, with the array index matching the global index of that cell.\n\n:return: A numpy.ndarray each entry represents the depth of a grid cell, and the index being the global index.\n:type: numpy.ndarray[double]"
     },
     "EclipseGrid_getCellDepthMask": {
         "signature": "EclipseGrid.getCellDepthMask(mask: list[int]) -> numpy.ndarray[double]",
-        "doc": "Returns the depths for the cell with the global ids given in the input list.\n\n:return: The depths for the given cells.\n:type: numpy.ndarray[double]"
+        "doc": "Returns the depths for the selected cells.\n\n:param mask: List containing one entry per grid cell, if the entry in the list is '1', this cell is selected by the mask.\n:type mask: list[int]\n:return: The depths for the given cells.\n:type: numpy.ndarray[double]"
     },
     "eclArrType": {
         "type": "class",
@@ -752,8 +752,8 @@
         "doc": "Represents an Eclipse Restart file. This class inherits from the class EclFile."
     },
     "ERst_init": {
-        "signature": "opm.io.ecl.ERst.__init__(filename: str)",
-        "doc": "Initializes the ERst object by loading the Restart file (and the underlying EclFile) from the specified path.\n\n:param filename: The path to the Restart file.\n:type filename: str"
+        "signature": "opm.io.ecl.ERst.__init__(filename: str) -> ERst",
+        "doc": "Initializes the ERst object by loading the Restart file (and the underlying EclFile) from the specified path.\n\n:param filename: The path to the Restart file.\n:type filename: str\n:return: The ERst object.\n:type: ERst"
     },
     "ERst_has_report_step": {
         "signature": "opm.io.ecl.ERst.__has_report_step(report_step: int) -> bool",
@@ -794,6 +794,116 @@
     "ERst_get_data_vector": {
         "signature": "opm.io.ecl.ERst.get_erst_vector(name: str, report_step: int, occurrence: int) -> tuple[numpy.ndarray, eclArrType]",
         "doc": "Retrieves the data array of the given name a the given occurrence at the given report step.\n\n:param name: The name of the arrays.\n:type name: str\n:param report_step: The report step.\n:type report_step: int\n:param occurrence: The occurrence to retrieve.\n:type occurrence: int\n:return: A tuple containing the data array and its associated type.\n:rtype: tuple[numpy.ndarray, eclArrType]"
+    },
+    "ESmry": {
+        "type": "class",
+        "signature": "opm.io.ecl.ESmry",
+        "doc": "Handles summary data from Eclipse simulations."
+    },
+    "ESmry_init": {
+        "signature": "opm.io.ecl.ESmry.__init__(filename: str, load_base_run: bool = False) -> ESmry",
+        "doc": "Initializes the ESmry object by loading the summary file.\n\n:param filename: Path to the .SMSPEC or .ESMRY file.\n:type filename: str\n:param load_base_run: Whether to load base run data. Default is False.\n:type load_base_run: bool\n:return: The ESmry object.\n:rtype: ESmry"
+    },
+    "ESmry_contains": {
+        "signature": "opm.io.ecl.ESmry.__contains__(key: str) -> bool",
+        "doc": "Checks if the specified key exists in the summary data.\n\n:param key: The key to check.\n:type key: str\n:return: True if the key exists, otherwise False.\n:rtype: bool"
+    },
+    "ESmry_make_esmry_file": {
+        "signature": "opm.io.ecl.ESmry.make_esmry_file() -> None",
+        "doc": "Generates an ESMRY file from an SMSPEC input file."
+    },
+    "ESmry_len": {
+        "signature": "opm.io.ecl.ESmry.__len__() -> int",
+        "doc": "Returns the number of time steps in the summary data.\n\n:return: The number of available time steps.\n:rtype: int"
+    },
+    "ESmry_get_all": {
+        "signature": "opm.io.ecl.ESmry.__get_all(key: str) -> numpy.ndarray",
+        "doc": "Retrieves the summary vector for the given key.\n\n:param key: The key.\n:type key: str\n:return: The summary for the specified key.\n:rtype: numpy.ndarray"
+    },
+    "ESmry_get_at_rstep": {
+        "signature": "opm.io.ecl.ESmry.__get_at_rstep(key: str) -> numpy.ndarray",
+        "doc": "Retrieves the report step summary vector for the given key.\n\n:param key: The key.\n:type key: str\n:return: The report step summary for the specified key.\n:rtype: numpy.ndarray"
+    },
+    "ESmry_start_date": {
+        "signature": "opm.io.ecl.ESmry.start_date -> datetime.datetime",
+        "doc": "The start date of the summary data as a `datetime.datetime <https://docs.python.org/3/library/datetime.html#datetime.datetime>`_.\n\n:return: The start date.\n:rtype: datetime.datetime"
+    },
+    "ESmry_keys1": {
+        "signature": "opm.io.ecl.ESmry.keys() -> list[str]",
+        "doc": "Retrieves a list of summary keys.\n\n:return: A list of available summary keys.\n:rtype: list[str]"
+    },
+    "ESmry_keys2": {
+        "signature": "opm.io.ecl.ESmry.keys(pattern: str) -> list[str]",
+        "doc": "Retrieves a list of summary keys matching the given pattern.\n\n:param pattern: A pattern to filter the keys.\n:type pattern: str\n:return: A list of available summary keys.\n:rtype: list[str]"
+    },
+    "ESmry_dates": {
+        "signature": "opm.io.ecl.ESmry.dates() -> list[datetime.datetime]",
+        "doc": "Retrieves a list of dates corresponding to the time steps in the summary data.\n\n:return: A list of dates.\n:rtype: list[datetime.datetime]"
+    },
+    "ESmry_units": {
+        "signature": "opm.io.ecl.ESmry.units(field: str) -> str",
+        "doc": "Retrieves the unit for a given field.\n\n:param field: The field name.\n:type field: str\n:return: The unit corresponding to the specified field.\n:rtype: str"
+    },
+    "EGrid": {
+        "type": "class",
+        "signature": "opm.io.ecl.EGrid",
+        "doc": "Represents an Eclipse Grid file."
+    },
+    "EGrid_init": {
+        "signature": "opm.io.ecl.EGrid.__init__(filename: str, grid_name: str = 'global') -> EGrid",
+        "doc": "Initializes an EGrid object by loading the grid file.\n\n:param filename: Path to the grid file.\n:type filename: str\n:param grid_name: The name of the grid (default is 'global').\n:type grid_name: str\n:return: The EGrid object.\n:rtype: EGrid"
+    },
+    "EGrid_active_cells": {
+        "signature": "opm.io.ecl.EGrid.active_cells -> int",
+        "doc": "Returns the number of active cells in the grid.\n\n:return: Number of active cells.\n:type: int"
+    },
+    "EGrid_dimension": {
+        "signature": "opm.io.ecl.EGrid.dimension -> tuple[int, int, int]",
+        "doc": "Returns the dimensions of the grid.\n\n:return: The (x,y,z) dimensions.\n:type: tuple[int, int, int]"
+    },
+    "EGrid_ijk_from_global_index": {
+        "signature": "opm.io.ecl.EGrid.ijk_from_global_index(global_index: int) -> tuple[int, int, int]",
+        "doc": "Converts a global index to IJK indices.\n\n:param global_index: The global index of the cell.\n:type global_index: int\n:return: The (I, J, K) indices.\n:type: tuple[int, int, int]"
+    },
+    "EGrid_ijk_from_active_index": {
+        "signature": "opm.io.ecl.EGrid.ijk_from_active_index(active_index: int) -> tuple[int, int, int]",
+        "doc": "Converts an active cell index to IJK indices.\n\n:param active_index: The active cell index.\n:type active_index: int\n:return: The (I, J, K) indices.\n:type: tuple[int, int, int]"
+    },
+    "EGrid_active_index": {
+        "signature": "opm.io.ecl.EGrid.active_index(i: int, j: int, k: int) -> int",
+        "doc": "Returns the active index corresponding to the given IJK index.\n\n:param i: The i index.\n:type i: int\n:param j: The j index.\n:type j: int\n:param k: The k index.\n:type k: int\n:return: The active cell index.\n:type: int"
+    },
+    "EGrid_global_index": {
+        "signature": "opm.io.ecl.EGrid.global_index(i: int, j: int, k: int) -> int",
+        "doc": "Returns the global index corresponding to the given IJK index.\n\n:param i: The i index.\n:type i: int\n:param j: The j index.\n:type j: int\n:param k: The k index.\n:type k: int\n:return: The global index.\n:type: int"
+    },
+    "EGrid_export_mapaxes": {
+        "signature": "opm.io.ecl.EGrid.export_mapaxes() -> tuple[double, 8]",
+        "doc": "Exports the map axes transformation for visualization.\n\n:return: tuple[double, 8]"
+    },
+    "EGrid_xyz_from_ijk": {
+        "signature": "opm.io.ecl.EGrid.xyz_from_ijk(i: int, j: int, k: int) -> tuple[tuple[double, 8], tuple[double, 8], tuple[double, 8]]",
+        "doc": "Computes the XYZ coordinates of the 8 cell corners given its ijk indices.\n\n:param i: The i index of the cell.\n:type i: int\n:param j: The j index of the cell.\n:type j: int\n:param k: The k index of the cell.\n:type k: int\n:return: The XYZ coordinates, as three tuples.\n:type: tuple[tuple[double, 8], tuple[double, 8], tuple[double, 8]]"
+    },
+    "EGrid_xyz_from_ijk_mapaxes": {
+        "signature": "opm.io.ecl.EGrid.xyz_from_ijk(i: int, j: int, k: int, apply_mapaxes: bool) -> tuple[tuple[double, 8], tuple[double, 8], tuple[double, 8]]",
+        "doc": "Computes the XYZ coordinates of the 8 cell corners given its ijk indices.\n\n:param i: The i index of the cell.\n:type i: int\n:param j: The j index of the cell.\n:type j: int\n:param k: The k index of the cell.\n:type k: int\n:param apply_mapaxes: Boolean to indicate if a mapaxes tranformation (if available) should be carried out before.\n:type apply_mapaxes: bool\n:return: The XYZ coordinates, as three tuples.\n:type: tuple[tuple[double, 8], tuple[double, 8], tuple[double, 8]]"
+    },
+    "EGrid_xyz_from_active_index": {
+        "signature": "opm.io.ecl.EGrid.xyz_from_active_index(active_index: int) -> tuple[tuple[double, 8], tuple[double, 8], tuple[double, 8]]",
+        "doc": "Computes the XYZ coordinates of a cell given its active index.\n\n:param active_index: The active cell index.\n:type active_index: int\n:return: XYZ coordinates.\n:type: tuple[float, float, float]"
+    },
+    "EGrid_xyz_from_active_index_mapaxes": {
+        "signature": "opm.io.ecl.EGrid.xyz_from_active_index(active_index: int, apply_mapaxes: bool) -> tuple[tuple[double, 8], tuple[double, 8], tuple[double, 8]]",
+        "doc": "Computes the XYZ coordinates of a cell given its active index.\n\n:param active_index: The active cell index.\n:type active_index: int\n:param apply_mapaxes: Boolean to indicate if a mapaxes tranformation (if available) should be carried out before.\n:type apply_mapaxes: bool\n:return: XYZ coordinates.\n:type: tuple[float, float, float]"
+    },
+    "EGrid_cellvolumes": {
+        "signature": "opm.io.ecl.EGrid.cellvolumes() -> numpy.ndarray",
+        "doc": "Returns an array containing the volume of each cell in the grid.\n\n:return: A NumPy array containing cell volumes.\n:type: numpy.ndarray"
+    },
+    "EGrid_cellvolumes_mask": {
+        "signature": "opm.io.ecl.EGrid.cellvolumes(mask: list[int]) -> numpy.ndarray",
+        "doc": "Returns an array containing the volume of the selected cells.\n\n:param mask: List containing one entry per grid cell, if the entry in the list is '1', this cell is selected by the mask.\n:type mask: list[int]\n:return: A NumPy array containing cell volumes.\n:type: numpy.ndarray"
     }
 
 }
