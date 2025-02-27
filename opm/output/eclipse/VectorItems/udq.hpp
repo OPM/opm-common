@@ -29,9 +29,7 @@ namespace Opm::RestartIO::Helpers::VectorItems {
             UDACode    = 0, // Integer code for keyword/item combination.
             UDQIndex   = 1, // UDQ insertion index (one-based)
 
-            NumIuapElm = 2, // Number of elements in IUAP for this UDA.  One
-                            // element for a regular group or well level
-                            // UDA, two elements for a FIELD level UDA.
+            NumIuapElm = 2, // Number of elements in IUAP for this UDA.
 
             UseCount   = 3, // Number of times this UDA is used in this
                             // way--i.e., number of wells (or groups) for
@@ -43,8 +41,11 @@ namespace Opm::RestartIO::Helpers::VectorItems {
 
         namespace Value {
             enum IuapElems : int {
-                Regular = 1, // UDA applies to a well or a non-field group.
-                Field   = 2, // UDA applies to the field group.
+                Well = 1,       // UDA applies to a well
+                GrpProd = 2,    // UDA applies to group or FIELD level
+                                // production (GCONPROD keyword)
+                GrpInj = 3,     // UDA applies to group or FIELD level
+                                // injection (GCONINJE keyword)
             };
         } // namespace Value
     } // namespace IUad
