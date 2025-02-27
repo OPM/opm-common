@@ -2005,6 +2005,22 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
         }        
     }
 
+    int EclipseGrid::getLGR_global_father(std::size_t global_index,  std::string lgr_tag) const
+    {
+        const EclipseGridLGR& lgr_cell = getLGRCell(lgr_tag);
+        const std::string& father_label  = lgr_cell.get_father_label(); 
+        if (father_label == "GLOBAL")
+        {
+            return 1;
+        }
+        else
+        {
+            // return getLGR_global_father(global_index, lgr_tag);
+            return 2;
+        }        
+
+    }
+
     std::vector<GridDims> EclipseGrid::get_lgr_children_gridim() const
     {
         std::vector<GridDims> lgr_children_gridim;

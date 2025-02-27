@@ -118,6 +118,10 @@ namespace Opm {
             std::vector<std::string> sliced_labels(all_lgr_labels.begin() + 1, all_lgr_labels.end());
             return sliced_labels;
         }
+
+        const std::vector<std::string> get_all_labels() const {
+            return all_lgr_labels;
+        }
         
         const std::string get_lgr_tag() const {
             return this->lgr_label;
@@ -277,7 +281,7 @@ namespace Opm {
         static bool allEqual(const std::vector<double> &v);
         EclipseGridLGR& getLGRCell(std::size_t index);
         EclipseGridLGR& getLGRCell(const std::string& lgr_tag) const;
- 
+        int getLGR_global_father(std::size_t global_index,  std::string lgr_tag) const;
         std::vector<EclipseGridLGR> lgr_children_cells;
         /**
         * @brief Sets Local Grid Refinement for the EclipseGrid.
@@ -422,6 +426,10 @@ namespace Opm {
         const std::array<int,3>& get_low_fahterIJK() const{
           return low_fahterIJK;
         }
+        const std::string& get_father_label() const{
+          return father_label;
+        }
+        
         const std::array<int,3>& get_up_fahterIJK() const{
           return up_fahterIJK;
         }

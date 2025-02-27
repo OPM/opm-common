@@ -102,6 +102,46 @@ Opm::ScheduleGrid::get_cell(std::size_t i, std::size_t j, std::size_t k) const
     return cellRef;
 }
 
+const Opm::CompletedCells::Cell&
+Opm::ScheduleGrid::get_cell(std::size_t i, std::size_t j, std::size_t k, std::string tag) const
+{
+    std::size_t tag_index = label_to_index.at(tag);
+    if (tag_index > 0)
+    {
+        return get_cell(i, j, k);
+    }
+    else
+    {
+        auto [valid, cellRef] = this->cells[tag_index]->try_get(i, j, k);
+
+        auto teste =  this->grid->getLGR_global_father(cellRef.global_index,tag);
+        if (!valid) {
+            cellRef.depth = this->grid->getCellDepth(i, j, k);
+            cellRef.dimensions = this->grid->getCellDimensions(i, j, k);
+
+            if (this->grid->cellActive(i, j, k)) {
+                const auto active_index = this->grid->getActiveIndex(i, j, k);
+                const double porv = try_get_value(*this->fp, "PORV", active_index);
+                if (this->grid->cellActiveAfterMINPV(i, j, k, porv)) {
+                    auto& props = cellRef.props.emplace(CompletedCells::Cell::Props{});
+                    props.active_index = active_index;
+                    props.permx = try_get_value(*this->fp, "PERMX", props.active_index);
+                    props.permy = try_get_value(*this->fp, "PERMY", props.active_index);
+                    props.permz = try_get_value(*this->fp, "PERMZ", props.active_index);
+                    props.poro = try_get_value(*this->fp, "PORO", props.active_index);
+                    props.satnum = this->fp->get_int("SATNUM").at(props.active_index);
+                    props.pvtnum = this->fp->get_int("PVTNUM").at(props.active_index);
+                    props.ntg = try_get_ntg_value(*this->fp, "NTG", props.active_index);
+                }
+            }
+        }
+
+    return cellRef;
+    }
+}
+
+
+
 const Opm::EclipseGrid* Opm::ScheduleGrid::get_grid() const
 {
     return this->grid;
@@ -109,12 +149,19 @@ const Opm::EclipseGrid* Opm::ScheduleGrid::get_grid() const
 
 void Opm::ScheduleGrid::init_lgr_grid()
 {
-    
-     for (auto lgr_tag : this->grid->get_all_lgr_labels())
-     {
+    std::size_t num_label = this->grid->get_all_labels().size();
+    cells.reserve(num_label);
+    std::size_t index = 0;
+    for (const std::string& label : this->grid->get_all_labels())
+    {
+        label_to_index[label] = index;
+        index++;
+    }
+    for (auto lgr_tag : this->grid->get_all_lgr_labels())
+    {
         const auto lgr_grid = this->grid->getLGRCell(lgr_tag);    
         cells.emplace_back(std::make_shared<Opm::CompletedCells>(lgr_grid.getNX(),
-                                                                 lgr_grid.getNY(), 
-                                                                 lgr_grid.getNZ()));
-     }
+                                                                    lgr_grid.getNY(), 
+                                                                    lgr_grid.getNZ()));
+    }
 }
