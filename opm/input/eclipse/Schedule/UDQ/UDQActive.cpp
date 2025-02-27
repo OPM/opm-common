@@ -191,7 +191,11 @@ Opm::UDQActive::load_rst(const UnitSystem&               units,
 {
     auto udaRecords = std::vector<RstRecord> {};
 
-    const auto& rst_active = rst_state.udq_active;
+    if (! rst_state.udq_active.has_value()) {
+        return udaRecords;
+    }
+
+    const auto& rst_active = *rst_state.udq_active;
     const auto& wgIndex = rst_active.wg_index;
 
     for (const auto& record : rst_active.iuad) {
