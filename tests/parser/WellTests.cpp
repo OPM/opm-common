@@ -2125,6 +2125,7 @@ COMPDATL
     auto test2 = grid.get_all_lgr_labels();
 
     const auto sched = Schedule { deck, es };
+    
     //sched.gri
     BOOST_CHECK_EQUAL(sched.getWell("PROD", 0).is_lgr_well(), true);
     BOOST_CHECK_EQUAL(sched.getWell("INJ", 0).is_lgr_well(), true);

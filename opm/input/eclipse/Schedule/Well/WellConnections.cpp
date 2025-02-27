@@ -544,6 +544,15 @@ The cell ({},{},{}) in well {} is not active and the connection will be ignored)
         }
     }
 
+    void WellConnections::loadCOMPDATL(const DeckRecord&      record,
+                                       const ScheduleGrid&    grid,
+                                       const std::string&     wname,
+                                       const WDFAC&           wdfac,
+                                       const KeywordLocation& location)
+    {
+        auto index = 1;
+    }
+
     void WellConnections::loadCOMPTRAJ(const DeckRecord&      record,
                                        const ScheduleGrid&    grid,
                                        const std::string&     wname,

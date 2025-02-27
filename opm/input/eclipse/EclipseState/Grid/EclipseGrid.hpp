@@ -281,7 +281,7 @@ namespace Opm {
         static bool allEqual(const std::vector<double> &v);
         EclipseGridLGR& getLGRCell(std::size_t index);
         EclipseGridLGR& getLGRCell(const std::string& lgr_tag) const;
-        int getLGR_global_father(std::size_t global_index,  std::string lgr_tag) const;
+        int getLGR_global_father(std::size_t global_index,  const std::string& lgr_tag) const;
         std::vector<EclipseGridLGR> lgr_children_cells;
         /**
         * @brief Sets Local Grid Refinement for the EclipseGrid.
@@ -429,7 +429,7 @@ namespace Opm {
         const std::string& get_father_label() const{
           return father_label;
         }
-        
+
         const std::array<int,3>& get_up_fahterIJK() const{
           return up_fahterIJK;
         }

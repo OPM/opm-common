@@ -92,6 +92,12 @@ namespace Opm {
                          const WDFAC&           wdfac,
                          const KeywordLocation& location);
 
+        void loadCOMPDATL(const DeckRecord&      record,
+                          const ScheduleGrid&    grid,
+                          const std::string&     wname,
+                          const WDFAC&           wdfac,
+                          const KeywordLocation& location);                         
+
         void loadCOMPTRAJ(const DeckRecord&      record,
                           const ScheduleGrid&    grid,
                           const std::string&     wname,

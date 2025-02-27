@@ -2005,7 +2005,7 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
         }        
     }
 
-    int EclipseGrid::getLGR_global_father(std::size_t global_index,  std::string lgr_tag) const
+    int EclipseGrid::getLGR_global_father(std::size_t global_index,  const std::string& lgr_tag) const
     {
         const EclipseGridLGR& lgr_cell = getLGRCell(lgr_tag);
         const std::string& father_label  = lgr_cell.get_father_label(); 

@@ -42,7 +42,15 @@ namespace Opm {
 
 namespace {
 
-void handleCOMPDAT(HandlerContext& handlerContext)
+    using LoadConnectionMethod = void (WellConnections::*)(
+        const DeckRecord&, 
+        const ScheduleGrid&,
+        const std::string&, 
+        const WDFAC&, 
+        const KeywordLocation& 
+    );
+    
+void handleCOMPDATX(HandlerContext& handlerContext, LoadConnectionMethod loadMethod)
 {
     std::unordered_set<std::string> wells;
     std::unordered_map<std::string, bool> well_connected;
@@ -54,10 +62,9 @@ void handleCOMPDAT(HandlerContext& handlerContext)
             auto well2 = handlerContext.state().wells.get(name);
 
             auto connections = std::make_shared<WellConnections>(well2.getConnections());
-            const auto origWellConnSetIsEmpty = connections->empty();
-
-            connections->loadCOMPDAT(record, handlerContext.grid, name,
-                                     well2.getWDFAC(), handlerContext.keyword.location());
+            const auto origWellConnSetIsEmpty = connections->empty();            
+            (connections.get()->*loadMethod)(record, handlerContext.grid, name,
+                                          well2.getWDFAC(), handlerContext.keyword.location());
 
             const auto isConnected = !origWellConnSetIsEmpty || !connections->empty();
             if (well_connected.count(name))
@@ -112,11 +119,16 @@ Well {} is not connected to grid - will remain SHUT)",
     }
 }
 
-void handleCOMPDATL(HandlerContext&)
+void handleCOMPDAT(HandlerContext& handlerContext)
 {
-    auto msg = "COMPDATL keyword is not supported in OPM";
-    OpmLog::warning(msg);
+    handleCOMPDATX(handlerContext, &WellConnections::loadCOMPDAT);
 }
+
+void handleCOMPDATL(HandlerContext& handlerContext)
+{
+    handleCOMPDATX(handlerContext, &WellConnections::loadCOMPDATL);
+}
+
 
 
 void handleCOMPLUMP(HandlerContext& handlerContext)

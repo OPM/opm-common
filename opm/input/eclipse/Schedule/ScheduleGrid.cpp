@@ -17,7 +17,6 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "opm/input/eclipse/EclipseState/Grid/GridDims.hpp"
 #include <opm/input/eclipse/Schedule/ScheduleGrid.hpp>
 
 #include <opm/input/eclipse/Schedule/CompletedCells.hpp>
@@ -27,25 +26,25 @@
 
 #include <cstddef>
 #include <string>
-#include <memory>
 #include <fmt/format.h>
 
 Opm::ScheduleGrid::ScheduleGrid(const Opm::EclipseGrid& ecl_grid,
                                 const Opm::FieldPropsManager& fpm,
-                                Opm::CompletedCells& completed_cells)
+                                Opm::CompletedCells& completed_cells,
+                                std::vector<CompletedCells>& completed_cells_lgr)
     : grid  { &ecl_grid }
     , fp    { &fpm }
+    , cells { completed_cells}
+    , cells_lgr{ completed_cells_lgr}
 {
-    cells.push_back(std::shared_ptr<Opm::CompletedCells>(std::addressof(completed_cells)));
-    if (grid->is_lgr())
-    {
-        init_lgr_grid();
-        lgr_intialized = true;
-    }    
+
 }
 
-Opm::ScheduleGrid::ScheduleGrid(Opm::CompletedCells& completed_cells)
-{cells.push_back(std::shared_ptr<Opm::CompletedCells>(std::addressof(completed_cells)));}
+Opm::ScheduleGrid::ScheduleGrid(Opm::CompletedCells& completed_cells, std::vector<CompletedCells>& completed_cells_lgr)
+    : cells { completed_cells}
+    , cells_lgr{completed_cells_lgr}
+{
+}
 
 namespace {
     double try_get_value(const Opm::FieldPropsManager& fp,
@@ -73,10 +72,10 @@ const Opm::CompletedCells::Cell&
 Opm::ScheduleGrid::get_cell(std::size_t i, std::size_t j, std::size_t k) const
 {
     if (this->grid == nullptr) {
-        return this->cells[0]->get(i, j, k);
+        return this->cells.get(i, j, k);
     }
 
-    auto [valid, cellRef] = this->cells[0]->try_get(i, j, k);
+    auto [valid, cellRef] = this->cells.try_get(i, j, k);
 
     if (!valid) {
         cellRef.depth = this->grid->getCellDepth(i, j, k);
@@ -112,7 +111,8 @@ Opm::ScheduleGrid::get_cell(std::size_t i, std::size_t j, std::size_t k, std::st
     }
     else
     {
-        auto [valid, cellRef] = this->cells[tag_index]->try_get(i, j, k);
+        tag_index--;
+        auto [valid, cellRef] = this->cells_lgr[tag_index].try_get(i, j, k);
 
         auto teste =  this->grid->getLGR_global_father(cellRef.global_index,tag);
         if (!valid) {
@@ -149,19 +149,10 @@ const Opm::EclipseGrid* Opm::ScheduleGrid::get_grid() const
 
 void Opm::ScheduleGrid::init_lgr_grid()
 {
-    std::size_t num_label = this->grid->get_all_labels().size();
-    cells.reserve(num_label);
     std::size_t index = 0;
     for (const std::string& label : this->grid->get_all_labels())
     {
         label_to_index[label] = index;
         index++;
-    }
-    for (auto lgr_tag : this->grid->get_all_lgr_labels())
-    {
-        const auto lgr_grid = this->grid->getLGRCell(lgr_tag);    
-        cells.emplace_back(std::make_shared<Opm::CompletedCells>(lgr_grid.getNX(),
-                                                                    lgr_grid.getNY(), 
-                                                                    lgr_grid.getNZ()));
     }
 }
