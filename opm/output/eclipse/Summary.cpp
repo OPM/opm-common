@@ -1686,37 +1686,79 @@ inline quantity res_vol_production_target( const fn_args& args )
     return { sum, measure::rate };
 }
 
-inline quantity oil_production_target( const fn_args& args )
+inline quantity group_oil_production_target( const fn_args& args )
 {
     const auto& groups = args.schedule[args.sim_step].groups;
-    const double value = groups.has(args.group_name) ? groups.get(args.group_name).productionProperties().oil_target.SI_value_or(0.0) : 0.0;
+    const double value = groups.has(args.group_name) ? groups.get(args.group_name).productionControls(args.st).oil_target : 0.0;
 
     return { value, measure::rate };
 }
 
-inline quantity gas_production_target( const fn_args& args )
+inline quantity group_gas_production_target( const fn_args& args )
 {
     const auto& groups = args.schedule[args.sim_step].groups;
-    const double value = groups.has(args.group_name) ? groups.get(args.group_name).productionProperties().gas_target.SI_value_or(0.0) : 0.0;
+    const double value = groups.has(args.group_name) ? groups.get(args.group_name).productionControls(args.st).gas_target : 0.0;
 
     return { value, measure::rate };
 }
 
-inline quantity water_production_target( const fn_args& args )
+inline quantity group_water_production_target( const fn_args& args )
 {
     const auto& groups = args.schedule[args.sim_step].groups;
-    const double value = groups.has(args.group_name) ? groups.get(args.group_name).productionProperties().water_target.SI_value_or(0.0) : 0.0;
+    const double value = groups.has(args.group_name) ? groups.get(args.group_name).productionControls(args.st).water_target : 0.0;
 
     return { value, measure::rate };
 }
 
-inline quantity liquid_production_target( const fn_args& args )
+inline quantity group_liquid_production_target( const fn_args& args )
 {
     const auto& groups = args.schedule[args.sim_step].groups;
-    const double value = groups.has(args.group_name) ? groups.get(args.group_name).productionProperties().liquid_target.SI_value_or(0.0) : 0.0;
+    const double value = groups.has(args.group_name) ? groups.get(args.group_name).productionControls(args.st).liquid_target : 0.0;
 
     return { value, measure::rate };
 }
+
+inline quantity group_gas_injection_target( const fn_args& args )
+{
+    double value = 0.0;
+    const auto& groups = args.schedule[args.sim_step].groups;
+    if (groups.has(args.group_name)) {
+        const auto& group = groups.get(args.group_name);
+        if (group.hasInjectionControl(Opm::Phase::GAS))
+            value = group.injectionControls(Opm::Phase::GAS, args.st).surface_max_rate;
+    }
+
+    return { value, measure::rate };
+}
+
+inline quantity group_water_injection_target( const fn_args& args )
+{
+    double value = 0.0;
+    const auto& groups = args.schedule[args.sim_step].groups;
+    if (groups.has(args.group_name)) {
+        const auto& group = groups.get(args.group_name);
+        if (group.hasInjectionControl(Opm::Phase::WATER))
+            value = group.injectionControls(Opm::Phase::WATER, args.st).surface_max_rate;
+    }
+
+    return { value, measure::rate };
+}
+
+inline quantity group_res_vol_injection_target( const fn_args& args )
+{
+    double value = 0.0;
+    const auto& groups = args.schedule[args.sim_step].groups;
+    if (groups.has(args.group_name)) {
+        const auto& group = groups.get(args.group_name);
+        if (group.hasInjectionControl(Opm::Phase::GAS))
+            value += group.injectionControls(Opm::Phase::GAS, args.st).resv_max_rate;
+        if (group.hasInjectionControl(Opm::Phase::WATER))
+            value += group.injectionControls(Opm::Phase::WATER, args.st).resv_max_rate;
+    }
+
+    return { value, measure::rate };
+}
+
 
 
 template <bool injection, Opm::data::WellControlLimits::Item i>
@@ -2559,11 +2601,16 @@ static const auto funs = std::unordered_map<std::string, ofun> {
     { "GMWIN", flowing< injector > },
     { "GMWPR", flowing< producer > },
 
-    { "GWPRT", water_production_target },
-    { "GOPRT", oil_production_target },
-    { "GGPRT", gas_production_target },
-    { "GLPRT", liquid_production_target },
+    { "GWPRT", group_water_production_target },
+    { "GOPRT", group_oil_production_target },
+    { "GGPRT", group_gas_production_target },
+    { "GLPRT", group_liquid_production_target },
     { "GVPRT", res_vol_production_target },
+
+    { "GWIRT", group_water_injection_target },
+    { "GGIRT", group_gas_injection_target },
+    { "GVIRT", group_res_vol_injection_target },
+
 
     { "CPR", cpr  },
     { "CGIRL", cratel< rt::gas, injector> },
@@ -2831,11 +2878,15 @@ static const auto funs = std::unordered_map<std::string, ofun> {
     { "FMWIN", flowing< injector > },
     { "FMWPR", flowing< producer > },
 
-    { "FWPRT", water_production_target },
-    { "FOPRT", oil_production_target },
-    { "FGPRT", gas_production_target },
-    { "FLPRT", liquid_production_target },
+    { "FWPRT", group_water_production_target },
+    { "FOPRT", group_oil_production_target },
+    { "FGPRT", group_gas_production_target },
+    { "FLPRT", group_liquid_production_target },
     { "FVPRT", res_vol_production_target },
+
+    { "FWIRT", group_water_injection_target },
+    { "FGIRT", group_gas_injection_target },
+    { "FVIRT", group_res_vol_injection_target },
 
     { "FMWPA", abandoned_well< producer > },
     { "FMWIA", abandoned_well< injector >},
