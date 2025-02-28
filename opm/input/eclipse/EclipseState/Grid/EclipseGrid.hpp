@@ -421,7 +421,7 @@ namespace Opm {
         }
         std::optional<std::reference_wrapper<EclipseGridLGR>>
         get_child_LGR_cell(const std::string& lgr_tag) const;
-        const std::vector<int>& get_hostnum(void) const;
+        std::vector<int> get_hostnum(void) const;
         void set_hostnum(std::vector<int>&);
         const std::array<int,3>& get_low_fahterIJK() const{
           return low_fahterIJK;

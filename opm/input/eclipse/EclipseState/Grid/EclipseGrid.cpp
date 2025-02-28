@@ -2011,7 +2011,7 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
         const std::string& father_label  = lgr_cell.get_father_label(); 
         if (father_label == "GLOBAL")
         {
-            return 1;
+            return 1; //lgr_cell.m_hostnum[global_index];
         }
         else
         {
@@ -2198,6 +2198,10 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
         initializeLGRTreeIndices();
         // parse the reference indices to object in the global level.
         parseGlobalReferenceToChildren();
+        // initialize the host cells for each LGR cell.
+        // because the standard algorithm is based on topological information
+        // it does not need for the refinement information to be parsed.
+        init_children_host_cells();
     }
 
     void EclipseGrid::propagateParentIndicesToLGRChildren(int index){
@@ -2557,9 +2561,11 @@ namespace Opm {
         lgr_label= self_label;
     }
 
-    const std::vector<int>& EclipseGridLGR::get_hostnum(void) const
+    std::vector<int> EclipseGridLGR::get_hostnum(void) const
     {
-        return m_hostnum;
+        std::vector<int> hostnum{this->m_hostnum};
+        std::transform(hostnum.begin(),hostnum.end(), hostnum.begin(), [](int a){return a+1;});
+        return hostnum;
     }
 
     std::optional<std::reference_wrapper<EclipseGridLGR>> 
@@ -2589,7 +2595,7 @@ namespace Opm {
 
     void EclipseGridLGR::set_hostnum(std::vector<int>& hostnum)
     {
-        std::transform(hostnum.begin(),hostnum.end(), hostnum.begin(), [](int a){return a+1;});
+        //std::transform(hostnum.begin(),hostnum.end(), hostnum.begin(), [](int a){return a+1;});
         m_hostnum = hostnum;
     }
     void EclipseGridLGR::set_lgr_refinement(const std::string& lgr_tag, const std::vector<double>& coord, const std::vector<double>& zcorn)
@@ -2705,7 +2711,7 @@ namespace Opm {
         egridfile.write("ZCORN", zcorn_f);
 
         egridfile.write("ACTNUM", m_actnum);
-        egridfile.write("HOSTNUM", m_hostnum);
+        egridfile.write("HOSTNUM", get_hostnum());
         egridfile.write("ENDGRID", endgrid);
         egridfile.write("ENDLGR", endgrid);
         for (std::size_t index: m_print_order_lgr_cells ){

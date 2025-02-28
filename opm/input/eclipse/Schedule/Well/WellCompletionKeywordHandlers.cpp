@@ -42,13 +42,13 @@ namespace Opm {
 
 namespace {
 
-    using LoadConnectionMethod = void (WellConnections::*)(
-        const DeckRecord&, 
-        const ScheduleGrid&,
-        const std::string&, 
-        const WDFAC&, 
-        const KeywordLocation& 
-    );
+using LoadConnectionMethod = void (WellConnections::*)(
+    const DeckRecord&, 
+    const ScheduleGrid&,
+    const std::string&, 
+    const WDFAC&, 
+    const KeywordLocation& 
+);
     
 void handleCOMPDATX(HandlerContext& handlerContext, LoadConnectionMethod loadMethod)
 {
