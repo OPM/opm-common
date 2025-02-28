@@ -274,7 +274,8 @@ namespace {
 }
 
 Opm::RestartIO::RstUDQActive::
-RstUDQActive(const std::vector<int>& iuad_arg,
+RstUDQActive(const int rstFileVersion,
+             const std::vector<int>& iuad_arg,
              const std::vector<int>& iuap,
              const std::vector<int>& igph)
     : wg_index { iuap }
@@ -289,7 +290,7 @@ RstUDQActive(const std::vector<int>& iuad_arg,
     {
         const auto* uda = &iuad_arg[offset];
 
-        this->iuad.emplace_back(UDQ::udaControl(uda[Ix::UDACode]),
+        this->iuad.emplace_back(UDQ::udaControl(uda[Ix::UDACode], rstFileVersion),
                                 uda[Ix::UDQIndex] - 1,
                                 udaKind(uda[Ix::Kind]),
                                 uda[Ix::UseCount],
