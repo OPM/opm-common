@@ -124,25 +124,31 @@ Opm::ScheduleGrid::get_cell_lgr(std::size_t i, std::size_t j, std::size_t k, std
         return get_cell(i, j, k);
     }   
     tag_index--;
+    const EclipseGridLGR& lgr_grid =  this->grid->getLGRCell(tag);
     auto [valid, cellRef] = this->cells_lgr[tag_index].try_get(i, j, k);
-    auto teste =  this->grid->getLGR_global_father(cellRef.global_index,tag);
+    int father_global_id =  this->grid->getLGR_global_father(cellRef.global_index,tag);
+    auto [fi, fj, fk] = this->grid->getIJK(father_global_id);
     if (!valid) {
-        cellRef.depth = this->grid->getCellDepth(i, j, k);
-        cellRef.dimensions = this->grid->getCellDimensions(i, j, k);
-
-        if (this->grid->cellActive(i, j, k)) {
-            const auto active_index = this->grid->getActiveIndex(i, j, k);
-            const double porv = try_get_value(*this->fp, "PORV", active_index);
+        // this part relies on the ZCORN and COORDS of the host cells that have not been parsed yet.
+        // getCellDepth and getCellDimensions on EclipseGridLGR class must be adapted.
+        cellRef.depth = lgr_grid.getCellDepth(i, j, k);
+        cellRef.dimensions = lgr_grid.getCellDimensions(i, j, k); 
+        
+        if (this->grid->cellActive(fi, fj, fk) && lgr_grid.cellActive(i, j, k)) 
+        {
+            const auto father_active_index = this->grid->getActiveIndex(fi, fj, fk);
+            const auto active_index = lgr_grid.getActiveIndex(i, j, k);
+            const double porv = try_get_value(*this->fp, "PORV", father_active_index);
             if (this->grid->cellActiveAfterMINPV(i, j, k, porv)) {
                 auto& props = cellRef.props.emplace(CompletedCells::Cell::Props{});
                 props.active_index = active_index;
-                props.permx = try_get_value(*this->fp, "PERMX", props.active_index);
-                props.permy = try_get_value(*this->fp, "PERMY", props.active_index);
-                props.permz = try_get_value(*this->fp, "PERMZ", props.active_index);
-                props.poro = try_get_value(*this->fp, "PORO", props.active_index);
-                props.satnum = this->fp->get_int("SATNUM").at(props.active_index);
-                props.pvtnum = this->fp->get_int("PVTNUM").at(props.active_index);
-                props.ntg = try_get_ntg_value(*this->fp, "NTG", props.active_index);
+                props.permx = try_get_value(*this->fp, "PERMX", father_active_index);
+                props.permy = try_get_value(*this->fp, "PERMY", father_active_index);
+                props.permz = try_get_value(*this->fp, "PERMZ", father_active_index);
+                props.poro = try_get_value(*this->fp, "PORO", father_active_index);
+                props.satnum = this->fp->get_int("SATNUM").at(father_active_index);
+                props.pvtnum = this->fp->get_int("PVTNUM").at(father_active_index);
+                props.ntg = try_get_ntg_value(*this->fp, "NTG", father_active_index);
             }
         }
     }

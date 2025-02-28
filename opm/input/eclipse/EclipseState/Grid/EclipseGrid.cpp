@@ -2011,12 +2011,12 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
         const std::string& father_label  = lgr_cell.get_father_label(); 
         if (father_label == "GLOBAL")
         {
-            return 1; //lgr_cell.m_hostnum[global_index];
+            return lgr_cell.get_hostnum(global_index);
         }
         else
         {
             // return getLGR_global_father(global_index, lgr_tag);
-            return 2;
+            return getLGR_global_father(lgr_cell.get_hostnum(global_index), father_label);
         }        
 
     }
@@ -2561,7 +2561,7 @@ namespace Opm {
         lgr_label= self_label;
     }
 
-    std::vector<int> EclipseGridLGR::get_hostnum(void) const
+    std::vector<int> EclipseGridLGR::save_hostnum(void) const
     {
         std::vector<int> hostnum{this->m_hostnum};
         std::transform(hostnum.begin(),hostnum.end(), hostnum.begin(), [](int a){return a+1;});
@@ -2711,7 +2711,7 @@ namespace Opm {
         egridfile.write("ZCORN", zcorn_f);
 
         egridfile.write("ACTNUM", m_actnum);
-        egridfile.write("HOSTNUM", get_hostnum());
+        egridfile.write("HOSTNUM", save_hostnum());
         egridfile.write("ENDGRID", endgrid);
         egridfile.write("ENDLGR", endgrid);
         for (std::size_t index: m_print_order_lgr_cells ){
