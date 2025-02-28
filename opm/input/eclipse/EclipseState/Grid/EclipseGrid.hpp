@@ -224,6 +224,8 @@ namespace Opm {
         std::array<double, 3> getCellDimensions(size_t i, size_t j, size_t k) const {
             return getCellDims(i, j, k);
         }
+        std::array<double,3> getCellDimensionsLGR(size_t i, size_t j, size_t k, const std::string& lgr_tag) const;
+
 
         bool isCellActive(size_t i, size_t j, size_t k) const {
             return cellActive(i, j, k);
@@ -282,6 +284,8 @@ namespace Opm {
         EclipseGridLGR& getLGRCell(std::size_t index);
         EclipseGridLGR& getLGRCell(const std::string& lgr_tag) const;
         int getLGR_global_father(std::size_t global_index,  const std::string& lgr_tag) const;
+        std::array<int,3> getCellSubdivisionRatioLGR(const std::string&      lgr_tag, 
+                                                           std::array<int,3> acum = {1,1,1}) const;
         std::vector<EclipseGridLGR> lgr_children_cells;
         /**
         * @brief Sets Local Grid Refinement for the EclipseGrid.
@@ -406,8 +410,8 @@ namespace Opm {
                        size_t ny,
                        size_t nz,
                        const vec_size_t& father_lgr_index,
-                       const std::array<int, 3>& low_fahterIJK_,
-                       const std::array<int, 3>& up_fahterIJK_);
+                       const std::array<int, 3>& low_fatherIJK_,
+                       const std::array<int, 3>& up_fatherIJK_);
         const vec_size_t& getFatherGlobalID() const;
         void save(Opm::EclIO::EclOutput&, const std::vector<Opm::NNCdata>&, const Opm::UnitSystem&) const;
         void save_nnc(Opm::EclIO::EclOutput&) const;
@@ -425,16 +429,18 @@ namespace Opm {
         int get_hostnum(std::size_t global_index) const {return(m_hostnum[global_index]);};
 
         void set_hostnum(std::vector<int>&);
-        const std::array<int,3>& get_low_fahterIJK() const{
-          return low_fahterIJK;
+        const std::array<int,3>& get_low_fatherIJK() const{
+          return low_fatherIJK;
         }
         const std::string& get_father_label() const{
           return father_label;
         }
 
-        const std::array<int,3>& get_up_fahterIJK() const{
-          return up_fahterIJK;
+        const std::array<int,3>& get_up_fatherIJK() const{
+          return up_fatherIJK;
         }
+        std::array<int,3> getNXYZ() const;
+
 
         /**
          * @brief Sets Local Grid Refinement for the EclipseGridLGR.
@@ -454,8 +460,8 @@ namespace Opm {
         std::string father_label;
         // references global on the father label
         vec_size_t father_global;
-        std::array<int, 3> low_fahterIJK {};
-        std::array<int, 3> up_fahterIJK {};
+        std::array<int, 3> low_fatherIJK {};
+        std::array<int, 3> up_fatherIJK {};
         std::vector<int> m_hostnum;
     };
 

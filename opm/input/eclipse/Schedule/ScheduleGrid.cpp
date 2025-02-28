@@ -132,7 +132,9 @@ Opm::ScheduleGrid::get_cell_lgr(std::size_t i, std::size_t j, std::size_t k, std
         // this part relies on the ZCORN and COORDS of the host cells that have not been parsed yet.
         // getCellDepth and getCellDimensions on EclipseGridLGR class must be adapted.
         cellRef.depth = lgr_grid.getCellDepth(i, j, k);
-        cellRef.dimensions = lgr_grid.getCellDimensions(i, j, k); 
+        auto dimensionst = this->grid->getCellDimensions(fi, fj, fk);
+
+        cellRef.dimensions = this->grid->getCellDimensionsLGR(fi, fj, fk, tag);
         
         if (this->grid->cellActive(fi, fj, fk) && lgr_grid.cellActive(i, j, k)) 
         {

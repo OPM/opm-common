@@ -2015,10 +2015,51 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
         }
         else
         {
-            // return getLGR_global_father(global_index, lgr_tag);
             return getLGR_global_father(lgr_cell.get_hostnum(global_index), father_label);
         }        
 
+    }
+
+    /**
+    * @brief Computes the dimensions of a local grid refinement (LGR) cell.
+    * 
+    * This function calculates the dimensions of an LGR cell by dividing 
+    * the parent cell's dimensions by the subdivision ratio for the given 
+    * LGR tag.
+    * 
+    * @param i Local index of the parent cell in the x-direction.
+    * @param j Local index of the parent cell in the y-direction.
+    * @param k Local index of the parent cell in the z-direction.
+    * @param lgr_tag Identifier for the LGR region.
+    * @return std::array<double,3> The computed dimensions of the LGR cell 
+    *         in the x, y, and z directions.
+    */
+    std::array<double,3> EclipseGrid::getCellDimensionsLGR(size_t i, size_t j, size_t k, const std::string& lgr_tag) const
+    {
+        std::array<int,3> subdivision = getCellSubdivisionRatioLGR(lgr_tag);
+        std::array<double,3> cell_dims = getCellDims(i, j, k);
+        
+        return {cell_dims[0] / static_cast<double>(subdivision[0]), 
+                cell_dims[1] / static_cast<double>(subdivision[1]), 
+                cell_dims[2] / static_cast<double>(subdivision[2])};
+    }
+
+    std::array<int,3> EclipseGrid::getCellSubdivisionRatioLGR(const std::string& lgr_tag,
+                                                                    std::array<int,3> acum ) const
+    {
+        const EclipseGridLGR& lgr_cell = getLGRCell(lgr_tag);
+        const std::string& father_label  = lgr_cell.get_father_label(); 
+        acum = {static_cast<int>(acum[0]*lgr_cell.getNX()), 
+                static_cast<int>(acum[1]*lgr_cell.getNY()), 
+                static_cast<int>(acum[2]*lgr_cell.getNZ())};
+        if (father_label == "GLOBAL")
+        {
+            return acum;
+        }
+        else
+        {            
+            return getCellSubdivisionRatioLGR(father_label, acum);
+        }    
     }
 
     std::vector<GridDims> EclipseGrid::get_lgr_children_gridim() const
@@ -2095,8 +2136,8 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
             return global_index;
         };
         for (EclipseGridLGR& lgr_cell : lgr_children_cells) {
-            const std::array<int,3>& host_low_fatherIJK = lgr_cell.get_low_fahterIJK();            
-            const std::array<int,3>& host_up_fatherIJK = lgr_cell.get_up_fahterIJK();    
+            const std::array<int,3>& host_low_fatherIJK = lgr_cell.get_low_fatherIJK();            
+            const std::array<int,3>& host_up_fatherIJK = lgr_cell.get_up_fatherIJK();    
             const std::array<int,3> host_IJK = {host_up_fatherIJK[0] - host_low_fatherIJK[0] + 1,
                                                 host_up_fatherIJK[1] - host_low_fatherIJK[1] + 1,
                                                 host_up_fatherIJK[2] - host_low_fatherIJK[2] + 1};
@@ -2552,10 +2593,10 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
 namespace Opm {
     EclipseGridLGR::EclipseGridLGR(const std::string& self_label, const std::string& father_label_,
                                    std::size_t nx, std::size_t ny, std::size_t nz,
-                                   const vec_size_t& father_lgr_index, const std::array<int,3>& low_fahterIJK_,
-                                   const std::array<int,3>& up_fahterIJK_)
+                                   const vec_size_t& father_lgr_index, const std::array<int,3>& low_fatherIJK_,
+                                   const std::array<int,3>& up_fatherIJK_)
     : EclipseGrid(nx,ny,nz), father_label(father_label_), father_global(father_lgr_index), 
-                             low_fahterIJK(low_fahterIJK_), up_fahterIJK(up_fahterIJK_)
+                             low_fatherIJK(low_fatherIJK_), up_fatherIJK(up_fatherIJK_)
     {
         init_father_global();
         lgr_label= self_label;
@@ -2595,7 +2636,6 @@ namespace Opm {
 
     void EclipseGridLGR::set_hostnum(std::vector<int>& hostnum)
     {
-        //std::transform(hostnum.begin(),hostnum.end(), hostnum.begin(), [](int a){return a+1;});
         m_hostnum = hostnum;
     }
     void EclipseGridLGR::set_lgr_refinement(const std::string& lgr_tag, const std::vector<double>& coord, const std::vector<double>& zcorn)
@@ -2621,10 +2661,18 @@ namespace Opm {
         std::sort(father_global.begin(),father_global.end());
     }
 
+    std::array<int,3> EclipseGridLGR::getNXYZ() const
+    {
+        return {up_fatherIJK[0] - low_fatherIJK[0] + 1, 
+                up_fatherIJK[1] - low_fatherIJK[1] + 1,
+                up_fatherIJK[2] - low_fatherIJK[2] + 1};
+    }
+
     const EclipseGridLGR::vec_size_t& EclipseGridLGR::getFatherGlobalID() const
     {
         return father_global;
     }
+
     void EclipseGridLGR::save(Opm::EclIO::EclOutput& egridfile, const std::vector<Opm::NNCdata>& nnc, const Opm::UnitSystem& units) const {
         const auto lgr_name_label = std::vector{ Opm::EclIO::PaddedOutputString<8>{ lgr_label }};
         egridfile.write("LGR",lgr_name_label);
@@ -2683,12 +2731,12 @@ namespace Opm {
         gridhead[24] = 1;                   // number of reservoirs
         gridhead[25] = 1;                   // number of coordinate line seg
         gridhead[26] = 0;                   // NTHETA =0 non-radial
-        gridhead[27] = low_fahterIJK[0] + 1;// Lower I-index-host
-        gridhead[28] = low_fahterIJK[1] + 1;// Lower J-index-host
-        gridhead[29] = low_fahterIJK[2] + 1;// Lower K-index-host
-        gridhead[30] = up_fahterIJK[0] + 1; // Upper I-index-host
-        gridhead[31] = up_fahterIJK[1] + 1; // Upper J-index-host
-        gridhead[32] = up_fahterIJK[2] + 1; // Upper K-index-host
+        gridhead[27] = low_fatherIJK[0] + 1;// Lower I-index-host
+        gridhead[28] = low_fatherIJK[1] + 1;// Lower J-index-host
+        gridhead[29] = low_fatherIJK[2] + 1;// Lower K-index-host
+        gridhead[30] = up_fatherIJK[0] + 1; // Upper I-index-host
+        gridhead[31] = up_fatherIJK[1] + 1; // Upper J-index-host
+        gridhead[32] = up_fatherIJK[2] + 1; // Upper K-index-host
 
         [[maybe_unused]] std::vector<int> nnchead(10, 0);
         [[maybe_unused]] std::vector<int> nnc1;
