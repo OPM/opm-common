@@ -225,6 +225,7 @@ namespace Opm {
             return getCellDims(i, j, k);
         }
         std::array<double,3> getCellDimensionsLGR(size_t i, size_t j, size_t k, const std::string& lgr_tag) const;
+        double getCellDepthLGR(size_t i, size_t j, size_t k, const std::string& lgr_tag) const;
 
 
         bool isCellActive(size_t i, size_t j, size_t k) const {
@@ -284,8 +285,7 @@ namespace Opm {
         EclipseGridLGR& getLGRCell(std::size_t index);
         EclipseGridLGR& getLGRCell(const std::string& lgr_tag) const;
         int getLGR_global_father(std::size_t global_index,  const std::string& lgr_tag) const;
-        std::array<int,3> getCellSubdivisionRatioLGR(const std::string&      lgr_tag, 
-                                                           std::array<int,3> acum = {1,1,1}) const;
+
         std::vector<EclipseGridLGR> lgr_children_cells;
         /**
         * @brief Sets Local Grid Refinement for the EclipseGrid.
@@ -395,7 +395,10 @@ namespace Opm {
                             std::array<double,8>& X,
                             std::array<double,8>& Y,
                             std::array<double,8>& Z) const;
-
+        std::array<int,3> getCellSubdivisionRatioLGR(const std::string&  lgr_tag, 
+                                                     std::array<int,3>   acum = {1,1,1}) const;
+    
+    
     };
 
     /// Specialized Class to describe LGR refined cells.
@@ -427,7 +430,13 @@ namespace Opm {
         get_child_LGR_cell(const std::string& lgr_tag) const;
         std::vector<int> save_hostnum(void) const;
         int get_hostnum(std::size_t global_index) const {return(m_hostnum[global_index]);};
-
+        void get_label_child_to_top_father(std::vector<std::reference_wrapper<const std::string>>& list) const;
+        void get_global_index_child_to_top_father(std::vector<std::size_t> & list, 
+                                                  std::size_t i, std::size_t j, std::size_t k) const;
+        void get_global_index_child_to_top_father(std::vector<std::size_t> & list, std::size_t global_ind) const;
+  
+        
+        
         void set_hostnum(std::vector<int>&);
         const std::array<int,3>& get_low_fatherIJK() const{
           return low_fatherIJK;
