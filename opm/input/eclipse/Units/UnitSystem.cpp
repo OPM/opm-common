@@ -1529,6 +1529,7 @@ namespace {
         case UDAControl::WCONINJE_RESV:
         case UDAControl::WCONPROD_RESV:
         case UDAControl::WELTARG_RESV:
+        case UDAControl::GCONPROD_RESV_TARGET:
         case UDAControl::GCONINJE_RESV_MAX_RATE:
             return this->getDimension(UnitSystem::measure::geometric_volume_rate);
 
