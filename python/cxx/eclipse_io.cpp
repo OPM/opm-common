@@ -86,7 +86,7 @@ public:
             return convert::numpy_array( m_ext_esmry->get_at_rstep(key) );
     }
 
-    time_point smry_start_date()
+    std::tuple<int, int, int,int, int, int, bool> smry_start_date()
     {
         time_point utc_chrono;
 
@@ -96,10 +96,25 @@ public:
             utc_chrono = m_ext_esmry->startdate();
 
         auto utc_time_t   = std::chrono::system_clock::to_time_t( utc_chrono );
+
         auto utc_ts       = Opm::TimeStampUTC( utc_time_t );
+
         auto local_time_t = Opm::asLocalTimeT( utc_ts );
-        return TimeService::from_time_t( local_time_t );
+
+        std::tm* local_tm = std::localtime(&local_time_t);
+
+        int y = local_tm->tm_year + 1900;
+        int m = local_tm->tm_mon + 1;
+        int d = local_tm->tm_mday;
+        int h = local_tm->tm_hour;
+        int mi = local_tm->tm_min;
+        int s = local_tm->tm_sec;
+
+        bool dst = local_tm->tm_isdst == 1 ? true : false;
+
+        return std::make_tuple(y, m, d, h, mi, s, dst);
     }
+
 
     std::vector<time_point> dates() const
     {
@@ -484,7 +499,7 @@ void python::common::export_IO(py::module& m) {
         .def("__len__", &ESmryBind::numberOfTimeSteps, ESmry_len_docstring)
         .def("__get_all", &ESmryBind::get_smry_vector, py::arg("key"), ESmry_get_all_docstring)
         .def("__get_at_rstep", &ESmryBind::get_smry_vector_at_rsteps, py::arg("key"), ESmry_get_at_rstep_docstring)
-        .def_property_readonly("start_date", &ESmryBind::smry_start_date, ESmry_start_date_docstring)
+        .def("__start_date", &ESmryBind::smry_start_date, ESmry_start_date_docstring)
         .def("keys", (const std::vector<std::string>& (ESmryBind::*) (void) const)
             &ESmryBind::keywordList, ESmry_keys1_docstring)
         .def("keys", (std::vector<std::string> (ESmryBind::*) (const std::string&) const)
