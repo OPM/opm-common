@@ -72,7 +72,19 @@ def esmry_end_date(self):
     start = self.start_date
     time = self.__get_all("TIME")
 
-    return start + datetime.timedelta(days = float(time[-1]))
+    return start + datetime.timedelta(seconds = float(int(time[-1]*24*3600.0)))
+
+@property
+def esmry_start_date(self):
+
+    y, m, d, h, mi, s, dst = self.__start_date()
+
+    startd = datetime.datetime(y, m, d, h, mi, s)
+
+    if dst :
+        return startd + datetime.timedelta(hours=-1)
+    else:
+        return startd
 
 
 def getitem_esmry(self, arg):
@@ -180,6 +192,7 @@ setattr(EclFile, "__getitem__", getitem_eclfile)
 setattr(ERst, "__contains__", contains_erst)
 setattr(ERst, "__getitem__", getitem_erst)
 
+setattr(ESmry, "start_date", esmry_start_date)
 setattr(ESmry, "end_date", esmry_end_date)
 setattr(ESmry, "__getitem__", getitem_esmry)
 

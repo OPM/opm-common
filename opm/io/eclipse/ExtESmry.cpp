@@ -48,10 +48,8 @@ Opm::time_point make_date(const std::vector<int>& datetime) {
     if (datetime.size() == 7) {
         hour = datetime[3];
         minute = datetime[4];
-        auto total_usec = datetime[5];
-        second = total_usec / 1000000;
+        second = datetime[5] ;
     }
-
 
     const auto ts = Opm::TimeStampUTC{ Opm::TimeStampUTC::YMD{ year, month, day}}.hour(hour).minutes(minute).seconds(second);
     return Opm::TimeService::from_time_t( Opm::asTimeT(ts) );
