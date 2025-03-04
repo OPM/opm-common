@@ -448,7 +448,6 @@ namespace Opm {
         const std::array<int,3>& get_up_fatherIJK() const{
           return up_fatherIJK;
         }
-        std::array<int,3> getNXYZ() const;
 
 
         /**

@@ -2047,8 +2047,9 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
     double EclipseGrid::getCellDepthLGR(size_t i, size_t j, size_t k, const std::string& lgr_tag) const
     {
         auto split_domain = [](double start_val, double end_val, int num_points, int index) {
-            if (index < 1 || index > num_points) {
-            throw std::out_of_range("Index must be between 1 and num_points.");
+            if (index < 0 || index >= num_points) 
+            {
+                throw std::out_of_range("Index must be between 1 and num_points.");
             }
             double step = (end_val - start_val) / (num_points - 1);
             return start_val + (index * step);
@@ -2056,7 +2057,8 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
         
         auto refine_cell = [&split_domain](std::array<double, 8>& Z, int nz, int k_pos) {
             std::array<double, 8> Zdiv;        
-            for (int index = 0; index < 4; index++) {
+            for (int index = 0; index < 4; index++) 
+            {
                 Zdiv[index] = split_domain(Z[index], Z[index + 4], nz + 1, k_pos);
                 Zdiv[index + 4] = split_domain(Z[index], Z[index + 4], nz + 1, k_pos + 1);
             }        
@@ -2735,13 +2737,6 @@ namespace Opm {
     void EclipseGridLGR::init_father_global()
     {
         std::sort(father_global.begin(),father_global.end());
-    }
-
-    std::array<int,3> EclipseGridLGR::getNXYZ() const
-    {
-        return {up_fatherIJK[0] - low_fatherIJK[0] + 1, 
-                up_fatherIJK[1] - low_fatherIJK[1] + 1,
-                up_fatherIJK[2] - low_fatherIJK[2] + 1};
     }
 
     const EclipseGridLGR::vec_size_t& EclipseGridLGR::getFatherGlobalID() const
