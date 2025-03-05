@@ -2006,7 +2006,6 @@ template <template <class> class NewContainerType, class Scalar, class IndexTrai
 FLUIDSYSTEM_CLASSNAME<Scalar, IndexTraits, NewContainerType>
 copy_to_gpu(const FLUIDSYSTEM_CLASSNAME<Scalar, IndexTraits, OldContainerType>& oldFluidSystem) {
 
-    using GpuCo2Tables = CO2Tables<double, NewContainerType<double>>;
     using GpuBuffer3Array = NewContainerType<std::array<Scalar, 3>>;
     using GpuBuffer9Array = NewContainerType<std::array<Scalar, 9>>;
 
