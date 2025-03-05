@@ -334,7 +334,9 @@ public:
     }
 
     OPM_HOST_DEVICE Scalar gasReferenceDensity(unsigned regionIdx) const
-    { return gasReferenceDensity_[regionIdx]; }
+    {
+        return gasReferenceDensity_[regionIdx];
+    }
 
     OPM_HOST_DEVICE Scalar oilReferenceDensity(unsigned regionIdx) const
     { return brineReferenceDensity_[regionIdx]; }

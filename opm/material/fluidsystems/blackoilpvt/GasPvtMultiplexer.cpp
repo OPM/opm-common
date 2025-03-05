@@ -28,47 +28,30 @@
 
 namespace Opm {
 
-template <class Scalar, bool enableThermal, class ParamsContainer, class ContainerT>
-void GasPvtMultiplexer<Scalar,enableThermal, ParamsContainer, ContainerT>::
+template <class Scalar, bool enableThermal, class ParamsContainer, class ContainerT, template <class...> class PtrType>
+void GasPvtMultiplexer<Scalar,enableThermal, ParamsContainer, ContainerT, PtrType>::
 initEnd()
 {
     OPM_GAS_PVT_MULTIPLEXER_CALL(pvtImpl.initEnd(), break);
 }
 
-template <class Scalar, bool enableThermal, class ParamsContainer, class ContainerT>
-OPM_HOST_DEVICE unsigned GasPvtMultiplexer<Scalar,enableThermal, ParamsContainer, ContainerT>::
-numRegions() const
-{
-    OPM_GAS_PVT_MULTIPLEXER_CALL(return pvtImpl.numRegions());
-}
-
-
-template <class Scalar, bool enableThermal, class ParamsContainer, class ContainerT>
-void GasPvtMultiplexer<Scalar,enableThermal, ParamsContainer, ContainerT>::
+template <class Scalar, bool enableThermal, class ParamsContainer, class ContainerT, template <class...> class PtrType>
+void GasPvtMultiplexer<Scalar,enableThermal, ParamsContainer, ContainerT, PtrType>::
 setVapPars(const Scalar par1, const Scalar par2)
 {
     OPM_GAS_PVT_MULTIPLEXER_CALL(pvtImpl.setVapPars(par1, par2), break);
 }
 
-
-template <class Scalar, bool enableThermal, class ParamsContainer, class ContainerT>
-OPM_HOST_DEVICE Scalar GasPvtMultiplexer<Scalar,enableThermal, ParamsContainer, ContainerT>::
-gasReferenceDensity(unsigned regionIdx)
-{
-    OPM_GAS_PVT_MULTIPLEXER_CALL(return pvtImpl.gasReferenceDensity(regionIdx));
-}
-
-
-template <class Scalar, bool enableThermal, class ParamsContainer, class ContainerT>
-OPM_HOST_DEVICE Scalar GasPvtMultiplexer<Scalar,enableThermal, ParamsContainer, ContainerT>::
+template <class Scalar, bool enableThermal, class ParamsContainer, class ContainerT, template <class...> class PtrType>
+OPM_HOST_DEVICE Scalar GasPvtMultiplexer<Scalar,enableThermal, ParamsContainer, ContainerT, PtrType>::
 hVap(unsigned regionIdx) const
 {
     OPM_GAS_PVT_MULTIPLEXER_CALL(return pvtImpl.hVap(regionIdx));
 }
 
 #if HAVE_ECL_INPUT
-template <class Scalar, bool enableThermal, class ParamsContainer, class ContainerT>
-void GasPvtMultiplexer<Scalar,enableThermal, ParamsContainer, ContainerT>::
+template <class Scalar, bool enableThermal, class ParamsContainer, class ContainerT, template <class...> class PtrType>
+void GasPvtMultiplexer<Scalar,enableThermal, ParamsContainer, ContainerT, PtrType>::
 initFromState(const EclipseState& eclState, const Schedule& schedule)
 {
     if (!eclState.runspec().phases().active(Phase::GAS))
@@ -96,10 +79,10 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
 #endif
 
 // Helper function to keep the switch case tidy when constructing different pvts
-template <class Scalar, bool enableThermal, class ParamsContainer, class ContainerT>
+template <class Scalar, bool enableThermal, class ParamsContainer, class ContainerT, template <class...> class PtrType>
 template <class ConcreteGasPvt>
-std::unique_ptr<void, std::function<void(void*)>>
-GasPvtMultiplexer<Scalar,enableThermal, ParamsContainer, ContainerT>::makeGasPvt()
+typename GasPvtMultiplexer<Scalar,enableThermal, ParamsContainer, ContainerT, PtrType>::UniqueVoidPtrWithDeleter
+GasPvtMultiplexer<Scalar,enableThermal, ParamsContainer, ContainerT, PtrType>::makeGasPvt()
 {
     return UniqueVoidPtrWithDeleter(
         new ConcreteGasPvt,
@@ -107,8 +90,8 @@ GasPvtMultiplexer<Scalar,enableThermal, ParamsContainer, ContainerT>::makeGasPvt
     );
 }
 
-template <class Scalar, bool enableThermal, class ParamsContainer, class ContainerT>
-void GasPvtMultiplexer<Scalar,enableThermal, ParamsContainer, ContainerT>::
+template <class Scalar, bool enableThermal, class ParamsContainer, class ContainerT, template <class...> class PtrType>
+void GasPvtMultiplexer<Scalar,enableThermal, ParamsContainer, ContainerT, PtrType>::
 setApproach(GasPvtApproach gasPvtAppr)
 {
     switch (gasPvtAppr) {
@@ -133,7 +116,7 @@ setApproach(GasPvtApproach gasPvtAppr)
         break;
 
     case GasPvtApproach::Co2Gas:
-        realGasPvt_ = makeGasPvt<Co2GasPvt<Scalar>>();
+        realGasPvt_ = makeGasPvt<Co2GasPvt<Scalar, ParamsT, ContainerT>>();
         break;
 
     case GasPvtApproach::H2Gas:
