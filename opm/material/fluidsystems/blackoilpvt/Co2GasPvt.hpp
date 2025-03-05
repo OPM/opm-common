@@ -87,6 +87,18 @@ public:
                        Scalar T_ref = 288.71, //(273.15 + 15.56)
                        Scalar P_ref = 101325);
 
+    Co2GasPvt(const Co2GasPvt& other)
+        : brineReferenceDensity_(other.brineReferenceDensity_)
+        , gasReferenceDensity_(other.gasReferenceDensity_)
+        , salinity_(other.salinity_)
+        , enableEzrokhiDensity_(other.enableEzrokhiDensity_)
+        , enableVaporization_(other.enableVaporization_)
+        , activityModel_(other.activityModel_)
+        , gastype_(other.gastype_)
+        , co2Tables(other.co2Tables)
+    {
+    }
+
     Co2GasPvt(const Params& params,
               const ContainerT& brineReferenceDensity,
               const ContainerT& gasReferenceDensity,
@@ -466,7 +478,7 @@ private:
 namespace Opm::gpuistl{
     template<class GPUContainer, class Params, class ScalarT>
     Co2GasPvt<ScalarT, Params, GPUContainer>
-    copy_to_gpu(const Co2GasPvt<ScalarT>& cpuCo2)
+    copy_to_gpu(Co2GasPvt<ScalarT, Opm::CO2Tables<double, std::vector<double>>, std::vector<ScalarT>>& cpuCo2)
     {
         return Co2GasPvt<ScalarT, Params, GPUContainer>(
             copy_to_gpu<GPUContainer>(cpuCo2.getParams()),
