@@ -17,10 +17,6 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <memory>
-#include <optional>
-#include <stdexcept>
-#include <utility>
 
 #define BOOST_TEST_MODULE WellTestLGR
 #include <boost/test/unit_test.hpp>
@@ -52,8 +48,21 @@
 #include <opm/common/utility/TimeService.hpp>
 
 #include <opm/input/eclipse/Parser/ParserKeywords/F.hpp>
-
+#define TOLERANCE_PERCENT 0.01  
 using namespace Opm;
+
+std::unordered_map<std::string, std::size_t> create_label_mapper(EclipseGrid ecl_grid)
+{
+    std::unordered_map<std::string, std::size_t> label_to_index;
+    std::size_t index = 0;
+    for (const std::string& label : ecl_grid.get_all_lgr_labels())
+    {
+        label_to_index[label] = index;
+        index++;
+    }
+    return label_to_index;
+}
+
 
 BOOST_AUTO_TEST_CASE(WellLGR)
 {
@@ -101,7 +110,7 @@ WELSPECL
 /
 COMPDATL
 -- Item #: 1	2	3	4	5	6	7	8	9 10
-	'PROD' 'LGR2'	3	2	1	1	'OPEN'	1*	1*	0.5 /
+	'PROD' 'LGR2'	3	1	2	2	'OPEN'	1*	1*	0.5 /
 	'INJ'  'LGR1'   1	1	1	1	'OPEN'	1*	1*	0.5 /
 /
 )");
@@ -116,13 +125,13 @@ COMPDATL
     //sched.gri
     BOOST_CHECK_EQUAL(sched.getWell("PROD", 0).is_lgr_well(), true);
     BOOST_CHECK_EQUAL(sched.getWell("INJ", 0).is_lgr_well(), true);
-    BOOST_CHECK_EQUAL(sched.getWell("PROD", 0).get_lgr_well_tag(), "LGR2");
-    BOOST_CHECK_EQUAL(sched.getWell("INJ", 0).get_lgr_well_tag(), "LGR1");
+    BOOST_CHECK_EQUAL(sched.getWell("PROD", 0).get_lgr_well_tag().value(), "LGR2");
+    BOOST_CHECK_EQUAL(sched.getWell("INJ", 0).get_lgr_well_tag().value(), "LGR1");
 }
 
 
 
-BOOST_AUTO_TEST_CASE(WellLGRDepth)
+BOOST_AUTO_TEST_CASE(WellLGRDepthHalf)
 {
     const auto deck = Parser{}.parseString(R"(RUNSPEC
 DIMENS
@@ -130,11 +139,11 @@ DIMENS
 GRID
 CARFIN
 -- NAME I1-I2 J1-J2 K1-K2 NX NY NZ
-'LGR1'  1  1  1  1  1  1  3  1  3 /
+'LGR1'  1  1  1  1  1  1  2  1  2 /
 ENDFIN
 CARFIN
 -- NAME I1-I2 J1-J2 K1-K2 NX NY NZ
-'LGR2'  3  3  3  3  1  1  3  3  1 /
+'LGR2'  3  3  3  3  1  1  2  1  2 /
 ENDFIN
 
 INIT
@@ -163,13 +172,13 @@ PERMZ
 SCHEDULE
 WELSPECL
 -- Item #: 1	 2	3	4	5	 6 7
-	'PROD'	'G1' 'LGR2'	3	1	8400	'OIL' /
-	'INJ'	'G1' 'LGR1'	1	1	8335	'GAS' /
+	'PROD'	'G1' 'LGR2'	2	1	8400	'OIL' /
+	'INJ'	'G1' 'LGR1'	2	1	8335	'GAS' /
 /
 COMPDATL
 -- Item #: 1	2	3	4	5	6	7	8	9 10
-	'PROD' 'LGR2'	3	1	2	1	'OPEN'	1*	1*	0.5 /
-	'INJ'  'LGR1'   1	1	1	1	'OPEN'	1*	1*	0.5 /
+	'PROD' 'LGR2'	2	1	1	1	'OPEN'	1*	1*	0.5 /
+	'INJ'  'LGR1'   2	1	2	2	'OPEN'	1*	1*	0.5 /
 /
 )");
 
@@ -180,14 +189,97 @@ COMPDATL
 
     const auto sched = Schedule { deck, es };
     
-    auto lgr2_dims = sched.completed_cells_lgr[0].dims;
-    auto lgr1_dims = sched.completed_cells_lgr[1].dims;
+    auto mapper = create_label_mapper(grid);    
 
-    auto i1 = grid.getLGRCell("LGR1").getNXYZ();
-    auto i2 = grid.getLGRCell("LGR2").getNXYZ();
-    //sched.gri
-    BOOST_CHECK_EQUAL(sched.getWell("PROD", 0).is_lgr_well(), true);
-    BOOST_CHECK_EQUAL(sched.getWell("INJ", 0).is_lgr_well(), true);
-    BOOST_CHECK_EQUAL(sched.getWell("PROD", 0).get_lgr_well_tag(), "LGR2");
-    BOOST_CHECK_EQUAL(sched.getWell("INJ", 0).get_lgr_well_tag(), "LGR1");
+    auto cell1 = sched.completed_cells_lgr[mapper["LGR2"]].get(1, 0, 0);
+    auto cell2 = sched.completed_cells_lgr[mapper["LGR1"]].get(1, 0, 1);
+
+    auto dim_original =  grid.getCellDimensions(0, 0,0);
+
+    auto dim_cell1 = cell1.dimensions;
+    auto dim_cell2 = cell2.dimensions;
+
+    BOOST_CHECK_EQUAL(cell1.depth,8337.5);
+    BOOST_CHECK_EQUAL(cell2.depth,8362.5);    
+    BOOST_CHECK_EQUAL(dim_original[0]/2,dim_cell1[0]);
+    BOOST_CHECK_EQUAL(dim_original[1]/1,dim_cell1[1]);
+    BOOST_CHECK_EQUAL(dim_original[2]/2,dim_cell1[2]);
+    BOOST_CHECK_EQUAL_COLLECTIONS(dim_cell1.begin(), dim_cell1.end(), dim_cell2.begin(), dim_cell2.end());
+}
+
+
+BOOST_AUTO_TEST_CASE(WellLGRDepthThird)
+{
+    const auto deck = Parser{}.parseString(R"(RUNSPEC
+DIMENS
+3 3 1 /
+GRID
+CARFIN
+-- NAME I1-I2 J1-J2 K1-K2 NX NY NZ
+'LGR1'  1  1  1  1  1  1  3  1  3 /
+ENDFIN
+CARFIN
+-- NAME I1-I2 J1-J2 K1-K2 NX NY NZ
+'LGR2'  3  3  3  3  1  1  3  1  3 /
+ENDFIN
+
+INIT
+DX 
+   	9*1000 /
+DY
+	9*1000 /
+DZ
+	9*50 /
+
+TOPS
+	9*8325 /
+
+PORO
+   	9*0.3 /
+
+PERMX
+	9*500 /
+
+PERMY
+	9*200 /
+
+PERMZ
+	9*200 /
+
+SCHEDULE
+WELSPECL
+-- Item #: 1	 2	3	4	5	 6 7
+	'PROD'	'G1' 'LGR2'	2	1	8400	'OIL' /
+	'INJ'	'G1' 'LGR1'	2	1	8335	'GAS' /
+/
+COMPDATL
+-- Item #: 1	2	3	4	5	6	7	8	9 10
+	'PROD' 'LGR2'	3	1	1	1	'OPEN'	1*	1*	0.5 /
+	'INJ'  'LGR1'   3	1	3	3	'OPEN'	1*	1*	0.5 /
+/
+)");
+
+    auto es    = EclipseState { deck };
+    auto& grid = es.getInputGrid();
+    auto test1 = grid.get_lgr_children_gridim();
+    auto test2 = grid.get_all_lgr_labels();
+
+    const auto sched = Schedule { deck, es };
+    
+    auto mapper = create_label_mapper(grid);    
+
+    auto cell1 = sched.completed_cells_lgr[mapper["LGR2"]].get(2, 0, 0);
+    auto cell2 = sched.completed_cells_lgr[mapper["LGR1"]].get(2, 0, 2);
+    auto dim_original =  grid.getCellDimensions(0, 0,0);
+
+    auto dim_cell1 = cell1.dimensions;
+    auto dim_cell2 = cell2.dimensions;
+
+    BOOST_CHECK_CLOSE(cell1.depth, 8333.333333, TOLERANCE_PERCENT);
+    BOOST_CHECK_CLOSE(cell2.depth,8366.666666, TOLERANCE_PERCENT);    
+
+    BOOST_CHECK_EQUAL(dim_original[0]/3,dim_cell1[0]);
+    BOOST_CHECK_EQUAL(dim_original[1]/1,dim_cell1[1]);
+    BOOST_CHECK_EQUAL(dim_original[2]/3,dim_cell1[2]);
+    BOOST_CHECK_EQUAL_COLLECTIONS(dim_cell1.begin(), dim_cell1.end(), dim_cell2.begin(), dim_cell2.end());
 }

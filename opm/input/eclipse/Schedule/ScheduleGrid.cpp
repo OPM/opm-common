@@ -140,7 +140,7 @@ Opm::ScheduleGrid::get_cell_lgr(std::size_t i, std::size_t j, std::size_t k, std
             const auto father_active_index = this->grid->getActiveIndex(fi, fj, fk);
             const auto active_index = lgr_grid.getActiveIndex(i, j, k);
             const double porv = try_get_value(*this->fp, "PORV", father_active_index);
-            if (this->grid->cellActiveAfterMINPV(i, j, k, porv)) {
+            if (this->grid->cellActiveAfterMINPV(fi, fj, fk, porv)) {
                 auto& props = cellRef.props.emplace(CompletedCells::Cell::Props{});
                 props.active_index = active_index;
                 props.permx = try_get_value(*this->fp, "PERMX", father_active_index);
