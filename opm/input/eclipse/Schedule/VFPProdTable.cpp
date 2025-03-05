@@ -17,23 +17,24 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <opm/input/eclipse/Schedule/VFPProdTable.hpp>
+
+#include <opm/common/OpmLog/OpmLog.hpp>
+
+#include <opm/input/eclipse/Units/Dimension.hpp>
+#include <opm/input/eclipse/Units/UnitSystem.hpp>
+
+#include <opm/input/eclipse/Deck/DeckItem.hpp>
+#include <opm/input/eclipse/Deck/DeckKeyword.hpp>
+#include <opm/input/eclipse/Deck/DeckRecord.hpp>
+
+#include <opm/input/eclipse/Parser/ParserKeywords/V.hpp>
+
 #include <algorithm>
 #include <cassert>
 #include <cmath>
 
 #include <fmt/format.h>
-
-#include <opm/common/OpmLog/OpmLog.hpp>
-
-#include <opm/input/eclipse/Deck/DeckItem.hpp>
-#include <opm/input/eclipse/Deck/DeckKeyword.hpp>
-#include <opm/input/eclipse/Deck/DeckRecord.hpp>
-#include <opm/input/eclipse/Parser/ParserKeywords/V.hpp>
-#include <opm/input/eclipse/Units/Dimension.hpp>
-#include <opm/input/eclipse/Units/UnitSystem.hpp>
-
-#include <opm/input/eclipse/Schedule/VFPProdTable.hpp>
-
 
 namespace Opm {
 
@@ -117,13 +118,10 @@ VFPProdTable::ALQ_TYPE getALQType( const DeckItem& item, bool gaslift_opt_active
     }
 }
 
-}
-
+} // Anonymous namespace
 
 VFPProdTable::VFPProdTable()
-{
-}
-
+{}
 
 VFPProdTable::VFPProdTable(int table_num,
                            double datum_depth,
@@ -181,8 +179,10 @@ VFPProdTable VFPProdTable::serializationTestObject()
   If the gaslift_opt flag is set to true the ALQ_TYPE item will default to GRAT.
 */
 
-VFPProdTable::VFPProdTable( const DeckKeyword& table, bool gaslift_opt_active, const UnitSystem& deck_unit_system) :
-    m_location(table.location())
+VFPProdTable::VFPProdTable(const DeckKeyword& table,
+                           const bool         gaslift_opt_active,
+                           const UnitSystem&  deck_unit_system)
+    : m_location(table.location())
 {
     using ParserKeywords::VFPPROD;
 
@@ -331,8 +331,17 @@ VFPProdTable::VFPProdTable( const DeckKeyword& table, bool gaslift_opt_active, c
     check();
 }
 
+std::pair<int, VFPProdTable::ALQ_TYPE>
+VFPProdTable::getALQType(const DeckKeyword& inputTable,
+                         const bool         gaslift_opt_active)
+{
+    const auto& header = inputTable.getRecord(0);
 
-
+    return {
+        header.getItem<ParserKeywords::VFPPROD::TABLE>().get<int>(0),
+        ::Opm::getALQType(header.getItem<ParserKeywords::VFPPROD::ALQ_DEF>(), gaslift_opt_active)
+    };
+}
 
 namespace {
 

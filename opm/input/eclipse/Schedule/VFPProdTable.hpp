@@ -20,17 +20,23 @@
 #ifndef OPM_PARSER_ECLIPSE_ECLIPSESTATE_TABLES_VFPPRODTABLE_HPP_
 #define OPM_PARSER_ECLIPSE_ECLIPSESTATE_TABLES_VFPPRODTABLE_HPP_
 
+#include <opm/common/OpmLog/KeywordLocation.hpp>
+
+#include <opm/input/eclipse/Units/Dimension.hpp>
 
 #include <array>
+#include <utility>
 #include <vector>
-#include <opm/input/eclipse/Units/Dimension.hpp>
-#include <opm/common/OpmLog/KeywordLocation.hpp>
 
 namespace Opm {
 
     class DeckItem;
     class DeckKeyword;
     class UnitSystem;
+
+} // namespace Opm
+
+namespace Opm {
 
 /**
  * Class for reading data from a VFPPROD (vertical flow performance production) table
@@ -80,7 +86,11 @@ public:
                  const std::vector<double>& gfr_data,
                  const std::vector<double>& alq_data,
                  const std::vector<double>& data);
+
     static Dimension ALQDimension(const ALQ_TYPE& alq_type, const UnitSystem& unit_system);
+
+    static std::pair<int, ALQ_TYPE>
+    getALQType(const DeckKeyword& inputTable, bool gaslift_opt_active);
 
     static VFPProdTable serializationTestObject();
 
@@ -219,9 +229,6 @@ private:
                                const UnitSystem& unit_system);
 };
 
+} // namespace Opm
 
-
-}
-
-
-#endif
+#endif // OPM_PARSER_ECLIPSE_ECLIPSESTATE_TABLES_VFPPRODTABLE_HPP_
