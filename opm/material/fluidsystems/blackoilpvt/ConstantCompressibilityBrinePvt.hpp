@@ -34,7 +34,7 @@
 
 namespace Opm {
 
-template <class Scalar, bool enableThermal, bool enableBrine, class ParamsContainer, class ContainerT>
+template <class Scalar, bool enableThermal, bool enableBrine, class ParamsContainer, class ContainerT, template <class...> class PtrType>
 class WaterPvtMultiplexer;
 
 #if HAVE_ECL_INPUT
