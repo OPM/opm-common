@@ -142,11 +142,21 @@ public:
 
     template<class ConcretePvt>
     GasPvtMultiplexer(GasPvtApproach approach, const ConcretePvt& realGasPvt)
-    : gasPvtApproach_(approach),
-        realGasPvt_(new ConcretePvt(realGasPvt), [this](void* ptr){ deleter(ptr); })
-    { }
+    : gasPvtApproach_(approach)
+    , realGasPvt_(nullptr)
+    //, realGasPvt_(new ConcretePvt(realGasPvt), [this](void* ptr){ deleter(ptr); })
+    {
+        if constexpr (std::is_same_v<PtrType<void>, std::unique_ptr<void>>) {
+            realGasPvt_ = UniqueVoidPtrWithDeleter(new ConcretePvt(realGasPvt), [this](void* ptr){ deleter(ptr); });
+        }
+        else {
+            realGasPvt_ = UniqueVoidPtrWithDeleter(new ConcretePvt(realGasPvt));
+        }
+    }
 
     GasPvtMultiplexer(const GasPvtMultiplexer<Scalar,enableThermal, ParamsContainer, ContainerT, PtrType>& data)
+    : gasPvtApproach_(data.gasPvtApproach_)
+    , realGasPvt_(initializeCopyConstructor(data))
     {
         *this = data;
     }
@@ -420,6 +430,40 @@ public:
 
 private:
 
+    UniqueVoidPtrWithDeleter initializeCopyConstructor(
+        const GasPvtMultiplexer<Scalar, enableThermal, ParamsContainer, ContainerT, PtrType>& data)
+    {
+        if (data.realGasPvt_.get() == nullptr) {
+            if constexpr (std::is_same_v<PtrType<void>, std::unique_ptr<void>>) {
+                return UniqueVoidPtrWithDeleter(nullptr, [](void*){});
+            } else {
+                return PtrType<void>(nullptr);
+            }
+        }
+        switch (data.gasPvtApproach_) {
+        case GasPvtApproach::DryGas:
+            return copyPvt<DryGasPvt<Scalar>>(data.realGasPvt_);
+        case GasPvtApproach::DryHumidGas:
+            return copyPvt<DryHumidGasPvt<Scalar>>(data.realGasPvt_);
+        case GasPvtApproach::WetHumidGas:
+            return copyPvt<WetHumidGasPvt<Scalar>>(data.realGasPvt_);
+        case GasPvtApproach::WetGas:
+            return copyPvt<WetGasPvt<Scalar>>(data.realGasPvt_);
+        case GasPvtApproach::ThermalGas:
+            return copyPvt<GasPvtThermal<Scalar>>(data.realGasPvt_);
+        case GasPvtApproach::Co2Gas:
+            return copyPvt<Co2GasPvt<Scalar, ParamsT, ContainerT>>(data.realGasPvt_);
+        case GasPvtApproach::H2Gas:
+            return copyPvt<H2GasPvt<Scalar>>(data.realGasPvt_);
+        default:
+            if constexpr (std::is_same_v<PtrType<void>, std::unique_ptr<void>>) {
+                return UniqueVoidPtrWithDeleter(nullptr, [](void*){});
+            } else {
+                return PtrType<void>(nullptr); // Assuming default constructor works
+            }
+        }
+    }
+
     void copyPointer(const UniqueVoidPtrWithDeleter& pointer) {
         switch (gasPvtApproach_) {
             case GasPvtApproach::DryGas:
@@ -451,10 +495,22 @@ private:
     template <class ConcreteGasPvt> UniqueVoidPtrWithDeleter makeGasPvt();
 
     template <class ConcretePvt> UniqueVoidPtrWithDeleter copyPvt(const UniqueVoidPtrWithDeleter& sourcePvt){
-        return UniqueVoidPtrWithDeleter(
-            new ConcretePvt(*static_cast<const ConcretePvt*>(sourcePvt.get())),
-            [this](void* ptr) { deleter(ptr); }
-        );
+        if constexpr (std::is_same_v<PtrType<void>, std::unique_ptr<void>>) {
+            return UniqueVoidPtrWithDeleter(
+                new ConcretePvt(*static_cast<const ConcretePvt*>(sourcePvt.get())),
+                [this](void* ptr) { deleter(ptr); }
+            );
+        }
+        else {
+            return UniqueVoidPtrWithDeleter(
+                new ConcretePvt(*static_cast<const ConcretePvt*>(sourcePvt.get()))
+            );
+        }
+
+        // return UniqueVoidPtrWithDeleter(
+        //     new ConcretePvt(*static_cast<const ConcretePvt*>(sourcePvt.get())),
+        //     [this](void* ptr) { deleter(ptr); }
+        // );
     }
 
     GasPvtApproach gasPvtApproach_{GasPvtApproach::NoGas};
