@@ -116,11 +116,11 @@ enum class GasPvtApproach {
  * the API exposed by this class is pretty specific to the assumptions made by the black
  * oil model.
  */
-template <class Scalar, bool enableThermal = true, class ParamsContainer = std::vector<double>, class ContainerT = std::vector<Scalar>>
+template <class Scalar, bool enableThermal = true, class ParamsContainer = std::vector<double>, class ContainerT = std::vector<Scalar>, template <class...> class PtrType = std::unique_ptr>
 class GasPvtMultiplexer
 {
 public:
-    using UniqueVoidPtrWithDeleter = std::unique_ptr<void, std::function<void(void*)>>;
+    using UniqueVoidPtrWithDeleter = PtrType<void, std::function<void(void*)>>;
 
     using ParamsT = CO2Tables<double, ParamsContainer>;
 
@@ -141,7 +141,7 @@ public:
         realGasPvt_(new ConcretePvt(realGasPvt), [this](void* ptr){ deleter(ptr); })
     { }
 
-    GasPvtMultiplexer(const GasPvtMultiplexer<Scalar,enableThermal, ParamsContainer, ContainerT>& data)
+    GasPvtMultiplexer(const GasPvtMultiplexer<Scalar,enableThermal, ParamsContainer, ContainerT, PtrType>& data)
     {
         *this = data;
     }
@@ -405,8 +405,8 @@ public:
 
     OPM_HOST_DEVICE const void* realGasPvt() const { return realGasPvt_.get(); }
 
-    GasPvtMultiplexer<Scalar,enableThermal, ParamsContainer, ContainerT>&
-    operator=(const GasPvtMultiplexer<Scalar,enableThermal, ParamsContainer, ContainerT>& data){
+    GasPvtMultiplexer<Scalar,enableThermal, ParamsContainer, ContainerT, PtrType>&
+    operator=(const GasPvtMultiplexer<Scalar,enableThermal, ParamsContainer, ContainerT, PtrType>& data){
         gasPvtApproach_ = data.gasPvtApproach_;
 
         copyPointer(data.realGasPvt_);
@@ -497,9 +497,20 @@ namespace gpuistl{
     {
         using Params = CO2Tables<Scalar, GPUContainerDouble>;
 
-        auto gpuPvt = copy_to_gpu<GPUContainerScalar, Params, Scalar>(gasMultiplexer.template getRealPvt<GasPvtApproach::Co2Gas>());
+        auto gpuPvt = copy_to_gpu<GPUContainerScalar, Params>(gasMultiplexer.template getRealPvt<GasPvtApproach::Co2Gas>());
 
         return GasPvtMultiplexer<Scalar, true, GPUContainerDouble, GPUContainerScalar>(GasPvtApproach::Co2Gas, gpuPvt);
+    }
+
+    template <template <class> class ViewPtr, class ViewDouble, class ViewScalar, class GPUContainerDouble, class GPUContainerScalar, class Scalar>
+    GasPvtMultiplexer<Scalar, true, ViewDouble, ViewScalar, ViewPtr>
+    make_view(GasPvtMultiplexer<Scalar, true, GPUContainerDouble, GPUContainerScalar, ViewPtr>& gasMultiplexer)
+    {
+        using ParamsView = CO2Tables<Scalar, ViewDouble>;
+
+        auto gpuPvtView = make_view<ViewScalar, ParamsView>(gasMultiplexer.template getRealPvt<GasPvtApproach::Co2Gas>());
+
+        return GasPvtMultiplexer<Scalar, true, ViewDouble, ViewScalar, ViewPtr>(GasPvtApproach::Co2Gas, gpuPvtView);
     }
 }
 } // namespace Opm
