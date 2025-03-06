@@ -414,6 +414,7 @@ namespace Opm {
             serializer(this->restart_output);
             serializer(this->completed_cells);
             serializer(this->completed_cells_lgr);
+            serializer(this->completed_cells_lgr_map);
             serializer(this->m_treat_critical_as_non_critical);
             serializer(this->current_report_step);
             serializer(this->m_lowActionParsingStrictness);

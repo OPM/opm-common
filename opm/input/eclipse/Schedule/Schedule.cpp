@@ -365,6 +365,7 @@ namespace Opm {
         result.restart_output = WriteRestartFileEvents::serializationTestObject();
         result.completed_cells = CompletedCells::serializationTestObject();
         result.completed_cells_lgr =  std::vector<CompletedCells>(3, CompletedCells::serializationTestObject());
+        result.completed_cells_lgr_map = { {"GLOBAL", 0}, {"LGR2", 1}, {"LGR1", 2} };	
         result.current_report_step = 0;
         result.m_lowActionParsingStrictness = false;
         result.simUpdateFromPython = std::make_shared<SimulatorUpdate>(SimulatorUpdate::serializationTestObject());

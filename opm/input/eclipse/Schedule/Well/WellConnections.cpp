@@ -556,7 +556,6 @@ The cell ({},{},{}) in well {} is not active and the connection will be ignored)
                                       const KeywordLocation& location)
     {
         loadCOMPDATX(record,grid,wname,wdfac,location);
-        //loadCOMPDATX(record, grid, wname, wdfac, location);
     }
 
 
