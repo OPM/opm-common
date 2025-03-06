@@ -468,7 +468,7 @@ namespace Opm {
         WriteRestartFileEvents restart_output{};
         CompletedCells completed_cells{};
         std::vector<CompletedCells> completed_cells_lgr{};
-
+        std::unordered_map<std::string, std::size_t> completed_cells_lgr_map;
         // Boolean indicating the strictness of parsing process for ActionX and PyAction.
         // If lowActionParsingStrictness is true, the simulator tries to apply unsupported
         // keywords, if lowActionParsingStrictness is false, the simulator only applies
@@ -491,6 +491,8 @@ namespace Opm {
         std::shared_ptr<SimulatorUpdate> simUpdateFromPython{};
 
         void init_completed_cells_lgr(const EclipseGrid& ecl_grid);
+        void init_completed_cells_lgr_map(const EclipseGrid& ecl_grid);
+
         void load_rst(const RestartIO::RstState& rst,
                       const TracerConfig& tracer_config,
                       const ScheduleGrid& grid,

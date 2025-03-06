@@ -549,7 +549,7 @@ The cell ({},{},{}) in well {} is not active and the connection will be ignored)
     }
 
 
-    void WellConnections::loadCOMPDAT(const DeckRecord&     record,
+    void WellConnections:: loadCOMPDAT(const DeckRecord&     record,
                                       const ScheduleGrid&    grid,
                                       const std::string&     wname,
                                       const WDFAC&           wdfac,

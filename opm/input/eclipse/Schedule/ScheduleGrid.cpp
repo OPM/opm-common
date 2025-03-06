@@ -31,21 +31,21 @@
 Opm::ScheduleGrid::ScheduleGrid(const Opm::EclipseGrid& ecl_grid,
                                 const Opm::FieldPropsManager& fpm,
                                 Opm::CompletedCells& completed_cells,
-                                std::vector<CompletedCells>& completed_cells_lgr)
-    : grid  { &ecl_grid }
-    , fp    { &fpm }
-    , cells { completed_cells}
-    , cells_lgr{ completed_cells_lgr}
-{
-    init_lgr_grid();
-}
+                                std::vector<CompletedCells>& completed_cells_lgr,
+                                const std::unordered_map<std::string, std::size_t>& label_to_index_)
+    : grid           { &ecl_grid }
+    , fp             { &fpm }
+    , cells          { completed_cells}
+    , cells_lgr      { completed_cells_lgr}
+    , label_to_index { label_to_index_}
+{}
 
-Opm::ScheduleGrid::ScheduleGrid(Opm::CompletedCells& completed_cells, std::vector<CompletedCells>& completed_cells_lgr)
-    : cells { completed_cells}
-    , cells_lgr{completed_cells_lgr}
-{
-    init_lgr_grid();
-}
+Opm::ScheduleGrid::ScheduleGrid(Opm::CompletedCells& completed_cells, std::vector<CompletedCells>& completed_cells_lgr,
+                                const std::unordered_map<std::string, std::size_t>& label_to_index_)
+    : cells         { completed_cells}
+    , cells_lgr     { completed_cells_lgr}
+    , label_to_index{ label_to_index_}
+{}
 
 namespace {
     double try_get_value(const Opm::FieldPropsManager& fp,
@@ -164,12 +164,3 @@ const Opm::EclipseGrid* Opm::ScheduleGrid::get_grid() const
     return this->grid;
 }
 
-void Opm::ScheduleGrid::init_lgr_grid()
-{
-    std::size_t index = 0;
-    for (const std::string& label : this->grid->get_all_labels())
-    {
-        label_to_index[label] = index;
-        index++;
-    }
-}

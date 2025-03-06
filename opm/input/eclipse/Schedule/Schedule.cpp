@@ -150,9 +150,9 @@ namespace Opm {
         this->simUpdateFromPython = std::make_shared<SimulatorUpdate>();
 
         init_completed_cells_lgr(ecl_grid);
-
+        init_completed_cells_lgr_map(ecl_grid);
         //const ScheduleGridWrapper gridWrapper { grid } ;
-        ScheduleGrid grid(ecl_grid, fp, this->completed_cells, this->completed_cells_lgr);
+        ScheduleGrid grid(ecl_grid, fp, this->completed_cells, this->completed_cells_lgr, this->completed_cells_lgr_map);
         
         if (!keepKeywords) {
             const auto& section = SCHEDULESection(deck);
@@ -1645,7 +1645,7 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
 
         ParseContext parseContext;
         ErrorGuard errors;
-        ScheduleGrid grid(this->completed_cells, this->completed_cells_lgr);
+        ScheduleGrid grid(this->completed_cells, this->completed_cells_lgr, this->completed_cells_lgr_map);
         SimulatorUpdate sim_update;
         std::unordered_map<std::string, double> wpimult_global_factor;
         const auto matches = Action::Result{false}.matches();
@@ -1743,7 +1743,7 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
 
         ErrorGuard errors;
         SimulatorUpdate sim_update;
-        ScheduleGrid grid(this->completed_cells, this->completed_cells_lgr);
+        ScheduleGrid grid(this->completed_cells, this->completed_cells_lgr, this->completed_cells_lgr_map);
 
         OpmLog::debug("/----------------------------------------------------------------------");
         OpmLog::debug(fmt::format("{0}Action {1} triggered. Will add action "
@@ -1869,7 +1869,7 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
             }
 
             ErrorGuard errors{};
-            ScheduleGrid grid(this->completed_cells, this->completed_cells_lgr);
+            ScheduleGrid grid(this->completed_cells, this->completed_cells_lgr, this->completed_cells_lgr_map);
 
             const std::string prefix = "| "; /* logger prefix string */
 
@@ -2163,6 +2163,15 @@ namespace {
                 const auto lgr_grid = ecl_grid.getLGRCell(lgr_tag);    
                 completed_cells_lgr.emplace_back(lgr_grid.getNX(), lgr_grid.getNY(), lgr_grid.getNZ());
             }
+        }
+    }
+    void Schedule::init_completed_cells_lgr_map(const EclipseGrid& ecl_grid)
+    {
+        std::size_t index = 0;
+        for (const std::string& label : ecl_grid.get_all_labels())
+        {
+            completed_cells_lgr_map[label] = index;
+            index++;
         }
     }
 
