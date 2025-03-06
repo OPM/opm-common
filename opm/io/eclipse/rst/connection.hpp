@@ -45,6 +45,7 @@ struct RstConnection
 
     std::size_t rst_index;
     std::array<int,3> ijk;
+    int lgr_grid{0};
     Connection::State state;
     int drain_sat_table;
     int imb_sat_table;

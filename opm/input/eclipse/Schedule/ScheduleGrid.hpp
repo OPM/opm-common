@@ -53,6 +53,7 @@ public:
     const CompletedCells::Cell&
     get_cell_lgr(std::size_t i, std::size_t j, std::size_t k, std::string tag) const; 
     const Opm::EclipseGrid* get_grid() const;
+    int get_lgr_grid_number(std::optional<std::string> lgr_label) const;
 
 private:
     bool lgr_intialized{false};

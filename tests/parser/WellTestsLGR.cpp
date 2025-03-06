@@ -110,7 +110,7 @@ WELSPECL
 /
 COMPDATL
 -- Item #: 1	2	3	4	5	6	7	8	9 10
-	'PROD' 'LGR2'	3	1	2	2	'OPEN'	1*	1*	0.5 /
+	'PROD' 'LGR2'	3	1	1	1	'OPEN'	1*	1*	0.5 /
 	'INJ'  'LGR1'   1	1	1	1	'OPEN'	1*	1*	0.5 /
 /
 )");
@@ -122,7 +122,6 @@ COMPDATL
 
     const auto sched = Schedule { deck, es };
     
-    //sched.gri
     BOOST_CHECK_EQUAL(sched.getWell("PROD", 0).is_lgr_well(), true);
     BOOST_CHECK_EQUAL(sched.getWell("INJ", 0).is_lgr_well(), true);
     BOOST_CHECK_EQUAL(sched.getWell("PROD", 0).get_lgr_well_tag().value(), "LGR2");

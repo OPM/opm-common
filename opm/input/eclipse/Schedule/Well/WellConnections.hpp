@@ -84,6 +84,7 @@ namespace Opm {
                            const Connection::Direction direction = Connection::Direction::Z,
                            const Connection::CTFKind ctf_kind = Connection::CTFKind::DeckValue,
                            const std::size_t seqIndex = 0,
+                           int lgr_grid_number = 0,
                            const bool defaultSatTabId = true);
         
         void loadCOMPDATX(const DeckRecord&      record,
@@ -211,6 +212,7 @@ namespace Opm {
                            const Connection::Direction direction,
                            const Connection::CTFKind ctf_kind,
                            const std::size_t seqIndex,
+                           int lgr_grid_number,
                            const bool defaultSatTabId);
 
         size_t findClosestConnection(int oi, int oj, double oz, size_t start_pos);

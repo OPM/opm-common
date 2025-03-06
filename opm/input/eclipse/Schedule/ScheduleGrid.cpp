@@ -17,6 +17,7 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include "opm/input/eclipse/Schedule/Schedule.hpp"
 #include <opm/input/eclipse/Schedule/ScheduleGrid.hpp>
 
 #include <opm/input/eclipse/Schedule/CompletedCells.hpp>
@@ -100,6 +101,15 @@ Opm::ScheduleGrid::get_cell(std::size_t i, std::size_t j, std::size_t k) const
     }
 
     return cellRef;
+}
+
+int Opm::ScheduleGrid::get_lgr_grid_number(std::optional<std::string> lgr_label) const
+{
+    if (lgr_label.has_value())
+    {
+        return static_cast<int>(label_to_index.at(lgr_label.value()));
+    }
+    return 0;
 }
 
 const Opm::CompletedCells::Cell&
