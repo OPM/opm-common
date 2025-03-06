@@ -98,7 +98,12 @@ template <class Scalar, bool enableThermal = true, bool enableBrine = true, clas
 class WaterPvtMultiplexer
 {
 public:
-    using UniqueVoidPtrWithDeleter = PtrType<void, std::function<void(void*)>>;
+    using UniqueVoidPtrWithDeleter =
+        std::conditional_t<
+            std::is_same_v<PtrType<void>, std::unique_ptr<void>>,
+            std::unique_ptr<void, std::function<void(void*)>>,
+            PtrType<void>
+        >;
     using ParamsT = CO2Tables<double, ParamsContainer>;
 
     WaterPvtMultiplexer()
@@ -460,16 +465,16 @@ namespace gpuistl{
     //     return WaterPvtMultiplexer<Scalar>(WaterPvtApproach::BrineCo2, &gpuRealPvt);
     // }
 
-    // template <template <class> class ViewPtr, class ViewDouble, class ViewScalar, class GPUContainerDouble, class GPUContainerScalar, class Scalar>
-    // GasPvtMultiplexer<Scalar, true, ViewDouble, ViewScalar, ViewPtr>
-    // make_view(GasPvtMultiplexer<Scalar, true, GPUContainerDouble, GPUContainerScalar, ViewPtr>& gasMultiplexer)
-    // {
-    //     using ParamsView = CO2Tables<Scalar, ViewDouble>;
+    template <template <class> class ViewPtr, class ViewDouble, class ViewScalar, class GPUContainerDouble, class GPUContainerScalar, class Scalar>
+    WaterPvtMultiplexer<Scalar, true, true, ViewDouble, ViewScalar, ViewPtr>
+    make_view(WaterPvtMultiplexer<Scalar, true, true, GPUContainerDouble, GPUContainerScalar, std::unique_ptr>& waterMultiplexer)
+    {
+        using ParamsView = CO2Tables<Scalar, ViewDouble>;
 
-    //     auto gpuPvtView = make_view<ViewScalar, ParamsView>(gasMultiplexer.template getRealPvt<GasPvtApproach::Co2Gas>());
+        auto gpuPvtView = make_view<ViewScalar, ParamsView>(waterMultiplexer.template getRealPvt<WaterPvtApproach::BrineCo2>());
 
-    //     return GasPvtMultiplexer<Scalar, true, ViewDouble, ViewScalar, ViewPtr>(GasPvtApproach::Co2Gas, gpuPvtView);
-    // }
+        return WaterPvtMultiplexer<Scalar, true, true, ViewDouble, ViewScalar, ViewPtr>(WaterPvtApproach::BrineCo2, gpuPvtView);
+    }
 }
 
 } // namespace Opm

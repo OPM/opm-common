@@ -120,7 +120,12 @@ template <class Scalar, bool enableThermal = true, class ParamsContainer = std::
 class GasPvtMultiplexer
 {
 public:
-    using UniqueVoidPtrWithDeleter = PtrType<void, std::function<void(void*)>>;
+    using UniqueVoidPtrWithDeleter =
+        std::conditional_t<
+            std::is_same_v<PtrType<void>, std::unique_ptr<void>>,
+            std::unique_ptr<void, std::function<void(void*)>>,
+            PtrType<void>
+        >;
 
     using ParamsT = CO2Tables<double, ParamsContainer>;
 
@@ -504,7 +509,7 @@ namespace gpuistl{
 
     template <template <class> class ViewPtr, class ViewDouble, class ViewScalar, class GPUContainerDouble, class GPUContainerScalar, class Scalar>
     GasPvtMultiplexer<Scalar, true, ViewDouble, ViewScalar, ViewPtr>
-    make_view(GasPvtMultiplexer<Scalar, true, GPUContainerDouble, GPUContainerScalar, ViewPtr>& gasMultiplexer)
+    make_view(GasPvtMultiplexer<Scalar, true, GPUContainerDouble, GPUContainerScalar, std::unique_ptr>& gasMultiplexer)
     {
         using ParamsView = CO2Tables<Scalar, ViewDouble>;
 

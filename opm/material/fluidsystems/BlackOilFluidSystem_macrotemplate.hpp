@@ -77,13 +77,21 @@ public:
     using GasPvt = std::conditional_t<
         std::is_same_v<Storage<double>, std::vector<double>>,
         GasPvtMultiplexer<Scalar, true>,
-        GasPvtMultiplexer<Scalar, true, Storage<double>, Storage<Scalar>>
+        std::conditional_t<
+            std::is_same_v<SmartPointer<double>, std::shared_ptr<double>>,
+            GasPvtMultiplexer<Scalar, true, Storage<double>, Storage<Scalar>, std::unique_ptr>,
+            GasPvtMultiplexer<Scalar, true, Storage<double>, Storage<Scalar>, SmartPointer>
+        >
     >;
     using OilPvt = OilPvtMultiplexer<Scalar>;
     using WaterPvt = std::conditional_t<
         std::is_same_v<Storage<double>, std::vector<double>>,
         WaterPvtMultiplexer<Scalar, true, true>,
-        WaterPvtMultiplexer<Scalar, true, true, Storage<double>, Storage<Scalar>>
+        std::conditional_t<
+            std::is_same_v<SmartPointer<double>, std::shared_ptr<double>>,
+            WaterPvtMultiplexer<Scalar, true, true, Storage<double>, Storage<Scalar>, std::unique_ptr>,
+            WaterPvtMultiplexer<Scalar, true, true, Storage<double>, Storage<Scalar>, SmartPointer>
+        >
     >;
 
     #ifdef COMPILING_STATIC_FLUID_SYSTEM
@@ -236,6 +244,10 @@ public:
     template <template <class> class NewContainerType, class ScalarT, class IndexTraitsT, template <class> class OldContainerType>
     friend FLUIDSYSTEM_CLASSNAME<ScalarT, IndexTraitsT, NewContainerType, SmartPointer>
     gpuistl::copy_to_gpu(const FLUIDSYSTEM_CLASSNAME<ScalarT, IndexTraitsT, OldContainerType, SmartPointer>& oldFluidSystem);
+
+    template <template <class> class ViewType, template <class> class PtrType, class ScalarT, class IndexTraitsT, template <class> class OldContainerType>
+    friend FLUIDSYSTEM_CLASSNAME<ScalarT, IndexTraitsT, ViewType, PtrType>
+    gpuistl::make_view(FLUIDSYSTEM_CLASSNAME<ScalarT, IndexTraitsT, OldContainerType>& oldFluidSystem);
 
     #endif
 
@@ -2026,6 +2038,58 @@ copy_to_gpu(const FLUIDSYSTEM_CLASSNAME<Scalar, IndexTraits, OldContainerType>& 
     auto newDiffusionCoefficients = GpuBuffer9Array(oldFluidSystem.diffusionCoefficients_);
 
     return FLUIDSYSTEM_CLASSNAME<Scalar, IndexTraits, NewContainerType>(
+        oldFluidSystem.surfacePressure,
+        oldFluidSystem.surfaceTemperature,
+        oldFluidSystem.numActivePhases_,
+        oldFluidSystem.phaseIsActive_,
+        oldFluidSystem.reservoirTemperature_,
+        newGasPvt,
+        newOilPvt,
+        newWaterPvt,
+        oldFluidSystem.enableDissolvedGas_,
+        oldFluidSystem.enableDissolvedGasInWater_,
+        oldFluidSystem.enableVaporizedOil_,
+        oldFluidSystem.enableVaporizedWater_,
+        oldFluidSystem.enableDiffusion_,
+        newReferenceDensity,
+        newMolarMass,
+        newDiffusionCoefficients,
+        oldFluidSystem.activeToCanonicalPhaseIdx_,
+        oldFluidSystem.canonicalToActivePhaseIdx_,
+        oldFluidSystem.isInitialized_,
+        oldFluidSystem.useSaturatedTables_,
+        oldFluidSystem.enthalpy_eq_energy_
+    );
+}
+
+template <template <class> class ViewType, template <class> class PtrType, class Scalar, class IndexTraits, template <class> class OldContainerType>
+FLUIDSYSTEM_CLASSNAME<Scalar, IndexTraits, ViewType, PtrType>
+make_view(FLUIDSYSTEM_CLASSNAME<Scalar, IndexTraits, OldContainerType>& oldFluidSystem)
+{
+    using Array3 = std::array<Scalar, 3>;
+    using Array9 = std::array<Scalar, 9>;
+    using GasMultiplexerView = GasPvtMultiplexer<Scalar, true, ViewType<double>, ViewType<Scalar>, PtrType>;
+    using WaterMultiplexerView = WaterPvtMultiplexer<Scalar, true, true, ViewType<double>, ViewType<Scalar>, PtrType>;
+
+    // Will it work to create this shared pointer when it goes out of scope the way it is implemented
+    // now and passed to the ctor?
+    auto gasPvtView = make_view<PtrType, ViewType<double>, ViewType<Scalar>>(*oldFluidSystem.gasPvt_);
+    auto newGasPvt = PtrType<GasMultiplexerView>(
+        new GasMultiplexerView(gasPvtView)
+    );
+
+    auto newOilPvt = PtrType<OilPvtMultiplexer<Scalar>>(new OilPvtMultiplexer<Scalar>());
+
+    auto waterPvt = make_view<PtrType, ViewType<double>, ViewType<Scalar>>(*oldFluidSystem.waterPvt_);
+    auto newWaterPvt = PtrType<WaterMultiplexerView>(
+        new WaterMultiplexerView(waterPvt)
+    );
+
+    auto newReferenceDensity = make_view<Array3>(oldFluidSystem.referenceDensity_);
+    auto newMolarMass = make_view<Array3>(oldFluidSystem.molarMass_);
+    auto newDiffusionCoefficients = make_view<Array9>(oldFluidSystem.diffusionCoefficients_);
+
+    return FLUIDSYSTEM_CLASSNAME<Scalar, IndexTraits, ViewType, PtrType>(
         oldFluidSystem.surfacePressure,
         oldFluidSystem.surfaceTemperature,
         oldFluidSystem.numActivePhases_,
