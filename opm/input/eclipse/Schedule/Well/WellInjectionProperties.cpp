@@ -327,7 +327,6 @@ namespace Opm {
             << "injector type: "    << InjectorType2String(wp.injectorType) << ", "
             << "control mode: "     << WellInjectorCMode2String(wp.controlMode) << " , "
             << "rs/rv concentration: " << wp.rsRvInj << " }";
-            // TODO: add gas_inj_composition
     }
 
 
@@ -348,7 +347,6 @@ namespace Opm {
         controls.vfp_table_number = this->VFPTableNumber;
         controls.prediction_mode = this->predictionMode;
         controls.rs_rv_inj = this->rsRvInj;
-        // TODO: should we add gas_inj_composition here?
 
         return controls;
     }

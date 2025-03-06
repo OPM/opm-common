@@ -450,15 +450,19 @@ void handleWELLSTRE(HandlerContext& handlerContext)
     auto& inj_streams = handlerContext.state().inj_streams;
     for (const auto& record : handlerContext.keyword) {
         const std::string& stream_name = record.getItem("STREAM").getTrimmedString(0);
-        const auto& compostion = record.getItem("COMPOSITIONS").getData<double>();
-        // TODO: we need to check the number of the values in the composition is the same as the number of components
-
-        const double sum = std::accumulate(compostion.begin(), compostion.end(), 0.0);
-        if (std::abs(sum - 1.0) > std::numeric_limits<double>::epsilon()) {
-            std::string msg = fmt::format("The sum of the composition values for stream '{}' is not 1.0, but {}.", stream_name, sum);
+        const auto& composition = record.getItem("COMPOSITIONS").getData<double>();
+        const std::size_t num_comps = handlerContext.static_schedule().m_runspec.numComps();
+        if (composition.size() != num_comps) {
+            const std::string msg = fmt::format("The number of the composition values for stream '{}' is not the same as the number of components.", stream_name);
             throw OpmInputError(msg, handlerContext.keyword.location());
         }
-        auto composition_ptr = std::make_shared<std::vector<double>>(std::move(compostion));
+
+        const double sum = std::accumulate(composition.begin(), composition.end(), 0.0);
+        if (std::abs(sum - 1.0) > std::numeric_limits<double>::epsilon()) {
+            const std::string msg = fmt::format("The sum of the composition values for stream '{}' is not 1.0, but {}.", stream_name, sum);
+            throw OpmInputError(msg, handlerContext.keyword.location());
+        }
+        auto composition_ptr = std::make_shared<std::vector<double>>(std::move(composition));
         inj_streams.update(stream_name, composition_ptr);
     }
 
@@ -548,39 +552,43 @@ void handleWELOPEN(HandlerContext& handlerContext)
 
 void handleWINJGAS(HandlerContext& handlerContext)
 {
+    // \Note: we do not support the item 4 MAKEUPGAS and item 5 STAGE in WINJGAS keyword yet
     for (const auto& record : handlerContext.keyword) {
         const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
         const auto well_names = handlerContext.wellNames(wellNamePattern, false);
-        const std::string& fluid_nature = record.getItem("FLUID").getTrimmedString(0);
-        // TODO: technically, only the firt two characters are significant
-        // TODO: we need to test it out whether only the first two characters matter
+        const std::string fluid_nature = record.getItem("FLUID").getTrimmedString(0);
+
+        // \Note: technically, only the first two characters are significant
+        // with some testing, we can determine whether we want to enforce this.
+        // at the moment, we only support full string STREAM for fluid nature
         if (fluid_nature != "STREAM") {
-            std::string msg = fmt::format("The fluid nature '{}' is not supported in WINJGAS keyword.", fluid_nature);
+            const std::string msg = fmt::format("The fluid nature '{}' is not supported in WINJGAS keyword.", fluid_nature);
             throw OpmInputError(msg, handlerContext.keyword.location());
         }
-        const std::string& stream_name = record.getItem("STREAM").getTrimmedString(0);
-        // TODO: we do not handle other records for now
+        const std::string stream_name = record.getItem("STREAM").getTrimmedString(0);
 
         // we make sure the stream is defined in WELLSTRE keyword
         const auto& inj_streams = handlerContext.state().inj_streams;
         if (!inj_streams.has(stream_name)) {
-            std::string msg = fmt::format("The stream '{}' is not defined in WELLSTRE keyword.", stream_name);
+            const std::string msg = fmt::format("The stream '{}' is not defined in WELLSTRE keyword.", stream_name);
             throw OpmInputError(msg, handlerContext.keyword.location());
         }
 
-        auto well2 = handlerContext.state().wells.get(well_names[0]);
-        // if (well2.isProducer()) {
-        //     std::string msg = fmt::format("The well '{}' is a producer, not an injector.", well_names[0]);
-        //     throw OpmInputError(msg, HandlerContext.keyword.location());
-        // }
-        auto injection = std::make_shared<Well::WellInjectionProperties>(well2.getInjectionProperties());
+        for (const auto& well_name : well_names) {
+            auto well2 = handlerContext.state().wells.get(well_name);
+            if (well2.isProducer()) {
+                const std::string msg = fmt::format(
+                        "The well '{}' is a producer, not an injector, can not be specified with WINJGAS.", well_name);
+                throw OpmInputError(msg, handlerContext.keyword.location());
+            }
+            auto injection = std::make_shared<Well::WellInjectionProperties>(well2.getInjectionProperties());
 
-        // TODO: should we make it a injection event?
-        const auto& inj_stream = inj_streams.get(stream_name);
-        injection->setGasInjComposition(inj_stream);
+            const auto& inj_stream = inj_streams.get(stream_name);
+            injection->setGasInjComposition(inj_stream);
 
-        if (well2.updateInjection(injection)) {
-            handlerContext.state().wells.update( std::move(well2) );
+            if (well2.updateInjection(injection)) {
+                handlerContext.state().wells.update(std::move(well2));
+            }
         }
     }
 }
@@ -1001,9 +1009,7 @@ getWellHandlers()
         { "WCONINJE", &handleWCONINJE },
         { "WCONINJH", &handleWCONINJH },
         { "WCONPROD", &handleWCONPROD },
-
         { "WCYCLE",   &handleWCYCLE   },
-
         { "WELOPEN" , &handleWELOPEN  },
         { "WELLSTRE", &handleWELLSTRE },
         { "WELSPECS", &handleWELSPECS },
