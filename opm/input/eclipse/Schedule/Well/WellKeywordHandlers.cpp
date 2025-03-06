@@ -576,11 +576,6 @@ void handleWINJGAS(HandlerContext& handlerContext)
 
         for (const auto& well_name : well_names) {
             auto well2 = handlerContext.state().wells.get(well_name);
-            if (well2.isProducer()) {
-                const std::string msg = fmt::format(
-                        "The well '{}' is a producer, not an injector, can not be specified with WINJGAS.", well_name);
-                throw OpmInputError(msg, handlerContext.keyword.location());
-            }
             auto injection = std::make_shared<Well::WellInjectionProperties>(well2.getInjectionProperties());
 
             const auto& inj_stream = inj_streams.get(stream_name);
