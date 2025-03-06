@@ -202,9 +202,8 @@ namespace Opm {
             }
 
             void update(const K& key, std::shared_ptr<T> value) {
-                this->m_data[key] = value;
+                this->m_data.insert_or_assign(key, std::move(value));
             }
-
 
             void update(T object) {
                 auto key = object.name();
