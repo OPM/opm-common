@@ -21,6 +21,7 @@
 #define SCHEDULE_TSTEP_HPP
 
 #include <opm/input/eclipse/Deck/DeckKeyword.hpp>
+#include <opm/common/utility/gpuDecorators.hpp>
 #include <opm/common/utility/TimeService.hpp>
 
 #include <opm/input/eclipse/EclipseState/Runspec.hpp>
@@ -481,8 +482,11 @@ namespace Opm {
                                   return this->source;
             else if constexpr ( std::is_same_v<T, WCYCLE> )
                                   return this->wcycle;
-            else
+            else {
+                #if !OPM_IS_COMPILING_WITH_GPU_COMPILER // NVCC evaluates this branch for some reason
                 static_assert(always_false1::value, "Template type <T> not supported in get()");
+                #endif
+            }
         }
 
 
@@ -498,8 +502,11 @@ namespace Opm {
                              return this->groups;
             else if constexpr ( std::is_same_v<T, Well> )
                                   return this->wells;
-            else
+            else {
+                #if !OPM_IS_COMPILING_WITH_GPU_COMPILER // NVCC evaluates this branch for some reason
                 static_assert(always_false2::value, "Template type <K,T> not supported in get_map()");
+                #endif
+            }
         }
 
         map_member<int, VFPProdTable> vfpprod;
