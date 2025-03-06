@@ -445,6 +445,29 @@ void handleWCYCLE(HandlerContext& handlerContext)
     handlerContext.state().wcycle.update(std::move(new_config));
 }
 
+void handleWELLSTRE(HandlerContext& handlerContext)
+{
+    auto& inj_streams = handlerContext.state().inj_streams;
+    for (const auto& record : handlerContext.keyword) {
+        const auto stream_name = record.getItem<ParserKeywords::WELLSTRE::STREAM>().getTrimmedString(0);
+        const auto& composition = record.getItem<ParserKeywords::WELLSTRE::COMPOSITIONS>().getSIDoubleData();
+        const std::size_t num_comps = handlerContext.static_schedule().m_runspec.numComps();
+        if (composition.size() != num_comps) {
+            const std::string msg = fmt::format("The number of the composition values for stream '{}' is not the same as the number of components.", stream_name);
+            throw OpmInputError(msg, handlerContext.keyword.location());
+        }
+
+        const double sum = std::accumulate(composition.begin(), composition.end(), 0.0);
+        if (std::abs(sum - 1.0) > std::numeric_limits<double>::epsilon()) {
+            const std::string msg = fmt::format("The sum of the composition values for stream '{}' is not 1.0, but {}.", stream_name, sum);
+            throw OpmInputError(msg, handlerContext.keyword.location());
+        }
+        auto composition_ptr = std::make_shared<std::vector<double>>(composition);
+        inj_streams.update(stream_name, std::move(composition_ptr));
+    }
+
+}
+
 void handleWELOPEN(HandlerContext& handlerContext)
 {
     const auto& keyword = handlerContext.keyword;
@@ -523,6 +546,44 @@ void handleWELOPEN(HandlerContext& handlerContext)
             handlerContext.record_well_structure_change();
 
             handlerContext.state().events().addEvent(ScheduleEvents::COMPLETION_CHANGE);
+        }
+    }
+}
+
+void handleWINJGAS(HandlerContext& handlerContext)
+{
+    // \Note: we do not support the item 4 MAKEUPGAS and item 5 STAGE in WINJGAS keyword yet
+    for (const auto& record : handlerContext.keyword) {
+        const std::string fluid_nature = record.getItem<ParserKeywords::WINJGAS::FLUID>().getTrimmedString(0);
+
+        // \Note: technically, only the first two characters are significant
+        // with some testing, we can determine whether we want to enforce this.
+        // at the moment, we only support full string STREAM for fluid nature
+        if (fluid_nature != "STREAM") {
+            const std::string msg = fmt::format("The fluid nature '{}' is not supported in WINJGAS keyword.", fluid_nature);
+            throw OpmInputError(msg, handlerContext.keyword.location());
+        }
+
+        const std::string stream_name = record.getItem<ParserKeywords::WINJGAS::STREAM>().getTrimmedString(0);
+        // we make sure the stream is defined in WELLSTRE keyword
+        const auto& inj_streams = handlerContext.state().inj_streams;
+        if (!inj_streams.has(stream_name)) {
+            const std::string msg = fmt::format("The stream '{}' is not defined in WELLSTRE keyword.", stream_name);
+            throw OpmInputError(msg, handlerContext.keyword.location());
+        }
+
+        const std::string wellNamePattern = record.getItem<ParserKeywords::WINJGAS::WELL>().getTrimmedString(0);
+        const auto well_names = handlerContext.wellNames(wellNamePattern, false);
+        for (const auto& well_name : well_names) {
+            auto well2 = handlerContext.state().wells.get(well_name);
+            auto injection = std::make_shared<Well::WellInjectionProperties>(well2.getInjectionProperties());
+
+            const auto& inj_stream = inj_streams.get(stream_name);
+            injection->setGasInjComposition(inj_stream);
+
+            if (well2.updateInjection(injection)) {
+                handlerContext.state().wells.update(std::move(well2));
+            }
         }
     }
 }
@@ -945,11 +1006,13 @@ getWellHandlers()
         { "WCONPROD", &handleWCONPROD },
         { "WCYCLE",   &handleWCYCLE   },
         { "WELOPEN" , &handleWELOPEN  },
+        { "WELLSTRE", &handleWELLSTRE },
         { "WELSPECS", &handleWELSPECS },
         { "WELSPECL", &handleWELSPECL },
         { "WELTARG" , &handleWELTARG  },
         { "WELTRAJ" , &handleWELTRAJ  },
         { "WHISTCTL", &handleWHISTCTL },
+        { "WINJGAS",  &handleWINJGAS  },
         { "WLIST"   , &handleWLIST    },
         { "WPAVE"   , &handleWPAVE    },
         { "WPAVEDEP", &handleWPAVEDEP },
