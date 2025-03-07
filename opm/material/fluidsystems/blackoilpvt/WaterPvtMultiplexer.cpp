@@ -29,39 +29,9 @@
 
 namespace Opm {
 
-template<class Scalar, bool enableThermal, bool enableBrine>
-WaterPvtMultiplexer<Scalar,enableThermal,enableBrine>::
-~WaterPvtMultiplexer()
-{
-    switch (approach_) {
-    case WaterPvtApproach::ConstantCompressibilityWater: {
-        delete &getRealPvt<WaterPvtApproach::ConstantCompressibilityWater>();
-        break;
-    }
-    case WaterPvtApproach::ConstantCompressibilityBrine: {
-        delete &getRealPvt<WaterPvtApproach::ConstantCompressibilityBrine>();
-        break;
-    }
-    case WaterPvtApproach::ThermalWater: {
-        delete &getRealPvt<WaterPvtApproach::ThermalWater>();
-        break;
-    }
-    case WaterPvtApproach::BrineCo2: {
-        delete &getRealPvt<WaterPvtApproach::BrineCo2>();
-        break;
-    }
-    case WaterPvtApproach::BrineH2: {
-        delete &getRealPvt<WaterPvtApproach::BrineH2>();
-        break;
-    }
-    case WaterPvtApproach::NoWater:
-        break;
-    }
-}
-
 #if HAVE_ECL_INPUT
-template<class Scalar, bool enableThermal, bool enableBrine>
-void WaterPvtMultiplexer<Scalar,enableThermal,enableBrine>::
+template<class Scalar, bool enableThermal, bool enableBrine, class ParamsContainer, class ContainerT, template <class...> class PtrType>
+void WaterPvtMultiplexer<Scalar,enableThermal,enableBrine, ParamsContainer, ContainerT, PtrType>::
 initFromState(const EclipseState& eclState, const Schedule& schedule)
 {
     if (!eclState.runspec().phases().active(Phase::WATER))
@@ -84,65 +54,70 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
 }
 #endif
 
-template<class Scalar, bool enableThermal, bool enableBrine>
-void WaterPvtMultiplexer<Scalar,enableThermal,enableBrine>::
+template<class Scalar, bool enableThermal, bool enableBrine, class ParamsContainer, class ContainerT, template <class...> class PtrType>
+void WaterPvtMultiplexer<Scalar,enableThermal,enableBrine, ParamsContainer, ContainerT, PtrType>::
 initEnd()
 {
     OPM_WATER_PVT_MULTIPLEXER_CALL(pvtImpl.initEnd(), break);
 }
 
 
-template<class Scalar, bool enableThermal, bool enableBrine>
-unsigned WaterPvtMultiplexer<Scalar,enableThermal,enableBrine>::
+template<class Scalar, bool enableThermal, bool enableBrine, class ParamsContainer, class ContainerT, template <class...> class PtrType>
+unsigned WaterPvtMultiplexer<Scalar,enableThermal,enableBrine, ParamsContainer, ContainerT, PtrType>::
 numRegions() const
 {
     OPM_WATER_PVT_MULTIPLEXER_CALL(return pvtImpl.numRegions());
 }
 
-template<class Scalar, bool enableThermal, bool enableBrine>
-void WaterPvtMultiplexer<Scalar,enableThermal,enableBrine>::
+template<class Scalar, bool enableThermal, bool enableBrine, class ParamsContainer, class ContainerT, template <class...> class PtrType>
+void WaterPvtMultiplexer<Scalar,enableThermal,enableBrine, ParamsContainer, ContainerT, PtrType>::
 setVapPars(const Scalar par1, const Scalar par2)
 {
     OPM_WATER_PVT_MULTIPLEXER_CALL(pvtImpl.setVapPars(par1, par2), break);
 }
 
-template<class Scalar, bool enableThermal, bool enableBrine>
-Scalar WaterPvtMultiplexer<Scalar,enableThermal,enableBrine>::
-waterReferenceDensity(unsigned regionIdx) const
-{
-    OPM_WATER_PVT_MULTIPLEXER_CALL(return pvtImpl.waterReferenceDensity(regionIdx));
-}
-
-template<class Scalar, bool enableThermal, bool enableBrine>
-Scalar WaterPvtMultiplexer<Scalar,enableThermal,enableBrine>::
+template<class Scalar, bool enableThermal, bool enableBrine, class ParamsContainer, class ContainerT, template <class...> class PtrType>
+Scalar WaterPvtMultiplexer<Scalar,enableThermal,enableBrine, ParamsContainer, ContainerT, PtrType>::
 hVap(unsigned regionIdx) const
 {
     OPM_WATER_PVT_MULTIPLEXER_CALL(return pvtImpl.hVap(regionIdx));
 }
 
-template<class Scalar, bool enableThermal, bool enableBrine>
-void WaterPvtMultiplexer<Scalar,enableThermal,enableBrine>::
+// Helper function to keep the switch case tidy when constructing different pvts
+template<class Scalar, bool enableThermal, bool enableBrine, class ParamsContainer, class ContainerT, template <class...> class PtrType>
+template <class ConcreteGasPvt>
+typename WaterPvtMultiplexer<Scalar,enableThermal,enableBrine, ParamsContainer, ContainerT, PtrType>::UniqueVoidPtrWithDeleter
+WaterPvtMultiplexer<Scalar,enableThermal,enableBrine, ParamsContainer, ContainerT, PtrType>::makeWaterPvt()
+{
+    return UniqueVoidPtrWithDeleter(
+        new ConcreteGasPvt,
+        [this](void* ptr) { deleter(ptr); }
+    );
+}
+
+template<class Scalar, bool enableThermal, bool enableBrine, class ParamsContainer, class ContainerT, template <class...> class PtrType>
+void WaterPvtMultiplexer<Scalar,enableThermal,enableBrine, ParamsContainer, ContainerT, PtrType>::
 setApproach(WaterPvtApproach appr)
 {
     switch (appr) {
     case WaterPvtApproach::ConstantCompressibilityWater:
-        realWaterPvt_ = new ConstantCompressibilityWaterPvt<Scalar>;
+        realWaterPvt_ = makeWaterPvt<ConstantCompressibilityWaterPvt<Scalar>>();
         break;
 
     case WaterPvtApproach::ConstantCompressibilityBrine:
-        realWaterPvt_ = new ConstantCompressibilityBrinePvt<Scalar>;
+        realWaterPvt_ = makeWaterPvt<ConstantCompressibilityBrinePvt<Scalar>>();
         break;
 
     case WaterPvtApproach::ThermalWater:
-        realWaterPvt_ = new WaterPvtThermal<Scalar, enableBrine>;
+        realWaterPvt_ = makeWaterPvt<WaterPvtThermal<Scalar, enableBrine>>();
         break;
 
     case WaterPvtApproach::BrineCo2:
-        realWaterPvt_ = new BrineCo2Pvt<Scalar>;
+        realWaterPvt_ = makeWaterPvt<BrineCo2Pvt<Scalar>>();
         break;
 
     case WaterPvtApproach::BrineH2:
-        realWaterPvt_ = new BrineH2Pvt<Scalar>;
+        realWaterPvt_ = makeWaterPvt<BrineH2Pvt<Scalar>>();
         break;
 
     case WaterPvtApproach::NoWater:
@@ -150,35 +125,6 @@ setApproach(WaterPvtApproach appr)
     }
 
     approach_ = appr;
-}
-
-template<class Scalar, bool enableThermal, bool enableBrine>
-WaterPvtMultiplexer<Scalar,enableThermal,enableBrine>&
-WaterPvtMultiplexer<Scalar,enableThermal,enableBrine>::
-operator=(const WaterPvtMultiplexer<Scalar,enableThermal,enableBrine>& data)
-{
-    approach_ = data.approach_;
-    switch (approach_) {
-    case WaterPvtApproach::ConstantCompressibilityWater:
-        realWaterPvt_ = new ConstantCompressibilityWaterPvt<Scalar>(*static_cast<const ConstantCompressibilityWaterPvt<Scalar>*>(data.realWaterPvt_));
-        break;
-    case WaterPvtApproach::ConstantCompressibilityBrine:
-        realWaterPvt_ = new ConstantCompressibilityBrinePvt<Scalar>(*static_cast<const ConstantCompressibilityBrinePvt<Scalar>*>(data.realWaterPvt_));
-        break;
-    case WaterPvtApproach::ThermalWater:
-        realWaterPvt_ = new WaterPvtThermal<Scalar, enableBrine>(*static_cast<const WaterPvtThermal<Scalar, enableBrine>*>(data.realWaterPvt_));
-        break;
-    case WaterPvtApproach::BrineCo2:
-        realWaterPvt_ = new BrineCo2Pvt<Scalar>(*static_cast<const BrineCo2Pvt<Scalar>*>(data.realWaterPvt_));
-        break;
-    case WaterPvtApproach::BrineH2:
-        realWaterPvt_ = new BrineH2Pvt<Scalar>(*static_cast<const BrineH2Pvt<Scalar>*>(data.realWaterPvt_));
-        break;
-    default:
-        break;
-    }
-
-    return *this;
 }
 
 template class WaterPvtMultiplexer<double,false,false>;

@@ -38,7 +38,7 @@ class EclipseState;
 class Schedule;
 #endif
 
-template <class Scalar, bool enableThermal, bool enableBrine>
+template <class Scalar, bool enableThermal, bool enableBrine, class ParamsContainer, class ContainerT, template <class...> class PtrType>
 class WaterPvtMultiplexer;
 
 /*!
@@ -52,7 +52,7 @@ class WaterPvtThermal
 {
 public:
     using TabulatedOneDFunction = Tabulated1DFunction<Scalar>;
-    using IsothermalPvt = WaterPvtMultiplexer<Scalar, /*enableThermal=*/false, enableBrine>;
+    using IsothermalPvt = WaterPvtMultiplexer<Scalar, /*enableThermal=*/false, enableBrine, std::vector<double>, std::vector<Scalar>, std::unique_ptr>;
 
     WaterPvtThermal() = default;
 
