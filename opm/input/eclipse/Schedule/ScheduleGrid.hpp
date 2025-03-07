@@ -48,7 +48,8 @@ public:
     ScheduleGrid(const EclipseGrid& ecl_grid,
                  const FieldPropsManager& fpm,
                  CompletedCells& completed_cells);
-    
+    explicit ScheduleGrid(Opm::CompletedCells& completed_cells);
+
     ~ScheduleGrid() = default;
     const CompletedCells::Cell&
     get_cell(std::size_t i, std::size_t j, std::size_t k) const;
