@@ -558,6 +558,8 @@ namespace gpuistl{
     {
         using Params = CO2Tables<Scalar, GPUContainerDouble>;
 
+        assert(gasMultiplexer.gasPvtApproach() == GasPvtApproach::Co2Gas);
+
         auto gpuPvt = copy_to_gpu<GPUContainerScalar, Params>(gasMultiplexer.template getRealPvt<GasPvtApproach::Co2Gas>());
 
         return GasPvtMultiplexer<Scalar, true, GPUContainerDouble, GPUContainerScalar>(GasPvtApproach::Co2Gas, gpuPvt);
@@ -568,6 +570,8 @@ namespace gpuistl{
     make_view(GasPvtMultiplexer<Scalar, true, GPUContainerDouble, GPUContainerScalar, std::unique_ptr>& gasMultiplexer)
     {
         using ParamsView = CO2Tables<Scalar, ViewDouble>;
+
+        assert(gasMultiplexer.gasPvtApproach() == GasPvtApproach::Co2Gas);
 
         auto gpuPvtView = make_view<ViewScalar, ParamsView>(gasMultiplexer.template getRealPvt<GasPvtApproach::Co2Gas>());
 

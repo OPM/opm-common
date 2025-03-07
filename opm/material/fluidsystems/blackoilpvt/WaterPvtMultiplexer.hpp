@@ -495,27 +495,20 @@ namespace gpuistl{
     {
         using ParamsT = CO2Tables<double, ParamsContainer>;
 
-        auto gpuPvt = copy_to_gpu<ParamsT, GPUContainer, Scalar>(waterMultiplexer.template getRealPvt<WaterPvtApproach::BrineCo2>());
+        assert(waterMultiplexer.approach() == WaterPvtApproach::BrineCo2);
+
+        auto gpuPvt = copy_to_gpu<ParamsT, GPUContainer>(waterMultiplexer.template getRealPvt<WaterPvtApproach::BrineCo2>());
 
         return WaterPvtMultiplexer<Scalar, true, true, ParamsContainer, GPUContainer>(WaterPvtApproach::BrineCo2, gpuPvt);
     }
-
-    // template <class Scalar, class Params, class ViewType>
-    // WaterPvtMultiplexer<Scalar>
-    // make_view(const WaterPvtMultiplexer<Scalar>& cpuWaterPvt){
-
-    //     // assert(WaterPvtApproach::BrineCo2 == cpuWaterPvt.approach());
-
-    //     auto& realPvt = cpuWaterPvt.template getRealPvt<WaterPvtApproach::BrineCo2>();
-    //     auto gpuRealPvt = make_view<ViewType, Params>(realPvt);
-    //     return WaterPvtMultiplexer<Scalar>(WaterPvtApproach::BrineCo2, &gpuRealPvt);
-    // }
 
     template <template <class> class ViewPtr, class ViewDouble, class ViewScalar, class GPUContainerDouble, class GPUContainerScalar, class Scalar>
     WaterPvtMultiplexer<Scalar, true, true, ViewDouble, ViewScalar, ViewPtr>
     make_view(WaterPvtMultiplexer<Scalar, true, true, GPUContainerDouble, GPUContainerScalar, std::unique_ptr>& waterMultiplexer)
     {
         using ParamsView = CO2Tables<Scalar, ViewDouble>;
+
+        assert(waterMultiplexer.approach() == WaterPvtApproach::BrineCo2);
 
         auto gpuPvtView = make_view<ViewScalar, ParamsView>(waterMultiplexer.template getRealPvt<WaterPvtApproach::BrineCo2>());
 

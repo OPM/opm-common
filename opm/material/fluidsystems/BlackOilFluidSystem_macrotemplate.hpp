@@ -2071,18 +2071,18 @@ make_view(FLUIDSYSTEM_CLASSNAME<Scalar, IndexTraits, OldContainerType>& oldFluid
     using GasMultiplexerView = GasPvtMultiplexer<Scalar, true, ViewType<double>, ViewType<Scalar>, PtrType>;
     using WaterMultiplexerView = WaterPvtMultiplexer<Scalar, true, true, ViewType<double>, ViewType<Scalar>, PtrType>;
 
-    // Will it work to create this shared pointer when it goes out of scope the way it is implemented
-    // now and passed to the ctor?
-    auto gasPvtView = make_view<PtrType, ViewType<double>, ViewType<Scalar>>(*oldFluidSystem.gasPvt_);
     auto newGasPvt = PtrType<GasMultiplexerView>(
-        new GasMultiplexerView(gasPvtView)
+        new GasMultiplexerView(
+            make_view<PtrType, ViewType<double>, ViewType<Scalar>>(*oldFluidSystem.gasPvt_)
+        )
     );
 
     auto newOilPvt = PtrType<OilPvtMultiplexer<Scalar>>(new OilPvtMultiplexer<Scalar>());
 
-    auto waterPvt = make_view<PtrType, ViewType<double>, ViewType<Scalar>>(*oldFluidSystem.waterPvt_);
     auto newWaterPvt = PtrType<WaterMultiplexerView>(
-        new WaterMultiplexerView(waterPvt)
+        new WaterMultiplexerView(
+            make_view<PtrType, ViewType<double>, ViewType<Scalar>>(*oldFluidSystem.waterPvt_)
+        )
     );
 
     auto newReferenceDensity = make_view<Array3>(oldFluidSystem.referenceDensity_);
