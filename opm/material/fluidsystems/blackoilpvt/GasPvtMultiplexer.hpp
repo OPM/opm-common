@@ -50,15 +50,15 @@ class Schedule;
 #if OPM_IS_COMPILING_WITH_GPU_COMPILER
 // Testing whether hardcoding the PvtType supported on GPU helps
 #define OPM_GAS_PVT_MULTIPLEXER_CALL(codeToCall, ...)                     \
-if constexpr (std::is_same_v<PtrType<void>, std::unique_ptr<void>>) { \
-    auto& pvtImpl = getRealPvt<GasPvtApproach::Co2Gas>();               \
-    codeToCall; \
-    __VA_ARGS__;                                                        \
-} else {                                                                \
-    auto& pvtImpl = realGasPvt_;  \
-    codeToCall;                                                           \
-    __VA_ARGS__;    \
-}
+    if constexpr (std::is_same_v<PtrType<void>, std::unique_ptr<void>>) { \
+        auto& pvtImpl = getRealPvt<GasPvtApproach::Co2Gas>();             \
+        codeToCall;                                                       \
+        __VA_ARGS__;                                                      \
+    } else {                                                              \
+        auto& pvtImpl = realGasPvt_;                                      \
+        codeToCall;                                                       \
+        __VA_ARGS__;                                                      \
+    }
 
 #else
 #define OPM_GAS_PVT_MULTIPLEXER_CALL(codeToCall, ...)                     \
@@ -460,7 +460,6 @@ private:
         const GasPvtMultiplexer<Scalar, enableThermal, ParamsContainer, ContainerT, PtrType>& data)
     {
         if constexpr (std::is_same_v<PtrType<void>, std::unique_ptr<void>>) {
-            
             if (data.realGasPvt_.get() == nullptr) {
                 if constexpr (std::is_same_v<PtrType<void>, std::unique_ptr<void>>) {
                     return UniqueVoidPtrWithDeleter(nullptr, [](void*){});
@@ -492,7 +491,7 @@ private:
             }
         }
         else {
-            return data.realGasPvt_; //realGasPvt_;
+            return data.realGasPvt_;
         }
     }
 
@@ -599,14 +598,8 @@ namespace gpuistl{
         using ParamsView = CO2Tables<Scalar, ViewDouble>;
 
         assert(gasMultiplexer.gasPvtApproach() == GasPvtApproach::Co2Gas);
-        std::cout << "size from buffer "<< gasMultiplexer.template getRealPvt<GasPvtApproach::Co2Gas>().getGasReferenceDensity().size() << std::endl;
-        auto gpuPvtView = make_view<ViewScalar, ParamsView>(gasMultiplexer.template getRealPvt<GasPvtApproach::Co2Gas>());
-        std::cout << "size from view "<< gpuPvtView.getGasReferenceDensity().size() << std::endl;
-//        auto gpuPvtViewPtr = ::Opm::gpuistl::make_gpu_unique_ptr<decltype(gpuPvtView)>(gpuPvtView);
 
-        auto tmp1 = GasPvtMultiplexer<Scalar, true, ViewDouble, ViewScalar, ViewPtr>(GasPvtApproach::Co2Gas, gpuPvtView);
-        auto tmp = tmp1;
-        std::cout << "size from created multiplexer view " << tmp.template getRealPvt<GasPvtApproach::Co2Gas>().getGasReferenceDensity().size() << std::endl;
+        auto gpuPvtView = make_view<ViewScalar, ParamsView>(gasMultiplexer.template getRealPvt<GasPvtApproach::Co2Gas>());
 
         return GasPvtMultiplexer<Scalar, true, ViewDouble, ViewScalar, ViewPtr>(GasPvtApproach::Co2Gas, gpuPvtView);
     }
