@@ -152,32 +152,7 @@ using ParamsT = CO2Tables<double, ParamsContainer>;
         }
     }
 
-    ~WaterPvtMultiplexer() = default; //{
-    //     switch (approach_) {
-    //         case WaterPvtApproach::ConstantCompressibilityWater: {
-    //             delete &getRealPvt<WaterPvtApproach::ConstantCompressibilityWater>();
-    //             break;
-    //         }
-    //         case WaterPvtApproach::ConstantCompressibilityBrine: {
-    //             delete &getRealPvt<WaterPvtApproach::ConstantCompressibilityBrine>();
-    //             break;
-    //         }
-    //         case WaterPvtApproach::ThermalWater: {
-    //             delete &getRealPvt<WaterPvtApproach::ThermalWater>();
-    //             break;
-    //         }
-    //         case WaterPvtApproach::BrineCo2: {
-    //             delete &getRealPvt<WaterPvtApproach::BrineCo2>();
-    //             break;
-    //         }
-    //         case WaterPvtApproach::BrineH2: {
-    //             delete &getRealPvt<WaterPvtApproach::BrineH2>();
-    //             break;
-    //         }
-    //         case WaterPvtApproach::NoWater:
-    //             break;
-    //         }
-    // }
+    ~WaterPvtMultiplexer() = default;
 
     bool mixingEnergy() const
     {

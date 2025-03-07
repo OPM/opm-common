@@ -572,7 +572,7 @@ private:
         }
     }
 
-    GasPvtApproach gasPvtApproach_{GasPvtApproach::NoGas};    
+    GasPvtApproach gasPvtApproach_{GasPvtApproach::NoGas};
     UniqueVoidPtrWithDeleter realGasPvt_;
 };
 

@@ -35,29 +35,12 @@ initEnd()
     OPM_GAS_PVT_MULTIPLEXER_CALL(pvtImpl.initEnd(), break);
 }
 
-// template <class Scalar, bool enableThermal, class ParamsContainer, class ContainerT, template <class...> class PtrType>
-// OPM_HOST_DEVICE unsigned GasPvtMultiplexer<Scalar,enableThermal, ParamsContainer, ContainerT, PtrType>::
-// numRegions() const
-// {
-//     OPM_GAS_PVT_MULTIPLEXER_CALL(return pvtImpl.numRegions());
-// }
-
-
 template <class Scalar, bool enableThermal, class ParamsContainer, class ContainerT, template <class...> class PtrType>
 void GasPvtMultiplexer<Scalar,enableThermal, ParamsContainer, ContainerT, PtrType>::
 setVapPars(const Scalar par1, const Scalar par2)
 {
     OPM_GAS_PVT_MULTIPLEXER_CALL(pvtImpl.setVapPars(par1, par2), break);
 }
-
-
-// template <class Scalar, bool enableThermal, class ParamsContainer, class ContainerT, template <class...> class PtrType>
-// OPM_HOST_DEVICE Scalar GasPvtMultiplexer<Scalar,enableThermal, ParamsContainer, ContainerT, PtrType>::
-// gasReferenceDensity(unsigned regionIdx)
-// {
-//     OPM_GAS_PVT_MULTIPLEXER_CALL(return pvtImpl.gasReferenceDensity(regionIdx));
-// }
-
 
 template <class Scalar, bool enableThermal, class ParamsContainer, class ContainerT, template <class...> class PtrType>
 OPM_HOST_DEVICE Scalar GasPvtMultiplexer<Scalar,enableThermal, ParamsContainer, ContainerT, PtrType>::

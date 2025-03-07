@@ -76,13 +76,6 @@ setVapPars(const Scalar par1, const Scalar par2)
     OPM_WATER_PVT_MULTIPLEXER_CALL(pvtImpl.setVapPars(par1, par2), break);
 }
 
-// template<class Scalar, bool enableThermal, bool enableBrine, class ParamsContainer, class ContainerT, template <class...> class PtrType>
-// Scalar WaterPvtMultiplexer<Scalar,enableThermal,enableBrine, ParamsContainer, ContainerT, PtrType>::
-// waterReferenceDensity(unsigned regionIdx) const
-// {
-//     OPM_WATER_PVT_MULTIPLEXER_CALL(return pvtImpl.waterReferenceDensity(regionIdx));
-// }
-
 template<class Scalar, bool enableThermal, bool enableBrine, class ParamsContainer, class ContainerT, template <class...> class PtrType>
 Scalar WaterPvtMultiplexer<Scalar,enableThermal,enableBrine, ParamsContainer, ContainerT, PtrType>::
 hVap(unsigned regionIdx) const
