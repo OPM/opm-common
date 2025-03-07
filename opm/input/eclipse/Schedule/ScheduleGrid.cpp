@@ -48,6 +48,17 @@ Opm::ScheduleGrid::ScheduleGrid(Opm::CompletedCells& completed_cells, std::vecto
     , label_to_index{ label_to_index_}
 {}
 
+Opm::ScheduleGrid::ScheduleGrid(const Opm::EclipseGrid& ecl_grid,
+                                const Opm::FieldPropsManager& fpm,
+                                Opm::CompletedCells& completed_cells)
+: grid           { &ecl_grid }
+, fp             { &fpm }
+, cells          { completed_cells}
+, cells_lgr      { cells_lgr_empty}
+, label_to_index { label_to_index_empty}
+{}
+
+
 namespace {
     double try_get_value(const Opm::FieldPropsManager& fp,
                          const std::string& kw,

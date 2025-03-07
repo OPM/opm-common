@@ -45,6 +45,10 @@ public:
     ScheduleGrid(CompletedCells& completed_cells, 
                  std::vector<CompletedCells>& completed_cells_lgr,
                  const std::unordered_map<std::string, std::size_t>& label_to_index_);
+    ScheduleGrid(const EclipseGrid& ecl_grid,
+                 const FieldPropsManager& fpm,
+                 CompletedCells& completed_cells);
+    
     ~ScheduleGrid() = default;
     const CompletedCells::Cell&
     get_cell(std::size_t i, std::size_t j, std::size_t k) const;
@@ -62,6 +66,10 @@ private:
     Opm::CompletedCells& cells; 
     std::vector<CompletedCells>& cells_lgr; 
     const std::unordered_map<std::string, std::size_t>& label_to_index;
+    // setting default values for cells_lgr and label_to_index when not provided
+    std::vector<CompletedCells> cells_lgr_empty{};
+    const std::unordered_map<std::string, std::size_t> label_to_index_empty;
+
 
 
 };
