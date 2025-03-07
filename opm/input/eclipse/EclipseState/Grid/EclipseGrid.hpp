@@ -286,7 +286,7 @@ namespace Opm {
         static bool hasEqualDVDEPTHZ(const Deck&);
         static bool allEqual(const std::vector<double> &v);
         EclipseGridLGR& getLGRCell(std::size_t index);
-        EclipseGridLGR& getLGRCell(const std::string& lgr_tag) const;
+        const EclipseGridLGR& getLGRCell(const std::string& lgr_tag) const;
         int getLGR_global_father(std::size_t global_index,  const std::string& lgr_tag) const;
 
         std::vector<EclipseGridLGR> lgr_children_cells;

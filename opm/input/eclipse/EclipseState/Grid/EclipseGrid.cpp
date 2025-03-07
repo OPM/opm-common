@@ -1986,12 +1986,12 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
         return lgr_children_cells[index];
       }
 
-    EclipseGridLGR& EclipseGrid::getLGRCell(const std::string& lgr_tag) const
+     const EclipseGridLGR& EclipseGrid::getLGRCell(const std::string& lgr_tag) const
     {
-        std::optional<std::reference_wrapper<EclipseGridLGR>>lgr_found = std::nullopt;
-        for (auto& lgr_cell : lgr_children_cells) 
+        std::optional<std::reference_wrapper<const EclipseGridLGR>>lgr_found = std::nullopt;
+        for (const auto& lgr_cell : lgr_children_cells) 
         {
-            auto lgr_temp = lgr_cell.get_child_LGR_cell(lgr_tag);          
+            const auto& lgr_temp = lgr_cell.get_child_LGR_cell(lgr_tag);          
             if (lgr_temp != std::nullopt)
                 lgr_found  = lgr_temp;
         }
@@ -2118,7 +2118,7 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
         std::vector<GridDims> lgr_children_gridim;
         for (const std::string& lgr_tag : get_all_lgr_labels()) 
         {
-            EclipseGridLGR& lgr_cell =  getLGRCell(lgr_tag);
+            const EclipseGridLGR& lgr_cell =  getLGRCell(lgr_tag);
             lgr_children_gridim.emplace_back(lgr_cell.getNX(), lgr_cell.getNY(), lgr_cell.getNZ());            
         }
         return lgr_children_gridim;
