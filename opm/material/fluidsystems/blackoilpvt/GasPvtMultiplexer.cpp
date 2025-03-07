@@ -133,7 +133,7 @@ setApproach(GasPvtApproach gasPvtAppr)
         break;
 
     case GasPvtApproach::Co2Gas:
-        realGasPvt_ = makeGasPvt<Co2GasPvt<Scalar>>();
+        realGasPvt_ = makeGasPvt<Co2GasPvt<Scalar, ParamsT, ContainerT>>();
         break;
 
     case GasPvtApproach::H2Gas:
