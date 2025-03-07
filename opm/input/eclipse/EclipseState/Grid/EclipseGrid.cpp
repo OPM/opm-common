@@ -1984,7 +1984,7 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
 
     EclipseGridLGR& EclipseGrid::getLGRCell(std::size_t index){
         return lgr_children_cells[index];
-      };
+      }
 
     EclipseGridLGR& EclipseGrid::getLGRCell(const std::string& lgr_tag) const
     {
@@ -2034,7 +2034,10 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
     * @return std::array<double,3> The computed dimensions of the LGR cell 
     *         in the x, y, and z directions.
     */
-    std::array<double,3> EclipseGrid::getCellDimensionsLGR(size_t i, size_t j, size_t k, const std::string& lgr_tag) const
+    std::array<double,3> EclipseGrid::getCellDimensionsLGR(const std::size_t  i, 
+                                                           const std::size_t  j, 
+                                                           const std::size_t  k, 
+                                                           const std::string& lgr_tag) const
     {
         std::array<int,3> subdivision = getCellSubdivisionRatioLGR(lgr_tag);
         std::array<double,3> cell_dims = getCellDims(i, j, k);
@@ -2113,7 +2116,7 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
     std::vector<GridDims> EclipseGrid::get_lgr_children_gridim() const
     {
         std::vector<GridDims> lgr_children_gridim;
-        for (std::string lgr_tag : get_all_lgr_labels()) 
+        for (const std::string& lgr_tag : get_all_lgr_labels()) 
         {
             EclipseGridLGR& lgr_cell =  getLGRCell(lgr_tag);
             lgr_children_gridim.emplace_back(lgr_cell.getNX(), lgr_cell.getNY(), lgr_cell.getNZ());            
@@ -2685,7 +2688,6 @@ namespace Opm {
             getLGRCell(father_label).get_global_index_child_to_top_father(list, father_id);
         }
     }
-
 
     std::optional<std::reference_wrapper<EclipseGridLGR>> 
     EclipseGridLGR::get_child_LGR_cell(const std::string& lgr_tag) const

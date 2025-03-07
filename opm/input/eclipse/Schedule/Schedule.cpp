@@ -153,7 +153,6 @@ namespace Opm {
         init_completed_cells_lgr_map(ecl_grid);
         //const ScheduleGridWrapper gridWrapper { grid } ;
         ScheduleGrid grid(ecl_grid, fp, this->completed_cells, this->completed_cells_lgr, this->completed_cells_lgr_map);
-        
         if (!keepKeywords) {
             const auto& section = SCHEDULESection(deck);
             keepKeywords = section.has_keyword("ACTIONX") ||
@@ -2159,9 +2158,9 @@ namespace {
         {
             std::size_t num_label = ecl_grid.get_all_lgr_labels().size();
             completed_cells_lgr.reserve(num_label);
-            for (auto lgr_tag : ecl_grid.get_all_lgr_labels())
+            for (const auto& lgr_tag : ecl_grid.get_all_lgr_labels())
             {
-                const auto lgr_grid = ecl_grid.getLGRCell(lgr_tag);    
+                const auto& lgr_grid = ecl_grid.getLGRCell(lgr_tag);    
                 completed_cells_lgr.emplace_back(lgr_grid.getNX(), lgr_grid.getNY(), lgr_grid.getNZ());
             }
         }

@@ -17,7 +17,6 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "opm/input/eclipse/Parser/ParserKeywords/C.hpp"
 #include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
 
 #include <opm/io/eclipse/rst/connection.hpp>
@@ -326,7 +325,7 @@ namespace Opm {
                                         const Connection::Direction      direction,
                                         const Connection::CTFKind        ctf_kind,
                                         const std::size_t                seqIndex,
-                                              int                        lgr_grid_number,
+                                        const int                        lgr_grid_number,
                                         const bool                       defaultSatTabId)
     {
         const int conn_i = (i < 0) ? this->headI : i;
@@ -385,7 +384,7 @@ namespace Opm {
 
         const auto skin_factor = record.getItem("SKIN").getSIDouble(0);
         const auto d_factor = record.getItem("D_FACTOR").getSIDouble(0);
-        int lgr_grid_number = grid.get_lgr_grid_number(lgr_label);
+        const int lgr_grid_number = grid.get_lgr_grid_number(lgr_label);
         
         int satTableId = -1;
         bool defaultSatTable = true;

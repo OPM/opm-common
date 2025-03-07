@@ -16,14 +16,11 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
-
-#include "opm/input/eclipse/Schedule/Schedule.hpp"
 #include <opm/input/eclipse/Schedule/ScheduleGrid.hpp>
-
-#include <opm/input/eclipse/Schedule/CompletedCells.hpp>
 
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
+#include <opm/input/eclipse/Schedule/CompletedCells.hpp>
 
 #include <cstddef>
 #include <string>
@@ -151,15 +148,14 @@ Opm::ScheduleGrid::get_cell_lgr(std::size_t i, std::size_t j, std::size_t k, std
     {
         return get_cell(i, j, k);
     }   
-    tag_index--;
     const EclipseGridLGR& lgr_grid =  this->grid->getLGRCell(tag);
-    auto [valid, cellRef] = this->cells_lgr[tag_index].try_get(i, j, k);
-    int father_global_id =  this->grid->getLGR_global_father(cellRef.global_index,tag);
-    auto [fi, fj, fk] = this->grid->getIJK(father_global_id);
-    if (!valid) {
+    auto [valid, cellRef] = this->cells_lgr[tag_index - 1].try_get(i, j, k);    
+    if (!valid) {  
+        int father_global_id =  this->grid->getLGR_global_father(cellRef.global_index,tag);
+        auto [fi, fj, fk] = this->grid->getIJK(father_global_id);
         // this part relies on the ZCORN and COORDS of the host cells that have not been parsed yet.
         // the following implementations are a path that compute depths and dimensions of the LGR cells
-        // based on the host cells.
+        // based on the host cells.   
         cellRef.depth = this->grid->getCellDepthLGR(i, j, k, tag);
         cellRef.dimensions = this->grid->getCellDimensionsLGR(fi, fj, fk, tag);
         

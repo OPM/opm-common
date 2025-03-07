@@ -114,16 +114,16 @@ namespace Opm {
             return activeIndex(globalIndex);
         }
 
-        const std::vector<std::string> get_all_lgr_labels() const {
+        std::vector<std::string> get_all_lgr_labels() const {
             std::vector<std::string> sliced_labels(all_lgr_labels.begin() + 1, all_lgr_labels.end());
             return sliced_labels;
         }
 
-        const std::vector<std::string> get_all_labels() const {
+        std::vector<std::string> get_all_labels() const {
             return all_lgr_labels;
         }
         
-        const std::string get_lgr_tag() const {
+        std::string get_lgr_tag() const {
             return this->lgr_label;
         }
 
@@ -224,7 +224,10 @@ namespace Opm {
         std::array<double, 3> getCellDimensions(size_t i, size_t j, size_t k) const {
             return getCellDims(i, j, k);
         }
-        std::array<double,3> getCellDimensionsLGR(size_t i, size_t j, size_t k, const std::string& lgr_tag) const;
+        std::array<double,3> getCellDimensionsLGR(const std::size_t  i, 
+                                                  const std::size_t  j, 
+                                                  const std::size_t  k, 
+                                                  const std::string& lgr_tag) const;
         double getCellDepthLGR(size_t i, size_t j, size_t k, const std::string& lgr_tag) const;
 
 

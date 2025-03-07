@@ -63,8 +63,8 @@ void handleCOMPDATX(HandlerContext& handlerContext, LoadConnectionMethod loadMet
 
             auto connections = std::make_shared<WellConnections>(well2.getConnections());
             const auto origWellConnSetIsEmpty = connections->empty();            
-            (connections.get()->*loadMethod)(record, handlerContext.grid, name,
-                                          well2.getWDFAC(), handlerContext.keyword.location());
+            std::invoke(loadMethod, connections, record, handlerContext.grid,
+                             name, well2.getWDFAC(), handlerContext.keyword.location());
 
             const auto isConnected = !origWellConnSetIsEmpty || !connections->empty();
             if (well_connected.count(name))

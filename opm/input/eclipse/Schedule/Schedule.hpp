@@ -224,7 +224,6 @@ namespace Opm {
         std::vector<std::string> wellNames(const std::string& pattern) const;
         std::vector<std::string> wellNames(std::size_t timeStep) const;
         std::vector<std::string> wellNames() const;
-        //const ScheduleGrid& get_schedulegrid() const{ return this->grid; };
         /// Query for group existence at particular time
         ///
         /// \param[in] groupName Fully specified group name.

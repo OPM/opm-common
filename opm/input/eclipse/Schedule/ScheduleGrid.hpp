@@ -19,11 +19,10 @@
 #ifndef SCHEDULE_GRID
 #define SCHEDULE_GRID
 
-#include <memory>
 #include <opm/input/eclipse/Schedule/CompletedCells.hpp>
-
 #include <cstddef>
 #include <string>
+#include <vector>
 
 namespace Opm {
 
@@ -64,7 +63,7 @@ private:
     bool lgr_intialized{false};
     const EclipseGrid* grid{nullptr};
     const FieldPropsManager* fp{nullptr};
-    Opm::CompletedCells& cells; 
+    CompletedCells& cells; 
     std::vector<CompletedCells>& cells_lgr; 
     const std::unordered_map<std::string, std::size_t>& label_to_index;
     // setting default values for cells_lgr and label_to_index when not provided
