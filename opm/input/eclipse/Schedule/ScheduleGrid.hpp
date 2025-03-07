@@ -20,9 +20,9 @@
 #define SCHEDULE_GRID
 
 #include <opm/input/eclipse/Schedule/CompletedCells.hpp>
-
 #include <cstddef>
 #include <string>
+#include <vector>
 
 namespace Opm {
 
@@ -38,19 +38,40 @@ class ScheduleGrid
 public:
     ScheduleGrid(const EclipseGrid& ecl_grid,
                  const FieldPropsManager& fpm,
+                 CompletedCells& completed_cells,
+                 std::vector<CompletedCells>& completed_cells_lgr,
+                 const std::unordered_map<std::string, std::size_t>& label_to_index_);
+    ScheduleGrid(CompletedCells& completed_cells, 
+                 std::vector<CompletedCells>& completed_cells_lgr,
+                 const std::unordered_map<std::string, std::size_t>& label_to_index_);
+    ScheduleGrid(const EclipseGrid& ecl_grid,
+                 const FieldPropsManager& fpm,
                  CompletedCells& completed_cells);
+    explicit ScheduleGrid(Opm::CompletedCells& completed_cells);
 
-    explicit ScheduleGrid(CompletedCells& completed_cells);
-
+    ~ScheduleGrid() = default;
     const CompletedCells::Cell&
     get_cell(std::size_t i, std::size_t j, std::size_t k) const;
-
+    const CompletedCells::Cell&
+    get_cell(std::size_t i, std::size_t j, std::size_t k, std::optional<std::string> tag) const;
+    const CompletedCells::Cell&
+    get_cell_lgr(std::size_t i, std::size_t j, std::size_t k, std::string tag) const; 
     const Opm::EclipseGrid* get_grid() const;
+    int get_lgr_grid_number(std::optional<std::string> lgr_label) const;
 
 private:
+    bool lgr_intialized{false};
     const EclipseGrid* grid{nullptr};
     const FieldPropsManager* fp{nullptr};
-    CompletedCells& cells;
+    CompletedCells& cells; 
+    std::vector<CompletedCells>& cells_lgr; 
+    const std::unordered_map<std::string, std::size_t>& label_to_index;
+    // setting default values for cells_lgr and label_to_index when not provided
+    std::vector<CompletedCells> cells_lgr_empty{};
+    const std::unordered_map<std::string, std::size_t> label_to_index_empty;
+
+
+
 };
 
 } // namespace Opm

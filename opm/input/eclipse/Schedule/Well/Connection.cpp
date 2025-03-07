@@ -117,7 +117,8 @@ namespace Opm
                            const double         depth,
                            const CTFProperties& ctf_props,
                            const std::size_t    sort_value,
-                           const bool           defaultSatTabId)
+                           const bool           defaultSatTabId,
+                           int                  lgr_grid_)
         : direction        (directionArg)
         , center_depth     (depth)
         , open_state       (stateArg)
@@ -125,6 +126,7 @@ namespace Opm
         , m_complnum       (complnum)
         , ctf_properties_  { ctf_props }
         , ijk              { i, j, k }
+        , lgr_grid         { lgr_grid_ }
         , m_ctfkind        (ctf_kind)
         , m_global_index   (global_index)
         , m_sort_value     (sort_value)
@@ -141,6 +143,7 @@ namespace Opm
         , m_complnum       (rst_connection.completion)
         , ctf_properties_  (collectCTFProps(rst_connection))
         , ijk              (rst_connection.ijk)
+        , lgr_grid         (rst_connection.lgr_grid)
         , m_ctfkind        (rst_connection.cf_kind)
         , m_global_index   (grid.get_cell(this->ijk[0], this->ijk[1], this->ijk[2]).global_index)
         , m_sort_value     (rst_connection.rst_index)
@@ -176,6 +179,8 @@ namespace Opm
         result.ctf_properties_ = CTFProperties::serializationTestObject();
 
         result.ijk = {9, 10, 11};
+        result.lgr_grid ={1};
+
         result.m_ctfkind = CTFKind::Defaulted;
         result.m_global_index = 12;
         result.m_perf_range = std::make_pair(14,15);
@@ -411,6 +416,7 @@ namespace Opm
         std::stringstream ss;
 
         ss << "ijk: " << this->ijk[0] << ','  << this->ijk[1] << ',' << this->ijk[2] << '\n'
+           << "LGR GRID " << this->lgr_grid << '\n'
            << "COMPLNUM " << this->m_complnum << '\n'
            << "CF " << this->CF() << '\n'
            << "RW " << this->rw() << '\n'
@@ -453,6 +459,7 @@ namespace Opm
             && (this->segment_number == that.segment_number)
             && (this->m_subject_to_welpi == that.m_subject_to_welpi)
             && (this->ijk == that.ijk)
+            && (this->lgr_grid == that.lgr_grid)
             && (this->m_injmult == that.m_injmult)
             && (this->center_depth == that.center_depth)
             && (this->m_perf_range == that.m_perf_range)
