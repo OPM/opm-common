@@ -112,7 +112,8 @@ public:
 
         // Iterate or not?
         bool iterate = false;
-        if ((activityModel == 1 && salinity > 0.0) || (activityModel == 2 && temperature > 372.15)) {
+        if ((activityModel == 1 && salinity > 0.0) || (activityModel == 2 &&
+                                                       ( temperature > 372.15 || temperature > CO2::criticalTemperature()))) {
             iterate = true;
         }
 
