@@ -334,9 +334,8 @@ public:
     }
 
     OPM_HOST_DEVICE Scalar gasReferenceDensity(unsigned regionIdx) const
-    { 
-        printf("In gasReferenceDensity co2, regionIndex = %d, size = %ld\n", regionIdx, gasReferenceDensity_.size());
-        return gasReferenceDensity_[regionIdx]; 
+    {
+        return gasReferenceDensity_[regionIdx];
     }
 
     OPM_HOST_DEVICE Scalar oilReferenceDensity(unsigned regionIdx) const

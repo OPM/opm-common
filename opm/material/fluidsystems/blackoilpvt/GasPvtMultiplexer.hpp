@@ -50,11 +50,16 @@ class Schedule;
 #if OPM_IS_COMPILING_WITH_GPU_COMPILER
 // Testing whether hardcoding the PvtType supported on GPU helps
 #define OPM_GAS_PVT_MULTIPLEXER_CALL(codeToCall, ...)                     \
-    printf("GPU: GasPvtMultiplexer\n");                                   \
+if constexpr (std::is_same_v<PtrType<void>, std::unique_ptr<void>>) { \
+    auto& pvtImpl = getRealPvt<GasPvtApproach::Co2Gas>();               \
+    codeToCall; \
+    __VA_ARGS__;                                                        \
+} else {                                                                \
     auto& pvtImpl = realGasPvt_;  \
-    printf("GPU: GasPvtMultiplexer2\n");                                  \
     codeToCall;                                                           \
-    __VA_ARGS__;
+    __VA_ARGS__;    \
+}
+
 #else
 #define OPM_GAS_PVT_MULTIPLEXER_CALL(codeToCall, ...)                     \
     switch (gasPvtApproach_) {                                            \
@@ -167,21 +172,11 @@ using UniqueVoidPtrWithDeleter =
     : gasPvtApproach_(data.gasPvtApproach_)
     , realGasPvt_(initializeCopyConstructor(data))
     {
-     //   if constexpr (std::is_same_v<PtrType<void>, std::unique_ptr<void>>) {
+        if constexpr (std::is_same_v<PtrType<void>, std::unique_ptr<void>>) {
             *this = data;
-       // }
-        //*this = data;
+        }
     }
 
-
-    // template <class T = PtrType<void>, typename std::enable_if<!std::is_same_v<T, std::unique_ptr<void>>, int>::type = 0>
-    // GasPvtMultiplexer(const GasPvtMultiplexer<Scalar, enableThermal, ParamsContainer, ContainerT, PtrType>& data)
-    // : gasPvtApproach_(data.gasPvtApproach_)
-    // , realGasPvt_(data.realGasPvt_)
-    // {
-    //  // empty
-    // }
-   
     ~GasPvtMultiplexer() = default;
 
     OPM_HOST_DEVICE bool mixingEnergy() const
@@ -215,28 +210,7 @@ using UniqueVoidPtrWithDeleter =
      * \brief Return the reference density which are considered by this PVT-object.
      */
     OPM_HOST_DEVICE Scalar gasReferenceDensity(unsigned regionIdx){
-        printf("Calling reference density %d\n", regionIdx);
-        printf("OPM_IS_INSIDE_DEVICE_FUNCTION %d\n", OPM_IS_INSIDE_DEVICE_FUNCTION);
-        printf("OPM_IS_INSIDE_HOST_FUNCTION %d\n", OPM_IS_INSIDE_HOST_FUNCTION);
-        printf("OPM_IS_COMPILING_WITH_GPU_COMPILER %d\n", OPM_IS_COMPILING_WITH_GPU_COMPILER);
-        
-        #if OPM_IS_COMPILING_WITH_GPU_COMPILER
-        if constexpr (std::is_same_v<PtrType<void>, std::unique_ptr<void>>) {
-            return getRealPvt<GasPvtApproach::Co2Gas>().gasReferenceDensity(regionIdx);
-            //OPM_GAS_PVT_MULTIPLEXER_CALL(const auto returnValue =  pvtImpl.gasReferenceDensity(regionIdx); printf("Reference density %f\n", returnValue); return returnValue;);
-        }
-        else{
-            printf("GPU hardcode\n");
-            const auto& pvtCo2 = realGasPvt_; //this->template getRealPvt<Opm::GasPvtApproach::Co2Gas>();
-            printf("Managed to cast\n");
-            const auto returnValue = pvtCo2.gasReferenceDensity(regionIdx);
-            printf("Got return value %f\n", returnValue);
-            return returnValue;
-        }
-        #else 
-        OPM_GAS_PVT_MULTIPLEXER_CALL(const auto returnValue =  pvtImpl.gasReferenceDensity(regionIdx); printf("Reference density %f\n", returnValue); return returnValue;);
-        #endif
-        //OPM_GAS_PVT_MULTIPLEXER_CALL(return pvtImpl.gasReferenceDensity(regionIdx));
+        OPM_GAS_PVT_MULTIPLEXER_CALL(return pvtImpl.gasReferenceDensity(regionIdx));
     }
 
     /*!
@@ -518,7 +492,6 @@ private:
             }
         }
         else {
-            printf("Calling copy ctor\n");
             return data.realGasPvt_; //realGasPvt_;
         }
     }
