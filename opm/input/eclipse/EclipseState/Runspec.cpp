@@ -670,7 +670,7 @@ Runspec::Runspec(const Deck& deck)
             const auto& item = runspecSection.get<NC>().back()[0].getItem<NC::NUM_ITER>();
 
             if (item.defaultApplied(0)) {
-                const auto msg = fmt::format("OPM Flow uses {} as default "
+                const auto msg = fmt::format("\nOPM Flow uses {} as default "
                                              "NUPCOL value", NC::NUM_ITER::defaultValue);
                 OpmLog::note(msg);
             }
@@ -687,15 +687,15 @@ Runspec::Runspec(const Deck& deck)
             if (phases().active(Phase::GAS) &&
                 (phases().active(Phase::OIL) || phases().active(Phase::WATER)))
             {
-                const std::string msg = "The CO2 storage option is given. PVT properties "
-                    "from the Brine-CO2 system is used\n"
+                const std::string msg = "\nThe CO2 storage option is given. PVT properties "
+                    "from the Brine-CO2 system are used.\n"
                     "See the OPM manual for details on the used models.";
 
                 OpmLog::note(msg);
             }
             else {
                 throw std::runtime_error {
-                    "The CO2 storage option is given. Activate GAS, plus WATER or OIL"
+                    "\nThe CO2 storage option is given. Activate GAS, plus WATER or OIL."
                 };
             }
         }
@@ -704,14 +704,14 @@ Runspec::Runspec(const Deck& deck)
             m_co2sol = true;
 
             if (phases().active(Phase::SOLVENT)) {
-                const std::string msg = "The CO2SOL option is given together "
+                const std::string msg = "\nThe CO2SOL option is given together "
                     "with SOLVENT. PVT properties from the CO2-Brine system is used\n"
                     "See the OPM manual for details on the used models.";
 
                 OpmLog::note(msg);
             }
             else {
-                throw std::runtime_error("The CO2SOL option is given. Activate SOLVENT.");
+                throw std::runtime_error("\nThe CO2SOL option is given. Activate SOLVENT.");
             }
         }
 
@@ -719,7 +719,7 @@ Runspec::Runspec(const Deck& deck)
             const auto& comps_item = runspecSection.get<ParserKeywords::COMPS>().back().getRecord(0).getItem<ParserKeywords::COMPS::NUM_COMPS>();
             const auto num_comps = comps_item.get<int>(0);
             if (num_comps < 1) {
-                throw std::logic_error(fmt::format("non-positive COMPS value {} is specified", num_comps));
+                throw std::logic_error(fmt::format("\nNon-positive COMPS value {} is specified", num_comps));
             }
             this->m_comps = num_comps;
         }
@@ -728,21 +728,21 @@ Runspec::Runspec(const Deck& deck)
             m_h2sol = true;
 
             if (phases().active(Phase::SOLVENT)) {
-                const std::string msg = "The H2SOL option is given together with SOLVENT. "
+                const std::string msg = "\nThe H2SOL option is given together with SOLVENT. "
                     "PVT properties from the H2-Brine system is used\n"
                     "See the OPM manual for details on the used models.";
 
                 OpmLog::note(msg);
             }
             else {
-                throw std::runtime_error("The H2SOL option is given. Activate SOLVENT.");
+                throw std::runtime_error("\nThe H2SOL option is given. Activate SOLVENT.");
             }
         }
 
         if (runspecSection.hasKeyword<ParserKeywords::H2STORE>()) {
             m_h2storage = true;
 
-            const std::string msg = "The H2 storage option is given. PVT properties "
+            const std::string msg = "\nThe H2 storage option is given. PVT properties "
                 "from the Brine-H2 system is used\n"
                 "See the OPM manual for details on the used models.";
 
@@ -752,7 +752,7 @@ Runspec::Runspec(const Deck& deck)
         if (runspecSection.hasKeyword<ParserKeywords::MICP>()) {
             m_micp = true;
 
-            const std::string msg = "The MICP option is given. Single phase (WATER) "
+            const std::string msg = "\nThe MICP option is given. Single phase (WATER) "
                 "+ 3 transported components\n + 3 solid phases are used. See "
                 "https://doi.org/10.1016/j.ijggc.2021.103256\n"
                 "for details on the used model.";
@@ -763,7 +763,7 @@ Runspec::Runspec(const Deck& deck)
         if (runspecSection.hasKeyword<ParserKeywords::MECH>()) {
             m_mech = true;
 
-            const std::string msg = "Simulation will solve for mechanical quantities";
+            const std::string msg = "\nSimulation will solve for mechanical quantities";
 
             OpmLog::note(msg);
         }
@@ -771,7 +771,7 @@ Runspec::Runspec(const Deck& deck)
         if (runspecSection.hasKeyword<ParserKeywords::TEMP>()) {
             m_temp = true;
 
-            const std::string msg = "TEMP is used to start a thermal simulation. "
+            const std::string msg = "\nTEMP is used to start a thermal simulation. "
                                     "Conservation equation for internal energy is used instead of enthalpy "
                                     "(i.e., no work terms are included).";
 

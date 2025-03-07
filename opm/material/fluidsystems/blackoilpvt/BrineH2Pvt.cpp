@@ -28,6 +28,9 @@
 
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
+#include <opm/input/eclipse/Units/UnitSystem.hpp>
+
+#include <fmt/format.h>
 
 namespace Opm {
 
@@ -52,11 +55,13 @@ template<class Scalar>
 void BrineH2Pvt<Scalar>::
 initFromState(const EclipseState& eclState, const Schedule&)
 {
+    using Meas = UnitSystem::measure;
+    auto usys = eclState.getDeckUnitSystem();
     bool h2sol = eclState.runspec().h2Sol();
     if( !h2sol && !eclState.getTableManager().getDensityTable().empty()) {
         OpmLog::warning("H2STORE is enabled but DENSITY is in the deck. \n"
                         "The surface density is computed based on H2-BRINE PVT "
-                        "at standard conditions (STCOND) and DENSITY is ignored ");
+                        "at standard conditions (STCOND) and DENSITY is ignored.");
     }
 
     if (!h2sol && (eclState.getTableManager().hasTables("PVDO") ||
@@ -72,6 +77,7 @@ initFromState(const EclipseState& eclState, const Schedule&)
                         "BRINE PVT properties are computed based on the Hu et al. "
                         "pvt model and PVTW input is ignored.");
     }
+    OpmLog::info("H2STORE/HSOL is enabled.");
     // enable h2 dissolution into brine for h2sol case with DISGASW
     // or h2store case with DISGASW or DISGAS    
     bool h2sol_dis = h2sol && eclState.getSimulationConfig().hasDISGASW();
@@ -97,6 +103,14 @@ initFromState(const EclipseState& eclState, const Schedule&)
 
     brineReferenceDensity_[regionIdx] = Brine::liquidDensity(T_ref, P_ref, salinity_[regionIdx], extrapolate);
     h2ReferenceDensity_[regionIdx] = H2::gasDensity(T_ref, P_ref, extrapolate);
+
+    OpmLog::info(fmt::format("The surface density of H2 is {:.6f} {}.",
+                             usys.from_si(Meas::density, h2ReferenceDensity_[0]), usys.name(Meas::density)));
+    OpmLog::info(fmt::format("The surface density of brine is {:.6f} {}.",
+                             usys.from_si(Meas::density, brineReferenceDensity_[0]), usys.name(Meas::density)));
+    OpmLog::info(fmt::format("The surface densities are computed using the reference pressure ({:.3f} {}) and reference temperature ({:.2f} {}).",
+                             usys.from_si(Meas::pressure , P_ref), usys.name(Meas::pressure),
+                             usys.from_si(Meas::temperature , T_ref), usys.name(Meas::temperature)));
 }
 #endif
 
