@@ -144,7 +144,6 @@ public:
     GasPvtMultiplexer(GasPvtApproach approach, const ConcretePvt& realGasPvt)
     : gasPvtApproach_(approach)
     , realGasPvt_(nullptr)
-    //, realGasPvt_(new ConcretePvt(realGasPvt), [this](void* ptr){ deleter(ptr); })
     {
         if constexpr (std::is_same_v<PtrType<void>, std::unique_ptr<void>>) {
             realGasPvt_ = UniqueVoidPtrWithDeleter(new ConcretePvt(realGasPvt), [this](void* ptr){ deleter(ptr); });
@@ -184,14 +183,18 @@ public:
     /*!
      * \brief Return the number of PVT regions which are considered by this PVT-object.
      */
-    OPM_HOST_DEVICE unsigned numRegions() const;
+    OPM_HOST_DEVICE unsigned numRegions() const {
+        OPM_GAS_PVT_MULTIPLEXER_CALL(return pvtImpl.numRegions());
+    }
 
     OPM_HOST_DEVICE void setVapPars(const Scalar par1, const Scalar par2);
 
     /*!
      * \brief Return the reference density which are considered by this PVT-object.
      */
-    OPM_HOST_DEVICE Scalar gasReferenceDensity(unsigned regionIdx);
+    OPM_HOST_DEVICE Scalar gasReferenceDensity(unsigned regionIdx){
+        OPM_GAS_PVT_MULTIPLEXER_CALL(return pvtImpl.gasReferenceDensity(regionIdx));
+    }
 
     /*!
      * \brief Returns the specific enthalpy [J/kg] of gas given a set of parameters.
@@ -506,15 +509,7 @@ private:
                 new ConcretePvt(*static_cast<const ConcretePvt*>(sourcePvt.get()))
             );
         }
-
-        // return UniqueVoidPtrWithDeleter(
-        //     new ConcretePvt(*static_cast<const ConcretePvt*>(sourcePvt.get())),
-        //     [this](void* ptr) { deleter(ptr); }
-        // );
     }
-
-    GasPvtApproach gasPvtApproach_{GasPvtApproach::NoGas};
-    UniqueVoidPtrWithDeleter realGasPvt_;
 
     void deleter(void* ptr){
         switch (gasPvtApproach_) {
@@ -550,7 +545,11 @@ private:
                 break;
         }
     }
+
+    GasPvtApproach gasPvtApproach_{GasPvtApproach::NoGas};
+    UniqueVoidPtrWithDeleter realGasPvt_;
 };
+
 namespace gpuistl{
     template<class GPUContainerDouble, class GPUContainerScalar, class Scalar>
     GasPvtMultiplexer<Scalar, true, GPUContainerDouble, GPUContainerScalar>
@@ -560,9 +559,10 @@ namespace gpuistl{
 
         assert(gasMultiplexer.gasPvtApproach() == GasPvtApproach::Co2Gas);
 
-        auto gpuPvt = copy_to_gpu<GPUContainerScalar, Params>(gasMultiplexer.template getRealPvt<GasPvtApproach::Co2Gas>());
-
-        return GasPvtMultiplexer<Scalar, true, GPUContainerDouble, GPUContainerScalar>(GasPvtApproach::Co2Gas, gpuPvt);
+        return GasPvtMultiplexer<Scalar, true, GPUContainerDouble, GPUContainerScalar>(
+            GasPvtApproach::Co2Gas,
+            copy_to_gpu<GPUContainerScalar, Params>(gasMultiplexer.template getRealPvt<GasPvtApproach::Co2Gas>())
+        );
     }
 
     template <template <class> class ViewPtr, class ViewDouble, class ViewScalar, class GPUContainerDouble, class GPUContainerScalar, class Scalar>
