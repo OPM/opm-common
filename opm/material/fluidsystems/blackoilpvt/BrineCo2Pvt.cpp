@@ -29,6 +29,9 @@
 
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
+#include <opm/input/eclipse/Units/UnitSystem.hpp>
+
+#include <fmt/format.h>
 
 namespace Opm {
 
@@ -64,6 +67,8 @@ template<class Scalar, class Params, class ContainerT>
 void BrineCo2Pvt<Scalar, Params, ContainerT>::
 initFromState(const EclipseState& eclState, const Schedule&)
 {
+    using Meas = UnitSystem::measure;
+    auto usys = eclState.getDeckUnitSystem();
     bool co2sol = eclState.runspec().co2Sol();
     if (!co2sol && !eclState.getTableManager().getDensityTable().empty()) {
         OpmLog::warning("CO2STORE is enabled but DENSITY is in the deck. \n"
@@ -82,6 +87,7 @@ initFromState(const EclipseState& eclState, const Schedule&)
                         "BRINE PVT properties are computed based on the Hu et al. "
                         "pvt model and PVTW input is ignored.");
     }
+    OpmLog::info("CO2STORE/CO2SOL is enabled.");
     // enable co2 dissolution into brine for co2sol case with DISGASW
     // or co2store case with DISGASW or DISGAS
     bool co2sol_dis = co2sol && eclState.getSimulationConfig().hasDISGASW();
@@ -106,22 +112,6 @@ initFromState(const EclipseState& eclState, const Schedule&)
     // Check for Ezrokhi tables DENAQA and VISCAQA
     setEzrokhiDenCoeff(eclState.getCo2StoreConfig().getDenaqaTables());
     setEzrokhiViscCoeff(eclState.getCo2StoreConfig().getViscaqaTables());
-    std::string ezrokhi_msg;
-    if (enableEzrokhiDensity_) {
-        ezrokhi_msg = "\nEzrokhi density coefficients : \n\tNaCl = " 
-                      + std::to_string(ezrokhiDenNaClCoeff_[0]) + " " + std::to_string(ezrokhiDenNaClCoeff_[1]) 
-                      + " " + std::to_string(ezrokhiDenNaClCoeff_[2])
-                      + "\n\tCO2 = " + std::to_string(ezrokhiDenCo2Coeff_[0]) + " " + std::to_string(ezrokhiDenCo2Coeff_[1]) 
-                      + " " + std::to_string(ezrokhiDenCo2Coeff_[2]);
-    }
-    else {
-        ezrokhi_msg = "";
-    }
-    if (enableEzrokhiViscosity_) {
-        ezrokhi_msg += "\nEzrokhi viscosity coefficients : \n\tNaCl = " 
-                       + std::to_string(ezrokhiViscNaClCoeff_[0]) + " " + std::to_string(ezrokhiViscNaClCoeff_[1]) 
-                       + " " + std::to_string(ezrokhiViscNaClCoeff_[2]);
-    }
     
     std::size_t regions = eclState.runspec().tabdims().getNumPVTTables();
     setNumRegions(regions);
@@ -139,14 +129,22 @@ initFromState(const EclipseState& eclState, const Schedule&)
         co2ReferenceDensity_[regionIdx] = CO2::gasDensity(co2Tables_, T_ref, P_ref, extrapolate);
     }
 
-    // The reference densities are the same across regions. Only output info for region 0
-    OpmLog::info("CO2STORE/CO2SOL is enabled. \n The surface density of CO2 is  " + std::to_string(co2ReferenceDensity_[0])
-            + "kg/m3 \n The surface density of Brine is  " + std::to_string(brineReferenceDensity_[0])
-            + "kg/m3"
-            + "\n The surface densities are computed using the reference pressure ( " + std::to_string(P_ref) 
-            + "Pa) and the reference temperature (" +  std::to_string(T_ref) + "K)."
-            + ezrokhi_msg
-            );
+    OpmLog::info(fmt::format("The surface density of CO2 is {:.6f} {}.",
+                             usys.from_si(Meas::density, co2ReferenceDensity_[0]), usys.name(Meas::density)));
+    OpmLog::info(fmt::format("The surface density of brine is {:.6f} {}.",
+                             usys.from_si(Meas::density, brineReferenceDensity_[0]), usys.name(Meas::density)));
+    OpmLog::info(fmt::format("The surface densities are computed using the reference pressure ({:.3f} {}) and reference temperature ({:.2f} {}).",
+                             usys.from_si(Meas::pressure , P_ref), usys.name(Meas::pressure),
+                             usys.from_si(Meas::temperature , T_ref), usys.name(Meas::temperature)));
+    if (enableEzrokhiDensity_) {
+        OpmLog::info(fmt::format("Ezrokhi density coefficients : \n\tNaCl = {:.3E} {:.3E} {:.3E} \n\tCO2 = {:.3E} {:.3E} {:.3E}",
+                                 ezrokhiDenNaClCoeff_[0], ezrokhiDenNaClCoeff_[1], ezrokhiDenNaClCoeff_[2],
+                                 ezrokhiDenCo2Coeff_[0], ezrokhiDenCo2Coeff_[1], ezrokhiDenCo2Coeff_[2]));
+    }
+    if (enableEzrokhiViscosity_) {
+       OpmLog::info(fmt::format("Ezrokhi viscosity coefficients : \n\tNaCl = {:.3E} {:.3E} {:.3E}",
+                    ezrokhiViscNaClCoeff_[0], ezrokhiViscNaClCoeff_[1], ezrokhiViscNaClCoeff_[2])); 
+    }
 }
 #endif
 
