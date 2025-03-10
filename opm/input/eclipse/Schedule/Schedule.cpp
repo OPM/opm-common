@@ -1734,6 +1734,8 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
     {
         const std::string prefix = "| ";
         ParseContext parseContext;
+        // Ignore invalid keyword combinaions in actions, since these decks are typically incomplete
+        parseContext.update(ParseContext::PARSE_INVALID_KEYWORD_COMBINATION, InputErrorAction::IGNORE);
         if (this->m_treat_critical_as_non_critical) { // Continue with invalid names if parsing strictness is set to low
             parseContext.update(ParseContext::SCHEDULE_INVALID_NAME, InputErrorAction::WARN);
         }

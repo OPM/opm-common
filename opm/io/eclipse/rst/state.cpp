@@ -48,6 +48,8 @@
 
 #include <opm/input/eclipse/Deck/Deck.hpp>
 
+#include <opm/input/eclipse/Parser/InputErrorAction.hpp>
+#include <opm/input/eclipse/Parser/ParseContext.hpp>
 #include <opm/input/eclipse/Parser/Parser.hpp>
 
 #include <algorithm>
@@ -616,7 +618,10 @@ void RstState::add_actions(const Parser& parser,
             action_deck += line + "\n";
             zlact_offset += actdims.line_size();
         }
-        const auto& deck = parser.parseString( action_deck );
+        // Ignore invalid keyword combinaions in actions, since these decks are typically incomplete
+        ParseContext parseContext;
+        parseContext.update(ParseContext::PARSE_INVALID_KEYWORD_COMBINATION, InputErrorAction::IGNORE);
+        const auto& deck = parser.parseString( action_deck, parseContext );
         for (auto keyword : deck)
             this->actions.back().keywords.push_back(std::move(keyword));
     }
