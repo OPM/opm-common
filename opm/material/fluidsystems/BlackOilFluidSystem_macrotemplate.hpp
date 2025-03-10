@@ -83,8 +83,8 @@ public:
         GasPvtMultiplexer<Scalar, true>,
         std::conditional_t<
             std::is_same_v<SmartPointer<double>, std::shared_ptr<double>>,
-            GasPvtMultiplexer<Scalar, true, Storage<double>, Storage<Scalar>, std::unique_ptr>,
-            GasPvtMultiplexer<Scalar, true, Storage<double>, Storage<Scalar>, SmartPointer>
+            GasPvtMultiplexer<Scalar, true, Storage<double>, Storage<Scalar>, true>,
+            GasPvtMultiplexer<Scalar, true, Storage<double>, Storage<Scalar>, false>
         >
     >;
     using OilPvt = OilPvtMultiplexer<Scalar>;
@@ -93,8 +93,8 @@ public:
         WaterPvtMultiplexer<Scalar, true, true>,
         std::conditional_t<
             std::is_same_v<SmartPointer<double>, std::shared_ptr<double>>,
-            WaterPvtMultiplexer<Scalar, true, true, Storage<double>, Storage<Scalar>, std::unique_ptr>,
-            WaterPvtMultiplexer<Scalar, true, true, Storage<double>, Storage<Scalar>, SmartPointer>
+            WaterPvtMultiplexer<Scalar, true, true, Storage<double>, Storage<Scalar>, true>,
+            WaterPvtMultiplexer<Scalar, true, true, Storage<double>, Storage<Scalar>, false>
         >
     >;
 
@@ -382,7 +382,7 @@ public:
      */
     STATIC_OR_DEVICE void initEnd();
 
-    STATIC_OR_DEVICE bool isInitialized()
+    STATIC_OR_DEVICE bool isInitialized() NOTHING_OR_CONST
     { return isInitialized_; }
 
     /****************************************
@@ -406,12 +406,12 @@ public:
     STATIC_OR_NOTHING Scalar surfaceTemperature;
 
     //! \copydoc BaseFluidSystem::phaseName
-    STATIC_OR_NOTHING std::string_view phaseName(unsigned phaseIdx);
+    STATIC_OR_NOTHING std::string_view phaseName(unsigned phaseIdx) NOTHING_OR_CONST;
 
 
 
     //! \copydoc BaseFluidSystem::isLiquid
-    STATIC_OR_DEVICE bool isLiquid(unsigned phaseIdx)
+    STATIC_OR_DEVICE bool isLiquid(unsigned phaseIdx) NOTHING_OR_CONST
     {
         assert(phaseIdx < numPhases);
         return phaseIdx != gasPhaseIdx;
@@ -437,27 +437,27 @@ protected:
 
 public:
     //! \brief Returns the number of active fluid phases (i.e., usually three)
-    STATIC_OR_DEVICE unsigned numActivePhases()
+    STATIC_OR_DEVICE unsigned numActivePhases() NOTHING_OR_CONST
     { return numActivePhases_; }
 
     //! \brief Returns whether a fluid phase is active
-    STATIC_OR_DEVICE bool phaseIsActive(unsigned phaseIdx)
+    STATIC_OR_DEVICE bool phaseIsActive(unsigned phaseIdx) NOTHING_OR_CONST
     {
         assert(phaseIdx < numPhases);
         return phaseIsActive_[phaseIdx];
     }
 
     //! \brief returns the index of "primary" component of a phase (solvent)
-    STATIC_OR_DEVICE unsigned solventComponentIndex(unsigned phaseIdx);
+    STATIC_OR_DEVICE unsigned solventComponentIndex(unsigned phaseIdx) NOTHING_OR_CONST;
 
     //! \brief returns the index of "secondary" component of a phase (solute)
-    STATIC_OR_DEVICE unsigned soluteComponentIndex(unsigned phaseIdx);
+    STATIC_OR_DEVICE unsigned soluteComponentIndex(unsigned phaseIdx) NOTHING_OR_CONST;
 
     //! \copydoc BaseFluidSystem::componentName
-    STATIC_OR_DEVICE std::string_view componentName(unsigned compIdx);
+    STATIC_OR_NOTHING std::string_view componentName(unsigned compIdx) NOTHING_OR_CONST;
 
     //! \copydoc BaseFluidSystem::molarMass
-    STATIC_OR_DEVICE Scalar molarMass(unsigned compIdx, unsigned regionIdx = 0)
+    STATIC_OR_DEVICE Scalar molarMass(unsigned compIdx, unsigned regionIdx = 0) NOTHING_OR_CONST
     { return molarMass_[regionIdx][compIdx]; }
 
     //! \copydoc BaseFluidSystem::isIdealMixture
@@ -469,11 +469,11 @@ public:
     }
 
     //! \copydoc BaseFluidSystem::isCompressible
-    STATIC_OR_DEVICE bool isCompressible(unsigned /*phaseIdx*/)
+    STATIC_OR_DEVICE bool isCompressible(unsigned /*phaseIdx*/) NOTHING_OR_CONST
     { return true; /* all phases are compressible */ }
 
     //! \copydoc BaseFluidSystem::isIdealGas
-    STATIC_OR_DEVICE bool isIdealGas(unsigned /*phaseIdx*/)
+    STATIC_OR_DEVICE bool isIdealGas(unsigned /*phaseIdx*/) NOTHING_OR_CONST
     { return false; }
 
 
@@ -485,7 +485,7 @@ public:
      *
      * By default, this is 1.
      */
-    STATIC_OR_DEVICE std::size_t numRegions()
+    STATIC_OR_DEVICE std::size_t numRegions() NOTHING_OR_CONST
     { return molarMass_.size(); }
 
     /*!
@@ -494,7 +494,7 @@ public:
      *
      * By default, dissolved gas is considered.
      */
-    STATIC_OR_DEVICE bool enableDissolvedGas()
+    STATIC_OR_DEVICE bool enableDissolvedGas() NOTHING_OR_CONST
     { return enableDissolvedGas_; }
 
 
@@ -504,7 +504,7 @@ public:
      *
      * By default, dissolved gas is considered.
      */
-    STATIC_OR_DEVICE bool enableDissolvedGasInWater()
+    STATIC_OR_DEVICE bool enableDissolvedGasInWater() NOTHING_OR_CONST
     { return enableDissolvedGasInWater_; }
 
     /*!
@@ -513,7 +513,7 @@ public:
      *
      * By default, vaporized oil is not considered.
      */
-    STATIC_OR_DEVICE bool enableVaporizedOil()
+    STATIC_OR_DEVICE bool enableVaporizedOil() NOTHING_OR_CONST
     { return enableVaporizedOil_; }
 
     /*!
@@ -522,7 +522,7 @@ public:
      *
      * By default, vaporized water is not considered.
      */
-    STATIC_OR_DEVICE bool enableVaporizedWater()
+    STATIC_OR_DEVICE bool enableVaporizedWater() NOTHING_OR_CONST
     { return enableVaporizedWater_; }
 
     /*!
@@ -530,7 +530,7 @@ public:
      *
      * By default, diffusion is not considered.
      */
-    STATIC_OR_DEVICE bool enableDiffusion()
+    STATIC_OR_DEVICE bool enableDiffusion() NOTHING_OR_CONST
     { return enableDiffusion_; }
 
     /*!
@@ -538,7 +538,7 @@ public:
      *
      * By default, saturated tables are used. If false the unsaturated tables are extrapolated
      */
-    STATIC_OR_DEVICE bool useSaturatedTables()
+    STATIC_OR_DEVICE bool useSaturatedTables() NOTHING_OR_CONST
     { return useSaturatedTables_; }
 
     /*!
@@ -546,7 +546,7 @@ public:
      *
      * \copydoc Doxygen::phaseIdxParam
      */
-    STATIC_OR_DEVICE Scalar referenceDensity(unsigned phaseIdx, unsigned regionIdx)
+    STATIC_OR_DEVICE Scalar referenceDensity(unsigned phaseIdx, unsigned regionIdx) NOTHING_OR_CONST
     { return referenceDensity_[regionIdx][phaseIdx]; }
 
     /****************************************
@@ -556,7 +556,7 @@ public:
     template <class FluidState, class LhsEval = typename FluidState::Scalar, class ParamCacheEval = LhsEval>
     STATIC_OR_DEVICE LhsEval density(const FluidState& fluidState,
                            const ParameterCache<ParamCacheEval>& paramCache,
-                           unsigned phaseIdx)
+                           unsigned phaseIdx) NOTHING_OR_CONST
     { return density<FluidState, LhsEval>(fluidState, phaseIdx, paramCache.regionIndex()); }
 
     //! \copydoc BaseFluidSystem::fugacityCoefficient
@@ -564,7 +564,7 @@ public:
     STATIC_OR_DEVICE LhsEval fugacityCoefficient(const FluidState& fluidState,
                                        const ParameterCache<ParamCacheEval>& paramCache,
                                        unsigned phaseIdx,
-                                       unsigned compIdx)
+                                       unsigned compIdx) NOTHING_OR_CONST
     {
         return fugacityCoefficient<FluidState, LhsEval>(fluidState,
                                                         phaseIdx,
@@ -576,7 +576,7 @@ public:
     template <class FluidState, class LhsEval = typename FluidState::Scalar, class ParamCacheEval = LhsEval>
     STATIC_OR_DEVICE LhsEval viscosity(const FluidState& fluidState,
                              const ParameterCache<ParamCacheEval>& paramCache,
-                             unsigned phaseIdx)
+                             unsigned phaseIdx) NOTHING_OR_CONST
     { return viscosity<FluidState, LhsEval>(fluidState, phaseIdx, paramCache.regionIndex()); }
 
     //! \copydoc BaseFluidSystem::enthalpy
@@ -589,7 +589,7 @@ public:
     template <class FluidState, class LhsEval = typename FluidState::Scalar, class ParamCacheEval = LhsEval>
     STATIC_OR_DEVICE LhsEval internalEnergy(const FluidState& fluidState,
                                   const ParameterCache<ParamCacheEval>& paramCache,
-                                  unsigned phaseIdx)
+                                  unsigned phaseIdx) NOTHING_OR_CONST
     { return internalEnergy<FluidState, LhsEval>(fluidState, phaseIdx, paramCache.regionIndex()); }
 
     /****************************************
@@ -600,7 +600,7 @@ public:
     template <class FluidState, class LhsEval = typename FluidState::Scalar>
     STATIC_OR_DEVICE LhsEval density(const FluidState& fluidState,
                            unsigned phaseIdx,
-                           unsigned regionIdx)
+                           unsigned regionIdx) NOTHING_OR_CONST
     {
         assert(phaseIdx <= numPhases);
         assert(regionIdx <= numRegions());
@@ -698,7 +698,7 @@ public:
     template <class FluidState, class LhsEval = typename FluidState::Scalar>
     STATIC_OR_DEVICE LhsEval saturatedDensity(const FluidState& fluidState,
                                     unsigned phaseIdx,
-                                    unsigned regionIdx)
+                                    unsigned regionIdx) NOTHING_OR_CONST
     {
         assert(phaseIdx <= numPhases);
         assert(regionIdx <= numRegions());
@@ -799,7 +799,7 @@ public:
     template <class FluidState, class LhsEval = typename FluidState::Scalar>
     STATIC_OR_DEVICE LhsEval inverseFormationVolumeFactor(const FluidState& fluidState,
                                                 unsigned phaseIdx,
-                                                unsigned regionIdx)
+                                                unsigned regionIdx) NOTHING_OR_CONST
     {
         OPM_TIMEBLOCK_LOCAL(inverseFormationVolumeFactor);
         assert(phaseIdx <= numPhases);
@@ -899,7 +899,7 @@ public:
     template <class FluidState, class LhsEval = typename FluidState::Scalar>
     STATIC_OR_DEVICE LhsEval saturatedInverseFormationVolumeFactor(const FluidState& fluidState,
                                                          unsigned phaseIdx,
-                                                         unsigned regionIdx)
+                                                         unsigned regionIdx) NOTHING_OR_CONST
     {
         OPM_TIMEBLOCK_LOCAL(saturatedInverseFormationVolumeFactor);
         assert(phaseIdx <= numPhases);
@@ -922,7 +922,7 @@ public:
     STATIC_OR_DEVICE LhsEval fugacityCoefficient(const FluidState& fluidState,
                                        unsigned phaseIdx,
                                        unsigned compIdx,
-                                       unsigned regionIdx)
+                                       unsigned regionIdx) NOTHING_OR_CONST
     {
         assert(phaseIdx <= numPhases);
         assert(compIdx <= numComponents);
@@ -1043,7 +1043,7 @@ public:
     template <class FluidState, class LhsEval = typename FluidState::Scalar>
     STATIC_OR_DEVICE LhsEval viscosity(const FluidState& fluidState,
                              unsigned phaseIdx,
-                             unsigned regionIdx)
+                             unsigned regionIdx) NOTHING_OR_CONST
     {
         OPM_TIMEBLOCK_LOCAL(viscosity);
         assert(phaseIdx <= numPhases);
@@ -1135,7 +1135,7 @@ public:
     template <class FluidState, class LhsEval = typename FluidState::Scalar>
     STATIC_OR_DEVICE LhsEval internalEnergy(const FluidState& fluidState,
                                   const unsigned phaseIdx,
-                                  const unsigned regionIdx)
+                                  const unsigned regionIdx) NOTHING_OR_CONST
     {
         const auto p = decay<LhsEval>(fluidState.pressure(phaseIdx));
         const auto T = decay<LhsEval>(fluidState.temperature(phaseIdx));
@@ -1181,7 +1181,7 @@ public:
     template <class FluidState, class LhsEval = typename FluidState::Scalar>
     STATIC_OR_DEVICE LhsEval internalMixingTotalEnergy(const FluidState& fluidState,
                                              unsigned phaseIdx,
-                                             unsigned regionIdx)
+                                             unsigned regionIdx) NOTHING_OR_CONST
     {
         assert(phaseIdx <= numPhases);
         assert(regionIdx <= numRegions());
@@ -1308,7 +1308,7 @@ public:
     template <class FluidState, class LhsEval = typename FluidState::Scalar>
     STATIC_OR_DEVICE LhsEval enthalpy(const FluidState& fluidState,
                             unsigned phaseIdx,
-                            unsigned regionIdx)
+                            unsigned regionIdx) NOTHING_OR_CONST
     {
         // should preferably not be used values should be taken from intensive quantities fluid state.
         const auto& p = decay<LhsEval>(fluidState.pressure(phaseIdx));
@@ -1329,7 +1329,7 @@ public:
     template <class FluidState, class LhsEval = typename FluidState::Scalar>
     STATIC_OR_DEVICE LhsEval saturatedVaporizationFactor(const FluidState& fluidState,
                                               unsigned phaseIdx,
-                                              unsigned regionIdx)
+                                              unsigned regionIdx) NOTHING_OR_CONST
     {
         assert(phaseIdx <= numPhases);
         assert(regionIdx <= numRegions());
@@ -1356,7 +1356,7 @@ public:
     STATIC_OR_DEVICE LhsEval saturatedDissolutionFactor(const FluidState& fluidState,
                                               unsigned phaseIdx,
                                               unsigned regionIdx,
-                                              const LhsEval& maxOilSaturation)
+                                              const LhsEval& maxOilSaturation) NOTHING_OR_CONST
     {
         OPM_TIMEBLOCK_LOCAL(saturatedDissolutionFactor);
         assert(phaseIdx <= numPhases);
@@ -1386,7 +1386,7 @@ public:
     template <class FluidState, class LhsEval = typename FluidState::Scalar>
     STATIC_OR_DEVICE LhsEval saturatedDissolutionFactor(const FluidState& fluidState,
                                               unsigned phaseIdx,
-                                              unsigned regionIdx)
+                                              unsigned regionIdx) NOTHING_OR_CONST
     {
         OPM_TIMEBLOCK_LOCAL(saturatedDissolutionFactor);
         assert(phaseIdx <= numPhases);
@@ -1409,7 +1409,7 @@ public:
      */
     template <class FluidState, class LhsEval = typename FluidState::Scalar>
     STATIC_OR_DEVICE LhsEval bubblePointPressure(const FluidState& fluidState,
-                                       unsigned regionIdx)
+                                       unsigned regionIdx) NOTHING_OR_CONST
     {
         return saturationPressure(fluidState, oilPhaseIdx, regionIdx);
     }
@@ -1420,7 +1420,7 @@ public:
      */
     template <class FluidState, class LhsEval = typename FluidState::Scalar>
     STATIC_OR_DEVICE LhsEval dewPointPressure(const FluidState& fluidState,
-                                       unsigned regionIdx)
+                                       unsigned regionIdx) NOTHING_OR_CONST
     {
         return saturationPressure(fluidState, gasPhaseIdx, regionIdx);
     }
@@ -1438,7 +1438,7 @@ public:
     template <class FluidState, class LhsEval = typename FluidState::Scalar>
     STATIC_OR_DEVICE LhsEval saturationPressure(const FluidState& fluidState,
                                       unsigned phaseIdx,
-                                      unsigned regionIdx)
+                                      unsigned regionIdx) NOTHING_OR_CONST
     {
         assert(phaseIdx <= numPhases);
         assert(regionIdx <= numRegions());
@@ -1463,7 +1463,7 @@ public:
      *        corresponding gas dissolution factor.
      */
     template <class LhsEval>
-    STATIC_OR_DEVICE LhsEval convertXoGToRs(const LhsEval& XoG, unsigned regionIdx)
+    STATIC_OR_DEVICE LhsEval convertXoGToRs(const LhsEval& XoG, unsigned regionIdx) NOTHING_OR_CONST
     {
         Scalar rho_oRef = referenceDensity_[regionIdx][oilPhaseIdx];
         Scalar rho_gRef = referenceDensity_[regionIdx][gasPhaseIdx];
@@ -1476,7 +1476,7 @@ public:
      *        corresponding gas dissolution factor.
      */
     template <class LhsEval>
-    STATIC_OR_DEVICE LhsEval convertXwGToRsw(const LhsEval& XwG, unsigned regionIdx)
+    STATIC_OR_DEVICE LhsEval convertXwGToRsw(const LhsEval& XwG, unsigned regionIdx) NOTHING_OR_CONST
     {
         Scalar rho_wRef = referenceDensity_[regionIdx][waterPhaseIdx];
         Scalar rho_gRef = referenceDensity_[regionIdx][gasPhaseIdx];
@@ -1489,7 +1489,7 @@ public:
      *        corresponding oil vaporization factor.
      */
     template <class LhsEval>
-    STATIC_OR_DEVICE LhsEval convertXgOToRv(const LhsEval& XgO, unsigned regionIdx)
+    STATIC_OR_DEVICE LhsEval convertXgOToRv(const LhsEval& XgO, unsigned regionIdx) NOTHING_OR_CONST
     {
         Scalar rho_oRef = referenceDensity_[regionIdx][oilPhaseIdx];
         Scalar rho_gRef = referenceDensity_[regionIdx][gasPhaseIdx];
@@ -1502,7 +1502,7 @@ public:
      *        corresponding water vaporization factor.
      */
     template <class LhsEval>
-    STATIC_OR_DEVICE LhsEval convertXgWToRvw(const LhsEval& XgW, unsigned regionIdx)
+    STATIC_OR_DEVICE LhsEval convertXgWToRvw(const LhsEval& XgW, unsigned regionIdx) NOTHING_OR_CONST
     {
         Scalar rho_wRef = referenceDensity_[regionIdx][waterPhaseIdx];
         Scalar rho_gRef = referenceDensity_[regionIdx][gasPhaseIdx];
@@ -1516,7 +1516,7 @@ public:
      *        of the gas component in the oil phase.
      */
     template <class LhsEval>
-    STATIC_OR_DEVICE LhsEval convertRsToXoG(const LhsEval& Rs, unsigned regionIdx)
+    STATIC_OR_DEVICE LhsEval convertRsToXoG(const LhsEval& Rs, unsigned regionIdx) NOTHING_OR_CONST
     {
         Scalar rho_oRef = referenceDensity_[regionIdx][oilPhaseIdx];
         Scalar rho_gRef = referenceDensity_[regionIdx][gasPhaseIdx];
@@ -1530,7 +1530,7 @@ public:
      *        of the gas component in the water phase.
      */
     template <class LhsEval>
-    STATIC_OR_DEVICE LhsEval convertRswToXwG(const LhsEval& Rsw, unsigned regionIdx)
+    STATIC_OR_DEVICE LhsEval convertRswToXwG(const LhsEval& Rsw, unsigned regionIdx) NOTHING_OR_CONST
     {
         Scalar rho_wRef = referenceDensity_[regionIdx][waterPhaseIdx];
         Scalar rho_gRef = referenceDensity_[regionIdx][gasPhaseIdx];
@@ -1544,7 +1544,7 @@ public:
      *        of the oil component in the gas phase.
      */
     template <class LhsEval>
-    STATIC_OR_DEVICE LhsEval convertRvToXgO(const LhsEval& Rv, unsigned regionIdx)
+    STATIC_OR_DEVICE LhsEval convertRvToXgO(const LhsEval& Rv, unsigned regionIdx) NOTHING_OR_CONST
     {
         Scalar rho_oRef = referenceDensity_[regionIdx][oilPhaseIdx];
         Scalar rho_gRef = referenceDensity_[regionIdx][gasPhaseIdx];
@@ -1558,7 +1558,7 @@ public:
      *        of the water component in the gas phase.
      */
     template <class LhsEval>
-    STATIC_OR_DEVICE LhsEval convertRvwToXgW(const LhsEval& Rvw, unsigned regionIdx)
+    STATIC_OR_DEVICE LhsEval convertRvwToXgW(const LhsEval& Rvw, unsigned regionIdx) NOTHING_OR_CONST
     {
         Scalar rho_wRef = referenceDensity_[regionIdx][waterPhaseIdx];
         Scalar rho_gRef = referenceDensity_[regionIdx][gasPhaseIdx];
@@ -1571,7 +1571,7 @@ public:
      * \brief Convert a water mass fraction in the gas phase the corresponding mole fraction.
      */
     template <class LhsEval>
-    STATIC_OR_DEVICE LhsEval convertXgWToxgW(const LhsEval& XgW, unsigned regionIdx)
+    STATIC_OR_DEVICE LhsEval convertXgWToxgW(const LhsEval& XgW, unsigned regionIdx) NOTHING_OR_CONST
     {
         Scalar MW = molarMass_[regionIdx][waterCompIdx];
         Scalar MG = molarMass_[regionIdx][gasCompIdx];
@@ -1583,7 +1583,7 @@ public:
      * \brief Convert a gas mass fraction in the water phase the corresponding mole fraction.
      */
     template <class LhsEval>
-    STATIC_OR_DEVICE LhsEval convertXwGToxwG(const LhsEval& XwG, unsigned regionIdx)
+    STATIC_OR_DEVICE LhsEval convertXwGToxwG(const LhsEval& XwG, unsigned regionIdx) NOTHING_OR_CONST
     {
         Scalar MW = molarMass_[regionIdx][waterCompIdx];
         Scalar MG = molarMass_[regionIdx][gasCompIdx];
@@ -1595,7 +1595,7 @@ public:
      * \brief Convert a gas mass fraction in the oil phase the corresponding mole fraction.
      */
     template <class LhsEval>
-    STATIC_OR_DEVICE LhsEval convertXoGToxoG(const LhsEval& XoG, unsigned regionIdx)
+    STATIC_OR_DEVICE LhsEval convertXoGToxoG(const LhsEval& XoG, unsigned regionIdx) NOTHING_OR_CONST
     {
         Scalar MO = molarMass_[regionIdx][oilCompIdx];
         Scalar MG = molarMass_[regionIdx][gasCompIdx];
@@ -1607,7 +1607,7 @@ public:
      * \brief Convert a gas mole fraction in the oil phase the corresponding mass fraction.
      */
     template <class LhsEval>
-    STATIC_OR_DEVICE LhsEval convertxoGToXoG(const LhsEval& xoG, unsigned regionIdx)
+    STATIC_OR_DEVICE LhsEval convertxoGToXoG(const LhsEval& xoG, unsigned regionIdx) NOTHING_OR_CONST
     {
         Scalar MO = molarMass_[regionIdx][oilCompIdx];
         Scalar MG = molarMass_[regionIdx][gasCompIdx];
@@ -1619,7 +1619,7 @@ public:
      * \brief Convert a oil mass fraction in the gas phase the corresponding mole fraction.
      */
     template <class LhsEval>
-    STATIC_OR_DEVICE LhsEval convertXgOToxgO(const LhsEval& XgO, unsigned regionIdx)
+    STATIC_OR_DEVICE LhsEval convertXgOToxgO(const LhsEval& XgO, unsigned regionIdx) NOTHING_OR_CONST
     {
         Scalar MO = molarMass_[regionIdx][oilCompIdx];
         Scalar MG = molarMass_[regionIdx][gasCompIdx];
@@ -1631,7 +1631,7 @@ public:
      * \brief Convert a oil mole fraction in the gas phase the corresponding mass fraction.
      */
     template <class LhsEval>
-    STATIC_OR_DEVICE LhsEval convertxgOToXgO(const LhsEval& xgO, unsigned regionIdx)
+    STATIC_OR_DEVICE LhsEval convertxgOToXgO(const LhsEval& xgO, unsigned regionIdx) NOTHING_OR_CONST
     {
         Scalar MO = molarMass_[regionIdx][oilCompIdx];
         Scalar MG = molarMass_[regionIdx][gasCompIdx];
@@ -1646,7 +1646,7 @@ public:
      * \note It is not recommended to use this method directly, but the black-oil
      *       specific methods of the fluid systems from above should be used instead.
      */
-    STATIC_OR_DEVICE const GasPvt& gasPvt()
+    STATIC_OR_DEVICE const GasPvt& gasPvt() NOTHING_OR_CONST
     { return *gasPvt_; }
 
     /*!
@@ -1656,7 +1656,7 @@ public:
      * \note It is not recommended to use this method directly, but the black-oil
      *       specific methods of the fluid systems from above should be used instead.
      */
-    STATIC_OR_DEVICE const OilPvt& oilPvt()
+    STATIC_OR_DEVICE const OilPvt& oilPvt() NOTHING_OR_CONST
     { return *oilPvt_; }
 
     /*!
@@ -1666,7 +1666,7 @@ public:
      * \note It is not recommended to use this method directly, but the black-oil
      *       specific methods of the fluid systems from above should be used instead.
      */
-    STATIC_OR_DEVICE const WaterPvt& waterPvt()
+    STATIC_OR_DEVICE const WaterPvt& waterPvt() NOTHING_OR_CONST
     { return *waterPvt_; }
 
     /*!
@@ -1674,7 +1674,7 @@ public:
      *
      * This method is black-oil specific and only makes sense for isothermal simulations.
      */
-    STATIC_OR_DEVICE Scalar reservoirTemperature(unsigned = 0)
+    STATIC_OR_DEVICE Scalar reservoirTemperature(unsigned = 0) NOTHING_OR_CONST
     { return reservoirTemperature_; }
 
     /*!
@@ -1682,19 +1682,19 @@ public:
      *
      * This method is black-oil specific and only makes sense for isothermal simulations.
      */
-    STATIC_OR_DEVICE void setReservoirTemperature(Scalar value)
+    STATIC_OR_DEVICE void setReservoirTemperature(Scalar value) NOTHING_OR_CONST
     { reservoirTemperature_ = value; }
 
-    STATIC_OR_DEVICE short activeToCanonicalPhaseIdx(unsigned activePhaseIdx);
+    STATIC_OR_DEVICE short activeToCanonicalPhaseIdx(unsigned activePhaseIdx) NOTHING_OR_CONST;
 
-    STATIC_OR_DEVICE short canonicalToActivePhaseIdx(unsigned phaseIdx);
+    STATIC_OR_DEVICE short canonicalToActivePhaseIdx(unsigned phaseIdx) NOTHING_OR_CONST;
 
     //! \copydoc BaseFluidSystem::diffusionCoefficient
-    STATIC_OR_DEVICE Scalar diffusionCoefficient(unsigned compIdx, unsigned phaseIdx, unsigned regionIdx = 0)
+    STATIC_OR_DEVICE Scalar diffusionCoefficient(unsigned compIdx, unsigned phaseIdx, unsigned regionIdx = 0) NOTHING_OR_CONST
     { return diffusionCoefficients_[regionIdx][numPhases*compIdx + phaseIdx]; }
 
     //! \copydoc BaseFluidSystem::setDiffusionCoefficient
-    STATIC_OR_DEVICE void setDiffusionCoefficient(Scalar coefficient, unsigned compIdx, unsigned phaseIdx, unsigned regionIdx = 0)
+    STATIC_OR_DEVICE void setDiffusionCoefficient(Scalar coefficient, unsigned compIdx, unsigned phaseIdx, unsigned regionIdx = 0) NOTHING_OR_CONST
     { diffusionCoefficients_[regionIdx][numPhases*compIdx + phaseIdx] = coefficient ; }
 
     /*!
@@ -1704,7 +1704,7 @@ public:
     STATIC_OR_DEVICE LhsEval diffusionCoefficient(const FluidState& fluidState,
                                         const ParameterCache<ParamCacheEval>& paramCache,
                                         unsigned phaseIdx,
-                                        unsigned compIdx)
+                                        unsigned compIdx) NOTHING_OR_CONST
     {
         // diffusion is disabled by the user
         if(!enableDiffusion())
@@ -1877,7 +1877,7 @@ NOTHING_OR_DEVICE void FLUIDSYSTEM_CLASSNAME<Scalar,IndexTraits, Storage, SmartP
 
 template <class Scalar, class IndexTraits, template<typename> typename Storage, template<typename> typename SmartPointer>
 std::string_view FLUIDSYSTEM_CLASSNAME<Scalar,IndexTraits, Storage, SmartPointer>::
-phaseName(unsigned phaseIdx)
+phaseName(unsigned phaseIdx) NOTHING_OR_CONST
 {
     switch (phaseIdx) {
     case waterPhaseIdx:
@@ -1894,7 +1894,7 @@ phaseName(unsigned phaseIdx)
 
 template <class Scalar, class IndexTraits, template<typename> typename Storage, template<typename> typename SmartPointer>
 NOTHING_OR_DEVICE unsigned FLUIDSYSTEM_CLASSNAME<Scalar,IndexTraits,Storage, SmartPointer>::
-solventComponentIndex(unsigned phaseIdx)
+solventComponentIndex(unsigned phaseIdx) NOTHING_OR_CONST
 {
     switch (phaseIdx) {
     case waterPhaseIdx:
@@ -1911,7 +1911,7 @@ solventComponentIndex(unsigned phaseIdx)
 
 template <class Scalar, class IndexTraits, template<typename> typename Storage, template<typename> typename SmartPointer>
 NOTHING_OR_DEVICE unsigned FLUIDSYSTEM_CLASSNAME<Scalar,IndexTraits,Storage, SmartPointer>::
-soluteComponentIndex(unsigned phaseIdx)
+soluteComponentIndex(unsigned phaseIdx) NOTHING_OR_CONST
 {
     switch (phaseIdx) {
     case waterPhaseIdx:
@@ -1933,7 +1933,7 @@ soluteComponentIndex(unsigned phaseIdx)
 
 template <class Scalar, class IndexTraits, template<typename> typename Storage, template<typename> typename SmartPointer>
 std::string_view FLUIDSYSTEM_CLASSNAME<Scalar,IndexTraits,Storage, SmartPointer>::
-componentName(unsigned compIdx)
+componentName(unsigned compIdx) NOTHING_OR_CONST
 {
     switch (compIdx) {
     case waterCompIdx:
@@ -1950,7 +1950,7 @@ componentName(unsigned compIdx)
 
 template <class Scalar, class IndexTraits, template<typename> typename Storage, template<typename> typename SmartPointer>
 NOTHING_OR_DEVICE short FLUIDSYSTEM_CLASSNAME<Scalar,IndexTraits, Storage, SmartPointer>::
-activeToCanonicalPhaseIdx(unsigned activePhaseIdx)
+activeToCanonicalPhaseIdx(unsigned activePhaseIdx) NOTHING_OR_CONST
 {
     assert(activePhaseIdx<numActivePhases());
     return activeToCanonicalPhaseIdx_[activePhaseIdx];
@@ -1958,7 +1958,7 @@ activeToCanonicalPhaseIdx(unsigned activePhaseIdx)
 
 template <class Scalar, class IndexTraits, template<typename> typename Storage, template<typename> typename SmartPointer>
 NOTHING_OR_DEVICE short FLUIDSYSTEM_CLASSNAME<Scalar,IndexTraits, Storage, SmartPointer>::
-canonicalToActivePhaseIdx(unsigned phaseIdx)
+canonicalToActivePhaseIdx(unsigned phaseIdx) NOTHING_OR_CONST
 {
     assert(phaseIdx<numPhases);
     assert(phaseIsActive(phaseIdx));
@@ -2063,23 +2063,12 @@ make_view(FLUIDSYSTEM_CLASSNAME<Scalar, IndexTraits, OldContainerType>& oldFluid
 {
     using Array3 = std::array<Scalar, 3>;
     using Array9 = std::array<Scalar, 9>;
-    using GasMultiplexerView = GasPvtMultiplexer<Scalar, true, ViewType<double>, ViewType<Scalar>, PtrType>;
-    using WaterMultiplexerView = WaterPvtMultiplexer<Scalar, true, true, ViewType<double>, ViewType<Scalar>, PtrType>;
+    using GasMultiplexerView = GasPvtMultiplexer<Scalar, true, ViewType<double>, ViewType<Scalar>, false>;
+    using WaterMultiplexerView = WaterPvtMultiplexer<Scalar, true, true, ViewType<double>, ViewType<Scalar>, false>;
 
-    // TODO: avoid newing this here
-    auto* allocatedGasPvt = new GasMultiplexerView(
-        make_view<PtrType, ViewType<double>, ViewType<Scalar>>(*oldFluidSystem.gasPvt_)
-    );
-
-    auto* allocatedOilPvt = new OilPvtMultiplexer<Scalar>();
-
-    auto* allocatedWaterPvt = new WaterMultiplexerView(
-        make_view<PtrType, ViewType<double>, ViewType<Scalar>>(*oldFluidSystem.waterPvt_)
-    );
-
-    auto newGasPvt = PtrType<GasMultiplexerView>(*allocatedGasPvt);
-    auto newOilPvt = PtrType<OilPvtMultiplexer<Scalar>>(*allocatedOilPvt);
-    auto newWaterPvt = PtrType<WaterMultiplexerView>(*allocatedWaterPvt);
+    auto newGasPvt = PtrType<GasMultiplexerView>(make_view<ViewType<double>, ViewType<Scalar>>(*oldFluidSystem.gasPvt_));
+    auto newOilPvt = PtrType<OilPvtMultiplexer<Scalar>>(OilPvtMultiplexer<Scalar>());
+    auto newWaterPvt = PtrType<WaterMultiplexerView>(make_view<ViewType<double>, ViewType<Scalar>>(*oldFluidSystem.waterPvt_));
 
     auto newReferenceDensity = make_view<Array3>(oldFluidSystem.referenceDensity_);
     auto newMolarMass = make_view<Array3>(oldFluidSystem.molarMass_);
