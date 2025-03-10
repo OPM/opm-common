@@ -30,8 +30,8 @@
 namespace Opm {
 
 #if HAVE_ECL_INPUT
-template<class Scalar, bool enableThermal, bool enableBrine, class ParamsContainer, class ContainerT, template <class...> class PtrType>
-void WaterPvtMultiplexer<Scalar,enableThermal,enableBrine, ParamsContainer, ContainerT, PtrType>::
+template<class Scalar, bool enableThermal, bool enableBrine, class ParamsContainer, class ContainerT, bool UseSmartPointer>
+void WaterPvtMultiplexer<Scalar,enableThermal,enableBrine, ParamsContainer, ContainerT, UseSmartPointer>::
 initFromState(const EclipseState& eclState, const Schedule& schedule)
 {
     if (!eclState.runspec().phases().active(Phase::WATER))
@@ -54,40 +54,40 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
 }
 #endif
 
-template<class Scalar, bool enableThermal, bool enableBrine, class ParamsContainer, class ContainerT, template <class...> class PtrType>
-void WaterPvtMultiplexer<Scalar,enableThermal,enableBrine, ParamsContainer, ContainerT, PtrType>::
+template<class Scalar, bool enableThermal, bool enableBrine, class ParamsContainer, class ContainerT, bool UseSmartPointer>
+void WaterPvtMultiplexer<Scalar,enableThermal,enableBrine, ParamsContainer, ContainerT, UseSmartPointer>::
 initEnd()
 {
     OPM_WATER_PVT_MULTIPLEXER_CALL(pvtImpl.initEnd(), break);
 }
 
 
-template<class Scalar, bool enableThermal, bool enableBrine, class ParamsContainer, class ContainerT, template <class...> class PtrType>
-unsigned WaterPvtMultiplexer<Scalar,enableThermal,enableBrine, ParamsContainer, ContainerT, PtrType>::
+template<class Scalar, bool enableThermal, bool enableBrine, class ParamsContainer, class ContainerT, bool UseSmartPointer>
+unsigned WaterPvtMultiplexer<Scalar,enableThermal,enableBrine, ParamsContainer, ContainerT, UseSmartPointer>::
 numRegions() const
 {
     OPM_WATER_PVT_MULTIPLEXER_CALL(return pvtImpl.numRegions());
 }
 
-template<class Scalar, bool enableThermal, bool enableBrine, class ParamsContainer, class ContainerT, template <class...> class PtrType>
-void WaterPvtMultiplexer<Scalar,enableThermal,enableBrine, ParamsContainer, ContainerT, PtrType>::
+template<class Scalar, bool enableThermal, bool enableBrine, class ParamsContainer, class ContainerT, bool UseSmartPointer>
+void WaterPvtMultiplexer<Scalar,enableThermal,enableBrine, ParamsContainer, ContainerT, UseSmartPointer>::
 setVapPars(const Scalar par1, const Scalar par2)
 {
     OPM_WATER_PVT_MULTIPLEXER_CALL(pvtImpl.setVapPars(par1, par2), break);
 }
 
-template<class Scalar, bool enableThermal, bool enableBrine, class ParamsContainer, class ContainerT, template <class...> class PtrType>
-Scalar WaterPvtMultiplexer<Scalar,enableThermal,enableBrine, ParamsContainer, ContainerT, PtrType>::
+template<class Scalar, bool enableThermal, bool enableBrine, class ParamsContainer, class ContainerT, bool UseSmartPointer>
+Scalar WaterPvtMultiplexer<Scalar,enableThermal,enableBrine, ParamsContainer, ContainerT, UseSmartPointer>::
 hVap(unsigned regionIdx) const
 {
     OPM_WATER_PVT_MULTIPLEXER_CALL(return pvtImpl.hVap(regionIdx));
 }
 
 // Helper function to keep the switch case tidy when constructing different pvts
-template<class Scalar, bool enableThermal, bool enableBrine, class ParamsContainer, class ContainerT, template <class...> class PtrType>
+template<class Scalar, bool enableThermal, bool enableBrine, class ParamsContainer, class ContainerT, bool UseSmartPointer>
 template <class ConcreteGasPvt>
-typename WaterPvtMultiplexer<Scalar,enableThermal,enableBrine, ParamsContainer, ContainerT, PtrType>::UniqueVoidPtrWithDeleter
-WaterPvtMultiplexer<Scalar,enableThermal,enableBrine, ParamsContainer, ContainerT, PtrType>::makeWaterPvt()
+typename WaterPvtMultiplexer<Scalar,enableThermal,enableBrine, ParamsContainer, ContainerT, UseSmartPointer>::UniqueVoidPtrWithDeleter
+WaterPvtMultiplexer<Scalar,enableThermal,enableBrine, ParamsContainer, ContainerT, UseSmartPointer>::makeWaterPvt()
 {
     return UniqueVoidPtrWithDeleter(
         new ConcreteGasPvt,
@@ -95,8 +95,8 @@ WaterPvtMultiplexer<Scalar,enableThermal,enableBrine, ParamsContainer, Container
     );
 }
 
-template<class Scalar, bool enableThermal, bool enableBrine, class ParamsContainer, class ContainerT, template <class...> class PtrType>
-void WaterPvtMultiplexer<Scalar,enableThermal,enableBrine, ParamsContainer, ContainerT, PtrType>::
+template<class Scalar, bool enableThermal, bool enableBrine, class ParamsContainer, class ContainerT, bool UseSmartPointer>
+void WaterPvtMultiplexer<Scalar,enableThermal,enableBrine, ParamsContainer, ContainerT, UseSmartPointer>::
 setApproach(WaterPvtApproach appr)
 {
     switch (appr) {

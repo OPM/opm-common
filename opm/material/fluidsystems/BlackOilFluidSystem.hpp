@@ -49,6 +49,9 @@
 // Make sure member variables are declared as static
 #define STATIC_OR_NOTHING static
 
+// Make sure member functions are const in non-static version of the fluid system
+#define NOTHING_OR_CONST
+
 // Functions defined outside of the class need OPM_HOST_DEVICE, but never static
 #define NOTHING_OR_DEVICE
 
@@ -79,6 +82,7 @@ class FLUIDSYSTEM_CLASSNAME_NONSTATIC;
 #undef STATIC_OR_DEVICE
 #undef COMPILING_STATIC_FLUID_SYSTEM
 #undef STATIC_OR_NOTHING
+#undef NOTHING_OR_CONST
 #undef FLUIDSYSTEM_CLASSNAME_STATIC
 #undef FLUIDSYSTEM_CLASSNAME_NONSTATIC
 #undef FLUIDSYSTEM_CLASSNAME

@@ -26,32 +26,33 @@
 
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 
-namespace Opm {
+namespace Opm
+{
 
-template <class Scalar, bool enableThermal, class ParamsContainer, class ContainerT, template <class...> class PtrType>
-void GasPvtMultiplexer<Scalar,enableThermal, ParamsContainer, ContainerT, PtrType>::
+template <class Scalar, bool enableThermal, class ParamsContainer, class ContainerT, bool UseSmartPointer>
+void GasPvtMultiplexer<Scalar,enableThermal, ParamsContainer, ContainerT, UseSmartPointer>::
 initEnd()
 {
     OPM_GAS_PVT_MULTIPLEXER_CALL(pvtImpl.initEnd(), break);
 }
 
-template <class Scalar, bool enableThermal, class ParamsContainer, class ContainerT, template <class...> class PtrType>
-void GasPvtMultiplexer<Scalar,enableThermal, ParamsContainer, ContainerT, PtrType>::
+template <class Scalar, bool enableThermal, class ParamsContainer, class ContainerT, bool UseSmartPointer>
+void GasPvtMultiplexer<Scalar,enableThermal, ParamsContainer, ContainerT, UseSmartPointer>::
 setVapPars(const Scalar par1, const Scalar par2)
 {
     OPM_GAS_PVT_MULTIPLEXER_CALL(pvtImpl.setVapPars(par1, par2), break);
 }
 
-template <class Scalar, bool enableThermal, class ParamsContainer, class ContainerT, template <class...> class PtrType>
-OPM_HOST_DEVICE Scalar GasPvtMultiplexer<Scalar,enableThermal, ParamsContainer, ContainerT, PtrType>::
+template <class Scalar, bool enableThermal, class ParamsContainer, class ContainerT, bool UseSmartPointer>
+OPM_HOST_DEVICE Scalar GasPvtMultiplexer<Scalar,enableThermal, ParamsContainer, ContainerT, UseSmartPointer>::
 hVap(unsigned regionIdx) const
 {
     OPM_GAS_PVT_MULTIPLEXER_CALL(return pvtImpl.hVap(regionIdx));
 }
 
 #if HAVE_ECL_INPUT
-template <class Scalar, bool enableThermal, class ParamsContainer, class ContainerT, template <class...> class PtrType>
-void GasPvtMultiplexer<Scalar,enableThermal, ParamsContainer, ContainerT, PtrType>::
+template <class Scalar, bool enableThermal, class ParamsContainer, class ContainerT, bool UseSmartPointer>
+void GasPvtMultiplexer<Scalar,enableThermal, ParamsContainer, ContainerT, UseSmartPointer>::
 initFromState(const EclipseState& eclState, const Schedule& schedule)
 {
     if (!eclState.runspec().phases().active(Phase::GAS))
@@ -79,10 +80,10 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
 #endif
 
 // Helper function to keep the switch case tidy when constructing different pvts
-template <class Scalar, bool enableThermal, class ParamsContainer, class ContainerT, template <class...> class PtrType>
+template <class Scalar, bool enableThermal, class ParamsContainer, class ContainerT, bool UseSmartPointer>
 template <class ConcreteGasPvt>
-typename GasPvtMultiplexer<Scalar,enableThermal, ParamsContainer, ContainerT, PtrType>::UniqueVoidPtrWithDeleter
-GasPvtMultiplexer<Scalar,enableThermal, ParamsContainer, ContainerT, PtrType>::makeGasPvt()
+typename GasPvtMultiplexer<Scalar,enableThermal, ParamsContainer, ContainerT, UseSmartPointer>::UniqueVoidPtrWithDeleter
+GasPvtMultiplexer<Scalar,enableThermal, ParamsContainer, ContainerT, UseSmartPointer>::makeGasPvt()
 {
     return UniqueVoidPtrWithDeleter(
         new ConcreteGasPvt,
@@ -90,8 +91,8 @@ GasPvtMultiplexer<Scalar,enableThermal, ParamsContainer, ContainerT, PtrType>::m
     );
 }
 
-template <class Scalar, bool enableThermal, class ParamsContainer, class ContainerT, template <class...> class PtrType>
-void GasPvtMultiplexer<Scalar,enableThermal, ParamsContainer, ContainerT, PtrType>::
+template <class Scalar, bool enableThermal, class ParamsContainer, class ContainerT, bool UseSmartPointer>
+void GasPvtMultiplexer<Scalar,enableThermal, ParamsContainer, ContainerT, UseSmartPointer>::
 setApproach(GasPvtApproach gasPvtAppr)
 {
     switch (gasPvtAppr) {
