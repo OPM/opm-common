@@ -177,7 +177,8 @@ namespace Opm {
                    double               depth,
                    const CTFProperties& ctf_properties,
                    const std::size_t    sort_value,
-                   const bool           defaultSatTabId);
+                   const bool           defaultSatTabId,
+                   int                  lgr_grid_ = 0);
 
         Connection(const RestartIO::RstConnection& rst_connection,
                    const ScheduleGrid&             grid,
@@ -268,6 +269,7 @@ namespace Opm {
             serializer(this->m_complnum);
             serializer(this->ctf_properties_);
             serializer(this->ijk);
+            serializer(this->lgr_grid);
             serializer(this->m_ctfkind);
             serializer(this->m_global_index);
             serializer(this->m_injmult);
@@ -292,6 +294,7 @@ namespace Opm {
         CTFProperties ctf_properties_{};
 
         std::array<int,3> ijk{};
+        int lgr_grid{0};
         CTFKind m_ctfkind { CTFKind::DeckValue };
         std::optional<InjMult> m_injmult{};
         std::size_t m_global_index{};
