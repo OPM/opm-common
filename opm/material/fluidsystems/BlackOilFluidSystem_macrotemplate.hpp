@@ -2075,20 +2075,9 @@ make_view(FLUIDSYSTEM_CLASSNAME<Scalar, IndexTraits, OldContainerType>& oldFluid
     using GasMultiplexerView = GasPvtMultiplexer<Scalar, true, ViewType<double>, ViewType<Scalar>, PtrType>;
     using WaterMultiplexerView = WaterPvtMultiplexer<Scalar, true, true, ViewType<double>, ViewType<Scalar>, PtrType>;
 
-    // TODO: avoid newing this here
-    auto* allocatedGasPvt = new GasMultiplexerView(
-        make_view<PtrType, ViewType<double>, ViewType<Scalar>>(*oldFluidSystem.gasPvt_)
-    );
-
-    auto* allocatedOilPvt = new OilPvtMultiplexer<Scalar>();
-
-    auto* allocatedWaterPvt = new WaterMultiplexerView(
-        make_view<PtrType, ViewType<double>, ViewType<Scalar>>(*oldFluidSystem.waterPvt_)
-    );
-
-    auto newGasPvt = PtrType<GasMultiplexerView>(*allocatedGasPvt);
-    auto newOilPvt = PtrType<OilPvtMultiplexer<Scalar>>(*allocatedOilPvt);
-    auto newWaterPvt = PtrType<WaterMultiplexerView>(*allocatedWaterPvt);
+    auto newGasPvt = PtrType<GasMultiplexerView>(make_view<PtrType, ViewType<double>, ViewType<Scalar>>(*oldFluidSystem.gasPvt_));
+    auto newOilPvt = PtrType<OilPvtMultiplexer<Scalar>>(OilPvtMultiplexer<Scalar>());
+    auto newWaterPvt = PtrType<WaterMultiplexerView>(make_view<PtrType, ViewType<double>, ViewType<Scalar>>(*oldFluidSystem.waterPvt_));
 
     auto newReferenceDensity = make_view<Array3>(oldFluidSystem.referenceDensity_);
     auto newMolarMass = make_view<Array3>(oldFluidSystem.molarMass_);
