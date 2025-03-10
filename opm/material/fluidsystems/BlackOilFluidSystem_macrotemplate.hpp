@@ -74,9 +74,29 @@ class FLUIDSYSTEM_CLASSNAME : public BaseFluidSystem<Scalar, FLUIDSYSTEM_CLASSNA
     using ThisType = FLUIDSYSTEM_CLASSNAME;
 
 public:
-    using GasPvt = GasPvtMultiplexer<Scalar>;
+    // The logic here is the following: regular CPU version of this class uses vector
+    // If we are in a GPU version of the class, then we keep using smart pointers
+    // if it is a buffer version, as it will allocate memory dynamically, and not be
+    // used in a kernel, otherwise we must use a templated pointertype that is GPU compatible
+    using GasPvt = std::conditional_t<
+        std::is_same_v<Storage<double>, std::vector<double>>,
+        GasPvtMultiplexer<Scalar, true>,
+        std::conditional_t<
+            std::is_same_v<SmartPointer<double>, std::shared_ptr<double>>,
+            GasPvtMultiplexer<Scalar, true, Storage<double>, Storage<Scalar>, true>,
+            GasPvtMultiplexer<Scalar, true, Storage<double>, Storage<Scalar>, false>
+        >
+    >;
     using OilPvt = OilPvtMultiplexer<Scalar>;
-    using WaterPvt = WaterPvtMultiplexer<Scalar>;
+    using WaterPvt = std::conditional_t<
+        std::is_same_v<Storage<double>, std::vector<double>>,
+        WaterPvtMultiplexer<Scalar, true, true>,
+        std::conditional_t<
+            std::is_same_v<SmartPointer<double>, std::shared_ptr<double>>,
+            WaterPvtMultiplexer<Scalar, true, true, Storage<double>, Storage<Scalar>, true>,
+            WaterPvtMultiplexer<Scalar, true, true, Storage<double>, Storage<Scalar>, false>
+        >
+    >;
 
     #ifdef COMPILING_STATIC_FLUID_SYSTEM
     //! \copydoc BaseFluidSystem::ParameterCache
@@ -179,6 +199,60 @@ public:
         , enthalpy_eq_energy_(other.enthalpy_eq_energy_)
     {
     }
+
+    FLUIDSYSTEM_CLASSNAME(Scalar _surfacePressure_,
+                          Scalar _surfaceTemperature_,
+                          unsigned _numActivePhases_,
+                          std::array<bool, 3> _phaseIsActive_,
+                          Scalar _reservoirTemperature_,
+                          SmartPointer<GasPvt> _gasPvt_,
+                          SmartPointer<OilPvt> _oilPvt_,
+                          SmartPointer<WaterPvt> _waterPvt_,
+                          bool _enableDissolvedGas_,
+                          bool _enableDissolvedGasInWater_,
+                          bool _enableVaporizedOil_,
+                          bool _enableVaporizedWater_,
+                          bool _enableDiffusion_,
+                          Storage<std::array<Scalar, 3>> _referenceDensity_,
+                          Storage<std::array<Scalar, 3>> _molarMass_,
+                          Storage<std::array<Scalar, 3 * 3>> _diffusionCoefficients_,
+                          std::array<short, 3> _activeToCanonicalPhaseIdx_,
+                          std::array<short, 3> _canonicalToActivePhaseIdx_,
+                          bool _isInitialized_,
+                          bool _useSaturatedTables_,
+                          bool _enthalpy_eq_energy_)
+        : surfacePressure(_surfacePressure_)
+        , surfaceTemperature(_surfaceTemperature_)
+        , numActivePhases_(_numActivePhases_)
+        , phaseIsActive_(_phaseIsActive_)
+        , reservoirTemperature_(_reservoirTemperature_)
+        , gasPvt_(_gasPvt_)
+        , oilPvt_(_oilPvt_)
+        , waterPvt_(_waterPvt_)
+        , enableDissolvedGas_(_enableDissolvedGas_)
+        , enableDissolvedGasInWater_(_enableDissolvedGasInWater_)
+        , enableVaporizedOil_(_enableVaporizedOil_)
+        , enableVaporizedWater_(_enableVaporizedWater_)
+        , enableDiffusion_(_enableDiffusion_)
+        , referenceDensity_(_referenceDensity_)
+        , molarMass_(_molarMass_)
+        , diffusionCoefficients_(_diffusionCoefficients_)
+        , activeToCanonicalPhaseIdx_(_activeToCanonicalPhaseIdx_)
+        , canonicalToActivePhaseIdx_(_canonicalToActivePhaseIdx_)
+        , isInitialized_(_isInitialized_)
+        , useSaturatedTables_(_useSaturatedTables_)
+        , enthalpy_eq_energy_(_enthalpy_eq_energy_)
+    {
+    }
+
+    template <template <class> class NewContainerType, class ScalarT, class IndexTraitsT, template <class> class OldContainerType>
+    friend FLUIDSYSTEM_CLASSNAME<ScalarT, IndexTraitsT, NewContainerType, SmartPointer>
+    gpuistl::copy_to_gpu(const FLUIDSYSTEM_CLASSNAME<ScalarT, IndexTraitsT, OldContainerType, SmartPointer>& oldFluidSystem);
+
+    template <template <class> class ViewType, template <class> class PtrType, class ScalarT, class IndexTraitsT, template <class> class OldContainerType>
+    friend FLUIDSYSTEM_CLASSNAME<ScalarT, IndexTraitsT, ViewType, PtrType>
+    gpuistl::make_view(FLUIDSYSTEM_CLASSNAME<ScalarT, IndexTraitsT, OldContainerType>& oldFluidSystem);
+
     #endif
 
     #ifdef COMPILING_STATIC_FLUID_SYSTEM
@@ -205,7 +279,7 @@ public:
     /*!
      * \brief Initialize the fluid system using an ECL deck object
      */
-    STATIC_OR_DEVICE void initFromState(const EclipseState& eclState, const Schedule& schedule);
+    STATIC_OR_NOTHING void initFromState(const EclipseState& eclState, const Schedule& schedule);
 #endif // HAVE_ECL_INPUT
 
     /*!
@@ -216,7 +290,7 @@ public:
      * compressibility must be set. Before the fluid system can be used, initEnd() must
      * be called to finalize the initialization.
      */
-    STATIC_OR_DEVICE void initBegin(std::size_t numPvtRegions);
+    STATIC_OR_NOTHING void initBegin(std::size_t numPvtRegions);
 
     /*!
      * \brief Specify whether the fluid system should consider that the gas component can
@@ -341,7 +415,9 @@ public:
     STATIC_OR_NOTHING Scalar surfaceTemperature;
 
     //! \copydoc BaseFluidSystem::phaseName
-    STATIC_OR_DEVICE std::string_view phaseName(unsigned phaseIdx);
+    STATIC_OR_NOTHING std::string_view phaseName(unsigned phaseIdx);
+
+
 
     //! \copydoc BaseFluidSystem::isLiquid
     STATIC_OR_DEVICE bool isLiquid(unsigned phaseIdx)
@@ -387,7 +463,7 @@ public:
     STATIC_OR_DEVICE unsigned soluteComponentIndex(unsigned phaseIdx);
 
     //! \copydoc BaseFluidSystem::componentName
-    STATIC_OR_DEVICE std::string_view componentName(unsigned compIdx);
+    STATIC_OR_NOTHING std::string_view componentName(unsigned compIdx);
 
     //! \copydoc BaseFluidSystem::molarMass
     STATIC_OR_DEVICE Scalar molarMass(unsigned compIdx, unsigned regionIdx = 0)
@@ -1759,7 +1835,7 @@ initBegin(std::size_t numPvtRegions)
 }
 
 template <class Scalar, class IndexTraits, template<typename> typename Storage, template<typename> typename SmartPointer>
-void FLUIDSYSTEM_CLASSNAME<Scalar,IndexTraits,Storage, SmartPointer>::
+NOTHING_OR_DEVICE void FLUIDSYSTEM_CLASSNAME<Scalar,IndexTraits,Storage, SmartPointer>::
 setReferenceDensities(Scalar rhoOil,
                       Scalar rhoWater,
                       Scalar rhoGas,
@@ -1771,7 +1847,7 @@ setReferenceDensities(Scalar rhoOil,
 }
 
 template <class Scalar, class IndexTraits, template<typename> typename Storage, template<typename> typename SmartPointer>
-void FLUIDSYSTEM_CLASSNAME<Scalar,IndexTraits, Storage, SmartPointer>::initEnd()
+NOTHING_OR_DEVICE void FLUIDSYSTEM_CLASSNAME<Scalar,IndexTraits, Storage, SmartPointer>::initEnd()
 {
     // calculate the final 2D functions which are used for interpolation.
     const std::size_t num_regions = molarMass_.size();
@@ -1826,7 +1902,7 @@ phaseName(unsigned phaseIdx)
 }
 
 template <class Scalar, class IndexTraits, template<typename> typename Storage, template<typename> typename SmartPointer>
-unsigned FLUIDSYSTEM_CLASSNAME<Scalar,IndexTraits,Storage, SmartPointer>::
+NOTHING_OR_DEVICE unsigned FLUIDSYSTEM_CLASSNAME<Scalar,IndexTraits,Storage, SmartPointer>::
 solventComponentIndex(unsigned phaseIdx)
 {
     switch (phaseIdx) {
@@ -1843,7 +1919,7 @@ solventComponentIndex(unsigned phaseIdx)
 }
 
 template <class Scalar, class IndexTraits, template<typename> typename Storage, template<typename> typename SmartPointer>
-unsigned FLUIDSYSTEM_CLASSNAME<Scalar,IndexTraits,Storage, SmartPointer>::
+NOTHING_OR_DEVICE unsigned FLUIDSYSTEM_CLASSNAME<Scalar,IndexTraits,Storage, SmartPointer>::
 soluteComponentIndex(unsigned phaseIdx)
 {
     switch (phaseIdx) {
@@ -1882,7 +1958,7 @@ componentName(unsigned compIdx)
 }
 
 template <class Scalar, class IndexTraits, template<typename> typename Storage, template<typename> typename SmartPointer>
-short FLUIDSYSTEM_CLASSNAME<Scalar,IndexTraits, Storage, SmartPointer>::
+NOTHING_OR_DEVICE short FLUIDSYSTEM_CLASSNAME<Scalar,IndexTraits, Storage, SmartPointer>::
 activeToCanonicalPhaseIdx(unsigned activePhaseIdx)
 {
     assert(activePhaseIdx<numActivePhases());
@@ -1890,7 +1966,7 @@ activeToCanonicalPhaseIdx(unsigned activePhaseIdx)
 }
 
 template <class Scalar, class IndexTraits, template<typename> typename Storage, template<typename> typename SmartPointer>
-short FLUIDSYSTEM_CLASSNAME<Scalar,IndexTraits, Storage, SmartPointer>::
+NOTHING_OR_DEVICE short FLUIDSYSTEM_CLASSNAME<Scalar,IndexTraits, Storage, SmartPointer>::
 canonicalToActivePhaseIdx(unsigned phaseIdx)
 {
     assert(phaseIdx<numPhases);
@@ -1936,6 +2012,102 @@ DECLARE_INSTANCE(float)
 DECLARE_INSTANCE(double)
 
 #undef DECLARE_INSTANCE
+#endif
+
+#ifndef COMPILING_STATIC_FLUID_SYSTEM
+namespace gpuistl
+{
+
+template <template <class> class NewContainerType, class Scalar, class IndexTraits, template <class> class OldContainerType>
+FLUIDSYSTEM_CLASSNAME<Scalar, IndexTraits, NewContainerType>
+copy_to_gpu(const FLUIDSYSTEM_CLASSNAME<Scalar, IndexTraits, OldContainerType>& oldFluidSystem) {
+
+    using GpuBuffer3Array = NewContainerType<std::array<Scalar, 3>>;
+    using GpuBuffer9Array = NewContainerType<std::array<Scalar, 9>>;
+
+    auto newGasPvt = std::make_shared<GasPvtMultiplexer<Scalar, true, NewContainerType<double>, NewContainerType<Scalar>>>(
+        copy_to_gpu<NewContainerType<double>, NewContainerType<Scalar>>(*oldFluidSystem.gasPvt_.get())
+    );
+
+    auto newOilPvt = std::make_shared<OilPvtMultiplexer<Scalar>>();
+
+    auto newWaterPvt = std::make_shared<WaterPvtMultiplexer<Scalar, true, true, NewContainerType<double>, NewContainerType<Scalar>>>(
+        copy_to_gpu<NewContainerType<double>, NewContainerType<Scalar>>(*oldFluidSystem.waterPvt_)
+    );
+
+    static_assert(std::is_same_v<decltype(newGasPvt), std::shared_ptr<GasPvtMultiplexer<Scalar, true, NewContainerType<double>, NewContainerType<Scalar>>>>);
+
+    auto newReferenceDensity = GpuBuffer3Array(oldFluidSystem.referenceDensity_);
+    auto newMolarMass = GpuBuffer3Array(oldFluidSystem.molarMass_);
+    auto newDiffusionCoefficients = GpuBuffer9Array(oldFluidSystem.diffusionCoefficients_);
+
+    return FLUIDSYSTEM_CLASSNAME<Scalar, IndexTraits, NewContainerType>(
+        oldFluidSystem.surfacePressure,
+        oldFluidSystem.surfaceTemperature,
+        oldFluidSystem.numActivePhases_,
+        oldFluidSystem.phaseIsActive_,
+        oldFluidSystem.reservoirTemperature_,
+        newGasPvt,
+        newOilPvt,
+        newWaterPvt,
+        oldFluidSystem.enableDissolvedGas_,
+        oldFluidSystem.enableDissolvedGasInWater_,
+        oldFluidSystem.enableVaporizedOil_,
+        oldFluidSystem.enableVaporizedWater_,
+        oldFluidSystem.enableDiffusion_,
+        newReferenceDensity,
+        newMolarMass,
+        newDiffusionCoefficients,
+        oldFluidSystem.activeToCanonicalPhaseIdx_,
+        oldFluidSystem.canonicalToActivePhaseIdx_,
+        oldFluidSystem.isInitialized_,
+        oldFluidSystem.useSaturatedTables_,
+        oldFluidSystem.enthalpy_eq_energy_
+    );
+}
+
+template <template <class> class ViewType, template <class> class PtrType, class Scalar, class IndexTraits, template <class> class OldContainerType>
+FLUIDSYSTEM_CLASSNAME<Scalar, IndexTraits, ViewType, PtrType>
+make_view(FLUIDSYSTEM_CLASSNAME<Scalar, IndexTraits, OldContainerType>& oldFluidSystem)
+{
+    using Array3 = std::array<Scalar, 3>;
+    using Array9 = std::array<Scalar, 9>;
+    using GasMultiplexerView = GasPvtMultiplexer<Scalar, true, ViewType<double>, ViewType<Scalar>, false>;
+    using WaterMultiplexerView = WaterPvtMultiplexer<Scalar, true, true, ViewType<double>, ViewType<Scalar>, false>;
+
+    auto newGasPvt = PtrType<GasMultiplexerView>(make_view<ViewType<double>, ViewType<Scalar>>(*oldFluidSystem.gasPvt_));
+    auto newOilPvt = PtrType<OilPvtMultiplexer<Scalar>>(OilPvtMultiplexer<Scalar>());
+    auto newWaterPvt = PtrType<WaterMultiplexerView>(make_view<ViewType<double>, ViewType<Scalar>>(*oldFluidSystem.waterPvt_));
+
+    auto newReferenceDensity = make_view<Array3>(oldFluidSystem.referenceDensity_);
+    auto newMolarMass = make_view<Array3>(oldFluidSystem.molarMass_);
+    auto newDiffusionCoefficients = make_view<Array9>(oldFluidSystem.diffusionCoefficients_);
+
+    return FLUIDSYSTEM_CLASSNAME<Scalar, IndexTraits, ViewType, PtrType>(
+        oldFluidSystem.surfacePressure,
+        oldFluidSystem.surfaceTemperature,
+        oldFluidSystem.numActivePhases_,
+        oldFluidSystem.phaseIsActive_,
+        oldFluidSystem.reservoirTemperature_,
+        newGasPvt,
+        newOilPvt,
+        newWaterPvt,
+        oldFluidSystem.enableDissolvedGas_,
+        oldFluidSystem.enableDissolvedGasInWater_,
+        oldFluidSystem.enableVaporizedOil_,
+        oldFluidSystem.enableVaporizedWater_,
+        oldFluidSystem.enableDiffusion_,
+        newReferenceDensity,
+        newMolarMass,
+        newDiffusionCoefficients,
+        oldFluidSystem.activeToCanonicalPhaseIdx_,
+        oldFluidSystem.canonicalToActivePhaseIdx_,
+        oldFluidSystem.isInitialized_,
+        oldFluidSystem.useSaturatedTables_,
+        oldFluidSystem.enthalpy_eq_energy_
+    );
+}
+}
 #endif
 
 } // namespace Opm
