@@ -103,7 +103,7 @@ public:
         m_read_coupling_file_flag = flag;
     }
 
-    void setReadCouplingFileName(const std::string file_name) {
+    void setReadCouplingFileName(const std::string& file_name) {
         m_read_coupling_file_name = file_name;
     }
 
