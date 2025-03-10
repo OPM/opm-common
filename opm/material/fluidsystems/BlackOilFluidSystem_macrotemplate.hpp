@@ -83,8 +83,8 @@ public:
         GasPvtMultiplexer<Scalar, true>,
         std::conditional_t<
             std::is_same_v<SmartPointer<double>, std::shared_ptr<double>>,
-            GasPvtMultiplexer<Scalar, true, Storage<double>, Storage<Scalar>, std::unique_ptr>,
-            GasPvtMultiplexer<Scalar, true, Storage<double>, Storage<Scalar>, SmartPointer>
+            GasPvtMultiplexer<Scalar, true, Storage<double>, Storage<Scalar>, true>,
+            GasPvtMultiplexer<Scalar, true, Storage<double>, Storage<Scalar>, false>
         >
     >;
     using OilPvt = OilPvtMultiplexer<Scalar>;
@@ -2072,10 +2072,10 @@ make_view(FLUIDSYSTEM_CLASSNAME<Scalar, IndexTraits, OldContainerType>& oldFluid
 {
     using Array3 = std::array<Scalar, 3>;
     using Array9 = std::array<Scalar, 9>;
-    using GasMultiplexerView = GasPvtMultiplexer<Scalar, true, ViewType<double>, ViewType<Scalar>, PtrType>;
+    using GasMultiplexerView = GasPvtMultiplexer<Scalar, true, ViewType<double>, ViewType<Scalar>, false>;
     using WaterMultiplexerView = WaterPvtMultiplexer<Scalar, true, true, ViewType<double>, ViewType<Scalar>, PtrType>;
 
-    auto newGasPvt = PtrType<GasMultiplexerView>(make_view<PtrType, ViewType<double>, ViewType<Scalar>>(*oldFluidSystem.gasPvt_));
+    auto newGasPvt = PtrType<GasMultiplexerView>(make_view<ViewType<double>, ViewType<Scalar>>(*oldFluidSystem.gasPvt_));
     auto newOilPvt = PtrType<OilPvtMultiplexer<Scalar>>(OilPvtMultiplexer<Scalar>());
     auto newWaterPvt = PtrType<WaterMultiplexerView>(make_view<PtrType, ViewType<double>, ViewType<Scalar>>(*oldFluidSystem.waterPvt_));
 
