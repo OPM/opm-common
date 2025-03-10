@@ -21,13 +21,16 @@
 
 #include <opm/io/eclipse/rst/state.hpp>
 
+#include <opm/output/eclipse/VectorItems/group.hpp>
+
 #include <opm/common/OpmLog/LogUtil.hpp>
 #include <opm/common/OpmLog/OpmLog.hpp>
 #include <opm/common/utility/OpmInputError.hpp>
-#include <opm/input/eclipse/Parser/InputErrorAction.hpp>
 #include <opm/common/utility/String.hpp>
 #include <opm/common/utility/numeric/cmp.hpp>
 #include <opm/common/utility/shmatch.hpp>
+
+#include <opm/input/eclipse/Parser/InputErrorAction.hpp>
 
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/EclipseState/TracerConfig.hpp>
@@ -37,15 +40,15 @@
 #include <opm/input/eclipse/Schedule/Action/ActionResult.hpp>
 #include <opm/input/eclipse/Schedule/Action/Actions.hpp>
 #include <opm/input/eclipse/Schedule/Action/ActionX.hpp>
-#include <opm/input/eclipse/Schedule/Action/State.hpp>
 #include <opm/input/eclipse/Schedule/Action/SimulatorUpdate.hpp>
+#include <opm/input/eclipse/Schedule/Action/State.hpp>
+#include <opm/input/eclipse/Schedule/GasLiftOpt.hpp>
 #include <opm/input/eclipse/Schedule/Group/GConSale.hpp>
 #include <opm/input/eclipse/Schedule/Group/GConSump.hpp>
-#include <opm/input/eclipse/Schedule/Group/GSatProd.hpp>
 #include <opm/input/eclipse/Schedule/Group/GroupEconProductionLimits.hpp>
+#include <opm/input/eclipse/Schedule/Group/GSatProd.hpp>
 #include <opm/input/eclipse/Schedule/Group/GTNode.hpp>
 #include <opm/input/eclipse/Schedule/Group/GuideRateConfig.hpp>
-#include <opm/input/eclipse/Schedule/GasLiftOpt.hpp>
 #include <opm/input/eclipse/Schedule/MSW/SegmentMatcher.hpp>
 #include <opm/input/eclipse/Schedule/MSW/SICD.hpp>
 #include <opm/input/eclipse/Schedule/MSW/Valve.hpp>
@@ -57,11 +60,13 @@
 #include <opm/input/eclipse/Schedule/ResCoup/ReservoirCouplingInfo.hpp>
 #include <opm/input/eclipse/Schedule/RFTConfig.hpp>
 #include <opm/input/eclipse/Schedule/RPTConfig.hpp>
+#include <opm/input/eclipse/Schedule/ScheduleBlock.hpp>
 #include <opm/input/eclipse/Schedule/ScheduleGrid.hpp>
 #include <opm/input/eclipse/Schedule/SummaryState.hpp>
 #include <opm/input/eclipse/Schedule/Tuning.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQActive.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQConfig.hpp>
+#include <opm/input/eclipse/Schedule/VFPProdTable.hpp>
 #include <opm/input/eclipse/Schedule/Well/WList.hpp>
 #include <opm/input/eclipse/Schedule/Well/WListManager.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellBrineProperties.hpp>
@@ -79,17 +84,19 @@
 
 #include <opm/input/eclipse/Parser/ErrorGuard.hpp>
 #include <opm/input/eclipse/Parser/ParseContext.hpp>
-#include <opm/input/eclipse/Parser/ParserKeywords/A.hpp>
-#include <opm/input/eclipse/Parser/ParserKeywords/B.hpp>
-#include <opm/input/eclipse/Parser/ParserKeywords/C.hpp>
-#include <opm/input/eclipse/Parser/ParserKeywords/E.hpp>
-#include <opm/input/eclipse/Parser/ParserKeywords/W.hpp>
 
 #include <opm/input/eclipse/Deck/Deck.hpp>
 #include <opm/input/eclipse/Deck/DeckItem.hpp>
 #include <opm/input/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/input/eclipse/Deck/DeckRecord.hpp>
 #include <opm/input/eclipse/Deck/DeckSection.hpp>
+
+#include <opm/input/eclipse/Parser/ParserKeywords/A.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/B.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/C.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/E.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/V.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/W.hpp>
 
 #include "HandlerContext.hpp"
 #include "KeywordHandlers.hpp"
@@ -105,6 +112,7 @@
 #include <optional>
 #include <stdexcept>
 #include <string>
+#include <unordered_map>
 #include <unordered_set>
 #include <utility>
 #include <vector>
@@ -2147,6 +2155,58 @@ namespace {
             throw std::invalid_argument("Invalid integer value: " + std::to_string(int_value) + " encountered when determining connection ordering");
         }
     }
+
+    class ALQTypesAtRestartTime
+    {
+    public:
+        ALQTypesAtRestartTime(const ScheduleState& snapshot,
+                              const ScheduleBlock& currBlock,
+                              const bool           enableGasLift);
+
+        std::optional<VFPProdTable::ALQ_TYPE>
+        getALQType(const bool isProducer,
+                   const int  tableId) const;
+
+    private:
+        std::unordered_map<int, VFPProdTable::ALQ_TYPE> types_{};
+    };
+
+    ALQTypesAtRestartTime::ALQTypesAtRestartTime(const ScheduleState& snapshot,
+                                                 const ScheduleBlock& currBlock,
+                                                 const bool           enableGasLift)
+    {
+        for (const auto& [tableId, tablePtr] : snapshot.vfpprod) {
+            this->types_.insert_or_assign(tableId, tablePtr->getALQType());
+        }
+
+        for (const auto& kw : currBlock) {
+            if (kw.name() != ParserKeywords::VFPPROD::keywordName) {
+                // Ignore all keywords other than VFPPROD.  Those will be
+                // processed later.
+                continue;
+            }
+
+            const auto& [tableId, alqType] =
+                VFPProdTable::getALQType(kw, enableGasLift);
+
+            this->types_.insert_or_assign(tableId, alqType);
+        }
+    }
+
+    std::optional<VFPProdTable::ALQ_TYPE>
+    ALQTypesAtRestartTime::getALQType(const bool isProducer,
+                                      const int  tableId) const
+    {
+        if (! isProducer) {
+            return {};
+        }
+
+        auto tablePos = this->types_.find(tableId);
+        return (tablePos != this->types_.end())
+            ? std::optional { tablePos->second }
+            : std::nullopt;
+    }
+
 }
 
     void Schedule::load_rst(const RestartIO::RstState& rst_state,
@@ -2213,11 +2273,13 @@ namespace {
                 Glo.add_group(GasLiftGroup(rst_group));
         }
 
-        const auto& vfpprod = this->snapshots.back().vfpprod;
+        const auto alqTypes = ALQTypesAtRestartTime {
+            this->snapshots.back(),
+            this->m_sched_deck[rst_state.header.report_step], // report_step + 1
+            this->m_static.gaslift_opt_active
+        };
+
         for (const auto& rst_well : rst_state.wells) {
-            std::optional<VFPProdTable::ALQ_TYPE> alq_type = vfpprod.has(rst_well.vfp_table)
-                                                             ? std::optional(vfpprod.get(rst_well.vfp_table).getALQType())
-                                                             : std::nullopt;
             auto well = Well {
                 rst_well,
                 report_step,
@@ -2225,7 +2287,7 @@ namespace {
                 tracer_config,
                 this->m_static.m_unit_system,
                 rst_state.header.udq_undefined,
-                alq_type
+                alqTypes.getALQType(rst_well.wtype.producer(), rst_well.vfp_table)
             };
 
             auto rst_connections = std::vector<Connection> {};
@@ -2318,15 +2380,35 @@ namespace {
                 this->snapshots.back().guide_rate.update(std::move(new_config));
             }
             if (group.isInjectionGroup()) {
-                // Set name of VREP group if different than default
+                // Set name of VREP group if different from default.
+                //
+                // Special case handling of FIELD since the insert_index()
+                // differs from the voidage_group_index for this group.
                 if (static_cast<int>(group.insert_index()) != rst_group.voidage_group_index) {
+                    auto groupNamePos = rst_group_names.find(rst_group.voidage_group_index);
+                    if (groupNamePos == rst_group_names.end()) {
+                        if ((rst_group.voidage_group_index == rst_state.header.max_groups_in_field)
+                            && (group.name() == "FIELD"))
+                        {
+                            // Special case handling for the FIELD group.
+                            // Voidage_group_index == max_groups_in_field is
+                            // the restart file representation of FIELD.
+                            continue;
+                        }
+                        else {
+                            throw std::runtime_error {
+                                fmt::format("{} group's reinjection group is unknown", group.name())
+                            };
+                        }
+                    }
+
                     for (const auto& [phase, orig_inj_prop] : group.injectionProperties()) {
                         Group::GroupInjectionProperties inj_prop(orig_inj_prop);
-                        inj_prop.voidage_group = rst_group_names[rst_group.voidage_group_index];
+                        inj_prop.voidage_group = groupNamePos->second;
                         group.updateInjection(inj_prop);
                     }
                 }
-             }
+            }
         }
 
         this->snapshots.back().udq.update( UDQConfig(this->m_static.m_runspec.udqParams(), rst_state) );
@@ -2423,7 +2505,19 @@ namespace {
                     node.as_choke(rst_node.as_choke.value());
                 }
 
-                node.add_gas_lift_gas(rst_node.add_lift_gas);
+                network.update_node(std::move(node));
+            }
+
+            for (const auto& rst_group : rst_state.groups) {
+                if (! network.has_node(rst_group.name)) {
+                    continue;
+                }
+
+                auto node = network.node(rst_group.name);
+                node.add_gas_lift_gas
+                    (rst_group.add_gas_lift_gas ==
+                     RestartIO::Helpers::VectorItems::
+                     IGroup::Value::GLiftGas::Yes);
 
                 network.update_node(std::move(node));
             }
