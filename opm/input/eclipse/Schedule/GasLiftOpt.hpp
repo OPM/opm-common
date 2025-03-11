@@ -16,18 +16,23 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
+
 #ifndef GAS_LIFT_OPT_HPP
 #define GAS_LIFT_OPT_HPP
 
+#include <opm/io/eclipse/rst/group.hpp>
+#include <opm/io/eclipse/rst/well.hpp>
+
+#include <cstddef>
+#include <map>
 #include <optional>
 #include <string>
-#include <map>
-#include <opm/io/eclipse/rst/well.hpp>
-#include <opm/io/eclipse/rst/group.hpp>
 
 namespace Opm {
 
-class GasLiftGroup {
+/// Gas lift optimisation parameters at the group level.
+class GasLiftGroup
+{
 public:
     GasLiftGroup() = default;
 
@@ -35,20 +40,12 @@ public:
         m_name(name)
     {}
 
-    static bool active(const RestartIO::RstGroup& rst_group) {
-        if ((rst_group.glift_max_rate + rst_group.glift_max_supply) == 0)
-            return false;
+    explicit GasLiftGroup(const RestartIO::RstGroup& rst_group);
 
-        return true;
-    }
+    static bool active(const RestartIO::RstGroup& rst_group);
 
-    explicit GasLiftGroup(const RestartIO::RstGroup& rst_group)
-        : m_name(rst_group.name)
-        , m_max_lift_gas(rst_group.glift_max_supply)
-        , m_max_total_gas(rst_group.glift_max_rate)
-    {}
-
-    const std::optional<double>& max_lift_gas() const {
+    const std::optional<double>& max_lift_gas() const
+    {
         return this->m_max_lift_gas;
     }
 
@@ -93,34 +90,17 @@ class GasLiftWell {
 public:
     GasLiftWell() = default;
 
-    explicit GasLiftWell(const RestartIO::RstWell& rst_well)
-        : m_name(rst_well.name)
-        , m_max_rate(rst_well.glift_max_rate)
-        , m_min_rate(rst_well.glift_min_rate)
-        , m_use_glo(rst_well.glift_active)
-        , m_weight(rst_well.glift_weight_factor)
-        , m_inc_weight(rst_well.glift_inc_weight_factor)
-        , m_alloc_extra_gas(rst_well.glift_alloc_extra_gas)
+    GasLiftWell(const std::string& name, const bool use_glo)
+        : m_name    { name }
+        , m_use_glo { use_glo }
     {}
 
+    explicit GasLiftWell(const RestartIO::RstWell& rst_well);
 
-    GasLiftWell(const std::string& name, bool use_glo) :
-        m_name(name),
-        m_use_glo(use_glo)
-    {}
+    static bool active(const RestartIO::RstWell& rst_well);
 
-    // Unfortunately it seems just using the rst_well.glift_active flag is
-    // not sufficient to determine whether the well should be included in
-    // gas lift optimization or not. The current implementation based on
-    // numerical values found in the restart file is pure guesswork.
-    static bool active(const RestartIO::RstWell& rst_well) {
-        if ((rst_well.glift_max_rate + rst_well.glift_min_rate + rst_well.glift_weight_factor == 0))
-            return false;
-
-        return true;
-    }
-
-    const std::string& name() const {
+    const std::string& name() const
+    {
         return this->m_name;
     }
 
@@ -259,6 +239,6 @@ private:
     std::map<std::string, GasLiftWell> m_wells{};
 };
 
-}
+} // namespace Opm
 
-#endif
+#endif // GAS_LIFT_OPT_HPP

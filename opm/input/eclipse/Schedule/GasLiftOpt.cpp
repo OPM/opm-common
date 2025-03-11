@@ -17,11 +17,34 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <stdexcept>
-
 #include <opm/input/eclipse/Schedule/GasLiftOpt.hpp>
 
+#include <cstddef>
+#include <map>
+#include <optional>
+#include <stdexcept>
+#include <string>
+
+namespace {
+    std::optional<double> liftOptMaxRateIfDefined(const double x)
+    {
+        return (x > 0.0) ? std::optional { x } : std::nullopt;
+    }
+} // Anonymous namespace
+
 namespace Opm {
+
+bool GasLiftGroup::active(const RestartIO::RstGroup& rst_group)
+{
+    return (rst_group.glift_max_rate +
+            rst_group.glift_max_supply) != 0.0;
+}
+
+GasLiftGroup::GasLiftGroup(const RestartIO::RstGroup& rst_group)
+    : m_name          { rst_group.name }
+    , m_max_lift_gas  { liftOptMaxRateIfDefined(rst_group.glift_max_supply) }
+    , m_max_total_gas { liftOptMaxRateIfDefined(rst_group.glift_max_rate) }
+{}
 
 GasLiftGroup GasLiftGroup::serializationTestObject()
 {
@@ -37,6 +60,29 @@ bool GasLiftGroup::operator==(const GasLiftGroup& other) const
     return this->m_name == other.m_name &&
            this->m_max_lift_gas == other.m_max_lift_gas &&
            this->m_max_total_gas == other.m_max_total_gas;
+}
+
+// ---------------------------------------------------------------------------
+
+GasLiftWell::GasLiftWell(const RestartIO::RstWell& rst_well)
+    : m_name            { rst_well.name }
+    , m_max_rate        { liftOptMaxRateIfDefined(rst_well.glift_max_rate) }
+    , m_min_rate        { rst_well.glift_min_rate }
+    , m_use_glo         { rst_well.glift_active }
+    , m_weight          { rst_well.glift_weight_factor }
+    , m_inc_weight      { rst_well.glift_inc_weight_factor }
+    , m_alloc_extra_gas { rst_well.glift_alloc_extra_gas }
+{}
+
+// Unfortunately it seems just using the rst_well.glift_active flag is not
+// sufficient to determine whether or not the well should be included in gas
+// lift optimization.  The current implementation based on numerical values
+// found in the restart file is pure guesswork.
+bool GasLiftWell::active(const RestartIO::RstWell& rst_well)
+{
+    return (rst_well.glift_max_rate +
+            rst_well.glift_min_rate +
+            rst_well.glift_weight_factor) != 0.0;
 }
 
 GasLiftWell GasLiftWell::serializationTestObject()
@@ -158,5 +204,4 @@ bool GasLiftOpt::operator==(const GasLiftOpt& other) const {
            this->m_wells == other.m_wells;
 }
 
-}
-
+} // namespace Opm
