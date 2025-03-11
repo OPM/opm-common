@@ -48,18 +48,21 @@ GasLiftGroup::GasLiftGroup(const RestartIO::RstGroup& rst_group)
 
 GasLiftGroup GasLiftGroup::serializationTestObject()
 {
-    GasLiftGroup group;
+    GasLiftGroup group{};
+
     group.m_name = "GR";
     group.m_max_lift_gas  = 100;
     group.m_max_total_gas = 200;
+
     return group;
 }
 
 bool GasLiftGroup::operator==(const GasLiftGroup& other) const
 {
-    return this->m_name == other.m_name &&
-           this->m_max_lift_gas == other.m_max_lift_gas &&
-           this->m_max_total_gas == other.m_max_total_gas;
+    return (this->m_name == other.m_name)
+        && (this->m_max_lift_gas == other.m_max_lift_gas)
+        && (this->m_max_total_gas == other.m_max_total_gas)
+        ;
 }
 
 // ---------------------------------------------------------------------------
@@ -87,7 +90,8 @@ bool GasLiftWell::active(const RestartIO::RstWell& rst_well)
 
 GasLiftWell GasLiftWell::serializationTestObject()
 {
-    GasLiftWell well;
+    GasLiftWell well{};
+
     well.m_name = "WELL";
     well.m_max_rate = 2000;
     well.m_min_rate = 56;
@@ -95,113 +99,141 @@ GasLiftWell GasLiftWell::serializationTestObject()
     well.m_weight = 1.25;
     well.m_inc_weight = 0.25;
     well.m_alloc_extra_gas = false;
+
     return well;
 }
 
 bool GasLiftWell::operator==(const GasLiftWell& other) const
 {
-    return this->m_name == other.m_name &&
-           this->m_max_rate == other.m_max_rate &&
-           this->m_min_rate == other.m_min_rate &&
-           this->m_use_glo  == other.m_use_glo &&
-           this->m_weight   == other.m_weight &&
-           this->m_inc_weight == other.m_inc_weight &&
-           this->m_alloc_extra_gas == other.m_alloc_extra_gas;
+    return (this->m_name == other.m_name)
+        && (this->m_max_rate == other.m_max_rate)
+        && (this->m_min_rate == other.m_min_rate)
+        && (this->m_use_glo  == other.m_use_glo)
+        && (this->m_weight   == other.m_weight)
+        && (this->m_inc_weight == other.m_inc_weight)
+        && (this->m_alloc_extra_gas == other.m_alloc_extra_gas)
+        ;
 }
 
-bool GasLiftOpt::active() const {
-    return (this->m_increment > 0);
+// ---------------------------------------------------------------------------
+
+bool GasLiftOpt::active() const
+{
+    return this->m_increment > 0.0;
 }
 
-void GasLiftOpt::gaslift_increment(double gaslift_increment) {
+void GasLiftOpt::gaslift_increment(const double gaslift_increment)
+{
     this->m_increment = gaslift_increment;
 }
 
-double GasLiftOpt::gaslift_increment() const {
+double GasLiftOpt::gaslift_increment() const
+{
     return this->m_increment;
 }
 
-void GasLiftOpt::min_eco_gradient(double min_eco_gradient) {
+void GasLiftOpt::min_eco_gradient(const double min_eco_gradient)
+{
     this->m_min_eco_gradient = min_eco_gradient;
 }
 
-double GasLiftOpt::min_eco_gradient() const {
+double GasLiftOpt::min_eco_gradient() const
+{
     return this->m_min_eco_gradient;
 }
 
-void GasLiftOpt::min_wait(double min_wait) {
+void GasLiftOpt::min_wait(const double min_wait)
+{
     this->m_min_wait = min_wait;
 }
 
-double GasLiftOpt::min_wait() const {
+double GasLiftOpt::min_wait() const
+{
     return this->m_min_wait;
 }
 
-void GasLiftOpt::all_newton(double all_newton) {
+void GasLiftOpt::all_newton(const bool all_newton)
+{
     this->m_all_newton = all_newton;
 }
 
-bool GasLiftOpt::all_newton() const {
+bool GasLiftOpt::all_newton() const
+{
     return this->m_all_newton;
 }
 
-const GasLiftGroup& GasLiftOpt::group(const std::string& gname) const {
+const GasLiftGroup& GasLiftOpt::group(const std::string& gname) const
+{
     const auto iter = this->m_groups.find(gname);
-    if (iter == this->m_groups.end())
-        throw std::out_of_range("No such group: " + gname + " configured for gas lift optimization");
+    if (iter == this->m_groups.end()) {
+        throw std::out_of_range {
+            "Group " + gname + " is not configured for gas lift optimization"
+        };
+    }
 
     return iter->second;
 }
 
-bool GasLiftOpt::has_well(const std::string& wname) const {
-    const auto iter = this->m_wells.find(wname);
-    return (iter != this->m_wells.end());
+bool GasLiftOpt::has_well(const std::string& wname) const
+{
+    return this->m_wells.find(wname) != this->m_wells.end();
 }
 
-std::size_t GasLiftOpt::num_wells() const {
-    return this->m_wells.size();
+bool GasLiftOpt::has_group(const std::string& gname) const
+{
+    return this->m_groups.find(gname) != this->m_groups.end();
 }
 
-bool GasLiftOpt::has_group(const std::string& gname) const {
-    const auto iter = this->m_groups.find(gname);
-    return (iter != this->m_groups.end());
-}
-
-
-void GasLiftOpt::add_group(const GasLiftGroup& group) {
+void GasLiftOpt::add_group(const GasLiftGroup& group)
+{
     this->m_groups.insert_or_assign(group.name(), group);
 }
 
-
-void GasLiftOpt::add_well(const GasLiftWell& well) {
+void GasLiftOpt::add_well(const GasLiftWell& well)
+{
     this->m_wells.insert_or_assign(well.name(), well);
 }
 
-
-const GasLiftWell& GasLiftOpt::well(const std::string& wname) const {
+const GasLiftWell& GasLiftOpt::well(const std::string& wname) const
+{
     const auto iter = this->m_wells.find(wname);
-    if (iter == this->m_wells.end())
-        throw std::out_of_range("No such well: " + wname + " configured for gas lift optimization");
+    if (iter == this->m_wells.end()) {
+        throw std::out_of_range {
+            "Well " + wname + " is not configured for gas lift optimization"
+        };
+    }
 
     return iter->second;
 }
 
-GasLiftOpt GasLiftOpt::serializationTestObject() {
-    GasLiftOpt glo;
-    glo.m_increment = 0;
-    glo.m_min_eco_gradient = 100;
-    glo.m_min_wait = 1;
-    glo.m_all_newton = true;
+GasLiftOpt GasLiftOpt::serializationTestObject()
+{
+    GasLiftOpt glo{};
+
+    glo.m_increment = 0.123;
+    glo.m_min_eco_gradient = 0.456;
+    glo.m_min_wait = 89.1;
+    glo.m_all_newton = false;
+
+    glo.add_well(GasLiftWell::serializationTestObject());
+    glo.m_wells.insert_or_assign("W2", GasLiftWell::serializationTestObject());
+
+    glo.add_group(GasLiftGroup::serializationTestObject());
+    glo.m_groups.insert_or_assign("G2", GasLiftGroup::serializationTestObject());
+    glo.m_groups.insert_or_assign("G3", GasLiftGroup::serializationTestObject());
+
     return glo;
 }
 
-bool GasLiftOpt::operator==(const GasLiftOpt& other) const {
-    return this->m_increment == other.m_increment &&
-           this->m_min_eco_gradient == other.m_min_eco_gradient &&
-           this->m_min_wait == other.m_min_wait &&
-           this->m_all_newton == other.m_all_newton &&
-           this->m_groups == other.m_groups &&
-           this->m_wells == other.m_wells;
+bool GasLiftOpt::operator==(const GasLiftOpt& other) const
+{
+    return (this->m_increment == other.m_increment)
+        && (this->m_min_eco_gradient == other.m_min_eco_gradient)
+        && (this->m_min_wait == other.m_min_wait)
+        && (this->m_all_newton == other.m_all_newton)
+        && (this->m_groups == other.m_groups)
+        && (this->m_wells == other.m_wells)
+        ;
 }
 
 } // namespace Opm
