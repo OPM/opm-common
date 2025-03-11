@@ -2286,11 +2286,19 @@ namespace {
                 Glo.add_group(GasLiftGroup { rst_group });
             }
 
-            if (rst_group.parent_group == 0)
-                continue;
+            // Define parent/child relations between groups.  No other code
+            // below this line within this block.
 
-            if (rst_group.parent_group == rst_state.header.max_groups_in_field)
+            if ((rst_group.parent_group == 0) ||
+                (rst_group.parent_group == rst_state.header.max_groups_in_field))
+            {
+                // Special case: No parent (parent_group == 0, => FIELD
+                // group) or parent is FIELD group itself (parent_group ==
+                // max_groups_in_field).  This is already handled when
+                // constructing the group object from restart file
+                // information, so no need to alter parent/child relations.
                 continue;
+            }
 
             const auto& parent_group = rst_state
                 .groups[rst_group.parent_group - 1].name;
@@ -2394,8 +2402,10 @@ namespace {
             }
         }
 
-        if (rst_state.header.histctl_override > 0)
-            this->snapshots.back().update_whistctl(WellProducerCModeFromInt(rst_state.header.histctl_override));
+        if (rst_state.header.histctl_override > 0) {
+            this->snapshots.back().update_whistctl
+                (WellProducerCModeFromInt(rst_state.header.histctl_override));
+        }
 
         for (const auto& rst_group : rst_state.groups) {
             auto& group = this->snapshots.back().groups.get( rst_group.name );
