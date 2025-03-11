@@ -372,6 +372,19 @@ public:
     OPM_HOST_DEVICE const Params& getParams() const
     { return co2Tables; }
 
+    Co2GasPvt& operator=(const Co2GasPvt& other)
+    {
+        brineReferenceDensity_ = other.brineReferenceDensity_;
+        gasReferenceDensity_ = other.gasReferenceDensity_;
+        salinity_ = other.salinity_;
+        enableEzrokhiDensity_ = other.enableEzrokhiDensity_;
+        enableVaporization_ = other.enableVaporization_;
+        activityModel_ = other.activityModel_;
+        gastype_ = other.gastype_;
+        co2Tables = other.co2Tables;
+        return *this;
+    }
+
 private:
     template <class LhsEval>
     LhsEval ezrokhiExponent_(const LhsEval& temperature,
