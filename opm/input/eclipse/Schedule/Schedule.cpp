@@ -57,11 +57,13 @@
 #include <opm/input/eclipse/Schedule/ResCoup/ReservoirCouplingInfo.hpp>
 #include <opm/input/eclipse/Schedule/RFTConfig.hpp>
 #include <opm/input/eclipse/Schedule/RPTConfig.hpp>
+#include <opm/input/eclipse/Schedule/ScheduleBlock.hpp>
 #include <opm/input/eclipse/Schedule/ScheduleGrid.hpp>
 #include <opm/input/eclipse/Schedule/SummaryState.hpp>
 #include <opm/input/eclipse/Schedule/Tuning.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQActive.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQConfig.hpp>
+#include <opm/input/eclipse/Schedule/VFPProdTable.hpp>
 #include <opm/input/eclipse/Schedule/Well/WList.hpp>
 #include <opm/input/eclipse/Schedule/Well/WListManager.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellBrineProperties.hpp>
@@ -90,6 +92,7 @@
 #include <opm/input/eclipse/Parser/ParserKeywords/B.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/C.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/E.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/V.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/W.hpp>
 
 #include "HandlerContext.hpp"
@@ -106,6 +109,7 @@
 #include <optional>
 #include <stdexcept>
 #include <string>
+#include <unordered_map>
 #include <unordered_set>
 #include <utility>
 #include <vector>
@@ -2148,6 +2152,58 @@ namespace {
             throw std::invalid_argument("Invalid integer value: " + std::to_string(int_value) + " encountered when determining connection ordering");
         }
     }
+
+    class ALQTypesAtRestartTime
+    {
+    public:
+        ALQTypesAtRestartTime(const ScheduleState& snapshot,
+                              const ScheduleBlock& currBlock,
+                              const bool           enableGasLift);
+
+        std::optional<VFPProdTable::ALQ_TYPE>
+        getALQType(const bool isProducer,
+                   const int  tableId) const;
+
+    private:
+        std::unordered_map<int, VFPProdTable::ALQ_TYPE> types_{};
+    };
+
+    ALQTypesAtRestartTime::ALQTypesAtRestartTime(const ScheduleState& snapshot,
+                                                 const ScheduleBlock& currBlock,
+                                                 const bool           enableGasLift)
+    {
+        for (const auto& [tableId, tablePtr] : snapshot.vfpprod) {
+            this->types_.insert_or_assign(tableId, tablePtr->getALQType());
+        }
+
+        for (const auto& kw : currBlock) {
+            if (kw.name() != ParserKeywords::VFPPROD::keywordName) {
+                // Ignore all keywords other than VFPPROD.  Those will be
+                // processed later.
+                continue;
+            }
+
+            const auto& [tableId, alqType] =
+                VFPProdTable::getALQType(kw, enableGasLift);
+
+            this->types_.insert_or_assign(tableId, alqType);
+        }
+    }
+
+    std::optional<VFPProdTable::ALQ_TYPE>
+    ALQTypesAtRestartTime::getALQType(const bool isProducer,
+                                      const int  tableId) const
+    {
+        if (! isProducer) {
+            return {};
+        }
+
+        auto tablePos = this->types_.find(tableId);
+        return (tablePos != this->types_.end())
+            ? std::optional { tablePos->second }
+            : std::nullopt;
+    }
+
 }
 
     void Schedule::load_rst(const RestartIO::RstState& rst_state,
@@ -2214,11 +2270,13 @@ namespace {
                 Glo.add_group(GasLiftGroup(rst_group));
         }
 
-        const auto& vfpprod = this->snapshots.back().vfpprod;
+        const auto alqTypes = ALQTypesAtRestartTime {
+            this->snapshots.back(),
+            this->m_sched_deck[rst_state.header.report_step], // report_step + 1
+            this->m_static.gaslift_opt_active
+        };
+
         for (const auto& rst_well : rst_state.wells) {
-            std::optional<VFPProdTable::ALQ_TYPE> alq_type = vfpprod.has(rst_well.vfp_table)
-                                                             ? std::optional(vfpprod.get(rst_well.vfp_table).getALQType())
-                                                             : std::nullopt;
             auto well = Well {
                 rst_well,
                 report_step,
@@ -2226,7 +2284,7 @@ namespace {
                 tracer_config,
                 this->m_static.m_unit_system,
                 rst_state.header.udq_undefined,
-                alq_type
+                alqTypes.getALQType(rst_well.wtype.producer(), rst_well.vfp_table)
             };
 
             auto rst_connections = std::vector<Connection> {};
