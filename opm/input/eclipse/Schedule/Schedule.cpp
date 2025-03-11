@@ -2281,8 +2281,10 @@ namespace {
         Glo.min_eco_gradient(rst_state.header.glift_min_eco_grad);
         Glo.gaslift_increment(rst_state.header.glift_rate_delta);
 
-        for (std::size_t group_index = 0; group_index < rst_state.groups.size(); group_index++) {
-            const auto& rst_group = rst_state.groups[group_index];
+        for (const auto& rst_group : rst_state.groups) {
+            if (GasLiftGroup::active(rst_group)) {
+                Glo.add_group(GasLiftGroup { rst_group });
+            }
 
             if (rst_group.parent_group == 0)
                 continue;
@@ -2290,11 +2292,10 @@ namespace {
             if (rst_group.parent_group == rst_state.header.max_groups_in_field)
                 continue;
 
-            const auto& parent_group = rst_state.groups[rst_group.parent_group - 1];
-            this->addGroupToGroup(parent_group.name, rst_group.name);
+            const auto& parent_group = rst_state
+                .groups[rst_group.parent_group - 1].name;
 
-            if (GasLiftGroup::active(rst_group))
-                Glo.add_group(GasLiftGroup(rst_group));
+            this->addGroupToGroup(parent_group, rst_group.name);
         }
 
         const auto alqTypes = ALQTypesAtRestartTime {
@@ -2304,6 +2305,10 @@ namespace {
         };
 
         for (const auto& rst_well : rst_state.wells) {
+            if (GasLiftWell::active(rst_well)) {
+                Glo.add_well(GasLiftWell { rst_well });
+            }
+
             auto well = Well {
                 rst_well,
                 report_step,
@@ -2346,10 +2351,6 @@ namespace {
             this->addWellToGroup(well.groupName(), well.name(), report_step);
 
             OpmLog::info(fmt::format("Adding well {} from restart file", rst_well.name));
-
-            if (GasLiftWell::active(rst_well)) {
-                Glo.add_well(GasLiftWell(rst_well));
-            }
         }
 
         this->snapshots.back().glo.update( std::move(Glo) );
