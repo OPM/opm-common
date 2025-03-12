@@ -135,6 +135,7 @@ public:
     double get(const std::string& group, const Group::GuideRateProdTarget target, const RateVector& rates) const;
     double get(const std::string& name, const GuideRateModel::Target model_target, const RateVector& rates) const;
     double get(const std::string& group, const Phase& phase) const;
+    const RateVector& getPotentials(const std::string& name) const;
 
     double getSI(const std::string& well, const WellGuideRateTarget target, const RateVector& rates) const;
     double getSI(const std::string& group, const Group::GuideRateProdTarget target, const RateVector& rates) const;
