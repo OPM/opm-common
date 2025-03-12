@@ -16,60 +16,105 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
+
 #ifndef GAS_LIFT_OPT_HPP
 #define GAS_LIFT_OPT_HPP
 
+#include <opm/io/eclipse/rst/group.hpp>
+#include <opm/io/eclipse/rst/well.hpp>
+
+#include <cstddef>
+#include <map>
 #include <optional>
 #include <string>
-#include <map>
-#include <opm/io/eclipse/rst/well.hpp>
-#include <opm/io/eclipse/rst/group.hpp>
 
 namespace Opm {
 
-class GasLiftGroup {
+/// Gas lift optimisation parameters at the group level.
+class GasLiftGroup
+{
 public:
+    /// Default constructor.
+    ///
+    /// Resulting object mostly usable as a target for a deserialisation
+    /// operation.
     GasLiftGroup() = default;
 
-    explicit GasLiftGroup(const std::string& name) :
-        m_name(name)
+    /// Construct gas lift optimisation parameter collection for a single
+    /// group.
+    ///
+    /// \param[in] name Group name.
+    explicit GasLiftGroup(const std::string& name)
+        : m_name(name)
     {}
 
-    static bool active(const RestartIO::RstGroup& rst_group) {
-        if ((rst_group.glift_max_rate + rst_group.glift_max_supply) == 0)
-            return false;
+    /// Construct gas lift optimisation parameter collection for a single
+    /// group from restart file representation.
+    ///
+    /// \param[in] rst_group Restart file representation of group object.
+    explicit GasLiftGroup(const RestartIO::RstGroup& rst_group);
 
-        return true;
-    }
+    /// Predicate for whether or not gas lift optimisation applies to a
+    /// group at simulation restart time.
+    ///
+    /// \param[in] rst_group Restart file representation of group object.
+    ///
+    /// \return Whether or not gas lift optimisation applies to this
+    /// particular group.
+    static bool active(const RestartIO::RstGroup& rst_group);
 
-    explicit GasLiftGroup(const RestartIO::RstGroup& rst_group)
-        : m_name(rst_group.name)
-        , m_max_lift_gas(rst_group.glift_max_supply)
-        , m_max_total_gas(rst_group.glift_max_rate)
-    {}
-
-    const std::optional<double>& max_lift_gas() const {
+    /// Maximum lift gas limit for this group.
+    ///
+    /// Nullopt for no limit.
+    const std::optional<double>& max_lift_gas() const
+    {
         return this->m_max_lift_gas;
     }
 
-    void max_lift_gas(double value) {
-        if (value >= 0)
+    /// Assign maximum lift gas limit for this group.
+    ///
+    /// \param[in] value Maximum lift gas limit.  Used only if non-negative.
+    void max_lift_gas(const double value)
+    {
+        if (! (value < 0.0)) {
             this->m_max_lift_gas = value;
+        }
     }
 
-    const std::optional<double>& max_total_gas() const {
+    /// Maximum total gas limit for this group.
+    ///
+    /// Sum of lift gas and produced gas.
+    ///
+    /// Nullopt if not limit.
+    const std::optional<double>& max_total_gas() const
+    {
         return this->m_max_total_gas;
     }
 
-    void max_total_gas(double value) {
-        if (value >= 0)
+    /// Assign maximum total gas limit for this group.
+    ///
+    /// \param[in] value Maximum total gas limit.  Used only if
+    /// non-negative.
+    void max_total_gas(const double value)
+    {
+        if (! (value < 0.0)) {
             this->m_max_total_gas = value;
+        }
     }
 
-    const std::string& name() const {
+    /// Group name.
+    ///
+    /// Mostly for convenience.
+    const std::string& name() const
+    {
         return this->m_name;
     }
 
+    /// Convert between byte array and object representation.
+    ///
+    /// \tparam Serializer Byte array conversion protocol.
+    ///
+    /// \param[in,out] serializer Byte array conversion object.
     template<class Serializer>
     void serializeOp(Serializer& serializer)
     {
@@ -78,117 +123,182 @@ public:
         serializer(m_max_total_gas);
     }
 
-
+    /// Create a serialisation test object.
     static GasLiftGroup serializationTestObject();
 
+    /// Equality predicate.
+    ///
+    /// \param[in] other Object against which \code *this \endcode will be
+    /// tested for equality.
+    ///
+    /// \return Whether or not \code *this \endcode is the same as \p
+    /// other.
     bool operator==(const GasLiftGroup& other) const;
 
 private:
-    std::string m_name;
-    std::optional<double> m_max_lift_gas;
-    std::optional<double> m_max_total_gas;
+    /// Group name.
+    std::string m_name{};
+
+    /// Maximum lift gas limit for this group.  Nullopt for no limit.
+    std::optional<double> m_max_lift_gas{};
+
+    /// Maximum total gas (lift + produced) limit for this group.  Nullopt
+    /// for no limit.
+    std::optional<double> m_max_total_gas{};
 };
 
-class GasLiftWell {
+// ---------------------------------------------------------------------------
+
+/// Gas lift and gas lift optimisation parameters at the well level.
+class GasLiftWell
+{
 public:
+    /// Default constructor.
+    ///
+    /// Resulting object mostly usable as a target for a deserialisation
+    /// operation.
     GasLiftWell() = default;
 
-    explicit GasLiftWell(const RestartIO::RstWell& rst_well)
-        : m_name(rst_well.name)
-        , m_max_rate(rst_well.glift_max_rate)
-        , m_min_rate(rst_well.glift_min_rate)
-        , m_use_glo(rst_well.glift_active)
-        , m_weight(rst_well.glift_weight_factor)
-        , m_inc_weight(rst_well.glift_inc_weight_factor)
-        , m_alloc_extra_gas(rst_well.glift_alloc_extra_gas)
+    /// Construct gas lift optimisation parameter collection for a single
+    /// well.
+    ///
+    /// \param[in] name Group name.
+    ///
+    /// \param[in] use_glo Whether or not to apply gas lift optimisation to
+    /// this well.
+    GasLiftWell(const std::string& name, const bool use_glo)
+        : m_name    { name }
+        , m_use_glo { use_glo }
     {}
 
+    /// Construct gas lift optimisation parameter collection for a single
+    /// well from restart file representation.
+    ///
+    /// \param[in] rst_well Restart file representation of well object.
+    explicit GasLiftWell(const RestartIO::RstWell& rst_well);
 
-    GasLiftWell(const std::string& name, bool use_glo) :
-        m_name(name),
-        m_use_glo(use_glo)
-    {}
+    /// Predicate for whether or not gas lift optimisation applies to a
+    /// group at simulation restart time.
+    ///
+    /// \param[in] rst_well Restart file representation of well object.
+    ///
+    /// \return Whether or not gas lift optimisation applies to this
+    /// particular well.
+    static bool active(const RestartIO::RstWell& rst_well);
 
-    // Unfortunately it seems just using the rst_well.glift_active flag is
-    // not sufficient to determine whether the well should be included in
-    // gas lift optimization or not. The current implementation based on
-    // numerical values found in the restart file is pure guesswork.
-    static bool active(const RestartIO::RstWell& rst_well) {
-        if ((rst_well.glift_max_rate + rst_well.glift_min_rate + rst_well.glift_weight_factor == 0))
-            return false;
-
-        return true;
-    }
-
-    const std::string& name() const {
+    /// Well name.
+    ///
+    /// Mostly for convenience.
+    const std::string& name() const
+    {
         return this->m_name;
     }
 
-    bool use_glo() const {
+    /// Whether or not this well is subject to gas lift optimisation.
+    bool use_glo() const
+    {
         return this->m_use_glo;
     }
 
-    void max_rate(double value) {
+    /// Assign maximum gas lift rate for this well.
+    ///
+    /// \param[in] value Maximum gas lift rate for this well.
+    void max_rate(const double value)
+    {
         this->m_max_rate = value;
     }
 
-
-    /*
-      The semantics of the max_rate is quite complicated:
-
-        1. If the std::optional<double> has a value that value should be
-           used as the maximum rate and all is fine.
-
-        2. If the std::optional<double> does not a have well we must check
-           the value of Well::use_glo():
-
-           False: The maximum gas lift should have been set with WCONPROD /
-              WELTARG - this code does not provide a value in that case.
-
-           True: If the well should be controlled with gas lift optimization
-              the value to use should be the largest ALQ value in the wells
-              VFP table.
-    */
-    const std::optional<double>& max_rate() const {
+    /// Retrieve maximum gas lift rate for this well.
+    ///
+    /// The semantics of the max_rate are as follows
+    ///
+    ///  1. If the optional has a value, then that value is the maximum gas
+    ///     lift rate.
+    ///
+    ///  2. Otherwise, the maximum gas lift rate depends on use_glo().  If
+    ///     gas lift optimisation does not apply to this well--i.e., when
+    ///     use_glo() is false--then the maximum gas lift rate is the well's
+    ///     artificial lift quantity (ALQ).  Conversely, when the well is
+    ///     subject to gas lift optimisation, the maximum gas lift rate
+    ///     should be the largest ALQ value in the well's VFP table.
+    const std::optional<double>& max_rate() const
+    {
         return this->m_max_rate;
     }
 
-    void weight_factor(double value) {
-        if (this->m_use_glo)
+    /// Assign weighting factor for preferential allocation of lift gas.
+    ///
+    /// \param[in] value Weighting factor.
+    void weight_factor(const double value)
+    {
+        if (this->m_use_glo) {
             this->m_weight = value;
+        }
     }
 
-    double weight_factor() const {
+    /// Retrieve weighting factor for preferential allocation of lift gas.
+    double weight_factor() const
+    {
         return this->m_weight;
     }
 
-    void inc_weight_factor(double value) {
-        if (this->m_use_glo)
+    /// Assign incremental gas rate weighting factor for this well.
+    ///
+    /// \param[in] value Incremental gas rate weighting factor.
+    void inc_weight_factor(const double value)
+    {
+        if (this->m_use_glo) {
             this->m_inc_weight = value;
+        }
     }
 
-    double inc_weight_factor() const {
+    /// Retrieve incremental gas rate weighting factor for this well.
+    double inc_weight_factor() const
+    {
         return this->m_inc_weight;
     }
 
-    void min_rate(double value) {
-        if (this->m_use_glo)
+    /// Assign minimum rate of lift gas injection for this well.
+    ///
+    /// \param[in] value Minimum rate of lift gas injection.  Used only if
+    /// the well is subject to gas lift optimisation--i.e., when use_glo()
+    /// is true.
+    void min_rate(const double value)
+    {
+        if (this->m_use_glo) {
             this->m_min_rate = value;
+        }
     }
 
-    double min_rate() const {
+    /// Retrieve this well's minimum lift gas injection rate.
+    double min_rate() const
+    {
         return this->m_min_rate;
     }
 
-    void alloc_extra_gas(bool value) {
-        if (this->m_use_glo)
+    /// Assign flag for whether or not to allocate extra lift gas if
+    /// available, even if group target is or would be exceeded.
+    ///
+    /// \param[in] value Flag for whether or not to allocate extra lift gas.
+    void alloc_extra_gas(const bool value)
+    {
+        if (this->m_use_glo) {
             this->m_alloc_extra_gas = value;
+        }
     }
 
-    bool alloc_extra_gas() const {
+    /// Whether or not to allocate extra lift gas if available, even if
+    /// group target is or would be exceeded.
+    bool alloc_extra_gas() const
+    {
         return this->m_alloc_extra_gas;
     }
 
+    /// Convert between byte array and object representation.
+    ///
+    /// \tparam Serializer Byte array conversion protocol.
+    ///
+    /// \param[in,out] serializer Byte array conversion object.
     template<class Serializer>
     void serializeOp(Serializer& serializer)
     {
@@ -201,43 +311,165 @@ public:
         serializer(m_alloc_extra_gas);
     }
 
+    /// Create a serialisation test object.
     static GasLiftWell serializationTestObject();
 
+    /// Equality predicate.
+    ///
+    /// \param[in] other Object against which \code *this \endcode will be
+    /// tested for equality.
+    ///
+    /// \return Whether or not \code *this \endcode is the same as \p
+    /// other.
     bool operator==(const GasLiftWell& other) const;
 
 private:
-    std::string m_name;
-    std::optional<double> m_max_rate;
-    double m_min_rate = 0;
-    bool m_use_glo = false;
-    double m_weight = 1;
-    double m_inc_weight = 0;
-    bool m_alloc_extra_gas = false;
+    /// Well name.
+    std::string m_name{};
+
+    /// Maximum lift gas injection limit.
+    ///
+    /// Nullopt value interpretation subject to value of m_use_glo.
+    std::optional<double> m_max_rate{};
+
+    /// Minimum lift gas injection rate.
+    double m_min_rate { 0.0 };
+
+    /// Whether or not gas lift optimisation applies to this well.
+    bool m_use_glo { false };
+
+    /// Weighting factor for preferential allocation of lift gas.
+    double m_weight { 1.0 };
+
+    /// Weighting factor for incremental gas rate.
+    double m_inc_weight { 0.0 };
+
+    /// Whether or not to allocate extra lift gas to this well even if group
+    /// target is or would be exceeded.
+    bool m_alloc_extra_gas { false };
 };
 
-class GasLiftOpt {
+// ---------------------------------------------------------------------------
+
+/// Gas lift optimisation parameters for all wells and groups.
+class GasLiftOpt
+{
 public:
+    /// Retrieve gas lift optimisation parameters for a single named group.
+    ///
+    /// Throws an exception of type std::out_of_range if no parameters have
+    /// been defined for the named group.
+    ///
+    /// \param[in] gname Group name.
+    ///
+    /// \return Gas lift optimisation parameters for named group \p gname.
     const GasLiftGroup& group(const std::string& gname) const;
+
+    /// Retrieve gas lift and gas lift optimisation parameters for a single
+    /// named well.
+    ///
+    /// Throws an exception of type std::out_of_range if no parameters have
+    /// been defined for the named well.
+    ///
+    /// \param[in] qname Well name.
+    ///
+    /// \return Gas lift and gas lift optimisation parameters for named
+    /// well \p wname.
     const GasLiftWell& well(const std::string& wname) const;
 
+    /// Lift gas rate increment.
     double gaslift_increment() const;
-    void gaslift_increment(double gaslift_increment);
-    double min_eco_gradient() const;
-    void min_eco_gradient(double min_eco_gradient);
-    double min_wait() const;
-    void min_wait(double min_wait);
-    void all_newton(double all_newton);
-    bool all_newton() const;
-    void add_group(const GasLiftGroup& group);
-    void add_well(const GasLiftWell& well);
-    bool active() const;
-    bool has_well(const std::string& well) const;
-    bool has_group(const std::string& group) const;
-    std::size_t num_wells() const;
 
+    /// Assign lift gas rate increment.
+    ///
+    /// \param[in] gaslift_increment Lift gas rate increment value.
+    void gaslift_increment(double gaslift_increment);
+
+    /// Retrieve minimum economical gradient threshold to continue
+    /// increasing lift gas injection rate.
+    double min_eco_gradient() const;
+
+    /// Assign minimum economical gradient threshold to continue increasing
+    /// lift gas injection rate.
+    void min_eco_gradient(double min_eco_gradient);
+
+    /// Retrieve minimum wait time between gas lift optimisation runs.
+    double min_wait() const;
+
+    /// Assign minimum wait time between gas lift optimisation runs.
+    ///
+    /// \param[in] min_wait Minimum wait time (seconds) between gas lift
+    /// optimisation runs.
+    void min_wait(double min_wait);
+
+    /// Whether or not to include gas lift optimisation in all of the first
+    /// "NUPCOL" non-linear iterations.
+    ///
+    /// If not, gas lift optimisation should be included only in the first
+    /// non-linear iteration of a time step.
+    bool all_newton() const;
+
+    /// Assign flag for whether or not to include gas lift optimisation in
+    /// all of the first "NUPCOL" non-linear iterations.
+    void all_newton(bool all_newton);
+
+    /// Incorporate gas lift optimisation parameters for a single group into
+    /// collection.
+    ///
+    /// \param[in] group Gas lift optimisation parameters for a single named
+    /// group.
+    void add_group(const GasLiftGroup& group);
+
+    /// Incorporate gas lift and gas lift optimisation parameters for a
+    /// single well into collection.
+    ///
+    /// \param[in] well Gas lift and gas lift optimisation parameters for a
+    /// single named well.
+    void add_well(const GasLiftWell& well);
+
+    /// Whether or not gas lift optimisation is currently enabled in the run.
+    bool active() const;
+
+    /// Whether or not gas lift parameters exists for single named well.
+    ///
+    /// \param[in] well Well name.
+    ///
+    /// \return Whether or not gas lift parameters exist for named well \p
+    /// well.
+    bool has_well(const std::string& well) const;
+
+    /// Whether or not gas lift optimisation parameters exists for single
+    /// named group.
+    ///
+    /// \param[in] group Group name.
+    ///
+    /// \return Whether or not gas lift optimisation parameters exist for
+    /// named group \p group.
+    bool has_group(const std::string& group) const;
+
+    /// Number of wells currently known to gas lift optimisation facility.
+    std::size_t num_wells() const
+    {
+        return this->m_wells.size();
+    }
+
+    /// Create a serialisation test object.
     static GasLiftOpt serializationTestObject();
+
+    /// Equality predicate.
+    ///
+    /// \param[in] other Object against which \code *this \endcode will be
+    /// tested for equality.
+    ///
+    /// \return Whether or not \code *this \endcode is the same as \p
+    /// other.
     bool operator==(const GasLiftOpt& other) const;
 
+    /// Convert between byte array and object representation.
+    ///
+    /// \tparam Serializer Byte array conversion protocol.
+    ///
+    /// \param[in,out] serializer Byte array conversion object.
     template<class Serializer>
     void serializeOp(Serializer& serializer)
     {
@@ -250,15 +482,32 @@ public:
     }
 
 private:
-    double m_increment = 0;
-    double m_min_eco_gradient = 0.0;
-    double m_min_wait = 0.0;
-    bool   m_all_newton = true;
+    /// Lift gas injection rate increment.
+    double m_increment { 0.0 };
 
+    /// Minimum economic gradient threshold to continue increasing lift gas
+    /// injection rate.
+    double m_min_eco_gradient { 0.0 };
+
+    /// Minimum wait time (seconds) between gas lift optimisation runs.
+    double m_min_wait { 0.0 };
+
+    /// Whether or not to include gas lift optimisation in every "NUPCOL"
+    /// non-linear iteration.
+    ///
+    /// If not, gas lift optimisation is performed only in the first
+    /// non-linear iteration.
+    bool m_all_newton { true };
+
+    /// Gas lift optimisation parameters for all applicable groups in
+    /// simulation run.
     std::map<std::string, GasLiftGroup> m_groups{};
+
+    /// Gas lift and gas lift optimisation parameters for all applicable
+    /// wells in simulation run.
     std::map<std::string, GasLiftWell> m_wells{};
 };
 
-}
+} // namespace Opm
 
-#endif
+#endif // GAS_LIFT_OPT_HPP

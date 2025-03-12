@@ -140,13 +140,10 @@ RstHeader::RstHeader(const Runspec&             runspec_,
     udq_eps(doubhead[VI::doubhead::UdqPar_4]),
     glift_min_wait(unit_system.to_si(M::time, doubhead[VI::doubhead::LOminInt])),
     glift_rate_delta(unit_system.to_si(M::gas_surface_rate, doubhead[VI::doubhead::LOincrsz])),
-    glift_min_eco_grad(unit_system.to_si(M::identity, doubhead[VI::doubhead::LOminEcGrad]))
- {
-    if (intehead.size() > VI::intehead::ISECND) {
-        microsecond = intehead[VI::intehead::ISECND];
-    } else {
-        microsecond = 0;
-    }
+    glift_min_eco_grad(unit_system.to_si(M::oil_gas_ratio, doubhead[VI::doubhead::LOminEcGrad]))
+{
+    this->microsecond = (intehead.size() > VI::intehead::ISECND)
+        ? intehead[VI::intehead::ISECND] : 0;
 }
 
 std::time_t RstHeader::sim_time() const
