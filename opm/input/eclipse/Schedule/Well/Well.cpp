@@ -610,12 +610,14 @@ void Well::set_lgr_well_tag(const std::string& lgr_tag_name)
     lgr_tag = lgr_tag_name;
 }
 
-const std::string& Well::get_lgr_well_tag(void) const
+std::optional<std::string> Well::get_lgr_well_tag(void) const
 {   
     if (this->ref_type == WellRefinementType::STANDARD)
-        throw std::invalid_argument("Well is not an LGR well.");
-     return lgr_tag;
+        return std::nullopt;
+    return lgr_tag;
 }
+
+
 
 
 bool Well::is_lgr_well(void) const
@@ -1006,13 +1008,15 @@ bool Well::updateConnections(std::shared_ptr<WellConnections> connections_arg, c
 
     if (this->pvt_table == 0 && !this->connections->empty()) {
         const auto& lowest = this->connections->lowest();
-        const auto& props = grid.get_cell(lowest.getI(), lowest.getJ(), lowest.getK()).props;
+        const auto& props = grid.get_cell(lowest.getI(), lowest.getJ(), lowest.getK(), get_lgr_well_tag()).props;
         this->pvt_table = props->pvtnum;
         update = true;
     }
 
     return update;
 }
+
+
 
 bool Well::updateSolventFraction(const double solvent_fraction_arg)
 {

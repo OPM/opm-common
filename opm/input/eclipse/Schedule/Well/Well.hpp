@@ -107,7 +107,7 @@ public:
     void flag_lgr_well();
     void set_lgr_well_tag(const std::string& lgr_tag_name);
     bool is_lgr_well() const;
-    const std::string& get_lgr_well_tag() const;
+    std::optional<std::string> get_lgr_well_tag() const;
     struct WellGuideRate {
         bool available;
         double guide_rate;

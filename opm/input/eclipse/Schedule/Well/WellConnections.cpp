@@ -25,6 +25,7 @@
 #include <opm/common/OpmLog/OpmLog.hpp>
 #include <opm/common/utility/ActiveGridCells.hpp>
 #include <opm/common/utility/numeric/linearInterpolation.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/W.hpp>
 
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
@@ -51,6 +52,7 @@
 #include <cmath>
 #include <cstddef>
 #include <limits>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <utility>
@@ -323,6 +325,7 @@ namespace Opm {
                                         const Connection::Direction      direction,
                                         const Connection::CTFKind        ctf_kind,
                                         const std::size_t                seqIndex,
+                                        const int                        lgr_grid_number,
                                         const bool                       defaultSatTabId)
     {
         const int conn_i = (i < 0) ? this->headI : i;
@@ -330,7 +333,7 @@ namespace Opm {
 
         this->m_connections.emplace_back(conn_i, conn_j, k, global_index, complnum,
                                          state, direction, ctf_kind, satTableId,
-                                         depth, ctf_props, seqIndex, defaultSatTabId);
+                                         depth, ctf_props, seqIndex, defaultSatTabId, lgr_grid_number);
     }
 
     void WellConnections::addConnection(const int i, const int j, const int k,
@@ -342,6 +345,7 @@ namespace Opm {
                                         const Connection::Direction      direction,
                                         const Connection::CTFKind        ctf_kind,
                                         const std::size_t                seqIndex,
+                                        int                              lgr_grid_number,
                                         const bool                       defaultSatTabId)
     {
         const auto complnum = static_cast<int>(this->m_connections.size()) + 1;
@@ -349,14 +353,15 @@ namespace Opm {
         this->addConnection(i, j, k, global_index, complnum, state,
                             depth, ctf_props,
                             satTableId, direction, ctf_kind,
-                            seqIndex, defaultSatTabId);
+                            seqIndex, lgr_grid_number, defaultSatTabId);
     }
 
-    void WellConnections::loadCOMPDAT(const DeckRecord&      record,
-                                      const ScheduleGrid&    grid,
-                                      const std::string&     wname,
-                                      const WDFAC&           wdfac,
-                                      const KeywordLocation& location)
+    void WellConnections::loadCOMPDATX(const DeckRecord&      record,
+                                       const ScheduleGrid&    grid,
+                                       const std::string&     wname,
+                                       const WDFAC&           wdfac,
+                                       const KeywordLocation& location,
+                                       std::optional<std::string> lgr_label = std::nullopt)
     {
         const auto& itemI = record.getItem("I");
         const auto defaulted_I = itemI.defaultApplied(0) || (itemI.get<int>(0) == 0);
@@ -379,7 +384,8 @@ namespace Opm {
 
         const auto skin_factor = record.getItem("SKIN").getSIDouble(0);
         const auto d_factor = record.getItem("D_FACTOR").getSIDouble(0);
-
+        const int lgr_grid_number = grid.get_lgr_grid_number(lgr_label);
+        
         int satTableId = -1;
         bool defaultSatTable = true;
         if (satTableIdItem.hasValue(0) && (satTableIdItem.get<int>(0) > 0)) {
@@ -403,9 +409,9 @@ namespace Opm {
         const auto angle = 6.2831853071795864769252867665590057683943387987502116419498;
 
         for (int k = K1; k <= K2; ++k) {
-            const auto& cell = grid.get_cell(I, J, k);
+            const auto& cell = grid.get_cell(I, J, k, lgr_label);
             if (!cell.is_active()) {
-                auto msg = fmt::format(R"(Problem with COMPDAT keyword
+                auto msg = fmt::format(R"(Problem with COMPDATX keyword
 In {} line {}
 The cell ({},{},{}) in well {} is not active and the connection will be ignored)",
                                        location.filename, location.lineno,
@@ -523,8 +529,8 @@ The cell ({},{},{}) in well {} is not active and the connection will be ignored)
                 const std::size_t noConn = this->m_connections.size();
                 this->addConnection(I, J, k, cell.global_index, state,
                                     cell.depth, ctf_props, satTableId,
-                                    direction, ctf_kind,
-                                    noConn, defaultSatTable);
+                                    direction, ctf_kind, noConn, 
+                                    lgr_grid_number, defaultSatTable);
             }
             else {
                 const auto compl_num = prev->complnum();
@@ -536,12 +542,33 @@ The cell ({},{},{}) in well {} is not active and the connection will be ignored)
                     I, J, k, cell.global_index, compl_num,
                     state, direction, ctf_kind, satTableId,
                     cell.depth, ctf_props,
-                    css_ind, defaultSatTable
+                    css_ind, defaultSatTable, lgr_grid_number
                 };
 
                 prev->updateSegment(conSegNo, cell.depth, css_ind, perf_range);
             }
         }
+    }
+
+
+    void WellConnections:: loadCOMPDAT(const DeckRecord&     record,
+                                      const ScheduleGrid&    grid,
+                                      const std::string&     wname,
+                                      const WDFAC&           wdfac,
+                                      const KeywordLocation& location)
+    {
+        loadCOMPDATX(record,grid,wname,wdfac,location);
+    }
+
+
+    void WellConnections::loadCOMPDATL(const DeckRecord&      record,
+                                       const ScheduleGrid&    grid,
+                                       const std::string&     wname,
+                                       const WDFAC&           wdfac,
+                                       const KeywordLocation& location)
+    {
+        const std::string& lgr_tag = record.getItem("LGR").get<std::string>(0);
+        loadCOMPDATX(record,grid,wname,wdfac,location, lgr_tag);
     }
 
     void WellConnections::loadCOMPTRAJ(const DeckRecord&      record,
@@ -739,7 +766,8 @@ CF and Kh items for well {} must both be specified or both defaulted/negative)",
                                     cell.global_index, state,
                                     cell.depth, ctf_props, satTableId,
                                     direction, ctf_kind,
-                                    noConn, defaultSatTable);
+                                    noConn, 0,
+                                    defaultSatTable);
             }
             else {
                 const auto compl_num = prev->complnum();
