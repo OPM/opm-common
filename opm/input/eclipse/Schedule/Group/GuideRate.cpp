@@ -27,6 +27,7 @@
 #include <opm/input/eclipse/Units/Units.hpp>
 
 #include <algorithm>
+#include <cassert>
 #include <memory>
 #include <stdexcept>
 #include <string>
@@ -130,6 +131,13 @@ double Opm::GuideRate::get(const std::string& name, const Phase& phase) const
         throw std::logic_error {message};
     }
     return iter->second;
+}
+
+const Opm::GuideRate::RateVector& Opm::GuideRate::getPotentials(const std::string& name) const
+{
+    // Assume caller has checked that the name exists.
+    assert(this->hasPotentials(name));
+    return this->potentials.at(name);
 }
 
 double Opm::GuideRate::getSI(const std::string&          well,
