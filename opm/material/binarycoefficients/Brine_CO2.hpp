@@ -926,9 +926,14 @@ private:
             c = { 1.668, 3.992e-3, -1.156e-5, 1.593e-9 };
         }
         else {
-            // For temperature below 31 C and pressures above saturation pressure, separate parameters are needed
-            Evaluation psat = CO2::vaporPressure(temperature);
-            if (temperatureCelcius < 31 && pg > psat && !spycherPruess2005) {
+            // For temperature below critical temperature and pressures above saturation pressure, separate parameters are needed
+            bool model1 = temperature < CO2::criticalTemperature() && !spycherPruess2005;
+            if (model1) {
+                // Computing the vapor pressure is not trivial and is also not defined for T > criticalTemperature
+                Evaluation psat = CO2::vaporPressure(temperature);
+                model1 = pg > psat;
+            }
+            if (model1) {
                 c = { 1.169, 1.368e-2, -5.38e-5, 0.0 };
             }
             else {
