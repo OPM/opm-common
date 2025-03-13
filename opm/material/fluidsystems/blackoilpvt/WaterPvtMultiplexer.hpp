@@ -35,6 +35,8 @@
 
 #include <opm/common/utility/gpuDecorators.hpp>
 
+#include <functional>
+
 #if OPM_IS_COMPILING_WITH_GPU_COMPILER
 #define OPM_WATER_PVT_MULTIPLEXER_CALL(codeToCall, ...)                                \
     if constexpr (UseSmartPointer) {              \
