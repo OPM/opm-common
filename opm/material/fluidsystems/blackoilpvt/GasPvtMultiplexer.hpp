@@ -35,8 +35,9 @@
 #include <opm/material/fluidsystems/blackoilpvt/WetGasPvt.hpp>
 #include <opm/material/fluidsystems/blackoilpvt/WetHumidGasPvt.hpp>
 
-#include <functional>
 #include <opm/common/utility/gpuDecorators.hpp>
+
+#include <functional>
 
 namespace Opm {
 
