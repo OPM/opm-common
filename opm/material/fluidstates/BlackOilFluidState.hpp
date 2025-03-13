@@ -368,13 +368,12 @@ public:
     /*!
      * \brief Return the temperature [K]
      */
-    const Scalar& temperature(unsigned) const
+    Scalar temperature(unsigned) const
     {
         if constexpr (enableTemperature || enableEnergy) {
             return *temperature_;
         } else {
-            static Scalar tmp(FluidSystem::reservoirTemperature(pvtRegionIdx_));
-            return tmp;
+            return FluidSystem::reservoirTemperature(pvtRegionIdx_);
         }
     }
 
@@ -394,13 +393,12 @@ public:
      * of gas at surface conditions per cubic meter of liquid oil at surface
      * conditions. This method is specific to the black-oil model.
      */
-    const Scalar& Rs() const
+    Scalar Rs() const
     {
         if constexpr (enableDissolution) {
             return *Rs_;
         } else {
-            static Scalar null = 0.0;
-            return null;
+            return Scalar(0.0);
         }
     }
 
@@ -411,11 +409,10 @@ public:
      * of liquid oil at surface conditions per cubic meter of gas at surface
      * conditions. This method is specific to the black-oil model.
      */
-    const Scalar& Rv() const
+    Scalar Rv() const
     {
         if constexpr (!enableDissolution) {
-            static Scalar null = 0.0;
-            return null;
+            return Scalar(0.0);
         } else {
             return *Rv_;
         }
@@ -428,13 +425,12 @@ public:
      * of liquid water at surface conditions per cubic meter of gas at surface
      * conditions. This method is specific to the black-oil model.
      */
-    const Scalar& Rvw() const
+    Scalar Rvw() const
     {
         if constexpr (enableVapwat) {
             return *Rvw_;
         } else {
-            static Scalar null = 0.0;
-            return null;
+            return Scalar(0.0);
         }
     }
 
@@ -445,39 +441,36 @@ public:
      * of gas at surface conditions per cubic meter of water at surface
      * conditions. This method is specific to the black-oil model.
      */
-    const Scalar& Rsw() const
+    Scalar Rsw() const
     {
         if constexpr (enableDissolutionInWater) {
             return *Rsw_;
         } else {
-            static Scalar null = 0.0;
-            return null;
+            return Scalar(0.0);
         }
     }
 
     /*!
      * \brief Return the concentration of salt in water
      */
-    const Scalar& saltConcentration() const
+    Scalar saltConcentration() const
     {
         if constexpr (enableBrine) {
             return *saltConcentration_;
         } else {
-            static Scalar null = 0.0;
-            return null;
+            return Scalar(0.0);
         }
     }
 
     /*!
      * \brief Return the saturation of solid salt
      */
-    const Scalar& saltSaturation() const
+    Scalar saltSaturation() const
     {
         if constexpr (enableSaltPrecipitation) {
             return *saltSaturation_;
         } else {
-            static Scalar null = 0.0;
-            return null;
+            return Scalar(0.0);
         }
     }
 
