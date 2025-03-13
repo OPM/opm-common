@@ -978,6 +978,12 @@ Defaulted grid coordinates is not allowed for COMPDAT as part of ACTIONX)"
         this->snapshots[report_step].update_events(events);
     }
 
+    void Schedule::clearEvents(const std::size_t report_step)
+    {
+        this->snapshots[report_step].events().reset();
+        this->snapshots[report_step].wellgroup_events().reset();
+    }
+
 
     bool Schedule::updateWPAVE(const std::string& wname, std::size_t report_step, const PAvg& pavg) {
         const auto& well = this->getWell(wname, report_step);
