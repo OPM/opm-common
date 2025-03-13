@@ -226,6 +226,10 @@ public:
     void open_completions(const std::string& well_name);
     bool completion_is_closed(const std::string& well_name, const int complnum) const;
     std::size_t num_closed_completions() const;
+    bool is_follow_on_well(const std::string& well_name) const;
+    bool add_follow_on_well(const std::string& well_name);
+    const std::vector<std::string>& get_follow_on_wells() const;
+
 
     void clear();
 
@@ -261,6 +265,7 @@ public:
     {
         serializer(this->wells);
         serializer(this->completions);
+        serializer(this->follow_on_wells);
     }
 
     static WellTestState serializationTestObject();
@@ -271,7 +276,7 @@ public:
 private:
     std::unordered_map<std::string, WTestWell> wells;
     std::unordered_map<std::string, std::unordered_map<int, ClosedCompletion>> completions;
-
+    std::vector<std::string> follow_on_wells;
     std::vector<std::pair<std::string, int>> updateCompletion(const WellTestConfig& config, double sim_time);
 };
 
