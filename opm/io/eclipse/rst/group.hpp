@@ -68,8 +68,8 @@ struct RstGroup
     float gas_reservoir_limit;
     float gas_reinject_limit;
     float gas_voidage_limit;
-    float glift_max_supply;
-    float glift_max_rate;
+    double glift_max_supply;
+    double glift_max_rate;
     float efficiency_factor;
     float inj_water_guide_rate;
     float inj_gas_guide_rate;
