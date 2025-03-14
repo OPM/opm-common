@@ -119,7 +119,7 @@ namespace Opm {
             return  {this->all_lgr_labels.begin() + 1, this->all_lgr_labels.end()};
         }
 
-        std::vector<std::string>& get_all_labels() const
+        const std::vector<std::string>& get_all_labels() const
         {
             return this->all_lgr_labels;
         }
