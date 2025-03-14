@@ -474,7 +474,7 @@ std::optional<JFunc> make_jfunc(const Deck& deck) {
         addTables( "SALTVD", m_eqldims.getNumEquilRegions());
         addTables( "SALTPVD", m_eqldims.getNumEquilRegions());
         addTables( "SALTSOL", m_tabdims.getNumPVTTables());
-        addTables( "PERMFACT",  m_tabdims.getNumPVTTables());
+        addTables( "PERMFACT",  m_tabdims.getNumSatTables());
         addTables( "PCFACT",  m_tabdims.getNumSatTables());
 
         addTables( "AQUTAB", m_aqudims.getNumInfluenceTablesCT());
@@ -544,7 +544,7 @@ std::optional<JFunc> make_jfunc(const Deck& deck) {
         initSimpleTableContainer<SaltpvdTable>(deck, "SALTPVD" , m_eqldims.getNumEquilRegions());
         initSimpleTableContainer<SaltvdTable>(deck, "SALTVD" , m_eqldims.getNumEquilRegions());
         initSimpleTableContainer<SaltsolTable>(deck, "SALTSOL" , m_tabdims.getNumPVTTables());
-        initSimpleTableContainer<PermfactTable>(deck, "PERMFACT" , m_tabdims.getNumPVTTables());
+        initSimpleTableContainer<PermfactTable>(deck, "PERMFACT" , m_tabdims.getNumSatTables());
         initSimpleTableContainer<PcfactTable>(deck, "PCFACT" , m_tabdims.getNumSatTables());
         initSimpleTableContainer<AqutabTable>(deck, "AQUTAB" , m_aqudims.getNumInfluenceTablesCT());
         {
