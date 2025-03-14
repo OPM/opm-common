@@ -114,13 +114,14 @@ namespace Opm {
             return activeIndex(globalIndex);
         }
 
-        std::vector<std::string> get_all_lgr_labels() const {
-            std::vector<std::string> sliced_labels(all_lgr_labels.begin() + 1, all_lgr_labels.end());
-            return sliced_labels;
+        std::vector<std::string> get_all_lgr_labels() const
+        {
+            return  {this->all_lgr_labels.begin() + 1, this->all_lgr_labels.end()};
         }
 
-        std::vector<std::string> get_all_labels() const {
-            return all_lgr_labels;
+        const std::vector<std::string>& get_all_labels() const
+        {
+            return this->all_lgr_labels;
         }
         
         std::string get_lgr_tag() const {
