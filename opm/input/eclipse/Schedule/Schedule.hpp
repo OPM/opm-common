@@ -311,6 +311,9 @@ namespace Opm {
         void add_event(ScheduleEvents::Events, std::size_t report_step);
         void applyWellProdIndexScaling(const std::string& well_name, const std::size_t reportStep, const double scalingFactor);
 
+        //! \brief Clear out all registered events at a given report step.
+        void clearEvents(const std::size_t report_step);
+
         WellProducerCMode getGlobalWhistctlMmode(std::size_t timestep) const;
 
         const UDQConfig& getUDQConfig(std::size_t timeStep) const;
