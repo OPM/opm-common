@@ -115,6 +115,7 @@ void checkSystemHasRequiredDimensions( const UnitSystem& system) {
 
     BOOST_CHECK( system.hasDimension("Permeability"));
     BOOST_CHECK( system.hasDimension("Pressure"));
+    BOOST_CHECK( system.hasDimension("PressureDrop"));
     BOOST_CHECK( system.hasDimension("Temperature"));
 }
 
@@ -129,6 +130,7 @@ BOOST_AUTO_TEST_CASE(CreateMetricSystem) {
     BOOST_CHECK_EQUAL( Metric::Time         , system.getDimension("Time").getSIScaling() );
     BOOST_CHECK_EQUAL( Metric::Permeability , system.getDimension("Permeability").getSIScaling() );
     BOOST_CHECK_EQUAL( Metric::Pressure     , system.getDimension("Pressure").getSIScaling() );
+    BOOST_CHECK_EQUAL( Metric::PressureDrop , system.getDimension("PressureDrop").getSIScaling() );
 }
 
 
@@ -142,6 +144,7 @@ BOOST_AUTO_TEST_CASE(CreateFieldSystem) {
     BOOST_CHECK_EQUAL( Field::Time         , system.getDimension("Time").getSIScaling() );
     BOOST_CHECK_EQUAL( Field::Permeability , system.getDimension("Permeability").getSIScaling() );
     BOOST_CHECK_EQUAL( Field::Pressure     , system.getDimension("Pressure").getSIScaling() );
+    BOOST_CHECK_EQUAL( Field::PressureDrop , system.getDimension("PressureDrop").getSIScaling() );
 }
 
 
@@ -156,6 +159,7 @@ BOOST_AUTO_TEST_CASE(CreateInputSystem) {
     BOOST_CHECK_EQUAL( 1.0, system.getDimension("Time").getSIScaling() );
     BOOST_CHECK_EQUAL( 1.0, system.getDimension("Permeability").getSIScaling() );
     BOOST_CHECK_EQUAL( 1.0, system.getDimension("Pressure").getSIScaling() );
+    BOOST_CHECK_EQUAL( 1.0, system.getDimension("PressureDrop").getSIScaling() );
 
     BOOST_CHECK_EQUAL( static_cast<long int>(system.getType( )) , static_cast<long int>(UnitSystem::UnitType::UNIT_TYPE_INPUT) );
 }
