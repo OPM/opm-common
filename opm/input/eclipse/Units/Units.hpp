@@ -155,8 +155,11 @@ namespace Opm {
         /// @{
         constexpr const double Pascal = Newton / square(meter); // == 1
         constexpr const double barsa  = 100000 * Pascal;
+        constexpr const double bars   = 100000 * Pascal;
+        constexpr const double atma   = 101325 * Pascal;
         constexpr const double atm    = 101325 * Pascal;
         constexpr const double psia   = lbf / square(inch);
+        constexpr const double psi    = lbf / square(inch);
         /// @}
 
         /// \name Temperature. This one is more complicated
@@ -258,6 +261,7 @@ namespace Opm {
         using namespace prefix;
         using namespace unit;
         constexpr const double Pressure             = barsa;
+        constexpr const double PressureDrop         = bars;
         constexpr const double Temperature          = degCelsius;
         constexpr const double TemperatureOffset    = degCelsiusOffset;
         constexpr const double AbsoluteTemperature  = degCelsius; // actually [K], but the these two are identical
@@ -294,6 +298,7 @@ namespace Opm {
         using namespace prefix;
         using namespace unit;
         constexpr const double Pressure             = psia;
+        constexpr const double PressureDrop         = psi;
         constexpr const double Temperature          = degFahrenheit;
         constexpr const double TemperatureOffset    = degFahrenheitOffset;
         constexpr const double AbsoluteTemperature  = degFahrenheit; // actually [°R], but the these two are identical
@@ -329,7 +334,8 @@ namespace Opm {
     namespace Lab {
         using namespace prefix;
         using namespace unit;
-        constexpr const double Pressure             = atm;
+        constexpr const double Pressure             = atma;
+        constexpr const double PressureDrop         = atm;
         constexpr const double Temperature          = degCelsius;
         constexpr const double TemperatureOffset    = degCelsiusOffset;
         constexpr const double AbsoluteTemperature  = degCelsius; // actually [K], but the these two are identical
@@ -365,7 +371,8 @@ namespace Opm {
     namespace PVT_M {
         using namespace prefix;
         using namespace unit;
-        constexpr const double Pressure             = atm;
+        constexpr const double Pressure             = atma;
+        constexpr const double PressureDrop         = atm;
         constexpr const double Temperature          = degCelsius;
         constexpr const double TemperatureOffset    = degCelsiusOffset;
         constexpr const double AbsoluteTemperature  = degCelsius; // actually [K], but the these two are identical

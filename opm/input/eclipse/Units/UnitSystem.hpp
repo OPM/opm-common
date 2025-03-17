@@ -48,6 +48,7 @@ namespace Opm {
             runtime,
             density,
             pressure,
+            pressure_drop,
             temperature_absolute,
             temperature,
             viscosity,
