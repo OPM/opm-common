@@ -439,9 +439,7 @@ namespace Opm {
                                                   std::size_t i, std::size_t j, std::size_t k) const;
         void get_global_index_child_to_top_father(std::vector<std::size_t> & list, std::size_t global_ind) const;
   
-        
-        
-        void set_hostnum(std::vector<int>&);
+        void set_hostnum(const std::vector<int>&);
         const std::array<int,3>& get_low_fatherIJK() const{
           return low_fatherIJK;
         }
