@@ -329,6 +329,15 @@ namespace {
             { "SGFR", Opm::EclIO::SummaryNode::Type::Rate     },
             { "SWFR", Opm::EclIO::SummaryNode::Type::Rate     },
             { "SPR",  Opm::EclIO::SummaryNode::Type::Pressure },
+            { "SPRDH",  Opm::EclIO::SummaryNode::Type::Pressure },
+            { "SPRDF",  Opm::EclIO::SummaryNode::Type::Pressure },
+            { "SPRDA",  Opm::EclIO::SummaryNode::Type::Pressure },
+            { "SOHF",  Opm::EclIO::SummaryNode::Type::Ratio},
+            { "SOFV",  Opm::EclIO::SummaryNode::Type::Undefined},
+            { "SWHF",  Opm::EclIO::SummaryNode::Type::Ratio},
+            { "SWFV",  Opm::EclIO::SummaryNode::Type::Undefined},
+            { "SGHF",  Opm::EclIO::SummaryNode::Type::Ratio},
+            { "SGFV",  Opm::EclIO::SummaryNode::Type::Undefined},
         };
 
         using Cat = Opm::EclIO::SummaryNode::Category;
