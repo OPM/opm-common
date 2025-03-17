@@ -60,7 +60,6 @@ public:
     int get_lgr_grid_number(std::optional<std::string> lgr_label) const;
 
 private:
-    bool lgr_intialized{false};
     const EclipseGrid* grid{nullptr};
     const FieldPropsManager* fp{nullptr};
     CompletedCells& cells; 

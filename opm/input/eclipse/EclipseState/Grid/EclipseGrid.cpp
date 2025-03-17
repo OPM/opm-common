@@ -2714,10 +2714,11 @@ namespace Opm {
         return lgr_found;
     }
 
-    void EclipseGridLGR::set_hostnum(std::vector<int>& hostnum)
+    void EclipseGridLGR::set_hostnum(const std::vector<int>& hostnum)
     {
         m_hostnum = hostnum;
     }
+
     void EclipseGridLGR::set_lgr_refinement(const std::string& lgr_tag, const std::vector<double>& coord, const std::vector<double>& zcorn)
     {
         if (lgr_tag == lgr_label)
