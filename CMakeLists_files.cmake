@@ -227,6 +227,8 @@ if(ENABLE_ECL_INPUT)
     opm/input/eclipse/Schedule/OilVaporizationProperties.cpp
     opm/input/eclipse/Schedule/RFTConfig.cpp
     opm/input/eclipse/Schedule/RPTConfig.cpp
+    opm/input/eclipse/Schedule/RPTKeywordNormalisation.cpp
+    opm/input/eclipse/Schedule/RptschedKeywordNormalisation.cpp
     opm/input/eclipse/Schedule/RSTConfig.cpp
     opm/input/eclipse/Schedule/RXXKeywordHandlers.cpp
     opm/input/eclipse/Schedule/Schedule.cpp
@@ -237,6 +239,7 @@ if(ENABLE_ECL_INPUT)
     opm/input/eclipse/Schedule/ScheduleState.cpp
     opm/input/eclipse/Schedule/ScheduleStatic.cpp
     opm/input/eclipse/Schedule/ScheduleTypes.cpp
+    opm/input/eclipse/Schedule/SimpleRPTIntegerControlHandler.cpp
     opm/input/eclipse/Schedule/Source.cpp
     opm/input/eclipse/Schedule/SummaryState.cpp
     opm/input/eclipse/Schedule/Tuning.cpp
@@ -1399,6 +1402,8 @@ if(ENABLE_ECL_INPUT)
        opm/input/eclipse/Schedule/SummaryState.hpp
        opm/input/eclipse/Schedule/RFTConfig.hpp
        opm/input/eclipse/Schedule/RPTConfig.hpp
+       opm/input/eclipse/Schedule/RPTKeywordNormalisation.hpp
+       opm/input/eclipse/Schedule/RptschedKeywordNormalisation.hpp
        opm/input/eclipse/Schedule/RSTConfig.hpp
        opm/input/eclipse/Schedule/Schedule.hpp
        opm/input/eclipse/Schedule/ScheduleBlock.hpp
@@ -1408,6 +1413,7 @@ if(ENABLE_ECL_INPUT)
        opm/input/eclipse/Schedule/ScheduleState.hpp
        opm/input/eclipse/Schedule/ScheduleStatic.hpp
        opm/input/eclipse/Schedule/ScheduleTypes.hpp
+       opm/input/eclipse/Schedule/SimpleRPTIntegerControlHandler.hpp
        opm/input/eclipse/Schedule/Source.hpp
        opm/input/eclipse/Schedule/Tuning.hpp
        opm/input/eclipse/Schedule/WriteRestartFileEvents.hpp
