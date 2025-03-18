@@ -18,61 +18,98 @@
 */
 
 #include <opm/input/eclipse/Schedule/RPTConfig.hpp>
-#include <opm/input/eclipse/Deck/DeckKeyword.hpp>
 
 #include <opm/common/ErrorMacros.hpp>
 
+#include <opm/input/eclipse/Schedule/RPTKeywordNormalisation.hpp>
+#include <opm/input/eclipse/Schedule/RptschedKeywordNormalisation.hpp>
+
+#include <opm/input/eclipse/Deck/DeckKeyword.hpp>
+
+#include <opm/input/eclipse/Parser/ErrorGuard.hpp>
+#include <opm/input/eclipse/Parser/ParseContext.hpp>
+
+#include <map>
+#include <string>
+#include <vector>
+
 namespace {
-
-    std::pair<std::string, unsigned> parse_mnemonic(const std::string& mnemonic) {
-        const auto pivot { mnemonic.find('=') } ;
-
-        if (pivot == std::string::npos) {
-            return { mnemonic, 1 } ;
-        } else {
-            const auto int_value { std::stoi(mnemonic.substr(pivot + 1)) } ;
-
-            if (!(int_value >= 0)) {
-                OPM_THROW(std::invalid_argument, "RPTSCHED - " + mnemonic + " - mnemonic value must be an integer >= 0");
-            }
-
-            return { mnemonic.substr(0, pivot), int_value } ;
+    class AcceptAllMnemonics
+    {
+    public:
+        bool operator()([[maybe_unused]] const std::string& mnemonic) const
+        {
+            return true;
         }
-    }
+    };
 
+    class NoIntegerControls
+    {
+    public:
+        Opm::RPTKeywordNormalisation::MnemonicMap
+        operator()([[maybe_unused]] const std::vector<int>& controlValues) const
+        {
+            return {};
+        }
+    };
 }
 
 namespace Opm {
 
-RPTConfig RPTConfig::serializationTestObject() {
+RPTConfig RPTConfig::serializationTestObject()
+{
     RPTConfig rptc;
     rptc.m_mnemonics.emplace( "KEY", 100 );
     return rptc;
 }
 
+RPTConfig::RPTConfig(const DeckKeyword& keyword)
+{
+    const auto parseContext = ParseContext{};
+    auto errors = ErrorGuard{};
 
-RPTConfig::RPTConfig(const DeckKeyword& keyword, const RPTConfig* prev) {
-    if (prev)
+    const auto mnemonics = RPTKeywordNormalisation {
+        NoIntegerControls{}, AcceptAllMnemonics{}
+    }.normaliseKeyword(keyword, parseContext, errors);
+
+    this->assignMnemonics(mnemonics);
+}
+
+RPTConfig::RPTConfig(const DeckKeyword&  keyword,
+                     const ParseContext& parseContext,
+                     ErrorGuard&         errors,
+                     const RPTConfig*    prev)
+{
+    if (prev != nullptr) {
         this->m_mnemonics = prev->m_mnemonics;
+    }
 
-    const auto& mnemonics { keyword.getStringData() } ;
-    for (const auto& mnemonic : mnemonics) {
-        if (mnemonic == "NOTHING")
+    const auto mnemonics =
+        normaliseRptSchedKeyword(keyword, parseContext, errors);
+
+    this->assignMnemonics(mnemonics);
+}
+
+bool RPTConfig::operator==(const RPTConfig& other) const
+{
+    return this->m_mnemonics == other.m_mnemonics;
+}
+
+bool RPTConfig::contains(const std::string& key) const
+{
+    return this->m_mnemonics.find(key) != this->m_mnemonics.end();
+}
+
+void RPTConfig::assignMnemonics(const std::map<std::string, int>& mnemonics)
+{
+    for (const auto& [mnemonic, value] : mnemonics) {
+        if (mnemonic == "NOTHING") {
             this->m_mnemonics.clear();
+        }
         else {
-            const auto key_value = parse_mnemonic(mnemonic);
-            this->m_mnemonics.insert_or_assign(key_value.first, key_value.second);
+            this->m_mnemonics.insert_or_assign(mnemonic, value);
         }
     }
 }
 
-
-bool RPTConfig::operator==(const RPTConfig& other) const {
-    return this->m_mnemonics == other.m_mnemonics;
-}
-
-bool RPTConfig::contains(const std::string& key) const {
-    return this->m_mnemonics.find(key) != this->m_mnemonics.end();
-}
-
-}
+} // namespace Opm
