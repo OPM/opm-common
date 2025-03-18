@@ -115,6 +115,7 @@ bool ActionX::valid_keyword(const std::string& keyword)
 
         "UDQ",
 
+        "WCONHIST", "WCONINJH",
         "WCONINJE", "WCONPROD",
         "WECON", "WEFAC",
         "WELOPEN", "WELPI", "WELSEGS", "WELSPECS", "WELTARG",
