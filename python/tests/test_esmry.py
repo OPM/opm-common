@@ -47,6 +47,17 @@ class TestEclFile(unittest.TestCase):
 
         self.assertEqual(len(time1b), 64)
 
+    def test_start_date(self):
+
+        smry1 = ESmry(test_path("data/T1_STARTD.SMSPEC"))
+        smry2 = ESmry(test_path("data/T1_STARTD.ESMRY"))
+
+        self.assertEqual(smry1.start_date, datetime.datetime(2020,3,29, 5, 4, 41) )
+        self.assertEqual(smry2.start_date, datetime.datetime(2020,3,29, 5, 4, 41) )
+
+        self.assertEqual(smry1.end_date, datetime.datetime(2020,4,24, 5, 4, 41) )
+        self.assertEqual(smry2.end_date, datetime.datetime(2020,4,24, 5, 4, 41) )
+
 
     def test_restart_runs(self):
 
