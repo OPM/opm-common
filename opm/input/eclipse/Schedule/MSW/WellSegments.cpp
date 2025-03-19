@@ -63,11 +63,6 @@ namespace Opm {
     }
 
 
-    WellSegments::WellSegments(const DeckKeyword& keyword, const UnitSystem& unit_system) {
-        this->loadWELSEGS(keyword, unit_system);
-    }
-
-
     WellSegments WellSegments::serializationTestObject()
     {
         WellSegments result;

@@ -70,7 +70,6 @@ namespace Opm {
         WellSegments() = default;
         WellSegments(CompPressureDrop compDrop,
                      const std::vector<Segment>& segments);
-        WellSegments(const DeckKeyword& keyword, const UnitSystem& unit_system);
         void loadWELSEGS( const DeckKeyword& welsegsKeyword, const UnitSystem& unit_system);
 
         static WellSegments serializationTestObject();
