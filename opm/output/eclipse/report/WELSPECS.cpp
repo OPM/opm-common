@@ -40,6 +40,9 @@
 #include <utility>
 #include <vector>
 
+#include <fmt/format.h>
+#include <fmt/chrono.h>
+
 namespace {
 
     constexpr char field_separator   {  ':' };
@@ -335,8 +338,16 @@ namespace {
 
     std::string run_time()
     {
-        const std::string header_run_time_string { "RUN AT 12:41 ON 12 SEP 2016" };
-        return wrap_string_for_header(header_run_time_string); // TODO: Calculate properly
+        using namespace fmt::literals;
+
+        auto now = std::time(0);
+        const auto timepoint = *std::localtime(&now);
+
+        const auto header_run_time_string =
+            fmt::format("Run at {timepoint:%d-%b-%Y %H:%M}",
+                        "timepoint"_a = timepoint);
+
+        return wrap_string_for_header(header_run_time_string);
     }
 
     void write_report_header(std::ostream&        os,
