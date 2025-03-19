@@ -20,33 +20,47 @@
 #include <opm/output/eclipse/WriteRPT.hpp>
 
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
+
 #include <opm/input/eclipse/Schedule/Group/GTNode.hpp>
 #include <opm/input/eclipse/Schedule/MSW/WellSegments.hpp>
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
+
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
 
 #include <algorithm>
+#include <array>
+#include <cstddef>
+#include <ctime>
 #include <functional>
 #include <numeric>
 #include <optional>
 #include <sstream>
+#include <string>
+#include <utility>
+#include <vector>
 
 namespace {
 
-    constexpr char field_separator   {  ':' } ;
-    constexpr char field_padding     {  ' ' } ;
-    constexpr char record_separator  { '\n' } ;
-    constexpr char section_separator { '\n' } ;
-    constexpr char divider_character {  '-' } ;
+    constexpr char field_separator   {  ':' };
+    constexpr char field_padding     {  ' ' };
+    constexpr char record_separator  { '\n' };
+    constexpr char section_separator { '\n' };
+    constexpr char divider_character {  '-' };
 
-    void left_align(std::string& string, std::size_t width, std::size_t = 0) {
+    void left_align(std::string& string,
+                    const std::size_t width,
+                    const std::size_t = 0)
+    {
         if (string.size() < width) {
             string.append(std::string(width - string.size(), field_padding));
         }
     }
 
-    void left_header(std::string& string, std::size_t width, std::size_t line_number) {
+    void left_header(std::string& string,
+                     const std::size_t width,
+                     const std::size_t line_number)
+    {
         if (line_number == 0) {
             left_align(string, width, line_number);
         } else {
@@ -54,28 +68,36 @@ namespace {
         }
     }
 
-    void right_align(std::string& string, std::size_t width, std::size_t = 0) {
+    void right_align(std::string& string,
+                     const std::size_t width,
+                     const std::size_t = 0)
+    {
         if (string.size() < width) {
             string = std::string(width - string.size(), field_padding) + string;
         }
     }
 
-    void centre_align(std::string& string, std::size_t width, std::size_t = 0) {
+    void centre_align(std::string& string,
+                      const std::size_t width,
+                      const std::size_t = 0)
+    {
         if (string.size() < width) {
-            std::size_t extra_space { width - string.size() } ;
-            std::size_t shift_one { extra_space % 2 } ;
+            std::size_t extra_space = width - string.size();
+            const std::size_t shift_one = extra_space % 2;
 
             if (shift_one) {
                 extra_space--;
             }
 
-            std::size_t left { shift_one + extra_space / 2 }, right { extra_space / 2 } ;
+            const std::size_t left = shift_one + extra_space / 2;
+            const std::size_t right = extra_space / 2;
 
             string = std::string(left, field_padding) + string + std::string(right, field_padding);
         }
     }
 
-    std::string underline(const std::string& string) {
+    std::string underline(const std::string& string)
+    {
         return std::string(string.size(), divider_character);
     }
 
@@ -85,60 +107,80 @@ namespace {
         const Opm::UnitSystem& unit_system;
     };
 
-    std::string format_number(const Opm::UnitSystem& unit_system, Opm::UnitSystem::measure measure, double number, std::size_t width) {
+    std::string format_number(const Opm::UnitSystem&         unit_system,
+                              const Opm::UnitSystem::measure measure,
+                              const double                   number,
+                              const std::size_t              width)
+    {
         return std::to_string(unit_system.from_si(measure, number)).substr(0, width);
     }
 
-    template<typename T>
-    const std::string& unimplemented(const T&, const context&, std::size_t, std::size_t) {
-        static const std::string s { } ;
+    template <typename T>
+    const std::string& unimplemented(const T&, const context&, std::size_t, std::size_t)
+    {
+        static const std::string s{};
 
         return s;
     }
 
-    template<typename T, std::size_t header_height>
-    struct column {
+    template <typename T, std::size_t header_height>
+    struct column
+    {
         using fetch_function = std::function<std::string(const T&, const context&, std::size_t, std::size_t)>;
         using format_function = std::function<void(std::string&, std::size_t, std::size_t)>;
 
         std::size_t internal_width;
         std::array<std::string, header_height> header;
 
-        fetch_function fetch { unimplemented<T> } ;
-        format_function format { centre_align } ;
+        fetch_function fetch { unimplemented<T> };
+        format_function format { centre_align };
 
-        std::optional<Opm::UnitSystem::measure> dimension { std::nullopt } ;
+        std::optional<Opm::UnitSystem::measure> dimension{};
 
-        void print(std::ostream& os, const T& data, const context& ctx, std::size_t sub_report, std::size_t line_number) const {
-            std::string string_data { fetch(data, ctx, sub_report, line_number) } ;
+        void print(std::ostream& os,
+                   const T& data,
+                   const context& ctx,
+                   const std::size_t sub_report,
+                   const std::size_t line_number) const
+        {
+            std::string string_data = fetch(data, ctx, sub_report, line_number);
+
             format(string_data, internal_width, line_number);
             centre_align(string_data, total_width());
+
             os << string_data;
         }
 
-        std::string header_line(std::size_t row, const context& ctx) const
+        std::string header_line(const std::size_t row, const context& ctx) const
         {
-            if (row == header_height && dimension) {
+            if ((row == header_height) && dimension) {
                 return ctx.unit_system.name(dimension.value());
-            } else {
+            }
+            else {
                 return header[row];
             }
         }
 
-        void print_header(std::ostream& os, std::size_t row, const context& ctx) const
+        void print_header(std::ostream& os,
+                          const std::size_t row,
+                          const context& ctx) const
         {
-            std::string line { header_line(row, ctx) } ;
+            std::string line = header_line(row, ctx);
+
             centre_align(line, total_width());
+
             os << line;
         }
 
-        constexpr std::size_t total_width() const {
+        constexpr std::size_t total_width() const
+        {
             return internal_width + 2;
         }
     };
 
-    template<typename T, std::size_t header_height>
-    struct table: std::vector<column<T, header_height>> {
+    template <typename T, std::size_t header_height>
+    struct table: std::vector<column<T, header_height>>
+    {
         using std::vector<column<T, header_height>>::vector;
 
         std::size_t total_width() const
@@ -150,13 +192,16 @@ namespace {
                                    });
         }
 
-        void print_divider(std::ostream& os, char padding = divider_character) const {
+        void print_divider(std::ostream& os, const char padding = divider_character) const
+        {
             os << std::string(total_width(), padding) << record_separator;
         }
 
-        void print_header(std::ostream& os, context ctx) const {
+        void print_header(std::ostream& os, context ctx) const
+        {
             print_divider(os);
-            for (size_t i { 0 }; i < header_height; ++i) {
+
+            for (std::size_t i = 0; i < header_height; ++i) {
                 for (const auto& column : *this) {
                     os << field_separator;
 
@@ -165,13 +210,18 @@ namespace {
 
                 os << field_separator << record_separator;
             }
+
             print_divider(os);
         }
 
-        void print_data(std::ostream& os, const std::vector<T>& lines, const context& ctx, std::size_t sub_report) const {
-            std::size_t line_number { 0 } ;
-            for (const auto& line : lines) {
+        void print_data(std::ostream& os,
+                        const std::vector<T>& lines,
+                        const context& ctx,
+                        const std::size_t sub_report) const
+        {
+            std::size_t line_number = 0;
 
+            for (const auto& line : lines) {
                 for (const auto& column : *this) {
                     os << field_separator;
                     column.print(os, line, ctx, sub_report, line_number);
@@ -184,16 +234,17 @@ namespace {
         }
     };
 
-
-    template<typename InputType, typename OutputType, std::size_t header_height>
-    struct report {
-
+    template <typename InputType, typename OutputType, std::size_t header_height>
+    struct report
+    {
         std::string title;
         std::string decor;
         table<OutputType, header_height> column_definition;
         const context ctx;
 
-        report(const std::string& _title, const table<OutputType, header_height>& _coldef, const context& _ctx)
+        report(const std::string&                      _title,
+               const table<OutputType, header_height>& _coldef,
+               const context&                          _ctx)
             : title              { _title           }
             , decor              { underline(title) }
             , column_definition  { _coldef          }
@@ -203,19 +254,27 @@ namespace {
             centre_align(decor, column_definition.total_width());
         }
 
-        void print_header(std::ostream& os) const {
-            os << title << record_separator;
-            os << decor << record_separator;
-            os << section_separator;
+        void print_header(std::ostream& os) const
+        {
+            os << title << record_separator
+               << decor << record_separator
+               << section_separator;
+
             column_definition.print_header(os, ctx);
         }
 
-        void print_data(std::ostream& os, const std::vector<OutputType>& data, std::size_t sub_report = 0, char bottom_border = '-') const {
+        void print_data(std::ostream& os,
+                        const std::vector<OutputType>& data,
+                        const std::size_t sub_report = 0,
+                        const char bottom_border = '-') const
+        {
             column_definition.print_data(os, data, this->ctx, sub_report);
             column_definition.print_divider(os, bottom_border);
         }
 
-        void print_footer(std::ostream& os, const std::vector<std::pair<int, std::string>>& footnotes) const {
+        void print_footer(std::ostream& os,
+                          const std::vector<std::pair<int, std::string>>& footnotes) const
+        {
             for (const auto& fnote: footnotes) {
                 os << fnote.first << ": " << fnote.second << record_separator;
             }
@@ -227,74 +286,93 @@ namespace {
 
 namespace {
 
-    inline std::string box_line(const std::pair<std::string,std::string>& textp, std::size_t line) {
+    std::string box_line(const std::pair<std::string,std::string>& textp,
+                         const std::size_t                         line)
+    {
         if (line == 1 || line == 2) {
-            std::string text { line == 1 ? textp.first : textp.second } ;
+            auto text = (line == 1) ? textp.first : textp.second;
             left_align(text, 72);
 
             return "*" + text + "*";
-        } else {
+        }
+        else {
             return std::string(74, '*');
         }
     }
 
-    std::string wrap_string_for_header(const std::string& string) {
-        std::string r { string } ;
+    std::string wrap_string_for_header(const std::string& string)
+    {
+        auto r = string;
+
         left_align(r, 27);
         centre_align(r, 29);
 
         return r;
     }
 
-    const std::string header_days_string { "WELSPECS AT       0.00 DAYS" } ;
-    std::string header_days(const Opm::Schedule& , std::size_t ) {
+    std::string header_days([[maybe_unused]] const Opm::Schedule& schedule,
+                            [[maybe_unused]] const std::size_t    report_step)
+    {
+        const std::string header_days_string { "WELSPECS AT       0.00 DAYS" };
+
         return wrap_string_for_header(header_days_string); // TODO: Calculate properly
     }
 
-    const std::string report_line_string { "REPORT   0     31 DEC 2007"  } ;
-    std::string report_line(const Opm::Schedule&, std::size_t ) {
+    std::string report_line([[maybe_unused]] const Opm::Schedule& schedule,
+                            [[maybe_unused]] const std::size_t    report_step)
+    {
+        const std::string report_line_string { "REPORT   0     31 DEC 2007" };
+
         return wrap_string_for_header(report_line_string); // TODO: Calculate properly
     }
 
-    const std::string header_version_string { "FLOW" } ;
-    std::string version_string() {
+    std::string version_string()
+    {
+        const std::string header_version_string { "FLOW" };
+
         return wrap_string_for_header(header_version_string); // TODO: Include in build setup and fetch
     }
 
-    const std::string header_run_time_string { "RUN AT 12:41 ON 12 SEP 2016" } ;
-    std::string run_time() {
+    std::string run_time()
+    {
+        const std::string header_run_time_string { "RUN AT 12:41 ON 12 SEP 2016" };
         return wrap_string_for_header(header_run_time_string); // TODO: Calculate properly
     }
 
+    void write_report_header(std::ostream&        os,
+                             const Opm::Schedule& schedule,
+                             const std::size_t    report_step)
+    {
+        const std::string filler(29, ' ');
+        const std::pair<std::string,std::string> box_text { "", "" };
 
-    void write_report_header(std::ostream& os, const Opm::Schedule& schedule, std::size_t report_step) {
-        const static std::string filler { std::string(29, ' ') } ;
-
-        const std::pair<std::string,std::string> box_text { "", "" } ;
-        os <<
-            filler                             << box_line(box_text, 0) << filler           << record_separator <<
-            header_days(schedule, report_step) << box_line(box_text, 1) << version_string() << record_separator <<
-            report_line(schedule, report_step) << box_line(box_text, 2) << run_time()       << record_separator <<
-            filler                             << box_line(box_text, 3) << filler           << record_separator <<
-            section_separator;
+        os << filler                             << box_line(box_text, 0) << filler           << record_separator
+           << header_days(schedule, report_step) << box_line(box_text, 1) << version_string() << record_separator
+           << report_line(schedule, report_step) << box_line(box_text, 2) << run_time()       << record_separator
+           << filler                             << box_line(box_text, 3) << filler           << record_separator
+           << section_separator;
     }
 
 }
 
 namespace {
 
-    struct WellWrapper {
+    struct WellWrapper
+    {
         const Opm::Well& well;
 
-        std::string well_name(const context&, std::size_t, std::size_t) const {
+        std::string well_name(const context&, std::size_t, std::size_t) const
+        {
             return well.name();
         }
 
-        std::string group_name(const context&, std::size_t, std::size_t) const {
+        std::string group_name(const context&, std::size_t, std::size_t) const
+        {
             return well.groupName();
         }
 
-        std::string wellhead_location(const context&, std::size_t, std::size_t) const {
+        std::string wellhead_location(const context&, std::size_t, std::size_t) const
+        {
             auto i = std::to_string(well.getHeadI() + 1);
             auto j = std::to_string(well.getHeadJ() + 1);
 
@@ -304,14 +382,15 @@ namespace {
             return i + ", " + j;
         }
 
-        std::string reference_depth(const context& ctx, std::size_t, std::size_t) const {
-            if (well.hasRefDepth())
-                return format_number(ctx.unit_system, Opm::UnitSystem::measure::length, well.getRefDepth(), 6);
-            else
-                return format_number(ctx.unit_system, Opm::UnitSystem::measure::identity, -1.0e+20, 9);
+        std::string reference_depth(const context& ctx, std::size_t, std::size_t) const
+        {
+            return well.hasRefDepth()
+                ? format_number(ctx.unit_system, Opm::UnitSystem::measure::length, well.getRefDepth(), 6)
+                : format_number(ctx.unit_system, Opm::UnitSystem::measure::identity, -1.0e+20, 9);
         }
 
-        std::string preferred_phase(const context&, std::size_t, std::size_t) const {
+        std::string preferred_phase(const context&, std::size_t, std::size_t) const
+        {
             std::ostringstream ss;
 
             ss << well.getPreferredPhase();
@@ -319,39 +398,49 @@ namespace {
             return ss.str().substr(0, 3);
         }
 
-        std::string pvt_tab(const context&, std::size_t, std::size_t) const {
+        std::string pvt_tab(const context&, std::size_t, std::size_t) const
+        {
             return std::to_string( well.pvt_table_number() );
         }
 
-        std::string shut_status(const context&, std::size_t, std::size_t) const {
+        std::string shut_status(const context&, std::size_t, std::size_t) const
+        {
             return Opm::WellStatus2String(well.getStatus());
         }
 
-        std::string region_number(const context&, std::size_t, std::size_t) const {
+        std::string region_number(const context&, std::size_t, std::size_t) const
+        {
             return std::to_string( well.fip_region_number() );
         }
 
-        std::string dens_calc(const context&, std::size_t, std::size_t) const {
+        std::string dens_calc(const context&, std::size_t, std::size_t) const
+        {
             return well.segmented_density_calculation() ? "SEG" : "AVG";
         }
 
         // Don't know what the D-FACTOR represents, but all examples just
         // show 0; we have therefore hardcoded that for now.
-        std::string D_factor(const context&, std::size_t, std::size_t) const {
+        std::string D_factor(const context&, std::size_t, std::size_t) const
+        {
             return "0";
         }
 
-        std::string cross_flow(const context&, std::size_t, std::size_t) const {
+        std::string cross_flow(const context&, std::size_t, std::size_t) const
+        {
             return well.getAllowCrossFlow() ? "YES" : "NO";
         }
 
-        std::string drainage_radius(const context& ctx, std::size_t, std::size_t) const {
-            if (well.getDrainageRadius() == 0)
-                return "P.EQUIV.R";
-            return format_number(ctx.unit_system, Opm::UnitSystem::measure::length, well.getDrainageRadius(), 6);
+        std::string drainage_radius(const context& ctx, std::size_t, std::size_t) const
+        {
+            return (well.getDrainageRadius() == 0)
+                ? std::string { "P.EQUIV.R" }
+                : format_number(ctx.unit_system,
+                                Opm::UnitSystem::measure::length,
+                                well.getDrainageRadius(), 6);
         }
 
-        std::string gas_inflow(const context&, std::size_t, std::size_t) const {
+        std::string gas_inflow(const context&, std::size_t, std::size_t) const
+        {
             return Opm::WellGasInflowEquation2String(well.gas_inflow_equation());
         }
     };
@@ -373,51 +462,81 @@ namespace {
     };
 
 
-void report_well_specification_data(std::ostream& os, const std::vector<Opm::Well>& data, const context& ctx) {
-    report<Opm::Well, WellWrapper, 3> well_specification { "WELL SPECIFICATION DATA", well_specification_table, ctx};
-    std::vector<WellWrapper> wrapper_data;
-    std::transform(data.begin(), data.end(), std::back_inserter(wrapper_data), [](const Opm::Well& well) { return WellWrapper { well } ; });
+    void report_well_specification_data(std::ostream& os,
+                                        const std::vector<Opm::Well>& data,
+                                        const context& ctx)
+    {
+        report<Opm::Well, WellWrapper, 3> well_specification {
+            "WELL SPECIFICATION DATA", well_specification_table, ctx
+        };
 
-    well_specification.print_header(os);
-    well_specification.print_data(os, wrapper_data);
-    well_specification.print_footer(os, {{1, "The WELL D-FACTOR is not implemented - and the report will always show the default value 0."}});
-}
+        std::vector<WellWrapper> wrapper_data;
+        wrapper_data.reserve(data.size());
+
+        std::transform(data.begin(), data.end(),
+                       std::back_inserter(wrapper_data),
+                       [](const Opm::Well& well)
+                       { return WellWrapper { well }; });
+
+        well_specification.print_header(os);
+        well_specification.print_data(os, wrapper_data);
+
+        well_specification.print_footer(os, {{1, "The WELL D-FACTOR is not implemented "
+                                                  "- and the report will always show "
+                                                  "the default value 0."}});
+    }
 
 }
 
 namespace {
 
-    struct GroupWrapper {
+    struct GroupWrapper
+    {
         const Opm::GTNode& node;
 
-        const std::string& group_name(const context&, std::size_t, std::size_t) const {
+        const std::string& group_name(const context&, std::size_t, std::size_t) const
+        {
             return node.group().name();
         }
 
-        std::string group_level(const context&, std::size_t, std::size_t) const {
+        std::string group_level(const context&, std::size_t, std::size_t) const
+        {
             return std::to_string(node.level());
         }
 
-        const std::string& group_parent(const context&, std::size_t, std::size_t) const {
+        const std::string& group_parent(const context&, std::size_t, std::size_t) const
+        {
             return node.parent_name();
         }
     };
 
-    const table<GroupWrapper, 2> group_levels_table {
-        { 8, { "GROUP"   , "NAME"     }, &GroupWrapper::group_name  , left_align },
-        { 5, { "LEVEL"   ,            }, &GroupWrapper::group_level ,            },
-        { 8, { "PARENT"  , "GROUP"    }, &GroupWrapper::group_parent, left_align },
-    };
+    void report_group_levels_data(std::ostream& os,
+                                  const context& ctx,
+                                  const std::size_t report_step)
+    {
+        const table<GroupWrapper, 2> group_levels_table {
+            { 8, { "GROUP"   , "NAME"     }, &GroupWrapper::group_name  , left_align },
+            { 5, { "LEVEL"   ,            }, &GroupWrapper::group_level ,            },
+            { 8, { "PARENT"  , "GROUP"    }, &GroupWrapper::group_parent, left_align },
+        };
 
-    void report_group_levels_data(std::ostream& os, const context& ctx, std::size_t report_step) {
-        const report<Opm::GTNode, GroupWrapper, 2> group_levels { "GROUP LEVELS", group_levels_table, ctx } ;
+        const report<Opm::GTNode, GroupWrapper, 2> group_levels {
+            "GROUP LEVELS", group_levels_table, ctx
+        };
+
         group_levels.print_header(os);
 
-        std::vector<GroupWrapper> data { } ;
-        const Opm::GTNode root { ctx.sched.groupTree(report_step) } ;
-        std::vector<const Opm::GTNode*> nodes { root.all_nodes() } ;
+        const Opm::GTNode root = ctx.sched.groupTree(report_step);
 
-        std::transform(++nodes.begin(), nodes.end(), std::back_inserter(data), [](const Opm::GTNode* node) { return GroupWrapper { *node } ; });
+        std::vector<const Opm::GTNode*> nodes = root.all_nodes();
+
+        std::vector<GroupWrapper> data {};
+        data.reserve(nodes.size() - 1);
+
+        std::transform(++nodes.begin(), nodes.end(),
+                       std::back_inserter(data),
+                       [](const Opm::GTNode* node)
+                       { return GroupWrapper { *node }; });
 
         group_levels.print_data(os, data);
         group_levels.print_footer(os, {});
@@ -426,7 +545,8 @@ namespace {
 
 namespace {
 
-    struct WellConnection {
+    struct WellConnection
+    {
         const Opm::Well& well;
         const Opm::Connection& connection;
 
@@ -434,59 +554,76 @@ namespace {
             return well.name();
         }
 
-        std::string grid_block(const context&, std::size_t, std::size_t) const {
-            const std::array<int,3> ijk { connection.getI() + 1, connection.getJ() + 1, connection.getK() + 1 } ;
+        std::string grid_block(const context&, std::size_t, std::size_t) const
+        {
+            const std::array<int,3> ijk {
+                connection.getI() + 1, connection.getJ() + 1, connection.getK() + 1
+            };
 
-            auto compose_coordinates { [](const std::string& out, const int in) -> std::string {
-                constexpr auto delimiter { ',' } ;
-                std::string coordinate_part { std::to_string(in) } ;
-                right_align(coordinate_part, 3);
+            auto compose_coordinates =
+                [](const std::string& out, const int in) -> std::string
+                {
+                    constexpr auto delimiter { ',' };
 
-                return out.empty()
-                    ? coordinate_part
-                    : out + delimiter + coordinate_part;
-            } };
+                    std::string coordinate_part = std::to_string(in);
+                    right_align(coordinate_part, 3);
 
-            return std::accumulate(std::begin(ijk), std::end(ijk), std::string {}, compose_coordinates);
+                    return out.empty()
+                        ? coordinate_part
+                        : out + delimiter + coordinate_part;
+                };
+
+            return std::accumulate(std::begin(ijk), std::end(ijk),
+                                   std::string {}, compose_coordinates);
         }
 
-        std::string cmpl_no(const context&, std::size_t, std::size_t) const {
+        std::string cmpl_no(const context&, std::size_t, std::size_t) const
+        {
             return std::to_string(connection.complnum());
         }
 
-        std::string centre_depth(const context& ctx, std::size_t, std::size_t) const {
+        std::string centre_depth(const context& ctx, std::size_t, std::size_t) const
+        {
             return format_number(ctx.unit_system, Opm::UnitSystem::measure::length, connection.depth(), 6);
         }
 
-        std::string open_shut(const context&, std::size_t, std::size_t) const {
+        std::string open_shut(const context&, std::size_t, std::size_t) const
+        {
             return Opm::Connection::State2String(connection.state());
         }
 
-        std::string sat_tab(const context&, std::size_t, std::size_t) const {
+        std::string sat_tab(const context&, std::size_t, std::size_t) const
+        {
             return std::to_string(connection.satTableId());
         }
 
-        std::string conn_factor(const context& ctx, std::size_t, std::size_t) const {
+        std::string conn_factor(const context& ctx, std::size_t, std::size_t) const
+        {
             return format_number(ctx.unit_system, Opm::UnitSystem::measure::transmissibility, connection.CF(), 10);
         }
 
-        std::string int_diam(const context& ctx, std::size_t, std::size_t) const {
+        std::string int_diam(const context& ctx, std::size_t, std::size_t) const
+        {
             return format_number(ctx.unit_system, Opm::UnitSystem::measure::length, connection.rw() * 2, 8);
         }
 
-        std::string kh_value(const context&, std::size_t, std::size_t) const {
+        std::string kh_value(const context&, std::size_t, std::size_t) const
+        {
             return std::to_string(connection.Kh()).substr(0, 9);
         }
 
-        std::string skin_factor(const context&, std::size_t, std::size_t) const {
+        std::string skin_factor(const context&, std::size_t, std::size_t) const
+        {
             return std::to_string(connection.skinFactor()).substr(0, 8);
         }
 
-        std::string sat_scaling(const context&, std::size_t, std::size_t) const {
+        std::string sat_scaling(const context&, std::size_t, std::size_t) const
+        {
             return "";
         }
 
-        const std::string dfactor(const context&, std::size_t, std::size_t) const {
+        const std::string dfactor(const context&, std::size_t, std::size_t) const
+        {
             return "0";
         }
 
@@ -510,61 +647,79 @@ namespace {
 
 namespace {
 
-    struct SegmentConnection {
+    struct SegmentConnection
+    {
         const Opm::Well& well;
         const Opm::Connection& connection;
         const Opm::Segment& segment;
 
         const std::pair<double,double>& perf_range;
 
-        const std::string& well_name(const context&, std::size_t, std::size_t) const {
+        const std::string& well_name(const context&, std::size_t, std::size_t) const
+        {
             return well.name();
         }
 
-        std::string connection_grid(const context& ctx, std::size_t sub_report, std::size_t n) const {
-            const WellConnection wc { well, connection } ;
+        std::string connection_grid(const context& ctx,
+                                    const std::size_t sub_report,
+                                    const std::size_t n) const
+        {
+            const WellConnection wc { well, connection };
 
             return wc.grid_block(ctx, sub_report, n);
         }
 
-        std::string segment_number(const context&, std::size_t, std::size_t) const {
+        std::string segment_number(const context&, std::size_t, std::size_t) const
+        {
             return std::to_string(segment.segmentNumber());
         }
 
-        std::string branch_id(const context&, std::size_t, std::size_t) const {
+        std::string branch_id(const context&, std::size_t, std::size_t) const
+        {
             return std::to_string(segment.branchNumber());
         }
 
-        std::string perf_start_length(const context& ctx, std::size_t, std::size_t) const {
+        std::string perf_start_length(const context& ctx, std::size_t, std::size_t) const
+        {
             return format_number(ctx.unit_system, Opm::UnitSystem::measure::length, perf_range.first, 6);
         }
 
-        std::string perf_mid_length(const context& ctx, std::size_t, std::size_t) const {
-            return format_number(ctx.unit_system, Opm::UnitSystem::measure::length, (perf_range.first + perf_range.second) / 2.0, 6);
+        std::string perf_mid_length(const context& ctx, std::size_t, std::size_t) const
+        {
+            return format_number(ctx.unit_system, Opm::UnitSystem::measure::length,
+                                 (perf_range.first + perf_range.second) / 2.0, 6);
         }
 
-        std::string perf_end_length(const context& ctx, std::size_t, std::size_t) const {
+        std::string perf_end_length(const context& ctx, std::size_t, std::size_t) const
+        {
             return format_number(ctx.unit_system, Opm::UnitSystem::measure::length, perf_range.second, 6);
         }
 
-        std::string length_end_segmt(const context& ctx, std::size_t, std::size_t) const {
+        std::string length_end_segmt(const context& ctx, std::size_t, std::size_t) const
+        {
             return format_number(ctx.unit_system, Opm::UnitSystem::measure::length, segment.totalLength(), 6);
         }
 
-        std::string connection_depth(const context& ctx, std::size_t, std::size_t) const {
+        std::string connection_depth(const context& ctx, std::size_t, std::size_t) const
+        {
             return format_number(ctx.unit_system, Opm::UnitSystem::measure::length, connection.depth(), 6);
         }
 
-        std::string segment_depth(const context& ctx, std::size_t, std::size_t) const {
+        std::string segment_depth(const context& ctx, std::size_t, std::size_t) const
+        {
             return format_number(ctx.unit_system, Opm::UnitSystem::measure::length, segment.depth(), 6);
         }
 
-        std::string grid_block_depth(const context& ctx, std::size_t, std::size_t) const {
-            return format_number(ctx.unit_system, Opm::UnitSystem::measure::length, ctx.grid.getCellDepth( connection.global_index() ), 6);
+        std::string grid_block_depth(const context& ctx, std::size_t, std::size_t) const
+        {
+            return format_number(ctx.unit_system, Opm::UnitSystem::measure::length,
+                                 ctx.grid.getCellDepth(connection.global_index()), 6);
         }
 
-
-        static void ws_format(std::string& string, std::size_t, std::size_t i) {
+        static void ws_format(std::string& string,
+                              const std::size_t,
+                              const std::size_t i)
+        {
             if (i == 0) {
                 left_align(string, 8, i);
             } else {
@@ -574,113 +729,131 @@ namespace {
 
     };
 
-
-
-    struct WellSegment {
+    struct WellSegment
+    {
         const Opm::Well& well;
         const Opm::Segment& segment;
 
-        std::string well_name_seg(const context&, std::size_t sub_report, std::size_t n) const {
-            if (sub_report > 0)
+        std::string well_name_seg(const context&,
+                                  const std::size_t sub_report,
+                                  const std::size_t n) const
+        {
+            if (sub_report > 0) {
                 return "";
+            }
 
-            if (n == 0)
+            if (n == 0) {
                 return well.name();
+            }
 
-            if (n == 1)
-                return Opm::WellSegments::CompPressureDropToString(well.getSegments().compPressureDrop());
+            if (n == 1) {
+                return Opm::WellSegments::CompPressureDropToString
+                    (well.getSegments().compPressureDrop());
+            }
 
             return "";
         }
 
-        std::string segment_number(const context&, std::size_t, std::size_t) const {
+        std::string segment_number(const context&, std::size_t, std::size_t) const
+        {
             return std::to_string(segment.segmentNumber());
         }
 
-        std::string branch_number(const context&, std::size_t, std::size_t n) const {
-            if (n == 0)
-                return std::to_string(segment.branchNumber());
-            return "";
+        std::string branch_number(const context&, std::size_t, const std::size_t n) const
+        {
+            return (n == 0)
+                ? std::to_string(segment.branchNumber())
+                : "";
         }
 
-        std::string main_inlet(const context&, std::size_t, std::size_t) const {
-            const auto& inlets { segment.inletSegments() } ;
+        std::string main_inlet(const context&, std::size_t, std::size_t) const
+        {
+            const auto& inlets = segment.inletSegments();
 
-            if (inlets.size() != 0) {
-                return std::to_string(segment.inletSegments().front());
-            } else {
-                return "0";
-            }
+            return inlets.empty() ? "0" : std::to_string(inlets.front());
         }
 
-        std::string outlet(const context&, std::size_t, std::size_t) const {
+        std::string outlet(const context&, std::size_t, std::size_t) const
+        {
             return std::to_string(segment.outletSegment());
         }
 
-        std::string total_length(const context& ctx, std::size_t, std::size_t) const {
+        std::string total_length(const context& ctx, std::size_t, std::size_t) const
+        {
             return format_number(ctx.unit_system, Opm::UnitSystem::measure::length, segment.totalLength(), 6);
         }
 
-        std::string length(const context& ctx, std::size_t sub_report, std::size_t line_number) const {
-            if (segment.segmentNumber() == 1)
+        std::string length(const context& ctx,
+                           const std::size_t sub_report,
+                           const std::size_t line_number) const
+        {
+            if (segment.segmentNumber() == 1) {
                 return total_length(ctx, sub_report, line_number);
+            }
 
-            const auto& segments { well.getSegments() } ;
-            const auto& outlet_segment { segments.getFromSegmentNumber( segment.outletSegment() ) } ;
-            return format_number(ctx.unit_system, Opm::UnitSystem::measure::length, segment.totalLength() - outlet_segment.totalLength(), 6);
+            const auto& segments = well.getSegments();
+            const auto& outlet_segment = segments.getFromSegmentNumber(segment.outletSegment());
+
+            return format_number(ctx.unit_system, Opm::UnitSystem::measure::length,
+                                 segment.totalLength() - outlet_segment.totalLength(), 6);
         }
 
-        std::string t_v_depth(const context& ctx, std::size_t, std::size_t) const {
+        std::string t_v_depth(const context& ctx, std::size_t, std::size_t) const
+        {
             return format_number(ctx.unit_system, Opm::UnitSystem::measure::length, segment.depth(), 6);
         }
 
-        std::string depth_change(const context& ctx, std::size_t sub_report, std::size_t line_number) const {
-            if (segment.segmentNumber() == 1)
+        std::string depth_change(const context& ctx,
+                                 const std::size_t sub_report,
+                                 const std::size_t line_number) const
+        {
+            if (segment.segmentNumber() == 1) {
                 return t_v_depth(ctx, sub_report, line_number);
-
-            const auto& segments { well.getSegments() } ;
-            const auto& outlet_segment { segments.getFromSegmentNumber( segment.outletSegment() ) } ;
-            return format_number(ctx.unit_system, Opm::UnitSystem::measure::length, segment.depth() - outlet_segment.depth(), 6);
-        }
-
-        std::string internal_diameter(const context& ctx, std::size_t, std::size_t) const {
-            const auto number { segment.internalDiameter() } ;
-
-            if (number != Opm::Segment::invalidValue()) {
-                return format_number(ctx.unit_system, Opm::UnitSystem::measure::length, number, 6);
-            } else {
-                return "0";
             }
+
+            const auto& segments = well.getSegments();
+            const auto& outlet_segment = segments.getFromSegmentNumber(segment.outletSegment());
+
+            return format_number(ctx.unit_system, Opm::UnitSystem::measure::length,
+                                 segment.depth() - outlet_segment.depth(), 6);
         }
 
-        std::string roughness(const context& ctx, std::size_t, std::size_t) const {
-            const auto number { segment.roughness() } ;
+        std::string internal_diameter(const context& ctx, std::size_t, std::size_t) const
+        {
+            const auto number = segment.internalDiameter();
 
-            if (number != Opm::Segment::invalidValue()) {
-                return format_number(ctx.unit_system, Opm::UnitSystem::measure::length, number, 8);
-            } else {
-                return "0";
-            }
+            return (number == Opm::Segment::invalidValue())
+                ? "0"
+                : format_number(ctx.unit_system, Opm::UnitSystem::measure::length, number, 6);
         }
 
-        std::string cross_section(const context&, std::size_t, std::size_t) const {
-            const auto number { segment.crossArea() } ;
+        std::string roughness(const context& ctx, std::size_t, std::size_t) const
+        {
+            const auto number = segment.roughness();
 
-            if (number != Opm::Segment::invalidValue()) {
-                return std::to_string(number).substr(0, 7);
-            } else {
-                return "0";
-            }
+            return (number == Opm::Segment::invalidValue())
+                ? "0"
+                : format_number(ctx.unit_system, Opm::UnitSystem::measure::length, number, 8);
         }
 
-        std::string volume(const context& ctx, std::size_t, std::size_t) const {
+        std::string cross_section(const context&, std::size_t, std::size_t) const
+        {
+            const auto number = segment.crossArea();
+
+            return (number == Opm::Segment::invalidValue())
+                ? "0"
+                : std::to_string(number).substr(0, 7);
+        }
+
+        std::string volume(const context& ctx, std::size_t, std::size_t) const
+        {
             return format_number(ctx.unit_system, Opm::UnitSystem::measure::volume, segment.volume(), 5);
         }
 
-        std::string pressure_drop_mult(const context&, std::size_t, std::size_t) const {
+        std::string pressure_drop_mult(const context&, std::size_t, std::size_t) const
+        {
             return std::to_string(1.0).substr(0, 5);
         }
-
 
         static void ws_format(std::string& string, std::size_t, std::size_t i) {
             if (i == 0) {
@@ -689,9 +862,7 @@ namespace {
                 right_align(string, 8, i);
             }
         }
-
     };
-
 
     const table<SegmentConnection, 3> msw_connection_table {
         {  8, {"WELL"       , "NAME"       ,              }, &SegmentConnection::well_name        , left_header },
@@ -727,14 +898,17 @@ namespace {
 
 namespace {
 
-    const std::string hierarchy_title     { "HIERARCHICAL DESCRIPTION OF GROUP CONTROL STRUCTURE" } ;
-    const std::string hierarchy_underline { underline(hierarchy_title)                            } ;
+    const std::string hierarchy_title     { "HIERARCHICAL DESCRIPTION OF GROUP CONTROL STRUCTURE" };
+    const std::string hierarchy_underline { underline(hierarchy_title)                            };
 
-    constexpr char horizontal_line  { '-' } ;
-    constexpr char vertical_line    { '|' } ;
-    constexpr char indent_character { ' ' } ;
+    constexpr char horizontal_line  { '-' };
+    constexpr char vertical_line    { '|' };
+    constexpr char indent_character { ' ' };
 
-    std::string decorate_hierarchy_name(const std::string& name, bool first_line, bool last_child) {
+    std::string decorate_hierarchy_name(const std::string& name,
+                                        const bool first_line,
+                                        const bool last_child)
+    {
         if (first_line) {
             return std::string(1, vertical_line) + std::string(3, horizontal_line) + name;
         } else if (last_child) {
@@ -744,32 +918,38 @@ namespace {
         }
     }
 
-    std::vector<std::string> lines_for_node(const Opm::GTNode& node) {
-        std::vector<std::string> lines { node.group().name() } ;
+    std::vector<std::string> lines_for_node(const Opm::GTNode& node)
+    {
+        std::vector<std::string> lines { node.group().name() };
 
-        const std::vector<Opm::GTNode>& children { node.groups() } ;
+        const auto& children = node.groups();
 
-        if (children.size()) {
-            lines.push_back(std::string(1, vertical_line));
+        if (children.empty()) {
+            return lines;
+        }
 
-            std::size_t i { 0 } ;
-            for (const auto& child : children) {
-                ++i;
-                std::vector<std::string> child_lines { lines_for_node(child) } ;
+        lines.push_back(std::string(1, vertical_line));
 
-                bool first_line { true } ;
-                for (const auto& line : child_lines) {
-                    lines.push_back(decorate_hierarchy_name(line, first_line, i == children.size()));
+        std::size_t i = 0;
+        for (const auto& child : children) {
+            ++i;
+            std::vector<std::string> child_lines = lines_for_node(child);
 
-                    first_line = false;
-                }
+            bool first_line = true;
+            for (const auto& line : child_lines) {
+                lines.push_back(decorate_hierarchy_name(line, first_line, i == children.size()));
+
+                first_line = false;
             }
         }
 
         return lines;
     }
 
-    void report_group_hierarchy_data(std::ostream& os, const context& ctx, std::size_t report_step = 0) {
+    void report_group_hierarchy_data(std::ostream& os,
+                                     const context& ctx,
+                                     const std::size_t report_step = 0)
+    {
         os << hierarchy_title     << record_separator
            << hierarchy_underline << record_separator
            << section_separator;
@@ -785,71 +965,142 @@ namespace {
 
 namespace {
 
-void report_well_connection_data(std::ostream& os, const std::vector<Opm::Well>& data, const context& ctx) {
-    const report<Opm::Well, WellConnection, 3> well_connection { "WELL CONNECTION DATA", connection_table, ctx};
-    well_connection.print_header(os);
+    void report_well_connection_data(std::ostream& os,
+                                     const std::vector<Opm::Well>& data,
+                                     const context& ctx)
+    {
+        const report<Opm::Well, WellConnection, 3> well_connection {
+            "WELL CONNECTION DATA", connection_table, ctx
+        };
 
-    std::size_t sub_report { 0 } ;
-    for (const auto& well : data) {
-        std::vector<WellConnection> wrapper_data;
-        const auto& connections { well.getConnections() } ;
-        std::transform(connections.begin(), connections.end(), std::back_inserter(wrapper_data), [&well](const Opm::Connection& connection) { return WellConnection { well, connection } ; });
+        well_connection.print_header(os);
 
-        well_connection.print_data(os, wrapper_data, sub_report);
-        sub_report++;
+        std::size_t sub_report = 0;
+        for (const auto& well : data) {
+            const auto& connections = well.getConnections();
+
+            std::vector<WellConnection> wrapper_data{};
+            wrapper_data.reserve(connections.size());
+
+            std::transform(connections.begin(),
+                           connections.end(),
+                           std::back_inserter(wrapper_data),
+                           [&well](const Opm::Connection& connection)
+                           { return WellConnection { well, connection }; });
+
+            well_connection.print_data(os, wrapper_data, sub_report);
+            ++sub_report;
+        }
+
+        well_connection.print_footer(os, {
+                {1, "The well connection D-FACTOR is not "
+                 "implemented in OPM and the report "
+                 "will always show 0."},
+                {2, "The saturation scaling data has not "
+                 "been implemented in the report and will "
+                 "always be blank."}
+            });
     }
-    well_connection.print_footer(os, {{1, "The well connection D-FACTOR is not implemented in opm and the report will always show 0."},
-                                      {2, "The saturation scaling data has not been implemented in the report and will always be blank."}});
-}
 
 }
 
-void Opm::RptIO::workers::write_WELSPECS(std::ostream& os, unsigned, const Opm::Schedule& schedule, const Opm::EclipseGrid& grid, const Opm::UnitSystem& unit_system, std::size_t report_step) {
-    auto well_names { schedule.changed_wells(report_step) } ;
-    if (well_names.empty())
+// ===========================================================================
+
+void Opm::RptIO::workers::wellSpecification(std::ostream&      os,
+                                            const int          /* wellSpecRequest */,
+                                            const Schedule&    schedule,
+                                            const EclipseGrid& grid,
+                                            const UnitSystem&  unit_system,
+                                            const std::size_t  report_step)
+{
+    const auto well_names = schedule.changed_wells(report_step);
+    if (well_names.empty()) {
         return;
-
-    context ctx { schedule, grid, unit_system } ;
-    std::vector<Well> changed_wells;
-    std::transform(well_names.begin(), well_names.end(), std::back_inserter(changed_wells), [&report_step, &schedule](const std::string& wname) { return schedule.getWell(wname, report_step); });
+    }
 
     write_report_header(os, schedule, report_step);
+
+    const context ctx { schedule, grid, unit_system };
+
+    std::vector<Well> changed_wells;
+    changed_wells.reserve(well_names.size());
+    std::transform(well_names.begin(), well_names.end(),
+                   std::back_inserter(changed_wells),
+                   [&report_step, &schedule](const std::string& wname)
+                   { return schedule.getWell(wname, report_step); });
+
     report_well_specification_data(os, changed_wells, ctx);
     report_well_connection_data(os, changed_wells, ctx);
 
     for (const auto& well : changed_wells) {
-        if (well.isMultiSegment()) {
-            {
-                const report<Opm::Well, WellSegment, 3> msw_data { "MULTI-SEGMENT WELL: SEGMENT STRUCTURE", msw_well_table, ctx};
-                msw_data.print_header(os);
-                std::size_t sub_report { 0 } ;
-                const auto& segments { well.getSegments() } ;
-                for (const auto& branch : segments.branches()) {
-                    std::vector<WellSegment> wrapper_data;
-                    const auto& branch_segments { segments.branchSegments(branch) } ;
-                    std::transform(branch_segments.begin(), branch_segments.end(), std::back_inserter(wrapper_data), [&well](const Opm::Segment& segment) { return WellSegment { well, segment } ; });
+        if (! well.isMultiSegment()) {
+            continue;
+        }
 
-                    sub_report++;
-                    if (sub_report == (segments.branches().size()))
-                        msw_data.print_data(os, wrapper_data, sub_report - 1, '=');
-                    else
-                        msw_data.print_data(os, wrapper_data, sub_report - 1, '-');
-                }
-                msw_data.print_footer(os, {{1, "The pressure drop multiplier is not implemented in opm/flow and will always show the default value 1.0."}});
+        {
+            const report<Well, WellSegment, 3> msw_data {
+                "MULTI-SEGMENT WELL: SEGMENT STRUCTURE", msw_well_table, ctx
+            };
+
+            msw_data.print_header(os);
+
+            std::size_t sub_report {0};
+            const auto& segments = well.getSegments();
+
+            for (const auto& branch : segments.branches()) {
+                const auto& branch_segments = segments.branchSegments(branch);
+
+                std::vector<WellSegment> wrapper_data;
+                wrapper_data.reserve(branch_segments.size());
+
+                std::transform(branch_segments.begin(),
+                               branch_segments.end(),
+                               std::back_inserter(wrapper_data),
+                               [&well](const Segment& segment)
+                               { return WellSegment { well, segment }; });
+
+                const auto separator = (sub_report + 1 == segments.branches().size())
+                    ? '=' : '-';
+
+                msw_data.print_data(os, wrapper_data, sub_report, separator);
+
+                ++sub_report;
             }
+
+            msw_data.print_footer(os, {{1, "The pressure drop multiplier is not "
+                                            "implemented in opm/flow and will "
+                                            "always show the default value 1.0." }});
+        }
+
+        {
+            const report<Well, SegmentConnection, 3> msw_connection {
+                "MULTI-SEGMENT WELL: CONNECTION DATA", msw_connection_table, ctx
+            };
+
+            msw_connection.print_header(os);
+
             {
-                const report<Opm::Well, SegmentConnection, 3> msw_connection { "MULTI-SEGMENT WELL: CONNECTION DATA", msw_connection_table,  ctx};
-                msw_connection.print_header(os);
-                {
-                    std::vector<SegmentConnection> wrapper_data;
-                    const auto& connections { well.getConnections() } ;
-                    const auto& segments { well.getSegments() } ;
-                    std::transform(connections.begin(), connections.end(), std::back_inserter(wrapper_data),
-                                   [&well, &segments] (const Opm::Connection& connection) { return SegmentConnection { well, connection, segments.getFromSegmentNumber(connection.segment()), *connection.perf_range() } ; });
-                    msw_connection.print_data(os, wrapper_data, 0, '=');
-                }
-                msw_connection.print_footer(os, {});
+                const auto& connections = well.getConnections();
+                const auto& segments = well.getSegments();
+
+                std::vector<SegmentConnection> wrapper_data;
+                wrapper_data.reserve(connections.size());
+
+                std::transform(connections.begin(), connections.end(),
+                               std::back_inserter(wrapper_data),
+                               [&well, &segments] (const Connection& connection)
+                               {
+                                   return SegmentConnection {
+                                       well, connection,
+                                       segments.getFromSegmentNumber(connection.segment()),
+                                       *connection.perf_range()
+                                   };
+                               });
+
+                msw_connection.print_data(os, wrapper_data, 0, '=');
             }
+
+            msw_connection.print_footer(os, {});
         }
     }
 
