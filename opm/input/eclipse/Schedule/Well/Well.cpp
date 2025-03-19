@@ -1793,12 +1793,12 @@ bool Well::handleWELSEGS(const DeckKeyword& keyword)
 {
     if (this->segments != nullptr) {
         auto new_segments = std::make_shared<WellSegments>(*this->segments);
-        new_segments->loadWELSEGS(keyword);
+        new_segments->loadWELSEGS(keyword, *unit_system);
 
         this->updateSegments(std::move(new_segments));
     }
     else {
-        this->updateSegments(std::make_shared<WellSegments>(keyword));
+        this->updateSegments(std::make_shared<WellSegments>(keyword, *unit_system));
     }
 
     return true;

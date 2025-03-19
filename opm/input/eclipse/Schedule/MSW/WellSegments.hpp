@@ -29,6 +29,7 @@
 namespace Opm {
     class SICD;
     class AutoICD;
+    class UnitSystem;
     class Valve;
     class WellConnections;
 }
@@ -69,8 +70,8 @@ namespace Opm {
         WellSegments() = default;
         WellSegments(CompPressureDrop compDrop,
                      const std::vector<Segment>& segments);
-        explicit WellSegments(const DeckKeyword& keyword);
-        void loadWELSEGS( const DeckKeyword& welsegsKeyword);
+        WellSegments(const DeckKeyword& keyword, const UnitSystem& unit_system);
+        void loadWELSEGS( const DeckKeyword& welsegsKeyword, const UnitSystem& unit_system);
 
         static WellSegments serializationTestObject();
 
@@ -111,7 +112,7 @@ namespace Opm {
         const std::vector<Segment>::const_iterator begin() const;
         const std::vector<Segment>::const_iterator end() const;
 
-        void checkSegmentDepthConsistency(const std::string& well_name) const;
+        void checkSegmentDepthConsistency(const std::string& well_name, const UnitSystem& unit_system) const;
 
         template<class Serializer>
         void serializeOp(Serializer& serializer)
@@ -124,7 +125,8 @@ namespace Opm {
     private:
         void processABS();
         void processINC(double depth_top, double length_top);
-        void process(const std::string& well_name, LengthDepth length_depth, double depth_top, double length_top);
+        void process(const std::string& well_name, const UnitSystem& unit_system,
+                     LengthDepth length_depth, double depth_top, double length_top);
         void addSegment(const Segment& new_segment);
         void addSegment(const int segment_number,
                         const int branch,
