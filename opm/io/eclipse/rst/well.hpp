@@ -122,10 +122,10 @@ struct RstWell
     float wtest_interval;
     float wtest_startup;
     float grupcon_gr_scaling;
-    float glift_max_rate;
-    float glift_min_rate;
-    float glift_weight_factor;
-    float glift_inc_weight_factor;
+    double glift_max_rate;
+    double glift_min_rate;
+    double glift_weight_factor;
+    double glift_inc_weight_factor;
     float dfac_corr_coeff_a{};
     float dfac_corr_exponent_b{};
     float dfac_corr_exponent_c{};
