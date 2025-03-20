@@ -171,6 +171,7 @@ void handleWCONHIST(HandlerContext& handlerContext)
                 handlerContext.state().wellgroup_events().addEvent( well_name, ScheduleEvents::REQUEST_OPEN_WELL);
             }
 
+            handlerContext.affected_well(well_name);
         }
     }
 }
@@ -328,6 +329,7 @@ void handleWCONINJH(HandlerContext& handlerContext)
                 handlerContext.state().wellgroup_events().addEvent( well_name, ScheduleEvents::REQUEST_OPEN_WELL);
             }
 
+            handlerContext.affected_well(well_name);
         }
     }
 }
