@@ -1043,9 +1043,12 @@ bool Well::handleCOMPSEGS(const DeckKeyword& keyword,
         };
     }
 
-    auto [new_connections, new_segments] = Compsegs::processCOMPSEGS
-        (keyword, *this->connections, *this->segments,
-         grid, parseContext, errors);
+    const auto& compsegs_vector = Compsegs::compsegsFromCOMPSEGSKeyword(
+        keyword, *this->segments, grid, parseContext, errors
+    );
+    auto [new_connections, new_segments] = Compsegs::processCOMPSEGS(
+        compsegs_vector, *this->connections, *this->segments, grid
+    );
 
     this->updateConnections(std::make_shared<WellConnections>(std::move(new_connections)), false);
     this->updateSegments(std::make_shared<WellSegments>(std::move(new_segments)));
