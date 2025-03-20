@@ -45,6 +45,8 @@
 
 #include <opm/input/eclipse/Python/Python.hpp>
 
+#include <opm/input/eclipse/Units/UnitSystem.hpp>
+
 #include <opm/input/eclipse/Deck/Deck.hpp>
 #include <opm/input/eclipse/Deck/DeckItem.hpp>
 #include <opm/input/eclipse/Deck/DeckRecord.hpp>
@@ -131,7 +133,9 @@ WSEGAICD
     BOOST_CHECK_EQUAL( 8U, compsegs.size() );
 
     const Opm::DeckKeyword welsegs = deck["WELSEGS"].back();
-    Opm::WellSegments segment_set(welsegs);
+    Opm::WellSegments segment_set{};
+    const Opm::UnitSystem unit_system {}; // Metric by default
+    segment_set.loadWELSEGS(welsegs, unit_system);
 
     BOOST_CHECK_EQUAL(7U, segment_set.size());
 
@@ -298,7 +302,9 @@ WSEGSICD
     BOOST_CHECK_EQUAL( 8U, compsegs.size() );
 
     const Opm::DeckKeyword welsegs = deck["WELSEGS"].back();
-    Opm::WellSegments segment_set(welsegs);
+    Opm::WellSegments segment_set{};
+    const Opm::UnitSystem unit_system {}; // Metric by default
+    segment_set.loadWELSEGS(welsegs, unit_system);
 
     BOOST_CHECK_EQUAL(7U, segment_set.size());
 
@@ -468,7 +474,9 @@ BOOST_AUTO_TEST_CASE(WrongDistanceCOMPSEGS)
     BOOST_CHECK_EQUAL( 8U, compsegs.size() );
 
     const Opm::DeckKeyword welsegs = deck["WELSEGS"].back();
-    Opm::WellSegments segment_set(welsegs);
+    Opm::WellSegments segment_set{};
+    const Opm::UnitSystem unit_system {}; // Metric by default
+    segment_set.loadWELSEGS(welsegs, unit_system);
 
     BOOST_CHECK_EQUAL(6U, segment_set.size());
 
@@ -550,7 +558,9 @@ BOOST_AUTO_TEST_CASE(NegativeDepthCOMPSEGS)
     BOOST_CHECK_EQUAL( 8U, compsegs.size() );
 
     const Opm::DeckKeyword welsegs = deck["WELSEGS"].back();
-    Opm::WellSegments segment_set(welsegs);
+    Opm::WellSegments segment_set{};
+    const Opm::UnitSystem unit_system {}; // Metric by default
+    segment_set.loadWELSEGS(welsegs, unit_system);
 
     BOOST_CHECK_EQUAL(6U, segment_set.size());
 
@@ -637,7 +647,9 @@ BOOST_AUTO_TEST_CASE(testwsegvalv)
     BOOST_CHECK_EQUAL( 8U, compsegs.size() );
 
     const Opm::DeckKeyword welsegs = deck["WELSEGS"].back();
-    Opm::WellSegments segment_set(welsegs);
+    Opm::WellSegments segment_set{};
+    const Opm::UnitSystem unit_system {}; // Metric by default
+    segment_set.loadWELSEGS(welsegs, unit_system);
 
     BOOST_CHECK_EQUAL(8U, segment_set.size());
 

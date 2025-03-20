@@ -25,6 +25,7 @@
 #include <opm/input/eclipse/Schedule/MSW/SICD.hpp>
 #include <opm/input/eclipse/Schedule/MSW/Valve.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
+#include <opm/input/eclipse/Units/UnitSystem.hpp>
 
 #include <opm/input/eclipse/Deck/DeckItem.hpp>
 #include <opm/input/eclipse/Deck/DeckKeyword.hpp>
@@ -59,11 +60,6 @@ namespace Opm {
     {
         for (const auto& segment : segments)
             this->addSegment(segment);
-    }
-
-
-    WellSegments::WellSegments(const DeckKeyword& keyword) {
-        this->loadWELSEGS(keyword);
     }
 
 
@@ -189,7 +185,7 @@ namespace Opm {
     }
 
 
-    void WellSegments::loadWELSEGS(const DeckKeyword& welsegsKeyword)
+    void WellSegments::loadWELSEGS(const DeckKeyword& welsegsKeyword, const UnitSystem& unit_system)
     {
         // For the first record, which provides the information for the top
         // segment and information for the whole segment set.
@@ -343,7 +339,7 @@ namespace Opm {
             m_segments[outlet_segment_index].addInletSegment(segment.segmentNumber());
         }
 
-        this->process(length_depth_type, depth_top, length_top);
+        this->process(wname, unit_system, length_depth_type, depth_top, length_top);
     }
 
     const Segment& WellSegments::getFromSegmentNumber(const int segment_number) const {
@@ -357,7 +353,9 @@ namespace Opm {
         return m_segments[segment_index];
     }
 
-    void WellSegments::process(const LengthDepth length_depth,
+    void WellSegments::process(const std::string& well_name,
+                               const UnitSystem& unit_system,
+                               const LengthDepth length_depth,
                                const double      depth_top,
                                const double      length_top)
     {
@@ -374,6 +372,7 @@ namespace Opm {
                             static_cast<int>(length_depth))
             };
         }
+        this->checkSegmentDepthConsistency(well_name, unit_system);
     }
 
     void WellSegments::processABS()
@@ -616,6 +615,32 @@ namespace Opm {
         return segment.depth() - outlet_segment.depth();
     }
 
+    void WellSegments::checkSegmentDepthConsistency(const std::string& well_name, const UnitSystem& unit_system) const {
+        for (const auto& segment : this->m_segments) {
+            const int segment_number = segment.segmentNumber();
+            if (segment_number == 1) {
+                continue; // not check the top segment for now
+            }
+            const double segment_length = this->segmentLength(segment_number);
+            const double segment_depth_change = this->segmentDepthChange(segment_number);
+            if (std::abs(segment_depth_change) > 1.001 * segment_length) { // 0.1% tolerance for comparison
+                const std::map<std::string, std::string> unit_name_mapping = {
+                        {"M", "meters"},
+                        {"FT", "feet"},
+                        {"CM", "cm"}
+                };
+                const std::string& length_unit_str = unit_name_mapping.at(unit_system.name(UnitSystem::measure::length));
+                const double segment_depth_change_in_unit = unit_system.from_si(UnitSystem::measure::length, segment_depth_change);
+                const double segment_length_in_unit = unit_system.from_si(UnitSystem::measure::length, segment_length);
+                const std::string msg = fmt::format(" Segment {} of well {} has a depth change of {} {},"
+                                                    " but it has a length of {} {}, which is unphysical.",
+                                                    segment_number, well_name,
+                                                    segment_depth_change_in_unit, length_unit_str,
+                                                    segment_length_in_unit, length_unit_str);
+                OpmLog::warning(msg);
+            }
+        }
+    }
 
     std::set<int> WellSegments::branches() const {
         std::set<int> bset;
