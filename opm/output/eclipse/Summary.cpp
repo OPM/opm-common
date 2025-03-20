@@ -260,6 +260,7 @@ namespace {
             {"CVIT", Opm::EclIO::SummaryNode::Type::Total},
             {"CPR",  Opm::EclIO::SummaryNode::Type::Pressure},
             {"CGOR", Opm::EclIO::SummaryNode::Type::Ratio},
+            {"CWCT", Opm::EclIO::SummaryNode::Type::Ratio},
         };
 
         using Cat = Opm::EclIO::SummaryNode::Category;
