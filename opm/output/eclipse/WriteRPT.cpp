@@ -19,30 +19,56 @@
 
 #include <opm/output/eclipse/WriteRPT.hpp>
 
+#include <opm/output/eclipse/report/WellSpecification.hpp>
+
+#include <cstddef>
 #include <functional>
+#include <optional>
 #include <string>
-#include <unordered_map>
 
-namespace Opm::RptIO {
+namespace {
 
-    using report_function = std::function<void(std::ostream&, unsigned, const Schedule&, const EclipseGrid&, const UnitSystem&, std::size_t)>;
+    using ReportHandler = std::function<void(std::ostream&,
+                                             const unsigned,
+                                             const double,
+                                             const std::size_t,
+                                             const Opm::Schedule&,
+                                             const Opm::EclipseGrid&,
+                                             const Opm::UnitSystem&)>;
 
-    static const std::unordered_map<std::string, report_function> report_functions {
-        { "WELSPECS", workers::write_WELSPECS },
-    };
-
-    void write_report(
-        std::ostream& os,
-        const std::string& report,
-        unsigned value,
-        const Opm::Schedule& schedule,
-        const Opm::EclipseGrid& grid,
-        const Opm::UnitSystem& unit_system,
-        std::size_t report_step
-    ) {
-        const auto function { report_functions.find(report) } ;
-        if (function != report_functions.end()) {
-            function->second(os, value, schedule, grid, unit_system, report_step);
+    std::optional<ReportHandler>
+    findReportHandler(const std::string& reportType)
+    {
+        if (reportType == "WELSPECS") {
+            return {
+                ReportHandler { Opm::PrtFile::Reports::wellSpecification }
+            };
         }
+
+        return {};
     }
-}
+
+} // Anonymous namespace
+
+namespace Opm::PrtFile {
+
+    void report(std::ostream&      os,
+                const std::string& reportType,
+                const int          reportSpec,
+                const double       elapsed_secs,
+                const std::size_t  report_step,
+                const Schedule&    schedule,
+                const EclipseGrid& grid,
+                const UnitSystem&  unit_system)
+    {
+        const auto handler = findReportHandler(reportType);
+        if (! handler.has_value()) {
+            return;
+        }
+
+        std::invoke(*handler, os, reportSpec,
+                    elapsed_secs, report_step,
+                    schedule, grid, unit_system);
+    }
+
+} // namespace Opm::RptIO
