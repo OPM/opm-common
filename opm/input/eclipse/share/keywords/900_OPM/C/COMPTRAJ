@@ -87,6 +87,12 @@
       "value_type": "DOUBLE",
       "dimension": "1",
       "comment": "Not used"
+    },
+    {
+      "item": 14,
+      "name": "MSW",
+      "value_type": "STRING",
+      "default": "NO"
     }
   ]
 }

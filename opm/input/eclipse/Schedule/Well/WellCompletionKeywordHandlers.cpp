@@ -201,7 +201,9 @@ Well {} is not connected to grid - will remain SHUT)",
                 OpmLog::warning(msg);
             }
 
-            { // Generate WELSEGS data:
+            const auto add_msw = DeckItem::to_bool(record.getItem("MSW").get<std::string>(0));
+
+            if (add_msw) { // Generate WELSEGS data:
                 const auto& perf_top = record.getItem("PERF_TOP").getSIDouble(0);
                 const auto& diameter = record.getItem("DIAMETER").getSIDouble(0);
                 
@@ -211,7 +213,7 @@ Well {} is not connected to grid - will remain SHUT)",
                 handlerContext.record_well_structure_change();
             }
 
-            { // Generate COMPSEGS data:
+            if (add_msw) { // Generate COMPSEGS data:
                 auto well = handlerContext.state().wells.get(name);
                 const auto& compsegs_vector = Compsegs::compsegsFromIntersections(
                     intersection_depths, intersection_ijk, well.getSegments()
