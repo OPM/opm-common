@@ -71,6 +71,12 @@ namespace Opm {
         WellSegments(CompPressureDrop compDrop,
                      const std::vector<Segment>& segments);
         void loadWELSEGS( const DeckKeyword& welsegsKeyword, const UnitSystem& unit_system);
+        explicit WellSegments(const std::string &wname, double length_top,
+                              const std::vector<std::pair<double, double>>& intersections,
+                              double diameter, const UnitSystem& unit_system);
+        void addWellSegmentsFromIntersections(const std::string &wname, double length_top,
+                                              const std::vector<std::pair<double, double>>& intersections,
+                                              double diameter, const UnitSystem& unit_system);
 
         static WellSegments serializationTestObject();
 
