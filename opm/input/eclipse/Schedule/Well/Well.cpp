@@ -1810,6 +1810,22 @@ bool Well::handleWELSEGS(const DeckKeyword& keyword)
     return true;
 }
 
+void Well::addWellSegmentsFromIntersections(double length_top,
+                                            const std::vector<std::pair<double, double>>& intersections,
+                                            double diameter)
+{
+    if (this->segments != nullptr) {
+        auto new_segments = std::make_shared<WellSegments>(*this->segments);
+        new_segments->addWellSegmentsFromIntersections(this->name(), length_top, intersections, diameter, *unit_system);
+
+        this->updateSegments(std::move(new_segments));
+    }
+    else {
+        this->updateSegments(std::make_shared<WellSegments>(this->name(), length_top, intersections, diameter, *unit_system));
+    }
+}
+
+
 bool Well::updatePVTTable(std::optional<int> pvt_table_)
 {
     if (pvt_table_.has_value() && (this->pvt_table != *pvt_table_)) {

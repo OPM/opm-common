@@ -110,7 +110,9 @@ namespace Opm {
                           const ScheduleGrid&    grid,
                           const std::string&     wname,
                           const KeywordLocation& location,
-                          external::cvf::ref<external::cvf::BoundingBoxTree>& cellSearchTree);
+                          external::cvf::ref<external::cvf::BoundingBoxTree>& cellSearchTree,
+                          std::vector<std::pair<double, double>>& intersection_depths,
+                          std::vector<std::array<int, 3>>& intersection_ijk);
 
         void loadWELTRAJ(const DeckRecord&      record,
                          const ScheduleGrid&    grid,

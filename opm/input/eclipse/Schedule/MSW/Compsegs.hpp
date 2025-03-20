@@ -86,6 +86,10 @@ struct Record {
                                                     ErrorGuard& errors);
 
 
+    std::vector<Record> compsegsFromIntersections(const std::vector<std::pair<double, double>>& intersection_depths,
+                                                  const std::vector<std::array<int, 3>>& intersections_ijk,
+                                                  const WellSegments& segments);
+
     std::pair<WellConnections, WellSegments>
     processCOMPSEGS(const std::vector< Record >& compseg_records,
                     const WellConnections& input_connections,

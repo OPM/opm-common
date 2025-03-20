@@ -286,6 +286,32 @@ namespace {
     }
 
 
+    std::vector<Record> compsegsFromIntersections(const std::vector<std::pair<double, double>>& intersection_depths,
+                                                  const std::vector<std::array<int, 3>>& intersections_ijk,
+                                                  const WellSegments& segments)
+    {
+        std::vector<Record> compsegs;
+
+        for (size_t is = 0; is < intersection_depths.size(); ++is) {
+            const auto startMD = intersection_depths[is].first;
+            const auto endMD = intersection_depths[is].second;
+            const auto ijk = intersections_ijk[is];
+
+            // Defaulted values:
+            auto direction = Connection::Direction::X;
+            const double center_depth = 0.0;
+            int segment_number = 0;
+            const int branch = 1;
+
+            std::size_t seqIndex = compsegs.size();
+            compsegs.emplace_back(
+                ijk[0], ijk[1], ijk[2], branch, startMD, endMD, direction, center_depth, segment_number, seqIndex);
+        }
+
+        processCOMPSEGS__(compsegs, segments);
+        return compsegs;
+    }
+
     std::pair<WellConnections, WellSegments>
     processCOMPSEGS(const std::vector< Record >& compsegs_vector,
                     const WellConnections& input_connections,
