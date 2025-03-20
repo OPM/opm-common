@@ -165,7 +165,8 @@ public:
                       const bool         haveExistingRFT,
                       const data::Wells& wellSol) const;
 
-    void writePrtFileReports(const int report_step) const;
+    void writePrtFileReports(const double secs_elapsed,
+                             const int    report_step) const;
 
 private:
     std::reference_wrapper<const EclipseState> es_;
@@ -409,19 +410,20 @@ void Opm::EclipseIO::Impl::writeRftFile(const double       secs_elapsed,
                  rftFile);
 }
 
-void Opm::EclipseIO::Impl::writePrtFileReports(const int report_step) const
+void Opm::EclipseIO::Impl::writePrtFileReports(const double secs_elapsed,
+                                               const int    report_step) const
 {
     const auto& sched = this->schedule_.get()[report_step];
 
     for (const auto& [reportType, reportSpec] : sched.rpt_config()) {
         std::stringstream ss;
 
-        RptIO::write_report(ss,
-                            reportType, reportSpec,
-                            this->schedule_,
-                            this->grid_,
-                            this->es_.get().getUnits(),
-                            report_step);
+        PrtFile::report(ss,
+                        reportType, reportSpec,
+                        secs_elapsed, report_step,
+                        this->schedule_,
+                        this->grid_,
+                        this->es_.get().getUnits());
 
         if (const auto log_string = ss.str(); ! log_string.empty()) {
             OpmLog::note(log_string);
@@ -551,7 +553,7 @@ void Opm::EclipseIO::writeTimeStep(const Action::State& action_state,
 
     if (! isSubstep) {
         // Various kinds of PRT file reports (RPTSCHED &c).
-        this->impl->writePrtFileReports(report_step);
+        this->impl->writePrtFileReports(secs_elapsed, report_step);
     }
 
     if (this->impl->wantSummaryOutput(report_step, isSubstep, secs_elapsed, time_step)) {
