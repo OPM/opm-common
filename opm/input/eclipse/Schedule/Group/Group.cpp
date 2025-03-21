@@ -203,6 +203,9 @@ namespace {
         injection.guide_rate_def = Opm::Group::GuideRateInjTargetFromInt(rst_group.inj_water_guide_rate_def);
         injection.guide_rate = is_defined(rst_group.inj_water_guide_rate) ? rst_group.inj_water_guide_rate : 0;
 
+        //Note: InjectionProperties::available_group_control is not recovered during the RESTART reading
+        //      when InjectionProperties::cmode is FLD, this will not be recovered during the RESTART reading
+
         assign_injection_controls(active, injection);
 
         return injection;
@@ -248,11 +251,11 @@ Group::Group(const RestartIO::RstGroup& rst_group, std::size_t insert_index_arg,
         this->updateProduction(make_production_properties(rst_group, prod_limits, unit_system_arg));
     }
 
-    if ((rst_group.ginj_cmode != 0) || has_active(gas_inj_limits)) {
+    if ((rst_group.ginj_cmode != 0) || has_active(gas_inj_limits) || (rst_group.inj_gas_guide_rate_def != 0)) {
         this->updateInjection(make_injection_properties(rst_group, gas_inj_limits));
     }
 
-    if ((rst_group.winj_cmode != 0) || has_active(water_inj_limits)) {
+    if ((rst_group.winj_cmode != 0) || has_active(water_inj_limits) || (rst_group.inj_water_guide_rate_def != 0)) {
         this->updateInjection(make_injection_properties(rst_group, water_inj_limits));
     }
 }
