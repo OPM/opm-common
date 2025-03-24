@@ -109,6 +109,11 @@ std::string Inplace::EclString(const Phase phase)
         {Phase::CO2MassInGasPhaseMaximumUnTrapped,   "GMMO"s},
         {Phase::CO2MassInGasPhaseEffectiveTrapped,   "GMST"s},
         {Phase::CO2MassInGasPhaseEffectiveUnTrapped, "GMUS"s},
+        {Phase::MicrobialMass,                       "MMIP"s},
+        {Phase::OxygenMass,                          "MOIP"s},
+        {Phase::UreaMass,                            "MUIP"s},
+        {Phase::BiofilmMass,                         "MBIP"s},
+        {Phase::CalciteMass,                         "MCIP"s},
     };
 
     const auto it = phaseToEcl.find(phase);
@@ -286,6 +291,11 @@ const std::vector<Inplace::Phase>& Inplace::mixingPhases()
         Inplace::Phase::CO2MassInGasPhaseEffectiveUnTrapped,
         Inplace::Phase::CO2MassInGasPhaseMaximumTrapped,
         Inplace::Phase::CO2MassInGasPhaseMaximumUnTrapped,
+        Inplace::Phase::MicrobialMass,
+        Inplace::Phase::OxygenMass,
+        Inplace::Phase::UreaMass,
+        Inplace::Phase::BiofilmMass,
+        Inplace::Phase::CalciteMass,
     };
 
     return mixingPhases_;

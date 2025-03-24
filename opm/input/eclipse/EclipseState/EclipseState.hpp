@@ -30,7 +30,6 @@
 #include <opm/input/eclipse/EclipseState/Grid/LgrCollection.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/NNC.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/TransMult.hpp>
-#include <opm/input/eclipse/EclipseState/MICPpara.hpp>
 #include <opm/input/eclipse/EclipseState/Runspec.hpp>
 #include <opm/input/eclipse/EclipseState/SimulationConfig/SimulationConfig.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
@@ -128,7 +127,6 @@ namespace Opm {
         const AquiferConfig& aquifer() const;
         const CompositionalConfig& compositionalConfig() const;
         const TracerConfig& tracer() const;
-        const MICPpara& getMICPpara() const;
         const WagHysteresisConfig& getWagHysteresis() const;
         const Co2StoreConfig& getCo2StoreConfig() const;
 
@@ -166,7 +164,6 @@ namespace Opm {
             serializer(m_faults);
             serializer(m_title);
             serializer(tracer_config);
-            serializer(m_micppara);
             serializer(wag_hyst_config);
             serializer(co2_store_config);
             serializer(this->fipRegionStatistics_);
@@ -205,7 +202,6 @@ namespace Opm {
         CompositionalConfig compositional_config;
         TransMult m_transMult;
         TracerConfig tracer_config;
-        MICPpara m_micppara;
         WagHysteresisConfig wag_hyst_config;
         Co2StoreConfig co2_store_config;
 

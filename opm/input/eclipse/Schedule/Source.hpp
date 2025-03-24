@@ -37,6 +37,9 @@ enum class SourceComponent {
      WATER,
      SOLVENT,
      POLYMER,
+     MICR,
+     OXYG,
+     UREA,
      NONE
 };
 
