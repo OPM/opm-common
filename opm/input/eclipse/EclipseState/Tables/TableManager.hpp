@@ -104,6 +104,8 @@ namespace Opm {
         const TableContainer& getSaltsolTables() const;
         const TableContainer& getPcfactTables() const;
         const TableContainer& getPermfactTables() const;
+        const TableContainer& getBiofilmTables() const;
+        const TableContainer& getDiffMICPTables() const;
         const TableContainer& getEnkrvdTables() const;
         const TableContainer& getEnptvdTables() const;
         const TableContainer& getImkrvdTables() const;
