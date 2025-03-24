@@ -25,10 +25,9 @@
 #include <cstddef>
 #include <optional>
 #include <type_traits>
+#include <unordered_map>
 #include <utility>
 #include <vector>
-#include <map>
-
 /// \file
 ///
 /// Facility for converting collection of region ID pairs into a sparse
@@ -237,10 +236,10 @@ namespace Opm { namespace utility {
             const Neighbours& columnIndices() const;
 
             /// Helper function to get the final vertex ID after all merges
-            VertexID findMergedVertexID(VertexID v, const std::map<VertexID, VertexID>& vertex_merges) const;
+            VertexID findMergedVertexID(VertexID v, const std::unordered_map<VertexID, VertexID>& vertex_merges) const;
 
             /// Apply vertex merges to the stored connections and create compact numbering
-            std::map<VertexID, VertexID> applyVertexMerges(const std::map<VertexID, VertexID>& vertex_merges);
+            std::unordered_map<VertexID, VertexID> applyVertexMerges(const std::unordered_map<VertexID, VertexID>& vertex_merges);
 
         private:
             /// Zero-based row/source region indices.
@@ -548,14 +547,17 @@ namespace Opm { namespace utility {
         /// Canonical representation of unique inter-region flow rates.
         CSR csr_;
 
-        /// Groups of vertices that should be merged together
-        std::vector<std::vector<VertexID>> vertex_groups_{};
+        /// Disjoint-set union parent pointers
+        std::unordered_map<VertexID, VertexID> parent_{};
 
         /// Mapping from original vertex IDs to final vertex IDs after merging and renumbering
-        std::map<VertexID, VertexID> vertex_mapping_{};
+        std::unordered_map<VertexID, VertexID> vertex_mapping_{};
 
-        /// Find connected components in vertex groups that share vertices
-        void findConnectedGroups();
+        /// Find the root of a disjoint set with path compression
+        VertexID find(VertexID v);
+
+        /// Union two sets by rank (using vertex ID as a simple rank)
+        void unionSets(VertexID a, VertexID b);
     };
 
 }} // namespace Opm::utility

@@ -24,14 +24,12 @@
 #include <exception>
 #include <iterator>
 #include <optional>
+#include <set>
 #include <stdexcept>
 #include <string>
+#include <unordered_map>
 #include <utility>
 #include <vector>
-#include <set>
-#include <map>
-#include <iostream>
-#include <functional>
 
 // ---------------------------------------------------------------------
 // Class Opm::utility::CSRGraphFromCoordinates::Connections
@@ -142,79 +140,88 @@ Connections::columnIndices() const
 template <typename VertexID, bool TrackCompressedIdx, bool PermitSelfConnections>
 VertexID
 Opm::utility::CSRGraphFromCoordinates<VertexID, TrackCompressedIdx, PermitSelfConnections>::
-Connections::findMergedVertexID(VertexID v, const std::map<VertexID, VertexID>& vertex_merges) const
+Connections::findMergedVertexID(VertexID v, const std::unordered_map<VertexID, VertexID>& vertex_merges) const
 {
+    // If found in the map, return the merged vertex ID
+    // Otherwise, return the original vertex ID unchanged
+    // vertex_merges is fully resolved from our disjoint set union structure
     auto it = vertex_merges.find(v);
-    while (it != vertex_merges.end()) {
-        v = it->second;
-        it = vertex_merges.find(v);
+    if (it != vertex_merges.end()) {
+        return it->second;
+    } else {
+        return v;
     }
-    return v;
 }
 
+
 template <typename VertexID, bool TrackCompressedIdx, bool PermitSelfConnections>
-std::map<VertexID, VertexID>
+std::unordered_map<VertexID, VertexID>
 Opm::utility::CSRGraphFromCoordinates<VertexID, TrackCompressedIdx, PermitSelfConnections>::
-Connections::applyVertexMerges(const std::map<VertexID, VertexID>& vertex_merges)
+Connections::applyVertexMerges(const std::unordered_map<VertexID, VertexID>& vertex_merges)
 {
-    std::map<VertexID, VertexID> vertex_mapping;
+
+    // Find the maximum vertex ID in the original connections
     VertexID max_original_vertex_id = std::max(max_i_.value_or(BaseVertexID{}), max_j_.value_or(BaseVertexID{}));
 
-    // Apply vertex merges to both i_ and j_ in place
-    for (auto& row : i_) {
-        row = findMergedVertexID(row, vertex_merges);
-    }
-    for (auto& col : j_) {
-        col = findMergedVertexID(col, vertex_merges);
-    }
+    // Apply merges to all connections directly in one pass
+    // We can leverage that vertex_merges is already fully resolved from our disjoint set union
+    // structure, so we don't need nested lookups
+    std::transform(i_.begin(), i_.end(), i_.begin(),
+                  [this, &vertex_merges](VertexID v) { return findMergedVertexID(v, vertex_merges); });
 
-    // When self-connections are not permitted, remove them
+    std::transform(j_.begin(), j_.end(), j_.begin(),
+                  [this, &vertex_merges](VertexID v) { return findMergedVertexID(v, vertex_merges); });
+
+    // Remove self-connections if required using erase-remove idiom
     if constexpr (!PermitSelfConnections) {
-        Neighbours new_i, new_j;
-        for (size_t idx = 0; idx < i_.size(); ++idx) {
-            if (i_[idx] != j_[idx]) {
-                new_i.push_back(i_[idx]);
-                new_j.push_back(j_[idx]);
+        auto write_pos = 0*i_.size();
+        for (auto read_pos = 0*i_.size(); read_pos < i_.size(); ++read_pos) {
+            if (i_[read_pos] != j_[read_pos]) {
+                if (write_pos != read_pos) {
+                    i_[write_pos] = i_[read_pos];
+                    j_[write_pos] = j_[read_pos];
+                }
+                ++write_pos;
             }
         }
-        i_ = std::move(new_i);
-        j_ = std::move(new_j);
+        i_.resize(write_pos);
+        j_.resize(write_pos);
     }
 
-    // Create a compact numbering for vertices
-    std::set<VertexID> uniqueVertices;
-    for (const auto& row : i_) {
-        uniqueVertices.insert(row);
-    }
-    for (const auto& col : j_) {
-        uniqueVertices.insert(col);
+    // Create compact vertex numbering
+    std::set<VertexID> sorted_unique_vertices;
+    sorted_unique_vertices.insert(i_.begin(), i_.end());
+    sorted_unique_vertices.insert(j_.begin(), j_.end());
+
+    // Generate direct mapping from old to compact vertex IDs
+    std::unordered_map<VertexID, VertexID> vertex_map;
+    vertex_map.reserve(sorted_unique_vertices.size());
+    VertexID new_id = 0;
+    for (auto& v : sorted_unique_vertices) {
+        vertex_map.emplace(v, new_id++);
     }
 
-    // Create mapping from old to new vertex IDs
-    std::map<VertexID, VertexID> vertexMap;
-    VertexID newID = 0;
-    for (const auto& vertex : uniqueVertices) {
-        vertexMap[vertex] = newID++;
-    }
+    // Update max indices
+    this->max_i_ = this->max_j_ = new_id - 1;
 
-    // Update the max indices
-    this->max_i_ = 0;
-    for (auto& row : i_) {
-        row = vertexMap[row];
-        this->max_i_ = std::max(this->max_i_.value_or(BaseVertexID{}), row);
-    }
-    this->max_j_ = 0;
-    for (auto& col : j_) {
-        col = vertexMap[col];
-        this->max_j_ = std::max(this->max_j_.value_or(BaseVertexID{}), col);
-    }
+    // Remap all vertices to compact IDs
+    auto remap = [&vertex_map](auto v) { 
+        // Using at() is appropriate here since we know all values from i_ and j_ are in vertex_map
+        return vertex_map.at(v);
+    };
 
-    for (auto vertex = 0; vertex < max_original_vertex_id + 1; ++vertex) {
+    std::transform(i_.begin(), i_.end(), i_.begin(), remap);
+    std::transform(j_.begin(), j_.end(), j_.begin(), remap);
+
+    // Build final mapping (original -> compact ID)
+    std::unordered_map<VertexID, VertexID> final_mapping;
+    final_mapping.reserve(max_original_vertex_id + 1);
+
+    for (VertexID vertex = 0; vertex <= max_original_vertex_id; ++vertex) {
         auto merged_id = findMergedVertexID(vertex, vertex_merges);
-        vertex_mapping[vertex] = vertexMap[merged_id];
+        final_mapping.emplace(vertex, vertex_map.at(merged_id));
     }
-
-    return vertex_mapping;
+    return final_mapping;
 }
 
 // =====================================================================
@@ -668,69 +675,63 @@ void
 Opm::utility::CSRGraphFromCoordinates<VertexID, TrackCompressedIdx, PermitSelfConnections>::
 addVertexGroup(const std::vector<VertexID>& vertices)
 {
-    if (!vertices.empty()) {
-        vertex_groups_.push_back(vertices);
+    if (vertices.empty()) {
+        return;
     }
+    // Initialize any new vertices in the disjoint set union structure
+    for (const auto& v : vertices) {
+        if (parent_.find(v) == parent_.end()) {
+            parent_.emplace(v, v);  // Each vertex initially points to itself
+        }
+    }
+
+    // Union all vertices in the group
+    if (vertices.size() > 1) {
+        for (size_t i = 1; i < vertices.size(); ++i) {
+            unionSets(vertices[0], vertices[i]);
+        }
+    }
+}
+
+template <typename VertexID, bool TrackCompressedIdx, bool PermitSelfConnections>
+VertexID
+Opm::utility::CSRGraphFromCoordinates<VertexID, TrackCompressedIdx, PermitSelfConnections>::
+find(VertexID v)
+{
+    // If vertex is not in the structure, add it as its own parent
+    auto it = parent_.find(v);
+    if (it == parent_.end()) {
+        parent_.emplace(v, v);
+        return v;
+    }
+
+    // Path compression: update parent pointers to point directly to the root
+    if (it->second != v) {
+        it->second = find(it->second);
+    }
+    return it->second;
 }
 
 template <typename VertexID, bool TrackCompressedIdx, bool PermitSelfConnections>
 void
 Opm::utility::CSRGraphFromCoordinates<VertexID, TrackCompressedIdx, PermitSelfConnections>::
-findConnectedGroups()
+unionSets(VertexID a, VertexID b)
 {
-    if (vertex_groups_.empty()) {
+    // Find representatives (roots) of both sets
+    VertexID rootA = find(a);
+    VertexID rootB = find(b);
+
+    // If already in same set, do nothing
+    if (rootA == rootB) {
         return;
     }
 
-    // Build a map of vertex to group indices for quick lookup
-    std::map<VertexID, std::set<std::size_t>> vertexToGroups;
-    for (std::size_t i = 0; i < vertex_groups_.size(); ++i) {
-        for (const auto& vertex : vertex_groups_[i]) {
-            vertexToGroups[vertex].insert(i);
-        }
-    }
-
-    // Find connected components using DFS
-    std::vector<bool> visited(vertex_groups_.size(), false);
-    std::vector<std::vector<std::vector<VertexID>>> connectedGroups;
-
-    std::function<void(std::size_t, std::vector<std::vector<VertexID>>&)> dfs = 
-        [&](std::size_t groupIdx, std::vector<std::vector<VertexID>>& component) {
-            if (visited[groupIdx]) return;
-            visited[groupIdx] = true;
-            component.push_back(vertex_groups_[groupIdx]);
-
-            // Find all groups that share vertices with this group
-            std::set<std::size_t> connectedGroupIndices;
-            for (const auto& vertex : vertex_groups_[groupIdx]) {
-                const auto& groups = vertexToGroups[vertex];
-                connectedGroupIndices.insert(groups.begin(), groups.end());
-            }
-
-            // Recursively visit connected groups
-            for (const auto& connectedIdx : connectedGroupIndices) {
-                if (!visited[connectedIdx]) {
-                    dfs(connectedIdx, component);
-                }
-            }
-        };
-
-    // Find all connected components
-    for (std::size_t i = 0; i < vertex_groups_.size(); ++i) {
-        if (!visited[i]) {
-            connectedGroups.emplace_back();
-            dfs(i, connectedGroups.back());
-        }
-    }
-
-    // Merge each connected component into a single group
-    vertex_groups_.clear();
-    for (const auto& component : connectedGroups) {
-        std::set<VertexID> mergedGroup;
-        for (const auto& group : component) {
-            mergedGroup.insert(group.begin(), group.end());
-        }
-        vertex_groups_.push_back(std::vector<VertexID>(mergedGroup.begin(), mergedGroup.end()));
+    // Union by rank: we'll use the smaller vertex ID as the root
+    // (This is a simple heuristic that works well for this use case)
+    if (rootA < rootB) {
+        parent_.at(rootB) = rootA;
+    } else {
+        parent_.at(rootA) = rootB;
     }
 }
 
@@ -739,27 +740,22 @@ typename Opm::utility::CSRGraphFromCoordinates<VertexID, TrackCompressedIdx, Per
 Opm::utility::CSRGraphFromCoordinates<VertexID, TrackCompressedIdx, PermitSelfConnections>::
 applyVertexMerges()
 {
-    // First find connected groups (merges groups that share vertices)
-    findConnectedGroups();
-
-    // For each group, merge all vertices into the lowest numbered vertex
-    std::map<VertexID, VertexID> vertex_merges;
-    for (const auto& group : vertex_groups_) {
-        if (group.empty()) {
-            continue;
-        }
-
-        // Use the lowest numbered vertex as the target
-        VertexID targetVertex = *std::min_element(group.begin(), group.end());
-
-        // Map all other vertices to the target
-        for (const auto& vertex : group) {
-            if (vertex != targetVertex) {
-                vertex_merges[vertex] = targetVertex;
-            }
-        }
+    // If no vertex groups were defined, nothing to do
+    if (parent_.empty()) {
+        return this->uncompressed_.maxRow().value_or(0) + 1;
     }
 
+    // Create the direct mapping for merges (original → target)
+    std::unordered_map<VertexID, VertexID> vertex_merges;
+    for (auto& [vertex, parent] : parent_) {
+        // Find the final root for this vertex which is the min vertex ID in the set
+        VertexID root = find(vertex);
+
+        // Only add to merges if the vertex isn't its own root
+        if (vertex != root) {
+            vertex_merges.emplace(vertex, root);
+        }
+    }
     // Apply the merges to the uncompressed data
     if (!vertex_merges.empty()) {
         vertex_mapping_ = this->uncompressed_.applyVertexMerges(vertex_merges);
@@ -774,7 +770,7 @@ Opm::utility::CSRGraphFromCoordinates<VertexID, TrackCompressedIdx, PermitSelfCo
 compress(Offset maxNumVertices, bool expandExistingIdxMap)
 {
     // Apply vertex merges if there are vertex groups but merges haven't been applied yet
-    if (!vertex_groups_.empty() && vertex_mapping_.empty()) {
+    if (!parent_.empty() && vertex_mapping_.empty()) {
         applyVertexMerges();
     }
 
