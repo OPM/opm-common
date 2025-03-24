@@ -21,26 +21,25 @@
 #define OPM_REPORT_WELL_SPECIFICATION_HPP_INCLUDED
 
 #include <cstddef>
+#include <functional>
 #include <iosfwd>
 #include <string>
 
 namespace Opm {
 
     class Schedule;
-    class EclipseGrid;
-    class UnitSystem;
 
 } // namespace Opm
 
 namespace Opm::PrtFile::Reports {
 
-    void wellSpecification(std::ostream&      os,
-                           const int          wellSpecRequest,
-                           const double       elapsedTime,
-                           const std::size_t  reportStep,
-                           const Schedule&    schedule,
-                           const EclipseGrid& grid,
-                           const UnitSystem&  unit_system);
+    using BlockDepthCallback = std::function<double(std::size_t)>;
+
+    void wellSpecification(const std::vector<std::string>& changedWells,
+                           const std::size_t               reportStep,
+                           const Schedule&                 schedule,
+                           BlockDepthCallback              blockDepth,
+                           std::ostream&                   os);
 
 } // namespace Opm::PrtFile::Reports
 
