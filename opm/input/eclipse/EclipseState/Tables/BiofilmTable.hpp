@@ -25,7 +25,8 @@ namespace Opm {
 
 class DeckItem;
 
-class BiofilmTable : public SimpleTable {
+class BiofilmTable : public SimpleTable
+{
 public:
     BiofilmTable( const DeckItem& item, const int tableID );
 
@@ -43,6 +44,7 @@ public:
     const TableColumn& getDensityCalcite() const;
     const TableColumn& getYieldUreaToCalciteCoefficient() const;
 };
-}
 
-#endif
+} // end of namespace Opm
+
+#endif //OPM_PARSER_BIOFILM_TABLE_HPP

@@ -30,8 +30,7 @@
 
 using namespace Opm;
 
-BOOST_AUTO_TEST_CASE(TestMICP) {
-
+BOOST_AUTO_TEST_CASE( TestMICP ) {
     const char *data =
       "RUNSPEC\n"
       "WATER\n"
