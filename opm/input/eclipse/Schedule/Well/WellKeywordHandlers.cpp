@@ -164,6 +164,7 @@ void handleWCONHIST(HandlerContext& handlerContext)
                 handlerContext.state().events().addEvent( ScheduleEvents::PRODUCTION_UPDATE );
                 handlerContext.state().wellgroup_events().addEvent( well2.name(), ScheduleEvents::PRODUCTION_UPDATE);
                 handlerContext.state().wells.update( well2 );
+                handlerContext.affected_well(well_name);
             }
 
             // Always check if well can be opened (it could have been closed for numerical reasons and possible to operate with new params)
@@ -171,7 +172,6 @@ void handleWCONHIST(HandlerContext& handlerContext)
                 handlerContext.state().wellgroup_events().addEvent( well_name, ScheduleEvents::REQUEST_OPEN_WELL);
             }
 
-            handlerContext.affected_well(well_name);
         }
     }
 }
@@ -322,14 +322,13 @@ void handleWCONINJH(HandlerContext& handlerContext)
                     handlerContext.state().wellgroup_events().addEvent( well_name, ScheduleEvents::INJECTION_TYPE_CHANGED);
                 }
                 handlerContext.state().wells.update( std::move(well2) );
+                handlerContext.affected_well(well_name);
             }
 
             // Always check if well can be opened (it could have been closed for numerical reasons and possible to operate with new params)
             if (handlerContext.getWellStatus(well_name) == WellStatus::OPEN) {
                 handlerContext.state().wellgroup_events().addEvent( well_name, ScheduleEvents::REQUEST_OPEN_WELL);
             }
-
-            handlerContext.affected_well(well_name);
         }
     }
 }
