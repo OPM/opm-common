@@ -166,7 +166,8 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
 
     // For co2storage and h2storage we dont have a concept of tables and should not spend time on
     // checking if we are at the saturated front
-    setUseSaturatedTables(!(eclState.runspec().h2Storage() || eclState.runspec().co2Storage()));
+    // setUseSaturatedTables(!(eclState.runspec().h2Storage() || eclState.runspec().co2Storage()));
+    setUseSaturatedTables(false);
 
     setEnableDiffusion(eclState.getSimulationConfig().isDiffusive());
     if (enableDiffusion()) {
