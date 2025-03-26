@@ -25,7 +25,8 @@ namespace Opm {
 
 class DeckItem;
 
-class DiffMICPTable : public SimpleTable {
+class DiffMICPTable : public SimpleTable
+{
 public:
     DiffMICPTable( const DeckItem& item, const int tableID );
 
@@ -33,6 +34,7 @@ public:
     const TableColumn& getOxygenDiffusion() const;
     const TableColumn& getUreaDiffusion() const;
 };
-}
 
-#endif
+} // end of namespace Opm
+
+#endif //OPM_PARSER_DIFFMICP_TABLE_HPP

@@ -845,7 +845,8 @@ inline quantity rate( const fn_args& args ) {
         sum += accum_groups(phase, args.schedule, args.sim_step, args.group_name);
     }
 
-    if (phase == rt::polymer || phase == rt::brine || phase == rt::microbial || phase == rt::oxygen || phase == rt::urea) {
+    if (phase == rt::polymer || phase == rt::brine || phase == rt::microbial ||
+        phase == rt::oxygen  || phase == rt::urea) {
         return { sum, measure::mass_rate };
     }
 
@@ -990,7 +991,8 @@ inline quantity ratetracer( const fn_args& args ) {
 
 template< rt phase, bool injection = true >
 inline quantity ratel( const fn_args& args ) {
-    const auto unit = ((phase == rt::polymer) || (phase == rt::brine) || (phase == rt::microbial) || (phase == rt::oxygen) || (phase == rt::urea))
+    const auto unit = ((phase == rt::polymer) || (phase == rt::brine) || (phase == rt::microbial) ||
+                       (phase == rt::oxygen)  || (phase == rt::urea))
         ? measure::mass_rate : rate_unit<phase>();
 
     const quantity zero = { 0.0, unit };
@@ -1069,7 +1071,8 @@ inline quantity cpr( const fn_args& args ) {
 
 template< rt phase, bool injection = true >
 inline quantity cratel( const fn_args& args ) {
-    const auto unit = ((phase == rt::polymer) || (phase == rt::brine) || (phase == rt::microbial) || (phase == rt::oxygen) || (phase == rt::urea))
+    const auto unit = ((phase == rt::polymer) || (phase == rt::brine) || (phase == rt::microbial) ||
+                       (phase == rt::oxygen)  || (phase == rt::urea))
         ? measure::mass_rate : rate_unit<phase>();
 
     const quantity zero = { 0.0, unit };
@@ -1214,7 +1217,8 @@ inline quantity crate( const fn_args& args ) {
     if (! injection)
         v *= -1;
 
-    if (phase == rt::polymer || phase == rt::brine || phase == rt::microbial || phase == rt::oxygen || phase == rt::urea)
+    if (phase == rt::polymer || phase == rt::brine || phase == rt::microbial ||
+        phase == rt::oxygen  || phase == rt::urea)
         return { v, measure::mass_rate };
 
     return { v, rate_unit< phase >() };
@@ -1303,7 +1307,8 @@ inline quantity segpress(const fn_args& args)
 template <rt phase>
 inline quantity srate(const fn_args& args)
 {
-    const auto m = ((phase == rt::polymer) || (phase == rt::brine) || (phase == rt::microbial) || (phase == rt::oxygen) || (phase == rt::urea))
+    const auto m = ((phase == rt::polymer) || (phase == rt::brine) || (phase == rt::microbial) ||
+                    (phase == rt::oxygen)  || (phase == rt::urea))
         ? measure::mass_rate
         : rate_unit<phase>();
 
