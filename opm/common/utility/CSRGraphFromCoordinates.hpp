@@ -25,9 +25,9 @@
 #include <cstddef>
 #include <optional>
 #include <type_traits>
+#include <unordered_map>
 #include <utility>
 #include <vector>
-
 /// \file
 ///
 /// Facility for converting collection of region ID pairs into a sparse
@@ -83,6 +83,10 @@ namespace Opm { namespace utility {
         /// PermitSelfConnections is in its default state of \c false, then
         /// this function does nothing.
         void addConnection(VertexID v1, VertexID v2);
+
+        /// Apply vertex merges to all vertex groups
+        Offset applyVertexMerges();
+
 
         /// Form CSR adjacency matrix representation of input graph from
         /// connections established in previous calls to addConnection().
@@ -160,6 +164,19 @@ namespace Opm { namespace utility {
                      other.columnIndices());
         }
 
+        /// Add a group of vertices that should be merged together.
+        /// Must be called before compress().
+        ///
+        /// \param[in] vertices Vector of vertex IDs to merge
+        void addVertexGroup(const std::vector<VertexID>& vertices);
+
+        /// Get the final vertex ID after all merges and renumbering for a given original vertex ID.
+        /// Returns the original ID if no merging or renumbering has been done.
+        ///
+        /// \param[in] originalVertexID The original vertex ID to look up
+        /// \return The final vertex ID after merges and renumbering
+        VertexID getFinalVertexID(VertexID originalVertexID) const;
+
     private:
         /// Coordinate format representation of individual contributions to
         /// inter-region flows.
@@ -217,6 +234,12 @@ namespace Opm { namespace utility {
 
             /// Read-only access to uncompressed column indices.
             const Neighbours& columnIndices() const;
+
+            /// Helper function to get the final vertex ID after all merges
+            VertexID findMergedVertexID(VertexID v, const std::unordered_map<VertexID, VertexID>& vertex_merges) const;
+
+            /// Apply vertex merges to the stored connections and create compact numbering
+            std::unordered_map<VertexID, VertexID> applyVertexMerges(const std::unordered_map<VertexID, VertexID>& vertex_merges);
 
         private:
             /// Zero-based row/source region indices.
@@ -514,6 +537,7 @@ namespace Opm { namespace utility {
             ///   compress() when TrackCompressedIdx is true.
             void remapCompressedIndex(Start&&                                  compressedIdx,
                                       std::optional<typename Start::size_type> numOrigNNZ = std::nullopt);
+
         };
 
         /// Accumulated coordinate format contributions that have not yet
@@ -522,6 +546,18 @@ namespace Opm { namespace utility {
 
         /// Canonical representation of unique inter-region flow rates.
         CSR csr_;
+
+        /// Disjoint-set union parent pointers
+        std::unordered_map<VertexID, VertexID> parent_{};
+
+        /// Mapping from original vertex IDs to final vertex IDs after merging and renumbering
+        std::unordered_map<VertexID, VertexID> vertex_mapping_{};
+
+        /// Find the root of a disjoint set with path compression
+        VertexID find(VertexID v);
+
+        /// Union two sets by rank (using vertex ID as a simple rank)
+        void unionSets(VertexID a, VertexID b);
     };
 
 }} // namespace Opm::utility
