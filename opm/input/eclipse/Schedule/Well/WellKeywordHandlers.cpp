@@ -164,6 +164,7 @@ void handleWCONHIST(HandlerContext& handlerContext)
                 handlerContext.state().events().addEvent( ScheduleEvents::PRODUCTION_UPDATE );
                 handlerContext.state().wellgroup_events().addEvent( well2.name(), ScheduleEvents::PRODUCTION_UPDATE);
                 handlerContext.state().wells.update( well2 );
+                handlerContext.affected_well(well_name);
             }
 
             // Always check if well can be opened (it could have been closed for numerical reasons and possible to operate with new params)
@@ -242,6 +243,7 @@ void handleWCONINJE(HandlerContext& handlerContext)
                     handlerContext.state().wellgroup_events().addEvent( well_name, ScheduleEvents::INJECTION_TYPE_CHANGED);
                 }
                 handlerContext.state().wells.update( std::move(well2) );
+                handlerContext.affected_well(well_name);
             }
 
             if (handlerContext.state().wells.get( well_name ).getStatus() == Well::Status::OPEN) {
@@ -252,8 +254,6 @@ void handleWCONINJE(HandlerContext& handlerContext)
             if (injection->updateUDQActive(handlerContext.state().udq.get(), udq_active)) {
                 handlerContext.state().udq_active.update( std::move(udq_active) );
             }
-
-            handlerContext.affected_well(well_name);
         }
     }
 }
@@ -321,13 +321,13 @@ void handleWCONINJH(HandlerContext& handlerContext)
                     handlerContext.state().wellgroup_events().addEvent( well_name, ScheduleEvents::INJECTION_TYPE_CHANGED);
                 }
                 handlerContext.state().wells.update( std::move(well2) );
+                handlerContext.affected_well(well_name);
             }
 
             // Always check if well can be opened (it could have been closed for numerical reasons and possible to operate with new params)
             if (handlerContext.getWellStatus(well_name) == WellStatus::OPEN) {
                 handlerContext.state().wellgroup_events().addEvent( well_name, ScheduleEvents::REQUEST_OPEN_WELL);
             }
-
         }
     }
 }
@@ -424,14 +424,13 @@ void handleWCONPROD(HandlerContext& handlerContext)
                 handlerContext.state().events().addEvent( ScheduleEvents::PRODUCTION_UPDATE );
                 handlerContext.state().wellgroup_events().addEvent( well2.name(), ScheduleEvents::PRODUCTION_UPDATE);
                 handlerContext.state().wells.update( std::move(well2) );
+                handlerContext.affected_well(well_name);
             }
 
             auto udq_active = handlerContext.state().udq_active.get();
             if (properties->updateUDQActive(handlerContext.state().udq.get(), udq_active)) {
                 handlerContext.state().udq_active.update( std::move(udq_active));
             }
-
-            handlerContext.affected_well(well_name);
         }
     }
 }
@@ -784,9 +783,8 @@ void handleWELTARG(HandlerContext& handlerContext)
                     handlerContext.state().events().addEvent( ScheduleEvents::INJECTION_UPDATE );
                 }
                 handlerContext.state().wells.update( std::move(well2) );
+                handlerContext.affected_well(well_name);
             }
-
-            handlerContext.affected_well(well_name);
         }
     }
 }
