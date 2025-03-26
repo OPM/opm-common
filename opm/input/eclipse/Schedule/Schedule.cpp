@@ -1477,6 +1477,18 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
         const auto insert_index = this->snapshots.back().groups.size();
         auto new_group = Group(rst_group, insert_index, udq_undefined, this->m_static.m_unit_system);
         if (rst_group.name != "FIELD") {
+            // we also update the GuideRateConfig
+            auto guide_rate_config = this->snapshots.back().guide_rate();
+            if (new_group.isInjectionGroup()) {
+                for (const auto& [_, inj_prop] : new_group.injectionProperties()) {
+                    guide_rate_config.update_injection_group(new_group.name(), inj_prop);
+                }
+            }
+            if (new_group.isProductionGroup()) {
+                guide_rate_config.update_production_group(new_group);
+            }
+            this->snapshots.back().guide_rate.update( std::move(guide_rate_config) );
+
             // Common case.  Add new group.
             this->addGroup( std::move(new_group) );
             return;
