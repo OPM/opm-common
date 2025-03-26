@@ -119,6 +119,19 @@ namespace Opm {
         return iter->second.closed;
     }
 
+    bool WellTestState::is_follow_on_well(const std::string& well_name) const {
+        return std::find(follow_on_wells.begin(), follow_on_wells.end(), well_name) != follow_on_wells.end();
+    }
+    bool WellTestState::add_follow_on_well(const std::string& well_name) {
+        if (is_follow_on_well(well_name))
+            return false;
+
+        this->follow_on_wells.push_back(well_name); //] = true;
+        return true;
+    }
+    const std::vector<std::string>& WellTestState::get_follow_on_wells() const {
+        return follow_on_wells;
+    }
 
     void WellTestState::filter_wells(const std::vector<std::string>& existing_wells) {
         std::unordered_set<std::string> well_set{ existing_wells.begin(), existing_wells.end() };
