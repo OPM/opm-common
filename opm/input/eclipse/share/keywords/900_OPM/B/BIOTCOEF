@@ -4,6 +4,7 @@
     "GRID"
   ],
   "description": "The BIOTCOEF item is used to set the Biot coefficient for a cell in mechanics models.",
+  "prohibits": ["POELCOEF"],
   "data": {
     "value_type": "DOUBLE",
     "dimension": "1"
