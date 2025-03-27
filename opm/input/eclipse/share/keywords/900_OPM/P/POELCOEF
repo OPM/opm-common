@@ -4,6 +4,7 @@
     "GRID"
   ],
   "description": "The POELCOEF item is used to set the elasticity coefficient for a cell in mechanics models.",
+  "prohibits": ["BIOTCOEF"],
   "data": {
     "value_type": "DOUBLE",
     "dimension": "1"

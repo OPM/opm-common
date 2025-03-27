@@ -153,7 +153,7 @@ static const std::unordered_map<std::string, keyword_info<double>> double_keywor
                                                                                       {"THCOIL",  keyword_info<double>{}.unit_string("Energy/AbsoluteTemperature*Length*Time")},
                                                                                       {"THCGAS",  keyword_info<double>{}.unit_string("Energy/AbsoluteTemperature*Length*Time")},
                                                                                       {"THCWATER",keyword_info<double>{}.unit_string("Energy/AbsoluteTemperature*Length*Time")},
-                                                                                      {"YMODULE", keyword_info<double>{}.unit_string("Giga*Pascal")},
+                                                                                      {"YMODULE", keyword_info<double>{}.unit_string("Ymodule")},
                                                                                       {"PRATIO", keyword_info<double>{}.unit_string("1")},
                                                                                       {"BIOTCOEF", keyword_info<double>{}.unit_string("1")},
                                                                                       {"POELCOEF", keyword_info<double>{}.unit_string("1")},
