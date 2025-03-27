@@ -846,7 +846,8 @@ inline quantity rate( const fn_args& args ) {
         sum += accum_groups(phase, args.schedule, args.sim_step, args.group_name);
     }
 
-    if (phase == rt::polymer || phase == rt::brine) {
+    if (phase == rt::polymer || phase == rt::brine || phase == rt::microbial ||
+        phase == rt::oxygen  || phase == rt::urea) {
         return { sum, measure::mass_rate };
     }
 
@@ -991,7 +992,8 @@ inline quantity ratetracer( const fn_args& args ) {
 
 template< rt phase, bool injection = true >
 inline quantity ratel( const fn_args& args ) {
-    const auto unit = ((phase == rt::polymer) || (phase == rt::brine))
+    const auto unit = ((phase == rt::polymer) || (phase == rt::brine) || (phase == rt::microbial) ||
+                       (phase == rt::oxygen)  || (phase == rt::urea))
         ? measure::mass_rate : rate_unit<phase>();
 
     const quantity zero = { 0.0, unit };
@@ -1070,7 +1072,8 @@ inline quantity cpr( const fn_args& args ) {
 
 template< rt phase, bool injection = true >
 inline quantity cratel( const fn_args& args ) {
-    const auto unit = ((phase == rt::polymer) || (phase == rt::brine))
+    const auto unit = ((phase == rt::polymer) || (phase == rt::brine) || (phase == rt::microbial) ||
+                       (phase == rt::oxygen)  || (phase == rt::urea))
         ? measure::mass_rate : rate_unit<phase>();
 
     const quantity zero = { 0.0, unit };
@@ -1215,7 +1218,8 @@ inline quantity crate( const fn_args& args ) {
     if (! injection)
         v *= -1;
 
-    if (phase == rt::polymer || phase == rt::brine)
+    if (phase == rt::polymer || phase == rt::brine || phase == rt::microbial ||
+        phase == rt::oxygen  || phase == rt::urea)
         return { v, measure::mass_rate };
 
     return { v, rate_unit< phase >() };
@@ -1304,7 +1308,8 @@ inline quantity segpress(const fn_args& args)
 template <rt phase>
 inline quantity srate(const fn_args& args)
 {
-    const auto m = ((phase == rt::polymer) || (phase == rt::brine))
+    const auto m = ((phase == rt::polymer) || (phase == rt::brine) || (phase == rt::microbial) ||
+                    (phase == rt::oxygen)  || (phase == rt::urea))
         ? measure::mass_rate
         : rate_unit<phase>();
 
@@ -2990,6 +2995,62 @@ static const auto funs = std::unordered_map<std::string, ofun> {
     {"GEFF" , group_efficiency_factor},
     {"WEFF" , well_efficiency_factor},
     {"WEFFG", well_efficiency_factor_grouptree},
+
+    // Biofilms
+    { "WMMIR", rate< rt::microbial, injector > },
+    { "WMMIT", mul( rate< rt::microbial, injector >, duration ) },
+    { "GMMIT", mul( rate< rt::microbial, injector >, duration ) },
+    { "CMMIR", crate< rt::microbial, injector > },
+    { "CMMIT",  mul( crate< rt::microbial, injector >, duration) },
+    { "CMMIRL", cratel< rt::microbial, injector> },
+    { "CMMITL", mul( cratel< rt::microbial, injector>, duration) },
+    { "FMMIR", rate< rt::microbial, injector > },
+    { "FMMIT", mul( rate< rt::microbial, injector >, duration ) },
+    { "WMMPR", rate< rt::microbial, producer > },
+    { "WMMPT", mul( rate< rt::microbial, producer >, duration ) },
+    { "GMMPT", mul( rate< rt::microbial, producer >, duration ) },
+    { "CMMPR", crate< rt::microbial, producer > },
+    { "CMMPT",  mul( crate< rt::microbial, producer >, duration) },
+    { "CMMPRL", cratel< rt::microbial, producer > },
+    { "CMMPTL", mul( cratel< rt::microbial, producer >, duration) },
+    { "FMMPR", rate< rt::microbial, producer > },
+    { "FMMPT", mul( rate< rt::microbial, producer >, duration ) },
+    { "WMOIR", rate< rt::oxygen, injector > },
+    { "WMOIT", mul( rate< rt::oxygen, injector >, duration ) },
+    { "GMOIT", mul( rate< rt::oxygen, injector >, duration ) },
+    { "CMOIR", crate< rt::oxygen, injector > },
+    { "CMOIT",  mul( crate< rt::oxygen, injector >, duration) },
+    { "CMOIRL", cratel< rt::oxygen, injector> },
+    { "CMOITL", mul( cratel< rt::oxygen, injector>, duration) },
+    { "FMOIR", rate< rt::oxygen, injector > },
+    { "FMOIT", mul( rate< rt::oxygen, injector >, duration ) },
+    { "WMOPR", rate< rt::oxygen, producer > },
+    { "WMOPT", mul( rate< rt::oxygen, producer >, duration ) },
+    { "GMOPT", mul( rate< rt::oxygen, producer >, duration ) },
+    { "CMOPR", crate< rt::oxygen, producer > },
+    { "CMOPT",  mul( crate< rt::oxygen, producer >, duration) },
+    { "CMOPRL", cratel< rt::oxygen, producer > },
+    { "CMOPTL", mul( cratel< rt::oxygen, producer >, duration) },
+    { "FMOPR", rate< rt::oxygen, producer > },
+    { "FMOPT", mul( rate< rt::oxygen, producer >, duration ) },
+    { "WMUIR", rate< rt::urea, injector > },
+    { "WMUIT", mul( rate< rt::urea, injector >, duration ) },
+    { "GMUIT", mul( rate< rt::urea, injector >, duration ) },
+    { "CMUIR", crate< rt::urea, injector > },
+    { "CMUIT",  mul( crate< rt::urea, injector >, duration) },
+    { "CMUIRL", cratel< rt::urea, injector> },
+    { "CMUITL", mul( cratel< rt::urea, injector>, duration) },
+    { "FMUIR", rate< rt::urea, injector > },
+    { "FMUIT", mul( rate< rt::urea, injector >, duration ) },
+    { "WMUPR", rate< rt::urea, producer > },
+    { "WMUPT", mul( rate< rt::urea, producer >, duration ) },
+    { "GMUPT", mul( rate< rt::urea, producer >, duration ) },
+    { "CMUPR", crate< rt::urea, producer > },
+    { "CMUPT",  mul( crate< rt::urea, producer >, duration) },
+    { "CMUPRL", cratel< rt::urea, producer > },
+    { "CMUPTL", mul( cratel< rt::urea, producer >, duration) },
+    { "FMUPR", rate< rt::urea, producer > },
+    { "FMUPT", mul( rate< rt::urea, producer >, duration ) },
 };
 
 static const auto single_values_units = UnitTable {
@@ -3041,6 +3102,11 @@ static const auto single_values_units = UnitTable {
     {"FGKMO"    , Opm::UnitSystem::measure::mass },
     {"FGMST"    , Opm::UnitSystem::measure::mass },
     {"FGMUS"    , Opm::UnitSystem::measure::mass },
+    {"FMMIP"    , Opm::UnitSystem::measure::mass },
+    {"FMOIP"    , Opm::UnitSystem::measure::mass },
+    {"FMUIP"    , Opm::UnitSystem::measure::mass },
+    {"FMBIP"    , Opm::UnitSystem::measure::mass },
+    {"FMCIP"    , Opm::UnitSystem::measure::mass },
 };
 
 static const auto region_units = UnitTable {
@@ -3072,6 +3138,11 @@ static const auto region_units = UnitTable {
     {"RGKMO" , Opm::UnitSystem::measure::mass },
     {"RGMST" , Opm::UnitSystem::measure::mass },
     {"RGMUS" , Opm::UnitSystem::measure::mass },
+    {"RMMIP" , Opm::UnitSystem::measure::mass },
+    {"RMOIP" , Opm::UnitSystem::measure::mass },
+    {"RMUIP" , Opm::UnitSystem::measure::mass },
+    {"RMBIP" , Opm::UnitSystem::measure::mass },
+    {"RMCIP" , Opm::UnitSystem::measure::mass },
 };
 
 static const auto interregion_units = UnitTable {
@@ -3177,6 +3248,13 @@ static const auto block_units = UnitTable {
     {"BSTRSSXY" , Opm::UnitSystem::measure::pressure},
     {"BSTRSSXZ" , Opm::UnitSystem::measure::pressure},
     {"BSTRSSYZ" , Opm::UnitSystem::measure::pressure},
+
+    // Biofilms
+    {"BMMIP"     , Opm::UnitSystem::measure::mass},
+    {"BMOIP"     , Opm::UnitSystem::measure::mass},
+    {"BMUIP"     , Opm::UnitSystem::measure::mass},
+    {"BMBIP"     , Opm::UnitSystem::measure::mass},
+    {"BMCIP"     , Opm::UnitSystem::measure::mass},
 };
 
 static const auto aquifer_units = UnitTable {

@@ -17,6 +17,26 @@
     "FGMMO",
     "FGMST",
     "FGMTR",
-    "FGMUS"
+    "FGMUS",
+    "FMBIP",
+    "FMCIP",
+    "FMMIP",
+    "FMMIR",
+    "FMMIT",
+    "FMOIP",
+    "FMOIR",
+    "FMOIT",
+    "FMUIP",
+    "FMUIR",
+    "FMUIT",
+    "FMMPP",
+    "FMMPR",
+    "FMMPT",
+    "FMOPP",
+    "FMOPR",
+    "FMOPT",
+    "FMUPP",
+    "FMUPR",
+    "FMUPT"
   ]
 }

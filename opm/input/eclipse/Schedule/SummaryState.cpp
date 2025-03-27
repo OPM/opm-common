@@ -94,6 +94,7 @@ namespace {
             "OFT", "OFT+", "OFT-", "OFTG", "OFTL",
             "GFT", "GFT+", "GFT-", "GFTG", "GFTL",
             "WFT", "WFT+", "WFT-", "GMIT",
+            "MMIT", "MOIT", "MUIT", "MMPT", "MOPT", "MUPT"
         };
 
         auto sep_pos = key.find(':');

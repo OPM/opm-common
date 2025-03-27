@@ -71,9 +71,11 @@ namespace Opm { namespace data {
                 brine            = (1 << 17),
                 alq              = (1 << 18),
                 tracer           = (1 << 19),
-                micp             = (1 << 20),
-                vaporized_water  = (1 << 21),
-                mass_gas         = (1 << 22)
+                microbial        = (1 << 20),
+                oxygen           = (1 << 21),
+                urea             = (1 << 22),
+                vaporized_water  = (1 << 23),
+                mass_gas         = (1 << 24)
             };
 
             using enum_size = std::underlying_type< opt >::type;
@@ -130,7 +132,9 @@ namespace Opm { namespace data {
                 serializer(brine);
                 serializer(alq);
                 serializer(tracer);
-                serializer(micp);
+                serializer(microbial);
+                serializer(oxygen);
+                serializer(urea);
                 serializer(vaporized_water);
                 serializer(mass_gas);
             }
@@ -157,9 +161,11 @@ namespace Opm { namespace data {
                 rat1.set(opt::well_potential_gas, 17.0);
                 rat1.set(opt::brine, 18.0);
                 rat1.set(opt::alq, 19.0);
-                rat1.set(opt::micp, 21.0);
-                rat1.set(opt::vaporized_water, 22.0);
-                rat1.set(opt::mass_gas, 23.0);
+                rat1.set(opt::microbial, 20.0);
+                rat1.set(opt::oxygen, 21.0);
+                rat1.set(opt::urea, 22.0);
+                rat1.set(opt::vaporized_water, 23.0);
+                rat1.set(opt::mass_gas, 24.0);
                 rat1.tracer.insert({"test_tracer", 1.0});
 
                 return rat1;
@@ -193,7 +199,9 @@ namespace Opm { namespace data {
             double brine = 0.0;
             double alq = 0.0;
             std::map<std::string, double> tracer{};
-            double micp = 0.0;
+            double microbial = 0.0;
+            double oxygen = 0.0;
+            double urea = 0.0;
             double vaporized_water = 0.0;
             double mass_gas = 0.0;
     };
@@ -1278,7 +1286,9 @@ namespace Opm { namespace data {
              brine == rate.brine &&
              alq == rate.alq &&
              tracer == rate.tracer &&
-             micp == rate.micp &&
+             microbial == rate.microbial &&
+             oxygen == rate.oxygen &&
+             urea == rate.urea &&
              vaporized_water == rate.vaporized_water &&
              mass_gas == rate.mass_gas;
     }
@@ -1316,7 +1326,9 @@ namespace Opm { namespace data {
             case opt::alq: return this->alq;
             case opt::tracer: /* Should _not_ be called with tracer argument */
                 break;
-            case opt::micp: return this->micp;
+            case opt::microbial: return this->microbial;
+            case opt::oxygen: return this->oxygen;
+            case opt::urea: return this->urea;
             case opt::vaporized_water: return this->vaporized_water;
             case opt::mass_gas: return this->mass_gas;
         }
@@ -1400,7 +1412,9 @@ namespace Opm { namespace data {
                 buffer.write(rate);
             }
 
-            buffer.write(this->micp);
+            buffer.write(this->microbial);
+            buffer.write(this->oxygen);
+            buffer.write(this->urea);
             buffer.write(this->vaporized_water);
             buffer.write(this->mass_gas);
     }
@@ -1577,7 +1591,9 @@ namespace Opm { namespace data {
                 this->tracer.emplace(tracer_name, tracer_rate);
             }
 
-            buffer.read(this->micp);
+            buffer.read(this->microbial);
+            buffer.read(this->oxygen);
+            buffer.read(this->urea);
             buffer.read(this->vaporized_water);
             buffer.read(this->mass_gas);
     }

@@ -54,6 +54,9 @@ enum class BCComponent {
      WATER,
      SOLVENT,
      POLYMER,
+     MICR,
+     OXYG,
+     UREA,
      NONE
 };
 
