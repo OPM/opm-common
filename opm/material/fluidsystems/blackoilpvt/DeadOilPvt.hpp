@@ -32,6 +32,8 @@
 #include <cstddef>
 #include <vector>
 
+#include <fmt/core.h>
+
 namespace Opm {
 
 #if HAVE_ECL_INPUT
@@ -143,7 +145,13 @@ public:
                                   const Evaluation& pressure) const
     {
         const Evaluation& invBo = inverseOilB_[regionIdx].eval(pressure, /*extrapolate=*/true);
+        if (invBo <= 0.) {
+            throw std::runtime_error(fmt::format("Dead oil invBo must be positive with pressure {}.", getValue(pressure)));
+        }
         const Evaluation& invMuoBo = inverseOilBMu_[regionIdx].eval(pressure, /*extrapolate=*/true);
+        if (invMuoBo <= 0.) {
+                throw std::runtime_error(fmt::format("Dead oil invMuBo must be positive with pressure {}.", getValue(pressure)));
+        }
 
         return invBo / invMuoBo;
     }

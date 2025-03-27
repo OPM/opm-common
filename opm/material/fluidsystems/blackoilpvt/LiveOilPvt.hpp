@@ -34,6 +34,8 @@
 #include <opm/material/common/UniformXTabulated2DFunction.hpp>
 #include <opm/material/common/Tabulated1DFunction.hpp>
 
+#include <fmt/core.h>
+
 namespace Opm {
 
 #if HAVE_ECL_INPUT
@@ -181,7 +183,14 @@ public:
     {
         // ATTENTION: Rs is the first axis!
         const Evaluation& invBo = inverseOilBTable_[regionIdx].eval(Rs, pressure, /*extrapolate=*/true);
+        if (invBo <=  0.) {
+            throw std::runtime_error(fmt::format("Oil formation volume factor must be positive with rs {} and pressure {}.", getValue(Rs), getValue(pressure)));
+        }
+
         const Evaluation& invMuoBo = inverseOilBMuTable_[regionIdx].eval(Rs, pressure, /*extrapolate=*/true);
+        if (invMuoBo <= 0.) {
+            throw std::runtime_error(fmt::format("invMuBo must be positive with rs {} and pressure {}.", getValue(Rs), getValue(pressure)));
+        }
 
         return invBo / invMuoBo;
     }
@@ -196,7 +205,13 @@ public:
     {
         // ATTENTION: Rs is the first axis!
         const Evaluation& invBo = inverseSaturatedOilBTable_[regionIdx].eval(pressure, /*extrapolate=*/true);
+        if (invBo <= 0.) {
+           throw std::runtime_error(fmt::format("Saturated invBo must be positive with pressure {}.", getValue(pressure)));
+        }
         const Evaluation& invMuoBo = inverseSaturatedOilBMuTable_[regionIdx].eval(pressure, /*extrapolate=*/true);
+        if (invMuoBo <= 0.) {
+            throw std::runtime_error(fmt::format("Saturated invMuBo must be positive with pressure {}.", getValue(pressure)));
+        }
 
         return invBo / invMuoBo;
     }
@@ -259,6 +274,10 @@ public:
             constexpr const Scalar eps = 0.001;
             const Evaluation& So = max(oilSaturation, eps);
             tmp *= max(1e-3, pow(So / maxOilSaturation, vapPar2_));
+        }
+
+        if (tmp < 0.0) {
+            throw std::runtime_error(fmt::format("Gas dissolution factor must be non negative with pressure {}.", getValue(pressure)));
         }
 
         return tmp;
