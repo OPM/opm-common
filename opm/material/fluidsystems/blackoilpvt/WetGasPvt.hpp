@@ -36,6 +36,8 @@
 
 #include <cstddef>
 
+#include <fmt/core.h>
+
 namespace Opm {
 
 #if HAVE_ECL_INPUT
@@ -186,7 +188,13 @@ public:
                          const Evaluation& /*Rvw*/) const
     {
         const Evaluation& invBg = inverseGasB_[regionIdx].eval(pressure, Rv, /*extrapolate=*/true);
+        if (invBg <= 0.) {
+            throw std::runtime_error(fmt::format("Gas invBg must be positive with Rv {} and pressure {}.", getValue(Rv), getValue(pressure)));
+        }
         const Evaluation& invMugBg = inverseGasBMu_[regionIdx].eval(pressure, Rv, /*extrapolate=*/true);
+        if (invMugBg <= 0.) {
+                throw std::runtime_error(fmt::format("Gas invMugBg must be positive with Rv {} and pressure {}.", getValue(Rv), getValue(pressure)));
+        }
 
         return invBg / invMugBg;
     }
@@ -200,7 +208,13 @@ public:
                                   const Evaluation& pressure) const
     {
         const Evaluation& invBg = inverseSaturatedGasB_[regionIdx].eval(pressure, /*extrapolate=*/true);
+        if (invBg <= 0.) {
+            throw std::runtime_error(fmt::format("Saturated invBg must be positive with pressure {}.", getValue(pressure)));
+        }
         const Evaluation& invMugBg = inverseSaturatedGasBMu_[regionIdx].eval(pressure, /*extrapolate=*/true);
+        if (invMugBg <= 0.) {
+            throw std::runtime_error(fmt::format("Saturated invMuBo must be positive with pressure {}.", getValue(pressure)));
+        }
 
         return invBg / invMugBg;
     }
@@ -279,6 +293,9 @@ public:
             constexpr const Scalar eps = 0.001;
             const Evaluation& So = max(oilSaturation, eps);
             tmp *= max(1e-3, pow(So / maxOilSaturation, vapPar1_));
+        }
+        if (tmp <= 0.) {
+            throw std::runtime_error(fmt::format("Oil vaporization factor must be positive with pressure {}.", getValue(pressure)));
         }
 
         return tmp;

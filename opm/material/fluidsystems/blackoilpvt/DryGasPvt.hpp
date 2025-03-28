@@ -34,6 +34,8 @@
 #include <cstddef>
 #include <vector>
 
+#include <fmt/core.h>
+
 namespace Opm {
 
 #if HAVE_ECL_INPUT
@@ -154,7 +156,13 @@ public:
                                   const Evaluation& pressure) const
     {
         const Evaluation& invBg = inverseGasB_[regionIdx].eval(pressure, /*extrapolate=*/true);
+        if (invBg <= 0.) {
+            throw std::runtime_error(fmt::format("Dry Gas invBg must be positive with pressure {}.", getValue(pressure)));
+        }
         const Evaluation& invMugBg = inverseGasBMu_[regionIdx].eval(pressure, /*extrapolate=*/true);
+        if (invMugBg <= 0.) {
+            throw std::runtime_error(fmt::format("Dry Gas invMugBg must be positive with pressure {}.", getValue(pressure)));
+        }
 
         return invBg / invMugBg;
     }
