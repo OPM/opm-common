@@ -1,5 +1,5 @@
 /*
-  Copyright (c) 2020 Equinor ASA
+  Copyright 2025 Equinor ASA.
 
   This file is part of the Open Porous Media project (OPM).
 
@@ -17,32 +17,22 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef OPM_WRITE_RPT_HPP
-#define OPM_WRITE_RPT_HPP
+#ifndef OPM_RPTSHCED_KEYWORD_NORMALISATION_HPP_INCLUDED
+#define OPM_RPTSHCED_KEYWORD_NORMALISATION_HPP_INCLUDED
 
-#include <cstddef>
-#include <iosfwd>
-#include <string>
+#include <opm/input/eclipse/Schedule/RPTKeywordNormalisation.hpp>
 
 namespace Opm {
+    class DeckKeyword;
+    class ParseContext;
+    class ErrorGuard;
+}
 
-    class Schedule;
-    class EclipseGrid;
-    class UnitSystem;
+namespace Opm {
+    RPTKeywordNormalisation::MnemonicMap
+    normaliseRptSchedKeyword(const DeckKeyword&  kw,
+                             const ParseContext& parseContext,
+                             ErrorGuard&         errors);
+}
 
-} // namespace Opm
-
-namespace Opm::PrtFile {
-
-    void report(std::ostream&      os,
-                const std::string& reportType,
-                const int          reportSpec,
-                const double       elapsed_secs,
-                const std::size_t  report_step,
-                const Schedule&    schedule,
-                const EclipseGrid& grid,
-                const UnitSystem&  unit_system);
-
-} // namespace Opm::RptIO
-
-#endif // OPM_WRITE_RPT_HPP
+#endif // OPM_RPTSHCED_KEYWORD_NORMALISATION_HPP_INCLUDED
