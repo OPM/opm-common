@@ -30,21 +30,29 @@ namespace Opm {
     class EclipseGrid;
     class UnitSystem;
 
-    namespace RptIO {
+} // namespace Opm
 
-        void write_report(
-            std::ostream&,
-            const std::string& report,
-            unsigned value,
-            const Schedule& schedule,
-            const EclipseGrid& grid,
-            const UnitSystem& unit_system,
-            std::size_t time_step
-        );
+namespace Opm::RptIO {
 
-        namespace workers {
+    void write_report(std::ostream&      os,
+                      const std::string& reportType,
+                      int                reportSpec,
+                      const Schedule&    schedule,
+                      const EclipseGrid& grid,
+                      const UnitSystem&  unit_system,
+                      std::size_t        time_step);
 
-            void write_WELSPECS(std::ostream&, unsigned, const Schedule&, const EclipseGrid& grid, const UnitSystem&, std::size_t);
+} // namespace Opm::RptIO
 
-}   }   }
+namespace Opm::RptIO::workers {
+
+    void wellSpecification(std::ostream&      os,
+                           int                wellSpecRequest,
+                           const Schedule&    schedule,
+                           const EclipseGrid& grid,
+                           const UnitSystem&  unit_system,
+                           std::size_t        time_step);
+
+} // namespace Opm::RptIO::workers
+
 #endif // OPM_WRITE_RPT_HPP
