@@ -135,6 +135,9 @@ public:
                              Action::State&                 action_state,
                              SummaryState&                  summary_state) const;
 
+    data::Solution loadRestartSolution(const std::vector<RestartKey>& solution_keys,
+                                       const int                      report_step) const;
+
     void writeInitial(data::Solution                          simProps,
                       std::map<std::string, std::vector<int>> int_data,
                       const std::vector<NNCdata>&             nnc) const;
@@ -304,6 +307,18 @@ Opm::EclipseIO::Impl::loadRestart(const std::vector<RestartKey>& solution_keys,
                            this->grid_,
                            this->schedule_,
                            extra_keys);
+}
+
+Opm::data::Solution
+Opm::EclipseIO::Impl::loadRestartSolution(const std::vector<RestartKey>& solution_keys,
+                                          const int                      report_step) const
+{
+    const auto& initConfig  = this->es_.get().getInitConfig();
+    const auto  filename    = this->es_.get().getIOConfig()
+        .getRestartFileName(initConfig.getRestartRootName(), report_step, false);
+
+    return RestartIO::load_solution_only(filename, report_step, solution_keys,
+                                         this->es_, this->grid_);
 }
 
 void Opm::EclipseIO::Impl::writeInitial(data::Solution                          simProps,
@@ -568,6 +583,13 @@ Opm::EclipseIO::loadRestart(Action::State&                 action_state,
 {
     return this->impl->loadRestart(solution_keys, extra_keys,
                                    action_state, summary_state);
+}
+
+Opm::data::Solution
+Opm::EclipseIO::loadRestartSolution(const std::vector<RestartKey>& solution_keys,
+                                    const int                      report_step) const
+{
+    return this->impl->loadRestartSolution(solution_keys, report_step);
 }
 
 const Opm::out::Summary& Opm::EclipseIO::summary() const

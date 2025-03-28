@@ -501,7 +501,7 @@ RSTConfig::RSTConfig(const SOLUTIONSection& solution_section,
                      const ParseContext&    parseContext,
                      const bool compositional_arg,
                      ErrorGuard&            errors)
-    : write_rst_file(false)
+    : write_rst_file(true)
     , compositional(compositional_arg)
 {
     for (const auto& keyword : solution_section) {
