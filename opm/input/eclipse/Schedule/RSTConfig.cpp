@@ -501,7 +501,7 @@ RSTConfig::RSTConfig(const SOLUTIONSection& solution_section,
                      const ParseContext&    parseContext,
                      const bool compositional_arg,
                      ErrorGuard&            errors)
-    : write_rst_file(false)
+    : write_rst_file(true)
     , compositional(compositional_arg)
 {
     for (const auto& keyword : solution_section) {
@@ -666,7 +666,9 @@ void RSTConfig::handleRPTRSTSOLUTION(const DeckKeyword&  keyword,
         this->solution_only_keywords.erase(kw.first);
     }
 
-    this->write_rst_file = true;
+    if (this->basic.has_value() && this->basic.value() == 0) {
+        this->write_rst_file = false;
+    }
 }
 
 void RSTConfig::handleRPTSCHED(const DeckKeyword&  keyword,
