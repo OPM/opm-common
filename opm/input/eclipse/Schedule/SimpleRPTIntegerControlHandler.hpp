@@ -1,5 +1,5 @@
 /*
-  Copyright (c) 2020 Equinor ASA
+  Copyright 2025 Equinor ASA.
 
   This file is part of the Open Porous Media project (OPM).
 
@@ -17,34 +17,31 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef OPM_WRITE_RPT_HPP
-#define OPM_WRITE_RPT_HPP
+#ifndef OPM_SIMPLE_RPT_INTEGER_CONTROL_HANDLER_HPP_INCLUDED
+#define OPM_SIMPLE_RPT_INTEGER_CONTROL_HANDLER_HPP_INCLUDED
 
-#include <cstddef>
-#include <iosfwd>
+#include <opm/input/eclipse/Schedule/RPTKeywordNormalisation.hpp>
+
+#include <initializer_list>
 #include <string>
+#include <vector>
 
 namespace Opm {
 
-    class Schedule;
-    class EclipseGrid;
-    class UnitSystem;
+class SimpleRPTIntegerControlHandler
+{
+public:
+    explicit SimpleRPTIntegerControlHandler(std::initializer_list<const char*> keywords)
+        : keywords_ { keywords.begin(), keywords.end() }
+    {}
 
-    namespace RptIO {
+    RPTKeywordNormalisation::MnemonicMap
+    operator()(const std::vector<int>& controlValues) const;
 
-        void write_report(
-            std::ostream&,
-            const std::string& report,
-            unsigned value,
-            const Schedule& schedule,
-            const EclipseGrid& grid,
-            const UnitSystem& unit_system,
-            std::size_t time_step
-        );
+private:
+    std::vector<std::string> keywords_{};
+};
 
-        namespace workers {
+} // namespace Opm
 
-            void write_WELSPECS(std::ostream&, unsigned, const Schedule&, const EclipseGrid& grid, const UnitSystem&, std::size_t);
-
-}   }   }
-#endif // OPM_WRITE_RPT_HPP
+#endif // OPM_OPM_SIMPLE_RPT_INTEGER_CONTROL_HANDLER_HPP_INCLUDED
