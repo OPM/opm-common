@@ -32,6 +32,7 @@ namespace Opm {
 
 class EclipseGrid;
 class FieldPropsManager;
+class NumericalAquifers;
 class NumericalAquiferCell;
 
 } // namespace Opm
@@ -120,6 +121,14 @@ public:
                  std::vector<CompletedCells>& completed_cells_lgr,
                  const std::unordered_map<std::string, std::size_t>& label_to_index_);
 
+    /// Make collection aware of numerical aquifers
+    ///
+    /// Wells intersected in numerical aquifers should have properties from
+    /// the numerical aquifer itself rather than from the main property
+    /// container.
+    ///
+    /// \param[in] num_aquifers Run's collection of numerical aquifers.
+    void include_numerical_aquifers(const NumericalAquifers& num_aquifers);
 
     /// Retrieve particular intersected cell in main grid.
     ///

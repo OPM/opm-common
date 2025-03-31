@@ -20,6 +20,7 @@
 #include <opm/input/eclipse/Schedule/ScheduleGrid.hpp>
 
 #include <opm/input/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquiferCell.hpp>
+#include <opm/input/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquifers.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
 
@@ -87,6 +88,10 @@ Opm::ScheduleGrid::ScheduleGrid(const EclipseGrid&           ecl_grid,
     , label_to_index { std::cref(label_to_index_) }
 {}
 
+void Opm::ScheduleGrid::include_numerical_aquifers(const NumericalAquifers& num_aquifers)
+{
+    this->num_aqu_cells = num_aquifers.allAquiferCells();
+}
 
 const Opm::CompletedCells::Cell&
 Opm::ScheduleGrid::get_cell(const std::size_t i,
@@ -295,7 +300,12 @@ populate_props_lgr(const std::string& tag, CompletedCells::Cell& cell) const
 }
 
 const Opm::NumericalAquiferCell*
-Opm::ScheduleGrid::get_num_aqu_cell([[maybe_unused]] const std::size_t global_index) const
+Opm::ScheduleGrid::get_num_aqu_cell(const std::size_t global_index) const
 {
-    return nullptr;
+    auto cellPos = this->num_aqu_cells.find(global_index);
+    if (cellPos == this->num_aqu_cells.end()) {
+        return nullptr;
+    }
+
+    return cellPos->second;
 }

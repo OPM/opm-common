@@ -150,6 +150,40 @@ END
 )");
     }
 
+    Opm::Deck singleStripWithAquifer()
+    {
+        return Opm::Parser{}.parseString(R"(RUNSPEC
+DIMENS
+1 5 2 /
+GRID
+DXV
+100 /
+DYV
+5*50 /
+DZV
+2*10 /
+TOPS
+5*2000 /
+PERMX
+  10 20 30 40  50
+  60 70 80 90 100 /
+PERMY
+  100 200 300 400  500
+  600 700 800 900 1000 /
+PERMZ
+  10 9 8 7 6
+   5 4 3 2 1 /
+PORO
+  0.1 1   0.2 0.9 0.3
+  0.8 0.4 0.7 0.5 0.6 /
+AQUNUM
+--aqnr I  J  K     A       L     PHI     K   DEPTH
+    1  1  3  2  3000000  25000  0.1243  8000  2115.53 /
+/
+END
+)");
+    }
+
     struct Case
     {
         Case(const Opm::Deck& deck)
@@ -199,6 +233,50 @@ BOOST_AUTO_TEST_CASE(Insert_New_Cell)
     BOOST_CHECK_CLOSE(cell.props->permz,   3.0*mD(), 1.0e-8);
     BOOST_CHECK_CLOSE(cell.props->poro ,   0.7     , 1.0e-8);
     BOOST_CHECK_CLOSE(cell.props->ntg  ,   1.0     , 1.0e-8);
+
+    BOOST_CHECK_EQUAL(cell.props->satnum, 1);
+    BOOST_CHECK_EQUAL(cell.props->pvtnum, 1);
+}
+
+BOOST_AUTO_TEST_CASE(Insert_New_Cell_In_Aquifer)
+{
+    const auto cse = Case { singleStripWithAquifer() };
+
+    auto cc = Opm::CompletedCells { cse.es.getInputGrid() };
+    auto grid = Opm::ScheduleGrid {
+        cse.es.getInputGrid(),
+        cse.es.fieldProps(),
+        cc
+    };
+
+    grid.include_numerical_aquifers(cse.es.aquifer().numericalAquifers());
+
+    const auto& cell = grid.get_cell(0, 2, 1);
+
+    BOOST_CHECK_MESSAGE(cell.props.has_value(),
+                        "Existing cell object must have property data");
+
+    BOOST_CHECK_MESSAGE(cell.is_active(), "Existing cell object must be active");
+
+    BOOST_CHECK_EQUAL(cell.global_index, std::size_t{7});
+    BOOST_CHECK_EQUAL(cell.i,            std::size_t{0});
+    BOOST_CHECK_EQUAL(cell.j,            std::size_t{2});
+    BOOST_CHECK_EQUAL(cell.k,            std::size_t{1});
+
+    BOOST_CHECK_CLOSE(cell.dimensions[0], 100.0, 1.0e-8);
+    BOOST_CHECK_CLOSE(cell.dimensions[1],  50.0, 1.0e-8);
+    BOOST_CHECK_CLOSE(cell.dimensions[2],  10.0, 1.0e-8);
+
+    BOOST_CHECK_CLOSE(cell.depth, 2115.53, 1.0e-8);
+
+    BOOST_CHECK_EQUAL(cell.active_index(), 7);
+    BOOST_CHECK_EQUAL(cell.props->active_index, 7);
+
+    BOOST_CHECK_CLOSE(cell.props->permx, 8000.0*mD(), 1.0e-8);
+    BOOST_CHECK_CLOSE(cell.props->permy, 8000.0*mD(), 1.0e-8);
+    BOOST_CHECK_CLOSE(cell.props->permz, 8000.0*mD(), 1.0e-8);
+    BOOST_CHECK_CLOSE(cell.props->poro ,    0.1243  , 1.0e-8);
+    BOOST_CHECK_CLOSE(cell.props->ntg  ,    1.0     , 1.0e-8);
 
     BOOST_CHECK_EQUAL(cell.props->satnum, 1);
     BOOST_CHECK_EQUAL(cell.props->pvtnum, 1);
