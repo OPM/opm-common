@@ -16,175 +16,286 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
+
 #include <opm/input/eclipse/Schedule/ScheduleGrid.hpp>
 
+#include <opm/input/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquiferCell.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
+
 #include <opm/input/eclipse/Schedule/CompletedCells.hpp>
 
+#include <cassert>
 #include <cstddef>
+#include <functional>
 #include <string>
+#include <vector>
+
 #include <fmt/format.h>
 
-Opm::ScheduleGrid::ScheduleGrid(const Opm::EclipseGrid& ecl_grid,
-                                const Opm::FieldPropsManager& fpm,
-                                Opm::CompletedCells& completed_cells,
+namespace {
+    std::vector<Opm::CompletedCells>& emptyCells()
+    {
+        static auto cells = std::vector<Opm::CompletedCells>{};
+
+        return cells;
+    }
+
+    const std::unordered_map<std::string, std::size_t>& emptyLgrLabels()
+    {
+        static const auto labels = std::unordered_map<std::string, std::size_t>{};
+
+        return labels;
+    }
+} // Anonymous namespace
+
+// ---------------------------------------------------------------------------
+
+Opm::ScheduleGrid::ScheduleGrid(CompletedCells& completed_cells)
+    : cells          { std::ref(completed_cells) }
+    , cells_lgr      { std::ref(emptyCells()) }
+    , label_to_index { std::cref(emptyLgrLabels()) }
+{}
+
+Opm::ScheduleGrid::ScheduleGrid(CompletedCells&              completed_cells,
+                                std::vector<CompletedCells>& completed_cells_lgr,
+                                const std::unordered_map<std::string, std::size_t>& label_to_index_)
+    : cells          { std::ref(completed_cells) }
+    , cells_lgr      { std::ref(completed_cells_lgr) }
+    , label_to_index { std::cref(label_to_index_) }
+{}
+
+Opm::ScheduleGrid::ScheduleGrid(const EclipseGrid&       ecl_grid,
+                                const FieldPropsManager& fpm,
+                                CompletedCells&          completed_cells)
+    : grid           { &ecl_grid }
+    , fp             { &fpm }
+    , cells          { std::ref(completed_cells) }
+    , cells_lgr      { std::ref(emptyCells()) }
+    , label_to_index { std::cref(emptyLgrLabels()) }
+{}
+
+Opm::ScheduleGrid::ScheduleGrid(const EclipseGrid&           ecl_grid,
+                                const FieldPropsManager&     fpm,
+                                CompletedCells&              completed_cells,
                                 std::vector<CompletedCells>& completed_cells_lgr,
                                 const std::unordered_map<std::string, std::size_t>& label_to_index_)
     : grid           { &ecl_grid }
     , fp             { &fpm }
-    , cells          { completed_cells}
-    , cells_lgr      { completed_cells_lgr}
-    , label_to_index { label_to_index_}
+    , cells          { std::ref(completed_cells) }
+    , cells_lgr      { std::ref(completed_cells_lgr) }
+    , label_to_index { std::cref(label_to_index_) }
 {}
 
-Opm::ScheduleGrid::ScheduleGrid(Opm::CompletedCells& completed_cells, 
-                                std::vector<CompletedCells>& completed_cells_lgr,
-                                const std::unordered_map<std::string, std::size_t>& label_to_index_)
-    : cells         { completed_cells}
-    , cells_lgr     { completed_cells_lgr}
-    , label_to_index{ label_to_index_}
-{}
-
-Opm::ScheduleGrid::ScheduleGrid(const Opm::EclipseGrid& ecl_grid,
-                                const Opm::FieldPropsManager& fpm,
-                                Opm::CompletedCells& completed_cells)
-: grid           { &ecl_grid }
-, fp             { &fpm }
-, cells          { completed_cells}
-, cells_lgr      { cells_lgr_empty}
-, label_to_index { label_to_index_empty}
-{}
-
-Opm::ScheduleGrid::ScheduleGrid(Opm::CompletedCells& completed_cells)
-: cells          { completed_cells}
-, cells_lgr      { cells_lgr_empty}
-, label_to_index { label_to_index_empty}
-{}
-
-
-namespace {
-    double try_get_value(const Opm::FieldPropsManager& fp,
-                         const std::string& kw,
-                         const std::size_t active_index)
-    {
-        if (! fp.has_double(kw)) {
-            throw std::logic_error(fmt::format("FieldPropsManager is missing keyword '{}'", kw));
-        }
-
-        return fp.try_get<double>(kw)->at(active_index);
-    }
-
-    double try_get_ntg_value(const Opm::FieldPropsManager& fp,
-                             const std::string& kw,
-                             const std::size_t active_index)
-    {
-        return fp.has_double(kw)
-            ? fp.try_get<double>(kw)->at(active_index)
-            : 1.0;
-    }
-}
 
 const Opm::CompletedCells::Cell&
-Opm::ScheduleGrid::get_cell(std::size_t i, std::size_t j, std::size_t k) const
+Opm::ScheduleGrid::get_cell(const std::size_t i,
+                            const std::size_t j,
+                            const std::size_t k) const
 {
     if (this->grid == nullptr) {
-        return this->cells.get(i, j, k);
+        return this->cells.get().get(i, j, k);
     }
 
-    auto [valid, cellRef] = this->cells.try_get(i, j, k);
+    auto [cell_ptr, is_existing_cell] =
+        this->cells.get().try_get(i, j, k);
 
-    if (!valid) {
-        cellRef.depth = this->grid->getCellDepth(i, j, k);
-        cellRef.dimensions = this->grid->getCellDimensions(i, j, k);
+    assert (cell_ptr != nullptr);
 
-        if (this->grid->cellActive(i, j, k)) {
-            const auto active_index = this->grid->getActiveIndex(i, j, k);
-            const double porv = try_get_value(*this->fp, "PORV", active_index);
-            if (this->grid->cellActiveAfterMINPV(i, j, k, porv)) {
-                auto& props = cellRef.props.emplace(CompletedCells::Cell::Props{});
-                props.active_index = active_index;
-                props.permx = try_get_value(*this->fp, "PERMX", props.active_index);
-                props.permy = try_get_value(*this->fp, "PERMY", props.active_index);
-                props.permz = try_get_value(*this->fp, "PERMZ", props.active_index);
-                props.poro = try_get_value(*this->fp, "PORO", props.active_index);
-                props.satnum = this->fp->get_int("SATNUM").at(props.active_index);
-                props.pvtnum = this->fp->get_int("PVTNUM").at(props.active_index);
-                props.ntg = try_get_ntg_value(*this->fp, "NTG", props.active_index);
-            }
-        }
+    if (! is_existing_cell) {
+        // New cell object created.  Populate its property data.
+        this->populate_props_from_main_grid(*cell_ptr);
     }
 
-    return cellRef;
-}
-
-int Opm::ScheduleGrid::get_lgr_grid_number(std::optional<std::string> lgr_label) const
-{
-    if (lgr_label.has_value())
-    {
-        return static_cast<int>(label_to_index.at(lgr_label.value()));
-    }
-    return 0;
+    return *cell_ptr;
 }
 
 const Opm::CompletedCells::Cell&
-Opm::ScheduleGrid::get_cell(std::size_t i, std::size_t j, std::size_t k, std::optional<std::string> tag) const
+Opm::ScheduleGrid::get_cell(const std::size_t i,
+                            const std::size_t j,
+                            const std::size_t k,
+                            const std::optional<std::string>& tag) const
 {
-    if (!tag.has_value()) 
-    {
-        return get_cell(i, j, k);
-    }
-    else
-    {
-        return get_cell_lgr(i, j, k,tag.value());
-    }
+    return ! tag.has_value()
+        ? this->get_cell    (i, j, k)
+        : this->get_cell_lgr(i, j, k, *tag);
 }
-
-const Opm::CompletedCells::Cell&
-Opm::ScheduleGrid::get_cell_lgr(std::size_t i, std::size_t j, std::size_t k, std::string tag) const
-{
-    std::size_t tag_index = label_to_index.at(tag);
-    if (tag_index == 0)
-    {
-        return get_cell(i, j, k);
-    }   
-    const EclipseGridLGR& lgr_grid =  this->grid->getLGRCell(tag);
-    auto [valid, cellRef] = this->cells_lgr[tag_index - 1].try_get(i, j, k);    
-    if (!valid) {  
-        int father_global_id =  this->grid->getLGR_global_father(cellRef.global_index,tag);
-        auto [fi, fj, fk] = this->grid->getIJK(father_global_id);
-        // this part relies on the ZCORN and COORDS of the host cells that have not been parsed yet.
-        // the following implementations are a path that compute depths and dimensions of the LGR cells
-        // based on the host cells.   
-        cellRef.depth = this->grid->getCellDepthLGR(i, j, k, tag);
-        cellRef.dimensions = this->grid->getCellDimensionsLGR(fi, fj, fk, tag);
-        
-        if (this->grid->cellActive(fi, fj, fk) && lgr_grid.cellActive(i, j, k)) 
-        {
-            const auto father_active_index = this->grid->getActiveIndex(fi, fj, fk);
-            const auto active_index = lgr_grid.getActiveIndex(i, j, k);
-            const double porv = try_get_value(*this->fp, "PORV", father_active_index);
-            if (this->grid->cellActiveAfterMINPV(fi, fj, fk, porv)) {
-                auto& props = cellRef.props.emplace(CompletedCells::Cell::Props{});
-                props.active_index = active_index;
-                props.permx = try_get_value(*this->fp, "PERMX", father_active_index);
-                props.permy = try_get_value(*this->fp, "PERMY", father_active_index);
-                props.permz = try_get_value(*this->fp, "PERMZ", father_active_index);
-                props.poro = try_get_value(*this->fp, "PORO", father_active_index);
-                props.satnum = this->fp->get_int("SATNUM").at(father_active_index);
-                props.pvtnum = this->fp->get_int("PVTNUM").at(father_active_index);
-                props.ntg = try_get_ntg_value(*this->fp, "NTG", father_active_index);
-            }
-        }
-    }
-
-    return cellRef;
- }
-
-
 
 const Opm::EclipseGrid* Opm::ScheduleGrid::get_grid() const
 {
     return this->grid;
 }
 
+int Opm::ScheduleGrid::get_lgr_grid_number(const std::optional<std::string>& lgr_label) const
+{
+    return lgr_label.has_value()
+        ? static_cast<int>(label_to_index.get().at(*lgr_label))
+        : 0;
+}
+
+// ===========================================================================
+// Private member functions and helpers below separator
+// ===========================================================================
+
+const Opm::CompletedCells::Cell&
+Opm::ScheduleGrid::get_cell_lgr(const std::size_t  i,
+                                const std::size_t  j,
+                                const std::size_t  k,
+                                const std::string& tag) const
+{
+    const auto tag_index = this->label_to_index.get().at(tag);
+
+    if (tag_index == 0) {
+        return this->get_cell(i, j, k);
+    }
+
+    auto [cell_ptr, is_existing_cell] =
+        this->cells_lgr.get()[tag_index - 1].try_get(i, j, k);
+
+    assert (cell_ptr != nullptr);
+
+    if (! is_existing_cell) {
+        // New cell object created.  Populate its property data.
+        this->populate_props_lgr(tag, *cell_ptr);
+    }
+
+    return *cell_ptr;
+}
+
+namespace {
+    double try_get_value(const Opm::FieldPropsManager& fp,
+                         const std::string&            kw,
+                         const std::size_t             active_index)
+    {
+        if (! fp.has_double(kw)) {
+            throw std::logic_error {
+                fmt::format("Cell based property '{}' does not exist", kw)
+            };
+        }
+
+        return fp.try_get<double>(kw)->at(active_index);
+    }
+
+    double get_ntg(const Opm::FieldPropsManager& fp,
+                   const std::size_t             active_index)
+    {
+        const auto kw = std::string { "NTG" };
+
+        return fp.has_double(kw)
+            ? fp.try_get<double>(kw)->at(active_index)
+            : 1.0;
+    }
+
+    void populate(const Opm::FieldPropsManager&     fp,
+                  const std::size_t                 active_index,
+                  Opm::CompletedCells::Cell::Props& props)
+    {
+        props.permx = try_get_value(fp, "PERMX", active_index);
+        props.permy = try_get_value(fp, "PERMY", active_index);
+        props.permz = try_get_value(fp, "PERMZ", active_index);
+        props.poro  = try_get_value(fp, "PORO" , active_index);
+        props.ntg   = get_ntg      (fp,          active_index);
+
+        props.satnum = fp.get_int("SATNUM").at(active_index);
+        props.pvtnum = fp.get_int("PVTNUM").at(active_index);
+    }
+} // Anonymous namespace
+
+void Opm::ScheduleGrid::populate_props_from_main_grid(CompletedCells::Cell& cell) const
+{
+    cell.depth = this->grid->getCellDepth(cell.global_index);
+    cell.dimensions = this->grid->getCellDims(cell.global_index);
+
+    if (const auto* numAquCell = this->get_num_aqu_cell(cell.global_index);
+        numAquCell == nullptr)
+    {
+        // Not in a numerical aquifer.  Pull property values from 'fp'.
+        this->populate_props_from_main_grid_cell(cell);
+    }
+    else {
+        // We're in a numerical aquifer.  Pull property values from the
+        // aquifer.
+        this->populate_props_from_num_aquifer(*numAquCell, cell);
+    }
+}
+
+void Opm::ScheduleGrid::populate_props_from_main_grid_cell(CompletedCells::Cell& cell) const
+{
+    if (! this->grid->cellActive(cell.global_index)) {
+        return;
+    }
+
+    const auto active_index = this->grid->getActiveIndex(cell.global_index);
+    const auto porv = try_get_value(*this->fp, "PORV", active_index);
+
+    if (! this->grid->cellActiveAfterMINPV(cell.i, cell.j, cell.k, porv)) {
+        return;
+    }
+
+    auto& props = cell.props.emplace(CompletedCells::Cell::Props{});
+
+    props.active_index = active_index;
+
+    populate(*this->fp, active_index, props);
+}
+
+void Opm::ScheduleGrid::
+populate_props_from_num_aquifer(const NumericalAquiferCell& numAquCell,
+                                CompletedCells::Cell&       cell) const
+{
+    auto& props = cell.props.emplace(CompletedCells::Cell::Props{});
+
+    props.active_index = this->grid->getActiveIndex(cell.global_index);
+
+    // Isotropic permeability tensor in numerical aquifer cells.
+    props.permx = props.permy = props.permz = numAquCell.permeability;
+
+    props.poro = numAquCell.porosity;
+    props.ntg  = 1.0;           // Aquifer cells don't have NTG values.
+
+    props.satnum = numAquCell.sattable;
+    props.pvtnum = numAquCell.pvttable;
+}
+
+void Opm::ScheduleGrid::
+populate_props_lgr(const std::string& tag, CompletedCells::Cell& cell) const
+{
+    const auto father_global_id = this->grid->
+        getLGR_global_father(cell.global_index, tag);
+
+    auto [fi, fj, fk] = this->grid->getIJK(father_global_id);
+
+    // This part relies on the ZCORN and COORDS of the host cells that
+    // have not been parsed yet.  The following implementations are a
+    // path that compute depths and dimensions of the LGR cells based on
+    // the host cells.
+    cell.depth = this->grid->getCellDepthLGR(cell.i, cell.j, cell.k, tag);
+    cell.dimensions = this->grid->getCellDimensionsLGR(fi, fj, fk, tag);
+
+    const auto& lgr_grid = this->grid->getLGRCell(tag);
+
+    if (!this->grid->cellActive(fi, fj, fk) ||
+        !lgr_grid.cellActive(cell.i, cell.j, cell.k))
+    {
+        return;
+    }
+
+    const auto father_active_index = this->grid->getActiveIndex(fi, fj, fk);
+    const auto porv = try_get_value(*this->fp, "PORV", father_active_index);
+
+    if (! this->grid->cellActiveAfterMINPV(fi, fj, fk, porv)) {
+        return;
+    }
+
+    auto& props = cell.props.emplace(CompletedCells::Cell::Props{});
+
+    props.active_index = lgr_grid.getActiveIndex(cell.i, cell.j, cell.k);
+
+    populate(*this->fp, father_active_index, props);
+}
+
+const Opm::NumericalAquiferCell*
+Opm::ScheduleGrid::get_num_aqu_cell([[maybe_unused]] const std::size_t global_index) const
+{
+    return nullptr;
+}
