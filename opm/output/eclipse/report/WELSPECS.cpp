@@ -403,9 +403,11 @@ namespace {
             return std::to_string( well.pvt_table_number() );
         }
 
-        std::string shut_status(const context&, std::size_t, std::size_t) const
+        std::string shutin_instruction(const context&, std::size_t, std::size_t) const
         {
-            return Opm::WellStatus2String(well.getStatus());
+            // Shut-in instruction is 'SHUT' if the well automatically shuts
+            // in, and 'STOP' otherwise.
+            return well.getAutomaticShutIn() ? "SHUT" : "STOP";
         }
 
         std::string region_number(const context&, std::size_t, std::size_t) const
@@ -446,19 +448,19 @@ namespace {
     };
 
     const table<WellWrapper, 3> well_specification_table {
-       {  8, { "WELL"       , "NAME"       ,               }, &WellWrapper::well_name        , left_align  },
-       {  8, { "GROUP"      , "NAME"       ,               }, &WellWrapper::group_name       , left_align  },
-       {  8, { "WELLHEAD"   , "LOCATION"   , "( I, J )"    }, &WellWrapper::wellhead_location, left_align  },
-       {  8, { "B.H.REF"    , "DEPTH"      , "METRES"      }, &WellWrapper::reference_depth  , right_align, Opm::UnitSystem::measure::length },
-       {  5, { "PREF-"      , "ERRED"      , "PHASE"       }, &WellWrapper::preferred_phase  ,             },
-       {  8, { "DRAINAGE"   , "RADIUS"     , "METRES"      }, &WellWrapper::drainage_radius  , right_align, Opm::UnitSystem::measure::length },
-       {  4, { "GAS"        , "INFL"       , "EQUN"        }, &WellWrapper::gas_inflow       ,             },
-       {  7, { "SHUT-IN"    , "INSTRCT"    ,               }, &WellWrapper::shut_status      ,             },
-       {  5, { "CROSS"      , "FLOW"       , "ABLTY"       }, &WellWrapper::cross_flow       ,             },
-       {  3, { "PVT"        , "TAB"        ,               }, &WellWrapper::pvt_tab          ,             },
-       {  4, { "WELL"       , "DENS"       , "CALC"        }, &WellWrapper::dens_calc        ,             },
-       {  3, { "FIP"        , "REG"        ,               }, &WellWrapper::region_number    ,             },
-       { 11, { "WELL"       , "D-FACTOR 1" , "DAY/SM3"     }, &WellWrapper::D_factor         ,             },
+       {  8, { "WELL"       , "NAME"       ,               }, &WellWrapper::well_name         , left_align  },
+       {  8, { "GROUP"      , "NAME"       ,               }, &WellWrapper::group_name        , left_align  },
+       {  8, { "WELLHEAD"   , "LOCATION"   , "( I, J )"    }, &WellWrapper::wellhead_location , left_align  },
+       {  8, { "B.H.REF"    , "DEPTH"      , "METRES"      }, &WellWrapper::reference_depth   , right_align, Opm::UnitSystem::measure::length },
+       {  5, { "PREF-"      , "ERRED"      , "PHASE"       }, &WellWrapper::preferred_phase   ,             },
+       {  8, { "DRAINAGE"   , "RADIUS"     , "METRES"      }, &WellWrapper::drainage_radius   , right_align, Opm::UnitSystem::measure::length },
+       {  4, { "GAS"        , "INFL"       , "EQUN"        }, &WellWrapper::gas_inflow        ,             },
+       {  7, { "SHUT-IN"    , "INSTRCT"    ,               }, &WellWrapper::shutin_instruction,             },
+       {  5, { "CROSS"      , "FLOW"       , "ABLTY"       }, &WellWrapper::cross_flow        ,             },
+       {  3, { "PVT"        , "TAB"        ,               }, &WellWrapper::pvt_tab           ,             },
+       {  4, { "WELL"       , "DENS"       , "CALC"        }, &WellWrapper::dens_calc         ,             },
+       {  3, { "FIP"        , "REG"        ,               }, &WellWrapper::region_number     ,             },
+       { 11, { "WELL"       , "D-FACTOR 1" , "DAY/SM3"     }, &WellWrapper::D_factor          ,             },
     };
 
 
