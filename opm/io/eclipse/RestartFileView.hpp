@@ -61,6 +61,8 @@ public:
     const std::vector<bool>& logihead() const;
     const std::vector<double>& doubhead() const;
 
+    bool valid() const;
+
 private:
     class Implementation;
     std::unique_ptr<Implementation> pImpl_;

@@ -1653,6 +1653,10 @@ namespace Opm::RestartIO  {
         auto rst_view = std::make_shared<Opm::EclIO::RestartFileView>
             (std::make_shared<Opm::EclIO::ERst>(filename), report_step);
 
+        if (!rst_view->valid()) {
+            return {};
+        }
+
         auto sol =  restoreSOLUTION(solution_keys, grid.getNumActive(), *rst_view);
         sol.convertToSI(es.getUnits());
 
