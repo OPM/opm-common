@@ -94,13 +94,13 @@ macro (opm_compile_satellites opm satellite excl_all test_regexp)
           set(_sat_FANCY ${_sat_NAME})
         endif()
       endforeach (_regexp)
-      get_target_property (_sat_LOC ${_sat_NAME} LOCATION)
       # Run tests through mpi-run. Ubuntu 14.04 provided mpi libs will crash
       # in the MPI_Finalize() call otherwise.
       if(MPI_FOUND)
-        set(_sat_LOC ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 1 ${_sat_LOC})
+        add_test (NAME ${_sat_FANCY} COMMAND ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 1 $<TARGET_FILE:${_sat_NAME}>)
+      else()
+        add_test (NAME ${_sat_FANCY} COMMAND $<TARGET_FILE:${_sat_NAME}>)
       endif()
-      add_test (${_sat_FANCY} ${_sat_LOC})
       # run the test in the directory where the data files are
       set_tests_properties (${_sat_FANCY} PROPERTIES
                             WORKING_DIRECTORY ${PROJECT_BINARY_DIR}/${${satellite}_DIR})
