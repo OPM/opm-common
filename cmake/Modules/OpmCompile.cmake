@@ -97,7 +97,7 @@ macro (opm_compile opm)
 
   # we need to know the name of the library which is generated
   if (${opm}_TARGET)
-	get_target_property (${opm}_LIBRARY ${${opm}_TARGET} LOCATION)
+    set(${opm}_LIBRARY $<TARGET_FILE:${${opm}_TARGET}>)
   endif (${opm}_TARGET)
   
 endmacro (opm_compile opm)

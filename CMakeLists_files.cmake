@@ -510,7 +510,6 @@ list(APPEND DUNE_TEST_SOURCE_FILES
 
 if(ENABLE_ECL_INPUT)
   list(APPEND TEST_SOURCE_FILES
-    tests/rst_test.cpp
     tests/test_ActiveGridCells.cpp
     tests/test_CopyablePtr.cpp
     tests/test_CSRGraphFromCoordinates.cpp
