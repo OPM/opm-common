@@ -62,11 +62,9 @@ namespace Opm {
     class GuideRateModel;
     class HandlerContext;
     enum class InputErrorAction;
+    class NumericalAquifers;
     class ParseContext;
     class Python;
-    namespace ReservoirCoupling {
-        class CouplingInfo;
-    }
     class Runspec;
     class RPTConfig;
     class ScheduleGrid;
@@ -83,6 +81,10 @@ namespace Opm {
     class WelSegsSet;
     class WellTestConfig;
 } // namespace Opm
+
+namespace Opm::ReservoirCoupling {
+    class CouplingInfo;
+} // namespace Opm::ReservoirCoupling
 
 namespace Opm::Action {
     class ActionX;
@@ -119,6 +121,7 @@ namespace Opm {
         Schedule(const Deck& deck,
                  const EclipseGrid& grid,
                  const FieldPropsManager& fp,
+                 const NumericalAquifers& numAquifers,
                  const Runspec &runspec,
                  const ParseContext& parseContext,
                  ErrorGuard& errors,
@@ -134,6 +137,7 @@ namespace Opm {
         Schedule(const Deck& deck,
                  const EclipseGrid& grid,
                  const FieldPropsManager& fp,
+                 const NumericalAquifers& numAquifers,
                  const Runspec &runspec,
                  const ParseContext& parseContext,
                  T&& errors,
@@ -148,6 +152,7 @@ namespace Opm {
         Schedule(const Deck& deck,
                  const EclipseGrid& grid,
                  const FieldPropsManager& fp,
+                 const NumericalAquifers& numAquifers,
                  const Runspec &runspec,
                  std::shared_ptr<const Python> python,
                  const bool lowActionParsingStrictness = false,

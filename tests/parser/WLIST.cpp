@@ -15,7 +15,7 @@
 
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
- */
+*/
 
 #include <stdexcept>
 #include <algorithm>
@@ -24,15 +24,19 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include <opm/input/eclipse/Python/Python.hpp>
+#include <opm/input/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquifers.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
+
+#include <opm/input/eclipse/Python/Python.hpp>
+
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 #include <opm/input/eclipse/Schedule/Well/WList.hpp>
 #include <opm/input/eclipse/Schedule/Well/WListManager.hpp>
 
 #include <opm/input/eclipse/Deck/Deck.hpp>
+
 #include <opm/input/eclipse/Parser/Parser.hpp>
 
 using namespace Opm;
@@ -100,8 +104,7 @@ static std::string WELSPECS() {
 }
 
 static Opm::Schedule createSchedule(const std::string& schedule) {
-    Opm::Parser parser;
-    std::string input =
+    const std::string input =
         "START             -- 0 \n"
         "10 MAI 2007 / \n"
         "SCHEDULE\n"+ schedule;
@@ -124,13 +127,15 @@ static Opm::Schedule createSchedule(const std::string& schedule) {
         "/\n";
     */
 
-    auto deck = parser.parseString(input);
+    auto deck = Parser{}.parseString(input);
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
     FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
     Runspec runspec (deck);
-    auto python = std::make_shared<Python>();
-    return Schedule(deck, grid , fp, runspec, python );
+    return Schedule {
+        deck, grid, fp, NumericalAquifers{},
+        runspec, std::make_shared<Python>()
+    };
 }
 
 

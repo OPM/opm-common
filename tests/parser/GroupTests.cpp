@@ -15,21 +15,21 @@
 
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
- */
-
-#include <stdexcept>
+*/
 
 #define BOOST_TEST_MODULE GroupTests
 #include <boost/test/unit_test.hpp>
-#include <opm/input/eclipse/Python/Python.hpp>
 
-#include <opm/input/eclipse/Deck/Deck.hpp>
-#include <opm/input/eclipse/Parser/Parser.hpp>
 #include <opm/input/eclipse/Parser/ParseContext.hpp>
+
+#include <opm/input/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquifers.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
 #include <opm/input/eclipse/EclipseState/Runspec.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
+
+#include <opm/input/eclipse/Python/Python.hpp>
+
 #include <opm/input/eclipse/Schedule/Group/GConSump.hpp>
 #include <opm/input/eclipse/Schedule/Group/GSatProd.hpp>
 #include <opm/input/eclipse/Schedule/Group/GConSale.hpp>
@@ -42,6 +42,15 @@
 #include <opm/input/eclipse/Schedule/Well/Well.hpp>
 
 #include <opm/common/utility/TimeService.hpp>
+
+#include <opm/input/eclipse/Deck/Deck.hpp>
+
+#include <opm/input/eclipse/Parser/Parser.hpp>
+
+#include <memory>
+#include <optional>
+#include <string>
+#include <stdexcept>
 
 using namespace Opm;
 
@@ -56,7 +65,7 @@ Schedule create_schedule(const std::string& deck_string)
     const FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
     const Runspec runspec(deck);
 
-    return { deck, grid, fp, runspec, std::make_shared<Python>() };
+    return { deck, grid, fp, NumericalAquifers{}, runspec, std::make_shared<Python>() };
 }
 
 } // Anonymous namespace

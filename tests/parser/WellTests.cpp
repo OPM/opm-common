@@ -15,26 +15,23 @@
 
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
- */
-
-#include <memory>
-#include <optional>
-#include <stdexcept>
-#include <utility>
+*/
 
 #define BOOST_TEST_MODULE WellTest
 #include <boost/test/unit_test.hpp>
 
-#include <opm/input/eclipse/Units/Units.hpp>
-#include <opm/input/eclipse/Units/UnitSystem.hpp>
-#include <opm/input/eclipse/Deck/Deck.hpp>
-#include <opm/input/eclipse/Deck/DeckItem.hpp>
-#include <opm/input/eclipse/Deck/DeckRecord.hpp>
+#include <opm/input/eclipse/Parser/ParseContext.hpp>
+#include <opm/input/eclipse/Parser/ErrorGuard.hpp>
 
-#include <opm/input/eclipse/Python/Python.hpp>
+#include <opm/common/utility/TimeService.hpp>
+
+#include <opm/input/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquifers.hpp>
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/input/eclipse/EclipseState/Runspec.hpp>
+
+#include <opm/input/eclipse/Python/Python.hpp>
+
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 #include <opm/input/eclipse/Schedule/ScheduleTypes.hpp>
 #include <opm/input/eclipse/Schedule/SummaryState.hpp>
@@ -42,12 +39,23 @@
 #include <opm/input/eclipse/Schedule/Well/Connection.hpp>
 #include <opm/input/eclipse/Schedule/Well/Well.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
-#include <opm/input/eclipse/Parser/ParseContext.hpp>
-#include <opm/input/eclipse/Parser/ErrorGuard.hpp>
+
+#include <opm/input/eclipse/Units/Units.hpp>
+#include <opm/input/eclipse/Units/UnitSystem.hpp>
+
+#include <opm/input/eclipse/Deck/Deck.hpp>
+#include <opm/input/eclipse/Deck/DeckItem.hpp>
+#include <opm/input/eclipse/Deck/DeckRecord.hpp>
+
 #include <opm/input/eclipse/Parser/Parser.hpp>
-#include <opm/common/utility/TimeService.hpp>
 
 #include <opm/input/eclipse/Parser/ParserKeywords/F.hpp>
+
+#include <cstddef>
+#include <memory>
+#include <optional>
+#include <stdexcept>
+#include <utility>
 
 using namespace Opm;
 
@@ -64,8 +72,7 @@ namespace {
 }
 
 BOOST_AUTO_TEST_CASE(WellCOMPDATtestTRACK) {
-    Opm::Parser parser;
-    std::string input =
+    const std::string input =
                 "START             -- 0 \n"
                 "19 JUN 2007 / \n"
                 "GRID\n"
@@ -96,34 +103,36 @@ BOOST_AUTO_TEST_CASE(WellCOMPDATtestTRACK) {
                 " 20  JAN 2010 / \n"
                 "/\n";
 
+    const auto deck = Parser{}.parseString(input);
+    EclipseGrid grid(10,10,10);
+    const TableManager table ( deck );
+    const FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
+    const Runspec runspec (deck);
+    const Schedule schedule {
+        deck, grid, fp, NumericalAquifers{},
+        runspec, std::make_shared<Python>()
+    };
 
-    auto deck = parser.parseString(input);
-    auto python = std::make_shared<Python>();
-    Opm::EclipseGrid grid(10,10,10);
-    TableManager table ( deck );
-    FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
-    Opm::Runspec runspec (deck);
-    Opm::Schedule schedule(deck, grid , fp, runspec, python);
     const auto& op_1 = schedule.getWell("OP_1", 2);
 
     const auto& completions = op_1.getConnections();
     BOOST_CHECK_EQUAL(9U, completions.size());
 
     //Verify TRACK completion ordering
-    for (size_t k = 0; k < completions.size(); ++k) {
+    for (std::size_t k = 0; k < completions.size(); ++k) {
         BOOST_CHECK_EQUAL(completions.get( k ).getK(), int(k));
     }
 
     // Output / input ordering
     const auto& output_connections = completions.output(grid);
     std::vector<int> expected = {0,2,3,4,5,6,7,8,1};
-    for (size_t k = 0; k < completions.size(); ++k)
+    for (std::size_t k = 0; k < completions.size(); ++k) {
         BOOST_CHECK_EQUAL( expected[k], output_connections[k]->getK());
+    }
 }
 
 BOOST_AUTO_TEST_CASE(WellCOMPDATtestDEPTH) {
-    Opm::Parser parser;
-    std::string input  = R"(
+    const std::string input  = R"(
 START             -- 0
 19 JUN 2007 /
 GRID
@@ -155,35 +164,37 @@ DATES             -- 2
 /
 )";
 
+    auto deck = Parser{}.parseString(input);
+    EclipseGrid grid(10,10,10);
+    const TableManager table ( deck );
+    const FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
+    const Runspec runspec (deck);
+    const Schedule schedule {
+        deck, grid, fp, NumericalAquifers{},
+        runspec, std::make_shared<Python>()
+    };
 
-    auto deck = parser.parseString(input);
-    auto python = std::make_shared<Python>();
-    Opm::EclipseGrid grid(10,10,10);
-    TableManager table ( deck );
-    FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
-    Opm::Runspec runspec (deck);
-    Opm::Schedule schedule(deck, grid , fp, runspec, python);
     const auto& op_1 = schedule.getWell("OP_1", 2);
 
     const auto& completions = op_1.getConnections();
     BOOST_CHECK_EQUAL(9U, completions.size());
 
     //Verify TRACK completion ordering
-    for (size_t k = 0; k < completions.size() - 1; ++k) {
+    for (std::size_t k = 0; k < completions.size() - 1; ++k) {
         BOOST_CHECK(completions[k].depth() <= completions[k+1].depth());
     }
 
     // Output / input ordering
     const auto& output_connections = completions.output(grid);
     std::vector<int> expected = {0,2,3,4,5,6,7,8,1};
-    for (size_t k = 0; k < completions.size(); ++k)
+    for (std::size_t k = 0; k < completions.size(); ++k) {
         BOOST_CHECK_EQUAL( expected[k], output_connections[k]->getK());
+    }
 }
 
 
 BOOST_AUTO_TEST_CASE(WellCOMPDATtestDefaultTRACK) {
-    Opm::Parser parser;
-    std::string input =
+    const std::string input =
                 "START             -- 0 \n"
                 "19 JUN 2007 / \n"
                 "GRID\n"
@@ -211,28 +222,29 @@ BOOST_AUTO_TEST_CASE(WellCOMPDATtestDefaultTRACK) {
                 " 20  JAN 2010 / \n"
                 "/\n";
 
+    const auto deck = Parser{}.parseString(input);
+    EclipseGrid grid(10,10,10);
+    const TableManager table ( deck );
+    const FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
+    const Runspec runspec (deck);
+    const Schedule schedule {
+        deck, grid, fp, NumericalAquifers{},
+        runspec, std::make_shared<Python>()
+    };
 
-    auto deck = parser.parseString(input);
-    auto python = std::make_shared<Python>();
-    Opm::EclipseGrid grid(10,10,10);
-    TableManager table ( deck );
-    FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
-    Opm::Runspec runspec (deck);
-    Opm::Schedule schedule(deck, grid , fp, runspec, python);
     const auto& op_1 = schedule.getWell("OP_1", 2);
 
     const auto& completions = op_1.getConnections();
     BOOST_CHECK_EQUAL(9U, completions.size());
 
     //Verify TRACK completion ordering
-    for (size_t k = 0; k < completions.size(); ++k) {
+    for (std::size_t k = 0; k < completions.size(); ++k) {
         BOOST_CHECK_EQUAL(completions.get( k ).getK(), int(k));
     }
 }
 
 BOOST_AUTO_TEST_CASE(WellCOMPDATtestINPUT) {
-    Opm::Parser parser;
-    std::string input =
+    const std::string input =
                 "START             -- 0 \n"
                 "19 JUN 2007 / \n"
                 "GRID\n"
@@ -263,15 +275,18 @@ BOOST_AUTO_TEST_CASE(WellCOMPDATtestINPUT) {
                 " 20  JAN 2010 / \n"
                 "/\n";
 
+    const auto deck = Parser{}.parseString(input);
+    EclipseGrid grid(10,10,10);
+    ErrorGuard errors;
+    const TableManager table ( deck );
+    const FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
+    const Runspec runspec (deck);
+    const Schedule schedule {
+        deck, grid, fp, NumericalAquifers{},
+        runspec, ParseContext{}, errors,
+        std::make_shared<Python>()
+    };
 
-    auto deck = parser.parseString(input);
-    Opm::EclipseGrid grid(10,10,10);
-    Opm::ErrorGuard errors;
-    TableManager table ( deck );
-    FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
-    Opm::Runspec runspec (deck);
-    auto python = std::make_shared<Python>();
-    Opm::Schedule schedule(deck, grid , fp, runspec, Opm::ParseContext(), errors, python);
     const auto& op_1 = schedule.getWell("OP_1", 2);
 
     const auto& completions = op_1.getConnections();
@@ -918,8 +933,7 @@ BOOST_AUTO_TEST_CASE(ExtraAccessors) {
 }
 
 BOOST_AUTO_TEST_CASE(WELOPEN) {
-    Opm::Parser parser;
-    std::string input =
+    const std::string input =
                 "START             -- 0 \n"
                 "19 JUN 2007 / \n"
                 "GRID\n"
@@ -953,18 +967,21 @@ BOOST_AUTO_TEST_CASE(WELOPEN) {
                 " 'OP_1'  'SHUT' 0 0 0 2* /\n"
                 "/\n";
 
+    const auto deck = Parser{}.parseString(input);
+    EclipseGrid grid(10,10,10);
+    const TableManager table ( deck );
+    const FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
+    const Runspec runspec (deck);
+    const Schedule schedule {
+        deck, grid, fp, NumericalAquifers{},
+        runspec, std::make_shared<Python>()
+    };
 
-    auto deck = parser.parseString(input);
-    auto python = std::make_shared<Python>();
-    Opm::EclipseGrid grid(10,10,10);
-    TableManager table ( deck );
-    FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
-    Opm::Runspec runspec (deck);
-    Opm::Schedule schedule(deck, grid , fp, runspec, python);
     {
         const auto& op_1 = schedule.getWell("OP_1", 1);
         BOOST_CHECK(op_1.getStatus() == Well::Status::OPEN);
     }
+
     {
         const auto& op_1 = schedule.getWell("OP_1", 2);
         BOOST_CHECK(op_1.getStatus() == Well::Status::SHUT);
@@ -1065,7 +1082,6 @@ BOOST_AUTO_TEST_CASE(Producer_Control_Mode) {
 }
 
 BOOST_AUTO_TEST_CASE(WPIMULT) {
-    Opm::Parser parser;
     std::string input = R"(
 START             -- 0
 19 JUN 2007 /
@@ -1142,15 +1158,17 @@ WPIMULT
 
 )";
 
-
-    auto deck = parser.parseString(input);
+    const auto deck = Parser{}.parseString(input);
     const auto& units = deck.getActiveUnitSystem();
-    auto python = std::make_shared<Opm::Python>();
-    Opm::EclipseGrid grid(10,10,10);
-    TableManager table ( deck );
-    FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
-    Opm::Runspec runspec (deck);
-    Opm::Schedule schedule(deck, grid , fp, runspec, python);
+    EclipseGrid grid(10,10,10);
+    const TableManager table ( deck );
+    const FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
+    const Runspec runspec (deck);
+    const Schedule schedule {
+        deck, grid, fp, NumericalAquifers{},
+        runspec, std::make_shared<Opm::Python>()
+    };
+
     const auto CF0 = units.to_si(Opm::UnitSystem::measure::transmissibility, 1.0);
     {
         const auto& well = schedule.getWell("OP_1", 0);
@@ -1202,7 +1220,6 @@ WPIMULT
 
 
 BOOST_AUTO_TEST_CASE(FIRST_OPEN) {
-    Opm::Parser parser;
     std::string input = R"(
 START             -- 0
 19 JUN 2007 /
@@ -1249,18 +1266,18 @@ WCONPROD
 WCONINJE
  'I' 'GAS' 'OPEN' 'RATE'  1000 /
 /
-
-
 )";
 
+    const auto deck = Parser{}.parseString(input);
+    EclipseGrid grid(10,10,10);
+    const TableManager table ( deck );
+    const FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
+    const Runspec runspec (deck);
+    const Schedule schedule {
+        deck, grid, fp, NumericalAquifers{},
+        runspec, std::make_shared<Python>()
+    };
 
-    auto deck = parser.parseString(input);
-    auto python = std::make_shared<Opm::Python>();
-    Opm::EclipseGrid grid(10,10,10);
-    TableManager table ( deck );
-    FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
-    Opm::Runspec runspec (deck);
-    Opm::Schedule schedule(deck, grid , fp, runspec, python);
     {
         const auto& iwell = schedule.getWell("I", 0);
         const auto& pwell = schedule.getWell("P", 0);

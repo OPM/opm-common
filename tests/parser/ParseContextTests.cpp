@@ -20,9 +20,27 @@
 #define BOOST_TEST_MODULE ParseContextTests
 #include <boost/test/unit_test.hpp>
 
+#include <opm/input/eclipse/Parser/InputErrorAction.hpp>
+#include <opm/input/eclipse/Parser/ParseContext.hpp>
+
+#include <opm/common/utility/OpmInputError.hpp>
+
+#include <opm/input/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquifers.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
+#include <opm/input/eclipse/EclipseState/Runspec.hpp>
+
 #include <opm/input/eclipse/Python/Python.hpp>
+
+#include <opm/input/eclipse/Schedule/Schedule.hpp>
+
 #include <opm/input/eclipse/Parser/ErrorGuard.hpp>
+
+#include <opm/input/eclipse/Deck/Deck.hpp>
+
 #include <opm/input/eclipse/Parser/Parser.hpp>
+
 #include <opm/input/eclipse/Parser/ParserKeywords/D.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/E.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/G.hpp>
@@ -30,17 +48,6 @@
 #include <opm/input/eclipse/Parser/ParserKeywords/R.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/S.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/T.hpp>
-#include <opm/input/eclipse/Parser/InputErrorAction.hpp>
-#include <opm/input/eclipse/Parser/ParseContext.hpp>
-#include <opm/common/utility/OpmInputError.hpp>
-
-
-#include <opm/input/eclipse/Deck/Deck.hpp>
-#include <opm/input/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
-#include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
-#include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
-#include <opm/input/eclipse/EclipseState/Runspec.hpp>
-#include <opm/input/eclipse/Schedule/Schedule.hpp>
 
 #include <cstdlib>
 #include <memory>
@@ -720,7 +727,7 @@ BOOST_AUTO_TEST_CASE( test_invalid_wtemplate_config ) {
         FieldPropsManager fp( deckUnSupported, Phases{true, true, true}, grid, table);
         Runspec runspec( deckUnSupported);
 
-        BOOST_CHECK_THROW( Schedule( deckUnSupported , grid , fp, runspec , parseContext, errors, python), OpmInputError);
+        BOOST_CHECK_THROW( Schedule( deckUnSupported, grid, fp, NumericalAquifers{}, runspec, parseContext, errors, python), OpmInputError);
     }
 }
 

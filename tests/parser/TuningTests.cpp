@@ -15,30 +15,38 @@
 
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
- */
-
+*/
 
 #define BOOST_TEST_MODULE TuningTests
 
-#include <optional>
-
 #include <boost/test/unit_test.hpp>
 
-#include <opm/input/eclipse/Python/Python.hpp>
-#include <opm/input/eclipse/Deck/Deck.hpp>
-#include <opm/input/eclipse/Parser/Parser.hpp>
+#include <opm/input/eclipse/Schedule/Tuning.hpp>
+
+#include <opm/input/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquifers.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
 #include <opm/input/eclipse/EclipseState/Runspec.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
+
+#include <opm/input/eclipse/Python/Python.hpp>
+
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
-#include <opm/input/eclipse/Schedule/Tuning.hpp>
-#include <opm/input/eclipse/Parser/ParserKeywords/W.hpp>
+
 #include <opm/input/eclipse/Units/Units.hpp>
 
+#include <opm/input/eclipse/Deck/Deck.hpp>
+
+#include <opm/input/eclipse/Parser/Parser.hpp>
+
+#include <opm/input/eclipse/Parser/ParserKeywords/W.hpp>
+
+#include <cstddef>
+#include <memory>
+#include <optional>
+#include <string>
 
 using namespace Opm;
-
 
 const std::string& deckStr =  R"(
 START
@@ -77,21 +85,22 @@ WSEGITER
 
 
 static Deck createDeck(const std::string& input) {
-    Opm::Parser parser;
-    return parser.parseString(input);
+    return Parser{}.parseString(input);
 }
 
 
 
-BOOST_AUTO_TEST_CASE(TuningTest) {
-
-  auto deck = createDeck(deckStr);
-  auto python = std::make_shared<Python>();
+BOOST_AUTO_TEST_CASE(TuningTest)
+{
+   const auto deck = createDeck(deckStr);
   EclipseGrid grid(10,10,10);
   TableManager table ( deck );
   FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
   Runspec runspec (deck);
-  Schedule schedule( deck, grid , fp, runspec, python);
+  const Schedule schedule {
+      deck, grid, fp, NumericalAquifers{},
+      runspec, std::make_shared<Python>()
+  };
 
   const double diff = 1.0e-14;
 
@@ -99,7 +108,7 @@ BOOST_AUTO_TEST_CASE(TuningTest) {
   /********* Record 1 ***********/
 
   {
-      size_t timestep = 4;
+      const std::size_t timestep = 4;
       const auto& event = schedule[timestep].events();
       // Because NEXTSTEP is persistent a tuning event is triggered at each report step
       BOOST_CHECK(event.hasEvent(ScheduleEvents::TUNING_CHANGE));
@@ -222,12 +231,12 @@ BOOST_AUTO_TEST_CASE(TuningTest) {
   /*** TIMESTEP 5***/
   /********* Record 1 ***********/
   {
-      std::size_t timeStep = 5;
+      const std::size_t timeStep = 5;
       const auto& event = schedule[timeStep].events();
       const auto& tuning = schedule[timeStep].tuning();
 
       BOOST_CHECK(event.hasEvent(ScheduleEvents::TUNING_CHANGE));
-			std::optional<double> TSINIT = tuning.TSINIT;
+                        std::optional<double> TSINIT = tuning.TSINIT;
       BOOST_CHECK_CLOSE(TSINIT.value(), 2 * Metric::Time, diff);
 
       BOOST_CHECK_CLOSE(schedule[timeStep].max_next_tstep(), 5*Metric::Time, diff);
@@ -333,15 +342,15 @@ BOOST_AUTO_TEST_CASE(TuningTest) {
 
   /*** TIMESTEP 7 ***/
   {
-      std::size_t timestep = 7;
+      const std::size_t timestep = 7;
       const auto& event = schedule[timestep].events();
-			// Because NEXTSTEP is persistent a tuning event is triggered at each report step
+                        // Because NEXTSTEP is persistent a tuning event is triggered at each report step
       BOOST_CHECK(event.hasEvent(ScheduleEvents::TUNING_CHANGE));
   }
 
   /*** TIMESTEP 8 ***/
   {
-      std::size_t timestep = 8;
+      const std::size_t timestep = 8;
       const auto& event = schedule[timestep].events();
       BOOST_CHECK(event.hasEvent(ScheduleEvents::TUNING_CHANGE));
 
@@ -350,7 +359,7 @@ BOOST_AUTO_TEST_CASE(TuningTest) {
 
   /*** TIMESTEP 9 ***/
   {
-      std::size_t timestep = 9;
+      const std::size_t timestep = 9;
       const auto& event = schedule[timestep].events();
       BOOST_CHECK(event.hasEvent(ScheduleEvents::TUNING_CHANGE));
 
@@ -361,7 +370,7 @@ BOOST_AUTO_TEST_CASE(TuningTest) {
   /*** TIMESTEP 10 ***/
   {
       /********* Record 1 ***********/
-      std::size_t timestep = 10;
+      const std::size_t timestep = 10;
       const auto& tuning = schedule[timestep].tuning();
       const auto& event = schedule[timestep].events();
       BOOST_CHECK(event.hasEvent(ScheduleEvents::TUNING_CHANGE));
@@ -375,7 +384,6 @@ BOOST_AUTO_TEST_CASE(TuningTest) {
       BOOST_CHECK_CLOSE(TRGTTE, 0.2, diff);
 
       int NEWTMX = tuning.NEWTMX;
-      BOOST_CHECK_EQUAL(NEWTMX, 13);     
-
+      BOOST_CHECK_EQUAL(NEWTMX, 13);
   }
 }

@@ -33,6 +33,7 @@
 
 #include <opm/common/OpmLog/KeywordLocation.hpp>
 
+#include <opm/input/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquifers.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
 #include <opm/input/eclipse/EclipseState/Runspec.hpp>
@@ -89,8 +90,11 @@ Schedule make_schedule(const std::string& deck_string,
     const FieldPropsManager fp(deck, Phases{true, true, true}, grid1, table);
     const Runspec runspec(deck);
 
-    ErrorGuard errors;
-    return { deck, grid1, fp, runspec, parseContext, errors, std::make_shared<Python>() };
+    ErrorGuard errors{};
+    return {
+        deck, grid1, fp, NumericalAquifers{}, runspec,
+        parseContext, errors, std::make_shared<Python>()
+    };
 }
 
 } // Anonymous namespace
@@ -937,7 +941,7 @@ TSTEP
     auto python = std::make_shared<Python>();
 
     Runspec runspec (deck);
-    Schedule sched(deck, grid1, fp, runspec, python);
+    Schedule sched(deck, grid1, fp, NumericalAquifers{}, runspec, python);
     const auto& actions0 = sched[0].actions.get();
     BOOST_CHECK_EQUAL(actions0.ecl_size(), 0U);
 
@@ -1099,7 +1103,10 @@ ENDACTIO
     const FieldPropsManager fp(deck, Phases{true, true, true}, grid1, table);
 
     const Runspec runspec(deck);
-    const Schedule sched(deck, grid1, fp, runspec, std::make_shared<Python>());
+    const Schedule sched {
+        deck, grid1, fp, NumericalAquifers{},
+        runspec, std::make_shared<Python>()
+    };
     const auto& action1 = sched[0].actions.get()["A"];
 
     SummaryState st(TimeService::now(), runspec.udqParams().undefinedValue());
@@ -1149,7 +1156,7 @@ WOPR 'OPX'  = 1000 /
 /
 
 ENDACTIO
-        )"};
+)"};
 
     const auto deck = Parser{}.parseString(deck_string);
     EclipseGrid grid1(10,10,10);
@@ -1157,7 +1164,10 @@ ENDACTIO
     const FieldPropsManager fp(deck, Phases{true, true, true}, grid1, table);
 
     const Runspec runspec (deck);
-    const Schedule sched(deck, grid1, fp, runspec, std::make_shared<Python>());
+    const Schedule sched {
+        deck, grid1, fp, NumericalAquifers{},
+        runspec, std::make_shared<Python>()
+    };
     const auto& action1 = sched[1].actions.get()["A"];
     const auto& action2 = sched[2].actions.get()["A"];
 

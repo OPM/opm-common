@@ -23,6 +23,7 @@
 
 #include <opm/input/eclipse/Python/Python.hpp>
 
+#include <opm/input/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquifers.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/input/eclipse/EclipseState/Runspec.hpp>
@@ -205,7 +206,10 @@ BOOST_AUTO_TEST_CASE(TestNoSolvent)
     const TableManager table (deck);
     const FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
     const Runspec runspec(deck);
-    const Schedule schedule(deck, grid, fp, runspec, std::make_shared<Python>());
+    const Schedule schedule {
+        deck, grid, fp, NumericalAquifers{},
+        runspec, std::make_shared<Python>()
+    };
 
     BOOST_CHECK(!deck.hasKeyword("WSOLVENT"));
 }
@@ -216,7 +220,10 @@ BOOST_AUTO_TEST_CASE(TestGasInjector) {
     const TableManager table (deck);
     const FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
     const Runspec runspec(deck);
-    const Schedule schedule(deck, grid, fp, runspec, std::make_shared<Python>());
+    const Schedule schedule {
+        deck, grid, fp, NumericalAquifers{},
+        runspec, std::make_shared<Python>()
+    };
 
     BOOST_CHECK(deck.hasKeyword("WSOLVENT"));
 }
@@ -228,7 +235,10 @@ BOOST_AUTO_TEST_CASE(TestDynamicWSOLVENT)
     const TableManager table (deck);
     const FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
     const Runspec runspec(deck);
-    const Schedule schedule(deck, grid, fp, runspec, std::make_shared<Python>());
+    const Schedule schedule {
+        deck, grid, fp, NumericalAquifers{},
+        runspec, std::make_shared<Python>()
+    };
 
     BOOST_CHECK(deck.hasKeyword("WSOLVENT"));
 
@@ -252,7 +262,7 @@ BOOST_AUTO_TEST_CASE(TestOilInjector)
     const FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
     const Runspec runspec(deck);
 
-    BOOST_CHECK_THROW (Schedule(deck, grid, fp, runspec, std::make_shared<Python>()), std::exception);
+    BOOST_CHECK_THROW(Schedule(deck, grid, fp, NumericalAquifers{}, runspec, std::make_shared<Python>()), std::exception);
 }
 
 BOOST_AUTO_TEST_CASE(TestWaterInjector)
@@ -263,5 +273,5 @@ BOOST_AUTO_TEST_CASE(TestWaterInjector)
     const FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
     const Runspec runspec(deck);
 
-    BOOST_CHECK_THROW (Schedule(deck, grid , fp, runspec, std::make_shared<Python>()), std::exception);
+    BOOST_CHECK_THROW(Schedule(deck, grid, fp, NumericalAquifers{}, runspec, std::make_shared<Python>()), std::exception);
 }

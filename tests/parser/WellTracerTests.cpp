@@ -25,6 +25,7 @@
 
 #include <opm/input/eclipse/Python/Python.hpp>
 
+#include <opm/input/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquifers.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/input/eclipse/EclipseState/Runspec.hpp>
@@ -161,7 +162,10 @@ BOOST_AUTO_TEST_CASE(TestNoTracer)
     const TableManager table (deck);
     const FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
     const Runspec runspec (deck);
-    const Schedule schedule(deck, grid, fp, runspec, std::make_shared<Python>());
+    const Schedule schedule {
+        deck, grid, fp, NumericalAquifers{},
+        runspec, std::make_shared<Python>()
+    };
 
     BOOST_CHECK(!deck.hasKeyword("WTRACER"));
 }
@@ -175,7 +179,10 @@ BOOST_AUTO_TEST_CASE(TestDynamicWTRACER)
     const TableManager table (deck);
     const FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
     const Runspec runspec (deck);
-    const Schedule schedule(deck, grid, fp, runspec, std::make_shared<Python>());
+    const Schedule schedule {
+        deck, grid, fp, NumericalAquifers{},
+        runspec, std::make_shared<Python>()
+    };
 
     BOOST_CHECK(deck.hasKeyword("WTRACER"));
 
@@ -202,5 +209,5 @@ BOOST_AUTO_TEST_CASE(TestTracerInProducerTHROW)
     const FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
     const Runspec runspec (deck);
 
-    BOOST_CHECK_THROW(Schedule(deck, grid, fp, runspec, std::make_shared<Python>()), OpmInputError);
+    BOOST_CHECK_THROW(Schedule(deck, grid, fp, NumericalAquifers{}, runspec, std::make_shared<Python>()), OpmInputError);
 }

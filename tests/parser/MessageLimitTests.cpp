@@ -23,21 +23,24 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include <opm/input/eclipse/Python/Python.hpp>
+#include <opm/input/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquifers.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
 #include <opm/input/eclipse/EclipseState/Runspec.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
+
+#include <opm/input/eclipse/Python/Python.hpp>
+
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 #include <opm/input/eclipse/Schedule/MessageLimits.hpp>
+
 #include <opm/input/eclipse/Deck/Deck.hpp>
+
 #include <opm/input/eclipse/Parser/Parser.hpp>
 
 using namespace Opm;
 
-
 BOOST_AUTO_TEST_CASE(MESSAGES) {
-    Opm::Parser parser;
     const std::string input = R"(
 START             -- 0
 19 JUN 2007 /
@@ -82,15 +85,17 @@ DATES             -- 2
 /
 MESSAGES
   10 /
-     )";
+)";
 
-    auto deck = parser.parseString(input);
-    auto python = std::make_shared<Python>();
+    auto deck = Parser{}.parseString(input);
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
     FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
     Runspec runspec (deck);
-    Schedule schedule(deck, grid, fp, runspec, python);
+    const Schedule schedule {
+        deck, grid, fp, NumericalAquifers{},
+        runspec, std::make_shared<Python>()
+    };
 
     BOOST_CHECK_EQUAL( schedule[0].message_limits().getBugPrintLimit( ) , 77 );   // The pre Schedule initialization
 
