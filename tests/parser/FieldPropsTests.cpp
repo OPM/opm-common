@@ -32,6 +32,7 @@
 
 #include <opm/common/utility/OpmInputError.hpp>
 
+#include <opm/input/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquifers.hpp>
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
@@ -3134,8 +3135,11 @@ MULTZ
     TableManager tables;
     FieldPropsManager fp(deck, Phases{true, true, true}, grid, tables);
     Runspec runspec (deck);
-    auto python = std::make_shared<Python>();
-    Schedule sched(deck, grid, fp, runspec, python);
+    const Schedule sched {
+        deck, grid, fp, NumericalAquifers{},
+        runspec, std::make_shared<Python>()
+    };
+
     const auto& multz0 = fp.get_double("MULTZ");
     for (std::size_t k=0; k < 2; k++) {
         for (std::size_t ij=0; ij < 100; ij++)

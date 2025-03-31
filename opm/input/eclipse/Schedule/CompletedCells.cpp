@@ -19,6 +19,12 @@
 
 #include <opm/input/eclipse/Schedule/CompletedCells.hpp>
 
+#include <array>
+#include <cstddef>
+#include <optional>
+#include <unordered_map>
+#include <utility>
+
 bool Opm::CompletedCells::Cell::Props::operator==(const Props& other) const
 {
     return (this->active_index == other.active_index)
@@ -48,6 +54,18 @@ Opm::CompletedCells::Cell::Props::serializationTestObject()
     return props;
 }
 
+// ===========================================================================
+
+bool Opm::CompletedCells::Cell::is_active() const
+{
+    return this->props.has_value();
+}
+
+std::size_t Opm::CompletedCells::Cell::active_index() const
+{
+    return this->props->active_index;
+}
+
 bool Opm::CompletedCells::Cell::operator==(const Cell& other) const
 {
     return (this->global_index == other.global_index)
@@ -72,28 +90,36 @@ Opm::CompletedCells::Cell::serializationTestObject()
     return cell;
 }
 
-Opm::CompletedCells::CompletedCells(std::size_t nx, std::size_t ny, std::size_t nz)
-    : dims(nx, ny, nz)
-{}
+// ===========================================================================
 
 Opm::CompletedCells::CompletedCells(const Opm::GridDims& dims_)
-    : dims(dims_)
+    : dims { dims_ }
+{}
+
+Opm::CompletedCells::CompletedCells(const std::size_t nx,
+                                    const std::size_t ny,
+                                    const std::size_t nz)
+    : dims { nx, ny, nz }
 {}
 
 const Opm::CompletedCells::Cell&
-Opm::CompletedCells::get(std::size_t i, std::size_t j, std::size_t k) const
+Opm::CompletedCells::get(const std::size_t i,
+                         const std::size_t j,
+                         const std::size_t k) const
 {
     return this->cells.at(this->dims.getGlobalIndex(i, j, k));
 }
 
-std::pair<bool, Opm::CompletedCells::Cell&>
-Opm::CompletedCells::try_get(std::size_t i, std::size_t j, std::size_t k)
+std::pair<Opm::CompletedCells::Cell*, bool>
+Opm::CompletedCells::try_get(const std::size_t i,
+                             const std::size_t j,
+                             const std::size_t k)
 {
     const auto g = this->dims.getGlobalIndex(i, j, k);
 
     const auto& [pos, inserted] = this->cells.try_emplace(g, g, i, j, k);
 
-    return { !inserted, pos->second };
+    return { &pos->second, !inserted };
 }
 
 bool Opm::CompletedCells::operator==(const Opm::CompletedCells& other) const
@@ -110,14 +136,4 @@ Opm::CompletedCells::serializationTestObject()
     cells.cells.emplace(7, Opm::CompletedCells::Cell::serializationTestObject());
 
     return cells;
-}
-
-std::size_t Opm::CompletedCells::Cell::active_index() const
-{
-    return this->props.value().active_index;
-}
-
-bool Opm::CompletedCells::Cell::is_active() const
-{
-    return this->props.has_value();
 }

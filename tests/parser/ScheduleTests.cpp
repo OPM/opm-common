@@ -38,6 +38,7 @@
 #include <opm/io/eclipse/RestartFileView.hpp>
 #include <opm/io/eclipse/rst/state.hpp>
 
+#include <opm/input/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquifers.hpp>
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
@@ -116,7 +117,7 @@ namespace {
         const FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
         const Runspec runspec (deck);
 
-        return { deck, grid, fp, runspec, std::make_shared<Python>() };
+        return { deck, grid, fp, NumericalAquifers{}, runspec, std::make_shared<Python>() };
     }
 
     std::string createDeck()
@@ -427,12 +428,11 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckMissingReturnsDefaults) {
     Deck deck;
     Parser parser;
     deck.addKeyword( DeckKeyword( parser.getKeyword("SCHEDULE" )));
-    auto python = std::make_shared<Python>();
     EclipseGrid grid(10,10,10);
-    TableManager table ( deck );
-    FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
-    Runspec runspec (deck);
-    Schedule schedule(deck, grid , fp, runspec, python);
+    const TableManager table ( deck );
+    const FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
+    const Runspec runspec (deck);
+    const Schedule schedule(deck, grid, fp, NumericalAquifers{}, runspec, std::make_shared<Python>());
     BOOST_CHECK_EQUAL( schedule.getStartTime() , asTimeT( TimeStampUTC(1983, 1, 1)));
 }
 
@@ -1779,10 +1779,10 @@ BOOST_AUTO_TEST_CASE(WELSPECS_WGNAME_SPACE) {
         ErrorGuard errors;
 
         parseContext.update(ParseContext::PARSE_WGNAME_SPACE, InputErrorAction::THROW_EXCEPTION);
-        BOOST_CHECK_THROW( Opm::Schedule(deck,  grid, fp, runspec, parseContext, errors, python), Opm::OpmInputError);
+        BOOST_CHECK_THROW( Opm::Schedule(deck, grid, fp, NumericalAquifers{}, runspec, parseContext, errors, python), Opm::OpmInputError);
 
         parseContext.update(ParseContext::PARSE_WGNAME_SPACE, InputErrorAction::IGNORE);
-        BOOST_CHECK_NO_THROW( Opm::Schedule(deck,  grid, fp, runspec, parseContext, errors, python));
+        BOOST_CHECK_NO_THROW( Opm::Schedule(deck, grid, fp, NumericalAquifers{}, runspec, parseContext, errors, python));
 }
 
 BOOST_AUTO_TEST_CASE(createDeckModifyMultipleGCONPROD) {
@@ -2455,13 +2455,15 @@ WCONHIST
 /
 )";
 
-    auto deck = parser.parseString(input);
-    auto python = std::make_shared<Python>();
+    const auto deck = parser.parseString(input);
     EclipseGrid grid(10,10,10);
-    TableManager table ( deck );
-    FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
-    Runspec runspec (deck);
-    Schedule schedule(deck, grid , fp, runspec, python);
+    const TableManager table ( deck );
+    const FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
+    const Runspec runspec (deck);
+    const Schedule schedule {
+        deck, grid, fp, NumericalAquifers{},
+        runspec, std::make_shared<Python>()
+    };
 
     //10  OKT 2008
     BOOST_CHECK(schedule.getWell("P1", 1).getProductionProperties().controlMode == Opm::Well::ProducerCMode::GRAT);
@@ -2501,8 +2503,7 @@ WCONHIST
 
 
 BOOST_AUTO_TEST_CASE(unsupportedOptionWHISTCTL) {
-    Opm::Parser parser;
-    std::string input = R"(
+    const std::string input = R"(
 START             -- 0
 19 JUN 2007 /
 SCHEDULE
@@ -2532,17 +2533,17 @@ WHISTCTL
  * YES /
 )";
 
-    auto deck = parser.parseString(input);
+    const auto deck = Parser{}.parseString(input);
     auto python = std::make_shared<Python>();
     EclipseGrid grid(10,10,10);
-    TableManager table ( deck );
-    FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
-    Runspec runspec (deck);
-    BOOST_CHECK_THROW(Schedule(deck, grid, fp, runspec, python), Opm::OpmInputError);
+    const TableManager table ( deck );
+    const FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
+    const Runspec runspec (deck);
+    BOOST_CHECK_THROW(Schedule(deck, grid, fp, NumericalAquifers{}, runspec, python), OpmInputError);
 }
 
 BOOST_AUTO_TEST_CASE(move_HEAD_I_location) {
-    std::string input = R"(
+    const std::string input = R"(
             START             -- 0
             19 JUN 2007 /
             SCHEDULE
@@ -2562,19 +2563,22 @@ BOOST_AUTO_TEST_CASE(move_HEAD_I_location) {
             /
     )";
 
-    auto deck = Parser().parseString(input);
-    auto python = std::make_shared<Python>();
+    const auto deck = Parser{}.parseString(input);
     EclipseGrid grid(10,10,10);
-    TableManager table ( deck );
-    FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
-    Runspec runspec (deck);
-    Schedule schedule( deck, grid, fp, runspec, python);
+    const TableManager table ( deck );
+    const FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
+    const Runspec runspec (deck);
+    const Schedule schedule {
+        deck, grid, fp, NumericalAquifers{},
+        runspec, std::make_shared<Python>()
+    };
+
     BOOST_CHECK_EQUAL(2, schedule.getWell("W1", 1).getHeadI());
     BOOST_CHECK_EQUAL(3, schedule.getWell("W1", 2).getHeadI());
 }
 
 BOOST_AUTO_TEST_CASE(change_ref_depth) {
-    std::string input = R"(
+    const std::string input = R"(
             START             -- 0
             19 JUN 2007 /
             SCHEDULE
@@ -2594,20 +2598,23 @@ BOOST_AUTO_TEST_CASE(change_ref_depth) {
             /
     )";
 
-    auto deck = Parser().parseString(input);
-    auto python = std::make_shared<Python>();
+    const auto deck = Parser{}.parseString(input);
     EclipseGrid grid(10,10,10);
-    TableManager table ( deck );
-    FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
-    Runspec runspec (deck);
-    Schedule schedule( deck, grid, fp, runspec, python);
+    const TableManager table ( deck );
+    const FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
+    const Runspec runspec (deck);
+    const Schedule schedule {
+        deck, grid, fp, NumericalAquifers{},
+        runspec, std::make_shared<Python>()
+    };
+
     BOOST_CHECK_CLOSE(2873.94, schedule.getWell("W1", 1).getRefDepth(), 1e-5);
     BOOST_CHECK_EQUAL(12.0, schedule.getWell("W1", 2).getRefDepth());
 }
 
 
 BOOST_AUTO_TEST_CASE(WTEMP_well_template) {
-    std::string input = R"(
+    const std::string input = R"(
             START             -- 0
             19 JUN 2007 /
             SCHEDULE
@@ -2635,13 +2642,15 @@ BOOST_AUTO_TEST_CASE(WTEMP_well_template) {
 
     )";
 
-    auto deck = Parser().parseString(input);
-    auto python = std::make_shared<Python>();
+    const auto deck = Parser{}.parseString(input);
     EclipseGrid grid(10,10,10);
-    TableManager table ( deck );
-    FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
-    Runspec runspec (deck);
-    Schedule schedule( deck, grid, fp, runspec, python);
+    const TableManager table ( deck );
+    const FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
+    const Runspec runspec (deck);
+    const Schedule schedule {
+        deck, grid, fp, NumericalAquifers{},
+        runspec, std::make_shared<Python>()
+    };
 
     BOOST_CHECK_THROW(schedule.getWell("W1", 1).inj_temperature(), std::logic_error);
     BOOST_CHECK_THROW(schedule.getWell("W1", 2).inj_temperature(), std::logic_error);
@@ -2655,7 +2664,7 @@ BOOST_AUTO_TEST_CASE(WTEMP_well_template) {
 
 
 BOOST_AUTO_TEST_CASE(WTEMPINJ_well_template) {
-        std::string input = R"(
+    const std::string input = R"(
             START             -- 0
             19 JUN 2007 /
             SCHEDULE
@@ -2682,13 +2691,15 @@ BOOST_AUTO_TEST_CASE(WTEMPINJ_well_template) {
             /
     )";
 
-        auto deck = Parser().parseString(input);
-        auto python = std::make_shared<Python>();
+        const auto deck = Parser().parseString(input);
         EclipseGrid grid(10,10,10);
-        TableManager table ( deck );
-        FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
-        Runspec runspec (deck);
-        Schedule schedule( deck, grid, fp, runspec, python);
+        const TableManager table ( deck );
+        const FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
+        const Runspec runspec (deck);
+        const Schedule schedule {
+            deck, grid, fp, NumericalAquifers{},
+            runspec, std::make_shared<Python>()
+        };
 
         BOOST_CHECK_THROW(schedule.getWell("W1", 1).inj_temperature(), std::logic_error);
         BOOST_CHECK_THROW(schedule.getWell("W2", 1).inj_temperature(), std::logic_error);
@@ -2743,7 +2754,10 @@ END
     const TableManager table (deck);
     const FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
     const Runspec runspec (deck);
-    const Schedule schedule(deck, grid, fp, runspec, std::make_shared<Python>());
+    const Schedule schedule {
+        deck, grid, fp, NumericalAquifers{},
+        runspec, std::make_shared<Python>()
+    };
 
     const auto& cs1 = schedule.getWell( "W1", 1 ).getConnections(  );
     BOOST_CHECK_EQUAL( 1, cs1.get( 0 ).complnum() );
@@ -2796,7 +2810,10 @@ COMPDAT
     const TableManager table (deck);
     const FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
     const Runspec runspec (deck);
-    const Schedule schedule(deck, grid, fp, runspec, std::make_shared<Python>());
+    const Schedule schedule {
+        deck, grid, fp, NumericalAquifers{},
+        runspec, std::make_shared<Python>()
+    };
 
     {
         const auto& w1cs = schedule.getWell( "W1", 1 ).getConnections();
@@ -2866,7 +2883,10 @@ COMPDAT
     const TableManager table (deck);
     const FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
     const Runspec runspec (deck);
-    const Schedule schedule(deck, grid, fp, runspec, std::make_shared<Python>());
+    const Schedule schedule {
+        deck, grid, fp, NumericalAquifers{},
+        runspec, std::make_shared<Python>()
+    };
 
     const auto& cs = schedule.getWell( "W1", 1 ).getConnections();
     BOOST_CHECK_EQUAL( 3U, cs.size() );
@@ -2877,7 +2897,7 @@ COMPDAT
 
 
 BOOST_AUTO_TEST_CASE( complump_less_than_1 ) {
-    std::string input = R"(
+    const std::string input = R"(
             START             -- 0
             19 JUN 2007 /
             GRID
@@ -2902,13 +2922,14 @@ BOOST_AUTO_TEST_CASE( complump_less_than_1 ) {
             /
     )";
 
-    auto deck = Parser().parseString( input);
+    const auto deck = Parser().parseString( input);
     auto python = std::make_shared<Python>();
     EclipseGrid grid( 10, 10, 10);
-    TableManager table ( deck );
-    FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
-    Runspec runspec (deck);
-    BOOST_CHECK_THROW( Schedule( deck , grid, fp, runspec, python), std::exception );
+    const TableManager table ( deck );
+    const FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
+    const Runspec runspec (deck);
+
+    BOOST_CHECK_THROW( Schedule(deck, grid, fp, NumericalAquifers{}, runspec, python), std::exception );
 }
 
 BOOST_AUTO_TEST_CASE( complump ) {
@@ -2962,7 +2983,10 @@ WELOPEN
     const TableManager table (deck);
     const FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
     const Runspec runspec (deck);
-    const Schedule schedule(deck, grid, fp, runspec, std::make_shared<Python>());
+    const Schedule schedule {
+        deck, grid, fp, NumericalAquifers{},
+        runspec, std::make_shared<Python>()
+    };
 
     const auto& sc0 = schedule.getWell("W1", 0).getConnections();
     /* complnum should be modified by COMPLNUM */
@@ -3081,7 +3105,10 @@ WELOPEN
     const TableManager table (deck );
     const FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
     const Runspec runspec (deck);
-    const Schedule schedule(deck, grid, fp, runspec, std::make_shared<Python>());
+    const Schedule schedule {
+        deck, grid, fp, NumericalAquifers{},
+        runspec, std::make_shared<Python>()
+    };
 
     const auto& cs1 = schedule.getWell("W1", 1).getConnections();
     const auto& cs2 = schedule.getWell("W1", 2).getConnections();
@@ -3507,8 +3534,7 @@ BOOST_AUTO_TEST_CASE(GuideRatePhaseEnum2Loop) {
 }
 
 BOOST_AUTO_TEST_CASE(handleWEFAC) {
-    Opm::Parser parser;
-    std::string input = R"(
+    const std::string input = R"(
 START             -- 0
 19 JUN 2007 /
 GRID
@@ -3555,13 +3581,15 @@ WEFAC
 /
 )";
 
-    auto deck = parser.parseString(input);
-    auto python = std::make_shared<Python>();
+    const auto deck = Parser{}.parseString(input);
     EclipseGrid grid(10,10,10);
-    TableManager table ( deck );
-    FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
-    Runspec runspec (deck);
-    Schedule schedule(deck, grid , fp, runspec, python);
+    const TableManager table ( deck );
+    const FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
+    const Runspec runspec (deck);
+    const Schedule schedule {
+        deck, grid, fp, NumericalAquifers{},
+        runspec, std::make_shared<Python>()
+    };
 
     //1
     BOOST_CHECK_EQUAL(schedule.getWell("P", 1).getEfficiencyFactor(), 0.5);
@@ -3577,8 +3605,7 @@ WEFAC
 }
 
 BOOST_AUTO_TEST_CASE(historic_BHP_and_THP) {
-    Opm::Parser parser;
-    std::string input = R"(
+    const std::string input = R"(
 START             -- 0
 19 JUN 2007 /
 SCHEDULE
@@ -3601,13 +3628,15 @@ WCONINJH
 /
 )";
 
-    auto deck = parser.parseString(input);
-    auto python = std::make_shared<Python>();
+    const auto deck = Parser{}.parseString(input);
     EclipseGrid grid(10,10,10);
-    TableManager table ( deck );
-    FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
-    Runspec runspec (deck);
-    Schedule schedule( deck, grid, fp, runspec, python);
+    const TableManager table ( deck );
+    const FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
+    const Runspec runspec (deck);
+    const Schedule schedule {
+        deck, grid, fp, NumericalAquifers{},
+        runspec, std::make_shared<Python>()
+    };
 
     {
         const auto& prod = schedule.getWell("P", 1).getProductionProperties();
@@ -3635,12 +3664,16 @@ WCONINJH
 
 BOOST_AUTO_TEST_CASE(FilterCompletions2) {
     const auto& deck = Parser{}.parseString(createDeckWithWellsAndCompletionData());
-    auto python = std::make_shared<Python>();
     EclipseGrid grid1(10,10,10);
-    TableManager table ( deck );
-    FieldPropsManager fp( deck, Phases{true, true, true}, grid1, table);
-    Runspec runspec (deck);
-    Schedule schedule(deck, grid1, fp, runspec, python);
+    const TableManager table ( deck );
+    const FieldPropsManager fp( deck, Phases{true, true, true}, grid1, table);
+    const Runspec runspec (deck);
+
+    /* mutable */ Schedule schedule {
+        deck, grid1, fp, NumericalAquifers{},
+        runspec, std::make_shared<Python>()
+    };
+
     std::vector<int> actnum = grid1.getACTNUM();
 
     {
@@ -3649,14 +3682,19 @@ BOOST_AUTO_TEST_CASE(FilterCompletions2) {
         BOOST_CHECK_EQUAL(2U, c1_1.size());
         BOOST_CHECK_EQUAL(9U, c1_3.size());
     }
+
     actnum[grid1.getGlobalIndex(8,8,1)] = 0;
     {
         std::vector<int> globalCell(grid1.getNumActive());
-        for(std::size_t i = 0; i < grid1.getNumActive(); ++i)
-            if (actnum[grid1.getGlobalIndex(i)])
+        for(std::size_t i = 0; i < grid1.getNumActive(); ++i) {
+            if (actnum[grid1.getGlobalIndex(i)]) {
                 globalCell[i] = grid1.getGlobalIndex(i);
+            }
+        }
+
         ActiveGridCells active(grid1.getNXYZ(), globalCell.data(),
                                grid1.getNumActive());
+
         schedule.filterConnections(active);
 
         const auto& c1_1 = schedule.getWell("OP_1", 1).getConnections();
@@ -3665,13 +3703,6 @@ BOOST_AUTO_TEST_CASE(FilterCompletions2) {
         BOOST_CHECK_EQUAL(8U, c1_3.size());
     }
 }
-
-
-
-
-
-
-
 
 BOOST_AUTO_TEST_CASE(VFPINJ_TEST) {
     const std::string input = R"(
@@ -3726,8 +3757,7 @@ VFPINJ
 2 4.5 5.5 6.5 /
 )";
 
-    const auto& schedule = make_schedule(input);
-
+    const auto schedule = make_schedule(input);
 
     BOOST_CHECK( schedule[0].events().hasEvent(ScheduleEvents::VFPINJ_UPDATE));
     BOOST_CHECK( !schedule[1].events().hasEvent(ScheduleEvents::VFPINJ_UPDATE));
@@ -3842,14 +3872,15 @@ TSTEP
  1 /
 )";
 
-    Opm::Parser parser;
-    auto deck = parser.parseString(deckData);
-    auto python = std::make_shared<Python>();
+    const auto deck = Parser{}.parseString(deckData);
     EclipseGrid grid1(10,10,10);
-    TableManager table ( deck );
-    FieldPropsManager fp( deck, Phases{true, true, true}, grid1, table);
-    Runspec runspec (deck);
-    Schedule schedule(deck, grid1 , fp, runspec, python);
+    const TableManager table ( deck );
+    const FieldPropsManager fp( deck, Phases{true, true, true}, grid1, table);
+    const Runspec runspec (deck);
+    const Schedule schedule {
+        deck, grid1, fp, NumericalAquifers{},
+        runspec, std::make_shared<Python>()
+    };
 
     const auto& poly0 = schedule.getWell("INJE01", 0).getPolymerProperties();
     const auto& poly1 = schedule.getWell("INJE01", 1).getPolymerProperties();
@@ -3945,16 +3976,16 @@ namespace {
     }
 }
 
-
-
 BOOST_AUTO_TEST_CASE(WELL_STATIC) {
     const auto& deck = Parser{}.parseString(createDeckWithWells());
-    auto python = std::make_shared<Python>();
     EclipseGrid grid1(10,10,10);
-    TableManager table ( deck );
-    FieldPropsManager fp( deck, Phases{true, true, true}, grid1, table);
-    Runspec runspec (deck);
-    Schedule schedule(deck, grid1, fp, runspec, python);
+    const TableManager table ( deck );
+    const FieldPropsManager fp( deck, Phases{true, true, true}, grid1, table);
+    const Runspec runspec (deck);
+    const Schedule schedule {
+        deck, grid1, fp, NumericalAquifers{},
+        runspec, std::make_shared<Python>()
+    };
 
     BOOST_CHECK_THROW( schedule.getWell("NO_SUCH_WELL", 0), std::exception);
     BOOST_CHECK_THROW( schedule.getWell("W_3", 0)         , std::exception);
@@ -4219,7 +4250,7 @@ DATES             -- 1
 }
 
 BOOST_AUTO_TEST_CASE(TESTGuideRateConfig) {
-    std::string input = R"(
+    const std::string input = R"(
 START             -- 0
 10 MAI 2007 /
 GRID
@@ -4487,30 +4518,35 @@ END
     BOOST_CHECK_EQUAL(Well::eclipseControlMode(sched.getWell("W8", 10), st), 6);
 }
 
-
-
 BOOST_AUTO_TEST_CASE(SKIPREST_VFP) {
-    auto python = std::make_shared<Python>();
-    Parser parser;
-    auto deck = parser.parseFile("MODEL2_RESTART.DATA");
-    EclipseState es{ deck };
+    auto parser = Parser{};
+
+    const auto deck = parser.parseFile("MODEL2_RESTART.DATA");
+    const EclipseState es{ deck };
     const auto& init_config = es.getInitConfig();
-    auto report_step = init_config.getRestartStep();
-    const auto& rst_filename = es.getIOConfig().getRestartFileName( init_config.getRestartRootName(), report_step, false );
-    auto rst_file = std::make_shared<Opm::EclIO::ERst>(rst_filename);
-    auto rst_view = std::make_shared<Opm::EclIO::RestartFileView>(std::move(rst_file), report_step);
-    const auto rst = Opm::RestartIO::RstState::load(std::move(rst_view), es.runspec(), parser);
-    const auto sched = Schedule{ deck, es, python, false, /*slave_mode=*/false, true, {}, &rst };
+    const auto report_step = init_config.getRestartStep();
+    const auto rst_filename = es.getIOConfig()
+        .getRestartFileName(init_config.getRestartRootName(), report_step, false);
+
+    auto rst_file = std::make_shared<EclIO::ERst>(rst_filename);
+    auto rst_view = std::make_shared<EclIO::RestartFileView>(std::move(rst_file), report_step);
+    const auto rst = RestartIO::RstState::load(std::move(rst_view), es.runspec(), parser);
+    const auto sched = Schedule {
+        deck, es, std::make_shared<Python>(),
+        /* lowActionParsingStrictness = */ false,
+        /* slave_mode = */ false,
+        /* keepKeywords = */ true,
+        /* output_interval = */ {},
+        &rst
+    };
+
     BOOST_CHECK_NO_THROW( sched[3].vfpprod(5) );
 
-    for (std::size_t index = 0; index < sched.size(); index++) {
+    for (std::size_t index = 0; index < sched.size(); ++index) {
         const auto& state = sched[index];
         BOOST_CHECK_EQUAL(index, state.sim_step());
     }
 }
-
-
-
 
 BOOST_AUTO_TEST_CASE(GASLIFT_OPT) {
     GasLiftOpt glo{};
@@ -4564,6 +4600,7 @@ WLIFTOPT
  'C-2H'   NO    150000   1.01   -1.0  /
 /
 )";
+
     Opm::UnitSystem unitSystem = UnitSystem( UnitSystem::UnitType::UNIT_TYPE_METRIC );
     double siFactorG = unitSystem.parse("GasSurfaceVolume/Time").getSIScaling();
     const auto sched = make_schedule(input);
@@ -6252,7 +6289,7 @@ DATES             -- 1
  10  NOV 2008 /
 /
 )";
-    
+
     auto schedule = make_schedule(input);
     BOOST_CHECK(schedule[1].events().hasEvent(ScheduleEvents::TUNING_CHANGE));
     // TUNING_CHANGE because NEXTSTEP cleared

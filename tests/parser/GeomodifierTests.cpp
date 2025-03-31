@@ -17,28 +17,35 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdexcept>
 #define BOOST_TEST_MODULE GeoModifiersTests
 #include <boost/test/unit_test.hpp>
 
+#include <opm/input/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquifers.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
+#include <opm/input/eclipse/EclipseState/Runspec.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
+
+#include <opm/input/eclipse/Python/Python.hpp>
+
+#include <opm/input/eclipse/Schedule/Events.hpp>
+#include <opm/input/eclipse/Schedule/Schedule.hpp>
+
+#include <opm/input/eclipse/Parser/ParseContext.hpp>
+
+#include <opm/input/eclipse/Deck/Deck.hpp>
+#include <opm/input/eclipse/Deck/DeckItem.hpp>
+#include <opm/input/eclipse/Deck/DeckKeyword.hpp>
+#include <opm/input/eclipse/Deck/DeckRecord.hpp>
 
 #include <opm/input/eclipse/Parser/Parser.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/M.hpp>
 #include <opm/input/eclipse/Parser/InputErrorAction.hpp>
 #include <opm/input/eclipse/Parser/ErrorGuard.hpp>
 
-#include <opm/input/eclipse/Python/Python.hpp>
-#include <opm/input/eclipse/Deck/Deck.hpp>
-#include <opm/input/eclipse/Deck/DeckItem.hpp>
-#include <opm/input/eclipse/Deck/DeckKeyword.hpp>
-#include <opm/input/eclipse/Deck/DeckRecord.hpp>
-#include <opm/input/eclipse/Parser/ParseContext.hpp>
-#include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
-#include <opm/input/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
-#include <opm/input/eclipse/EclipseState/Runspec.hpp>
-#include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
-#include <opm/input/eclipse/Schedule/Schedule.hpp>
-#include <opm/input/eclipse/Schedule/Events.hpp>
+#include <memory>
+#include <stdexcept>
+#include <string>
 
 using namespace Opm;
 
@@ -79,7 +86,6 @@ TSTEP  -- 3,4
    10 10/
 )";
 
-    auto python = std::make_shared<Python>();
     Parser parser(true);
     ParseContext parseContext;
     ErrorGuard errors;
@@ -89,8 +95,12 @@ TSTEP  -- 3,4
     FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
 
     {
-        Runspec runspec ( deck );
-        Schedule schedule( deck, grid , fp, runspec , parseContext, errors, python);
+        const Runspec runspec ( deck );
+        const Schedule schedule {
+            deck, grid, fp, NumericalAquifers{},
+            runspec, parseContext, errors, std::make_shared<Python>()
+        };
+
         BOOST_CHECK_EQUAL( false , schedule[1].events().hasEvent( ScheduleEvents::GEO_MODIFIER ));
         BOOST_CHECK_EQUAL( true  , schedule[2].events().hasEvent( ScheduleEvents::GEO_MODIFIER ));
         BOOST_CHECK_EQUAL( false , schedule[3].events().hasEvent( ScheduleEvents::GEO_MODIFIER ));

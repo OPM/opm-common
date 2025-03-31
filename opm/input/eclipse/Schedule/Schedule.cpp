@@ -33,6 +33,7 @@
 #include <opm/input/eclipse/Parser/InputErrorAction.hpp>
 
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
+#include <opm/input/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquifers.hpp>
 #include <opm/input/eclipse/EclipseState/TracerConfig.hpp>
 
 #include <opm/input/eclipse/Python/Python.hpp>
@@ -136,6 +137,7 @@ namespace Opm {
     Schedule::Schedule( const Deck& deck,
                         const EclipseGrid& ecl_grid,
                         const FieldPropsManager& fp,
+                        const NumericalAquifers& numAquifers,
                         const Runspec &runspec,
                         const ParseContext& parseContext,
                         ErrorGuard& errors,
@@ -157,10 +159,20 @@ namespace Opm {
         this->restart_output.clearRemainingEvents(0);
         this->simUpdateFromPython = std::make_shared<SimulatorUpdate>();
 
-        init_completed_cells_lgr(ecl_grid);
-        init_completed_cells_lgr_map(ecl_grid);
-        //const ScheduleGridWrapper gridWrapper { grid } ;
-        ScheduleGrid grid(ecl_grid, fp, this->completed_cells, this->completed_cells_lgr, this->completed_cells_lgr_map);
+        this->init_completed_cells_lgr(ecl_grid);
+        this->init_completed_cells_lgr_map(ecl_grid);
+
+        auto grid = ScheduleGrid {
+            ecl_grid, fp,
+            this->completed_cells,
+            this->completed_cells_lgr,
+            this->completed_cells_lgr_map
+        };
+
+        if (numAquifers.size() > 0) {
+            grid.include_numerical_aquifers(numAquifers);
+        }
+
         if (!keepKeywords) {
             const auto& section = SCHEDULESection(deck);
             keepKeywords = section.has_keyword("ACTIONX") ||
@@ -208,6 +220,7 @@ namespace Opm {
     Schedule::Schedule( const Deck& deck,
                         const EclipseGrid& grid,
                         const FieldPropsManager& fp,
+                        const NumericalAquifers& numAquifers,
                         const Runspec &runspec,
                         const ParseContext& parseContext,
                         T&& errors,
@@ -221,6 +234,7 @@ namespace Opm {
         : Schedule(deck,
                    grid,
                    fp,
+                   numAquifers,
                    runspec,
                    parseContext,
                    errors,
@@ -236,6 +250,7 @@ namespace Opm {
     Schedule::Schedule( const Deck& deck,
                         const EclipseGrid& grid,
                         const FieldPropsManager& fp,
+                        const NumericalAquifers& numAquifers,
                         const Runspec &runspec,
                         std::shared_ptr<const Python> python,
                         const bool lowActionParsingStrictness,
@@ -247,6 +262,7 @@ namespace Opm {
         : Schedule(deck,
                    grid,
                    fp,
+                   numAquifers,
                    runspec,
                    ParseContext(),
                    ErrorGuard(),
@@ -272,6 +288,7 @@ namespace Opm {
         : Schedule(deck,
                    es.getInputGrid(),
                    es.fieldProps(),
+                   es.aquifer().numericalAquifers(),
                    es.runspec(),
                    parse_context,
                    errors,
@@ -298,6 +315,7 @@ namespace Opm {
         : Schedule(deck,
                    es.getInputGrid(),
                    es.fieldProps(),
+                   es.aquifer().numericalAquifers(),
                    es.runspec(),
                    parse_context,
                    errors,

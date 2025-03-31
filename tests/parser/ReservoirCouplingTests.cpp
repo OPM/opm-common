@@ -16,53 +16,72 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include "config.h"
+
+#include <config.h>
+
 #define BOOST_TEST_MODULE ReservoirCouplingTests
 
 #include <boost/test/unit_test.hpp>
+
 #include <opm/input/eclipse/Schedule/ResCoup/ReservoirCouplingInfo.hpp>
 #include <opm/input/eclipse/Schedule/ResCoup/WriteCouplingFile.hpp>
 #include <opm/input/eclipse/Schedule/ResCoup/GrupSlav.hpp>
 #include <opm/input/eclipse/Schedule/ResCoup/MasterGroup.hpp>
 #include <opm/input/eclipse/Schedule/ResCoup/Slaves.hpp>
 
-#include <opm/input/eclipse/Deck/Deck.hpp>
-#include <opm/input/eclipse/Parser/Parser.hpp>
-#include <opm/input/eclipse/Schedule/Schedule.hpp>
+#include <opm/common/OpmLog/OpmLog.hpp>
+#include <opm/common/OpmLog/StreamLog.hpp>
+#include <opm/common/utility/OpmInputError.hpp>
+
+#include <opm/input/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquifers.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
-#include <opm/input/eclipse/Python/Python.hpp>
-#include <opm/input/eclipse/Units/Units.hpp>
-#include <opm/common/utility/OpmInputError.hpp>
-#include <opm/common/OpmLog/OpmLog.hpp>
-#include <opm/common/OpmLog/StreamLog.hpp>
 
+#include <opm/input/eclipse/Schedule/Schedule.hpp>
+#include <opm/input/eclipse/Python/Python.hpp>
+
+#include <opm/input/eclipse/Units/Units.hpp>
+
+#include <opm/input/eclipse/Deck/Deck.hpp>
+#include <opm/input/eclipse/Parser/Parser.hpp>
+
+#include <cstddef>
+#include <memory>
 #include <sstream>
 #include <string>
+#include <vector>
 
 using namespace Opm;
+
 namespace {
-Schedule makeSchedule(const std::string& schedule_string, bool slave_mode) {
-    Parser parser;
-    auto python = std::make_shared<Python>();
-    Deck deck = parser.parseString(schedule_string);
+Schedule makeSchedule(const std::string& schedule_string, const bool slave_mode)
+{
+    const auto deck = Parser{}.parseString(schedule_string);
+
     EclipseGrid grid(10,10,10);
-    TableManager table ( deck );
-    FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
-    Runspec runspec (deck);
-    Schedule schedule(
-        deck, grid , fp, runspec, python, /*lowActionParsingStrictness=*/false, slave_mode
-    );
-    return schedule;
+    const TableManager table ( deck );
+    const FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
+    const Runspec runspec (deck);
+
+    return {
+        deck, grid, fp, NumericalAquifers{},
+        runspec, std::make_shared<Python>(),
+        /*lowActionParsingStrictness = */ false,
+        slave_mode
+    };
 }
 
-void addStringLogger(std::ostringstream& stream_buffer) {
+void addStringLogger(std::ostringstream& stream_buffer)
+{
     auto string_logger = std::make_shared<StreamLog>(stream_buffer, Log::DefaultMessageTypes);
     OpmLog::addBackend("MYLOGGER", string_logger);
 }
 
-void assertRaisesInputErrorException(const std::string& schedule_string, bool slave_mode, const std::string& exception_string) {
+void assertRaisesInputErrorException(const std::string& schedule_string,
+                                     const bool slave_mode,
+                                     const std::string& exception_string)
+{
     BOOST_CHECK_THROW(makeSchedule(schedule_string, slave_mode), Opm::OpmInputError);
     try {
         // Now that we know that it will throw the specific exception Opm::OpmInputError,
@@ -74,11 +93,10 @@ void assertRaisesInputErrorException(const std::string& schedule_string, bool sl
     }
 }
 
-void checkLastLineStringBuffer(
-    const std::ostringstream& stream_buffer,
-    const std::string& expected,
-    size_t offset  // Line offset from the end of the string
-) {
+void checkLastLineStringBuffer(const std::ostringstream& stream_buffer,
+                               const std::string& expected,
+                               const std::size_t offset)   // Line offset from the end of the string
+{
     std::string output = stream_buffer.str();
     std::istringstream iss(output);
     std::vector<std::string> lines;
@@ -98,7 +116,7 @@ void checkLastLineStringBuffer(
     }
 }
 
-std::string getMinimumMasterTimeStepDeckString(const std::string &end_of_deck_string)
+std::string getMinimumMasterTimeStepDeckString(const std::string& end_of_deck_string)
 {
     std::string prefix = R"(
 SCHEDULE
@@ -130,12 +148,13 @@ GRUPMAST
     return prefix + end_of_deck_string;
 }
 
-std::string getCouplingFileDeckString(const std::string &end_of_deck_string)
+std::string getCouplingFileDeckString(const std::string& end_of_deck_string)
 {
     return getMinimumMasterTimeStepDeckString(end_of_deck_string);
 }
 
-void removeStringLogger() {
+void removeStringLogger()
+{
     OpmLog::removeBackend("MYLOGGER");
 }
 

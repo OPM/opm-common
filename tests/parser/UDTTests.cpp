@@ -23,15 +23,20 @@
 
 #include <opm/common/utility/OpmInputError.hpp>
 
-#include <opm/input/eclipse/Deck/Deck.hpp>
-#include <opm/input/eclipse/EclipseState/Runspec.hpp>
+#include <opm/input/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquifers.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
+#include <opm/input/eclipse/EclipseState/Runspec.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
-#include <opm/input/eclipse/Parser/Parser.hpp>
+
 #include <opm/input/eclipse/Python/Python.hpp>
+
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDT.hpp>
+
+#include <opm/input/eclipse/Deck/Deck.hpp>
+
+#include <opm/input/eclipse/Parser/Parser.hpp>
 
 using namespace Opm;
 
@@ -88,7 +93,7 @@ UDT
     TableManager table(deck);
     FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
     Runspec runspec(deck);
-    BOOST_CHECK_NO_THROW(Schedule schedule(deck, grid, fp, runspec, std::make_shared<Python>()));
+    BOOST_CHECK_NO_THROW(Schedule schedule(deck, grid, fp, NumericalAquifers{}, runspec, std::make_shared<Python>()));
 }
 
 BOOST_AUTO_TEST_CASE(ParseUDT_LC)
@@ -111,7 +116,7 @@ UDT
     TableManager table(deck);
     FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
     Runspec runspec(deck);
-    BOOST_CHECK_NO_THROW(Schedule schedule(deck, grid, fp, runspec, std::make_shared<Python>()));
+    BOOST_CHECK_NO_THROW(Schedule schedule(deck, grid, fp, NumericalAquifers{}, runspec, std::make_shared<Python>()));
 }
 
 BOOST_AUTO_TEST_CASE(ParseUDT_LL)
@@ -134,7 +139,7 @@ UDT
     TableManager table(deck);
     FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
     Runspec runspec(deck);
-    BOOST_CHECK_NO_THROW(Schedule schedule(deck, grid, fp, runspec, std::make_shared<Python>()));
+    BOOST_CHECK_NO_THROW(Schedule schedule(deck, grid, fp, NumericalAquifers{}, runspec, std::make_shared<Python>()));
 }
 
 BOOST_AUTO_TEST_CASE(ParseUDT_NonAscending)
@@ -157,7 +162,7 @@ UDT
     TableManager table(deck);
     FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
     Runspec runspec(deck);
-    BOOST_CHECK_THROW(Schedule schedule(deck, grid, fp, runspec, std::make_shared<Python>()),
+    BOOST_CHECK_THROW(Schedule schedule(deck, grid, fp, NumericalAquifers{}, runspec, std::make_shared<Python>()),
                       Opm::OpmInputError);
 }
 
@@ -181,7 +186,7 @@ UDT
     TableManager table(deck);
     FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
     Runspec runspec(deck);
-    BOOST_CHECK_THROW(Schedule schedule(deck, grid, fp, runspec, std::make_shared<Python>()),
+    BOOST_CHECK_THROW(Schedule schedule(deck, grid, fp, NumericalAquifers{}, runspec, std::make_shared<Python>()),
                       Opm::OpmInputError);
 }
 
@@ -205,6 +210,6 @@ UDT
     TableManager table(deck);
     FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
     Runspec runspec(deck);
-    BOOST_CHECK_THROW(Schedule schedule(deck, grid, fp, runspec, std::make_shared<Python>()),
+    BOOST_CHECK_THROW(Schedule schedule(deck, grid, fp, NumericalAquifers{}, runspec, std::make_shared<Python>()),
                       Opm::OpmInputError);
 }

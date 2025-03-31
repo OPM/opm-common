@@ -24,6 +24,7 @@
 
 #include <opm/common/utility/OpmInputError.hpp>
 
+#include <opm/input/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquifers.hpp>
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
 #include <opm/input/eclipse/EclipseState/Runspec.hpp>
@@ -621,9 +622,8 @@ BOOST_AUTO_TEST_CASE( MULTISEGMENT_ABS ) {
 
     const EclipseState state(deck);
     const TableManager table ( deck );
-    Runspec runspec (deck);
-    auto python = std::make_shared<Python>();
-    const Schedule sched(deck, state, python);
+    const Runspec runspec (deck);
+    const Schedule sched(deck, state, std::make_shared<Python>());
 
     // checking the relation between segments and completions
     // and also the depth of completions
@@ -1398,15 +1398,16 @@ WOPR
 }
 
 BOOST_AUTO_TEST_CASE( WCONPROD ) {
-    Parser parser;
-    std::string wconprodFile(pathprefix() + "WellWithWildcards/WCONPROD1");
-    auto deck =  parser.parseFile(wconprodFile);
+    const std::string wconprodFile(pathprefix() + "WellWithWildcards/WCONPROD1");
+    const auto deck = Parser{}.parseFile(wconprodFile);
     EclipseGrid grid(30,30,30);
-    TableManager table ( deck );
-    FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
-    Runspec runspec (deck);
-    auto python = std::make_shared<Python>();
-    Schedule sched(deck, grid, fp, runspec, python);
+    const TableManager table ( deck );
+    const FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
+    const Runspec runspec (deck);
+    const Schedule sched {
+        deck, grid, fp, NumericalAquifers{},
+        runspec, std::make_shared<Python>()
+    };
 
     BOOST_CHECK_EQUAL(5U, sched.numWells());
     BOOST_CHECK(sched.hasWell("INJE1"));
@@ -1452,7 +1453,11 @@ BOOST_AUTO_TEST_CASE( WCONINJE )
     const TableManager table (deck);
     const FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
     const Runspec runspec(deck);
-    const Schedule sched(deck, grid, fp, runspec, std::make_shared<Python>());
+    const Schedule sched {
+        deck, grid, fp, NumericalAquifers{},
+        runspec, std::make_shared<Python>()
+    };
+
     SummaryState st(TimeService::now(), runspec.udqParams().undefinedValue());
 
     BOOST_CHECK_EQUAL(5U, sched.numWells());

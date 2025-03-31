@@ -26,6 +26,7 @@
 
 #include <opm/io/eclipse/rst/udq.hpp>
 
+#include <opm/input/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquifers.hpp>
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
 #include <opm/input/eclipse/EclipseState/Runspec.hpp>
@@ -82,11 +83,14 @@ namespace {
         }
         else {
             EclipseGrid grid(10,10,10);
-            TableManager table(deck);
-            FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
-            Runspec runspec(deck);
+            const TableManager table(deck);
+            const FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
+            const Runspec runspec(deck);
 
-            return { deck, grid, fp, runspec, std::make_shared<Python>() };
+            return {
+                deck, grid, fp, NumericalAquifers{},
+                runspec, std::make_shared<Python>()
+            };
         }
     }
 

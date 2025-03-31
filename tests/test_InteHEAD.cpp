@@ -23,17 +23,22 @@
 
 #include <opm/output/eclipse/InteHEAD.hpp>
 
+#include <opm/io/eclipse/rst/header.hpp>
+
 #include <opm/output/eclipse/VectorItems/intehead.hpp>
 #include <opm/output/eclipse/WriteRestartHelpers.hpp>
 
-#include <opm/input/eclipse/Schedule/Schedule.hpp>
-#include <opm/input/eclipse/Deck/Deck.hpp>
+#include <opm/input/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquifers.hpp>
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
-#include <opm/input/eclipse/Parser/Parser.hpp>
-#include <opm/input/eclipse/Parser/ParseContext.hpp>
+
 #include <opm/input/eclipse/Python/Python.hpp>
 
-#include <opm/io/eclipse/rst/header.hpp>
+#include <opm/input/eclipse/Schedule/Schedule.hpp>
+
+#include <opm/input/eclipse/Deck/Deck.hpp>
+
+#include <opm/input/eclipse/Parser/Parser.hpp>
+#include <opm/input/eclipse/Parser/ParseContext.hpp>
 
 #include <algorithm>
 #include <array>
@@ -513,7 +518,10 @@ namespace {
         const Opm::FieldPropsManager fp(deck, Opm::Phases{true, true, true}, grid, table);
         const Opm::Runspec runspec(deck);
 
-        return Opm::Schedule(deck, grid, fp, runspec, std::make_shared<Opm::Python>());
+        return Opm::Schedule {
+            deck, grid, fp, Opm::NumericalAquifers{},
+            runspec, std::make_shared<Opm::Python>()
+        };
     }
 }
 

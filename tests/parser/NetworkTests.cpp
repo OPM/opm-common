@@ -23,6 +23,7 @@
 
 #include <opm/common/utility/OpmInputError.hpp>
 
+#include <opm/input/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquifers.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
@@ -43,16 +44,18 @@
 using namespace Opm;
 
 namespace {
-Schedule make_schedule(const std::string& schedule_string) {
-    Parser parser;
-    auto python = std::make_shared<Python>();
-    Deck deck = parser.parseString(schedule_string);
+Schedule make_schedule(const std::string& schedule_string)
+{
+    const auto deck = Parser{}.parseString(schedule_string);
     EclipseGrid grid(10,10,10);
-    TableManager table ( deck );
-    FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
-    Runspec runspec (deck);
-    Schedule schedule(deck, grid , fp, runspec, python);
-    return schedule;
+    const TableManager table ( deck );
+    const FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
+    const Runspec runspec (deck);
+
+    return {
+        deck, grid, fp, NumericalAquifers{},
+        runspec, std::make_shared<Python>()
+    };
 }
 }
 
