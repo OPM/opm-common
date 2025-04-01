@@ -75,7 +75,7 @@ namespace Opm { namespace Action {
    will read from and write to the file "CASE.X0010" - completely ignoring
    the report step argument '99'.
 */
-namespace Opm { namespace RestartIO {
+namespace Opm::RestartIO {
 
     void save(EclIO::OutputStream::Restart&                 rstFile,
               int                                           report_step,
@@ -102,6 +102,12 @@ namespace Opm { namespace RestartIO {
                       const Schedule&                schedule,
                       const std::vector<RestartKey>& extra_keys = {});
 
-}} // namespace Opm::RestartIO
+    data::Solution load_solution_only(const std::string&             filename,
+                                      int                            report_step,
+                                      const std::vector<RestartKey>& solution_keys,
+                                      const EclipseState&            es,
+                                      const EclipseGrid&             grid);
+
+} // namespace Opm::RestartIO
 
 #endif  // RESTART_IO_HPP

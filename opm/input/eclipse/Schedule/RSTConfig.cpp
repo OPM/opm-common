@@ -501,20 +501,12 @@ RSTConfig::RSTConfig(const SOLUTIONSection& solution_section,
                      const ParseContext&    parseContext,
                      const bool compositional_arg,
                      ErrorGuard&            errors)
-    : write_rst_file(false)
+    : write_rst_file(true)
     , compositional(compositional_arg)
 {
     for (const auto& keyword : solution_section) {
         if (keyword.name() == ParserKeywords::RPTRST::keywordName) {
-            const auto in_solution = true;
-            this->handleRPTRST(keyword, parseContext, errors, in_solution);
-
-            // Generating restart file output at time zero is normally
-            // governed by setting the 'RESTART' mnemonic to a value greater
-            // than one (1) in the RPTSOL keyword.  Here, when handling the
-            // RPTRST keyword in the SOLUTION section, we unconditionally
-            // request that restart file output be generated at time zero.
-            this->write_rst_file = true;
+            this->handleRPTRSTSOLUTION(keyword, parseContext, errors);
         }
         else if (keyword.name() == ParserKeywords::RPTSOL::keywordName) {
             this->handleRPTSOL(keyword, parseContext, errors);
@@ -641,8 +633,7 @@ void RSTConfig::handleRPTSOL(const DeckKeyword&  keyword,
 
 void RSTConfig::handleRPTRST(const DeckKeyword&  keyword,
                              const ParseContext& parseContext,
-                             ErrorGuard&         errors,
-                             const bool          in_solution)
+                             ErrorGuard&         errors)
 {
     const auto& [mnemonics, basic_freq] = RPTRST(keyword, parseContext, errors, compositional);
 
@@ -652,14 +643,31 @@ void RSTConfig::handleRPTRST(const DeckKeyword&  keyword,
         // Insert_or_assign() to overwrite existing 'kw' elements.
         this->keywords.insert_or_assign(kw, num);
     }
+}
 
-    if (in_solution) {
-        // We're processing RPTRST in the SOLUTION section.  Mnemonics from
-        // RPTRST should persist beyond the SOLUTION section in this case so
-        // prune these from the list of solution-only keywords.
-        for (const auto& kw : mnemonics) {
-            this->solution_only_keywords.erase(kw.first);
-        }
+void RSTConfig::handleRPTRSTSOLUTION(const DeckKeyword&  keyword,
+                                     const ParseContext& parseContext,
+                                     ErrorGuard&         errors)
+{
+    const auto& [mnemonics, basic_freq] = RPTRST(keyword, parseContext, errors, compositional);
+
+    update_optional(this->basic, basic_freq.first);
+    update_optional(this->freq, basic_freq.second);
+
+    for (const auto& [kw, num] : mnemonics) {
+        // Insert_or_assign() to overwrite existing 'kw' elements.
+        this->keywords.insert_or_assign(kw, num);
+    }
+
+    // We're processing RPTRST in the SOLUTION section.  Mnemonics from
+    // RPTRST should persist beyond the SOLUTION section in this case so
+    // prune these from the list of solution-only keywords.
+    for (const auto& kw : mnemonics) {
+        this->solution_only_keywords.erase(kw.first);
+    }
+
+    if (this->basic.has_value() && this->basic.value() == 0) {
+        this->write_rst_file = false;
     }
 }
 

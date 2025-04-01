@@ -158,6 +158,9 @@ public:
         return this->getKeyword<double>(dhkw, 0);
     }
 
+    bool valid() const
+    { return rst_file_.operator bool(); }
+
 private:
     using RstFile = std::shared_ptr<ERst>;
 
@@ -271,6 +274,11 @@ const std::vector<bool>& Opm::EclIO::RestartFileView::logihead() const
 const std::vector<double>& Opm::EclIO::RestartFileView::doubhead() const
 {
     return this->pImpl_->doubhead();
+}
+
+bool Opm::EclIO::RestartFileView::valid() const
+{
+    return this->pImpl_->valid();
 }
 
 template <typename ElmType>

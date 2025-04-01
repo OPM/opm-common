@@ -102,6 +102,9 @@ Schedule make_schedule(std::string sched_input, bool add_grid = true) {
 
 BOOST_AUTO_TEST_CASE(TestIOConfigCreation) {
     const std::string deckData  = R"(
+SOLUTION
+RPTRST
+  BASIC=0 /
 SCHEDULE
 DATES             -- 1
  10  OKT 2008 /
@@ -452,7 +455,7 @@ PORO
   1000*0.25 /
 SOLUTION
 RPTRST  -- PRES,DEN,PCOW,PCOG,RK,VELOCITY,COMPRESS
-  6*0 1 0 1 9*0 1 7*0 1 0 3*1 / -- Static
+  1 5*0 1 0 1 9*0 1 7*0 1 0 3*1 / -- Static
 
 SCHEDULE
 -- 0
@@ -578,7 +581,7 @@ PORO
   1000*0.25 /
 SOLUTION
 RPTRST
- ACIP KRG KRO KRW NORST SFREQ=10 ALLPROPS/
+ ACIP KRG KRO KRW NORST SFREQ=10 ALLPROPS BASIC=0/
 SCHEDULE
 DATES             -- 1
  10  OKT 2008 /
@@ -592,6 +595,9 @@ DATES             -- 2
 )";
 
     const std::string deckData2 = R"(
+SOLUTION
+RPTRST
+  BASIC=0 /
 SCHEDULE
 DATES             -- 1
  10  OKT 2008 /
@@ -608,6 +614,9 @@ DATES             -- 3
 )";
 
     const char* deckData3 = R"(
+SOLUTION
+RPTRST
+  BASIC=0 /
 SCHEDULE
 DATES             -- 1
  10  OKT 2008 /
@@ -625,11 +634,7 @@ DATES             -- 3
 
     auto sched1 = make_schedule(deckData1, false);
 
-    // Observe that this is true due to some undocumented guessing that
-    // the initial restart file should be written if a RPTRST keyword is
-    // found in the SOLUTION section, irrespective of the content of that
-    // keyword.
-    BOOST_CHECK(  sched1.write_rst_file( 0 ) );
+    BOOST_CHECK( !sched1.write_rst_file( 0 ) );
     BOOST_CHECK( !sched1.write_rst_file( 1 ) );
     BOOST_CHECK(  sched1.write_rst_file( 2 ) );
 
@@ -722,8 +727,12 @@ PORO
   1000*0.25 /
 SOLUTION
 RPTRST
- ACIP KRG KRO KRW NORST SFREQ = 10 ALLPROPS/
+ ACIP KRG KRO KRW NORST SFREQ = 10 ALLPROPS BASIC=1/
 SCHEDULE
+RPTRST
+BASIC = 0
+/
+
 DATES             -- 1
  10  OKT 2008 /
 /
@@ -757,6 +766,9 @@ DEPTHZ
 
 PORO
   1000*0.25 /
+SOLUTION
+RPTRST
+BASIC=0 /
 SCHEDULE
 DATES             -- 1
  10  OKT 2008 /
@@ -773,6 +785,9 @@ DATES             -- 3
 )";
 
     const std::string deckData3 = R"(
+SOLUTION
+RPTRST
+BASIC = 0 /
 SCHEDULE
 DATES             -- 1
  10  OKT 2008 /
@@ -813,10 +828,6 @@ DATES             -- 3
     BOOST_CHECK_THROW( Schedule( deck0, es0, ctx, errors, {} ), std::exception );
 
 
-    // Observe that this is true due to some undocumented guessing that
-    // the initial restart file should be written if a RPTRST keyword is
-    // found in the SOLUTION section, irrespective of the content of that
-    // keyword.
     BOOST_CHECK(  sched1.write_rst_file( 0 ) );
     BOOST_CHECK( !sched1.write_rst_file( 1 ) );
     BOOST_CHECK(  sched1.write_rst_file( 2 ) );
@@ -858,6 +869,9 @@ DATES             -- 3
 BOOST_AUTO_TEST_CASE(RPTSCHED) {
 
     const std::string deckData1 = R"(
+SOLUTION
+RPTRST
+BASIC=0 /
 SCHEDULE
 DATES             -- 1
  10  OKT 2008 /
@@ -882,6 +896,9 @@ RUNSPEC
 DIMENS
  10 10 10 /
 GRID
+SOLUTION
+RPTRST
+'BASIC=0' /
 START             -- 0
 19 JUN 2007 /
 SCHEDULE
@@ -971,6 +988,9 @@ RUNSPEC
 DIMENS
  10 10 10 /
 GRID
+SOLUTION
+RPTRST
+BASIC=0 /
 START             -- 0
 19 JUN 2007 /
 SCHEDULE
@@ -1018,7 +1038,8 @@ RPTSCHED
 )";
 
     auto sched = make_schedule(data);
-    for( size_t ts = 0; ts < 4; ++ts )
+    BOOST_CHECK(sched.write_rst_file(0));
+    for( size_t ts = 1; ts < 4; ++ts )
         BOOST_CHECK( !sched.write_rst_file( ts ) );
 }
 
@@ -1043,7 +1064,8 @@ BASIC=1
 )";
 
     auto sched = make_schedule(data);
-    for( size_t ts = 0; ts < 3; ++ts )
+    BOOST_CHECK(sched.write_rst_file(0));
+    for( size_t ts = 1; ts < 3; ++ts )
         BOOST_CHECK( !sched.write_rst_file( ts ) );
 
     BOOST_CHECK( sched.write_rst_file( 3 ) );
@@ -1186,12 +1208,12 @@ DATES
     auto sched = make_schedule(data);
     /* BASIC=5, restart file is written at the first report step of each month.
      */
-    for (std::size_t ts : { 0, 1, 2, 3, 4, 7, 8, 11, 12, 13, 14, 15, 17, 18, 19, 20, 21, 23 }) {
+    for (std::size_t ts : { 1, 2, 3, 4, 7, 8, 11, 12, 13, 14, 15, 17, 18, 19, 20, 21, 23 }) {
         BOOST_CHECK_MESSAGE( !sched.write_rst_file(ts),
                              "Must not write restart file for excluded step " << ts );
     }
 
-    for (std::size_t ts : { 5, 6, 9, 10, 16, 22 }) {
+    for (std::size_t ts : { 0, 5, 6, 9, 10, 16, 22 }) {
         BOOST_CHECK_MESSAGE( sched.write_rst_file(ts),
                              "Restart file expected for step: " << ts );
     }
@@ -1358,9 +1380,8 @@ DATES
 )";
 
     auto sched = make_schedule(data);
-    /* RESTART=0, no restart file is written
-     */
-    for (std::size_t ts = 0; ts < 11; ++ts)
+    BOOST_CHECK( sched.write_rst_file(0));
+    for (std::size_t ts = 1; ts < 11; ++ts)
         BOOST_CHECK( !sched.write_rst_file( ts ) );
 }
 
@@ -1412,7 +1433,8 @@ DATES
     /* RESTART=0, no restart file is written
      */
     auto sched = make_schedule(data, false);
-    for (std::size_t ts = 0; ts < 11; ++ts)
+    BOOST_CHECK(sched.write_rst_file(0));
+    for (std::size_t ts = 1; ts < 11; ++ts)
         BOOST_CHECK( !sched.write_rst_file( ts ) );
 }
 

@@ -244,8 +244,11 @@ private:
 
     void handleRPTRST(const DeckKeyword& keyword,
                       const ParseContext& parse_context,
-                      ErrorGuard& errors,
-                      bool in_solution = false);
+                      ErrorGuard& errors);
+
+    void handleRPTRSTSOLUTION(const DeckKeyword& keyword,
+                              const ParseContext& parse_context,
+                              ErrorGuard& errors);
 
     void handleRPTSCHED(const DeckKeyword& keyword,
                         const ParseContext& parse_context,
