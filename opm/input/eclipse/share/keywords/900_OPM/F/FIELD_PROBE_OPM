@@ -15,8 +15,12 @@
     "FGMIR",
     "FGMIT",
     "FGMMO",
+    "FGMPR",
+    "FGMPT",
     "FGMST",
     "FGMTR",
-    "FGMUS"
+    "FGMUS",
+    "FWIPG",
+    "FWIPL"
   ]
 }

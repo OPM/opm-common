@@ -14,8 +14,10 @@
     "RGMIP",
     "RGMMO",
     "RGMST",
-    "RGMIM",
-    "RGMUS"
+    "RGMTR",
+    "RGMUS",
+    "RWIPG",
+    "RWIPL"
   ],
   "deck_name_regex_suffix": "_{0,2}[A-Z0-9]{3}",
   "data": {

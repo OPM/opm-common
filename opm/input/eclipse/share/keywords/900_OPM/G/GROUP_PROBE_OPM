@@ -6,7 +6,9 @@
   "comment": "Group summary keywords only supported by OPM-flow",
   "deck_names": [
     "GGMIR",
-    "GGMIT"
+    "GGMIT",
+    "GGMPR",
+    "GGMPT"
   ],
   "size": 1,
   "items": [
