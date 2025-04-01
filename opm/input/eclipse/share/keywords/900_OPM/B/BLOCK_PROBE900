@@ -3,14 +3,30 @@
   "sections": [
     "SUMMARY"
   ],
-  "comment": "E300 only",
+  "comment": "Block summary vectors supported only by OPM Flow",
   "deck_names": [
+    "BGCDI",
+    "BGCDM",
+    "BGKDI",
+    "BGKDM",
+    "BGKMO",
+    "BGKTR",
+    "BGMDS",
+    "BGMGP",
+    "BGMIP",
+    "BGMMO",
+    "BGMST",
+    "BGMTR",
+    "BGMUS",
     "BSTRSSXX",
     "BSTRSSYY",
     "BSTRSSZZ",
     "BSTRSSXY",
     "BSTRSSXZ",
-    "BSTRSSYZ"
+    "BSTRSSYZ",
+    "BWCD",
+    "BWIPG",
+    "BWIPL"
   ],
   "items": [
     {

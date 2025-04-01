@@ -237,6 +237,7 @@ struct SummaryConfigContext {
     bool is_rate(const std::string& keyword) {
         static const keyword_set ratekw {
             "OPR", "GPR", "WPR", "GLIR", "LPR", "NPR", "CPR", "VPR", "TPR", "TPC",
+            "GMPR",
 
             "OFR", "OFRF", "OFRS", "OFR+", "OFR-", "TFR",
             "GFR", "GFRF", "GFRS", "GFR+", "GFR-",
@@ -278,7 +279,7 @@ struct SummaryConfigContext {
             "OPT", "GPT", "WPT", "LPT", "NPT", "CPT",
             "VPT", "TPT", "OVPT", "GVPT", "WVPT",
             "WPTH", "OPTH", "GPTH", "LPTH",
-            "GPTS", "OPTS", "GPTF", "OPTF",
+            "GPTS", "OPTS", "GPTF", "OPTF", "GMPT",
 
             "OFT", "OFT+", "OFT-", "OFTL", "OFTG",
             "GFT", "GFT+", "GFT-", "GFTL", "GFTG",

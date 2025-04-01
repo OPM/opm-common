@@ -617,7 +617,6 @@ measure rate_unit< rt::reservoir_gas >() { return measure::rate; }
 template<> constexpr
 measure rate_unit< rt::mass_gas >() { return measure::mass_rate; }
 
-
 template<> constexpr
 measure rate_unit < rt::productivity_index_water > () { return measure::liquid_productivity_index; }
 
@@ -2272,7 +2271,6 @@ static const auto funs = std::unordered_map<std::string, ofun> {
     { "WWIR", rate< rt::wat, injector > },
     { "WOIR", rate< rt::oil, injector > },
     { "WGIR", rate< rt::gas, injector > },
-    { "WGMIR", rate< rt::mass_gas, injector > },
     { "WEIR", rate< rt::energy, injector > },
     { "WTIRHEA", rate< rt::energy, injector > },
     { "WNIR", rate< rt::solvent, injector > },
@@ -2305,7 +2303,6 @@ static const auto funs = std::unordered_map<std::string, ofun> {
     { "WWIT", mul( rate< rt::wat, injector >, duration ) },
     { "WOIT", mul( rate< rt::oil, injector >, duration ) },
     { "WGIT", mul( rate< rt::gas, injector >, duration ) },
-    { "WGMIT", mul( rate< rt::mass_gas, injector >, duration ) },
     { "WEIT", mul( rate< rt::energy, injector >, duration ) },
     { "WTITHEA", mul( rate< rt::energy, injector >, duration ) },
     { "WNIT", mul( rate< rt::solvent, injector >, duration ) },
@@ -2453,7 +2450,6 @@ static const auto funs = std::unordered_map<std::string, ofun> {
     { "WWVIR", rate< rt::reservoir_water, injector >},
     { "GOIR", rate< rt::oil, injector > },
     { "GGIR", rate< rt::gas, injector > },
-    { "GGMIR", rate< rt::mass_gas, injector > },
     { "GEIR", rate< rt::energy, injector > },
     { "GTIRHEA", rate< rt::energy, injector > },
     { "GNIR", rate< rt::solvent, injector > },
@@ -2468,7 +2464,6 @@ static const auto funs = std::unordered_map<std::string, ofun> {
     { "GWIT", mul( rate< rt::wat, injector >, duration ) },
     { "GOIT", mul( rate< rt::oil, injector >, duration ) },
     { "GGIT", mul( rate< rt::gas, injector >, duration ) },
-    { "GGMIT", mul( rate< rt::mass_gas, injector >, duration ) },
     { "GEIT", mul( rate< rt::energy, injector >, duration ) },
     { "GTITHEA", mul( rate< rt::energy, injector >, duration ) },
     { "GNIT", mul( rate< rt::solvent, injector >, duration ) },
@@ -2788,7 +2783,6 @@ static const auto funs = std::unordered_map<std::string, ofun> {
     { "FWIR", rate< rt::wat, injector > },
     { "FOIR", rate< rt::oil, injector > },
     { "FGIR", rate< rt::gas, injector > },
-    { "FGMIR", rate< rt::mass_gas, injector > },
     { "FEIR", rate< rt::energy, injector > },
     { "FTIRHEA", rate< rt::energy, injector > },
     { "FNIR", rate< rt::solvent, injector > },
@@ -2819,7 +2813,6 @@ static const auto funs = std::unordered_map<std::string, ofun> {
     { "FWIT", mul( rate< rt::wat, injector >, duration ) },
     { "FOIT", mul( rate< rt::oil, injector >, duration ) },
     { "FGIT", mul( rate< rt::gas, injector >, duration ) },
-    { "FGMIT", mul( rate< rt::mass_gas, injector >, duration ) },
     { "FEIT", mul( rate< rt::energy, injector >, duration ) },
     { "FTITHEA", mul( rate< rt::energy, injector >, duration ) },
     { "FNIT", mul( rate< rt::solvent, injector >, duration ) },
@@ -2990,6 +2983,28 @@ static const auto funs = std::unordered_map<std::string, ofun> {
     {"GEFF" , group_efficiency_factor},
     {"WEFF" , well_efficiency_factor},
     {"WEFFG", well_efficiency_factor_grouptree},
+
+    // co2/h2store
+    { "FGMIR",  rate< rt::mass_gas, injector > },
+    { "GGMIR",  rate< rt::mass_gas, injector > },
+    { "WGMIR",  rate< rt::mass_gas, injector > },
+    { "CGMIR",  crate< rt::mass_gas, injector > },
+    { "CGMIRL", cratel< rt::mass_gas, injector > },
+    { "FGMIT",  mul( rate< rt::mass_gas, injector >, duration ) },
+    { "GGMIT",  mul( rate< rt::mass_gas, injector >, duration ) },
+    { "WGMIT",  mul( rate< rt::mass_gas, injector >, duration ) },
+    { "CGMIT",  mul( crate< rt::mass_gas, injector >, duration ) },
+    { "CGMITL", mul( cratel< rt::mass_gas, injector >, duration ) },
+    { "FGMPR",  rate< rt::mass_gas, producer > },
+    { "GGMPR",  rate< rt::mass_gas, producer > },
+    { "WGMPR",  rate< rt::mass_gas, producer > },
+    { "CGMPR",  crate< rt::mass_gas, producer > },
+    { "CGMPRL", cratel< rt::mass_gas, producer > },
+    { "FGMPT",  mul( rate< rt::mass_gas, producer >, duration ) },
+    { "GGMPT",  mul( rate< rt::mass_gas, producer >, duration ) },
+    { "WGMPT",  mul( rate< rt::mass_gas, producer >, duration ) },
+    { "CGMPT",  mul( crate< rt::mass_gas, producer >, duration ) },
+    { "CGMPTL", mul( cratel< rt::mass_gas, producer >, duration ) },
 };
 
 static const auto single_values_units = UnitTable {
@@ -3177,6 +3192,24 @@ static const auto block_units = UnitTable {
     {"BSTRSSXY" , Opm::UnitSystem::measure::pressure},
     {"BSTRSSXZ" , Opm::UnitSystem::measure::pressure},
     {"BSTRSSYZ" , Opm::UnitSystem::measure::pressure},
+
+    // co2/h2store
+    {"BWCD" , Opm::UnitSystem::measure::moles},
+    {"BGCDI" , Opm::UnitSystem::measure::moles},
+    {"BGCDM" , Opm::UnitSystem::measure::moles},
+    {"BGKDI" , Opm::UnitSystem::measure::moles},
+    {"BGKDM" , Opm::UnitSystem::measure::moles},
+    {"BGKMO" , Opm::UnitSystem::measure::mass},
+    {"BGKTR" , Opm::UnitSystem::measure::mass},
+    {"BGMDS" , Opm::UnitSystem::measure::mass},
+    {"BGMGP" , Opm::UnitSystem::measure::mass},
+    {"BGMIP" , Opm::UnitSystem::measure::mass},
+    {"BGMMO" , Opm::UnitSystem::measure::mass},
+    {"BGMST" , Opm::UnitSystem::measure::mass},
+    {"BGMTR" , Opm::UnitSystem::measure::mass},
+    {"BGMUS" , Opm::UnitSystem::measure::mass},
+    {"BWIPG" , Opm::UnitSystem::measure::liquid_surface_volume},
+    {"BWIPL" , Opm::UnitSystem::measure::liquid_surface_volume},
 };
 
 static const auto aquifer_units = UnitTable {
