@@ -5,6 +5,8 @@
   ],
   "comment": "Region-level summary vectors supported only by OPM Flow",
   "deck_names": [
+    "RGCDI",
+    "RGCDM",
     "RGKDI",
     "RGKDM",
     "RGKMO",
@@ -16,6 +18,7 @@
     "RGMST",
     "RGMTR",
     "RGMUS",
+    "RWCD",
     "RWIPG",
     "RWIPL"
   ],
