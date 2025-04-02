@@ -2569,7 +2569,7 @@ BOOST_AUTO_TEST_CASE( TestParseDIFFMICP ) {
       /
 
       DIFFMICP
-        1.1 1.2 1.4 /
+        1.1 1.2 1.3 /
     )";
 
     Opm::Parser parser;
@@ -2581,7 +2581,7 @@ BOOST_AUTO_TEST_CASE( TestParseDIFFMICP ) {
     const DiffMICPTable& diffmicp = diffmicpTable.getTable<DiffMICPTable>(0);
     BOOST_CHECK_CLOSE( 1.1, diffmicp.getMicrobialDiffusion().front()*conversion_factor, epsilon() );
     BOOST_CHECK_CLOSE( 1.2, diffmicp.getOxygenDiffusion().front()*conversion_factor, epsilon());
-    BOOST_CHECK_CLOSE( 1.4, diffmicp.getUreaDiffusion().front()*conversion_factor, epsilon());
+    BOOST_CHECK_CLOSE( 1.3, diffmicp.getUreaDiffusion().front()*conversion_factor, epsilon());
 }
 
 BOOST_AUTO_TEST_CASE(TestParsePPCWMAX) {
