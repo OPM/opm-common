@@ -645,6 +645,7 @@ if(ENABLE_ECL_OUTPUT)
           tests/test_data_InterRegFlow.cpp
           tests/test_data_InterRegFlowMap.cpp
           tests/test_EclipseIO.cpp
+          tests/test_EclipseIO_LGR.cpp
           tests/test_Inplace.cpp
           tests/test_InteHEAD.cpp
           tests/test_LGOData.cpp
