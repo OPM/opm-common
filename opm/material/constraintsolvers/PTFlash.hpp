@@ -972,7 +972,7 @@ protected:
         // SecondaryNewtonMatrix xx;
         // pri_jac.solve(xx, sec_jac);
         pri_jac.invert();
-        sec_jac.template leftmultiply(pri_jac);
+        sec_jac.template leftmultiply<PrimaryNewtonMatrix>(pri_jac);
 
         ComponentVector x(numComponents), y(numComponents);
         InputEval L_eval = L;
