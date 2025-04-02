@@ -576,7 +576,7 @@ struct fn_args
     const Opm::EclipseGrid& grid;
     const Opm::Schedule& schedule;
     const std::vector< std::pair< std::string, double > > eff_factors;
-    const Opm::Inplace& initial_inplace;
+    const std::optional<Opm::Inplace>& initial_inplace;
     const Opm::Inplace& inplace;
     const Opm::UnitSystem& unit_system;
 };
@@ -1481,7 +1481,11 @@ inline quantity bhp( const fn_args& args ) {
 quantity roew(const fn_args& args) {
     const quantity zero = { 0, measure::identity };
     const auto& region_name = std::get<std::string>(*args.extra_data);
-    if (!args.initial_inplace.has( region_name, Opm::Inplace::Phase::OIL, args.num))
+    if (!args.initial_inplace.has_value())
+        return zero;
+
+    const auto& initial_inplace = args.initial_inplace.value();
+    if (!initial_inplace.has( region_name, Opm::Inplace::Phase::OIL, args.num))
         return zero;
 
     double oil_prod = 0;
@@ -1491,7 +1495,7 @@ quantity roew(const fn_args& args) {
             oil_prod += args.st.get(copt_key);
     }
     oil_prod = args.unit_system.to_si(Opm::UnitSystem::measure::volume, oil_prod);
-    return { oil_prod / args.initial_inplace.get( region_name, Opm::Inplace::Phase::OIL, args.num ) , measure::identity };
+    return { oil_prod / initial_inplace.get( region_name, Opm::Inplace::Phase::OIL, args.num ) , measure::identity };
 }
 
 template <bool injection = true>
@@ -3520,7 +3524,7 @@ namespace Evaluator {
         const Opm::Schedule& sched;
         const Opm::EclipseGrid& grid;
         const Opm::out::RegionCache& reg;
-        const Opm::Inplace initial_inplace;
+        const std::optional<Opm::Inplace>& initial_inplace;
     };
 
     struct SimulatorResults
@@ -4696,7 +4700,7 @@ public:
               const data::WellBlockAveragePressures& wbp,
               const data::GroupAndNetworkValues&     grp_nwrk_solution,
               GlobalProcessParameters                single_values,
-              const Inplace&                         initial_inplace,
+              const std::optional<Inplace>&          initial_inplace,
               const Opm::Inplace&                    inplace,
               const RegionParameters&                region_values,
               const BlockValues&                     block_values,
@@ -4849,7 +4853,7 @@ eval(const int                              sim_step,
      const data::WellBlockAveragePressures& wbp,
      const data::GroupAndNetworkValues&     grp_nwrk_solution,
      GlobalProcessParameters                single_values,
-     const Inplace&                         initial_inplace,
+     const std::optional<Inplace>&          initial_inplace,
      const Opm::Inplace&                    inplace,
      const RegionParameters&                region_values,
      const BlockValues&                     block_values,
@@ -5325,7 +5329,7 @@ void Summary::eval(SummaryState&                          st,
                    const data::WellBlockAveragePressures& wbp,
                    const data::GroupAndNetworkValues&     grp_nwrk_solution,
                    const GlobalProcessParameters&         single_values,
-                   const Inplace&                         initial_inplace,
+                   const std::optional<Inplace>&          initial_inplace,
                    const Inplace&                         inplace,
                    const RegionParameters&                region_values,
                    const BlockValues&                     block_values,
