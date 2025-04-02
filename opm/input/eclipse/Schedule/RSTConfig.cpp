@@ -21,6 +21,9 @@
 
 #include <opm/common/utility/OpmInputError.hpp>
 
+#include <opm/input/eclipse/Schedule/RPTKeywordNormalisation.hpp>
+#include <opm/input/eclipse/Schedule/RptschedKeywordNormalisation.hpp>
+
 #include <opm/input/eclipse/Utility/Functional.hpp>
 
 #include <opm/input/eclipse/Deck/DeckKeyword.hpp>
@@ -31,13 +34,11 @@
 #include <opm/input/eclipse/Parser/ParserKeywords/R.hpp>
 
 #include <algorithm>
-#include <array>
-#include <cctype>
 #include <cstddef>
-#include <iterator>
 #include <map>
 #include <optional>
 #include <stdexcept>
+#include <string>
 #include <utility>
 #include <vector>
 
@@ -45,451 +46,255 @@
 
 namespace {
 
-static constexpr auto SCHEDIntegerKeywords = std::array {
-    "PRES",    // 1
-    "SOIL",    // 2
-    "SWAT",    // 3
-    "SGAS",    // 4
-    "RS",      // 5
-    "RV",      // 6
-    "RESTART", // 7
-    "FIP",     // 8
-    "WELLS",   // 9
-    "VFPPROD", // 10
-    "SUMMARY", // 11
-    "CPU",     // 12
-    "AQUCT",   // 13
-    "WELSPECS",// 14
-    "NEWTON",  // 15
-    "POILD",   // 16
-    "PWAT",    // 17
-    "PWATD",   // 18
-    "PGAS",    // 19
-    "PGASD",   // 20
-    "FIPVE",   // 21
-    "WOC",     // 22
-    "GOC",     // 23
-    "WOCDIFF", // 24
-    "GOCDIFF", // 25
-    "WOCGOC",  // 26
-    "ODGAS",   // 27
-    "ODWAT",   // 28
-    "GDOWAT",  // 29
-    "WDOGAS",  // 30
-    "OILAPI",  // 31
-    "FIPITR",  // 32
-    "TBLK",    // 33
-    "PBLK",    // 34
-    "SALT",    // 35
-    "PLYADS",  // 36
-    "RK",      // 37
-    "FIPSALT", // 38
-    "TUNING",  // 39
-    "GI",      // 40
-    "ROCKC",   // 41
-    "SPENWAT", // 42
-    "FIPSOL",  // 43
-    "SURFBLK", // 44
-    "SURFADS", // 45
-    "FIPSURF", // 46
-    "TRADS",   // 47
-    "VOIL",    // 48
-    "VWAT",    // 49
-    "VGAS",    // 50
-    "DENO",    // 51
-    "DENW",    // 52
-    "DENG",    // 53
-    "GASCONC", // 54
-    "PB",      // 55
-    "PD",      // 56
-    "KRW",     // 57
-    "KRO",     // 58
-    "KRG",     // 59
-    "MULT",    // 60
-    "UNKNOWN", // 61 (not listed in the manual)
-    "UNKNOWN", // 62 (not listed in the manual)
-    "FOAM",    // 63
-    "FIPFOAM", // 64
-    "TEMP",    // 65
-    "FIPTEMP", // 66
-    "POTC",    // 67
-    "FOAMADS", // 68
-    "FOAMDCY", // 69
-    "FOAMMOB", // 70
-    "RECOV",   // 71
-    "FLOOIL",  // 72
-    "FLOWAT",  // 73
-    "FLOGAS",  // 74
-    "SGTRAP",  // 75
-    "FIPRESV", // 76
-    "FLOSOL",  // 77
-    "KRN",     // 78
-    "GRAD",    // 79
-};
+    /// Translate sequence of RPTRST integer controls to RPTRST mnemonics.
+    class RptRstIntegerControlHandler
+    {
+    public:
+        /// Default constructor.
+        RptRstIntegerControlHandler();
 
-static constexpr auto RSTIntegerKeywords = std::array {
-    "BASIC",      //  1
-    "FLOWS",      //  2
-    "FIP",        //  3
-    "POT",        //  4
-    "PBPD",       //  5
-    "FREQ",       //  6
-    "PRES",       //  7
-    "VISC",       //  8
-    "DEN",        //  9
-    "DRAIN",      // 10
-    "KRO",        // 11
-    "KRW",        // 12
-    "KRG",        // 13
-    "PORO",       // 14
-    "NOGRAD",     // 15
-    "NORST",      // 16 NORST - not supported
-    "SAVE",       // 17
-    "SFREQ",      // 18 SFREQ=?? - not supported
-    "ALLPROPS",   // 19
-    "ROCKC",      // 20
-    "SGTRAP",     // 21
-    "",           // 22 - Blank - ignored.
-    "RSSAT",      // 23
-    "RVSAT",      // 24
-    "GIMULT",     // 25
-    "SURFBLK",    // 26
-    "",           // 27 - PCOW, PCOG, special cased
-    "STREAM",     // 28 STREAM=?? - not supported
-    "RK",         // 29
-    "VELOCITY",   // 30
-    "COMPRESS",   // 31
-};
+        /// Translate integer controls to mnemonics.
+        ///
+        /// \param[in] controlValues RPTRST integer control values.
+        ///
+        /// \return Normalised RPTRST mnemonics and associate mnemonic
+        /// values.
+        Opm::RPTKeywordNormalisation::MnemonicMap
+        operator()(const std::vector<int>& controlValues) const;
 
-bool is_int(const std::string& x)
-{
-    auto is_digit = [](char c) { return std::isdigit(c); };
-
-    return !x.empty()
-        && ((x.front() == '-') || is_digit(x.front()))
-        && std::all_of(x.begin() + 1, x.end(), is_digit);
-}
-
-bool is_RPTRST_mnemonic(const std::string& kw)
-{
-    // Every ECLIPSE 100 keyword we want to not simply ignore when handling
-    // RPTRST.  The list is sorted, so we can use binary_search for log(n)
-    // lookup.  It is important that the list is sorted, but these are all
-    // the keywords listed in the manual and unlikely to change at all
-    static constexpr const char* valid[] = {
-        "ACIP",     "ACIS",     "ALLPROPS", "BASIC",    "BG",      "BO",
-        "BW",       "CELLINDX", "COMPRESS", "CONV",     "DEN",     "DENG",
-        "DENO",     "DENW",     "DRAIN",    "DRAINAGE", "DYNREG",  "FIP",
-        "FLORES",   "FLORES-",  "FLOWS",    "FLOWS-",   "FREQ",    "GIMULT",
-        "HYDH",     "HYDHFW",   "KRG",      "KRO",      "KRW",     "NOGRAD",
-        "NORST",    "NPMREB",   "PBPD",     "PCGW",     "PCOG",    "PCOW",
-        "PERMREDN", "POIS",     "PORO",     "PORV",     "POT",     "PRES",
-        "RESIDUAL", "RFIP",     "RK",       "ROCKC",    "RPORV",   "RSSAT",
-        "RSWSAT",   "RVSAT",    "RVWSAT",   "SAVE",     "SDENO",   "SFIP",
-        "SFREQ",    "SGTRAP",   "SIGM_MOD", "STREAM",   "SURFBLK", "TEMP",
-        "TRAS",     "VELGAS",   "VELOCITY", "VELOIL",   "VELWAT",  "VGAS",
-        "VISC",     "VOIL",     "VWAT",
+    private:
+        /// Mnemonic strings for RPTRST integer controls.
+        std::vector<std::string> keywords_{};
     };
 
-    return std::binary_search(std::begin(valid), std::end(valid), kw);
-}
+    RptRstIntegerControlHandler::RptRstIntegerControlHandler()
+        : keywords_ {
+                "BASIC",      //  1
+                "FLOWS",      //  2
+                "FIP",        //  3
+                "POT",        //  4
+                "PBPD",       //  5
+                "FREQ",       //  6
+                "PRES",       //  7
+                "VISC",       //  8
+                "DEN",        //  9
+                "DRAIN",      // 10
+                "KRO",        // 11
+                "KRW",        // 12
+                "KRG",        // 13
+                "PORO",       // 14
+                "NOGRAD",     // 15
+                "NORST",      // 16 NORST - not supported
+                "SAVE",       // 17
+                "SFREQ",      // 18 SFREQ=?? - not supported
+                "ALLPROPS",   // 19
+                "ROCKC",      // 20
+                "SGTRAP",     // 21
+                "",           // 22 - Blank - ignored.
+                "RSSAT",      // 23
+                "RVSAT",      // 24
+                "GIMULT",     // 25
+                "SURFBLK",    // 26
+                "",           // 27 - PCOW, PCOG, special cased
+                "STREAM",     // 28 STREAM=?? - not supported
+                "RK",         // 29
+                "VELOCITY",   // 30
+                "COMPRESS",   // 31
+            }
+    {}
 
-bool is_RPTRST_mnemonic_compositional(const std::string& kw)
-{
-    // Every compositional keyword we want to not simply ignore when handling
-    // RPTRST.  The list is sorted, so we can use binary_search for log(n)
-    // lookup.  It is important that the list is sorted, but these are all
-    // the keywords listed in the manual and unlikely to change at all
-    // TODO: FLOCn, LGLCn and TRMFxxxx are not in the list and needs to be handled separately
-    static constexpr const char* valid[] = {
-        "AIM",      "ALSURF",   "ALSTML",   "AMF",      "AQSP",    "AQPH",
-        "AREAC",    "ASPADS",   "ASPDOT",   "ASPENT",   "ASPFLO",  "ASPFLT",
-        "ASPFRD",   "ASPKDM",   "ASPLIM",   "ASPLUG",   "ASPRET",  "ASPREW",
-        "ASPVEL",   "ASPVOM",   "BASIC",    "BFORO",    "BG",      "BGAS",
-        "BO",       "BOIL",     "BSOL",     "BTFORG",   "BTFORO",  "BW",
-        "BWAT",     "CELLINDX", "CFL",      "CGAS",     "COLR",    "COILR",
-        "CONV",     "DENG",     "DENO",     "DENS",     "DENW",    "DYNREG",
-        "ENERGY",   "ESALTS",   "ESALTP",   "FFACTG",   "FFACTO",  "FFORO",
-        "FIP",      "FLOE",     "FLOGAS",   "FLOOIL",   "FLOWAT",  "FLORES",
-        "FLORES-",  "FMISC",    "FOAM",     "FOAMST",   "FOAMCNM", "FOAMMOB",
-        "FPC",      "FREQ",     "FUGG",     "FUGO",     "GASPOT",  "HGAS",
-        "HOIL",     "HSOL",     "HWAT",     "JV",       "KRG",     "KRO",
-        "KRW",      "KRGDM",    "KRODM",    "KRWDM",    "LGLCWAT", "LGLCHC",
-        "MLSC",     "MWAT",     "NCNG",     "NCNO",     "NPMREB",  "OILPOT",
-        "PART",     "PCGW",     "PCOG",     "PCOW",     "PERM_MDX","PERM_MDY",
-        "PERM_MDZ", "PERM_MOD", "PGAS",     "PKRG",     "PKRGR",   "PKRO",
-        "PKRORG",   "PKRORW",   "PKRW",     "PKRWR",    "POIL",    "POLY",
-        "POLYVM",   "PORV",     "PORV_MOD", "PPCG",     "PPCW",    "PRES_EFF",
-        "PRES",     "PRESMIN",  "PRESSURE", "PSAT",     "PSGCR",   "PSGL",
-        "PSGU",     "PSOGCR",   "PSOWCR",   "PSWCR",    "PSWL",    "PSWU",
-        "PVDPH",    "PWAT",     "RATP",     "RATS",     "RATT",    "REAC",
-        "RESTART",  "RFIP",     "ROCKC",    "ROMLS",    "RPORV",   "RS",
-        "RSSAT",    "RSW",      "RV",       "RVSAT",    "SFIP",    "SFIPGAS",
-        "SFIPOIL",  "SFIPWAT",  "SFOIL",    "SFSOL",    "SGAS",    "SGASMAX",
-        "SGCRH",    "SGTRH",    "SGTRAP",   "SIGM_MOD", "SMF",     "SMMULT",
-        "SOIL",     "SOILM",    "SOILMAX",  "SOILR",    "SOLADS",  "SOLADW",
-        "SOLWET",   "SSFRAC",   "SSOLID",   "STATE",    "STEN",    "SUBG",
-        "SURF",     "SURFCNM",  "SURFKR",   "SURFCP",   "SURFST",  "SWAT",
-        "SWATMIN",  "TCBULK",   "TCMULT",   "TEMP",     "TOTCOMP", "TREACM",
-        "TSUB",     "VGAS",     "VOIL",     "VMF",      "VWAT",    "WATPOT",
-        "XFW",      "XGAS",     "XMF",      "XWAT",     "YFW",     "YMF",
-        "ZMF"
-    };
+    Opm::RPTKeywordNormalisation::MnemonicMap
+    RptRstIntegerControlHandler::
+    operator()(const std::vector<int>& controlValues) const
+    {
+        auto mnemonics = Opm::RPTKeywordNormalisation::MnemonicMap{};
 
-    return std::binary_search(std::begin(valid), std::end(valid), kw);
-}
+        const auto PCO_index   = std::vector<int>::size_type{26};
+        const auto BASIC_index = std::vector<int>::size_type{ 0};
+        const auto numValues   =
+            std::min(controlValues.size(), this->keywords_.size());
 
-bool is_RPTSCHED_mnemonic(const std::string& kw)
-{
-    static constexpr const char* valid[] = {
-        "ALKALINE", "ANIONS",  "AQUCT",    "AQUFET",   "AQUFETP",  "BFORG",
-        "CATIONS",  "CPU",     "DENG",     "DENO",     "DENW",     "ESALPLY",
-        "ESALSUR",  "FFORG",   "FIP",      "FIPFOAM",  "FIPHEAT",  "FIPRESV",
-        "FIPSALT",  "FIPSOL",  "FIPSURF",  "FIPTEMP",  "FIPTR",    "FIPVE",
-        "FLOGAS",   "FLOOIL",  "FLOSOL",   "FLOWAT",   "FMISC",    "FOAM",
-        "FOAMADS",  "FOAMCNM", "FOAMDCY",  "FOAMMOB",  "GASCONC",  "GASSATC",
-        "GDOWAT",   "GI",      "GOC",      "GOCDIFF",  "GRAD",     "KRG",
-        "KRN",      "KRO",     "KRW",      "MULT",     "NEWTON",   "NOTHING",
-        "NPMREB",   "ODGAS",   "ODWAT",    "OILAPI",   "PB",       "PBLK",
-        "PBU",      "PD",      "PDEW",     "PGAS",     "PGASD",    "PLYADS",
-        "POIL",     "POILD",   "POLYMER",  "POTC",     "POTG",     "POTO",
-        "POTW",     "PRES",    "PRESSURE", "PWAT",     "PWATD",    "RECOV",
-        "RESTART",  "ROCKC",   "RS",       "RSSAT",    "RV",       "RVSAT",
-        "SALT",     "SGAS",    "SGTRAP",   "SIGM_MOD", "SOIL",     "SSOL",
-        "SUMMARY",  "SURFADS", "SURFBLK",  "SWAT",     "TBLK",     "TEMP",
-        "TRACER",   "TRADS",   "TRDCY",    "TUNING",   "VFPPROD",  "VGAS",
-        "VOIL",     "VWAT",    "WDOGAS",   "WELLS",    "WELSPECL", "WELSPECS",
-        "WOC",      "WOCDIFF", "WOCGOC",
-    };
-
-    return std::binary_search(std::begin(valid), std::end(valid), kw);
-}
-
-std::map<std::string, int>
-RPTSCHED_integer(const std::vector<int>& ints)
-{
-    const std::size_t size = std::min(ints.size(), SCHEDIntegerKeywords.size());
-
-    std::map<std::string, int> mnemonics;
-    for (std::size_t i = 0; i < size; ++i) {
-        mnemonics[SCHEDIntegerKeywords[i]] = ints[i];
-    }
-
-    return mnemonics;
-}
-
-std::map<std::string, int>
-RPTRST_integer(const std::vector<int>& ints)
-{
-    std::map<std::string, int> mnemonics;
-
-    const std::size_t PCO_index = 26;
-    const std::size_t BASIC_index = 0;
-
-    const std::size_t size = std::min(ints.size(), RSTIntegerKeywords.size());
-
-    // Fun with special cases.  ECLIPSE seems to ignore the BASIC=0,
-    // interpreting it as sort-of "don't modify".  Handle this by *not*
-    // adding/updating the integer list sourced BASIC mnemonic, should it be
-    // zero.  I'm not sure if this applies to other mnemonics, but the
-    // ECLIPSE manual indicates that any zero here should disable the
-    // output.
-    //
-    // See https://github.com/OPM/opm-parser/issues/886 for reference
-    //
-    // The current treatment of a mix on RPTRST and RPTSCHED integer
-    // keywords is probably not correct, but it is extremely difficult to
-    // comprehend exactly how it should be. Current code is a rather
-    // arbitrary hack to get through the tests.
-
-    if (size >= PCO_index) {
-        for (std::size_t i = 0; i < std::min(size, PCO_index); ++i) {
-            mnemonics[RSTIntegerKeywords[i]] = ints[i];
-        }
-    }
-    else {
-        if ((size > 0) && (ints[BASIC_index] != 0)) {
-            mnemonics[RSTIntegerKeywords[BASIC_index]] = ints[BASIC_index];
+        if ((numValues > BASIC_index) &&
+            ((numValues >= PCO_index) || (controlValues[BASIC_index] != 0)))
+        {
+            // Special case.  Leave BASIC untouched if number of control
+            // values is small and the control value itself is zero.
+            //
+            // Needed for RestartConfigTests.cpp:RPTSCHED_INTEGER2.
+            mnemonics.emplace_back(this->keywords_[BASIC_index],
+                                   controlValues  [BASIC_index]);
         }
 
-        for (std::size_t i = 1; i < std::min(size, PCO_index); ++i) {
-            mnemonics[RSTIntegerKeywords[i]] = ints[i];
+        for (auto i = BASIC_index + 1; i < std::min(PCO_index, numValues); ++i) {
+            mnemonics.emplace_back(this->keywords_[i], controlValues[i]);
         }
+
+        // Item 27 (index 26) sets both PCOW and PCOG, so we special case it
+        // here.
+        if (numValues > PCO_index) {
+            mnemonics.emplace_back("PCOW", controlValues[PCO_index]);
+            mnemonics.emplace_back("PCOG", controlValues[PCO_index]);
+        }
+
+        for (auto i = PCO_index + 1; i < numValues; ++i) {
+            mnemonics.emplace_back(this->keywords_[i], controlValues[i]);
+        }
+
+        return mnemonics;
     }
 
-    for (std::size_t i = PCO_index + 1; i < size; ++i) {
-        mnemonics[RSTIntegerKeywords[i]] = ints[i];
-    }
+    // -----------------------------------------------------------------------
 
-    // Item 27 (index 26) sets both PCOW and PCOG, so we special case it here.
-    if (ints.size() > PCO_index) {
-        mnemonics["PCOW"] = ints[PCO_index];
-        mnemonics["PCOG"] = ints[PCO_index];
-    }
-
-    return mnemonics;
-}
-
-template <typename F, typename G>
-std::map<std::string, int>
-RPT(const Opm::DeckKeyword&  keyword,
-    const Opm::ParseContext& parseContext,
-    Opm::ErrorGuard&         errors,
-    F                        is_mnemonic,
-    G                        integer_mnemonic)
-{
-    std::vector<std::string> items;
-
-    const auto& deck_items = keyword.getStringData();
-    const auto ints =  std::any_of(deck_items.begin(), deck_items.end(), is_int);
-    const auto strs = !std::all_of(deck_items.begin(), deck_items.end(), is_int);
-
-    // If any of the values are pure integers we assume this is meant to be
-    // the slash-terminated list of integers way of configuring.  If
-    // integers and non-integers are mixed, this is an error; however if the
-    // error mode RPT_MIXED_STYLE is permissive we try some desperate
-    // heuristics to interpret this as list of mnemonics.  See the
-    // documentation of the RPT_MIXED_STYLE error handler for more details.
-    if (! strs) {
-        auto stoi = [](const std::string& str) { return std::stoi(str); };
-        return integer_mnemonic(Opm::fun::map(stoi, deck_items));
-    }
-
-    if (ints) {
-        const auto msg = std::string {
-            "Error in keyword {keyword}--mixing "
-            "mnemonics and integers is not permitted\n"
-            "In {file} line {line}."
+    std::vector<std::string> rptRstBaseMnemonics()
+    {
+        return {
+            "ACIP",     "ACIS",     "ALLPROPS", "BASIC",    "BG",      "BO",
+            "BW",       "CELLINDX", "COMPRESS", "CONV",     "DEN",     "DENG",
+            "DENO",     "DENW",     "DRAIN",    "DRAINAGE", "DYNREG",  "FIP",
+            "FLORES",   "FLORES-",  "FLOWS",    "FLOWS-",   "FREQ",    "GIMULT",
+            "HYDH",     "HYDHFW",   "KRG",      "KRO",      "KRW",     "NOGRAD",
+            "NORST",    "NPMREB",   "PBPD",     "PCGW",     "PCOG",    "PCOW",
+            "PERMREDN", "POIS",     "PORO",     "PORV",     "POT",     "PRES",
+            "RESIDUAL", "RFIP",     "RK",       "ROCKC",    "RPORV",   "RSSAT",
+            "RSWSAT",   "RVSAT",    "RVWSAT",   "SAVE",     "SDENO",   "SFIP",
+            "SFREQ",    "SGTRAP",   "SIGM_MOD", "STREAM",   "SURFBLK", "TEMP",
+            "TRAS",     "VELGAS",   "VELOCITY", "VELOIL",   "VELWAT",  "VGAS",
+            "VISC",     "VOIL",     "VWAT",
         };
+    }
 
-        const auto& location = keyword.location();
-        parseContext.handleError(Opm::ParseContext::RPT_MIXED_STYLE,
-                                 msg, location, errors);
+    std::vector<std::string> rptRstCompositionalMnemonics()
+    {
+        return {
+            "AIM",      "ALSURF",   "ALSTML",   "AMF",      "AQSP",    "AQPH",
+            "AREAC",    "ASPADS",   "ASPDOT",   "ASPENT",   "ASPFLO",  "ASPFLT",
+            "ASPFRD",   "ASPKDM",   "ASPLIM",   "ASPLUG",   "ASPRET",  "ASPREW",
+            "ASPVEL",   "ASPVOM",   "BASIC",    "BFORO",    "BG",      "BGAS",
+            "BO",       "BOIL",     "BSOL",     "BTFORG",   "BTFORO",  "BW",
+            "BWAT",     "CELLINDX", "CFL",      "CGAS",     "COLR",    "COILR",
+            "CONV",     "DENG",     "DENO",     "DENS",     "DENW",    "DYNREG",
+            "ENERGY",   "ESALTS",   "ESALTP",   "FFACTG",   "FFACTO",  "FFORO",
+            "FIP",      "FLOE",     "FLOGAS",   "FLOOIL",   "FLOWAT",  "FLORES",
+            "FLORES-",  "FMISC",    "FOAM",     "FOAMST",   "FOAMCNM", "FOAMMOB",
+            "FPC",      "FREQ",     "FUGG",     "FUGO",     "GASPOT",  "HGAS",
+            "HOIL",     "HSOL",     "HWAT",     "JV",       "KRG",     "KRO",
+            "KRW",      "KRGDM",    "KRODM",    "KRWDM",    "LGLCWAT", "LGLCHC",
+            "MLSC",     "MWAT",     "NCNG",     "NCNO",     "NPMREB",  "OILPOT",
+            "PART",     "PCGW",     "PCOG",     "PCOW",     "PERM_MDX","PERM_MDY",
+            "PERM_MDZ", "PERM_MOD", "PGAS",     "PKRG",     "PKRGR",   "PKRO",
+            "PKRORG",   "PKRORW",   "PKRW",     "PKRWR",    "POIL",    "POLY",
+            "POLYVM",   "PORV",     "PORV_MOD", "PPCG",     "PPCW",    "PRES_EFF",
+            "PRES",     "PRESMIN",  "PRESSURE", "PSAT",     "PSGCR",   "PSGL",
+            "PSGU",     "PSOGCR",   "PSOWCR",   "PSWCR",    "PSWL",    "PSWU",
+            "PVDPH",    "PWAT",     "RATP",     "RATS",     "RATT",    "REAC",
+            "RESTART",  "RFIP",     "ROCKC",    "ROMLS",    "RPORV",   "RS",
+            "RSSAT",    "RSW",      "RV",       "RVSAT",    "SFIP",    "SFIPGAS",
+            "SFIPOIL",  "SFIPWAT",  "SFOIL",    "SFSOL",    "SGAS",    "SGASMAX",
+            "SGCRH",    "SGTRH",    "SGTRAP",   "SIGM_MOD", "SMF",     "SMMULT",
+            "SOIL",     "SOILM",    "SOILMAX",  "SOILR",    "SOLADS",  "SOLADW",
+            "SOLWET",   "SSFRAC",   "SSOLID",   "STATE",    "STEN",    "SUBG",
+            "SURF",     "SURFCNM",  "SURFKR",   "SURFCP",   "SURFST",  "SWAT",
+            "SWATMIN",  "TCBULK",   "TCMULT",   "TEMP",     "TOTCOMP", "TREACM",
+            "TSUB",     "VGAS",     "VOIL",     "VMF",      "VWAT",    "WATPOT",
+            "XFW",      "XGAS",     "XMF",      "XWAT",     "YFW",     "YMF",
+            "ZMF",
+        };
+    }
 
-        std::vector<std::string> stack;
-        for (std::size_t index = 0; index < deck_items.size(); ++index) {
-            if (is_int(deck_items[index])) {
-                if (stack.size() < 2) {
-                    throw Opm::OpmInputError {
-                        "Problem processing {keyword}\nIn {file} line {line}.", location
-                    };
-                }
+    class IsRptRstSchedMnemonic
+    {
+    public:
+        explicit IsRptRstSchedMnemonic(const bool isCompositional)
+            : mnemonics_ { isCompositional
+                           ? rptRstCompositionalMnemonics()
+                           : rptRstBaseMnemonics() }
+        {}
 
-                if (stack.back() == "=") {
-                    stack.pop_back();
-                    const std::string mnemonic = stack.back();
-                    stack.pop_back();
-
-                    items.insert(items.begin(), stack.begin(), stack.end());
-
-                    stack.clear();
-                    items.push_back(mnemonic + "=" + deck_items[index]);
-                }
-                else {
-                    throw Opm::OpmInputError {
-                        "Problem processing {keyword}\nIn {file} line {line}.", location
-                    };
-                }
-            }
-            else {
-                stack.push_back(deck_items[index]);
-            }
+        bool operator()(const std::string& mnemonic) const
+        {
+            return std::binary_search(this->mnemonics_.begin(),
+                                      this->mnemonics_.end(), mnemonic);
         }
 
-        items.insert(items.begin(), stack.begin(), stack.end());
-    }
-    else {
-        items = deck_items;
-    }
+    private:
+        std::vector<std::string> mnemonics_{};
+    };
 
-    std::map<std::string, int> mnemonics;
-    for (const auto& mnemonic : items) {
-        const auto sep_pos = mnemonic.find_first_of( "= " );
+    // -----------------------------------------------------------------------
 
-        const auto base = mnemonic.substr(0, sep_pos);
-        if (! is_mnemonic(base)) {
-            const auto msg_fmt =
-                fmt::format("Error in keyword {{keyword}}, "
-                            "unrecognized mnemonic {}\n"
-                            "In {{file}} line {{line}}.", base);
-
-            parseContext.handleError(Opm::ParseContext::RPT_UNKNOWN_MNEMONIC,
-                                     msg_fmt, keyword.location(), errors);
-            continue;
+    void expand_RPTRST_mnemonics(std::map<std::string, int>& mnemonics)
+    {
+        auto allprops_iter = mnemonics.find("ALLPROPS");
+        if (allprops_iter == mnemonics.end()) {
+            return;
         }
 
-        int val = 1;
-        if (sep_pos != std::string::npos) {
-            const auto value_pos = mnemonic.find_first_not_of("= ", sep_pos);
-            if (value_pos != std::string::npos) {
-                val = std::stoi(mnemonic.substr(value_pos));
-            }
+        const auto value = allprops_iter->second;
+        mnemonics.erase(allprops_iter);
+
+        for (const auto& kw : {
+                "BG"  , "BO"  , "BW"  ,
+                "KRG" , "KRO" , "KRW" ,
+                "VOIL", "VGAS", "VWAT",
+                "DEN" ,
+            })
+        {
+            mnemonics.insert_or_assign(kw, value);
+        }
+    }
+
+    std::optional<int>
+    extract(std::map<std::string, int>& mnemonics, const std::string& key)
+    {
+        auto iter = mnemonics.find(key);
+        if (iter == mnemonics.end()) {
+            return {};
         }
 
-        mnemonics.emplace(base, val);
+        const auto value = iter->second;
+        mnemonics.erase(iter);
+
+        return value;
     }
 
-    return mnemonics;
-}
-
-void expand_RPTRST_mnemonics(std::map<std::string, int>& mnemonics)
-{
-    auto allprops_iter = mnemonics.find("ALLPROPS");
-    if (allprops_iter == mnemonics.end()) {
-        return;
+    std::map<std::string, int>
+    asMap(const std::vector<std::pair<std::string, int>>& mnemonic_list)
+    {
+        return { mnemonic_list.begin(), mnemonic_list.end() };
     }
 
-    const auto value = allprops_iter->second;
-    mnemonics.erase(allprops_iter);
+    std::pair<
+        std::map<std::string, int>,
+        std::pair<std::optional<int>, std::optional<int>>
+        >
+    RPTRST(const Opm::DeckKeyword&  keyword,
+           const Opm::ParseContext& parseContext,
+           Opm::ErrorGuard&         errors,
+           const bool               compositional = false)
+    {
+        auto mnemonic_list = Opm::RPTKeywordNormalisation {
+            RptRstIntegerControlHandler{},
+            IsRptRstSchedMnemonic {compositional}
+        }.normaliseKeyword(keyword, parseContext, errors);
 
-    for (const auto& kw : {"BG", "BO", "BW", "KRG", "KRO", "KRW", "VOIL", "VGAS", "VWAT", "DEN"}) {
-        mnemonics[kw] = value;
+        auto mnemonics = asMap(mnemonic_list);
+
+        const auto basic = extract(mnemonics, "BASIC");
+        const auto freq  = extract(mnemonics, "FREQ");
+
+        expand_RPTRST_mnemonics(mnemonics);
+
+        return { mnemonics, { basic, freq }};
     }
-}
 
-std::optional<int> extract(std::map<std::string, int>& mnemonics, const std::string& key)
-{
-    auto iter = mnemonics.find(key);
-    if (iter == mnemonics.end()) {
-        return {};
+    template <typename T>
+    void update_optional(std::optional<T>&       target,
+                         const std::optional<T>& src)
+    {
+        if (src.has_value()) {
+            target = src;
+        }
     }
-
-    int value = iter->second;
-    mnemonics.erase(iter);
-    return value;
-}
-
-std::pair<
-    std::map<std::string, int>,
-    std::pair<std::optional<int>, std::optional<int>>
-    >
-RPTRST(const Opm::DeckKeyword&  keyword,
-       const Opm::ParseContext& parseContext,
-       Opm::ErrorGuard&         errors,
-       const bool               compositional = false)
-{
-    const auto is_mnemonic = compositional
-                             ? is_RPTRST_mnemonic_compositional
-                             : is_RPTRST_mnemonic;
-    auto mnemonics = RPT(keyword, parseContext, errors,
-                         is_mnemonic, RPTRST_integer);
-
-    const auto basic = extract(mnemonics, "BASIC");
-    const auto freq  = extract(mnemonics, "FREQ");
-
-    expand_RPTRST_mnemonics(mnemonics);
-
-    return { mnemonics, { basic, freq }};
-}
-
-template <typename T>
-void update_optional(std::optional<T>&       target,
-                     const std::optional<T>& src)
-{
-    if (src.has_value()) {
-        target = src;
-    }
-}
 
 } // Anonymous namespace
 
@@ -601,9 +406,8 @@ void RSTConfig::handleRPTSOL(const DeckKeyword&  keyword,
     // typical cases.  Older style integer controls are however only
     // partially handled and we may choose to refine this logic by
     // introducing predicates specific to the RPTSOL keyword later.
-    auto mnemonics = RPT(keyword, parseContext, errors,
-                         is_RPTSCHED_mnemonic,
-                         RPTSCHED_integer);
+    auto mnemonics =
+        asMap(normaliseRptSchedKeyword(keyword, parseContext, errors));
 
     const auto restart = extract(mnemonics, "RESTART");
     const auto request_restart =
@@ -635,7 +439,8 @@ void RSTConfig::handleRPTRST(const DeckKeyword&  keyword,
                              const ParseContext& parseContext,
                              ErrorGuard&         errors)
 {
-    const auto& [mnemonics, basic_freq] = RPTRST(keyword, parseContext, errors, compositional);
+    const auto& [mnemonics, basic_freq] =
+        RPTRST(keyword, parseContext, errors, compositional);
 
     this->update_schedule(basic_freq);
 
@@ -675,14 +480,19 @@ void RSTConfig::handleRPTSCHED(const DeckKeyword&  keyword,
                                const ParseContext& parseContext,
                                ErrorGuard&         errors)
 {
-    auto mnemonics = RPT(keyword, parseContext, errors,
-                         is_RPTSCHED_mnemonic,
-                         RPTSCHED_integer);
+    auto mnemonic_list = normaliseRptSchedKeyword(keyword, parseContext, errors);
 
-    if (const auto nothing = extract(mnemonics, "NOTHING"); nothing.has_value()) {
+    auto nothingPos = std::find_if(mnemonic_list.begin(), mnemonic_list.end(),
+                                   [](const auto& mnemonicPair)
+                                   { return mnemonicPair.first == "NOTHING"; });
+
+    if (nothingPos != mnemonic_list.end()) {
         this->basic = {};
         this->keywords.clear();
+        mnemonic_list.erase(mnemonic_list.begin(), nothingPos + 1);
     }
+
+    auto mnemonics = asMap(mnemonic_list);
 
     if (this->basic.value_or(2) <= 2) {
         const auto restart = extract(mnemonics, "RESTART");
