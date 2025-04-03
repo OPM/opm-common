@@ -24,6 +24,8 @@
 #include <unordered_map>
 #include <vector>
 
+#include <opm/input/eclipse/Schedule/Well/Connection.hpp>
+
 namespace Opm {
 
     class Segment;
@@ -42,6 +44,33 @@ namespace RestartIO {
 namespace Compsegs {
 
 
+struct Record {
+    int m_i;
+    int m_j;
+    int m_k;
+    // the branch number on the main stem is always 1.
+    // lateral branches should be numbered bigger than 1.
+    // a suboridnate branch must have a higher branch number than parent branch.
+    int m_branch_number;
+    double m_distance_start;
+    double m_distance_end;
+    Connection::Direction m_dir;
+
+    double center_depth;
+    // we do not handle thermal length for the moment
+    // double m_thermal_length;
+    int segment_number;
+    std::size_t m_seqIndex;
+
+    Record(int i_in, int j_in, int k_in, int branch_number_in, double distance_start_in, double distance_end_in,
+           Connection::Direction dir_in, double center_depth_in, int segment_number_in, std::size_t seqIndex_in);
+
+    void calculateCenterDepthWithSegments(const WellSegments& segment_set);
+
+
+};
+
+
 /*
   The COMPSEGS keyword defines a link between connections and segments. This
   linking is circular because information about the segments is embedded in the
@@ -50,13 +79,22 @@ namespace Compsegs {
   established.
 */
 
+  std::vector< Record > compsegsFromCOMPSEGSKeyword(const DeckKeyword& compsegsKeyword,
+                                                    const WellSegments& segments,
+                                                    const ScheduleGrid& grid,
+                                                    const ParseContext& parseContext,
+                                                    ErrorGuard& errors);
+
+
+    std::vector<Record> compsegsFromIntersections(const std::vector<std::pair<double, double>>& intersection_depths,
+                                                  const std::vector<std::array<int, 3>>& intersections_ijk,
+                                                  const WellSegments& segments);
+
     std::pair<WellConnections, WellSegments>
-    processCOMPSEGS(const DeckKeyword& compsegs,
+    processCOMPSEGS(const std::vector< Record >& compseg_records,
                     const WellConnections& input_connections,
                     const WellSegments& input_segments,
-                    const ScheduleGrid& grid,
-                    const ParseContext& parseContext,
-                    ErrorGuard& errors);
+                    const ScheduleGrid& grid);
 
 
     std::pair<WellConnections, WellSegments>
