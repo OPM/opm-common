@@ -30,6 +30,7 @@
 
 #include <algorithm>
 #include <array>
+#include <cassert>
 #include <cstddef>
 #include <ctime>
 #include <functional>
@@ -39,9 +40,6 @@
 #include <string>
 #include <utility>
 #include <vector>
-
-#include <fmt/format.h>
-#include <fmt/chrono.h>
 
 namespace {
 
@@ -106,8 +104,7 @@ namespace {
 
     struct context {
         const Opm::Schedule& sched;
-        const Opm::EclipseGrid& grid;
-        const Opm::UnitSystem& unit_system;
+        Opm::PrtFile::Reports::BlockDepthCallback blockDepth;
     };
 
     std::string format_number(const Opm::UnitSystem&         unit_system,
@@ -157,7 +154,7 @@ namespace {
         std::string header_line(const std::size_t row, const context& ctx) const
         {
             if ((row == header_height) && dimension) {
-                return ctx.unit_system.name(dimension.value());
+                return ctx.sched.getUnits().name(dimension.value());
             }
             else {
                 return header[row];
@@ -289,98 +286,6 @@ namespace {
 
 namespace {
 
-    std::string box_line(const std::pair<std::string,std::string>& textp,
-                         const std::size_t                         line)
-    {
-        if (line == 1 || line == 2) {
-            auto text = (line == 1) ? textp.first : textp.second;
-            left_align(text, 72);
-
-            return "*" + text + "*";
-        }
-        else {
-            return std::string(74, '*');
-        }
-    }
-
-    std::string wrap_string_for_header(const std::string& string)
-    {
-        auto r = string;
-
-        left_align(r, 27);
-        centre_align(r, 29);
-
-        return r;
-    }
-
-    std::string header_elap(const Opm::Schedule& schedule,
-                            const double         elapsedTime)
-    {
-        using M = Opm::UnitSystem::measure;
-
-        const auto& usys = schedule.getUnits();
-
-        const auto time_string = fmt::format
-            ("WELSPECS AT {:10.2f} {:<4}",
-             usys.from_si(M::time, elapsedTime),
-             usys.name(M::time));
-
-        return wrap_string_for_header(time_string);
-    }
-
-    std::string report_line(const Opm::Schedule& schedule,
-                            const std::size_t    reportStep)
-    {
-        auto simTime = schedule.simTime(reportStep);
-        const auto timepoint = *std::localtime(&simTime);
-
-        const auto report_string = fmt::format
-            ("REPORT {:>4} {:>14%d-%b-%Y}",
-             reportStep, timepoint);
-
-        return wrap_string_for_header(report_string);
-    }
-
-    std::string version_string()
-    {
-        const std::string header_version_string { "FLOW" };
-
-        return wrap_string_for_header(header_version_string); // TODO: Include in build setup and fetch
-    }
-
-    std::string run_time()
-    {
-        using namespace fmt::literals;
-
-        auto now = std::time(0);
-        const auto timepoint = *std::localtime(&now);
-
-        const auto header_run_time_string =
-            fmt::format("Run at {timepoint:%d-%b-%Y %H:%M}",
-                        "timepoint"_a = timepoint);
-
-        return wrap_string_for_header(header_run_time_string);
-    }
-
-    void write_report_header(std::ostream&        os,
-                             const Opm::Schedule& schedule,
-                             const double         elapsedTime,
-                             const std::size_t    report_step)
-    {
-        const std::string filler(29, ' ');
-        const std::pair<std::string,std::string> box_text { "", "" };
-
-        os << filler                             << box_line(box_text, 0) << filler           << record_separator
-           << header_elap(schedule, elapsedTime) << box_line(box_text, 1) << version_string() << record_separator
-           << report_line(schedule, report_step) << box_line(box_text, 2) << run_time()       << record_separator
-           << filler                             << box_line(box_text, 3) << filler           << record_separator
-           << section_separator;
-    }
-
-}
-
-namespace {
-
     struct WellWrapper
     {
         const Opm::Well& well;
@@ -408,9 +313,11 @@ namespace {
 
         std::string reference_depth(const context& ctx, std::size_t, std::size_t) const
         {
+            const auto& usys = ctx.sched.getUnits();
+
             return well.hasRefDepth()
-                ? format_number(ctx.unit_system, Opm::UnitSystem::measure::length, well.getRefDepth(), 6)
-                : format_number(ctx.unit_system, Opm::UnitSystem::measure::identity, -1.0e+20, 9);
+                ? format_number(usys, Opm::UnitSystem::measure::length, well.getRefDepth(), 6)
+                : format_number(usys, Opm::UnitSystem::measure::identity, -1.0e+20, 9);
         }
 
         std::string preferred_phase(const context&, std::size_t, std::size_t) const
@@ -460,7 +367,7 @@ namespace {
         {
             return (well.getDrainageRadius() == 0)
                 ? std::string { "P.EQUIV.R" }
-                : format_number(ctx.unit_system,
+                : format_number(ctx.sched.getUnits(),
                                 Opm::UnitSystem::measure::length,
                                 well.getDrainageRadius(), 6);
         }
@@ -610,7 +517,9 @@ namespace {
 
         std::string centre_depth(const context& ctx, std::size_t, std::size_t) const
         {
-            return format_number(ctx.unit_system, Opm::UnitSystem::measure::length, connection.depth(), 6);
+            return format_number(ctx.sched.getUnits(),
+                                 Opm::UnitSystem::measure::length,
+                                 connection.depth(), 6);
         }
 
         std::string open_shut(const context&, std::size_t, std::size_t) const
@@ -625,17 +534,23 @@ namespace {
 
         std::string conn_factor(const context& ctx, std::size_t, std::size_t) const
         {
-            return format_number(ctx.unit_system, Opm::UnitSystem::measure::transmissibility, connection.CF(), 10);
+            return format_number(ctx.sched.getUnits(),
+                                 Opm::UnitSystem::measure::transmissibility,
+                                 connection.CF(), 10);
         }
 
         std::string int_diam(const context& ctx, std::size_t, std::size_t) const
         {
-            return format_number(ctx.unit_system, Opm::UnitSystem::measure::length, connection.rw() * 2, 8);
+            return format_number(ctx.sched.getUnits(),
+                                 Opm::UnitSystem::measure::length,
+                                 connection.rw() * 2, 8);
         }
 
-        std::string kh_value(const context&, std::size_t, std::size_t) const
+        std::string kh_value(const context& ctx, std::size_t, std::size_t) const
         {
-            return std::to_string(connection.Kh()).substr(0, 9);
+            return format_number(ctx.sched.getUnits(),
+                                 Opm::UnitSystem::measure::effective_Kh,
+                                 connection.Kh(), 9);
         }
 
         std::string skin_factor(const context&, std::size_t, std::size_t) const
@@ -648,9 +563,11 @@ namespace {
             return "";
         }
 
-        const std::string dfactor(const context&, std::size_t, std::size_t) const
+        const std::string dfactor(const context& ctx, std::size_t, std::size_t) const
         {
-            return "0";
+            return format_number(ctx.sched.getUnits(),
+                                 Opm::UnitSystem::measure::dfactor,
+                                 connection.dFactor(), 12);
         }
 
     };
@@ -666,8 +583,8 @@ namespace {
        {  6, {"INT"                    ,"DIAM"                     ,"METRES"                 }, &WellConnection::int_diam        , right_align, Opm::UnitSystem::measure::length           },
        {  7, {"K  H"                   ,"VALUE"                    ,"MD.METRE"               }, &WellConnection::kh_value        , right_align },
        {  6, {"SKIN"                   ,"FACTOR"                   ,                         }, &WellConnection::skin_factor     , right_align },
-       { 10, {"CONNECTION"             ,"D-FACTOR 1"               ,"DAY/SM3"                }, &WellConnection::dfactor         ,             },
-       { 23, {"SATURATION SCALING DATA","SWMIN SWMAX SGMIN SGMAX 2",                         }, &WellConnection::sat_scaling     ,             }};
+       { 10, {"CONNECTION"             ,"D-FACTOR"                 ,"DAY/SM3"                }, &WellConnection::dfactor         ,             },
+       { 23, {"SATURATION SCALING DATA","SWMIN SWMAX SGMIN SGMAX 1",                         }, &WellConnection::sat_scaling     ,             }};
 
 }
 
@@ -707,39 +624,51 @@ namespace {
 
         std::string perf_start_length(const context& ctx, std::size_t, std::size_t) const
         {
-            return format_number(ctx.unit_system, Opm::UnitSystem::measure::length, perf_range.first, 6);
+            return format_number(ctx.sched.getUnits(),
+                                 Opm::UnitSystem::measure::length,
+                                 perf_range.first, 6);
         }
 
         std::string perf_mid_length(const context& ctx, std::size_t, std::size_t) const
         {
-            return format_number(ctx.unit_system, Opm::UnitSystem::measure::length,
+            return format_number(ctx.sched.getUnits(),
+                                 Opm::UnitSystem::measure::length,
                                  (perf_range.first + perf_range.second) / 2.0, 6);
         }
 
         std::string perf_end_length(const context& ctx, std::size_t, std::size_t) const
         {
-            return format_number(ctx.unit_system, Opm::UnitSystem::measure::length, perf_range.second, 6);
+            return format_number(ctx.sched.getUnits(),
+                                 Opm::UnitSystem::measure::length,
+                                 perf_range.second, 6);
         }
 
         std::string length_end_segmt(const context& ctx, std::size_t, std::size_t) const
         {
-            return format_number(ctx.unit_system, Opm::UnitSystem::measure::length, segment.totalLength(), 6);
+            return format_number(ctx.sched.getUnits(),
+                                 Opm::UnitSystem::measure::length,
+                                 segment.totalLength(), 6);
         }
 
         std::string connection_depth(const context& ctx, std::size_t, std::size_t) const
         {
-            return format_number(ctx.unit_system, Opm::UnitSystem::measure::length, connection.depth(), 6);
+            return format_number(ctx.sched.getUnits(),
+                                 Opm::UnitSystem::measure::length,
+                                 connection.depth(), 6);
         }
 
         std::string segment_depth(const context& ctx, std::size_t, std::size_t) const
         {
-            return format_number(ctx.unit_system, Opm::UnitSystem::measure::length, segment.depth(), 6);
+            return format_number(ctx.sched.getUnits(),
+                                 Opm::UnitSystem::measure::length,
+                                 segment.depth(), 6);
         }
 
         std::string grid_block_depth(const context& ctx, std::size_t, std::size_t) const
         {
-            return format_number(ctx.unit_system, Opm::UnitSystem::measure::length,
-                                 ctx.grid.getCellDepth(connection.global_index()), 6);
+            return format_number(ctx.sched.getUnits(),
+                                 Opm::UnitSystem::measure::length,
+                                 ctx.blockDepth(connection.global_index()), 6);
         }
 
         static void ws_format(std::string& string,
@@ -806,7 +735,9 @@ namespace {
 
         std::string total_length(const context& ctx, std::size_t, std::size_t) const
         {
-            return format_number(ctx.unit_system, Opm::UnitSystem::measure::length, segment.totalLength(), 6);
+            return format_number(ctx.sched.getUnits(),
+                                 Opm::UnitSystem::measure::length,
+                                 segment.totalLength(), 6);
         }
 
         std::string length(const context& ctx,
@@ -820,13 +751,16 @@ namespace {
             const auto& segments = well.getSegments();
             const auto& outlet_segment = segments.getFromSegmentNumber(segment.outletSegment());
 
-            return format_number(ctx.unit_system, Opm::UnitSystem::measure::length,
+            return format_number(ctx.sched.getUnits(),
+                                 Opm::UnitSystem::measure::length,
                                  segment.totalLength() - outlet_segment.totalLength(), 6);
         }
 
         std::string t_v_depth(const context& ctx, std::size_t, std::size_t) const
         {
-            return format_number(ctx.unit_system, Opm::UnitSystem::measure::length, segment.depth(), 6);
+            return format_number(ctx.sched.getUnits(),
+                                 Opm::UnitSystem::measure::length,
+                                 segment.depth(), 6);
         }
 
         std::string depth_change(const context& ctx,
@@ -840,7 +774,8 @@ namespace {
             const auto& segments = well.getSegments();
             const auto& outlet_segment = segments.getFromSegmentNumber(segment.outletSegment());
 
-            return format_number(ctx.unit_system, Opm::UnitSystem::measure::length,
+            return format_number(ctx.sched.getUnits(),
+                                 Opm::UnitSystem::measure::length,
                                  segment.depth() - outlet_segment.depth(), 6);
         }
 
@@ -850,7 +785,9 @@ namespace {
 
             return (number == Opm::Segment::invalidValue())
                 ? "0"
-                : format_number(ctx.unit_system, Opm::UnitSystem::measure::length, number, 6);
+                : format_number(ctx.sched.getUnits(),
+                                Opm::UnitSystem::measure::length,
+                                number, 6);
         }
 
         std::string roughness(const context& ctx, std::size_t, std::size_t) const
@@ -859,7 +796,9 @@ namespace {
 
             return (number == Opm::Segment::invalidValue())
                 ? "0"
-                : format_number(ctx.unit_system, Opm::UnitSystem::measure::length, number, 8);
+                : format_number(ctx.sched.getUnits(),
+                                Opm::UnitSystem::measure::length,
+                                number, 8);
         }
 
         std::string cross_section(const context&, std::size_t, std::size_t) const
@@ -873,7 +812,9 @@ namespace {
 
         std::string volume(const context& ctx, std::size_t, std::size_t) const
         {
-            return format_number(ctx.unit_system, Opm::UnitSystem::measure::volume, segment.volume(), 5);
+            return format_number(ctx.sched.getUnits(),
+                                 Opm::UnitSystem::measure::volume,
+                                 segment.volume(), 5);
         }
 
         std::string pressure_drop_mult(const context&, std::size_t, std::size_t) const
@@ -1019,10 +960,7 @@ namespace {
         }
 
         well_connection.print_footer(os, {
-                {1, "The well connection D-FACTOR is not "
-                 "implemented in OPM and the report "
-                 "will always show 0."},
-                {2, "The saturation scaling data has not "
+                {1, "The saturation scaling data has not "
                  "been implemented in the report and will "
                  "always be blank."}
             });
@@ -1102,26 +1040,19 @@ namespace {
 
 // ===========================================================================
 
-void Opm::PrtFile::Reports::wellSpecification(std::ostream&      os,
-                                              const int          /* wellSpecRequest */,
-                                              const double       elapsedTime,
-                                              const std::size_t  reportStep,
-                                              const Schedule&    schedule,
-                                              const EclipseGrid& grid,
-                                              const UnitSystem&  unit_system)
+void Opm::PrtFile::Reports::wellSpecification(const std::vector<std::string>& changedWells,
+                                              const std::size_t               reportStep,
+                                              const Schedule&                 schedule,
+                                              BlockDepthCallback              blockDepth,
+                                              std::ostream&                   os)
 {
-    const auto well_names = schedule.changed_wells(reportStep);
-    if (well_names.empty()) {
-        return;
-    }
+    assert (! changedWells.empty());
 
-    write_report_header(os, schedule, elapsedTime, reportStep);
-
-    const context ctx { schedule, grid, unit_system };
+    const context ctx { schedule, std::move(blockDepth) };
 
     std::vector<Well> changed_wells;
-    changed_wells.reserve(well_names.size());
-    std::transform(well_names.begin(), well_names.end(),
+    changed_wells.reserve(changedWells.size());
+    std::transform(changedWells.begin(), changedWells.end(),
                    std::back_inserter(changed_wells),
                    [&reportStep, &schedule](const std::string& wname)
                    { return schedule.getWell(wname, reportStep); });
@@ -1138,6 +1069,6 @@ void Opm::PrtFile::Reports::wellSpecification(std::ostream&      os,
         report_mswell_connection_data(os, well, ctx);
     }
 
-    report_group_hierarchy_data(os, ctx);
+    report_group_hierarchy_data(os, ctx, reportStep);
     report_group_levels_data(os, ctx, reportStep);
 }

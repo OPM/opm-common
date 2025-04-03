@@ -1191,35 +1191,39 @@ Defaulted grid coordinates is not allowed for COMPDAT as part of ACTIONX)"
         return this->snapshots[timeStep].groups.has(groupName);
     }
 
-    /*
-      This function will return a list of wells which have changed
-      *structurally* in the last report_step; wells where only production
-      settings have changed will not be included.
-    */
-    std::vector<std::string> Schedule::changed_wells(std::size_t report_step) const
+    // This function will return a list of wells which have changed
+    // *structurally* in the last report_step; wells where only production
+    // settings have changed will not be included.
+    std::vector<std::string>
+    Schedule::changed_wells(const std::size_t report_step,
+                            const std::size_t initialStep) const
     {
-        std::vector<std::string> wells;
-        const auto& state = this->snapshots[report_step];
-        const auto& all_wells = state.wells();
+        auto changedWells = std::vector<std::string> {};
 
-        if (report_step == 0)
-            std::transform( all_wells.begin(), all_wells.end(),
-                           std::back_inserter(wells),
-                           [](const auto& well_ref) { return well_ref.get().name(); });
+        const auto& currWells = this->snapshots[report_step].wells;
+
+        changedWells.reserve(currWells.size());
+
+        if (report_step == initialStep) {
+            // Time = 0 or time = simulation restart.
+            std::transform(currWells.begin(), currWells.end(),
+                           std::back_inserter(changedWells),
+                           [](const auto& wellPair)
+                           { return wellPair.first; });
+        }
         else {
-            const auto& prev_state = this->snapshots[report_step - 1];
-            for (const auto& well_ref : all_wells) {
-                const auto& wname = well_ref.get().name();
-                if (prev_state.wells.has(wname)) {
-                    const auto& prev_well = prev_state.wells.get( wname );
-                    if (!prev_well.cmp_structure(well_ref.get()))
-                        wells.push_back( wname );
-                } else
-                    wells.push_back( wname );
+            const auto& prevWells = this->snapshots[report_step - 1].wells;
+
+            for (const auto& [wname, wellPtr] : currWells) {
+                if (! prevWells.has(wname) ||
+                    ! prevWells(wname).cmp_structure(*wellPtr))
+                {
+                    changedWells.push_back(wname);
+                }
             }
         }
 
-        return wells;
+        return this->wellMatcher(report_step).sort(std::move(changedWells));
     }
 
 
