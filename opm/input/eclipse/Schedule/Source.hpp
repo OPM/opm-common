@@ -96,9 +96,6 @@ public:
 
 private:
     std::map<std::array<int, 3>, std::vector<SourceCell>> m_cells;
-
-    std::vector<SourceCell>::iterator findSourceCell(std::vector<SourceCell>& source_vec, SourceComponent input);
-    std::vector<SourceCell>::const_iterator findSourceCell(const std::vector<SourceCell>& source_vec, SourceComponent input) const;
 };
 
 } // namespace Opm

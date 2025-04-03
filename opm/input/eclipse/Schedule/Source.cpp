@@ -25,6 +25,14 @@
 #include <algorithm>
 #include <string>
 
+template <typename SourceCellSequence>
+auto findInSequence(SourceCellSequence&& sequence, const Opm::SourceComponent comp)
+{
+    return std::find_if(std::begin(sequence), std::end(sequence),
+                        [comp](const auto& source)
+                        { return source.component == comp; });
+}
+
 namespace Opm {
 namespace {
 
@@ -104,22 +112,6 @@ bool Source::SourceCell::isSame(const SourceComponent& other) const {
 
 // Source functions
 // ----------------
-std::vector<Source::SourceCell>::iterator 
-Source::findSourceCell(std::vector<Source::SourceCell>& source_vec, 
-                       SourceComponent input)
-{
-    auto componentSearch = [&input](const auto& source) { return source.isSame(input); };
-    return std::find_if(source_vec.begin(), source_vec.end(), componentSearch);
-}
-
-std::vector<Source::SourceCell>::const_iterator 
-Source::findSourceCell(const std::vector<Source::SourceCell>& source_vec, 
-                       SourceComponent input) const
-{
-    auto componentSearch = [&input](const auto& source) { return source.isSame(input); };
-    return std::find_if(source_vec.begin(), source_vec.end(), componentSearch);
-}
-
 void Source::updateSource(const DeckRecord& record)
 {
     const Source::SourceCell sourcenew(record);
@@ -129,7 +121,7 @@ void Source::updateSource(const DeckRecord& record)
 
     auto [cellPos, inserted] = this->m_cells.try_emplace(ijk, std::vector { sourcenew });
     if (! inserted) {
-        auto sourcePos = findSourceCell(cellPos->second, sourcenew.component);
+        auto sourcePos = findInSequence(cellPos->second, sourcenew.component);
     
         if (sourcePos != cellPos->second.end()) {
             *sourcePos = sourcenew;
@@ -170,7 +162,7 @@ double Source::rate(const std::array<int, 3>& ijk, SourceComponent input) const
 {
     auto it = m_cells.find(ijk);
     if (it != m_cells.end()) {
-        const auto it2 = findSourceCell(it->second, input);
+        const auto it2 = findInSequence(it->second, input);
                             
         return (it2 != it->second.end()) ? it2->rate : 0.0;
     }
@@ -183,7 +175,7 @@ std::optional<double> Source::hrate(const std::array<int, 3>& ijk, SourceCompone
 {
     auto it = m_cells.find(ijk);
     if (it != m_cells.end()) {
-        const auto it2 = findSourceCell(it->second, input);
+        const auto it2 = findInSequence(it->second, input);
 
         return (it2 != it->second.end()) ? it2->hrate : std::nullopt;
     }
@@ -196,7 +188,7 @@ std::optional<double> Source::temperature(const std::array<int, 3>& ijk, SourceC
 {
     auto it = m_cells.find(ijk);
     if (it != m_cells.end()) {
-        const auto it2 = findSourceCell(it->second, input);
+        const auto it2 = findInSequence(it->second, input);
 
         return (it2 != it->second.end()) ? it2->temperature : std::nullopt;
     }
