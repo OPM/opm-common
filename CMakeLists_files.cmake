@@ -817,6 +817,7 @@ if(ENABLE_ECL_INPUT)
     examples/opmhash.cpp
     examples/rst_deck.cpp
     examples/wellgraph.cpp
+    examples/networkgraph.cpp
     examples/make_ext_smry.cpp
     examples/co2brinepvt.cpp
     examples/hysteresis.cpp
