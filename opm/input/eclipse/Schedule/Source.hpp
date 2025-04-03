@@ -60,7 +60,6 @@ public:
         static SourceCell serializationTestObject();
 
         bool operator==(const SourceCell& other) const;
-        bool isSame(const SourceComponent& other) const;
 
         template<class Serializer>
         void serializeOp(Serializer& serializer)

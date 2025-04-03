@@ -100,14 +100,10 @@ Source::SourceCell Source::SourceCell::serializationTestObject()
 }
 
 bool Source::SourceCell::operator==(const Source::SourceCell& other) const {
-    return this->isSame(other.component) && 
+    return this->component == other.component && 
            this->rate == other.rate &&
            this->hrate == other.hrate &&
            this->temperature == other.temperature;
-}
-
-bool Source::SourceCell::isSame(const SourceComponent& other) const {
-    return this->component == other;
 }
 
 // Source functions
