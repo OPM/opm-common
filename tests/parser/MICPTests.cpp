@@ -24,34 +24,33 @@
 #include <opm/input/eclipse/Deck/Deck.hpp>
 #include <opm/input/eclipse/EclipseState/Runspec.hpp>
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
-#include <opm/input/eclipse/EclipseState/MICPpara.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/BiofilmTable.hpp>
 #include <opm/input/eclipse/Parser/Parser.hpp>
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
 
-BOOST_AUTO_TEST_CASE(TestMICP) {
+using namespace Opm;
 
+BOOST_AUTO_TEST_CASE( TestMICP ) {
     const char *data =
       "RUNSPEC\n"
       "WATER\n"
       "MICP\n";
 
-    Opm::Parser parser;
+    auto deck = Parser().parseString(data);
 
-    auto deck = parser.parseString(data);
-
-    Opm::Runspec runspec( deck );
+    Runspec runspec( deck );
     const auto& phases = runspec.phases();
     BOOST_CHECK_EQUAL( 1U, phases.size() );
-    BOOST_CHECK( phases.active( Opm::Phase::WATER ) );
+    BOOST_CHECK( phases.active( Phase::WATER ) );
     BOOST_CHECK( runspec.micp() );
 }
 
-BOOST_AUTO_TEST_CASE( TestMICPPARA ) {
+BOOST_AUTO_TEST_CASE( TestBiofPara ) {
     const char *data =
     "DIMENS\n"
     "10 10 10 /\n"
     "TABDIMS\n"
-    "3 /\n"
+    "2 /\n"
     "GRID\n"
     "DX\n"
     "1000*0.25 /\n"
@@ -62,36 +61,30 @@ BOOST_AUTO_TEST_CASE( TestMICPPARA ) {
     "TOPS\n"
     "100*0.25 /\n"
     "PROPS\n"
-    "MICPPARA\n"
-    " 1. 2. 3. 4. 5. 6. 7. 8. 9. 10. 11. 12. 13. 14. 15. 16. 17. /\n";
+    "BIOFPARA\n"
+    " 1. 2. 3. 4. 5. 6. 7. 8. 9. 10. 11. 12. 13. /\n"
+    "/\n";
 
-    Opm::Parser parser;
+    UnitSystem unitSystem = UnitSystem( UnitSystem::UnitType::UNIT_TYPE_METRIC );
 
-    Opm::UnitSystem unitSystem = Opm::UnitSystem( Opm::UnitSystem::UnitType::UNIT_TYPE_METRIC );
+    auto deck = Parser().parseString(data);
 
-    auto deck = parser.parseString(data);
+    double siFactor1 = unitSystem.parse("1/Time").getSIScaling();
 
-    double siFactor1 = unitSystem.parse("Length/Viscosity").getSIScaling();
-    double siFactor2 = unitSystem.parse("1/Time").getSIScaling();
-    double siFactor3 = unitSystem.parse("Permeability").getSIScaling();
-
-    Opm::EclipseState eclipsestate( deck );
-    const auto& MICPpara = eclipsestate.getMICPpara();
-    BOOST_CHECK_EQUAL( MICPpara.getDensityBiofilm()             , 1.  );
-    BOOST_CHECK_EQUAL( MICPpara.getDensityCalcite()             , 2.  );
-    BOOST_CHECK_EQUAL( MICPpara.getDetachmentRate()             , 3. * siFactor1  );
-    BOOST_CHECK_EQUAL( MICPpara.getCriticalPorosity()           , 4.  );
-    BOOST_CHECK_EQUAL( MICPpara.getFittingFactor()              , 5.  );
-    BOOST_CHECK_EQUAL( MICPpara.getHalfVelocityOxygen()         , 6.  );
-    BOOST_CHECK_EQUAL( MICPpara.getHalfVelocityUrea()           , 7.  );
-    BOOST_CHECK_EQUAL( MICPpara.getMaximumGrowthRate()          , 8. * siFactor2  );
-    BOOST_CHECK_EQUAL( MICPpara.getMaximumOxygenConcentration() , 9.  );
-    BOOST_CHECK_EQUAL( MICPpara.getMaximumUreaConcentration()   , 10. );
-    BOOST_CHECK_EQUAL( MICPpara.getMaximumUreaUtilization()     , 11. * siFactor2 );
-    BOOST_CHECK_EQUAL( MICPpara.getMicrobialAttachmentRate()    , 12. * siFactor2 );
-    BOOST_CHECK_EQUAL( MICPpara.getMicrobialDeathRate()         , 13. * siFactor2 );
-    BOOST_CHECK_EQUAL( MICPpara.getMinimumPermeability()        , 14. * siFactor3 );
-    BOOST_CHECK_EQUAL( MICPpara.getOxygenConsumptionFactor()    , 15. );
-    BOOST_CHECK_EQUAL( MICPpara.getToleranceBeforeClogging()    , 16. );
-    BOOST_CHECK_EQUAL( MICPpara.getYieldGrowthCoefficient()     , 17. );
+    TableManager tables(deck);
+    const auto& biofilmTables = tables.getBiofilmTables();
+    const BiofilmTable& biofilmTable = biofilmTables.getTable<BiofilmTable>(0);
+    BOOST_CHECK_EQUAL( biofilmTable.getDensityBiofilm().front()                , 1.  );
+    BOOST_CHECK_EQUAL( biofilmTable.getMicrobialDeathRate().front()            , 2.  * siFactor1 );
+    BOOST_CHECK_EQUAL( biofilmTable.getMaximumGrowthRate().front()             , 3.  * siFactor1 );
+    BOOST_CHECK_EQUAL( biofilmTable.getHalfVelocityOxygen().front()            , 4.  );
+    BOOST_CHECK_EQUAL( biofilmTable.getYieldGrowthCoefficient().front()        , 5.  );
+    BOOST_CHECK_EQUAL( biofilmTable.getOxygenConsumptionFactor().front()       , 6.  );
+    BOOST_CHECK_EQUAL( biofilmTable.getMicrobialAttachmentRate().front()       , 7.  * siFactor1 );
+    BOOST_CHECK_EQUAL( biofilmTable.getDetachmentRate().front()                , 8.  * siFactor1 );
+    BOOST_CHECK_EQUAL( biofilmTable.getDetachmentExponent().front()            , 9.  );
+    BOOST_CHECK_EQUAL( biofilmTable.getMaximumUreaUtilization().front()        , 10. * siFactor1 );
+    BOOST_CHECK_EQUAL( biofilmTable.getHalfVelocityUrea().front()              , 11. );
+    BOOST_CHECK_EQUAL( biofilmTable.getDensityCalcite().front()                , 12. );
+    BOOST_CHECK_EQUAL( biofilmTable.getYieldUreaToCalciteCoefficient().front() , 13. );
 }

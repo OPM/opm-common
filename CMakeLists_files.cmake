@@ -121,7 +121,6 @@ if(ENABLE_ECL_INPUT)
     opm/input/eclipse/EclipseState/EclipseConfig.cpp
     opm/input/eclipse/EclipseState/EclipseState.cpp
     opm/input/eclipse/EclipseState/EndpointScaling.cpp
-    opm/input/eclipse/EclipseState/MICPpara.cpp
     opm/input/eclipse/EclipseState/Phase.cpp
     opm/input/eclipse/EclipseState/Runspec.cpp
     opm/input/eclipse/EclipseState/TracerConfig.cpp
@@ -1236,7 +1235,6 @@ if(ENABLE_ECL_INPUT)
        opm/input/eclipse/EclipseState/Grid/MinpvMode.hpp
        opm/input/eclipse/EclipseState/EndpointScaling.hpp
        opm/input/eclipse/EclipseState/TracerConfig.hpp
-       opm/input/eclipse/EclipseState/MICPpara.hpp
        opm/input/eclipse/EclipseState/WagHysteresisConfig.hpp
        opm/input/eclipse/EclipseState/Tables/DenT.hpp
        opm/input/eclipse/EclipseState/Tables/JouleThomson.hpp
@@ -1327,6 +1325,8 @@ if(ENABLE_ECL_INPUT)
        opm/input/eclipse/EclipseState/Tables/Sof3Table.hpp
        opm/input/eclipse/EclipseState/Tables/SgofTable.hpp
        opm/input/eclipse/EclipseState/Tables/TracerVdTable.hpp
+       opm/input/eclipse/EclipseState/Tables/BiofilmTable.hpp
+       opm/input/eclipse/EclipseState/Tables/DiffMICPTable.hpp
        opm/input/eclipse/EclipseState/Co2StoreConfig.hpp
        opm/input/eclipse/EclipseState/EclipseState.hpp
        opm/input/eclipse/EclipseState/EclipseConfig.hpp

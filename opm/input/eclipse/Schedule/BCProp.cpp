@@ -81,6 +81,15 @@ BCComponent component(const std::string& s) {
     if (s == "POLYMER")
         return BCComponent::POLYMER;
 
+    if (s == "MICR")
+        return BCComponent::MICR;
+
+    if (s == "OXYG")
+        return BCComponent::OXYG;
+
+    if (s == "UREA")
+        return BCComponent::UREA;
+
     if (s == "NONE")
         return BCComponent::NONE;
 

@@ -45,6 +45,15 @@ SourceComponent component(const std::string& s) {
     if (s == "POLYMER")
         return SourceComponent::POLYMER;
 
+    if (s == "MICR")
+        return SourceComponent::MICR;
+
+    if (s == "OXYG")
+        return SourceComponent::OXYG;
+
+    if (s == "UREA")
+        return SourceComponent::UREA;
+
     if (s == "NONE")
         return SourceComponent::NONE;
 

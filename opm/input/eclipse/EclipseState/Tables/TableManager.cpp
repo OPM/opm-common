@@ -85,6 +85,8 @@
 #include <opm/input/eclipse/EclipseState/Tables/RvwvdTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/PcfactTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/PermfactTable.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/BiofilmTable.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/DiffMICPTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/SaltvdTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/SaltpvdTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/SaltSolubilityTable.hpp>
@@ -476,6 +478,8 @@ std::optional<JFunc> make_jfunc(const Deck& deck) {
         addTables( "SALTSOL", m_tabdims.getNumPVTTables());
         addTables( "PERMFACT",  m_tabdims.getNumSatTables());
         addTables( "PCFACT",  m_tabdims.getNumSatTables());
+        addTables( "BIOFPARA", m_tabdims.getNumSatTables());
+        addTables( "DIFFMICP", m_tabdims.getNumPVTTables());
 
         addTables( "AQUTAB", m_aqudims.getNumInfluenceTablesCT());
         {
@@ -546,6 +550,8 @@ std::optional<JFunc> make_jfunc(const Deck& deck) {
         initSimpleTableContainer<SaltsolTable>(deck, "SALTSOL" , m_tabdims.getNumPVTTables());
         initSimpleTableContainer<PermfactTable>(deck, "PERMFACT" , m_tabdims.getNumSatTables());
         initSimpleTableContainer<PcfactTable>(deck, "PCFACT" , m_tabdims.getNumSatTables());
+        initSimpleTableContainer<BiofilmTable>(deck, "BIOFPARA" , m_tabdims.getNumSatTables());
+        initSimpleTableContainer<DiffMICPTable>(deck, "DIFFMICP" , m_tabdims.getNumPVTTables());
         initSimpleTableContainer<AqutabTable>(deck, "AQUTAB" , m_aqudims.getNumInfluenceTablesCT());
         {
             size_t numEndScaleTables = ParserKeywords::ENDSCALE::NTENDP::defaultValue;
@@ -953,7 +959,7 @@ std::optional<JFunc> make_jfunc(const Deck& deck) {
         return getTables("SALTPVD");
     }
 
-   const TableContainer& TableManager::getSaltsolTables() const {
+    const TableContainer& TableManager::getSaltsolTables() const {
         return getTables("SALTSOL");
     }
 
@@ -963,6 +969,14 @@ std::optional<JFunc> make_jfunc(const Deck& deck) {
     
     const TableContainer& TableManager::getPermfactTables() const {
         return getTables("PERMFACT");
+    }
+
+    const TableContainer& TableManager::getBiofilmTables() const {
+        return getTables("BIOFPARA");
+    }
+
+    const TableContainer& TableManager::getDiffMICPTables() const {
+        return getTables("DIFFMICP");
     }
 
     const TableContainer& TableManager::getEnkrvdTables() const {
