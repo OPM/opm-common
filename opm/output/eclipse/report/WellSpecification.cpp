@@ -17,7 +17,7 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <opm/output/eclipse/WriteRPT.hpp>
+#include <opm/output/eclipse/report/WellSpecification.hpp>
 
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 
@@ -313,20 +313,32 @@ namespace {
         return r;
     }
 
-    std::string header_days([[maybe_unused]] const Opm::Schedule& schedule,
-                            [[maybe_unused]] const std::size_t    report_step)
+    std::string header_elap(const Opm::Schedule& schedule,
+                            const double         elapsedTime)
     {
-        const std::string header_days_string { "WELSPECS AT       0.00 DAYS" };
+        using M = Opm::UnitSystem::measure;
 
-        return wrap_string_for_header(header_days_string); // TODO: Calculate properly
+        const auto& usys = schedule.getUnits();
+
+        const auto time_string = fmt::format
+            ("WELSPECS AT {:10.2f} {:<4}",
+             usys.from_si(M::time, elapsedTime),
+             usys.name(M::time));
+
+        return wrap_string_for_header(time_string);
     }
 
-    std::string report_line([[maybe_unused]] const Opm::Schedule& schedule,
-                            [[maybe_unused]] const std::size_t    report_step)
+    std::string report_line(const Opm::Schedule& schedule,
+                            const std::size_t    reportStep)
     {
-        const std::string report_line_string { "REPORT   0     31 DEC 2007" };
+        auto simTime = schedule.simTime(reportStep);
+        const auto timepoint = *std::localtime(&simTime);
 
-        return wrap_string_for_header(report_line_string); // TODO: Calculate properly
+        const auto report_string = fmt::format
+            ("REPORT {:>4} {:>14%d-%b-%Y}",
+             reportStep, timepoint);
+
+        return wrap_string_for_header(report_string);
     }
 
     std::string version_string()
@@ -352,13 +364,14 @@ namespace {
 
     void write_report_header(std::ostream&        os,
                              const Opm::Schedule& schedule,
+                             const double         elapsedTime,
                              const std::size_t    report_step)
     {
         const std::string filler(29, ' ');
         const std::pair<std::string,std::string> box_text { "", "" };
 
         os << filler                             << box_line(box_text, 0) << filler           << record_separator
-           << header_days(schedule, report_step) << box_line(box_text, 1) << version_string() << record_separator
+           << header_elap(schedule, elapsedTime) << box_line(box_text, 1) << version_string() << record_separator
            << report_line(schedule, report_step) << box_line(box_text, 2) << run_time()       << record_separator
            << filler                             << box_line(box_text, 3) << filler           << record_separator
            << section_separator;
@@ -1015,23 +1028,94 @@ namespace {
             });
     }
 
+    void report_mswell_segment_data(std::ostream&    os,
+                                    const Opm::Well& well,
+                                    const context&   ctx)
+    {
+        const report<Opm::Well, WellSegment, 3> msw_data {
+            "MULTI-SEGMENT WELL: SEGMENT STRUCTURE", msw_well_table, ctx
+        };
+
+        msw_data.print_header(os);
+
+        std::size_t sub_report {0};
+        const auto& segments = well.getSegments();
+
+        for (const auto& branch : segments.branches()) {
+            const auto& branch_segments = segments.branchSegments(branch);
+
+            std::vector<WellSegment> wrapper_data;
+            wrapper_data.reserve(branch_segments.size());
+
+            std::transform(branch_segments.begin(),
+                           branch_segments.end(),
+                           std::back_inserter(wrapper_data),
+                           [&well](const Opm::Segment& segment)
+                           { return WellSegment { well, segment }; });
+
+            const auto separator = (sub_report + 1 == segments.branches().size())
+                ? '=' : '-';
+
+            msw_data.print_data(os, wrapper_data, sub_report, separator);
+
+            ++sub_report;
+        }
+
+        msw_data.print_footer(os, {{1, "The pressure drop multiplier is not "
+                                        "implemented in opm/flow and will "
+                                        "always show the default value 1.0." }});
+    }
+
+    void report_mswell_connection_data(std::ostream&    os,
+                                       const Opm::Well& well,
+                                       const context&   ctx)
+    {
+        const report<Opm::Well, SegmentConnection, 3> msw_connection {
+            "MULTI-SEGMENT WELL: CONNECTION DATA", msw_connection_table, ctx
+        };
+
+        msw_connection.print_header(os);
+
+        const auto& connections = well.getConnections();
+        const auto& segments = well.getSegments();
+
+        std::vector<SegmentConnection> wrapper_data;
+        wrapper_data.reserve(connections.size());
+
+        std::transform(connections.begin(), connections.end(),
+                       std::back_inserter(wrapper_data),
+                       [&well, &segments] (const Opm::Connection& connection)
+                       {
+                           return SegmentConnection {
+                               well, connection,
+                               segments.getFromSegmentNumber(connection.segment()),
+                               *connection.perf_range()
+                           };
+                       });
+
+        msw_connection.print_data(os, wrapper_data, 0, '=');
+
+        msw_connection.print_footer(os, {});
+    }
+
 }
 
 // ===========================================================================
 
-void Opm::RptIO::workers::wellSpecification(std::ostream&      os,
-                                            const int          /* wellSpecRequest */,
-                                            const Schedule&    schedule,
-                                            const EclipseGrid& grid,
-                                            const UnitSystem&  unit_system,
-                                            const std::size_t  report_step)
+void Opm::PrtFile::Reports::wellSpecification(std::ostream&      os,
+                                              const int          /* wellSpecRequest */,
+                                              const double       elapsedTime,
+                                              const std::size_t  reportStep,
+                                              const Schedule&    schedule,
+                                              const EclipseGrid& grid,
+                                              const UnitSystem&  unit_system)
 {
-    const auto well_names = schedule.changed_wells(report_step);
+    const auto well_names = schedule.changed_wells(reportStep);
     if (well_names.empty()) {
         return;
     }
 
-    write_report_header(os, schedule, report_step);
+    write_report_header(os, schedule, elapsedTime, reportStep);
 
     const context ctx { schedule, grid, unit_system };
 
@@ -1039,8 +1123,8 @@ void Opm::RptIO::workers::wellSpecification(std::ostream&      os,
     changed_wells.reserve(well_names.size());
     std::transform(well_names.begin(), well_names.end(),
                    std::back_inserter(changed_wells),
-                   [&report_step, &schedule](const std::string& wname)
-                   { return schedule.getWell(wname, report_step); });
+                   [&reportStep, &schedule](const std::string& wname)
+                   { return schedule.getWell(wname, reportStep); });
 
     report_well_specification_data(os, changed_wells, ctx);
     report_well_connection_data(os, changed_wells, ctx);
@@ -1050,73 +1134,10 @@ void Opm::RptIO::workers::wellSpecification(std::ostream&      os,
             continue;
         }
 
-        {
-            const report<Well, WellSegment, 3> msw_data {
-                "MULTI-SEGMENT WELL: SEGMENT STRUCTURE", msw_well_table, ctx
-            };
-
-            msw_data.print_header(os);
-
-            std::size_t sub_report {0};
-            const auto& segments = well.getSegments();
-
-            for (const auto& branch : segments.branches()) {
-                const auto& branch_segments = segments.branchSegments(branch);
-
-                std::vector<WellSegment> wrapper_data;
-                wrapper_data.reserve(branch_segments.size());
-
-                std::transform(branch_segments.begin(),
-                               branch_segments.end(),
-                               std::back_inserter(wrapper_data),
-                               [&well](const Segment& segment)
-                               { return WellSegment { well, segment }; });
-
-                const auto separator = (sub_report + 1 == segments.branches().size())
-                    ? '=' : '-';
-
-                msw_data.print_data(os, wrapper_data, sub_report, separator);
-
-                ++sub_report;
-            }
-
-            msw_data.print_footer(os, {{1, "The pressure drop multiplier is not "
-                                            "implemented in opm/flow and will "
-                                            "always show the default value 1.0." }});
-        }
-
-        {
-            const report<Well, SegmentConnection, 3> msw_connection {
-                "MULTI-SEGMENT WELL: CONNECTION DATA", msw_connection_table, ctx
-            };
-
-            msw_connection.print_header(os);
-
-            {
-                const auto& connections = well.getConnections();
-                const auto& segments = well.getSegments();
-
-                std::vector<SegmentConnection> wrapper_data;
-                wrapper_data.reserve(connections.size());
-
-                std::transform(connections.begin(), connections.end(),
-                               std::back_inserter(wrapper_data),
-                               [&well, &segments] (const Connection& connection)
-                               {
-                                   return SegmentConnection {
-                                       well, connection,
-                                       segments.getFromSegmentNumber(connection.segment()),
-                                       *connection.perf_range()
-                                   };
-                               });
-
-                msw_connection.print_data(os, wrapper_data, 0, '=');
-            }
-
-            msw_connection.print_footer(os, {});
-        }
+        report_mswell_segment_data(os, well, ctx);
+        report_mswell_connection_data(os, well, ctx);
     }
 
     report_group_hierarchy_data(os, ctx);
-    report_group_levels_data(os, ctx, report_step);
+    report_group_levels_data(os, ctx, reportStep);
 }

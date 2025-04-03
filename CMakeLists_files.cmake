@@ -459,7 +459,7 @@ if(ENABLE_ECL_OUTPUT)
           opm/output/eclipse/WriteInit.cpp
           opm/output/eclipse/WriteRFT.cpp
           opm/output/eclipse/WriteRPT.cpp
-          opm/output/eclipse/report/WELSPECS.cpp
+          opm/output/eclipse/report/WellSpecification.cpp
           opm/utility/EModel.cpp
       )
 endif()
@@ -1559,6 +1559,7 @@ if(ENABLE_ECL_OUTPUT)
         opm/output/eclipse/WriteRFT.hpp
         opm/output/eclipse/WriteRPT.hpp
         opm/output/eclipse/WriteRestartHelpers.hpp
+        opm/output/eclipse/report/WellSpecification.hpp
         opm/utility/CopyablePtr.hpp
         opm/utility/EModel.hpp
         )

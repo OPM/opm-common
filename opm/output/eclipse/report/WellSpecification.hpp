@@ -17,8 +17,8 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef OPM_WRITE_RPT_HPP
-#define OPM_WRITE_RPT_HPP
+#ifndef OPM_REPORT_WELL_SPECIFICATION_HPP_INCLUDED
+#define OPM_REPORT_WELL_SPECIFICATION_HPP_INCLUDED
 
 #include <cstddef>
 #include <iosfwd>
@@ -32,17 +32,16 @@ namespace Opm {
 
 } // namespace Opm
 
-namespace Opm::PrtFile {
+namespace Opm::PrtFile::Reports {
 
-    void report(std::ostream&      os,
-                const std::string& reportType,
-                const int          reportSpec,
-                const double       elapsed_secs,
-                const std::size_t  report_step,
-                const Schedule&    schedule,
-                const EclipseGrid& grid,
-                const UnitSystem&  unit_system);
+    void wellSpecification(std::ostream&      os,
+                           const int          wellSpecRequest,
+                           const double       elapsedTime,
+                           const std::size_t  reportStep,
+                           const Schedule&    schedule,
+                           const EclipseGrid& grid,
+                           const UnitSystem&  unit_system);
 
-} // namespace Opm::RptIO
+} // namespace Opm::PrtFile::Reports
 
-#endif // OPM_WRITE_RPT_HPP
+#endif // OPM_REPORT_WELL_SPECIFICATION_HPP_INCLUDED
