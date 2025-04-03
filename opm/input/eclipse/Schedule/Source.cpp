@@ -104,6 +104,22 @@ bool Source::SourceCell::isSame(const SourceComponent& other) const {
 
 // Source functions
 // ----------------
+std::vector<Source::SourceCell>::iterator 
+Source::findSourceCell(std::vector<Source::SourceCell>& source_vec, 
+                       SourceComponent input)
+{
+    auto componentSearch = [&input](const auto& source) { return source.isSame(input); };
+    return std::find_if(source_vec.begin(), source_vec.end(), componentSearch);
+}
+
+std::vector<Source::SourceCell>::const_iterator 
+Source::findSourceCell(const std::vector<Source::SourceCell>& source_vec, 
+                       SourceComponent input) const
+{
+    auto componentSearch = [&input](const auto& source) { return source.isSame(input); };
+    return std::find_if(source_vec.begin(), source_vec.end(), componentSearch);
+}
+
 void Source::updateSource(const DeckRecord& record)
 {
     const Source::SourceCell sourcenew(record);
@@ -111,21 +127,16 @@ void Source::updateSource(const DeckRecord& record)
                              record.getItem<SOURCEKEY::J>().get<int>(0)-1,
                              record.getItem<SOURCEKEY::K>().get<int>(0)-1};
 
-    auto it = m_cells.find(ijk);
-    if (it != m_cells.end()) {
-        auto it2 = std::find_if(it->second.begin(), it->second.end(),
-                               [&sourcenew](const auto& source)
-                               {
-                                   return source.isSame(sourcenew.component);
-                               });
-        if (it2 != it->second.end()) {
-            *it2 = sourcenew;
+    auto [cellPos, inserted] = this->m_cells.try_emplace(ijk, std::vector { sourcenew });
+    if (! inserted) {
+        auto sourcePos = findSourceCell(cellPos->second, sourcenew.component);
+    
+        if (sourcePos != cellPos->second.end()) {
+            *sourcePos = sourcenew;
         }
         else {
-            it->second.emplace_back(sourcenew);
+            cellPos->second.push_back(sourcenew);
         }
-    } else {
-        m_cells.insert({ijk, {sourcenew}});
     }
 }
 
@@ -159,11 +170,7 @@ double Source::rate(const std::array<int, 3>& ijk, SourceComponent input) const
 {
     auto it = m_cells.find(ijk);
     if (it != m_cells.end()) {
-        const auto it2 = std::find_if(it->second.begin(), it->second.end(),
-                                     [&input](const auto& source)
-                                     {
-                                         return source.isSame(input);
-                                     });
+        const auto it2 = findSourceCell(it->second, input);
                             
         return (it2 != it->second.end()) ? it2->rate : 0.0;
     }
@@ -176,11 +183,7 @@ std::optional<double> Source::hrate(const std::array<int, 3>& ijk, SourceCompone
 {
     auto it = m_cells.find(ijk);
     if (it != m_cells.end()) {
-        const auto it2 = std::find_if(it->second.begin(), it->second.end(),
-                                     [&input](const auto& source)
-                                     {
-                                         return source.isSame(input);
-                                     });
+        const auto it2 = findSourceCell(it->second, input);
 
         return (it2 != it->second.end()) ? it2->hrate : std::nullopt;
     }
@@ -193,11 +196,7 @@ std::optional<double> Source::temperature(const std::array<int, 3>& ijk, SourceC
 {
     auto it = m_cells.find(ijk);
     if (it != m_cells.end()) {
-        const auto it2 = std::find_if(it->second.begin(), it->second.end(),
-                                     [&input](const auto& source)
-                                     {
-                                         return source.isSame(input);
-                                     });
+        const auto it2 = findSourceCell(it->second, input);
 
         return (it2 != it->second.end()) ? it2->temperature : std::nullopt;
     }
