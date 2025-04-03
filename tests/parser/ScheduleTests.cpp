@@ -6243,12 +6243,12 @@ SOURCE
     {
         size_t currentStep = 0;
         const auto& source = schedule[currentStep].source();
-        BOOST_CHECK_EQUAL(source.size(), 2);
-        double rate11 = source.rate({{0,0,0},Opm::SourceComponent::GAS});
+        BOOST_CHECK_EQUAL(source.size(), 1);  // num cells
+        double rate11 = source.rate({0,0,0},Opm::SourceComponent::GAS);
         BOOST_CHECK_EQUAL(rate11,
                         schedule.getUnits().to_si("Mass/Time", 0.01));
 
-        double rate12 = source.rate({{0,0,0},Opm::SourceComponent::WATER});
+        double rate12 = source.rate({0,0,0},Opm::SourceComponent::WATER);
         BOOST_CHECK_EQUAL(rate12,
                       schedule.getUnits().to_si("Mass/Time", 0.01));
     }
@@ -6256,15 +6256,15 @@ SOURCE
     {
         size_t currentStep = 1;
         const auto& source = schedule[currentStep].source();
-        BOOST_CHECK_EQUAL(source.size(), 3);
-        double rate21 = source.rate({{0,0,0},Opm::SourceComponent::GAS});
+        BOOST_CHECK_EQUAL(source.size(), 2);  // num cells
+        double rate21 = source.rate({0,0,0},Opm::SourceComponent::GAS);
         BOOST_CHECK_EQUAL(rate21,
                         schedule.getUnits().to_si("Mass/Time", 0.02));
-        double rate22 = source.rate({{0,0,0},Opm::SourceComponent::WATER});
+        double rate22 = source.rate({0,0,0},Opm::SourceComponent::WATER);
         BOOST_CHECK_EQUAL(rate22,
                         schedule.getUnits().to_si("Mass/Time", 0.01));
 
-        double rate23 = source.rate({{0,0,1},Opm::SourceComponent::WATER});
+        double rate23 = source.rate({0,0,1},Opm::SourceComponent::WATER);
         BOOST_CHECK_EQUAL(rate23,
                       schedule.getUnits().to_si("Mass/Time", 0.01));
     }
