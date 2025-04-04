@@ -107,6 +107,7 @@
 
 #include <algorithm>
 #include <array>
+#include <cassert>
 #include <cstddef>
 #include <functional>
 #include <initializer_list>
@@ -120,6 +121,184 @@
 #include <fmt/format.h>
 
 namespace {
+
+    struct LowPressTable
+    {
+        using Sample = std::array<double,2>;
+
+        Sample pressure{};
+        Sample mixingRatio{};
+        Sample formationVolumeFactor{};
+        Sample viscosity{};
+    };
+
+    double linearInterpolation(const LowPressTable::Sample& xi,
+                               const LowPressTable::Sample& yi,
+                               const double                  x)
+    {
+        const auto t = (x - xi[0]) / (xi[1] - xi[0]);
+
+        return (1.0 - t)*yi[0] + t*yi[1];
+    }
+
+    // -------------------------------------------------------------------------
+
+    class LowGasPressureLimit
+    {
+    public:
+        void establishLowerLimit(const LowPressTable& lowPressTable);
+
+        bool needsPadding() const
+        {
+            return this->needsPadding_;
+        }
+
+        double pressure() const
+        {
+            return this->pressure_;
+        }
+
+        double vaporisedOilRatio() const
+        {
+            return this->rv_;
+        }
+
+        double formationVolumeFactor() const
+        {
+            return this->formationVolumeFactor_;
+        }
+
+        double viscosity() const
+        {
+            return this->viscosity_;
+        }
+
+    private:
+        double pressure_{0.0};
+        double rv_{0.0};
+        double formationVolumeFactor_{0.0};
+        double viscosity_{0.0};
+        bool needsPadding_{false};
+    };
+
+    void LowGasPressureLimit::establishLowerLimit(const LowPressTable& lowPressTable)
+    {
+        const auto& p = lowPressTable.pressure;
+
+        const auto rv = LowPressTable::Sample {
+            lowPressTable.mixingRatio[0],
+            lowPressTable.mixingRatio[1],
+        };
+
+        const auto b = LowPressTable::Sample {
+            1.0 / lowPressTable.formationVolumeFactor[0],  // 1 / B(0)
+            1.0 / lowPressTable.formationVolumeFactor[1],  // 1 / B(1)
+        };
+
+        const auto recipBmu = LowPressTable::Sample {
+            b[0] / lowPressTable.viscosity[0], // 1 / (B(0) * mu(0))
+            b[1] / lowPressTable.viscosity[1], // 1 / (B(1) * mu(1))
+        };
+
+        this->formationVolumeFactor_ = std::max(10.0 / b[0], 1.0);
+
+        this->pressure_ = linearInterpolation
+            (b, p, 1.0 / this->formationVolumeFactor_);
+
+        this->rv_ = linearInterpolation(p, rv, this->pressure_);
+
+        this->viscosity_  = 1.0 /
+            (this->formationVolumeFactor_ *
+             linearInterpolation(p, recipBmu, this->pressure_));
+
+        const auto p0 = 1.0*Opm::unit::barsa;
+
+        this->needsPadding_ = (p[0] > p0) &&
+            (linearInterpolation(p, b, p0) < 1.0 / this->formationVolumeFactor_);
+    }
+
+    // -------------------------------------------------------------------------
+
+    class LowOilPressureLimit
+    {
+    public:
+        void establishLowerLimit(const LowPressTable& lowPressTable);
+
+        bool needsPadding() const
+        {
+            return this->needsPadding_;
+        }
+
+        double pressure() const
+        {
+            return this->pressure_;
+        }
+
+        double dissolvedGasRatio() const
+        {
+            return this->rs_;
+        }
+
+        const LowPressTable::Sample& formationVolumeFactor() const
+        {
+            return this->formationVolumeFactor_;
+        }
+
+        double viscosity() const
+        {
+            return this->viscosity_;
+        }
+
+    private:
+        double pressure_{0.0};
+        double rs_{0.0};
+        LowPressTable::Sample formationVolumeFactor_{};
+        double viscosity_{0.0};
+        bool needsPadding_{false};
+    };
+
+    void LowOilPressureLimit::establishLowerLimit(const LowPressTable& lowPressTable)
+    {
+        const auto& p = lowPressTable.pressure;
+
+        const auto rs = LowPressTable::Sample {
+            lowPressTable.mixingRatio[0],
+            lowPressTable.mixingRatio[1],
+        };
+
+        if (! (rs[0] > 0.0) || (! (rs[1] > rs[0]))) {
+            this->needsPadding_ = false;
+            return;
+        }
+
+        const auto b = LowPressTable::Sample {
+            1.0 / lowPressTable.formationVolumeFactor[0],  // 1 / B(0)
+            1.0 / lowPressTable.formationVolumeFactor[1],  // 1 / B(1)
+        };
+
+        const auto recipBmu = LowPressTable::Sample {
+            b[0] / lowPressTable.viscosity[0], // 1 / (B(0) * mu(0))
+            b[1] / lowPressTable.viscosity[1], // 1 / (B(1) * mu(1))
+        };
+
+        const auto p0 = 1.0*Opm::unit::barsa;
+        const auto smallRs = 1.0e-6;
+
+        this->pressure_ = std::max(linearInterpolation(rs, p, smallRs), p0);
+        this->rs_       = linearInterpolation(p, rs, this->pressure_);
+
+        this->formationVolumeFactor_[0] = 1.0 / linearInterpolation(p, b, p0);
+        this->formationVolumeFactor_[1] =
+            1.0 / linearInterpolation(p, b, this->pressure_);
+
+        this->viscosity_  = 1.0 /
+            (this->formationVolumeFactor_[1] *
+             linearInterpolation(p, recipBmu, this->pressure_));
+
+        this->needsPadding_ = p[0] > this->pressure_;
+    }
+
+    // -------------------------------------------------------------------------
 
     /// Simple query interface for extracting tabulated values of saturated
     /// gas.
@@ -156,85 +335,43 @@ namespace {
         virtual double vaporisedOil(const std::size_t row) const = 0;
     };
 
+    // -------------------------------------------------------------------------
+
     /// Padding for gas property tables at low pressure
-    class LowPressureTablePadding
+    class LowPressureGasTablePadding
     {
     public:
         /// Constructor
         ///
         /// \param[in] Tabulated gas properties at saturated conditions
-        explicit LowPressureTablePadding(const GasPropertyTableInterface& prop);
+        explicit LowPressureGasTablePadding(const GasPropertyTableInterface& prop);
 
         /// Whether or not input table needs padding at low pressures
-        bool inputNeedsPadding() const { return this->needPadding_; }
+        bool inputNeedsPadding() const { return this->limit_.needsPadding(); }
 
-        /// Low pressure padding rows for input table.  Needed only if
-        /// inputNeedsPadding() returns \c true.
         Opm::SimpleTable padding() const;
 
     private:
         /// Gas pressure values in rows zero and one of input table.
-        std::array<double, 2> p_{};
+        double pMin_{0.0};
 
-        /// Interpolated gas property values at "limiting" pressure
-        struct {
-            /// Limiting pressure
-            double p {0.0};
-
-            /// Vaporised oil concentration at limiting pressure
-            double rv {0.0};
-
-            /// Formation volume factor at limiting pressure
-            double fvf {0.0};
-
-            /// Gas viscosity at limiting pressure
-            double mu {0.0};
-        } limit_{};
-
-        /// Whether or not input table needs padding at low pressure values.
-        bool needPadding_{false};
+        LowGasPressureLimit limit_{};
     };
 
-    LowPressureTablePadding::LowPressureTablePadding(const GasPropertyTableInterface& prop)
-        : p_{ prop.pressure(0), prop.pressure(1) }
+    LowPressureGasTablePadding::LowPressureGasTablePadding(const GasPropertyTableInterface& prop)
+        : pMin_ { prop.pressure(0) }
     {
-        auto linInterp = [](const std::array<double, 2>& xi,
-                            const std::array<double, 2>& yi,
-                            const double                  x)
-        {
-            const auto t = (x - xi[0]) / (xi[1] - xi[0]);
-
-            return (1.0 - t)*yi[0] + t*yi[1];
+        const auto lowPressTable = LowPressTable {
+            { this->pMin_, prop.pressure(1) },              // pressure
+            { prop.vaporisedOil(0), prop.vaporisedOil(1) }, // mixingRatio (== Rv)
+            { prop.fvf(0), prop.fvf(1) },                   // formationVolumeFactor
+            { prop.viscosity(0), prop.viscosity(1) }        // viscosity
         };
 
-        const auto rv = std::array {
-            prop.vaporisedOil(0),
-            prop.vaporisedOil(1),
-        };
-
-        const auto b = std::array {
-            1.0 / prop.fvf(0),  // 1 / B(0)
-            1.0 / prop.fvf(1),  // 1 / B(1)
-        };
-
-        const auto recipBmu = std::array {
-            b[0] / prop.viscosity(0), // 1 / (B(0) * mu(0))
-            b[1] / prop.viscosity(1), // 1 / (B(1) * mu(1))
-        };
-
-        this->limit_.fvf = std::max(10.0 / b[0], 1.0);
-        this->limit_.p   = linInterp(b, this->p_, 1.0 / this->limit_.fvf);
-        this->limit_.rv  = linInterp(this->p_, rv, this->limit_.p);
-        this->limit_.mu  = 1.0 /
-            (this->limit_.fvf * linInterp(this->p_, recipBmu, this->limit_.p));
-
-        const auto p0 = 1.0*Opm::unit::barsa;
-
-        this->needPadding_ = (this->p_[0] > p0) &&
-            (linInterp(this->p_, b, p0) < 1.0 / this->limit_.fvf);
+        this->limit_.establishLowerLimit(lowPressTable);
     }
 
-    Opm::SimpleTable LowPressureTablePadding::padding() const
+    Opm::SimpleTable LowPressureGasTablePadding::padding() const
     {
         auto padSchema = Opm::TableSchema{};
         padSchema.addColumn(Opm::ColumnSchema("PG" , Opm::Table::STRICTLY_INCREASING, Opm::Table::DEFAULT_NONE));
@@ -246,12 +383,97 @@ namespace {
 
         const auto p0 = 1.0*Opm::unit::barsa;
 
-        if (this->limit_.p < this->p_[0]) {
-            if (p0 < this->limit_.p) {
-                padTable.addRow({ p0, this->limit_.rv, 1.1*this->limit_.fvf, this->limit_.mu }, "PAD");
+        if (const auto pLimit = this->limit_.pressure(); pLimit < this->pMin_) {
+            if (p0 < pLimit) {
+                padTable.addRow({
+                        p0,
+                        this->limit_.vaporisedOilRatio(),
+                        this->limit_.formationVolumeFactor() * 1.1,
+                        this->limit_.viscosity()
+                    }, "PAD");
             }
 
-            padTable.addRow({ this->limit_.p, this->limit_.rv, this->limit_.fvf, this->limit_.mu }, "PAD");
+            padTable.addRow({
+                    pLimit,
+                    this->limit_.vaporisedOilRatio(),
+                    this->limit_.formationVolumeFactor(),
+                    this->limit_.viscosity()
+                }, "PAD");
+        }
+
+        return padTable;
+    }
+
+    // -------------------------------------------------------------------------
+
+    /// Padding for oil property tables at low pressure
+    class LowPressureOilTablePadding
+    {
+    public:
+        /// Constructor
+        ///
+        /// \param[in] Tabulated oil properties at saturated conditions
+        explicit LowPressureOilTablePadding(const Opm::PvtoTable& pvto);
+
+        /// Whether or not input table needs padding at low pressures
+        bool inputNeedsPadding() const { return this->limit_.needsPadding(); }
+
+        Opm::SimpleTable padding() const;
+
+    private:
+        /// Oil pressure values in rows zero and one of input table.
+        double pMin_{0.0};
+
+        LowOilPressureLimit limit_{};
+    };
+
+    LowPressureOilTablePadding::LowPressureOilTablePadding(const Opm::PvtoTable& pvto)
+        : pMin_ { pvto.getSaturatedTable().getColumn(1)[0] }
+    {
+        const auto& satTable = pvto.getSaturatedTable();
+
+        const auto& rs = satTable.getColumn(0);
+        const auto& Bo = satTable.getColumn(2);
+        const auto& vo = satTable.getColumn(3);
+
+        const auto lowPressTable = LowPressTable {
+            { this->pMin_, satTable.getColumn(1)[1] }, // pressure
+            { rs[0], rs[1] },   // mixingRatio (== Rs)
+            { Bo[0], Bo[1] },   // formationVolumeFactor
+            { vo[0], vo[1] }    // viscosity
+        };
+
+        this->limit_.establishLowerLimit(lowPressTable);
+    }
+
+    Opm::SimpleTable LowPressureOilTablePadding::padding() const
+    {
+        auto padSchema = Opm::TableSchema{};
+        padSchema.addColumn(Opm::ColumnSchema("RS", Opm::Table::STRICTLY_INCREASING, Opm::Table::DEFAULT_NONE));
+        padSchema.addColumn(Opm::ColumnSchema("P" , Opm::Table::RANDOM, Opm::Table::DEFAULT_NONE));
+        padSchema.addColumn(Opm::ColumnSchema("BO", Opm::Table::RANDOM, Opm::Table::DEFAULT_LINEAR));
+        padSchema.addColumn(Opm::ColumnSchema("MU", Opm::Table::RANDOM, Opm::Table::DEFAULT_LINEAR));
+
+        auto padTable = Opm::SimpleTable { std::move(padSchema) };
+
+        const auto p0 = 1.0*Opm::unit::barsa;
+
+        if (const auto pLimit = this->limit_.pressure(); pLimit < this->pMin_) {
+            if (p0 < pLimit) {
+                padTable.addRow({
+                        0.0,
+                        p0,
+                        this->limit_.formationVolumeFactor()[0],
+                        this->limit_.viscosity()
+                    }, "PAD");
+            }
+
+            padTable.addRow({
+                    ! (p0 < pLimit) ? 0.0 : this->limit_.dissolvedGasRatio(),
+                    pLimit,
+                    this->limit_.formationVolumeFactor()[1],
+                    this->limit_.viscosity()
+                }, "PAD");
         }
 
         return padTable;
@@ -385,6 +607,70 @@ namespace {
         return this->satTable_.get().getColumn(1)[row];
     }
 
+    // -------------------------------------------------------------------------
+
+    /// Oil property query interface implementation for live oil
+    class LiveOilTable
+    {
+    public:
+        /// Constructor
+        ///
+        /// \param[in] pvto Tabulated oil property values for live oil
+        explicit LiveOilTable(const Opm::PvtoTable& pvto)
+            : satTable_ { pvto.getSaturatedTable() }
+        {}
+
+        /// Retrieve oil pressure at saturated conditions
+        ///
+        /// \param[in] row Row index in saturated gas property table.
+        ///   Typically 0 or 1 in the intended/primary use case.
+        double pressure(const std::size_t row) const;
+
+        /// Retrieve formation volume factor for oil at saturated
+        /// conditions.
+        ///
+        /// \param[in] row Row index in saturated oil property table.
+        ///   Typically 0 or 1 in the intended/primary use case.
+        double fvf(const std::size_t row) const;
+
+        /// Retrieve phase viscosity for oil at saturated conditions.
+        ///
+        /// \param[in] row Row index in saturated oil property table.
+        ///   Typically 0 or 1 in the intended/primary use case.
+        double viscosity(const std::size_t row) const;
+
+        /// Retrieve dissolved gas concentration ("Rs") for oil at saturated
+        /// conditions.
+        ///
+        /// \param[in] row Row index in saturated oil property table.
+        ///   Typically 0 or 1 in the intended/primary use case.
+        double dissolvedGas(const std::size_t row) const;
+
+    private:
+        /// Underlying property table for wet gas at saturated conditions.
+        std::reference_wrapper<const Opm::SimpleTable> satTable_;
+    };
+
+    double LiveOilTable::pressure(const std::size_t row) const
+    {
+        return this->satTable_.get().getColumn(1)[row];
+    }
+
+    double LiveOilTable::fvf(const std::size_t row) const
+    {
+        return this->satTable_.get().getColumn(2)[row];
+    }
+
+    double LiveOilTable::viscosity(const std::size_t row) const
+    {
+        return this->satTable_.get().getColumn(3)[row];
+    }
+
+    double LiveOilTable::dissolvedGas(const std::size_t row) const
+    {
+        return this->satTable_.get().getColumn(0)[row];
+    }
+
 } // Anonymous namespace
 
 namespace Opm
@@ -507,7 +793,7 @@ PvtgTable::PvtgTable(const DeckKeyword& keyword, size_t tableIdx)
         return;
     }
 
-    if (const auto tablePadding = LowPressureTablePadding { WetGasTable { *this } };
+    if (const auto tablePadding = LowPressureGasTablePadding { WetGasTable { *this } };
         tablePadding.inputNeedsPadding())
     {
         // Note: The padded PVTG table holds values for a single table/PVT
@@ -606,6 +892,92 @@ PvtgwoTable::operator==(const PvtgwoTable& data) const
     return static_cast<const PvtxTable&>(*this) == static_cast<const PvtxTable&>(data);
 }
 
+namespace {
+    DeckItem createPvtoItemZero(const DeckKeyword& pvtoTableInput)
+    {
+        return pvtoTableInput[0].getItem(0).emptyStructuralCopy();
+    }
+
+    DeckItem createPvtoItemOne(const DeckKeyword& pvtoTableInput)
+    {
+        return pvtoTableInput[0].getItem(1).emptyStructuralCopy();
+    }
+
+    DeckKeyword paddedPVTOTable(const SimpleTable& padding,
+                                const DeckKeyword& pvtoTableInput,
+                                const PvtoTable&   pvtoTable)
+    {
+        auto paddedTable = pvtoTableInput.emptyStructuralCopy();
+
+        // Padding
+        {
+            const auto nrow = padding.numRows();
+            const auto ncol = padding.numColumns();
+
+            for (auto row = 0*nrow; row < nrow; ++row) {
+                auto recordItems = std::vector {
+                    createPvtoItemZero(pvtoTableInput),
+                    createPvtoItemOne (pvtoTableInput)
+                };
+
+                {
+                    auto& rs = recordItems.front();
+                    const auto& dim = rs.getActiveDimensions();
+                    rs.push_back(dim.front().convertSiToRaw(padding.get(0, row)));
+                }
+
+                {
+                    auto& rest = recordItems.back();
+                    const auto& dim = rest.getActiveDimensions();
+                    auto n = 0*dim.size();
+
+                    for (auto col = 1 + 0*ncol; col < ncol; ++col, n = (n + 1) % dim.size()) {
+                        rest.push_back(dim[n].convertSiToRaw(padding.get(col, row)));
+                    }
+                }
+
+                paddedTable.addRecord(DeckRecord { std::move(recordItems) });
+            }
+        }
+
+        // Original input table
+        for (auto rsIx = 0*pvtoTable.size(); rsIx < pvtoTable.size(); ++rsIx) {
+            auto recordItems = std::vector {
+                createPvtoItemZero(pvtoTableInput),
+                createPvtoItemOne (pvtoTableInput)
+            };
+
+            {
+                auto& rs = recordItems.front();
+                const auto& dim = rs.getActiveDimensions();
+                rs.push_back(dim.front().convertSiToRaw(pvtoTable.getArgValue(rsIx)));
+            }
+
+            {
+                auto& rest = recordItems.back();
+                const auto& dim = rest.getActiveDimensions();
+
+                const auto& rsTable = pvtoTable.getUnderSaturatedTable(rsIx);
+                const auto nrow = rsTable.numRows();
+                const auto ncol = rsTable.numColumns();
+
+                for (auto row = 0*nrow; row < nrow; ++row) {
+                    for (auto col = 0*ncol; col < ncol; ++col) {
+                        rest.push_back(dim[col].convertSiToRaw(rsTable.get(col, row)));
+                    }
+                }
+            }
+
+            paddedTable.addRecord(DeckRecord { std::move(recordItems) });
+        }
+
+        // Resulting padded table holds values for just a single table/PVT
+        // region, even if pvtoTableInput holds tables for multiple PVT
+        // regions.
+        return paddedTable;
+    }
+} // Anonymous namespace
+
 PvtoTable::PvtoTable(const DeckKeyword& keyword, size_t tableIdx)
     : PvtxTable("RS")
 {
@@ -618,7 +990,44 @@ PvtoTable::PvtoTable(const DeckKeyword& keyword, size_t tableIdx)
     m_saturatedSchema.addColumn(ColumnSchema("BO", Table::RANDOM, Table::DEFAULT_LINEAR));
     m_saturatedSchema.addColumn(ColumnSchema("MU", Table::RANDOM, Table::DEFAULT_LINEAR));
 
+    // Run full table initialisation first.  The downside to this is that we
+    // will end up throwing away and redoing that work if the table needs
+    // padding at low pressure values.  On the other hand, the full table
+    // initialisation procedure also checks consistency and replaces any
+    // defaulted values which means we don't have to have special logic in
+    // place to handle those complexities if the table does need padding.
+
     PvtxTable::init(keyword, tableIdx);
+
+    if (this->size() <= 1) {
+        // At most a single Rs node in the input PVTO data.  There is not
+        // enough information to perform table padding, even if it might be
+        // needed.  We might for instance be running in the context of a
+        // unit test with incomplete data or the input might just be very
+        // sparse.  In any case we can't perform table padding so just
+        // return here.
+        return;
+    }
+
+    if (const auto tablePadding = LowPressureOilTablePadding { *this };
+        tablePadding.inputNeedsPadding())
+    {
+        // Note: The padded PVTO table holds values for a single table/PVT
+        // region, even if 'keyword' holds tables for multiple PVT regions.
+        // We therefore unconditionally pass '0' as the 'tableIdx' in this
+        // case.  Moreover, PvtxTable::init() expects that both the outer
+        // column and the array of undersaturated tables are empty, so clear
+        // those here, once we've used their contents to form the padding
+        // table.
+
+        const auto paddedTable =
+            paddedPVTOTable(tablePadding.padding(), keyword, *this);
+
+        this->m_outerColumn = TableColumn { this->m_outerColumnSchema };
+        this->m_underSaturatedTables.clear();
+
+        PvtxTable::init(paddedTable, 0);
+    }
 }
 
 PvtoTable
@@ -1082,7 +1491,7 @@ PvdgTable::PvdgTable(const DeckItem& item, const int tableID)
         return;
     }
 
-    if (const auto tablePadding = LowPressureTablePadding { DryGasTable { *this } };
+    if (const auto tablePadding = LowPressureGasTablePadding { DryGasTable { *this } };
         tablePadding.inputNeedsPadding())
     {
         SimpleTable::init(tableName, paddedPVDGTable(tablePadding.padding(), item, *this), tableID);
@@ -1115,7 +1524,6 @@ PvdoTable::PvdoTable(const DeckItem& item, const int tableID)
 
     SimpleTable::init("PVDO", item, tableID);
 }
-
 
 const TableColumn&
 PvdoTable::getPressureColumn() const
