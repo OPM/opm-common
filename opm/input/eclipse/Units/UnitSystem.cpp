@@ -1544,10 +1544,21 @@ namespace {
         case UDAControl::WELTARG_BHP:   case UDAControl::WELTARG_THP:
             return this->getDimension(UnitSystem::measure::pressure);
 
-        case UDAControl::GCONINJE_TARGET_REINJ_FRACTION:
-        case UDAControl::GCONINJE_TARGET_VOID_FRACTION:
         case UDAControl::GCONINJE_SURFACE_MAX_RATE:
         case UDAControl::WCONINJE_RATE:
+            // Note: GCONINJE_SURFACE_MAX_RATE and WCONINJE_RATE are *very*
+            // special cases.  We *intentionally* use 'identity' for these
+            // quantities since the actual unit conversion depends on the
+            // injected phase, which may change throughout the simulation
+            // run.  We effectively ignore the fact that we know the
+            // injected phase at restart time and defer said unit conversion
+            // to the helper functions Opm::UDA::eval_well_uda_rate() and
+            // Opm::UDA::eval_group_uda_rate().  Both these functions in
+            // turn *depend* on the Dimension being 'identity' here.
+            return this->getDimension(UnitSystem::measure::identity);
+
+        case UDAControl::GCONINJE_TARGET_REINJ_FRACTION:
+        case UDAControl::GCONINJE_TARGET_VOID_FRACTION:
             return this->getDimension(UnitSystem::measure::identity);
 
         default:
