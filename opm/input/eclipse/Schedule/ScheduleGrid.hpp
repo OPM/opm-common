@@ -33,7 +33,7 @@ namespace Opm {
 class EclipseGrid;
 class FieldPropsManager;
 class NumericalAquifers;
-class NumericalAquiferCell;
+struct NumericalAquiferCell;
 
 } // namespace Opm
 
