@@ -637,5 +637,15 @@ std::size_t EclFile::size() const {
     return this->array_name.size();
 }
 
+template const std::vector<bool>&
+EclFile::getImpl(int, eclArrType, const std::unordered_map<int,std::vector<bool>>&, const std::string&);
+template const std::vector<float>&
+EclFile::getImpl(int, eclArrType, const std::unordered_map<int,std::vector<float>>&, const std::string&);
+template const std::vector<double>&
+EclFile::getImpl(int, eclArrType, const std::unordered_map<int,std::vector<double>>&, const std::string&);
+template const std::vector<int>&
+EclFile::getImpl(int, eclArrType, const std::unordered_map<int,std::vector<int>>&, const std::string&);
+template const std::vector<std::string>&
+EclFile::getImpl(int, eclArrType, const std::unordered_map<int,std::vector<std::string>>&, const std::string&);
 
-}} // namespace Opm::ecl
+}} // namespace Opm::EclIO
