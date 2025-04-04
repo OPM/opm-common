@@ -21,8 +21,7 @@
 
 #include <algorithm>
 
-namespace Opm { namespace EclIO {
-
+namespace Opm::EclIO {
 
 EInit::EInit(const std::string &filename) : EclFile(filename)
 {
@@ -121,8 +120,7 @@ int EInit::get_lgr_index(const std::string& grid_name) const
     auto it = std::find(lgr_names.begin(), lgr_names.end(), grid_name);
 
     if (it == lgr_names.end()) {
-        std::string message = "LGR '" + grid_name + "' not found in init file.";
-        OPM_THROW(std::invalid_argument, message);
+        OPM_THROW(std::invalid_argument, "LGR '" + grid_name + "' not found in init file.");
     }
 
     return  std::distance(lgr_names.begin(), it);
@@ -161,17 +159,21 @@ const std::vector<T>& EInit::ImplgetInitData(const std::string& name, const std:
 {
     int arr_ind = get_array_index(name, grid_name);
 
-    if constexpr (std::is_same_v<T, int>)
-            return getImpl(arr_ind, INTE, inte_array, "integer");
+    if constexpr (std::is_same_v<T, int>) {
+        return getImpl(arr_ind, INTE, inte_array, "integer");
+    }
 
-    if constexpr (std::is_same_v<T, float>)
-            return getImpl(arr_ind, REAL, real_array, "float");
+    if constexpr (std::is_same_v<T, float>) {
+        return getImpl(arr_ind, REAL, real_array, "float");
+    }
 
-    if constexpr (std::is_same_v<T, double>)
-            return getImpl(arr_ind, DOUB, doub_array, "double");
+    if constexpr (std::is_same_v<T, double>) {
+        return getImpl(arr_ind, DOUB, doub_array, "double");
+    }
 
-    if constexpr (std::is_same_v<T, bool>)
-            return getImpl(arr_ind, LOGI, logi_array, "bool");
+    if constexpr (std::is_same_v<T, bool>) {
+        return getImpl(arr_ind, LOGI, logi_array, "bool");
+    }
 
     if constexpr (std::is_same_v<T, std::string>)
     {
@@ -192,4 +194,4 @@ template const std::vector<float>& EInit::ImplgetInitData(const std::string& nam
 template const std::vector<double>& EInit::ImplgetInitData(const std::string& name, const std::string& grid_name);
 template const std::vector<bool>& EInit::ImplgetInitData(const std::string& name, const std::string& grid_name);
 
-}} // namespace Opm::EclIO
+} // namespace Opm::EclIO

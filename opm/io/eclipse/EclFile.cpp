@@ -197,8 +197,7 @@ void EclFile::loadData()
         fileH.open(inputFilename, std::ios::in |  std::ios::binary);
 
         if (!fileH) {
-            std::string message="Could not open file: '" + inputFilename +"'";
-            OPM_THROW(std::runtime_error, message);
+            OPM_THROW(std::runtime_error, "Could not open file: '" + inputFilename +"'");
         }
 
         for (std::size_t i = 0; i < array_name.size(); i++) {
@@ -241,8 +240,7 @@ void EclFile::loadData(const std::string& name)
         fileH.open(inputFilename, std::ios::in |  std::ios::binary);
 
         if (!fileH) {
-            std::string message="Could not open file: '" + inputFilename +"'";
-            OPM_THROW(std::runtime_error, message);
+            OPM_THROW(std::runtime_error, "Could not open file: '" + inputFilename +"'");
         }
 
         for (size_t i = 0; i < array_name.size(); i++) {
@@ -283,8 +281,7 @@ void EclFile::loadData(const std::vector<int>& arrIndex)
         fileH.open(inputFilename, std::ios::in |  std::ios::binary);
 
         if (!fileH) {
-            std::string message="Could not open file: '" + inputFilename +"'";
-            OPM_THROW(std::runtime_error, message);
+            OPM_THROW(std::runtime_error, "Could not open file: '" + inputFilename +"'");
         }
 
         for (int ind : arrIndex) {
@@ -320,8 +317,7 @@ void EclFile::loadData(int arrIndex)
         fileH.open(inputFilename, std::ios::in |  std::ios::binary);
 
         if (!fileH) {
-            std::string message="Could not open file: '" + inputFilename +"'";
-            OPM_THROW(std::runtime_error, message);
+            OPM_THROW(std::runtime_error, "Could not open file: '" + inputFilename +"'");
         }
 
         loadBinaryArray(fileH, arrIndex);
@@ -391,8 +387,7 @@ std::vector<unsigned int> EclFile::get_bin_logi_raw_values(int arrIndex) const
     fileH.open(inputFilename, std::ios::in |  std::ios::binary);
 
     if (!fileH) {
-        std::string message="Could not open file: '" + inputFilename +"'";
-        OPM_THROW(std::runtime_error, message);
+        OPM_THROW(std::runtime_error, "Could not open file: '" + inputFilename +"'");
     }
 
     fileH.seekg (ifStreamPos[arrIndex], fileH.beg);
@@ -410,8 +405,7 @@ std::vector<std::string> EclFile::get_fmt_real_raw_str_values(int arrIndex) cons
     std::ifstream inFile(inputFilename);
 
     if (!inFile) {
-        std::string message="Could not open file: '" + inputFilename +"'";
-        OPM_THROW(std::runtime_error, message);
+        OPM_THROW(std::runtime_error, "Could not open file: '" + inputFilename +"'");
     }
 
     inFile.seekg(ifStreamPos[arrIndex]);
@@ -477,8 +471,8 @@ template<>
 const std::vector<std::string>& EclFile::get<std::string>(int arrIndex)
 {
     if ((array_type[arrIndex] != Opm::EclIO::C0NN) && (array_type[arrIndex] != Opm::EclIO::CHAR)){
-        std::string message = "Array with index " + std::to_string(arrIndex) + " is not of type " + "std::string";
-        OPM_THROW(std::runtime_error, message);
+        OPM_THROW(std::runtime_error,
+                  fmt::format("Array with index {} is not of type std::string", arrIndex));
     }
 
     return getImpl(arrIndex, array_type[arrIndex], char_array, "string");
@@ -558,8 +552,7 @@ const std::vector<int>& EclFile::get<int>(const std::string& name)
     auto search = array_index.find(name);
 
     if (search == array_index.end()) {
-        std::string message="key '"+name + "' not found";
-        OPM_THROW(std::invalid_argument, message);
+        OPM_THROW(std::invalid_argument, "key '" + name + "' not found");
     }
 
     return getImpl(search->second, INTE, inte_array, "integer");
@@ -571,8 +564,7 @@ const std::vector<float>& EclFile::get<float>(const std::string& name)
     auto search = array_index.find(name);
 
     if (search == array_index.end()) {
-        std::string message="key '"+name + "' not found";
-        OPM_THROW(std::invalid_argument, message);
+        OPM_THROW(std::invalid_argument, "key '" + name + "' not found");
     }
 
     return getImpl(search->second, REAL, real_array, "float");
@@ -585,8 +577,7 @@ const std::vector<double>& EclFile::get<double>(const std::string &name)
     auto search = array_index.find(name);
 
     if (search == array_index.end()) {
-        std::string message="key '"+name + "' not found";
-        OPM_THROW(std::invalid_argument, message);
+        OPM_THROW(std::invalid_argument, "key '" + name + "' not found");
     }
 
     return getImpl(search->second, DOUB, doub_array, "double");
@@ -599,8 +590,7 @@ const std::vector<bool>& EclFile::get<bool>(const std::string &name)
     auto search = array_index.find(name);
 
     if (search == array_index.end()) {
-        std::string message="key '"+name + "' not found";
-        OPM_THROW(std::invalid_argument, message);
+        OPM_THROW(std::invalid_argument, "key '" + name + "' not found");
     }
 
     return getImpl(search->second, LOGI, logi_array, "bool");
@@ -613,13 +603,12 @@ const std::vector<std::string>& EclFile::get<std::string>(const std::string &nam
     auto search = array_index.find(name);
 
     if (search == array_index.end()) {
-        std::string message="key '"+name + "' not found";
-        OPM_THROW(std::invalid_argument, message);
+        OPM_THROW(std::invalid_argument, "key '" + name + "' not found");
     }
 
     if ((array_type[search->second] != Opm::EclIO::C0NN) && (array_type[search->second] != Opm::EclIO::CHAR)){
-        std::string message = "Array with index " + std::to_string(search->second) + " is not of type " + "std::string";
-        OPM_THROW(std::runtime_error, message);
+        OPM_THROW(std::runtime_error,
+                  fmt::format("Array with index {} is not of type std::string", search->second));
     }
 
     return getImpl(search->second, array_type[search->second], char_array, "string");
@@ -632,8 +621,8 @@ const std::vector<T>& EclFile::getImpl(int arrIndex, eclArrType type,
                                        const std::string& typeStr)
 {
     if (array_type[arrIndex] != type) {
-        std::string message = "Array with index " + std::to_string(arrIndex) + " is not of type " + typeStr;
-        OPM_THROW(std::runtime_error, message);
+        OPM_THROW(std::runtime_error,
+                  fmt::format("Array with index {} is not of type {}", arrIndex, typeStr));
     }
 
     if (!arrayLoaded[arrIndex]) {

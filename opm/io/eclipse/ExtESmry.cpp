@@ -551,8 +551,8 @@ void ExtESmry::loadData(const std::vector<std::string>& stringVect)
         }
 
         if (n_attempts == 10){
-            std::string emsry_file_name = m_esmry_files[ind].string();
-            OPM_THROW( std::runtime_error, "when loading data from ESMRY file" + emsry_file_name );
+            OPM_THROW(std::runtime_error,
+                      "when loading data from ESMRY file" + m_esmry_files[ind].string());
         }
 
         ind--;
