@@ -25,6 +25,7 @@
 #include <vector>
 #include <cstddef>
 #include <optional>
+#include <map>
 
 namespace Opm {
 
@@ -48,7 +49,6 @@ class Source
 public:
     struct SourceCell
     {
-        std::array<int, 3> ijk{};
         SourceComponent component{SourceComponent::NONE};
         double rate{};
         std::optional<double> hrate{};
@@ -60,13 +60,10 @@ public:
         static SourceCell serializationTestObject();
 
         bool operator==(const SourceCell& other) const;
-        bool isSame(const SourceCell& other) const;
-        bool isSame(const std::pair<std::array<int, 3>, SourceComponent>& other) const;
 
         template<class Serializer>
         void serializeOp(Serializer& serializer)
         {
-            serializer(ijk);
             serializer(component);
             serializer(rate);
             serializer(hrate);
@@ -79,24 +76,16 @@ public:
     static Source serializationTestObject();
 
     std::size_t size() const;
-    std::vector<SourceCell>::const_iterator begin() const;
-    std::vector<SourceCell>::const_iterator end() const;
+    std::map<std::array<int, 3>, std::vector<SourceCell>>::const_iterator begin() const;
+    std::map<std::array<int, 3>, std::vector<SourceCell>>::const_iterator end() const;
     bool operator==(const Source& other) const;
 
-    double rate(const std::pair<std::array<int, 3>, SourceComponent>& input ) const;
-    double hrate(const std::pair<std::array<int, 3>, SourceComponent>& input ) const;
-    double temperature(const std::pair<std::array<int, 3>, SourceComponent>& input) const;
-    bool hasHrate(const std::pair<std::array<int, 3>, SourceComponent>& input) const;
-    bool hasTemperature(const std::pair<std::array<int, 3>, SourceComponent>& input) const;
+    double rate(const std::array<int, 3>& ijk, SourceComponent input ) const;
+    std::optional<double> hrate(const std::array<int, 3>& ijk, SourceComponent input ) const;
+    std::optional<double> temperature(const std::array<int, 3>& ijk, SourceComponent input) const;
     bool hasSource(const std::array<int, 3>& input) const;
 
     void updateSource(const DeckRecord& record);
-
-    //! \brief Add a source term for a grid cell.
-    void addSourceCell(const SourceCell& cell)
-    {
-        m_cells.push_back(cell);
-    }
 
     template<class Serializer>
     void serializeOp(Serializer& serializer)
@@ -105,7 +94,7 @@ public:
     }
 
 private:
-    std::vector<SourceCell> m_cells;
+    std::map<std::array<int, 3>, std::vector<SourceCell>> m_cells;
 };
 
 } // namespace Opm
