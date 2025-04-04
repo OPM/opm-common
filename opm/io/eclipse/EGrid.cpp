@@ -32,8 +32,9 @@
 #include <string>
 #include <stdexcept>
 
+#include <fmt/format.h>
 
-namespace Opm { namespace EclIO {
+namespace Opm::EclIO {
 
 using NNCentry = std::tuple<int, int, int, int, int, int, float>;
 
@@ -251,26 +252,26 @@ void EGrid::load_nnc_data()
             int init_nactive = init.activeCells(m_grid_name);
 
             if (init_dims != nijk){
-                std::string message = "Dimensions of Egrid differ from dimensions found in init file. ";
-                std::string grid_str = std::to_string(nijk[0]) + "x" + std::to_string(nijk[1]) + "x" + std::to_string(nijk[2]);
-                std::string init_str = std::to_string(init_dims[0]) + "x" + std::to_string(init_dims[1]) + "x" + std::to_string(init_dims[2]);
-                message = message + "Egrid: " + grid_str + ". INIT file: " + init_str;
-                OPM_THROW(std::invalid_argument, message);
+                OPM_THROW(std::invalid_argument,
+                          fmt::format("Dimensions of Egrid differ from dimensions found in init file. "
+                                      "Egrid: {}x{}x{}. INIT file: {}x{}x{}",
+                                      nijk[0], nijk[1], nijk[2],
+                                      init_dims[0], init_dims[1], init_dims[2]));
             }
 
             if (init_nactive != nactive){
-                std::string message = "Number of active cells are different in Egrid and Init file.";
-                message = message + " Egrid: " + std::to_string(nactive) + ". INIT file: " + std::to_string(init_nactive);
-                OPM_THROW(std::invalid_argument, message);
+                OPM_THROW(std::invalid_argument,
+                          fmt::format("Number of active cells are different in Egrid and Init file."
+                                      " Egrid: {}. INIT file: {}", nactive, init_nactive));
             }
 
             auto trans_data = init.getInitData<float>("TRANNNC", m_grid_name);
 
             if (trans_data.size() != nnc1_array.size()){
-                std::string message = "inconsistent size of array TRANNNC in init file. ";
-                message = message + " Size of NNC1 and NNC2: " + std::to_string(nnc1_array.size());
-                message = message + " Size of TRANNNC: " + std::to_string(trans_data.size());
-                OPM_THROW(std::invalid_argument, message);
+                OPM_THROW(std::invalid_argument,
+                          fmt::format("inconsistent size of array TRANNNC in init file. "
+                                      "Size of NNC1 and NNC2: {} Size of TRANNNC: {}",
+                                      nnc1_array.size(), trans_data.size()));
             }
 
             transnnc_array = trans_data;
@@ -439,16 +440,15 @@ std::vector<std::array<float, 3>> EGrid::getXYZ_layer(int layer, const std::arra
    // layer is layer index, zero based. The box array is i and j range (i1,i2,j1,j2), also zero based
 
     if ((layer < 0) || (layer > (nijk[2] -1))){
-        std::string message = "invalid layer index " + std::to_string(layer) + ". Valid range [0, ";
-        message = message + std::to_string(nijk[2] -1) + "]";
-        throw std::invalid_argument(message);
+        throw std::invalid_argument(fmt::format("invalid layer index {}. Valid range [0,{}]",
+                                                layer, nijk[2] - 1));
     }
 
     if ((box[0] < 0) || (box[0]+1 > nijk[0]) || (box[1] < 0) || (box[1]+1 > nijk[0]) ||
          (box[2] < 0) || (box[2]+1 > nijk[1]) || (box[3] < 0) || (box[3]+1 > nijk[1]) ||
            (box[0] > box[1]) || (box[2] > box[3])){
 
-        throw std::invalid_argument("invalid box input, i1,i2,j1 or j2 out of valid range ");
+        throw std::invalid_argument("invalid box input, i1, i2, j1 or j2 out of valid range ");
     }
 
     int nodes_pr_surf = nijk[0]*nijk[1]*4;
@@ -644,6 +644,4 @@ void EGrid::getCellCorners(const std::array<int, 3>& ijk, const std::vector<floa
     }
 }
 
-
-
-}} // namespace Opm::ecl
+} // namespace Opm::EclIO

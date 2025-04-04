@@ -31,6 +31,8 @@
 #include <string>
 #include <vector>
 
+#include <fmt/format.h>
+
 #ifdef _MSC_VER
 #include <intrin.h>
 #endif
@@ -220,8 +222,7 @@ std::uint64_t Opm::EclIO::sizeOnDiskBinary(std::int64_t num, Opm::EclIO::eclArrT
 
     if (arrType == Opm::EclIO::MESS) {
         if (num > 0) {
-            std::string message = "In routine calcSizeOfArray, type MESS can not have size > 0";
-            OPM_THROW(std::invalid_argument, message);
+            OPM_THROW(std::invalid_argument, "In routine calcSizeOfArray, type MESS can not have size > 0");
         }
     } else {
         if (num > 0) {
@@ -312,9 +313,10 @@ void Opm::EclIO::readBinaryHeader(std::fstream& fileH, std::string& tmpStrName,
     fileH.read(reinterpret_cast<char*>(&bhead), sizeof(bhead));
     bhead = Opm::EclIO::flipEndianInt(bhead);
 
-    if (bhead != 16){
-        std::string message="Error reading binary header. Expected 16 bytes of header data, found " + std::to_string(bhead);
-        OPM_THROW(std::runtime_error, message);
+    if (bhead != 16) {
+        OPM_THROW(std::runtime_error,
+                  fmt::format("Error reading binary header. Expected 16 bytes of header data,"
+                              " found {}", bhead));
     }
 
     fileH.read(&tmpStrName[0], 8);
@@ -327,9 +329,10 @@ void Opm::EclIO::readBinaryHeader(std::fstream& fileH, std::string& tmpStrName,
     fileH.read(reinterpret_cast<char*>(&bhead), sizeof(bhead));
     bhead = Opm::EclIO::flipEndianInt(bhead);
 
-    if (bhead != 16){
-        std::string message="Error reading binary header. Expected 16 bytes of header data, found " + std::to_string(bhead);
-        OPM_THROW(std::runtime_error, message);
+    if (bhead != 16) {
+        OPM_THROW(std::runtime_error,
+                  fmt::format("Error reading binary header. Expected 16 bytes of header data,"
+                              " found {}", bhead));
     }
 }
 
@@ -488,8 +491,7 @@ std::vector<T> Opm::EclIO::readBinaryArray(std::fstream& fileH, const std::int64
 
         if (( num < maxNumberOfElements && rest != 0) ||
             (num == maxNumberOfElements && rest < 0)) {
-            std::string message = "Error reading binary data, incorrect number of elements";
-            OPM_THROW(std::runtime_error, message);
+            OPM_THROW(std::runtime_error, "Error reading binary data, incorrect number of elements");
         }
 
         int dtail;

@@ -28,6 +28,7 @@
 #include <stdexcept>
 #include <string>
 
+#include <fmt/format.h>
 
 namespace {
     int seqnumFromSeparateFilename(const std::string& filename)
@@ -49,7 +50,7 @@ namespace {
 }
 
 
-namespace Opm { namespace EclIO {
+namespace Opm::EclIO {
 
 ERst::ERst(const std::string& filename)
     : EclFile(filename)
@@ -73,8 +74,8 @@ bool ERst::hasReportStepNumber(int number) const
 void ERst::loadReportStepNumber(int number)
 {
     if (!hasReportStepNumber(number)) {
-        std::string message="Trying to load non existing report step number " + std::to_string(number);
-        OPM_THROW(std::invalid_argument, message);
+        OPM_THROW(std::invalid_argument,
+                  fmt::format("Trying to load non existing report step number {}", number));
     }
 
     std::vector<int> arrayIndexList;
@@ -101,13 +102,14 @@ std::vector<EclFile::EclEntry> ERst::listOfRstArrays(int reportStepNumber, const
     std::vector<EclEntry> list;
 
     if (!hasReportStepNumber(reportStepNumber)) {
-        std::string message = "Trying to get list of arrays from non existing report step number  " + std::to_string(reportStepNumber);
-        OPM_THROW(std::invalid_argument, message);
+        OPM_THROW(std::invalid_argument,
+                  fmt::format("Trying to get list of arrays from non existing "
+                              "report step number {}", reportStepNumber));
     }
 
     if ((lgr_name != "global") && (!this->hasLGR(lgr_name, reportStepNumber))) {
-        std::string message = "Trying to get list of arrays from non existing LGR " + lgr_name;
-        OPM_THROW(std::invalid_argument, message);
+        OPM_THROW(std::invalid_argument,
+                  "Trying to get list of arrays from non existing LGR " + lgr_name);
     }
 
     std::string lgr_name_upper = lgr_name;
@@ -149,8 +151,9 @@ std::vector<EclFile::EclEntry> ERst::listOfRstArrays(int reportStepNumber, const
 int ERst::occurrence_count(const std::string& name, int reportStepNumber) const
 {
     if (!hasReportStepNumber(reportStepNumber)) {
-        std::string message = "Trying to count vectors of name " + name + " from non existing sequence " + std::to_string(reportStepNumber);
-        OPM_THROW(std::invalid_argument, message);
+        OPM_THROW(std::invalid_argument,
+                  fmt::format("Trying to count vectors of name {}"
+                              " from non existing sequence {}", name, reportStepNumber));
     }
 
     int count = 0;
@@ -211,8 +214,8 @@ void ERst::initUnified()
 bool ERst::hasLGR(const std::string& gridname, int reportStepNumber) const
 {
     if (!hasReportStepNumber(reportStepNumber)) {
-        std::string message = "Checking for LGR name in non existing sequence " + std::to_string(reportStepNumber);
-        OPM_THROW(std::invalid_argument, message);
+        OPM_THROW(std::invalid_argument,
+                  fmt::format("Checking for LGR name in non existing sequence {}", reportStepNumber));
     }
 
    auto it_seqnum = std::find(seqnum.begin(), seqnum.end(), reportStepNumber);
@@ -245,8 +248,8 @@ void ERst::initSeparate(const int number)
 int ERst::get_start_index_lgrname(int number, const std::string& lgr_name)
 {
     if (!hasReportStepNumber(number)) {
-        std::string message = "Trying to get a restart vector from non report step " + std::to_string(number);
-        OPM_THROW(std::invalid_argument, message);
+        OPM_THROW(std::invalid_argument,
+                  fmt::format("Trying to get a restart vector from non report step {}", number));
     }
 
     auto range_it = arrIndexRange.find(number);
@@ -262,8 +265,7 @@ int ERst::get_start_index_lgrname(int number, const std::string& lgr_name)
     }
 
     if (start_ind_lgr == -1){
-        std::string message = "LGR '" + lgr_name + "'not found in restart file";
-        OPM_THROW(std::runtime_error, message);
+        OPM_THROW(std::runtime_error, "LGR '" + lgr_name + "'not found in restart file");
     }
 
     return start_ind_lgr;
@@ -272,8 +274,8 @@ int ERst::get_start_index_lgrname(int number, const std::string& lgr_name)
 std::tuple<int,int> ERst::getIndexRange(int reportStepNumber) const {
 
     if (!hasReportStepNumber(reportStepNumber)) {
-        std::string message = "Trying to get index range for non existing sequence " + std::to_string(reportStepNumber);
-        OPM_THROW(std::invalid_argument, message);
+        OPM_THROW(std::invalid_argument,
+                  fmt::format("Trying to get index range for non existing sequence {}", reportStepNumber));
     }
 
     auto range_it = arrIndexRange.find(reportStepNumber);
@@ -303,8 +305,8 @@ bool  ERst::hasArray(const std::string& name, int number) const
 int ERst::getArrayIndex(const std::string& name, int number, int occurrenc)
 {
     if (!hasReportStepNumber(number)) {
-        std::string message = "Trying to get vector " + name + " from non existing sequence " + std::to_string(number);
-        OPM_THROW(std::invalid_argument, message);
+        OPM_THROW(std::invalid_argument,
+                  fmt::format("Trying to get vector {} from non existing sequence {}", name, number));
     }
 
 
@@ -320,8 +322,8 @@ int ERst::getArrayIndex(const std::string& name, int number, int occurrenc)
     }
 
     if (std::distance(array_name.begin(),it) == indexRange.second) {
-        std::string message = "Array " + name + " not found in sequence " + std::to_string(number);
-        OPM_THROW(std::runtime_error, message);
+        OPM_THROW(std::runtime_error,
+                  fmt::format("Array {} not found in sequence {}", name, number));
     }
 
     return std::distance(array_name.begin(), it);
@@ -338,8 +340,7 @@ int ERst::getArrayIndex(const std::string& name, int number, const std::string& 
                         array_name.begin() + indexRange.second, name);
 
     if (std::distance(array_name.begin(),it) == indexRange.second) {
-        std::string message = "Array " + name + " not found for " + lgr_name;
-        OPM_THROW(std::runtime_error, message);
+        OPM_THROW(std::runtime_error, "Array " + name + " not found for " + lgr_name);
     }
 
     return std::distance(array_name.begin(), it);
@@ -444,4 +445,4 @@ template const std::vector<float>& ERst::getRestartData(int index, int reportSte
 template const std::vector<double>& ERst::getRestartData(int index, int reportStepNumber, const std::string& lgr_name);
 template const std::vector<bool>& ERst::getRestartData(int index, int reportStepNumber, const std::string& lgr_name);
 
-}} // namespace Opm::ecl
+} // namespace Opm::EclIO
