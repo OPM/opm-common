@@ -53,9 +53,9 @@ class numeric_limits<quad>
 public:
     static constexpr bool is_specialized = true;
 
-    static constexpr quad min() throw()
+    static constexpr quad min() noexcept
     { return FLT128_MIN; }
-    static constexpr quad max() throw()
+    static constexpr quad max() noexcept
     { return FLT128_MAX; }
 
     // number of bits in mantissa
@@ -66,9 +66,9 @@ public:
     static constexpr bool is_integer = false;
     static constexpr bool is_exact = false;
     static constexpr int radix = 0;
-    static constexpr quad epsilon() throw()
+    static constexpr quad epsilon() noexcept
     { return FLT128_EPSILON; }
-    static constexpr quad round_error() throw()
+    static constexpr quad round_error() noexcept
     { return 0.5; }
 
     static constexpr int min_exponent = FLT128_MIN_EXP;
@@ -81,13 +81,13 @@ public:
     static constexpr bool has_signaling_NaN = true;
     static constexpr float_denorm_style has_denorm = denorm_present;
     static constexpr bool has_denorm_loss = false;
-    static constexpr quad infinity() throw()
+    static constexpr quad infinity() noexcept
     { return __builtin_huge_valq(); }
-    static constexpr quad quiet_NaN() throw()
+    static constexpr quad quiet_NaN() noexcept
     { return __builtin_nan(""); }
-    static constexpr quad signaling_NaN() throw()
+    static constexpr quad signaling_NaN() noexcept
     { return __builtin_nans(""); }
-    static constexpr quad denorm_min() throw()
+    static constexpr quad denorm_min() noexcept
     { return FLT128_DENORM_MIN; }
 
     static constexpr bool is_iec559 = true;
