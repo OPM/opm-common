@@ -847,6 +847,7 @@ if(ENABLE_ECL_INPUT)
     examples/rst_deck.cpp
     examples/wellgraph.cpp
     examples/networkgraph.cpp
+    examples/networkgraph2.cpp
     examples/make_ext_smry.cpp
     examples/co2brinepvt.cpp
     examples/hysteresis.cpp
