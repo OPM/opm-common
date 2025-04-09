@@ -1985,6 +1985,10 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
     EclipseGridLGR& EclipseGrid::getLGRCell(std::size_t index){
         return lgr_children_cells[index];
       }
+      
+    const EclipseGridLGR& EclipseGrid::getLGRCell(std::size_t index) const{
+        return lgr_children_cells[index];
+    }
 
      const EclipseGridLGR& EclipseGrid::getLGRCell(const std::string& lgr_tag) const
     {

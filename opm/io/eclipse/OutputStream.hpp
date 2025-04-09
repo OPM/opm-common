@@ -107,6 +107,24 @@ namespace Opm { namespace EclIO { namespace OutputStream {
         void write(const std::string&         kw,
                    const std::vector<double>& data);
 
+        /// Write padded character data (8 characters per string)
+        /// to underlying output stream.
+        ///
+        /// \param[in] kw Name of output vector (keyword).
+        ///
+        /// \param[in] data Output values.
+        void write(const std::string&                        kw,
+                   const std::vector<PaddedOutputString<8>>& data);
+
+        /// Write padded character data (8 characters per string)
+        /// to underlying output stream.
+        ///
+        /// \param[in] kw Name of output vector (keyword).
+        ///
+        /// \param[in] data Output values.
+        void write(const std::string&                        kw,
+                   const std::vector<char>&                  data);                   
+
     private:
         /// Init file output stream.
         std::unique_ptr<EclOutput> stream_;
