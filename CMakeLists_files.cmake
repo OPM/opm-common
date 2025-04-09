@@ -442,10 +442,15 @@ if(ENABLE_ECL_OUTPUT)
           opm/output/eclipse/CreateDoubHead.cpp
           opm/output/eclipse/CreateInteHead.cpp
           opm/output/eclipse/CreateLogiHead.cpp
+          opm/output/eclipse/CreateLgrHeadi.cpp
+          opm/output/eclipse/CreateLgrHeadd.cpp
           opm/output/eclipse/DoubHEAD.cpp
           opm/output/eclipse/EclipseGridInspector.cpp
           opm/output/eclipse/EclipseIO.cpp
           opm/output/eclipse/InteHEAD.cpp
+          opm/output/eclipse/LgrHEADI.cpp
+          opm/output/eclipse/LgrHEADQ.cpp
+          opm/output/eclipse/LgrHEADD.cpp
           opm/output/eclipse/LinearisedOutputTable.cpp
           opm/output/eclipse/LoadRestart.cpp
           opm/output/eclipse/LogiHEAD.cpp
@@ -1528,6 +1533,10 @@ if(ENABLE_ECL_OUTPUT)
         opm/output/eclipse/VectorItems/group.hpp
         opm/output/eclipse/VectorItems/intehead.hpp
         opm/output/eclipse/VectorItems/logihead.hpp
+        opm/output/eclipse/VectorItems/lgrheadd.hpp
+        opm/output/eclipse/VectorItems/lgrheadi.hpp
+        opm/output/eclipse/VectorItems/lgrheadq.hpp
+
         opm/output/eclipse/VectorItems/msw.hpp
         opm/output/eclipse/VectorItems/network.hpp
         opm/output/eclipse/VectorItems/tabdims.hpp
@@ -1548,6 +1557,9 @@ if(ENABLE_ECL_OUTPUT)
         opm/output/eclipse/EclipseIO.hpp
         opm/output/eclipse/EclipseIOUtil.hpp
         opm/output/eclipse/InteHEAD.hpp
+        opm/output/eclipse/LgrHEADI.hpp
+        opm/output/eclipse/LgrHEADQ.hpp
+        opm/output/eclipse/LgrHEADD.hpp
         opm/output/eclipse/LinearisedOutputTable.hpp
         opm/output/eclipse/LogiHEAD.hpp
         opm/output/eclipse/RegionCache.hpp

@@ -28,6 +28,7 @@
 
 #include <array>
 #include <memory>
+#include <ranges>
 #include <optional>
 #include <stdexcept>
 #include <string>
@@ -82,7 +83,7 @@ namespace Opm {
                     const int * actnum = nullptr);
 
         virtual ~EclipseGrid() = default;
-
+        
         /// EclipseGrid ignores ACTNUM in Deck, and therefore needs ACTNUM
         /// explicitly.  If a null pointer is passed, every cell is active.
         explicit EclipseGrid(const Deck& deck, const int * actnum = nullptr);
@@ -109,6 +110,9 @@ namespace Opm {
         size_t getActiveIndex(size_t i, size_t j, size_t k) const {
             return activeIndex(i, j, k);
         }
+        const std::vector<std::size_t>& get_print_order_lgr () const {
+          return m_print_order_lgr_cells;
+        }       
 
         size_t getActiveIndex(size_t globalIndex) const {
             return activeIndex(globalIndex);
@@ -124,7 +128,7 @@ namespace Opm {
             return this->all_lgr_labels;
         }
         
-        std::string get_lgr_tag() const {
+        const std::string& get_lgr_tag() const {
             return this->lgr_label;
         }
 
@@ -287,6 +291,7 @@ namespace Opm {
         static bool hasEqualDVDEPTHZ(const Deck&);
         static bool allEqual(const std::vector<double> &v);
         EclipseGridLGR& getLGRCell(std::size_t index);
+        const EclipseGridLGR& getLGRCell(std::size_t index) const;
         const EclipseGridLGR& getLGRCell(const std::string& lgr_tag) const;
         int getLGR_global_father(std::size_t global_index,  const std::string& lgr_tag) const;
 

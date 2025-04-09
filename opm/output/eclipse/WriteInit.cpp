@@ -28,6 +28,8 @@
 
 #include <opm/output/data/Solution.hpp>
 #include <opm/output/eclipse/LogiHEAD.hpp>
+#include <opm/output/eclipse/LgrHEADQ.hpp>
+
 #include <opm/output/eclipse/Tables.hpp>
 #include <opm/output/eclipse/WriteRestartHelpers.hpp>
 
@@ -39,6 +41,7 @@
 #include <opm/input/eclipse/EclipseState/Runspec.hpp>
 
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
+#include <opm/io/eclipse/PaddedOutputString.hpp>
 
 #include <algorithm>
 #include <cstddef>
@@ -293,6 +296,13 @@ namespace {
         return lh.data();
     }
 
+    std::vector<bool> lgrheadq(const ::Opm::EclipseState& es)
+    {
+        const auto lh = ::Opm::RestartIO::LgrHEADQ{};
+
+        return lh.data();
+    }    
+
     void writeInitFileHeader(const ::Opm::EclipseState&      es,
                              const ::Opm::EclipseGrid&       grid,
                              const ::Opm::Schedule&          sched,
@@ -313,6 +323,52 @@ namespace {
             const auto dh = ::Opm::RestartIO::Helpers::
                 createDoubHead(es, sched, 0, 0, 0.0, 0.0);
 
+            initFile.write("DOUBHEAD", dh);
+        } 
+    }
+
+
+    void writeInitFileHeaderLGRCell(const ::Opm::EclipseState&      es,
+                                    const ::Opm::EclipseGridLGR&    local_grid,
+                                    const ::Opm::Schedule&          sched,
+                                    Opm::EclIO::OutputStream::Init& initFile,
+                                    int index)
+    {
+        using PaddedString = Opm::EclIO::PaddedOutputString<8>;
+        // using NullMessage = std::vector<char>;
+        const auto lgr_label = std::vector{PaddedString{local_grid.get_lgr_tag()}};
+        initFile.write("LGR", lgr_label);
+        // LGR header data
+        {
+            const auto ih = ::Opm::RestartIO::Helpers::
+            createLgrHeadi(es, index);    
+            initFile.write("LGRHEADI", ih);
+        }
+
+        {
+            initFile.write("LGRHEADQ", lgrheadq(es));
+        }
+
+        {
+            const auto dh = ::Opm::RestartIO::Helpers::createLgrHeadd();
+            initFile.write("LGRHEADD", dh);
+        } 
+                                
+        // LGR header array
+        {
+            const auto ih = ::Opm::RestartIO::Helpers::
+            createInteHead(es, local_grid, sched, 0.0, 0, 0, 0);
+
+            initFile.write("INTEHEAD", ih);
+        }
+
+        {
+            initFile.write("LOGIHEAD", logihead(es));
+        }
+
+        {
+            const auto dh = ::Opm::RestartIO::Helpers::
+            createDoubHead(es, sched, 0, 0, 0.0, 0.0);
             initFile.write("DOUBHEAD", dh);
         }
     }
@@ -647,22 +703,25 @@ void Opm::InitIO::write(const ::Opm::EclipseState&              es,
                         const std::vector<::Opm::NNCdata>&      nnc,
                         ::Opm::EclIO::OutputStream::Init&       initFile)
 {
+    
+    using PaddedString = Opm::EclIO::PaddedOutputString<8>;
+    using NullMessage = std::vector<char>;
     const auto& units = es.getUnits();
 
+    // GLOBAL HEADER - ITEM 1
     writeInitFileHeader(es, grid, schedule, initFile);
 
+    // GLOBAL PROPERTY ARRAYS - ITEM 2
     // The PORV vector is a special case.  This particular vector always
     // holds a total of nx*ny*nz elements, and the elements are explicitly
     // set to zero for inactive cells.  This treatment implies that the
     // active/inactive cell mapping can be inferred by reading the PORV
     // vector from the result set.
     writePoreVolume(es, units, initFile);
-
     writeGridGeometry(grid, units, initFile);
-
     writeDoubleCellProperties(es, units, initFile);
     writeSimulatorProperties(grid, simProps, initFile);
-
+    
     // Size defaulted MULT* arrays according to the number of active cells
     // in the processed simulation grid--i.e., grid.getNumActive().
     {
@@ -679,8 +738,27 @@ void Opm::InitIO::write(const ::Opm::EclipseState&              es,
         writeSimulatorProperties(grid, multipliers, initFile);
     }
 
-    writeTableData(es, units, initFile);
+    // HEADER FOR EACH LGR - ITEM 3
+    // ITEM 4
+    if (grid.is_lgr()) 
+    {
+        auto all_lgr_tag  = grid.get_all_lgr_labels();
+        for (std::size_t index : grid.get_print_order_lgr()) 
+        {
+            auto lgr_label = all_lgr_tag[index];
+            auto lgr_grid = grid.getLGRCell(lgr_label);
+            // const auto& lname =  local_grid.get_lgr_tag();
+            // std::vector<std::string> lgr_labels = local_grid.get_all_labels();
+            // std::vector<std::string> lgr_labels_l = local_grid.get_all_lgr_labels();
+            writeInitFileHeaderLGRCell(es, lgr_grid, schedule, initFile, index);            
+            //initFile.write("LGRSGONE", NullMessage{});
+        }
+    }
 
+
+    // end of header init including lgr
+
+    writeTableData(es, units, initFile);
     writeIntegerCellProperties(es, initFile);
     writeIntegerMaps(std::move(int_data), initFile);
 
