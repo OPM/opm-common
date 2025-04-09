@@ -54,16 +54,28 @@ inline void createDot(const Opm::Schedule& schedule, const std::string& casename
     os << "// Convert output to PDF with 'dot -Tpdf " << casename << ".gv > " << casename << ".pdf'\n";
     os << "strict digraph \"" << casename << "\"\n{\n";
     const std::size_t last = schedule.size() - 1;
-    const auto groupnames = schedule.groupNames(last);
     // by default, it is the last report step, while it can be any report step
     const auto& network = schedule[last].network();
 
     for (const auto& branch : network.branches()) {
-        os << "    \"" << branch->uptree_node() << "\" -> \"" << branch->downtree_node() << "\";\n";
+        os << "    \"" << branch->uptree_node() << "\" -> \"" << branch->downtree_node() << "\"";
+        if (branch->vfp_table().has_value()) {
+            os << " [label=\"" << branch->vfp_table().value() << "\"]";
+        }
+        os << ";\n";
     }
+
     // Highlight root nodes
     for (const auto& root : network.roots()) {
-        os << "    \"" << root.get().name() << "\" [shape=doubleoctagon];\n";
+        const auto& root_node = root.get();
+        os << "    \"" << root_node.name() << "\" [shape=doubleoctagon";
+        if (root_node.terminal_pressure().has_value()) {
+            if (root_node.terminal_pressure().has_value()) {
+                // TODO: we should be able to get the Unit conversion here
+                os << ", label=\"" << root_node.name() << " : " << root_node.terminal_pressure().value()/1.e5 << "bars\"";
+            }
+        }
+        os << "];\n";
     }
 
     // Highlight leaf nodes
