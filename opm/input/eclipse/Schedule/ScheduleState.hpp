@@ -86,6 +86,7 @@ namespace Opm {
     class UDQActive;
     class UDQConfig;
     class Well;
+    class WellFractureSeeds;
     class WellTestConfig;
     class WListManager;
 
@@ -498,6 +499,11 @@ namespace Opm {
         map_member<int, VFPInjTable> vfpinj;
         map_member<std::string, Group> groups;
         map_member<std::string, Well> wells;
+
+        /// Well fracturing seed points and associate fracture plane normal
+        /// vectors.
+        map_member<std::string, WellFractureSeeds> wseed;
+
         // constant flux aquifers
         std::unordered_map<int, SingleAquiferFlux> aqufluxs;
         BCProp bcprop;
@@ -537,6 +543,7 @@ namespace Opm {
             serializer(vfpinj);
             serializer(groups);
             serializer(wells);
+            serializer(wseed);
             serializer(aqufluxs);
             serializer(bcprop);
             serializer(inj_streams);

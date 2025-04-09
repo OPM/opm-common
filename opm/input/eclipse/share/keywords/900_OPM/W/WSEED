@@ -1,0 +1,47 @@
+{
+  "name": "WSEED",
+  "sections": [
+    "SCHEDULE"
+  ],
+  "requires": ["MECH"],
+  "items": [
+    {
+      "item": 1,
+      "name": "WELL",
+      "value_type": "STRING"
+    },
+    {
+      "item": 2,
+      "name": "I",
+      "value_type": "INT"
+    },
+    {
+      "item": 3,
+      "name": "J",
+      "value_type": "INT"
+    },
+    {
+      "item": 4,
+      "name": "K",
+      "value_type": "INT"
+    },
+    {
+      "item": 5,
+      "name": "NORMAL_X",
+      "value_type": "DOUBLE",
+      "dimension": "Length"
+    },
+    {
+      "item": 6,
+      "name": "NORMAL_Y",
+      "value_type": "DOUBLE",
+      "dimension": "Length"
+    },
+    {
+      "item": 7,
+      "name": "NORMAL_Z",
+      "value_type": "DOUBLE",
+      "dimension": "Length"
+    }
+  ]
+}

@@ -18,32 +18,37 @@
  */
 
 #include "WellKeywordHandlers.hpp"
+
 #include <opm/common/OpmLog/OpmLog.hpp>
 #include <opm/common/utility/OpmInputError.hpp>
 #include <opm/common/utility/String.hpp>
 
-#include <opm/input/eclipse/Deck/DeckKeyword.hpp>
-
-#include <opm/input/eclipse/Parser/ParseContext.hpp>
-#include <opm/input/eclipse/Parser/ParserKeywords/F.hpp>
-#include <opm/input/eclipse/Parser/ParserKeywords/W.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 
 #include <opm/input/eclipse/Schedule/Network/ExtNetwork.hpp>
+#include <opm/input/eclipse/Schedule/ScheduleGrid.hpp>
 #include <opm/input/eclipse/Schedule/ScheduleState.hpp>
 #include <opm/input/eclipse/Schedule/ScheduleStatic.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQActive.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQConfig.hpp>
 #include <opm/input/eclipse/Schedule/Well/NameOrder.hpp>
 #include <opm/input/eclipse/Schedule/Well/WDFAC.hpp>
-#include <opm/input/eclipse/Schedule/Well/Well.hpp>
-#include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
-#include <opm/input/eclipse/Schedule/Well/WellEconProductionLimits.hpp>
-#include <opm/input/eclipse/Schedule/Well/WellTestConfig.hpp>
 #include <opm/input/eclipse/Schedule/Well/WListManager.hpp>
 #include <opm/input/eclipse/Schedule/Well/WVFPDP.hpp>
 #include <opm/input/eclipse/Schedule/Well/WVFPEXP.hpp>
+#include <opm/input/eclipse/Schedule/Well/Well.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellEconProductionLimits.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellFractureSeeds.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellTestConfig.hpp>
 
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
+
+#include <opm/input/eclipse/Deck/DeckKeyword.hpp>
+
+#include <opm/input/eclipse/Parser/ParseContext.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/F.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/W.hpp>
 
 #include "../HandlerContext.hpp"
 
@@ -52,6 +57,10 @@
 
 #include <algorithm>
 #include <memory>
+#include <numeric>
+#include <string>
+#include <unordered_set>
+#include <vector>
 
 namespace Opm {
 
@@ -967,6 +976,76 @@ void handleWPAVEDEP(HandlerContext& handlerContext)
     }
 }
 
+/// Handler function for well fracturing seeds
+///
+/// Keyword structure:
+///
+///   WSEED
+///     WellName  I  J  K  nx  ny  nz /
+///     WellName  I  J  K  nx  ny  nz /
+///     WellName  I  J  K  nx  ny  nz /
+///   /
+///
+/// in which 'WellName' is a well, well list, well template or well list
+/// template.  I,J,K are regular well connection coordinates and nx,ny,nz
+/// are the components of the fracturing plane's normal vector.
+void handleWSEED(HandlerContext& handlerContext)
+{
+    const auto* grid = handlerContext.grid.get_grid();
+    if (grid == nullptr) {
+        return;
+    }
+
+    auto& seeds = handlerContext.state().wseed;
+    auto updated_seed_wells = std::unordered_set<std::string>{};
+
+    for (const auto& record : handlerContext.keyword) {
+        const auto wellNamePattern = record.getItem<ParserKeywords::WSEED::WELL>()
+            .getTrimmedString(0);
+
+        const auto well_names = handlerContext.wellNames(wellNamePattern, false);
+        if (well_names.empty()) {
+            handlerContext.invalidNamePattern(wellNamePattern);
+            continue;
+        }
+
+        // Subtract one to convert one-based input indices to zero-based
+        // internal processing indices.
+        const auto cellSeedIndex = grid->getGlobalIndex
+            (record.getItem<ParserKeywords::WSEED::I>().get<int>(0) - 1,
+             record.getItem<ParserKeywords::WSEED::J>().get<int>(0) - 1,
+             record.getItem<ParserKeywords::WSEED::K>().get<int>(0) - 1);
+
+        const auto cellSeedNormal = WellFractureSeeds::NormalVector {
+            record.getItem<ParserKeywords::WSEED::NORMAL_X>().getSIDouble(0),
+            record.getItem<ParserKeywords::WSEED::NORMAL_Y>().getSIDouble(0),
+            record.getItem<ParserKeywords::WSEED::NORMAL_Z>().getSIDouble(0),
+        };
+
+        for (const auto& well_name : well_names) {
+            const auto hasConn = handlerContext.state()
+                .wells(well_name)
+                .getConnections()
+                .hasGlobalIndex(cellSeedIndex);
+
+            if (! hasConn) { continue; }
+
+            auto seed = seeds.has(well_name)
+                ? std::make_shared<WellFractureSeeds>(seeds(well_name))
+                : std::make_shared<WellFractureSeeds>(well_name);
+
+            if (seed->updateSeed(cellSeedIndex, cellSeedNormal)) {
+                updated_seed_wells.insert(well_name);
+                seeds.update(well_name, std::move(seed));
+            }
+        }
+    }
+
+    for (const auto& updated_seed_well : updated_seed_wells) {
+        seeds.get(updated_seed_well).finalizeSeeds();
+    }
+}
+
 void handleWTEST(HandlerContext& handlerContext)
 {
     auto new_config = handlerContext.state().wtest_config.get();
@@ -1014,6 +1093,7 @@ getWellHandlers()
         { "WLIST"   , &handleWLIST    },
         { "WPAVE"   , &handleWPAVE    },
         { "WPAVEDEP", &handleWPAVEDEP },
+        { "WSEED"   , &handleWSEED    },
         { "WTEST"   , &handleWTEST    },
     };
 }
