@@ -24,6 +24,7 @@
 
 #include <algorithm>
 #include <string>
+#include <unordered_map>
 
 template <typename SourceCellSequence>
 auto findInSequence(SourceCellSequence&& sequence, const Opm::SourceComponent comp)
@@ -37,33 +38,25 @@ namespace Opm {
 namespace {
 
 namespace fromstring {
-SourceComponent component(const std::string& s) {
-    if (s == "OIL")
-        return SourceComponent::OIL;
 
-    if (s == "GAS")
-        return SourceComponent::GAS;
+SourceComponent component(const std::string& s)
+{
+    static const auto compMap = std::unordered_map<std::string, SourceComponent>{
+        {"GAS",     SourceComponent::GAS},
+        {"MICR",    SourceComponent::MICR},
+        {"NONE",    SourceComponent::NONE},
+        {"OIL",     SourceComponent::OIL},
+        {"OXYG",    SourceComponent::OXYG},
+        {"POLYMER", SourceComponent::POLYMER},
+        {"SOLVENT", SourceComponent::SOLVENT},
+        {"UREA",    SourceComponent::UREA},
+        {"WATER",   SourceComponent::WATER},
+    };
 
-    if (s == "WATER")
-        return SourceComponent::WATER;
-
-    if (s == "SOLVENT")
-        return SourceComponent::SOLVENT;
-
-    if (s == "POLYMER")
-        return SourceComponent::POLYMER;
-
-    if (s == "MICR")
-        return SourceComponent::MICR;
-
-    if (s == "OXYG")
-        return SourceComponent::OXYG;
-
-    if (s == "UREA")
-        return SourceComponent::UREA;
-
-    if (s == "NONE")
-        return SourceComponent::NONE;
+    const auto it = compMap.find(s);
+    if (it != compMap.end()) {
+        return it->second;
+    }
 
     throw std::invalid_argument("Not recognized source component: " + s);
 }
