@@ -142,18 +142,6 @@ Source Source::serializationTestObject()
     return result;
 }
 
-std::size_t Source::size() const {
-    return this->m_cells.size();
-}
-
-std::map<std::array<int, 3>, std::vector<Source::SourceCell>>::const_iterator Source::begin() const {
-    return this->m_cells.begin();
-}
-
-std::map<std::array<int, 3>, std::vector<Source::SourceCell>>::const_iterator Source::end() const {
-    return this->m_cells.end();
-}
-
 bool Source::hasSource(const std::array<int, 3>& input) const
 {
     return m_cells.find(input) != m_cells.end();
