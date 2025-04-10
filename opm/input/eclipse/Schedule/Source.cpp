@@ -37,6 +37,15 @@ auto findInSequence(SourceCellSequence&& sequence, const Opm::SourceComponent co
 namespace Opm {
 namespace {
 
+    std::optional<double> optionalItemValue(const DeckItem& i)
+    {
+        if (! i.hasValue(0)) {
+            return {};
+        }
+
+        return i.getSIDouble(0);
+    }
+
 namespace fromstring {
 
 SourceComponent component(const std::string& s)
@@ -70,15 +79,9 @@ using SOURCEKEY = ParserKeywords::SOURCE;
 Source::SourceCell::SourceCell(const DeckRecord& record)
     : component(fromstring::component(record.getItem<SOURCEKEY::COMPONENT>().get<std::string>(0)))
     , rate(record.getItem<SOURCEKEY::RATE>().getSIDouble(0))
-    , hrate(std::nullopt)
-    , temperature(std::nullopt)
+    , hrate(optionalItemValue(record.getItem<SOURCEKEY::HRATE>()))
+    , temperature(optionalItemValue(record.getItem<SOURCEKEY::TEMP>()))
 {
-    if (record.getItem<SOURCEKEY::HRATE>().hasValue(0))
-        hrate = record.getItem<SOURCEKEY::HRATE>().getSIDouble(0);
-
-    if (record.getItem<SOURCEKEY::TEMP>().hasValue(0))
-        temperature = record.getItem<SOURCEKEY::TEMP>().getSIDouble(0);
-
 }
 
 Source::SourceCell Source::SourceCell::serializationTestObject()
