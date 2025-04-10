@@ -21,7 +21,8 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
-
+#include <cstdint>
+#include <opm/common/utility/numeric/VectorUtil.hpp>
 #include <opm/output/eclipse/WriteInit.hpp>
 
 #include <opm/io/eclipse/OutputStream.hpp>
@@ -296,10 +297,9 @@ namespace {
         return lh.data();
     }
 
-    std::vector<bool> lgrheadq(const ::Opm::EclipseState& es)
+    std::vector<bool> lgrheadq([[maybe_unused]] const ::Opm::EclipseState& es)
     {
         const auto lh = ::Opm::RestartIO::LgrHEADQ{};
-
         return lh.data();
     }    
 
@@ -332,7 +332,7 @@ namespace {
                                     const ::Opm::EclipseGridLGR&    local_grid,
                                     const ::Opm::Schedule&          sched,
                                     Opm::EclIO::OutputStream::Init& initFile,
-                                    int index)
+                                                 int                index)
     {
         using PaddedString = Opm::EclIO::PaddedOutputString<8>;
         // using NullMessage = std::vector<char>;
@@ -382,6 +382,20 @@ namespace {
         initFile.write("PORV", singlePrecision(porv));
     }
 
+    void writePoreVolumeLGRCell(const ::Opm::EclipseState&              es,
+                                const ::Opm::UnitSystem&                units,
+                                      ::Opm::EclIO::OutputStream::Init& initFile,
+                                const   std::vector<int>&               global_fathers,
+                                const               int                 volume_prop)
+
+    {
+        auto porv = es.globalFieldProps().porv(true);
+        auto local_porv = VectorUtil::filterArray(porv, global_fathers);
+        units.from_si(::Opm::UnitSystem::measure::volume, local_porv);
+        VectorUtil::scalarVectorOperation(static_cast<double>(volume_prop), local_porv,  std::divides<double>{});
+        initFile.write("PORV", singlePrecision(local_porv));
+    }    
+
     void writeIntegerCellProperties(const ::Opm::EclipseState&        es,
                                     ::Opm::EclIO::OutputStream::Init& initFile)
     {
@@ -430,6 +444,47 @@ namespace {
         initFile.write("DY"   , dy);
         initFile.write("DZ"   , dz);
     }
+
+    void writeGridGeometryLGRCell(const ::Opm::EclipseGrid&         grid,
+                                  const ::Opm::EclipseGridLGR&      lgr_grid,
+                                  const ::Opm::UnitSystem&          units,
+                                        ::Opm::EclIO::OutputStream::Init& initFile,
+                                  const                  int        nx,
+                                  const                  int        ny,
+                                  const                  int        nz)
+    {
+        const auto length = ::Opm::UnitSystem::measure::length;
+        auto convert_length = [&units](std::vector<float>& depth) 
+        {
+            for (std::size_t index = 0; index < depth.size(); ++index) {
+                depth[index] = units.from_si(length, depth[index]);
+            }           
+        };
+        const auto nAct   = lgr_grid.getNumActive();       
+        auto dx    = std::vector<float>{};  dx   .reserve(nAct);
+        auto dy    = std::vector<float>{};  dy   .reserve(nAct);
+        auto dz    = std::vector<float>{};  dz   .reserve(nAct);
+        auto depth = singlePrecision(lgr_grid.getLGRCell_all_depth(grid));
+
+        for (auto cell = 0*nAct; cell < nAct; ++cell) {
+            const auto  globCell = lgr_grid.getGlobalIndex(cell);
+            const auto& dims     = grid.getCellDims(globCell);
+
+            dx   .push_back(units.from_si(length, dims[0]));
+            dy   .push_back(units.from_si(length, dims[1]));
+            dz   .push_back(units.from_si(length, dims[2]));
+        }
+
+        VectorUtil::scalarVectorOperation(static_cast<float>(nx), dx, std::divides<float>{});
+        VectorUtil::scalarVectorOperation(static_cast<float>(ny), dy, std::divides<float>{});
+        VectorUtil::scalarVectorOperation(static_cast<float>(nz), dz, std::divides<float>{});
+        convert_length(depth);
+        initFile.write("DEPTH", depth);
+        initFile.write("DX"   , dx);
+        initFile.write("DY"   , dy);
+        initFile.write("DZ"   , dz);
+    }
+
 
     template <class WriteVector>
     void writeCellDoublePropertiesWithDefaultFlag(const Properties&               propList,
@@ -703,8 +758,7 @@ void Opm::InitIO::write(const ::Opm::EclipseState&              es,
                         const std::vector<::Opm::NNCdata>&      nnc,
                         ::Opm::EclIO::OutputStream::Init&       initFile)
 {
-    
-    using PaddedString = Opm::EclIO::PaddedOutputString<8>;
+    // The INIT file is a binary file.  The data is written in the   
     using NullMessage = std::vector<char>;
     const auto& units = es.getUnits();
 
@@ -742,17 +796,22 @@ void Opm::InitIO::write(const ::Opm::EclipseState&              es,
     // ITEM 4
     if (grid.is_lgr()) 
     {
-        auto all_lgr_tag  = grid.get_all_lgr_labels();
+        std::vector<std::string> all_lgr_tag  = grid.get_all_lgr_labels();
         for (std::size_t index : grid.get_print_order_lgr()) 
         {
             auto lgr_label = all_lgr_tag[index];
-            auto lgr_grid = grid.getLGRCell(lgr_label);
-            // const auto& lname =  local_grid.get_lgr_tag();
-            // std::vector<std::string> lgr_labels = local_grid.get_all_labels();
-            // std::vector<std::string> lgr_labels_l = local_grid.get_all_lgr_labels();
-            writeInitFileHeaderLGRCell(es, lgr_grid, schedule, initFile, index);            
-            //initFile.write("LGRSGONE", NullMessage{});
+            const EclipseGridLGR& lgr_grid = grid.getLGRCell(lgr_label);
+            const std::array<int,3> subdivisions = grid.getCellSubdivisionRatioLGR(lgr_label);
+            std::vector<int> global_fathers = lgr_grid.getLGRCell_global_father(grid);
+            writeInitFileHeaderLGRCell(es, lgr_grid, schedule, initFile, index+1);           
+            writePoreVolumeLGRCell(es, units, initFile, global_fathers, subdivisions[0]*subdivisions[1]*subdivisions[2]);
+            writeGridGeometryLGRCell(grid, lgr_grid, units, initFile, subdivisions[0], subdivisions[1], subdivisions[2]);
+            //writeDoubleCellPropertiesLGRCell(es, units, initFile);
+            //writeSimulatorPropertiesLGRCell(grid, simProps, initFile);
+
+            //
         }
+        initFile.write("LGRSGONE", NullMessage{});
     }
 
 

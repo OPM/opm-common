@@ -101,7 +101,7 @@ const std::string deckStringLGR = std::string { R"(RUNSPEC
     ENDFIN
     INIT
     DX 
-            9*1000 /
+        9*1000 /
     DY
         9*1000 /
     DZ
