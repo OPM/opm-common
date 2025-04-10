@@ -129,7 +129,7 @@ void Source::addSourceCell(const std::array<int,3>& ijk, const SourceCell& cell)
 Source Source::serializationTestObject()
 {
     Source result;
-    std::array<int, 3> ijk = {1,1,1};
+    const std::array<int, 3> ijk = {1,1,1};
     result.m_cells = {{ijk, {SourceCell::serializationTestObject()}}};
 
     return result;
@@ -142,7 +142,7 @@ bool Source::hasSource(const std::array<int, 3>& input) const
 
 double Source::rate(const std::array<int, 3>& ijk, SourceComponent input) const
 {
-    auto it = m_cells.find(ijk);
+    const auto it = m_cells.find(ijk);
     if (it != m_cells.end()) {
         const auto it2 = findInSequence(it->second, input);
                             
@@ -155,7 +155,7 @@ double Source::rate(const std::array<int, 3>& ijk, SourceComponent input) const
 
 std::optional<double> Source::hrate(const std::array<int, 3>& ijk, SourceComponent input) const
 {
-    auto it = m_cells.find(ijk);
+    const auto it = m_cells.find(ijk);
     if (it != m_cells.end()) {
         const auto it2 = findInSequence(it->second, input);
 
@@ -168,7 +168,7 @@ std::optional<double> Source::hrate(const std::array<int, 3>& ijk, SourceCompone
 
 std::optional<double> Source::temperature(const std::array<int, 3>& ijk, SourceComponent input) const
 {
-    auto it = m_cells.find(ijk);
+    const auto it = m_cells.find(ijk);
     if (it != m_cells.end()) {
         const auto it2 = findInSequence(it->second, input);
 
