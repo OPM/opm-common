@@ -410,7 +410,11 @@ inline std::string make_deck_name(const std::string_view& str) {
 
 inline std::string_view update_record_buffer(const std::string_view& record_buffer,
                                              const std::string_view& line) {
-    if (record_buffer.empty())
+    // If line.data() + line.size() - record_buffer.data() < 0 something is wrong with the
+    // record_buffer, possibly caused by reading in too much data due to an incorreclty
+    // terminated keyword. In this case, the simulation might run into a segmentation
+    // fault, so instead: return the line and let the error be handled later.
+    if (record_buffer.empty() || line.data() + line.size() - record_buffer.data() < 0)
         return line;
     else {
         const std::size_t size = line.data() + line.size() - record_buffer.data();
