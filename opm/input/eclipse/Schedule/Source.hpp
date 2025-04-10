@@ -75,9 +75,9 @@ public:
 
     static Source serializationTestObject();
 
-    std::size_t size() const;
-    std::map<std::array<int, 3>, std::vector<SourceCell>>::const_iterator begin() const;
-    std::map<std::array<int, 3>, std::vector<SourceCell>>::const_iterator end() const;
+    auto size() const { return this->m_cells.size(); }
+    auto begin() const { return this->m_cells.begin(); }
+    auto end() const { return this->m_cells.end(); }
     bool operator==(const Source& other) const;
 
     double rate(const std::array<int, 3>& ijk, SourceComponent input ) const;
@@ -86,6 +86,7 @@ public:
     bool hasSource(const std::array<int, 3>& input) const;
 
     void updateSource(const DeckRecord& record);
+    void addSourceCell(const std::array<int,3>& ijk, const SourceCell& cell);
 
     template<class Serializer>
     void serializeOp(Serializer& serializer)

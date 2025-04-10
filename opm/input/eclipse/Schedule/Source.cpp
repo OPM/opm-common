@@ -24,6 +24,7 @@
 
 #include <algorithm>
 #include <string>
+#include <unordered_map>
 
 template <typename SourceCellSequence>
 auto findInSequence(SourceCellSequence&& sequence, const Opm::SourceComponent comp)
@@ -36,36 +37,37 @@ auto findInSequence(SourceCellSequence&& sequence, const Opm::SourceComponent co
 namespace Opm {
 namespace {
 
+    std::optional<double> optionalItemValue(const DeckItem& i)
+    {
+        if (! i.hasValue(0)) {
+            return {};
+        }
+
+        return i.getSIDouble(0);
+    }
+
 namespace fromstring {
-SourceComponent component(const std::string& s) {
-    if (s == "OIL")
-        return SourceComponent::OIL;
 
-    if (s == "GAS")
-        return SourceComponent::GAS;
+SourceComponent component(const std::string& s)
+{
+    static const auto compMap = std::unordered_map<std::string, SourceComponent>{
+        {"GAS",     SourceComponent::GAS},
+        {"MICR",    SourceComponent::MICR},
+        {"NONE",    SourceComponent::NONE},
+        {"OIL",     SourceComponent::OIL},
+        {"OXYG",    SourceComponent::OXYG},
+        {"POLYMER", SourceComponent::POLYMER},
+        {"SOLVENT", SourceComponent::SOLVENT},
+        {"UREA",    SourceComponent::UREA},
+        {"WATER",   SourceComponent::WATER},
+    };
 
-    if (s == "WATER")
-        return SourceComponent::WATER;
+    const auto it = compMap.find(s);
+    if (it != compMap.end()) {
+        return it->second;
+    }
 
-    if (s == "SOLVENT")
-        return SourceComponent::SOLVENT;
-
-    if (s == "POLYMER")
-        return SourceComponent::POLYMER;
-
-    if (s == "MICR")
-        return SourceComponent::MICR;
-
-    if (s == "OXYG")
-        return SourceComponent::OXYG;
-
-    if (s == "UREA")
-        return SourceComponent::UREA;
-
-    if (s == "NONE")
-        return SourceComponent::NONE;
-
-    throw std::invalid_argument("Not recognized source component: " + s);
+    throw std::invalid_argument("Unrecognized source component: " + s);
 }
 
 }
@@ -74,19 +76,12 @@ SourceComponent component(const std::string& s) {
 // SourceCell functions
 // --------------------
 using SOURCEKEY = ParserKeywords::SOURCE;
-Source::SourceCell::SourceCell(const DeckRecord& record) :
-    component(fromstring::component(record.getItem<SOURCEKEY::COMPONENT>().get<std::string>(0))),
-    rate(record.getItem<SOURCEKEY::RATE>().getSIDouble(0)),
-    hrate(std::nullopt),
-    temperature(std::nullopt)
+Source::SourceCell::SourceCell(const DeckRecord& record)
+    : component(fromstring::component(record.getItem<SOURCEKEY::COMPONENT>().get<std::string>(0)))
+    , rate(record.getItem<SOURCEKEY::RATE>().getSIDouble(0))
+    , hrate(optionalItemValue(record.getItem<SOURCEKEY::HRATE>()))
+    , temperature(optionalItemValue(record.getItem<SOURCEKEY::TEMP>()))
 {
-
-    if (record.getItem<SOURCEKEY::HRATE>().hasValue(0))
-        hrate = record.getItem<SOURCEKEY::HRATE>().getSIDouble(0);
-
-    if (record.getItem<SOURCEKEY::TEMP>().hasValue(0))
-        temperature = record.getItem<SOURCEKEY::TEMP>().getSIDouble(0);
-
 }
 
 Source::SourceCell Source::SourceCell::serializationTestObject()
@@ -99,11 +94,13 @@ Source::SourceCell Source::SourceCell::serializationTestObject()
     return result;
 }
 
-bool Source::SourceCell::operator==(const Source::SourceCell& other) const {
-    return this->component == other.component && 
-           this->rate == other.rate &&
-           this->hrate == other.hrate &&
-           this->temperature == other.temperature;
+bool Source::SourceCell::operator==(const Source::SourceCell& other) const
+{
+    return this->component == other.component
+        && this->rate == other.rate
+        && this->hrate == other.hrate
+        && this->temperature == other.temperature
+        ;
 }
 
 // Source functions
@@ -111,19 +108,24 @@ bool Source::SourceCell::operator==(const Source::SourceCell& other) const {
 void Source::updateSource(const DeckRecord& record)
 {
     const Source::SourceCell sourcenew(record);
-    std::array<int, 3> ijk {record.getItem<SOURCEKEY::I>().get<int>(0)-1, 
+    std::array<int, 3> ijk {record.getItem<SOURCEKEY::I>().get<int>(0)-1,
                              record.getItem<SOURCEKEY::J>().get<int>(0)-1,
                              record.getItem<SOURCEKEY::K>().get<int>(0)-1};
 
-    auto [cellPos, inserted] = this->m_cells.try_emplace(ijk, std::vector { sourcenew });
+    addSourceCell(ijk, sourcenew);
+}
+
+void Source::addSourceCell(const std::array<int,3>& ijk, const SourceCell& cell)
+{
+    auto [cellPos, inserted] = this->m_cells.try_emplace(ijk, std::vector { cell });
     if (! inserted) {
-        auto sourcePos = findInSequence(cellPos->second, sourcenew.component);
-    
+        auto sourcePos = findInSequence(cellPos->second, cell.component);
+
         if (sourcePos != cellPos->second.end()) {
-            *sourcePos = sourcenew;
+            *sourcePos = cell;
         }
         else {
-            cellPos->second.push_back(sourcenew);
+            cellPos->second.push_back(cell);
         }
     }
 }
@@ -131,22 +133,10 @@ void Source::updateSource(const DeckRecord& record)
 Source Source::serializationTestObject()
 {
     Source result;
-    std::array<int, 3> ijk = {1,1,1};
+    const std::array<int, 3> ijk = {1,1,1};
     result.m_cells = {{ijk, {SourceCell::serializationTestObject()}}};
 
     return result;
-}
-
-std::size_t Source::size() const {
-    return this->m_cells.size();
-}
-
-std::map<std::array<int, 3>, std::vector<Source::SourceCell>>::const_iterator Source::begin() const {
-    return this->m_cells.begin();
-}
-
-std::map<std::array<int, 3>, std::vector<Source::SourceCell>>::const_iterator Source::end() const {
-    return this->m_cells.end();
 }
 
 bool Source::hasSource(const std::array<int, 3>& input) const
@@ -156,10 +146,10 @@ bool Source::hasSource(const std::array<int, 3>& input) const
 
 double Source::rate(const std::array<int, 3>& ijk, SourceComponent input) const
 {
-    auto it = m_cells.find(ijk);
+    const auto it = m_cells.find(ijk);
     if (it != m_cells.end()) {
         const auto it2 = findInSequence(it->second, input);
-                            
+
         return (it2 != it->second.end()) ? it2->rate : 0.0;
     }
     else {
@@ -169,7 +159,7 @@ double Source::rate(const std::array<int, 3>& ijk, SourceComponent input) const
 
 std::optional<double> Source::hrate(const std::array<int, 3>& ijk, SourceComponent input) const
 {
-    auto it = m_cells.find(ijk);
+    const auto it = m_cells.find(ijk);
     if (it != m_cells.end()) {
         const auto it2 = findInSequence(it->second, input);
 
@@ -182,7 +172,7 @@ std::optional<double> Source::hrate(const std::array<int, 3>& ijk, SourceCompone
 
 std::optional<double> Source::temperature(const std::array<int, 3>& ijk, SourceComponent input) const
 {
-    auto it = m_cells.find(ijk);
+    const auto it = m_cells.find(ijk);
     if (it != m_cells.end()) {
         const auto it2 = findInSequence(it->second, input);
 
@@ -193,7 +183,8 @@ std::optional<double> Source::temperature(const std::array<int, 3>& ijk, SourceC
     }
 }
 
-bool Source::operator==(const Source& other) const {
+bool Source::operator==(const Source& other) const
+{
     return this->m_cells == other.m_cells;
 }
 

@@ -119,7 +119,6 @@ SOURCE
     double rate23 = prop.rate({0,0,1}, Opm::SourceComponent::WATER);
     BOOST_CHECK_EQUAL(rate23,
                       deck.getActiveUnitSystem().to_si("Mass/Time", 0.02));
-    
 }
 
 BOOST_AUTO_TEST_CASE(SourceEnergy)
@@ -220,7 +219,7 @@ SOURCE
                       deck.getActiveUnitSystem().to_si("Mass/Time", 0.02));
     auto hrate2 = prop.hrate({0,0,0}, Opm::SourceComponent::WATER);
     BOOST_CHECK(hrate2);
-    BOOST_CHECK_EQUAL(hrate2.value(), deck.getActiveUnitSystem().to_si("Energy/Time", 2.0)); 
+    BOOST_CHECK_EQUAL(hrate2.value(), deck.getActiveUnitSystem().to_si("Energy/Time", 2.0));
 
     for (const auto& record : kw[2]) {
         prop.updateSource(record);
@@ -234,5 +233,5 @@ SOURCE
     BOOST_CHECK_EQUAL(temp1.value(), 50 + 273.15);
     auto temp2 = prop.temperature({0,0,0}, Opm::SourceComponent::WATER);
     BOOST_CHECK(temp2);
-    BOOST_CHECK_EQUAL(temp2.value(), 273.15 + 100);   
+    BOOST_CHECK_EQUAL(temp2.value(), 273.15 + 100);
 }
