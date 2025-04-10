@@ -2180,11 +2180,6 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
         return fmt::format("{:04d}-{:02d}-{:02d}" , ts.year(), ts.month(), ts.day());
     }
 
-    std::string Schedule::simulationDays(std::size_t currentStep) const {
-        const double sim_time { this->m_static.m_unit_system.from_si(UnitSystem::measure::time, simTime(currentStep)) } ;
-        return fmt::format("{} {}", sim_time, this->m_static.m_unit_system.name(UnitSystem::measure::time));
-    }
-
 namespace {
 
     // Duplicated from Well.cpp
