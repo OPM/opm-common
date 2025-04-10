@@ -86,6 +86,7 @@ public:
     bool hasSource(const std::array<int, 3>& input) const;
 
     void updateSource(const DeckRecord& record);
+    void addSourceCell(const std::array<int,3>& ijk, const SourceCell& cell);
 
     template<class Serializer>
     void serializeOp(Serializer& serializer)

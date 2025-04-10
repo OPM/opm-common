@@ -115,15 +115,20 @@ void Source::updateSource(const DeckRecord& record)
                              record.getItem<SOURCEKEY::J>().get<int>(0)-1,
                              record.getItem<SOURCEKEY::K>().get<int>(0)-1};
 
-    auto [cellPos, inserted] = this->m_cells.try_emplace(ijk, std::vector { sourcenew });
+    addSourceCell(ijk, sourcenew);
+}
+
+void Source::addSourceCell(const std::array<int,3>& ijk, const SourceCell& cell)
+{
+    auto [cellPos, inserted] = this->m_cells.try_emplace(ijk, std::vector { cell });
     if (! inserted) {
-        auto sourcePos = findInSequence(cellPos->second, sourcenew.component);
-    
+        auto sourcePos = findInSequence(cellPos->second, cell.component);
+
         if (sourcePos != cellPos->second.end()) {
-            *sourcePos = sourcenew;
+            *sourcePos = cell;
         }
         else {
-            cellPos->second.push_back(sourcenew);
+            cellPos->second.push_back(cell);
         }
     }
 }
