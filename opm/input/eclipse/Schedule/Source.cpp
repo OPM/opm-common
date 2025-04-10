@@ -58,7 +58,7 @@ SourceComponent component(const std::string& s)
         return it->second;
     }
 
-    throw std::invalid_argument("Not recognized source component: " + s);
+    throw std::invalid_argument("Unrecognized source component: " + s);
 }
 
 }
@@ -67,13 +67,12 @@ SourceComponent component(const std::string& s)
 // SourceCell functions
 // --------------------
 using SOURCEKEY = ParserKeywords::SOURCE;
-Source::SourceCell::SourceCell(const DeckRecord& record) :
-    component(fromstring::component(record.getItem<SOURCEKEY::COMPONENT>().get<std::string>(0))),
-    rate(record.getItem<SOURCEKEY::RATE>().getSIDouble(0)),
-    hrate(std::nullopt),
-    temperature(std::nullopt)
+Source::SourceCell::SourceCell(const DeckRecord& record)
+    : component(fromstring::component(record.getItem<SOURCEKEY::COMPONENT>().get<std::string>(0)))
+    , rate(record.getItem<SOURCEKEY::RATE>().getSIDouble(0))
+    , hrate(std::nullopt)
+    , temperature(std::nullopt)
 {
-
     if (record.getItem<SOURCEKEY::HRATE>().hasValue(0))
         hrate = record.getItem<SOURCEKEY::HRATE>().getSIDouble(0);
 
@@ -92,11 +91,13 @@ Source::SourceCell Source::SourceCell::serializationTestObject()
     return result;
 }
 
-bool Source::SourceCell::operator==(const Source::SourceCell& other) const {
-    return this->component == other.component && 
-           this->rate == other.rate &&
-           this->hrate == other.hrate &&
-           this->temperature == other.temperature;
+bool Source::SourceCell::operator==(const Source::SourceCell& other) const
+{
+    return this->component == other.component
+        && this->rate == other.rate
+        && this->hrate == other.hrate
+        && this->temperature == other.temperature
+        ;
 }
 
 // Source functions
@@ -104,7 +105,7 @@ bool Source::SourceCell::operator==(const Source::SourceCell& other) const {
 void Source::updateSource(const DeckRecord& record)
 {
     const Source::SourceCell sourcenew(record);
-    std::array<int, 3> ijk {record.getItem<SOURCEKEY::I>().get<int>(0)-1, 
+    std::array<int, 3> ijk {record.getItem<SOURCEKEY::I>().get<int>(0)-1,
                              record.getItem<SOURCEKEY::J>().get<int>(0)-1,
                              record.getItem<SOURCEKEY::K>().get<int>(0)-1};
 
@@ -145,7 +146,7 @@ double Source::rate(const std::array<int, 3>& ijk, SourceComponent input) const
     const auto it = m_cells.find(ijk);
     if (it != m_cells.end()) {
         const auto it2 = findInSequence(it->second, input);
-                            
+
         return (it2 != it->second.end()) ? it2->rate : 0.0;
     }
     else {
@@ -179,7 +180,8 @@ std::optional<double> Source::temperature(const std::array<int, 3>& ijk, SourceC
     }
 }
 
-bool Source::operator==(const Source& other) const {
+bool Source::operator==(const Source& other) const
+{
     return this->m_cells == other.m_cells;
 }
 
