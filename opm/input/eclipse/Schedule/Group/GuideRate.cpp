@@ -139,6 +139,7 @@ const Opm::GuideRate::RateVector& Opm::GuideRate::getPotentials(const std::strin
         auto message = fmt::format("Potentials for '{}' do not exist.", name);
         throw std::logic_error {message};
     }
+    return this->potentials.at(name);
 }
 
 double Opm::GuideRate::getSI(const std::string&          well,
