@@ -504,6 +504,25 @@ namespace {
     }
 
     template <class WriteVector>
+    void writeCellDoublePropertiesWithDefaultFlagLGRCell(const Properties&               propList,
+                                                         const ::Opm::FieldPropsManager& fp,
+                                                         const std::vector<int>&         global_fathers,
+                                                         WriteVector&&                   write)
+    {
+        for (const auto& prop : propList) {
+            if (! fp.has_double(prop.name)) {
+                continue;
+            }
+
+            auto data = fp.get_double(prop.name);
+            auto defaulted = fp.defaulted<double>(prop.name);
+            data = VectorUtil::filterArray(data, global_fathers);
+            defaulted = VectorUtil::filterArray(defaulted, global_fathers);
+            write(prop, std::move(defaulted), std::move(data));
+        }
+    }    
+
+    template <class WriteVector>
     void writeCellPropertiesValuesOnly(const Properties&               propList,
                                        const ::Opm::FieldPropsManager& fp,
                                        WriteVector&&                   write)
@@ -517,6 +536,23 @@ namespace {
             write(prop, std::move(data));
         }
     }
+
+    template <class WriteVector>
+    void writeCellPropertiesValuesOnlyLGRCell(const Properties&               propList,
+                                              const ::Opm::FieldPropsManager& fp,
+                                              const std::vector<int>&         global_fathers,
+                                              WriteVector&&                   write)
+    {
+        for (const auto& prop : propList) {
+            if (!fp.has_double(prop.name)) {
+                continue;
+            }
+
+            auto data = fp.get_double(prop.name);
+            data = VectorUtil::filterArray(data, global_fathers);
+            write(prop, std::move(data));
+        }
+    }    
 
     void writeDoubleCellProperties(const Properties&                    propList,
                                    const ::Opm::FieldPropsManager&      fp,
@@ -557,9 +593,49 @@ namespace {
         }
     }
 
+    void writeDoubleCellPropertiesLGRCell(const Properties&                    propList,
+                                          const ::Opm::FieldPropsManager&      fp,
+                                          const ::Opm::UnitSystem&             units,
+                                          const bool                           needDflt,
+                                          ::Opm::EclIO::OutputStream::Init&    initFile,
+                                          const std::vector<int>&              global_fathers)
+    {
+        if (needDflt) {
+            writeCellDoublePropertiesWithDefaultFlagLGRCell(propList, fp, global_fathers,
+                [&units, &initFile](const CellProperty&   prop,
+                                    std::vector<bool>&&   dflt,
+                                    std::vector<double>&& value)
+            {
+                units.from_si(prop.unit, value);
+
+                for (auto n = dflt.size(), i = 0*n; i < n; ++i) {
+                    if (dflt[i]) {
+                        // Element defaulted.  Output sentinel value
+                        // (-1.0e+20) to signify defaulted element.
+                        //
+                        // Note: Start as float for roundtripping through
+                        // function singlePrecision().
+                        value[i] = static_cast<double>(-1.0e+20f);
+                    }
+                }
+
+                initFile.write(prop.name, singlePrecision(value));
+            });
+        }
+        else {
+            writeCellPropertiesValuesOnlyLGRCell(propList, fp, global_fathers,
+                [&units, &initFile](const CellProperty&   prop,
+                                    std::vector<double>&& value)
+            {
+                units.from_si(prop.unit, value);
+                initFile.write(prop.name, singlePrecision(value));
+            });
+        }
+    }
     void writeDoubleCellProperties(const ::Opm::EclipseState&        es,
                                    const ::Opm::UnitSystem&          units,
-                                   ::Opm::EclIO::OutputStream::Init& initFile)
+                                   ::Opm::EclIO::OutputStream::Init& initFile,
+                                   std::optional<std::reference_wrapper<const std::vector<int>>> global_fathers = std::nullopt)
     {
         const auto doubleKeywords = Properties {
             // do not reorder the fields below
@@ -585,7 +661,14 @@ namespace {
         const auto& fp = es.globalFieldProps();
         fp.get_double("NTG");
 
-        writeDoubleCellProperties(doubleKeywords, fp, units, false, initFile);
+        if (!global_fathers)
+        {
+            writeDoubleCellProperties(doubleKeywords, fp, units, false, initFile);
+        }
+        else 
+        {
+            writeDoubleCellPropertiesLGRCell(doubleKeywords, fp, units, false, initFile, global_fathers.value());
+        }
     }
 
     void writeSimulatorProperties(const ::Opm::EclipseGrid&         grid,
@@ -786,7 +869,7 @@ void Opm::InitIO::write(const ::Opm::EclipseState&              es,
         if (es.globalFieldProps().has_double("MULTPV")) {
             multipliers.insert("MULTPV", UnitSystem::measure::identity,
                         es.globalFieldProps().get_double("MULTPV"),
-                        data::TargetType::INIT);
+                        data::TargetType::INIT); 
         }
 
         writeSimulatorProperties(grid, multipliers, initFile);
@@ -806,7 +889,7 @@ void Opm::InitIO::write(const ::Opm::EclipseState&              es,
             writeInitFileHeaderLGRCell(es, lgr_grid, schedule, initFile, index+1);           
             writePoreVolumeLGRCell(es, units, initFile, global_fathers, subdivisions[0]*subdivisions[1]*subdivisions[2]);
             writeGridGeometryLGRCell(grid, lgr_grid, units, initFile, subdivisions[0], subdivisions[1], subdivisions[2]);
-            //writeDoubleCellPropertiesLGRCell(es, units, initFile);
+            writeDoubleCellProperties(es, units, initFile, global_fathers);
             //writeSimulatorPropertiesLGRCell(grid, simProps, initFile);
 
             //
