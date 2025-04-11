@@ -1198,4 +1198,6 @@ set( keywords
      900_OPM/W/WINJFCNC
      900_OPM/W/WMICP
      900_OPM/W/WPMITAB
-     900_OPM/W/WSKPTAB)
+     900_OPM/W/WSEED
+     900_OPM/W/WSKPTAB
+   )

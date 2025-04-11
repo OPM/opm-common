@@ -64,6 +64,7 @@
 #include <opm/input/eclipse/Schedule/Well/Well.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellFoamProperties.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellFractureSeeds.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellMatcher.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellPolymerProperties.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellTestConfig.hpp>
@@ -6296,4 +6297,260 @@ DATES             -- 1
     BOOST_CHECK(schedule[2].events().hasEvent(ScheduleEvents::TUNING_CHANGE));
     schedule.clear_event(ScheduleEvents::TUNING_CHANGE, 1);
     BOOST_CHECK(!schedule[1].events().hasEvent(ScheduleEvents::TUNING_CHANGE));
+}
+
+BOOST_AUTO_TEST_CASE(Well_Fracture_Seeds)
+{
+    const auto deck = Parser{}.parseString(R"(RUNSPEC
+DIMENS
+  10 10 10 /
+
+START             -- 0
+10 MAI 2007 /
+
+MECH
+
+GRID
+DXV
+10*100.0 /
+DYV
+10*100.0 /
+DZV
+10*10.0 /
+DEPTHZ
+121*2000.0 /
+
+PORO
+    1000*0.1 /
+PERMX
+    1000*1 /
+PERMY
+    1000*0.1 /
+PERMZ
+    1000*0.01 /
+
+SCHEDULE
+WELSPECS
+    'OP_1'       'OP'   9   9 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  /
+    'OP_2'       'OP'   8   8 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  /
+    'OP_3'       'OP'   7   7 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  /
+/
+COMPDAT
+ 'OP_1'  9  9   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
+ 'OP_1'  9  9   2   2 'OPEN' 1*   46.825   0.311  4332.346 1*  1*  'X'  22.123 /
+ 'OP_2'  8  8   1   3 'OPEN' 1*    1.168   0.311   107.872 1*  1*  'Y'  21.925 /
+ 'OP_2'  8  7   3   3 'OPEN' 1*   15.071   0.311  1391.859 1*  1*  'Y'  21.920 /
+ 'OP_2'  8  7   3   6 'OPEN' 1*    6.242   0.311   576.458 1*  1*  'Y'  21.915 /
+ 'OP_3'  7  7   1   1 'OPEN' 1*   27.412   0.311  2445.337 1*  1*  'Y'  18.521 /
+ 'OP_3'  7  7   2   2 'OPEN' 1*   55.195   0.311  4923.842 1*  1*  'Y'  18.524 /
+/
+
+DATES             -- 1, 2
+  10  JUN 2007 /
+  10  AUG 2007 /
+/
+
+WSEED
+  'OP_1'  9 9 1   1.0   -1.0      1.0  /
+  'OP_1'  9 9 2   0.0    0.0     17.29 /
+  'OP_3'  7 7 2   3.1   41.592  653.5  /
+/
+
+DATES
+  1 SEP 2007 /
+/
+END
+)");
+
+    const auto es    = EclipseState { deck };
+    const auto sched = Schedule { deck, es };
+
+    BOOST_CHECK_EQUAL(sched[0].wseed.size(), std::size_t{0});
+    BOOST_CHECK_EQUAL(sched[1].wseed.size(), std::size_t{0});
+    BOOST_CHECK_EQUAL(sched[2].wseed.size(), std::size_t{2});
+    BOOST_CHECK_EQUAL(sched[3].wseed.size(), std::size_t{2});
+
+    const auto& wseed = sched[2].wseed;
+    BOOST_CHECK_MESSAGE(  wseed.has("OP_1"), R"(Well "OP_1" must have well fracturing seeds)");
+    BOOST_CHECK_MESSAGE(! wseed.has("OP_2"), R"(Well "OP_2" must NOT have well fracturing seeds)");
+    BOOST_CHECK_MESSAGE(  wseed.has("OP_3"), R"(Well "OP_3" must have well fracturing seeds)");
+
+    {
+        const auto& op_1 = wseed("OP_1");
+
+        BOOST_CHECK_MESSAGE(! op_1.empty(), R"(Well fracturing seed container for "OP_1" must not be empty)");
+
+        const auto expectSeedCell = std::vector {
+            es.getInputGrid().getGlobalIndex(9-1, 9-1, 1-1),
+            es.getInputGrid().getGlobalIndex(9-1, 9-1, 2-1),
+        };
+
+        const auto& seedCells = op_1.seedCells();
+
+        BOOST_CHECK_EQUAL_COLLECTIONS(seedCells.begin(), seedCells.end(),
+                                      expectSeedCell.begin(), expectSeedCell.end());
+
+        const auto& n0 = op_1.getNormal(WellFractureSeeds::SeedIndex { 0 });
+
+        BOOST_CHECK_CLOSE(n0[0],  1.0, 1.0e-8);
+        BOOST_CHECK_CLOSE(n0[1], -1.0, 1.0e-8);
+        BOOST_CHECK_CLOSE(n0[2],  1.0, 1.0e-8);
+
+        const auto& n1 = op_1.getNormal(WellFractureSeeds::SeedIndex { 1 });
+
+        BOOST_CHECK_CLOSE(n1[0],  0.0 , 1.0e-8);
+        BOOST_CHECK_CLOSE(n1[1],  0.0 , 1.0e-8);
+        BOOST_CHECK_CLOSE(n1[2], 17.29, 1.0e-8);
+    }
+
+    {
+        const auto& op_3 = wseed("OP_3");
+
+        BOOST_CHECK_MESSAGE(! op_3.empty(), R"(Well fracturing seed container for "OP_3" must not be empty)");
+
+        const auto expectSeedCell = std::vector {
+            es.getInputGrid().getGlobalIndex(7-1, 7-1, 2-1),
+        };
+
+        const auto& seedCells = op_3.seedCells();
+
+        BOOST_CHECK_EQUAL_COLLECTIONS(seedCells.begin(), seedCells.end(),
+                                      expectSeedCell.begin(), expectSeedCell.end());
+
+        const auto& n0 = op_3.getNormal(WellFractureSeeds::SeedIndex { 0 });
+
+        BOOST_CHECK_CLOSE(n0[0],   3.1  , 1.0e-8);
+        BOOST_CHECK_CLOSE(n0[1],  41.592, 1.0e-8);
+        BOOST_CHECK_CLOSE(n0[2], 653.5  , 1.0e-8);
+    }
+
+    const auto& wseed_back = sched[3].wseed;
+    BOOST_CHECK_MESSAGE(  wseed_back.has("OP_1"), R"(Well "OP_1" must have well fracturing seeds)");
+    BOOST_CHECK_MESSAGE(! wseed_back.has("OP_2"), R"(Well "OP_2" must NOT have well fracturing seeds)");
+    BOOST_CHECK_MESSAGE(  wseed_back.has("OP_3"), R"(Well "OP_3" must have well fracturing seeds)");
+
+    {
+        const auto& op_1 = wseed_back("OP_1");
+
+        BOOST_CHECK_MESSAGE(! op_1.empty(), R"(Well fracturing seed container for "OP_1" must not be empty)");
+
+        const auto expectSeedCell = std::vector {
+            es.getInputGrid().getGlobalIndex(9-1, 9-1, 1-1),
+            es.getInputGrid().getGlobalIndex(9-1, 9-1, 2-1),
+        };
+
+        const auto& seedCells = op_1.seedCells();
+
+        BOOST_CHECK_EQUAL_COLLECTIONS(seedCells.begin(), seedCells.end(),
+                                      expectSeedCell.begin(), expectSeedCell.end());
+
+        const auto& n0 = op_1.getNormal(WellFractureSeeds::SeedIndex { 0 });
+
+        BOOST_CHECK_CLOSE(n0[0],  1.0, 1.0e-8);
+        BOOST_CHECK_CLOSE(n0[1], -1.0, 1.0e-8);
+        BOOST_CHECK_CLOSE(n0[2],  1.0, 1.0e-8);
+
+        const auto& n1 = op_1.getNormal(WellFractureSeeds::SeedIndex { 1 });
+
+        BOOST_CHECK_CLOSE(n1[0],  0.0 , 1.0e-8);
+        BOOST_CHECK_CLOSE(n1[1],  0.0 , 1.0e-8);
+        BOOST_CHECK_CLOSE(n1[2], 17.29, 1.0e-8);
+    }
+
+    {
+        const auto& op_3 = wseed_back("OP_3");
+
+        BOOST_CHECK_MESSAGE(! op_3.empty(), R"(Well fracturing seed container for "OP_3" must not be empty)");
+
+        const auto expectSeedCell = std::vector {
+            es.getInputGrid().getGlobalIndex(7-1, 7-1, 2-1),
+        };
+
+        const auto& seedCells = op_3.seedCells();
+
+        BOOST_CHECK_EQUAL_COLLECTIONS(seedCells.begin(), seedCells.end(),
+                                      expectSeedCell.begin(), expectSeedCell.end());
+
+        const auto& n0 = op_3.getNormal(WellFractureSeeds::SeedIndex { 0 });
+
+        BOOST_CHECK_CLOSE(n0[0],   3.1  , 1.0e-8);
+        BOOST_CHECK_CLOSE(n0[1],  41.592, 1.0e-8);
+        BOOST_CHECK_CLOSE(n0[2], 653.5  , 1.0e-8);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(Well_Fracture_Seeds_No_MECH)
+{
+    const auto inputString = std::string { R"(RUNSPEC
+DIMENS
+  10 10 10 /
+
+START             -- 0
+10 MAI 2007 /
+
+-- WSEED's required keyword 'MECH' is missing (disabled) to check that
+-- 'WSEED' throws when parsing this input deck
+-- MECH
+
+GRID
+DXV
+10*100.0 /
+DYV
+10*100.0 /
+DZV
+10*10.0 /
+DEPTHZ
+121*2000.0 /
+
+PORO
+    1000*0.1 /
+PERMX
+    1000*1 /
+PERMY
+    1000*0.1 /
+PERMZ
+    1000*0.01 /
+
+SCHEDULE
+WELSPECS
+    'OP_1'       'OP'   9   9 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  /
+    'OP_2'       'OP'   8   8 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  /
+    'OP_3'       'OP'   7   7 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  /
+/
+COMPDAT
+ 'OP_1'  9  9   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
+ 'OP_1'  9  9   2   2 'OPEN' 1*   46.825   0.311  4332.346 1*  1*  'X'  22.123 /
+ 'OP_2'  8  8   1   3 'OPEN' 1*    1.168   0.311   107.872 1*  1*  'Y'  21.925 /
+ 'OP_2'  8  7   3   3 'OPEN' 1*   15.071   0.311  1391.859 1*  1*  'Y'  21.920 /
+ 'OP_2'  8  7   3   6 'OPEN' 1*    6.242   0.311   576.458 1*  1*  'Y'  21.915 /
+ 'OP_3'  7  7   1   1 'OPEN' 1*   27.412   0.311  2445.337 1*  1*  'Y'  18.521 /
+ 'OP_3'  7  7   2   2 'OPEN' 1*   55.195   0.311  4923.842 1*  1*  'Y'  18.524 /
+/
+
+DATES             -- 1, 2
+  10  JUN 2007 /
+  10  AUG 2007 /
+/
+
+WSEED
+  'OP_1'  9 9 1   1.0   -1.0      1.0  /
+  'OP_1'  9 9 2   0.0    0.0     17.29 /
+  'OP_3'  7 7 2   3.1   41.592  653.5  /
+/
+
+DATES
+  1 SEP 2007 /
+/
+END
+)" };
+
+    // No MECH keyword means that parsing, by default, should fail in WSEED.
+    BOOST_CHECK_THROW(Parser().parseString(inputString), OpmInputError);
+
+    auto ctx = ParseContext{};
+    ctx.update(ParseContext::PARSE_INVALID_KEYWORD_COMBINATION,
+               InputErrorAction::IGNORE);
+
+    // Allow parsing the input if we ignore incompatible keywords.
+    BOOST_CHECK_NO_THROW(Parser().parseString(inputString, ctx));
 }

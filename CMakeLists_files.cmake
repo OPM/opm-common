@@ -327,6 +327,7 @@ if(ENABLE_ECL_INPUT)
     opm/input/eclipse/Schedule/Well/WellEconProductionLimits.cpp
     opm/input/eclipse/Schedule/Well/WellEnums.cpp
     opm/input/eclipse/Schedule/Well/WellFoamProperties.cpp
+    opm/input/eclipse/Schedule/Well/WellFractureSeeds.cpp
     opm/input/eclipse/Schedule/Well/WellInjectionProperties.cpp
     opm/input/eclipse/Schedule/Well/WellKeywordHandlers.cpp
     opm/input/eclipse/Schedule/Well/WellMatcher.cpp
@@ -534,6 +535,7 @@ if(ENABLE_ECL_INPUT)
     tests/test_PAvgCalculator.cpp
     tests/test_PAvgDynamicSourceData.cpp
     tests/test_Serialization.cpp
+    tests/test_WellFractureSeeds.cpp
     tests/material/test_co2brinepvt.cpp
     tests/material/test_h2brinepvt.cpp
     tests/material/test_hysteresis.cpp
@@ -1389,6 +1391,7 @@ if(ENABLE_ECL_INPUT)
        opm/input/eclipse/Schedule/Well/WListManager.hpp
        opm/input/eclipse/Schedule/Well/WellEconProductionLimits.hpp
        opm/input/eclipse/Schedule/Well/WellFoamProperties.hpp
+       opm/input/eclipse/Schedule/Well/WellFractureSeeds.hpp
        opm/input/eclipse/Schedule/Well/WellBrineProperties.hpp
        opm/input/eclipse/Schedule/Well/WellMICPProperties.hpp
        opm/input/eclipse/Schedule/Well/WellPolymerProperties.hpp
