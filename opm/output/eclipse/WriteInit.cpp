@@ -332,7 +332,8 @@ namespace {
                                     const ::Opm::EclipseGridLGR&    local_grid,
                                     const ::Opm::Schedule&          sched,
                                     Opm::EclIO::OutputStream::Init& initFile,
-                                                 int                index)
+                                                 int                index,
+                                                 bool fullHeader =  true)
     {
         using PaddedString = Opm::EclIO::PaddedOutputString<8>;
         // using NullMessage = std::vector<char>;
@@ -354,23 +355,27 @@ namespace {
             initFile.write("LGRHEADD", dh);
         } 
                                 
-        // LGR header array
+        if (fullHeader) 
         {
-            const auto ih = ::Opm::RestartIO::Helpers::
-            createInteHead(es, local_grid, sched, 0.0, 0, 0, 0);
+            // LGR header array
+            {
+                const auto ih = ::Opm::RestartIO::Helpers::
+                createInteHead(es, local_grid, sched, 0.0, 0, 0, 0);
 
-            initFile.write("INTEHEAD", ih);
+                initFile.write("INTEHEAD", ih);
+            }
+
+            {
+                initFile.write("LOGIHEAD", logihead(es));
+            }
+
+            {
+                const auto dh = ::Opm::RestartIO::Helpers::
+                createDoubHead(es, sched, 0, 0, 0.0, 0.0);
+                initFile.write("DOUBHEAD", dh);
+            }
         }
 
-        {
-            initFile.write("LOGIHEAD", logihead(es));
-        }
-
-        {
-            const auto dh = ::Opm::RestartIO::Helpers::
-            createDoubHead(es, sched, 0, 0, 0.0, 0.0);
-            initFile.write("DOUBHEAD", dh);
-        }
     }
 
     void writePoreVolume(const ::Opm::EclipseState&        es,
@@ -416,6 +421,29 @@ namespace {
             initFile.write(keyword, fp.get_int(keyword));
         }
     }
+
+    void writeIntegerCellPropertiesLGRCell(const ::Opm::EclipseState&        es,
+                                                   std::vector<int>&         global_fathers,
+                            ::Opm::EclIO::OutputStream::Init&                initFile)
+    {
+        // The INIT file should always contain PVT, saturation function,
+        // equilibration, and fluid-in-place region vectors.
+        // Unconditionally 'get()' these arrays--on a 'const'
+        // FieldPropsManager object--to invoke the automatic creation of the
+        // arrays, and ensure that the keywords exist in the properties
+        // container.
+
+        const auto& fp = es.globalFieldProps();
+        fp.get_int("PVTNUM");
+        fp.get_int("SATNUM");
+        fp.get_int("EQLNUM");
+        fp.get_int("FIPNUM");
+
+        for (const auto& keyword : fp.keys<int>()) {
+            auto data = fp.get_int(keyword);
+            initFile.write(keyword, VectorUtil::filterArray(data,global_fathers));
+        }
+    }    
 
     void writeGridGeometry(const ::Opm::EclipseGrid&         grid,
                            const ::Opm::UnitSystem&          units,
@@ -682,6 +710,17 @@ namespace {
         }
     }
 
+    void writeSimulatorPropertiesLGRCell(const ::Opm::EclipseGrid&         grid,
+                                         const ::Opm::data::Solution&      simProps,
+                                         ::Opm::EclIO::OutputStream::Init& initFile,
+                                         const std::vector<int>&          global_fathers)
+    {
+        for (const auto& prop : simProps) {
+            const auto& value = grid.compressedVector(prop.second.data<double>());
+            initFile.write(prop.first, singlePrecision(VectorUtil::filterArray(value, global_fathers)));
+        }
+    }
+
     void writeTableData(const ::Opm::EclipseState&        es,
                         const ::Opm::UnitSystem&          units,
                         ::Opm::EclIO::OutputStream::Init& initFile)
@@ -875,8 +914,7 @@ void Opm::InitIO::write(const ::Opm::EclipseState&              es,
         writeSimulatorProperties(grid, multipliers, initFile);
     }
 
-    // HEADER FOR EACH LGR - ITEM 3
-    // ITEM 4
+    // ITEM 3 - LOOP FOR LOCAL PROPERTIES LGR
     if (grid.is_lgr()) 
     {
         std::vector<std::string> all_lgr_tag  = grid.get_all_lgr_labels();
@@ -890,22 +928,48 @@ void Opm::InitIO::write(const ::Opm::EclipseState&              es,
             writePoreVolumeLGRCell(es, units, initFile, global_fathers, subdivisions[0]*subdivisions[1]*subdivisions[2]);
             writeGridGeometryLGRCell(grid, lgr_grid, units, initFile, subdivisions[0], subdivisions[1], subdivisions[2]);
             writeDoubleCellProperties(es, units, initFile, global_fathers);
-            //writeSimulatorPropertiesLGRCell(grid, simProps, initFile);
+            writeSimulatorPropertiesLGRCell(grid, simProps, initFile, global_fathers);
+            {
+                const auto writeAll = es.cfg().io().writeAllTransMultipliers();
+        
+                auto multipliers = es.getTransMult()
+                    .convertToSimProps(grid.getNumActive(), writeAll);
+                if (es.globalFieldProps().has_double("MULTPV")) {
+                    multipliers.insert("MULTPV", UnitSystem::measure::identity,
+                                es.globalFieldProps().get_double("MULTPV"),
+                                data::TargetType::INIT); 
+                }
+                writeSimulatorPropertiesLGRCell(grid, multipliers, initFile,global_fathers);
+            }
 
             //
         }
         initFile.write("LGRSGONE", NullMessage{});
     }
 
-
-    // end of header init including lgr
-
+    // ITEM 5 - TABLES and 
     writeTableData(es, units, initFile);
+    // ITEM 6 - GLOBAL REGION
     writeIntegerCellProperties(es, initFile);
     writeIntegerMaps(std::move(int_data), initFile);
-
     writeSatFuncScaling(es, units, initFile);
 
+    // ITEM 7 - LOOP FOR LOCAL REGIONS LGR
+    if (grid.is_lgr()) 
+    {
+        std::vector<std::string> all_lgr_tag  = grid.get_all_lgr_labels();
+        for (std::size_t index : grid.get_print_order_lgr()) 
+        {
+            auto lgr_label = all_lgr_tag[index];
+            const EclipseGridLGR& lgr_grid = grid.getLGRCell(lgr_label);
+            std::vector<int> global_fathers = lgr_grid.getLGRCell_global_father(grid);
+            writeInitFileHeaderLGRCell(es, lgr_grid, schedule, initFile, index+1, false);           
+            writeIntegerCellPropertiesLGRCell(es, global_fathers, initFile);
+            //
+        }
+        initFile.write("LGRSGONE", NullMessage{});
+    }
+ 
     if (!nnc.empty()) {
         writeNonNeighbourConnections(nnc, units, initFile);
     }
@@ -913,4 +977,21 @@ void Opm::InitIO::write(const ::Opm::EclipseState&              es,
     if (es.aquifer().active()) {
         writeAquifers(es.aquifer(), grid, initFile);
     }
+
+     // ITEM 10  - LOOP FOR NNC LGR - NOT IMPLEMENTED YET
+    if (grid.is_lgr()) 
+    {
+        std::vector<std::string> all_lgr_tag  = grid.get_all_lgr_labels();
+        for (std::size_t index : grid.get_print_order_lgr()) 
+        {
+            auto lgr_label = all_lgr_tag[index];
+            const EclipseGridLGR& lgr_grid = grid.getLGRCell(lgr_label);
+            const std::array<int,3> subdivisions = grid.getCellSubdivisionRatioLGR(lgr_label);
+            std::vector<int> global_fathers = lgr_grid.getLGRCell_global_father(grid);
+            writeInitFileHeaderLGRCell(es, lgr_grid, schedule, initFile, index+1,false);           
+
+        }
+        initFile.write("LGRSGONE", NullMessage{});
+    }
+
 }
