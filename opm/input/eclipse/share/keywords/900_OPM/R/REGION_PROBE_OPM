@@ -5,6 +5,7 @@
   ],
   "comment": "Region-level summary vectors supported only by OPM Flow",
   "deck_names": [
+    "RAMIP",
     "RGCDI",
     "RGCDM",
     "RGKDI",

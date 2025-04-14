@@ -5,6 +5,7 @@
   ],
   "comment": "Block summary vectors supported only by OPM Flow",
   "deck_names": [
+    "BAMIP",
     "BGCDI",
     "BGCDM",
     "BGKDI",

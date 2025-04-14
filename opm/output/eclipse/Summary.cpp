@@ -618,6 +618,9 @@ template<> constexpr
 measure rate_unit< rt::mass_gas >() { return measure::mass_rate; }
 
 template<> constexpr
+measure rate_unit< rt::mass_wat >() { return measure::mass_rate; }
+
+template<> constexpr
 measure rate_unit< rt::microbial >() { return measure::mass_rate; }
 
 template<> constexpr
@@ -2997,6 +3000,28 @@ static const auto funs = std::unordered_map<std::string, ofun> {
     {"WEFF" , well_efficiency_factor},
     {"WEFFG", well_efficiency_factor_grouptree},
 
+    // Mass water
+    { "FAMIR",  rate< rt::mass_wat, injector > },
+    { "GAMIR",  rate< rt::mass_wat, injector > },
+    { "WAMIR",  rate< rt::mass_wat, injector > },
+    { "CAMIR",  crate< rt::mass_wat, injector > },
+    { "CAMIRL", cratel< rt::mass_wat, injector > },
+    { "FAMIT",  mul( rate< rt::mass_wat, injector >, duration ) },
+    { "GAMIT",  mul( rate< rt::mass_wat, injector >, duration ) },
+    { "WAMIT",  mul( rate< rt::mass_wat, injector >, duration ) },
+    { "CAMIT",  mul( crate< rt::mass_wat, injector >, duration ) },
+    { "CAMITL", mul( cratel< rt::mass_wat, injector >, duration ) },
+    { "FAMPR",  rate< rt::mass_wat, producer > },
+    { "GAMPR",  rate< rt::mass_wat, producer > },
+    { "WAMPR",  rate< rt::mass_wat, producer > },
+    { "CAMPR",  crate< rt::mass_wat, producer > },
+    { "CAMPRL", cratel< rt::mass_wat, producer > },
+    { "FAMPT",  mul( rate< rt::mass_wat, producer >, duration ) },
+    { "GAMPT",  mul( rate< rt::mass_wat, producer >, duration ) },
+    { "WAMPT",  mul( rate< rt::mass_wat, producer >, duration ) },
+    { "CAMPT",  mul( crate< rt::mass_wat, producer >, duration ) },
+    { "CAMPTL", mul( cratel< rt::mass_wat, producer >, duration ) },
+
     // co2/h2store
     { "FGMIR",  rate< rt::mass_gas, injector > },
     { "GGMIR",  rate< rt::mass_gas, injector > },
@@ -3130,6 +3155,7 @@ static const auto single_values_units = UnitTable {
     {"FMUIP"    , Opm::UnitSystem::measure::mass },
     {"FMBIP"    , Opm::UnitSystem::measure::mass },
     {"FMCIP"    , Opm::UnitSystem::measure::mass },
+    {"FAMIP"    , Opm::UnitSystem::measure::mass },
 };
 
 static const auto region_units = UnitTable {
@@ -3166,6 +3192,7 @@ static const auto region_units = UnitTable {
     {"RMUIP" , Opm::UnitSystem::measure::mass },
     {"RMBIP" , Opm::UnitSystem::measure::mass },
     {"RMCIP" , Opm::UnitSystem::measure::mass },
+    {"RAMIP" , Opm::UnitSystem::measure::mass },
 };
 
 static const auto interregion_units = UnitTable {
@@ -3245,6 +3272,7 @@ static const auto block_units = UnitTable {
     {"BSWAT"    , Opm::UnitSystem::measure::identity},
     {"BWVIS"    , Opm::UnitSystem::measure::viscosity},
     {"BVWAT"    , Opm::UnitSystem::measure::viscosity},
+    {"BAMIP"    , Opm::UnitSystem::measure::mass},
 
     // Pressure quantities
     {"BPR"      , Opm::UnitSystem::measure::pressure},

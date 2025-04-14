@@ -172,6 +172,7 @@ struct SummaryConfigContext {
          {"MUIP",     {"RMUIP", "FMUIP"}},
          {"MBIP",     {"RMBIP", "FMBIP"}},
          {"MCIP",     {"RMCIP", "FMCIP"}},
+         {"AMIP",     {"RAMIP", "FAMIP"}},
     };
 
     using keyword_set = std::unordered_set<std::string>;
@@ -242,7 +243,7 @@ struct SummaryConfigContext {
     bool is_rate(const std::string& keyword) {
         static const keyword_set ratekw {
             "OPR", "GPR", "WPR", "GLIR", "LPR", "NPR", "CPR", "VPR", "TPR", "TPC",
-            "GMPR",
+            "GMPR", "AMPR",
 
             "OFR", "OFRF", "OFRS", "OFR+", "OFR-", "TFR",
             "GFR", "GFRF", "GFRS", "GFR+", "GFR-",
@@ -257,7 +258,7 @@ struct SummaryConfigContext {
             "OIGR", "GIGR", "WIGR",
             "OIRH", "GIRH", "WIRH",
             "OVIR", "GVIR", "WVIR",
-            "GMIR",
+            "GMIR", "AMIR",
 
             "OPI", "OPP", "GPI", "GPP", "WPI", "WPP",
 
@@ -286,7 +287,7 @@ struct SummaryConfigContext {
             "OPT", "GPT", "WPT", "LPT", "NPT", "CPT",
             "VPT", "TPT", "OVPT", "GVPT", "WVPT",
             "WPTH", "OPTH", "GPTH", "LPTH",
-            "GPTS", "OPTS", "GPTF", "OPTF", "GMPT",
+            "GPTS", "OPTS", "GPTF", "OPTF", "GMPT", "AMPT",
 
             "OFT", "OFT+", "OFT-", "OFTL", "OFTG",
             "GFT", "GFT+", "GFT-", "GFTL", "GFTG",
@@ -294,6 +295,7 @@ struct SummaryConfigContext {
 
             "WIT", "OIT", "GIT", "LIT", "NIT", "CIT", "VIT", "TIT",
             "WITH", "OITH", "GITH", "WVIT", "OVIT", "GVIT", "GMIT",
+            "AMIT",
 
             "AQT", "AQTG", "NQT",
 

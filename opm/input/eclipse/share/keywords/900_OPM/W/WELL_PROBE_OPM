@@ -5,6 +5,10 @@
   ],
   "comment": "Well summary keywords only supported by OPM-flow",
   "deck_names": [
+      "WAMIR",
+      "WAMIT",
+      "WAMPR",
+      "WAMPT",
       "WINJFC",
       "WINJFVR",
       "WINJFVT",
