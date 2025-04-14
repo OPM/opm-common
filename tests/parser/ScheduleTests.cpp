@@ -5328,7 +5328,7 @@ END
     BOOST_CHECK_EQUAL( netbalan1.interval(), 86400 );
     BOOST_CHECK_EQUAL( netbalan1.pressure_tolerance(), 200000 );
     BOOST_CHECK_EQUAL( netbalan1.pressure_max_iter(), 3 );
-    BOOST_CHECK_EQUAL( netbalan1.thp_tolerance(), 4 );
+    BOOST_CHECK_EQUAL( netbalan1.thp_tolerance(), 4e5 );
     BOOST_CHECK_EQUAL( netbalan1.thp_max_iter(), 5 );
 }
 

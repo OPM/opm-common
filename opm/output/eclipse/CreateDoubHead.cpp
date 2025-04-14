@@ -135,7 +135,7 @@ namespace {
 
         param.balancingInterval = units.from_si(M::time, netbalan.interval());
         param.convTolNodPres = units.from_si(M::pressure, netbalan.pressure_tolerance());
-        param.convTolTHPCalc = units.from_si(M::identity, netbalan.thp_tolerance());
+        param.convTolTHPCalc = units.from_si(M::pressure, netbalan.thp_tolerance());
 
         if (const auto& trgBE = netbalan.target_balance_error(); trgBE.has_value()) {
             param.targBranchBalError = units.from_si(M::pressure, trgBE.value());

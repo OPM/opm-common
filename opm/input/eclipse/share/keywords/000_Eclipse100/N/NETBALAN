@@ -30,7 +30,8 @@
       "item": 4,
       "name": "THP_CONVERGENCE_LIMIT",
       "value_type": "DOUBLE",
-      "default": 0.01
+      "default": 0.01,
+      "dimension" : "Pressure"
     },
     {
       "item": 5,
