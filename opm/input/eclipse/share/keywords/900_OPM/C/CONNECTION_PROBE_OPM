@@ -56,7 +56,15 @@
     "CMUPR",
     "CMUPT",
     "CMUPRL",
-    "CMUPTL"
+    "CMUPTL",
+    "CWMAIR",
+    "CWMAIRL",
+    "CWMAIT",
+    "CWMAITL",
+    "CWMAPR",
+    "CWMAPRL",
+    "CWMAPT",
+    "CWMAPTL"
   ],
   "items": [
     {

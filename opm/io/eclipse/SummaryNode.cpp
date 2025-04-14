@@ -199,6 +199,16 @@ bool Opm::EclIO::SummaryNode::is_user_defined() const {
     return matched && !blacklisted;
 }
 
+bool Opm::EclIO::SummaryNode::is_long_reg_kw(const std::string& keyword)
+{
+    static const auto node_kw = std::unordered_set<std::string> {
+        "RWMAIP",
+    };
+
+    // Regional keywords longer than 5 characters
+    return node_kw.find(keyword) != node_kw.end();
+}
+
 /*
   Observe that this function started out as a slight generalisation of the
   special case handling of segment variables; i.e. variables starting with 'S'.
@@ -246,6 +256,10 @@ Opm::EclIO::SummaryNode::normalise_keyword(const Opm::EclIO::SummaryNode::Catego
 std::string
 Opm::EclIO::SummaryNode::normalise_region_keyword(const std::string& keyword)
 {
+    if (Opm::EclIO::SummaryNode::is_long_reg_kw(keyword)) {
+        return keyword;
+    }
+
     static const auto region_kw = std::regex {
         R"((R[A-Z]{2,4})(_{0,2}[A-Z0-9]{3})?)"
     };

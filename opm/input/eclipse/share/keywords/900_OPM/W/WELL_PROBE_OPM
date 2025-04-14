@@ -23,7 +23,11 @@
       "WMOPR",
       "WMOPT",
       "WMUPR",
-      "WMUPT"
+      "WMUPT",
+      "WWMAIR",
+      "WWMAIT",
+      "WWMAPR",
+      "WWMAPT"
   ],
   "size": 1,
   "items": [

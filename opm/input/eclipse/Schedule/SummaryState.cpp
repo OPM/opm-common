@@ -94,7 +94,7 @@ namespace {
             "MMIT", "MOIT", "MUIT", "MMPT", "MOPT", "MUPT",
             "OFT", "OFT+", "OFT-", "OFTG", "OFTL",
             "GFT", "GFT+", "GFT-", "GFTG", "GFTL",
-            "WFT", "WFT+", "WFT-", "GMIT", "GMPT",
+            "WFT", "WFT+", "WFT-", "GMIT", "GMPT", "WMAIT", "WMAPT",
         };
 
         auto sep_pos = key.find(':');

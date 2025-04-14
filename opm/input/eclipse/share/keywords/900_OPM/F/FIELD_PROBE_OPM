@@ -44,6 +44,11 @@
     "FMUPT",
     "FWCD",
     "FWIPG",
-    "FWIPL"
+    "FWIPL",
+    "FWMAIP",
+    "FWMAIR",
+    "FWMAIT",
+    "FWMAPR",
+    "FWMAPT"
   ]
 }

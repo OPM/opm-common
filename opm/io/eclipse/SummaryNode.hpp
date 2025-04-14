@@ -76,6 +76,8 @@ struct SummaryNode {
 
     bool is_user_defined() const;
 
+    static bool is_long_reg_kw(const std::string& keyword);
+
     static Category category_from_keyword(const std::string&);
 
     static std::string normalise_keyword(const Category     category,
