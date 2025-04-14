@@ -61,6 +61,14 @@ namespace {
 
         return tol;
     }
+    double defaultTHPTolerance()
+    {
+        static const auto tol = Opm::UnitSystem::newMETRIC()
+            .to_si(Opm::UnitSystem::measure::pressure,
+                   Opm::ParserKeywords::NETBALAN::THP_CONVERGENCE_LIMIT::defaultValue);
+
+        return tol;
+    }
 }
 
 namespace Opm { namespace Network {
@@ -72,7 +80,7 @@ Balance::Balance()
     , calc_interval      (defaultCalcInterval())
     , ptol               (defaultNodePressureTolerance())
     , m_pressure_max_iter(NB::MAX_ITER::defaultValue)
-    , m_thp_tolerance    (NB::THP_CONVERGENCE_LIMIT::defaultValue)
+    , m_thp_tolerance    (defaultTHPTolerance())
     , m_thp_max_iter     (NB::MAX_ITER_THP::defaultValue)
 {}
 
@@ -85,7 +93,7 @@ Balance::Balance(const DeckKeyword& keyword)
     this->ptol = record.getItem<NB::PRESSURE_CONVERGENCE_LIMIT>().getSIDouble(0);
     this->m_pressure_max_iter = record.getItem<NB::MAX_ITER>().get<int>(0);
 
-    this->m_thp_tolerance = record.getItem<NB::THP_CONVERGENCE_LIMIT>().get<double>(0);
+    this->m_thp_tolerance = record.getItem<NB::THP_CONVERGENCE_LIMIT>().getSIDouble(0);
     this->m_thp_max_iter = record.getItem<NB::MAX_ITER_THP>().get<int>(0);
 
     if (const auto& targBE = record.getItem<NB::TARGET_BALANCE_ERROR>(); !targBE.defaultApplied(0)) {
@@ -104,18 +112,19 @@ Balance::Balance(const DeckKeyword& keyword)
 Balance::Balance(const bool network_active)
     : calc_mode      (CalcMode::TimeStepStart)
     , calc_interval  (defaultCalcInterval())
-    , m_thp_tolerance(NB::THP_CONVERGENCE_LIMIT::defaultValue)
-    , m_thp_max_iter (NB::MAX_ITER_THP::defaultValue)
 {
     if (network_active) {
-        this->ptol = UnitSystem::newMETRIC().to_si(UnitSystem::measure::pressure,
-                                                   NB::PRESSURE_CONVERGENCE_LIMIT::defaultValue);
-
+        this->ptol = defaultNodePressureTolerance();
         this->m_pressure_max_iter = NB::MAX_ITER::defaultValue;
+
+        this->m_thp_tolerance = defaultTHPTolerance();
+        this->m_thp_max_iter = NB::MAX_ITER_THP::defaultValue;
     }
     else {
         this->ptol = 0.0;
         this->m_pressure_max_iter = 0;
+        this->m_thp_tolerance = 0.0;
+        this->m_thp_max_iter = 0;
     }
 }
 
