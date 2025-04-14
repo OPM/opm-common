@@ -20,7 +20,11 @@
     "GMOPR",
     "GMOPT",
     "GMUPR",
-    "GMUPT"
+    "GMUPT",
+    "GWMAIR",
+    "GWMAIT",
+    "GWMAPR",
+    "GWMAPT"
   ],
   "size": 1,
   "items": [

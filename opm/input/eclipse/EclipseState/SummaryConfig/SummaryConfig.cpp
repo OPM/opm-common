@@ -172,6 +172,7 @@ struct SummaryConfigContext {
          {"MUIP",     {"RMUIP", "FMUIP"}},
          {"MBIP",     {"RMBIP", "FMBIP"}},
          {"MCIP",     {"RMCIP", "FMCIP"}},
+         {"WMAIP",    {"RWMAIP","FWMAIP"}},
     };
 
     using keyword_set = std::unordered_set<std::string>;
@@ -242,7 +243,7 @@ struct SummaryConfigContext {
     bool is_rate(const std::string& keyword) {
         static const keyword_set ratekw {
             "OPR", "GPR", "WPR", "GLIR", "LPR", "NPR", "CPR", "VPR", "TPR", "TPC",
-            "GMPR",
+            "GMAPR", "WMAPR",
 
             "OFR", "OFRF", "OFRS", "OFR+", "OFR-", "TFR",
             "GFR", "GFRF", "GFRS", "GFR+", "GFR-",
@@ -257,7 +258,7 @@ struct SummaryConfigContext {
             "OIGR", "GIGR", "WIGR",
             "OIRH", "GIRH", "WIRH",
             "OVIR", "GVIR", "WVIR",
-            "GMIR",
+            "GMAIR", "WMAIR",
 
             "OPI", "OPP", "GPI", "GPP", "WPI", "WPP",
 
@@ -286,7 +287,7 @@ struct SummaryConfigContext {
             "OPT", "GPT", "WPT", "LPT", "NPT", "CPT",
             "VPT", "TPT", "OVPT", "GVPT", "WVPT",
             "WPTH", "OPTH", "GPTH", "LPTH",
-            "GPTS", "OPTS", "GPTF", "OPTF", "GMPT",
+            "GPTS", "OPTS", "GPTF", "OPTF", "GMPT", "WMAPT",
 
             "OFT", "OFT+", "OFT-", "OFTL", "OFTG",
             "GFT", "GFT+", "GFT-", "GFTL", "GFTG",
@@ -294,6 +295,7 @@ struct SummaryConfigContext {
 
             "WIT", "OIT", "GIT", "LIT", "NIT", "CIT", "VIT", "TIT",
             "WITH", "OITH", "GITH", "WVIT", "OVIT", "GVIT", "GMIT",
+            "WMAIT",
 
             "AQT", "AQTG", "NQT",
 
@@ -940,8 +942,7 @@ establishRegionContext(const DeckKeyword&       keyword,
                        SummaryConfigContext&    context)
 {
     auto region_name = std::string { "FIPNUM" };
-
-    if (keyword.name().size() > 5) {
+    if (keyword.name().size() > 5 && !EclIO::SummaryNode::is_long_reg_kw(keyword.name())) {
         region_name = "FIP" + keyword.name().substr(5, 3);
 
         if (! field_props.has_int(region_name)) {

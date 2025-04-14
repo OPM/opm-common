@@ -80,6 +80,7 @@ public:
         UreaMass = 36,
         BiofilmMass = 37,
         CalciteMass = 38,
+        WaterMass = 39,
     };
 
     /// Create non-defaulted object suitable for testing the serialisation
