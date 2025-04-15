@@ -44,9 +44,9 @@ public:
     static constexpr unsigned gasPhaseIdx = 2;
 
     //! Index of the oil component
-    static constexpr int oilCompIdx = 0;
+    static constexpr int oilCompIdx = 1;
     //! Index of the water component
-    static constexpr int waterCompIdx = 1;
+    static constexpr int waterCompIdx = 0;
     //! Index of the gas component
     static constexpr int gasCompIdx = 2;
 };
