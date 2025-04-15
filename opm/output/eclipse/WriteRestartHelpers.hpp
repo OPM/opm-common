@@ -57,6 +57,13 @@ namespace Opm::RestartIO::Helpers {
                    const int           report_step,
                    const int           lookup_step);
 
+    std::vector<int>
+    createLgrHeadi(const EclipseState& es,
+                   const int           lgr_index);               
+
+    std::vector<double>
+    createLgrHeadd();  
+
     std::vector<bool>
     createLogiHead(const EclipseState& es);
 
