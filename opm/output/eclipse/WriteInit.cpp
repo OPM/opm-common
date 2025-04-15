@@ -986,7 +986,6 @@ void Opm::InitIO::write(const ::Opm::EclipseState&              es,
         {
             auto lgr_label = all_lgr_tag[index];
             const EclipseGridLGR& lgr_grid = grid.getLGRCell(lgr_label);
-            const std::array<int,3> subdivisions = grid.getCellSubdivisionRatioLGR(lgr_label);
             std::vector<int> global_fathers = lgr_grid.getLGRCell_global_father(grid);
             writeInitFileHeaderLGRCell(es, lgr_grid, schedule, initFile, index+1,false);           
 

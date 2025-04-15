@@ -94,7 +94,7 @@ protected:
 
     std::vector<std::uint64_t> ifStreamPos;
 
-    std::map<std::string, int> array_index;
+    std::multimap<std::string, int> array_index;
 
     template<class T>
     const std::vector<T>& getImpl(int arrIndex, eclArrType type,

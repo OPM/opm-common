@@ -416,64 +416,14 @@ void checkInitFile(const Deck& deck, const data::Solution& simProps)
     }
 }
 
-void checkRestartFile( int timeStepIdx ) {
-    EclIO::ERst rstFile{ "FOO.UNRST" };
-
-    for (int i = 1; i <= timeStepIdx; ++i) {
-        if (! rstFile.hasReportStepNumber(i))
-            continue;
-
-        auto sol = createBlackoilState( i, 3 * 3 * 3 );
-
-        rstFile.loadReportStepNumber(i);
-
-        const auto& knownVec = rstFile.listOfRstArrays(i);
-
-        if (keywordExists(knownVec, "PRESSURE")) {
-            const auto& press = rstFile.getRestartData<float>("PRESSURE", i, 0);
-            std::transform(sol.data<double>("PRESSURE").begin(),
-                           sol.data<double>("PRESSURE").end(),
-                           sol.data<double>("PRESSURE").begin(),
-                           [](const auto& x) { return x / Metric::Pressure; });
-
-            compareErtData( sol.data<double>("PRESSURE"), press, 1e-4 );
-        }
-
-        if (keywordExists(knownVec, "SWAT")) {
-            const auto& swat = rstFile.getRestartData<float>("SWAT", i, 0);
-            compareErtData( sol.data<double>("SWAT"), swat, 1e-4 );
-        }
-
-        if (keywordExists(knownVec, "SGAS")) {
-            const auto& sgas = rstFile.getRestartData<float>("SGAS", i, 0);
-            compareErtData( sol.data<double>("SGAS"), sgas, 1e-4 );
-        }
-
-        if (keywordExists(knownVec, "KRO")) {
-            const auto& kro = rstFile.getRestartData<float>("KRO", i, 0);
-            BOOST_CHECK_CLOSE(1.0 * i * kro.size(), sum(kro), 1.0e-8);
-        }
-
-        if (keywordExists(knownVec, "KRG")) {
-            const auto& krg = rstFile.getRestartData<float>("KRG", i, 0);
-            BOOST_CHECK_CLOSE(10.0 * i * krg.size(), sum(krg), 1.0e-8);
-        }
-    }
-}
-
-time_t ecl_util_make_date( const int day, const int month, const int year )
-{
-    const auto ymd = Opm::TimeStampUTC::YMD{ year, month, day };
-    return static_cast<time_t>(asTimeT(Opm::TimeStampUTC{ymd}));
-}
 
 } // Anonymous namespace
 
-BOOST_AUTO_TEST_CASE(EclipseIOLGR_all_test)
+BOOST_AUTO_TEST_CASE(EclipseIOLGR_INIT)
 {
     const std::string& deckString = deckStringLGR;
 
-    auto write_and_check = [&deckString]( int first = 1, int last = 5 ) {
+    auto write_and_check = []( ) {
         // preparing tested objects
         const auto deck = Parser().parseString( deckString);
         auto es = EclipseState( deck );
@@ -488,10 +438,9 @@ BOOST_AUTO_TEST_CASE(EclipseIOLGR_all_test)
         // defining test data
         using measure = UnitSystem::measure;
         using TargetType = data::TargetType;
-        const auto start_time = ecl_util_make_date( 10, 10, 2008 );
-        std::vector<double> tranx(3*3*3);
-        std::vector<double> trany(3*3*3);
-        std::vector<double> tranz(3*3*3);
+        std::vector<double> tranx(3*3*1);
+        std::vector<double> trany(3*3*1);
+        std::vector<double> tranz(3*3*1);
         const data::Solution eGridProps {
             { "TRANX", data::CellData { measure::transmissibility, tranx, TargetType::INIT } },
             { "TRANY", data::CellData { measure::transmissibility, trany, TargetType::INIT } },
@@ -505,16 +454,17 @@ BOOST_AUTO_TEST_CASE(EclipseIOLGR_all_test)
         // writing the initial file
         eclWriter.writeInitial( );
 
-        //BOOST_CHECK_THROW(eclWriter.writeInitial(eGridProps, int_data), std::invalid_argument);
+        BOOST_CHECK_THROW(eclWriter.writeInitial(eGridProps, int_data), std::invalid_argument);
+        int_data.erase("STR_ULONGNAME");
+        eclWriter.writeInitial(eGridProps, int_data);
 
-  
+        checkInitFile(deck, eGridProps);
 
-        std::streampos file_size = 0;
-        return file_size;
+
     };
 
     WorkArea work_area("test_ecl_writer");
-    const auto file_size = write_and_check();
+    write_and_check();
     auto index  = 1;
 }
 
