@@ -142,6 +142,10 @@ public:
        return has_zFraction;
     }
 
+    bool hasBioeffects() const noexcept {
+        return has_bioeffects;
+    }
+
     bool hasMICP() const noexcept {
         return has_micp;
     }
@@ -169,6 +173,7 @@ private:
     bool has_foam{};
     bool has_brine{};
     bool has_zFraction{};
+    bool has_bioeffects{};
     bool has_micp{};
     bool has_co2_or_h2store{};
 
