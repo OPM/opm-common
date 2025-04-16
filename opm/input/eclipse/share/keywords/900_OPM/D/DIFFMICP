@@ -8,7 +8,6 @@
       "keyword": "TABDIMS",
       "item": "NTPVT"
     },
-    "requires": ["MICP"],
     "items": [
     {
       "name": "DATA",

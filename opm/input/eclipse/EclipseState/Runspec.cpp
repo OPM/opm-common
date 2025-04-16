@@ -668,6 +668,7 @@ Runspec::Runspec(const Deck& deck)
     , m_micp       (false)
     , m_mech       (false)
     , m_temp       (false)
+    , m_biof       (false)
 {
     if (DeckSection::hasRUNSPEC(deck)) {
         const RUNSPECSection runspecSection{deck};
@@ -799,6 +800,14 @@ Runspec::Runspec(const Deck& deck)
             OpmLog::note(msg);
 
         }
+
+        if (runspecSection.hasKeyword<ParserKeywords::BIOFILM>()) {
+            m_biof = true;
+
+            const std::string msg = "\nSimulation will solve for biofilm quantities";
+
+            OpmLog::note(msg);
+        }
     }
 }
 
@@ -828,6 +837,7 @@ Runspec Runspec::serializationTestObject()
     result.m_micp = true;
     result.m_mech = true;
     result.m_temp = true;
+    result.m_biof = true;
 
     return result;
 }
@@ -943,6 +953,11 @@ bool Runspec::compositional() const noexcept
     return (this->m_comps > 0) && !this->m_co2storage && !this->m_h2storage;
 }
 
+bool Runspec::biof() const noexcept
+{
+    return this->m_biof;
+}
+
 std::time_t Runspec::start_time() const noexcept
 {
     return this->m_start_time;
@@ -992,6 +1007,7 @@ bool Runspec::rst_cmp(const Runspec& full_spec, const Runspec& rst_spec)
         full_spec.m_mech == rst_spec.m_mech &&
         full_spec.m_frac == rst_spec.m_frac &&
         full_spec.m_temp == rst_spec.m_temp &&
+        full_spec.m_biof == rst_spec.m_biof &&
         Welldims::rst_cmp(full_spec.wellDimensions(), rst_spec.wellDimensions());
 }
 
@@ -1021,6 +1037,7 @@ bool Runspec::operator==(const Runspec& data) const
         && (this->m_mech == data.m_mech)
         && (this->m_frac == data.m_frac)
         && (this->m_temp == data.m_temp)
+        && (this->m_biof == data.m_biof)
         ;
 }
 
