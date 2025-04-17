@@ -1304,13 +1304,11 @@ namespace {
             // Injection rates reported as negative production rates.
             xWell[Ix::VoidPrRate] = -get("WGVIR");
 
-            xWell[Ix::GasFVF] = (std::abs(xWell[Ix::GasPrRate]) > 0.0)
-                ? xWell[Ix::VoidPrRate] / xWell[Ix::GasPrRate]
-                : 0.0;
-
-            if (std::isnan(xWell[Ix::GasFVF])) {
-                xWell[Ix::GasFVF] = 0.0;
-            }
+            xWell[Ix::GasFVF] = (std::isnan(xWell[Ix::VoidPrRate]) ||
+                 std::isnan(xWell[Ix::GasPrRate]) ||
+                 std::abs(xWell[Ix::GasPrRate]) <= 0.0)
+                ? 0.0
+                : xWell[Ix::VoidPrRate] / xWell[Ix::GasPrRate];
 
             xWell[Ix::PrimGuideRate] = xWell[Ix::PrimGuideRate_2] = -get("WGIGR");
             xWell[Ix::GasVoidPrRate] = xWell[Ix::VoidPrRate];
