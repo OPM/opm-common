@@ -26,6 +26,7 @@
 #include <opm/input/eclipse/Parser/ParseContext.hpp>
 #include <opm/input/eclipse/Parser/Parser.hpp>
 
+#include <cstddef>
 #include <getopt.h>
 #include <iostream>
 #include <sstream>
@@ -175,7 +176,7 @@ Node::print(std::stringstream& netw_str)
         m_xpos = netw_str.str().find_first_of("+", init_length) - pos_lineshift;
     }
 
-    for (size_t m = 0; m < m_inlet_list.size(); m++) {
+    for (std::size_t m = 0; m < m_inlet_list.size(); m++) {
         m_inlet_list[m]->print(netw_str);
     }
 
@@ -331,7 +332,7 @@ NetWork::parse_data_deck(const std::filesystem::path& inputFileName)
             last_time = m_start_date;
         }
         else if (keyw.name() == "TSTEP") {
-            for (size_t n = 0; n < keyw[0].getItem(0).data_size(); n++) {
+            for (std::size_t n = 0; n < keyw[0].getItem(0).data_size(); n++) {
                 auto dt = keyw[0].getItem(0).get<double>(n);
                 last_time = last_time + static_cast<int>(dt * 24.0 * 3600.0);
 
@@ -486,8 +487,8 @@ NetWork::print_network_input()
 
     std::cout << "\nm_bran_input_list: " << m_bran_input_list.size() << "\n\n";
 
-    for (size_t r = 0; r < m_bran_input_list.size(); r++) {
-        for (size_t n = 0; n < m_bran_input_list[r].size(); n++) {
+    for (std::size_t r = 0; r < m_bran_input_list.size(); r++) {
+        for (std::size_t n = 0; n < m_bran_input_list[r].size(); n++) {
             auto downtree = std::get<0>(m_bran_input_list[r][n]);
             auto uptree = std::get<1>(m_bran_input_list[r][n]);
             auto vfp = std::get<2>(m_bran_input_list[r][n]);
@@ -499,8 +500,8 @@ NetWork::print_network_input()
 
     std::cout << "\n\nm_node_input_list: " << m_node_input_list.size() << "\n\n";
 
-    for (size_t r = 0; r < m_node_input_list.size(); r++) {
-        for (size_t n = 0; n < m_node_input_list[r].size(); n++) {
+    for (std::size_t r = 0; r < m_node_input_list.size(); r++) {
+        for (std::size_t n = 0; n < m_node_input_list[r].size(); n++) {
             auto node = std::get<0>(m_node_input_list[r][n]);
             auto pres = std::get<1>(m_node_input_list[r][n]);
 
@@ -543,7 +544,7 @@ NetWork::add_branch(const std::string& downtree, const std::string& uptree, int 
     std::shared_ptr<Node> pDowntree;
 
     // handle uptree node
-    for (size_t n = 0; n < m_node_list.size(); n++) {
+    for (std::size_t n = 0; n < m_node_list.size(); n++) {
         if (m_node_list[n]->name() == uptree) {
             pUptree = m_node_list[n];
         }
@@ -555,7 +556,7 @@ NetWork::add_branch(const std::string& downtree, const std::string& uptree, int 
     }
 
     // handle down tree node
-    for (size_t n = 0; n < m_node_list.size(); n++) {
+    for (std::size_t n = 0; n < m_node_list.size(); n++) {
         if (m_node_list[n]->name() == downtree) {
             pDowntree = m_node_list[n];
         }
@@ -619,7 +620,7 @@ NetWork::build_network(int rstep)
     }
 
     for (const auto n : input_step_vect) {
-        for (size_t b = 0; b < m_bran_input_list[n].size(); b++) {
+        for (std::size_t b = 0; b < m_bran_input_list[n].size(); b++) {
             auto downtree = std::get<0>(m_bran_input_list[n][b]);
             auto uptree = std::get<1>(m_bran_input_list[n][b]);
             auto vfp = std::get<2>(m_bran_input_list[n][b]);
@@ -635,7 +636,7 @@ NetWork::build_network(int rstep)
 
     m_top_node_list.clear();
 
-    for (size_t n = 0; n < m_node_list.size(); n++) {
+    for (std::size_t n = 0; n < m_node_list.size(); n++) {
         if (m_node_list[n]->get_outlet() == nullptr) {
             m_top_node_list.push_back(m_node_list[n]);
         }
@@ -644,7 +645,7 @@ NetWork::build_network(int rstep)
     std::map<std::string, std::string> well_map;
 
     for (const auto n : input_step_vect) {
-        for (size_t b = 0; b < m_well_input_list[n].size(); b++) {
+        for (std::size_t b = 0; b < m_well_input_list[n].size(); b++) {
             auto wname = std::get<0>(m_well_input_list[n][b]);
             auto gname = std::get<1>(m_well_input_list[n][b]);
             well_map[wname] = gname;
@@ -655,7 +656,7 @@ NetWork::build_network(int rstep)
         auto gname = m.second;
         auto wname = m.first;
 
-        for (size_t n = 0; n < m_node_list.size(); n++) {
+        for (std::size_t n = 0; n < m_node_list.size(); n++) {
             if (m_node_list[n]->name() == gname) {
                 m_node_list[n]->add_well(wname);
             }
@@ -663,11 +664,11 @@ NetWork::build_network(int rstep)
     }
 
     for (const auto n : input_step_vect) {
-        for (size_t b = 0; b < m_node_input_list[n].size(); b++) {
+        for (std::size_t b = 0; b < m_node_input_list[n].size(); b++) {
             auto node = std::get<0>(m_node_input_list[n][b]);
             auto pressure = std::get<1>(m_node_input_list[n][b]);
 
-            for (size_t m = 0; m < m_node_list.size(); m++) {
+            for (std::size_t m = 0; m < m_node_list.size(); m++) {
                 if (m_node_list[m]->name() == node) {
                     m_node_list[m]->set_fixed_pres(pressure);
                 }
@@ -685,7 +686,7 @@ NetWork::print_network(int rstep)
 
     std::cout << "Report step : " << time_str(t) << "\n\n";
 
-    for (size_t n = 0; n < m_top_node_list.size(); n++) {
+    for (std::size_t n = 0; n < m_top_node_list.size(); n++) {
         m_top_node_list[n]->print(m_netw_str);
         m_netw_str << "\n\n";
     }
@@ -694,7 +695,7 @@ NetWork::print_network(int rstep)
 
     std::cout << "\nFixed pressure nodes: \n\n";
 
-    for (size_t n = 0; n < m_node_list.size(); n++) {
+    for (std::size_t n = 0; n < m_node_list.size(); n++) {
         auto fixed_pres = m_node_list[n]->get_fixed_pres();
 
         if (fixed_pres > -1.0) {
@@ -715,7 +716,7 @@ NetWork::print_report_steps()
 
     std::cout << "\nList of all report steps \n\n";
 
-    for (size_t n = 0; n < m_report_time_list.size(); n++) {
+    for (std::size_t n = 0; n < m_report_time_list.size(); n++) {
         std::cout << "Report step " << n + 1 << "  | " << time_str(m_report_time_list[n]) << "\n";
     }
 }
