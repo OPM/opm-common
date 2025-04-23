@@ -42,36 +42,36 @@ public:
     void set_outlet(std::shared_ptr<Node> outlet)
     {
         m_outlet = outlet;
-    };
+    }
     std::shared_ptr<Node> get_outlet()
     {
         return m_outlet;
-    };
+    }
 
     void add_inlet_node(std::shared_ptr<Node> n);
 
     void set_vfp(int vfp)
     {
         m_vfp = vfp;
-    };
+    }
     int get_vfp()
     {
         return m_vfp;
-    };
+    }
 
     void set_fixed_pres(double pres)
     {
         m_fixed_pres = pres;
-    };
+    }
     double get_fixed_pres()
     {
         return m_fixed_pres;
-    };
+    }
 
     int get_xpos()
     {
         return m_xpos;
-    };
+    }
 
     void print(std::stringstream& netw_str);
 
@@ -82,7 +82,7 @@ public:
     void reset_outlet()
     {
         m_outlet = nullptr;
-    };
+    }
 
 private:
     int m_vfp;
