@@ -141,8 +141,9 @@ Node::delete_from_inlet_list(const std::string& name)
 bool
 Node::add_well(const std::string& name)
 {
-    if (m_inlet_list.size() > 0)
+    if (!m_inlet_list.empty()) {
         return false;
+    }
 
     m_well_list.push_back(name);
 
@@ -159,8 +160,9 @@ Node::print(std::stringstream& netw_str)
 
     auto p = netw_str.str().find_last_of("\n");
 
-    if (p != std::string::npos)
+    if (p != std::string::npos) {
         pos_lineshift = p + 1;
+    }
 
     if (m_outlet == nullptr) {
         netw_str << "  o (" << m_name << ")";
@@ -173,16 +175,18 @@ Node::print(std::stringstream& netw_str)
         m_xpos = netw_str.str().find_first_of("+", init_length) - pos_lineshift;
     }
 
-    for (size_t m = 0; m < m_inlet_list.size(); m++)
+    for (size_t m = 0; m < m_inlet_list.size(); m++) {
         m_inlet_list[m]->print(netw_str);
+    }
 
     if (m_inlet_list.size() == 0) {
         auto next_br = next_branch();
 
         netw_str << " : ";
 
-        for (const auto& well : m_well_list)
+        for (const auto& well : m_well_list) {
             netw_str << " " << well;
+        }
 
         if (next_br != nullptr) {
             std::string xpos_str(next_br->m_xpos, ' ');
@@ -269,13 +273,12 @@ NetWork::NetWork(const std::string& filename)
 
     if (inputFileName.extension() == ".DATA") {
         parse_data_deck(inputFileName);
-
-    } else if (inputFileName.extension() == ".UNRST") {
-
+    }
+    else if (inputFileName.extension() == ".UNRST") {
         parse_unrst(inputFileName);
         m_from_unrst = true;
-
-    } else {
+    }
+    else {
         std::cout << "\n!Error, unsupported file type " << filename << "\n\n";
         exit(1);
     }
@@ -298,9 +301,8 @@ NetWork::parse_data_deck(const std::filesystem::path& inputFileName)
 
     try {
         deck_schecule = parser.parseFile(inputFileName, parseContext, sections);
-
-    } catch (const std::exception& e) {
-
+    }
+    catch (const std::exception& e) {
         std::cout << "\n!Error parsing data deck " << inputFileName << "\n\n";
         std::cout << e.what() << "\n\n";
 
@@ -327,9 +329,8 @@ NetWork::parse_data_deck(const std::filesystem::path& inputFileName)
             m_start_date = time_from_rec(keyw[0]);
 
             last_time = m_start_date;
-
-        } else if (keyw.name() == "TSTEP") {
-
+        }
+        else if (keyw.name() == "TSTEP") {
             for (size_t n = 0; n < keyw[0].getItem(0).data_size(); n++) {
                 auto dt = keyw[0].getItem(0).get<double>(n);
                 last_time = last_time + static_cast<int>(dt * 24.0 * 3600.0);
@@ -341,11 +342,12 @@ NetWork::parse_data_deck(const std::filesystem::path& inputFileName)
                     m_well_input_list.push_back({});
                 }
 
-                if ((skiprest) && (last_time >= m_rst_time))
+                if ((skiprest) && (last_time >= m_rst_time)) {
                     skiprest = false;
+                }
             }
-
-        } else if (keyw.name() == "DATES") {
+        }
+        else if (keyw.name() == "DATES") {
             for (const auto& rec : keyw) {
                 last_time = time_from_rec(rec);
 
@@ -355,7 +357,8 @@ NetWork::parse_data_deck(const std::filesystem::path& inputFileName)
                                   << "' has already passed \n\n";
                         exit(1);
                     }
-                } else {
+                }
+                else {
                     if ((last_time <= m_report_time_list.back()) && (!skiprest)) {
                         std::cout << "\n!Error, next report step '" << time_str(last_time)
                                   << "' has already passed \n\n";
@@ -370,25 +373,25 @@ NetWork::parse_data_deck(const std::filesystem::path& inputFileName)
                     m_well_input_list.push_back({});
                 }
 
-                if ((skiprest) && (last_time >= m_rst_time))
+                if ((skiprest) && (last_time >= m_rst_time)) {
                     skiprest = false;
+                }
             }
-
-        } else if (keyw.name() == "RESTART") {
-
+        }
+        else if (keyw.name() == "RESTART") {
             auto rst_file = keyw[0].getItem(0).get<std::string>(0) + ".UNRST";
             auto rst_rstep = keyw[0].getItem(1).get<int>(0);
 
             br_input_from_rst(rst_file, {rst_rstep});
 
             restart = true;
-
-        } else if (keyw.name() == "SKIPREST") {
-
-            if (restart)
+        }
+        else if (keyw.name() == "SKIPREST") {
+            if (restart) {
                 skiprest = true;
-
-        } else if ((keyw.name() == "BRANPROP") && (!skiprest)) {
+            }
+        }
+        else if ((keyw.name() == "BRANPROP") && (!skiprest)) {
             for (const auto& rec : keyw) {
                 auto downtree = rec.getItem(0).get<std::string>(0);
                 auto uptree = rec.getItem(1).get<std::string>(0);
@@ -398,8 +401,8 @@ NetWork::parse_data_deck(const std::filesystem::path& inputFileName)
 
                 m_bran_input_list.back().push_back(br);
             }
-
-        } else if ((keyw.name() == "NODEPROP") && (!skiprest)) {
+        }
+        else if ((keyw.name() == "NODEPROP") && (!skiprest)) {
             for (const auto& rec : keyw) {
                 if (rec.getItem(1).hasValue(0)) {
                     auto node_name = rec.getItem(0).get<std::string>(0);
@@ -408,8 +411,8 @@ NetWork::parse_data_deck(const std::filesystem::path& inputFileName)
                     m_node_input_list.back().push_back(node);
                 }
             }
-
-        } else if ((keyw.name() == "WELSPECS") && (!skiprest)) {
+        }
+        else if ((keyw.name() == "WELSPECS") && (!skiprest)) {
             for (const auto& rec : keyw) {
                 auto wname = rec.getItem(0).get<std::string>(0);
                 auto gname = rec.getItem(1).get<std::string>(0);
@@ -519,8 +522,9 @@ NetWork::node_exist(const std::string& name)
 void
 NetWork::add_node(const std::string& name)
 {
-    if (!this->node_exist(name))
+    if (!this->node_exist(name)) {
         m_node_list.push_back(std::make_shared<Node>(name));
+    }
     else {
         std::cout << "in function add_node: Node " << name << " already exists \n\n";
         exit(1);
@@ -539,10 +543,11 @@ NetWork::add_branch(const std::string& downtree, const std::string& uptree, int 
     std::shared_ptr<Node> pDowntree;
 
     // handle uptree node
-
-    for (size_t n = 0; n < m_node_list.size(); n++)
-        if (m_node_list[n]->name() == uptree)
+    for (size_t n = 0; n < m_node_list.size(); n++) {
+        if (m_node_list[n]->name() == uptree) {
             pUptree = m_node_list[n];
+        }
+    }
 
     if (pUptree == nullptr) {
         add_node(uptree);
@@ -550,10 +555,11 @@ NetWork::add_branch(const std::string& downtree, const std::string& uptree, int 
     }
 
     // handle down tree node
-
-    for (size_t n = 0; n < m_node_list.size(); n++)
-        if (m_node_list[n]->name() == downtree)
+    for (size_t n = 0; n < m_node_list.size(); n++) {
+        if (m_node_list[n]->name() == downtree) {
             pDowntree = m_node_list[n];
+        }
+    }
 
     if (pDowntree == nullptr) {
         add_node(downtree);
@@ -603,31 +609,37 @@ NetWork::build_network(int rstep)
     // input from restart file -> each report step describes a complete state of network
     // input from data deck -> network build from all steps up to report step (branprop increments)
 
-    if (m_from_unrst)
+    if (m_from_unrst) {
         input_step_vect.push_back(rstep - 1);
-    else
-        for (int n = 0; n < rstep; n++)
+    }
+    else {
+        for (int n = 0; n < rstep; n++) {
             input_step_vect.push_back(n);
+        }
+    }
 
     for (const auto n : input_step_vect) {
-
         for (size_t b = 0; b < m_bran_input_list[n].size(); b++) {
             auto downtree = std::get<0>(m_bran_input_list[n][b]);
             auto uptree = std::get<1>(m_bran_input_list[n][b]);
             auto vfp = std::get<2>(m_bran_input_list[n][b]);
 
-            if (vfp == 0)
+            if (vfp == 0) {
                 delete_branch(downtree, uptree);
-            else
+            }
+            else {
                 add_branch(downtree, uptree, vfp);
+            }
         }
     }
 
     m_top_node_list.clear();
 
-    for (size_t n = 0; n < m_node_list.size(); n++)
-        if (m_node_list[n]->get_outlet() == nullptr)
+    for (size_t n = 0; n < m_node_list.size(); n++) {
+        if (m_node_list[n]->get_outlet() == nullptr) {
             m_top_node_list.push_back(m_node_list[n]);
+        }
+    }
 
     std::map<std::string, std::string> well_map;
 
@@ -643,9 +655,11 @@ NetWork::build_network(int rstep)
         auto gname = m.second;
         auto wname = m.first;
 
-        for (size_t n = 0; n < m_node_list.size(); n++)
-            if (m_node_list[n]->name() == gname)
+        for (size_t n = 0; n < m_node_list.size(); n++) {
+            if (m_node_list[n]->name() == gname) {
                 m_node_list[n]->add_well(wname);
+            }
+        }
     }
 
     for (const auto n : input_step_vect) {
@@ -653,9 +667,11 @@ NetWork::build_network(int rstep)
             auto node = std::get<0>(m_node_input_list[n][b]);
             auto pressure = std::get<1>(m_node_input_list[n][b]);
 
-            for (size_t m = 0; m < m_node_list.size(); m++)
-                if (m_node_list[m]->name() == node)
+            for (size_t m = 0; m < m_node_list.size(); m++) {
+                if (m_node_list[m]->name() == node) {
                     m_node_list[m]->set_fixed_pres(pressure);
+                }
+            }
         }
     }
 }
@@ -828,10 +844,9 @@ NetWork::br_input_from_rst(const std::string& rstfile, std::vector<int> rstep_ve
             auto ibran = rst1.getRestartData<int>("IBRAN", rstep);
             auto rnode = rst1.getRestartData<double>("RNODE", rstep);
 
-
-            for (int n = 0; n < noactnod; n++)
+            for (int n = 0; n < noactnod; n++) {
                 nodelist.push_back(znode[2 * n]);
-
+            }
 
             for (int b = 0; b < noactbr; b++) {
                 int ind = b * nibran;
@@ -864,8 +879,9 @@ NetWork::br_input_from_rst(const std::string& rstfile, std::vector<int> rstep_ve
         auto iwel = rst1.getRestartData<int>("IWEL", rstep);
         auto zgrp = rst1.getRestartData<std::string>("ZGRP", rstep);
 
-        for (int g = 0; g < ngmaxz; g++)
+        for (int g = 0; g < ngmaxz; g++) {
             grouplist.push_back(zgrp[g * nzgrpz]);
+        }
 
         for (int n = 0; n < nswells; n++) {
             std::string wname = zwel[n * nzwelz];
@@ -929,8 +945,8 @@ main(int argc, char** argv)
 
     if (rstep == -1) {
         rstep = netw.number_report_steps();
-    } else {
-
+    }
+    else {
         if ((rstep < 1) || (rstep > netw.number_report_steps())) {
             std::cout << "\n!Error, invalid report step " << rstep;
             std::cout << " should be > 0 and less than " << netw.number_report_steps() << "\n";
