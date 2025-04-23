@@ -92,7 +92,6 @@ private:
     int m_vfp;
     int m_xpos = -1;
     double m_fixed_pres = -1.0;
-    int m_ind = -1;
 
     std::string m_name;
     std::shared_ptr<Node> m_outlet;
