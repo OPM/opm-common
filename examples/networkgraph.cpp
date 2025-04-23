@@ -113,10 +113,10 @@ Node::next_branch()
     std::shared_ptr<Node> p1 = m_outlet;
 
     while (p1 != nullptr) {
-        for (size_t n = 0; n < p1->m_inlet_list.size(); n++) {
-            if (p1->m_inlet_list[n]->m_xpos == -1) {
-                return p1;
-            }
+        if (std::any_of(p1->m_inlet_list.begin(), p1->m_inlet_list.end(),
+                        [](const auto& inlet) { return inlet->m_xpos == -1 ;}))
+        {
+            return p1;
         }
         p1 = p1->m_outlet;
     }
@@ -127,16 +127,13 @@ Node::next_branch()
 bool
 Node::delete_from_inlet_list(const std::string& name)
 {
-    int ind = -1;
+    const auto it = std::find_if(m_inlet_list.begin(), m_inlet_list.end(),
+                                 [&name](const auto& inlet) { return inlet->name() == name; });
 
-    for (size_t n = 0; n < m_inlet_list.size(); n++)
-        if (m_inlet_list[n]->name() == name)
-            ind = n;
-
-    if (ind < 0) {
+    if (it == m_inlet_list.end()) {
         return false;
     } else {
-        m_inlet_list.erase(m_inlet_list.begin() + ind);
+        m_inlet_list.erase(it);
         return true;
     }
 }
@@ -199,8 +196,8 @@ Node::add_inlet_node(std::shared_ptr<Node> node)
 {
     std::vector<std::shared_ptr<Node>>::iterator exist;
 
-    exist = std::find_if(
-        m_inlet_list.begin(), m_inlet_list.end(), [&](const auto& val) { return val->name() == node->name(); });
+    exist = std::find_if(m_inlet_list.begin(), m_inlet_list.end(),
+                         [&](const auto& val) { return val->name() == node->name(); });
 
     if (exist != m_inlet_list.end()) {
         m_inlet_list.erase(exist);
@@ -434,9 +431,9 @@ NetWork::parse_unrst(const std::filesystem::path& inputFileName)
 
     std::vector<int> rstep_vect;
 
-    for (auto r : all_reports)
-        if (r > 0)
-            rstep_vect.push_back(r);
+    std::copy_if(all_reports.begin(), all_reports.end(),
+                 std::back_inserter(rstep_vect),
+                 [](const auto r) { return r > 0; });
 
     m_node_input_list.push_back({});
     m_bran_input_list.push_back({});
@@ -515,11 +512,8 @@ NetWork::print_network_input()
 bool
 NetWork::node_exist(const std::string& name)
 {
-    for (size_t n = 0; n < m_node_list.size(); n++)
-        if (name == m_node_list[n]->name())
-            return true;
-
-    return false;
+    return std::any_of(m_node_list.begin(), m_node_list.end(),
+                       [&name](const auto& node) { return node->name() == name; });
 }
 
 void
@@ -575,37 +569,30 @@ NetWork::add_branch(const std::string& downtree, const std::string& uptree, int 
 void
 NetWork::delete_branch(const std::string& downtree, const std::string& uptree)
 {
-    std::shared_ptr<Node> pUptree;
-    std::shared_ptr<Node> pDowntree;
+    auto up_it = std::find_if(m_node_list.begin(), m_node_list.end(),
+                           [&uptree](const auto& node) { return node->name() == uptree;});
 
-    for (size_t n = 0; n < m_node_list.size(); n++)
-        if (m_node_list[n]->name() == uptree)
-            pUptree = m_node_list[n];
+    auto down_it = std::find_if(m_node_list.begin(), m_node_list.end(),
+                                [&downtree](const auto& node) { return node->name() == downtree;});
 
-    for (size_t n = 0; n < m_node_list.size(); n++)
-        if (m_node_list[n]->name() == downtree)
-            pDowntree = m_node_list[n];
-
-    if ((pUptree == nullptr) || (pDowntree == nullptr)) {
+    if (up_it == m_node_list.end() || down_it == m_node_list.end()) {
         std::cout << "\n!Error, pointer to downtree and/or uptree not found \n\n";
         exit(1);
     }
 
-    if (pUptree->delete_from_inlet_list(downtree) == false) {
+    if ((*up_it)->delete_from_inlet_list(downtree) == false) {
         std::cout << "\n!Error, problem with deleteing branch, needs to be checked  \n\n";
         exit(1);
     }
 
-    pDowntree->reset_outlet();
+    (*down_it)->reset_outlet();
 
-    bool found_in_list = false;
+    const auto top_it = std::find_if(m_top_node_list.begin(), m_top_node_list.end(),
+                                     [&downtree](const auto& node) { return node->name() == downtree; });
 
-    for (size_t n = 0; n < m_top_node_list.size(); n++)
-        if (m_top_node_list[n]->name() == downtree)
-            found_in_list = true;
-
-    if (!found_in_list)
-        m_top_node_list.push_back(pDowntree);
+    if (top_it == m_top_node_list.end()) {
+        m_top_node_list.push_back(*up_it);
+    }
 }
 
 void
