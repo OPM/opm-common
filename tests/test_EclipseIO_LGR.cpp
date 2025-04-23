@@ -383,6 +383,10 @@ void checkEgridFile(const EclipseGrid& eclGrid)
 void checkInitFile(const Deck& deck, const data::Solution& simProps)
 {
     EclIO::EclFile initFile { "FOO.INIT" };
+    // tests
+    auto lgr_name = initFile.get<std::string>("LGR");
+    auto lgr_name2 = initFile.get<std::string>("LGR");
+
 
     if (initFile.hasKey("PORO")) {
         const auto& poro   = initFile.get<float>("PORO");

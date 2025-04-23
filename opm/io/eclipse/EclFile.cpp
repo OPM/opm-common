@@ -55,7 +55,7 @@ void EclFile::load(bool preload) {
             if (formatted) {
                 readFormattedHeader(fileH,arrName,num,arrType, sizeOfElement);
             } else {
-                readBinaryHeader(fileH,arrName,num, arrType, sizeOfElement);
+                readBinaryHeader(fileH,arrName,num,  arrType, sizeOfElement);
             }
         } catch (const std::exception& e){
             OPM_THROW(std::runtime_error,
@@ -573,7 +573,7 @@ const std::vector<float>& EclFile::get<float>(const std::string& name)
 
 template<>
 const std::vector<double>& EclFile::get<double>(const std::string &name)
-{
+{ 
     auto search = array_index.find(name);
 
     if (search == array_index.end()) {
