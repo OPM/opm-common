@@ -185,7 +185,7 @@ Node::print(std::stringstream& netw_str)
 
         netw_str << " : ";
 
-        for (auto& well : m_well_list)
+        for (const auto& well : m_well_list)
             netw_str << " " << well;
 
         if (next_br != nullptr) {
@@ -323,7 +323,7 @@ NetWork::parse_data_deck(const std::filesystem::path& inputFileName)
         exit(1);
     }
 
-    for (auto keyw : deck_schecule) {
+    for (const auto& keyw : deck_schecule) {
         if (keyw.name() == "START") {
             m_node_input_list.push_back({});
             m_bran_input_list.push_back({});
@@ -350,7 +350,7 @@ NetWork::parse_data_deck(const std::filesystem::path& inputFileName)
             }
 
         } else if (keyw.name() == "DATES") {
-            for (auto& rec : keyw) {
+            for (const auto& rec : keyw) {
                 last_time = time_from_rec(rec);
 
                 if (m_report_time_list.size() == 0) {
@@ -393,7 +393,7 @@ NetWork::parse_data_deck(const std::filesystem::path& inputFileName)
                 skiprest = true;
 
         } else if ((keyw.name() == "BRANPROP") && (!skiprest)) {
-            for (auto& rec : keyw) {
+            for (const auto& rec : keyw) {
                 auto downtree = rec.getItem(0).get<std::string>(0);
                 auto uptree = rec.getItem(1).get<std::string>(0);
                 auto vfp = rec.getItem(2).get<int>(0);
@@ -404,7 +404,7 @@ NetWork::parse_data_deck(const std::filesystem::path& inputFileName)
             }
 
         } else if ((keyw.name() == "NODEPROP") && (!skiprest)) {
-            for (auto& rec : keyw) {
+            for (const auto& rec : keyw) {
                 if (rec.getItem(1).hasValue(0)) {
                     auto node_name = rec.getItem(0).get<std::string>(0);
                     auto node_pres = rec.getItem(1).get<double>(0);
@@ -414,7 +414,7 @@ NetWork::parse_data_deck(const std::filesystem::path& inputFileName)
             }
 
         } else if ((keyw.name() == "WELSPECS") && (!skiprest)) {
-            for (auto& rec : keyw) {
+            for (const auto& rec : keyw) {
                 auto wname = rec.getItem(0).get<std::string>(0);
                 auto gname = rec.getItem(1).get<std::string>(0);
 
@@ -449,10 +449,11 @@ NetWork::parse_unrst(const std::filesystem::path& inputFileName)
 std::string
 NetWork::time_str(time_t t1)
 {
-    std::vector<std::string> mndStr {
-        "JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"};
+    const std::vector<std::string> mndStr {
+        "JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"
+    };
 
-    std::tm* date = std::localtime(&t1);
+    const std::tm* date = std::localtime(&t1);
 
     std::stringstream date_str;
 
@@ -622,7 +623,7 @@ NetWork::build_network(int rstep)
         for (int n = 0; n < rstep; n++)
             input_step_vect.push_back(n);
 
-    for (auto& n : input_step_vect) {
+    for (const auto n : input_step_vect) {
 
         for (size_t b = 0; b < m_bran_input_list[n].size(); b++) {
             auto downtree = std::get<0>(m_bran_input_list[n][b]);
@@ -644,7 +645,7 @@ NetWork::build_network(int rstep)
 
     std::map<std::string, std::string> well_map;
 
-    for (auto n : input_step_vect) {
+    for (const auto n : input_step_vect) {
         for (size_t b = 0; b < m_well_input_list[n].size(); b++) {
             auto wname = std::get<0>(m_well_input_list[n][b]);
             auto gname = std::get<1>(m_well_input_list[n][b]);
@@ -652,7 +653,7 @@ NetWork::build_network(int rstep)
         }
     }
 
-    for (auto m : well_map) {
+    for (const auto& m : well_map) {
         auto gname = m.second;
         auto wname = m.first;
 
@@ -661,7 +662,7 @@ NetWork::build_network(int rstep)
                 m_node_list[n]->add_well(wname);
     }
 
-    for (auto n : input_step_vect) {
+    for (const auto n : input_step_vect) {
         for (size_t b = 0; b < m_node_input_list[n].size(); b++) {
             auto node = std::get<0>(m_node_input_list[n][b]);
             auto pressure = std::get<1>(m_node_input_list[n][b]);
@@ -706,33 +707,35 @@ NetWork::print_network(int rstep)
 void
 NetWork::print_report_steps()
 {
-
-    if (!m_from_unrst)
+    if (!m_from_unrst) {
         std::cout << "\n\nStart date  " << time_str(m_start_date) << "\n";
+    }
 
     std::cout << "\nList of all report steps \n\n";
 
-    for (size_t n = 0; n < m_report_time_list.size(); n++)
+    for (size_t n = 0; n < m_report_time_list.size(); n++) {
         std::cout << "Report step " << n + 1 << "  | " << time_str(m_report_time_list[n]) << "\n";
+    }
 }
 
 time_t
 NetWork::time_from_rec(const Opm::DeckRecord& rec)
 {
-
-    std::map<std::string, int> mnd_map {{"JAN", 0},
-                                        {"FEB", 1},
-                                        {"MAR", 2},
-                                        {"APR", 3},
-                                        {"MAY", 4},
-                                        {"JUN", 5},
-                                        {"JUL", 6},
-                                        {"JLY", 6},
-                                        {"AUG", 7},
-                                        {"SEP", 8},
-                                        {"OCT", 9},
-                                        {"NOV", 10},
-                                        {"DEC", 11}};
+    const std::map<std::string, int> mnd_map {
+        {"JAN", 0},
+        {"FEB", 1},
+        {"MAR", 2},
+        {"APR", 3},
+        {"MAY", 4},
+        {"JUN", 5},
+        {"JUL", 6},
+        {"JLY", 6},
+        {"AUG", 7},
+        {"SEP", 8},
+        {"OCT", 9},
+        {"NOV", 10},
+        {"DEC", 11}
+    };
 
     auto day = rec.getItem(0).get<int>(0);
     auto mndStr = rec.getItem(1).get<std::string>(0);
