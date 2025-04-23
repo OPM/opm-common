@@ -29,8 +29,11 @@
 #include <unordered_map>
 #include <vector>
 #include <cstdint>
+#include <type_traits>
+
 
 namespace Opm { namespace EclIO {
+
 
 class EclFile
 {
@@ -96,6 +99,24 @@ protected:
 
     std::map<std::string, int> array_index;
 
+    virtual void add_entry_to_array_index(const std::string& name, int index)
+    {
+        array_index[name] = index;
+    };
+    
+    virtual std::map<std::string, int>::iterator find_in_array_index(const std::string& key,
+                                                                     const std::string& lgr_tag = "GLOBAL") 
+    {
+        if (lgr_tag == "GLOBAL") 
+        {
+            return array_index.find(key);
+        }
+        else 
+        {
+            throw std::invalid_argument("lgr_tag not found");
+        }
+    };
+
     template<class T>
     const std::vector<T>& getImpl(int arrIndex, eclArrType type,
                                   const std::unordered_map<int, std::vector<T>>& array,
@@ -117,5 +138,61 @@ private:
 };
 
 }} // namespace Opm::EclIO
+
+namespace Opm {
+namespace EclIO {
+
+class EclFileLGR : public EclFile {
+public:
+    EclFileLGR(const std::string& filename, bool preload = false)
+        : EclFile(filename, preload)
+    {
+        initilizeLGRmap();
+        classifyLGRarray_index();
+    }
+
+    EclFileLGR(const std::string& filename, Formatted fmt, bool preload = false)
+        : EclFile(filename, fmt, preload)
+    {
+        initilizeLGRmap();
+        classifyLGRarray_index();
+    }
+
+protected:
+    std::multimap<std::string, int> array_index;
+    std::vector<int> array_index_lgr;
+    std::map<std::string, int> lgr_tag_to_num;
+
+    void add_entry_to_array_index(const std::string& name, int index) override
+    {
+        array_index.insert(std::make_pair(name, index));
+    };
+
+    std::multimap<std::string, int>::iterator find_in_array_index(const std::string& key, 
+                                                                 const std::string& lgr_tag)  override 
+   {
+        const int lgr_num = lgr_tag_to_num[lgr_tag];
+        auto range = array_index.equal_range(key);
+        for (auto it = range.first; it != range.second; ++it) {
+            int index = it->second;
+            if (index >= 0 && index < static_cast<int>(array_index_lgr.size()) && (array_index_lgr[index] == lgr_num)) 
+            {
+                return it;
+            }
+        }
+        return array_index.end();  
+    }
+
+    private:
+    void initilizeLGRmap(){};
+    void classifyLGRarray_index(){};
+
+
+
+
+};
+
+}} // namespace Opm::EclIO
+
 
 #endif // OPM_IO_ECLFILE_HPP

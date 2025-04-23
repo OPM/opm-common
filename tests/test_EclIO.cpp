@@ -548,3 +548,12 @@ BOOST_AUTO_TEST_CASE(CombinedVectorID)
         BOOST_CHECK_EQUAL(n2,  1);
     }
 }
+
+
+BOOST_AUTO_TEST_CASE(Lgr_Init)
+{
+    //WorkArea work;
+    std::string testFile="LGR-WELL.INIT";
+    EclFileLGR file1(testFile);
+    int index = 1;
+}

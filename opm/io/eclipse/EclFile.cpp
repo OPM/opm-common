@@ -67,7 +67,7 @@ void EclFile::load(bool preload) {
         array_name.push_back(trimr(arrName));
         array_element_size.push_back(sizeOfElement);
 
-        array_index[array_name[n]] = n;
+        add_entry_to_array_index(array_name[n],n);
 
         std::uint64_t pos = fileH.tellg();
         ifStreamPos.push_back(pos);
