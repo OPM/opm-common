@@ -246,7 +246,6 @@ private:
 
     void br_input_from_rst(const std::string& rstfile, std::vector<int> rstep_vect);
 
-    void print_network_input();
     void parse_data_deck(const std::filesystem::path& inputFileName);
     void parse_unrst(const std::filesystem::path& inputFileName);
 
@@ -477,40 +476,6 @@ NetWork::time_str(time_t t1)
     date_str << ":" << std::setw(2) << std::setfill('0') << date->tm_sec;
 
     return date_str.str();
-}
-
-void
-NetWork::print_network_input()
-{
-    std::cout << "m_report_time_list: " << m_report_time_list.size() << "\n";
-    std::cout << "m_well_input_list : " << m_well_input_list.size() << "\n";
-
-    std::cout << "\nm_bran_input_list: " << m_bran_input_list.size() << "\n\n";
-
-    for (std::size_t r = 0; r < m_bran_input_list.size(); r++) {
-        for (std::size_t n = 0; n < m_bran_input_list[r].size(); n++) {
-            auto downtree = std::get<0>(m_bran_input_list[r][n]);
-            auto uptree = std::get<1>(m_bran_input_list[r][n]);
-            auto vfp = std::get<2>(m_bran_input_list[r][n]);
-
-            std::cout << "r= " << r << ", n= " << n << " " << downtree;
-            std::cout << " " << uptree << " " << vfp << "\n";
-        }
-    }
-
-    std::cout << "\n\nm_node_input_list: " << m_node_input_list.size() << "\n\n";
-
-    for (std::size_t r = 0; r < m_node_input_list.size(); r++) {
-        for (std::size_t n = 0; n < m_node_input_list[r].size(); n++) {
-            auto node = std::get<0>(m_node_input_list[r][n]);
-            auto pres = std::get<1>(m_node_input_list[r][n]);
-
-            std::cout << "r= " << r << ", n= " << n << " " << node;
-            std::cout << " " << pres << "\n";
-        }
-    }
-
-    std::cout << "\n\n";
 }
 
 bool
