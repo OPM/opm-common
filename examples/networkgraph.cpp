@@ -17,10 +17,6 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <getopt.h>
-#include <iostream>
-#include <sstream>
-
 #include <opm/io/eclipse/ERst.hpp>
 
 #include <opm/input/eclipse/Deck/Deck.hpp>
@@ -30,6 +26,10 @@
 #include <opm/input/eclipse/Parser/ParseContext.hpp>
 #include <opm/input/eclipse/Parser/Parser.hpp>
 
+#include <cstddef>
+#include <getopt.h>
+#include <iostream>
+#include <sstream>
 
 class Node
 {
@@ -40,39 +40,43 @@ public:
     {
         return m_name;
     }
+
     void set_outlet(std::shared_ptr<Node> outlet)
     {
         m_outlet = outlet;
-    };
+    }
+
     std::shared_ptr<Node> get_outlet()
     {
         return m_outlet;
-    };
+    }
 
     void add_inlet_node(std::shared_ptr<Node> n);
 
     void set_vfp(int vfp)
     {
         m_vfp = vfp;
-    };
+    }
+
     int get_vfp()
     {
         return m_vfp;
-    };
+    }
 
     void set_fixed_pres(double pres)
     {
         m_fixed_pres = pres;
-    };
+    }
+
     double get_fixed_pres()
     {
         return m_fixed_pres;
-    };
+    }
 
     int get_xpos()
     {
         return m_xpos;
-    };
+    }
 
     void print(std::stringstream& netw_str);
 
@@ -83,13 +87,12 @@ public:
     void reset_outlet()
     {
         m_outlet = nullptr;
-    };
+    }
 
 private:
     int m_vfp;
     int m_xpos = -1;
     double m_fixed_pres = -1.0;
-    int m_ind = -1;
 
     std::string m_name;
     std::shared_ptr<Node> m_outlet;
@@ -98,7 +101,6 @@ private:
 
     std::shared_ptr<Node> next_branch();
 };
-
 
 Node::Node(const std::string& name)
     : m_name(name)
@@ -109,14 +111,13 @@ Node::Node(const std::string& name)
 std::shared_ptr<Node>
 Node::next_branch()
 {
-
     std::shared_ptr<Node> p1 = m_outlet;
 
     while (p1 != nullptr) {
-        for (size_t n = 0; n < p1->m_inlet_list.size(); n++) {
-            if (p1->m_inlet_list[n]->m_xpos == -1) {
-                return p1;
-            }
+        if (std::any_of(p1->m_inlet_list.begin(), p1->m_inlet_list.end(),
+                        [](const auto& inlet) { return inlet->m_xpos == -1 ;}))
+        {
+            return p1;
         }
         p1 = p1->m_outlet;
     }
@@ -127,17 +128,13 @@ Node::next_branch()
 bool
 Node::delete_from_inlet_list(const std::string& name)
 {
+    const auto it = std::find_if(m_inlet_list.begin(), m_inlet_list.end(),
+                                 [&name](const auto& inlet) { return inlet->name() == name; });
 
-    int ind = -1;
-
-    for (size_t n = 0; n < m_inlet_list.size(); n++)
-        if (m_inlet_list[n]->name() == name)
-            ind = n;
-
-    if (ind < 0) {
+    if (it == m_inlet_list.end()) {
         return false;
     } else {
-        m_inlet_list.erase(m_inlet_list.begin() + ind);
+        m_inlet_list.erase(it);
         return true;
     }
 }
@@ -145,19 +142,18 @@ Node::delete_from_inlet_list(const std::string& name)
 bool
 Node::add_well(const std::string& name)
 {
-    if (m_inlet_list.size() > 0)
+    if (!m_inlet_list.empty()) {
         return false;
+    }
 
     m_well_list.push_back(name);
 
     return true;
 }
 
-
 void
 Node::print(std::stringstream& netw_str)
 {
-
     netw_str.seekg(0, std::ios::end);
     int init_length = netw_str.tellg();
 
@@ -165,8 +161,9 @@ Node::print(std::stringstream& netw_str)
 
     auto p = netw_str.str().find_last_of("\n");
 
-    if (p != std::string::npos)
+    if (p != std::string::npos) {
         pos_lineshift = p + 1;
+    }
 
     if (m_outlet == nullptr) {
         netw_str << "  o (" << m_name << ")";
@@ -179,16 +176,18 @@ Node::print(std::stringstream& netw_str)
         m_xpos = netw_str.str().find_first_of("+", init_length) - pos_lineshift;
     }
 
-    for (size_t m = 0; m < m_inlet_list.size(); m++)
+    for (std::size_t m = 0; m < m_inlet_list.size(); m++) {
         m_inlet_list[m]->print(netw_str);
+    }
 
     if (m_inlet_list.size() == 0) {
         auto next_br = next_branch();
 
         netw_str << " : ";
 
-        for (auto& well : m_well_list)
+        for (const auto& well : m_well_list) {
             netw_str << " " << well;
+        }
 
         if (next_br != nullptr) {
             std::string xpos_str(next_br->m_xpos, ' ');
@@ -197,14 +196,13 @@ Node::print(std::stringstream& netw_str)
     }
 }
 
-
 void
 Node::add_inlet_node(std::shared_ptr<Node> node)
 {
     std::vector<std::shared_ptr<Node>>::iterator exist;
 
-    exist = std::find_if(
-        m_inlet_list.begin(), m_inlet_list.end(), [&](const auto& val) { return val->name() == node->name(); });
+    exist = std::find_if(m_inlet_list.begin(), m_inlet_list.end(),
+                         [&](const auto& val) { return val->name() == node->name(); });
 
     if (exist != m_inlet_list.end()) {
         m_inlet_list.erase(exist);
@@ -212,7 +210,6 @@ Node::add_inlet_node(std::shared_ptr<Node> node)
 
     m_inlet_list.push_back(node);
 }
-
 
 class NetWork
 {
@@ -249,7 +246,6 @@ private:
 
     void br_input_from_rst(const std::string& rstfile, std::vector<int> rstep_vect);
 
-    void print_network_input();
     void parse_data_deck(const std::filesystem::path& inputFileName);
     void parse_unrst(const std::filesystem::path& inputFileName);
 
@@ -271,31 +267,26 @@ private:
     std::vector<std::shared_ptr<Node>> m_top_node_list;
 };
 
-
 NetWork::NetWork(const std::string& filename)
 {
     std::filesystem::path inputFileName {filename};
 
     if (inputFileName.extension() == ".DATA") {
-
         parse_data_deck(inputFileName);
-
-    } else if (inputFileName.extension() == ".UNRST") {
-
+    }
+    else if (inputFileName.extension() == ".UNRST") {
         parse_unrst(inputFileName);
         m_from_unrst = true;
-
-    } else {
+    }
+    else {
         std::cout << "\n!Error, unsupported file type " << filename << "\n\n";
         exit(1);
     }
 }
 
-
 void
 NetWork::parse_data_deck(const std::filesystem::path& inputFileName)
 {
-
     Opm::ParseContext parseContext;
     parseContext.update(Opm::ParseContext::PARSE_UNKNOWN_KEYWORD, Opm::InputErrorAction::IGNORE);
     parseContext.update(Opm::ParseContext::PARSE_RANDOM_TEXT, Opm::InputErrorAction::IGNORE);
@@ -310,9 +301,8 @@ NetWork::parse_data_deck(const std::filesystem::path& inputFileName)
 
     try {
         deck_schecule = parser.parseFile(inputFileName, parseContext, sections);
-
-    } catch (const std::exception& e) {
-
+    }
+    catch (const std::exception& e) {
         std::cout << "\n!Error parsing data deck " << inputFileName << "\n\n";
         std::cout << e.what() << "\n\n";
 
@@ -331,8 +321,7 @@ NetWork::parse_data_deck(const std::filesystem::path& inputFileName)
         exit(1);
     }
 
-    for (auto keyw : deck_schecule) {
-
+    for (const auto& keyw : deck_schecule) {
         if (keyw.name() == "START") {
             m_node_input_list.push_back({});
             m_bran_input_list.push_back({});
@@ -340,10 +329,9 @@ NetWork::parse_data_deck(const std::filesystem::path& inputFileName)
             m_start_date = time_from_rec(keyw[0]);
 
             last_time = m_start_date;
-
-        } else if (keyw.name() == "TSTEP") {
-
-            for (size_t n = 0; n < keyw[0].getItem(0).data_size(); n++) {
+        }
+        else if (keyw.name() == "TSTEP") {
+            for (std::size_t n = 0; n < keyw[0].getItem(0).data_size(); n++) {
                 auto dt = keyw[0].getItem(0).get<double>(n);
                 last_time = last_time + static_cast<int>(dt * 24.0 * 3600.0);
 
@@ -354,12 +342,13 @@ NetWork::parse_data_deck(const std::filesystem::path& inputFileName)
                     m_well_input_list.push_back({});
                 }
 
-                if ((skiprest) && (last_time >= m_rst_time))
+                if ((skiprest) && (last_time >= m_rst_time)) {
                     skiprest = false;
+                }
             }
-
-        } else if (keyw.name() == "DATES") {
-            for (auto& rec : keyw) {
+        }
+        else if (keyw.name() == "DATES") {
+            for (const auto& rec : keyw) {
                 last_time = time_from_rec(rec);
 
                 if (m_report_time_list.size() == 0) {
@@ -368,7 +357,8 @@ NetWork::parse_data_deck(const std::filesystem::path& inputFileName)
                                   << "' has already passed \n\n";
                         exit(1);
                     }
-                } else {
+                }
+                else {
                     if ((last_time <= m_report_time_list.back()) && (!skiprest)) {
                         std::cout << "\n!Error, next report step '" << time_str(last_time)
                                   << "' has already passed \n\n";
@@ -383,27 +373,26 @@ NetWork::parse_data_deck(const std::filesystem::path& inputFileName)
                     m_well_input_list.push_back({});
                 }
 
-                if ((skiprest) && (last_time >= m_rst_time))
+                if ((skiprest) && (last_time >= m_rst_time)) {
                     skiprest = false;
+                }
             }
-
-        } else if (keyw.name() == "RESTART") {
-
+        }
+        else if (keyw.name() == "RESTART") {
             auto rst_file = keyw[0].getItem(0).get<std::string>(0) + ".UNRST";
             auto rst_rstep = keyw[0].getItem(1).get<int>(0);
 
             br_input_from_rst(rst_file, {rst_rstep});
 
             restart = true;
-
-        } else if (keyw.name() == "SKIPREST") {
-
-            if (restart)
+        }
+        else if (keyw.name() == "SKIPREST") {
+            if (restart) {
                 skiprest = true;
-
-        } else if ((keyw.name() == "BRANPROP") && (!skiprest)) {
-            for (auto& rec : keyw) {
-
+            }
+        }
+        else if ((keyw.name() == "BRANPROP") && (!skiprest)) {
+            for (const auto& rec : keyw) {
                 auto downtree = rec.getItem(0).get<std::string>(0);
                 auto uptree = rec.getItem(1).get<std::string>(0);
                 auto vfp = rec.getItem(2).get<int>(0);
@@ -412,9 +401,9 @@ NetWork::parse_data_deck(const std::filesystem::path& inputFileName)
 
                 m_bran_input_list.back().push_back(br);
             }
-
-        } else if ((keyw.name() == "NODEPROP") && (!skiprest)) {
-            for (auto& rec : keyw) {
+        }
+        else if ((keyw.name() == "NODEPROP") && (!skiprest)) {
+            for (const auto& rec : keyw) {
                 if (rec.getItem(1).hasValue(0)) {
                     auto node_name = rec.getItem(0).get<std::string>(0);
                     auto node_pres = rec.getItem(1).get<double>(0);
@@ -422,9 +411,9 @@ NetWork::parse_data_deck(const std::filesystem::path& inputFileName)
                     m_node_input_list.back().push_back(node);
                 }
             }
-
-        } else if ((keyw.name() == "WELSPECS") && (!skiprest)) {
-            for (auto& rec : keyw) {
+        }
+        else if ((keyw.name() == "WELSPECS") && (!skiprest)) {
+            for (const auto& rec : keyw) {
                 auto wname = rec.getItem(0).get<std::string>(0);
                 auto gname = rec.getItem(1).get<std::string>(0);
 
@@ -439,16 +428,15 @@ NetWork::parse_data_deck(const std::filesystem::path& inputFileName)
 void
 NetWork::parse_unrst(const std::filesystem::path& inputFileName)
 {
-
     Opm::EclIO::ERst rst1(inputFileName);
 
     auto all_reports = rst1.listOfReportStepNumbers();
 
     std::vector<int> rstep_vect;
 
-    for (auto r : all_reports)
-        if (r > 0)
-            rstep_vect.push_back(r);
+    std::copy_if(all_reports.begin(), all_reports.end(),
+                 std::back_inserter(rstep_vect),
+                 [](const auto r) { return r > 0; });
 
     m_node_input_list.push_back({});
     m_bran_input_list.push_back({});
@@ -460,11 +448,11 @@ NetWork::parse_unrst(const std::filesystem::path& inputFileName)
 std::string
 NetWork::time_str(time_t t1)
 {
+    const std::vector<std::string> mndStr {
+        "JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"
+    };
 
-    std::vector<std::string> mndStr {
-        "JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"};
-
-    std::tm* date = std::localtime(&t1);
+    const std::tm* date = std::localtime(&t1);
 
     std::stringstream date_str;
 
@@ -490,65 +478,24 @@ NetWork::time_str(time_t t1)
     return date_str.str();
 }
 
-
-void
-NetWork::print_network_input()
-{
-
-    std::cout << "m_report_time_list: " << m_report_time_list.size() << "\n";
-    std::cout << "m_well_input_list : " << m_well_input_list.size() << "\n";
-
-    std::cout << "\nm_bran_input_list: " << m_bran_input_list.size() << "\n\n";
-
-    for (size_t r = 0; r < m_bran_input_list.size(); r++) {
-        for (size_t n = 0; n < m_bran_input_list[r].size(); n++) {
-            auto downtree = std::get<0>(m_bran_input_list[r][n]);
-            auto uptree = std::get<1>(m_bran_input_list[r][n]);
-            auto vfp = std::get<2>(m_bran_input_list[r][n]);
-
-            std::cout << "r= " << r << ", n= " << n << " " << downtree;
-            std::cout << " " << uptree << " " << vfp << "\n";
-        }
-    }
-
-    std::cout << "\n\nm_node_input_list: " << m_node_input_list.size() << "\n\n";
-
-    for (size_t r = 0; r < m_node_input_list.size(); r++) {
-        for (size_t n = 0; n < m_node_input_list[r].size(); n++) {
-            auto node = std::get<0>(m_node_input_list[r][n]);
-            auto pres = std::get<1>(m_node_input_list[r][n]);
-
-            std::cout << "r= " << r << ", n= " << n << " " << node;
-            std::cout << " " << pres << "\n";
-        }
-    }
-
-    std::cout << "\n\n";
-}
-
-
 bool
 NetWork::node_exist(const std::string& name)
 {
-    for (size_t n = 0; n < m_node_list.size(); n++)
-        if (name == m_node_list[n]->name())
-            return true;
-
-    return false;
+    return std::any_of(m_node_list.begin(), m_node_list.end(),
+                       [&name](const auto& node) { return node->name() == name; });
 }
-
 
 void
 NetWork::add_node(const std::string& name)
 {
-    if (!this->node_exist(name))
+    if (!this->node_exist(name)) {
         m_node_list.push_back(std::make_shared<Node>(name));
+    }
     else {
         std::cout << "in function add_node: Node " << name << " already exists \n\n";
         exit(1);
     }
 }
-
 
 void
 NetWork::add_branch(const std::string& downtree, const std::string& uptree, int vfp)
@@ -562,10 +509,11 @@ NetWork::add_branch(const std::string& downtree, const std::string& uptree, int 
     std::shared_ptr<Node> pDowntree;
 
     // handle uptree node
-
-    for (size_t n = 0; n < m_node_list.size(); n++)
-        if (m_node_list[n]->name() == uptree)
+    for (std::size_t n = 0; n < m_node_list.size(); n++) {
+        if (m_node_list[n]->name() == uptree) {
             pUptree = m_node_list[n];
+        }
+    }
 
     if (pUptree == nullptr) {
         add_node(uptree);
@@ -573,10 +521,11 @@ NetWork::add_branch(const std::string& downtree, const std::string& uptree, int 
     }
 
     // handle down tree node
-
-    for (size_t n = 0; n < m_node_list.size(); n++)
-        if (m_node_list[n]->name() == downtree)
+    for (std::size_t n = 0; n < m_node_list.size(); n++) {
+        if (m_node_list[n]->name() == downtree) {
             pDowntree = m_node_list[n];
+        }
+    }
 
     if (pDowntree == nullptr) {
         add_node(downtree);
@@ -586,46 +535,37 @@ NetWork::add_branch(const std::string& downtree, const std::string& uptree, int 
     pDowntree->set_outlet(pUptree);
     pDowntree->set_vfp(vfp);
 
-
     pUptree->add_inlet_node(pDowntree);
 }
 
 void
 NetWork::delete_branch(const std::string& downtree, const std::string& uptree)
 {
-    std::shared_ptr<Node> pUptree;
-    std::shared_ptr<Node> pDowntree;
+    auto up_it = std::find_if(m_node_list.begin(), m_node_list.end(),
+                           [&uptree](const auto& node) { return node->name() == uptree;});
 
-    for (size_t n = 0; n < m_node_list.size(); n++)
-        if (m_node_list[n]->name() == uptree)
-            pUptree = m_node_list[n];
+    auto down_it = std::find_if(m_node_list.begin(), m_node_list.end(),
+                                [&downtree](const auto& node) { return node->name() == downtree;});
 
-    for (size_t n = 0; n < m_node_list.size(); n++)
-        if (m_node_list[n]->name() == downtree)
-            pDowntree = m_node_list[n];
-
-    if ((pUptree == nullptr) || (pDowntree == nullptr)) {
+    if (up_it == m_node_list.end() || down_it == m_node_list.end()) {
         std::cout << "\n!Error, pointer to downtree and/or uptree not found \n\n";
         exit(1);
     }
 
-    if (pUptree->delete_from_inlet_list(downtree) == false) {
+    if ((*up_it)->delete_from_inlet_list(downtree) == false) {
         std::cout << "\n!Error, problem with deleteing branch, needs to be checked  \n\n";
         exit(1);
     }
 
-    pDowntree->reset_outlet();
+    (*down_it)->reset_outlet();
 
-    bool found_in_list = false;
+    const auto top_it = std::find_if(m_top_node_list.begin(), m_top_node_list.end(),
+                                     [&downtree](const auto& node) { return node->name() == downtree; });
 
-    for (size_t n = 0; n < m_top_node_list.size(); n++)
-        if (m_top_node_list[n]->name() == downtree)
-            found_in_list = true;
-
-    if (!found_in_list)
-        m_top_node_list.push_back(pDowntree);
+    if (top_it == m_top_node_list.end()) {
+        m_top_node_list.push_back(*up_it);
+    }
 }
-
 
 void
 NetWork::build_network(int rstep)
@@ -635,59 +575,69 @@ NetWork::build_network(int rstep)
     // input from restart file -> each report step describes a complete state of network
     // input from data deck -> network build from all steps up to report step (branprop increments)
 
-    if (m_from_unrst)
+    if (m_from_unrst) {
         input_step_vect.push_back(rstep - 1);
-    else
-        for (int n = 0; n < rstep; n++)
+    }
+    else {
+        for (int n = 0; n < rstep; n++) {
             input_step_vect.push_back(n);
+        }
+    }
 
-    for (auto& n : input_step_vect) {
-
-        for (size_t b = 0; b < m_bran_input_list[n].size(); b++) {
+    for (const auto n : input_step_vect) {
+        for (std::size_t b = 0; b < m_bran_input_list[n].size(); b++) {
             auto downtree = std::get<0>(m_bran_input_list[n][b]);
             auto uptree = std::get<1>(m_bran_input_list[n][b]);
             auto vfp = std::get<2>(m_bran_input_list[n][b]);
 
-            if (vfp == 0)
+            if (vfp == 0) {
                 delete_branch(downtree, uptree);
-            else
+            }
+            else {
                 add_branch(downtree, uptree, vfp);
+            }
         }
     }
 
     m_top_node_list.clear();
 
-    for (size_t n = 0; n < m_node_list.size(); n++)
-        if (m_node_list[n]->get_outlet() == nullptr)
+    for (std::size_t n = 0; n < m_node_list.size(); n++) {
+        if (m_node_list[n]->get_outlet() == nullptr) {
             m_top_node_list.push_back(m_node_list[n]);
+        }
+    }
 
     std::map<std::string, std::string> well_map;
 
-    for (auto n : input_step_vect) {
-        for (size_t b = 0; b < m_well_input_list[n].size(); b++) {
+    for (const auto n : input_step_vect) {
+        for (std::size_t b = 0; b < m_well_input_list[n].size(); b++) {
             auto wname = std::get<0>(m_well_input_list[n][b]);
             auto gname = std::get<1>(m_well_input_list[n][b]);
             well_map[wname] = gname;
         }
     }
 
-    for (auto m : well_map) {
+    for (const auto& m : well_map) {
         auto gname = m.second;
         auto wname = m.first;
 
-        for (size_t n = 0; n < m_node_list.size(); n++)
-            if (m_node_list[n]->name() == gname)
+        for (std::size_t n = 0; n < m_node_list.size(); n++) {
+            if (m_node_list[n]->name() == gname) {
                 m_node_list[n]->add_well(wname);
+            }
+        }
     }
 
-    for (auto n : input_step_vect) {
-        for (size_t b = 0; b < m_node_input_list[n].size(); b++) {
+    for (const auto n : input_step_vect) {
+        for (std::size_t b = 0; b < m_node_input_list[n].size(); b++) {
             auto node = std::get<0>(m_node_input_list[n][b]);
             auto pressure = std::get<1>(m_node_input_list[n][b]);
 
-            for (size_t m = 0; m < m_node_list.size(); m++)
-                if (m_node_list[m]->name() == node)
+            for (std::size_t m = 0; m < m_node_list.size(); m++) {
+                if (m_node_list[m]->name() == node) {
                     m_node_list[m]->set_fixed_pres(pressure);
+                }
+            }
         }
     }
 }
@@ -695,15 +645,13 @@ NetWork::build_network(int rstep)
 void
 NetWork::print_network(int rstep)
 {
-
     std::cout << "\n\n";
 
     time_t t = m_report_time_list[rstep - 1];
 
     std::cout << "Report step : " << time_str(t) << "\n\n";
 
-    for (size_t n = 0; n < m_top_node_list.size(); n++) {
-
+    for (std::size_t n = 0; n < m_top_node_list.size(); n++) {
         m_top_node_list[n]->print(m_netw_str);
         m_netw_str << "\n\n";
     }
@@ -712,7 +660,7 @@ NetWork::print_network(int rstep)
 
     std::cout << "\nFixed pressure nodes: \n\n";
 
-    for (size_t n = 0; n < m_node_list.size(); n++) {
+    for (std::size_t n = 0; n < m_node_list.size(); n++) {
         auto fixed_pres = m_node_list[n]->get_fixed_pres();
 
         if (fixed_pres > -1.0) {
@@ -727,33 +675,35 @@ NetWork::print_network(int rstep)
 void
 NetWork::print_report_steps()
 {
-
-    if (!m_from_unrst)
+    if (!m_from_unrst) {
         std::cout << "\n\nStart date  " << time_str(m_start_date) << "\n";
+    }
 
     std::cout << "\nList of all report steps \n\n";
 
-    for (size_t n = 0; n < m_report_time_list.size(); n++)
+    for (std::size_t n = 0; n < m_report_time_list.size(); n++) {
         std::cout << "Report step " << n + 1 << "  | " << time_str(m_report_time_list[n]) << "\n";
+    }
 }
 
 time_t
 NetWork::time_from_rec(const Opm::DeckRecord& rec)
 {
-
-    std::map<std::string, int> mnd_map {{"JAN", 0},
-                                        {"FEB", 1},
-                                        {"MAR", 2},
-                                        {"APR", 3},
-                                        {"MAY", 4},
-                                        {"JUN", 5},
-                                        {"JUL", 6},
-                                        {"JLY", 6},
-                                        {"AUG", 7},
-                                        {"SEP", 8},
-                                        {"OCT", 9},
-                                        {"NOV", 10},
-                                        {"DEC", 11}};
+    const std::map<std::string, int> mnd_map {
+        {"JAN", 0},
+        {"FEB", 1},
+        {"MAR", 2},
+        {"APR", 3},
+        {"MAY", 4},
+        {"JUN", 5},
+        {"JUL", 6},
+        {"JLY", 6},
+        {"AUG", 7},
+        {"SEP", 8},
+        {"OCT", 9},
+        {"NOV", 10},
+        {"DEC", 11}
+    };
 
     auto day = rec.getItem(0).get<int>(0);
     auto mndStr = rec.getItem(1).get<std::string>(0);
@@ -809,11 +759,9 @@ NetWork::time_from_rec(const Opm::DeckRecord& rec)
     return std::mktime(&date1);
 }
 
-
 time_t
 NetWork::time_from_rst(const std::string& rstfile, int rstep)
 {
-
     Opm::EclIO::ERst rst1(rstfile);
 
     auto inteh = rst1.getRestartData<int>("INTEHEAD", rstep);
@@ -842,18 +790,15 @@ NetWork::time_from_rst(const std::string& rstfile, int rstep)
 void
 NetWork::br_input_from_rst(const std::string& rstfile, std::vector<int> rstep_vect)
 {
-
     Opm::EclIO::ERst rst1(rstfile);
 
     for (int& rstep : rstep_vect) {
-
         m_rst_time = time_from_rst(rstfile, rstep);
         m_report_time_list.push_back(m_rst_time);
 
         auto intehead = rst1.getRestartData<int>("INTEHEAD", rstep);
 
         if (rst1.hasArray("ZNODE", rstep)) {
-
             std::vector<std::string> nodelist;
 
             auto noactnod = intehead[129]; // Number of active/defined nodes in the network
@@ -865,10 +810,9 @@ NetWork::br_input_from_rst(const std::string& rstfile, std::vector<int> rstep_ve
             auto ibran = rst1.getRestartData<int>("IBRAN", rstep);
             auto rnode = rst1.getRestartData<double>("RNODE", rstep);
 
-
-            for (int n = 0; n < noactnod; n++)
+            for (int n = 0; n < noactnod; n++) {
                 nodelist.push_back(znode[2 * n]);
-
+            }
 
             for (int b = 0; b < noactbr; b++) {
                 int ind = b * nibran;
@@ -901,8 +845,9 @@ NetWork::br_input_from_rst(const std::string& rstfile, std::vector<int> rstep_ve
         auto iwel = rst1.getRestartData<int>("IWEL", rstep);
         auto zgrp = rst1.getRestartData<std::string>("ZGRP", rstep);
 
-        for (int g = 0; g < ngmaxz; g++)
+        for (int g = 0; g < ngmaxz; g++) {
             grouplist.push_back(zgrp[g * nzgrpz]);
+        }
 
         for (int n = 0; n < nswells; n++) {
             std::string wname = zwel[n * nzwelz];
@@ -918,11 +863,9 @@ NetWork::br_input_from_rst(const std::string& rstfile, std::vector<int> rstep_ve
     }
 }
 
-
 static void
 printHelp()
 {
-
     std::cout << "\n This program visualizes a production network with terminal output."
               << " Input to this program should be a valid data deck (.DATA) \n or a unified"
               << " restart file (.UNRST).\n\n The program takes these options"
@@ -932,11 +875,9 @@ printHelp()
               << " -h Print help and exit.\n\n";
 }
 
-
 int
 main(int argc, char** argv)
 {
-
     int c = 0;
     bool list_report_steps = false;
     int rstep = -1;
@@ -970,8 +911,8 @@ main(int argc, char** argv)
 
     if (rstep == -1) {
         rstep = netw.number_report_steps();
-    } else {
-
+    }
+    else {
         if ((rstep < 1) || (rstep > netw.number_report_steps())) {
             std::cout << "\n!Error, invalid report step " << rstep;
             std::cout << " should be > 0 and less than " << netw.number_report_steps() << "\n";
