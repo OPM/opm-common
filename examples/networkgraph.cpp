@@ -17,10 +17,6 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <getopt.h>
-#include <iostream>
-#include <sstream>
-
 #include <opm/io/eclipse/ERst.hpp>
 
 #include <opm/input/eclipse/Deck/Deck.hpp>
@@ -30,6 +26,9 @@
 #include <opm/input/eclipse/Parser/ParseContext.hpp>
 #include <opm/input/eclipse/Parser/Parser.hpp>
 
+#include <getopt.h>
+#include <iostream>
+#include <sstream>
 
 class Node
 {
