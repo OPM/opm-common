@@ -39,10 +39,12 @@ public:
     {
         return m_name;
     }
+
     void set_outlet(std::shared_ptr<Node> outlet)
     {
         m_outlet = outlet;
     }
+
     std::shared_ptr<Node> get_outlet()
     {
         return m_outlet;
@@ -54,6 +56,7 @@ public:
     {
         m_vfp = vfp;
     }
+
     int get_vfp()
     {
         return m_vfp;
@@ -63,6 +66,7 @@ public:
     {
         m_fixed_pres = pres;
     }
+
     double get_fixed_pres()
     {
         return m_fixed_pres;
@@ -98,7 +102,6 @@ private:
     std::shared_ptr<Node> next_branch();
 };
 
-
 Node::Node(const std::string& name)
     : m_name(name)
 {
@@ -108,7 +111,6 @@ Node::Node(const std::string& name)
 std::shared_ptr<Node>
 Node::next_branch()
 {
-
     std::shared_ptr<Node> p1 = m_outlet;
 
     while (p1 != nullptr) {
@@ -126,7 +128,6 @@ Node::next_branch()
 bool
 Node::delete_from_inlet_list(const std::string& name)
 {
-
     int ind = -1;
 
     for (size_t n = 0; n < m_inlet_list.size(); n++)
@@ -152,11 +153,9 @@ Node::add_well(const std::string& name)
     return true;
 }
 
-
 void
 Node::print(std::stringstream& netw_str)
 {
-
     netw_str.seekg(0, std::ios::end);
     int init_length = netw_str.tellg();
 
@@ -196,7 +195,6 @@ Node::print(std::stringstream& netw_str)
     }
 }
 
-
 void
 Node::add_inlet_node(std::shared_ptr<Node> node)
 {
@@ -211,7 +209,6 @@ Node::add_inlet_node(std::shared_ptr<Node> node)
 
     m_inlet_list.push_back(node);
 }
-
 
 class NetWork
 {
@@ -270,13 +267,11 @@ private:
     std::vector<std::shared_ptr<Node>> m_top_node_list;
 };
 
-
 NetWork::NetWork(const std::string& filename)
 {
     std::filesystem::path inputFileName {filename};
 
     if (inputFileName.extension() == ".DATA") {
-
         parse_data_deck(inputFileName);
 
     } else if (inputFileName.extension() == ".UNRST") {
@@ -290,11 +285,9 @@ NetWork::NetWork(const std::string& filename)
     }
 }
 
-
 void
 NetWork::parse_data_deck(const std::filesystem::path& inputFileName)
 {
-
     Opm::ParseContext parseContext;
     parseContext.update(Opm::ParseContext::PARSE_UNKNOWN_KEYWORD, Opm::InputErrorAction::IGNORE);
     parseContext.update(Opm::ParseContext::PARSE_RANDOM_TEXT, Opm::InputErrorAction::IGNORE);
@@ -331,7 +324,6 @@ NetWork::parse_data_deck(const std::filesystem::path& inputFileName)
     }
 
     for (auto keyw : deck_schecule) {
-
         if (keyw.name() == "START") {
             m_node_input_list.push_back({});
             m_bran_input_list.push_back({});
@@ -402,7 +394,6 @@ NetWork::parse_data_deck(const std::filesystem::path& inputFileName)
 
         } else if ((keyw.name() == "BRANPROP") && (!skiprest)) {
             for (auto& rec : keyw) {
-
                 auto downtree = rec.getItem(0).get<std::string>(0);
                 auto uptree = rec.getItem(1).get<std::string>(0);
                 auto vfp = rec.getItem(2).get<int>(0);
@@ -438,7 +429,6 @@ NetWork::parse_data_deck(const std::filesystem::path& inputFileName)
 void
 NetWork::parse_unrst(const std::filesystem::path& inputFileName)
 {
-
     Opm::EclIO::ERst rst1(inputFileName);
 
     auto all_reports = rst1.listOfReportStepNumbers();
@@ -459,7 +449,6 @@ NetWork::parse_unrst(const std::filesystem::path& inputFileName)
 std::string
 NetWork::time_str(time_t t1)
 {
-
     std::vector<std::string> mndStr {
         "JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"};
 
@@ -489,11 +478,9 @@ NetWork::time_str(time_t t1)
     return date_str.str();
 }
 
-
 void
 NetWork::print_network_input()
 {
-
     std::cout << "m_report_time_list: " << m_report_time_list.size() << "\n";
     std::cout << "m_well_input_list : " << m_well_input_list.size() << "\n";
 
@@ -525,7 +512,6 @@ NetWork::print_network_input()
     std::cout << "\n\n";
 }
 
-
 bool
 NetWork::node_exist(const std::string& name)
 {
@@ -535,7 +521,6 @@ NetWork::node_exist(const std::string& name)
 
     return false;
 }
-
 
 void
 NetWork::add_node(const std::string& name)
@@ -547,7 +532,6 @@ NetWork::add_node(const std::string& name)
         exit(1);
     }
 }
-
 
 void
 NetWork::add_branch(const std::string& downtree, const std::string& uptree, int vfp)
@@ -584,7 +568,6 @@ NetWork::add_branch(const std::string& downtree, const std::string& uptree, int 
 
     pDowntree->set_outlet(pUptree);
     pDowntree->set_vfp(vfp);
-
 
     pUptree->add_inlet_node(pDowntree);
 }
@@ -624,7 +607,6 @@ NetWork::delete_branch(const std::string& downtree, const std::string& uptree)
     if (!found_in_list)
         m_top_node_list.push_back(pDowntree);
 }
-
 
 void
 NetWork::build_network(int rstep)
@@ -694,7 +676,6 @@ NetWork::build_network(int rstep)
 void
 NetWork::print_network(int rstep)
 {
-
     std::cout << "\n\n";
 
     time_t t = m_report_time_list[rstep - 1];
@@ -702,7 +683,6 @@ NetWork::print_network(int rstep)
     std::cout << "Report step : " << time_str(t) << "\n\n";
 
     for (size_t n = 0; n < m_top_node_list.size(); n++) {
-
         m_top_node_list[n]->print(m_netw_str);
         m_netw_str << "\n\n";
     }
@@ -808,11 +788,9 @@ NetWork::time_from_rec(const Opm::DeckRecord& rec)
     return std::mktime(&date1);
 }
 
-
 time_t
 NetWork::time_from_rst(const std::string& rstfile, int rstep)
 {
-
     Opm::EclIO::ERst rst1(rstfile);
 
     auto inteh = rst1.getRestartData<int>("INTEHEAD", rstep);
@@ -841,18 +819,15 @@ NetWork::time_from_rst(const std::string& rstfile, int rstep)
 void
 NetWork::br_input_from_rst(const std::string& rstfile, std::vector<int> rstep_vect)
 {
-
     Opm::EclIO::ERst rst1(rstfile);
 
     for (int& rstep : rstep_vect) {
-
         m_rst_time = time_from_rst(rstfile, rstep);
         m_report_time_list.push_back(m_rst_time);
 
         auto intehead = rst1.getRestartData<int>("INTEHEAD", rstep);
 
         if (rst1.hasArray("ZNODE", rstep)) {
-
             std::vector<std::string> nodelist;
 
             auto noactnod = intehead[129]; // Number of active/defined nodes in the network
@@ -917,11 +892,9 @@ NetWork::br_input_from_rst(const std::string& rstfile, std::vector<int> rstep_ve
     }
 }
 
-
 static void
 printHelp()
 {
-
     std::cout << "\n This program visualizes a production network with terminal output."
               << " Input to this program should be a valid data deck (.DATA) \n or a unified"
               << " restart file (.UNRST).\n\n The program takes these options"
@@ -931,11 +904,9 @@ printHelp()
               << " -h Print help and exit.\n\n";
 }
 
-
 int
 main(int argc, char** argv)
 {
-
     int c = 0;
     bool list_report_steps = false;
     int rstep = -1;
