@@ -103,13 +103,10 @@ int ERft::getReportIndex(const std::string& wellName, const RftDate& date) const
     auto rIndIt = reportIndices.find(wellDatePair);
 
     if (rIndIt == reportIndices.end()) {
-        int y = std::get<0>(date);
-        int m = std::get<1>(date);
-        int d = std::get<2>(date);
-
         OPM_THROW(std::invalid_argument,
                   fmt::format("RFT data not found for well {} at date: {}/{}/{}",
-                              wellName, y, m, d));
+                              wellName, std::get<0>(date),
+                              std::get<1>(date), std::get<2>(date)));
     }
 
     return rIndIt->second;
@@ -158,13 +155,10 @@ int ERft::getArrayIndex(const std::string& name, const std::string& wellName,
     auto it = std::find(array_name.begin() + fromInd, array_name.begin() + toInd, name);
 
     if (std::distance(array_name.begin(),it) == toInd) {
-        int y = std::get<0>(date);
-        int m = std::get<1>(date);
-        int d = std::get<2>(date);
-
         OPM_THROW(std::invalid_argument,
                   fmt::format("Array {} not found for RFT, well: {} date: {}/{}/{}",
-                              name, wellName, y, m, d));
+                              name, wellName, std::get<0>(date),
+                              std::get<1>(date), std::get<2>(date)));
     }
 
     return std::distance(array_name.begin(), it);
