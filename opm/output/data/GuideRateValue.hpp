@@ -148,17 +148,6 @@ namespace Opm { namespace data {
             return val;
         }
 
-    private:
-        enum { Size = static_cast<std::size_t>(Item::NumItems) };
-
-        std::bitset<Size>        mask_{};
-        std::array<double, Size> value_{};
-
-        constexpr std::size_t index(const Item p) const noexcept
-        {
-            return static_cast<std::size_t>(p);
-        }
-
         std::string itemName(const Item p) const
         {
             switch (p) {
@@ -173,6 +162,17 @@ namespace Opm { namespace data {
 
             return "Unknown (" + std::to_string(this->index(p)) + ')';
         }
+    private:
+        enum { Size = static_cast<std::size_t>(Item::NumItems) };
+
+        std::bitset<Size>        mask_{};
+        std::array<double, Size> value_{};
+
+        constexpr std::size_t index(const Item p) const noexcept
+        {
+            return static_cast<std::size_t>(p);
+        }
+
     };
 
 }} // namespace Opm::data
