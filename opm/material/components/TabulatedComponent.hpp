@@ -31,6 +31,7 @@
 #include <opm/material/common/MathToolbox.hpp>
 
 #include <cmath>
+#include <cstddef>
 #include <limits>
 #include <cassert>
 #include <stdexcept>
@@ -653,7 +654,7 @@ private:
             return std::numeric_limits<Scalar>::quiet_NaN();
         }
 
-        const size_t iT = static_cast<size_t>(scalarValue(alphaT));
+        const std::size_t iT = static_cast<std::size_t>(scalarValue(alphaT));
         alphaT -= iT;
 
         return
@@ -673,18 +674,18 @@ private:
             return std::numeric_limits<Scalar>::quiet_NaN();
         }
 
-        const size_t iT = static_cast<size_t>(scalarValue(alphaT));
+        const std::size_t iT = static_cast<std::size_t>(scalarValue(alphaT));
         alphaT -= iT;
 
         Evaluation alphaP1 = pressLiquidIdx_(p, iT);
         Evaluation alphaP2 = pressLiquidIdx_(p, iT + 1);
 
-        const size_t iP1 =
-            static_cast<size_t>(
+        const std::size_t iP1 =
+            static_cast<std::size_t>(
                 std::max<int>(0, std::min(static_cast<int>(data_.nPress_) - 2,
                                           static_cast<int>(scalarValue(alphaP1)))));
-        const size_t iP2 =
-            static_cast<size_t>(
+        const std::size_t iP2 =
+            static_cast<std::size_t>(
                 std::max(0, std::min(static_cast<int>(data_.nPress_) - 2,
                                      static_cast<int>(scalarValue(alphaP2)))));
         alphaP1 -= iP1;
@@ -709,20 +710,20 @@ private:
             return std::numeric_limits<Scalar>::quiet_NaN();
         }
 
-        const size_t iT =
-            static_cast<size_t>(
+        const std::size_t iT =
+            static_cast<std::size_t>(
                 std::max(0, std::min(static_cast<int>(data_.nTemp_) - 2,
                                      static_cast<int>(scalarValue(alphaT)))));
         alphaT -= iT;
 
         Evaluation alphaP1 = pressGasIdx_(p, iT);
         Evaluation alphaP2 = pressGasIdx_(p, iT + 1);
-        const size_t iP1 =
-            static_cast<size_t>(
+        const std::size_t iP1 =
+            static_cast<std::size_t>(
                 std::max(0, std::min(static_cast<int>(data_.nPress_) - 2,
                                      static_cast<int>(scalarValue(alphaP1)))));
-        const size_t iP2 =
-            static_cast<size_t>(
+        const std::size_t iP2 =
+            static_cast<std::size_t>(
                 std::max(0, std::min(static_cast<int>(data_.nPress_) - 2,
                                      static_cast<int>(scalarValue(alphaP2)))));
         alphaP1 -= iP1;
@@ -803,7 +804,7 @@ private:
 
     // returns the index of an entry in a pressure field
     template <class Evaluation>
-    static Evaluation pressLiquidIdx_(const Evaluation& pressure, size_t tempIdx)
+    static Evaluation pressLiquidIdx_(const Evaluation& pressure, std::size_t tempIdx)
     {
         const Scalar plMin = minLiquidPressure_(tempIdx);
         const Scalar plMax = maxLiquidPressure_(tempIdx);
@@ -813,7 +814,7 @@ private:
 
     // returns the index of an entry in a temperature field
     template <class Evaluation>
-    static Evaluation pressGasIdx_(const Evaluation& pressure, size_t tempIdx)
+    static Evaluation pressGasIdx_(const Evaluation& pressure, std::size_t tempIdx)
     {
         const Scalar pgMin = minGasPressure_(tempIdx);
         const Scalar pgMax = maxGasPressure_(tempIdx);
@@ -823,7 +824,7 @@ private:
 
     // returns the index of an entry in a density field
     template <class Evaluation>
-    static Evaluation densityLiquidIdx_(const Evaluation& density, size_t tempIdx)
+    static Evaluation densityLiquidIdx_(const Evaluation& density, std::size_t tempIdx)
     {
         const Scalar densityMin = minLiquidDensity_(tempIdx);
         const Scalar densityMax = maxLiquidDensity_(tempIdx);
@@ -832,7 +833,7 @@ private:
 
     // returns the index of an entry in a density field
     template <class Evaluation>
-    static Evaluation densityGasIdx_(const Evaluation& density, size_t tempIdx)
+    static Evaluation densityGasIdx_(const Evaluation& density, std::size_t tempIdx)
     {
         const Scalar densityMin = minGasDensity_(tempIdx);
         const Scalar densityMax = maxGasDensity_(tempIdx);
@@ -841,7 +842,7 @@ private:
 
     // returns the minimum tabulized liquid pressure at a given
     // temperature index
-    static Scalar minLiquidPressure_(size_t tempIdx)
+    static Scalar minLiquidPressure_(std::size_t tempIdx)
     {
         if (!useVaporPressure) {
             return data_.pressMin_;
@@ -853,7 +854,7 @@ private:
 
     // returns the maximum tabulized liquid pressure at a given
     // temperature index
-    static Scalar maxLiquidPressure_(size_t tempIdx)
+    static Scalar maxLiquidPressure_(std::size_t tempIdx)
     {
         if (!useVaporPressure) {
             return data_.pressMax_;
@@ -865,7 +866,7 @@ private:
 
     // returns the minumum tabulized gas pressure at a given
     // temperature index
-    static Scalar minGasPressure_(size_t tempIdx)
+    static Scalar minGasPressure_(std::size_t tempIdx)
     {
         if (!useVaporPressure) {
             return data_.pressMin_;
@@ -877,7 +878,7 @@ private:
 
     // returns the maximum tabulized gas pressure at a given
     // temperature index
-    static Scalar maxGasPressure_(size_t tempIdx)
+    static Scalar maxGasPressure_(std::size_t tempIdx)
     {
         if (!useVaporPressure) {
             return data_.pressMax_;
@@ -889,22 +890,22 @@ private:
 
     // returns the minimum tabulized liquid density at a given
     // temperature index
-    static Scalar minLiquidDensity_(size_t tempIdx)
+    static Scalar minLiquidDensity_(std::size_t tempIdx)
     { return data_.minLiquidDensity__[tempIdx]; }
 
     // returns the maximum tabulized liquid density at a given
     // temperature index
-    static Scalar maxLiquidDensity_(size_t tempIdx)
+    static Scalar maxLiquidDensity_(std::size_t tempIdx)
     { return data_.maxLiquidDensity__[tempIdx]; }
 
     // returns the minumum tabulized gas density at a given
     // temperature index
-    static Scalar minGasDensity_(size_t tempIdx)
+    static Scalar minGasDensity_(std::size_t tempIdx)
     { return data_.minGasDensity__[tempIdx]; }
 
     // returns the maximum tabulized gas density at a given
     // temperature index
-    static Scalar maxGasDensity_(size_t tempIdx)
+    static Scalar maxGasDensity_(std::size_t tempIdx)
     { return data_.maxGasDensity__[tempIdx]; }
 
     static TabulatedComponentData<Scalar> data_;
