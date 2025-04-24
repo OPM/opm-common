@@ -1278,8 +1278,6 @@ void cleanup_deck_keyword_list(ParserState& parserState, const std::set<Opm::Ecl
 
 
 bool parseState( ParserState& parserState, const Parser& parser ) {
-    std::string filename = parserState.current_path().string();
-
     auto ignore = parserState.get_ignore();
 
     bool has_edit = true;
