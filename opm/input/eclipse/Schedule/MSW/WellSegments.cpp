@@ -451,7 +451,7 @@ namespace Opm {
                     : old_segment.volume();
 
                 this->addSegment(Segment {
-                    old_segment, new_length, new_depth,
+                    old_segment, new_depth, new_length,
                     new_volume, new_x, new_y
                 });
             }
