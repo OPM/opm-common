@@ -322,7 +322,7 @@ public:
     template <class Evaluation>
     static Evaluation vaporPressure(const Evaluation& temperature)
     {
-        const Evaluation& result = interpolateT_(data_.vaporPressure_.data(), temperature);
+        const Evaluation& result = interpolateT_(data_.vaporPressure_, temperature);
         if (std::isnan(scalarValue(result)))
             return RawComponent::vaporPressure(temperature);
         return result;
@@ -337,7 +337,7 @@ public:
     template <class Evaluation>
     static Evaluation gasEnthalpy(const Evaluation& temperature, const Evaluation& pressure)
     {
-        const Evaluation& result = interpolateGasTP_(data_.gasEnthalpy_.data(),
+        const Evaluation& result = interpolateGasTP_(data_.gasEnthalpy_,
                                                      temperature,
                                                      pressure);
         if (std::isnan(scalarValue(result)))
@@ -354,7 +354,7 @@ public:
     template <class Evaluation>
     static Evaluation liquidEnthalpy(const Evaluation& temperature, const Evaluation& pressure)
     {
-        const Evaluation& result = interpolateLiquidTP_(data_.liquidEnthalpy_.data(),
+        const Evaluation& result = interpolateLiquidTP_(data_.liquidEnthalpy_,
                                                         temperature,
                                                         pressure);
         if (std::isnan(scalarValue(result)))
@@ -371,7 +371,7 @@ public:
     template <class Evaluation>
     static Evaluation gasHeatCapacity(const Evaluation& temperature, const Evaluation& pressure)
     {
-        const Evaluation& result = interpolateGasTP_(data_.gasHeatCapacity_.data(),
+        const Evaluation& result = interpolateGasTP_(data_.gasHeatCapacity_,
                                                      temperature,
                                                      pressure);
         if (std::isnan(scalarValue(result)))
@@ -388,7 +388,7 @@ public:
     template <class Evaluation>
     static Evaluation liquidHeatCapacity(const Evaluation& temperature, const Evaluation& pressure)
     {
-        const Evaluation& result = interpolateLiquidTP_(data_.liquidHeatCapacity_.data(),
+        const Evaluation& result = interpolateLiquidTP_(data_.liquidHeatCapacity_,
                                                         temperature,
                                                         pressure);
         if (std::isnan(scalarValue(result)))
@@ -425,7 +425,7 @@ public:
     template <class Evaluation>
     static Evaluation gasPressure(const Evaluation& temperature, Scalar density)
     {
-        const Evaluation& result = interpolateGasTRho_(data_.gasPressure_.data(),
+        const Evaluation& result = interpolateGasTRho_(data_.gasPressure_,
                                                        temperature,
                                                        density);
         if (std::isnan(scalarValue(result)))
@@ -443,7 +443,7 @@ public:
     template <class Evaluation>
     static Evaluation liquidPressure(const Evaluation& temperature, Scalar density)
     {
-        const Evaluation& result = interpolateLiquidTRho_(data_.liquidPressure_.data(),
+        const Evaluation& result = interpolateLiquidTRho_(data_.liquidPressure_,
                                                           temperature,
                                                           density);
         if (std::isnan(scalarValue(result)))
@@ -481,7 +481,7 @@ public:
     template <class Evaluation>
     static Evaluation gasDensity(const Evaluation& temperature, const Evaluation& pressure)
     {
-        const Evaluation& result = interpolateGasTP_(data_.gasDensity_.data(),
+        const Evaluation& result = interpolateGasTP_(data_.gasDensity_,
                                                      temperature,
                                                      pressure);
         if (std::isnan(scalarValue(result)))
@@ -499,7 +499,7 @@ public:
     template <class Evaluation>
     static Evaluation liquidDensity(const Evaluation& temperature, const Evaluation& pressure)
     {
-        const Evaluation& result = interpolateLiquidTP_(data_.liquidDensity_.data(),
+        const Evaluation& result = interpolateLiquidTP_(data_.liquidDensity_,
                                                         temperature,
                                                         pressure);
         if (std::isnan(scalarValue(result)))
@@ -516,7 +516,7 @@ public:
     template <class Evaluation>
     static Evaluation gasViscosity(const Evaluation& temperature, const Evaluation& pressure)
     {
-        const Evaluation& result = interpolateGasTP_(data_.gasViscosity_.data(),
+        const Evaluation& result = interpolateGasTP_(data_.gasViscosity_,
                                                      temperature,
                                                      pressure);
         if (std::isnan(scalarValue(result)))
@@ -533,7 +533,7 @@ public:
     template <class Evaluation>
     static Evaluation liquidViscosity(const Evaluation& temperature, const Evaluation& pressure)
     {
-        const Evaluation& result = interpolateLiquidTP_(data_.liquidViscosity_.data(),
+        const Evaluation& result = interpolateLiquidTP_(data_.liquidViscosity_,
                                                         temperature,
                                                         pressure);
         if (std::isnan(scalarValue(result)))
@@ -550,7 +550,7 @@ public:
     template <class Evaluation>
     static Evaluation gasThermalConductivity(const Evaluation& temperature, const Evaluation& pressure)
     {
-        const Evaluation& result = interpolateGasTP_(data_.gasThermalConductivity_.data(),
+        const Evaluation& result = interpolateGasTP_(data_.gasThermalConductivity_,
                                                      temperature,
                                                      pressure);
         if (std::isnan(scalarValue(result)))
@@ -567,7 +567,7 @@ public:
     template <class Evaluation>
     static Evaluation liquidThermalConductivity(const Evaluation& temperature, const Evaluation& pressure)
     {
-        const Evaluation& result = interpolateLiquidTP_(data_.liquidThermalConductivity_.data(),
+        const Evaluation& result = interpolateLiquidTP_(data_.liquidThermalConductivity_,
                                                         temperature,
                                                         pressure);
         if (std::isnan(scalarValue(result)))
@@ -578,7 +578,7 @@ public:
 private:
     // returns an interpolated value depending on temperature
     template <class Evaluation>
-    static Evaluation interpolateT_(const Scalar* values, const Evaluation& T)
+    static Evaluation interpolateT_(const std::vector<Scalar>& values, const Evaluation& T)
     {
         Evaluation alphaT = tempIdx_(T);
         if (alphaT < 0 || alphaT >= data_.nTemp_ - 1)
@@ -595,7 +595,9 @@ private:
     // returns an interpolated value for liquid depending on
     // temperature and pressure
     template <class Evaluation>
-    static Evaluation interpolateLiquidTP_(const Scalar* values, const Evaluation& T, const Evaluation& p)
+    static Evaluation interpolateLiquidTP_(const std::vector<Scalar>& values,
+                                           const Evaluation& T,
+                                           const Evaluation& p)
     {
         Evaluation alphaT = tempIdx_(T);
         if (alphaT < 0 || alphaT >= data_.nTemp_ - 1)
@@ -628,7 +630,9 @@ private:
     // returns an interpolated value for gas depending on
     // temperature and pressure
     template <class Evaluation>
-    static Evaluation interpolateGasTP_(const Scalar* values, const Evaluation& T, const Evaluation& p)
+    static Evaluation interpolateGasTP_(const std::vector<Scalar>& values,
+                                        const Evaluation& T,
+                                        const Evaluation& p)
     {
         Evaluation alphaT = tempIdx_(T);
         if (alphaT < 0 || alphaT >= data_.nTemp_ - 1)
@@ -663,7 +667,9 @@ private:
     // returns an interpolated value for gas depending on
     // temperature and density
     template <class Evaluation>
-    static Evaluation interpolateGasTRho_(const Scalar* values, const Evaluation& T, const Evaluation& rho)
+    static Evaluation interpolateGasTRho_(const std::vector<Scalar>& values,
+                                          const Evaluation& T,
+                                          const Evaluation& rho)
     {
         Evaluation alphaT = tempIdx_(T);
         unsigned iT = std::max(0,
@@ -694,7 +700,9 @@ private:
     // returns an interpolated value for liquid depending on
     // temperature and density
     template <class Evaluation>
-    static Evaluation interpolateLiquidTRho_(const Scalar* values, const Evaluation& T, const Evaluation& rho)
+    static Evaluation interpolateLiquidTRho_(const std::vector<Scalar>& values,
+                                             const Evaluation& T,
+                                             const Evaluation& rho)
     {
         Evaluation alphaT = tempIdx_(T);
         unsigned iT = std::max<int>(0, std::min<int>(data_.nTemp_ - 2, static_cast<int>(alphaT)));
