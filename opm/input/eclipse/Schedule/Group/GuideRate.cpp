@@ -135,11 +135,12 @@ double Opm::GuideRate::get(const std::string& name, const Phase& phase) const
 
 const Opm::GuideRate::RateVector& Opm::GuideRate::getPotentials(const std::string& name) const
 {
-    if (!this->hasPotentials(name)) {
+    if (const auto candidate = this->potentials.find(name); candidate == this->potentials.end()) {
         auto message = fmt::format("Potentials for '{}' do not exist.", name);
         throw std::logic_error {message};
+    } else {
+        return candidate->second;
     }
-    return this->potentials.at(name);
 }
 
 double Opm::GuideRate::getSI(const std::string&          well,
