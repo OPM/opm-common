@@ -161,19 +161,19 @@ public:
 
         // fill the temperature-pressure arrays
         for (unsigned iT = 0; iT < data_.nTemp_; ++ iT) {
-            Scalar temperature = iT * (data_.tempMax_ - data_.tempMin_) / (data_.nTemp_ - 1) + data_.tempMin_;
+            const Scalar temperature = iT * (data_.tempMax_ - data_.tempMin_) / (data_.nTemp_ - 1) + data_.tempMin_;
 
             try { data_.vaporPressure_[iT] = RawComponent::vaporPressure(temperature); }
             catch (const std::exception&) { data_.vaporPressure_[iT] = NaN; }
 
-            Scalar pgMax = maxGasPressure_(iT);
-            Scalar pgMin = minGasPressure_(iT);
+            const Scalar pgMax = maxGasPressure_(iT);
+            const Scalar pgMin = minGasPressure_(iT);
 
             // fill the temperature, pressure gas arrays
             for (unsigned iP = 0; iP < data_.nPress_; ++ iP) {
-                Scalar pressure = iP * (pgMax - pgMin) / (data_.nPress_ - 1) + pgMin;
+                const Scalar pressure = iP * (pgMax - pgMin) / (data_.nPress_ - 1) + pgMin;
 
-                unsigned i = iT + iP * data_.nTemp_;
+                const unsigned i = iT + iP * data_.nTemp_;
 
                 try { data_.gasEnthalpy_[i] = RawComponent::gasEnthalpy(temperature, pressure); }
                 catch (const std::exception&) { data_.gasEnthalpy_[i] = NaN; }
@@ -191,12 +191,12 @@ public:
                 catch (const std::exception&) { data_.gasThermalConductivity_[i] = NaN; }
             };
 
-            Scalar plMin = minLiquidPressure_(iT);
-            Scalar plMax = maxLiquidPressure_(iT);
+            const Scalar plMin = minLiquidPressure_(iT);
+            const Scalar plMax = maxLiquidPressure_(iT);
             for (unsigned iP = 0; iP < data_.nPress_; ++ iP) {
                 Scalar pressure = iP * (plMax - plMin) / (data_.nPress_ - 1) + plMin;
 
-                unsigned i = iT + iP*data_.nTemp_;
+                const unsigned i = iT + iP*data_.nTemp_;
 
                 try { data_.liquidEnthalpy_[i] = RawComponent::liquidEnthalpy(temperature, pressure); }
                 catch (const std::exception&) { data_.liquidEnthalpy_[i] = NaN; }
@@ -217,7 +217,7 @@ public:
 
         // fill the temperature-density arrays
         for (unsigned iT = 0; iT < data_.nTemp_; ++ iT) {
-            Scalar temperature = iT * (data_.tempMax_ - data_.tempMin_) / (data_.nTemp_ - 1) + data_.tempMin_;
+            const Scalar temperature = iT * (data_.tempMax_ - data_.tempMin_) / (data_.nTemp_ - 1) + data_.tempMin_;
 
             // calculate the minimum and maximum values for the gas
             // densities
@@ -229,13 +229,13 @@ public:
 
             // fill the temperature, density gas arrays
             for (unsigned iRho = 0; iRho < data_.nDensity_; ++ iRho) {
-                Scalar density =
+                const Scalar density =
                     Scalar(iRho) / (data_.nDensity_ - 1) *
                     (data_.maxGasDensity__[iT] - data_.minGasDensity__[iT])
                     +
                     data_.minGasDensity__[iT];
 
-                unsigned i = iT + iRho * data_.nTemp_;
+                const unsigned i = iT + iRho * data_.nTemp_;
 
                 try { data_.gasPressure_[i] = RawComponent::gasPressure(temperature, density); }
                 catch (const std::exception&) { data_.gasPressure_[i] = NaN; };
@@ -251,13 +251,13 @@ public:
 
             // fill the temperature, density liquid arrays
             for (unsigned iRho = 0; iRho < data_.nDensity_; ++ iRho) {
-                Scalar density =
+                const Scalar density =
                     Scalar(iRho) / (data_.nDensity_ - 1) *
                     (data_.maxLiquidDensity__[iT] - data_.minLiquidDensity__[iT])
                     +
                     data_.minLiquidDensity__[iT];
 
-                unsigned i = iT + iRho * data_.nTemp_;
+                const unsigned i = iT + iRho * data_.nTemp_;
 
                 try { data_.liquidPressure_[i] = RawComponent::liquidPressure(temperature, density); }
                 catch (const std::exception&) { data_.liquidPressure_[i] = NaN; };
@@ -584,7 +584,7 @@ private:
         if (alphaT < 0 || alphaT >= data_.nTemp_ - 1)
             return std::numeric_limits<Scalar>::quiet_NaN();
 
-        size_t iT = static_cast<size_t>(scalarValue(alphaT));
+        const size_t iT = static_cast<size_t>(scalarValue(alphaT));
         alphaT -= iT;
 
         return
@@ -603,17 +603,17 @@ private:
         if (alphaT < 0 || alphaT >= data_.nTemp_ - 1)
             return std::numeric_limits<Scalar>::quiet_NaN();
 
-        size_t iT = static_cast<size_t>(scalarValue(alphaT));
+        const size_t iT = static_cast<size_t>(scalarValue(alphaT));
         alphaT -= iT;
 
         Evaluation alphaP1 = pressLiquidIdx_(p, iT);
         Evaluation alphaP2 = pressLiquidIdx_(p, iT + 1);
 
-        size_t iP1 =
+        const size_t iP1 =
             static_cast<size_t>(
                 std::max<int>(0, std::min(static_cast<int>(data_.nPress_) - 2,
                                           static_cast<int>(scalarValue(alphaP1)))));
-        size_t iP2 =
+        const size_t iP2 =
             static_cast<size_t>(
                 std::max(0, std::min(static_cast<int>(data_.nPress_) - 2,
                                      static_cast<int>(scalarValue(alphaP2)))));
@@ -638,7 +638,7 @@ private:
         if (alphaT < 0 || alphaT >= data_.nTemp_ - 1)
             return std::numeric_limits<Scalar>::quiet_NaN();
 
-        size_t iT =
+        const size_t iT =
             static_cast<size_t>(
                 std::max(0, std::min(static_cast<int>(data_.nTemp_) - 2,
                                      static_cast<int>(scalarValue(alphaT)))));
@@ -646,11 +646,11 @@ private:
 
         Evaluation alphaP1 = pressGasIdx_(p, iT);
         Evaluation alphaP2 = pressGasIdx_(p, iT + 1);
-        size_t iP1 =
+        const size_t iP1 =
             static_cast<size_t>(
                 std::max(0, std::min(static_cast<int>(data_.nPress_) - 2,
                                      static_cast<int>(scalarValue(alphaP1)))));
-        size_t iP2 =
+        const size_t iP2 =
             static_cast<size_t>(
                 std::max(0, std::min(static_cast<int>(data_.nPress_) - 2,
                                      static_cast<int>(scalarValue(alphaP2)))));
@@ -672,18 +672,19 @@ private:
                                           const Evaluation& rho)
     {
         Evaluation alphaT = tempIdx_(T);
-        unsigned iT = std::max(0,
-                               std::min(static_cast<int>(data_.nTemp_ - 2),
-                                        static_cast<int>(alphaT)));
+        const unsigned iT =
+            std::max(0,
+                     std::min(static_cast<int>(data_.nTemp_ - 2),
+                              static_cast<int>(alphaT)));
         alphaT -= iT;
 
         Evaluation alphaP1 = densityGasIdx_(rho, iT);
         Evaluation alphaP2 = densityGasIdx_(rho, iT + 1);
-        unsigned iP1 =
+        const unsigned iP1 =
             std::max(0,
                      std::min(static_cast<int>(data_.nDensity_ - 2),
                               static_cast<int>(alphaP1)));
-        unsigned iP2 =
+        const unsigned iP2 =
             std::max(0,
                      std::min(static_cast<int>(data_.nDensity_ - 2),
                               static_cast<int>(alphaP2)));
@@ -705,13 +706,13 @@ private:
                                              const Evaluation& rho)
     {
         Evaluation alphaT = tempIdx_(T);
-        unsigned iT = std::max<int>(0, std::min<int>(data_.nTemp_ - 2, static_cast<int>(alphaT)));
+        const unsigned iT = std::max<int>(0, std::min<int>(data_.nTemp_ - 2, static_cast<int>(alphaT)));
         alphaT -= iT;
 
         Evaluation alphaP1 = densityLiquidIdx_(rho, iT);
         Evaluation alphaP2 = densityLiquidIdx_(rho, iT + 1);
-        unsigned iP1 = std::max<int>(0, std::min<int>(data_.nDensity_ - 2, static_cast<int>(alphaP1)));
-        unsigned iP2 = std::max<int>(0, std::min<int>(data_.nDensity_ - 2, static_cast<int>(alphaP2)));
+        const unsigned iP1 = std::max<int>(0, std::min<int>(data_.nDensity_ - 2, static_cast<int>(alphaP1)));
+        const unsigned iP2 = std::max<int>(0, std::min<int>(data_.nDensity_ - 2, static_cast<int>(alphaP2)));
         alphaP1 -= iP1;
         alphaP2 -= iP2;
 
@@ -734,8 +735,8 @@ private:
     template <class Evaluation>
     static Evaluation pressLiquidIdx_(const Evaluation& pressure, size_t tempIdx)
     {
-        Scalar plMin = minLiquidPressure_(tempIdx);
-        Scalar plMax = maxLiquidPressure_(tempIdx);
+        const Scalar plMin = minLiquidPressure_(tempIdx);
+        const Scalar plMax = maxLiquidPressure_(tempIdx);
 
         return (data_.nPress_ - 1) * (pressure - plMin) / (plMax - plMin);
     }
@@ -744,8 +745,8 @@ private:
     template <class Evaluation>
     static Evaluation pressGasIdx_(const Evaluation& pressure, size_t tempIdx)
     {
-        Scalar pgMin = minGasPressure_(tempIdx);
-        Scalar pgMax = maxGasPressure_(tempIdx);
+        const Scalar pgMin = minGasPressure_(tempIdx);
+        const Scalar pgMax = maxGasPressure_(tempIdx);
 
         return (data_.nPress_ - 1) * (pressure - pgMin) / (pgMax - pgMin);
     }
@@ -754,8 +755,8 @@ private:
     template <class Evaluation>
     static Evaluation densityLiquidIdx_(const Evaluation& density, size_t tempIdx)
     {
-        Scalar densityMin = minLiquidDensity_(tempIdx);
-        Scalar densityMax = maxLiquidDensity_(tempIdx);
+        const Scalar densityMin = minLiquidDensity_(tempIdx);
+        const Scalar densityMax = maxLiquidDensity_(tempIdx);
         return (data_.nDensity_ - 1) * (density - densityMin) / (densityMax - densityMin);
     }
 
@@ -763,8 +764,8 @@ private:
     template <class Evaluation>
     static Evaluation densityGasIdx_(const Evaluation& density, size_t tempIdx)
     {
-        Scalar densityMin = minGasDensity_(tempIdx);
-        Scalar densityMax = maxGasDensity_(tempIdx);
+        const Scalar densityMin = minGasDensity_(tempIdx);
+        const Scalar densityMax = maxGasDensity_(tempIdx);
         return (data_.nDensity_ - 1) * (density - densityMin) / (densityMax - densityMin);
     }
 
