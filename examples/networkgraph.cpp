@@ -29,6 +29,7 @@
 #include <cstddef>
 #include <getopt.h>
 #include <iostream>
+#include <memory>
 #include <sstream>
 
 class Node
@@ -36,7 +37,7 @@ class Node
 public:
     explicit Node(const std::string& name);
 
-    std::string name() const
+    const std::string& name() const
     {
         return m_name;
     }
