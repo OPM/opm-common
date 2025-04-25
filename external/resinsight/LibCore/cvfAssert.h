@@ -37,6 +37,8 @@
 
 #pragma once
 
+#include <memory>
+
 namespace external {
 namespace cvf {
 
@@ -69,7 +71,7 @@ public:
     static FailAction   reportFailedAssert(const char* fileName, int lineNumber, const char* expr, const char* msg);
 
 private:
-    static AssertHandler*   sm_handler;
+    static std::unique_ptr<AssertHandler>   sm_handler;
 };
 
 } // cvf
