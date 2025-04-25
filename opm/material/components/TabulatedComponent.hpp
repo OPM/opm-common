@@ -28,14 +28,97 @@
 #ifndef OPM_TABULATED_COMPONENT_HPP
 #define OPM_TABULATED_COMPONENT_HPP
 
+#include <opm/material/common/MathToolbox.hpp>
+
 #include <cmath>
+#include <cstddef>
 #include <limits>
 #include <cassert>
 #include <stdexcept>
-
-#include <opm/material/common/MathToolbox.hpp>
+#include <vector>
 
 namespace Opm {
+
+template<class Scalar>
+struct TabulatedComponentData
+{
+    // 1D fields with the temperature as degree of freedom
+    std::vector<Scalar> vaporPressure_;
+
+    std::vector<Scalar> minLiquidDensity__;
+    std::vector<Scalar> maxLiquidDensity__;
+
+    std::vector<Scalar> minGasDensity__;
+    std::vector<Scalar> maxGasDensity__;
+
+    // 2D fields with the temperature and pressure as degrees of
+    // freedom
+    std::vector<Scalar> gasEnthalpy_;
+    std::vector<Scalar> liquidEnthalpy_;
+
+    std::vector<Scalar> gasHeatCapacity_;
+    std::vector<Scalar> liquidHeatCapacity_;
+
+    std::vector<Scalar> gasDensity_;
+    std::vector<Scalar> liquidDensity_;
+
+    std::vector<Scalar> gasViscosity_;
+    std::vector<Scalar> liquidViscosity_;
+
+    std::vector<Scalar> gasThermalConductivity_;
+    std::vector<Scalar> liquidThermalConductivity_;
+
+    // 2D fields with the temperature and density as degrees of
+    // freedom
+    std::vector<Scalar> gasPressure_;
+    std::vector<Scalar> liquidPressure_;
+
+    // temperature, pressure and density ranges
+    Scalar tempMin_;
+    Scalar tempMax_;
+    unsigned nTemp_;
+
+    Scalar pressMin_;
+    Scalar pressMax_;
+    unsigned nPress_;
+
+    Scalar densityMin_;
+    Scalar densityMax_;
+    unsigned nDensity_;
+
+    void init(Scalar tempMin, Scalar tempMax, unsigned nTemp,
+              Scalar pressMin, Scalar pressMax, unsigned nPress)
+    {
+        tempMin_ = tempMin;
+        tempMax_ = tempMax;
+        nTemp_ = nTemp;
+        pressMin_ = pressMin;
+        pressMax_ = pressMax;
+        nPress_ = nPress;
+        nDensity_ = nPress_;
+
+        // allocate the arrays
+        vaporPressure_.resize(nTemp_);
+        minGasDensity__.resize(nTemp_);
+        maxGasDensity__.resize(nTemp_);
+        minLiquidDensity__.resize(nTemp_);
+        maxLiquidDensity__.resize(nTemp_);
+
+        gasEnthalpy_.resize(nTemp_*nPress_);
+        liquidEnthalpy_.resize(nTemp_*nPress_);
+        gasHeatCapacity_.resize(nTemp_*nPress_);
+        liquidHeatCapacity_.resize(nTemp_*nPress_);
+        gasDensity_.resize(nTemp_*nPress_);
+        liquidDensity_.resize(nTemp_*nPress_);
+        gasViscosity_.resize(nTemp_*nPress_);
+        liquidViscosity_.resize(nTemp_*nPress_);
+        gasThermalConductivity_.resize(nTemp_*nPress_);
+        liquidThermalConductivity_.resize(nTemp_*nPress_);
+        gasPressure_.resize(nTemp_*nDensity_);
+        liquidPressure_.resize(nTemp_*nDensity_);
+    }
+};
+
 /*!
  * \ingroup Components
  *
@@ -55,7 +138,7 @@ template <class ScalarT, class RawComponent, bool useVaporPressure=true>
 class TabulatedComponent
 {
 public:
-    typedef ScalarT Scalar;
+    using Scalar = ScalarT;
 
     static constexpr bool isTabulated = true;
 
@@ -72,140 +155,170 @@ public:
     static void init(Scalar tempMin, Scalar tempMax, unsigned nTemp,
                      Scalar pressMin, Scalar pressMax, unsigned nPress)
     {
-        tempMin_ = tempMin;
-        tempMax_ = tempMax;
-        nTemp_ = nTemp;
-        pressMin_ = pressMin;
-        pressMax_ = pressMax;
-        nPress_ = nPress;
-        nDensity_ = nPress_;
-
-        // allocate the arrays
-        vaporPressure_ = new Scalar[nTemp_];
-        minGasDensity__ = new Scalar[nTemp_];
-        maxGasDensity__ = new Scalar[nTemp_];
-        minLiquidDensity__ = new Scalar[nTemp_];
-        maxLiquidDensity__ = new Scalar[nTemp_];
-
-        gasEnthalpy_ = new Scalar[nTemp_*nPress_];
-        liquidEnthalpy_ = new Scalar[nTemp_*nPress_];
-        gasHeatCapacity_ = new Scalar[nTemp_*nPress_];
-        liquidHeatCapacity_ = new Scalar[nTemp_*nPress_];
-        gasDensity_ = new Scalar[nTemp_*nPress_];
-        liquidDensity_ = new Scalar[nTemp_*nPress_];
-        gasViscosity_ = new Scalar[nTemp_*nPress_];
-        liquidViscosity_ = new Scalar[nTemp_*nPress_];
-        gasThermalConductivity_ = new Scalar[nTemp_*nPress_];
-        liquidThermalConductivity_ = new Scalar[nTemp_*nPress_];
-        gasPressure_ = new Scalar[nTemp_*nDensity_];
-        liquidPressure_ = new Scalar[nTemp_*nDensity_];
+        data_.init(tempMin, tempMax, nTemp, pressMin, pressMax, nPress);
 
         assert(std::numeric_limits<Scalar>::has_quiet_NaN);
-        Scalar NaN = std::numeric_limits<Scalar>::quiet_NaN();
+        constexpr Scalar NaN = std::numeric_limits<Scalar>::quiet_NaN();
 
         // fill the temperature-pressure arrays
-        for (unsigned iT = 0; iT < nTemp_; ++ iT) {
-            Scalar temperature = iT * (tempMax_ - tempMin_)/(nTemp_ - 1) + tempMin_;
+        for (unsigned iT = 0; iT < data_.nTemp_; ++ iT) {
+            const Scalar temperature = iT * (data_.tempMax_ - data_.tempMin_) / (data_.nTemp_ - 1) + data_.tempMin_;
 
-            try { vaporPressure_[iT] = RawComponent::vaporPressure(temperature); }
-            catch (const std::exception&) { vaporPressure_[iT] = NaN; }
+            try {
+                data_.vaporPressure_[iT] = RawComponent::vaporPressure(temperature);
+            }
+            catch (const std::exception&) {
+                data_.vaporPressure_[iT] = NaN;
+            }
 
-            Scalar pgMax = maxGasPressure_(iT);
-            Scalar pgMin = minGasPressure_(iT);
+            const Scalar pgMax = maxGasPressure_(iT);
+            const Scalar pgMin = minGasPressure_(iT);
 
             // fill the temperature, pressure gas arrays
-            for (unsigned iP = 0; iP < nPress_; ++ iP) {
-                Scalar pressure = iP * (pgMax - pgMin)/(nPress_ - 1) + pgMin;
+            for (unsigned iP = 0; iP < data_.nPress_; ++ iP) {
+                const Scalar pressure = iP * (pgMax - pgMin) / (data_.nPress_ - 1) + pgMin;
 
-                unsigned i = iT + iP*nTemp_;
+                const unsigned i = iT + iP * data_.nTemp_;
 
-                try { gasEnthalpy_[i] = RawComponent::gasEnthalpy(temperature, pressure); }
-                catch (const std::exception&) { gasEnthalpy_[i] = NaN; }
+                try {
+                    data_.gasEnthalpy_[i] = RawComponent::gasEnthalpy(temperature, pressure);
+                }
+                catch (const std::exception&) {
+                    data_.gasEnthalpy_[i] = NaN;
+                }
 
-                try { gasHeatCapacity_[i] = RawComponent::gasHeatCapacity(temperature, pressure); }
-                catch (const std::exception&) { gasHeatCapacity_[i] = NaN; }
+                try {
+                    data_.gasHeatCapacity_[i] = RawComponent::gasHeatCapacity(temperature, pressure);
+                }
+                catch (const std::exception&) {
+                    data_.gasHeatCapacity_[i] = NaN;
+                }
 
-                try { gasDensity_[i] = RawComponent::gasDensity(temperature, pressure); }
-                catch (const std::exception&) { gasDensity_[i] = NaN; }
+                try {
+                    data_.gasDensity_[i] = RawComponent::gasDensity(temperature, pressure);
+                }
+                catch (const std::exception&) {
+                    data_.gasDensity_[i] = NaN;
+                }
 
-                try { gasViscosity_[i] = RawComponent::gasViscosity(temperature, pressure); }
-                catch (const std::exception&) { gasViscosity_[i] = NaN; }
+                try {
+                    data_.gasViscosity_[i] = RawComponent::gasViscosity(temperature, pressure);
+                }
+                catch (const std::exception&) {
+                    data_.gasViscosity_[i] = NaN;
+                }
 
-                try { gasThermalConductivity_[i] = RawComponent::gasThermalConductivity(temperature, pressure); }
-                catch (const std::exception&) { gasThermalConductivity_[i] = NaN; }
+                try {
+                    data_.gasThermalConductivity_[i] = RawComponent::gasThermalConductivity(temperature, pressure);
+                }
+                catch (const std::exception&) {
+                    data_.gasThermalConductivity_[i] = NaN;
+                }
             };
 
-            Scalar plMin = minLiquidPressure_(iT);
-            Scalar plMax = maxLiquidPressure_(iT);
-            for (unsigned iP = 0; iP < nPress_; ++ iP) {
-                Scalar pressure = iP * (plMax - plMin)/(nPress_ - 1) + plMin;
+            const Scalar plMin = minLiquidPressure_(iT);
+            const Scalar plMax = maxLiquidPressure_(iT);
+            for (unsigned iP = 0; iP < data_.nPress_; ++ iP) {
+                Scalar pressure = iP * (plMax - plMin) / (data_.nPress_ - 1) + plMin;
 
-                unsigned i = iT + iP*nTemp_;
+                const unsigned i = iT + iP*data_.nTemp_;
 
-                try { liquidEnthalpy_[i] = RawComponent::liquidEnthalpy(temperature, pressure); }
-                catch (const std::exception&) { liquidEnthalpy_[i] = NaN; }
+                try {
+                    data_.liquidEnthalpy_[i] = RawComponent::liquidEnthalpy(temperature, pressure);
+                }
+                catch (const std::exception&) {
+                    data_.liquidEnthalpy_[i] = NaN;
+                }
 
-                try { liquidHeatCapacity_[i] = RawComponent::liquidHeatCapacity(temperature, pressure); }
-                catch (const std::exception&) { liquidHeatCapacity_[i] = NaN; }
+                try {
+                    data_.liquidHeatCapacity_[i] = RawComponent::liquidHeatCapacity(temperature, pressure);
+                }
+                catch (const std::exception&) {
+                    data_.liquidHeatCapacity_[i] = NaN;
+                }
 
-                try { liquidDensity_[i] = RawComponent::liquidDensity(temperature, pressure); }
-                catch (const std::exception&) { liquidDensity_[i] = NaN; }
+                try {
+                    data_.liquidDensity_[i] = RawComponent::liquidDensity(temperature, pressure);
+                }
+                catch (const std::exception&) {
+                    data_.liquidDensity_[i] = NaN;
+                }
 
-                try { liquidViscosity_[i] = RawComponent::liquidViscosity(temperature, pressure); }
-                catch (const std::exception&) { liquidViscosity_[i] = NaN; }
+                try {
+                    data_.liquidViscosity_[i] = RawComponent::liquidViscosity(temperature, pressure);
+                }
+                catch (const std::exception&) {
+                    data_.liquidViscosity_[i] = NaN;
+                }
 
-                try { liquidThermalConductivity_[i] = RawComponent::liquidThermalConductivity(temperature, pressure); }
-                catch (const std::exception&) { liquidThermalConductivity_[i] = NaN; }
+                try {
+                    data_.liquidThermalConductivity_[i] = RawComponent::liquidThermalConductivity(temperature, pressure);
+                }
+                catch (const std::exception&) {
+                    data_.liquidThermalConductivity_[i] = NaN;
+                }
             }
         }
 
         // fill the temperature-density arrays
-        for (unsigned iT = 0; iT < nTemp_; ++ iT) {
-            Scalar temperature = iT * (tempMax_ - tempMin_)/(nTemp_ - 1) + tempMin_;
+        for (unsigned iT = 0; iT < data_.nTemp_; ++ iT) {
+            const Scalar temperature = iT * (data_.tempMax_ - data_.tempMin_) / (data_.nTemp_ - 1) + data_.tempMin_;
 
             // calculate the minimum and maximum values for the gas
             // densities
-            minGasDensity__[iT] = RawComponent::gasDensity(temperature, minGasPressure_(iT));
-            if (iT < nTemp_ - 1)
-                maxGasDensity__[iT] = RawComponent::gasDensity(temperature, maxGasPressure_(iT + 1));
-            else
-                maxGasDensity__[iT] = RawComponent::gasDensity(temperature, maxGasPressure_(iT));
+            data_.minGasDensity__[iT] = RawComponent::gasDensity(temperature, minGasPressure_(iT));
+            if (iT < data_.nTemp_ - 1) {
+                data_.maxGasDensity__[iT] = RawComponent::gasDensity(temperature, maxGasPressure_(iT + 1));
+            }
+            else {
+                data_.maxGasDensity__[iT] = RawComponent::gasDensity(temperature, maxGasPressure_(iT));
+            }
 
             // fill the temperature, density gas arrays
-            for (unsigned iRho = 0; iRho < nDensity_; ++ iRho) {
-                Scalar density =
-                    Scalar(iRho)/(nDensity_ - 1) *
-                    (maxGasDensity__[iT] - minGasDensity__[iT])
+            for (unsigned iRho = 0; iRho < data_.nDensity_; ++ iRho) {
+                const Scalar density =
+                    Scalar(iRho) / (data_.nDensity_ - 1) *
+                    (data_.maxGasDensity__[iT] - data_.minGasDensity__[iT])
                     +
-                    minGasDensity__[iT];
+                    data_.minGasDensity__[iT];
 
-                unsigned i = iT + iRho*nTemp_;
+                const unsigned i = iT + iRho * data_.nTemp_;
 
-                try { gasPressure_[i] = RawComponent::gasPressure(temperature, density); }
-                catch (const std::exception&) { gasPressure_[i] = NaN; };
-            };
+                try {
+                    data_.gasPressure_[i] = RawComponent::gasPressure(temperature, density);
+                }
+                catch (const std::exception&) {
+                    data_.gasPressure_[i] = NaN;
+                }
+            }
 
             // calculate the minimum and maximum values for the liquid
             // densities
-            minLiquidDensity__[iT] = RawComponent::liquidDensity(temperature, minLiquidPressure_(iT));
-            if (iT < nTemp_ - 1)
-                maxLiquidDensity__[iT] = RawComponent::liquidDensity(temperature, maxLiquidPressure_(iT + 1));
-            else
-                maxLiquidDensity__[iT] = RawComponent::liquidDensity(temperature, maxLiquidPressure_(iT));
+            data_.minLiquidDensity__[iT] = RawComponent::liquidDensity(temperature, minLiquidPressure_(iT));
+            if (iT < data_.nTemp_ - 1) {
+                data_.maxLiquidDensity__[iT] = RawComponent::liquidDensity(temperature, maxLiquidPressure_(iT + 1));
+            }
+            else {
+                data_.maxLiquidDensity__[iT] = RawComponent::liquidDensity(temperature, maxLiquidPressure_(iT));
+            }
 
             // fill the temperature, density liquid arrays
-            for (unsigned iRho = 0; iRho < nDensity_; ++ iRho) {
-                Scalar density =
-                    Scalar(iRho)/(nDensity_ - 1) *
-                    (maxLiquidDensity__[iT] - minLiquidDensity__[iT])
+            for (unsigned iRho = 0; iRho < data_.nDensity_; ++ iRho) {
+                const Scalar density =
+                    Scalar(iRho) / (data_.nDensity_ - 1) *
+                    (data_.maxLiquidDensity__[iT] - data_.minLiquidDensity__[iT])
                     +
-                    minLiquidDensity__[iT];
+                    data_.minLiquidDensity__[iT];
 
-                unsigned i = iT + iRho*nTemp_;
+                const unsigned i = iT + iRho * data_.nTemp_;
 
-                try { liquidPressure_[i] = RawComponent::liquidPressure(temperature, density); }
-                catch (const std::exception&) { liquidPressure_[i] = NaN; };
-            };
+                try {
+                    data_.liquidPressure_[i] = RawComponent::liquidPressure(temperature, density);
+                }
+                catch (const std::exception&) {
+                    data_.liquidPressure_[i] = NaN;
+                }
+            }
         }
     }
 
@@ -266,9 +379,10 @@ public:
     template <class Evaluation>
     static Evaluation vaporPressure(const Evaluation& temperature)
     {
-        const Evaluation& result = interpolateT_(vaporPressure_, temperature);
-        if (std::isnan(scalarValue(result)))
+        const Evaluation& result = interpolateT_(data_.vaporPressure_, temperature);
+        if (std::isnan(scalarValue(result))) {
             return RawComponent::vaporPressure(temperature);
+        }
         return result;
     }
 
@@ -281,11 +395,12 @@ public:
     template <class Evaluation>
     static Evaluation gasEnthalpy(const Evaluation& temperature, const Evaluation& pressure)
     {
-        const Evaluation& result = interpolateGasTP_(gasEnthalpy_,
+        const Evaluation& result = interpolateGasTP_(data_.gasEnthalpy_,
                                                      temperature,
                                                      pressure);
-        if (std::isnan(scalarValue(result)))
+        if (std::isnan(scalarValue(result))) {
             return RawComponent::gasEnthalpy(temperature, pressure);
+        }
         return result;
     }
 
@@ -298,11 +413,12 @@ public:
     template <class Evaluation>
     static Evaluation liquidEnthalpy(const Evaluation& temperature, const Evaluation& pressure)
     {
-        const Evaluation& result = interpolateLiquidTP_(liquidEnthalpy_,
+        const Evaluation& result = interpolateLiquidTP_(data_.liquidEnthalpy_,
                                                         temperature,
                                                         pressure);
-        if (std::isnan(scalarValue(result)))
+        if (std::isnan(scalarValue(result))) {
             return RawComponent::liquidEnthalpy(temperature, pressure);
+        }
         return result;
     }
 
@@ -315,11 +431,12 @@ public:
     template <class Evaluation>
     static Evaluation gasHeatCapacity(const Evaluation& temperature, const Evaluation& pressure)
     {
-        const Evaluation& result = interpolateGasTP_(gasHeatCapacity_,
+        const Evaluation& result = interpolateGasTP_(data_.gasHeatCapacity_,
                                                      temperature,
                                                      pressure);
-        if (std::isnan(scalarValue(result)))
+        if (std::isnan(scalarValue(result))) {
             return RawComponent::gasHeatCapacity(temperature, pressure);
+        }
         return result;
     }
 
@@ -332,11 +449,12 @@ public:
     template <class Evaluation>
     static Evaluation liquidHeatCapacity(const Evaluation& temperature, const Evaluation& pressure)
     {
-        const Evaluation& result = interpolateLiquidTP_(liquidHeatCapacity_,
+        const Evaluation& result = interpolateLiquidTP_(data_.liquidHeatCapacity_,
                                                         temperature,
                                                         pressure);
-        if (std::isnan(scalarValue(result)))
+        if (std::isnan(scalarValue(result))) {
             return RawComponent::liquidHeatCapacity(temperature, pressure);
+        }
         return result;
     }
 
@@ -348,7 +466,7 @@ public:
      */
     template <class Evaluation>
     static Evaluation gasInternalEnergy(const Evaluation& temperature, const Evaluation& pressure)
-    { return gasEnthalpy(temperature, pressure) - pressure/gasDensity(temperature, pressure); }
+    { return gasEnthalpy(temperature, pressure) - pressure / gasDensity(temperature, pressure); }
 
     /*!
      * \brief Specific internal energy of the liquid \f$\mathrm{[J/kg]}\f$.
@@ -358,7 +476,7 @@ public:
      */
     template <class Evaluation>
     static Evaluation liquidInternalEnergy(const Evaluation& temperature, const Evaluation& pressure)
-    { return liquidEnthalpy(temperature, pressure) - pressure/liquidDensity(temperature, pressure); }
+    { return liquidEnthalpy(temperature, pressure) - pressure / liquidDensity(temperature, pressure); }
 
     /*!
      * \brief The pressure of gas in \f$\mathrm{[Pa]}\f$ at a given density and temperature.
@@ -369,12 +487,13 @@ public:
     template <class Evaluation>
     static Evaluation gasPressure(const Evaluation& temperature, Scalar density)
     {
-        const Evaluation& result = interpolateGasTRho_(gasPressure_,
+        const Evaluation& result = interpolateGasTRho_(data_.gasPressure_,
                                                        temperature,
                                                        density);
-        if (std::isnan(scalarValue(result)))
+        if (std::isnan(scalarValue(result))) {
             return RawComponent::gasPressure(temperature,
                                              density);
+        }
         return result;
     }
 
@@ -387,12 +506,13 @@ public:
     template <class Evaluation>
     static Evaluation liquidPressure(const Evaluation& temperature, Scalar density)
     {
-        const Evaluation& result = interpolateLiquidTRho_(liquidPressure_,
+        const Evaluation& result = interpolateLiquidTRho_(data_.liquidPressure_,
                                                           temperature,
                                                           density);
-        if (std::isnan(scalarValue(result)))
+        if (std::isnan(scalarValue(result))) {
             return RawComponent::liquidPressure(temperature,
                                                 density);
+        }
         return result;
     }
 
@@ -414,7 +534,6 @@ public:
     static bool gasIsIdeal()
     { return RawComponent::gasIsIdeal(); }
 
-
     /*!
      * \brief The density of gas at a given pressure and temperature
      *        \f$\mathrm{[kg/m^3]}\f$.
@@ -425,11 +544,12 @@ public:
     template <class Evaluation>
     static Evaluation gasDensity(const Evaluation& temperature, const Evaluation& pressure)
     {
-        const Evaluation& result = interpolateGasTP_(gasDensity_,
+        const Evaluation& result = interpolateGasTP_(data_.gasDensity_,
                                                      temperature,
                                                      pressure);
-        if (std::isnan(scalarValue(result)))
+        if (std::isnan(scalarValue(result))) {
             return RawComponent::gasDensity(temperature, pressure);
+        }
         return result;
     }
 
@@ -443,11 +563,12 @@ public:
     template <class Evaluation>
     static Evaluation liquidDensity(const Evaluation& temperature, const Evaluation& pressure)
     {
-        const Evaluation& result = interpolateLiquidTP_(liquidDensity_,
+        const Evaluation& result = interpolateLiquidTP_(data_.liquidDensity_,
                                                         temperature,
                                                         pressure);
-        if (std::isnan(scalarValue(result)))
+        if (std::isnan(scalarValue(result))) {
             return RawComponent::liquidDensity(temperature, pressure);
+        }
         return result;
     }
 
@@ -460,11 +581,12 @@ public:
     template <class Evaluation>
     static Evaluation gasViscosity(const Evaluation& temperature, const Evaluation& pressure)
     {
-        const Evaluation& result = interpolateGasTP_(gasViscosity_,
+        const Evaluation& result = interpolateGasTP_(data_.gasViscosity_,
                                                      temperature,
                                                      pressure);
-        if (std::isnan(scalarValue(result)))
+        if (std::isnan(scalarValue(result))) {
             return RawComponent::gasViscosity(temperature, pressure);
+        }
         return result;
     }
 
@@ -477,11 +599,12 @@ public:
     template <class Evaluation>
     static Evaluation liquidViscosity(const Evaluation& temperature, const Evaluation& pressure)
     {
-        const Evaluation& result = interpolateLiquidTP_(liquidViscosity_,
+        const Evaluation& result = interpolateLiquidTP_(data_.liquidViscosity_,
                                                         temperature,
                                                         pressure);
-        if (std::isnan(scalarValue(result)))
+        if (std::isnan(scalarValue(result))) {
             return RawComponent::liquidViscosity(temperature, pressure);
+        }
         return result;
     }
 
@@ -494,11 +617,12 @@ public:
     template <class Evaluation>
     static Evaluation gasThermalConductivity(const Evaluation& temperature, const Evaluation& pressure)
     {
-        const Evaluation& result = interpolateGasTP_(gasThermalConductivity_,
+        const Evaluation& result = interpolateGasTP_(data_.gasThermalConductivity_,
                                                      temperature,
                                                      pressure);
-        if (std::isnan(scalarValue(result)))
+        if (std::isnan(scalarValue(result))) {
             return RawComponent::gasThermalConductivity(temperature, pressure);
+        }
         return result;
     }
 
@@ -511,24 +635,26 @@ public:
     template <class Evaluation>
     static Evaluation liquidThermalConductivity(const Evaluation& temperature, const Evaluation& pressure)
     {
-        const Evaluation& result = interpolateLiquidTP_(liquidThermalConductivity_,
+        const Evaluation& result = interpolateLiquidTP_(data_.liquidThermalConductivity_,
                                                         temperature,
                                                         pressure);
-        if (std::isnan(scalarValue(result)))
+        if (std::isnan(scalarValue(result))) {
             return RawComponent::liquidThermalConductivity(temperature, pressure);
+        }
         return result;
     }
 
 private:
     // returns an interpolated value depending on temperature
     template <class Evaluation>
-    static Evaluation interpolateT_(const Scalar* values, const Evaluation& T)
+    static Evaluation interpolateT_(const std::vector<Scalar>& values, const Evaluation& T)
     {
         Evaluation alphaT = tempIdx_(T);
-        if (alphaT < 0 || alphaT >= nTemp_ - 1)
+        if (alphaT < 0 || alphaT >= data_.nTemp_ - 1) {
             return std::numeric_limits<Scalar>::quiet_NaN();
+        }
 
-        size_t iT = static_cast<size_t>(scalarValue(alphaT));
+        const std::size_t iT = static_cast<std::size_t>(scalarValue(alphaT));
         alphaT -= iT;
 
         return
@@ -539,330 +665,254 @@ private:
     // returns an interpolated value for liquid depending on
     // temperature and pressure
     template <class Evaluation>
-    static Evaluation interpolateLiquidTP_(const Scalar* values, const Evaluation& T, const Evaluation& p)
+    static Evaluation interpolateLiquidTP_(const std::vector<Scalar>& values,
+                                           const Evaluation& T,
+                                           const Evaluation& p)
     {
         Evaluation alphaT = tempIdx_(T);
-        if (alphaT < 0 || alphaT >= nTemp_ - 1)
+        if (alphaT < 0 || alphaT >= data_.nTemp_ - 1) {
             return std::numeric_limits<Scalar>::quiet_NaN();
+        }
 
-        size_t iT = static_cast<size_t>(scalarValue(alphaT));
+        const std::size_t iT = static_cast<std::size_t>(scalarValue(alphaT));
         alphaT -= iT;
 
         Evaluation alphaP1 = pressLiquidIdx_(p, iT);
         Evaluation alphaP2 = pressLiquidIdx_(p, iT + 1);
 
-        size_t iP1 =
-            static_cast<size_t>(
-                std::max<int>(0, std::min(static_cast<int>(nPress_) - 2,
+        const std::size_t iP1 =
+            static_cast<std::size_t>(
+                std::max<int>(0, std::min(static_cast<int>(data_.nPress_) - 2,
                                           static_cast<int>(scalarValue(alphaP1)))));
-        size_t iP2 =
-            static_cast<size_t>(
-                std::max(0, std::min(static_cast<int>(nPress_) - 2,
+        const std::size_t iP2 =
+            static_cast<std::size_t>(
+                std::max(0, std::min(static_cast<int>(data_.nPress_) - 2,
                                      static_cast<int>(scalarValue(alphaP2)))));
         alphaP1 -= iP1;
         alphaP2 -= iP2;
 
         return
-            values[(iT    ) + (iP1    )*nTemp_]*(1 - alphaT)*(1 - alphaP1) +
-            values[(iT    ) + (iP1 + 1)*nTemp_]*(1 - alphaT)*(    alphaP1) +
-            values[(iT + 1) + (iP2    )*nTemp_]*(    alphaT)*(1 - alphaP2) +
-            values[(iT + 1) + (iP2 + 1)*nTemp_]*(    alphaT)*(    alphaP2);
+            values[(iT    ) + (iP1    ) * data_.nTemp_] * (1 - alphaT) * (1 - alphaP1) +
+            values[(iT    ) + (iP1 + 1) * data_.nTemp_] * (1 - alphaT) * (    alphaP1) +
+            values[(iT + 1) + (iP2    ) * data_.nTemp_] * (    alphaT) * (1 - alphaP2) +
+            values[(iT + 1) + (iP2 + 1) * data_.nTemp_] * (    alphaT) * (    alphaP2);
     }
 
     // returns an interpolated value for gas depending on
     // temperature and pressure
     template <class Evaluation>
-    static Evaluation interpolateGasTP_(const Scalar* values, const Evaluation& T, const Evaluation& p)
+    static Evaluation interpolateGasTP_(const std::vector<Scalar>& values,
+                                        const Evaluation& T,
+                                        const Evaluation& p)
     {
         Evaluation alphaT = tempIdx_(T);
-        if (alphaT < 0 || alphaT >= nTemp_ - 1)
+        if (alphaT < 0 || alphaT >= data_.nTemp_ - 1) {
             return std::numeric_limits<Scalar>::quiet_NaN();
+        }
 
-        size_t iT =
-            static_cast<size_t>(
-                std::max(0, std::min(static_cast<int>(nTemp_) - 2,
+        const std::size_t iT =
+            static_cast<std::size_t>(
+                std::max(0, std::min(static_cast<int>(data_.nTemp_) - 2,
                                      static_cast<int>(scalarValue(alphaT)))));
         alphaT -= iT;
 
         Evaluation alphaP1 = pressGasIdx_(p, iT);
         Evaluation alphaP2 = pressGasIdx_(p, iT + 1);
-        size_t iP1 =
-            static_cast<size_t>(
-                std::max(0, std::min(static_cast<int>(nPress_) - 2,
+        const std::size_t iP1 =
+            static_cast<std::size_t>(
+                std::max(0, std::min(static_cast<int>(data_.nPress_) - 2,
                                      static_cast<int>(scalarValue(alphaP1)))));
-        size_t iP2 =
-            static_cast<size_t>(
-                std::max(0, std::min(static_cast<int>(nPress_) - 2,
+        const std::size_t iP2 =
+            static_cast<std::size_t>(
+                std::max(0, std::min(static_cast<int>(data_.nPress_) - 2,
                                      static_cast<int>(scalarValue(alphaP2)))));
         alphaP1 -= iP1;
         alphaP2 -= iP2;
 
         return
-            values[(iT    ) + (iP1    )*nTemp_]*(1 - alphaT)*(1 - alphaP1) +
-            values[(iT    ) + (iP1 + 1)*nTemp_]*(1 - alphaT)*(    alphaP1) +
-            values[(iT + 1) + (iP2    )*nTemp_]*(    alphaT)*(1 - alphaP2) +
-            values[(iT + 1) + (iP2 + 1)*nTemp_]*(    alphaT)*(    alphaP2);
+            values[(iT    ) + (iP1    ) * data_.nTemp_] * (1 - alphaT) * (1 - alphaP1) +
+            values[(iT    ) + (iP1 + 1) * data_.nTemp_] * (1 - alphaT) * (    alphaP1) +
+            values[(iT + 1) + (iP2    ) * data_.nTemp_] * (    alphaT) * (1 - alphaP2) +
+            values[(iT + 1) + (iP2 + 1) * data_.nTemp_] * (    alphaT) * (    alphaP2);
     }
 
     // returns an interpolated value for gas depending on
     // temperature and density
     template <class Evaluation>
-    static Evaluation interpolateGasTRho_(const Scalar* values, const Evaluation& T, const Evaluation& rho)
+    static Evaluation interpolateGasTRho_(const std::vector<Scalar>& values,
+                                          const Evaluation& T,
+                                          const Evaluation& rho)
     {
         Evaluation alphaT = tempIdx_(T);
-        unsigned iT = std::max(0,
-                               std::min(static_cast<int>(nTemp_ - 2),
-                                        static_cast<int>(alphaT)));
+        const unsigned iT =
+            std::max(0,
+                     std::min(static_cast<int>(data_.nTemp_ - 2),
+                              static_cast<int>(alphaT)));
         alphaT -= iT;
 
         Evaluation alphaP1 = densityGasIdx_(rho, iT);
         Evaluation alphaP2 = densityGasIdx_(rho, iT + 1);
-        unsigned iP1 =
+        const unsigned iP1 =
             std::max(0,
-                     std::min(static_cast<int>(nDensity_ - 2),
+                     std::min(static_cast<int>(data_.nDensity_ - 2),
                               static_cast<int>(alphaP1)));
-        unsigned iP2 =
+        const unsigned iP2 =
             std::max(0,
-                     std::min(static_cast<int>(nDensity_ - 2),
+                     std::min(static_cast<int>(data_.nDensity_ - 2),
                               static_cast<int>(alphaP2)));
         alphaP1 -= iP1;
         alphaP2 -= iP2;
 
         return
-            values[(iT    ) + (iP1    )*nTemp_]*(1 - alphaT)*(1 - alphaP1) +
-            values[(iT    ) + (iP1 + 1)*nTemp_]*(1 - alphaT)*(    alphaP1) +
-            values[(iT + 1) + (iP2    )*nTemp_]*(    alphaT)*(1 - alphaP2) +
-            values[(iT + 1) + (iP2 + 1)*nTemp_]*(    alphaT)*(    alphaP2);
+            values[(iT    ) + (iP1    ) * data_.nTemp_] * (1 - alphaT) * (1 - alphaP1) +
+            values[(iT    ) + (iP1 + 1) * data_.nTemp_] * (1 - alphaT) * (    alphaP1) +
+            values[(iT + 1) + (iP2    ) * data_.nTemp_] * (    alphaT) * (1 - alphaP2) +
+            values[(iT + 1) + (iP2 + 1) * data_.nTemp_] * (    alphaT) * (    alphaP2);
     }
 
     // returns an interpolated value for liquid depending on
     // temperature and density
     template <class Evaluation>
-    static Evaluation interpolateLiquidTRho_(const Scalar* values, const Evaluation& T, const Evaluation& rho)
+    static Evaluation interpolateLiquidTRho_(const std::vector<Scalar>& values,
+                                             const Evaluation& T,
+                                             const Evaluation& rho)
     {
         Evaluation alphaT = tempIdx_(T);
-        unsigned iT = std::max<int>(0, std::min<int>(nTemp_ - 2, static_cast<int>(alphaT)));
+        const unsigned iT = std::max<int>(0, std::min<int>(data_.nTemp_ - 2, static_cast<int>(alphaT)));
         alphaT -= iT;
 
         Evaluation alphaP1 = densityLiquidIdx_(rho, iT);
         Evaluation alphaP2 = densityLiquidIdx_(rho, iT + 1);
-        unsigned iP1 = std::max<int>(0, std::min<int>(nDensity_ - 2, static_cast<int>(alphaP1)));
-        unsigned iP2 = std::max<int>(0, std::min<int>(nDensity_ - 2, static_cast<int>(alphaP2)));
+        const unsigned iP1 = std::max<int>(0, std::min<int>(data_.nDensity_ - 2, static_cast<int>(alphaP1)));
+        const unsigned iP2 = std::max<int>(0, std::min<int>(data_.nDensity_ - 2, static_cast<int>(alphaP2)));
         alphaP1 -= iP1;
         alphaP2 -= iP2;
 
         return
-            values[(iT    ) + (iP1    )*nTemp_]*(1 - alphaT)*(1 - alphaP1) +
-            values[(iT    ) + (iP1 + 1)*nTemp_]*(1 - alphaT)*(    alphaP1) +
-            values[(iT + 1) + (iP2    )*nTemp_]*(    alphaT)*(1 - alphaP2) +
-            values[(iT + 1) + (iP2 + 1)*nTemp_]*(    alphaT)*(    alphaP2);
+            values[(iT    ) + (iP1    ) * data_.nTemp_] * (1 - alphaT) * (1 - alphaP1) +
+            values[(iT    ) + (iP1 + 1) * data_.nTemp_] * (1 - alphaT) * (    alphaP1) +
+            values[(iT + 1) + (iP2    ) * data_.nTemp_] * (    alphaT) * (1 - alphaP2) +
+            values[(iT + 1) + (iP2 + 1) * data_.nTemp_] * (    alphaT) * (    alphaP2);
     }
-
 
     // returns the index of an entry in a temperature field
     template <class Evaluation>
     static Evaluation tempIdx_(const Evaluation& temperature)
     {
-        return (nTemp_ - 1)*(temperature - tempMin_)/(tempMax_ - tempMin_);
+        return (data_.nTemp_ - 1) * (temperature - data_.tempMin_) / (data_.tempMax_ - data_.tempMin_);
     }
 
     // returns the index of an entry in a pressure field
     template <class Evaluation>
-    static Evaluation pressLiquidIdx_(const Evaluation& pressure, size_t tempIdx)
+    static Evaluation pressLiquidIdx_(const Evaluation& pressure, std::size_t tempIdx)
     {
-        Scalar plMin = minLiquidPressure_(tempIdx);
-        Scalar plMax = maxLiquidPressure_(tempIdx);
+        const Scalar plMin = minLiquidPressure_(tempIdx);
+        const Scalar plMax = maxLiquidPressure_(tempIdx);
 
-        return (nPress_ - 1)*(pressure - plMin)/(plMax - plMin);
+        return (data_.nPress_ - 1) * (pressure - plMin) / (plMax - plMin);
     }
 
     // returns the index of an entry in a temperature field
     template <class Evaluation>
-    static Evaluation pressGasIdx_(const Evaluation& pressure, size_t tempIdx)
+    static Evaluation pressGasIdx_(const Evaluation& pressure, std::size_t tempIdx)
     {
-        Scalar pgMin = minGasPressure_(tempIdx);
-        Scalar pgMax = maxGasPressure_(tempIdx);
+        const Scalar pgMin = minGasPressure_(tempIdx);
+        const Scalar pgMax = maxGasPressure_(tempIdx);
 
-        return (nPress_ - 1)*(pressure - pgMin)/(pgMax - pgMin);
+        return (data_.nPress_ - 1) * (pressure - pgMin) / (pgMax - pgMin);
     }
 
     // returns the index of an entry in a density field
     template <class Evaluation>
-    static Evaluation densityLiquidIdx_(const Evaluation& density, size_t tempIdx)
+    static Evaluation densityLiquidIdx_(const Evaluation& density, std::size_t tempIdx)
     {
-        Scalar densityMin = minLiquidDensity_(tempIdx);
-        Scalar densityMax = maxLiquidDensity_(tempIdx);
-        return (nDensity_ - 1) * (density - densityMin)/(densityMax - densityMin);
+        const Scalar densityMin = minLiquidDensity_(tempIdx);
+        const Scalar densityMax = maxLiquidDensity_(tempIdx);
+        return (data_.nDensity_ - 1) * (density - densityMin) / (densityMax - densityMin);
     }
 
     // returns the index of an entry in a density field
     template <class Evaluation>
-    static Evaluation densityGasIdx_(const Evaluation& density, size_t tempIdx)
+    static Evaluation densityGasIdx_(const Evaluation& density, std::size_t tempIdx)
     {
-        Scalar densityMin = minGasDensity_(tempIdx);
-        Scalar densityMax = maxGasDensity_(tempIdx);
-        return (nDensity_ - 1) * (density - densityMin)/(densityMax - densityMin);
+        const Scalar densityMin = minGasDensity_(tempIdx);
+        const Scalar densityMax = maxGasDensity_(tempIdx);
+        return (data_.nDensity_ - 1) * (density - densityMin) / (densityMax - densityMin);
     }
 
     // returns the minimum tabulized liquid pressure at a given
     // temperature index
-    static Scalar minLiquidPressure_(size_t tempIdx)
+    static Scalar minLiquidPressure_(std::size_t tempIdx)
     {
-        if (!useVaporPressure)
-            return pressMin_;
-        else
-            return std::max<Scalar>(pressMin_, vaporPressure_[tempIdx] / 1.1);
+        if (!useVaporPressure) {
+            return data_.pressMin_;
+        }
+        else {
+            return std::max<Scalar>(data_.pressMin_, data_.vaporPressure_[tempIdx] / 1.1);
+        }
     }
 
     // returns the maximum tabulized liquid pressure at a given
     // temperature index
-    static Scalar maxLiquidPressure_(size_t tempIdx)
+    static Scalar maxLiquidPressure_(std::size_t tempIdx)
     {
-        if (!useVaporPressure)
-            return pressMax_;
-        else
-            return std::max<Scalar>(pressMax_, vaporPressure_[tempIdx] * 1.1);
+        if (!useVaporPressure) {
+            return data_.pressMax_;
+        }
+        else {
+            return std::max<Scalar>(data_.pressMax_, data_.vaporPressure_[tempIdx] * 1.1);
+        }
     }
 
     // returns the minumum tabulized gas pressure at a given
     // temperature index
-    static Scalar minGasPressure_(size_t tempIdx)
+    static Scalar minGasPressure_(std::size_t tempIdx)
     {
-        if (!useVaporPressure)
-            return pressMin_;
-        else
-            return std::min<Scalar>(pressMin_, vaporPressure_[tempIdx] / 1.1 );
+        if (!useVaporPressure) {
+            return data_.pressMin_;
+        }
+        else {
+            return std::min<Scalar>(data_.pressMin_, data_.vaporPressure_[tempIdx] / 1.1);
+        }
     }
 
     // returns the maximum tabulized gas pressure at a given
     // temperature index
-    static Scalar maxGasPressure_(size_t tempIdx)
+    static Scalar maxGasPressure_(std::size_t tempIdx)
     {
-        if (!useVaporPressure)
-            return pressMax_;
-        else
-            return std::min<Scalar>(pressMax_, vaporPressure_[tempIdx] * 1.1);
+        if (!useVaporPressure) {
+            return data_.pressMax_;
+        }
+        else {
+            return std::min<Scalar>(data_.pressMax_, data_.vaporPressure_[tempIdx] * 1.1);
+        }
     }
-
 
     // returns the minimum tabulized liquid density at a given
     // temperature index
-    static Scalar minLiquidDensity_(size_t tempIdx)
-    { return minLiquidDensity__[tempIdx]; }
+    static Scalar minLiquidDensity_(std::size_t tempIdx)
+    { return data_.minLiquidDensity__[tempIdx]; }
 
     // returns the maximum tabulized liquid density at a given
     // temperature index
-    static Scalar maxLiquidDensity_(size_t tempIdx)
-    { return maxLiquidDensity__[tempIdx]; }
+    static Scalar maxLiquidDensity_(std::size_t tempIdx)
+    { return data_.maxLiquidDensity__[tempIdx]; }
 
     // returns the minumum tabulized gas density at a given
     // temperature index
-    static Scalar minGasDensity_(size_t tempIdx)
-    { return minGasDensity__[tempIdx]; }
+    static Scalar minGasDensity_(std::size_t tempIdx)
+    { return data_.minGasDensity__[tempIdx]; }
 
     // returns the maximum tabulized gas density at a given
     // temperature index
-    static Scalar maxGasDensity_(size_t tempIdx)
-    { return maxGasDensity__[tempIdx]; }
+    static Scalar maxGasDensity_(std::size_t tempIdx)
+    { return data_.maxGasDensity__[tempIdx]; }
 
-    // 1D fields with the temperature as degree of freedom
-    static Scalar* vaporPressure_;
-
-    static Scalar* minLiquidDensity__;
-    static Scalar* maxLiquidDensity__;
-
-    static Scalar* minGasDensity__;
-    static Scalar* maxGasDensity__;
-
-    // 2D fields with the temperature and pressure as degrees of
-    // freedom
-    static Scalar* gasEnthalpy_;
-    static Scalar* liquidEnthalpy_;
-
-    static Scalar* gasHeatCapacity_;
-    static Scalar* liquidHeatCapacity_;
-
-    static Scalar* gasDensity_;
-    static Scalar* liquidDensity_;
-
-    static Scalar* gasViscosity_;
-    static Scalar* liquidViscosity_;
-
-    static Scalar* gasThermalConductivity_;
-    static Scalar* liquidThermalConductivity_;
-
-    // 2D fields with the temperature and density as degrees of
-    // freedom
-    static Scalar* gasPressure_;
-    static Scalar* liquidPressure_;
-
-    // temperature, pressure and density ranges
-    static Scalar tempMin_;
-    static Scalar tempMax_;
-    static unsigned nTemp_;
-
-    static Scalar pressMin_;
-    static Scalar pressMax_;
-    static unsigned nPress_;
-
-    static Scalar densityMin_;
-    static Scalar densityMax_;
-    static unsigned nDensity_;
+    static TabulatedComponentData<Scalar> data_;
 };
 
 template <class Scalar, class RawComponent, bool useVaporPressure>
-Scalar* TabulatedComponent<Scalar, RawComponent, useVaporPressure>::vaporPressure_;
-template <class Scalar, class RawComponent, bool useVaporPressure>
-Scalar* TabulatedComponent<Scalar, RawComponent, useVaporPressure>::minLiquidDensity__;
-template <class Scalar, class RawComponent, bool useVaporPressure>
-Scalar* TabulatedComponent<Scalar, RawComponent, useVaporPressure>::maxLiquidDensity__;
-template <class Scalar, class RawComponent, bool useVaporPressure>
-Scalar* TabulatedComponent<Scalar, RawComponent, useVaporPressure>::minGasDensity__;
-template <class Scalar, class RawComponent, bool useVaporPressure>
-Scalar* TabulatedComponent<Scalar, RawComponent, useVaporPressure>::maxGasDensity__;
-template <class Scalar, class RawComponent, bool useVaporPressure>
-Scalar* TabulatedComponent<Scalar, RawComponent, useVaporPressure>::gasEnthalpy_;
-template <class Scalar, class RawComponent, bool useVaporPressure>
-Scalar* TabulatedComponent<Scalar, RawComponent, useVaporPressure>::liquidEnthalpy_;
-template <class Scalar, class RawComponent, bool useVaporPressure>
-Scalar* TabulatedComponent<Scalar, RawComponent, useVaporPressure>::gasHeatCapacity_;
-template <class Scalar, class RawComponent, bool useVaporPressure>
-Scalar* TabulatedComponent<Scalar, RawComponent, useVaporPressure>::liquidHeatCapacity_;
-template <class Scalar, class RawComponent, bool useVaporPressure>
-Scalar* TabulatedComponent<Scalar, RawComponent, useVaporPressure>::gasDensity_;
-template <class Scalar, class RawComponent, bool useVaporPressure>
-Scalar* TabulatedComponent<Scalar, RawComponent, useVaporPressure>::liquidDensity_;
-template <class Scalar, class RawComponent, bool useVaporPressure>
-Scalar* TabulatedComponent<Scalar, RawComponent, useVaporPressure>::gasViscosity_;
-template <class Scalar, class RawComponent, bool useVaporPressure>
-Scalar* TabulatedComponent<Scalar, RawComponent, useVaporPressure>::liquidViscosity_;
-template <class Scalar, class RawComponent, bool useVaporPressure>
-Scalar* TabulatedComponent<Scalar, RawComponent, useVaporPressure>::gasThermalConductivity_;
-template <class Scalar, class RawComponent, bool useVaporPressure>
-Scalar* TabulatedComponent<Scalar, RawComponent, useVaporPressure>::liquidThermalConductivity_;
-template <class Scalar, class RawComponent, bool useVaporPressure>
-Scalar* TabulatedComponent<Scalar, RawComponent, useVaporPressure>::gasPressure_;
-template <class Scalar, class RawComponent, bool useVaporPressure>
-Scalar* TabulatedComponent<Scalar, RawComponent, useVaporPressure>::liquidPressure_;
-template <class Scalar, class RawComponent, bool useVaporPressure>
-Scalar TabulatedComponent<Scalar, RawComponent, useVaporPressure>::tempMin_;
-template <class Scalar, class RawComponent, bool useVaporPressure>
-Scalar TabulatedComponent<Scalar, RawComponent, useVaporPressure>::tempMax_;
-template <class Scalar, class RawComponent, bool useVaporPressure>
-unsigned TabulatedComponent<Scalar, RawComponent, useVaporPressure>::nTemp_;
-template <class Scalar, class RawComponent, bool useVaporPressure>
-Scalar TabulatedComponent<Scalar, RawComponent, useVaporPressure>::pressMin_;
-template <class Scalar, class RawComponent, bool useVaporPressure>
-Scalar TabulatedComponent<Scalar, RawComponent, useVaporPressure>::pressMax_;
-template <class Scalar, class RawComponent, bool useVaporPressure>
-unsigned TabulatedComponent<Scalar, RawComponent, useVaporPressure>::nPress_;
-template <class Scalar, class RawComponent, bool useVaporPressure>
-Scalar TabulatedComponent<Scalar, RawComponent, useVaporPressure>::densityMin_;
-template <class Scalar, class RawComponent, bool useVaporPressure>
-Scalar TabulatedComponent<Scalar, RawComponent, useVaporPressure>::densityMax_;
-template <class Scalar, class RawComponent, bool useVaporPressure>
-unsigned TabulatedComponent<Scalar, RawComponent, useVaporPressure>::nDensity_;
-
+TabulatedComponentData<Scalar> TabulatedComponent<Scalar, RawComponent, useVaporPressure>::data_;
 
 } // namespace Opm
 
