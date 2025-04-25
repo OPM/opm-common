@@ -174,7 +174,34 @@ namespace {
         return std::make_tuple(out, pos1, pos2);
     }
 }
-
+BOOST_AUTO_TEST_CASE(tuple1)
+{
+    using T = std::tuple<int,double,double>;
+    auto obj = T(0,9,1);
+    int a = 3, b = 4;
+    Opm::Serialization::MemPacker packer;
+    Opm::Serializer ser(packer);
+    ser.pack(a, obj, b);
+    BOOST_CHECK(ser.position() == 192/8+4);
+    T out{};
+    int c{}, d{};
+    ser.unpack(c, out, d);
+    BOOST_CHECK(ser.position() == 192/8+4);
+    
+}
+BOOST_AUTO_TEST_CASE(tuple2)
+{
+    using T = std::tuple<int,double,double>;
+    auto obj = T(0,9,1);
+    Opm::Serialization::MemPacker packer;
+    Opm::Serializer ser(packer);
+    ser.pack(obj);
+    BOOST_CHECK(ser.position() == 128/8+4);
+    T out{};
+    ser.unpack(out);
+    BOOST_CHECK(ser.position() == 128/8+4);
+    
+}
 #define TEST_FOR_TYPE_NAMED_OBJ(TYPE, NAME, OBJ) \
 BOOST_AUTO_TEST_CASE(NAME) \
 { \

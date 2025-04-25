@@ -1184,7 +1184,7 @@ static Opm::Deck createActnumBoxDeck2() {
             "ZCORN \n"
             "  8000*1 / \n"
             "PORO \n"
-            "  1000*0.15 /\n"
+            " 0 999*0.15 /\n"
             "EQUALS\n"
             " ACTNUM 0 1 10 1 10 1 1 /\n" // disable top layer
             "/ \n"
@@ -1209,7 +1209,7 @@ static Opm::Deck createActnumBoxDeck2() {
             "1000*0 /\n"
             "EDIT\n"
             "PORV\n"
-            "1000*1 /\n";
+            "0 1000*1 /\n";
 
     Opm::Parser parser;
     return parser.parseString( deckData);
