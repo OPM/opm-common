@@ -166,36 +166,36 @@ namespace {
     std::vector<std::string> rptRstCompositionalMnemonics()
     {
         return {
-            "AIM",      "ALSURF",   "ALSTML",   "AMF",      "AQSP",    "AQPH",
+            "AIM",      "ALSTML",   "ALSURF",   "AMF",      "AQPH",    "AQSP",
             "AREAC",    "ASPADS",   "ASPDOT",   "ASPENT",   "ASPFLO",  "ASPFLT",
             "ASPFRD",   "ASPKDM",   "ASPLIM",   "ASPLUG",   "ASPRET",  "ASPREW",
             "ASPVEL",   "ASPVOM",   "BASIC",    "BFORO",    "BG",      "BGAS",
             "BO",       "BOIL",     "BSOL",     "BTFORG",   "BTFORO",  "BW",
-            "BWAT",     "CELLINDX", "CFL",      "CGAS",     "COLR",    "COILR",
+            "BWAT",     "CELLINDX", "CFL",      "CGAS",     "COILR",   "COLR",
             "CONV",     "DENG",     "DENO",     "DENS",     "DENW",    "DYNREG",
-            "ENERGY",   "ESALTS",   "ESALTP",   "FFACTG",   "FFACTO",  "FFORO",
-            "FIP",      "FLOE",     "FLOGAS",   "FLOOIL",   "FLOWAT",  "FLORES",
-            "FLORES-",  "FMISC",    "FOAM",     "FOAMST",   "FOAMCNM", "FOAMMOB",
+            "ENERGY",   "ESALTP",   "ESALTS",   "FFACTG",   "FFACTO",  "FFORO",
+            "FIP",      "FLOE",     "FLOGAS",   "FLOOIL",   "FLORES",  "FLORES-",
+            "FLOWAT",   "FMISC",    "FOAM",     "FOAMCNM",  "FOAMMOB", "FOAMST",
             "FPC",      "FREQ",     "FUGG",     "FUGO",     "GASPOT",  "HGAS",
-            "HOIL",     "HSOL",     "HWAT",     "JV",       "KRG",     "KRO",
-            "KRW",      "KRGDM",    "KRODM",    "KRWDM",    "LGLCWAT", "LGLCHC",
+            "HOIL",     "HSOL",     "HWAT",     "JV",       "KRG",     "KRGDM",
+            "KRO",      "KRODM",    "KRW",      "KRWDM",    "LGLCHC",  "LGLCWAT",
             "MLSC",     "MWAT",     "NCNG",     "NCNO",     "NPMREB",  "OILPOT",
             "PART",     "PCGW",     "PCOG",     "PCOW",     "PERM_MDX","PERM_MDY",
             "PERM_MDZ", "PERM_MOD", "PGAS",     "PKRG",     "PKRGR",   "PKRO",
             "PKRORG",   "PKRORW",   "PKRW",     "PKRWR",    "POIL",    "POLY",
-            "POLYVM",   "PORV",     "PORV_MOD", "PPCG",     "PPCW",    "PRES_EFF",
-            "PRES",     "PRESMIN",  "PRESSURE", "PSAT",     "PSGCR",   "PSGL",
+            "POLYVM",   "PORV",     "PORV_MOD", "PPCG",     "PPCW",    "PRES",
+            "PRESMIN",  "PRESSURE", "PRES_EFF", "PSAT",     "PSGCR",   "PSGL",
             "PSGU",     "PSOGCR",   "PSOWCR",   "PSWCR",    "PSWL",    "PSWU",
             "PVDPH",    "PWAT",     "RATP",     "RATS",     "RATT",    "REAC",
             "RESTART",  "RFIP",     "ROCKC",    "ROMLS",    "RPORV",   "RS",
             "RSSAT",    "RSW",      "RV",       "RVSAT",    "SFIP",    "SFIPGAS",
             "SFIPOIL",  "SFIPWAT",  "SFOIL",    "SFSOL",    "SGAS",    "SGASMAX",
-            "SGCRH",    "SGTRH",    "SGTRAP",   "SIGM_MOD", "SMF",     "SMMULT",
+            "SGCRH",    "SGTRAP",   "SGTRH",    "SIGM_MOD", "SMF",     "SMMULT",
             "SOIL",     "SOILM",    "SOILMAX",  "SOILR",    "SOLADS",  "SOLADW",
             "SOLWET",   "SSFRAC",   "SSOLID",   "STATE",    "STEN",    "SUBG",
-            "SURF",     "SURFCNM",  "SURFKR",   "SURFCP",   "SURFST",  "SWAT",
+            "SURF",     "SURFCNM",  "SURFCP",   "SURFKR",   "SURFST",  "SWAT",
             "SWATMIN",  "TCBULK",   "TCMULT",   "TEMP",     "TOTCOMP", "TREACM",
-            "TSUB",     "VGAS",     "VOIL",     "VMF",      "VWAT",    "WATPOT",
+            "TSUB",     "VGAS",     "VMF",      "VOIL",     "VWAT",    "WATPOT",
             "XFW",      "XGAS",     "XMF",      "XWAT",     "YFW",     "YMF",
             "ZMF",
         };
@@ -208,7 +208,9 @@ namespace {
             : mnemonics_ { isCompositional
                            ? rptRstCompositionalMnemonics()
                            : rptRstBaseMnemonics() }
-        {}
+        {
+            std::sort(mnemonics_.begin(), mnemonics_.end());
+        }
 
         bool operator()(const std::string& mnemonic) const
         {
