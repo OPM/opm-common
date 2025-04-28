@@ -257,13 +257,6 @@ namespace Opm {
                 };
             }
 
-            if ((segment1 != segment2) && (length_depth_type == LengthDepth::ABS)) {
-                throw std::logic_error{
-                    fmt::format("In WELSEGS, it is not supported to enter multiple segments in one record "
-                                     "with ABS type of tubing length and depth information")
-                };
-            }
-
             const int branch = record.getItem("BRANCH").get<int>(0);
             if (branch < 1) {
                 throw std::logic_error {
