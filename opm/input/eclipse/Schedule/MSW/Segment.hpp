@@ -61,8 +61,8 @@ namespace Opm {
         Segment(const int segment_number_in,
                 const int branch_in,
                 const int outlet_segment_in,
-                const double length_in,
                 const double depth_in,
+                const double length_in,
                 const double internal_diameter_in,
                 const double roughness_in,
                 const double cross_area_in,
@@ -135,8 +135,8 @@ namespace Opm {
             serializer(m_branch);
             serializer(m_outlet_segment);
             serializer(m_inlet_segments);
-            serializer(m_total_length);
             serializer(m_depth);
+            serializer(m_total_length);
             serializer(m_internal_diameter);
             serializer(m_roughness);
             serializer(m_cross_area);
@@ -177,19 +177,19 @@ namespace Opm {
         // the segments whose outlet segments are the current segment
         std::vector<int> m_inlet_segments;
 
-        // length of the segment node to the bhp reference point.
-        // when reading in from deck, with 'INC',
-        // it will be incremental length before processing.
-        // After processing and in the class Well, it always stores the 'ABS' value.
-        // which means the total_length
-        double m_total_length;
-
         // depth of the nodes to the bhp reference point
         // when reading in from deck, with 'INC',
         // it will be the incremental depth before processing.
         // in the class Well, it always stores the 'ABS' value.
         // TODO: to check if it is good to use 'ABS' always.
         double m_depth;
+
+        // length of the segment node to the bhp reference point.
+        // when reading in from deck, with 'INC',
+        // it will be incremental length before processing.
+        // After processing and in the class Well, it always stores the 'ABS' value.
+        // which means the total_length
+        double m_total_length;
 
         // tubing internal diameter
         // or the equivalent diameter for annular cross-sections

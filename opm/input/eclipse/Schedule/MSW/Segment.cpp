@@ -80,8 +80,8 @@ namespace Opm {
         : m_segment_number   (-1)
         , m_branch           (-1)
         , m_outlet_segment   (-1)
-        , m_total_length     (invalid_value)
         , m_depth            (invalid_value)
+        , m_total_length     (invalid_value)
         , m_internal_diameter(invalid_value)
         , m_roughness        (invalid_value)
         , m_cross_area       (invalid_value)
@@ -95,8 +95,8 @@ namespace Opm {
         : m_segment_number   (rst_segment.segment)
         , m_branch           (rst_segment.branch)
         , m_outlet_segment   (rst_segment.outlet_segment)
-        , m_total_length     (rst_segment.dist_bhp_ref)
         , m_depth            (rst_segment.node_depth)
+        , m_total_length     (rst_segment.dist_bhp_ref)
         , m_internal_diameter(if_invalid_value(rst_segment.diameter))
         , m_roughness        (if_invalid_value(rst_segment.roughness))
         , m_cross_area       (if_invalid_value(rst_segment.area))
@@ -134,8 +134,8 @@ namespace Opm {
     Segment::Segment(const int    segment_number_in,
                      const int    branch_in,
                      const int    outlet_segment_in,
-                     const double length_in,
                      const double depth_in,
+                     const double length_in,
                      const double internal_diameter_in,
                      const double roughness_in,
                      const double cross_area_in,
@@ -146,8 +146,8 @@ namespace Opm {
         : m_segment_number   (segment_number_in)
         , m_branch           (branch_in)
         , m_outlet_segment   (outlet_segment_in)
-        , m_total_length     (length_in)
         , m_depth            (depth_in)
+        , m_total_length     (length_in)
         , m_internal_diameter(internal_diameter_in)
         , m_roughness        (roughness_in)
         , m_cross_area       (cross_area_in)
