@@ -467,7 +467,7 @@ class ParserState {
 
         ParserState( const std::vector<std::pair<std::string,std::string>>&,
                      const ParseContext&, ErrorGuard&,
-                     std::filesystem::path, const std::set<Opm::Ecl::SectionType>& ignore = {});
+                     const std::filesystem::path&, const std::set<Opm::Ecl::SectionType>& ignore = {});
 
         void loadString( const std::string& );
         void loadFile( const std::filesystem::path& );
@@ -568,7 +568,7 @@ ParserState::ParserState(const std::vector<std::pair<std::string, std::string>>&
 ParserState::ParserState( const std::vector<std::pair<std::string, std::string>>& code_keywords_arg,
                           const ParseContext& context,
                           ErrorGuard& errors_arg,
-                          std::filesystem::path p,
+                          const std::filesystem::path& p,
                           const std::set<Opm::Ecl::SectionType>& ignore ) :
     code_keywords(code_keywords_arg),
     ignore_sections(ignore),

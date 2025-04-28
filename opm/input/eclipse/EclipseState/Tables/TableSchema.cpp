@@ -30,27 +30,33 @@ namespace Opm {
         return result;
     }
 
-    void TableSchema::addColumn( ColumnSchema column ) {
+    void TableSchema::addColumn(const ColumnSchema& column)
+    {
         m_columns.insert( std::make_pair( column.name(), column ));
     }
 
-    const ColumnSchema& TableSchema::getColumn( const std::string& name ) const {
+    const ColumnSchema& TableSchema::getColumn(const std::string& name) const
+    {
         return m_columns.get( name );
     }
 
-    const ColumnSchema& TableSchema::getColumn( size_t columnIndex ) const {
+    const ColumnSchema& TableSchema::getColumn(std::size_t columnIndex) const
+    {
         return m_columns.iget( columnIndex );
     }
 
-    size_t TableSchema::size() const {
+    std::size_t TableSchema::size() const
+    {
         return m_columns.size();
     }
 
-    bool TableSchema::hasColumn(const std::string& name) const {
+    bool TableSchema::hasColumn(const std::string& name) const
+    {
         return m_columns.count( name ) > 0;
     }
 
-    bool TableSchema::operator==(const TableSchema& data) const {
+    bool TableSchema::operator==(const TableSchema& data) const
+    {
         return this->m_columns == data.m_columns;
     }
 }

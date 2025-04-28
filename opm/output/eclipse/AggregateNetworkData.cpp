@@ -161,7 +161,7 @@ std::vector<int> inobrFunc( const Opm::Schedule&    sched,
         int ind = (dwntr_nd_res) ? dwntr_nd_res.value() + 1 : 0 ;
         inlets.push_back(ind);
         auto uptr_nd_res = findInVector<std::string>(ntwNdNm, branch->uptree_node());
-        ind = (dwntr_nd_res) ? uptr_nd_res.value() + 1 : 0 ;
+        ind = (uptr_nd_res) ? uptr_nd_res.value() + 1 : 0 ;
         outlets.push_back(ind);
     }
 

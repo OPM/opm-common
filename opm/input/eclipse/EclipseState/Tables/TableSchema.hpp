@@ -21,10 +21,11 @@
 #ifndef OPM_TABLE_SCHEMA_HPP
 #define OPM_TABLE_SCHEMA_HPP
 
-#include <string>
-
 #include <opm/input/eclipse/EclipseState/Tables/ColumnSchema.hpp>
 #include <opm/input/eclipse/EclipseState/Util/OrderedMap.hpp>
+
+#include <cstddef>
+#include <string>
 
 namespace Opm {
 
@@ -32,13 +33,13 @@ namespace Opm {
     public:
         static TableSchema serializationTestObject();
 
-        void addColumn( ColumnSchema );
-        const ColumnSchema& getColumn( const std::string& name ) const;
-        const ColumnSchema& getColumn( size_t columnIndex ) const;
+        void addColumn(const ColumnSchema&);
+        const ColumnSchema& getColumn(const std::string& name) const;
+        const ColumnSchema& getColumn(std::size_t columnIndex) const;
         bool hasColumn(const std::string&) const;
 
         /* Number of columns */
-        size_t size() const;
+        std::size_t size() const;
 
         bool operator==(const TableSchema& data) const;
 

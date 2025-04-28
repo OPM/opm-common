@@ -115,7 +115,7 @@ public:
     //! \brief Update status of a well.
     bool updateWellStatus(const std::string& well,
                           WellStatus status,
-                          std::optional<KeywordLocation> location = {});
+                          const std::optional<KeywordLocation>& location = {});
 
     //! \brief Get status of a well
     WellStatus getWellStatus(const std::string& well) const;
