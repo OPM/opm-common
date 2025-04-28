@@ -176,7 +176,7 @@ namespace Opm {
     {
         const auto segment = Segment {
             segment_number, branch, outlet_segment,
-            length, depth, internal_diameter, roughness,
+            depth, length, internal_diameter, roughness,
             cross_area, volume,
             data_ready, node_x, node_y
         };
