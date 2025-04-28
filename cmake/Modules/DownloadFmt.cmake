@@ -12,6 +12,6 @@ endif()
 # in our depends list for downstream modules and the installation list.
 # Instead, we just download and use header only mode.
 add_compile_definitions(FMT_HEADER_ONLY)
-include_directories(${fmt_SOURCE_DIR}/include)
+include_directories(SYSTEM ${fmt_SOURCE_DIR}/include)
 set(fmt_POPULATED ${fmt_POPULATED} PARENT_SCOPE)
 set(fmt_SOURCE_DIR ${fmt_SOURCE_DIR} PARENT_SCOPE)
