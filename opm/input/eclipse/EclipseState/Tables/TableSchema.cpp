@@ -35,7 +35,8 @@ namespace Opm {
         m_columns.insert( std::make_pair( column.name(), column ));
     }
 
-    const ColumnSchema& TableSchema::getColumn( const std::string& name ) const {
+    const ColumnSchema& TableSchema::getColumn(const std::string& name) const
+    {
         return m_columns.get( name );
     }
 
@@ -49,11 +50,13 @@ namespace Opm {
         return m_columns.size();
     }
 
-    bool TableSchema::hasColumn(const std::string& name) const {
+    bool TableSchema::hasColumn(const std::string& name) const
+    {
         return m_columns.count( name ) > 0;
     }
 
-    bool TableSchema::operator==(const TableSchema& data) const {
+    bool TableSchema::operator==(const TableSchema& data) const
+    {
         return this->m_columns == data.m_columns;
     }
 }
