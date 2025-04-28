@@ -164,8 +164,8 @@ namespace Opm {
     void WellSegments::addSegment(const int segment_number,
                                   const int branch,
                                   const int outlet_segment,
-                                  const double length,
                                   const double depth,
+                                  const double length,
                                   const double internal_diameter,
                                   const double roughness,
                                   const double cross_area,
@@ -217,7 +217,7 @@ namespace Opm {
             const auto cross_area = invalid_value;
             const auto data_ready = false;
 
-            this->addSegment(segmentID, branchID, outletSegment, length, depth,
+            this->addSegment(segmentID, branchID, outletSegment, depth, length,
                              internal_diameter, roughness, cross_area,
                              volume_top, data_ready, nodeX_top, nodeY_top);
         }
@@ -231,7 +231,7 @@ namespace Opm {
             const auto data_ready = true;
 
             this->addSegment(segmentID, branchID, outletSegment,
-                             length_top, depth_top,
+                             depth_top, length_top,
                              internal_diameter, roughness, cross_area,
                              volume_top, data_ready, nodeX_top, nodeY_top);
         }
@@ -316,7 +316,7 @@ namespace Opm {
                     && (segment_number == segment2);
 
                 this->addSegment(segment_number, branch, outlet_segment,
-                                 length, depth, diameter,
+                                 depth, length, diameter,
                                  roughness, area, volume, data_ready,
                                  node_X, node_Y);
             }
