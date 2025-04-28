@@ -245,7 +245,8 @@ private:
     void add_branch(const std::string& downtree, const std::string& uptree, int vfp);
     void delete_branch(const std::string& downtree, const std::string& uptree);
 
-    void br_input_from_rst(const std::string& rstfile, std::vector<int> rstep_vect);
+    void br_input_from_rst(const std::string& rstfile,
+                           const std::vector<int>& rstep_vect);
 
     void parse_data_deck(const std::filesystem::path& inputFileName);
     void parse_unrst(const std::filesystem::path& inputFileName);
@@ -789,11 +790,12 @@ NetWork::time_from_rst(const std::string& rstfile, int rstep)
 }
 
 void
-NetWork::br_input_from_rst(const std::string& rstfile, std::vector<int> rstep_vect)
+NetWork::br_input_from_rst(const std::string& rstfile,
+                           const std::vector<int>& rstep_vect)
 {
     Opm::EclIO::ERst rst1(rstfile);
 
-    for (int& rstep : rstep_vect) {
+    for (const int rstep : rstep_vect) {
         m_rst_time = time_from_rst(rstfile, rstep);
         m_report_time_list.push_back(m_rst_time);
 

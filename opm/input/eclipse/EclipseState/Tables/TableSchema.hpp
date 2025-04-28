@@ -32,7 +32,7 @@ namespace Opm {
     public:
         static TableSchema serializationTestObject();
 
-        void addColumn( ColumnSchema );
+        void addColumn(const ColumnSchema&);
         const ColumnSchema& getColumn( const std::string& name ) const;
         const ColumnSchema& getColumn( size_t columnIndex ) const;
         bool hasColumn(const std::string&) const;

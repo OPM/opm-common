@@ -30,7 +30,8 @@ namespace Opm {
         return result;
     }
 
-    void TableSchema::addColumn( ColumnSchema column ) {
+    void TableSchema::addColumn(const ColumnSchema& column)
+    {
         m_columns.insert( std::make_pair( column.name(), column ));
     }
 
