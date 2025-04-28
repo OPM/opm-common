@@ -39,11 +39,13 @@ namespace Opm {
         return m_columns.get( name );
     }
 
-    const ColumnSchema& TableSchema::getColumn( size_t columnIndex ) const {
+    const ColumnSchema& TableSchema::getColumn(std::size_t columnIndex) const
+    {
         return m_columns.iget( columnIndex );
     }
 
-    size_t TableSchema::size() const {
+    std::size_t TableSchema::size() const
+    {
         return m_columns.size();
     }
 
