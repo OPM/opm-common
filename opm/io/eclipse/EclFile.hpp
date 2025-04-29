@@ -19,16 +19,20 @@
 #ifndef OPM_IO_ECLFILE_HPP
 #define OPM_IO_ECLFILE_HPP
 
+#include <cstddef>
 #include <opm/io/eclipse/EclIOdata.hpp>
 
 #include <ios>
 #include <map>
 #include <string>
 #include <stdexcept>
+#include <set>
 #include <tuple>
 #include <unordered_map>
 #include <vector>
 #include <cstdint>
+#include <algorithm> 
+
 
 namespace Opm { namespace EclIO {
 
@@ -66,9 +70,10 @@ public:
 
     template <typename T>
     const std::vector<T>& get(int arrIndex);
-
+  
     template <typename T>
     const std::vector<T>& get(const std::string& name);
+
 
     bool hasKey(const std::string &name) const;
     std::size_t count(const std::string& name) const;
@@ -94,7 +99,8 @@ protected:
 
     std::vector<std::uint64_t> ifStreamPos;
 
-    std::map<std::string, int> array_index;
+    std::map<std::string, std::vector<int>> array_index;
+    //std::map<std::string, int> array_index;
 
     template<class T>
     const std::vector<T>& getImpl(int arrIndex, eclArrType type,
@@ -117,5 +123,69 @@ private:
 };
 
 }} // namespace Opm::EclIO
+
+
+namespace Opm {
+    namespace EclIO {
+    
+    class EclFileLGR : public EclFile {
+    public:
+        EclFileLGR(const std::string& filename, bool preload = false)
+            : EclFile(filename, preload)
+        {
+            initialize_lgr_properties();
+            classify_lgr();
+        };
+    
+        EclFileLGR(const std::string& filename, Formatted fmt, bool preload = false)
+            : EclFile(filename, fmt, preload)
+        {
+            initialize_lgr_properties();
+            classify_lgr();
+        };
+        
+        template <typename T>
+        const std::vector<T>& get(int arrIndex)
+        {
+            EclFile::get<T>(arrIndex);
+        };
+      
+        template <typename T>
+        const std::vector<T>& get(const std::string& name){
+            EclFile::get<T>(name);
+        };
+        template <typename T>
+        const std::vector<T>& get(const std::string& name, const std::string& lgr_name = "GLOBAL")
+        {
+            const auto tag = array_name_to_num[name];
+            const int lgr_num = lgr_labels[lgr_name];
+            for (int idx = 0; idx < lgr_array_index.size(); ++idx) {
+                if (lgr_array_index[idx] == tag && lgr_classification[idx] == lgr_num) {
+                    return get<T>(idx);
+                }
+            }
+            throw std::invalid_argument("No array found for name '" + name + "' and lgr '" + lgr_name + "'");
+
+        };
+
+
+    protected:
+        std::map<std::string, int> array_name_to_num;
+        std::vector<int> lgr_array_index;
+        std::vector<int> lgr_array_index_file_entries;
+        std::map<std::string,int> lgr_labels;        
+        std::vector<int> lgr_classification;
+        
+
+    private:
+    void initialize_lgr_properties();
+    void classify_lgr();
+    
+    
+    
+    
+    };
+    
+    }} // namespace Opm::EclIO
 
 #endif // OPM_IO_ECLFILE_HPP

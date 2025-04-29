@@ -20,7 +20,6 @@
 #include <opm/io/eclipse/EclUtil.hpp>
 #include <opm/common/ErrorMacros.hpp>
 
-#include <algorithm>
 #include <cstring>
 #include <cstddef>
 #include <fstream>
@@ -67,7 +66,7 @@ void EclFile::load(bool preload) {
         array_name.push_back(trimr(arrName));
         array_element_size.push_back(sizeOfElement);
 
-        array_index[array_name[n]] = n;
+        array_index[array_name[n]].push_back(n);
 
         std::uint64_t pos = fileH.tellg();
         ifStreamPos.push_back(pos);
@@ -555,7 +554,7 @@ const std::vector<int>& EclFile::get<int>(const std::string& name)
         OPM_THROW(std::invalid_argument, "key '" + name + "' not found");
     }
 
-    return getImpl(search->second, INTE, inte_array, "integer");
+    return getImpl(search->second[0], INTE, inte_array, "integer");
 }
 
 template<>
@@ -567,7 +566,7 @@ const std::vector<float>& EclFile::get<float>(const std::string& name)
         OPM_THROW(std::invalid_argument, "key '" + name + "' not found");
     }
 
-    return getImpl(search->second, REAL, real_array, "float");
+    return getImpl(search->second[0], REAL, real_array, "float");
 }
 
 
@@ -580,7 +579,7 @@ const std::vector<double>& EclFile::get<double>(const std::string &name)
         OPM_THROW(std::invalid_argument, "key '" + name + "' not found");
     }
 
-    return getImpl(search->second, DOUB, doub_array, "double");
+    return getImpl(search->second[0], DOUB, doub_array, "double");
 }
 
 
@@ -593,7 +592,7 @@ const std::vector<bool>& EclFile::get<bool>(const std::string &name)
         OPM_THROW(std::invalid_argument, "key '" + name + "' not found");
     }
 
-    return getImpl(search->second, LOGI, logi_array, "bool");
+    return getImpl(search->second[0], LOGI, logi_array, "bool");
 }
 
 
@@ -606,12 +605,12 @@ const std::vector<std::string>& EclFile::get<std::string>(const std::string &nam
         OPM_THROW(std::invalid_argument, "key '" + name + "' not found");
     }
 
-    if ((array_type[search->second] != Opm::EclIO::C0NN) && (array_type[search->second] != Opm::EclIO::CHAR)){
+    if ((array_type[search->second[0]] != Opm::EclIO::C0NN) && (array_type[search->second[0]] != Opm::EclIO::CHAR)){
         OPM_THROW(std::runtime_error,
-                  fmt::format("Array with index {} is not of type std::string", search->second));
+                  fmt::format("Array with index {} is not of type std::string", search->second[0]));
     }
 
-    return getImpl(search->second, array_type[search->second], char_array, "string");
+    return getImpl(search->second[0], array_type[search->second[0]], char_array, "string");
 }
 
 
@@ -648,4 +647,82 @@ EclFile::getImpl(int, eclArrType, const std::unordered_map<int,std::vector<int>>
 template const std::vector<std::string>&
 EclFile::getImpl(int, eclArrType, const std::unordered_map<int,std::vector<std::string>>&, const std::string&);
 
-}} // namespace Opm::EclIO
+}}
+
+
+namespace Opm { namespace EclIO {
+
+void EclFileLGR::initialize_lgr_properties()
+{
+    lgr_array_index.assign(array_name.size(), 0);
+    lgr_array_index_file_entries.assign(array_name.size(), 0);
+
+    int i = 0;
+    for (const auto& entry : array_index) {
+        const std::string& key = entry.first;
+        array_name_to_num[key] = i;
+        i++;
+    }
+
+    for (const auto& entry : array_index) {
+        const std::string& key = entry.first;
+        int key_index = array_name_to_num[key];
+        const std::vector<int>& indices = entry.second;
+        if (!indices.empty()) {
+            for (const int& index : indices) {
+                lgr_array_index[index] = key_index;
+                lgr_array_index_file_entries[index] = index;
+            }
+        }
+    }
+    std::set<std::string> lgr_string_set;
+    
+    if (hasKey("LGR"))
+    {
+        auto lgr_marker = array_index["LGR"];
+        auto counter = 1;
+        for (std::size_t idx = 0; idx < lgr_marker.size(); ++idx) 
+        {
+            int marker = lgr_marker[idx];
+            const std::vector<std::string>& lgr_label = EclFile::get<std::string>(marker);
+            if (lgr_labels.find(lgr_label[0]) == lgr_labels.end())
+            {
+                lgr_labels[lgr_label[0]] = counter;
+                counter++;
+            }       
+        }    
+        lgr_labels["GLOBAL"] = 0;
+    }
+}
+
+void EclFileLGR::classify_lgr()
+{
+    lgr_classification.assign(array_name.size(), 0);
+    auto lgr_marker = array_index["LGR"];
+    auto lgr_marker_end = array_index["LGRSGONE"];
+    lgr_marker.push_back(lgr_marker_end.back());
+
+    for (std::size_t i = 0; i < lgr_marker.size() - 1; ++i) {
+        int blockStart = lgr_marker[i];
+        int blockEnd   = lgr_marker[i + 1];
+
+        // Process the LGRSGONE marker, if needed       
+        for (std::size_t index = 0; index < lgr_marker_end.size() ; ++index) 
+        {            
+                if ((lgr_marker_end[index] > blockStart) && (lgr_marker_end[index] < blockEnd))
+                {
+                    blockEnd = lgr_marker_end[index];
+                }                
+        }
+        const std::string& lgr_label = EclFile::get<std::string>(blockStart)[0];
+        auto lgr_num = lgr_labels[lgr_label];
+        for (int j = blockStart; j <= blockEnd; ++j) 
+        {
+            lgr_classification[j] = lgr_num;
+        }
+
+    }
+}
+
+}}
+// namespace Opm::EclIO
