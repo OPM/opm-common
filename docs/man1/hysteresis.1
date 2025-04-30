@@ -1,0 +1,33 @@
+.TH HYSTERESIS "1" "April 2025" "hysteresis" "User Commands"
+.SH NAME
+hysteresis \- Tool to extract relative permeability curves with hysteresis
+.SH SYNOPSIS
+.B hysteresis
+\fI\,DATA_FILE\/\fR
+\fI\,SATURATION_FILE\/\fR \fI\,OUTPUT_RELPERM_FILE\/\fR
+\fI\,TWOPHASE_SYSTEM\/\fR  [\fI\,CELL_INDEX\/\fR]
+.SH DESCRIPTION
+Extracts the relative permeambility curves with hysteresis for a cell
+in the model and writes them as tables to a CSV file.
+.PP
+DATAFILE, Data file name that contains keywords SGOF, EHYSTR etc.
+.PP
+SATURATION_FILE, a file that contains the requested saturations. It
+should contain one saturation value s per line. Whether this is the
+gas or water saturation depends on the parameter TWOPHASE_SYSTEM. It
+will be the saturation of the first mentioned phase of the specified
+system.
+.PP
+OUTPUT_RELPERM_FILE, the name of the CSV file that we write the
+permeability curves to. There will be one line for each saturaiton
+value from SATURATION_FILE. Each line will contain the values [s, kr,
+kro, krnSwMdc(So at turning point), Sn(trapped s) ]. 
+.PP
+TWOPHASE_SYSTEM, The two phase system to use for outputting the first
+two phases. Should be one of the following strings: WO (for
+water\-oil, water first, then oil), GO (for gas\-oil), or GW (for
+gas\-water)
+.PP
+CELL_INDEX: cell index (default is 0), to be used to determine SATNUM/IMBNUM
+value that is used for the calculation
+
