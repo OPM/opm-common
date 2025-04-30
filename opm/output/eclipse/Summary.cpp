@@ -464,25 +464,25 @@ measure div_unit( measure numer, measure denom ) {
         denom == measure::liquid_surface_rate )
         return measure::water_cut;
 
-    if( numer == measure::liquid_surface_rate &&
+    if( numer == measure::liquid_surface_volume &&
         denom == measure::time )
-        return measure::liquid_surface_volume;
+        return measure::liquid_surface_rate;
 
-    if( numer == measure::gas_surface_rate &&
+    if( numer == measure::gas_surface_volume &&
         denom == measure::time )
-        return measure::gas_surface_volume;
+        return measure::gas_surface_rate;
 
-    if( numer == measure::mass_rate &&
+    if( numer == measure::mass &&
         denom == measure::time )
-        return measure::mass;
+        return measure::mass_rate;
 
     if( numer == measure::mass_rate &&
         denom == measure::liquid_surface_rate )
         return measure::polymer_density;
 
-    if( numer == measure::energy_rate &&
+    if( numer == measure::energy &&
         denom == measure::time )
-        return measure::energy;
+        return measure::energy_rate;
 
     return measure::identity;
 }
