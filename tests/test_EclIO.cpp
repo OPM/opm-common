@@ -553,8 +553,40 @@ BOOST_AUTO_TEST_CASE(Lgr_Init)
 {
     //WorkArea work;
     std::string testFile="LGR-WELL.INIT";
-    EclFileLGR file1(testFile);
-    auto test = file1.get<double>("LGRHEADD", "LGR1");
-    auto test1 = 1 ;
+    auto checkVec = [](const auto& vec1, const auto& vec2)
+    {
+        if (vec1.size() != vec2.size())
+        {
+            throw std::runtime_error("Vectors must be of equal size");
+            BOOST_CHECK_EQUAL_COLLECTIONS(vec1.begin(), vec1.end(), vec2.begin(), vec2.end());
+        }
+    };
 
+    
+
+    double tol = 0.00001;
+    EclFileLGR file1(testFile);
+    auto poro = file1.get<float>("PORO", "GLOBAL");
+    BOOST_CHECK_EQUAL(poro.size(), 9);
+    BOOST_CHECK_CLOSE(poro[3], 0.30000001, tol);
+
+
+    auto poro_lgr1 = file1.get<float>("PORO", "LGR1");
+    BOOST_CHECK_EQUAL(poro_lgr1.size(), 9);
+    BOOST_CHECK_CLOSE(poro_lgr1[3], 0.30000001, tol);
+    auto poro_lgr2 = file1.get<float>("PORO", "LGR2");
+    BOOST_CHECK_EQUAL(poro_lgr2.size(), 9);
+    BOOST_CHECK_CLOSE(poro_lgr2[3], 0.30000001,tol);
+
+
+    auto lgrheadq_lgr1 = file1.get<bool>("LGRHEADQ", "LGR1");
+    auto lgrheadq_lgr2 = file1.get<bool>("LGRHEADQ", "LGR2");
+
+    checkVec(lgrheadq_lgr1, std::vector<bool>{ false, false, false, false, false});
+    checkVec(lgrheadq_lgr1,lgrheadq_lgr2);
+
+    auto lgrheadi_lgr1 = file1.get<int>("LGRHEADI", "LGR1");
+    auto lgrheadi_lgr2 = file1.get<int>("LGRHEADI", "LGR2");
+    BOOST_CHECK_EQUAL(lgrheadi_lgr1[0], 1);
+    BOOST_CHECK_EQUAL(lgrheadi_lgr2[0], 2);
 }

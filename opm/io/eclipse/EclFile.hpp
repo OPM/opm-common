@@ -147,19 +147,19 @@ namespace Opm {
         template <typename T>
         const std::vector<T>& get(int arrIndex)
         {
-            EclFile::get<T>(arrIndex);
+            return EclFile::get<T>(arrIndex);
         };
       
         template <typename T>
         const std::vector<T>& get(const std::string& name){
-            EclFile::get<T>(name);
+            return EclFile::get<T>(name);
         };
         template <typename T>
         const std::vector<T>& get(const std::string& name, const std::string& lgr_name = "GLOBAL")
         {
             const auto tag = array_name_to_num[name];
             const int lgr_num = lgr_labels[lgr_name];
-            for (int idx = 0; idx < lgr_array_index.size(); ++idx) {
+            for (std::size_t idx = 0; idx < lgr_array_index.size(); ++idx) {
                 if (lgr_array_index[idx] == tag && lgr_classification[idx] == lgr_num) {
                     return get<T>(idx);
                 }
