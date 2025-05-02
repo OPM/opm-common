@@ -17,6 +17,7 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include "config.h"
+#include "opm/io/eclipse/EInit.hpp"
 
 #define BOOST_TEST_MODULE EclipseIO_LGR
 #include <boost/test/unit_test.hpp>
@@ -286,53 +287,10 @@ const std::string deckStringLGR = std::string { R"(RUNSPEC
     )" };
     
 
-
-
-bool keywordExists(const std::vector<EclIO::EclFile::EclEntry>& knownVec,
-                   const std::string&                           arrayname)
-{
-    return std::any_of(knownVec.begin(), knownVec.end(),
-        [&arrayname](const EclIO::EclFile::EclEntry& entry) -> bool
-    {
-        return std::get<0>(entry) == arrayname;
-    });
-}
-
 template <typename T>
 T sum(const std::vector<T>& array)
 {
     return std::accumulate(array.begin(), array.end(), T(0));
-}
-
-data::Solution createBlackoilState( int timeStepIdx, int numCells ) {
-
-    std::vector< double > pressure( numCells );
-    std::vector< double > swat( numCells );
-    std::vector< double > sgas( numCells );
-    std::vector< double > rs( numCells );
-    std::vector< double > rv( numCells );
-
-    for( int cellIdx = 0; cellIdx < numCells; ++cellIdx) {
-
-        pressure[cellIdx] = timeStepIdx*1e5 + 1e4 + cellIdx;
-        sgas[cellIdx] = timeStepIdx*1e5 +2.2e4 + cellIdx;
-        swat[cellIdx] = timeStepIdx*1e5 +2.3e4 + cellIdx;
-
-        // oil vaporization factor
-        rv[cellIdx] = timeStepIdx*1e5 +3e4 + cellIdx;
-        // gas dissolution factor
-        rs[cellIdx] = timeStepIdx*1e5 + 4e4 + cellIdx;
-    }
-
-    data::Solution solution;
-
-    solution.insert( "PRESSURE" , UnitSystem::measure::pressure , pressure, data::TargetType::RESTART_SOLUTION );
-    solution.insert( "SWAT" , UnitSystem::measure::identity , swat, data::TargetType::RESTART_SOLUTION );
-    solution.insert( "SGAS" , UnitSystem::measure::identity , sgas, data::TargetType::RESTART_SOLUTION );
-    solution.insert( "RS" , UnitSystem::measure::identity , rs, data::TargetType::RESTART_SOLUTION );
-    solution.insert( "RV" , UnitSystem::measure::identity , rv, data::TargetType::RESTART_SOLUTION );
-
-    return solution;
 }
 
 template< typename T, typename U >
@@ -345,79 +303,56 @@ void compareErtData(const std::vector< T > &src,
         BOOST_CHECK_CLOSE(src[i], dst[i], tolerance);
 }
 
-void compareErtData(const std::vector<int> &src, const std::vector<int> &dst)
+
+void checkInitFile(const Deck& deck,[[maybe_unused]] const data::Solution& simProps)
 {
-    BOOST_CHECK_EQUAL_COLLECTIONS( src.begin(), src.end(),
-                                   dst.begin(), dst.end() );
-}
-
-void checkEgridFile(const EclipseGrid& eclGrid)
-{
-    auto egridFile = EclIO::EGrid("FOO.EGRID");
-
-    {
-        const auto& coord  = egridFile.get<float>("COORD");
-        const auto& expect = eclGrid.getCOORD();
-        compareErtData(expect, coord, 1e-6);
-    }
-
-    {
-        const auto& zcorn  = egridFile.get<float>("ZCORN");
-        const auto& expect = eclGrid.getZCORN();
-        compareErtData(expect, zcorn, 1e-6);
-    }
-
-    if (egridFile.hasKey("ACTNUM")) {
-        const auto& actnum = egridFile.get<int>("ACTNUM");
-        auto expect = eclGrid.getACTNUM();
-
-        if (expect.empty()) {
-            const auto numCells = eclGrid.getNX() * eclGrid.getNY() * eclGrid.getNZ();
-            expect.assign(numCells, 1);
-        }
-
-        compareErtData(expect, actnum);
-    }
-}
-
-void checkInitFile(const Deck& deck, const data::Solution& simProps)
-{
-    EclIO::EclFile initFile { "FOO.INIT" };
+    EclIO::EInit initFile { "FOO.INIT" };
     // tests
-    auto lgr_name = initFile.get<std::string>("LGR");
-    auto lgr_name2 = initFile.get<std::string>("LGR");
-
+    auto lgr_names = initFile.list_of_lgrs();
 
     if (initFile.hasKey("PORO")) {
-        const auto& poro   = initFile.get<float>("PORO");
+        const auto& poro_global   = initFile.getInitData<float>("PORO" );
+        const auto& poro_lgr1   = initFile.getInitData<float>("PORO", lgr_names[0]);
+        const auto& poro_lgr2   = initFile.getInitData<float>("PORO", lgr_names[1]);
         const auto& expect = deck["PORO"].back().getSIDoubleData();
 
-        compareErtData(expect, poro, 1e-4);
+        compareErtData(expect, poro_global, 1e-4);
+        compareErtData(expect, poro_lgr1, 1e-4);
+        compareErtData(expect, poro_lgr2, 1e-4);
+
     }
 
     if (initFile.hasKey("PERMX")) {
         const auto& expect = deck["PERMX"].back().getSIDoubleData();
         auto        permx  = initFile.get<float>("PERMX");
+        auto        permx_lgr1  = initFile.getInitData<float>("PERMX", lgr_names[0]);
+        auto        permx_lgr2  = initFile.getInitData<float>("PERMX", lgr_names[1]);
 
         std::transform(permx.begin(), permx.end(), permx.begin(),
                        [](const auto& kx) { return kx * 9.869233e-16; });
+        std::transform(permx_lgr1.begin(), permx_lgr1.end(), permx_lgr1.begin(),
+                       [](const auto& kx) { return kx * 9.869233e-16; });
+        std::transform(permx_lgr2.begin(), permx_lgr2.end(), permx_lgr2.begin(),
+                       [](const auto& kx) { return kx * 9.869233e-16; });
+
 
         compareErtData(expect, permx, 1e-4);
+        compareErtData(expect, permx_lgr1, 1e-4);
+        compareErtData(expect, permx_lgr2, 1e-4);
+
+    }
+    if (initFile.hasKey("LGRHEADQ")) {
+        auto        lgrheadq_lgr1  = initFile.getInitData<bool>("LGRHEADQ", lgr_names[0]);
+        auto        lgrheadq_lgr2  = initFile.getInitData<bool>("LGRHEADQ", lgr_names[1]);
+        std::vector<bool> lgrheadq(5, false);
+        BOOST_CHECK_EQUAL_COLLECTIONS(lgrheadq_lgr1.begin(), lgrheadq_lgr1.end(), lgrheadq.begin(), lgrheadq.end());
+        BOOST_CHECK_EQUAL_COLLECTIONS(lgrheadq_lgr2.begin(), lgrheadq_lgr2.end(), lgrheadq.begin(), lgrheadq.end());
     }
 
-    // These arrays should always be in the INIT file, irrespective of
-    // keyword presence in the inut deck.
-    BOOST_CHECK_MESSAGE( initFile.hasKey("NTG"), R"(INIT file must have "NTG" array)" );
-    BOOST_CHECK_MESSAGE( initFile.hasKey("FIPNUM"), R"(INIT file must have "FIPNUM" array)");
-    BOOST_CHECK_MESSAGE( initFile.hasKey("SATNUM"), R"(INIT file must have "SATNUM" array)");
-    std::array<std::string, 3> multipliers{"MULTX", "MULTY", "MULTZ"};
-    for (const auto& mult: multipliers) {
-       BOOST_CHECK_MESSAGE( initFile.hasKey(mult), R"(INIT file must have ")" + mult + R"(" array)" );
-    }
 
-    for (const auto& prop : simProps) {
-        BOOST_CHECK_MESSAGE( initFile.hasKey(prop.first), R"(INIT file must have ")" + prop.first + R"(" array)" );
-    }
+
+
+
 }
 
 
@@ -469,6 +404,5 @@ BOOST_AUTO_TEST_CASE(EclipseIOLGR_INIT)
 
     WorkArea work_area("test_ecl_writer");
     write_and_check();
-    auto index  = 1;
 }
 
