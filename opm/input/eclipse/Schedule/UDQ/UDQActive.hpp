@@ -65,7 +65,7 @@ public:
         ///
         /// \param[in] wgname_arg Well or group name affected by this UDA.
         RstRecord(const UDAControl   control_arg,
-                  const UDAValue     value_arg,
+                  const UDAValue&    value_arg,
                   const std::string& wgname_arg)
             : control { control_arg }
             , value   { value_arg }
@@ -86,7 +86,7 @@ public:
         ///
         /// \param[in] phase Injected phase.
         RstRecord(const UDAControl   control_arg,
-                  const UDAValue     value_arg,
+                  const UDAValue&    value_arg,
                   const std::string& wgname_arg,
                   const Phase        phase)
             : RstRecord { control_arg, value_arg, wgname_arg }

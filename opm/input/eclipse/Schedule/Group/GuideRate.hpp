@@ -206,8 +206,6 @@ private:
                      const double          oil_pot,
                      const double          gas_pot,
                      const double          wat_pot) const;
-    double eval_group_pot() const;
-    double eval_group_resvinj() const;
 
     void assign_grvalue(const std::string&    wgname,
                         const GuideRateModel& model,

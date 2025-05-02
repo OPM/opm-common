@@ -425,9 +425,9 @@ int AssertHandlerWinDialog::handleUsingCrtDbgReport(const char* fileName, int li
 //==================================================================================================
 
 #ifdef WIN32
-AssertHandler* Assert::sm_handler = new AssertHandlerWinDialog;
+std::unique_ptr<AssertHandler> Assert::sm_handler = std::make_unique<AssertHandlerWinDialog>();
 #else
-AssertHandler* Assert::sm_handler = new AssertHandlerConsole;
+std::unique_ptr<AssertHandler> Assert::sm_handler = std::make_unique<AssertHandlerConsole>();
 #endif
 
 //--------------------------------------------------------------------------------------------------
@@ -439,17 +439,16 @@ void Assert::setReportMode(ReportMode reportMode)
     if (reportMode == INTERACTIVE_DIALOG) return;
 #endif
 
-    delete sm_handler;
-    sm_handler = NULL;
+    sm_handler.reset();
 
     if (reportMode == CONSOLE)
     {
-        sm_handler = new AssertHandlerConsole;
+        sm_handler = std::make_unique<AssertHandlerConsole>();
     }
 #ifdef WIN32
     else if (reportMode == INTERACTIVE_DIALOG)
     {
-        sm_handler = new AssertHandlerWinDialog;
+        sm_handler = std::make_unique<AssertHandlerWinDialog>();
     }
 #endif
 }

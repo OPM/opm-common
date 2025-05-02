@@ -20,25 +20,27 @@
 #ifndef SCHEDULE_TSTEP_HPP
 #define SCHEDULE_TSTEP_HPP
 
-#include <opm/input/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/common/utility/gpuDecorators.hpp>
 #include <opm/common/utility/TimeService.hpp>
 
-#include <opm/input/eclipse/EclipseState/Runspec.hpp>
 #include <opm/input/eclipse/EclipseState/Aquifer/AquiferFlux.hpp>
-#include <opm/input/eclipse/Schedule/Well/PAvg.hpp>
-#include <opm/input/eclipse/Schedule/Tuning.hpp>
-#include <opm/input/eclipse/Schedule/OilVaporizationProperties.hpp>
-#include <opm/input/eclipse/Schedule/Events.hpp>
+#include <opm/input/eclipse/EclipseState/Runspec.hpp>
+
 #include <opm/input/eclipse/Schedule/BCProp.hpp>
-#include <opm/input/eclipse/Schedule/Source.hpp>
+#include <opm/input/eclipse/Schedule/Events.hpp>
 #include <opm/input/eclipse/Schedule/Group/Group.hpp>
+#include <opm/input/eclipse/Schedule/MessageLimits.hpp>
+#include <opm/input/eclipse/Schedule/OilVaporizationProperties.hpp>
+#include <opm/input/eclipse/Schedule/RSTConfig.hpp>
+#include <opm/input/eclipse/Schedule/Source.hpp>
+#include <opm/input/eclipse/Schedule/Tuning.hpp>
+#include <opm/input/eclipse/Schedule/VFPInjTable.hpp>
+#include <opm/input/eclipse/Schedule/VFPProdTable.hpp>
+#include <opm/input/eclipse/Schedule/Well/PAvg.hpp>
 #include <opm/input/eclipse/Schedule/Well/WCYCLE.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellEnums.hpp>
-#include <opm/input/eclipse/Schedule/MessageLimits.hpp>
-#include <opm/input/eclipse/Schedule/VFPProdTable.hpp>
-#include <opm/input/eclipse/Schedule/VFPInjTable.hpp>
-#include <opm/input/eclipse/Schedule/RSTConfig.hpp>
+
+#include <opm/input/eclipse/Deck/DeckKeyword.hpp>
 
 #include <cstddef>
 #include <memory>
@@ -84,6 +86,7 @@ namespace Opm {
     class UDQActive;
     class UDQConfig;
     class Well;
+    class WellFractureSeeds;
     class WellTestConfig;
     class WListManager;
 
@@ -492,30 +495,15 @@ namespace Opm {
             }
         }
 
-
-        template <typename K, typename T>
-        map_member<K,T>& get_map()
-        {
-            struct always_false2 : std::false_type {};
-            if constexpr ( std::is_same_v<T, VFPProdTable> )
-                             return this->vfpprod;
-            else if constexpr ( std::is_same_v<T, VFPInjTable> )
-                             return this->vfpinj;
-            else if constexpr ( std::is_same_v<T, Group> )
-                             return this->groups;
-            else if constexpr ( std::is_same_v<T, Well> )
-                                  return this->wells;
-            else {
-                #if !OPM_IS_COMPILING_WITH_GPU_COMPILER // NVCC evaluates this branch for some reason
-                static_assert(always_false2::value, "Template type <K,T> not supported in get_map()");
-                #endif
-            }
-        }
-
         map_member<int, VFPProdTable> vfpprod;
         map_member<int, VFPInjTable> vfpinj;
         map_member<std::string, Group> groups;
         map_member<std::string, Well> wells;
+
+        /// Well fracturing seed points and associate fracture plane normal
+        /// vectors.
+        map_member<std::string, WellFractureSeeds> wseed;
+
         // constant flux aquifers
         std::unordered_map<int, SingleAquiferFlux> aqufluxs;
         BCProp bcprop;
@@ -525,8 +513,6 @@ namespace Opm {
         std::unordered_map<std::string, double> target_wellpi;
         std::optional<NextStep> next_tstep;
 
-
-        using WellPIMapType = std::unordered_map<std::string, double>;
         template<class Serializer>
         void serializeOp(Serializer& serializer)
         {
@@ -557,6 +543,7 @@ namespace Opm {
             serializer(vfpinj);
             serializer(groups);
             serializer(wells);
+            serializer(wseed);
             serializer(aqufluxs);
             serializer(bcprop);
             serializer(inj_streams);
@@ -604,6 +591,7 @@ namespace Opm {
         std::optional<double> m_sumthin{};
         bool m_rptonly{false};
     };
-}
 
-#endif
+} // namespace Opm
+
+#endif // SCHEDULE_TSTEP_HPP

@@ -850,11 +850,9 @@ COMPDAT
 
 WELSEGS
 'PROD01' 2512.5 2512.5 1.0e-5 'ABS' 'HF-' 'HO' 123.456 789.012 /
-2         2      1      1    2537.5 2537.5  0.3  0.00010 2* 123.456 789.012 /
+2         2      1      1    2537.5 2525.5  0.3  0.00010 2* 123.456 789.012 /
 3         3      1      2    2562.5 2562.5  0.2  0.00010 2* 123.456 789.012 /
-4         4      2      2    2737.5 2537.5  0.2  0.00010 2* 123.456 789.012 /
-6         6      2      4    3037.5 2539.5  0.2  0.00010 2* 123.456 789.012 /
-7         7      2      6    3337.5 2534.5  0.2  0.00010 2* 123.456 789.012 /
+4         7      2      2    2737.5 2537.5  0.2  0.00010 2* 123.456 789.012 /
 8         8      3      7    3337.6 2534.5  0.2  0.00015 2* 123.456 789.012 /
 /
 
@@ -877,6 +875,14 @@ COMPSEGS
     for (const auto& segment : segments) {
         BOOST_CHECK_CLOSE(segment.node_X(), 123.456, 1.0e-8);
         BOOST_CHECK_CLOSE(segment.node_Y(), 789.012, 1.0e-8);
+    }
+    // checking the segments that input with multiple segments per record in WELSEGS
+    constexpr double inc_length = (2737.5 - 2537.5) / 4.;
+    constexpr double inc_depth = (2537.5 - 2525.5) / 4.;
+    for (int segment_number = 4; segment_number <= 7; ++segment_number) {
+        const auto& segment = segments.getFromSegmentNumber(segment_number);
+        BOOST_CHECK_CLOSE(segment.depth(), 2525.5 + (segment_number - 3) * inc_depth, 1.e-8);
+        BOOST_CHECK_CLOSE(segment.totalLength(), 2537.5 + (segment_number - 3) * inc_length, 1.e-8);
     }
 }
 

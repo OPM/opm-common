@@ -25,6 +25,7 @@
 
 #include <map>
 #include <memory>
+#include <optional>
 #include <string>
 #include <unordered_map>
 #include <utility>
@@ -74,7 +75,7 @@ public:
               const data::WellBlockAveragePressures& wbp,
               const data::GroupAndNetworkValues&     group_and_nwrk_solution,
               const GlobalProcessParameters&         single_values,
-              const Inplace&                         initial_inplace,
+              const std::optional<Inplace>&          initial_inplace,
               const Inplace&                         inplace,
               const RegionParameters&                region_values = {},
               const BlockValues&                     block_values  = {},

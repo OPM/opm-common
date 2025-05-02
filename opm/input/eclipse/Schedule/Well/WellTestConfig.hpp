@@ -120,7 +120,6 @@ public:
     bool has(const std::string& well, Reason reason) const;
     const WTESTWell& get(const std::string& well) const;
 
-    static std::string reasonToString(const Reason reason);
     bool empty() const;
 
     bool operator==(const WellTestConfig& data) const;

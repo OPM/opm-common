@@ -146,4 +146,20 @@ BOOST_AUTO_TEST_CASE(ParserKeyword_includeWrongCase) {
     BOOST_CHECK_EQUAL(false, parser.parseFile(inputFile3Path.string()).hasKeyword("WATER"));
 #endif
 }
+BOOST_AUTO_TEST_CASE(ParserKeyword_includeFileWithIncorrectlyTerminatedKW)
+{
+    std::filesystem::path inputFilePath(prefix() + "includeIncorrectlyTerminatedKW.data");
+
+    const auto keywords_string = std::string {R"(INCLUDE
+   ')" + inputFilePath.string() + R"(' /
+EQUIL
+  2650.00 250.000 2700.00 0.00 2650.000 0.00 1 1 0 /
+  2700.00 253.300 2700.00 0.00 1650.000 0.00 1 1 0 /
+  2730.00 300.000 2725.00 0.00 1650.000 0.00 1 1 0 /
+  2730.00 300.000 2715.00 0.00 1650.000 0.00 1 1 0 /
+)"};
+    Opm::Parser parser;
+    BOOST_CHECK_THROW(parser.parseString(keywords_string), Opm::OpmInputError);
+}
+
 

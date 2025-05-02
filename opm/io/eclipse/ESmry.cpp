@@ -116,7 +116,7 @@ bool is_well_completion(const std::string& keyword)
 }
 
 
-namespace Opm { namespace EclIO {
+namespace Opm::EclIO {
 
 ESmry::ESmry(const std::string &filename, bool loadBaseRunData) :
     inputFileName { filename },
@@ -578,13 +578,13 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData) :
         while  (i < arraySourceList.size()) {
 
             if (std::get<0>(arraySourceList[i]) != "MINISTEP") {
-                std::string message="Reading summary file, expecting keyword MINISTEP, found '" + std::get<0>(arraySourceList[i]) + "'";
-                throw std::invalid_argument(message);
+                throw std::invalid_argument("Reading summary file, expecting keyword MINISTEP, "
+                                            "found '" + std::get<0>(arraySourceList[i]) + "'");
             }
 
             if (std::get<0>(arraySourceList[i+1]) != "PARAMS") {
-                std::string message="Reading summary file, expecting keyword PARAMS, found '" + std::get<0>(arraySourceList[i]) + "'";
-                throw std::invalid_argument(message);
+                throw std::invalid_argument("Reading summary file, expecting keyword PARAMS, "
+                                            "found '" + std::get<0>(arraySourceList[i]) + "'");
             }
 
             i++;
@@ -922,7 +922,8 @@ void ESmry::loadData() const
 
                 const int num = dhead / sizeOfInte;
                 if ((num > maxNumberOfElements) || (num < 0))
-                    OPM_THROW(std::runtime_error, "??Error reading binary data, inconsistent header data or incorrect number of elements");
+                    OPM_THROW(std::runtime_error, "??Error reading binary data, inconsistent header "
+                                                  "data or incorrect number of elements");
 
                 for (int i = 0; i < num; ++i, ++p) {
                     float value;
@@ -937,8 +938,7 @@ void ESmry::loadData() const
                 if (( num < maxNumberOfElements && rest != 0) ||
                         (num == maxNumberOfElements && rest < 0))
                 {
-                    std::string message = "Error reading binary data, incorrect number of elements";
-                    OPM_THROW(std::runtime_error, message);
+                    OPM_THROW(std::runtime_error, "Error reading binary data, incorrect number of elements");
                 }
 
                 int dtail;
@@ -1362,8 +1362,7 @@ const std::vector<float>& ESmry::get(const std::string& name) const
     auto it = std::find(keyword.begin(), keyword.end(), name);
 
     if (it == keyword.end()) {
-        const std::string message="keyword " + name + " not found ";
-        OPM_THROW(std::invalid_argument, message);
+        OPM_THROW(std::invalid_argument, "keyword " + name + " not found ");
     }
 
     int ind = std::distance(keyword.begin(), it);
@@ -1450,4 +1449,4 @@ std::tuple<double, double> ESmry::get_io_elapsed() const
 }
 
 
-}} // namespace Opm::EclIO
+} // namespace Opm::EclIO

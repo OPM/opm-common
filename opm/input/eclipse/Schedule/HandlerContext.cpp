@@ -94,7 +94,7 @@ void HandlerContext::setExitCode(int code)
 
 bool HandlerContext::updateWellStatus(const std::string& well,
                                       WellStatus status,
-                                      std::optional<KeywordLocation> location)
+                                      const std::optional<KeywordLocation>& location)
 {
     return schedule_.updateWellStatus(well, currentStep,
                                       status, location);

@@ -288,7 +288,10 @@ namespace Opm {
         /// \param[in] timeStep Zero-based report step index.
         std::vector<const Group*> restart_groups(std::size_t timeStep) const;
 
-        std::vector<std::string> changed_wells(std::size_t reportStep) const;
+        std::vector<std::string>
+        changed_wells(std::size_t reportStep,
+                      std::size_t initialStep = 0) const;
+
         const Well& getWell(std::size_t well_index, std::size_t timeStep) const;
         const Well& getWell(const std::string& wellName, std::size_t timeStep) const;
         const Well& getWellatEnd(const std::string& well_name) const;
@@ -322,7 +325,6 @@ namespace Opm {
         WellProducerCMode getGlobalWhistctlMmode(std::size_t timestep) const;
 
         const UDQConfig& getUDQConfig(std::size_t timeStep) const;
-        void evalAction(const SummaryState& summary_state, std::size_t timeStep);
 
         GTNode groupTree(std::size_t report_step) const;
         GTNode groupTree(const std::string& root_node, std::size_t report_step) const;
@@ -523,7 +525,6 @@ namespace Opm {
 
         void updateGuideRateModel(const GuideRateModel& new_model, std::size_t report_step);
         GTNode groupTree(const std::string& root_node, std::size_t report_step, std::size_t level, const std::optional<std::string>& parent_name) const;
-        bool checkGroups(const ParseContext& parseContext, ErrorGuard& errors);
         bool updateWellStatus( const std::string& well, std::size_t reportStep, WellStatus status, std::optional<KeywordLocation> = {});
         void addWellToGroup( const std::string& group_name, const std::string& well_name , std::size_t timeStep);
         void iterateScheduleSection(std::size_t load_start,
@@ -567,9 +568,7 @@ namespace Opm {
         std::vector<std::string> wellNames(const std::string& pattern,
                                            const HandlerContext& context,
                                            bool allowEmpty = false);
-        std::vector<std::string> wellNames(const std::string& pattern, std::size_t timeStep, const std::vector<std::string>& matching_wells, InputErrorAction error_action, ErrorGuard& errors, const KeywordLocation& location) const;
         static std::string formatDate(std::time_t t);
-        std::string simulationDays(std::size_t currentStep) const;
         void applyGlobalWPIMULT( const std::unordered_map<std::string, double>& wpimult_global_factor);
 
         bool must_write_rst_file(std::size_t report_step) const;

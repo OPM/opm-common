@@ -25,7 +25,9 @@
 #include <iterator>
 #include <string>
 
-namespace Opm { namespace EclIO {
+#include <fmt/format.h>
+
+namespace Opm::EclIO {
 
 ERft::ERft(const std::string &filename) : EclFile(filename)
 {
@@ -101,13 +103,10 @@ int ERft::getReportIndex(const std::string& wellName, const RftDate& date) const
     auto rIndIt = reportIndices.find(wellDatePair);
 
     if (rIndIt == reportIndices.end()) {
-        int y = std::get<0>(date);
-        int m = std::get<1>(date);
-        int d = std::get<2>(date);
-
-        std::string dateStr=std::to_string(y) + "/" + std::to_string(m) + "/" + std::to_string(d);
-        std::string message="RFT data not found for well  " + wellName + " at date: " + dateStr;
-        OPM_THROW(std::invalid_argument, message);
+        OPM_THROW(std::invalid_argument,
+                  fmt::format("RFT data not found for well {} at date: {}/{}/{}",
+                              wellName, std::get<0>(date),
+                              std::get<1>(date), std::get<2>(date)));
     }
 
     return rIndIt->second;
@@ -153,41 +152,39 @@ int ERft::getArrayIndex(const std::string& name, const std::string& wellName,
 
     int fromInd =std::get<0>(searchInd->second);
     int toInd = std::get<1>(searchInd->second);
-    auto it=std::find(array_name.begin()+fromInd,array_name.begin()+toInd,name);
+    auto it = std::find(array_name.begin() + fromInd, array_name.begin() + toInd, name);
 
     if (std::distance(array_name.begin(),it) == toInd) {
-        int y = std::get<0>(date);
-        int m = std::get<1>(date);
-        int d = std::get<2>(date);
-
-        std::string dateStr = std::to_string(y) + "/" + std::to_string(m) + "/" + std::to_string(d);
-        std::string message = "Array " + name + " not found for RFT, well: " + wellName + " date: " + dateStr;
-        OPM_THROW(std::invalid_argument, message);
+        OPM_THROW(std::invalid_argument,
+                  fmt::format("Array {} not found for RFT, well: {} date: {}/{}/{}",
+                              name, wellName, std::get<0>(date),
+                              std::get<1>(date), std::get<2>(date)));
     }
 
-    return std::distance(array_name.begin(),it);
+    return std::distance(array_name.begin(), it);
 }
 
 
 int ERft::getArrayIndex(const std::string& name, int reportIndex) const
 {
     if ((reportIndex < 0) || (reportIndex >= numReports)) {
-        std::string message = "Report index " + std::to_string(reportIndex) + " not found in RFT file.";
-        OPM_THROW(std::invalid_argument, message);
+        OPM_THROW(std::invalid_argument,
+                  fmt::format("Report index {} not found in RFT file.", reportIndex));
     }
 
     auto searchInd = arrIndexRange.find(reportIndex);
-    int fromInd =std::get<0>(searchInd->second);
+    int fromInd = std::get<0>(searchInd->second);
     int toInd = std::get<1>(searchInd->second);
 
-    auto it=std::find(array_name.begin() + fromInd,array_name.begin() + toInd,name);
+    auto it = std::find(array_name.begin() + fromInd,array_name.begin() + toInd, name);
 
-    if (std::distance(array_name.begin(),it) == toInd) {
-        std::string message = "Array " + name + " not found for RFT, rft report index: " + std::to_string(reportIndex);
-        OPM_THROW(std::invalid_argument, message);
+    if (std::distance(array_name.begin(), it) == toInd) {
+        OPM_THROW(std::invalid_argument,
+                  fmt::format("Array {} not found for RFT, rft report index: {}",
+                              name, reportIndex));
     }
 
-    return std::distance(array_name.begin(),it);
+    return std::distance(array_name.begin(), it);
 }
 
 
@@ -198,8 +195,9 @@ ERft::getRft<float>(const std::string& name, const std::string &wellName,
     int arrInd = getArrayIndex(name, wellName, date);
 
     if (array_type[arrInd] != REAL) {
-        std::string message = "Array " + name + " found in RFT file for selected date and well, but called with wrong type";
-        OPM_THROW(std::runtime_error, message);
+        OPM_THROW(std::runtime_error,
+                  "Array " + name + " found in RFT file for selected "
+                  "date and well, but called with wrong type");
     }
 
     auto search_array = real_array.find(arrInd);
@@ -214,8 +212,9 @@ ERft::getRft<double>(const std::string& name, const std::string& wellName,
     int arrInd = getArrayIndex(name, wellName, date);
 
     if (array_type[arrInd] != DOUB) {
-        std::string message = "Array " + name + " found in RFT file for selected date and well, but called with wrong type";
-        OPM_THROW(std::runtime_error, message);
+        OPM_THROW(std::runtime_error,
+                  "Array " + name + " found in RFT file for selected "
+                  "date and well, but called with wrong type");
     }
 
     auto search_array = doub_array.find(arrInd);
@@ -230,8 +229,9 @@ ERft::getRft<int>(const std::string& name, const std::string& wellName,
     int arrInd = getArrayIndex(name, wellName, date);
 
     if (array_type[arrInd] != INTE) {
-        std::string message = "Array " + name + " found in RFT file for selected date and well, but called with wrong type";
-        OPM_THROW(std::runtime_error, message);
+        OPM_THROW(std::runtime_error,
+                  "Array " + name + " found in RFT file for selected "
+                  "date and well, but called with wrong type");
     }
 
     auto search_array = inte_array.find(arrInd);
@@ -246,8 +246,9 @@ ERft::getRft<bool>(const std::string& name, const std::string& wellName,
     int arrInd = getArrayIndex(name, wellName, date);
 
     if (array_type[arrInd] != LOGI) {
-        std::string message = "Array " + name + " found in RFT file for selected date and well, but called with wrong type";
-        OPM_THROW(std::runtime_error, message);
+        OPM_THROW(std::runtime_error,
+                  "Array " + name + " found in RFT file for selected "
+                  "date and well, but called with wrong type");
     }
 
     auto search_array = logi_array.find(arrInd);
@@ -262,8 +263,9 @@ ERft::getRft<std::string>(const std::string& name, const std::string& wellName,
     int arrInd = getArrayIndex(name, wellName, date);
 
     if (array_type[arrInd] != CHAR) {
-        std::string message = "Array " + name + " found in RFT file for selected date and well, but called with wrong type";
-        OPM_THROW(std::runtime_error, message);
+        OPM_THROW(std::runtime_error,
+                  "Array " + name + " found in RFT file for selected "
+                  "date and well, but called with wrong type");
     }
 
     auto search_array = char_array.find(arrInd);
@@ -317,8 +319,9 @@ ERft::getRft<float>(const std::string& name, int reportIndex) const
     int arrInd = getArrayIndex(name, reportIndex);
 
     if (array_type[arrInd] != REAL) {
-        std::string message = "Array " + name + " found in RFT file for selected report, but called with wrong type";
-        OPM_THROW(std::runtime_error, message);
+        OPM_THROW(std::runtime_error,
+                  "Array " + name + " found in RFT file for selected "
+                  "report, but called with wrong type");
     }
 
     auto search_array = real_array.find(arrInd);
@@ -332,8 +335,9 @@ ERft::getRft<double>(const std::string& name, int reportIndex) const
     int arrInd = getArrayIndex(name, reportIndex);
 
     if (array_type[arrInd] != DOUB) {
-        std::string message = "Array " + name + " !!found in RFT file for selected report, but called with wrong type";
-        OPM_THROW(std::runtime_error, message);
+        OPM_THROW(std::runtime_error,
+                  "Array " + name + " !!found in RFT file for selected "
+                  "report, but called with wrong type");
     }
 
     auto search_array = doub_array.find(arrInd);
@@ -347,8 +351,9 @@ ERft::getRft<int>(const std::string& name, int reportIndex) const
     int arrInd = getArrayIndex(name, reportIndex);
 
     if (array_type[arrInd] != INTE) {
-        std::string message = "Array " + name + " !!found in RFT file for selected report, but called with wrong type";
-        OPM_THROW(std::runtime_error, message);
+        OPM_THROW(std::runtime_error,
+                  "Array " + name + " !!found in RFT file for selected "
+                  "report, but called with wrong type");
     }
 
     auto search_array = inte_array.find(arrInd);
@@ -362,8 +367,9 @@ ERft::getRft<bool>(const std::string& name, int reportIndex) const
     int arrInd = getArrayIndex(name, reportIndex);
 
     if (array_type[arrInd] != LOGI) {
-        std::string message = "Array " + name + " !!found in RFT file for selected report, but called with wrong type";
-        OPM_THROW(std::runtime_error, message);
+        OPM_THROW(std::runtime_error,
+                  "Array " + name + " !!found in RFT file for selected "
+                  "report, but called with wrong type");
     }
 
     auto search_array = logi_array.find(arrInd);
@@ -377,8 +383,9 @@ ERft::getRft<std::string>(const std::string& name, int reportIndex) const
     int arrInd = getArrayIndex(name, reportIndex);
 
     if (array_type[arrInd] != CHAR) {
-        std::string message = "Array " + name + " !!found in RFT file for selected report, but called with wrong type";
-        OPM_THROW(std::runtime_error, message);
+        OPM_THROW(std::runtime_error,
+                  "Array " + name + " !!found in RFT file for selected "
+                  "report, but called with wrong type");
     }
 
     auto search_array = char_array.find(arrInd);
@@ -389,8 +396,8 @@ ERft::getRft<std::string>(const std::string& name, int reportIndex) const
 std::vector<EclFile::EclEntry> ERft::listOfRftArrays(int reportIndex) const
 {
     if ((reportIndex < 0) || (reportIndex >= numReports)) {
-        std::string message = "Report index " + std::to_string(reportIndex) + " not found in RFT file.";
-        OPM_THROW(std::invalid_argument, message);
+        OPM_THROW(std::invalid_argument,
+                  fmt::format("Report index {} not found in RFT file.", reportIndex));
     }
 
     std::vector<EclEntry> list;
@@ -436,4 +443,4 @@ std::vector<ERft::RftDate> ERft::listOfdates() const
     return { this->dateList.begin(), this->dateList.end() };
 }
 
-}} // namespace Opm::ecl
+} // namespace Opm::EclIO

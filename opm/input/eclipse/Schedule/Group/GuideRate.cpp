@@ -358,16 +358,6 @@ double Opm::GuideRate::eval_form(const GuideRateModel& model,
     return model.eval(oil_pot, gas_pot, wat_pot);
 }
 
-double Opm::GuideRate::eval_group_pot() const
-{
-    return 0.0;
-}
-
-double Opm::GuideRate::eval_group_resvinj() const
-{
-    return 0.0;
-}
-
 void Opm::GuideRate::assign_grvalue(const std::string&    wgname,
                                     const GuideRateModel& model,
                                     GuideRateValue&&      value)

@@ -144,7 +144,6 @@ namespace Opm {
         , compositional_config(deck, m_runspec)
         , m_transMult(         GridDims(deck), deck, field_props)
         , tracer_config(       m_deckUnitSystem, deck)
-        , m_micppara(          deck)
         , wag_hyst_config(     deck)
         , co2_store_config(    deck)
     {
@@ -276,10 +275,6 @@ namespace Opm {
 
     const LgrCollection& EclipseState::getLgrs() const {
         return m_lgrs;
-    }
-
-    const MICPpara& EclipseState::getMICPpara() const {
-        return m_micppara;
     }
 
     const WagHysteresisConfig& EclipseState::getWagHysteresis() const {

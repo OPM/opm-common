@@ -17,34 +17,30 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef OPM_WRITE_RPT_HPP
-#define OPM_WRITE_RPT_HPP
+#ifndef OPM_REPORT_WELL_SPECIFICATION_HPP_INCLUDED
+#define OPM_REPORT_WELL_SPECIFICATION_HPP_INCLUDED
 
 #include <cstddef>
+#include <functional>
 #include <iosfwd>
 #include <string>
 
 namespace Opm {
 
     class Schedule;
-    class EclipseGrid;
-    class UnitSystem;
 
-    namespace RptIO {
+} // namespace Opm
 
-        void write_report(
-            std::ostream&,
-            const std::string& report,
-            unsigned value,
-            const Schedule& schedule,
-            const EclipseGrid& grid,
-            const UnitSystem& unit_system,
-            std::size_t time_step
-        );
+namespace Opm::PrtFile::Reports {
 
-        namespace workers {
+    using BlockDepthCallback = std::function<double(std::size_t)>;
 
-            void write_WELSPECS(std::ostream&, unsigned, const Schedule&, const EclipseGrid& grid, const UnitSystem&, std::size_t);
+    void wellSpecification(const std::vector<std::string>& changedWells,
+                           const std::size_t               reportStep,
+                           const Schedule&                 schedule,
+                           BlockDepthCallback              blockDepth,
+                           std::ostream&                   os);
 
-}   }   }
-#endif // OPM_WRITE_RPT_HPP
+} // namespace Opm::PrtFile::Reports
+
+#endif // OPM_REPORT_WELL_SPECIFICATION_HPP_INCLUDED

@@ -1,0 +1,21 @@
+{
+    "name": "DIFFMICP",
+    "comment": "Hardcoded three components.",
+    "sections": [
+      "PROPS"
+    ],
+    "size": {
+      "keyword": "TABDIMS",
+      "item": "NTPVT"
+    },
+    "requires": ["MICP"],
+    "items": [
+    {
+      "name": "DATA",
+      "value_type": "DOUBLE",
+      "size_type": "ALL",
+      "dimension": ["Length*Length/Time","Length*Length/Time","Length*Length/Time"]
+    }
+    ]
+  }
+  

@@ -48,7 +48,10 @@ class TestEModel(unittest.TestCase):
 
         refVol1 = 2.79083e8
 
-        self.assertTrue( abs((sum(celvol1) - refVol1)/refVol1) < 1.0e-5)
+        # The algorithm for sum in Python 3.12 changed to Neumaier summation
+        # which breaks the following test. Using numpy.sum now to get the
+        # old behaviour. For 3.11 they yield the same result.
+        self.assertTrue( abs((np.sum(celvol1) - refVol1)/refVol1) < 1.0e-5)
 
         mod1.add_filter("EQLNUM","eq", 1);
         mod1.add_filter("DEPTH","lt", 2645.21);

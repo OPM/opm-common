@@ -43,8 +43,14 @@ void handleRPTONLYO(HandlerContext& handlerContext)
 
 void handleRPTSCHED(HandlerContext& handlerContext)
 {
-    const RPTConfig& prev = handlerContext.state().rpt_config.get();
-    handlerContext.state().rpt_config.update( RPTConfig(handlerContext.keyword, &prev));
+    auto rpt_config = RPTConfig {
+        handlerContext.keyword,
+        &handlerContext.state().rpt_config(),
+        handlerContext.parseContext,
+        handlerContext.errors
+    };
+    handlerContext.state().rpt_config.update(std::move(rpt_config));
+
     auto rst_config = handlerContext.state().rst_config();
     rst_config.update(handlerContext.keyword,
                       handlerContext.parseContext,

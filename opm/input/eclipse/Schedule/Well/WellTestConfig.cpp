@@ -162,25 +162,6 @@ const WellTestConfig::WTESTWell& WellTestConfig::get(const std::string& well) co
 }
 
 
-
-std::string WellTestConfig::reasonToString(const Reason reason) {
-    switch(reason) {
-    case Reason::PHYSICAL:
-        return std::string("PHYSICAL");
-    case Reason::ECONOMIC:
-        return std::string("ECONOMIC");
-    case Reason::GROUP:
-        return std::string("GROUP");
-    case Reason::THP_DESIGN:
-        return std::string("THP_DESIGN");
-    case Reason::COMPLETION:
-        return std::string("COMPLETION");
-    default:
-        throw std::runtime_error("unknown closure reason");
-    }
-}
-
-
 bool WellTestConfig::empty() const {
     return this->wells.empty();
 }

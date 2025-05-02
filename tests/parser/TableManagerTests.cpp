@@ -32,6 +32,7 @@
 
 // keyword specific table classes
 #include <opm/input/eclipse/EclipseState/Tables/DenT.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/DiffMICPTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/FlatTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/FoamadsTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/FoammobTable.hpp>
@@ -2558,6 +2559,29 @@ BOOST_AUTO_TEST_CASE( TestParseDIFFCAWATGAS ) {
 
     Opm::Parser parser;
     BOOST_CHECK_THROW(parser.parseString(data), Opm::OpmInputError);
+}
+
+BOOST_AUTO_TEST_CASE( TestParseDIFFMICP ) {
+    const std::string data = R"(
+      MICP
+      WATER
+      TABDIMS
+      /
+
+      DIFFMICP
+        1.1 1.2 1.3 /
+    )";
+
+    Opm::Parser parser;
+    auto deck = parser.parseString(data);
+    Opm::TableManager tables( deck );
+    double conversion_factor = (60*60*24);
+
+    const auto& diffmicpTable = tables.getDiffMICPTables();
+    const DiffMICPTable& diffmicp = diffmicpTable.getTable<DiffMICPTable>(0);
+    BOOST_CHECK_CLOSE( 1.1, diffmicp.getMicrobialDiffusion().front()*conversion_factor, epsilon() );
+    BOOST_CHECK_CLOSE( 1.2, diffmicp.getOxygenDiffusion().front()*conversion_factor, epsilon());
+    BOOST_CHECK_CLOSE( 1.3, diffmicp.getUreaDiffusion().front()*conversion_factor, epsilon());
 }
 
 BOOST_AUTO_TEST_CASE(TestParsePPCWMAX) {

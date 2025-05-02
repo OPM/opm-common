@@ -167,6 +167,11 @@ struct SummaryConfigContext {
          {"GMUS",     {"RGMUS", "FGMUS"}},
          {"GKTR",     {"RGKTR", "FGKTR"}},
          {"GKMO",     {"RGKMO", "FGKMO"}},
+         {"MMIP",     {"RMMIP", "FMMIP"}},
+         {"MOIP",     {"RMOIP", "FMOIP"}},
+         {"MUIP",     {"RMUIP", "FMUIP"}},
+         {"MBIP",     {"RMBIP", "FMBIP"}},
+         {"MCIP",     {"RMCIP", "FMCIP"}},
     };
 
     using keyword_set = std::unordered_set<std::string>;
@@ -257,6 +262,8 @@ struct SummaryConfigContext {
             "OPI", "OPP", "GPI", "GPP", "WPI", "WPP",
 
             "AQR", "AQRG", "NQR",
+
+            "MMIR", "MOIR", "MUIR", "MMPR", "MOPR", "MUPR",
         };
 
         return is_in_set(ratekw, keyword.substr(1))
@@ -289,6 +296,8 @@ struct SummaryConfigContext {
             "WITH", "OITH", "GITH", "WVIT", "OVIT", "GVIT", "GMIT",
 
             "AQT", "AQTG", "NQT",
+
+            "MMIT", "MOIT", "MUIT", "MMPT", "MOPT", "MUPT",
         };
 
         return is_in_set(totalkw, keyword.substr(1))

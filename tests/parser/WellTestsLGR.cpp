@@ -51,7 +51,7 @@
 #define TOLERANCE_PERCENT 0.01  
 using namespace Opm;
 
-std::unordered_map<std::string, std::size_t> create_label_mapper(EclipseGrid ecl_grid)
+std::unordered_map<std::string, std::size_t> create_label_mapper(const EclipseGrid& ecl_grid)
 {
     std::unordered_map<std::string, std::size_t> label_to_index;
     std::size_t index = 0;

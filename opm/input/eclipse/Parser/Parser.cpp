@@ -410,7 +410,11 @@ inline std::string make_deck_name(const std::string_view& str) {
 
 inline std::string_view update_record_buffer(const std::string_view& record_buffer,
                                              const std::string_view& line) {
-    if (record_buffer.empty())
+    // If line.data() + line.size() - record_buffer.data() < 0 something is wrong with the
+    // record_buffer, possibly caused by reading in too much data due to an incorreclty
+    // terminated keyword. In this case, the simulation might run into a segmentation
+    // fault, so instead: return the line and let the error be handled later.
+    if (record_buffer.empty() || line.data() + line.size() - record_buffer.data() < 0)
         return line;
     else {
         const std::size_t size = line.data() + line.size() - record_buffer.data();
@@ -463,7 +467,7 @@ class ParserState {
 
         ParserState( const std::vector<std::pair<std::string,std::string>>&,
                      const ParseContext&, ErrorGuard&,
-                     std::filesystem::path, const std::set<Opm::Ecl::SectionType>& ignore = {});
+                     const std::filesystem::path&, const std::set<Opm::Ecl::SectionType>& ignore = {});
 
         void loadString( const std::string& );
         void loadFile( const std::filesystem::path& );
@@ -564,7 +568,7 @@ ParserState::ParserState(const std::vector<std::pair<std::string, std::string>>&
 ParserState::ParserState( const std::vector<std::pair<std::string, std::string>>& code_keywords_arg,
                           const ParseContext& context,
                           ErrorGuard& errors_arg,
-                          std::filesystem::path p,
+                          const std::filesystem::path& p,
                           const std::set<Opm::Ecl::SectionType>& ignore ) :
     code_keywords(code_keywords_arg),
     ignore_sections(ignore),
@@ -1274,8 +1278,6 @@ void cleanup_deck_keyword_list(ParserState& parserState, const std::set<Opm::Ecl
 
 
 bool parseState( ParserState& parserState, const Parser& parser ) {
-    std::string filename = parserState.current_path().string();
-
     auto ignore = parserState.get_ignore();
 
     bool has_edit = true;

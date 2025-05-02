@@ -121,7 +121,6 @@ if(ENABLE_ECL_INPUT)
     opm/input/eclipse/EclipseState/EclipseConfig.cpp
     opm/input/eclipse/EclipseState/EclipseState.cpp
     opm/input/eclipse/EclipseState/EndpointScaling.cpp
-    opm/input/eclipse/EclipseState/MICPpara.cpp
     opm/input/eclipse/EclipseState/Phase.cpp
     opm/input/eclipse/EclipseState/Runspec.cpp
     opm/input/eclipse/EclipseState/TracerConfig.cpp
@@ -227,6 +226,8 @@ if(ENABLE_ECL_INPUT)
     opm/input/eclipse/Schedule/OilVaporizationProperties.cpp
     opm/input/eclipse/Schedule/RFTConfig.cpp
     opm/input/eclipse/Schedule/RPTConfig.cpp
+    opm/input/eclipse/Schedule/RPTKeywordNormalisation.cpp
+    opm/input/eclipse/Schedule/RptschedKeywordNormalisation.cpp
     opm/input/eclipse/Schedule/RSTConfig.cpp
     opm/input/eclipse/Schedule/RXXKeywordHandlers.cpp
     opm/input/eclipse/Schedule/Schedule.cpp
@@ -237,6 +238,7 @@ if(ENABLE_ECL_INPUT)
     opm/input/eclipse/Schedule/ScheduleState.cpp
     opm/input/eclipse/Schedule/ScheduleStatic.cpp
     opm/input/eclipse/Schedule/ScheduleTypes.cpp
+    opm/input/eclipse/Schedule/SimpleRPTIntegerControlHandler.cpp
     opm/input/eclipse/Schedule/Source.cpp
     opm/input/eclipse/Schedule/SummaryState.cpp
     opm/input/eclipse/Schedule/Tuning.cpp
@@ -325,6 +327,7 @@ if(ENABLE_ECL_INPUT)
     opm/input/eclipse/Schedule/Well/WellEconProductionLimits.cpp
     opm/input/eclipse/Schedule/Well/WellEnums.cpp
     opm/input/eclipse/Schedule/Well/WellFoamProperties.cpp
+    opm/input/eclipse/Schedule/Well/WellFractureSeeds.cpp
     opm/input/eclipse/Schedule/Well/WellInjectionProperties.cpp
     opm/input/eclipse/Schedule/Well/WellKeywordHandlers.cpp
     opm/input/eclipse/Schedule/Well/WellMatcher.cpp
@@ -460,8 +463,7 @@ if(ENABLE_ECL_OUTPUT)
           opm/output/eclipse/RestartValue.cpp
           opm/output/eclipse/WriteInit.cpp
           opm/output/eclipse/WriteRFT.cpp
-          opm/output/eclipse/WriteRPT.cpp
-          opm/output/eclipse/report/WELSPECS.cpp
+          opm/output/eclipse/report/WellSpecification.cpp
           opm/utility/EModel.cpp
       )
 endif()
@@ -534,9 +536,11 @@ if(ENABLE_ECL_INPUT)
     tests/test_ExtESmry.cpp
     tests/test_FIPRegionStatistics.cpp
     tests/test_RegionSetMatcher.cpp
+    tests/test_RPTConfig.cpp
     tests/test_PAvgCalculator.cpp
     tests/test_PAvgDynamicSourceData.cpp
     tests/test_Serialization.cpp
+    tests/test_WellFractureSeeds.cpp
     tests/material/test_co2brinepvt.cpp
     tests/material/test_h2brinepvt.cpp
     tests/material/test_hysteresis.cpp
@@ -821,6 +825,7 @@ if(ENABLE_ECL_INPUT)
     examples/opmhash.cpp
     examples/rst_deck.cpp
     examples/wellgraph.cpp
+    examples/networkgraph.cpp
     examples/make_ext_smry.cpp
     examples/co2brinepvt.cpp
     examples/hysteresis.cpp
@@ -1239,7 +1244,6 @@ if(ENABLE_ECL_INPUT)
        opm/input/eclipse/EclipseState/Grid/MinpvMode.hpp
        opm/input/eclipse/EclipseState/EndpointScaling.hpp
        opm/input/eclipse/EclipseState/TracerConfig.hpp
-       opm/input/eclipse/EclipseState/MICPpara.hpp
        opm/input/eclipse/EclipseState/WagHysteresisConfig.hpp
        opm/input/eclipse/EclipseState/Tables/DenT.hpp
        opm/input/eclipse/EclipseState/Tables/JouleThomson.hpp
@@ -1330,6 +1334,8 @@ if(ENABLE_ECL_INPUT)
        opm/input/eclipse/EclipseState/Tables/Sof3Table.hpp
        opm/input/eclipse/EclipseState/Tables/SgofTable.hpp
        opm/input/eclipse/EclipseState/Tables/TracerVdTable.hpp
+       opm/input/eclipse/EclipseState/Tables/BiofilmTable.hpp
+       opm/input/eclipse/EclipseState/Tables/DiffMICPTable.hpp
        opm/input/eclipse/EclipseState/Co2StoreConfig.hpp
        opm/input/eclipse/EclipseState/EclipseState.hpp
        opm/input/eclipse/EclipseState/EclipseConfig.hpp
@@ -1391,6 +1397,7 @@ if(ENABLE_ECL_INPUT)
        opm/input/eclipse/Schedule/Well/WListManager.hpp
        opm/input/eclipse/Schedule/Well/WellEconProductionLimits.hpp
        opm/input/eclipse/Schedule/Well/WellFoamProperties.hpp
+       opm/input/eclipse/Schedule/Well/WellFractureSeeds.hpp
        opm/input/eclipse/Schedule/Well/WellBrineProperties.hpp
        opm/input/eclipse/Schedule/Well/WellMICPProperties.hpp
        opm/input/eclipse/Schedule/Well/WellPolymerProperties.hpp
@@ -1406,6 +1413,8 @@ if(ENABLE_ECL_INPUT)
        opm/input/eclipse/Schedule/SummaryState.hpp
        opm/input/eclipse/Schedule/RFTConfig.hpp
        opm/input/eclipse/Schedule/RPTConfig.hpp
+       opm/input/eclipse/Schedule/RPTKeywordNormalisation.hpp
+       opm/input/eclipse/Schedule/RptschedKeywordNormalisation.hpp
        opm/input/eclipse/Schedule/RSTConfig.hpp
        opm/input/eclipse/Schedule/Schedule.hpp
        opm/input/eclipse/Schedule/ScheduleBlock.hpp
@@ -1415,6 +1424,7 @@ if(ENABLE_ECL_INPUT)
        opm/input/eclipse/Schedule/ScheduleState.hpp
        opm/input/eclipse/Schedule/ScheduleStatic.hpp
        opm/input/eclipse/Schedule/ScheduleTypes.hpp
+       opm/input/eclipse/Schedule/SimpleRPTIntegerControlHandler.hpp
        opm/input/eclipse/Schedule/Source.hpp
        opm/input/eclipse/Schedule/Tuning.hpp
        opm/input/eclipse/Schedule/WriteRestartFileEvents.hpp
@@ -1563,8 +1573,8 @@ if(ENABLE_ECL_OUTPUT)
         opm/output/eclipse/WindowedArray.hpp
         opm/output/eclipse/WriteInit.hpp
         opm/output/eclipse/WriteRFT.hpp
-        opm/output/eclipse/WriteRPT.hpp
         opm/output/eclipse/WriteRestartHelpers.hpp
+        opm/output/eclipse/report/WellSpecification.hpp
         opm/utility/CopyablePtr.hpp
         opm/utility/EModel.hpp
         )

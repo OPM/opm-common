@@ -72,6 +72,7 @@
 #include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellEconProductionLimits.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellFoamProperties.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellFractureSeeds.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellMatcher.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellMICPProperties.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellPolymerProperties.hpp>
@@ -317,7 +318,9 @@ DATES             -- 7
 /
 )";
 
-static Schedule make_schedule(const std::string& deck_string)
+namespace {
+
+Schedule make_schedule(const std::string& deck_string)
 {
     const auto deck = Parser{}.parseString(deck_string);
     EclipseGrid grid(10,10,10);
@@ -329,6 +332,8 @@ static Schedule make_schedule(const std::string& deck_string)
         runspec, std::make_shared<Python>()
     };
 }
+
+} // Anonymous namespace
 
 BOOST_AUTO_TEST_CASE(SerializeWTest)
 {
