@@ -50,13 +50,18 @@ if(AMGX_FOUND)
             INTERFACE_INCLUDE_DIRECTORIES "${AMGX_INCLUDE_DIRS}"
         )
 
+        # Since AMGX is basically unversioned we need to use cuda version to decide
+        if(CUDA_VERSION VERSION_LESS 12.9)
+          set(EXTRA_LIBS CUDA::nvToolsExt)
+        endif()
+
         # Link CUDA libraries that AMGX depends on
         target_link_libraries(AMGX::AMGX INTERFACE
             CUDA::cusolver
             CUDA::cusparse
             CUDA::cublas
             CUDA::cudart
-            CUDA::nvToolsExt
+            ${EXTRA_LIBS}
         )
     endif()
 endif()
