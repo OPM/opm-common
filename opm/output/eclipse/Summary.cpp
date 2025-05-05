@@ -451,38 +451,38 @@ constexpr const bool producer = false;
  * unit conversion. This removes a lot of boilerplate. ad-hoc solution to poor
  * unit support in general.
  */
-measure div_unit( measure denom, measure div ) {
-    if( denom == measure::gas_surface_rate &&
-        div   == measure::liquid_surface_rate )
+measure div_unit( measure numer, measure denom ) {
+    if( numer == measure::gas_surface_rate &&
+        denom == measure::liquid_surface_rate )
         return measure::gas_oil_ratio;
 
-    if( denom == measure::liquid_surface_rate &&
-        div   == measure::gas_surface_rate )
+    if( numer == measure::liquid_surface_rate &&
+        denom == measure::gas_surface_rate )
         return measure::oil_gas_ratio;
 
-    if( denom == measure::liquid_surface_rate &&
-        div   == measure::liquid_surface_rate )
+    if( numer == measure::liquid_surface_rate &&
+        denom == measure::liquid_surface_rate )
         return measure::water_cut;
 
-    if( denom == measure::liquid_surface_rate &&
-        div   == measure::time )
-        return measure::liquid_surface_volume;
+    if( numer == measure::liquid_surface_volume &&
+        denom == measure::time )
+        return measure::liquid_surface_rate;
 
-    if( denom == measure::gas_surface_rate &&
-        div   == measure::time )
-        return measure::gas_surface_volume;
+    if( numer == measure::gas_surface_volume &&
+        denom == measure::time )
+        return measure::gas_surface_rate;
 
-    if( denom == measure::mass_rate &&
-        div   == measure::time )
-        return measure::mass;
+    if( numer == measure::mass &&
+        denom == measure::time )
+        return measure::mass_rate;
 
-    if( denom == measure::mass_rate &&
-        div   == measure::liquid_surface_rate )
+    if( numer == measure::mass_rate &&
+        denom == measure::liquid_surface_rate )
         return measure::polymer_density;
 
-    if( denom == measure::energy_rate &&
-        div   == measure::time )
-        return measure::energy;
+    if( numer == measure::energy &&
+        denom == measure::time )
+        return measure::energy_rate;
 
     return measure::identity;
 }
