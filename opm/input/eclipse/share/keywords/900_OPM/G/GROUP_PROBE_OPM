@@ -5,6 +5,10 @@
   ],
   "comment": "Group summary keywords only supported by OPM-flow",
   "deck_names": [
+    "GAMIR",
+    "GAMIT",
+    "GAMPR",
+    "GAMPT",
     "GGMIR",
     "GGMIT",
     "GGMPR",
