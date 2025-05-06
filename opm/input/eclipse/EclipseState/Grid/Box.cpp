@@ -32,31 +32,35 @@
 
 namespace {
 
-    void assert_dims(const int len, const int l1, const int l2)
+    void assert_dims(const int len, const int l1, const int l2, const char direction)
     {
         if (len <= 0) {
-            throw std::invalid_argument {
-                "Box must have finite size in all directions"
+            throw std::invalid_argument{
+                "Box dimensions must be positive. Received dimension in " + std::string(1, direction)
+                + "-direction is " + std::to_string(len) + "."
             };
         }
 
-        if ((l1 < 0) || (l2 < 0)){
-            throw std::invalid_argument {
-                "Invalid index values for sub box (" + std::to_string(l1)
-                + " or " + std::to_string(l2) + " below 0)"};
+        if ((l1 < 0) || (l2 < 0)) {
+            throw std::invalid_argument{
+                "Invalid box indices in " + std::string(1, direction)
+                + "-direction, the indices must be non-negative. Received indices "
+                + std::to_string(l1) + " and " + std::to_string(l2) + "."};
         }
 
         if (l1 > l2) {
-            throw std::invalid_argument {
-                "Invalid index values for sub box (" + std::to_string(l1)
-                + " > " + std::to_string(l2) + ")"};
+            throw std::invalid_argument{
+                "Invalid box range in " + std::string(1, direction)
+                + "-direction: Starting index " + std::to_string(l1)
+                + " must not exceed ending index " + std::to_string(l2) + "."
+            };
         }
 
         if (l2 >= len) {
-            throw std::invalid_argument {
-                "Invalid index values for sub box. Index "
-                + std::to_string(l2) + " is not below "
-                + std::to_string(len)
+            throw std::invalid_argument{
+                "Box index out of bounds in " + std::string(1, direction)
+                + "-direction: Ending index " + std::to_string(l2)
+                + " must not exceed the box length " + std::to_string(len) + "."
             };
         }
     }
@@ -133,9 +137,9 @@ namespace Opm
                    const int j1, const int j2,
                    const int k1, const int k2)
     {
-        assert_dims(this->m_globalGridDims_.getNX(), i1, i2);
-        assert_dims(this->m_globalGridDims_.getNY(), j1, j2);
-        assert_dims(this->m_globalGridDims_.getNZ(), k1, k2);
+        assert_dims(this->m_globalGridDims_.getNX(), i1, i2, 'i');
+        assert_dims(this->m_globalGridDims_.getNY(), j1, j2, 'j');
+        assert_dims(this->m_globalGridDims_.getNZ(), k1, k2, 'k');
 
         this->m_dims[0] = static_cast<std::size_t>(i2 - i1 + 1);
         this->m_dims[1] = static_cast<std::size_t>(j2 - j1 + 1);
