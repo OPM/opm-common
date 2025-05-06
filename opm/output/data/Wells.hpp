@@ -20,6 +20,7 @@
 #ifndef OPM_OUTPUT_WELLS_HPP
 #define OPM_OUTPUT_WELLS_HPP
 
+#include <opm/common/OpmLog/OpmLog.hpp>
 #include <opm/output/data/GuideRateValue.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellEnums.hpp>
 
@@ -1151,7 +1152,10 @@ namespace Opm { namespace data {
                 buffer.read(name);
                 Well well;
                 well.read(buffer);
-                this->emplace(name, well);
+                auto result = this->emplace(name, well);
+                if (!result.second) {
+                    OpmLog::warning("Received output data for well " + name + " several times - this might be incorrect!");
+                }
             }
         }
 
