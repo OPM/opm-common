@@ -291,6 +291,9 @@ namespace Opm {
         return this->getDataRecord().getDataItem().data_size();
     }
 
+    std::vector<int>& DeckKeyword::getIntData(){
+         return this->getRecord(0).getItem(0).getData< int >();
+    }
 
     const std::vector<int>& DeckKeyword::getIntData() const {
         return this->getDataRecord().getDataItem().getData< int >();
