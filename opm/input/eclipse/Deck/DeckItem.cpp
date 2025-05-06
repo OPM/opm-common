@@ -216,6 +216,10 @@ void DeckItem::shrink_to_fit<double>() {
     this->dval.shrink_to_fit();
 }
 
+template< typename T >
+std::vector< T >& DeckItem::getData(){
+    return this->value_ref< T >();
+}
 
 template< typename T >
 const std::vector< T >& DeckItem::getData() const {
@@ -560,7 +564,10 @@ template void DeckItem::push_backDummyDefault<std::string>( std::size_t );
 template void DeckItem::push_backDummyDefault<RawString>( std::size_t );
 template void DeckItem::push_backDummyDefault<UDAValue>( std::size_t );
 
+template std::vector< int >& DeckItem::getData< int >();
+
 template const std::vector< int >& DeckItem::getData< int >() const;
+template const std::vector< double >& DeckItem::getData< double >() const;
 template const std::vector< UDAValue >& DeckItem::getData< UDAValue >() const;
 template const std::vector< std::string >& DeckItem::getData< std::string >() const;
 template const std::vector<RawString>& DeckItem::getData<RawString>() const;
