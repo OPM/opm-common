@@ -29,7 +29,7 @@
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
 
-#include <opm/material/fluidsystems/BlackOilDefaultIndexTraits.hpp>
+#include <opm/material/fluidsystems/BlackOilDefaultFluidSystemIndices.hpp>
 #include <opm/material/fluidsystems/BlackOilFluidSystem.hpp>
 
 #include <cassert>
@@ -274,7 +274,7 @@ initNullCond_()
     thermalConductionLawParams_[0].finalize();
 }
 
-using FS = BlackOilFluidSystem<double,BlackOilDefaultIndexTraits>;
+using FS = BlackOilFluidSystem<double, BlackOilDefaultFluidSystemIndices>;
 template class EclThermalLawManager<double,FS>;
 
 } // namespace Opm

@@ -25,7 +25,7 @@
  * \copydoc Opm::BlackOilFluidSystem
  */
 
-#include "BlackOilDefaultIndexTraits.hpp"
+#include <opm/material/fluidsystems/BlackOilDefaultFluidSystemIndices.hpp>
 #include "blackoilpvt/OilPvtMultiplexer.hpp"
 #include "blackoilpvt/GasPvtMultiplexer.hpp"
 #include "blackoilpvt/WaterPvtMultiplexer.hpp"
@@ -66,8 +66,8 @@ class Schedule;
  *
  * \tparam Scalar The type used for scalar floating point values
  */
-template <class Scalar, class IndexTraits = BlackOilDefaultIndexTraits, 
-    template<typename> typename Storage = VectorWithDefaultAllocator, 
+template <class Scalar, class IndexTraits = BlackOilDefaultFluidSystemIndices,
+    template<typename> typename Storage = VectorWithDefaultAllocator,
     template<typename> typename SmartPointer = std::shared_ptr>
 class FLUIDSYSTEM_CLASSNAME : public BaseFluidSystem<Scalar, FLUIDSYSTEM_CLASSNAME<Scalar, IndexTraits, Storage, SmartPointer> >
 {
@@ -1907,7 +1907,7 @@ resizeArrays_(std::size_t numRegions)
 }
 
 #ifdef COMPILING_STATIC_FLUID_SYSTEM
-template <typename T> using BOFS = FLUIDSYSTEM_CLASSNAME<T, BlackOilDefaultIndexTraits, VectorWithDefaultAllocator, std::shared_ptr>;
+template <typename T> using BOFS = FLUIDSYSTEM_CLASSNAME<T, BlackOilDefaultFluidSystemIndices, VectorWithDefaultAllocator, std::shared_ptr>;
 
 #define DECLARE_INSTANCE(T)                                                           \
 template<> unsigned char BOFS<T>::numActivePhases_;                                   \
