@@ -45,15 +45,28 @@
 #include <vector>
 
 // helper macro to handle error throws or not
-#define HANDLE_ERROR(type, message) \
-  { \
-    if (throwOnError) \
-      OPM_THROW(type, message); \
-    else { \
-      std::cerr << message << std::endl; \
-      ++num_errors; \
-    } \
-  }
+#define HANDLE_ERROR(type, message)                     \
+    do {                                                \
+        if (throwOnError) {                             \
+            OPM_THROW((type), (message));               \
+        }                                               \
+        else {                                          \
+            std::cerr << (message) << std::endl;        \
+            ++this->num_errors;                         \
+        }                                               \
+    } while (false)
+
+#define HANDLE_ERROR_OR_RETURN(type, message)           \
+    do {                                                \
+        if (throwOnError) {                             \
+            OPM_THROW((type), (message));               \
+        }                                               \
+        else {                                          \
+            std::cerr << (message) << std::endl;        \
+            ++this->num_errors;                         \
+            return;                                     \
+        }                                               \
+    } while (false)
 
 namespace {
 
@@ -110,12 +123,12 @@ void ECLRegressionTest::compareFloatingPointVectors(const std::vector<T>& t1, co
     }
 
     if (t1.size() != t2.size()) {
-        HANDLE_ERROR(std::runtime_error,
-                     fmt::format("\nError trying to compare two vectors "
-                                 "with different size {} - {}"
-                                 "\n > size of first vector : {}"
-                                 "\n > size of second vector: {}",
-                                 keyword, reference, t1.size(), t2.size()));
+        HANDLE_ERROR_OR_RETURN(std::runtime_error,
+                               fmt::format("\nError trying to compare two vectors "
+                                           "with different size {} - {}"
+                                           "\n > size of first vector : {}"
+                                           "\n > size of second vector: {}",
+                                           keyword, reference, t1.size(), t2.size()));
     }
 
     auto it = std::find(keywordDisallowNegatives.begin(), keywordDisallowNegatives.end(), keyword);
@@ -137,12 +150,12 @@ template <typename T>
 void ECLRegressionTest::compareVectors(const std::vector<T>& t1, const std::vector<T>& t2, const std::string& keyword, const std::string& reference) {
 
     if (t1.size() != t2.size()) {
-        HANDLE_ERROR(std::runtime_error,
-                     fmt::format("\nError trying to compare two vectors "
-                                 "with different size {} - {}"
-                                 "\n > size of first vector : {}"
-                                 "\n > size of second vector: {}",
-                                 keyword, reference, t1.size(), t2.size()));
+        HANDLE_ERROR_OR_RETURN(std::runtime_error,
+                               fmt::format("\nError trying to compare two vectors "
+                                           "with different size {} - {}"
+                                           "\n > size of first vector : {}"
+                                           "\n > size of second vector: {}",
+                                           keyword, reference, t1.size(), t2.size()));
 
     }
 
