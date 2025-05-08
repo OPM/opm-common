@@ -22,10 +22,10 @@
 */
 /*!
  * \file
- * \copydoc Opm::BlackOilDefaultIndexTraits
+ * \copydoc Opm::BlackOilDefaultFluidSystemIndices
  */
-#ifndef OPM_BLACK_OIL_DEFAULT_INDEX_TRAITS_HPP
-#define OPM_BLACK_OIL_DEFAULT_INDEX_TRAITS_HPP
+#ifndef OPM_BLACK_OIL_DEFAULT_FLUID_SYSTEM_INDICES_HPP
+#define OPM_BLACK_OIL_DEFAULT_FLUID_SYSTEM_INDICES_HPP
 
 namespace Opm {
 
@@ -33,7 +33,7 @@ namespace Opm {
  * \brief The class which specifies the default phase and component indices for the
  *        black-oil fluid system.
  */
-class BlackOilDefaultIndexTraits
+class BlackOilDefaultFluidSystemIndices
 {
 public:
     //! Index of the water phase
