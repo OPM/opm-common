@@ -91,10 +91,28 @@ std::vector<T> scalarVectorOperation(const T& scalar, const std::vector<T>& vecA
     return result;
 }
 
+
+template <typename T, typename Operation>
+void scalarVectorOperation(const T& scalar, std::vector<T>& vecA, Operation op) {
+    std::transform(vecA.begin(), vecA.end(), vecA.begin(),
+        [&scalar, &op](const T& a) { return op(a, scalar); });
+}
+
+
 std::tuple<std::array<double,4>, std::array<double,4>, std::array<double,4>> 
 appendNode(const std::array<double,3>&, const std::array<double,3>&, 
            const std::array<double,3>&, const double&, const double&, 
            const double&);
+           
+template <typename T>
+std::vector<T> filterArray(const std::vector<T>& X, const std::vector<int>& ind){
+    std::vector<T> filtered_vectorX(ind.size(),0);
+    for (std::size_t index = 0; index < ind.size(); index++) {
+        filtered_vectorX[index] = X[ind[index]];
+    }
+    return filtered_vectorX;
+}
+
 template <typename T>
 std::vector<T> filterArray(const std::vector<std::size_t>& X, const std::vector<int>& ind){
     std::vector<T> filtered_vectorX(ind.size(),0);

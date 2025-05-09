@@ -262,6 +262,23 @@ write(const std::string& kw, const std::vector<double>& data)
 
 void
 Opm::EclIO::OutputStream::Init::
+write(const std::string&                        kw,
+      const std::vector<PaddedOutputString<8>>& data)
+{
+    this->writeImpl(kw, data);
+}
+
+void
+Opm::EclIO::OutputStream::Init::
+write(const std::string&                        kw,
+      const std::vector<char >&                 data)
+{
+    this->writeImpl(kw, data);
+}
+
+
+void
+Opm::EclIO::OutputStream::Init::
 open(const std::string& fname,
      const bool         formatted)
 {
