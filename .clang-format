@@ -1,20 +1,22 @@
-{
-        BasedOnStyle: WebKit,
-        AlignConsecutiveAssignments: false,
-        AlignConsecutiveDeclarations: false,
-        AlignAfterOpenBracket: Align,
-        AllowShortBlocksOnASingleLine: false,
-        AllowShortFunctionsOnASingleLine: None,
-        AlwaysBreakAfterReturnType: TopLevelDefinitions,
-        AlwaysBreakTemplateDeclarations: Yes,
-        BinPackArguments: false,
-        BinPackParameters: false,
-        BreakBeforeBraces: Linux,
-        BreakConstructorInitializers: BeforeComma,
-        ColumnLimit: 120,
-        Cpp11BracedListStyle: true,
-        FixNamespaceComments: true,
-        InsertNewlineAtEOF: true,
-        MaxEmptyLinesToKeep: 5,
-        NamespaceIndentation: Inner,
-}
+BasedOnStyle: WebKit
+AlignConsecutiveAssignments: false
+AlignConsecutiveDeclarations: false
+AlignAfterOpenBracket: Align
+AllowShortBlocksOnASingleLine: false
+AllowShortFunctionsOnASingleLine: None
+AlwaysBreakAfterReturnType: TopLevelDefinitions
+AlwaysBreakTemplateDeclarations: Yes
+BinPackArguments: false
+BinPackParameters: false
+BreakBeforeBraces: Custom
+BreakConstructorInitializers: BeforeComma
+ColumnLimit: 120
+Cpp11BracedListStyle: true
+FixNamespaceComments: true
+InsertNewlineAtEOF: true
+MaxEmptyLinesToKeep: 5
+NamespaceIndentation: Inner
+BraceWrapping:
+    AfterStruct: true
+    AfterClass: true
+    AfterFunction: true
