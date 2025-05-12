@@ -20,6 +20,8 @@
 #ifndef OPM_OUTPUT_WELLS_HPP
 #define OPM_OUTPUT_WELLS_HPP
 
+#include <opm/common/ErrorMacros.hpp>
+#include <opm/common/OpmLog/OpmLog.hpp>
 #include <opm/output/data/GuideRateValue.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellEnums.hpp>
 
@@ -1059,6 +1061,11 @@ namespace Opm { namespace data {
                 ;
         }
 
+        bool operator!=(const Well& well2) const
+        {
+            return !(*this == well2);
+        }
+
         template<class Serializer>
         void serializeOp(Serializer& serializer)
         {
@@ -1151,7 +1158,14 @@ namespace Opm { namespace data {
                 buffer.read(name);
                 Well well;
                 well.read(buffer);
-                this->emplace(name, well);
+                auto result = this->emplace(name, well);
+                // In case there was already an entry for the well we want to insert, then result.second == false.
+                // Then we check if this entry is the same as the one we want to insert.
+                if (!result.second && result.first->second != well) {
+                    OPM_THROW(std::runtime_error, "Received different output data for well " + name + " from more than one process, the output of this simulation will be wrong!");
+                } else if (!result.second) {
+                    OpmLog::warning("Received consistently duplicated output data for well " + name + " from more than one process - this might be problematic!");
+                }
             }
         }
 
