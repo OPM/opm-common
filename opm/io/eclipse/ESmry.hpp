@@ -107,6 +107,8 @@ private:
     std::vector<int> seqIndex;
     std::vector<int> mini_steps;
 
+    std::vector<std::string> ignore_keyword_list = {"TNAVHEAD", "TNAVTIME"};
+
     void ijk_from_global_index(int glob, int &i, int &j, int &k) const;
 
     std::vector<SummaryNode> summaryNodes;

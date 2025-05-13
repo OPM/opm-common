@@ -1023,7 +1023,8 @@ ESmry::getListOfArrays(const std::string& filename, bool formatted)
 
             fseek(ptr, 8, SEEK_CUR);
 
-            if ((strcmp(arrName, "SEQHDR  ") == 0) || (strcmp(arrName, "MINISTEP") == 0))
+            if ((strcmp(arrName, "SEQHDR  ") == 0) || (strcmp(arrName, "MINISTEP") == 0)
+                  || (strcmp(arrName, "TNAVHEAD") == 0) || (strcmp(arrName, "TNAVTIME") == 0) )
                 arrType = Opm::EclIO::INTE;
             else if (strcmp(arrName, "PARAMS  ") == 0)
                 arrType = Opm::EclIO::REAL;
@@ -1032,11 +1033,13 @@ ESmry::getListOfArrays(const std::string& filename, bool formatted)
             }
         }
 
-        uint64_t filePos = static_cast<uint64_t>(ftell(ptr));
 
-        std::tuple <std::string, uint64_t> t1;
-        t1 = std::make_tuple(Opm::EclIO::trimr(arrName), filePos);
-        resultVect.push_back(t1);
+        if ( std::find(ignore_keyword_list.begin(), ignore_keyword_list.end(), std::string(arrName)) == ignore_keyword_list.end()){
+            uint64_t filePos = static_cast<uint64_t>(ftell(ptr));
+            std::tuple <std::string, uint64_t> t1;
+            t1 = std::make_tuple(Opm::EclIO::trimr(arrName), filePos);
+            resultVect.push_back(t1);
+        }
 
         if (num > 0) {
             if (formatted) {
