@@ -949,6 +949,43 @@
     "ERft_len": {
         "signature": "opm.io.ecl.ERft.__len__() -> int",
         "doc": "Returns the number of reports, i.e., the length of the ERft.\n\n:return: The number of reports.\n:type return: int"
+    },
+    "EclOutput": {
+        "type": "class",
+        "signature": "opm.io.ecl.EclOutput",
+        "doc": "Class for writing Eclipse output files."
+    },
+    "EclOutput_init": {
+        "signature": "opm.io.ecl.EclOutput.__init__(filename: str, formatted: bool = False, append: bool = False) -> EclOutput",
+        "doc": "Initialize the EclOutput object.\n\n:param filename: The name of the output file.\n:type filename: str\n:param formatted: Whether to use formatted output.\n:type formatted: bool\n:param append: Whether to append to an existing file.\n:type append: bool\n:return: The initialized EclOutput object.\n:rtype: EclOutput"
+    },
+    "EclOutput_write_message": {
+        "signature": "opm.io.ecl.EclOutput.write_message(message: str) -> None",
+        "doc": "Write a plain message to the Eclipse output file.\n\n:param message: The message string to write.\n:type message: str"
+    },
+    "EclOutput_write_char_array": {
+        "signature": "opm.io.ecl.EclOutput.__write_char_array(array_name: str, data: list[str]) -> None",
+        "doc": "Write a string array to the Eclipse output file under the given array name.\n\n:param array_name: The array name for the data.\n:type array_name: str\n:param data: List of strings to write.\n:type data: list[str]"
+    },
+    "EclOutput_write_c0nn_array": {
+        "signature": "opm.io.ecl.EclOutput.__write_c0nn_array(array_name: str, data: list[str], element_size: int) -> None",
+        "doc": "Write connection (C0NN) data to the Eclipse output file.\n\n:param array_name: The array name for the data.\n:type array_name: str\n:param data: List of C0NN strings to write.\n:type data: list[bool]\n:param element_size: The element_size for type C0NN.\n:type element_size: int"
+    },
+    "EclOutput_write_logi_array": {
+        "signature": "opm.io.ecl.EclOutput.__write_logi_array(array_name: str, data: list[bool]) -> None",
+        "doc": "Write a boolean array to the Eclipse output file under the given array name.\n\n:param array_name: The array name for the data.\n:type array_name: str\n:param data: List of booleans to write.\n:type data: list[bool]"
+    },
+    "EclOutput_write_inte_array": {
+        "signature": "opm.io.ecl.EclOutput.__write_inte_array(array_name: str, data: list[int]) -> None",
+        "doc": "Write an integer array to the Eclipse output file under the given array name.\n\n:param array_name: The array name for the data.\n:type array_name: str\n:param data: List of integers to write.\n:type data: list[int]"
+    },
+    "EclOutput_write_real_array": {
+        "signature": "opm.io.ecl.EclOutput.__write_real_array(array_name: str, data: list[float]) -> None",
+        "doc": "Write a float array to the Eclipse output file under the given array name.\n\n:param array_name: The array name for the data.\n:type array_name: str\n:param data: List of floats to write.\n:type data: list[float]"
+    },
+    "EclOutput_write_doub_array": {
+        "signature": "opm.io.ecl.EclOutput.__write_doub_array(array_name: str, data: list[float]) -> None",
+        "doc": "Write a double-precision float array to the Eclipse output file under the given array name.\n\n:param array_name: The array name for the data.\n:type array_name: str\n:param data: List of double-precision floats to write.\n:type data: list[float]"
     }
 
 }

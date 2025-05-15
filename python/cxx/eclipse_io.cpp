@@ -548,21 +548,21 @@ void python::common::export_IO(py::module& m) {
 
        .def("__len__", &Opm::EclIO::ERft::numberOfReports, ERft_len_docstring);
 
-   py::class_<EclOutputBind>(m, "EclOutput")
+   py::class_<EclOutputBind>(m, "EclOutput", EclOutput_docstring)
         .def(py::init<const std::string &, const bool, const bool>(), py::arg("filename"),
-             py::arg("formatted") = false, py::arg("append") = false)
-        .def("write_message", &EclOutputBind::writeMessage)
+             py::arg("formatted") = false, py::arg("append") = false, EclOutput_init_docstring)
+        .def("write_message", &EclOutputBind::writeMessage, py::arg("msg"), EclOutput_write_message_docstring)
         .def("__write_char_array", (void (EclOutputBind::*)(const std::string&,
-                                  const std::vector<std::string>&)) &EclOutputBind::writeArray)
+                                  const std::vector<std::string>&)) &EclOutputBind::writeArray, py::arg("array_name"), py::arg("data"), EclOutput_write_char_array_docstring)
 
-        .def("__write_c0nn_array", &EclOutputBind::writeC0nnArray)
+        .def("__write_c0nn_array", &EclOutputBind::writeC0nnArray, py::arg("array_name"), py::arg("data"), py::arg("element_size"), EclOutput_write_c0nn_array_docstring)
 
         .def("__write_logi_array", (void (EclOutputBind::*)(const std::string&,
-                                  const std::vector<bool>&)) &EclOutputBind::writeArray)
+                                  const std::vector<bool>&)) &EclOutputBind::writeArray, py::arg("array_name"), py::arg("data"), EclOutput_write_logi_array_docstring)
         .def("__write_inte_array", (void (EclOutputBind::*)(const std::string&,
-                                  const std::vector<int>&)) &EclOutputBind::writeArray)
+                                  const std::vector<int>&)) &EclOutputBind::writeArray, py::arg("array_name"), py::arg("data"), EclOutput_write_inte_array_docstring)
         .def("__write_real_array", (void (EclOutputBind::*)(const std::string&,
-                                  const std::vector<float>&)) &EclOutputBind::writeArray)
+                                  const std::vector<float>&)) &EclOutputBind::writeArray, py::arg("array_name"), py::arg("data"), EclOutput_write_real_array_docstring)
         .def("__write_doub_array", (void (EclOutputBind::*)(const std::string&,
-                                  const std::vector<double>&)) &EclOutputBind::writeArray);
+                                  const std::vector<double>&)) &EclOutputBind::writeArray, py::arg("array_name"), py::arg("data"), EclOutput_write_doub_array_docstring);
 }
