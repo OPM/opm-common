@@ -761,7 +761,7 @@
     },
     "ERst_load_report_step": {
         "signature": "opm.io.ecl.ERst.load_report_step(report_step: int) -> None",
-        "doc": "Loads the specified report step from the file into memory.\n\n:param report_step: The report step number to load.\n:type report_step: int\n:return: None"
+        "doc": "Loads the specified report step from the file into memory.\n\n:param report_step: The report step number to load.\n:type report_step: int"
     },
     "ERst_report_steps": {
         "signature": "opm.io.ecl.ERst.report_steps -> list[int]",
