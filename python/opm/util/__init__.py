@@ -1,4 +1,4 @@
-from opm._common import EModel, eclArrType
+from opm._common import EModel, eclArrType, EModel_add_filter_docstring
 from opm._common import calc_cell_vol
 
 def emodel_add_filter(self, key, operator, val1, val2 = None):
@@ -28,5 +28,6 @@ def emodel_add_filter(self, key, operator, val1, val2 = None):
         elif arrType == eclArrType.REAL:
             self.__add_filter(key, operator, float(val1), float(val2))
 
+emodel_add_filter.__doc__ = EModel_add_filter_docstring
 
 setattr(EModel, "add_filter", emodel_add_filter)

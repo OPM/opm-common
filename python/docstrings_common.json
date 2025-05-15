@@ -1007,6 +1007,83 @@
       "FieldProperties_get_int_array": {
         "signature": "FieldProperties.get_int_array(keyword: str) -> numpy.ndarray",
         "doc": "Returns an integer array for the given keyword.\n\n:param keyword: Name of the keyword.\n:type keyword: str\n:return: NumPy array of integers.\n:rtype: numpy.ndarray"
+    },
+    "EModel": {
+        "type": "class",
+        "signature": "opm.util.EModel",
+        "doc": "Represents an Eclipse model loaded from a simulation file."
+    },
+    "EModel_init": {
+        "signature": "opm.util.EModel.__init__(filename: str) -> EModel",
+        "doc": "Initializes the EModel instance using the provided file.\n\n:param filename: Path to the file.\n:type filename: str\n:return: EModel object.\n:rtype: EModel"
+    },
+    "EModel_contains": {
+        "signature": "opm.util.EModel.__contains__(parameter: str) -> bool",
+        "doc": "Checks if the given init or solution parameter exists in the model.\n\n:param parameter: Name of the parameter.\n:type parameter: str\n:return: True if the parameter exists.\n:rtype: bool"
+    },
+    "EModel_grid_dims": {
+        "signature": "opm.util.EModel.grid_dims() -> tuple[int, int, int]",
+        "doc": "Returns the grid dimensions (I, J, K) of the simulation model.\n\n:return: Tuple containing the grid dimensions.\n:rtype: tuple[int, int, int]"
+    },
+    "EModel_active_cells": {
+        "signature": "opm.util.EModel.active_cells() -> int",
+        "doc": "Returns the number of active cells in the simulation grid.\n\n:return: Number of active grid cells.\n:rtype: int"
+    },
+    "EModel_set_depth_fwl": {
+        "signature": "opm.util.EModel.set_depth_fwl(fwl: list[float]) -> None",
+        "doc": "Sets the free water level depths.\n\n:param fwl: List of free water level depths.\n:type fwl: list[float]"
+    },
+    "EModel_add_hc_filter": {
+        "signature": "opm.util.EModel.add_hc_filter() -> None",
+        "doc": "Adds a HC volume filter to the model."
+    },
+    "EModel_get_list_of_arrays": {
+        "signature": "opm.util.EModel.get_list_of_arrays() -> list[tuple[str, eclArrType]]",
+        "doc": "Returns a list of available parameter arrays and their types.\n\n:return: List of tuples with parameter arrays and their types.\n:rtype: list[tuple[str, eclArrType]]"
+    },
+    "EModel_active_report_step": {
+        "signature": "opm.util.EModel.active_report_step() -> int",
+        "doc": "Gets the currently active report step.\n\n:return: Active report step index.\n:rtype: int"
+    },
+    "EModel_get_report_steps": {
+        "signature": "opm.util.EModel.get_report_steps() -> list[int]",
+        "doc": "Returns all available report steps.\n\n:return: List of report steps.\n:rtype: list[int]"
+    },
+    "EModel_has_report_step": {
+        "signature": "opm.util.EModel.has_report_step(report_step: int) -> bool",
+        "doc": "Checks if the specified report step exists.\n\n:param report_step: The report step.\n:type report_step: int\n:return: True if the report step exists.\n:rtype: bool"
+    },
+    "EModel_set_report_step": {
+        "signature": "opm.util.EModel.set_report_step(report_step: int) -> None",
+        "doc": "Sets the active report step to the given report step and initializes the solution data.\n\n:param report_step: The report step.\n:type report_step: int"
+    },
+    "EModel_reset_filter": {
+        "signature": "opm.util.EModel.reset_filter() -> None",
+        "doc": "Clears all filters currently applied to the model."
+    },
+    "EModel_get": {
+        "signature": "opm.util.EModel.get(key: str) -> numpy.ndarray",
+        "doc": "Retrieves a parameter array by key. Returns an array of floats or integers depending on the data type.\n\n:param key: Name of the parameter.\n:type key: str\n:return: Parameter data as a NumPy array.\n:rtype: numpy.ndarray"
+    },
+    "EModel_add_filter_int1": {
+        "signature": "opm.util.EModel.__add_filter(key: str, operator: str, value: int) -> None",
+        "doc": "Adds an integer filter with a single value.\n\n:param key: Name of the parameter to filter.\n:type key: str\n:param operator: Comparison operator ('==', '>', '<' or 'eq', 'gt', 'lt').\n:type operator: str\n:param value: Integer value for the filter.\n:type value: int"
+    },
+    "EModel_add_filter_float1": {
+        "signature": "opm.util.EModel.__add_filter(key: str, operator: str, value: float) -> None",
+        "doc": "Adds a float filter with a single value.\n\n:param key: Name of the parameter to filter.\n:type key: str\n:param operator: Comparison operator ('==', '>', '<' or 'eq', 'gt', 'lt').\n:type operator: str\n:param value: Floating-point value for the filter.\n:type value: float"
+    },
+    "EModel_add_filter_int2": {
+        "signature": "opm.util.EModel.__add_filter(key: str, operator: str, value1: int, value2: int) -> None",
+        "doc": "Adds an integer filter with two bounds, i.e., a range filter.\n\n:param key: Name of the parameter to filter.\n:type key: str\n:param operator: Comparison operator ('between' or 'in').\n:type operator: str\n:param value1: Lower bound of the filter.\n:type value1: int\n:param value2: Upper bound of the filter.\n:type value2: int"
+    },
+    "EModel_add_filter_float2": {
+        "signature": "opm.util.EModel.__add_filter(key: str, operator: str, value1: float, value2: float) -> None",
+        "doc": "Adds a float filter with two bounds, i.e., a range filter.\n\n:param key: Name of the parameter to filter.\n:type key: str\n:param operator: Comparison operator ('between' or 'in').\n:type operator: str\n:param value1: Lower bound.\n:type value1: float\n:param value2: Upper bound.\n:type value2: float"
+    },
+    "EModel_add_filter": {
+        "signature": "opm.util.EModel.add_filter(key: str, operator: str, val1: int | float, val2: int | float | None = None) -> None",
+        "doc": "Adds a filter to the EModel based on parameter type and number of values.\n\nAutomatically determines the array type (integer or float) based on the key and dispatches the appropriate filter method.\n\n:param key: Name of the parameter to filter.\n:type key: str\n:param operator: Comparison operator (e.g., '==', '>', '<', '>=', '<=').\n:type operator: str\n:param val1: First comparison value.\n:type val1: int or float\n:param val2: Optional second value for range-based filters.\n:type val2: int or float or None\n:raises ValueError: If the report step is in the past or exceeds the duration of the simulation."
     }
 
 }
