@@ -70,8 +70,8 @@
         "doc": "Returns the title of the EclipseState.\n\n:return: The title.\n:type return: str"
     },
     "EclipseState_field_props": {
-        "signature": "opm.io.ecl_state.EclipseState.field_props() -> FieldPropsManager",
-        "doc": "Returns the field properties for the Eclipse simulation. \n\n:return: The field properties for the simulation.\n:type: FieldPropsManager"
+        "signature": "opm.io.ecl_state.EclipseState.field_props() -> FieldProperties",
+        "doc": "Returns the field properties for the Eclipse simulation. \n\n:return: The field properties for the simulation.\n:type: FieldProperties"
     },
     "EclipseState_grid": {
         "signature": "opm.io.ecl_state.EclipseState.grid() -> EclipseGrid",
@@ -986,6 +986,27 @@
     "EclOutput_write_doub_array": {
         "signature": "opm.io.ecl.EclOutput.__write_doub_array(array_name: str, data: list[float]) -> None",
         "doc": "Write a double-precision float array to the Eclipse output file under the given array name.\n\n:param array_name: The array name for the data.\n:type array_name: str\n:param data: List of double-precision floats to write.\n:type data: list[float]"
+    },
+    "FieldProperties": {
+        "type": "class",
+        "signature": "FieldProperties",
+        "doc": "Provides access to field-wide simulation properties."
+    },
+      "FieldProperties_contains": {
+        "signature": "FieldProperties.__contains__(keyword: str) -> bool",
+        "doc": "Checks whether the given keyword exists.\n\n:param keyword: Name of the keyword.\n:type keyword: str\n:return: True if the keyword exists.\n:rtype: bool"
+    },
+      "FieldProperties_getitem": {
+        "signature": "FieldProperties.__getitem__(keyword: str) -> numpy.ndarray",
+        "doc": "Retrieves a double-precision floating-point or integer array associated for the given keyword.\n\n:param keyword: Name of the keyword.\n:type keyword: str\n:return: NumPy array of doubles or integers.\n:rtype: numpy.ndarray"
+    },
+      "FieldProperties_get_double_array": {
+        "signature": "FieldProperties.get_double_array(keyword: str) -> numpy.ndarray",
+        "doc": "Returns a double-precision floating-point array for the given keyword.\n\n:param keyword: Name of the keyword.\n:type keyword: str\n:return: NumPy array of doubles.\n:rtype: numpy.ndarray"
+    },
+      "FieldProperties_get_int_array": {
+        "signature": "FieldProperties.get_int_array(keyword: str) -> numpy.ndarray",
+        "doc": "Returns an integer array for the given keyword.\n\n:param keyword: Name of the keyword.\n:type keyword: str\n:return: NumPy array of integers.\n:rtype: numpy.ndarray"
     }
 
 }
