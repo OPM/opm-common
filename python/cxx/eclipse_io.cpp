@@ -524,26 +524,29 @@ void python::common::export_IO(py::module& m) {
         .def("cellvolumes", &get_cellvolumes_mask, py::arg("mask"), EGrid_cellvolumes_mask_docstring);
 
 
-   py::class_<Opm::EclIO::ERft>(m, "ERft")
-        .def(py::init<const std::string &>())
-        .def_property_readonly("list_of_rfts", &Opm::EclIO::ERft::listOfRftReports)
+ py::class_<Opm::EclIO::ERft>(m, "ERft", ERft_docstring)
+        .def(py::init<const std::string &>(), py::arg("filename"), ERft_init_docstring)
+        .def_property_readonly("list_of_rfts", &Opm::EclIO::ERft::listOfRftReports, ERft_list_of_rfts_docstring)
 
         .def("__get_list_of_arrays", (std::vector< std::tuple<std::string, Opm::EclIO::eclArrType, int64_t> >
-                                      (Opm::EclIO::ERft::*)(int) const) &Opm::EclIO::ERft::listOfRftArrays)
+                                      (Opm::EclIO::ERft::*)(int) const) &Opm::EclIO::ERft::listOfRftArrays, py::arg("report_index"), ERft_get_list_of_arrays1_docstring)
 
         .def("__get_list_of_arrays", (std::vector< std::tuple<std::string, Opm::EclIO::eclArrType, int64_t> >
                                       (Opm::EclIO::ERft::*)(const std::string&, int, int, int) const)
-             &Opm::EclIO::ERft::listOfRftArrays)
+             &Opm::EclIO::ERft::listOfRftArrays, py::arg("well_name"), py::arg("year"), py::arg("month"), py::arg("day"), ERft_get_list_of_arrays2_docstring)
 
-        .def("__get_data", &get_rft_vector_WellDate)
-        .def("__get_data", &get_rft_vector_Index)
+        .def("__get_data", &get_rft_vector_WellDate, py::arg("array_name"), py::arg("well_name"), py::arg("year"), py::arg("month"), py::arg("day"), ERft_get_data1_docstring)
+        .def("__get_data", &get_rft_vector_Index, py::arg("array_name"), py::arg("report_index"), ERft_get_data2_docstring)
 
-        .def("__has_rft", (bool (Opm::EclIO::ERft::*)(const std::string&, int, int, int) const) &Opm::EclIO::ERft::hasRft)
-        .def("__has_array", (bool (Opm::EclIO::ERft::*)(const std::string&, int) const) &Opm::EclIO::ERft::hasArray)
+        .def("__has_rft", (bool (Opm::EclIO::ERft::*)(const std::string&, int, int, int) const) &Opm::EclIO::ERft::hasRft,
+             py::arg("well_name"), py::arg("year"), py::arg("month"), py::arg("day"), ERft_has_rft_docstring)
+        .def("__has_array", (bool (Opm::EclIO::ERft::*)(const std::string&, int) const) &Opm::EclIO::ERft::hasArray,
+             py::arg("array_name"), py::arg("report_index"), ERft_has_array1_docstring)
         .def("__has_array", (bool (Opm::EclIO::ERft::*)(const std::string&, const std::string&, const
-                             std::tuple<int,int,int>&) const) &Opm::EclIO::ERft::hasArray)
+                             std::tuple<int,int,int>&) const) &Opm::EclIO::ERft::hasArray,
+             py::arg("array_name"), py::arg("well_name"), py::arg("date"), ERft_has_array2_docstring)
 
-       .def("__len__", &Opm::EclIO::ERft::numberOfReports);
+       .def("__len__", &Opm::EclIO::ERft::numberOfReports, ERft_len_docstring);
 
    py::class_<EclOutputBind>(m, "EclOutput")
         .def(py::init<const std::string &, const bool, const bool>(), py::arg("filename"),

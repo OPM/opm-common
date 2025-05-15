@@ -904,6 +904,51 @@
     "EGrid_cellvolumes_mask": {
         "signature": "opm.io.ecl.EGrid.cellvolumes(mask: list[int]) -> numpy.ndarray",
         "doc": "Returns an array containing the volume of the selected cells.\n\n:param mask: List containing one entry per grid cell, if the entry in the list is '1', this cell is selected by the mask.\n:type mask: list[int]\n:return: A NumPy array containing cell volumes.\n:type: numpy.ndarray"
+    },
+    "ERft": {
+        "type": "class",
+        "signature": "opm.io.ecl.ERft",
+        "doc": "Handles RFT data from Eclipse simulation outputs."
+    },
+    "ERft_init": {
+        "signature": "opm.io.ecl.ERft.__init__(filename: str) -> ERft",
+        "doc": "Initializes the ERft object from the specified file.\n\n:param filename: Path to the RFT file.\n:type filename: str\n:return: The ERft object.\n:rtype: ERft"
+    },
+    "ERft_list_of_rfts": {
+        "signature": "opm.io.ecl.ERft.list_of_rfts -> list[tuple[well_name: str, tuple[year: int, month: int, day: int]]]",
+        "doc": "Returns a list of RFT reports.\n\n:return: A list of tuples with well names and corresponding dates.\n:rtype: list[tuple[well_name: str, tuple[year: int, month: int, day: int]]]"
+    },
+    "ERft_get_list_of_arrays1": {
+        "signature": "opm.io.ecl.ERft.__get_list_of_arrays(report_index: int) -> list[tuple[str, eclArrType, int]]",
+        "doc": "Returns the metadata for arrays for a specific report step.\n\n:param report_index: The report step index.\n:type report_index: int\n:return: List of array metadata (name, type, size).\n:rtype: list[tuple[str, eclArrType, int]]"
+    },
+    "ERft_get_list_of_arrays2": {
+        "signature": "opm.io.ecl.ERft.__get_list_of_arrays(well_name: str, year: int, month: int, day: int) -> list[tuple[str, eclArrType, int]]",
+        "doc": "Returns the metadata for arrays for a specific well and date.\n\n:param well_name: Well name.\n:type well_name: str\n:param year: Year.\n:type year: int\n:param month: Month.\n:type month: int\n:param day: Day.\n:type day: int\n:return: List of array metadata (name, type, size).\n:rtype: list[tuple[str, eclArrType, int]]"
+    },
+    "ERft_get_data1": {
+        "signature": "opm.io.ecl.ERft.__get_data(array_name: str, well_name: str, year: int, month: int, day: int) -> tuple[numpy.ndarray, eclArrType]",
+        "doc": "Retrieves the RFT array data for a specific well and date.\n\n:param array_name: Name of the array.\n:param well_name: Well name.\n:type well_name: str\n:param year: Year.\n:type year: int\n:param month: Month.\n:type month: int\n:param day: Day.\n:type day: int\n:type array_name: str\n:return: The RFT data as a NumPy array and the eclArrType.\n:rtype: tuple[numpy.ndarray, eclArrType]"
+    },
+    "ERft_get_data2": {
+        "signature": "opm.io.ecl.ERft.__get_data(array_name: str, report_index: int) -> tuple[numpy.ndarray, eclArrType]",
+        "doc": "Retrieves RFT array data using a report index.\n\n:param array_name: Name of the array.\n:type array_name: str\n:param report_index: The report step index.\n:type report_index: int\n:return: The RFT data as a NumPy array and the eclArrType.\n:rtype: tuple[numpy.ndarray, eclArrType]"
+    },
+    "ERft_has_rft": {
+        "signature": "opm.io.ecl.ERft.__has_rft(well_name: str, year: int, month: int, day: int) -> bool",
+        "doc": "Checks if an RFT exists for the given well and date.\n\n:param well_name: Well name.\n:type well_name: str\n:param year: Year.\n:type year: int\n:param month: Month.\n:type month: int\n:param day: Day.\n:type day: int\n:return: True if the RFT exists.\n:rtype: bool"
+    },
+    "ERft_has_array1": {
+        "signature": "opm.io.ecl.ERft.__has_array(array_name: str, report_index: int) -> bool",
+        "doc": "Checks if an array exists for a specific report index.\n\n:param array_name: Name of the array.\n:type array_name: str\n:param report_index: The report index.\n:type report_index: int\n:return: True if the array exists.\n:rtype: bool"
+    },
+    "ERft_has_array2": {
+        "signature": "opm.io.ecl.ERft.__has_array(array_name: str, well_name: str, date: tuple[int, int, int]) -> bool",
+        "doc": "Checks if an array exists for a given well and date.\n\n:param array_name: Name of the array.\n:type array_name: str\n:param well_name: Well name.\n:type well_name: str\n:param date: The date as a tuple(year, month, day).\n:type date: tuple[int, int, int]\n:return: True if the array exists.\n:rtype: bool"
+    },
+    "ERft_len": {
+        "signature": "opm.io.ecl.ERft.__len__() -> int",
+        "doc": "Returns the number of reports, i.e., the length of the ERft.\n\n:return: The number of reports.\n:type return: int"
     }
 
 }
