@@ -1084,6 +1084,39 @@
     "EModel_add_filter": {
         "signature": "opm.util.EModel.add_filter(key: str, operator: str, val1: int | float, val2: int | float | None = None) -> None",
         "doc": "Adds a filter to the EModel based on parameter type and number of values.\n\nAutomatically determines the array type (integer or float) based on the key and dispatches the appropriate filter method.\n\n:param key: Name of the parameter to filter.\n:type key: str\n:param operator: Comparison operator (e.g., '==', '>', '<', '>=', '<=').\n:type operator: str\n:param val1: First comparison value.\n:type val1: int or float\n:param val2: Optional second value for range-based filters.\n:type val2: int or float or None\n:raises ValueError: If the report step is in the past or exceeds the duration of the simulation."
+    },
+    "OpmLog": {
+        "type": "class",
+        "signature": "opm.io.OpmLog",
+        "doc": "Fully static class providing logging functionality for OPM, for embedded python accessible via opm_embedded.OpmLog."
+    },
+      "OpmLog_info": {
+        "signature": "opm.io.OpmLog.info(msg: str) -> None",
+        "doc": "Add an info message to the OPM log.\n\n:param msg: Message to log.\n:type msg: str\n:return: None"
+    },
+      "OpmLog_warning": {
+        "signature": "opm.io.OpmLog.warning(msg: str) -> None",
+        "doc": "Add a warning message to the OPM log.\n\n:param msg: Warning message.\n:type msg: str\n:return: None"
+    },
+      "OpmLog_error": {
+        "signature": "opm.io.OpmLog.error(msg: str) -> None",
+        "doc": "Add an error message to the OPM log.\n\n:param msg: Error message.\n:type msg: str\n:return: None"
+    },
+      "OpmLog_problem": {
+        "signature": "opm.io.OpmLog.problem(msg: str) -> None",
+        "doc": "Add a problem message to the OPM log.\n\n:param msg: Problem description.\n:type msg: str\n:return: None"
+    },
+      "OpmLog_bug": {
+        "signature": "opm.io.OpmLog.bug(msg: str) -> None",
+        "doc": "Add a bug message to the OPM log.\n\n:param msg: Bug report message.\n:type msg: str\n:return: None"
+    },
+      "OpmLog_debug": {
+        "signature": "opm.io.OpmLog.debug(msg: str) -> None",
+        "doc": "Add a debug message to the OPM log.\n\n:param msg: Debug message.\n:type msg: str\n:return: None"
+    },
+      "OpmLog_note": {
+        "signature": "opm.io.OpmLog.note(msg: str) -> None",
+        "doc": "Add a note to the OPM log.\n\n:param msg: Note message.\n:type msg: str\n:return: None"
     }
 
 }
