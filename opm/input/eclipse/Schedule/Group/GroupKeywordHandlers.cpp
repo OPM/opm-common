@@ -179,10 +179,12 @@ void handleGCONPROD(HandlerContext& handlerContext)
         }
 
         const Group::ProductionCMode controlMode = Group::ProductionCModeFromString(record.getItem("CONTROL_MODE").getTrimmedString(0));
-        // \Note: we do not enforce the allRates anymore. Instead, we have explicit definition of actions for all the possible rate limits
-        const Group::ExceedAction allRates = Group::ExceedActionFromString(record.getItem("EXCEED_PROC").getTrimmedString(0));
 
         Group::GroupLimitAction groupLimitAction;
+        groupLimitAction.allRates = Group::ExceedActionFromString(record.getItem("EXCEED_PROC").getTrimmedString(0));
+        // \Note: we do not use the allRates anymore. Instead, we have explicit definition of actions for all the possible rate limits
+        // \Note: the allRates is here for backward compatibility for the RESTART file output
+        const auto& allRates = groupLimitAction.allRates;
 
         groupLimitAction.oil = allRates;
 
@@ -214,7 +216,7 @@ void handleGCONPROD(HandlerContext& handlerContext)
                 groupLimitAction.liquid = Group::ExceedAction::RATE;
                 break;
             case Group::ProductionCMode::FLD:
-                //TODO: we do not know yet
+                //TODO: we do not know yet and we do nothing for now
             default:
                 break; // do nothing
         }
