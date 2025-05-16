@@ -29,6 +29,6 @@ from .opmcommon_python import ESmry
 from .opmcommon_python import EGrid
 from .opmcommon_python import ERft
 from .opmcommon_python import EclOutput
-from .opmcommon_python import EModel
+from .opmcommon_python import EModel, EModel_add_filter_docstring
 from .opmcommon_python import calc_cell_vol
 from .opmcommon_python import SummaryState
