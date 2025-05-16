@@ -174,7 +174,9 @@ public:
 
     struct GroupLimitAction
     {
+        // \Note: we do not use allRates in the simulation, while keeping it for now for RESTART output purpose
         ExceedAction allRates{ExceedAction::NONE};
+        ExceedAction oil{ExceedAction::NONE};
         ExceedAction water{ExceedAction::NONE};
         ExceedAction gas{ExceedAction::NONE};
         ExceedAction liquid{ExceedAction::NONE};
@@ -183,6 +185,7 @@ public:
         void serializeOp(Serializer& serializer)
         {
             serializer(allRates);
+            serializer(oil);
             serializer(water);
             serializer(gas);
             serializer(liquid);
@@ -191,6 +194,7 @@ public:
         bool operator==(const GroupLimitAction& other) const
         {
             return (this->allRates == other.allRates)
+                && (this->oil == other.oil)
                 && (this->water == other.water)
                 && (this->gas == other.gas)
                 && (this->liquid == other.liquid);
