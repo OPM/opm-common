@@ -174,6 +174,7 @@ public:
 
     struct GroupLimitAction
     {
+        // \Note: we do not use allRates in the simulation, while keeping it for now for RESTART output purpose
         ExceedAction allRates{ExceedAction::NONE};
         ExceedAction oil{ExceedAction::NONE};
         ExceedAction water{ExceedAction::NONE};
