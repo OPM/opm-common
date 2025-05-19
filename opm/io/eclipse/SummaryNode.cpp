@@ -247,7 +247,7 @@ std::string
 Opm::EclIO::SummaryNode::normalise_region_keyword(const std::string& keyword)
 {
     static const auto region_kw = std::regex {
-        R"((R[A-Z]{2,4})(_{0,2}[A-Z0-9]{3})?)"
+        R"((R[A-Z]{2,4})(_{0,2}[A-Z0-9_]{1,3})?)"
     };
 
     auto keywordPieces = std::smatch {};

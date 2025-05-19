@@ -88,7 +88,19 @@ FIPNUM
    50*8  50*18
    50*9  50*19
    50*10 50*20
-/ 
+/
+
+FIP_A
+  500*1
+  500*2
+/
+
+EQUALS
+  FIP_BC 4 4* 1 5 /
+  FIP_BC 3 4* 6 7 /
+  FIP_BC 2 4* 8 8 /
+  FIP_BC 1 4* 9 10 /
+/
 
 SOLUTION
 TBLKFSEA
@@ -311,6 +323,10 @@ ROP
 /
 ROPR
 /
+ROPR__A
+ 2 /
+ROPR__BC
+ 1 4 /
 RGPR
 /
 RWPR
