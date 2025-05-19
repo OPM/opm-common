@@ -62,6 +62,7 @@
 #include <filesystem>
 #include <map>
 #include <memory>
+#include <optional>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -2101,6 +2102,54 @@ BOOST_AUTO_TEST_CASE(region_production) {
                       ecl_sum_get_general_var( resp , 2 , "CGPT:W_1:1,1,1") +
                       ecl_sum_get_general_var( resp , 2 , "CGPT:W_2:2,1,1") +
                       ecl_sum_get_general_var( resp , 2 , "CGPT:W_3:3,1,1"), 1e-5);
+}
+
+BOOST_AUTO_TEST_CASE(region_production_udef_regset)
+{
+    setup cfg("region_vars_udef_regset");
+
+    {
+        out::Summary writer(cfg.config, cfg.es, cfg.grid, cfg.schedule, cfg.name);
+        SummaryState st(TimeService::now(), cfg.es.runspec().udqParams().undefinedValue());
+
+        const auto single_values = out::Summary::GlobalProcessParameters{};
+        const auto initial_inplace = std::optional<Inplace>{};
+        const auto inplace = Inplace{};
+
+        writer.eval(st, 1, 2 * day, cfg.wells, cfg.wbp, cfg.grp_nwrk,
+                    single_values, initial_inplace, inplace);
+        writer.add_timestep(st, 1, false);
+
+        writer.eval(st, 1, 5 * day, cfg.wells, cfg.wbp, cfg.grp_nwrk,
+                    single_values, initial_inplace, inplace);
+        writer.add_timestep(st, 1, false);
+
+        writer.eval(st, 2, 10 * day, cfg.wells, cfg.wbp, cfg.grp_nwrk,
+                    single_values, initial_inplace, inplace);
+        writer.add_timestep(st, 2, false);
+
+        writer.write();
+    }
+
+    auto res = readsum(cfg.name);
+    const auto* resp = res.get();
+
+    BOOST_CHECK(!ecl_sum_has_general_var(resp, "ROPR__A:1"));
+    BOOST_CHECK( ecl_sum_has_general_var(resp, "ROPR__A:2"));
+    BOOST_CHECK( ecl_sum_has_general_var(resp, "ROPR__BC:1"));
+    BOOST_CHECK(!ecl_sum_has_general_var(resp, "ROPR__BC:2"));
+    BOOST_CHECK(!ecl_sum_has_general_var(resp, "ROPR__BC:3"));
+    BOOST_CHECK( ecl_sum_has_general_var(resp, "ROPR__BC:4"));
+
+    // All connections in top two layers => _A:2 = 0 at all times.
+    BOOST_CHECK_CLOSE(ecl_sum_get_general_var(resp, 1, "ROPR__A:2"), 0.0, 1e-5);
+
+    // All connections in top two layers => _BC:1 = 0 at all times.
+    BOOST_CHECK_CLOSE(ecl_sum_get_general_var(resp, 1, "ROPR__BC:1"), 0.0, 1e-5);
+
+    // All connections top two layers => _BC:4 = full rate at all times
+    BOOST_CHECK_CLOSE(ecl_sum_get_general_var(resp, 1, "ROPR__BC:4"),
+                      100.1 + 200.1, 1e-5);
 }
 
 BOOST_AUTO_TEST_CASE(region_injection) {
