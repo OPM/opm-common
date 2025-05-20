@@ -565,6 +565,7 @@ template void DeckItem::push_backDummyDefault<RawString>( std::size_t );
 template void DeckItem::push_backDummyDefault<UDAValue>( std::size_t );
 
 template std::vector< int >& DeckItem::getData< int >();
+template std::vector< double >& DeckItem::getData< double >();
 
 template const std::vector< int >& DeckItem::getData< int >() const;
 template const std::vector< double >& DeckItem::getData< double >() const;

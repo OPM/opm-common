@@ -52,78 +52,90 @@
 #include <assert.h>
 namespace fs = std::filesystem;
 
-namespace {
+namespace Opm{
 
-Opm::Deck manipulate_deck(const char* deck_file, std::ostream& os)
+struct GridSize{
+    int nx;
+    int ny;
+    int nz;
+};
+struct ExtendParam{
+    int nz_upper;
+    double top_upper;
+    int nz_lower;
+    double bottom_lower;
+    double upper_poro;
+    double min_dist;
+    bool no_gap;
+    bool monotonic_zcorn;
+    bool vert_coord;
+    int upper_equilnum;
+    int nz_new;
+};
+
+GridSize getDimens(const Opm::Deck& deck)
 {
-  using namespace Opm;
-    ParseContext parseContext(Opm::InputErrorAction::WARN);
-    ErrorGuard errors;
-    // Pad vertically
-    auto deck = Opm::Parser{}.parseFile(deck_file, parseContext, errors);
-    int nz_upper = 2; 
-    double top_upper = 1500;
-    bool no_gap= true;
-    double min_dist = 0.0;
-    double upper_poro= 0.1;
-    //GridSection gridsec(decDeckSection gridsec(deck,"GRID");
-    DeckSection gridsec(deck,"GRID");// fixing CARTDIMS? + ZCORN + double valued arrays.
-    DeckSection runspec(deck,"RUNSPEC"); // fixing dimens
-    DeckSection schedule(deck,"SCHEDULE");  // fixing COMPDAT
-    //DeckSection props(deck,"PROPS"); // do nothing
-    DeckSection regions(deck,"REGIONS"); // extend and add for equilnum
-    DeckSection solution(deck,"SOLUTION"); // extend and add for equilnum
-    
-    ///DeckSection gridsec(deck,"EDIT");
-    //std::vector<int>& cardims = deck.get<ParserKeywords::CARDIMS>().back().getSIDoubleData();
-    //std::vector<int>& actnum = deck.get<ParserKeywords::ACTNUM>().back().getSIDoubleData();
-    //std::vector<double>& coord = deck.get<ParserKeywords::COORD>().back().data();
-    //std::vector<double>& zcorn = deck.get<ParserKeywords::ZCORN>().back().data();
-    //const Opm::DeckView& actnum_view = gridsec.get<ParserKeywords::ACTNUM>();
-    //Opm::DeckView& actnum_view = gridsec[](ParserKeywords::ACTNUM);
+    int nx,ny,nz;
+    GridSize grid_size;
+    if(deck.hasKeyword<Opm::ParserKeywords::DIMENS>()){
+        nx = deck[Opm::ParserKeywords::DIMENS::keywordName].back().getRecord(0).getItem("NX").get<int>(0);
+        ny = deck[Opm::ParserKeywords::DIMENS::keywordName].back().getRecord(0).getItem("NY").get<int>(0);
+        nz = deck[Opm::ParserKeywords::DIMENS::keywordName].back().getRecord(0).getItem("NZ").get<int>(0);
+        grid_size.nx = nx;
+        grid_size.ny = ny;
+        grid_size.nz = nz;
+    }else{
+        std::cerr << "No DIMENS keyword found in the deck" << std::endl;
+    }
+    return grid_size;
+}
 
-    std::vector<int>& actnum = const_cast<std::vector<int>&>(gridsec.get<ParserKeywords::ACTNUM>().back().getIntData());
-    std::vector<value::status>& actnum_status = const_cast<std::vector<value::status>&>(gridsec.get<ParserKeywords::ACTNUM>().back().getValueStatus());
-    //std::cout << runspec;
-    
-    int nx,ny,nz,nz_new,upper_equilnum;
+void extendDimens(const GridSize& grid_size, ExtendParam& extend_param, Opm::Deck& deck){
+    //int nx = grid_size.nx;
+    //int ny = grid_size.ny;
+    int nz = grid_size.nz;
     if(deck.hasKeyword<ParserKeywords::DIMENS>()){
-        nx = deck[ParserKeywords::DIMENS::keywordName].back().getRecord(0).getItem("NX").get<int>(0);
-        ny = deck[ParserKeywords::DIMENS::keywordName].back().getRecord(0).getItem("NY").get<int>(0);
-        nz = deck[ParserKeywords::DIMENS::keywordName].back().getRecord(0).getItem("NZ").get<int>(0);
-        nz_new= nz+nz_upper;
+        
+        extend_param.nz_new= nz+extend_param.nz_upper + extend_param.nz_lower;
         {
             DeckItem& NZit = const_cast<DeckItem&>(deck[ParserKeywords::DIMENS::keywordName].back().getRecord(0).getItem("NZ"));
             std::vector<int>& data = NZit.getData<int>();
-            data[0]=nz_new;
+            data[0]=extend_param.nz_new;
         }
         
         
         {
             DeckItem& eqldims = const_cast<DeckItem&>(deck[ParserKeywords::EQLDIMS::keywordName].back().getRecord(0).getItem("NTEQUL"));
             std::vector<int>& data = eqldims.getData<int>();
-            data[0] += 1;
-            upper_equilnum = data[0];
+            std::vector<value::status>& value_status = const_cast<std::vector<value::status>&>(eqldims.getValueStatus());
+            if(value_status[0] == value::status::deck_value){
+                data[0] += 1;
+            } else {
+                value_status[0] = value::status::deck_value;
+                data[0] = 2;
+            }
+            int upper_equilnum = data[0];
+            extend_param.upper_equilnum = upper_equilnum;
         }   
         //NZit.set<int>(0,nz+10);
     }else{
         std::cerr << "No DIMENS keyword found in the deck" << std::endl;
-        return deck;
     }
-    {
-        DeckItem& NZit = const_cast<DeckItem&>(gridsec[ParserKeywords::SPECGRID::keywordName].back().getRecord(0).getItem("NZ"));
+    if(deck.hasKeyword<ParserKeywords::SPECGRID>()){
+        DeckItem& NZit = const_cast<DeckItem&>(deck[ParserKeywords::SPECGRID::keywordName].back().getRecord(0).getItem("NZ"));
         std::vector<int>& data = NZit.getData<int>();
-        data[0]=nz_new;
+        data[0]=extend_param.nz_new;
     }
-  
-    std::vector<double>& coord = const_cast<std::vector<double>&>(gridsec.get<ParserKeywords::COORD>().back().getRawDoubleData());
-    std::vector<double>& zcorn = const_cast<std::vector<double>&>(gridsec.get<ParserKeywords::ZCORN>().back().getRawDoubleData());
-    std::vector<value::status>& zcorn_status = const_cast<std::vector<value::status>&>(gridsec.get<ParserKeywords::ZCORN>().back().getValueStatus());
-      //getRecord(0).getDataItem().getData< double >();
-    //ZcornMapper mapper( getNX(), getNY(), getNZ());
-    //zcorn_fixed = mapper.fixupZCORN( zcorn );
-    //dimens[2] += 3;
-    int nc_new = nx*ny*(nz+nz_upper);
+
+}
+    template<typename T>
+    void extendGridSection(DeckSection& gridsec,const GridSize& grid_size,const ExtendParam&  extend_param, type_tag type){
+    int nx = grid_size.nx;
+    int ny  = grid_size.ny;
+    int nz =  grid_size.nz;
+    int nz_upper = extend_param.nz_upper;
+    int nz_new = extend_param.nz_new;
+    int nc_new =nx*ny*nz_new;
     int nc = nx*ny*nz;
     //std::vector<DeckKeyword*> keywords = const_cast<std::vector<DeckKeyword*>>(gridsec.getKeywordList());
     for(const auto& records: gridsec){
@@ -136,30 +148,34 @@ Opm::Deck manipulate_deck(const char* deck_file, std::ostream& os)
         }
         const DeckItem& item = record.getItem(0);
         type_tag type_tag = item.getType();
-        if(type_tag != type_tag::fdouble){
+        if(type_tag != type){
             continue;
         }
-        std::vector<double>& val = const_cast<std::vector<double>&>(item.getData<double>());
-        if(val.size() != nc){
+        std::vector<T>& val = const_cast<std::vector<T>&>(item.getData<T>());
+        if( int(val.size()) != nc){
             continue;
         }
-        double default_value = 0.0;
+        T default_value = 0;
         if(records.name() == std::string("PORO")){
-            default_value = upper_poro;
+            default_value = extend_param.upper_poro;
         }
-
+        if(records.name() == std::string("NTG")){
+            default_value = 1.0;
+        }
         std::cout << "Extend data_size: " << records.name() << std::endl;
         //std::cout << "Extend item name: " << item.name() << std::endl;
         std::vector<value::status>& val_status = const_cast<std::vector<value::status>&>(item.getValueStatus());
 
-        std::vector<double> val_new(nc_new);
+        std::vector<T> val_new(nc_new);
         std::vector<value::status> val_status_new(nc_new, value::status::deck_value);
+
+        int nz_bottom = nz_upper + nz;
         for(int i=0; i<nx;++i){
              for(int j=0; j<ny; ++j){
                  for(int k=0; k<nz_new; ++k){
                      int ind_new = i + nx*j + nx*ny*k;
                      int ind_old = i + nx*j + nx*ny*(k-nz_upper);
-                     if(k>=nz_upper){
+                     if(k>=nz_upper && k < nz_bottom){
                          val_new[ind_new] = val[ind_old];
                          val_status_new[ind_new] = val_status[ind_old];
                      }else{
@@ -172,143 +188,179 @@ Opm::Deck manipulate_deck(const char* deck_file, std::ostream& os)
         val_status = val_status_new;
         val = val_new;
     }
-    // include all cells
-    actnum.resize(nx*ny*nz_new);
-    actnum_status = std::vector<value::status>(nx*ny*nz_new, value::status::deck_value);
-    for(auto& act:actnum){
-        act = 1;
     }
-    // make pilars strait
-    int ncoord = coord.size();
-    int nxny= ncoord/6;
-    assert((nx+1)*(ny+1) == nxny);
-    assert(ncoord%6 == 0);
-    for(int i=0; i<nxny; ++i){
-        coord[6*i+3] = coord[6*i+0] ;
-        coord[6*i+4] = coord[6*i+1] ;
-        //coord[6*i+2] = 0;
-        //coord[6*i+5] = coord[6*i+2];
-    }
-    std::vector<value::status> zcorn_status_new((2*nx)*(2*ny)*(2*nz_new),value::status::deck_value); 
-    std::vector<double> zcorn_new((2*nx)*(2*ny)*(2*nz_new),0.0);
-    // extend, make monotonic, fill gaps zcorn
-    for (int i=0; i<2*nx; ++i){
-        for(int j=0; j < 2*ny; ++j){
-            double minz=1e20;
-            double maxz=-1e20;
-            for(int k=0; k< 2*nz; ++k){
-                int index = i + j*(2*nx) + k*(2*nx)*(2*ny);
-                double z = zcorn[index];
-                minz = std::min(minz, z);
-                maxz = std::max(maxz, z);
-                //coord[6*index+5] = top_upper;
+    void
+    extendGRDECL(DeckSection& gridsec, const GridSize& grid_size, const ExtendParam& extend_param)
+    {
+        int nx = grid_size.nx;
+        int ny = grid_size.ny;
+        int nz = grid_size.nz;
+        int nz_upper = extend_param.nz_upper;
+        int nz_lower = extend_param.nz_lower;
+        double top_upper = extend_param.top_upper;
+        double bottom_lower = extend_param.bottom_lower;
+        double min_dist = extend_param.min_dist;
+        double no_gap = extend_param.no_gap;
+        int nz_new = extend_param.nz_new;
+        //int nc_new = nx*ny*nz_new;
+        std::vector<double>& coord
+            = const_cast<std::vector<double>&>(gridsec.get<ParserKeywords::COORD>().back().getRawDoubleData());
+        std::vector<double>& zcorn
+            = const_cast<std::vector<double>&>(gridsec.get<ParserKeywords::ZCORN>().back().getRawDoubleData());
+        std::vector<value::status>& zcorn_status = const_cast<std::vector<value::status>&>(gridsec.get<ParserKeywords::ZCORN>().back().getValueStatus());
+        //getRecord(0).getDataItem().getData< double >();
+        //ZcornMapper mapper( getNX(), getNY(), getNZ());
+        //zcorn_fixed = mapper.fixupZCORN( zcorn );
+        //dimens[2] += 3;
+        
+        // include all cells
+        
+        
+        // make pilars strait
+        if (extend_param.vert_coord) {
+            int ncoord = coord.size();
+            int nxny = ncoord / 6;
+            assert((nx + 1) * (ny + 1) == nxny);
+            assert(ncoord % 6 == 0);
+            for (int i = 0; i < nxny; ++i) {
+                coord[6 * i + 3] = coord[6 * i + 0];
+                coord[6 * i + 4] = coord[6 * i + 1];
+                // coord[6*i+2] = 0;
+                // coord[6*i+5] = coord[6*i+2];
             }
-            std::cout << "minz: " << minz << " maxz: " << maxz << std::endl;
-            double dz_upper = (minz-top_upper)/nz_upper;
-            std::cout << "dz_upper: " << dz_upper << std::endl;
-            std::vector<double> zcornvert(2*nz_new);
-            zcornvert[0] = top_upper;
-            double z_prev = top_upper;
-            for(int k=1; k<2*nz_new; k++){
-                int k_old = k-2*nz_upper;
-                //int ind_new = i + j*(2*nx) + k*(2*nx)*(2*ny);
-                int ind_old = i + j*(2*nx) + k_old*(2*nx)*(2*ny);
-                if(k_old>=0){
-                        //double z_prev = zcorn[ind_prev];
-                        double z = zcorn[ind_old];
-                        double dz= z- z_prev;
-                        //std::cout << dz << " " << z << " " << z_prev << std::endl;
-                        if(dz<min_dist){   
-                            dz=0;
-                        }    
-                        if(z==0.0){
-                            dz=0;
+        }
+        if (extend_param.monotonic_zcorn) {
+
+            std::vector<value::status> zcorn_status_new((2 * nx) * (2 * ny) * (2 * nz_new), value::status::deck_value);
+            std::vector<double> zcorn_new((2 * nx) * (2 * ny) * (2 * nz_new), 0.0);
+            // extend, make monotonic, fill gaps zcorn
+            for (int i = 0; i < 2 * nx; ++i) {
+                for (int j = 0; j < 2 * ny; ++j) {
+                    double minz = 1e20;
+                    double maxz = -1e20;
+                    for (int k = 0; k < 2 * nz; ++k) {
+                        int index = i + j * (2 * nx) + k * (2 * nx) * (2 * ny);
+                        //int cell_index = i / 2 + (j / 2) * nx + (k / 2) * nx * ny;
+                        double z = zcorn[index];
+                        if(z > 0.0){
+                            minz = std::min(minz, z);
+                            maxz = std::max(maxz, z);
                         }
-                        if(no_gap){
-                            // if we jup to new logical cell wee should not have gaps
-                            if(k%2==0){
-                                dz=0;
-                            }
-                        }
-                        
-                        zcornvert[k] = zcornvert[k-1]+dz;
-                        z_prev = zcornvert[k];
-                } else {
-                    if(k%2==1){
-                        zcornvert[k] = zcornvert[k-1]+dz_upper;
-                    }else{
-                        zcornvert[k] = zcornvert[k-1];
+                        // coord[6*index+5] = top_upper;
                     }
-                    z_prev = zcornvert[k];
+                    //std::cout << "minz: " << minz << " maxz: " << maxz << std::endl;
+                    double dz_upper = (minz -top_upper) / nz_upper;
+                    dz_upper = std::max(dz_upper, 0.0);
+                    double dz_lower = (bottom_lower - maxz) / nz_lower;
+                    dz_lower = std::max(dz_lower, 0.0);
+                    //std::cout << "dz_upper: " << dz_upper << std::endl;
+                    //std::cout << "dz_lower: " << dz_lower << std::endl;
+                    std::vector<double> zcornvert(2 * nz_new);
+                    if(nz_upper>0){
+                        zcornvert[0] = std::min(top_upper, minz);
+                    } else {
+                        zcornvert[0] = minz;
+                    }
+                    double z_prev = zcornvert[0];
+                    for (int k = 1; k < 2 * nz_new; k++) {
+                        int k_old = k - 2 * nz_upper;
+                        // int ind_new = i + j*(2*nx) + k*(2*nx)*(2*ny);
+                        int ind_old = i + j * (2 * nx) + k_old * (2 * nx) * (2 * ny);
+                        if (k_old >= 0 && k_old < 2 * nz) {
+                            // double z_prev = zcorn[ind_prev];
+                            double z = zcorn[ind_old];
+                            double dz = z - z_prev;
+                            // std::cout << dz << " " << z << " " << z_prev << std::endl;
+                            if (dz < min_dist) {
+                                dz = 0;
+                            }
+                            if (z == 0.0) {
+                                dz = 0;
+                            }
+                            if (no_gap) {
+                                // if we jup to new logical cell wee should not have gaps
+                                if (k % 2 == 0) {
+                                    dz = 0;
+                                }
+                            }
+
+                            zcornvert[k] = zcornvert[k - 1] + dz;
+                            z_prev = zcornvert[k];
+                        } else {
+                            double dz_cell = dz_lower;
+                            if (k < 2 * nz_upper) {
+                                dz_cell = dz_upper;
+                            }
+                            if (k % 2 == 1) {
+                                zcornvert[k] = zcornvert[k - 1] + dz_cell;
+                            } else {
+                                zcornvert[k] = zcornvert[k - 1];
+                            }
+                            z_prev = zcornvert[k];
+                        }
+                    }
+                    for (int k = 0; k < 2 * nz_new; k++) {
+                        int ind = i + j * (2 * nx) + k * (2 * nx) * (2 * ny);
+                        zcorn_new[ind] = zcornvert[k];
+                    }
                 }
             }
-            for(int k=0; k<2*nz_new; k++){
-                int ind = i + j*(2*nx) + k*(2*nx)*(2*ny);
-                zcorn_new[ind] = zcornvert[k];
+            zcorn_status = zcorn_status_new;
+            zcorn = zcorn_new;
+        }
+    }
+    void
+    extendSchedule(DeckSection& schedule, const ExtendParam& extend_param)
+    {
+        // fix kz for schedule i.e. COMPDAT
+        int nz_upper = extend_param.nz_upper;
+        for (const auto& records : schedule) {
+            // DeckView
+
+            if (records.name() != std::string("COMPDAT")) {
+                std::cout << "Schedule record name not handled: " << records.name() << std::endl;
+                continue;
             }
-               
+            std::cout << "Schedule record name: " << records.name() << std::endl;
+            for (const auto& record : records) {
+                DeckRecord a;
+                // std::cout << "Record: " << record << std::endl;
+                int& K1 = const_cast<int&>(record.getItem("K1").getData<int>()[0]);
+                int& K2 = const_cast<int&>(record.getItem("K2").getData<int>()[0]);
+                K1 += nz_upper;
+                K2 += nz_upper;
+                //   for(const auto& item: record){
+                //         std::cout << "Item name: " << item.name() << std::endl;
+                //         auto type_tag = item.getType();
+                //         //std::cout << "Item type: " << item.getType() << std::endl;
+                //         //std::cout << "Item size: " << item.size() << std::endl;
+                //         std::cout << "Item data size: " << item.data_size() << std::endl;
+                //         //std::cout << "Item value status: " << item.getValueStatus() << std::endl;
+                //     }
+            }
         }
     }
-    zcorn_status = zcorn_status_new;
-    zcorn = zcorn_new;
-
-    // fix kz for schedule i.e. COMPDAT
-    for(const auto& records: schedule){
-        //DeckView
-        
-        if( records.name() != std::string("COMPDAT")){
-            std::cout << "Schedule record name not handled: " << records.name() << std::endl;
-            continue;
+    void extendRegions(DeckSection& regions,const GridSize grid_size, 
+                        const ExtendParam& extend_param,
+                        const std::vector<int>& actnum_old){
+        int nx = grid_size.nx;
+        int ny  = grid_size.ny;
+        int nz =  grid_size.nz;
+        int nz_upper = extend_param.nz_upper;
+        int nz_new = extend_param.nz_new;
+        int nc_new =nx*ny*nz_new;
+        int nc = nx*ny*nz;
+        int upper_equilnum = extend_param.upper_equilnum;
+        if(regions.hasKeyword<Opm::ParserKeywords::EQLNUM>()){
+            std::cout << "EQLNUM keyword found in the deck" << std::endl;
+            //std::vector<int>& eqldims = const_cast<std::vector<int>&>(deck.get<Opm::ParserKeywords::EQLDIMS>().back().getIntData());
+        }else{
+            std::cout << "No EQLNUM keyword found in the deck" << std::endl;
+            //DeckKeyword keyword(Opm::ParserKeywords::EQLNUM::keywordName);
+            //regions.add_keyword(keyword);
         }
-        std::cout << "Schedule record name: " << records.name() << std::endl;
-        for(const auto& record: records){
-            DeckRecord a;
-            //std::cout << "Record: " << record << std::endl;
-            int& K1 = const_cast<int&>(record.getItem("K1").getData<int>()[0]);
-            int& K2 = const_cast<int&>(record.getItem("K2").getData<int>()[0]);
-            K1 += nz_upper;
-            K2 += nz_upper;
-        //   for(const auto& item: record){
-        //         std::cout << "Item name: " << item.name() << std::endl;
-        //         auto type_tag = item.getType();
-        //         //std::cout << "Item type: " << item.getType() << std::endl;
-        //         //std::cout << "Item size: " << item.size() << std::endl;
-        //         std::cout << "Item data size: " << item.data_size() << std::endl;
-        //         //std::cout << "Item value status: " << item.getValueStatus() << std::endl;
-        //     }
-         }
-    }
 
-    for(const auto& records: deck){
-        //DeckView
-        
-        if( (records.name() != std::string("EQUALS")) || 
-            (records.name() != std::string("MULTIPLY")) ||
-            (records.name() != std::string("COPY"))
-        ){
-            std::cout << "Schedule record name not handled: " << records.name() << std::endl;
-            continue;
-        }
-        std::cout << "Schedule record name: " << records.name() << std::endl;
-        for(const auto& record: records){
-            DeckRecord a;
-            //std::cout << "Record: " << record << std::endl;
-            int& K1 = const_cast<int&>(record.getItem("K1").getData<int>()[0]);
-            int& K2 = const_cast<int&>(record.getItem("K2").getData<int>()[0]);
-            K1 += nz_upper;
-            K2 += nz_upper;
-        //   for(const auto& item: record){
-        //         std::cout << "Item name: " << item.name() << std::endl;
-        //         auto type_tag = item.getType();
-        //         //std::cout << "Item type: " << item.getType() << std::endl;
-        //         //std::cout << "Item size: " << item.size() << std::endl;
-        //         std::cout << "Item data size: " << item.data_size() << std::endl;
-        //         //std::cout << "Item value status: " << item.getValueStatus() << std::endl;
-        //     }
-         }
-    }
-
-    for(const auto& records: regions){
+        for(const auto& records: regions){
         if(records.size() != 1){
             continue;
         }
@@ -322,30 +374,32 @@ Opm::Deck manipulate_deck(const char* deck_file, std::ostream& os)
             continue;
         }
         std::vector<int>& val = const_cast<std::vector<int>&>(item.getData<int>());
-        if(val.size() != nc){
+        if(int(val.size()) != nc){
             continue;
         }
         int min_val = *std::min_element(val.begin(), val.end());
-        int max_val = *std::max_element(val.begin(), val.end());
+        //int max_val = *std::max_element(val.begin(), val.end());
         int exteded_val = min_val;
-        if(records.name() == std::string("EQUILNUM")){
+        if(records.name() == std::string("EQLNUM")){
             exteded_val = upper_equilnum;
         }
         //std::cout << "Extend data_size: " << .data_size() << std::endl;
-        std::cout << "Extend item name: " << records.name() << std::endl;
         std::vector<value::status>& val_status = const_cast<std::vector<value::status>&>(item.getValueStatus());
 
         std::vector<int> val_new(nc_new);
         std::vector<value::status> val_status_new(nc_new, value::status::deck_value);
+        int nz_bottom = nz_upper + nz;
         for(int i=0; i<nx;++i){
              for(int j=0; j<ny; ++j){
                  for(int k=0; k<nz_new; ++k){
+                     int k_old = k-nz_upper;
                      int ind_new = i + nx*j + nx*ny*k;
-                     int ind_old = i + nx*j + nx*ny*(k-nz_upper);
-                     if(k>=nz_upper){
+                     int ind_old = i + nx*j + nx*ny*(k_old);
+                     if(k>=nz_upper && k < nz_bottom && actnum_old[ind_old] == 1){
                          val_new[ind_new] = val[ind_old];
                          val_status_new[ind_new] = val_status[ind_old];
                      }else{
+                        std::cout << "Extend regions: " << records.name() << std::endl;
                          val_status_new[ind_new] = value::status::deck_value;
                          val_new[ind_new] = exteded_val;           
                      }   
@@ -356,8 +410,9 @@ Opm::Deck manipulate_deck(const char* deck_file, std::ostream& os)
         val = val_new;
         
     }
-
-    for(const auto& records: solution){
+    }
+    void extendSolution(DeckSection& solution, const ExtendParam& /*extend_param*/){
+        for(const auto& records: solution){
         if(records.name() == std::string("EQUIL")){
         
         // copy first record
@@ -391,7 +446,101 @@ Opm::Deck manipulate_deck(const char* deck_file, std::ostream& os)
         }
 
     }     
- 
+}
+
+//} // namespace
+}
+namespace {
+
+Opm::Deck manipulate_deck(const char* deck_file, std::ostream& os)
+{
+    using namespace Opm;
+    ParseContext parseContext(Opm::InputErrorAction::WARN);
+    ErrorGuard errors;
+    // Pad vertically
+    auto deck = Opm::Parser{}.parseFile(deck_file, parseContext, errors);
+    ExtendParam extend_param;
+    extend_param.nz_upper = 2; 
+    extend_param.top_upper = 1000;
+    extend_param.no_gap= true;
+    extend_param.vert_coord= true;
+    extend_param.monotonic_zcorn= true;// change results on norne?
+    extend_param.min_dist = 3;
+    extend_param.upper_poro= 0.1;
+    extend_param.nz_lower = 3;
+    extend_param.bottom_lower = 3600;
+    //GridSection gridsec(decDeckSection gridsec(deck,"GRID");
+    DeckSection gridsec(deck,"GRID");// fixing CARTDIMS? + ZCORN + double valued arrays.
+    DeckSection runspec(deck,"RUNSPEC"); // fixing dimens
+    DeckSection schedule(deck,"SCHEDULE");  // fixing COMPDAT
+    //DeckSection props(deck,"PROPS"); // do nothing
+    DeckSection regions(deck,"REGIONS"); // extend and add for equilnum
+    DeckSection solution(deck,"SOLUTION"); // extend and add for equilnum
+    
+    ///DeckSection gridsec(deck,"EDIT");
+    //std::vector<int>& cardims = deck.get<ParserKeywords::CARDIMS>().back().getSIDoubleData();
+    //std::vector<int>& actnum = deck.get<ParserKeywords::ACTNUM>().back().getSIDoubleData();
+    //std::vector<double>& coord = deck.get<ParserKeywords::COORD>().back().data();
+    //std::vector<double>& zcorn = deck.get<ParserKeywords::ZCORN>().back().data();
+    //const Opm::DeckView& actnum_view = gridsec.get<ParserKeywords::ACTNUM>();
+    //Opm::DeckView& actnum_view = gridsec[](ParserKeywords::ACTNUM);
+
+    
+    //std::cout << runspec;
+    
+    
+    //int nz_new,upper_equilnum;
+    std::vector<int> actnum_old = const_cast<std::vector<int>&>(gridsec.get<ParserKeywords::ACTNUM>().back().getIntData());
+    GridSize grid_size = getDimens(deck);//(nx, ny, nz);
+    extendDimens(grid_size, extend_param, deck);
+    extendGridSection<double>(gridsec, grid_size, extend_param, type_tag::fdouble);
+    extendGridSection<int>(gridsec, grid_size, extend_param, type_tag::integer);
+    std::vector<int>& actnum = const_cast<std::vector<int>&>(gridsec.get<ParserKeywords::ACTNUM>().back().getIntData());
+    std::vector<value::status>& actnum_status = const_cast<std::vector<value::status>&>(gridsec.get<ParserKeywords::ACTNUM>().back().getValueStatus());
+    int nc_new = grid_size.nx*grid_size.ny*extend_param.nz_new;    
+    actnum.resize(nc_new);
+    actnum_status = std::vector<value::status>(nc_new, value::status::deck_value);
+    
+    for(auto& act:actnum){
+        act = 1;
+    }
+    extendGRDECL(gridsec, grid_size, extend_param);
+
+    //NB NB need to always add EQUILNUM
+    extendRegions(regions, grid_size, extend_param, actnum_old);    
+    extendSolution(solution, extend_param);
+    
+    extendSchedule(schedule, extend_param);
+
+    for (const auto& records : deck) {
+        //std::cout << "Deck record name: " << records.name() << std::endl;
+        int nz_upper = extend_param.nz_upper;
+        // DeckView
+        if ((records.name() != std::string("EQUALS")) 
+           && (records.name() != std::string("MULTIPLY"))
+           && (records.name() != std::string("COPY"))) 
+        {
+            //std::cout << "Deck record name not handled: " << records.name() << std::endl;
+            continue;
+        }
+        std::cout << "Exending" << records.name() << std::endl;
+        for (const auto& record : records) {
+                std::cout << "Record: " << record << std::endl;
+                int& K1 = const_cast<int&>(record.getItem("K1").getData<int>()[0]);
+                int& K2 = const_cast<int&>(record.getItem("K2").getData<int>()[0]);
+                K1 += nz_upper;
+                K2 += nz_upper;
+        }
+        
+    }
+    if(deck.hasKeyword<Opm::ParserKeywords::EQLDIMS>()){
+        std::cout << "EQLDIMS keyword found in the deck" << std::endl;
+        //std::vector<int>& eqldims = const_cast<std::vector<int>&>(deck.get<Opm::ParserKeywords::EQLDIMS>().back().getIntData());
+    }else{
+        std::cout << "No EQLDIMS keyword found in the deck" << std::endl;
+    }
+
+
 
 
     os << deck;
@@ -407,6 +556,7 @@ Opm::Deck manipulate_deck(const char* deck_file, std::ostream& os)
     //std::cout << count/8 << std::endl;
     return deck;
 }
+
 
 void print_help_and_exit()
 {
