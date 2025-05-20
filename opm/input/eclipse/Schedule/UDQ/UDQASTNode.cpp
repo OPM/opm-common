@@ -26,10 +26,15 @@
 #include <opm/input/eclipse/Schedule/UDQ/UDQSet.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDT.hpp>
 
+#include <cassert>
+#include <charconv>
 #include <memory>
+#include <optional>
 #include <set>
 #include <stdexcept>
 #include <string>
+#include <string_view>
+#include <system_error>
 #include <tuple>
 #include <unordered_set>
 #include <variant>
@@ -298,6 +303,23 @@ void UDQASTNode::required_summary(std::unordered_set<std::string>& summary_keys)
 
     if (this->right) {
         this->right->required_summary(summary_keys);
+    }
+}
+
+void UDQASTNode::requiredObjects(UDQ::RequisiteEvaluationObjects& objects) const
+{
+    if ((this->type == UDQTokenType::ecl_expr) &&
+        std::holds_alternative<std::string>(this->value))
+    {
+        this->populateRequiredObjects(objects);
+    }
+
+    if (this->left != nullptr) {
+        this->left->requiredObjects(objects);
+    }
+
+    if (this->right != nullptr) {
+        this->right->requiredObjects(objects);
     }
 }
 
@@ -667,6 +689,118 @@ void UDQASTNode::func_tokens(std::set<UDQTokenType>& tokens) const
     if (this->right) {
         this->right->func_tokens(tokens);
     }
+}
+
+void UDQASTNode::populateRequiredObjects(UDQ::RequisiteEvaluationObjects& objects) const
+{
+    const auto vectorType = UDQ::targetType(std::get<std::string>(this->value));
+
+    if (this->selector.empty() && (vectorType != UDQVarType::REGION_VAR)) {
+        // No specific objects identified for this node.  Will generate an
+        // appropriately sized UDQ set and populate all elements of the set.
+        // Nothing to do.
+        //
+        // Note empty selector exception in the case of REGION_VARs.  Region
+        // level vectors encode the region set into the vector name, so we
+        // always have to run the full requisite object analysis for region
+        // level vectors.
+        return;
+    }
+
+    // If we get here, then the node identifies one or more specific objects
+    // for which to generate values in the resulting UDQ set.  Tell caller
+    // about these objects.
+
+    switch (vectorType) {
+    case UDQVarType::REGION_VAR:
+        this->populateRequiredRegionObjects(objects);
+        break;
+
+    case UDQVarType::SEGMENT_VAR:
+        this->populateRequiredSegmentObjects(objects);
+        break;
+
+    case UDQVarType::WELL_VAR:
+        this->populateRequiredWellObjects(objects);
+        break;
+
+    case UDQVarType::GROUP_VAR:
+        this->populateRequiredGroupObjects(objects);
+        break;
+
+    default:
+        // Nothing to do since either FIELD_VAR or unsupported.
+        break;
+    }
+}
+
+void UDQASTNode::populateRequiredGroupObjects(UDQ::RequisiteEvaluationObjects& objects) const
+{
+    // The selector is a group name like 'G' or a group name root like 'G*'.
+    assert (this->selector.size() == 1);
+
+    objects.groups.insert(this->selector.front());
+}
+
+namespace {
+    std::optional<int> parsePositiveInt(std::string_view s)
+    {
+        auto result = 0;
+        auto [ptr, ec] { std::from_chars(s.data(), s.data() + s.size(), result) };
+
+        if ((ec == std::errc{}) && (ptr == s.data() + s.size()) && (result > 0)) {
+            // s is "7" or similar.
+            return { result };
+        }
+
+        return {};
+    }
+} // Anonymous namespace
+
+void UDQASTNode::populateRequiredRegionObjects(UDQ::RequisiteEvaluationObjects& objects) const
+{
+    const auto split = std::string::size_type{5};
+
+    const auto& vector = std::get<std::string>(this->value);
+    if (vector.size() <= split) {
+        // No specific region set, meaning this vector applies to all region
+        // sets.  No requisite objects to enumerate.
+        return;
+    }
+
+    // If we get here, the vector is something specific like ROPR_ABC or
+    // RPR__NUM.  Split off the region set portion to form a 'FIP*' array
+    // name, and insert any specific region IDs into the object list.
+    //
+    // This is similar to, though not quite the same as, the
+    // RegionSetMatcher algorithm used during node evaluation.
+    auto& regNo = objects.regions["FIP" + vector.substr(split)];
+
+    for (const auto& regID : this->selector) {
+        if (const auto id = parsePositiveInt(regID); id.has_value()) {
+            regNo.insert(*id);
+        }
+    }
+}
+
+void UDQASTNode::populateRequiredSegmentObjects(UDQ::RequisiteEvaluationObjects& objects) const
+{
+    auto& segNo = objects.msWells[this->selector.front()];
+
+    for (auto i = 0*this->selector.size() + 1; i < this->selector.size(); ++i) {
+        if (const auto id = parsePositiveInt(this->selector[i]); id.has_value()) {
+            segNo.insert(*id);
+        }
+    }
+}
+
+void UDQASTNode::populateRequiredWellObjects(UDQ::RequisiteEvaluationObjects& objects) const
+{
+    // The selector is a well name like 'P', a well name template like 'P*',
+    // a well list like '*P', or a well list template like '*P*'.
+    assert (this->selector.size() == 1);
+
+    objects.wells.insert(this->selector.front());
 }
 
 UDQASTNode operator*(const UDQASTNode&lhs, double sign_factor)

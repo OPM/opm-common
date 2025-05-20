@@ -77,6 +77,13 @@ public:
 
     static UDQDefine serializationTestObject();
 
+    /// All specific objects required for the defining expression.
+    ///
+    /// Could, for instance, be a collection of specific well names in a
+    /// field level UDQ, or a set of group name patterns for a group level
+    /// UDQ.
+    UDQ::RequisiteEvaluationObjects requiredObjects() const;
+
     UDQSet eval(const UDQContext& context) const;
     const std::string& keyword() const;
     const std::string& input_string() const { return this->input_string_; }

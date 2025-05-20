@@ -20,6 +20,9 @@
 #ifndef UDQ_ENUMS_HPP
 #define UDQ_ENUMS_HPP
 
+#include <cstddef>
+#include <map>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -197,6 +200,37 @@ enum class UDAKeyword
 };
 
 namespace UDQ {
+
+    /// Collection of specific Schedule objects named in a UDQ definition.
+    struct RequisiteEvaluationObjects
+    {
+        /// Collection of named objects--typically wells or groups.
+        using NamedObjects = std::set<std::string>;
+
+        /// Collection of named and enumerated objects.
+        ///
+        /// Typically segment numbers pertaining to particular MS wells or
+        /// specific region IDs and their associate region sets.
+        using EnumeratedObjects = std::map<std::string, std::set<std::size_t>>;
+
+        /// Wells named in a UDQ definition.
+        ///
+        /// Individual well names, well name templates, well lists, or well
+        /// list templates.
+        NamedObjects wells{};
+
+        /// Groups named in a UDQ definition.
+        ///
+        /// Individual group names or group name roots.
+        NamedObjects groups{};
+
+        /// Multi-segmented wells and specific segment numbers named in UDQ
+        /// definition.
+        EnumeratedObjects msWells{};
+
+        /// Specific region sets and region IDs named in UDQ definition.
+        EnumeratedObjects regions{};
+    };
 
     UDQVarType targetType(const std::string& keyword, const std::vector<std::string>& selector);
     UDQVarType targetType(const std::string& keyword);

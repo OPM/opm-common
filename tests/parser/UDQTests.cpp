@@ -64,8 +64,9 @@
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
-#include <memory>
 #include <limits>
+#include <memory>
+#include <set>
 #include <stdexcept>
 #include <string>
 #include <utility>
@@ -3037,4 +3038,135 @@ DEFINE WU_WBHP TU_FBHP[WOPR] UMIN WU_WBHP0 /
 
     BOOST_CHECK_EQUAL(wu_wbhp1, 100.0 + (180.0 - 100.0) * (120.0 - 100.0) / (500.0 - 100.0));
     BOOST_CHECK_EQUAL(wu_wbhp2, 100.0 + (180.0 - 100.0) * (450.0 - 100.0) / (500.0 - 100.0));
+}
+
+BOOST_AUTO_TEST_CASE(UDQ_REQUIRED_WELL_OBJECTS)
+{
+    const auto schedule = make_schedule(R"(RUNSPEC
+UDQDIMS
+   10* 'Y'/
+UDQPARAM
+  3* 0.25 /
+SCHEDULE
+UDQ
+DEFINE FUNNY (WBP 'XD-1H') + ((WGIR 'XD-2H')/((WPI4 'XD-1Z') + 1.0)) /
+/
+)");
+
+    const auto reqObj = schedule[0].udq().define("FUNNY").requiredObjects();
+
+    const auto expect = std::vector<std::string> {
+        "XD-1H", "XD-1Z", "XD-2H",
+    };
+
+    BOOST_CHECK_EQUAL_COLLECTIONS(reqObj.wells.begin(), reqObj.wells.end(),
+                                  expect.begin(), expect.end());
+}
+
+BOOST_AUTO_TEST_CASE(UDQ_REQUIRED_GROUP_OBJECTS)
+{
+    const auto schedule = make_schedule(R"(RUNSPEC
+UDQDIMS
+   10* 'Y'/
+UDQPARAM
+  3* 0.25 /
+SCHEDULE
+UDQ
+DEFINE GUITAR (GGOR HELLO) + ((GWCT 'FIELD')/((GOPT 'PR*') + 1.0)) /
+/
+)");
+
+    const auto reqObj = schedule[0].udq().define("GUITAR").requiredObjects();
+
+    const auto expect = std::vector<std::string> {
+        "FIELD", "HELLO", "PR*",
+    };
+
+    BOOST_CHECK_EQUAL_COLLECTIONS(reqObj.groups.begin(), reqObj.groups.end(),
+                                  expect.begin(), expect.end());
+}
+
+BOOST_AUTO_TEST_CASE(UDQ_REQUIRED_REGION_OBJECTS)
+{
+    const auto schedule = make_schedule(R"(RUNSPEC
+UDQDIMS
+   10* 'Y'/
+UDQPARAM
+  3* 0.25 /
+SCHEDULE
+UDQ
+DEFINE FUNNY (RPR__NUM 42) + ((ROPR__F0 11)/((RODENT 4) + 1.0)) /
+/
+)");
+
+    const auto reqObj = schedule[0].udq().define("FUNNY").requiredObjects();
+
+    {
+        const auto regPos = reqObj.regions.find("FIPNUM");
+        BOOST_REQUIRE_MESSAGE(regPos != reqObj.regions.end(),
+                              R"("FIPNUM" region must be named in "FUNNY" UDQ)");
+
+        const auto expect = std::vector { std::size_t{42} };
+
+        BOOST_CHECK_EQUAL_COLLECTIONS(regPos->second.begin(), regPos->second.end(),
+                                      expect.begin(), expect.end());
+    }
+
+    {
+        const auto regPos = reqObj.regions.find("FIP_F0");
+        BOOST_REQUIRE_MESSAGE(regPos != reqObj.regions.end(),
+                              R"("FIP_F0" region must be named in "FUNNY" UDQ)");
+
+        const auto expect = std::vector { std::size_t{11} };
+
+        BOOST_CHECK_EQUAL_COLLECTIONS(regPos->second.begin(), regPos->second.end(),
+                                      expect.begin(), expect.end());
+    }
+
+    {
+        const auto regPos = reqObj.regions.find("FIPT");
+        BOOST_REQUIRE_MESSAGE(regPos != reqObj.regions.end(),
+                              R"("FIPT" region must be named in "FUNNY" UDQ)");
+
+        const auto expect = std::vector { std::size_t{4} };
+
+        BOOST_CHECK_EQUAL_COLLECTIONS(regPos->second.begin(), regPos->second.end(),
+                                      expect.begin(), expect.end());
+    }
+}
+
+BOOST_AUTO_TEST_CASE(UDQ_REQUIRED_SEGMENT_OBJECTS)
+{
+    const auto schedule = make_schedule(R"(RUNSPEC
+UDQDIMS
+   10* 'Y'/
+UDQPARAM
+  3* 0.25 /
+SCHEDULE
+UDQ
+DEFINE SUSHI (SOFR 'W1' 42) + ((SWCT W1 11)/((SGLR W2) + 1.0)) /
+/
+)");
+
+    const auto reqObj = schedule[0].udq().define("SUSHI").requiredObjects();
+
+    {
+        const auto mswPos = reqObj.msWells.find("W1");
+        BOOST_REQUIRE_MESSAGE(mswPos != reqObj.msWells.end(),
+                              R"(Well "W1" must be named in "SUSHI" UDQ)");
+
+        const auto expect = std::vector { std::size_t{11}, std::size_t{42} };
+
+        BOOST_CHECK_EQUAL_COLLECTIONS(mswPos->second.begin(), mswPos->second.end(),
+                                      expect.begin(), expect.end());
+    }
+
+    {
+        const auto mswPos = reqObj.msWells.find("W2");
+        BOOST_REQUIRE_MESSAGE(mswPos != reqObj.msWells.end(),
+                              R"(Well "W2" must be named in "SUSHI" UDQ)");
+
+        BOOST_CHECK_MESSAGE(mswPos->second.empty(),
+                            R"(Well "W2" must not have any associate segments in "SUSHI" UDQ)");
+    }
 }

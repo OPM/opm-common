@@ -74,6 +74,13 @@ public:
     bool operator==(const UDQASTNode& data) const;
     void required_summary(std::unordered_set<std::string>& summary_keys) const;
 
+    /// Populate collection of requisite objects needed to evaluate this node.
+    ///
+    /// \param[in,out] objects Specific Schedule objects named in containing
+    /// UDQ definition.  On exit also contains the specific objects needed
+    /// by this node and, recursively, its children.
+    void requiredObjects(UDQ::RequisiteEvaluationObjects& objects) const;
+
     template <class Serializer>
     void serializeOp(Serializer& serializer)
     {
@@ -135,6 +142,50 @@ private:
                                   const UDQContext& context) const;
 
     void func_tokens(std::set<UDQTokenType>& tokens) const;
+
+    /// Populate collection of requisite objects needed to evaluate this
+    /// node.
+    ///
+    /// \param[in,out] objects Specific Schedule objects named in containing
+    /// UDQ definition.  On exit also contains the specific objects needed
+    /// by this node.
+    void populateRequiredObjects(UDQ::RequisiteEvaluationObjects& objects) const;
+
+    /// Populate collection of requisite group level objects needed to
+    /// evaluate this node.
+    ///
+    /// \param[in,out] objects Specific Schedule objects named in containing
+    /// UDQ definition.  On exit also contains the specific group level
+    /// objects needed by this node.  Includes group names or group name
+    /// roots.
+    void populateRequiredGroupObjects(UDQ::RequisiteEvaluationObjects& objects) const;
+
+    /// Populate collection of requisite region level objects needed to
+    /// evaluate this node.
+    ///
+    /// \param[in,out] objects Specific Schedule objects named in containing
+    /// UDQ definition.  On exit also contains the specific region level
+    /// objects needed by this node.  Includes region set names and,
+    /// potentially, specific region numbers.
+    void populateRequiredRegionObjects(UDQ::RequisiteEvaluationObjects& objects) const;
+
+    /// Populate collection of requisite segment level objects needed to
+    /// evaluate this node.
+    ///
+    /// \param[in,out] objects Specific Schedule objects named in containing
+    /// UDQ definition.  On exit also contains the specific segment level
+    /// objects needed by this node.  Includes well names and, potentially,
+    /// specific segment numbers.
+    void populateRequiredSegmentObjects(UDQ::RequisiteEvaluationObjects& objects) const;
+
+    /// Populate collection of requisite well level objects needed to
+    /// evaluate this node.
+    ///
+    /// \param[in,out] objects Specific Schedule objects named in containing
+    /// UDQ definition.  On exit also contains the specific well level
+    /// objects needed by this node.  Includes well names, well name
+    /// templates, well lists, or well lists templates.
+    void populateRequiredWellObjects(UDQ::RequisiteEvaluationObjects& objects) const;
 };
 
 UDQASTNode operator*(const UDQASTNode&lhs, double rhs);
