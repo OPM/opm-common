@@ -232,18 +232,46 @@
         "signature": "ScheduleState.get_group(group_name: str) -> Group",
         "doc": "Gets the group with the specified name from the schedule state.\n\n:param group_name: The name of the group to retrieve from the schedule state.\n:type group_name: str\n\n:return: The group with the specified name from the schedule state. \n:type return: Group"
     },
-    "WellClass": {
+    "Well": {
         "type": "class",
         "signature": "Well",
         "doc": "The Well class."
+    },
+    "Well_name": {
+        "signature": "Well.name -> str",
+        "doc": "Returns the name of the well.\n\n:return: The well name.\n:type return: str"
+    },
+    "Well_preferred_phase": {
+        "signature": "Well.preferred_phase -> str",
+        "doc": "Returns the preferred phase (e.g., oil, gas, water) for the well.\n\n:return: The preferred phase.\n:type return: str"
     },
     "Well_pos": {
         "signature": "Well.pos() -> tuple",
         "doc": "Retrieves the position of the well.\n\n:return: A tuple containing the (i, j) coordinates and the reference depth of the well. \n:type return: tuple"
     },
+    "Well_status": {
+        "signature": "Well.status() -> str",
+        "doc": "Returns the operational status of the well, i.e., OPEN, SHUT, AUTO or STOP.\n\n:return: The well status.\n:type return: str"
+    },
     "Well_isdefined": {
         "signature": "Well.isdefined(report_step: int) -> bool",
         "doc": "Checks if the well is defined at a specific report step.\n\n:param report_step: The report step to check for the well's definition.\n:type report_step: int\n\n:return: True if the well is defined at the specified report step, False otherwise. \n:type return: bool"
+    },
+    "Well_isinjector": {
+        "signature": "Well.isinjector() -> bool",
+        "doc": "Checks whether the well is configured as an injector.\n\n:return: True if the well is an injector, otherwise False.\n:type return: bool"
+    },
+    "Well_isproducer": {
+        "signature": "Well.isproducer() -> bool",
+        "doc": "Checks whether the well is configured as a producer.\n\n:return: True if the well is a producer, otherwise False.\n:type return: bool"
+    },
+    "Well_group": {
+        "signature": "Well.group() -> str",
+        "doc": "Returns the name of the group the well belongs to.\n\n:return: The group name.\n:type return: str"
+    },
+    "Well_guide_rate": {
+        "signature": "Well.guide_rate() -> float",
+        "doc": "Returns the guide rate for the well.\n\n:return: The guide rate.\n:type return: float"
     },
     "Well_available_gctrl": {
         "signature": "Well.available_gctrl() -> bool",
