@@ -232,18 +232,46 @@
         "signature": "ScheduleState.get_group(group_name: str) -> Group",
         "doc": "Gets the group with the specified name from the schedule state.\n\n:param group_name: The name of the group to retrieve from the schedule state.\n:type group_name: str\n\n:return: The group with the specified name from the schedule state. \n:type return: Group"
     },
-    "WellClass": {
+    "Well": {
         "type": "class",
         "signature": "Well",
         "doc": "The Well class."
+    },
+    "Well_name": {
+        "signature": "Well.name -> str",
+        "doc": "Returns the name of the well.\n\n:return: The well name.\n:type return: str"
+    },
+    "Well_preferred_phase": {
+        "signature": "Well.preferred_phase -> str",
+        "doc": "Returns the preferred phase (e.g., oil, gas, water) for the well.\n\n:return: The preferred phase.\n:type return: str"
     },
     "Well_pos": {
         "signature": "Well.pos() -> tuple",
         "doc": "Retrieves the position of the well.\n\n:return: A tuple containing the (i, j) coordinates and the reference depth of the well. \n:type return: tuple"
     },
+    "Well_status": {
+        "signature": "Well.status() -> str",
+        "doc": "Returns the operational status of the well, i.e., OPEN, SHUT, AUTO or STOP.\n\n:return: The well status.\n:type return: str"
+    },
     "Well_isdefined": {
         "signature": "Well.isdefined(report_step: int) -> bool",
         "doc": "Checks if the well is defined at a specific report step.\n\n:param report_step: The report step to check for the well's definition.\n:type report_step: int\n\n:return: True if the well is defined at the specified report step, False otherwise. \n:type return: bool"
+    },
+    "Well_isinjector": {
+        "signature": "Well.isinjector() -> bool",
+        "doc": "Checks whether the well is configured as an injector.\n\n:return: True if the well is an injector, otherwise False.\n:type return: bool"
+    },
+    "Well_isproducer": {
+        "signature": "Well.isproducer() -> bool",
+        "doc": "Checks whether the well is configured as a producer.\n\n:return: True if the well is a producer, otherwise False.\n:type return: bool"
+    },
+    "Well_group": {
+        "signature": "Well.group() -> str",
+        "doc": "Returns the name of the group the well belongs to.\n\n:return: The group name.\n:type return: str"
+    },
+    "Well_guide_rate": {
+        "signature": "Well.guide_rate() -> float",
+        "doc": "Returns the guide rate for the well.\n\n:return: The guide rate.\n:type return: float"
     },
     "Well_available_gctrl": {
         "signature": "Well.available_gctrl() -> bool",
@@ -1117,6 +1145,44 @@
       "OpmLog_note": {
         "signature": "opm.io.OpmLog.note(msg: str) -> None",
         "doc": "Add a note to the OPM log.\n\n:param msg: Note message.\n:type msg: str\n:return: None"
+    },
+    "ParseContext": {
+        "type": "class",
+        "signature": "opm.io.parser.ParseContext",
+        "doc": "The ParseContext class manages how input parsing errors are handled for specific keywords."
+    },
+    "ParseContext_init": {
+        "signature": "opm.io.parser.ParseContext.__init__() -> ParseContext",
+        "doc": "Creates an empty ParseContext with default error handling behavior.\n\n:return: ParseContext\n:type return: ParseContext"
+    },
+    "ParseContext_init_with_actions": {
+        "signature": "opm.io.parser.ParseContext.__init__(action_list: list[tuple[str, action]]) -> None",
+        "doc": "Initializes a ParseContext with a list of specific error handling actions for the given keyword.\n\n:param action_list: A list of (keyword, action) pairs specifying how to handle errors for a keyword, wildcards '*' are possible in the keyword.\n:type action_list: list[tuple[str, action]]\n:return: ParseContext\n:type return: ParseContext"
+    },
+    "ParseContext_ignore_keyword": {
+        "signature": "opm.io.parser.ParseContext.ignore_keyword(keyword: str) -> None",
+        "doc": "Instructs the parser to ignore the specified keyword.\n\n:param keyword: The keyword to ignore.\n:type keyword: str\n:return: None\n:type return: None"
+    },
+    "ParseContext_update": {
+        "signature": "opm.io.parser.ParseContext.update(keyword: str, action: action) -> None",
+        "doc": "Updates the error handling behavior for a specific keyword.\n\n:param keyword: The keyword to update, wildcards '*' are possible in the keyword.\n:type keyword: str\n:param action: The error handling action to associate with the keyword.\n:type action: action\n:return: None\n:type return: None"
+    },
+    "action": {
+        "type": "class",
+        "signature": "opm.io.parser.action",
+        "doc": "`Python enum <https://docs.python.org/3/library/enum.html>`_ with the types of input errors for parsing a file."
+    },
+    "action_throw": {
+        "signature": "opm.io.parser.action.throw",
+        "doc": "Raise an exception when a parsing error occurs."
+    },
+    "action_warn": {
+        "signature": "opm.io.parser.action.warn",
+        "doc": "Issue a warning when a parsing error occurs, but continue."
+    },
+    "action_ignore": {
+        "signature": "opm.io.parser.action.ignore",
+        "doc": "Silently ignore the parsing error."
     }
 
 }

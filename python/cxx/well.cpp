@@ -37,16 +37,16 @@ void python::common::export_Well(py::module& module) {
 
     using namespace Opm::Common::DocStrings;
 
-    py::class_< Well >( module, "Well")
-        .def_property_readonly( "name", &Well::name )
-        .def_property_readonly( "preferred_phase", &preferred_phase )
+    py::class_< Well >( module, "Well", Well_docstring)
+        .def_property_readonly( "name", &Well::name, Well_name_docstring)
+        .def_property_readonly( "preferred_phase", &preferred_phase, Well_preferred_phase_docstring)
         .def( "pos",             &get_pos, Well_pos_docstring)
-        .def( "status",          &status )
+        .def( "status",          &status, Well_status_docstring)
         .def( "isdefined",       &Well::hasBeenDefined, Well_isdefined_docstring)
-        .def( "isinjector",      &Well::isInjector )
-        .def( "isproducer",      &Well::isProducer )
-        .def( "group",           &Well::groupName )
-        .def( "guide_rate",      &Well::getGuideRate )
+        .def( "isinjector",      &Well::isInjector, Well_isinjector_docstring)
+        .def( "isproducer",      &Well::isProducer, Well_isproducer_docstring)
+        .def( "group",           &Well::groupName, Well_group_docstring)
+        .def( "guide_rate",      &Well::getGuideRate, Well_guide_rate_docstring)
         .def( "available_gctrl", &Well::isAvailableForGroupControl, Well_available_gctrl_docstring)
         .def( "connections",     &connections, Well_connections_docstring);
 
