@@ -191,7 +191,6 @@ namespace Opm {
         }
 
         if (action == InputErrorAction::DELAYED_EXIT1) {
-            OpmLog::error(msg);
             errors.addError(errorKey, msg);
             return;
         }
