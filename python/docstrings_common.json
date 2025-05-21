@@ -1117,6 +1117,44 @@
       "OpmLog_note": {
         "signature": "opm.io.OpmLog.note(msg: str) -> None",
         "doc": "Add a note to the OPM log.\n\n:param msg: Note message.\n:type msg: str\n:return: None"
+    },
+    "ParseContext": {
+        "type": "class",
+        "signature": "opm.io.parser.ParseContext",
+        "doc": "The ParseContext class manages how input parsing errors are handled for specific keywords."
+    },
+    "ParseContext_init": {
+        "signature": "opm.io.parser.ParseContext.__init__() -> ParseContext",
+        "doc": "Creates an empty ParseContext with default error handling behavior.\n\n:return: ParseContext\n:type return: ParseContext"
+    },
+    "ParseContext_init_with_actions": {
+        "signature": "opm.io.parser.ParseContext.__init__(action_list: list[tuple[str, action]]) -> None",
+        "doc": "Initializes a ParseContext with a list of specific error handling actions for the given keyword.\n\n:param action_list: A list of (keyword, action) pairs specifying how to handle errors for a keyword, wildcards '*' are possible in the keyword.\n:type action_list: list[tuple[str, action]]\n:return: ParseContext\n:type return: ParseContext"
+    },
+    "ParseContext_ignore_keyword": {
+        "signature": "opm.io.parser.ParseContext.ignore_keyword(keyword: str) -> None",
+        "doc": "Instructs the parser to ignore the specified keyword.\n\n:param keyword: The keyword to ignore.\n:type keyword: str\n:return: None\n:type return: None"
+    },
+    "ParseContext_update": {
+        "signature": "opm.io.parser.ParseContext.update(keyword: str, action: action) -> None",
+        "doc": "Updates the error handling behavior for a specific keyword.\n\n:param keyword: The keyword to update, wildcards '*' are possible in the keyword.\n:type keyword: str\n:param action: The error handling action to associate with the keyword.\n:type action: action\n:return: None\n:type return: None"
+    },
+    "action": {
+        "type": "class",
+        "signature": "opm.io.parser.action",
+        "doc": "`Python enum <https://docs.python.org/3/library/enum.html>`_ with the types of input errors for parsing a file."
+    },
+    "action_throw": {
+        "signature": "opm.io.parser.action.throw",
+        "doc": "Raise an exception when a parsing error occurs."
+    },
+    "action_warn": {
+        "signature": "opm.io.parser.action.warn",
+        "doc": "Issue a warning when a parsing error occurs, but continue."
+    },
+    "action_ignore": {
+        "signature": "opm.io.parser.action.ignore",
+        "doc": "Silently ignore the parsing error."
     }
 
 }
