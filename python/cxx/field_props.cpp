@@ -7,6 +7,8 @@
 #include "export.hpp"
 #include "converters.hpp"
 
+#include <python/cxx/OpmCommonPythonDoc.hpp>
+
 namespace {
 
     bool contains( const FieldPropsManager& manager, const std::string& kw) {
@@ -49,11 +51,13 @@ namespace {
 
 void python::common::export_FieldProperties(py::module& module) {
 
-    py::class_< FieldPropsManager >( module, "FieldProperties")
-    .def( "__contains__", &contains )
-    .def("__getitem__", &get_array)
-    .def( "get_double_array",  &get_double_array )
-    .def( "get_int_array",  &get_int_array )
+    using namespace Opm::Common::DocStrings;
+
+    py::class_< FieldPropsManager >( module, "FieldProperties", FieldProperties_docstring)
+    .def( "__contains__", &contains, py::arg("keyword"), FieldProperties_contains_docstring)
+    .def("__getitem__", &get_array, py::arg("keyword"), FieldProperties_getitem_docstring)
+    .def( "get_double_array",  &get_double_array, py::arg("keyword"), FieldProperties_get_double_array_docstring)
+    .def( "get_int_array",  &get_int_array, py::arg("keyword"), FieldProperties_get_int_array_docstring)
     ;
 
 }

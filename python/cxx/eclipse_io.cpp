@@ -524,42 +524,45 @@ void python::common::export_IO(py::module& m) {
         .def("cellvolumes", &get_cellvolumes_mask, py::arg("mask"), EGrid_cellvolumes_mask_docstring);
 
 
-   py::class_<Opm::EclIO::ERft>(m, "ERft")
-        .def(py::init<const std::string &>())
-        .def_property_readonly("list_of_rfts", &Opm::EclIO::ERft::listOfRftReports)
+ py::class_<Opm::EclIO::ERft>(m, "ERft", ERft_docstring)
+        .def(py::init<const std::string &>(), py::arg("filename"), ERft_init_docstring)
+        .def_property_readonly("list_of_rfts", &Opm::EclIO::ERft::listOfRftReports, ERft_list_of_rfts_docstring)
 
         .def("__get_list_of_arrays", (std::vector< std::tuple<std::string, Opm::EclIO::eclArrType, int64_t> >
-                                      (Opm::EclIO::ERft::*)(int) const) &Opm::EclIO::ERft::listOfRftArrays)
+                                      (Opm::EclIO::ERft::*)(int) const) &Opm::EclIO::ERft::listOfRftArrays, py::arg("report_index"), ERft_get_list_of_arrays1_docstring)
 
         .def("__get_list_of_arrays", (std::vector< std::tuple<std::string, Opm::EclIO::eclArrType, int64_t> >
                                       (Opm::EclIO::ERft::*)(const std::string&, int, int, int) const)
-             &Opm::EclIO::ERft::listOfRftArrays)
+             &Opm::EclIO::ERft::listOfRftArrays, py::arg("well_name"), py::arg("year"), py::arg("month"), py::arg("day"), ERft_get_list_of_arrays2_docstring)
 
-        .def("__get_data", &get_rft_vector_WellDate)
-        .def("__get_data", &get_rft_vector_Index)
+        .def("__get_data", &get_rft_vector_WellDate, py::arg("array_name"), py::arg("well_name"), py::arg("year"), py::arg("month"), py::arg("day"), ERft_get_data1_docstring)
+        .def("__get_data", &get_rft_vector_Index, py::arg("array_name"), py::arg("report_index"), ERft_get_data2_docstring)
 
-        .def("__has_rft", (bool (Opm::EclIO::ERft::*)(const std::string&, int, int, int) const) &Opm::EclIO::ERft::hasRft)
-        .def("__has_array", (bool (Opm::EclIO::ERft::*)(const std::string&, int) const) &Opm::EclIO::ERft::hasArray)
+        .def("__has_rft", (bool (Opm::EclIO::ERft::*)(const std::string&, int, int, int) const) &Opm::EclIO::ERft::hasRft,
+             py::arg("well_name"), py::arg("year"), py::arg("month"), py::arg("day"), ERft_has_rft_docstring)
+        .def("__has_array", (bool (Opm::EclIO::ERft::*)(const std::string&, int) const) &Opm::EclIO::ERft::hasArray,
+             py::arg("array_name"), py::arg("report_index"), ERft_has_array1_docstring)
         .def("__has_array", (bool (Opm::EclIO::ERft::*)(const std::string&, const std::string&, const
-                             std::tuple<int,int,int>&) const) &Opm::EclIO::ERft::hasArray)
+                             std::tuple<int,int,int>&) const) &Opm::EclIO::ERft::hasArray,
+             py::arg("array_name"), py::arg("well_name"), py::arg("date"), ERft_has_array2_docstring)
 
-       .def("__len__", &Opm::EclIO::ERft::numberOfReports);
+       .def("__len__", &Opm::EclIO::ERft::numberOfReports, ERft_len_docstring);
 
-   py::class_<EclOutputBind>(m, "EclOutput")
+   py::class_<EclOutputBind>(m, "EclOutput", EclOutput_docstring)
         .def(py::init<const std::string &, const bool, const bool>(), py::arg("filename"),
-             py::arg("formatted") = false, py::arg("append") = false)
-        .def("write_message", &EclOutputBind::writeMessage)
+             py::arg("formatted") = false, py::arg("append") = false, EclOutput_init_docstring)
+        .def("write_message", &EclOutputBind::writeMessage, py::arg("msg"), EclOutput_write_message_docstring)
         .def("__write_char_array", (void (EclOutputBind::*)(const std::string&,
-                                  const std::vector<std::string>&)) &EclOutputBind::writeArray)
+                                  const std::vector<std::string>&)) &EclOutputBind::writeArray, py::arg("array_name"), py::arg("data"), EclOutput_write_char_array_docstring)
 
-        .def("__write_c0nn_array", &EclOutputBind::writeC0nnArray)
+        .def("__write_c0nn_array", &EclOutputBind::writeC0nnArray, py::arg("array_name"), py::arg("data"), py::arg("element_size"), EclOutput_write_c0nn_array_docstring)
 
         .def("__write_logi_array", (void (EclOutputBind::*)(const std::string&,
-                                  const std::vector<bool>&)) &EclOutputBind::writeArray)
+                                  const std::vector<bool>&)) &EclOutputBind::writeArray, py::arg("array_name"), py::arg("data"), EclOutput_write_logi_array_docstring)
         .def("__write_inte_array", (void (EclOutputBind::*)(const std::string&,
-                                  const std::vector<int>&)) &EclOutputBind::writeArray)
+                                  const std::vector<int>&)) &EclOutputBind::writeArray, py::arg("array_name"), py::arg("data"), EclOutput_write_inte_array_docstring)
         .def("__write_real_array", (void (EclOutputBind::*)(const std::string&,
-                                  const std::vector<float>&)) &EclOutputBind::writeArray)
+                                  const std::vector<float>&)) &EclOutputBind::writeArray, py::arg("array_name"), py::arg("data"), EclOutput_write_real_array_docstring)
         .def("__write_doub_array", (void (EclOutputBind::*)(const std::string&,
-                                  const std::vector<double>&)) &EclOutputBind::writeArray);
+                                  const std::vector<double>&)) &EclOutputBind::writeArray, py::arg("array_name"), py::arg("data"), EclOutput_write_doub_array_docstring);
 }
