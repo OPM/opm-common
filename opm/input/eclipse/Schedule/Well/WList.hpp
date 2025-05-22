@@ -36,6 +36,9 @@ public:
 
     std::size_t size() const;
 
+    /// Predicate for an empty list.
+    bool empty() const { return this->size() == 0; }
+
     void clear();
 
     void add(const std::string& well);

@@ -224,6 +224,7 @@ WELSPECS
 WLIST
   '*ILIST'  'NEW'  I1 /
   '*ILIST'  'ADD'  I2 /
+  '*EMPTY'  'NEW' /
 /
 
 WCONPROD
@@ -4214,8 +4215,74 @@ BOOST_AUTO_TEST_CASE(GroupOrderTest)
     }
 }
 
+BOOST_AUTO_TEST_CASE(Has_Well)
+{
+    const auto schedule = make_schedule(createDeckWTEST());
 
+    // Start of simulation
+    {
+        const auto wm = schedule.wellMatcher(0);
 
+        BOOST_CHECK_MESSAGE(  wm.hasWell("W1"), R"(Well "W1" must exist at time zero)");
+        BOOST_CHECK_MESSAGE(! wm.hasWell("W4"), R"(Well "W4" must NOT exist at time zero)");
+        BOOST_CHECK_MESSAGE(  wm.hasWell("W?"), R"(Wells matching pattern "W?" must exist at time zero)");
+        BOOST_CHECK_MESSAGE(  wm.hasWell("W*"), R"(Wells matching pattern "W*" must exist at time zero)");
+        BOOST_CHECK_MESSAGE(  wm.hasWell("DEF*"), R"(Wells matching pattern "DEF*" must exist at time zero)");
+        BOOST_CHECK_MESSAGE(! wm.hasWell("*ILIST"), R"(Wells matching pattern "*ILIST" must NOT exist at time zero)");
+    }
+
+    // Report step 2--injectors and well lists introduced
+    {
+        const auto wm = schedule.wellMatcher(2);
+
+        BOOST_CHECK_MESSAGE(  wm.hasWell("W1"), R"(Well "W1" must exist at report step 2)");
+        BOOST_CHECK_MESSAGE(! wm.hasWell("W4"), R"(Well "W4" must NOT exist at report step 2)");
+        BOOST_CHECK_MESSAGE(  wm.hasWell("W?"), R"(Wells matching pattern "W?" must exist at report step 2)");
+        BOOST_CHECK_MESSAGE(  wm.hasWell("W*"), R"(Wells matching pattern "W*" must exist at report step 2)");
+        BOOST_CHECK_MESSAGE(  wm.hasWell("DEF*"), R"(Wells matching pattern "DEF*" must exist at report step 2)");
+
+        BOOST_CHECK_MESSAGE(  wm.hasWell("I1"), R"(Well "I1" must exist at report step 2)");
+        BOOST_CHECK_MESSAGE(! wm.hasWell("I4"), R"(Well "I4" must NOT exist at report step 2)");
+        BOOST_CHECK_MESSAGE(  wm.hasWell("I?"), R"(Wells matching pattern "I?" must exist at report step 2)");
+        BOOST_CHECK_MESSAGE(  wm.hasWell("I*"), R"(Wells matching pattern "I*" must exist at report step 2)");
+        BOOST_CHECK_MESSAGE(  wm.hasWell("*ILIST"), R"(Wells matching pattern "*ILIST" must exist at report step 2)");
+        BOOST_CHECK_MESSAGE(  wm.hasWell("*IL*"), R"(Wells matching pattern "*IL*" must exist at report step 2)");
+
+        // Well list '*EMPTY' exists, but has no wells => hasWell() returns 'false'.
+        BOOST_CHECK_MESSAGE(! wm.hasWell("*EMPTY"), R"(Wells matching pattern "*EMPTY" must NOT exist at report step 2)");
+    }
+}
+
+BOOST_AUTO_TEST_CASE(Has_Group_Simple)
+{
+    const auto schedule = make_schedule(createDeckWTEST());
+
+    // Start of simulation
+    const auto& go = schedule[0].group_order();
+
+    BOOST_CHECK_MESSAGE(  go.anyGroupMatches("OP"), R"(Group "OP" must exist at time zero)");
+    BOOST_CHECK_MESSAGE(! go.anyGroupMatches("OPE"), R"(Group "OPE" must NOT exist at time zero)");
+    BOOST_CHECK_MESSAGE(  go.anyGroupMatches("OP*"), R"(Groups matching pattern "OP*" must exist at time zero)");
+    BOOST_CHECK_MESSAGE(  go.anyGroupMatches("O*"), R"(Groups matching pattern "O*" must exist at time zero)");
+    BOOST_CHECK_MESSAGE(! go.anyGroupMatches("NO*"), R"(Groups matching pattern "NO*" must NOT exist at time zero)");
+    BOOST_CHECK_MESSAGE(  go.anyGroupMatches("FI*"), R"(Groups matching pattern "FI*" must exist at time zero)");
+}
+
+BOOST_AUTO_TEST_CASE(Has_Group_GroupTree)
+{
+    const auto schedule = make_schedule(createDeckWithWellsOrderedGRUPTREE());
+
+    // Start of simulation
+    const auto& go = schedule[0].group_order();
+
+    BOOST_CHECK_MESSAGE(  go.anyGroupMatches("FIELD"), R"(Group "FIELD" must exist at time zero)");
+    BOOST_CHECK_MESSAGE(  go.anyGroupMatches("FI*"), R"(Groups matching pattern "FI*" must exist at time zero)");
+    BOOST_CHECK_MESSAGE(  go.anyGroupMatches("PLATFORM"), R"(Group "OP" must exist at time zero)");
+    BOOST_CHECK_MESSAGE(  go.anyGroupMatches("PLAT*"), R"(Groups matching the pattern "PLAT*" must exist at time zero)");
+    BOOST_CHECK_MESSAGE(! go.anyGroupMatches("PG13"), R"(Group "PG13" must NOT exist at time zero)");
+    BOOST_CHECK_MESSAGE(  go.anyGroupMatches("PG*"), R"(Groups matching "PG*" must exist at time zero)");
+    BOOST_CHECK_MESSAGE(  go.anyGroupMatches("PG1*"), R"(Groups matching "PG1*" must exist at time zero)");
+}
 
 BOOST_AUTO_TEST_CASE(nupcol) {
     std::string input = R"(

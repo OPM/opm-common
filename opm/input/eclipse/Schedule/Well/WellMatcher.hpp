@@ -108,6 +108,21 @@ public:
     /// \return *this.
     WellMatcher& operator=(WellMatcher&& rhs);
 
+    /// Well existence predicate.
+    ///
+    /// Checks whether or not a well matching a name pattern exists in the
+    /// collection.  If the pattern represents one or more well lists, i.e.,
+    /// there is a leading asterisk as in "*PROD", then the predicate will
+    /// check if the well list exists and, if so, if the well list is
+    /// non-empty.
+    ///
+    /// \param[in] pattern Well name, well name template, well list, or well
+    /// list template.
+    ///
+    /// \return Whether or not a well matching the \p pattern exists in the
+    /// current collection.
+    bool hasWell(const std::string& pattern) const;
+
     /// Sort a list of well names according to the established order.
     ///
     /// Throws an exception if any name in the list is not known.

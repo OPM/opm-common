@@ -40,6 +40,19 @@ public:
     static WListManager serializationTestObject();
 
     std::size_t WListSize() const;
+
+    /// Whether or not one or more wells matching a well list name or well
+    /// list template exists.
+    ///
+    /// This predicate checks whether or not a well list exists matching the
+    /// pattern *and* that that well list is non-empty.
+    ///
+    /// \param[in] pattern Well list name or well list template.
+    ///
+    /// \return Whether or not there are any current wells matching \p
+    /// pattern.
+    bool hasWell(const std::string& pattern) const;
+
     bool hasList(const std::string&) const;
     WList& getList(const std::string& name);
     const WList& getList(const std::string& name) const;
