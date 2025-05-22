@@ -817,11 +817,11 @@
     },
     "ERst_get_data_by_index": {
         "signature": "opm.io.ecl.ERst.__get_data(index: int, report_step: int) -> tuple[numpy.ndarray, eclArrType]",
-        "doc": "Retrieves the given index of the data at the given report step.\n\n:param index: The index.\n:type index: int\n:return: A tuple containing the data array and its associated type.\n:rtype: tuple[numpy.ndarray, eclArrType]"
+        "doc": "Retrieves the given index of the data at the given report step.\n\n:param index: The index.\n:type index: int\n:return: A tuple containing the data array and its associated type.\n:type return: tuple[numpy.ndarray, eclArrType]"
     },
     "ERst_get_data_vector": {
         "signature": "opm.io.ecl.ERst.get_erst_vector(name: str, report_step: int, occurrence: int) -> tuple[numpy.ndarray, eclArrType]",
-        "doc": "Retrieves the data array of the given name a the given occurrence at the given report step.\n\n:param name: The name of the arrays.\n:type name: str\n:param report_step: The report step.\n:type report_step: int\n:param occurrence: The occurrence to retrieve.\n:type occurrence: int\n:return: A tuple containing the data array and its associated type.\n:rtype: tuple[numpy.ndarray, eclArrType]"
+        "doc": "Retrieves the data array of the given name a the given occurrence at the given report step.\n\n:param name: The name of the arrays.\n:type name: str\n:param report_step: The report step.\n:type report_step: int\n:param occurrence: The occurrence to retrieve.\n:type occurrence: int\n:return: A tuple containing the data array and its associated type.\n:type return: tuple[numpy.ndarray, eclArrType]"
     },
     "ESmry": {
         "type": "class",
@@ -830,11 +830,11 @@
     },
     "ESmry_init": {
         "signature": "opm.io.ecl.ESmry.__init__(filename: str, load_base_run: bool = False) -> ESmry",
-        "doc": "Initializes the ESmry object by loading the summary file.\n\n:param filename: Path to the .SMSPEC or .ESMRY file.\n:type filename: str\n:param load_base_run: Whether to load base run data. Default is False.\n:type load_base_run: bool\n:return: The ESmry object.\n:rtype: ESmry"
+        "doc": "Initializes the ESmry object by loading the summary file.\n\n:param filename: Path to the .SMSPEC or .ESMRY file.\n:type filename: str\n:param load_base_run: Whether to load base run data. Default is False.\n:type load_base_run: bool\n:return: The ESmry object.\n:type return: ESmry"
     },
     "ESmry_contains": {
         "signature": "opm.io.ecl.ESmry.__contains__(key: str) -> bool",
-        "doc": "Checks if the specified key exists in the summary data.\n\n:param key: The key to check.\n:type key: str\n:return: True if the key exists, otherwise False.\n:rtype: bool"
+        "doc": "Checks if the specified key exists in the summary data.\n\n:param key: The key to check.\n:type key: str\n:return: True if the key exists, otherwise False.\n:type return: bool"
     },
     "ESmry_make_esmry_file": {
         "signature": "opm.io.ecl.ESmry.make_esmry_file() -> None",
@@ -842,35 +842,35 @@
     },
     "ESmry_len": {
         "signature": "opm.io.ecl.ESmry.__len__() -> int",
-        "doc": "Returns the number of time steps in the summary data.\n\n:return: The number of available time steps.\n:rtype: int"
+        "doc": "Returns the number of time steps in the summary data.\n\n:return: The number of available time steps.\n:type return: int"
     },
     "ESmry_get_all": {
         "signature": "opm.io.ecl.ESmry.__get_all(key: str) -> numpy.ndarray",
-        "doc": "Retrieves the summary vector for the given key.\n\n:param key: The key.\n:type key: str\n:return: The summary for the specified key.\n:rtype: numpy.ndarray"
+        "doc": "Retrieves the summary vector for the given key.\n\n:param key: The key.\n:type key: str\n:return: The summary for the specified key.\n:type return: numpy.ndarray"
     },
     "ESmry_get_at_rstep": {
         "signature": "opm.io.ecl.ESmry.__get_at_rstep(key: str) -> numpy.ndarray",
-        "doc": "Retrieves the report step summary vector for the given key.\n\n:param key: The key.\n:type key: str\n:return: The report step summary for the specified key.\n:rtype: numpy.ndarray"
+        "doc": "Retrieves the report step summary vector for the given key.\n\n:param key: The key.\n:type key: str\n:return: The report step summary for the specified key.\n:type return: numpy.ndarray"
     },
     "ESmry_start_date": {
         "signature": "opm.io.ecl.ESmry.start_date -> datetime.datetime",
-        "doc": "The start date of the summary data as a `datetime.datetime <https://docs.python.org/3/library/datetime.html#datetime.datetime>`_.\n\n:return: The start date.\n:rtype: datetime.datetime"
+        "doc": "The start date of the summary data as a `datetime.datetime <https://docs.python.org/3/library/datetime.html#datetime.datetime>`_.\n\n:return: The start date.\n:type return: datetime.datetime"
     },
     "ESmry_keys1": {
         "signature": "opm.io.ecl.ESmry.keys() -> list[str]",
-        "doc": "Retrieves a list of summary keys.\n\n:return: A list of available summary keys.\n:rtype: list[str]"
+        "doc": "Retrieves a list of summary keys.\n\n:return: A list of available summary keys.\n:type return: list[str]"
     },
     "ESmry_keys2": {
         "signature": "opm.io.ecl.ESmry.keys(pattern: str) -> list[str]",
-        "doc": "Retrieves a list of summary keys matching the given pattern.\n\n:param pattern: A pattern to filter the keys.\n:type pattern: str\n:return: A list of available summary keys.\n:rtype: list[str]"
+        "doc": "Retrieves a list of summary keys matching the given pattern.\n\n:param pattern: A pattern to filter the keys.\n:type pattern: str\n:return: A list of available summary keys.\n:type return: list[str]"
     },
     "ESmry_dates": {
         "signature": "opm.io.ecl.ESmry.dates() -> list[datetime.datetime]",
-        "doc": "Retrieves a list of dates corresponding to the time steps in the summary data.\n\n:return: A list of dates.\n:rtype: list[datetime.datetime]"
+        "doc": "Retrieves a list of dates corresponding to the time steps in the summary data.\n\n:return: A list of dates.\n:type return: list[datetime.datetime]"
     },
     "ESmry_units": {
         "signature": "opm.io.ecl.ESmry.units(field: str) -> str",
-        "doc": "Retrieves the unit for a given field.\n\n:param field: The field name.\n:type field: str\n:return: The unit corresponding to the specified field.\n:rtype: str"
+        "doc": "Retrieves the unit for a given field.\n\n:param field: The field name.\n:type field: str\n:return: The unit corresponding to the specified field.\n:type return: str"
     },
     "EGrid": {
         "type": "class",
@@ -879,7 +879,7 @@
     },
     "EGrid_init": {
         "signature": "opm.io.ecl.EGrid.__init__(filename: str, grid_name: str = 'global') -> EGrid",
-        "doc": "Initializes an EGrid object by loading the grid file.\n\n:param filename: Path to the grid file.\n:type filename: str\n:param grid_name: The name of the grid (default is 'global').\n:type grid_name: str\n:return: The EGrid object.\n:rtype: EGrid"
+        "doc": "Initializes an EGrid object by loading the grid file.\n\n:param filename: Path to the grid file.\n:type filename: str\n:param grid_name: The name of the grid (default is 'global').\n:type grid_name: str\n:return: The EGrid object.\n:type return: EGrid"
     },
     "EGrid_active_cells": {
         "signature": "opm.io.ecl.EGrid.active_cells -> int",
@@ -940,39 +940,39 @@
     },
     "ERft_init": {
         "signature": "opm.io.ecl.ERft.__init__(filename: str) -> ERft",
-        "doc": "Initializes the ERft object from the specified file.\n\n:param filename: Path to the RFT file.\n:type filename: str\n:return: The ERft object.\n:rtype: ERft"
+        "doc": "Initializes the ERft object from the specified file.\n\n:param filename: Path to the RFT file.\n:type filename: str\n:return: The ERft object.\n:type return: ERft"
     },
     "ERft_list_of_rfts": {
         "signature": "opm.io.ecl.ERft.list_of_rfts -> list[tuple[well_name: str, tuple[year: int, month: int, day: int]]]",
-        "doc": "Returns a list of RFT reports.\n\n:return: A list of tuples with well names and corresponding dates.\n:rtype: list[tuple[well_name: str, tuple[year: int, month: int, day: int]]]"
+        "doc": "Returns a list of RFT reports.\n\n:return: A list of tuples with well names and corresponding dates.\n:type return: list[tuple[well_name: str, tuple[year: int, month: int, day: int]]]"
     },
     "ERft_get_list_of_arrays1": {
         "signature": "opm.io.ecl.ERft.__get_list_of_arrays(report_index: int) -> list[tuple[str, eclArrType, int]]",
-        "doc": "Returns the metadata for arrays for a specific report step.\n\n:param report_index: The report step index.\n:type report_index: int\n:return: List of array metadata (name, type, size).\n:rtype: list[tuple[str, eclArrType, int]]"
+        "doc": "Returns the metadata for arrays for a specific report step.\n\n:param report_index: The report step index.\n:type report_index: int\n:return: List of array metadata (name, type, size).\n:type return: list[tuple[str, eclArrType, int]]"
     },
     "ERft_get_list_of_arrays2": {
         "signature": "opm.io.ecl.ERft.__get_list_of_arrays(well_name: str, year: int, month: int, day: int) -> list[tuple[str, eclArrType, int]]",
-        "doc": "Returns the metadata for arrays for a specific well and date.\n\n:param well_name: Well name.\n:type well_name: str\n:param year: Year.\n:type year: int\n:param month: Month.\n:type month: int\n:param day: Day.\n:type day: int\n:return: List of array metadata (name, type, size).\n:rtype: list[tuple[str, eclArrType, int]]"
+        "doc": "Returns the metadata for arrays for a specific well and date.\n\n:param well_name: Well name.\n:type well_name: str\n:param year: Year.\n:type year: int\n:param month: Month.\n:type month: int\n:param day: Day.\n:type day: int\n:return: List of array metadata (name, type, size).\n:type return: list[tuple[str, eclArrType, int]]"
     },
     "ERft_get_data1": {
         "signature": "opm.io.ecl.ERft.__get_data(array_name: str, well_name: str, year: int, month: int, day: int) -> tuple[numpy.ndarray, eclArrType]",
-        "doc": "Retrieves the RFT array data for a specific well and date.\n\n:param array_name: Name of the array.\n:param well_name: Well name.\n:type well_name: str\n:param year: Year.\n:type year: int\n:param month: Month.\n:type month: int\n:param day: Day.\n:type day: int\n:type array_name: str\n:return: The RFT data as a NumPy array and the eclArrType.\n:rtype: tuple[numpy.ndarray, eclArrType]"
+        "doc": "Retrieves the RFT array data for a specific well and date.\n\n:param array_name: Name of the array.\n:param well_name: Well name.\n:type well_name: str\n:param year: Year.\n:type year: int\n:param month: Month.\n:type month: int\n:param day: Day.\n:type day: int\n:type array_name: str\n:return: The RFT data as a NumPy array and the eclArrType.\n:type return: tuple[numpy.ndarray, eclArrType]"
     },
     "ERft_get_data2": {
         "signature": "opm.io.ecl.ERft.__get_data(array_name: str, report_index: int) -> tuple[numpy.ndarray, eclArrType]",
-        "doc": "Retrieves RFT array data using a report index.\n\n:param array_name: Name of the array.\n:type array_name: str\n:param report_index: The report step index.\n:type report_index: int\n:return: The RFT data as a NumPy array and the eclArrType.\n:rtype: tuple[numpy.ndarray, eclArrType]"
+        "doc": "Retrieves RFT array data using a report index.\n\n:param array_name: Name of the array.\n:type array_name: str\n:param report_index: The report step index.\n:type report_index: int\n:return: The RFT data as a NumPy array and the eclArrType.\n:type return: tuple[numpy.ndarray, eclArrType]"
     },
     "ERft_has_rft": {
         "signature": "opm.io.ecl.ERft.__has_rft(well_name: str, year: int, month: int, day: int) -> bool",
-        "doc": "Checks if an RFT exists for the given well and date.\n\n:param well_name: Well name.\n:type well_name: str\n:param year: Year.\n:type year: int\n:param month: Month.\n:type month: int\n:param day: Day.\n:type day: int\n:return: True if the RFT exists.\n:rtype: bool"
+        "doc": "Checks if an RFT exists for the given well and date.\n\n:param well_name: Well name.\n:type well_name: str\n:param year: Year.\n:type year: int\n:param month: Month.\n:type month: int\n:param day: Day.\n:type day: int\n:return: True if the RFT exists.\n:type return: bool"
     },
     "ERft_has_array1": {
         "signature": "opm.io.ecl.ERft.__has_array(array_name: str, report_index: int) -> bool",
-        "doc": "Checks if an array exists for a specific report index.\n\n:param array_name: Name of the array.\n:type array_name: str\n:param report_index: The report index.\n:type report_index: int\n:return: True if the array exists.\n:rtype: bool"
+        "doc": "Checks if an array exists for a specific report index.\n\n:param array_name: Name of the array.\n:type array_name: str\n:param report_index: The report index.\n:type report_index: int\n:return: True if the array exists.\n:type return: bool"
     },
     "ERft_has_array2": {
         "signature": "opm.io.ecl.ERft.__has_array(array_name: str, well_name: str, date: tuple[int, int, int]) -> bool",
-        "doc": "Checks if an array exists for a given well and date.\n\n:param array_name: Name of the array.\n:type array_name: str\n:param well_name: Well name.\n:type well_name: str\n:param date: The date as a tuple(year, month, day).\n:type date: tuple[int, int, int]\n:return: True if the array exists.\n:rtype: bool"
+        "doc": "Checks if an array exists for a given well and date.\n\n:param array_name: Name of the array.\n:type array_name: str\n:param well_name: Well name.\n:type well_name: str\n:param date: The date as a tuple(year, month, day).\n:type date: tuple[int, int, int]\n:return: True if the array exists.\n:type return: bool"
     },
     "ERft_len": {
         "signature": "opm.io.ecl.ERft.__len__() -> int",
@@ -985,7 +985,7 @@
     },
     "EclOutput_init": {
         "signature": "opm.io.ecl.EclOutput.__init__(filename: str, formatted: bool = False, append: bool = False) -> EclOutput",
-        "doc": "Initialize the EclOutput object.\n\n:param filename: The name of the output file.\n:type filename: str\n:param formatted: Whether to use formatted output.\n:type formatted: bool\n:param append: Whether to append to an existing file.\n:type append: bool\n:return: The initialized EclOutput object.\n:rtype: EclOutput"
+        "doc": "Initialize the EclOutput object.\n\n:param filename: The name of the output file.\n:type filename: str\n:param formatted: Whether to use formatted output.\n:type formatted: bool\n:param append: Whether to append to an existing file.\n:type append: bool\n:return: The initialized EclOutput object.\n:type return: EclOutput"
     },
     "EclOutput_write_message": {
         "signature": "opm.io.ecl.EclOutput.write_message(message: str) -> None",
@@ -1022,19 +1022,19 @@
     },
       "FieldProperties_contains": {
         "signature": "FieldProperties.__contains__(keyword: str) -> bool",
-        "doc": "Checks whether the given keyword exists.\n\n:param keyword: Name of the keyword.\n:type keyword: str\n:return: True if the keyword exists.\n:rtype: bool"
+        "doc": "Checks whether the given keyword exists.\n\n:param keyword: Name of the keyword.\n:type keyword: str\n:return: True if the keyword exists.\n:type return: bool"
     },
       "FieldProperties_getitem": {
         "signature": "FieldProperties.__getitem__(keyword: str) -> numpy.ndarray",
-        "doc": "Retrieves a double-precision floating-point or integer array associated for the given keyword.\n\n:param keyword: Name of the keyword.\n:type keyword: str\n:return: NumPy array of doubles or integers.\n:rtype: numpy.ndarray"
+        "doc": "Retrieves a double-precision floating-point or integer array associated for the given keyword.\n\n:param keyword: Name of the keyword.\n:type keyword: str\n:return: NumPy array of doubles or integers.\n:type return: numpy.ndarray"
     },
       "FieldProperties_get_double_array": {
         "signature": "FieldProperties.get_double_array(keyword: str) -> numpy.ndarray",
-        "doc": "Returns a double-precision floating-point array for the given keyword.\n\n:param keyword: Name of the keyword.\n:type keyword: str\n:return: NumPy array of doubles.\n:rtype: numpy.ndarray"
+        "doc": "Returns a double-precision floating-point array for the given keyword.\n\n:param keyword: Name of the keyword.\n:type keyword: str\n:return: NumPy array of doubles.\n:type return: numpy.ndarray"
     },
       "FieldProperties_get_int_array": {
         "signature": "FieldProperties.get_int_array(keyword: str) -> numpy.ndarray",
-        "doc": "Returns an integer array for the given keyword.\n\n:param keyword: Name of the keyword.\n:type keyword: str\n:return: NumPy array of integers.\n:rtype: numpy.ndarray"
+        "doc": "Returns an integer array for the given keyword.\n\n:param keyword: Name of the keyword.\n:type keyword: str\n:return: NumPy array of integers.\n:type return: numpy.ndarray"
     },
     "EModel": {
         "type": "class",
@@ -1043,19 +1043,19 @@
     },
     "EModel_init": {
         "signature": "opm.util.EModel.__init__(filename: str) -> EModel",
-        "doc": "Initializes the EModel instance using the provided file.\n\n:param filename: Path to the file.\n:type filename: str\n:return: EModel object.\n:rtype: EModel"
+        "doc": "Initializes the EModel instance using the provided file.\n\n:param filename: Path to the file.\n:type filename: str\n:return: EModel object.\n:type return: EModel"
     },
     "EModel_contains": {
         "signature": "opm.util.EModel.__contains__(parameter: str) -> bool",
-        "doc": "Checks if the given init or solution parameter exists in the model.\n\n:param parameter: Name of the parameter.\n:type parameter: str\n:return: True if the parameter exists.\n:rtype: bool"
+        "doc": "Checks if the given init or solution parameter exists in the model.\n\n:param parameter: Name of the parameter.\n:type parameter: str\n:return: True if the parameter exists.\n:type return: bool"
     },
     "EModel_grid_dims": {
         "signature": "opm.util.EModel.grid_dims() -> tuple[int, int, int]",
-        "doc": "Returns the grid dimensions (I, J, K) of the simulation model.\n\n:return: Tuple containing the grid dimensions.\n:rtype: tuple[int, int, int]"
+        "doc": "Returns the grid dimensions (I, J, K) of the simulation model.\n\n:return: Tuple containing the grid dimensions.\n:type return: tuple[int, int, int]"
     },
     "EModel_active_cells": {
         "signature": "opm.util.EModel.active_cells() -> int",
-        "doc": "Returns the number of active cells in the simulation grid.\n\n:return: Number of active grid cells.\n:rtype: int"
+        "doc": "Returns the number of active cells in the simulation grid.\n\n:return: Number of active grid cells.\n:type return: int"
     },
     "EModel_set_depth_fwl": {
         "signature": "opm.util.EModel.set_depth_fwl(fwl: list[float]) -> None",
@@ -1067,19 +1067,19 @@
     },
     "EModel_get_list_of_arrays": {
         "signature": "opm.util.EModel.get_list_of_arrays() -> list[tuple[str, eclArrType]]",
-        "doc": "Returns a list of available parameter arrays and their types.\n\n:return: List of tuples with parameter arrays and their types.\n:rtype: list[tuple[str, eclArrType]]"
+        "doc": "Returns a list of available parameter arrays and their types.\n\n:return: List of tuples with parameter arrays and their types.\n:type return: list[tuple[str, eclArrType]]"
     },
     "EModel_active_report_step": {
         "signature": "opm.util.EModel.active_report_step() -> int",
-        "doc": "Gets the currently active report step.\n\n:return: Active report step index.\n:rtype: int"
+        "doc": "Gets the currently active report step.\n\n:return: Active report step index.\n:type return: int"
     },
     "EModel_get_report_steps": {
         "signature": "opm.util.EModel.get_report_steps() -> list[int]",
-        "doc": "Returns all available report steps.\n\n:return: List of report steps.\n:rtype: list[int]"
+        "doc": "Returns all available report steps.\n\n:return: List of report steps.\n:type return: list[int]"
     },
     "EModel_has_report_step": {
         "signature": "opm.util.EModel.has_report_step(report_step: int) -> bool",
-        "doc": "Checks if the specified report step exists.\n\n:param report_step: The report step.\n:type report_step: int\n:return: True if the report step exists.\n:rtype: bool"
+        "doc": "Checks if the specified report step exists.\n\n:param report_step: The report step.\n:type report_step: int\n:return: True if the report step exists.\n:type return: bool"
     },
     "EModel_set_report_step": {
         "signature": "opm.util.EModel.set_report_step(report_step: int) -> None",
@@ -1091,7 +1091,7 @@
     },
     "EModel_get": {
         "signature": "opm.util.EModel.get(key: str) -> numpy.ndarray",
-        "doc": "Retrieves a parameter array by key. Returns an array of floats or integers depending on the data type.\n\n:param key: Name of the parameter.\n:type key: str\n:return: Parameter data as a NumPy array.\n:rtype: numpy.ndarray"
+        "doc": "Retrieves a parameter array by key. Returns an array of floats or integers depending on the data type.\n\n:param key: Name of the parameter.\n:type key: str\n:return: Parameter data as a NumPy array.\n:type return: numpy.ndarray"
     },
     "EModel_add_filter_int1": {
         "signature": "opm.util.EModel.__add_filter(key: str, operator: str, value: int) -> None",
